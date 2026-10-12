@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>P4 · The panel, just created (2.22)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.wf{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#1f1f1f;background:#fff;font-size:14px;line-height:1.45}
+.wf *{box-sizing:border-box}
+.wf a{color:#1f1f1f;text-decoration:underline}
+.desk{width:1280px;display:flex;min-height:800px;background:#fff}
+.side{width:240px;flex:none;background:#efefef;border-right:1px solid #bdbdbd;padding:16px;display:flex;flex-direction:column;gap:8px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:18px;padding:4px 0 12px}
+.brand img{width:32px;height:32px;display:block}
+.acting{font-size:12px;color:#4a4a4a;border:1px solid #bdbdbd;border-radius:4px;padding:6px 8px;background:#fff}
+.acting b{display:block;font-size:14px;color:#1f1f1f}
+.nav{display:flex;flex-direction:column;gap:2px;margin-top:8px}
+.nav a{display:block;padding:7px 10px;border-radius:4px;text-decoration:none}
+.nav a.on{background:#cdcdcd;font-weight:700}
+.nav .rule{border-top:1px solid #bdbdbd;margin:8px 0}
+.nav .ph{display:block;height:10px;margin:10px;background:#d2d2d2;border-radius:2px}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{height:56px;border-bottom:1px solid #bdbdbd;display:flex;justify-content:flex-end;align-items:center;gap:16px;padding:0 32px}
+.body{padding:24px 32px 48px;display:flex;flex-direction:column;gap:24px}
+.trail{font-size:13px;color:#4a4a4a;display:flex;gap:6px}
+.wf h1{font-size:28px;line-height:1.2;margin:0}
+.wf h2{font-size:20px;line-height:1.3;margin:0}
+.wf h3{font-size:16px;line-height:1.3;margin:0}
+.wf p{margin:0}
+.sub{color:#4a4a4a;margin-top:4px}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:1px solid #bdbdbd;padding-bottom:16px}
+.hdr .t{display:flex;flex-direction:column;gap:4px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 16px;border-radius:4px;border:1px solid #2b2b2b;background:#2b2b2b;color:#fff !important;font:inherit;font-weight:600;text-decoration:none !important;white-space:nowrap;cursor:pointer}
+.btn.sec{background:#fff;color:#1f1f1f !important}
+.btn.sm{min-height:28px;padding:0 10px;font-size:13px}
+.btn.full{width:100%;min-height:44px}
+.btn.ph44{min-height:44px}
+.card{border:1px solid #bdbdbd;border-radius:6px;padding:16px;background:#fff;display:flex;flex-direction:column;gap:12px}
+.grey{background:#f5f5f5}
+.row{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
+.stack{display:flex;flex-direction:column;gap:12px}
+.stack8{display:flex;flex-direction:column;gap:8px}
+.stack4{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.tc{overflow-x:auto}
+.wf table{border-collapse:collapse;width:100%}
+.wf caption{text-align:left;font-weight:700;padding:0 0 8px}
+.wf th,.wf td{text-align:left;padding:8px;border-bottom:1px solid #d6d6d6;vertical-align:top}
+.wf th{font-size:13px;color:#333;background:#f2f2f2;font-weight:700}
+.num{text-align:right !important;font-variant-numeric:tabular-nums}
+.badge{display:inline-block;padding:1px 8px;border:1px solid #555;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;background:#fff}
+.b-ok{background:#dcdcdc}
+.b-warn{border-style:dashed;border-width:2px}
+.b-bad{background:#2b2b2b;color:#fff;border-color:#2b2b2b}
+.muted{color:#4a4a4a}
+.small{font-size:13px}
+.bar{display:inline-block;height:9px;background:#cfcfcf;border-radius:2px;vertical-align:middle}
+.wf label,.lbl{display:block;font-weight:700;margin-bottom:4px}
+.wf select,.wf input[type=text],.wf input[type=date]{font:inherit;border:1px solid #6b6b6b;border-radius:4px;min-height:36px;padding:4px 8px;background:#fff;color:#1f1f1f;width:100%}
+.help{font-size:13px;color:#4a4a4a;margin-top:4px}
+.field{display:flex;flex-direction:column;min-width:0}
+fieldset{border:1px solid #bdbdbd;border-radius:6px;padding:12px 16px;margin:0;display:flex;flex-direction:column;gap:8px}
+legend{font-weight:700;padding:0 4px}
+.radio{display:flex;gap:8px;align-items:flex-start}
+.radio input{margin-top:3px;width:18px;height:18px}
+.radio label{font-weight:600;margin:0}
+.radio .help{margin-top:0}
+.alert{border:1px solid #555;border-radius:6px;padding:12px 16px;display:flex;flex-direction:column;gap:6px;background:#fff}
+.alert.warn{border:2px dashed #333}
+.alert.ok{background:#e4e4e4}
+.alert.danger{border:3px solid #1f1f1f}
+.alert .k{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:#333}
+.focus{outline:3px solid #000;outline-offset:3px}
+.fl{font:600 11px/1.3 ui-monospace,Menlo,Consolas,monospace;color:#000;background:#fff;border:1px solid #000;padding:1px 5px;border-radius:3px;white-space:normal;display:inline-block}
+.tag{display:inline-block;font:600 11px/1.3 ui-monospace,Menlo,Consolas,monospace;border:1px dashed #333;padding:2px 6px;color:#222;background:#fff;border-radius:3px;white-space:normal;max-width:100%}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;align-items:start}
+.aside{position:sticky;top:16px}
+.invalid{border-left:4px solid #1f1f1f;padding-left:12px}
+.err{font-weight:700}
+details>summary{cursor:pointer;list-style:none}
+details>summary::-webkit-details-marker{display:none}
+.chev{font:700 14px ui-monospace,monospace;display:inline-block;width:16px}
+.grp{border:1px solid #bdbdbd;border-radius:6px;background:#fff}
+.grp>summary{padding:12px 16px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,2fr) auto;gap:16px;align-items:center}
+.grp[open]>summary{border-bottom:1px solid #bdbdbd;background:#f5f5f5}
+.grp .in{padding:16px;display:flex;flex-direction:column;gap:16px}
+.inform{border:2px solid #1f1f1f;border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:16px}
+.dl{display:grid;grid-template-columns:160px minmax(0,1fr);gap:6px 16px;margin:0}
+.dl dt{font-weight:700;color:#333}
+.dl dd{margin:0}
+.strip{display:flex;gap:48px;padding:24px;background:#e9e9e9;align-items:flex-start}
+.pcol{display:flex;flex-direction:column;gap:8px;width:390px}
+.plabel{font:600 13px/1.3 system-ui,sans-serif;color:#1f1f1f}
+.phone{width:390px;border:1px solid #9a9a9a;background:#fff}
+.pbar{min-height:56px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 16px;border-bottom:1px solid #bdbdbd;background:#efefef}
+.pbar .brand{padding:0;font-size:16px}
+.pbar .ar{font-size:12px;line-height:1.25;text-align:right}
+.pbody{padding:16px;display:flex;flex-direction:column;gap:16px}
+.phone h1{font-size:24px}
+.srow{border-bottom:1px solid #d6d6d6;padding:12px 0;display:flex;flex-direction:column;gap:6px}
+.srow:first-child{border-top:1px solid #d6d6d6}
+.kv{display:grid;grid-template-columns:96px minmax(0,1fr);gap:2px 8px;font-size:13px}
+.kv span:nth-child(odd){color:#4a4a4a;font-weight:600}
+.skel{background:#e2e2e2;border-radius:3px;height:12px}
+.mini{border:1px solid #9a9a9a;background:#fff;padding:16px;display:flex;flex-direction:column;gap:12px}
+.mtitle{font:600 13px/1.3 system-ui,sans-serif}
+.seat{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}
+.seg{display:flex;gap:16px}
+.seg label{display:flex;gap:6px;align-items:center;font-weight:400;margin:0;min-height:28px}
+.pseg{display:flex;flex-direction:column;gap:0;border:1px solid #9a9a9a;border-radius:6px}
+.pseg label{display:flex;gap:8px;align-items:center;font-weight:400;margin:0;min-height:44px;padding:0 12px;border-top:1px solid #d6d6d6}
+.pseg label:first-child{border-top:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</helmet>
+<div class="wf" style="width: 1280px">
+<div class="desk">
+<nav class="side" aria-label="Main">
+<div class="brand"><img src="/_blob/d8e89f2bacfcd9a2e79781ca6f135313" alt=""><span>Wombat</span></div>
+<div class="acting">Acting as<b>Institutional admin</b></div>
+<div class="nav"><span class="ph" style="width:120px" aria-hidden="true"></span>
+<span class="ph" style="width:106px" aria-hidden="true"></span>
+<span class="ph" style="width:92px" aria-hidden="true"></span>
+<a href="#" class="on" aria-current="page">Decision panels</a>
+<span class="ph" style="width:110px" aria-hidden="true"></span>
+<span class="ph" style="width:90px" aria-hidden="true"></span>
+<div class="rule"></div><a href="#">My data rights</a></div>
+</nav>
+<div class="main">
+<div class="top"><span>Nolwazi Mbatha</span><a href="#">Sign out</a></div>
+<main class="body">
+<nav class="trail" aria-label="Breadcrumb"><a href="#">Decision panels</a> <span aria-hidden="true">›</span> <span>Paed Annual Review Panel</span></nav><div class="hdr"><div class="t"><h1>Paed Annual Review Panel</h1><p class="sub">Speciality panel · Paediatrics · Kgosi Kgari Teaching Hospital</p><div class="tags"><span class="tag">CHANGED: the h1 and tab name the panel (T260); “Back to panels” goes: the trail is the way back</span></div></div></div>
+<div class="alert ok" role="status" tabindex="-1"><span class="k">Created</span><p>Paed Annual Review Panel was created. Its reviews can now be scheduled.</p><span class="fl">&#9654; focus lands on this result</span></div>
+<section class="card grey"><h2>About this panel</h2>
+<dl class="dl"><dt>Scope</dt><dd>Speciality: Paediatrics</dd><dt>Institution</dt><dd>Kgosi Kgari Teaching Hospital</dd><dt>Decides for</dt><dd>General panel</dd><dt>Open reviews</dt><dd>None</dd></dl>
+<p class="small muted">Its name, scope, institution and speciality cannot change once it is created.</p>
+<div class="tags"><span class="tag">ReferenceBlock</span></div></section>
+<form class="stack"><h2>Who sits on it</h2>
+<div class="field"><label for="ch">Chair</label><select id="ch"><option>Thandi Zulu · zulu@kgk.wombat.loc</option></select></div>
+<div class="tc"><table><caption>Seats for the active committee members at Kgosi Kgari Teaching Hospital who are not trainees, by surname</caption><thead><tr><th>Committee member</th><th>Seat</th></tr></thead><tbody><tr><td><b>Sarah Botha</b><div class="small muted">botha@kgk.wombat.loc</div></td><td><fieldset style="border:0;padding:0"><legend class="sr" style="position:absolute;left:-9999px">Seat for Sarah Botha</legend><div class="seg"><label><input type="radio" name="s-botha" checked> Not seated</label><label><input type="radio" name="s-botha"> Member</label><label><input type="radio" name="s-botha"> External member</label></div></fieldset></td></tr><tr><td><b>David Naidoo</b><div class="small muted">naidoo@kgk.wombat.loc</div></td><td><fieldset style="border:0;padding:0"><legend class="sr" style="position:absolute;left:-9999px">Seat for David Naidoo</legend><div class="seg"><label><input type="radio" name="s-naidoo"> Not seated</label><label><input type="radio" name="s-naidoo" checked> Member</label><label><input type="radio" name="s-naidoo"> External member</label></div></fieldset></td></tr><tr><td><b>John van Rensburg</b><div class="small muted">vanrensburg@kgk.wombat.loc</div></td><td><fieldset style="border:0;padding:0"><legend class="sr" style="position:absolute;left:-9999px">Seat for John van Rensburg</legend><div class="seg"><label><input type="radio" name="s-vanrensburg"> Not seated</label><label><input type="radio" name="s-vanrensburg"> Member</label><label><input type="radio" name="s-vanrensburg" checked> External member</label></div></fieldset></td></tr><tr><td><b>Thandi Zulu</b><div class="small muted">zulu@kgk.wombat.loc</div></td><td><b>Chair</b></td></tr></tbody></table></div>
+<div class="actions"><button class="btn" type="button">Save panel</button></div>
+<div class="tags"><span class="tag">Members may change while reviews are open</span><span class="tag">After Save: “Panel members updated.” here, focus on it; the can-no-longer-sit warning is read from the saved panel, so it never goes stale</span></div>
+</form>
+<form class="stack"><h2>Decides for</h2>
+<div class="row"><div class="field" style="width:420px"><label for="df2">Decides for</label><select id="df2"><option>General panel</option></select></div><button class="btn sec" type="button">Save committee</button></div>
+<p class="help" style="max-width:820px">A panel sitting as a College committee decides the EPAs the College gives that committee (the neonatal CCC decides EPAs 4 and 5), and nothing else. Where no panel sits as it, the general panels decide them. It cannot change while a review before the panel is scheduled, in progress or awaiting ratification.</p>
+<div class="tags"><span class="tag">Speciality admin: read-only, “Only an institutional administrator can change which College committee a panel sits as.”</span></div>
+</form>
+</main>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 1280, "height": 1438}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

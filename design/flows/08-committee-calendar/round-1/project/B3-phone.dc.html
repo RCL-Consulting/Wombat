@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>B3 · 390</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.wf{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#1f1f1f;background:#fff;font-size:14px;line-height:1.45}
+.wf *{box-sizing:border-box}
+.wf a{color:#1f1f1f;text-decoration:underline}
+.desk{width:1280px;display:flex;min-height:800px;background:#fff}
+.side{width:240px;flex:none;background:#efefef;border-right:1px solid #bdbdbd;padding:16px;display:flex;flex-direction:column;gap:8px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:18px;padding:4px 0 12px}
+.brand img{width:32px;height:32px;display:block}
+.acting{font-size:12px;color:#4a4a4a;border:1px solid #bdbdbd;border-radius:4px;padding:6px 8px;background:#fff}
+.acting b{display:block;font-size:14px;color:#1f1f1f}
+.nav{display:flex;flex-direction:column;gap:2px;margin-top:8px}
+.nav a{display:block;padding:7px 10px;border-radius:4px;text-decoration:none}
+.nav a.on{background:#cdcdcd;font-weight:700}
+.nav .rule{border-top:1px solid #bdbdbd;margin:8px 0}
+.nav .ph{display:block;height:10px;margin:10px;background:#d2d2d2;border-radius:2px}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{height:56px;border-bottom:1px solid #bdbdbd;display:flex;justify-content:flex-end;align-items:center;gap:16px;padding:0 32px}
+.body{padding:24px 32px 48px;display:flex;flex-direction:column;gap:24px}
+.trail{font-size:13px;color:#4a4a4a;display:flex;gap:6px}
+.wf h1{font-size:28px;line-height:1.2;margin:0}
+.wf h2{font-size:20px;line-height:1.3;margin:0}
+.wf h3{font-size:16px;line-height:1.3;margin:0}
+.wf p{margin:0}
+.sub{color:#4a4a4a;margin-top:4px}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:1px solid #bdbdbd;padding-bottom:16px}
+.hdr .t{display:flex;flex-direction:column;gap:4px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 16px;border-radius:4px;border:1px solid #2b2b2b;background:#2b2b2b;color:#fff !important;font:inherit;font-weight:600;text-decoration:none !important;white-space:nowrap;cursor:pointer}
+.btn.sec{background:#fff;color:#1f1f1f !important}
+.btn.sm{min-height:28px;padding:0 10px;font-size:13px}
+.btn.full{width:100%;min-height:44px}
+.btn.ph44{min-height:44px}
+.card{border:1px solid #bdbdbd;border-radius:6px;padding:16px;background:#fff;display:flex;flex-direction:column;gap:12px}
+.grey{background:#f5f5f5}
+.row{display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap}
+.stack{display:flex;flex-direction:column;gap:12px}
+.stack8{display:flex;flex-direction:column;gap:8px}
+.stack4{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.tc{overflow-x:auto}
+.wf table{border-collapse:collapse;width:100%}
+.wf caption{text-align:left;font-weight:700;padding:0 0 8px}
+.wf th,.wf td{text-align:left;padding:8px;border-bottom:1px solid #d6d6d6;vertical-align:top}
+.wf th{font-size:13px;color:#333;background:#f2f2f2;font-weight:700}
+.num{text-align:right !important;font-variant-numeric:tabular-nums}
+.badge{display:inline-block;padding:1px 8px;border:1px solid #555;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;background:#fff}
+.b-ok{background:#dcdcdc}
+.b-warn{border-style:dashed;border-width:2px}
+.b-bad{background:#2b2b2b;color:#fff;border-color:#2b2b2b}
+.muted{color:#4a4a4a}
+.small{font-size:13px}
+.bar{display:inline-block;height:9px;background:#cfcfcf;border-radius:2px;vertical-align:middle}
+.wf label,.lbl{display:block;font-weight:700;margin-bottom:4px}
+.wf select,.wf input[type=text],.wf input[type=date]{font:inherit;border:1px solid #6b6b6b;border-radius:4px;min-height:36px;padding:4px 8px;background:#fff;color:#1f1f1f;width:100%}
+.help{font-size:13px;color:#4a4a4a;margin-top:4px}
+.field{display:flex;flex-direction:column;min-width:0}
+fieldset{border:1px solid #bdbdbd;border-radius:6px;padding:12px 16px;margin:0;display:flex;flex-direction:column;gap:8px}
+legend{font-weight:700;padding:0 4px}
+.radio{display:flex;gap:8px;align-items:flex-start}
+.radio input{margin-top:3px;width:18px;height:18px}
+.radio label{font-weight:600;margin:0}
+.radio .help{margin-top:0}
+.alert{border:1px solid #555;border-radius:6px;padding:12px 16px;display:flex;flex-direction:column;gap:6px;background:#fff}
+.alert.warn{border:2px dashed #333}
+.alert.ok{background:#e4e4e4}
+.alert.danger{border:3px solid #1f1f1f}
+.alert .k{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:#333}
+.focus{outline:3px solid #000;outline-offset:3px}
+.fl{font:600 11px/1.3 ui-monospace,Menlo,Consolas,monospace;color:#000;background:#fff;border:1px solid #000;padding:1px 5px;border-radius:3px;white-space:normal;display:inline-block}
+.tag{display:inline-block;font:600 11px/1.3 ui-monospace,Menlo,Consolas,monospace;border:1px dashed #333;padding:2px 6px;color:#222;background:#fff;border-radius:3px;white-space:normal;max-width:100%}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;align-items:start}
+.aside{position:sticky;top:16px}
+.invalid{border-left:4px solid #1f1f1f;padding-left:12px}
+.err{font-weight:700}
+details>summary{cursor:pointer;list-style:none}
+details>summary::-webkit-details-marker{display:none}
+.chev{font:700 14px ui-monospace,monospace;display:inline-block;width:16px}
+.grp{border:1px solid #bdbdbd;border-radius:6px;background:#fff}
+.grp>summary{padding:12px 16px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,2fr) auto;gap:16px;align-items:center}
+.grp[open]>summary{border-bottom:1px solid #bdbdbd;background:#f5f5f5}
+.grp .in{padding:16px;display:flex;flex-direction:column;gap:16px}
+.inform{border:2px solid #1f1f1f;border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:16px}
+.dl{display:grid;grid-template-columns:160px minmax(0,1fr);gap:6px 16px;margin:0}
+.dl dt{font-weight:700;color:#333}
+.dl dd{margin:0}
+.strip{display:flex;gap:48px;padding:24px;background:#e9e9e9;align-items:flex-start}
+.pcol{display:flex;flex-direction:column;gap:8px;width:390px}
+.plabel{font:600 13px/1.3 system-ui,sans-serif;color:#1f1f1f}
+.phone{width:390px;border:1px solid #9a9a9a;background:#fff}
+.pbar{min-height:56px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 16px;border-bottom:1px solid #bdbdbd;background:#efefef}
+.pbar .brand{padding:0;font-size:16px}
+.pbar .ar{font-size:12px;line-height:1.25;text-align:right}
+.pbody{padding:16px;display:flex;flex-direction:column;gap:16px}
+.phone h1{font-size:24px}
+.srow{border-bottom:1px solid #d6d6d6;padding:12px 0;display:flex;flex-direction:column;gap:6px}
+.srow:first-child{border-top:1px solid #d6d6d6}
+.kv{display:grid;grid-template-columns:96px minmax(0,1fr);gap:2px 8px;font-size:13px}
+.kv span:nth-child(odd){color:#4a4a4a;font-weight:600}
+.skel{background:#e2e2e2;border-radius:3px;height:12px}
+.mini{border:1px solid #9a9a9a;background:#fff;padding:16px;display:flex;flex-direction:column;gap:12px}
+.mtitle{font:600 13px/1.3 system-ui,sans-serif}
+.seat{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}
+.seg{display:flex;gap:16px}
+.seg label{display:flex;gap:6px;align-items:center;font-weight:400;margin:0;min-height:28px}
+.pseg{display:flex;flex-direction:column;gap:0;border:1px solid #9a9a9a;border-radius:6px}
+.pseg label{display:flex;gap:8px;align-items:center;font-weight:400;margin:0;min-height:44px;padding:0 12px;border-top:1px solid #d6d6d6}
+.pseg label:first-child{border-top:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</helmet>
+<div class="wf" style="width: 1314px">
+<div class="strip"><div class="pcol"><div class="plabel">B · 4.9 · Dr Mokoena · registrars at a glance</div><div class="phone">
+<div class="pbar"><div class="brand"><img src="/_blob/d8e89f2bacfcd9a2e79781ca6f135313" alt="" style="width:28px;height:28px"><span>Wombat</span></div>
+<div class="ar">Acting as<br><b>Speciality admin</b></div>
+<a href="#" class="btn sec ph44" style="min-width:44px;padding:0 12px">Menu</a></div>
+<main class="pbody">
+<div class="stack8" style="border-bottom:1px solid #bdbdbd;padding-bottom:16px"><h1>Decisions due</h1></div>
+<p class="muted small">The EPAs due for an entrustment decision in 2026 S2 for the 5 trainees you oversee at Kgosi Kgari Teaching Hospital, by each EPA's decision cadence: every semester, or once a year. Missed is read today: the EPA's window has ended with nothing decided or on an open review's agenda.</p>
+<details class="card grey"><summary><b><span class="chev" aria-hidden="true">▸</span>Filters</b> <span class="muted small">2026 S2 · outstanding</span></summary></details>
+<details class="card grey"><summary><div class="row" style="justify-content:space-between;align-items:center">
+<h2><span class="chev" aria-hidden="true">▸</span>By EPA</h2><span class="muted small">How many trainees stand where on each of the 15 EPAs due in 2026 S2</span></div></summary></details>
+<div class="tags"><span class="tag">Stacks per EPA at 390</span></div>
+<h2>Registrars</h2><p class="muted small">75 of 75 decisions due in 2026 S2 shown, for 5 registrars.</p>
+<details class="grp"><summary style="display:flex;flex-direction:column;gap:6px;align-items:stretch">
+<b><span class="chev" aria-hidden="true">▸</span>Anele Dlamini <span class="muted small" style="font-weight:400">Training year 3</span></b>
+<span class="small">15 due: 15 scheduled</span><span class="small muted">Review #2 holds 2026 S2 before Paed Annual Review Panel.</span></summary><div style="padding:0 16px 16px"><a class="btn sec full" href="#" aria-label="Open review #2 of Anele Dlamini">Open review #2</a></div></details>
+<details class="grp"><summary style="display:flex;flex-direction:column;gap:6px;align-items:stretch">
+<b><span class="chev" aria-hidden="true">▸</span>Pieter du Plessis <span class="muted small" style="font-weight:400">Training year 2</span></b>
+<span class="small">15 due: 15 scheduled</span><span class="small muted">Review #3 holds 2026 S2 before Paed Annual Review Panel.</span></summary><div style="padding:0 16px 16px"><a class="btn sec full" href="#" aria-label="Open review #3 of Pieter du Plessis">Open review #3</a></div></details>
+<details class="grp"><summary style="display:flex;flex-direction:column;gap:6px;align-items:stretch">
+<b><span class="chev" aria-hidden="true">▸</span>Nomsa Mahlangu <span class="muted small" style="font-weight:400">Training year 1</span></b>
+<span class="small">15 due: 12 not scheduled, 3 as opportunity allows</span><span class="small muted">No review holds 2026 S2.</span></summary><div style="padding:0 16px 16px"><button class="btn full" type="button" aria-label="Schedule Nomsa Mahlangu's review before Paed Annual Review Panel">Schedule</button></div></details>
+<details class="grp"><summary style="display:flex;flex-direction:column;gap:6px;align-items:stretch">
+<b><span class="chev" aria-hidden="true">▸</span>Lerato Molefe <span class="muted small" style="font-weight:400">Training year 4</span></b>
+<span class="small">15 due: 15 scheduled</span><span class="small muted">Review #1 holds 2026 S2 before Paed Annual Review Panel.</span></summary><div style="padding:0 16px 16px"><a class="btn sec full" href="#" aria-label="Open review #1 of Lerato Molefe">Open review #1</a></div></details>
+<details class="grp"><summary style="display:flex;flex-direction:column;gap:6px;align-items:stretch">
+<b><span class="chev" aria-hidden="true">▸</span>Sipho Ndlovu <span class="muted small" style="font-weight:400">Training year 1</span></b>
+<span class="small">15 due: 12 not scheduled, 3 as opportunity allows</span><span class="small muted">No review holds 2026 S2.</span></summary><div style="padding:0 16px 16px"><button class="btn full" type="button" aria-label="Schedule Sipho Ndlovu's review before Paed Annual Review Panel">Schedule</button></div></details>
+<div class="tags"><span class="tag">4.9 state: the page is five blocks, not 75 rows</span></div>
+</main>
+</div></div><div class="pcol"><div class="plabel">B · 5.1 · Mr Smit · one registrar opened (heavy: two panels)</div><div class="phone">
+<div class="pbar"><div class="brand"><img src="/_blob/d8e89f2bacfcd9a2e79781ca6f135313" alt="" style="width:28px;height:28px"><span>Wombat</span></div>
+<div class="ar">Acting as<br><b>Coordinator</b></div>
+<a href="#" class="btn sec ph44" style="min-width:44px;padding:0 12px">Menu</a></div>
+<main class="pbody">
+<div class="stack8" style="border-bottom:1px solid #bdbdbd;padding-bottom:16px"><h1>Decisions due</h1></div>
+<h2>Registrars</h2>
+<details class="grp" open><summary style="display:flex;flex-direction:column;gap:6px;align-items:stretch">
+<b><span class="chev" aria-hidden="true">▾</span>Lerato Molefe <span class="muted small" style="font-weight:400">Training year 4</span></b>
+<span class="small">15 due: 3 decided, 9 not decided, 3 as opportunity allows</span><span class="small muted">Heavy volume: two panels decide her EPAs.</span></summary><div class="stack8" style="padding:0 16px 16px">
+<div class="small"><b>Paed Annual Review Panel</b>: 13 EPAs. No open review.</div><button class="btn full" type="button">Schedule before Paed Annual Review Panel</button>
+<div class="small"><b>[Neonatal panel]</b>, sitting as the Neonatal team Clinical Competency Committee: PAED-004 and PAED-005. No open review.</div><button class="btn full" type="button">Schedule before [Neonatal panel]</button></div><div class="pbody" style="border-top:1px solid #bdbdbd;padding-top:12px"><div><div class="srow"><b>PAED-001 — Managing common paediatric emergencies</b><span class="small muted">Window 2026 S2</span><div class="stack4"><span class="badge b-ok">Decided</span><span class="small">STAR #1, issued at <a href="#">review #1</a>.</span></div></div><div class="srow"><b>PAED-002 — <span class="bar" style="width:210px" aria-hidden="true"></span></b><span class="small muted">Window 2026 S2</span><div class="stack4"><span class="badge b-warn">Not decided</span><span class="small">Not decided at <a href="#">review #1</a>. A later sitting for 2026 S2 plans it again.</span></div></div><div class="srow"><b>PAED-003 — <span class="bar" style="width:170px" aria-hidden="true"></span></b><span class="small muted">Window 2026 S2</span><div class="stack4"><span class="badge b-warn">Not decided</span><span class="small">Not decided at <a href="#">review #1</a>. A later sitting for 2026 S2 plans it again.</span></div></div><div class="srow"><b>PAED-004 — <span class="bar" style="width:230px" aria-hidden="true"></span></b><span class="small muted">Window 2026 S2</span><div class="stack4"><span class="badge b-warn">Not decided</span><span class="small">Not decided at <a href="#">review #1</a>. A later sitting for 2026 S2 plans it again.</span></div></div><div class="srow"><b>PAED-015 — Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research</b><span class="small muted">Window 2026</span><div class="stack4"><span class="badge b-warn">Not decided</span><span class="small">Not decided at <a href="#">review #1</a>. A later sitting for 2026 plans it again.</span></div></div><p class="muted small" style="padding-top:8px">… PAED-005 to PAED-014</p></div></div></details>
+<div class="tags"><span class="tag">5.1 · every status · the 120-character EPA title wraps, never cut</span></div>
+</main>
+</div></div><div class="pcol"><div class="plabel">B · 4.9 · scheduling in place</div><div class="phone">
+<div class="pbar"><div class="brand"><img src="/_blob/d8e89f2bacfcd9a2e79781ca6f135313" alt="" style="width:28px;height:28px"><span>Wombat</span></div>
+<div class="ar">Acting as<br><b>Speciality admin</b></div>
+<a href="#" class="btn sec ph44" style="min-width:44px;padding:0 12px">Menu</a></div>
+<main class="pbody">
+<div class="stack8" style="border-bottom:1px solid #bdbdbd;padding-bottom:16px"><h1>Decisions due</h1></div>
+<details class="grp" open><summary style="display:flex;flex-direction:column;gap:6px"><b><span class="chev" aria-hidden="true">▾</span>Nomsa Mahlangu</b><span class="small">15 due: 12 not scheduled, 3 as opportunity allows</span></summary>
+<div class="pbody"><form class="inform" style="padding:12px">
+<h3 tabindex="-1">Schedule Nomsa Mahlangu's review</h3><span class="fl">&#9654; focus moves here</span>
+<dl class="dl" style="grid-template-columns:72px minmax(0,1fr)"><dt>Panel</dt><dd>Paed Annual Review Panel</dd><dt>Period</dt><dd>2026 S2 · 1 Jul to 31 Dec 2026</dd></dl>
+<fieldset><legend>Evidence window</legend><div class="field"><label for="r1">From</label><input type="text" inputmode="numeric" id="r1" value="2026-01-01"><p class="help">YYYY-MM-DD</p></div><div class="field"><label for="r2">To</label><input type="text" inputmode="numeric" id="r2" value="2026-12-31"><p class="help">YYYY-MM-DD</p></div></fieldset>
+<div class="field"><label for="r3">Scheduled on</label><input type="text" inputmode="numeric" id="r3" value="2026-10-12"><p class="help">YYYY-MM-DD</p></div>
+<fieldset><legend>Review type</legend><div class="radio"><input type="radio" name="rt" id="rt0" checked><div><label for="rt0">Annual progression review</label><p class="help">The semester-2 sitting decides the trainee's progression for the year.</p></div></div><div class="radio"><input type="radio" name="rt" id="rt1"><div><label for="rt1">Pre-graduation review</label><p class="help">[What a pre-graduation review decides: the operator's words]</p></div></div><div class="radio"><input type="radio" name="rt" id="rt2"><div><label for="rt2">Formative check-in</label><p class="help">Closes without a binding decision and cannot issue entrustment decisions. Use for interim progress check-ins. It takes no seat for the period.</p></div></div></fieldset>
+<div class="card grey" aria-live="polite"><h4 style="margin:0">Agenda</h4><p><b>15 EPAs will be on the agenda for 2026 S2.</b></p>
+<p>PAED-001, PAED-002, PAED-003, PAED-004, PAED-005, PAED-006, PAED-007, PAED-010, PAED-011, PAED-012, PAED-014 and PAED-015 are due at this sitting.</p><ul class="stack4" style="margin:0;padding-left:18px"><li>PAED-008 — <span class="bar" style="width:180px" aria-hidden="true"></span> · As opportunity allows</li><li>PAED-009 — <span class="bar" style="width:200px" aria-hidden="true"></span> · As opportunity allows</li><li>PAED-013 — <span class="bar" style="width:195px" aria-hidden="true"></span> · As opportunity allows</li></ul></div>
+<button class="btn full" type="button">Create review</button><button class="btn sec full" type="button">Cancel</button>
+</form></div></details>
+</main>
+</div></div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 1314, "height": 1706}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
