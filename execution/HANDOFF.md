@@ -35,7 +35,7 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
   return link, stacking), P (the page), runbook; reviewed by three Sonnet lenses (`build-review.md`: 16 findings, none
   high; 15 fixed, R5 left); one fix pass. Six suites on the squashed tree: 814 / 3750 / 1022 / 52 / 3557 / 489,
   0 warnings. **Not pushed.** Branches `t361`, `t361-*` kept locally; worktrees removed.
-- **Step 7 running** (brief `replay-brief.md`, `05b743f6`): app on `:5180`, `wombat_scenario_t361`, published from
+- **Step 7 running; acts 1–3 done** (no regression; `ebece7f6`, `7a28e669`, `7d8bff26`; brief `replay-brief.md`, `05b743f6`): app on `:5180`, `wombat_scenario_t361`, published from
   `57046f14`; acts in order, one agent each, then the states; scratch `g361` in this session's scratchpad. It must confirm: T356's browser check (the chair's bar
   never over Sign out at 768/1280), "As of … No change.", the brackets (round-3-check's list; the runbook's `[#n]`), the
   new states rows ("Narrow, in progress", failed Refresh, quorum shortfall), A.7.6's progress link for Dr Zulu after
