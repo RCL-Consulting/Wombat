@@ -66,3 +66,9 @@ T361 (flow 07), T362, T363, T309 (the scheduling preview's seat warning), T329; 
 - **2026-10-12, steps 1–2.** Restated from two read-only audits (code at `b62997a5`; every capture opened). Staged
   with `stage_upload.ps1 -Flow 08` (87 files, 6.2 MB, nothing to crop); `design/flows/08-committee-calendar/round-1-ask.txt`
   is § 1 + § 8 as one paste, with `/_blob/MARK` until the mark is copied into the canvas. Waits for the operator's canvas link.
+- **2026-10-12, round 1 picked: A** (two pages, the schedule a form page of its own at `/committee/reviews/new`), with
+  B's open-review line when one trainee is filtered; the panels proposal confirmed (the seat picker, the panel named on
+  its page). The operator said "proceed" on the recommendations: a Missed row of an ended semester schedules for the
+  current semester (C5); both panel rules kept; both semester labels kept with one line on the schedule (D40);
+  T309, T259, T260, T329, T338, T324, T272 and T280 folded into the build; pre-graduation help worded (C1). Round 1
+  gave no step counts (C14 asks again). All in `design/flows/08-committee-calendar/round-2-ask.txt`.

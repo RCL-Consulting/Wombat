@@ -1,0 +1,90 @@
+ROUND 1 PICKED: A, "two pages and a scheduling page of its own", with the corrections below, and the panels proposal
+confirmed with its corrections. Round 2: A and the panels at full fidelity on the design system's tokens (Wombat, v19),
+every screen and state at 1280 and 390, and Decisions due's list and the schedule page also at 768. Put round 2 on its
+own page of the canvas; keep B's and C's boards on round 1's page, untouched. The brand mark is at
+/_blob/d8e89f2bacfcd9a2e79781ca6f135313: use it, never a drawn disc.
+
+DECISIONS (the operator's, 2026-10-12; one sentence each):
+  Pick: A. Decisions due stays a list with filters; Schedule a review is a form page of its own, owned by Committee
+    reviews, at /committee/reviews/new (PROPOSED route, now decided), filled from ?panel=&trainee=&period=.
+  Q1: two pages, the form on its own page, as A2 drew; Committee reviews' header action links to it.
+  Q2: a Trainee filter on Decisions due, as A1 drew (C2 adds the registrar's line).
+  Q3: on the schedule page, "Already held" before Create, with Open review #n, and Create not offered while the seat
+    is held, as A4's 4.8 phone drew; draw it at 1280 too.
+  Q4: stacked rows at 390 (DataTable's Stack), as A4 drew; By EPA stacks one block per EPA.
+  Q5: the panels' seat picker, one row per committee member (Not seated / Member / External member), as P3 drew.
+  Q6: a panel's page names the panel in its h1 and tab, with "About this panel", as P4 drew; "Back to panels" goes.
+  Q7: a Missed row of an ended semester keeps Schedule, which opens the form on the CURRENT semester, the form saying
+    under Period: "2026 S1 has ended. The review sits for 2026 S2, the current semester; it can still decide what
+    2026 S1 missed." (C5).
+  Q8: keep both panel rules (name, scope, institution and speciality fixed at creation; members may change while
+    reviews are open); the page says so, as P3 and P4 drew.
+  Q9: keep both semester labels. Where the schedule shows a period, add one line: "The College's semester 2 ends in
+    November; reviews for it may sit until 31 December." Semester 1 reads January to June on both, so it needs none.
+  Q10: T309, T259, T260, T329, T338, T324, T272 and T280 are folded into this flow's build; draw each as fixed.
+
+CORRECTIONS TO A (round 2's review checks each by number):
+  C1. Pre-graduation review's help: "The final review before the programme ends: it decides the trainee's progression,
+      and whether they may graduate." Replace the placeholder on every board.
+  C2. With one trainee filtered, a line above the table names her open review, borrowed from B: "Review #1 (annual
+      progression) holds 2026 S2 before Paed Annual Review Panel, scheduled on 2026-10-12. Open review #1", or "No
+      open review holds 2026 S2. Schedule a review" (a link to the schedule page, filled), or "Formative check-in #6
+      is open: it takes no seat." Draw all three.
+  C3. A held review's row: the row's action is "Open review #n" and its Schedule is not drawn; a row that can be
+      scheduled shows only Schedule. One action per row, always (A1's rule). T259: the holding sentence names the
+      panel the holding review sits before.
+  C4. The schedule page from Committee reviews (no query): Panel, Trainee, Period empty; Trainee disabled until a panel
+      is chosen, as today, with its help. Draw this state and the filled one. After Cancel, the page returns where it
+      came from (Decisions due with its filters, or Committee reviews).
+  C5. Draw the Missed-row case of Q7: the form filled from a 2026 S1 Missed row, Period on 2026 S2, the sentence under
+      it, the preview for 2026 S2.
+  C6. The preview's failure (T338, T272): "The agenda could not be read just now. Try again" (a button), never the
+      exception's text; Create stays offered (the preview is advice), but a refusal on Create shows beside it.
+  C7. Every refusal on Create (period, type, scope, the race on a held seat) shows in a summary above the actions and
+      beside its field, with the focus on the summary, in Wombat's words (T324: "Choose a trainee.", "Choose a
+      panel.", "Give the panel a name."). The duplicate, if it races: "Review #1 already puts Lerato Molefe before Paed
+      Annual Review Panel for 2026 S2 (scheduled on 2026-10-12). …" — "scheduled" once, with Open review #1.
+  C8. Committee reviews: keep the Mode column out (A3's proposal is decided): Type reads "Formative check-in" for a
+      check-in. The Period column reads "2026 S2" with the window under it, never broken mid-date.
+  C9. Filters: keep Apply (one round trip) and Clear filters; the Status filter keeps today's options; the pager's
+      select is labelled "Decisions per page" (T280), and after a page change the focus goes to the "Decisions"
+      heading, which says the page ("Decisions, page 2 of 4") (T264).
+  C10. Headings: one h1 per page, then h2 for each section (By EPA, Decisions, Agenda, Who decides each EPA, About this
+      panel, Who sits on it, Decides for), h3 below. Every table has a caption.
+  C11. Loading and load error on every page (Decision panels, a panel, Decisions due, the schedule page, Committee
+      reviews): the header at once, a skeleton, then content or "Could not load" with Try again, as P2 drew. "Who
+      decides each EPA" never says there is no routing while it loads (T329).
+  C12. A panel's page after Save panel: "Panel members updated." where the focus lands; the can-no-longer-sit warning
+      is re-read from the saved panel (T260); it is a live alert the first time it shows.
+  C13. Decides for, refused by a race (a review scheduled meanwhile): the refusal beside the select, the select back
+      on the saved value (A5), as P5's note says; draw it at 1280.
+  C14. Step counts: round 1 gave none. For A as corrected, give presses + fields typed, at 1280 and 390, for: Mr Smit
+      scheduling Dr Molefe from an empty schedule and being stopped from a second (4.1, 4.6–4.8); Dr Mokoena
+      scheduling Dr Mahlangu from Decisions due (4.9); Mr Smit reading Dr Molefe's rows and scheduling her
+      pre-graduation review (5.1, 5.2); a formative check-in (4.49); Prof Mbatha creating the panel (2.21–2.22).
+
+STATES TO DRAW (each at 1280 and 390, with the role's menu):
+  Decision panels: empty; the manager's (with Who decides); a speciality admin's; a member's and the Coordinator's;
+    an Administrator choosing an institution; nowhere to create (T260); loading; load error.
+  A panel: new (the InstitutionalAdmin's with Decides for; a sub-speciality admin's, Speciality only); the chair
+    chosen; a panel of one refused; created; members updated; a speciality admin (Decides for read-only); Decides for
+    locked by an open review; the race refusal (C13); a member who can no longer sit; not found; access denied for
+    the Coordinator (flow 01's page).
+  Decisions due: an Administrator choosing an institution; outstanding (all trainees); one trainee (C2's three
+    lines); filtered to one EPA (4.1); no row matches; a past semester with Missed rows; all scheduled; after the
+    sitting (Decided, Not decided, optional); revoked to decide again; nothing due; loading; access denied for a
+    member; 768.
+  Schedule a review: empty (C4); filled from a row; the preview (15 EPAs); pre-graduation with "Already decided";
+    the seat already held (Q3); formative (no agenda, no seat); the Missed-row case (C5); the preview failed (C6); a
+    refusal (C7); busy ("Creating…"); created (flow 07's review page, Scheduled, focus on its h1: draw its top only);
+    768.
+  Committee reviews: empty for a scheduler and for a member; scheduled; ratified; with a formative check-in; a
+    member's list; a deleted user's pseudonym (as stored).
+
+ASK: name every design-system component you use and mark anything else NEW (SeatPicker, the trainee line, the
+  schedule page's aside); say which DESIGN.md rule each board changes (§ Table system, § Form system, § Pager, the
+  owner table's rows for a panel, a review and the new schedule page, Decisions due's section); mark PROPOSED anything
+  not built. Give every colour as a token from tokens.json, or a NEW token with its value; check contrast (text 4.5:1;
+  borders and the focus ring 3:1) and targets (24 px; 44 at 390). Then a Spec board (components, classes, DESIGN.md
+  changes, tokens, and the list of C1–C14 with where each is drawn) and a Steps board (the 30 runbook steps once A is
+  built: what each Route, Do and Expect becomes).
