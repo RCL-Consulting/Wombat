@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>R2 spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Fraunces:wght@500&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="doc" style="width:2000px;min-height:4400px;background:var(--surface-color);font-family:'Source Sans 3',sans-serif">
+<h1>Flow 07 · round 3 · Spec</h1>
+<p style="margin:0;max-width:1600px">A, "the agenda is the page", on Wombat's tokens (tokens.json as of flow 06). One page, one address: <code>/committee/reviews/{ReviewId:int}</code>. Round 3 corrects round 2 on every board of this page; round 1 stays on its own page. The canvas loads Source Sans 3 and Fraunces from Google Fonts for preview only.</p>
+
+<h2>Round 3: what changed, and where</h2>
+<table><thead><tr><th style="width:80px">Item</th><th>What changed</th><th style="width:560px">Where</th></tr></thead><tbody>
+<tr><td>E1</td><td>One label for every unstaged line, due or optional: "Not decided at this sitting" with the decision's sentence; "Not decided" alone is gone. Record: "Records 12 EPAs as not decided: PAED-002, …". Ratify: "PAED-002 and 11 others were not decided at this sitting."</td><td>1280 record and ratify (Record dialog, decided, Ratify dialog, ratified, du Plessis); 390 record and ratify; Steps 4.25, 4.27, 4.29, 4.30</td></tr>
+<tr><td>E2</td><td>Start offered to the chair, any member who may sit, the Coordinator and the Administrator, never while the chair cannot act. Others read "Only the coordinators of the panel's institution, and those of its members who are active committee members there, can start this review."</td><td>1280 start: frame 2 (Naidoo with Start), frame 3 (Mbatha, the sentence), frame 4 (no Start for anyone); 1280 more: Sarah Botha on another day; 390 start frame 2</td></tr>
+<tr><td>E3</td><td>The decisions-due page's rule for "Not decided" vs "Due by year end".</td><td>This Spec, D53 words table</td></tr>
+<tr><td>E4</td><td>An entrustment-only review refuses Record with nothing staged, beside Record.</td><td>1280 more frame 11; 390 more frame 9</td></tr>
+<tr><td>E5, E6</td><td>The remitted appeal's replacement decision carries the sentence; "Training year 4" is the year at the end of the review's period.</td><td>This Spec, § Rules carried</td></tr>
+<tr><td>E7</td><td>"As of 14:02 SAST" today; "As of 2026-10-04 14:02 SAST" on another day.</td><td>1280 more frames 3–6; 390 more frames 1–4</td></tr>
+<tr><td>E8</td><td>Only the chair's bar sticks from 641 px, one line (state, count, her next act; Present drops at 768). Readers' bars static under the title.</td><td>Every reader frame (<code>.sitting-bar--reader</code> is <code>position: static</code>); 768 board</td></tr>
+<tr><td>E9</td><td>One open line at a time; the other keeps a draft, "Draft kept" beside its Stage.</td><td>1280 stage frame 6; 390 start frame 10</td></tr>
+<tr><td>Settled</td><td>The sentence stored once, on the decision; "Not decided at this sitting" written at ratification, same words between Record and Ratify. "Lerato Molefe's progress" only for Committee member, Coordinator, Speciality admin and Sub-speciality admin readers, never when the trainee trains elsewhere: removed from Mbatha's frames. T324's sentences used.</td><td>All boards; 1280 decide frames 3 and 4</td></tr>
+<tr><td>7</td><td>The quorum line's sentence; the panel that cannot sit a quorum shows its reason instead, and ticking cannot cure it.</td><td>1280 decide frame 2; 390 decide frame 2</td></tr>
+<tr><td>8</td><td>The reader shows the activity as it is now; "Now Completed. Frozen at Start as Awaiting review." under its heading; no action or move.</td><td>1280 stage frame 15</td></tr>
+<tr><td>9</td><td>The review's return link replaces the activity page's own back link; only for a reader who may read the review.</td><td>Activity board, 1280 and 390</td></tr>
+<tr><td>11</td><td>Start dialog: "the 9 items … (8 activities and the MSF campaign report)" and, when it applies, the T173 sentence. A failed standing part reads "Standing could not be loaded."</td><td>1280 start frame 5; 390 start frame 4; 1280 stage frame 7</td></tr>
+<tr><td>13</td><td>"PAED-0xx (no longer in use)" in the sampling card and a staged line.</td><td>1280 stage frame 16</td></tr>
+<tr><td>14</td><td>Stacking rewritten (below, Sitting bar row).</td><td>This Spec; 768 board's fold</td></tr>
+<tr><td>15</td><td>scroll-padding-top and scroll-margin-top (below).</td><td>This Spec</td></tr>
+<tr><td>16</td><td>Record decision… and Stage pending decision: <code>aria-disabled="true"</code> with <code>.is-unavailable</code>, focusable, reason beside.</td><td>1280 stage frame 6; 1280 decide frames 1, 2; 768; 390 decide frames 1, 2</td></tr>
+<tr><td>17</td><td>Remove…: <code>.btn .btn-sm .btn-outline</code>, like Stage.</td><td>Every staged line, 1280, 768, 390</td></tr>
+<tr><td>18</td><td>Flat kebab class names; the open row reuses <code>tr.is-editing</code>; one new rule for the stacked line's stripe.</td><td>This Spec, components</td></tr>
+<tr><td>19</td><td>The progress link is PageHeader's <code>SubtitleContent</code>; DESIGN.md's page-action rule amended.</td><td>This Spec, DESIGN.md table</td></tr>
+<tr><td>20</td><td>The agenda stacks by a container query on its table container, explicit table roles; "Show the other N snapshot lines" a button with <code>aria-expanded</code>; a link alone on its line has a 24 px target (44 at 390).</td><td>768 board; 1280 stage frames 1, 3; every "Rating chart" and progress link (<code>.lk</code>)</td></tr>
+<tr><td>21</td><td>Refresh's status says what changed: "As of 14:31 SAST. Now Decided." Only the quorum line is a live region.</td><td>1280 more frame 4; 390 more frame 2</td></tr>
+<tr><td>22</td><td>Safe buttons "Not yet" everywhere (Record's was "Go back"); Remove's "Keep it".</td><td>Every dialog</td></tr>
+<tr><td>23</td><td>Instruments by stored name: Mini-CEX (Paediatrics), Case-Based Discussion (Paediatrics), DOPS (Paediatrics); no "CBD".</td><td>Every board</td></tr>
+<tr><td>24</td><td>Window: PAED-001, 002, 004, 005, 010, 012 "2026 S2"; the other nine "2026".</td><td>Every agenda line</td></tr>
+<tr><td>25</td><td>Pre-graduation: "13 EPAs for 2026 S2 · 13 staged"; PAED-002 to 009, 011, 013, 014, 015 and the chair's PAED-010 ("Added by the chair."); "Already decided in this window, so not on the agenda: PAED-001 and PAED-012."</td><td>1280 more frame 1; 1280 stage frame 12; 390 decide frame 11</td></tr>
+<tr><td>26</td><td>PAED-001's standing "MSF: None released yet"; PAED-010's and PAED-012's "MSF: Covered".</td><td>1280 stage frames 1–7; 768; 390</td></tr>
+<tr><td>27</td><td>PAED-012 Evidence 3 items; pre-graduation lines rest on Default MSF #1 with both hints, Evidence 0 items; PAED-010 on 2. Recount on Steps.</td><td>1280 stage frames 7, 9, 10, 13; 1280 more frame 1; Steps</td></tr>
+<tr><td>28</td><td>Before Start: "Summative · evidence 2026-01-01 to 2026-12-31"; formative: "Formative: an interim check-in, no binding decision".</td><td>1280 start; 1280 more frames 5, 7, 8; 390</td></tr>
+<tr><td>29</td><td>Schedule preview wording.</td><td>This Spec, D53 words table</td></tr>
+<tr><td>30</td><td>Snapshot and picker grouped by instrument, A–Z; the staged line's wording with item numbers.</td><td>1280 stage frames 1–4, 14; every staged line</td></tr>
+<tr><td>31</td><td>PAED-012 "2 ratings · 2 assessors · 2 sources"; Step 4.20 ticks DOPS (Paediatrics) #14; PAED-010's MSF record "Not recorded"; the 390 agenda frame on review #7; Step 4.23's Expect.</td><td>1280 start frame 1; 1280 stage frames 5, 11; 390 decide frame 11; Steps 4.20, 4.23</td></tr>
+<tr><td>Fills</td><td>Every EPA title, Molefe's snapshot, STAR numbers, Act 5's period and window, the entrustment-only review: filled.</td><td>Every board; remaining brackets listed at the foot</td></tr>
+</tbody></table>
+
+<h2>Components: new and changed</h2>
+<table><thead><tr><th style="width:230px">Component</th><th style="width:90px"></th><th style="width:430px">Classes</th><th>What it is, and its rules</th></tr></thead><tbody>
+<tr><td><b>SittingBar</b></td><td><span class="new">NEW</span></td><td><code>.sitting-bar</code>, <code>.sitting-bar--reader</code>, <code>.sitting-bar-state</code>, <code>.sitting-bar-count</code>, <code>.sitting-bar-sentence</code>, <code>.sitting-bar-as-of</code>, <code>.sitting-bar-actions</code></td><td>A <code>section</code> named "The sitting" (visually hidden h2) under PageHeader: state badge, count ("3 staged"), the mode and evidence window before Start, Present (not live), and the next act (Start review…, Go to the decision, Ratify…, Close review…). <b>The chair's bar</b> (an act is hers): 4px <code>secondary-color</code> stripe, from 641 px <code>position: sticky; top: 56px</code>, one line. <b>Readers' bar</b> (<code>--reader</code>): <code>input-border</code> stripe, static under the title, scrolls away; holds the who-may-act sentence and "As of … · Refresh". <b>Stacking (14):</b> <code>.sidebar</code> gains <code>z-index: 10</code> at 641 px and wider; <code>.sitting-bar</code> <code>z-index: 1</code>, so it sits under the sticky sidebar and the top bar and above the page's tables. Below 641 px every bar is static, stacked, its button full width. Re-rendered after every action (T260).</td></tr>
+<tr><td><b>Focus clearance (15)</b></td><td><span class="new">NEW</span></td><td><code>html { scroll-padding-top: calc(56px + var(--sitting-bar-h, 0px)); }</code>; <code>scroll-margin-top</code> on every heading and result that takes the focus</td><td><code>--sitting-bar-h</code> is measured from the chair's stuck bar (ResizeObserver in <code>wombat.js</code>), 0 for readers and below 641 px. No focused element is ever hidden under the top bar or the chair's bar.</td></tr>
+<tr><td><b>Agenda line</b> (DataTable row)</td><td><span class="chg">CHANGED</span></td><td><code>tr.is-editing</code> (existing) on the open row and its form row; <code>.agenda-form-row</code>; <code>.agenda-result-row</code>; stacked: <code>.agenda-line</code>, <code>.agenda-line.is-editing</code> (the one new rule: its 4px stripe)</td><td>EPA (code over its title, wrapping), Window, State (badge over sentence), Evidence, Action (chair only). Stage opens the line in place; one open line at a time (E9): opening another keeps the first's typed form as a draft and shows "Draft kept" beside its Stage (part of Stage's name), which reopens it as typed; a draft lasts until staged, cancelled or the page is left. Remove… is <code>.btn .btn-sm .btn-outline</code>, named "Remove the staged decision on PAED-012". Results in <code>.agenda-result-row</code>, focused. <b>Stacking (20):</b> a container query on the table container (<code>container-type: inline-size</code>, stack below 760px), with explicit <code>role="table|row|cell|columnheader"</code> on the stacked markup.</td></tr>
+<tr><td><b>AgendaLineForm</b></td><td><span class="new">NEW</span></td><td><code>.agenda-form</code>, <code>.snapshot-pick</code>, <code>.snapshot-pick-line</code>, <code>.agenda-form-standing</code></td><td>Header "Stage a decision on PAED-001"; one line of standing ("Year 4 target 5 · no STAR yet · 3 ratings in the review window · MSF: None released yet"); a part that fails reads "Standing could not be loaded." in its place (11). "Rating chart for PAED-001" (24 px target). "Evidence it rests on": this EPA's lines first, grouped by instrument A–Z, each with tick and Read; "Show the other N snapshot lines" a button with <code>aria-expanded</code>. Hints beside the ticks, not live. Authorised level, Issued on (today, South African calendar), Expires on, Rationale, Stage pending decision (<code>aria-disabled</code> + <code>.is-unavailable</code> with "Name at least one item of the evidence snapshot." until a tick), Cancel (discards the draft).</td></tr>
+<tr><td><b>"Stage a decision on an EPA not on this agenda"</b></td><td><span class="chg">CHANGED</span></td><td><code>.agenda-form</code> with an EPA select</td><td>At the agenda's foot. Staged, the EPA gains a chair's line: "Added by the chair." and what it decides again.</td></tr>
+<tr><td><b>EvidenceReader</b></td><td><span class="new">NEW</span></td><td><code>.evidence-reader</code></td><td>Inside an open line: Read swaps the form for the activity as it is now (ActivityStatus, ActivityAbout, ActivityForm read-only), no action, no move. If its state moved since Start: "Now Completed. Frozen at Start as Awaiting review." under the heading (8). "← Back to PAED-001" restores the form as typed, focus on the Read pressed.</td></tr>
+<tr><td><b>Chart link pair</b></td><td><span class="chg">CHANGED</span></td><td><code>.chart-jump</code>, <code>.chart-back</code></td><td>The link moves the focus to the chart's heading; while the line is open, "Back to PAED-001's line" returns it.</td></tr>
+<tr><td><b>Decision form</b></td><td><span class="chg">CHANGED</span></td><td>FormField in <code>.form-grid</code>; <code>.quorum-line</code> (<code>aria-live="polite"</code>, the page's only live region besides results)</td><td>Category, Rationale, About the EPAs not decided (optional, "The registrar sees this once the review is ratified."), Conditions, Present. Quorum line: "Only the chair is ticked. A committee decision needs at least two panel members present: the chair and at least one other." / "4 present: …"; a panel that cannot sit a quorum shows that reason. Record decision… <code>aria-disabled</code> + <code>.is-unavailable</code> while the quorum falls short. Refusals: "Choose a progression category.", "Give the committee's rationale.", and for entrustment-only with nothing staged "This review decides entrustment only, so stage at least one decision before recording it." beside Record.</td></tr>
+<tr><td><b>Refresh line</b></td><td><span class="new">NEW</span></td><td><code>.sitting-bar-as-of</code> (<code>role="status"</code>), <code>.btn-sm</code> Refresh</td><td>Readers only: "As of 14:02 SAST" (today) or "As of 2026-10-04 14:02 SAST"; after Refresh, what changed: "As of 14:31 SAST. Now Decided." Scroll and focus kept. Live following is T362, not drawn.</td></tr>
+<tr><td><b>Return link</b> on flow 03's page</td><td><span class="chg">CHANGED</span></td><td><code>.return-link</code></td><td>"← Back to Lerato Molefe · 2026 S2" replaces the page's own back link (one back link) when opened from the review's snapshot and the reader may read that review.</td></tr>
+<tr><td><b>PageHeader</b></td><td><span class="chg">CHANGED</span></td><td><code>SubtitleContent</code> (existing)</td><td>"Lerato Molefe's progress" to <code>/programme/trainees/{ProfileId:int}</code>, for Committee member, Coordinator, Speciality admin and Sub-speciality admin readers; not when the trainee trains elsewhere.</td></tr>
+<tr><td><b>ConfirmDialog</b> uses</td><td><span class="chg">CHANGED</span></td><td>flow 01's <code>&lt;dialog&gt;</code></td><td>Start, Remove ("Keep it"), Record, Ratify, Close review ("Not yet" for all but Remove). Focus on the safe button; Cancel returns it to the opener.</td></tr>
+<tr><td>Review card, Pending card, deferral, Defer, Reinstate, bulk deferral, the sampling ×, "Not decided" alone</td><td><span class="gone">GONE</span></td><td></td><td>D53, E1, T280.</td></tr>
+</tbody></table>
+
+<h2>DESIGN.md: rule text that changes</h2>
+<table><thead><tr><th style="width:300px">Section</th><th>New text</th></tr></thead><tbody>
+<tr><td>§ Committee agenda</td><td>The agenda is the review page's spine: one line per EPA due in the window, then the chair's lines. One line opens at a time to stage a decision; a staged decision is shown in its line. There is no deferral (D53): every line left unstaged when the review is ratified reads "Not decided at this sitting", with the decision's optional sentence. The caption counts what is staged.</td></tr>
+<tr><td>§ The chair's controls</td><td>The chair's acts live in her sticky sitting bar and in the agenda's lines; readers see the who-may-act sentence, controls not drawn. Record is held back only by the quorum. Start is offered to the chair, members who may sit, the Coordinator and the Administrator, never while the chair cannot act.</td></tr>
+<tr><td>§ Page-level patterns · page actions</td><td>"The primary page action lives in the PageHeader action slot" gains: <i>except on the committee review, where it lives in the sitting bar.</i></td></tr>
+<tr><td>§ Page-level patterns · the title rule</td><td>A record page's h1 names its subject: "Lerato Molefe · 2026 S2" (tab "… · Wombat"); "Committee review" while loading.</td></tr>
+<tr><td>§ Entrustment-only reviews</td><td>No Category; recording needs at least one staged decision; the record reads "Entrustment decisions only"; "staged below" becomes "staged above".</td></tr>
+<tr><td>§ Detail page and its details-grid</td><td>The committee review has no details-grid: one column, the decision card rising above the agenda once recorded.</td></tr>
+<tr><td>§ Stacking (new)</td><td><code>.sidebar</code> <code>z-index: 10</code> at 641 px and wider; sticky page bars <code>z-index: 1</code>; scroll-padding-top covers the top bar and any stuck page bar.</td></tr>
+</tbody></table>
+
+<h2>D53: words that change elsewhere (pages not redrawn here)</h2>
+<table><thead><tr><th style="width:420px">Where</th><th style="width:420px">Was</th><th>Now</th></tr></thead><tbody>
+<tr><td>This page, a due line</td><td>Due · "Must be decided at this sitting, or deferred with a reason."</td><td>Due at this sitting</td></tr>
+<tr><td>This page, after Record and once ratified</td><td>Deferred · "Reason: …" · Reinstate; optional lines "Not decided"</td><td>"Not decided at this sitting" and the sentence, due and optional alike (E1)</td></tr>
+<tr><td>This page, the who-may-act sentence</td><td>"… stage entrustment decisions, defer agenda lines and record …"</td><td>"… stage entrustment decisions and record the committee's decision."</td></tr>
+<tr><td>Decisions-due page, a window's status (E3)</td><td>Deferred</td><td><b>Not decided</b> only when the line was due at that sitting or its window has ended. An annual EPA left unstaged at a semester-1 sitting still reads <b>Due by year end</b>. <b>Missed</b> stays (the window ended and no sitting held it).</td></tr>
+<tr><td>The registrar's reviews page, a line</td><td>"Deferred. Reason: …"</td><td>"Not decided at this sitting." and the sentence, once ratified</td></tr>
+<tr><td>The schedule preview (29)</td><td>"must be decided at this sitting, or deferred with a reason, before it is ratified"</td><td>"is due at this sitting"</td></tr>
+</tbody></table>
+
+<h2>Rules carried (Spec only)</h2>
+<table><tbody>
+<tr><td style="width:80px">E5</td><td>A remitted appeal's replacement decision carries the sentence about the EPAs not decided, as the original did; it is written on the lines the replacement leaves unstaged.</td></tr>
+<tr><td>E6</td><td>"Training year 4" in the subtitle is the trainee's training year at the end of the review's period.</td></tr>
+<tr><td>—</td><td>The sentence is stored once, on the decision; "Not decided at this sitting" is written when the review is ratified; between Record and Ratify the page shows the same words.</td></tr>
+</tbody></table>
+
+<h2>States as badges</h2>
+<div class="row" style="gap:12px"><span class="bdg">Scheduled</span><span class="bdg b-i">In progress</span><span class="bdg b-w">Decided</span><span class="bdg b-s">Ratified</span><span class="bdg">Closed</span><span style="width:24px"></span><span class="bdg b-w">Due at this sitting</span><span class="bdg">As opportunity allows</span><span class="bdg">Due by year end</span><span class="bdg">Partial period</span><span class="bdg b-i">Staged</span><span class="bdg b-s">Decided</span><span class="bdg b-s">Decided elsewhere</span><span class="bdg">Not decided at this sitting</span></div>
+
+<h2>Tokens, contrast and targets (no NEW colour token)</h2>
+<table><thead><tr><th>Pair, where</th><th style="width:120px">Needs</th><th style="width:140px">Ratio</th></tr></thead><tbody>
+<tr><td><code>text-color</code> on surface · background · the info, warning, success tints</td><td>4.5</td><td>12.63 · 11.99 · 11.84 · 11.89 · 11.23</td></tr>
+<tr><td><code>muted-text</code> on surface (Present, help, captions, "Draft kept")</td><td>4.5</td><td>5.09</td></tr>
+<tr><td><code>link-color</code> on surface (chart and progress links, Read)</td><td>4.5</td><td>6.70</td></tr>
+<tr><td><code>on-fill</code> on <code>secondary-color</code> · on <code>danger-color</code></td><td>4.5</td><td>4.86 · 5.95</td></tr>
+<tr><td><code>secondary-color</code> outline buttons (Stage, Remove…, Refresh, Not yet) on surface; at 65% opacity for <code>.is-unavailable</code> the label is incidental (WCAG 1.4.3's inactive-component exception), its reason beside it at full contrast</td><td>4.5</td><td>4.86</td></tr>
+<tr><td><code>danger-color</code> as words (a field's refusal) on surface</td><td>4.5</td><td>5.95</td></tr>
+<tr><td><code>input-border</code> (controls, readers' stripe) · <code>secondary-color</code> (chair's stripe, open line) · <code>focus-ring</code> on surface</td><td>3</td><td>3.80 · 4.86 · 4.86</td></tr>
+<tr><td>Badge and alert edges and icons on their tints</td><td>3</td><td>4.55 – 5.56</td></tr>
+</tbody></table>
+<p style="margin:0" class="sm">Targets: buttons 36px (44 at 390); row actions, Refresh, Back 28px, at least 24; tick rows the whole label; a link alone on its line 24px (44 at 390). Icons <code>refresh-cw</code>, <code>arrow-left</code>, <code>chart-line</code> added from Lucide if not among the 60. "Focus" chips and dashed fold strips are canvas notation.</p>
+
+<h2>Still bracketed</h2>
+<table><tbody>
+<tr><td style="width:40px">1</td><td>The Direct Observation's item number (PAED-010) and the MSF record #23's state at Start.</td></tr>
+<tr><td>2</td><td>Act 5's replay day (the pre-graduation issue date) and PAED-010's two lines in that snapshot.</td></tr>
+<tr><td>3</td><td>The order of STARs #6 to #17 across the twelve EPAs (drawn in agenda order).</td></tr>
+<tr><td>4</td><td>The entrustment-only review's staged decisions and the rest of its stored sentence.</td></tr>
+<tr><td>5</td><td>The words for "the chair cannot act" and "the panel cannot sit a quorum" reasons; du Plessis's moved portfolio review (EPA, number, assessor, date); the rationale typed at 4.20.</td></tr>
+<tr><td>6</td><td>Refresh with no change: "As of 14:31 SAST. No change." is proposed, to confirm.</td></tr>
+<tr><td>7</td><td>The formative check-in's three item numbers.</td></tr>
+</tbody></table>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2000,"height":4400}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

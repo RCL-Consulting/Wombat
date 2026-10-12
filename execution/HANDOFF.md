@@ -29,13 +29,14 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
   operator's): no deferral; unstaged closing lines are recorded "Not decided at this sitting", overruling T131's O2.
   Live following for members proposed as **T362**.
 
-### Next: T361 step 5, round 3 (the correction round) in the canvas
+### Next: T361 step 6, the build in waves
 
-- **Round 2** (`83ba4dc7`) reviewed from three sides: `design/flows/07-review-sitting/round-2-review.md` (`f1e193c8`).
-  The operator took E1–E9 as recommended (2026-10-12). `round-3-ask.txt` carries them, corrections 7–31 by the
-  review's numbers, and the fills. The operator pastes it as ONE message; then read the boards and check round 3 item
-  by item (flow 06's `round-3-check.md`), then the build.
-- **The build is not presentation only:** D53 changes the domain (the review's findings 1–6). Plan its review as one.
+- **Round 2** (`83ba4dc7`) reviewed from three sides (`round-2-review.md`, `f1e193c8`); the operator took E1–E9;
+  `round-3-ask.txt` (`d32d5b64`). **Round 3 drawn and checked:** `design/flows/07-review-sitting/round-3-check.md`
+  (canvas `1791774971-ed50`, boards in `round-3/`). The design is final; the check lists what the build carries
+  (markup the boards leave out, no pronouns, brackets read from the data, the runbook's Expects).
+- **The build is not presentation only:** D53 changes the domain (round 2 review's findings 1–6: `UndecidedNote`,
+  NotDecided at Ratify, Defer/Reinstate removed with a migration, E4's refusal, the decisions-due rule). Full pipeline.
 - **T290 stays in progress** for its other items only.
 
 ### For the operator
