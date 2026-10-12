@@ -2,7 +2,7 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-10-11 (Opus): the harness upgraded to 3.4; 111 done tasks archived; T361 started
+## Sessions 2026-10-11 to 10-12 (Opus): the harness upgraded to 3.4; 111 done tasks archived; T361 (flow 07) done
 
 The operator said "upgrade the execution workspace", "move the done tasks" and "proceed". **The repo is `C:\dev\Wombat`,
 on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when the operator asks.** The harness is
@@ -29,35 +29,35 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
   operator's): no deferral; unstaged closing lines are recorded "Not decided at this sitting", overruling T131's O2.
   Live following for members proposed as **T362**.
 
-### T361 step 6 done: the build squashed onto master (`44de180b`); next step 7, the replay
+### T361 done (2026-10-12): flow 07 built, replayed, in the design system (version 19)
 
-- **Built** from round 3 (`round-3-check.md`) in lanes A (D53, migration `20261012055324_T361_NoDeferral`), R (reads,
-  return link, stacking), P (the page), runbook; reviewed by three Sonnet lenses (`build-review.md`: 16 findings, none
-  high; 15 fixed, R5 left); one fix pass. Six suites on the squashed tree: 814 / 3750 / 1022 / 52 / 3557 / 489,
-  0 warnings. **Not pushed.** Branches `t361`, `t361-*` kept locally; worktrees removed.
-- **Step 7 running; acts 1–6 and A done** (three regressions found and fixed: 4.17 return link `59bb72fd`, 5.4 foot form date `6ad6c57a`, A.7.6 snapshot links 21px at 390 `6b149fff`; app republished at `6b149fff`; the states agent running on scratch `wombat_scenario_t361_st*` at :5181; brief `replay-brief.md`, `05b743f6`): app on `:5180`, `wombat_scenario_t361`, published from
-  `57046f14`; acts in order, one agent each, then the states; scratch `g361` in this session's scratchpad. It must confirm: T356's browser check (the chair's bar
-  never over Sign out at 768/1280), "As of … No change.", the brackets (round-3-check's list; the runbook's `[#n]`), the
-  new states rows ("Narrow, in progress", failed Refresh, quorum shortfall), A.7.6's progress link for Dr Zulu after
-  graduation, and the symptoms the squash names (T356, T273, T309 item 2, T329's and T260's review halves, T324's
-  decision form) before any of those tasks closes. Then step 8 (design system v18), step 9 (BRIEF § 11 lessons).
-- **Known gaps the page leaves (no data):** the ratified graduation summary, a chair's line's earlier STAR, a decided
-  line's level and expiry, who can start when the chair cannot act. Candidates for a proposal after the replay.
-- **T290 stays in progress** for its other items only.
+- **Build** `44de180b` (D53 with it), reviewed by three Sonnet lenses; six suites green (814 / 3750 / 1022 / 52 / 3557 /
+  489). **Not pushed.** Branches `t361`, `t361-*` kept locally.
+- **Replay** (`wombat_scenario_t361`, one agent per act): 331 steps, 267 with no gap; five flow-07 faults found and
+  fixed in the session, each re-checked in the browser: the return link's `#snap-n` (`59bb72fd`), the foot form's
+  Issued on (`6ad6c57a`), 21 px snapshot links at 390 (`6b149fff`), the stacked caption and a pick line's space
+  (`14378856`). States: 82 of 83 hold (`cdd12d9a`), the 83rd fixed. All other gaps are open tasks the act files cite.
+- **Closed by flow 07:** T356 (the shell's stacking), T273 (the "no longer in use" mark). Still open with their review
+  halves confirmed fixed: T309 (item 2 done), T329, T260, T324 (the form's half).
+- **Design system** re-synced (`design/system/`, one Sonnet review) and published as **version 19** (1791816174-d002);
+  the live v18 matched HEAD first. **Lessons** in BRIEF § 11 "Flow 07".
+- **Proposed:** T363 (the page's four data gaps). T362 (live following) still waits. **T290** stays in progress.
+- **Next in the redesign:** flow 08 (BRIEF § 8), when the operator says.
 
 ### For the operator
 
 - **Decide:** drop the scratch databases below; whether to rewrite history to remove the contributor (deferred).
-- **T157 (deploy), T128 (backup), the College questions:** unchanged. The deploy now carries flows 02–06.
+- **T157 (deploy), T128 (backup), the College questions:** unchanged. The deploy now carries flows 02–07.
 - **Tasks flow 05's build closed in part** (still in `queued/`): T306 (Home's half), T346, T323 (the chart), T328.
 
 ### Environment left
 
-- **The replay app on `:5180`** now runs `wombat_scenario_t361` (above); it ran `wombat_scenario_t358_end` (flow 06's appendix end state), published from
-  `94edf2b7`. Dumps `recovery/scenario-t358-post-act{1..6,A}`, `scenario-t358-pre-a515`.
-- **Replay scratch:** this session's scratchpad `g358` (`replay-pw.env`; act and states scripts). Khumalo's and du
+- **The replay app on `:5180`** runs `wombat_scenario_t361` (flow 07's appendix end state), published from `14378856`.
+  Dumps `recovery/scenario-t361-post-act{1..6,A}`, `scenario-t361-pre-a515`.
+- **Replay scratch:** this session's scratchpad `g361` (`replay-pw.env`; act and states scripts). Khumalo's and du
   Plessis's pre-appendix passwords are the `_A` keys.
-- **Droppable databases:** `wombat_scenario_t358` (polluted by the states agent), `_t358_s515`, `_t358_states*`,
+- **Droppable databases:** `wombat_scenario_t361_st1`, `_t361_st3`, `_t361_st3b`, `_t361_st4`, `_t361_s515` (scratch),
+  `wombat_scenario_t358` (polluted by the states agent), `_t358_s515`, `_t358_states*`,
   `_t290`, `_t355`, `_t355_s518*`, `_t304`, `_t350*`, `_t342*`, `_t339*`, `_t335*`, `_states*`, `_rc*`, `_t292`.
 - **Branches:** `t358`, `t358-*` (merged, squashed into `85d5a508`), `t355*`, `t304`, `t350*`, `t342*` kept locally;
   worktrees removed. The orphaned `verify-master` worktree folder (pointing at the pre-move repo path) was deleted 2026-10-06.

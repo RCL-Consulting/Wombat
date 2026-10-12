@@ -1055,6 +1055,39 @@ teach is here.
   prompts say to stop and report, never restart, a killed wait.
 - **A new step takes a letter when its number is taken.** Observed: the boards' new 3.55–3.57 and A.7.9 already existed,
   so the runbook lane wrote 3.54a–c and A.7.8a (6.14a's precedent) rather than renumber and break the captures' names.
+**Flow 07 (T361, 2026-10-11 to 10-12): what the seventh flow added**
+
+Flow 07 ran the loop in two days: three structures (A picked), three rounds, the operator's D53 (no deferral), the build
+(`44de180b`) in four lanes with three Sonnet reviewers, the replay (331 steps, 267 with no gap), the states (82 of 83) and
+the re-sync (design system version 19). Its record is `design/flows/07-review-sitting/`. Only what flows 01–06 did not
+already teach is here.
+
+- **A question about the design can change the domain.** Observed: round 1's boards kept Defer; the operator asked why
+  anything is deferred at all, and the answer was D53: lines left unstaged are recorded "Not decided at this sitting".
+  That made the flow a domain change (a migration, a command removed, a check constraint dropped) and sized its build to
+  the full pipeline. *Changed:* nothing; a board that keeps an old action keeps the operator's question open.
+- **The replay still finds what the reviewers and the suites pass.** Observed: three reviewers and six green suites,
+  then five faults in the browser: the return link's `#snap-n` never scrolled (the page draws its lines after the
+  navigation), the foot form opened Issued on 0001-01-01 (a bare draft object), the snapshot's links were 21 px tall at
+  390, the stacked agenda's caption shrank to one word a line, and a flex label dropped its space. Each was fixed in
+  the session and re-checked in the browser after a republish. *Changed:* nothing; a page that draws after its read
+  takes the focus at its own fragment, a container query that blocks a table blocks its caption, and the integrator
+  republishes between acts so a later act plays the fix.
+- **An agent can die mid-act on an API error and resume with its context.** Observed: the states agent stopped on a
+  403; the working tree showed nothing half-written (it writes its rows last), and a message to the same agent resumed
+  it where it was. *Changed:* nothing; check the tree before resuming, and tell it to edit in place.
+- **A tool with no `--help` runs for real when given one.** Observed: `sync_verbatim_steps.py --help` re-pasted five
+  briefs. The change was the wanted one, but it was not a dry run. *Changed:* nothing; read a tool's usage line, and use
+  `--dry-run`.
+- **Compare the bundle with app.css's git blob, not the working copy.** Observed: on Windows the working `app.css` is
+  CRLF; the re-sync's search for `
+body {
+` found nothing and copied the whole file in, and the implementer caught it
+  and rebuilt from `git show HEAD:…`. *Changed:* nothing; the re-sync and its review both compare against the blob.
+- **The live design system's version can move without its files changing.** Observed: v17's publish was 1791219142;
+  the live version was v18, 1791814724, and all 131 `project/` files matched HEAD (two licence files differ only in line
+  endings). *Changed:* nothing; the compare before the publish is what tells an edit from a version bump.
+
 **What the brief keeps as it was**
 - The flows' order (§ 8), the invariants (§ 4.4) and the acceptance check (§ 9) held. The digest (§ 5.1) is restated
   for what flow 01 fixed: the shell, its components and the states it already designed. The brief template (§ 2.4)

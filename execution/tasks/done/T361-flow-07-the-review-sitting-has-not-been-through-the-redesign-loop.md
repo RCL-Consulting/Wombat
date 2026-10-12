@@ -1,12 +1,13 @@
 ---
 id: T361
 title: Flow 07, the review sitting, has not been through the redesign loop
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-10-05
 started: 2026-10-11
+completed: 2026-10-12
 ---
 
 # T361 — Flow 07, the review sitting, has not been through the redesign loop
@@ -61,7 +62,8 @@ Run the loop as flow 06 ran it (`design/flows/06-programme-oversight/`, BRIEF §
   (2026-10-12, `wombat_scenario_t361`: acts 1–6 and A, `ebece7f6`..`337ef44c`; 5 regressions found (4.17, 5.4, A.7.6,
   the stacked caption, the pick line's space), each fixed and re-checked in the browser; states 82 of 83 hold, the 83rd
   fixed in `14378856` (`cdd12d9a`); missing 0.)
-- [ ] The design system is re-synced and republished — its version number.
+- [x] The design system is re-synced and republished — its version number. (Version 19, 1791816174-d002;
+  `336567c0`; one Sonnet review, one must-fix applied; lessons in BRIEF § 11 "Flow 07".)
 
 ## Notes
 

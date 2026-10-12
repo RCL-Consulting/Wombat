@@ -6,7 +6,6 @@ Queued tasks that wait on another are listed after the ready ones.
 
 | lane | id | pri | title | model | waits on |
 |---|---|---|---|---|---|
-| in_progress | [T361](tasks/in_progress/T361-flow-07-the-review-sitting-has-not-been-through-the-redesign-loop.md) | P2 | Flow 07, the review sitting, has not been through the redesign loop |  |  |
 | in_progress | [T290](tasks/in_progress/T290-trainee-first-and-existence-leftovers-completing-your-own-profile-invitations-the-users-commands-refusals-and-two-committee-queries-that-read-claims.md) | P3 | Trainee-first and existence leftovers: completing your own profile, in |  |  |
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |  |
@@ -23,7 +22,6 @@ Queued tasks that wait on another are listed after the ready ones.
 | queued | [T333](tasks/queued/T333-sso-group-mappings-can-grant-or-remove-trainee-and-pendingtrainee-round-admission.md) | P2 | SSO group mappings can grant or remove Trainee and PendingTrainee, rou |  |  |
 | queued | [T334](tasks/queued/T334-the-builder-lets-the-college-edit-the-system-managed-msf-and-learner-feedback-types-whose-data-the-releases-write.md) | P2 | The builder lets the College edit the system-managed MSF and learner-f |  |  |
 | queued | [T341](tasks/queued/T341-account-outcomes-ride-in-the-address-so-a-crafted-link-can-show-a-fixed-notice-or-reopen-the-remove-dialog.md) | P2 | Account outcomes ride in the address, so a crafted link can show a fix |  |  |
-| queued | [T356](tasks/queued/T356-a-scrolled-table-paints-over-the-fixed-top-bar-covering-sign-out.md) | P2 | A scrolled table paints over the fixed top bar, covering Sign out |  |  |
 | queued | [T019-b](tasks/queued/T019-b-drag-drop-reorder.md) | P3 | Drag-and-drop reordering in the builder |  |  |
 | queued | [T019-c](tasks/queued/T019-c-nested-and-repeatable-sections.md) | P3 | Nested and repeatable sections |  |  |
 | queued | [T019-d](tasks/queued/T019-d-visual-workflow-editor.md) | P3 | Visual workflow editor |  |  |
@@ -48,7 +46,6 @@ Queued tasks that wait on another are listed after the ready ones.
 | queued | [T270](tasks/queued/T270-msf-page-polish-from-1-responses-on-the-report-the-draft-address-table-at-390px-and-a-withdrawn-draft-s-responded-column.md) | P3 | MSF page polish: "from 1 responses" on the report, the draft address t |  |  |
 | queued | [T271](tasks/queued/T271-a-scale-delete-and-a-publish-binding-that-scale-can-race-and-the-builder-shows-a-seed-key-binding-as-select.md) | P3 | A scale delete and a publish binding that scale can race, and the buil |  |  |
 | queued | [T272](tasks/queued/T272-failed-saves-across-admin-handlers-every-failure-reported-as-already-exists-raw-ef-text-on-two-pages-and-msf-questions-with-no-scale-foreign-key.md) | P3 | Failed saves across admin handlers: every failure reported as "already |  |  |
-| queued | [T273](tasks/queued/T273-the-committee-review-page-s-sampling-list-and-staged-star-lines-do-not-mark-an-epa-that-is-no-longer-in-force.md) | P3 | The committee review page's sampling list and staged STAR lines do not |  |  |
 | queued | [T274](tasks/queued/T274-mailing-jobs-one-recipient-s-failure-stops-the-run-for-everyone-after-them-and-the-decision-expiry-notices-still-reach-locked-accounts.md) | P3 | Mailing jobs: one recipient's failure stops the run for everyone after |  |  |
 | queued | [T275](tasks/queued/T275-dev-and-the-integration-tests-run-on-postgresql-16-while-production-runs-18.md) | P3 | Dev and the integration tests run on PostgreSQL 16 while production ru |  |  |
 | queued | [T276](tasks/queued/T276-erasure-leftovers-in-flight-activities-still-credit-the-pseudonym-nominee-ids-in-activity-data-are-not-rewritten-and-records-created-during-an-erasure-escape-it.md) | P3 | Erasure leftovers: in-flight activities still credit the pseudonym, no |  |  |
@@ -90,7 +87,7 @@ Queued tasks that wait on another are listed after the ready ones.
 | queued | [T359](tasks/queued/T359-staff-cannot-reassign-a-waiting-request-to-another-assessor.md) | P3 | Staff cannot reassign a waiting request to another assessor |  |  |
 | queued | [T360](tasks/queued/T360-programme-pages-last-filed-breaks-iso-dates-at-the-hyphen-and-the-ended-registrar-page-wraps-its-period-line-into-a-tall-block.md) | P3 | Programme pages: Last filed breaks ISO dates at the hyphen, and the en |  |  |
 
-Done: 115 task(s).
+Done: 118 task(s).
 
 ## Proposals
 
@@ -99,6 +96,7 @@ Not started until the user promotes one (`task promote`) or drops it.
 | id | title | proposed |
 |---|---|---|
 | [T362](tasks/proposed/T362-committee-review-members-pages-follow-the-chair-s-changes-live-during-a-sitting.md) | Committee review: members' pages follow the chair's changes live durin | 2026-10-12 |
+| [T363](tasks/proposed/T363-the-committee-review-page-leaves-gaps-where-it-has-no-data-the-graduation-summary-a-line-s-earlier-star-a-decided-line-s-level-and-expiry-and-who-may-start-when-the-chair-cannot.md) | The committee review page leaves gaps where it has no data: the gradua | 2026-10-12 |
 
 ## From STATE.md
 
@@ -107,18 +105,18 @@ Cap: 60 lines. `harness.py lint` enforces it; `harness.py trim` moves the overfl
 This is a reset point, not a diary.
 ## Focus
 Wombat is **deployed but not in service**: scenario data only. **The EPA v11.1 stream is built**, the runbook is a
-replayed journey catalogue with a screenshot baseline, and **six redesign flows are done**: 01 the shell (T335,
+replayed journey catalogue with a screenshot baseline, and **seven redesign flows are done**: 01 the shell (T335,
 `b347e11c`), 02 sign-in (T339, `f50dffb2`), 03 filing an activity (T342, `725237ee`), 04 an assessor's inbox (T350,
-`06aa51d7`), 05 a registrar's progress (T355, `b020c942`) and 06 programme oversight (T358, `85d5a508`), each designed,, replayed and in the design system (version 17). Left: flows 07–20 (T361 next), the deploy, the College's, the P2s, P3 polish. The repo is on GitHub (RCL-Consulting/Wombat, public) since 2026-10-05.
+`06aa51d7`), 05 a registrar's progress (T355, `b020c942`) 06 programme oversight (T358, `85d5a508`) and 07 the review sitting (T361, `44de180b`, with D53), each designed, replayed
 
 ## Recent commits
 
 ```
-7b00819a docs(design): flow 07 round 1 recorded: three structures, A, B and C (T361 step 5)
-025da574 docs(design): flow 07's canvas created and the mark copied in; the ask names it (T361 steps 3-4)
-d71456a7 docs(design): flow 07's round 1 paste file staged; handoff (T361 steps 1-2)
-9a204a5c docs(design): flow 07's brief restated for the restructure, structure first (T361 step 1)
-0ce2352a chore(execution): handoff: the harness path's backslashes
+336567c0 docs(design): the design system re-synced to flow 07 as built (T361 step 8)
+be59879b chore(execution): T361 step 7 done; T356 and T273 closed by flow 07
+14378856 fix(committee): keep the stacked agenda's caption on its line, and a pick line's space (T361)
+cdd12d9a docs(runbook): flow 07's states re-taken, 82 of 83 hold (T361 step 7)
+11d36a8f chore(execution): handoff: T361 replay acts done, states running
 ```
 
 ## For the reviewer
@@ -127,7 +125,9 @@ No review closed yet; showing everything since 2026-10-11.
 
 #### Tasks finished
 
-_None._
+- T273 The committee review page's sampling list and staged STAR lines do not mark an EPA that is no longer in force
+- T356 A scrolled table paints over the fixed top bar, covering Sign out
+- T361 Flow 07, the review sitting, has not been through the redesign loop
 
 #### Decisions awaiting you (Proposed)
 
@@ -140,6 +140,7 @@ _None._
 #### Proposals awaiting you (promote, drop or leave)
 
 - T362 Committee review: members' pages follow the chair's changes live during a sitting (2026-10-12)
+- T363 The committee review page leaves gaps where it has no data: the graduation summary, a line's earlier STAR, a decided line's level and expiry, and who may start when the chair cannot (2026-10-12)
 
 #### From the handoffs
 
@@ -148,12 +149,35 @@ _Nothing flagged._
 #### Commits
 
 ```
-7b00819a docs(design): flow 07 round 1 recorded: three structures, A, B and C (T361 step 5)
-025da574 docs(design): flow 07's canvas created and the mark copied in; the ask names it (T361 steps 3-4)
-d71456a7 docs(design): flow 07's round 1 paste file staged; handoff (T361 steps 1-2)
-9a204a5c docs(design): flow 07's brief restated for the restructure, structure first (T361 step 1)
-0ce2352a chore(execution): handoff: the harness path's backslashes
-ea382548 chore(execution): session handoff (harness 3.4, archive, T361 started)
-bc9a6c4b chore(execution): archive 111 done tasks to log/tasks; books-rag's medical sources named
-c5c4d41d docs(claude): upgrade the harness section to rcl-harness 3.4
+336567c0 docs(design): the design system re-synced to flow 07 as built (T361 step 8)
+be59879b chore(execution): T361 step 7 done; T356 and T273 closed by flow 07
+14378856 fix(committee): keep the stacked agenda's caption on its line, and a pick line's space (T361)
+cdd12d9a docs(runbook): flow 07's states re-taken, 82 of 83 hold (T361 step 7)
+11d36a8f chore(execution): handoff: T361 replay acts done, states running
+6b149fff fix(committee): make the snapshot's activity links 44px targets on a phone (T361)
+337ef44c docs(runbook): the appendix replayed against flow 07 (T361 step 7)
+897b4bef docs(runbook): act 6 replayed against flow 07 (T361 step 7)
+2f4ce254 chore(execution): handoff: T361 replay acts 1-5 done, two fixes
+31a47124 docs(design): re-sync the briefs' verbatim steps after acts 1-5 (T361 step 7)
+55f1d0f3 docs(runbook): 5.3's agenda line above its caption; the two replay fixes noted (T361 step 7)
+6ad6c57a fix(committee): open the agenda's foot form issued today (T361)
+01907f28 docs(runbook): act 5 replayed against flow 07 (T361 step 7)
+59bb72fd fix(committee): land the review's way back at its snapshot line (T361)
+81bf08f2 docs(runbook): act 4 replayed against flow 07 (T361 step 7)
+92fe0876 chore(execution): handoff: T361 replay acts 1-3 done
+7d8bff26 docs(runbook): act 3 replayed against flow 07 (T361 step 7)
+7a28e669 docs(runbook): act 2 replayed against flow 07 (T361 step 7)
+ebece7f6 docs(runbook): act 1 replayed against flow 07 (T361 step 7)
+690a7bbb chore(execution): handoff: T361 replay running
+05b743f6 docs(design): flow 07 replay brief (T361 step 7)
+57046f14 chore(execution): handoff: T361 built and squashed; the replay next
+44de180b feat(committee): the review sitting redesigned, with no deferral (T361, D53)
+cc321075 chore(execution): handoff: T361 reviewed, fix pass in flight
+2b7a2f69 chore(execution): handoff: T361 wave 2 merged, runbook lane in flight
+6617b1dd chore(execution): handoff: T361 wave 1 merged, wave 2 in flight
+2186371c chore(execution): handoff: T361 build wave 1 in flight
+aed269d8 docs(design): flow 07 build plan: three lanes in two waves and their contracts (T361 step 6, D53)
+8236dd8b docs(design): flow 07 round 3 recorded and checked; the design is final (T361 step 5)
+d32d5b64 docs(design): flow 07 round 3 ask: the operator's E1-E9, corrections 7-31 and the fills (T361 step 5)
 ```
+_11 more; see `git log`._
