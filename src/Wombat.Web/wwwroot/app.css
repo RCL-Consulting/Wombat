@@ -4391,7 +4391,9 @@ fieldset.form-group fieldset.form-group > legend {
     width: 1px;
   }
 
+  /* The caption too: left a table-caption in a block table, it shrank to one word a line (states, review-detail--narrow). */
   .agenda-table,
+  .agenda-table caption,
   .agenda-table tbody,
   .agenda-table tr,
   .agenda-table th,
@@ -4626,6 +4628,13 @@ fieldset.form-group fieldset.form-group > legend {
     display: inline-flex;
     flex: 1;
     min-height: 2.75rem;
+  }
+
+  /* A flex label drops the space before its detail ("Default MSF #1Released", the states pass): a gap puts it back, and
+     a long line's detail wraps under its name. */
+  .review-page .snapshot-pick-line .form-check label {
+    column-gap: 0.25em;
+    flex-wrap: wrap;
   }
 }
 /* end Flow 07: the review sitting */
