@@ -29,15 +29,13 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
   operator's): no deferral; unstaged closing lines are recorded "Not decided at this sitting", overruling T131's O2.
   Live following for members proposed as **T362**.
 
-### Next: T361 step 5, round 2 (fidelity) in the canvas
+### Next: T361 step 5, the operator's decisions on round 2, then round 3 (the correction round)
 
-- **Canvas:** https://claude.ai/artifact/9hVRTiLRBUugygR7bHB1CS. The operator pastes `round-2-ask.txt` as ONE message;
-  round 1 reported no missing attachment, so none is re-attached. When it says done, read the boards
-  (`Artifact read`, `paths`), then the review of round 2: code, cast and design-system reviewers on Sonnet, the
-  operator's decisions, one correction round.
-- **The build is not presentation only:** D53 changes the domain (Record's gate, the Deferred state and its check
-  constraint, `DeferAgendaLine`, the decisions-due status, runbook steps 4.21 and 4.28–4.32). Plan its review as a
-  domain change.
+- **Round 2** (canvas version 1791772499-ebd7) is saved in `round-2/` (`83ba4dc7`) and reviewed from three sides
+  (code, cast, design system; Sonnet): `design/flows/07-review-sitting/round-2-review.md`, 31 findings, the fills for
+  every bracket, and **E1–E9 for the operator**. Their answers, then write `round-3-ask.txt` (decisions plus the
+  findings as numbered corrections, as flow 06's round 3), then check round 3 item by item.
+- **The build is not presentation only:** D53 changes the domain (findings 1–6). Plan its review as a domain change.
 - **T290 stays in progress** for its other items only.
 
 ### For the operator
