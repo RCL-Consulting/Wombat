@@ -85,6 +85,77 @@ public sealed class CommitteeAgendaPostgresTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task TheNoDeferralMigration_WritesADeferredLineDueWhileItsReviewIsOpen_NotDecidedOnceClosed_AndDropsTheReason_AndAddsTheDecisionsSentence()
+    {
+        // T361, D53, on a schema stopped at the migration before it, with the rows it rewrites written as that schema held
+        // them: a Deferred line (2) with its reason, a Due line and a NotDecided one on a ratified review; and a Deferred
+        // line on a Scheduled and on an In progress review, which are still to decide (review R2).
+        const string NoDeferral = "_T361_NoDeferral";
+        try
+        {
+            var schema = await _schemas.CreateAsync();
+            await using (var db = NewContext(schema))
+            {
+                var migrations = db.Database.GetMigrations().ToList();
+                var t361 = migrations.Single(migration => migration.EndsWith(NoDeferral, StringComparison.Ordinal));
+                await db.GetService<IMigrator>().MigrateAsync(migrations[migrations.IndexOf(t361) - 1]);
+                (await db.Database.GetPendingMigrationsAsync()).First().Should().Be(t361);
+            }
+
+            int deferred, due, notDecided, decisionReview, deferredWhileScheduled, deferredWhileInProgress;
+            await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
+            {
+                var panelId = await InsertPanelAsync(connection, await InsertInstitutionAsync(connection, "KGK"));
+                var reviewId = await InsertReviewAsync(connection, panelId, 2026, 1, state: 4);
+                deferred = await InsertLineBeforeT361Async(connection, reviewId, 2, state: 2, reason: "Not observed this semester.");
+                due = await InsertLineBeforeT361Async(connection, reviewId, 1, state: 1, reason: null);
+                notDecided = await InsertLineBeforeT361Async(connection, reviewId, 3, state: 4, reason: null);
+                decisionReview = reviewId;
+
+                var scheduled = await InsertReviewAsync(connection, panelId, 2026, 2, state: 1, trainee: "trainee-2");
+                deferredWhileScheduled = await InsertLineBeforeT361Async(connection, scheduled, 2, state: 2, reason: "Not observed yet.");
+                var inProgress = await InsertReviewAsync(connection, panelId, 2026, 2, state: 2, trainee: "trainee-3");
+                deferredWhileInProgress = await InsertLineBeforeT361Async(connection, inProgress, 2, state: 2, reason: "Not observed yet.");
+                await ExecuteAsync(connection,
+                    """INSERT INTO "CommitteeDecisions" ("ReviewId", "Category", "Rationale", "DecidedOn", "DecidedByChairUserId") VALUES ($1, 1, 'On track.', TIMESTAMPTZ '2026-07-02 09:00:00+00', 'chair-1')""",
+                    reviewId);
+            }
+
+            await using (var db = NewContext(schema))
+            {
+                await db.Database.MigrateAsync();
+                (await db.Database.GetPendingMigrationsAsync()).Should().BeEmpty();
+
+                var states = await db.CommitteeAgendaLines.AsNoTracking().ToDictionaryAsync(line => line.Id, line => line.State);
+                states.Should().Equal(new Dictionary<int, Wombat.Domain.CommitteeDecisions.CommitteeAgendaLineState>
+                {
+                    [deferred] = Wombat.Domain.CommitteeDecisions.CommitteeAgendaLineState.NotDecided,
+                    [due] = Wombat.Domain.CommitteeDecisions.CommitteeAgendaLineState.Due,
+                    [notDecided] = Wombat.Domain.CommitteeDecisions.CommitteeAgendaLineState.NotDecided,
+                    [deferredWhileScheduled] = Wombat.Domain.CommitteeDecisions.CommitteeAgendaLineState.Due,
+                    [deferredWhileInProgress] = Wombat.Domain.CommitteeDecisions.CommitteeAgendaLineState.Due
+                });
+                (await db.CommitteeDecisions.AsNoTracking().SingleAsync(decision => decision.ReviewId == decisionReview))
+                    .UndecidedNote.Should().BeNull("no stored reason is guessed into the decision's sentence");
+            }
+
+            await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
+            {
+                (await ScalarAsync<long>(connection,
+                        """SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'CommitteeAgendaLines' AND column_name = 'DeferralReason'"""))
+                    .Should().Be(0);
+                (await ScalarAsync<long>(connection,
+                        """SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'CommitteeDecisions' AND column_name = 'UndecidedNote' AND character_maximum_length = 4000"""))
+                    .Should().Be(1);
+            }
+        }
+        finally
+        {
+            await _schemas.DropAllAsync();
+        }
+    }
+
+    [Fact]
     public async Task OneOpenBindingReview_PerTraineePanelAndPeriod_IsHeldByTheIndex()
     {
         try
@@ -127,7 +198,7 @@ public sealed class CommitteeAgendaPostgresTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task AnAgendaLine_IsDecidedExactlyWhenItNamesAStar_AndDeferredExactlyWhenItHasAReason()
+    public async Task AnAgendaLine_IsDecidedExactlyWhenItNamesAStar_AndCarriesNoDeferral()
     {
         try
         {
@@ -136,21 +207,24 @@ public sealed class CommitteeAgendaPostgresTests : IAsyncLifetime
             var panelId = await InsertPanelAsync(connection, await InsertInstitutionAsync(connection, "A"));
             var reviewId = await InsertReviewAsync(connection, panelId, 2026, 1, state: 2);
 
-            await InsertLineAsync(connection, reviewId, epaId: 1, windowSemester: 1, state: 1, reason: null);
-            await InsertLineAsync(connection, reviewId, epaId: 2, windowSemester: null, state: 2, reason: "Rotation moved.");
-            await InsertLineAsync(connection, reviewId, epaId: 3, windowSemester: 1, state: 4, reason: null);
+            await InsertLineAsync(connection, reviewId, epaId: 1, windowSemester: 1, state: 1);
+            await InsertLineAsync(connection, reviewId, epaId: 3, windowSemester: 1, state: 4);
 
-            // T235: 5 is DecidedElsewhere. The STAR that decided the window is another sitting's, so the line names none,
-            // and it carries no reason.
-            await InsertLineAsync(connection, reviewId, epaId: 4, windowSemester: null, state: 5, reason: null);
-            await RefusedAsync(() => InsertLineAsync(connection, reviewId, 14, null, 5, "Decided at the semester-1 sitting."), "CK_CommitteeAgendaLines_DeferredHasAReason");
+            // T235: 5 is DecidedElsewhere. The STAR that decided the window is another sitting's, so the line names none.
+            await InsertLineAsync(connection, reviewId, epaId: 4, windowSemester: null, state: 5);
 
-            await RefusedAsync(() => InsertLineAsync(connection, reviewId, 10, 3, 1, null), "CK_CommitteeAgendaLines_WindowSemester");
-            await RefusedAsync(() => InsertLineAsync(connection, reviewId, 11, 1, 3, null), "CK_CommitteeAgendaLines_DecidedNamesItsStar");
-            await RefusedAsync(() => InsertLineAsync(connection, reviewId, 12, 1, 2, null), "CK_CommitteeAgendaLines_DeferredHasAReason");
-            await RefusedAsync(() => InsertLineAsync(connection, reviewId, 13, 1, 1, "A reason on a due line."), "CK_CommitteeAgendaLines_DeferredHasAReason");
+            await RefusedAsync(() => InsertLineAsync(connection, reviewId, 10, 3, 1), "CK_CommitteeAgendaLines_WindowSemester");
+            await RefusedAsync(() => InsertLineAsync(connection, reviewId, 11, 1, 3), "CK_CommitteeAgendaLines_DecidedNamesItsStar");
 
-            var secondLineOnTheEpa = async () => await InsertLineAsync(connection, reviewId, 1, 1, 1, null);
+            // T361, D53: the deferral's constraint and its reason went with it.
+            (await ScalarAsync<long>(connection,
+                    """SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'CommitteeAgendaLines' AND column_name = 'DeferralReason'"""))
+                .Should().Be(0);
+            (await ScalarAsync<long>(connection,
+                    """SELECT COUNT(*) FROM pg_constraint WHERE conname = 'CK_CommitteeAgendaLines_DeferredHasAReason' AND connamespace = current_schema()::regnamespace"""))
+                .Should().Be(0);
+
+            var secondLineOnTheEpa = async () => await InsertLineAsync(connection, reviewId, 1, 1, 1);
             (await secondLineOnTheEpa.Should().ThrowAsync<PostgresException>()).Which.SqlState
                 .Should().Be(PostgresErrorCodes.UniqueViolation);
 
@@ -176,11 +250,10 @@ public sealed class CommitteeAgendaPostgresTests : IAsyncLifetime
             var reviewId = await InsertReviewAsync(connection, panelId, 2026, 1, state: 4);
             var starId = await InsertStarAsync(connection, reviewId);
 
-            await RefusedAsync(() => InsertLineAsync(connection, reviewId, 20, 1, 1, null, starId), "CK_CommitteeAgendaLines_DecidedNamesItsStar");
-            await RefusedAsync(() => InsertLineAsync(connection, reviewId, 21, 1, 2, "Later.", starId), "CK_CommitteeAgendaLines_DecidedNamesItsStar");
-            await RefusedAsync(() => InsertLineAsync(connection, reviewId, 22, 1, 4, null, starId), "CK_CommitteeAgendaLines_DecidedNamesItsStar");
-            await RefusedAsync(() => InsertLineAsync(connection, reviewId, 24, null, 5, null, starId), "CK_CommitteeAgendaLines_DecidedNamesItsStar");
-            var decided = await InsertLineAsync(connection, reviewId, 23, 1, 3, null, starId);
+            await RefusedAsync(() => InsertLineAsync(connection, reviewId, 20, 1, 1, starId), "CK_CommitteeAgendaLines_DecidedNamesItsStar");
+            await RefusedAsync(() => InsertLineAsync(connection, reviewId, 22, 1, 4, starId), "CK_CommitteeAgendaLines_DecidedNamesItsStar");
+            await RefusedAsync(() => InsertLineAsync(connection, reviewId, 24, null, 5, starId), "CK_CommitteeAgendaLines_DecidedNamesItsStar");
+            var decided = await InsertLineAsync(connection, reviewId, 23, 1, 3, starId);
 
             // STARs are revoked, never deleted; the key restricts, so a Decided line never loses the STAR it names.
             var deleteTheStar = async () => await ExecuteAsync(connection, """DELETE FROM "EntrustmentDecisions" WHERE "Id" = $1""", starId);
@@ -326,15 +399,24 @@ public sealed class CommitteeAgendaPostgresTests : IAsyncLifetime
             trainee, panelId, year, semester, formative, state);
 
     private static Task<int> InsertLineAsync(
-        NpgsqlConnection connection, int reviewId, int epaId, int? windowSemester, int state, string? reason, int? starId = null)
+        NpgsqlConnection connection, int reviewId, int epaId, int? windowSemester, int state, int? starId = null)
         => InsertAsync(connection,
-            """INSERT INTO "CommitteeAgendaLines" ("ReviewId", "CurriculumItemId", "EpaId", "EpaCode", "EpaTitle", "Origin", "WindowYear", "WindowSemester", "IsClosing", "IsPartialPeriod", "State", "DeferralReason", "EntrustmentDecisionId") VALUES ($1, $2, $2, 'PAED-' || $2::text, 'An EPA', 1, 2026, $3, TRUE, FALSE, $4, $5, $6) RETURNING "Id" """,
+            """INSERT INTO "CommitteeAgendaLines" ("ReviewId", "CurriculumItemId", "EpaId", "EpaCode", "EpaTitle", "Origin", "WindowYear", "WindowSemester", "IsClosing", "IsPartialPeriod", "State", "EntrustmentDecisionId") VALUES ($1, $2, $2, 'PAED-' || $2::text, 'An EPA', 1, 2026, $3, TRUE, FALSE, $4, $5::integer) RETURNING "Id" """,
             reviewId,
             epaId,
             (object?)windowSemester ?? DBNull.Value,
             state,
-            (object?)reason ?? DBNull.Value,
             (object?)starId ?? DBNull.Value);
+
+    /// <summary>A line as the schema before T361 stores one, with the deferral's reason column.</summary>
+    private static Task<int> InsertLineBeforeT361Async(
+        NpgsqlConnection connection, int reviewId, int epaId, int state, string? reason)
+        => InsertAsync(connection,
+            """INSERT INTO "CommitteeAgendaLines" ("ReviewId", "CurriculumItemId", "EpaId", "EpaCode", "EpaTitle", "Origin", "WindowYear", "WindowSemester", "IsClosing", "IsPartialPeriod", "State", "DeferralReason") VALUES ($1, $2, $2, 'PAED-' || $2::text, 'An EPA', 1, 2026, 1, TRUE, FALSE, $3, $4) RETURNING "Id" """,
+            reviewId,
+            epaId,
+            state,
+            (object?)reason ?? DBNull.Value);
 
     private static async Task<int> InsertAsync(NpgsqlConnection connection, string sql, params object[] values)
     {

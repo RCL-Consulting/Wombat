@@ -119,6 +119,19 @@ public sealed class CountMsfCampaignsOutsideSnapshotQueryHandler
             return MsfCampaignsOutsideSnapshotDto.None;
         }
 
+        return await CountOutsideAsync(_dbContext, review, cancellationToken);
+    }
+
+    /// <summary>
+    /// The count itself, for a review the caller has already been let read and that is neither withdrawn nor read by its
+    /// own trainee: the query above, and the Start dialog's preview (<see cref="GetStartPreviewQuery" />, T361), which
+    /// says it before Start.
+    /// </summary>
+    internal static async Task<MsfCampaignsOutsideSnapshotDto> CountOutsideAsync(
+        IApplicationDbContext dbContext,
+        CommitteeReview review,
+        CancellationToken cancellationToken)
+    {
         // Before Start there is no snapshot, and a released campaign is one Start will take, so only the unreleased
         // are outside it. After Start the snapshot is what it froze, and a released campaign it does not name was
         // released too late for it. Membership is judged for both states alike, so a campaign the snapshot does hold
@@ -126,13 +139,13 @@ public sealed class CountMsfCampaignsOutsideSnapshotQueryHandler
         // and is not under review is counted as released after Start.
         var reviewId = review.Id;
         var started = review.State != CommitteeReviewState.Scheduled;
-        var counts = await _dbContext.Set<MsfCampaign>()
+        var counts = await dbContext.Set<MsfCampaign>()
             .AsNoTracking()
             .ClosedInWindowOf(review)
             .Where(campaign =>
                 campaign.State == MsfCampaignState.UnderReview ||
                 (started && campaign.State == MsfCampaignState.Released))
-            .Where(campaign => !_dbContext.Set<CommitteeEvidence>()
+            .Where(campaign => !dbContext.Set<CommitteeEvidence>()
                 .Any(item => item.ReviewId == reviewId && item.MsfCampaignId == campaign.Id))
             .GroupBy(campaign => campaign.State == MsfCampaignState.UnderReview)
             .Select(group => new { AwaitingRelease = group.Key, Count = group.Count() })

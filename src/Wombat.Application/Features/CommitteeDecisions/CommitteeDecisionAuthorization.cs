@@ -880,7 +880,7 @@ internal static class CommitteeDecisionAuthorization
     /// <summary>
     /// Refuses, before anything else is looked at, unless <paramref name="review" /> exists and the caller chairs it now
     /// (<see cref="Chairs" />): the gate of every chair's action, recording the decision, ratifying it, closing a formative
-    /// review, staging and removing entrustment decisions, and deferring and reinstating agenda lines. An unknown id and a
+    /// review, and staging and removing entrustment decisions (T361: there is no deferral, D53). An unknown id and a
     /// review of another panel get the one refusal; the Chair seat's holder who may not sit at the review now gets the
     /// seat's own (<see cref="PanelSeat.MayNotChairFromSeat" />). (T131, T165, T194 item 1, T256)
     /// </summary>

@@ -28,7 +28,7 @@ namespace Wombat.Web.Tests.CommitteeDecisions;
 public sealed partial class ReviewDetailSamplingSentenceTests : TestContext
 {
     private const string Incomplete = "Sampling figures are incomplete";
-    private const string OutOfScope = "outside what your account may read";
+    private const string OutOfScope = "outside what this account may read";
     private const string CouldNotBeRead = "could not be read";
     private const string NotCounted = "Not counted:";
     private const string AskAPanelMember = "Ask a panel member with the full record";
@@ -48,10 +48,11 @@ public sealed partial class ReviewDetailSamplingSentenceTests : TestContext
 
         text.Should().Contain(Incomplete);
         text.Should().Contain("3 rated observations in this review window are " + OutOfScope);
-        text.Should().Contain(AskAPanelMember + " before you rely on the sampling check.");
+        // T361 (round-3-check 3): no pronoun in a shipped word, so "before relying" and "those observations". The figures'
+        // summary line went with the notes card (round 3 item 31): the card lists each EPA's line.
+        text.Should().Contain(AskAPanelMember + " before relying on the sampling check.");
         text.Should().NotContain(CouldNotBeRead);
-        text.Should().Contain("The concentration check on this page ran without them.");
-        text.Should().Contain("that could be counted in the review window");
+        text.Should().Contain("The concentration check on this page ran without those observations.");
     }
 
     [Fact]
@@ -64,7 +65,7 @@ public sealed partial class ReviewDetailSamplingSentenceTests : TestContext
                               ": the EPA, the rating or the assessor is missing or malformed.");
         text.Should().NotContain(OutOfScope, "nothing here is outside this account's read scope");
         text.Should().NotContain(AskAPanelMember, "no panel member has a fuller record of a row nobody can read");
-        text.Should().Contain("The concentration check on this page ran without it.");
+        text.Should().Contain("The concentration check on this page ran without that observation.");
     }
 
     [Fact]
@@ -74,7 +75,7 @@ public sealed partial class ReviewDetailSamplingSentenceTests : TestContext
 
         text.Should().Contain("1 rated observation in this review window is " + OutOfScope);
         text.Should().Contain("2 rated observations in this review window " + CouldNotBeRead);
-        text.Should().Contain("ran without them", "three rows are missing between the two causes");
+        text.Should().Contain("ran without those observations", "three rows are missing between the two causes");
     }
 
     [Fact]
@@ -83,10 +84,8 @@ public sealed partial class ReviewDetailSamplingSentenceTests : TestContext
         var text = RenderText(Report(withheld: 0, unreadable: 0, unattributed: 2));
 
         text.Should().NotContain(Incomplete, "an MSF record is not missing evidence");
-        text.Should().Contain("4 rated observations from 2 distinct assessors in the review window.");
-        text.Should().NotContain("that could be counted");
         text.Should().Contain(NotCounted + " 2 records in the review window with no rating by a named assessor");
-        text.Should().Contain("the form names nobody for the rating (multi-source feedback, for one), or the rating or the assessor was left blank where the form allows it.");
+        text.Should().Contain("(the form names nobody for the rating, multi-source feedback for one, or the rating or the assessor was left blank where the form allows it).");
         text.Should().Contain("The figures above count only ratings a named assessor gave.");
     }
 

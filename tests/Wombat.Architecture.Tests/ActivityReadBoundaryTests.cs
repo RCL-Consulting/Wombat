@@ -89,8 +89,8 @@ public class ActivityReadBoundaryTests
         ["Wombat.Application.Features.Activities.Services.DecidedByYou"] =
             "The shared decided read (T350, note 6) behind ListDecidedByYouQuery and the Assessor's Home. Its rows are those the caller moved last - the past-actor arm of IsReadableBy, which the list filter deliberately omits.",
 
-        ["Wombat.Application.Features.CommitteeDecisions.StartCommitteeReviewCommandHandler"] =
-            "Builds the review evidence snapshot after CommitteeDecisionAuthorization.DemandStartableReview, which admits a member of this panel, a Coordinator of the institution this panel belongs to, or a global Administrator - it waived every Coordinator anywhere until T101 finding E, which is what made this reason worth stating - and after CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync, which refuses anyone but an Administrator a review whose trainee does not train at the panel's institution (T182). Stores labels and dates, never DataJson.",
+        ["Wombat.Application.Features.CommitteeDecisions.CommitteeEvidenceSnapshot"] =
+            "The review evidence snapshot, built by StartCommitteeReviewCommandHandler and counted, never returned, by GetStartPreviewQueryHandler (T361, review 11), which answers only a caller the review read ladder (CommitteeDecisionAuthorization.ReadableReviewsAsync) admits, and only numbers and the window. Start builds it after CommitteeDecisionAuthorization.DemandStartableReview, which admits a member of this panel, a Coordinator of the institution this panel belongs to, or a global Administrator - it waived every Coordinator anywhere until T101 finding E, which is what made this reason worth stating - and after CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync, which refuses anyone but an Administrator a review whose trainee does not train at the panel's institution (T182). Stores labels and dates, never DataJson.",
 
         ["Wombat.Application.Features.Programme.Filing.FilingMoments"] =
             "T358 (E5): when each registrar last filed, as dates, for registrars the caller has already admitted to its list: the acting role's current registrars (ProgrammeScope.Profiles, then TraineeScopeResolver.KeepCurrentAsync) or a digest recipient's roster. Reads each activity's moves and pinned workflow to find the filing; no activity row, field or state leaves it.",
@@ -113,7 +113,9 @@ public class ActivityReadBoundaryTests
         // T358: Waiting for assessors, the Homes' card of that name, and the registrar page's section (E4).
         "Wombat.Application.Features.Programme.Waiting.WaitingForAssessorsReader",
         // T358: the filing moments Programme trainees, Home's Nothing filed card and the weekly digest share (E5).
-        "Wombat.Application.Features.Programme.Filing.FilingMoments"
+        "Wombat.Application.Features.Programme.Filing.FilingMoments",
+        // T361: the evidence snapshot Start freezes and the Start dialog counts (review 11).
+        "Wombat.Application.Features.CommitteeDecisions.CommitteeEvidenceSnapshot"
     };
 
     // ─── The boundary itself ─────────────────────────────────────────────────

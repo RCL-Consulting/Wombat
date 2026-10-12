@@ -131,7 +131,7 @@ public sealed class PeopleByNamePageTests : TestContext
         _sender.On<StartCommitteeReviewCommand>(_ => Review(CommitteeReviewState.InProgress));
 
         var cut = RenderReview();
-        cut.FindAll("button").First(button => button.TextContent.Trim() == "Start review").Click();
+        StartTheReview(cut);
         cut.WaitForState(() => cut.Markup.Contains("Review started."));
 
         Trainee(cut).Should().Be("Thandi Nkosi");
@@ -141,7 +141,9 @@ public sealed class PeopleByNamePageTests : TestContext
     /// <summary>
     /// An action that succeeded is shown as succeeded, with the state its command returned, whatever a later read of
     /// the review would have done. The page once read the review back after the success message: when that read failed
-    /// it showed success and an error together, and kept offering "Start review" on a review already started.
+    /// it showed success and an error together, and kept offering "Start review" on a review already started. Since T361
+    /// the page reads the review again after every action (T260), and where that read fails it falls back on the
+    /// command's answer, named from the copy it holds.
     /// </summary>
     [Fact]
     public void TheReviewPage_AfterAnAction_ShowsTheCommandsResult_WithoutReadingTheReviewAgain()
@@ -155,12 +157,12 @@ public sealed class PeopleByNamePageTests : TestContext
         _sender.On<StartCommitteeReviewCommand>(_ => Review(CommitteeReviewState.InProgress));
 
         var cut = RenderReview();
-        cut.FindAll("button").First(button => button.TextContent.Trim() == "Start review").Click();
+        StartTheReview(cut);
         cut.WaitForState(() => cut.Markup.Contains("Review started."));
 
         cut.FindAll(".alert-danger").Should().BeEmpty("the action succeeded");
-        cut.FindAll("button").Select(button => button.TextContent.Trim()).Should().NotContain(
-            "Start review", "the review is in progress now, as the command said");
+        cut.FindAll("button").Where(button => button.Closest("dialog") is null).Select(button => button.TextContent.Trim())
+            .Should().NotContain("Start review…", "the review is in progress now, as the command said");
         Trainee(cut).Should().Be("Thandi Nkosi");
     }
 
@@ -182,7 +184,9 @@ public sealed class PeopleByNamePageTests : TestContext
             .On<GetEntrustmentStandingForTraineeQuery>(_ => null)
             .On<GetMsfCoverageForTraineeQuery>(_ => null)
             .On<ListStarEpaOptionsForReviewQuery>(_ => Array.Empty<StarEpaOptionDto>())
-            .On<GetEntrustmentScalesListQuery>(_ => Array.Empty<EntrustmentScaleDto>());
+            .On<GetEntrustmentScalesListQuery>(_ => Array.Empty<EntrustmentScaleDto>())
+            .On<GetStartPreviewQuery>(_ => null)
+            .On<GetCommitteeAgendaQuery>(_ => null);
     }
 
     private IRenderedComponent<ReviewDetail> RenderReview()
@@ -192,8 +196,16 @@ public sealed class PeopleByNamePageTests : TestContext
         return cut;
     }
 
+    // T361 (round 3, the title rule): the trainee is named in the h1, "Thandi Nkosi · 2026 S1".
     private static string Trainee(IRenderedComponent<ReviewDetail> cut)
-        => cut.FindAll("dt").Single(term => term.TextContent.Trim() == "Trainee").NextElementSibling!.TextContent.Trim();
+        => cut.Find("h1").TextContent.Trim().Split(" · ")[0];
+
+    // T361 (round 3 item 22): Start review… opens a dialog, whose Start review sends the command.
+    private static void StartTheReview(IRenderedComponent<ReviewDetail> cut)
+    {
+        cut.FindAll("button").First(button => button.Closest("dialog") is null && button.TextContent.Trim() == "Start review…").Click();
+        cut.FindAll("dialog button").First(button => button.TextContent.Trim() == "Start review").Click();
+    }
 
     /// <summary>The text of one column, found by its header, so a reordered table cannot pass by accident.</summary>
     private static IReadOnlyList<string> Column<T>(IRenderedComponent<T> cut, string header)

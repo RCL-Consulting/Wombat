@@ -73,7 +73,7 @@ public sealed class EntrustmentOnlyReviewTests
     {
         var review = StartedReview(CommitteeReviewType.EntrustmentOnly);
 
-        var decision = review.RecordDecision(null, "PAED-004 entrusted at 3a.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [], []);
+        var decision = review.RecordDecision(null, "PAED-004 entrusted at 3a.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [4], []);
         review.Ratify("chair-1", Now);
 
         Assert.Null(decision.Category);
@@ -140,7 +140,7 @@ public sealed class EntrustmentOnlyReviewTests
     public void Ratify_RefusesAnEntrustmentOnlyReviewWhoseDecisionRecordsACategory_AndStampsNothing()
     {
         var review = StartedReview(CommitteeReviewType.EntrustmentOnly);
-        review.RecordDecision(null, "PAED-004 entrusted at 3a.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [], []);
+        review.RecordDecision(null, "PAED-004 entrusted at 3a.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [4], []);
         ReplaceTheDecisionWith(review, CommitteeDecisionCategory.SatisfactoryProgress);
 
         var refusal = Assert.Throws<InvalidOperationException>(() => review.Ratify("chair-1", Now));
@@ -206,62 +206,54 @@ public sealed class EntrustmentOnlyReviewTests
         Assert.Null(Assert.Single(review.Decisions).Category);
     }
 
-    // ─── An agenda with nothing on it ────────────────────────────────────────
+    // ─── Nothing staged (T361, E4) ───────────────────────────────────────────
 
     [Fact]
-    public void AnEntrustmentOnlyReview_WithNothingOnItsAgenda_CannotBeRecorded()
+    public void AnEntrustmentOnlyReview_WithNothingStaged_CannotBeRecorded_AndChangesNothing()
     {
-        // Its decision is what its agenda holds; with nothing on it, the decision would be a rationale about nothing.
-        var review = StartedReview(CommitteeReviewType.EntrustmentOnly);
+        // T361, E4: its decision is what is staged at it. With nothing staged, D53 would record every line not decided and
+        // issue nothing, so Record refuses; the agenda alone (here an optional line) no longer makes it a decision.
+        var review = StartedReview(CommitteeReviewType.EntrustmentOnly, [OpportunisticLine()]);
 
-        var recording = Assert.Throws<InvalidOperationException>(() => review.EnsureAgendaSettled([], []));
+        var refusal = Assert.Throws<InvalidOperationException>(() => review.RecordDecision(
+            null, "Nothing on PAED-009 this semester.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [], []));
 
-        Assert.Equal("The committee's decision cannot be recorded yet: " + CommitteeReview.NothingOnTheAgenda, recording.Message);
-        Assert.Equal(CommitteeReview.NothingOnTheAgenda, review.EmptyAgendaRefusal());
+        Assert.Equal(CommitteeReview.NothingStagedOnEntrustmentOnly, refusal.Message);
+        Assert.Equal(
+            "This review decides entrustment only, so stage at least one decision before recording it.",
+            CommitteeReview.NothingStagedOnEntrustmentOnly);
+        Assert.Empty(review.Decisions);
         Assert.Equal(CommitteeReviewState.InProgress, review.State);
+        Assert.Equal(CommitteeReview.NothingStagedOnEntrustmentOnly, review.NothingStagedRefusal([]));
+        Assert.Null(review.NothingStagedRefusal([9]));
     }
 
     [Fact]
-    public void AnEntrustmentOnlyReview_WhoseAgendaEmptiedAfterItWasDecided_IsStillRatified()
+    public void AnEntrustmentOnlyReview_WhoseStagedDecisionWasRemovedAfterItWasDecided_IsStillRatified()
     {
         // T167's exception can remove the one staged STAR, and its chair's line, after the decision is recorded. The review
         // cannot go back to stage another, so ratify does not ask again: it would leave the review decided for good.
         var review = StartedReview(CommitteeReviewType.EntrustmentOnly);
-        review.RecordDecision(null, "PAED-004 entrusted at 3a.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [], []);
+        review.RecordDecision(null, "PAED-004 entrusted at 3a.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [4], []);
 
-        review.EnsureAgendaClosable([], []);
-        review.Ratify("chair-1", Now);
-
-        Assert.Equal(CommitteeReviewState.Ratified, review.State);
-    }
-
-    [Fact]
-    public void AnEntrustmentOnlyReview_WithAnOptionalLineNothingWasStagedOn_IsRecordedAndRatified()
-    {
-        // A line the College makes optional is still decided when the review closes: NotDecided. Only an empty agenda is
-        // refused, never an agenda whose lines were left.
-        var review = StartedReview(CommitteeReviewType.EntrustmentOnly, [OpportunisticLine()]);
-
-        review.EnsureAgendaSettled([], []);
-        review.RecordDecision(null, "Nothing on PAED-009 this semester.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [], []);
         review.Ratify("chair-1", Now);
         review.CloseAgenda(new Dictionary<int, Wombat.Domain.EntrustmentDecisions.EntrustmentDecision>(), []);
 
-        Assert.Null(review.EmptyAgendaRefusal());
-        Assert.Equal(CommitteeAgendaLineState.NotDecided, review.AgendaLines.Single().State);
+        Assert.Equal(CommitteeReviewState.Ratified, review.State);
     }
 
     [Theory]
     [InlineData(CommitteeReviewType.AnnualProgression)]
     [InlineData(CommitteeReviewType.PreGraduation)]
-    public void AProgressionReview_WithNothingOnItsAgenda_IsNotRefusedForIt(CommitteeReviewType type)
+    public void AProgressionReview_WithNothingStaged_IsNotRefusedForIt(CommitteeReviewType type)
     {
         // Its decision is its category.
-        var review = StartedReview(type);
+        var review = StartedReview(type, [OpportunisticLine()]);
 
-        review.EnsureAgendaSettled([], []);
+        Assert.Null(review.NothingStagedRefusal([]));
+        review.RecordDecision(CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [], []);
 
-        Assert.Null(review.EmptyAgendaRefusal());
+        Assert.Equal(CommitteeReviewState.Decided, review.State);
     }
 
     // ─── Fixture ─────────────────────────────────────────────────────────────
@@ -313,7 +305,7 @@ public sealed class EntrustmentOnlyReviewTests
         var review = StartedReview(type);
         review.RecordDecision(
             type == CommitteeReviewType.EntrustmentOnly ? null : CommitteeDecisionCategory.SatisfactoryProgress,
-            "Decided.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [], []);
+            "Decided.", null, "chair-1", Now, CommitteeQuorumFixture.ChairAndMember, [4], []);
         review.Ratify("chair-1", Now);
         review.LodgeAppeal("The level understates my supervised practice.", "trainee-1", Now);
         return review;

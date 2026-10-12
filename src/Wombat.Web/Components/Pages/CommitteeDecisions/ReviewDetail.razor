@@ -1,1025 +1,1045 @@
 @page "/committee/reviews/{ReviewId:int}"
 @attribute [Authorize(Roles = "CommitteeMember,Coordinator,Administrator,InstitutionalAdmin,SpecialityAdmin,SubSpecialityAdmin")]
+@using System.Security.Claims
+@using Microsoft.Extensions.DependencyInjection
+@using Wombat.Application.Features.Curricula.Quota
+@using Wombat.Application.Features.Programme
+@using Wombat.Web.Components.Pages.CommitteeDecisions.Review
+@using Wombat.Web.Components.Shared.Programme
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@using Wombat.Application.Features.Curricula.Quota
+@inject ILogger<ReviewDetail> Logger
+@inject IJSRuntime JS
+@inject IServiceProvider ServiceProvider
 
-<PageTitle>Committee review · Wombat</PageTitle>
+@*
+  A committee review, sat (T361, flow 07; round 3's boards, R2-Spec; DESIGN.md § Committee agenda, § The chair's controls,
+  § Detail page, § Stacking). "The agenda is the page": one column, its h1 the trainee and the period (the title rule),
+  the sitting bar under it, the agenda as the page's spine with one line open at a time, and the decision under the agenda
+  until it is recorded, then above it. No deferral anywhere (D53): every line left unstaged reads "Not decided at this
+  sitting" with the decision's one sentence. No live following (T362): a reader keeps up by Refresh.
 
-<PageHeader Title="Committee review" Subtitle="Evidence bundle, decision record, ratification, and appeals in one place." />
+  This page is a host. What it draws is in Review/: SittingBar, AgendaTable with its open line (AgendaLineForm or
+  EvidenceReader), the foot form, DecisionForm, and ReviewWords, every sentence it ships. It holds the state those share:
+  the review and its sibling reads, the drafts the chair has typed (E9), the one result on the page and where it sits
+  (round 3 item 15: beside its control, taking the focus), and the dialogs (ConfirmDialog, "Not yet" or "Keep it" safe).
 
-@* What an action did. It takes the focus once the action is done (T234 review; DESIGN.md § Button system): Start, Close
-   review, Ratify, Record decision and Resolve appeal each take their own button away; staging clears its form, which
-   disables Stage pending decision; a removed decision's row and a deferred line's form are gone; and Reinstate gives way
-   to Stage and Defer. A refusal leaves the focus where it was: it is an alert, read at once, and the button is still
-   there. *@
-<ActionResult @ref="_result">
-  @if (!string.IsNullOrWhiteSpace(_status))
-  {
-    <Alert Kind="success">@_status</Alert>
-  }
+  The review is read again after every action, done or refused (T260), and on Refresh; each sibling read fails apart in
+  its own sentence (T329, round 3 item 11). Never an exception's text on the page: it goes to the log.
+*@
 
-  @if (!string.IsNullOrWhiteSpace(_error))
-  {
-    <Alert Kind="danger">@_error</Alert>
-  }
-</ActionResult>
+<PageTitle>@Heading · Wombat</PageTitle>
 
-@* An incomplete report is not a quiet one: without this banner, "some of this trainee's evidence
-   is outside what you may read" would render exactly like "we checked the sampling and it is
-   clean", on a page where the next click decides whether someone progresses. Not dismissible for
-   the same reason. Two different things make it incomplete, and each gets its own sentence, because
-   the cause differs: a withheld row is one this account may not read, an unreadable one nobody can. (T135) *@
-@if (_samplingReport is { EvidenceComplete: false })
-{
-  var withheld = _samplingReport.WithheldRatedActivities;
-  var unreadable = _samplingReport.UnreadableRatedActivities;
-  var missing = withheld + unreadable;
-  <Alert Kind="danger">
-    <div>
-      <h3>Sampling figures are incomplete</h3>
-      @if (withheld > 0)
-      {
-        <p>
-          @withheld rated observation@(withheld == 1 ? string.Empty : "s")
-          in this review window @(withheld == 1 ? "is" : "are") outside what your account may read —
-          evidence held by another institution, or recorded before this trainee transferred. Ask a panel
-          member with the full record before you rely on the sampling check.
-        </p>
-      }
-      @if (unreadable > 0)
-      {
-        <p>
-          @unreadable rated observation@(unreadable == 1 ? string.Empty : "s")
-          in this review window could not be read: the EPA, the rating or the assessor is missing or malformed.
-        </p>
-      }
-      <p>
-        The concentration check on this page ran without @(missing == 1 ? "it" : "them").
-        Treat the absence of a concentration warning as unknown rather than clean.
-      </p>
+<PageHeader Title="@Heading" SubtitleContent="@Subtitle" CurrentCrumb="@(_notFound ? "Not found" : null)"
+            Icon="@(_notFound ? "search" : null)" />
+
+@* Always present, filled while the review is read: a live region added with its words in it is often not read. *@
+<p class="visually-hidden" role="status">@(_loading ? ReviewWords.Loading : null)</p>
+
+<StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusHeadingAsync">
+  <LoadingContent>
+    @* Board 8: the header at once, a skeleton and no action until loaded; reduced motion keeps still blocks. *@
+    <div class="review-page" aria-busy="true">
+      <p class="muted" aria-hidden="true">@ReviewWords.Loading</p>
+      <div class="dashboard-card-skeleton" aria-hidden="true"><div class="skeleton"></div><div class="skeleton"></div></div>
+      <div class="detail-card" aria-hidden="true"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
     </div>
-  </Alert>
-}
-
-@if (_samplingReport is { AnyWarning: true })
-{
-  var unattributed = _samplingReport.UnattributedRatedActivities;
-  <Alert Kind="warning" Role="" Dismissible="true">
-    <div>
-      <h3>Sampling concentration warnings</h3>
-      <p class="muted">
-        @_samplingReport.TotalRatedActivities rated observation@(_samplingReport.TotalRatedActivities == 1 ? string.Empty : "s")
-        from @_samplingReport.DistinctAssessorCount distinct assessor@(_samplingReport.DistinctAssessorCount == 1 ? string.Empty : "s")
-        @(_samplingReport.EvidenceComplete ? "in the review window" : "that could be counted in the review window").
-        Acknowledge in the decision rationale if these warnings are relevant.
-      </p>
-      @if (unattributed > 0)
-      {
-        <p class="muted">
-          Not counted: @unattributed record@(unattributed == 1 ? string.Empty : "s") in the review window
-          with no rating by a named assessor — the form names nobody for the rating (multi-source feedback,
-          for one), or the rating or the assessor was left blank where the form allows it. The figures above
-          count only ratings a named assessor gave.
-        </p>
-      }
-      <ul class="list-unstyled">
-        @foreach (var epa in _samplingReport.PerEpa)
-        {
-          <li>
-            <strong>@epa.EpaCode — @epa.EpaTitle</strong>
-            <span>@epa.RatingCount rating@(epa.RatingCount == 1 ? string.Empty : "s") · @epa.DistinctAssessorCount assessor@(epa.DistinctAssessorCount == 1 ? string.Empty : "s") · @epa.DistinctSourceCount source@(epa.DistinctSourceCount == 1 ? string.Empty : "s")</span>
-            <ul class="list-unstyled">
-              @if (epa.OneAssessorOverHalf)
-              {
-                <li>One assessor contributed @epa.DominantAssessorCount of @epa.RatingCount ratings (&gt; 50%).</li>
-              }
-              @if (epa.SingleSource)
-              {
-                <li>All ratings came from a single source of evidence.</li>
-              }
-              @if (epa.FewerThanThreeAssessors)
-              {
-                <li>Fewer than three distinct assessors across this EPA's evidence.</li>
-              }
-            </ul>
-          </li>
-        }
-      </ul>
-    </div>
-  </Alert>
-}
-
-@if (_review is not null)
-{
-  <div class="details-grid">
-    <section class="detail-card">
-      <h3>Review</h3>
-      <dl class="details-list">
-        <div><dt>Trainee</dt><dd>@_review.TraineeName</dd></div>
-        <div><dt>Panel</dt><dd>@_review.PanelName</dd></div>
-        <div><dt>Sits for</dt><dd>@_review.PeriodLabel</dd></div>
-        <div><dt>Evidence window</dt><dd>@_review.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @_review.ReviewPeriodTo.ToString("yyyy-MM-dd")</dd></div>
-        <div><dt>Type</dt><dd id="review-type">@CommitteeDecisionWording.ReviewTypeLabel(_review.ReviewType)</dd></div>
-        <div><dt>Mode</dt><dd>@(_review.IsFormative ? "Formative (interim check-in, no binding decision)" : "Summative")</dd></div>
-        <div><dt>State</dt><dd id="review-state">@_review.StateLabel</dd></div>
-        @* T258: a withdrawn review says when and why, where its state is read. Nothing is offered at it: every action above
-           and below asks for an open state. *@
-        @if (_review.WithdrawnOn is { } withdrawnOn)
-        {
-          <div><dt>Withdrawn</dt><dd id="review-withdrawn">@withdrawnOn.ToString("yyyy-MM-dd"). @_review.WithdrawalReason</dd></div>
-        }
-      </dl>
-      <FormActions>
-        @* T213 review: Start demands, as every chair's action does, that the trainee still trains at the panel's institution
-           (TraineeElsewhere); when that fails for this reader it is not offered, and #trainee-elsewhere-note says why.
-           T194: it is offered only to someone its handler lets start the review (CallerMayStart): a member of the panel
-           who may sit on it now (T279), a coordinator of its institution, or an Administrator. An institutional administrator who reads the review
-           without a seat is not; #chair-actions-note says who can. *@
-        @if (_review.State == CommitteeReviewState.Scheduled && _review.CallerMayStart && _review.TraineeElsewhere is null)
-        {
-          @* Said at the button as well as beside the list: the Evidence snapshot card can be three cards below this
-             one on a narrow screen, and this is the click that decides it. (T173) *@
-          var awaitingAtStart = _msfOutsideSnapshot.AwaitingRelease;
-          if (awaitingAtStart > 0)
-          {
-            <span id="start-review-msf-note" class="muted">
-              Starting now leaves out @awaitingAtStart feedback campaign@(awaitingAtStart == 1 ? string.Empty : "s")
-              that closed in this window and @(awaitingAtStart == 1 ? "is" : "are") not yet released.
-            </span>
-          }
-          <button type="button" class="btn btn-primary" aria-describedby="@(awaitingAtStart > 0 ? "start-review-msf-note" : null)"
-                  disabled="@OtherInFlight(StartAction)" aria-disabled="@InFlight.AriaDisabled(Running(StartAction))"
-                  @onclick="StartAsync">Start review</button>
-        }
-        @* T213: the chair's actions are offered to the chair alone, by the predicates their handlers demand
-           (ChairMayAct). Hidden, not disabled: T107's disabled button is for an action the reader may take but cannot
-           complete yet, and nobody else may take these. #chair-actions-note says who can. *@
-        @if (_review.State == CommitteeReviewState.InProgress && _review.IsFormative && ChairMayAct)
-        {
-          <button type="button" class="btn btn-primary" disabled="@OtherInFlight(CloseAction)"
-                  aria-disabled="@InFlight.AriaDisabled(Running(CloseAction))" @onclick="CloseFormativeAsync">Close review</button>
-        }
-        @if (_review.State == CommitteeReviewState.Decided && ChairMayAct)
-        {
-          @* Shown, not hidden, so the chair learns why (T107's pattern): the attendance falls short of a quorum (T165), or a
-             closing line of the agenda is neither staged nor deferred (T131 slice 4). The reason is the first the server
-             would refuse with, in the ratify handler's order. No click handler while one stands. *@
-          if (RatifyBlockedReason is null)
-          {
-            <button type="button" class="btn btn-primary" disabled="@OtherInFlight(RatifyAction)"
-                    aria-disabled="@InFlight.AriaDisabled(Running(RatifyAction))" @onclick="RatifyAsync">Ratify</button>
-          }
-          else
-          {
-            <button type="button" class="btn btn-primary" disabled aria-describedby="ratify-reason">Ratify</button>
-          }
-        }
-      </FormActions>
-      @if (_review.State == CommitteeReviewState.Decided && ChairMayAct && RatifyBlockedReason is { } ratifyReason)
-      {
-        <ul class="workflow-action-reasons">
-          <li id="ratify-reason"><strong>Ratify:</strong> @ratifyReason</li>
-        </ul>
-      }
-      @if (ChairActionsNote is { } chairActionsNote)
-      {
-        <p id="chair-actions-note" class="muted">@chairActionsNote</p>
-      }
-      @* T213 review. Standing page content, there on every visit until the trainee's move is resolved: no role. The
-         sentence Start and every chair's action refuse with, said where their buttons would be. *@
-      @if (_review.TraineeElsewhere is { } traineeElsewhere)
-      {
-        <Alert Kind="warning" Role="" Id="trainee-elsewhere-note">@traineeElsewhere</Alert>
-      }
-      @* T256. The panel's chair may not sit at the review now (lost the CommitteeMember role, moved, deactivated, or holds
-         Trainee), so every chair's action refuses and none is offered. Standing page content until a panel administrator
-         seats a chair who can: no role. To the chair it is the sentence their click would be refused with; to everyone
-         else it names the chair, in place of #chair-actions-note's "Only the panel's chair … can". *@
-      @if (_review.ChairCannotAct is { } chairCannotAct)
-      {
-        <Alert Kind="warning" Role="" Id="chair-cannot-act-note">@chairCannotAct</Alert>
-      }
-    </section>
-
-    @if (!_review.IsFormative)
+  </LoadingContent>
+  <ChildContent>
+    @if (_notFound || _review is null)
     {
-      <section class="detail-card">
-        <h3>Decision</h3>
-        @* T165. Not a refusal: in a small programme the chair can be the only assessor who saw the trainee, and the panel
-           should weigh that, not be stopped by it. Read from the frozen snapshot, so it says what the panel weighed. *@
-        @if (_review.ChairRatedEveryLine is { } chairAssessor)
-        {
-          <Alert Kind="warning" Role="">
-            <div>
-              <h4>The chair rated all of this evidence</h4>
-              <p>
-                Every rated record in the evidence snapshot was rated by @chairAssessor.DisplayName, who chairs this panel.
-                A committee decision is never a single assessor's: say in the rationale how the other members weighed it.
-              </p>
-            </div>
-          </Alert>
-        }
-        @* T131 slice 5. An entrustment-only review's decision is the STARs staged at it: it asks for no progression
-           category, and says why where the category would be. The handler refuses a category on it, and requires one on
-           any other review. Once ratified, the staged decisions are STARs its agenda names, and the note says so. *@
-        @if (!_review.DecidesProgression)
-        {
-          <p id="entrustment-only-note" class="muted">@CommitteeDecisionWording.EntrustmentOnlyPanelNote(_review.State)</p>
-        }
-        @* T213: the chair records the decision, so only the chair is offered the form, and only while the review is in
-           progress, the one state in which the record handler takes a decision (T213 review: before it, a chair on a
-           decided or appealed review was shown empty fields with no button). *@
-        @if (OffersDecisionForm)
-        {
-          <EditForm Model="_decision" OnValidSubmit="RecordDecisionAsync" FormName="committee-decision">
-            <DataAnnotationsValidator />
-            <ValidationSummary class="validation-summary-errors" />
-            <div class="form-grid">
-              @if (_review.DecidesProgression)
-              {
-                @* Opens on no category, as the remit's select does (DESIGN.md § Entrustment-only reviews): a chair who
-                   leaves it alone records nothing, and the handler says a progression review needs one. *@
-                <FormField Label="Category" InputId="decision-category" Required="true">
-                  <InputSelect id="decision-category" class="form-select" @bind-Value="_decision.Category">
-                    <option value="">Select a category…</option>
-                    @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
-                    {
-                      <option value="@category">@CommitteeDecisionWording.CategoryLabel(category)</option>
-                    }
-                  </InputSelect>
-                </FormField>
-              }
-              <FormField Label="Rationale" InputId="decision-rationale" Required="true">
-                <InputTextArea id="decision-rationale" class="form-control" @bind-Value="_decision.Rationale" />
-              </FormField>
-              <FormField Label="Conditions" InputId="decision-conditions">
-                <InputTextArea id="decision-conditions" class="form-control" @bind-Value="_decision.Conditions" />
-              </FormField>
-              @* T165. Who sat: a group of checkboxes, so a fieldset whose legend names it (DESIGN.md § Form system). The
-                 chair is ticked and cannot be unticked, because the chair records the decision and must be present. *@
-              @PresentFieldset("decision-present", _decision.PresentUserIds, lockedUserId: null)
-            </div>
-            @* O8's warning is about a progression decision taken before another panel's entrustment decisions: an
-               entrustment-only review takes none, so it is not warned. *@
-            @if (_review.DecidesProgression && CommitteeAgendaText.SittingOrderWarning(_agenda) is { } sittingOrder)
-            {
-              <p id="sitting-order-warning" class="field-warning">@sittingOrder</p>
-            }
-            <FormActions>
-              @* The staged STARs below are part of this decision and are fixed with it (T165), and so are the agenda's
-                 deferrals (T131 slice 4): said at the button, the click that fixes them. *@
-              <span id="record-decision-note" class="muted">
-                Recording fixes the entrustment decisions staged below and the agenda's deferrals:
-                they cannot be changed afterwards.
-              </span>
-              @if (RecordBlockedReason is null)
-              {
-                <button type="submit" class="btn btn-primary" aria-describedby="record-decision-note"
-                        disabled="@OtherInFlight(RecordAction)" aria-disabled="@InFlight.AriaDisabled(Running(RecordAction))">Record decision</button>
-              }
-              else
-              {
-                @* T107's pattern: shown, not hidden, with the reason, which the server would otherwise give only after the
-                   chair had written the rationale. *@
-                <button type="button" class="btn btn-primary" disabled aria-describedby="record-reason">Record decision</button>
-              }
-            </FormActions>
-            @if (RecordBlockedReason is { } recordReason)
-            {
-              <ul class="workflow-action-reasons">
-                <li id="record-reason"><strong>Record decision:</strong> @recordReason</li>
-              </ul>
-            }
-          </EditForm>
-        }
-        else if (_review.Decisions.Count == 0)
-        {
-          @* T213 review: without the form, a review with no decision yet would leave the card a bare heading. Who can
-             record one is said in the Review card (#chair-actions-note). *@
-          @* T258 review: nothing more is recorded at a withdrawn review, so it is not "yet". *@
-          <p id="no-decision-note" class="muted">@(_review.State == CommitteeReviewState.Withdrawn
-            ? "No decision was recorded before the review was withdrawn."
-            : "No decision has been recorded yet.")</p>
-        }
+      @* Flow 01's not found with this page's sentence (board 8): an id out of reach reads as one that names nothing (T194). *@
+      <div class="system-panel">
+        <p>@ReviewWords.NotFound</p>
+        <div class="actions-cell">
+          <a class="btn btn-primary" href="@NavItems.CommitteeReviews.Href">@ReviewWords.BackToReviews</a>
+        </div>
+      </div>
+    }
+    else
+    {
+      var review = _review;
+      var decided = review.State is not (CommitteeReviewState.Scheduled or CommitteeReviewState.InProgress);
+      <div class="review-page">
+        <SittingBar View="@Bar" AsOf="@AsOf" Busy="@(_inFlight is not null)" Refreshing="@(_inFlight == RefreshAction)"
+                    OnStart="OpenStartAsync" OnGoToDecision="GoToDecisionAsync" OnRatify="OpenRatifyAsync"
+                    OnClose="OpenCloseAsync" OnRefresh="RefreshAsync" Focus="FocusByIdAsync" />
+        @ResultAt(BarPlace)
 
-        @if (_review.Decisions.Count > 0)
-        {
-          var replaced = _review.Decisions
-            .Select(decision => decision.SupersedesDecisionId)
-            .OfType<int>()
-            .ToHashSet();
-          @* T258 review: a decision recorded and then withdrawn keeps its category as its heading, the record of what the
-             panel recorded, and is said never to have been ratified. *@
-          if (_review.State == CommitteeReviewState.Withdrawn)
-          {
-            <p id="withdrawn-decision-note" class="muted">@CommitteeDecisionWording.WithdrawnDecisionNote</p>
-          }
-          <div class="stack-list">
-            @foreach (var decision in _review.Decisions)
-            {
-              @* T165. Each decision says who took it: a decision an appeal remitted was taken by whoever sat for the
-                 appeal, not by the review's first sitting. *@
-              <article class="detail-card detail-card--compact" id="decision-@decision.Id">
-                <h4>@CommitteeDecisionWording.OutcomeLabel(decision.Category)</h4>
-                @if (replaced.Contains(decision.Id))
-                {
-                  <p class="muted">Replaced on appeal by the decision above.</p>
-                }
-                <p>@decision.Rationale</p>
-                @if (!string.IsNullOrWhiteSpace(decision.Conditions))
-                {
-                  <p><strong>Conditions:</strong> @decision.Conditions</p>
-                }
-                @if (decision.Attendees.Count > 0)
-                {
-                  <p><strong>Present:</strong> @string.Join(", ", decision.Attendees.Select(attendee => attendee.Label))</p>
-                }
-                else
-                {
-                  <p class="muted">Nobody was recorded as present for this decision.</p>
-                }
-              </article>
-            }
-          </div>
-        }
-      </section>
+        @NotesSection
 
-      @StandingSection
-      @MsfCoverageSection
-      @AgendaSection
-
-      <section class="detail-card">
-        <h3>Pending entrustment decisions</h3>
-        <p class="muted">
-          Decisions staged here are issued atomically when the committee review is ratified.
-          They become formal Statements of Awarded Responsibility (STAR) at that point.
-        </p>
-        @if (_review.State == CommitteeReviewState.Decided)
+        @if (review.IsFormative)
         {
-          @* T165. The staged set is part of the decision the panel recorded, so it is fixed: said here, where the form
-             used to be. *@
-          <p class="muted">
-            Fixed when the committee's decision was recorded: ratifying issues exactly these. Only a decision that no
-            longer fits the trainee's curriculum can still be removed.
-          </p>
-        }
-
-        @* T213: staging is the chair's, so only the chair is offered the form (ChairMayAct). *@
-        @if (_review.State == CommitteeReviewState.InProgress && ChairMayAct)
-        {
-          @* The EPAs are the trainee's curriculum, and each EPA's levels are the rungs of its item's ladder: the same
-             list StagePendingEntrustmentDecision enforces (StarCurriculum, T167). Before T167 this listed the EPAs in
-             the chair's scope, so a STAR could be staged on an EPA the trainee's programme does not contain. *@
-          @if (_starEpas.Count == 0)
-          {
-            <p class="muted">This trainee's curriculum lists no EPA, so no entrustment decision can be staged.</p>
-          }
-          <EditForm Model="_pending" OnValidSubmit="StagePendingAsync" FormName="pending-entrustment">
-            <DataAnnotationsValidator />
-            <ValidationSummary class="validation-summary-errors" />
-            <div class="form-grid">
-              <FormField Label="EPA" InputId="pending-epa" Required="true" HelpText="The EPAs on the trainee's curriculum.">
-                <InputSelect id="pending-epa" class="form-select" aria-describedby="@FieldHelp.Id("pending-epa")" @bind-Value="_pending.EpaId" @bind-Value:after="OnStarEpaChanged" @ref="_pendingEpaSelect">
-                  <option value="0">Select an EPA…</option>
-                  @foreach (var epa in _starEpas)
-                  {
-                    <option value="@epa.EpaId">@epa.Code — @epa.Title</option>
-                  }
-                </InputSelect>
-              </FormField>
-              <FormField Label="Authorised level" InputId="pending-level" Required="true" HelpText="@LevelHelpText">
-                <InputSelect id="pending-level" class="form-select" aria-describedby="@FieldHelp.Id("pending-level")" @bind-Value="_pending.AuthorisedLevelId">
-                  <option value="0">@(SelectedStarEpa is null ? "Select an EPA first…" : "Select a level…")</option>
-                  @foreach (var scale in LevelScales)
-                  {
-                    <optgroup label="@scale.Name">
-                      @foreach (var level in scale.Levels)
-                      {
-                        <option value="@level.Id">@level.Label</option>
-                      }
-                    </optgroup>
-                  }
-                </InputSelect>
-              </FormField>
-              <FormField Label="Issued on" InputId="pending-issued" Required="true">
-                <InputDate id="pending-issued" class="form-control" @bind-Value="_pending.IssuedOn" />
-              </FormField>
-              <FormField Label="Expires on" InputId="pending-expires">
-                <InputDate id="pending-expires" class="form-control" @bind-Value="_pending.ExpiresOn" />
-              </FormField>
-              <FormField Label="Rationale" InputId="pending-rationale" Required="true">
-                <InputTextArea id="pending-rationale" class="form-control" @bind-Value="_pending.Rationale" />
-              </FormField>
-
-              @* D38 (T131): a decision names the lines of the frozen snapshot it rests on, at least one. The lines offered
-                 are the ones StagePendingEntrustmentDecision accepts (CanGroundADecision: never a supervisor report),
-                 grouped as the snapshot card below groups them, with the chosen EPA's lines first as a hint. A line
-                 about any EPA may be named; that none is about this one, or that only one is named, is said, not
-                 refused. One field of the form, so a form group, and so is each list by EPA inside it (T188). Marked
-                 required, as Rationale beside it is: Stage waits for a line, and the command refuses none (D38). *@
-              @{ var picker = EvidenceSnapshotGroups.BuildPicker(_review.EvidenceItems, _pending.EpaId); }
-              <fieldset class="form-group full-width" aria-describedby="pending-evidence-help">
-                <legend>
-                  Evidence it rests on
-                  <span aria-hidden="true">*</span>
-                  <span class="visually-hidden">required</span>
-                </legend>
-                <p id="pending-evidence-help" class="page-subtitle">
-                  Tick the lines of the evidence snapshot this decision rests on.@(SelectedStarEpa is null
-                    ? string.Empty
-                    : $" {SelectedStarEpa.Code}'s lines are listed first.")
-                </p>
-                @if (picker.IsEmpty)
-                {
-                  <p class="page-subtitle">
-                    The evidence snapshot holds no line a decision can rest on, so no entrustment decision can be staged
-                    at this review.
-                  </p>
-                }
-                @foreach (var group in picker.ByEpa)
-                {
-                  <fieldset class="form-group">
-                    <legend>@group.EpaCode@(string.IsNullOrWhiteSpace(group.EpaTitle) ? string.Empty : $" — {group.EpaTitle}")</legend>
-                    <div class="check-grid">
-                      @foreach (var line in group.Instruments.SelectMany(instrument => instrument.Lines))
-                      {
-                        @EvidenceCheckbox(line, EvidenceSnapshotGroups.PickerDetail(line))
-                      }
-                    </div>
-                  </fieldset>
-                }
-                @if (picker.AcrossEpas.Count > 0)
-                {
-                  <fieldset class="form-group">
-                    <legend>Not about a single EPA</legend>
-                    <div class="check-grid">
-                      @foreach (var line in picker.AcrossEpas)
-                      {
-                        @EvidenceCheckbox(line, line.SourceStateLabel)
-                      }
-                    </div>
-                  </fieldset>
-                }
-                @if (picker.FrozenBeforeLinesNamedTheirEpa.Count > 0)
-                {
-                  <fieldset class="form-group">
-                    <legend>Frozen before lines named their EPA</legend>
-                    <div class="check-grid">
-                      @foreach (var line in picker.FrozenBeforeLinesNamedTheirEpa)
-                      {
-                        @EvidenceCheckbox(line, null)
-                      }
-                    </div>
-                  </fieldset>
-                }
-                @* Always present, filled only when a hint applies: a screen reader announces a change to a region it
-                   already knows. *@
-                <div id="pending-evidence-hints" role="status">
-                  @foreach (var hint in EvidenceHints)
-                  {
-                    <p class="field-warning">@hint</p>
-                  }
-                </div>
-              </fieldset>
-            </div>
-            <FormActions>
-              <button type="submit" class="btn btn-primary" disabled="@(!EvidenceNamed || OtherInFlight(StageAction))"
-                      aria-disabled="@InFlight.AriaDisabled(Running(StageAction))"
-                      aria-describedby="@(EvidenceNamed ? null : "pending-evidence-reason")">Stage pending decision</button>
-            </FormActions>
-            @if (!EvidenceNamed)
-            {
-              <ul class="workflow-action-reasons">
-                <li id="pending-evidence-reason"><strong>Stage pending decision:</strong> @StagedEvidence.NoneNamed</li>
-              </ul>
-            }
-          </EditForm>
-        }
-
-        @if (_pendingDecisionsError is not null)
-        {
-          @* T212. A warning, as the agenda card's is: the action that preceded the read succeeded, and the list last read
-             stays in view below it. *@
-          <Alert Kind="warning">The staged decisions could not be read again: @_pendingDecisionsError</Alert>
-        }
-        @if (_pendingDecisions.Count == 0)
-        {
-          <p id="no-pending-note">@NoPendingNote</p>
+          @SnapshotSection
+          @StandingSection
+          @MsfCoverageSection
+          @TrajectorySection
         }
         else
         {
-          <ul class="list-unstyled">
-            @foreach (var pending in _pendingDecisions)
-            {
-              <li>
-                <strong>@pending.EpaCode — @pending.EpaTitle</strong>
-                <span>@pending.AuthorisedLevelLabel · issued @pending.IssuedOn.ToString("yyyy-MM-dd")@(pending.ExpiresOn.HasValue ? $" · expires {pending.ExpiresOn:yyyy-MM-dd}" : string.Empty)</span>
-                <p>@pending.Rationale</p>
-                @{ var restsOn = EvidenceLabels(pending.EvidenceItemIds); }
-                <p class="muted">
-                  @if (restsOn.Count == 0)
-                  {
-                    @NoEvidenceNote
-                  }
-                  else
-                  {
-                    @($"Rests on {restsOn.Count} item{(restsOn.Count == 1 ? string.Empty : "s")} of the snapshot: {string.Join("; ", restsOn)}.")
-                  }
-                </p>
-                @if (pending.NoLongerFits is { } noLongerFits)
-                {
-                  <p class="muted"><strong>No longer fits:</strong> @noLongerFits</p>
-                }
-                @if (ChairMayAct &&
-                     (_review.State == CommitteeReviewState.InProgress ||
-                      (_review.State == CommitteeReviewState.Decided && pending.NoLongerFits is not null)))
-                {
-                  @* T239: named by the EPA whose staged decision it removes; a review stages one decision an EPA. A row's
-                     action is .btn .btn-sm .btn-outline (DESIGN.md § Button system). It was .btn-link, which app.css does
-                     not define (T266). *@
-                  <button type="button" class="btn btn-sm btn-outline" disabled="@OtherInFlight(RemoveAction(pending.Id))"
-                          aria-disabled="@InFlight.AriaDisabled(Running(RemoveAction(pending.Id)))"
-                          aria-label="@($"Remove the staged decision on {pending.EpaCode}")"
-                          @onclick="() => RemovePendingAsync(pending.Id)">Remove</button>
-                }
-              </li>
-            }
-          </ul>
+          @if (decided)
+          {
+            @DecisionSection
+          }
+          <AgendaTable Review="review" Agenda="_agenda" Pending="_pending"
+                       ChairStages="@ChairStages" ChairActsOnDecided="@(ChairMayAct && review.State == CommitteeReviewState.Decided)"
+                       OpenEpaId="_openEpaId" DraftEpaIds="_drafts.Keys" OpenContent="OpenLine"
+                       Result="@(_resultPlace is null ? null : ResultRegion)" ResultAtTop="@(_resultPlace == AgendaPlace)"
+                       ResultEpaId="@ResultLine" Foot="@(ChairStages ? FootForm : null)"
+                       AgendaError="_agendaFailed" PendingError="_pendingFailed" Busy="@(_inFlight is not null)"
+                       OnStage="OpenLineFor" OnRemove="OpenRemoveAsync" />
+          @if (!decided)
+          {
+            @DecisionSection
+          }
+          @StandingSection
+          @MsfCoverageSection
+          @SnapshotSection
+          @TrajectorySection
+          @AppealsSection
         }
-      </section>
+      </div>
+
+      @Dialogs
     }
-
-    <section class="detail-card" aria-labelledby="evidence-snapshot-heading">
-      <h3 id="evidence-snapshot-heading">Evidence snapshot</h3>
-      @* Live, and not evidence: counts read on every load, beside the frozen list rather than in it. A campaign
-         enters the snapshot only once released (T138), so one that closed in this window and is still under review
-         at Start reaches no review's evidence, and releasing it later does not put it back; the panel is told it
-         exists, and nothing else about it. Before Start that is a reason to wait; after, a gap to weigh. (T173) *@
-      @if (_msfOutsideSnapshot.Total > 0)
-      {
-        var awaiting = _msfOutsideSnapshot.AwaitingRelease;
-        var releasedLate = _msfOutsideSnapshot.ReleasedAfterStart;
-        <Alert Kind="info">
-          @if (awaiting > 0)
-          {
-            @* "Feedback campaign": the count includes learner-feedback campaigns, which run on the same aggregate (T164). *@
-            <p>@awaiting feedback @(awaiting == 1 ? "campaign that closed in this window is" : "campaigns that closed in this window are") not yet released.</p>
-          }
-          @if (releasedLate > 0)
-          {
-            <p>@releasedLate feedback @(releasedLate == 1 ? "campaign that closed in this window was" : "campaigns that closed in this window were") released after this review started.</p>
-          }
-          @if (_review.State == CommitteeReviewState.Scheduled)
-          {
-            <p>A campaign is evidence only once released. Starting the review now leaves @(awaiting == 1 ? "it" : "them") out of the snapshot.</p>
-          }
-          else
-          {
-            <p>The snapshot holds only the campaigns released before the review started, so @(_msfOutsideSnapshot.Total == 1 ? "it is" : "they are") not in it.</p>
-          }
-        </Alert>
-      }
-      @* Empty means two different things. Before Start nothing has been frozen; after it the window
-         genuinely held nothing, and telling a panel that starting would capture a bundle, on a review
-         already started, sends it looking for a button that is gone. (T138) *@
-      @if (_review.EvidenceItems.Count == 0 && _review.State == CommitteeReviewState.Scheduled)
-      {
-        <p>No evidence has been frozen yet. Starting the review captures the current bundle.</p>
-      }
-      else if (_review.EvidenceItems.Count == 0 && _review.StartedOn is null)
-      {
-        @* T258 review: withdrawn while still scheduled, so it never started and froze nothing. *@
-        <p>No evidence was frozen: the review was withdrawn before it started.</p>
-      }
-      else if (_review.EvidenceItems.Count == 0)
-      {
-        <p>The review window held no evidence when this review started.</p>
-      }
-      else
-      {
-        @* Grouped by EPA, then by instrument, so a panel reads what each EPA rests on without opening every
-           activity. Every state is listed and labelled: a run of declines is evidence too (T135). Each line is
-           what was frozen at Start, not the activity as it stands now. (T167) *@
-        var snapshot = EvidenceSnapshotGroups.Build(_review.EvidenceItems);
-        <p class="muted">Frozen when the review started, grouped by EPA and then by instrument. Every state is listed.</p>
-        <div class="stack-list">
-          @foreach (var group in snapshot.ByEpa)
-          {
-            var headingId = $"evidence-epa-{group.EpaId}";
-            <article class="detail-card detail-card--compact" aria-labelledby="@headingId">
-              <h4 id="@headingId">@group.EpaCode@(string.IsNullOrWhiteSpace(group.EpaTitle) ? string.Empty : $" — {group.EpaTitle}")</h4>
-              <div class="table-container">
-                <table class="clinic-table">
-                  <caption>@group.LineCount record@(group.LineCount == 1 ? string.Empty : "s") from @group.Instruments.Count instrument@(group.Instruments.Count == 1 ? string.Empty : "s")</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Instrument</th>
-                      <th scope="col">Record</th>
-                      <th scope="col">Rating</th>
-                      <th scope="col">Encounter</th>
-                      <th scope="col">State</th>
-                    </tr>
-                  </thead>
-                  @foreach (var instrument in group.Instruments)
-                  {
-                    <tbody>
-                      @for (var index = 0; index < instrument.Lines.Count; index++)
-                      {
-                        var line = instrument.Lines[index];
-                        <tr>
-                          @if (index == 0)
-                          {
-                            <th scope="rowgroup" rowspan="@instrument.Lines.Count">@instrument.InstrumentName</th>
-                          }
-                          <td><a href="/activities/@line.ActivityId">@line.SourceLabel</a></td>
-                          <td>@EvidenceSnapshotGroups.RatingText(line)</td>
-                          <td>
-                            @if (line.ObservedOn is DateOnly observedOn)
-                            {
-                              <EncounterDateLabel ObservedOn="observedOn" Declared="@(line.ObservedOnDeclared == true)" />
-                            }
-                          </td>
-                          <td>@line.SourceStateLabel</td>
-                        </tr>
-                      }
-                    </tbody>
-                  }
-                </table>
-              </div>
-            </article>
-          }
-
-          @if (snapshot.AcrossEpas.Count > 0)
-          {
-            <article class="detail-card detail-card--compact" aria-labelledby="evidence-across-epas">
-              <h4 id="evidence-across-epas">Not about a single EPA</h4>
-              @* Each sentence only when it is true of this list. A review frozen before T167 has no EPA cards: its
-                 campaign's per-EPA records are among the old lines in the card below, not "under each EPA above". *@
-              @if (snapshot.AcrossEpasHoldsACampaignReport)
-              {
-                <p class="muted">@(snapshot.FrozenBeforeLinesNamedTheirEpa.Count == 0
-                  ? "A feedback campaign's report (multi-source or learner feedback) covers several EPAs; its per-EPA records are listed under each EPA above."
-                  : "A feedback campaign's report (multi-source or learner feedback) covers several EPAs; its per-EPA records are among the lines below, " +
-                    "frozen before lines named their EPA.")</p>
-              }
-              @if (snapshot.AcrossEpasHoldsAnActivity)
-              {
-                <p class="muted">An activity here names no EPA.</p>
-              }
-              <ul class="list-unstyled">
-                @foreach (var item in snapshot.AcrossEpas)
-                {
-                  <li><strong>@item.SourceLabel</strong> <span>@item.Summary</span></li>
-                }
-              </ul>
-            </article>
-          }
-
-          @if (snapshot.FrozenBeforeLinesNamedTheirEpa.Count > 0)
-          {
-            <article class="detail-card detail-card--compact" aria-labelledby="evidence-frozen-before">
-              <h4 id="evidence-frozen-before">Frozen before lines named their EPA</h4>
-              <p class="muted">
-                This review started before each line recorded its EPA, instrument, rating and encounter date, so these
-                are listed as they were frozen.
-              </p>
-              <ul class="list-unstyled">
-                @foreach (var item in snapshot.FrozenBeforeLinesNamedTheirEpa)
-                {
-                  <li><strong>@item.SourceLabel</strong> <span>@item.Summary</span></li>
-                }
-              </ul>
-            </article>
-          }
-        </div>
-      }
-    </section>
-
-    @if (_review.IsFormative)
-    {
-      @StandingSection
-      @MsfCoverageSection
-    }
-
-    @* The charts are cards of their own, so their section is not a card around them (never a card in a card): a nested
-       card left each chart's figure 874 px at 1280, short of the 900 drawing (the T355 replay's 4.15). *@
-    <section class="list-section full-width" aria-labelledby="trajectory-section-h">
-      <h3 class="list-section-title" id="trajectory-section-h">Rating trajectory by EPA</h3>
-      @if (_trajectories.Count == 0)
-      {
-        <p class="muted">No rating by a named assessor to chart in this review's window.</p>
-      }
-      else
-      {
-        @* T355 (flow 05; R4, decision D2): one chart per EPA in its new form, over the review's own window with no Today,
-           the trainee named in its summary (4.15), each headed one level below this section's h3 and anchored at
-           "trajectory-<EpaId>", its heading "trajectory-<EpaId>-h" the standing panel's EPA names' target. An EPA no longer in force still charts what was recorded
-           against it, and says it is no longer in use (T255). Flow 07 places the chart; this only gives it its window. *@
-        <div class="stack-list">
-          @foreach (var trajectory in _trajectories)
-          {
-            <TrajectoryChart Trajectory="trajectory" HeadingLevel="4" ReviewWindow="true" SubjectName="@_review.TraineeName" />
-          }
-        </div>
-      }
-    </section>
-
-    @if (!_review.IsFormative)
-    {
-      <section class="detail-card">
-        <h3>Appeals</h3>
-        @* T213: resolving is the appeal body's, the chair or an external member, so only they are offered the form
-           (CallerResolvesAppeals), and only under appeal, the one state in which the resolve handler takes an answer (T213
-           review: before it, the body was shown a required Outcome with no button on every other review). *@
-        @if (_review.CallerResolvesAppeals && _review.State == CommitteeReviewState.UnderAppeal)
-        {
-          <EditForm Model="_appeal" OnValidSubmit="ResolveAppealAsync" OnInvalidSubmit="FocusAppealOutcome" FormName="committee-appeal-resolution">
-            <DataAnnotationsValidator />
-            <div class="form-grid">
-              @* T307. Resolving closes the review for good, so the Outcome opens on none, as every category select does
-                 (DESIGN.md § Entrustment-only reviews): Resolve appeal with none chosen says "Choose an outcome." under
-                 the select and sends nothing. Each outcome is said in words, with what it does to the decision (D51). *@
-              <FormField Label="Outcome" InputId="appeal-outcome" Required="true" HelpText="@CommitteeDecisionWording.AppealOutcomeHelp">
-                <ChildContent>
-                  <InputSelect id="appeal-outcome" class="form-select"
-                               aria-describedby="@FieldHelp.DescribedBy("appeal-outcome", CommitteeDecisionWording.AppealOutcomeHelp, AppealOutcomeMessageId)"
-                               @bind-Value="_appeal.Outcome" @ref="_appealOutcomeSelect">
-                    <option value="">Select an outcome…</option>
-                    @foreach (var outcome in Enum.GetValues<CommitteeAppealOutcome>())
-                    {
-                      <option value="@outcome">@CommitteeDecisionWording.AppealOutcomeLabel(outcome)</option>
-                    }
-                  </InputSelect>
-                </ChildContent>
-                <ValidationContent>
-                  <div id="@AppealOutcomeMessageId">
-                    <ValidationMessage For="() => _appeal.Outcome" />
-                  </div>
-                </ValidationContent>
-              </FormField>
-              @if (_appeal.Outcome == CommitteeAppealOutcome.Remitted)
-              {
-                @* T131 slice 5: a remitted entrustment-only review's replacement records no category either. *@
-                if (_review.DecidesProgression)
-                {
-                  <FormField Label="Replacement category" InputId="appeal-category" Required="true">
-                    <InputSelect id="appeal-category" class="form-select" @bind-Value="_appeal.RemittedCategory">
-                      <option value="">Select a category…</option>
-                      @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
-                      {
-                        <option value="@category">@CommitteeDecisionWording.CategoryLabel(category)</option>
-                      }
-                    </InputSelect>
-                  </FormField>
-                }
-                else
-                {
-                  @* A remit here changes no STAR the review issued: the appeal body is told so, and how one is changed. *@
-                  <p id="remit-entrustment-only-note" class="full-width muted">@CommitteeDecisionWording.EntrustmentOnlyRemitForThePanel</p>
-                }
-                <FormField Label="Replacement rationale" InputId="appeal-rationale" Required="true">
-                  <InputTextArea id="appeal-rationale" class="form-control" @bind-Value="_appeal.RemittedRationale" />
-                </FormField>
-                @* T307. The replacement is a committee decision, so it records conditions as the Decision form's does, on
-                   either type of review: a remit to Satisfactory with Observations carries its observations. *@
-                <FormField Label="Replacement conditions" InputId="appeal-conditions">
-                  <InputTextArea id="appeal-conditions" class="form-control" @bind-Value="_appeal.RemittedConditions" />
-                </FormField>
-                @* T165. The replacement is a committee decision, so it records who sat for it, held to the same quorum. The
-                   chair and the caller are ticked and locked, since both must have sat (CommitteeReview.ResolveAppeal):
-                   this form is offered only to the appeal body (T213), so the caller is whoever resolves the appeal,
-                   the chair or an external member. *@
-                @PresentFieldset("remit-present", _appeal.PresentUserIds, lockedUserId: _currentUserId)
-              }
-            </div>
-            <FormActions>
-              @if (_appeal.Outcome == CommitteeAppealOutcome.Remitted && _review.PanelShortfall is not null)
-              {
-                <button type="button" class="btn btn-primary" disabled aria-describedby="remit-reason">Resolve appeal</button>
-              }
-              else
-              {
-                <button type="submit" class="btn btn-primary" disabled="@OtherInFlight(ResolveAction)"
-                        aria-disabled="@InFlight.AriaDisabled(Running(ResolveAction))">Resolve appeal</button>
-              }
-            </FormActions>
-            @if (_appeal.Outcome == CommitteeAppealOutcome.Remitted && _review.PanelShortfall is { } remitShortfall)
-            {
-              <ul class="workflow-action-reasons">
-                <li id="remit-reason"><strong>Resolve appeal:</strong> @remitShortfall</li>
-              </ul>
-            }
-          </EditForm>
-        }
-        else if (_review.State == CommitteeReviewState.UnderAppeal)
-        {
-          <p id="appeal-body-note" class="muted">@AppealBodyNote</p>
-        }
-
-        @if (_review.Appeals.Count == 0)
-        {
-          <p class="muted">No appeal has been lodged against this review.</p>
-        }
-        else
-        {
-          @* T307: an outcome is named by CommitteeDecisionWording, as the resolve form's options are, never the enum's name. *@
-          <ul class="list-unstyled">
-            @foreach (var appeal in _review.Appeals)
-            {
-              <li><strong>@appeal.LodgedOn.ToString("yyyy-MM-dd")</strong> @appeal.Reason (@(appeal.Outcome is { } resolvedAs ? CommitteeDecisionWording.AppealOutcomeName(resolvedAs) : "Open"))</li>
-            }
-          </ul>
-        }
-      </section>
-    }
-  </div>
-}
+  </ChildContent>
+</StatePanel>
 
 @code {
   [Parameter] public int ReviewId { get; set; }
 
-  private CommitteeReviewDetailDto? _review;
-  private string? _status;
-  private string? _error;
-  private ActionResult? _result;
+  /// <summary>The acting role, as App resolved it and Routes cascades it; the claims' when nothing cascades it.</summary>
+  [CascadingParameter] public ActingRole? Acting { get; set; }
 
-  /// <summary>
-  /// The action that has been sent and has not yet answered, and the reads after it, or null (T234 review). While one
-  /// runs nothing else is sent, and every other button is disabled; the one pressed is not: it has the focus, and a
-  /// browser drops the focus of a button it disables, to the page. Before, a second press sent the command again, and
-  /// the review's concurrency token refused it, so "Decision recorded." stood beside a red refusal.
-  /// </summary>
-  private string? _inFlight;
-
+  private const string RefreshAction = "refresh";
   private const string StartAction = "start";
   private const string CloseAction = "close";
   private const string RatifyAction = "ratify";
   private const string RecordAction = "record";
   private const string ResolveAction = "resolve";
-  private const string StageAction = "stage";
-  private const string DeferAction = "defer";
+  private const string RemoveAction = "remove";
 
-  private static string RemoveAction(int pendingId) => $"remove:{pendingId}";
+  private static string StageAction(int key) => $"stage:{key}";
 
-  private static string ReinstateAction(int lineId) => $"reinstate:{lineId}";
+  // Where the page's one result sits (round 3 item 15): beside the control it answers.
+  private const string BarPlace = "bar";
+  private const string AgendaPlace = "agenda";
+  private const string DecisionPlace = "decision";
+  private const string AppealsPlace = "appeals";
+  private const string FootPlace = "foot";
 
-  private bool Running(string action) => _inFlight == action;
+  private static string LinePlace(int epaId) => $"line:{epaId}";
 
-  private bool OtherInFlight(string action) => _inFlight is not null && _inFlight != action;
+  private static string FormPlace(int key) => $"form:{key}";
 
-  private DecisionFormModel _decision = new();
-  private AppealResolutionModel _appeal = new();
-  private PendingDecisionFormModel _pending = new();
-  private IReadOnlyList<PendingEntrustmentDecisionDto> _pendingDecisions = Array.Empty<PendingEntrustmentDecisionDto>();
-  private string? _pendingDecisionsError;
-  private IReadOnlyList<StarEpaOptionDto> _starEpas = Array.Empty<StarEpaOptionDto>();
-  private IReadOnlyList<EntrustmentScaleDto> _scales = Array.Empty<EntrustmentScaleDto>();
+  private bool _loading = true;
+  private string? _loadError;
+  private bool _notFound;
+  private ClaimsPrincipal _user = new();
+
+  private CommitteeReviewDetailDto? _review;
+  private CommitteeAgendaDto? _agenda;
+  private bool _agendaFailed;
+  private IReadOnlyList<PendingEntrustmentDecisionDto> _pending = [];
+  private bool _pendingFailed;
   private SamplingConcentrationReportDto? _samplingReport;
   private MsfCampaignsOutsideSnapshotDto _msfOutsideSnapshot = MsfCampaignsOutsideSnapshotDto.None;
-  private IReadOnlyList<EpaTrajectoryDto> _trajectories = Array.Empty<EpaTrajectoryDto>();
-
-  /// <summary>
-  /// The standing panel links an EPA's name to its chart further down this page (T355, R4), only when this page draws
-  /// one: an EPA with no rating in the review's window has no chart, so its name stays plain text.
-  /// </summary>
-  private string? ChartHref(EpaStandingDto epa)
-      => _trajectories.Any(trajectory => trajectory.EpaId == epa.EpaId) ? $"#trajectory-{epa.EpaId}-h" : null;
+  private IReadOnlyList<EpaTrajectoryDto> _trajectories = [];
+  private bool _trajectoriesFailed;
+  private IReadOnlyList<StarEpaOptionDto> _starEpas = [];
+  private IReadOnlyList<EntrustmentScaleDto> _scales = [];
   private EntrustmentStandingDto? _standing;
   private string? _standingError;
   private MsfCoverageDto? _msfCoverage;
   private string? _msfCoverageError;
-  private string? _currentUserId;
-  private CommitteeAgendaDto? _agenda;
-  private string? _agendaError;
-  private DeferralFormModel? _deferral;
-  private InputSelect<int>? _pendingEpaSelect;
-  private InputTextArea? _deferralReason;
+
+  // When the review was last read, and what the last Refresh found (21; E7).
+  private DateTime _readAt;
+  private string? _refreshChange;
+
+  // What the chair has typed: the decision, each line's draft (E9), and the foot form's.
+  private DecisionDraft _decision = new();
+  private readonly Dictionary<int, LineDraft> _drafts = [];
+  private LineDraft _foot = new();
+  private int? _openEpaId;
+  private CommitteeEvidenceDto? _reading;
+
+  // The action sent and not yet answered (T234): one at a time.
+  private string? _inFlight;
+
+  // The page's one result: where it sits, its kind and its words; and whether it takes the focus after the next render.
+  private string? _resultPlace;
+  private string _resultKind = "success";
+  private string? _resultText;
+  private ActionResult? _result;
+  private bool _focusResult;
+
+  // An element to focus by id after the next render: the opened line's level, the reader's heading, a Read, a Stage.
+  private string? _focusId;
+
+  private ConfirmDialog? _startDialog;
+  private ConfirmDialog? _removeDialog;
+  private ConfirmDialog? _recordDialog;
+  private ConfirmDialog? _ratifyDialog;
+  private ConfirmDialog? _closeDialog;
+  private StartPreviewDto? _startPreview;
+  private PendingEntrustmentDecisionDto? _removing;
+
+  private AppealResolutionModel _appeal = new();
   private InputSelect<CommitteeAppealOutcome?>? _appealOutcomeSelect;
-
-  // Set when a deferral form opens: the reason box exists only after the next render, so the focus moves there then.
-  private bool _focusDeferralReason;
-
-  // Set when Resolve appeal is refused for want of an outcome (T307): the message under the select is in the DOM only
-  // after the next render, so the focus moves there then, and a screen reader reads the message with the select.
   private bool _focusAppealOutcome;
+  private const string AppealOutcomeMessageId = "appeal-outcome-message";
+
+  // The clock the host registers, else the system's: "today" on the South African calendar (T325).
+  private TimeProvider Clock => ServiceProvider.GetService<TimeProvider>() ?? TimeProvider.System;
+
+  private DateOnly Today => QuotaCalendar.Today(Clock);
+
+  /// <summary>The h1, the tab's stem and the crumb (the title rule): "Committee review" while it is read.</summary>
+  private string Heading => _loading || _loadError is not null ? ReviewWords.LoadingHeading
+    : _notFound || _review is null ? ReviewWords.NotFoundHeading
+    : ReviewWords.Heading(_review);
 
   /// <summary>
-  /// Why Ratify is refused now, or null when it is not: the first reason the ratify handler would give, in its order. The
-  /// decision's recorded attendance first (T165), then the agenda's closing lines (T131 slice 4).
+  /// The subtitle, and "Lerato Molefe's progress" under it (round 3 item 19): for the four roles flow 06's registrar page
+  /// admits (ProgrammeReadAs), while the trainee trains at the panel's institution (TraineeProfileId).
   /// </summary>
-  private string? RatifyBlockedReason => _review?.QuorumShortfall ?? _agenda?.RatifyBlockedReason;
-
-  /// <summary>
-  /// Why Record is refused now, or null when it is not, in the record handler's order: the panel cannot seat a quorum
-  /// (T165), or a closing line of the agenda is neither staged nor deferred, since the decision fixes the agenda with it
-  /// (T131 slice 4), or an entrustment-only review has nothing on its agenda (slice 5). The closing lines' sentence is the
-  /// one Ratify shows: it names the lines, not the button.
-  /// </summary>
-  private string? RecordBlockedReason => _review?.PanelShortfall ?? _agenda?.RecordBlockedReason;
-
-  /// <summary>
-  /// Whether the reader may take the chair's actions at this review (T213): they hold the panel's Chair seat
-  /// (<c>CommitteeReviewDetailDto.CallerChairs</c>), and the trainee check every one of those actions also demands passes
-  /// for them (<c>TraineeElsewhere</c> is null, T213 review). The chair's controls (Record decision, Ratify, Close review,
-  /// the staging form, Remove, and the agenda's Stage, Defer and Reinstate) are offered only then, by the predicates their
-  /// handlers demand. Before T213 every reader was offered them, and each refused on the click.
-  /// </summary>
-  private bool ChairMayAct => _review is { CallerChairs: true, TraineeElsewhere: null };
-
-  /// <summary>
-  /// Whether the decision form is offered: to the chair (<see cref="ChairMayAct" />), while the review is in progress,
-  /// the one state in which recording takes a decision. (T213 review)
-  /// </summary>
-  private bool OffersDecisionForm => ChairMayAct && _review?.State == CommitteeReviewState.InProgress;
-
-  /// <summary>
-  /// Who can act at this review now, said to a reader who is not offered the chair's controls (T213), so they are not
-  /// left looking for a button: the chair by name, and what only the chair can do in the review's state; on a scheduled
-  /// review, to a reader not offered Start (T194), who can start it. Nothing while no such action is open, nothing to the
-  /// chair, and nothing while the trainee check refuses the panel's actions, the chair's included:
-  /// #trainee-elsewhere-note says so instead. Nothing about the chair's actions while the chair may not sit at the review
-  /// (T256): it would name as able to act someone who cannot, and #chair-cannot-act-note says so instead.
-  /// </summary>
-  private string? ChairActionsNote
-  {
-    get
+  private RenderFragment? Subtitle => _loading || _loadError is not null || _notFound || _review is null
+    ? null
+    : __builder =>
     {
-      if (_review is null || _review.CallerChairs || _review.TraineeElsewhere is not null)
+      var review = _review;
+      <span>@ReviewWords.Subtitle(review)</span>
+      @if (ProgressHref is { } href)
       {
-        return null;
+        <a class="review-progress-link" href="@href">@ReviewWords.ProgressLink(review.TraineeName ?? string.Empty)</a>
       }
+    };
 
-      if (_review is { State: CommitteeReviewState.Scheduled, CallerMayStart: false })
+  private string? ProgressHref
+    => _review is { TraineeProfileId: int profileId, TraineeName: not null, TraineeElsewhere: null } &&
+       ProgrammeReadAs.RoleFor(Acting ?? ActingRoleResolver.Resolve(_user), ProgrammeScope.RosterRoles) is not null
+      ? ProgrammeLinks.Trainee(profileId)
+      : null;
+
+  private bool ChairMayAct => _review is not null && ReviewSitting.ChairMayAct(_review);
+
+  /// <summary>The chair may stage: the chair, while the review is in progress (T213).</summary>
+  private bool ChairStages => ChairMayAct && _review?.State == CommitteeReviewState.InProgress && _review.IsFormative == false;
+
+  private int Present => 1 + (_review?.PanelMembers ?? [])
+    .Count(member => member.MaySit && member.Role != DecisionPanelMemberRole.Chair && _decision.PresentUserIds.Contains(member.UserId));
+
+  private SittingBarView Bar => ReviewSitting.Bar(_review!, _agenda, _pending, Present);
+
+  private string AsOf => ReviewWords.AsOf(_readAt, Today, _refreshChange);
+
+  private int? ResultLine
+    => _resultPlace is { } place && place.StartsWith("line:", StringComparison.Ordinal) &&
+       int.TryParse(place.AsSpan(5), out var epaId)
+      ? epaId
+      : null;
+
+  // ─── Reading ─────────────────────────────────────────────────────────────────
+
+  protected override async Task OnParametersSetAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    _notFound = false;
+    ClearResult();
+    await LoadOrFailAsync();
+  }
+
+  private async Task LoadOrFailAsync()
+  {
+    try
+    {
+      _user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      await ReadReviewAsync();
+      await ReadSectionsAsync(everything: true);
+    }
+    catch (UnauthorizedAccessException)
+    {
+      // T194: an unknown id and one out of reach get the same one refusal, so the page is not found either way.
+      _notFound = true;
+      _review = null;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // Never the exception's text (T329): a fixed sentence, the failure to the log.
+      Logger.LogError(exception, "Committee review {ReviewId} could not be loaded.", ReviewId);
+      _loadError = ReviewWords.LoadFailed;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private async Task RetryAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    StateHasChanged();
+    await LoadOrFailAsync();
+  }
+
+  private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  /// <summary>The review, with its agenda, read through the review's ladder.</summary>
+  private async Task ReadReviewAsync()
+  {
+    _review = await Sender.Send(new GetCommitteeReviewByIdQuery(ReviewId, _user));
+    _agenda = _review.Agenda;
+    _agendaFailed = false;
+    _readAt = Clock.GetUtcNow().UtcDateTime;
+  }
+
+  /// <summary>
+  /// The review's sibling reads, each apart (round 3 item 11): a failure is its own section's sentence, never the page's.
+  /// <paramref name="everything" /> adds what no action changes: the trajectories, the MSF coverage, the staging lists.
+  /// </summary>
+  private async Task ReadSectionsAsync(bool everything)
+  {
+    if (_review is null)
+    {
+      return;
+    }
+
+    var review = _review;
+
+    try
+    {
+      _pending = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId, _user));
+      _pendingFailed = false;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogWarning(exception, "Committee review {ReviewId}'s staged decisions could not be read.", ReviewId);
+      _pendingFailed = true;
+    }
+
+    _samplingReport = await TryAsync(() => Sender.Send(new GetSamplingConcentrationWarningsQuery(ReviewId, _user)), "sampling report", _samplingReport);
+    _msfOutsideSnapshot = await TryAsync(() => Sender.Send(new CountMsfCampaignsOutsideSnapshotQuery(ReviewId, _user)), "MSF count", _msfOutsideSnapshot)
+                          ?? MsfCampaignsOutsideSnapshotDto.None;
+
+    // Ratifying issues the staged decisions, which is exactly what the standing reads (T166).
+    try
+    {
+      _standing = await Sender.Send(new GetEntrustmentStandingForTraineeQuery(
+        review.TraineeUserId, _user, review.ReviewPeriodTo < Today ? review.ReviewPeriodTo : null));
+      _standingError = null;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogWarning(exception, "Committee review {ReviewId}'s standing could not be read.", ReviewId);
+      _standing = null;
+      _standingError = ReviewWords.StandingFailed;
+    }
+
+    if (!everything)
+    {
+      return;
+    }
+
+    try
+    {
+      // The review's window (T355, D2): a rating outside it is not charted here.
+      _trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(
+        review.TraineeUserId, _user, review.ReviewPeriodFrom, review.ReviewPeriodTo));
+      _trajectoriesFailed = false;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogWarning(exception, "Committee review {ReviewId}'s trajectories could not be read.", ReviewId);
+      _trajectories = [];
+      _trajectoriesFailed = true;
+    }
+
+    try
+    {
+      _msfCoverage = await Sender.Send(new GetMsfCoverageForTraineeQuery(
+        review.TraineeUserId, _user, review.ReviewPeriodFrom, review.ReviewPeriodTo));
+      _msfCoverageError = null;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogWarning(exception, "Committee review {ReviewId}'s MSF coverage could not be read.", ReviewId);
+      _msfCoverage = null;
+      _msfCoverageError = ReviewWords.MsfCoverageFailed;
+    }
+
+    // The trainee's curriculum and the ladders, which the staging forms offer (StarCurriculum, T167): only to the chair.
+    if (ChairMayAct && review.State == CommitteeReviewState.InProgress)
+    {
+      _starEpas = await TryAsync(() => Sender.Send(new ListStarEpaOptionsForReviewQuery(ReviewId, _user)), "curriculum", _starEpas) ?? [];
+      if (_scales.Count == 0)
       {
-        // T194: Start is not the chair's alone, but it is not every reader's either. A member counts only while they may
-        // sit on the panel (T279), so a member who reads the review some other way is not told that they can.
-        return "Only the coordinators of the panel's institution, and those of its members who are active committee " +
-               "members there, can start this review.";
+        _scales = await TryAsync(() => Sender.Send(new GetEntrustmentScalesListQuery()), "scales", _scales) ?? [];
       }
+    }
+  }
 
-      if (_review.ChairCannotAct is not null)
-      {
-        return null;
-      }
-
-      var chair = _review.PanelMembers.FirstOrDefault(member => member.Role == DecisionPanelMemberRole.Chair);
-      var only = chair is null ? "Only the panel's chair" : $"Only the panel's chair, {chair.DisplayName},";
-      return _review switch
-      {
-        { IsFormative: true, State: CommitteeReviewState.InProgress } => $"{only} can close this review.",
-        { IsFormative: false, State: CommitteeReviewState.InProgress } =>
-          $"{only} can stage entrustment decisions, defer agenda lines and record the committee's decision.",
-        { IsFormative: false, State: CommitteeReviewState.Decided } => $"{only} can {JoinWithAnd(DecidedChairActions())}.",
-        _ => null
-      };
+  private async Task<T?> TryAsync<T>(Func<Task<T>> read, string what, T? fallback)
+  {
+    try
+    {
+      return await read();
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogWarning(exception, "Committee review {ReviewId}'s {What} could not be read.", ReviewId, what);
+      return fallback;
     }
   }
 
   /// <summary>
-  /// What the chair can still do at a decided review, in the order the page offers it (T213 review): remove a staged
-  /// decision that no longer fits the trainee's curriculum, where one is staged (the page's Remove); defer a closing line
-  /// that keeps the review from being ratified, where one does (<see cref="MayDeferAfterRecording" />); and ratify.
+  /// What an action changed, read again (T260), done or refused. The review through its query, which names everyone;
+  /// where that fails, the command's answer named from the copy the page holds (T142) and the agenda apart.
   /// </summary>
-  private IReadOnlyList<string> DecidedChairActions()
+  private async Task ReadAgainAsync(CommitteeReviewDetailDto? answer)
   {
-    var actions = new List<string>();
-    if (_pendingDecisions.Any(pending => pending.NoLongerFits is not null))
+    var before = _review;
+    try
     {
-      actions.Add("remove a staged decision that no longer fits the trainee's curriculum");
+      await ReadReviewAsync();
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogWarning(exception, "Committee review {ReviewId} could not be read again after an action.", ReviewId);
+      if (answer is not null)
+      {
+        _review = answer.WithNamesFrom(before) with
+        {
+          TraineeProfileId = before?.TraineeProfileId,
+          TrainingYear = before?.TrainingYear
+        };
+      }
+
+      try
+      {
+        _agenda = await Sender.Send(new GetCommitteeAgendaQuery(ReviewId, _user));
+        _agendaFailed = false;
+      }
+      catch (Exception agendaException) when (agendaException is not OperationCanceledException)
+      {
+        Logger.LogWarning(agendaException, "Committee review {ReviewId}'s agenda could not be read again.", ReviewId);
+        _agendaFailed = true;
+      }
     }
 
-    if (_agenda?.Lines.Any(MayDeferAfterRecording) == true)
-    {
-      actions.Add("defer an agenda line that keeps the review from being ratified");
-    }
-
-    actions.Add("ratify the committee's decision");
-    return actions;
+    await ReadSectionsAsync(everything: before?.State != _review?.State);
   }
 
   /// <summary>
-  /// Who resolves the appeal, said to a reader who is not offered the resolve form (T213): the appeal body, the chair and
-  /// the external members, by name, as the chair's note names the chair (T213 review). The trainee sees the same people
-  /// named as present at their decision.
+  /// Refresh (21; round-3-check): the review read again in place, scroll and focus kept on Refresh, and the status says
+  /// what changed: "As of 14:31 SAST. Now Decided.", "… Now 4 staged.", or "… No change.".
   /// </summary>
-  /// <remarks>
-  /// Only those who can act (<see cref="CommitteeReviewDetailDto.AppealBody" />, T237): each may sit on the panel now,
-  /// so never someone who holds Trainee, whom the resolve handler refuses (T194). Before T237 the note named every
-  /// external member, a trainee seated as one included, and told the trainee so on their own appeal. Where no one on
-  /// the appeal body can act, it says so and what unblocks it, rather than name nobody.
-  /// </remarks>
+  private async Task RefreshAsync()
+  {
+    if (_inFlight is not null || _review is null)
+    {
+      return;
+    }
+
+    _inFlight = RefreshAction;
+    var state = _review.State;
+    var stateLabel = _review.StateLabel;
+    var staged = ReviewSitting.StagedCount(_agenda, _pending);
+    try
+    {
+      await ReadReviewAsync();
+      await ReadSectionsAsync(everything: _review.State != state);
+      var nowStaged = ReviewSitting.StagedCount(_agenda, _pending);
+      _refreshChange = ReviewWords.RefreshChange(
+        _review.StateLabel != stateLabel ? _review.StateLabel : null,
+        _review.State == CommitteeReviewState.InProgress && nowStaged != staged ? nowStaged : null);
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogWarning(exception, "Committee review {ReviewId} could not be refreshed.", ReviewId);
+      _refreshChange = ReviewWords.RefreshFailed;
+    }
+    finally
+    {
+      _inFlight = null;
+    }
+  }
+
+  // ─── Results and focus ───────────────────────────────────────────────────────
+
+  private void ClearResult()
+  {
+    _resultPlace = null;
+    _resultText = null;
+    _resultKind = "success";
+  }
+
+  private void ShowResult(string place, string kind, string text)
+  {
+    _resultPlace = place;
+    _resultKind = kind;
+    _resultText = text;
+    _focusResult = true;
+  }
+
+  /// <summary>The page's one result region (T234), drawn where <see cref="_resultPlace" /> says.</summary>
+  private RenderFragment ResultRegion => __builder =>
+  {
+    <ActionResult @ref="_result" Id="review-result">
+      <Alert Kind="@_resultKind">@_resultText</Alert>
+    </ActionResult>
+  };
+
+  private RenderFragment? ResultAt(string place) => _resultPlace == place ? ResultRegion : null;
+
+  private ValueTask FocusByIdAsync(string id) => PageFocus.FocusByIdAsync(JS, id);
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusResult && _result is not null && _resultPlace is not null)
+    {
+      _focusResult = false;
+      await _result.Element.FocusAsync();
+    }
+    else if (_focusId is { } id)
+    {
+      _focusId = null;
+      try
+      {
+        await FocusByIdAsync(id);
+      }
+      catch (JSException)
+      {
+        // Focus is a convenience; what it would have shown is on the page either way.
+      }
+    }
+
+    if (_focusAppealOutcome)
+    {
+      _focusAppealOutcome = false;
+      if (_appealOutcomeSelect?.Element is { } outcome)
+      {
+        await outcome.FocusAsync();
+      }
+    }
+  }
+
+  /// <summary>
+  /// Sends one of the review's commands, unless an action runs (T234), then reads the review again, done or refused
+  /// (T260); the result sits beside the control and takes the focus.
+  /// </summary>
+  private async Task<bool> ExecuteAsync(
+    string name,
+    Func<ClaimsPrincipal, Task<CommitteeReviewDetailDto>> action,
+    string donePlace,
+    string done,
+    string refusedPlace,
+    Func<string, string>? refusal = null)
+  {
+    if (_inFlight is not null)
+    {
+      return false;
+    }
+
+    _inFlight = name;
+    ClearResult();
+    try
+    {
+      CommitteeReviewDetailDto answer;
+      try
+      {
+        answer = await action(_user);
+      }
+      catch (Exception exception) when (exception is not OperationCanceledException)
+      {
+        var text = RefusalText.Of(exception);
+        await ReadAgainAsync(null);
+        ShowResult(refusedPlace, "danger", refusal is null ? text : refusal(text));
+        return false;
+      }
+
+      await ReadAgainAsync(answer);
+      ShowResult(donePlace, "success", done);
+      return true;
+    }
+    finally
+    {
+      _inFlight = null;
+    }
+  }
+
+  // ─── The bar's acts ──────────────────────────────────────────────────────────
+
+  /// <summary>
+  /// Start review… (round 3 item 11): what Start would freeze, counted by the code Start runs, then the dialog. A preview
+  /// that cannot be read leaves the window alone in the dialog; Start itself refuses a review that moved meanwhile.
+  /// </summary>
+  private async Task OpenStartAsync()
+  {
+    _startPreview = await TryAsync(() => Sender.Send(new GetStartPreviewQuery(ReviewId, _user)), "start preview", (StartPreviewDto?)null);
+    StateHasChanged();
+    await ShowAsync(_startDialog);
+  }
+
+  private Task StartAsync()
+    => ExecuteAsync(
+      StartAction,
+      user => Sender.Send(new StartCommitteeReviewCommand(ReviewId, user)),
+      _review?.IsFormative == true ? BarPlace : AgendaPlace,
+      ReviewWords.Started,
+      BarPlace);
+
+  private async Task GoToDecisionAsync() => await FocusByIdAsync("decision-heading");
+
+  private async Task OpenRatifyAsync() => await ShowAsync(_ratifyDialog);
+
+  private Task RatifyAsync()
+    => ExecuteAsync(
+      RatifyAction,
+      user => Sender.Send(new RatifyCommitteeDecisionCommand(ReviewId, user)),
+      BarPlace,
+      ReviewWords.Ratified,
+      BarPlace);
+
+  private async Task OpenCloseAsync() => await ShowAsync(_closeDialog);
+
+  private Task CloseAsync()
+    => ExecuteAsync(
+      CloseAction,
+      user => Sender.Send(new CloseFormativeReviewCommand(ReviewId, user)),
+      BarPlace,
+      ReviewWords.Closed,
+      BarPlace);
+
+  private static async Task ShowAsync(ConfirmDialog? dialog)
+  {
+    if (dialog is not null)
+    {
+      await dialog.ShowAsync();
+    }
+  }
+
+  // ─── The agenda's lines (E9; C2, C3) ────────────────────────────────────────
+
+  private LineDraft NewDraft(int epaId) => new() { EpaId = epaId, IssuedOn = Today };
+
+  private static string Prefix(int key) => $"stage-{key}";
+
+  /// <summary>Stage on a line: opens it, keeping any other line's typed form as its draft (E9); the focus to its level.</summary>
+  private void OpenLineFor(CommitteeAgendaLineDto line)
+  {
+    if (_openEpaId != line.EpaId)
+    {
+      _reading = null;
+      _openEpaId = line.EpaId;
+      if (!_drafts.ContainsKey(line.EpaId))
+      {
+        _drafts[line.EpaId] = NewDraft(line.EpaId);
+      }
+
+      ClearResult();
+    }
+
+    _focusId = $"{Prefix(line.EpaId)}-level";
+  }
+
+  /// <summary>Cancel: discards the draft and closes the line; the focus back on its Stage.</summary>
+  private void CancelLine(int epaId)
+  {
+    _drafts.Remove(epaId);
+    if (_openEpaId == epaId)
+    {
+      _openEpaId = null;
+      _reading = null;
+    }
+
+    ClearResult();
+    _focusId = AgendaTable.StageId(epaId);
+  }
+
+  /// <summary>Read (C3): the activity as it is now takes the form's place; its heading takes the focus.</summary>
+  private void Read(CommitteeEvidenceDto line)
+  {
+    if (_openEpaId is not int epaId)
+    {
+      return;
+    }
+
+    _reading = line;
+    _focusId = EvidenceReader.HeadingIdFor(Prefix(epaId));
+  }
+
+  /// <summary>Back from the reader: the form as typed, the focus on the Read that was pressed.</summary>
+  private void BackFromReader()
+  {
+    if (_openEpaId is not int epaId || _reading is null)
+    {
+      return;
+    }
+
+    _focusId = AgendaLineForm.ReadId(Prefix(epaId), _reading.Id);
+    _reading = null;
+  }
+
+  /// <summary>"Rating chart for PAED-001": the focus to its chart's heading (C2).</summary>
+  private async Task JumpToChartAsync(int epaId) => await FocusByIdAsync($"trajectory-{epaId}-h");
+
+  /// <summary>The open line's form, or Read's reader in its place.</summary>
+  private RenderFragment<CommitteeAgendaLineDto> OpenLine => line => __builder =>
+  {
+    var prefix = Prefix(line.EpaId);
+    if (_reading is { } reading)
+    {
+      <EvidenceReader Line="reading" EpaCode="@line.EpaCode" IdPrefix="@prefix" OnBack="BackFromReader" />
+    }
+    else if (_drafts.TryGetValue(line.EpaId, out var draft))
+    {
+      <AgendaLineForm Draft="draft" IdPrefix="@prefix" Heading="@ReviewWords.StageHeading(line.EpaCode)"
+                      StarEpas="_starEpas" Scales="_scales" EvidenceItems="_review!.EvidenceItems"
+                      Standing="StandingLine" HasChart="HasChart" OffersRead="true"
+                      Result="@ResultAt(FormPlace(line.EpaId))"
+                      OnRead="Read" OnChartJump="JumpToChartAsync"
+                      OnStage="() => StageAsync(draft, foot: false)" OnCancel="() => CancelLine(line.EpaId)"
+                      Busy="@(_inFlight is not null)" Running="@(_inFlight == StageAction(line.EpaId))" Focus="FocusByIdAsync" />
+    }
+  };
+
+  /// <summary>"Stage a decision on an EPA not on this agenda", at the agenda's foot: an EPA select, no Read.</summary>
+  private RenderFragment FootForm => __builder =>
+  {
+    <div class="agenda-foot" id="agenda-foot">
+      @if (_starEpas.Count == 0)
+      {
+        <p class="muted">@ReviewWords.NoCurriculumEpa</p>
+      }
+      else
+      {
+        <AgendaLineForm Draft="_foot" IdPrefix="@Prefix(0)" ChoosesEpa="true" Heading="@ReviewWords.FootHeading"
+                        StarEpas="_starEpas" Scales="_scales" EvidenceItems="_review!.EvidenceItems"
+                        Standing="StandingLine" HasChart="HasChart" OnChartJump="JumpToChartAsync"
+                        Result="@(_resultPlace is FootPlace ? ResultRegion : ResultAt(FormPlace(0)))"
+                        OnStage="() => StageAsync(_foot, foot: true)"
+                        Busy="@(_inFlight is not null)" Running="@(_inFlight == StageAction(0))" Focus="FocusByIdAsync" />
+      }
+    </div>
+  };
+
+  /// <summary>
+  /// The open line's standing in one line (round 3 items 11, 26): the year's target and the STAR, the ratings in the
+  /// review window, the MSF. A part that failed is replaced by "Standing could not be loaded." once, in its place.
+  /// </summary>
+  private string? StandingLine(int epaId)
+  {
+    var parts = new List<string>();
+    var said = false;
+
+    void Failed()
+    {
+      if (!said)
+      {
+        parts.Add(ReviewWords.StandingFailed);
+        said = true;
+      }
+    }
+
+    if (_standingError is not null)
+    {
+      Failed();
+    }
+    else if (_standing?.Epas.FirstOrDefault(epa => epa.EpaId == epaId) is { } standing)
+    {
+      parts.Add(ReviewWords.TargetAndStar(_standing.TargetYear, standing.YearTargetLabel, standing.Decision?.LevelLabel));
+    }
+
+    if (_trajectoriesFailed)
+    {
+      Failed();
+    }
+    else
+    {
+      parts.Add(ReviewWords.RatingsInWindow(_trajectories.FirstOrDefault(trajectory => trajectory.EpaId == epaId)?.Points.Count ?? 0));
+    }
+
+    if (_msfCoverageError is not null)
+    {
+      Failed();
+    }
+    else if (_msfCoverage is not null)
+    {
+      parts.Add(ReviewWords.Msf(_msfCoverage.Epas.FirstOrDefault(epa => epa.EpaId == epaId)?.Periods.Any(period => period.IsCovered) == true));
+    }
+
+    return parts.Count == 0 ? null : string.Join(" · ", parts);
+  }
+
+  private bool HasChart(int epaId) => _trajectories.Any(trajectory => trajectory.EpaId == epaId && trajectory.Points.Count > 0);
+
+  /// <summary>
+  /// Stage pending decision (round 3 items 16, 30; 4.17–4.20): what the form can tell is refused at its top before
+  /// anything is sent, each field marked; then the command. Staged, the line closes to Staged with the result under it;
+  /// refused, the refusal at the form's top, everything typed kept.
+  /// </summary>
+  private async Task StageAsync(LineDraft draft, bool foot)
+  {
+    var key = foot ? 0 : draft.EpaId;
+    if (_inFlight is not null)
+    {
+      return;
+    }
+
+    draft.ClearRefusal();
+    ClearResult();
+    if (foot && draft.EpaId == 0)
+    {
+      draft.FieldRefusals[LineDraft.Fields.Epa] = ReviewWords.ChooseAnEpa;
+    }
+
+    if (draft.AuthorisedLevelId == 0)
+    {
+      draft.FieldRefusals[LineDraft.Fields.Level] = ReviewWords.ChooseALevel;
+    }
+
+    if (draft.ExpiresOn is DateOnly expires && expires <= draft.IssuedOn)
+    {
+      draft.FieldRefusals[LineDraft.Fields.Expires] = ReviewWords.ExpiryRefusal;
+    }
+
+    if (string.IsNullOrWhiteSpace(draft.Rationale))
+    {
+      draft.FieldRefusals[LineDraft.Fields.Rationale] = ReviewWords.GiveDecisionRationale;
+    }
+
+    if (draft.FieldRefusals.Count > 0)
+    {
+      draft.Refusal = string.Join(" ", draft.FieldRefusals.Values);
+      ShowResult(FormPlace(key), "danger", ReviewWords.NotStaged(draft.Refusal));
+      return;
+    }
+
+    _inFlight = StageAction(key);
+    try
+    {
+      try
+      {
+        await Sender.Send(new StagePendingEntrustmentDecisionCommand(
+          ReviewId, null, draft.EpaId, draft.AuthorisedLevelId, draft.IssuedOn, draft.ExpiresOn, draft.Rationale,
+          draft.EvidenceItemIds.ToArray(), _user));
+      }
+      catch (Exception exception) when (exception is not OperationCanceledException)
+      {
+        var refusal = RefusalText.Of(exception);
+        draft.Refusal = refusal;
+        if (refusal.Contains(ReviewWords.ExpiryRefusal, StringComparison.Ordinal))
+        {
+          draft.FieldRefusals[LineDraft.Fields.Expires] = ReviewWords.ExpiryRefusal;
+        }
+
+        await ReadAgainAsync(null);
+        ShowResult(FormPlace(key), "danger", ReviewWords.NotStaged(refusal));
+        return;
+      }
+
+      var epaId = draft.EpaId;
+      if (foot)
+      {
+        _foot = new LineDraft();
+      }
+      else
+      {
+        _drafts.Remove(epaId);
+        if (_openEpaId == epaId)
+        {
+          _openEpaId = null;
+          _reading = null;
+        }
+      }
+
+      await ReadAgainAsync(null);
+      ShowResult(_agenda?.Lines.Any(line => line.EpaId == epaId) == true ? LinePlace(epaId) : FootPlace, "success", ReviewWords.StagedResult);
+    }
+    finally
+    {
+      _inFlight = null;
+    }
+  }
+
+  /// <summary>Remove… (17, 22): the dialog names the EPA and what is discarded; "Keep it" is safe.</summary>
+  private async Task OpenRemoveAsync(PendingEntrustmentDecisionDto pending)
+  {
+    _removing = pending;
+    StateHasChanged();
+    await ShowAsync(_removeDialog);
+  }
+
+  private async Task RemoveAsync()
+  {
+    if (_removing is not { } pending || _inFlight is not null)
+    {
+      return;
+    }
+
+    _inFlight = RemoveAction;
+    ClearResult();
+    try
+    {
+      try
+      {
+        await Sender.Send(new RemovePendingEntrustmentDecisionCommand(ReviewId, pending.Id, _user));
+      }
+      catch (Exception exception) when (exception is not OperationCanceledException)
+      {
+        var refusal = RefusalText.Of(exception);
+        await ReadAgainAsync(null);
+        ShowResult(LinePlace(pending.EpaId), "danger", refusal);
+        return;
+      }
+
+      await ReadAgainAsync(null);
+      ShowResult(_agenda?.Lines.Any(line => line.EpaId == pending.EpaId) == true ? LinePlace(pending.EpaId) : AgendaPlace,
+        "success", ReviewWords.RemovedResult);
+    }
+    finally
+    {
+      _inFlight = null;
+    }
+  }
+
+  // ─── The decision (T324; E1, E4) ─────────────────────────────────────────────
+
+  /// <summary>
+  /// Record decision… pressed while available: refused before any dialog where the form can tell (T324), the summary at
+  /// the form's top taking the focus and each field marked; else the dialog.
+  /// </summary>
+  private async Task OpenRecordAsync()
+  {
+    _decision.ClearRefusal();
+    ClearResult();
+    if (_review?.DecidesProgression == true && _decision.Category is null)
+    {
+      _decision.FieldRefusals[DecisionDraft.Fields.Category] = ReviewWords.ChooseCategory;
+    }
+
+    if (string.IsNullOrWhiteSpace(_decision.Rationale))
+    {
+      _decision.FieldRefusals[DecisionDraft.Fields.Rationale] = ReviewWords.GiveRationale;
+    }
+
+    if (_decision.FieldRefusals.Count > 0)
+    {
+      var refusals = new List<string>();
+      if (_decision.FieldRefusals.ContainsKey(DecisionDraft.Fields.Category))
+      {
+        refusals.Add(CommitteeReview.ProgressionNeedsACategory);
+      }
+
+      if (_decision.FieldRefusals.ContainsKey(DecisionDraft.Fields.Rationale))
+      {
+        refusals.Add(ReviewWords.GiveRationale);
+      }
+
+      _decision.Refusal = ReviewWords.NotRecorded(refusals);
+      ShowResult(DecisionPlace, "danger", _decision.Refusal);
+      return;
+    }
+
+    StateHasChanged();
+    await ShowAsync(_recordDialog);
+  }
+
+  private IReadOnlyList<string> PresentLabels()
+    => (_review?.PanelMembers ?? [])
+      .Where(member => member.MaySit &&
+                       (member.Role == DecisionPanelMemberRole.Chair || _decision.PresentUserIds.Contains(member.UserId)))
+      .Select(member => member.Label)
+      .ToArray();
+
+  private IReadOnlyList<string> PresentUserIds()
+    => (_review?.PanelMembers ?? [])
+      .Where(member => member.MaySit &&
+                       (member.Role == DecisionPanelMemberRole.Chair || _decision.PresentUserIds.Contains(member.UserId)))
+      .Select(member => member.UserId)
+      .ToArray();
+
+  private async Task RecordAsync()
+  {
+    var recorded = await ExecuteAsync(
+      RecordAction,
+      user => Sender.Send(new RecordCommitteeDecisionCommand(
+        ReviewId,
+        // T131 slice 5: an entrustment-only review's decision records no category.
+        _review?.DecidesProgression == false ? null : _decision.Category,
+        _decision.Rationale,
+        _decision.Conditions,
+        // T361, D53, E1: the one sentence about the EPAs not decided.
+        string.IsNullOrWhiteSpace(_decision.UndecidedNote) ? null : _decision.UndecidedNote.Trim(),
+        PresentUserIds(),
+        user)),
+      DecisionPlace,
+      ReviewWords.Recorded,
+      DecisionPlace,
+      ReviewWords.NotRecorded);
+
+    if (recorded)
+    {
+      _decision = new DecisionDraft();
+    }
+  }
+
+  // ─── The appeal (T213, T307) ─────────────────────────────────────────────────
+
+  private async Task ResolveAppealAsync()
+  {
+    if (_appeal.Outcome is not { } outcome)
+    {
+      return;
+    }
+
+    var remitted = outcome == CommitteeAppealOutcome.Remitted;
+    var resolved = await ExecuteAsync(
+      ResolveAction,
+      user => Sender.Send(new ResolveAppealCommand(
+        ReviewId,
+        outcome,
+        remitted && _review?.DecidesProgression == true ? _appeal.RemittedCategory : null,
+        remitted ? _appeal.RemittedRationale : null,
+        remitted ? _appeal.RemittedConditions : null,
+        remitted ? PresentForAppeal() : null,
+        user)),
+      AppealsPlace,
+      ReviewWords.AppealResolved,
+      AppealsPlace);
+
+    if (resolved)
+    {
+      _appeal = new AppealResolutionModel();
+    }
+  }
+
+  // The chair and whoever resolves the appeal always sat (CommitteeReview.ResolveAppeal), ticked and locked (T165).
+  private IReadOnlyList<string> PresentForAppeal()
+  {
+    var caller = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    return (_review?.PanelMembers ?? [])
+      .Where(member => member.MaySit)
+      .Where(member => member.Role == DecisionPanelMemberRole.Chair ||
+                       string.Equals(member.UserId, caller, StringComparison.Ordinal) ||
+                       _appeal.PresentUserIds.Contains(member.UserId))
+      .Select(member => member.UserId)
+      .ToArray();
+  }
+
+  private void FocusAppealOutcome() => _focusAppealOutcome = true;
+
+  /// <summary>Who resolves the appeal, to a reader not offered the form (T213, T237).</summary>
   private string AppealBodyNote
   {
     get
     {
       var body = _review?.AppealBody ?? [];
       var chair = body.FirstOrDefault(member => member.Role == DecisionPanelMemberRole.Chair);
-      var externals = body
-        .Where(member => member.Role == DecisionPanelMemberRole.External)
-        .Select(member => member.DisplayName)
-        .ToArray();
-
+      var externals = body.Where(member => member.Role == DecisionPanelMemberRole.External).Select(member => member.DisplayName).ToArray();
       if (chair is null && externals.Length == 0)
       {
         return "Only the appeal body, the panel's chair or an external member, can resolve the appeal, and none of them " +
@@ -1035,235 +1055,428 @@
       if (externals.Length > 0)
       {
         parts.Add($"{(chair is null ? "the panel's" : "its")} external member{(externals.Length == 1 ? string.Empty : "s")}, " +
-                  JoinWithAnd(externals));
+                  CommitteeAgendaText.Codes(externals));
       }
 
-      return $"Only the appeal body can resolve the appeal: {JoinWithAnd(parts).TrimEnd(',')}.";
+      return $"Only the appeal body can resolve the appeal: {CommitteeAgendaText.Codes(parts).TrimEnd(',')}.";
     }
   }
 
-  /// <summary>"a", "a and b", "a, b and c".</summary>
-  private static string JoinWithAnd(IReadOnlyList<string> parts)
-    => parts.Count <= 1
-      ? string.Concat(parts)
-      : $"{string.Join(", ", parts.Take(parts.Count - 1))} and {parts[^1]}";
+  // ─── Sections ────────────────────────────────────────────────────────────────
 
   /// <summary>
-  /// Said beside a staged decision that names no evidence (T213). Staging never stores one, so only a row written some
-  /// other way can show it; ratifying refuses it. While the review is in progress it can be removed and staged again, by
-  /// the chair; once the decision is recorded it is fixed with it (D46), and the page says what the ratify refusal says
-  /// (<c>StagedEvidence.UngroundedOnceRecorded</c>). Before T213 the page told the chair to remove it and stage it again
-  /// in every state, which on a decided review neither handler allows.
+  /// "Before the committee decides" (round 3 items 13, 31): the sampling check, not dismissible, and what makes it
+  /// incomplete (T135); an EPA whose STAR was revoked mid-review, for the chair to stage (T235). Shown when it has
+  /// something to say.
   /// </summary>
-  private string NoEvidenceNote
-    => "Names no evidence, so the review cannot be ratified with it. " + (_review?.State switch
-    {
-      CommitteeReviewState.InProgress when ChairMayAct => "Remove it and stage it again, naming the evidence.",
-      CommitteeReviewState.InProgress => "The chair can remove it and stage it again, naming the evidence.",
-      _ => StagedEvidence.UngroundedOnceRecorded
-    });
-
-  /// <summary>
-  /// Said when nothing is staged (T212). Before the review is ratified, nothing has been. Once it is, the list is empty
-  /// whatever ratifying did, so the sentence says which it was, by the agenda: "none have been staged" straight after
-  /// Ratify would read as if the decisions just ratified were lost, and "issued what was staged" would be false of a
-  /// review ratified with nothing staged, which the ratify handler allows (every line optional or deferred, or a
-  /// progression review with an empty agenda).
-  /// </summary>
-  private string NoPendingNote
-    => _review?.State == CommitteeReviewState.Withdrawn
-      // T258 review: withdrawing removed whatever was staged, so "none have been staged" could be false.
-      ? "Nothing is pending: the review was withdrawn, so it issues no STAR, and anything staged at it was removed."
-      : _review?.State is not (CommitteeReviewState.Ratified or CommitteeReviewState.UnderAppeal or CommitteeReviewState.Final)
-      ? "No pending entrustment decisions have been staged for this review."
-      : _agenda is null
-        ? "Nothing is pending: the review is ratified."
-        : _agenda.Lines.Any(RatifyingIssuedOn)
-          ? "Nothing is pending: ratifying the review issued what was staged as STARs, and the agenda names each one."
-          : "Nothing was staged when the review was ratified, so ratifying it issued no STAR.";
-
-  /// <summary>
-  /// Whether ratifying issued a STAR on this line: it is Decided, or, where the agenda could not be read again after
-  /// Ratify and the page still holds the one read before, it was staged, since ratifying issues every staged decision.
-  /// Staging always leaves the EPA a line, so the agenda names every STAR ratifying issued.
-  /// </summary>
-  private static bool RatifyingIssuedOn(CommitteeAgendaLineDto line)
-    => line.State == CommitteeAgendaLineState.Decided || line.IsStaged;
-
-  protected override async Task OnParametersSetAsync()
+  private RenderFragment NotesSection => __builder =>
   {
-    await LoadAsync();
+    var review = _review!;
+    var report = _samplingReport;
+    var noLongerDecided = _agenda?.NoLongerDecided ?? [];
+    var incomplete = report is { EvidenceComplete: false };
+    var warns = report is { AnyWarning: true };
+    if (incomplete || warns || noLongerDecided.Count > 0)
+    {
+      <section class="detail-card" id="notes" aria-labelledby="notes-heading">
+        <h2 id="notes-heading" class="review-section-title">@ReviewWords.NotesHeading</h2>
+        @if (incomplete)
+        {
+          var withheld = report!.WithheldRatedActivities;
+          var unreadable = report.UnreadableRatedActivities;
+          var missing = withheld + unreadable;
+          @* T135: an incomplete report is not a quiet one; not dismissible, each cause its own sentence. *@
+          <Alert Kind="danger" Role="">
+            <h3>Sampling figures are incomplete</h3>
+            @if (withheld > 0)
+            {
+              <p>
+                @ReviewWords.Count(withheld, "rated observation", "rated observations") in this review window
+                @(withheld == 1 ? "is" : "are") outside what this account may read: evidence held by another institution,
+                or recorded before the trainee transferred. Ask a panel member with the full record before relying on the
+                sampling check.
+              </p>
+            }
+            @if (unreadable > 0)
+            {
+              <p>
+                @ReviewWords.Count(unreadable, "rated observation", "rated observations") in this review window could not
+                be read: the EPA, the rating or the assessor is missing or malformed.
+              </p>
+            }
+            <p>
+              The concentration check on this page ran without @(missing == 1 ? "that observation" : "those observations").
+              Treat the absence of a concentration warning as unknown rather than clean.
+            </p>
+          </Alert>
+        }
+        @if (warns)
+        {
+          <h3 id="sampling-heading">@ReviewWords.SamplingHeading</h3>
+          <ul class="list-unstyled review-notes-list" aria-labelledby="sampling-heading">
+            @foreach (var epa in report!.PerEpa)
+            {
+              <li>@ReviewWords.SamplingLine(epa)</li>
+            }
+          </ul>
+          @if (report.UnattributedRatedActivities > 0)
+          {
+            <p class="muted">@ReviewWords.NotCounted(report.UnattributedRatedActivities)</p>
+          }
+        }
+        @if (CommitteeAgendaText.NoLongerDecidedNote(noLongerDecided.Select(epa => epa.EpaCode).ToArray()) is { } note)
+        {
+          @* T235: stands until the chair acts, so no role. Stage chooses the EPA in the foot form. *@
+          <Alert Kind="warning" Role="" Id="agenda-no-longer-decided">
+            <p>@note</p>
+            @if (ChairStages)
+            {
+              <div class="actions-cell">
+                @foreach (var epa in noLongerDecided)
+                {
+                  <button type="button" class="btn btn-outline btn-sm" @onclick="() => StageOnFoot(epa.EpaId)">Stage @epa.EpaCode</button>
+                }
+              </div>
+            }
+          </Alert>
+        }
+      </section>
+    }
+  };
+
+  private void StageOnFoot(int epaId)
+  {
+    _foot.EpaId = epaId;
+    _focusId = $"{Prefix(0)}-level";
   }
 
-  private async Task LoadAsync()
+  private RenderFragment DecisionSection => __builder =>
   {
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _currentUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-      _review = await Sender.Send(new GetCommitteeReviewByIdQuery(ReviewId, authState.User));
-      _agenda = _review.Agenda;
-      _agendaError = null;
-      _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId, authState.User));
-      _pendingDecisionsError = null;
-      _samplingReport = await Sender.Send(new GetSamplingConcentrationWarningsQuery(ReviewId, authState.User));
-      _msfOutsideSnapshot = await Sender.Send(new CountMsfCampaignsOutsideSnapshotQuery(ReviewId, authState.User));
-      // The review's window (T355, decision D2): a rating outside the period is not charted here; the evidence lists,
-      // which are the review's record, are unchanged.
-      _trajectories = await Sender.Send(new GetEpaTrajectoryForTraineeQuery(
-        _review.TraineeUserId, authState.User, _review.ReviewPeriodFrom, _review.ReviewPeriodTo));
-      // T167: the trainee's curriculum, each EPA with the ladder its level must be on. The same list the stage
-      // handler enforces, so the picker cannot offer what the gate refuses.
-      _starEpas = await Sender.Send(new ListStarEpaOptionsForReviewQuery(ReviewId, authState.User));
-      if (_scales.Count == 0)
+    <DecisionForm Review="_review!" Agenda="_agenda" Pending="_pending" Draft="_decision"
+                  OffersForm="@(ChairMayAct && _review!.State == CommitteeReviewState.InProgress)"
+                  Result="@ResultAt(DecisionPlace)" OnRecord="OpenRecordAsync" OnTicked="StateHasChanged"
+                  Running="@(_inFlight == RecordAction)" Focus="FocusByIdAsync" />
+  };
+
+  private RenderFragment StandingSection => __builder =>
+  {
+    <section class="detail-card" aria-labelledby="standing-heading">
+      <h2 id="standing-heading" class="review-section-title">@ReviewWords.StandingHeading</h2>
+      <EntrustmentStandingPanel Standing="@_standing" LoadError="@_standingError" ReviewPeriodTo="@_review?.ReviewPeriodTo"
+                                EpaHref="@ChartHref" />
+    </section>
+  };
+
+  private string? ChartHref(EpaStandingDto epa) => HasChart(epa.EpaId) ? $"#trajectory-{epa.EpaId}-h" : null;
+
+  private RenderFragment MsfCoverageSection => __builder =>
+  {
+    <section class="detail-card" aria-labelledby="msf-coverage-heading">
+      <h2 id="msf-coverage-heading" class="review-section-title">@ReviewWords.MsfHeading</h2>
+      <MsfCoveragePanel Coverage="@_msfCoverage" LoadError="@_msfCoverageError"
+                        ReviewPeriodFrom="@_review?.ReviewPeriodFrom" ReviewPeriodTo="@_review?.ReviewPeriodTo"
+                        ReviewState="@_review?.State" />
+    </section>
+  };
+
+  /// <summary>
+  /// The frozen snapshot (Q6; round 3 items 23, 30): by EPA, then instrument A–Z. Each line's item goes to flow 03's page
+  /// with the review's way back (ReviewLinks), and carries the id that way back lands on.
+  /// </summary>
+  private RenderFragment SnapshotSection => __builder =>
+  {
+    var review = _review!;
+    <section class="detail-card" id="evidence-snapshot" aria-labelledby="evidence-snapshot-heading">
+      <h2 id="evidence-snapshot-heading" class="review-section-title">@ReviewWords.SnapshotHeading</h2>
+      @* T173: live, and not evidence: a campaign closed in the window and not yet released reaches no snapshot. *@
+      @if (_msfOutsideSnapshot.Total > 0)
       {
-        _scales = await Sender.Send(new GetEntrustmentScalesListQuery());
+        var awaiting = _msfOutsideSnapshot.AwaitingRelease;
+        var releasedLate = _msfOutsideSnapshot.ReleasedAfterStart;
+        <Alert Kind="info">
+          @if (awaiting > 0)
+          {
+            <p>@awaiting feedback @(awaiting == 1 ? "campaign that closed in this window is" : "campaigns that closed in this window are") not yet released.</p>
+          }
+          @if (releasedLate > 0)
+          {
+            <p>@releasedLate feedback @(releasedLate == 1 ? "campaign that closed in this window was" : "campaigns that closed in this window were") released after this review started.</p>
+          }
+          @if (review.State == CommitteeReviewState.Scheduled)
+          {
+            <p>A campaign is evidence only once released. Starting the review now leaves @(awaiting == 1 ? "that campaign" : "those campaigns") out of the snapshot.</p>
+          }
+          else
+          {
+            <p>The snapshot holds only the campaigns released before the review started, so @(_msfOutsideSnapshot.Total == 1 ? "that campaign is" : "those campaigns are") not in it.</p>
+          }
+        </Alert>
       }
-    }
-    catch (Exception exception)
-    {
-      _error = RefusalText.Of(exception);
-    }
-
-    await LoadStandingAsync();
-    await LoadMsfCoverageAsync();
-  }
-
-  /// <summary>
-  /// Per EPA and per semester of the review period, whether a released MSF campaign covering the EPA closed in it
-  /// (T168). Loaded apart, like the standing: it is advisory, and a failure says so in its own card. Read live, for the
-  /// whole period: no action on this page changes it, so it is not read again after one.
-  /// </summary>
-  private async Task LoadMsfCoverageAsync()
-  {
-    if (_review is null)
-    {
-      return;
-    }
-
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _msfCoverage = await Sender.Send(new GetMsfCoverageForTraineeQuery(
-        _review.TraineeUserId,
-        authState.User,
-        _review.ReviewPeriodFrom,
-        _review.ReviewPeriodTo));
-      _msfCoverageError = null;
-    }
-    catch (Exception exception)
-    {
-      _msfCoverage = null;
-      _msfCoverageError = RefusalText.Of(exception);
-    }
-  }
-
-  /// <summary>
-  /// The trainee's standing against Annexure A (T166). Loaded apart from the review: it is advisory, and a failure here
-  /// must not take the review, and the actions on it, down with it. It says so in its own card instead.
-  /// </summary>
-  private async Task LoadStandingAsync()
-  {
-    if (_review is null)
-    {
-      return;
-    }
-
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _standing = await Sender.Send(new GetEntrustmentStandingForTraineeQuery(
-        _review.TraineeUserId,
-        authState.User,
-        StandingReadFor(_review.ReviewPeriodTo, QuotaCalendar.Today())));
-      _standingError = null;
-    }
-    catch (Exception exception)
-    {
-      _standing = null;
-      _standingError = RefusalText.Of(exception);
-    }
-  }
-
-  private async Task StartAsync()
-  {
-    await ExecuteAsync(StartAction, user => Sender.Send(new StartCommitteeReviewCommand(ReviewId, user)), "Review started.");
-  }
-
-  private async Task RecordDecisionAsync()
-  {
-    await ExecuteAsync(
-      RecordAction,
-      user => Sender.Send(new RecordCommitteeDecisionCommand(
-        ReviewId,
-        // T131 slice 5: an entrustment-only review's decision records no category; the form offers none.
-        _review?.DecidesProgression == false ? null : _decision.Category,
-        _decision.Rationale, _decision.Conditions,
-        PresentUserIds(_decision.PresentUserIds, lockedUserId: null), user)),
-      "Decision recorded.");
-  }
-
-  // T165. Who is sent as present: the members who may sit, in the panel's order, of whom the chair (and, at an appeal,
-  // whoever resolves it) always is, ticked and locked on the form and sent whatever was clicked, and the rest as ticked.
-  private IReadOnlyList<string> PresentUserIds(HashSet<string> ticked, string? lockedUserId)
-    => _review is null
-      ? []
-      : _review.PanelMembers
-        .Where(member => member.MaySit)
-        .Where(member => IsLockedPresent(member, lockedUserId) || ticked.Contains(member.UserId))
-        .Select(member => member.UserId)
-        .ToArray();
-
-  private static bool IsLockedPresent(CommitteePersonDto member, string? lockedUserId)
-    => member.Role == DecisionPanelMemberRole.Chair ||
-       (lockedUserId is not null && string.Equals(member.UserId, lockedUserId, StringComparison.Ordinal));
-
-  private static void TogglePresent(HashSet<string> ticked, string userId, bool present)
-  {
-    if (present)
-    {
-      ticked.Add(userId);
-    }
-    else
-    {
-      ticked.Remove(userId);
-    }
-  }
+      @if (review.EvidenceItems.Count == 0)
+      {
+        <p>@(review.State == CommitteeReviewState.Scheduled ? ReviewWords.NothingFrozenYet
+              : review.StartedOn is null ? ReviewWords.NothingFrozenWithdrawn
+              : ReviewWords.WindowHeldNothing)</p>
+      }
+      else
+      {
+        var snapshot = EvidenceSnapshotGroups.Build(review.EvidenceItems);
+        <p class="muted">@ReviewWords.FrozenOn(review.StartedOn is DateTime started ? ActivityMoments.Date(started) : string.Empty, review.EvidenceItems.Count)</p>
+        @foreach (var group in snapshot.ByEpa)
+        {
+          var headingId = $"evidence-epa-{group.EpaId}";
+          <h3 id="@headingId" class="snapshot-group-heading">@group.EpaCode@(string.IsNullOrWhiteSpace(group.EpaTitle) ? string.Empty : $" — {group.EpaTitle}")</h3>
+          <div class="table-container">
+            <table class="clinic-table clinic-table--stack" role="table" aria-labelledby="@headingId">
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th scope="col" role="columnheader">Item</th>
+                  <th scope="col" role="columnheader">Assessor</th>
+                  <th scope="col" role="columnheader">Rating</th>
+                  <th scope="col" role="columnheader">Encounter</th>
+                  <th scope="col" role="columnheader">State</th>
+                </tr>
+              </thead>
+              <tbody role="rowgroup">
+                @foreach (var line in group.Instruments.SelectMany(instrument => instrument.Lines))
+                {
+                  <tr role="row" id="@ReviewLinks.SnapshotLineId(line.Id)">
+                    <th scope="row" role="rowheader">
+                      @if (line.ActivityId is int activityId)
+                      {
+                        <a href="@ReviewLinks.ActivityFromReview(activityId, review.Id, line.Id)">@line.SourceLabel</a>
+                      }
+                      else
+                      {
+                        @line.SourceLabel
+                      }
+                    </th>
+                    <td role="cell" data-label="Assessor">@line.AssessorName</td>
+                    <td role="cell" data-label="Rating">@EvidenceSnapshotGroups.RatingText(line)</td>
+                    <td role="cell" data-label="Encounter">
+                      @if (line.ObservedOn is DateOnly observedOn)
+                      {
+                        <EncounterDateLabel ObservedOn="observedOn" Declared="@(line.ObservedOnDeclared == true)" />
+                      }
+                    </td>
+                    <td role="cell" data-label="State">@line.SourceStateLabel</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+        @if (snapshot.AcrossEpas.Count > 0)
+        {
+          <h3 id="evidence-across-epas" class="snapshot-group-heading">@ReviewWords.AcrossEpasHeading</h3>
+          @if (snapshot.AcrossEpasHoldsACampaignReport)
+          {
+            <p class="muted">@(snapshot.FrozenBeforeLinesNamedTheirEpa.Count == 0
+              ? "A feedback campaign's report (multi-source or learner feedback) covers several EPAs; its per-EPA records are listed under each EPA above."
+              : "A feedback campaign's report (multi-source or learner feedback) covers several EPAs; its per-EPA records are among the lines below, frozen before lines named their EPA.")</p>
+          }
+          @if (snapshot.AcrossEpasHoldsAnActivity)
+          {
+            <p class="muted">An activity here names no EPA.</p>
+          }
+          <ul class="list-unstyled" aria-labelledby="evidence-across-epas">
+            @foreach (var item in snapshot.AcrossEpas)
+            {
+              <li id="@ReviewLinks.SnapshotLineId(item.Id)">
+                @if (item.ActivityId is int activityId)
+                {
+                  <a href="@ReviewLinks.ActivityFromReview(activityId, review.Id, item.Id)">@item.SourceLabel</a>
+                }
+                else
+                {
+                  <strong>@item.SourceLabel</strong>
+                }
+                <span>@($" · {item.Summary}")</span>
+              </li>
+            }
+          </ul>
+        }
+        @if (snapshot.FrozenBeforeLinesNamedTheirEpa.Count > 0)
+        {
+          <h3 id="evidence-frozen-before" class="snapshot-group-heading">@ReviewWords.FrozenBeforeHeading</h3>
+          <p class="muted">
+            This review started before each line recorded its EPA, instrument, rating and encounter date, so these are listed
+            as they were frozen.
+          </p>
+          <ul class="list-unstyled" aria-labelledby="evidence-frozen-before">
+            @foreach (var item in snapshot.FrozenBeforeLinesNamedTheirEpa)
+            {
+              <li id="@ReviewLinks.SnapshotLineId(item.Id)"><strong>@item.SourceLabel</strong> <span>@item.Summary</span></li>
+            }
+          </ul>
+        }
+      }
+    </section>
+  };
 
   /// <summary>
-  /// Who sat, as a group of checkboxes: a fieldset whose legend names it, one checkbox per panel member who may sit
-  /// (<c>PanelSeat</c>), each with its own id under <paramref name="idPrefix" /> (DESIGN.md § Form system). Nobody who
-  /// may not sit is offered, so the form cannot send someone the server refuses. (T165) One field among the form's
-  /// others, so a form group, its legend read as a label (T188).
+  /// The charts (T355, D2), each placed and not redrawn, one level below this section's h2; while an EPA's line is open its
+  /// chart says "Back to PAED-001's line" under its heading (C2).
   /// </summary>
-  private RenderFragment PresentFieldset(string idPrefix, HashSet<string> ticked, string? lockedUserId) => __builder =>
+  private RenderFragment TrajectorySection => __builder =>
   {
+    <section class="list-section full-width" aria-labelledby="trajectory-section-h">
+      <h2 class="list-section-title review-section-title" id="trajectory-section-h">@ReviewWords.TrajectoryHeading</h2>
+      @if (_trajectoriesFailed)
+      {
+        <Alert Kind="warning" Role="">@ReviewWords.TrajectoryFailed</Alert>
+      }
+      else if (_trajectories.Count == 0)
+      {
+        <p class="muted">@ReviewWords.NoTrajectory</p>
+      }
+      else
+      {
+        <div class="stack-list">
+          @foreach (var trajectory in _trajectories)
+          {
+            var epaId = trajectory.EpaId;
+            var code = trajectory.EpaCode;
+            <TrajectoryChart Trajectory="trajectory" HeadingLevel="3" ReviewWindow="true" SubjectName="@_review?.TraineeName"
+                             HeadContent="@(_openEpaId == epaId && _reading is null ? ChartBack(epaId, code) : null)" />
+          }
+        </div>
+      }
+    </section>
+  };
+
+  // "Back to PAED-001's line": the open line's own "Rating chart for …", by its form's prefix, never the foot form's on the
+  // same EPA (T361, review D4).
+  private RenderFragment ChartBack(int epaId, string code) => __builder =>
+  {
+    var jumpId = AgendaLineForm.ChartJumpId(Prefix(epaId), epaId);
+    <a class="chart-back" href="@($"#{jumpId}")"
+       @onclick="() => FocusByIdAsync(jumpId)" @onclick:preventDefault>@ReviewWords.ChartBack(code)</a>
+  };
+
+  private RenderFragment AppealsSection => __builder =>
+  {
+    var review = _review!;
+    <section class="detail-card review-appeals" id="appeals" aria-labelledby="appeals-heading">
+      <h2 id="appeals-heading" class="review-section-title">@ReviewWords.AppealsHeading</h2>
+      @ResultAt(AppealsPlace)
+      @if (review.CallerResolvesAppeals && review.State == CommitteeReviewState.UnderAppeal)
+      {
+        <EditForm Model="_appeal" OnValidSubmit="ResolveAppealAsync" OnInvalidSubmit="FocusAppealOutcome" FormName="committee-appeal-resolution">
+          <DataAnnotationsValidator />
+          <div class="form-grid">
+            <FormField Label="Outcome" InputId="appeal-outcome" Required="true" HelpText="@CommitteeDecisionWording.AppealOutcomeHelp">
+              <ChildContent>
+                <InputSelect id="appeal-outcome" class="form-select"
+                             aria-describedby="@FieldHelp.DescribedBy("appeal-outcome", CommitteeDecisionWording.AppealOutcomeHelp, AppealOutcomeMessageId)"
+                             @bind-Value="_appeal.Outcome" @ref="_appealOutcomeSelect">
+                  <option value="">Select an outcome…</option>
+                  @foreach (var outcome in Enum.GetValues<CommitteeAppealOutcome>())
+                  {
+                    <option value="@outcome">@CommitteeDecisionWording.AppealOutcomeLabel(outcome)</option>
+                  }
+                </InputSelect>
+              </ChildContent>
+              <ValidationContent>
+                <div id="@AppealOutcomeMessageId">
+                  <ValidationMessage For="() => _appeal.Outcome" />
+                </div>
+              </ValidationContent>
+            </FormField>
+            @if (_appeal.Outcome == CommitteeAppealOutcome.Remitted)
+            {
+              if (review.DecidesProgression)
+              {
+                <FormField Label="Replacement category" InputId="appeal-category" Required="true">
+                  <InputSelect id="appeal-category" class="form-select" @bind-Value="_appeal.RemittedCategory">
+                    <option value="">Select a category…</option>
+                    @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
+                    {
+                      <option value="@category">@CommitteeDecisionWording.CategoryLabel(category)</option>
+                    }
+                  </InputSelect>
+                </FormField>
+              }
+              else
+              {
+                <p id="remit-entrustment-only-note" class="full-width muted">@CommitteeDecisionWording.EntrustmentOnlyRemitForThePanel</p>
+              }
+              <FormField Label="Replacement rationale" InputId="appeal-rationale" Required="true">
+                <InputTextArea id="appeal-rationale" class="form-control" @bind-Value="_appeal.RemittedRationale" />
+              </FormField>
+              <FormField Label="Replacement conditions" InputId="appeal-conditions">
+                <InputTextArea id="appeal-conditions" class="form-control" @bind-Value="_appeal.RemittedConditions" />
+              </FormField>
+              @RemitPresent
+            }
+          </div>
+          <FormActions>
+            @if (_appeal.Outcome == CommitteeAppealOutcome.Remitted && review.PanelShortfall is not null)
+            {
+              <button type="button" class="btn btn-primary is-unavailable" aria-disabled="true" aria-describedby="remit-reason">Resolve appeal</button>
+            }
+            else
+            {
+              <button type="submit" class="btn btn-primary" disabled="@(_inFlight is not null && _inFlight != ResolveAction)"
+                      aria-disabled="@InFlight.AriaDisabled(_inFlight == ResolveAction)">Resolve appeal</button>
+            }
+          </FormActions>
+          @if (_appeal.Outcome == CommitteeAppealOutcome.Remitted && review.PanelShortfall is { } remitShortfall)
+          {
+            <ul class="workflow-action-reasons">
+              <li id="remit-reason"><strong>Resolve appeal:</strong> @remitShortfall</li>
+            </ul>
+          }
+        </EditForm>
+      }
+      else if (review.State == CommitteeReviewState.UnderAppeal)
+      {
+        <p id="appeal-body-note" class="muted">@AppealBodyNote</p>
+      }
+
+      @if (review.Appeals.Count == 0)
+      {
+        <p class="muted">@ReviewWords.NoAppeal</p>
+      }
+      else
+      {
+        <ul class="list-unstyled">
+          @foreach (var appeal in review.Appeals)
+          {
+            <li><strong>@ActivityMoments.Date(appeal.LodgedOn)</strong> @appeal.Reason (@(appeal.Outcome is { } resolvedAs ? CommitteeDecisionWording.AppealOutcomeName(resolvedAs) : "Open"))</li>
+          }
+        </ul>
+      }
+    </section>
+  };
+
+  /// <summary>Who sat for a remitted replacement: the chair and the resolver locked (T165).</summary>
+  private RenderFragment RemitPresent => __builder =>
+  {
+    var caller = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
     var seated = _review?.PanelMembers.Where(member => member.MaySit).ToArray() ?? [];
-    <fieldset class="form-group full-width" aria-describedby="@($"{idPrefix}-help")">
+    <fieldset class="form-group full-width" aria-describedby="remit-present-help">
       <legend>
         Present
         <span aria-hidden="true">*</span>
         <span class="visually-hidden">required</span>
       </legend>
-      <p id="@($"{idPrefix}-help")" class="page-subtitle">
-        Tick every panel member at this sitting. @CommitteeReviewDetailDto.QuorumRule
-      </p>
+      <p id="remit-present-help" class="page-subtitle">@ReviewWords.PresentHelp</p>
       <div class="check-grid">
         @for (var index = 0; index < seated.Length; index++)
         {
           var member = seated[index];
-          // By position, not by user id: an id is any string, and an id attribute must not hold a space.
-          var inputId = $"{idPrefix}-{index}";
+          var inputId = $"remit-present-{index}";
+          var locked = member.Role == DecisionPanelMemberRole.Chair || string.Equals(member.UserId, caller, StringComparison.Ordinal);
           <div class="form-check">
-            @if (IsLockedPresent(member, lockedUserId))
+            @if (locked)
             {
               <input id="@inputId" class="form-check-input" type="checkbox" checked disabled />
             }
             else
             {
-              <input id="@inputId" class="form-check-input" type="checkbox"
-                     checked="@ticked.Contains(member.UserId)"
-                     @onchange="args => TogglePresent(ticked, member.UserId, args.Value is bool isChecked && isChecked)" />
+              <input id="@inputId" class="form-check-input" type="checkbox" checked="@_appeal.PresentUserIds.Contains(member.UserId)"
+                     @onchange="args => TickRemit(member.UserId, args.Value is true)" />
             }
             <label for="@inputId">@member.Label</label>
           </div>
@@ -1272,850 +1485,92 @@
     </fieldset>
   };
 
-  private async Task RatifyAsync()
+  private void TickRemit(string userId, bool present)
   {
-    await ExecuteAsync(RatifyAction, user => Sender.Send(new RatifyCommitteeDecisionCommand(ReviewId, user)), "Decision ratified.");
-  }
-
-  private async Task CloseFormativeAsync()
-  {
-    await ExecuteAsync(CloseAction, user => Sender.Send(new CloseFormativeReviewCommand(ReviewId, user)), "Formative review closed.");
-  }
-
-  private async Task ResolveAppealAsync()
-  {
-    // The form submits only once an outcome is chosen ([Required]); this covers a submit that reaches here without one.
-    if (_appeal.Outcome is not { } outcome)
+    if (present)
     {
-      return;
-    }
-
-    // Only a remit takes a decision (T165, T307): what was typed for a replacement before the outcome changed to
-    // Dismissed is not sent with the dismissal.
-    var remitted = outcome == CommitteeAppealOutcome.Remitted;
-    await ExecuteAsync(
-      ResolveAction,
-      user => Sender.Send(new ResolveAppealCommand(
-        ReviewId,
-        outcome,
-        // Only a remitted progression review's replacement takes a category (T131 slice 5).
-        remitted && _review?.DecidesProgression == true ? _appeal.RemittedCategory : null,
-        remitted ? _appeal.RemittedRationale : null,
-        // T307: the replacement's conditions, on either type of review, as a recorded decision's.
-        remitted ? _appeal.RemittedConditions : null,
-        // T165: a remitted appeal's replacement records who sat for it; a dismissal takes no decision.
-        remitted ? PresentUserIds(_appeal.PresentUserIds, _currentUserId) : null,
-        user)),
-      "Appeal resolved.");
-  }
-
-  /// <summary>The region under the appeal's Outcome that holds its validation message; the select names it (T307).</summary>
-  private const string AppealOutcomeMessageId = "appeal-outcome-message";
-
-  /// <summary>
-  /// A Resolve appeal the form refused (no outcome chosen, T307) moves the focus to the Outcome, whose description now
-  /// includes the message saying why, as a refused deferral does (T212). Only once the render that puts the message in
-  /// the DOM is done (<see cref="OnAfterRenderAsync" />): focused from this handler, the select would be read before its
-  /// message exists, since the renderer holds the validation message's render until the handler yields.
-  /// </summary>
-  private void FocusAppealOutcome() => _focusAppealOutcome = true;
-
-  private async Task StagePendingAsync()
-  {
-    if (_inFlight is not null)
-    {
-      return;
-    }
-
-    _error = null;
-    _status = null;
-
-    // The button is disabled until an item is ticked; this covers a submit by the Enter key. The handler refuses too.
-    if (!EvidenceNamed)
-    {
-      _error = StagedEvidence.NoneNamed;
-      return;
-    }
-
-    _inFlight = StageAction;
-    try
-    {
-      try
-      {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        await Sender.Send(new StagePendingEntrustmentDecisionCommand(
-          ReviewId,
-          null,
-          _pending.EpaId,
-          _pending.AuthorisedLevelId,
-          _pending.IssuedOn,
-          _pending.ExpiresOn,
-          _pending.Rationale,
-          NamedEvidenceIds(),
-          authState.User));
-        _pending = new PendingDecisionFormModel();
-        _status = "Pending entrustment decision staged.";
-      }
-      catch (Exception exception)
-      {
-        _error = RefusalText.Of(exception);
-        return;
-      }
-
-      await LoadPendingDecisionsAsync();
-      await LoadAgendaAsync();
-
-      // The cleared form ticks no evidence, which disables Stage pending decision, and a disabled button loses the focus.
-      _result?.FocusAfterRender();
-    }
-    finally
-    {
-      _inFlight = null;
-    }
-  }
-
-  private StarEpaOptionDto? SelectedStarEpa => _starEpas.FirstOrDefault(option => option.EpaId == _pending.EpaId);
-
-  // The rungs of the selected EPA's ladder: its curriculum item's pinned scale, else the programme's scale, else every
-  // scale (StarCurriculum). Nothing until an EPA is chosen, because the ladder is the EPA's.
-  private IEnumerable<EntrustmentScaleDto> LevelScales => SelectedStarEpa switch
-  {
-    null => Array.Empty<EntrustmentScaleDto>(),
-    { ScaleId: int scaleId } => _scales.Where(scale => scale.Id == scaleId),
-    _ => _scales
-  };
-
-  private string LevelHelpText => SelectedStarEpa switch
-  {
-    null => "The rungs of the chosen EPA's ladder.",
-    { ScaleName: { } name } => $"Rungs of {name}, the ladder this EPA is assessed on.",
-    _ => "This EPA is on no ladder, so any scale's rung may be chosen."
-  };
-
-  // A level chosen for one EPA is not a rung of another's ladder; clear it rather than submit a level the picker no
-  // longer shows.
-  private void OnStarEpaChanged()
-  {
-    if (!LevelScales.SelectMany(scale => scale.Levels).Any(level => level.Id == _pending.AuthorisedLevelId))
-    {
-      _pending.AuthorisedLevelId = 0;
-    }
-  }
-
-  // ---- The evidence a staged decision rests on (D38, T131) ----------------------------------------------------------
-
-  // The ticked lines, as the review holds them. Only lines the handler accepts can be ticked, since only they are listed;
-  // the filter is repeated so that nothing else is ever sent.
-  private IReadOnlyList<CommitteeEvidenceDto> NamedEvidenceLines()
-    => _review is null
-      ? Array.Empty<CommitteeEvidenceDto>()
-      : _review.EvidenceItems
-        .Where(line => line.CanGroundADecision && _pending.EvidenceItemIds.Contains(line.Id))
-        .ToArray();
-
-  private int[] NamedEvidenceIds() => NamedEvidenceLines().Select(line => line.Id).ToArray();
-
-  private bool EvidenceNamed => NamedEvidenceLines().Count > 0;
-
-  internal const string NoFinishedItemHint =
-    "None of the named items was finished when the review started (each shows the state it was in), so the decision " +
-    "would rest on no completed assessment.";
-
-  // Said, never enforced: D38 as adopted asks for one item, about any EPA (the design's Decision 8, question O1).
-  private IReadOnlyList<string> EvidenceHints
-  {
-    get
-    {
-      var named = NamedEvidenceLines();
-      if (named.Count == 0)
-      {
-        return Array.Empty<string>();
-      }
-
-      var hints = new List<string>();
-      if (named.Count == 1)
-      {
-        hints.Add("Only one item is named. The College's rule is that an entrustment decision is never taken from a single form.");
-      }
-
-      if (SelectedStarEpa is { } epa && named.All(line => line.EpaId != epa.EpaId))
-      {
-        hints.Add($"None of the named items is about {epa.Code}.");
-      }
-
-      // A requested form nobody filled in, a draft, a declined or cancelled request: every state is in the snapshot on
-      // purpose (T138), and D38 as adopted lets any line ground a decision, so this is said, not refused. Only lines
-      // known to be unfinished count; a line frozen before T131 records neither. (T131 review)
-      if (named.All(line => line.SourceFinished == false))
-      {
-        hints.Add(NoFinishedItemHint);
-      }
-
-      return hints;
-    }
-  }
-
-  private void ToggleEvidence(int evidenceId, bool isChecked)
-  {
-    if (isChecked)
-    {
-      _pending.EvidenceItemIds.Add(evidenceId);
+      _appeal.PresentUserIds.Add(userId);
     }
     else
     {
-      _pending.EvidenceItemIds.Remove(evidenceId);
+      _appeal.PresentUserIds.Remove(userId);
     }
   }
 
-  // What a staged decision rests on, by the snapshot's own labels.
-  private IReadOnlyList<string> EvidenceLabels(IReadOnlyList<int> evidenceItemIds)
-    => evidenceItemIds
-      .Select(id => _review?.EvidenceItems.FirstOrDefault(line => line.Id == id)?.SourceLabel ?? $"item #{id}")
-      .ToArray();
+  // ─── The dialogs (round 3 items 11, 22; E1) ──────────────────────────────────
 
-  private RenderFragment EvidenceCheckbox(CommitteeEvidenceDto line, string? detail) =>
-    @<div class="form-check">
-      <input id="@($"pending-evidence-{line.Id}")" class="form-check-input" type="checkbox"
-             checked="@_pending.EvidenceItemIds.Contains(line.Id)"
-             @onchange="args => ToggleEvidence(line.Id, args.Value is bool isChecked && isChecked)" />
-      <label for="@($"pending-evidence-{line.Id}")">
-        @line.SourceLabel
-        @* T212: the space before "·" is part of the detail's text. Written in the markup, it stood alone before the @if,
-           and Razor drops whitespace there, so the label read "… #19· 3a · …" (T166 met the same). *@
-        @if (!string.IsNullOrWhiteSpace(detail))
+  private RenderFragment Dialogs => __builder =>
+  {
+    var review = _review!;
+    var staged = _pending;
+    <ConfirmDialog @ref="_startDialog" Title="@ReviewWords.StartTitle(review)" CancelLabel="@ReviewWords.NotYet"
+                   ConfirmLabel="@ReviewWords.StartConfirm" OnConfirm="StartAsync">
+      <BodyContent>
+        <p>@ReviewWords.StartBody(_startPreview, review.ReviewPeriodFrom, review.ReviewPeriodTo)</p>
+        @if (ReviewWords.CampaignsLeftOut(_startPreview?.CampaignsLeftOut ?? 0) is { } leftOut)
         {
-          <span class="muted">@($" · {detail}")</span>
+          <p>@leftOut</p>
         }
-      </label>
-    </div>;
+      </BodyContent>
+    </ConfirmDialog>
 
-  private async Task RemovePendingAsync(int pendingId)
-  {
-    if (_inFlight is not null)
+    <ConfirmDialog @ref="_removeDialog"
+                   Title="@(_removing is null ? "Remove the staged decision?" : $"{ReviewWords.RemoveName(_removing.EpaCode)}?")"
+                   Body="@(_removing is null ? string.Empty : ReviewWords.RemoveBody(_removing, RemovedLineIsDue(_removing)))"
+                   CancelLabel="@ReviewWords.KeepIt" ConfirmLabel="@ReviewWords.RemoveConfirm" DangerAction="true"
+                   OnConfirm="RemoveAsync" />
+
+    @if (!review.IsFormative)
     {
-      return;
+      <ConfirmDialog @ref="_recordDialog" Title="@ReviewWords.RecordTitle(review.DecidesProgression ? _decision.Category : null, review.TraineeName)"
+                     CancelLabel="@ReviewWords.NotYet" ConfirmLabel="@ReviewWords.RecordConfirm" OnConfirm="RecordAsync">
+        <BodyContent>
+          <p>@ReviewWords.Fixes(staged)</p>
+          @if (ReviewWords.RecordsNotDecided(ReviewSitting.NotStagedCodes(_agenda, _pending)) is { } notDecided)
+          {
+            <p>@notDecided</p>
+          }
+          <p>@ReviewWords.PresentList(PresentLabels())</p>
+          <p>@ReviewWords.RecordAfterwards</p>
+        </BodyContent>
+      </ConfirmDialog>
+
+      <ConfirmDialog @ref="_ratifyDialog" Title="@ReviewWords.RatifyTitle(staged.Count, review.TraineeName)"
+                     CancelLabel="@ReviewWords.NotYet" ConfirmLabel="@ReviewWords.RatifyConfirm(staged.Count)" OnConfirm="RatifyAsync">
+        <BodyContent>
+          @if (staged.Count > 0)
+          {
+            <ul class="dialog-list">
+              @foreach (var pending in staged)
+              {
+                <li>@ReviewWords.Issues(pending)</li>
+              }
+            </ul>
+          }
+          @if (ReviewWords.NotDecidedAtRatify(ReviewSitting.NotDecidedCodes(_agenda)) is { } notDecided)
+          {
+            <p>@notDecided</p>
+          }
+          <p>@ReviewWords.RatifyFinal</p>
+        </BodyContent>
+      </ConfirmDialog>
     }
-
-    _inFlight = RemoveAction(pendingId);
-    _error = null;
-    _status = null;
-
-    try
+    else
     {
-      try
-      {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        await Sender.Send(new RemovePendingEntrustmentDecisionCommand(ReviewId, pendingId, authState.User));
-        _status = "Pending entrustment decision removed.";
-      }
-      catch (Exception exception)
-      {
-        _error = RefusalText.Of(exception);
-        return;
-      }
-
-      await LoadPendingDecisionsAsync();
-      await LoadAgendaAsync();
-
-      // The removed decision's row, and its Remove, are gone.
-      _result?.FocusAfterRender();
+      <ConfirmDialog @ref="_closeDialog" Title="@ReviewWords.CloseTitle(review.TraineeName)" Body="@ReviewWords.CloseBody"
+                     CancelLabel="@ReviewWords.NotYet" ConfirmLabel="@ReviewWords.CloseConfirm" OnConfirm="CloseAsync" />
     }
-    finally
-    {
-      _inFlight = null;
-    }
-  }
-
-  /// <summary>
-  /// The day the standing's training year is read for: the review period's last day once it has passed, else today
-  /// (null). A review judges a period, and is often held after it ends; read for today, a trainee whose year has just
-  /// turned would be held to next year's targets at the review of this one. Only the year moves: the decisions a review
-  /// issues postdate its period, so they are read as they stand. (T166)
-  /// </summary>
-  private static DateOnly? StandingReadFor(DateOnly reviewPeriodTo, DateOnly today)
-    => reviewPeriodTo < today ? reviewPeriodTo : null;
-
-  /// <summary>
-  /// Full width, after the first pair of cards: the Decision card on a summative review, the Evidence snapshot on a
-  /// formative one, so neither leaves an empty cell beside the Review card. (T166)
-  /// </summary>
-  private RenderFragment StandingSection => __builder =>
-  {
-    <section class="detail-card full-width">
-      <h3>Entrustment against Annexure A</h3>
-      <EntrustmentStandingPanel Standing="@_standing" LoadError="@_standingError" ReviewPeriodTo="@_review?.ReviewPeriodTo"
-                                EpaHref="@ChartHref" />
-    </section>
   };
 
-  /// <summary>
-  /// Full width, directly after the standing wherever that sits, so the pair of cards below it stays a pair. (T168)
-  /// </summary>
-  private RenderFragment MsfCoverageSection => __builder =>
-  {
-    <section class="detail-card full-width" aria-labelledby="msf-coverage-heading">
-      <h3 id="msf-coverage-heading">Multi-source feedback by EPA</h3>
-      <MsfCoveragePanel Coverage="@_msfCoverage" LoadError="@_msfCoverageError"
-                        ReviewPeriodFrom="@_review?.ReviewPeriodFrom" ReviewPeriodTo="@_review?.ReviewPeriodTo"
-                        ReviewState="@_review?.State" />
-    </section>
-  };
-
-  /// <summary>
-  /// Sends one of the review's own commands, unless an action is already running (T234 review), then reads again what it
-  /// changed. A done action's result takes the focus: each of these takes its own button away.
-  /// </summary>
-  private async Task ExecuteAsync(
-    string name, Func<System.Security.Claims.ClaimsPrincipal, Task<CommitteeReviewDetailDto>> action, string status)
-  {
-    if (_inFlight is not null)
-    {
-      return;
-    }
-
-    _inFlight = name;
-    try
-    {
-      if (await SendAsync(action, status))
-      {
-        await ReadAgainAfterActionAsync();
-        _result?.FocusAfterRender();
-      }
-    }
-    finally
-    {
-      _inFlight = null;
-    }
-  }
-
-  /// <summary>Sends the command and shows its answer, or its refusal. Returns whether it was done.</summary>
-  private async Task<bool> SendAsync(Func<System.Security.Claims.ClaimsPrincipal, Task<CommitteeReviewDetailDto>> action, string status)
-  {
-    _error = null;
-    _status = null;
-
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var updated = await action(authState.User);
-
-      // The command's answer is the review as it now stands, but it is built by the mapper the commands share, which
-      // names nobody. A review's trainee never changes, so the name the page loaded with carries over, and so do the
-      // panel's names, which cover everyone a decision can record as present (T165). Reading the review back instead
-      // would be a second round trip that can fail after the action has already succeeded. (T142)
-      _review = updated.WithNamesFrom(_review);
-      _status = status;
-      return true;
-    }
-    catch (Exception exception)
-    {
-      _error = RefusalText.Of(exception);
-      return false;
-    }
-  }
-
-  /// <summary>What a done action of the review's own changes, read again. Every failure here lands in its own card.</summary>
-  private async Task ReadAgainAfterActionAsync()
-  {
-    // The MSF notice is live, and an action can change what it must say. Start above all: it freezes the snapshot the
-    // counts are measured against, and a campaign released since the page loaded is now in it (T173). Refreshed outside
-    // the action's try: the action has succeeded, and a failed count must not show that success beside an error (T142).
-    // The notice keeps its last value instead.
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _msfOutsideSnapshot = await Sender.Send(new CountMsfCampaignsOutsideSnapshotQuery(ReviewId, authState.User));
-    }
-    catch (Exception)
-    {
-      // Deliberately silent: the notice is advisory, and the page already says what the action did.
-    }
-
-    // Ratifying issues the staged STAR decisions, which is exactly what the standing reads, so it is read again after
-    // every action. A failure lands in the standing card, not beside the action's success.
-    await LoadStandingAsync();
-    // Ratifying also clears the staged list it issued; before T212 the list was not read again, and the page went on
-    // showing the decisions it had just issued as still pending until a reload.
-    await LoadPendingDecisionsAsync();
-    await LoadAgendaAsync();
-  }
-
-  /// <summary>
-  /// The staged decisions, read again after an action (T212): staging adds one, Remove takes one off, and ratifying
-  /// issues them all as STARs and clears the list. Read outside the action's <c>try</c>, as the agenda is: the action has
-  /// succeeded, so a failure here is a warning in the card, and the list last read stays in view below it.
-  /// </summary>
-  private async Task LoadPendingDecisionsAsync()
-  {
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _pendingDecisions = await Sender.Send(new ListPendingEntrustmentDecisionsForReviewQuery(ReviewId, authState.User));
-      _pendingDecisionsError = null;
-    }
-    catch (Exception exception)
-    {
-      _pendingDecisionsError = RefusalText.Of(exception);
-    }
-  }
-
-  /// <summary>
-  /// The review's agenda, read again after an action (T131 slice 4): Start plans it, and staging, removing, deferring,
-  /// reinstating and ratifying move its lines. The commands answer with the review as the shared mapper builds it,
-  /// which reads no agenda. A failure lands in the agenda card, not beside the action's success.
-  /// </summary>
-  private async Task LoadAgendaAsync()
-  {
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _agenda = await Sender.Send(new GetCommitteeAgendaQuery(ReviewId, authState.User));
-      _agendaError = null;
-    }
-    catch (Exception exception)
-    {
-      _agendaError = RefusalText.Of(exception);
-    }
-  }
-
-  /// <summary>
-  /// Whether the agenda's lines may still be staged, deferred or reinstated: only while the review is in progress, as the
-  /// staged decisions (T165). Once the decision is recorded they are fixed with it.
-  /// </summary>
-  private bool AgendaIsOpen => _review?.State is CommitteeReviewState.InProgress;
-
-  /// <summary>What the chair may do on an agenda line now (T131 slice 4, T165, T213).</summary>
-  private enum AgendaLineAction
-  {
-    /// <summary>Nothing: the reader is not the chair, or the line is staged, decided, or fixed with a recorded decision.</summary>
-    None,
-
-    /// <summary>A line still due at a review in progress: stage a decision on it, or defer it with a reason.</summary>
-    StageOrDefer,
-
-    /// <summary>A line deferred at a review in progress: take the deferral back.</summary>
-    Reinstate,
-
-    /// <summary>A decided review's closing line that keeps it from being ratified (<see cref="MayDeferAfterRecording" />).</summary>
-    DeferAfterRecording
-  }
-
-  /// <summary>The one action the agenda offers on this line, by the predicates its commands demand.</summary>
-  private AgendaLineAction ActionOn(CommitteeAgendaLineDto line)
-    => !ChairMayAct ? AgendaLineAction.None
-      : AgendaIsOpen && line.State == CommitteeAgendaLineState.Due && !line.IsStaged ? AgendaLineAction.StageOrDefer
-      : AgendaIsOpen && line.State == CommitteeAgendaLineState.Deferred ? AgendaLineAction.Reinstate
-      : MayDeferAfterRecording(line) ? AgendaLineAction.DeferAfterRecording
-      : AgendaLineAction.None;
-
-  /// <summary>
-  /// Whether the agenda has its Action column: some line offers the chair something (T226). A decided or ratified
-  /// review's lines offer nothing but a Defer on a line that keeps it from being ratified, so the column was a row of
-  /// blank cells there. A line with no action beside one that has says why in its cell (<see cref="NoActionReason" />).
-  /// </summary>
-  private bool AgendaOffersActions => _agenda?.Lines.Any(line => ActionOn(line) != AgendaLineAction.None) == true;
-
-  /// <summary>
-  /// Why a line offers the chair nothing, said in its Action cell while another line offers something (T226 review;
-  /// DESIGN.md § Table system, T211: a row with no action is not left blank). The column is shown only to the chair, so
-  /// the reason is never "not yours". In progress, the one such line is a staged one, whose decision is changed in the
-  /// staged list below, as the curriculum items page says "Editing below". Once the decision is recorded, every line but
-  /// one that keeps the review from being ratified is fixed with it (T165).
-  /// </summary>
-  private string NoActionReason(CommitteeAgendaLineDto line)
-    => !AgendaIsOpen ? "Fixed with the recorded decision"
-      : line.IsStaged ? "Staged below"
-      : "Nothing to do at this sitting";
-
-  /// <summary>
-  /// A decided review's one open action: deferring a closing line that keeps it from being ratified, which recording's
-  /// own check leaves only when the decision staged on it was removed afterwards because it no longer fits the trainee's
-  /// curriculum (T165's exception, <c>DeferAgendaLineCommand</c>).
-  /// </summary>
-  private bool MayDeferAfterRecording(CommitteeAgendaLineDto line)
-    => _review?.State is CommitteeReviewState.Decided && line.BlocksRatify;
-
-  /// <summary>Chooses the line's EPA in the staging form below, and moves the focus to it.</summary>
-  private Task StageFromAgendaAsync(CommitteeAgendaLineDto line) => StageEpaAsync(line.EpaId);
-
-  /// <summary>
-  /// Chooses the EPA in the staging form below, and moves the focus to it: an agenda line's, or one the card names as no
-  /// longer decided (T235), whose staging adds the chair's line.
-  /// </summary>
-  private async Task StageEpaAsync(int epaId)
-  {
-    _deferral = null;
-    _pending.EpaId = epaId;
-    OnStarEpaChanged();
-
-    if (_pendingEpaSelect?.Element is { } select)
-    {
-      try
-      {
-        await select.FocusAsync();
-      }
-      catch (Exception)
-      {
-        // Focus is a convenience; the EPA is chosen either way.
-      }
-    }
-  }
-
-  /// <summary>Opens the deferral form for the line; the focus moves to its reason once it is rendered, as Stage moves it.</summary>
-  private void OpenDeferral(CommitteeAgendaLineDto line)
-  {
-    _deferral = new DeferralFormModel { LineId = line.Id, EpaCode = line.EpaCode };
-    _focusDeferralReason = true;
-  }
-
-  protected override async Task OnAfterRenderAsync(bool firstRender)
-  {
-    if (_focusDeferralReason && _deferralReason?.Element is { } reason)
-    {
-      _focusDeferralReason = false;
-      try
-      {
-        await reason.FocusAsync();
-      }
-      catch (Exception)
-      {
-        // Focus is a convenience; the form is open either way.
-      }
-    }
-
-    // Cleared on the first render after it is set, whatever that render holds: the select was on the page when its form
-    // refused the submit, so a later render must not move the focus back to it.
-    if (_focusAppealOutcome)
-    {
-      _focusAppealOutcome = false;
-      if (_appealOutcomeSelect?.Element is { } outcome)
-      {
-        try
-        {
-          await outcome.FocusAsync();
-        }
-        catch (Exception)
-        {
-          // Focus is a convenience; the message is shown either way.
-        }
-      }
-    }
-  }
-
-  private const string DeferralReasonHelp =
-    "Kept on the agenda line. The trainee sees it on their reviews page once the review is ratified.";
-
-  /// <summary>The region under the deferral's reason that holds its validation message; the box names it (T212).</summary>
-  private const string DeferralReasonMessageId = "deferral-reason-message";
-
-  /// <summary>
-  /// A submit the form refused (an empty reason, T212) moves the focus to the reason, whose description now includes
-  /// the message saying why, as opening the form does.
-  /// </summary>
-  private void FocusDeferralReason() => _focusDeferralReason = true;
-
-  private void CancelDeferral() => _deferral = null;
-
-  private async Task DeferAsync()
-  {
-    if (_deferral is not { } deferral || _inFlight is not null)
-    {
-      return;
-    }
-
-    _inFlight = DeferAction;
-    _error = null;
-    _status = null;
-
-    try
-    {
-      try
-      {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        await Sender.Send(new DeferAgendaLineCommand(ReviewId, deferral.LineId, deferral.Reason, authState.User));
-        _deferral = null;
-        _status = $"{deferral.EpaCode} deferred.";
-      }
-      catch (Exception exception)
-      {
-        _error = RefusalText.Of(exception);
-        return;
-      }
-
-      await LoadAgendaAsync();
-
-      // The deferral's form, and the button that sent it, are gone.
-      _result?.FocusAfterRender();
-    }
-    finally
-    {
-      _inFlight = null;
-    }
-  }
-
-  private async Task ReinstateAsync(CommitteeAgendaLineDto line)
-  {
-    if (_inFlight is not null)
-    {
-      return;
-    }
-
-    _inFlight = ReinstateAction(line.Id);
-    _error = null;
-    _status = null;
-
-    try
-    {
-      try
-      {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        await Sender.Send(new ReinstateAgendaLineCommand(ReviewId, line.Id, authState.User));
-        _status = $"{line.EpaCode} reinstated: it is due at this sitting again.";
-      }
-      catch (Exception exception)
-      {
-        _error = RefusalText.Of(exception);
-        return;
-      }
-
-      await LoadAgendaAsync();
-
-      // The line is due again, so Stage and Defer take Reinstate's place.
-      _result?.FocusAfterRender();
-    }
-    finally
-    {
-      _inFlight = null;
-    }
-  }
-
-  /// <summary>
-  /// The EPAs this sitting is there to decide (T131 slice 4): full width, directly above the staging form, so a chair
-  /// reads what is due and stages it in one place. A formative review carries none, and the card is not shown for it.
-  /// </summary>
-  private RenderFragment AgendaSection => __builder =>
-  {
-    <section class="detail-card full-width" aria-labelledby="agenda-heading">
-      <h3 id="agenda-heading">Agenda</h3>
-      @if (_agendaError is not null)
-      {
-        @* A warning, as the standing card's is: an action that succeeded is not shown beside a red error, and the agenda
-           last read stays in view below it. *@
-        <Alert Kind="warning">The agenda could not be read again: @_agendaError</Alert>
-      }
-      @if (_agenda is null)
-      {
-        if (_agendaError is null)
-        {
-          <p class="muted">The agenda is not available.</p>
-        }
-      }
-      else
-      {
-        <p class="muted">@AgendaIntro(_agenda)</p>
-        @if (CommitteeAgendaText.NoLongerDecidedNote(_agenda.NoLongerDecided.Select(epa => epa.EpaCode).ToArray()) is { } noLongerDecided)
-        {
-          @* T235: an EPA Start left off because a STAR decided its window, whose STAR has since been revoked. Named in its own
-             sentence above the table, and never added to the agenda by itself (D46): the chair stages it. A warning that
-             stands on the page until it is acted on, so it carries no role and is not read out on every load. *@
-          <Alert Kind="warning" Role="" Id="agenda-no-longer-decided">
-            <p>@noLongerDecided</p>
-            @if (ChairMayAct && AgendaIsOpen)
-            {
-              <div class="actions-cell">
-                @* Named by its text: "Stage PAED-003" says what it does, and an aria-label that did not contain it would
-                   break label-in-name for a speech user. *@
-                @foreach (var epa in _agenda.NoLongerDecided)
-                {
-                  <button type="button" class="btn btn-outline btn-sm" @onclick="() => StageEpaAsync(epa.EpaId)">Stage @epa.EpaCode</button>
-                }
-              </div>
-            }
-          </Alert>
-        }
-        @if (_agenda.Lines.Count == 0)
-        {
-          <p>@AgendaEmpty(_review!.State)</p>
-        }
-        else
-        {
-          <div class="table-container">
-            <table class="clinic-table">
-              <caption>@AgendaCaption(_agenda)</caption>
-              <thead>
-                <tr>
-                  <th scope="col">EPA</th>
-                  <th scope="col">Window</th>
-                  <th scope="col">State</th>
-                  <th scope="col">Evidence</th>
-                  @* T213: staging, deferring and reinstating are the chair's, so nobody else gets the column. T226: nor does
-                     the chair once no line offers anything (a decided or ratified review, an agenda all staged), rather
-                     than a column of blank cells. *@
-                  @if (AgendaOffersActions)
-                  {
-                    <th scope="col">Action</th>
-                  }
-                </tr>
-              </thead>
-              <tbody>
-                @foreach (var line in _agenda.Lines)
-                {
-                  var detail = CommitteeAgendaText.StatusDetail(line, _review!.State);
-                  <tr id="@($"agenda-line-{line.EpaId}")">
-                    <th scope="row">@line.EpaCode — @line.EpaTitle</th>
-                    <td>@line.WindowLabel</td>
-                    <td>
-                      <span class="badge @BadgeFor.AgendaLine(line.Status)">@CommitteeAgendaText.StatusLabel(line.Status)</span>
-                      @if (detail is not null)
-                      {
-                        <div class="muted">@detail</div>
-                      }
-                    </td>
-                    <td>@line.EvidenceCount item@(line.EvidenceCount == 1 ? string.Empty : "s")</td>
-                    @if (AgendaOffersActions)
-                    {
-                      <td>
-                        <div class="actions-cell">
-                          @* Stage and Defer send nothing; each is disabled while an action runs, since what that action
-                             answers can change the line (T234 review). *@
-                          @switch (ActionOn(line))
-                          {
-                            case AgendaLineAction.StageOrDefer:
-                              <button type="button" class="btn btn-outline btn-sm" disabled="@(_inFlight is not null)"
-                                      @onclick="() => StageFromAgendaAsync(line)"
-                                      aria-label="@($"Stage a decision on {line.EpaCode}")">Stage</button>
-                              <button type="button" class="btn btn-outline btn-sm" disabled="@(_inFlight is not null)"
-                                      @onclick="() => OpenDeferral(line)"
-                                      aria-label="@($"Defer {line.EpaCode}")">Defer</button>
-                              break;
-                            case AgendaLineAction.Reinstate:
-                              <button type="button" class="btn btn-outline btn-sm" disabled="@OtherInFlight(ReinstateAction(line.Id))"
-                                      aria-disabled="@InFlight.AriaDisabled(Running(ReinstateAction(line.Id)))"
-                                      @onclick="() => ReinstateAsync(line)"
-                                      aria-label="@($"Reinstate {line.EpaCode}")">Reinstate</button>
-                              break;
-                            case AgendaLineAction.DeferAfterRecording:
-                              <button type="button" class="btn btn-outline btn-sm" disabled="@(_inFlight is not null)"
-                                      @onclick="() => OpenDeferral(line)"
-                                      aria-label="@($"Defer {line.EpaCode}")">Defer</button>
-                              break;
-                            default:
-                              <span class="muted">@NoActionReason(line)</span>
-                              break;
-                          }
-                        </div>
-                      </td>
-                    }
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        }
-
-        @if (_deferral is { } deferral)
-        {
-          <EditForm Model="deferral" OnValidSubmit="DeferAsync" OnInvalidSubmit="FocusDeferralReason" FormName="agenda-deferral">
-            <DataAnnotationsValidator />
-            <fieldset>
-              <legend>Defer @deferral.EpaCode</legend>
-              <div class="form-grid">
-                @* T212: an empty reason is refused here, and says why under the field. Before, the box was marked invalid
-                   and nothing said what was wrong. The message's region is always present and the box names it, and a
-                   refused submit moves the focus to the box, so a screen reader reads the message with it. *@
-                <FormField Label="Why the committee is deferring it" InputId="deferral-reason" Required="true" FullWidth="true"
-                           HelpText="@DeferralReasonHelp">
-                  <ChildContent>
-                    <InputTextArea id="deferral-reason" class="form-control"
-                                   aria-describedby="@FieldHelp.DescribedBy("deferral-reason", DeferralReasonHelp, DeferralReasonMessageId)"
-                                   @bind-Value="deferral.Reason" @ref="_deferralReason" />
-                  </ChildContent>
-                  <ValidationContent>
-                    <div id="@DeferralReasonMessageId">
-                      <ValidationMessage For="() => deferral.Reason" />
-                    </div>
-                  </ValidationContent>
-                </FormField>
-              </div>
-              <FormActions>
-                <button type="button" class="btn btn-outline" disabled="@(_inFlight is not null)" @onclick="CancelDeferral">Cancel</button>
-                <button type="submit" class="btn btn-primary" disabled="@OtherInFlight(DeferAction)"
-                        aria-disabled="@InFlight.AriaDisabled(Running(DeferAction))">Defer @deferral.EpaCode</button>
-              </FormActions>
-            </fieldset>
-          </EditForm>
-        }
-
-        @if (CommitteeAgendaText.DecidedInWindowNote(_agenda.DecidedInWindow) is { } decidedInWindow)
-        {
-          <p id="agenda-decided-in-window" class="muted">@decidedInWindow</p>
-        }
-
-        @if (_agenda.RoutedElsewhere.Count > 0)
-        {
-          <h4 id="agenda-elsewhere-heading">Decided by another panel</h4>
-          <ul class="list-unstyled" aria-labelledby="agenda-elsewhere-heading">
-            @foreach (var line in _agenda.RoutedElsewhere)
-            {
-              <li id="@($"agenda-elsewhere-{line.EpaId}")">
-                <strong>@line.EpaCode — @line.EpaTitle</strong>
-                <span>@line.PanelName · @line.WindowLabel</span>
-                <span class="badge @BadgeFor.AgendaElsewhere(line.Status)">@CommitteeAgendaText.ElsewhereLabel(line.Status)</span>
-              </li>
-            }
-          </ul>
-        }
-      }
-    </section>
-  };
-
-  private static string AgendaIntro(CommitteeAgendaDto agenda)
-    => $"The EPAs routed to this panel that are due for {agenda.PeriodLabel}, planned when the review was scheduled " +
-       "and when it started. A line marked Due must be staged or deferred with a reason before the decision is recorded; " +
-       "the others are optional.";
-
-  private static string AgendaEmpty(CommitteeReviewState state) => state switch
-  {
-    CommitteeReviewState.Scheduled =>
-      "Nothing is on the agenda yet. Starting the review adds every EPA routed to this panel that is due in its period " +
-      "and not already decided in its window.",
-    // T258: nothing more is staged at a withdrawn review.
-    CommitteeReviewState.Withdrawn => "Nothing was on this review's agenda when it was withdrawn.",
-    _ => "Nothing is on this review's agenda. A decision can still be staged on any EPA of the trainee's curriculum that " +
-         "routes to this panel, and staging it adds it."
-  };
-
-  private static string AgendaCaption(CommitteeAgendaDto agenda)
-  {
-    var outstanding = agenda.OutstandingClosingLines.Count;
-    return $"{agenda.Lines.Count} EPA{(agenda.Lines.Count == 1 ? string.Empty : "s")} for {agenda.PeriodLabel}" +
-           (outstanding == 0 ? string.Empty : $", {outstanding} still to stage or defer");
-  }
-
-  private sealed class DecisionFormModel
-  {
-    /// <summary>
-    /// The progression category, or null until the chair chooses one. Not [Required]: an entrustment-only review takes
-    /// none (T131 slice 5), and a progression review sent without one is refused by the handler, whose reason the page
-    /// shows.
-    /// </summary>
-    public CommitteeDecisionCategory? Category { get; set; }
-
-    [Required]
-    public string Rationale { get; set; } = string.Empty;
-
-    public string? Conditions { get; set; }
-
-    /// <summary>The members ticked as present, other than the chair, who always is (T165).</summary>
-    public HashSet<string> PresentUserIds { get; } = new(StringComparer.Ordinal);
-  }
+  /// <summary>Whether a removed decision's line is due here again: a line the agenda planned, not one the chair added.</summary>
+  private bool RemovedLineIsDue(PendingEntrustmentDecisionDto pending)
+    => _agenda?.Lines.FirstOrDefault(line => line.EpaId == pending.EpaId) is { } line &&
+       line.Origin != CommitteeAgendaLineOrigin.Chair && line.IsClosing &&
+       _review?.State == CommitteeReviewState.InProgress;
 
   private sealed class AppealResolutionModel
   {
-    /// <summary>
-    /// Null until the resolver chooses one (T307): resolving closes the review for good, so the form never offers an
-    /// outcome nobody chose. Before T307 it opened on Dismissed, and Resolve appeal pressed untouched dismissed the appeal.
-    /// </summary>
+    /// <summary>Null until the resolver chooses one (T307).</summary>
     [Required(ErrorMessage = "Choose an outcome.")]
     public CommitteeAppealOutcome? Outcome { get; set; }
 
@@ -2125,38 +1580,5 @@
 
     /// <summary>The members ticked as present for a remitted replacement, other than those always present (T165).</summary>
     public HashSet<string> PresentUserIds { get; } = new(StringComparer.Ordinal);
-  }
-
-  private sealed class DeferralFormModel
-  {
-    public int LineId { get; init; }
-
-    public string EpaCode { get; init; } = string.Empty;
-
-    [Required(ErrorMessage = "Say why the committee is deferring the decision.")]
-    // The domain's own limit and words (CommitteeAgendaLine.DeferralReasonMaxLength): without them, the message under
-    // the box (T212) would print the framework's "The field Reason must be a string with a maximum length of 2000."
-    [StringLength(2000, ErrorMessage = "A deferral reason is at most 2000 characters.")]
-    public string Reason { get; set; } = string.Empty;
-  }
-
-  private sealed class PendingDecisionFormModel
-  {
-    [Range(1, int.MaxValue, ErrorMessage = "Select an EPA.")]
-    public int EpaId { get; set; }
-
-    [Range(1, int.MaxValue, ErrorMessage = "Select an entrustment level.")]
-    public int AuthorisedLevelId { get; set; }
-
-    [Required]
-    public DateOnly IssuedOn { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
-
-    public DateOnly? ExpiresOn { get; set; }
-
-    [Required]
-    public string Rationale { get; set; } = string.Empty;
-
-    // The ids of the ticked snapshot lines (D38, T131).
-    public HashSet<int> EvidenceItemIds { get; } = new();
   }
 }

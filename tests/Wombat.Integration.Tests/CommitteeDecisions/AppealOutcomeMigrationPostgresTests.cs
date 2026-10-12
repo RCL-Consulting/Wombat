@@ -17,7 +17,8 @@ namespace Wombat.Integration.Tests.CommitteeDecisions;
 /// <remarks>
 /// The unit suites run on EF InMemory, which runs no migration and enforces no check, and on a fresh database the rewrite
 /// touches nothing. So it is rehearsed on a schema stopped at the last migration before it. That schema has every table and
-/// column the current model has (T307 adds a check and changes no column), so its rows are written through the domain,
+/// column the current model has but T361's <c>UndecidedNote</c>, lent for the writes (T307 adds a check and changes no
+/// column), so its rows are written through the domain,
 /// and the one Upheld outcome, which the domain no longer writes, by raw SQL. The schema helpers follow
 /// <c>SystemManagedMigrationPostgresTests</c>.
 /// </remarks>
@@ -45,6 +46,10 @@ public sealed class AppealOutcomeMigrationPostgresTests : IAsyncLifetime
                 (await db.Database.GetPendingMigrationsAsync())
                     .Should().ContainSingle(migration => migration.EndsWith("_T307_AppealOutcomesDismissedOrRemitted", StringComparison.Ordinal));
             }
+
+            // T361 added CommitteeDecisions.UndecidedNote, which the current model writes and this schema lacks: lent for
+            // the domain's writes below, and taken back before the migrations run, which add it.
+            await ExecuteAsync(schema, """ALTER TABLE "CommitteeDecisions" ADD COLUMN "UndecidedNote" character varying(4000)""");
 
             int upheld, dismissed, remitted, open;
             await using (var db = NewContext(schema))
@@ -82,6 +87,7 @@ public sealed class AppealOutcomeMigrationPostgresTests : IAsyncLifetime
                 (upheld, dismissed, remitted, open) = (appealIds[0], appealIds[1], appealIds[2], appealIds[3]);
             }
 
+            await ExecuteAsync(schema, """ALTER TABLE "CommitteeDecisions" DROP COLUMN "UndecidedNote" """);
             (await ExecuteAsync(schema, """UPDATE "CommitteeAppeals" SET "Outcome" = 1 WHERE "Id" = $1""", upheld))
                 .Should().Be(1, "guard: before T307 an Upheld outcome could be stored");
 

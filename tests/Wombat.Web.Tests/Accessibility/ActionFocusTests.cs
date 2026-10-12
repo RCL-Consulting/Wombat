@@ -232,13 +232,18 @@ public sealed class ActionFocusTests : TestContext
         hold.Release();
 
         // bUnit on .NET 10 leaves an element's blazor:elementReference empty in the markup, so the focused reference is
-        // matched to the region's own.
-        var region = cut.FindComponent<ActionResult>();
-        cut.WaitForAssertion(() => FocusCalls().Should().ContainSingle()
-            .Which.Arguments[0].Should().BeOfType<ElementReference>()
-            .Which.Id.Should().Be(region.Instance.Element.Id));
-        region.Find(".action-result").TextContent.Trim().Should().NotBeEmpty("the focus reads the result out");
-        region.Find(".action-result").GetAttribute("tabindex").Should().Be("-1");
+        // matched to the region's own. The region is found once the result is drawn: the committee review draws it beside
+        // the control the result answers, so it is in the page only then (T361, round 3 item 15).
+        IRenderedComponent<ActionResult>? region = null;
+        cut.WaitForAssertion(() =>
+        {
+            region = cut.FindComponent<ActionResult>();
+            FocusCalls().Should().ContainSingle()
+                .Which.Arguments[0].Should().BeOfType<ElementReference>()
+                .Which.Id.Should().Be(region.Instance.Element.Id);
+        });
+        region!.Find(".action-result").TextContent.Trim().Should().NotBeEmpty("the focus reads the result out");
+        region!.Find(".action-result").GetAttribute("tabindex").Should().Be("-1");
     }
 
     [Theory]
@@ -379,11 +384,19 @@ public sealed class ActionFocusTests : TestContext
     [Fact]
     public void EachStagedDecisionsRemove_IsNamedByItsEpa()
     {
-        var cut = ReviewPage(new Hold(), _ => false,
-            Review(CommitteeReviewState.InProgress), Review(CommitteeReviewState.InProgress),
+        // T361 (round 3 item 17): each staged decision's Remove… is in its agenda line.
+        var review = Review(CommitteeReviewState.InProgress);
+        review = review with
+        {
+            Agenda = review.Agenda! with
+            {
+                Lines = [.. review.Agenda.Lines, AgendaLine(2, "PAED-002", CommitteeAgendaLineStatus.Due, CommitteeAgendaLineState.Due)]
+            }
+        };
+        var cut = ReviewPage(new Hold(), _ => false, review, review,
             [PendingStar(), PendingStar() with { Id = 10, EpaId = 2, EpaCode = "PAED-002", EpaTitle = "EPA 2" }]);
 
-        cut.FindAll("button").Where(button => button.TextContent.Trim() == "Remove")
+        cut.FindAll("button").Where(button => button.TextContent.Trim() == "Remove…")
             .Select(button => AccessibleNames.NameOf(cut, button))
             .Should().Equal("Remove the staged decision on PAED-001", "Remove the staged decision on PAED-002");
     }
@@ -972,34 +985,51 @@ public sealed class ActionFocusTests : TestContext
             cut => Named(cut, "Run now").Click()),
 
         // ---- T234 review: the committee review page, which the sweep missed ----
+        //
+        // T361 (flow 07, round 3 items 15, 22): Start, Close, Record, Ratify and Remove are confirmed in a dialog, whose
+        // confirm button has the focus while the action runs, so it is the button held to the rule; the page's opener is
+        // disabled then, as every button that would race it is. A result and a refusal both sit beside their control and
+        // take the focus (item 15), so a refusal takes it too.
 
         ["ReviewDetail Start review"] = new(
             (test, hold) => test.ReviewPage(hold, request => request is StartCommitteeReviewCommand,
                 Review(CommitteeReviewState.Scheduled), Review(CommitteeReviewState.InProgress)),
-            cut => Named(cut, "Start review"),
-            cut => Named(cut, "Start review").Click()),
+            cut => InDialog(cut, "Start review"),
+            cut => Confirm(cut, "Start review…", "Start review"),
+            RefusalTakesFocus: true),
 
         ["ReviewDetail Close review"] = new(
             (test, hold) => test.ReviewPage(hold, request => request is CloseFormativeReviewCommand,
                 Review(CommitteeReviewState.InProgress, formative: true), Review(CommitteeReviewState.Final, formative: true)),
-            cut => Named(cut, "Close review"),
-            cut => Named(cut, "Close review").Click()),
+            cut => InDialog(cut, "Close review"),
+            cut => Confirm(cut, "Close review…", "Close review"),
+            RefusalTakesFocus: true),
 
         ["ReviewDetail Record decision"] = new(
             (test, hold) => test.ReviewPage(hold, request => request is RecordCommitteeDecisionCommand,
                 Review(CommitteeReviewState.InProgress), Review(CommitteeReviewState.Decided)),
-            cut => Named(cut, "Record decision"),
+            cut => InDialog(cut, "Record decision"),
             cut =>
             {
+                // A category, a rationale and a quorum ticked, or Record decision… refuses before any dialog (T324, 16).
+                cut.Find("#decision-category").Change(CommitteeDecisionCategory.SatisfactoryProgress.ToString());
                 cut.Find("#decision-rationale").Change("On track.");
-                cut.Find("#decision-rationale").Closest("form")!.Submit();
-            }),
+                if (!cut.Find("#decision-present-1").HasAttribute("checked"))
+                {
+                    cut.Find("#decision-present-1").Change(true);
+                }
+
+                cut.Find("#record-decision").Click();
+                InDialog(cut, "Record decision").Click();
+            },
+            RefusalTakesFocus: true),
 
         ["ReviewDetail Ratify"] = new(
             (test, hold) => test.ReviewPage(hold, request => request is RatifyCommitteeDecisionCommand,
                 Review(CommitteeReviewState.Decided), Review(CommitteeReviewState.Ratified)),
-            cut => Named(cut, "Ratify"),
-            cut => Named(cut, "Ratify").Click()),
+            cut => InDialog(cut, "Ratify the review"),
+            cut => Confirm(cut, "Ratify…", "Ratify the review"),
+            RefusalTakesFocus: true),
 
         ["ReviewDetail Resolve appeal"] = new(
             (test, hold) => test.ReviewPage(hold, request => request is ResolveAppealCommand,
@@ -1010,53 +1040,45 @@ public sealed class ActionFocusTests : TestContext
                 // The Outcome opens on none (T307), so one is chosen, as a resolver must.
                 cut.Find("#appeal-outcome").Change(CommitteeAppealOutcome.Dismissed.ToString());
                 cut.Find("#appeal-outcome").Closest("form")!.Submit();
-            }),
+            },
+            RefusalTakesFocus: true),
 
         ["ReviewDetail Stage pending decision"] = new(
-            (test, hold) => test.ReviewPage(hold, request => request is StagePendingEntrustmentDecisionCommand,
-                Review(CommitteeReviewState.InProgress), Review(CommitteeReviewState.InProgress)),
-            cut => Named(cut, "Stage pending decision"),
+            (test, hold) =>
+            {
+                var cut = test.ReviewPage(hold, request => request is StagePendingEntrustmentDecisionCommand,
+                    Review(CommitteeReviewState.InProgress), Review(CommitteeReviewState.InProgress));
+
+                // T361 (C2): the form is the agenda line's, opened by its Stage; opening it moves the focus by id. A line of
+                // the snapshot is ticked, so Stage pending decision is available before it is pressed (round 3 item 16).
+                cut.Find("#agenda-stage-1").Click();
+                cut.Find("#stage-1-evidence-501").Change(true);
+                test.IgnoreFocusSoFar();
+                return cut;
+            },
+            cut => cut.Find("#stage-1-submit"),
             cut =>
             {
-                // A staged decision clears the form, which ticks no evidence and so disables this button.
-                cut.Find("#pending-epa").Change("1");
-                cut.Find("#pending-level").Change("1");
-                cut.Find("#pending-rationale").Change("Consistent across the period.");
-                cut.Find("#pending-evidence-501").Change(true);
-                cut.Find("#pending-epa").Closest("form")!.Submit();
-            }),
+                cut.Find("#stage-1-level").Change("1");
+                cut.Find("#stage-1-rationale").Change("Consistent across the period.");
+                cut.Find("#stage-1-submit").Click();
+            },
+            RefusalTakesFocus: true),
 
         ["ReviewDetail Remove"] = new(
             (test, hold) => test.ReviewPage(hold, request => request is RemovePendingEntrustmentDecisionCommand,
                 Review(CommitteeReviewState.InProgress), Review(CommitteeReviewState.InProgress), [PendingStar()]),
-            cut => Named(cut, "Remove"),
-            cut => Named(cut, "Remove").Click()),
-
-        ["ReviewDetail Defer"] = new(
-            (test, hold) =>
-            {
-                // The agenda's Defer opens the deferral's form. Its submit is the button pressed; a done deferral closes it.
-                var cut = test.ReviewPage(hold, request => request is DeferAgendaLineCommand,
-                    Review(CommitteeReviewState.InProgress), Review(CommitteeReviewState.InProgress));
-                Named(cut, "Defer").Click();
-
-                // Opening the form puts the focus in its reason box (T212); what the deferral does comes after.
-                cut.WaitForAssertion(() => test.FocusCalls().Should().ContainSingle());
-                test.IgnoreFocusSoFar();
-                return cut;
-            },
-            cut => Named(cut, "Defer PAED-001"),
+            cut => InDialog(cut, "Remove the decision"),
             cut =>
             {
-                cut.Find("#deferral-reason").Change("Not observed this semester.");
-                cut.Find("#deferral-reason").Closest("form")!.Submit();
-            }),
+                if (cut.FindAll("#agenda-remove-1").SingleOrDefault() is { } opener && !opener.HasAttribute("disabled"))
+                {
+                    opener.Click();
+                }
 
-        ["ReviewDetail Reinstate"] = new(
-            (test, hold) => test.ReviewPage(hold, request => request is ReinstateAgendaLineCommand,
-                Review(CommitteeReviewState.InProgress), Review(CommitteeReviewState.InProgress)),
-            cut => Named(cut, "Reinstate"),
-            cut => Named(cut, "Reinstate").Click()),
+                InDialog(cut, "Remove the decision").Click();
+            },
+            RefusalTakesFocus: true),
 
         // T342, flow 03 (C10, A10): the pressed move keeps the focus as "Submitting…", aria-disabled; once it has moved,
         // the result region takes the focus; a refusal naming no field leaves the focus on the button.
@@ -1251,6 +1273,22 @@ public sealed class ActionFocusTests : TestContext
 
     private static void Submit(IRenderedFragment cut) => cut.Find("form button[type=submit]").Closest("form")!.Submit();
 
+    /// <summary>A button of the page's dialogs, by its words (the committee review's confirms, T361).</summary>
+    private static IElement InDialog(IRenderedFragment cut, string label)
+        => cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == label);
+
+    /// <summary>Presses the page's opener while it is enabled, then the dialog's confirm (T361, round 3 item 22).</summary>
+    private static void Confirm(IRenderedFragment cut, string opener, string confirm)
+    {
+        if (cut.FindAll("button").SingleOrDefault(button => button.Closest("dialog") is null && button.TextContent.Trim() == opener) is { } open &&
+            !open.HasAttribute("disabled"))
+        {
+            open.Click();
+        }
+
+        InDialog(cut, confirm).Click();
+    }
+
     private static IElement Named(IRenderedFragment cut, params string[] labels)
         => cut.FindAll("button").Single(button => button.Closest("dialog") is null
                                                   && labels.Contains(button.TextContent.Trim()));
@@ -1336,7 +1374,7 @@ public sealed class ActionFocusTests : TestContext
                     :
                     [
                         AgendaLine(1, "PAED-001", CommitteeAgendaLineStatus.Due, CommitteeAgendaLineState.Due),
-                        AgendaLine(4, "PAED-004", CommitteeAgendaLineStatus.Deferred, CommitteeAgendaLineState.Deferred)
+                        AgendaLine(4, "PAED-004", CommitteeAgendaLineStatus.AsOpportunityAllows, CommitteeAgendaLineState.Due)
                     ],
                 []),
             PanelMembers =
@@ -1353,8 +1391,7 @@ public sealed class ActionFocusTests : TestContext
         int epaId, string code, CommitteeAgendaLineStatus status, CommitteeAgendaLineState state)
         => new(
             100 + epaId, epaId, code, $"EPA {epaId}", CommitteeAgendaLineOrigin.Cadence, 2026, 1, "2026 S1",
-            status == CommitteeAgendaLineStatus.Due, false, state, status, false, false,
-            state == CommitteeAgendaLineState.Deferred ? "Later." : null, null, 1);
+            status == CommitteeAgendaLineStatus.Due, false, state, status, false, false, null, 1);
 
     private static CommitteeEvidenceDto SnapshotLine(int id, int epaId)
         => new(

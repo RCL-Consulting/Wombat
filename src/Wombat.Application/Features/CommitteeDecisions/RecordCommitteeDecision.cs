@@ -12,7 +12,7 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 
 /// <remarks>
 /// <para>
-/// <c>Rationale</c> and <c>Conditions</c> are redacted from the audit summary. They are the
+/// <c>Rationale</c>, <c>Conditions</c> and <c>UndecidedNote</c> are redacted from the audit summary. They are the
 /// committee's written judgement of a named trainee's progression — the most sensitive prose the
 /// product holds — and the audit log is read through a different, coarser gate than the review
 /// itself. <c>ReviewId</c>, <c>Category</c> and the actor stay in the clear, which is what makes
@@ -29,12 +29,18 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// decision needs one, and an entrustment-only review's takes none, because its decision is the STARs staged at it.
 /// <see cref="CommitteeReview.CategoryRefusal" /> refuses either mismatch before anything changes.
 /// </para>
+/// <para>
+/// <c>UndecidedNote</c> is the committee's optional sentence about the EPAs it does not decide at the sitting (T361, D53):
+/// every line left unstaged is written Not decided when the review is ratified, and the registrar reads the sentence under
+/// each. Redacted, as the rationale is: it is the committee's judgement of a named trainee.
+/// </para>
 /// </remarks>
 public sealed record RecordCommitteeDecisionCommand(
     int ReviewId,
     CommitteeDecisionCategory? Category,
     [property: Redact] string Rationale,
     [property: Redact] string? Conditions,
+    [property: Redact] string? UndecidedNote,
     IReadOnlyList<string> PresentUserIds,
     ClaimsPrincipal Principal) : IRequest<CommitteeReviewDetailDto>;
 
@@ -44,8 +50,9 @@ public sealed class RecordCommitteeDecisionCommandValidator : AbstractValidator<
     {
         RuleFor(command => command.ReviewId).GreaterThan(0);
         RuleFor(command => command.Category).IsInEnum();
-        RuleFor(command => command.Rationale).NotEmpty().MaximumLength(4000);
-        RuleFor(command => command.Conditions).MaximumLength(4000);
+        RuleFor(command => command.Rationale).NotEmpty().WithMessage(CommitteeDecisionWording.GiveCommitteeRationale).MaximumLength(4000);
+        RuleFor(command => command.Conditions).MaximumLength(CommitteeDecision.ConditionsMaxLength);
+        RuleFor(command => command.UndecidedNote).MaximumLength(CommitteeDecision.ConditionsMaxLength);
         RuleFor(command => command.PresentUserIds)
             .NotNull()
             .Must(present => present is null || present.All(userId => !string.IsNullOrWhiteSpace(userId)))
@@ -93,11 +100,12 @@ public sealed class RecordCommitteeDecisionCommandHandler : IRequestHandler<Reco
         // the request's context from its catch. Who may be counted is PanelSeat's rule, read from the user store.
         var present = PanelSeat.DemandPresent(review, request.PresentUserIds, eligible);
 
-        // T131 slice 4: the decision fixes the agenda with the staged decisions (the deferrals are the committee's too), so
-        // every closing line must be staged or deferred before it is recorded, by the predicate ratify enforces again.
-        // T235: or decided elsewhere. A line still due whose window another sitting has decided since it was planned is
-        // optional, read by the window rule the planner and the decisions-due page share, and recording settles it so.
-        // Asked of a review that can take a decision; RecordDecision refuses any other with its own reason. Reads only.
+        // T131 slice 4: the decision fixes the agenda with the staged decisions. A closing line nothing is staged on holds
+        // nothing back (T361, D53): ratify writes it Not decided. What is staged is read for E4 (an entrustment-only review
+        // with nothing staged is refused, in RecordDecision). T235: a line still due whose window another sitting has
+        // decided since it was planned is read by the window rule the planner and the decisions-due page share, and
+        // recording settles it so. Asked of a review that can take a decision; RecordDecision refuses any other with its
+        // own reason. Reads only.
         IReadOnlyCollection<int> stagedEpaIds = [];
         IReadOnlySet<int> decidedElsewhere = new HashSet<int>();
         if (review is { IsFormative: false, State: CommitteeReviewState.InProgress })
@@ -109,7 +117,6 @@ public sealed class RecordCommitteeDecisionCommandHandler : IRequestHandler<Reco
             decidedElsewhere = (await AgendaPlanner.PlanForReviewAsync(
                     _dbContext, review, ProgrammeCalendar.DateOf(DateTime.UtcNow), cancellationToken))
                 .DecidedElsewhere;
-            review.EnsureAgendaSettled(stagedEpaIds, decidedElsewhere);
         }
 
         // The first mutation. Every check above, and the domain's own, runs before it changes anything.
@@ -121,12 +128,13 @@ public sealed class RecordCommitteeDecisionCommandHandler : IRequestHandler<Reco
             DateTime.UtcNow,
             present,
             stagedEpaIds,
-            decidedElsewhere);
+            decidedElsewhere,
+            request.UndecidedNote);
 
         // Refused whole when the review changed after it was read above: its xmin token (CommitteeReviewConfiguration) is
-        // checked with the state this save changes. Staging, removing, deferring and reinstating each mark the review
-        // modified, so a decision recorded here fixes exactly the staged decisions and deferrals that were there when it
-        // was read (D46), and a second record of the same review is refused too.
+        // checked with the state this save changes. Staging and removing each mark the review modified, so a decision
+        // recorded here fixes exactly the staged decisions that were there when it was read (D46), and a second record of
+        // the same review is refused too.
         try
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
@@ -148,6 +156,6 @@ public sealed class RecordCommitteeDecisionCommandHandler : IRequestHandler<Reco
     /// </remarks>
     public const string ReviewChanged =
         "This review changed while the decision was being recorded: " + CommitteeReviewChanged.WhatChanges + ". " +
-        "Nothing was recorded. Reload the review and check what is staged and deferred; if it is still in progress, " +
+        "Nothing was recorded. Reload the review and check what is staged; if it is still in progress, " +
         "record the decision again.";
 }

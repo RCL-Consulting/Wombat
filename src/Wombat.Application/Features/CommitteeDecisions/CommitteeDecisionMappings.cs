@@ -33,6 +33,8 @@ internal static class CommitteeDecisionMappings
                     decision.DecidedByChairUserId,
                     decision.SupersedesDecisionId)
                 {
+                    // T361, D53: the one sentence about the EPAs not decided, shown under each such line.
+                    UndecidedNote = decision.UndecidedNote,
                     // T165. Who sat for this decision, ids and roles only: the query that serves the page names them.
                     Attendees = decision.Attendees
                         .OrderBy(attendee => attendee.Role)

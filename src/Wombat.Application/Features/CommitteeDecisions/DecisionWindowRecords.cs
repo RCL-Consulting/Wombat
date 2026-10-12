@@ -10,6 +10,7 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// <param name="Sitting">When its review sat (<see cref="CommitteeSitting" />).</param>
 /// <param name="PanelInstitutionId">The institution of the panel its review sat before.</param>
 /// <param name="EntrustmentDecisionId">The STAR a Decided line names.</param>
+/// <param name="IsClosing">Whether the line was due at its sitting (T361, E3).</param>
 internal sealed record RecordedAgendaLine(
     string TraineeUserId,
     int EpaId,
@@ -19,7 +20,8 @@ internal sealed record RecordedAgendaLine(
     CommitteeReviewState ReviewState,
     CommitteeSitting Sitting,
     int PanelInstitutionId,
-    int? EntrustmentDecisionId);
+    int? EntrustmentDecisionId,
+    bool IsClosing = false);
 
 /// <summary>
 /// What the committee has on record about some trainees' decisions in one academic year: the STARs issued at sittings for
@@ -87,7 +89,8 @@ internal sealed class DecisionWindowRecords
                 line.Review.Semester,
                 line.ReviewId,
                 PanelInstitutionId = line.Review.Panel.InstitutionId,
-                line.EntrustmentDecisionId
+                line.EntrustmentDecisionId,
+                line.IsClosing
             })
             .ToListAsync(cancellationToken);
 
@@ -109,7 +112,8 @@ internal sealed class DecisionWindowRecords
                     line.ReviewState,
                     new CommitteeSitting(line.AcademicYear, line.Semester, line.ReviewId),
                     line.PanelInstitutionId,
-                    line.EntrustmentDecisionId))
+                    line.EntrustmentDecisionId,
+                    line.IsClosing))
                 .ToArray());
     }
 
@@ -195,7 +199,7 @@ internal sealed class DecisionWindowRecords
                           line.EntrustmentDecisionId is int starId &&
                           _starsById.TryGetValue(starId, out var star) &&
                           Decides(star, window);
-        return new AgendaLineStanding(line.State, line.ReviewState, line.Sitting, starDecides);
+        return new AgendaLineStanding(line.State, line.ReviewState, line.Sitting, starDecides) { IsClosing = line.IsClosing };
     }
 
     /// <summary>The semester of a semester window, or null for a whole year: what an agenda line records.</summary>

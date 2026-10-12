@@ -456,8 +456,9 @@ Role: Coordinator — Mr Pieter Smit
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Schedule a review of Dr Ndlovu before the Paed Annual Review Panel for the period holding `D`, Scheduled on `D`,
   with Formative only ticked. Note the review's id from its address.
-Expect: The review opens with Mode "Formative (interim check-in, no binding decision)" and State Scheduled, as at Step
-  4.49. It is open, so the erasure at A.1.12 has a review to end.
+Expect: The review opens as at Step 4.49: the subtitle "Formative check-in · Paed Annual Review Panel · Training year
+  1", and the sitting bar Scheduled with "Formative: an interim check-in, no binding decision · evidence …" (T361). It
+  is open, so the erasure at A.1.12 has a review to end.
 
 Step A.1.11 — Dr Ndlovu requests erasure (appendix-cross-cutting.md)
 Role: Trainee — Dr Sipho Ndlovu
@@ -494,8 +495,9 @@ Do: Look for Dr Ndlovu among KGK's users, its trainees and its committee reviews
 Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
   - Committee reviews lists his reviews under a pseudonym, `deleted_user_…`, that names nobody: Act 4's ratified
     review and closed check-in as they were, and A.1.10's check-in as Withdrawn.
-  - The check-in reads Withdrawn, dated today, with the reason "Withdrawn because the trainee's personal data was erased
-    at their request. Nothing more is decided at this review.", and offers no action.
+  - The check-in's sitting bar reads Withdrawn and "Withdrawn on `D`. Withdrawn because the trainee's personal data
+    was erased at their request. Nothing more is decided at this review." (T258, T361), and the page offers no action:
+    no Start, no Refresh.
   - His activities and progress stay under the same pseudonym; the account itself is checked in the outcome's SQL.
 
 Step A.2.3 — Mr Smit opts out of digest emails (appendix-cross-cutting.md)

@@ -296,6 +296,33 @@ public sealed class SamplingConcentrationWarningsTests
     }
 
     /// <summary>
+    /// T273 (T361, round 3 item 13): each EPA line says whether the EPA is in force now, read from the EPA rows the report
+    /// already loads, so the page can mark one no longer in use.
+    /// </summary>
+    [Theory]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public async Task EachEpaLine_SaysWhetherItsEpaIsInForceNow(bool deactivated, bool inForce)
+    {
+        await using var dbContext = CreateDbContext();
+        var reviewId = await SeedReviewAsync(dbContext);
+        var miniCex = await SeedActivityTypeAsync(dbContext, "mini_cex");
+        AddActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, new DateTime(2026, 2, 1, 10, 0, 0, DateTimeKind.Utc));
+        AddActivity(dbContext, miniCex, "trainee-1", "assessor-a", 7, new DateTime(2026, 2, 5, 10, 0, 0, DateTimeKind.Utc));
+        if (deactivated)
+        {
+            (await dbContext.Epas.SingleAsync(epa => epa.Id == 7)).Deactivate(new DateTime(2026, 5, 1, 8, 0, 0, DateTimeKind.Utc));
+        }
+
+        await dbContext.SaveChangesAsync();
+
+        var report = await new GetSamplingConcentrationWarningsQueryHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext))
+            .Handle(new GetSamplingConcentrationWarningsQuery(reviewId, AdministratorPrincipal()), CancellationToken.None);
+
+        report.PerEpa.Should().ContainSingle(entry => entry.EpaId == 7).Which.EpaInForce.Should().Be(inForce);
+    }
+
+    /// <summary>
     /// These tests are about the concentration arithmetic, so they read as a global Administrator —
     /// the one caller neither gate narrows. Who may ask for the report at all is exercised by
     /// RefusesACallerWithNoClaimOnTheReview and RefusesACoordinatorFromAnotherInstitution; what the

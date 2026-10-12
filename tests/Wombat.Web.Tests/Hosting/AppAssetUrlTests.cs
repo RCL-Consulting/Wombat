@@ -27,6 +27,7 @@ public sealed partial class AppAssetUrlTests
         "wombat.js",
         "js/dialog.js",
         "js/file-download.js",
+        "js/sticky-offset.js",
         "_framework/blazor.web.js",
     ];
 

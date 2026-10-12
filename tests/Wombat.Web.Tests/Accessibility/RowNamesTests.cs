@@ -133,6 +133,24 @@ public sealed class RowNamesTests
     }
 
     [Fact]
+    public void FormativeCheckIns_AreNotToldApartByAStoredTypeTheirRowDoesNotShow()
+    {
+        // T361, review R1: a formative check-in's Type column reads "Formative" whatever its stored type, so two that share
+        // a name are told apart by what the row shows next, never by "Annual progression" against "Entrustment only".
+        var names = ReviewRowNames.For(
+        [
+            Review(40, "General CCC", semester: 2, scheduledOn: new DateOnly(2026, 9, 1), formative: true),
+            Review(41, "General CCC", semester: 2, scheduledOn: new DateOnly(2026, 9, 8), formative: true) with
+            {
+                ReviewType = CommitteeReviewType.EntrustmentOnly
+            }
+        ], withTrainee: false);
+
+        names[40].Should().Be("the 2026 S2 formative review before General CCC, scheduled 2026-09-01");
+        names[41].Should().Be("the 2026 S2 formative review before General CCC, scheduled 2026-09-08");
+    }
+
+    [Fact]
     public void AnActivity_IsNamedByItsType_ItsSubjectInAnInbox_ItsEpa_AndItsEncounterDate()
     {
         var declared = Activity(1, "PAED-003", new DateOnly(2026, 9, 1), declared: true);

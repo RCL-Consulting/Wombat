@@ -380,8 +380,8 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
         query.AsOf.Should().Be(new DateOnly(2026, 6, 30), "the review period is over: its targets are the year it ended in");
         query.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value.Should().Be("chair-1");
 
-        var section = cut.FindAll("section.detail-card").Single(card => card.QuerySelector("h3")?.TextContent == "Entrustment against Annexure A");
-        section.ClassList.Should().Contain("full-width");
+        // T361 (round 3, § Detail page): one column, each section headed by an h2; no details grid to span.
+        var section = cut.FindAll("section.detail-card").Single(card => card.QuerySelector("h2")?.TextContent == "Entrustment against Annexure A");
         section.QuerySelectorAll("tbody tr").Should().ContainSingle();
     }
 
@@ -427,9 +427,10 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
         // T355, R4 (the integrator's wiring after wave 2): the panel links a name to the chart further down the page,
         // and only for an EPA the page charts; an EPA with no rating in the review's window keeps its name as text.
         SignIn("chair-1", WombatRoles.CommitteeMember);
-        var charted = new EpaTrajectoryDto(1, "PAED-001", "PAED-001 title", true, null, null, [], []);
+        // The handler returns only EPAs with a rating in the window, so the charted EPA has points (T361: the page links
+        // an EPA it draws a chart with ratings for).
         var sender = ReviewSender(Review(CommitteeReviewState.InProgress, formative: false))
-            .On<GetEpaTrajectoryForTraineeQuery>(_ => new[] { charted })
+            .On<GetEpaTrajectoryForTraineeQuery>(_ => new[] { ChartedTrajectory() })
             .On<GetEntrustmentStandingForTraineeQuery>(_ => Standing(
                 Epa("PAED-001", decision: "5", year: EntrustmentStandingStatus.AtOrAbove, exit: EntrustmentStandingStatus.AtOrAbove),
                 Epa("PAED-010", decision: null, year: EntrustmentStandingStatus.NoDecision, exit: EntrustmentStandingStatus.NoDecision) with { EpaId = 10 }));
@@ -476,11 +477,12 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
     }
 
     [Fact]
-    public void TheReviewPage_ChartsTheReviewsWindow_UnderAnH4_NamingTheTrainee_WithNoToday()
+    public void TheReviewPage_ChartsTheReviewsWindow_UnderAnH3_NamingTheTrainee_WithNoToday()
     {
         // T355, build review G2 (decision D2): the committee page reads the trajectory over the review's own period, heads
-        // each chart one level below its section's h3, names the trainee and the window in the summary, and draws no
-        // "Today", because the window is the review's, not today's.
+        // each chart one level below its section's heading, names the trainee and the window in the summary, and draws no
+        // "Today", because the window is the review's, not today's. Since T361 (A.7.13) the section's heading is an h2 and
+        // each chart's an h3.
         SignIn("chair-1", WombatRoles.CommitteeMember);
         var review = Review(CommitteeReviewState.InProgress, formative: false, periodTo: new DateOnly(2026, 12, 31)) with
         {
@@ -504,11 +506,11 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
 
         var card = cut.Find("section#trajectory-1");
         var section = card.ParentElement!.Closest("section.list-section")!;
-        section.QuerySelector("h3")!.TextContent.Should().Be("Rating trajectory by EPA");
+        section.QuerySelector("h2")!.TextContent.Should().Be("Rating trajectory by EPA");
         section.ClassList.Should().NotContain("detail-card", "the charts are cards; their section is not a card around them");
         section.ClassList.Should().Contain("full-width",
             "the charts span the details grid, never its narrow column (the T355 replay's 4.15: a 267 px card at 1280)");
-        Text(card.QuerySelector("h4")!.TextContent).Should().Be("PAED-001 — PAED-001 title");
+        Text(card.QuerySelector("h3")!.TextContent).Should().Be("PAED-001 — PAED-001 title");
         Text(card.TextContent).Should().Contain(
             "Lerato Molefe · 3 ratings in the review window, 2026-01-01 to 2026-12-31");
         card.QuerySelectorAll(".trajectory-chart-today").Should().BeEmpty("the committee page reads a review's window, not today");
@@ -558,7 +560,7 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
         var cut = RenderReview();
 
         cut.Markup.Should().Contain("Record decision");
-        var section = cut.FindAll("section.detail-card").Single(card => card.QuerySelector("h3")?.TextContent == "Entrustment against Annexure A");
+        var section = cut.FindAll("section.detail-card").Single(card => card.QuerySelector("h2")?.TextContent == "Entrustment against Annexure A");
         cut.FindAll(".alert-danger").Where(alert => !section.Contains(alert)).Should().BeEmpty("the review itself loaded");
         Text(section.QuerySelector(".alert-danger")!.TextContent).Should().Be(EntrustmentStandingPanel.OthersLoadFailed);
         cut.Markup.Should().NotContain("The database is unavailable.", "the failure's text is the log's (T329)");
@@ -569,6 +571,8 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
     {
         // Ratifying issues the staged STAR decisions, which is what the standing reads.
         SignIn("chair-1", WombatRoles.CommitteeMember);
+        JSInterop.Mode = JSRuntimeMode.Loose; // the dialog opens and closes, and the result takes the focus
+
         var standings = new Queue<EntrustmentStandingDto>(
         [
             Standing(Epa("PAED-001", decision: null, year: EntrustmentStandingStatus.NoDecision, exit: EntrustmentStandingStatus.NoDecision)),
@@ -582,7 +586,9 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
         var cut = RenderReview();
         Badges(cut).Should().Equal("No decision");
 
-        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Ratify").Click();
+        // T361 (round 3 item 22): Ratify… opens a dialog, whose confirm ratifies.
+        cut.FindAll("button").Single(button => button.Closest("dialog") is null && button.TextContent.Trim() == "Ratify…").Click();
+        cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Ratify the review").Click();
         cut.WaitForState(() => cut.Markup.Contains("Decision ratified."));
 
         sender.Received.OfType<GetEntrustmentStandingForTraineeQuery>().Should().HaveCount(2);
@@ -864,7 +870,9 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
             .On<GetEpaTrajectoryForTraineeQuery>(_ => Array.Empty<EpaTrajectoryDto>())
             .On<ListStarEpaOptionsForReviewQuery>(_ => Array.Empty<StarEpaOptionDto>())
             .On<GetEntrustmentScalesListQuery>(_ => Array.Empty<EntrustmentScaleDto>())
-            .On<GetMsfCoverageForTraineeQuery>(_ => null);
+            .On<GetMsfCoverageForTraineeQuery>(_ => null)
+            .On<GetStartPreviewQuery>(_ => null)
+            .On<GetCommitteeAgendaQuery>(_ => null);
 
     private static string Text(string text) => Whitespace().Replace(text, " ").Trim();
 

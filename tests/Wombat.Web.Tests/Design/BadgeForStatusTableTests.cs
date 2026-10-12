@@ -98,13 +98,13 @@ public sealed class BadgeForStatusTableTests
             (CommitteeAgendaLineStatus.Staged, Blue),
             (CommitteeAgendaLineStatus.Decided, Green),
             (CommitteeAgendaLineStatus.DecidedElsewhere, Green),
-            (CommitteeAgendaLineStatus.Deferred, Amber),
-            (CommitteeAgendaLineStatus.NotDecided, Red));
+            // T361, D53: "Not decided at this sitting", amber as the deferral it replaces was.
+            (CommitteeAgendaLineStatus.NotDecided, Amber));
 
         Rows<CommitteeAgendaElsewhereStatus>(BadgeFor.AgendaElsewhere,
             (CommitteeAgendaElsewhereStatus.NotYetDecided, Grey),
             (CommitteeAgendaElsewhereStatus.OnAgenda, Blue),
-            (CommitteeAgendaElsewhereStatus.Deferred, Amber),
+            (CommitteeAgendaElsewhereStatus.NotDecided, Amber),
             (CommitteeAgendaElsewhereStatus.Decided, Green),
             (CommitteeAgendaElsewhereStatus.Missed, Red));
     }
@@ -115,7 +115,7 @@ public sealed class BadgeForStatusTableTests
         Rows<EntrustmentDecisionDueStatus>(BadgeFor.DecisionDue,
             (EntrustmentDecisionDueStatus.Decided, Green),
             (EntrustmentDecisionDueStatus.Scheduled, Blue),
-            (EntrustmentDecisionDueStatus.Deferred, Amber),
+            (EntrustmentDecisionDueStatus.NotDecided, Amber),
             (EntrustmentDecisionDueStatus.NotScheduled, Grey),
             (EntrustmentDecisionDueStatus.DueByYearEnd, Grey),
             (EntrustmentDecisionDueStatus.PartialPeriod, Grey),

@@ -75,14 +75,14 @@ public static class BadgeFor
 
     /// <summary>
     /// A line of a review's agenda (T131 slice 4; DESIGN.md § Badges, "Committee agenda"): the shades of "still due" share
-    /// the grey badge and are told apart by their label, and so do the two of "decided".
+    /// the grey badge and are told apart by their label, and so do the two of "decided". "Not decided at this sitting" is
+    /// amber, the tint the deferral it replaces had (T361, D53): an outcome the committee chose, not a failure.
     /// </summary>
     public static string AgendaLine(CommitteeAgendaLineStatus status) => State(status switch
     {
         CommitteeAgendaLineStatus.Staged => BadgeState.Submitted,
         CommitteeAgendaLineStatus.Decided or CommitteeAgendaLineStatus.DecidedElsewhere => BadgeState.Completed,
-        CommitteeAgendaLineStatus.Deferred => BadgeState.Accepted,
-        CommitteeAgendaLineStatus.NotDecided => BadgeState.Declined,
+        CommitteeAgendaLineStatus.NotDecided => BadgeState.Accepted,
         _ => BadgeState.Draft
     });
 
@@ -91,7 +91,7 @@ public static class BadgeFor
     {
         CommitteeAgendaElsewhereStatus.Decided => BadgeState.Completed,
         CommitteeAgendaElsewhereStatus.OnAgenda => BadgeState.Submitted,
-        CommitteeAgendaElsewhereStatus.Deferred => BadgeState.Accepted,
+        CommitteeAgendaElsewhereStatus.NotDecided => BadgeState.Accepted,
         CommitteeAgendaElsewhereStatus.Missed => BadgeState.Declined,
         _ => BadgeState.Draft
     });
@@ -104,7 +104,7 @@ public static class BadgeFor
     {
         EntrustmentDecisionDueStatus.Decided => BadgeState.Completed,
         EntrustmentDecisionDueStatus.Scheduled => BadgeState.Submitted,
-        EntrustmentDecisionDueStatus.Deferred => BadgeState.Accepted,
+        EntrustmentDecisionDueStatus.NotDecided => BadgeState.Accepted,
         EntrustmentDecisionDueStatus.Missed or EntrustmentDecisionDueStatus.Revoked => BadgeState.Declined,
         _ => BadgeState.Draft
     });

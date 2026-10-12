@@ -29,11 +29,13 @@ public enum EntrustmentDecisionDueStatus
     Scheduled = 2,
 
     /// <summary>
-    /// A sitting deferred it, with a reason, and no later sitting has decided it since. A later sitting plans it again.
+    /// A sitting left it not decided (T361, D53), and no later sitting has decided it since: shown only when the line was
+    /// due at that sitting or its window has ended (E3). A later sitting in the window plans it again. The value was
+    /// Deferred.
     /// </summary>
-    Deferred = 3,
+    NotDecided = 3,
 
-    /// <summary>The window's decision was revoked, and no sitting has deferred it since: it must be decided again.</summary>
+    /// <summary>The window's decision was revoked, and no sitting has left it not decided since: it must be decided again.</summary>
     Revoked = 4,
 
     /// <summary>An annual EPA before its year's last semester: not scheduled yet, and decided by the year's last sitting.</summary>
@@ -48,7 +50,7 @@ public enum EntrustmentDecisionDueStatus
     /// <summary>Due in this period, not decided, and no open review holds it, while its window is still open.</summary>
     NotScheduled = 8,
 
-    /// <summary>Its window has ended with nothing decided, deferred, or on an open review's agenda.</summary>
+    /// <summary>Its window has ended with nothing decided, and no sitting held it.</summary>
     Missed = 9
 }
 
@@ -57,7 +59,7 @@ public enum EntrustmentDecisionDueStatus
 /// <param name="WindowLabel">"2026 S1" for a semester EPA, "2026" for an annual one.</param>
 /// <param name="ReviewId">
 /// The review the status is about: the one that issued the STAR for Decided and Revoked; the open review whose agenda
-/// holds it for Scheduled; the one that deferred it for Deferred. Null otherwise.
+/// holds it for Scheduled; the one that left it not decided for NotDecided. Null otherwise.
 /// </param>
 /// <param name="MayOpenReview">Whether the caller passes that review's read ladder, so the page may link to it.</param>
 /// <param name="EntrustmentDecisionId">The STAR a Decided or Revoked status is about.</param>
@@ -111,7 +113,7 @@ public sealed record EntrustmentDecisionDueEpaSummaryDto(
     int Due,
     int Decided,
     int Scheduled,
-    int Deferred,
+    int NotDecided,
     int ToSchedule,
     int Missed,
     int Optional);
@@ -141,7 +143,7 @@ public sealed record EntrustmentDecisionsDueDto(
                 group.Count(),
                 group.Count(item => item.Status == EntrustmentDecisionDueStatus.Decided),
                 group.Count(item => item.Status == EntrustmentDecisionDueStatus.Scheduled),
-                group.Count(item => item.Status == EntrustmentDecisionDueStatus.Deferred),
+                group.Count(item => item.Status == EntrustmentDecisionDueStatus.NotDecided),
                 group.Count(item => item.Status is EntrustmentDecisionDueStatus.NotScheduled
                     or EntrustmentDecisionDueStatus.DueByYearEnd
                     or EntrustmentDecisionDueStatus.Revoked),
@@ -185,7 +187,7 @@ public sealed record EntrustmentDecisionsDueDto(
 /// <para>
 /// <b>Where it stands</b> is <see cref="CommitteeAgendaStatus.DecisionDue" />, over the records the planner reads
 /// (<see cref="DecisionWindowRecords" />). A STAR is in the window when the sitting that issued it sat for a period the
-/// window holds, so a sitting held after its period ends still decides that period. A line still due or deferred at
+/// window holds, so a sitting held after its period ends still decides that period. A line still due or not decided at
 /// another institution's panel (a review the trainee stranded when they moved) says nothing about where the decision
 /// stands here; a Decided line, like a STAR, goes with the trainee.
 /// </para>
@@ -429,7 +431,7 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
             period,
             today);
 
-        var (reviewId, starId) = ReferenceOf(status, stars, standings);
+        var (reviewId, starId) = ReferenceOf(status, stars, standings, window.End, today);
 
         // The panel the Schedule link fills in: the one routing gives the EPA to for this trainee, and only when the
         // scheduling rule would accept the caller putting the trainee before it (picker = gate).
@@ -472,13 +474,16 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
 
     /// <summary>
     /// The review a status is about, and the STAR, each the latest in sitting order: the STAR that decides the window for
-    /// Decided, the one it lost for Revoked; the open review holding it for Scheduled; the review that deferred it for
-    /// Deferred. Nothing otherwise.
+    /// Decided, the one it lost for Revoked; the open review holding it for Scheduled; the review that left it not decided
+    /// for NotDecided, read by the status's own predicate (<see cref="CommitteeAgendaStatus.CountsAsNotDecided" />), so an
+    /// optional sitting's Not decided that does not count is never the one named (T361, review R3). Nothing otherwise.
     /// </summary>
     private static (int? ReviewId, int? StarId) ReferenceOf(
         EntrustmentDecisionDueStatus status,
         IReadOnlyList<(DecisionWindowStar Star, StarStanding Standing)> stars,
-        IReadOnlyList<(RecordedAgendaLine Line, AgendaLineStanding Standing)> lines)
+        IReadOnlyList<(RecordedAgendaLine Line, AgendaLineStanding Standing)> lines,
+        DateOnly windowEnd,
+        DateOnly today)
     {
         switch (status)
         {
@@ -495,8 +500,9 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
             case EntrustmentDecisionDueStatus.Scheduled:
                 return (Latest(lines.Where(line =>
                     line.Standing.State == CommitteeAgendaLineState.Due && IsOpen(line.Standing.Review))), null);
-            case EntrustmentDecisionDueStatus.Deferred:
-                return (Latest(lines.Where(line => line.Standing.State == CommitteeAgendaLineState.Deferred)), null);
+            case EntrustmentDecisionDueStatus.NotDecided:
+                return (Latest(lines.Where(line =>
+                    CommitteeAgendaStatus.CountsAsNotDecided(line.Standing, windowEnd, today))), null);
             default:
                 return (null, null);
         }

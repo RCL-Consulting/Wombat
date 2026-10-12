@@ -2,9 +2,11 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Common.Users;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Curricula;
+using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
 
@@ -53,6 +55,8 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
             detail.PanelMembers
                 .Concat(detail.Decisions.SelectMany(decision => decision.Attendees))
                 .Select(person => person.UserId)
+                // T361 (round 3 items 23, 30): the snapshot names each line's assessor, in the same one lookup.
+                .Concat(detail.EvidenceItems.Select(item => item.AssessorUserId).OfType<string>())
                 .Prepend(review.TraineeUserId),
             cancellationToken);
 
@@ -83,6 +87,9 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
         var agenda = await CommitteeAgendaReader.ReadAsync(
             _dbContext, review, request.Today ?? ProgrammeCalendar.DateOf(DateTime.UtcNow), cancellationToken);
 
+        // T361 (round 2 review 10, E6): the registrar page's id and the training year the page's subtitle names.
+        var (traineeProfileId, trainingYear) = await TraineeOfAsync(review, cancellationToken);
+
         return detail with
         {
             TraineeName = names.NameOf(review.TraineeUserId),
@@ -103,6 +110,8 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
                                     PanelSeat.AppealBodyAt(review, eligible).Any(member =>
                                         string.Equals(member.UserId, callerUserId, StringComparison.Ordinal)),
             TraineeElsewhere = traineeElsewhere,
+            TraineeProfileId = traineeProfileId,
+            TrainingYear = trainingYear,
             AppealBody = AppealBodyOf(review, eligible)
                 .Select(person => person with { Name = names.NameOf(person.UserId) })
                 .ToArray(),
@@ -113,6 +122,9 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
                     MaySit = seated.Contains(person.UserId)
                 })
                 .ToArray(),
+            EvidenceItems = detail.EvidenceItems
+                .Select(item => item.AssessorUserId is { } assessor ? item with { AssessorName = names.NameOf(assessor) } : item)
+                .ToArray(),
             Decisions = detail.Decisions
                 .Select(decision => decision with
                 {
@@ -120,6 +132,49 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
                 })
                 .ToArray()
         };
+    }
+
+    /// <summary>
+    /// The trainee's registrar-page id and training year, for the review page (T361, round 2 review 10, E6).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The id is the preferred profile's (<see cref="TraineeScopeResolver.PreferredProfiles" />), the one profile the
+    /// registrar page opens (<c>GetProgrammeTraineeQuery</c>), and only while it is at the panel's institution: once the
+    /// trainee trains elsewhere that page is not this panel's staff's to open.
+    /// </para>
+    /// <para>
+    /// The year is read from the programme the review sat for: the preferred profile when it is at the panel's
+    /// institution, else the latest profile there, so a review of a trainee who has since moved keeps the year it sat
+    /// in. It is the year on the period's last day, or on the programme's when it ended sooner, as an ended programme is
+    /// read everywhere (T252); null before the programme starts and for a trainee with no profile there.
+    /// </para>
+    /// </remarks>
+    private async Task<(int? ProfileId, int? TrainingYear)> TraineeOfAsync(
+        CommitteeReview review,
+        CancellationToken cancellationToken)
+    {
+        var institutionId = review.Panel.InstitutionId;
+        var preferred = await TraineeScopeResolver.PreferredProfiles(_dbContext)
+            .AsNoTracking()
+            .Where(profile => profile.UserId == review.TraineeUserId)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        var atPanel = preferred is not null && preferred.InstitutionId == institutionId
+            ? preferred
+            : await _dbContext.Set<TraineeProfile>()
+                .AsNoTracking()
+                .Where(profile => profile.UserId == review.TraineeUserId && profile.InstitutionId == institutionId)
+                .OrderByDescending(profile => profile.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+
+        if (atPanel is null)
+        {
+            return (null, null);
+        }
+
+        var day = atPanel.EndedOn is { } ended && ended < review.ReviewPeriodTo ? ended : review.ReviewPeriodTo;
+        return (ReferenceEquals(atPanel, preferred) ? atPanel.Id : null, atPanel.GetStage(day));
     }
 
     /// <summary>
@@ -162,9 +217,10 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
     /// Why nobody can take the chair's actions at this review now, or null when its chair may (T256): the panel's chair
     /// may not sit at it (<see cref="PanelSeat.SittingAt" />), the rule every chair's action demands
     /// (<see cref="CommitteeDecisionAuthorization.Chairs" />). Said to the Chair seat's holder in the words their click
-    /// would be refused with, and to everyone else naming the chair.
+    /// would be refused with, and to everyone else naming the chair. Start refuses with the same sentence while it is not
+    /// null (T361, Q11, E2), so the page's reason and the server's refusal are one.
     /// </summary>
-    private static string? ChairCannotActOf(
+    internal static string? ChairCannotActOf(
         CommitteeReview review,
         ClaimsPrincipal principal,
         IReadOnlyDictionary<string, Common.Interfaces.UserIdentityDetails> eligible,

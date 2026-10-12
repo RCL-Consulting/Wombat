@@ -542,18 +542,23 @@ Expect: The counts read Responded: Peer doctor 1, Consultant 2, Nurse 2 and Alli
 Step 4.27 — Dr Zulu ratifies, and the STARs are issued
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
-Do: Ratify the decision.
-Expect: "Decision ratified." The state reads Ratified, and Ratify is gone.
-  - **Agenda:**
+Do: Choose Ratify… in the sitting bar, read the dialog, and confirm.
+Expect:
+  - **The dialog** is titled "Ratify and issue 3 STARs to Lerato Molefe?". It lists "PAED-001 at 5, issued `D`",
+    "PAED-010 at 4, issued `D`, expires `D+20`" and "PAED-012 at 5, issued `D`", then "PAED-002 and 11 others were not
+    decided at this sitting." (E1) and "Ratifying cannot be undone: nothing on this review can change afterwards." It
+    says nothing about mail (T320). The focus is on "Not yet"; the confirm is "Ratify and issue 3 STARs".
+  - **Ratified:** "Decision ratified." under the bar, with the focus there. The bar reads Ratified and "Satisfactory
+    Progress · 3 STARs issued", and Ratify… is gone.
+  - **Agenda:** "Nothing is pending: ratifying the review issued what was staged as STARs, and the agenda names each
+    one." above it (T212).
     - PAED-001, 010 and 012 read Decided, each with "STAR #n.";
-    - the nine deferred lines keep their reasons;
-    - PAED-008, 009 and 013 read Not decided, "The review was ratified without deciding it.".
-  - **Pending:** "Nothing is pending: ratifying the review issued what was staged as STARs, and the agenda names each
-    one." (T212)
+    - the other twelve, due and optional alike, read "Not decided at this sitting" with "To be decided at her final
+      review." (E1).
   - **Standing:** "2 at or above · 1 below · 12 with no decision, of 15 EPAs". PAED-001 and 012 at `5` meet year 4's
     target of `5`, and PAED-010 at `4` is below it. The exit rule reads "2 of 15 EPAs at their exit level by STAR
     decision".
-  - **What ratifying locks:** nothing on the review can now be staged, deferred, removed or recorded.
+  - **What ratifying locks:** nothing on the review can now be staged, removed or recorded.
 
 Step 4.36 — Dr Mokoena revokes one of Dr Dlamini's STARs
 Role: SpecialityAdmin — Dr Refilwe Mokoena

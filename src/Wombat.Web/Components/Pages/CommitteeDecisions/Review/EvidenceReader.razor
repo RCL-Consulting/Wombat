@@ -1,0 +1,161 @@
+@using System.Security.Claims
+@using Wombat.Application.Features.Activities.Queries.GetActivityById
+@using Wombat.Application.Features.Activities.Services
+@using Wombat.Application.Features.CommitteeDecisions
+@using Wombat.Application.Features.Epas
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IServiceScopeFactory ScopeFactory
+@inject ILogger<EvidenceReader> Logger
+
+@*
+  Read, in place (T361, flow 07; R2-Spec "EvidenceReader"; C3, round 3 item 8): inside an open agenda line, the activity a
+  snapshot line names, as it is now, takes the staging form's place. Flow 03's status card, About and the form read-only
+  (ActivityStatus, ActivityAbout, ActivityDetail), with no action and no move, even to its assessor. Where its state moved
+  since Start, "Now Completed. Frozen at Start as Awaiting review." says so under the heading: the snapshot keeps the
+  state at Start, and the hints read that. "Back to PAED-001" brings the form back as typed (the page's LineDraft), the
+  focus on the Read that was pressed. The heading takes the focus when the reader opens.
+*@
+<div class="evidence-reader" role="group" aria-labelledby="@HeadingId">
+  <button type="button" class="btn btn-sm btn-outline evidence-reader-back" id="@BackId" @onclick="OnBack">
+    <Icon Name="arrow-left" />@ReviewWords.ReaderBack(EpaCode)
+  </button>
+  @* h3 under the page's h2 Agenda; the activity's own About and form sections sit under it at h4 (T361, review D1). *@
+  <h3 class="evidence-reader-heading" id="@HeadingId" tabindex="-1">@ReviewWords.ReaderHeading(Line)</h3>
+
+  @if (_loading)
+  {
+    <p class="muted" role="status">@ReviewWords.ReaderLoading</p>
+  }
+  else if (_failed)
+  {
+    <Alert Kind="warning" Role="">@ReviewWords.ReaderFailed</Alert>
+  }
+  else if (_model is null)
+  {
+    <p class="muted">@ReviewWords.ReaderUnavailable</p>
+  }
+  else
+  {
+    var model = _model;
+    @if (Moved(model) is { } moved)
+    {
+      <p class="evidence-reader-moved">@moved</p>
+    }
+
+    @* No action and no move, even to its assessor (8): the status card's action is dropped. *@
+    <ActivityStatus View="@(model.Status(_ratedLabel) with { Action = ActivityStatusAction.None, ActionLabel = null, ActionHref = null })" />
+    <ActivityAbout Rows="@model.About()" HeadingLevel="4" />
+    <ActivityDetail SchemaJson="@model.Activity.SchemaJson"
+                    DataJson="@model.Activity.DataJson"
+                    SubjectUserId="@model.Activity.SubjectUserId"
+                    CreditRulesJson="@model.Activity.CreditRulesJson"
+                    WbaToolKey="@model.Activity.WbaToolKey"
+                    ActivityInstitutionId="@model.Activity.InstitutionId"
+                    LockedOwnerName="@model.Detail.NomineeName"
+                    LockedSectionsClosed="@model.IsOver"
+                    ReaderIsSubject="@model.ViewerIsSubject"
+                    Rungs="@_rungs"
+                    SectionAttributions="@model.SectionAttributions()"
+                    SectionHeadingLevel="4" />
+  }
+</div>
+
+@code {
+  /// <summary>The frozen snapshot line Read was pressed on.</summary>
+  [Parameter, EditorRequired] public CommitteeEvidenceDto Line { get; set; } = default!;
+
+  /// <summary>The open line's EPA, which Back names: "Back to PAED-001".</summary>
+  [Parameter, EditorRequired] public string EpaCode { get; set; } = default!;
+
+  /// <summary>The ids' start: the open line's form's prefix.</summary>
+  [Parameter, EditorRequired] public string IdPrefix { get; set; } = default!;
+
+  /// <summary>Back: the page restores the form as typed and moves the focus to the Read pressed.</summary>
+  [Parameter] public EventCallback OnBack { get; set; }
+
+  private ActivityPageModel? _model;
+  private IReadOnlyList<EntrustmentRung>? _rungs;
+  private string? _ratedLabel;
+  private bool _loading = true;
+  private bool _failed;
+  private int? _loadedFor;
+
+  /// <summary>The reader's heading's id, which takes the focus when it opens.</summary>
+  public static string HeadingIdFor(string idPrefix) => $"{idPrefix}-reader-heading";
+
+  private string HeadingId => HeadingIdFor(IdPrefix);
+
+  private string BackId => $"{IdPrefix}-reader-back";
+
+  protected override async Task OnParametersSetAsync()
+  {
+    if (_loadedFor == Line.Id)
+    {
+      return;
+    }
+
+    _loadedFor = Line.Id;
+    _loading = true;
+    _failed = false;
+    _model = null;
+
+    try
+    {
+      if (Line.ActivityId is int activityId)
+      {
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+        var detail = await Sender.Send(new GetActivityByIdQuery(activityId, user));
+        if (detail is not null)
+        {
+          _model = ActivityPageModel.From(detail, user.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+          _rungs = await RungsAsync(_model.RatedScaleKey);
+          _ratedLabel = _model.RatedLabel(_rungs);
+        }
+      }
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // Never the exception's text on the page (T329): the reader's own sentence, the review untouched.
+      Logger.LogWarning(exception, "Snapshot line {EvidenceId}'s activity could not be read in place.", Line.Id);
+      _failed = true;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  /// <summary>"Now Completed. Frozen at Start as Awaiting review.", where the state moved since Start (8); null otherwise.</summary>
+  private string? Moved(ActivityPageModel model)
+  {
+    var now = model.Activity.CurrentStateLabel;
+    var frozen = Line.SourceStateLabel;
+    return string.IsNullOrWhiteSpace(frozen) || string.Equals(now, frozen, StringComparison.OrdinalIgnoreCase)
+      ? null
+      : ReviewWords.MovedSinceStart(now, frozen);
+  }
+
+  // The rated field's ladder, for "Rated 4", read as the activity page reads it; a ladder that cannot be read is no rung
+  // row, not a failed reader.
+  private async Task<IReadOnlyList<EntrustmentRung>?> RungsAsync(string? scaleKey)
+  {
+    if (string.IsNullOrWhiteSpace(scaleKey))
+    {
+      return null;
+    }
+
+    try
+    {
+      await using var scope = ScopeFactory.CreateAsyncScope();
+      var referenceData = scope.ServiceProvider.GetRequiredService<IActivityReferenceDataService>();
+      var rungs = await referenceData.GetEntrustmentScaleRungsAsync(scaleKey);
+      return rungs.Count == 0 ? null : rungs;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogWarning(exception, "The rungs of scale {ScaleKey} could not be read for the reader.", scaleKey);
+      return null;
+    }
+  }
+}

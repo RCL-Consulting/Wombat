@@ -1,0 +1,293 @@
+@using Wombat.Application.Features.CommitteeDecisions
+@using Wombat.Application.Features.EntrustmentDecisions
+@using Wombat.Application.Features.Epas
+@using Wombat.Domain.CommitteeDecisions
+
+@*
+  The agenda, the review page's spine (T361, flow 07; R2-Spec "Agenda line", DESIGN.md § Committee agenda; round 3 items
+  17, 20, 24, 25, 27, 30; E1, E9). One line per EPA: the code over its title (the row's header), Window, State (the badge
+  over its sentence), Evidence, and the chair's Action column.
+
+  - One line opens at a time, in place: its row and the row under it holding the form (or the reader) take tr.is-editing,
+    whose stripe ties them (.agenda-line.is-editing when stacked). A line closed while another opens keeps its typed form
+    as a draft, "Draft kept" beside its Stage, which reopens it as typed (E9).
+  - A staged line says its decision in item 30's words, with the hints; its Remove… is .btn .btn-sm .btn-outline, named
+    "Remove the staged decision on PAED-012" (17), behind the page's dialog.
+  - Every line left unstaged once the decision is recorded reads "Not decided at this sitting" with the decision's
+    sentence (E1). No deferral anywhere (D53).
+  - A result ("Pending entrustment decision staged." / "removed.") sits in a row under its line (.agenda-result-row) and
+    takes the focus; "Review started." sits atop the table.
+  - Stacking (20): a container query on the table's container stacks the lines below 760px; the markup carries its table
+    roles explicitly, so a stacked line keeps them.
+*@
+<section class="detail-card" id="agenda" aria-labelledby="agenda-heading">
+  <h2 id="agenda-heading" class="review-section-title">@ReviewWords.AgendaHeading</h2>
+
+  @if (ResultAtTop)
+  {
+    @Result
+  }
+
+  @if (AgendaError)
+  {
+    <Alert Kind="warning" Role="">@ReviewWords.AgendaNotRead</Alert>
+  }
+  @if (PendingError)
+  {
+    <Alert Kind="warning" Role="">@ReviewWords.StagedNotRead</Alert>
+  }
+
+  @if (Agenda is not null)
+  {
+    @if (Intro is { } intro)
+    {
+      <p class="muted" id="agenda-intro">@intro</p>
+    }
+
+    @if (CommitteeAgendaText.DecidedInWindowNote(Agenda.DecidedInWindow) is { } decidedInWindow)
+    {
+      <p id="agenda-decided-in-window" class="muted">@decidedInWindow</p>
+    }
+
+    @if (Agenda.Lines.Count == 0)
+    {
+      <p>@ReviewWords.AgendaEmpty(Review.State)</p>
+    }
+    else
+    {
+      var columns = OffersActions ? 5 : 4;
+      <div class="table-container agenda-table-container">
+        <table class="clinic-table agenda-table" role="table">
+          <caption>@Caption</caption>
+          <thead role="rowgroup">
+            <tr role="row">
+              <th scope="col" role="columnheader">EPA</th>
+              <th scope="col" role="columnheader">Window</th>
+              <th scope="col" role="columnheader">State</th>
+              <th scope="col" role="columnheader">Evidence</th>
+              @if (OffersActions)
+              {
+                <th scope="col" role="columnheader">Action</th>
+              }
+            </tr>
+          </thead>
+          <tbody role="rowgroup">
+            @foreach (var line in Agenda.Lines)
+            {
+              var open = OpenEpaId == line.EpaId;
+              var staged = StagedOn(line);
+              <tr class="@(open ? "agenda-line is-editing" : "agenda-line")" id="@($"agenda-line-{line.EpaId}")" role="row">
+                <th scope="row" role="rowheader">
+                  <span class="agenda-epa-code">@line.EpaCode@if (staged is { EpaInForce: false }){<span class="paused-mark">@($" {EpaOptionLabel.NoLongerInUse}")</span>}</span>
+                  <span class="agenda-epa-title">@line.EpaTitle</span>
+                </th>
+                <td role="cell" data-label="Window">@line.WindowLabel</td>
+                <td role="cell" data-label="State">
+                  <span class="badge @BadgeFor.AgendaLine(line.Status)">@CommitteeAgendaText.StatusLabel(line.Status)</span>
+                  @foreach (var detail in Details(line, staged))
+                  {
+                    @* The space keeps each sentence apart in the line's text, which a stacked line reads as one. *@
+                    <span class="agenda-line-detail">@($" {detail}")</span>
+                  }
+                </td>
+                <td role="cell" data-label="Evidence">@ReviewWords.Items(line.EvidenceCount)</td>
+                @if (OffersActions)
+                {
+                  <td role="cell" class="agenda-line-action">
+                    <div class="actions-cell">
+                      @ActionFor(line, staged, open)
+                    </div>
+                  </td>
+                }
+              </tr>
+              @if (open && OpenContent is not null)
+              {
+                <tr class="is-editing agenda-form-row" id="@($"agenda-form-{line.EpaId}")" role="row">
+                  <td colspan="@columns" role="cell">@OpenContent(line)</td>
+                </tr>
+              }
+              @if (ResultEpaId == line.EpaId && Result is not null)
+              {
+                <tr class="agenda-result-row" role="row">
+                  <td colspan="@columns" role="cell">@Result</td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (Agenda.RoutedElsewhere.Count > 0)
+    {
+      <h3 id="agenda-elsewhere-heading">Decided by another panel</h3>
+      <ul class="list-unstyled" aria-labelledby="agenda-elsewhere-heading">
+        @foreach (var line in Agenda.RoutedElsewhere)
+        {
+          <li id="@($"agenda-elsewhere-{line.EpaId}")">
+            <strong>@line.EpaCode — @line.EpaTitle</strong>
+            <span>@($" {line.PanelName} · {line.WindowLabel} ")</span>
+            <span class="badge @BadgeFor.AgendaElsewhere(line.Status)">@CommitteeAgendaText.ElsewhereLabel(line.Status)</span>
+          </li>
+        }
+      </ul>
+    }
+  }
+
+  @* The foot form stands whether or not the agenda could be read: staging on any EPA of the curriculum needs none. *@
+  @Foot
+</section>
+
+@code {
+  [Parameter, EditorRequired] public CommitteeReviewDetailDto Review { get; set; } = default!;
+  [Parameter] public CommitteeAgendaDto? Agenda { get; set; }
+
+  /// <summary>The staged decisions, each shown in its line.</summary>
+  [Parameter] public IReadOnlyList<PendingEntrustmentDecisionDto> Pending { get; set; } = [];
+
+  /// <summary>The chair may stage now: the chair, while the review is in progress.</summary>
+  [Parameter] public bool ChairStages { get; set; }
+
+  /// <summary>The chair may act on a decided review: Remove… on a staged decision that no longer fits (T165).</summary>
+  [Parameter] public bool ChairActsOnDecided { get; set; }
+
+  /// <summary>The open line's EPA, or null (E9).</summary>
+  [Parameter] public int? OpenEpaId { get; set; }
+
+  /// <summary>The EPAs whose lines hold a kept draft (E9).</summary>
+  [Parameter] public IReadOnlyCollection<int> DraftEpaIds { get; set; } = [];
+
+  /// <summary>The open line's form or reader, drawn in the row under it.</summary>
+  [Parameter] public RenderFragment<CommitteeAgendaLineDto>? OpenContent { get; set; }
+
+  /// <summary>The page's result region.</summary>
+  [Parameter] public RenderFragment? Result { get; set; }
+
+  /// <summary>The result sits atop the table ("Review started.").</summary>
+  [Parameter] public bool ResultAtTop { get; set; }
+
+  /// <summary>The line the result sits under ("staged.", "removed."), or null.</summary>
+  [Parameter] public int? ResultEpaId { get; set; }
+
+  /// <summary>The foot form, "Stage a decision on an EPA not on this agenda".</summary>
+  [Parameter] public RenderFragment? Foot { get; set; }
+
+  [Parameter] public bool AgendaError { get; set; }
+  [Parameter] public bool PendingError { get; set; }
+
+  /// <summary>An action runs: Stage and Remove… would race it.</summary>
+  [Parameter] public bool Busy { get; set; }
+
+  [Parameter] public EventCallback<CommitteeAgendaLineDto> OnStage { get; set; }
+  [Parameter] public EventCallback<PendingEntrustmentDecisionDto> OnRemove { get; set; }
+
+  /// <summary>The id of a line's Stage, which Cancel returns the focus to.</summary>
+  public static string StageId(int epaId) => $"agenda-stage-{epaId}";
+
+  /// <summary>The id of a line's Remove….</summary>
+  public static string RemoveId(int epaId) => $"agenda-remove-{epaId}";
+
+  private string? UndecidedNote => Review.Decisions.FirstOrDefault()?.UndecidedNote;
+
+  private PendingEntrustmentDecisionDto? StagedOn(CommitteeAgendaLineDto line)
+    => Pending.FirstOrDefault(pending => pending.EpaId == line.EpaId);
+
+  private int StagedCount => ReviewSitting.StagedCount(Agenda, Pending);
+
+  private string Caption => ReviewWords.AgendaCaption(
+    Agenda!.Lines.Count,
+    Agenda.PeriodLabel,
+    Review.State == CommitteeReviewState.InProgress ? StagedCount : null);
+
+  /// <summary>What the agenda says above its lines: fixed once recorded, what ratifying issued once ratified.</summary>
+  private string? Intro => Review.State switch
+  {
+    CommitteeReviewState.Decided => Pending.Any(pending => pending.NoLongerFits is not null)
+      ? $"{ReviewWords.FixedWhenRecorded} {ReviewWords.NoLongerFitsCanGo}"
+      : ReviewWords.FixedWhenRecorded,
+    CommitteeReviewState.Ratified or CommitteeReviewState.UnderAppeal or CommitteeReviewState.Final =>
+      Agenda!.Lines.Any(line => line.State == CommitteeAgendaLineState.Decided || line.IsStaged)
+        ? ReviewWords.IssuedWhatWasStaged
+        : ReviewWords.NothingWasStaged,
+    CommitteeReviewState.Withdrawn => ReviewWords.WithdrawnNothingPending,
+    _ => null
+  };
+
+  /// <summary>The Action column: the chair's alone, and only while some line offers something (T213, T226).</summary>
+  private bool OffersActions
+    => (ChairStages && Agenda!.Lines.Any(line => line.IsStaged || Stageable(line))) ||
+       (ChairActsOnDecided && Pending.Any(pending => pending.NoLongerFits is not null));
+
+  /// <summary>A line still due and unstaged at a review in progress: Stage (no deferral, D53).</summary>
+  private bool Stageable(CommitteeAgendaLineDto line)
+    => ChairStages && line.State == CommitteeAgendaLineState.Due && !line.IsStaged;
+
+  private RenderFragment ActionFor(CommitteeAgendaLineDto line, PendingEntrustmentDecisionDto? staged, bool open) => __builder =>
+  {
+    if (staged is not null && (ChairStages || (ChairActsOnDecided && staged.NoLongerFits is not null)))
+    {
+      <button type="button" class="btn btn-sm btn-outline" id="@RemoveId(line.EpaId)" disabled="@Busy"
+              aria-label="@ReviewWords.RemoveName(line.EpaCode)" @onclick="() => OnRemove.InvokeAsync(staged)">@ReviewWords.RemoveLabel</button>
+    }
+    else if (Stageable(line))
+    {
+      var kept = !open && DraftEpaIds.Contains(line.EpaId);
+      if (kept)
+      {
+        <span class="agenda-draft-kept">@ReviewWords.DraftKept</span>
+      }
+      <button type="button" class="btn btn-sm btn-outline" id="@StageId(line.EpaId)" disabled="@Busy"
+              aria-expanded="@(open ? "true" : "false")" aria-controls="@(open ? $"agenda-form-{line.EpaId}" : null)"
+              aria-label="@ReviewWords.StageName(line.EpaCode, kept)" @onclick="() => OnStage.InvokeAsync(line)">@ReviewWords.StageLabel</button>
+    }
+    else
+    {
+      <span class="muted">@(ChairStages ? ReviewWords.NothingToDo : ReviewWords.FixedWithTheDecision)</span>
+    }
+  };
+
+  /// <summary>What a line's state means for this sitting, under its badge: a staged decision in item 30's words.</summary>
+  private IEnumerable<string> Details(CommitteeAgendaLineDto line, PendingEntrustmentDecisionDto? staged)
+  {
+    if (staged is null)
+    {
+      if (CommitteeAgendaText.StatusDetail(line, Review.State, UndecidedNote) is { } detail &&
+          line.Status != CommitteeAgendaLineStatus.Staged)
+      {
+        yield return detail;
+      }
+
+      yield break;
+    }
+
+    if (line.Origin == CommitteeAgendaLineOrigin.Chair)
+    {
+      yield return ReviewWords.AddedByTheChair;
+    }
+
+    yield return ReviewWords.StagedDecision(staged);
+
+    var named = staged.EvidenceItemIds
+      .Select(id => Review.EvidenceItems.FirstOrDefault(item => item.Id == id))
+      .ToArray();
+    if (named.Length == 0)
+    {
+      yield return ReviewWords.NamesNoEvidence(Review.State == CommitteeReviewState.InProgress, ChairStages);
+    }
+    else
+    {
+      yield return ReviewWords.RestsOn(staged.EvidenceItemIds
+        .Select((id, index) => named[index]?.SourceLabel ?? $"item #{id}")
+        .ToArray());
+      foreach (var hint in ReviewWords.Hints(named.OfType<CommitteeEvidenceDto>().ToArray(), line.EpaId, line.EpaCode))
+      {
+        yield return hint;
+      }
+    }
+
+    if (staged.NoLongerFits is { } noLongerFits)
+    {
+      yield return ReviewWords.NoLongerFits(noLongerFits);
+    }
+  }
+}

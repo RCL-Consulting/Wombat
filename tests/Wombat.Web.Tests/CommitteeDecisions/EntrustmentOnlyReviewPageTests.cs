@@ -14,6 +14,7 @@ using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
+using Wombat.Web.Components.Pages.CommitteeDecisions.Review;
 using Wombat.Web.Services;
 
 namespace Wombat.Web.Tests.CommitteeDecisions;
@@ -44,17 +45,19 @@ public sealed partial class EntrustmentOnlyReviewPageTests : TestContext
     {
         var cut = RenderReview(Review(CommitteeReviewType.EntrustmentOnly, CommitteeReviewState.InProgress));
 
-        Text(cut.Find("#review-type")).Should().Be("Entrustment-only review");
+        // T361 (round 3): the type is in the subtitle, and the decision form sits under the agenda, so its decisions are
+        // "staged above" (§ Entrustment-only reviews).
+        Text(cut.Find(".page-subtitle span")).Should().StartWith("Entrustment-only review · Neonatal CCC");
         cut.FindAll("#decision-category").Should().BeEmpty();
-        Text(cut.Find("#entrustment-only-note")).Should().Be(CommitteeDecisionWording.EntrustmentOnlyForThePanel);
+        Text(cut.Find("#entrustment-only-note")).Should().Be(ReviewWords.EntrustmentOnlyNote(CommitteeReviewState.InProgress));
 
         cut.Find("#decision-rationale").Change("PAED-004 entrusted at 3a on the evidence named.");
-        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Record decision").Click();
+        Record(cut);
         cut.WaitForState(() => _sender.Received.OfType<RecordCommitteeDecisionCommand>().Any());
 
         _sender.Received.OfType<RecordCommitteeDecisionCommand>().Single().Category.Should().BeNull();
         cut.WaitForState(() => cut.Markup.Contains("Decision recorded."));
-        Text(cut.Find("#decision-41 h4")).Should().Be("Entrustment decisions only");
+        Text(cut.Find("#decision-41 h3")).Should().Be("Entrustment decisions only");
     }
 
     [Fact]
@@ -62,7 +65,7 @@ public sealed partial class EntrustmentOnlyReviewPageTests : TestContext
     {
         var cut = RenderReview(Review(CommitteeReviewType.AnnualProgression, CommitteeReviewState.InProgress));
 
-        Text(cut.Find("#review-type")).Should().Be("Annual progression review");
+        Text(cut.Find(".page-subtitle span")).Should().StartWith("Annual progression review · Neonatal CCC");
         cut.FindAll("#entrustment-only-note").Should().BeEmpty();
         var first = cut.FindAll("#decision-category option").First();
         first.GetAttribute("value").Should().BeEmpty("the page never shows a category the chair did not choose");
@@ -72,41 +75,47 @@ public sealed partial class EntrustmentOnlyReviewPageTests : TestContext
 
         cut.Find("#decision-category").Change(CommitteeDecisionCategory.OutcomeDeferred.ToString());
         cut.Find("#decision-rationale").Change("Deferred to the next sitting.");
-        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Record decision").Click();
+        Record(cut);
         cut.WaitForState(() => _sender.Received.OfType<RecordCommitteeDecisionCommand>().Any());
 
         _sender.Received.OfType<RecordCommitteeDecisionCommand>().Single().Category.Should().Be(CommitteeDecisionCategory.OutcomeDeferred);
         cut.WaitForState(() => cut.Markup.Contains("Decision recorded."));
-        Text(cut.Find("#decision-41 h4")).Should().Be("Outcome Deferred");
+        Text(cut.Find("#decision-41 h3")).Should().Be("Outcome Deferred");
     }
 
     [Fact]
-    public void AProgressionReview_LeftWithNoCategoryChosen_SendsNone_AndShowsTheHandlersRefusal()
+    public void AProgressionReview_LeftWithNoCategoryChosen_IsRefusedBeforeAnyDialog_InTheHandlersWords()
     {
+        // T361 (T324; round 3, 1280 decide frame 3): refused before any dialog, nothing sent, the summary at the form's top
+        // in the handler's own words, Category marked.
         var cut = RenderReview(Review(CommitteeReviewType.AnnualProgression, CommitteeReviewState.InProgress));
-        _sender.On<RecordCommitteeDecisionCommand>(recorded => recorded.Category is null
-            ? throw new InvalidOperationException(CommitteeReview.ProgressionNeedsACategory)
-            : (object?)null);
 
         cut.Find("#decision-rationale").Change("On track.");
-        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Record decision").Click();
-        cut.WaitForState(() => cut.FindAll(".alert-danger").Count == 1);
+        cut.Find("#decision-present-1").Change(true);
+        cut.Find("#record-decision").Click();
 
-        _sender.Received.OfType<RecordCommitteeDecisionCommand>().Single().Category.Should().BeNull();
-        Text(cut.Find(".alert-danger")).Should().Be(CommitteeReview.ProgressionNeedsACategory);
+        _sender.Received.OfType<RecordCommitteeDecisionCommand>().Should().BeEmpty();
+        Text(cut.Find(".alert-danger")).Should().Be($"Not recorded. {CommitteeReview.ProgressionNeedsACategory}");
+        Text(cut.Find("#decision-category-message")).Should().Be("Choose a progression category.");
         cut.Markup.Should().NotContain("Decision recorded.");
     }
 
     [Fact]
-    public void AnEntrustmentOnlyReview_WithNothingOnItsAgenda_ShowsRecordDisabled_WithTheReason()
+    public void AnEntrustmentOnlyReview_WithNothingStaged_ShowsRecordHeldBack_WithTheReason()
     {
         var agenda = new CommitteeAgendaDto(30, 2026, 1, "2026 S1", false, [], []) { DecidesProgression = false };
         var cut = RenderReview(Review(CommitteeReviewType.EntrustmentOnly, CommitteeReviewState.InProgress) with { Agenda = agenda });
 
-        var record = cut.FindAll("button").Single(button => button.TextContent.Trim() == "Record decision");
-        record.HasAttribute("disabled").Should().BeTrue();
+        // A quorum ticked, so the reason left is E4's.
+        cut.Find("#decision-present-1").Change(true);
+
+        // T361, E4 (round 3 item 16): unavailable, never natively disabled, the record refusal's own sentence beside it.
+        var record = cut.Find("#record-decision");
+        record.HasAttribute("disabled").Should().BeFalse();
+        record.GetAttribute("aria-disabled").Should().Be("true");
         record.GetAttribute("aria-describedby").Should().Be("record-reason");
-        Text(cut.Find("#record-reason")).Should().Be($"Record decision: {CommitteeReview.NothingOnTheAgenda}");
+        Text(cut.Find("#record-reason")).Should().Be(
+            "This review decides entrustment only, so stage at least one decision before recording it.");
     }
 
     [Fact]
@@ -191,7 +200,7 @@ public sealed partial class EntrustmentOnlyReviewPageTests : TestContext
             Agenda = new CommitteeAgendaDto(30, 2026, 1, "2026 S1", false,
                 [
                     new CommitteeAgendaLineDto(1, 4, "PAED-004", "Newborn", CommitteeAgendaLineOrigin.Cadence, 2026, 1, "2026 S1",
-                        true, false, CommitteeAgendaLineState.Decided, CommitteeAgendaLineStatus.Decided, false, false, null, 91, 1)
+                        true, false, CommitteeAgendaLineState.Decided, CommitteeAgendaLineStatus.Decided, false, false, 91, 1)
                 ],
                 [])
         };
@@ -337,10 +346,22 @@ public sealed partial class EntrustmentOnlyReviewPageTests : TestContext
         _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, userId));
     }
 
+    /// <summary>Record decision… with a quorum ticked, then the dialog's Record decision (T361, round 3 item 22).</summary>
+    private static void Record(IRenderedComponent<ReviewDetail> cut)
+    {
+        cut.Find("#decision-present-1").Change(true);
+        cut.Find("#record-decision").Click();
+        cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Record decision").Click();
+    }
+
     private IRenderedComponent<ReviewDetail> RenderReview(CommitteeReviewDetailDto review)
     {
+        // The page reads the review again after every action (T260): it reads what the last command left.
+        var current = review;
+        JSInterop.Mode = JSRuntimeMode.Loose;
         _sender
-            .On<GetCommitteeReviewByIdQuery>(_ => review)
+            .On<GetCommitteeReviewByIdQuery>(_ => current)
+            .On<GetStartPreviewQuery>(_ => null)
             .On<ListPendingEntrustmentDecisionsForReviewQuery>(_ => Array.Empty<PendingEntrustmentDecisionDto>())
             .On<GetSamplingConcentrationWarningsQuery>(_ => null)
             .On<CountMsfCampaignsOutsideSnapshotQuery>(_ => MsfCampaignsOutsideSnapshotDto.None)
@@ -351,12 +372,12 @@ public sealed partial class EntrustmentOnlyReviewPageTests : TestContext
             .On<GetMsfCoverageForTraineeQuery>(_ => null)
             .On<GetCommitteeAgendaQuery>(_ => review.Agenda)
             // The command's answer, as the shared mapper builds it: the decision it recorded, with the category it was sent.
-            .On<RecordCommitteeDecisionCommand>(recorded => review with
+            .On<RecordCommitteeDecisionCommand>(recorded => current = review with
             {
                 State = CommitteeReviewState.Decided,
                 Decisions = [Decision(41, recorded.Category)]
             })
-            .On<ResolveAppealCommand>(_ => review with { State = CommitteeReviewState.Final });
+            .On<ResolveAppealCommand>(_ => current = review with { State = CommitteeReviewState.Final });
 
         var cut = RenderComponent<ReviewDetail>(parameters => parameters.Add(page => page.ReviewId, 30));
         cut.WaitForState(() => cut.Markup.Contains("Evidence snapshot"));

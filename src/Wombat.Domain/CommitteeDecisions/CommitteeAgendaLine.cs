@@ -17,18 +17,23 @@ public enum CommitteeAgendaLineOrigin
 /// Where an agenda line stands. "Staged" is not a state: it is read from the review's staged decision on the EPA, which
 /// is unique per EPA. "Missed" is not one either: it is computed, never stored. (T131, Decision 6)
 /// </summary>
+/// <remarks>
+/// There is no deferral (T361, D53): the value 2, Deferred, is gone, and the others keep their numbers, which a check
+/// constraint names (<c>CK_CommitteeAgendaLines_DecidedNamesItsStar</c> uses 3).
+/// </remarks>
 public enum CommitteeAgendaLineState
 {
     /// <summary>Still to be decided at this sitting.</summary>
     Due = 1,
 
-    /// <summary>The chair put it off, with a reason. A later sitting in the same window plans it again.</summary>
-    Deferred = 2,
-
     /// <summary>Ratifying issued a STAR on it (<see cref="CommitteeAgendaLine.EntrustmentDecisionId" />).</summary>
     Decided = 3,
 
-    /// <summary>An optional line the review was ratified without. Never a closing line.</summary>
+    /// <summary>
+    /// Not decided at this sitting: the review was ratified with nothing staged on the line, closing or optional alike
+    /// (T361, D53, E1). The decision's one sentence about such lines is <see cref="CommitteeDecision.UndecidedNote" />. A
+    /// later sitting in the window plans the line again.
+    /// </summary>
     NotDecided = 4,
 
     /// <summary>
@@ -51,8 +56,9 @@ public enum CommitteeAgendaLineState
 /// EPA, both semesters of the year for an annual one. There is no calendar here but <see cref="AcademicPeriod" />'s.
 /// </para>
 /// <para>
-/// <b>Closing</b> (<see cref="IsClosing" />): a line the review cannot be ratified without, unless it is staged or
-/// deferred with a reason. A line is closing when the sitting is in the window's last semester: every semester-cadence
+/// <b>Closing</b> (<see cref="IsClosing" />): a line due at this sitting, the window's last chance. It no longer holds
+/// anything back (T361, D53): left unstaged, it is written Not decided when the review is ratified, as an optional line
+/// is, and the decisions-due page reads it so. A line is closing when the sitting is in the window's last semester: every semester-cadence
 /// line, and an annual line at the semester-2 sitting (Decision 5), except a line the College has decided as opportunity
 /// allows (<see cref="CurriculumItem.DecisionIsOpportunistic" />, O7) and a line in a window the trainee joined part-way
 /// through (<see cref="IsPartialPeriod" />, Decision 9, D14/D42). An annual EPA reaches every binding sitting of its
@@ -67,19 +73,18 @@ public enum CommitteeAgendaLineState
 /// <para>
 /// <b>Decided elsewhere</b> (T235). A line is planned because its window was undecided, and another sitting can decide it
 /// while this review is open: a late semester-1 review ratifying an annual EPA that the semester-2 review holds as closing.
-/// Such a line is optional, and does not block ratify (<see cref="BlocksRatify" />): whether another sitting has decided
+/// Such a line is optional: whether another sitting has decided
 /// the window is read, by the one predicate the planner and the decisions-due page share, whenever the line is judged,
 /// and written as <see cref="CommitteeAgendaLineState.DecidedElsewhere" /> once the review settles its agenda.
 /// </para>
 /// <para>
-/// <b>No user id.</b> Who deferred a line is the audit row's, so erasure has nothing here to pseudonymise.
+/// <b>No user id</b>, so erasure has nothing here to pseudonymise.
 /// </para>
 /// </remarks>
 public sealed class CommitteeAgendaLine
 {
     public const int EpaCodeMaxLength = 64;
     public const int EpaTitleMaxLength = 200;
-    public const int DeferralReasonMaxLength = 2000;
 
     private CommitteeAgendaLine()
     {
@@ -104,7 +109,10 @@ public sealed class CommitteeAgendaLine
     /// <summary>The semester of the decision window, or null for a whole-year window (an annual EPA).</summary>
     public int? WindowSemester { get; private set; }
 
-    /// <summary>Whether the review cannot be ratified while this line is neither staged nor deferred.</summary>
+    /// <summary>
+    /// Whether the line is due at this sitting, the window's last semester (Decision 5). Since D53 it labels the line and
+    /// tells the decisions-due page a not-decided window apart; it holds nothing back (T361).
+    /// </summary>
     public bool IsClosing { get; private set; }
 
     /// <summary>
@@ -114,9 +122,6 @@ public sealed class CommitteeAgendaLine
     public bool IsPartialPeriod { get; private set; }
 
     public CommitteeAgendaLineState State { get; private set; } = CommitteeAgendaLineState.Due;
-
-    /// <summary>Why the chair deferred the line. Set exactly when <see cref="State" /> is Deferred.</summary>
-    public string? DeferralReason { get; private set; }
 
     /// <summary>The STAR ratifying issued on the line. Set exactly when <see cref="State" /> is Decided.</summary>
     public int? EntrustmentDecisionId { get; private set; }
@@ -205,57 +210,6 @@ public sealed class CommitteeAgendaLine
         QuotaWindow window)
         => Create(CommitteeAgendaLineOrigin.Chair, curriculumItemId, epaId, epaCode, epaTitle, window, isClosing: false);
 
-    /// <summary>
-    /// Whether this line keeps the review from being ratified: still due, closing, no decision is staged on it, and no other
-    /// sitting has decided its window. The predicate the record and ratify handlers enforce and the page's disabled Record
-    /// and Ratify buttons say, so they cannot disagree.
-    /// </summary>
-    /// <param name="staged">Whether a decision on the EPA is staged at the review.</param>
-    /// <param name="decidedElsewhere">
-    /// Whether another sitting has decided the line's window since it was planned (T235): read by the caller, by the one
-    /// "is this window decided" predicate the planner and the decisions-due page share. Every caller states it.
-    /// </param>
-    public bool BlocksRatify(bool staged, bool decidedElsewhere)
-        => State == CommitteeAgendaLineState.Due && IsClosing && !staged && !decidedElsewhere;
-
-    /// <summary>Puts the line off, with the reason the committee gives. Only a line still due can be deferred.</summary>
-    public void Defer(string reason)
-    {
-        if (State != CommitteeAgendaLineState.Due)
-        {
-            throw new InvalidOperationException($"{EpaCode} is not due at this review, so it cannot be deferred.");
-        }
-
-        var trimmed = reason?.Trim();
-        if (string.IsNullOrEmpty(trimmed))
-        {
-            throw new InvalidOperationException(DeferralReasonRequired);
-        }
-
-        if (trimmed.Length > DeferralReasonMaxLength)
-        {
-            throw new InvalidOperationException($"A deferral reason is at most {DeferralReasonMaxLength} characters.");
-        }
-
-        State = CommitteeAgendaLineState.Deferred;
-        DeferralReason = trimmed;
-    }
-
-    /// <summary>Takes a deferral back: the line is due again, and its reason is cleared.</summary>
-    public void Reinstate()
-    {
-        if (State != CommitteeAgendaLineState.Deferred)
-        {
-            throw new InvalidOperationException($"{EpaCode} is not deferred at this review, so there is nothing to reinstate.");
-        }
-
-        State = CommitteeAgendaLineState.Due;
-        DeferralReason = null;
-    }
-
-    /// <summary>The refusal for a deferral with no reason.</summary>
-    public const string DeferralReasonRequired = "Say why the committee is deferring the decision.";
-
     /// <summary>Ratifying issued <paramref name="decision" /> on the line. Through the navigation: the STAR has no id until saved.</summary>
     internal void Decide(EntrustmentDecision decision)
     {
@@ -288,12 +242,12 @@ public sealed class CommitteeAgendaLine
         State = CommitteeAgendaLineState.DecidedElsewhere;
     }
 
-    /// <summary>The review was ratified without deciding this optional line.</summary>
+    /// <summary>The review was ratified with nothing staged on this line, closing or optional alike (T361, D53).</summary>
     internal void CloseUndecided()
     {
-        if (State != CommitteeAgendaLineState.Due || IsClosing)
+        if (State != CommitteeAgendaLineState.Due)
         {
-            throw new InvalidOperationException($"{EpaCode} must be decided or deferred at this sitting.");
+            throw new InvalidOperationException($"{EpaCode} is not due at this review, so it cannot be closed as not decided.");
         }
 
         State = CommitteeAgendaLineState.NotDecided;

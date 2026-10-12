@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.RegularExpressions;
+using AngleSharp.Dom;
 using Bunit;
 using Bunit.TestDoubles;
 using FluentAssertions;
@@ -30,7 +31,6 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
     private const string NotYetReleased = "not yet released";
     private const string ReleasedAfterStart = "released after this review started";
     private const string StartedEmpty = "The review window held no evidence when this review started.";
-    private const string StartNoteId = "start-review-msf-note";
 
     public ReviewDetailMsfOutsideSnapshotTests()
     {
@@ -38,6 +38,9 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
         auth.SetAuthorized("chair@test");
         auth.SetRoles("CommitteeMember");
         auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "chair-1"));
+
+        // The Start dialog opens and closes, and a result takes the focus (T361).
+        JSInterop.Mode = JSRuntimeMode.Loose;
     }
 
     [Theory]
@@ -48,8 +51,7 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
         var (cut, text) = Render(state, MsfCampaignsOutsideSnapshotDto.None);
 
         text.Should().NotContain(NotYetReleased);
-        text.Should().NotContain("feedback campaign");
-        cut.FindAll($"#{StartNoteId}").Should().BeEmpty();
+        text.Replace(StartDialogText(cut), string.Empty, StringComparison.Ordinal).Should().NotContain("feedback campaign");
     }
 
     [Fact]
@@ -58,7 +60,7 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
         var (_, text) = Render(CommitteeReviewState.InProgress, new MsfCampaignsOutsideSnapshotDto(1, 0));
 
         text.Should().Contain("1 feedback campaign that closed in this window is not yet released.");
-        text.Should().Contain("The snapshot holds only the campaigns released before the review started, so it is not in it.");
+        text.Should().Contain("The snapshot holds only the campaigns released before the review started, so that campaign is not in it.");
     }
 
     [Fact]
@@ -67,7 +69,7 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
         var (_, text) = Render(CommitteeReviewState.InProgress, new MsfCampaignsOutsideSnapshotDto(2, 0));
 
         text.Should().Contain("2 feedback campaigns that closed in this window are not yet released.");
-        text.Should().Contain("The snapshot holds only the campaigns released before the review started, so they are not in it.");
+        text.Should().Contain("The snapshot holds only the campaigns released before the review started, so those campaigns are not in it.");
     }
 
     [Fact]
@@ -76,7 +78,7 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
         var (_, text) = Render(CommitteeReviewState.InProgress, new MsfCampaignsOutsideSnapshotDto(0, 1));
 
         text.Should().Contain("1 feedback campaign that closed in this window was released after this review started.");
-        text.Should().Contain("so it is not in it.");
+        text.Should().Contain("so that campaign is not in it.");
         text.Should().NotContain(NotYetReleased);
     }
 
@@ -87,7 +89,7 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
 
         text.Should().Contain("1 feedback campaign that closed in this window is not yet released.");
         text.Should().Contain("2 feedback campaigns that closed in this window were released after this review started.");
-        text.Should().Contain("so they are not in it.", "three campaigns are missing, not one");
+        text.Should().Contain("so those campaigns are not in it.", "three campaigns are missing, not one");
         cut.FindAll(".alert").Should().ContainSingle(alert => alert.TextContent.Contains(ReleasedAfterStart));
     }
 
@@ -97,33 +99,34 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
         var (_, text) = Render(CommitteeReviewState.Scheduled, new MsfCampaignsOutsideSnapshotDto(2, 0));
 
         text.Should().Contain("2 feedback campaigns that closed in this window are not yet released.");
-        text.Should().Contain("Starting the review now leaves them out of the snapshot.");
+        text.Should().Contain("Starting the review now leaves those campaigns out of the snapshot.");
         text.Should().NotContain("released before the review started", "there is no snapshot before Start");
     }
 
     /// <summary>
-    /// The Evidence snapshot card can be three cards below the Start button on a narrow screen, so the warning is also
-    /// at the button, which names it as its description.
+    /// The Evidence snapshot card can be far below Start on a narrow screen, so the warning is also said where Start is
+    /// confirmed: since T361 (round 3 item 11) in the Start dialog, from the preview of what Start freezes and leaves out.
     /// </summary>
     [Theory]
     [InlineData(1, "Starting now leaves out 1 feedback campaign that closed in this window and is not yet released.")]
     [InlineData(3, "Starting now leaves out 3 feedback campaigns that closed in this window and are not yet released.")]
-    public void BeforeStart_TheStartButtonCarriesTheWarning(int awaiting, string expected)
+    public void BeforeStart_TheStartDialogCarriesTheWarning(int awaiting, string expected)
     {
-        var (cut, _) = Render(CommitteeReviewState.Scheduled, new MsfCampaignsOutsideSnapshotDto(awaiting, 0));
+        var (cut, _) = Render(CommitteeReviewState.Scheduled, new MsfCampaignsOutsideSnapshotDto(awaiting, 0), leftOut: awaiting);
 
-        var start = cut.FindAll("button").Single(button => button.TextContent.Trim() == "Start review");
-        start.GetAttribute("aria-describedby").Should().Be(StartNoteId);
-        Whitespace().Replace(cut.Find($"#{StartNoteId}").TextContent, " ").Trim().Should().Be(expected);
+        cut.FindAll("button").Single(button => button.Closest("dialog") is null && button.TextContent.Trim() == "Start review…").Click();
+
+        StartDialogParagraphs(cut).Should().HaveCount(2).And.EndWith(expected);
     }
 
     [Fact]
-    public void BeforeStart_WithNothingAwaiting_TheStartButtonDescribesNothing()
+    public void BeforeStart_WithNothingAwaiting_TheStartDialogSaysNothingOfIt()
     {
         var (cut, _) = Render(CommitteeReviewState.Scheduled, MsfCampaignsOutsideSnapshotDto.None);
 
-        var start = cut.FindAll("button").Single(button => button.TextContent.Trim() == "Start review");
-        start.HasAttribute("aria-describedby").Should().BeFalse();
+        cut.FindAll("button").Single(button => button.Closest("dialog") is null && button.TextContent.Trim() == "Start review…").Click();
+
+        StartDialogParagraphs(cut).Should().ContainSingle().Which.Should().NotContain("feedback campaign");
     }
 
     [Fact]
@@ -171,7 +174,9 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
         cut.WaitForState(() => cut.Markup.Contains("Evidence snapshot"));
         cut.Markup.Should().Contain(NotYetReleased, "the setup: one campaign is awaiting release at load");
 
-        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Start review").Click();
+        // T361 (round 3 item 22): Start review… opens the dialog, whose Start review starts it.
+        cut.FindAll("button").Single(button => button.Closest("dialog") is null && button.TextContent.Trim() == "Start review…").Click();
+        cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Start review").Click();
         cut.WaitForState(() => cut.Markup.Contains("Review started."));
 
         sender.CountQueries.Should().HaveCount(2);
@@ -181,9 +186,10 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
 
     private (IRenderedComponent<ReviewDetail> Cut, string Text) Render(
         CommitteeReviewState state,
-        MsfCampaignsOutsideSnapshotDto outsideSnapshot)
+        MsfCampaignsOutsideSnapshotDto outsideSnapshot,
+        int leftOut = 0)
     {
-        Services.AddSingleton<IScopedSender>(new FakeSender(Review(state), outsideSnapshot));
+        Services.AddSingleton<IScopedSender>(new FakeSender(Review(state), outsideSnapshot) { LeftOut = leftOut });
 
         var cut = RenderComponent<ReviewDetail>(parameters => parameters.Add(page => page.ReviewId, 30));
         cut.WaitForState(() => cut.Markup.Contains("Evidence snapshot"));
@@ -195,6 +201,15 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
 
     [GeneratedRegex(@"\s+")]
     private static partial Regex Whitespace();
+
+    private static IElement StartDialog(IRenderedComponent<ReviewDetail> cut)
+        => cut.FindAll("dialog").Single(dialog => dialog.QuerySelector("h2")!.TextContent.StartsWith("Start ", StringComparison.Ordinal));
+
+    private static IReadOnlyList<string> StartDialogParagraphs(IRenderedComponent<ReviewDetail> cut)
+        => StartDialog(cut).QuerySelectorAll("p").Select(p => Whitespace().Replace(p.TextContent, " ").Trim()).ToArray();
+
+    private static string StartDialogText(IRenderedComponent<ReviewDetail> cut)
+        => cut.FindAll("dialog").Count == 0 ? string.Empty : Whitespace().Replace(StartDialog(cut).TextContent, " ");
 
     private static CommitteeReviewDetailDto Review(CommitteeReviewState state)
     {
@@ -241,6 +256,9 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
 
         public List<CountMsfCampaignsOutsideSnapshotQuery> CountQueries { get; } = [];
 
+        /// <summary>The campaigns Start would leave out, as the Start dialog's preview reads them (T361, T173).</summary>
+        public int LeftOut { get; init; }
+
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
         {
             if (request is CountMsfCampaignsOutsideSnapshotQuery countQuery)
@@ -265,6 +283,7 @@ public sealed partial class ReviewDetailMsfOutsideSnapshotTests : TestContext
                 GetMsfCoverageForTraineeQuery => null,
                 ListStarEpaOptionsForReviewQuery => Array.Empty<StarEpaOptionDto>(),
                 GetEntrustmentScalesListQuery => Array.Empty<EntrustmentScaleDto>(),
+                GetStartPreviewQuery => new StartPreviewDto(8, 8, 0, new DateOnly(2026, 1, 1), new DateOnly(2026, 6, 30), LeftOut),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };
 

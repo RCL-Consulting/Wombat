@@ -116,6 +116,42 @@ public static class CommitteeDecisionWording
         ? "decided, not yet ratified"
         : StateLabel(state).ToLowerInvariant();
 
+    /// <summary>
+    /// A Record with no rationale, refused: the review page's own sentence, and the Record validator's, so a direct Record
+    /// is refused in the page's words, not FluentValidation's default (T361, review R4).
+    /// </summary>
+    public const string GiveCommitteeRationale = "Give the committee's rationale.";
+
+    /// <summary>A formative review's type, whatever type it was scheduled with (T361, T309 item 2).</summary>
+    public const string FormativeTypeLabel = "Formative check-in";
+
+    /// <summary>A formative review's type as a list column says it (T309 item 2).</summary>
+    public const string FormativeTypeShortLabel = "Formative";
+
+    /// <summary>
+    /// A review's type as a heading or a detail line says it, read from both fields: "Formative check-in" for a formative
+    /// review, which decides nothing whatever its stored type (T361, T309 item 2), else <see cref="ReviewTypeLabel(CommitteeReviewType)" />.
+    /// </summary>
+    public static string ReviewTypeLabel(CommitteeReviewType type, bool isFormative)
+        => isFormative ? FormativeTypeLabel : ReviewTypeLabel(type);
+
+    /// <summary>A review's type as a list column says it: "Formative" for a formative review (T309 item 2).</summary>
+    public static string ReviewTypeShortLabel(CommitteeReviewType type, bool isFormative)
+        => isFormative ? FormativeTypeShortLabel : ReviewTypeShortLabel(type);
+
+    /// <summary>
+    /// Who may act at a summative review in progress, said to a reader who is not its chair (T361, D53): "Only the panel's
+    /// chair, Thandi Zulu, can stage entrustment decisions and record the committee's decision." Before D53 it named
+    /// deferring agenda lines too.
+    /// </summary>
+    /// <param name="chairName">The chair's name, or null when the panel has no chair on record.</param>
+    public static string OnlyTheChairSits(string? chairName)
+        => $"{OnlyTheChair(chairName)} can stage entrustment decisions and record the committee's decision.";
+
+    /// <summary>"Only the panel's chair, Thandi Zulu," or "Only the panel's chair": the start of a who-may-act sentence.</summary>
+    public static string OnlyTheChair(string? chairName)
+        => string.IsNullOrWhiteSpace(chairName) ? "Only the panel's chair" : $"Only the panel's chair, {chairName},";
+
     /// <summary>The review's type as a heading or a detail line says it: "Entrustment-only review".</summary>
     public static string ReviewTypeLabel(CommitteeReviewType type) => type switch
     {

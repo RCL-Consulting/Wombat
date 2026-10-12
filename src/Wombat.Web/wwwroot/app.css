@@ -88,6 +88,7 @@
   --nav-divider: rgb(255 255 255 / 0.18);
   --nav-focus-ring: rgb(255 255 255); /* every focusable control on dark chrome; --focus-ring is 2.90:1 there */
   --sidebar-width: 250px; /* the shell's sidebar, and where the error bar starts beside it (MainLayout.razor.css) */
+  --sitting-bar-h: 0px; /* the chair's stuck sitting bar's height, measured by js/sticky-offset.js from 641px (T361) */
 
   /* Shape and motion */
   --radius-sm: 4px; /* nav rows, skeleton, a field's warning */
@@ -4150,3 +4151,474 @@ fieldset.form-group fieldset.form-group > legend {
   }
 }
 /* end Flow 06 */
+
+/* ── The review sitting ─────────────────────────────── */
+/* Flow 07: stacking and focus clearance (T361) */
+/* Round 2 review 14, 15; round 3 items 9, 14, 15; T356. The shell's stacking is MainLayout.razor.css's:
+   .sidebar takes z-index 10 from 641px, so its fixed top bar (.account-row) paints above every positioned element of the
+   page, a .table-container's and the chair's sitting bar (z-index 1) alike; dialogs are in the top layer, above both, and
+   the error bar keeps its 1000. */
+
+/* Focus is never hidden under the bars (WCAG 2.4.11): from 641px the top bar is fixed, 56px, and the chair's sitting bar
+   sticks under it. js/sticky-offset.js measures that bar into --sitting-bar-h (0 for a reader's bar, and with none). Below
+   641px neither bar is fixed, so nothing is reserved. */
+@media (min-width: 641px) {
+  html {
+    scroll-padding-top: calc(56px + var(--sitting-bar-h, 0px));
+  }
+}
+
+/* Flow 03's activity page opened from a review's snapshot (round 3 item 9): "Back to Lerato Molefe · 2026 S2" above the
+   header, the page's one back link. Below 641px it is the 44px row the trail's back crumb was, and the crumb goes. */
+.return-link {
+  align-items: center;
+  display: inline-flex;
+  font-weight: 600;
+  gap: var(--space-xs);
+  margin: 0 0 var(--space-sm);
+  min-height: 24px;
+}
+
+@media (max-width: 640.98px) {
+  .return-link {
+    min-height: 44px;
+  }
+
+  .activity-page--from-review nav:has(> .breadcrumbs) {
+    display: none;
+  }
+}
+/* end Flow 07: stacking and focus clearance */
+
+/* Flow 07: the review sitting (T361) */
+/* Round 3's boards (R2-Spec; DESIGN.md § Committee agenda, § The chair's controls, § Detail page,
+   § Stacking). The committee review is one column: the sitting bar, the notes, the agenda, the decision (above the agenda
+   once recorded), the standing, MSF, the snapshot, the charts and the appeals. No new colour token; every pair is one
+   the Spec measured (text 12.63:1, muted 5.09:1, link 6.70:1, the action blue 4.86:1, the input border 3.80:1). */
+.review-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* Each section's h2, one level under the page's h1 (A.7.13): the card title's size. */
+.review-section-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-md);
+}
+
+/* What takes the focus is kept clear of the top bar and the chair's stuck bar (round 3 item 15): scroll-padding-top on
+   html (lane R) reserves both; each target also carries the margin, for a scroll the browser does not route through it. */
+.review-page h2[tabindex],
+.review-page h3[tabindex],
+.review-page h4[tabindex],
+.review-page .action-result,
+.review-page tr[id^="snap-"],
+.review-page li[id^="snap-"] {
+  scroll-margin-top: calc(56px + var(--sitting-bar-h, 0px) + var(--space-md));
+}
+
+/* "Lerato Molefe's progress" in PageHeader's subtitle (round 3 item 19): a link alone on its line, a 24px target (20). */
+.review-progress-link {
+  align-items: center;
+  display: flex;
+  font-weight: 600;
+  min-height: 24px;
+  width: fit-content;
+}
+
+/* The sitting bar (E8, round 3 items 14, 28). The chair's: the action blue stripe, sticky under the 56px top bar from
+   641px, one line, z-index 1 (under the sidebar's 10, above the page's tables). A reader's: the input-border stripe,
+   static; a reader who may start the review keeps the action blue (E2). */
+.sitting-bar {
+  align-items: center;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--secondary-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.sitting-bar--reader {
+  border-left-color: var(--input-border);
+}
+
+.sitting-bar--reader.sitting-bar--starts {
+  border-left-color: var(--secondary-color);
+}
+
+.sitting-bar-line {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+}
+
+.sitting-bar-state {
+  flex: none;
+}
+
+.sitting-bar-count {
+  font-weight: 600;
+}
+
+.sitting-bar-mode,
+.sitting-bar-present {
+  color: var(--muted-text);
+}
+
+.sitting-bar-sentence {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.sitting-bar-as-of {
+  color: var(--muted-text);
+  margin: 0;
+}
+
+.sitting-bar-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-left: auto;
+}
+
+@media (min-width: 641px) {
+  .sitting-bar:not(.sitting-bar--reader) {
+    position: sticky;
+    top: 56px;
+    z-index: 1;
+  }
+}
+
+/* At 768 the chair's bar keeps one line: state, count and the next act; Present drops (E8). */
+@media (min-width: 641px) and (max-width: 1023.98px) {
+  .sitting-bar:not(.sitting-bar--reader) .sitting-bar-present {
+    display: none;
+  }
+}
+
+/* Below 641px every bar is static and stacked, its buttons full width at 44px (Q9). */
+@media (max-width: 640.98px) {
+  .sitting-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sitting-bar-actions {
+    align-items: stretch;
+    flex-direction: column;
+    margin-left: 0;
+  }
+
+  .sitting-bar-actions .btn,
+  .review-progress-link,
+  .chart-jump,
+  .chart-back {
+    min-height: 44px;
+  }
+}
+
+/* The notes card's sampling lines. */
+.review-notes-list li + li {
+  margin-top: var(--space-xs);
+}
+
+/* The agenda (round 3 items 17, 20, 30; E9): the code over its title, the badge over its sentences. The open line and its
+   form row reuse tr.is-editing's stripe; a result row sits under its line. */
+.agenda-epa-code {
+  display: block;
+  font-weight: 600;
+}
+
+.agenda-epa-title {
+  color: var(--muted-text);
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.agenda-line-detail {
+  display: block;
+  font-size: 0.9rem;
+  margin-top: var(--space-xs);
+}
+
+.agenda-line-action .actions-cell {
+  align-items: center;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.agenda-draft-kept {
+  color: var(--muted-text);
+  font-size: 0.85rem;
+}
+
+.agenda-form-row > td,
+.agenda-result-row > td {
+  padding: var(--space-md);
+}
+
+.clinic-table tbody tr.agenda-form-row:hover,
+.clinic-table tbody tr.agenda-result-row:hover {
+  background-color: transparent;
+}
+
+/* Stacking (20): a container query on the agenda's own container, below 760px each line a block of its cells. The markup
+   carries its table roles explicitly, so a stacked line keeps them; the header row stays, visually hidden. */
+.agenda-table-container {
+  container: agenda / inline-size;
+}
+
+@container agenda (width < 760px) {
+  .agenda-table thead {
+    border: 0;
+    clip: rect(0, 0, 0, 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+
+  .agenda-table,
+  .agenda-table tbody,
+  .agenda-table tr,
+  .agenda-table th,
+  .agenda-table td {
+    display: block;
+    width: auto;
+  }
+
+  .agenda-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .agenda-table th,
+  .agenda-table td {
+    border: 0;
+    padding: var(--space-xs) 0;
+  }
+
+  /* The one new rule (18): the stacked open line's stripe, the row's own edge rather than its first cell's. */
+  .agenda-table tbody tr.agenda-line.is-editing,
+  .agenda-table tbody tr.agenda-form-row {
+    box-shadow: inset 4px 0 0 var(--secondary-color);
+  }
+
+  .agenda-table tbody tr.is-editing > td:first-child {
+    box-shadow: none;
+  }
+
+  .agenda-line-action .actions-cell {
+    justify-content: flex-start;
+  }
+
+  /* A stacked cell names its column, as the hidden header row would (review D3; the stack-wide tables' rule): the label
+     is drawn, and the alternative text after the slash keeps it out of what a screen reader hears, which the cell's
+     table role already names. */
+  .agenda-table td[data-label]::before {
+    color: var(--muted-text);
+    content: attr(data-label) ": ";
+    content: attr(data-label) ": " / "";
+    font-weight: 600;
+  }
+}
+
+/* The staging form (AgendaLineForm): one column inside its line, the standing in one line under its heading. */
+.agenda-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.agenda-form-heading {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.agenda-form-standing {
+  color: var(--muted-text);
+  margin: 0;
+}
+
+.agenda-form .form-actions {
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: 0;
+}
+
+.agenda-foot {
+  border-top: 1px solid var(--border-color);
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+}
+
+/* The evidence a decision rests on: this EPA's lines, then the others behind "Show the other N snapshot lines". Each line
+   a tick (the whole label is its target) and Read. */
+.snapshot-pick {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.snapshot-pick-line {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-md);
+  justify-content: space-between;
+}
+
+.snapshot-pick-group {
+  font-weight: 600;
+  margin: var(--space-sm) 0 0;
+}
+
+.snapshot-pick-more {
+  align-self: flex-start;
+}
+
+/* "Rating chart for PAED-001" and the chart's "Back to PAED-001's line" (C2): links alone on their lines, 24px. */
+.chart-jump,
+.chart-back {
+  align-items: center;
+  display: flex;
+  font-weight: 600;
+  min-height: 24px;
+  width: fit-content;
+}
+
+/* Read, in place (C3, round 3 item 8): the activity as it is now, flow 03's cards, in the line. */
+.evidence-reader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.evidence-reader-back {
+  align-self: flex-start;
+}
+
+.evidence-reader-heading {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.evidence-reader-moved {
+  font-weight: 600;
+  margin: 0;
+}
+
+/* The activity's own About and form sections sit at h4 under the reader's h3 (review D1); their heads keep flow 03's
+   margin. */
+.evidence-reader .form-section-head h4,
+.evidence-reader .form-section-lockhead h4 {
+  margin: 0;
+}
+
+/* The decision: Record decision… with, beside it, the quorum line (the one live region besides the results, 21) and
+   either its reason or the hint. */
+.decision-actions {
+  align-items: flex-start;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  margin-top: var(--space-xl);
+  padding-top: var(--space-md);
+}
+
+.decision-actions-text {
+  display: flex;
+  flex: 1 1 18rem;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.decision-actions-text p {
+  margin: 0;
+}
+
+.quorum-line {
+  color: var(--text-color);
+}
+
+.decision-record h3 {
+  font-size: 1.05rem;
+  margin: 0 0 var(--space-sm);
+}
+
+/* The snapshot's groups, an h3 each (A.7.13). */
+.snapshot-group-heading {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: var(--space-lg) 0 var(--space-sm);
+}
+
+/* ConfirmDialog's body of more than one sentence (Start, Record, Ratify). */
+.dialog-body p {
+  margin: 0 0 var(--space-sm);
+}
+
+.dialog-list {
+  margin: 0 0 var(--space-sm);
+  padding-left: var(--space-lg);
+}
+
+/* Below 641px: 44px row actions and ticks (Q9, round 3 item 20). */
+@media (max-width: 640.98px) {
+  .agenda-line-action .btn,
+  .snapshot-pick-line .btn,
+  .evidence-reader-back,
+  .decision-actions .btn {
+    min-height: 44px;
+  }
+
+  .decision-actions .btn {
+    width: 100%;
+  }
+
+  /* The rest of the 44px targets (review D2): Stage pending decision and Cancel, "Show the other N snapshot lines" and
+     the appeal's buttons; the snapshot and Present ticks, each label filling its 2.75rem row so the tick is pressed
+     anywhere on it, as flow 03's multi-choice rows are. */
+  .agenda-form .form-actions .btn,
+  .snapshot-pick-more,
+  .review-appeals .form-actions .btn {
+    min-height: 44px;
+  }
+
+  .review-page .snapshot-pick-line .form-check,
+  .review-page .check-grid .form-check {
+    flex: 1 1 auto;
+    min-height: 2.75rem;
+  }
+
+  .review-page .snapshot-pick-line .form-check-input,
+  .review-page .check-grid .form-check-input {
+    height: 1.25rem;
+    width: 1.25rem;
+  }
+
+  .review-page .snapshot-pick-line .form-check label,
+  .review-page .check-grid .form-check label {
+    align-items: center;
+    display: inline-flex;
+    flex: 1;
+    min-height: 2.75rem;
+  }
+}
+/* end Flow 07: the review sitting */

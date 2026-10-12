@@ -13,14 +13,14 @@ public static class CommitteeAgendaText
     /// <summary>A line's status as the agenda table's badge says it.</summary>
     public static string StatusLabel(CommitteeAgendaLineStatus status) => status switch
     {
-        CommitteeAgendaLineStatus.Due => "Due",
+        CommitteeAgendaLineStatus.Due => "Due at this sitting",
         CommitteeAgendaLineStatus.DueByYearEnd => "Due by year end",
         CommitteeAgendaLineStatus.PartialPeriod => "Partial period",
         CommitteeAgendaLineStatus.AsOpportunityAllows => "As opportunity allows",
         CommitteeAgendaLineStatus.Staged => "Staged",
         CommitteeAgendaLineStatus.Decided => "Decided",
-        CommitteeAgendaLineStatus.Deferred => "Deferred",
-        CommitteeAgendaLineStatus.NotDecided => "Not decided",
+        // T361, D53, E1: one label for every line left unstaged, closing or optional alike.
+        CommitteeAgendaLineStatus.NotDecided => "Not decided at this sitting",
         CommitteeAgendaLineStatus.DecidedElsewhere => "Decided elsewhere",
         _ => status.ToString()
     };
@@ -30,20 +30,24 @@ public static class CommitteeAgendaText
     /// The review's state. A line decided elsewhere and still due is said to be open to staging only while the review is in
     /// progress, the one state in which a decision can be staged (T235).
     /// </param>
-    public static string? StatusDetail(CommitteeAgendaLineDto line, CommitteeReviewState reviewState) => line.Status switch
+    /// <param name="undecidedNote">
+    /// The current decision's sentence about the EPAs not decided (<see cref="CommitteeDecisionDto.UndecidedNote" />, T361,
+    /// D53), said under every line that reads "Not decided at this sitting"; null where the decision has none.
+    /// </param>
+    public static string? StatusDetail(CommitteeAgendaLineDto line, CommitteeReviewState reviewState, string? undecidedNote = null) => line.Status switch
     {
-        CommitteeAgendaLineStatus.Due => "Must be decided at this sitting, or deferred with a reason.",
+        // T361, D53: the badge says it; nothing is asked of the line but staging, and no deferral.
+        CommitteeAgendaLineStatus.Due => null,
         CommitteeAgendaLineStatus.DueByYearEnd => "Optional here; decided by the year's last sitting.",
         CommitteeAgendaLineStatus.PartialPeriod => "The trainee joined part-way through the window: optional, never missed.",
         CommitteeAgendaLineStatus.AsOpportunityAllows => line.Origin == CommitteeAgendaLineOrigin.Chair
             ? "Added by the chair."
             : "Decided as opportunity allows: optional.",
         CommitteeAgendaLineStatus.Staged => "A decision is staged below.",
-        CommitteeAgendaLineStatus.Deferred => line.DeferralReason is null ? null : $"Reason: {line.DeferralReason}",
         CommitteeAgendaLineStatus.Decided => line.EntrustmentDecisionId is int starId ? $"STAR #{starId}." : null,
         CommitteeAgendaLineStatus.NotDecided => reviewState == CommitteeReviewState.Withdrawn
             ? "The review was withdrawn before deciding it."
-            : "The review was ratified without deciding it.",
+            : NullIfBlank(undecidedNote),
         CommitteeAgendaLineStatus.DecidedElsewhere => DecidedElsewhereDetail(line, reviewState),
         _ => null
     };
@@ -77,28 +81,33 @@ public static class CommitteeAgendaText
     }
 
     /// <summary>
-    /// What a line's outcome means, said to the trainee under its badge: the committee's reason for a deferral (O6), the
-    /// STAR a decided line names. Null where the badge says it all.
+    /// What a line's outcome means, said to the trainee under its badge: the committee's sentence about the EPAs it did not
+    /// decide (O6; T361, D53), the STAR a decided line names. Null where the badge says it all.
     /// </summary>
-    public static string? TraineeStatusDetail(CommitteeAgendaLineDto line)
+    /// <param name="undecidedNote">
+    /// The current decision's <see cref="CommitteeDecisionDto.UndecidedNote" />: said under every line not decided at this
+    /// sitting. No reason, and no Deferred: there is no deferral.
+    /// </param>
+    public static string? TraineeStatusDetail(CommitteeAgendaLineDto line, string? undecidedNote = null)
     {
         ArgumentNullException.ThrowIfNull(line);
         return line.Status switch
         {
-            CommitteeAgendaLineStatus.Deferred => line.DeferralReason is null ? null : $"The committee's reason: {line.DeferralReason}",
             CommitteeAgendaLineStatus.Decided => line.EntrustmentDecisionId is int starId ? $"STAR #{starId}." : null,
-            CommitteeAgendaLineStatus.NotDecided => "Not decided at this review.",
+            CommitteeAgendaLineStatus.NotDecided => NullIfBlank(undecidedNote),
             CommitteeAgendaLineStatus.DecidedElsewhere => "Decided at another sitting in this window.",
             _ => null
         };
     }
+
+    private static string? NullIfBlank(string? text) => string.IsNullOrWhiteSpace(text) ? null : text.Trim();
 
     /// <summary>Where another panel's decision stands, as the line after its panel's name says it.</summary>
     public static string ElsewhereLabel(CommitteeAgendaElsewhereStatus status) => status switch
     {
         CommitteeAgendaElsewhereStatus.Decided => "Decided",
         CommitteeAgendaElsewhereStatus.OnAgenda => "On the agenda of an open review",
-        CommitteeAgendaElsewhereStatus.Deferred => "Deferred",
+        CommitteeAgendaElsewhereStatus.NotDecided => "Not decided",
         CommitteeAgendaElsewhereStatus.Missed => "Missed",
         _ => "Not yet decided"
     };
@@ -140,7 +149,7 @@ public static class CommitteeAgendaText
                $"without {(outstanding.Count == 1 ? "it" : "them")}.";
     }
 
-    /// <summary>The scheduling preview's opening: how many EPAs, and which must be decided or deferred.</summary>
+    /// <summary>The scheduling preview's opening: how many EPAs, and which are due at this sitting.</summary>
     public static IReadOnlyList<string> PreviewSentences(CommitteeAgendaPreviewDto preview)
     {
         ArgumentNullException.ThrowIfNull(preview);
@@ -173,7 +182,8 @@ public static class CommitteeAgendaText
         var closing = preview.Lines.Where(line => line.IsClosing).Select(line => line.EpaCode).ToArray();
         if (closing.Length > 0)
         {
-            sentences.Add($"{Codes(closing)} must be decided at this sitting, or deferred with a reason, before it is ratified.");
+            // T361, D53 (round 3 item 29): a closing line is due here, and nothing more is asked of it.
+            sentences.Add($"{Codes(closing)} {(closing.Length == 1 ? "is" : "are")} due at this sitting.");
         }
 
         return sentences;

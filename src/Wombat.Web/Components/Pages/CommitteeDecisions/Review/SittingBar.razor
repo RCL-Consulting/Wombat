@@ -1,0 +1,117 @@
+@*
+  The sitting bar (T361, flow 07; R2-Spec "SittingBar"; round 3 items 14, 16, 21, 28; E2, E7, E8): a section named "The
+  sitting" by a visually hidden h2, under PageHeader. The state badge, the count, the mode and evidence window before
+  Start, Present from the ticks (the chair's, not live), and the next act: Start review…, Go to the decision, Ratify… or
+  Close review….
+
+  - The chair's bar (.sitting-bar): an act is the chair's. From 641px it sticks under the top bar (z-index 1, under the
+    sidebar's 10), one line; js/sticky-offset.js measures it into --sitting-bar-h, which scroll-padding-top reserves.
+  - A reader's bar (.sitting-bar--reader): static under the title, it scrolls away. It holds the who-may-act sentence, and
+    while the review can still change "As of 14:02 SAST" and Refresh, which re-reads in place and says what changed (21).
+    A reader who may start the review (E2) is offered Start in it, its stripe the action blue (.sitting-bar--starts).
+  - Ratify short of a quorum is aria-disabled with .is-unavailable and its reason beside it (16), never natively disabled.
+  Re-rendered after every action (T260): the page reads the review again, and the bar is drawn from what it read.
+*@
+<section class="@BarClass" id="sitting-bar" aria-labelledby="sitting-heading">
+  <h2 id="sitting-heading" class="visually-hidden">@ReviewWords.SittingHeading</h2>
+  <div class="sitting-bar-line">
+    <span class="badge @View.BadgeClass sitting-bar-state">@View.StateLabel</span>
+    @if (View.Count is { } count)
+    {
+      <span class="sitting-bar-count">@count</span>
+    }
+    @if (View.Mode is { } mode)
+    {
+      <span class="sitting-bar-mode">@mode</span>
+    }
+    @if (View.Present is { } present)
+    {
+      <span class="sitting-bar-present">@present</span>
+    }
+  </div>
+  @if (View.Sentence is { } sentence)
+  {
+    <p class="sitting-bar-sentence" id="sitting-sentence">@sentence</p>
+  }
+  @if (View.Refresh || View.Act != SittingAct.None)
+  {
+    <div class="sitting-bar-actions">
+      @if (View.Refresh)
+      {
+        <p class="sitting-bar-as-of" id="sitting-as-of" role="status">@AsOf</p>
+        @* Its own read never disables it: it keeps the focus while it reads (T234), and the focus stays on it after (21). *@
+        <button type="button" class="btn btn-sm btn-outline" id="sitting-refresh" disabled="@(Busy && !Refreshing)"
+                aria-disabled="@InFlight.AriaDisabled(Refreshing)" @onclick="RefreshAsync">
+          <Icon Name="refresh-cw" />@ReviewWords.RefreshLabel
+        </button>
+      }
+      @switch (View.Act)
+      {
+        case SittingAct.Start:
+          <button type="button" class="btn btn-primary" id="sitting-start" disabled="@Busy" @onclick="OnStart">@ReviewWords.StartLabel</button>
+          break;
+        case SittingAct.GoToDecision:
+          <button type="button" class="btn btn-outline" id="sitting-go-to-decision" @onclick="OnGoToDecision">@ReviewWords.GoToDecisionLabel</button>
+          break;
+        case SittingAct.Close:
+          <button type="button" class="btn btn-primary" id="sitting-close" disabled="@Busy" @onclick="OnClose">@ReviewWords.CloseLabel</button>
+          break;
+        case SittingAct.Ratify:
+          @if (View.ActReason is { } reason)
+          {
+            @* Round 3 item 16: unavailable, never natively disabled; a press moves the focus to its reason. *@
+            <button type="button" class="btn btn-primary is-unavailable" id="sitting-ratify" aria-disabled="true"
+                    aria-describedby="ratify-reason" @onclick="FocusReasonAsync">@ReviewWords.RatifyLabel</button>
+            <p class="move-reasons move-reasons--beside" id="ratify-reason">@reason</p>
+          }
+          else
+          {
+            <button type="button" class="btn btn-primary" id="sitting-ratify" disabled="@Busy" @onclick="OnRatify">@ReviewWords.RatifyLabel</button>
+          }
+          break;
+      }
+    </div>
+  }
+</section>
+
+@code {
+  [Parameter, EditorRequired] public SittingBarView View { get; set; } = default!;
+
+  /// <summary>"As of 14:02 SAST", with what the last Refresh found.</summary>
+  [Parameter] public string? AsOf { get; set; }
+
+  /// <summary>An action runs: every act here would race it.</summary>
+  [Parameter] public bool Busy { get; set; }
+
+  /// <summary>Refresh's own read runs.</summary>
+  [Parameter] public bool Refreshing { get; set; }
+
+  [Parameter] public EventCallback OnStart { get; set; }
+  [Parameter] public EventCallback OnGoToDecision { get; set; }
+  [Parameter] public EventCallback OnRatify { get; set; }
+  [Parameter] public EventCallback OnClose { get; set; }
+  [Parameter] public EventCallback OnRefresh { get; set; }
+
+  /// <summary>Moves the focus to an element by id.</summary>
+  [Parameter] public Func<string, ValueTask>? Focus { get; set; }
+
+  private string BarClass => View.Chairs ? "sitting-bar"
+    : View.StartsAsReader ? "sitting-bar sitting-bar--reader sitting-bar--starts"
+    : "sitting-bar sitting-bar--reader";
+
+  private async Task RefreshAsync()
+  {
+    if (!Refreshing)
+    {
+      await OnRefresh.InvokeAsync();
+    }
+  }
+
+  private async Task FocusReasonAsync()
+  {
+    if (Focus is not null)
+    {
+      await Focus("ratify-reason");
+    }
+  }
+}

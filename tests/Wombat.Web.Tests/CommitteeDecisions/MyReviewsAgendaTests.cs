@@ -15,8 +15,9 @@ namespace Wombat.Web.Tests.CommitteeDecisions;
 
 /// <summary>
 /// The trainee's own reviews page shows a ratified review's agenda: each EPA the review was there to decide and what the
-/// committee did with it, the reason for a deferral included (T131 slice 4, O6). The review page's deferral form tells
-/// the chair the trainee sees the reason; this is where.
+/// committee did with it (T131 slice 4, O6). A line left unstaged reads "Not decided at this sitting" with the decision's
+/// one sentence about such lines, and no reason or Deferred: there is no deferral (T361, D53). The decision form tells the
+/// chair the registrar sees the sentence once the review is ratified; this is where.
 /// </summary>
 public sealed partial class MyReviewsAgendaTests : TestContext
 {
@@ -34,12 +35,13 @@ public sealed partial class MyReviewsAgendaTests : TestContext
     }
 
     [Fact]
-    public void ARatifiedReview_ShowsEachEpasOutcome_AndTheCommitteesReasonForADeferral()
+    public void ARatifiedReview_ShowsEachEpasOutcome_AndTheSentenceUnderEveryLineNotDecided()
     {
         var cut = Open(CommitteeReviewState.Ratified, Agenda(
             Line(1, "PAED-001", CommitteeAgendaLineStatus.Decided, CommitteeAgendaLineState.Decided, starId: 7),
-            Line(2, "PAED-002", CommitteeAgendaLineStatus.Deferred, CommitteeAgendaLineState.Deferred, reason: "Not observed this semester."),
-            Line(3, "PAED-003", CommitteeAgendaLineStatus.NotDecided, CommitteeAgendaLineState.NotDecided, window: (2026, null))));
+            Line(2, "PAED-002", CommitteeAgendaLineStatus.NotDecided, CommitteeAgendaLineState.NotDecided),
+            Line(3, "PAED-003", CommitteeAgendaLineStatus.NotDecided, CommitteeAgendaLineState.NotDecided, window: (2026, null))),
+            undecidedNote: "To be decided at her final review.");
 
         Text(cut.Find("#my-review-agenda-heading").ParentElement!).Should().Contain(
             "The EPAs this review was there to decide for 2026 S2, and what the committee did with each.");
@@ -48,13 +50,17 @@ public sealed partial class MyReviewsAgendaTests : TestContext
         decided.QuerySelector(".badge")!.ClassList.Should().Contain("badge-completed");
         Text(decided).Should().Contain("PAED-001 — EPA 1").And.Contain("2026 S2").And.Contain("Decided").And.Contain("STAR #7.");
 
-        var deferred = cut.Find("#my-agenda-line-2");
-        deferred.QuerySelector(".badge")!.ClassList.Should().Contain("badge-accepted");
-        Text(deferred).Should().Contain("Deferred").And.Contain("The committee's reason: Not observed this semester.");
+        // T361, D53 and E1: closing (PAED-002) and optional (PAED-003) alike.
+        foreach (var id in new[] { "#my-agenda-line-2", "#my-agenda-line-3" })
+        {
+            var notDecided = cut.Find(id);
+            notDecided.QuerySelector(".badge")!.ClassList.Should().Contain("badge-accepted");
+            Text(notDecided.QuerySelector(".badge")!).Should().Be("Not decided at this sitting");
+            Text(notDecided).Should().Contain("To be decided at her final review.");
+        }
 
-        var notDecided = cut.Find("#my-agenda-line-3");
-        notDecided.QuerySelector(".badge")!.ClassList.Should().Contain("badge-declined");
-        Text(notDecided).Should().Contain("2026").And.Contain("Not decided").And.Contain("Not decided at this review.");
+        Text(cut.Find("#my-agenda-line-3")).Should().Contain("2026");
+        Page(cut).Should().NotContain("Deferred").And.NotContain("reason");
 
         cut.FindAll("#my-review-agenda-heading ~ .table-container button").Should().BeEmpty("the trainee's view is read-only");
     }
@@ -71,19 +77,20 @@ public sealed partial class MyReviewsAgendaTests : TestContext
     public void LodgingAnAppeal_KeepsTheAgendaInView()
     {
         var cut = Open(CommitteeReviewState.Ratified, Agenda(
-            Line(2, "PAED-002", CommitteeAgendaLineStatus.Deferred, CommitteeAgendaLineState.Deferred, reason: "Later.")));
-        _sender.On<LodgeAppealCommand>(_ => Review(CommitteeReviewState.UnderAppeal, agenda: null));
+            Line(2, "PAED-002", CommitteeAgendaLineStatus.NotDecided, CommitteeAgendaLineState.NotDecided)),
+            undecidedNote: "Later.");
+        _sender.On<LodgeAppealCommand>(_ => Review(CommitteeReviewState.UnderAppeal, agenda: null, undecidedNote: "Later."));
 
         cut.Find("#trainee-appeal-reason").Change("The rating ignored my logbook.");
         cut.Find("#trainee-appeal-reason").Closest("form")!.Submit();
 
         cut.WaitForState(() => cut.Markup.Contains("Appeal lodged."));
-        Text(cut.Find("#my-agenda-line-2")).Should().Contain("The committee's reason: Later.");
+        Text(cut.Find("#my-agenda-line-2")).Should().Contain("Not decided at this sitting").And.Contain("Later.");
     }
 
     // ---- Fixture ------------------------------------------------------------------------------------------------------
 
-    private IRenderedComponent<MyReviews> Open(CommitteeReviewState state, CommitteeAgendaDto agenda)
+    private IRenderedComponent<MyReviews> Open(CommitteeReviewState state, CommitteeAgendaDto agenda, string? undecidedNote = null)
     {
         _sender
             .On<ListReviewsForTraineeQuery>(_ => new[]
@@ -96,7 +103,7 @@ public sealed partial class MyReviewsAgendaTests : TestContext
                     Semester = 2
                 }
             })
-            .On<GetCommitteeReviewByIdQuery>(_ => Review(state, agenda));
+            .On<GetCommitteeReviewByIdQuery>(_ => Review(state, agenda, undecidedNote));
 
         var cut = RenderComponent<MyReviews>();
         cut.WaitForState(() => cut.FindAll("button").Any(button => button.TextContent.Trim() == "View"));
@@ -105,11 +112,17 @@ public sealed partial class MyReviewsAgendaTests : TestContext
         return cut;
     }
 
-    private static CommitteeReviewDetailDto Review(CommitteeReviewState state, CommitteeAgendaDto? agenda)
+    private static CommitteeReviewDetailDto Review(CommitteeReviewState state, CommitteeAgendaDto? agenda, string? undecidedNote = null)
         => new(
             30, TraineeId, 20, "General CCC", new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31), new DateOnly(2027, 1, 8),
             state, new DateTime(2027, 1, 8, 9, 0, 0, DateTimeKind.Utc), "chair-1", new DateTime(2027, 1, 8, 12, 0, 0, DateTimeKind.Utc),
-            "chair-1", null, [], [], [])
+            "chair-1", null,
+            [
+                new CommitteeDecisionDto(
+                    41, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null,
+                    new DateTime(2027, 1, 8, 9, 0, 0, DateTimeKind.Utc), "chair-1", null) { UndecidedNote = undecidedNote }
+            ],
+            [], [])
         {
             AcademicYear = 2026,
             Semester = 2,
@@ -125,16 +138,18 @@ public sealed partial class MyReviewsAgendaTests : TestContext
         CommitteeAgendaLineStatus status,
         CommitteeAgendaLineState state,
         (int Year, int? Semester)? window = null,
-        string? reason = null,
         int? starId = null)
     {
         var (year, semester) = window ?? (2026, 2);
         return new CommitteeAgendaLineDto(
             100 + epaId, epaId, code, $"EPA {epaId}", CommitteeAgendaLineOrigin.Cadence, year, semester,
-            semester is int s ? $"{year} S{s}" : $"{year}", true, false, state, status, false, false, reason, starId, 0);
+            semester is int s ? $"{year} S{s}" : $"{year}", true, false, state, status, false,
+            status == CommitteeAgendaLineStatus.NotDecided, starId, 0);
     }
 
     private static string Text(AngleSharp.Dom.IElement element) => Whitespace().Replace(element.TextContent, " ").Trim();
+
+    private static string Page(IRenderedComponent<MyReviews> cut) => Whitespace().Replace(cut.Find("#my-review-agenda-heading").ParentElement!.TextContent, " ");
 
     [GeneratedRegex(@"\s+")]
     private static partial Regex Whitespace();

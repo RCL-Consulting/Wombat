@@ -93,7 +93,8 @@ public sealed partial class ReviewsScheduleAgendaPreviewTests : TestContext
         var preview = Text(cut.Find("#agenda-preview"));
         var period = $"{_current.AcademicYear} S{_current.Semester}";
         preview.Should().Contain($"2 EPAs will be on the agenda for {period}.")
-            .And.Contain("PAED-001 must be decided at this sitting, or deferred with a reason, before it is ratified.")
+            .And.Contain("PAED-001 is due at this sitting.")
+            .And.NotContain("defer")
             .And.Contain("PAED-003 — Paediatric ward round · Due by year end")
             .And.Contain("PAED-004 and PAED-005 are decided by Neonatal CCC: schedule them separately.")
             .And.Contain("Already decided in this window, so not on the agenda: PAED-006.");
@@ -116,7 +117,7 @@ public sealed partial class ReviewsScheduleAgendaPreviewTests : TestContext
         var preview = Text(cut.Find("#agenda-preview"));
         preview.Should().Contain($"1 EPA will be on the agenda for {_current.AcademicYear} S{_current.Semester}.")
             .And.Contain("Already decided in this window, so not on the agenda: PAED-001, PAED-002 and PAED-006.")
-            .And.NotContain("must be decided at this sitting");
+            .And.NotContain("due at this sitting");
         cut.FindAll("#agenda-preview li").Select(item => Text(item)).Should().ContainSingle()
             .Which.Should().StartWith("PAED-003");
         Text(cut.Find("#agenda-preview-summary")).Should().NotContain("Already decided", "only the opening sentences are live");
@@ -156,7 +157,7 @@ public sealed partial class ReviewsScheduleAgendaPreviewTests : TestContext
 
         var live = cut.FindAll("[role=status]").Should().ContainSingle().Subject;
         live.Id.Should().Be("agenda-preview-summary");
-        Text(live).Should().Contain("will be on the agenda").And.Contain("must be decided at this sitting")
+        Text(live).Should().Contain("will be on the agenda").And.Contain("is due at this sitting")
             .And.NotContain("Due by year end").And.NotContain("schedule them separately");
         cut.Find("#agenda-preview").HasAttribute("role").Should().BeFalse();
     }
@@ -228,7 +229,7 @@ public sealed partial class ReviewsScheduleAgendaPreviewTests : TestContext
     private static CommitteeAgendaLineDto Line(
         int epaId, string code, string title, bool closing, CommitteeAgendaLineStatus status, string window)
         => new(0, epaId, code, title, CommitteeAgendaLineOrigin.Cadence, 2026, 1, window, closing, false,
-            CommitteeAgendaLineState.Due, status, false, false, null, null, 0);
+            CommitteeAgendaLineState.Due, status, false, false, null, 0);
 
     private static string Text(AngleSharp.Dom.IElement element) => Whitespace().Replace(element.TextContent, " ").Trim();
 

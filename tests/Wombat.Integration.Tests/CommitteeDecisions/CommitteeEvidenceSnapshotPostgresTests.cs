@@ -199,32 +199,15 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
             RecordCommitteeDecisionCommandHandler Record(ApplicationDbContext db)
                 => new(db, FakeUserDirectory.CommitteeMembersAt(hostId, ChairUserId, MemberUserId));
             var recordCommand = new RecordCommitteeDecisionCommand(
-                reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, [ChairUserId, MemberUserId], Chair());
+                reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, null, [ChairUserId, MemberUserId], Chair());
 
-            // T131 slice 4: a closing line is staged or deferred before the decision is recorded, which fixes the agenda
-            // (T165), and so before ratify. PAED-001 is staged; the chair defers the other five semester EPAs, through the
-            // handler, as the page does.
+            // T361, D53: the five other closing semester EPAs are left unstaged; they hold nothing back, and ratify writes
+            // them Not decided.
             await using (var db = NewContext(schema))
             {
-                var closingUnstaged = await db.CommitteeAgendaLines
-                    .Where(agendaLine => agendaLine.ReviewId == reviewId && agendaLine.IsClosing && agendaLine.EpaId != paed001)
-                    .Select(agendaLine => agendaLine.Id)
-                    .ToListAsync();
-                closingUnstaged.Should().HaveCount(5);
-
-                var early = () => Record(db).Handle(recordCommand, CancellationToken.None);
-                await early.Should().ThrowAsync<InvalidOperationException>()
-                    .WithMessage("The committee's decision cannot be recorded yet: PAED-002, PAED-004, PAED-005, PAED-010 and PAED-012 must be decided at this sitting.*");
-                await db.SaveChangesAsync();
-                (await db.CommitteeDecisions.CountAsync(decision => decision.ReviewId == reviewId))
-                    .Should().Be(0, "a refused recording writes nothing, even through the audit save");
-
-                foreach (var agendaLineId in closingUnstaged)
-                {
-                    await new DeferAgendaLineCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
-                        new DeferAgendaLineCommand(reviewId, agendaLineId, "Not yet observed enough to decide.", Chair()),
-                        CancellationToken.None);
-                }
+                (await db.CommitteeAgendaLines
+                    .CountAsync(agendaLine => agendaLine.ReviewId == reviewId && agendaLine.IsClosing && agendaLine.EpaId != paed001))
+                    .Should().Be(5);
             }
 
             await using (var db = NewContext(schema))
@@ -261,15 +244,13 @@ public sealed class CommitteeEvidenceSnapshotPostgresTests : IAsyncLifetime
                 (await db.PendingEntrustmentDecisions.CountAsync()).Should().Be(0);
 
                 // The agenda closed in the same save as the STAR was issued: the staged line names it (the check constraint
-                // holds within the one save), the deferred lines keep their reason, and the optional ones were not decided.
+                // holds within the one save), and every other line, closing or optional, was not decided (T361, D53).
                 var lines = await db.CommitteeAgendaLines.AsNoTracking().Where(agendaLine => agendaLine.ReviewId == reviewId).ToListAsync();
                 var decided = lines.Should().ContainSingle(agendaLine => agendaLine.State == CommitteeAgendaLineState.Decided).Subject;
                 decided.EpaId.Should().Be(paed001);
                 decided.EntrustmentDecisionId.Should().Be(star.Id);
-                lines.Count(agendaLine => agendaLine.State == CommitteeAgendaLineState.Deferred).Should().Be(5);
-                lines.Where(agendaLine => agendaLine.State == CommitteeAgendaLineState.Deferred)
-                    .Should().OnlyContain(agendaLine => agendaLine.DeferralReason == "Not yet observed enough to decide.");
-                lines.Count(agendaLine => agendaLine.State == CommitteeAgendaLineState.NotDecided).Should().Be(9);
+                lines.Count(agendaLine => agendaLine.State == CommitteeAgendaLineState.NotDecided).Should().Be(14);
+                lines.Count(agendaLine => agendaLine.State == CommitteeAgendaLineState.NotDecided && agendaLine.IsClosing).Should().Be(5);
             }
         }
         finally

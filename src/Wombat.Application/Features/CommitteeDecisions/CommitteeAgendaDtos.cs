@@ -10,7 +10,10 @@ namespace Wombat.Application.Features.CommitteeDecisions;
 /// </summary>
 public enum CommitteeAgendaLineStatus
 {
-    /// <summary>A closing line still to be decided: it must be staged or deferred before ratify.</summary>
+    /// <summary>
+    /// Due at this sitting, the window's last semester (a closing line), and nothing staged on it yet. It holds nothing back
+    /// (T361, D53): left unstaged, it is not decided at this sitting.
+    /// </summary>
     Due = 1,
 
     /// <summary>An annual line before the year's last sitting: optional here, and never missed (Decision 5).</summary>
@@ -28,10 +31,11 @@ public enum CommitteeAgendaLineStatus
     /// <summary>Ratifying issued a STAR on it.</summary>
     Decided = 6,
 
-    /// <summary>The chair put it off, with a reason.</summary>
-    Deferred = 7,
-
-    /// <summary>An optional line the review was ratified without.</summary>
+    /// <summary>
+    /// Not decided at this sitting: the review was ratified with nothing staged on the line, closing or optional alike, or
+    /// it is decided and the line is unstaged, which ratify will write so (T361, D53, E1); or the review was withdrawn
+    /// before deciding it (T258). The value 7, Deferred, is gone.
+    /// </summary>
     NotDecided = 8,
 
     /// <summary>
@@ -46,9 +50,11 @@ public enum CommitteeAgendaLineStatus
 /// <summary>One line of a review's agenda, as the page shows it. (T131 slice 4)</summary>
 /// <param name="WindowLabel">"2026 S1" for a semester window, "2026" for an annual EPA's year.</param>
 /// <param name="IsStaged">Whether a decision on the EPA is staged at the review: read, never stored.</param>
-/// <param name="BlocksRatify">
-/// Whether the line keeps the review from being ratified: <see cref="CommitteeAgendaLine.BlocksRatify" />, the predicate
-/// the record and ratify handlers enforce, with whether another sitting has decided its window read as they read it (T235).
+/// <param name="ReadsNotDecided">
+/// Whether the page prints "Not decided at this sitting", with the decision's
+/// <see cref="CommitteeDecisionDto.UndecidedNote" /> under it (T361, D53, E1): the line's state is NotDecided, or the
+/// review is decided and the line is still due, unstaged and not decided elsewhere, which ratify will write NotDecided.
+/// Settled either way, so the same words between Record and Ratify. Never on a withdrawn review's line.
 /// </param>
 /// <param name="EvidenceCount">How many lines of the review's evidence snapshot are about the EPA.</param>
 public sealed record CommitteeAgendaLineDto(
@@ -65,8 +71,7 @@ public sealed record CommitteeAgendaLineDto(
     CommitteeAgendaLineState State,
     CommitteeAgendaLineStatus Status,
     bool IsStaged,
-    bool BlocksRatify,
-    string? DeferralReason,
+    bool ReadsNotDecided,
     int? EntrustmentDecisionId,
     int EvidenceCount);
 
@@ -82,15 +87,18 @@ public enum CommitteeAgendaElsewhereStatus
     /// <summary>It is on the agenda of an open review before that panel.</summary>
     OnAgenda = 2,
 
-    /// <summary>That panel deferred it, with a reason, and nothing has decided it since.</summary>
-    Deferred = 3,
+    /// <summary>
+    /// A sitting before that panel left it not decided (T361, D53), where that counts (<see cref="CommitteeAgendaStatus" />,
+    /// E3), and nothing has decided it since. The value was Deferred.
+    /// </summary>
+    NotDecided = 3,
 
     /// <summary>A STAR was issued on it in the window.</summary>
     Decided = 4,
 
     /// <summary>
-    /// Its window has ended and nothing decided or deferred it, where it was not optional (not decided as opportunity
-    /// allows, and not a partial period).
+    /// Its window has ended and no sitting held it, where it was not optional (not decided as opportunity allows, and not a
+    /// partial period).
     /// </summary>
     Missed = 5
 }
@@ -123,13 +131,6 @@ public sealed record CommitteeAgendaDto(
     IReadOnlyList<CommitteeAgendaLineDto> Lines,
     IReadOnlyList<CommitteeAgendaElsewhereDto> RoutedElsewhere)
 {
-    /// <summary>The closing lines neither staged nor deferred, in code order: what keeps the review from being ratified.</summary>
-    public IReadOnlyList<CommitteeAgendaLineDto> OutstandingClosingLines
-        => Lines.Where(line => line.BlocksRatify)
-            .OrderBy(line => line.EpaCode, StringComparer.Ordinal)
-            .ThenBy(line => line.EpaId)
-            .ToArray();
-
     /// <summary>
     /// Whether the review's decision records a progression category: false for an entrustment-only review (T131 slice 5),
     /// whose decision is what this agenda holds. Filled by the agenda's reader; true unless it says otherwise.
@@ -155,26 +156,16 @@ public sealed record CommitteeAgendaDto(
     /// </summary>
     public IReadOnlyList<CommitteeAgendaEpaDto> NoLongerDecided { get; init; } = [];
 
-    /// <summary>Why the review cannot be ratified yet, in the ratify refusal's own words; null when nothing blocks it.</summary>
-    public string? RatifyBlockedReason
-    {
-        get
-        {
-            var outstanding = OutstandingClosingLines;
-            return outstanding.Count == 0
-                ? null
-                : CommitteeReview.OutstandingClosingLinesReason(outstanding.Select(line => line.EpaCode).ToArray());
-        }
-    }
-
     /// <summary>
-    /// Why the committee's decision cannot be recorded yet, in the record refusal's own words; null when the agenda does not
-    /// block it. What blocks ratify first, since recording settles the agenda (slice 4); then, on an entrustment-only review,
-    /// an empty agenda (<see cref="CommitteeReview.EmptyAgendaRefusal" />, slice 5), which ratify does not ask again.
+    /// Why the committee's decision cannot be recorded yet for what is staged, in the record refusal's own words; null when
+    /// it can: only an entrustment-only review with nothing staged (<see cref="CommitteeReview.NothingStagedRefusal" />,
+    /// T361, E4). A closing line no longer holds Record back (D53); the quorum is the review's
+    /// <see cref="CommitteeReviewDetailDto.PanelShortfall" /> and the page's ticks. Read for a review in progress.
     /// </summary>
     public string? RecordBlockedReason
-        => RatifyBlockedReason
-           ?? (!IsFormative && !DecidesProgression && Lines.Count == 0 ? CommitteeReview.NothingOnTheAgenda : null);
+        => !IsFormative && !DecidesProgression && !Lines.Any(line => line.IsStaged)
+            ? CommitteeReview.NothingStagedOnEntrustmentOnly
+            : null;
 
     /// <summary>The EPAs another panel takes that are not yet decided in their window.</summary>
     public IReadOnlyList<CommitteeAgendaElsewhereDto> UndecidedElsewhere
@@ -212,8 +203,8 @@ public sealed record CommitteeAgendaPreviewDto(
 /// (T131 slice 6 review)
 /// </summary>
 /// <remarks>
-/// What sittings did to one decision is read in this order: a deferral stands only while no later sitting in the window
-/// has decided the EPA since, whatever has become of that decision. A sitting for a later period sat later. Within a
+/// What sittings did to one decision is read in this order: a sitting that left it not decided stands only while no later
+/// sitting in the window has decided the EPA since, whatever has become of that decision. A sitting for a later period sat later. Within a
 /// period, a later review was scheduled later, and one seat holds one open binding review per period, so a remediation
 /// sitting comes after the sitting it remedies.
 /// </remarks>
@@ -250,6 +241,12 @@ public readonly record struct AgendaLineStanding(
     CommitteeSitting Sitting,
     bool StarDecides)
 {
+    /// <summary>
+    /// Whether the line was due at its sitting, the window's last semester (<see cref="CommitteeAgendaLine.IsClosing" />):
+    /// a line left not decided there reads Not decided at once (T361, E3).
+    /// </summary>
+    public bool IsClosing { get; init; }
+
     /// <summary>Decided, on a STAR that still decides the window.</summary>
     public bool Decides => State == CommitteeAgendaLineState.Decided && StarDecides;
 
@@ -313,13 +310,16 @@ public static class CommitteeAgendaStatus
     /// that window on any of the trainee's reviews: the one reading of "missed", computed and never stored (Decision 6).
     /// </summary>
     /// <remarks>
-    /// <see cref="IsDecided" /> says Decided. Otherwise a line still due on an open review puts it on the agenda. A
-    /// deferral stands only when it is the latest thing a sitting did about the EPA in the window: a later sitting that
-    /// decided it, even on a STAR since revoked, has overtaken the deferral, and a sitting that deferred it after a
-    /// decision was revoked is the latest word (T131 slice 6 review). Then Missed, once the window has ended.
+    /// <see cref="IsDecided" /> says Decided. Otherwise a line still due on an open review puts it on the agenda. Then
+    /// <b>Not decided</b> (T361, D53, E3): a sitting left the line not decided, and either it was due there (closing) or
+    /// the window has ended; a line an optional sitting left, an annual EPA at the semester-1 sitting, says nothing while the
+    /// window is open, so the EPA still reads due by year end. It stands only when it is the latest thing a sitting did about
+    /// the EPA in the window: a later sitting that decided it, even on a STAR since revoked, has overtaken it, and a sitting
+    /// that left it not decided after a decision was revoked is the latest word (T131 slice 6 review). Then Missed, once the
+    /// window has ended with no sitting that held it.
     /// </remarks>
     /// <param name="lines">
-    /// The lines. The caller passes only what bears on the decision here: no line still due or deferred on a review at
+    /// The lines. The caller passes only what bears on the decision here: no line still due or not decided on a review at
     /// another institution (<see cref="AgendaPlanner" />).
     /// </param>
     /// <param name="starsInWindow">
@@ -349,13 +349,13 @@ public static class CommitteeAgendaStatus
         }
 
         // Nothing decides the window, so every STAR of it is one the window has lost: revoked, or superseded inside it by
-        // one since revoked. Each is a later decision, weighed against a deferral as a lapsed line is.
+        // one since revoked. Each is a later decision, weighed against a not-decided line as a lapsed line is.
         return Standing(lineStandings, stars.Select(star => star.Sitting).ToArray(), mayBeMissed, windowEnd, today);
     }
 
     /// <summary>
     /// Where an undecided window stands (<see cref="Elsewhere" />), with <paramref name="lapses" />, the sittings of the
-    /// window's lost decisions, weighed against a deferral as a lapsed line is.
+    /// window's lost decisions, weighed against a not-decided line as a lapsed line is.
     /// </summary>
     private static CommitteeAgendaElsewhereStatus Standing(
         AgendaLineStanding[] lines,
@@ -369,17 +369,17 @@ public static class CommitteeAgendaStatus
             return CommitteeAgendaElsewhereStatus.OnAgenda;
         }
 
-        var deferrals = lines.Where(line => line.State == CommitteeAgendaLineState.Deferred).ToArray();
-        if (deferrals.Length > 0)
+        var notDecided = lines.Where(line => CountsAsNotDecided(line, windowEnd, today)).ToArray();
+        if (notDecided.Length > 0)
         {
-            var latestDeferral = deferrals.MaxBy(line => line.Sitting.Key).Sitting;
+            var latest = notDecided.MaxBy(line => line.Sitting.Key).Sitting;
             var overtaken = lines.Where(line => line.Lapsed).Select(line => line.Sitting)
                 .Concat(lapses)
-                .Any(lapse => lapse.IsAfter(latestDeferral));
+                .Any(lapse => lapse.IsAfter(latest));
 
             if (!overtaken)
             {
-                return CommitteeAgendaElsewhereStatus.Deferred;
+                return CommitteeAgendaElsewhereStatus.NotDecided;
             }
         }
 
@@ -387,6 +387,15 @@ public static class CommitteeAgendaStatus
             ? CommitteeAgendaElsewhereStatus.Missed
             : CommitteeAgendaElsewhereStatus.NotYetDecided;
     }
+
+    /// <summary>
+    /// Whether a line's Not decided bears on where its window stands (T361, E3): where the line was due at its sitting, or
+    /// once the window has ended. An annual line an optional semester-1 sitting left says nothing while the year is still
+    /// open. The one predicate <see cref="Elsewhere" /> and the decisions-due page's named review both read, so the review
+    /// a row names is the one its status rests on (T361, review R3).
+    /// </summary>
+    public static bool CountsAsNotDecided(AgendaLineStanding line, DateOnly windowEnd, DateOnly today)
+        => line.State == CommitteeAgendaLineState.NotDecided && (line.IsClosing || today > windowEnd);
 
     /// <summary>Scheduled, in progress, or decided and awaiting ratify: a review that can still decide what it holds.</summary>
     private static bool IsOpen(CommitteeReviewState state)
@@ -406,7 +415,8 @@ public static class CommitteeAgendaStatus
     /// </para>
     /// <para>
     /// Otherwise <see cref="Elsewhere" /> reads the rest: on the agenda of an open review is <b>Scheduled</b>, then
-    /// <b>Deferred</b>, where no later sitting has decided it since, the window's STARs counted with its lines. Then a
+    /// <b>Not decided</b> (T361, E3), where a sitting left it so when it was due there or its window has ended, and no later
+    /// sitting has decided it since, the window's STARs counted with its lines. Then a
     /// window whose decision was revoked reads so ("re-decide") ahead of <b>Missed</b>, which is
     /// <see cref="Elsewhere" />'s one computation. What is left is still to be decided and not scheduled, and says why it
     /// cannot be missed where it cannot: a partial period (Decision 9), an EPA decided as opportunity allows (O7), or an
@@ -414,7 +424,7 @@ public static class CommitteeAgendaStatus
     /// </para>
     /// </remarks>
     /// <param name="lines">
-    /// The agenda lines about the EPA in the window, as for <see cref="Elsewhere" />: no line still due or deferred on a
+    /// The agenda lines about the EPA in the window, as for <see cref="Elsewhere" />: no line still due or not decided on a
     /// review before a panel at another institution.
     /// </param>
     /// <param name="starsInWindow">Every STAR on the EPA from a sitting for a period in the window.</param>
@@ -448,8 +458,8 @@ public static class CommitteeAgendaStatus
                 return EntrustmentDecisionDueStatus.Decided;
             case CommitteeAgendaElsewhereStatus.OnAgenda:
                 return EntrustmentDecisionDueStatus.Scheduled;
-            case CommitteeAgendaElsewhereStatus.Deferred:
-                return EntrustmentDecisionDueStatus.Deferred;
+            case CommitteeAgendaElsewhereStatus.NotDecided:
+                return EntrustmentDecisionDueStatus.NotDecided;
         }
 
         // Nothing decides the window, so any STAR of it is one the window has lost: revoked, or superseded inside it by

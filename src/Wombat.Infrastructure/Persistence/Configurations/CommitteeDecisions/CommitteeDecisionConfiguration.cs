@@ -14,7 +14,10 @@ public sealed class CommitteeDecisionConfiguration : IEntityTypeConfiguration<Co
         // decision carries depends on its review's type, a rule across two tables that CommitteeReview holds.
         builder.Property(entity => entity.Category).IsRequired(false);
         builder.Property(entity => entity.Rationale).HasMaxLength(4000).IsRequired();
-        builder.Property(entity => entity.Conditions).HasMaxLength(4000);
+        builder.Property(entity => entity.Conditions).HasMaxLength(CommitteeDecision.ConditionsMaxLength);
+
+        // T361, D53: the decision's one sentence about the EPAs it did not decide; optional, as long as Conditions may be.
+        builder.Property(entity => entity.UndecidedNote).HasMaxLength(CommitteeDecision.ConditionsMaxLength);
         builder.Property(entity => entity.DecidedByChairUserId).HasMaxLength(450).IsRequired();
         builder.HasIndex(entity => new { entity.ReviewId, entity.DecidedOn });
 

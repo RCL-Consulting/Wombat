@@ -7,6 +7,7 @@
 @using Wombat.Application.Features.Activities.Queries.GetActivityById
 @using Wombat.Application.Features.Activities.Queries.ListWaitingForYou
 @using Wombat.Application.Features.Activities.Services
+@using Wombat.Application.Features.CommitteeDecisions
 @using Wombat.Application.Features.Epas
 @using Wombat.Web.Navigation
 @inject IScopedSender Sender
@@ -26,11 +27,20 @@
   says what is left for them ("Completed. 1 more waits for you.") and the way on (WayOn) follows it, outside its live
   region. On a phone a reader with a section to fill gets the filled sections folded and About under the bar; every other
   reader keeps the order. "Activity unavailable" goes back to the acting role's list, else Home.
+
+  T361 (flow 07; round 2 review 9, round 3 item 9): opened from a committee review's snapshot
+  (?from=review-{id}&at=snap-{itemId}, ReviewLinks), the review's "Back to Lerato Molefe · 2026 S2" replaces the page's own
+  back link: above the header, in place of the phone's back crumb, and as the way on's Back. Only for a reader the review
+  reads for; a forged, unknown or unreadable id leaves the page as it is and names nobody.
 *@
 
 <PageTitle>@Heading · Wombat</PageTitle>
 
-<div class="activity-page">
+<div class="@(_returnLink is null ? "activity-page" : "activity-page activity-page--from-review")">
+@if (_returnLink is { } back)
+{
+  <a class="return-link" href="@back.Href"><Icon Name="arrow-left" />@back.Label</a>
+}
 @* One header above every state, its title changing as the page loads, so the h1 FocusOnNavigate focused on arrival is the
    one the loaded page shows (T342; the build review's A5). *@
 <PageHeader Title="@Heading" Subtitle="@(_loading || _loadError is not null ? null : _model?.Subtitle)" CurrentCrumb="@(_loading ? "Loading…" : null)" />
@@ -91,7 +101,7 @@ else
   @if (_wayOnShown)
   {
     var (ownerLabel, ownerHref) = OwnerList();
-    <WayOn Next="@_next" BackLabel="@($"Back to {ownerLabel}")" BackHref="@ownerHref" />
+    <WayOn Next="@_next" BackLabel="@(_returnLink?.Label ?? $"Back to {ownerLabel}")" BackHref="@(_returnLink?.Href ?? ownerHref)" />
   }
 
   @if (_summary is { } summary)
@@ -215,6 +225,15 @@ else
 
 @code {
   [Parameter] public int ActivityId { get; set; }
+
+  /// <summary>The review the activity was opened from, <c>review-{id}</c> (<see cref="ReviewLinks" />, T361).</summary>
+  [SupplyParameterFromQuery(Name = ReviewLinks.FromKey)] public string? From { get; set; }
+
+  /// <summary>The snapshot line it was opened from, <c>snap-{itemId}</c> (<see cref="ReviewLinks" />, T361).</summary>
+  [SupplyParameterFromQuery(Name = ReviewLinks.AtKey)] public string? At { get; set; }
+
+  // The review's way back, when the page was opened from its snapshot and the reader may read it (T361); null otherwise.
+  private (string Label, string Href)? _returnLink;
 
   /// <summary>The role the reader acts in: whose list the way on and "Activity unavailable" go back to (T350, R3).</summary>
   [CascadingParameter] public ActingRole? Acting { get; set; }
@@ -346,6 +365,7 @@ else
   {
     _loading = true;
     _loadError = null;
+    _returnLink = null;
     ClearOutcome();
 
     await LoadOrFailAsync();
@@ -364,6 +384,13 @@ else
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       await LoadAsync(authState.User);
+
+      // Read before the page is drawn loaded, so the review's way back arrives with it (T361). Never a load error: it
+      // says nothing about the activity.
+      if (_model is not null && _returnLink is null)
+      {
+        _returnLink = await ReturnLinkAsync(authState.User);
+      }
     }
     catch (Exception exception) when (exception is not OperationCanceledException)
     {
@@ -373,6 +400,38 @@ else
     finally
     {
       _loading = false;
+    }
+  }
+
+  /// <summary>
+  /// The review's "Back to Lerato Molefe · 2026 S2", to its snapshot line (T361, round 2 review 9): read through the review's
+  /// own query, so it is offered exactly to the readers that query answers, and a forged, unknown or unreadable id gets
+  /// nothing, the same nothing (T194 item 1). A line that is not the review's lands on the review's top. A read that fails
+  /// for any other reason leaves the page's own link; the page is not the review's to break.
+  /// </summary>
+  private async Task<(string Label, string Href)?> ReturnLinkAsync(ClaimsPrincipal user)
+  {
+    if (!ReviewLinks.TryReadReturn(From, At, out var reviewId, out var snapshotItemId))
+    {
+      return null;
+    }
+
+    try
+    {
+      var review = await Sender.Send(new GetCommitteeReviewByIdQuery(reviewId, user));
+      var href = snapshotItemId is int itemId && review.EvidenceItems.Any(item => item.Id == itemId)
+        ? ReviewLinks.SnapshotLine(reviewId, itemId)
+        : ReviewLinks.Review(reviewId);
+      return ($"Back to {review.TraineeName ?? "the committee review"} · {review.PeriodLabel}", href);
+    }
+    catch (UnauthorizedAccessException)
+    {
+      return null;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogWarning(exception, "Committee review {ReviewId} could not be read for activity {ActivityId}'s way back.", reviewId, ActivityId);
+      return null;
     }
   }
 

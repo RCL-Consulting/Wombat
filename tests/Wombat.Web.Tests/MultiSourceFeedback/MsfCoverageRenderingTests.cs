@@ -161,9 +161,9 @@ public sealed partial class MsfCoverageRenderingTests : TestContext
         query.To.Should().Be(new DateOnly(2026, 6, 30));
         query.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value.Should().Be("chair-1");
 
-        var headings = cut.FindAll("section.detail-card > h3").Select(Text).ToList();
+        // T361 (round 3, § Detail page): one column, each section headed by an h2; the card stays right after the standing.
+        var headings = cut.FindAll("section.detail-card > h2").Select(Text).ToList();
         headings.IndexOf("Multi-source feedback by EPA").Should().Be(headings.IndexOf("Entrustment against Annexure A") + 1);
-        CoverageCard(cut).ClassList.Should().Contain("full-width");
     }
 
     [Fact]
@@ -318,7 +318,9 @@ public sealed partial class MsfCoverageRenderingTests : TestContext
 
         var cut = RenderReview();
 
-        Text(CoverageCard(cut)).Should().Contain("The multi-source feedback coverage could not be loaded: The database is unavailable.");
+        // T361 (T329): the failure stays in its card, in fixed words; the exception's text goes to the log.
+        Text(CoverageCard(cut)).Should().Contain("The multi-source feedback coverage could not be loaded");
+        cut.Markup.Should().NotContain("The database is unavailable.");
         cut.FindAll(".alert-danger").Should().BeEmpty("the page's own error banner is for the review and its actions");
     }
 
@@ -441,7 +443,7 @@ public sealed partial class MsfCoverageRenderingTests : TestContext
     }
 
     private static IElement CoverageCard(IRenderedFragment cut)
-        => cut.FindAll("section.detail-card").Single(card => card.QuerySelector("h3") is { } heading && Text(heading) == "Multi-source feedback by EPA");
+        => cut.FindAll("section.detail-card").Single(card => card.QuerySelector("h2") is { } heading && Text(heading) == "Multi-source feedback by EPA");
 
     /// <summary>The MSF line of one quota card, found by the card's EPA code.</summary>
     private static string MsfLine(IRenderedFragment cut, string epaCode)

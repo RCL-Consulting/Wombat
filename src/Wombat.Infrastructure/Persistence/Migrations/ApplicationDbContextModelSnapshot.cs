@@ -654,10 +654,6 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.Property<int>("CurriculumItemId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("DeferralReason")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
                     b.Property<int?>("EntrustmentDecisionId")
                         .HasColumnType("integer");
 
@@ -711,8 +707,6 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.ToTable("CommitteeAgendaLines", null, t =>
                         {
                             t.HasCheckConstraint("CK_CommitteeAgendaLines_DecidedNamesItsStar", "(\"State\" = 3) = (\"EntrustmentDecisionId\" IS NOT NULL)");
-
-                            t.HasCheckConstraint("CK_CommitteeAgendaLines_DeferredHasAReason", "(\"State\" = 2) = (\"DeferralReason\" IS NOT NULL)");
 
                             t.HasCheckConstraint("CK_CommitteeAgendaLines_WindowSemester", "\"WindowSemester\" IS NULL OR \"WindowSemester\" IN (1, 2)");
                         });
@@ -795,6 +789,10 @@ namespace Wombat.Infrastructure.Persistence.Migrations
 
                     b.Property<int?>("SupersedesDecisionId")
                         .HasColumnType("integer");
+
+                    b.Property<string>("UndecidedNote")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
 
                     b.HasKey("Id");
 

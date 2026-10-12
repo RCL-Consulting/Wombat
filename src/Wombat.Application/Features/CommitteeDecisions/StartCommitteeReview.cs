@@ -4,6 +4,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Users;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Epas;
@@ -59,7 +60,24 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
         await CommitteeTraineeScope.DemandTraineeAtPanelInstitutionAsync(_dbContext, request.Principal, review, cancellationToken);
 
         var actorUserId = CommitteeDecisionAuthorization.GetRequiredUserId(request.Principal);
-        var evidenceItems = await BuildEvidenceSnapshotAsync(review, cancellationToken);
+
+        // Q11, E2 (T361): nothing starts while the panel's chair cannot act, so a stale tab cannot freeze a sitting nobody
+        // can conduct. Refused with the sentence the review page shows in its place, before anything is staged.
+        if (review.State == CommitteeReviewState.Scheduled)
+        {
+            var eligible = await PanelSeat.EligibleAsync(_users, review.Panel.InstitutionId, cancellationToken);
+            if (!PanelSeat.SittingAt(review, eligible).Any(member => member.Role == DecisionPanelMemberRole.Chair))
+            {
+                var names = await UserDisplayNames.ResolveAsync(
+                    _users,
+                    review.Panel.Members.Where(member => member.Role == DecisionPanelMemberRole.Chair).Select(member => member.UserId),
+                    cancellationToken);
+                throw new InvalidOperationException(
+                    GetCommitteeReviewByIdQueryHandler.ChairCannotActOf(review, request.Principal, eligible, names));
+            }
+        }
+
+        var evidenceItems = await CommitteeEvidenceSnapshot.BuildAsync(_dbContext, review, cancellationToken);
 
         // T131 slice 4: the agenda is frozen with the snapshot. Planned again now, by the planner scheduling ran, and only
         // added to: an EPA already on the agenda keeps its line, and one that has come due, or routes here, since the
@@ -83,8 +101,23 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
         await _dbContext.SaveChangesAsync(cancellationToken);
         return review.ToDetailDto();
     }
+}
 
-    private async Task<IReadOnlyList<CommitteeEvidence>> BuildEvidenceSnapshotAsync(CommitteeReview review, CancellationToken cancellationToken)
+/// <summary>
+/// The evidence snapshot a review's Start freezes (T119, T138, T167), built by the one code that both Start and the Start
+/// dialog's count run (<see cref="GetStartPreviewQuery" />; T361, round 2 review 11), so the dialog can never promise a
+/// count Start does not freeze.
+/// </summary>
+internal static class CommitteeEvidenceSnapshot
+{
+    /// <summary>
+    /// The lines Start freezes for <paramref name="review" />: every activity of its trainee observed in its window, in any
+    /// state, and every MSF campaign released and closed in it. Read only; nothing is staged.
+    /// </summary>
+    public static async Task<IReadOnlyList<CommitteeEvidence>> BuildAsync(
+        IApplicationDbContext dbContext,
+        CommitteeReview review,
+        CancellationToken cancellationToken)
     {
         // A review period is a clinical period: the panel is judging what the trainee DID between these
         // dates, so evidence falls in the window by its encounter date, not by when the form was filed.
@@ -108,7 +141,7 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
         // and it can count rows this list never held (a WBA observed in the window and completed after
         // Start). Do not "fix" that either; the snapshot labels each row's state, and the report's
         // arithmetic has no label to carry a declined rating. (T135)
-        var activities = await _dbContext.Set<Activity>()
+        var activities = await dbContext.Set<Activity>()
             .AsNoTracking()
             .Include(activity => activity.ActivityType)
             .Where(activity =>
@@ -122,7 +155,7 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
         // why, and is shared with the live notice that counts the campaigns this leaves out for being unreleased
         // at Start (T173). Every campaign here is released, and a released one always has ClosedOn: Release requires
         // UnderReview, which only Close produces, and Close stamps it.
-        var msfCampaigns = await _dbContext.Set<MsfCampaign>()
+        var msfCampaigns = await dbContext.Set<MsfCampaign>()
             .AsNoTracking()
             .Include(campaign => campaign.Template)
             // T164: each response's invitation, which carries the teaching context a learner was taught in, so a
@@ -151,13 +184,13 @@ public sealed class StartCommitteeReviewCommandHandler : IRequestHandler<StartCo
             .OrderByDescending(campaign => campaign.ClosedOn)
             .ToListAsync(cancellationToken);
 
-        var describe = await ActivityDescriber.LoadAsync(_dbContext, activities, cancellationToken);
+        var describe = await ActivityDescriber.LoadAsync(dbContext, activities, cancellationToken);
         var activityEvidence = activities.Select(describe.Describe);
 
         // Which EPAs each campaign's evidence rows carry: the reader T168's coverage grid shares (T186). Each campaign is
         // read from the type its own kind's release writes, learner_feedback_cpsa for learner feedback (T164).
         var recorded = await MsfCampaignCoverage.RecordedEpasAsync(
-            _dbContext,
+            dbContext,
             review.TraineeUserId,
             msfCampaigns.Select(campaign => (campaign.Id, campaign.State, campaign.Template.Kind)),
             cancellationToken);

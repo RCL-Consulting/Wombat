@@ -91,7 +91,7 @@ internal static class CommitteeSectionComponent
             column.Item().Text(text =>
             {
                 text.Span("Type: ").FontSize(9).Bold();
-                text.Span(CommitteeDecisionWording.ReviewTypeLabel(review.ReviewType)).FontSize(9);
+                text.Span(TypeLine(review)).FontSize(9);
             });
 
             column.Item().Text(text =>
@@ -144,6 +144,13 @@ internal static class CommitteeSectionComponent
             }
         });
     }
+
+    /// <summary>
+    /// The review's type as the portfolio prints it: "Formative check-in" for a formative review, which decides nothing
+    /// whatever its stored type, else the type's own label (T361, review R1; T309 item 2).
+    /// </summary>
+    internal static string TypeLine(CommitteeReview review)
+        => CommitteeDecisionWording.ReviewTypeLabel(review.ReviewType, review.IsFormative);
 
     /// <summary>
     /// The decision's outcome as the portfolio prints it: its progression category in words, or, for an entrustment-only

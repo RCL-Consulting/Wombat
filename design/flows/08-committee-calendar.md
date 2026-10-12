@@ -47,7 +47,9 @@ What is wrong today:
 - The agenda preview gives no sign that the registrar already holds the period's binding review. The refusal comes only
   on Create review.
 - A formative check-in is typed and shown as "Annual progression review", because the Review type select stays live
-  when "Formative only" is ticked.
+  when "Formative only" is ticked. Since flow 07's build (T361, T309 item 2) the review page and My committee reviews
+  call it "Formative check-in" ("Formative" in My committee reviews' Type column); the schedule's own list and form do
+  not yet.
 - A panel's own page never shows the panel's name, scope or speciality.
 - While the panels list loads, it already says "There is no committee routing to show for your institution."
 - The panel form is a narrow column. Members are chosen from native multi-selects ("Hold Ctrl (Windows) / Cmd (Mac) to
@@ -85,21 +87,24 @@ WHAT THE PAGES CARRY TODAY:
   - Filters: Period (the current semester by default), Status ("Outstanding: not yet decided" by default, "Every
     status", or each status), and EPA. An Administrator also picks an Institution.
   - The opening sentence names the period, how many trainees and where, and what Missed means.
-  - "By EPA": a summary table, EPA × Due, Decided, Scheduled, Deferred, To schedule, Missed, Optional. It scrolls
+  - "By EPA": a summary table, EPA × Due, Decided, Scheduled, Not decided, To schedule, Missed, Optional. It scrolls
     sideways at 390 px.
   - A count: "75 of 75 decisions due in 2026 S2 shown."
   - The list: Trainee, EPA, window ("2026 S2", or "2026" for an annual EPA), status (a badge plus a sentence), and an
     action. Twenty rows a page; 75 rows for five registrars.
   - Statuses: Not scheduled, Scheduled ("On the agenda of review #1, which is still open."), Decided ("STAR #1, issued
-    at review #1."), Deferred, As opportunity allows, Due by year end, Missed, and "Revoked: re-decide".
+    at review #1."), Not decided (an amber badge, "Not decided at review #4. A later sitting for 2026 S2 plans it
+    again.": a ratified review left it unstaged, read so only where it was due at that sitting or its window has ended,
+    T361, D53, E3), As opportunity allows, Due by year end, Missed ("2026 S1 has ended with nothing decided or on an
+    open review's agenda."), and "Revoked: re-decide". There is no Deferred since D53.
   - Actions: Schedule, which opens the schedule form already filled with panel, trainee and period; and Open review.
 - Committee reviews (the schedule):
   - Schedule review in the header, for those who may schedule.
   - The form: Panel; Trainee (disabled until a panel is chosen); Period ("2026 S2 · 1 Jul to 31 Dec 2026"); Review
     period from and to (filled from the period); Scheduled on; Review type (Annual progression review or
     Pre-graduation review, with Entrustment-only review in semester 1); and Formative only.
-  - The agenda preview: "15 EPAs will be on the agenda for 2026 S2." It names the EPAs that must be decided, lists the
-    optional ones, and says "Already decided in this window, so not on the agenda: …". For a formative review: "A
+  - The agenda preview: "15 EPAs will be on the agenda for 2026 S2." It names the EPAs due at this sitting ("… are due
+    at this sitting.", since flow 07's build: no "or deferred with a reason", D53), lists the optional ones, and says "Already decided in this window, so not on the agenda: …". For a formative review: "A
     formative review carries no agenda: it decides no EPA."
   - A list: Trainee, Period with its window, Type, Mode, State, Decision, and Open.
   - The duplicate refusal, in full: "Review #1 already puts this trainee before Paed Annual Review Panel for 2026 S2
@@ -123,7 +128,7 @@ SCREENS, in order:
    speciality admin (Decides for read-only) and a sub-speciality admin (Speciality scope only); the committee change
    refused; a member who can no longer sit; not found.
 3. /committee/decisions-due — Decisions Due: nothing due; an Administrator who must choose an institution; outstanding;
-   no row matches the filters; a past semester with Missed rows; all scheduled; after the sitting (Decided, Deferred);
+   no row matches the filters; a past semester with Missed rows; all scheduled; after the sitting (Decided, Not decided);
    a revoked STAR to decide again.
 4. /committee/reviews — the schedule: empty for a scheduler and for a member; the form; the agenda preview; a duplicate
    refused; scheduled; filled from Decisions Due; formative; pre-graduation; ratified; the preview failed.
@@ -305,8 +310,8 @@ Do: Open Decisions due from the menu. Look for an Institution filter, then switc
   back to `<P>`.
 Expect: No Institution filter is offered, because she reads her own institution. The same five registrars and 75 rows
   as Step 4.1. For the previous semester, `<Y> S1`, the statuses follow that period's windows:
-  - every registrar's six semester EPAs read Missed ("`<Y> S1` has ended with nothing decided, deferred or on an open
-    review's agenda."). Mahlangu and Ndlovu started on 15 January, inside the semester's first month, so their windows
+  - every registrar's six semester EPAs read Missed ("`<Y> S1` has ended with nothing decided or on an open review's
+    agenda.", T361). Mahlangu and Ndlovu started on 15 January, inside the semester's first month, so their windows
     count too (D42);
   - the annual EPAs read "Due by year end";
   - PAED-008, 009 and 013 read "As opportunity allows", since an optional EPA is never missed.
@@ -356,19 +361,16 @@ Expect:
   - **Period:** labelled "`<P>` · 1 Jul to 31 Dec `<Y>`". Choosing it fills the window as `<Y>`-01-01 to `<Y>`-12-31.
   - **Review type:** only "Annual progression review" and "Pre-graduation review", with the help "The semester-2 sitting
     decides the trainee's progression for the year." (T131 slice 5).
-  - **The preview** reads "15 EPAs will be on the agenda for `<P>`." It then says that PAED-001, 002, 003, 004, 005,
-    006, 007, 010, 011, 012, 014 and 015 "must be decided at this sitting, or deferred with a reason, before it is
-    ratified". It lists PAED-008, 009 and 013 as "As opportunity allows".
-  - **After Create review:** the page opens the new review. Its Review card reads:
-    - Trainee Lerato Molefe;
-    - Panel Paed Annual Review Panel;
-    - Sits for `<P>`;
-    - Evidence window `<Y>`-01-01 to `<Y>`-12-31;
-    - Type Annual progression review;
-    - Mode Summative;
-    - State Scheduled.
-  - **Start review** is offered to Smit, since the coordinators of the panel's institution may start a review. He leaves
-    it for the chair.
+  - **The preview** reads "15 EPAs will be on the agenda for `<P>`." It then says "PAED-001, PAED-002, PAED-003,
+    PAED-004, PAED-005, PAED-006, PAED-007, PAED-010, PAED-011, PAED-012, PAED-014 and PAED-015 are due at this
+    sitting." (T361, round 3 item 29: no deferral, D53). It lists PAED-008, 009 and 013 as "As opportunity allows".
+  - **After Create review:** the page opens the new review (T361):
+    - the h1 and the tab read "Lerato Molefe · `<P>`" ("… · Wombat" in the tab);
+    - the subtitle reads "Annual progression review · Paed Annual Review Panel · Training year 4";
+    - the sitting bar, under the title, reads Scheduled, "15 EPAs on the agenda" and "Summative · evidence
+      `<Y>`-01-01 to `<Y>`-12-31".
+  - **Start review…** is offered to Smit in the sitting bar, since the coordinators of the panel's institution may start
+    a review (E2). He leaves it for the chair.
   - **Evidence snapshot:** "No evidence has been frozen yet. Starting the review captures the current bundle."
 
 ### Step 4.7 — Mr Smit schedules Dr Dlamini's and Dr du Plessis's reviews
@@ -404,15 +406,16 @@ Expect:
   - **The link opens the scheduling form already filled:** Panel `Paed Annual Review Panel`, Trainee Dr Mahlangu and
     Period `<P>`. The preview shows 15 EPAs. The query string fills only what the form offers her, so the link
     authorises nothing.
-  - **The review opens as Scheduled,** and Start review is not offered to her. The Review card says: "Only the
-    coordinators of the panel's institution, and those of its members who are active committee members there, can start
-    this review." (T194)
+  - **The review opens as Scheduled,** and Start review… is not offered to her. Her sitting bar, static under the title,
+    says: "Only the coordinators of the panel's institution, and those of its members who are active committee members
+    there, can start this review." (T194, E2), with "As of hh:mm SAST" and Refresh.
 
 ### Step 4.10 — Dr Sithole schedules Dr Ndlovu's review from what is due
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /committee/decisions-due → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: On Decisions due, choose Schedule on one of Dr Ndlovu's rows. Set Scheduled on `D` and create the review.
-Expect: As Step 4.9: the form is filled, the review opens as Scheduled, and Start is not offered. Decisions due then
+Expect: As Step 4.9: the form is filled, the review opens as Scheduled, and Start review… is not offered: the sitting
+  bar says who can start it. Decisions due then
   reads Scheduled on all 75 rows, and By EPA reads Scheduled 5 and To schedule 0 for every EPA.
 
 ### Step 4.11 — Dr Naidoo lists the panel's reviews
@@ -422,7 +425,8 @@ Do: Open Committee reviews, then open Dr Dlamini's review.
 Expect:
   - **The list:** its subtitle reads "Open existing committee reviews.", and no Schedule review button is offered. It
     lists the five reviews of the panel he sits on, all Scheduled, with Decision Pending.
-  - **Dlamini's review:** Start review is offered to him, as a member who may sit on the panel. He leaves it.
+  - **Dlamini's review:** Start review… is offered to him in the sitting bar, as a member who may sit on the panel (E2).
+    He leaves it.
 
 ### Step 4.12 — Prof Mbatha checks the schedule
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -460,11 +464,12 @@ Expect:
   - **Every status:**
     - Decided on five rows, each "STAR #n, issued at review #N.": Molefe's PAED-001, 010 and 012, and Dlamini's PAED-001
       and 002;
-    - Deferred on 55 rows, "Deferred at review #N. A later sitting for `<P>` plans it again.", or `<Y>` for an annual
-      EPA;
-    - As opportunity allows on 15.
-  - **By EPA:** PAED-001 reads Due 5, Decided 2 and Deferred 3.
-  - **Actions:** a deferred row offers Open review and Schedule, since no open review holds its seat now.
+    - Not decided on 55 rows, its badge amber, "Not decided at review #N. A later sitting for `<P>` plans it again.",
+      or `<Y>` for an annual EPA (T361, D53, E3: each was due at that sitting);
+    - As opportunity allows on 15: an optional EPA left unstaged is recorded as not decided at its review, but its
+      window `<Y>` has not ended, so it still reads "Decided as opportunity allows: optional, never missed." (E3).
+  - **By EPA:** PAED-001 reads Due 5, Decided 2 and Not decided 3.
+  - **Actions:** a Not decided row offers Open review and Schedule, since no open review holds its seat now.
 
 ### Step 4.37 — Dr Sithole reads the list and what must be decided again
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
@@ -478,7 +483,7 @@ Expect:
     T142) and the reason.
   - **Decisions due:** Dlamini's PAED-002 reads "Revoked: re-decide". Its detail reads "STAR #n, issued for `<P>`, was
     revoked. Schedule a review to decide it again." It offers Schedule.
-  - **By EPA:** PAED-002 reads Decided 0, Deferred 4 and To schedule 1.
+  - **By EPA:** PAED-002 reads Decided 0, Not decided 4 and To schedule 1.
   - **Count, default filter:** "71 of 75 decisions due in `<P>` shown."
 
 ### Step 4.49 — Mr Smit schedules a formative check-in for Dr Ndlovu
@@ -488,8 +493,10 @@ Do: Schedule a review of Dr Ndlovu before the panel for `<P>`, Scheduled on `D`,
 Expect:
   - **Accepted:** a formative review takes no binding seat for the period (T131 slice 4).
   - **The preview:** "A formative review carries no agenda: it decides no EPA."
-  - **The review:** it opens with Mode "Formative (interim check-in, no binding decision)" and State Scheduled. It has
-    no Decision, Agenda, Pending entrustment decisions or Appeals card.
+  - **The review:** its h1 reads "Sipho Ndlovu · `<P>`" and its subtitle "Formative check-in · Paed Annual Review
+    Panel · Training year 1" (T309 item 2). The sitting bar reads Scheduled and "Formative: an interim check-in, no
+    binding decision · evidence `<Y>`-01-01 to `<Y>`-12-31" (round 3 item 28), with Start review… for Smit. It has no
+    Decision, Agenda or Appeals section: only the evidence snapshot, the standing, MSF coverage and the trajectories.
   - **The list:** the review shows Mode Formative and Decision "—".
 
 --- from execution/knowledge/scenario-paediatrics/act-5-graduation.md ---
@@ -500,8 +507,10 @@ Route: /committee/decisions-due
 Do: Open Decisions due for the period holding `D`, set the status filter to every status, and read Dr Molefe's rows.
 Expect: There is one row for each EPA due for her in the period, and each row gives its status in words:
   - an EPA that an Act 4 STAR decided reads Decided, and names the STAR and the review that issued it;
-  - an EPA that Act 4 deferred reads Deferred, and says that a later sitting plans it again;
-  - the others read Not scheduled, Due by year end or As opportunity allows.
+  - an EPA due at Act 4's sitting and left unstaged there reads Not decided (amber), "Not decided at review #N. A later
+    sitting for … plans it again." (T361, D53, E3);
+  - the others read Not scheduled, Due by year end or As opportunity allows: PAED-008, 009 and 013, recorded as not
+    decided at Act 4 but optional, read As opportunity allows while their window `<Y>` is open (E3).
   Every row that is not yet decided offers Schedule. KGK's other registrars are listed too, and nobody outside KGK is.
 
 ### Step 5.2 — Mr Smit schedules Dr Molefe's pre-graduation review
@@ -518,11 +527,13 @@ Expect: The form opens with the Paed Annual Review Panel, Dr Molefe and the peri
   Annual progression review and Pre-graduation review. Entrustment-only review is offered only in a semester-1 period.
   The agenda preview lists the EPAs that are due and names those Act 4 decided. In the same semester-2 period as Act 4:
   - it reads "12 EPAs will be on the agenda for …", with the period's label;
-  - it names the nine EPAs Act 4 deferred as to be decided, or deferred with a reason, before the review is ratified;
+  - it names the nine EPAs Act 4 did not decide that are due here: "PAED-002, PAED-003, PAED-004, PAED-005, PAED-006,
+    PAED-007, PAED-011, PAED-014 and PAED-015 are due at this sitting." (T361, round 3 item 29);
   - it lists PAED-008, 009 and 013 as As opportunity allows;
   - it says "Already decided in this window, so not on the agenda: PAED-001, PAED-010 and PAED-012."
-  The new review reads Pre-graduation review, Summative and Scheduled, with the evidence window running from `J−3y` to
-  the end of the period. Mr Smit is offered Start review, but leaves it to the chair.
+  The new review's h1 reads "Lerato Molefe · `<P>`", its subtitle "Pre-graduation review · Paed Annual Review Panel ·
+  Training year 4", and its sitting bar Scheduled, "12 EPAs on the agenda" and "Summative · evidence `J−3y` to
+  `<Y>`-12-31" (ISO dates). Mr Smit is offered Start review… in the bar, but leaves it to the chair.
 
 ### Step 5.29 — Neither ended programme can be put before the panel
 Role: Coordinator — Mr Pieter Smit
@@ -538,8 +549,9 @@ Role: Coordinator — Mr Pieter Smit
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Schedule a review of Dr Ndlovu before the Paed Annual Review Panel for the period holding `D`, Scheduled on `D`,
   with Formative only ticked. Note the review's id from its address.
-Expect: The review opens with Mode "Formative (interim check-in, no binding decision)" and State Scheduled, as at Step
-  4.49. It is open, so the erasure at A.1.12 has a review to end.
+Expect: The review opens as at Step 4.49: the subtitle "Formative check-in · Paed Annual Review Panel · Training year
+  1", and the sitting bar Scheduled with "Formative: an interim check-in, no binding decision · evidence …" (T361). It
+  is open, so the erasure at A.1.12 has a review to end.
 
 ### Step A.7.5 — Mr Smit on his phone
 Role: Coordinator — Mr Pieter Smit
@@ -597,10 +609,10 @@ One line per step: what the person does, and what they must be able to see. The 
 | 4.12 | `/committee/reviews` → `/committee/decisions-due` | Prof Mbatha | All five scheduled; every row's Open review opens the review holding it. |
 | 4.13 | `/committee/panels` → `/committee/panels/{PanelId:int}` | Prof Mbatha | Changing what the panel decides is refused while its reviews are open. The select keeps the refused choice until a reload (observed in the step's Actual). |
 | 4.33 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Mr Smit | After the sitting: all five Ratified, each Decision by its label, never an enum name (T250). |
-| 4.34 | `/committee/decisions-due` | Prof Mbatha | After the sitting: 70 outstanding; Every status shows Decided (with STAR and review), Deferred and optional rows. |
+| 4.34 | `/committee/decisions-due` | Prof Mbatha | After the sitting: 70 outstanding; Every status shows Decided (with STAR and review), Not decided (amber, D53, E3) and optional rows. |
 | 4.37 | `/admin/entrustment-decisions` → `/committee/decisions-due` | Dr Sithole | After a revocation (the list is F09's): "Revoked: re-decide", with Schedule. |
-| 4.49 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Mr Smit | A formative check-in: no agenda in the preview, and no Decision or Agenda card on the review. It is typed "Annual progression" (T309). |
-| 5.1 | `/committee/decisions-due` | Mr Smit | Dr Molefe's fifteen rows in words: Decided, Deferred, As opportunity allows. |
+| 4.49 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Mr Smit | A formative check-in: no agenda in the preview, and no Decision or Agenda section on the review, which reads "Formative check-in" since flow 07 (T361); the schedule still types it "Annual progression" (T309). |
+| 5.1 | `/committee/decisions-due` | Mr Smit | Dr Molefe's fifteen rows in words: Decided, Not decided, As opportunity allows. |
 | 5.2 | `/committee/decisions-due` → `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Mr Smit | Schedules her pre-graduation review from a row: the form filled, the window widened to her start, the preview naming what is already decided. |
 | 5.29 | `/committee/reviews` | Mr Smit | Only current registrars are offered; a graduate and a withdrawn registrar are not. |
 | A.1.10 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Mr Smit | Another formative check-in, for the data-rights appendix. |

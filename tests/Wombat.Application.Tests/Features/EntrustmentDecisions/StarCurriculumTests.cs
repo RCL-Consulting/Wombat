@@ -393,7 +393,7 @@ public sealed class StarCurriculumTests
 
     private static Task RecordDecisionAsync(ApplicationDbContext db)
         => new RecordCommitteeDecisionCommandHandler(db, FakeUserDirectory.CommitteeMembersAt(HostInstitution, "chair-1", "member-1")).Handle(
-            new RecordCommitteeDecisionCommand(ReviewId, CommitteeDecisionCategory.SatisfactoryProgress, "Satisfactory.", null, ["chair-1", "member-1"], Chair()),
+            new RecordCommitteeDecisionCommand(ReviewId, CommitteeDecisionCategory.SatisfactoryProgress, "Satisfactory.", null, null, ["chair-1", "member-1"], Chair()),
             CancellationToken.None);
 
     private static Task RatifyOnlyAsync(ApplicationDbContext db)

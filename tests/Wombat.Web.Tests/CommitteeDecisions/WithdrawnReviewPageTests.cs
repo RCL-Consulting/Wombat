@@ -43,11 +43,13 @@ public sealed partial class WithdrawnReviewPageTests : TestContext
     {
         var cut = RenderReview(Withdrawn(CommitteeReviewType.AnnualProgression, CommitteeDecisionCategory.SatisfactoryWithObservations));
 
-        Text(cut.Find("#decision-41 h4")).Should().Be("Satisfactory with Observations", "the record of what the panel recorded");
+        Text(cut.Find("#decision-41 h3")).Should().Be("Satisfactory with Observations", "the record of what the panel recorded");
         Text(cut.Find("#withdrawn-decision-note")).Should().Be(
             "Recorded, and never ratified: the review was withdrawn before it was, so this decision took no effect.");
         cut.FindAll("#no-decision-note").Should().BeEmpty();
-        cut.FindAll("button").Select(button => button.TextContent.Trim()).Should().NotContain(["Ratify", "Record decision"]);
+        // T361 (round 3 item 22): the dialogs' buttons are always in the page; the controls that open them are not offered.
+        cut.FindAll("button").Where(button => button.Closest("dialog") is null).Select(button => button.TextContent.Trim())
+            .Should().NotContain(["Ratify…", "Record decision…"]);
     }
 
     [Fact]

@@ -16,6 +16,7 @@
               SectionAttributions="@SectionAttributions"
               HandOffFieldKey="@HandOffFieldKey"
               FoldFilledSections="@FoldFilledSections"
+              SectionHeadingLevel="@SectionHeadingLevel"
               ReadOnly="true" />
 
 @code {
@@ -50,4 +51,10 @@
 
   // T350 (round 1, E3; build-contracts.md): the page's FoldFilledSections, forwarded as the editable page passes it.
   [Parameter] public bool FoldFilledSections { get; set; }
+
+  /// <summary>
+  /// The level of each section's heading, passed to <see cref="ActivityForm.SectionHeadingLevel" />: 2 on the activity
+  /// pages; the review sitting's evidence reader, under its own h3, passes 4 (T361, review D1).
+  /// </summary>
+  [Parameter] public int SectionHeadingLevel { get; set; } = 2;
 }

@@ -77,4 +77,11 @@ public sealed record PendingEntrustmentDecisionDto(
     /// only staged decision the chair may still remove (T165).
     /// </summary>
     public string? NoLongerFits { get; init; }
+
+    /// <summary>
+    /// Whether the staged decision's EPA is in force now (<c>Epa.IsActive</c>), from the EPA row loaded with it, so the
+    /// review page marks one no longer in use as the sampling card does (T273; T361, round 3 item 13). True when the EPA
+    /// was not loaded.
+    /// </summary>
+    public bool EpaInForce { get; init; } = true;
 }

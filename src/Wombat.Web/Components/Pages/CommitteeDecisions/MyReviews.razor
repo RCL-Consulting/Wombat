@@ -36,7 +36,7 @@
         @* T212: the period the review sat for, then its evidence window, as the schedule prints them. The window alone
            read the same for a year's two sittings, since a semester-2 sitting's window is the whole year. *@
         <td>@item.PeriodLabel <span class="muted">@($"· {Window(item.ReviewPeriodFrom, item.ReviewPeriodTo)}")</span></td>
-        <td>@CommitteeDecisionWording.ReviewTypeShortLabel(item.ReviewType)</td>
+        <td>@CommitteeDecisionWording.ReviewTypeShortLabel(item.ReviewType, item.IsFormative)</td>
         <td>@item.StateLabel</td>
         @* T131 slice 5: an entrustment-only review's decision has no category, and is not "Pending" for that. *@
         <td>@CommitteeDecisionWording.OutcomeLabel(item)</td>
@@ -59,7 +59,7 @@
     <p><strong>Panel:</strong> @_selectedReview.PanelName</p>
     <p id="my-review-period"><strong>Sits for:</strong> @_selectedReview.PeriodLabel</p>
     <p id="my-review-window"><strong>Evidence window:</strong> @Window(_selectedReview.ReviewPeriodFrom, _selectedReview.ReviewPeriodTo)</p>
-    <p id="my-review-type"><strong>Type:</strong> @CommitteeDecisionWording.ReviewTypeLabel(_selectedReview.ReviewType)</p>
+    <p id="my-review-type"><strong>Type:</strong> @_selectedReview.ReviewTypeLabel</p>
     <p id="my-review-state"><strong>State:</strong> @_selectedReview.StateLabel</p>
 
     @if (_selectedReview.Decisions.Count > 0)
@@ -85,8 +85,9 @@
       </article>
     }
 
-    @* The EPAs the review was there to decide, and what the committee did with each, the deferral's reason included (T131
-       slice 4, O6). Only once ratified: the read ladder gives a trainee nothing sooner. *@
+    @* The EPAs the review was there to decide, and what the committee did with each (T131 slice 4, O6): a line not decided
+       at this sitting reads so, with the decision's one sentence about such lines (T361, D53). Only once ratified: the
+       read ladder gives a trainee nothing sooner. *@
     @if (IsRatified(_selectedReview.State) && _selectedReview.Agenda is { Lines.Count: > 0 } agenda)
     {
       <article class="detail-card detail-card--compact" aria-labelledby="my-review-agenda-heading">
@@ -104,7 +105,7 @@
             <tbody>
               @foreach (var line in agenda.Lines)
               {
-                var detail = CommitteeAgendaText.TraineeStatusDetail(line);
+                var detail = CommitteeAgendaText.TraineeStatusDetail(line, _selectedReview.Decisions.FirstOrDefault()?.UndecidedNote);
                 <tr id="@($"my-agenda-line-{line.EpaId}")">
                   <th scope="row">@line.EpaCode — @line.EpaTitle</th>
                   <td>@line.WindowLabel</td>

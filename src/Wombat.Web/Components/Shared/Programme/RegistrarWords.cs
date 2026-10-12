@@ -115,11 +115,14 @@ public static class RegistrarWords
     /// <summary>Committee reviews with none (r1): "No review is scheduled for Nomsa Mahlangu."</summary>
     public static string NoReview(string name) => $"No review is scheduled for {name}.";
 
-    /// <summary>A review's link (r3, r6): "Pre-graduation review, 2026-10-04", by its type and the day it sits.</summary>
+    /// <summary>
+    /// A review's link (r3, r6): "Pre-graduation review, 2026-10-04", by its type and the day it sits; a formative
+    /// check-in's, "Formative check-in, 2026-10-04", whatever its stored type (T361, review R1).
+    /// </summary>
     public static string ReviewLink(CommitteeReviewListItemDto review)
     {
         ArgumentNullException.ThrowIfNull(review);
-        return $"{CommitteeDecisionWording.ReviewTypeLabel(review.ReviewType)}, {QuotaText.Iso(review.ScheduledOn)}";
+        return $"{CommitteeDecisionWording.ReviewTypeLabel(review.ReviewType, review.IsFormative)}, {QuotaText.Iso(review.ScheduledOn)}";
     }
 
     /// <summary>The line under a review's link: "Semester 2, 2026 · Scheduled".</summary>

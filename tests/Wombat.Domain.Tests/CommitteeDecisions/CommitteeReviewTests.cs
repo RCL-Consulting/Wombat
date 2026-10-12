@@ -158,4 +158,58 @@ public sealed class CommitteeReviewTests
         Assert.Equal(2, review.Decisions.Count);
         Assert.Equal(CommitteeAppealOutcome.Remitted, review.Appeals.Single().Outcome);
     }
+
+    // ─── The sentence about the EPAs not decided (T361, D53) ─────────────────
+
+    [Fact]
+    public void RecordingTheDecision_StoresTheSentenceAboutTheEpasNotDecided_Trimmed_AndABlankOneAsNull()
+    {
+        var review = StartedReview();
+        var decision = review.RecordDecision(
+            CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-1", DateTime.UtcNow,
+            CommitteeQuorumFixture.ChairAndMember, [], [], undecidedNote: "  To be decided at her final review.  ");
+
+        Assert.Equal("To be decided at her final review.", decision.UndecidedNote);
+
+        var blank = StartedReview().RecordDecision(
+            CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, "chair-1", DateTime.UtcNow,
+            CommitteeQuorumFixture.ChairAndMember, [], [], undecidedNote: "   ");
+        Assert.Null(blank.UndecidedNote);
+    }
+
+    [Fact]
+    public void RemittingTheDecision_CarriesTheSentenceAboutTheEpasNotDecidedForward()
+    {
+        // T361, E5: the replacement decision says what the original said about the EPAs left undecided.
+        var review = StartedReview();
+        review.RecordDecision(
+            CommitteeDecisionCategory.InadequateProgressAdditionalTraining, "Not enough observed evidence.", null, "chair-1",
+            DateTime.UtcNow, CommitteeQuorumFixture.ChairAndMember, [], [], undecidedNote: "Too early in the programme to decide.");
+        review.Ratify("chair-1", DateTime.UtcNow);
+        review.LodgeAppeal("The single DOPS reflects the start of the year.", "trainee-1", DateTime.UtcNow);
+
+        review.ResolveAppeal(
+            CommitteeAppealOutcome.Remitted, "external-1", DateTime.UtcNow.AddDays(1),
+            CommitteeDecisionCategory.SatisfactoryWithObservations, "Progress is adequate.", null,
+            CommitteeQuorumFixture.ChairAndExternal);
+
+        Assert.Equal(2, review.Decisions.Count);
+        Assert.Equal("Too early in the programme to decide.", review.GetCurrentDecision()!.UndecidedNote);
+    }
+
+    private static CommitteeReview StartedReview()
+    {
+        var review = new CommitteeReview
+        {
+            AcademicYear = 2026,
+            Semester = 2,
+            TraineeUserId = "trainee-1",
+            ReviewPeriodFrom = new DateOnly(2026, 1, 1),
+            ReviewPeriodTo = new DateOnly(2026, 12, 31),
+            ScheduledOn = new DateOnly(2026, 10, 4)
+        };
+
+        review.Start([], "chair-1", DateTime.UtcNow);
+        return review;
+    }
 }

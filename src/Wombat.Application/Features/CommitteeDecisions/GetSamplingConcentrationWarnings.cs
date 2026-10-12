@@ -100,7 +100,14 @@ public sealed record EpaSamplingConcentrationDto(
     int DominantAssessorCount,
     bool OneAssessorOverHalf,
     bool SingleSource,
-    bool FewerThanThreeAssessors);
+    bool FewerThanThreeAssessors)
+{
+    /// <summary>
+    /// Whether the EPA is in force now (<c>Epa.IsActive</c>), from the EPA row the report already loads, so the page marks
+    /// one no longer in use (T273; T361, round 3 item 13). True unless the report says otherwise.
+    /// </summary>
+    public bool EpaInForce { get; init; } = true;
+}
 
 public sealed class GetSamplingConcentrationWarningsQueryHandler
     : IRequestHandler<GetSamplingConcentrationWarningsQuery, SamplingConcentrationReportDto>
@@ -326,7 +333,10 @@ public sealed class GetSamplingConcentrationWarningsQueryHandler
                 dominantCount,
                 oneAssessorOverHalf,
                 singleSource,
-                fewerThanThree));
+                fewerThanThree)
+            {
+                EpaInForce = epa.IsActive
+            });
         }
 
         return new SamplingConcentrationReportDto(

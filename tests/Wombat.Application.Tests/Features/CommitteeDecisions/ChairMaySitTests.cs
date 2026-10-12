@@ -62,7 +62,7 @@ public sealed class ChairMaySitTests
     /// <summary>Every chair's action: the requests <c>DemandChairedReviewAsync</c> gates.</summary>
     public static TheoryData<string> ChairsActions => new()
     {
-        "Record", "Ratify", "Close", "Stage", "Remove", "Defer", "Reinstate"
+        "Record", "Ratify", "Close", "Stage", "Remove"
     };
 
     /// <summary>Why the chair may not sit at the review now, as the user store says it.</summary>
@@ -80,7 +80,7 @@ public sealed class ChairMaySitTests
         get
         {
             var data = new TheoryData<string, string>();
-            foreach (var action in new[] { "Record", "Ratify", "Close", "Stage", "Remove", "Defer", "Reinstate" })
+            foreach (var action in new[] { "Record", "Ratify", "Close", "Stage", "Remove" })
             {
                 foreach (var condition in new[]
                          {
@@ -173,6 +173,7 @@ public sealed class ChairMaySitTests
                 review.State.Should().Be(CommitteeReviewState.Ratified, action);
                 review.RatifiedByUserId.Should().Be(ChairUserId, action);
                 stars.Should().Be(1, "ratifying issues the staged decision as a STAR");
+                lines.Should().Equal([CommitteeAgendaLineState.Decided], action);
                 break;
             case "Close":
                 review.State.Should().Be(CommitteeReviewState.Final, action);
@@ -182,12 +183,6 @@ public sealed class ChairMaySitTests
                 break;
             case "Remove":
                 staged.Should().Be(0, action);
-                break;
-            case "Defer":
-                lines.Should().Equal([CommitteeAgendaLineState.Deferred], action);
-                break;
-            case "Reinstate":
-                lines.Should().Equal([CommitteeAgendaLineState.Due], action);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(action), action, null);
@@ -381,7 +376,7 @@ public sealed class ChairMaySitTests
         {
             "Record" => (object)await new RecordCommitteeDecisionCommandHandler(db, users).Handle(
                 new RecordCommitteeDecisionCommand(
-                    reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, [ChairUserId, "member-a"], principal),
+                    reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, null, [ChairUserId, "member-a"], principal),
                 CancellationToken.None),
             "Ratify" => await new RatifyCommitteeDecisionCommandHandler(db, users).Handle(
                 new RatifyCommitteeDecisionCommand(reviewId, principal), CancellationToken.None),
@@ -394,12 +389,6 @@ public sealed class ChairMaySitTests
                 CancellationToken.None),
             "Remove" => await new RemovePendingEntrustmentDecisionCommandHandler(db, users).Handle(
                 new RemovePendingEntrustmentDecisionCommand(reviewId, await PendingIdAsync(db, reviewId), principal),
-                CancellationToken.None),
-            "Defer" => await new DeferAgendaLineCommandHandler(db, users).Handle(
-                new DeferAgendaLineCommand(reviewId, await AgendaLineIdAsync(db, reviewId), "Not observed this semester.", principal),
-                CancellationToken.None),
-            "Reinstate" => await new ReinstateAgendaLineCommandHandler(db, users).Handle(
-                new ReinstateAgendaLineCommand(reviewId, await AgendaLineIdAsync(db, reviewId), principal),
                 CancellationToken.None),
             _ => throw new ArgumentOutOfRangeException(nameof(action), action, null)
         };
@@ -415,9 +404,6 @@ public sealed class ChairMaySitTests
 
     private static Task<int> PendingIdAsync(ApplicationDbContext db, int reviewId)
         => db.Set<PendingEntrustmentDecision>().Where(pending => pending.ReviewId == reviewId).Select(pending => pending.Id).SingleAsync();
-
-    private static Task<int> AgendaLineIdAsync(ApplicationDbContext db, int reviewId)
-        => db.CommitteeAgendaLines.Where(line => line.ReviewId == reviewId).Select(line => line.Id).SingleAsync();
 
     private static CommitteeReviewDetailDto Detail()
         => new(
@@ -441,8 +427,6 @@ public sealed class ChairMaySitTests
         "Close" => SeedReviewAsync(db, state: null),
         "Stage" => SeedReviewAsync(db, CommitteeReviewState.InProgress),
         "Remove" => SeedReviewAsync(db, CommitteeReviewState.InProgress, stage: true),
-        "Defer" => SeedReviewAsync(db, CommitteeReviewState.InProgress),
-        "Reinstate" => SeedReviewAsync(db, CommitteeReviewState.InProgress, deferLine: true),
         _ => throw new ArgumentOutOfRangeException(nameof(action), action, null)
     };
 
@@ -452,7 +436,7 @@ public sealed class ChairMaySitTests
     /// line; a decided one has the line staged, as recording demands.
     /// </summary>
     private static async Task<int> SeedReviewAsync(
-        ApplicationDbContext db, CommitteeReviewState? state, bool stage = false, bool deferLine = false)
+        ApplicationDbContext db, CommitteeReviewState? state, bool stage = false)
     {
         var now = new DateTime(2027, 1, 8, 9, 0, 0, DateTimeKind.Utc);
         var review = new CommitteeReview
@@ -489,11 +473,6 @@ public sealed class ChairMaySitTests
                         new AcademicPeriod(2026, 2))
                 ];
             review.Start([line], agenda, ChairUserId, now);
-        }
-
-        if (deferLine)
-        {
-            review.AgendaLines.Single().Defer("Not observed this semester.");
         }
 
         db.CommitteeReviews.Add(review);
@@ -606,7 +585,7 @@ public sealed class ChairMaySitTests
             .Select(pending => $"pending {pending.Id}:{pending.EpaId}:{pending.AuthorisedLevelId}:{pending.Rationale}")
             .ToListAsync());
         rows.AddRange(await read.Set<CommitteeAgendaLine>().OrderBy(line => line.Id)
-            .Select(line => $"line {line.Id}:{line.State}:{line.DeferralReason}")
+            .Select(line => $"line {line.Id}:{line.State}")
             .ToListAsync());
         rows.AddRange(await read.Set<EntrustmentDecision>().OrderBy(decision => decision.Id)
             .Select(decision => $"star {decision.Id}:{decision.Status}")

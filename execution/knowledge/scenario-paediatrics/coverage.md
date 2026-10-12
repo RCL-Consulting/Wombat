@@ -27,6 +27,15 @@ to confirm, the gaps the steps record or the cards showed: T290 at 2.37 (the ext
 T298 at 2.33 and 3.52 (ties by surname), T280 and T325 at 3.30 (each row its own link; no "26 Sept"), B7
 (BRIEF § 7: Stalled activities built as Waiting for assessors, with its reminder, and Programme trainees) and B8
 (Decision panels in the Coordinator's menu, Entrustment decisions in the speciality admins').
+T361 (flow 07, 2026-10-12) rebuilt the review sitting and removed agenda deferral (D53), so Step 4.21 (Defer) went:
+331 steps, 71 page files and 83 templates. Its build closes, for its replay to confirm, the gaps the steps record:
+F-4.46a (T299's review half: the remit's refusal sits in the Appeals section beside the form, 4.46), F-A.7.13a and
+F-A.7.13b (T280: no control on the review page is an unnamed "×", and each section is a region named by its h2,
+A.7.13); and the review page's halves of the tasks folded into it: T356 (no scrolled table paints over the top bar),
+T273 (an EPA no longer in force marked in the sampling list and the staged lines), T309 item 2 at 4.50 (a formative
+check-in reads "Formative check-in" wherever its type shows), T329 at 4.15 (a skeleton while the review loads, a fixed
+sentence when it fails), T260 (the notes about who may act re-read after every action) and T324 (a missing
+rationale refused in Wombat's words).
 
 ## Pages
 
@@ -89,7 +98,7 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/committee/panels` | CommitteeDecisions/PanelsList.razor | CommitteeMember, Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 2.20, 2.23, 2.24, 2.25, 2.32, 2.35, 2.37, 4.13, 4.14, A.7.7 |
 | `/committee/panels/new`, `/committee/panels/{PanelId:int}` | CommitteeDecisions/PanelEdit.razor | Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 2.21, 2.22, 2.23, 2.25, 2.32, 4.13 |
 | `/committee/reviews` | CommitteeDecisions/ReviewsSchedule.razor | Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, CommitteeMember | 4.6, 4.7, 4.8, 4.9, 4.10, 4.11, 4.12, 4.15, 4.22, 4.26, 4.28, 4.30, 4.31, 4.32, 4.33, 4.44, 4.45, 4.49, 5.2, 5.3, 5.29, A.1.10, A.1.14, A.7.6, A.7.8, A.7.14 |
-| `/committee/reviews/{ReviewId:int}` | CommitteeDecisions/ReviewDetail.razor | CommitteeMember, Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 4.6, 4.7, 4.9, 4.10, 4.11, 4.15, 4.16, 4.17, 4.18, 4.19, 4.20, 4.21, 4.22, 4.23, 4.24, 4.25, 4.26, 4.27, 4.28, 4.29, 4.30, 4.31, 4.32, 4.33, 4.41, 4.44, 4.45, 4.46, 4.47, 4.49, 4.50, 5.2, 5.3, 5.4, 5.5, 5.6, A.1.10, A.1.14, A.7.6, A.7.13 |
+| `/committee/reviews/{ReviewId:int}` | CommitteeDecisions/ReviewDetail.razor | CommitteeMember, Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 4.6, 4.7, 4.9, 4.10, 4.11, 4.15, 4.16, 4.17, 4.18, 4.19, 4.20, 4.22, 4.23, 4.24, 4.25, 4.26, 4.27, 4.28, 4.29, 4.30, 4.31, 4.32, 4.33, 4.41, 4.44, 4.45, 4.46, 4.47, 4.49, 4.50, 5.2, 5.3, 5.4, 5.5, 5.6, A.1.10, A.1.14, A.7.6, A.7.13 |
 | `/Error` | Error.razor | Anyone, signed in or not (static; T321) | A.5.8 |
 | `/msf/campaigns` | MultiSourceFeedback/CampaignsList.razor | Coordinator, Administrator | 3.34, 3.38, 3.41, 3.46, 3.49, A.4.7, A.7.5 |
 | `/msf/campaigns/new`, `/msf/campaigns/{CampaignId:int}` | MultiSourceFeedback/CampaignEdit.razor | Coordinator, Administrator | 3.34, 3.35, 3.36, 3.37, 3.38, 3.43, 3.44, A.7.5 |
@@ -153,9 +162,9 @@ state, `states.md` is where it belongs.
 | An MSF report blocked from release (short of responses or groups); `/msf/respond` refusing an expired, revoked or unrecognised link | The story's campaign is released. Only "already used" (3.40) and "request closed" (3.45) are played. | `states.md` |
 | The MSF auto-close and expiry-reminder jobs acting on a campaign | The appendix runs both with no open campaign (A.2.9). | `states.md` |
 | An entrustment-only review; a panel sitting as the neonatal CCC; "Decided by another panel"; the sitting-order warning (T131 slice 5) | KGK has no neonatal panel, so PAED-004 and 005 fall back to the general panel (2.24, 4.14). | `states.md`, with a second panel |
-| Agenda lines "Decided elsewhere" and "no longer decided", Defer after recording, and Remove of a STAR that no longer fits (T235) | Each needs two sittings in one window, a STAR revoked mid-review, or a curriculum change between recording and ratifying. | `states.md` |
+| Agenda lines "Decided elsewhere" and "no longer decided", and Remove of a STAR that no longer fits (T235) | Each needs two sittings in one window, a STAR revoked mid-review, or a curriculum change between recording and ratifying. | `states.md` |
 | Appeal outcome Dismissed | The story's one appeal is remitted (4.47); 4.45 reads the other outcome on the form. There is no Upheld (T307, D51). | `states.md` |
-| The review page's notes for a chair who can no longer act (T256), and for a trainee now elsewhere (T182, T213) | Nobody in the story loses the role, moves or is deactivated mid-review. | `states.md` |
+| The review page's sitting sentence (`#sitting-sentence`) for a chair who can no longer act, with Start refused then (T256, E2), and for a trainee now elsewhere (T182, T213) | Nobody in the story loses the role, moves or is deactivated mid-review. | `states.md` |
 | The Administrator on Decisions due and on a review (no ratify or appeal bypass, D46) | The Administrator acts only in Act 1, Act 6 and the appendix. | `states.md` |
 | A graduate filing an activity about herself | Undecided. 5.22 opens the page, which admits her, and files nothing. | A decision first |
 | Verifying a STAR certificate | `/portfolio/verify` checks portfolio exports only; a certificate's hash is recorded nowhere. | Not built |
@@ -359,11 +368,11 @@ and Assessor) appears under each role for the jobs done in it.
 | Find that scheduling is not mine | 4.5 | `/committee/decisions-due`, `/access-denied` |
 | List my panel's reviews and open one | 4.11 | `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
 | (Chair) Read a registrar's evidence, standing and MSF before the sitting | 4.15, 5.3 | `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
-| (Chair) Start a review and stage STARs on its evidence | 4.16, 4.17, 4.18, 4.19, 4.20, 4.28, 5.3, 5.4 | `/committee/reviews/{ReviewId:int}`, `/activities/{ActivityId:int}` |
-| (Chair) Defer what the committee will not decide, with a reason | 4.21, 4.28, 4.30, 4.31, 4.32 | `/committee/reviews/{ReviewId:int}` |
+| (Chair) Start a review and stage STARs on its evidence, reading an item from the snapshot and coming back by its return link | 4.16, 4.17, 4.18, 4.19, 4.20, 4.28, 5.3, 5.4 | `/committee/reviews/{ReviewId:int}`, `/activities/{ActivityId:int}` |
+| (Chair) Say, once, why the EPAs left unstaged were not decided (D53: no deferral; each reads "Not decided at this sitting") | 4.25, 4.29, 4.30, 4.31, 4.32 | `/committee/reviews/{ReviewId:int}` |
 | (Chair) Record the committee's decision with a quorum present | 4.23, 4.24, 4.25, 4.29, 4.30, 4.31, 4.32, 5.5 | `/committee/reviews/{ReviewId:int}` |
 | (Chair) Ratify the decision and issue the STARs | 4.27, 4.29, 4.30, 4.31, 4.32, 5.6 | `/committee/reviews/{ReviewId:int}` |
-| (Member) Follow a sitting without the chair's controls | 4.22, 4.44 | `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
+| (Member) Follow a sitting without the chair's controls, keeping up by Refresh | 4.22, 4.44 | `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
 | (External member) See the appeal I may hear | 4.45 | `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
 | (Chair) Resolve an appeal, with a quorum for the replacement decision | 4.46, 4.47 | `/committee/reviews/{ReviewId:int}` |
 | (Chair) Hold and close a formative check-in | 4.50 | `/committee/reviews/{ReviewId:int}` |

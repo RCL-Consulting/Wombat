@@ -44,7 +44,16 @@
   {
     <div class="form-container">
       <h2 id="@TitleId">@Title</h2>
-      <p id="@BodyId">@Body</p>
+      @if (BodyContent is not null)
+      {
+        @* T361 (flow 07): a body of more than one sentence, the committee review's lists, under the one id that describes
+           the dialog. *@
+        <div id="@BodyId" class="dialog-body">@BodyContent</div>
+      }
+      else
+      {
+        <p id="@BodyId">@Body</p>
+      }
       <FormActions>
         @* While the confirmed action runs, the dialog stays open and the confirm button keeps the focus: it is not disabled,
            a second press sends nothing, and aria-disabled says so (DESIGN.md § Button system, T234 review). Cancel would
@@ -66,6 +75,13 @@
 
   [Parameter] public string Title { get; set; } = "Confirm";
   [Parameter] public string Body { get; set; } = string.Empty;
+
+  /// <summary>
+  /// The action mode's body when it is more than one sentence (T361, flow 07): the committee review's Start, Record and
+  /// Ratify dialogs list what they freeze, fix and issue. Given, it is drawn in place of <see cref="Body" />, under the id
+  /// that describes the dialog.
+  /// </summary>
+  [Parameter] public RenderFragment? BodyContent { get; set; }
   [Parameter] public string ConfirmLabel { get; set; } = "Confirm";
 
   /// <summary>

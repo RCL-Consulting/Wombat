@@ -495,8 +495,9 @@ Do: Look for Dr Ndlovu among KGK's users, its trainees and its committee reviews
 Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
   - Committee reviews lists his reviews under a pseudonym, `deleted_user_…`, that names nobody: Act 4's ratified
     review and closed check-in as they were, and A.1.10's check-in as Withdrawn.
-  - The check-in reads Withdrawn, dated today, with the reason "Withdrawn because the trainee's personal data was erased
-    at their request. Nothing more is decided at this review.", and offers no action.
+  - The check-in's sitting bar reads Withdrawn and "Withdrawn on `D`. Withdrawn because the trainee's personal data
+    was erased at their request. Nothing more is decided at this review." (T258, T361), and the page offers no action:
+    no Start, no Refresh.
   - His activities and progress stay under the same pseudonym; the account itself is checked in the outcome's SQL.
 
 Step A.3.1 — Prof Mbatha opens SSO Mappings with no provider configured

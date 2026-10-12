@@ -69,7 +69,7 @@ public sealed class CommitteeRequestsAuthoriseFirstTests
     public static TheoryData<string> ReviewRequests => new()
     {
         // Commands.
-        "Start", "Record", "Ratify", "Close", "ResolveAppeal", "LodgeAppeal", "Stage", "Remove", "Defer", "Reinstate",
+        "Start", "Record", "Ratify", "Close", "ResolveAppeal", "LodgeAppeal", "Stage", "Remove",
         // The review page's reads, which share one ladder.
         "GetById", "Agenda", "MsfOutsideSnapshot", "Sampling", "PendingDecisions", "StarEpaOptions"
     };
@@ -216,7 +216,7 @@ public sealed class CommitteeRequestsAuthoriseFirstTests
 
     public static TheoryData<string> RequestsAPanelSeatAdmits => new()
     {
-        "Start", "Record", "Ratify", "Close", "ResolveAppeal", "Stage", "Remove", "Defer", "Reinstate",
+        "Start", "Record", "Ratify", "Close", "ResolveAppeal", "Stage", "Remove",
         "GetById", "Agenda", "MsfOutsideSnapshot", "Sampling", "PendingDecisions", "StarEpaOptions"
     };
 
@@ -367,7 +367,7 @@ public sealed class CommitteeRequestsAuthoriseFirstTests
         "Close" => CommitteeReviewState.InProgress,          // binding, so not closed without a decision
         "ResolveAppeal" => CommitteeReviewState.Ratified,    // no appeal open
         "LodgeAppeal" => CommitteeReviewState.UnderAppeal,   // an appeal already open
-        "Stage" or "Defer" or "Reinstate" => null,           // formative: no entrustment decisions, no agenda
+        "Stage" => null,                                     // formative: no entrustment decisions, no agenda
         "Remove" => CommitteeReviewState.Ratified,           // the staged decisions are fixed
         _ => CommitteeReviewState.Scheduled
     };
@@ -409,6 +409,7 @@ public sealed class CommitteeRequestsAuthoriseFirstTests
             "Record" => await new RecordCommitteeDecisionCommandHandler(db, users).Handle(
                 new RecordCommitteeDecisionCommand(
                     reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null,
+                    null,
                     ["chair-a", "member-a"], principal),
                 CancellationToken.None),
             "Ratify" => await new RatifyCommitteeDecisionCommandHandler(db, users).Handle(
@@ -426,10 +427,6 @@ public sealed class CommitteeRequestsAuthoriseFirstTests
                 CancellationToken.None),
             "Remove" => await new RemovePendingEntrustmentDecisionCommandHandler(db, users).Handle(
                 new RemovePendingEntrustmentDecisionCommand(reviewId, 1, principal), CancellationToken.None),
-            "Defer" => await new DeferAgendaLineCommandHandler(db, users).Handle(
-                new DeferAgendaLineCommand(reviewId, 1, "Not yet observed.", principal), CancellationToken.None),
-            "Reinstate" => await new ReinstateAgendaLineCommandHandler(db, users).Handle(
-                new ReinstateAgendaLineCommand(reviewId, 1, principal), CancellationToken.None),
             "GetById" => await new GetCommitteeReviewByIdQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
                 new GetCommitteeReviewByIdQuery(reviewId, principal), CancellationToken.None),
             "Agenda" => await new GetCommitteeAgendaQueryHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
@@ -1044,7 +1041,7 @@ public sealed class CommitteeRequestsAuthoriseFirstTests
             .Select(pending => $"pending {pending.Id}:{pending.EpaId}")
             .ToListAsync());
         rows.AddRange(await read.Set<CommitteeAgendaLine>().OrderBy(line => line.Id)
-            .Select(line => $"line {line.Id}:{line.State}:{line.DeferralReason}")
+            .Select(line => $"line {line.Id}:{line.State}")
             .ToListAsync());
         rows.AddRange(await read.Set<EntrustmentDecision>().OrderBy(decision => decision.Id)
             .Select(decision => $"star {decision.Id}:{decision.Status}")

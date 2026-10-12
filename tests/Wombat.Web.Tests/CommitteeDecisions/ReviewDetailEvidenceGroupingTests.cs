@@ -49,30 +49,28 @@ public sealed class ReviewDetailEvidenceGroupingTests : TestContext
     }
 
     [Fact]
-    public void WithinAnEpa_TheLinesAreGroupedByInstrument_EachNamingItsRatingEncounterAndState()
+    public void WithinAnEpa_TheLinesAreOrderedByInstrumentAtoZ_EachNamingItsRatingEncounterAndState()
     {
+        // T361 (round 3 items 23, 30): one row per line, the item as the row's header, ordered by instrument A–Z; the
+        // columns are Item, Assessor, Rating, Encounter and State, and the item goes to flow 03's page with the way back.
         var cut = RenderPage(Review(
             Line(1, 101, 7, "PAED-001", "Acute admission", "Mini-CEX", rating: "3a", observedOn: new DateOnly(2026, 2, 1)),
             Line(2, 102, 7, "PAED-001", "Acute admission", "Reflective exercise", rating: null, isRated: false),
             Line(3, 103, 7, "PAED-001", "Acute admission", "Mini-CEX", rating: null, isRated: true, state: "declined",
                 observedOn: new DateOnly(2026, 3, 1))));
 
-        var article = EpaArticle(cut, 7);
-        article.QuerySelectorAll("tbody th[scope=rowgroup]").Select(header => header.TextContent.Trim())
-            .Should().Equal("Mini-CEX", "Reflective exercise");
+        var table = EpaTable(cut, 7);
+        table.QuerySelectorAll("tbody th[scope=row]").Select(header => header.TextContent.Trim())
+            .Should().Equal("Mini-CEX (Paediatrics) #101", "Mini-CEX (Paediatrics) #103", "Reflective exercise (Paediatrics) #102");
 
-        var miniCex = article.QuerySelectorAll("tbody")[0].QuerySelectorAll("tr");
-        miniCex.Should().HaveCount(2);
-        miniCex[0].QuerySelector("th")!.GetAttribute("rowspan").Should().Be("2");
+        var rows = table.QuerySelectorAll("tbody tr");
         // The state by the label frozen with the line (T220).
-        Cells(miniCex[0]).Should().Equal("Mini-CEX (Paediatrics) #101", "3a", "2026-02-01", "Completed");
-        Cells(miniCex[1]).Should().Equal("Mini-CEX (Paediatrics) #103", "Not recorded", "2026-03-01", "Declined");
+        Cells(rows[0]).Should().Equal(string.Empty, "3a", "2026-02-01", "Completed");
+        Cells(rows[1]).Should().Equal(string.Empty, "Not recorded", "2026-03-01", "Declined");
+        Cells(rows[2])[1].Should().Be("Unrated");
 
-        var reflective = article.QuerySelectorAll("tbody")[1].QuerySelector("tr")!;
-        Cells(reflective)[1].Should().Be("Unrated");
-
-        article.QuerySelector("a")!.GetAttribute("href").Should().Be("/activities/101");
-        article.QuerySelector("caption")!.TextContent.Should().Be("3 records from 2 instruments");
+        rows[0].Id.Should().Be("snap-1");
+        table.QuerySelector("a")!.GetAttribute("href").Should().Be("/activities/101?from=review-30&at=snap-1");
     }
 
     /// <summary>
@@ -86,9 +84,9 @@ public sealed class ReviewDetailEvidenceGroupingTests : TestContext
             Line(1, 101, 7, "PAED-001", "Acute admission", "Clinical audit", rating: null, isRated: false,
                 state: "submitted", stateLabel: "Awaiting supervisor")));
 
-        var row = EpaArticle(cut, 7).QuerySelector("tbody tr")!;
+        var row = EpaTable(cut, 7).QuerySelector("tbody tr")!;
         Cells(row)[^1].Should().Be("Awaiting supervisor");
-        EpaArticle(cut, 7).TextContent.Should().NotContain("submitted");
+        EpaTable(cut, 7).TextContent.Should().NotContain("submitted");
     }
 
     [Fact]
@@ -97,7 +95,7 @@ public sealed class ReviewDetailEvidenceGroupingTests : TestContext
         var cut = RenderPage(Review(
             Line(1, 101, 7, "PAED-001", "Acute admission", "Mini-CEX", rating: "3a", declared: false)));
 
-        EpaArticle(cut, 7).TextContent.Should().Contain("not recorded (created 2026-02-10)");
+        EpaTable(cut, 7).TextContent.Should().Contain("not recorded (created 2026-02-10)");
     }
 
     [Fact]
@@ -107,10 +105,11 @@ public sealed class ReviewDetailEvidenceGroupingTests : TestContext
             Line(1, 101, 7, "PAED-001", "Acute admission", "MSF", rating: null, isRated: true),
             Campaign(2, 50)));
 
-        var across = cut.Find("article[aria-labelledby=evidence-across-epas]");
-        across.TextContent.Should().Contain("Annual MSF #50").And.Contain("Evidence recorded for PAED-001, one activity each.");
-        EpaArticle(cut, 7).TextContent.Should().NotContain("Annual MSF #50");
-        across.TextContent.Should().Contain("its per-EPA records are listed under each EPA above.")
+        var across = Snapshot(cut);
+        cut.Find("ul[aria-labelledby=evidence-across-epas]").TextContent.Should().Contain("Annual MSF #50")
+            .And.Contain("Evidence recorded for PAED-001, one activity each.");
+        EpaTable(cut, 7).TextContent.Should().NotContain("Annual MSF #50");
+        across.Should().Contain("its per-EPA records are listed under each EPA above.")
             .And.NotContain("An activity here names no EPA.", "every activity line here names its EPA");
     }
 
@@ -124,8 +123,8 @@ public sealed class ReviewDetailEvidenceGroupingTests : TestContext
         var cut = RenderPage(Review(Legacy(1, 101), Campaign(2, 50)));
 
         Headings(cut).Should().Equal("Not about a single EPA", "Frozen before lines named their EPA");
-        var across = cut.Find("article[aria-labelledby=evidence-across-epas]");
-        across.TextContent.Should().Contain("its per-EPA records are among the lines below")
+        var across = Snapshot(cut);
+        across.Should().Contain("its per-EPA records are among the lines below")
             .And.NotContain("under each EPA above")
             .And.NotContain("An activity here names no EPA.");
     }
@@ -140,14 +139,15 @@ public sealed class ReviewDetailEvidenceGroupingTests : TestContext
             EpaTitle = null
         }));
 
-        var across = cut.Find("article[aria-labelledby=evidence-across-epas]");
-        across.TextContent.Should().Contain("An activity here names no EPA.")
+        var across = Snapshot(cut);
+        across.Should().Contain("An activity here names no EPA.")
             .And.NotContain("multi-source feedback");
     }
 
     [Fact]
     public void TheStarPicker_OffersTheCurriculumOptions_AndEachEpasOwnLadder()
     {
+        // T361 (round 3, "Stage a decision on an EPA not on this agenda"): the EPA select is the agenda's foot form's.
         var options = new[]
         {
             new StarEpaOptionDto(7, "PAED-001", "Acute admission", 1, "CPSA ladder"),
@@ -155,18 +155,18 @@ public sealed class ReviewDetailEvidenceGroupingTests : TestContext
         };
         var cut = RenderPage(Review(), options);
 
-        cut.FindAll("#pending-epa option").Select(option => option.TextContent)
-            .Should().Equal("Select an EPA…", "PAED-001 — Acute admission", "PAED-002 — Ward round");
-        cut.FindAll("#pending-level option").Select(option => option.TextContent)
-            .Should().Equal(["Select an EPA first…"], "the ladder is the chosen EPA's");
+        cut.FindAll("#stage-0-epa option").Select(option => option.TextContent)
+            .Should().Equal("Choose an EPA…", "PAED-001 — Acute admission", "PAED-002 — Ward round");
+        cut.FindAll("#stage-0-level option").Select(option => option.TextContent)
+            .Should().Equal(["Choose an EPA first…"], "the ladder is the chosen EPA's");
 
-        cut.Find("#pending-epa").Change("7");
-        cut.FindAll("#pending-level optgroup").Select(group => group.GetAttribute("label")).Should().Equal("CPSA ladder");
-        cut.FindAll("#pending-level option").Select(option => option.TextContent)
-            .Should().Equal("Select a level…", "1", "2", "3a");
+        cut.Find("#stage-0-epa").Change("7");
+        cut.FindAll("#stage-0-level optgroup").Select(group => group.GetAttribute("label")).Should().Equal("CPSA ladder");
+        cut.FindAll("#stage-0-level option").Select(option => option.TextContent)
+            .Should().Equal("Choose a rung…", "1", "2", "3a");
 
-        cut.Find("#pending-epa").Change("8");
-        cut.FindAll("#pending-level optgroup").Select(group => group.GetAttribute("label"))
+        cut.Find("#stage-0-epa").Change("8");
+        cut.FindAll("#stage-0-level optgroup").Select(group => group.GetAttribute("label"))
             .Should().Equal(["CPSA ladder", "Old ladder"], "an EPA on no ladder may take any scale's rung");
     }
 
@@ -180,14 +180,18 @@ public sealed class ReviewDetailEvidenceGroupingTests : TestContext
 
     // ---- Fixture -------------------------------------------------------------------------------------------------
 
+    // T361 (A.7.13): the snapshot's groups are h3s in the section, each EPA's table after its heading.
     private static IReadOnlyList<string> Headings(IRenderedComponent<ReviewDetail> cut)
         => cut.Find("section[aria-labelledby=evidence-snapshot-heading]")
-            .QuerySelectorAll("article h4")
+            .QuerySelectorAll("h3")
             .Select(heading => heading.TextContent.Trim())
             .ToArray();
 
-    private static IElement EpaArticle(IRenderedComponent<ReviewDetail> cut, int epaId)
-        => cut.Find($"article[aria-labelledby=evidence-epa-{epaId}]");
+    private static IElement EpaTable(IRenderedComponent<ReviewDetail> cut, int epaId)
+        => cut.Find($"#evidence-epa-{epaId} + .table-container table");
+
+    private static string Snapshot(IRenderedComponent<ReviewDetail> cut)
+        => cut.Find("section[aria-labelledby=evidence-snapshot-heading]").TextContent;
 
     private static IReadOnlyList<string> Cells(IElement row)
         => row.QuerySelectorAll("td").Select(cell => cell.TextContent.Trim()).ToArray();
@@ -286,7 +290,9 @@ public sealed class ReviewDetailEvidenceGroupingTests : TestContext
             // The page offers the chair's controls by what the query says the caller may do (T213); these tests act as the
             // chair.
             CallerChairs = true,
-            CallerResolvesAppeals = true
+            CallerResolvesAppeals = true,
+            // The foot form, which holds the STAR picker, sits under the agenda (T361).
+            Agenda = new CommitteeAgendaDto(30, 2026, 1, "2026 S1", false, [], [])
         };
 
     private sealed class FakeSender : IScopedSender
@@ -327,6 +333,7 @@ public sealed class ReviewDetailEvidenceGroupingTests : TestContext
                 ListStarEpaOptionsForReviewQuery => _starEpas,
                 GetEntrustmentScalesListQuery => Scales,
                 GetMsfCoverageForTraineeQuery => null,
+                GetStartPreviewQuery => null,
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };
 

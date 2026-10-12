@@ -1,5 +1,8 @@
 # Act 5 — Year 4: graduation
 
+**Actuals before T361.** An Actual dated before the T361 replay describes the review page with deferral, which D53
+removed; the Expects are the page as built.
+
 **Scenario date:** late December 2026, a fortnight after Act 4's sitting and in Dr Molefe's last month of training: her
 programme ends on 14 January 2027, the expected completion Act 2 recorded. The date is narrative only (see "The clock"
 below).
@@ -29,8 +32,9 @@ after his last day counts towards nothing, including one that had already counte
   released, which covers PAED-010 and 012.
 - Act 4 sat a review for each registrar, recorded and ratified each decision, and resolved Dr Mahlangu's appeal. No
   review is left open. Dr Molefe holds the three STARs Act 4 issued: PAED-001 and PAED-012 at `5`, their exit level,
-  with no expiry, and PAED-010 at `4`, expiring 20 days after Act 4's sitting. Her other twelve EPAs are undecided: nine
-  that Act 4 deferred, and PAED-008, 009 and 013, which it did not decide.
+  with no expiry, and PAED-010 at `4`, expiring 20 days after Act 4's sitting. Her other twelve EPAs are undecided:
+  Act 4 recorded each as "Not decided at this sitting" (D53), nine of them due there and PAED-008, 009 and 013
+  optional.
 - To start here, restore `recovery/scenario-post-act4.dump`.
 
 **The clock:**
@@ -43,6 +47,10 @@ after his last day counts towards nothing, including one that had already counte
 - Act 2 wrote every programme start from `J`, so Dr Molefe reads training year 4. If a 15 January has passed since Act
   2 was replayed, she reads year 5. The curriculum sets no level for year 5, so each EPA's exit level stands in
   as its target (T139).
+- The standing is read on `D`; a committee review's subtitle reads the training year at the end of the review's
+  period (T361, E6). The two agree on a replay in semester 2, whose period ends on 31 December, before the next 15
+  January. On a replay in semester 1 between 1 and 14 January, the period ends on 30 June, after the 15 January, so the
+  subtitle reads a year more than the standing.
 - D49 exempts the period a programme ends in only when it ends before that period's last month: June for semester 1,
   November for semester 2 and for the academic year (`QuotaWindow`). If `D`, or Dr du Plessis's `D−2`, falls in June,
   the semester keeps its full target and the year does not; in November or December, both keep it. Steps 5.20 and 5.28
@@ -65,8 +73,10 @@ Route: /committee/decisions-due
 Do: Open Decisions due for the period holding `D`, set the status filter to every status, and read Dr Molefe's rows.
 Expect: There is one row for each EPA due for her in the period, and each row gives its status in words:
   - an EPA that an Act 4 STAR decided reads Decided, and names the STAR and the review that issued it;
-  - an EPA that Act 4 deferred reads Deferred, and says that a later sitting plans it again;
-  - the others read Not scheduled, Due by year end or As opportunity allows.
+  - an EPA due at Act 4's sitting and left unstaged there reads Not decided (amber), "Not decided at review #N. A later
+    sitting for … plans it again." (T361, D53, E3);
+  - the others read Not scheduled, Due by year end or As opportunity allows: PAED-008, 009 and 013, recorded as not
+    decided at Act 4 but optional, read As opportunity allows while their window `<Y>` is open (E3).
   Every row that is not yet decided offers Schedule. KGK's other registrars are listed too, and nobody outside KGK is.
 Actual (2026-10-05, T358 replay, wombat_scenario_t358): Menu Home, Programme trainees, Waiting for assessors,
   Decisions due, MSF campaigns, Committee reviews, Decision panels, Data rights requests, My data rights. Decisions
@@ -91,11 +101,13 @@ Expect: The form opens with the Paed Annual Review Panel, Dr Molefe and the peri
   Annual progression review and Pre-graduation review. Entrustment-only review is offered only in a semester-1 period.
   The agenda preview lists the EPAs that are due and names those Act 4 decided. In the same semester-2 period as Act 4:
   - it reads "12 EPAs will be on the agenda for …", with the period's label;
-  - it names the nine EPAs Act 4 deferred as to be decided, or deferred with a reason, before the review is ratified;
+  - it names the nine EPAs Act 4 did not decide that are due here: "PAED-002, PAED-003, PAED-004, PAED-005, PAED-006,
+    PAED-007, PAED-011, PAED-014 and PAED-015 are due at this sitting." (T361, round 3 item 29);
   - it lists PAED-008, 009 and 013 as As opportunity allows;
   - it says "Already decided in this window, so not on the agenda: PAED-001, PAED-010 and PAED-012."
-  The new review reads Pre-graduation review, Summative and Scheduled, with the evidence window running from `J−3y` to
-  the end of the period. Mr Smit is offered Start review, but leaves it to the chair.
+  The new review's h1 reads "Lerato Molefe · `<P>`", its subtitle "Pre-graduation review · Paed Annual Review Panel ·
+  Training year 4", and its sitting bar Scheduled, "12 EPAs on the agenda" and "Summative · evidence `J−3y` to
+  `<Y>`-12-31" (ISO dates). Mr Smit is offered Start review… in the bar, but leaves it to the chair.
 Note: A second binding review for a period is refused only while the first one is open (scheduled, in progress or
   decided). Act 4's review of her has been ratified.
 Actual (2026-10-05, T358 replay, wombat_scenario_t358): Schedule on Molefe's PAED-006 row opened
@@ -112,9 +124,13 @@ Gap: none
 ### Step 5.3 — Dr Zulu starts the review and reads where Dr Molefe stands
 Role: CommitteeMember — Dr Thandi Zulu (chair)
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Dr Molefe's pre-graduation review from Committee reviews and start it. Read the evidence snapshot, the agenda
-  and "Entrustment against Annexure A".
-Expect: The page says "Review started." and the review reads In progress.
+Do: Open Dr Molefe's pre-graduation review from Committee reviews and start it through its dialog. Read the evidence
+  snapshot, the agenda and "Entrustment against Annexure A".
+Expect: Before Start, the h1 reads "Lerato Molefe · `<P>`" with "Pre-graduation review" in the subtitle, and the bar
+  "Summative · evidence `J−3y` to `<Y>`-12-31" (round 3 item 28). The Start dialog counts "the [n] items observed from
+  `J−3y` to `<Y>`-12-31 (…)". The page then says "Review started." atop the agenda and the review reads In progress.
+  - The agenda's caption reads "12 EPAs for `<P>` · none staged", and under it "Already decided in this window, so not
+    on the agenda: PAED-001, PAED-010 and PAED-012." (round 3 item 25).
   - The snapshot freezes her evidence observed since `J−3y`, grouped by EPA, including the released MSF
     campaign.
   - The standing reads training year 4, and "2 at or above · 1 below · 12 with no decision, of 15 EPAs". Its exit rule
@@ -122,7 +138,8 @@ Expect: The page says "Review started." and the review reads In progress.
     yet: …", which names every EPA but PAED-001 and PAED-012.
   - Under the rule: "For information only. Recording a Graduate decision or completing the programme does not check the
     exit rule."
-  - Record decision is shown disabled, and names the closing agenda lines that are still to be staged or deferred.
+  - Record decision… is held back only by the quorum (D53): unavailable, with the quorum line beside it, until a
+    second member is ticked. It names no agenda line.
   - Sampling warnings may name EPAs rated by fewer than three assessors. They are warnings and refuse nothing.
 Actual (2026-10-05, T358 replay, wombat_scenario_t358): Menu Home, Programme trainees, Committee reviews, Decision
   panels, My data rights ("Acting as Committee member", Switch to Assessor). Opened review #7 from Committee reviews
@@ -142,16 +159,22 @@ Do: For each EPA the standing names under "Not yet", stage a decision at its exi
   one but PAED-001 and PAED-012, which Act 4 decided at their exit level:
   - rung `5` on PAED-002 to 007 and PAED-010;
   - rung `4` on PAED-008, 009, 011, 013, 014 and 015.
-  Use Stage on the EPA's agenda line. For PAED-010, which Act 4 decided in this window below its exit level, choose it
-  in the staging form's EPA list instead. Issue each decision on `D` with no expiry, write a rationale,
-  and tick the snapshot lines it rests on, choosing that EPA's own lines where it has some. Defer nothing.
+  Use Stage on each of the twelve agenda lines (PAED-002 to 009, 011, 013, 014 and 015), each resting on Default MSF #1
+  alone, since none of them has a line of its own. For PAED-010, which Act 4 decided in this window below its exit
+  level, use "Stage a decision on an EPA not on this agenda" at the agenda's foot, choosing it in its EPA list and
+  ticking its own two lines. Issue each decision on `D` with no expiry and write a rationale.
 Expect: The level list offers only the six rungs of the CPSA Paediatric Entrustment Scale v11.1 (`1`, `2`, `3a`, `3b`,
-  `4`, `5`). Stage pending decision stays disabled until a line is ticked. A decision that rests on no line about its
-  own EPA, or on a single line, gets a hint but is not refused. After each staging:
-  - the page says "Pending entrustment decision staged.";
-  - the EPA's line reads Staged, and an EPA that was not on the agenda gains a chair's line;
-  - the decision is listed with its level, its issue date and the lines it rests on.
-  Once every closing line is staged, Record decision is enabled.
+  `4`, `5`). Stage pending decision stays unavailable, with "Name at least one item of the evidence snapshot." beside
+  it, until a line is ticked. A decision on Default MSF #1 alone gets both hints, "Only one item is named. The College's
+  rule is that an entrustment decision is never taken from a single form." and "None of the named items is about
+  PAED-002." (and so on), and is staged anyway. After each staging:
+  - "Pending entrustment decision staged." sits under the EPA's line, with the focus there;
+  - the line reads Staged, with its decision in words ("Level 5 · issued `D` · no expiry.") and "Rests on 1 item of
+    the snapshot: Default MSF #1." with the hints;
+  - PAED-010 gains a chair's line, reading Staged with "Added by the chair.", on its two lines [the Direct
+    Observation #n and the MSF record #n].
+  Once all thirteen are staged, the caption reads "13 EPAs for `<P>` · 13 staged" and "Already decided in this window,
+  so not on the agenda: PAED-001 and PAED-012." (round 3 item 25). Record decision… is held back only by the quorum.
 Note: The exit levels are v11.1's final minima: nine EPAs at `5` and six at `4` (T166).
 Actual (2026-10-05, T358 replay, wombat_scenario_t358): Staged 13 decisions on review #7, all issued 2026-10-05 (the
   form's default) with no expiry: rung 5 on PAED-002 to 007 and 010, rung 4 on PAED-008, 009, 011, 013, 014 and 015.
@@ -168,15 +191,21 @@ Gap: none
 ### Step 5.5 — The panel records its decision: Graduate
 Role: CommitteeMember — Dr Thandi Zulu (chair)
 Route: /committee/reviews/{ReviewId:int}
-Do: Record the committee's decision:
+Do: Choose Go to the decision and record the committee's decision, confirming in the dialog:
   - category: Graduate (programme complete);
   - rationale: every EPA is entrusted at its exit level, and the panel recommends completion;
+  - About the EPAs not decided: nothing (every line is staged);
   - conditions: none;
   - present: Dr Zulu, Dr Naidoo, Dr Botha and Dr van Rensburg.
 Expect: The category list opens with nothing chosen and offers Graduate (programme complete) among the progression
-  outcomes. Dr Zulu is ticked as present and cannot be unticked. The review then reads Decided (T250). The decision is
-  headed "Graduate (programme complete)" and names the four members present. The page says that the staged decisions
-  are now fixed and that ratifying issues exactly these. The staging form is gone, and only Dr Zulu is offered Ratify.
+  outcomes. Dr Zulu is ticked as present and cannot be unticked. Beside the available Record decision…: "Recording fixes
+  the 13 staged decisions." The dialog, "Record Graduate (programme complete) for Lerato Molefe?", reads "Fixes 13
+  staged decisions: …" naming each EPA at its level, and records none as not decided: it has no "Records … as not
+  decided" line (E1). The review then reads Decided (T250), with "Decision recorded." in the Decision section, now above
+  the agenda. The decision is headed "Graduate (programme complete)" and names the four members present. The agenda
+  says "Fixed when the committee's decision was recorded: ratifying issues exactly these." The foot form and every
+  Remove… are gone, the bar reads "Graduate (programme complete) · 13 decisions to issue", and only Dr Zulu is offered
+  Ratify…; Dr Naidoo's static bar reads "Only the panel's chair, Thandi Zulu, can ratify the committee's decision."
 Note: Recording a Graduate decision checks nothing against the exit rule. T166 deferred that check until the College
   confirms the rule.
 Actual (2026-10-05, T358 replay, wombat_scenario_t358): Category opened on "Select a category…" and offered
@@ -192,12 +221,16 @@ Gap: none
 ### Step 5.6 — Dr Zulu ratifies
 Role: CommitteeMember — Dr Thandi Zulu (chair)
 Route: /committee/reviews/{ReviewId:int}
-Do: Ratify the decision.
-Expect: The page says "Decision ratified." and the review reads Ratified. Every staged decision is issued as a STAR in
-  the same action:
-  - each agenda line reads Decided;
-  - the list of pending decisions is empty;
-  - Act 4's active STAR on PAED-010, which was re-decided today, is superseded.
+Do: Choose Ratify… and confirm in the dialog.
+Expect: The dialog, "Ratify and issue 13 STARs to Lerato Molefe?", lists the thirteen ("PAED-002 at 5, issued `D`" and
+  so on) and names no EPA as not decided; its confirm is "Ratify and issue 13 STARs". The page says "Decision
+  ratified." under the bar, and the review reads Ratified, "Graduate (programme complete) · 13 STARs issued". Every
+  staged decision is issued as a STAR in the same action, STARs #6 to #18 (which EPA holds which number is read at the
+  replay: [#n] each):
+  - each agenda line reads Decided with its "STAR #n.";
+  - the agenda says "Nothing is pending: ratifying the review issued what was staged as STARs, and the agenda names each
+    one.";
+  - Act 4's active STAR on PAED-010 [#2], re-decided today as [#18], is superseded.
   The standing's exit rule reads "15 of 15 EPAs at their exit level by STAR decision (level 5: 9 of 9 · level 4: 6 of
   6). Every EPA is at its exit level." Its year line reads "15 at or above · 0 below · 0 with no decision, of 15 EPAs".
 Note: Only the panel's chair ratifies. There is no Administrator bypass (D46, T165).

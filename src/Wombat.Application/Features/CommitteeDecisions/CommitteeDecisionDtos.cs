@@ -104,6 +104,13 @@ public sealed record CommitteeDecisionDto(
     int? SupersedesDecisionId)
 {
     /// <summary>
+    /// The committee's one sentence about the EPAs it did not decide at the sitting, or null (T361, D53): printed under every
+    /// line that reads "Not decided at this sitting" (<see cref="CommitteeAgendaLineDto.ReadsNotDecided" />). A remitted
+    /// appeal's replacement carries the original's (E5).
+    /// </summary>
+    public string? UndecidedNote { get; init; }
+
+    /// <summary>
     /// Who was recorded as present when this decision was taken, chair first, with the role each held then (T165).
     /// Each decision keeps its own sitting: a decision an appeal remitted names whoever sat for the appeal.
     /// </summary>
@@ -186,6 +193,14 @@ public sealed record CommitteeEvidenceDto(
     /// handler enforces, so the page's picker offers exactly those lines (D38, T131).
     /// </summary>
     public bool CanGroundADecision => Wombat.Application.Features.EntrustmentDecisions.StagedEvidence.CanGround(SourceType);
+
+    /// <summary>
+    /// The assessor <see cref="AssessorUserId" /> names, by name (<c>UserDisplayNames.NameOf</c>), for the review page's
+    /// snapshot and its line form: "Mini-CEX (Paediatrics) #12 · Thandi Zulu" (T361, round 3 items 23, 30). Filled by
+    /// <c>GetCommitteeReviewByIdQuery</c> in the one lookup it already makes; null where the line names nobody, and from the
+    /// commands, whose mapper names nobody.
+    /// </summary>
+    public string? AssessorName { get; init; }
 }
 
 public sealed record CommitteeReviewDetailDto(
@@ -228,6 +243,12 @@ public sealed record CommitteeReviewDetailDto(
     public bool DecidesProgression => CommitteeReviewTypes.DecidesProgression(ReviewType);
 
     /// <summary>
+    /// The review's type as the page says it: "Formative check-in" for a formative review, else the type's label
+    /// (<see cref="CommitteeDecisionWording.ReviewTypeLabel(CommitteeReviewType, bool)" />, T361, T309 item 2).
+    /// </summary>
+    public string ReviewTypeLabel => CommitteeDecisionWording.ReviewTypeLabel(ReviewType, IsFormative);
+
+    /// <summary>
     /// The review's agenda (T131 slice 4). Filled by <c>GetCommitteeReviewByIdQuery</c>, through the review's read ladder.
     /// Null from the commands that answer with the review: the mapper they share reads nothing, so the review page reads
     /// the agenda again (<c>GetCommitteeAgendaQuery</c>) after each action.
@@ -251,6 +272,23 @@ public sealed record CommitteeReviewDetailDto(
     /// <summary>Why the review was withdrawn, as recorded with the withdrawal, or null (T258).</summary>
     public string? WithdrawalReason { get; init; }
 
+    /// <summary>
+    /// The trainee's preferred profile (<c>TraineeScopeResolver.PreferredProfiles</c>) while it is at the panel's
+    /// institution, or null: the registrar page's id (<c>/programme/trainees/{id}</c>, flow 06), which the review page
+    /// links to as "Lerato Molefe's progress" for the roles that page admits (T361, round 2 review 10). Null once the
+    /// trainee trains elsewhere, where that page would not open for this panel's staff. Filled by
+    /// <c>GetCommitteeReviewByIdQuery</c>; null from the commands that answer with the review.
+    /// </summary>
+    public int? TraineeProfileId { get; init; }
+
+    /// <summary>
+    /// The trainee's training year at the end of the review's period (<c>TraineeProfile.GetStage</c>), read on the
+    /// programme's last day when it ended sooner, from the profile at the panel's institution; null with none, or before
+    /// the programme started (T361, E6: "Training year 4" in the page's subtitle). Filled by
+    /// <c>GetCommitteeReviewByIdQuery</c>; null from the commands that answer with the review.
+    /// </summary>
+    public int? TrainingYear { get; init; }
+
     /// <summary>The rule a decision's attendance is held to, as the review page states it (T165).</summary>
     public static string QuorumRule => CommitteeReview.QuorumRule;
 
@@ -262,8 +300,8 @@ public sealed record CommitteeReviewDetailDto(
 
     /// <summary>
     /// Whether the caller holds the panel's Chair seat and may sit at this review now, and so may take the chair's actions
-    /// at it: record the decision, ratify it, close a formative review, stage and remove entrustment decisions, and defer
-    /// and reinstate agenda lines (T213, T256). Filled by <c>GetCommitteeReviewByIdQuery</c> with the predicate those
+    /// at it: record the decision, ratify it, close a formative review, and stage and remove entrustment decisions (T213,
+    /// T256). Filled by <c>GetCommitteeReviewByIdQuery</c> with the predicate those
     /// handlers demand (<c>CommitteeDecisionAuthorization.Chairs</c>), so the review page offers the chair's controls to
     /// the chair alone, and only while the chair may sit (<c>PanelSeat.SittingAt</c>): before T213 it offered them to every
     /// reader, and each refused on the click, and before T256 it offered them to a chair who had lost the CommitteeMember

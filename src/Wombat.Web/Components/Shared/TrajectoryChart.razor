@@ -19,6 +19,7 @@
 <section class="detail-card trajectory-card" id="@CardId" aria-labelledby="@HeadingId">
   <div class="trajectory-head">
     @Heading
+    @HeadContent
     @if (Trajectory.Points.Count > 0)
     {
       <p>@TrajectoryWords.Summary(Trajectory, ReviewWindow, SubjectName)</p>
@@ -113,6 +114,12 @@
 
   /// <summary>The trainee, named in the summary on the committee's page (4.15); null on their own.</summary>
   [Parameter] public string? SubjectName { get; set; }
+
+  /// <summary>
+  /// Drawn under the heading, before the summary: the committee review's "Back to PAED-001's line" while that EPA's agenda
+  /// line is open (T361, flow 07; C2). The chart itself is placed, not redrawn.
+  /// </summary>
+  [Parameter] public RenderFragment? HeadContent { get; set; }
 
   /// <summary>Whether the page has multi-source feedback beside this EPA, so the card says it is not plotted (D8, D36).</summary>
   [Parameter] public bool MsfBeside { get; set; }

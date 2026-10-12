@@ -1,4 +1,4 @@
-# F07 The committee sits: the chair stages STARs, defers, records with a quorum, and ratifies
+# F07 The committee sits: the chair stages STARs, records with a quorum, and ratifies
 
 **Who and why:** a registrar's review is the one moment the programme's evidence becomes a decision. The panel's chair
 reads the registrar's frozen evidence and standing, stages STARs (Statements of Awarded Responsibility), defers what the
@@ -7,6 +7,12 @@ follow on their own screens without the chair's controls; an administrator reads
 "immutable once issued" (`execution/knowledge/DOMAIN.md:78`): this is the highest-stakes page in the product, and today
 it is one page 9,192 px tall before Start and 14,834 px with thirteen decisions staged, with every result and refusal
 shown at its top.
+
+**Built 2026-10-12 (T361, step 6),** from round 3 (`07-review-sitting/round-3-check.md`): design A, "the agenda is the
+page". **There is no deferral** (D53, the operator's, EPA-PROGRAMME § 3D): every agenda line the chair does not stage is
+recorded as "Not decided at this sitting" when the review is ratified, with the decision's one optional sentence about
+the EPAs not decided. §§ 1–7 below are the brief as round 1 was sent it, and describe the page before the build,
+deferral included; § 8 is re-synced to the runbook as built. The build's own record is `07-review-sitting/build-*.md`.
 
 Restated 2026-10-11 for T361 (the brief of 2026-09-26, T332, predates flows 01–06). Paths to screenshots are under
 `design/baseline/` (gitignored). Code is cited at `bc9a6c4b`; `W/` is `src/Wombat.Web/`, `A/` is
@@ -19,7 +25,7 @@ Restated 2026-10-11 for T361 (the brief of 2026-09-26, T332, predates flows 01�
 | Viewports | Desktop 1280×800 and phone 390×844 |
 | Variations | 2–3 in round 1; the chosen one in round 2 |
 | People | CommitteeMember: Dr Thandi Zulu (chair), Dr David Naidoo, Dr Sarah Botha (each also an Assessor), Dr John van Rensburg (external, CommitteeMember only). InstitutionalAdmin: Prof Nolwazi Mbatha, who reads a decided review (Step 4.26). The registrars reviewed: Dr Lerato Molefe (training year 4), Dr Anele Dlamini (3), Dr Pieter du Plessis (2), Dr Nomsa Mahlangu and Dr Sipho Ndlovu (1) (`README.md` § Cast) |
-| Runbook steps | 26, pasted verbatim in § 8: 4.14–4.32 and 4.50 (Act 4), 5.3–5.6 (Act 5), A.7.6 and A.7.13 (appendix). Forty steps touch the review page in all (`coverage.md`); the others are flow 08's (scheduling, panels) and flow 09's (appeals, revocation). |
+| Runbook steps | 26 when round 1 was sent (25 since the build: 4.21, the deferral, is gone, D53), pasted verbatim in § 8: 4.14–4.32 and 4.50 (Act 4), 5.3–5.6 (Act 5), A.7.6 and A.7.13 (appendix). Forty steps touch the review page in all (`coverage.md`); the others are flow 08's (scheduling, panels) and flow 09's (appeals, revocation). |
 | Pages (`coverage.md` templates) | `/committee/reviews/{ReviewId:int}` (`W/Components/Pages/CommitteeDecisions/ReviewDetail.razor`, 2,162 lines), `/activities/{ActivityId:int}` (read-only, opened from the snapshot; flow 03's page), `/committee/reviews` (`ReviewsSchedule.razor`, the list, to open one; flow 08's), `/committee/panels` (`PanelsList.razor`, who sits; flow 08's). The registrar page `/programme/trainees/{id}` (flow 06's, `ProgrammeTraineeDetail.razor:640–665`) and Decisions due (flow 08's, `DecisionsDue.razor:152`, `:160`) also link a review. Checked at `bc9a6c4b`. |
 | Menus (`NavItems.cs`) | Committee reviews (`:100`) is in every staff menu that reaches a review: CommitteeMember (`:169`: Home, Programme trainees, Committee reviews, Decision panels); SpecialityAdmin and SubSpecialityAdmin (`:166`, `:168`); Coordinator (`:175`); InstitutionalAdmin and Administrator under "Reviews" (`:154`, `:148`). The review page's owning list is Committee reviews for all six (`W/Navigation/NavOwners.cs:105–114`; DESIGN.md owner table `:599`), so its trail reads Home › Committee reviews › Committee review. DESIGN.md's nav table (`:529–535`) matches. |
 | Components drawn at runtime | `PageHeader`, `ActionResult`, `Alert` (the sampling card is its only `Dismissible` caller), `FormField`, `FormActions`, `EditForm` with `InputSelect`/`InputDate`/`InputTextArea`, `EncounterDateLabel`; flow 05's `EntrustmentStandingPanel` (`Shared/`, 332 lines), `MsfCoveragePanel` and `TrajectoryChart` (two fixed drawings, 900 and 322 px, its table always visible). The agenda, the staging form, the staged list and the snapshot are inline in `ReviewDetail.razor`, helped by `EvidenceSnapshotGroups.cs` and `CommitteeAgendaText.cs`. Not used: `ConfirmDialog`, `StatePanel`, `Skeleton`, `DataTable`. Queries: `GetCommitteeReviewByIdQuery` (with the agenda), `ListPendingEntrustmentDecisionsForReviewQuery`, `GetSamplingConcentrationWarningsQuery`, `GetEntrustmentStandingForTraineeQuery`, `GetMsfCoverageForTraineeQuery`, `GetEpaTrajectoryForTraineeQuery`; commands `Start…`, `RecordCommitteeDecision…`, `RatifyCommitteeDecision…`, `CloseFormativeReview…`, `DeferAgendaLine…`, `ReinstateAgendaLine…`, `StagePendingEntrustmentDecision…`, `RemovePendingEntrustmentDecision…` (`A/Features/CommitteeDecisions/`, `A/Features/EntrustmentDecisions/`) |
@@ -544,11 +550,13 @@ A flow is done when BRIEF.md § 9's four checks hold. For this flow:
 
 ## 8. The runbook steps, verbatim (sent with § 1, in the same message)
 
-These are pasted from `execution/knowledge/scenario-paediatrics/` (Role, Route, Do and Expect only), as they stood on
-2026-10-11 after flow 06's build. `D` is the replay day.
+These are pasted from `execution/knowledge/scenario-paediatrics/` (Role, Route, Do and Expect only). Each Expect
+describes the product as flow 07's build left it (T361, 2026-10-12); § 2 records what each step showed before it, and
+round 1 was sent the steps as they stood on 2026-10-11, after flow 06's build. Step 4.21, the deferral, is removed with
+deferral itself (D53), so 25 steps remain; the numbers after it are kept. `D` is the replay day.
 
 ```text
-Step 4.14 — Dr Botha checks who sits and who decides (act-4-annual-review.md:323)
+Step 4.14 — Dr Botha checks who sits and who decides (act-4-annual-review.md:329)
 Role: CommitteeMember — Dr Sarah Botha
 Route: /committee/panels
 Do: Open Decision panels.
@@ -558,294 +566,371 @@ Expect:
   - **Who decides each EPA:** curriculum 11.1's EPAs are decided by `Paed Annual Review Panel`. PAED-004 and 005 fall
     back to it, because no panel covering the programme sits as the neonatal CCC.
 
-Step 4.15 — Dr Zulu reads Dr Molefe's review before starting it (act-4-annual-review.md:338)
+Step 4.15 — Dr Zulu reads Dr Molefe's review before starting it (act-4-annual-review.md:344)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Committee reviews and Dr Molefe's review. Read every card before starting it.
-Expect:
-  - **Start review** is offered to her.
-  - **Decision card:** "No decision has been recorded yet."
+Do: Open Committee reviews and Dr Molefe's review. Read every section before starting it.
+Expect: The page is one column, the agenda its spine (T361, round 3):
+  - **The header:** the h1 and the tab read "Lerato Molefe · `<P>`"; the subtitle "Annual progression review · Paed
+    Annual Review Panel · Training year 4", with the link "Lerato Molefe's progress" to her registrar page under it
+    (round 3 item 19). There is no Review card and no Pending card.
+  - **The chair's sitting bar,** under the title: Scheduled, "15 EPAs on the agenda", "Summative · evidence
+    `<Y>`-01-01 to `<Y>`-12-31", and Start review… (round 3 item 28).
+  - **Decision:** "No decision has been recorded yet.", under the agenda.
   - **Entrustment against Annexure A** reads training year 4 on `D`, and "0 at or above · 0 below · 15 with no decision,
     of 15 EPAs". The exit rule reads "0 of 15 EPAs at their exit level by STAR decision", names all fifteen as "Not
     yet", and says it is for information only (T166). The names of PAED-001, PAED-010 and PAED-012 link to their charts
     on the page (T355).
   - **Multi-source feedback by EPA** marks Covered, in the semester Act 3's campaign closed in, each EPA that campaign
     covered. The other cells read "None released" or "None released yet" (T168).
-  - **Agenda** lists the 15 EPAs:
-    - window `<P>` for the six semester EPAs and `<Y>` for the nine annual ones;
-    - twelve Due, each with "Must be decided at this sitting, or deferred with a reason.";
-    - three As opportunity allows;
+  - **Agenda,** captioned "15 EPAs for `<P>`", lists the 15 EPAs, each its code over its title:
+    - window `<P>` for PAED-001, 002, 004, 005, 010 and 012 and `<Y>` for the other nine (round 3 item 24);
+    - twelve "Due at this sitting", with no sentence under the badge (D53);
+    - three "As opportunity allows", each "Decided as opportunity allows: optional.";
     - Evidence 0 items each;
     - no Action column, because the review has not started.
-  - **Evidence snapshot:** "No evidence has been frozen yet …"
+  - **Evidence snapshot:** "No evidence has been frozen yet. Starting the review captures the current bundle."
   - **Rating trajectory by EPA** charts PAED-001, PAED-010 and PAED-012 on the ladder's rungs, each over the review's
     window and with no Today. Each chart's line names the trainee, the window and the assessors, PAED-001's reading
     "Lerato Molefe · 3 ratings in the review window, `<Y>`-01-01 to `<Y>`-12-31, from Thandi Zulu, David Naidoo and
     Mohammed Patel. 2 at the minimum, 1 below.", and the table of its ratings is under it (T355, T323).
-  - **Sampling concentration warnings,** above the cards, name PAED-010 (one rating) and PAED-012 (two), each with
-    "Fewer than three distinct assessors across this EPA's evidence." PAED-001, rated by three assessors on three
-    instruments, is not named. The card says her two MSF records are not counted, because no named assessor rated them
-    (T135, D44).
-  - **Pending entrustment decisions:** "No pending entrustment decisions have been staged for this review."
+  - **Before the committee decides,** the first section under the bar, not dismissible (T280): its "Sampling
+    concentration warnings" read "PAED-010 · 1 rating · 1 assessor · 1 source. Fewer than three distinct assessors
+    across this EPA's evidence." and "PAED-012 · 2 ratings · 2 assessors · 2 sources. Fewer than three distinct
+    assessors across this EPA's evidence." (round 3 item 31). PAED-001, rated by three assessors on three instruments, is
+    not named. "Not counted: 2 records in the review window with no rating by a named assessor …" says her two MSF
+    records are not counted (T135, D44).
   - **Appeals:** "No appeal has been lodged against this review."
 
-Step 4.16 — Dr Zulu starts the review (act-4-annual-review.md:385)
+Step 4.16 — Dr Zulu starts the review (act-4-annual-review.md:396)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
-Do: Start the review.
-Expect: "Review started." The state reads In progress.
-  - **Evidence snapshot:** frozen "when the review started", grouped by EPA and then by instrument. Every state is
-    listed, and each line links to its activity and shows its rating, encounter date and state. The MSF campaign's
-    report sits under "Not about a single EPA", and its per-EPA records are listed under each EPA.
-  - **Agenda:** its caption reads "15 EPAs for `<P>`, 12 still to stage or defer". Each line counts its snapshot items
-    and offers Stage and Defer.
-  - **Decision card:** a form with these fields:
+Do: Choose Start review… in the sitting bar, read the dialog, and start the review.
+Expect:
+  - **The dialog** is titled "Start Lerato Molefe's review for `<P>`?" and reads "Starting freezes the evidence: the 9
+    items observed from `<Y>`-01-01 to `<Y>`-12-31 (8 activities and the MSF campaign report) become this review's
+    snapshot, each in the state it is in now. Anything finished later is not added." (round 3 item 11). No sentence
+    about a campaign left out: the campaign is released (T173). The focus is on its safe button, "Not yet"; the confirm
+    is "Start review".
+  - **Started:** "Review started." atop the agenda, with the focus there. The bar reads In progress, "None staged",
+    "Present: the chair · one more member needed" and Go to the decision.
+  - **Agenda:** its caption reads "15 EPAs for `<P>` · none staged". Each line counts its snapshot items and offers
+    Stage only (D53).
+  - **Evidence snapshot:** "Frozen when the review started, `D` · 9 items", an h3 per EPA ("PAED-001 — …"), its lines
+    by instrument A–Z (round 3 item 30). Every state is listed, and each line links to its activity and shows its
+    assessor, rating, encounter date and state. The MSF campaign's report sits under "Not about a single EPA", and its
+    per-EPA records are listed under each EPA.
+  - **Decision,** under the agenda: a form with these fields:
     - Category, opening on "Select a category…";
     - Rationale;
+    - "About the EPAs not decided (optional)", with the help "The registrar sees this once the review is ratified.";
     - Conditions;
     - Present, listing Thandi Zulu (chair) ticked and locked, David Naidoo, Sarah Botha and John van Rensburg
       (external).
-  - **Record decision** is disabled. The line under it reads "Record decision: PAED-001, PAED-002, … and PAED-015 must
-    be decided at this sitting. Stage a decision on each, or defer it with a reason." It names the twelve closing EPAs.
-  - **The staging form** appears under Pending entrustment decisions.
+  - **Record decision…** is unavailable (aria-disabled, not natively disabled, round 3 item 16), with the quorum line
+    beside it: "Only the chair is ticked. A committee decision needs at least two panel members present: the chair and
+    at least one other." It names no EPA: no line holds Record back (D53).
+  - **Start** is also offered to a member who may sit, the Coordinator and the Administrator, never while the chair
+    cannot act (E2).
 
-Step 4.17 — Dr Zulu stages PAED-001 at level 5 (act-4-annual-review.md:415)
+Step 4.17 — Dr Zulu stages PAED-001 at level 5 (act-4-annual-review.md:437)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int} → /activities/{ActivityId:int} → /committee/reviews/{ReviewId:int}
-Do: Open Dr Zulu's own PAED-001 Mini-CEX from the snapshot to re-read it, then come back to the review. Choose Stage on
-  PAED-001's agenda line and fill in:
+Do: Open Dr Zulu's own PAED-001 Mini-CEX from the evidence snapshot to re-read it, then come back to the review by its
+  return link. Choose Stage on PAED-001's agenda line and fill in:
   - Authorised level `5`;
   - Issued on `D`, as filled;
   - no expiry;
   - the rationale "Leads resuscitation and emergency care without prompting; ready for unsupervised practice."
   Tick the Mini-CEX, then Dr Naidoo's CBD, and stage the pending decision.
 Expect:
-  - **The snapshot line** opens the Mini-CEX, read-only: its status card, badged Completed, reads "Done. You completed
-    it on …" and "Rated 5. Credited 1 item to PAED-001.", and no move is offered (T342).
-  - **Choosing Stage** puts PAED-001 in the EPA select and moves the focus there.
+  - **The snapshot line** "Mini-CEX (Paediatrics) #12" opens the Mini-CEX at
+    `/activities/{ActivityId}?from=review-{ReviewId}&at=snap-{itemId}`, read-only: its status card, badged Completed,
+    reads "Done. You completed it on …" and "Rated 5. Credited 1 item to PAED-001.", and no move is offered (T342). Its
+    only back link is "Back to Lerato Molefe · `<P>`" (round 3 item 9), which returns to the review at that snapshot
+    line (`#snap-{itemId}`).
+  - **Choosing Stage** opens PAED-001's line in place, under its row, headed "Stage a decision on PAED-001", with the
+    focus on Authorised level. Its standing reads "Year 4 target 5 · no STAR yet · 3 ratings in the review window · MSF:
+    None released yet" (round 3 item 26), with the link "Rating chart for PAED-001".
   - **The level select** offers the rungs 1, 2, 3a, 3b, 4 and 5 under "CPSA Paediatric Entrustment Scale v11.1", with
     the help "Rungs of CPSA Paediatric Entrustment Scale v11.1, the ladder this EPA is assessed on." (T076, T167)
-  - **The evidence picker** lists PAED-001's three lines first. Stage pending decision stays disabled with "Name at
-    least one item of the evidence snapshot." until a line is ticked (D38).
+  - **"Evidence it rests on"** lists PAED-001's three lines first, by instrument A–Z: Case-Based Discussion
+    (Paediatrics) #13, DOPS (Paediatrics) #14 and Mini-CEX (Paediatrics) #12, each with a tick and Read; the other
+    lines sit behind "Show the other N snapshot lines". Read shows an activity in place of the form, and "Back to
+    PAED-001" restores the form as typed (round 3 item 8). Stage pending decision stays unavailable with "Name at least
+    one item of the evidence snapshot." beside it until a line is ticked (D38, round 3 item 16).
   - **With one line ticked,** the picker says "Only one item is named. The College's rule is that an entrustment
     decision is never taken from a single form." It still allows the stage.
-  - **After staging:** "Pending entrustment decision staged." PAED-001's line reads Staged, "A decision is staged
-    below.", and its Action cell reads "Staged below". The caption counts 11 still to stage or defer. The pending list
-    shows PAED-001 at `5`, issued `D`, and "Rests on 2 items of the snapshot: …" naming both.
+  - **After staging:** "Pending entrustment decision staged." under PAED-001's line, with the focus there. The line reads
+    Staged, "Level 5 · issued `D` · no expiry." and "Rests on 2 items of the snapshot: Mini-CEX (Paediatrics) #12;
+    Case-Based Discussion (Paediatrics) #13." (round 3 item 30), with Remove… in its Action cell. The caption and the
+    bar read "1 staged".
 
-Step 4.18 — An expiry before the issue date is refused (act-4-annual-review.md:451)
+Step 4.18 — An expiry before the issue date is refused (act-4-annual-review.md:482)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: Start staging PAED-010: choose its Stage, then level `4`, Issued on `D`, Expires on `D−1`, the rationale "Leads the
   ward round safely; one observation so far, to be confirmed at her final review." and both PAED-010 lines (the Direct
   Observation and the MSF record). Stage it.
-Expect: Refused with "An expiry date must be after the issue date." Nothing is staged, the form keeps what was typed,
-  and PAED-010 still reads Due.
+Expect: PAED-010's open line lists its two lines first: the Direct Observation [#n] (Thandi Zulu, rated 5) and the MSF
+  record #22 ("Not recorded"). Refused before anything is sent: "Not staged. An expiry date must be after the issue
+  date." at the top of the line's form, with the focus there, and Expires on marked with "An expiry date must be after
+  the issue date." (round 3 item 15). Nothing is staged, the form keeps what was typed, PAED-010 still reads Due at this
+  sitting, and the bar still reads "1 staged".
 
-Step 4.19 — Dr Zulu stages PAED-010 with an expiry, and PAED-012 (act-4-annual-review.md:464)
+Step 4.19 — Dr Zulu stages PAED-010 with an expiry, and PAED-012 (act-4-annual-review.md:498)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: Correct PAED-010's Expires on to `D+20` and stage it. Then stage PAED-012 at `5` with no expiry, the rationale
   "Breaks difficult news clearly and kindly; consistent across settings." and its two WBA lines. Remove the PAED-012
-  decision, then stage it again the same way.
-Expect: Both are staged. The pending list shows:
-  - PAED-010 at `4`, "issued `D` · expires `D+20`";
-  - PAED-012 at `5`.
-  The caption counts 9 still to stage or defer.
-  - **Remove** is named "Remove the staged decision on PAED-012". It answers "Pending entrustment decision removed.",
-    PAED-012's line reads Due again, with Stage and Defer, and the caption counts 10.
-  - **Staged again,** it reads Staged, and the caption counts 9.
+  decision, confirming in its dialog, then stage it again the same way.
+Expect: Both are staged, each with "Pending entrustment decision staged." under its line:
+  - PAED-010 reads "Level 4 · issued `D` · expires `D+20`.";
+  - PAED-012 reads "Level 5 · issued `D` · no expiry." on Mini-CEX (Paediatrics) #15 and Case-Based Discussion
+    (Paediatrics) #16 (its Evidence 3 items).
+  The bar reads "3 staged".
+  - **Remove…** (an outline button, round 3 item 17) is named "Remove the staged decision on PAED-012". It opens a
+    dialog titled "Remove the staged decision on PAED-012?", reading "Its level 5, its rationale and the 2 snapshot
+    items it rests on are discarded. PAED-012 is due at this sitting again.", with the focus on its safe button "Keep
+    it" (round 3 item 22), which would close it and change nothing. "Remove the decision" answers "Pending entrustment
+    decision removed." under the line, PAED-012's line reads Due at this sitting with Stage, and the bar reads "2
+    staged".
+  - **Staged again,** it reads Staged, and the bar reads "3 staged".
 
-Step 4.20 — A second decision on PAED-001 is refused (act-4-annual-review.md:484)
+Step 4.20 — A second decision on PAED-001 is refused (act-4-annual-review.md:523)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
-Do: In the staging form, choose PAED-001 from the EPA select, then fill in level `4`, a rationale and one line. Stage
-  it.
-Expect: Refused with "An entrustment decision on PAED-001 is already staged at this review. Remove it to stage
-  another." The pending list still holds exactly one PAED-001 decision, at `5`.
+Do: In "Stage a decision on an EPA not on this agenda", at the agenda's foot, choose PAED-001 from the EPA select, then
+  fill in level `4`, a rationale and one line, DOPS (Paediatrics) #14 (rated 4, Mohammed Patel). Stage it.
+Expect: Refused: "Not staged. An entrustment decision on PAED-001 is already staged at this review. Remove it to stage
+  another." at the top of that form, with the focus there. PAED-001's line still holds exactly one decision, "Level 5
+  · issued `D` · no expiry.", and the bar still reads "3 staged".
 
-Step 4.21 — Dr Zulu defers the other nine closing lines (act-4-annual-review.md:496)
-Role: CommitteeMember (chair) — Dr Thandi Zulu
-Route: /committee/reviews/{ReviewId:int}
-Do: Choose Defer on PAED-002 and submit an empty reason. Then give the reason "To be decided at her final review." and
-  defer it. Reinstate PAED-002, then defer it again with the same reason. Defer the other eight lines still marked Due
-  the same way.
-Expect:
-  - **The deferral form:** a group titled "Defer PAED-002" opens under the table with the focus in its reason box. Its
-    help reads "Kept on the agenda line. The trainee sees it on their reviews page once the review is ratified."
-  - **An empty reason** is refused in the form with "Say why the committee is deferring the decision." (T212).
-  - **Deferring:** "PAED-002 deferred." The line reads Deferred with "Reason: To be decided at her final review." and
-    offers Reinstate.
-  - **Reinstating:** "PAED-002 reinstated: it is due at this sitting again." Stage and Defer return.
-  - **After the last deferral:** the caption reads "15 EPAs for `<P>`" with nothing left to stage or defer. PAED-008,
-    009 and 013 still read As opportunity allows. Record decision is enabled, beside "Recording fixes the entrustment
-    decisions staged below and the agenda's deferrals: they cannot be changed afterwards."
-
-Step 4.22 — Dr Naidoo reads the sitting without the chair's controls (act-4-annual-review.md:521)
+Step 4.22 — Dr Naidoo reads the sitting without the chair's controls (act-4-annual-review.md:540)
 Role: CommitteeMember — Dr David Naidoo
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Dr Molefe's review while it is in progress.
-Expect: He sees everything the chair sees:
+Do: Open Dr Molefe's review while it is in progress, and press Refresh in its sitting bar.
+Expect: Dr Naidoo sees everything the chair sees:
   - the snapshot;
-  - the agenda with its Staged and Deferred badges and reasons;
-  - the three staged decisions and their evidence;
-  - the standing, MSF coverage, trajectory and sampling cards.
-  He is offered none of the chair's controls (T213):
+  - the agenda with its Staged and "Due at this sitting" badges, and each staged decision and its evidence in its line;
+  - the standing, MSF coverage, trajectory and "Before the committee decides" sections.
+  Dr Naidoo is offered none of the chair's controls (T213):
   - the agenda has four columns, with no Action column;
-  - there is no staging form, no Remove and no decision form.
-  The Review card says "Only the panel's chair, Thandi Zulu, can stage entrustment decisions, defer agenda lines and
-  record the committee's decision." The Decision card says "No decision has been recorded yet."
+  - there is no Stage, no Remove…, no foot form and no decision form.
+  The sitting bar is a reader's, static under the title (E8): In progress, "3 staged", the sentence "Only the panel's
+  chair, Thandi Zulu, can stage entrustment decisions and record the committee's decision." (D53), and "As of hh:mm
+  SAST" with Refresh. Refresh reads the review again in place, keeping the scroll and the focus, and says what changed:
+  with nothing changed, "As of hh:mm SAST. No change." (round 3 item 21). Decision reads "No decision has been
+  recorded yet."
 
-Step 4.23 — Recording without a second member present is refused (act-4-annual-review.md:542)
+Step 4.23 — Recording without a second member present is refused (act-4-annual-review.md:563)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
-Do: Choose the category Satisfactory Progress and write a rationale. Tick nobody besides herself under Present, and
-  record the decision.
-Expect: Refused with "A committee decision needs at least two panel members present: the chair and at least one
-  other." (T165, D46). The review stays In progress, with nothing recorded.
+Do: Choose Go to the decision in the sitting bar. Choose the category Satisfactory Progress and write a rationale. Tick
+  nobody besides Dr Zulu under Present, and press Record decision….
+Expect: Go to the decision moves the focus to the Decision heading. With only the chair ticked, Record decision… cannot
+  be pressed to any effect: it is unavailable (aria-disabled, round 3 item 16), and the quorum line beside it reads
+  "Only the chair is ticked. A committee decision needs at least two panel members present: the chair and at least one
+  other." (T165, D46). Pressing it moves the focus to that line, opens no dialog and sends nothing, so the audit log
+  gains no row (Step 4.38). The review stays In progress, with nothing recorded; the server's refusal stays only as
+  the backstop.
 
-Step 4.24 — Recording without a category is refused (act-4-annual-review.md:554)
+Step 4.24 — Recording without a category is refused (act-4-annual-review.md:579)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: Tick David Naidoo, Sarah Botha and John van Rensburg as present. Set Category back to "Select a category…" and
-  record.
-Expect: Refused with "This review decides the trainee's progression, so its decision records a progression category.
-  Choose one." (T131 slice 5). Nothing is recorded.
+  press Record decision….
+Expect: The quorum line reads "4 present: the chair and 3 others. The quorum is met." and the bar "4 present · quorum
+  met"; Record decision… is available, with the hint "Recording fixes the 3 staged decisions, and records the 12 EPAs
+  not staged as not decided." beside it. Pressed, it is refused before any dialog (T324): "Not recorded. This review
+  decides the trainee's progression, so its decision records a progression category. Choose one." at the top of the
+  Decision section, with the focus there, and Category marked "Choose a progression category." (T131 slice 5). Nothing
+  is sent and nothing is recorded.
 
-Step 4.25 — Dr Zulu records Dr Molefe's decision (act-4-annual-review.md:566)
+Step 4.25 — Dr Zulu records Dr Molefe's decision (act-4-annual-review.md:595)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: Choose Satisfactory Progress, with the rationale "On track for completion; three EPAs entrusted, the rest to be
-  decided at her final review." Keep all four present, and record the decision.
-Expect: "Decision recorded." The state reads Decided.
-  - **Decision card:** headed "Satisfactory Progress", with the rationale and a "Present:" line. It opens with "Thandi
-    Zulu (chair)", ends with "John van Rensburg (external)", and names David Naidoo and Sarah Botha between them.
-  - **Fixed:** the pending card now says the decisions were "Fixed when the committee's decision was recorded: ratifying
-    issues exactly these." No Remove is offered.
-  - **Agenda:** no Action column.
-  - **Ratify** is offered, enabled.
+  decided at her final review." Write "To be decided at her final review." in About the EPAs not decided. Keep all
+  four present, press Record decision…, and confirm.
+Expect:
+  - **The dialog** is titled "Record Satisfactory Progress for Lerato Molefe?" and reads "Fixes 3 staged decisions:
+    PAED-001 at 5, PAED-010 at 4 (expires `D+20`), PAED-012 at 5.", "Records 12 EPAs as not decided: PAED-002,
+    PAED-003, PAED-004, PAED-005, PAED-006, PAED-007, PAED-008, PAED-009, PAED-011, PAED-013, PAED-014 and PAED-015."
+    (E1), "Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)." and "Afterwards only
+    a decision that no longer fits the trainee's curriculum can be removed." The focus is on its safe button, "Not yet"
+    (round 3 item 22); the confirm is "Record decision".
+  - **Recorded:** "Decision recorded." in the Decision section, which now sits above the agenda, with the focus there.
+    The bar reads Decided, "Satisfactory Progress · 3 decisions to issue" and Ratify….
+  - **The decision:** headed "Satisfactory Progress", with the rationale, "About the EPAs not decided: To be decided at
+    her final review." and a "Present:" line. It opens with "Thandi Zulu (chair)", ends with "John van Rensburg
+    (external)", and names David Naidoo and Sarah Botha between them.
+  - **Agenda:** "Fixed when the committee's decision was recorded: ratifying issues exactly these." above it. The three
+    staged lines keep their decisions, with no Remove…; the other twelve, due and optional alike, read "Not decided at
+    this sitting" with "To be decided at her final review." (E1). No Action column.
   - **No chair-rated warning:** five assessors rated her lines, so "The chair rated all of this evidence" is not shown
     (D46 warns of that case and refuses nothing).
 
-Step 4.26 — Prof Mbatha reads the decided review, and is not offered Ratify (act-4-annual-review.md:586)
+Step 4.26 — Prof Mbatha reads the decided review, and is not offered Ratify (act-4-annual-review.md:624)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Between the recording and the ratifying, open Dr Molefe's review from Committee reviews.
-Expect: The list reads Decided, Satisfactory Progress, for her review. The review shows the decision with its
-  "Present:" line and the three staged decisions under "Fixed when the committee's decision was recorded …". It offers
-  no Ratify, no Remove and no Action column. The Review card says "Only the panel's chair, Thandi Zulu, can ratify the
-  committee's decision.": only the chair ratifies, with no administrator's bypass (D46).
+Expect: The list reads Decided, Satisfactory Progress, for Dr Molefe's review. The review shows the decision with its
+  "Present:" line above the agenda, and the three staged decisions in their lines under "Fixed when the committee's
+  decision was recorded …". It offers no Ratify…, no Remove… and no Action column, and the subtitle has no "Lerato
+  Molefe's progress": that link is for the committee member, the coordinator and the speciality and sub-speciality
+  admins (round 3 item 19). The sitting bar is a reader's, static: Decided, "Satisfactory Progress · 3 decisions to
+  issue", "Only the panel's chair, Thandi Zulu, can ratify the committee's decision.", and "As of hh:mm SAST" with
+  Refresh. Only the chair ratifies, with no administrator's bypass (D46).
 
-Step 4.27 — Dr Zulu ratifies, and the STARs are issued (act-4-annual-review.md:600)
+Step 4.27 — Dr Zulu ratifies, and the STARs are issued (act-4-annual-review.md:641)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
-Do: Ratify the decision.
-Expect: "Decision ratified." The state reads Ratified, and Ratify is gone.
-  - **Agenda:**
+Do: Choose Ratify… in the sitting bar, read the dialog, and confirm.
+Expect:
+  - **The dialog** is titled "Ratify and issue 3 STARs to Lerato Molefe?". It lists "PAED-001 at 5, issued `D`",
+    "PAED-010 at 4, issued `D`, expires `D+20`" and "PAED-012 at 5, issued `D`", then "PAED-002 and 11 others were not
+    decided at this sitting." (E1) and "Ratifying cannot be undone: nothing on this review can change afterwards." It
+    says nothing about mail (T320). The focus is on "Not yet"; the confirm is "Ratify and issue 3 STARs".
+  - **Ratified:** "Decision ratified." under the bar, with the focus there. The bar reads Ratified and "Satisfactory
+    Progress · 3 STARs issued", and Ratify… is gone.
+  - **Agenda:** "Nothing is pending: ratifying the review issued what was staged as STARs, and the agenda names each
+    one." above it (T212).
     - PAED-001, 010 and 012 read Decided, each with "STAR #n.";
-    - the nine deferred lines keep their reasons;
-    - PAED-008, 009 and 013 read Not decided, "The review was ratified without deciding it.".
-  - **Pending:** "Nothing is pending: ratifying the review issued what was staged as STARs, and the agenda names each
-    one." (T212)
+    - the other twelve, due and optional alike, read "Not decided at this sitting" with "To be decided at her final
+      review." (E1).
   - **Standing:** "2 at or above · 1 below · 12 with no decision, of 15 EPAs". PAED-001 and 012 at `5` meet year 4's
     target of `5`, and PAED-010 at `4` is below it. The exit rule reads "2 of 15 EPAs at their exit level by STAR
     decision".
-  - **What ratifying locks:** nothing on the review can now be staged, deferred, removed or recorded.
+  - **What ratifying locks:** nothing on the review can now be staged, removed or recorded.
 
-Step 4.28 — Dr Zulu stages two decisions for Dr Dlamini (act-4-annual-review.md:625)
+Step 4.28 — Dr Zulu stages two decisions for Dr Dlamini (act-4-annual-review.md:671)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Dr Dlamini's review and start it. Stage, each on two finished PAED-001 lines (Dr Naidoo's Mini-CEX and Dr
-  Botha's CCA):
+Do: Open Dr Dlamini's review and start it through its dialog. Stage, each on two finished PAED-001 lines (Dr Naidoo's
+  Mini-CEX and Dr Botha's CCA):
   - PAED-001 at `4`, with the rationale "Manages the acutely ill child with the senior available on request.";
   - PAED-002 at `3b`, with the rationale "Manages common presentations with decisions checked by the senior on call."
-  Defer the other ten closing lines with the reason "Not at a decision point this year."
+  Defer nothing: there is no deferral (D53).
 Expect:
-  - **Start:** "Review started." Her snapshot freezes her four Act 3 WBAs: three under PAED-001 and one under PAED-004.
-  - **Staging PAED-002:** she has no PAED-002 line, so the picker says "None of the named items is about PAED-002." It
-    still stages, since D38 lets any line of the snapshot ground a decision.
-  - **The agenda:** PAED-001 and 002 read Staged, ten lines Deferred, and PAED-008, 009 and 013 As opportunity allows.
-  - **Record decision** becomes enabled once the tenth line is deferred.
+  - **Start:** the dialog counts "the 4 items observed from `<Y>`-01-01 to `<Y>`-12-31 (4 activities)"; then "Review
+    started." Dr Dlamini's snapshot freezes her four Act 3 WBAs: three under PAED-001 and one under PAED-004.
+  - **Staging PAED-002:** Dr Dlamini has no PAED-002 line, so PAED-002's open line lists none of its own first, and the
+    picker says "None of the named items is about PAED-002." It still stages, since D38 lets any line of the snapshot
+    ground a decision; the staged line repeats the hint.
+  - **The agenda:** PAED-001 and 002 read Staged; the other ten closing lines stay "Due at this sitting" and PAED-008,
+    009 and 013 "As opportunity allows"; the bar reads "2 staged".
+  - **Record decision…** is held back only by the quorum: it becomes available once a second member is ticked (Step
+    4.29).
 
-Step 4.29 — Dr Zulu records and ratifies Dr Dlamini's decision (act-4-annual-review.md:646)
+Step 4.29 — Dr Zulu records and ratifies Dr Dlamini's decision (act-4-annual-review.md:696)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
-Do: Choose Satisfactory Progress with a rationale, tick David Naidoo and Sarah Botha as present, and record. Then
-  ratify.
+Do: Choose Satisfactory Progress with a rationale, write "Not at a decision point this year." in About the EPAs not
+  decided, tick David Naidoo and Sarah Botha as present, and record, confirming in the dialog. Then ratify, confirming in
+  its dialog.
 Expect:
-  - **Recorded:** "Decision recorded.", then "Decision ratified.". The state reads Ratified.
+  - **The Record dialog** reads "Fixes 2 staged decisions: PAED-001 at 4, PAED-002 at 3b." and "Records 13 EPAs as not
+    decided: PAED-003, PAED-004, PAED-005, PAED-006, PAED-007, PAED-008, PAED-009, PAED-010, PAED-011, PAED-012,
+    PAED-013, PAED-014 and PAED-015." (E1).
+  - **Recorded:** "Decision recorded.", then, after the Ratify dialog ("Ratify and issue 2 STARs to Anele Dlamini?",
+    "PAED-003 and 12 others were not decided at this sitting."), "Decision ratified.". The state reads Ratified.
   - **Present:** a "Present:" line naming Thandi Zulu (chair), David Naidoo and Sarah Botha.
-  - **The agenda:** PAED-001 and 002 read Decided with their STAR numbers, and PAED-008, 009 and 013 Not decided.
+  - **The agenda:** PAED-001 and 002 read Decided with their STAR numbers; the other thirteen read "Not decided at this
+    sitting" with "Not at a decision point this year."
   - **Standing:** "1 at or above · 1 below · 13 with no decision, of 15 EPAs". PAED-001 at `4` meets year 3's target of
     `4`, and PAED-002 at `3b` is below it.
 
-Step 4.30 — Dr du Plessis's sitting: progress with an observation, no STAR (act-4-annual-review.md:663)
+Step 4.30 — Dr du Plessis's sitting: progress with an observation, no STAR (act-4-annual-review.md:719)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Dr du Plessis's review and start it. Stage nothing, and defer all twelve closing lines with the reason "Not at
-  a decision point this year." Record Satisfactory with Observations:
+Do: Open Dr du Plessis's review and start it through its dialog. Stage nothing. Record Satisfactory with Observations,
+  confirming in the dialog:
   - the rationale "Teaching logs are sound; no observed clinical assessment completed yet.";
+  - About the EPAs not decided: "Not at a decision point this year.";
   - the condition "At least two Mini-CEX before the next sitting.";
   - David Naidoo present.
-  Then ratify.
+  Then ratify, confirming in its dialog.
 Expect:
   - **The snapshot** holds his two teaching sessions logged this year, his CBD still Requested, his cancelled DOPS and
     his portfolio review still Awaiting review, each with its state (T138). The session logged for `J−1y−56d` is outside
     the window and not in it.
   - **Rating trajectory:** "No rating by a named assessor to chart in this review's window."
-  - **Recorded:** the decision reads "Satisfactory with Observations", with "Conditions: At least two Mini-CEX before
-    the next sitting." and "Present: Thandi Zulu (chair), David Naidoo".
-  - **Ratified:** the state reads Ratified, and the pending card says "Nothing was staged when the review was ratified,
-    so ratifying it issued no STAR."
+  - **Record decision…** is available once David Naidoo is ticked, with nothing staged (D53): its dialog reads "Fixes no
+    staged decision." and "Records 15 EPAs as not decided: PAED-001, PAED-002, … and PAED-015."
+  - **Recorded:** the decision reads "Satisfactory with Observations", with "About the EPAs not decided: Not at a
+    decision point this year.", "Conditions: At least two Mini-CEX before the next sitting." and "Present: Thandi Zulu
+    (chair), David Naidoo".
+  - **Ratified:** the Ratify dialog is titled "Ratify Pieter du Plessis's review?", reads "PAED-001 and 14 others were
+    not decided at this sitting." and confirms with "Ratify the review". The state reads Ratified, the bar
+    "Satisfactory with Observations · no STAR issued", and the agenda says "Nothing was staged when the review was
+    ratified, so ratifying it issued no STAR." All fifteen lines read "Not decided at this sitting" with "Not at a
+    decision point this year."
 
-Step 4.31 — Dr Mahlangu's sitting: additional training (act-4-annual-review.md:689)
+Step 4.31 — Dr Mahlangu's sitting: additional training (act-4-annual-review.md:752)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Dr Mahlangu's review and start it, and read her snapshot. Defer all twelve closing lines with the reason "Not
-  enough observed evidence yet this year." Record Inadequate Progress — Additional Training:
+Do: Open Dr Mahlangu's review and start it through its dialog, and read the snapshot. Stage nothing. Record Inadequate
+  Progress — Additional Training, confirming in the dialog:
   - the rationale "One DOPS in the year and a Mini-CEX that stalled; a supervised support plan and re-review in six
     months.";
+  - About the EPAs not decided: "Not enough observed evidence yet this year.";
   - Sarah Botha and John van Rensburg present.
-  Then ratify.
+  Then ratify, confirming in its dialog.
 Expect:
-  - **The snapshot** lists her DOPS under PAED-002 and her Mini-CEX under PAED-004, both Completed at 3a.
+  - **The snapshot** lists Dr Mahlangu's DOPS under PAED-002 and Mini-CEX under PAED-004, both Completed at 3a.
   - **Sampling concentration warnings** name PAED-002 and PAED-004, one rating each.
-  - **Ratified:** the state reads Ratified.
+  - **Ratified:** the state reads Ratified. All fifteen lines read "Not decided at this sitting" with "Not enough
+    observed evidence yet this year." (D53, E1).
   - **Present:** "Present: Thandi Zulu (chair), Sarah Botha, John van Rensburg (external)".
 
-Step 4.32 — Dr Ndlovu's sitting: the outcome deferred (act-4-annual-review.md:709)
+Step 4.32 — Dr Ndlovu's sitting: the outcome deferred (act-4-annual-review.md:774)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Dr Ndlovu's review and start it, and read his snapshot. Defer all twelve closing lines with the reason "Too
-  early in the programme to decide." Record Outcome Deferred:
+Do: Open Dr Ndlovu's review and start it through its dialog, and read the snapshot. Stage nothing. Record Outcome
+  Deferred, the progression category (unrelated to D53's end of agenda deferral), confirming in the dialog:
   - the rationale "One completed Mini-CEX and one reflection in his first semester; to be judged at the next
     sitting.";
+  - About the EPAs not decided: "Too early in the programme to decide.";
   - Sarah Botha present.
-  Then ratify.
+  Then ratify, confirming in its dialog.
 Expect:
+  - **The agenda, once ratified:** all fifteen lines read "Not decided at this sitting" with "Too early in the programme
+    to decide."
   - **Evidence snapshot:** his three Act 3 activities, each with its state: the Mini-CEX Dr Khumalo declined and the
     one Dr Botha completed at 3a, both under PAED-002, and the reflective exercise under PAED-001, discussed. A declined
     request is evidence too (T138).
   - **Trajectory:** PAED-002 alone, from Dr Botha's rating.
-  - **Sampling:** the warnings card names PAED-002, one rating from one assessor.
+  - **Sampling:** "Before the committee decides" names PAED-002, one rating from one assessor.
   - **Ratified:** the review reads Ratified, with "Outcome Deferred".
 
-Step 4.50 — Dr Zulu starts and closes the check-in (act-4-annual-review.md:1082)
+Step 4.50 — Dr Zulu starts and closes the check-in (act-4-annual-review.md:1157)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
-Do: Start the formative review, read it, and close it.
+Do: Start the formative review through its dialog, read it, and close it through its dialog.
 Expect:
-  - **Started:** "Review started." The snapshot freezes the same three activities as his annual review, and the standing
-    and MSF coverage cards follow it. Close review is offered to her alone.
-  - **Closed:** "Formative review closed." The state reads Closed, and nothing is offered.
-  - **Other readers** are told "Only the panel's chair, Thandi Zulu, can close this review." while it is in progress.
+  - **The type:** the subtitle reads "Formative check-in · Paed Annual Review Panel · Training year 1" (T309 item 2).
+  - **Started:** "Review started." under the sitting bar, with the focus there. The bar reads In progress, "Formative: an
+    interim check-in, no binding decision" and Close review…. The snapshot freezes the same three activities as Dr
+    Ndlovu's annual review, and the standing and MSF coverage sections follow it. Close review… is offered to the chair
+    alone.
+  - **Closed:** the dialog is titled "Close Sipho Ndlovu's formative check-in?" and reads "It records no decision and
+    issues no STAR. Nothing on it can change once it is closed.", with the focus on "Not yet"; its confirm is "Close
+    review". Then "Formative review closed." with the focus on it; the bar reads Closed and "Formative check-in · no
+    decision recorded", and nothing is offered.
+  - **Other readers** (Dr Naidoo, Mr Smit) read "Only the panel's chair, Thandi Zulu, can close this review." in a
+    static bar while it is in progress, with "As of hh:mm SAST" and Refresh, and no button to close it.
 
-Step 5.3 — Dr Zulu starts the review and reads where Dr Molefe stands (act-5-graduation.md:112)
+Step 5.3 — Dr Zulu starts the review and reads where Dr Molefe stands (act-5-graduation.md:124)
 Role: CommitteeMember — Dr Thandi Zulu (chair)
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Dr Molefe's pre-graduation review from Committee reviews and start it. Read the evidence snapshot, the agenda
-  and "Entrustment against Annexure A".
-Expect: The page says "Review started." and the review reads In progress.
+Do: Open Dr Molefe's pre-graduation review from Committee reviews and start it through its dialog. Read the evidence
+  snapshot, the agenda and "Entrustment against Annexure A".
+Expect: Before Start, the h1 reads "Lerato Molefe · `<P>`" with "Pre-graduation review" in the subtitle, and the bar
+  "Summative · evidence `J−3y` to `<Y>`-12-31" (round 3 item 28). The Start dialog counts "the [n] items observed from
+  `J−3y` to `<Y>`-12-31 (…)". The page then says "Review started." atop the agenda and the review reads In progress.
+  - The agenda's caption reads "12 EPAs for `<P>` · none staged", and under it "Already decided in this window, so not
+    on the agenda: PAED-001, PAED-010 and PAED-012." (round 3 item 25).
   - The snapshot freezes her evidence observed since `J−3y`, grouped by EPA, including the released MSF
     campaign.
   - The standing reads training year 4, and "2 at or above · 1 below · 12 with no decision, of 15 EPAs". Its exit rule
@@ -853,53 +938,70 @@ Expect: The page says "Review started." and the review reads In progress.
     yet: …", which names every EPA but PAED-001 and PAED-012.
   - Under the rule: "For information only. Recording a Graduate decision or completing the programme does not check the
     exit rule."
-  - Record decision is shown disabled, and names the closing agenda lines that are still to be staged or deferred.
+  - Record decision… is held back only by the quorum (D53): unavailable, with the quorum line beside it, until a
+    second member is ticked. It names no agenda line.
   - Sampling warnings may name EPAs rated by fewer than three assessors. They are warnings and refuse nothing.
 
-Step 5.4 — Dr Zulu stages a STAR at its exit level on every EPA not yet there (act-5-graduation.md:138)
+Step 5.4 — Dr Zulu stages a STAR at its exit level on every EPA not yet there (act-5-graduation.md:155)
 Role: CommitteeMember — Dr Thandi Zulu (chair)
 Route: /committee/reviews/{ReviewId:int}
 Do: For each EPA the standing names under "Not yet", stage a decision at its exit level. That is thirteen EPAs, every
   one but PAED-001 and PAED-012, which Act 4 decided at their exit level:
   - rung `5` on PAED-002 to 007 and PAED-010;
   - rung `4` on PAED-008, 009, 011, 013, 014 and 015.
-  Use Stage on the EPA's agenda line. For PAED-010, which Act 4 decided in this window below its exit level, choose it
-  in the staging form's EPA list instead. Issue each decision on `D` with no expiry, write a rationale,
-  and tick the snapshot lines it rests on, choosing that EPA's own lines where it has some. Defer nothing.
+  Use Stage on each of the twelve agenda lines (PAED-002 to 009, 011, 013, 014 and 015), each resting on Default MSF #1
+  alone, since none of them has a line of its own. For PAED-010, which Act 4 decided in this window below its exit
+  level, use "Stage a decision on an EPA not on this agenda" at the agenda's foot, choosing it in its EPA list and
+  ticking its own two lines. Issue each decision on `D` with no expiry and write a rationale.
 Expect: The level list offers only the six rungs of the CPSA Paediatric Entrustment Scale v11.1 (`1`, `2`, `3a`, `3b`,
-  `4`, `5`). Stage pending decision stays disabled until a line is ticked. A decision that rests on no line about its
-  own EPA, or on a single line, gets a hint but is not refused. After each staging:
-  - the page says "Pending entrustment decision staged.";
-  - the EPA's line reads Staged, and an EPA that was not on the agenda gains a chair's line;
-  - the decision is listed with its level, its issue date and the lines it rests on.
-  Once every closing line is staged, Record decision is enabled.
+  `4`, `5`). Stage pending decision stays unavailable, with "Name at least one item of the evidence snapshot." beside
+  it, until a line is ticked. A decision on Default MSF #1 alone gets both hints, "Only one item is named. The College's
+  rule is that an entrustment decision is never taken from a single form." and "None of the named items is about
+  PAED-002." (and so on), and is staged anyway. After each staging:
+  - "Pending entrustment decision staged." sits under the EPA's line, with the focus there;
+  - the line reads Staged, with its decision in words ("Level 5 · issued `D` · no expiry.") and "Rests on 1 item of
+    the snapshot: Default MSF #1." with the hints;
+  - PAED-010 gains a chair's line, reading Staged with "Added by the chair.", on its two lines [the Direct
+    Observation #n and the MSF record #n].
+  Once all thirteen are staged, the caption reads "13 EPAs for `<P>` · 13 staged" and "Already decided in this window,
+  so not on the agenda: PAED-001 and PAED-012." (round 3 item 25). Record decision… is held back only by the quorum.
 
-Step 5.5 — The panel records its decision: Graduate (act-5-graduation.md:168)
+Step 5.5 — The panel records its decision: Graduate (act-5-graduation.md:191)
 Role: CommitteeMember — Dr Thandi Zulu (chair)
 Route: /committee/reviews/{ReviewId:int}
-Do: Record the committee's decision:
+Do: Choose Go to the decision and record the committee's decision, confirming in the dialog:
   - category: Graduate (programme complete);
   - rationale: every EPA is entrusted at its exit level, and the panel recommends completion;
+  - About the EPAs not decided: nothing (every line is staged);
   - conditions: none;
   - present: Dr Zulu, Dr Naidoo, Dr Botha and Dr van Rensburg.
 Expect: The category list opens with nothing chosen and offers Graduate (programme complete) among the progression
-  outcomes. Dr Zulu is ticked as present and cannot be unticked. The review then reads Decided (T250). The decision is
-  headed "Graduate (programme complete)" and names the four members present. The page says that the staged decisions
-  are now fixed and that ratifying issues exactly these. The staging form is gone, and only Dr Zulu is offered Ratify.
+  outcomes. Dr Zulu is ticked as present and cannot be unticked. Beside the available Record decision…: "Recording fixes
+  the 13 staged decisions." The dialog, "Record Graduate (programme complete) for Lerato Molefe?", reads "Fixes 13
+  staged decisions: …" naming each EPA at its level, and records none as not decided: it has no "Records … as not
+  decided" line (E1). The review then reads Decided (T250), with "Decision recorded." in the Decision section, now above
+  the agenda. The decision is headed "Graduate (programme complete)" and names the four members present. The agenda
+  says "Fixed when the committee's decision was recorded: ratifying issues exactly these." The foot form and every
+  Remove… are gone, the bar reads "Graduate (programme complete) · 13 decisions to issue", and only Dr Zulu is offered
+  Ratify…; Dr Naidoo's static bar reads "Only the panel's chair, Thandi Zulu, can ratify the committee's decision."
 
-Step 5.6 — Dr Zulu ratifies (act-5-graduation.md:192)
+Step 5.6 — Dr Zulu ratifies (act-5-graduation.md:221)
 Role: CommitteeMember — Dr Thandi Zulu (chair)
 Route: /committee/reviews/{ReviewId:int}
-Do: Ratify the decision.
-Expect: The page says "Decision ratified." and the review reads Ratified. Every staged decision is issued as a STAR in
-  the same action:
-  - each agenda line reads Decided;
-  - the list of pending decisions is empty;
-  - Act 4's active STAR on PAED-010, which was re-decided today, is superseded.
+Do: Choose Ratify… and confirm in the dialog.
+Expect: The dialog, "Ratify and issue 13 STARs to Lerato Molefe?", lists the thirteen ("PAED-002 at 5, issued `D`" and
+  so on) and names no EPA as not decided; its confirm is "Ratify and issue 13 STARs". The page says "Decision
+  ratified." under the bar, and the review reads Ratified, "Graduate (programme complete) · 13 STARs issued". Every
+  staged decision is issued as a STAR in the same action, STARs #6 to #18 (which EPA holds which number is read at the
+  replay: [#n] each):
+  - each agenda line reads Decided with its "STAR #n.";
+  - the agenda says "Nothing is pending: ratifying the review issued what was staged as STARs, and the agenda names each
+    one.";
+  - Act 4's active STAR on PAED-010 [#2], re-decided today as [#18], is superseded.
   The standing's exit rule reads "15 of 15 EPAs at their exit level by STAR decision (level 5: 9 of 9 · level 4: 6 of
   6). Every EPA is at its exit level." Its year line reads "15 at or above · 0 below · 0 with no decision, of 15 EPAs".
 
-Step A.7.6 — Dr Zulu on her phone (appendix-cross-cutting.md:1253)
+Step A.7.6 — Dr Zulu on her phone (appendix-cross-cutting.md:1258)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: At 390 px, open Committee reviews and Dr Molefe's final review.
@@ -909,18 +1011,32 @@ Expect: Home's Registrars and Targets by EPA cards are one column: each registra
   a card of its own (its section is not a card around it), drawn at 322 px, never scaled, its rungs and months 12 px,
   and fits its named region, "Rating chart for PAED-001" and the like (E1), with its table stacked under it. Nothing
   scrolls sideways (T166, T355).
+  Review #7, Dr Molefe's pre-graduation review, ratified (T361, round 3): the sitting bar under the title, static
+  below 641 px; the decision above the agenda; the agenda as stacked lines (a container query on its container, below
+  760 px), each keeping its table roles and each cell labelled by its column; "Lerato Molefe's progress" under the
+  title a 44 px target (round 3 item 20; a line's "Rating chart for …" and the chart's "Back to …'s line", the other
+  links item 20 sizes, are drawn only while a line is open, so the Note checks them with the review in progress);
+  the charts at 322 px. Nothing scrolls sideways. Checked at 768 px as well: the agenda still stacks, and nothing
+  scrolls sideways.
 
-Step A.7.13 — Dr Zulu hears a populated review with a screen reader (appendix-cross-cutting.md:1412)
+Step A.7.13 — Dr Zulu hears a populated review with a screen reader (appendix-cross-cutting.md:1427)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
-Do: With NVDA (or Narrator) on, open Dr Molefe's final review. Walk it by headings, then by tables, then by regions.
-Expect: The page heading is announced on arrival. Each card is a heading ("Review", "Decision", "Evidence snapshot",
-  "Rating trajectory by EPA", "Appeals", "Entrustment against Annexure A", "Multi-source feedback by EPA", "Agenda"),
-  and each EPA group within a card is a heading below it.
+Do: With NVDA (or Narrator) on, open Dr Molefe's final review (review #7). Walk it by headings, then by tables, then by
+  regions.
+Expect: The h1, "Lerato Molefe · `<P>`", is announced on arrival. The sections are h2s, in the page's order: "The
+  sitting" (visually hidden), "Before the committee decides", "Decision" (above the agenda, the review being ratified),
+  "Agenda", "Entrustment against Annexure A", "Multi-source feedback by EPA", "Evidence snapshot", "Rating trajectory by
+  EPA" and "Appeals" (T361, T280). Below them, h3s: "Sampling concentration warnings", the decision's "Graduate
+  (programme complete)", each EPA group of the snapshot and "Not about a single EPA", and each EPA's chart.
+  - Every section is a region named by its heading.
   - Each trajectory chart is announced by its EPA, and a table follows it that a screen reader reads, with one row per
     observation (T085).
-  - Evidence tables announce their column headers, and every row action is named for its row (T239).
+  - The agenda and the evidence tables announce their column headers (stacked lines keep their table roles), and every
+    row action is named for its row (T239).
   - Every badge is read as its words.
-  - No control is unnamed.
+  - Nothing announces itself on arrival: on this page only a result, the decision form's quorum line and Refresh's
+    status are live (round 3 item 21), and a ratified review shows none of them. Nothing is dismissible, and no
+    control is unnamed (no "×", T280).
 ```
 

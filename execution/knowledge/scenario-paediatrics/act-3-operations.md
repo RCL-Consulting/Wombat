@@ -1562,7 +1562,7 @@ staged STAR to name at least one item of that snapshot.
   - PAED-001: three completed WBAs, two at year 3's minimum (rung 4). The target is met.
   - PAED-004: one completed WBA, at rung 4.
 - **Dr du Plessis (year 2)** has credited nothing. He has three logged teaching sessions, a CBD still Requested, and a
-  portfolio review still Awaiting review. He is the natural case for deferral.
+  portfolio review still Awaiting review. He is the natural case for a sitting that stages nothing and issues no STAR.
 - **Dr Mahlangu (year 1)** has PAED-002 and PAED-004 once each, at the minimum. The PAED-004 Mini-CEX stalled for eight
   days before it was rated.
 - **Dr Ndlovu (year 1)** has PAED-002 once, a declined request that credited nothing, and a discussed reflection on

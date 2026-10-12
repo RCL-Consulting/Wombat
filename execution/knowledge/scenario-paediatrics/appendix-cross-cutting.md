@@ -1,5 +1,8 @@
 # Appendix — cross-cutting
 
+**Actuals before T361.** An Actual dated before the T361 replay describes the review page with deferral, which D53
+removed; the Expects are the page as built.
+
 **Scenario date.** None of its own. The appendix is played on the replay day `D`, after Act 6, and every check in it
 reads the real clock (README § The clock). In the story it is early 2027: Dr Molefe has graduated, Dr du Plessis has
 left the programme, and the other three registrars are still in it.
@@ -200,8 +203,9 @@ Role: Coordinator — Mr Pieter Smit
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Schedule a review of Dr Ndlovu before the Paed Annual Review Panel for the period holding `D`, Scheduled on `D`,
   with Formative only ticked. Note the review's id from its address.
-Expect: The review opens with Mode "Formative (interim check-in, no binding decision)" and State Scheduled, as at Step
-  4.49. It is open, so the erasure at A.1.12 has a review to end.
+Expect: The review opens as at Step 4.49: the subtitle "Formative check-in · Paed Annual Review Panel · Training year
+  1", and the sitting bar Scheduled with "Formative: an interim check-in, no binding decision · evidence …" (T361). It
+  is open, so the erasure at A.1.12 has a review to end.
 Actual (2026-10-05, T358 replay, wombat_scenario_t358): Committee reviews → Schedule review: the trainee picker,
   enabled once the panel is chosen, offered Anele Dlamini, Nomsa Mahlangu and Sipho Ndlovu. Paed Annual Review Panel,
   Sipho Ndlovu, 2026 S2 (the default, "1 Jul to 31 Dec 2026"), Scheduled on 2026-10-05 (the default), Formative only
@@ -265,8 +269,9 @@ Do: Look for Dr Ndlovu among KGK's users, its trainees and its committee reviews
 Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
   - Committee reviews lists his reviews under a pseudonym, `deleted_user_…`, that names nobody: Act 4's ratified
     review and closed check-in as they were, and A.1.10's check-in as Withdrawn.
-  - The check-in reads Withdrawn, dated today, with the reason "Withdrawn because the trainee's personal data was erased
-    at their request. Nothing more is decided at this review.", and offers no action.
+  - The check-in's sitting bar reads Withdrawn and "Withdrawn on `D`. Withdrawn because the trainee's personal data
+    was erased at their request. Nothing more is decided at this review." (T258, T361), and the page offers no action:
+    no Start, no Refresh.
   - His activities and progress stay under the same pseudonym; the account itself is checked in the outcome's SQL.
 Note: T276 (open) lists what an erasure does not yet end: an activity about him still in its workflow can be completed
   and credit the pseudonym, and user ids inside activity data are not rewritten.
@@ -1260,6 +1265,16 @@ Expect: Home's Registrars and Targets by EPA cards are one column: each registra
   a card of its own (its section is not a card around it), drawn at 322 px, never scaled, its rungs and months 12 px,
   and fits its named region, "Rating chart for PAED-001" and the like (E1), with its table stacked under it. Nothing
   scrolls sideways (T166, T355).
+  Review #7, Dr Molefe's pre-graduation review, ratified (T361, round 3): the sitting bar under the title, static
+  below 641 px; the decision above the agenda; the agenda as stacked lines (a container query on its container, below
+  760 px), each keeping its table roles and each cell labelled by its column; "Lerato Molefe's progress" under the
+  title a 44 px target (round 3 item 20; a line's "Rating chart for …" and the chart's "Back to …'s line", the other
+  links item 20 sizes, are drawn only while a line is open, so the Note checks them with the review in progress);
+  the charts at 322 px. Nothing scrolls sideways. Checked at 768 px as well: the agenda still stacks, and nothing
+  scrolls sideways.
+Note: The board R2-Steps also draws 44 px row actions and dialogs at the foot of the screen at 390: those belong to a
+  review in progress, which review #7 no longer is. states.md's "Narrow, in progress" row checks them at Steps
+  4.16–4.19 and 4.24–4.25, with the chart links.
 Actual (2026-10-05, T358 replay, wombat_scenario_t358): At 390 px. The bar's "Acting as Committee member" wraps and the
   bar grows to 59 px; the menu's head adds "Switch to Assessor" (44 px rows: Home, Programme trainees, Committee
   reviews, Decision panels, My data rights). Home: Registrars ("2 registrars") and Targets by EPA are one column (16 to
@@ -1412,16 +1427,22 @@ Gap: none
 ### Step A.7.13 — Dr Zulu hears a populated review with a screen reader
 Role: CommitteeMember — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
-Do: With NVDA (or Narrator) on, open Dr Molefe's final review. Walk it by headings, then by tables, then by regions.
-Expect: The page heading is announced on arrival. Each card is a heading ("Review", "Decision", "Evidence snapshot",
-  "Rating trajectory by EPA", "Appeals", "Entrustment against Annexure A", "Multi-source feedback by EPA", "Agenda"),
-  and each EPA group within a card is a heading below it.
+Do: With NVDA (or Narrator) on, open Dr Molefe's final review (review #7). Walk it by headings, then by tables, then by
+  regions.
+Expect: The h1, "Lerato Molefe · `<P>`", is announced on arrival. The sections are h2s, in the page's order: "The
+  sitting" (visually hidden), "Before the committee decides", "Decision" (above the agenda, the review being ratified),
+  "Agenda", "Entrustment against Annexure A", "Multi-source feedback by EPA", "Evidence snapshot", "Rating trajectory by
+  EPA" and "Appeals" (T361, T280). Below them, h3s: "Sampling concentration warnings", the decision's "Graduate
+  (programme complete)", each EPA group of the snapshot and "Not about a single EPA", and each EPA's chart.
+  - Every section is a region named by its heading.
   - Each trajectory chart is announced by its EPA, and a table follows it that a screen reader reads, with one row per
     observation (T085).
-  - Evidence tables announce their column headers, and every row action is named for its row (T239).
+  - The agenda and the evidence tables announce their column headers (stacked lines keep their table roles), and every
+    row action is named for its row (T239).
   - Every badge is read as its words.
-  - No control is unnamed.
-Note: The headings go from level 1 to level 3 with no level 2 (noted by T085; cosmetic).
+  - Nothing announces itself on arrival: on this page only a result, the decision form's quorum line and Refresh's
+    status are live (round 3 item 21), and a ratified review shows none of them. Nothing is dismissible, and no
+    control is unnamed (no "×", T280).
 Actual (2026-10-05, T358 replay, wombat_scenario_t358): No screen reader can be driven here, so the accessibility tree
   and DOM of review 7 were read in its place, at 1280 px, opened from Committee reviews. The focus arrives on the h1
   "Committee review". Headings: the h1, then h3s Sampling concentration warnings, Review, Decision (h4 "Graduate
@@ -1432,8 +1453,10 @@ Actual (2026-10-05, T358 replay, wombat_scenario_t358): No screen reader can be 
   below.", followed by the table "The ratings, oldest first", one row per observation (3, 1, 2). Badges are plain
   words. Named regions: Multi-source feedback by EPA, Agenda, Evidence snapshot, Rating trajectory by EPA, and each
   EPA's group and chart. The warnings' dismiss button's only name is "×".
-Gap: F-A.7.13a, T280 (still: the "×" button has no name). F-A.7.13b, T280 (still: Review, Decision, Entrustment against
-  Annexure A and Appeals are not regions).
+Gap: F-A.7.13a, T280, closed by T361, for the replay to confirm (the sampling notes are not dismissible, so no "×"
+  is drawn; the Actual above is from before it: the "×" button had no name). F-A.7.13b, T280, closed by T361, for the
+  replay to confirm (each section is a region named by its h2; before it, Review, Decision, Entrustment against
+  Annexure A and Appeals were not regions).
 
 ### Step A.7.14 — Prof Mbatha's pages, checked for contrast
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha

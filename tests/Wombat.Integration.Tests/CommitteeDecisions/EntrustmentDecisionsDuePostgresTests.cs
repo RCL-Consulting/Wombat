@@ -80,7 +80,7 @@ public sealed class EntrustmentDecisionsDuePostgresTests : IAsyncLifetime
                 panelId = panel.Id;
             }
 
-            // Semester 1: PAED-001 staged and ratified, every other closing line deferred.
+            // Semester 1: PAED-001 staged and ratified, every other line left unstaged and so not decided (T361, D53).
             firstReviewId = await ScheduleAsync(schema, panelId, hostId, 2026, 1);
             await using (var db = NewContext(schema))
             {
@@ -114,25 +114,14 @@ public sealed class EntrustmentDecisionsDuePostgresTests : IAsyncLifetime
                     CancellationToken.None);
             }
 
-            await using (var db = NewContext(schema))
-            {
-                var closing = await db.CommitteeAgendaLines
-                    .Where(line => line.ReviewId == firstReviewId && line.IsClosing && line.EpaId != paed001)
-                    .Select(line => line.Id)
-                    .ToListAsync();
-                foreach (var lineId in closing)
-                {
-                    await new DeferAgendaLineCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
-                        new DeferAgendaLineCommand(firstReviewId, lineId, "Not at a decision point.", Chair()), CancellationToken.None);
-                }
-            }
-
+            // T361, D53: the other closing lines are left unstaged; ratify writes them Not decided.
             await using (var db = NewContext(schema))
             {
                 await new RecordCommitteeDecisionCommandHandler(db, FakeUserDirectory.CommitteeMembersAt(hostId, ChairUserId, MemberUserId))
                     .Handle(
                         new RecordCommitteeDecisionCommand(
                             firstReviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null,
+                            null,
                             [ChairUserId, MemberUserId], Chair()),
                         CancellationToken.None);
             }
@@ -162,7 +151,8 @@ public sealed class EntrustmentDecisionsDuePostgresTests : IAsyncLifetime
             (decided.Status, decided.ReviewId, decided.EntrustmentDecisionId, decided.MayOpenReview)
                 .Should().Be((EntrustmentDecisionDueStatus.Decided, firstReviewId, starId, true));
             mine1.Where(item => item.EpaCode is "PAED-002" or "PAED-004" or "PAED-005" or "PAED-010" or "PAED-012")
-                .Should().OnlyContain(item => item.Status == EntrustmentDecisionDueStatus.Deferred && item.ReviewId == firstReviewId);
+                .Should().OnlyContain(item => item.Status == EntrustmentDecisionDueStatus.NotDecided && item.ReviewId == firstReviewId,
+                    "due at that sitting, and left unstaged (T361, E3)");
             mine1.Where(item => item.EpaCode is "PAED-003" or "PAED-006")
                 .Should().OnlyContain(item => item.Status == EntrustmentDecisionDueStatus.DueByYearEnd);
             mine1.Where(item => item.EpaCode is "PAED-008" or "PAED-009" or "PAED-013")

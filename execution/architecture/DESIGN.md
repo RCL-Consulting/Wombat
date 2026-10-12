@@ -29,7 +29,11 @@
 >   roles' menus, the owner table's two rows), § Dashboard layout grid (the staff target cards, the programme's figures,
 >   the progressbar rule's `aria-hidden` exception, the card title's badge tone), § Page-level patterns "List page" (the
 >   filters applied with Show) and "Dashboard page" (the Coordinator's header action, the guard on eager reads, the
->   oversight Homes), and § app.css section order (one Programme section)).
+>   oversight Homes), and § app.css section order (one Programme section)); flow 07, the review sitting (2026-10-12,
+>   T361, D53: § Committee agenda (the agenda is the page, the opened line, the evidence reader), "The sitting bar",
+>   § The chair's controls and "The decision" (no deferral: Not decided at this sitting), § Entrustment-only reviews,
+>   § Detail page, § Button system (the page-action exception), § Layout grid "Stacking", "Record page with a workflow"
+>   (the return link), § Decisions due (Not decided, amber), and § app.css section order (one Review sitting section)).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 
@@ -486,6 +490,21 @@ from 641px                                          below 641px, folded        b
   left border, the row's left padding giving back its width (`NavItemLink.razor.css`), and My account's underline is a
   3px `CanvasText` text underline (`MainLayout.razor.css`). `Navigation/MainLayoutTests` holds both.
 
+### Stacking
+
+> **Added 2026-10-12, T361, flow 07** (round 2 review 14, 15; round 3 items 14, 15; T356).
+
+- **`.sidebar` takes `z-index: 10` from 641px** (`MainLayout.razor.css`), so its fixed top bar paints above every
+  positioned element of the page: a `.table-container`, a chart, the committee review's sitting bar. Below 641px the
+  phone bar is not fixed and takes none. Dialogs open in the top layer, above both; the error bar keeps its 1000.
+- **A sticky page bar takes `z-index: 1`**: the committee review's chair's sitting bar, from 641px, under the sidebar and
+  above the page's tables. `Design/StylesheetRuleTests` fails any `z-index` of 10 or more in `app.css`.
+- **`scroll-padding-top` covers the top bar and any stuck page bar**: from 641px `html { scroll-padding-top: calc(56px +
+  var(--sitting-bar-h, 0px)); }`. `--sitting-bar-h` (`:root`, 0px) is the chair's stuck bar's height, measured by
+  `js/sticky-offset.js` (a ResizeObserver on `.sitting-bar:not(.sitting-bar--reader)`, from 641px; 0 for a reader's bar
+  and with none). The page's focus targets (its headings with `tabindex`, its result region, its snapshot lines) carry
+  `scroll-margin-top` too, so no focused element is ever hidden under the top bar or the chair's bar (WCAG 2.4.11).
+
 ## The NavMenu
 
 > **Rewritten 2026-09-27, T335, flow 01** (the pick, variation A with C's breadcrumbs; R2-Rules; A-Spec; review S7–S12,
@@ -679,7 +698,8 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
 
 - Never use Bootstrap's `.btn-outline-primary` / `.btn-outline-success` / `.btn-outline-danger`. Use `.btn-outline` and let the tokens drive the colour.
 - Row-level list actions (Edit, Delete) are `.btn .btn-sm .btn-outline`, wrapped in `<div class="actions-cell">` for a flex-gap cluster.
-- The primary page action is `.btn .btn-primary` and lives in the `PageHeader` action slot.
+- The primary page action is `.btn .btn-primary` and lives in the `PageHeader` action slot, except on the committee
+  review, where it lives in the sitting bar (T361, flow 07; § Committee agenda, "The sitting bar").
 - Destructive actions open a `ConfirmDialog` first; the red `.btn-danger` only appears inside the dialog's footer.
 - A destructive row action on a list (Withdraw on the MSF campaign list, T206) is one `ConfirmDialog` for the page,
   whose body names the row it was opened from and says what cannot be undone. The row's button carries an `aria-label`
@@ -795,12 +815,9 @@ item": an Administrator, T222), and says "Your institution's own item" to anyone
 their own. The query decides which (`CurriculumItemDto.OwningInstitutionName`, cut by
 `CurriculumAdminScope.NamesItemOwners`), never the page from the caller's roles.
 
-**A column of actions that no row offers is not rendered** (T226). The committee agenda's Action column is the chair's
-(T213), and it is shown while some line offers Stage, Defer or Reinstate (`ActionOn(line)`, the predicates the commands
-demand). A decided or ratified review's lines offer nothing, bar a Defer on a line that keeps it from being ratified, so
-the column was a row of blank cells there; now it is left out. A line with no action beside one that has is not left
-blank either, as above: its cell says why in a `.muted` span. In progress that is a staged line, "Staged below", where
-its decision is removed; on a decided review, "Fixed with the recorded decision" (T226 review). A cell's buttons sit in a
+**A column of actions that no row offers is not rendered** (T226), and a row with no action beside one that has says
+why in a `.muted` span rather than leaving its cell blank. The committee agenda's chair-only Action column was the
+first case (T213, T226; § Committee agenda). A cell's buttons sit in a
 `div.actions-cell` inside the `<td>`, never `td.actions-cell`: a table cell made a flex box is no longer a table cell,
 and its border no longer meets its row's. Every list page's buttons are in one since T266 (nine had `td.actions-cell`), and
 every actions column's header is the `.visually-hidden` "Actions" below (26 headers on 24 pages were an empty `<th>`).
@@ -1055,7 +1072,8 @@ dl.form-group     /* no margin on it or its <dd>s: a field shown as text to a ca
   class names are the ones styled, so a page marks a field by giving it a validation message, and a hand-made control by
   the two markers above, never by a style of its own. `Design/InvalidFieldStyleTests` pins the rule, and its
   `ShowsInvalid(element)` matches a rendered control against the rule's own selectors, which a page test uses to show a
-  refused field is one the rule styles (the agenda deferral reason, the activity form's encounter date).
+  refused field is one the rule styles (the activity form's encounter date; the committee review's staging and decision
+  forms mark theirs with `aria-invalid`, T361).
 - **A field the server refused is marked, not only named** (T263). An activity form's refusal names each field by its
   label in words, and carries the fields' schema keys beside the message (`ActivityFieldsRefusedException.FieldKeys`;
   CUSTOMIZATION.md § Keys are for logic). The page hands them to `ActivityForm` as `RefusedFieldKeys`, the refusal's
@@ -1093,7 +1111,7 @@ dl.form-group     /* no margin on it or its <dd>s: a field shown as text to a ca
   group too, and is set in by a 2px rule down its left, because its legend is the same size as the field's. Its legend
   is floated, so it is laid out inside the group and the rule runs its full height (a rendered legend straddles the
   top border, and the rule began halfway down it); a floated legend still names its fieldset. A fieldset that
-  **holds** fields (a `.form-grid` or `<FormField>`s: the curriculum item's edit row, a deferral) is a cluster, and
+  **holds** fields (a `.form-grid` or `<FormField>`s: the curriculum item's edit row) is a cluster, and
   keeps the section-size legend; an activity form's section is a `<section>` since T342 (below). `Design/FieldGroupTests`
   reads every `<fieldset` in every `.razor` file, the render fragments in `@code` included, and fails on a field whose
   class does not write `form-group` out (one an expression adds is sometimes not there), and on a paragraph in a field
@@ -2047,157 +2065,200 @@ review). Dropping the group and rating counts from the PDF would match the web c
 call, not made here, since T249 asked for the counts to be kept and pluralised. The coordinator's report page is not
 changed: it still shows a suppressed group's card, without its answers.
 
-**Committee agenda** (T131 slice 4). The committee review page's Agenda card is full width, directly above the
-"Pending entrustment decisions" card, so a chair reads what is due and stages it in one place. A formative review has
-no Agenda card. The card holds:
+**Committee agenda** (T131 slice 4; rewritten 2026-10-12, T361, flow 07, round 3's R2-Spec). The agenda is the review
+page's spine: one line per EPA due in the window, then the chair's lines. One line opens at a time to stage a decision;
+a staged decision is shown in its line. There is no deferral (D53): every line left unstaged when the review is ratified
+reads "Not decided at this sitting", with the decision's optional sentence. The caption counts what is staged. The page
+is drawn by `Pages/CommitteeDecisions/Review/AgendaTable.razor`, every sentence by `ReviewWords`, and a formative review
+has no agenda. The section (`#agenda`, h2 "Agenda") holds:
 
-- A muted sentence naming the period ("2026 S1") and saying that a line marked Due must be staged or deferred before
-  ratify.
-- On a review in progress, the EPAs routed to this panel and due whose window lost its decision while the review sat,
-  and which the agenda does not hold (T235): an EPA Start left off because a STAR decided it, whose STAR has since been
-  revoked. They are named in one sentence of their own in a warning `Alert` (`#agenda-no-longer-decided`) directly
-  under the opening sentence, above the table: "PAED-003 is no longer decided in its window: the STAR that decided it
-  has been revoked. It is not on this agenda; stage a decision on it to decide it at this sitting." (plural: "PAED-003
-  and PAED-006 are no longer decided in their windows: the STARs that decided them have been revoked. They are not on
-  this agenda; stage a decision on each to decide it at this sitting."). The alert stands on the page until the chair
-  acts, so it takes `Role=""` and is not read out on every load. The chair gets one `.btn-outline.btn-sm` per EPA in an
-  `.actions-cell` row under the sentence, "Stage PAED-003", named by its own text (no `aria-label`, so the name holds the
-  visible words), which chooses the EPA in the staging form and moves the focus there, as a line's Stage does; staging it adds the chair's line, and
-  the EPA is named no longer. Anyone else reads the sentence alone. The EPA is never added to the agenda by itself: the
-  agenda was planned at Start and the decision recorded at this sitting settles it (D46). The sentence is not shown
-  before Start, which plans the EPA, nor once the decision is recorded, when nothing more can be staged and the
-  decisions-due page reads it as "Revoked: re-decide".
-- A `.clinic-table` with five columns: EPA (the row header), window ("2026 S1" for a semester, "2026" for an annual EPA),
-  state, evidence count, and action. The action column is the chair's alone (T213): anyone else reads four columns, not
-  an empty fifth. The caption counts the lines and the ones still to stage or defer. The state cell
-  holds the badge and, under it, a `.muted` line saying what the state means for this sitting: the deferral's reason,
-  the STAR a decided line names, or that an optional line is optional and why.
-- A line whose window another sitting has decided since it was planned reads "Decided elsewhere" (T235): a late
-  semester-1 sitting ratifying an annual EPA that the semester-2 review holds as closing. Whether the window is decided is
-  `CommitteeAgendaStatus.IsDecided`, the decisions-due page's and the planner's one predicate, read on the line's own
-  window whenever the agenda is read and when the decision is recorded and ratified. Such a line is optional: it is not
-  counted in the caption, and neither Record nor Ratify is disabled for it. While it is still due its muted line says
-  "Another sitting has decided it in this window, so it need not be decided here." On a review in progress, the one
-  state that takes a staged decision, it adds "A decision staged on it decides it again.", and the line offers Stage and
-  Defer as any line still due does. On a decided review awaiting ratify it adds "Ratifying the review records that.",
-  and on a scheduled review nothing. A review whose trainee has moved to another institution reads none of its lines
-  this way, since that would say what the new institution decided (T182); a speciality panel that no longer covers the
-  trainee at the same institution still does. Recording the decision settles it
-  (`DecidedElsewhere` is stored, D46), and so does ratify for one decided since; its muted line then says "Another sitting
-  had decided it in this window when this review settled its agenda." A settled line stays so if the other sitting's
-  STAR is later revoked: the decisions-due page shows that, and the next sitting plans the EPA again. The trainee's own
-  page says "Decided at another sitting in this window."
-- Each line offers only what its state allows. A Due line that is not staged offers Stage and Defer. Stage chooses the
-  EPA in the staging form below and moves the focus there. A deferred line offers Reinstate. The others offer nothing.
-  All of it only while the review is in progress: recording the decision fixes the agenda with the staged STARs (T165).
-  On a decided review the one action left is Defer on a closing line that blocks Ratify, which happens only when the
-  STAR staged on it was removed afterwards because it no longer fits the trainee's curriculum.
-- A deferral opens a `<fieldset>` form under the table, with its `<legend>` naming the EPA ("Defer PAED-002"), a
-  required reason, and Cancel and Defer in a `.form-actions` row. The focus moves to the reason once the form is
-  rendered, as Stage moves it to the EPA. The trainee sees the reason once the review is ratified (below). An empty
-  reason is refused in the form with "Say why the committee is deferring the decision." as a `.validation-message` under
-  the box (T212). Its region (`#deferral-reason-message`) is there before anything is refused, and the box names it with
-  `aria-describedby` after its help. A refused submit moves the focus back to the box, so the message is read with it.
-- The EPAs routed to this panel that a STAR already decided in their window, so the planner left them off, as one
-  `.muted` sentence (`#agenda-decided-in-window`) in the scheduling preview's words: "Already decided in this window, so
-  not on the agenda: PAED-001 and PAED-006." (T215). A STAR decides its window whether or not an agenda line records it,
-  by the decisions-due page's rule. An EPA the review holds a line for is not named: its line says what this sitting did
-  with it, and the decisions-due page says where the decision stands now. An empty agenda on a scheduled review says
-  that Start adds every EPA due in its period and not already decided in its window.
+- The caption, "15 EPAs for 2026 S2 · 3 staged" while the review is in progress ("· none staged" before the first), the
+  count alone otherwise; "Review started." atop the table, in the page's one result region, once Start has answered.
+- Under it, what the lines mean now: on a decided review "Fixed when the committee's decision was recorded: ratifying
+  issues exactly these." (with "Only a decision that no longer fits the trainee's curriculum can still be removed." where
+  one does); once ratified "Nothing is pending: ratifying the review issued what was staged as STARs, and the agenda
+  names each one." or, where nothing was staged, "Nothing was staged when the review was ratified, so ratifying it issued
+  no STAR."; on a withdrawn review that nothing is pending and why (`#agenda-intro`).
+- The EPAs a STAR already decided in their window, in the scheduling preview's words: "Already decided in this window,
+  so not on the agenda: PAED-001 and PAED-012." (`#agenda-decided-in-window`, T215).
+- A `.clinic-table.agenda-table` of five columns: EPA (the row header: the code in `.agenda-epa-code` over the title in
+  `.agenda-epa-title`, which wraps), Window ("2026 S2" for a semester, "2026" for an annual EPA), State (the badge, and
+  under it each sentence in a `.agenda-line-detail`), Evidence ("3 items") and Action. The Action column is the chair's
+  alone (T213): anyone else reads four columns, never an empty fifth. A line the chair can do nothing on beside one that
+  offers something says why in its cell (T211).
+- **Stage.** A line still due and unstaged at a review in progress offers Stage (`.btn .btn-sm .btn-outline`, named
+  "Stage a decision on PAED-001", `aria-expanded`). It opens the line in place: the line's row and the row under it
+  (`tr.is-editing.agenda-form-row`, one cell spanning the table) take `tr.is-editing`'s stripe, the form is
+  `AgendaLineForm` (below), and the focus moves to Authorised level. One line is open at a time (E9): opening another
+  keeps the first's typed form as a draft, and "Draft kept" (`.agenda-draft-kept`, muted) stands beside its Stage, whose
+  name then ends "(draft kept)"; that Stage reopens the line as typed. A draft lasts until it is staged, cancelled or the
+  page is left: the page holds it, in no storage.
+- **A staged line** says its decision in round 3 item 30's words: "Level 5 · issued 2026-10-05 · no expiry." (or "·
+  expires 2026-10-25."), then "Rests on 2 items of the snapshot: Mini-CEX (Paediatrics) #12; Case-Based Discussion
+  (Paediatrics) #13.", then the hints the staging form gave ("Only one item is named. …", "None of the named items is about
+  PAED-002."). A chair's line starts "Added by the chair.". An EPA no longer in force carries "(no longer in use)" after
+  its code (T273). Its action is Remove… (`.btn .btn-sm .btn-outline`, named "Remove the staged decision on PAED-012"),
+  which opens a `ConfirmDialog`: "Remove the staged decision on PAED-012?", "Its level 5, its rationale and the 2
+  snapshot items it rests on are discarded. PAED-012 is due at this sitting again.", the safe button "Keep it" and the
+  danger fill "Remove the decision". On a decided review the one Remove left is on a decision that no longer fits the
+  trainee's curriculum (T165).
+- **Results** sit in a row under their line (`tr.agenda-result-row`): "Pending entrustment decision staged.", "Pending
+  entrustment decision removed.". Each takes the focus.
+- **Not decided at this sitting** (E1): once the decision is recorded, every line left unstaged, closing or optional
+  alike, reads that badge with the decision's `UndecidedNote` under it, the same words between Record and Ratify; the
+  line DTO's `ReadsNotDecided` says which. A withdrawn review's lines read "The review was withdrawn before deciding it."
+- A line whose window another sitting has decided reads "Decided elsewhere" (T235), with the sentences below; it is
+  optional, never counted as not decided, and offers Stage while the review is in progress ("A decision staged on it
+  decides it again.").
+- **The foot form**, "Stage a decision on an EPA not on this agenda" (`#agenda-foot`): the same `AgendaLineForm` with an
+  EPA select over the trainee's curriculum (StarCurriculum, T167). Staging it adds the chair's line ("Added by the
+  chair."), and the result sits under that line. An EPA no longer decided in its window (T235) is named in the notes
+  card with a "Stage PAED-003" button that chooses it in the foot form.
 - The EPAs another panel sitting as a College committee decides for the period ("Decided by another panel"), as a
-  read-only list: the panel, the window, and a badge. While one is not yet decided, the progression Decision card shows
-  a `.field-warning` above Record decision. That is a warning, never a refusal (O8).
+  read-only list under the table, as before; while one is not yet decided, the progression Decision form shows O8's
+  `.field-warning`. That is a warning, never a refusal.
+- **Stacking** (round 3 item 20): the table's container (`.agenda-table-container`) is a query container; below 760px
+  of its own width each line stacks into a block of its cells, the header row visually hidden. The markup carries its
+  table roles explicitly (`role="table|rowgroup|row|rowheader|columnheader|cell"`), so a stacked line keeps them, and the
+  stacked open line's stripe is the row's own edge (`.agenda-line.is-editing`, the one new rule).
+
+**The line's form** (`AgendaLineForm`, `.agenda-form`). Its h3 "Stage a decision on PAED-001"; the refusal at its top
+(the page's result region, taking the focus); the standing in one line (`.agenda-form-standing`): "Year 4 target 5 · no
+STAR yet · 3 ratings in the review window · MSF: None released yet", each part read apart, and a part that failed reads
+"Standing could not be loaded." once in its place (round 3 item 11). "Rating chart for PAED-001" (`.chart-jump`, a link
+alone on its line, 24px; 44px below 641px) moves the focus to the chart's heading, where "Back to PAED-001's line"
+(`.chart-back`, drawn in the chart's head while the line is open) returns it (C2). "Evidence it rests on" is one field,
+a form group (`fieldset.form-group.snapshot-pick`): this EPA's lines first, by instrument A–Z, each a tick (the whole
+label its target: "Mini-CEX (Paediatrics) #12 · Thandi Zulu Rated 5 · 2026-09-23 · Completed") and Read; the other lines
+behind "Show the other 6 snapshot lines" (a button with `aria-expanded`), grouped by EPA (`.snapshot-pick-group`). Only
+lines a decision may rest on are offered (never a supervisor report, D38). The hints are said under the ticks, never
+enforced, and are not a live region. Then Authorised level (the rungs of the EPA's ladder, its help naming the ladder),
+Issued on (today on the South African calendar), Expires on (optional), Rationale. **Stage pending decision** is
+`aria-disabled="true"` with `.is-unavailable` until a line is ticked, never natively disabled, with "Name at least one item
+of the evidence snapshot." beside it, named by `aria-describedby`; pressed then, it moves the focus to the reason (round 3
+item 16). What the form can tell is refused at its top before anything is sent, each field marked with its own message
+and `aria-invalid` (T324): "Not staged. An expiry date must be after the issue date.", the server's refusals likewise.
+Cancel discards the draft, closes the line, and returns the focus to its Stage.
+
+**Read, in place** (`EvidenceReader`, `.evidence-reader`; C3, round 3 item 8). Read on a line swaps the form for the
+activity as it is now: flow 03's `ActivityStatus` (with no action), `ActivityAbout` and the form read-only
+(`ActivityDetail`), no action and no move, even to its assessor. Its h4 ("Mini-CEX (Paediatrics) #12 · PAED-001") takes
+the focus. Where the state moved since Start, "Now Completed. Frozen at Start as Awaiting review." stands under it: the
+snapshot keeps the state at Start, and the hints read that. "Back to PAED-001" restores the form as typed and returns the
+focus to the Read that was pressed.
 
 The badges. Each says the state in words, and the three kinds of "still due" share one badge and differ by label:
 
 | State | Badge |
 |---|---|
-| Due, Due by year end, Partial period, As opportunity allows | `badge-draft` |
+| Due at this sitting, Due by year end, Partial period, As opportunity allows | `badge-draft` |
 | Staged | `badge-submitted` |
 | Decided, Decided elsewhere | `badge-completed` |
-| Deferred | `badge-accepted` |
-| Not decided | `badge-declined` |
+| Not decided at this sitting | `badge-accepted` |
 
-Another panel's decision uses the same badges: Not yet decided is `badge-draft`, On the agenda of an open review is
-`badge-submitted`, Decided is `badge-completed`, Deferred is `badge-accepted`, and Missed is `badge-declined`. "Missed"
-is computed when the page is read, never stored. It means the window has ended with nothing decided, deferred, or on an
-open review's agenda. An EPA decided as opportunity allows, or in a partial period, is never missed.
+Every Not decided badge is amber (`badge-accepted`), on this page, the trainee's reviews and the decisions-due page
+alike (T361, D53): a line not decided at a sitting wants attention again, it is not a refusal. Another panel's decision
+uses the same badges: Not yet decided is `badge-draft`, On the agenda of an open review is `badge-submitted`, Decided is
+`badge-completed`, Not decided is `badge-accepted`, and Missed is `badge-declined`. "Missed" is computed when the page is
+read, never stored: the window has ended with nothing decided, not decided at a sitting that counts (E3), or on an open
+review's agenda. An EPA decided as opportunity allows, or in a partial period, is never missed.
 
-Record decision is a disabled button while a closing line is neither staged, deferred nor decided elsewhere (the T107
-pattern above), and so is Ratify. Each one's `.workflow-action-reasons` line names the lines, in the refusal's own words
-(`CommitteeAgendaDto.RatifyBlockedReason`). Where more than one reason stands, the line gives the first the handler
-would refuse with: the panel's seats before the agenda for Record, the decision's quorum before the agenda for Ratify.
-The agenda is read again after every action on the page. A failure is a warning `Alert` in the card, never red beside
-the action's success, and the agenda last read stays in view. Every sentence is built in C# (`CommitteeAgendaText`),
-which the scheduling form's preview shares.
+The review is read again after every action on the page, done or refused (T260), and on Refresh: the review with its
+agenda through `GetCommitteeReviewByIdQuery`, then the staged decisions, the sampling report, the MSF count and the
+standing, each apart. A read that fails is a warning in its own section, never red beside the action's success, and what
+was last read stays in view.
 
-The "Pending entrustment decisions" list is read again after every action that can change it (T212): Stage, Remove, and
-the review's own actions (Start, Record, Ratify, Close, Resolve). Ratifying issues the staged decisions as STARs and
-clears the list, which the page used to go on showing until a reload. Defer and Reinstate do not read it: a line with a
-decision staged on it cannot be deferred, and neither touches a staged row. A failed read is a warning `Alert` in that
-card, as the agenda's is, and the list last read stays in view. An empty list says why it is empty
-(`#no-pending-note`). Before the review is ratified it says that nothing has been staged. Once it is ratified, the
-sentence depends on the agenda. With a line ratifying decided, it says that ratifying issued what was staged as STARs
-and the agenda names each one; staging always leaves the EPA a line, so that is exact. With none, which ratify allows
-when every line was optional or deferred (or a progression review's agenda is empty), it says that nothing was staged when the review was ratified, so it issued no
-STAR. Where the agenda could not be read again straight after Ratify, the lines staged in the agenda last read count as
-issued, since ratifying issues every staged decision.
+**The sitting bar** (`SittingBar.razor`; 2026-10-12, T361, flow 07; E2, E7, E8; round 3 items 14, 21, 28). A section
+named "The sitting" by a visually hidden h2, directly under `PageHeader`: the state badge (`.sitting-bar-state`), the
+count (`.sitting-bar-count`: "15 EPAs on the agenda" before Start, "3 staged" in progress, "Satisfactory Progress · 3
+decisions to issue" once decided, "Satisfactory Progress · 3 STARs issued" or "· no STAR issued" once ratified,
+"Formative check-in · no decision recorded" for a closed formative review), before Start the mode and evidence window
+(`.sitting-bar-mode`: "Summative · evidence 2026-01-01 to 2026-12-31", "Formative: an interim check-in, no binding
+decision"), on the chair's bar while the review is in progress Present from the decision form's ticks
+(`.sitting-bar-present`: "Present: the chair · one more member needed", "4 present · quorum met"; not live), and the
+next act (`.sitting-bar-actions`): Start review…, Go to the decision (moves the focus to the Decision heading), Ratify… or
+Close review….
 
-**The chair's controls** (T213). The review page offers each control to exactly the people its handler lets use it,
-in exactly the states its handler takes it, by what `GetCommitteeReviewByIdQuery` says the caller may do:
-`CallerChairs`, `CallerResolvesAppeals` and `CallerMayStart`, computed by the predicates the handlers demand
-(`CommitteeDecisionAuthorization.Chairs`, `ResolvesAppeals` and `WorksOnReview`), and `TraineeElsewhere`, the trainee check
-every chair's action and Start also demand (`CommitteeTraineeScope`). Start is offered on a scheduled review, and only
-then, to a member of its panel who may sit on it now (`PanelSeat.SittingAt`, T279: an active committee member at the
-panel's institution who is not a trainee, and never the trainee under review), a coordinator of the panel's institution
-or an Administrator (T194); an institutional, speciality or sub-speciality administrator who reads the review without a
-seat (T218), or through their role while their seat no longer counts, is not offered it, and `#chair-actions-note` reads
-"Only the coordinators of the panel's institution, and those of its members who are active committee members there, can
-start this review." A member who may no longer sit (lost the CommitteeMember role, moved institution, deactivated, given
-Trainee) reads the review through their seat no more than they start it (T279): the page, its sibling reads and the
-committee reviews list refuse or leave it out, with the one refusal. None of the three
-flags is ever true for someone who holds Trainee, whatever seat or role they hold beside it (T185's rung, asked by
-`WorksOnReview` and by the seat predicates since the T194 review): a trainee seated on the panel that reviews them before
-they held Trainee reads their own review once it is ratified, and is offered neither the chair's controls nor the
-resolve form on it. Since T237 no one who holds Trainee is seated at all (see **The panel form**). The chair alone is
-offered the decision form and Record decision (while the review is in progress), Ratify and its reason (once decided),
-Close review, the staging form, Remove, and the agenda's Stage, Defer and Reinstate, and only while the chair may sit at
-the review now (`PanelSeat.SittingAt`, T237's one rule, which `CommitteeDecisionAuthorization.Chairs` asks and every
-chair's action demands, T256): an active committee member at the panel's institution who is not a trainee, and never the
-trainee under review. A chair who has since lost the CommitteeMember role, moved institution, been deactivated or been
-given Trainee is offered none of them. In their place, while a chair's action is open or to come (scheduled, in progress
-or decided), a standing warning `Alert` with no
-role (`#chair-cannot-act-note`, the query's `ChairCannotAct`) says why: to the chair, the sentence each click would be
-refused with ("You chair this panel but cannot take the chair's actions now: only an active committee member at the
-panel's institution who is not a trainee can, and never the trainee under review. A panel administrator must seat a
-chair who can."); to every other reader, the same naming the chair ("The panel's chair, Thandi Zulu, cannot take the
-chair's actions now: …"). `#chair-actions-note` then says nothing about the chair's actions, which it would name the
-chair as able to take; on a scheduled review it still says who can start it. The appeal body alone (the chair or an external member) is offered the
-resolve-appeal form, and only while the review is under appeal: a form is never shown with empty fields and no button.
-It is offered only to a member of the appeal body who may sit on the panel now (`PanelSeat.AppealBodyAt`, the list the
-note below names, T237), which the resolve handler demands too; a chair or external member who has since lost the
-CommitteeMember role, moved institution or been deactivated reads the note instead, which does not name them.
-These are hidden from everyone else, not disabled: T107's disabled button is for an action the reader may take but
-cannot complete yet, and nobody else may take these. Instead a `.muted` sentence in the Review card
-(`#chair-actions-note`) names the chair and what only the chair can do in the review's state ("Only the panel's chair,
-Thandi Zulu, can ratify the committee's decision."; on a decided review it also names removing a staged decision that no
-longer fits and deferring a line that keeps the review from being ratified, where either is open), and under appeal the
-Appeals card names who resolves it (`#appeal-body-note`: "Only the appeal body can resolve the appeal: the panel's
-chair, Thandi Zulu, and its external member, Anna Botha."). It names only those who can act, the query's `AppealBody`
-(T237): the chair and external members who may sit on the panel now (`PanelSeat`), never someone who holds Trainee, and
-the same for every reader, the trainee on their own appeal included. A chair who cannot act is left out ("…: the
-panel's external member, Anna Botha."), and where no one can, it says so: "Only the appeal body, the panel's chair or an
-external member, can resolve the appeal, and none of them can act now. A panel administrator must seat a chair who
-can." A Decision card with no decision and no form says "No
-decision has been recorded yet." (`#no-decision-note`) rather than stand as a bare heading. When the review's trainee no
-longer trains at the panel's institution, Start and the chair's controls are offered to nobody (a global Administrator
-excepted, whom the check does not refuse), no `#chair-actions-note` is shown, and a warning `Alert` with no role
-(`#trainee-elsewhere-note`) says what those actions would refuse with. What the review holds (its agenda, staged
-decisions, evidence and decisions) is shown to every reader as before. The remit form ticks and locks the chair and the
-caller, who is the resolver because only the appeal body is offered the form. A staged decision that names no evidence
-(only a row written some other way can) says, while the review is in progress, that the chair can remove it and stage it
-again; once the decision is recorded it says what the ratify refusal says, that it is fixed and an administrator must
-look into it (D46).
+- **The chair's bar** (`.sitting-bar`) is drawn when an act is the chair's. Its stripe is the action blue
+  (`--secondary-color`), and from 641px it sticks under the 56px top bar (`position: sticky; top: 56px; z-index: 1`),
+  one line, Present dropping below 1024px (E8). `js/sticky-offset.js` measures it into `--sitting-bar-h`.
+- **A reader's bar** (`.sitting-bar.sitting-bar--reader`) is static under the title and scrolls away. Its stripe is
+  `--input-border`, or the action blue where the reader may start the review (`.sitting-bar--starts`, E2). It holds the
+  who-may-act sentence (`.sitting-bar-sentence`, `#sitting-sentence`), and while the review can still change (scheduled,
+  in progress, decided) "As of 14:02 SAST" (`.sitting-bar-as-of`, `role="status"`; "As of 2026-10-04 14:02 SAST" when
+  read on another day, E7) and Refresh. Refresh reads the review again in place, keeps the scroll and the focus (it is
+  never disabled by its own read), and says what changed: "As of 14:31 SAST. Now Decided.", "… Now 4 staged." or "… No
+  change." (21). There is no live following (T362): a reader keeps up by Refresh.
+- Below 641px every bar is static and stacked, its buttons full width at 44px.
+
+**The chair's controls** (T213; rewritten 2026-10-12, T361). The page offers each control to exactly the people its
+handler lets use it, in exactly the states its handler takes it, by what `GetCommitteeReviewByIdQuery` says the caller
+may do: `CallerChairs`, `CallerResolvesAppeals` and `CallerMayStart`, computed by the predicates the handlers demand
+(`CommitteeDecisionAuthorization.Chairs`, `ResolvesAppeals` and `WorksOnReview`), and `TraineeElsewhere`, the trainee
+check every chair's action and Start also demand (`CommitteeTraineeScope`). The chair's acts live in the chair's sitting
+bar and in the agenda's lines; readers see the who-may-act sentence, controls not drawn. Record is held back only by the
+quorum (and, on an entrustment-only review, by nothing staged, E4).
+
+- **Start** is offered on a scheduled review to the chair, a member of the panel who may sit on it now
+  (`PanelSeat.SittingAt`, T279), a coordinator of the panel's institution and an Administrator (T194, E2), never while
+  the chair cannot act (Q11: the handler refuses it too, with `ChairCannotAct`'s sentence) and never while the trainee
+  trains elsewhere. Anyone else reads "Only the coordinators of the panel's institution, and those of its members who
+  are active committee members there, can start this review." in its place. Start review… opens a `ConfirmDialog`:
+  "Start Lerato Molefe's review for 2026 S2?", "Starting freezes the evidence: the 9 items observed from 2026-01-01 to
+  2026-12-31 (8 activities and the MSF campaign report) become this review's snapshot, each in the state it is in now.
+  Anything finished later is not added." (counted by `GetStartPreviewQuery`, the code Start runs), T173's "Starting now
+  leaves out 1 feedback campaign that closed in this window and is not yet released." when it applies, "Not yet" and
+  "Start review". "Review started." sits atop the agenda.
+- **The chair alone** is offered the decision form and Record decision… (while the review is in progress), Ratify…
+  (once decided), Close review… (a formative review in progress), the staging forms, Stage and Remove…, and only while
+  the chair may sit at the review now (`PanelSeat.SittingAt`, T256). A chair who has since lost the CommitteeMember role,
+  moved institution, been deactivated or been given Trainee is offered none of them; the bar says why, to every reader,
+  in `ChairCannotAct`'s words ("The panel's chair, Thandi Zulu, cannot take the chair's actions now: … A panel
+  administrator must seat a chair who can."). When the trainee trains elsewhere the bar says
+  `TraineeElsewhere`'s sentence instead, and nothing is offered (a global Administrator excepted, whom the check does
+  not refuse).
+- **What a reader reads** in the bar while a chair's action is open: "Only the panel's chair, Thandi Zulu, can stage
+  entrustment decisions and record the committee's decision." (`CommitteeDecisionWording.OnlyTheChairSits`), "… can
+  ratify the committee's decision." (with removing a staged decision that no longer fits, where one does), "… can close
+  this review.". Under appeal the Appeals section names who resolves it (`#appeal-body-note`), only those who can act
+  (`AppealBody`, T237); the appeal body alone is offered the resolve form, and only under appeal.
+- **Ratify…** opens a `ConfirmDialog`: "Ratify and issue 3 STARs to Lerato Molefe?", each STAR it issues ("PAED-010 at
+  4, issued 2026-10-05, expires 2026-10-25"), "PAED-002 and 11 others were not decided at this sitting.", "Ratifying cannot
+  be undone: nothing on this review can change afterwards.", "Not yet" and "Ratify and issue 3 STARs"; nothing about
+  mail. Short of a quorum (`QuorumShortfall`) Ratify… is `aria-disabled` with `.is-unavailable` and its reason beside it
+  (`#ratify-reason`), never natively disabled; pressed, it moves the focus to the reason. "Decision ratified." sits under
+  the bar.
+- **Close review…** opens "Close Sipho Ndlovu's formative check-in?", "It records no decision and issues no STAR.
+  Nothing on it can change once it is closed.", "Not yet" and "Close review". "Formative review closed." sits under the
+  bar.
+- Every dialog's safe button is "Not yet", Remove's "Keep it", and it has the focus when the dialog opens (round 3 item
+  22). Every result and refusal sits beside its control in the page's one `ActionResult` and takes the focus once drawn
+  (round 3 item 15); `scroll-margin-top` and `html`'s `scroll-padding-top` keep it clear of the top bar and the chair's
+  stuck bar.
+
+**The decision** (`DecisionForm.razor`, `#decision`, h2 "Decision"; round 3 items 7, 16, 21; E1, E4; T324). Below the
+agenda until the decision is recorded, then above it. For the chair while the review is in progress: Category (a
+progression review only; opens on "Select a category…"), Rationale, "About the EPAs not decided (optional)" with the help
+"The registrar sees this once the review is ratified." (the decision's `UndecidedNote`, D53), Conditions, and Present
+(every member who may sit, the chair ticked and locked; T165). Under it, beside Record decision…, the quorum line
+(`.quorum-line`, `#quorum-line`, `aria-live="polite"`, the page's one live region besides the results): "Only the chair
+is ticked. A committee decision needs at least two panel members present: the chair and at least one other.", "4
+present: the chair and 3 others. The quorum is met."; a panel that cannot sit a quorum shows that reason
+(`PanelShortfall`) instead, and ticking cannot cure it (7). Record decision… is `aria-disabled="true"` with
+`.is-unavailable` while the quorum falls short, named by the quorum line, or while an entrustment-only review has nothing
+staged, with "This review decides entrustment only, so stage at least one decision before recording it." beside it
+(`#record-reason`, E4); never natively disabled, and a press then moves the focus to the reason (16). Available, the
+hint beside it says what Recording does ("Recording fixes the 3 staged decisions, and records the 12 EPAs not staged as
+not decided.", `#record-hint`, not live). A missing category or rationale is refused at the form's top before any dialog,
+taking the focus, each field marked with its own message ("Choose a progression category.", "Give the committee's
+rationale."; never the model's property name, T324), everything typed and ticked kept. Then a `ConfirmDialog`: "Record
+Satisfactory Progress for Lerato Molefe?", "Fixes 3 staged decisions: PAED-001 at 5, PAED-010 at 4 (expires 2026-10-25),
+PAED-012 at 5.", "Records 12 EPAs as not decided: PAED-002, … and PAED-015." (every unstaged line, due and optional
+alike, E1), "Present: …", "Afterwards only a decision that no longer fits the trainee's curriculum can be removed.",
+"Not yet" and "Record decision". "Decision recorded." sits in the Decision section, now above the agenda, which shows the
+outcome, the rationale, "About the EPAs not decided: …", "Conditions: …" and "Present: …". Anyone else reads the
+recorded decision, or "No decision has been recorded yet.". "Outcome Deferred" is a progression category, recorded and
+ratified like any other; it is not a deferral.
 
 **A refusal never says whether an id exists** (T194). Every committee command and every read of a review authorises
 before it looks at anything else, and gives an id that names nothing the same sentence as one out of the caller's reach,
@@ -2225,8 +2286,8 @@ says the same on two lines, "Sits for" and "Evidence window", as the committee's
 detail shows its agenda read-only, as an
 `article.detail-card--compact` headed "Agenda": a muted sentence naming the period, then a `.clinic-table` of three
 columns, EPA (the row header), window and outcome. The outcome cell holds the same badge as the chair's table and, under
-it, a `.muted` line: the committee's reason for a deferral (O6), the STAR a decided line names, or that it was not
-decided at this review. No actions. Nothing is shown before ratify; the read ladder gives a trainee nothing sooner.
+it, a `.muted` line: the STAR a decided line names, or, under "Not decided at this sitting.", the decision's sentence
+about the EPAs not decided (O6; T361, D53: there is no deferral). No actions. Nothing is shown before ratify; the read ladder gives a trainee nothing sooner.
 
 **Scheduling a review.** The form asks for the period the review sits for: a select of semesters around today, labelled
 with the period itself, "2026 S2 · 1 Jul to 31 Dec 2026". Choosing one fills the evidence window, which stays editable,
@@ -2371,13 +2432,16 @@ panel's semester-1 sitting may be one too. Every page says so in the same words,
   name. An entrustment-only review's reads "Entrustment decisions only": as the decision's heading on the review page,
   in the Decision column of the schedule and of the trainee's reviews, as the heading of the trainee's current decision,
   and on the portfolio PDF's Decision line. It never reads "Pending" once the decision is recorded.
-- **The Decision card** of an entrustment-only review has no Category field. In its place, above the form, a `.muted`
-  paragraph (`#entrustment-only-note`) says the decision is the entrustment decisions staged below and records no
-  progression category; once the review is ratified it says instead that the decision is the entrustment decisions the
-  review issued, each named on its agenda. Rationale, conditions and who was present are asked as on any review. O8's
-  sitting-order warning is not shown: it is about a progression decision, and this review takes none. While nothing is
-  on its agenda, Record decision is shown disabled with the reason (the T107 pattern, `#record-reason`): its decision is
-  what the agenda holds, and staging a decision puts the EPA there.
+- **The Decision section** of an entrustment-only review has no Category field. In its place, above the form, a
+  `.muted` paragraph (`#entrustment-only-note`) says the decision is the entrustment decisions staged above (the form
+  sits under the agenda; once the decision is recorded and rises above the agenda, "staged on the agenda below") and
+  records no progression category; once the review is ratified it says instead that the decision is the entrustment
+  decisions the review issued, each named on its agenda. Rationale, the sentence about the EPAs not decided, conditions
+  and who was present are asked as on any review, and the record reads "Entrustment decisions only". O8's sitting-order
+  warning is not shown: it is about a progression decision, and this review takes none. Recording needs at least one
+  staged decision (E4): while nothing is staged, Record decision… stays reachable, `aria-disabled` with "This review
+  decides entrustment only, so stage at least one decision before recording it." beside it (`#record-reason`), and the
+  handler refuses with the same words.
 - **Every category select opens on "Select a category…"**, the first-time decision's as well as a remitted appeal's
   replacement, so the page never shows a category the chair did not choose. Leaving it there on a progression review is
   refused by the handler, whose reason the page shows ("… records a progression category. Choose one.").
@@ -2424,14 +2488,14 @@ other role admits them (T185's trainee rung): the page shows its empty card.
 - **The opening**: a `.muted` sentence (`#due-intro`) naming the period, how many trainees and where, and what Missed
   means.
 - **By EPA**: a `.detail-card` holding a `.clinic-table--compact` of eight columns: EPA (the row header), Due, Decided,
-  Scheduled, Deferred, To schedule, Missed and Optional. Its caption says what the last three count. The filters do not
+  Scheduled, Not decided, To schedule, Missed and Optional. Its caption says what the last three count. The filters do not
   narrow it: it is the whole period at a glance. Its `.table-container` (`#due-summary-scroll`) is `tabindex="0"`,
   `role="region"` and labelled by the card's heading, so a keyboard can scroll it at 390px: it holds nothing focusable.
 - **The count**: a `.muted` line (`#due-count`, `role="status"`), "4 of 15 decisions due in 2026 S2 shown.", which a
   screen reader hears again whenever the Status or EPA filter changes it.
 - **The list**: a `.clinic-table` of five columns: Trainee (the row header, by name), EPA, window ("2026 S1", or "2026"
   for an annual EPA), status, and action. The status cell holds the badge and, under it, a `.muted` line saying what it
-  means: the STAR and review for a decision, the open review holding it, the review that deferred it, or why it is
+  means: the STAR and review for a decision, the open review holding it, the review that left it not decided, or why it is
   optional. `PagerControls` pages it, 20 rows to start. When the filters leave nothing, a `.detail-card--empty` says so.
 - **Actions.** "Open review" where the status names a review and the caller passes that review's read ladder. "Schedule"
   on every row neither decided nor scheduled: it opens `/committee/reviews` with the panel the EPA routes to for the
@@ -2443,8 +2507,8 @@ other role admits them (T185's trainee rung): the page shows its empty card.
   committee, or a College committee), and scheduling a second is refused. Where one is already open for the row's
   schedule period before the panel's seat, the row offers "Open review #N" (where the caller may open it) instead of
   Schedule, and its `.muted` line says "Review #N is open for 2026 S2 before General CCC: decide it there, or ratify that
-  review before scheduling another." A line deferred on that same open review reads "Deferred at review #N, which is
-  still open: its chair can reinstate it there", beside its one "Open review" link.
+  review before scheduling another." A line on that same open review reads "On the agenda of review #N, which is still
+  open.", beside its one "Open review" link. There is no deferral (D53): nothing on an open review is reinstated.
 - **States**: `StatePanel`'s skeletons while loading, its danger `Alert` on a failure, and its empty card ("Nothing due
   for 2026 S2") when no trainee owes a decision.
 
@@ -2452,17 +2516,19 @@ other role admits them (T185's trainee rung): the page shows its empty card.
 |---|---|
 | Decided | `badge-completed` |
 | Scheduled | `badge-submitted` |
-| Deferred | `badge-accepted` |
+| Not decided | `badge-accepted` |
 | Not scheduled, Due by year end, Partial period, As opportunity allows | `badge-draft` |
 | Missed, Revoked: re-decide | `badge-declined` |
 
 Decided means a STAR from a sitting for a period in the window that still decides it, whether or not an agenda line
 records it: Active; Expired, since expiry is informational (Decision 10); or Superseded, by a STAR from another window or
 by one that decides this window in turn. A revoked one reads "Revoked: re-decide", and so does one superseded inside the
-window by a STAR since revoked. Deferred holds only while no later sitting has decided the EPA since, in sitting order
-(the period a review sat for, then the order reviews were scheduled in), so a deferral that a later, since-revoked
-decision overtook reads "Revoked: re-decide". Missed is computed when the page is read, as on the agenda: the window has
-ended with nothing decided, deferred or on an open review's agenda, and an EPA decided as opportunity allows, or in a
+window by a STAR since revoked. Not decided ("Not decided at review #N. A later sitting for 2026 S2 plans it again.")
+holds only while no later sitting has decided the EPA since, in sitting order (the period a review sat for, then the
+order reviews were scheduled in), so a Not decided that a later, since-revoked decision overtook reads "Revoked:
+re-decide". It shows only when the line was due at that sitting or its window has ended (E3), so an EPA decided as
+opportunity allows and left unstaged reads Not decided once its window ends. Missed is computed when the page is read, as on the agenda: the window has
+ended with nothing decided or on an open review's agenda, and an EPA decided as opportunity allows, or in a
 partial period, is never missed. The agenda planner, its "routed elsewhere" list and its "Already decided in this
 window" sentence read the same rule (`CommitteeAgendaStatus.IsDecided`), so a sitting never plans as due an EPA this page
 calls decided (T215). An open review's own lines are read against it too, so a line this page calls decided reads
@@ -2701,6 +2767,11 @@ flow 01). Its nav label, its heading, its breadcrumb and its tab are the same wo
   (`<PageTitle>@Heading · Wombat</PageTitle>` beside `<PageHeader Title="@Heading" …>`) or a choice of two literals
   (`@(IsNew ? "Create EPA" : "Edit EPA")`). Until it has loaded the member says what the page is ("Activity",
   "Activity type"), never nothing. An activity's page is named for its type ("Mini-CEX (Paediatrics) · Wombat").
+- **The title rule** (T361, flow 07): a record page's h1 names its subject, "Lerato Molefe · 2026 S2" on a committee
+  review (tab "Lerato Molefe · 2026 S2 · Wombat"), and says what the page is, "Committee review", while it loads or when
+  its read failed. Its subtitle carries the rest ("Annual progression review · Paed Annual Review Panel · Training year
+  4"), and on the committee review, for the four roles flow 06's registrar page admits, "Lerato Molefe's progress" under
+  it, a link alone on its line (`.review-progress-link`, `PageHeader`'s `SubtitleContent`).
 - **After a refused post the title starts "Error: "** (WCAG technique G88): the change password page, the MSF respondent
   page.
 
@@ -2926,6 +2997,15 @@ one card should look like each of several; on My MSF reports the list would jump
 when a report is selected. (The rule that a lone trajectory chart scales with its card is withdrawn: since T355 the chart
 is drawn at two fixed sizes and never scaled, § Entrustment standing, and the trajectory.)
 
+**The committee review has no details-grid** (T361, flow 07): one column (`.review-page`, a flex column), the sitting bar
+under the header, then "Before the committee decides" (when it has something to say), the agenda, the decision (above
+the agenda once recorded), "Entrustment against Annexure A", "Multi-source feedback by EPA", the evidence snapshot, the
+rating trajectories and the appeals, each section an h2. A formative review shows the bar, the snapshot, the standing,
+the MSF coverage and the trajectories. Its loading state is the header "Committee review", "Loading the review…" and a
+skeleton with no action; its load error one fixed sentence, "The review could not be loaded. Nothing on it has
+changed.", with Try again (T329); an id out of the reader's reach is flow 01's Page not found with "The committee review
+could not be found among the reviews you can view." and "Back to Committee reviews".
+
 ### Record page under a personal link
 
 > **Added 2026-10-04, T355, flow 05** (R2, R5; R3-C-Epa): one EPA's page, `/portfolio/progress/{EpaId:int}`
@@ -3100,6 +3180,13 @@ is drawn at two fixed sizes and never scaled, § Entrustment standing, and the t
   h1 FocusOnNavigate focused on arrival is the loaded page's (A5); the loading line's `role="status"` is always there,
   filled while it loads (A6). One `StatePanel` holds the three (its `LoadingContent` the page's own skeleton), kept across
   Try again: a retry that reads focuses the h1, one that fails again the alert (A3).
+
+**Opened from a committee review's snapshot** (T361, flow 07; round 3 item 9): `?from=review-{id}&at=snap-{itemId}`
+(`ReviewLinks`, both integers only). When the reader may read that review, "Back to Lerato Molefe · 2026 S2"
+(`.return-link`, with the `arrow-left` icon) replaces the page's own back link, above the header, and lands on the
+snapshot line (`/committee/reviews/{id}#snap-{itemId}`); the page takes `.activity-page--from-review`, which below 641px
+hides the trail's back crumb, so there is one back link, never two, a 44px row there. A forged, unknown or unreadable
+id leaves the page as it is and names nobody.
 
 ### Form page
 
@@ -3904,10 +3991,15 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
   "2. The registrar page (R2-Registrar)": .registrar-stack (+ > .index-section, > .standing-panel, > .list-section: margin 0),
   "3. The oversight Homes (R2-Home)": .roster-row, .roster-row > .roster-exempt, .coverage-row (+ ≤900px: one column)
   "4. The two lists' tables below 900px (A.7.8a)": .clinic-table--stack-wide (≤900px: stacked as DataTable's Stack)
+
+/* ── The review sitting ─────────────────────────────── */
+"Flow 07: stacking and focus clearance (T361)": html (≥641px: scroll-padding-top over the top bar and --sitting-bar-h), .return-link, .activity-page--from-review (≤640px: no trail's back crumb, the return link 44px)
+"Flow 07: the review sitting (T361)": .review-page, .review-section-title, scroll-margin-top on the page's focus targets, .review-progress-link, .sitting-bar, .sitting-bar--reader, .sitting-bar--starts, .sitting-bar-line, .sitting-bar-state, .sitting-bar-count, .sitting-bar-mode, .sitting-bar-present, .sitting-bar-sentence, .sitting-bar-as-of, .sitting-bar-actions (≥641px: the chair's sticky, z-index 1; 641–1023px: Present hidden; ≤640px: stacked, 44px), .review-notes-list, .agenda-epa-code, .agenda-epa-title, .agenda-line-detail, .agenda-line-action, .agenda-draft-kept, .agenda-form-row, .agenda-result-row, .agenda-table-container (+ @container agenda below 760px: stacked, .agenda-line.is-editing), .agenda-form, .agenda-form-heading, .agenda-form-standing, .agenda-foot, .snapshot-pick, .snapshot-pick-line, .snapshot-pick-group, .snapshot-pick-more, .chart-jump, .chart-back, .evidence-reader(-back|-heading|-moved), .decision-actions, .decision-actions-text, .quorum-line, .decision-record, .snapshot-group-heading, .dialog-body, .dialog-list (+ ≤640px: 44px row actions, Read, Back and Record)
 ```
 
 The Progress section replaced the Trajectory chart section that held T123's chart (2026-10-04, T355): every flow 05
-rule is in it, none elsewhere. The Programme section holds every flow 06 rule, none elsewhere (2026-10-05, T358).
+rule is in it, none elsewhere. The Programme section holds every flow 06 rule, none elsewhere (2026-10-05, T358). The
+review sitting section holds every flow 07 rule, none elsewhere (2026-10-12, T361).
 
 When a new section is needed (say `/* ── Badges ── */`), add its heading in alphabetical-ish order inside the existing block and keep the rest of the file untouched.
 

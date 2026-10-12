@@ -619,7 +619,7 @@ public sealed class CommitteeQuorumHandlerTests
     public void TheRecordCommandValidator_RefusesAnAttendanceThatCannotBeAQuorum(string[] present)
     {
         var result = new RecordCommitteeDecisionCommandValidator().Validate(
-            new RecordCommitteeDecisionCommand(ReviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, present, Chair()));
+            new RecordCommitteeDecisionCommand(ReviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, null, present, Chair()));
 
         result.IsValid.Should().BeFalse();
     }
@@ -628,8 +628,21 @@ public sealed class CommitteeQuorumHandlerTests
     public void TheRecordCommandValidator_AcceptsTheChairAndOneOther()
         => new RecordCommitteeDecisionCommandValidator().Validate(
                 new RecordCommitteeDecisionCommand(
-                    ReviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, ["chair-1", "member-1"], Chair()))
+                    ReviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, null, ["chair-1", "member-1"], Chair()))
             .IsValid.Should().BeTrue();
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void TheRecordCommandValidator_RefusesNoRationale_InTheReviewPagesOwnWords(string rationale)
+    {
+        // T361, review R4: a direct Record with no rationale reads as the page's refusal does.
+        var result = new RecordCommitteeDecisionCommandValidator().Validate(
+            new RecordCommitteeDecisionCommand(
+                ReviewId, CommitteeDecisionCategory.SatisfactoryProgress, rationale, null, null, ["chair-1", "member-1"], Chair()));
+
+        result.Errors.Should().ContainSingle().Which.ErrorMessage.Should().Be("Give the committee's rationale.");
+    }
 
     // ─── The STARs staged with the decision ──────────────────────────────────
 
@@ -1225,7 +1238,7 @@ public sealed class CommitteeQuorumHandlerTests
     private Task<CommitteeReviewDetailDto> RecordAsync(ApplicationDbContext db, ClaimsPrincipal principal, params string[] present)
         => new RecordCommitteeDecisionCommandHandler(db, Directory()).Handle(
             new RecordCommitteeDecisionCommand(
-                ReviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, present, principal),
+                ReviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, null, present, principal),
             CancellationToken.None);
 
     private Task<CommitteeReviewDetailDto> RatifyAsync(ApplicationDbContext db, ClaimsPrincipal principal)

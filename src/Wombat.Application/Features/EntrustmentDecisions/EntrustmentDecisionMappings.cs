@@ -59,5 +59,8 @@ internal static class EntrustmentDecisionMappings
             pending.Rationale,
             pending.EvidenceItemIds,
             pending.StagedOn,
-            pending.StagedByUserId);
+            pending.StagedByUserId)
+        {
+            EpaInForce = pending.Epa?.IsActive ?? true
+        };
 }

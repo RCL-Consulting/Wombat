@@ -213,6 +213,10 @@ main > article {
     height: 100vh;
     position: sticky;
     top: 0;
+    /* Above every positioned element of the page, so the fixed top bar inside it is too: without it a scrolled
+       .table-container, a later positioned element, painted over Sign out (T356; T361, round 2 review 14). The chair's
+       sitting bar is 1, under it; dialogs are in the top layer. */
+    z-index: 10;
   }
 
   .sidebar .brand {

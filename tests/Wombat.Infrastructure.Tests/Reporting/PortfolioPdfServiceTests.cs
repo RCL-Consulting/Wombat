@@ -763,7 +763,9 @@ public sealed class PortfolioPdfServiceTests
         review.Start([], "chair-1", sitting);
         review.RecordDecision(
             type == CommitteeReviewType.EntrustmentOnly ? null : CommitteeDecisionCategory.SatisfactoryProgress,
-            "On track.", null, "chair-1", sitting, members, [], []);
+            "On track.", null, "chair-1", sitting, members,
+            // T361, E4: an entrustment-only review's decision is what is staged at it, so one EPA is named as staged.
+            type == CommitteeReviewType.EntrustmentOnly ? [1] : [], []);
         review.Ratify("chair-1", sitting);
 
         db.Set<DecisionPanel>().Add(panel);

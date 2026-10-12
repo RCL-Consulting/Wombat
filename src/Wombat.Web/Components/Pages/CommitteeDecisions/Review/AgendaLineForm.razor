@@ -1,0 +1,375 @@
+@using Wombat.Application.Features.CommitteeDecisions
+@using Wombat.Application.Features.EntrustmentDecisions
+@using Wombat.Application.Features.Epas
+
+@*
+  One staging form (T361, flow 07; R2-Spec "AgendaLineForm"; round 3 items 8, 11, 16, 20, 26, 30; C2, C3, E9): inside an
+  agenda line opened by its Stage, or at the agenda's foot as "Stage a decision on an EPA not on this agenda" with an EPA
+  select. Its typed values live in the page's LineDraft, so a line closed while another opens keeps them ("Draft kept"),
+  and Read's reader can swap the form out and Back bring it back as typed.
+
+  - The heading, then the refusal at the top (the page's result region, which takes the focus), then the standing in one
+    line: each part apart, a part that failed reads "Standing could not be loaded." once in its place (11).
+  - "Rating chart for PAED-001" (.chart-jump) moves the focus to the chart's heading (C2), only where a chart is drawn.
+  - "Evidence it rests on", a form group: this EPA's lines first, by instrument A–Z, each a tick and Read (30); the other
+    lines behind "Show the other N snapshot lines" (aria-expanded, 20). The hints sit under the ticks, not live (D38).
+  - Authorised level, Issued on (today, South African calendar), Expires on, Rationale. Stage pending decision is
+    aria-disabled with .is-unavailable until a line is ticked, its reason beside it, never natively disabled (16): pressed
+    then, it moves the focus to the reason. Cancel discards the draft.
+*@
+<div class="agenda-form" role="group" aria-labelledby="@($"{IdPrefix}-heading")">
+  <h3 class="agenda-form-heading" id="@($"{IdPrefix}-heading")" tabindex="-1">@Heading</h3>
+
+  @Result
+
+  @if (EpaChosen && Standing(Draft.EpaId) is { } standing)
+  {
+    <p class="agenda-form-standing" id="@($"{IdPrefix}-standing")">@standing</p>
+  }
+
+  @if (EpaChosen && HasChart(Draft.EpaId))
+  {
+    <a class="chart-jump" id="@ChartJumpId(IdPrefix, Draft.EpaId)" href="@($"#trajectory-{Draft.EpaId}-h")"
+       @onclick="() => OnChartJump.InvokeAsync(Draft.EpaId)" @onclick:preventDefault>@ReviewWords.ChartJump(CodeOf(Draft.EpaId))</a>
+  }
+
+  <div class="form-grid">
+    @if (ChoosesEpa)
+    {
+      var epaId = $"{IdPrefix}-epa";
+      var epaMessage = MessageId(LineDraft.Fields.Epa);
+      <FormField Label="@ReviewWords.EpaLabel" InputId="@epaId" Required="true" HelpText="@ReviewWords.EpaHelp" FullWidth="true">
+        <ChildContent>
+          <select id="@epaId" class="form-select" value="@Draft.EpaId" @onchange="EpaChanged"
+                  aria-invalid="@Invalid(LineDraft.Fields.Epa)"
+                  aria-describedby="@FieldHelp.DescribedBy(epaId, ReviewWords.EpaHelp, Refused(LineDraft.Fields.Epa) ? epaMessage : null)">
+            <option value="0">@ReviewWords.ChooseEpa</option>
+            @foreach (var epa in StarEpas)
+            {
+              <option value="@epa.EpaId">@epa.Code — @epa.Title</option>
+            }
+          </select>
+        </ChildContent>
+        <ValidationContent>
+          @FieldMessage(LineDraft.Fields.Epa)
+        </ValidationContent>
+      </FormField>
+    }
+
+    @{ var picker = Picker(); }
+    <fieldset class="form-group full-width snapshot-pick" aria-describedby="@($"{IdPrefix}-hints")">
+      <legend>
+        @ReviewWords.EvidenceLegend
+        <span aria-hidden="true">*</span>
+        <span class="visually-hidden">required</span>
+      </legend>
+      @if (picker.IsEmpty)
+      {
+        <p class="page-subtitle">@ReviewWords.NoLineCanGround</p>
+      }
+      @foreach (var line in picker.Mine)
+      {
+        @PickLine(line)
+      }
+      @if (picker.Others.Count > 0)
+      {
+        @if (picker.Mine.Count > 0)
+        {
+          <button type="button" class="btn btn-sm btn-outline snapshot-pick-more" id="@($"{IdPrefix}-others")"
+                  aria-expanded="@(Draft.OthersShown ? "true" : "false")" aria-controls="@($"{IdPrefix}-other-lines")"
+                  @onclick="ToggleOthers">@ReviewWords.ShowOthers(picker.Others.Count)</button>
+        }
+        @if (Draft.OthersShown || picker.Mine.Count == 0)
+        {
+          <div id="@($"{IdPrefix}-other-lines")">
+            @foreach (var group in picker.OtherGroups)
+            {
+              <div class="snapshot-pick-group">@group.Label</div>
+              @foreach (var line in group.Lines)
+              {
+                @PickLine(line)
+              }
+            }
+          </div>
+        }
+      }
+      @* Hints are said, never enforced (D38, O1), and not live (round 3): the stage's result is what is read out. *@
+      <div id="@($"{IdPrefix}-hints")">
+        @foreach (var hint in ReviewWords.Hints(Named(), Draft.EpaId, EpaChosen ? CodeOf(Draft.EpaId) : null))
+        {
+          <p class="field-warning">@hint</p>
+        }
+      </div>
+    </fieldset>
+
+    @{ var levelId = $"{IdPrefix}-level"; var levelHelp = ReviewWords.LevelHelp(ScaleNameOf(Draft.EpaId), EpaChosen); }
+    <FormField Label="@ReviewWords.LevelLabel" InputId="@levelId" Required="true" HelpText="@levelHelp">
+      <ChildContent>
+        <select id="@levelId" class="form-select" value="@Draft.AuthorisedLevelId" @onchange="LevelChanged"
+                aria-invalid="@Invalid(LineDraft.Fields.Level)"
+                aria-describedby="@FieldHelp.DescribedBy(levelId, levelHelp, Refused(LineDraft.Fields.Level) ? MessageId(LineDraft.Fields.Level) : null)">
+          <option value="0">@(EpaChosen ? ReviewWords.ChooseRung : ReviewWords.ChooseEpaFirst)</option>
+          @foreach (var scale in Ladders())
+          {
+            <optgroup label="@scale.Name">
+              @foreach (var level in scale.Levels)
+              {
+                <option value="@level.Id">@level.Label</option>
+              }
+            </optgroup>
+          }
+        </select>
+      </ChildContent>
+      <ValidationContent>
+        @FieldMessage(LineDraft.Fields.Level)
+      </ValidationContent>
+    </FormField>
+
+    @{ var issuedId = $"{IdPrefix}-issued"; }
+    <FormField Label="@ReviewWords.IssuedOnLabel" InputId="@issuedId" Required="true">
+      <input id="@issuedId" type="date" class="form-control" @bind="Draft.IssuedOn" />
+    </FormField>
+
+    @{ var expiresId = $"{IdPrefix}-expires"; }
+    <FormField Label="@ReviewWords.ExpiresOnLabel" InputId="@expiresId">
+      <ChildContent>
+        <input id="@expiresId" type="date" class="form-control" @bind="Draft.ExpiresOn"
+               aria-invalid="@Invalid(LineDraft.Fields.Expires)"
+               aria-describedby="@(Refused(LineDraft.Fields.Expires) ? MessageId(LineDraft.Fields.Expires) : null)" />
+      </ChildContent>
+      <ValidationContent>
+        @FieldMessage(LineDraft.Fields.Expires)
+      </ValidationContent>
+    </FormField>
+
+    @{ var rationaleId = $"{IdPrefix}-rationale"; }
+    <FormField Label="@ReviewWords.RationaleLabel" InputId="@rationaleId" Required="true" FullWidth="true">
+      <ChildContent>
+        <textarea id="@rationaleId" class="form-control" @bind="Draft.Rationale"
+                  aria-invalid="@Invalid(LineDraft.Fields.Rationale)"
+                  aria-describedby="@(Refused(LineDraft.Fields.Rationale) ? MessageId(LineDraft.Fields.Rationale) : null)"></textarea>
+      </ChildContent>
+      <ValidationContent>
+        @FieldMessage(LineDraft.Fields.Rationale)
+      </ValidationContent>
+    </FormField>
+  </div>
+
+  <div class="form-actions">
+    @* Round 3 item 16: never natively disabled. Unavailable, it keeps its place in the tab order and is named by its reason;
+       a press then moves the focus to the reason. While its own stage runs it is aria-disabled and keeps the focus (T234). *@
+    <button type="button" id="@($"{IdPrefix}-submit")" class="@(EvidenceNamed ? "btn btn-primary" : "btn btn-primary is-unavailable")"
+            aria-disabled="@(!EvidenceNamed || Running ? "true" : null)"
+            aria-describedby="@(EvidenceNamed ? null : ReasonId)"
+            @onclick="StageAsync">@ReviewWords.StageSubmit</button>
+    @if (!EvidenceNamed)
+    {
+      <p class="move-reasons move-reasons--beside" id="@ReasonId">@StagedEvidence.NoneNamed</p>
+    }
+    @if (OnCancel.HasDelegate)
+    {
+      <button type="button" class="btn btn-outline" disabled="@Busy" @onclick="OnCancel">@ReviewWords.Cancel</button>
+    }
+  </div>
+</div>
+
+@code {
+  /// <summary>What is typed, held by the page.</summary>
+  [Parameter, EditorRequired] public LineDraft Draft { get; set; } = default!;
+
+  /// <summary>The start of every id in the form: "stage-1" for PAED-001's line, "stage-0" for the foot form.</summary>
+  [Parameter, EditorRequired] public string IdPrefix { get; set; } = default!;
+
+  /// <summary>Whether the form chooses its EPA (the foot form) rather than stage on its line's.</summary>
+  [Parameter] public bool ChoosesEpa { get; set; }
+
+  /// <summary>The heading: "Stage a decision on PAED-001", or the foot form's.</summary>
+  [Parameter, EditorRequired] public string Heading { get; set; } = default!;
+
+  /// <summary>The trainee's curriculum, each EPA with its ladder (StarCurriculum, T167).</summary>
+  [Parameter] public IReadOnlyList<StarEpaOptionDto> StarEpas { get; set; } = [];
+
+  /// <summary>Every scale, for the ladders.</summary>
+  [Parameter] public IReadOnlyList<EntrustmentScaleDto> Scales { get; set; } = [];
+
+  /// <summary>The review's frozen snapshot.</summary>
+  [Parameter] public IReadOnlyList<CommitteeEvidenceDto> EvidenceItems { get; set; } = [];
+
+  /// <summary>The standing line for an EPA, or null (11, 26).</summary>
+  [Parameter] public Func<int, string?> Standing { get; set; } = _ => null;
+
+  /// <summary>Whether the page draws a chart for an EPA (C2).</summary>
+  [Parameter] public Func<int, bool> HasChart { get; set; } = _ => false;
+
+  /// <summary>The page's result region, when the last refusal is this form's: at its top, taking the focus.</summary>
+  [Parameter] public RenderFragment? Result { get; set; }
+
+  /// <summary>Whether Read is offered on a line (inside an open agenda line; C3).</summary>
+  [Parameter] public bool OffersRead { get; set; }
+
+  [Parameter] public EventCallback<CommitteeEvidenceDto> OnRead { get; set; }
+  [Parameter] public EventCallback<int> OnChartJump { get; set; }
+
+  /// <summary>Stage pending decision, once the form has nothing to refuse.</summary>
+  [Parameter] public EventCallback OnStage { get; set; }
+
+  /// <summary>Cancel: discards the draft and closes the line. None on the foot form.</summary>
+  [Parameter] public EventCallback OnCancel { get; set; }
+
+  /// <summary>An action runs on the page: Cancel would race it.</summary>
+  [Parameter] public bool Busy { get; set; }
+
+  /// <summary>This form's own stage runs: Stage pending decision is aria-disabled and keeps the focus (T234).</summary>
+  [Parameter] public bool Running { get; set; }
+
+  /// <summary>Moves the focus to an element by id (the reason, Read's reader).</summary>
+  [Parameter] public Func<string, ValueTask>? Focus { get; set; }
+
+  /// <summary>
+  /// The id of an EPA's "Rating chart for …" in one form, which the chart's "Back to …'s line" returns the focus to:
+  /// "stage-1-chart-jump-1". The form's prefix keeps it the form's own, so the foot form and an open line on one EPA never
+  /// share an id (T361, review D4).
+  /// </summary>
+  public static string ChartJumpId(string idPrefix, int epaId) => $"{idPrefix}-chart-jump-{epaId}";
+
+  /// <summary>The id of a line's Read in a form, which Back from the reader returns the focus to.</summary>
+  public static string ReadId(string idPrefix, int evidenceId) => $"{idPrefix}-read-{evidenceId}";
+
+  private string ReasonId => $"{IdPrefix}-reason";
+
+  private bool EpaChosen => Draft.EpaId > 0;
+
+  private StarEpaOptionDto? Epa(int epaId) => StarEpas.FirstOrDefault(epa => epa.EpaId == epaId);
+
+  private string CodeOf(int epaId)
+    => Epa(epaId)?.Code ?? EvidenceItems.FirstOrDefault(line => line.EpaId == epaId)?.EpaCode ?? $"EPA {epaId}";
+
+  private string? ScaleNameOf(int epaId) => Epa(epaId)?.ScaleName;
+
+  // The rungs of the EPA's ladder: its item's pinned scale, else every scale (StarCurriculum); none until it is chosen.
+  private IEnumerable<EntrustmentScaleDto> Ladders()
+    => !EpaChosen ? []
+      : Epa(Draft.EpaId) is { ScaleId: int scaleId } ? Scales.Where(scale => scale.Id == scaleId)
+      : Scales;
+
+  private IReadOnlyList<CommitteeEvidenceDto> Named()
+    => Draft.EvidenceItemIds
+      .Select(id => EvidenceItems.FirstOrDefault(line => line.Id == id && line.CanGroundADecision))
+      .OfType<CommitteeEvidenceDto>()
+      .ToArray();
+
+  private bool EvidenceNamed => Named().Count > 0;
+
+  private string MessageId(string field) => $"{IdPrefix}-{field}-message";
+
+  private bool Refused(string field) => Draft.FieldRefusals.ContainsKey(field);
+
+  private string? Invalid(string field) => Refused(field) ? "true" : null;
+
+  private RenderFragment FieldMessage(string field) => __builder =>
+  {
+    if (Draft.FieldRefusals.TryGetValue(field, out var message))
+    {
+      <div class="validation-message" id="@MessageId(field)">@message</div>
+    }
+  };
+
+  private RenderFragment PickLine(CommitteeEvidenceDto line) => __builder =>
+  {
+    var inputId = $"{IdPrefix}-evidence-{line.Id}";
+    <div class="snapshot-pick-line">
+      <div class="form-check">
+        <input id="@inputId" class="form-check-input" type="checkbox" checked="@Draft.EvidenceItemIds.Contains(line.Id)"
+               @onchange="args => Draft.Tick(line.Id, args.Value is true)" />
+        <label for="@inputId">
+          @ReviewWords.PickLabel(line)
+          <span class="muted">@($" {ReviewWords.PickDetail(line)}")</span>
+        </label>
+      </div>
+      @if (OffersRead && line.ActivityId is not null)
+      {
+        <button type="button" class="btn btn-sm btn-outline" id="@ReadId(IdPrefix, line.Id)"
+                aria-label="@ReviewWords.ReadName(line)" disabled="@Busy"
+                @onclick="() => OnRead.InvokeAsync(line)">@ReviewWords.ReadLabel</button>
+      }
+    </div>
+  };
+
+  /// <summary>The lines a decision may rest on (CanGroundADecision): this EPA's, then the others by EPA.</summary>
+  private PickerView Picker()
+  {
+    var view = EvidenceSnapshotGroups.BuildPicker(EvidenceItems, Draft.EpaId);
+    var mine = EpaChosen
+      ? view.ByEpa.Where(group => group.EpaId == Draft.EpaId)
+        .SelectMany(group => group.Instruments.SelectMany(instrument => instrument.Lines))
+        .ToArray()
+      : [];
+
+    var groups = new List<PickerGroup>();
+    foreach (var group in view.ByEpa.Where(group => !EpaChosen || group.EpaId != Draft.EpaId))
+    {
+      groups.Add(new PickerGroup(
+        string.IsNullOrWhiteSpace(group.EpaTitle) ? group.EpaCode : $"{group.EpaCode} — {group.EpaTitle}",
+        group.Instruments.SelectMany(instrument => instrument.Lines).ToArray()));
+    }
+
+    if (view.AcrossEpas.Count > 0)
+    {
+      groups.Add(new PickerGroup(ReviewWords.AcrossEpasHeading, view.AcrossEpas));
+    }
+
+    if (view.FrozenBeforeLinesNamedTheirEpa.Count > 0)
+    {
+      groups.Add(new PickerGroup(ReviewWords.FrozenBeforeHeading, view.FrozenBeforeLinesNamedTheirEpa));
+    }
+
+    return new PickerView(mine, groups);
+  }
+
+  private sealed record PickerGroup(string Label, IReadOnlyList<CommitteeEvidenceDto> Lines);
+
+  private sealed record PickerView(IReadOnlyList<CommitteeEvidenceDto> Mine, IReadOnlyList<PickerGroup> OtherGroups)
+  {
+    public IReadOnlyList<CommitteeEvidenceDto> Others => OtherGroups.SelectMany(group => group.Lines).ToArray();
+
+    public bool IsEmpty => Mine.Count == 0 && OtherGroups.Count == 0;
+  }
+
+  private void ToggleOthers() => Draft.OthersShown = !Draft.OthersShown;
+
+  private void EpaChanged(ChangeEventArgs args)
+  {
+    Draft.EpaId = int.TryParse(args.Value?.ToString(), out var epaId) ? epaId : 0;
+
+    // A level chosen for one EPA is not a rung of another's ladder: cleared, rather than send a level the select no
+    // longer shows.
+    if (!Ladders().SelectMany(scale => scale.Levels).Any(level => level.Id == Draft.AuthorisedLevelId))
+    {
+      Draft.AuthorisedLevelId = 0;
+    }
+  }
+
+  private void LevelChanged(ChangeEventArgs args)
+    => Draft.AuthorisedLevelId = int.TryParse(args.Value?.ToString(), out var levelId) ? levelId : 0;
+
+  private async Task StageAsync()
+  {
+    if (Running)
+    {
+      return;
+    }
+
+    if (!EvidenceNamed)
+    {
+      // Round 3 item 16: pressed while unavailable, it does nothing but move the focus to its reason.
+      if (Focus is not null)
+      {
+        await Focus(ReasonId);
+      }
+
+      return;
+    }
+
+    await OnStage.InvokeAsync();
+  }
+}

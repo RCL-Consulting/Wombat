@@ -150,7 +150,7 @@ public sealed class StagePendingEntrustmentDecisionCommandHandler
         // 5. T131 slice 4: the review holds a line for this EPA, or the EPA routes to this panel for this trainee and the
         // chair's staging adds one (DecisionRouting, Decision 3). Only the chair's line runs the routing check again: an
         // agenda line, once written, says the EPA is this sitting's, so re-tagging a panel does not strand a review
-        // already under way. A deferred line is reinstated first. An edit keeps the line its decision was staged on.
+        // already under way. An edit keeps the line its decision was staged on.
         CommitteeAgendaLine? chairLine = null;
         if (existing is null)
         {
@@ -159,11 +159,6 @@ public sealed class StagePendingEntrustmentDecisionCommandHandler
             {
                 var (added, refusal) = await AgendaPlanner.ChairLineAsync(_dbContext, review, epa, cancellationToken);
                 chairLine = added ?? throw new InvalidOperationException(refusal);
-            }
-            else if (line.State == CommitteeAgendaLineState.Deferred)
-            {
-                throw new InvalidOperationException(
-                    $"{epa.Code} is deferred at this review. Reinstate it to stage a decision on it.");
             }
         }
 

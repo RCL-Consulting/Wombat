@@ -51,3 +51,39 @@ corrects this file ("As built after wave 1") before wave 2.
   `.agenda-line.is-editing`; `.snapshot-pick`, `.snapshot-pick-line`; `.evidence-reader`; `.chart-jump`, `.chart-back`;
   `.quorum-line`; `scroll-margin-top` on the page's focus targets. Reuses `tr.is-editing`, `.btn-outline`,
   `.is-unavailable`.
+
+## As built after wave 1 (merged into `t361` at `0dfcac16`)
+
+Where this differs from § A and § R above, this wins.
+
+**Lane A** (`fd808a23`):
+- `CommitteeDecision.Create` and `CommitteeReview.RecordDecision` take `undecidedNote` as a trailing optional parameter;
+  `CommitteeDecision.ConditionsMaxLength = 4000` bounds both Conditions and `UndecidedNote` (validator and column).
+- `CommitteeDecisionDto.UndecidedNote` is an init property.
+- E4: `CommitteeReview.NothingStagedOnEntrustmentOnly` (the sentence) and `NothingStagedRefusal(...)`; they replace
+  `NothingOnTheAgenda`/`EmptyAgendaRefusal`. `CommitteeAgendaDto.RecordBlockedReason` carries E4's sentence only.
+- `CommitteeAgendaLineDto(…, bool IsStaged, bool ReadsNotDecided, int? EntrustmentDecisionId, int EvidenceCount)`;
+  `IsClosing` stays; on a Decided review an unstaged due line already reads `Status = NotDecided`.
+- Decisions due: `EntrustmentDecisionDueStatus.NotDecided = 3` ("Not decided"); the summary's `NotDecided`;
+  `CommitteeAgendaElsewhereStatus.NotDecided = 3`.
+- `CommitteeReviewDetailDto.ReviewTypeLabel` (computed: "Formative check-in" for a formative review);
+  `CommitteeDecisionWording.ReviewTypeLabel(type, isFormative)` / `ReviewTypeShortLabel(type, isFormative)`.
+- The member's who-may-act sentence: `CommitteeDecisionWording.OnlyTheChairSits(chairName)`.
+- `CommitteeAgendaText`: badges "Due at this sitting" / "Not decided at this sitting"; `StatusDetail` and
+  `TraineeStatusDetail` take `undecidedNote`. **Every Not decided badge is amber** (`badge-accepted`): lane P writes
+  DESIGN.md's badge row so (it still says `badge-declined`).
+- Interim on the page: Record sends `UndecidedNote: null`; Record and Ratify still use native `disabled`.
+
+**Lane R** (`b8b7f13e`, `1f0a58f3`, `afb2166a`):
+- `CommitteeReviewDetailDto.TraineeProfileId`, `.TrainingYear` as contracted.
+- `GetStartPreviewQuery` / `StartPreviewDto` as contracted; null unless readable and Scheduled. The snapshot is built by
+  `CommitteeEvidenceSnapshot.BuildAsync`, shared with Start.
+- Start refuses while Scheduled and the chair cannot act, with `ChairCannotAct`'s sentence.
+- `EpaInForce` (default true) on both DTOs.
+- `ReviewLinks` adds `SnapshotLineId(itemId)` → `"snap-{itemId}"` (**use it for each snapshot line's `id`**), `FromKey`,
+  `AtKey`, `TryReadReturn(...)`.
+- CSS: `.sidebar { z-index: 10 }` is in `MainLayout.razor.css` (≥641 px); `scroll-padding-top` applies from 641 px;
+  `--sitting-bar-h: 0px` in `:root`; **a test fails any `z-index` ≥ 10 in `app.css`**, so `.sitting-bar` takes 1.
+  `js/sticky-offset.js` is loaded in `App.razor`.
+- `.return-link` and `.activity-page--from-review` are defined; DESIGN.md does not have them yet (lane P adds them to
+  the index with § Stacking).

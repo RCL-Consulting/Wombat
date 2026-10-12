@@ -288,6 +288,7 @@ public sealed class CommitteeDecisionHandlersTests
                 CommitteeDecisionCategory.SatisfactoryWithObservations,
                 "Reasonable progress with targeted conditions.",
                 "Improve documentation quality.",
+                null,
                 ["chair-1", "member-1"],
                 CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
@@ -357,6 +358,7 @@ public sealed class CommitteeDecisionHandlersTests
                 CommitteeDecisionCategory.InadequateProgressAdditionalTraining,
                 "Not enough observed evidence yet this year.",
                 "Repeat the semester's observed assessments.",
+                "Too early in the programme to decide.",
                 ["chair-1", "member-1"],
                 chair),
             CancellationToken.None);
@@ -391,6 +393,10 @@ public sealed class CommitteeDecisionHandlersTests
         read.Decisions.Select(decision => (decision.Category, decision.Conditions)).Should().Equal(
             (CommitteeDecisionCategory.SatisfactoryWithObservations, "Two observed Mini-CEX and one DOPS before the next review."),
             (CommitteeDecisionCategory.InadequateProgressAdditionalTraining, "Repeat the semester's observed assessments."));
+
+        // T361, E5: the replacement carries the original's sentence about the EPAs not decided.
+        read.Decisions.Select(decision => decision.UndecidedNote).Should().Equal(
+            "Too early in the programme to decide.", "Too early in the programme to decide.");
     }
 
     private static Task<CommitteeReviewDetailDto> StartAsync(ApplicationDbContext dbContext, CommitteeReview review)

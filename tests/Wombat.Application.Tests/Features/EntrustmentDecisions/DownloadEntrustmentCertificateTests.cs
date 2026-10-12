@@ -221,7 +221,7 @@ public sealed class DownloadEntrustmentCertificateTests
         var recordHandler = new RecordCommitteeDecisionCommandHandler(
             dbContext, FakeUserDirectory.CommitteeMembersAt(1, "chair-1", "member-1"));
         await recordHandler.Handle(
-            new RecordCommitteeDecisionCommand(review.Id, CommitteeDecisionCategory.SatisfactoryProgress, "Satisfactory.", null, ["chair-1", "member-1"],
+            new RecordCommitteeDecisionCommand(review.Id, CommitteeDecisionCategory.SatisfactoryProgress, "Satisfactory.", null, null, ["chair-1", "member-1"],
                 CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
         var ratifyHandler = new RatifyCommitteeDecisionCommandHandler(dbContext, FakeUserDirectory.PanelMembersOf(dbContext));

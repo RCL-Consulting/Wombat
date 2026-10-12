@@ -82,7 +82,7 @@ public sealed class RemovePendingEntrustmentDecisionCommandHandler
         // (CommitteeReviewConfiguration) is then checked in this save, which is refused whole when the review changed
         // after it was read above. Without it a remove that read the review in progress could delete a staged decision
         // after the committee's decision was recorded, and the STARs the panel recorded would not be the ones ratifying
-        // issues (D46). A record, stage, deferral or ratify that reads the review before this commits is refused the same
+        // issues (D46). A record, stage or ratify that reads the review before this commits is refused the same
         // way. A staged row already gone, ratified or removed, is refused by its own delete.
         _dbContext.Set<CommitteeReview>().Entry(review).Property(r => r.State).IsModified = true;
 

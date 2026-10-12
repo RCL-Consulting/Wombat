@@ -12,7 +12,7 @@ namespace Wombat.Web.Tests.Design;
 /// </summary>
 /// <remarks>
 /// A fieldset that holds fields (a <c>.form-grid</c> or a <c>&lt;FormField&gt;</c>: an activity form's section, the
-/// curriculum item's edit row, a deferral) is a cluster, and keeps the section-size legend. Every other fieldset is one
+/// curriculum item's edit row) is a cluster, and keeps the section-size legend. Every other fieldset is one
 /// field: a group of checkboxes or radios, or a field with no control to name. The scan reads every <c>&lt;fieldset</c>
 /// in every <c>.razor</c> file, the <c>@code</c> block's render fragments included (the review's Present list), and
 /// needs <c>form-group</c> written out in a field's class, not left to an expression.
@@ -51,10 +51,10 @@ public sealed partial class FieldGroupTests
              "StageMinimaEditor.razor"],
             "guard: the scan finds the field-level groups, or it proves nothing");
         // An activity form's section is a <section> named by its heading since T342 (flow 03): a card one deep, not a
-        // fieldset, so the clusters left are the curriculum item's edit row and the deferral.
+        // fieldset, so the cluster left is the curriculum item's edit row. The review's deferral form went with D53 (T361).
         clusters.Distinct().Should().Contain(
-            ["CurriculumItemsEdit.razor", "ReviewDetail.razor"],
-            "guard: the scan tells a fieldset of fields (a section, the edit row, a deferral) from a field");
+            ["CurriculumItemsEdit.razor"],
+            "guard: the scan tells a fieldset of fields (a section, the edit row) from a field");
         string.Join(Environment.NewLine, offenders).Should().BeEmpty(
             "a fieldset that is one field is a form group, so its legend reads as that field's label (DESIGN.md § Form " +
             "system, T188); every one is listed");

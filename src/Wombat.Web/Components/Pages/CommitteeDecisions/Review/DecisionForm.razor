@@ -1,0 +1,299 @@
+@using Wombat.Application.Features.CommitteeDecisions
+@using Wombat.Application.Features.EntrustmentDecisions
+@using Wombat.Domain.CommitteeDecisions
+
+@*
+  The Decision section (T361, flow 07; R2-Spec "Decision form"; round 3 items 7, 16, 21; E1, E4; T324): an h2 the bar's
+  "Go to the decision" moves the focus to, then the page's result region when it is this section's ("Decision recorded."
+  or a refusal before any dialog), then, for the chair while the review is in progress, the form; otherwise the decisions
+  recorded, or "No decision has been recorded yet.".
+
+  - Category (a progression review only), Rationale, "About the EPAs not decided (optional)" with its help, Conditions,
+    Present (every member who may sit, the chair ticked and locked).
+  - The quorum line, from the ticks: the one live region besides the results (21). A panel that cannot sit a quorum shows
+    that reason in it instead, and ticking cannot cure it (7).
+  - Record decision… is aria-disabled with .is-unavailable while the quorum falls short, or an entrustment-only review has
+    nothing staged (E4), never natively disabled; the reason beside it, and a press then moves the focus to the reason
+    (16). Available, the hint beside it counts what Recording fixes and records (round-3-check), and a press asks the page
+    to check the fields and open the dialog.
+*@
+<section class="detail-card" id="decision" aria-labelledby="decision-heading">
+  <h2 id="decision-heading" class="review-section-title" tabindex="-1">@ReviewWords.DecisionHeading</h2>
+
+  @Result
+
+  @if (!Review.DecidesProgression)
+  {
+    <p id="entrustment-only-note" class="muted">@ReviewWords.EntrustmentOnlyNote(Review.State)</p>
+  }
+
+  @* T165. Not a refusal: in a small programme the chair can be the only assessor who saw the trainee. *@
+  @if (Review.ChairRatedEveryLine is { } chairAssessor && Review.State is CommitteeReviewState.InProgress or CommitteeReviewState.Decided)
+  {
+    <Alert Kind="warning" Role="">
+      <h3>The chair rated all of this evidence</h3>
+      <p>
+        Every rated record in the evidence snapshot was rated by @chairAssessor.DisplayName, who chairs this panel. A
+        committee decision is never a single assessor's: say in the rationale how the other members weighed it.
+      </p>
+    </Alert>
+  }
+
+  @if (OffersForm)
+  {
+    <div class="form-grid">
+      @if (Review.DecidesProgression)
+      {
+        <FormField Label="@ReviewWords.CategoryLabel" InputId="decision-category" Required="true">
+          <ChildContent>
+            <select id="decision-category" class="form-select" value="@Draft.Category?.ToString()" @onchange="CategoryChanged"
+                    aria-invalid="@Invalid(DecisionDraft.Fields.Category)"
+                    aria-describedby="@(Refused(DecisionDraft.Fields.Category) ? "decision-category-message" : null)">
+              <option value="">@ReviewWords.SelectCategory</option>
+              @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
+              {
+                <option value="@category">@CommitteeDecisionWording.CategoryLabel(category)</option>
+              }
+            </select>
+          </ChildContent>
+          <ValidationContent>
+            @FieldMessage(DecisionDraft.Fields.Category, "decision-category-message")
+          </ValidationContent>
+        </FormField>
+      }
+
+      <FormField Label="@ReviewWords.RationaleLabel" InputId="decision-rationale" Required="true" FullWidth="true">
+        <ChildContent>
+          <textarea id="decision-rationale" class="form-control" @bind="Draft.Rationale"
+                    aria-invalid="@Invalid(DecisionDraft.Fields.Rationale)"
+                    aria-describedby="@(Refused(DecisionDraft.Fields.Rationale) ? "decision-rationale-message" : null)"></textarea>
+        </ChildContent>
+        <ValidationContent>
+          @FieldMessage(DecisionDraft.Fields.Rationale, "decision-rationale-message")
+        </ValidationContent>
+      </FormField>
+
+      <FormField Label="@ReviewWords.UndecidedLabel" InputId="decision-undecided" HelpText="@ReviewWords.UndecidedHelp" FullWidth="true">
+        <textarea id="decision-undecided" class="form-control" @bind="Draft.UndecidedNote"
+                  aria-describedby="@FieldHelp.DescribedBy("decision-undecided", ReviewWords.UndecidedHelp)"></textarea>
+      </FormField>
+
+      <FormField Label="@ReviewWords.ConditionsLabel" InputId="decision-conditions" FullWidth="true">
+        <textarea id="decision-conditions" class="form-control" @bind="Draft.Conditions"></textarea>
+      </FormField>
+
+      @* T165. Who sat: a group of checkboxes, one field, so a form group (T188). The chair is ticked and locked. *@
+      <fieldset class="form-group full-width" aria-describedby="decision-present-help">
+        <legend>
+          @ReviewWords.PresentLegend
+          <span aria-hidden="true">*</span>
+          <span class="visually-hidden">required</span>
+        </legend>
+        <p id="decision-present-help" class="page-subtitle">@ReviewWords.PresentHelp</p>
+        <div class="check-grid">
+          @for (var index = 0; index < Seated.Count; index++)
+          {
+            var member = Seated[index];
+            var inputId = $"decision-present-{index}";
+            <div class="form-check">
+              @if (member.Role == DecisionPanelMemberRole.Chair)
+              {
+                <input id="@inputId" class="form-check-input" type="checkbox" checked disabled />
+              }
+              else
+              {
+                <input id="@inputId" class="form-check-input" type="checkbox" checked="@Draft.PresentUserIds.Contains(member.UserId)"
+                       @onchange="args => TickAsync(member.UserId, args.Value is true)" />
+              }
+              <label for="@inputId">@member.Label</label>
+            </div>
+          }
+        </div>
+      </fieldset>
+    </div>
+
+    @* O8: a warning about a progression decision before another panel's entrustment decisions, never a refusal. *@
+    @if (Review.DecidesProgression && CommitteeAgendaText.SittingOrderWarning(Agenda) is { } sittingOrder)
+    {
+      <p id="sitting-order-warning" class="field-warning">@sittingOrder</p>
+    }
+
+    var reason = UnavailableReason;
+    <div class="decision-actions">
+      <button type="button" id="record-decision"
+              class="@(reason is null ? "btn btn-primary" : "btn btn-primary is-unavailable")"
+              aria-disabled="@(reason is not null || Running ? "true" : null)"
+              aria-describedby="@ReasonId(reason)"
+              @onclick="RecordAsync">@ReviewWords.RecordLabel</button>
+      <div class="decision-actions-text">
+        @* The quorum line: always here, filled from the ticks, so a change is announced (21). *@
+        <p class="quorum-line" id="quorum-line" aria-live="polite">@QuorumText</p>
+        @if (reason is { Kind: RecordBlock.Entrustment } entrustment)
+        {
+          <p class="move-reasons" id="record-reason">@entrustment.Text</p>
+        }
+        else if (reason is null)
+        {
+          <p class="muted" id="record-hint">@ReviewWords.RecordHint(StagedCount, NotStaged.Count)</p>
+        }
+      </div>
+    </div>
+  }
+  else
+  {
+    @if (Review.Decisions.Count == 0)
+    {
+      <p id="no-decision-note" class="muted">@(Review.State == CommitteeReviewState.Withdrawn ? ReviewWords.NoDecisionWithdrawn : ReviewWords.NoDecisionYet)</p>
+    }
+    else
+    {
+      var replaced = Review.Decisions.Select(decision => decision.SupersedesDecisionId).OfType<int>().ToHashSet();
+      @if (Review.State == CommitteeReviewState.Withdrawn)
+      {
+        <p id="withdrawn-decision-note" class="muted">@CommitteeDecisionWording.WithdrawnDecisionNote</p>
+      }
+      <div class="stack-list">
+        @foreach (var decision in Review.Decisions)
+        {
+          <article class="decision-record" id="@($"decision-{decision.Id}")" aria-labelledby="@($"decision-{decision.Id}-h")">
+            <h3 id="@($"decision-{decision.Id}-h")">@CommitteeDecisionWording.OutcomeLabel(decision.Category)</h3>
+            @if (replaced.Contains(decision.Id))
+            {
+              <p class="muted">@ReviewWords.ReplacedOnAppeal</p>
+            }
+            <p>@decision.Rationale</p>
+            @if (!string.IsNullOrWhiteSpace(decision.UndecidedNote))
+            {
+              <p>@ReviewWords.AboutNotDecided(decision.UndecidedNote)</p>
+            }
+            @if (!string.IsNullOrWhiteSpace(decision.Conditions))
+            {
+              <p>@ReviewWords.Conditions(decision.Conditions)</p>
+            }
+            @if (decision.Attendees.Count > 0)
+            {
+              <p>@ReviewWords.PresentList(decision.Attendees.Select(attendee => attendee.Label)).TrimEnd('.')</p>
+            }
+            else
+            {
+              <p class="muted">@ReviewWords.NobodyPresent</p>
+            }
+          </article>
+        }
+      </div>
+    }
+  }
+</section>
+
+@code {
+  [Parameter, EditorRequired] public CommitteeReviewDetailDto Review { get; set; } = default!;
+  [Parameter] public CommitteeAgendaDto? Agenda { get; set; }
+
+  /// <summary>The staged decisions, which Record fixes.</summary>
+  [Parameter] public IReadOnlyList<PendingEntrustmentDecisionDto> Pending { get; set; } = [];
+
+  /// <summary>What the chair has typed, held by the page.</summary>
+  [Parameter, EditorRequired] public DecisionDraft Draft { get; set; } = default!;
+
+  /// <summary>Whether the form is offered: the chair, while the review is in progress (T213).</summary>
+  [Parameter] public bool OffersForm { get; set; }
+
+  /// <summary>The page's result region when it is this section's.</summary>
+  [Parameter] public RenderFragment? Result { get; set; }
+
+  /// <summary>Record decision… pressed while available: the page checks the fields and opens the dialog.</summary>
+  [Parameter] public EventCallback OnRecord { get; set; }
+
+  /// <summary>Record runs (T234): aria-disabled, keeping the focus.</summary>
+  [Parameter] public bool Running { get; set; }
+
+  /// <summary>Moves the focus to an element by id.</summary>
+  [Parameter] public Func<string, ValueTask>? Focus { get; set; }
+
+  /// <summary>A tick changed: the chair's bar counts Present from the ticks.</summary>
+  [Parameter] public EventCallback OnTicked { get; set; }
+
+  private Task TickAsync(string userId, bool present)
+  {
+    Draft.Tick(userId, present);
+    return OnTicked.InvokeAsync();
+  }
+
+  private enum RecordBlock
+  {
+    Quorum,
+    Entrustment
+  }
+
+  private sealed record Reason(RecordBlock Kind, string Text);
+
+  private IReadOnlyList<CommitteePersonDto> Seated => Review.PanelMembers.Where(member => member.MaySit).ToArray();
+
+  /// <summary>The chair and every other member who may sit and is ticked.</summary>
+  public int PresentCount
+    => 1 + Seated.Count(member => member.Role != DecisionPanelMemberRole.Chair && Draft.PresentUserIds.Contains(member.UserId));
+
+  private int StagedCount => Pending.Count;
+
+  /// <summary>
+  /// Every agenda line Record leaves unstaged, due and optional alike, which it records as not decided (E1); never a line
+  /// another sitting decided.
+  /// </summary>
+  private IReadOnlyList<string> NotStaged => ReviewSitting.NotStagedCodes(Agenda, Pending);
+
+  private string QuorumText => Review.PanelShortfall ?? ReviewWords.Quorum(PresentCount);
+
+  /// <summary>
+  /// Why Record is unavailable, in the record handler's order (16): the panel cannot sit a quorum, the ticks fall short, or
+  /// an entrustment-only review has nothing staged (E4).
+  /// </summary>
+  private Reason? UnavailableReason
+    => Review.PanelShortfall is { } shortfall ? new Reason(RecordBlock.Quorum, shortfall)
+      : PresentCount < CommitteeReview.Quorum ? new Reason(RecordBlock.Quorum, QuorumText)
+      : Agenda?.RecordBlockedReason is { } entrustmentOnly ? new Reason(RecordBlock.Entrustment, entrustmentOnly)
+      : null;
+
+  private static string? ReasonId(Reason? reason)
+    => reason switch
+    {
+      null => "record-hint",
+      { Kind: RecordBlock.Quorum } => "quorum-line",
+      _ => "record-reason"
+    };
+
+  private bool Refused(string field) => Draft.FieldRefusals.ContainsKey(field);
+
+  private string? Invalid(string field) => Refused(field) ? "true" : null;
+
+  private RenderFragment FieldMessage(string field, string id) => __builder =>
+  {
+    if (Draft.FieldRefusals.TryGetValue(field, out var message))
+    {
+      <div class="validation-message" id="@id">@message</div>
+    }
+  };
+
+  private void CategoryChanged(ChangeEventArgs args)
+    => Draft.Category = Enum.TryParse<CommitteeDecisionCategory>(args.Value?.ToString(), out var category) ? category : null;
+
+  private async Task RecordAsync()
+  {
+    if (Running)
+    {
+      return;
+    }
+
+    if (UnavailableReason is { } reason)
+    {
+      // Round 3 item 16: pressed while unavailable, Record does nothing but move the focus to its reason.
+      if (Focus is not null)
+      {
+        await Focus(ReasonId(reason)!);
+      }
+
+      return;
+    }
+
+    await OnRecord.InvokeAsync();
+  }
+}

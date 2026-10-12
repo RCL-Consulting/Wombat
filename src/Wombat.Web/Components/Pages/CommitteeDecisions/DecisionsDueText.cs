@@ -15,7 +15,7 @@ public static class DecisionsDueText
         EntrustmentDecisionDueStatus.NotScheduled,
         EntrustmentDecisionDueStatus.Revoked,
         EntrustmentDecisionDueStatus.DueByYearEnd,
-        EntrustmentDecisionDueStatus.Deferred,
+        EntrustmentDecisionDueStatus.NotDecided,
         EntrustmentDecisionDueStatus.Scheduled,
         EntrustmentDecisionDueStatus.PartialPeriod,
         EntrustmentDecisionDueStatus.AsOpportunityAllows,
@@ -27,7 +27,7 @@ public static class DecisionsDueText
     {
         EntrustmentDecisionDueStatus.Decided => "Decided",
         EntrustmentDecisionDueStatus.Scheduled => "Scheduled",
-        EntrustmentDecisionDueStatus.Deferred => "Deferred",
+        EntrustmentDecisionDueStatus.NotDecided => "Not decided",
         EntrustmentDecisionDueStatus.Revoked => "Revoked: re-decide",
         EntrustmentDecisionDueStatus.DueByYearEnd => "Due by year end",
         EntrustmentDecisionDueStatus.PartialPeriod => "Partial period",
@@ -49,10 +49,10 @@ public static class DecisionsDueText
                 ? $"{star}, issued at review #{decidedAt}."
                 : $"{star} stands for {item.WindowLabel}.",
             EntrustmentDecisionDueStatus.Scheduled => $"On the agenda of review #{item.ReviewId}, which is still open.",
-            EntrustmentDecisionDueStatus.Deferred => item.HoldingReviewId is int holding && holding == item.ReviewId
-                ? $"Deferred at review #{item.ReviewId}, which is still open: its chair can reinstate it there."
-                : $"Deferred at review #{item.ReviewId}. A later sitting for {item.WindowLabel} plans it again." +
-                  HoldingSentence(item),
+            // T361, D53: a ratified review left it so; there is nothing to reinstate.
+            EntrustmentDecisionDueStatus.NotDecided =>
+                $"Not decided at review #{item.ReviewId}. A later sitting for {item.WindowLabel} plans it again." +
+                HoldingSentence(item),
             EntrustmentDecisionDueStatus.Revoked => item.HoldingReviewId is null
                 ? $"{star}, issued for {item.WindowLabel}, was revoked. Schedule a review to decide it again."
                 : $"{star}, issued for {item.WindowLabel}, was revoked." + HoldingSentence(item),
@@ -67,7 +67,7 @@ public static class DecisionsDueText
                 ? $"No open review holds it, and {item.WindowLabel} has not ended."
                 : $"{item.WindowLabel} has not ended, and no open review's agenda holds it." + HoldingSentence(item),
             EntrustmentDecisionDueStatus.Missed =>
-                $"{item.WindowLabel} has ended with nothing decided, deferred or on an open review's agenda." +
+                $"{item.WindowLabel} has ended with nothing decided or on an open review's agenda." +
                 HoldingSentence(item),
             _ => string.Empty
         };
@@ -91,7 +91,7 @@ public static class DecisionsDueText
         var trainees = result.TraineeCount == 1 ? "1 trainee" : $"{result.TraineeCount} trainees";
         return $"The EPAs due for an entrustment decision in {result.PeriodLabel} for the {trainees} you oversee at " +
                $"{result.InstitutionName}, by each EPA's decision cadence: every semester, or once a year. " +
-               "Missed is read today: the EPA's window has ended with nothing decided, deferred or on an open review's agenda.";
+               "Missed is read today: the EPA's window has ended with nothing decided or on an open review's agenda.";
     }
 
     /// <summary>

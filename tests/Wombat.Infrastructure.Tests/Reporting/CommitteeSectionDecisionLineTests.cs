@@ -32,4 +32,18 @@ public sealed class CommitteeSectionDecisionLineTests
 
         CommitteeSectionComponent.DecisionLine(decision).Should().Be("Entrustment decisions only");
     }
+
+    [Theory]
+    [InlineData(false, "Annual progression review")]
+    [InlineData(true, "Formative check-in")]
+    public void TheReviewsType_IsPrintedAsTheReviewIs_AFormativeCheckInAsOne(bool isFormative, string expected)
+    {
+        // T361, review R1 (T309 item 2): a formative check-in decides nothing whatever its stored type.
+        var review = new CommitteeReview
+        {
+            AcademicYear = 2026, Semester = 2, ReviewType = CommitteeReviewType.AnnualProgression, IsFormative = isFormative
+        };
+
+        CommitteeSectionComponent.TypeLine(review).Should().Be(expected);
+    }
 }

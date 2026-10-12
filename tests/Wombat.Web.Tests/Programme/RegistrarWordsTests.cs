@@ -84,6 +84,9 @@ public sealed class RegistrarWordsTests
         };
         RegistrarWords.ReviewLink(review).Should().Be("Pre-graduation review, 2026-10-04");
         RegistrarWords.ReviewMeta(review).Should().Be("Semester 2, 2026 · Scheduled");
+
+        // T361, review R1: a formative check-in's link says what it is, never its stored type.
+        RegistrarWords.ReviewLink(review with { IsFormative = true }).Should().Be("Formative check-in, 2026-10-04");
     }
 
     [Fact]

@@ -117,7 +117,8 @@
         <td>@item.TraineeName</td>
         <td>@item.PanelName</td>
         <td>@item.PeriodLabel <span class="muted">· @item.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @item.ReviewPeriodTo.ToString("yyyy-MM-dd")</span></td>
-        <td>@CommitteeDecisionWording.ReviewTypeShortLabel(item.ReviewType)</td>
+        @* A formative check-in decides nothing whatever its stored type, so its Type says so (T361, review R1; T309 item 2). *@
+        <td>@CommitteeDecisionWording.ReviewTypeShortLabel(item.ReviewType, item.IsFormative)</td>
         <td>@(item.IsFormative ? "Formative" : "Summative")</td>
         <td>@item.StateLabel</td>
         @* A withdrawn review says so, formative or not (T258 review): OutcomeLabel asks for it first. *@

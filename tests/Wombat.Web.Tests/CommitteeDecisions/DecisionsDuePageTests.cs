@@ -109,7 +109,7 @@ public sealed partial class DecisionsDuePageTests : WombatTestContext
         var missed = cut.Find("#due-item-trainee-a-1");
         missed.QuerySelector(".badge")!.ClassList.Should().Contain("badge-declined");
         Text(missed.QuerySelector(".muted")!).Should().Be(
-            $"{PeriodLabel} has ended with nothing decided, deferred or on an open review's agenda.");
+            $"{PeriodLabel} has ended with nothing decided or on an open review's agenda.");
         cut.Find("#due-item-trainee-a-3 .badge").ClassList.Should().Contain("badge-declined");
         Text(cut.Find("#due-item-trainee-a-3 .muted")).Should().Be(
             $"STAR #7, issued for {_current.AcademicYear}, was revoked. Schedule a review to decide it again.");
@@ -148,8 +148,8 @@ public sealed partial class DecisionsDuePageTests : WombatTestContext
                 reviewId: 3, mayOpen: true, starId: 7, holdingReviewId: 44, mayOpenHolding: true),
             Row("trainee-a", "Ada Trainee", 2, "PAED-002", "Handover", EntrustmentDecisionDueStatus.NotScheduled,
                 holdingReviewId: 44, mayOpenHolding: false),
-            Row("trainee-a", "Ada Trainee", 5, "PAED-005", "Neonatal", EntrustmentDecisionDueStatus.Deferred,
-                reviewId: 44, mayOpen: true, holdingReviewId: 44, mayOpenHolding: true)
+            Row("trainee-a", "Ada Trainee", 5, "PAED-005", "Neonatal", EntrustmentDecisionDueStatus.NotDecided,
+                reviewId: 41, mayOpen: true, holdingReviewId: 44, mayOpenHolding: true)
         ]));
 
         var cut = RenderComponent<DecisionsDue>();
@@ -167,10 +167,13 @@ public sealed partial class DecisionsDuePageTests : WombatTestContext
         unreadable.QuerySelectorAll("a").Should().BeEmpty("the caller cannot open review 44, and Schedule would be refused");
         Text(unreadable.QuerySelector(".muted")!).Should().Contain("Review #44 is open for 2026 S2 before General CCC");
 
-        var deferredThere = cut.Find("#due-item-trainee-a-5");
-        deferredThere.QuerySelectorAll("a").Select(link => Text(link)).Should().Equal("Open review");
-        Text(deferredThere.QuerySelector(".muted")!).Should().Be(
-            "Deferred at review #44, which is still open: its chair can reinstate it there.");
+        // T361, D53: a ratified review left it not decided; there is nothing to reinstate, and the open review holds the seat.
+        var notDecided = cut.Find("#due-item-trainee-a-5");
+        notDecided.QuerySelectorAll("a").Select(link => Text(link)).Should().Equal("Open review", "Open review #44");
+        Text(notDecided.QuerySelector(".badge")!).Should().Be("Not decided");
+        Text(notDecided.QuerySelector(".muted")!).Should().StartWith("Not decided at review #41. A later sitting for ")
+            .And.Contain("Review #44 is open for 2026 S2 before General CCC: decide it there")
+            .And.NotContain("reinstate");
     }
 
     [Fact]
@@ -240,7 +243,7 @@ public sealed partial class DecisionsDuePageTests : WombatTestContext
         cut.Find("#due-status").Change(nameof(EntrustmentDecisionDueStatus.Missed));
         Rows(cut).Should().Equal(("Ada Trainee", "PAED-001 — Acute admission", "Missed"));
 
-        cut.Find("#due-status").Change(nameof(EntrustmentDecisionDueStatus.Deferred));
+        cut.Find("#due-status").Change(nameof(EntrustmentDecisionDueStatus.NotDecided));
         Text(cut.Find("#due-no-match")).Should().Contain("No decision matches the filters");
     }
 

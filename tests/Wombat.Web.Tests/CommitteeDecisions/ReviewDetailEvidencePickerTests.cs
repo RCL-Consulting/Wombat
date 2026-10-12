@@ -8,6 +8,7 @@ using Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Application.Features.Epas;
+using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
 using Wombat.Web.Services;
@@ -15,13 +16,15 @@ using Wombat.Web.Services;
 namespace Wombat.Web.Tests.CommitteeDecisions;
 
 /// <summary>
-/// The staging form names the lines of the frozen snapshot a decision rests on: grouped as the snapshot card groups
-/// them, the chosen EPA's lines first, never a supervisor report, and Stage stays disabled, with its reason said, until
-/// one is ticked (D38, T131).
+/// The staging form names the lines of the frozen snapshot a decision rests on: grouped as the snapshot groups them, the
+/// chosen EPA's lines first and the others behind "Show the other N snapshot lines", never a supervisor report; and Stage
+/// pending decision stays unavailable, with its reason said, until one is ticked (D38, T131). Since T361 (round 3 items
+/// 16, 20, 30) the form is the agenda's foot form, "Stage a decision on an EPA not on this agenda" (an open line's form is
+/// the same component, with its line's EPA), and Stage is aria-disabled, never natively disabled.
 /// </summary>
 public sealed class ReviewDetailEvidencePickerTests : TestContext
 {
-    private const string ReasonId = "pending-evidence-reason";
+    private const string ReasonId = "stage-0-reason";
 
     public ReviewDetailEvidencePickerTests()
     {
@@ -29,6 +32,7 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
         auth.SetAuthorized("chair@test");
         auth.SetRoles("CommitteeMember");
         auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "chair-1"));
+        JSInterop.Mode = JSRuntimeMode.Loose;
     }
 
     [Fact]
@@ -36,42 +40,38 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
     {
         var (cut, _) = RenderPage();
 
-        Legends(cut).Should().Equal("PAED-001 — Acute admission", "PAED-002 — Ward round", "Not about a single EPA");
-        CheckboxIds(cut).Should().BeEquivalentTo(new[] { "pending-evidence-1", "pending-evidence-2", "pending-evidence-3" });
-        cut.FindAll("#pending-evidence-4").Should().BeEmpty("a supervisor report cannot ground a decision");
+        Groups(cut).Should().Equal("PAED-001 — Acute admission", "PAED-002 — Ward round", "Not about a single EPA");
+        CheckboxIds(cut).Should().BeEquivalentTo(new[] { "stage-0-evidence-1", "stage-0-evidence-2", "stage-0-evidence-3" });
+        cut.FindAll("#stage-0-evidence-4").Should().BeEmpty("a supervisor report cannot ground a decision");
         // The state by its frozen label (T220).
-        cut.Find("label[for=pending-evidence-1]").TextContent.Should().Contain("Mini-CEX #101").And.Contain("3a · 2026-02-10 · Completed");
+        cut.Find("label[for=stage-0-evidence-1]").TextContent.Should().Contain("Mini-CEX #101").And.Contain("Rated 3a · 2026-02-10 · Completed");
     }
 
     [Fact]
-    public void ThePicker_IsOneFieldAmongTheForms_WithItsListsByEpaSetInsideIt()
+    public void ThePicker_IsOneFieldAmongTheForms()
     {
-        // T188. The picker is one field of the staging form, so a form group: its legend reads as a label, like
-        // Rationale's beside it, not as a section title. Its lists by EPA are form groups inside it, which app.css sets
-        // in by a rule down their left (fieldset.form-group fieldset.form-group), since their legends are the same size.
+        // T188. The picker is one field of the staging form, so a form group: its legend reads as a label, like Rationale's
+        // beside it, not as a section title. Its groups by EPA are labels inside it, not fieldsets of their own (T361,
+        // round 3 item 30).
         var (cut, _) = RenderPage();
 
-        var picker = cut.Find("#pending-evidence-help").Closest("fieldset")!;
-        picker.ClassList.Should().Contain(["form-group", "full-width"]);
+        var picker = Picker(cut);
+        picker.ClassList.Should().Contain(["form-group", "full-width", "snapshot-pick"]);
         picker.ParentElement!.ClassList.Should().Contain("form-grid", "it sits among the form's fields");
-        PendingForm(cut).QuerySelectorAll("fieldset.form-group fieldset.form-group > legend")
-            .Select(legend => legend.TextContent.Trim())
-            .Should().Equal(Legends(cut), "every list by EPA is a group within the picker's group");
+        picker.QuerySelectorAll("fieldset").Should().BeEmpty();
     }
 
     [Fact]
-    public void ThePickersLegend_IsMarkedRequired_AndItsHelpIsTheSizeOfAFieldsHelp()
+    public void ThePickersLegend_IsMarkedRequired()
     {
         // T188 review. Read as a label beside "Rationale *", the legend said nothing of what Stage waits for: at least one
-        // line (D38; StagePendingEntrustmentDecision refuses none). It carries the mark FormField gives a required
-        // field, seen and heard. Its help, like a FormField's, is a page-subtitle, not a body-size muted paragraph.
+        // line (D38; StagePendingEntrustmentDecision refuses none). It carries the mark FormField gives a required field.
+        // Its help paragraph went with round 3 (item 30): the boards draw none.
         var (cut, _) = RenderPage();
 
-        var picker = cut.Find("#pending-evidence-help").Closest("fieldset")!;
-        var legend = picker.Children.First(child => child.LocalName == "legend");
+        var legend = Picker(cut).Children.First(child => child.LocalName == "legend");
         legend.QuerySelector("span[aria-hidden=true]")!.TextContent.Should().Be("*");
         legend.QuerySelector("span.visually-hidden")!.TextContent.Should().Be("required");
-        cut.Find("#pending-evidence-help").ClassList.Should().Contain("page-subtitle");
     }
 
     /// <summary>
@@ -94,8 +94,8 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
 
         var (cut, _) = RenderPage(evidence: [Line(1, 101, 7, "PAED-001", "Acute admission"), noEpa]);
 
-        Legends(cut).Should().Equal("PAED-001 — Acute admission", "Not about a single EPA");
-        var label = cut.Find("label[for=pending-evidence-5]").TextContent;
+        Groups(cut).Should().Equal("PAED-001 — Acute admission", "Not about a single EPA");
+        var label = cut.Find("label[for=stage-0-evidence-5]").TextContent;
         label.Should().Contain("Clinical Audit #105").And.Contain("Awaiting supervisor");
         label.Should().NotContain("submitted");
     }
@@ -103,60 +103,72 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
     [Fact]
     public void EachLabel_ReadsWithASpaceBeforeItsDetail()
     {
-        // T212: the space before the first "·" stood alone before the detail's @if, where Razor drops whitespace, so a
-        // label read "Mini-CEX #101· 3a · …". Checked on the label's own text, not with Contain, which passed it.
+        // T212: the space before the detail stood alone before an @if, where Razor drops whitespace, so a label read
+        // "Mini-CEX #101· 3a · …". Checked on the label's own text, not with Contain, which passed it. Round 3 item 30's
+        // words: "Rated 3a", and a campaign report by its state alone.
         var (cut, _) = RenderPage();
 
-        LabelText(cut, 1).Should().Be("Mini-CEX #101 · 3a · 2026-02-10 · Completed", "the state by its frozen label (T220)");
-        LabelText(cut, 3).Should().Be("Annual MSF #50 · Released");
+        LabelText(cut, 1).Should().Be("Mini-CEX #101 Rated 3a · 2026-02-10 · Completed", "the state by its frozen label (T220)");
+        LabelText(cut, 3).Should().Be("Annual MSF #50 Released");
     }
 
     [Fact]
-    public void ChoosingAnEpa_ListsItsLinesFirst_AsAHint_WithoutHidingTheOthers()
+    public void ChoosingAnEpa_ListsItsLinesFirst_AndTheOthersBehindAButton_WithoutDroppingThem()
     {
+        // T361 (round 3 items 20, 30): the chosen EPA's lines first; the others behind a button with aria-expanded.
         var (cut, _) = RenderPage();
 
-        cut.Find("#pending-epa").Change("8");
+        cut.Find("#stage-0-epa").Change("8");
 
-        Legends(cut).Should().Equal("PAED-002 — Ward round", "PAED-001 — Acute admission", "Not about a single EPA");
-        cut.Find("#pending-evidence-help").TextContent.Should().Contain("PAED-002's lines are listed first.");
+        CheckboxIds(cut).Should().Equal("stage-0-evidence-2");
+        var others = cut.Find("#stage-0-others");
+        others.TextContent.Trim().Should().Be("Show the other 2 snapshot lines");
+        others.GetAttribute("aria-expanded").Should().Be("false");
+
+        others.Click();
+
+        Groups(cut).Should().Equal("PAED-001 — Acute admission", "Not about a single EPA");
         CheckboxIds(cut).Should().HaveCount(3);
     }
 
     [Fact]
-    public void Stage_IsDisabledUntilAnItemIsTicked_AndSaysWhy()
+    public void Stage_IsUnavailableUntilAnItemIsTicked_AndSaysWhy()
     {
+        // T361 (round 3 item 16): aria-disabled and .is-unavailable, never natively disabled; its reason beside it.
         var (cut, _) = RenderPage();
 
         var stage = StageButton(cut);
-        stage.HasAttribute("disabled").Should().BeTrue();
+        stage.HasAttribute("disabled").Should().BeFalse();
+        stage.GetAttribute("aria-disabled").Should().Be("true");
+        stage.ClassList.Should().Contain("is-unavailable");
         stage.GetAttribute("aria-describedby").Should().Be(ReasonId);
-        cut.Find($"#{ReasonId}").TextContent.Should().Be("Stage pending decision: Name at least one item of the evidence snapshot.");
+        cut.Find($"#{ReasonId}").TextContent.Should().Be("Name at least one item of the evidence snapshot.");
 
-        cut.Find("#pending-evidence-1").Change(true);
+        cut.Find("#stage-0-evidence-1").Change(true);
 
-        StageButton(cut).HasAttribute("disabled").Should().BeFalse();
+        StageButton(cut).HasAttribute("aria-disabled").Should().BeFalse();
         StageButton(cut).HasAttribute("aria-describedby").Should().BeFalse();
         cut.FindAll($"#{ReasonId}").Should().BeEmpty();
 
-        cut.Find("#pending-evidence-1").Change(false);
-        StageButton(cut).HasAttribute("disabled").Should().BeTrue("unticking the only item takes the evidence away again");
+        cut.Find("#stage-0-evidence-1").Change(false);
+        StageButton(cut).GetAttribute("aria-disabled").Should().Be("true", "unticking the only item takes the evidence away again");
     }
 
     [Fact]
     public void OneNamedItem_OrNoneAboutTheChosenEpa_IsSaid_NeverRefused()
     {
         var (cut, _) = RenderPage();
-        cut.Find("#pending-epa").Change("8");
+        cut.Find("#stage-0-epa").Change("8");
+        cut.Find("#stage-0-others").Click();
 
-        cut.Find("#pending-evidence-1").Change(true);
+        cut.Find("#stage-0-evidence-1").Change(true);
 
         var hints = Hints(cut);
         hints.Should().Contain(hint => hint.Contains("never taken from a single form"));
         hints.Should().Contain("None of the named items is about PAED-002.");
-        StageButton(cut).HasAttribute("disabled").Should().BeFalse();
+        StageButton(cut).HasAttribute("aria-disabled").Should().BeFalse();
 
-        cut.Find("#pending-evidence-2").Change(true);
+        cut.Find("#stage-0-evidence-2").Change(true);
 
         Hints(cut).Should().BeEmpty("two items are named, one of them about PAED-002");
     }
@@ -176,19 +188,19 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
             Unfinished(Line(3, 103, 7, "PAED-001", "Acute admission"), "draft"),
             Line(4, 104, 7, "PAED-001", "Acute admission") with { SourceFinished = null }
         ]);
-        cut.Find("#pending-epa").Change("7");
+        cut.Find("#stage-0-epa").Change("7");
 
-        cut.Find("#pending-evidence-2").Change(true);
-        cut.Find("#pending-evidence-3").Change(true);
+        cut.Find("#stage-0-evidence-2").Change(true);
+        cut.Find("#stage-0-evidence-3").Change(true);
 
-        Hints(cut).Should().Equal(ReviewDetail.NoFinishedItemHint);
-        StageButton(cut).HasAttribute("disabled").Should().BeFalse("it is said, not refused");
+        Hints(cut).Should().Equal(Wombat.Web.Components.Pages.CommitteeDecisions.Review.ReviewWords.NoFinishedItem);
+        StageButton(cut).HasAttribute("aria-disabled").Should().BeFalse("it is said, not refused");
 
-        cut.Find("#pending-evidence-1").Change(true);
+        cut.Find("#stage-0-evidence-1").Change(true);
         Hints(cut).Should().BeEmpty("one named item was finished");
 
-        cut.Find("#pending-evidence-1").Change(false);
-        cut.Find("#pending-evidence-4").Change(true);
+        cut.Find("#stage-0-evidence-1").Change(false);
+        cut.Find("#stage-0-evidence-4").Change(true);
         Hints(cut).Should().BeEmpty("a line frozen before T131 does not say whether it was finished");
     }
 
@@ -196,21 +208,22 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
     public void Staging_SendsTheTickedLines()
     {
         var (cut, sender) = RenderPage();
-        cut.Find("#pending-epa").Change("7");
-        cut.Find("#pending-level").Change("13");
-        cut.Find("#pending-rationale").Change("Consistent across the window.");
-        cut.Find("#pending-evidence-1").Change(true);
-        cut.Find("#pending-evidence-3").Change(true);
+        cut.Find("#stage-0-epa").Change("7");
+        cut.Find("#stage-0-level").Change("13");
+        cut.Find("#stage-0-rationale").Change("Consistent across the window.");
+        cut.Find("#stage-0-evidence-1").Change(true);
+        cut.Find("#stage-0-others").Click();
+        cut.Find("#stage-0-evidence-3").Change(true);
 
-        PendingForm(cut).Submit();
+        StageButton(cut).Click();
 
         cut.WaitForState(() => sender.Staged is not null);
-        sender.Staged!.EvidenceItemIds.Should().BeEquivalentTo(new[] { 1, 3 });
+        sender.Staged!.EvidenceItemIds.Should().Equal(1, 3);
         sender.Staged.EpaId.Should().Be(7);
 
-        // The list is read again once the decision is staged (T212: outside the stage's own try), so it shows.
+        // The staged decisions are read again once the decision is staged (T212), so its line says what it rests on.
         cut.WaitForState(() => cut.Markup.Contains("Pending entrustment decision staged."));
-        cut.Markup.Should().Contain("Rests on 2 items of the snapshot: Mini-CEX #101; Annual MSF #50.");
+        Text(cut.Find("#agenda-line-7")).Should().Contain("Rests on 2 items of the snapshot: Mini-CEX #101; Annual MSF #50.");
     }
 
     [Fact]
@@ -222,43 +235,41 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
 
         var (cut, _) = RenderPage(pending);
 
-        cut.Markup.Should().Contain("Rests on 2 items of the snapshot: Mini-CEX #101; Annual MSF #50.");
+        Text(cut.Find("#agenda-line-7")).Should().Contain("Rests on 2 items of the snapshot: Mini-CEX #101; Annual MSF #50.");
     }
 
     [Fact]
-    public void ASnapshotWithNothingADecisionCanRestOn_SaysSo_AndStageStaysDisabled()
+    public void ASnapshotWithNothingADecisionCanRestOn_SaysSo_AndStageStaysUnavailable()
     {
         var (cut, _) = RenderPage(evidence: [Report(4)]);
 
         cut.Markup.Should().Contain("The evidence snapshot holds no line a decision can rest on");
-        StageButton(cut).HasAttribute("disabled").Should().BeTrue();
+        StageButton(cut).GetAttribute("aria-disabled").Should().Be("true");
     }
 
     // ---- Fixture -------------------------------------------------------------------------------------------------
 
-    private static AngleSharp.Dom.IElement PendingForm(IRenderedComponent<ReviewDetail> cut)
-        => cut.Find("#pending-epa").Closest("form")!;
+    private static AngleSharp.Dom.IElement Picker(IRenderedComponent<ReviewDetail> cut)
+        => cut.Find("#agenda-foot").QuerySelector("fieldset.snapshot-pick")!;
 
     private static AngleSharp.Dom.IElement StageButton(IRenderedComponent<ReviewDetail> cut)
-        => PendingForm(cut).QuerySelectorAll("button[type=submit]").Single();
+        => cut.Find("#stage-0-submit");
 
-    private static IReadOnlyList<string> Legends(IRenderedComponent<ReviewDetail> cut)
-        => PendingForm(cut).QuerySelectorAll("fieldset fieldset > legend")
-            .Select(legend => legend.TextContent.Trim())
-            .ToArray();
+    private static IReadOnlyList<string> Groups(IRenderedComponent<ReviewDetail> cut)
+        => Picker(cut).QuerySelectorAll(".snapshot-pick-group").Select(group => group.TextContent.Trim()).ToArray();
 
     private static IReadOnlyList<string> CheckboxIds(IRenderedComponent<ReviewDetail> cut)
-        => PendingForm(cut).QuerySelectorAll("input[type=checkbox]")
-            .Select(input => input.Id ?? string.Empty)
-            .ToArray();
+        => Picker(cut).QuerySelectorAll("input[type=checkbox]").Select(input => input.Id ?? string.Empty).ToArray();
+
+    private static string Text(AngleSharp.Dom.IElement element)
+        => System.Text.RegularExpressions.Regex.Replace(element.TextContent, @"\s+", " ").Trim();
 
     /// <summary>The label's text as a reader gets it: runs of whitespace as one space, and no space where none is.</summary>
     private static string LabelText(IRenderedComponent<ReviewDetail> cut, int evidenceId)
-        => System.Text.RegularExpressions.Regex.Replace(
-            cut.Find($"label[for=pending-evidence-{evidenceId}]").TextContent, @"\s+", " ").Trim();
+        => Text(cut.Find($"label[for=stage-0-evidence-{evidenceId}]"));
 
     private static IReadOnlyList<string> Hints(IRenderedComponent<ReviewDetail> cut)
-        => cut.FindAll("#pending-evidence-hints .field-warning").Select(hint => hint.TextContent.Trim()).ToArray();
+        => cut.FindAll("#stage-0-hints .field-warning").Select(hint => hint.TextContent.Trim()).ToArray();
 
     private (IRenderedComponent<ReviewDetail> Cut, FakeSender Sender) RenderPage(
         PendingEntrustmentDecisionDto? pending = null,
@@ -269,7 +280,7 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
         Services.AddSingleton<IScopedSender>(sender);
 
         var cut = RenderComponent<ReviewDetail>(parameters => parameters.Add(page => page.ReviewId, review.Id));
-        cut.WaitForState(() => cut.Markup.Contains("Evidence it rests on"));
+        cut.WaitForState(() => cut.FindAll("#agenda-foot").Count > 0);
         return (cut, sender);
     }
 
@@ -347,7 +358,15 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
             // The page offers the chair's controls by what the query says the caller may do (T213); these tests act as the
             // chair.
             CallerChairs = true,
-            CallerResolvesAppeals = true
+            CallerResolvesAppeals = true,
+            // A line each for the two EPAs, so a staged decision shows in its line (T361, round 3 item 30).
+            Agenda = new CommitteeAgendaDto(30, 2026, 1, "2026 S1", false,
+            [
+                new CommitteeAgendaLineDto(107, 7, "PAED-001", "Acute admission", CommitteeAgendaLineOrigin.Cadence, 2026, 1,
+                    "2026 S1", true, false, CommitteeAgendaLineState.Due, CommitteeAgendaLineStatus.Due, false, false, null, 1),
+                new CommitteeAgendaLineDto(108, 8, "PAED-002", "Ward round", CommitteeAgendaLineOrigin.Cadence, 2026, 1,
+                    "2026 S1", true, false, CommitteeAgendaLineState.Due, CommitteeAgendaLineStatus.Due, false, false, null, 1)
+            ], [])
         };
 
     private sealed class FakeSender : IScopedSender
@@ -391,6 +410,9 @@ public sealed class ReviewDetailEvidencePickerTests : TestContext
                 ListStarEpaOptionsForReviewQuery => StarEpas,
                 GetEntrustmentScalesListQuery => Scales,
                 StagePendingEntrustmentDecisionCommand stage => Stage(stage),
+                GetEntrustmentStandingForTraineeQuery => null,
+                GetMsfCoverageForTraineeQuery => null,
+                GetStartPreviewQuery => null,
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };
 

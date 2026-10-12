@@ -132,7 +132,8 @@ public sealed class EntrustmentOnlyReviewPostgresTests : IAsyncLifetime
                     ReviewType = CommitteeReviewType.EntrustmentOnly
                 };
                 review.Start([], "chair-n", sitting);
-                review.RecordDecision(null, "PAED-004 entrusted at 3a.", null, "chair-n", sitting, members, [], []);
+                // T361, E4: an entrustment-only decision is what is staged at it; the EPA staged on is named (PAED-004, id 4).
+                review.RecordDecision(null, "PAED-004 entrusted at 3a.", null, "chair-n", sitting, members, [4], []);
                 review.Ratify("chair-n", sitting);
                 db.CommitteeReviews.Add(review);
                 await db.SaveChangesAsync();

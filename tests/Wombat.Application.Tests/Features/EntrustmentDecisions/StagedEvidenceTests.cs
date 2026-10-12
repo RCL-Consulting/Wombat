@@ -366,7 +366,7 @@ public sealed class StagedEvidenceTests
     private static Task RecordDecisionAsync(ApplicationDbContext db)
         => new RecordCommitteeDecisionCommandHandler(db, FakeUserDirectory.CommitteeMembersAt(Institution, "chair-1", "member-1")).Handle(
             new RecordCommitteeDecisionCommand(
-                ReviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, ["chair-1", "member-1"], Chair()),
+                ReviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, null, ["chair-1", "member-1"], Chair()),
             CancellationToken.None);
 
     private static Task RatifyAsync(ApplicationDbContext db)

@@ -172,6 +172,30 @@ public sealed class EntrustmentDecisionHandlersTests
             .Should().BeEquivalentTo([("EPA-07", true), ("EPA-08", false)]);
     }
 
+    /// <summary>
+    /// T273 (T361, round 3 item 13): a staged STAR says whether its EPA is in force now, from the EPA row the list already
+    /// loads, so the review page marks one no longer in use as the sampling card does.
+    /// </summary>
+    [Fact]
+    public async Task TheStagedList_SaysWhetherEachEpaIsInForceNow()
+    {
+        await using var dbContext = CreateDbContext();
+        var review = await SeedReviewInStateAsync(dbContext, startReview: true);
+        await StageAsync(dbContext, review.Id, 7, 3, new DateOnly(2026, 4, 1), null, "Level 3.", EvidenceOnEpa7);
+        await StageAsync(dbContext, review.Id, 8, 3, new DateOnly(2026, 4, 1), null, "Level 3.", EvidenceOnEpa8);
+
+        (await dbContext.Epas.SingleAsync(epa => epa.Id == 8))
+            .Deactivate(new DateTime(2026, 5, 1, 8, 0, 0, DateTimeKind.Utc)).Should().BeTrue();
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        var staged = await new ListPendingEntrustmentDecisionsForReviewQueryHandler(dbContext, Committee).Handle(
+            new ListPendingEntrustmentDecisionsForReviewQuery(review.Id, CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
+            CancellationToken.None);
+
+        staged.Select(decision => (decision.EpaCode, decision.EpaInForce)).Should().Equal(("EPA-07", true), ("EPA-08", false));
+    }
+
     private static ApplicationDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -196,7 +220,7 @@ public sealed class EntrustmentDecisionHandlersTests
     /// <summary>Records the decision with a quorate sitting, the chair and the other member present (T165).</summary>
     private static Task RecordDecisionAsync(ApplicationDbContext dbContext, int reviewId)
         => new RecordCommitteeDecisionCommandHandler(dbContext, Committee).Handle(
-            new RecordCommitteeDecisionCommand(reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "Satisfactory.", null, ["chair-1", "member-1"],
+            new RecordCommitteeDecisionCommand(reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "Satisfactory.", null, null, ["chair-1", "member-1"],
                 CreatePrincipal("chair-1", [WombatRoles.CommitteeMember])),
             CancellationToken.None);
 

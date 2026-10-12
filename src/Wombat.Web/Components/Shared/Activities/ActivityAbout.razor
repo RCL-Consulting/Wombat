@@ -6,7 +6,7 @@
   ActivityPageModel.About's.
 *@
 <section class="@($"detail-card activity-about {Class}".TrimEnd())" aria-labelledby="activity-about-title@(IdSuffix)">
-  <h2 id="activity-about-title@(IdSuffix)" class="activity-card-title">About</h2>
+  @Heading
   <dl class="details-list">
     @foreach (var row in Rows)
     {
@@ -42,4 +42,19 @@
 
   /// <summary>Appended to every id the card carries: <c>-narrow</c> on the phone's copy, so no id is on the page twice.</summary>
   [Parameter] public string IdSuffix { get; set; } = string.Empty;
+
+  /// <summary>
+  /// The level of the card's heading: 2 on the activity pages, under their h1; the review sitting's evidence reader,
+  /// under its own h3, passes 4 (T361, review D1).
+  /// </summary>
+  [Parameter] public int HeadingLevel { get; set; } = 2;
+
+  private RenderFragment Heading => __builder =>
+  {
+    __builder.OpenElement(0, $"h{Math.Clamp(HeadingLevel, 2, 6)}");
+    __builder.AddAttribute(1, "id", $"activity-about-title{IdSuffix}");
+    __builder.AddAttribute(2, "class", "activity-card-title");
+    __builder.AddContent(3, "About");
+    __builder.CloseElement();
+  };
 }

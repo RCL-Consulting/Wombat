@@ -27,9 +27,9 @@ namespace Wombat.Web.Tests.CommitteeDecisions;
 /// </summary>
 public sealed partial class ReviewDetailChairControlsTests : TestContext
 {
-    /// <summary>Every control only the chair may use, by its visible label.</summary>
+    /// <summary>Every control only the chair may use, by its visible label (round 3's words, T361).</summary>
     private static readonly string[] ChairsControls =
-        ["Record decision", "Ratify", "Close review", "Stage pending decision", "Remove", "Stage", "Defer", "Reinstate"];
+        ["Record decision…", "Ratify…", "Close review…", "Stage pending decision", "Remove…", "Stage", "Go to the decision"];
 
     private readonly TestAuthorizationContext _auth;
     private readonly RecordingSender _sender = new();
@@ -38,6 +38,7 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
     {
         _auth = this.AddTestAuthorization();
         Services.AddSingleton<IScopedSender>(_sender);
+        JSInterop.Mode = JSRuntimeMode.Loose; // the dialogs open and close, and results take the focus (T361)
     }
 
     // ─── The chair's controls ────────────────────────────────────────────────
@@ -46,13 +47,14 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
     public void WhileTheReviewIsInProgress_ThePanelsChair_IsOfferedEveryControl()
     {
         SignInAs("chair-1");
-        var cut = Render(Review(CommitteeReviewState.InProgress, callerChairs: true), [Pending(7, evidence: [501])]);
+        var cut = Render(Review(CommitteeReviewState.InProgress, callerChairs: true), [Pending(1, evidence: [501])]);
 
-        Buttons(cut).Should().Contain(["Record decision", "Stage pending decision", "Remove", "Stage", "Defer", "Reinstate"]);
+        Buttons(cut).Should().Contain(["Record decision…", "Stage pending decision", "Remove…", "Stage", "Go to the decision"]);
+        Buttons(cut).Should().NotContain(["Defer", "Reinstate"], "there is no deferral (T361, D53)");
         cut.FindAll("#decision-rationale").Should().ContainSingle();
-        cut.FindAll("#pending-epa").Should().ContainSingle();
+        cut.FindAll("#stage-0-epa").Should().ContainSingle();
         AgendaHeaders(cut).Should().Contain("Action");
-        cut.FindAll("#chair-actions-note").Should().BeEmpty();
+        cut.FindAll("#sitting-sentence").Should().BeEmpty();
     }
 
     [Fact]
@@ -60,19 +62,17 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
     {
         // Before T213 every one of these was offered, and each refused on the click ("Only the panel's chair can do this.").
         SignInAs("member-1");
-        var cut = Render(Review(CommitteeReviewState.InProgress, callerChairs: false), [Pending(7, evidence: [501])]);
+        var cut = Render(Review(CommitteeReviewState.InProgress, callerChairs: false), [Pending(1, evidence: [501])]);
 
         Buttons(cut).Should().NotContain(ChairsControls);
         cut.FindAll("#decision-rationale").Should().BeEmpty("the decision form is the chair's");
-        cut.FindAll("#pending-epa").Should().BeEmpty("the staging form is the chair's");
+        cut.FindAll("#stage-0-epa").Should().BeEmpty("the staging form is the chair's");
         AgendaHeaders(cut).Should().Equal(["EPA", "Window", "State", "Evidence"], "nobody else gets an empty Action column");
-        Text(cut.Find("#chair-actions-note")).Should().Be(
-            "Only the panel's chair, Thandi Zulu, can stage entrustment decisions, defer agenda lines and record the " +
-            "committee's decision.");
+        Text(cut.Find("#sitting-sentence")).Should().Be(
+            "Only the panel's chair, Thandi Zulu, can stage entrustment decisions and record the committee's decision.");
 
-        // What the review holds is still there to read.
-        Text(cut.Find("#agenda-line-1")).Should().Contain("PAED-001");
-        Page(cut).Should().Contain("PAED-007 — An EPA");
+        // What the review holds is still there to read: the staged decision in its line (T361, round 3 item 30).
+        Text(cut.Find("#agenda-line-1")).Should().Contain("PAED-001").And.Contain("Level 3a");
     }
 
     [Fact]
@@ -81,9 +81,9 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
         SignInAs("member-1");
         var cut = Render(Review(CommitteeReviewState.Decided, callerChairs: false) with { QuorumShortfall = "Short." });
 
-        Buttons(cut).Should().NotContain("Ratify");
+        Buttons(cut).Should().NotContain("Ratify…");
         cut.FindAll("#ratify-reason").Should().BeEmpty();
-        Text(cut.Find("#chair-actions-note")).Should().Be("Only the panel's chair, Thandi Zulu, can ratify the committee's decision.");
+        Text(cut.Find("#sitting-sentence")).Should().Be("Only the panel's chair, Thandi Zulu, can ratify the committee's decision.");
     }
 
     [Fact]
@@ -92,8 +92,8 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
         SignInAs("chair-1");
         var cut = Render(Review(CommitteeReviewState.Decided, callerChairs: true));
 
-        Buttons(cut).Should().Contain("Ratify");
-        cut.FindAll("#chair-actions-note").Should().BeEmpty();
+        Buttons(cut).Should().Contain("Ratify…");
+        cut.FindAll("#sitting-sentence").Should().BeEmpty();
     }
 
     [Fact]
@@ -102,8 +102,8 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
         SignInAs("member-1");
         var cut = Render(Review(CommitteeReviewState.InProgress, callerChairs: false) with { IsFormative = true });
 
-        Buttons(cut).Should().NotContain("Close review");
-        Text(cut.Find("#chair-actions-note")).Should().Be("Only the panel's chair, Thandi Zulu, can close this review.");
+        Buttons(cut).Should().NotContain("Close review…");
+        Text(cut.Find("#sitting-sentence")).Should().Be("Only the panel's chair, Thandi Zulu, can close this review.");
     }
 
     // ─── The appeal body ─────────────────────────────────────────────────────
@@ -254,11 +254,11 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
         SignInAs("member-1");
         var cut = Render(
             Review(CommitteeReviewState.Decided, callerChairs: false),
-            [Pending(7, evidence: [501]) with { NoLongerFits = "PAED-007 is no longer on the trainee's curriculum." }]);
+            [Pending(1, evidence: [501]) with { NoLongerFits = "PAED-001 is no longer on the trainee's curriculum." }]);
 
-        PendingLine(cut, "PAED-007").QuerySelectorAll("button").Should().BeEmpty();
-        Buttons(cut).Should().NotContain("Remove");
-        Text(cut.Find("#chair-actions-note")).Should().Be(
+        PendingLine(cut, 1).QuerySelectorAll("button").Should().BeEmpty();
+        Buttons(cut).Should().NotContain("Remove…");
+        Text(cut.Find("#sitting-sentence")).Should().Be(
             "Only the panel's chair, Thandi Zulu, can remove a staged decision that no longer fits the trainee's " +
             "curriculum and ratify the committee's decision.");
     }
@@ -269,28 +269,9 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
         SignInAs("chair-1");
         var cut = Render(
             Review(CommitteeReviewState.Decided, callerChairs: true),
-            [Pending(7, evidence: [501]) with { NoLongerFits = "PAED-007 is no longer on the trainee's curriculum." }]);
+            [Pending(1, evidence: [501]) with { NoLongerFits = "PAED-001 is no longer on the trainee's curriculum." }]);
 
-        PendingLine(cut, "PAED-007").QuerySelectorAll("button").Select(button => button.TextContent.Trim()).Should().Equal("Remove");
-    }
-
-    [Fact]
-    public void OnADecidedReview_WithALineThatKeepsItFromBeingRatified_AMemberIsToldTheChairCanDeferIt()
-    {
-        SignInAs("member-1");
-        var review = Review(CommitteeReviewState.Decided, callerChairs: false);
-        var cut = Render(review with
-        {
-            Agenda = review.Agenda! with
-            {
-                Lines = [Line(1, "PAED-001", CommitteeAgendaLineStatus.Due, CommitteeAgendaLineState.Due, blocksRatify: true)]
-            }
-        });
-
-        Buttons(cut).Should().NotContain("Defer");
-        Text(cut.Find("#chair-actions-note")).Should().Be(
-            "Only the panel's chair, Thandi Zulu, can defer an agenda line that keeps the review from being ratified and " +
-            "ratify the committee's decision.");
+        PendingLine(cut, 1).QuerySelectorAll("button").Select(button => button.TextContent.Trim()).Should().Equal("Remove…");
     }
 
     // ─── A chair who may no longer sit (T256) ────────────────────────────────
@@ -319,19 +300,18 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
     public void AChairWhoMayNoLongerSit_IsOfferedNoneOfTheChairsControls_AndIsToldWhy(CommitteeReviewState state, bool formative)
     {
         // Before T256 the query asked only the seat, from claims frozen for the circuit's life, so a chair who had lost the
-        // CommitteeMember role, moved or been deactivated was offered Ratify, Close, Stage, Remove, Defer and Reinstate,
+        // CommitteeMember role, moved or been deactivated was offered Ratify, Close, Stage and Remove,
         // and each worked. The query now asks the seat rule too, and says why.
         SignInAs("chair-1");
         var cut = Render(
             Review(state, callerChairs: false) with { IsFormative = formative, ChairCannotAct = YouMayNotChair },
-            [Pending(7, evidence: [501])]);
+            [Pending(1, evidence: [501])]);
 
         Buttons(cut).Should().NotContain(ChairsControls, $"{state}, formative: {formative}");
         cut.FindAll("#decision-rationale").Should().BeEmpty();
-        cut.FindAll("#pending-epa").Should().BeEmpty();
-        Text(cut.Find("#chair-cannot-act-note")).Should().Be(YouMayNotChair);
-        cut.Find("#chair-cannot-act-note").GetAttribute("role").Should().BeNull("standing page content is not announced on every load");
-        cut.FindAll("#chair-actions-note").Should().BeEmpty("it would name the chair as the one who can act");
+        cut.FindAll("#stage-0-epa").Should().BeEmpty();
+        Text(cut.Find("#sitting-sentence")).Should().Be(YouMayNotChair);
+        cut.Find("#sitting-sentence").GetAttribute("role").Should().BeNull("standing page content is not announced on every load");
     }
 
     [Theory]
@@ -342,14 +322,15 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
         var cut = Render(Review(state, callerChairs: false) with { IsFormative = formative, ChairCannotAct = TheChairMayNotAct });
 
         Buttons(cut).Should().NotContain(ChairsControls);
-        Text(cut.Find("#chair-cannot-act-note")).Should().Be(TheChairMayNotAct);
-        cut.FindAll("#chair-actions-note").Should().BeEmpty("\"Only the panel's chair, Thandi Zulu, can …\" is not so");
+        // "Only the panel's chair, Thandi Zulu, can …" is not so: the bar's one sentence says why nobody can (T361).
+        Text(cut.Find("#sitting-sentence")).Should().Be(TheChairMayNotAct);
     }
 
     [Fact]
-    public void WhenTheChairMayNoLongerSit_AScheduledReview_StillSaysWhoCanStartIt()
+    public void WhenTheChairMayNoLongerSit_AScheduledReview_SaysWhy_AndOffersNobodyStart()
     {
-        // Start is not the chair's: who can start it is still said, beside why the chair will not be able to act.
+        // T361 (C5, Q11, E2): while the chair cannot act, nobody is offered Start, and the bar's one sentence says why;
+        // who could start it otherwise is not said, since nobody can now.
         SignInAs("instadmin-1");
         var cut = Render(Review(CommitteeReviewState.Scheduled, callerChairs: false) with
         {
@@ -357,9 +338,8 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
             ChairCannotAct = TheChairMayNotAct
         });
 
-        Text(cut.Find("#chair-actions-note"))
-            .Should().Be(WhoCanStart);
-        Text(cut.Find("#chair-cannot-act-note")).Should().Be(TheChairMayNotAct);
+        Buttons(cut).Should().NotContain("Start review…");
+        Text(cut.Find("#sitting-sentence")).Should().Be(TheChairMayNotAct);
     }
 
     [Fact]
@@ -368,8 +348,8 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
         SignInAs("chair-1");
         var cut = Render(Review(CommitteeReviewState.Decided, callerChairs: true));
 
-        Buttons(cut).Should().Contain("Ratify");
-        cut.FindAll("#chair-cannot-act-note").Should().BeEmpty();
+        Buttons(cut).Should().Contain("Ratify…");
+        cut.FindAll("#sitting-sentence").Should().BeEmpty();
     }
 
     // ─── A trainee who has moved institution (T213 review) ───────────────────
@@ -382,14 +362,14 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
         SignInAs("chair-1");
         var cut = Render(
             Review(CommitteeReviewState.InProgress, callerChairs: true) with { TraineeElsewhere = TraineeMoved },
-            [Pending(7, evidence: [501])]);
+            [Pending(1, evidence: [501])]);
 
         Buttons(cut).Should().NotContain(ChairsControls);
         cut.FindAll("#decision-rationale").Should().BeEmpty();
-        cut.FindAll("#pending-epa").Should().BeEmpty();
+        cut.FindAll("#stage-0-epa").Should().BeEmpty();
         AgendaHeaders(cut).Should().Equal(["EPA", "Window", "State", "Evidence"]);
-        Text(cut.Find("#trainee-elsewhere-note")).Should().Be(TraineeMoved);
-        cut.FindAll("#chair-actions-note").Should().BeEmpty("the chair is not the one to wait for");
+        // The chair is not the one to wait for: the bar's one sentence says why (T361).
+        Text(cut.Find("#sitting-sentence")).Should().Be(TraineeMoved);
     }
 
     [Fact]
@@ -398,8 +378,7 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
         SignInAs("member-1");
         var cut = Render(Review(CommitteeReviewState.Decided, callerChairs: false) with { TraineeElsewhere = TraineeMoved });
 
-        Text(cut.Find("#trainee-elsewhere-note")).Should().Be(TraineeMoved);
-        cut.FindAll("#chair-actions-note").Should().BeEmpty();
+        Text(cut.Find("#sitting-sentence")).Should().Be(TraineeMoved);
     }
 
     [Fact]
@@ -408,8 +387,8 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
         SignInAs("member-1");
         var cut = Render(Review(CommitteeReviewState.Scheduled, callerChairs: false) with { TraineeElsewhere = TraineeMoved });
 
-        Buttons(cut).Should().NotContain("Start review");
-        Text(cut.Find("#trainee-elsewhere-note")).Should().Be(TraineeMoved);
+        Buttons(cut).Should().NotContain("Start review…");
+        Text(cut.Find("#sitting-sentence")).Should().Be(TraineeMoved);
     }
 
     [Fact]
@@ -418,8 +397,8 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
         SignInAs("member-1");
         var cut = Render(Review(CommitteeReviewState.Scheduled, callerChairs: false));
 
-        Buttons(cut).Should().Contain("Start review");
-        cut.FindAll("#trainee-elsewhere-note").Should().BeEmpty();
+        Buttons(cut).Should().Contain("Start review…");
+        cut.FindAll("#sitting-sentence").Should().BeEmpty();
     }
 
     /// <summary>
@@ -439,8 +418,8 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
         SignInAs("instadmin-1");
         var cut = Render(Review(CommitteeReviewState.Scheduled, callerChairs: false) with { CallerMayStart = false });
 
-        Buttons(cut).Should().NotContain("Start review");
-        Text(cut.Find("#chair-actions-note"))
+        Buttons(cut).Should().NotContain("Start review…");
+        Text(cut.Find("#sitting-sentence"))
             .Should().Be(WhoCanStart);
     }
 
@@ -450,8 +429,8 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
         SignInAs("member-1");
         var cut = Render(Review(CommitteeReviewState.Scheduled, callerChairs: false));
 
-        Buttons(cut).Should().Contain("Start review");
-        cut.FindAll("#chair-actions-note").Should().BeEmpty();
+        Buttons(cut).Should().Contain("Start review…");
+        cut.FindAll("#sitting-sentence").Should().BeEmpty();
     }
 
     [Fact]
@@ -480,10 +459,14 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
         ]));
         var cut = Render(Review(CommitteeReviewState.InProgress, callerChairs: true));
 
+        cut.Find("#decision-category").Change(CommitteeDecisionCategory.SatisfactoryProgress.ToString());
         cut.Find("#decision-rationale").Change("On track.");
-        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Record decision").Click();
+        cut.Find("#decision-present-1").Change(true);
+        // T361 (round 3 item 22): Record decision… opens the dialog; the refusal sits at the form's top (T324).
+        cut.Find("#record-decision").Click();
+        cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Record decision").Click();
 
-        cut.WaitForAssertion(() => Text(cut.Find(".alert-danger")).Should().Be(CommitteeReview.QuorumRule));
+        cut.WaitForAssertion(() => Text(cut.Find(".alert-danger")).Should().Be($"Not recorded. {CommitteeReview.QuorumRule}"));
         Page(cut).Should().NotContain("Validation failed").And.NotContain("Severity").And.NotContain("PresentUserIds");
     }
 
@@ -495,9 +478,9 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
         // Item 3: once the decision is recorded the staged decisions are fixed (D46), so neither Remove nor Stage will take
         // it; the page says what the ratify refusal says.
         SignInAs("chair-1");
-        var cut = Render(Review(CommitteeReviewState.Decided, callerChairs: true), [Pending(7, evidence: [])]);
+        var cut = Render(Review(CommitteeReviewState.Decided, callerChairs: true), [Pending(1, evidence: [])]);
 
-        var line = PendingLine(cut, "PAED-007");
+        var line = PendingLine(cut, 1);
         Text(line).Should().Contain(
                 $"Names no evidence, so the review cannot be ratified with it. {StagedEvidence.UngroundedOnceRecorded}")
             .And.NotContain("Remove it");
@@ -508,12 +491,12 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
     public void WhileTheReviewIsInProgress_AStagedDecisionThatNamesNoEvidence_TellsTheChairToRemoveIt()
     {
         SignInAs("chair-1");
-        var cut = Render(Review(CommitteeReviewState.InProgress, callerChairs: true), [Pending(7, evidence: [])]);
+        var cut = Render(Review(CommitteeReviewState.InProgress, callerChairs: true), [Pending(1, evidence: [])]);
 
-        var line = PendingLine(cut, "PAED-007");
+        var line = PendingLine(cut, 1);
         Text(line).Should().Contain(
             "Names no evidence, so the review cannot be ratified with it. Remove it and stage it again, naming the evidence.");
-        line.QuerySelectorAll("button").Select(button => button.TextContent.Trim()).Should().Equal("Remove");
+        line.QuerySelectorAll("button").Select(button => button.TextContent.Trim()).Should().Equal("Remove…");
     }
 
     // ─── Fixture ─────────────────────────────────────────────────────────────
@@ -538,7 +521,8 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
             .On<GetEntrustmentScalesListQuery>(_ => Array.Empty<EntrustmentScaleDto>())
             .On<GetEntrustmentStandingForTraineeQuery>(_ => null)
             .On<GetMsfCoverageForTraineeQuery>(_ => null)
-            .On<GetCommitteeAgendaQuery>(_ => review.Agenda);
+            .On<GetCommitteeAgendaQuery>(_ => review.Agenda)
+            .On<GetStartPreviewQuery>(_ => null);
 
         var cut = RenderComponent<ReviewDetail>(parameters => parameters.Add(page => page.ReviewId, 30));
         cut.WaitForState(() => cut.Markup.Contains("Evidence snapshot"));
@@ -577,7 +561,7 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
                 30, 2026, 1, "2026 S1", false,
                 [
                     Line(1, "PAED-001", CommitteeAgendaLineStatus.Due, CommitteeAgendaLineState.Due),
-                    Line(4, "PAED-004", CommitteeAgendaLineStatus.Deferred, CommitteeAgendaLineState.Deferred, reason: "Later.")
+                    Line(4, "PAED-004", CommitteeAgendaLineStatus.AsOpportunityAllows, CommitteeAgendaLineState.Due)
                 ],
                 []),
             PanelMembers =
@@ -619,17 +603,16 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
         string code,
         CommitteeAgendaLineStatus status,
         CommitteeAgendaLineState state,
-        string? reason = null,
-        bool blocksRatify = false)
+        bool readsNotDecided = false)
         => new(
             100 + epaId, epaId, code, $"EPA {epaId}", CommitteeAgendaLineOrigin.Cadence, 2026, 1, "2026 S1",
-            status == CommitteeAgendaLineStatus.Due, false, state, status, false, blocksRatify, reason, null, 1);
+            status == CommitteeAgendaLineStatus.Due, false, state, status, false, readsNotDecided, null, 1);
 
     private const string TraineeMoved =
         "This review's trainee does not train at the panel's institution, so the panel cannot act on it.";
 
     private static AngleSharp.Dom.IElement AppealsCard(IRenderedComponent<ReviewDetail> cut)
-        => cut.FindAll("section.detail-card").Single(card => card.QuerySelector("h3")?.TextContent.Trim() == "Appeals");
+        => cut.FindAll("section.detail-card").Single(card => card.QuerySelector("h2")?.TextContent.Trim() == "Appeals");
 
     private static CommitteeEvidenceDto Evidence(int id, int epaId)
         => new(
@@ -638,14 +621,16 @@ public sealed partial class ReviewDetailChairControlsTests : TestContext
             EpaId: epaId, EpaCode: $"PAED-00{epaId}", EpaTitle: $"EPA {epaId}", InstrumentName: "Mini-CEX",
             ObservedOn: new DateOnly(2026, 2, 10), ObservedOnDeclared: true, SourceState: "completed", SourceFinished: true);
 
+    // The page's own buttons: the dialogs' are always in the page (T361, round 3 item 22).
     private static IReadOnlyList<string> Buttons(IRenderedComponent<ReviewDetail> cut)
-        => cut.FindAll("button").Select(button => button.TextContent.Trim()).ToArray();
+        => cut.FindAll("button").Where(button => button.Closest("dialog") is null).Select(button => button.TextContent.Trim()).ToArray();
 
     private static IReadOnlyList<string> AgendaHeaders(IRenderedComponent<ReviewDetail> cut)
-        => cut.FindAll("#agenda-heading ~ .table-container thead th").Select(header => header.TextContent.Trim()).ToArray();
+        => cut.FindAll("#agenda thead th").Select(header => header.TextContent.Trim()).ToArray();
 
-    private static AngleSharp.Dom.IElement PendingLine(IRenderedComponent<ReviewDetail> cut, string code)
-        => cut.FindAll("section.detail-card li").Single(item => item.QuerySelector("strong")?.TextContent.StartsWith(code) == true);
+    // A staged decision is shown in its agenda line (T361, round 3 item 30).
+    private static AngleSharp.Dom.IElement PendingLine(IRenderedComponent<ReviewDetail> cut, int epaId)
+        => cut.Find($"#agenda-line-{epaId}");
 
     private static string Page(IRenderedComponent<ReviewDetail> cut)
         => Whitespace().Replace(string.Join(" ", cut.Nodes.Select(node => node.TextContent)), " ");

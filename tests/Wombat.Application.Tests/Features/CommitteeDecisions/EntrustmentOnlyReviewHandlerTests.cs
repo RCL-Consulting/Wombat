@@ -156,7 +156,6 @@ public sealed class EntrustmentOnlyReviewHandlerTests
         var review = await ScheduleAsync(db, NeonatalPanel, semester: 1, type: null);
         await StartWithEvidenceAsync(db, review.Id);
         await StageAsync(db, review.Id, EpaIdOf("PAED-004"));
-        await DeferAsync(db, review.Id, "PAED-005", "The neonatal rotation has not started.");
 
         var decided = await RecordAsync(db, review.Id, NeonatalChair(), category: null, "chair-n", "member-n");
         var ratified = await RatifyAsync(db, review.Id, NeonatalChair());
@@ -173,6 +172,9 @@ public sealed class EntrustmentOnlyReviewHandlerTests
         star.IssuedByCommitteeReviewId.Should().Be(review.Id);
         (await read.CommitteeAgendaLines.SingleAsync(line => line.EpaCode == "PAED-004")).State
             .Should().Be(CommitteeAgendaLineState.Decided);
+        // T361, D53: PAED-005, due here and left unstaged, did not hold Record or Ratify back; ratify wrote it Not decided.
+        (await read.CommitteeAgendaLines.SingleAsync(line => line.EpaCode == "PAED-005")).State
+            .Should().Be(CommitteeAgendaLineState.NotDecided);
     }
 
     [Fact]
@@ -182,7 +184,6 @@ public sealed class EntrustmentOnlyReviewHandlerTests
         var review = await ScheduleAsync(db, NeonatalPanel, semester: 1, type: null);
         await StartWithEvidenceAsync(db, review.Id);
         await StageAsync(db, review.Id, EpaIdOf("PAED-004"));
-        await DeferAsync(db, review.Id, "PAED-005", "The neonatal rotation has not started.");
 
         var act = () => RecordAsync(db, review.Id, NeonatalChair(), CommitteeDecisionCategory.SatisfactoryProgress, "chair-n", "member-n");
 
@@ -244,6 +245,38 @@ public sealed class EntrustmentOnlyReviewHandlerTests
     }
 
     [Fact]
+    public async Task AnEntrustmentOnlyReview_WithNothingStaged_IsNotRecorded_UntilADecisionIsStaged()
+    {
+        // T361, E4: PAED-004 and PAED-005 are on the agenda and nothing is staged. Without the refusal, D53 would record
+        // both as not decided and the review would issue nothing.
+        await using var db = await SeededDbAsync();
+        var review = await ScheduleAsync(db, NeonatalPanel, semester: 1, type: null);
+        await StartWithEvidenceAsync(db, review.Id);
+
+        var agenda = await AgendaAsync(db, review.Id);
+        var act = () => RecordAsync(db, review.Id, NeonatalChair(), category: null, "chair-n", "member-n");
+
+        agenda.Lines.Should().NotBeEmpty();
+        agenda.RecordBlockedReason.Should().Be(
+            "This review decides entrustment only, so stage at least one decision before recording it.",
+            "the page shows the reason beside Record");
+        (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message
+            .Should().Be(CommitteeReview.NothingStagedOnEntrustmentOnly);
+        await SaveAndClearAsAuditPipelineWouldAsync(db);
+        await using (var read = CreateDb())
+        {
+            (await read.CommitteeReviews.SingleAsync()).State.Should().Be(CommitteeReviewState.InProgress);
+            (await read.Set<CommitteeDecision>().CountAsync()).Should().Be(0);
+            (await read.Set<CommitteeDecisionAttendee>().CountAsync()).Should().Be(0);
+        }
+
+        // Staging PAED-004 lets the decision be recorded.
+        await StageAsync(db, review.Id, EpaIdOf("PAED-004"));
+        (await AgendaAsync(db, review.Id)).RecordBlockedReason.Should().BeNull();
+        await RecordAsync(db, review.Id, NeonatalChair(), category: null, "chair-n", "member-n");
+    }
+
+    [Fact]
     public async Task AnEntrustmentOnlyReview_WithNothingOnItsAgenda_IsNotRecorded_UntilADecisionIsStagedOnIt()
     {
         // PAED-004 and 005 route to the neonatal CCC but carry no cadence here, so nothing is due and the agenda starts
@@ -257,25 +290,15 @@ public sealed class EntrustmentOnlyReviewHandlerTests
         var act = () => RecordAsync(db, review.Id, NeonatalChair(), category: null, "chair-n", "member-n");
 
         agenda.Lines.Should().BeEmpty();
-        agenda.RecordBlockedReason.Should().Be(CommitteeReview.NothingOnTheAgenda, "the page shows Record disabled with it");
-        agenda.RatifyBlockedReason.Should().BeNull();
+        agenda.RecordBlockedReason.Should().Be(CommitteeReview.NothingStagedOnEntrustmentOnly, "the page shows it beside Record");
         (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message
-            .Should().Be("The committee's decision cannot be recorded yet: " + CommitteeReview.NothingOnTheAgenda);
-        await SaveAndClearAsAuditPipelineWouldAsync(db);
-        await using (var read = CreateDb())
-        {
-            (await read.CommitteeReviews.SingleAsync()).State.Should().Be(CommitteeReviewState.InProgress);
-            (await read.Set<CommitteeDecision>().CountAsync()).Should().Be(0);
-            (await read.Set<CommitteeDecisionAttendee>().CountAsync()).Should().Be(0);
-        }
+            .Should().Be(CommitteeReview.NothingStagedOnEntrustmentOnly);
 
-        // Staging PAED-004 puts the chair's line on the agenda; then the decision is recorded and ratified, with its STAR.
+        // Staging PAED-004 puts the chair's line on the agenda; then the decision is recorded.
+        db.ChangeTracker.Clear();
         await StageAsync(db, review.Id, EpaIdOf("PAED-004"));
         (await AgendaAsync(db, review.Id)).RecordBlockedReason.Should().BeNull();
         await RecordAsync(db, review.Id, NeonatalChair(), category: null, "chair-n", "member-n");
-        (await RatifyAsync(db, review.Id, NeonatalChair())).State.Should().Be(CommitteeReviewState.Ratified);
-        await using var after = CreateDb();
-        (await after.EntrustmentDecisions.SingleAsync()).EpaId.Should().Be(EpaIdOf("PAED-004"));
     }
 
     [Fact]
@@ -530,20 +553,11 @@ public sealed class EntrustmentOnlyReviewHandlerTests
         db.ChangeTracker.Clear();
     }
 
-    private static async Task DeferAsync(ApplicationDbContext db, int reviewId, string epaCode, string reason)
-    {
-        var lineId = await db.CommitteeAgendaLines.Where(line => line.ReviewId == reviewId && line.EpaCode == epaCode)
-            .Select(line => line.Id).SingleAsync();
-        await new DeferAgendaLineCommandHandler(db, FakeUserDirectory.PanelMembersOf(db)).Handle(
-            new DeferAgendaLineCommand(reviewId, lineId, reason, await ChairOfAsync(db, reviewId)), CancellationToken.None);
-        db.ChangeTracker.Clear();
-    }
-
     private static async Task<CommitteeReviewDetailDto> RecordAsync(
         ApplicationDbContext db, int reviewId, ClaimsPrincipal chair, CommitteeDecisionCategory? category, params string[] present)
     {
         var recorded = await new RecordCommitteeDecisionCommandHandler(db, FakeUserDirectory.CommitteeMembersAt(InstitutionA, present)).Handle(
-            new RecordCommitteeDecisionCommand(reviewId, category, "Decided on the evidence named.", null, present, chair),
+            new RecordCommitteeDecisionCommand(reviewId, category, "Decided on the evidence named.", null, null, present, chair),
             CancellationToken.None);
         db.ChangeTracker.Clear();
         return recorded;
@@ -602,7 +616,7 @@ public sealed class EntrustmentOnlyReviewHandlerTests
 
     /// <summary>
     /// A ratified review before <paramref name="panelId" />: entrustment-only before the neonatal CCC, with PAED-004
-    /// decided and PAED-005 deferred; annual progression before the general panel, with PAED-001 decided.
+    /// decided and PAED-005 not decided at this sitting (T361, D53); annual progression before the general panel, with PAED-001 decided.
     /// </summary>
     private async Task<ApplicationDbContext> RatifiedDbAsync(int panelId)
     {
@@ -612,8 +626,7 @@ public sealed class EntrustmentOnlyReviewHandlerTests
             var review = await ScheduleAsync(db, NeonatalPanel, semester: 1, type: null);
             await StartWithEvidenceAsync(db, review.Id);
             await StageAsync(db, review.Id, EpaIdOf("PAED-004"));
-            await DeferAsync(db, review.Id, "PAED-005", "The neonatal rotation has not started.");
-            await RecordAsync(db, review.Id, NeonatalChair(), category: null, "chair-n", "member-n");
+                await RecordAsync(db, review.Id, NeonatalChair(), category: null, "chair-n", "member-n");
             await RatifyAsync(db, review.Id, NeonatalChair());
         }
         else

@@ -42,7 +42,7 @@ internal sealed record AgendaPlan(
 
     /// <summary>
     /// The EPAs of the review's own lines still due whose window another sitting has decided
-    /// (<see cref="CommitteeAgendaStatus.IsDecided" /> on the line's own window): optional, and never blocking ratify (T235).
+    /// (<see cref="CommitteeAgendaStatus.IsDecided" /> on the line's own window): optional, and settled DecidedElsewhere (T235).
     /// Filled only by <see cref="AgendaPlanner.PlanForReviewAsync" />; empty for a sitting not yet scheduled.
     /// </summary>
     public IReadOnlySet<int> DecidedElsewhere { get; init; } = new HashSet<int>();
@@ -90,7 +90,7 @@ internal sealed record DecidedEpa(int EpaId, string Code);
 /// record of what a sitting did; the STAR is the fact, and one ratified before agendas existed has no line. A revoked
 /// STAR decides nothing, so its EPA is planned again, and nor does one superseded inside the window by a STAR since
 /// revoked; an expired one decided its window (Decision 10). The records are the page's
-/// (<see cref="DecisionWindowRecords" />). A sitting is its institution's: a line still due, or deferred, on a review
+/// (<see cref="DecisionWindowRecords" />). A sitting is its institution's: a line still due, or not decided, on a review
 /// before a panel at another institution (a review the trainee stranded when they moved) says nothing about where the
 /// decision stands here.
 /// </para>
@@ -98,8 +98,7 @@ internal sealed record DecidedEpa(int EpaId, string Code);
 /// <b>What changes while a review is open</b> (T235). An agenda is planned at schedule and at Start, and a window can be
 /// decided, or lose its decision, while the review is open. Each line the review still holds due is read against the same
 /// predicate, on its own window, whenever it is judged (<see cref="PlanForReviewAsync" />: the agenda read, recording the
-/// decision, ratify, and deferring after the recording): one another sitting has decided is optional, and never blocks
-/// ratify. The other way round, an EPA Start left off because a STAR decided its window, whose STAR has since been revoked,
+/// decision, and ratify): one another sitting has decided is optional, and is settled so. The other way round, an EPA Start left off because a STAR decided its window, whose STAR has since been revoked,
 /// is named beside the agenda (<see cref="AgendaPlan.NoLongerDecided" />) and is not added to it. Adding it would change,
 /// under the chair, the agenda Start planned and the decision recorded at this sitting settles (D46); staging a decision
 /// on it adds the chair's line, as for any EPA that routes here, and otherwise the decisions-due page reads it as revoked
@@ -124,8 +123,8 @@ internal static class AgendaPlanner
 
     /// <summary>
     /// The plan for the review's own sitting, with each line it still holds due read against the window rule
-    /// (<see cref="AgendaPlan.DecidedElsewhere" />, T235): the one read the agenda, and the record, ratify and defer
-    /// handlers share, so the page's disabled Record and Ratify say what the handlers refuse. Nothing for a formative
+    /// (<see cref="AgendaPlan.DecidedElsewhere" />, T235): the one read the agenda, and the record and ratify handlers
+    /// share, so the page says what the handlers settle. Nothing for a formative
     /// review, which carries no agenda. Reads only.
     /// </summary>
     /// <param name="review">The review, with its <see cref="CommitteeReview.Panel" /> and agenda lines loaded.</param>

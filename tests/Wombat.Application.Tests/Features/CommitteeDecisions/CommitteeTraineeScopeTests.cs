@@ -1079,7 +1079,7 @@ public sealed class CommitteeTraineeScopeTests
                 new StartCommitteeReviewCommand(reviewId, principal), CancellationToken.None),
             "Record" => await new RecordCommitteeDecisionCommandHandler(db, Committee).Handle(
                 new RecordCommitteeDecisionCommand(
-                    reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null,
+                    reviewId, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null, null,
                     // The actor and one member present (T165): the chair records, and sat.
                     [principal.FindFirst(ClaimTypes.NameIdentifier)!.Value, "member-a"], principal),
                 CancellationToken.None),

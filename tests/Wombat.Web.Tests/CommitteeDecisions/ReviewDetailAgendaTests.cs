@@ -13,15 +13,17 @@ using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
+using Wombat.Web.Components.Pages.CommitteeDecisions.Review;
 using Wombat.Web.Services;
-using Wombat.Web.Tests.Design;
 
 namespace Wombat.Web.Tests.CommitteeDecisions;
 
 /// <summary>
-/// The review page's agenda (T131 slice 4): above the staging form, each line with its window, a state badge, the
-/// evidence about it and its action; Ratify disabled with the closing lines still outstanding named (T107); what another
-/// panel still owes, read-only, and a warning on the progression decision while it does (O8).
+/// The review page's agenda (T131 slice 4): each line with its window, a state badge, the evidence about it and its
+/// action; Record and Ratify held back by no line (T361, D53); what another panel still owes, read-only, and a warning on
+/// the progression decision while it does (O8). Since T361 (round 3) the agenda is the page's spine: a staged decision is
+/// shown in its own line with its Remove… (items 17, 30), a line's Stage opens it in place (C2), and what the agenda says
+/// about what was issued sits above its table (the Pending card is gone).
 /// </summary>
 public sealed partial class ReviewDetailAgendaTests : TestContext
 {
@@ -34,6 +36,7 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
         auth.SetRoles(WombatRoles.CommitteeMember);
         auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "chair-1"));
         Services.AddSingleton<IScopedSender>(_sender);
+        JSInterop.Mode = JSRuntimeMode.Loose; // the dialogs open and close, and results take the focus (T361)
     }
 
     [Fact]
@@ -43,111 +46,49 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
             Due(1, "PAED-001"),
             Staged(2, "PAED-002"),
             Line(3, "PAED-003", CommitteeAgendaLineStatus.DueByYearEnd, CommitteeAgendaLineState.Due, window: (2026, null)),
-            Line(4, "PAED-004", CommitteeAgendaLineStatus.Deferred, CommitteeAgendaLineState.Deferred, reason: "Rotation moved.")));
+            Line(4, "PAED-004", CommitteeAgendaLineStatus.AsOpportunityAllows, CommitteeAgendaLineState.Due)));
 
-        var rows = cut.FindAll("#agenda-heading ~ .table-container tbody tr");
-        rows.Should().HaveCount(4);
+        AgendaRows(cut).Should().HaveCount(4);
         Row(cut, 1).QuerySelector(".badge")!.ClassList.Should().Contain("badge-draft");
-        Text(Row(cut, 1)).Should().Contain("PAED-001 — EPA 1").And.Contain("2026 S1").And.Contain("Due")
-            .And.Contain("Must be decided at this sitting, or deferred with a reason.").And.Contain("2 items");
+        // T361, D53: a closing line is due at this sitting, and nothing more is asked of it. Round 3: the code over its title.
+        Text(Row(cut, 1)).Should().Contain("PAED-001 EPA 1").And.Contain("2026 S1").And.Contain("Due at this sitting")
+            .And.Contain("2 items").And.NotContain("defer");
         Row(cut, 2).QuerySelector(".badge")!.ClassList.Should().Contain("badge-submitted");
         Text(Row(cut, 3)).Should().Contain("2026").And.Contain("Due by year end");
-        Row(cut, 4).QuerySelector(".badge")!.ClassList.Should().Contain("badge-accepted");
-        Text(Row(cut, 4)).Should().Contain("Reason: Rotation moved.");
+        Row(cut, 4).QuerySelector(".badge")!.ClassList.Should().Contain("badge-draft");
 
-        var caption = cut.Find("#agenda-heading ~ .table-container caption").TextContent;
-        caption.Should().Be("4 EPAs for 2026 S1, 1 still to stage or defer");
+        cut.Find("#agenda caption").TextContent.Should().Be("4 EPAs for 2026 S1 · 1 staged");
 
-        // The card sits above the staging form.
-        var cards = cut.FindAll("section.detail-card h3").Select(heading => heading.TextContent.Trim()).ToList();
-        cards.IndexOf("Agenda").Should().BeLessThan(cards.IndexOf("Pending entrustment decisions"));
+        // The agenda sits above the decision until the decision is recorded (round 3, § Detail page).
+        var sections = cut.FindAll(".review-page > section").Select(section => section.Id).ToList();
+        sections.IndexOf("agenda").Should().BeLessThan(sections.IndexOf("decision"));
     }
 
     [Fact]
     public void EachLine_OffersWhatItsStateAllows()
     {
+        // T361 (round 3 items 17, 30): a staged line is removed in its own line, by Remove….
         var cut = Render(CommitteeReviewState.InProgress, Agenda(
             Due(1, "PAED-001"),
-            Staged(2, "PAED-002"),
-            Line(4, "PAED-004", CommitteeAgendaLineStatus.Deferred, CommitteeAgendaLineState.Deferred, reason: "Later.")));
+            Staged(2, "PAED-002")),
+            pending: [Pending(91, 2, "PAED-002")]);
 
-        Buttons(Row(cut, 1)).Should().Equal("Stage", "Defer");
-        Buttons(Row(cut, 2)).Should().BeEmpty("a staged line is removed from the staged list below, not here");
-        Buttons(Row(cut, 4)).Should().Equal("Reinstate");
+        Buttons(Row(cut, 1)).Should().Equal("Stage");
+        Buttons(Row(cut, 2)).Should().Equal("Remove…");
     }
 
     [Fact]
-    public void Stage_ChoosesTheLinesEpaInTheStagingForm()
+    public void Stage_OpensTheLineInPlace_WithItsEpasForm()
     {
+        // T361 (C2; round 3, 1280 stage frame 1): Stage opens the line, its form in the row under it, the focus on its level.
         var cut = Render(CommitteeReviewState.InProgress, Agenda(Due(1, "PAED-001"), Due(2, "PAED-002")));
 
         ButtonIn(Row(cut, 2), "Stage").Click();
 
-        cut.Find("#pending-epa").GetAttribute("value").Should().Be("2");
-    }
-
-    [Fact]
-    public void Defer_AsksWhy_SendsTheReason_AndReadsTheAgendaAgain()
-    {
-        var cut = Render(CommitteeReviewState.InProgress, Agenda(Due(1, "PAED-001")));
-        _sender.On<DeferAgendaLineCommand>(_ => Unit.Value)
-            .On<GetCommitteeAgendaQuery>(_ => Agenda(Line(1, "PAED-001", CommitteeAgendaLineStatus.Deferred, CommitteeAgendaLineState.Deferred, reason: "Not observed.")));
-
-        ButtonIn(Row(cut, 1), "Defer").Click();
-        // The deferral's own fieldset: the decision form above it has one too, for who was present (T165).
-        cut.Find("#deferral-reason").Closest("fieldset")!.QuerySelector("legend")!.TextContent.Should().Contain("Defer PAED-001");
-        cut.Find("#deferral-reason").Change("Not observed.");
-        cut.Find("#deferral-reason").Closest("form")!.Submit();
-
-        cut.WaitForState(() => cut.Markup.Contains("PAED-001 deferred."));
-        var command = _sender.Received.OfType<DeferAgendaLineCommand>().Should().ContainSingle().Subject;
-        command.LineId.Should().Be(101);
-        command.Reason.Should().Be("Not observed.");
-        _sender.Received.OfType<GetCommitteeAgendaQuery>().Should().ContainSingle();
-        Text(Row(cut, 1)).Should().Contain("Deferred").And.Contain("Reason: Not observed.");
-        cut.FindAll("#deferral-reason").Should().BeEmpty("the form closes once the line is deferred");
-    }
-
-    [Fact]
-    public void Defer_MovesTheFocusToTheReason_AsStageMovesItToTheEpa()
-    {
-        var cut = Render(CommitteeReviewState.InProgress, Agenda(Due(1, "PAED-001")));
-
-        ButtonIn(Row(cut, 1), "Defer").Click();
-
-        cut.WaitForAssertion(() => JSInterop.VerifyFocusAsyncInvoke().Arguments[0]
-            .Should().BeOfType<Microsoft.AspNetCore.Components.ElementReference>()
-            .Which.ShouldBeElementReferenceTo(cut.Find("#deferral-reason")));
-    }
-
-    [Fact]
-    public void Reinstate_SendsTheCommand()
-    {
-        var cut = Render(CommitteeReviewState.InProgress, Agenda(
-            Line(4, "PAED-004", CommitteeAgendaLineStatus.Deferred, CommitteeAgendaLineState.Deferred, reason: "Later.")));
-        _sender.On<ReinstateAgendaLineCommand>(_ => Unit.Value).On<GetCommitteeAgendaQuery>(_ => Agenda(Due(4, "PAED-004")));
-
-        ButtonIn(Row(cut, 4), "Reinstate").Click();
-
-        cut.WaitForState(() => cut.Markup.Contains("PAED-004 reinstated"));
-        _sender.Received.OfType<ReinstateAgendaLineCommand>().Single().LineId.Should().Be(104);
-    }
-
-    [Fact]
-    public void OnceTheDecisionIsRecorded_OnlyALineThatBlocksRatify_OffersAnything_AndThatIsDefer()
-    {
-        // The agenda is fixed with the recorded decision (T165). The one line still open is a closing line whose staged
-        // decision was removed afterwards because it no longer fits the curriculum: deferring it is the way through.
-        var cut = Render(CommitteeReviewState.Decided, Agenda(
-            Due(1, "PAED-001"),
-            Staged(2, "PAED-002"),
-            Line(3, "PAED-003", CommitteeAgendaLineStatus.DueByYearEnd, CommitteeAgendaLineState.Due, window: (2026, null)),
-            Line(4, "PAED-004", CommitteeAgendaLineStatus.Deferred, CommitteeAgendaLineState.Deferred, reason: "Later.")));
-
-        Buttons(Row(cut, 1)).Should().Equal("Defer");
-        Buttons(Row(cut, 2)).Should().BeEmpty();
-        Buttons(Row(cut, 3)).Should().BeEmpty("an optional line is not deferred after the decision is recorded");
-        Buttons(Row(cut, 4)).Should().BeEmpty("a deferral is not taken back after the decision is recorded");
+        cut.Find("#agenda-form-2 h3").TextContent.Should().Be("Stage a decision on PAED-002");
+        cut.FindAll("#agenda-form-1").Should().BeEmpty();
+        JSInterop.Invocations.Where(call => call.Identifier == "wombat.focusById")
+            .Select(call => call.Arguments[0]).Should().Contain("stage-2-level");
     }
 
     [Theory]
@@ -155,13 +96,13 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
     [InlineData(CommitteeReviewState.Ratified)]
     public void AnAgendaWhoseLinesOfferNothing_HasNoActionColumn(CommitteeReviewState state)
     {
-        // T226: once the decision is recorded the lines offer nothing, bar a Defer on a line that keeps the review from
-        // being ratified, so the chair's Action column was a column of blank cells (reviews 4, 6 and 7 on dev).
+        // T226: once the decision is recorded the lines offer nothing, so the chair's Action column was a column of blank
+        // cells (reviews 4, 6 and 7 on dev).
         var cut = Render(state, Agenda(
             Line(1, "PAED-001", CommitteeAgendaLineStatus.Decided, CommitteeAgendaLineState.Decided),
             Staged(2, "PAED-002"),
             Line(3, "PAED-003", CommitteeAgendaLineStatus.DueByYearEnd, CommitteeAgendaLineState.Due, window: (2026, null)),
-            Line(4, "PAED-004", CommitteeAgendaLineStatus.Deferred, CommitteeAgendaLineState.Deferred, reason: "Later.")));
+            Line(4, "PAED-004", CommitteeAgendaLineStatus.NotDecided, CommitteeAgendaLineState.Due, closing: true, readsNotDecided: true)));
 
         AgendaHeaders(cut).Should().Equal("EPA", "Window", "State", "Evidence");
         AgendaRows(cut).Should().HaveCount(4).And.OnlyContain(row => row.Children.Length == 4, "no line has a blank Action cell");
@@ -171,21 +112,18 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
     public void AWithdrawnReview_SaysWhenAndWhy_ReadsWhatItHeldDueAsNotDecided_AndOffersNothing()
     {
         // T258: an erasure withdraws a review still open. Its page is the record of it: when and why it was withdrawn, and
-        // the lines it never decided. Nothing more is decided at it, so no action is offered, the chair included.
+        // the lines it never decided. Nothing more is decided at it, so no action is offered, the chair included. Since
+        // T361 the when and why is the sitting bar's sentence.
         var cut = Render(
             CommitteeReviewState.Withdrawn,
             Agenda(
-                Line(1, "PAED-001", CommitteeAgendaLineStatus.NotDecided, CommitteeAgendaLineState.Due, closing: true),
-                Line(4, "PAED-004", CommitteeAgendaLineStatus.Deferred, CommitteeAgendaLineState.Deferred, reason: "Later.")),
+                Line(1, "PAED-001", CommitteeAgendaLineStatus.NotDecided, CommitteeAgendaLineState.Due, closing: true)),
             withdrawn: (new DateOnly(2026, 9, 25), CommitteeReview.WithdrawnTraineeErased));
 
-        Text(cut.Find("#review-withdrawn")).Should().Be("2026-09-25. " + CommitteeReview.WithdrawnTraineeErased);
-        Text(Row(cut, 1)).Should().Contain("Not decided").And.Contain("The review was withdrawn before deciding it.");
-        Text(Row(cut, 4)).Should().Contain("Reason: Later.");
+        Text(cut.Find("#sitting-sentence")).Should().Be("Withdrawn on 2026-09-25. " + CommitteeReview.WithdrawnTraineeErased);
+        Text(Row(cut, 1)).Should().Contain("Not decided at this sitting").And.Contain("The review was withdrawn before deciding it.");
         AgendaHeaders(cut).Should().Equal("EPA", "Window", "State", "Evidence");
-        cut.FindAll("button").Select(button => button.TextContent.Trim())
-            .Should().NotContain(["Start review", "Close review", "Record decision", "Ratify", "Stage", "Defer", "Reinstate"]);
-        cut.FindAll("#chair-actions-note").Should().BeEmpty();
+        PageButtons(cut).Should().NotContain(["Start review…", "Close review…", "Record decision…", "Ratify…", "Stage", "Remove…"]);
     }
 
     [Fact]
@@ -193,37 +131,38 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
     {
         var cut = Render(CommitteeReviewState.InProgress, Agenda(Due(1, "PAED-001")));
 
-        cut.FindAll("#review-withdrawn").Should().BeEmpty();
+        cut.Markup.Should().NotContain("Withdrawn on");
     }
 
     [Fact]
-    public void AnAgendaInProgress_WhoseEveryLineIsStaged_HasNoActionColumn()
+    public void AnAgendaInProgress_WhoseEveryLineIsStaged_OffersRemoveOnEach()
     {
-        var cut = Render(CommitteeReviewState.InProgress, Agenda(Staged(1, "PAED-001"), Staged(2, "PAED-002")));
+        // T361 (round 3 items 17, 30): each staged line keeps its Remove…, so the Action column stays.
+        var cut = Render(
+            CommitteeReviewState.InProgress,
+            Agenda(Staged(1, "PAED-001"), Staged(2, "PAED-002")),
+            pending: [Pending(90, 1, "PAED-001"), Pending(91, 2, "PAED-002")]);
 
-        AgendaHeaders(cut).Should().Equal("EPA", "Window", "State", "Evidence");
-        AgendaRows(cut).Should().OnlyContain(row => row.Children.Length == 4);
+        AgendaHeaders(cut).Should().Equal("EPA", "Window", "State", "Evidence", "Action");
+        Buttons(Row(cut, 1)).Should().Equal("Remove…");
+        Buttons(Row(cut, 2)).Should().Equal("Remove…");
     }
 
     [Fact]
     public void TheActionColumn_StaysWhileAnyLineOffersSomething_AndALineThatOffersNothingSaysWhy()
     {
-        var cut = Render(CommitteeReviewState.Decided, Agenda(
+        var cut = Render(CommitteeReviewState.InProgress, Agenda(
             Due(1, "PAED-001"),
-            Staged(2, "PAED-002"),
-            Line(4, "PAED-004", CommitteeAgendaLineStatus.Deferred, CommitteeAgendaLineState.Deferred, reason: "Later.")));
+            Line(3, "PAED-003", CommitteeAgendaLineStatus.DecidedElsewhere, CommitteeAgendaLineState.DecidedElsewhere, window: (2026, null))));
 
         AgendaHeaders(cut).Should().Equal("EPA", "Window", "State", "Evidence", "Action");
-        Buttons(Row(cut, 1)).Should().Equal("Defer");
+        Buttons(Row(cut, 1)).Should().Equal("Stage");
         ActionReason(Row(cut, 1)).Should().BeNull("a line that offers something needs no reason");
 
         // DESIGN.md § Table system (T211): a row with no action is not left blank; its actions cell says why, muted.
-        foreach (var epaId in new[] { 2, 4 })
-        {
-            Row(cut, epaId).Children.Should().HaveCount(5);
-            Buttons(Row(cut, epaId)).Should().BeEmpty();
-            ActionReason(Row(cut, epaId)).Should().Be("Fixed with the recorded decision");
-        }
+        Row(cut, 3).Children.Should().HaveCount(5);
+        Buttons(Row(cut, 3)).Should().BeEmpty();
+        ActionReason(Row(cut, 3)).Should().Be("Nothing to do at this sitting");
 
         // The buttons are a cluster inside the cell: a <td> that is itself a flex box is no longer a table cell, and its
         // border no longer meets its row's.
@@ -231,65 +170,62 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
     }
 
     [Fact]
-    public void InProgress_AStagedLineBesideOneThatIsDue_SaysItsDecisionIsStagedBelow()
+    public void InProgress_AStagedLine_SaysItsDecisionInItsOwnLine()
     {
-        // Its decision is changed in the staged list below, where its Remove is (as "Editing below" on the curriculum items
-        // page), not in the agenda.
-        var cut = Render(CommitteeReviewState.InProgress, Agenda(Due(1, "PAED-001"), Staged(2, "PAED-002")));
+        // T361 (round 3 item 30): the staged decision is said in its line, in the line's words, beside its Remove….
+        var cut = Render(
+            CommitteeReviewState.InProgress,
+            Agenda(Due(1, "PAED-001"), Staged(2, "PAED-002")),
+            pending: [Pending(91, 2, "PAED-002")]);
 
-        AgendaHeaders(cut).Should().Equal("EPA", "Window", "State", "Evidence", "Action");
-        Buttons(Row(cut, 1)).Should().Equal("Stage", "Defer");
-        Buttons(Row(cut, 2)).Should().BeEmpty();
-        ActionReason(Row(cut, 2)).Should().Be("Staged below");
+        Text(Row(cut, 2)).Should().Contain(
+            "Staged Level 3a · issued 2026-07-02 · no expiry. Rests on 2 items of the snapshot: Mini-CEX #501; Mini-CEX #502.");
+        Buttons(Row(cut, 2)).Should().Equal("Remove…");
     }
 
     [Fact]
-    public void Record_IsDisabled_WhileAClosingLineIsNeitherStagedNorDeferred_AndSaysWhich()
+    public void Record_IsOffered_WithAClosingLineNothingIsStagedOn()
     {
-        // The decision fixes the agenda (T165), so it is recorded only once every closing line is staged or deferred.
+        // T361, D53: a closing line no longer holds Record back; left unstaged, it is not decided at this sitting.
         var cut = Render(CommitteeReviewState.InProgress, Agenda(Due(1, "PAED-001"), Staged(2, "PAED-002")), seatsAQuorum: true);
+        cut.Find("#decision-present-1").Change(true);
 
-        var record = RecordButton(cut);
-        record.HasAttribute("disabled").Should().BeTrue();
-        record.GetAttribute("aria-describedby").Should().Be("record-reason");
-        Text(cut.Find("#record-reason")).Should().Be(
-            "Record decision: PAED-001 must be decided at this sitting. Stage a decision on it, or defer it with a reason.");
+        RecordButton(cut).HasAttribute("aria-disabled").Should().BeFalse();
+        cut.FindAll("#record-reason").Should().BeEmpty();
     }
 
     [Fact]
-    public void Record_IsOffered_OnceEveryClosingLineIsStagedOrDeferred()
+    public void Record_IsOffered_WithEveryClosingLineStaged()
     {
         var cut = Render(CommitteeReviewState.InProgress, Agenda(
             Staged(1, "PAED-001"),
             Line(3, "PAED-003", CommitteeAgendaLineStatus.DueByYearEnd, CommitteeAgendaLineState.Due, window: (2026, null))),
             seatsAQuorum: true);
+        cut.Find("#decision-present-1").Change(true);
 
-        var record = RecordButton(cut);
-        record.HasAttribute("disabled").Should().BeFalse();
-        record.GetAttribute("type").Should().Be("submit");
+        RecordButton(cut).HasAttribute("aria-disabled").Should().BeFalse();
+        RecordButton(cut).HasAttribute("disabled").Should().BeFalse();
         cut.FindAll("#record-reason").Should().BeEmpty();
     }
 
     [Fact]
-    public void Ratify_IsDisabled_WhileAClosingLineIsNeitherStagedNorDeferred_AndSaysWhich()
+    public void Ratify_IsNotHeldBackByALineNothingIsStagedOn()
     {
+        // T361, D53: ratify writes such a line Not decided.
         var cut = Render(CommitteeReviewState.Decided, Agenda(Due(1, "PAED-001"), Due(5, "PAED-005"), Staged(2, "PAED-002")));
 
-        var ratify = RatifyButton(cut);
-        ratify.HasAttribute("disabled").Should().BeTrue();
-        ratify.GetAttribute("aria-describedby").Should().Be("ratify-reason");
-        cut.Find("#ratify-reason").TextContent.Should().Be(
-            "Ratify: PAED-001 and PAED-005 must be decided at this sitting. Stage a decision on each, or defer it with a reason.");
+        RatifyButton(cut).HasAttribute("aria-disabled").Should().BeFalse();
+        cut.FindAll("#ratify-reason").Should().BeEmpty();
     }
 
     [Fact]
-    public void Ratify_IsEnabled_OnceEveryClosingLineIsStagedOrDeferred()
+    public void Ratify_IsAvailable_WithEveryClosingLineStaged()
     {
         var cut = Render(CommitteeReviewState.Decided, Agenda(
             Staged(1, "PAED-001"),
             Line(3, "PAED-003", CommitteeAgendaLineStatus.DueByYearEnd, CommitteeAgendaLineState.Due, window: (2026, null))));
 
-        RatifyButton(cut).HasAttribute("disabled").Should().BeFalse();
+        RatifyButton(cut).HasAttribute("aria-disabled").Should().BeFalse();
         cut.FindAll("#ratify-reason").Should().BeEmpty();
     }
 
@@ -326,15 +262,16 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
         var note = cut.Find("#agenda-decided-in-window");
         note.TextContent.Should().Be("Already decided in this window, so not on the agenda: PAED-001 and PAED-006.");
         note.ClassList.Should().Contain("muted");
-        note.Closest("section")!.QuerySelector("h3")!.TextContent.Should().Be("Agenda");
+        note.Closest("section")!.QuerySelector("h2")!.TextContent.Should().Be("Agenda");
         cut.FindAll("#agenda-line-1").Should().BeEmpty();
     }
 
     [Fact]
-    public void AnEpaNoLongerDecided_IsNamedInItsOwnSentence_AboveTheTable_AndTheChairCanStageIt()
+    public void AnEpaNoLongerDecided_IsNamedInItsOwnSentence_BeforeTheCommitteeDecides_AndTheChairCanStageIt()
     {
         // T235: Start left PAED-002 off because a STAR decided its window, and that STAR was revoked while the review sat.
-        // It is not added to the agenda (D46); the card names it so the chair can stage it.
+        // It is not added to the agenda (D46); the page names it so the chair can stage it. Since T361 (round 3) it is the
+        // notes card's ("Before the committee decides"), and its Stage chooses the EPA in the agenda's foot form.
         var cut = Render(
             CommitteeReviewState.InProgress,
             Agenda(Due(1, "PAED-001")) with { NoLongerDecided = [new CommitteeAgendaEpaDto(2, "PAED-002", "EPA 2")] },
@@ -346,19 +283,20 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
         Text(note.QuerySelector("p")!).Should().Be(
             "PAED-002 is no longer decided in its window: the STAR that decided it has been revoked. It is not on this " +
             "agenda; stage a decision on it to decide it at this sitting.");
-        note.Closest("section")!.QuerySelector("h3")!.TextContent.Should().Be("Agenda");
-        cut.FindAll("#agenda-no-longer-decided ~ .table-container").Should().ContainSingle("it sits above the table");
+        note.Closest("section")!.Id.Should().Be("notes");
         cut.FindAll("#agenda-line-2").Should().BeEmpty("it is not on the agenda");
-        RecordButton(cut).HasAttribute("disabled").Should().BeTrue("guard: PAED-001 still blocks, and PAED-002 does not add to it");
-        Text(cut.Find("#record-reason")).Should().NotContain("PAED-002");
+        // T361, D53: no line holds Record back, PAED-001 unstaged included, and PAED-002 adds no reason.
+        cut.Find("#decision-present-1").Change(true);
+        RecordButton(cut).HasAttribute("aria-disabled").Should().BeFalse();
+        cut.FindAll("#record-reason").Should().BeEmpty();
 
-        var stage = note.QuerySelectorAll("button").Should().ContainSingle().Subject;
+        var stage = cut.Find("#agenda-no-longer-decided").QuerySelectorAll("button").Should().ContainSingle().Subject;
         Text(stage).Should().Be("Stage PAED-002");
         stage.HasAttribute("aria-label").Should().BeFalse("its text names it, and a label without that text would break label-in-name");
 
         stage.Click();
 
-        cut.Find("#pending-epa").GetAttribute("value").Should().Be("2", "Stage chooses the EPA in the staging form, as a line's Stage does");
+        cut.Find("#stage-0-epa").GetAttribute("value").Should().Be("2", "Stage chooses the EPA in the foot form, the chair's line");
     }
 
     [Fact]
@@ -404,7 +342,7 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
     public void ALineDecidedElsewhere_SaysSo_AndDoesNotHoldBackRecord()
     {
         // T235: PAED-003's window was decided at another sitting after this review planned it. It is optional now: the
-        // chair may still stage it, and Record is offered with it neither staged nor deferred.
+        // chair may still stage it, and Record is offered with it unstaged.
         var cut = Render(
             CommitteeReviewState.InProgress,
             Agenda(
@@ -417,9 +355,10 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
         badge.ClassList.Should().Contain("badge-completed");
         Text(Row(cut, 3)).Should().Contain(
             "Another sitting has decided it in this window, so it need not be decided here. A decision staged on it decides it again.");
-        Buttons(Row(cut, 3)).Should().Equal("Stage", "Defer");
-        cut.Find("#agenda-heading ~ .table-container caption").TextContent.Should().Be("2 EPAs for 2026 S1");
-        RecordButton(cut).HasAttribute("disabled").Should().BeFalse();
+        Buttons(Row(cut, 3)).Should().Equal("Stage");
+        cut.Find("#agenda caption").TextContent.Should().Be("2 EPAs for 2026 S1 · 1 staged");
+        cut.Find("#decision-present-1").Change(true);
+        RecordButton(cut).HasAttribute("aria-disabled").Should().BeFalse();
     }
 
     [Theory]
@@ -436,7 +375,7 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
                 Staged(1, "PAED-001"),
                 Line(3, "PAED-003", CommitteeAgendaLineStatus.DecidedElsewhere, CommitteeAgendaLineState.Due, window: (2026, null), closing: true)));
 
-        var detail = Text(Row(cut, 3).QuerySelector("td .muted")!);
+        var detail = Text(Row(cut, 3).QuerySelector(".agenda-line-detail")!);
         detail.Should().Be("Another sitting has decided it in this window, so it need not be decided here." + rest);
         detail.Should().NotContain("staged");
         Buttons(Row(cut, 3)).Should().BeEmpty();
@@ -454,7 +393,7 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
         Text(Row(cut, 3)).Should().Contain("Decided elsewhere")
             .And.Contain("Another sitting had decided it in this window when this review settled its agenda.");
         Buttons(Row(cut, 3)).Should().BeEmpty();
-        RatifyButton(cut).HasAttribute("disabled").Should().BeFalse();
+        RatifyButton(cut).HasAttribute("aria-disabled").Should().BeFalse();
     }
 
     [Fact]
@@ -471,9 +410,9 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
     {
         var cut = Render(CommitteeReviewState.InProgress, Agenda());
 
-        Text(cut.Find("#agenda-heading").ParentElement!).Should().Contain(
+        Text(cut.Find("#agenda")).Should().Contain(
             "Nothing is on this review's agenda. A decision can still be staged on any EPA of the trainee's curriculum that routes to this panel, and staging it adds it.");
-        RatifyButtonOrNull(cut).Should().BeNull("the review is not decided yet");
+        cut.FindAll("#sitting-ratify").Should().BeEmpty("the review is not decided yet");
     }
 
     [Fact]
@@ -482,7 +421,7 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
         // T215 review: beside "Already decided in this window", the empty agenda must not promise that Start adds them.
         var cut = Render(CommitteeReviewState.Scheduled, Agenda() with { DecidedInWindow = ["PAED-001", "PAED-002"] });
 
-        var card = Text(cut.Find("#agenda-heading").ParentElement!);
+        var card = Text(cut.Find("#agenda"));
         card.Should().Contain(
                 "Nothing is on the agenda yet. Starting the review adds every EPA routed to this panel that is due in its " +
                 "period and not already decided in its window.")
@@ -498,78 +437,26 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
     }
 
     [Fact]
-    public void Defer_WithNoReason_SaysWhyUnderTheReason_AndSendsNothing()
-    {
-        // T212: the box was marked invalid and nothing said why. The message's region is there before anything is
-        // refused, and the box names it, so the message is read with the box once it appears.
-        var cut = Render(CommitteeReviewState.InProgress, Agenda(Due(1, "PAED-001")));
-        _sender.On<DeferAgendaLineCommand>(_ => Unit.Value);
-
-        ButtonIn(Row(cut, 1), "Defer").Click();
-        var reason = cut.Find("#deferral-reason");
-        reason.GetAttribute("aria-describedby").Should().Be("deferral-reason-help deferral-reason-message");
-        Text(cut.Find("#deferral-reason-message")).Should().BeEmpty("nothing is refused before a submit");
-        InvalidFieldStyleTests.ShowsInvalid(reason).Should().BeFalse("nothing is refused before a submit");
-        // Opening the form moves the focus to the reason (Defer_MovesTheFocusToTheReason).
-        cut.WaitForAssertion(() => JSInterop.VerifyFocusAsyncInvoke().Arguments[0]
-            .Should().BeOfType<Microsoft.AspNetCore.Components.ElementReference>()
-            .Which.ShouldBeElementReferenceTo(cut.Find("#deferral-reason")));
-        var reasonReference = (Microsoft.AspNetCore.Components.ElementReference)JSInterop.VerifyFocusAsyncInvoke().Arguments[0]!;
-
-        reason.Closest("form")!.Submit();
-
-        var message = cut.Find("#deferral-reason-message .validation-message");
-        message.TextContent.Should().Be("Say why the committee is deferring the decision.");
-        cut.Find("#deferral-reason").GetAttribute("aria-invalid").Should().Be("true");
-        // T236: and the box itself shows it, not only the message under it. Blazor marks it; app.css styles the mark.
-        InvalidFieldStyleTests.ShowsInvalid(cut.Find("#deferral-reason")).Should().BeTrue();
-        _sender.Received.OfType<DeferAgendaLineCommand>().Should().BeEmpty();
-
-        // The refused submit moves the focus back to the reason. Compared by the reference's id: once the box re-renders
-        // with its message, bUnit's markup no longer carries the reference to compare with.
-        cut.WaitForAssertion(() => JSInterop.VerifyFocusAsyncInvoke(calledTimes: 2)[^1].Arguments[0]
-            .Should().BeOfType<Microsoft.AspNetCore.Components.ElementReference>()
-            .Which.Id.Should().Be(reasonReference.Id));
-    }
-
-    [Fact]
-    public void Defer_WithATooLongReason_SaysSoInTheDomainsWords_NotTheFrameworks()
-    {
-        // The T212 review: the message region shows whatever the model's attributes say, and [StringLength] alone says
-        // "The field Reason must be a string with a maximum length of 2000."
-        var cut = Render(CommitteeReviewState.InProgress, Agenda(Due(1, "PAED-001")));
-        _sender.On<DeferAgendaLineCommand>(_ => Unit.Value);
-
-        ButtonIn(Row(cut, 1), "Defer").Click();
-        cut.Find("#deferral-reason").Change(new string('x', 2001));
-        cut.Find("#deferral-reason").Closest("form")!.Submit();
-
-        cut.Find("#deferral-reason-message .validation-message").TextContent
-            .Should().Be("A deferral reason is at most 2000 characters.");
-        _sender.Received.OfType<DeferAgendaLineCommand>().Should().BeEmpty();
-    }
-
-    [Fact]
     public void Ratify_WithNothingStaged_SaysItIssuedNoStar_NotThatItIssuedWhatWasStaged()
     {
-        // The T212 review: ratify allows a review whose lines were all optional or deferred, with nothing staged. The note
+        // The T212 review: ratify allows a review with nothing staged (T361, D53: every line is then not decided). The note
         // said "ratifying the review issued what was staged as STARs" of it, beside an agenda showing none decided.
         var cut = Render(
             CommitteeReviewState.Decided,
             Agenda(
                 Line(1, "PAED-001", CommitteeAgendaLineStatus.AsOpportunityAllows, CommitteeAgendaLineState.Due),
-                Line(2, "PAED-002", CommitteeAgendaLineStatus.Deferred, CommitteeAgendaLineState.Deferred, closing: true, reason: "Later.")));
+                Line(2, "PAED-002", CommitteeAgendaLineStatus.NotDecided, CommitteeAgendaLineState.Due, closing: true, readsNotDecided: true)));
+        var ratified = Review(CommitteeReviewState.Ratified, Agenda(
+            Line(1, "PAED-001", CommitteeAgendaLineStatus.NotDecided, CommitteeAgendaLineState.NotDecided),
+            Line(2, "PAED-002", CommitteeAgendaLineStatus.NotDecided, CommitteeAgendaLineState.NotDecided, closing: true, readsNotDecided: true)));
         _sender
-            .On<RatifyCommitteeDecisionCommand>(_ => Review(CommitteeReviewState.Ratified, agenda: null))
-            .On<ListPendingEntrustmentDecisionsForReviewQuery>(_ => Array.Empty<PendingEntrustmentDecisionDto>())
-            .On<GetCommitteeAgendaQuery>(_ => Agenda(
-                Line(1, "PAED-001", CommitteeAgendaLineStatus.NotDecided, CommitteeAgendaLineState.NotDecided),
-                Line(2, "PAED-002", CommitteeAgendaLineStatus.Deferred, CommitteeAgendaLineState.Deferred, closing: true, reason: "Later.")));
+            .On<RatifyCommitteeDecisionCommand>(_ => ratified)
+            .On<GetCommitteeReviewByIdQuery>(_ => ratified);
 
-        RatifyButton(cut).Click();
+        Ratify(cut, "Ratify the review");
 
         cut.WaitForState(() => cut.Markup.Contains("Decision ratified."));
-        cut.Find("#no-pending-note").TextContent.Should().Be(
+        cut.Find("#agenda-intro").TextContent.Should().Be(
             "Nothing was staged when the review was ratified, so ratifying it issued no STAR.");
     }
 
@@ -582,43 +469,47 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
                 Line(1, "PAED-001", CommitteeAgendaLineStatus.Decided, CommitteeAgendaLineState.Decided),
                 Line(2, "PAED-002", CommitteeAgendaLineStatus.NotDecided, CommitteeAgendaLineState.NotDecided)));
 
-        cut.Find("#no-pending-note").TextContent.Should().Be(
+        cut.Find("#agenda-intro").TextContent.Should().Be(
             "Nothing is pending: ratifying the review issued what was staged as STARs, and the agenda names each one.");
     }
 
     [Fact]
-    public void Ratify_WhenTheAgendaCannotBeReadAgain_CountsTheLinesStagedInTheAgendaLastRead_AsIssued()
+    public void Ratify_WhenTheReviewCannotBeReadAgain_CountsTheLinesStagedInTheAgendaLastRead_AsIssued()
     {
         // The page still holds the agenda read before Ratify, whose lines are Staged, not Decided. Ratifying issued each.
+        // Since T361 the page reads the review again after every action (T260); here neither it nor the agenda can be read.
         var cut = Render(
             CommitteeReviewState.Decided,
             Agenda(Staged(1, "PAED-001")),
             pending: [Pending(90, 1, "PAED-001")]);
         _sender
             .On<RatifyCommitteeDecisionCommand>(_ => Review(CommitteeReviewState.Ratified, agenda: null))
+            .On<GetCommitteeReviewByIdQuery>(_ => throw new InvalidOperationException("The database is unavailable."))
             .On<ListPendingEntrustmentDecisionsForReviewQuery>(_ => Array.Empty<PendingEntrustmentDecisionDto>())
             .On<GetCommitteeAgendaQuery>(_ => throw new InvalidOperationException("The database is unavailable."));
 
-        RatifyButton(cut).Click();
+        Ratify(cut, "Ratify and issue 1 STAR");
 
         cut.WaitForState(() => cut.Markup.Contains("Decision ratified."));
-        cut.Markup.Should().Contain("The agenda could not be read again", "guard: the agenda on the page is the one read before");
-        cut.Find("#no-pending-note").TextContent.Should().Be(
+        cut.Markup.Should().Contain(ReviewWords.AgendaNotRead, "guard: the agenda on the page is the one read before");
+        cut.Markup.Should().NotContain("The database is unavailable.", "the failure's text is the log's (T329)");
+        cut.Find("#agenda-intro").TextContent.Should().Be(
             "Nothing is pending: ratifying the review issued what was staged as STARs, and the agenda names each one.");
     }
 
     [Fact]
-    public void ARatifiedReview_WithNoAgenda_SaysOnlyThatItIsRatified()
+    public void ARatifiedReview_WithNoAgenda_ClaimsNothingAboutWhatWasIssued()
     {
-        // Not reached in production (the review query always reads the agenda), but a note with no agenda cannot say
-        // whether ratifying issued anything.
+        // Not reached in production (the review query always reads the agenda), but with no agenda the page cannot say
+        // whether ratifying issued anything, so it says nothing of it (T361: the Pending card's fallback went with it).
         var cut = Render(CommitteeReviewState.Ratified, agenda: null);
 
-        cut.Find("#no-pending-note").TextContent.Should().Be("Nothing is pending: the review is ratified.");
+        cut.FindAll("#agenda-intro").Should().BeEmpty();
+        cut.Markup.Should().NotContain("issued what was staged").And.NotContain("issued no STAR");
     }
 
     [Fact]
-    public void Ratify_ReadsTheStagedDecisionsAgain_SoTheOnesItIssuedAreNoLongerListedAsPending()
+    public void Ratify_ReadsTheStagedDecisionsAgain_SoTheOnesItIssuedAreNoLongerShownAsStaged()
     {
         // T212: ratifying issues the staged decisions as STARs and removes them, but the page read the list only when it
         // loaded, so it went on listing them as pending until a reload.
@@ -626,43 +517,45 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
             CommitteeReviewState.Decided,
             Agenda(Staged(1, "PAED-001"), Staged(2, "PAED-002")),
             pending: [Pending(90, 1, "PAED-001"), Pending(91, 2, "PAED-002")]);
-        PendingItems(cut).Should().Equal(new[] { "PAED-001 — EPA 1", "PAED-002 — EPA 2" }, "guard: the page loads with two staged");
+        StagedLines(cut).Should().Equal(new[] { 1, 2 }, "guard: the page loads with two staged");
+        var ratified = Review(CommitteeReviewState.Ratified, Agenda(
+            Line(1, "PAED-001", CommitteeAgendaLineStatus.Decided, CommitteeAgendaLineState.Decided),
+            Line(2, "PAED-002", CommitteeAgendaLineStatus.Decided, CommitteeAgendaLineState.Decided)));
         _sender
-            .On<RatifyCommitteeDecisionCommand>(_ => Review(CommitteeReviewState.Ratified, agenda: null))
-            .On<ListPendingEntrustmentDecisionsForReviewQuery>(_ => Array.Empty<PendingEntrustmentDecisionDto>())
-            .On<GetCommitteeAgendaQuery>(_ => Agenda(
-                Line(1, "PAED-001", CommitteeAgendaLineStatus.Decided, CommitteeAgendaLineState.Decided),
-                Line(2, "PAED-002", CommitteeAgendaLineStatus.Decided, CommitteeAgendaLineState.Decided)));
+            .On<RatifyCommitteeDecisionCommand>(_ => ratified)
+            .On<GetCommitteeReviewByIdQuery>(_ => ratified)
+            .On<ListPendingEntrustmentDecisionsForReviewQuery>(_ => Array.Empty<PendingEntrustmentDecisionDto>());
 
-        RatifyButton(cut).Click();
+        Ratify(cut, "Ratify and issue 2 STARs");
 
         cut.WaitForState(() => cut.Markup.Contains("Decision ratified."));
-        PendingItems(cut).Should().BeEmpty();
-        cut.Find("#no-pending-note").TextContent.Should().Be(
+        StagedLines(cut).Should().BeEmpty();
+        cut.Find("#agenda-intro").TextContent.Should().Be(
             "Nothing is pending: ratifying the review issued what was staged as STARs, and the agenda names each one.");
         _sender.Received.OfType<ListPendingEntrustmentDecisionsForReviewQuery>().Should().HaveCount(2, "once on load, once after Ratify");
     }
 
     [Fact]
-    public void AFailedReadOfTheStagedDecisionsAfterRatify_IsAWarningInTheCard_BesideTheSuccess()
+    public void AFailedReadOfTheStagedDecisionsAfterRatify_IsAWarningInTheAgenda_BesideTheSuccess()
     {
         var cut = Render(
             CommitteeReviewState.Decided,
             Agenda(Staged(1, "PAED-001")),
             pending: [Pending(90, 1, "PAED-001")]);
+        var ratified = Review(CommitteeReviewState.Ratified, Agenda(Line(1, "PAED-001", CommitteeAgendaLineStatus.Decided, CommitteeAgendaLineState.Decided)));
         _sender
-            .On<RatifyCommitteeDecisionCommand>(_ => Review(CommitteeReviewState.Ratified, agenda: null))
-            .On<ListPendingEntrustmentDecisionsForReviewQuery>(_ => throw new InvalidOperationException("The database is unavailable."))
-            .On<GetCommitteeAgendaQuery>(_ => Agenda(Line(1, "PAED-001", CommitteeAgendaLineStatus.Decided, CommitteeAgendaLineState.Decided)));
+            .On<RatifyCommitteeDecisionCommand>(_ => ratified)
+            .On<GetCommitteeReviewByIdQuery>(_ => ratified)
+            .On<ListPendingEntrustmentDecisionsForReviewQuery>(_ => throw new InvalidOperationException("The database is unavailable."));
 
-        RatifyButton(cut).Click();
+        Ratify(cut, "Ratify and issue 1 STAR");
 
         cut.WaitForState(() => cut.Markup.Contains("Decision ratified."));
-        var warning = PendingCard(cut).QuerySelector(".alert")!;
+        var warning = cut.Find("#agenda .alert");
         warning.ClassList.Should().Contain("alert-warning");
-        Text(warning).Should().Contain("The staged decisions could not be read again: The database is unavailable.");
-        cut.FindAll(".alert-danger").Should().NotContain(alert => alert.TextContent.Contains("database is unavailable"));
-        PendingItems(cut).Should().Equal(new[] { "PAED-001 — EPA 1" }, "the list last read stays in view below the warning");
+        Text(warning).Should().Be(ReviewWords.StagedNotRead);
+        cut.FindAll(".alert-danger").Should().BeEmpty("the action succeeded");
+        cut.Markup.Should().NotContain("The database is unavailable.", "the failure's text is the log's (T329)");
     }
 
     [Fact]
@@ -675,30 +568,29 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
             pending: [Pending(90, 1, "PAED-001"), Pending(91, 2, "PAED-002")]);
         _sender
             .On<RemovePendingEntrustmentDecisionCommand>(_ => Unit.Value)
-            .On<ListPendingEntrustmentDecisionsForReviewQuery>(_ => new[] { Pending(91, 2, "PAED-002") })
-            .On<GetCommitteeAgendaQuery>(_ => Agenda(Due(1, "PAED-001"), Staged(2, "PAED-002")));
+            .On<ListPendingEntrustmentDecisionsForReviewQuery>(_ => new[] { Pending(91, 2, "PAED-002") });
 
-        RemoveButtons(cut)[0].Click();
+        Remove(cut, 1);
 
         cut.WaitForState(() => cut.Markup.Contains("Pending entrustment decision removed."));
         _sender.Received.OfType<RemovePendingEntrustmentDecisionCommand>().Single().PendingId.Should().Be(90);
-        PendingItems(cut).Should().Equal(new[] { "PAED-002 — EPA 2" });
+        StagedLines(cut).Should().Equal(2);
 
         _sender.On<ListPendingEntrustmentDecisionsForReviewQuery>(_ => throw new InvalidOperationException("The database is unavailable."));
 
-        RemoveButtons(cut)[0].Click();
+        Remove(cut, 2);
 
-        cut.WaitForState(() => cut.Markup.Contains("The staged decisions could not be read again"));
+        cut.WaitForState(() => cut.Markup.Contains(ReviewWords.StagedNotRead));
         cut.Markup.Should().Contain("Pending entrustment decision removed.", "the remove succeeded; only the read after it failed");
-        PendingCard(cut).QuerySelector(".alert")!.ClassList.Should().Contain("alert-warning");
+        cut.Find("#agenda .alert").ClassList.Should().Contain("alert-warning");
 
         // The next read that succeeds clears the warning (the T212 review found nothing held it).
         _sender.On<ListPendingEntrustmentDecisionsForReviewQuery>(_ => Array.Empty<PendingEntrustmentDecisionDto>());
 
-        RemoveButtons(cut)[0].Click();
+        Remove(cut, 2);
 
-        cut.WaitForAssertion(() => PendingItems(cut).Should().BeEmpty());
-        PendingCard(cut).QuerySelector(".alert").Should().BeNull("the list was read again, so the warning no longer stands");
+        cut.WaitForAssertion(() => StagedLines(cut).Should().BeEmpty());
+        cut.FindAll("#agenda .alert-warning").Should().BeEmpty("the list was read again, so the warning no longer stands");
     }
 
     [Fact]
@@ -711,24 +603,26 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
             pending: [Pending(90, 1, "PAED-001")]);
         _sender
             .On<RemovePendingEntrustmentDecisionCommand>(_ => Unit.Value)
-            .On<ListPendingEntrustmentDecisionsForReviewQuery>(_ => throw new InvalidOperationException("The database is unavailable."))
-            .On<GetCommitteeAgendaQuery>(_ => Agenda(Due(1, "PAED-001")));
-        RemoveButtons(cut)[0].Click();
-        cut.WaitForState(() => cut.Markup.Contains("The staged decisions could not be read again"));
+            .On<ListPendingEntrustmentDecisionsForReviewQuery>(_ => throw new InvalidOperationException("The database is unavailable."));
+        Remove(cut, 1);
+        cut.WaitForState(() => cut.Markup.Contains(ReviewWords.StagedNotRead));
 
         _sender.On<ListPendingEntrustmentDecisionsForReviewQuery>(_ => Array.Empty<PendingEntrustmentDecisionDto>());
+        var reads = _sender.Received.OfType<GetCommitteeReviewByIdQuery>().Count();
         cut.SetParametersAndRender(parameters => parameters.Add(page => page.ReviewId, 31));
 
-        cut.WaitForAssertion(() => _sender.Received.OfType<GetCommitteeReviewByIdQuery>().Should().HaveCount(2));
-        cut.WaitForAssertion(() => PendingCard(cut).QuerySelector(".alert").Should().BeNull());
+        cut.WaitForAssertion(() => _sender.Received.OfType<GetCommitteeReviewByIdQuery>().Should().HaveCount(reads + 1));
+        cut.WaitForAssertion(() => cut.FindAll("#agenda .alert-warning").Should().BeEmpty());
     }
 
     [Fact]
-    public void BeforeRatify_AnEmptyStagedList_SaysNothingHasBeenStaged()
+    public void BeforeRatify_NothingStaged_TheCaptionSaysNoneStaged()
     {
+        // T361 (round 3): the caption counts what is staged; the Pending card that said so is gone.
         var cut = Render(CommitteeReviewState.InProgress, Agenda(Due(1, "PAED-001")));
 
-        cut.Find("#no-pending-note").TextContent.Should().Be("No pending entrustment decisions have been staged for this review.");
+        cut.Find("#agenda caption").TextContent.Should().Be("1 EPA for 2026 S1 · none staged");
+        cut.FindAll("#agenda-intro").Should().BeEmpty();
     }
 
     [Fact]
@@ -740,15 +634,15 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
             Agenda(Line(1, "PAED-001", CommitteeAgendaLineStatus.NotDecided, CommitteeAgendaLineState.Due, closing: true)),
             withdrawn: (new DateOnly(2026, 9, 25), CommitteeReview.WithdrawnTraineeErased));
 
-        cut.Find("#no-pending-note").TextContent.Should().Be(
+        cut.Find("#agenda-intro").TextContent.Should().Be(
             "Nothing is pending: the review was withdrawn, so it issues no STAR, and anything staged at it was removed.");
     }
 
     // ---- Fixture ------------------------------------------------------------------------------------------------------
 
     /// <param name="seatsAQuorum">
-    /// The panel's chair and one member may both sit (T165), so the panel is no reason to refuse Record; otherwise the
-    /// review names no panel member.
+    /// The panel's chair and one member may both sit (T165), so the panel is no reason to refuse Record once the member is
+    /// ticked; otherwise the review names no panel member.
     /// </param>
     /// <param name="pending">The staged decisions the page loads with; none unless given.</param>
     /// <param name="callerChairs">Whether the reader holds the panel's Chair seat (T213); these tests act as the chair unless told otherwise.</param>
@@ -770,6 +664,7 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
 
         _sender
             .On<GetCommitteeReviewByIdQuery>(_ => review)
+            .On<GetCommitteeAgendaQuery>(_ => review.Agenda)
             .On<ListPendingEntrustmentDecisionsForReviewQuery>(_ => pending ?? Array.Empty<PendingEntrustmentDecisionDto>())
             .On<GetSamplingConcentrationWarningsQuery>(_ => null)
             .On<CountMsfCampaignsOutsideSnapshotQuery>(_ => MsfCampaignsOutsideSnapshotDto.None)
@@ -780,10 +675,12 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
                 new StarEpaOptionDto(2, "PAED-002", "EPA 2", null, null)
             })
             .On<GetEntrustmentScalesListQuery>(_ => Array.Empty<EntrustmentScaleDto>())
-            .On<GetMsfCoverageForTraineeQuery>(_ => null);
+            .On<GetEntrustmentStandingForTraineeQuery>(_ => null)
+            .On<GetMsfCoverageForTraineeQuery>(_ => null)
+            .On<GetStartPreviewQuery>(_ => null);
 
         var cut = RenderComponent<ReviewDetail>(parameters => parameters.Add(page => page.ReviewId, 30));
-        cut.WaitForState(() => cut.Markup.Contains("Committee review") && cut.Markup.Contains("Evidence snapshot"));
+        cut.WaitForState(() => cut.Markup.Contains("Evidence snapshot"));
         return cut;
     }
 
@@ -796,7 +693,12 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
     {
         var review = new CommitteeReviewDetailDto(
             30, "trainee-1", 20, "General CCC", new DateOnly(2026, 1, 1), new DateOnly(2026, 6, 30), new DateOnly(2026, 7, 2),
-            state, new DateTime(2026, 7, 2, 9, 0, 0, DateTimeKind.Utc), "chair-1", null, null, null, [], [],
+            state, new DateTime(2026, 7, 2, 9, 0, 0, DateTimeKind.Utc), "chair-1", null, null, null,
+            state is CommitteeReviewState.Decided or CommitteeReviewState.Ratified or CommitteeReviewState.Final && !formative
+                ? [new CommitteeDecisionDto(41, CommitteeDecisionCategory.SatisfactoryProgress, "On track.", null,
+                    new DateTime(2026, 7, 2, 9, 0, 0, DateTimeKind.Utc), "chair-1", null)]
+                : [],
+            [],
             [
                 Evidence(501, 1), Evidence(502, 1), Evidence(503, 2)
             ],
@@ -826,20 +728,32 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
             id, 30, epaId, code, $"EPA {epaId}", 13, "3a", new DateOnly(2026, 7, 2), null, "Consistent across the window.",
             [501, 502], new DateTime(2026, 7, 2, 9, 0, 0, DateTimeKind.Utc), "chair-1");
 
-    private static IReadOnlyList<string> PendingItems(IRenderedComponent<ReviewDetail> cut)
-        => PendingCard(cut).QuerySelectorAll("ul.list-unstyled > li strong").Select(item => item.TextContent.Trim()).ToArray();
+    /// <summary>The EPAs whose agenda lines say a staged decision (T361, round 3 item 30).</summary>
+    private static IReadOnlyList<int> StagedLines(IRenderedComponent<ReviewDetail> cut)
+        => cut.FindAll("#agenda tbody tr.agenda-line")
+            .Where(row => row.TextContent.Contains("Rests on", StringComparison.Ordinal))
+            .Select(row => int.Parse(row.Id!.Replace("agenda-line-", string.Empty, StringComparison.Ordinal), System.Globalization.CultureInfo.InvariantCulture))
+            .ToArray();
 
-    private static IReadOnlyList<AngleSharp.Dom.IElement> RemoveButtons(IRenderedComponent<ReviewDetail> cut)
-        => PendingCard(cut).QuerySelectorAll("button").Where(button => button.TextContent.Trim() == "Remove").ToArray();
+    /// <summary>Remove… on the line, then the dialog's Remove the decision (T361, round 3 items 17, 22).</summary>
+    private static void Remove(IRenderedComponent<ReviewDetail> cut, int epaId)
+    {
+        cut.Find($"#agenda-remove-{epaId}").Click();
+        cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Remove the decision").Click();
+    }
 
-    private static AngleSharp.Dom.IElement PendingCard(IRenderedComponent<ReviewDetail> cut)
-        => cut.FindAll("section.detail-card").Single(card => card.QuerySelector("h3")?.TextContent.Trim() == "Pending entrustment decisions");
+    /// <summary>Ratify… in the sitting bar, then the dialog's confirm (T361, round 3 item 22).</summary>
+    private static void Ratify(IRenderedComponent<ReviewDetail> cut, string confirm)
+    {
+        RatifyButton(cut).Click();
+        cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == confirm).Click();
+    }
 
     private static CommitteeAgendaDto Agenda(params CommitteeAgendaLineDto[] lines)
         => new(30, 2026, 1, "2026 S1", false, lines, []);
 
     private static CommitteeAgendaLineDto Due(int epaId, string code)
-        => Line(epaId, code, CommitteeAgendaLineStatus.Due, CommitteeAgendaLineState.Due, closing: true, blocks: true);
+        => Line(epaId, code, CommitteeAgendaLineStatus.Due, CommitteeAgendaLineState.Due, closing: true);
 
     private static CommitteeAgendaLineDto Staged(int epaId, string code)
         => Line(epaId, code, CommitteeAgendaLineStatus.Staged, CommitteeAgendaLineState.Due, closing: true, staged: true);
@@ -852,13 +766,12 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
         (int Year, int? Semester)? window = null,
         bool closing = false,
         bool staged = false,
-        bool blocks = false,
-        string? reason = null)
+        bool readsNotDecided = false)
     {
         var (year, semester) = window ?? (2026, 1);
         return new CommitteeAgendaLineDto(
             100 + epaId, epaId, code, $"EPA {epaId}", CommitteeAgendaLineOrigin.Cadence, year, semester,
-            semester is int s ? $"{year} S{s}" : $"{year}", closing, false, state, status, staged, blocks, reason, null,
+            semester is int s ? $"{year} S{s}" : $"{year}", closing, false, state, status, staged, readsNotDecided, null,
             epaId == 1 ? 2 : epaId == 2 ? 1 : 0);
     }
 
@@ -871,15 +784,19 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
             SourceStateLabel: "Completed");
 
     private static IReadOnlyList<string> AgendaHeaders(IRenderedComponent<ReviewDetail> cut)
-        => cut.FindAll("#agenda-heading ~ .table-container thead th").Select(header => header.TextContent.Trim()).ToArray();
+        => cut.FindAll("#agenda thead th").Select(header => header.TextContent.Trim()).ToArray();
 
     private static IReadOnlyList<AngleSharp.Dom.IElement> AgendaRows(IRenderedComponent<ReviewDetail> cut)
-        => cut.FindAll("#agenda-heading ~ .table-container tbody tr").ToArray();
+        => cut.FindAll("#agenda tbody tr.agenda-line").ToArray();
 
     private static AngleSharp.Dom.IElement Row(IRenderedComponent<ReviewDetail> cut, int epaId) => cut.Find($"#agenda-line-{epaId}");
 
     private static IReadOnlyList<string> Buttons(AngleSharp.Dom.IElement row)
         => row.QuerySelectorAll("button").Select(button => button.TextContent.Trim()).ToArray();
+
+    // The page's own buttons: the dialogs' are always in the page (T361, round 3 item 22).
+    private static IReadOnlyList<string> PageButtons(IRenderedComponent<ReviewDetail> cut)
+        => cut.FindAll("button").Where(button => button.Closest("dialog") is null).Select(button => button.TextContent.Trim()).ToArray();
 
     /// <summary>The muted reason in a line's Action cell (the row's fifth cell), or null where it has none.</summary>
     private static string? ActionReason(AngleSharp.Dom.IElement row)
@@ -888,21 +805,16 @@ public sealed partial class ReviewDetailAgendaTests : TestContext
     private static AngleSharp.Dom.IElement ButtonIn(AngleSharp.Dom.IElement row, string label)
         => row.QuerySelectorAll("button").Single(button => button.TextContent.Trim() == label);
 
-    private static AngleSharp.Dom.IElement RecordButton(IRenderedComponent<ReviewDetail> cut)
-        => cut.FindAll("button").Single(button => button.TextContent.Trim() == "Record decision");
+    private static AngleSharp.Dom.IElement RecordButton(IRenderedComponent<ReviewDetail> cut) => cut.Find("#record-decision");
 
-    private static AngleSharp.Dom.IElement RatifyButton(IRenderedComponent<ReviewDetail> cut)
-        => RatifyButtonOrNull(cut) ?? throw new InvalidOperationException("No Ratify button.");
-
-    private static AngleSharp.Dom.IElement? RatifyButtonOrNull(IRenderedComponent<ReviewDetail> cut)
-        => cut.FindAll("button").SingleOrDefault(button => button.TextContent.Trim() == "Ratify");
+    private static AngleSharp.Dom.IElement RatifyButton(IRenderedComponent<ReviewDetail> cut) => cut.Find("#sitting-ratify");
 
     private static string Text(AngleSharp.Dom.IElement element) => Whitespace().Replace(element.TextContent, " ").Trim();
 
     [GeneratedRegex(@"\s+")]
     private static partial Regex Whitespace();
 
-    /// <summary>Answers what a test registers, records every request, and refuses anything unregistered.</summary>
+    /// <summary>Answers what a test registers (the last registration wins), records every request, refuses the rest.</summary>
     private sealed class RecordingSender : IScopedSender
     {
         private readonly Dictionary<Type, Func<object, object?>> _answers = [];

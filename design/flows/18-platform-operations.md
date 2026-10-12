@@ -345,15 +345,15 @@ Expect: The log holds every institution's rows and the rows with no institution.
 ### Step 4.38 — Prof Mbatha reads the sitting in the audit log
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/audit → /admin/audit/{Id:guid}
-Do: Filter Action to RecordCommitteeDecisionCommand. Open one of the failed entries and one successful entry. Then
-  filter to RevokeEntrustmentDecisionCommand.
+Do: Filter Action to RecordCommitteeDecisionCommand. Open one successful entry. Then filter to
+  RevokeEntrustmentDecisionCommand.
 Expect:
-  - **The failed entries:** two FAILED rows by Dr Zulu, from Steps 4.23 and 4.24, whose errors name the quorum rule and
-    the missing category. Each refusal wrote its row and changed nothing else: every check runs before the first change.
-  - **The successful entries:** five OK rows, one per review.
-  - **An entry's detail:** the Event card (with a failure's error) and the Actor card only. The Payload card is an
-    Administrator's (Step 3.56), so she reads no summary. The stored summary, checked with SQL, keeps ReviewId,
-    Category and PresentUserIds in the clear and holds Rationale and Conditions as "[REDACTED]" (T101).
+  - **No failed entry:** Steps 4.23 and 4.24 are refused on the page before anything is sent (round 3 item 16, T324), so
+    no FAILED row is written; the handler's quorum and category refusals stay as the backstop (T361).
+  - **The successful entries:** five OK rows by Dr Zulu, one per review.
+  - **An entry's detail:** the Event card and the Actor card only. The Payload card is an Administrator's (Step 3.56),
+    so she reads no summary. The stored summary, checked with SQL, keeps ReviewId, Category and PresentUserIds in the
+    clear and holds Rationale, Conditions and UndecidedNote as "[REDACTED]" (T101, T361).
   - **The revocation's entry:** its actor is Dr Mokoena. Its stored Reason is "[REDACTED]".
 
 [act-6-catalogue.md]

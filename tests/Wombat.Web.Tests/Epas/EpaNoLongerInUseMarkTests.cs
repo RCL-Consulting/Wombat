@@ -120,7 +120,8 @@ public sealed class EpaNoLongerInUseMarkTests : TestContext
         var cut = RenderComponent<ReviewDetail>(parameters => parameters.Add(page => page.ReviewId, 5));
         cut.WaitForState(() => cut.Markup.Contains("Rating trajectory by EPA"));
 
-        var headings = cut.FindAll("section.trajectory-card h4");
+        // T361 (A.7.13): each chart is an h3 under the section's h2.
+        var headings = cut.FindAll("section.trajectory-card h3");
         Texts(headings).Should().Equal(InForce, Deactivated);
         MarkersIn(headings).Should().Equal([EpaOptionLabel.NoLongerInUse], "only the EPA that is not in force is marked, and muted");
     }

@@ -418,7 +418,7 @@ Expect:
     T142) and the reason.
   - **Decisions due:** Dlamini's PAED-002 reads "Revoked: re-decide". Its detail reads "STAR #n, issued for `<P>`, was
     revoked. Schedule a review to decide it again." It offers Schedule.
-  - **By EPA:** PAED-002 reads Decided 0, Deferred 4 and To schedule 1.
+  - **By EPA:** PAED-002 reads Decided 0, Not decided 4 and To schedule 1.
   - **Count, default filter:** "71 of 75 decisions due in `<P>` shown."
 
 Step 4.39 — Dr Molefe reads her STARs and downloads a certificate

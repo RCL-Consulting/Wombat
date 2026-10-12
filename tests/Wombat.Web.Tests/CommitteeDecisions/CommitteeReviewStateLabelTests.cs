@@ -95,9 +95,10 @@ public sealed partial class CommitteeReviewStateLabelTests : TestContext
         Services.AddSingleton<IScopedSender>(new PageSender([ListItem(60, state)]));
 
         var cut = RenderComponent<ReviewDetail>(parameters => parameters.Add(page => page.ReviewId, 60));
-        cut.WaitForState(() => cut.FindAll("#review-state").Count == 1);
+        // T361 (round 3): the state is the sitting bar's badge now; the Review card is gone.
+        cut.WaitForState(() => cut.FindAll("#sitting-bar .sitting-bar-state").Count == 1);
 
-        Text(cut.Find("#review-state")).Should().Be(label);
+        Text(cut.Find("#sitting-bar .sitting-bar-state")).Should().Be(label);
     }
 
     private void SignIn(string role, string userId)
