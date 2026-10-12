@@ -29,14 +29,15 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
   operator's): no deferral; unstaged closing lines are recorded "Not decided at this sitting", overruling T131's O2.
   Live following for members proposed as **T362**.
 
-### Next: T361 step 6, the build in waves
+### Next: T361 step 6, the build in waves (in flight)
 
-- **Round 2** (`83ba4dc7`) reviewed from three sides (`round-2-review.md`, `f1e193c8`); the operator took E1–E9;
-  `round-3-ask.txt` (`d32d5b64`). **Round 3 drawn and checked:** `design/flows/07-review-sitting/round-3-check.md`
-  (canvas `1791774971-ed50`, boards in `round-3/`). The design is final; the check lists what the build carries
-  (markup the boards leave out, no pronouns, brackets read from the data, the runbook's Expects).
-- **The build is not presentation only:** D53 changes the domain (round 2 review's findings 1–6: `UndecidedNote`,
-  NotDecided at Ratify, Defer/Reinstate removed with a migration, E4's refusal, the decisions-due rule). Full pipeline.
+- **Design final:** `design/flows/07-review-sitting/round-3-check.md` (`8236dd8b`). **Build plan** (`aed269d8`):
+  `build-lanes.md` and `build-contracts.md` beside it. Integration branch `t361` (from `aed269d8`).
+- **Wave 1 running** (the operator said "go", 2026-10-12): lane A `t361-domain` (D53: no deferral, the migration
+  `T361_NoDeferral`, decisions-due E3, E4, E5) and lane R `t361-reads` (detail DTO's profile id and training year,
+  `GetStartPreviewQuery`, Start refused while the chair cannot act, T273's flags, flow 03's return link, the stacking
+  for T356), worktrees under `.claude/worktrees/`. Then: merge A then R into `t361`, six suites, "As built" in the
+  contracts; wave 2 lane P (the page); the runbook lane; three Sonnet reviewers; one fix pass; squash. Not pushed.
 - **T290 stays in progress** for its other items only.
 
 ### For the operator
