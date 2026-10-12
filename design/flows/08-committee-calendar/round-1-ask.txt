@@ -6,7 +6,7 @@ This is flow 08 of a RESTRUCTURE with UX in scope (design/BRIEF.md § 4). Flows 
   Structure first, then fidelity: round 1 is 2–3 structural variations of the calendar (Decisions due, Committee
   reviews and scheduling) as wireframes, plus ONE proposal for the panels (the list, the form, a panel's own page) for
   me to confirm or correct. I pick before round 2. The runbook steps follow below in this same message. The brand mark
-  is at /_blob/MARK: use it, never a drawn disc.
+  is at /_blob/d8e89f2bacfcd9a2e79781ca6f135313: use it, never a drawn disc.
 
 GOAL: The people who run the programme must be able to:
   - form a review panel (a name, a scope, a chair, members and external members, and the College committee it sits

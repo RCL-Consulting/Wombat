@@ -49,7 +49,8 @@ Run the loop as flow 07 ran it (`design/flows/07-review-sitting/`, BRIEF § 11 "
 
 - [x] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit. (`c6740da1`; exit 0, baseline
   paths missing 0, verbatim 424 steps 0 problems)
-- [ ] The canvas is created, with the mark copied in before round 1 — its link.
+- [x] The canvas is created, with the mark copied in before round 1 — its link. ("Wombat 08",
+  https://claude.ai/artifact/Bvi2pBNN4WBWc4HqwnRRtQ, design system installed; mark `/_blob/d8e89f2bacfcd9a2e79781ca6f135313`, 2026-10-12)
 - [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/08-committee-calendar/`.
 - [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 08) — the squash commit and counts.
 - [ ] The whole runbook replays on a fresh database with no regression from flow 08, the baseline is re-captured, and

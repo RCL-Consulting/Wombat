@@ -31,10 +31,11 @@ Restated 2026-10-12 for T364 (the brief of 2026-09-26, T332, predates flows 01�
    2026-10-12). Do not stage `states/panel-edit--one-member.png` (a broken stitch: its top 1,094 px have no shell) or
    `states/panels-list--narrow.png` (375 px, and it shows scratch rows of a curriculum 11.2).
 2. **Start a new canvas** from the main app's Design page, on the Wombat design system v19
-   (https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18). Not an earlier flow's canvas. Flow 08's canvas: (to come).
+   (https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18). Not an earlier flow's canvas. Flow 08's canvas, "Wombat 08": https://claude.ai/artifact/Bvi2pBNN4WBWc4HqwnRRtQ (created 2026-10-12 by
+   Claude Code from the Design type, the design system installed and the mark copied in).
 3. **Copy the mark into the canvas before round 1** (`Artifact publish`, `asset: true`, `from_url` = the design
    system, `asset_ids: ["16c4e619b7ea0971d0c28ed6509be7a8"]`). Put the returned `/_blob/` URL in § 1 and in
-   `design/flows/08-committee-calendar/round-1-ask.txt`, where they read `/_blob/MARK`.
+   `design/flows/08-committee-calendar/round-1-ask.txt`, where they read `/_blob/d8e89f2bacfcd9a2e79781ca6f135313`.
 4. **Send § 1 and § 8 as ONE message** (`design/flows/08-committee-calendar/round-1-ask.txt`), with the key screenshots
    in § 4. Read `project/canvas.json`'s version before and after: a send can draw nothing. Read round 1's notes for a
    line saying it never received the attachments (§ 11, flow 06); re-attach and name the folder before round 2 if so.
@@ -59,7 +60,7 @@ This is flow 08 of a RESTRUCTURE with UX in scope (design/BRIEF.md § 4). Flows 
   Structure first, then fidelity: round 1 is 2–3 structural variations of the calendar (Decisions due, Committee
   reviews and scheduling) as wireframes, plus ONE proposal for the panels (the list, the form, a panel's own page) for
   me to confirm or correct. I pick before round 2. The runbook steps follow below in this same message. The brand mark
-  is at /_blob/MARK: use it, never a drawn disc.
+  is at /_blob/d8e89f2bacfcd9a2e79781ca6f135313: use it, never a drawn disc.
 
 GOAL: The people who run the programme must be able to:
   - form a review panel (a name, a scope, a chair, members and external members, and the College committee it sits
