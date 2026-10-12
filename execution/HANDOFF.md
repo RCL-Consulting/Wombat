@@ -46,7 +46,7 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
 
 ### For the operator
 
-- **Decide:** drop the scratch databases below; whether to rewrite history to remove the contributor (deferred).
+- **Decide:** whether to rewrite history to remove the contributor (deferred).
 - **T157 (deploy), T128 (backup), the College questions:** unchanged. The deploy now carries flows 02–07.
 - **Tasks flow 05's build closed in part** (still in `queued/`): T306 (Home's half), T346, T323 (the chart), T328.
 
@@ -56,9 +56,9 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
   Dumps `recovery/scenario-t361-post-act{1..6,A}`, `scenario-t361-pre-a515`.
 - **Replay scratch:** this session's scratchpad `g361` (`replay-pw.env`; act and states scripts). Khumalo's and du
   Plessis's pre-appendix passwords are the `_A` keys.
-- **Droppable databases:** `wombat_scenario_t361_st1`, `_t361_st3`, `_t361_st3b`, `_t361_st4`, `_t361_s515` (scratch),
-  `wombat_scenario_t358` (polluted by the states agent), `_t358_s515`, `_t358_states*`,
-  `_t290`, `_t355`, `_t355_s518*`, `_t304`, `_t350*`, `_t342*`, `_t339*`, `_t335*`, `_states*`, `_rc*`, `_t292`.
+- **Databases:** 77 old `wombat_scenario_*` replay and scratch databases dropped 2026-10-12 (the operator's word);
+  every earlier flow's act dumps stay in `recovery/`. Left: `wombat_scenario_t361`, `wombat_scenario`, `_pdf`, and the
+  non-scenario ones (`wombat`, `wombat_snapshot_pre_t130_*`, `wombat_t002_verify`, `wombat_t159`, `ClinicAssist*`).
 - **Branches:** `t358`, `t358-*` (merged, squashed into `85d5a508`), `t355*`, `t304`, `t350*`, `t342*` kept locally;
   worktrees removed. The orphaned `verify-master` worktree folder (pointing at the pre-move repo path) was deleted 2026-10-06.
 
