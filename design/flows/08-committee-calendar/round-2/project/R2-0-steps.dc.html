@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Steps · the 30 runbook steps once A is built</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+/* ===== NEW for flow 08 (to be written into app.css, section "Committee calendar") ===== */
+
+/* The trainee line (C2): above Decisions due's table while one trainee is filtered; what holds the period. */
+.trainee-line {
+  align-items: center;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+  padding: 0.75rem var(--space-md);
+}
+.trainee-line p { margin: 0; }
+.trainee-line + .trainee-line { margin-top: calc(-1 * var(--space-sm)); }
+
+/* A count beside a list heading: the page it shows (C9, T264). */
+.list-section-page { color: var(--muted-text); font-size: 1rem; font-weight: 400; }
+.list-section-count { color: var(--muted-text); font-size: 0.9rem; margin: calc(-1 * var(--space-sm)) 0 var(--space-md); }
+
+/* A status cell: the badge over its sentence. */
+.status-cell { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-xs); }
+.status-cell p { margin: 0; font-size: 0.9rem; }
+.nowrap { white-space: nowrap; }
+.period-window { color: var(--muted-text); display: block; font-size: 0.9rem; }
+.period-window span { white-space: nowrap; }
+
+/* By EPA's counts behind a fold (A1: shut by default; a native details, no round trip). */
+.count-fold > summary {
+  align-items: center;
+  color: var(--link-color);
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 600;
+  gap: var(--space-sm);
+  list-style: none;
+  min-height: 28px;
+}
+.count-fold > summary::-webkit-details-marker { display: none; }
+.count-fold > summary .icon { transition: transform var(--motion-fast) ease; }
+.count-fold[open] > summary .icon { transform: rotate(90deg); }
+.count-fold[open] > summary { margin-bottom: var(--space-md); }
+.count-fold .fold-hide { display: none; }
+.count-fold[open] .fold-hide { display: inline; }
+.count-fold[open] .fold-show { display: none; }
+.section-intro { color: var(--muted-text); margin: 0 0 var(--space-md); font-size: 0.9rem; }
+
+/* Schedule a review: the fields, the agenda beside them from 901px, between them and the actions below. */
+.schedule-grid {
+  display: grid;
+  gap: var(--space-lg) var(--space-xl);
+  grid-template-areas: "fields preview" "summary preview" "actions preview";
+  grid-template-columns: minmax(0, 1fr) minmax(0, 22rem);
+  align-items: start;
+}
+.schedule-fields { grid-area: fields; display: flex; flex-direction: column; gap: var(--space-lg); }
+.schedule-grid > .error-summary { grid-area: summary; margin: 0; }
+.schedule-grid > .form-actions { grid-area: actions; margin: 0; }
+.agenda-preview {
+  grid-area: preview;
+  background-color: var(--info-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: var(--space-md) var(--space-lg);
+  position: sticky;
+  top: calc(56px + var(--space-md));
+}
+.agenda-preview h2 { margin: 0; }
+.agenda-preview p { margin: 0; }
+.agenda-preview ul { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: var(--space-xs); }
+.agenda-preview .alert { margin: 0; }
+.agenda-count { font-weight: 600; }
+.agenda-held .actions-cell { margin-top: var(--space-xs); }
+@media (max-width: 900px) {
+  .schedule-grid { grid-template-areas: "fields" "preview" "summary" "actions"; grid-template-columns: minmax(0, 1fr); }
+  .agenda-preview { position: static; }
+}
+.schedule-grid .form-actions .move-reasons { flex-basis: auto; color: var(--muted-text); }
+.field-pair { display: grid; gap: var(--space-md); grid-template-columns: repeat(auto-fit, minmax(min(10rem, 100%), 1fr)); }
+.form-group > small.page-subtitle + small.page-subtitle { margin-top: 0; }
+.period-note { color: var(--text-color) !important; }
+.type-choices { display: flex; flex-direction: column; gap: 0.75rem; }
+.type-choice { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--space-sm); align-items: start; }
+.type-choice input { margin-top: 0.3rem; width: 1.125rem; height: 1.125rem; accent-color: var(--secondary-color); }
+.type-choice label { font-weight: 600; min-height: 28px; display: inline-flex; align-items: center; }
+.type-choice .page-subtitle { grid-column: 2; margin: 0; }
+.btn[aria-disabled="true"].is-busy { cursor: progress; }
+
+/* A group of choices refused as a whole: the field's 4px stripe, so not colour alone. */
+.invalid-group, fieldset.form-group.invalid { box-shadow: inset 4px 0 0 var(--danger-color); padding-left: var(--space-md); }
+
+/* The seat picker (Q5): one row a committee member, one radio group a seat. */
+.seat-choices { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-lg); }
+.seat-choices label { align-items: center; display: inline-flex; gap: var(--space-sm); min-height: 28px; margin: 0; }
+.seat-choices input { width: 1.125rem; height: 1.125rem; margin: 0; accent-color: var(--secondary-color); }
+.seat-person { display: flex; flex-direction: column; }
+.seat-person span { color: var(--muted-text); font-size: 0.9rem; overflow-wrap: anywhere; }
+.seat-chair { font-weight: 600; }
+.seat-chair span { color: var(--muted-text); font-weight: 400; }
+.seat-count { color: var(--muted-text); font-size: 0.9rem; margin: var(--space-sm) 0 0; }
+.panel-section + .panel-section { margin-top: var(--space-lg); }
+.panel-section > h2 { margin: 0 0 var(--space-md); }
+.form-section-title { margin: 0 0 var(--space-md); }
+.form-container .form-section-title ~ .form-section-title { margin-top: var(--space-xl); }
+.readonly-value { margin: 0; font-weight: 600; }
+.locked-note { margin-top: var(--space-sm); }
+@media (max-width: 640.98px) {
+  .seat-choices { flex-direction: column; gap: 0; border: 1px solid var(--input-border); border-radius: var(--radius-md); width: 100%; }
+  .seat-choices label { min-height: 44px; padding: 0 0.75rem; border-top: 1px solid var(--border-color); }
+  .seat-choices label:first-of-type { border-top: 0; }
+  .type-choice label { min-height: 44px; }
+  .type-choice input { margin-top: 0.8rem; }
+  .count-fold > summary { min-height: 44px; }
+  .trainee-line .btn { min-height: 44px; width: 100%; }
+  .clinic-table--stack .btn, .clinic-table--stack-wide .btn { min-height: 44px; width: 100%; }
+  .schedule-grid .form-actions { flex-direction: column-reverse; align-items: stretch; }
+  .schedule-grid .form-actions .btn { min-height: 44px; }
+  .agenda-preview { padding: var(--space-md); }
+  .header-container .actions-cell { width: 100%; }
+  .header-container .actions-cell .btn { min-height: 44px; width: 100%; }
+}
+@media (max-width: 900px) {
+  .clinic-table--stack-wide .btn { min-height: 44px; }
+}
+
+/* ===== Preview framing only (the canvas, not the product) ===== */
+body { margin: 0; background-color: var(--header-bg); }
+.pv-board { display: flex; flex-direction: column; gap: var(--space-xl); padding: var(--space-lg) 0 var(--space-2xl); background-color: var(--header-bg); }
+.pv-head { margin: 0 var(--space-lg); background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--space-md) var(--space-lg); display: flex; flex-direction: column; gap: var(--space-xs); font-size: 0.9rem; }
+.pv-head h1 { font-size: 1.25rem; margin: 0 0 var(--space-xs); }
+.pv-head p { margin: 0; }
+.pv-head b { font-weight: 600; }
+.pv-frame { display: flex; flex-direction: column; }
+.pv-cap { margin: 0; padding: var(--space-sm) var(--space-lg); background-color: var(--primary-color); color: var(--on-fill); font-size: 0.9rem; line-height: 1.4; display: flex; flex-direction: column; gap: 2px; }
+.pv-cap b { font-weight: 600; font-size: 1rem; }
+.pv-cap span { opacity: 1; }
+.pv-frame .page { position: relative; min-height: 0; background-color: var(--background-color); }
+@media (min-width: 641px) {
+  .pv-frame .sidebar { height: auto; position: static; align-self: stretch; }
+  .pv-frame .account-row { position: absolute; left: var(--sidebar-width); right: 0; top: 0; }
+  .pv-frame .agenda-preview { position: static; }
+}
+.pv-frame article { padding-bottom: var(--space-xl); }
+.pv-focus { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.pv-cut { border: 1px dashed var(--input-border); border-radius: var(--radius-md); color: var(--muted-text); font-size: 0.85rem; padding: var(--space-sm) var(--space-md); margin: var(--space-sm) 0; text-align: center; background-color: var(--surface-color); }
+.pv-doc { margin: 0 var(--space-lg); background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--space-lg) var(--space-xl); }
+.pv-doc h2 { margin: var(--space-xl) 0 var(--space-sm); }
+.pv-doc h2:first-child { margin-top: 0; }
+.pv-doc h3 { margin: var(--space-lg) 0 var(--space-sm); }
+.pv-doc p, .pv-doc li { font-size: 0.95rem; }
+.pv-doc table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.pv-doc th, .pv-doc td { border-bottom: 1px solid var(--border-color); padding: 6px 8px; text-align: left; vertical-align: top; }
+.pv-doc th { background-color: var(--header-bg); font-weight: 600; }
+.pv-doc code { font-family: var(--font-mono); font-size: 0.85rem; }
+.pv-swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--input-border); vertical-align: -2px; margin-right: 6px; }
+</style>
+</helmet>
+<div class="pv-board" style="width: 1440px">
+<div class="pv-doc"><h2>The 30 runbook steps once A is built</h2>
+<p>Route, Do and Expect as they become; “as today” where nothing on these pages changes the step. &lt;P&gt;, &lt;Y&gt;, D and J as the runbook defines them.</p>
+<table><thead><tr><th>Step</th><th>Role</th><th>Route</th><th>Do</th><th>Expect</th></tr></thead><tbody><tr><td><b>2.20</b></td><td>Institutional admin, Nolwazi Mbatha</td><td><code>/committee/panels</code></td><td>Open Decision panels.</td><td>While it loads, the header and skeletons, no New panel and no routing sentence. Then “No decision panels” / “Create a panel before scheduling reviews.”, New panel in the header, and Who decides each EPA naming Paediatric EPA Curriculum 11.1 with “No panel at this institution covers this programme.” against PAED-001 to PAED-015.</td></tr><tr><td><b>2.21</b></td><td>Institutional admin, Nolwazi Mbatha</td><td><code>/committee/panels/new</code></td><td>Name it “Paed Annual Review Panel”, Scope Speciality, Speciality Paediatrics, Decides for General panel. Under Who sits on it, seat Zulu and Naidoo as Member, then choose Zulu as Chair. Set Naidoo to Not seated, leaving the chair alone, and press Create panel.</td><td>Scope offers Institution and Speciality, on Speciality; Speciality offers Paediatrics alone, with its help; Decides for offers General panel and the Neonatal team Clinical Competency Committee. Chair and the seat picker list exactly Botha, Naidoo, van Rensburg and Zulu, by surname, whole names with their addresses. Choosing Zulu as chair turns her row to “Chair · chosen above” and says “Thandi Zulu is the chair now, so is no longer seated as a member.” The create is refused: “The panel was not created. Everything you chose is kept below.” with “Seats: A panel needs at least two members: …”, the focus on it, the seats marked.</td></tr><tr><td><b>2.22</b></td><td>Institutional admin, Nolwazi Mbatha</td><td><code>/committee/panels/new → /committee/panels/{PanelId:int}</code></td><td>Seat Naidoo as Member and van Rensburg as External member, then Create panel.</td><td>The panel's page: tab and h1 “Paed Annual Review Panel”, trail Home › Decision panels › Paed Annual Review Panel, subtitle “Speciality panel · Paediatrics · Kgosi Kgari Teaching Hospital”, and “Paed Annual Review Panel was created. …” with the focus. About this panel; Who sits on it (Zulu chair, Naidoo Member, van Rensburg External member, Botha Not seated; the externals' help); Decides for (General panel, Save committee, the rule). No “Back to panels”.</td></tr><tr><td><b>2.23</b></td><td>Speciality admin, Refilwe Mokoena</td><td><code>/account/login → / → /committee/panels → /committee/panels/{PanelId:int} → /committee/panels</code></td><td>Sign in, open Decision panels and Edit the panel. Seat Botha as Member, press Save panel, then open Decision panels.</td><td>The list offers New panel and Edit on this panel (T194). Decides for reads “General panel” and “Only an institutional administrator can change which College committee a panel sits as.” The save reads “Panel members updated. Thandi Zulu chairs, with 2 members and 1 external member.” with the focus. The list's Members reads “4: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)”.</td></tr><tr><td><b>2.24</b></td><td>Institutional admin, Nolwazi Mbatha</td><td><code>/committee/panels</code></td><td>Read the list and Who decides each EPA.</td><td>One row: Paed Annual Review Panel, “Speciality · Paediatrics”, General panel, the four by name, and Edit (“Edit Paed Annual Review Panel”). PAED-004 and PAED-005 go to the panel with “No panel covering this programme sits as the Neonatal team Clinical Competency Committee, so the general panel decides.” (T131); the other thirteen to the panel.</td></tr><tr><td><b>2.25</b></td><td>Sub-speciality admin, Kabelo Sithole</td><td><code>/account/login → / → /committee/panels → /committee/panels/new</code></td><td>Sign in, open Decision panels, press New panel and read the form. Cancel.</td><td>New panel and Edit on the panel (T194, T245). Scope reads “Speciality”, as text; Speciality offers Paediatrics; no Decides for. Cancel returns to Decision panels; nothing is created.</td></tr><tr><td><b>2.32</b></td><td>Coordinator, Pieter Smit</td><td><code>/account/login → / → /admin/invitations → /access-denied → /committee/panels → /committee/panels/new → /access-denied</code></td><td>As today.</td><td>Home and the menu as today. Decision panels lists the panel with no New panel and no Edit column, Decision panels lit. The panel form reads “You cannot open this page” / “Your role (Coordinator) does not open this page.” / “If you need it for your work, ask your institution's Wombat administrator.”, Go to Home, nothing lit.</td></tr><tr><td><b>4.1</b></td><td>Coordinator, Pieter Smit</td><td><code>/ → /committee/decisions-due</code></td><td>Open Decisions due. Leave Period on <P> and Status on “Outstanding: not yet decided”. Press Next to page 2, then set Status Not scheduled and EPA PAED-004 and press Show.</td><td>The opening names <P>, the 5 trainees at Kgosi Kgari Teaching Hospital, and what Missed means; under Period, “The College's semester 2 ends in November; reviews for it may sit until 31 December.” By EPA is shut (“Show the counts for 15 EPAs”); opened, each EPA Due 5, twelve To schedule 5, PAED-008, 009 and 013 Optional 5. “75 of 75 decisions due in <P> shown.”; “Decisions, page 1 of 4”, 20 rows; each row one action, Schedule, named by trainee and EPA. After Next the focus is on “Decisions, page 2 of 4”. After Show: five PAED-004 rows, “5 of 75 decisions due in <P> shown: Not scheduled, PAED-004.”, the focus on the heading, Clear filters offered; By EPA unchanged. No Missed row.</td></tr><tr><td><b>4.2</b></td><td>Institutional admin, Nolwazi Mbatha</td><td><code>/ → /committee/decisions-due</code></td><td>Open Decisions due. Look for an Institution filter, then switch Period to <Y> S1, Show, and back.</td><td>No Institution filter. For <Y> S1: the six semester EPAs Missed (red), annual Due by year end, PAED-008, 009 and 013 As opportunity allows (D42). Each Missed row offers Schedule, named “… for <Y> S2, the current semester”, which opens the form on <P> (Q7).</td></tr><tr><td><b>4.3</b></td><td>Speciality admin, Refilwe Mokoena</td><td><code>/account/login → / → /committee/decisions-due</code></td><td>As today.</td><td>Menu and Home as today. The five registrars, 75 rows, each with one Schedule.</td></tr><tr><td><b>4.4</b></td><td>Sub-speciality admin, Kabelo Sithole</td><td><code>/account/login → / → /committee/decisions-due</code></td><td>As today.</td><td>As Step 4.3.</td></tr><tr><td><b>4.5</b></td><td>Committee member, David Naidoo</td><td><code>/dashboard/switch/{role} → / → /committee/decisions-due → /access-denied</code></td><td>As today.</td><td>No Decisions due in his menu; the typed address reads “You cannot open this page” / “None of your roles (Committee member, Assessor) opens this page.”, nothing lit.</td></tr><tr><td><b>4.6</b></td><td>Coordinator, Pieter Smit</td><td><code>/committee/reviews → /committee/reviews/new → /committee/reviews/{ReviewId:int}</code></td><td>Open Committee reviews and press Schedule review. Choose the Paed Annual Review Panel, Dr Molefe and <P> (the window fills), leave Scheduled on D, choose Annual progression review, read the Agenda and press Create review.</td><td>Schedule a review: trail Home › Committee reviews › Schedule a review, Committee reviews lit. Trainee disabled, with “Choose a panel first. …”, until a panel is chosen; then the five. Period “<P> · 1 Jul to 31 Dec <Y>” with its help and the College's November line; the window <Y>-01-01 to <Y>-12-31, ISO. Review type: Annual progression review, Pre-graduation review and Formative check-in, each with its own help. The Agenda beside the fields: “15 EPAs will be on the agenda for <P>.”, the twelve due, the three As opportunity allows. Create review reads “Creating…” while it runs, then the review opens as today (h1, subtitle, sitting bar, Start review…, evidence snapshot).</td></tr><tr><td><b>4.7</b></td><td>Coordinator, Pieter Smit</td><td><code>/committee/reviews → /committee/reviews/new → /committee/reviews/{ReviewId:int}</code></td><td>As today, from Schedule review.</td><td>Each opens Scheduled with a 15-EPA Agenda. Committee reviews lists three rows for <P>: Period “<P>” over “<Y>-01-01 to <Y>-12-31”, Type Annual progression, State Scheduled, Decision Pending; no Mode column (C8). Each Open named by its review.</td></tr><tr><td><b>4.8</b></td><td>Coordinator, Pieter Smit</td><td><code>/committee/reviews → /committee/reviews/new</code></td><td>Press Schedule review and choose the panel, Dr Molefe and <P>.</td><td>Before Create, the Agenda reads “Already held. Review #N already puts Lerato Molefe before Paed Annual Review Panel for <P> (scheduled on D). A trainee has one binding review for each period …” and the formative line; Create review is not offered (“Create review is not offered: review #N already holds <P> for Lerato Molefe.”); Open review #N is. Nothing is created; the list still holds three rows. (Raced: the same words in the refusal summary above the actions, with Open review #N.)</td></tr><tr><td><b>4.9</b></td><td>Speciality admin, Refilwe Mokoena</td><td><code>/committee/decisions-due → /committee/reviews/new → /committee/reviews/{ReviewId:int}</code></td><td>On Decisions due, choose Schedule on Dr Mahlangu's PAED-001 row. Choose Annual progression review and create the review.</td><td>Molefe's, Dlamini's and du Plessis's rows read Scheduled, “On the agenda of review #N before Paed Annual Review Panel, which is still open.” (T259), each with Open review #N as its one action. The form opens filled (Panel, Dr Mahlangu, <P>) and the Agenda shows 15 EPAs; the query fills only what the form offers. The review opens Scheduled; its sitting bar says who can start it. Cancel would have returned to Decisions due with its filters.</td></tr><tr><td><b>4.10</b></td><td>Sub-speciality admin, Kabelo Sithole</td><td><code>/committee/decisions-due → /committee/reviews/new → /committee/reviews/{ReviewId:int}</code></td><td>On Decisions due, choose Schedule on one of Dr Ndlovu's rows; choose Annual progression review; create.</td><td>As Step 4.9. Decisions due then reads Scheduled on all 75 rows, each with Open review #N; By EPA Scheduled 5 and To schedule 0 for every EPA.</td></tr><tr><td><b>4.11</b></td><td>Committee member, David Naidoo</td><td><code>/committee/reviews → /committee/reviews/{ReviewId:int}</code></td><td>As today.</td><td>Subtitle “Open existing committee reviews.”, no Schedule review; the five reviews of his panel, Scheduled, Pending. Dlamini's review offers him Start review….</td></tr><tr><td><b>4.12</b></td><td>Institutional admin, Nolwazi Mbatha</td><td><code>/committee/reviews → /committee/decisions-due</code></td><td>As today.</td><td>Committee reviews offers Schedule review and lists five. Decisions due reads Scheduled on all 75 rows; each row's one action is Open review #N; no Schedule is drawn.</td></tr><tr><td><b>4.13</b></td><td>Institutional admin, Nolwazi Mbatha</td><td><code>/committee/panels → /committee/panels/{PanelId:int}</code></td><td>Open the panel and read Decides for.</td><td>Decides for reads “General panel” and “It cannot change now. Review #N (<P>, scheduled) still sits before this panel. What a review decides, and its agenda, follow …”, with Open review #N; no select and no Save committee are offered, so nothing is refused. About this panel lists the open reviews. (Raced, a review scheduled after the page was read: the refusal beside the select, the select back on General panel, the focus on the section's summary.)</td></tr><tr><td><b>4.33</b></td><td>Coordinator, Pieter Smit</td><td><code>/committee/reviews → /committee/reviews/{ReviewId:int}</code></td><td>As today.</td><td>All five Ratified (green); Decision by label: Satisfactory Progress (Molefe, Dlamini), Satisfactory with Observations (du Plessis), Inadequate Progress — Additional Training (Mahlangu), Outcome Deferred (Ndlovu). No Mode column. Molefe's review as today.</td></tr><tr><td><b>4.34</b></td><td>Institutional admin, Nolwazi Mbatha</td><td><code>/committee/decisions-due</code></td><td>Read <P> with the default filter, then Every status and Show.</td><td>“70 of 75 decisions due in <P> shown.” Every status: Decided on five rows, “STAR #n, issued at review #N.”, each saying “Decided: nothing to schedule”; Not decided on 55 (amber), “Not decided at review #N. A later sitting for <P> plans it again.” (or <Y>), review #N a link; As opportunity allows on 15. By EPA: PAED-001 Due 5, Decided 2, Not decided 3. A Not decided row offers only Schedule (C3).</td></tr><tr><td><b>4.37</b></td><td>Sub-speciality admin, Kabelo Sithole</td><td><code>/admin/entrustment-decisions → /committee/decisions-due</code></td><td>As today; Decisions due with Every status.</td><td>Entrustment decisions as today. Dlamini's PAED-002 reads “Revoked: re-decide” (red), “STAR #n, issued for <P>, was revoked. Schedule a review to decide it again.”, and offers Schedule. By EPA PAED-002: Decided 0, Not decided 4, To schedule 1. Default filter: “71 of 75 decisions due in <P> shown.”</td></tr><tr><td><b>4.49</b></td><td>Coordinator, Pieter Smit</td><td><code>/committee/reviews → /committee/reviews/new → /committee/reviews/{ReviewId:int}</code></td><td>Press Schedule review; choose the panel, Dr Ndlovu and <P>; choose Formative check-in; press Create review.</td><td>Formative check-in is a Review type, so no other type is chosen (T309); the Agenda reads “A formative review carries no agenda: it decides no EPA.” Accepted; the review page as today. The list shows Type “Formative check-in”, Decision “—”.</td></tr><tr><td><b>5.1</b></td><td>Coordinator, Pieter Smit</td><td><code>/committee/decisions-due</code></td><td>Open Decisions due for the period holding D; set Trainee to Lerato Molefe and Status to Every status; Show.</td><td>The trainee line: “No open review holds <P>.” with Schedule a review. Fifteen rows, no Trainee column, the caption naming her; “15 of 75 decisions due in <P> shown: Lerato Molefe, every status.”; the focus on the Decisions heading. Decided rows name the STAR and the review; Not decided amber with its review linked; PAED-008, 009 and 013 As opportunity allows. Every row not yet decided offers only Schedule. While the filter is set, no other registrar is listed.</td></tr><tr><td><b>5.2</b></td><td>Coordinator, Pieter Smit</td><td><code>/committee/decisions-due → /committee/reviews/new → /committee/reviews/{ReviewId:int}</code></td><td>Press Schedule a review on the trainee line (or a row's Schedule). Choose Pre-graduation review, widen From to J−3y, leave Scheduled on D, and create.</td><td>The form opens with the panel, Dr Molefe and <P>. Pre-graduation review's help: “The final review before the programme ends: it decides the trainee's progression, and whether they may graduate.” The Agenda: “12 EPAs will be on the agenda for <P>.”, the nine due, the three optional, and “Already decided in this window, so not on the agenda: PAED-001, PAED-010 and PAED-012.” The review opens as today, the focus on its h1.</td></tr><tr><td><b>5.29</b></td><td>Coordinator, Pieter Smit</td><td><code>/committee/reviews → /committee/reviews/new → /committee/reviews</code></td><td>Press Schedule review, choose the panel and read Trainee. Cancel.</td><td>Trainee offers only Dr Dlamini, Dr Mahlangu and Dr Ndlovu (T238). Cancel returns to Committee reviews.</td></tr><tr><td><b>A.1.10</b></td><td>Coordinator, Pieter Smit</td><td><code>/committee/reviews → /committee/reviews/new → /committee/reviews/{ReviewId:int}</code></td><td>As Step 4.49. Note the review's id.</td><td>As Step 4.49.</td></tr><tr><td><b>A.7.5</b></td><td>Coordinator, Pieter Smit</td><td><code>/ → /msf/campaigns → /msf/campaigns/{CampaignId:int} → /committee/decisions-due → /admin/data-rights</code></td><td>At 390px, as today.</td><td>Home and the campaign as today. Decisions due: the filters stacked, Show and Clear filters 44px and the row's width; By EPA's fold a 44px summary, opened one block per EPA (no sideways scroll, names whole); each decision a block (the EPA its head, Trainee, Window, the badge and its sentence, the action a 44px full-width button); the pager's buttons 44px. The queue as today.</td></tr><tr><td><b>A.7.8</b></td><td>Sub-speciality admin, Kabelo Sithole</td><td><code>/ → /committee/reviews → /committee/decisions-due</code></td><td>At 390px, as today.</td><td>Home and the bar as today. Committee reviews: Schedule review a 44px row under the header; each review a block (the trainee its head, Panel, Period “<P>” over its window, Type, State badge, Decision, Open 44px). Decisions due as Step A.7.5.</td></tr></tbody></table></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 1440, "height": 4583}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Schedule a review · 390 · b</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+/* ===== NEW for flow 08 (to be written into app.css, section "Committee calendar") ===== */
+
+/* The trainee line (C2): above Decisions due's table while one trainee is filtered; what holds the period. */
+.trainee-line {
+  align-items: center;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+  padding: 0.75rem var(--space-md);
+}
+.trainee-line p { margin: 0; }
+.trainee-line + .trainee-line { margin-top: calc(-1 * var(--space-sm)); }
+
+/* A count beside a list heading: the page it shows (C9, T264). */
+.list-section-page { color: var(--muted-text); font-size: 1rem; font-weight: 400; }
+.list-section-count { color: var(--muted-text); font-size: 0.9rem; margin: calc(-1 * var(--space-sm)) 0 var(--space-md); }
+
+/* A status cell: the badge over its sentence. */
+.status-cell { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-xs); }
+.status-cell p { margin: 0; font-size: 0.9rem; }
+.nowrap { white-space: nowrap; }
+.period-window { color: var(--muted-text); display: block; font-size: 0.9rem; }
+.period-window span { white-space: nowrap; }
+
+/* By EPA's counts behind a fold (A1: shut by default; a native details, no round trip). */
+.count-fold > summary {
+  align-items: center;
+  color: var(--link-color);
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 600;
+  gap: var(--space-sm);
+  list-style: none;
+  min-height: 28px;
+}
+.count-fold > summary::-webkit-details-marker { display: none; }
+.count-fold > summary .icon { transition: transform var(--motion-fast) ease; }
+.count-fold[open] > summary .icon { transform: rotate(90deg); }
+.count-fold[open] > summary { margin-bottom: var(--space-md); }
+.count-fold .fold-hide { display: none; }
+.count-fold[open] .fold-hide { display: inline; }
+.count-fold[open] .fold-show { display: none; }
+.section-intro { color: var(--muted-text); margin: 0 0 var(--space-md); font-size: 0.9rem; }
+
+/* Schedule a review: the fields, the agenda beside them from 901px, between them and the actions below. */
+.schedule-grid {
+  display: grid;
+  gap: var(--space-lg) var(--space-xl);
+  grid-template-areas: "fields preview" "summary preview" "actions preview";
+  grid-template-columns: minmax(0, 1fr) minmax(0, 22rem);
+  align-items: start;
+}
+.schedule-fields { grid-area: fields; display: flex; flex-direction: column; gap: var(--space-lg); }
+.schedule-grid > .error-summary { grid-area: summary; margin: 0; }
+.schedule-grid > .form-actions { grid-area: actions; margin: 0; }
+.agenda-preview {
+  grid-area: preview;
+  background-color: var(--info-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: var(--space-md) var(--space-lg);
+  position: sticky;
+  top: calc(56px + var(--space-md));
+}
+.agenda-preview h2 { margin: 0; }
+.agenda-preview p { margin: 0; }
+.agenda-preview ul { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: var(--space-xs); }
+.agenda-preview .alert { margin: 0; }
+.agenda-count { font-weight: 600; }
+.agenda-held .actions-cell { margin-top: var(--space-xs); }
+@media (max-width: 900px) {
+  .schedule-grid { grid-template-areas: "fields" "preview" "summary" "actions"; grid-template-columns: minmax(0, 1fr); }
+  .agenda-preview { position: static; }
+}
+.schedule-grid .form-actions .move-reasons { flex-basis: auto; color: var(--muted-text); }
+.field-pair { display: grid; gap: var(--space-md); grid-template-columns: repeat(auto-fit, minmax(min(10rem, 100%), 1fr)); }
+.form-group > small.page-subtitle + small.page-subtitle { margin-top: 0; }
+.period-note { color: var(--text-color) !important; }
+.type-choices { display: flex; flex-direction: column; gap: 0.75rem; }
+.type-choice { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--space-sm); align-items: start; }
+.type-choice input { margin-top: 0.3rem; width: 1.125rem; height: 1.125rem; accent-color: var(--secondary-color); }
+.type-choice label { font-weight: 600; min-height: 28px; display: inline-flex; align-items: center; }
+.type-choice .page-subtitle { grid-column: 2; margin: 0; }
+.btn[aria-disabled="true"].is-busy { cursor: progress; }
+
+/* A group of choices refused as a whole: the field's 4px stripe, so not colour alone. */
+.invalid-group, fieldset.form-group.invalid { box-shadow: inset 4px 0 0 var(--danger-color); padding-left: var(--space-md); }
+
+/* The seat picker (Q5): one row a committee member, one radio group a seat. */
+.seat-choices { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-lg); }
+.seat-choices label { align-items: center; display: inline-flex; gap: var(--space-sm); min-height: 28px; margin: 0; }
+.seat-choices input { width: 1.125rem; height: 1.125rem; margin: 0; accent-color: var(--secondary-color); }
+.seat-person { display: flex; flex-direction: column; }
+.seat-person span { color: var(--muted-text); font-size: 0.9rem; overflow-wrap: anywhere; }
+.seat-chair { font-weight: 600; }
+.seat-chair span { color: var(--muted-text); font-weight: 400; }
+.seat-count { color: var(--muted-text); font-size: 0.9rem; margin: var(--space-sm) 0 0; }
+.panel-section + .panel-section { margin-top: var(--space-lg); }
+.panel-section > h2 { margin: 0 0 var(--space-md); }
+.form-section-title { margin: 0 0 var(--space-md); }
+.form-container .form-section-title ~ .form-section-title { margin-top: var(--space-xl); }
+.readonly-value { margin: 0; font-weight: 600; }
+.locked-note { margin-top: var(--space-sm); }
+@media (max-width: 640.98px) {
+  .seat-choices { flex-direction: column; gap: 0; border: 1px solid var(--input-border); border-radius: var(--radius-md); width: 100%; }
+  .seat-choices label { min-height: 44px; padding: 0 0.75rem; border-top: 1px solid var(--border-color); }
+  .seat-choices label:first-of-type { border-top: 0; }
+  .type-choice label { min-height: 44px; }
+  .type-choice input { margin-top: 0.8rem; }
+  .count-fold > summary { min-height: 44px; }
+  .trainee-line .btn { min-height: 44px; width: 100%; }
+  .clinic-table--stack .btn, .clinic-table--stack-wide .btn { min-height: 44px; width: 100%; }
+  .schedule-grid .form-actions { flex-direction: column-reverse; align-items: stretch; }
+  .schedule-grid .form-actions .btn { min-height: 44px; }
+  .agenda-preview { padding: var(--space-md); }
+  .header-container .actions-cell { width: 100%; }
+  .header-container .actions-cell .btn { min-height: 44px; width: 100%; }
+}
+@media (max-width: 900px) {
+  .clinic-table--stack-wide .btn { min-height: 44px; }
+}
+
+/* ===== Preview framing only (the canvas, not the product) ===== */
+body { margin: 0; background-color: var(--header-bg); }
+.pv-board { display: flex; flex-direction: column; gap: var(--space-xl); padding: var(--space-lg) 0 var(--space-2xl); background-color: var(--header-bg); }
+.pv-head { margin: 0 var(--space-lg); background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--space-md) var(--space-lg); display: flex; flex-direction: column; gap: var(--space-xs); font-size: 0.9rem; }
+.pv-head h1 { font-size: 1.25rem; margin: 0 0 var(--space-xs); }
+.pv-head p { margin: 0; }
+.pv-head b { font-weight: 600; }
+.pv-frame { display: flex; flex-direction: column; }
+.pv-cap { margin: 0; padding: var(--space-sm) var(--space-lg); background-color: var(--primary-color); color: var(--on-fill); font-size: 0.9rem; line-height: 1.4; display: flex; flex-direction: column; gap: 2px; }
+.pv-cap b { font-weight: 600; font-size: 1rem; }
+.pv-cap span { opacity: 1; }
+.pv-frame .page { position: relative; min-height: 0; background-color: var(--background-color); }
+@media (min-width: 641px) {
+  .pv-frame .sidebar { height: auto; position: static; align-self: stretch; }
+  .pv-frame .account-row { position: absolute; left: var(--sidebar-width); right: 0; top: 0; }
+  .pv-frame .agenda-preview { position: static; }
+}
+.pv-frame article { padding-bottom: var(--space-xl); }
+.pv-focus { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.pv-cut { border: 1px dashed var(--input-border); border-radius: var(--radius-md); color: var(--muted-text); font-size: 0.85rem; padding: var(--space-sm) var(--space-md); margin: var(--space-sm) 0; text-align: center; background-color: var(--surface-color); }
+.pv-doc { margin: 0 var(--space-lg); background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--space-lg) var(--space-xl); }
+.pv-doc h2 { margin: var(--space-xl) 0 var(--space-sm); }
+.pv-doc h2:first-child { margin-top: 0; }
+.pv-doc h3 { margin: var(--space-lg) 0 var(--space-sm); }
+.pv-doc p, .pv-doc li { font-size: 0.95rem; }
+.pv-doc table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.pv-doc th, .pv-doc td { border-bottom: 1px solid var(--border-color); padding: 6px 8px; text-align: left; vertical-align: top; }
+.pv-doc th { background-color: var(--header-bg); font-weight: 600; }
+.pv-doc code { font-family: var(--font-mono); font-size: 0.85rem; }
+.pv-swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--input-border); vertical-align: -2px; margin-right: 6px; }
+</style>
+</helmet>
+<div class="pv-board" style="width: 390px">
+<header class="pv-head"><h1>Schedule a review · 390px <span class="muted">(continued, part b)</span></h1><p><b>Route</b> /committee/reviews/new?panel=&amp;trainee=&amp;period= (decided) · NEW owner table row: Committee reviews lit (aria-current="true") for the Coordinator, both speciality admins, the Institutional admin and the Administrator; trail Home › Committee reviews › Schedule a review; tab “Schedule a review · Wombat”.</p><p><b>Components</b> PageHeader, Breadcrumbs, FormField, FormActions, RefusalSummary, Alert, StatePanel, SittingBar (on arrival). <b>NEW</b> the schedule page's grid (.schedule-grid), its aside AgendaPreview (.agenda-preview), the review-type choices (.type-choices, .type-choice), .field-pair.</p><p><b>DESIGN.md</b> § Page-level patterns, Form page: a form page with an advisory aside; § Form system: Formative only folds into Review type (T309), dates typed ISO (PROPOSED: text inputs with a YYYY-MM-DD hint, in place of the browser's date control); the owner table's new row. <b>Covers</b> Q1, Q3, Q7, Q9, C1, C4, C5, C6, C7, C10, C11, T309, T324, T338, T272.</p></header><section class="pv-frame"><p class="pv-cap"><b>The preview: 15 EPAs</b><span>Step 4.6 · Pieter Smit · Annual progression review</span></p><div class="page">
+<input type="checkbox" id="nt845" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/d8e89f2bacfcd9a2e79781ca6f135313" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span> <span>Coordinator</span></p>
+<label class="nav-toggle-label" for="nt845"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16" /></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12" /></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main"><div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">Coordinator</span></p></div><div class="nav-list"><ul class="nav-items"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg><span class="nav-label">Home</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /> <circle cx="12" cy="9" r="3" /></svg><span class="nav-label">Programme trainees</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /> <polyline points="12 6 12 12 16 14" /></svg><span class="nav-label">Waiting for assessors</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4M16 2v4" /> <rect width="18" height="18" x="3" y="4" rx="2" /> <path d="M3 10h18M9 16l2 2 4-4" /></svg><span class="nav-label">Decisions due</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg><span class="nav-label">MSF campaigns</span></a></li><li><a class="nav-link active" href="#" aria-current="true"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg><span class="nav-label">Committee reviews</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></svg><span class="nav-label">Decision panels</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1zM9 12l2 2 4-4" /></svg><span class="nav-label">Data rights requests</span></a></li></ul><ul class="nav-items nav-personal"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg><span class="nav-label">My data rights</span></a></li></ul></div></nav>
+<div class="account-row"><a class="account-link" href="#" title="Pieter Smit"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /> <path d="M6 20a6 6 0 0 1 12 0" /></svg><span class="account-name">Pieter Smit</span></a>
+<form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>Sign out</button></form></div>
+</header>
+<main><article>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a> <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li><li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Committee reviews</a> <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li><li class="breadcrumb-current"><span aria-current="page">Schedule a review</span></li></ol></nav><div class="header-container"><div><h1 tabindex="-1">Schedule a review</h1><p class="page-subtitle">Put a trainee before a panel for a period. The review opens once it is created.</p></div></div><form class="form-container" aria-label="Schedule a review"><div class="schedule-grid"><div class="schedule-fields"><div class="form-group"><label for="s834">Panel</label><select id="s834" class="form-select" aria-describedby="s834-help"><option>Choose a panel</option><option selected>Paed Annual Review Panel</option></select><small class="page-subtitle" id="s834-help">Only the panels with a trainee you can schedule are listed.</small></div><div class="form-group"><label for="s835">Trainee</label><select id="s835" class="form-select" aria-describedby="s835-help"><option>Choose a trainee</option><option>Anele Dlamini · Training year 3</option><option>Pieter du Plessis · Training year 2</option><option>Nomsa Mahlangu · Training year 1</option><option selected>Lerato Molefe · Training year 4</option><option>Sipho Ndlovu · Training year 1</option></select><small class="page-subtitle" id="s835-help">Current registrars at the panel's institution whose programme you oversee.</small></div><div class="form-group"><label for="s836">Period</label><select id="s836" class="form-select" aria-describedby="s836-help s836-help1"><option>Choose a period</option><option>2026 S1 · 1 Jan to 30 Jun 2026</option><option selected>2026 S2 · 1 Jul to 31 Dec 2026</option><option>2027 S1 · 1 Jan to 30 Jun 2027</option><option>2027 S2 · 1 Jul to 31 Dec 2027</option></select><small class="page-subtitle" id="s836-help">The semester the committee decides for. Choosing one fills the evidence window from the start of its academic year, so the annual EPAs a semester-2 sitting decides are judged on the whole year.</small><small class="page-subtitle" id="s836-help1">The College's semester 2 ends in November; reviews for it may sit until 31 December.</small></div><fieldset class="form-group"><legend>Evidence window</legend><div class="field-pair"><div class="form-group"><label for="t837">From</label><input id="t837" class="form-control" type="text" value="2026-01-01" inputmode="numeric" aria-describedby="t837-help"><small class="page-subtitle" id="t837-help">YYYY-MM-DD</small></div><div class="form-group"><label for="t838">To</label><input id="t838" class="form-control" type="text" value="2026-12-31" inputmode="numeric" aria-describedby="t838-help"><small class="page-subtitle" id="t838-help">YYYY-MM-DD</small></div></div></fieldset><div class="form-group"><label for="t839">Scheduled on</label><input id="t839" class="form-control" type="text" value="2026-10-12" inputmode="numeric" aria-describedby="t839-help"><small class="page-subtitle" id="t839-help">YYYY-MM-DD. The day the review is put on the schedule.</small></div><fieldset class="form-group"><legend>Review type</legend><div class="type-choices"><div class="type-choice"><input type="radio" name="rt840" id="rt841" checked aria-describedby="rt841-help"><label for="rt841">Annual progression review</label><small class="page-subtitle" id="rt841-help">The semester-2 sitting decides the trainee's progression for the year.</small></div><div class="type-choice"><input type="radio" name="rt840" id="rt842" aria-describedby="rt842-help"><label for="rt842">Pre-graduation review</label><small class="page-subtitle" id="rt842-help">The final review before the programme ends: it decides the trainee's progression, and whether they may graduate.</small></div><div class="type-choice"><input type="radio" name="rt840" id="rt843" aria-describedby="rt843-help"><label for="rt843">Formative check-in</label><small class="page-subtitle" id="rt843-help">Closes without a binding decision and cannot issue entrustment decisions. Use for interim progress check-ins. It takes no seat for the period.</small></div></div></fieldset></div><section class="agenda-preview" aria-labelledby="ag844" aria-live="polite"><h2 id="ag844">Agenda</h2><p class="agenda-count">15 EPAs will be on the agenda for 2026 S2.</p><p>PAED-001, PAED-002, PAED-003, PAED-004, PAED-005, PAED-006, PAED-007, PAED-010, PAED-011, PAED-012, PAED-014 and PAED-015 are due at this sitting.</p><ul><li>PAED-008 — [PAED-008 title] · As opportunity allows</li><li>PAED-009 — [PAED-009 title] · As opportunity allows</li><li>PAED-013 — [PAED-013 title] · As opportunity allows</li></ul></section><div class="form-actions"><a class="btn btn-outline" href="#" aria-label="Cancel, back to Committee reviews">Cancel</a><button type="submit" class="btn btn-primary">Create review</button></div></div></form>
+</article></main>
+</div></section><section class="pv-frame"><p class="pv-cap"><b>Pre-graduation, with Already decided</b><span>Step 5.2 · Pieter Smit · from her row; the window widened to her programme start (C1's help)</span></p><div class="page">
+<input type="checkbox" id="nt857" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/d8e89f2bacfcd9a2e79781ca6f135313" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span> <span>Coordinator</span></p>
+<label class="nav-toggle-label" for="nt857"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16" /></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12" /></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main"><div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">Coordinator</span></p></div><div class="nav-list"><ul class="nav-items"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg><span class="nav-label">Home</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /> <circle cx="12" cy="9" r="3" /></svg><span class="nav-label">Programme trainees</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /> <polyline points="12 6 12 12 16 14" /></svg><span class="nav-label">Waiting for assessors</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4M16 2v4" /> <rect width="18" height="18" x="3" y="4" rx="2" /> <path d="M3 10h18M9 16l2 2 4-4" /></svg><span class="nav-label">Decisions due</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg><span class="nav-label">MSF campaigns</span></a></li><li><a class="nav-link active" href="#" aria-current="true"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg><span class="nav-label">Committee reviews</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></svg><span class="nav-label">Decision panels</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1zM9 12l2 2 4-4" /></svg><span class="nav-label">Data rights requests</span></a></li></ul><ul class="nav-items nav-personal"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg><span class="nav-label">My data rights</span></a></li></ul></div></nav>
+<div class="account-row"><a class="account-link" href="#" title="Pieter Smit"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /> <path d="M6 20a6 6 0 0 1 12 0" /></svg><span class="account-name">Pieter Smit</span></a>
+<form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>Sign out</button></form></div>
+</header>
+<main><article>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a> <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li><li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Committee reviews</a> <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li><li class="breadcrumb-current"><span aria-current="page">Schedule a review</span></li></ol></nav><div class="header-container"><div><h1 tabindex="-1">Schedule a review</h1><p class="page-subtitle">Put a trainee before a panel for a period. The review opens once it is created.</p></div></div><form class="form-container" aria-label="Schedule a review"><div class="schedule-grid"><div class="schedule-fields"><div class="form-group"><label for="s846">Panel</label><select id="s846" class="form-select" aria-describedby="s846-help"><option>Choose a panel</option><option selected>Paed Annual Review Panel</option></select><small class="page-subtitle" id="s846-help">Only the panels with a trainee you can schedule are listed.</small></div><div class="form-group"><label for="s847">Trainee</label><select id="s847" class="form-select" aria-describedby="s847-help"><option>Choose a trainee</option><option>Anele Dlamini · Training year 3</option><option>Pieter du Plessis · Training year 2</option><option>Nomsa Mahlangu · Training year 1</option><option selected>Lerato Molefe · Training year 4</option><option>Sipho Ndlovu · Training year 1</option></select><small class="page-subtitle" id="s847-help">Current registrars at the panel's institution whose programme you oversee.</small></div><div class="form-group"><label for="s848">Period</label><select id="s848" class="form-select" aria-describedby="s848-help s848-help1"><option>Choose a period</option><option>2026 S1 · 1 Jan to 30 Jun 2026</option><option selected>2026 S2 · 1 Jul to 31 Dec 2026</option><option>2027 S1 · 1 Jan to 30 Jun 2027</option><option>2027 S2 · 1 Jul to 31 Dec 2027</option></select><small class="page-subtitle" id="s848-help">The semester the committee decides for. Choosing one fills the evidence window from the start of its academic year, so the annual EPAs a semester-2 sitting decides are judged on the whole year.</small><small class="page-subtitle" id="s848-help1">The College's semester 2 ends in November; reviews for it may sit until 31 December.</small></div><fieldset class="form-group"><legend>Evidence window</legend><div class="field-pair"><div class="form-group"><label for="t849">From</label><input id="t849" class="form-control" type="text" value="2023-01-15" inputmode="numeric" aria-describedby="t849-help"><small class="page-subtitle" id="t849-help">YYYY-MM-DD</small></div><div class="form-group"><label for="t850">To</label><input id="t850" class="form-control" type="text" value="2026-12-31" inputmode="numeric" aria-describedby="t850-help"><small class="page-subtitle" id="t850-help">YYYY-MM-DD</small></div></div></fieldset><div class="form-group"><label for="t851">Scheduled on</label><input id="t851" class="form-control" type="text" value="2026-10-12" inputmode="numeric" aria-describedby="t851-help"><small class="page-subtitle" id="t851-help">YYYY-MM-DD. The day the review is put on the schedule.</small></div><fieldset class="form-group"><legend>Review type</legend><div class="type-choices"><div class="type-choice"><input type="radio" name="rt852" id="rt853" aria-describedby="rt853-help"><label for="rt853">Annual progression review</label><small class="page-subtitle" id="rt853-help">The semester-2 sitting decides the trainee's progression for the year.</small></div><div class="type-choice"><input type="radio" name="rt852" id="rt854" checked aria-describedby="rt854-help"><label for="rt854">Pre-graduation review</label><small class="page-subtitle" id="rt854-help">The final review before the programme ends: it decides the trainee's progression, and whether they may graduate.</small></div><div class="type-choice"><input type="radio" name="rt852" id="rt855" aria-describedby="rt855-help"><label for="rt855">Formative check-in</label><small class="page-subtitle" id="rt855-help">Closes without a binding decision and cannot issue entrustment decisions. Use for interim progress check-ins. It takes no seat for the period.</small></div></div></fieldset></div><section class="agenda-preview" aria-labelledby="ag856" aria-live="polite"><h2 id="ag856">Agenda</h2><p class="agenda-count">12 EPAs will be on the agenda for 2026 S2.</p><p>PAED-002, PAED-003, PAED-004, PAED-005, PAED-006, PAED-007, PAED-011, PAED-014 and PAED-015 are due at this sitting.</p><ul><li>PAED-008 — [PAED-008 title] · As opportunity allows</li><li>PAED-009 — [PAED-009 title] · As opportunity allows</li><li>PAED-013 — [PAED-013 title] · As opportunity allows</li></ul><p>Already decided in this window, so not on the agenda: PAED-001, PAED-010 and PAED-012.</p></section><div class="form-actions"><a class="btn btn-outline" href="#" aria-label="Cancel, back to Decisions due">Cancel</a><button type="submit" class="btn btn-primary">Create review</button></div></div></form>
+</article></main>
+</div></section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 390, "height": 5594}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
