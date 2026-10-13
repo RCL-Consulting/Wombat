@@ -69,3 +69,7 @@ Hold every page to one StatePanel contract. The header renders from the first re
 ## Related
 
 T272 (the wording of the alert: raw EF text, and RefusalText's case for database failures), T299 (ActivityView's missing h1 in the same loading and load-error states), T300 (the builder's buttons gated on CanWrite), T321 (the circuit's unhandled-error bar, which it leaves out of scope), T270 (MyMsfReports, where one field holds both the list's load error and a selection's refusal). states.md § Holding a read, and rows 105, 244, 331 and 392.
+
+## Notes
+
+- **2026-10-13, T364 (flow 08, `622c5ad1`) fixed the panels' half: Decision panels never says "no committee routing" while it loads.** Confirmed in the T364 replay (`wombat_scenario_t364`).

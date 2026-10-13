@@ -46,3 +46,7 @@ Then re-sync `design/system/` for what changes.
 - [ ] Design tests: the brand-mark sizes per bar, the `code` rule, no inline style under `Components/Shared`, and the
   tab edge in ContrastTests — test names.
 - [ ] Each of the 13 icons matches Lucide's path — a test or a diff.
+
+## Notes
+
+- **2026-10-13, T364 (flow 08, `622c5ad1`) fixed the failure text on flow 08's pages: a handler's own refusal (`CommitteeRefusedException`) prints its words, any other failure fixed words, logged.** Confirmed in the T364 replay (`wombat_scenario_t364`).

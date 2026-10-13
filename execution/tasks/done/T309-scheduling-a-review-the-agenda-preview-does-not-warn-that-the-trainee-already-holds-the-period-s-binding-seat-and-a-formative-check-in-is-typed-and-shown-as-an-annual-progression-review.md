@@ -1,11 +1,12 @@
 ---
 id: T309
 title: Scheduling a review: the agenda preview does not warn that the trainee already holds the period's binding seat, and a formative check-in is typed and shown as an annual progression review
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-26
+completed: 2026-10-13
 ---
 
 # T309 — Scheduling a review: the agenda preview does not warn that the trainee already holds the period's binding seat, and a formative check-in is typed and shown as an annual progression review
@@ -40,13 +41,22 @@ created: 2026-09-26
 
 ## Verification
 
-- [ ] Application test (CommitteeAgendaHandlerTests): the preview for a trainee with an open binding review in the seat returns that review. It returns none for a formative request, for a panel in another seat (a neonatal CCC panel), or once the review is ratified.
-- [ ] bUnit (ReviewsScheduleAgendaPreviewTests): the preview shows the holding-review sentence and Open review link, and Create review is disabled with the reason.
-- [ ] bUnit (ReviewsScheduleTraineeFirstTests or a new test): ticking Formative only hides #review-type.
-- [ ] Application or bUnit test: a formative review reads "Formative check-in" or "Formative" on ReviewDetail, both MyReviews cells and the schedule list.
-- [ ] PDF text test (PortfolioPdfServiceTests): a closed check-in prints "Type: Formative check-in".
-- [ ] Browser: Step 4.8's preview warns before Create is pressed; Steps 4.49 and 4.51's check-in reads Formative on review #6, on Mr Smit's list and on Dr Ndlovu's list.
+- [x] Application test (CommitteeAgendaHandlerTests): the preview for a trainee with an open binding review in the seat returns that review. It returns none for a formative request, for a panel in another seat (a neonatal CCC panel), or once the review is ratified.
+- [x] bUnit (ReviewsScheduleAgendaPreviewTests): the preview shows the holding-review sentence and Open review link, and Create review is disabled with the reason.
+- [x] bUnit (ReviewsScheduleTraineeFirstTests or a new test): ticking Formative only hides #review-type.
+- [x] Application or bUnit test: a formative review reads "Formative check-in" or "Formative" on ReviewDetail, both MyReviews cells and the schedule list.
+- [x] PDF text test (PortfolioPdfServiceTests): a closed check-in prints "Type: Formative check-in".
+- [x] Browser: Step 4.8's preview warns before Create is pressed; Steps 4.49 and 4.51's check-in reads Formative on review #6, on Mr Smit's list and on Dr Ndlovu's list.
 
 ## Related
 
 T131 slice 4 (one open binding review per seat and period), T131 slice 5 (review types; the preview already says the entrustment-only refusal first), T107 (disabled with the reason), T259 (decisions-due seat and panel naming, neighbouring code). Runbook Steps 4.8, 4.49, 4.50 and 4.51. Findings F-4.8a and F-4.49a.
+
+## Notes
+
+- **Closed 2026-10-13 by T364 (flow 08, `622c5ad1`) with T361 (flow 07).** Item 1: the schedule page's "Already held"
+  before Create (`GetSchedulingSeat`; `CommitteeAgendaHandlerTests`, `ScheduleReviewPageTests`). Item 2 (T361):
+  "Formative check-in" on the review page, both lists and the PDF (`ReviewTypeLabelTests`,
+  `CommitteeSectionDecisionLineTests`, `ReviewsScheduleFormativeTypeTests`). Item 3: Formative only folded into Review
+  type as "Formative check-in" (`ScheduleReviewPageTests`), recorded in DESIGN.md (round 3's F-decisions); item 4's
+  PDF line by the same label. Browser: the T364 replay's 4.8, 4.49 and 4.51 (`act-4-annual-review.md`, `b9cd85be`).

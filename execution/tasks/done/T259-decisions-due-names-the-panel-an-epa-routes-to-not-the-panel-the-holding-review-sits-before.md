@@ -1,11 +1,12 @@
 ---
 id: T259
 title: Decisions-due names the panel an EPA routes to, not the panel the holding review sits before
-status: queued
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
+completed: 2026-10-13
 ---
 
 # T259 — Decisions-due names the panel an EPA routes to, not the panel the holding review sits before
@@ -32,8 +33,14 @@ seat.
 
 ## Verification
 
-- [ ] The row names the holding review's panel. Tests.
+- [x] The row names the holding review's panel. Tests.
 
 ## Related
 
 T131 (slice 6), T235.
+
+## Notes
+
+- **Closed 2026-10-13 by T364 (flow 08, `622c5ad1`):** the holding sentence names the holding review's own panel
+  (`EntrustmentDecisionsDueHandlerTests`, `EntrustmentDecisionsDuePostgresTests`, `DecisionsDuePageTests`). The T364
+  replay played Decisions due's holding rows (4.9, 4.10) with no gap.

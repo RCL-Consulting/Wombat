@@ -56,8 +56,11 @@ Run the loop as flow 07 ran it (`design/flows/07-review-sitting/`, BRIEF § 11 "
 - [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 08) — the squash commit and counts.
   (The T364 squash, 2026-10-13: Domain 814, Application 3782, Infrastructure 1022, Architecture 52, Web 3636,
   Integration 491, all passed; `build-review.md`)
-- [ ] The whole runbook replays on a fresh database with no regression from flow 08, the baseline is re-captured, and
-  flow 08's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
+- [x] The whole runbook replays on a fresh database with no regression from flow 08, the baseline is re-captured, and
+  flow 08's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines. (2026-10-13,
+  `wombat_scenario_t364`: acts 1–6 and the appendix `b4dc3cd1`..`6a1daf0d`; one flow 08 fault, the 19 px sentence
+  links, fixed and re-measured (`1ec7a352`); states 56 of 59 hold, 3 rows corrected (`88f545f9`); missing 0. T365
+  proposed for an older label defect; T309 and T259 closed.)
 - [ ] The design system is re-synced and republished — its version number.
 
 ## Related
