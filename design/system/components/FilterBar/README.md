@@ -1,6 +1,6 @@
 # FilterBar
 
-A list's filters, applied with Show: a real form above the list, its labelled fields in a `.search-grid`, then Show and, once a filter is set, Clear filters; nothing changes until Show, and the address carries what was asked. A pattern, not a component: each page writes the form. Flow 06 (T358, 2026-10-05, 85d5a508; round 3 items 25, 31, 33; D3, D9; R2-Trainees, R2-Waiting) made it, on Programme trainees and Waiting for assessors (DESIGN.md § Page-level patterns, "List page", "A list's filters are applied with Show").
+A list's filters, applied with Show: a real form above the list, its labelled fields in a `.search-grid`, then Show and, once a filter is set, Clear filters; nothing changes until Show, and the address carries what was asked. A pattern, not a component: each page writes the form. Flow 06 (T358, 2026-10-05, 85d5a508; round 3 items 25, 31, 33; D3, D9; R2-Trainees, R2-Waiting) made it, on Programme trainees and Waiting for assessors (DESIGN.md § Page-level patterns, "List page", "A list's filters are applied with Show"). Flow 08 (T364, 2026-10-13, 622c5ad1; F2) applied it to Decisions due (Institution for an Administrator, Period, Trainee, Status, EPA) and to Decision panels (an Administrator's Institution alone).
 
 ## Markup
 
@@ -31,12 +31,15 @@ A list's filters, applied with Show: a real form above the list, its labelled fi
 - **Show** navigates to the page's own address with the filters as its query: `?short=2&year=4&filed=true` (Programme trainees), `?show=overdue&with=<id>` (Waiting for assessors). The page reads them as query parameters and reads the list again whenever they change, so the address, Back and a shared link all show what was asked. An address that is already the one shown reads again in place.
 - **Clear filters** is a link to the bare route.
 - **The page number is not in the address**: Show starts from the first page.
+- **A filter that chooses what is read stays when the rest is cleared** (flow 08): on Decisions due, Institution and Period choose what is read and Trainee, Status and EPA narrow it, so Clear filters keeps the first two (`?period=2026-1`) and is offered only once one of the other three is set. On Decision panels an Administrator's Institution is the only field, so it has no Clear filters; until Show the page says "Choose an institution".
 
 ## The answer (D9)
 
 - **The list's heading counts the answer** in the list's own words, and takes the focus after Show and after a page turn (`h2.list-section-title`, `tabindex="-1"`): with no filter, the count ("5 current registrars", "3 waiting, 2 overdue"); with one, its own sentence ("1 of 5 current registrars has filed nothing in 30 days", "1 waiting, 1 overdue, with Mohammed Patel"); with several, "2 of 5 current registrars match these filters", and what was asked in the rule line. Every count has its singular.
 - **No match is not empty.** The heading is "0 of 5 current registrars" ("0 of 2 waiting"), over an empty-state card: "No registrar matches these filters." ("No request matches these filters."), what was asked ("Overdue only, with Fatima Khumalo."), and Clear filters. One pattern and one button word for every list (review 33).
 - **Nothing to filter, no form.** When the list holds nothing at all, the page draws its empty state and no form. While it loads or has failed, the form stands.
+
+**A list with pages says its page in the heading and counts under it** (flow 08, Decisions due; C9, T264): the heading names the list and, while there is more than one page, the page, "Decisions, page 2 of 4" (`span.list-section-page`, muted, weight 400), and takes the focus after Show and after a page turn; the count stands under it as its own status line, `p.list-section-count` (`role="status"`, muted 0.9rem): "75 of 75 decisions due in 2026 S2 shown.", "15 of 75 decisions due in 2026 S2 shown: Lerato Molefe, every status." No match keeps the count, then the card, "No decision matches these filters.", what was asked ("Missed only, every trainee, every EPA."), and Clear filters.
 
 ## Rules
 

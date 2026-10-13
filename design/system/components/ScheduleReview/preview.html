@@ -1,0 +1,237 @@
+<!-- @dsCard group="Committee" height=3400 width=1280 subtitle="Schedule a review, a page of its own: the fields, Review type as radios with their help, the Agenda aside beside them from 1100px; Already held before Create with Create not offered; the preview failed; refused; Creating…; loading" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ScheduleReview</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  .pv-page { max-width: 974px; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Pieter Smit, Coordinator, at 1280 (Step 4.6): the trail under Committee reviews, the fields, Review type preselected, the Agenda aside beside them with the count, what is due and the optional lines</p>
+<div class="pv-page committee-calendar">
+  <nav aria-label="Breadcrumb">
+    <ol class="breadcrumbs">
+      <li class="breadcrumb-ancestor">
+        <a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a>
+        <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+      </li>
+      <li class="breadcrumb-parent">
+        <a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Committee reviews</a>
+        <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+      </li>
+      <li class="breadcrumb-current"><span aria-current="page">Schedule a review</span></li>
+    </ol>
+  </nav>
+  <div class="header-container">
+    <div>
+      <h1>Schedule a review</h1>
+      <p class="page-subtitle">Put a trainee before a panel for a period. The review opens once it is created.</p>
+    </div>
+  </div>
+  <p class="visually-hidden" role="status"></p>
+  <form class="form-container" aria-label="Schedule a review">
+    <div class="schedule-grid">
+      <div class="schedule-fields">
+        <div class="form-group">
+          <label for="review-panel">Panel</label>
+          <select id="review-panel" class="form-select" aria-describedby="review-panel-help"><option>Choose a panel</option><option selected>Paed Annual Review Panel</option></select>
+          <small class="page-subtitle" id="review-panel-help">Only the panels with a trainee you can schedule are listed.</small>
+        </div>
+        <div class="form-group">
+          <label for="review-trainee">Trainee</label>
+          <select id="review-trainee" class="form-select" aria-describedby="review-trainee-help"><option>Choose a trainee</option><option selected>Lerato Molefe · Training year 4</option></select>
+          <small class="page-subtitle" id="review-trainee-help">Current registrars at the panel's institution whose programme you oversee, with their training year.</small>
+        </div>
+        <div class="form-group">
+          <label for="review-period">Period</label>
+          <select id="review-period" class="form-select" aria-describedby="review-period-help review-period-note"><option>Choose a period</option><option selected>2026 S2 · 1 Jul to 31 Dec 2026</option></select>
+          <small class="page-subtitle" id="review-period-help">The semester the committee decides for. Choosing one fills the evidence window from the start of its academic year, so the annual EPAs a semester-2 sitting decides are judged on the whole year.</small>
+          <small class="page-subtitle" id="review-period-note">The College's semester 2 ends in November; its window runs to 31 December, so December's work counts.</small>
+        </div>
+        <fieldset class="form-group">
+          <legend>Evidence window</legend>
+          <div class="field-pair">
+            <div class="form-group">
+              <label for="review-from">From</label>
+              <input type="date" id="review-from" class="form-control" value="2026-01-01">
+            </div>
+            <div class="form-group">
+              <label for="review-to">To</label>
+              <input type="date" id="review-to" class="form-control" value="2026-12-31">
+            </div>
+          </div>
+        </fieldset>
+        <div class="form-group">
+          <label for="review-scheduled">Scheduled on</label>
+          <input type="date" id="review-scheduled" class="form-control" value="2026-10-13" aria-describedby="review-scheduled-help">
+          <small class="page-subtitle" id="review-scheduled-help">The day the review is put on the schedule.</small>
+        </div>
+        <fieldset class="form-group">
+          <legend>Review type</legend>
+          <div class="scale-choices">
+            <div class="form-check review-type-choice">
+              <input class="form-check-input" type="radio" name="review-type" id="review-type-annualprogression" aria-describedby="review-type-annualprogression-help" checked>
+              <label for="review-type-annualprogression">Annual progression review</label>
+              <small class="page-subtitle review-type-help" id="review-type-annualprogression-help">The semester-2 sitting decides the trainee's progression for the year.</small>
+            </div>
+            <div class="form-check review-type-choice">
+              <input class="form-check-input" type="radio" name="review-type" id="review-type-pregraduation" aria-describedby="review-type-pregraduation-help">
+              <label for="review-type-pregraduation">Pre-graduation review</label>
+              <small class="page-subtitle review-type-help" id="review-type-pregraduation-help">The final review before the programme ends: it decides the trainee's progression, and whether they may graduate.</small>
+            </div>
+            <div class="form-check review-type-choice">
+              <input class="form-check-input" type="radio" name="review-type" id="review-type-formative" aria-describedby="review-type-formative-help">
+              <label for="review-type-formative">Formative check-in</label>
+              <small class="page-subtitle review-type-help" id="review-type-formative-help">Closes without a binding decision and cannot issue entrustment decisions. Use for interim progress check-ins. It takes no seat for the period.</small>
+            </div>
+          </div>
+        </fieldset>
+      </div>
+
+      <section class="agenda-preview" id="agenda-preview" aria-labelledby="agenda-preview-heading">
+        <h2 id="agenda-preview-heading">Agenda</h2>
+        <div class="agenda-live" id="agenda-preview-summary" aria-live="polite">
+          <p class="agenda-count">15 EPAs will be on the agenda for 2026 S2.</p>
+          <p>PAED-001, PAED-002, PAED-003, PAED-004, PAED-005, PAED-006, PAED-007, PAED-010, PAED-011, PAED-012, PAED-014 and PAED-015 are due at this sitting.</p>
+        </div>
+        <ul class="agenda-lines">
+          <li>PAED-008 — Evaluating and managing neurodevelopmental and behavioural presentations in children <span class="muted">· As opportunity allows</span></li>
+          <li>PAED-009 — Providing care for an adolescent patient <span class="muted">· As opportunity allows</span></li>
+          <li>PAED-013 — Managing child protection, legal and ethical aspects of children at risk <span class="muted">· As opportunity allows</span></li>
+        </ul>
+      </section>
+
+      <div class="form-actions">
+        <a class="btn btn-outline" href="#">Cancel</a>
+        <button type="submit" class="btn btn-primary">Create review</button>
+      </div>
+      <p class="visually-hidden" role="status"></p>
+    </div>
+  </form>
+</div>
+
+<p class="pv-cap">Already held (Step 4.8, Q3, T309 item 1): the aside says so before Create, in the duplicate refusal's words; Create review is not offered, the reason first, then Cancel and the review in the way</p>
+<div class="pv-page committee-calendar">
+  <form class="form-container" aria-label="Schedule a review">
+    <div class="schedule-grid">
+      <div class="schedule-fields">
+        <div class="form-group">
+          <label for="review-trainee-2">Trainee</label>
+          <select id="review-trainee-2" class="form-select"><option selected>Lerato Molefe · Training year 4</option></select>
+        </div>
+      </div>
+      <section class="agenda-preview" aria-labelledby="agenda-preview-heading-2">
+        <h2 id="agenda-preview-heading-2">Agenda</h2>
+        <div class="agenda-live" aria-live="polite">
+          <div class="alert alert-warning">
+            <p><strong>Already held.</strong> Review #1 already puts Lerato Molefe before Paed Annual Review Panel for 2026 S2 (scheduled on 2026-10-13). A trainee has one binding review for each period before the panels that decide the same EPAs, until it is ratified: open that review, or ratify it before scheduling another.</p>
+            <p>A formative check-in takes no seat: choose Formative check-in under Review type to schedule one.</p>
+          </div>
+        </div>
+      </section>
+      <div class="form-actions">
+        <p class="move-reasons move-reasons--beside">Create review is not offered: review #1 already holds 2026 S2 for Lerato Molefe.</p>
+        <a class="btn btn-outline" href="#">Cancel</a>
+        <a class="btn btn-primary" href="#" aria-label="Open review #1 of Lerato Molefe">Open review #1</a>
+      </div>
+    </div>
+  </form>
+</div>
+
+<p class="pv-cap">An ended period from a Missed row's Schedule (Step 4.2, F1): Period's help leads with the end; and the preview failed (C6): Try again, Create still offered</p>
+<div class="pv-page committee-calendar">
+  <form class="form-container" aria-label="Schedule a review">
+    <div class="schedule-grid">
+      <div class="schedule-fields">
+        <div class="form-group">
+          <label for="review-period-3">Period</label>
+          <select id="review-period-3" class="form-select" aria-describedby="review-period-3-help"><option selected>2026 S1 · 1 Jan to 30 Jun 2026</option></select>
+          <small class="page-subtitle" id="review-period-3-help">2026 S1 has ended. A review can still sit for it: sittings are often held after the period ends. The semester the committee decides for. Choosing one fills the evidence window from the start of its academic year, so the annual EPAs a semester-2 sitting decides are judged on the whole year.</small>
+        </div>
+      </div>
+      <section class="agenda-preview" aria-labelledby="agenda-preview-heading-3">
+        <h2 id="agenda-preview-heading-3">Agenda</h2>
+        <div class="agenda-live" aria-live="polite">
+          <div class="alert alert-warning">
+            <div class="alert-row">
+              <span class="alert-row-text">The agenda could not be read just now.</span>
+              <button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button>
+            </div>
+            <p>The review can still be created: its agenda is planned when you press Create review.</p>
+          </div>
+        </div>
+      </section>
+      <div class="form-actions">
+        <a class="btn btn-outline" href="#">Cancel</a>
+        <button type="submit" class="btn btn-primary">Create review</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<p class="pv-cap">Refused before sending (T324): the summary above the actions, focused, each line linking to its field, the message beside the field</p>
+<div class="pv-page committee-calendar">
+  <form class="form-container" aria-label="Schedule a review">
+    <div class="schedule-grid">
+      <div class="schedule-fields">
+        <div class="form-group">
+          <label for="review-panel-4">Panel</label>
+          <select id="review-panel-4" class="form-select invalid" aria-invalid="true" aria-describedby="review-panel-4-help review-panel-4-msg schedule-refusal"><option selected>Choose a panel</option></select>
+          <small class="page-subtitle" id="review-panel-4-help">Only the panels with a trainee you can schedule are listed.</small>
+          <div class="validation-message" id="review-panel-4-msg">Choose a panel.</div>
+        </div>
+      </div>
+      <section class="agenda-preview" aria-labelledby="agenda-preview-heading-4">
+        <h2 id="agenda-preview-heading-4">Agenda</h2>
+        <div class="agenda-live" aria-live="polite"><p class="muted">Choose a panel, a trainee and a period to see which EPAs the review will be there to decide.</p></div>
+      </section>
+      <div id="schedule-refusal" class="validation-summary-errors error-summary" tabindex="-1" role="alert">
+        <strong>The review was not created.</strong> Everything you chose is kept below.
+        <ul class="refusal-summary-list">
+          <li><a href="#review-panel-4">Panel: Choose a panel.</a></li>
+          <li><a href="#">Trainee: Choose a trainee.</a></li>
+          <li><a href="#">Period: Choose the period the review sits for.</a></li>
+          <li><a href="#">Scheduled on: Choose the day the review is scheduled on.</a></li>
+        </ul>
+      </div>
+      <div class="form-actions">
+        <a class="btn btn-outline" href="#">Cancel</a>
+        <button type="submit" class="btn btn-primary">Create review</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<p class="pv-cap">Creating (S6): Creating…, aria-disabled and never disabled; Cancel a disabled button, not a link</p>
+<div class="pv-page committee-calendar">
+  <div class="form-actions">
+    <button type="button" class="btn btn-outline" disabled>Cancel</button>
+    <button type="submit" class="btn btn-primary is-running" aria-disabled="true">Creating…</button>
+  </div>
+  <p class="visually-hidden" role="status">Creating the review.</p>
+</div>
+
+<p class="pv-cap">Loading (C11): the header at once, the form's shape, the Agenda heading and Cancel; no Create review</p>
+<div class="pv-page committee-calendar">
+  <p class="visually-hidden" role="status">Loading what you can schedule.</p>
+  <div class="form-container" aria-busy="true">
+    <div class="schedule-grid">
+      <div class="schedule-fields">
+        <div aria-hidden="true"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+      </div>
+      <section class="agenda-preview" aria-labelledby="agenda-loading-heading">
+        <h2 id="agenda-loading-heading">Agenda</h2>
+      </section>
+      <div class="form-actions">
+        <a class="btn btn-outline" href="#">Cancel</a>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

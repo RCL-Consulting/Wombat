@@ -1,4 +1,4 @@
-<!-- @dsCard group="Data" height=200 subtitle="Under every list that can grow; at either end Previous or Next is aria-disabled, never disabled; with a Label, a navigation landmark" -->
+<!-- @dsCard group="Data" height=300 subtitle="Under every list that can grow; at either end Previous or Next is aria-disabled, never disabled; with a Label, a navigation landmark; the page-size select named by its label" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -18,8 +18,8 @@
     <button type="button" class="btn btn-outline btn-sm">Next</button>
   </div>
   <div class="pager-page-size">
-    <span class="pager-page-size-label">Per page:</span>
-    <select class="form-select form-select-sm pager-page-size-select">
+    <label class="pager-page-size-label" for="pager-size-1">Per page:</label>
+    <select id="pager-size-1" class="form-select form-select-sm pager-page-size-select">
       <option>10</option><option selected>20</option><option>50</option><option>100</option>
     </select>
   </div>
@@ -33,8 +33,22 @@
     <button type="button" class="btn btn-outline btn-sm" aria-disabled="true">Next</button>
   </div>
   <div class="pager-page-size">
-    <span class="pager-page-size-label">Per page:</span>
-    <select class="form-select form-select-sm pager-page-size-select">
+    <label class="pager-page-size-label" for="pager-size-2">Per page:</label>
+    <select id="pager-size-2" class="form-select form-select-sm pager-page-size-select">
+      <option>10</option><option selected>20</option><option>50</option><option>100</option>
+    </select>
+  </div>
+</nav>
+<p class="pv-cap">With a PageSizeLabel (flow 08, Decisions due): the select named "Decisions per page", the pager "Decisions, pages"</p>
+<nav class="pager" aria-label="Decisions, pages">
+  <div class="pager-info">Showing 21–40 of 75</div>
+  <div class="pager-actions">
+    <button type="button" class="btn btn-outline btn-sm">Previous</button>
+    <button type="button" class="btn btn-outline btn-sm">Next</button>
+  </div>
+  <div class="pager-page-size">
+    <label class="pager-page-size-label" for="pager-size-3">Decisions per page</label>
+    <select id="pager-size-3" class="form-select form-select-sm pager-page-size-select">
       <option>10</option><option selected>20</option><option>50</option><option>100</option>
     </select>
   </div>

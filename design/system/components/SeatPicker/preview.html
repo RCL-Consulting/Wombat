@@ -1,0 +1,174 @@
+<!-- @dsCard group="Committee" height=2150 width=974 subtitle="Who sits on a panel, chosen by person: Chair, then one row a committee member with Not seated, Member or External member, the chair's row chosen above, the seat count; the chair taken from a seat; a panel of one refused; stacked on a phone" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SeatPicker</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* Below 641px app.css stacks .clinic-table--stack. This card is wider than that, so the 390 rendition (a 358px column)
+     repeats the media rules' declarations under .pv-phone. */
+  .pv-phone { width: 358px; }
+  .pv-phone .form-container { padding: var(--space-md); }
+  .pv-phone .clinic-table--stack thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-phone .clinic-table--stack tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-phone .clinic-table--stack tbody tr:last-child { border-bottom: 0; }
+  .pv-phone .clinic-table--stack td { border: 0; padding: 0; }
+  .pv-phone .panel-seats .clinic-table--stack tbody th { background: none; border: 0; display: block; padding: 0; }
+  .pv-phone .form-check, .pv-phone .form-select { min-height: 2.75rem; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Nolwazi Mbatha's panel as saved (Step 2.23): the Chair select, the seats by surname, the chair's row chosen above, the count</p>
+<form class="form-container" aria-label="Who sits on it">
+  <h2 class="form-section-title">Who sits on it</h2>
+  <div class="form-group">
+    <label for="panel-chair">Chair</label>
+    <select id="panel-chair" class="form-select" aria-describedby="panel-chair-help"><option>Choose a chair</option><option selected>Thandi Zulu (zulu@kgk.wombat.local)</option></select>
+    <div id="panel-chair-note" class="muted" role="status"></div>
+    <small class="page-subtitle" id="panel-chair-help">Only active committee members at the panel's institution who are not trainees are listed.</small>
+  </div>
+  <div id="panel-seats" class="choice-group panel-seats" role="group" aria-label="Seats">
+    <div class="table-container shadow">
+      <table class="clinic-table clinic-table--stack" role="table">
+        <caption>Seats on the panel: the active committee members at Kgosi Kgari Teaching Hospital who are not trainees, by surname</caption>
+        <thead role="rowgroup">
+          <tr role="row"><th scope="col" role="columnheader">Committee member</th><th scope="col" role="columnheader">Seat</th></tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th scope="row" role="rowheader"><div class="person-cell">Sarah Botha<span>botha@kgk.wombat.local</span></div></th>
+            <td role="cell">
+              <fieldset class="form-group choice-row">
+                <legend class="visually-hidden">Seat for Sarah Botha</legend>
+                <div class="check-grid">
+                  <div class="form-check"><input class="form-check-input" type="radio" name="seat-0" id="seat-0-none" checked><label for="seat-0-none">Not seated</label></div>
+                  <div class="form-check"><input class="form-check-input" type="radio" name="seat-0" id="seat-0-member"><label for="seat-0-member">Member</label></div>
+                  <div class="form-check"><input class="form-check-input" type="radio" name="seat-0" id="seat-0-external"><label for="seat-0-external">External member</label></div>
+                </div>
+              </fieldset>
+            </td>
+          </tr>
+          <tr role="row">
+            <th scope="row" role="rowheader"><div class="person-cell">David Naidoo<span>naidoo@kgk.wombat.local</span></div></th>
+            <td role="cell">
+              <fieldset class="form-group choice-row">
+                <legend class="visually-hidden">Seat for David Naidoo</legend>
+                <div class="check-grid">
+                  <div class="form-check"><input class="form-check-input" type="radio" name="seat-1" id="seat-1-none"><label for="seat-1-none">Not seated</label></div>
+                  <div class="form-check"><input class="form-check-input" type="radio" name="seat-1" id="seat-1-member" checked><label for="seat-1-member">Member</label></div>
+                  <div class="form-check"><input class="form-check-input" type="radio" name="seat-1" id="seat-1-external"><label for="seat-1-external">External member</label></div>
+                </div>
+              </fieldset>
+            </td>
+          </tr>
+          <tr role="row">
+            <th scope="row" role="rowheader"><div class="person-cell">John van Rensburg<span>vanrensburg@sun.wombat.local</span></div></th>
+            <td role="cell">
+              <fieldset class="form-group choice-row">
+                <legend class="visually-hidden">Seat for John van Rensburg</legend>
+                <div class="check-grid">
+                  <div class="form-check"><input class="form-check-input" type="radio" name="seat-2" id="seat-2-none"><label for="seat-2-none">Not seated</label></div>
+                  <div class="form-check"><input class="form-check-input" type="radio" name="seat-2" id="seat-2-member"><label for="seat-2-member">Member</label></div>
+                  <div class="form-check"><input class="form-check-input" type="radio" name="seat-2" id="seat-2-external" checked><label for="seat-2-external">External member</label></div>
+                </div>
+              </fieldset>
+            </td>
+          </tr>
+          <tr role="row">
+            <th scope="row" role="rowheader"><div class="person-cell">Thandi Zulu<span>zulu@kgk.wombat.local</span></div></th>
+            <td role="cell"><p class="readonly-value">Chair <span class="muted">· chosen above</span></p></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="field-help" id="panel-seat-count" role="status">3 seats: the chair, 1 member and 1 external member.</p>
+    <small class="page-subtitle">External members are external examiners, who sit with the chair on the panel's appeal body. Only active committee members at the panel's institution who are not trainees are listed: cross-institution externals are not yet supported.</small>
+  </div>
+</form>
+
+<p class="pv-cap">A chair chosen from a seat (Step 2.21, T257): the note under Chair says so while the focus stays there</p>
+<div class="form-container">
+  <div class="form-group">
+    <label for="panel-chair-b">Chair</label>
+    <select id="panel-chair-b" class="form-select" aria-describedby="panel-chair-help-b panel-chair-note-b"><option selected>Thandi Zulu (zulu@kgk.wombat.local)</option></select>
+    <div id="panel-chair-note-b" class="muted" role="status">Thandi Zulu is the chair now, so is no longer seated as a member.</div>
+    <small class="page-subtitle" id="panel-chair-help-b">Only active committee members at the panel's institution who are not trainees are listed.</small>
+  </div>
+</div>
+
+<p class="pv-cap">A panel of one, refused (Step 2.21): the summary, focused; the group marked with the stripe, its message at its top</p>
+<form class="form-container" aria-label="New panel">
+  <div id="panel-refusal" class="validation-summary-errors error-summary" tabindex="-1" role="alert">
+    <strong>The panel was not created.</strong> Everything you chose is kept below.
+    <ul class="refusal-summary-list">
+      <li><a href="#seat-r-none">Seats: A panel needs at least two members: the chair and at least one other, so that no decision is one person's.</a></li>
+    </ul>
+  </div>
+  <div id="panel-seats-r" class="choice-group panel-seats is-invalid" role="group" aria-label="Seats" aria-describedby="panel-seats-msg">
+    <div class="validation-message" id="panel-seats-msg">A panel needs at least two members: the chair and at least one other, so that no decision is one person's.</div>
+    <div class="table-container shadow">
+      <table class="clinic-table clinic-table--stack" role="table">
+        <caption>Seats on the panel: the active committee members at Kgosi Kgari Teaching Hospital who are not trainees, by surname</caption>
+        <thead role="rowgroup">
+          <tr role="row"><th scope="col" role="columnheader">Committee member</th><th scope="col" role="columnheader">Seat</th></tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th scope="row" role="rowheader"><div class="person-cell">Sarah Botha<span>botha@kgk.wombat.local</span></div></th>
+            <td role="cell">
+              <fieldset class="form-group choice-row">
+                <legend class="visually-hidden">Seat for Sarah Botha</legend>
+                <div class="check-grid">
+                  <div class="form-check"><input class="form-check-input" type="radio" name="seat-r" id="seat-r-none" checked><label for="seat-r-none">Not seated</label></div>
+                  <div class="form-check"><input class="form-check-input" type="radio" name="seat-r" id="seat-r-member"><label for="seat-r-member">Member</label></div>
+                  <div class="form-check"><input class="form-check-input" type="radio" name="seat-r" id="seat-r-external"><label for="seat-r-external">External member</label></div>
+                </div>
+              </fieldset>
+            </td>
+          </tr>
+          <tr role="row">
+            <th scope="row" role="rowheader"><div class="person-cell">Thandi Zulu<span>zulu@kgk.wombat.local</span></div></th>
+            <td role="cell"><p class="readonly-value">Chair <span class="muted">· chosen above</span></p></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="field-help" role="status">1 seat: the chair, 0 members and 0 external members.</p>
+  </div>
+</form>
+
+<p class="pv-cap">At 390: the seats stack, each name over its radios, the row header's tint dropped (the seat picker's only); each radio row 44px</p>
+<div class="pv-phone committee-calendar">
+  <div class="form-container">
+    <div class="choice-group panel-seats" role="group" aria-label="Seats">
+      <div class="table-container shadow">
+        <table class="clinic-table clinic-table--stack" role="table">
+          <caption>Seats on the panel: the active committee members at Kgosi Kgari Teaching Hospital who are not trainees, by surname</caption>
+          <thead role="rowgroup">
+            <tr role="row"><th scope="col">Committee member</th><th scope="col">Seat</th></tr>
+          </thead>
+          <tbody role="rowgroup">
+            <tr role="row">
+              <th scope="row" role="rowheader"><div class="person-cell">David Naidoo<span>naidoo@kgk.wombat.local</span></div></th>
+              <td role="cell">
+                <fieldset class="form-group choice-row">
+                  <legend class="visually-hidden">Seat for David Naidoo</legend>
+                  <div class="check-grid">
+                    <div class="form-check"><input class="form-check-input" type="radio" name="seat-p" id="seat-p-none"><label for="seat-p-none">Not seated</label></div>
+                    <div class="form-check"><input class="form-check-input" type="radio" name="seat-p" id="seat-p-member" checked><label for="seat-p-member">Member</label></div>
+                    <div class="form-check"><input class="form-check-input" type="radio" name="seat-p" id="seat-p-external"><label for="seat-p-external">External member</label></div>
+                  </div>
+                </fieldset>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

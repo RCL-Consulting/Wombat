@@ -515,8 +515,8 @@
   },
   "lastChange": {
     "by": "Renier Cloete",
-    "at": "2026-10-12T16:00:00Z",
-    "via": "Claude Code · Wombat@be59879b",
-    "note": "Re-synced to flow 07 as built (T361, 44de180b with 59bb72fd, 6ad6c57a, 6b149fff and 14378856): one token added (size: sitting-bar-h, 0px, measured by js/sticky-offset.js), no other value changed; 7 records added in a new Committee group (ReviewSitting, SittingBar, AgendaTable, AgendaLineForm, EvidenceReader, DecisionForm, ReviewReturnLink); revised ConfirmDialog (BodyContent, the review's five dialogs), Badge (Not decided amber, the review's state badge), MainLayout (stacking: the sidebar's z-index 10, focus clearance), TrajectoryChart (HeadContent, h3 under the review's h2), EntrustmentStandingPanel, ActivityAbout and ActivityForm (heading levels), WayOn and Breadcrumbs (the review's way back), StatePanel, Button (is-unavailable), ProgrammeTraineeDetail (the formative label), Icon, the Icons group, the README, tokens' ref and source map, and the bundle (the sidebar's z-index carried into its layout tail); no icon added (60 in all, 53 named by a page)."
+    "at": "2026-10-13T20:45:00Z",
+    "via": "Claude Code · Wombat@77b8dd79",
+    "note": "Re-synced to flow 08 as built (T364, 622c5ad1 with 1ec7a352): no token added or changed; 6 records added in the Committee group (DecisionPanels, DecisionPanelPage, SeatPicker, DecisionsDue, ScheduleReview, CommitteeReviews); revised PagerControls (the page-size label, PageSizeLabel; its preview and the pager in ProgrammeTrainees' and WaitingList's previews), Badge (Scheduled grey on Decisions due), DataTable (flow 08's stack-wide lists, one action a row, the status cell, the period window, the person cell), FilterBar (Decisions due and Decision panels; the heading's page and the count under it), FormField (radios for kinds, the read-only value, the seat picker, dates in the date input), StatePanel (flow 08's fixed-word load failures), NavMenu (Schedule a review's owner row), Breadcrumbs (the trail is the way back), Icon, the Icons group, the README, tokens' ref and source map, and the bundle (app.css's four Flow 08 sections); no icon added (60 in all, 53 named by a page)."
   }
 }

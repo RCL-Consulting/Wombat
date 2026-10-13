@@ -44,18 +44,25 @@ My activities' All activities was the first: the columns Activity, Who has it no
 
 **Stacked from 900px** (flow 06, T358, 94edf2b7; A.7.8a): `.clinic-table--stack-wide`, added beside `.clinic-table--stack`, stacks the same way **at 900px and below**, where the dashboard grid goes to one column too. From 641 to 900px the sidebar leaves the main column too narrow for Programme trainees' six columns and Waiting for assessors' four, so the names split mid-word. The two lists write it out by hand, as flow 05's tables do; a row's header (`th scope="row"`, the registrar) is `display: block`, and a cell carries `data-label` as below 641px.
 
+Flow 08 (T364, round 3 M8) stacks its lists the same way from 900px: Decision panels and its Who decides each EPA (DecisionPanels), Decisions due's By EPA (DecisionsDue) and Committee reviews (CommitteeReviews); there a stack-wide row's button is 44px (`.committee-calendar .clinic-table--stack-wide .btn`). Decisions due's list and the seat picker (SeatPicker) stack below 641px only. A stack-wide row header keeps the header cell's tint; only the seat picker's drops it below 641px, so the name sits over its radios (build review D5).
+
 ## Rules
 
 - Every `<table>` is a `.clinic-table` in a `.table-container`; never Bootstrap's `.table`, and no inline column widths.
 - An actions column's header is a `.visually-hidden` "Actions", never an empty `<th>`. A column no row offers an action in is not rendered.
 - Every row's button carries an `aria-label` that contains its visible label and names the row in the page's words ("View Mini-CEX, PAED-003, encounter date 2026-09-01"); `RowNames.Distinct` adds tie-breakers where names would repeat.
 - A row with no action says why in a `.muted` span ("Set by the College", "Staged below"); it is never blank.
+- **One action a row** (flow 08, T364, C3; DESIGN.md § Table system): a row offers the one thing to do next, never two that compete. Decisions due's held row offers "Open review #1" and no Schedule, a row that can be scheduled only Schedule, a decided one "Decided: nothing to schedule".
+- **A status cell** (flow 08, `.status-cell`): the badge over a sentence (0.9rem) saying what it means, a review it names a link whose line is padded to a 24px target (`.status-cell p a`, 1ec7a352).
+- **A period over its window** (flow 08, `.period-window`): "2026 S2" over "2026-01-01 to 2026-12-31" in `muted-text` at 0.9rem, each date unbroken (Committee reviews).
+- **A person over the address** (flow 08, `.person-cell`): the name over the whole address in `muted-text`, which wraps anywhere (the seat picker).
+- **On flow 08's pages** (`.committee-calendar`) every row action of a stacked table is 44px and the row's width below 641px.
 - An item open for editing keeps its row read-only ("Editing below") and puts its controls in a second row spanning the table.
 - Measure a table at 1280px against its longest real values before adding a column.
 
 ## Known gaps
 
-- My activities, the Activity inbox, flow 05's index, standing panel, trajectory table and Activities on this EPA, and flow 06's Programme trainees and Waiting for assessors (from 900px) stack. Every other list at 390px still scrolls sideways inside its container.
+- My activities, the Activity inbox, flow 05's index, standing panel, trajectory table and Activities on this EPA, flow 06's Programme trainees and Waiting for assessors (from 900px), and flow 08's Decision panels, Who decides each EPA, By EPA and Committee reviews (from 900px), Decisions due's list and the seat picker stack. Every other list at 390px still scrolls sideways inside its container.
 - A filtered list's form above it is FilterBar's (flow 06); the older lists' `.search-container` with `.search-input` fields acts as each page wires it.
 
 ## Appearance

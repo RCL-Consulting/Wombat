@@ -1,0 +1,259 @@
+<!-- @dsCard group="Committee" height=3700 width=974 subtitle="Decisions due: the filters applied with Show, By EPA in a fold, the Decisions heading that says its page, the trainee line, each row's badge over its sentence and its one action; no match, loading, failed, and stacked on a phone" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DecisionsDue</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* Below 641px app.css stacks .clinic-table--stack and makes the page's row actions 44px. This card is wider than
+     that, so the 390 rendition (a 358px column) repeats the media rules' declarations under .pv-phone. */
+  .pv-phone { width: 358px; }
+  .pv-phone .clinic-table--stack thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-phone .clinic-table--stack tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-phone .clinic-table--stack td { border: 0; padding: 0; }
+  .pv-phone .clinic-table--stack th[scope="row"] { display: block; }
+  .pv-phone .clinic-table--stack td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-phone .committee-calendar .clinic-table--stack .btn, .pv-phone .committee-calendar .trainee-line .btn { min-height: 2.75rem; width: 100%; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Refilwe Mokoena, Speciality admin, one trainee filtered (Step 4.9): the opening, the filters with Clear filters, By EPA shut, the Decisions heading and its count, the trainee line, the rows' badges, sentences and one action, the pager named</p>
+<div class="committee-calendar">
+  <div class="header-container">
+    <div>
+      <h1>Decisions due</h1>
+      <p class="page-subtitle">What the committee must decide, per registrar and per EPA, and where each decision stands.</p>
+    </div>
+  </div>
+  <p class="visually-hidden" role="status"></p>
+  <p id="due-intro" class="muted">The EPAs due for an entrustment decision in 2026 S2 for the 5 trainees you oversee at Kgosi Kgari Teaching Hospital, by each EPA's decision cadence: every semester, or once a year. Missed is read today: the EPA's window has ended with nothing decided or on an open review's agenda.</p>
+  <form class="search-container" method="get" aria-label="Filter Decisions due">
+    <div class="search-grid">
+      <div class="search-field">
+        <label for="due-period">Period</label>
+        <select id="due-period" name="period" class="form-select" aria-describedby="due-period-help"><option>2026 S1 · 1 Jan to 30 Jun 2026</option><option selected>2026 S2 · 1 Jul to 31 Dec 2026</option></select>
+        <small id="due-period-help" class="field-help">The College's semester 2 ends in November; its window runs to 31 December, so December's work counts.</small>
+      </div>
+      <div class="search-field">
+        <label for="due-trainee">Trainee</label>
+        <select id="due-trainee" name="trainee" class="form-select"><option>Every trainee</option><option selected>Lerato Molefe</option></select>
+      </div>
+      <div class="search-field">
+        <label for="due-status">Status</label>
+        <select id="due-status" name="status" class="form-select"><option>Outstanding: not yet decided</option><option selected>Every status</option><option>Missed</option></select>
+      </div>
+      <div class="search-field">
+        <label for="due-epa">EPA</label>
+        <select id="due-epa" name="epa" class="form-select"><option>Every EPA</option><option>PAED-001 — Providing paediatric emergency care to children</option></select>
+      </div>
+      <div class="search-field filter-actions">
+        <button type="submit" class="btn btn-primary">Show</button>
+        <a class="btn btn-outline" href="#">Clear filters</a>
+      </div>
+    </div>
+  </form>
+
+  <section class="list-section" aria-labelledby="due-summary-heading">
+    <h2 id="due-summary-heading" class="list-section-title">By EPA</h2>
+    <p class="muted">The filters above do not narrow these counts.</p>
+    <details id="due-summary-fold" class="rung-legend">
+      <summary><svg class="icon rung-legend-marker" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>Counts for the 15 EPAs due in 2026 S2<span class="section-fold-show"><span class="fold-show">Show</span><span class="fold-hide">Hide</span></span></summary>
+      <div id="due-summary-scroll" class="table-container shadow" tabindex="0" role="region" aria-label="By EPA, 2026 S2, scrollable">
+        <table id="due-summary" class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+          <caption>How many trainees stand where on each EPA due in 2026 S2. To schedule: not scheduled, due by year end, or revoked. Optional: a partial period, or decided as opportunity allows.</caption>
+          <thead role="rowgroup">
+            <tr role="row"><th scope="col">EPA</th><th scope="col">Due</th><th scope="col">Decided</th><th scope="col">Scheduled</th><th scope="col">Not decided</th><th scope="col">To schedule</th><th scope="col">Missed</th><th scope="col">Optional</th></tr>
+          </thead>
+          <tbody role="rowgroup">
+            <tr role="row"><th scope="row" role="rowheader">PAED-001 — Providing paediatric emergency care to children</th><td role="cell" data-label="Due">5</td><td role="cell" data-label="Decided">0</td><td role="cell" data-label="Scheduled">3</td><td role="cell" data-label="Not decided">0</td><td role="cell" data-label="To schedule">2</td><td role="cell" data-label="Missed">0</td><td role="cell" data-label="Optional">0</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </section>
+
+  <section class="list-section" aria-labelledby="due-list-heading">
+    <h2 id="due-list-heading" class="list-section-title" tabindex="-1"><span>Decisions</span></h2>
+    <p id="due-count" class="list-section-count" role="status">15 of 75 decisions due in 2026 S2 shown: Lerato Molefe, every status.</p>
+    <div class="trainee-line" id="due-line-1">
+      <p>Review #1 (annual progression) holds 2026 S2 before Paed Annual Review Panel, scheduled on 2026-10-13.</p>
+      <a class="btn btn-outline btn-sm" href="#" aria-label="Open review #1 of Lerato Molefe">Open review #1</a>
+    </div>
+    <div class="table-container shadow">
+      <table id="due-items" class="clinic-table clinic-table--stack" role="table">
+        <caption>Lerato Molefe's decisions due in 2026 S2, every status, by EPA</caption>
+        <thead role="rowgroup">
+          <tr role="row"><th scope="col" role="columnheader">EPA</th><th scope="col" role="columnheader">Window</th><th scope="col" role="columnheader">Status</th><th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th></tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th scope="row" role="rowheader">PAED-001 — Providing paediatric emergency care to children</th>
+            <td role="cell" data-label="Window">2026 S2</td>
+            <td role="cell"><div class="status-cell"><span class="badge badge-draft">Scheduled</span><p>On the agenda of <a href="#">review #1</a> before Paed Annual Review Panel, which is still open.</p></div></td>
+            <td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Open review #1 for Lerato Molefe, PAED-001">Open review #1</a></div></td>
+          </tr>
+          <tr role="row">
+            <th scope="row" role="rowheader">PAED-003 — Providing intensive care to children</th>
+            <td role="cell" data-label="Window">2026</td>
+            <td role="cell"><div class="status-cell"><span class="badge badge-draft">Scheduled</span><p>On the agenda of <a href="#">review #1</a> before Paed Annual Review Panel, which is still open.</p></div></td>
+            <td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Open review #1 for Lerato Molefe, PAED-003">Open review #1</a></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <nav class="pager" aria-label="Decisions, pages">
+      <div class="pager-info">Showing 1–15 of 15</div>
+      <div class="pager-actions">
+        <button type="button" class="btn btn-outline btn-sm" aria-disabled="true">Previous</button>
+        <button type="button" class="btn btn-outline btn-sm" aria-disabled="true">Next</button>
+      </div>
+      <div class="pager-page-size">
+        <label class="pager-page-size-label" for="pager-size-a">Decisions per page</label>
+        <select id="pager-size-a" class="form-select form-select-sm pager-page-size-select"><option>10</option><option selected>20</option><option>50</option><option>100</option></select>
+      </div>
+    </nav>
+  </section>
+</div>
+
+<p class="pv-cap">Every trainee, page 2 of 4 (C9, T264): the heading says its page and takes the focus after the turn; each kind of row's one action</p>
+<div class="committee-calendar">
+  <section class="list-section" aria-labelledby="due-list-heading-2">
+    <h2 id="due-list-heading-2" class="list-section-title" tabindex="-1"><span>Decisions<span class="list-section-page">, page 2 of 4</span></span></h2>
+    <p class="list-section-count" role="status">75 of 75 decisions due in 2026 S2 shown.</p>
+    <div class="table-container shadow">
+      <table class="clinic-table clinic-table--stack" role="table">
+        <caption>Decisions due in 2026 S2, by trainee then EPA</caption>
+        <thead role="rowgroup">
+          <tr role="row"><th scope="col" role="columnheader">EPA</th><th scope="col" role="columnheader">Trainee</th><th scope="col" role="columnheader">Window</th><th scope="col" role="columnheader">Status</th><th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th></tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th scope="row" role="rowheader">PAED-001 — Providing paediatric emergency care to children</th>
+            <td role="cell" data-label="Trainee">Anele Dlamini</td>
+            <td role="cell" data-label="Window">2026 S2</td>
+            <td role="cell"><div class="status-cell"><span class="badge badge-draft">Not scheduled</span><p>No open review holds it, and 2026 S2 has not ended.</p></div></td>
+            <td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Schedule a review of Anele Dlamini for PAED-001 before Paed Annual Review Panel">Schedule</a></div></td>
+          </tr>
+          <tr role="row">
+            <th scope="row" role="rowheader">PAED-008 — Evaluating and managing neurodevelopmental and behavioural presentations in children</th>
+            <td role="cell" data-label="Trainee">Anele Dlamini</td>
+            <td role="cell" data-label="Window">2026</td>
+            <td role="cell"><div class="status-cell"><span class="badge badge-draft">As opportunity allows</span><p>Decided as opportunity allows: optional, never missed.</p></div></td>
+            <td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Schedule a review of Anele Dlamini for PAED-008 before Paed Annual Review Panel">Schedule</a></div></td>
+          </tr>
+          <tr role="row">
+            <th scope="row" role="rowheader">PAED-002 — Managing common paediatric presentations</th>
+            <td role="cell" data-label="Trainee">Lerato Molefe</td>
+            <td role="cell" data-label="Window">2026 S2</td>
+            <td role="cell"><div class="status-cell"><span class="badge badge-completed">Decided</span><p>STAR #12, issued at <a href="#">review #1</a>.</p></div></td>
+            <td role="cell"><div class="actions-cell"><span class="muted">Decided: nothing to schedule</span></div></td>
+          </tr>
+          <tr role="row">
+            <th scope="row" role="rowheader">PAED-004 — Managing common neonatal conditions</th>
+            <td role="cell" data-label="Trainee">Lerato Molefe</td>
+            <td role="cell" data-label="Window">2026 S2</td>
+            <td role="cell"><div class="status-cell"><span class="badge badge-accepted">Not decided</span><p>Not decided at <a href="#">review #1</a>. A later sitting for 2026 S2 plans it again.</p></div></td>
+            <td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Schedule a review of Lerato Molefe for PAED-004 before Paed Annual Review Panel">Schedule</a></div></td>
+          </tr>
+          <tr role="row">
+            <th scope="row" role="rowheader">PAED-003 — Providing intensive care to children</th>
+            <td role="cell" data-label="Trainee">Nomsa Mahlangu</td>
+            <td role="cell" data-label="Window">2026</td>
+            <td role="cell"><div class="status-cell"><span class="badge badge-declined">Revoked: re-decide</span><p>STAR #14, issued for 2026, was revoked. Review #3 is open for 2026 S2 before Paed Annual Review Panel: decide it there, or ratify that review before scheduling another.</p></div></td>
+            <td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Open review #3 for Nomsa Mahlangu, PAED-003">Open review #3</a></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <nav class="pager" aria-label="Decisions, pages">
+      <div class="pager-info">Showing 21–40 of 75</div>
+      <div class="pager-actions">
+        <button type="button" class="btn btn-outline btn-sm">Previous</button>
+        <button type="button" class="btn btn-outline btn-sm">Next</button>
+      </div>
+      <div class="pager-page-size">
+        <label class="pager-page-size-label" for="pager-size-b">Decisions per page</label>
+        <select id="pager-size-b" class="form-select form-select-sm pager-page-size-select"><option>10</option><option selected>20</option><option>50</option><option>100</option></select>
+      </div>
+    </nav>
+  </section>
+</div>
+
+<p class="pv-cap">One trainee whose period no open review holds (C2): the free line, its one link to the schedule page; an open check-in's own line</p>
+<div class="committee-calendar">
+  <div class="trainee-line" id="due-line-2">
+    <p>No open review holds 2026 S2.</p>
+    <a class="btn btn-outline btn-sm" href="#" aria-label="Schedule a review of Sipho Ndlovu for 2026 S2 before Paed Annual Review Panel">Schedule a review</a>
+  </div>
+  <div class="trainee-line" id="due-check-in-6">
+    <p>Formative check-in #6 is open: it takes no seat.</p>
+    <a class="btn btn-outline btn-sm" href="#" aria-label="Open check-in #6 of Sipho Ndlovu">Open check-in #6</a>
+  </div>
+</div>
+
+<p class="pv-cap">No match: the count, what was asked, and Clear filters</p>
+<div class="committee-calendar">
+  <section class="list-section" aria-labelledby="due-list-heading-3">
+    <h2 id="due-list-heading-3" class="list-section-title" tabindex="-1"><span>Decisions</span></h2>
+    <p class="list-section-count" role="status">0 of 75 decisions due in 2026 S2 shown.</p>
+    <div id="due-no-match" class="detail-card detail-card--empty">
+      <div class="state-panel-title">No decision matches these filters.</div>
+      <div class="state-panel-copy">Missed only, every trainee, every EPA.</div>
+      <div class="form-actions"><a class="btn btn-outline" href="#">Clear filters</a></div>
+    </div>
+  </section>
+</div>
+
+<p class="pv-cap">Loading (C11, T329): both headings at once, skeletons under them, no Schedule or Open review</p>
+<div class="committee-calendar">
+  <p class="visually-hidden" role="status">Loading Decisions due.</p>
+  <section class="list-section" aria-busy="true">
+    <h2 class="list-section-title">By EPA</h2>
+    <div class="dashboard-card-skeleton" aria-hidden="true"><div class="skeleton"></div></div>
+  </section>
+  <section class="list-section" aria-busy="true">
+    <h2 class="list-section-title">Decisions</h2>
+    <div class="dashboard-card-skeleton" aria-hidden="true"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+  </section>
+</div>
+
+<p class="pv-cap">The read failed (T338): fixed words and Try again, whose answer focuses the Decisions heading</p>
+<div class="action-result" tabindex="-1">
+<div class="alert alert-danger" role="alert">
+  <div class="alert-row">
+    <span class="alert-row-text">Could not load Decisions due. Nothing has changed. Try again, or come back in a few minutes.</span>
+    <button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button>
+  </div>
+</div>
+</div>
+
+<p class="pv-cap">At 390 (Step A.7.5): the trainee line's link a 44px row of its own; each row its EPA over its labelled cells, its action 44px and the row's width</p>
+<div class="pv-phone">
+  <div class="committee-calendar">
+    <div class="trainee-line">
+      <p>Review #1 (annual progression) holds 2026 S2 before Paed Annual Review Panel, scheduled on 2026-10-13.</p>
+      <a class="btn btn-outline btn-sm" href="#" aria-label="Open review #1 of Lerato Molefe">Open review #1</a>
+    </div>
+    <div class="table-container shadow">
+      <table class="clinic-table clinic-table--stack" role="table">
+        <caption>Lerato Molefe's decisions due in 2026 S2, every status, by EPA</caption>
+        <thead role="rowgroup">
+          <tr role="row"><th scope="col">EPA</th><th scope="col">Window</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th scope="row" role="rowheader">PAED-001 — Providing paediatric emergency care to children</th>
+            <td role="cell" data-label="Window">2026 S2</td>
+            <td role="cell"><div class="status-cell"><span class="badge badge-draft">Scheduled</span><p>On the agenda of <a href="#">review #1</a> before Paed Annual Review Panel, which is still open.</p></div></td>
+            <td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Open review #1 for Lerato Molefe, PAED-001">Open review #1</a></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>

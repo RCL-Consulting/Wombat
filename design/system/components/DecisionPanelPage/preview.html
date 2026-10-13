@@ -1,0 +1,194 @@
+<!-- @dsCard group="Committee" height=3500 width=974 subtitle="A decision panel's page, titled by the panel: created, About this panel and what cannot change, Who sits on it, Decides for with its select, its lock while a review is open, or as text; New panel's one form; not found" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DecisionPanelPage</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Nolwazi Mbatha, Institutional admin, after Create panel (Step 2.22): the trail, the h1 the panel's name, the subtitle what it covers, the result focused, About this panel, Who sits on it (SeatPicker) and Decides for</p>
+<div class="committee-calendar">
+  <nav aria-label="Breadcrumb">
+    <ol class="breadcrumbs">
+      <li class="breadcrumb-ancestor">
+        <a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a>
+        <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+      </li>
+      <li class="breadcrumb-parent">
+        <a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Decision panels</a>
+        <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+      </li>
+      <li class="breadcrumb-current"><span aria-current="page">Paed Annual Review Panel</span></li>
+    </ol>
+  </nav>
+  <div class="header-container">
+    <div>
+      <h1>Paed Annual Review Panel</h1>
+      <p class="page-subtitle">Speciality panel · Paediatrics · Kgosi Kgari Teaching Hospital</p>
+    </div>
+  </div>
+  <p class="visually-hidden" role="status"></p>
+  <div class="action-result" tabindex="-1">
+    <div class="alert alert-success" role="status"><strong>Paed Annual Review Panel was created.</strong> Its reviews can now be scheduled on Committee reviews.</div>
+  </div>
+
+  <section class="detail-card panel-section" aria-labelledby="panel-about-title">
+    <h2 id="panel-about-title">About this panel</h2>
+    <dl class="details-list">
+      <div><dt>Scope</dt><dd>Speciality: Paediatrics</dd></div>
+      <div><dt>Institution</dt><dd>Kgosi Kgari Teaching Hospital</dd></div>
+      <div><dt>Open reviews</dt><dd id="panel-open-reviews">None</dd></div>
+    </dl>
+    <p class="muted">Its name, scope, institution and speciality cannot change once it is created. Its members can, even while its reviews are open.</p>
+  </section>
+
+  <form class="form-container panel-section" aria-labelledby="panel-seats-title">
+    <h2 id="panel-seats-title" class="form-section-title">Who sits on it</h2>
+    <div class="form-group">
+      <label for="panel-chair">Chair</label>
+      <select id="panel-chair" class="form-select" aria-describedby="panel-chair-help"><option>Choose a chair</option><option selected>Thandi Zulu (zulu@kgk.wombat.local)</option></select>
+      <div id="panel-chair-note" class="muted" role="status"></div>
+      <small class="page-subtitle" id="panel-chair-help">Only active committee members at the panel's institution who are not trainees are listed.</small>
+    </div>
+    <div id="panel-seats" class="choice-group panel-seats" role="group" aria-label="Seats">
+      <div class="table-container shadow">
+        <table class="clinic-table clinic-table--stack" role="table">
+          <caption>Seats on the panel: the active committee members at Kgosi Kgari Teaching Hospital who are not trainees, by surname</caption>
+          <thead role="rowgroup">
+            <tr role="row"><th scope="col" role="columnheader">Committee member</th><th scope="col" role="columnheader">Seat</th></tr>
+          </thead>
+          <tbody role="rowgroup">
+            <tr role="row">
+              <th scope="row" role="rowheader"><div class="person-cell">David Naidoo<span>naidoo@kgk.wombat.local</span></div></th>
+              <td role="cell">
+                <fieldset class="form-group choice-row">
+                  <legend class="visually-hidden">Seat for David Naidoo</legend>
+                  <div class="check-grid">
+                    <div class="form-check"><input class="form-check-input" type="radio" name="seat-0" id="seat-0-none" value="none"><label for="seat-0-none">Not seated</label></div>
+                    <div class="form-check"><input class="form-check-input" type="radio" name="seat-0" id="seat-0-member" value="member" checked><label for="seat-0-member">Member</label></div>
+                    <div class="form-check"><input class="form-check-input" type="radio" name="seat-0" id="seat-0-external" value="external"><label for="seat-0-external">External member</label></div>
+                  </div>
+                </fieldset>
+              </td>
+            </tr>
+            <tr role="row">
+              <th scope="row" role="rowheader"><div class="person-cell">Thandi Zulu<span>zulu@kgk.wombat.local</span></div></th>
+              <td role="cell"><p class="readonly-value">Chair <span class="muted">· chosen above</span></p></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="field-help" id="panel-seat-count" role="status">2 seats: the chair, 1 member and 0 external members.</p>
+      <small class="page-subtitle">External members are external examiners, who sit with the chair on the panel's appeal body. Only active committee members at the panel's institution who are not trainees are listed: cross-institution externals are not yet supported.</small>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Save panel</button>
+    </div>
+  </form>
+
+  <section class="form-container panel-section" aria-labelledby="panel-body-title">
+    <h2 id="panel-body-title" class="form-section-title">Decides for</h2>
+    <form>
+      <div class="form-group">
+        <label for="panel-body">Decides for</label>
+        <select id="panel-body" class="form-select" aria-describedby="panel-body-help"><option selected>General panel</option><option>Neonatal team Clinical Competency Committee</option></select>
+        <small class="page-subtitle" id="panel-body-help">A panel sitting as a College committee decides the EPAs the College gives that committee (the neonatal CCC decides EPAs 4 and 5), and nothing else. Where no panel sits as it, the general panels decide them. It cannot change while a review before the panel is scheduled, in progress or awaiting ratification.</small>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save committee</button>
+      </div>
+    </form>
+  </section>
+</div>
+
+<p class="pv-cap">While a review before the panel is open (Step 4.13, F5): no select; the value as text, then the lock said first, in the refusal's words, with the review linked</p>
+<div class="committee-calendar">
+  <section class="detail-card panel-section" aria-labelledby="panel-about-title-2">
+    <h2 id="panel-about-title-2">About this panel</h2>
+    <dl class="details-list">
+      <div><dt>Scope</dt><dd>Speciality: Paediatrics</dd></div>
+      <div><dt>Institution</dt><dd>Kgosi Kgari Teaching Hospital</dd></div>
+      <div><dt>Open reviews</dt><dd><a href="#">Review #1 (2026 S2, scheduled)</a></dd></div>
+    </dl>
+    <p class="muted">Its name, scope, institution and speciality cannot change once it is created. Its members can, even while its reviews are open.</p>
+  </section>
+  <section class="form-container panel-section" aria-labelledby="panel-body-title-2">
+    <h2 id="panel-body-title-2" class="form-section-title">Decides for</h2>
+    <p class="readonly-value" id="panel-body-value">General panel</p>
+    <div class="alert alert-info panel-lock" id="panel-body-lock">
+      <p><strong>It cannot change now.</strong> Review #1 (2026 S2, scheduled) still sits before this panel. What a review decides, and its agenda, follow the College committee the panel sat as when it was scheduled, so the panel keeps what it sits as until its open reviews are ratified, or closed if formative.</p>
+      <p><a href="#">Open review #1</a></p>
+    </div>
+  </section>
+</div>
+
+<p class="pv-cap">Refilwe Mokoena, Speciality admin: Decides for read-only, and who may change it</p>
+<div class="committee-calendar">
+  <section class="form-container panel-section" aria-labelledby="panel-body-title-3">
+    <h2 id="panel-body-title-3" class="form-section-title">Decides for</h2>
+    <p class="readonly-value">General panel</p>
+    <p class="muted">Only an institutional administrator can change which College committee a panel sits as.</p>
+  </section>
+</div>
+
+<p class="pv-cap">New panel, a speciality admin (Step 2.25): one scope offered, said as text with why; Who sits on it under About this panel; Cancel and Create panel</p>
+<div class="committee-calendar">
+  <div class="header-container">
+    <div>
+      <h1>New panel</h1>
+      <p class="page-subtitle">A panel takes entrustment and progression decisions for the trainees it covers. Its name, scope, institution and speciality cannot change once it is created.</p>
+    </div>
+  </div>
+  <form class="form-container" aria-label="New panel">
+    <h2 class="form-section-title">About this panel</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="panel-name">Panel name<span aria-hidden="true"> *</span><span class="visually-hidden">required</span></label>
+        <input id="panel-name" class="form-control" value="Paed Annual Review Panel">
+      </div>
+      <dl class="form-group">
+        <dt>Scope</dt>
+        <dd class="readonly-value" id="panel-scope">Speciality</dd>
+        <dd class="page-subtitle">A speciality administrator creates Speciality-scoped panels for the speciality.</dd>
+      </dl>
+      <div class="form-group">
+        <label for="panel-speciality">Speciality</label>
+        <select id="panel-speciality" class="form-select" aria-describedby="panel-speciality-help"><option>Paediatrics</option></select>
+        <small class="page-subtitle" id="panel-speciality-help">The panel runs at your institution. Only the specialities it has adopted a curriculum in are listed.</small>
+      </div>
+    </div>
+    <h2 class="form-section-title">Who sits on it</h2>
+    <div class="form-group">
+      <label for="panel-chair-2">Chair</label>
+      <select id="panel-chair-2" class="form-select"><option>Choose a chair</option></select>
+      <small class="page-subtitle">Only active committee members at the panel's institution who are not trainees are listed.</small>
+    </div>
+    <div class="form-actions">
+      <a class="btn btn-outline" href="#">Cancel</a>
+      <button type="submit" class="btn btn-primary">Create panel</button>
+    </div>
+  </form>
+</div>
+
+<p class="pv-cap">An id out of reach, or unknown (M7): flow 01's Page not found, word for word</p>
+<div class="committee-calendar">
+  <div class="header-container">
+    <div>
+      <h1 class="page-title-with-icon"><svg class="icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>Page not found</h1>
+    </div>
+  </div>
+  <div class="system-panel">
+    <p>There is no page at this address.</p>
+    <p class="muted">Check the address, or start again from Home.</p>
+    <div class="actions-cell">
+      <a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg>Go to Home</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!-- @dsCard group="Committee" height=2500 width=974 subtitle="Decision panels: who sits on each panel by name, Edit where the panel's page opens, New panel once creating would be accepted, and Who decides each EPA in ranges; an administrator's institution first, loading, failed, and stacked at 768" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DecisionPanels</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* At 900px and below app.css stacks .clinic-table--stack-wide. This card is wider than that, so the 768 rendition
+     (a 486px main column beside the sidebar) repeats the media rules' declarations under .pv-narrow. */
+  .pv-narrow { width: 486px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-narrow .committee-calendar .clinic-table--stack-wide .btn { min-height: 2.75rem; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Nolwazi Mbatha, Institutional admin (Step 2.22 onward): New panel in the header; the panel's members by name; Edit named for its panel; Who decides each EPA, its EPAs as ranges</p>
+<div class="committee-calendar">
+  <div class="header-container">
+    <div>
+      <h1>Decision panels</h1>
+      <p class="page-subtitle">The panels that take entrustment and progression decisions at Kgosi Kgari Teaching Hospital.</p>
+    </div>
+    <div class="actions-cell">
+      <a class="btn btn-primary" href="#">New panel</a>
+    </div>
+  </div>
+  <p class="visually-hidden" role="status"></p>
+  <div id="panels-list" tabindex="-1">
+    <div class="table-container shadow">
+      <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>Decision panels at Kgosi Kgari Teaching Hospital</caption>
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">Name</th>
+            <th scope="col" role="columnheader">Scope</th>
+            <th scope="col" role="columnheader">Decides for</th>
+            <th scope="col" role="columnheader">Members</th>
+            <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th scope="row" role="rowheader">Paed Annual Review Panel</th>
+            <td role="cell" data-label="Scope">Speciality · Paediatrics</td>
+            <td role="cell" data-label="Decides for">General panel</td>
+            <td role="cell" data-label="Members">4: Thandi Zulu (chair), Sarah Botha, David Naidoo, John van Rensburg (external)</td>
+            <td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit Paed Annual Review Panel">Edit</a></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <section class="panel-section" aria-labelledby="routing-title">
+    <h2 id="routing-title">Who decides each EPA</h2>
+    <p class="muted">Which panel takes each EPA's entrustment decision for a trainee of each programme at Kgosi Kgari Teaching Hospital. An EPA the College gives to a named committee (EPAs 4 and 5 to the neonatal CCC) goes to a panel sitting as it, one covering the trainee's speciality before an institution-wide one, and to the general panels while none does.</p>
+    <h3 id="routing-programme-1">Paediatric EPA Curriculum 11.1</h3>
+    <div class="table-container shadow">
+      <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>Who decides each EPA of Paediatric EPA Curriculum 11.1</caption>
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">EPAs</th>
+            <th scope="col" role="columnheader">Decided by</th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th scope="row" role="rowheader">PAED-001 to PAED-003, PAED-006 to PAED-015</th>
+            <td role="cell" data-label="Decided by">Paed Annual Review Panel</td>
+          </tr>
+          <tr role="row">
+            <th scope="row" role="rowheader">PAED-004, PAED-005</th>
+            <td role="cell" data-label="Decided by">Paed Annual Review Panel. No panel covering this programme sits as the Neonatal team Clinical Competency Committee, so the general panel decides.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<p class="pv-cap">Sarah Botha, Committee member (Step 4.14): no New panel, no actions column; the panels are read here</p>
+<div class="committee-calendar">
+  <div class="header-container">
+    <div>
+      <h1>Decision panels</h1>
+      <p class="page-subtitle">The panels that take entrustment and progression decisions at Kgosi Kgari Teaching Hospital.</p>
+    </div>
+  </div>
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+      <caption>Decision panels at Kgosi Kgari Teaching Hospital</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">Name</th>
+          <th scope="col" role="columnheader">Scope</th>
+          <th scope="col" role="columnheader">Decides for</th>
+          <th scope="col" role="columnheader">Members</th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr role="row">
+          <th scope="row" role="rowheader">Paed Annual Review Panel</th>
+          <td role="cell" data-label="Scope">Speciality · Paediatrics</td>
+          <td role="cell" data-label="Decides for">General panel</td>
+          <td role="cell" data-label="Members">4: Thandi Zulu (chair), Sarah Botha, David Naidoo, John van Rensburg (external)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<p class="pv-cap">An administrator, no institution chosen yet (F2): the GET form with Show; nothing is read until Show</p>
+<div class="committee-calendar">
+  <div class="header-container">
+    <div>
+      <h1>Decision panels</h1>
+      <p class="page-subtitle">The panels that take entrustment and progression decisions, by institution.</p>
+    </div>
+  </div>
+  <form class="search-container" method="get" aria-label="Choose the institution">
+    <div class="search-grid">
+      <div class="search-field">
+        <label for="panels-institution">Institution</label>
+        <select id="panels-institution" name="institution" class="form-select"><option>Select institution</option><option>Kgosi Kgari Teaching Hospital</option></select>
+      </div>
+      <div class="search-field filter-actions">
+        <button type="submit" class="btn btn-primary">Show</button>
+      </div>
+    </div>
+  </form>
+  <div id="panels-list-2" tabindex="-1">
+    <div class="detail-card detail-card--empty" tabindex="-1">
+      <div class="state-panel-title">Choose an institution</div>
+      <div class="state-panel-copy">An administrator belongs to no institution, so the panels are shown for the one chosen above.</div>
+    </div>
+  </div>
+  <section class="panel-section" aria-labelledby="routing-title-2">
+    <h2 id="routing-title-2">Who decides each EPA</h2>
+    <p class="muted">Choose an institution to see which panel decides each EPA there.</p>
+  </section>
+</div>
+
+<p class="pv-cap">Loading (T329): the header, the status line, skeletons, and Who decides each EPA's heading over skeletons, never "no routing"</p>
+<div class="committee-calendar">
+  <div class="header-container">
+    <div>
+      <h1>Decision panels</h1>
+      <p class="page-subtitle">The panels that take entrustment and progression decisions.</p>
+    </div>
+  </div>
+  <p class="visually-hidden" role="status">Loading Decision panels.</p>
+  <div aria-hidden="true"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+  <section class="panel-section" aria-labelledby="routing-title-3">
+    <h2 id="routing-title-3">Who decides each EPA</h2>
+    <div aria-hidden="true"><div class="skeleton"></div><div class="skeleton"></div></div>
+  </section>
+</div>
+
+<p class="pv-cap">The read failed (T338): fixed words and Try again; Who decides each EPA is not drawn</p>
+<div class="action-result" tabindex="-1">
+<div class="alert alert-danger" role="alert">
+  <div class="alert-row">
+    <span class="alert-row-text">Could not load Decision panels. Nothing has changed. Try again, or come back in a few minutes.</span>
+    <button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button>
+  </div>
+</div>
+</div>
+
+<p class="pv-cap">At 768 (Step A.7.7): the list stacks from 900px, the panel's name over its labelled cells, Edit 44px</p>
+<div class="pv-narrow">
+  <div class="committee-calendar">
+    <div class="table-container shadow">
+      <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>Decision panels at Kgosi Kgari Teaching Hospital</caption>
+        <thead role="rowgroup">
+          <tr role="row"><th scope="col">Name</th><th scope="col">Scope</th><th scope="col">Decides for</th><th scope="col">Members</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th scope="row" role="rowheader">Paed Annual Review Panel</th>
+            <td role="cell" data-label="Scope">Speciality · Paediatrics</td>
+            <td role="cell" data-label="Decides for">General panel</td>
+            <td role="cell" data-label="Members">4: Thandi Zulu (chair), Sarah Botha, David Naidoo, John van Rensburg (external)</td>
+            <td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit Paed Annual Review Panel">Edit</a></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>
