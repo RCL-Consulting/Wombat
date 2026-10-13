@@ -10,12 +10,7 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
 
 ### Done
 
-- **Harness 3.4** (`c5c4d41d`): `upgrade --apply`, five conflicts settled (this repo's `## Verification` rule kept; the
-  generic multi-agent block points at CLAUDE.md's own section); `execution/harness.json` records the merge base;
-  the template's empty `execution/ref/` added. `lint` clean; `upgrade` says up to date.
-- **Archive** (`bc9a6c4b`): the 50 undated tasks and every task completed by 2026-09-24 moved from `tasks/done/` to
-  `log/tasks/` (226 to 115); four links followed. CLAUDE.md's books-rag bullet names the medical-education sources
-  (ten Cate et al. 2024 on EPAs, the `medicine` category), per the operator.
+- **Harness 3.4** (`c5c4d41d`) and the archive of 111 done tasks (`bc9a6c4b`); `lint` clean.
 - **T361 steps 1–2** (flow 07, the review sitting): the brief restated in flow 06's layout (`9a204a5c`), from two
   read-only audits (the review page's code at `bc9a6c4b`; the captures). Completeness exit 0, baseline paths missing 0,
   all 26 verbatim steps match. Staged with `stage_upload.ps1 -Flow 07` (88 files, 18.7 MB);
@@ -49,7 +44,10 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
 - Brief restated (`c6740da1`); canvas **Wombat 08** created by Claude (`0c37b4ef`, the mark copied). Round 1: A picked
   (`6f051379`, `4cdea93e`); round 2 drawn (`716adffc`) and reviewed from three sides (`951b855d`); the operator took
   F1–F6 (F1 reverses Q7). Round 3 drawn (`a41cc281`) and checked: **the design is final** (`round-3-check.md`).
-  **Next:** step 6, the build, from the round-3 Spec, `round-2-review.md` and `round-3-check.md`.
+- **Step 6, the build, running** (2026-10-13): integration branch `t364` (worktree `.claude/worktrees/t364`) holds the
+  shared pieces (`94e14fee`: `ReviewLinks.Schedule`/`ScheduleReturn`, the pager's label, the calendar's shared CSS) and
+  `build-lanes.md`/`build-contracts.md` (`1e54fd25`). Three lanes on Opus in their own worktrees: `t364-panels`,
+  `t364-due`, `t364-schedule`. Then: merge, the runbook lane, a three-lens Sonnet review, one fix pass, the squash.
 
 ### For the operator
 
