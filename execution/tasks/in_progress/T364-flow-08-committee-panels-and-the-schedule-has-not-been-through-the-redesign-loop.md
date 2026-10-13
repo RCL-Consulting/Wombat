@@ -72,3 +72,8 @@ T361 (flow 07), T362, T363, T309 (the scheduling preview's seat warning), T329; 
   current semester (C5); both panel rules kept; both semester labels kept with one line on the schedule (D40);
   T309, T259, T260, T329, T338, T324, T272 and T280 folded into the build; pre-graduation help worded (C1). Round 1
   gave no step counts (C14 asks again). All in `design/flows/08-committee-calendar/round-2-ask.txt`.
+- **2026-10-12 to 10-13, round 2 reviewed** from three sides (`951b855d`, `round-2-review.md`): ten must-fixes (the
+  wrong semester EPAs drawn, the brief's fault, now corrected), F1–F6 put to the operator, who took every
+  recommendation (2026-10-13): **F1 reverses Q7**, a Missed row schedules its own ended semester (an S2 review cannot
+  decide an S1 EPA: `AgendaPlanner.cs:210`, `DecisionWindowRecords.cs:125`); Show; the browser's date input; type
+  preselected; races tested, not replayed; the S2 line reworded. Round 3 is `round-3-ask.txt`.

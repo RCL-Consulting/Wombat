@@ -1,0 +1,84 @@
+ROUND 3: one correction round on A and the panels as round 2 drew them. Keep every board and its states; change what
+follows, then say on the Spec, item by item (by the numbers below), what changed and where. Round 1's boards stay on
+their page. The brand mark is at /_blob/d8e89f2bacfcd9a2e79781ca6f135313.
+
+THE OPERATOR'S DECISIONS (2026-10-13):
+  F1. Q7 is reversed. An S2 review never decides an S1 semester EPA (it plans only its own windows), so Schedule on a
+      Missed row opens the form on the row's OWN ended semester, which is the only review that clears it. Under Period:
+      "2026 S1 has ended. A review can still sit for it: sittings are often held after the period ends." Redraw C5's
+      board so: Period 2026 S1, that sentence, the preview for 2026 S1 (the six semester EPAs PAED-001, 002, 004, 005,
+      010, 012 that S1 missed, and S1's annual and optional lines as the planner gives them).
+  F2. The filter button reads Show, on every list (the word flow 06's filter bars use). C9's "Apply" goes.
+  F3. Dates are typed in the browser's date input, as today. Every date SHOWN reads ISO (2026-10-12). The ISO text field
+      (PROPOSED) goes, with its parse refusal.
+  F4. Review type is preselected: the default type, and the only type where only one is allowed (a panel sitting as the
+      neonatal committee). No "Choose a review type." refusal is drawn.
+  F5. Steps 4.8 and 4.13 check the warnings shown first ("Already held" with Open review #n; the committee select not
+      offered while a review is open). The race refusals stay drawn as their own states (C7, C13), marked "scratch
+      state: a second tab", and are tested by handler and bUnit tests. No runbook step plays a race.
+  F6. Q9's line becomes: "The College's semester 2 ends in November; its window runs to 31 December, so December's work
+      counts." Wherever round 2 drew "reviews for it may sit until 31 December", replace it.
+
+THE CADENCE (from the College's v11.1 seed; round 2 drew it wrong, the brief's fault):
+  Semester EPAs (a window each semester): PAED-001, 002, 004, 005, 010, 012. PAED-004 and 005 are the neonatal
+  committee's. Annual EPAs (a window per year): PAED-003, 006, 007, 011, 014, 015. Optional, "As opportunity allows",
+  never Missed: PAED-008, 009, 013. Titles are the seed's: PAED-001 is "Providing paediatric emergency care to
+  children"; take the rest from the brief's § 8 steps, never invent one.
+
+MUST FIX (round 3's check takes each by number):
+  M1. Redraw every board with rows from the cadence above: windows, statuses and sentences. In 4.2 (2026 S1) the six
+      semester EPAs read Missed for every registrar, the annual six "Due by year end", the optional three "As
+      opportunity allows". PAED-003 and 006 are never Missed in S1.
+  M2. An annual EPA's Not scheduled row reads "No open review holds it, and 2026 has not ended." (the year, not "2026
+      S2").
+  M3. By EPA's counts follow each board's rows (Due, To schedule, Scheduled, Decided, Not decided, Missed, Optional),
+      never the opening counts copied. Draw the fold open at 4.10, 4.34, 4.37, and at 4.2 with an S1 caption (Missed 5
+      on 001, 002, 004, 005, 010, 012).
+  M4. Q7's sentence is gone everywhere (F1).
+  M5. The schedule page's Period offers the same six as Decisions due: 2025 S1 to 2027 S2.
+  M6. The can-no-longer-sit board: Dr Botha appears in no control (not Chair, not a seat); the warning names her.
+  M7. A panel not found is flow 01's Not found page, word for word; no sentence about other institutions.
+  M8. Committee reviews, Decision panels and By EPA use clinic-table--stack-wide (stacked at 900 px and below). Draw each at
+      768.
+  M9. The schedule page's grid stacks below 1100 px (the dashboard grid's breakpoint): the agenda aside goes under the
+      form. Draw it at 1024.
+  M10. Steps board, 4.1 and 4.2: restore their checks. 4.1: "75 of 75 decisions due in 2026 S2 shown.", 20 rows a page,
+      each row's sentence by kind (semester, annual, optional), the filters leaving five PAED-004 rows with By EPA
+      unchanged, no Missed row. 4.2: D42 (Mahlangu's and Ndlovu's 15 January start counts in S1), the 75 rows, the
+      three kinds' sentences; its Do now also presses one Missed row's Schedule and reads F1's form (without creating).
+
+SHOULD FIX:
+  S1. The heavy case in full: one trainee line per panel when two panels can hold the trainee; the two-option Panel
+      select; the neonatal rows' sentences. S1's three review types with their help, and the neonatal panel's one type.
+      The trainee picker lists current registrars only (5.29), with training year. The new-panel page's note when a
+      Trainee also holds a committee role. Draw NothingToDecide: an entrustment-only review before a panel that decides no EPA on the trainee's
+      curriculum (the preview says so first; Create refuses with the handler's sentence).
+  S2. Committee reviews' heavy rows match the runbook: after A.1.14 Ndlovu's rows show as three pseudonym rows (as
+      stored); no Dlamini check-in; "Entrustment only" appears only in an S1 period.
+  S3. Email addresses whole, on .local domains: van Rensburg on sun.wombat.local.
+  S4. Words:
+      - Refusals for the evidence window, and for a missing name, speciality or institution, in Wombat's words.
+      - "Never the exception's text" means unexpected errors only; a handler's own sentence still shows.
+      - The Decisions due subtitle drops "each semester" (annual EPAs exist).
+      - Remove "the agenda is read again when it opens": it is planned at Create.
+      - The race summary links a short clause, not the paragraph.
+      - The Status filter keeps today's order.
+      - Rows sort by surname.
+  S5. Steps 5.1, 5.2, 4.6 and 4.9 keep their quoted checks. The trainee line's three states (C2) are played in 4.9 and
+      4.12, and in 4.49 and A.1.10.
+  S6. CSS: reuse what exists. The folds use .rung-legend's fold with the global .fold-show / .fold-hide. The type radios
+      use .scale-choices .form-check, the seats .form-check (rename any class with "seat" in it that also serves Scope).
+      Busy is .is-running and the opening line .muted. Fold summaries are 44 px at every width, and controls on these
+      forms 44 px at 390. Scope any new phone rule to these pages (unscoped, it would change flows 03, 05 and 06). One
+      narrow live region in the agenda aside, with no role="alert" inside it. A group refusal is tied by
+      aria-describedby, its summary link focuses the first radio, and it has a forced-colours stripe and no padding
+      shift. No summary link points at a disabled control; no static inline styles; Cancel while busy is not a
+      followable link.
+  S7. Accessibility: "Open check-in #6" keeps its visible words in its accessible name. "Scheduled" is one badge colour
+      on both lists. "1 seat", not "1 seats". The header button reads "Schedule a review", the same as the page. Read
+      "—" as "None" to screen readers.
+  S8. Steps board: recount the Today column of the step counts (C14); round 2 overstated it.
+
+SPEC BOARD: list F1–F6, M1–M10 and S1–S8 with where each is drawn or why it is Spec only. Keep the "Data the build must
+add" list. Name the runbook steps outside this flow that change (2.35, 2.37, 4.14, A.1.14, A.7.5–A.7.8, A.7.14, every
+"Formative only" and "Mode"); the build edits them, the boards need not.

@@ -44,12 +44,12 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
 - **Proposed:** T363 (the page's four data gaps). T362 (live following) still waits. **T290** stays in progress.
 - **Next in the redesign:** flow 08, started (below).
 
-### T364, flow 08 (panels, what is due, the schedule): steps 1–2 done, 2026-10-12
+### T364, flow 08 (panels, what is due, the schedule): steps 1–5 in progress, 2026-10-12 to 10-13
 
-- The operator said "flow 08". T364 filed and started (`b610cabd`). Brief restated in flow 07's layout (`c6740da1`) from
-  two read-only audits; all checkers clean; staged (`stage_upload.ps1 -Flow 08`, 87 files). `round-1-ask.txt` holds
-  `/_blob/MARK` until the mark is copied. **Waits for the operator's new canvas link** (main app's Design page, design
-  system v19); then copy the mark, send round 1, record it in `design/flows/08-committee-calendar/`.
+- Brief restated (`c6740da1`); canvas **Wombat 08** created by Claude (`0c37b4ef`, the mark copied). Round 1: A picked
+  (`6f051379`, `4cdea93e`); round 2 drawn (`716adffc`) and reviewed from three sides (`951b855d`). The operator took
+  F1–F6 (2026-10-13; F1 reverses Q7). **Next:** the operator pastes `design/flows/08-committee-calendar/round-3-ask.txt`
+  into Wombat 08; then save round 3, check it item by item (`round-3-check.md`), and build (step 6).
 
 ### For the operator
 
