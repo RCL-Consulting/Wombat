@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Decisions due · 1280 · f</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+/* ===== NEW for flow 08 (app.css, section "Committee calendar"). Every phone rule is scoped to .committee-calendar,
+   the wrapper these five pages draw, so flows 03, 05 and 06 keep theirs (S6). ===== */
+
+/* The trainee line (C2): above Decisions due's table while one trainee is filtered; one line a panel that can hold the period. */
+.trainee-line {
+  align-items: center;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+  padding: 0.75rem var(--space-md);
+}
+.trainee-line p { margin: 0; }
+.trainee-line:last-of-type { margin-bottom: var(--space-md); }
+
+/* A list heading's page and its count (C9, T264). */
+.list-section-page { color: var(--muted-text); font-size: 1rem; font-weight: 400; }
+.list-section-count { color: var(--muted-text); font-size: 0.9rem; margin: calc(-1 * var(--space-sm)) 0 var(--space-md); }
+
+/* A status cell: the badge over its sentence. */
+.status-cell { align-items: flex-start; display: flex; flex-direction: column; gap: var(--space-xs); }
+.status-cell p { font-size: 0.9rem; margin: 0; }
+.status-cell .badge { align-self: flex-start; }
+.nowrap { white-space: nowrap; }
+.period-window { color: var(--muted-text); display: block; font-size: 0.9rem; }
+.period-window span { white-space: nowrap; }
+
+/* By EPA's counts in .rung-legend's fold (flow 04): its table inside the fold's frame. */
+.rung-legend > .table-container { margin: 0 0.75rem 0.75rem; }
+
+/* Schedule a review: fields, then the summary and the actions; the Agenda beside them from 1100px (the dashboard grid's
+   breakpoint), under the fields below it (M9). */
+.schedule-grid {
+  align-items: start;
+  display: grid;
+  gap: var(--space-lg) var(--space-xl);
+  grid-template-areas: "fields preview" "summary preview" "actions preview";
+  grid-template-columns: minmax(0, 1fr) minmax(0, 22rem);
+}
+.schedule-fields { display: flex; flex-direction: column; gap: var(--space-lg); grid-area: fields; }
+.schedule-grid > .error-summary { grid-area: summary; margin: 0; }
+.schedule-grid > .form-actions { grid-area: actions; margin: 0; }
+.agenda-preview {
+  background-color: var(--info-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  grid-area: preview;
+  padding: var(--space-md) var(--space-lg);
+  position: sticky;
+  top: calc(56px + var(--space-md));
+}
+.agenda-preview h2 { margin: 0; }
+/* The aside's one live region: only the changing words (S6); no role="alert" inside it. */
+.agenda-live { display: flex; flex-direction: column; gap: 0.75rem; }
+.agenda-live p, .agenda-live .alert { margin: 0; }
+.agenda-live ul { display: flex; flex-direction: column; gap: var(--space-xs); margin: 0; padding-left: 1.1rem; }
+.agenda-count { font-weight: 600; }
+@media (max-width: 1099.98px) {
+  .schedule-grid { grid-template-areas: "fields" "preview" "summary" "actions"; grid-template-columns: minmax(0, 1fr); }
+  .agenda-preview { position: static; }
+}
+.schedule-grid .form-actions .move-reasons { color: var(--muted-text); flex-basis: auto; }
+.field-pair { display: grid; gap: var(--space-md); grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr)); }
+.period-note { color: var(--text-color); }
+
+/* Choices: Scope and each seat are radios in .check-grid (.form-check), framed by a bare fieldset. */
+.choice-row { border: 0; margin: 0; min-width: 0; padding: 0; }
+.person-cell { display: flex; flex-direction: column; }
+.person-cell span { color: var(--muted-text); font-size: 0.9rem; overflow-wrap: anywhere; }
+.readonly-value { font-weight: 600; margin: 0; }
+/* A group of choices: its padding never moves; refused, the field's 4px danger stripe, and a border in forced colours. */
+.choice-group { padding-left: var(--space-md); }
+.choice-group.is-invalid { box-shadow: inset 4px 0 0 var(--danger-color); }
+@media (forced-colors: active) { .choice-group.is-invalid { border-left: 4px solid CanvasText; box-shadow: none; padding-left: calc(var(--space-md) - 4px); } }
+.panel-section + .panel-section { margin-top: var(--space-lg); }
+.panel-section > h2 { margin: 0 0 var(--space-md); }
+.form-section-title { margin: 0 0 var(--space-md); }
+.form-container .form-section-title ~ .form-section-title { margin-top: var(--space-xl); }
+.trainee-line + .table-container, .list-section-count + .table-container { margin-top: 0; }
+
+/* Below 641px, on these pages only: every control on these forms and every row action 44px. */
+@media (max-width: 640.98px) {
+  .committee-calendar .form-check { min-height: 2.75rem; }
+  .committee-calendar .form-control, .committee-calendar .form-select { min-height: 2.75rem; }
+  .committee-calendar .trainee-line .btn,
+  .committee-calendar .clinic-table--stack .btn,
+  .committee-calendar .header-container .actions-cell .btn,
+  .committee-calendar .form-actions .btn { min-height: 2.75rem; width: 100%; }
+  .committee-calendar .header-container .actions-cell { width: 100%; }
+  .committee-calendar .schedule-grid .form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .committee-calendar .agenda-preview { padding: var(--space-md); }
+}
+@media (max-width: 900px) {
+  .committee-calendar .clinic-table--stack-wide .btn { min-height: 2.75rem; }
+}
+
+/* ===== Preview framing only (the canvas, not the product) ===== */
+body { margin: 0; background-color: var(--header-bg); }
+.pv-board { display: flex; flex-direction: column; gap: var(--space-xl); padding: var(--space-lg) 0 var(--space-2xl); background-color: var(--header-bg); }
+.pv-head { margin: 0 var(--space-lg); background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--space-md) var(--space-lg); display: flex; flex-direction: column; gap: var(--space-xs); font-size: 0.9rem; }
+.pv-head h1 { font-size: 1.25rem; margin: 0 0 var(--space-xs); }
+.pv-head p { margin: 0; }
+.pv-head b { font-weight: 600; }
+.pv-frame { display: flex; flex-direction: column; }
+.pv-cap { margin: 0; padding: var(--space-sm) var(--space-lg); background-color: var(--primary-color); color: var(--on-fill); font-size: 0.9rem; line-height: 1.4; display: flex; flex-direction: column; gap: 2px; }
+.pv-cap b { font-weight: 600; font-size: 1rem; }
+.pv-cap span { opacity: 1; }
+.pv-frame .page { position: relative; min-height: 0; background-color: var(--background-color); }
+@media (min-width: 641px) {
+  .pv-frame .sidebar { height: auto; position: static; align-self: stretch; }
+  .pv-frame .account-row { position: absolute; left: var(--sidebar-width); right: 0; top: 0; }
+  .pv-frame .agenda-preview { position: static; }
+}
+.pv-frame article { padding-bottom: var(--space-xl); }
+.pv-focus { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.pv-cut { border: 1px dashed var(--input-border); border-radius: var(--radius-md); color: var(--muted-text); font-size: 0.85rem; padding: var(--space-sm) var(--space-md); margin: var(--space-sm) 0; text-align: center; background-color: var(--surface-color); }
+.pv-doc { margin: 0 var(--space-lg); background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--space-lg) var(--space-xl); }
+.pv-doc h2 { margin: var(--space-xl) 0 var(--space-sm); }
+.pv-doc h2:first-child { margin-top: 0; }
+.pv-doc h3 { margin: var(--space-lg) 0 var(--space-sm); }
+.pv-doc p, .pv-doc li { font-size: 0.95rem; }
+.pv-doc table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.pv-doc th, .pv-doc td { border-bottom: 1px solid var(--border-color); padding: 6px 8px; text-align: left; vertical-align: top; }
+.pv-doc th { background-color: var(--header-bg); font-weight: 600; }
+.pv-doc code { font-family: var(--font-mono); font-size: 0.85rem; }
+.pv-swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--input-border); vertical-align: -2px; margin-right: 6px; }
+</style>
+</helmet>
+<div class="pv-board" style="width: 1280px">
+<header class="pv-head"><h1>Decisions due · 1280px <span class="muted">(continued, part f)</span></h1><p><b>Route</b> /committee/decisions-due · the schedulers' list; a Committee member is refused.</p><p><b>Components</b> PageHeader, FilterBar (Show, Clear filters), DataTable (stack-wide), PagerControls (labelled), the .rung-legend fold with .fold-show / .fold-hide, StatePanel, Badge, AccessDenied. <b>NEW</b> the Trainee filter, .trainee-line (C2), .status-cell, .list-section-page, .list-section-count.</p><p><b>DESIGN.md</b> Decisions due's section; § Pager; § Table system. <b>Round 3</b> the cadence (M1, M2), By EPA from the board's rows (M3), F1, F2, F6, M8, S1, S4, S5, S7.</p></header><section class="pv-frame"><p class="pv-cap"><b>Nothing due</b><span>Pieter Smit · the form stands, so another period can be read</span></p><div class="page">
+<input type="checkbox" id="nt809" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/d8e89f2bacfcd9a2e79781ca6f135313" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span> <span>Coordinator</span></p>
+<label class="nav-toggle-label" for="nt809"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16" /></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12" /></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main"><div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">Coordinator</span></p></div><div class="nav-list"><ul class="nav-items"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg><span class="nav-label">Home</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /> <circle cx="12" cy="9" r="3" /></svg><span class="nav-label">Programme trainees</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /> <polyline points="12 6 12 12 16 14" /></svg><span class="nav-label">Waiting for assessors</span></a></li><li><a class="nav-link active" href="#" aria-current="page"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4M16 2v4" /> <rect width="18" height="18" x="3" y="4" rx="2" /> <path d="M3 10h18M9 16l2 2 4-4" /></svg><span class="nav-label">Decisions due</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg><span class="nav-label">MSF campaigns</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg><span class="nav-label">Committee reviews</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></svg><span class="nav-label">Decision panels</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1zM9 12l2 2 4-4" /></svg><span class="nav-label">Data rights requests</span></a></li></ul><ul class="nav-items nav-personal"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg><span class="nav-label">My data rights</span></a></li></ul></div></nav>
+<div class="account-row"><a class="account-link" href="#" title="Pieter Smit"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /> <path d="M6 20a6 6 0 0 1 12 0" /></svg><span class="account-name">Pieter Smit</span></a>
+<form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>Sign out</button></form></div>
+</header>
+<main><article>
+<div class="committee-calendar"><div class="header-container"><div><h1 tabindex="-1">Decisions due</h1><p class="page-subtitle">What the committee must decide, per registrar and per EPA, and where each decision stands.</p></div></div><form class="search-container" method="get" aria-label="Filter Decisions due"><div class="search-grid"><div class="search-field"><label for="s805">Period</label><select id="s805" class="form-select" aria-describedby="s805-help"><option>2025 S1 · 1 Jan to 30 Jun 2025</option><option>2025 S2 · 1 Jul to 31 Dec 2025</option><option>2026 S1 · 1 Jan to 30 Jun 2026</option><option selected>2026 S2 · 1 Jul to 31 Dec 2026</option><option>2027 S1 · 1 Jan to 30 Jun 2027</option><option>2027 S2 · 1 Jul to 31 Dec 2027</option></select><small class="page-subtitle" id="s805-help">The College's semester 2 ends in November; its window runs to 31 December, so December's work counts.</small></div><div class="search-field"><label for="s806">Trainee</label><select id="s806" class="form-select"><option selected>Every trainee</option><option>Anele Dlamini</option><option>Pieter du Plessis</option><option>Nomsa Mahlangu</option><option>Lerato Molefe</option><option>Sipho Ndlovu</option></select></div><div class="search-field"><label for="s807">Status</label><select id="s807" class="form-select"><option selected>Outstanding: not yet decided</option><option>Every status</option><option>Not scheduled</option><option>Scheduled</option><option>Decided</option><option>Not decided</option><option>Revoked: re-decide</option><option>Due by year end</option><option>Partial period</option><option>As opportunity allows</option><option>Missed</option></select></div><div class="search-field"><label for="s808">EPA</label><select id="s808" class="form-select"><option selected>Every EPA</option><option>PAED-001 — Providing paediatric emergency care to children</option><option>PAED-002 — [PAED-002 title, as seeded]</option><option>PAED-003 — Providing intensive care to children</option><option>PAED-004 — [PAED-004 title, as seeded]</option><option>PAED-005 — [PAED-005 title, as seeded]</option><option>PAED-006 — [PAED-006 title, as seeded]</option><option>PAED-007 — [PAED-007 title, as seeded]</option><option>PAED-008 — Evaluating and managing neurodevelopmental and behavioural presentations in children</option><option>PAED-009 — [PAED-009 title, as seeded]</option><option>PAED-010 — [PAED-010 title, as seeded]</option><option>PAED-011 — [PAED-011 title, as seeded]</option><option>PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams</option><option>PAED-013 — [PAED-013 title, as seeded]</option><option>PAED-014 — [PAED-014 title, as seeded]</option><option>PAED-015 — Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research</option></select></div><div class="search-field filter-actions"><button type="submit" class="btn btn-primary">Show</button></div></div></form><div class="detail-card detail-card--empty" tabindex="-1"><div class="state-panel-title">Nothing due for 2026 S2</div><div class="state-panel-copy">No trainee you oversee at Kgosi Kgari Teaching Hospital owes an entrustment decision in 2026 S2.</div></div></div>
+</article></main>
+</div></section><section class="pv-frame"><p class="pv-cap"><b>Loading</b><span>C11, T329 · no Schedule or Open review until the read is in</span></p><div class="page">
+<input type="checkbox" id="nt814" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/d8e89f2bacfcd9a2e79781ca6f135313" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span> <span>Coordinator</span></p>
+<label class="nav-toggle-label" for="nt814"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16" /></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12" /></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main"><div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">Coordinator</span></p></div><div class="nav-list"><ul class="nav-items"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg><span class="nav-label">Home</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /> <circle cx="12" cy="9" r="3" /></svg><span class="nav-label">Programme trainees</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /> <polyline points="12 6 12 12 16 14" /></svg><span class="nav-label">Waiting for assessors</span></a></li><li><a class="nav-link active" href="#" aria-current="page"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4M16 2v4" /> <rect width="18" height="18" x="3" y="4" rx="2" /> <path d="M3 10h18M9 16l2 2 4-4" /></svg><span class="nav-label">Decisions due</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg><span class="nav-label">MSF campaigns</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg><span class="nav-label">Committee reviews</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></svg><span class="nav-label">Decision panels</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1zM9 12l2 2 4-4" /></svg><span class="nav-label">Data rights requests</span></a></li></ul><ul class="nav-items nav-personal"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg><span class="nav-label">My data rights</span></a></li></ul></div></nav>
+<div class="account-row"><a class="account-link" href="#" title="Pieter Smit"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /> <path d="M6 20a6 6 0 0 1 12 0" /></svg><span class="account-name">Pieter Smit</span></a>
+<form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>Sign out</button></form></div>
+</header>
+<main><article>
+<div class="committee-calendar"><div class="header-container"><div><h1 tabindex="-1">Decisions due</h1><p class="page-subtitle">What the committee must decide, per registrar and per EPA, and where each decision stands.</p></div></div><p class="visually-hidden" role="status">Loading Decisions due.</p><div aria-hidden="true"><div class="skeleton" style="width:70%;height:1rem"></div><div class="skeleton" style="width:55%;height:1rem"></div></div><form class="search-container" method="get" aria-label="Filter Decisions due"><div class="search-grid"><div class="search-field"><label for="s810">Period</label><select id="s810" class="form-select" aria-describedby="s810-help"><option>2025 S1 · 1 Jan to 30 Jun 2025</option><option>2025 S2 · 1 Jul to 31 Dec 2025</option><option>2026 S1 · 1 Jan to 30 Jun 2026</option><option selected>2026 S2 · 1 Jul to 31 Dec 2026</option><option>2027 S1 · 1 Jan to 30 Jun 2027</option><option>2027 S2 · 1 Jul to 31 Dec 2027</option></select><small class="page-subtitle" id="s810-help">The College's semester 2 ends in November; its window runs to 31 December, so December's work counts.</small></div><div class="search-field"><label for="s811">Trainee</label><select id="s811" class="form-select"><option selected>Every trainee</option><option>Anele Dlamini</option><option>Pieter du Plessis</option><option>Nomsa Mahlangu</option><option>Lerato Molefe</option><option>Sipho Ndlovu</option></select></div><div class="search-field"><label for="s812">Status</label><select id="s812" class="form-select"><option selected>Outstanding: not yet decided</option><option>Every status</option><option>Not scheduled</option><option>Scheduled</option><option>Decided</option><option>Not decided</option><option>Revoked: re-decide</option><option>Due by year end</option><option>Partial period</option><option>As opportunity allows</option><option>Missed</option></select></div><div class="search-field"><label for="s813">EPA</label><select id="s813" class="form-select"><option selected>Every EPA</option><option>PAED-001 — Providing paediatric emergency care to children</option><option>PAED-002 — [PAED-002 title, as seeded]</option><option>PAED-003 — Providing intensive care to children</option><option>PAED-004 — [PAED-004 title, as seeded]</option><option>PAED-005 — [PAED-005 title, as seeded]</option><option>PAED-006 — [PAED-006 title, as seeded]</option><option>PAED-007 — [PAED-007 title, as seeded]</option><option>PAED-008 — Evaluating and managing neurodevelopmental and behavioural presentations in children</option><option>PAED-009 — [PAED-009 title, as seeded]</option><option>PAED-010 — [PAED-010 title, as seeded]</option><option>PAED-011 — [PAED-011 title, as seeded]</option><option>PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams</option><option>PAED-013 — [PAED-013 title, as seeded]</option><option>PAED-014 — [PAED-014 title, as seeded]</option><option>PAED-015 — Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research</option></select></div><div class="search-field filter-actions"><button type="submit" class="btn btn-primary">Show</button></div></div></form><section class="list-section"><h2 class="list-section-title">By EPA</h2><div class="skeleton" style="width:40%;height:1rem"></div></section><section class="list-section"><h2 class="list-section-title">Decisions</h2><div aria-hidden="true"><div class="skeleton" style="width:100%;height:3rem"></div><div class="skeleton" style="width:100%;height:3rem"></div><div class="skeleton" style="width:100%;height:3rem"></div><div class="skeleton" style="width:100%;height:3rem"></div><div class="skeleton" style="width:100%;height:3rem"></div></div></section></div>
+</article></main>
+</div></section><section class="pv-frame"><p class="pv-cap"><b>Load error</b><span>C11, T338 · fixed words for an unexpected failure; a handler's own sentence still shows (S4)</span><span>Focus: the alert, once drawn</span></p><div class="page">
+<input type="checkbox" id="nt819" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/d8e89f2bacfcd9a2e79781ca6f135313" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span> <span>Coordinator</span></p>
+<label class="nav-toggle-label" for="nt819"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16" /></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12" /></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main"><div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">Coordinator</span></p></div><div class="nav-list"><ul class="nav-items"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg><span class="nav-label">Home</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /> <circle cx="12" cy="9" r="3" /></svg><span class="nav-label">Programme trainees</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /> <polyline points="12 6 12 12 16 14" /></svg><span class="nav-label">Waiting for assessors</span></a></li><li><a class="nav-link active" href="#" aria-current="page"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4M16 2v4" /> <rect width="18" height="18" x="3" y="4" rx="2" /> <path d="M3 10h18M9 16l2 2 4-4" /></svg><span class="nav-label">Decisions due</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg><span class="nav-label">MSF campaigns</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg><span class="nav-label">Committee reviews</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></svg><span class="nav-label">Decision panels</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1zM9 12l2 2 4-4" /></svg><span class="nav-label">Data rights requests</span></a></li></ul><ul class="nav-items nav-personal"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg><span class="nav-label">My data rights</span></a></li></ul></div></nav>
+<div class="account-row"><a class="account-link" href="#" title="Pieter Smit"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /> <path d="M6 20a6 6 0 0 1 12 0" /></svg><span class="account-name">Pieter Smit</span></a>
+<form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>Sign out</button></form></div>
+</header>
+<main><article>
+<div class="committee-calendar"><div class="header-container"><div><h1 tabindex="-1">Decisions due</h1><p class="page-subtitle">What the committee must decide, per registrar and per EPA, and where each decision stands.</p></div></div><form class="search-container" method="get" aria-label="Filter Decisions due"><div class="search-grid"><div class="search-field"><label for="s815">Period</label><select id="s815" class="form-select" aria-describedby="s815-help"><option>2025 S1 · 1 Jan to 30 Jun 2025</option><option>2025 S2 · 1 Jul to 31 Dec 2025</option><option>2026 S1 · 1 Jan to 30 Jun 2026</option><option selected>2026 S2 · 1 Jul to 31 Dec 2026</option><option>2027 S1 · 1 Jan to 30 Jun 2027</option><option>2027 S2 · 1 Jul to 31 Dec 2027</option></select><small class="page-subtitle" id="s815-help">The College's semester 2 ends in November; its window runs to 31 December, so December's work counts.</small></div><div class="search-field"><label for="s816">Trainee</label><select id="s816" class="form-select"><option selected>Every trainee</option><option>Anele Dlamini</option><option>Pieter du Plessis</option><option>Nomsa Mahlangu</option><option>Lerato Molefe</option><option>Sipho Ndlovu</option></select></div><div class="search-field"><label for="s817">Status</label><select id="s817" class="form-select"><option selected>Outstanding: not yet decided</option><option>Every status</option><option>Not scheduled</option><option>Scheduled</option><option>Decided</option><option>Not decided</option><option>Revoked: re-decide</option><option>Due by year end</option><option>Partial period</option><option>As opportunity allows</option><option>Missed</option></select></div><div class="search-field"><label for="s818">EPA</label><select id="s818" class="form-select"><option selected>Every EPA</option><option>PAED-001 — Providing paediatric emergency care to children</option><option>PAED-002 — [PAED-002 title, as seeded]</option><option>PAED-003 — Providing intensive care to children</option><option>PAED-004 — [PAED-004 title, as seeded]</option><option>PAED-005 — [PAED-005 title, as seeded]</option><option>PAED-006 — [PAED-006 title, as seeded]</option><option>PAED-007 — [PAED-007 title, as seeded]</option><option>PAED-008 — Evaluating and managing neurodevelopmental and behavioural presentations in children</option><option>PAED-009 — [PAED-009 title, as seeded]</option><option>PAED-010 — [PAED-010 title, as seeded]</option><option>PAED-011 — [PAED-011 title, as seeded]</option><option>PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams</option><option>PAED-013 — [PAED-013 title, as seeded]</option><option>PAED-014 — [PAED-014 title, as seeded]</option><option>PAED-015 — Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research</option></select></div><div class="search-field filter-actions"><button type="submit" class="btn btn-primary">Show</button></div></div></form><div class="action-result pv-focus" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text"><strong>Could not load Decisions due.</strong> Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button></div></div></div></div>
+</article></main>
+</div></section><section class="pv-frame"><p class="pv-cap"><b>Access denied: a committee member</b><span>Step 4.5 · David Naidoo · flow 01's page; nothing lit</span></p><div class="page">
+<input type="checkbox" id="nt820" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/d8e89f2bacfcd9a2e79781ca6f135313" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span> <span>Committee member</span></p>
+<label class="nav-toggle-label" for="nt820"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16" /></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12" /></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main"><div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">Committee member</span></p><a class="role-switch" href="#" data-enhance-nav="false"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4" /></svg><span>Switch to Assessor</span></a></div><div class="nav-list"><ul class="nav-items"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg><span class="nav-label">Home</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /> <circle cx="12" cy="9" r="3" /></svg><span class="nav-label">Programme trainees</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6" /></svg><span class="nav-label">Committee reviews</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></svg><span class="nav-label">Decision panels</span></a></li></ul><ul class="nav-items nav-personal"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg><span class="nav-label">My data rights</span></a></li></ul></div></nav>
+<div class="account-row"><a class="account-link" href="#" title="David Naidoo"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /> <path d="M6 20a6 6 0 0 1 12 0" /></svg><span class="account-name">David Naidoo</span></a>
+<form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>Sign out</button></form></div>
+</header>
+<main><article>
+<div class="header-container"><div><h1 class="page-title-with-icon"><svg class="icon page-title-icon page-title-icon--danger" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /> <path d="m4.9 4.9 14.2 14.2" /></svg>You cannot open this page</h1></div></div><div class="system-panel"><p>None of your roles (Committee member, Assessor) opens this page.</p><p class="muted">If you need it for your work, ask your institution's Wombat administrator.</p><div class="actions-cell"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5" /></svg>Go to Home</a></div></div>
+</article></main>
+</div></section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 1280, "height": 3237}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
