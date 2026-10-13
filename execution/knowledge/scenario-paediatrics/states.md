@@ -456,7 +456,7 @@ until Show, and the address carries it (D3), so a filtered state is reached by i
 | `/committee/panels` | A member's list | `states/panels-list--member.png` | Dr Botha | At Step 4.14: no New panel, no Edit column. |
 | `/committee/panels` | A coordinator's list | `states/panels-list--coordinator.png` | Mr Smit | At Step 2.32. |
 | `/committee/panels` | Loading | `states/panels-list--loading.png` | Dr Botha | Hold a read, then Decision panels in the menu: the header, skeletons, and Who decides each EPA as skeletons, never "no routing" (T329). No change. |
-| `/committee/panels` | Load error | `states/panels-list--load-error.png` | Dr Botha | The same, held 35 s: "Could not load Decision panels. Nothing has changed. Try again, or come back in a few minutes." with Try again (T338). No change. |
+| `/committee/panels` | Load error | `states/panels-list--load-error.png` | Dr Botha | The same, held about 75 s: the alert shows only after about 60 s, twice the 30 s command timeout (a 35 s hold still shows "Loading Decision panels."): "Could not load Decision panels. Nothing has changed. Try again, or come back in a few minutes." with Try again (T338). No change. |
 | `/committee/panels` | An administrator, no institution | `states/panels-list--choose-institution.png` | devadmin | Any time after Act 2: "Choose an institution" until one is chosen and Show pressed (F2). No change. |
 | `/committee/panels` | Narrow | `states/panels-list--narrow.png` | Dr Mokoena | At Step A.7.7. |
 | `/committee/panels/new` | The new-panel form | `states/panel-edit--new.png` | Prof Mbatha | At Step 2.21, before choosing members. |
@@ -484,8 +484,8 @@ until Show, and the address carries it (D3), so a filtered state is reached by i
 | `/committee/reviews/new` | Already decided in this window | `states/reviews-schedule--pre-graduation.png` | Mr Smit | At Step 5.2, before Create review. |
 | `/committee/reviews` | Ratified | `states/reviews-schedule--ratified.png` | Mr Smit | At Step 4.33. |
 | `/committee/reviews/new` | Current trainees only | `states/reviews-schedule--current-only.png` | Mr Smit | At Step 5.29, the trainee list open. |
-| `/committee/reviews` | After an erasure | `states/reviews-schedule--pseudonym.png` | Prof Mbatha | At Step A.1.14: `deleted_user_…`, one Withdrawn. |
-| `/committee/reviews/new` | Preview failed | `states/reviews-schedule--preview-failed.png` | Mr Smit | At Step 4.6, before choosing the trainee: hold a read, choose Dr Molefe, wait 35 s: "The agenda could not be read just now." with Try again, and Create review still offered (C6). `ROLLBACK;`, then Try again. No change. |
+| `/committee/reviews` | After an erasure | `states/reviews-schedule--pseudonym.png` | Prof Mbatha | At Step A.1.14: `deleted_user_…` on three rows (a Withdrawn formative check-in, "None: the review was withdrawn"; a Closed formative check-in; a Ratified annual progression, Outcome Deferred). |
+| `/committee/reviews/new` | Preview failed | `states/reviews-schedule--preview-failed.png` | Mr Smit | At Step 4.6, before choosing the trainee: hold a read (75 s), choose Dr Molefe, wait: the alert shows after about 60 s, not 35: "The agenda could not be read just now." with Try again, and Create review still offered (C6). `ROLLBACK;`, then Try again. No change. |
 | `/committee/reviews/new` | An ended period | `states/schedule-review--ended-period.png` | Prof Mbatha | At Step 4.2, from a Missed row's Schedule: Period `<Y>` S1 with "`<Y>` S1 has ended. A review can still sit for it: …" (F1). No change. |
 | `/committee/reviews/new` | Loading | `states/schedule-review--loading.png` | Mr Smit | Hold a read, then Schedule a review on Committee reviews: the header, the form's skeleton, the Agenda heading and Cancel; no Create review (C11). No change. |
 | `/committee/reviews` | Loading | `states/reviews-schedule--loading.png` | Mr Smit | Hold a read, then Committee reviews in the menu. No change. |
