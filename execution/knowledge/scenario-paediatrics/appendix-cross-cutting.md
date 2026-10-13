@@ -1274,10 +1274,9 @@ Actual (2026-10-13, T364 replay, wombat_scenario_t364): At 390 px. The bar reads
   "Decisions, page 2 of 2". The queue (Data rights requests): Type and Status stack above the table (623 px, scrolls in
   its container), with Apply filters in the page header above them (y 141, the filters 272 and 366). Nothing scrolls
   sideways on any of them.
-Gap: F-A.7.5b, T328 (still: Apply filters comes before the filters it applies). new: regression-t364: at 390 px the
-  inline links "review #2" and "review #4" in Decisions due's sentences ("STAR #4, issued at review #2.", "Not decided
-  at review #2. ...") are 19 px tall, under § A.7's 24 px floor (T086); the same on every Decisions due page at 390
-  (A.7.7, A.7.8).
+Gap: F-A.7.5b, T328 (still: Apply filters comes before the filters it applies). The 19 px "review #n" links in
+  Decisions due's sentences (regression-t364, under § A.7's 24 px floor, T086) were fixed in the session: re-measured
+  27 px, all 16 on the page at 390, no sideways scroll.
 
 ### Step A.7.6 — Dr Zulu on her phone
 Role: CommitteeMember — Dr Thandi Zulu
@@ -1342,8 +1341,8 @@ Actual (2026-10-13, T364 replay, wombat_scenario_t364): At 390 px. The bar reads
   Decisions due reads as at A.7.5 (filters stacked at 44 px, the By EPA fold 44 px, the 19 px "review #N" links of
   A.7.5). Entrustment decisions from the menu: lit on its page, no trail at 390 or 1280; 18 rows, the table (764 px)
   scrolling in its container. Nothing scrolls sideways.
-Gap: new: regression-t364: Decisions due's inline "review #N" links are 19 px tall at 390 px (as A.7.5). The Note's
-  unlit page under a trail no longer occurs: Entrustment decisions is in the menu and lit.
+Gap: none (the 19 px "review #n" links on Decisions due were fixed in the session, as A.7.5; the Note's unlit page
+  under a trail no longer occurs: Entrustment decisions is in the menu and lit).
 
 ### Step A.7.8 — Dr Sithole on his phone
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
@@ -1362,7 +1361,7 @@ Actual (2026-10-13, T364 replay, wombat_scenario_t364): At 390 px. The folded ba
   review is a row of its own under the header (16 to 374, y144, 44 px); each review a grid block (356 px in 358, no
   Mode column): the trainee, then "Panel:", "Period:" over its window, "Type:", State (badge), "Decision:", and Open
   (44 px, named for the row). Decisions due reads as at A.7.5. Nothing scrolls sideways.
-Gap: new: regression-t364: Decisions due's inline "review #N" links are 19 px tall at 390 px (as A.7.5).
+Gap: none (the 19 px "review #n" links on Decisions due were fixed in the session, as A.7.5).
 
 ### Step A.7.8a — Programme trainees, a registrar's page and Waiting for assessors on a phone and a tablet
 Role: CommitteeMember and Coordinator — Dr Thandi Zulu and Mr Pieter Smit

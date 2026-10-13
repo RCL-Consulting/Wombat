@@ -4656,6 +4656,12 @@ fieldset.form-group fieldset.form-group > legend {
   margin: 0;
 }
 
+/* A sentence's "review #n" link: its line made it a 19px target (the replay's A.7.5, T086). Inline padding grows the
+   target without moving the line. */
+.status-cell p a {
+  padding-block: 0.25rem;
+}
+
 /* A period over its window, each date unbroken (C8). */
 .period-window {
   color: var(--muted-text);
