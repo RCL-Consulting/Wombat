@@ -13,6 +13,7 @@ using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
 using Wombat.Web.Services;
+using static Wombat.Web.Tests.CommitteeDecisions.PanelSeatPicker;
 
 namespace Wombat.Web.Tests.CommitteeDecisions;
 
@@ -69,7 +70,7 @@ public sealed class PanelEditInstitutionTests : TestContext
         var cut = RenderComponent<PanelEdit>();
         cut.WaitForState(() => cut.FindAll("#panel-scope").Count == 1);
 
-        cut.Find("#panel-scope").Change(DecisionPanelScope.Speciality.ToString());
+        ChooseScope(cut, DecisionPanelScope.Speciality);
 
         cut.FindAll("#panel-institution").Should().ContainSingle("an Administrator belongs to no institution");
         cut.FindAll("#panel-speciality").Should().ContainSingle();
@@ -92,7 +93,7 @@ public sealed class PanelEditInstitutionTests : TestContext
         var cut = RenderComponent<PanelEdit>();
         cut.WaitForState(() => cut.FindAll("#panel-scope").Count == 1);
 
-        cut.Find("#panel-scope").Change(DecisionPanelScope.Speciality.ToString());
+        ChooseScope(cut, DecisionPanelScope.Speciality);
 
         cut.FindAll("#panel-institution").Should().BeEmpty();
         cut.Markup.Should().Contain("The panel runs at your institution.");
@@ -110,45 +111,49 @@ public sealed class PanelEditInstitutionTests : TestContext
         var cut = RenderComponent<PanelEdit>();
         cut.WaitForState(() => cut.FindAll("#panel-scope").Count == 1);
 
-        cut.Find("#panel-scope").Change(DecisionPanelScope.Institution.ToString());
+        ChooseScope(cut, DecisionPanelScope.Institution);
 
         cut.FindAll("#panel-institution").Should().ContainSingle();
         cut.FindAll("#panel-speciality").Should().BeEmpty();
     }
 
-    // T199 item 2: an institution-wide panel sent without its institution was refused in the validator's log format,
-    // "Validation failed: -- : Institution-scoped panels require an institution. Severity: Error", with no property name
-    // because the rule is on the whole command. The refusal here is the real validator's, thrown as the validation
-    // pipeline throws it; the page shows its message alone (RefusalText, T213), for either scope.
-    [Theory]
-    [InlineData(DecisionPanelScope.Institution, "Institution-scoped panels require an institution.")]
-    [InlineData(DecisionPanelScope.Speciality, "Speciality-scoped panels require a speciality.")]
-    public void APanelSentWithoutWhatItsScopeNeeds_IsRefusedInTheValidatorsWords_NotItsLogFormat(
-        DecisionPanelScope scope, string refusal)
+    // T199 item 2, T324, round 3 S4: a panel without what its scope needs is refused in Wombat's words, beside the field
+    // and in the summary, which takes the focus; never the validator's log format. The form says it before anything is
+    // sent.
+    [Fact]
+    public void AnInstitutionWidePanelWithoutItsInstitution_IsRefusedBesideTheField_BeforeAnythingIsSent()
     {
         SignInAs(WombatRoles.InstitutionalAdmin);
-        _sender
-            .On<ListPanelMemberCandidatesQuery>(_ => new[]
-            {
-                new PanelMemberCandidateDto("zulu", "zulu@test", "Thandi", "Zulu", InstitutionA),
-                new PanelMemberCandidateDto("naidoo", "naidoo@test", "Priya", "Naidoo", InstitutionA)
-            })
-            .On<CreateDecisionPanelCommand>(command =>
-            {
-                new CreateDecisionPanelCommandValidator().ValidateAndThrow(command);
-                return new DecisionPanelDetailDto(5, command.Name, command.Scope, InstitutionA, command.SpecialityId, []);
-            });
-
         var cut = RenderComponent<PanelEdit>();
         cut.WaitForState(() => cut.FindAll("#panel-scope").Count == 1);
-        cut.Find("#panel-scope").Change(scope.ToString());
+        ChooseScope(cut, DecisionPanelScope.Institution);
         cut.Find("#panel-name").Change("Paediatrics annual review");
         cut.Find("#panel-chair").Change("zulu");
-        cut.Find("#panel-members").Change(new[] { "naidoo" });
         cut.Find("form").Submit();
 
-        cut.WaitForAssertion(() => System.Text.RegularExpressions.Regex.Replace(cut.Find(".alert-danger").TextContent, @"\s+", " ")
-            .Trim().Should().Be(refusal));
+        _sender.Received.OfType<CreateDecisionPanelCommand>().Should().BeEmpty();
+        Squash(cut.Find("#panel-refusal").TextContent)
+            .Should().StartWith("The panel was not created. Everything you chose is kept below.");
+        cut.FindAll("#panel-refusal li").Select(line => Squash(line.TextContent))
+            .Should().Equal("Institution: Choose an institution.");
+        cut.Find("#panel-institution-msg").TextContent.Trim().Should().Be("Choose an institution.");
+        cut.Find("#panel-institution").GetAttribute("aria-describedby").Should().Contain("panel-institution-msg");
+        cut.Find("#panel-institution").GetAttribute("aria-invalid").Should().Be("true");
+        cut.Find("#panel-refusal a").GetAttribute("href").Should().Be("#panel-institution");
+    }
+
+    [Fact]
+    public void AFieldTheValidatorRefuses_IsSaidBesideIt_InItsWords_NotItsLogFormat()
+    {
+        SignInAs(WombatRoles.InstitutionalAdmin);
+        _sender.On<CreateDecisionPanelCommand>(_ => throw new ValidationException(
+            [new FluentValidation.Results.ValidationFailure("SpecialityId", CreateDecisionPanelCommandValidator.SpecialityMissing)]));
+        var cut = RenderComponent<PanelEdit>();
+        cut.WaitForState(() => cut.FindAll("#panel-scope").Count == 1);
+        FillAndSubmit(cut, institutionId: null);
+
+        cut.WaitForAssertion(() => cut.Find("#panel-speciality-msg").TextContent.Trim().Should().Be("Choose a speciality."));
+        Squash(cut.Find("#panel-refusal li").TextContent).Should().Be("Speciality: Choose a speciality.");
         cut.Markup.Should().NotContain("Validation failed").And.NotContain("Severity");
     }
 

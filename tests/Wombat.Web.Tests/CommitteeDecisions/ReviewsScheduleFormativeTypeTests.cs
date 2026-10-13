@@ -14,7 +14,8 @@ namespace Wombat.Web.Tests.CommitteeDecisions;
 
 /// <summary>
 /// T361, review R1 (T309 item 2): a formative check-in decides nothing whatever its stored type, so the schedule's Type
-/// cell reads "Formative", never the stored "Annual progression"; a binding review beside it keeps its own type.
+/// cell reads "Formative check-in" (T364, C8), never the stored "Annual progression"; a binding review beside it keeps its
+/// own type. There is no Mode column (C8), and a check-in's Decision is "—", read as "None" (S7).
 /// </summary>
 public sealed class ReviewsScheduleFormativeTypeTests : TestContext
 {
@@ -36,19 +37,26 @@ public sealed class ReviewsScheduleFormativeTypeTests : TestContext
     }
 
     [Fact]
-    public void AFormativeCheckInsTypeCell_ReadsFormative_NotItsStoredType()
+    public void AFormativeCheckInsTypeCell_ReadsFormativeCheckIn_NotItsStoredType()
     {
         var cut = RenderComponent<ReviewsSchedule>();
         cut.WaitForState(() => cut.FindAll("table tbody tr").Count == 2);
 
-        var typeColumn = cut.FindAll("thead th").Select(th => th.TextContent.Trim()).ToList().IndexOf("Type");
-        var types = cut.FindAll("tbody tr")
+        var headers = cut.FindAll("thead th").Select(th => th.TextContent.Trim()).ToList();
+        headers.Should().NotContain("Mode", "a check-in says so in Type (C8)");
+        var rows = cut.FindAll("tbody tr")
             .ToDictionary(
                 row => row.QuerySelector("a[href^='/committee/reviews/']")!.GetAttribute("href")!,
-                row => row.QuerySelectorAll("td")[typeColumn].TextContent.Trim());
+                row => row.Children.ToArray());
+        var type = headers.IndexOf("Type");
+        var decision = headers.IndexOf("Decision");
 
-        types[$"/committee/reviews/{Formative}"].Should().Be("Formative");
-        types[$"/committee/reviews/{Binding}"].Should().Be("Annual progression");
+        rows[$"/committee/reviews/{Formative}"][type].TextContent.Trim().Should().Be("Formative check-in");
+        rows[$"/committee/reviews/{Binding}"][type].TextContent.Trim().Should().Be("Annual progression");
+        var none = rows[$"/committee/reviews/{Formative}"][decision];
+        none.QuerySelector("[aria-hidden='true']")!.TextContent.Should().Be("—");
+        none.QuerySelector(".visually-hidden")!.TextContent.Should().Be("None");
+        rows[$"/committee/reviews/{Binding}"][decision].TextContent.Trim().Should().Be("Pending");
     }
 
     private static CommitteeReviewListItemDto Review(int id, bool isFormative)

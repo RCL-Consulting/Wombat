@@ -1,10 +1,12 @@
 using System.Data.Common;
+using System.Globalization;
 using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Users;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Curricula;
 
@@ -61,7 +63,10 @@ public sealed class ScheduleCommitteeReviewCommandValidator : AbstractValidator<
         RuleFor(command => command.AcademicYear).InclusiveBetween(ReviewPeriodRules.FirstYear, ReviewPeriodRules.LastYear);
         RuleFor(command => command.Semester).InclusiveBetween(1, 2).WithMessage(ReviewPeriodRules.SemesterMessage);
         RuleFor(command => command.Principal).NotNull();
-        RuleFor(command => command.ReviewPeriodTo).GreaterThanOrEqualTo(command => command.ReviewPeriodFrom);
+        // In the schedule page's words (T364, S4; T324), which say the same beside the field before anything is sent.
+        RuleFor(command => command.ReviewPeriodTo)
+            .GreaterThanOrEqualTo(command => command.ReviewPeriodFrom)
+            .WithMessage(command => ScheduleCommitteeReviewCommandHandler.WindowEndsBeforeItStarts(command.ReviewPeriodFrom));
         RuleFor(command => command.ReviewType).IsInEnum().WithMessage(CommitteeReviewTypes.UnknownType);
     }
 }
@@ -95,7 +100,7 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
             // Anyone but an Administrator is refused exactly as for another institution's panel, so that the refusal
             // does not say which panel ids exist. (T182)
             throw request.Principal.IsAdministrator()
-                ? new InvalidOperationException("The decision panel could not be found.")
+                ? new CommitteeRefusedException("The decision panel could not be found.")
                 : new UnauthorizedAccessException(CommitteeTraineeScope.NotSchedulable);
         }
 
@@ -115,7 +120,7 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
         var reviewType = request.ReviewType ?? CommitteeReviewTypes.DefaultFor(bodyName is not null, period.Semester);
         if (CommitteeReviewTypes.Refusal(reviewType, bodyName, period.Semester) is { } typeRefusal)
         {
-            throw new InvalidOperationException(typeRefusal);
+            throw new CommitteeRefusedException(typeRefusal);
         }
 
         // One open binding review per trainee, period and seat (see the remarks): named, so the scheduler can open it
@@ -123,10 +128,10 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
         IReadOnlyList<CommitteeAgendaLine> agenda = [];
         if (!request.IsFormative)
         {
-            var open = await OpenBindingReviewAsync(traineeUserId, panel, period, cancellationToken);
+            var open = await CommitteeReviewSeats.HolderAsync(_dbContext, traineeUserId, panel, period, cancellationToken);
             if (open is not null)
             {
-                throw new InvalidOperationException(AlreadyScheduled(open, period));
+                throw new CommitteeRefusedException(AlreadyScheduled(open, await TraineeNameAsync(traineeUserId, cancellationToken), period));
             }
 
             var plan = await AgendaPlanner.PlanAsync(
@@ -137,7 +142,7 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
             // not, nothing could ever be put there, and the review could never be recorded.
             if (reviewType == CommitteeReviewType.EntrustmentOnly && !plan.PanelDecidesAnything)
             {
-                throw new InvalidOperationException(NothingToDecide(panel.Name));
+                throw new CommitteeRefusedException(NothingToDecide(panel.Name));
             }
 
             agenda = plan.Lines;
@@ -169,13 +174,14 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
             // The race: another binding review of this trainee before this panel for this period was scheduled after the
             // check above read the table. Named, with the database's refusal kept underneath so the audit pipeline writes
             // its row without re-sending the refused insert (T201).
-            var open = await OpenBindingReviewAsync(traineeUserId, panel, period, cancellationToken);
+            var open = await CommitteeReviewSeats.HolderAsync(_dbContext, traineeUserId, panel, period, cancellationToken);
             if (open is null)
             {
                 throw;
             }
 
-            throw new InvalidOperationException(AlreadyScheduled(open, period), exception);
+            throw new CommitteeRefusedException(
+                AlreadyScheduled(open, await TraineeNameAsync(traineeUserId, cancellationToken), period), exception);
         }
 
         return new CommitteeReviewListItemDto(
@@ -197,31 +203,10 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
         };
     }
 
-    /// <summary>
-    /// The open binding review of this trainee for this period before a panel in <paramref name="panel" />'s seat, if any:
-    /// a panel at the same institution sitting as the same College committee, or as none. Includes the panel itself, which
-    /// is what the index allows one of. The decisions-due page asks the same (<see cref="CommitteeReviewSeats" />).
-    /// </summary>
-    private async Task<OpenReview?> OpenBindingReviewAsync(
-        string traineeUserId, DecisionPanel panel, AcademicPeriod period, CancellationToken cancellationToken)
-    {
-        var institutionId = panel.InstitutionId;
-        var bodyKey = DecisionBody.NormalizeKey(panel.DecisionBodyKey);
+    /// <summary>The trainee by name, as the refusal names them (T364, C7); their id when no name is on record.</summary>
+    private async Task<string> TraineeNameAsync(string traineeUserId, CancellationToken cancellationToken)
+        => (await UserDisplayNames.ResolveAsync(_users, [traineeUserId], cancellationToken)).NameOf(traineeUserId);
 
-        return await _dbContext.Set<CommitteeReview>()
-            .AsNoTracking()
-            .OpenBinding()
-            .Where(entity => entity.TraineeUserId == traineeUserId &&
-                             entity.Panel.InstitutionId == institutionId &&
-                             entity.Panel.DecisionBodyKey == bodyKey &&
-                             entity.AcademicYear == period.Year &&
-                             entity.Semester == period.Semester)
-            .OrderBy(entity => entity.Id)
-            .Select(entity => new OpenReview(entity.Id, entity.Panel.Name, entity.State, entity.ScheduledOn))
-            .FirstOrDefaultAsync(cancellationToken);
-    }
-
-    /// <summary>The refusal for a second open binding review of one trainee, in one seat, for one period.</summary>
     /// <summary>
     /// The refusal for an entrustment-only review before a panel that decides no EPA on the trainee's curriculum (T131
     /// slice 5). The scheduling preview says the same first (<see cref="CommitteeAgendaPreviewDto.PanelDecidesAnything" />).
@@ -230,11 +215,29 @@ public sealed class ScheduleCommitteeReviewCommandHandler : IRequestHandler<Sche
         => $"{panelName} decides no EPA on this trainee's curriculum, so an entrustment-only review before it would have " +
            "nothing to decide.";
 
-    internal static string AlreadyScheduled(OpenReview open, AcademicPeriod period)
-        => $"Review #{open.Id} already puts this trainee before {open.PanelName} for {period} " +
-           $"({CommitteeDecisionWording.StateInSentence(open.State)}, scheduled {open.ScheduledOn:yyyy-MM-dd}). A trainee " +
-           "has one binding review for each period before the panels that decide the same EPAs, until it is ratified: " +
-           "open that review, or ratify it before scheduling another.";
+    /// <summary>
+    /// The refusal for a second open binding review of one trainee, in one seat, for one period, and the schedule page's
+    /// Already held, which says it before Create (<see cref="GetSchedulingSeatQuery" />): "Review #1 already puts Lerato
+    /// Molefe before Paed Annual Review Panel for 2026 S2 (scheduled on 2026-10-12). …". The trainee by name, and
+    /// "scheduled" said once (T364, C7): a review under way says its state first, "(in progress, scheduled on …)".
+    /// </summary>
+    internal static string AlreadyScheduled(SeatHolder open, string traineeName, AcademicPeriod period)
+    {
+        ArgumentNullException.ThrowIfNull(open);
 
-    internal sealed record OpenReview(int Id, string PanelName, CommitteeReviewState State, DateOnly ScheduledOn);
+        var state = open.State == CommitteeReviewState.Scheduled
+            ? string.Empty
+            : $"{CommitteeDecisionWording.StateInSentence(open.State)}, ";
+        return $"Review #{open.Id} already puts {traineeName} before {open.PanelName} for {period} " +
+               string.Create(CultureInfo.InvariantCulture, $"({state}scheduled on {open.ScheduledOn:yyyy-MM-dd}). ") +
+               "A trainee has one binding review for each period before the panels that decide the same EPAs, until it " +
+               "is ratified: open that review, or ratify it before scheduling another.";
+    }
+
+    /// <summary>
+    /// An evidence window that ends before it starts, refused (T364, S4; T324): "The window ends before it starts. Choose a
+    /// day on or after 2026-01-01.", beside To on the schedule page and from the command's validator alike.
+    /// </summary>
+    public static string WindowEndsBeforeItStarts(DateOnly from)
+        => string.Create(CultureInfo.InvariantCulture, $"The window ends before it starts. Choose a day on or after {from:yyyy-MM-dd}.");
 }

@@ -214,7 +214,7 @@ section.
 | 5.26 | `/portfolio/progress` | Dr du Plessis reads PAED-002 | This period's count includes it, as the latest encounter |
 | 5.27 | `/admin/trainees` → `/admin/trainees/edit` → `/admin/trainees` | Prof Mbatha deactivates his profile with last day `D−2` | The dialog naming the day; the result; Inactive, "Left the programme"; "Withdrawn" in the closed list; the credit taken back in the same save |
 | 5.28 | `/` → `/portfolio/progress` → `/activities/mine` | Dr du Plessis reads his record | Home's ended line and link; My progress read-only, "Ended"; the Mini-CEX Completed, credited None |
-| 5.29 | `/committee/reviews` | Mr Smit opens Schedule review | Only the current trainees are offered |
+| 5.29 | `/committee/reviews` → `/committee/reviews/new` → `/committee/reviews` | Mr Smit presses Schedule a review, reads the trainees and cancels | Only the current trainees are offered, each with the training year |
 | 6.21 | `/portfolio/progress` | Dr Molefe reads her record while PAED-012 is paused | Today PAED-012 drops out. After T312 it stays, headed "(no longer in use)" |
 | 6.40 | `/portfolio/progress` | Dr Molefe reads her record after the rebuild | Today a KGK-001 card appears with shortfalls. After T312 her record is as she graduated |
 | 6.41 | `/portfolio/progress` → `/activities/mine` | Dr du Plessis reads his record after the rebuild | Still ended and read-only; the Mini-CEX still credited None |
@@ -619,10 +619,11 @@ Expect: Each page records that his programme ended on `D−2`, every date ISO (T
 
 Step 5.29 — Neither ended programme can be put before the panel (act-5-graduation.md)
 Role: Coordinator — Mr Pieter Smit
-Route: /committee/reviews
-Do: Open Schedule review, choose the Paed Annual Review Panel and read the trainee list.
-Expect: The list offers only Dr Dlamini, Dr Mahlangu and Dr Ndlovu. A graduate and a registrar who has withdrawn are not
-  current trainees (T238). He closes the form without scheduling anything.
+Route: /committee/reviews → /committee/reviews/new → /committee/reviews
+Do: Press Schedule a review, choose the Paed Annual Review Panel and read the Trainee list. Then Cancel.
+Expect: The list offers only Dr Dlamini, Dr Mahlangu and Dr Ndlovu, each with the training year. A graduate and a
+  registrar who has withdrawn are not current trainees (T238). Cancel returns to Committee reviews; nothing is
+  scheduled.
 
 Step 6.21 — Dr Molefe's record during the pause (act-6-catalogue.md)
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe

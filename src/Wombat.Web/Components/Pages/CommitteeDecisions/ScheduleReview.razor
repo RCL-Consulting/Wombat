@@ -1,0 +1,975 @@
+@page "/committee/reviews/new"
+@attribute [Authorize(Roles = "Coordinator,Administrator,InstitutionalAdmin,SpecialityAdmin,SubSpecialityAdmin")]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+@inject TimeProvider Clock
+@inject ILogger<ScheduleReview> Logger
+@using Wombat.Application.Features.Curricula.Quota
+
+<PageTitle>Schedule a review · Wombat</PageTitle>
+
+@*
+  Schedule a review (T364, flow 08; round 3's boards R2-4). A form page of its own, owned by Committee reviews (Q1), filled
+  from ?panel=&trainee=&period= (Decisions due's Schedule, F1: the row's own period, an ended one included), with return=
+  read through ReviewLinks.ScheduleReturn for Cancel (C4). Until T364 it was a card over the Committee reviews list.
+  - The fields: Panel; Trainee, disabled until a panel is chosen (C4), current registrars with their training year (5.29);
+    Period, the six Decisions due offers (M5), saying when it has ended (F1) and semester 2's window (F6); the evidence
+    window and Scheduled on in the browser's date input (F3); Review type as radios preselected by
+    CommitteeReviewTypes.DefaultFor (F4), each with its help (S1, C1), and Formative check-in among them (T309 item 3).
+  - The Agenda aside (.agenda-preview): beside the fields from 1100px, under them below (M9). One narrow live region
+    (.agenda-live) with no role="alert" inside it (S6). It says Already held before Create, by the create's own seat check
+    (GetSchedulingSeatQuery, Q3; T309 item 1), and Create is not offered then; NothingToDecide in the handler's words (S1);
+    and a failed preview in fixed words with Try again, Create still offered (C6, T338, T272).
+  - Create (C7): busy reads "Creating…" (.is-running, aria-disabled) with Cancel a disabled button (S6); each refusal in a
+    summary above the actions and beside its field, the focus on the summary, in Wombat's words (T324); an unexpected
+    failure in fixed words, the failure to the log (T338). Created: flow 07's review page, whose h1 takes the focus.
+*@
+<div class="committee-calendar">
+  <PageHeader Title="Schedule a review" Subtitle="@ScheduleWords.Subtitle" />
+
+  @* Present from the first render, so its words are announced when they come (flow 04's C11). *@
+  <p class="visually-hidden" role="status">@(_loading ? ScheduleWords.Loading : null)</p>
+
+  <StatePanel IsLoading="_loading"
+              LoadError="@_loadError"
+              OnRetry="LoadAsync"
+              IsEmpty="@(!_loading && !MaySchedule)"
+              EmptyTitle="No review can be scheduled"
+              EmptyBody="@NotSchedulableBody"
+              EmptyActions="@NotSchedulableActions">
+    <LoadingContent>
+      @* The header at once, then the form's shape; Create is not offered until the read is in (C11). *@
+      <div class="form-container" aria-busy="true">
+        <div class="schedule-grid">
+          <div class="schedule-fields">
+            <Skeleton Count="5" Height="3rem" />
+          </div>
+          <section class="agenda-preview" aria-labelledby="agenda-loading-heading">
+            <h2 id="agenda-loading-heading">Agenda</h2>
+          </section>
+          <div class="form-actions">
+            <a class="btn btn-outline" href="@CancelHref">Cancel</a>
+          </div>
+        </div>
+      </div>
+    </LoadingContent>
+    <ChildContent>
+      <EditForm EditContext="_editContext" OnSubmit="CreateAsync" FormName="schedule-review" class="form-container" aria-label="Schedule a review">
+        <div class="schedule-grid">
+          <div class="schedule-fields">
+            <FormField Label="Panel" InputId="@PanelId" HelpText="@PanelHelpText">
+              <ChildContent>
+                <InputSelect id="@PanelId" class="form-select"
+                             aria-describedby="@DescribedBy(PanelId, PanelHelpText)"
+                             @bind-Value="_model.PanelId" @bind-Value:after="OnPanelChangedAsync">
+                  <option value="">Choose a panel</option>
+                  @foreach (var panel in _panels)
+                  {
+                    <option @key="panel.Id" value="@panel.Id">@panel.Name</option>
+                  }
+                </InputSelect>
+              </ChildContent>
+              <ValidationContent>@FieldMessage(PanelId)</ValidationContent>
+            </FormField>
+
+            <FormField Label="Trainee" InputId="@TraineeId" HelpText="@TraineeHelpText">
+              <ChildContent>
+                <InputSelect id="@TraineeId" class="form-select"
+                             aria-describedby="@DescribedBy(TraineeId, TraineeHelpText)"
+                             @bind-Value="_model.TraineeUserId" @bind-Value:after="OnTraineeChangedAsync"
+                             disabled="@(_model.PanelId is null)">
+                  <option value="">@(_model.PanelId is null ? "Choose a panel first" : "Choose a trainee")</option>
+                  @foreach (var trainee in _trainees)
+                  {
+                    <option @key="trainee.UserId" value="@trainee.UserId">@ScheduleWords.TraineeOption(trainee)</option>
+                  }
+                </InputSelect>
+              </ChildContent>
+              <ValidationContent>@FieldMessage(TraineeId)</ValidationContent>
+            </FormField>
+
+            @* The period the review sits for (T131, Decision 4): its agenda is the EPAs due in it. Choosing one fills the
+               evidence window below, which stays editable: the window is what the snapshot reads, the period is what the
+               committee decides for, and neither is derived from the other. *@
+            <FormField Label="Period" InputId="@PeriodId" HelpText="@PeriodHelpText">
+              <ChildContent>
+                <InputSelect id="@PeriodId" class="form-select"
+                             aria-describedby="@DescribedBy(PeriodId, PeriodHelpText, SelectedPeriod?.Semester == 2 ? PeriodNoteId : null)"
+                             @bind-Value="_model.PeriodKey" @bind-Value:after="OnPeriodChangedAsync">
+                  <option value="">Choose a period</option>
+                  @foreach (var period in _periods)
+                  {
+                    <option @key="period.Key" value="@period.Key">@period.Label</option>
+                  }
+                </InputSelect>
+              </ChildContent>
+              <ValidationContent>
+                @if (SelectedPeriod?.Semester == 2)
+                {
+                  <small class="page-subtitle" id="@PeriodNoteId">@ScheduleWords.Semester2WindowNote</small>
+                }
+                @FieldMessage(PeriodId)
+              </ValidationContent>
+            </FormField>
+
+            <fieldset class="form-group">
+              <legend>Evidence window</legend>
+              <div class="field-pair">
+                <FormField Label="From" InputId="@FromId">
+                  <ChildContent>
+                    <InputDate TValue="DateOnly?" id="@FromId" class="form-control"
+                               aria-describedby="@DescribedBy(FromId, null)"
+                               @bind-Value="_model.From" @bind-Value:after="() => ClearField(FromId)" />
+                  </ChildContent>
+                  <ValidationContent>@FieldMessage(FromId)</ValidationContent>
+                </FormField>
+                <FormField Label="To" InputId="@ToId">
+                  <ChildContent>
+                    <InputDate TValue="DateOnly?" id="@ToId" class="form-control"
+                               aria-describedby="@DescribedBy(ToId, null)"
+                               @bind-Value="_model.To" @bind-Value:after="() => ClearField(ToId)" />
+                  </ChildContent>
+                  <ValidationContent>@FieldMessage(ToId)</ValidationContent>
+                </FormField>
+              </div>
+            </fieldset>
+
+            <FormField Label="Scheduled on" InputId="@ScheduledId" HelpText="@ScheduleWords.ScheduledOnHelp">
+              <ChildContent>
+                <InputDate TValue="DateOnly?" id="@ScheduledId" class="form-control"
+                           aria-describedby="@DescribedBy(ScheduledId, ScheduleWords.ScheduledOnHelp)"
+                           @bind-Value="_model.ScheduledOn" @bind-Value:after="() => ClearField(ScheduledId)" />
+              </ChildContent>
+              <ValidationContent>@FieldMessage(ScheduledId)</ValidationContent>
+            </FormField>
+
+            @* T131 slice 5: the types the handler accepts for this panel and period (CommitteeReviewTypes.Allowed), and no
+               other, preselected on its default (F4); then Formative check-in, which Formative only became (T309 item 3). *@
+            <fieldset class="form-group" aria-describedby="@(HasError(TypeId) ? $"{MessageId(TypeId)} {SummaryId}" : null)">
+              <legend>Review type</legend>
+              <div class="scale-choices">
+                @foreach (var choice in TypeChoices)
+                {
+                  var inputId = TypeInputId(choice.Key);
+                  var helpId = $"{inputId}-help";
+                  <div class="form-check review-type-choice" @key="choice.Key">
+                    @* Named by the type alone; its help is the radio's description, shown under the label (T364, build
+                       review D7). *@
+                    <input class="form-check-input" type="radio" name="review-type" id="@inputId" value="@choice.Key"
+                           aria-describedby="@helpId"
+                           checked="@(_model.TypeKey == choice.Key)" @onchange="() => ChooseTypeAsync(choice.Key)" />
+                    <label for="@inputId">@choice.Label</label>
+                    <small class="page-subtitle review-type-help" id="@helpId">@choice.Help</small>
+                  </div>
+                }
+              </div>
+              @FieldMessage(TypeId)
+            </fieldset>
+          </div>
+
+          <section class="agenda-preview" id="agenda-preview" aria-labelledby="agenda-preview-heading">
+            <h2 id="agenda-preview-heading">Agenda</h2>
+            @AgendaPreview
+          </section>
+
+          @if (_refusal is not null)
+          {
+            @* Above the actions (C7). It takes the focus once drawn; each line about a field moves the focus to it. *@
+            <div @ref="_summary" id="@SummaryId" class="validation-summary-errors error-summary" tabindex="-1" role="alert">
+              <strong>@ScheduleWords.NotCreated</strong>@(" ")@ScheduleWords.KeptBelow
+              <ul class="refusal-summary-list">
+                @foreach (var line in _refusal)
+                {
+                  <li>
+                    @if (line.FieldId is { } fieldId)
+                    {
+                      <a href="@($"#{FocusTargetOf(fieldId)}")" @onclick="() => FocusFieldAsync(fieldId)" @onclick:preventDefault>@line.Text</a>
+                    }
+                    else
+                    {
+                      @line.Text
+                    }
+                  </li>
+                }
+              </ul>
+              @if (_refusalSeat is { } held)
+              {
+                @* The race (C7, F5): the review that took the seat meanwhile, by a short link (S4). *@
+                <p><a href="@ReviewLinks.Review(held.ReviewId)" aria-label="@ScheduleWords.OpenReviewOf(held)">@ScheduleWords.OpenReview(held.ReviewId)</a></p>
+              }
+            </div>
+          }
+
+          <div class="form-actions">
+            @if (HeldSeat is { } seat)
+            {
+              @* Q3: Create is not offered while the seat is held; the review in the way is. *@
+              <p class="move-reasons move-reasons--beside">@ScheduleWords.CreateNotOffered(seat)</p>
+              <a class="btn btn-outline" href="@CancelHref">Cancel</a>
+              <a class="btn btn-primary" href="@ReviewLinks.Review(seat.ReviewId)" aria-label="@ScheduleWords.OpenReviewOf(seat)">@ScheduleWords.OpenReview(seat.ReviewId)</a>
+            }
+            else
+            {
+              @if (_creating)
+              {
+                @* S6: while Create runs, Cancel is a disabled button, never a followable link. *@
+                <button type="button" class="btn btn-outline" disabled>Cancel</button>
+              }
+              else
+              {
+                <a class="btn btn-outline" href="@CancelHref">Cancel</a>
+              }
+              @* Not disabled while it runs (T234): it keeps the focus, and a second press sends nothing. *@
+              <button type="submit" class="btn btn-primary @(_creating ? "is-running" : null)" aria-disabled="@InFlight.AriaDisabled(_creating)">@(_creating ? "Creating…" : "Create review")</button>
+            }
+          </div>
+          <p class="visually-hidden" role="status">@(_creating ? "Creating the review." : null)</p>
+        </div>
+      </EditForm>
+    </ChildContent>
+  </StatePanel>
+</div>
+
+@code {
+  private const string PanelId = "review-panel";
+  private const string TraineeId = "review-trainee";
+  private const string PeriodId = "review-period";
+  private const string PeriodNoteId = "review-period-note";
+  private const string FromId = "review-from";
+  private const string ToId = "review-to";
+  private const string ScheduledId = "review-scheduled";
+  private const string TypeId = "review-type";
+
+  /// <summary>The refusal summary's id, which every refused field names.</summary>
+  public const string SummaryId = "schedule-refusal";
+
+  /// <summary>The Review type choice that is a formative check-in (T309 item 3).</summary>
+  public const string FormativeKey = "Formative";
+
+  private readonly List<DecisionPanelSummaryDto> _panels = [];
+  private readonly List<SchedulableTraineeDto> _trainees = [];
+  private readonly ScheduleModel _model = new();
+  private EditContext _editContext = default!;
+  private ValidationMessageStore _messages = default!;
+  private IReadOnlyList<CommitteeReviewPeriodOptionDto> _periods = [];
+  private DateOnly _today;
+  private CommitteeReviewsAccessDto? _access;
+  private bool _loading = true;
+  private string? _loadError;
+  private bool _traineesLoading;
+  private bool _traineesFailed;
+
+  private CommitteeAgendaPreviewDto? _preview;
+  private bool _previewFailed;
+  private bool _agendaReading;
+
+  // A type the registrar chose by hand is kept while a panel or period change still allows it; one never chosen follows
+  // CommitteeReviewTypes.DefaultFor (T364, build review D4; F4).
+  private bool _typeChosen;
+  private int _previewRequest;
+  private SchedulingSeatDto? _seat;
+  private int _seatRequest;
+
+  private bool _creating;
+  private readonly Dictionary<string, string> _fieldErrors = new(StringComparer.Ordinal);
+  private IReadOnlyList<RefusalLine>? _refusal;
+  private SchedulingSeatDto? _refusalSeat;
+  private ElementReference _summary;
+  private bool _focusSummary;
+
+  /// <summary>The refusal summary's element, which takes the focus once drawn; a test matches a focus call to it.</summary>
+  public ElementReference SummaryElement => _summary;
+
+  /// <summary>The panel Decisions due's Schedule names (T131 slice 6). A convenience, never an authorization (T111's rule).</summary>
+  [SupplyParameterFromQuery(Name = "panel")]
+  public int? PrefillPanelId { get; set; }
+
+  [SupplyParameterFromQuery(Name = "trainee")]
+  public string? PrefillTraineeUserId { get; set; }
+
+  /// <summary>The row's own period, "2026-1", an ended one included (F1).</summary>
+  [SupplyParameterFromQuery(Name = "period")]
+  public string? PrefillPeriodKey { get; set; }
+
+  /// <summary>Where Cancel returns, read only through <see cref="ReviewLinks.ScheduleReturn" /> (C4).</summary>
+  [SupplyParameterFromQuery(Name = ReviewLinks.ReturnKey)]
+  public string? ReturnTo { get; set; }
+
+  private string CancelHref => ReviewLinks.ScheduleReturn(ReturnTo);
+
+  protected override void OnInitialized()
+  {
+    _editContext = new EditContext(_model);
+    _messages = new ValidationMessageStore(_editContext);
+    _today = QuotaCalendar.Today(Clock);
+    _periods = CommitteeReviewPeriods.Around(_today);
+    _model.ScheduledOn = _today;
+    _model.TypeKey = DefaultTypeKey;
+  }
+
+  protected override async Task OnInitializedAsync()
+  {
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _access = await Sender.Send(new GetCommitteeReviewsAccessQuery(authState.User));
+
+      // Only the panels this caller may put a trainee before, by the scheduling rule itself (T194). None for a caller
+      // the command refuses outright, who is offered no form, from a link any more than from the button (T216).
+      _panels.Clear();
+      if (MaySchedule)
+      {
+        _panels.AddRange(await Sender.Send(new ListDecisionPanelsQuery(authState.User, ForScheduling: true)));
+      }
+    }
+    catch (Exception exception)
+    {
+      Logger.LogError(exception, "The schedule page could not read what the caller may schedule.");
+      _loadError = ScheduleWords.LoadFailure;
+      return;
+    }
+    finally
+    {
+      _loading = false;
+    }
+
+    await ApplyPrefillAsync();
+  }
+
+  /// <summary>
+  /// Fills the form from the query string, where the page offers what it names: the panels the caller may use, the
+  /// trainees the scheduling handler would accept on that panel, and the six periods (M5). A value that is not there
+  /// leaves its field empty, and the handler still decides.
+  /// </summary>
+  private async Task ApplyPrefillAsync()
+  {
+    if (!MaySchedule)
+    {
+      return;
+    }
+
+    // The period first: the panel's default review type is the period's.
+    if (_periods.FirstOrDefault(period => string.Equals(period.Key, PrefillPeriodKey, StringComparison.Ordinal)) is { } chosen)
+    {
+      ApplyPeriod(chosen);
+    }
+
+    if (PrefillPanelId is not int panelId || !_panels.Any(panel => panel.Id == panelId))
+    {
+      KeepAllowedType();
+      return;
+    }
+
+    _model.PanelId = panelId;
+    KeepAllowedType();
+    await LoadTraineesAsync();
+
+    if (!string.IsNullOrEmpty(PrefillTraineeUserId) &&
+        _trainees.Any(trainee => string.Equals(trainee.UserId, PrefillTraineeUserId, StringComparison.Ordinal)))
+    {
+      _model.TraineeUserId = PrefillTraineeUserId;
+    }
+
+    await ReadAgendaAsync();
+  }
+
+  /// <summary>Whether the scheduling command would admit this caller at all (T216).</summary>
+  private bool MaySchedule => _access?.MaySchedule == true;
+
+  private string NotSchedulableBody => _access?.TraineeNote ?? "Your role does not schedule committee reviews.";
+
+  private RenderFragment? NotSchedulableActions => _access?.TraineeNote is null ? null : MyReviewsLink;
+
+  private RenderFragment MyReviewsLink => __builder =>
+  {
+    <a class="btn btn-outline" href="/committee/my-reviews">Open My committee reviews</a>
+  };
+
+  // ---- The fields ----------------------------------------------------------------------------------------------------
+
+  private DecisionPanelSummaryDto? SelectedPanel => _panels.FirstOrDefault(panel => panel.Id == _model.PanelId);
+
+  private CommitteeReviewPeriodOptionDto? SelectedPeriod
+    => _periods.FirstOrDefault(period => string.Equals(period.Key, _model.PeriodKey, StringComparison.Ordinal));
+
+  private bool TraineeIsOffered
+    => _trainees.Any(trainee => string.Equals(trainee.UserId, _model.TraineeUserId, StringComparison.Ordinal));
+
+  private bool IsFormative => _model.TypeKey == FormativeKey;
+
+  private string PanelHelpText => _panels.Count == 0 ? ScheduleWords.NoPanelHelp : ScheduleWords.PanelHelp;
+
+  private string TraineeHelpText => _model.PanelId is null
+    ? ScheduleWords.TraineeWaitsForPanel
+    : _traineesFailed
+      ? "The trainees could not be read just now. Choose the panel again to try again."
+      : !_traineesLoading && _trainees.Count == 0
+        ? ScheduleWords.NoTraineeHelp
+        : ScheduleWords.TraineeHelp;
+
+  /// <summary>Period's help, led by F1's sentence when the period chosen has ended.</summary>
+  private string PeriodHelpText => SelectedPeriod is { } period && CommitteeReviewPeriods.EndedNote(period, _today) is { } ended
+    ? $"{ended} {CommitteeReviewPeriods.PeriodHelp}"
+    : CommitteeReviewPeriods.PeriodHelp;
+
+  /// <summary>The semester the types are judged for: the period chosen, else today's.</summary>
+  private int Semester => SelectedPeriod?.Semester ?? CommitteeReviewPeriods.Current(_today).Semester;
+
+  private bool SitsAsBody => SelectedPanel?.DecisionBodyKey is not null;
+
+  private string DefaultTypeKey => CommitteeReviewTypes.DefaultFor(SitsAsBody, Semester).ToString();
+
+  /// <summary>The binding types the handler accepts here, the default first, then Formative check-in (F4, S1).</summary>
+  private IEnumerable<TypeChoice> TypeChoices
+  {
+    get
+    {
+      var panelName = SelectedPanel?.Name ?? "The panel";
+      var bodyName = SelectedPanel is { DecisionBodyKey: { } key } panel ? panel.DecisionBodyName ?? key : null;
+      foreach (var type in CommitteeReviewTypes.Allowed(SitsAsBody, Semester))
+      {
+        yield return new TypeChoice(
+            type.ToString(),
+            CommitteeDecisionWording.ReviewTypeLabel(type),
+            CommitteeDecisionWording.ReviewTypeHelp(type, panelName, bodyName, Semester));
+      }
+
+      yield return new TypeChoice(FormativeKey, CommitteeDecisionWording.FormativeTypeLabel, CommitteeDecisionWording.FormativeCheckInHelp);
+    }
+  }
+
+  private static string TypeInputId(string key) => $"{TypeId}-{FieldHelp.IdPart(key)}";
+
+  /// <summary>
+  /// Keeps a type chosen by hand where it is still offered; otherwise, and for a type never chosen, takes the default
+  /// for the panel and period now chosen (F4; T364, build review D4).
+  /// </summary>
+  private void KeepAllowedType()
+  {
+    if (!_typeChosen || !TypeChoices.Any(choice => choice.Key == _model.TypeKey))
+    {
+      _typeChosen = false;
+      _model.TypeKey = DefaultTypeKey;
+    }
+  }
+
+  private void ApplyPeriod(CommitteeReviewPeriodOptionDto period)
+  {
+    _model.PeriodKey = period.Key;
+    _model.From = period.WindowFrom;
+    _model.To = period.WindowTo;
+  }
+
+  private async Task OnPanelChangedAsync()
+  {
+    ClearField(PanelId);
+    ClearField(TraineeId);
+    ClearField(TypeId);
+    _model.TraineeUserId = string.Empty;
+    KeepAllowedType();
+    await LoadTraineesAsync();
+    await ReadAgendaAsync();
+  }
+
+  private async Task OnTraineeChangedAsync()
+  {
+    ClearField(TraineeId);
+    await ReadAgendaAsync();
+  }
+
+  private async Task OnPeriodChangedAsync()
+  {
+    ClearField(PeriodId);
+    if (SelectedPeriod is { } period)
+    {
+      ApplyPeriod(period);
+      ClearField(FromId);
+      ClearField(ToId);
+    }
+
+    KeepAllowedType();
+    await ReadAgendaAsync();
+  }
+
+  private async Task ChooseTypeAsync(string key)
+  {
+    ClearField(TypeId);
+    _model.TypeKey = key;
+    _typeChosen = true;
+    await ReadAgendaAsync();
+  }
+
+  /// <summary>
+  /// The trainees the scheduling handler would accept on the chosen panel, by its own predicate
+  /// (ListSchedulableTraineesQuery, T182): a panel reviews its own institution's trainees, so the list follows the panel.
+  /// </summary>
+  private async Task LoadTraineesAsync()
+  {
+    _trainees.Clear();
+    _traineesFailed = false;
+    if (_model.PanelId is not int panelId)
+    {
+      return;
+    }
+
+    _traineesLoading = true;
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var trainees = await Sender.Send(new ListSchedulableTraineesQuery(panelId, authState.User));
+
+      // The panel may have changed while this was in flight; the later request's answer is the one that counts.
+      if (_model.PanelId == panelId)
+      {
+        _trainees.AddRange(trainees);
+      }
+    }
+    catch (Exception exception)
+    {
+      Logger.LogError(exception, "The schedule page could not read the trainees of panel {PanelId}.", panelId);
+      _traineesFailed = true;
+    }
+    finally
+    {
+      _traineesLoading = false;
+    }
+  }
+
+  // ---- The Agenda aside ----------------------------------------------------------------------------------------------
+
+  /// <summary>The seat a binding review would take is held: Create is not offered (Q3). A check-in takes none.</summary>
+  private SchedulingSeatDto? HeldSeat => IsFormative ? null : _seat;
+
+  /// <summary>
+  /// Reads the seat and the agenda for the panel, trainee and period chosen: the seat by the create's own check
+  /// (GetSchedulingSeatQuery), the agenda by the planner scheduling runs (PreviewCommitteeAgendaQuery). Each is its own
+  /// read, so a failed preview never hides a held seat (C6). A formative check-in reads neither: it carries no agenda and
+  /// takes no seat.
+  /// </summary>
+  private async Task ReadAgendaAsync()
+  {
+    _preview = null;
+    _previewFailed = false;
+    _seat = null;
+    _agendaReading = false;
+    var previewRequest = ++_previewRequest;
+    var seatRequest = ++_seatRequest;
+
+    if (IsFormative || _model.PanelId is not int panelId || !TraineeIsOffered || SelectedPeriod is not { } period)
+    {
+      return;
+    }
+
+    _agendaReading = true;
+
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    await ReadSeatAsync(authState.User, panelId, period, seatRequest);
+    await ReadPreviewAsync(authState.User, panelId, period, previewRequest);
+  }
+
+  private async Task ReadSeatAsync(
+      System.Security.Claims.ClaimsPrincipal user, int panelId, CommitteeReviewPeriodOptionDto period, int request)
+  {
+    try
+    {
+      var seat = await Sender.Send(new GetSchedulingSeatQuery(
+          _model.TraineeUserId, panelId, period.AcademicYear, period.Semester, user));
+      if (request == _seatRequest)
+      {
+        _seat = seat;
+      }
+    }
+    catch (Exception exception)
+    {
+      // Advice like the preview: Create stays offered, and the handler refuses a held seat in its own words.
+      Logger.LogError(exception, "The schedule page could not read the seat for panel {PanelId}.", panelId);
+    }
+  }
+
+  private async Task ReadPreviewAsync(
+      System.Security.Claims.ClaimsPrincipal user, int panelId, CommitteeReviewPeriodOptionDto period, int request)
+  {
+    try
+    {
+      var preview = await Sender.Send(new PreviewCommitteeAgendaQuery(
+          _model.TraineeUserId, panelId, period.AcademicYear, period.Semester, user));
+      if (request == _previewRequest)
+      {
+        _preview = preview;
+      }
+    }
+    catch (Exception exception)
+    {
+      // C6, T338, T272: the preview is advice. Its failure is said in fixed words, and Create stays offered.
+      Logger.LogError(exception, "The schedule page could not preview the agenda for panel {PanelId}.", panelId);
+      if (request == _previewRequest)
+      {
+        _previewFailed = true;
+      }
+    }
+    finally
+    {
+      if (request == _previewRequest)
+      {
+        _agendaReading = false;
+      }
+    }
+  }
+
+  private async Task RetryPreviewAsync()
+  {
+    if (_model.PanelId is int panelId && SelectedPeriod is { } period)
+    {
+      _previewFailed = false;
+      _agendaReading = true;
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await ReadPreviewAsync(authState.User, panelId, period, ++_previewRequest);
+    }
+  }
+
+  private RenderFragment AgendaPreview => __builder =>
+  {
+    @* The one live region (S6): only the words that change, no role="alert" inside; the optional lines and the notes are
+       outside it, so a choice is announced once, not every line again. *@
+    <div class="agenda-live" id="agenda-preview-summary" aria-live="polite">
+      @if (IsFormative)
+      {
+        <p>@ScheduleWords.FormativeNoAgenda</p>
+      }
+      else if (HeldSeat is { } seat)
+      {
+        <div class="alert alert-warning">
+          <p><strong>@ScheduleWords.AlreadyHeld</strong>@(" ")@seat.Sentence</p>
+          <p>@ScheduleWords.CheckInTakesNoSeat</p>
+        </div>
+      }
+      else if (_previewFailed)
+      {
+        <div class="alert alert-warning">
+          <div class="alert-row">
+            <span class="alert-row-text">@ScheduleWords.PreviewFailed</span>
+            <button type="button" class="btn btn-outline btn-sm" @onclick="RetryPreviewAsync">
+              <Icon Name="refresh-cw" />
+              Try again
+            </button>
+          </div>
+          <p>@ScheduleWords.PreviewFailedNote</p>
+        </div>
+      }
+      else if (_preview is null && _agendaReading)
+      {
+        @* Between the choice and the reads returning (T364, build review D2). *@
+        <p class="muted">@ScheduleWords.ReadingAgenda</p>
+      }
+      else if (_preview is null)
+      {
+        <p class="muted">@ScheduleWords.ChooseToPreview</p>
+      }
+      else if (_preview.NothingToDecide is { } nothing)
+      {
+        @* S1: the handler's own sentence, before Create refuses with it. *@
+        <p class="agenda-count">@ScheduleWords.NoEpaOnAgenda</p>
+        <p>@nothing</p>
+      }
+      else
+      {
+        @foreach (var (sentence, index) in CommitteeAgendaText.PreviewSentences(_preview).Select((sentence, index) => (sentence, index)))
+        {
+          <p class="@(index == 0 ? "agenda-count" : null)">@sentence</p>
+        }
+      }
+    </div>
+    @if (!IsFormative && HeldSeat is null && !_previewFailed && _preview is { NothingToDecide: null } preview)
+    {
+      var optional = preview.Lines.Where(line => !line.IsClosing).ToArray();
+      @if (optional.Length > 0)
+      {
+        <ul class="agenda-lines">
+          @foreach (var line in optional)
+          {
+            <li>@line.EpaCode — @line.EpaTitle <span class="muted">· @CommitteeAgendaText.StatusLabel(line.Status)</span></li>
+          }
+        </ul>
+      }
+      @foreach (var note in CommitteeAgendaText.PreviewNotes(preview))
+      {
+        <p class="muted">@note</p>
+      }
+    }
+  };
+
+  // ---- Create ----------------------------------------------------------------------------------------------------------
+
+  private async Task CreateAsync()
+  {
+    // A second press while one runs sends nothing (T234).
+    if (_creating || HeldSeat is not null)
+    {
+      return;
+    }
+
+    _refusal = null;
+    _refusalSeat = null;
+    _fieldErrors.Clear();
+    _messages.Clear();
+
+    var lines = CheckFields();
+    if (lines.Count > 0)
+    {
+      Refuse(lines);
+      return;
+    }
+
+    var period = SelectedPeriod!;
+    _creating = true;
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var formative = IsFormative;
+      var type = formative
+          ? CommitteeReviewTypes.DefaultFor(SitsAsBody, period.Semester)
+          : Enum.Parse<CommitteeReviewType>(_model.TypeKey);
+      var review = await Sender.Send(new ScheduleCommitteeReviewCommand(
+          _model.TraineeUserId,
+          _model.PanelId!.Value,
+          period.AcademicYear,
+          period.Semester,
+          _model.From!.Value,
+          _model.To!.Value,
+          _model.ScheduledOn!.Value,
+          authState.User,
+          formative,
+          type));
+
+      // Flow 07's review page, whose h1 takes the focus on arrival (FocusOnNavigate).
+      NavigationManager.NavigateTo(ReviewLinks.Review(review.Id));
+    }
+    catch (FluentValidation.ValidationException validation)
+    {
+      Refuse(validation.Errors
+          .Select(failure => new RefusalLine(FieldOfProperty(failure.PropertyName), failure.ErrorMessage))
+          .DistinctBy(line => line.Text)
+          .ToArray());
+    }
+    catch (CommitteeRefusedException refusal)
+    {
+      // The handler's own refusal, in its words (S4). Any other InvalidOperationException is the framework's, whose text
+      // never reaches the page (T364, build review R4; T338): it falls to the fixed sentence below.
+      await RefuseInWombatsWordsAsync(refusal.Message);
+    }
+    catch (UnauthorizedAccessException refusal)
+    {
+      // The scope refusal, in the handler's words: it names no field the caller could fix.
+      Refuse([new RefusalLine(null, refusal.Message)]);
+    }
+    catch (Exception exception)
+    {
+      // T338: an unexpected failure is a fixed sentence, and the failure goes to the log.
+      Logger.LogError(exception, "A committee review could not be scheduled.");
+      Refuse([new RefusalLine(null, ScheduleWords.CreateFailed)]);
+    }
+    finally
+    {
+      _creating = false;
+    }
+  }
+
+  /// <summary>The page's own checks, in field order, each beside its field (C7, T324). None points at a disabled control.</summary>
+  private List<RefusalLine> CheckFields()
+  {
+    var lines = new List<RefusalLine>();
+    if (_model.PanelId is null || SelectedPanel is null)
+    {
+      lines.Add(new RefusalLine(PanelId, ScheduleWords.ChoosePanel));
+    }
+    else if (!TraineeIsOffered)
+    {
+      // The select's value arrives from the browser: a value the picker never offered is never sent.
+      lines.Add(new RefusalLine(TraineeId, ScheduleWords.ChooseTrainee));
+    }
+
+    if (SelectedPeriod is null)
+    {
+      lines.Add(new RefusalLine(PeriodId, ScheduleWords.ChoosePeriod));
+    }
+
+    if (_model.From is null)
+    {
+      lines.Add(new RefusalLine(FromId, ScheduleWords.ChooseWindowStart));
+    }
+
+    if (_model.To is null)
+    {
+      lines.Add(new RefusalLine(ToId, ScheduleWords.ChooseWindowEnd));
+    }
+    else if (_model.From is { } from && _model.To < from)
+    {
+      lines.Add(new RefusalLine(ToId, ScheduleCommitteeReviewCommandHandler.WindowEndsBeforeItStarts(from)));
+    }
+
+    if (_model.ScheduledOn is null)
+    {
+      lines.Add(new RefusalLine(ScheduledId, ScheduleWords.ChooseScheduledOn));
+    }
+
+    return lines;
+  }
+
+  /// <summary>
+  /// A handler's own refusal, shown as it is (S4), beside the field it is about: NothingToDecide beside Panel, a type the
+  /// panel no longer allows beside Review type. The duplicate's race (C7, F5) re-reads the seat, so the aside turns to
+  /// Already held, and the summary offers the review in the way.
+  /// </summary>
+  private async Task RefuseInWombatsWordsAsync(string message)
+  {
+    if (_preview?.NothingToDecide == message || message.Contains("decides no EPA on this trainee's curriculum", StringComparison.Ordinal))
+    {
+      Refuse([new RefusalLine(PanelId, message)]);
+      return;
+    }
+
+    if (message == CommitteeReviewTypes.EntrustmentOnlyNotAtSemester2 || message == CommitteeReviewTypes.UnknownType ||
+        message.Contains("decides entrustment only: a review before it is an entrustment-only review", StringComparison.Ordinal))
+    {
+      Refuse([new RefusalLine(TypeId, message)]);
+      return;
+    }
+
+    await ReadAgendaAsync();
+    _refusalSeat = HeldSeat;
+    Refuse([new RefusalLine(null, message)]);
+  }
+
+  private void Refuse(IReadOnlyList<RefusalLine> lines)
+  {
+    foreach (var line in lines)
+    {
+      if (line.FieldId is { } fieldId && _fieldErrors.TryAdd(fieldId, line.Text) && ModelFieldOf(fieldId) is { } field)
+      {
+        _messages.Add(field, line.Text);
+      }
+    }
+
+    _editContext.NotifyValidationStateChanged();
+
+    _refusal = lines.Select(line => line.FieldId is { } fieldId ? line with { Text = $"{LabelOf(fieldId)}: {line.Text}" } : line).ToArray();
+    _focusSummary = true;
+  }
+
+  private static string? FieldOfProperty(string propertyName) => propertyName switch
+  {
+    nameof(ScheduleCommitteeReviewCommand.PanelId) => PanelId,
+    nameof(ScheduleCommitteeReviewCommand.TraineeUserId) => TraineeId,
+    nameof(ScheduleCommitteeReviewCommand.AcademicYear) or nameof(ScheduleCommitteeReviewCommand.Semester) => PeriodId,
+    nameof(ScheduleCommitteeReviewCommand.ReviewPeriodFrom) => FromId,
+    nameof(ScheduleCommitteeReviewCommand.ReviewPeriodTo) => ToId,
+    nameof(ScheduleCommitteeReviewCommand.ScheduledOn) => ScheduledId,
+    nameof(ScheduleCommitteeReviewCommand.ReviewType) => TypeId,
+    _ => null
+  };
+
+  private static string LabelOf(string fieldId) => fieldId switch
+  {
+    PanelId => "Panel",
+    TraineeId => "Trainee",
+    PeriodId => "Period",
+    FromId => "Evidence window, From",
+    ToId => "Evidence window, To",
+    ScheduledId => "Scheduled on",
+    _ => "Review type"
+  };
+
+  /// <summary>A refused group's line focuses its first radio (S6); any other its control.</summary>
+  private string FocusTargetOf(string fieldId)
+    => fieldId == TypeId ? TypeInputId(TypeChoices.First().Key) : fieldId;
+
+  private async Task FocusFieldAsync(string fieldId) => await PageFocus.FocusByIdAsync(JS, FocusTargetOf(fieldId));
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusSummary && _refusal is not null)
+    {
+      _focusSummary = false;
+      await _summary.FocusAsync();
+    }
+  }
+
+  // ---- A field's marks -------------------------------------------------------------------------------------------------
+
+  private bool HasError(string fieldId) => _fieldErrors.ContainsKey(fieldId);
+
+  private static string MessageId(string fieldId) => $"{fieldId}-msg";
+
+  /// <summary>A changed value drops its marks and its message at once; the summary stays until the next press.</summary>
+  private void ClearField(string fieldId)
+  {
+    if (_fieldErrors.Remove(fieldId) && ModelFieldOf(fieldId) is { } field)
+    {
+      _messages.Clear(field);
+      _editContext.NotifyValidationStateChanged();
+    }
+  }
+
+  /// <summary>
+  /// The model's field behind a control, whose messages in the EditContext give the control Blazor's own marks, .invalid
+  /// and aria-invalid, which app.css styles with the danger border and stripe (DESIGN.md § Form system, T236). Review type
+  /// is radios, which take no mark: its message says it.
+  /// </summary>
+  private FieldIdentifier? ModelFieldOf(string fieldId) => fieldId switch
+  {
+    PanelId => new FieldIdentifier(_model, nameof(ScheduleModel.PanelId)),
+    TraineeId => new FieldIdentifier(_model, nameof(ScheduleModel.TraineeUserId)),
+    PeriodId => new FieldIdentifier(_model, nameof(ScheduleModel.PeriodKey)),
+    FromId => new FieldIdentifier(_model, nameof(ScheduleModel.From)),
+    ToId => new FieldIdentifier(_model, nameof(ScheduleModel.To)),
+    ScheduledId => new FieldIdentifier(_model, nameof(ScheduleModel.ScheduledOn)),
+    _ => null
+  };
+
+
+  private string? DescribedBy(string fieldId, string? help, string? noteId = null)
+    => HasError(fieldId)
+        ? FieldHelp.DescribedBy(fieldId, help, noteId, MessageId(fieldId), SummaryId)
+        : FieldHelp.DescribedBy(fieldId, help, noteId);
+
+  private RenderFragment FieldMessage(string fieldId) => __builder =>
+  {
+    @if (_fieldErrors.TryGetValue(fieldId, out var message))
+    {
+      <div class="validation-message" id="@MessageId(fieldId)">@message</div>
+    }
+  };
+
+  private sealed record TypeChoice(string Key, string Label, string Help);
+
+  private sealed record RefusalLine(string? FieldId, string Text);
+
+  private sealed class ScheduleModel
+  {
+    public int? PanelId { get; set; }
+
+    public string TraineeUserId { get; set; } = string.Empty;
+
+    // "2026-1"; empty until one is chosen or the link names one (C4).
+    public string PeriodKey { get; set; } = string.Empty;
+
+    // Filled from the period whenever one is chosen, and editable after (T131, Decision 4).
+    public DateOnly? From { get; set; }
+
+    public DateOnly? To { get; set; }
+
+    public DateOnly? ScheduledOn { get; set; }
+
+    // A CommitteeReviewType's name, or FormativeKey.
+    public string TypeKey { get; set; } = string.Empty;
+  }
+}

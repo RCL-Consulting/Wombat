@@ -171,10 +171,19 @@ public sealed class EntrustmentDecisionsDuePostgresTests : IAsyncLifetime
                 EntrustmentDecisionDueStatus.Scheduled, "an annual EPA's window is the year, which the new review decides");
 
             // T131 slice 6 review: the seat the open semester-2 review holds is read on Postgres by the scheduling
-            // handler's predicate, and an annual EPA schedules the year's last sitting.
-            (annualInSemester1.SchedulePeriodKey, annualInSemester1.HoldingReviewId, annualInSemester1.MayOpenHoldingReview)
-                .Should().Be(("2026-2", secondReviewId, true));
-            mine2.Single(item => item.EpaCode == "PAED-002").HoldingReviewId.Should().Be(secondReviewId);
+            // handler's predicate. T364, F1: a row schedules its own period, an annual EPA's in semester 1 included, so
+            // the semester-2 review holds no seat for it there.
+            (annualInSemester1.SchedulePeriodKey, annualInSemester1.HoldingReviewId)
+                .Should().Be(("2026-1", (int?)null));
+            var held = mine2.Single(item => item.EpaCode == "PAED-002");
+            (held.HoldingReviewId, held.MayOpenHoldingReview, held.HoldingPanelName, held.ReviewPanelName)
+                .Should().Be((secondReviewId, true, "T131 slice 6 CCC", "T131 slice 6 CCC"), "T259: the panel the review sits before");
+
+            // T364, C2: the trainee line, read on Postgres: the seat held by the semester-2 review, its type and day.
+            var line = semester2.Trainees.Single(trainee => trainee.UserId == TraineeUserId).SeatLines.Should().ContainSingle().Subject;
+            line.Should().Be(new DecisionsDueSeatLineDto(
+                panelId, "T131 slice 6 CCC", secondReviewId, "Annual progression", "T131 slice 6 CCC", new DateOnly(2026, 7, 2), true));
+            semester2.Trainees.Single(trainee => trainee.UserId == TraineeUserId).CheckIns.Should().BeEmpty();
 
             // The STAR revoked: its window is to be decided again.
             await using (var db = NewContext(schema))

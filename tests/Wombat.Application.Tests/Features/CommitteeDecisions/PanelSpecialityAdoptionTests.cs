@@ -144,7 +144,7 @@ public sealed class PanelSpecialityAdoptionTests
 
         speciality.Should().BeOfType<UnauthorizedAccessException>()
             .Which.Message.Should().Be("Only an institutional administrator can say which College committee a panel sits as.");
-        institutional.Should().BeOfType<InvalidOperationException>().Which.Message.Should().Be(NotAdopted);
+        institutional.Should().BeOfType<CommitteeRefusedException>().Which.Message.Should().Be(NotAdopted);
         await SaveAndClearAsAuditPipelineWouldAsync(db);
         (await StoredPanelsAsync()).Should().BeEmpty();
     }
@@ -342,7 +342,7 @@ public sealed class PanelSpecialityAdoptionTests
         db.ChangeTracker.Clear();
 
         var principal = Principal("SpecialityAdmin of Surgery");
-        (await new GetDecisionPanelByIdQueryHandler(db).Handle(new GetDecisionPanelByIdQuery(panel.Id, principal), CancellationToken.None))
+        (await new GetDecisionPanelByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(new GetDecisionPanelByIdQuery(panel.Id, principal), CancellationToken.None))
             .Should().NotBeNull();
 
         await new UpdateDecisionPanelCommandHandler(db, Seats).Handle(

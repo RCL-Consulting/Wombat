@@ -36,6 +36,14 @@ T273 (an EPA no longer in force marked in the sampling list and the staged lines
 check-in reads "Formative check-in" wherever its type shows), T329 at 4.15 (a skeleton while the review loads, a fixed
 sentence when it fails), T260 (the notes about who may act re-read after every action) and T324 (a missing
 rationale refused in Wombat's words).
+T364 (flow 08, 2026-10-13) moved scheduling off Committee reviews onto a page of its own, `/committee/reviews/new`
+(ScheduleReview.razor), which the steps that schedule now name: 331 steps, 72 page files and 84 templates. Its build
+closes, for its replay to confirm, the gaps the steps record: F-2.22a (T260: a panel's page names the panel, 2.22),
+F-4.1a (T280: the pager's page-size select is labelled "Decisions per page", 4.1), F-4.8a (T309 item 1: the Agenda
+says the seat is held before Create, 4.8) and F-4.49a (T309 item 3: Formative only folded into Review type as
+Formative check-in, 4.49); and the flow's halves of T259 (the panel a holding review sits before), T264 (the focus
+after a page turn on Decisions due), T272 and T338 (fixed words for a failure), T324 (the panel's and the schedule's
+field messages) and T329 (no "no routing" while Decision panels loads).
 
 ## Pages
 
@@ -93,12 +101,13 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/admin/trainees/edit` | Admin/Trainees/TraineeProfileEdit.razor | Administrator, InstitutionalAdmin | 2.29, 2.30, 5.16, 5.17, 5.27, 6.34, 6.36, A.7.9 |
 | `/admin/users` | Admin/Users/UsersList.razor | Administrator, InstitutionalAdmin | 2.12, 2.13, 2.28, 2.44, 5.10, A.1.14, A.4.5, A.5.1, A.6.4, A.6.9, A.7.9 |
 | `/admin/users/{UserId}` | Admin/Users/UserDetail.razor | Administrator, InstitutionalAdmin | 2.12, 2.13, 2.28, 5.10, 5.17, A.4.5, A.5.5, A.6.4, A.6.7, A.6.9, A.7.9, A.7.14 |
-| `/committee/decisions-due` | CommitteeDecisions/DecisionsDue.razor | Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 4.1, 4.2, 4.3, 4.4, 4.5, 4.9, 4.10, 4.12, 4.34, 4.37, 5.1, 5.2, A.7.5, A.7.7, A.7.8 |
+| `/committee/decisions-due` | CommitteeDecisions/DecisionsDue.razor | Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 4.1, 4.2, 4.3, 4.4, 4.5, 4.9, 4.10, 4.12, 4.34, 4.37, 4.49, 5.1, 5.2, A.1.10, A.7.5, A.7.7, A.7.8 |
 | `/committee/my-reviews` | CommitteeDecisions/MyReviews.razor | Trainee, Administrator | 4.41, 4.42, 4.43, 4.48, 4.51, 5.8, 5.22 |
 | `/committee/panels` | CommitteeDecisions/PanelsList.razor | CommitteeMember, Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 2.20, 2.23, 2.24, 2.25, 2.32, 2.35, 2.37, 4.13, 4.14, A.7.7 |
 | `/committee/panels/new`, `/committee/panels/{PanelId:int}` | CommitteeDecisions/PanelEdit.razor | Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 2.21, 2.22, 2.23, 2.25, 2.32, 4.13 |
-| `/committee/reviews` | CommitteeDecisions/ReviewsSchedule.razor | Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, CommitteeMember | 4.6, 4.7, 4.8, 4.9, 4.10, 4.11, 4.12, 4.15, 4.22, 4.26, 4.28, 4.30, 4.31, 4.32, 4.33, 4.44, 4.45, 4.49, 5.2, 5.3, 5.29, A.1.10, A.1.14, A.7.6, A.7.8, A.7.14 |
-| `/committee/reviews/{ReviewId:int}` | CommitteeDecisions/ReviewDetail.razor | CommitteeMember, Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 4.6, 4.7, 4.9, 4.10, 4.11, 4.15, 4.16, 4.17, 4.18, 4.19, 4.20, 4.22, 4.23, 4.24, 4.25, 4.26, 4.27, 4.28, 4.29, 4.30, 4.31, 4.32, 4.33, 4.41, 4.44, 4.45, 4.46, 4.47, 4.49, 4.50, 5.2, 5.3, 5.4, 5.5, 5.6, A.1.10, A.1.14, A.7.6, A.7.13 |
+| `/committee/reviews` | CommitteeDecisions/ReviewsSchedule.razor | Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, CommitteeMember | 4.6, 4.7, 4.8, 4.11, 4.12, 4.15, 4.22, 4.26, 4.28, 4.30, 4.31, 4.32, 4.33, 4.44, 4.45, 4.49, 5.3, 5.29, A.1.10, A.1.14, A.7.6, A.7.8, A.7.14 |
+| `/committee/reviews/new` | CommitteeDecisions/ScheduleReview.razor | Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 4.2, 4.6, 4.7, 4.8, 4.9, 4.10, 4.49, 5.2, 5.29, A.1.10 |
+| `/committee/reviews/{ReviewId:int}` | CommitteeDecisions/ReviewDetail.razor | CommitteeMember, Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 4.6, 4.7, 4.9, 4.10, 4.11, 4.15, 4.16, 4.17, 4.18, 4.19, 4.20, 4.22, 4.23, 4.24, 4.25, 4.26, 4.27, 4.28, 4.29, 4.30, 4.31, 4.32, 4.33, 4.41, 4.44, 4.45, 4.46, 4.47, 4.49, 4.50, 5.2, 5.3, 5.4, 5.5, 5.6, A.1.10, A.1.14, A.7.6, A.7.13, A.7.14 |
 | `/Error` | Error.razor | Anyone, signed in or not (static; T321) | A.5.8 |
 | `/msf/campaigns` | MultiSourceFeedback/CampaignsList.razor | Coordinator, Administrator | 3.34, 3.38, 3.41, 3.46, 3.49, A.4.7, A.7.5 |
 | `/msf/campaigns/new`, `/msf/campaigns/{CampaignId:int}` | MultiSourceFeedback/CampaignEdit.razor | Coordinator, Administrator | 3.34, 3.35, 3.36, 3.37, 3.38, 3.43, 3.44, A.7.5 |
@@ -118,7 +127,7 @@ institution, speciality or the record's own people; where that decides what a pe
 
 ## Not played
 
-No template is unplayed. Every one of the 83 templates is named by at least one step's `Route:` line, so this section
+No template is unplayed. Every one of the 84 templates is named by at least one step's `Route:` line, so this section
 has no rows. A row added here must name, in backticks, a template that no step plays, with its reason (T294).
 
 ## Flows and states not played
@@ -280,7 +289,7 @@ and Assessor) appears under each role for the jobs done in it.
 | Form the review panel, and see who decides each EPA | 2.20, 2.21, 2.22, 2.24 | `/committee/panels`, `/committee/panels/new`, `/committee/panels/{PanelId:int}` |
 | Change which College committee a panel sits as | 4.13 | `/committee/panels`, `/committee/panels/{PanelId:int}` |
 | Read my institution's audit trail | 3.55, 3.56, 4.38 | `/admin/audit`, `/admin/audit/{Id:guid}` |
-| See what the committee must decide this period, and what is scheduled | 4.2, 4.12, 4.34 | `/committee/decisions-due`, `/committee/reviews` |
+| See what the committee must decide this period, and what is scheduled | 4.2, 4.12, 4.34 | `/committee/decisions-due`, `/committee/reviews/new`, `/committee/reviews` |
 | Read a decided review before the chair ratifies it | 4.26 | `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
 | Read the STARs the committee issued, and download a certificate | 4.35, 5.7 | `/`, `/admin/entrustment-decisions` |
 | Export a registrar's portfolio | 5.10, 5.11 | `/admin/users`, `/admin/users/{UserId}`, `/portfolio/export/{TraineeUserId}` |
@@ -294,7 +303,7 @@ and Assessor) appears under each role for the jobs done in it.
 | Reset a registrar's password | A.4.5 | `/admin/users`, `/admin/users/{UserId}` |
 | Lock a consultant out, and let him back in | A.6.4, A.6.7 | `/admin/users`, `/admin/users/{UserId}` |
 | Find the Administrator's pages closed to me | A.5.2 | `/admin/institutions`, `/admin/jobs`, `/access-denied` |
-| Do my administration on a phone, and check its contrast | A.7.9, A.7.14 | `/`, `/admin/users`, `/admin/users/{UserId}`, `/admin/trainees`, `/admin/trainees/edit`, `/admin/activity-types/{ActivityTypeId:int}`, `/account/login`, `/account/profile`, `/account/profile/submit`, `/account/change-password`, `/committee/reviews` |
+| Do my administration on a phone, and check its contrast | A.7.9, A.7.14 | `/`, `/admin/users`, `/admin/users/{UserId}`, `/admin/trainees`, `/admin/trainees/edit`, `/admin/activity-types/{ActivityTypeId:int}`, `/account/login`, `/account/profile`, `/account/profile/submit`, `/account/change-password`, `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
 
 ### SpecialityAdmin (Dr Refilwe Mokoena, Paediatrics)
 
@@ -305,7 +314,7 @@ and Assessor) appears under each role for the jobs done in it.
 | Read my programme's dashboard: what waits for an assessor, the registrars, the targets by EPA | 2.38, 3.53, 4.3 | `/` |
 | See which requests wait for an assessor, filter them by assessor and how overdue | 3.54c | `/programme/waiting` |
 | See what the committee must decide in my speciality | 4.3 | `/committee/decisions-due` |
-| Schedule a registrar's review from what is due | 4.9 | `/committee/decisions-due`, `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
+| Schedule a registrar's review from what is due | 4.9 | `/committee/decisions-due`, `/committee/reviews/new`, `/committee/reviews/{ReviewId:int}` |
 | Revoke a STAR issued in error | 4.36 | `/admin/entrustment-decisions` |
 | Find Programme trainees, Waiting for assessors and Entrustment decisions in my menu, and no STAR review queue | 3.53, A.5.12 | `/` |
 | Review my account | 2.41 | `/account/profile` |
@@ -319,7 +328,7 @@ and Assessor) appears under each role for the jobs done in it.
 | See which panels I may create | 2.25 | `/committee/panels`, `/committee/panels/new` |
 | Read my sub-speciality's dashboard: what waits for an assessor, the registrars, the targets by EPA | 2.38, 3.54, 4.4 | `/` |
 | See what the committee must decide in my sub-speciality | 4.4 | `/committee/decisions-due` |
-| Schedule a registrar's review from what is due | 4.10 | `/committee/decisions-due`, `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
+| Schedule a registrar's review from what is due | 4.10 | `/committee/decisions-due`, `/committee/reviews/new`, `/committee/reviews/{ReviewId:int}` |
 | Find a revoked STAR and what must be decided again | 4.37 | `/admin/entrustment-decisions`, `/committee/decisions-due` |
 | Review my account | 2.41 | `/account/profile` |
 | Do my work on a phone | A.7.8 | `/`, `/committee/reviews`, `/committee/decisions-due` |
@@ -341,12 +350,12 @@ and Assessor) appears under each role for the jobs done in it.
 | Read an MSF report, close the campaign and release it to the registrar | 3.41, 3.44, 3.46 | `/msf/campaigns`, `/msf/reports/{CampaignId:int}`, `/msf/campaigns/{CampaignId:int}` |
 | See which registrars the programme's MSF has covered | 3.49 | `/msf/campaigns`, `/msf/coverage` |
 | See what the committee must decide this period | 4.1, 5.1 | `/`, `/committee/decisions-due` |
-| Schedule the annual reviews, and be stopped from a second for the same period | 4.6, 4.7, 4.8 | `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
+| Schedule the annual reviews, and be stopped from a second for the same period | 4.6, 4.7, 4.8 | `/committee/reviews`, `/committee/reviews/new`, `/committee/reviews/{ReviewId:int}` |
 | Read the ratified schedule and a review's outcome | 4.33 | `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
-| Schedule a formative check-in | 4.49, A.1.10 | `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
-| Schedule a registrar's pre-graduation review | 5.2 | `/committee/decisions-due`, `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
+| Schedule a formative check-in | 4.49, A.1.10 | `/committee/reviews`, `/committee/reviews/new`, `/committee/reviews/{ReviewId:int}`, `/committee/decisions-due` |
+| Schedule a registrar's pre-graduation review | 5.2 | `/committee/decisions-due`, `/committee/reviews/new`, `/committee/reviews/{ReviewId:int}` |
 | Reproduce a registrar's portfolio export | 5.12 | `/portfolio/export/{TraineeUserId}` |
-| Check that an ended programme cannot be put before the panel | 5.29 | `/committee/reviews` |
+| Check that an ended programme cannot be put before the panel | 5.29 | `/committee/reviews`, `/committee/reviews/new` |
 | Decide a registrar's data-rights request: approve an export, reject a correction | A.1.3, A.1.8, A.5.7 | `/admin/data-rights`, `/admin/data-rights/{Id:guid}` |
 | Find that I cannot download a registrar's data export | A.1.4 | `/account/data-rights/download/{id:guid}` |
 | Stop, then restart, my weekly digest email | A.2.3, A.2.5 | `/account/data-rights` |

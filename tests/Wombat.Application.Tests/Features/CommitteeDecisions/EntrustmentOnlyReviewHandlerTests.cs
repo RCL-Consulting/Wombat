@@ -128,6 +128,10 @@ public sealed class EntrustmentOnlyReviewHandlerTests
 
         preview.TraineeHasCurriculum.Should().BeTrue();
         preview.PanelDecidesAnything.Should().BeFalse();
+        preview.NothingToDecide.Should().Be(
+            "Neonatal CCC decides no EPA on this trainee's curriculum, so an entrustment-only review before it would have " +
+            "nothing to decide.",
+            "the preview says the handler's own sentence first (T364, S1)");
         (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be(
             "Neonatal CCC decides no EPA on this trainee's curriculum, so an entrustment-only review before it would have " +
             "nothing to decide.");
@@ -141,10 +145,11 @@ public sealed class EntrustmentOnlyReviewHandlerTests
         // before it, and a progression review before either panel is never refused for it.
         (await ScheduleAsync(db, GeneralPanel, semester: 1, CommitteeReviewType.EntrustmentOnly, TraineeWithoutNeonatal))
             .ReviewType.Should().Be(CommitteeReviewType.EntrustmentOnly);
-        (await new PreviewCommitteeAgendaQueryHandler(db, FakeUserDirectory.TraineesOf(db)).Handle(
-                new PreviewCommitteeAgendaQuery(TraineeWithoutNeonatal, GeneralPanel, 2026, 2, TestPrincipals.Coordinator(InstitutionA)),
-                CancellationToken.None))
-            .PanelDecidesAnything.Should().BeTrue();
+        var general = await new PreviewCommitteeAgendaQueryHandler(db, FakeUserDirectory.TraineesOf(db)).Handle(
+            new PreviewCommitteeAgendaQuery(TraineeWithoutNeonatal, GeneralPanel, 2026, 2, TestPrincipals.Coordinator(InstitutionA)),
+            CancellationToken.None);
+        general.PanelDecidesAnything.Should().BeTrue();
+        general.NothingToDecide.Should().BeNull();
     }
 
     // ─── Recording and ratifying ─────────────────────────────────────────────

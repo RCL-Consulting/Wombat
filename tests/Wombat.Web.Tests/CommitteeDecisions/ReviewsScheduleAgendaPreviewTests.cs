@@ -15,8 +15,9 @@ using Wombat.Web.Services;
 namespace Wombat.Web.Tests.CommitteeDecisions;
 
 /// <summary>
-/// The scheduling form asks for the period the review sits for (T131, Decision 4): choosing it fills the evidence window,
-/// which stays editable, and the form previews the agenda the planner will give the review.
+/// The schedule page asks for the period the review sits for (T131, Decision 4): choosing it fills the evidence window,
+/// which stays editable, and the page previews the agenda the planner will give the review, in the aside's one live
+/// region (T364, S6). Until a period is chosen there is none (C4), and the six offered are Decisions due's (M5).
 /// </summary>
 public sealed partial class ReviewsScheduleAgendaPreviewTests : TestContext
 {
@@ -33,13 +34,14 @@ public sealed partial class ReviewsScheduleAgendaPreviewTests : TestContext
         auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "coordinator-a"));
 
         Services.AddSingleton<IScopedSender>(_sender);
+        Services.AddSingleton(TimeProvider.System);
         _sender
             .On<ListDecisionPanelsQuery>(_ => new[]
             {
                 new DecisionPanelSummaryDto(Panel, "General CCC", DecisionPanelScope.Institution, 1, null, 3)
             })
             .On<GetCommitteeReviewsAccessQuery>(_ => new CommitteeReviewsAccessDto(MaySchedule: true, TraineeNote: null))
-            .On<ListReviewsForPanelQuery>(_ => Array.Empty<CommitteeReviewListItemDto>())
+            .On<GetSchedulingSeatQuery>(_ => null)
             .On<ListSchedulableTraineesQuery>(_ => new[] { new SchedulableTraineeDto("paeds-a", "Palesa Paeds") })
             .On<PreviewCommitteeAgendaQuery>(query => Preview(query.AcademicYear, query.Semester))
             .On<ScheduleCommitteeReviewCommand>(command => new CommitteeReviewListItemDto(
@@ -53,15 +55,19 @@ public sealed partial class ReviewsScheduleAgendaPreviewTests : TestContext
     }
 
     [Fact]
-    public void ThePeriod_DefaultsToTheCurrentOne_AndFillsTheEvidenceWindow()
+    public void ThePeriod_StartsEmpty_OffersDecisionsDuesSix_AndChoosingOneFillsTheEvidenceWindow()
     {
         var cut = RenderForm();
 
-        cut.Find("#review-period").GetAttribute("value").Should().Be(_current.Key);
+        cut.Find("#review-period").GetAttribute("value").Should().BeNullOrEmpty("C4: nothing is chosen for the reader");
+        cut.Find("#review-from").GetAttribute("value").Should().BeNullOrEmpty();
+        cut.FindAll("#review-period option").Select(option => option.GetAttribute("value"))
+            .Should().Equal(new[] { string.Empty }.Concat(CommitteeReviewPeriods.Around(QuotaCalendar.Today()).Select(period => period.Key)));
+
+        cut.Find("#review-period").Change(_current.Key);
+
         cut.Find("#review-from").GetAttribute("value").Should().Be(_current.WindowFrom.ToString("yyyy-MM-dd"));
         cut.Find("#review-to").GetAttribute("value").Should().Be(_current.WindowTo.ToString("yyyy-MM-dd"));
-        cut.FindAll("#review-period option").Select(option => option.GetAttribute("value"))
-            .Should().Equal(CommitteeReviewPeriods.Around(QuotaCalendar.Today()).Select(period => period.Key));
     }
 
     [Fact]
@@ -151,15 +157,20 @@ public sealed partial class ReviewsScheduleAgendaPreviewTests : TestContext
     [Fact]
     public void OnlyThePreviewsSummary_IsALiveRegion()
     {
-        // A screen reader hears what changed when a choice changes the preview, not every optional line and note again.
+        // A screen reader hears what changed when a choice changes the preview, not every optional line and note again:
+        // one narrow live region, with no role="alert" inside it (T364, S6).
         var cut = RenderForm();
         ChoosePanelAndTrainee(cut);
 
-        var live = cut.FindAll("[role=status]").Should().ContainSingle().Subject;
+        var live = cut.FindAll("#agenda-preview [aria-live]").Should().ContainSingle().Subject;
         live.Id.Should().Be("agenda-preview-summary");
+        live.GetAttribute("aria-live").Should().Be("polite");
+        live.ClassList.Should().Contain("agenda-live");
+        live.QuerySelectorAll("[role]").Should().BeEmpty();
         Text(live).Should().Contain("will be on the agenda").And.Contain("is due at this sitting")
             .And.NotContain("Due by year end").And.NotContain("schedule them separately");
         cut.Find("#agenda-preview").HasAttribute("role").Should().BeFalse();
+        cut.Find("#agenda-preview h2").TextContent.Should().Be("Agenda", "C10: an h2 for the section");
     }
 
     [Fact]
@@ -168,9 +179,9 @@ public sealed partial class ReviewsScheduleAgendaPreviewTests : TestContext
         var cut = RenderForm();
         ChoosePanelAndTrainee(cut);
 
-        cut.Find("#review-formative").Change(true);
+        cut.Find("#review-type-Formative").Change(true);
 
-        Text(cut.Find("#agenda-preview")).Should().Be("A formative review carries no agenda: it decides no EPA.");
+        Text(cut.Find("#agenda-preview")).Should().Be("Agenda A formative review carries no agenda: it decides no EPA.");
     }
 
     [Fact]
@@ -182,6 +193,7 @@ public sealed partial class ReviewsScheduleAgendaPreviewTests : TestContext
         cut.Find("#review-period").Change(earliest.Key);
 
         cut.Find("#review-panel").Closest("form")!.Submit();
+        cut.WaitForState(() => _sender.Received.OfType<ScheduleCommitteeReviewCommand>().Any());
 
         var command = _sender.Received.OfType<ScheduleCommitteeReviewCommand>().Should().ContainSingle().Subject;
         (command.AcademicYear, command.Semester).Should().Be((earliest.AcademicYear, earliest.Semester));
@@ -190,17 +202,20 @@ public sealed partial class ReviewsScheduleAgendaPreviewTests : TestContext
 
     // ---- Fixture ------------------------------------------------------------------------------------------------------
 
-    private IRenderedComponent<ReviewsSchedule> RenderForm()
+    private IRenderedComponent<ScheduleReview> RenderForm()
     {
-        var cut = RenderComponent<ReviewsSchedule>();
-        cut.WaitForState(() => cut.Markup.Contains("No reviews yet"));
-        cut.Find("button.btn-primary").Click();
+        var cut = RenderComponent<ScheduleReview>();
         cut.WaitForState(() => cut.FindAll("#review-period").Count == 1);
         return cut;
     }
 
-    private static void ChoosePanelAndTrainee(IRenderedComponent<ReviewsSchedule> cut, string until = "will be on the agenda")
+    private void ChoosePanelAndTrainee(IRenderedComponent<ScheduleReview> cut, string until = "will be on the agenda")
     {
+        if (string.IsNullOrEmpty(cut.Find("#review-period").GetAttribute("value")))
+        {
+            cut.Find("#review-period").Change(_current.Key);
+        }
+
         cut.Find("#review-panel").Change(Panel.ToString());
         cut.WaitForState(() => cut.FindAll("select#review-trainee option[value='paeds-a']").Count == 1);
         cut.Find("#review-trainee").Change("paeds-a");

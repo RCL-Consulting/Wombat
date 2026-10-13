@@ -2,203 +2,338 @@
 @attribute [Authorize(Roles = "Coordinator,Administrator,InstitutionalAdmin,SpecialityAdmin,SubSpecialityAdmin")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject ILogger<DecisionsDue> Logger
 @using Wombat.Application.Features.Curricula.Quota
 
-@* T131 slice 6: which EPAs each trainee's committee is to decide in a period, and where each decision stands, from the
-   agenda lines, the STARs and each EPA's cadence (GetEntrustmentDecisionsDueQuery). For the roles that schedule reviews;
-   a CommitteeMember is not offered it. *@
+@*
+  Decisions due (T131 slice 6; T364, flow 08, lane D; boards R2-3): which EPAs each trainee's committee is to decide in a
+  period, and where each decision stands (GetEntrustmentDecisionsDueQuery). For the roles that schedule reviews; a
+  CommitteeMember is not offered it.
+
+  - The filters are a GET form applied with Show (F2; DESIGN.md § List page): Institution (an Administrator's), Period,
+    Trainee (Q2), Status and EPA, carried in the address. Period and Institution choose what is read; Trainee, Status and
+    EPA narrow it, and Clear filters drops those three. Nothing acts on change.
+  - By EPA's counts sit in .rung-legend's fold (M3, M8), stack-wide; the filters do not narrow them.
+  - The Decisions heading says the page ("Decisions, page 2 of 4") and takes the focus after Show and after a page turn
+    (C9, T264); the count under it is a status region.
+  - With one trainee filtered, the trainee line (C2): one line for each panel that can hold the period, read by the
+    scheduling handler's seat rule, and each open formative check-in.
+  - Each row carries one action (C3): Open review #n where its review holds it, Schedule where it can be scheduled, filled
+    through ReviewLinks.Schedule with the row's own period, an ended one included (F1), and this page's address to return
+    to; else why there is none.
+*@
 
 <PageTitle>Decisions due · Wombat</PageTitle>
 
-<PageHeader Title="Decisions due" Subtitle="Which EPAs each trainee's committee is to decide in a period, and where each decision stands." />
+<div class="committee-calendar">
+  <PageHeader Title="Decisions due" Subtitle="@DecisionsDueText.Subtitle" />
 
-<div class="search-container shadow mb-3">
-  <div class="search-grid">
-    @if (_isAdministrator)
-    {
+  @* Present from the first render, so its words are announced when they come (flow 04's C11). *@
+  <p class="visually-hidden" role="status">@(_loading ? DecisionsDueText.Loading : null)</p>
+
+  @if (ChoosingInstitution)
+  {
+    <p id="due-intro" class="muted">@DecisionsDueText.AdministratorIntro</p>
+  }
+  else if (!_loading && _error is null && _result is { Items.Count: > 0 } intro)
+  {
+    <p id="due-intro" class="muted">@DecisionsDueText.Intro(intro)</p>
+  }
+
+  <form class="search-container" method="get" aria-label="Filter Decisions due" @onsubmit="ShowAsync" @onsubmit:preventDefault="true">
+    <div class="search-grid">
+      @if (_isAdministrator)
+      {
+        <div class="search-field">
+          <label for="due-institution">Institution</label>
+          <select id="due-institution" name="@DecisionsDueText.InstitutionKey" class="form-select" @bind="_institutionField">
+            <option value="">Select institution</option>
+            @foreach (var institution in _institutions)
+            {
+              <option value="@institution.Id">@institution.Name</option>
+            }
+          </select>
+        </div>
+      }
       <div class="search-field">
-        <label for="due-institution">Institution</label>
-        <select id="due-institution" class="form-select" value="@_institutionId" @onchange="OnInstitutionChangedAsync">
-          <option value="">Select institution</option>
-          @foreach (var institution in _institutions)
+        <label for="due-period">Period</label>
+        <select id="due-period" name="@DecisionsDueText.PeriodKey" class="form-select" aria-describedby="due-period-help" @bind="_periodField">
+          @foreach (var period in _periods)
           {
-            <option value="@institution.Id">@institution.Name</option>
+            <option value="@period.Key">@period.Label</option>
+          }
+        </select>
+        <small id="due-period-help" class="field-help">@DecisionsDueText.PeriodHelp</small>
+      </div>
+      <div class="search-field">
+        <label for="due-trainee">Trainee</label>
+        <select id="due-trainee" name="@DecisionsDueText.TraineeKey" class="form-select" @bind="_traineeField">
+          <option value="">@DecisionsDueText.EveryTrainee</option>
+          @foreach (var trainee in _result?.Trainees ?? [])
+          {
+            <option value="@trainee.UserId">@trainee.Name</option>
           }
         </select>
       </div>
-    }
-    <div class="search-field">
-      <label for="due-period">Period</label>
-      <select id="due-period" class="form-select" value="@_periodKey" @onchange="OnPeriodChangedAsync">
-        @foreach (var period in _periods)
+      <div class="search-field">
+        <label for="due-status">Status</label>
+        <select id="due-status" name="@DecisionsDueText.StatusKey" class="form-select" @bind="_statusField">
+          <option value="@DecisionsDueText.OutstandingValue">@DecisionsDueText.OutstandingOption</option>
+          <option value="@DecisionsDueText.EveryStatusValue">@DecisionsDueText.EveryStatusOption</option>
+          @foreach (var status in DecisionsDueText.FilterOrder)
+          {
+            <option value="@status">@DecisionsDueText.StatusLabel(status)</option>
+          }
+        </select>
+      </div>
+      <div class="search-field">
+        <label for="due-epa">EPA</label>
+        <select id="due-epa" name="@DecisionsDueText.EpaKey" class="form-select" @bind="_epaField">
+          <option value="">@DecisionsDueText.EveryEpa</option>
+          @foreach (var epa in _result?.ByEpa ?? [])
+          {
+            <option value="@epa.EpaId">@epa.EpaCode — @epa.EpaTitle</option>
+          }
+        </select>
+      </div>
+      <div class="search-field filter-actions">
+        <button type="submit" class="btn btn-primary">@DecisionsDueText.Show</button>
+        @if (CurrentAsked.IsFiltered)
         {
-          <option value="@period.Key">@period.Label</option>
+          <a class="btn btn-outline" href="@ClearHref">@DecisionsDueText.ClearFilters</a>
         }
-      </select>
+      </div>
     </div>
-    <div class="search-field">
-      <label for="due-status">Status</label>
-      <select id="due-status" class="form-select" value="@_statusFilter" @onchange="OnStatusChanged">
-        <option value="@OutstandingFilter">Outstanding: not yet decided</option>
-        <option value="@EveryStatusFilter">Every status</option>
-        @foreach (var status in DecisionsDueText.FilterOrder)
-        {
-          <option value="@status">@DecisionsDueText.StatusLabel(status)</option>
-        }
-      </select>
+  </form>
+
+  @if (_institutionsError is not null)
+  {
+    @* T338: an Administrator's institution list failed; the page says so, with Try again. *@
+    <StatePanel LoadError="@_institutionsError" OnRetry="LoadInstitutionsAsync">
+      <ChildContent></ChildContent>
+    </StatePanel>
+  }
+
+  @if (ChoosingInstitution)
+  {
+    <div id="due-choose-institution" class="detail-card detail-card--empty">
+      <div class="state-panel-title">@DecisionsDueText.ChooseInstitutionTitle</div>
+      <div class="state-panel-copy">@DecisionsDueText.ChooseInstitutionBody</div>
     </div>
-    <div class="search-field">
-      <label for="due-epa">EPA</label>
-      <select id="due-epa" class="form-select" value="@_epaFilter" @onchange="OnEpaChanged">
-        <option value="">Every EPA</option>
-        @foreach (var epa in EpaOptions)
-        {
-          <option value="@epa.EpaId">@epa.EpaCode — @epa.EpaTitle</option>
-        }
-      </select>
-    </div>
-  </div>
+  }
+  else
+  {
+    <StatePanel @ref="_panel"
+                IsLoading="_loading"
+                LoadError="@_error"
+                OnRetry="LoadAsync"
+                FocusAfterRetry="FocusHeadingAsync"
+                IsEmpty="@IsEmpty"
+                EmptyTitle="@EmptyTitle"
+                EmptyBody="@EmptyBody">
+      <LoadingContent>
+        @* The header at once, then skeletons: no Schedule or Open review until the read is in (C11, T329). *@
+        <section class="list-section" aria-busy="true">
+          <h2 class="list-section-title">@DecisionsDueText.ByEpaHeading</h2>
+          <div class="dashboard-card-skeleton" aria-hidden="true"><Skeleton Count="1" Height="2.75rem" /></div>
+        </section>
+        <section class="list-section" aria-busy="true">
+          <h2 class="list-section-title">@DecisionsDueText.ListHeading</h2>
+          <div class="dashboard-card-skeleton" aria-hidden="true"><Skeleton Count="4" Height="3rem" /></div>
+        </section>
+      </LoadingContent>
+      <ChildContent>
+        @{ var result = _result!; var asked = CurrentAsked; var shown = FilteredItems; var pages = PageCount(shown.Count); }
+        <section class="list-section" aria-labelledby="due-summary-heading">
+          <h2 id="due-summary-heading" class="list-section-title">@DecisionsDueText.ByEpaHeading</h2>
+          <p class="muted">@DecisionsDueText.ByEpaRule</p>
+          <details id="due-summary-fold" class="rung-legend">
+            <summary><Icon Name="chevron-right" Class="rung-legend-marker" />@DecisionsDueText.ByEpaFold(result)<span class="section-fold-show"><span class="fold-show">Show</span><span class="fold-hide">Hide</span></span></summary>
+            @* Focusable, so a keyboard can scroll it: it holds no link or button of its own. *@
+            <div id="due-summary-scroll" class="table-container shadow" tabindex="0" role="region" aria-label="@DecisionsDueText.ByEpaRegion(result)">
+              <table id="due-summary" class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+                <caption>@DecisionsDueText.ByEpaCaption(result)</caption>
+                <thead role="rowgroup">
+                  <tr role="row">
+                    <th scope="col" role="columnheader">EPA</th>
+                    <th scope="col" role="columnheader">Due</th>
+                    <th scope="col" role="columnheader">Decided</th>
+                    <th scope="col" role="columnheader">Scheduled</th>
+                    <th scope="col" role="columnheader">Not decided</th>
+                    <th scope="col" role="columnheader">To schedule</th>
+                    <th scope="col" role="columnheader">Missed</th>
+                    <th scope="col" role="columnheader">Optional</th>
+                  </tr>
+                </thead>
+                <tbody role="rowgroup">
+                  @foreach (var summary in result.ByEpa)
+                  {
+                    <tr id="@($"due-summary-{summary.EpaId}")" role="row">
+                      <th scope="row" role="rowheader">@summary.EpaCode — @summary.EpaTitle</th>
+                      <td role="cell" data-label="Due">@summary.Due</td>
+                      <td role="cell" data-label="Decided">@summary.Decided</td>
+                      <td role="cell" data-label="Scheduled">@summary.Scheduled</td>
+                      <td role="cell" data-label="Not decided">@summary.NotDecided</td>
+                      <td role="cell" data-label="To schedule">@summary.ToSchedule</td>
+                      <td role="cell" data-label="Missed">@summary.Missed</td>
+                      <td role="cell" data-label="Optional">@summary.Optional</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </details>
+        </section>
+
+        <section class="list-section" aria-labelledby="due-list-heading">
+          <h2 id="due-list-heading" class="list-section-title" tabindex="-1" @ref="_heading"><span>@DecisionsDueText.ListHeading@if (pages > 1)
+            {<span class="list-section-page">@DecisionsDueText.PageOf(CurrentPage(shown.Count), pages)</span>}</span></h2>
+          <p id="due-count" class="list-section-count" role="status">@DecisionsDueText.Count(result, shown.Count, asked)</p>
+
+          @if (FilteredTrainee is { } trainee)
+          {
+            var namePanel = trainee.SeatLines.Count > 1;
+            @foreach (var line in trainee.SeatLines)
+            {
+              <div class="trainee-line" id="@($"due-line-{line.PanelId}")">
+                @if (line.HoldingReviewId is int holdingId)
+                {
+                  <p>@DecisionsDueText.HeldLine(line, result.PeriodLabel)</p>
+                  @if (line.MayOpenHoldingReview)
+                  {
+                    <a class="btn btn-outline btn-sm" href="@ReviewLinks.Review(holdingId)"
+                       aria-label="@DecisionsDueText.HeldLineLabel(holdingId, trainee.Name)">@($"Open review #{holdingId}")</a>
+                  }
+                }
+                else
+                {
+                  <p>@DecisionsDueText.FreeLine(line, result.PeriodLabel, namePanel)</p>
+                  <a class="btn btn-outline btn-sm" href="@ReviewLinks.Schedule(line.PanelId, trainee.UserId, PeriodKeyOf(result), ReturnTo)"
+                     aria-label="@DecisionsDueText.FreeLineLabel(line, trainee.Name, result.PeriodLabel, namePanel)">@DecisionsDueText.FreeLineLink(line, namePanel)</a>
+                }
+              </div>
+            }
+            @foreach (var checkIn in trainee.CheckIns)
+            {
+              <div class="trainee-line" id="@($"due-check-in-{checkIn.ReviewId}")">
+                <p>@DecisionsDueText.CheckInLine(checkIn.ReviewId)</p>
+                @if (checkIn.MayOpen)
+                {
+                  <a class="btn btn-outline btn-sm" href="@ReviewLinks.Review(checkIn.ReviewId)"
+                     aria-label="@DecisionsDueText.CheckInLabel(checkIn.ReviewId, trainee.Name)">@DecisionsDueText.CheckInLink(checkIn.ReviewId)</a>
+                }
+              </div>
+            }
+          }
+
+          @if (shown.Count == 0)
+          {
+            @* No match is not empty (DESIGN.md § List page): what was asked, and the way back. *@
+            <div id="due-no-match" class="detail-card detail-card--empty">
+              <div class="state-panel-title">@DecisionsDueText.NoMatch</div>
+              <div class="state-panel-copy">@DecisionsDueText.AskedSentence(asked)</div>
+              <div class="form-actions">
+                <a class="btn btn-outline" href="@ClearHref">@DecisionsDueText.ClearFilters</a>
+              </div>
+            </div>
+          }
+          else
+          {
+            var byTrainee = FilteredTrainee is null;
+            <div class="table-container shadow">
+              <table id="due-items" class="clinic-table clinic-table--stack" role="table">
+                <caption>@DecisionsDueText.Caption(result, asked)</caption>
+                <thead role="rowgroup">
+                  <tr role="row">
+                    <th scope="col" role="columnheader">EPA</th>
+                    @if (byTrainee)
+                    {
+                      <th scope="col" role="columnheader">Trainee</th>
+                    }
+                    <th scope="col" role="columnheader">Window</th>
+                    <th scope="col" role="columnheader">Status</th>
+                    <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody role="rowgroup">
+                  @foreach (var item in PageOf(shown))
+                  {
+                    var sentence = DecisionsDueText.Sentence(item);
+                    var action = DecisionsDueText.ActionFor(item);
+                    <tr id="@($"due-item-{item.TraineeUserId}-{item.EpaId}")" role="row">
+                      <th scope="row" role="rowheader">@item.EpaCode — @item.EpaTitle</th>
+                      @if (byTrainee)
+                      {
+                        <td role="cell" data-label="Trainee">@item.TraineeName</td>
+                      }
+                      <td role="cell" data-label="Window">@item.WindowLabel</td>
+                      <td role="cell">
+                        <div class="status-cell">
+                          <span class="badge @BadgeFor.DecisionDue(item.Status)">@DecisionsDueText.StatusLabel(item.Status)</span>
+                          <p>@(sentence.Before)@if (sentence is { ReviewId: int named, MayOpen: true })
+                            {<a href="@ReviewLinks.Review(named)">@sentence.ReviewText</a>}
+                            else
+                            {@sentence.ReviewText}@(sentence.After)</p>
+                        </div>
+                      </td>
+                      <td role="cell">
+                        <div class="actions-cell">
+                          @switch (action.Kind)
+                          {
+                            case DecisionsDueText.RowActionKind.OpenReview:
+                              <a class="btn btn-outline btn-sm" href="@ReviewLinks.Review(action.ReviewId!.Value)"
+                                 aria-label="@($"Open review #{action.ReviewId} for {item.TraineeName}, {item.EpaCode}")">@($"Open review #{action.ReviewId}")</a>
+                              break;
+                            case DecisionsDueText.RowActionKind.Schedule:
+                              <a class="btn btn-outline btn-sm" href="@ReviewLinks.Schedule(item.SchedulePanelId, item.TraineeUserId, item.SchedulePeriodKey, ReturnTo)"
+                                 aria-label="@($"Schedule a review of {item.TraineeName} for {item.EpaCode} before {item.SchedulePanelName}{DecisionsDueText.EndedPeriod(item, result.HasEnded)}")">Schedule</a>
+                              break;
+                            default:
+                              <span class="muted">@action.Text</span>
+                              break;
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <PagerControls Page="CurrentPage(shown.Count)" PageSize="_pageSize" TotalCount="shown.Count"
+                           Label="@DecisionsDueText.PagerLabel" PageSizeLabel="@DecisionsDueText.PageSizeLabel"
+                           OnPageChanged="TurnPage" OnPageSizeChanged="ChangePageSize" />
+          }
+        </section>
+      </ChildContent>
+    </StatePanel>
+  }
 </div>
 
-@if (_isAdministrator && _institutionId is null)
-{
-  <div id="due-choose-institution" class="detail-card detail-card--empty">
-    <div class="state-panel-title">Choose an institution</div>
-    <div class="state-panel-copy">An administrator belongs to no institution, so the decisions due are shown for the one chosen above.</div>
-  </div>
-}
-else
-{
-  <StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@IsEmpty" EmptyTitle="@EmptyTitle" EmptyBody="@EmptyBody">
-    @{ var result = _result!; }
-    <p id="due-intro" class="muted">@DecisionsDueText.Intro(result)</p>
-
-    <section class="detail-card" aria-labelledby="due-summary-heading">
-      <h3 id="due-summary-heading">By EPA</h3>
-      @* Focusable, so a keyboard can scroll it on a narrow screen: it holds no link or button of its own. *@
-      <div id="due-summary-scroll" class="table-container" tabindex="0" role="region" aria-labelledby="due-summary-heading">
-        <table id="due-summary" class="clinic-table clinic-table--compact">
-          <caption>@SummaryCaption(result)</caption>
-          <thead>
-            <tr>
-              <th scope="col">EPA</th>
-              <th scope="col">Due</th>
-              <th scope="col">Decided</th>
-              <th scope="col">Scheduled</th>
-              <th scope="col">Not decided</th>
-              <th scope="col">To schedule</th>
-              <th scope="col">Missed</th>
-              <th scope="col">Optional</th>
-            </tr>
-          </thead>
-          <tbody>
-            @foreach (var summary in result.ByEpa)
-            {
-              <tr id="@($"due-summary-{summary.EpaId}")">
-                <th scope="row">@summary.EpaCode — @summary.EpaTitle</th>
-                <td>@summary.Due</td>
-                <td>@summary.Decided</td>
-                <td>@summary.Scheduled</td>
-                <td>@summary.NotDecided</td>
-                <td>@summary.ToSchedule</td>
-                <td>@summary.Missed</td>
-                <td>@summary.Optional</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <p id="due-count" class="muted" role="status">@CountText(result)</p>
-
-    @if (FilteredItems.Count == 0)
-    {
-      <div id="due-no-match" class="detail-card detail-card--empty">
-        <div class="state-panel-title">No decision matches the filters</div>
-        <div class="state-panel-copy">Choose another status or EPA above.</div>
-      </div>
-    }
-    else
-    {
-      <div class="table-container shadow">
-        <table id="due-items" class="clinic-table">
-          <caption>@ItemsCaption(result)</caption>
-          <thead>
-            <tr>
-              <th scope="col">Trainee</th>
-              <th scope="col">EPA</th>
-              <th scope="col">Window</th>
-              <th scope="col">Status</th>
-              <th scope="col">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            @foreach (var item in PageItems)
-            {
-              var scheduleHref = DecisionsDueText.ScheduleHref(item);
-              <tr id="@($"due-item-{item.TraineeUserId}-{item.EpaId}")">
-                <th scope="row">@item.TraineeName</th>
-                <td>@item.EpaCode — @item.EpaTitle</td>
-                <td>@item.WindowLabel</td>
-                <td>
-                  <span class="badge @BadgeFor.DecisionDue(item.Status)">@DecisionsDueText.StatusLabel(item.Status)</span>
-                  <div class="muted">@DecisionsDueText.Detail(item)</div>
-                </td>
-                <td>
-                  <div class="actions-cell">
-                    @if (item.ReviewId is int reviewId && item.MayOpenReview)
-                    {
-                      <a class="btn btn-outline btn-sm" href="@($"/committee/reviews/{reviewId}")"
-                         aria-label="@($"Open review #{reviewId} for {item.TraineeName}, {item.EpaCode}")">Open review</a>
-                    }
-                    @if (DecisionsDueText.WantsASitting(item) && item.HoldingReviewId is int holdingId && holdingId != item.ReviewId)
-                    {
-                      @* Scheduling another binding review for the period would be refused: point to the one that is open. *@
-                      if (item.MayOpenHoldingReview)
-                      {
-                        <a class="btn btn-outline btn-sm" href="@($"/committee/reviews/{holdingId}")"
-                           aria-label="@($"Open review #{holdingId}, open for {item.SchedulePeriodLabel}, to decide {item.EpaCode} for {item.TraineeName}")">@($"Open review #{holdingId}")</a>
-                      }
-                    }
-                    else if (DecisionsDueText.OffersSchedule(item))
-                    {
-                      if (scheduleHref is not null)
-                      {
-                        <a class="btn btn-outline btn-sm" href="@scheduleHref"
-                           aria-label="@($"Schedule a review of {item.TraineeName} for {item.EpaCode} before {item.SchedulePanelName}")">Schedule</a>
-                      }
-                      else
-                      {
-                        <span class="muted">No panel you can schedule before decides it.</span>
-                      }
-                    }
-                  </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      <PagerControls Page="_page" PageSize="_pageSize" TotalCount="FilteredItems.Count"
-                     OnPageChanged="OnPageChanged" OnPageSizeChanged="OnPageSizeChanged" />
-    }
-  </StatePanel>
-}
-
 @code {
-  private const string OutstandingFilter = "outstanding";
-  private const string EveryStatusFilter = "all";
-
   private readonly IReadOnlyList<CommitteeReviewPeriodOptionDto> _periods = CommitteeReviewPeriods.Around(QuotaCalendar.Today());
 
   private bool _isAdministrator;
   private IReadOnlyList<InstitutionDto> _institutions = [];
-  private int? _institutionId;
+  private string? _institutionsError;
 
+  // What the address asks, as last read (F2): Show changes the address, and the page follows it.
+  private int? _institutionId;
   private string _periodKey = CommitteeReviewPeriods.Current(QuotaCalendar.Today()).Key;
-  private string _statusFilter = OutstandingFilter;
-  private int? _epaFilter;
+  private string? _traineeId;
+  private string _status = DecisionsDueText.OutstandingValue;
+  private int? _epaId;
+
+  // The institution and period the result was read for: a change of either reads again; the rest narrows it here.
+  private (int? InstitutionId, string PeriodKey)? _read;
+
+  // The form's fields: they change nothing until Show.
+  private string _institutionField = string.Empty;
+  private string _periodField = string.Empty;
+  private string _traineeField = string.Empty;
+  private string _statusField = DecisionsDueText.OutstandingValue;
+  private string _epaField = string.Empty;
+
   private int _page = 1;
   private int _pageSize = 20;
 
@@ -207,75 +342,113 @@ else
   private string? _error;
   private int _request;
 
+  private bool _focusAfterLoad;
+  private bool _focusHeading;
+  private ElementReference _heading;
+  private StatePanel? _panel;
+
+  /// <summary>The Administrator's institution from the address.</summary>
+  [SupplyParameterFromQuery(Name = DecisionsDueText.InstitutionKey)] public int? Institution { get; set; }
+
+  /// <summary>The period from the address, "2026-1"; the current one when absent or not offered.</summary>
+  [SupplyParameterFromQuery(Name = DecisionsDueText.PeriodKey)] public string? Period { get; set; }
+
+  /// <summary>The Trainee filter from the address: the trainee's user id (Q2).</summary>
+  [SupplyParameterFromQuery(Name = DecisionsDueText.TraineeKey)] public string? Trainee { get; set; }
+
+  /// <summary>The Status filter from the address: "all", a status's name, or Outstanding when absent.</summary>
+  [SupplyParameterFromQuery(Name = DecisionsDueText.StatusKey)] public string? Status { get; set; }
+
+  /// <summary>The EPA filter from the address: its id.</summary>
+  [SupplyParameterFromQuery(Name = DecisionsDueText.EpaKey)] public int? Epa { get; set; }
+
+  /// <summary>The Decisions heading, which Show, a page turn and a Try again focus. A test matches a focus call to it.</summary>
+  public ElementReference DecisionsHeading => _heading;
+
   protected override async Task OnInitializedAsync()
   {
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
     _isAdministrator = authState.User.IsInRole(WombatRoles.Administrator);
-
-    if (!_isAdministrator)
+    if (_isAdministrator)
     {
-      await LoadAsync();
-      return;
+      await LoadInstitutionsAsync();
+    }
+  }
+
+  /// <summary>
+  /// Follows the address (F2): on arrival, after Show, after Clear filters and after Back. A change of institution or
+  /// period reads again; a change of Trainee, Status or EPA narrows what was read.
+  /// </summary>
+  protected override async Task OnParametersSetAsync()
+  {
+    _institutionId = _isAdministrator ? Institution : null;
+    _periodKey = _periods.Any(option => string.Equals(option.Key, Period, StringComparison.Ordinal))
+      ? Period!
+      : CommitteeReviewPeriods.Current(QuotaCalendar.Today()).Key;
+    _traineeId = string.IsNullOrEmpty(Trainee) ? null : Trainee;
+    _status = IsStatusValue(Status) ? Status! : DecisionsDueText.OutstandingValue;
+    _epaId = Epa;
+    _page = 1;
+
+    if (_read != (_institutionId, _periodKey))
+    {
+      if (ChoosingInstitution)
+      {
+        _read = (null, _periodKey);
+        _result = null;
+        _loading = false;
+        _error = null;
+      }
+      else
+      {
+        _read = (_institutionId, _periodKey);
+        await LoadAsync();
+      }
+    }
+    else if (_focusAfterLoad && !_loading && _error is null)
+    {
+      _focusHeading = true;
     }
 
-    // An Administrator belongs to no institution: the page waits for one to be chosen.
-    _loading = false;
+    _focusAfterLoad = false;
+    SetFields();
+  }
+
+  /// <summary>An Administrator who has not chosen an institution: nothing is read until one is.</summary>
+  private bool ChoosingInstitution => _isAdministrator && _institutionId is null;
+
+  private static bool IsStatusValue(string? value)
+    => value is DecisionsDueText.OutstandingValue or DecisionsDueText.EveryStatusValue ||
+       (value is not null && Enum.TryParse<EntrustmentDecisionDueStatus>(value, out var parsed) && Enum.IsDefined(parsed) &&
+        !int.TryParse(value, out _));
+
+  /// <summary>The fields say what the address asks, a trainee or EPA the answer does not hold as none.</summary>
+  private void SetFields()
+  {
+    _institutionField = _institutionId?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+    _periodField = _periodKey;
+    _traineeField = FilteredTrainee?.UserId ?? (_result is null ? _traineeId ?? string.Empty : string.Empty);
+    _statusField = _status;
+    _epaField = FilteredEpa?.EpaId.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                ?? (_result is null ? _epaId?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty : string.Empty);
+  }
+
+  private async Task LoadInstitutionsAsync()
+  {
+    _institutionsError = null;
     try
     {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
     }
     catch (Exception exception)
     {
-      _error = RefusalText.Of(exception);
+      Logger.LogError(exception, "Decisions due could not read the institutions to choose from.");
+      _institutionsError = DecisionsDueText.InstitutionsLoadFailed;
     }
   }
 
-  private async Task OnInstitutionChangedAsync(ChangeEventArgs e)
-  {
-    _institutionId = int.TryParse(e.Value?.ToString(), out var id) ? id : null;
-    _result = null;
-    _error = null;
-
-    if (_institutionId is not null)
-    {
-      await LoadAsync();
-    }
-  }
-
-  private async Task OnPeriodChangedAsync(ChangeEventArgs e)
-  {
-    if (_periods.FirstOrDefault(period => string.Equals(period.Key, e.Value?.ToString(), StringComparison.Ordinal)) is not { } chosen)
-    {
-      return;
-    }
-
-    _periodKey = chosen.Key;
-    if (!_isAdministrator || _institutionId is not null)
-    {
-      await LoadAsync();
-    }
-  }
-
-  private void OnStatusChanged(ChangeEventArgs e)
-  {
-    _statusFilter = e.Value?.ToString() ?? OutstandingFilter;
-    _page = 1;
-  }
-
-  private void OnEpaChanged(ChangeEventArgs e)
-  {
-    _epaFilter = int.TryParse(e.Value?.ToString(), out var id) ? id : null;
-    _page = 1;
-  }
-
-  private void OnPageChanged(int page) => _page = page;
-
-  private void OnPageSizeChanged(int pageSize)
-  {
-    _pageSize = pageSize;
-    _page = 1;
-  }
-
+  /// <summary>Reads the period at the institution, with the skeleton in its place; Try again reads it again.</summary>
   private async Task LoadAsync()
   {
     var request = ++_request;
@@ -297,17 +470,13 @@ else
 
       _result = result;
       _page = 1;
-      if (_epaFilter is int epaId && !(result?.Items.Any(item => item.EpaId == epaId) ?? false))
-      {
-        _epaFilter = null;
-      }
     }
     catch (Exception exception)
     {
       if (request == _request)
       {
         _result = null;
-        _error = RefusalText.Of(exception);
+        _error = FailureText(exception);
       }
     }
     finally
@@ -315,9 +484,96 @@ else
       if (request == _request)
       {
         _loading = false;
+        SetFields();
+        if (_focusAfterLoad && _error is null)
+        {
+          _focusHeading = true;
+        }
       }
     }
   }
+
+  /// <summary>
+  /// A handler's own refusal in its own words (S4); any other failure in fixed words, the failure to the log (T338, T329).
+  /// </summary>
+  private string FailureText(Exception exception)
+  {
+    // Only the handler's own refusal: any other InvalidOperationException is the framework's (T364, build review R4).
+    if (exception is CommitteeRefusedException or FluentValidation.ValidationException)
+    {
+      return RefusalText.Of(exception);
+    }
+
+    Logger.LogError(exception, "Decisions due could not be read.");
+    return DecisionsDueText.LoadFailed;
+  }
+
+  /// <summary>
+  /// Show (F2): to the page's own address with the fields as its query. The same question asked again reads it here.
+  /// Either way the Decisions heading takes the focus once the answer is drawn.
+  /// </summary>
+  private async Task ShowAsync()
+  {
+    var target = DecisionsDueText.Address(
+      _isAdministrator && int.TryParse(_institutionField, out var institution) ? institution : null,
+      _periodField,
+      string.IsNullOrEmpty(_traineeField) ? null : _traineeField,
+      _statusField,
+      int.TryParse(_epaField, out var epa) ? epa : null);
+
+    _focusAfterLoad = true;
+    if (string.Equals(target, CurrentAddress, StringComparison.Ordinal))
+    {
+      _page = 1;
+      if (ChoosingInstitution)
+      {
+        _focusAfterLoad = false;
+        return;
+      }
+
+      await LoadAsync();
+      _focusAfterLoad = false;
+      return;
+    }
+
+    Navigation.NavigateTo(target);
+  }
+
+  /// <summary>The page's address as asked, with its filters: Show's comparison, and where a Schedule link returns (C4).</summary>
+  private string CurrentAddress => DecisionsDueText.Address(_institutionId, _periodKey, _traineeId, _status, _epaId);
+
+  /// <summary>Where Cancel on the schedule page comes back to: this page as it is filtered (C4).</summary>
+  private string ReturnTo => DecisionsDueText.Address(
+    _institutionId, _periodKey, FilteredTrainee?.UserId, _status, FilteredEpa?.EpaId);
+
+  /// <summary>Clear filters keeps what is read, the institution and the period, and drops what narrows it.</summary>
+  private string ClearHref => DecisionsDueText.Address(_institutionId, _periodKey, null, null, null);
+
+  // Flow 04's C10 f: after a page turn the list's heading takes the focus and says which page it is on.
+  private void TurnPage(int page)
+  {
+    _page = page;
+    _focusHeading = true;
+  }
+
+  // Flow 04's build review A1: a change of size leaves the focus on the select.
+  private void ChangePageSize(int pageSize)
+  {
+    _pageSize = pageSize;
+    _page = 1;
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusHeading && !_loading && _error is null && _result is { Items.Count: > 0 })
+    {
+      _focusHeading = false;
+      await _heading.FocusAsync();
+    }
+  }
+
+  /// <summary>After a Try again that read: the Decisions heading (flow 04's C10 e).</summary>
+  private async ValueTask FocusHeadingAsync() => await _heading.FocusAsync();
 
   private bool IsEmpty => !_loading && _error is null && (_result is null || _result.Items.Count == 0);
 
@@ -327,7 +583,17 @@ else
     ? "There are no decisions due to show for your institution."
     : $"No trainee you oversee at {_result.InstitutionName} owes an entrustment decision in {_result.PeriodLabel}.";
 
-  private IReadOnlyList<EntrustmentDecisionDueEpaSummaryDto> EpaOptions => _result?.ByEpa ?? [];
+  /// <summary>The filtered trainee, when the answer holds them; a trainee it does not hold is no filter.</summary>
+  private DecisionsDueTraineeDto? FilteredTrainee
+    => _traineeId is null ? null : _result?.Trainees.FirstOrDefault(trainee => string.Equals(trainee.UserId, _traineeId, StringComparison.Ordinal));
+
+  /// <summary>The filtered EPA, when the answer holds it.</summary>
+  private EntrustmentDecisionDueEpaSummaryDto? FilteredEpa
+    => _epaId is null ? null : _result?.ByEpa.FirstOrDefault(epa => epa.EpaId == _epaId);
+
+  private DecisionsDueText.Asked CurrentAsked => new(FilteredTrainee?.Name, _status, FilteredEpa?.EpaCode);
+
+  private static string PeriodKeyOf(EntrustmentDecisionsDueDto result) => CommitteeReviewPeriods.KeyOf(result.AcademicYear, result.Semester);
 
   private IReadOnlyList<EntrustmentDecisionDueDto> FilteredItems
   {
@@ -338,39 +604,29 @@ else
         return [];
       }
 
-      var parsed = Enum.TryParse<EntrustmentDecisionDueStatus>(_statusFilter, out var status) ? status : (EntrustmentDecisionDueStatus?)null;
+      var trainee = FilteredTrainee?.UserId;
+      var epa = FilteredEpa?.EpaId;
+      var parsed = Enum.TryParse<EntrustmentDecisionDueStatus>(_status, out var status) ? status : (EntrustmentDecisionDueStatus?)null;
       return _result.Items
-        .Where(item => _statusFilter switch
+        .Where(item => _status switch
         {
-          OutstandingFilter => item.IsOutstanding,
-          EveryStatusFilter => true,
+          DecisionsDueText.OutstandingValue => item.IsOutstanding,
+          DecisionsDueText.EveryStatusValue => true,
           _ => item.Status == parsed
         })
-        .Where(item => _epaFilter is null || item.EpaId == _epaFilter)
+        .Where(item => trainee is null || string.Equals(item.TraineeUserId, trainee, StringComparison.Ordinal))
+        .Where(item => epa is null || item.EpaId == epa)
         .ToArray();
     }
   }
 
-  private IReadOnlyList<EntrustmentDecisionDueDto> PageItems
+  private int PageCount(int count) => Math.Max(1, (int)Math.Ceiling(count / (double)Math.Max(1, _pageSize)));
+
+  private int CurrentPage(int count) => Math.Clamp(_page, 1, PageCount(count));
+
+  private IReadOnlyList<EntrustmentDecisionDueDto> PageOf(IReadOnlyList<EntrustmentDecisionDueDto> items)
   {
-    get
-    {
-      var items = FilteredItems;
-      var pages = Math.Max(1, (int)Math.Ceiling(items.Count / (double)Math.Max(1, _pageSize)));
-      var page = Math.Clamp(_page, 1, pages);
-      return items.Skip((page - 1) * _pageSize).Take(_pageSize).ToArray();
-    }
+    var page = CurrentPage(items.Count);
+    return items.Skip((page - 1) * _pageSize).Take(_pageSize).ToArray();
   }
-
-  private static string SummaryCaption(EntrustmentDecisionsDueDto result)
-    => $"How many trainees stand where on each EPA due in {result.PeriodLabel}. To schedule: not scheduled, due by year " +
-       "end, or revoked. Optional: a partial period, or decided as opportunity allows.";
-
-  private static string ItemsCaption(EntrustmentDecisionsDueDto result)
-    => $"The decisions due in {result.PeriodLabel}, one row per trainee and EPA, as the filters above leave them.";
-
-  /// <summary>How many rows the filters leave: said again, politely, whenever a filter changes it (role="status").</summary>
-  private string CountText(EntrustmentDecisionsDueDto result)
-    => $"{FilteredItems.Count} of {result.Items.Count} decision{(result.Items.Count == 1 ? string.Empty : "s")} due in " +
-       $"{result.PeriodLabel} shown.";
 }

@@ -7,7 +7,27 @@ public sealed record DecisionPanelMemberInput(string UserId, DecisionPanelMember
 public sealed record DecisionPanelMemberDto(
     int Id,
     string UserId,
-    DecisionPanelMemberRole Role);
+    DecisionPanelMemberRole Role)
+{
+    /// <summary>
+    /// The member's name as stored ("First Last", a pseudonym after an erasure), or null where the read names nobody: only
+    /// <c>GetDecisionPanelByIdQuery</c> fills it, so a panel's page names a member who can no longer sit (T364, M6; T260).
+    /// </summary>
+    public string? Name { get; init; }
+}
+
+/// <summary>A panel member by name as stored, with the seat they hold: the panels list's Members (T364, round 3 M8).</summary>
+public sealed record DecisionPanelMemberNameDto(string Name, DecisionPanelMemberRole Role);
+
+/// <summary>
+/// A review still open before a panel: scheduled, in progress, or decided and awaiting ratification, the states that hold
+/// what the panel sits as (<c>SetDecisionPanelBodyCommand</c>). A panel's page lists them under About this panel and
+/// links each the reader may open. (T364, round 2 "Data the build must add")
+/// </summary>
+/// <param name="Period">The review's period, "2026 S2".</param>
+/// <param name="StateInSentence">Its state as a sentence says it, "scheduled".</param>
+/// <param name="MayOpen">Whether the reader may open the review's page, by the review read ladder.</param>
+public sealed record PanelOpenReviewDto(int Id, string Period, CommitteeReviewState State, string StateInSentence, bool MayOpen);
 
 /// <param name="DecisionBodyKey">The College committee the panel sits as (T131), or null for a general panel.</param>
 /// <param name="DecisionBodyName">That committee's name, or null for a general panel.</param>
@@ -28,6 +48,18 @@ public sealed record DecisionPanelSummaryDto(
     /// else.
     /// </summary>
     public bool CallerMayManage { get; init; }
+
+    /// <summary>The institution the panel runs at, by name; filled by <c>ListDecisionPanelsQuery</c> (T364).</summary>
+    public string? InstitutionName { get; init; }
+
+    /// <summary>The speciality a Speciality-scoped panel covers, by name; null for an institution-wide panel (T364).</summary>
+    public string? SpecialityName { get; init; }
+
+    /// <summary>
+    /// Who sits on the panel, by name as stored: the chair, then the members, then the external members, each in the order
+    /// they were seated. Filled by <c>ListDecisionPanelsQuery</c>, so the list names who sits (T364, round 3 M8).
+    /// </summary>
+    public IReadOnlyList<DecisionPanelMemberNameDto> MemberNames { get; init; } = [];
 }
 
 /// <param name="DecisionBodyKey">The College committee the panel sits as (T131), or null for a general panel.</param>
@@ -40,7 +72,26 @@ public sealed record DecisionPanelDetailDto(
     int? SpecialityId,
     IReadOnlyList<DecisionPanelMemberDto> Members,
     string? DecisionBodyKey = null,
-    string? DecisionBodyName = null);
+    string? DecisionBodyName = null)
+{
+    /// <summary>The institution the panel runs at, by name; filled by <c>GetDecisionPanelByIdQuery</c> (T364, Q6).</summary>
+    public string? InstitutionName { get; init; }
+
+    /// <summary>The speciality a Speciality-scoped panel covers, by name; filled by <c>GetDecisionPanelByIdQuery</c> (T364).</summary>
+    public string? SpecialityName { get; init; }
+
+    /// <summary>
+    /// The reviews still open before the panel, oldest first (T364, Q6; C13). Filled by <c>GetDecisionPanelByIdQuery</c>.
+    /// </summary>
+    public IReadOnlyList<PanelOpenReviewDto> OpenReviews { get; init; } = [];
+
+    /// <summary>
+    /// Why the College committee the panel sits as cannot change now, in the words <c>SetDecisionPanelBodyCommand</c>
+    /// refuses with, naming the first open review; null while no review holds it. The page shows it in place of the select,
+    /// so the lock is read before anything is tried (T364, F5; step 4.13). Filled by <c>GetDecisionPanelByIdQuery</c>.
+    /// </summary>
+    public string? DecisionBodyLock { get; init; }
+}
 
 public sealed record CommitteeReviewListItemDto(
     int Id,
@@ -88,6 +139,13 @@ public sealed record CommitteeReviewListItemDto(
     /// the trainee's own list and the chair's, which do not show it, and from scheduling.
     /// </summary>
     public string? TraineeName { get; init; }
+
+    /// <summary>
+    /// The name of the institution whose panel holds the review: Committee reviews' caption names it, "Committee reviews
+    /// at Kgosi Kgari Teaching Hospital, newest scheduled first" (T364, C10). Filled by <c>ListReviewsForPanelQuery</c>;
+    /// null elsewhere.
+    /// </summary>
+    public string? InstitutionName { get; init; }
 }
 
 /// <param name="Category">

@@ -51,10 +51,14 @@ public sealed partial class CommitteeReviewStateLabelTests : TestContext
         var cut = RenderComponent<ReviewsSchedule>();
         cut.WaitForState(() => cut.FindAll("tbody tr").Count == reviews.Length);
 
+        // The trainee is the row's header cell since T364 (C10), so the columns are read from the row's cells in order.
         var stateColumn = Column(cut, "State");
-        cut.FindAll("tbody tr").Select(row => Text(row.QuerySelectorAll("td")[stateColumn])).Should().Equal(
+        cut.FindAll("tbody tr").Select(row => Text(row.Children.ElementAt(stateColumn))).Should().Equal(
             "Scheduled", "In progress", "Decided", "Ratified", "Under appeal", "Closed");
         cut.Markup.Should().NotContain("InProgress").And.NotContain("UnderAppeal");
+
+        // S7: Scheduled is the one grey badge, the review page's own tint (ReviewSitting.StateBadge).
+        cut.FindAll("tbody tr").First().Children.ElementAt(stateColumn).QuerySelector(".badge")!.ClassList.Should().Contain("badge-draft");
     }
 
     [Fact]

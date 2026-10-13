@@ -17,6 +17,7 @@ using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
 using Wombat.Tests.Shared;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
+using Wombat.Web.Components.Shared;
 using Wombat.Web.Services;
 
 namespace Wombat.Web.Tests.CommitteeDecisions;
@@ -66,6 +67,7 @@ public sealed class ReviewsScheduleTraineeFirstTests : TestContext
         _auth = this.AddTestAuthorization();
         _sender = new HandlerSender(CreateDb);
         Services.AddSingleton<IScopedSender>(_sender);
+        Services.AddSingleton(TimeProvider.System);
         Seed();
     }
 
@@ -83,21 +85,30 @@ public sealed class ReviewsScheduleTraineeFirstTests : TestContext
     public void ATraineeWhoAlsoSchedules_IsOfferedNoScheduling_AndListedNoReview_EvenWhenTheLinkNamesAPeer(string role)
     {
         SignIn(role, alsoTrainee: true);
-        NavigateToTheLinkFor(Peer);
 
-        var cut = RenderComponent<ReviewsSchedule>();
-        cut.WaitForState(() => cut.FindAll(".detail-card--empty").Count == 1);
+        var list = RenderComponent<ReviewsSchedule>();
+        list.WaitForState(() => list.FindAll(".detail-card--empty").Count == 1);
 
-        EmptyCardSays(cut, TraineeWhoSchedulesNote);
-        ScheduleButtons(cut).Should().BeEmpty("the scheduling command refuses this caller whoever they name");
-        cut.FindAll("#review-panel").Should().BeEmpty("the link opens no form");
-        cut.Find(".page-subtitle").TextContent.Should().Be("Open existing committee reviews.");
+        EmptyCardSays(list, "No reviews to show", TraineeWhoSchedulesNote);
+        ScheduleLinks(list).Should().BeEmpty("the scheduling command refuses this caller whoever they name");
+        list.Find(".page-subtitle").TextContent.Should().Be("Open existing committee reviews.");
 
         // The empty card is an answer, not a failure the page swallowed.
-        cut.FindAll(".alert").Should().BeEmpty();
+        list.FindAll(".alert").Should().BeEmpty();
 
+        // The schedule page, opened from Decisions due's link naming the peer, offers no form either (T216; T364, Q1).
+        NavigateToTheLinkFor(Peer);
+        var form = RenderComponent<ScheduleReview>();
+        form.WaitForState(() => form.FindAll(".detail-card--empty").Count == 1);
+
+        EmptyCardSays(form, "No review can be scheduled", TraineeWhoSchedulesNote);
+        form.FindAll("#review-panel").Should().BeEmpty("the link opens no form");
+        form.FindAll(".alert").Should().BeEmpty();
+
+        _sender.Received.OfType<ListDecisionPanelsQuery>().Should().BeEmpty();
         _sender.Received.OfType<ListSchedulableTraineesQuery>().Should().BeEmpty();
         _sender.Received.OfType<PreviewCommitteeAgendaQuery>().Should().BeEmpty();
+        _sender.Received.OfType<GetSchedulingSeatQuery>().Should().BeEmpty();
         _sender.Received.OfType<ScheduleCommitteeReviewCommand>().Should().BeEmpty();
 
         var listed = _sender.Received.OfType<ListReviewsForPanelQuery>().Should().ContainSingle().Subject;
@@ -111,21 +122,26 @@ public sealed class ReviewsScheduleTraineeFirstTests : TestContext
     public void TheSameRoleWithoutTrainee_IsOfferedThePeer_SeesTheirAgenda_AndListsTheirReview(string role)
     {
         SignIn(role, alsoTrainee: false);
+
+        var list = RenderComponent<ReviewsSchedule>();
+        list.WaitForState(() => list.FindAll("tbody tr").Count == 1);
+
+        ScheduleLinks(list).Should().ContainSingle();
+        list.Find(".page-subtitle").TextContent.Should().Be("Schedule progression reviews and open existing ones.");
+        list.Find("tbody tr").TextContent.Should().Contain("Palesa Paeds");
+        list.FindAll(".alert").Should().BeEmpty();
+
         NavigateToTheLinkFor(Peer);
+        var form = RenderComponent<ScheduleReview>();
+        form.WaitForState(() => _sender.Received.OfType<PreviewCommitteeAgendaQuery>().Any());
+        form.WaitForState(() => form.Find("#agenda-preview-summary").TextContent.Contains("decides no EPA"));
 
-        var cut = RenderComponent<ReviewsSchedule>();
-        cut.WaitForState(() => _sender.Received.OfType<PreviewCommitteeAgendaQuery>().Any());
-        cut.WaitForState(() => cut.Find("#agenda-preview-summary").TextContent.Contains("This panel decides no EPA"));
-
-        ScheduleButtons(cut).Should().ContainSingle();
-        cut.Find(".page-subtitle").TextContent.Should().Be("Schedule progression reviews and open existing ones.");
-        OptionValues(cut).Should().Equal(string.Empty, Peer);
-        cut.Find("select#review-trainee option[value='paeds-a']").TextContent.Should().Be("Palesa Paeds");
-        cut.Find("#review-trainee").GetAttribute("value").Should().Be(Peer);
-        cut.Markup.Should().NotContain("could not be previewed");
-
-        cut.FindAll("tbody tr").Should().ContainSingle().Which.TextContent.Should().Contain("Palesa Paeds");
-        cut.FindAll(".alert").Should().BeEmpty();
+        OptionValues(form).Should().Equal(string.Empty, Peer);
+        form.Find("select#review-trainee option[value='paeds-a']").TextContent.Should().StartWith("Palesa Paeds");
+        form.Find("#review-trainee").GetAttribute("value").Should().Be(Peer);
+        form.Find("#agenda-preview-summary").TextContent.Should().Contain("No EPA will be on the agenda.");
+        form.Markup.Should().NotContain(ScheduleWords.PreviewFailed);
+        form.FindAll(".alert").Should().BeEmpty();
     }
 
     [Fact]
@@ -136,8 +152,8 @@ public sealed class ReviewsScheduleTraineeFirstTests : TestContext
         var cut = RenderComponent<ReviewsSchedule>();
         cut.WaitForState(() => cut.FindAll(".detail-card--empty").Count == 1);
 
-        EmptyCardSays(cut, TraineeOnTheCommitteeNote);
-        ScheduleButtons(cut).Should().BeEmpty();
+        EmptyCardSays(cut, "No reviews to show", TraineeOnTheCommitteeNote);
+        ScheduleLinks(cut).Should().BeEmpty();
         cut.FindAll(".alert").Should().BeEmpty();
     }
 
@@ -145,27 +161,31 @@ public sealed class ReviewsScheduleTraineeFirstTests : TestContext
     public void ACommitteeMember_ListsTheirPanelsReviews_ButIsOfferedNoScheduling_NotEvenFromALink()
     {
         // Before T216 the page offered every caller "Schedule review", a committee member included, whom the command
-        // refuses whoever they name.
+        // refuses whoever they name. The schedule page does not admit the role (its [Authorize]); drawn anyway, it offers
+        // no form.
         SignIn(WombatRoles.CommitteeMember, alsoTrainee: false);
-        NavigateToTheLinkFor(Peer);
 
         var cut = RenderComponent<ReviewsSchedule>();
         cut.WaitForState(() => cut.FindAll("tbody tr").Count == 1);
 
         cut.Find("tbody tr").TextContent.Should().Contain("Palesa Paeds");
-        ScheduleButtons(cut).Should().BeEmpty();
-        cut.FindAll("#review-panel").Should().BeEmpty();
+        ScheduleLinks(cut).Should().BeEmpty();
         cut.Find(".page-subtitle").TextContent.Should().Be("Open existing committee reviews.");
-        _sender.Received.OfType<ListSchedulableTraineesQuery>().Should().BeEmpty();
         cut.FindAll(".alert").Should().BeEmpty();
+
+        NavigateToTheLinkFor(Peer);
+        var form = RenderComponent<ScheduleReview>();
+        form.WaitForState(() => form.FindAll(".detail-card--empty").Count == 1);
+        form.FindAll("#review-panel").Should().BeEmpty();
+        _sender.Received.OfType<ListSchedulableTraineesQuery>().Should().BeEmpty();
     }
 
     // ─── What the page shows ─────────────────────────────────────────────────
 
-    private static void EmptyCardSays(IRenderedComponent<ReviewsSchedule> cut, string note)
+    private static void EmptyCardSays(IRenderedFragment cut, string title, string note)
     {
         var card = cut.Find(".detail-card--empty");
-        card.QuerySelector(".state-panel-title")!.TextContent.Should().Be("No reviews to show");
+        card.QuerySelector(".state-panel-title")!.TextContent.Should().Be(title);
         card.QuerySelector(".state-panel-copy")!.TextContent.Should().Be(note);
 
         var link = card.QuerySelector("a")!;
@@ -173,10 +193,10 @@ public sealed class ReviewsScheduleTraineeFirstTests : TestContext
         link.TextContent.Trim().Should().Be("Open My committee reviews");
     }
 
-    private static IReadOnlyList<IElement> ScheduleButtons(IRenderedComponent<ReviewsSchedule> cut)
-        => cut.FindAll("button").Where(button => button.TextContent.Trim() == "Schedule review").ToArray();
+    private static IReadOnlyList<IElement> ScheduleLinks(IRenderedFragment cut)
+        => cut.FindAll("a").Where(link => link.TextContent.Trim() == "Schedule a review").ToArray();
 
-    private static IReadOnlyList<string> OptionValues(IRenderedComponent<ReviewsSchedule> cut)
+    private static IReadOnlyList<string> OptionValues(IRenderedFragment cut)
         => cut.FindAll("select#review-trainee option")
             .Select(option => option.GetAttribute("value") ?? string.Empty)
             .ToArray();
@@ -214,7 +234,7 @@ public sealed class ReviewsScheduleTraineeFirstTests : TestContext
     {
         var period = CommitteeReviewPeriods.Current(QuotaCalendar.Today());
         Services.GetRequiredService<NavigationManager>().NavigateTo(
-            $"/committee/reviews?panel={PanelA}&trainee={Uri.EscapeDataString(traineeUserId)}&period={period.Key}");
+            ReviewLinks.Schedule(PanelA, traineeUserId, period.Key, "/committee/decisions-due"));
     }
 
     private void Seed()
@@ -301,7 +321,7 @@ public sealed class ReviewsScheduleTraineeFirstTests : TestContext
             Received.Add(request);
             await using var db = createDb();
 
-            object answer = request switch
+            object? answer = request switch
             {
                 GetCommitteeReviewsAccessQuery query =>
                     await new GetCommitteeReviewsAccessQueryHandler().Handle(query, cancellationToken),
@@ -312,12 +332,14 @@ public sealed class ReviewsScheduleTraineeFirstTests : TestContext
                     await new ListSchedulableTraineesQueryHandler(db, _users).Handle(query, cancellationToken),
                 PreviewCommitteeAgendaQuery query =>
                     await new PreviewCommitteeAgendaQueryHandler(db, _users).Handle(query, cancellationToken),
+                GetSchedulingSeatQuery query =>
+                    (object?)await new GetSchedulingSeatQueryHandler(db, _users).Handle(query, cancellationToken),
                 ScheduleCommitteeReviewCommand command =>
                     await new ScheduleCommitteeReviewCommandHandler(db, _users).Handle(command, cancellationToken),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };
 
-            return (TResponse)answer;
+            return (TResponse)answer!;
         }
 
         public Task Send(IRequest request, CancellationToken cancellationToken = default)

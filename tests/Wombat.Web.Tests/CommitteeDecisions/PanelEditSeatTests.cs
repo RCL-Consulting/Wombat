@@ -12,6 +12,7 @@ using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
 using Wombat.Web.Services;
+using static Wombat.Web.Tests.CommitteeDecisions.PanelSeatPicker;
 
 namespace Wombat.Web.Tests.CommitteeDecisions;
 
@@ -27,6 +28,14 @@ public sealed class PanelEditSeatTests : TestContext
 
     private readonly TestAuthorizationContext _auth;
     private readonly RecordingSender _sender = new();
+
+    // The panel as stored: its erased member's name is the pseudonym the store holds (round 3 M6).
+    private IReadOnlyList<DecisionPanelMemberDto> _stored =
+    [
+        new(1, "zulu", DecisionPanelMemberRole.Chair),
+        new(2, "naidoo", DecisionPanelMemberRole.Member),
+        new(3, "erased-7f3a", DecisionPanelMemberRole.Member) { Name = "Former user 7f3a" }
+    ];
 
     public PanelEditSeatTests()
     {
@@ -44,7 +53,8 @@ public sealed class PanelEditSeatTests : TestContext
                 MayCreateInstitutionWide: true, Specialities: query.InstitutionId is null ? null : []))
             // An Administrator may say which College committee a panel sits as (T131 slice 3), so the form reads the list.
             .On<GetDecisionBodiesQuery>(_ => new[] { new DecisionBodyDto("neonatal", "Neonatal team Clinical Competency Committee") })
-            .On<ListPanelMemberCandidatesQuery>(query => query.InstitutionId == InstitutionA || query.InstitutionId is null
+            // An Administrator is offered nobody until an institution is chosen, as the handler does.
+            .On<ListPanelMemberCandidatesQuery>(query => query.InstitutionId == InstitutionA
                 ? new[]
                 {
                     new PanelMemberCandidateDto("zulu", "zulu@test", "Thandi", "Zulu", InstitutionA),
@@ -52,18 +62,16 @@ public sealed class PanelEditSeatTests : TestContext
                 }
                 : Array.Empty<PanelMemberCandidateDto>())
             .On<GetDecisionPanelByIdQuery>(_ => new DecisionPanelDetailDto(
-                PanelId, "Paediatrics CCC", DecisionPanelScope.Institution, InstitutionA, null,
-                [
-                    new DecisionPanelMemberDto(1, "zulu", DecisionPanelMemberRole.Chair),
-                    new DecisionPanelMemberDto(2, "naidoo", DecisionPanelMemberRole.Member),
-                    new DecisionPanelMemberDto(3, "erased-7f3a", DecisionPanelMemberRole.Member)
-                ]))
-            .On<UpdateDecisionPanelCommand>(command => new DecisionPanelDetailDto(
-                PanelId, "Paediatrics CCC", DecisionPanelScope.Institution, InstitutionA, null, []));
+                PanelId, "Paediatrics CCC", DecisionPanelScope.Institution, InstitutionA, null, _stored))
+            .On<UpdateDecisionPanelCommand>(command =>
+            {
+                _stored = command.Members.Select((member, index) => new DecisionPanelMemberDto(index + 10, member.UserId, member.Role)).ToArray();
+                return new DecisionPanelDetailDto(PanelId, "Paediatrics CCC", DecisionPanelScope.Institution, InstitutionA, null, []);
+            });
     }
 
     [Fact]
-    public void AStoredMemberWhoCanNoLongerSit_IsSaidToBeTakenOff_AndIsNotSentBack()
+    public void AStoredMemberWhoCanNoLongerSit_IsNamed_IsInNoControl_AndIsNotSentBack()
     {
         SignInAs(WombatRoles.Administrator);
 
@@ -72,19 +80,28 @@ public sealed class PanelEditSeatTests : TestContext
 
         _sender.Received.OfType<ListPanelMemberCandidatesQuery>().Should().ContainSingle()
             .Which.InstitutionId.Should().Be(InstitutionA, "the panel's own institution, not the Administrator's none");
-        System.Text.RegularExpressions.Regex.Replace(cut.Find(".alert-warning").TextContent, @"\s+", " ").Trim()
-            .Should().Be("1 member of this panel can no longer sit on it, so is not listed below: only an active " +
-                         "committee member at its institution who is not a trainee can. Saving takes that member off the " +
-                         "panel.");
-        cut.Find(".alert-warning").HasAttribute("role").Should().BeFalse(
-            "it says what the page is, on every visit; a live region would read it out each time (T193)");
+        // Round 3 M6, C12: named as stored, and a live alert as it first shows.
+        Squash(cut.Find(".alert-warning").TextContent)
+            .Should().Be("Former user 7f3a can no longer sit on this panel, so is not listed below: only an active " +
+                         "committee member at its institution who is not a trainee can. Saving takes Former user 7f3a off " +
+                         "the panel.");
+        cut.Find(".alert-warning").GetAttribute("role").Should().Be("alert");
+        Options(cut).Should().Equal("zulu", "naidoo");
+        Listed(cut).Should().Equal("Thandi Zulu", "Priya Naidoo");
 
-        // The members' own form: an Administrator also sees the College committee form above it (T131 slice 3).
+        // The members' own form: an Administrator also sees the College committee form below it (T131 slice 3).
         cut.FindAll("form").Single(form => form.QuerySelector("#panel-chair") is not null).Submit();
 
         _sender.Received.OfType<UpdateDecisionPanelCommand>().Should().ContainSingle().Which.Members
             .Select(member => $"{member.UserId}:{member.Role}")
             .Should().Equal("zulu:Chair", "naidoo:Member");
+
+        // C12: the warning is read again from the saved panel, and the result says who is off it, with the focus.
+        cut.WaitForAssertion(() => Squash(cut.Find(".alert-success").TextContent).Should().Be(
+            "Panel members updated. Former user 7f3a is off the panel. Thandi Zulu chairs, with 1 member and 0 external " +
+            "members."));
+        cut.FindAll(".alert-warning").Should().BeEmpty("the saved panel seats nobody who can no longer sit");
+        _sender.Received.OfType<GetDecisionPanelByIdQuery>().Should().HaveCount(2, "the panel is read again after the save");
     }
 
     [Fact]
@@ -94,24 +111,30 @@ public sealed class PanelEditSeatTests : TestContext
 
         var cut = RenderComponent<PanelEdit>();
         cut.WaitForState(() => cut.FindAll("#panel-scope").Count == 1);
-        cut.Find("#panel-scope").Change(DecisionPanelScope.Institution.ToString());
+        Squash(cut.Find("#panel-seats-none").TextContent)
+            .Should().Be("Choose the institution first: a panel seats committee members from its own institution.");
+
+        ChooseScope(cut, DecisionPanelScope.Institution);
         cut.Find("#panel-institution").Change(InstitutionB.ToString());
 
         Options(cut).Should().BeEmpty("nobody at the other hospital may sit");
-        cut.Markup.Should().NotContain("Choose the institution first");
+        Squash(cut.Find("#panel-seats-none").TextContent)
+            .Should().Be("No active committee member at Other Hospital who is not a trainee can sit yet.");
 
         cut.Find("#panel-institution").Change(InstitutionA.ToString());
 
         _sender.Received.OfType<ListPanelMemberCandidatesQuery>().Select(query => query.InstitutionId)
             .Should().Equal(null, InstitutionB, InstitutionA);
         Options(cut).Should().Equal("zulu", "naidoo");
+        cut.Find("#panel-seats caption").TextContent.Trim().Should().Be(
+            "Seats on the panel: the active committee members at Kgosi Kgari who are not trainees, by surname");
     }
 
     [Fact]
-    public void AMemberListRefusedByItsValidator_ShowsTheRefusalOnly_NotTheValidatorsLogFormat()
+    public void AMemberListRefusedByItsValidator_IsSaidOnTheSeats_NotInTheValidatorsLogFormat()
     {
-        // T213 item 5: the page used to print ValidationException.Message, "Validation failed: -- Members: … Severity:
-        // Error".
+        // T213 item 5: the page used to print ValidationException.Message, "Validation failed: -- Members: ... Severity:
+        // Error". Round 3 S6: a refused group is named by its message, and the summary's line focuses its first radio.
         SignInAs(WombatRoles.Administrator);
         _sender.On<UpdateDecisionPanelCommand>(_ => throw new FluentValidation.ValidationException(
             [new FluentValidation.Results.ValidationFailure("Members", DecisionPanelComposition.TooFewMembers)]));
@@ -120,9 +143,39 @@ public sealed class PanelEditSeatTests : TestContext
         cut.WaitForState(() => cut.FindAll("#panel-chair").Count == 1);
         cut.FindAll("form").Single(form => form.QuerySelector("#panel-chair") is not null).Submit();
 
-        cut.WaitForAssertion(() => System.Text.RegularExpressions.Regex.Replace(cut.Find(".alert-danger").TextContent, @"\s+", " ")
-            .Trim().Should().Be(DecisionPanelComposition.TooFewMembers));
+        cut.WaitForAssertion(() => Squash(cut.Find("#panel-refusal li").TextContent)
+            .Should().Be("Seats: " + DecisionPanelComposition.TooFewMembers));
+        Squash(cut.Find("#panel-refusal strong").TextContent).Should().Be("The panel's members were not saved.");
+        var group = cut.Find("#panel-seats");
+        group.ClassList.Should().Contain("is-invalid");
+        group.GetAttribute("aria-describedby").Should().Be("panel-seats-msg");
+        Squash(cut.Find("#panel-seats-msg").TextContent).Should().Be(DecisionPanelComposition.TooFewMembers);
+        cut.Find("#panel-refusal a").GetAttribute("href").Should().Be("#seat-1-none", "the first radio: Zulu's row is the chair's");
         cut.Markup.Should().NotContain("Validation failed").And.NotContain("Severity");
+    }
+
+    [Fact]
+    public void AFrameworksInvalidOperation_OnSave_IsTheFixedSentence_ButAHandlersRefusalIsItsOwnWords()
+    {
+        // T364, build review R4 (T338): the framework throws InvalidOperationException too, so only the handlers' own
+        // refusal (CommitteeRefusedException) is printed; anything else is the page's fixed sentence, logged.
+        SignInAs(WombatRoles.Administrator);
+        var refusal = (Exception)new InvalidOperationException("Sequence contains more than one element");
+        _sender.On<UpdateDecisionPanelCommand>(_ => throw refusal);
+
+        var cut = RenderComponent<PanelEdit>(parameters => parameters.Add(page => page.PanelId, PanelId));
+        cut.WaitForState(() => cut.FindAll("#panel-chair").Count == 1);
+        AngleSharp.Dom.IElement MembersForm() => cut.FindAll("form").Single(form => form.QuerySelector("#panel-chair") is not null);
+        MembersForm().Submit();
+
+        cut.WaitForAssertion(() => Squash(cut.Find("#panel-refusal li").TextContent)
+            .Should().Be(Wombat.Web.Components.Pages.CommitteeDecisions.Panels.PanelWords.SaveFailed));
+        cut.Markup.Should().NotContain("Sequence contains");
+
+        refusal = new CommitteeRefusedException(PanelSeat.NotEligible);
+        MembersForm().Submit();
+
+        cut.WaitForAssertion(() => Squash(cut.Find("#panel-refusal li").TextContent).Should().Be(PanelSeat.NotEligible));
     }
 
     private static IReadOnlyList<string?> Options(IRenderedComponent<PanelEdit> cut)

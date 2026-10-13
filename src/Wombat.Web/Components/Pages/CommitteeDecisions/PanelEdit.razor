@@ -1,249 +1,271 @@
 @page "/committee/panels/new"
 @page "/committee/panels/{PanelId:int}"
 @attribute [Authorize(Roles = "Administrator,InstitutionalAdmin,SpecialityAdmin,SubSpecialityAdmin")]
+@using Wombat.Web.Components.Pages.CommitteeDecisions.Panels
 @inject IScopedSender Sender
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject ILogger<PanelEdit> Logger
 
-<PageTitle>Decision panel · Wombat</PageTitle>
+@*
+  A new panel, and a panel's own page (T364, flow 08: boards R2-2-*; Q5, Q6, Q8; C10–C13; round 3 M6, M7, F5, S3, S4, S6,
+  S7; T260, T324, T329, T338).
 
-<PageHeader Title="Decision panel" Subtitle="Panels hold the named members who can review, ratify, and resolve appeals.">
-  <Actions>
-    <a class="btn btn-outline btn-sm" href="/committee/panels">Back to panels</a>
-  </Actions>
-</PageHeader>
+  - The page names the panel in its h1 and tab, with what it covers as the subtitle; no "Back to panels" (Q6). While it
+    reads, and when the read failed, the h1 is "Decision panel" (C11). An id out of reach, or unknown, is flow 01's Page
+    not found, word for word (M7).
+  - About this panel: scope, institution and the open reviews, linked where the reader may open them; name, scope,
+    institution and speciality are fixed at creation, and the page says so (Q8).
+  - Who sits on it: Chair, a select of the people the panel may seat, then the seat picker (Q5), one radio group a
+    committee member, "Not seated / Member / External member", with the name over the whole address. It replaces the two
+    native multi-selects. The count under it says "1 seat" (S7). A member who can no longer sit is in no control, and the
+    warning names them (M6); after Save panel it is read again from the saved panel (C12).
+  - Decides for: the College committee the panel sits as. A select and Save committee for an InstitutionalAdmin or an
+    Administrator, read-only for anyone else, and, while a review is open before the panel, the lock said first in the
+    refusal's own words with the review linked (F5). A change refused by a review scheduled meanwhile (a second tab, C13)
+    is said in the section's summary and beside the select, which goes back to what is saved.
+  - Every refusal is in a summary above the form, which takes the focus, and beside its field (C7, T324). An unexpected
+    failure is fixed words, the failure logged (T338).
+*@
 
-@* What a save did. It takes the focus once Save committee or Save panel is done (T234; DESIGN.md § Button system):
-   Save committee's form is rebuilt with what was stored, and the button with it, and a status arriving on its own is
-   often not read. A refusal leaves the focus where it was: Save panel's is an alert here, and Save committee's an alert
-   beside its button, each read at once. *@
-<ActionResult @ref="_result">
-  @if (!string.IsNullOrWhiteSpace(_status))
-  {
-    <Alert Kind="success">@_status</Alert>
-  }
+<PageTitle>@Heading · Wombat</PageTitle>
 
-  @if (!string.IsNullOrWhiteSpace(_error))
-  {
-    <Alert Kind="danger">@_error</Alert>
-  }
-</ActionResult>
+<div class="committee-calendar">
+  <PageHeader Title="@Heading" Subtitle="@Subtitle" Icon="@(_notFound ? "search" : null)"
+              Page="@(_notFound ? typeof(NotFound) : null)" />
 
-<StatePanel IsLoading="_loading" IsEmpty="false" EmptyTitle="" EmptyBody="" LoadError="@_loadError">
-  @if (_traineeNote is { } traineeNote)
-  {
-    @* T256. Someone who holds Trainee beside a role that manages panels creates, changes and opens none, the one that
-       reviews them included: panel create and update refuse them first, and the panel's read gives them nothing. So no
-       form is offered, for a new panel or this one, and the card says why in the words the handlers refuse with. *@
-    <section class="detail-card detail-card--empty" id="panel-trainee-note">
-      <h3>@(PanelId.HasValue ? "Update members" : "Create panel")</h3>
-      <p class="muted">@traineeNote</p>
-    </section>
-  }
-  else
-  {
-  @if (_unseatable > 0)
-  {
-    @* T165. A member who can no longer sit (erased, deactivated, moved, no longer a committee member, or since T237 a
-       holder of Trainee) is not offered, so saving takes them off; said before the save, not after it. *@
-    <Alert Kind="warning" Role="">
-      @_unseatable member@(_unseatable == 1 ? " of this panel" : "s of this panel") can no longer sit on it, so
-      @(_unseatable == 1 ? "is" : "are") not listed below: only an active committee member at its institution who is
-      not a trainee can. Saving takes @(_unseatable == 1 ? "that member" : "them") off the panel.
-    </Alert>
-  }
-  <div class="details-grid">
-    @if (PanelId.HasValue)
+  @* Present from the first render, so its words are announced when they come (C11). *@
+  <p class="visually-hidden" role="status">@(_loading ? PanelWords.PanelLoading : null)</p>
+
+  @* What a save did. It takes the focus once Save panel or Save committee is done, and on arrival after Create panel
+     (T234; C12; step 2.22). *@
+  <ActionResult @ref="_result">
+    @if (_statusLead is not null)
     {
-      @* Which College committee the panel sits as (T131). Its own form and command: only an InstitutionalAdmin or an
-         Administrator may change it, and a SpecialityAdmin who manages this panel's members sees it read-only. *@
-      <aside class="detail-card" aria-labelledby="panel-body-title">
-        <h3 id="panel-body-title">Decides for</h3>
-        @if (_mayChooseBody)
-        {
-          <EditForm Model="_bodyModel" OnValidSubmit="SaveBodyAsync" FormName="committee-panel-body">
-            <div class="form-grid">
-              <FormField Label="College committee" InputId="panel-body" HelpText="@BodyHelpText">
-                <InputSelect id="panel-body" class="form-select" aria-describedby="@FieldHelp.Id("panel-body")" @bind-Value="_bodyModel.DecisionBodyKey">
-                  <option value="">General panel</option>
-                  @foreach (var body in _bodies)
-                  {
-                    <option value="@body.Key">@body.Name</option>
-                  }
-                </InputSelect>
-              </FormField>
-            </div>
-            @if (!string.IsNullOrWhiteSpace(_bodyError))
-            {
-              <Alert Kind="danger">@_bodyError</Alert>
-            }
-            <FormActions>
-              @* Neither save is disabled while it runs (T234): the one pressed has the focus, and a browser drops the focus
-                 of a button it disables, to the page. A second press sends nothing. *@
-              <button type="submit" class="btn btn-primary" disabled="@_saving" aria-disabled="@InFlight.AriaDisabled(_savingBody)">@(_savingBody ? "Saving..." : "Save committee")</button>
-            </FormActions>
-          </EditForm>
-        }
-        else
-        {
-          <dl class="details-list">
-            <div>
-              <dt>College committee</dt>
-              <dd>@(_bodyName ?? "General panel")</dd>
-            </div>
-          </dl>
-          <p class="muted">Only an institutional administrator can change which College committee a panel sits as.</p>
-        }
-      </aside>
+      <div class="alert alert-success" role="status"><strong>@_statusLead</strong>@if (_statusText is not null)
+        {@(" ")@_statusText}</div>
     }
-    @if (!PanelId.HasValue && _formOptions is { MayCreateAny: false })
+  </ActionResult>
+
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="LoadAsync" IsEmpty="false">
+    @if (_notFound)
+    {
+      @* Flow 01's NotFound, word for word (M7): an id that is not this reader's to change is no page at all. *@
+      <div class="system-panel">
+        <p>There is no page at this address.</p>
+        <p class="muted">Check the address, or start again from Home.</p>
+        <div class="actions-cell">
+          <a class="btn btn-primary" href="/"><Icon Name="home" />Go to Home</a>
+        </div>
+      </div>
+    }
+    else if (_traineeNote is { } traineeNote)
+    {
+      @* T256. Someone who holds Trainee beside a role that manages panels creates, changes and opens none, the one that
+         reviews them included: panel create and update refuse them first. The rule is said first; no form (S1). *@
+      <Alert Kind="info" Id="panel-trainee-note">@traineeNote</Alert>
+      <div class="actions-cell">
+        <a class="btn btn-outline" href="/committee/panels">@PanelWords.GoToPanels</a>
+      </div>
+    }
+    else if (!PanelId.HasValue && _formOptions is { MayCreateAny: false })
     {
       @* T194. No scope is open to this caller, so the form is not offered empty: creating any panel would be refused. *@
-      <section class="detail-card detail-card--empty" id="panel-none-creatable">
-        <h3>Create panel</h3>
-        <p class="muted">@NoneCreatable</p>
-      </section>
+      <Alert Kind="info" Id="panel-none-creatable">@PanelWords.NoneCreatable</Alert>
+      <div class="actions-cell">
+        <a class="btn btn-outline" href="/committee/panels">@PanelWords.GoToPanels</a>
+      </div>
     }
-    else
+    else if (!PanelId.HasValue)
     {
-    <section class="detail-card">
-      <h3>@(PanelId.HasValue ? "Update members" : "Create panel")</h3>
-      <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="committee-panel">
-        <DataAnnotationsValidator />
-        <ValidationSummary class="validation-summary-errors" />
+      <EditForm EditContext="_editContext" OnSubmit="SaveAsync" FormName="committee-panel" class="form-container" aria-label="@PanelWords.NewPanelTitle">
+        @RefusalSummary()
+        <h2 class="form-section-title">@PanelWords.AboutTitle</h2>
         <div class="form-grid">
-          @if (!PanelId.HasValue)
+          <div class="form-group">
+            <label for="panel-name">Panel name<span aria-hidden="true"> *</span><span class="visually-hidden">required</span></label>
+            <InputText id="panel-name" class="form-control" @bind-Value="_model.Name" @bind-Value:after="() => RemoveFieldError(NameKey)" aria-describedby="@MessageId(NameKey)" />
+            @FieldMessage(NameKey)
+          </div>
+
+          @ScopeField()
+
+          @* Every panel runs at one institution (T182). Anyone but an Administrator creates panels at their own, so the
+             picker is theirs only for an institution-wide panel; an Administrator names it for every scope. *@
+          @if (_model.Scope == DecisionPanelScope.Institution || _isAdministrator)
           {
-            <FormField Label="Panel name" InputId="panel-name" Required="true">
-              <InputText id="panel-name" class="form-control" @bind-Value="_model.Name" />
-            </FormField>
-            <FormField Label="Scope" InputId="panel-scope" Required="true">
-              <InputSelect id="panel-scope" class="form-select" @bind-Value="_model.Scope">
-                @* Only the scopes the caller may create, by the rule creating a panel demands (GetDecisionPanelFormOptionsQuery,
-                   T194): a Speciality or SubSpecialityAdmin manages Speciality-scoped panels only, and used to be offered
-                   the institution-wide scope only to be refused it. *@
-                @foreach (var scope in Enum.GetValues<DecisionPanelScope>().Where(MayCreate))
+            <div class="form-group">
+              <label for="panel-institution">Institution</label>
+              <InputSelect id="panel-institution" class="form-select" @bind-Value="_model.InstitutionId"
+                           @bind-Value:after="OnInstitutionChangedAsync"
+                           aria-describedby="@MessageId(InstitutionKey)">
+                <option value="">@PanelWords.ChooseInstitutionTitle</option>
+                @foreach (var institution in _institutions)
                 {
-                  <option value="@scope">@scope</option>
+                  <option value="@institution.Id">@institution.Name</option>
                 }
               </InputSelect>
-            </FormField>
-
-            @* Every panel runs at one institution (T182). Anyone but an Administrator creates panels at their own, so the
-               picker is theirs only for an institution-wide panel; an Administrator names it for every scope. *@
-            @if (_model.Scope == DecisionPanelScope.Institution || _isAdministrator)
-            {
-              <FormField Label="Institution" InputId="panel-institution" Required="true">
-                <InputSelect id="panel-institution" class="form-select" @bind-Value="_model.InstitutionId"
-                             @bind-Value:after="OnInstitutionChangedAsync">
-                  <option value="">Select institution</option>
-                  @foreach (var institution in _institutions)
-                  {
-                    <option value="@institution.Id">@institution.Name</option>
-                  }
-                </InputSelect>
-              </FormField>
-            }
-            @if (_model.Scope == DecisionPanelScope.Speciality)
-            {
-              <FormField Label="Speciality" InputId="panel-speciality" Required="true"
-                         HelpText="@SpecialityHelpText">
-                <InputSelect id="panel-speciality" class="form-select" aria-describedby="@FieldHelp.DescribedBy("panel-speciality", SpecialityHelpText)" @bind-Value="_model.SpecialityId">
-                  <option value="">Select speciality</option>
-                  @foreach (var speciality in OfferedSpecialities)
-                  {
-                    @* Specialities are national now (T091); College prefix lands with the Phase 5 rework. *@
-                    <option value="@speciality.Id">@speciality.Name</option>
-                  }
-                </InputSelect>
-              </FormField>
-            }
-            @if (_mayChooseBody)
-            {
-              <FormField Label="Decides for" InputId="panel-body" HelpText="@BodyHelpText">
-                <InputSelect id="panel-body" class="form-select" aria-describedby="@FieldHelp.Id("panel-body")" @bind-Value="_model.DecisionBodyKey">
-                  <option value="">General panel</option>
-                  @foreach (var body in _bodies)
-                  {
-                    <option value="@body.Key">@body.Name</option>
-                  }
-                </InputSelect>
-              </FormField>
-            }
+              @FieldMessage(InstitutionKey)
+            </div>
           }
-
-          <FormField Label="Chair" InputId="panel-chair" Required="true" HelpText="@ChairHelpText">
-            <ChildContent>
-              <InputSelect id="panel-chair" class="form-select" aria-describedby="@FieldHelp.DescribedBy("panel-chair", ChairHelpText, _chairNote is null ? null : ChairNoteId)"
-                           @bind-Value="_model.ChairUserId" @bind-Value:after="OnChairChanged">
-                <option value="">Select chair</option>
-                @foreach (var candidate in _candidates)
+          @if (_model.Scope == DecisionPanelScope.Speciality)
+          {
+            <div class="form-group">
+              <label for="panel-speciality">Speciality</label>
+              <InputSelect id="panel-speciality" class="form-select" @bind-Value="_model.SpecialityId"
+                           @bind-Value:after="() => RemoveFieldError(SpecialityKey)"
+                           aria-describedby="@FieldHelp.DescribedBy("panel-speciality", SpecialityHelpText, MessageId(SpecialityKey))">
+                @if (OfferedSpecialities.Count != 1)
                 {
-                  <option value="@candidate.UserId">@FormatCandidate(candidate)</option>
+                  <option value="">@PanelWords.ChooseSpecialityOption</option>
+                }
+                @foreach (var speciality in OfferedSpecialities)
+                {
+                  @* Specialities are national now (T091); College prefix lands with the Phase 5 rework. *@
+                  <option value="@speciality.Id">@speciality.Name</option>
                 }
               </InputSelect>
-            </ChildContent>
-            <ValidationContent>
-              @* T257. The chosen chair is taken off the Members and External members selections, whose pickers leave the
-                 chair out, and put back there when another chair is chosen; this line says so. A live region present
-                 before anything is chosen, so what appears in it is read while the focus stays on the Chair select. *@
-              <div id="@ChairNoteId" class="muted" role="status">@_chairNote</div>
-            </ValidationContent>
-          </FormField>
-
-          @* Each option is keyed by the person it offers (T257; DESIGN.md § Form system). Unkeyed, Blazor reuses the options
-             by position when someone leaves the list (the chair, or a member under External members), and a browser
-             ignores a change to the selected attribute of an option the user has clicked: the element reused for the next
-             person still showed them selected, although the form did not hold them. *@
-          <FormField Label="Members" InputId="panel-members" FullWidth="true" HelpText="@MembersHelpText">
-            <select id="panel-members" class="form-select" multiple size="6" aria-describedby="@FieldHelp.Id("panel-members")" @onchange="OnMembersChanged">
-              @foreach (var candidate in _candidates.Where(candidate => candidate.UserId != _model.ChairUserId))
-              {
-                var isSelected = _model.MemberUserIds.Contains(candidate.UserId);
-                <option @key="candidate.UserId" value="@candidate.UserId" selected="@isSelected">@FormatCandidate(candidate)</option>
-              }
-            </select>
-          </FormField>
-
-          <FormField Label="External members" InputId="panel-external" FullWidth="true" HelpText="@ExternalsHelpText">
-            <select id="panel-external" class="form-select" multiple size="6" aria-describedby="@FieldHelp.Id("panel-external")" @onchange="OnExternalsChanged">
-              @foreach (var candidate in _candidates.Where(candidate => candidate.UserId != _model.ChairUserId && !_model.MemberUserIds.Contains(candidate.UserId)))
-              {
-                var isSelected = _model.ExternalUserIds.Contains(candidate.UserId);
-                <option @key="candidate.UserId" value="@candidate.UserId" selected="@isSelected">@FormatCandidate(candidate)</option>
-              }
-            </select>
-          </FormField>
+              @FieldMessage(SpecialityKey)
+              <small class="page-subtitle" id="@FieldHelp.Id("panel-speciality")">@SpecialityHelpText</small>
+            </div>
+          }
+          @if (_mayChooseBody)
+          {
+            <div class="form-group">
+              <label for="panel-body">@PanelWords.DecidesForTitle</label>
+              <InputSelect id="panel-body" class="form-select" aria-describedby="@FieldHelp.Id("panel-body")" @bind-Value="_model.DecisionBodyKey">
+                <option value="">@PanelWords.GeneralPanel</option>
+                @foreach (var body in _bodies)
+                {
+                  <option value="@body.Key">@body.Name</option>
+                }
+              </InputSelect>
+              <small class="page-subtitle" id="@FieldHelp.Id("panel-body")">@PanelWords.DecidesForHelpNew</small>
+            </div>
+          }
         </div>
-        <FormActions>
-          <button type="submit" class="btn btn-primary" disabled="@_savingBody" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : "Save panel")</button>
-        </FormActions>
+
+        <h2 class="form-section-title">@PanelWords.SeatsTitle</h2>
+        @Seats()
+
+        <div class="form-actions">
+          <a class="btn btn-outline" href="/committee/panels">@PanelWords.Cancel</a>
+          <button type="submit" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? PanelWords.Saving : PanelWords.CreatePanel)</button>
+        </div>
       </EditForm>
-    </section>
     }
-  </div>
-  }
-</StatePanel>
+    else if (_panel is { } panel)
+    {
+      <section class="detail-card panel-section" aria-labelledby="panel-about-title">
+        <h2 id="panel-about-title">@PanelWords.AboutTitle</h2>
+        <dl class="details-list">
+          <div>
+            <dt>Scope</dt>
+            <dd>@PanelWords.ScopeValue(panel.Scope, panel.SpecialityName)</dd>
+          </div>
+          <div>
+            <dt>Institution</dt>
+            <dd>@panel.InstitutionName</dd>
+          </div>
+          <div>
+            <dt>Open reviews</dt>
+            <dd id="panel-open-reviews">
+              @if (panel.OpenReviews.Count == 0)
+              {
+                @PanelWords.None
+              }
+              else
+              {
+                var first = panel.OpenReviews[0];
+                @if (first.MayOpen)
+                {
+                  <a href="@ReviewLinks.Review(first.Id)">@PanelWords.OpenReview(first)</a>
+                }
+                else
+                {
+                  @PanelWords.OpenReview(first)
+                }
+                @if (PanelWords.MoreOpenReviews(panel.OpenReviews.Count) is { } more)
+                {
+                  @(" ")@more
+                }
+              }
+            </dd>
+          </div>
+        </dl>
+        <p class="muted">@PanelWords.PanelRules</p>
+      </section>
+
+      <EditForm EditContext="_editContext" OnSubmit="SaveAsync" FormName="committee-panel" class="form-container panel-section" aria-labelledby="panel-seats-title">
+        <h2 id="panel-seats-title" class="form-section-title">@PanelWords.SeatsTitle</h2>
+        @RefusalSummary()
+        @if (_unseatableNames.Count > 0)
+        {
+          @* T165, round 3 M6, C12. A member who can no longer sit (erased, deactivated, moved, no longer a committee
+             member, or a holder of Trainee, T237) is in no control, so saving takes them off; said before the save, by
+             name, and announced as it first shows. Read again from the saved panel after Save panel. *@
+          <Alert Kind="warning" Role="alert" Id="panel-cannot-sit">@PanelWords.CannotSit(_unseatableNames)</Alert>
+        }
+        @Seats()
+        <div class="form-actions">
+          @* Neither save is disabled while either runs (T234; T364, build review D3): the one pressed has the focus, and a
+             browser drops the focus of a button it disables, to the page. aria-disabled says it is unavailable, and a
+             second press sends nothing (Busy). *@
+          <button type="submit" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(Busy)">@(_saving ? PanelWords.Saving : PanelWords.SavePanel)</button>
+        </div>
+      </EditForm>
+
+      @DecidesFor(panel)
+    }
+  </StatePanel>
+</div>
 
 @code {
   [Parameter] public int? PanelId { get; set; }
 
-  private string? _status;
-  private string? _error;
-  private string? _loadError;
+  /// <summary>
+  /// Set by Create panel's landing (?created=1): the page says the panel was created (step 2.22). Only "1": any other value
+  /// on an old panel's address announces nothing (T364, build review R7).
+  /// </summary>
+  [SupplyParameterFromQuery(Name = "created")] public string? Created { get; set; }
+
+  private const string NameKey = "name";
+  private const string InstitutionKey = "institution";
+  private const string SpecialityKey = "speciality";
+  private const string ChairKey = "chair";
+  private const string SeatsKey = "seats";
+
+  /// <summary>The line under the Chair select, a polite live region (T257).</summary>
+  private const string ChairNoteId = "panel-chair-note";
+
+  private const string SeatsMessageId = "panel-seats-msg";
+  private const string RefusalId = "panel-refusal";
+  private const string BodyRefusalId = "panel-body-refusal";
+
   private bool _loading = true;
+  private string? _loadError;
+  private bool _notFound;
   private bool _saving;
+  private bool _savingBody;
   private bool _isAdministrator;
   private bool _mayChooseBody;
-  private bool _savingBody;
+  private System.Security.Claims.ClaimsPrincipal _user = new();
   private ActionResult? _result;
 
   /// <summary>A save has been sent and has not answered, so nothing else may be sent. (T234)</summary>
   private bool Busy => _saving || _savingBody;
-  private string? _bodyError;
-  private string? _bodyName;
+
+  private string? _statusLead;
+  private string? _statusText;
   private PanelFormModel _model = new();
-  private BodyFormModel _bodyModel = new();
+
+  // The form's edit context, and the store the refusals' field messages go in, so Blazor's inputs mark themselves
+  // invalid (.invalid, aria-invalid; DESIGN.md § Form system, T236). Made again whenever the model is (T364, T324).
+  private EditContext _editContext = new(new PanelFormModel());
+  private ValidationMessageStore? _messages;
+  private string? _bodyKey;
+  private DecisionPanelDetailDto? _panel;
   private IReadOnlyList<DecisionBodyDto> _bodies = [];
   private IReadOnlyList<InstitutionDto> _institutions = [];
 
@@ -254,20 +276,47 @@
   private IReadOnlyList<SpecialityDto> _institutionSpecialities = [];
   private DecisionPanelFormOptionsDto? _formOptions;
   private IReadOnlyList<PanelMemberCandidateDto> _candidates = [];
-  private int _unseatable;
+  private IReadOnlyList<string> _unseatableNames = [];
   private string? _traineeNote;
 
-  /// <summary>The line under the Chair select, a polite live region (T257).</summary>
-  private const string ChairNoteId = "panel-chair-note";
+  // The members form's refusal: its summary's lines, and each field's message by key (C7, T324).
+  private string? _refusalTitle;
+  private readonly List<(string Text, string? FieldId)> _refusalLines = [];
+  private readonly Dictionary<string, string> _fieldErrors = new(StringComparer.Ordinal);
+  private ElementReference _refusalElement;
+  private bool _focusRefusal;
+
+  // Decides for's refusal (C13): what is still saved, the summary's line, and the words beside the select.
+  private string? _bodyRefusalTitle;
+  private string? _bodyRefusalLink;
+  private string? _bodyRefusalRest;
+  private string? _bodyBeside;
+  private ElementReference _bodyRefusalElement;
+  private bool _focusBodyRefusal;
+
+  private bool _focusResult;
 
   /// <summary>What the last choice of chair took off or put back; null when it did neither (T257).</summary>
   private string? _chairNote;
 
   /// <summary>
-  /// The chair now, and the selections choosing them took them off, to put them back when another chair is chosen; null
-  /// when choosing them took them off none, and after a save or a fresh read, which make the chair the stored one (T257).
+  /// The chair now, and the seat choosing them took them from, to put them back when another chair is chosen; null when
+  /// choosing them took them from none, and after a save or a fresh read (T257).
   /// </summary>
   private ChairTakenFrom? _chairTakenFrom;
+
+  /// <summary>The h1, which the tab and the crumb share (Q6; C11; M7).</summary>
+  private string Heading
+    => !PanelId.HasValue ? PanelWords.NewPanelTitle
+      : _notFound ? "Page not found"
+      : _panel is { } panel && !_loading && _loadError is null ? panel.Name
+      : PanelWords.PanelLoadingTitle;
+
+  private string? Subtitle
+    => !PanelId.HasValue ? PanelWords.NewPanelSubtitle
+      : _panel is { } panel && !_loading && _loadError is null && !_notFound
+        ? PanelWords.PanelSubtitle(panel.Scope, panel.SpecialityName, panel.InstitutionName)
+        : null;
 
   protected override async Task OnParametersSetAsync()
   {
@@ -278,38 +327,50 @@
   {
     _loading = true;
     _loadError = null;
+    _notFound = false;
+    _panel = null;
     _chairNote = null;
     _chairTakenFrom = null;
+    _statusLead = null;
+    _statusText = null;
+    ClearRefusal();
+    ClearBodyRefusal();
+    UseModel(new PanelFormModel());
 
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _isAdministrator = authState.User.IsInRole(WombatRoles.Administrator);
-      _mayChooseBody = _isAdministrator || authState.User.IsInRole(WombatRoles.InstitutionalAdmin);
+      _user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      _isAdministrator = _user.IsInRole(WombatRoles.Administrator);
+      _mayChooseBody = _isAdministrator || _user.IsInRole(WombatRoles.InstitutionalAdmin);
 
       // What a panel may be, by the rule creating one demands (T194), asked first for a new panel and an existing one
       // alike: someone who holds Trainee beside a role that manages panels is told why nothing is offered, and nothing
       // else is read for them (T256).
-      _formOptions = await Sender.Send(new GetDecisionPanelFormOptionsQuery(authState.User));
+      _formOptions = await Sender.Send(new GetDecisionPanelFormOptionsQuery(_user));
       _traineeNote = _formOptions.TraineeNote;
       if (_traineeNote is not null)
       {
         return;
       }
 
-      _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
+      _institutions = await Sender.Send(new GetInstitutionsListQuery(_user));
       // Anyone but a global Administrator is offered, from the options, exactly the specialities creating their panel
       // accepts (T194, T245). An Administrator's follow the institution the form holds, usually none yet.
       _institutionSpecialities = [];
-      await LoadInstitutionSpecialitiesAsync(authState.User);
+      await LoadInstitutionSpecialitiesAsync();
       if (!PanelId.HasValue)
       {
         // The form starts on a scope it offers: Speciality where it offers one, as it always did, else the
-        // institution-wide scope.
+        // institution-wide scope; and on the one speciality, where only one is offered (step 2.21).
         _model.Scope = MayCreate(DecisionPanelScope.Speciality) || !MayCreate(DecisionPanelScope.Institution)
           ? DecisionPanelScope.Speciality
           : DecisionPanelScope.Institution;
+        if (OfferedSpecialities.Count == 1)
+        {
+          _model.SpecialityId = OfferedSpecialities[0].Id;
+        }
       }
+
       if (_mayChooseBody)
       {
         _bodies = await Sender.Send(new GetDecisionBodiesQuery());
@@ -317,33 +378,32 @@
 
       if (PanelId.HasValue)
       {
-        var panel = await Sender.Send(new GetDecisionPanelByIdQuery(PanelId.Value, authState.User));
+        var panel = await Sender.Send(new GetDecisionPanelByIdQuery(PanelId.Value, _user));
         if (panel is null)
         {
-          _loadError = "The decision panel could not be found.";
+          // M7: flow 01's Page not found, whether the panel is another institution's or does not exist.
+          _notFound = true;
           return;
         }
-        _model = new PanelFormModel
-        {
-          Name = panel.Name,
-          Scope = panel.Scope,
-          InstitutionId = panel.InstitutionId,
-          SpecialityId = panel.SpecialityId,
-          ChairUserId = panel.Members.FirstOrDefault(member => member.Role == DecisionPanelMemberRole.Chair)?.UserId ?? string.Empty,
-          MemberUserIds = panel.Members.Where(member => member.Role == DecisionPanelMemberRole.Member).Select(member => member.UserId).ToHashSet(StringComparer.Ordinal),
-          ExternalUserIds = panel.Members.Where(member => member.Role == DecisionPanelMemberRole.External).Select(member => member.UserId).ToHashSet(StringComparer.Ordinal),
-          DecisionBodyKey = panel.DecisionBodyKey
-        };
-        _bodyModel = new BodyFormModel { DecisionBodyKey = panel.DecisionBodyKey };
-        _bodyName = panel.DecisionBodyName;
+
+        UsePanel(panel);
       }
 
       // T165: the people this panel may seat, by the rule its save enforces, for the panel's institution.
-      await LoadCandidatesAsync(authState.User);
+      await LoadCandidatesAsync();
+
+      if (PanelId.HasValue && Created == "1" && _panel is { } created)
+      {
+        // Step 2.22: the panel's own page, saying it was created, with the focus.
+        _statusLead = PanelWords.Created(created.Name);
+        _statusText = PanelWords.CreatedNext;
+        _focusResult = true;
+      }
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _loadError = RefusalText.Of(exception);
+      Logger.LogError(exception, "The decision panel page could not be read.");
+      _loadError = PanelId.HasValue ? PanelWords.PanelLoadFailed : PanelWords.NewPanelLoadFailed;
     }
     finally
     {
@@ -351,116 +411,43 @@
     }
   }
 
-  private const string BodyHelpText =
-    "A panel sitting as a College committee decides the EPAs the College gives that committee (the neonatal CCC " +
-    "decides EPAs 4 and 5), and nothing else. Where no panel sits as it, the general panels decide them. It cannot " +
-    "change while a review before the panel is scheduled, in progress or awaiting ratification.";
-
-  /// <summary>Said in place of the form when no panel is the caller's to create (T194).</summary>
-  private const string NoneCreatable =
-    "You cannot create a decision panel. A speciality or sub-speciality administrator creates panels for their own " +
-    "speciality at their own institution, once the institution has adopted a curriculum in it. An institutional " +
-    "administrator creates the institution's panels.";
-
-  private const string MembersHelpText =
-    "Hold Ctrl (Windows) / Cmd (Mac) to select multiple. The chair is excluded automatically. A panel needs at least " +
-    "one member or external member besides the chair: no committee decision is one person's. Only active committee " +
-    "members at the panel's institution who are not trainees are listed.";
-
-  private const string ExternalsHelpText =
-    "External examiners, who sit with the chair on the panel's appeal body. Only active committee members at the " +
-    "panel's institution who are not trainees are listed: cross-institution externals are not yet supported.";
-
-  /// <summary>
-  /// Whether the caller may create a panel of this scope (T194): the institution-wide one when the options say so, a
-  /// Speciality-scoped one when there is a speciality to offer. Read from what creating a panel would accept, not from
-  /// the caller's roles.
-  /// </summary>
-  private bool MayCreate(DecisionPanelScope scope) => scope switch
+  /// <summary>The form holds the panel as saved: its chair and seats, and the committee it sits as.</summary>
+  private void UsePanel(DecisionPanelDetailDto panel)
   {
-    DecisionPanelScope.Institution => _formOptions?.MayCreateInstitutionWide == true,
-    DecisionPanelScope.Speciality => SpecialitiesFollowInstitution || OfferedSpecialities.Count > 0,
-    _ => false
-  };
-
-  /// <summary>
-  /// Whether the specialities offered depend on the institution chosen in the form: a global Administrator's, whose
-  /// options name none until an institution is chosen (T245 review). They may create a speciality panel wherever one has
-  /// been adopted, so the Speciality scope is theirs whichever institution is chosen.
-  /// </summary>
-  private bool SpecialitiesFollowInstitution => _formOptions is { Specialities: null };
-
-  /// <summary>
-  /// The specialities a new Speciality-scoped panel may cover (T194): the ones the panel's institution has adopted, only
-  /// their own for a Speciality or SubSpecialityAdmin (T245), and for a global Administrator the ones the institution they
-  /// chose has adopted (T245 review).
-  /// </summary>
-  private IReadOnlyList<SpecialityDto> OfferedSpecialities => _formOptions?.Specialities ?? _institutionSpecialities;
-
-  private async Task SaveBodyAsync()
-  {
-    if (!PanelId.HasValue || Busy)
+    _panel = panel;
+    UseModel(new PanelFormModel
     {
-      return;
-    }
-
-    _savingBody = true;
-    _bodyError = null;
-    _status = null;
-
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var result = await Sender.Send(new SetDecisionPanelBodyCommand(PanelId.Value, _bodyModel.DecisionBodyKey, authState.User));
-      _bodyModel = new BodyFormModel { DecisionBodyKey = result.DecisionBodyKey };
-      _bodyName = result.DecisionBodyName;
-      _status = result.DecisionBodyName is null
-        ? "The panel is a general panel."
-        : $"The panel sits as the {result.DecisionBodyName}.";
-      _result?.FocusAfterRender();
-    }
-    catch (Exception exception)
-    {
-      _bodyError = RefusalText.Of(exception);
-    }
-    finally
-    {
-      _savingBody = false;
-    }
+      Name = panel.Name,
+      Scope = panel.Scope,
+      InstitutionId = panel.InstitutionId,
+      SpecialityId = panel.SpecialityId,
+      ChairUserId = panel.Members.FirstOrDefault(member => member.Role == DecisionPanelMemberRole.Chair)?.UserId ?? string.Empty,
+      MemberUserIds = panel.Members.Where(member => member.Role == DecisionPanelMemberRole.Member).Select(member => member.UserId).ToHashSet(StringComparer.Ordinal),
+      ExternalUserIds = panel.Members.Where(member => member.Role == DecisionPanelMemberRole.External).Select(member => member.UserId).ToHashSet(StringComparer.Ordinal),
+      DecisionBodyKey = panel.DecisionBodyKey
+    });
+    _bodyKey = panel.DecisionBodyKey;
   }
 
-  private static string FormatCandidate(PanelMemberCandidateDto candidate)
-    => $"{candidate.FirstName} {candidate.LastName} ({candidate.Email})";
-
   /// <summary>
-  /// Said under the Speciality select: a panel may cover only a speciality its institution has adopted (T245), so a
-  /// speciality the caller's claims name, or any other, is not offered where the institution has not, and this says why.
-  /// Anyone but a global Administrator creates at their own institution; an Administrator chooses it above, first
-  /// (T245 review).
+  /// The people this panel may seat (<c>PanelSeat</c>, T165; never someone who holds Trainee, T237), offered by Chair and
+  /// by the seat picker, for the panel's institution: an Administrator's choice on a new panel, the stored one on an
+  /// existing panel, and anyone else's own. Anyone held who is not among them is taken out of the form and named, so the
+  /// form never sends a member the save refuses (round 3 M6).
   /// </summary>
-  private string SpecialityHelpText => !SpecialitiesFollowInstitution
-    ? "The panel runs at your institution. Only the specialities it has adopted a curriculum in are listed."
-    : _model.InstitutionId is null
-      ? "Choose the institution first: only the specialities it has adopted a curriculum in are listed."
-      : "Only the specialities the chosen institution has adopted a curriculum in are listed.";
-
-  private string? ChairHelpText
-    => _isAdministrator && !PanelId.HasValue && _model.InstitutionId is null
-      ? "Choose the institution first: a panel seats committee members from its own institution."
-      : null;
-
-  /// <summary>
-  /// The people this panel may seat (<c>PanelSeat</c>, T165; never someone who holds Trainee, T237), offered by every
-  /// seat's picker, the Chair's, the Members' and the External members', for the panel's institution: an Administrator's
-  /// choice on a new panel, the stored one on an existing panel, and anyone else's own. Anyone selected who is not among
-  /// them is taken out of the selection and counted, so the form never sends a member the save refuses.
-  /// </summary>
-  private async Task LoadCandidatesAsync(System.Security.Claims.ClaimsPrincipal user)
+  private async Task LoadCandidatesAsync()
   {
-    _candidates = await Sender.Send(new ListPanelMemberCandidatesQuery(user, _model.InstitutionId));
+    _candidates = await Sender.Send(new ListPanelMemberCandidatesQuery(_user, _model.InstitutionId));
 
     var seatable = _candidates.Select(candidate => candidate.UserId).ToHashSet(StringComparer.Ordinal);
-    var before = (string.IsNullOrWhiteSpace(_model.ChairUserId) ? 0 : 1) + _model.MemberUserIds.Count + _model.ExternalUserIds.Count;
+    var held = new List<string>();
+    if (!string.IsNullOrWhiteSpace(_model.ChairUserId))
+    {
+      held.Add(_model.ChairUserId);
+    }
+
+    held.AddRange(_model.MemberUserIds);
+    held.AddRange(_model.ExternalUserIds);
 
     if (!seatable.Contains(_model.ChairUserId))
     {
@@ -470,36 +457,42 @@
     _model.MemberUserIds.IntersectWith(seatable);
     _model.ExternalUserIds.IntersectWith(seatable);
 
-    var after = (string.IsNullOrWhiteSpace(_model.ChairUserId) ? 0 : 1) + _model.MemberUserIds.Count + _model.ExternalUserIds.Count;
-    _unseatable = PanelId.HasValue ? before - after : 0;
+    _unseatableNames = PanelId.HasValue
+      ? held.Where(userId => !seatable.Contains(userId)).Select(StoredName).ToArray()
+      : [];
   }
+
+  /// <summary>A member's name as the panel's read stored it, for a member no longer among the candidates (M6).</summary>
+  private string StoredName(string userId)
+    => _panel?.Members.FirstOrDefault(member => string.Equals(member.UserId, userId, StringComparison.Ordinal))?.Name
+       ?? PanelWords.UnnamedMember;
 
   private async Task OnInstitutionChangedAsync()
   {
     // Whoever the line names may not sit at the institution now chosen, and the chair may be cleared with it. Nor is the
-    // chair put back later in a selection it was taken from: the selections now keep only who may sit there.
+    // chair put back later in a seat it was taken from: the seats now keep only who may sit there.
     _chairNote = null;
     _chairTakenFrom = null;
+    RemoveFieldError(InstitutionKey);
 
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      await LoadInstitutionSpecialitiesAsync(authState.User);
-      await LoadCandidatesAsync(authState.User);
+      await LoadInstitutionSpecialitiesAsync();
+      await LoadCandidatesAsync();
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _error = RefusalText.Of(exception);
+      Logger.LogError(exception, "The new panel's institution could not be read.");
+      ShowRefusal(PanelWords.NotCreated, [(PanelWords.SaveFailed, null)]);
     }
   }
 
   /// <summary>
   /// A global Administrator's new panel may cover only a speciality the institution they chose has adopted (T245 review):
   /// read, by the rule panel create demands, whenever the institution changes, and a speciality chosen before that the
-  /// institution now chosen has not adopted is unchosen, so the form never sends one the save refuses. Anyone else's
-  /// panel runs at their own institution, whose specialities the options name already.
+  /// institution now chosen has not adopted is unchosen, so the form never sends one the save refuses.
   /// </summary>
-  private async Task LoadInstitutionSpecialitiesAsync(System.Security.Claims.ClaimsPrincipal user)
+  private async Task LoadInstitutionSpecialitiesAsync()
   {
     if (PanelId.HasValue || !SpecialitiesFollowInstitution)
     {
@@ -507,26 +500,253 @@
     }
 
     _institutionSpecialities = _model.InstitutionId is int institutionId
-      ? (await Sender.Send(new GetDecisionPanelFormOptionsQuery(user, institutionId))).Specialities ?? []
+      ? (await Sender.Send(new GetDecisionPanelFormOptionsQuery(_user, institutionId))).Specialities ?? []
       : [];
 
     if (_model.SpecialityId is int chosen && _institutionSpecialities.All(speciality => speciality.Id != chosen))
     {
       _model.SpecialityId = null;
     }
+
+    if (_model.SpecialityId is null && _institutionSpecialities.Count == 1)
+    {
+      _model.SpecialityId = _institutionSpecialities[0].Id;
+    }
   }
 
   /// <summary>
-  /// Takes the chair just chosen off the Members and External members selections, puts the chair before back where
-  /// choosing them took them from, and says so (T257). Those pickers leave the chair out, but a selection made before the
-  /// chair was chosen kept them, unseen, and the save sent them twice, to be refused with "A panel member is listed more
-  /// than once.". Putting the chair before back means a chair chosen and then changed takes nobody off: in Chrome and
-  /// Edge on Windows each arrow key on the closed Chair select is a change, so moving down the list chose everyone passed.
+  /// Whether the caller may create a panel of this scope (T194): the institution-wide one when the options say so, a
+  /// Speciality-scoped one when there is a speciality to offer.
+  /// </summary>
+  private bool MayCreate(DecisionPanelScope scope) => scope switch
+  {
+    DecisionPanelScope.Institution => _formOptions?.MayCreateInstitutionWide == true,
+    DecisionPanelScope.Speciality => SpecialitiesFollowInstitution || OfferedSpecialities.Count > 0,
+    _ => false
+  };
+
+  /// <summary>A global Administrator's specialities depend on the institution chosen in the form (T245 review).</summary>
+  private bool SpecialitiesFollowInstitution => _isAdministrator && _formOptions is { Specialities: null };
+
+  private IReadOnlyList<SpecialityDto> OfferedSpecialities
+    => SpecialitiesFollowInstitution ? _institutionSpecialities : _formOptions?.Specialities ?? [];
+
+  private string SpecialityHelpText => !SpecialitiesFollowInstitution
+    ? "The panel runs at your institution. Only the specialities it has adopted a curriculum in are listed."
+    : _model.InstitutionId is null
+      ? "Choose the institution first: only the specialities it has adopted a curriculum in are listed."
+      : "Only the specialities the chosen institution has adopted a curriculum in are listed.";
+
+  /// <summary>The institution the seats are at, by name, for the picker's caption (Q5).</summary>
+  private string? SeatsInstitutionName
+    => _panel?.InstitutionName
+       ?? (_isAdministrator
+         ? _institutions.FirstOrDefault(institution => institution.Id == _model.InstitutionId)?.Name
+         : _formOptions?.InstitutionName);
+
+  private string ScopeHelp
+    => MayCreate(DecisionPanelScope.Speciality)
+      ? _user.IsInRole(WombatRoles.SpecialityAdmin) ? PanelWords.ScopeSpecialityAdmin : PanelWords.ScopeSubSpecialityAdmin
+      : PanelWords.ScopeInstitutionOnly;
+
+  // ─── The scope ───────────────────────────────────────────────────────────
+
+  private RenderFragment ScopeField() => __builder =>
+  {
+    var scopes = Enum.GetValues<DecisionPanelScope>().Where(MayCreate).ToArray();
+    if (scopes.Length > 1)
+    {
+      <fieldset class="form-group choice-row" id="panel-scope">
+        <legend>Scope</legend>
+        <div class="check-grid">
+          @foreach (var scope in scopes)
+          {
+            var id = $"panel-scope-{scope.ToString().ToLowerInvariant()}";
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="panel-scope" id="@id" value="@scope"
+                     checked="@(_model.Scope == scope)" @onchange="() => ChooseScope(scope)" />
+              <label for="@id">@PanelWords.ScopeChoice(scope)</label>
+            </div>
+          }
+        </div>
+      </fieldset>
+    }
+    else
+    {
+      @* One scope offered (a speciality or sub-speciality administrator's): said as text, with why (step 2.25). *@
+      <dl class="form-group">
+        <dt>Scope</dt>
+        <dd class="readonly-value" id="panel-scope">@PanelWords.ScopeChoice(_model.Scope)</dd>
+        <dd class="page-subtitle">@ScopeHelp</dd>
+      </dl>
+    }
+  };
+
+  private void ChooseScope(DecisionPanelScope scope)
+  {
+    _model.Scope = scope;
+    RemoveFieldError(InstitutionKey);
+    RemoveFieldError(SpecialityKey);
+  }
+
+  // ─── Who sits on it ──────────────────────────────────────────────────────
+
+  private RenderFragment Seats() => __builder =>
+  {
+    var chairHelpId = FieldHelp.Id("panel-chair");
+    <div class="form-group">
+      <label for="panel-chair">@PanelWords.ChairLabel</label>
+      <InputSelect id="panel-chair" class="form-select" @bind-Value="_model.ChairUserId" @bind-Value:after="OnChairChanged"
+                   aria-describedby="@FieldHelp.DescribedBy("panel-chair", PanelWords.CandidatesHelp, MessageId(ChairKey), _chairNote is null ? null : ChairNoteId)">
+        <option value="">@PanelWords.ChooseChairOption</option>
+        @foreach (var candidate in _candidates)
+        {
+          <option value="@candidate.UserId">@FormatCandidate(candidate)</option>
+        }
+      </InputSelect>
+      @FieldMessage(ChairKey)
+      @* T257. A live region present before anything is chosen, so what appears in it is read while the focus stays on
+         Chair (step 2.21). *@
+      <div id="@ChairNoteId" class="muted" role="status">@_chairNote</div>
+      <small class="page-subtitle" id="@chairHelpId">@PanelWords.CandidatesHelp</small>
+    </div>
+
+    var seatsInvalid = _fieldErrors.ContainsKey(SeatsKey);
+    <div id="panel-seats" class="@(seatsInvalid ? "choice-group panel-seats is-invalid" : "choice-group panel-seats")" role="group" aria-label="Seats"
+         aria-describedby="@(seatsInvalid ? SeatsMessageId : null)">
+      @if (seatsInvalid)
+      {
+        <div class="validation-message" id="@SeatsMessageId">@_fieldErrors[SeatsKey]</div>
+      }
+      @if (_candidates.Count == 0)
+      {
+        <p class="muted" id="panel-seats-none">@(_isAdministrator && !PanelId.HasValue && _model.InstitutionId is null ? PanelWords.ChooseInstitutionFirst : PanelWords.NobodyMaySit(SeatsInstitutionName))</p>
+      }
+      else
+      {
+        @* Q5: one radio group a committee member, keyed by the person (DESIGN.md § Form system), so a row reused for
+           another person never shows their choice. *@
+        <div class="table-container shadow">
+          <table class="clinic-table clinic-table--stack" role="table">
+            <caption>@PanelWords.SeatsCaption(SeatsInstitutionName)</caption>
+            <thead role="rowgroup">
+              <tr role="row">
+                <th scope="col" role="columnheader">Committee member</th>
+                <th scope="col" role="columnheader">Seat</th>
+              </tr>
+            </thead>
+            <tbody role="rowgroup">
+              @for (var index = 0; index < _candidates.Count; index++)
+              {
+                var candidate = _candidates[index];
+                var name = NameOf(candidate);
+                var group = $"seat-{index}";
+                var seat = SeatOf(candidate.UserId);
+                <tr role="row" @key="candidate.UserId">
+                  <th scope="row" role="rowheader"><div class="person-cell">@name<span>@candidate.Email</span></div></th>
+                  <td role="cell">
+                    @if (string.Equals(candidate.UserId, _model.ChairUserId, StringComparison.Ordinal))
+                    {
+                      <p class="readonly-value">@PanelWords.ChairLabel <span class="muted">· @PanelWords.ChairChosenAbove</span></p>
+                    }
+                    else
+                    {
+                      <fieldset class="form-group choice-row" @key="candidate.UserId">
+                        <legend class="visually-hidden">@PanelWords.SeatFor(name)</legend>
+                        <div class="check-grid">
+                          @foreach (var choice in SeatChoices)
+                          {
+                            var id = $"{group}-{choice.Value}";
+                            var userId = candidate.UserId;
+                            <div class="form-check">
+                              <input class="form-check-input" type="radio" name="@group" id="@id" value="@choice.Value"
+                                     checked="@(seat == choice.Seat)" @onchange="() => SetSeat(userId, choice.Seat)" />
+                              <label for="@id">@choice.Label</label>
+                            </div>
+                          }
+                        </div>
+                      </fieldset>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <p class="field-help" id="panel-seat-count" role="status">@PanelWords.SeatCount(!string.IsNullOrEmpty(_model.ChairUserId), _model.MemberUserIds.Count, _model.ExternalUserIds.Count)</p>
+      <small class="page-subtitle">@PanelWords.ExternalsHelp</small>
+    </div>
+  };
+
+  private enum Seat
+  {
+    None,
+    Member,
+    External
+  }
+
+  private static readonly (Seat Seat, string Value, string Label)[] SeatChoices =
+  [
+    (Seat.None, "none", PanelWords.NotSeated),
+    (Seat.Member, "member", PanelWords.Member),
+    (Seat.External, "external", PanelWords.ExternalMember)
+  ];
+
+  private Seat SeatOf(string userId)
+    => _model.MemberUserIds.Contains(userId) ? Seat.Member
+      : _model.ExternalUserIds.Contains(userId) ? Seat.External
+      : Seat.None;
+
+  private void SetSeat(string userId, Seat seat)
+  {
+    _model.MemberUserIds.Remove(userId);
+    _model.ExternalUserIds.Remove(userId);
+    if (seat == Seat.Member)
+    {
+      _model.MemberUserIds.Add(userId);
+    }
+    else if (seat == Seat.External)
+    {
+      _model.ExternalUserIds.Add(userId);
+    }
+
+    RemoveFieldError(SeatsKey);
+  }
+
+  /// <summary>The first radio of the picker, which the summary's Seats line focuses (S6).</summary>
+  private string? FirstSeatRadioId
+  {
+    get
+    {
+      for (var index = 0; index < _candidates.Count; index++)
+      {
+        if (!string.Equals(_candidates[index].UserId, _model.ChairUserId, StringComparison.Ordinal))
+        {
+          return $"seat-{index}-none";
+        }
+      }
+
+      return null;
+    }
+  }
+
+  private static string FormatCandidate(PanelMemberCandidateDto candidate)
+    => $"{NameOf(candidate)} ({candidate.Email})";
+
+  private static string NameOf(PanelMemberCandidateDto candidate)
+    => $"{candidate.FirstName} {candidate.LastName}".Trim();
+
+  /// <summary>
+  /// Takes the chair just chosen out of the seat they held, puts the chair before back in the seat choosing them took
+  /// them from, and says so (T257). Putting the chair before back means a chair chosen and then changed takes nobody off:
+  /// in Chrome and Edge on Windows each arrow key on the closed Chair select is a change.
   /// </summary>
   private void OnChairChanged()
   {
     var chair = _model.ChairUserId;
     var putBack = _chairTakenFrom;
+    RemoveFieldError(ChairKey);
     if (putBack is not null && string.Equals(putBack.UserId, chair, StringComparison.Ordinal))
     {
       // Not a change: the select calls this only when its value changes. Were it run, putting the chair back would seat
@@ -543,68 +763,29 @@
       var fromExternals = _model.ExternalUserIds.Remove(chair);
       if (fromMembers || fromExternals)
       {
-        _chairTakenFrom = new ChairTakenFrom(chair, fromMembers, fromExternals);
-        sentences.Add($"{PersonName(chair, "The new chair")} is the chair now, so is no longer selected under {Seats(fromMembers, fromExternals)}.");
+        _chairTakenFrom = new ChairTakenFrom(chair, fromExternals);
+        sentences.Add(PanelWords.NowChair(PersonName(chair), fromExternals));
       }
     }
 
     if (putBack is not null)
     {
-      if (putBack.FromMembers)
-      {
-        _model.MemberUserIds.Add(putBack.UserId);
-      }
-
-      if (putBack.FromExternals)
-      {
-        _model.ExternalUserIds.Add(putBack.UserId);
-      }
-
-      sentences.Add($"{PersonName(putBack.UserId, "The chair before")} is selected under {Seats(putBack.FromMembers, putBack.FromExternals)} again.");
+      (putBack.WasExternal ? _model.ExternalUserIds : _model.MemberUserIds).Add(putBack.UserId);
+      sentences.Add(PanelWords.SeatedAgain(PersonName(putBack.UserId), putBack.WasExternal));
     }
 
     _chairNote = sentences.Count == 0 ? null : string.Join(" ", sentences);
   }
 
-  private static string Seats(bool members, bool externals) => (members, externals) switch
-  {
-    (true, true) => "Members and External members",
-    (true, false) => "Members",
-    _ => "External members"
-  };
-
-  private string PersonName(string userId, string unnamed)
+  private string PersonName(string userId)
     => _candidates.FirstOrDefault(candidate => string.Equals(candidate.UserId, userId, StringComparison.Ordinal)) is { } candidate
-      ? $"{candidate.FirstName} {candidate.LastName}"
-      : unnamed;
+      ? NameOf(candidate)
+      : StoredName(userId);
 
-  /// <summary>The chair, and which selections choosing them took them off (T257).</summary>
-  private sealed record ChairTakenFrom(string UserId, bool FromMembers, bool FromExternals);
+  /// <summary>The chair, and whether choosing them took them from an external member's seat (else a member's) (T257).</summary>
+  private sealed record ChairTakenFrom(string UserId, bool WasExternal);
 
-  private void OnMembersChanged(ChangeEventArgs e)
-  {
-    _model.MemberUserIds = ToHashSet(e.Value);
-    // Externals must not overlap members.
-    _model.ExternalUserIds.ExceptWith(_model.MemberUserIds);
-  }
-
-  private void OnExternalsChanged(ChangeEventArgs e)
-  {
-    _model.ExternalUserIds = ToHashSet(e.Value);
-  }
-
-  private static HashSet<string> ToHashSet(object? value)
-  {
-    if (value is string[] array)
-    {
-      return new HashSet<string>(array, StringComparer.Ordinal);
-    }
-    if (value is IEnumerable<object> objects)
-    {
-      return new HashSet<string>(objects.Select(item => item?.ToString() ?? string.Empty).Where(item => !string.IsNullOrEmpty(item)), StringComparer.Ordinal);
-    }
-    return new HashSet<string>(StringComparer.Ordinal);
-  }
+  // ─── Saving the panel ────────────────────────────────────────────────────
 
   private async Task SaveAsync()
   {
@@ -613,47 +794,204 @@
       return;
     }
 
-    _saving = true;
-    _error = null;
-    _status = null;
+    ClearRefusal();
+    _statusLead = null;
+    _statusText = null;
+    var title = PanelId.HasValue ? PanelWords.MembersNotSaved : PanelWords.NotCreated;
 
+    // The fields a save would be refused for, said before anything is sent (T324; S4): each in Wombat's words, in the
+    // order the form shows them.
+    var missing = MissingFields();
+    if (missing.Count > 0)
+    {
+      foreach (var (key, message) in missing)
+      {
+        SetFieldError(key, message);
+      }
+
+      ShowRefusal(title, missing.Select(field => (Line(field.Key, field.Message), (string?)FocusIdOf(field.Key))).ToArray());
+      return;
+    }
+
+    _saving = true;
+    var takenOff = _unseatableNames;
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       var members = BuildMembers();
-
       if (PanelId.HasValue)
       {
-        await Sender.Send(new UpdateDecisionPanelCommand(PanelId.Value, members, authState.User));
-        _status = "Panel members updated.";
-        // The change it described is saved now; the result says so. The saved chair is the stored one, so choosing
-        // another does not put them back under Members.
-        _chairNote = null;
-        _chairTakenFrom = null;
-        _result?.FocusAfterRender();
+        await Sender.Send(new UpdateDecisionPanelCommand(PanelId.Value, members, _user));
       }
       else
       {
-        var result = await Sender.Send(new CreateDecisionPanelCommand(
+        var created = await Sender.Send(new CreateDecisionPanelCommand(
           _model.Name,
           _model.Scope,
           _model.InstitutionId,
-          _model.SpecialityId,
+          _model.Scope == DecisionPanelScope.Speciality ? _model.SpecialityId : null,
           members,
-          authState.User,
+          _user,
           _mayChooseBody ? _model.DecisionBodyKey : null));
 
-        NavigationManager.NavigateTo($"/committee/panels/{result.Id}", forceLoad: true);
+        // Step 2.22: the panel's own page, which says it was created and takes the focus there.
+        NavigationManager.NavigateTo($"/committee/panels/{created.Id}?created=1");
+        return;
       }
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _error = RefusalText.Of(exception);
+      ShowSaveRefusal(title, exception);
+      return;
     }
     finally
     {
       _saving = false;
     }
+
+    // C12: the panel as saved, read again, so the warning and the seats are what is stored.
+    try
+    {
+      if (await Sender.Send(new GetDecisionPanelByIdQuery(PanelId!.Value, _user)) is { } saved)
+      {
+        UsePanel(saved);
+        await LoadCandidatesAsync();
+      }
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogWarning(exception, "Decision panel {PanelId} could not be read again after its members were saved.", PanelId);
+    }
+
+    var chair = string.IsNullOrEmpty(_model.ChairUserId) ? null : PersonName(_model.ChairUserId);
+    _statusLead = PanelWords.MembersUpdated(takenOff, chair, _model.MemberUserIds.Count, _model.ExternalUserIds.Count);
+    _statusText = null;
+    // The change the chair note described is saved now; the result says so.
+    _chairNote = null;
+    _chairTakenFrom = null;
+    _focusResult = true;
+  }
+
+  private IReadOnlyList<(string Key, string Message)> MissingFields()
+  {
+    var missing = new List<(string Key, string Message)>();
+    if (!PanelId.HasValue)
+    {
+      if (string.IsNullOrWhiteSpace(_model.Name))
+      {
+        missing.Add((NameKey, CreateDecisionPanelCommandValidator.NameMissing));
+      }
+
+      if ((_isAdministrator || _model.Scope == DecisionPanelScope.Institution) && _model.InstitutionId is null)
+      {
+        missing.Add((InstitutionKey, CreateDecisionPanelCommandValidator.InstitutionMissing));
+      }
+
+      if (_model.Scope == DecisionPanelScope.Speciality && _model.SpecialityId is null)
+      {
+        missing.Add((SpecialityKey, CreateDecisionPanelCommandValidator.SpecialityMissing));
+      }
+    }
+
+    if (string.IsNullOrWhiteSpace(_model.ChairUserId))
+    {
+      missing.Add((ChairKey, PanelWords.ChooseAChair));
+    }
+
+    return missing;
+  }
+
+  /// <summary>
+  /// A save refused: a validator's failures beside their fields, a handler's own sentence in the summary (S4), and an
+  /// unexpected failure in fixed words, logged (T338).
+  /// </summary>
+  private void ShowSaveRefusal(string title, Exception exception)
+  {
+    var lines = new List<(string Text, string? FieldId)>();
+    switch (exception)
+    {
+      case FluentValidation.ValidationException validation:
+        foreach (var failure in validation.Errors.Where(failure => !string.IsNullOrWhiteSpace(failure.ErrorMessage)))
+        {
+          var key = KeyOf(failure.PropertyName, failure.ErrorMessage);
+          if (key is null)
+          {
+            lines.Add((failure.ErrorMessage.Trim(), null));
+            continue;
+          }
+
+          if (!_fieldErrors.ContainsKey(key))
+          {
+            SetFieldError(key, failure.ErrorMessage.Trim());
+            lines.Add((Line(key, failure.ErrorMessage.Trim()), FocusIdOf(key)));
+          }
+        }
+
+        if (lines.Count == 0)
+        {
+          lines.Add((RefusalText.Of(exception), null));
+        }
+
+        break;
+      // The handlers' own refusals, in their words (S4); any other InvalidOperationException is the framework's, whose
+      // text never reaches the page (T364, build review R4; T338).
+      case CommitteeRefusedException or UnauthorizedAccessException:
+        lines.Add((exception.Message, null));
+        break;
+      default:
+        Logger.LogError(exception, "Decision panel {PanelId} could not be saved.", PanelId);
+        lines.Add((PanelWords.SaveFailed, null));
+        break;
+    }
+
+    ShowRefusal(title, lines);
+  }
+
+  /// <summary>Which field a validator's failure is about, by its property: the panel's own words (T324).</summary>
+  private static string? KeyOf(string propertyName, string message) => propertyName switch
+  {
+    nameof(CreateDecisionPanelCommand.Name) => NameKey,
+    nameof(CreateDecisionPanelCommand.InstitutionId) => InstitutionKey,
+    nameof(CreateDecisionPanelCommand.SpecialityId) => SpecialityKey,
+    nameof(CreateDecisionPanelCommand.Members) when string.Equals(message, DecisionPanelComposition.ExactlyOneChair, StringComparison.Ordinal) => ChairKey,
+    nameof(CreateDecisionPanelCommand.Members) => SeatsKey,
+    _ => null
+  };
+
+  private static string Line(string key, string message) => $"{LabelOf(key)}: {message}";
+
+  private static string LabelOf(string key) => key switch
+  {
+    NameKey => "Panel name",
+    InstitutionKey => "Institution",
+    SpecialityKey => "Speciality",
+    ChairKey => PanelWords.ChairLabel,
+    _ => "Seats"
+  };
+
+  private string? FocusIdOf(string key) => key switch
+  {
+    NameKey => "panel-name",
+    InstitutionKey => "panel-institution",
+    SpecialityKey => "panel-speciality",
+    ChairKey => "panel-chair",
+    _ => FirstSeatRadioId
+  };
+
+  private void ShowRefusal(string title, IReadOnlyList<(string Text, string? FieldId)> lines)
+  {
+    _refusalTitle = title;
+    _refusalLines.Clear();
+    _refusalLines.AddRange(lines);
+    _focusRefusal = true;
+  }
+
+  private void ClearRefusal()
+  {
+    _refusalTitle = null;
+    _refusalLines.Clear();
+    _fieldErrors.Clear();
+    _messages?.Clear();
+    _editContext.NotifyValidationStateChanged();
   }
 
   private IReadOnlyList<DecisionPanelMemberInput> BuildMembers()
@@ -665,38 +1003,274 @@
       members.Add(new DecisionPanelMemberInput(_model.ChairUserId.Trim(), DecisionPanelMemberRole.Chair));
     }
 
-    members.AddRange(_model.MemberUserIds.Select(userId => new DecisionPanelMemberInput(userId, DecisionPanelMemberRole.Member)));
-    members.AddRange(_model.ExternalUserIds.Select(userId => new DecisionPanelMemberInput(userId, DecisionPanelMemberRole.External)));
+    // In the picker's order (by surname), so the list names members as the page showed them.
+    var order = _candidates.Select(candidate => candidate.UserId).ToList();
+    members.AddRange(_model.MemberUserIds.OrderBy(order.IndexOf).Select(userId => new DecisionPanelMemberInput(userId, DecisionPanelMemberRole.Member)));
+    members.AddRange(_model.ExternalUserIds.OrderBy(order.IndexOf).Select(userId => new DecisionPanelMemberInput(userId, DecisionPanelMemberRole.External)));
     return members;
+  }
+
+  // ─── The refusal summary and field messages (C7, S6) ─────────────────────
+
+  private RenderFragment RefusalSummary() => __builder =>
+  {
+    if (_refusalTitle is null)
+    {
+      return;
+    }
+
+    @* The summary takes the focus; each line moves it to its field, never navigating (the base href would go Home). *@
+    <div @ref="_refusalElement" id="@RefusalId" class="validation-summary-errors error-summary" tabindex="-1" role="alert">
+      <strong>@_refusalTitle</strong> @PanelWords.KeptBelow
+      @if (_refusalLines.Count > 0)
+      {
+        <ul class="refusal-summary-list">
+          @foreach (var line in _refusalLines)
+          {
+            <li>
+              @if (line.FieldId is { } fieldId)
+              {
+                <a href="@($"#{fieldId}")" @onclick="() => FocusFieldAsync(fieldId)" @onclick:preventDefault>@line.Text</a>
+              }
+              else
+              {
+                @line.Text
+              }
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  };
+
+  private RenderFragment FieldMessage(string key) => __builder =>
+  {
+    if (_fieldErrors.TryGetValue(key, out var message))
+    {
+      <div class="validation-message" id="@MessageId(key)">@message</div>
+    }
+  };
+
+  private string? MessageId(string key) => _fieldErrors.ContainsKey(key) ? $"panel-{key}-msg" : null;
+
+  /// <summary>The form holds this model, with a fresh edit context and message store.</summary>
+  private void UseModel(PanelFormModel model)
+  {
+    _model = model;
+    _editContext = new EditContext(model);
+    _messages = new ValidationMessageStore(_editContext);
+  }
+
+  /// <summary>The model's property a field's message is put on, so its input marks itself invalid; null for the seats.</summary>
+  private static string? PropertyOf(string key) => key switch
+  {
+    NameKey => nameof(PanelFormModel.Name),
+    InstitutionKey => nameof(PanelFormModel.InstitutionId),
+    SpecialityKey => nameof(PanelFormModel.SpecialityId),
+    ChairKey => nameof(PanelFormModel.ChairUserId),
+    _ => null
+  };
+
+  private void SetFieldError(string key, string message)
+  {
+    _fieldErrors[key] = message;
+    if (PropertyOf(key) is { } property)
+    {
+      _messages?.Add(_editContext.Field(property), message);
+      _editContext.NotifyValidationStateChanged();
+    }
+  }
+
+  /// <summary>A field changed after a refusal: its message goes, the summary stays until the next save.</summary>
+  private void RemoveFieldError(string key)
+  {
+    if (!_fieldErrors.Remove(key))
+    {
+      return;
+    }
+
+    if (PropertyOf(key) is { } property)
+    {
+      _messages?.Clear(_editContext.Field(property));
+      _editContext.NotifyValidationStateChanged();
+    }
+  }
+
+  private async Task FocusFieldAsync(string id) => await PageFocus.FocusByIdAsync(JS, id);
+
+  // ─── Decides for ─────────────────────────────────────────────────────────
+
+  private RenderFragment DecidesFor(DecisionPanelDetailDto panel) => __builder =>
+  {
+    <section class="form-container panel-section" aria-labelledby="panel-body-title">
+      <h2 id="panel-body-title" class="form-section-title">@PanelWords.DecidesForTitle</h2>
+      @if (!_mayChooseBody)
+      {
+        @* Which College committee the panel sits as (T131): only an InstitutionalAdmin or an Administrator may change it,
+           so a SpecialityAdmin who manages this panel's members reads it. *@
+        <p class="readonly-value" id="panel-body-value">@PanelWords.DecidesFor(panel.DecisionBodyName)</p>
+        <p class="muted">@PanelWords.DecidesForReadOnly</p>
+      }
+      else if (panel.DecisionBodyLock is { } locked && _bodyRefusalTitle is null)
+      {
+        @* F5, step 4.13: while a review is open before the panel, no select is offered; the lock is said first, in the
+           words Save committee would be refused with, and the review is linked. *@
+        <p class="readonly-value" id="panel-body-value">@PanelWords.DecidesFor(panel.DecisionBodyName)</p>
+        <div class="alert alert-info panel-lock" id="panel-body-lock">
+          <p><strong>@PanelWords.CannotChangeNow</strong> @locked</p>
+          @if (panel.OpenReviews.FirstOrDefault() is { MayOpen: true } first)
+          {
+            <p><a href="@ReviewLinks.Review(first.Id)">@PanelWords.OpenReviewLink(first.Id)</a></p>
+          }
+        </div>
+      }
+      else
+      {
+        <EditForm Model="_model" OnSubmit="SaveBodyAsync" FormName="committee-panel-body">
+          @if (_bodyRefusalTitle is not null)
+          {
+            <div @ref="_bodyRefusalElement" id="@BodyRefusalId" class="validation-summary-errors error-summary" tabindex="-1" role="alert">
+              <strong>@_bodyRefusalTitle</strong>
+              <ul class="refusal-summary-list">
+                <li><a href="#panel-body" @onclick="() => FocusFieldAsync(BodySelectId)" @onclick:preventDefault>@_bodyRefusalLink</a>@_bodyRefusalRest</li>
+              </ul>
+            </div>
+          }
+          <div class="form-group">
+            <label for="@BodySelectId">@PanelWords.DecidesForTitle</label>
+            <select id="@BodySelectId" class="@(_bodyBeside is null ? "form-select" : "form-select input-validation-error")"
+                    aria-invalid="@(_bodyBeside is null ? null : "true")"
+                    aria-describedby="@FieldHelp.DescribedBy(BodySelectId, PanelWords.DecidesForHelp, _bodyBeside is null ? null : "panel-body-msg")"
+                    value="@(_bodyKey ?? string.Empty)" @onchange="OnBodyChanged">
+              <option value="">@PanelWords.GeneralPanel</option>
+              @foreach (var body in _bodies)
+              {
+                <option value="@body.Key">@body.Name</option>
+              }
+            </select>
+            @if (_bodyBeside is not null)
+            {
+              <div class="validation-message" id="panel-body-msg">@_bodyBeside</div>
+            }
+            <small class="page-subtitle" id="@FieldHelp.Id(BodySelectId)">@PanelWords.DecidesForHelp</small>
+          </div>
+          <div class="form-actions">
+            @* Never natively disabled, while either form saves (T364, build review D3; T234): aria-disabled, and Busy ignores a
+               second press. *@
+            <button type="submit" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(Busy)">@(_savingBody ? PanelWords.Saving : PanelWords.SaveCommittee)</button>
+          </div>
+        </EditForm>
+      }
+    </section>
+  };
+
+  private const string BodySelectId = "panel-body";
+
+  private void OnBodyChanged(ChangeEventArgs e)
+  {
+    var value = e.Value?.ToString();
+    _bodyKey = string.IsNullOrEmpty(value) ? null : value;
+  }
+
+  private async Task SaveBodyAsync()
+  {
+    if (!PanelId.HasValue || Busy || _panel is null)
+    {
+      return;
+    }
+
+    _savingBody = true;
+    ClearBodyRefusal();
+    _statusLead = null;
+    _statusText = null;
+    var saved = _panel;
+
+    try
+    {
+      var result = await Sender.Send(new SetDecisionPanelBodyCommand(PanelId.Value, _bodyKey, _user));
+      _bodyKey = result.DecisionBodyKey;
+      _panel = saved with { DecisionBodyKey = result.DecisionBodyKey, DecisionBodyName = result.DecisionBodyName };
+      _statusLead = PanelWords.CommitteeSaved(result.DecisionBodyName);
+      _focusResult = true;
+    }
+    catch (DecisionBodyLockedException locked)
+    {
+      // C13, a scratch state (a second tab): a review was scheduled before this panel since the page was read. The
+      // select goes back to what is saved; the refusal is said in the section's summary and beside the select.
+      _bodyKey = saved.DecisionBodyKey;
+      _bodyRefusalTitle = PanelWords.CommitteeNotSaved(saved.DecisionBodyName);
+      _bodyRefusalLink = PanelWords.RaceClause(locked.ReviewId);
+      _bodyRefusalRest = PanelWords.RaceExplained;
+      _bodyBeside = PanelWords.RaceBeside(locked.ReviewId, locked.Period, locked.StateInSentence);
+      _focusBodyRefusal = true;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // Only a handler's own refusal is said in its words (T364, build review R4; T338).
+      var refusal = exception is CommitteeRefusedException or UnauthorizedAccessException or FluentValidation.ValidationException
+        ? RefusalText.Of(exception)
+        : null;
+      if (refusal is null)
+      {
+        Logger.LogError(exception, "Decision panel {PanelId}'s committee could not be saved.", PanelId);
+      }
+
+      _bodyKey = saved.DecisionBodyKey;
+      _bodyRefusalTitle = PanelWords.CommitteeNotSaved(saved.DecisionBodyName);
+      _bodyRefusalLink = $"{PanelWords.DecidesForTitle}: {refusal ?? PanelWords.SaveFailed}";
+      _bodyRefusalRest = null;
+      _bodyBeside = PanelWords.NotSavedBecause(refusal ?? PanelWords.SaveFailed);
+      _focusBodyRefusal = true;
+    }
+    finally
+    {
+      _savingBody = false;
+    }
+  }
+
+  private void ClearBodyRefusal()
+  {
+    _bodyRefusalTitle = null;
+    _bodyRefusalLink = null;
+    _bodyRefusalRest = null;
+    _bodyBeside = null;
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_loading)
+    {
+      return;
+    }
+
+    if (_focusRefusal && _refusalTitle is not null)
+    {
+      _focusRefusal = false;
+      await _refusalElement.FocusAsync();
+    }
+    else if (_focusBodyRefusal && _bodyRefusalTitle is not null)
+    {
+      _focusBodyRefusal = false;
+      await _bodyRefusalElement.FocusAsync();
+    }
+    else if (_focusResult && _result is not null)
+    {
+      _focusResult = false;
+      await _result.Element.FocusAsync();
+    }
   }
 
   private sealed class PanelFormModel
   {
-    [Required]
-    [MaxLength(200)]
     public string Name { get; set; } = string.Empty;
-
-    [Required]
     public DecisionPanelScope Scope { get; set; } = DecisionPanelScope.Speciality;
-
     public int? InstitutionId { get; set; }
     public int? SpecialityId { get; set; }
-
-    // Said as a sentence, not as "The ChairUserId field is required.": the Chair select is left empty when the stored
-    // chair can no longer sit (T165, T237), so this is a message the page expects to show.
-    [Required(ErrorMessage = "Choose a chair.")]
     public string ChairUserId { get; set; } = string.Empty;
-
     public HashSet<string> MemberUserIds { get; set; } = new(StringComparer.Ordinal);
     public HashSet<string> ExternalUserIds { get; set; } = new(StringComparer.Ordinal);
 
     /// <summary>The College committee a new panel sits as; blank for a general panel.</summary>
-    public string? DecisionBodyKey { get; set; }
-  }
-
-  private sealed class BodyFormModel
-  {
-    /// <summary>The College committee the panel sits as; blank for a general panel.</summary>
     public string? DecisionBodyKey { get; set; }
   }
 }

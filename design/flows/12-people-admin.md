@@ -494,7 +494,8 @@ Route: /admin/users → /admin/trainees → /committee/reviews → /committee/re
 Do: Look for Dr Ndlovu among KGK's users, its trainees and its committee reviews. Open the check-in from A.1.10.
 Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
   - Committee reviews lists his reviews under a pseudonym, `deleted_user_…`, that names nobody: Act 4's ratified
-    review and closed check-in as they were, and A.1.10's check-in as Withdrawn.
+    review as it was; the closed check-in, Type "Formative check-in", State Closed and Decision "—" (read as "None");
+    and A.1.10's check-in, Type "Formative check-in", State Withdrawn and Decision "None: the review was withdrawn".
   - The check-in's sitting bar reads Withdrawn and "Withdrawn on `D`. Withdrawn because the trainee's personal data
     was erased at their request. Nothing more is decided at this review." (T258, T361), and the page offers no action:
     no Start, no Refresh.
@@ -573,8 +574,8 @@ Do: With a contrast checker (axe, or the browser's accessibility audit), check e
   - the sign-in card;
   - the nav on its gradient, and its current item (white on the .32 fill);
   - muted text on the page background;
-  - the status badges on a committee review opened from Committee reviews (Dr Molefe's review 7; the list itself shows
-    each state as plain text);
+  - the status badges on Committee reviews (each state a badge since T364, Scheduled grey there and on Decisions due)
+    and on a committee review opened from it (Dr Molefe's review 7);
   - a success alert (save My account's name, from the name in the top bar, unchanged: "Name saved.") and a danger
     alert (Change password with a confirmation that differs, which checks no password and changes nothing);
   - a password field's Show toggle, pressed (white on the action blue, 4.86:1);

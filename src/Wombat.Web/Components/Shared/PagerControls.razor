@@ -26,8 +26,8 @@
       <button type="button" class="btn btn-outline btn-sm" aria-disabled="@(AtLast ? "true" : null)" @onclick="NextAsync">Next</button>
     </div>
     <div class="pager-page-size">
-      <span class="pager-page-size-label">Per page:</span>
-      <select class="form-select form-select-sm pager-page-size-select" value="@PageSize" @onchange="HandlePageSizeChangedAsync">
+      <label class="pager-page-size-label" for="@_sizeId">@PageSizeLabel</label>
+      <select id="@_sizeId" class="form-select form-select-sm pager-page-size-select" value="@PageSize" @onchange="HandlePageSizeChangedAsync">
         @foreach (var size in _pageSizes)
         {
           <option value="@size">@size</option>
@@ -37,6 +37,12 @@
   </text>;
 
   private static readonly int[] _pageSizes = [10, 20, 50, 100];
+
+  // The page-size select is named by its own label (T280, T364): one id an instance, so two pagers never share it.
+  private readonly string _sizeId = $"pager-size-{Guid.NewGuid():N}";
+
+  /// <summary>The page-size select's label, its accessible name: "Decisions per page" (T364, C9); "Per page:" by default.</summary>
+  [Parameter] public string PageSizeLabel { get; set; } = "Per page:";
 
   /// <summary>The landmark's name; null or empty for a plain block.</summary>
   [Parameter] public string? Label { get; set; }

@@ -25,20 +25,39 @@ public sealed record CreateDecisionPanelCommand(
 
 public sealed class CreateDecisionPanelCommandValidator : AbstractValidator<CreateDecisionPanelCommand>
 {
+    /// <summary>A new panel with no name, refused in Wombat's words (T364, T324; round 3 S4).</summary>
+    public const string NameMissing = "Give the panel a name.";
+
+    /// <summary>A name longer than the store keeps (T364, T324).</summary>
+    public const string NameTooLong = "Give the panel a name of at most 200 characters.";
+
+    /// <summary>An institution-wide panel, or an Administrator's, with no institution (T364, T324; round 3 S4).</summary>
+    public const string InstitutionMissing = "Choose an institution.";
+
+    /// <summary>A Speciality-scoped panel with no speciality (T364, T324; round 3 S4).</summary>
+    public const string SpecialityMissing = "Choose a speciality.";
+
     public CreateDecisionPanelCommandValidator()
     {
-        RuleFor(command => command.Name).NotEmpty().MaximumLength(200);
+        RuleFor(command => command.Name)
+            .Cascade(CascadeMode.Stop)
+            .Must(name => !string.IsNullOrWhiteSpace(name)).WithMessage(NameMissing)
+            // Measured trimmed, as the handler stores it (T364, build review R5).
+            .Must(name => name.Trim().Length <= 200).WithMessage(NameTooLong);
         RuleFor(command => command.Principal).NotNull();
         RuleFor(command => command.DecisionBodyKey).MaximumLength(DecisionBody.KeyMaxLength);
         // T165: each member once, exactly one chair, and the chair plus at least one other, so that no decision the panel
         // takes can be one person's.
         RuleFor(command => command.Members).MustBeAPanelsMembers();
-        RuleFor(command => command)
-            .Must(command => command.Scope != DecisionPanelScope.Institution || command.InstitutionId.HasValue)
-            .WithMessage("Institution-scoped panels require an institution.");
-        RuleFor(command => command)
-            .Must(command => command.Scope != DecisionPanelScope.Speciality || command.SpecialityId.HasValue)
-            .WithMessage("Speciality-scoped panels require a speciality.");
+        // Each on its own field, so the panel page puts the refusal beside the control that is missing (T364, T324).
+        RuleFor(command => command.InstitutionId)
+            .NotNull()
+            .When(command => command.Scope == DecisionPanelScope.Institution)
+            .WithMessage(InstitutionMissing);
+        RuleFor(command => command.SpecialityId)
+            .NotNull()
+            .When(command => command.Scope == DecisionPanelScope.Speciality)
+            .WithMessage(SpecialityMissing);
     }
 }
 
@@ -128,7 +147,7 @@ public sealed class CreateDecisionPanelCommandHandler : IRequestHandler<CreateDe
                 throw;
             }
 
-            throw new InvalidOperationException(taken, exception);
+            throw new CommitteeRefusedException(taken, exception);
         }
 
         return DecisionPanelBodies.ToDetailDto(panel, body?.Name);
@@ -155,12 +174,12 @@ public sealed class CreateDecisionPanelCommandHandler : IRequestHandler<CreateDe
 
         if (request.InstitutionId is not int institutionId)
         {
-            throw new InvalidOperationException("Choose the institution that runs this panel.");
+            throw new CommitteeRefusedException("Choose the institution that runs this panel.");
         }
 
         if (!await _dbContext.Set<Institution>().AnyAsync(entity => entity.Id == institutionId, cancellationToken))
         {
-            throw new InvalidOperationException("The institution could not be found.");
+            throw new CommitteeRefusedException("The institution could not be found.");
         }
 
         return institutionId;

@@ -84,7 +84,8 @@ public sealed class PreviewCommitteeAgendaQueryHandler : IRequestHandler<Preview
             plan.RoutedElsewhere,
             plan.DecidedInWindow.Select(epa => epa.Code).ToArray())
         {
-            PanelDecidesAnything = plan.PanelDecidesAnything
+            PanelDecidesAnything = plan.PanelDecidesAnything,
+            NothingToDecide = plan.PanelDecidesAnything ? null : ScheduleCommitteeReviewCommandHandler.NothingToDecide(panel.Name)
         };
     }
 }

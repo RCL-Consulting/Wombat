@@ -196,6 +196,13 @@ public sealed record CommitteeAgendaPreviewDto(
     /// says otherwise.
     /// </summary>
     public bool PanelDecidesAnything { get; init; } = true;
+
+    /// <summary>
+    /// The scheduling handler's own refusal of an entrustment-only review before this panel, word for word, when the panel
+    /// decides nothing on the trainee's curriculum (<see cref="PanelDecidesAnything" /> false); else null. The schedule
+    /// page says it first, and Create refuses in the same sentence (T364, S1).
+    /// </summary>
+    public string? NothingToDecide { get; init; }
 }
 
 /// <summary>

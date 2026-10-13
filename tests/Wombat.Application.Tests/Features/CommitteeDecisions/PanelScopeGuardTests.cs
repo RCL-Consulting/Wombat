@@ -156,7 +156,7 @@ public sealed class PanelScopeGuardTests
         db.Set<DecisionPanel>().Add(panel);
         await db.SaveChangesAsync();
 
-        var handler = new GetDecisionPanelByIdQueryHandler(db);
+        var handler = new GetDecisionPanelByIdQueryHandler(db, FakeUserDirectory.Empty);
         var result = await handler.Handle(
             new GetDecisionPanelByIdQuery(panel.Id, TestPrincipals.InstitutionalAdmin(InstitutionA)),
             CancellationToken.None);

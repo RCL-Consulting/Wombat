@@ -297,8 +297,11 @@ public sealed class CommitteeAgendaPostgresTests : IAsyncLifetime
             {
                 var ours = () => ScheduleAsync(db, panelId, Coordinator(institutionId));
 
-                var refusal = await ours.Should().ThrowExactlyAsync<InvalidOperationException>();
-                refusal.Which.Message.Should().StartWith($"Review #{rivalId} already puts this trainee before Annual review for 2026 S1");
+                // The handler's own refusal, which the page shows in its words (T364, build review R4).
+                var refusal = await ours.Should().ThrowExactlyAsync<CommitteeRefusedException>();
+                // The trainee by name, here the directory's id for want of one, and "scheduled" once (T364, C7).
+                refusal.Which.Message.Should().StartWith(
+                    $"Review #{rivalId} already puts trainee-1 before Annual review for 2026 S1 (scheduled on 2026-07-02).");
                 refusal.Which.InnerException.Should().BeAssignableTo<DbUpdateException>();
             }
 
@@ -314,6 +317,43 @@ public sealed class CommitteeAgendaPostgresTests : IAsyncLifetime
     }
 
     // ---- arrange --------------------------------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task TheHeldSeat_AndCommitteeReviewsInstitution_AreReadOnPostgres()
+    {
+        // T364: the schedule page's Already held (GetSchedulingSeatQuery) and Committee reviews' caption (the institution's
+        // name, a subquery in the list's projection) run on Postgres as on the in-memory store.
+        try
+        {
+            var schema = await MigratedSchemaAsync();
+            int institutionId, panelId;
+            await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
+            {
+                institutionId = await InsertInstitutionAsync(connection, "A");
+                panelId = await InsertPanelAsync(connection, institutionId);
+                await ExecuteAsync(connection,
+                    """INSERT INTO "TraineeProfiles" ("UserId", "InstitutionId", "CurriculumId", "ProgrammeStartDate", "ExpectedCompletionDate", "IsActive") VALUES ('trainee-1', $1, $2, DATE '2025-01-15', DATE '2029-01-14', TRUE)""",
+                    institutionId, await InsertCurriculumAsync(connection));
+            }
+
+            await using var db = NewContext(schema);
+            var scheduled = await ScheduleAsync(db, panelId, Coordinator(institutionId));
+
+            var seat = await new GetSchedulingSeatQueryHandler(db, FakeUserDirectory.TraineesOf(db)).Handle(
+                new GetSchedulingSeatQuery("trainee-1", panelId, 2026, 1, Coordinator(institutionId)), CancellationToken.None);
+            seat.Should().NotBeNull();
+            seat!.ReviewId.Should().Be(scheduled.Id);
+            seat.Sentence.Should().StartWith($"Review #{scheduled.Id} already puts trainee-1 before Annual review for 2026 S1 (scheduled on 2026-07-02).");
+
+            var listed = await new ListReviewsForPanelQueryHandler(db, FakeUserDirectory.TraineesOf(db)).Handle(
+                new ListReviewsForPanelQuery(Coordinator(institutionId)), CancellationToken.None);
+            listed.Should().ContainSingle().Which.InstitutionName.Should().Be("A", "the institution's name as stored");
+        }
+        finally
+        {
+            await _schemas.DropAllAsync();
+        }
+    }
 
     private static Task<CommitteeReviewListItemDto> ScheduleAsync(ApplicationDbContext db, int panelId, ClaimsPrincipal principal)
         => new ScheduleCommitteeReviewCommandHandler(db, FakeUserDirectory.TraineesOf(db)).Handle(

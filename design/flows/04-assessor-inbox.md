@@ -426,7 +426,7 @@ describes the product as it is today, after flow 03 (re-synced 2026-09-30). `D` 
 (`act-3-operations.md` § The clock in this act).
 
 ```text
-Step 2.36 — Dr Patel and Dr Khumalo, assessors (act-2-onboarding.md:666)
+Step 2.36 — Dr Patel and Dr Khumalo, assessors (act-2-onboarding.md:687)
 Role: Assessor — Dr Mohammed Patel and Dr Fatima Khumalo
 Route: /account/login → /
 Do: Each signs in and reads the dashboard and nav.
@@ -602,7 +602,7 @@ Expect:
   - The inbox lights Activity inbox in the menu: Home and Activity inbox, then My data rights. There is no Recent
     activities: the flow 01 pick dropped it, with its placeholder.
 
-Step 5.25 — Dr Naidoo rates it (act-5-graduation.md:661)
+Step 5.25 — Dr Naidoo rates it (act-5-graduation.md:666)
 Role: Assessor — Dr David Naidoo
 Route: /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int} → /dashboard/switch/{role} → /
 Do: He has acted as a Committee member since Step 4.5: choose Switch to Assessor in the sidebar, then open Dr du
@@ -631,7 +631,7 @@ Expect:
     EPA is paused." About's Credit reads None, with "This activity's EPA is paused: its credit waits." under it. In
     its history, the completion's Credit reads None.
 
-Step A.4.3 — Dr Khumalo's other session ends (appendix-cross-cutting.md:591)
+Step A.4.3 — Dr Khumalo's other session ends (appendix-cross-cutting.md:594)
 Role: Assessor — Dr Fatima Khumalo (the second browser)
 Route: /activities/inbox → /account/session-ended → /account/login → /activities/inbox
 Do: Go back to the second browser and wait up to a minute. Sign in with the old password, then with the new one.
@@ -639,7 +639,7 @@ Expect: The tab leaves for the sign-in page by a full page load, which says "You
   (T279), an information notice. The old password is refused, and "Invalid email or password." takes the notice's
   place. The new one brings her back to her Activity inbox: the return address survives the refusal.
 
-Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:1065)
+Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:1068)
 Role: Assessor — Dr Mohammed Patel
 Route: /account/login → /
 Do: Sign in with his own password.
@@ -648,7 +648,7 @@ Expect: He lands on his Assessor dashboard. "Waiting for you", in the warning st
   it, "Waiting 8 days", as his inbox lists it, "8 days" over "since `D−8` … SAST" (T297, T335, T350). Recent decisions
   lists the three he decided on `D`. Dr Dlamini's assessor list names him again (checked at A.7.1).
 
-Step A.7.2 — Dr Patel completes it on his phone (appendix-cross-cutting.md:1158)
+Step A.7.2 — Dr Patel completes it on his phone (appendix-cross-cutting.md:1161)
 Role: Assessor — Dr Mohammed Patel
 Route: /activities/inbox → /activities/{ActivityId:int}
 Do: At 390 px, open Dr Dlamini's Mini-CEX from Activity inbox. Rate the supervision at `3b`, write the three

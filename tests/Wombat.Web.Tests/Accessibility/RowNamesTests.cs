@@ -135,8 +135,9 @@ public sealed class RowNamesTests
     [Fact]
     public void FormativeCheckIns_AreNotToldApartByAStoredTypeTheirRowDoesNotShow()
     {
-        // T361, review R1: a formative check-in's Type column reads "Formative" whatever its stored type, so two that share
-        // a name are told apart by what the row shows next, never by "Annual progression" against "Entrustment only".
+        // T361, review R1: a formative check-in's Type column reads "Formative check-in" (T364, C8) whatever its stored
+        // type, so two that share a name are told apart by what the row shows next, never by "Annual progression" against
+        // "Entrustment only".
         var names = ReviewRowNames.For(
         [
             Review(40, "General CCC", semester: 2, scheduledOn: new DateOnly(2026, 9, 1), formative: true),

@@ -835,10 +835,11 @@ public sealed class CommitteeTraineeScopeTests
 
         var offered = await PickerAsync(db, TestPrincipals.Coordinator(InstitutionA), PanelA);
 
-        offered.Should().Equal(
-            new SchedulableTraineeDto(NeonatologyAtA, "Nandi Neonatal"),
-            new SchedulableTraineeDto(PaedsAtA, "Palesa Paeds"),
-            new SchedulableTraineeDto(SurgeryAtA, "Sipho Surgery"));
+        // By name; each one's training year is held by CommitteeAgendaHandlerTests (T364, 5.29).
+        offered.Select(trainee => (trainee.UserId, trainee.DisplayName)).Should().Equal(
+            (NeonatologyAtA, "Nandi Neonatal"),
+            (PaedsAtA, "Palesa Paeds"),
+            (SurgeryAtA, "Sipho Surgery"));
     }
 
     [Fact]

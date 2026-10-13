@@ -394,16 +394,22 @@ public sealed class EntrustmentDecisionsDueHandlerTests
     // ---- Where Schedule leads ----------------------------------------------------------------------------------------
 
     [Fact]
-    public async Task TheSchedulePeriod_IsTheWindowsLastSemester_SoAnAnnualEpaSchedulesTheYearsLastSitting()
+    public async Task TheSchedulePeriod_IsTheRowsOwnPeriod_AnEndedOneAndAnAnnualEpaIncluded()
     {
+        // T364, F1 (reversing Q7, and the window's-last-semester rule before it): an S2 sitting never decides what S1
+        // missed, so a row's Schedule fills in the period the page shows, ended or not, for an annual EPA too.
         await using var db = await SeededDbAsync();
+        await ScheduleAsync(db, GeneralPanel, Trainee, 2026, 2);
 
-        var due = await DueAsync(db, 2026, 1);
+        var semester1 = await DueAsync(db, 2026, 1);
 
-        var annual = Row(due, Trainee, "PAED-003");
-        (annual.SchedulePeriodKey, annual.SchedulePeriodLabel).Should().Be(("2026-2", "2026 S2"), "Decision 5");
-        (Row(due, Trainee, "PAED-001").SchedulePeriodKey, Row(due, Trainee, "PAED-001").SchedulePeriodLabel)
+        semester1.HasEnded.Should().BeTrue("today is 24 September 2026");
+        var annual = Row(semester1, Trainee, "PAED-003");
+        (annual.SchedulePeriodKey, annual.SchedulePeriodLabel, annual.HoldingReviewId)
+            .Should().Be(("2026-1", "2026 S1", (int?)null), "the open review sits for 2026 S2, so it holds no seat for 2026 S1");
+        (Row(semester1, Trainee, "PAED-001").SchedulePeriodKey, Row(semester1, Trainee, "PAED-001").SchedulePeriodLabel)
             .Should().Be(("2026-1", "2026 S1"));
+        (await DueAsync(db, 2026, 2)).HasEnded.Should().BeFalse();
     }
 
     [Fact]
@@ -494,6 +500,116 @@ public sealed class EntrustmentDecisionsDueHandlerTests
         due.ByEpa.Select(summary => summary.EpaCode).Should().BeInAscendingOrder(StringComparer.Ordinal);
     }
 
+    // ---- Flow 08 (T364): the panel a review sits before, the surname order, the trainee line ---------------------------
+
+    [Fact]
+    public async Task AScheduledRow_AndTheSeatItHolds_NameThePanelTheirReviewSitsBefore()
+    {
+        // T259: the holding review may sit before another panel in the same seat than the one routing gives the EPA to.
+        await using var db = await SeededDbAsync();
+        db.DecisionPanels.Add(Panel(12, "Second CCC", InstitutionA, null, "chair-a", "member-a"));
+        await SaveAndClearAsync(db);
+        var review = await ScheduleAsync(db, 12, Trainee, 2026, 2);
+
+        var row = Row(await DueAsync(db, 2026, 2), Trainee, "PAED-001");
+
+        (row.Status, row.ReviewId, row.ReviewPanelName).Should().Be(
+            (EntrustmentDecisionDueStatus.Scheduled, review.Id, "Second CCC"));
+        (row.SchedulePanelName, row.HoldingReviewId, row.HoldingPanelName).Should().Be(
+            ("General CCC", review.Id, "Second CCC"), "the general seat is held, before the panel the review sits before");
+    }
+
+    [Fact]
+    public async Task RowsAndTheTraineeFilter_AreInSurnameOrder()
+    {
+        // T364, S4: rows sort by surname, and the Trainee filter lists the current trainees in the caller's reach the same
+        // way, one with nothing due in the period among them.
+        await using var db = await SeededDbAsync();
+        var users = new FakeUserDirectory(
+                (Trainee, "Ada Zulu"), (LateStarter, "Zanele Abrahams"), (SurgeryTrainee, "Sipho du Plessis"), (FutureStarter, "Fikile Future"))
+            .With(Person(Trainee, "Ada", "Zulu"))
+            .With(Person(LateStarter, "Zanele", "Abrahams"))
+            .With(Person(SurgeryTrainee, "Sipho", "du Plessis"))
+            .With(Person(FutureStarter, "Fikile", "Future"))
+            .WithTraineesOf(db);
+
+        var due = await DueAsync(db, 2026, 2, users: users);
+
+        due.Items.Select(item => item.TraineeUserId).Distinct().Should().Equal(LateStarter, SurgeryTrainee, Trainee);
+        due.Trainees.Select(trainee => (trainee.UserId, trainee.Name)).Should().Equal(
+            (LateStarter, "Zanele Abrahams"), (SurgeryTrainee, "Sipho du Plessis"), (FutureStarter, "Fikile Future"), (Trainee, "Ada Zulu"));
+    }
+
+    [Fact]
+    public async Task ATraineeWithNoSurname_SortsByTheirName_AsTheSchedulePickerDoes()
+    {
+        // T364, build review R3: one order for the picker and this page. A blank surname sorts by the name shown, never
+        // ahead of everyone as an empty string would.
+        await using var db = await SeededDbAsync();
+        var users = new FakeUserDirectory(
+                (Trainee, "Ada Zulu"), (LateStarter, "Zanele Abrahams"), (SurgeryTrainee, "Sipho du Plessis"), (FutureStarter, "Mpho"))
+            .With(Person(Trainee, "Ada", "Zulu"))
+            .With(Person(LateStarter, "Zanele", "Abrahams"))
+            .With(Person(SurgeryTrainee, "Sipho", "du Plessis"))
+            .With(Person(FutureStarter, "Mpho", " "))
+            .WithTraineesOf(db);
+
+        var due = await DueAsync(db, 2026, 2, users: users);
+
+        due.Trainees.Select(trainee => trainee.UserId).Should().Equal(LateStarter, SurgeryTrainee, FutureStarter, Trainee);
+    }
+
+    [Fact]
+    public async Task TheTraineeFilter_ListsOnlyTheCurrentTraineesInTheCallersReach()
+    {
+        await using var db = await SeededDbAsync();
+
+        (await DueAsync(db, 2026, 2)).Trainees.Select(trainee => trainee.UserId)
+            .Should().BeEquivalentTo([Trainee, LateStarter, FutureStarter, SurgeryTrainee], "not the leaver, nor B's trainee");
+        (await DueAsync(db, 2026, 2, SpecialityAdmin(Surgery))).Trainees.Select(trainee => trainee.UserId)
+            .Should().Equal(SurgeryTrainee);
+    }
+
+    [Fact]
+    public async Task TheTraineeLine_NamesTheReviewHoldingEachSeat_OrNone_AndEachOpenCheckIn()
+    {
+        // T364, C2: one line for each panel that can hold the period, read by the scheduling handler's seat rule
+        // (CommitteeReviewSeats); a formative check-in takes no seat, and is named on a line of its own.
+        await using var db = await SeededDbAsync(withNeonatalPanel: true);
+        var general = await ScheduleAsync(db, GeneralPanel, Trainee, 2026, 2);
+        var checkIn = await ScheduleAsync(db, GeneralPanel, Trainee, 2026, 2, formative: true);
+        await ScheduleAsync(db, GeneralPanel, Trainee, 2026, 1, formative: true);
+
+        var due = await DueAsync(db, 2026, 2);
+
+        var ada = due.Trainees.Should().ContainSingle(trainee => trainee.UserId == Trainee).Subject;
+        ada.Name.Should().Be("Ada Trainee");
+        ada.SeatLines.Should().Equal(
+            new DecisionsDueSeatLineDto(
+                GeneralPanel, "General CCC", general.Id, "Annual progression", "General CCC", new DateOnly(2026, 7, 2), true),
+            new DecisionsDueSeatLineDto(NeonatalPanel, "Neonatal CCC", null, null, null, null, false));
+        ada.CheckIns.Should().Equal(new DecisionsDueCheckInDto(checkIn.Id, true));
+
+        var late = due.Trainees.Single(trainee => trainee.UserId == LateStarter);
+        late.SeatLines.Select(line => (line.PanelId, line.HoldingReviewId))
+            .Should().Equal((GeneralPanel, (int?)null), (NeonatalPanel, (int?)null));
+        late.CheckIns.Should().BeEmpty("the check-ins are Ada's");
+
+        due.Trainees.Single(trainee => trainee.UserId == FutureStarter).SeatLines
+            .Should().BeEmpty("nothing is due for them in 2026, so no panel is asked to hold the period");
+    }
+
+    [Fact]
+    public async Task TheTraineeLine_IsOnlyForThePeriodShown()
+    {
+        await using var db = await SeededDbAsync();
+        await ScheduleAsync(db, GeneralPanel, Trainee, 2026, 2);
+
+        var ada = (await DueAsync(db, 2026, 1)).Trainees.Single(trainee => trainee.UserId == Trainee);
+
+        ada.SeatLines.Should().ContainSingle().Which.HoldingReviewId.Should().BeNull("the review sits for 2026 S2");
+    }
+
     // ---- Scope ------------------------------------------------------------------------------------------------------
 
     [Fact]
@@ -514,7 +630,8 @@ public sealed class EntrustmentDecisionsDueHandlerTests
 
         var act = () => DueAsync(db, 2026, 2, TestPrincipals.Administrator());
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
+        // The handler's own refusal, which the page shows in its words (T364, build review R4).
+        await act.Should().ThrowExactlyAsync<CommitteeRefusedException>()
             .WithMessage("Choose the institution whose decisions due to show.");
     }
 
@@ -772,15 +889,15 @@ public sealed class EntrustmentDecisionsDueHandlerTests
 
     private static async Task<EntrustmentDecisionsDueDto> DueAsync(
         ApplicationDbContext db, int year, int semester, ClaimsPrincipal? principal = null, int? institutionId = null,
-        DateOnly? today = null)
-        => (await DueNullableAsync(db, year, semester, principal, institutionId, today))
+        DateOnly? today = null, IUserAdministrationService? users = null)
+        => (await DueNullableAsync(db, year, semester, principal, institutionId, today, users))
            ?? throw new InvalidOperationException("The query returned nothing.");
 
     private static async Task<EntrustmentDecisionsDueDto?> DueNullableAsync(
         ApplicationDbContext db, int year, int semester, ClaimsPrincipal? principal = null, int? institutionId = null,
-        DateOnly? today = null)
+        DateOnly? today = null, IUserAdministrationService? users = null)
     {
-        var due = await new GetEntrustmentDecisionsDueQueryHandler(db, Names().WithTraineesOf(db)).Handle(
+        var due = await new GetEntrustmentDecisionsDueQueryHandler(db, users ?? Names().WithTraineesOf(db)).Handle(
             new GetEntrustmentDecisionsDueQuery(
                 year, semester, institutionId, principal ?? TestPrincipals.Coordinator(InstitutionA), today ?? Today),
             CancellationToken.None);
@@ -794,6 +911,10 @@ public sealed class EntrustmentDecisionsDueHandlerTests
         (FutureStarter, "Fikile Future"),
         (SurgeryTrainee, "Sipho Surgeon"),
         (TraineeAtB, "Bongi Bee"));
+
+    /// <summary>A trainee's account with a first name and a surname, which the page sorts by (T364, S4).</summary>
+    private static UserIdentityDetails Person(string userId, string firstName, string lastName)
+        => new(userId, $"{userId}@test", firstName, lastName, InstitutionA, [], [], [WombatRoles.Trainee]);
 
     private static IEnumerable<(string Code, string Window, EntrustmentDecisionDueStatus Status)> Rows(
         EntrustmentDecisionsDueDto due, string trainee)

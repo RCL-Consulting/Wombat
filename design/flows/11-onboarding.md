@@ -731,9 +731,9 @@ Expect: Home reads "Coordinator · Semester N, YYYY", with the header action "St
   campaigns, Committee reviews, Decision panels and Data rights requests, one flat list (E2), then My data rights. It
   has no Invitations, and the invitations page reads "You cannot open this page", "Your role (Coordinator) does not open
   this page." and "If you need it for your work, ask your institution's Wombat administrator.", with Go to Home (T178,
-  T335). Decision panels lists the panel with no New panel and no Edit column, and Decision panels is lit there (T358,
-  C10). The panel form reads "You cannot open this page" in the same words: the Coordinator reads panels, and edits none
-  (D4).
+  T335). Decision panels lists the panel (Scope "Speciality · Paediatrics", its four members by name) with no New
+  panel and no Edit column, and Decision panels is lit there (T358, C10). The panel form reads "You cannot open this
+  page" in the same words: the Coordinator reads panels, and edits none (D4).
 
 Step 2.44 — Prof Mbatha's dashboard after onboarding
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha

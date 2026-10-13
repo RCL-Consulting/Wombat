@@ -125,8 +125,46 @@ public static class CommitteeDecisionWording
     /// <summary>A formative review's type, whatever type it was scheduled with (T361, T309 item 2).</summary>
     public const string FormativeTypeLabel = "Formative check-in";
 
-    /// <summary>A formative review's type as a list column says it (T309 item 2).</summary>
-    public const string FormativeTypeShortLabel = "Formative";
+    /// <summary>
+    /// A formative review's type as a list column says it (T309 item 2): "Formative check-in", the words the review page
+    /// and the schedule page's Review type use, now that Committee reviews has no Mode column (T364, C8).
+    /// </summary>
+    public const string FormativeTypeShortLabel = FormativeTypeLabel;
+
+    /// <summary>
+    /// The help under the schedule page's Formative check-in (T364, T309 item 3, where Formative only folded into Review
+    /// type): what a check-in is, and that it takes no seat for the period.
+    /// </summary>
+    public const string FormativeCheckInHelp =
+        "Closes without a binding decision and cannot issue entrustment decisions. Use for interim progress check-ins. It " +
+        "takes no seat for the period.";
+
+    /// <summary>The pre-graduation review's help (T364, C1).</summary>
+    public const string PreGraduationHelp =
+        "The final review before the programme ends: it decides the trainee's progression, and whether they may graduate.";
+
+    /// <summary>
+    /// What a review of <paramref name="type" /> decides, said under its radio on the schedule page (T364, S1): before a
+    /// panel sitting as a College committee, entrustment only, named; at a general panel's semester-2 sitting, the year's
+    /// progression.
+    /// </summary>
+    /// <param name="type">The type offered (<see cref="CommitteeReviewTypes.Allowed" />).</param>
+    /// <param name="panelName">The panel chosen.</param>
+    /// <param name="decisionBodyName">The College committee the panel sits as, or null for a general panel.</param>
+    /// <param name="semester">The semester, 1 or 2, of the period chosen.</param>
+    public static string ReviewTypeHelp(CommitteeReviewType type, string panelName, string? decisionBodyName, int semester)
+        => type switch
+        {
+            CommitteeReviewType.AnnualProgression => semester == 2
+                ? "The semester-2 sitting decides the trainee's progression for the year."
+                : "Decides the trainee's progression for the year.",
+            CommitteeReviewType.PreGraduation => PreGraduationHelp,
+            CommitteeReviewType.EntrustmentOnly => decisionBodyName is not null
+                ? $"{panelName} sits as the {decisionBodyName}, which decides entrustment only: a review before it records " +
+                  "no progression category."
+                : "Decides entrustment only: it records no progression category.",
+            _ => ReviewTypeLabel(type)
+        };
 
     /// <summary>
     /// A review's type as a heading or a detail line says it, read from both fields: "Formative check-in" for a formative
@@ -135,7 +173,7 @@ public static class CommitteeDecisionWording
     public static string ReviewTypeLabel(CommitteeReviewType type, bool isFormative)
         => isFormative ? FormativeTypeLabel : ReviewTypeLabel(type);
 
-    /// <summary>A review's type as a list column says it: "Formative" for a formative review (T309 item 2).</summary>
+    /// <summary>A review's type as a list column says it: "Formative check-in" for a formative review (T309 item 2; T364, C8).</summary>
     public static string ReviewTypeShortLabel(CommitteeReviewType type, bool isFormative)
         => isFormative ? FormativeTypeShortLabel : ReviewTypeShortLabel(type);
 

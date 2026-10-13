@@ -422,8 +422,8 @@ Do: With a contrast checker (axe, or the browser's accessibility audit), check e
   - the sign-in card;
   - the nav on its gradient, and its current item (white on the .32 fill);
   - muted text on the page background;
-  - the status badges on a committee review opened from Committee reviews (Dr Molefe's review 7; the list itself shows
-    each state as plain text);
+  - the status badges on Committee reviews (each state a badge since T364, Scheduled grey there and on Decisions due)
+    and on a committee review opened from it (Dr Molefe's review 7);
   - a success alert (save My account's name, from the name in the top bar, unchanged: "Name saved.") and a danger
     alert (Change password with a confirmation that differs, which checks no password and changes nothing);
   - a password field's Show toggle, pressed (white on the action blue, 4.86:1);

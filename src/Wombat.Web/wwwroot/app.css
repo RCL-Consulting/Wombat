@@ -4638,3 +4638,336 @@ fieldset.form-group fieldset.form-group > legend {
   }
 }
 /* end Flow 07: the review sitting */
+
+/* Flow 08: the committee calendar, shared (T364). The classes the panels, Decisions due, the schedule page and Committee
+   reviews all draw, written once before the build's lanes so each lane uses them as given. Every phone rule is scoped to
+   .committee-calendar, the wrapper the five pages draw, so flows 03, 05 and 06 keep theirs (round 3 S6). */
+
+/* A status cell: the badge over its sentence. */
+.status-cell {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.status-cell p {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* A period over its window, each date unbroken (C8). */
+.period-window {
+  color: var(--muted-text);
+  display: block;
+  font-size: 0.9rem;
+}
+
+.period-window span {
+  white-space: nowrap;
+}
+
+/* A list heading's page and the count under it: "Decisions, page 2 of 4"; "75 of 75 … shown." (C9, T264). */
+.list-section-page {
+  color: var(--muted-text);
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.list-section-count {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  margin: calc(-1 * var(--space-sm)) 0 var(--space-md);
+}
+
+/* A group of radios (Scope, a seat, Review type), framed by a bare fieldset. Refused, the field's 4px danger stripe
+   with no shift of its padding, and a border in forced colours (round 3 S6). */
+.choice-row {
+  border: 0;
+  margin: 0;
+  min-width: 0;
+  padding: 0;
+}
+
+.choice-group {
+  padding-left: var(--space-md);
+}
+
+.choice-group.is-invalid {
+  box-shadow: inset 4px 0 0 var(--danger-color);
+}
+
+@media (forced-colors: active) {
+  .choice-group.is-invalid {
+    border-left: 4px solid CanvasText;
+    box-shadow: none;
+    padding-left: calc(var(--space-md) - 4px);
+  }
+}
+
+/* A person: the name over the whole address. */
+.person-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.person-cell span {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+/* A value fixed at creation, shown in a form's place (Q8). */
+.readonly-value {
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Below 641px, on these pages only: every control on their forms and every row action 44px (round 3 S6). */
+@media (max-width: 640.98px) {
+  .committee-calendar .form-check,
+  .committee-calendar .form-control,
+  .committee-calendar .form-select {
+    min-height: 2.75rem;
+  }
+
+  .committee-calendar .clinic-table--stack .btn,
+  .committee-calendar .header-container .actions-cell .btn,
+  .committee-calendar .form-actions .btn {
+    min-height: 2.75rem;
+    width: 100%;
+  }
+
+  .committee-calendar .header-container .actions-cell {
+    width: 100%;
+  }
+}
+
+/* Up to 900px, where the stack-wide lists stack: their row actions 44px too. */
+@media (max-width: 900px) {
+  .committee-calendar .clinic-table--stack-wide .btn {
+    min-height: 2.75rem;
+  }
+}
+
+/* Flow 08: Decisions due (T364). The trainee line above the list while one trainee is filtered (C2), and By EPA's table
+   inside .rung-legend's fold (M3). Every phone rule is scoped to .committee-calendar (round 3 S6). */
+
+/* The trainee line: what holds the period before one panel, or an open check-in; its sentence, then its one link. */
+.trainee-line {
+  align-items: center;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  justify-content: space-between;
+  margin: 0 0 var(--space-md);
+  padding: 0.75rem var(--space-md);
+}
+
+.trainee-line p {
+  margin: 0;
+}
+
+/* By EPA's counts inside the fold's frame. */
+.rung-legend > .table-container {
+  margin: 0 0.75rem 0.75rem;
+}
+
+/* Below 641px the trainee line's link is a 44px row of its own, as the stacked rows' buttons are. */
+@media (max-width: 640.98px) {
+  .committee-calendar .trainee-line .btn {
+    min-height: 2.75rem;
+    width: 100%;
+  }
+}
+/* end Flow 08: Decisions due */
+
+/* Flow 08: the schedule and Committee reviews (T364). Schedule a review (/committee/reviews/new) and its Agenda aside, as
+   round 3's boards R2-4 draw them; Committee reviews uses the shared classes above. Every phone rule is scoped to
+   .committee-calendar (round 3 S6). */
+
+/* The schedule page: the fields, then the summary and the actions; the Agenda beside them from 1100px, the dashboard
+   grid's line, and under the fields below it, before the summary and the actions (M9). */
+.schedule-grid {
+  align-items: start;
+  display: grid;
+  gap: var(--space-lg) var(--space-xl);
+  grid-template-areas:
+    "fields preview"
+    "summary preview"
+    "actions preview";
+  grid-template-columns: minmax(0, 1fr) minmax(0, 22rem);
+}
+
+.schedule-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  grid-area: fields;
+  min-width: 0;
+}
+
+.schedule-grid > .error-summary {
+  grid-area: summary;
+  margin: 0;
+}
+
+.schedule-grid > .form-actions {
+  grid-area: actions;
+  margin: 0;
+}
+
+/* The evidence window's From and To, side by side while they fit. */
+.field-pair {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
+}
+
+/* Review type's radios: each named by its type, its help under the name as the radio's description, set in from the
+   radio's edge so it lines up with the label (T364, build review D7). */
+.review-type-choice {
+  flex-wrap: wrap;
+}
+
+.review-type-choice .review-type-help {
+  flex-basis: 100%;
+  margin: 0;
+  padding-left: calc(1rem + var(--space-sm));
+}
+
+/* The Agenda aside: advice, never a gate (C6). Body text on --info-bg is 11.84:1, its muted notes 4.77:1. */
+.agenda-preview {
+  background-color: var(--info-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  grid-area: preview;
+  padding: var(--space-md) var(--space-lg);
+}
+
+.agenda-preview h2,
+.agenda-preview > p {
+  margin: 0;
+}
+
+/* The aside's one live region: only the changing words (S6). */
+.agenda-live {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.agenda-live p,
+.agenda-live .alert {
+  margin: 0;
+}
+
+.agenda-live .alert p + p {
+  margin-top: var(--space-xs);
+}
+
+.agenda-count {
+  font-weight: 600;
+}
+
+.agenda-lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin: 0;
+  padding-left: var(--space-md);
+}
+
+@media (max-width: 1099.98px) {
+  .schedule-grid {
+    grid-template-areas:
+      "fields"
+      "preview"
+      "summary"
+      "actions";
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Below 641px: the actions stacked, the primary one on top, each 44px and full width (the shared rule); the aside's
+   padding a step smaller. The held seat's reason is the last item by order, so the reversed column shows it first, above
+   the buttons it explains (T364, build review D1). */
+@media (max-width: 640.98px) {
+  .committee-calendar .schedule-grid .form-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .committee-calendar .schedule-grid .form-actions > .move-reasons {
+    order: 1;
+  }
+
+  .committee-calendar .agenda-preview {
+    padding: var(--space-md);
+  }
+}
+
+/* Flow 08: the panels (T364). Decision panels and a panel's page (boards R2-1, R2-2; Q5, Q6; C10). Each section is
+   headed by an h2 (About this panel, Who sits on it, Decides for, Who decides each EPA), the list and Who decides each EPA
+   stack at 900px and below (.clinic-table--stack-wide, round 3 M8), and the seat picker is a stacked table of
+   .choice-row radio groups (the shared classes above). */
+
+/* A section of the page, spaced from the one before. */
+.panel-section {
+  margin-top: var(--space-lg);
+}
+
+.panel-section > h2,
+.form-section-title {
+  margin: 0 0 var(--space-md);
+}
+
+/* A form's second section title (New panel's Who sits on it) stands clear of the fields above it. */
+.form-container .form-section-title ~ .form-section-title {
+  margin-top: var(--space-xl);
+}
+
+/* The seat picker's group holds its table, the count and the help, spaced as a form group's are. */
+.panel-seats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+/* A seat's radios run across where there is room, and wrap under one another on a phone. */
+.panel-seats .choice-row .check-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(9rem, 100%), 1fr));
+}
+
+/* About this panel's rule, under its list. */
+.panel-section > .details-list + .muted {
+  margin: var(--space-md) 0 0;
+}
+
+/* The lock on Decides for: the sentence, then the review's link, inside one info alert. */
+.panel-lock p {
+  margin: 0;
+}
+
+.panel-lock p + p {
+  margin-top: var(--space-xs);
+}
+/* Below 641px the seat picker stacks (DataTable's Stack): each person's row header loses the header cell's tint, edge and
+   padding, as a stacked cell does, so the name sits over its radios. The seat picker's only: the other stacked tables of
+   the committee pages keep their row headers (T364, build review D5). */
+@media (max-width: 640.98px) {
+  .committee-calendar .panel-seats .clinic-table--stack tbody th {
+    background: none;
+    border: 0;
+    padding: 0;
+  }
+}
+/* end Flow 08: the panels */

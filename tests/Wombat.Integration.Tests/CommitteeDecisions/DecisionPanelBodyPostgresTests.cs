@@ -215,7 +215,8 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
             {
                 var ourSet = () => SetBodyAsync(db, ours, "neonatal", InstitutionalAdmin(a));
 
-                var refusal = await ourSet.Should().ThrowExactlyAsync<InvalidOperationException>();
+                // The handler's own refusal, which the page shows in its words (T364, build review R4).
+                var refusal = await ourSet.Should().ThrowExactlyAsync<CommitteeRefusedException>();
                 refusal.Which.Message.Should().StartWith(
                     "Rival CCC already sits as the Neonatal team Clinical Competency Committee for the whole institution.");
                 refusal.Which.InnerException.Should().BeAssignableTo<DbUpdateException>();
@@ -264,7 +265,8 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
                         "neonatal"),
                     CancellationToken.None);
 
-                var refusal = await create.Should().ThrowExactlyAsync<InvalidOperationException>();
+                // The handler's own refusal, which the page shows in its words (T364, build review R4).
+                var refusal = await create.Should().ThrowExactlyAsync<CommitteeRefusedException>();
                 refusal.Which.Message.Should().StartWith(
                     "Rival CCC already sits as the Neonatal team Clinical Competency Committee for the whole institution.");
                 refusal.Which.InnerException.Should().BeAssignableTo<DbUpdateException>();
@@ -313,6 +315,64 @@ public sealed class DecisionPanelBodyPostgresTests : IAsyncLifetime
     }
 
     // ---- arrange --------------------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// T364 (round 3 M8, Q6): the panels list projects each panel's members with it, and a panel's page reads its
+    /// institution, speciality, members and open reviews; both on a real server, where a nested projection is translated.
+    /// </summary>
+    [Fact]
+    public async Task TheList_NamesEachPanelsMembers_AndAPanelsPage_ItsInstitutionAndSpeciality()
+    {
+        try
+        {
+            var schema = await MigratedSchemaAsync();
+            int a, speciality, panel;
+            await using (var connection = await TestDatabase.OpenSchemaConnectionAsync(schema))
+            {
+                a = await InsertInstitutionAsync(connection, "A");
+                speciality = await InsertSpecialityAsync(connection);
+                panel = await InsertPanelAsync(connection, a, speciality, null, "Paed Annual Review Panel");
+                await InsertPanelAsync(connection, a, null, null, "Hospital Review Panel");
+                foreach (var (userId, role) in new[] { ("naidoo", 2), ("zulu", 1), ("vanrensburg", 3) })
+                {
+                    await ExecuteAsync(connection,
+                        """INSERT INTO "DecisionPanelMembers" ("PanelId", "UserId", "Role") VALUES ($1, $2, $3)""",
+                        panel, userId, role);
+                }
+            }
+
+            var directory = new FakeUserDirectory(("zulu", "Thandi Zulu"), ("naidoo", "David Naidoo"), ("vanrensburg", "John van Rensburg"));
+
+            await using (var db = NewContext(schema))
+            {
+                var listed = await new ListDecisionPanelsQueryHandler(db, directory).Handle(
+                    new ListDecisionPanelsQuery(InstitutionalAdmin(a)), CancellationToken.None);
+
+                listed.Select(row => row.Name).Should().Equal("Hospital Review Panel", "Paed Annual Review Panel");
+                var paediatric = listed.Single(row => row.Id == panel);
+                paediatric.InstitutionName.Should().Be("A");
+                paediatric.SpecialityName.Should().Be("Paediatrics");
+                paediatric.MemberNames.Select(member => member.Name)
+                    .Should().Equal("Thandi Zulu", "David Naidoo", "John van Rensburg");
+            }
+
+            await using (var db = NewContext(schema))
+            {
+                var page = await new GetDecisionPanelByIdQueryHandler(db, directory).Handle(
+                    new GetDecisionPanelByIdQuery(panel, InstitutionalAdmin(a)), CancellationToken.None);
+
+                page!.InstitutionName.Should().Be("A");
+                page.SpecialityName.Should().Be("Paediatrics");
+                page.Members.Select(member => member.Name).Should().BeEquivalentTo(["Thandi Zulu", "David Naidoo", "John van Rensburg"]);
+                page.OpenReviews.Should().BeEmpty();
+                page.DecisionBodyLock.Should().BeNull();
+            }
+        }
+        finally
+        {
+            await _schemas.DropAllAsync();
+        }
+    }
 
     private async Task<string> MigratedSchemaAsync()
     {

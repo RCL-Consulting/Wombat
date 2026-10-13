@@ -6,6 +6,7 @@ using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Common.Users;
+using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Curricula;
@@ -69,17 +70,25 @@ public enum EntrustmentDecisionDueStatus
 /// </param>
 /// <param name="SchedulePanelName">That panel's name.</param>
 /// <param name="SchedulePeriodKey">
-/// The period a sitting that decides the window sits for, as the scheduling form's period select says it ("2026-2"): the
-/// window's last semester. For an annual EPA that is semester 2, whichever semester the page shows, since the year's last
-/// sitting is the one it closes at (Decision 5).
+/// The period the page shows, as the schedule page's period select says it ("2026-1"): the row's own period, an ended one
+/// included, for an annual EPA too (T364, F1). A sitting for a later period never decides what this one missed, since it
+/// plans only its own windows. Before F1 it was the window's last semester.
 /// </param>
-/// <param name="SchedulePeriodLabel">That period: "2026 S2".</param>
+/// <param name="SchedulePeriodLabel">That period: "2026 S1".</param>
 /// <param name="HoldingReviewId">
 /// The open binding review that already puts the trainee before <paramref name="SchedulePanelName" />'s seat for that
 /// period, if any: scheduling another would be refused (one open binding review per trainee, period and seat), so the page
 /// points to this one instead of offering Schedule.
 /// </param>
 /// <param name="MayOpenHoldingReview">Whether the caller passes that review's read ladder.</param>
+/// <param name="ReviewPanelName">
+/// The panel the review <paramref name="ReviewId" /> sits before: "On the agenda of review #1 before Paed Annual Review
+/// Panel" (T364, T259). Null when there is no such review.
+/// </param>
+/// <param name="HoldingPanelName">
+/// The panel the holding review sits before, which may be another panel in the same seat than
+/// <paramref name="SchedulePanelName" /> (T364, T259). Null when nothing holds the seat.
+/// </param>
 public sealed record EntrustmentDecisionDueDto(
     string TraineeUserId,
     string TraineeName,
@@ -96,7 +105,9 @@ public sealed record EntrustmentDecisionDueDto(
     string SchedulePeriodKey,
     string SchedulePeriodLabel,
     int? HoldingReviewId,
-    bool MayOpenHoldingReview)
+    bool MayOpenHoldingReview,
+    string? ReviewPanelName = null,
+    string? HoldingPanelName = null)
 {
     /// <summary>Whether nothing yet decides it: every status but Decided.</summary>
     public bool IsOutstanding => Status != EntrustmentDecisionDueStatus.Decided;
@@ -118,16 +129,58 @@ public sealed record EntrustmentDecisionDueEpaSummaryDto(
     int Missed,
     int Optional);
 
+/// <summary>
+/// The trainee line's read for one panel that can hold the period (T364, C2): the open binding review that holds the
+/// trainee's seat before it, by the scheduling handler's own seat rule (<see cref="CommitteeReviewSeats" />), or none.
+/// </summary>
+/// <param name="PanelId">A panel a row of the trainee's routes to, before which the caller may schedule the trainee.</param>
+/// <param name="PanelName">That panel's name: what "Schedule a review before …" names when the trainee has two.</param>
+/// <param name="HoldingReviewId">The open binding review holding that seat for the period, or null.</param>
+/// <param name="HoldingReviewTypeLabel">Its type as a list column says it ("Annual progression").</param>
+/// <param name="HoldingPanelName">The panel it sits before (T259).</param>
+/// <param name="HoldingScheduledOn">The day it is scheduled on.</param>
+/// <param name="MayOpenHoldingReview">Whether the caller passes its read ladder.</param>
+public sealed record DecisionsDueSeatLineDto(
+    int PanelId,
+    string PanelName,
+    int? HoldingReviewId,
+    string? HoldingReviewTypeLabel,
+    string? HoldingPanelName,
+    DateOnly? HoldingScheduledOn,
+    bool MayOpenHoldingReview);
+
+/// <summary>An open formative check-in of the trainee for the period: it takes no seat (T364, C2).</summary>
+public sealed record DecisionsDueCheckInDto(int ReviewId, bool MayOpen);
+
+/// <summary>
+/// A current trainee in the caller's reach: the Trainee filter's option, and, once the filter names them, the trainee line
+/// (T364, Q2, C2).
+/// </summary>
+/// <param name="SeatLines">One per panel that can hold the period, the general committee's first.</param>
+/// <param name="CheckIns">The open formative check-ins for the period, oldest first.</param>
+public sealed record DecisionsDueTraineeDto(
+    string UserId,
+    string Name,
+    IReadOnlyList<DecisionsDueSeatLineDto> SeatLines,
+    IReadOnlyList<DecisionsDueCheckInDto> CheckIns);
+
 /// <summary>The decisions due at one institution in one period. (T131 slice 6)</summary>
 /// <param name="PeriodLabel">"2026 S1".</param>
-/// <param name="Items">One row per trainee per EPA due, ordered by trainee name, then EPA code.</param>
+/// <param name="Items">One row per trainee per EPA due, ordered by trainee surname (T364, S4), then EPA code.</param>
+/// <param name="Trainees">
+/// The current trainees in the caller's reach, by surname, a trainee with nothing due included: the Trainee filter's
+/// options, each with its trainee line (T364).
+/// </param>
+/// <param name="HasEnded">Whether the period ended before today: the Schedule links then name it (T364, F1).</param>
 public sealed record EntrustmentDecisionsDueDto(
     int InstitutionId,
     string InstitutionName,
     int AcademicYear,
     int Semester,
     string PeriodLabel,
-    IReadOnlyList<EntrustmentDecisionDueDto> Items)
+    IReadOnlyList<EntrustmentDecisionDueDto> Items,
+    IReadOnlyList<DecisionsDueTraineeDto> Trainees,
+    bool HasEnded)
 {
     /// <summary>How many trainees owe at least one decision in the period.</summary>
     public int TraineeCount => Items.Select(item => item.TraineeUserId).Distinct(StringComparer.Ordinal).Count();
@@ -193,10 +246,15 @@ public sealed record EntrustmentDecisionsDueDto(
 /// </para>
 /// <para>
 /// <b>Schedule.</b> Each row names the panel a sitting that decides it would sit before, and the period it would sit for:
-/// the window's last semester (<see cref="EntrustmentDecisionDueDto.SchedulePeriodKey" />). Where an open binding review
-/// already holds the trainee's seat before that panel for that period, the row names it instead
-/// (<see cref="EntrustmentDecisionDueDto.HoldingReviewId" />, <see cref="CommitteeReviewSeats" />), since scheduling
-/// another would be refused.
+/// the period shown, ended or not (<see cref="EntrustmentDecisionDueDto.SchedulePeriodKey" />, T364, F1). Where an open
+/// binding review already holds the trainee's seat before that panel for that period, the row names it instead, with the
+/// panel it sits before (<see cref="EntrustmentDecisionDueDto.HoldingReviewId" />, <see cref="CommitteeReviewSeats" />,
+/// T259), since scheduling another would be refused.
+/// </para>
+/// <para>
+/// <b>The trainees</b> (T364, Q2, C2): every current trainee in reach, by surname, with one seat line for each panel their
+/// rows route to (the panels a Schedule link names), read by the same seat rule, and their open formative check-ins for
+/// the period, which take no seat.
 /// </para>
 /// <para>
 /// Reads only. "Today" is the programme's (<see cref="ProgrammeCalendar.DateOf" />) unless a test pins it.
@@ -268,10 +326,13 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
         var period = new AcademicPeriod(request.AcademicYear, request.Semester);
         var today = request.Today ?? ProgrammeCalendar.DateOf(DateTime.UtcNow);
 
+        var hasEnded = period.End < today;
+
         var trainees = await TraineesAsync(principal, institutionId, cancellationToken);
         if (trainees.Count == 0)
         {
-            return new EntrustmentDecisionsDueDto(institutionId, institutionName, period.Year, period.Semester, period.ToString(), []);
+            return new EntrustmentDecisionsDueDto(
+                institutionId, institutionName, period.Year, period.Semester, period.ToString(), [], [], hasEnded);
         }
 
         var traineeIds = trainees.Select(trainee => trainee.UserId).ToArray();
@@ -299,20 +360,42 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
             .Where(panel => panel.InstitutionId == institutionId)
             .ToListAsync(cancellationToken);
 
-        // The open binding reviews that hold a seat before the institution's panels this year, the scheduling handler's
-        // predicate (CommitteeReviewSeats): one query, matched in memory.
+        // The open binding reviews that hold a seat before the institution's panels for the period shown, the scheduling
+        // handler's predicate (CommitteeReviewSeats): one query, matched in memory. Every Schedule link names this period
+        // (T364, F1), so no other period's seat is asked about.
         var openReviews = (await _dbContext.Set<CommitteeReview>()
                 .AsNoTracking()
                 .OpenBinding()
                 .Where(review => traineeIds.Contains(review.TraineeUserId) &&
                                  review.Panel.InstitutionId == institutionId &&
-                                 review.AcademicYear == period.Year)
+                                 review.AcademicYear == period.Year &&
+                                 review.Semester == period.Semester)
                 .Select(review => new OpenSeatReview(
-                    review.Id, review.TraineeUserId, review.Panel.DecisionBodyKey, review.AcademicYear, review.Semester))
+                    review.Id,
+                    review.TraineeUserId,
+                    review.Panel.DecisionBodyKey,
+                    review.Panel.Name,
+                    review.ReviewType,
+                    review.ScheduledOn))
                 .ToListAsync(cancellationToken))
             .ToLookup(review => review.TraineeUserId, StringComparer.Ordinal);
 
+        // The open formative check-ins for the period: they take no seat, and the trainee line names them (T364, C2).
+        var checkIns = (await _dbContext.Set<CommitteeReview>()
+                .AsNoTracking()
+                .Where(review => review.IsFormative &&
+                                 CommitteeReview.OpenStates.Contains(review.State) &&
+                                 traineeIds.Contains(review.TraineeUserId) &&
+                                 review.Panel.InstitutionId == institutionId &&
+                                 review.AcademicYear == period.Year &&
+                                 review.Semester == period.Semester)
+                .Select(review => new { review.Id, review.TraineeUserId })
+                .ToListAsync(cancellationToken))
+            .ToLookup(review => review.TraineeUserId, review => review.Id, StringComparer.Ordinal);
+
         var names = await UserDisplayNames.ResolveAsync(_users, traineeIds, cancellationToken);
+        // The surname every list of the programme's registrars sorts by (T298; T364, S4).
+        var contacts = await _users.GetContactsAsync(traineeIds, cancellationToken);
 
         var rows = new List<EntrustmentDecisionDueDto>();
         foreach (var trainee in trainees)
@@ -342,7 +425,15 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
             }
         }
 
-        rows = await LinkReviewsAsync(principal, rows, cancellationToken);
+        var traineeLines = trainees
+            .Select(trainee => new DecisionsDueTraineeDto(
+                trainee.UserId,
+                names.NameOf(trainee.UserId),
+                SeatLines(rows.Where(row => string.Equals(row.TraineeUserId, trainee.UserId, StringComparison.Ordinal)), panels, openReviews[trainee.UserId]),
+                checkIns[trainee.UserId].Order().Select(id => new DecisionsDueCheckInDto(id, MayOpen: false)).ToArray()))
+            .ToList();
+
+        (rows, traineeLines) = await LinkReviewsAsync(principal, rows, traineeLines, cancellationToken);
 
         return new EntrustmentDecisionsDueDto(
             institutionId,
@@ -351,11 +442,54 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
             period.Semester,
             period.ToString(),
             rows
-                .OrderBy(row => row.TraineeName, StringComparer.CurrentCultureIgnoreCase)
-                .ThenBy(row => row.TraineeUserId, StringComparer.Ordinal)
+                .OrderBy(_ => 0)
+                .ThenBySurname(row => row.TraineeUserId, contacts)
                 .ThenBy(row => row.EpaCode, StringComparer.Ordinal)
                 .ThenBy(row => row.EpaId)
-                .ToArray());
+                .ToArray(),
+            traineeLines
+                .OrderBy(_ => 0)
+                .ThenBySurname(trainee => trainee.UserId, contacts)
+                .ToArray(),
+            hasEnded);
+    }
+
+    /// <summary>
+    /// The trainee line's seats (T364, C2): one for each panel the trainee's rows name for Schedule, the panels routing gives
+    /// their EPAs to and the caller may schedule before, one per seat, the general committee's first; each with the open
+    /// binding review holding that seat for the period, by <see cref="CommitteeReviewSeats.SameSeat" />, the rule the rows
+    /// and the scheduling handler read.
+    /// </summary>
+    private static IReadOnlyList<DecisionsDueSeatLineDto> SeatLines(
+        IEnumerable<EntrustmentDecisionDueDto> rows,
+        IReadOnlyList<DecisionPanel> panels,
+        IEnumerable<OpenSeatReview> openReviews)
+    {
+        var reviews = openReviews.ToArray();
+        var panelIds = rows.Select(row => row.SchedulePanelId).OfType<int>().ToHashSet();
+
+        return panels
+            .Where(panel => panelIds.Contains(panel.Id))
+            .GroupBy(panel => DecisionBody.NormalizeKey(panel.DecisionBodyKey), StringComparer.Ordinal)
+            .Select(seat => seat.OrderBy(panel => panel.Id).First())
+            .OrderBy(panel => panel.DecisionBodyKey is null ? 0 : 1)
+            .ThenBy(panel => panel.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(panel => panel.Id)
+            .Select(panel =>
+            {
+                var holding = reviews
+                    .Where(review => CommitteeReviewSeats.SameSeat(review.BodyKey, panel.DecisionBodyKey))
+                    .MinBy(review => review.Id);
+                return new DecisionsDueSeatLineDto(
+                    panel.Id,
+                    panel.Name,
+                    holding?.Id,
+                    holding is null ? null : CommitteeDecisionWording.ReviewTypeShortLabel(holding.ReviewType),
+                    holding?.PanelName,
+                    holding?.ScheduledOn,
+                    MayOpenHoldingReview: false);
+            })
+            .ToArray();
     }
 
     /// <summary>The institution to read, or null when the caller may read none.</summary>
@@ -365,7 +499,7 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
 
         if (principal.IsAdministrator())
         {
-            return request.InstitutionId ?? throw new InvalidOperationException(AdministratorMustNameInstitution);
+            return request.InstitutionId ?? throw new CommitteeRefusedException(AdministratorMustNameInstitution);
         }
 
         // Their own institution, whatever they named. Who among its trainees they see is TraineesAsync's question.
@@ -441,16 +575,15 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
             .ThenBy(panel => panel.Id)
             .FirstOrDefault(panel => CommitteeTraineeScope.MayScheduleFor(principal, panel, trainee.Scope));
 
-        // The sitting that decides the window is one for its last semester: semester 2 for an annual EPA (Decision 5).
-        var schedulePeriod = window.Semesters[^1];
+        // The row's own period, ended or not (T364, F1): the only sitting that clears what it missed. The open reviews read
+        // are this period's.
+        var schedulePeriod = period;
 
         // One open binding review per trainee, period and seat: where one holds the seat, Schedule would be refused.
         var holding = schedulePanel is null
             ? null
             : openReviews
-                .Where(review => review.AcademicYear == schedulePeriod.Year &&
-                                 review.Semester == schedulePeriod.Semester &&
-                                 CommitteeReviewSeats.SameSeat(review.BodyKey, schedulePanel.DecisionBodyKey))
+                .Where(review => CommitteeReviewSeats.SameSeat(review.BodyKey, schedulePanel.DecisionBodyKey))
                 .MinBy(review => review.Id);
 
         return new EntrustmentDecisionDueDto(
@@ -469,7 +602,9 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
             CommitteeReviewPeriods.KeyOf(schedulePeriod.Year, schedulePeriod.Semester),
             schedulePeriod.ToString(),
             holding?.Id,
-            MayOpenHoldingReview: false);
+            MayOpenHoldingReview: false,
+            ReviewPanelName: null,
+            HoldingPanelName: holding?.PanelName);
     }
 
     /// <summary>
@@ -515,26 +650,30 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
         => state is CommitteeReviewState.Scheduled or CommitteeReviewState.InProgress or CommitteeReviewState.Decided;
 
     /// <summary>
-    /// Says, row by row, whether the caller may open the reviews a row names, the one its status is about and the one
-    /// holding its seat: the review's own read ladder, in its set form
-    /// (<see cref="CommitteeDecisionAuthorization.ReadableReviewsAsync" />), asked of each review rather than copied, so
-    /// the page links only to a review that will open. One query for every review named, one resolve of their trainees
-    /// where the ladder asks where they train (a speciality administrator's, T218), and one read of who may sit on the
-    /// panels of each institution where the caller holds a seat (T279).
+    /// Says, row by row and line by line, whether the caller may open the reviews each names, the one a status is about,
+    /// the one holding its seat, and the trainee lines' holding reviews and check-ins (T364): the review's own read ladder,
+    /// in its set form (<see cref="CommitteeDecisionAuthorization.ReadableReviewsAsync" />), asked of each review rather
+    /// than copied, so the page links only to a review that will open. One query for every review named, one resolve of
+    /// their trainees where the ladder asks where they train (a speciality administrator's, T218), and one read of who may
+    /// sit on the panels of each institution where the caller holds a seat (T279). It also names the panel the status's
+    /// review sits before (T259).
     /// </summary>
-    private async Task<List<EntrustmentDecisionDueDto>> LinkReviewsAsync(
+    private async Task<(List<EntrustmentDecisionDueDto> Rows, List<DecisionsDueTraineeDto> Trainees)> LinkReviewsAsync(
         ClaimsPrincipal principal,
         List<EntrustmentDecisionDueDto> rows,
+        List<DecisionsDueTraineeDto> trainees,
         CancellationToken cancellationToken)
     {
         var reviewIds = rows.Select(row => row.ReviewId)
             .Concat(rows.Select(row => row.HoldingReviewId))
+            .Concat(trainees.SelectMany(trainee => trainee.SeatLines).Select(line => line.HoldingReviewId))
+            .Concat(trainees.SelectMany(trainee => trainee.CheckIns).Select(checkIn => (int?)checkIn.ReviewId))
             .OfType<int>()
             .Distinct()
             .ToArray();
         if (reviewIds.Length == 0)
         {
-            return rows;
+            return (rows, trainees);
         }
 
         var reviews = await _dbContext.Set<CommitteeReview>()
@@ -544,18 +683,37 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
             .Where(review => reviewIds.Contains(review.Id))
             .ToListAsync(cancellationToken);
 
+        var panelNames = reviews.ToDictionary(review => review.Id, review => review.Panel.Name);
         var readable = (await CommitteeDecisionAuthorization.ReadableReviewsAsync(
                 _dbContext, _users, principal, reviews, cancellationToken))
             .Select(review => review.Id)
             .ToHashSet();
 
-        return rows
+        var linkedRows = rows
             .Select(row => row with
             {
                 MayOpenReview = row.ReviewId is int id && readable.Contains(id),
-                MayOpenHoldingReview = row.HoldingReviewId is int holdingId && readable.Contains(holdingId)
+                MayOpenHoldingReview = row.HoldingReviewId is int holdingId && readable.Contains(holdingId),
+                ReviewPanelName = row.ReviewId is int named && panelNames.TryGetValue(named, out var panelName) ? panelName : null
             })
             .ToList();
+
+        var linkedTrainees = trainees
+            .Select(trainee => trainee with
+            {
+                SeatLines = trainee.SeatLines
+                    .Select(line => line with
+                    {
+                        MayOpenHoldingReview = line.HoldingReviewId is int holdingId && readable.Contains(holdingId)
+                    })
+                    .ToArray(),
+                CheckIns = trainee.CheckIns
+                    .Select(checkIn => checkIn with { MayOpen = readable.Contains(checkIn.ReviewId) })
+                    .ToArray()
+            })
+            .ToList();
+
+        return (linkedRows, linkedTrainees);
     }
 
     private sealed record DueTrainee(string UserId, TraineeScope Scope, int CurriculumId, DateOnly ProgrammeStart);
@@ -568,6 +726,15 @@ public sealed class GetEntrustmentDecisionsDueQueryHandler
         string? BodyKey,
         bool IsOpportunistic);
 
-    /// <summary>An open binding review of a trainee before one of the institution's panels, and the seat it holds.</summary>
-    private sealed record OpenSeatReview(int Id, string TraineeUserId, string? BodyKey, int AcademicYear, int Semester);
+    /// <summary>
+    /// An open binding review of a trainee before one of the institution's panels for the period, the seat it holds, and
+    /// what the trainee line says of it (T364, C2).
+    /// </summary>
+    private sealed record OpenSeatReview(
+        int Id,
+        string TraineeUserId,
+        string? BodyKey,
+        string PanelName,
+        CommitteeReviewType ReviewType,
+        DateOnly ScheduledOn);
 }

@@ -13,6 +13,7 @@ using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
 using Wombat.Web.Components.Shared;
 using Wombat.Web.Services;
+using static Wombat.Web.Tests.CommitteeDecisions.PanelSeatPicker;
 
 namespace Wombat.Web.Tests.CommitteeDecisions;
 
@@ -72,7 +73,7 @@ public sealed class PanelDecisionBodyTests : TestContext
         var cut = RenderComponent<PanelEdit>();
         cut.WaitForState(() => cut.FindAll("#panel-scope").Count == 1);
 
-        cut.FindAll("#panel-scope option").Select(option => option.GetAttribute("value"))
+        ScopesOffered(cut)
             .Should().Equal(DecisionPanelScope.Speciality.ToString());
         cut.FindAll("#panel-body").Should().BeEmpty();
         _sender.Received.OfType<GetDecisionBodiesQuery>().Should().BeEmpty();
@@ -87,7 +88,7 @@ public sealed class PanelDecisionBodyTests : TestContext
         var cut = RenderComponent<PanelEdit>();
         cut.WaitForState(() => cut.FindAll("#panel-body").Count == 1);
 
-        cut.FindAll("#panel-scope option").Select(option => option.GetAttribute("value"))
+        ScopesOffered(cut)
             .Should().Equal(DecisionPanelScope.Institution.ToString(), DecisionPanelScope.Speciality.ToString());
         cut.Find("label[for=panel-body]").TextContent.Should().Contain("Decides for");
         cut.FindAll("#panel-body option").Select(option => option.TextContent.Trim())
@@ -102,7 +103,7 @@ public sealed class PanelDecisionBodyTests : TestContext
         cut.WaitForState(() => cut.FindAll("#panel-body").Count == 1);
 
         cut.Find("#panel-name").Change("Neonatal CCC");
-        cut.Find("#panel-scope").Change(DecisionPanelScope.Institution.ToString());
+        ChooseScope(cut, DecisionPanelScope.Institution);
         cut.Find("#panel-institution").Change(InstitutionA.ToString());
         cut.Find("#panel-body").Change("neonatal");
         cut.Find("#panel-chair").Change("zulu");
@@ -167,7 +168,7 @@ public sealed class PanelDecisionBodyTests : TestContext
     }
 
     [Fact]
-    public void WhileTheCommitteeSaves_SaveCommitteeStaysEnabled_SavePanelIsDisabled_AndASecondPressSendsNothing()
+    public void WhileTheCommitteeSaves_BothSavesAreAriaDisabled_NeverNativelyDisabled_AndASecondPressSendsNothing()
     {
         SignInAs(WombatRoles.InstitutionalAdmin);
         _sender.Hold<SetDecisionPanelBodyCommand>();
@@ -179,7 +180,10 @@ public sealed class PanelDecisionBodyTests : TestContext
             "it has the focus, and a browser drops the focus of a button it disables, to the page (T234)");
         BodyForm(cut).QuerySelector("button[type=submit]")!.GetAttribute("aria-disabled").Should().Be("true",
             "a second press does nothing (T234 review)");
-        MembersForm(cut).QuerySelector("button[type=submit]")!.HasAttribute("disabled").Should().BeTrue();
+        // D3 (T364 build review): Save panel is unavailable while the other form saves, said by aria-disabled (DESIGN.md),
+        // never the native attribute.
+        MembersForm(cut).QuerySelector("button[type=submit]")!.HasAttribute("disabled").Should().BeFalse();
+        MembersForm(cut).QuerySelector("button[type=submit]")!.GetAttribute("aria-disabled").Should().Be("true");
 
         BodyForm(cut).Submit();
         MembersForm(cut).Submit();
@@ -193,18 +197,119 @@ public sealed class PanelDecisionBodyTests : TestContext
     }
 
     [Fact]
-    public void ARefusedCommittee_IsShownBesideItsButton_WhichKeepsTheFocus()
+    public void AFrameworksInvalidOperation_OnTheCommittee_IsTheFixedSentence_NeverItsMessage()
     {
+        // T364, build review R4 (T338): only the handler's own refusal is said in its words.
         SignInAs(WombatRoles.InstitutionalAdmin);
-        _sender.On<SetDecisionPanelBodyCommand>(_ => throw new InvalidOperationException("The committee cannot be changed now."));
+        _sender.On<SetDecisionPanelBodyCommand>(_ => throw new InvalidOperationException("Sequence contains no elements"));
         var cut = RenderPanel();
 
+        cut.Find("#panel-body").Change("");
         BodyForm(cut).Submit();
 
-        cut.WaitForAssertion(() => BodyForm(cut).QuerySelector(".alert-danger")!.TextContent.Trim()
-            .Should().Be("The committee cannot be changed now."));
-        JSInterop.Invocations.Should().NotContain(invocation => invocation.Identifier == "Blazor._internal.domWrapper.focus");
+        cut.WaitForAssertion(() => Squash(cut.Find("#panel-body-msg").TextContent)
+            .Should().Be($"Not saved: {Wombat.Web.Components.Pages.CommitteeDecisions.Panels.PanelWords.SaveFailed}"));
+        cut.Markup.Should().NotContain("Sequence contains");
+    }
+
+    [Fact]
+    public void WhileTheMembersSave_SaveCommitteeIsAriaDisabled_NeverNativelyDisabled()
+    {
+        // D3 (T364 build review).
+        SignInAs(WombatRoles.InstitutionalAdmin);
+        _sender.On<UpdateDecisionPanelCommand>(_ => Panel("neonatal")).Hold<UpdateDecisionPanelCommand>();
+        var cut = RenderPanel();
+
+        MembersForm(cut).Submit();
+
+        var saveCommittee = BodyForm(cut).QuerySelector("button[type=submit]")!;
+        saveCommittee.HasAttribute("disabled").Should().BeFalse();
+        saveCommittee.GetAttribute("aria-disabled").Should().Be("true");
+        BodyForm(cut).Submit();
+        _sender.HeldSends.Should().Be(1, "Save committee sends nothing while the members save");
+        _sender.Received.OfType<SetDecisionPanelBodyCommand>().Should().BeEmpty();
+
+        _sender.Release();
+    }
+
+    [Fact]
+    public void ARefusedCommittee_IsSaidInTheSectionsSummary_AndBesideTheSelect_WhichGoesBackToWhatIsSaved()
+    {
+        // C7, C13: the refusal in a summary that takes the focus, and beside its field, in the handler's own words.
+        SignInAs(WombatRoles.InstitutionalAdmin);
+        _sender.On<SetDecisionPanelBodyCommand>(_ => throw new CommitteeRefusedException("The committee cannot be changed now."));
+        var cut = RenderPanel();
+
+        cut.Find("#panel-body").Change("");
+        BodyForm(cut).Submit();
+
+        cut.WaitForAssertion(() => Squash(cut.Find("#panel-body-refusal strong").TextContent)
+            .Should().Be($"Not saved. The panel still sits as the {NeonatalName}."));
+        Squash(cut.Find("#panel-body-refusal li").TextContent).Should().Be("Decides for: The committee cannot be changed now.");
+        Squash(cut.Find("#panel-body-msg").TextContent).Should().Be("Not saved: The committee cannot be changed now.");
+        cut.Find("#panel-body").GetAttribute("value").Should().Be("neonatal", "the select shows what is saved");
+        cut.Find("#panel-body").GetAttribute("aria-describedby").Should().Contain("panel-body-msg");
+        cut.WaitForAssertion(() => FocusedReference().Id.Should().NotBe(cut.FindComponent<ActionResult>().Instance.Element.Id));
         BodyForm(cut).QuerySelector("button[type=submit]")!.HasAttribute("disabled").Should().BeFalse();
+    }
+
+    /// <summary>
+    /// C13, F5: a scratch state, a second tab. A review was scheduled before the panel since the page was read, so Save
+    /// committee is refused: the section's summary names the review in a short clause, the words beside the select say
+    /// which review and that the select shows what is saved, and the select is back on General panel.
+    /// </summary>
+    [Fact]
+    public void ACommitteeChangeRefusedByAReviewScheduledMeanwhile_NamesTheReview_AndTheSelectShowsWhatIsSaved()
+    {
+        SignInAs(WombatRoles.InstitutionalAdmin);
+        _sender
+            .On<GetDecisionPanelByIdQuery>(_ => Panel(bodyKey: null))
+            .On<SetDecisionPanelBodyCommand>(_ => throw new DecisionBodyLockedException(
+                1, new Wombat.Domain.Curricula.AcademicPeriod(2026, 2), CommitteeReviewState.Scheduled));
+        var cut = RenderPanel();
+
+        cut.Find("#panel-body").Change("neonatal");
+        BodyForm(cut).Submit();
+
+        cut.WaitForAssertion(() => Squash(cut.Find("#panel-body-refusal strong").TextContent)
+            .Should().Be("Not saved. The panel is still a general panel."));
+        Squash(cut.Find("#panel-body-refusal a").TextContent).Should().Be("Decides for: review #1 now sits before this panel");
+        Squash(cut.Find("#panel-body-refusal li").TextContent).Should().Be(
+            "Decides for: review #1 now sits before this panel. What a review decides, and its agenda, follow the College " +
+            "committee the panel sat as when it was scheduled, so the panel keeps what it sits as until its open reviews " +
+            "are ratified, or closed if formative.");
+        Squash(cut.Find("#panel-body-msg").TextContent).Should().Be(
+            "Not saved: review #1 (2026 S2, scheduled) now sits before this panel. The select shows what is saved.");
+        cut.Find("#panel-body").GetAttribute("value").Should().BeEmpty("General panel, as saved");
+        cut.WaitForAssertion(() => FocusedReference().Id.Should().NotBe(cut.FindComponent<ActionResult>().Instance.Element.Id,
+            "the section's summary takes the focus"));
+    }
+
+    /// <summary>F5, step 4.13: while a review is open before the panel, the lock is said first and no select is offered.</summary>
+    [Fact]
+    public void WhileAReviewIsOpenBeforeThePanel_TheCommitteeIsLocked_SaidFirst_AndTheReviewIsLinked()
+    {
+        SignInAs(WombatRoles.InstitutionalAdmin);
+        const string locked =
+            "Review #1 (2026 S2, scheduled) still sits before this panel. What a review decides, and its agenda, follow the " +
+            "College committee the panel sat as when it was scheduled, so the panel keeps what it sits as until its open " +
+            "reviews are ratified, or closed if formative.";
+        _sender.On<GetDecisionPanelByIdQuery>(_ => Panel(bodyKey: null) with
+        {
+            OpenReviews = [new PanelOpenReviewDto(1, "2026 S2", CommitteeReviewState.Scheduled, "scheduled", MayOpen: true)],
+            DecisionBodyLock = locked
+        });
+
+        var cut = RenderComponent<PanelEdit>(parameters => parameters.Add(page => page.PanelId, PanelId));
+        cut.WaitForState(() => cut.FindAll("#panel-body-lock").Count == 1);
+
+        cut.FindAll("#panel-body").Should().BeEmpty("no select is offered while a review is open");
+        cut.FindAll("form").Where(form => form.TextContent.Contains("Save committee")).Should().BeEmpty();
+        cut.Find("#panel-body-value").TextContent.Trim().Should().Be("General panel");
+        Squash(cut.Find("#panel-body-lock p").TextContent).Should().Be("It cannot change now. " + locked);
+        cut.Find("#panel-body-lock a").GetAttribute("href").Should().Be("/committee/reviews/1");
+        cut.Find("#panel-body-lock a").TextContent.Trim().Should().Be("Open review #1");
+        Squash(cut.Find("#panel-open-reviews").TextContent).Should().Be("Review #1 (2026 S2, scheduled)");
     }
 
     private IRenderedComponent<PanelEdit> RenderPanel()
@@ -231,7 +336,7 @@ public sealed class PanelDecisionBodyTests : TestContext
         cut.WaitForState(() => cut.FindAll("#panel-body-title").Count == 1);
 
         cut.FindAll("#panel-body").Should().BeEmpty();
-        cut.Find("aside dl dd").TextContent.Should().Be(NeonatalName);
+        cut.Find("#panel-body-value").TextContent.Should().Be(NeonatalName);
         cut.Markup.Should().Contain("Only an institutional administrator can change which College committee a panel sits as.");
     }
 
@@ -250,16 +355,18 @@ public sealed class PanelDecisionBodyTests : TestContext
             .On<GetCommitteeRoutingQuery>(query => Routing(neonatalPanel: new CommitteeRoutedPanelDto(11, "Neonatal CCC")));
 
         var cut = RenderComponent<PanelsList>();
-        cut.WaitForState(() => cut.FindAll("[aria-labelledby=routing-programme-100] tbody tr").Count == 2);
+        cut.WaitForState(() => cut.FindAll("#routing-table-100 tbody tr").Count == 2);
 
         _sender.Received.OfType<GetCommitteeRoutingQuery>().Should().ContainSingle()
             .Which.InstitutionId.Should().BeNull("anyone but an Administrator reads their own institution");
 
-        var rows = cut.FindAll("[aria-labelledby=routing-programme-100] tbody tr").ToArray();
-        rows[0].QuerySelector("th")!.TextContent.Should().Be("PAED-004, PAED-005");
-        rows[0].QuerySelector("td")!.TextContent.Should().Contain("Neonatal CCC").And.Contain($"Sits as the {NeonatalName}.");
-        rows[1].QuerySelector("th")!.TextContent.Should().Be("PAED-001, PAED-002");
-        rows[1].QuerySelector("td")!.TextContent.Trim().Should().Be("Annual review");
+        // Rows read in the order of their first EPA (board R2-1): the general row, then the committee's.
+        var rows = cut.FindAll("#routing-table-100 tbody tr").ToArray();
+        rows[0].QuerySelector("th")!.TextContent.Should().Be("PAED-001, PAED-002");
+        rows[0].QuerySelector("td")!.TextContent.Trim().Should().Be("Annual review");
+        rows[1].QuerySelector("th")!.TextContent.Should().Be("PAED-004, PAED-005");
+        rows[1].QuerySelector("td")!.TextContent.Trim().Should().Be($"Neonatal CCC, sitting as the {NeonatalName}.");
+        cut.Find("#routing-table-100 caption").TextContent.Trim().Should().Be("Who decides each EPA of General Paediatrics 11.1");
 
         cut.FindAll("tbody tr").Select(row => row.TextContent)
             .Should().Contain(text => text.Contains("Neonatal CCC") && text.Contains(NeonatalName), "the list says what each panel decides for");
@@ -274,12 +381,12 @@ public sealed class PanelDecisionBodyTests : TestContext
             .On<GetCommitteeRoutingQuery>(_ => Routing(neonatalPanel: null));
 
         var cut = RenderComponent<PanelsList>();
-        cut.WaitForState(() => cut.FindAll("[aria-labelledby=routing-programme-100] tbody tr").Count == 2);
+        cut.WaitForState(() => cut.FindAll("#routing-table-100 tbody tr").Count == 2);
 
-        var neonatalRow = cut.FindAll("[aria-labelledby=routing-programme-100] tbody tr").First();
+        var neonatalRow = cut.FindAll("#routing-table-100 tbody tr").Last();
         neonatalRow.QuerySelector("th")!.TextContent.Should().Be("PAED-004, PAED-005");
-        neonatalRow.QuerySelector("td")!.TextContent.Should().Contain("Annual review")
-            .And.Contain($"No panel covering this programme sits as the {NeonatalName}, so the general panel decides.");
+        neonatalRow.QuerySelector("td")!.TextContent.Trim().Should().Be(
+            $"Annual review. No panel covering this programme sits as the {NeonatalName}, so the general panel decides.");
     }
 
     [Fact]
@@ -293,9 +400,9 @@ public sealed class PanelDecisionBodyTests : TestContext
                 generals: [new CommitteeRoutedPanelDto(10, "Annual review"), new CommitteeRoutedPanelDto(12, "Paediatric CCC")]));
 
         var cut = RenderComponent<PanelsList>();
-        cut.WaitForState(() => cut.FindAll("[aria-labelledby=routing-programme-100] tbody tr").Count == 2);
+        cut.WaitForState(() => cut.FindAll("#routing-table-100 tbody tr").Count == 2);
 
-        cut.FindAll("[aria-labelledby=routing-programme-100] tbody tr").First().QuerySelector("td")!.TextContent
+        cut.FindAll("#routing-table-100 tbody tr").Last().QuerySelector("td")!.TextContent
             .Should().Contain("Annual review, Paediatric CCC")
             .And.Contain($"No panel covering this programme sits as the {NeonatalName}, so the general panels decide.");
     }
@@ -311,11 +418,14 @@ public sealed class PanelDecisionBodyTests : TestContext
             .On<GetCommitteeRoutingQuery>(_ => Routing(neonatalPanel: null, generals: []));
 
         var cut = RenderComponent<PanelsList>();
-        cut.WaitForState(() => cut.FindAll("[aria-labelledby=routing-programme-100] tbody tr").Count == 2);
+        cut.WaitForState(() => cut.FindAll("#routing-table-100 tbody tr").Count == 1);
 
-        var neonatalCell = cut.FindAll("[aria-labelledby=routing-programme-100] tbody tr").First().QuerySelector("td")!.TextContent;
-        neonatalCell.Should().Contain("No panel at this institution covers this programme.");
-        neonatalCell.Should().NotContain("general panel");
+        // Where no panel covers the programme, every EPA shares the one row (step 2.20).
+        var row = cut.Find("#routing-table-100 tbody tr");
+        row.QuerySelector("th")!.TextContent.Should().Be("PAED-001, PAED-002, PAED-004, PAED-005");
+        var cell = row.QuerySelector("td")!.TextContent;
+        cell.Trim().Should().Be("No panel at this institution covers this programme.");
+        cell.Should().NotContain("general panel");
     }
 
     [Fact]
@@ -327,16 +437,32 @@ public sealed class PanelDecisionBodyTests : TestContext
             .On<GetCommitteeRoutingQuery>(_ => Routing(neonatalPanel: null));
 
         var cut = RenderComponent<PanelsList>();
-        cut.WaitForState(() => cut.FindAll("#routing-institution option").Count == 2);
+        cut.WaitForState(() => cut.FindAll("#panels-institution option").Count == 2);
 
+        // F2: nothing is read for an institution until one is chosen and Show is pressed.
         _sender.Received.OfType<GetCommitteeRoutingQuery>().Should().BeEmpty();
+        _sender.Received.OfType<ListDecisionPanelsQuery>().Should().BeEmpty();
+        cut.Find(".state-panel-title").TextContent.Trim().Should().Be("Choose an institution");
+        cut.Find(".state-panel-copy").TextContent.Trim()
+            .Should().Be("An administrator belongs to no institution, so the panels are shown for the one chosen above.");
         cut.Markup.Should().Contain("Choose an institution to see which panel decides each EPA there.");
 
-        cut.Find("#routing-institution").Change(InstitutionA.ToString());
+        cut.Find("#panels-institution").Change(InstitutionA.ToString());
+        _sender.Received.OfType<GetCommitteeRoutingQuery>().Should().BeEmpty("nothing changes until Show");
+        cut.Find("form").Submit();
 
+        var navigation = Services.GetRequiredService<FakeNavigationManager>();
+        navigation.Uri.Should().EndWith($"/committee/panels?institution={InstitutionA}");
+
+        // The address asks for the institution: the page reads it again, the list and Who decides each EPA for it.
+        cut.WaitForState(() => cut.FindAll("#routing-table-100").Count == 1);
         _sender.Received.OfType<GetCommitteeRoutingQuery>().Should().ContainSingle()
             .Which.InstitutionId.Should().Be(InstitutionA);
-        cut.WaitForState(() => cut.FindAll("[aria-labelledby=routing-programme-100]").Count == 1);
+        _sender.Received.OfType<ListDecisionPanelsQuery>().Should().ContainSingle()
+            .Which.InstitutionId.Should().Be(InstitutionA);
+        cut.Find(".page-subtitle").TextContent.Trim()
+            .Should().Be("The panels that take entrustment and progression decisions at Kgosi Kgari.");
+        cut.Find("#panels-institution").GetAttribute("value").Should().Be(InstitutionA.ToString());
     }
 
     // ─── Fixture ─────────────────────────────────────────────────────────────

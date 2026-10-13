@@ -410,14 +410,15 @@ Step 4.37 — Dr Sithole reads the list and what must be decided again
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /admin/entrustment-decisions → /committee/decisions-due
 Do: Open Entrustment decisions from the menu. Filter Status to Revoked and apply, then to Active and apply. Download
-  the revoked certificate. Then open Decisions due with "Every status".
+  the revoked certificate. Then open Decisions due, read the count, set Status to "Every status", press Show, and open
+  By EPA.
 Expect:
   - **The menu:** Entrustment decisions is lit on its page, with no trail (T358, R2-Menus m5).
   - **Filtered:** Revoked leaves Dlamini's PAED-002, and Active leaves four rows.
   - **The revoked certificate** reads Status Revoked, with "REVOKED", the date, who revoked it (Dr Mokoena, by name,
     T142) and the reason.
   - **Decisions due:** Dlamini's PAED-002 reads "Revoked: re-decide". Its detail reads "STAR #n, issued for `<P>`, was
-    revoked. Schedule a review to decide it again." It offers Schedule.
+    revoked. Schedule a review to decide it again." Its one action is Schedule (C3).
   - **By EPA:** PAED-002 reads Decided 0, Not decided 4 and To schedule 1.
   - **Count, default filter:** "71 of 75 decisions due in `<P>` shown."
 

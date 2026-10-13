@@ -366,9 +366,10 @@ While the registrars' links age (Step 2.26 needs an hour), Mbatha forms the pane
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/panels
 Do: Open Decision panels.
-Expect: The page reads "No decision panels" / "Create a panel before scheduling reviews." and offers New panel. "Who
-  decides each EPA" names `Paediatric EPA Curriculum 11.1` and says against every EPA "No panel at this institution
-  covers this programme."
+Expect: While the page reads, the header shows at once over skeletons: no New panel yet, and Who decides each EPA draws
+  skeletons, never a sentence saying there is no routing (T329). Then the page reads "No decision panels" / "Create a
+  panel before scheduling reviews." and offers New panel in the header. "Who decides each EPA" names `Paediatric EPA
+  Curriculum 11.1` in one row, "PAED-001 to PAED-015", against "No panel at this institution covers this programme."
 Actual (2026-10-12, T361 replay, wombat_scenario_t361): "No decision panels" / "Create a panel before scheduling
   reviews.", New panel offered. "Who decides each EPA" names Paediatric EPA Curriculum 11.1 in two rows (PAED-004,
   PAED-005; and the other thirteen), each "No panel at this institution covers this programme."
@@ -377,15 +378,22 @@ Gap: none
 ### Step 2.21 — The new-panel form, and a panel of one refused
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/panels/new
-Do: Name it "Paed Annual Review Panel", with scope Speciality, speciality Paediatrics and Decides for General panel.
-  Select Zulu and Naidoo under Members, then choose Zulu as Chair. Unselect Naidoo, leaving the chair alone, and save.
-Expect: Scope offers Institution and Speciality and starts on Speciality. Speciality offers Paediatrics alone ("The panel
-  runs at your institution. Only the specialities it has adopted a curriculum in are listed."). Decides for offers
-  General panel and the Neonatal team Clinical Competency Committee. Chair, Members and External members each list
-  exactly Botha, Naidoo, van Rensburg and Zulu: active committee members at KGK who are not trainees (T165, T237).
-  Choosing Zulu as chair shows "Thandi Zulu is the chair now, so is no longer selected under Members." (T257). The save
-  is refused: "A panel needs at least two members: the chair and at least one other, so that no decision is one
-  person's." (D46).
+Do: Name it "Paed Annual Review Panel", with Scope Speciality, Speciality Paediatrics and Decides for General panel.
+  Under Who sits on it, seat Zulu and Naidoo as Member, then choose Zulu as Chair. Set Naidoo to Not seated, leaving the
+  chair alone, and press Create panel.
+Expect: The page reads "New panel": "A panel takes entrustment and progression decisions for the trainees it covers. Its
+  name, scope, institution and speciality cannot change once it is created."
+  - Scope offers Institution and Speciality and starts on Speciality. Speciality offers Paediatrics alone ("The panel
+    runs at your institution. Only the specialities it has adopted a curriculum in are listed."). Decides for offers
+    General panel and the Neonatal team Clinical Competency Committee.
+  - Chair, and the seat picker under it (one row a person: Not seated, Member or External member), each list exactly
+    Botha, Naidoo, van Rensburg and Zulu, by surname, each with the whole address (van Rensburg's on
+    `sun.wombat.local`): active committee members at KGK who are not trainees (T165, T237).
+  - Choosing Zulu as chair says "Thandi Zulu is the chair now, so is no longer seated as a member." (T257), and her row
+    reads "Chair · chosen above".
+  - Create panel is refused and nothing is created: "The panel was not created. Everything you chose is kept below.",
+    with "Seats: A panel needs at least two members: the chair and at least one other, so that no decision is one
+    person's." (D46). The summary takes the focus, and the seats are marked with the same sentence.
 Actual (2026-10-12, T361 replay, wombat_scenario_t361): Scope offered Institution and Speciality, on Speciality;
   Speciality offered Paediatrics with the quoted help; Decides for offered General panel and the Neonatal team Clinical
   Competency Committee. Chair, Members and External members each listed Botha, Naidoo, van Rensburg and Zulu. Choosing
@@ -397,11 +405,19 @@ Gap: none
 ### Step 2.22 — Mbatha saves the panel
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/panels/new → /committee/panels/{PanelId:int}
-Do: Select Naidoo under Members and van Rensburg under External members, then save. Botha is left for Step 2.23.
-Expect: The page reloads as the panel's own page. It has a "Decides for" card reading General panel with Save
-  committee, and Update members shows Zulu as chair, Naidoo as a member and van Rensburg as external. The External
-  members help text says external members sit with the chair on the appeal body and that cross-institution externals
-  are not yet supported.
+Do: Seat Naidoo as Member and van Rensburg as External member, then press Create panel. Botha is left Not seated, for
+  Dr Mokoena in Step 2.23.
+Expect: The panel's own page opens, and names the panel: its h1 and tab read "Paed Annual Review Panel", its subtitle
+  "Speciality panel · Paediatrics · Kgosi Kgari Teaching Hospital" (T260). "Paed Annual Review Panel was created. Its
+  reviews can now be scheduled on Committee reviews." takes the focus.
+  - **About this panel:** Scope "Speciality: Paediatrics", Institution Kgosi Kgari Teaching Hospital, Open reviews
+    None, and "Its name, scope, institution and speciality cannot change once it is created. Its members can, even
+    while its reviews are open."
+  - **Who sits on it:** Chair Zulu; Naidoo Member, van Rensburg External member, Botha Not seated; "3 seats: the chair,
+    1 member and 1 external member." The externals' help says external members sit with the chair on the panel's
+    appeal body, and that cross-institution externals are not yet supported.
+  - **Decides for:** General panel, with Save committee and the rule under it.
+  There is no "Back to panels".
 Actual (2026-10-12, T361 replay, wombat_scenario_t361): Saved to /committee/panels/1. The "Decides for" card reads
   General panel with Save committee; Update members shows Zulu chair, Naidoo member, van Rensburg external, and the
   External members help as expected ("…who sit with the chair on the panel's appeal body… cross-institution externals
@@ -413,12 +429,14 @@ Gap: [F-2.22a, T260] (still) A panel's own page never shows its name (nor scope 
 ### Step 2.23 — Dr Mokoena adds Dr Botha to the panel
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /account/login → / → /committee/panels → /committee/panels/{PanelId:int} → /committee/panels
-Do: Sign in, open Decision panels and Edit the panel. Select Botha under Members as well, then save and go back to the
-  panels.
+Do: Sign in, open Decision panels and Edit the panel. Seat Botha as Member, press Save panel, then go back to Decision
+  panels from the menu.
 Expect: The list offers her New panel and an Edit on this panel, a Speciality-scoped panel in her speciality at her
-  institution (T194). Decides for is read-only: "General panel", with "Only an institutional administrator can change
-  which College committee a panel sits as." The save reads "Panel members updated.", and the list's Members column
-  reads 4.
+  institution (T194). On the panel's page Decides for is read-only: "General panel", with "Only an institutional
+  administrator can change which College committee a panel sits as." Save panel reads "Panel members updated. Thandi
+  Zulu chairs, with 2 members and 1 external member.", with the focus on it. Back on the list, Members names the four,
+  "4: Thandi Zulu (chair), …, John van Rensburg (external)", with Sarah Botha, then David Naidoo, between (the members
+  in the picker's surname order).
 Actual (2026-10-12, T361 replay, wombat_scenario_t361): The list offered her New panel and "Edit Paed Annual Review
   Panel" (Members 3). Decides for was read-only, "General panel", with "Only an institutional administrator can change
   which College committee a panel sits as." and no select. Save panel read "Panel members updated." (members Botha and
@@ -428,10 +446,12 @@ Gap: none
 ### Step 2.24 — Who decides each EPA now
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/panels
-Do: Read the list and the routing card.
-Expect: One row: Paed Annual Review Panel, Speciality, General panel, 4 members, with an Edit. PAED-004 and PAED-005 go to
-  the panel with "No panel covering this programme sits as the Neonatal team Clinical Competency Committee, so the
-  general panel decides." (T131). The other thirteen EPAs go to the panel.
+Do: Read the list and Who decides each EPA.
+Expect: One row: Paed Annual Review Panel, Scope "Speciality · Paediatrics", Decides for General panel, and Members
+  naming the four (the chair first, van Rensburg marked external), with an Edit. Who decides each EPA has two rows:
+  "PAED-001 to PAED-003, PAED-006 to PAED-015" go to Paed Annual Review Panel, and "PAED-004, PAED-005" to "Paed Annual
+  Review Panel. No panel covering this programme sits as the Neonatal team Clinical Competency Committee, so the
+  general panel decides." (T131).
 Note: KGK has no neonatal CCC, so "Decides for" stays General panel. Act 4 schedules every review on this panel.
 Actual (2026-10-12, T361 replay, wombat_scenario_t361): One row: Paed Annual Review Panel, Speciality, General panel,
   4, "Edit Paed Annual Review Panel". Routing: PAED-004, PAED-005 → Paed Annual Review Panel with "No panel covering
@@ -441,11 +461,12 @@ Gap: none
 
 ### Step 2.25 — Dr Sithole looks at what he may create
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
-Route: /account/login → / → /committee/panels → /committee/panels/new
-Do: Sign in, open Decision panels, press New panel and read the form. He leaves without saving.
-Expect: The list offers him New panel and an Edit on the panel. The form's Scope offers Speciality only, because a
+Route: /account/login → / → /committee/panels → /committee/panels/new → /committee/panels
+Do: Sign in, open Decision panels, press New panel and read the form. Then Cancel without creating.
+Expect: The list offers him New panel and an Edit on the panel. The form's Scope reads "Speciality" as text, with "A
+  sub-speciality administrator creates Speciality-scoped panels for the speciality of the sub-speciality.": a
   sub-speciality administrator manages the Speciality-scoped panels of his sub-speciality's speciality (T194, T245).
-  Speciality offers Paediatrics. There is no Decides for field. Nothing is created.
+  Speciality offers Paediatrics. There is no Decides for field. Cancel returns to Decision panels; nothing is created.
 Actual (2026-10-12, T361 replay, wombat_scenario_t361): The list offered him New panel and "Edit Paed Annual Review
   Panel". The form's Scope offered Speciality only, Speciality offered Paediatrics, and there was no Decides for field.
   He went Back to panels without saving; still one panel.
@@ -577,9 +598,9 @@ Expect: Home reads "Coordinator · Semester N, YYYY", with the header action "St
   campaigns, Committee reviews, Decision panels and Data rights requests, one flat list (E2), then My data rights. It
   has no Invitations, and the invitations page reads "You cannot open this page", "Your role (Coordinator) does not open
   this page." and "If you need it for your work, ask your institution's Wombat administrator.", with Go to Home (T178,
-  T335). Decision panels lists the panel with no New panel and no Edit column, and Decision panels is lit there (T358,
-  C10). The panel form reads "You cannot open this page" in the same words: the Coordinator reads panels, and edits none
-  (D4).
+  T335). Decision panels lists the panel (Scope "Speciality · Paediatrics", its four members by name) with no New
+  panel and no Edit column, and Decision panels is lit there (T358, C10). The panel form reads "You cannot open this
+  page" in the same words: the Coordinator reads panels, and edits none (D4).
 Actual (2026-10-12, T361 replay, wombat_scenario_t361): Home, "Coordinator · Semester 2, 2026", header action "Start an
   MSF campaign" (/msf/campaigns/new), no Quick action card. Cards in order: "Waiting for assessors", no badge, "Nothing
   is waiting for an assessor.", Open Waiting for assessors; "Nothing filed in 30 days", the rule line as quoted, "Every
@@ -654,8 +675,8 @@ Role: CommitteeMember + Assessor — Dr David Naidoo and Dr Sarah Botha
 Route: /account/login → / → /committee/panels
 Do: Each signs in, reads the dashboard and opens Decision panels.
 Expect: Dr Naidoo and Dr Botha each see what Dr Zulu saw in Step 2.33: the same menu, the five registrars on Registrars
-  in its order, and "0 of 5" for every EPA on Targets by EPA. Decision panels lists the panel both sit on, with no New
-  panel and no Edit.
+  in its order, and "0 of 5" for every EPA on Targets by EPA. Decision panels lists the panel both sit on, Scope
+  "Speciality · Paediatrics" and its four members by name, with no New panel and no Edit.
 Actual (2026-10-12, T361 replay, wombat_scenario_t361): Each: Home, "Committee member · Semester 2, 2026", "Acting as
   Committee member" with "Switch to Assessor", Zulu's menu, Registrars badged "5 registrars" in Zulu's order (Dlamini,
   du Plessis, Mahlangu, Molefe, Ndlovu) at "0 of 10" / "0 of 5", and Targets by EPA PAED-001 to 015 each "0 of 5".
@@ -685,7 +706,8 @@ Expect: Dr van Rensburg sees "Committee member · Semester N, YYYY" on Home, and
   EPA" reads "0 of 5" for each EPA: a committee member reads every current registrar at the member's institution,
   whatever the member's own sub-specialities, and Dr van Rensburg holds none (T290). The sidebar reads "Acting as
   Committee member" with no switch, over Home, Programme trainees, Committee reviews and Decision panels, then My data
-  rights. Decision panels lists the panel Dr van Rensburg sits on as external member, with no New panel and no Edit.
+  rights. Decision panels lists the panel Dr van Rensburg sits on as external member, its Members marking him
+  "(external)", with no New panel and no Edit.
 Note: Zulu, Naidoo and Botha hold the Paediatrics sub-speciality only through their assessor profiles (Step 2.14), and a
   CommitteeMember invitation may carry none (Step 2.3). So a committee member with no assessor profile sees no trainee
   here, although he sits on the panel and may read every KGK trainee's record (T113). Fixed by T290 (2026-10-05):

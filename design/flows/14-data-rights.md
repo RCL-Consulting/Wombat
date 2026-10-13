@@ -203,7 +203,7 @@ section.
 | A.1.7 | `/account/data-rights` | Dr Mahlangu asks for a correction | Submitted, with a Withdraw |
 | A.1.8 | `/admin/data-rights` → `/admin/data-rights/{Id:guid}` | Mr Smit clears the filters, opens the withdrawn request, then rejects Dr Mahlangu's with a note | Three requests, newest first, with status badges; the withdrawn one offering no decision; "Request rejected." with the focus on it |
 | A.1.9 | `/account/data-rights` | Dr Mahlangu reads the decision | Rejected, nothing offered. Today no note and no date; after T319 both |
-| A.1.10 | `/committee/reviews` → `/committee/reviews/{ReviewId:int}` | Mr Smit schedules a formative check-in for Dr Ndlovu | An open review for the erasure to end (a setup step; the page is F08's) |
+| A.1.10 | `/committee/reviews` → `/committee/reviews/new` → `/committee/reviews/{ReviewId:int}` → `/committee/decisions-due` | Mr Smit schedules a formative check-in for Dr Ndlovu | An open review for the erasure to end (a setup step; the page is F08's) |
 | A.1.11 | `/account/data-rights` | Dr Ndlovu requests erasure | Accepted although a review is scheduled; Submitted, with a Withdraw |
 | A.1.12 | `/admin/data-rights` → `/admin/data-rights/{Id:guid}` | `devadmin` filters to Erasure and approves with a note | Every institution's requests; after T264 a confirmation first; then Completed at once, with the Decision card |
 | A.1.13 | `/account/session-ended` → `/account/login` | Dr Ndlovu's open tab, then a sign-in attempt | "Your session has ended. Please sign in again."; then "Invalid email or password.", with no mention of an erasure |
@@ -453,12 +453,14 @@ Expect: The request reads Rejected and offers nothing: no Withdraw, no Download.
 
 Step A.1.10 — Mr Smit schedules a formative check-in for Dr Ndlovu (appendix-cross-cutting.md)
 Role: Coordinator — Mr Pieter Smit
-Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Schedule a review of Dr Ndlovu before the Paed Annual Review Panel for the period holding `D`, Scheduled on `D`,
-  with Formative only ticked. Note the review's id from its address.
+Route: /committee/reviews → /committee/reviews/new → /committee/reviews/{ReviewId:int} → /committee/decisions-due
+Do: Press Schedule a review and schedule a review of Dr Ndlovu before the Paed Annual Review Panel for the period
+  holding `D`, Scheduled on `D`, with Review type Formative check-in. Note the review's id from its address. Then open Decisions
+  due, set Trainee to Dr Ndlovu and press Show.
 Expect: The review opens as at Step 4.49: the subtitle "Formative check-in · Paed Annual Review Panel · Training year
   1", and the sitting bar Scheduled with "Formative: an interim check-in, no binding decision · evidence …" (T361). It
-  is open, so the erasure at A.1.12 has a review to end.
+  is open, so the erasure at A.1.12 has a review to end. Decisions due's line reads "Formative check-in #N is open: it
+  takes no seat." with Open check-in #N, as at Step 4.49.
 
 Step A.1.11 — Dr Ndlovu requests erasure (appendix-cross-cutting.md)
 Role: Trainee — Dr Sipho Ndlovu
@@ -494,7 +496,8 @@ Route: /admin/users → /admin/trainees → /committee/reviews → /committee/re
 Do: Look for Dr Ndlovu among KGK's users, its trainees and its committee reviews. Open the check-in from A.1.10.
 Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
   - Committee reviews lists his reviews under a pseudonym, `deleted_user_…`, that names nobody: Act 4's ratified
-    review and closed check-in as they were, and A.1.10's check-in as Withdrawn.
+    review as it was; the closed check-in, Type "Formative check-in", State Closed and Decision "—" (read as "None");
+    and A.1.10's check-in, Type "Formative check-in", State Withdrawn and Decision "None: the review was withdrawn".
   - The check-in's sitting bar reads Withdrawn and "Withdrawn on `D`. Withdrawn because the trainee's personal data
     was erased at their request. Nothing more is decided at this review." (T258, T361), and the page offers no action:
     no Start, no Refresh.
@@ -534,10 +537,12 @@ Expect: The dashboard's cards stack, each Furthest short row's figure under its 
 Step A.7.5 — Mr Smit on his phone (appendix-cross-cutting.md)
 Role: Coordinator — Mr Pieter Smit
 Route: / → /msf/campaigns → /msf/campaigns/{CampaignId:int} → /committee/decisions-due → /admin/data-rights
-Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue.
+Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue. On Decisions
+  due, set Status to "Every status", press Show, and open By EPA.
 Expect: Home's header action, Start an MSF campaign, is a row of its own below the header's rule, 44px tall and the
   page's width, and the cards stack in one column, each row's link a 44px block (T358, R2-Home k6). The campaign page
   keeps its gutter (T226), and its invitee table (counts by respondent group: the page never lists an address) scrolls
-  within its card. Decisions due's summary scrolls sideways, and a keyboard can scroll it, as a labelled, focusable
-  region (DESIGN.md's decisions-due contract). The queue's filters stack above its table.
+  within its card. Decisions due's filters stack, with Show and Clear filters each 44px tall; By EPA's fold summary is
+  44px, and opened it reads one block per EPA; each decision is a block, its one action a 44px button the block's
+  width; the pager's buttons are 44px (T364). The queue's filters stack above its table.
 ```

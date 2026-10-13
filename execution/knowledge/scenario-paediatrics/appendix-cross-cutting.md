@@ -200,12 +200,14 @@ Gap: F-A.1.9a, T319 (still: a rejected requester is never told why, though A.1.7
 
 ### Step A.1.10 — Mr Smit schedules a formative check-in for Dr Ndlovu
 Role: Coordinator — Mr Pieter Smit
-Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Schedule a review of Dr Ndlovu before the Paed Annual Review Panel for the period holding `D`, Scheduled on `D`,
-  with Formative only ticked. Note the review's id from its address.
+Route: /committee/reviews → /committee/reviews/new → /committee/reviews/{ReviewId:int} → /committee/decisions-due
+Do: Press Schedule a review and schedule a review of Dr Ndlovu before the Paed Annual Review Panel for the period
+  holding `D`, Scheduled on `D`, with Review type Formative check-in. Note the review's id from its address. Then open Decisions
+  due, set Trainee to Dr Ndlovu and press Show.
 Expect: The review opens as at Step 4.49: the subtitle "Formative check-in · Paed Annual Review Panel · Training year
   1", and the sitting bar Scheduled with "Formative: an interim check-in, no binding decision · evidence …" (T361). It
-  is open, so the erasure at A.1.12 has a review to end.
+  is open, so the erasure at A.1.12 has a review to end. Decisions due's line reads "Formative check-in #N is open: it
+  takes no seat." with Open check-in #N, as at Step 4.49.
 Actual (2026-10-12, T361 replay, wombat_scenario_t361): Committee reviews → Schedule review: the trainee picker,
   enabled once the panel is chosen, offered Anele Dlamini, Nomsa Mahlangu and Sipho Ndlovu. Paed Annual Review Panel,
   Sipho Ndlovu, 2026 S2 (the default), Scheduled on 2026-10-12 (the default), Formative only ticked: "A formative
@@ -269,7 +271,8 @@ Route: /admin/users → /admin/trainees → /committee/reviews → /committee/re
 Do: Look for Dr Ndlovu among KGK's users, its trainees and its committee reviews. Open the check-in from A.1.10.
 Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
   - Committee reviews lists his reviews under a pseudonym, `deleted_user_…`, that names nobody: Act 4's ratified
-    review and closed check-in as they were, and A.1.10's check-in as Withdrawn.
+    review as it was; the closed check-in, Type "Formative check-in", State Closed and Decision "—" (read as "None");
+    and A.1.10's check-in, Type "Formative check-in", State Withdrawn and Decision "None: the review was withdrawn".
   - The check-in's sitting bar reads Withdrawn and "Withdrawn on `D`. Withdrawn because the trainee's personal data
     was erased at their request. Nothing more is decided at this review." (T258, T361), and the page offers no action:
     no Start, no Refresh.
@@ -1238,12 +1241,14 @@ Gap: F-A.7.4a, T311 (still: Home points her to My progress but does not say that
 ### Step A.7.5 — Mr Smit on his phone
 Role: Coordinator — Mr Pieter Smit
 Route: / → /msf/campaigns → /msf/campaigns/{CampaignId:int} → /committee/decisions-due → /admin/data-rights
-Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue.
+Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue. On Decisions
+  due, set Status to "Every status", press Show, and open By EPA.
 Expect: Home's header action, Start an MSF campaign, is a row of its own below the header's rule, 44px tall and the
   page's width, and the cards stack in one column, each row's link a 44px block (T358, R2-Home k6). The campaign page
   keeps its gutter (T226), and its invitee table (counts by respondent group: the page never lists an address) scrolls
-  within its card. Decisions due's summary scrolls sideways, and a keyboard can scroll it, as a labelled, focusable
-  region (DESIGN.md's decisions-due contract). The queue's filters stack above its table.
+  within its card. Decisions due's filters stack, with Show and Clear filters each 44px tall; By EPA's fold summary is
+  44px, and opened it reads one block per EPA; each decision is a block, its one action a 44px button the block's
+  width; the pager's buttons are 44px (T364). The queue's filters stack above its table.
 Actual (2026-10-12, T361 replay, wombat_scenario_t361): At 390 px. The bar reads "Acting as Coordinator". Home's header
   action, Start an MSF campaign, is a row of its own under the header's rule, the page's width and 44 px; the cards
   stack in one track (16 to 374): Waiting for assessors (the warning stripe, "3 waiting, 1 overdue", each row's link a
@@ -1264,9 +1269,9 @@ Route: / → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: At 390 px, open Committee reviews and Dr Molefe's final review.
 Expect: Home's Registrars and Targets by EPA cards are one column: each registrar's name a 44px block with the training
   year and the figures under it, each EPA's name a 44px block with its cadence and its "n of 2" under it (T358, round 3
-  item 21). The review's cards stack. The evidence tables scroll inside their containers. Each EPA's trajectory chart is
-  a card of its own (its section is not a card around it), drawn at 322 px, never scaled, its rungs and months 12 px,
-  and fits its named region, "Rating chart for PAED-001" and the like (E1), with its table stacked under it. Nothing
+  item 21). Committee reviews stacks, a block per review, as at Step A.7.8. The review's cards stack. The evidence
+  tables scroll inside their containers. Each EPA's trajectory chart is a card of its own (its section is not a card
+  around it), drawn at 322 px, never scaled, its rungs and months 12 px, and fits its named region, "Rating chart for PAED-001" and the like (E1), with its table stacked under it. Nothing
   scrolls sideways (T166, T355).
   Review #7, Dr Molefe's pre-graduation review, ratified (T361, round 3): the sitting bar under the title, static
   below 641 px; the decision above the agenda; the agenda as stacked lines (a container query on its container, below
@@ -1306,9 +1311,9 @@ Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: / → /committee/panels → /committee/decisions-due → /admin/entrustment-decisions
 Do: At 390 px, open the dashboard, then Decision panels, Decisions due and Entrustment decisions from the menu.
 Expect: Home stacks Waiting for assessors, badged "3 waiting, 1 overdue", Registrars, badged "2 registrars", and Targets
-  by EPA, KGK-001 first among the EPAs neither registrar has met, by code (T358). The panels list and the decisions list
-  scroll inside their containers (T226). Entrustment decisions is in the menu, lit on its page, with no trail: it is a
-  list the menu offers (R2-Menus m5).
+  by EPA, KGK-001 first among the EPAs neither registrar has met, by code (T358). Decision panels' list and Who
+  decides each EPA stack, a block per panel and per row of EPAs (T364), and Decisions due reads as at Step A.7.5.
+  Entrustment decisions is in the menu, lit on its page, with no trail: it is a list the menu offers (R2-Menus m5).
 Note: Until T358 no menu item led to Entrustment decisions for a speciality admin, and the page lit nothing, under the
   trail Home › Entrustment decisions.
 Actual (2026-10-12, T361 replay, wombat_scenario_t361): At 390 px. The bar reads "Acting as" over "Speciality admin".
@@ -1328,7 +1333,9 @@ Route: / → /committee/reviews → /committee/decisions-due
 Do: At 390 px, open his dashboard, then Committee reviews and Decisions due from the menu.
 Expect: As for Dr Mokoena, scoped to Dr Sithole's sub-speciality: Home stacks the same three cards. The folded bar reads
   "Acting as" over "Sub-speciality admin", in two lines: the bar grows, and the role is never cut. Dr Sithole's menu
-  reads as Dr Mokoena's (A.5.12), each row 44px.
+  reads as Dr Mokoena's (A.5.12), each row 44px. Committee reviews: Schedule a review is a 44px row of its own under the
+  header, and each review a block (the trainee, then Panel, Period over its window, Type, State, Decision, and Open
+  44px). Decisions due reads as at Step A.7.5.
 Actual (2026-10-12, T361 replay, wombat_scenario_t361): At 390 px. The folded bar reads "Acting as" over
   "Sub-speciality admin" on two lines, and the bar grows to 59 px; nothing is cut. Home stacks the same three cards as
   Dr Mokoena's (Waiting for assessors "3 waiting, 1 overdue", Registrars "2 registrars", Targets by EPA from KGK-001),
@@ -1472,8 +1479,8 @@ Do: With a contrast checker (axe, or the browser's accessibility audit), check e
   - the sign-in card;
   - the nav on its gradient, and its current item (white on the .32 fill);
   - muted text on the page background;
-  - the status badges on a committee review opened from Committee reviews (Dr Molefe's review 7; the list itself shows
-    each state as plain text);
+  - the status badges on Committee reviews (each state a badge since T364, Scheduled grey there and on Decisions due)
+    and on a committee review opened from it (Dr Molefe's review 7);
   - a success alert (save My account's name, from the name in the top bar, unchanged: "Name saved.") and a danger
     alert (Change password with a confirmation that differs, which checks no password and changes nothing);
   - a password field's Show toggle, pressed (white on the action blue, 4.86:1);

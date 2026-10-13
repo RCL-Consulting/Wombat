@@ -51,8 +51,11 @@ Run the loop as flow 07 ran it (`design/flows/07-review-sitting/`, BRIEF § 11 "
   paths missing 0, verbatim 424 steps 0 problems)
 - [x] The canvas is created, with the mark copied in before round 1 — its link. ("Wombat 08",
   https://claude.ai/artifact/Bvi2pBNN4WBWc4HqwnRRtQ, design system installed; mark `/_blob/d8e89f2bacfcd9a2e79781ca6f135313`, 2026-10-12)
-- [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/08-committee-calendar/`.
-- [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 08) — the squash commit and counts.
+- [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/08-committee-calendar/`.
+  (A picked; rounds 1–3, `round-2-review.md`, F1–F6, `round-3-check.md`: final, 2026-10-13)
+- [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 08) — the squash commit and counts.
+  (The T364 squash, 2026-10-13: Domain 814, Application 3782, Infrastructure 1022, Architecture 52, Web 3636,
+  Integration 491, all passed; `build-review.md`)
 - [ ] The whole runbook replays on a fresh database with no regression from flow 08, the baseline is re-captured, and
   flow 08's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
 - [ ] The design system is re-synced and republished — its version number.
@@ -80,3 +83,6 @@ T361 (flow 07), T362, T363, T309 (the scheduling preview's seat warning), T329; 
 - **2026-10-13, round 3 drawn and checked** (`round-3/`, `round-3-check.md`): F1–F6, M1–M10 and S1–S8 done; the design
   is final. F4's S1 default is drawn Entrustment-only; the code's `DefaultFor` makes it Annual progression (the build
   moves it). Next: step 6, the build.
+- **2026-10-13, step 6 built** on `t364`: shared pieces, three page lanes (panels, Decisions due, the schedule and
+  Committee reviews), the runbook lane, three Sonnet reviews (R, D, G: 0 high, 2 medium, 18 low), one fix pass, squashed
+  onto master. Next: step 7, the replay on a fresh database.

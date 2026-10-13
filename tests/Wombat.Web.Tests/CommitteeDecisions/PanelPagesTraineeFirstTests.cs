@@ -18,6 +18,7 @@ using Wombat.Infrastructure.Persistence;
 using Wombat.Tests.Shared;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
 using Wombat.Web.Services;
+using Microsoft.AspNetCore.Components;
 
 namespace Wombat.Web.Tests.CommitteeDecisions;
 
@@ -73,8 +74,10 @@ public sealed class PanelPagesTraineeFirstTests : TestContext
         var cut = RenderComponent<PanelEdit>();
         cut.WaitForState(() => cut.FindAll("#panel-trainee-note").Count == 1);
 
-        cut.Find("#panel-trainee-note h3").TextContent.Should().Be("Create panel");
-        cut.Find("#panel-trainee-note p").TextContent.Should().Be(TraineeManagesNoPanel);
+        // Round 3 S1: the rule said first, the form not drawn, and the way back to the list.
+        cut.Find("#panel-trainee-note").TextContent.Trim().Should().Be(TraineeManagesNoPanel);
+        cut.Find("h1").TextContent.Trim().Should().Be("New panel");
+        cut.FindAll("a.btn").Select(link => link.TextContent.Trim()).Should().Equal("Go to Decision panels");
         cut.FindAll("form").Should().BeEmpty(role);
         cut.FindAll("#panel-scope").Should().BeEmpty(role);
         cut.FindAll("#panel-none-creatable").Should().BeEmpty("the reason is the Trainee role, and the card says so");
@@ -91,8 +94,8 @@ public sealed class PanelPagesTraineeFirstTests : TestContext
         var cut = RenderComponent<PanelEdit>(parameters => parameters.Add(page => page.PanelId, PanelId));
         cut.WaitForState(() => cut.FindAll("#panel-trainee-note").Count == 1);
 
-        cut.Find("#panel-trainee-note h3").TextContent.Should().Be("Update members");
-        cut.Find("#panel-trainee-note p").TextContent.Should().Be(TraineeManagesNoPanel);
+        cut.Find("#panel-trainee-note").TextContent.Trim().Should().Be(TraineeManagesNoPanel);
+        cut.Find("h1").TextContent.Trim().Should().Be("Decision panel", "the panel is not read for them, so not named");
         cut.FindAll("form").Should().BeEmpty(role);
         cut.FindAll("#panel-chair").Should().BeEmpty(role);
         cut.FindAll("#panel-body-title").Should().BeEmpty("which College committee it sits as is not theirs to say either");
@@ -123,7 +126,7 @@ public sealed class PanelPagesTraineeFirstTests : TestContext
     {
         SignInAs(role, holdsTrainee: true);
 
-        var cut = RenderComponent<PanelsList>();
+        var cut = RenderList(role);
         cut.WaitForState(() => cut.FindAll("#panels-trainee-note").Count == 1);
         cut.WaitForState(() => cut.Markup.Contains("Paediatrics CCC"));
 
@@ -138,7 +141,7 @@ public sealed class PanelPagesTraineeFirstTests : TestContext
     {
         SignInAs(role, holdsTrainee: false);
 
-        var cut = RenderComponent<PanelsList>();
+        var cut = RenderList(role);
         cut.WaitForState(() => cut.Markup.Contains("Paediatrics CCC") && Links(cut).Contains("Edit"));
 
         Links(cut).Should().Contain(["New panel", "Edit"], role);
@@ -168,11 +171,14 @@ public sealed class PanelPagesTraineeFirstTests : TestContext
         var cut = RenderComponent<PanelsList>();
         cut.WaitForState(() => cut.Markup.Contains("Paediatrics CCC"));
 
-        // The page's first table is the panel list; the routing section's follow it.
+        // The page's first table is the panel list; the routing section's follow it. Each row is headed by the panel's
+        // name, then its three cells (T364, round 3 M8).
         var list = cut.Find("table");
         list.QuerySelectorAll("thead th").Select(header => header.TextContent.Trim())
             .Should().Equal("Name", "Scope", "Decides for", "Members");
-        list.QuerySelectorAll("tbody tr").Should().OnlyContain(row => row.QuerySelectorAll("td").Length == 4);
+        list.QuerySelectorAll("tbody tr").Should().OnlyContain(row => row.QuerySelectorAll("td").Length == 3);
+        list.QuerySelector("tbody tr")!.QuerySelectorAll("th, td").Select(cell => cell.TextContent.Trim())
+            .Should().Equal("Paediatrics CCC", "Speciality · Paediatrics", "General panel", "2: Thandi Zulu (chair), David Naidoo");
     }
 
     [Fact]
@@ -195,8 +201,8 @@ public sealed class PanelPagesTraineeFirstTests : TestContext
         // Offered New panel: told to create one.
         { WombatRoles.Administrator, false, "Create a panel before scheduling reviews." },
         { WombatRoles.InstitutionalAdmin, false, "Create a panel before scheduling reviews." },
-        // Not offered it, so not told to. An Administrator lists every institution's panels and belongs to none.
-        { WombatRoles.Administrator, true, "No decision panel has been created yet." },
+        // Not offered it, so not told to. An Administrator belongs to none, so is told about the one chosen (F2).
+        { WombatRoles.Administrator, true, "No decision panel runs at A yet." },
         { WombatRoles.InstitutionalAdmin, true, "No decision panel runs at your institution yet." },
         { WombatRoles.CommitteeMember, false, "No decision panel runs at your institution yet." }
     };
@@ -214,13 +220,27 @@ public sealed class PanelPagesTraineeFirstTests : TestContext
 
         SignInAs(role, holdsTrainee);
 
-        var cut = RenderComponent<PanelsList>();
-        cut.WaitForState(() => cut.FindAll(".state-panel-copy").Count == 1);
+        var cut = RenderList(role);
+        cut.WaitForState(() => cut.FindAll(".state-panel-copy").Count == 1 && cut.FindAll("#routing-title").Count == 1 &&
+                               !cut.Markup.Contains("skeleton"));
 
         cut.Find(".state-panel-copy").TextContent.Should().Be(expected, $"{role}, holding Trainee: {holdsTrainee}");
     }
 
     // ─── Fixture ─────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Decision panels as the role opens it: an Administrator belongs to no institution, so has chosen A with Show (F2).
+    /// </summary>
+    private IRenderedComponent<PanelsList> RenderList(string role)
+    {
+        if (role == WombatRoles.Administrator)
+        {
+            Services.GetRequiredService<NavigationManager>().NavigateTo($"/committee/panels?institution={InstitutionA}");
+        }
+
+        return RenderComponent<PanelsList>();
+    }
 
     private static IReadOnlyList<string> Links(IRenderedComponent<PanelsList> cut)
         => cut.FindAll("a.btn").Select(link => link.TextContent.Trim()).ToArray();
@@ -298,7 +318,8 @@ public sealed class PanelPagesTraineeFirstTests : TestContext
     /// </summary>
     private sealed class HandlerSender(Func<ApplicationDbContext> createDb) : IScopedSender
     {
-        private readonly FakeUserDirectory _users = FakeUserDirectory.CommitteeMembersAt(InstitutionA, "chair-a", "member-a");
+        private readonly FakeUserDirectory _users = new FakeUserDirectory(("chair-a", "Thandi Zulu"), ("member-a", "David Naidoo"))
+            .WithCommitteeMembers(InstitutionA, "chair-a", "member-a");
 
         public List<object> Received { get; } = [];
 
@@ -314,7 +335,7 @@ public sealed class PanelPagesTraineeFirstTests : TestContext
                 GetInstitutionsListQuery query => await new GetInstitutionsListQueryHandler(db).Handle(query, cancellationToken),
                 GetSpecialitiesListQuery query => await new GetSpecialitiesListQueryHandler(db).Handle(query, cancellationToken),
                 GetDecisionBodiesQuery query => await new GetDecisionBodiesQueryHandler(db).Handle(query, cancellationToken),
-                GetDecisionPanelByIdQuery query => await new GetDecisionPanelByIdQueryHandler(db).Handle(query, cancellationToken),
+                GetDecisionPanelByIdQuery query => await new GetDecisionPanelByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(query, cancellationToken),
                 ListPanelMemberCandidatesQuery query =>
                     await new ListPanelMemberCandidatesQueryHandler(_users).Handle(query, cancellationToken),
                 ListDecisionPanelsQuery query => await new ListDecisionPanelsQueryHandler(db, _users).Handle(query, cancellationToken),

@@ -67,6 +67,65 @@ public static class ReviewLinks
         return false;
     }
 
+    /// <summary>The schedule page, owned by Committee reviews (T364, flow 08): <c>/committee/reviews/new</c>.</summary>
+    public const string ScheduleNew = "/committee/reviews/new";
+
+    /// <summary>The query's key naming the page Cancel returns to: <c>return=/committee/decisions-due?…</c> (T364, C4).</summary>
+    public const string ReturnKey = "return";
+
+    /// <summary>The pages the schedule page may return to; anything else returns to Committee reviews (T364, C4).</summary>
+    private static readonly string[] ScheduleReturnPages = ["/committee/decisions-due", "/committee/reviews"];
+
+    /// <summary>
+    /// The schedule page, filled: <c>/committee/reviews/new?panel=10&amp;trainee=…&amp;period=2026-1&amp;return=…</c>
+    /// (T364, flow 08; round 2 C4, F1). Each part is left out when null; <paramref name="period" /> is the period's key as
+    /// Decisions due writes it (<c>2026-1</c>), always the row's own period, an ended one included (F1).
+    /// <paramref name="returnTo" /> is the address Cancel goes back to, with its filters.
+    /// </summary>
+    public static string Schedule(int? panelId, string? traineeUserId, string? period, string? returnTo)
+    {
+        var parts = new List<string>(4);
+        if (panelId is int panel)
+        {
+            parts.Add(Invariant($"panel={panel}"));
+        }
+
+        if (!string.IsNullOrEmpty(traineeUserId))
+        {
+            parts.Add($"trainee={Uri.EscapeDataString(traineeUserId)}");
+        }
+
+        if (!string.IsNullOrEmpty(period))
+        {
+            parts.Add($"period={Uri.EscapeDataString(period)}");
+        }
+
+        if (!string.IsNullOrEmpty(returnTo))
+        {
+            parts.Add($"{ReturnKey}={Uri.EscapeDataString(returnTo)}");
+        }
+
+        return parts.Count == 0 ? ScheduleNew : $"{ScheduleNew}?{string.Join('&', parts)}";
+    }
+
+    /// <summary>
+    /// Where the schedule page's Cancel goes: <paramref name="returnTo" /> when it is Decisions due or Committee reviews on
+    /// this site, with or without a query; else Committee reviews. Only a path of ours is ever followed, so a crafted
+    /// <c>return=</c> cannot send the reader to another site (an open redirect) or to any other page.
+    /// </summary>
+    public static string ScheduleReturn(string? returnTo)
+    {
+        if (string.IsNullOrEmpty(returnTo) || returnTo.Contains('\\') || returnTo.Contains('#') ||
+            returnTo.Any(char.IsControl))
+        {
+            return "/committee/reviews";
+        }
+
+        var query = returnTo.IndexOf('?', StringComparison.Ordinal);
+        var path = query >= 0 ? returnTo[..query] : returnTo;
+        return ScheduleReturnPages.Contains(path, StringComparer.Ordinal) ? returnTo : "/committee/reviews";
+    }
+
     // Digits only: int.Parse alone takes a sign, white space and a leading "+", none of which an address of ours carries.
     private static bool TryReadId(string? value, string prefix, out int id)
     {

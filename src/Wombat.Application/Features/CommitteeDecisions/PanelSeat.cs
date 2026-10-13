@@ -195,7 +195,7 @@ public static class PanelSeat
         var eligible = await EligibleAsync(users, panelInstitutionId, cancellationToken);
         if (members.Any(member => !eligible.ContainsKey(member.UserId.Trim())))
         {
-            throw new InvalidOperationException(NotEligible);
+            throw new CommitteeRefusedException(NotEligible);
         }
     }
 

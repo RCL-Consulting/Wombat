@@ -270,14 +270,18 @@ public sealed partial class EntrustmentOnlyReviewPageTests : TestContext
     [Fact]
     public void BeforeTheNeonatalCcc_TheFormOffersOnlyAnEntrustmentOnlyReview_SaysWhy_AndSchedulesOne()
     {
+        // T364 (F4, S1; build review D7): Review type is radios, each named by its type with its help as its description;
+        // Formative check-in is among them.
         var cut = RenderSchedule();
 
         ChoosePanelAndTrainee(cut, NeonatalPanel);
 
         TypeOptions(cut).Should().Equal(CommitteeReviewType.EntrustmentOnly.ToString());
-        Text(cut.Find("#review-type-help")).Should().Be(
-            $"Neonatal CCC sits as the {NeonatalCcc}, which decides entrustment only: a review before it records no progression category.");
-        cut.Find("#review-type").GetAttribute("aria-describedby").Should().Be("review-type-help");
+        Text(cut.Find("label[for='review-type-EntrustmentOnly']")).Should().Be("Entrustment-only review");
+        Text(cut.Find("#review-type-EntrustmentOnly-help")).Should().Be(
+            $"Neonatal CCC sits as the {NeonatalCcc}, which decides entrustment only: a review " +
+            "before it records no progression category.");
+        cut.Find("#review-type-EntrustmentOnly").HasAttribute("checked").Should().BeTrue("the one binding type, preselected");
 
         cut.Find("#review-panel").Closest("form")!.Submit();
 
@@ -297,10 +301,10 @@ public sealed partial class EntrustmentOnlyReviewPageTests : TestContext
         cut.Find("#review-period").Change(semester1.Key);
         TypeOptions(cut).Should().Equal(
             nameof(CommitteeReviewType.AnnualProgression), nameof(CommitteeReviewType.PreGraduation), nameof(CommitteeReviewType.EntrustmentOnly));
-        Text(cut.Find("#review-type-help")).Should().Be(
-            "Choose Entrustment-only review when this sitting decides STARs and not the trainee's progression: it records no " +
-            "progression category. The semester-2 sitting always decides progression.");
-        cut.Find("#review-type").Change(nameof(CommitteeReviewType.EntrustmentOnly));
+        Text(cut.Find("label[for='review-type-EntrustmentOnly']")).Should().Be("Entrustment-only review");
+        Text(cut.Find("#review-type-EntrustmentOnly-help")).Should().Be(
+            "Decides entrustment only: it records no progression category.");
+        cut.Find("#review-type-EntrustmentOnly").Change(true);
 
         cut.Find("#review-period").Change(semester2.Key);
         TypeOptions(cut).Should().Equal(nameof(CommitteeReviewType.AnnualProgression), nameof(CommitteeReviewType.PreGraduation));
@@ -316,10 +320,10 @@ public sealed partial class EntrustmentOnlyReviewPageTests : TestContext
         var cut = RenderSchedule();
 
         ChoosePanelAndTrainee(cut, NeonatalPanel);
-        cut.Find("#review-type").GetAttribute("value").Should().Be(nameof(CommitteeReviewType.EntrustmentOnly));
+        CheckedType(cut).Should().Be(nameof(CommitteeReviewType.EntrustmentOnly));
 
         ChoosePanelAndTrainee(cut, GeneralPanel);
-        cut.Find("#review-type").GetAttribute("value").Should().Be(nameof(CommitteeReviewType.AnnualProgression));
+        CheckedType(cut).Should().Be(nameof(CommitteeReviewType.AnnualProgression));
     }
 
     [Fact]
@@ -384,9 +388,10 @@ public sealed partial class EntrustmentOnlyReviewPageTests : TestContext
         return cut;
     }
 
-    private IRenderedComponent<ReviewsSchedule> RenderSchedule()
+    private IRenderedComponent<ScheduleReview> RenderSchedule()
     {
         SignInAs("coordinator-a", WombatRoles.Coordinator);
+        Services.AddSingleton(TimeProvider.System);
         _sender
             .On<ListDecisionPanelsQuery>(_ => new[]
             {
@@ -394,8 +399,8 @@ public sealed partial class EntrustmentOnlyReviewPageTests : TestContext
                 new DecisionPanelSummaryDto(NeonatalPanel, "Neonatal CCC", DecisionPanelScope.Institution, 1, null, 2, "neonatal", NeonatalCcc)
             })
             .On<GetCommitteeReviewsAccessQuery>(_ => new CommitteeReviewsAccessDto(MaySchedule: true, TraineeNote: null))
-            .On<ListReviewsForPanelQuery>(_ => Array.Empty<CommitteeReviewListItemDto>())
             .On<ListSchedulableTraineesQuery>(_ => new[] { new SchedulableTraineeDto("paeds-a", "Palesa Paeds") })
+            .On<GetSchedulingSeatQuery>(_ => null)
             .On<PreviewCommitteeAgendaQuery>(query => new CommitteeAgendaPreviewDto(
                 query.AcademicYear, query.Semester, $"{query.AcademicYear} S{query.Semester}", true, [], [], []))
             .On<ScheduleCommitteeReviewCommand>(command => new CommitteeReviewListItemDto(
@@ -406,22 +411,28 @@ public sealed partial class EntrustmentOnlyReviewPageTests : TestContext
                 Semester = command.Semester
             });
 
-        var cut = RenderComponent<ReviewsSchedule>();
-        cut.WaitForState(() => cut.Markup.Contains("No reviews yet"));
-        cut.Find("button.btn-primary").Click();
+        var cut = RenderComponent<ScheduleReview>();
         cut.WaitForState(() => cut.FindAll("#review-period").Count == 1);
+
+        // C4: the period starts empty; the current one, as the form defaulted to before T364.
+        cut.Find("#review-period").Change(CommitteeReviewPeriods.Current(QuotaCalendar.Today()).Key);
         return cut;
     }
 
-    private static void ChoosePanelAndTrainee(IRenderedComponent<ReviewsSchedule> cut, int panelId)
+    private static void ChoosePanelAndTrainee(IRenderedComponent<ScheduleReview> cut, int panelId)
     {
         cut.Find("#review-panel").Change(panelId.ToString(System.Globalization.CultureInfo.InvariantCulture));
         cut.WaitForState(() => cut.FindAll("select#review-trainee option[value='paeds-a']").Count == 1);
         cut.Find("#review-trainee").Change("paeds-a");
     }
 
-    private static IReadOnlyList<string?> TypeOptions(IRenderedComponent<ReviewsSchedule> cut)
-        => cut.FindAll("#review-type option").Select(option => option.GetAttribute("value")).ToArray();
+    /// <summary>The binding types offered; Formative check-in is always offered after them (T309 item 3).</summary>
+    private static IReadOnlyList<string?> TypeOptions(IRenderedComponent<ScheduleReview> cut)
+        => cut.FindAll("input[name='review-type']").Select(radio => radio.GetAttribute("value"))
+            .Where(value => value != ScheduleReview.FormativeKey).ToArray();
+
+    private static string? CheckedType(IRenderedComponent<ScheduleReview> cut)
+        => cut.FindAll("input[name='review-type']").Single(radio => radio.HasAttribute("checked")).GetAttribute("value");
 
     private static CommitteeReviewListItemDto ListItem(
         CommitteeReviewType type, CommitteeReviewState state, CommitteeDecisionCategory? category)

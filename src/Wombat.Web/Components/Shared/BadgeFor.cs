@@ -98,12 +98,12 @@ public static class BadgeFor
 
     /// <summary>
     /// A decision due (T131 slice 6; DESIGN.md § Badges, "Decisions due"): the agenda's badges, with every shade of "still
-    /// to be decided, nothing wrong yet" grey, and every one that needs a decision taken again red.
+    /// to be decided, nothing wrong yet" grey, and every one that needs a decision taken again red. Scheduled is grey, as a
+    /// scheduled review's state is on Committee reviews: one colour on both lists (T364, round 3 S7).
     /// </summary>
     public static string DecisionDue(EntrustmentDecisionDueStatus status) => State(status switch
     {
         EntrustmentDecisionDueStatus.Decided => BadgeState.Completed,
-        EntrustmentDecisionDueStatus.Scheduled => BadgeState.Submitted,
         EntrustmentDecisionDueStatus.NotDecided => BadgeState.Accepted,
         EntrustmentDecisionDueStatus.Missed or EntrustmentDecisionDueStatus.Revoked => BadgeState.Declined,
         _ => BadgeState.Draft

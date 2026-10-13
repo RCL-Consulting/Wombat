@@ -46,7 +46,7 @@ public sealed class ReviewsScheduleListScopeTests : TestContext
     private const int PaedsReviewAtB = 200;
 
     private const string EmptyBodyForAScheduler =
-        "The reviews you can open appear here once they are scheduled. Use Schedule review to put a trainee before a panel.";
+        "The reviews you can open appear here once they are scheduled. Use Schedule a review to put a trainee before a panel.";
 
     private readonly string _databaseName = Guid.NewGuid().ToString();
     private readonly TestAuthorizationContext _auth;
@@ -117,8 +117,9 @@ public sealed class ReviewsScheduleListScopeTests : TestContext
         empty.QuerySelector(".state-panel-title")!.TextContent.Trim().Should().Be("No reviews yet");
         empty.QuerySelector(".state-panel-copy")!.TextContent.Trim().Should().Be(EmptyBodyForAScheduler);
         cut.Markup.Should().NotContain("Schedule the first committee review");
-        cut.FindAll("button").Select(button => button.TextContent.Trim()).Should().Contain(
-            "Schedule review", "the body's pointer names the header's button, which a scheduler is offered");
+        cut.FindAll(".header-container a").Select(link => link.TextContent.Trim()).Should().Contain(
+            "Schedule a review", "the body's pointer names the header's link, which a scheduler is offered (T364, S7)");
+        cut.Find(".header-container a.btn-primary").GetAttribute("href").Should().Be("/committee/reviews/new");
     }
 
     [Fact]
@@ -143,7 +144,7 @@ public sealed class ReviewsScheduleListScopeTests : TestContext
     private static IReadOnlyList<(string Trainee, string Href)> Rows(IRenderedComponent<ReviewsSchedule> cut)
         => cut.FindAll("table tbody tr")
             .Select(row => (
-                row.QuerySelector("td")!.TextContent.Trim(),
+                row.QuerySelector("th[scope=row]")!.TextContent.Trim(),
                 row.QuerySelector("a[href^='/committee/reviews/']")!.GetAttribute("href") ?? string.Empty))
             .ToArray();
 

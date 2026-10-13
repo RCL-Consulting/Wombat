@@ -6,6 +6,7 @@ using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Common.Users;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
 
@@ -84,6 +85,7 @@ public sealed class ListReviewsForPanelQueryHandler : IRequestHandler<ListReview
 
         var reviews = await listed
             .OrderByDescending(review => review.ScheduledOn)
+            .ThenByDescending(review => review.Id)
             .Select(review => new CommitteeReviewListItemDto(
                 review.Id,
                 review.TraineeUserId,
@@ -99,7 +101,12 @@ public sealed class ListReviewsForPanelQueryHandler : IRequestHandler<ListReview
                 review.ReviewType)
             {
                 AcademicYear = review.AcademicYear,
-                Semester = review.Semester
+                Semester = review.Semester,
+                // The caption names the institution the reviews are at (T364, C10).
+                InstitutionName = _dbContext.Set<Institution>()
+                    .Where(institution => institution.Id == review.Panel.InstitutionId)
+                    .Select(institution => institution.Name)
+                    .FirstOrDefault()
             })
             .ToListAsync(cancellationToken);
 

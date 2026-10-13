@@ -166,9 +166,9 @@ THE RULES THE PAGES CARRY TODAY (real words; they are the data to draw with, and
     Committee.". The warning "1 member of this panel can no longer sit on it, so is not listed below: only an active
     committee member at its institution who is not a trainee can. Saving takes that member off the panel." Not found:
     "The decision panel could not be found." (an out-of-scope panel reads the same). A panel manager with nowhere to
-    create one: "You cannot create a decision panel. A speciality or sub-speciality administrator creates panels for
-    their own speciality at their own institution, once the institution has adopted a curriculum in it. An
-    institutional administrator creates the institution's panels."
+    create one: "You cannot create a decision panel. A speciality or sub-speciality administrator creates the panels of
+    the speciality administered, at the administrator's own institution, once that institution has adopted a
+    curriculum in the speciality. An institutional administrator creates the institution's panels."
   - Decisions due. Filters: Institution (an Administrator only, "Select institution"; until then "Choose an
     institution" / "An administrator belongs to no institution, so the decisions due are shown for the one chosen
     above."); Period (three semesters back, the current, two ahead, as "2026 S2 · 1 Jul to 31 Dec 2026"); Status
@@ -626,57 +626,78 @@ Step 2.20 — Decision panels before any exist
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/panels
 Do: Open Decision panels.
-Expect: The page reads "No decision panels" / "Create a panel before scheduling reviews." and offers New panel. "Who
-  decides each EPA" names `Paediatric EPA Curriculum 11.1` and says against every EPA "No panel at this institution
-  covers this programme."
+Expect: While the page reads, the header shows at once over skeletons: no New panel yet, and Who decides each EPA draws
+  skeletons, never a sentence saying there is no routing (T329). Then the page reads "No decision panels" / "Create a
+  panel before scheduling reviews." and offers New panel in the header. "Who decides each EPA" names `Paediatric EPA
+  Curriculum 11.1` in one row, "PAED-001 to PAED-015", against "No panel at this institution covers this programme."
 
 Step 2.21 — The new-panel form, and a panel of one refused
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/panels/new
-Do: Name it "Paed Annual Review Panel", with scope Speciality, speciality Paediatrics and Decides for General panel.
-  Select Zulu and Naidoo under Members, then choose Zulu as Chair. Unselect Naidoo, leaving the chair alone, and save.
-Expect: Scope offers Institution and Speciality and starts on Speciality. Speciality offers Paediatrics alone ("The panel
-  runs at your institution. Only the specialities it has adopted a curriculum in are listed."). Decides for offers
-  General panel and the Neonatal team Clinical Competency Committee. Chair, Members and External members each list
-  exactly Botha, Naidoo, van Rensburg and Zulu: active committee members at KGK who are not trainees (T165, T237).
-  Choosing Zulu as chair shows "Thandi Zulu is the chair now, so is no longer selected under Members." (T257). The save
-  is refused: "A panel needs at least two members: the chair and at least one other, so that no decision is one
-  person's." (D46).
+Do: Name it "Paed Annual Review Panel", with Scope Speciality, Speciality Paediatrics and Decides for General panel.
+  Under Who sits on it, seat Zulu and Naidoo as Member, then choose Zulu as Chair. Set Naidoo to Not seated, leaving the
+  chair alone, and press Create panel.
+Expect: The page reads "New panel": "A panel takes entrustment and progression decisions for the trainees it covers. Its
+  name, scope, institution and speciality cannot change once it is created."
+  - Scope offers Institution and Speciality and starts on Speciality. Speciality offers Paediatrics alone ("The panel
+    runs at your institution. Only the specialities it has adopted a curriculum in are listed."). Decides for offers
+    General panel and the Neonatal team Clinical Competency Committee.
+  - Chair, and the seat picker under it (one row a person: Not seated, Member or External member), each list exactly
+    Botha, Naidoo, van Rensburg and Zulu, by surname, each with the whole address (van Rensburg's on
+    `sun.wombat.local`): active committee members at KGK who are not trainees (T165, T237).
+  - Choosing Zulu as chair says "Thandi Zulu is the chair now, so is no longer seated as a member." (T257), and her row
+    reads "Chair · chosen above".
+  - Create panel is refused and nothing is created: "The panel was not created. Everything you chose is kept below.",
+    with "Seats: A panel needs at least two members: the chair and at least one other, so that no decision is one
+    person's." (D46). The summary takes the focus, and the seats are marked with the same sentence.
 
 Step 2.22 — Mbatha saves the panel
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/panels/new → /committee/panels/{PanelId:int}
-Do: Select Naidoo under Members and van Rensburg under External members, then save. Botha is left for Step 2.23.
-Expect: The page reloads as the panel's own page. It has a "Decides for" card reading General panel with Save
-  committee, and Update members shows Zulu as chair, Naidoo as a member and van Rensburg as external. The External
-  members help text says external members sit with the chair on the appeal body and that cross-institution externals
-  are not yet supported.
+Do: Seat Naidoo as Member and van Rensburg as External member, then press Create panel. Botha is left Not seated, for
+  Dr Mokoena in Step 2.23.
+Expect: The panel's own page opens, and names the panel: its h1 and tab read "Paed Annual Review Panel", its subtitle
+  "Speciality panel · Paediatrics · Kgosi Kgari Teaching Hospital" (T260). "Paed Annual Review Panel was created. Its
+  reviews can now be scheduled on Committee reviews." takes the focus.
+  - **About this panel:** Scope "Speciality: Paediatrics", Institution Kgosi Kgari Teaching Hospital, Open reviews
+    None, and "Its name, scope, institution and speciality cannot change once it is created. Its members can, even
+    while its reviews are open."
+  - **Who sits on it:** Chair Zulu; Naidoo Member, van Rensburg External member, Botha Not seated; "3 seats: the chair,
+    1 member and 1 external member." The externals' help says external members sit with the chair on the panel's
+    appeal body, and that cross-institution externals are not yet supported.
+  - **Decides for:** General panel, with Save committee and the rule under it.
+  There is no "Back to panels".
 
 Step 2.23 — Dr Mokoena adds Dr Botha to the panel
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /account/login → / → /committee/panels → /committee/panels/{PanelId:int} → /committee/panels
-Do: Sign in, open Decision panels and Edit the panel. Select Botha under Members as well, then save and go back to the
-  panels.
+Do: Sign in, open Decision panels and Edit the panel. Seat Botha as Member, press Save panel, then go back to Decision
+  panels from the menu.
 Expect: The list offers her New panel and an Edit on this panel, a Speciality-scoped panel in her speciality at her
-  institution (T194). Decides for is read-only: "General panel", with "Only an institutional administrator can change
-  which College committee a panel sits as." The save reads "Panel members updated.", and the list's Members column
-  reads 4.
+  institution (T194). On the panel's page Decides for is read-only: "General panel", with "Only an institutional
+  administrator can change which College committee a panel sits as." Save panel reads "Panel members updated. Thandi
+  Zulu chairs, with 2 members and 1 external member.", with the focus on it. Back on the list, Members names the four,
+  "4: Thandi Zulu (chair), …, John van Rensburg (external)", with Sarah Botha, then David Naidoo, between (the members
+  in the picker's surname order).
 
 Step 2.24 — Who decides each EPA now
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/panels
-Do: Read the list and the routing card.
-Expect: One row: Paed Annual Review Panel, Speciality, General panel, 4 members, with an Edit. PAED-004 and PAED-005 go to
-  the panel with "No panel covering this programme sits as the Neonatal team Clinical Competency Committee, so the
-  general panel decides." (T131). The other thirteen EPAs go to the panel.
+Do: Read the list and Who decides each EPA.
+Expect: One row: Paed Annual Review Panel, Scope "Speciality · Paediatrics", Decides for General panel, and Members
+  naming the four (the chair first, van Rensburg marked external), with an Edit. Who decides each EPA has two rows:
+  "PAED-001 to PAED-003, PAED-006 to PAED-015" go to Paed Annual Review Panel, and "PAED-004, PAED-005" to "Paed Annual
+  Review Panel. No panel covering this programme sits as the Neonatal team Clinical Competency Committee, so the
+  general panel decides." (T131).
 
 Step 2.25 — Dr Sithole looks at what he may create
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
-Route: /account/login → / → /committee/panels → /committee/panels/new
-Do: Sign in, open Decision panels, press New panel and read the form. He leaves without saving.
-Expect: The list offers him New panel and an Edit on the panel. The form's Scope offers Speciality only, because a
+Route: /account/login → / → /committee/panels → /committee/panels/new → /committee/panels
+Do: Sign in, open Decision panels, press New panel and read the form. Then Cancel without creating.
+Expect: The list offers him New panel and an Edit on the panel. The form's Scope reads "Speciality" as text, with "A
+  sub-speciality administrator creates Speciality-scoped panels for the speciality of the sub-speciality.": a
   sub-speciality administrator manages the Speciality-scoped panels of his sub-speciality's speciality (T194, T245).
-  Speciality offers Paediatrics. There is no Decides for field. Nothing is created.
+  Speciality offers Paediatrics. There is no Decides for field. Cancel returns to Decision panels; nothing is created.
 
 Step 2.32 — Mr Smit, Coordinator
 Role: Coordinator — Mr Pieter Smit
@@ -695,38 +716,52 @@ Expect: Home reads "Coordinator · Semester N, YYYY", with the header action "St
   campaigns, Committee reviews, Decision panels and Data rights requests, one flat list (E2), then My data rights. It
   has no Invitations, and the invitations page reads "You cannot open this page", "Your role (Coordinator) does not open
   this page." and "If you need it for your work, ask your institution's Wombat administrator.", with Go to Home (T178,
-  T335). Decision panels lists the panel with no New panel and no Edit column, and Decision panels is lit there (T358,
-  C10). The panel form reads "You cannot open this page" in the same words: the Coordinator reads panels, and edits none
-  (D4).
+  T335). Decision panels lists the panel (Scope "Speciality · Paediatrics", its four members by name) with no New
+  panel and no Edit column, and Decision panels is lit there (T358, C10). The panel form reads "You cannot open this
+  page" in the same words: the Coordinator reads panels, and edits none (D4).
 
 Step 4.1 — Mr Smit reads the decisions due
 Role: Coordinator — Mr Pieter Smit
 Route: / → /committee/decisions-due
-Do: Open Decisions due from the menu. Leave Period on `<P>` and Status on "Outstanding: not yet decided". Page through
-  the list, then filter Status to "Not scheduled" and EPA to PAED-004.
+Do: Open Decisions due from the menu. Leave Period on `<P>` and Status on "Outstanding: not yet decided", and open By
+  EPA. Page through the list with Next. Then set Status to "Not scheduled" and EPA to PAED-004, and press Show.
 Expect: The opening sentence names `<P>`, "5 trainees you oversee at Kgosi Kgari Teaching Hospital", and what Missed
-  means. By EPA lists all 15 EPAs, each Due 5.
+  means. Period's help reads "The College's semester 2 ends in November; its window runs to 31 December, so December's
+  work counts." By EPA ("Counts for the 15 EPAs due in `<P>`") lists all 15 EPAs, each Due 5.
   - Twelve EPAs read To schedule 5.
   - PAED-008, 009 and 013 read Optional 5.
   The count reads "75 of 75 decisions due in `<P>` shown.", and the list pages 20 rows at a time.
-  - Each semester EPA's row reads Not scheduled, window `<P>`, "No open review holds it, and `<P>` has not ended.".
-  - An annual EPA's row reads the same with window `<Y>`.
+  - Each semester EPA's row (PAED-001, 002, 004, 005, 010, 012) reads Not scheduled, window `<P>`, "No open review
+    holds it, and `<P>` has not ended.".
+  - Each annual EPA's row (PAED-003, 006, 007, 011, 014, 015) reads the same with window `<Y>`: "… and `<Y>` has not
+    ended.".
   - The three optional EPAs read "As opportunity allows".
-  Every Not scheduled row offers Schedule, named by trainee and EPA. The filters leave five PAED-004 rows, one per
-  registrar; the By EPA card does not change. No Missed row exists.
+  Every Not scheduled row offers one action, Schedule, named by trainee, EPA and panel ("Schedule a review of … for
+  PAED-001 before Paed Annual Review Panel"). After Next the focus is on the heading, which reads "Decisions, page 2 of
+  4" (T264). The filters leave five PAED-004 rows, one per registrar ("5 of 75 decisions due in `<P>` shown: Not
+  scheduled, PAED-004."), with Clear filters offered; By EPA does not change. No Missed row exists.
 
 Step 4.2 — Prof Mbatha reads the same period
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: / → /committee/decisions-due
-Do: Open Decisions due from the menu. Look for an Institution filter, then switch Period to the previous semester and
-  back to `<P>`.
+Route: / → /committee/decisions-due → /committee/reviews/new → /committee/decisions-due
+Do: Open Decisions due from the menu. Look for an Institution filter. Switch Period to the previous semester, `<Y>` S1,
+  and press Show, then open By EPA. Press Schedule on one Missed row and read the form it opens, then Cancel without
+  creating. Back on Decisions due, switch Period to `<P>` and press Show.
 Expect: No Institution filter is offered, because she reads her own institution. The same five registrars and 75 rows
-  as Step 4.1. For the previous semester, `<Y> S1`, the statuses follow that period's windows:
-  - every registrar's six semester EPAs read Missed ("`<Y> S1` has ended with nothing decided or on an open review's
+  as Step 4.1. For `<Y>` S1 the statuses follow that period's windows:
+  - every registrar's six semester EPAs read Missed ("`<Y>` S1 has ended with nothing decided or on an open review's
     agenda.", T361). Mahlangu and Ndlovu started on 15 January, inside the semester's first month, so their windows
     count too (D42);
-  - the annual EPAs read "Due by year end";
-  - PAED-008, 009 and 013 read "As opportunity allows", since an optional EPA is never missed.
+  - the annual EPAs read "Due by year end", so PAED-003 and 006 are never Missed;
+  - PAED-008, 009 and 013 read "As opportunity allows", since an optional EPA is never missed;
+  - By EPA reads Missed 5 on the six semester EPAs.
+  A Missed row's Schedule opens Schedule a review filled with the panel, that registrar and the row's own period (F1),
+  "`<Y>` S1 · 1 Jan to 30 Jun `<Y>`", the window `<Y>`-01-01 to `<Y>`-06-30. Period's help begins "`<Y>` S1 has ended. A
+  review can still sit for it: sittings are often held after the period ends." Review type offers Annual progression
+  review (chosen), Pre-graduation review and Entrustment-only review, then Formative check-in. The Agenda reads `<Y>`
+  S1's plan as the planner gives it: "PAED-001, PAED-002, PAED-004, PAED-005, PAED-010 and PAED-012 are due at this
+  sitting.", the six annual EPAs "Due by year end" and PAED-008, 009 and 013 "As opportunity allows". Cancel returns to
+  Decisions due on `<Y>` S1. Nothing is created.
 
 Step 4.3 — Dr Mokoena reads what is due in her speciality
 Role: SpecialityAdmin — Dr Refilwe Mokoena
@@ -738,7 +773,7 @@ Expect:
   - **Home's cards:** Waiting for assessors, Registrars and Targets by EPA, read for Paediatrics. Waiting for assessors
     holds Dr du Plessis's CBD and portfolio review, both still open from Act 3, the review Overdue; Registrars the five,
     badged "5 registrars".
-  - **The page:** the same five registrars, all in Paediatrics, and 75 rows, each Schedule link offered.
+  - **The page:** the same five registrars, all in Paediatrics, and 75 rows, each with one action, Schedule.
   - **Entrustment decisions** is in the menu (Step A.7.7 opens it from there); no card on Home names it.
 
 Step 4.4 — Dr Sithole reads what is due in his sub-speciality
@@ -758,22 +793,26 @@ Expect: His menu has Committee reviews and Decision panels but no Decisions due.
 
 Step 4.6 — Mr Smit schedules Dr Molefe's review
 Role: Coordinator — Mr Pieter Smit
-Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Committee reviews from the menu and choose Schedule review. Fill in:
+Route: /committee/reviews → /committee/reviews/new → /committee/reviews/{ReviewId:int}
+Do: Open Committee reviews from the menu and press Schedule a review. Fill in:
   - Panel: `Paed Annual Review Panel`.
   - Trainee: Dr Molefe.
   - Period: `<P>`, and leave the evidence window as it fills.
-  - Scheduled on: `D`.
-  - Review type: Annual progression review.
-  - Formative only: unticked.
-  Read the agenda preview, then choose Create review.
+  - Scheduled on: `D`, as it starts.
+  - Review type: Annual progression review, as it starts.
+  Read the Agenda, then press Create review.
 Expect:
-  - **Panel:** the one panel is offered. The Trainee select, empty until a panel is chosen, then lists the five
-    registrars.
-  - **Period:** labelled "`<P>` · 1 Jul to 31 Dec `<Y>`". Choosing it fills the window as `<Y>`-01-01 to `<Y>`-12-31.
-  - **Review type:** only "Annual progression review" and "Pre-graduation review", with the help "The semester-2 sitting
-    decides the trainee's progression for the year." (T131 slice 5).
-  - **The preview** reads "15 EPAs will be on the agenda for `<P>`." It then says "PAED-001, PAED-002, PAED-003,
+  - **The page:** Schedule a review is a page of its own, under the trail Home › Committee reviews › Schedule a review
+    (T364, Q1).
+  - **Panel:** the one panel is offered. Trainee is disabled until a panel is chosen ("Choose a panel first. The list
+    holds the trainees at its institution you can schedule."), then lists the five registrars, each with the training
+    year ("Lerato Molefe · Training year 4").
+  - **Period:** labelled "`<P>` · 1 Jul to 31 Dec `<Y>`". Choosing it fills the window as `<Y>`-01-01 to `<Y>`-12-31
+    and adds "The College's semester 2 ends in November; its window runs to 31 December, so December's work counts."
+  - **Review type:** radios, "Annual progression review" (chosen) and "Pre-graduation review", with the help "The
+    semester-2 sitting decides the trainee's progression for the year." (T131 slice 5), then Formative check-in (T309
+    item 3).
+  - **The Agenda** reads "15 EPAs will be on the agenda for `<P>`." It then says "PAED-001, PAED-002, PAED-003,
     PAED-004, PAED-005, PAED-006, PAED-007, PAED-010, PAED-011, PAED-012, PAED-014 and PAED-015 are due at this
     sitting." (T361, round 3 item 29: no deferral, D53). It lists PAED-008, 009 and 013 as "As opportunity allows".
   - **After Create review:** the page opens the new review (T361):
@@ -787,35 +826,43 @@ Expect:
 
 Step 4.7 — Mr Smit schedules Dr Dlamini's and Dr du Plessis's reviews
 Role: Coordinator — Mr Pieter Smit
-Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Schedule the same kind of review for Dr Dlamini, then for Dr du Plessis: same panel, `<P>`, window as filled,
-  Scheduled on `D`, Annual progression review.
-Expect: Each opens as Scheduled with a 15-EPA preview like Step 4.6's. Committee reviews lists three rows for `<P>`.
-  Each row reads:
-  - Period "`<P>` · `<Y>`-01-01 to `<Y>`-12-31";
+Route: /committee/reviews → /committee/reviews/new → /committee/reviews/{ReviewId:int}
+Do: From Schedule a review, schedule the same kind of review for Dr Dlamini, then for Dr du Plessis: same panel, `<P>`,
+  window as filled, Scheduled on `D`, Annual progression review.
+Expect: Each opens as Scheduled with a 15-EPA preview like Step 4.6's. Committee reviews, captioned "Committee reviews
+  at Kgosi Kgari Teaching Hospital, newest scheduled first" under "The College's semester 2 ends in November; …",
+  lists three rows for `<P>`. Each row reads:
+  - Period "`<P>`" over its window, "`<Y>`-01-01 to `<Y>`-12-31";
   - Type Annual progression;
-  - Mode Summative;
-  - State Scheduled;
+  - State Scheduled, a grey badge, as on Decisions due;
   - Decision Pending.
-  Each row's Open is named by the review it opens.
+  There is no Mode column (C8). Each row's Open is named by the review it opens.
 
 Step 4.8 — A second review of Dr Molefe for the same period is refused
 Role: Coordinator — Mr Pieter Smit
-Route: /committee/reviews
-Do: Schedule another Annual progression review of Dr Molefe before the same panel for `<P>`.
-Expect: Refused, and nothing is created. The refusal names the open review: "Review #N already puts this trainee before
-  Paed Annual Review Panel for `<P>` (scheduled, scheduled `D`). A trainee has one binding review for each period …".
-  The wording is a product decision (T131 slice 4). The list still holds three rows.
+Route: /committee/reviews → /committee/reviews/new
+Do: Press Schedule a review and choose the panel, Dr Molefe and `<P>`, as for another Annual progression review. Read
+  the Agenda before Create.
+Expect: Before Create, the Agenda says the seat is held (T309 item 1): "Already held. Review #N already puts Lerato
+  Molefe before Paed Annual Review Panel for `<P>` (scheduled on `D`). A trainee has one binding review for each period
+  …", then "A formative check-in takes no seat: choose Formative check-in under Review type to schedule one." Create
+  review is not offered: "Create review is not offered: review #N already holds `<P>` for Lerato Molefe.", beside Cancel
+  and Open review #N. The wording is a product decision (T131 slice 4; T364, C7). Nothing is created; the list still
+  holds three rows.
 
 Step 4.9 — Dr Mokoena schedules Dr Mahlangu's review from what is due
 Role: SpecialityAdmin — Dr Refilwe Mokoena
-Route: /committee/decisions-due → /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: On Decisions due, choose Schedule on Dr Mahlangu's PAED-001 row. Check the form it opens, set Scheduled on `D`, and
-  create the review.
+Route: /committee/decisions-due → /committee/reviews/new → /committee/reviews/{ReviewId:int}
+Do: On Decisions due, set Trainee to Dr Molefe, press Show and read the line above the list. Then set Trainee to Dr
+  Mahlangu, press Show, and press Schedule a review on the line (or Schedule on her PAED-001 row). Check the form it
+  opens, set Scheduled on `D`, and create the review.
 Expect:
-  - **Decisions due before she schedules:** Molefe's, Dlamini's and du Plessis's rows now read Scheduled, "On the agenda
-    of review #N, which is still open.", each with Open review.
-  - **The link opens the scheduling form already filled:** Panel `Paed Annual Review Panel`, Trainee Dr Mahlangu and
+  - **Decisions due before she schedules:** Molefe's, Dlamini's and du Plessis's rows read Scheduled, "On the agenda of
+    review #N before Paed Annual Review Panel, which is still open." (T259), each with Open review #N.
+  - **The trainee line** (C2): with Dr Molefe filtered, "Review #N (annual progression) holds `<P>` before Paed Annual
+    Review Panel, scheduled on `D`." with Open review #N; with Dr Mahlangu, "No open review holds `<P>`." with Schedule
+    a review.
+  - **The link opens the schedule page already filled:** Panel `Paed Annual Review Panel`, Trainee Dr Mahlangu and
     Period `<P>`. The preview shows 15 EPAs. The query string fills only what the form offers her, so the link
     authorises nothing.
   - **The review opens as Scheduled,** and Start review… is not offered to her. Her sitting bar, static under the title,
@@ -824,18 +871,19 @@ Expect:
 
 Step 4.10 — Dr Sithole schedules Dr Ndlovu's review from what is due
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
-Route: /committee/decisions-due → /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: On Decisions due, choose Schedule on one of Dr Ndlovu's rows. Set Scheduled on `D` and create the review.
+Route: /committee/decisions-due → /committee/reviews/new → /committee/reviews/{ReviewId:int} → /committee/decisions-due
+Do: On Decisions due, press Schedule on one of Dr Ndlovu's rows. Set Scheduled on `D` and create the review. Then go
+  back to Decisions due and open By EPA.
 Expect: As Step 4.9: the form is filled, the review opens as Scheduled, and Start review… is not offered: the sitting
-  bar says who can start it. Decisions due then
-  reads Scheduled on all 75 rows, and By EPA reads Scheduled 5 and To schedule 0 for every EPA.
+  bar says who can start it. Decisions due then reads Scheduled on all 75 rows, and By EPA reads Scheduled 5 and To
+  schedule 0 for every EPA.
 
 Step 4.11 — Dr Naidoo lists the panel's reviews
 Role: CommitteeMember — Dr David Naidoo
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Open Committee reviews, then open Dr Dlamini's review.
 Expect:
-  - **The list:** its subtitle reads "Open existing committee reviews.", and no Schedule review button is offered. It
+  - **The list:** its subtitle reads "Open existing committee reviews.", and no Schedule a review is offered. It
     lists the five reviews of the panel he sits on, all Scheduled, with Decision Pending.
   - **Dlamini's review:** Start review… is offered to him in the sitting bar, as a member who may sit on the panel (E2).
     He leaves it.
@@ -843,23 +891,27 @@ Expect:
 Step 4.12 — Prof Mbatha checks the schedule
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/reviews → /committee/decisions-due
-Do: Read Committee reviews, then Decisions due.
-Expect: Committee reviews offers Schedule review and lists all five reviews. Decisions due reads Scheduled on all 75
-  rows. Each row's "Open review" opens the review holding it, and no row offers Schedule.
+Do: Read Committee reviews, then Decisions due. Set Trainee to Dr Ndlovu and press Show.
+Expect: Committee reviews offers Schedule a review and lists all five reviews. Decisions due reads Scheduled on all 75
+  rows, each with Open review #N, which opens the review holding it; no row offers Schedule. With Dr Ndlovu filtered,
+  the line reads "Review #N (annual progression) holds `<P>` before Paed Annual Review Panel, scheduled on `D`." with
+  Open review #N.
 
 Step 4.13 — The panel cannot change what it decides while its reviews are open
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/panels → /committee/panels/{PanelId:int}
-Do: Open the panel. In Decides for, choose the Neonatal team Clinical Competency Committee and save the committee.
-Expect: Refused, and the panel stays a General panel. The refusal names the first open review: "Review #N (`<P>`,
-  scheduled) still sits before this panel. What a review decides, and its agenda, follow the College committee the
-  panel sat as when it was scheduled …" (T131 slice 5). The select's help text says the same rule before she tries.
+Do: Open the panel from Decision panels and read Decides for.
+Expect: Decides for reads "General panel", with no select and no Save committee: the lock is said first (F5), "It
+  cannot change now. Review #N (`<P>`, scheduled) still sits before this panel. What a review decides, and its agenda,
+  follow the College committee the panel sat as when it was scheduled …" (T131 slice 5), with Open review #N, the
+  first review still open before the panel. About this panel's Open reviews names the same review, linked, "and 4
+  more".
 
 Step 4.33 — Mr Smit reads the ratified schedule
 Role: Coordinator — Mr Pieter Smit
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Read Committee reviews, then open Dr Molefe's review.
-Expect: All five read Ratified. The Decision column reads:
+Expect: All five read Ratified, Type Annual progression; there is no Mode column (C8). The Decision column reads:
   - Satisfactory Progress for Molefe and Dlamini;
   - Satisfactory with Observations for du Plessis;
   - Inadequate Progress — Additional Training for Mahlangu;
@@ -870,7 +922,7 @@ Expect: All five read Ratified. The Decision column reads:
 Step 4.34 — Prof Mbatha reads what is due after the sitting
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /committee/decisions-due
-Do: Read `<P>` with the default filter, then with "Every status".
+Do: Read `<P>` with the default filter. Then set Status to "Every status", press Show, and open By EPA.
 Expect:
   - **Count, default filter:** "70 of 75 decisions due in `<P>` shown."
   - **Every status:**
@@ -881,61 +933,74 @@ Expect:
     - As opportunity allows on 15: an optional EPA left unstaged is recorded as not decided at its review, but its
       window `<Y>` has not ended, so it still reads "Decided as opportunity allows: optional, never missed." (E3).
   - **By EPA:** PAED-001 reads Due 5, Decided 2 and Not decided 3.
-  - **Actions:** a Not decided row offers Open review and Schedule, since no open review holds its seat now.
+  - **Actions:** each row has one (C3). A Not decided row offers only Schedule, since no open review holds its seat now;
+    its review is a link in its sentence. A Decided row offers none: "Decided: nothing to schedule".
 
 Step 4.37 — Dr Sithole reads the list and what must be decided again
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /admin/entrustment-decisions → /committee/decisions-due
 Do: Open Entrustment decisions from the menu. Filter Status to Revoked and apply, then to Active and apply. Download
-  the revoked certificate. Then open Decisions due with "Every status".
+  the revoked certificate. Then open Decisions due, read the count, set Status to "Every status", press Show, and open
+  By EPA.
 Expect:
   - **The menu:** Entrustment decisions is lit on its page, with no trail (T358, R2-Menus m5).
   - **Filtered:** Revoked leaves Dlamini's PAED-002, and Active leaves four rows.
   - **The revoked certificate** reads Status Revoked, with "REVOKED", the date, who revoked it (Dr Mokoena, by name,
     T142) and the reason.
   - **Decisions due:** Dlamini's PAED-002 reads "Revoked: re-decide". Its detail reads "STAR #n, issued for `<P>`, was
-    revoked. Schedule a review to decide it again." It offers Schedule.
+    revoked. Schedule a review to decide it again." Its one action is Schedule (C3).
   - **By EPA:** PAED-002 reads Decided 0, Not decided 4 and To schedule 1.
   - **Count, default filter:** "71 of 75 decisions due in `<P>` shown."
 
 Step 4.49 — Mr Smit schedules a formative check-in for Dr Ndlovu
 Role: Coordinator — Mr Pieter Smit
-Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Schedule a review of Dr Ndlovu before the panel for `<P>`, Scheduled on `D`, with Formative only ticked.
+Route: /committee/reviews → /committee/reviews/new → /committee/reviews/{ReviewId:int} → /committee/decisions-due
+Do: Press Schedule a review and schedule a review of Dr Ndlovu before the panel for `<P>`, Scheduled on `D`, with
+  Review type Formative check-in; create it. Then open Decisions due, set Trainee to Dr Ndlovu and press Show.
 Expect:
-  - **Accepted:** a formative review takes no binding seat for the period (T131 slice 4).
+  - **Accepted:** a formative review takes no binding seat for the period (T131 slice 4). Formative check-in's help
+    reads "Closes without a binding decision and cannot issue entrustment decisions. Use for interim progress
+    check-ins. It takes no seat for the period." (T309 item 3).
   - **The preview:** "A formative review carries no agenda: it decides no EPA."
   - **The review:** its h1 reads "Sipho Ndlovu · `<P>`" and its subtitle "Formative check-in · Paed Annual Review
     Panel · Training year 1" (T309 item 2). The sitting bar reads Scheduled and "Formative: an interim check-in, no
     binding decision · evidence `<Y>`-01-01 to `<Y>`-12-31" (round 3 item 28), with Start review… for Smit. It has no
     Decision, Agenda or Appeals section: only the evidence snapshot, the standing, MSF coverage and the trajectories.
-  - **The list:** the review shows Mode Formative and Decision "—".
+  - **The list:** the review's Type reads "Formative check-in" and its Decision "—", read as "None"; there is no Mode
+    column (C8).
+  - **Decisions due's line:** "No open review holds `<P>`." with Schedule a review, and "Formative check-in #N is open:
+    it takes no seat." with Open check-in #N.
 
 Step 5.1 — Mr Smit reads what Dr Molefe's committee still has to decide
 Role: Coordinator — Mr Pieter Smit
 Route: /committee/decisions-due
-Do: Open Decisions due for the period holding `D`, set the status filter to every status, and read Dr Molefe's rows.
-Expect: There is one row for each EPA due for her in the period, and each row gives its status in words:
+Do: Open Decisions due for the period holding `D`. Set Trainee to Dr Molefe and Status to "Every status", and press
+  Show. Then set Trainee back to "Every trainee" and press Show.
+Expect: The line above the list reads "No open review holds `<P>`." with Schedule a review: Act 4's review of her is
+  ratified. There is one row for each EPA due for her in the period ("15 of 75 decisions due in `<P>` shown: Lerato
+  Molefe, every status."), and each row gives its status in words:
   - an EPA that an Act 4 STAR decided reads Decided, and names the STAR and the review that issued it;
   - an EPA due at Act 4's sitting and left unstaged there reads Not decided (amber), "Not decided at review #N. A later
     sitting for … plans it again." (T361, D53, E3);
   - the others read Not scheduled, Due by year end or As opportunity allows: PAED-008, 009 and 013, recorded as not
     decided at Act 4 but optional, read As opportunity allows while their window `<Y>` is open (E3).
-  Every row that is not yet decided offers Schedule. KGK's other registrars are listed too, and nobody outside KGK is.
+  Every row that is not yet decided offers Schedule. While the filter is set only her rows are listed; with Every
+  trainee, KGK's other registrars are listed too, and nobody outside KGK is.
 
 Step 5.2 — Mr Smit schedules Dr Molefe's pre-graduation review
 Role: Coordinator — Mr Pieter Smit
-Route: /committee/decisions-due → /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Follow Schedule on one of Dr Molefe's outstanding rows. If Act 4 decided every EPA that is due, use Schedule review
-  on Committee reviews instead. Then complete the form:
+Route: /committee/decisions-due → /committee/reviews/new → /committee/reviews/{ReviewId:int}
+Do: Set Trainee to Dr Molefe again and press Show (Step 5.1 ended on Every trainee, where no trainee line shows). Press
+  Schedule a review on Dr Molefe's line (or Schedule on one of her outstanding rows). Then complete the form:
   - review type: Pre-graduation review;
-  - evidence window: widened to start on her programme start, `J−3y`;
-  - scheduled on: `D`;
-  - Formative only: unticked.
+  - evidence window: From widened to her programme start, `J−3y`;
+  - scheduled on: `D`.
   Create the review.
-Expect: The form opens with the Paed Annual Review Panel, Dr Molefe and the period already filled in. The type offers
-  Annual progression review and Pre-graduation review. Entrustment-only review is offered only in a semester-1 period.
-  The agenda preview lists the EPAs that are due and names those Act 4 decided. In the same semester-2 period as Act 4:
+Expect: The form opens with the Paed Annual Review Panel, Dr Molefe and the period already filled in. Review type offers
+  Annual progression review (chosen) and Pre-graduation review, then Formative check-in; Entrustment-only review is
+  offered only in a semester-1 period. Pre-graduation review's help reads "The final review before the programme ends:
+  it decides the trainee's progression, and whether they may graduate." (C1). The agenda preview lists the EPAs that
+  are due and names those Act 4 decided. In the same semester-2 period as Act 4:
   - it reads "12 EPAs will be on the agenda for …", with the period's label;
   - it names the nine EPAs Act 4 did not decide that are due here: "PAED-002, PAED-003, PAED-004, PAED-005, PAED-006,
     PAED-007, PAED-011, PAED-014 and PAED-015 are due at this sitting." (T361, round 3 item 29);
@@ -947,29 +1012,34 @@ Expect: The form opens with the Paed Annual Review Panel, Dr Molefe and the peri
 
 Step 5.29 — Neither ended programme can be put before the panel
 Role: Coordinator — Mr Pieter Smit
-Route: /committee/reviews
-Do: Open Schedule review, choose the Paed Annual Review Panel and read the trainee list.
-Expect: The list offers only Dr Dlamini, Dr Mahlangu and Dr Ndlovu. A graduate and a registrar who has withdrawn are not
-  current trainees (T238). He closes the form without scheduling anything.
+Route: /committee/reviews → /committee/reviews/new → /committee/reviews
+Do: Press Schedule a review, choose the Paed Annual Review Panel and read the Trainee list. Then Cancel.
+Expect: The list offers only Dr Dlamini, Dr Mahlangu and Dr Ndlovu, each with the training year. A graduate and a
+  registrar who has withdrawn are not current trainees (T238). Cancel returns to Committee reviews; nothing is
+  scheduled.
 
 Step A.1.10 — Mr Smit schedules a formative check-in for Dr Ndlovu
 Role: Coordinator — Mr Pieter Smit
-Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Schedule a review of Dr Ndlovu before the Paed Annual Review Panel for the period holding `D`, Scheduled on `D`,
-  with Formative only ticked. Note the review's id from its address.
+Route: /committee/reviews → /committee/reviews/new → /committee/reviews/{ReviewId:int} → /committee/decisions-due
+Do: Press Schedule a review and schedule a review of Dr Ndlovu before the Paed Annual Review Panel for the period
+  holding `D`, Scheduled on `D`, with Review type Formative check-in. Note the review's id from its address. Then open Decisions
+  due, set Trainee to Dr Ndlovu and press Show.
 Expect: The review opens as at Step 4.49: the subtitle "Formative check-in · Paed Annual Review Panel · Training year
   1", and the sitting bar Scheduled with "Formative: an interim check-in, no binding decision · evidence …" (T361). It
-  is open, so the erasure at A.1.12 has a review to end.
+  is open, so the erasure at A.1.12 has a review to end. Decisions due's line reads "Formative check-in #N is open: it
+  takes no seat." with Open check-in #N, as at Step 4.49.
 
 Step A.7.5 — Mr Smit on his phone
 Role: Coordinator — Mr Pieter Smit
 Route: / → /msf/campaigns → /msf/campaigns/{CampaignId:int} → /committee/decisions-due → /admin/data-rights
-Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue.
+Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue. On Decisions
+  due, set Status to "Every status", press Show, and open By EPA.
 Expect: Home's header action, Start an MSF campaign, is a row of its own below the header's rule, 44px tall and the
   page's width, and the cards stack in one column, each row's link a 44px block (T358, R2-Home k6). The campaign page
   keeps its gutter (T226), and its invitee table (counts by respondent group: the page never lists an address) scrolls
-  within its card. Decisions due's summary scrolls sideways, and a keyboard can scroll it, as a labelled, focusable
-  region (DESIGN.md's decisions-due contract). The queue's filters stack above its table.
+  within its card. Decisions due's filters stack, with Show and Clear filters each 44px tall; By EPA's fold summary is
+  44px, and opened it reads one block per EPA; each decision is a block, its one action a 44px button the block's
+  width; the pager's buttons are 44px (T364). The queue's filters stack above its table.
 
 Step A.7.8 — Dr Sithole on his phone
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
@@ -977,5 +1047,7 @@ Route: / → /committee/reviews → /committee/decisions-due
 Do: At 390 px, open his dashboard, then Committee reviews and Decisions due from the menu.
 Expect: As for Dr Mokoena, scoped to Dr Sithole's sub-speciality: Home stacks the same three cards. The folded bar reads
   "Acting as" over "Sub-speciality admin", in two lines: the bar grows, and the role is never cut. Dr Sithole's menu
-  reads as Dr Mokoena's (A.5.12), each row 44px.
+  reads as Dr Mokoena's (A.5.12), each row 44px. Committee reviews: Schedule a review is a 44px row of its own under the
+  header, and each review a block (the trainee, then Panel, Period over its window, Type, State, Decision, and Open
+  44px). Decisions due reads as at Step A.7.5.
 ```

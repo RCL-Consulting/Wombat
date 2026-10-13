@@ -112,6 +112,17 @@ public static class NavOwners
                 ],
                 NavItems.CommitteeReviews),
         ],
+        // Schedule a review, a form page of its own since T364 (flow 08, Q1), under Committee reviews for the five roles
+        // that schedule: Home › Committee reviews › Schedule a review, whichever page's Schedule opened it (D5).
+        [typeof(ScheduleReview)] =
+        [
+            new(
+                [
+                    WombatRoles.Coordinator, WombatRoles.SpecialityAdmin, WombatRoles.SubSpecialityAdmin,
+                    WombatRoles.InstitutionalAdmin, WombatRoles.Administrator
+                ],
+                NavItems.CommitteeReviews),
+        ],
         // The Coordinator reads the panels on the list, which lights itself; a panel's page does not admit him (T358, D4).
         [typeof(PanelEdit)] = [new(PanelKeepers, NavItems.DecisionPanels)],
 

@@ -70,14 +70,18 @@ after his last day counts towards nothing, including one that had already counte
 ### Step 5.1 — Mr Smit reads what Dr Molefe's committee still has to decide
 Role: Coordinator — Mr Pieter Smit
 Route: /committee/decisions-due
-Do: Open Decisions due for the period holding `D`, set the status filter to every status, and read Dr Molefe's rows.
-Expect: There is one row for each EPA due for her in the period, and each row gives its status in words:
+Do: Open Decisions due for the period holding `D`. Set Trainee to Dr Molefe and Status to "Every status", and press
+  Show. Then set Trainee back to "Every trainee" and press Show.
+Expect: The line above the list reads "No open review holds `<P>`." with Schedule a review: Act 4's review of her is
+  ratified. There is one row for each EPA due for her in the period ("15 of 75 decisions due in `<P>` shown: Lerato
+  Molefe, every status."), and each row gives its status in words:
   - an EPA that an Act 4 STAR decided reads Decided, and names the STAR and the review that issued it;
   - an EPA due at Act 4's sitting and left unstaged there reads Not decided (amber), "Not decided at review #N. A later
     sitting for … plans it again." (T361, D53, E3);
   - the others read Not scheduled, Due by year end or As opportunity allows: PAED-008, 009 and 013, recorded as not
     decided at Act 4 but optional, read As opportunity allows while their window `<Y>` is open (E3).
-  Every row that is not yet decided offers Schedule. KGK's other registrars are listed too, and nobody outside KGK is.
+  Every row that is not yet decided offers Schedule. While the filter is set only her rows are listed; with Every
+  trainee, KGK's other registrars are listed too, and nobody outside KGK is.
 Actual (2026-10-12, T361 replay, wombat_scenario_t361): Menu Home, Programme trainees, Waiting for assessors, Decisions
   due, MSF campaigns, Committee reviews, Decision panels, Data rights requests, My data rights. Decisions due opened on
   "2026 S2 · 1 Jul to 31 Dec 2026"; Every status: "75 of 75 decisions due in 2026 S2 shown." for "the 5 trainees you
@@ -90,17 +94,18 @@ Gap: none
 
 ### Step 5.2 — Mr Smit schedules Dr Molefe's pre-graduation review
 Role: Coordinator — Mr Pieter Smit
-Route: /committee/decisions-due → /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Follow Schedule on one of Dr Molefe's outstanding rows. If Act 4 decided every EPA that is due, use Schedule review
-  on Committee reviews instead. Then complete the form:
+Route: /committee/decisions-due → /committee/reviews/new → /committee/reviews/{ReviewId:int}
+Do: Set Trainee to Dr Molefe again and press Show (Step 5.1 ended on Every trainee, where no trainee line shows). Press
+  Schedule a review on Dr Molefe's line (or Schedule on one of her outstanding rows). Then complete the form:
   - review type: Pre-graduation review;
-  - evidence window: widened to start on her programme start, `J−3y`;
-  - scheduled on: `D`;
-  - Formative only: unticked.
+  - evidence window: From widened to her programme start, `J−3y`;
+  - scheduled on: `D`.
   Create the review.
-Expect: The form opens with the Paed Annual Review Panel, Dr Molefe and the period already filled in. The type offers
-  Annual progression review and Pre-graduation review. Entrustment-only review is offered only in a semester-1 period.
-  The agenda preview lists the EPAs that are due and names those Act 4 decided. In the same semester-2 period as Act 4:
+Expect: The form opens with the Paed Annual Review Panel, Dr Molefe and the period already filled in. Review type offers
+  Annual progression review (chosen) and Pre-graduation review, then Formative check-in; Entrustment-only review is
+  offered only in a semester-1 period. Pre-graduation review's help reads "The final review before the programme ends:
+  it decides the trainee's progression, and whether they may graduate." (C1). The agenda preview lists the EPAs that
+  are due and names those Act 4 decided. In the same semester-2 period as Act 4:
   - it reads "12 EPAs will be on the agenda for …", with the period's label;
   - it names the nine EPAs Act 4 did not decide that are due here: "PAED-002, PAED-003, PAED-004, PAED-005, PAED-006,
     PAED-007, PAED-011, PAED-014 and PAED-015 are due at this sitting." (T361, round 3 item 29);
@@ -752,10 +757,11 @@ Gap: none
 
 ### Step 5.29 — Neither ended programme can be put before the panel
 Role: Coordinator — Mr Pieter Smit
-Route: /committee/reviews
-Do: Open Schedule review, choose the Paed Annual Review Panel and read the trainee list.
-Expect: The list offers only Dr Dlamini, Dr Mahlangu and Dr Ndlovu. A graduate and a registrar who has withdrawn are not
-  current trainees (T238). He closes the form without scheduling anything.
+Route: /committee/reviews → /committee/reviews/new → /committee/reviews
+Do: Press Schedule a review, choose the Paed Annual Review Panel and read the Trainee list. Then Cancel.
+Expect: The list offers only Dr Dlamini, Dr Mahlangu and Dr Ndlovu, each with the training year. A graduate and a
+  registrar who has withdrawn are not current trainees (T238). Cancel returns to Committee reviews; nothing is
+  scheduled.
 Actual (2026-10-12, T361 replay, wombat_scenario_t361): Committee reviews → Schedule review → Paed Annual Review Panel:
   the Trainee list offers only Anele Dlamini, Nomsa Mahlangu and Sipho Ndlovu. He left the form without creating
   anything (still 7 reviews, SQL).

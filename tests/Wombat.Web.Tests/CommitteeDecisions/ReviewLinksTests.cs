@@ -66,4 +66,29 @@ public sealed class ReviewLinksTests
     [InlineData("http://localhost/committee/reviews/30#evidence-snapshot", null)]
     public void TheLineAnAddressOpensAt_IsReadFromItsFragment_OnlyInItsOwnForm(string uri, string? line)
         => ReviewLinks.SnapshotLineIn(uri).Should().Be(line);
+
+    // T364 (flow 08; round 2 C4, F1): the schedule page, filled from a Decisions due row with its own period and the list
+    // to return to; each part left out when absent.
+    [Fact]
+    public void TheSchedulePage()
+    {
+        ReviewLinks.Schedule(null, null, null, null).Should().Be("/committee/reviews/new");
+        ReviewLinks.Schedule(10, "u 1", "2026-1", "/committee/decisions-due?period=2026-1&status=missed")
+            .Should().Be("/committee/reviews/new?panel=10&trainee=u%201&period=2026-1" +
+                         "&return=%2Fcommittee%2Fdecisions-due%3Fperiod%3D2026-1%26status%3Dmissed");
+    }
+
+    [Theory]
+    [InlineData("/committee/decisions-due", "/committee/decisions-due")]
+    [InlineData("/committee/decisions-due?period=2026-1&trainee=x", "/committee/decisions-due?period=2026-1&trainee=x")]
+    [InlineData("/committee/reviews", "/committee/reviews")]
+    [InlineData(null, "/committee/reviews")]
+    [InlineData("", "/committee/reviews")]
+    [InlineData("https://example.com/committee/reviews", "/committee/reviews")]
+    [InlineData("//example.com/committee/reviews", "/committee/reviews")]
+    [InlineData("/\example.com", "/committee/reviews")]
+    [InlineData("/admin/users", "/committee/reviews")]
+    [InlineData("/committee/decisions-due#x", "/committee/reviews")]
+    public void CancelReturns_OnlyToAListOfOurs(string? returnTo, string expected)
+        => ReviewLinks.ScheduleReturn(returnTo).Should().Be(expected);
 }

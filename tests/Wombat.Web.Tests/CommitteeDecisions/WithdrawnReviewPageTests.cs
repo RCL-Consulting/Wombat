@@ -102,8 +102,10 @@ public sealed partial class WithdrawnReviewPageTests : TestContext
         var cut = RenderComponent<ReviewsSchedule>();
         cut.WaitForState(() => cut.FindAll("tbody tr").Count == 3);
 
-        cut.FindAll("tbody tr").Select(row => row.Children[6].TextContent.Trim()).Should().Equal(
-            CommitteeDecisionWording.WithdrawnOutcome, "—", CommitteeDecisionWording.WithdrawnOutcome);
+        // T364 (C8): no Mode column, so Decision is read by its header; a check-in's "—" is read as "None" (S7).
+        var decision = cut.FindAll("thead th").Select(th => th.TextContent.Trim()).ToList().IndexOf("Decision");
+        cut.FindAll("tbody tr").Select(row => row.Children.ElementAt(decision).TextContent.Trim()).Should().Equal(
+            CommitteeDecisionWording.WithdrawnOutcome, "—None", CommitteeDecisionWording.WithdrawnOutcome);
     }
 
     // ─── Fixture ─────────────────────────────────────────────────────────────

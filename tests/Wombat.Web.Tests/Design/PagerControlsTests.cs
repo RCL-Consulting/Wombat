@@ -70,6 +70,19 @@ public sealed class PagerControlsTests : TestContext
         cut.FindAll(".pager-page-size-select option").Select(option => option.TextContent).Should().Equal("10", "20", "50", "100");
     }
 
+    // T280, T364 (C9): the page-size select is named by its label, which a page may word for its list.
+    [Fact]
+    public void ThePageSizeSelect_IsNamedByItsLabel()
+    {
+        var cut = RenderComponent<PagerControls>(parameters => parameters
+            .Add(pager => pager.TotalCount, 45)
+            .Add(pager => pager.PageSizeLabel, "Decisions per page"));
+
+        var label = cut.Find("label.pager-page-size-label");
+        label.TextContent.Should().Be("Decisions per page");
+        cut.Find(".pager-page-size-select").Id.Should().NotBeNullOrEmpty().And.Be(label.GetAttribute("for"));
+    }
+
     // The build review's D2 (R3-C-Inbox): given a name, the pager is a navigation landmark by that name; unnamed, a plain
     // block, as My activities and Decisions due have it.
     [Fact]

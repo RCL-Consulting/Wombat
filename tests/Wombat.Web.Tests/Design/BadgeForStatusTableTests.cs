@@ -114,7 +114,8 @@ public sealed class BadgeForStatusTableTests
     {
         Rows<EntrustmentDecisionDueStatus>(BadgeFor.DecisionDue,
             (EntrustmentDecisionDueStatus.Decided, Green),
-            (EntrustmentDecisionDueStatus.Scheduled, Blue),
+            // Grey since T364 (round 3 S7): a scheduled review's state is grey on Committee reviews, one colour on both lists.
+            (EntrustmentDecisionDueStatus.Scheduled, Grey),
             (EntrustmentDecisionDueStatus.NotDecided, Amber),
             (EntrustmentDecisionDueStatus.NotScheduled, Grey),
             (EntrustmentDecisionDueStatus.DueByYearEnd, Grey),

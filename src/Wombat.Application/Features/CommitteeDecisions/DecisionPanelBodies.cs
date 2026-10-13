@@ -25,7 +25,7 @@ internal static class DecisionPanelBodies
     /// <param name="specialityId">The speciality the panel covers, or null for an institution-wide panel.</param>
     /// <param name="panelId">The panel being changed, which may keep its own body; null for a new panel.</param>
     /// <param name="cancellationToken">Cancels the reads.</param>
-    /// <exception cref="InvalidOperationException">The key names no body, or the body is taken.</exception>
+    /// <exception cref="CommitteeRefusedException">The key names no body, or the body is taken.</exception>
     public static async Task<DecisionBody?> DemandAsync(
         IApplicationDbContext dbContext,
         string? decisionBodyKey,
@@ -43,13 +43,13 @@ internal static class DecisionPanelBodies
         var body = await dbContext.Set<DecisionBody>()
             .AsNoTracking()
             .SingleOrDefaultAsync(entity => entity.Key == key, cancellationToken)
-            ?? throw new InvalidOperationException(UnknownBody);
+            ?? throw new CommitteeRefusedException(UnknownBody);
 
         // The unique index on (institution, speciality, body) holds against a race; this names the panel in the way.
         var taken = await TakenRefusalAsync(dbContext, body, institutionId, specialityId, panelId, cancellationToken);
         if (taken is not null)
         {
-            throw new InvalidOperationException(taken);
+            throw new CommitteeRefusedException(taken);
         }
 
         return body;

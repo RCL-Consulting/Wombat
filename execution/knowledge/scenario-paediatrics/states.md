@@ -451,35 +451,43 @@ until Show, and the address carries it (D3), so a filtered state is reached by i
 | Page | State | Screenshot | Account | How to reach it |
 |---|---|---|---|---|
 | `/committee/panels` | No panels | `states/panels-list--empty.png` | Prof Mbatha | At Step 2.20. |
-| `/committee/panels` | The manager's list | `states/panels-list--manager.png` | Prof Mbatha | At Step 2.24, with the routing card. |
+| `/committee/panels` | The manager's list | `states/panels-list--manager.png` | Prof Mbatha | At Step 2.24, with Who decides each EPA. |
 | `/committee/panels` | A speciality admin's list | `states/panels-list--speciality-admin.png` | Dr Mokoena | At Step 2.23, back on the list. |
 | `/committee/panels` | A member's list | `states/panels-list--member.png` | Dr Botha | At Step 4.14: no New panel, no Edit column. |
 | `/committee/panels` | A coordinator's list | `states/panels-list--coordinator.png` | Mr Smit | At Step 2.32. |
-| `/committee/panels` | Loading | `states/panels-list--loading.png` | Dr Botha | Hold a read, then Decision panels in the menu. No change. |
+| `/committee/panels` | Loading | `states/panels-list--loading.png` | Dr Botha | Hold a read, then Decision panels in the menu: the header, skeletons, and Who decides each EPA as skeletons, never "no routing" (T329). No change. |
+| `/committee/panels` | Load error | `states/panels-list--load-error.png` | Dr Botha | The same, held 35 s: "Could not load Decision panels. Nothing has changed. Try again, or come back in a few minutes." with Try again (T338). No change. |
+| `/committee/panels` | An administrator, no institution | `states/panels-list--choose-institution.png` | devadmin | Any time after Act 2: "Choose an institution" until one is chosen and Show pressed (F2). No change. |
 | `/committee/panels` | Narrow | `states/panels-list--narrow.png` | Dr Mokoena | At Step A.7.7. |
 | `/committee/panels/new` | The new-panel form | `states/panel-edit--new.png` | Prof Mbatha | At Step 2.21, before choosing members. |
-| `/committee/panels/new` | Chair moved out of Members | `states/panel-edit--chair-note.png` | Prof Mbatha | At Step 2.21: "Thandi Zulu is the chair now, …". |
-| `/committee/panels/new` | A panel of one refused | `states/panel-edit--one-member.png` | Prof Mbatha | At Step 2.21, after Save. |
-| `/committee/panels/{PanelId:int}` | Saved | `states/panel-edit--saved.png` | Prof Mbatha | At Step 2.22. |
+| `/committee/panels/new` | Chair taken from the seats | `states/panel-edit--chair-note.png` | Prof Mbatha | At Step 2.21: "Thandi Zulu is the chair now, so is no longer seated as a member.", her row "Chair · chosen above". |
+| `/committee/panels/new` | A panel of one refused | `states/panel-edit--one-member.png` | Prof Mbatha | At Step 2.21, after Create panel: "The panel was not created. …" with "Seats: A panel needs at least two members: …", the focus on the summary, the seats marked. |
+| `/committee/panels/{PanelId:int}` | Created | `states/panel-edit--saved.png` | Prof Mbatha | At Step 2.22: "Paed Annual Review Panel was created. …" with the focus, the panel named in the h1. |
 | `/committee/panels/{PanelId:int}` | Read-only committee | `states/panel-edit--speciality-admin.png` | Dr Mokoena | At Step 2.23: "Decides for" read-only, then "Panel members updated." |
 | `/committee/panels/new` | Speciality scope only | `states/panel-edit--sub-speciality-admin.png` | Dr Sithole | At Step 2.25. |
-| `/committee/panels/{PanelId:int}` | Committee change refused | `states/panel-edit--body-refused.png` | Prof Mbatha | At Step 4.13. |
-| `/committee/panels/{PanelId:int}` | Not found | `states/panel-edit--not-found.png` | Prof Mbatha | Typed: `/committee/panels/999999`: "The decision panel could not be found." No change. |
-| `/committee/panels/{PanelId:int}` | A member who can no longer sit | `states/panel-edit--unseatable.png` | Prof Mbatha | Scratch (post-appendix): lock Dr Botha out on her user page, open the panel: "1 member of this panel can no longer sit on it, …". |
+| `/committee/panels/{PanelId:int}` | Decides for locked | `states/panel-edit--body-refused.png` | Prof Mbatha | At Step 4.13: "It cannot change now. Review #N …" with Open review #N, no select (F5). |
+| `/committee/panels/{PanelId:int}` | Decides for refused by a race | `states/panel-edit--body-race.png` | Prof Mbatha | Scratch (post-act2, before Step 4.6): open the panel in two tabs and choose the Neonatal team CCC in the first; schedule a review before the panel in the second; press Save committee in the first: "Not saved. The panel is still a general panel." with "Decides for: review #N now sits before this panel", and beside the select "Not saved: review #N (…) now sits before this panel. The select shows what is saved." (C13). Drop the scratch database after. |
+| `/committee/panels/{PanelId:int}` | Not found | `states/panel-edit--not-found.png` | Prof Mbatha | Typed: `/committee/panels/999999`: flow 01's Page not found, "There is no page at this address." (M7). No change. |
+| `/committee/panels/{PanelId:int}` | A member who can no longer sit | `states/panel-edit--unseatable.png` | Prof Mbatha | Scratch (post-appendix): lock Dr Botha out on her user page, open the panel: "Sarah Botha can no longer sit on this panel, so is not listed below: … Saving takes Sarah Botha off the panel." (M6). |
 | `/committee/panels/{PanelId:int}` | Narrow | `states/panel-edit--narrow.png` | Prof Mbatha | At Step 2.22, at 390 px. No change. |
 | `/committee/reviews` | None yet, a scheduler | `states/reviews-schedule--empty-scheduler.png` | Mr Smit | At Step 4.1, before Step 4.6: "No reviews yet". No change. |
 | `/committee/reviews` | None yet, a member | `states/reviews-schedule--empty-member.png` | Dr Naidoo | At Step 4.5: "The reviews of the panels you sit on appear here once they are scheduled." No change. |
-| `/committee/reviews` | The form, no panel chosen | `states/reviews-schedule--form.png` | Mr Smit | At Step 4.6, Schedule review pressed: Trainee disabled. |
-| `/committee/reviews` | The agenda preview | `states/reviews-schedule--preview.png` | Mr Smit | At Step 4.6, before Create review. |
-| `/committee/reviews` | A second review refused | `states/reviews-schedule--refused.png` | Mr Smit | At Step 4.8. |
+| `/committee/reviews/new` | The form, no panel chosen | `states/reviews-schedule--form.png` | Mr Smit | At Step 4.6, Schedule a review pressed: Trainee disabled, "Choose a panel first. …", Annual progression review chosen. |
+| `/committee/reviews/new` | The agenda preview | `states/reviews-schedule--preview.png` | Mr Smit | At Step 4.6, before Create review. |
+| `/committee/reviews/new` | Already held | `states/reviews-schedule--refused.png` | Mr Smit | At Step 4.8: "Already held. Review #N already puts Lerato Molefe …", Create review not offered, Open review #N (T309 item 1). No change. |
+| `/committee/reviews/new` | A second review refused by a race | `states/schedule-review--race.png` | Mr Smit | Scratch (post-act4): open Schedule a review in two tabs on one registrar and period; create in the first; press Create review in the second: "The review was not created. …" with "Review #N already puts … (scheduled on `D`). …" and Open review #N, the Agenda turned to Already held (C7, F5). Drop the scratch database after. |
+| `/committee/reviews/new` | Fields refused | `states/schedule-review--refused.png` | Mr Smit | At Step 4.6, before choosing anything: clear Scheduled on and press Create review: "The review was not created. Everything you chose is kept below." with a line for each missing field ("Panel: Choose a panel.", "Period: Choose the period the review sits for.", …), each said beside its field, the focus on the summary (T324). No change. |
+| `/committee/reviews/new` | Creating | `states/schedule-review--creating.png` | Mr Smit | At Step 4.6, hold a read (§ Holding a read) and press Create review: "Creating…", Cancel a disabled button (S6). `ROLLBACK;` before it answers. No change. |
 | `/committee/reviews` | Scheduled | `states/reviews-schedule--scheduled.png` | Mr Smit | At Step 4.7. |
-| `/committee/reviews` | Filled from Decisions due | `states/reviews-schedule--prefilled.png` | Dr Mokoena | At Step 4.9. |
-| `/committee/reviews` | Formative preview | `states/reviews-schedule--formative.png` | Mr Smit | At Step 4.49. |
-| `/committee/reviews` | Already decided in this window | `states/reviews-schedule--pre-graduation.png` | Mr Smit | At Step 5.2, before Create review. |
+| `/committee/reviews/new` | Filled from Decisions due | `states/reviews-schedule--prefilled.png` | Dr Mokoena | At Step 4.9. |
+| `/committee/reviews/new` | Formative preview | `states/reviews-schedule--formative.png` | Mr Smit | At Step 4.49. |
+| `/committee/reviews/new` | Already decided in this window | `states/reviews-schedule--pre-graduation.png` | Mr Smit | At Step 5.2, before Create review. |
 | `/committee/reviews` | Ratified | `states/reviews-schedule--ratified.png` | Mr Smit | At Step 4.33. |
-| `/committee/reviews` | Current trainees only | `states/reviews-schedule--current-only.png` | Mr Smit | At Step 5.29, the trainee list open. |
+| `/committee/reviews/new` | Current trainees only | `states/reviews-schedule--current-only.png` | Mr Smit | At Step 5.29, the trainee list open. |
 | `/committee/reviews` | After an erasure | `states/reviews-schedule--pseudonym.png` | Prof Mbatha | At Step A.1.14: `deleted_user_…`, one Withdrawn. |
-| `/committee/reviews` | Preview failed | `states/reviews-schedule--preview-failed.png` | Mr Smit | At Step 4.6, before choosing the trainee: hold a read, choose Dr Molefe, wait 35 s: "The agenda could not be previewed: …". `ROLLBACK;`, then choose another trainee and her again. No change. |
+| `/committee/reviews/new` | Preview failed | `states/reviews-schedule--preview-failed.png` | Mr Smit | At Step 4.6, before choosing the trainee: hold a read, choose Dr Molefe, wait 35 s: "The agenda could not be read just now." with Try again, and Create review still offered (C6). `ROLLBACK;`, then Try again. No change. |
+| `/committee/reviews/new` | An ended period | `states/schedule-review--ended-period.png` | Prof Mbatha | At Step 4.2, from a Missed row's Schedule: Period `<Y>` S1 with "`<Y>` S1 has ended. A review can still sit for it: …" (F1). No change. |
+| `/committee/reviews/new` | Loading | `states/schedule-review--loading.png` | Mr Smit | Hold a read, then Schedule a review on Committee reviews: the header, the form's skeleton, the Agenda heading and Cancel; no Create review (C11). No change. |
 | `/committee/reviews` | Loading | `states/reviews-schedule--loading.png` | Mr Smit | Hold a read, then Committee reviews in the menu. No change. |
 | `/committee/reviews` | Narrow | `states/reviews-schedule--narrow.png` | Dr Sithole | At Step A.7.8. |
 | `/committee/reviews/{ReviewId:int}` | Scheduled, the chair | `states/review-detail--scheduled.png` | Dr Zulu | At Step 4.15: h1 "Lerato Molefe · <P>"; the chair's sitting bar (Scheduled, "15 EPAs on the agenda", "Summative · evidence …", Start review…); "Before the committee decides" under it; the agenda with no Action column; each chart over the review's window, its line naming Lerato Molefe, no Today (T355, T361). |
@@ -540,12 +548,17 @@ until Show, and the address carries it (D3), so a filtered state is reached by i
 | `/committee/decisions-due` | Nothing due | `states/decisions-due--nothing-due.png` | Prof Mbatha | After Step 1.22, before Step 2.29 (no trainee admitted): "Nothing due for <period>". No change. |
 | `/committee/decisions-due` | An administrator, no institution | `states/decisions-due--choose-institution.png` | devadmin | Any time after Act 1: "Choose an institution". No change. |
 | `/committee/decisions-due` | Outstanding | `states/decisions-due--outstanding.png` | Mr Smit | At Step 4.1. |
-| `/committee/decisions-due` | No row matches | `states/decisions-due--no-match.png` | Mr Smit | At Step 4.1, Status set to Missed: "No decision matches the filters". No change. |
+| `/committee/decisions-due` | Page 2 | `states/decisions-due--page-2.png` | Mr Smit | At Step 4.1, after Next: the focus on "Decisions, page 2 of 4" (T264). No change. |
+| `/committee/decisions-due` | No row matches | `states/decisions-due--no-match.png` | Mr Smit | At Step 4.1, Status set to Missed and Show: "No decision matches these filters.", "Missed only, every trainee, every EPA.", with Clear filters. No change. |
 | `/committee/decisions-due` | A past semester, missed | `states/decisions-due--missed.png` | Prof Mbatha | At Step 4.2. |
+| `/committee/decisions-due` | A trainee's seat held | `states/decisions-due--line-held.png` | Dr Mokoena | At Step 4.9, Trainee Dr Molefe: "Review #N (annual progression) holds `<P>` before Paed Annual Review Panel, …" (C2). No change. |
+| `/committee/decisions-due` | A trainee's seat free | `states/decisions-due--line-free.png` | Dr Mokoena | At Step 4.9, Trainee Dr Mahlangu: "No open review holds `<P>`." with Schedule a review (C2). No change. |
 | `/committee/decisions-due` | All scheduled | `states/decisions-due--scheduled.png` | Dr Sithole | At Step 4.10. |
 | `/committee/decisions-due` | After the sitting | `states/decisions-due--after-sitting.png` | Prof Mbatha | At Step 4.34, Every status: Decided, Not decided (amber, "Not decided at review #N. …", T361 D53 E3) and As opportunity allows. |
 | `/committee/decisions-due` | Revoked, to decide again | `states/decisions-due--revoked.png` | Dr Sithole | At Step 4.37. |
+| `/committee/decisions-due` | An open check-in | `states/decisions-due--line-check-in.png` | Mr Smit | At Step 4.49, Trainee Dr Ndlovu: "Formative check-in #N is open: it takes no seat." (C2). No change. |
 | `/committee/decisions-due` | Loading | `states/decisions-due--loading.png` | Mr Smit | Hold a read, then Decisions due in the menu. No change. |
+| `/committee/decisions-due` | Load error | `states/decisions-due--load-error.png` | Mr Smit | The same, held 35 s: "Could not load Decisions due. Nothing has changed. …" with Try again (T338). No change. |
 | `/committee/decisions-due` | Narrow | `states/decisions-due--narrow.png` | Mr Smit | At Step A.7.5. |
 | `/admin/entrustment-decisions` | None issued | `states/entrustment-decisions--empty.png` | Prof Mbatha | At Step 4.2, from her dashboard's quick link: "No entrustment decisions". No change. |
 | `/admin/entrustment-decisions` | Issued | `states/entrustment-decisions--issued.png` | Prof Mbatha | At Step 4.35. |

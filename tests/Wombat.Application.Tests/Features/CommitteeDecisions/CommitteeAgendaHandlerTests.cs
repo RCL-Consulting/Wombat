@@ -643,7 +643,8 @@ public sealed class CommitteeAgendaHandlerTests
         var second = () => ScheduleAsync(db, GeneralPanel, Trainee, 2026, 1);
 
         (await second.Should().ThrowAsync<InvalidOperationException>()).Which.Message
-            .Should().StartWith($"Review #{first.Id} already puts this trainee before General CCC for 2026 S1 (scheduled, scheduled 2026-07-02).");
+            .Should().StartWith($"Review #{first.Id} already puts {Trainee} before General CCC for 2026 S1 (scheduled on 2026-07-02).",
+                "the trainee is named as the directory names them, here by id, and 'scheduled' is said once (T364, C7)");
         await SaveAndClearAsync(db);
         (await db.CommitteeReviews.CountAsync()).Should().Be(1);
         (await db.CommitteeAgendaLines.CountAsync()).Should().Be(6, "only the first review's agenda");
@@ -667,7 +668,7 @@ public sealed class CommitteeAgendaHandlerTests
         var second = () => ScheduleAsync(db, SpecialityPanel, Trainee, 2026, 1);
 
         (await second.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be(
-            $"Review #{first.Id} already puts this trainee before General CCC for 2026 S1 (scheduled, scheduled 2026-07-02). " +
+            $"Review #{first.Id} already puts {Trainee} before General CCC for 2026 S1 (scheduled on 2026-07-02). " +
             "A trainee has one binding review for each period before the panels that decide the same EPAs, until it is " +
             "ratified: open that review, or ratify it before scheduling another.");
         await SaveAndClearAsync(db);
@@ -696,6 +697,157 @@ public sealed class CommitteeAgendaHandlerTests
     }
 
     [Fact]
+    public async Task TheDuplicateRefusal_NamesTheTrainee_AndAnOpenReviewsStateOnlyWhenItIsNotScheduled()
+    {
+        // T364, C7: "Review #1 already puts Lerato Molefe before ... (scheduled on 2026-10-12)", the trainee by name and
+        // "scheduled" once; a review under way says its state first.
+        await using var db = await SeededDbAsync();
+        var first = await ScheduleAsync(db, GeneralPanel, Trainee, 2026, 1);
+        var directory = new FakeUserDirectory((Trainee, "Lerato Molefe")).WithTraineesOf(db);
+        var second = () => new ScheduleCommitteeReviewCommandHandler(db, directory).Handle(
+            new ScheduleCommitteeReviewCommand(
+                Trainee, GeneralPanel, 2026, 1, new DateOnly(2026, 1, 1), new DateOnly(2026, 6, 30), new DateOnly(2026, 7, 9),
+                TestPrincipals.Coordinator(InstitutionA)),
+            CancellationToken.None);
+
+        (await second.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().StartWith(
+            $"Review #{first.Id} already puts Lerato Molefe before General CCC for 2026 S1 (scheduled on 2026-07-02). A trainee");
+        await SaveAndClearAsync(db);
+
+        await StartWithEvidenceAsync(db, first.Id);
+        (await second.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().StartWith(
+            $"Review #{first.Id} already puts Lerato Molefe before General CCC for 2026 S1 (in progress, scheduled on 2026-07-02).");
+    }
+
+    [Fact]
+    public async Task TheHeldSeat_IsTheReviewInTheSeat_WhicheverPanelOfThatSeatHoldsIt_InTheDuplicateRefusalsWords()
+    {
+        // T364, Q3 and T309 item 1: the schedule page says "Already held" before Create, by the create's own seat check.
+        await using var db = await SeededDbAsync(withNeonatalPanel: true);
+        db.DecisionPanels.Add(Panel(SpecialityPanel, "Paediatrics CCC", InstitutionA, null, "chair-s", specialityId: 1));
+        await SaveAndClearAsync(db);
+        (await SeatAsync(db, GeneralPanel, Trainee, 2026, 1)).Should().BeNull("guard: nothing is held until a review is");
+        var first = await ScheduleAsync(db, GeneralPanel, Trainee, 2026, 1);
+
+        var held = await SeatAsync(db, SpecialityPanel, Trainee, 2026, 1, names: (Trainee, "Lerato Molefe"));
+
+        held.Should().NotBeNull();
+        held!.ReviewId.Should().Be(first.Id);
+        held.PanelName.Should().Be("General CCC");
+        held.PeriodLabel.Should().Be("2026 S1");
+        held.ScheduledOn.Should().Be(new DateOnly(2026, 7, 2));
+        held.TraineeName.Should().Be("Lerato Molefe");
+        held.Sentence.Should().Be(
+            $"Review #{first.Id} already puts Lerato Molefe before General CCC for 2026 S1 (scheduled on 2026-07-02). " +
+            "A trainee has one binding review for each period before the panels that decide the same EPAs, until it is " +
+            "ratified: open that review, or ratify it before scheduling another.");
+
+        // Free: another seat (the neonatal CCC) and another period.
+        (await SeatAsync(db, NeonatalPanel, Trainee, 2026, 1)).Should().BeNull();
+        (await SeatAsync(db, GeneralPanel, Trainee, 2026, 2)).Should().BeNull();
+    }
+
+    [Fact]
+    public async Task AFormativeCheckIn_HoldsNoSeat()
+    {
+        await using var db = await SeededDbAsync();
+        await ScheduleAsync(db, GeneralPanel, Trainee, 2026, 1, formative: true);
+
+        (await SeatAsync(db, GeneralPanel, Trainee, 2026, 1)).Should().BeNull("a check-in takes no seat (T364, 4.49)");
+    }
+
+    [Fact]
+    public async Task TheHeldSeat_IsNothing_ForACallerWhoMayNotScheduleTheTrainee_OrAPanelThatIsNotThere()
+    {
+        // Out of scope reads as nothing, never as a refusal that says the review exists (CLAUDE.md, T056's rule).
+        await using var db = await SeededDbAsync();
+        await ScheduleAsync(db, GeneralPanel, Trainee, 2026, 1);
+
+        (await SeatAsync(db, GeneralPanel, Trainee, 2026, 1, TestPrincipals.Coordinator(InstitutionB))).Should().BeNull();
+        (await SeatAsync(db, 999, Trainee, 2026, 1)).Should().BeNull();
+        (await SeatAsync(db, GeneralPanel, "nobody", 2026, 1)).Should().BeNull();
+        (await SeatAsync(db, GeneralPanel, Trainee, 2026, 1, TestPrincipals.InRole(WombatRoles.CommitteeMember, "member-a", InstitutionA))).Should().BeNull();
+        (await SeatAsync(db, GeneralPanel, Trainee, 2026, 1)).Should().NotBeNull("the control: the coordinator of A is told");
+    }
+
+    [Fact]
+    public async Task TheSeat_ForAnUnchosenPanelOrTrainee_IsNothing_NeverARefusal()
+    {
+        // T364, build review R2: the query promises null, never a refusal, for a panel or trainee that is not there; its
+        // validator held only what the handler cannot answer (the period).
+        await using var db = await SeededDbAsync();
+        var validator = new GetSchedulingSeatQueryValidator();
+
+        validator.Validate(new GetSchedulingSeatQuery("", 0, 2026, 1, TestPrincipals.Coordinator(InstitutionA)))
+            .Errors.Should().BeEmpty();
+        (await SeatAsync(db, 0, Trainee, 2026, 1)).Should().BeNull();
+        (await SeatAsync(db, GeneralPanel, "  ", 2026, 1)).Should().BeNull();
+        validator.Validate(new GetSchedulingSeatQuery(Trainee, GeneralPanel, 2026, 3, TestPrincipals.Coordinator(InstitutionA)))
+            .IsValid.Should().BeFalse("the period is still the validator's");
+    }
+
+    [Fact]
+    public async Task ThePanelPicker_ReadsNoNamesItDoesNotShow()
+    {
+        // T364, build review R6: the schedule page's panel picker shows a panel's name only, so the list asked for
+        // scheduling reads no member, institution or speciality names.
+        await using var db = await SeededDbAsync();
+        var directory = FakeUserDirectory.PanelMembersOf(db).WithTraineesOf(db);
+
+        var panels = await new ListDecisionPanelsQueryHandler(db, directory).Handle(
+            new ListDecisionPanelsQuery(TestPrincipals.Coordinator(InstitutionA), ForScheduling: true), CancellationToken.None);
+
+        panels.Should().NotBeEmpty("guard: the coordinator may schedule before a panel");
+        panels.Should().AllSatisfy(panel =>
+        {
+            panel.MemberNames.Should().BeEmpty();
+            panel.InstitutionName.Should().BeNull();
+            panel.SpecialityName.Should().BeNull();
+        });
+        directory.Lookups.Should().BeEmpty("no member's name is asked for");
+    }
+
+    [Fact]
+    public async Task ThePicker_GivesEachTraineesTrainingYear_InSurnameOrder()
+    {
+        // T364, 5.29: current registrars only, each with the training year, by surname.
+        await using var db = await SeededDbAsync();
+        var directory = new FakeUserDirectory()
+            .With(new Wombat.Application.Common.Interfaces.UserIdentityDetails(
+                Trainee, "a@test", "Zola", "Adams", InstitutionA, [], [], ["Trainee"]))
+            .With(new Wombat.Application.Common.Interfaces.UserIdentityDetails(
+                LateStarter, "b@test", "Anele", "Zulu", InstitutionA, [], [], ["Trainee"]));
+
+        var trainees = await new ListSchedulableTraineesQueryHandler(db, directory).Handle(
+            new ListSchedulableTraineesQuery(GeneralPanel, TestPrincipals.Coordinator(InstitutionA), Today),
+            CancellationToken.None);
+
+        trainees.Select(trainee => trainee.UserId).Should().Equal(Trainee, LateStarter);
+        trainees.Select(trainee => trainee.TrainingYear).Should().Equal(
+            TraineeProfile.StageOn(new DateOnly(2025, 1, 15), Today), TraineeProfile.StageOn(new DateOnly(2026, 3, 2), Today));
+        trainees[0].TrainingYear.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task ThePicker_SortsATraineeWithNoSurname_ByTheirName_AsDecisionsDueDoes()
+    {
+        // T364, build review R3: the picker and Decisions due share one rule (CurriculumCoverageReader.ThenBySurname). The
+        // display name here differs from the account's name, so a picker sorting by its own fallback would put Zola first.
+        await using var db = await SeededDbAsync();
+        var directory = new FakeUserDirectory((Trainee, "Zola"), (LateStarter, "Anele Nkosi"))
+            .With(new Wombat.Application.Common.Interfaces.UserIdentityDetails(
+                Trainee, "a@test", "Mpho", "", InstitutionA, [], [], ["Trainee"]))
+            .With(new Wombat.Application.Common.Interfaces.UserIdentityDetails(
+                LateStarter, "b@test", "Anele", "Nkosi", InstitutionA, [], [], ["Trainee"]));
+
+        var trainees = await new ListSchedulableTraineesQueryHandler(db, directory).Handle(
+            new ListSchedulableTraineesQuery(GeneralPanel, TestPrincipals.Coordinator(InstitutionA), Today),
+            CancellationToken.None);
+
+        trainees.Select(trainee => trainee.UserId).Should().Equal([Trainee, LateStarter], "Mpho sorts before Nkosi");
+    }
+
+    [Fact]
     public async Task ThePreview_IsRefusedToAnyoneWhoMayNotScheduleTheTrainee_AsSchedulingIs()
     {
         await using var db = await SeededDbAsync();
@@ -705,6 +857,32 @@ public sealed class CommitteeAgendaHandlerTests
 
         var unknownPanel = () => PreviewAsync(db, 999, Trainee, 2026, 1);
         (await unknownPanel.Should().ThrowAsync<UnauthorizedAccessException>()).Which.Message.Should().Be(NotSchedulable);
+    }
+
+    [Fact]
+    public void TheSchedulingValidator_RefusesAWindowThatEndsBeforeItStarts_InWombatsWords()
+    {
+        // T364, S4 and T324: the schedule page's own sentence, never FluentValidation's default.
+        var command = new ScheduleCommitteeReviewCommand(
+            Trainee, GeneralPanel, 2026, 2, new DateOnly(2026, 1, 1), new DateOnly(2025, 12, 31), new DateOnly(2026, 7, 2),
+            TestPrincipals.Coordinator(InstitutionA));
+
+        new ScheduleCommitteeReviewCommandValidator().Validate(command).Errors.Select(error => error.ErrorMessage)
+            .Should().Equal("The window ends before it starts. Choose a day on or after 2026-01-01.");
+    }
+
+    [Fact]
+    public void ThePeriods_SayWhenOneHasEnded()
+    {
+        // T364, F1: an ended period can still be chosen, and says so under Period.
+        var today = new DateOnly(2026, 10, 13);
+        var periods = CommitteeReviewPeriods.Around(today);
+
+        periods.Select(period => period.Key).Should().Equal("2025-1", "2025-2", "2026-1", "2026-2", "2027-1", "2027-2");
+        var ended = periods.Single(period => period.Key == "2026-1");
+        CommitteeReviewPeriods.EndedNote(ended, today).Should().Be(
+            "2026 S1 has ended. A review can still sit for it: sittings are often held after the period ends.");
+        CommitteeReviewPeriods.EndedNote(periods.Single(period => period.Key == "2026-2"), today).Should().BeNull();
     }
 
     [Fact]
@@ -1100,6 +1278,16 @@ public sealed class CommitteeAgendaHandlerTests
             CancellationToken.None);
         db.ChangeTracker.Clear();
         return scheduled;
+    }
+
+    private static async Task<SchedulingSeatDto?> SeatAsync(
+        ApplicationDbContext db, int panelId, string trainee, int year, int semester, ClaimsPrincipal? principal = null,
+        (string UserId, string Name)? names = null)
+    {
+        var directory = (names is { } person ? new FakeUserDirectory(person) : new FakeUserDirectory()).WithTraineesOf(db);
+        return await new GetSchedulingSeatQueryHandler(db, directory).Handle(
+            new GetSchedulingSeatQuery(trainee, panelId, year, semester, principal ?? TestPrincipals.Coordinator(InstitutionA)),
+            CancellationToken.None);
     }
 
     private static async Task<CommitteeAgendaPreviewDto> PreviewAsync(

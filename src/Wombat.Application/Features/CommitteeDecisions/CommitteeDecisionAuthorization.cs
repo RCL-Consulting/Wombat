@@ -235,7 +235,7 @@ internal static class CommitteeDecisionAuthorization
         if (specialityId is int speciality &&
             !(await CreatableSpecialityIdsAsync(dbContext, reach, institutionId, cancellationToken)).Contains(speciality))
         {
-            throw new InvalidOperationException(
+            throw new CommitteeRefusedException(
                 reach.EveryInstitution ? SpecialityNotAdoptedAtChosenInstitution : SpecialityNotAdopted);
         }
     }

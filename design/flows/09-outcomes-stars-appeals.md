@@ -470,14 +470,15 @@ Step 4.37 — Dr Sithole reads the list and what must be decided again
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /admin/entrustment-decisions → /committee/decisions-due
 Do: Open Entrustment decisions from the menu. Filter Status to Revoked and apply, then to Active and apply. Download
-  the revoked certificate. Then open Decisions due with "Every status".
+  the revoked certificate. Then open Decisions due, read the count, set Status to "Every status", press Show, and open
+  By EPA.
 Expect:
   - **The menu:** Entrustment decisions is lit on its page, with no trail (T358, R2-Menus m5).
   - **Filtered:** Revoked leaves Dlamini's PAED-002, and Active leaves four rows.
   - **The revoked certificate** reads Status Revoked, with "REVOKED", the date, who revoked it (Dr Mokoena, by name,
     T142) and the reason.
   - **Decisions due:** Dlamini's PAED-002 reads "Revoked: re-decide". Its detail reads "STAR #n, issued for `<P>`, was
-    revoked. Schedule a review to decide it again." It offers Schedule.
+    revoked. Schedule a review to decide it again." Its one action is Schedule (C3).
   - **By EPA:** PAED-002 reads Decided 0, Not decided 4 and To schedule 1.
   - **Count, default filter:** "71 of 75 decisions due in `<P>` shown."
 
@@ -595,8 +596,8 @@ Role: Trainee — Dr Sipho Ndlovu
 Route: /committee/my-reviews
 Do: Open My committee reviews.
 Expect: Two rows for `<P>`. The annual review reads Annual progression, Ratified, Outcome Deferred. The check-in reads
-  Type "Formative" (T309 item 2), State Closed, with Decision "No binding decision"; its detail's Type reads "Formative
-  check-in".
+  Type "Formative check-in" (T309 item 2; T364, C8), State Closed, with Decision "No binding decision"; its detail's Type
+  reads "Formative check-in".
 
 Step 5.7 — Prof Mbatha reads Dr Molefe's STARs
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -644,7 +645,7 @@ Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: / → /committee/panels → /committee/decisions-due → /admin/entrustment-decisions
 Do: At 390 px, open the dashboard, then Decision panels, Decisions due and Entrustment decisions from the menu.
 Expect: Home stacks Waiting for assessors, badged "3 waiting, 1 overdue", Registrars, badged "2 registrars", and Targets
-  by EPA, KGK-001 first among the EPAs neither registrar has met, by code (T358). The panels list and the decisions list
-  scroll inside their containers (T226). Entrustment decisions is in the menu, lit on its page, with no trail: it is a
-  list the menu offers (R2-Menus m5).
+  by EPA, KGK-001 first among the EPAs neither registrar has met, by code (T358). Decision panels' list and Who
+  decides each EPA stack, a block per panel and per row of EPAs (T364), and Decisions due reads as at Step A.7.5.
+  Entrustment decisions is in the menu, lit on its page, with no trail: it is a list the menu offers (R2-Menus m5).
 ```

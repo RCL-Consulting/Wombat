@@ -146,7 +146,7 @@ public sealed class DecisionPanelBodyTests
                 Neonatal),
             CancellationToken.None));
 
-        second.Should().BeOfType<InvalidOperationException>()
+        second.Should().BeOfType<CommitteeRefusedException>()
             .Which.Message.Should().StartWith("Panel 10 already sits as the Neonatal team Clinical Competency Committee for the whole institution.");
         await SaveAndClearAsAuditPipelineWouldAsync(db);
 
@@ -162,7 +162,7 @@ public sealed class DecisionPanelBodyTests
 
         var refusal = await RefusalAsync(() => SetBodyAsync(db, PanelA, "cardiac", TestPrincipals.InstitutionalAdmin(InstitutionA)));
 
-        refusal.Should().BeOfType<InvalidOperationException>().Which.Message.Should().Be("Choose a College committee from the list.");
+        refusal.Should().BeOfType<CommitteeRefusedException>().Which.Message.Should().Be("Choose a College committee from the list.");
         await SaveAndClearAsAuditPipelineWouldAsync(db);
         (await StoredBodiesAsync())[PanelA].Should().BeNull();
     }
@@ -198,7 +198,7 @@ public sealed class DecisionPanelBodyTests
         db.ChangeTracker.Clear();
 
         created.DecisionBodyName.Should().Be("Neonatal team Clinical Competency Committee");
-        var read = await new GetDecisionPanelByIdQueryHandler(db).Handle(
+        var read = await new GetDecisionPanelByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(
             new GetDecisionPanelByIdQuery(created.Id, adminOfA), CancellationToken.None);
         read!.DecisionBodyKey.Should().Be(Neonatal);
         read.DecisionBodyName.Should().Be("Neonatal team Clinical Competency Committee");
@@ -257,7 +257,7 @@ public sealed class DecisionPanelBodyTests
         (await StoredMembersAsync(PaediatricPanelA)).Should().Equal($"chair-{PaediatricPanelA}");
         (await StoredBodiesAsync())[PaediatricPanelA].Should().Be(Neonatal);
 
-        (await new GetDecisionPanelByIdQueryHandler(db).Handle(
+        (await new GetDecisionPanelByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(
                 new GetDecisionPanelByIdQuery(PaediatricPanelA, surgeryAdmin), CancellationToken.None))
             .Should().BeNull("the form's read is the panels the caller may change");
     }

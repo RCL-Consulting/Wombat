@@ -51,7 +51,7 @@ public sealed class UpdateDecisionPanelCommandHandler : IRequestHandler<UpdateDe
         if (panel is null)
         {
             throw request.Principal.IsAdministrator()
-                ? new InvalidOperationException("The decision panel could not be found.")
+                ? new CommitteeRefusedException("The decision panel could not be found.")
                 : new UnauthorizedAccessException(CommitteeDecisionAuthorization.PanelOutOfScope);
         }
 

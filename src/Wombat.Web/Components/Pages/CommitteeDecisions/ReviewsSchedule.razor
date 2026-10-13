@@ -2,236 +2,128 @@
 @attribute [Authorize(Roles = "Coordinator,Administrator,InstitutionalAdmin,SpecialityAdmin,SubSpecialityAdmin,CommitteeMember")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject NavigationManager NavigationManager
-@using Wombat.Application.Features.Curricula.Quota
+@inject ILogger<ReviewsSchedule> Logger
 
 <PageTitle>Committee reviews · Wombat</PageTitle>
 
-@* Schedule review is offered only to a caller the scheduling command would admit at all, as the query says
-   (GetCommitteeReviewsAccessQuery, T216): not to a committee member, and not to anyone who also holds Trainee. *@
-<PageHeader Title="Committee reviews" Subtitle="@Subtitle">
-  <Actions>
-    @if (MaySchedule)
-    {
-      <button type="button" class="btn btn-primary" @onclick="ToggleCreateForm">Schedule review</button>
-    }
-  </Actions>
-</PageHeader>
+@*
+  Committee reviews (T364, flow 08; round 3's boards R2-5). The list alone: scheduling is a page of its own at
+  /committee/reviews/new (Q1), which the header's "Schedule a review" opens for the five schedulers, in the page's own
+  words (S7). Until T364 the form opened above this list.
+  - No Mode column (C8): a formative check-in says so in Type, "Formative check-in".
+  - Period over its window (.period-window), each date unbroken.
+  - Stacked at 900px and below (.clinic-table--stack-wide, M8), captioned (C10).
+  - Scheduled is one grey badge here and on Decisions due (StateBadge's tints, S7).
+  - Loading and the load error (C11, T338): the header at once, then the skeleton, then the list or "Could not load"
+    with Try again, never an exception's text.
+*@
+<div class="committee-calendar">
+  @* Schedule a review is offered only to a caller the scheduling command would admit at all, as the query says
+     (GetCommitteeReviewsAccessQuery, T216): not to a committee member, and not to anyone who also holds Trainee; and only
+     once that is read (C11). *@
+  <PageHeader Title="Committee reviews" Subtitle="@Subtitle">
+    <Actions>
+      @if (MaySchedule)
+      {
+        <a class="btn btn-primary" href="@ReviewLinks.ScheduleNew"><Icon Name="plus" />Schedule a review</a>
+      }
+    </Actions>
+  </PageHeader>
 
-@if (!string.IsNullOrWhiteSpace(_actionError))
-{
-  <Alert Kind="danger">@_actionError</Alert>
-}
+  @* Present from the first render, so its words are announced when they come (flow 04's C11). *@
+  <p class="visually-hidden" role="status">@(_loading ? ScheduleWords.ListLoading : null)</p>
 
-@if (_showCreateForm)
-{
-  <section class="detail-card">
-    <h3>Schedule review</h3>
-    <EditForm Model="_model" OnValidSubmit="CreateAsync" FormName="committee-review">
-      <DataAnnotationsValidator />
-      <ValidationSummary class="validation-summary-errors" />
-      <div class="form-grid">
-        <FormField Label="Panel" InputId="review-panel" Required="true" HelpText="@PanelHelpText">
-          <InputSelect id="review-panel" class="form-select" aria-describedby="@FieldHelp.DescribedBy("review-panel", PanelHelpText)" @bind-Value="_model.PanelId" @bind-Value:after="LoadTraineesAsync">
-            <option value="">Select panel</option>
-            @foreach (var panel in _panels)
-            {
-              <option value="@panel.Id">@panel.Name</option>
-            }
-          </InputSelect>
-        </FormField>
-        <FormField Label="Trainee" InputId="review-trainee" Required="true" HelpText="@TraineeHelpText">
-          <InputSelect id="review-trainee" class="form-select" aria-describedby="@FieldHelp.DescribedBy("review-trainee", TraineeHelpText)" @bind-Value="_model.TraineeUserId" @bind-Value:after="LoadPreviewAsync" disabled="@(_model.PanelId is null)">
-            <option value="">Select trainee</option>
-            @foreach (var trainee in _trainees)
-            {
-              <option value="@trainee.UserId">@trainee.DisplayName</option>
-            }
-          </InputSelect>
-        </FormField>
-        @* The period the review sits for (T131, Decision 4): its agenda is the EPAs due in it. Choosing one fills the
-           evidence window below, which stays editable: the window is what the snapshot reads, the period is what the
-           committee decides for, and neither is derived from the other. *@
-        <FormField Label="Period" InputId="review-period" Required="true" HelpText="The semester the committee decides for. Choosing one fills the evidence window from the start of its academic year, so the annual EPAs a semester-2 sitting decides are judged on the whole year.">
-          <InputSelect id="review-period" class="form-select" aria-describedby="@FieldHelp.Id("review-period")" @bind-Value="_model.PeriodKey" @bind-Value:after="OnPeriodChangedAsync">
-            @foreach (var period in _periods)
-            {
-              <option value="@period.Key">@period.Label</option>
-            }
-          </InputSelect>
-        </FormField>
-        <FormField Label="Review period from" InputId="review-from" Required="true">
-          <InputDate id="review-from" class="form-control" @bind-Value="_model.ReviewPeriodFrom" />
-        </FormField>
-        <FormField Label="Review period to" InputId="review-to" Required="true">
-          <InputDate id="review-to" class="form-control" @bind-Value="_model.ReviewPeriodTo" />
-        </FormField>
-        <FormField Label="Scheduled on" InputId="review-scheduled" Required="true">
-          <InputDate id="review-scheduled" class="form-control" @bind-Value="_model.ScheduledOn" />
-        </FormField>
-        @* T131 slice 5. The types the handler accepts for this panel and period (CommitteeReviewTypes.Allowed), and no
-           other: entrustment-only before a College committee, and never at a general panel's semester-2 sitting. *@
-        <FormField Label="Review type" InputId="review-type" Required="true" HelpText="@ReviewTypeHelpText">
-          <InputSelect id="review-type" class="form-select" @bind-Value="_model.ReviewType"
-                       aria-describedby="@FieldHelp.DescribedBy("review-type", ReviewTypeHelpText)">
-            @foreach (var type in AllowedTypes)
-            {
-              <option value="@type">@CommitteeDecisionWording.ReviewTypeLabel(type)</option>
-            }
-          </InputSelect>
-        </FormField>
-        <FormField Label="Formative only" InputId="review-formative">
-          @* A checkbox and its words on one line (DESIGN.md § Form system's .form-check); the words stay in its label, so
-             they are part of its name. It was .checkbox-label, which app.css does not define (T266). *@
-          <label class="form-check">
-            <InputCheckbox id="review-formative" class="form-check-input" @bind-Value="_model.IsFormative" @bind-Value:after="LoadPreviewAsync" />
-            <span>Formative review — closes without a binding decision and cannot issue entrustment decisions. Use for interim progress check-ins.</span>
-          </label>
-        </FormField>
-        @AgendaPreview
-      </div>
-      <FormActions>
-        <button type="submit" class="btn btn-primary">Create review</button>
-      </FormActions>
-    </EditForm>
-  </section>
-}
-
-@{ var rowNames = ReviewRowNames.For(_reviews, withTrainee: true); }
-<StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="@(!_loading && _reviews.Count == 0)" EmptyTitle="@EmptyTitle" EmptyBody="@EmptyBody" EmptyActions="@EmptyActions">
-  <DataTable Items="_reviews">
-    <HeaderRow>
-      <tr>
-        <th>Trainee</th>
-        <th>Panel</th>
-        <th>Period</th>
-        <th>Type</th>
-        <th>Mode</th>
-        <th>State</th>
-        <th>Decision</th>
-        <th><span class="visually-hidden">Actions</span></th>
-      </tr>
-    </HeaderRow>
-    <Row Context="item">
-      <tr>
-        <td>@item.TraineeName</td>
-        <td>@item.PanelName</td>
-        <td>@item.PeriodLabel <span class="muted">· @item.ReviewPeriodFrom.ToString("yyyy-MM-dd") to @item.ReviewPeriodTo.ToString("yyyy-MM-dd")</span></td>
-        @* A formative check-in decides nothing whatever its stored type, so its Type says so (T361, review R1; T309 item 2). *@
-        <td>@CommitteeDecisionWording.ReviewTypeShortLabel(item.ReviewType, item.IsFormative)</td>
-        <td>@(item.IsFormative ? "Formative" : "Summative")</td>
-        <td>@item.StateLabel</td>
-        @* A withdrawn review says so, formative or not (T258 review): OutcomeLabel asks for it first. *@
-        <td>@(item.IsFormative && item.State != CommitteeReviewState.Withdrawn ? "—" : CommitteeDecisionWording.OutcomeLabel(item))</td>
-        <td>
-          @* T239: named by the review it opens, "Open the 2026 S2 review of Thandi Nkosi before General CCC". *@
-          <div class="actions-cell">
-            <a class="btn btn-outline btn-sm" href="@($"/committee/reviews/{item.Id}")" aria-label="@($"Open {rowNames[item.Id]}")">Open</a>
-          </div>
-        </td>
-      </tr>
-    </Row>
-  </DataTable>
-</StatePanel>
+  @{ var rowNames = ReviewRowNames.For(_reviews, withTrainee: true); }
+  <StatePanel IsLoading="_loading"
+              LoadError="@_loadError"
+              OnRetry="LoadAsync"
+              IsEmpty="@(!_loading && _reviews.Count == 0)"
+              EmptyTitle="@EmptyTitle"
+              EmptyBody="@EmptyBody"
+              EmptyActions="@EmptyActions">
+    @* F6: the rule a semester-2 period follows, once above the list. *@
+    <p class="needs-you-rule">@ScheduleWords.Semester2WindowNote</p>
+    <div class="table-container shadow">
+      <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>@ScheduleWords.ListCaption(_reviews)</caption>
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">Trainee</th>
+            <th scope="col" role="columnheader">Panel</th>
+            <th scope="col" role="columnheader">Period</th>
+            <th scope="col" role="columnheader">Type</th>
+            <th scope="col" role="columnheader">State</th>
+            <th scope="col" role="columnheader">Decision</th>
+            <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          @foreach (var item in _reviews)
+          {
+            <tr role="row" @key="item.Id">
+              @* The trainee as stored: a name, or an erased trainee's pseudonym (T142, flow 14). *@
+              <th scope="row" role="rowheader">@item.TraineeName</th>
+              <td role="cell" data-label="Panel">@item.PanelName</td>
+              <td role="cell" data-label="Period">
+                @item.PeriodLabel
+                <span class="period-window"><span>@Iso(item.ReviewPeriodFrom)</span> to <span>@Iso(item.ReviewPeriodTo)</span></span>
+              </td>
+              @* A formative check-in decides nothing whatever its stored type, so its Type says so (T361, review R1; T309
+                 item 2), in the words the review page uses (T364, C8). *@
+              <td role="cell" data-label="Type">@CommitteeDecisionWording.ReviewTypeShortLabel(item.ReviewType, item.IsFormative)</td>
+              <td role="cell"><span class="badge @Review.ReviewSitting.StateBadge(item.State)">@item.StateLabel</span></td>
+              <td role="cell" data-label="Decision">
+                @if (item.IsFormative && item.State != CommitteeReviewState.Withdrawn)
+                {
+                  @* A check-in records no decision: "—", read as "None" (S7). A withdrawn review says so, formative or
+                     not (T258 review): OutcomeLabel asks for it first. *@
+                  <span aria-hidden="true">—</span><span class="visually-hidden">None</span>
+                }
+                else
+                {
+                  @CommitteeDecisionWording.OutcomeLabel(item)
+                }
+              </td>
+              <td role="cell">
+                @* T239: named by the review it opens, "Open the 2026 S2 review of Thandi Nkosi before General CCC". *@
+                <div class="actions-cell">
+                  <a class="btn btn-outline btn-sm" href="@ReviewLinks.Review(item.Id)" aria-label="@($"Open {rowNames[item.Id]}")">Open</a>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </StatePanel>
+</div>
 
 @code {
-  private readonly List<DecisionPanelSummaryDto> _panels = [];
   private readonly List<CommitteeReviewListItemDto> _reviews = [];
-  private readonly List<SchedulableTraineeDto> _trainees = [];
-  private bool _traineesLoading;
   private bool _loading = true;
-  private bool _showCreateForm;
   private string? _loadError;
-  private string? _actionError;
-  private ReviewFormModel _model = new();
   private CommitteeReviewsAccessDto? _access;
 
-  // The periods a review can sit for, around today, read from the one academic calendar (T131).
-  private readonly IReadOnlyList<CommitteeReviewPeriodOptionDto> _periods = CommitteeReviewPeriods.Around(QuotaCalendar.Today());
-  private CommitteeAgendaPreviewDto? _preview;
-  private string? _previewError;
-  private int _previewRequest;
-
-  protected override void OnInitialized()
-  {
-    ApplyPeriod(CommitteeReviewPeriods.Current(QuotaCalendar.Today()));
-  }
-
-  /// <summary>
-  /// The panel, trainee and period the decisions-due page's Schedule link names (T131 slice 6): "?panel=10&amp;trainee=…&amp;period=2026-1".
-  /// </summary>
-  /// <remarks>
-  /// A convenience, never an authorization statement (T111's rule for NewActivity's ?type=). Each value is resolved against
-  /// what this page has already loaded for the caller: the panels they may use, the trainees the scheduling handler would
-  /// accept on that panel, and the periods offered. A value that is not there leaves its field as it would be, and the
-  /// handler still decides.
-  /// </remarks>
-  [SupplyParameterFromQuery(Name = "panel")]
-  public int? PrefillPanelId { get; set; }
-
-  [SupplyParameterFromQuery(Name = "trainee")]
-  public string? PrefillTraineeUserId { get; set; }
-
-  [SupplyParameterFromQuery(Name = "period")]
-  public string? PrefillPeriodKey { get; set; }
-
-  protected override async Task OnInitializedAsync()
-  {
-    await LoadAsync();
-    await ApplyPrefillAsync();
-  }
-
-  /// <summary>Opens the form filled from the query string, where the page offers what it names.</summary>
-  private async Task ApplyPrefillAsync()
-  {
-    // A caller who may schedule no one is not offered the form, from a link any more than from the button (T216).
-    if (!MaySchedule || PrefillPanelId is not int panelId || !_panels.Any(panel => panel.Id == panelId))
-    {
-      return;
-    }
-
-    _showCreateForm = true;
-
-    // The period first: choosing the panel takes its default review type for the period chosen.
-    if (_periods.FirstOrDefault(period => string.Equals(period.Key, PrefillPeriodKey, StringComparison.Ordinal)) is { } chosen)
-    {
-      ApplyPeriod(chosen);
-    }
-
-    _model.PanelId = panelId;
-    await LoadTraineesAsync();
-
-    if (!string.IsNullOrEmpty(PrefillTraineeUserId) &&
-        _trainees.Any(trainee => string.Equals(trainee.UserId, PrefillTraineeUserId, StringComparison.Ordinal)))
-    {
-      _model.TraineeUserId = PrefillTraineeUserId;
-      await LoadPreviewAsync();
-    }
-  }
+  protected override async Task OnInitializedAsync() => await LoadAsync();
 
   private async Task LoadAsync()
   {
+    _loading = true;
+    _loadError = null;
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-
       _access = await Sender.Send(new GetCommitteeReviewsAccessQuery(authState.User));
 
-      // Only the panels this caller may put a trainee before, by the scheduling rule itself (T194): not a panel they
-      // sit on at another institution, nor one covering a speciality they do not administer. None for a caller the
-      // command refuses outright, who is offered no form.
-      _panels.Clear();
-      if (MaySchedule)
-      {
-        _panels.AddRange(await Sender.Send(new ListDecisionPanelsQuery(authState.User, ForScheduling: true)));
-      }
-
+      var reviews = await Sender.Send(new ListReviewsForPanelQuery(authState.User));
       _reviews.Clear();
-      _reviews.AddRange(await Sender.Send(new ListReviewsForPanelQuery(authState.User)));
+      _reviews.AddRange(reviews);
     }
     catch (Exception exception)
     {
-      _loadError = RefusalText.Of(exception);
+      // T338: fixed words, the failure to the log.
+      Logger.LogError(exception, "Committee reviews could not be read.");
+      _loadError = ScheduleWords.ListLoadFailure;
     }
     finally
     {
@@ -239,12 +131,7 @@
     }
   }
 
-  private void ToggleCreateForm()
-  {
-    _showCreateForm = !_showCreateForm;
-  }
-
-  /// <summary>Whether the scheduling command would admit this caller at all; false until the page knows (T216).</summary>
+  /// <summary>Whether the scheduling command would admit this caller at all; false until the page knows (T216, C11).</summary>
   private bool MaySchedule => _access?.MaySchedule == true;
 
   private string Subtitle => _access is { MaySchedule: false }
@@ -263,8 +150,8 @@
     { MaySchedule: false } => "The reviews of the panels you sit on appear here once they are scheduled.",
     // Not which reviews those are: a coordinator's follow the panel's institution, a speciality administrator's the
     // trainee's programme, an Administrator's are every one (T218 review).
-    _ => "The reviews you can open appear here once they are scheduled. Use Schedule review to put a trainee before a " +
-         "panel."
+    _ => "The reviews you can open appear here once they are scheduled. Use Schedule a review to put a trainee before " +
+         "a panel."
   };
 
   private RenderFragment? EmptyActions => _access?.TraineeNote is null ? null : MyReviewsLink;
@@ -274,275 +161,5 @@
     <a class="btn btn-outline" href="/committee/my-reviews">Open My committee reviews</a>
   };
 
-  /// <summary>
-  /// Offers the trainees the scheduling handler would accept on the chosen panel, by the handler's own predicate
-  /// (ListSchedulableTraineesQuery). A panel reviews its own institution's trainees, so the list follows the panel. (T182)
-  /// </summary>
-  private async Task LoadTraineesAsync()
-  {
-    _trainees.Clear();
-    _model.TraineeUserId = string.Empty;
-    ResetReviewType();
-    ClearPreview();
-
-    if (_model.PanelId is not int panelId)
-    {
-      return;
-    }
-
-    _traineesLoading = true;
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var trainees = await Sender.Send(new ListSchedulableTraineesQuery(panelId, authState.User));
-
-      // The panel may have changed while this was in flight; the later request's answer is the one that counts.
-      if (_model.PanelId == panelId)
-      {
-        _trainees.AddRange(trainees);
-      }
-    }
-    catch (Exception exception)
-    {
-      _actionError = RefusalText.Of(exception);
-    }
-    finally
-    {
-      _traineesLoading = false;
-    }
-  }
-
-  private CommitteeReviewPeriodOptionDto? SelectedPeriod
-    => _periods.FirstOrDefault(period => string.Equals(period.Key, _model.PeriodKey, StringComparison.Ordinal));
-
-  private void ApplyPeriod(CommitteeReviewPeriodOptionDto period)
-  {
-    _model.PeriodKey = period.Key;
-    _model.ReviewPeriodFrom = period.WindowFrom;
-    _model.ReviewPeriodTo = period.WindowTo;
-  }
-
-  private async Task OnPeriodChangedAsync()
-  {
-    if (SelectedPeriod is { } period)
-    {
-      ApplyPeriod(period);
-    }
-
-    KeepAllowedReviewType();
-    await LoadPreviewAsync();
-  }
-
-  private void ClearPreview()
-  {
-    _preview = null;
-    _previewError = null;
-    _previewRequest++;
-  }
-
-  /// <summary>
-  /// What the review would put on its agenda, by the planner scheduling runs (PreviewCommitteeAgendaQuery), once a
-  /// panel, a trainee and a period are chosen. A formative review carries none. Advisory: a failure is said beside the
-  /// preview and never stops the form.
-  /// </summary>
-  private async Task LoadPreviewAsync()
-  {
-    ClearPreview();
-    var request = _previewRequest;
-
-    if (_model.IsFormative || _model.PanelId is not int panelId || string.IsNullOrEmpty(_model.TraineeUserId) ||
-        SelectedPeriod is not { } period ||
-        !_trainees.Any(trainee => string.Equals(trainee.UserId, _model.TraineeUserId, StringComparison.Ordinal)))
-    {
-      return;
-    }
-
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var preview = await Sender.Send(new PreviewCommitteeAgendaQuery(
-        _model.TraineeUserId, panelId, period.AcademicYear, period.Semester, authState.User));
-
-      // A later choice started another preview while this one was in flight; the later one's answer counts.
-      if (request == _previewRequest)
-      {
-        _preview = preview;
-      }
-    }
-    catch (Exception exception)
-    {
-      if (request == _previewRequest)
-      {
-        _previewError = RefusalText.Of(exception);
-      }
-    }
-  }
-
-  private RenderFragment AgendaPreview => __builder =>
-  {
-    if (_model.IsFormative)
-    {
-      <p id="agenda-preview" class="full-width muted" role="status">A formative review carries no agenda: it decides no EPA.</p>
-      return;
-    }
-
-    @* Only the summary is a live region: a screen reader hears what changed when a choice changes the preview, not
-       every optional line and note read out again. *@
-    <section id="agenda-preview" class="full-width" aria-labelledby="agenda-preview-heading">
-      <h4 id="agenda-preview-heading">Agenda</h4>
-      <div id="agenda-preview-summary" role="status">
-        @if (_previewError is not null)
-        {
-          <p class="field-warning">The agenda could not be previewed: @_previewError</p>
-        }
-        else if (_preview is null)
-        {
-          <p class="muted">Choose a panel, a trainee and a period to see which EPAs the review will be there to decide.</p>
-        }
-        else
-        {
-          @foreach (var sentence in CommitteeAgendaText.PreviewSentences(_preview))
-          {
-            <p>@sentence</p>
-          }
-        }
-      </div>
-      @if (_previewError is null && _preview is not null)
-      {
-        var optional = _preview.Lines.Where(line => !line.IsClosing).ToArray();
-        @if (optional.Length > 0)
-        {
-          <ul class="list-unstyled">
-            @foreach (var line in optional)
-            {
-              <li>@line.EpaCode — @line.EpaTitle <span class="muted">· @CommitteeAgendaText.StatusLabel(line.Status)</span></li>
-            }
-          </ul>
-        }
-        @foreach (var sentence in CommitteeAgendaText.PreviewNotes(_preview))
-        {
-          <p class="muted">@sentence</p>
-        }
-      }
-    </section>
-  };
-
-  /// <summary>
-  /// Said when no panel is offered (T194): the list holds only panels with a trainee this caller may schedule, so an
-  /// empty one is not a fault to report.
-  /// </summary>
-  private string? PanelHelpText => _panels.Count == 0
-    ? "No panel has a trainee you can schedule a review for. A panel is listed once a trainee it reviews is in a " +
-      "programme you oversee."
-    : null;
-
-  private string? TraineeHelpText => _model.PanelId is null
-    ? "Choose a panel first. The list holds the trainees at its institution you can schedule."
-    : !_traineesLoading && _trainees.Count == 0
-      ? "This panel has no trainees you can schedule a review for."
-      : null;
-
-  private DecisionPanelSummaryDto? SelectedPanel => _panels.FirstOrDefault(panel => panel.Id == _model.PanelId);
-
-  /// <summary>
-  /// The review types the scheduling handler accepts for the chosen panel and period, by its own rule
-  /// (<see cref="CommitteeReviewTypes.Allowed" />, T131 slice 5), the default first.
-  /// </summary>
-  private IReadOnlyList<CommitteeReviewType> AllowedTypes
-    => CommitteeReviewTypes.Allowed(SelectedPanel?.DecisionBodyKey is not null, SelectedPeriod?.Semester ?? 1);
-
-  private string? ReviewTypeHelpText => SelectedPanel switch
-  {
-    { DecisionBodyKey: not null } panel =>
-      $"{panel.Name} sits as the {panel.DecisionBodyName ?? panel.DecisionBodyKey}, which decides entrustment only: a " +
-      "review before it records no progression category.",
-    // A semester-1 sitting may decide progression (the default) or entrustment only; the help text claims neither is the
-    // rule, only what each type records.
-    not null when SelectedPeriod?.Semester == 1 =>
-      "Choose Entrustment-only review when this sitting decides STARs and not the trainee's progression: it records no " +
-      "progression category. The semester-2 sitting always decides progression.",
-    not null => "The semester-2 sitting decides the trainee's progression for the year.",
-    _ => null
-  };
-
-  /// <summary>A new panel's review type is its default: entrustment-only before a College committee.</summary>
-  private void ResetReviewType()
-    => _model.ReviewType = AllowedTypes[0];
-
-  /// <summary>Keeps the chosen type when the period still allows it, else takes the default.</summary>
-  private void KeepAllowedReviewType()
-  {
-    if (!AllowedTypes.Contains(_model.ReviewType))
-    {
-      _model.ReviewType = AllowedTypes[0];
-    }
-  }
-
-  private async Task CreateAsync()
-  {
-    _actionError = null;
-
-    // The select's value arrives from the browser. The handler is the gate; this only keeps a value the picker never
-    // offered from being sent at all.
-    if (!_trainees.Any(trainee => string.Equals(trainee.UserId, _model.TraineeUserId, StringComparison.Ordinal)))
-    {
-      _actionError = "Choose a trainee from the list.";
-      return;
-    }
-
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      if (SelectedPeriod is not { } period)
-      {
-        _actionError = "Choose the period the review sits for.";
-        return;
-      }
-
-      var review = await Sender.Send(new ScheduleCommitteeReviewCommand(
-        _model.TraineeUserId,
-        _model.PanelId ?? 0,
-        period.AcademicYear,
-        period.Semester,
-        _model.ReviewPeriodFrom,
-        _model.ReviewPeriodTo,
-        _model.ScheduledOn,
-        authState.User,
-        _model.IsFormative,
-        _model.ReviewType));
-
-      NavigationManager.NavigateTo($"/committee/reviews/{review.Id}");
-    }
-    catch (Exception exception)
-    {
-      _actionError = RefusalText.Of(exception);
-    }
-  }
-
-  private sealed class ReviewFormModel
-  {
-    [Required]
-    public string TraineeUserId { get; set; } = string.Empty;
-
-    [Required]
-    public int? PanelId { get; set; }
-
-    // "2026-1": filled with the current period when the page opens.
-    [Required]
-    public string PeriodKey { get; set; } = string.Empty;
-
-    // Filled from the period when the page opens and whenever one is chosen.
-    [Required]
-    public DateOnly ReviewPeriodFrom { get; set; }
-
-    [Required]
-    public DateOnly ReviewPeriodTo { get; set; }
-
-    [Required]
-    public DateOnly ScheduledOn { get; set; } = QuotaCalendar.Today();
-
-    public bool IsFormative { get; set; }
-
-    public CommitteeReviewType ReviewType { get; set; } = CommitteeReviewType.AnnualProgression;
-  }
+  private static string Iso(DateOnly date) => date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
 }

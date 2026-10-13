@@ -19,6 +19,7 @@ using Wombat.Infrastructure.Persistence;
 using Wombat.Tests.Shared;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
 using Wombat.Web.Services;
+using static Wombat.Web.Tests.CommitteeDecisions.PanelSeatPicker;
 
 namespace Wombat.Web.Tests.CommitteeDecisions;
 
@@ -60,24 +61,22 @@ public sealed partial class PanelEditTraineeSeatTests : TestContext
         var cut = RenderComponent<PanelEdit>();
         cut.WaitForState(() => cut.FindAll("#panel-chair option").Count > 1);
 
-        foreach (var seat in Seats)
-        {
-            Values(cut, seat).Should().NotContain(Representative, seat).And.Contain("member-a", seat);
-        }
-
-        Values(cut, "#panel-chair").Should().Equal("chair-a", "external-a", "member-a");
-        Text(cut.Find("#panel-external-help")).Should().Be(
-            "External examiners, who sit with the chair on the panel's appeal body. Only active committee members at the " +
-            "panel's institution who are not trainees are listed: cross-institution externals are not yet supported.");
+        // Neither Chair nor the seat picker offers the representative (T364, Q5: one control for every seat).
+        ChairOptions(cut).Should().Equal("chair-a", "external-a", "member-a");
+        Listed(cut).Should().Equal("chair-a", "external-a", "member-a");
+        Text(cut.Find("#panel-seats")).Should().Contain(
+            "External members are external examiners, who sit with the chair on the panel's appeal body. Only active " +
+            "committee members at the panel's institution who are not trainees are listed: cross-institution externals " +
+            "are not yet supported.");
 
         cut.Find("#panel-name").Change("Hospital CCC");
         cut.Find("#panel-institution").Change(InstitutionA.ToString());
         cut.Find("#panel-chair").Change("chair-a");
-        cut.Find("#panel-members").Change(new[] { "member-a" });
-        cut.Find("#panel-external").Change(new[] { "external-a" });
+        SeatById(cut, "member-a", "member");
+        SeatById(cut, "external-a", "external");
         cut.Find("form").Submit();
 
-        cut.FindAll(".alert-danger").Should().BeEmpty("the create handler accepts what the form offered");
+        cut.FindAll(".validation-summary-errors").Should().BeEmpty("the create handler accepts what the form offered");
         StoredMembers().Should().Equal("chair-a:Chair", "external-a:External", "member-a:Member");
     }
 
@@ -98,20 +97,19 @@ public sealed partial class PanelEditTraineeSeatTests : TestContext
         var cut = RenderComponent<PanelEdit>(parameters => parameters.Add(page => page.PanelId, PanelId));
         cut.WaitForState(() => cut.FindAll("#panel-chair option").Count > 1);
 
+        // Round 3 M6: named, and in no control.
         Text(cut.Find(".alert-warning")).Should().Be(
-            "1 member of this panel can no longer sit on it, so is not listed below: only an active committee member at " +
-            "its institution who is not a trainee can. Saving takes that member off the panel.");
-        foreach (var picker in Seats)
-        {
-            Values(cut, picker).Should().NotContain(Representative, picker);
-        }
+            "Demo Trainee can no longer sit on this panel, so is not listed below: only an active committee member at its " +
+            "institution who is not a trainee can. Saving takes Demo Trainee off the panel.");
+        ChairOptions(cut).Should().NotContain(Representative);
+        Listed(cut).Should().NotContain("Demo Trainee");
 
         if (seat == DecisionPanelMemberRole.Chair)
         {
             // The chair's seat is left empty, so the form is not sent until another chair is chosen.
             MembersForm(cut).Submit();
             cut.FindAll(".validation-summary-errors li").Select(Text).Should().Equal(
-                ["Choose a chair."], "a panel needs a chair, said in words rather than by the model's property name");
+                ["Chair: Choose a chair."], "a panel needs a chair, said in words rather than by the model's property name");
             StoredMembers().Should().Equal("member-a:Member", $"{Representative}:Chair");
 
             cut.Find("#panel-chair").Change("chair-a");
@@ -119,21 +117,12 @@ public sealed partial class PanelEditTraineeSeatTests : TestContext
 
         MembersForm(cut).Submit();
 
-        cut.FindAll(".alert-danger").Should().BeEmpty("the update handler accepts what the form sends");
+        cut.FindAll(".validation-summary-errors").Should().BeEmpty("the update handler accepts what the form sends");
         StoredMembers().Should().Equal("chair-a:Chair", "member-a:Member");
     }
 
-    /// <summary>Every seat's picker on the members form.</summary>
-    private static readonly string[] Seats = ["#panel-chair", "#panel-members", "#panel-external"];
-
     private static AngleSharp.Dom.IElement MembersForm(IRenderedComponent<PanelEdit> cut)
         => cut.FindAll("form").Single(form => form.QuerySelector("#panel-chair") is not null);
-
-    private static IReadOnlyList<string> Values(IRenderedComponent<PanelEdit> cut, string select)
-        => cut.FindAll($"{select} option")
-            .Select(option => option.GetAttribute("value") ?? string.Empty)
-            .Where(value => value.Length > 0)
-            .ToArray();
 
     private static string Text(AngleSharp.Dom.IElement element) => Whitespace().Replace(element.TextContent, " ").Trim();
 
@@ -193,7 +182,8 @@ public sealed partial class PanelEditTraineeSeatTests : TestContext
     /// </summary>
     private sealed class HandlerSender(Func<ApplicationDbContext> createDb) : IScopedSender
     {
-        private readonly FakeUserDirectory _users = FakeUserDirectory.CommitteeMembersAt(InstitutionA, "chair-a", "member-a", "external-a")
+        private readonly FakeUserDirectory _users = new FakeUserDirectory((Representative, "Demo Trainee"))
+            .WithCommitteeMembers(InstitutionA, "chair-a", "member-a", "external-a")
             .With(new UserIdentityDetails(
                 Representative, "rep@test", "Demo", "Trainee", InstitutionA, [], [],
                 [WombatRoles.CommitteeMember, WombatRoles.Trainee]));
@@ -209,7 +199,7 @@ public sealed partial class PanelEditTraineeSeatTests : TestContext
                 GetInstitutionsListQuery query => await new GetInstitutionsListQueryHandler(db).Handle(query, cancellationToken),
                 GetSpecialitiesListQuery query => await new GetSpecialitiesListQueryHandler(db).Handle(query, cancellationToken),
                 GetDecisionBodiesQuery query => await new GetDecisionBodiesQueryHandler(db).Handle(query, cancellationToken),
-                GetDecisionPanelByIdQuery query => await new GetDecisionPanelByIdQueryHandler(db).Handle(query, cancellationToken),
+                GetDecisionPanelByIdQuery query => await new GetDecisionPanelByIdQueryHandler(db, _users).Handle(query, cancellationToken),
                 ListPanelMemberCandidatesQuery query =>
                     await new ListPanelMemberCandidatesQueryHandler(_users).Handle(query, cancellationToken),
                 CreateDecisionPanelCommand command =>

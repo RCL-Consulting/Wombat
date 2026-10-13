@@ -74,6 +74,28 @@ public static class CommitteeReviewPeriods
             .ToArray();
     }
 
+    /// <summary>
+    /// The help under the schedule page's Period (T131, Decision 4): what the period is, and the window it fills.
+    /// </summary>
+    public const string PeriodHelp =
+        "The semester the committee decides for. Choosing one fills the evidence window from the start of its academic " +
+        "year, so the annual EPAs a semester-2 sitting decides are judged on the whole year.";
+
+    /// <summary>
+    /// Under Period, when the chosen period has ended (T364, F1): "2026 S1 has ended. A review can still sit for it:
+    /// sittings are often held after the period ends."; null while it has not. A Missed row's Schedule opens the form on
+    /// its own ended semester, the only review that can clear it, so an ended period is offered and accepted.
+    /// </summary>
+    public static string? EndedNote(CommitteeReviewPeriodOptionDto period, DateOnly today)
+    {
+        ArgumentNullException.ThrowIfNull(period);
+        return period.WindowTo < today
+            ? string.Create(
+                CultureInfo.InvariantCulture,
+                $"{period.AcademicYear} S{period.Semester} has ended. A review can still sit for it: sittings are often held after the period ends.")
+            : null;
+    }
+
     /// <summary>The period holding <paramref name="today" />: the scheduling page's default.</summary>
     public static CommitteeReviewPeriodOptionDto Current(DateOnly today) => ToOption(AcademicPeriod.Containing(today));
 

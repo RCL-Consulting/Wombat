@@ -240,18 +240,25 @@ public static class CurriculumCoverageReader
 
     /// <summary>
     /// The tie-break every list of the programme's registrars uses (T298): surname, then first name, then the id, which
-    /// only separates two people of one name. A trainee with no name on record sorts by the id, as UserDisplayNames reads.
+    /// only separates two people of one name. A trainee with no surname on record sorts by the name shown ("Mpho"), and one
+    /// with no name at all by the id, as UserDisplayNames reads: the one rule the schedule page's trainee picker and
+    /// Decisions due both sort by (T364, build review R3), where a blank surname used to sort ahead of everyone here.
     /// </summary>
     internal static IOrderedEnumerable<T> ThenBySurname<T>(
         this IOrderedEnumerable<T> ordered,
         Func<T, string> userIdOf,
         IReadOnlyDictionary<string, UserContact> contacts)
         => ordered
-            .ThenBy(entry => contacts.TryGetValue(userIdOf(entry), out var contact) ? contact.LastName : userIdOf(entry),
-                StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(entry => SurnameKey(contacts, userIdOf(entry)), StringComparer.CurrentCultureIgnoreCase)
             .ThenBy(entry => contacts.TryGetValue(userIdOf(entry), out var contact) ? contact.FirstName : string.Empty,
                 StringComparer.CurrentCultureIgnoreCase)
             .ThenBy(userIdOf, StringComparer.Ordinal);
+
+    /// <summary>What <see cref="ThenBySurname{T}" /> sorts by first: the surname, else the name shown, else the id.</summary>
+    private static string SurnameKey(IReadOnlyDictionary<string, UserContact> contacts, string userId)
+        => contacts.TryGetValue(userId, out var contact) && !string.IsNullOrWhiteSpace(contact.LastName)
+            ? contact.LastName.Trim()
+            : NameOf(contacts, userId) ?? userId;
 
     internal static CurriculumCoverage Compute(
         DateOnly asOf,

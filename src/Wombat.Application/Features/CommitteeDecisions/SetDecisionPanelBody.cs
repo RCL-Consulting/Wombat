@@ -68,7 +68,7 @@ public sealed class SetDecisionPanelBodyCommandHandler : IRequestHandler<SetDeci
         if (panel is null)
         {
             throw request.Principal.IsAdministrator()
-                ? new InvalidOperationException("The decision panel could not be found.")
+                ? new CommitteeRefusedException("The decision panel could not be found.")
                 : new UnauthorizedAccessException(CommitteeDecisionAuthorization.PanelOutOfScope);
         }
 
@@ -92,8 +92,8 @@ public sealed class SetDecisionPanelBodyCommandHandler : IRequestHandler<SetDeci
 
             if (open is not null)
             {
-                throw new InvalidOperationException(
-                    ReviewStillOpen(open.Id, new AcademicPeriod(open.AcademicYear, open.Semester), open.State));
+                throw new DecisionBodyLockedException(
+                    open.Id, new AcademicPeriod(open.AcademicYear, open.Semester), open.State);
             }
         }
 
@@ -114,14 +114,17 @@ public sealed class SetDecisionPanelBodyCommandHandler : IRequestHandler<SetDeci
                 throw;
             }
 
-            throw new InvalidOperationException(taken, exception);
+            throw new CommitteeRefusedException(taken, exception);
         }
 
         return DecisionPanelBodies.ToDetailDto(panel, body?.Name);
     }
 
-    /// <summary>The states of a review whose type and agenda still follow the panel's body (see the remarks).</summary>
-    private static readonly CommitteeReviewState[] OpenStates =
+    /// <summary>
+    /// The states of a review whose type and agenda still follow the panel's body (see the remarks). A panel's page lists
+    /// the reviews in them as its open reviews (<c>GetDecisionPanelByIdQuery</c>, T364), so the page and the refusal agree.
+    /// </summary>
+    internal static readonly CommitteeReviewState[] OpenStates =
         [CommitteeReviewState.Scheduled, CommitteeReviewState.InProgress, CommitteeReviewState.Decided];
 
     /// <summary>The refusal naming the first open review before the panel. (T131 slice 5)</summary>
@@ -129,4 +132,29 @@ public sealed class SetDecisionPanelBodyCommandHandler : IRequestHandler<SetDeci
         => $"Review #{reviewId} ({period}, {CommitteeDecisionWording.StateInSentence(state)}) still sits before this panel. " +
            "What a review decides, and its agenda, follow the College committee the panel sat as when it was scheduled, so " +
            "the panel keeps what it sits as until its open reviews are ratified, or closed if formative.";
+}
+
+/// <summary>
+/// The College committee a panel sits as was not changed because a review is still open before it (T131 slice 5): the
+/// refusal <see cref="SetDecisionPanelBodyCommandHandler.ReviewStillOpen" /> words, carrying the review it names, so a page
+/// that raced a scheduling can say which review now holds the panel beside its select (T364, C13).
+/// </summary>
+public sealed class DecisionBodyLockedException : CommitteeRefusedException
+{
+    public DecisionBodyLockedException(int reviewId, AcademicPeriod period, CommitteeReviewState state)
+        : base(SetDecisionPanelBodyCommandHandler.ReviewStillOpen(reviewId, period, state))
+    {
+        ReviewId = reviewId;
+        Period = period.ToString();
+        StateInSentence = CommitteeDecisionWording.StateInSentence(state);
+    }
+
+    /// <summary>The open review's id.</summary>
+    public int ReviewId { get; }
+
+    /// <summary>Its period, "2026 S2".</summary>
+    public string Period { get; }
+
+    /// <summary>Its state as a sentence says it, "scheduled".</summary>
+    public string StateInSentence { get; }
 }

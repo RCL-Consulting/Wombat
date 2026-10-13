@@ -510,7 +510,7 @@ describes the product as it is today, after flow 04 (re-synced 2026-10-03). `D` 
 January on or before it.
 
 ```text
-Step 2.39 — Dr Molefe, final-year registrar (act-2-onboarding.md:719)
+Step 2.39 — Dr Molefe, final-year registrar (act-2-onboarding.md:741)
 Role: Trainee — Dr Lerato Molefe
 Route: /account/login → / → /portfolio/progress
 Do: Sign in, read the dashboard and nav, and open My progress.
@@ -530,7 +530,7 @@ Expect: Home's first card, Your targets, reads "Training year 4 — it sets the 
   "Each semester · 10 EPAs" and "Once a year · 5 EPAs", every count 0 and every STAR "No decision"; Entrustment against
   Annexure A reads "0 at or above · 0 below · 15 with no decision, of 15 EPAs".
 
-Step 2.40 — The other registrars' training years (act-2-onboarding.md:753)
+Step 2.40 — The other registrars' training years (act-2-onboarding.md:775)
 Role: Trainee — Dr Dlamini, Dr du Plessis, Dr Mahlangu and Dr Ndlovu
 Route: /account/login → / → /portfolio/progress
 Do: Each signs in and opens My progress.
@@ -607,7 +607,7 @@ Expect:
     with Open My authorisations. The header offers "Log an activity" (T335: the Actions card is gone), and there is no
     Upcoming deadlines card (T355).
 
-Step 4.40 — Dr Molefe reads her progress against Annexure A (act-4-annual-review.md:1019)
+Step 4.40 — Dr Molefe reads her progress against Annexure A (act-4-annual-review.md:1056)
 Role: Trainee — Dr Lerato Molefe
 Route: /portfolio/progress
 Do: Open My progress and read its index's STAR column and "Entrustment against Annexure A".
@@ -621,7 +621,7 @@ Expect: The index's STAR column, headed "STAR against training year 4", reads "A
   Each EPA's name links to its page, and each Latest rating, "4 · Encounter <date>" and the like, is a link to its
   activity (T355). The exit rule says it gates nothing. The page reads the same table as the committee's (T166).
 
-Step 5.15 — Dr Molefe leaves My progress open (act-5-graduation.md:444)
+Step 5.15 — Dr Molefe leaves My progress open (act-5-graduation.md:449)
 Role: Trainee — Dr Lerato Molefe
 Route: /account/login → /account/login/submit → / → /portfolio/progress
 Do: In her own browser, sign in and open My progress. Leave the tab open through Step 5.19.
@@ -634,7 +634,7 @@ Expect: The page shows her programme as still running:
   - the period before each window, and her rating trajectories, on each EPA's page (T355), not on My progress.
   Nothing says that her programme has ended.
 
-Step 5.26 — Dr du Plessis sees it counted (act-5-graduation.md:687)
+Step 5.26 — Dr du Plessis sees it counted (act-5-graduation.md:692)
 Role: Trainee — Dr Pieter du Plessis
 Route: /portfolio/progress → /portfolio/progress/{EpaId:int}
 Do: Open My progress, then PAED-002 from its index, and read its count for this period.
@@ -734,7 +734,7 @@ Expect: Each of the 15 EPAs carried over from 11.1 reads the count he noted in S
   target of 2 per academic year. The rows are "Each semester · 10 EPAs" and "Once a year · 7 EPAs", and This period's
   yearly figure is "… of 7" over "EPAs met in 2026".
 
-Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1190)
+Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1193)
 Role: Trainee — Dr Anele Dlamini
 Route: / → /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/mine → /account/data-rights
 Do: At 390 px, sign in and open her dashboard, My progress and one EPA's page from its index, My activities and My data

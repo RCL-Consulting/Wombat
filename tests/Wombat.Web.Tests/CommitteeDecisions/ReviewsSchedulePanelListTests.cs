@@ -19,7 +19,7 @@ using Wombat.Web.Services;
 namespace Wombat.Web.Tests.CommitteeDecisions;
 
 /// <summary>
-/// The scheduling form's Panel select offers exactly the panels on which the caller may put someone before the panel: not
+/// The schedule page's Panel select offers exactly the panels on which the caller may put someone before the panel: not
 /// a panel they sit on at another institution, and not one covering a speciality they do not administer. (T194 item 3)
 /// </summary>
 /// <remarks>
@@ -51,6 +51,7 @@ public sealed class ReviewsSchedulePanelListTests : TestContext
     {
         _auth = this.AddTestAuthorization();
         Services.AddSingleton<IScopedSender>(new HandlerSender(CreateDb));
+        Services.AddSingleton(TimeProvider.System);
         Seed();
     }
 
@@ -63,7 +64,7 @@ public sealed class ReviewsSchedulePanelListTests : TestContext
         var cut = OpenTheForm();
 
         PanelOptions(cut).Should().Equal(string.Empty, PanelA.ToString(), PaediatricsPanelA.ToString());
-        cut.FindAll("#review-panel-help").Should().BeEmpty();
+        cut.Find("#review-panel-help").TextContent.Should().Be("Only the panels with a trainee you can schedule are listed.");
     }
 
     [Fact]
@@ -87,17 +88,15 @@ public sealed class ReviewsSchedulePanelListTests : TestContext
         cut.Find("#review-panel").GetAttribute("aria-describedby").Should().Contain("review-panel-help");
     }
 
-    private IRenderedComponent<ReviewsSchedule> OpenTheForm()
+    private IRenderedComponent<ScheduleReview> OpenTheForm()
     {
-        var cut = RenderComponent<ReviewsSchedule>();
-        cut.WaitForState(() => cut.FindAll("button").Any(button => button.TextContent.Trim() == "Schedule review"));
-        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Schedule review").Click();
+        var cut = RenderComponent<ScheduleReview>();
         cut.WaitForState(() => cut.FindAll("#review-panel").Count == 1);
         cut.FindAll(".alert").Should().BeEmpty();
         return cut;
     }
 
-    private static IReadOnlyList<string> PanelOptions(IRenderedComponent<ReviewsSchedule> cut)
+    private static IReadOnlyList<string> PanelOptions(IRenderedComponent<ScheduleReview> cut)
         => cut.FindAll("select#review-panel option").Select(option => option.GetAttribute("value") ?? string.Empty).ToArray();
 
     private void SignIn(string role, string userId, int? specialityId = null)

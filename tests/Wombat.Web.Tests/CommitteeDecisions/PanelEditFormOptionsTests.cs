@@ -19,6 +19,7 @@ using Wombat.Tests.Shared;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
 using Wombat.Web.Components.Shared;
 using Wombat.Web.Services;
+using static Wombat.Web.Tests.CommitteeDecisions.PanelSeatPicker;
 
 namespace Wombat.Web.Tests.CommitteeDecisions;
 
@@ -79,8 +80,9 @@ public sealed class PanelEditFormOptionsTests : TestContext
         SignInAs(WombatRoles.SpecialityAdmin, specialityId: Paediatrics);
         var cut = RenderForm();
 
-        Values(cut, "#panel-scope option").Should().Equal(DecisionPanelScope.Speciality.ToString());
-        Values(cut, "#panel-speciality option").Should().Equal(string.Empty, Paediatrics.ToString());
+        ScopesOffered(cut).Should().Equal(DecisionPanelScope.Speciality.ToString());
+        // The one speciality offered is chosen already (T364, step 2.21: "Speciality offers Paediatrics alone").
+        Values(cut, "#panel-speciality option").Should().Equal(Paediatrics.ToString());
         cut.FindAll("#panel-institution").Should().BeEmpty("the panel runs at their own institution");
 
         Create(cut, Paediatrics);
@@ -95,8 +97,8 @@ public sealed class PanelEditFormOptionsTests : TestContext
         SignInAs(WombatRoles.SubSpecialityAdmin, subSpecialityId: GeneralSurgery);
         var cut = RenderForm();
 
-        Values(cut, "#panel-scope option").Should().Equal(DecisionPanelScope.Speciality.ToString());
-        Values(cut, "#panel-speciality option").Should().Equal(string.Empty, Surgery.ToString());
+        ScopesOffered(cut).Should().Equal(DecisionPanelScope.Speciality.ToString());
+        Values(cut, "#panel-speciality option").Should().Equal(Surgery.ToString());
 
         Create(cut, Surgery);
 
@@ -112,7 +114,7 @@ public sealed class PanelEditFormOptionsTests : TestContext
         SignInAs(WombatRoles.InstitutionalAdmin);
         var cut = RenderForm();
 
-        Values(cut, "#panel-scope option")
+        ScopesOffered(cut)
             .Should().Equal(DecisionPanelScope.Institution.ToString(), DecisionPanelScope.Speciality.ToString());
         Values(cut, "#panel-speciality option").Should().Equal(string.Empty, Paediatrics.ToString(), Surgery.ToString());
         cut.FindAll("#panel-none-creatable").Should().BeEmpty();
@@ -126,7 +128,7 @@ public sealed class PanelEditFormOptionsTests : TestContext
         SignInAs(WombatRoles.Administrator, institutionId: null);
         var cut = RenderForm();
 
-        Values(cut, "#panel-scope option")
+        ScopesOffered(cut)
             .Should().Equal(DecisionPanelScope.Institution.ToString(), DecisionPanelScope.Speciality.ToString());
         Values(cut, "#panel-speciality option").Should().Equal(string.Empty);
         var helpId = FieldHelp.Id("panel-speciality");
@@ -167,13 +169,13 @@ public sealed class PanelEditFormOptionsTests : TestContext
         cut.Find("#panel-institution").Change(InstitutionB.ToString());
         cut.Find("#panel-speciality").Change(Paediatrics.ToString());
         cut.Find("#panel-chair").Change("chair-b");
-        cut.Find("#panel-members").Change(new[] { "member-b" });
+        SeatById(cut, "member-b", "member");
         cut.Find("form").Submit();
 
-        cut.WaitForState(() => cut.FindAll(".alert-danger").Count == 1);
-        var refusal = cut.Find(".alert-danger");
+        cut.WaitForState(() => cut.FindAll(".validation-summary-errors").Count == 1);
+        var refusal = cut.Find(".validation-summary-errors");
         refusal.GetAttribute("role").Should().Be("alert", "a refusal after a click is announced at once");
-        refusal.TextContent.Trim().Should().Be(
+        refusal.QuerySelector("li")!.TextContent.Trim().Should().Be(
             "The institution you chose has adopted no curriculum in this speciality, so a panel for it would have no " +
             "trainee to review.");
         StoredPanels().Should().BeEmpty();
@@ -187,7 +189,7 @@ public sealed class PanelEditFormOptionsTests : TestContext
         SignInAs(WombatRoles.SpecialityAdmin, specialityId: Paediatrics, secondSpecialityId: GeneralMedicine);
         var cut = RenderForm();
 
-        Values(cut, "#panel-speciality option").Should().Equal(string.Empty, Paediatrics.ToString());
+        Values(cut, "#panel-speciality option").Should().Equal(Paediatrics.ToString());
         var helpId = FieldHelp.Id("panel-speciality");
         cut.Find("#" + helpId).TextContent.Trim().Should().Be(AdoptedOnlyHelp);
         cut.Find("#panel-speciality").GetAttribute("aria-describedby").Should().Contain(helpId);
@@ -219,7 +221,7 @@ public sealed class PanelEditFormOptionsTests : TestContext
         cut.FindAll("form").Should().BeEmpty();
         cut.Find("#panel-none-creatable").TextContent.Should()
             .Contain("You cannot create a decision panel.").And
-            .Contain("once the institution has adopted a curriculum in it");
+            .Contain("once that institution has adopted a curriculum in the speciality");
     }
 
     [Fact]
@@ -233,13 +235,13 @@ public sealed class PanelEditFormOptionsTests : TestContext
         cut.Find("#panel-name").Change("General Medicine CCC");
         cut.Find("#panel-speciality").Change(GeneralMedicine.ToString());
         cut.Find("#panel-chair").Change("chair-a");
-        cut.Find("#panel-members").Change(new[] { "member-a" });
+        SeatById(cut, "member-a", "member");
         cut.Find("form").Submit();
 
-        cut.WaitForState(() => cut.FindAll(".alert-danger").Count == 1);
-        var refusal = cut.Find(".alert-danger");
+        cut.WaitForState(() => cut.FindAll(".validation-summary-errors").Count == 1);
+        var refusal = cut.Find(".validation-summary-errors");
         refusal.GetAttribute("role").Should().Be("alert", "a refusal after a click is announced at once");
-        refusal.TextContent.Trim().Should().Be(
+        refusal.QuerySelector("li")!.TextContent.Trim().Should().Be(
             "Your institution has adopted no curriculum in this speciality, so a panel for it would have no trainee to review.");
         StoredPanels().Should().BeEmpty();
     }
@@ -253,17 +255,17 @@ public sealed class PanelEditFormOptionsTests : TestContext
         SignInAs(WombatRoles.InstitutionalAdmin, institutionId: InstitutionB);
         var cut = RenderForm();
 
-        Values(cut, "#panel-scope option").Should().Equal(DecisionPanelScope.Institution.ToString());
+        ScopesOffered(cut).Should().Equal(DecisionPanelScope.Institution.ToString());
         cut.FindAll("#panel-speciality").Should().BeEmpty("no speciality is theirs to offer");
         cut.FindAll("#panel-institution").Should().ContainSingle("an institution-wide panel names its institution");
 
         cut.Find("#panel-name").Change("Hospital CCC");
         cut.Find("#panel-institution").Change(InstitutionB.ToString());
         cut.Find("#panel-chair").Change("chair-b");
-        cut.Find("#panel-members").Change(new[] { "member-b" });
+        SeatById(cut, "member-b", "member");
         cut.Find("form").Submit();
 
-        cut.FindAll(".alert-danger").Should().BeEmpty("the create handler accepts what the form offered");
+        cut.FindAll(".validation-summary-errors").Should().BeEmpty("the create handler accepts what the form offered");
         StoredPanels().Should().ContainSingle()
             .Which.Should().Be((DecisionPanelScope.Institution, InstitutionB, (int?)null));
     }
@@ -294,9 +296,9 @@ public sealed class PanelEditFormOptionsTests : TestContext
         cut.Find("#panel-name").Change("Programme CCC");
         cut.Find("#panel-speciality").Change(specialityId.ToString());
         cut.Find("#panel-chair").Change("chair-a");
-        cut.Find("#panel-members").Change(new[] { "member-a" });
+        SeatById(cut, "member-a", "member");
         cut.Find("form").Submit();
-        cut.FindAll(".alert-danger").Should().BeEmpty("the create handler accepts what the form offered");
+        cut.FindAll(".validation-summary-errors").Should().BeEmpty("the create handler accepts what the form offered");
     }
 
     private static IReadOnlyList<string> Values(IRenderedComponent<PanelEdit> cut, string selector)

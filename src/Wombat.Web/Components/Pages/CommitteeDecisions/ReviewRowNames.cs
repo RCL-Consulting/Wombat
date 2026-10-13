@@ -13,8 +13,8 @@ namespace Wombat.Web.Components.Pages.CommitteeDecisions;
 /// than one trainee's, with "formative" where the review is. That can still repeat: a trainee has one open binding review
 /// for a period before a panel, but once it is ratified another may be scheduled (an entrustment-only review after the
 /// annual one), and formative reviews are not held to one. So a name two rows share adds the review's type as the Type
-/// column says it ("Formative" for a formative check-in, whatever its stored type: T361, review R1), then the day each
-/// was scheduled for, then the review's number, as the committee's refusals name a review ("Review #12"). Every name on one list is then different (<see cref="RowNames.Distinct{TItem, TKey}" />).
+/// column says it ("Formative check-in" for a formative check-in, whatever its stored type: T361, review R1; T364, C8),
+/// then the day each was scheduled for, then the review's number, as the committee's refusals name a review ("Review #12"). Every name on one list is then different (<see cref="RowNames.Distinct{TItem, TKey}" />).
 /// </remarks>
 public static class ReviewRowNames
 {

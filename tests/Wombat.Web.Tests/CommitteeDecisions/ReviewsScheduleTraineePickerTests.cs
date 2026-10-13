@@ -14,7 +14,8 @@ namespace Wombat.Web.Tests.CommitteeDecisions;
 
 /// <summary>
 /// The scheduling page offers, for the chosen panel, exactly the trainees the scheduling handler would accept, and
-/// schedules only one it offered. (T182)
+/// schedules only one it offered. (T182) Each is offered with the training year (T364, 5.29), on the schedule page of
+/// its own (<see cref="ScheduleReview" />, T364, Q1).
 /// </summary>
 /// <remarks>
 /// Before T182 the trainee was a free-text user id, so the page would send any id at all and the handler checked none.
@@ -37,6 +38,7 @@ public sealed class ReviewsScheduleTraineePickerTests : TestContext
         auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, CoordinatorUserId));
 
         Services.AddSingleton<IScopedSender>(_sender);
+        Services.AddSingleton(TimeProvider.System);
         _sender
             .On<ListDecisionPanelsQuery>(_ => new[]
             {
@@ -44,13 +46,15 @@ public sealed class ReviewsScheduleTraineePickerTests : TestContext
                 new DecisionPanelSummaryDto(PanelB, "A's second panel", DecisionPanelScope.Institution, 1, null, 3)
             })
             .On<GetCommitteeReviewsAccessQuery>(_ => new CommitteeReviewsAccessDto(MaySchedule: true, TraineeNote: null))
-            .On<ListReviewsForPanelQuery>(_ => Array.Empty<CommitteeReviewListItemDto>())
             .On<ListSchedulableTraineesQuery>(query => query.PanelId switch
             {
-                PanelA => new[] { new SchedulableTraineeDto("paeds-a", "Palesa Paeds") },
+                PanelA => new[] { new SchedulableTraineeDto("paeds-a", "Palesa Paeds", TrainingYear: 3) },
                 PanelB => new[] { new SchedulableTraineeDto("neo-a", "Nandi Neonatal") },
                 _ => Array.Empty<SchedulableTraineeDto>()
             })
+            .On<GetSchedulingSeatQuery>(_ => null)
+            .On<PreviewCommitteeAgendaQuery>(query => new CommitteeAgendaPreviewDto(
+                query.AcademicYear, query.Semester, $"{query.AcademicYear} S{query.Semester}", true, [], [], []))
             .On<ScheduleCommitteeReviewCommand>(command => new CommitteeReviewListItemDto(
                 77, command.TraineeUserId, command.PanelId, "A's annual review panel",
                 command.ReviewPeriodFrom, command.ReviewPeriodTo, command.ScheduledOn,
@@ -83,7 +87,8 @@ public sealed class ReviewsScheduleTraineePickerTests : TestContext
         cut.WaitForState(() => OptionValues(cut).Count > 1);
 
         OptionValues(cut).Should().Equal(string.Empty, "paeds-a");
-        cut.Find("select#review-trainee option[value='paeds-a']").TextContent.Should().Be("Palesa Paeds");
+        cut.Find("select#review-trainee option[value='paeds-a']").TextContent.Should().Be(
+            "Palesa Paeds · Training year 3", "with the training year (T364, 5.29)");
         cut.Find("select#review-trainee").HasAttribute("disabled").Should().BeFalse();
 
         var query = _sender.Received.OfType<ListSchedulableTraineesQuery>().Should().ContainSingle().Which;
@@ -130,10 +135,11 @@ public sealed class ReviewsScheduleTraineePickerTests : TestContext
         cut.WaitForState(() => OptionValues(cut).Contains("paeds-a"));
 
         cut.Find("#review-trainee").Change("paeds-b");
+        ChooseTheFirstPeriod(cut);
         cut.Find("form").Submit();
 
         _sender.Received.OfType<ScheduleCommitteeReviewCommand>().Should().BeEmpty();
-        cut.Markup.Should().Contain("Choose a trainee from the list.");
+        cut.Find("#review-trainee-msg").TextContent.Should().Be("Choose a trainee.", "in Wombat's words, beside the field (T324)");
     }
 
     [Fact]
@@ -144,6 +150,7 @@ public sealed class ReviewsScheduleTraineePickerTests : TestContext
         cut.WaitForState(() => OptionValues(cut).Contains("paeds-a"));
 
         cut.Find("#review-trainee").Change("paeds-a");
+        ChooseTheFirstPeriod(cut);
         cut.Find("form").Submit();
 
         var command = _sender.Received.OfType<ScheduleCommitteeReviewCommand>().Should().ContainSingle().Which;
@@ -152,19 +159,20 @@ public sealed class ReviewsScheduleTraineePickerTests : TestContext
         CallerOf(command.Principal).Should().Be(CoordinatorUserId);
     }
 
-    private IRenderedComponent<ReviewsSchedule> RenderForm()
+    private IRenderedComponent<ScheduleReview> RenderForm()
     {
-        var cut = RenderComponent<ReviewsSchedule>();
-        cut.WaitForState(() => cut.Markup.Contains("No reviews yet"));
-        cut.Find("button.btn-primary").Click();
+        var cut = RenderComponent<ScheduleReview>();
         cut.WaitForState(() => cut.FindAll("#review-panel").Count == 1);
         return cut;
     }
 
+    private static void ChooseTheFirstPeriod(IRenderedComponent<ScheduleReview> cut)
+        => cut.Find("#review-period").Change(cut.FindAll("#review-period option").ElementAt(1).GetAttribute("value"));
+
     private static string? CallerOf(ClaimsPrincipal principal)
         => principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-    private static IReadOnlyList<string> OptionValues(IRenderedComponent<ReviewsSchedule> cut)
+    private static IReadOnlyList<string> OptionValues(IRenderedComponent<ScheduleReview> cut)
         => cut.FindAll("select#review-trainee option")
             .Select(option => option.GetAttribute("value") ?? string.Empty)
             .ToArray();

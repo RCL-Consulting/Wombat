@@ -214,7 +214,8 @@ public sealed class PeopleByNamePageTests : TestContext
         var index = cut.FindAll("thead th").Select(cell => cell.TextContent.Trim()).ToList().IndexOf(header);
         index.Should().BeGreaterThanOrEqualTo(0, "the table must have a '{0}' column", header);
 
-        return cut.FindAll("tbody tr").Select(row => row.QuerySelectorAll("td")[index].TextContent.Trim()).ToList();
+        // A row's cells in order, its header cell included: Committee reviews names the trainee in a th (T364, C10).
+        return cut.FindAll("tbody tr").Select(row => row.Children.ElementAt(index).TextContent.Trim()).ToList();
     }
 
     private static EntrustmentDecisionDto Decision(int id, string traineeUserId, string traineeName) => new(

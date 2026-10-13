@@ -33,7 +33,12 @@
 >   T361, D53: § Committee agenda (the agenda is the page, the opened line, the evidence reader), "The sitting bar",
 >   § The chair's controls and "The decision" (no deferral: Not decided at this sitting), § Entrustment-only reviews,
 >   § Detail page, § Button system (the page-action exception), § Layout grid "Stacking", "Record page with a workflow"
->   (the return link), § Decisions due (Not decided, amber), and § app.css section order (one Review sitting section)).
+>   (the return link), § Decisions due (Not decided, amber), and § app.css section order (one Review sitting section));
+>   flow 08, the committee calendar (2026-10-13, T364: § Decisions due (the Trainee filter and line, one action a row,
+>   By EPA in the fold, Scheduled grey), § Pager (the page-size label, the focus on the list's heading), § Form system
+>   (the seat picker, Review type as radios, dates in the date input), § Table system (one action a row; Committee
+>   reviews), § Page-level patterns "Form page" (Schedule a review at /committee/reviews/new) and "Decision panels and
+>   a decision panel's page", the owner table's new row, and § app.css section order (four Committee calendar sections)).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 
@@ -616,6 +621,7 @@ there, and its trail is Home › the page (§ Page-level patterns).
 | An activity (`/activities/{id}`) | Assessor: Activity inbox · Trainee, Pending trainee: My activities · Speciality and Sub-speciality admin, Coordinator: Waiting for assessors, however the activity was reached (T358) |
 | A registrar's progress (`/programme/trainees/{id}`) | Committee member, Speciality and Sub-speciality admin, Coordinator: Programme trainees; its trail Home › Programme trainees › the registrar's name (T358) |
 | A committee review | Committee member, Coordinator, Speciality and Sub-speciality admin, Institutional admin, Administrator: Committee reviews (the trainee reads theirs on My committee reviews; the page does not admit them) |
+| Schedule a review (`/committee/reviews/new`) | Coordinator, Speciality and Sub-speciality admin, Institutional admin, Administrator, the five that schedule: Committee reviews; its trail Home › Committee reviews › Schedule a review, whichever page's Schedule opened it (T364, flow 08, Q1). Not the Committee member: the page does not admit him |
 | A decision panel | Administrator, Institutional admin, Speciality and Sub-speciality admin: Decision panels. Not the Coordinator: the panel's page does not admit him, and an owner is named only for a role the page admits, so he reads the panels on the list, which lights itself (T358, D4) |
 | An MSF campaign, `/msf/reports/{id}`, `/msf/coverage` | Coordinator: MSF campaigns (T331) |
 | A data-rights request | Coordinator, Administrator: Data rights requests. Its crumb is the request's id once loaded (R2-Rules § 3). R2-Rules also names the requester, under My data rights: that row was dropped, since the page admits only Administrator and Coordinator, so the owner table may not name the requester's role (the review of the t335 branch) |
@@ -969,6 +975,26 @@ Measure a table at 1280px against the longest real values before adding a column
 
 No inline `style="width:…"` on a table's cells. A column's width is one of the classes above.
 
+**One action per row** (T364, flow 08; round 2's C3). A row offers the one thing to do next, never two that compete:
+Decisions due's held row offers "Open review #n" and no Schedule, a row that can be scheduled offers only Schedule. A row
+with nothing to do says why in its status cell.
+
+**Committee reviews** (`/committee/reviews`, T364, flow 08; round 3's R2-5):
+- Seven columns: Trainee (the row header, a name or an erased trainee's pseudonym as stored), Panel, Period, Type, State,
+  Decision, and the row's Open. **No Mode column** (C8): a check-in says so in Type, "Formative check-in"
+  (`CommitteeDecisionWording.ReviewTypeShortLabel`).
+- Period reads "2026 S2" with its evidence window under it (`.period-window`, each ISO date unbroken).
+- State is the review page's badge (`ReviewSitting.StateBadge`): Scheduled is the one grey badge here and on Decisions due
+  (S7). A check-in's Decision is "—", read as "None" (`aria-hidden` dash, `.visually-hidden` word); a withdrawn review
+  says it was withdrawn, formative or not (T258).
+- Captioned "Committee reviews at {institution}, newest scheduled first" (the institution only when every row is at one).
+  Above it, a `.needs-you-rule` line: "The College's semester 2 ends in November; its window runs to 31 December, so
+  December's work counts." (F6).
+- **Stacked at 900px and below** (`.clinic-table--stack .clinic-table--stack-wide`, M8), as Decision panels and By EPA
+  are, each row a block whose cells name their column (`data-label`); its Open 44px there.
+- The header's "Schedule a review" is a link to the schedule page, the page's own words (S7), for the five schedulers,
+  once their access is read (C11).
+
 A table **grouped by one column** puts each group in its own `<tbody>`, and the group's first row opens with
 `<th scope="rowgroup" rowspan="n">` naming it; `app.css` aligns that label to the top of its group. No new class. The
 committee review's evidence snapshot is one table per EPA, grouped by instrument (T167). A card that holds such a table
@@ -1054,9 +1080,25 @@ dl.form-group     /* no margin on it or its <dd>s: a field shown as text to a ca
 - Inputs default to `.form-control`. Selects use `.form-select` (never native unstyled).
 - **An option of a `<select multiple>` rendered from data is keyed by what it offers**: `<option @key="candidate.UserId"
   value="@candidate.UserId" selected="@isSelected">` (T257). Unkeyed, Blazor reuses the option elements by position when
-  the list changes (the panel form's Members list leaves out the chair), and a browser ignores a change to the `selected`
+  the list changes (the panel form's Members list left out the chair), and a browser ignores a change to the `selected`
   attribute of an option the user has clicked, so the element reused for the next person shows them selected when the
-  form does not hold them, and the next click sends them. `Design/MultiSelectOptionKeyTests` scans every page.
+  form does not hold them, and the next click sends them. `Design/MultiSelectOptionKeyTests` scans every page. No page
+  has a multi-select since flow 08 (T364): the rule stands for one a page adds.
+- **The seat picker** (2026-10-13, T364, flow 08, Q5; round 3 S3, S6, S7): who sits on a decision panel is chosen by
+  person, never in a multi-select. First the Chair select ("Choose a chair", then "Sarah Botha
+  (botha@kgk.wombat.local)": the name and the whole address), with its help "Only active committee members at the panel's
+  institution who are not trainees are listed." and the chair note (below). Then a group (`div.choice-group`,
+  `role="group"`, `aria-label="Seats"`) holding a stacked `.clinic-table` captioned "Seats on the panel: the active
+  committee members at Kgosi Kgari Teaching Hospital who are not trainees, by surname", one row a candidate, by surname:
+  the row header is `.person-cell` (the name over the whole address, which wraps anywhere), and the cell a
+  `fieldset.form-group.choice-row` keyed by the person (`@key`), its visually hidden legend "Seat for Sarah Botha", and
+  three `.form-check` radios in a `.check-grid`: Not seated, Member, External member. The chair's row has no radios: a
+  `.readonly-value` "Chair · chosen above". Under the table the count, `.field-help` (`#panel-seat-count`): "2 seats: the
+  chair, 1 member and 0 external members." ("1 seat", "1 member", "1 external member"), and the externals' help. A panel
+  refused for its seats (a panel of one) marks the group `.is-invalid` (the shared stripe, a border in forced colours, no
+  padding shift), puts the refusal at the group's top as its `.validation-message` (`#panel-seats-msg`), which the group
+  names with `aria-describedby`, and the summary's "Seats: …" line focuses the first radio. `Design/MultiSelectOptionKeyTests`
+  holds each person's group keyed.
 - Validation summaries render as `.validation-summary-errors` (red panel) at the top of the form. Per-field errors render as `.validation-message` under the field.
 - **An invalid field shows it on the control**, not only in the message under it (T236). Blazor's inputs carry `.invalid`
   and `aria-invalid="true"` while the `EditContext` holds a message for them. A control a page marks by hand, where the
@@ -1164,6 +1206,22 @@ so a password typed in a circuit does not cross it keystroke by keystroke. It re
   window are unreleased, T173) says so in a `<span class="muted">` beside the button in its `.form-actions` row, and
   the button points at it with `aria-describedby`. Say it at the button even when a notice elsewhere on the page says
   it too: on a narrow screen the notice can be several cards away.
+
+- **A choice of one among a few kinds, each needing a sentence, is radios, not a select** (T364, flow 08; round 3 S1,
+  S6): the schedule page's Review type is a `fieldset.form-group` holding a `.scale-choices` list of
+  `.form-check.review-type-choice` rows, each a native radio named by its label, the kind alone ("Pre-graduation review"),
+  with its help under the label as a `small.page-subtitle.review-type-help` (`{id}-help`) that the radio names with
+  `aria-describedby`, so the name stays short and the help is read as its description (T364, build review D7).
+  **Preselected**: the choice the command takes when none is asked for is checked as the page opens
+  (`CommitteeReviewTypes.DefaultFor`, F4), so the form never refuses a missing type. A kind chosen by hand is kept while a
+  change of panel or period still offers it; one never chosen follows the default for the new panel and period (D4). A flag that changes the kind (the
+  old "Formative only" tick) folds into the radios as one more kind (Formative check-in, T309 item 3).
+- **Dates are typed in the browser's date input** (`InputDate`, F3) and every date shown is ISO (`2026-10-12`). No text
+  field asks for an ISO date, and none refuses its format: the browser's input cannot send one that does not parse.
+- **A refused field the page checks itself is marked through the EditContext** (T364, C7, T324): the page adds its message
+  to a `ValidationMessageStore`, so Blazor's own `.invalid` and `aria-invalid` mark the control and app.css's rule styles
+  it; its message is a `.validation-message` under it (`{id}-msg`), which the control names, then the summary. A radio
+  group takes no mark: its message is named by the fieldset. No refusal points at a disabled control.
 
 ### The activity form (T342, flow 03)
 
@@ -2326,48 +2384,62 @@ offering none, never draws. So that a speciality is not simply missing, the Spec
 panel runs at your institution. Only the specialities it has adopted a curriculum in are listed."; to an Administrator
 "Choose the institution first: only the specialities it has adopted a curriculum in are listed." until they have, then
 "Only the specialities the chosen institution has adopted a curriculum in are listed." Speciality is selected first where
-it is offered. Where nothing is, the page shows no form: a `detail-card--empty` card (`#panel-none-creatable`) headed "Create
-panel" says in a `.muted` paragraph that they cannot create a panel, and who can: "…A speciality or sub-speciality
-administrator creates panels for their own speciality at their own institution, once the institution has adopted a
-curriculum in it. An institutional administrator creates the institution's panels." Every seat's picker (Chair, Members, External members) offers
-exactly the people the panel may seat, `ListPanelMemberCandidatesQuery` by `PanelSeat`, the rule panel create and
-update enforce: active committee members at the panel's institution who do not hold Trainee (T165, T237). The Members
-help text ends "Only active committee members at the panel's institution who are not trainees are listed.", and the
-External members help text says the same of its list and that external members sit with the chair on the appeal body. A
-stored
-member who can no longer sit is not listed and not sent back: a standing warning `Alert` (`Role=""`) above the form
-says so before the save ("1 member of this panel can no longer sit on it, so is not listed below: only an active
-committee member at its institution who is not a trainee can. Saving takes that member off the panel."). A stored chair
-who cannot sit leaves the Chair select on "Select chair", so the form cannot be saved until another chair is chosen:
-Save shows "Choose a chair." in the validation summary. The Members and External members pickers leave the chair out,
-and choosing as chair someone already selected in either takes them off that selection too (T257): until then the
-selection kept them, unseen, and the save was refused with "A panel member is listed more than once.". A polite line
-under the Chair select says so ("Priya Naidoo is the chair now, so is no longer selected under Members."): a
-`role="status"` region (`#panel-chair-note`, `.muted`) present before any chair is chosen, which the select names with
-`aria-describedby` after its help while the line says something. Choosing another chair, or none, puts the chair before
-back in the selection choosing them took them from, and the line says that too, after what the new choice took, if
-anything ("Priya Naidoo is selected under Members again."). So a chair chosen by mistake takes nobody off, nor does
-moving down the Chair select with the arrow keys, which in Chrome and Edge on Windows chooses each person passed. The
-line is emptied when a choice takes nobody off and puts nobody back, when the institution changes, when the panel is
-read again, and when the save succeeds; after any of these nobody is put back, so a stored chair is not moved to Members
-when another is chosen: they are offered there again, unselected. Each option in the Members and External members
-selects is keyed by the person it offers (§ Form system).
+it is offered, and where one speciality is offered it is chosen already (T364, step 2.21). Scope is radios
+(`fieldset.form-group.choice-row`, "Institution", "Speciality"); where only one scope is offered it is said as text
+(`dl.form-group`, its value `.readonly-value`) with why ("A sub-speciality administrator creates Speciality-scoped panels
+for the speciality of the sub-speciality."). Where nothing is offered, the page shows no form: an info `Alert`
+(`#panel-none-creatable`) says that they cannot create a panel, and who can: "…A speciality or sub-speciality
+administrator creates the panels of the speciality administered, at the administrator's own institution, once that
+institution has adopted a curriculum in the speciality. An institutional administrator creates the institution's
+panels.", with "Go to Decision panels". The
+seat picker (§ Form system) and the Chair select offer exactly the people the panel may seat,
+`ListPanelMemberCandidatesQuery` by `PanelSeat`, the rule panel create and update enforce: active committee members at
+the panel's institution who do not hold Trainee (T165, T237). A stored member who can no longer sit is in no control and
+is not sent back (round 3 M6): a warning `Alert` with `role="alert"` (`#panel-cannot-sit`) at the top of Who sits on it
+names them as stored ("Sarah Botha can no longer sit on this panel, so is not listed below: only an active committee
+member at its institution who is not a trainee can. Saving takes Sarah Botha off the panel."). After Save panel the
+panel is read again, so the warning is the saved panel's (C12, T260), and the result says who went: "Panel members
+updated. Sarah Botha is off the panel. Thandi Zulu chairs, with 1 member and 1 external member.". A stored chair who
+cannot sit leaves the Chair select on "Choose a chair", so the form is not sent until another chair is chosen. Choosing
+as chair someone already seated takes them out of that seat (T257), and a polite line under the Chair select says so
+("Priya Naidoo is the chair now, so is no longer seated as a member."): a `role="status"` region (`#panel-chair-note`,
+`.muted`) present before any chair is chosen, which the select names with `aria-describedby` after its help while the
+line says something. Choosing another chair, or none, puts the chair before back in the seat choosing them took them
+from, and the line says that too, after what the new choice took, if anything ("Priya Naidoo is seated as a member
+again."). So a chair chosen by mistake takes nobody off, nor does moving down the Chair select with the arrow keys, which
+in Chrome and Edge on Windows chooses each person passed. The line is emptied when a choice takes nobody off and puts
+nobody back, when the institution changes, when the panel is read again, and when the save succeeds; after any of these
+nobody is put back.
+
+**The panel form's refusals** (T364, C7, T324; round 3 S4). The fields a save would be refused for are said before
+anything is sent: "Give the panel a name.", "Choose an institution.", "Choose a speciality." (the create validator's own
+words, `CreateDecisionPanelCommandValidator`, which also refuses each on its own field) and "Choose a chair.". A refusal
+is a summary at the form's top (`#panel-refusal`, `.validation-summary-errors`, `role="alert"`), which takes the focus:
+"The panel was not created." (or "The panel's members were not saved.") "Everything you chose is kept below.", then one
+line a field, "Panel name: Give the panel a name.", each a link that moves the focus to its control without navigating.
+Each field shows its message under it, and Blazor's inputs mark themselves `.invalid` with `aria-invalid` from the form's
+`EditContext`. A handler's own sentence is a line with no field (a member who may not sit, an unadopted speciality); an
+unexpected failure is "The panel could not be saved just now. Nothing has changed. Try again, or come back in a few
+minutes.", the failure logged (T338).
 
 **Nobody who holds Trainee administers a panel** (T256). Panel create and update refuse someone who holds Trainee beside
 a role that manages panels (the Administrator's included, T185's rung) before anything is read, the panel's read gives
 them nothing, and the pickers offer them nobody: a trainee does not choose who sits on their review. So the panel form,
 for a new panel (`/committee/panels/new`) and an existing one (`/committee/panels/{id}`) alike, reads
-`GetDecisionPanelFormOptionsQuery` first and, where its `TraineeNote` is set, shows no form, no "Decides for" card and
-nothing about the panel: a `detail-card--empty` card (`#panel-trainee-note`) headed "Create panel" or "Update members"
-says in a `.muted` paragraph "You hold the Trainee role, so you cannot create or change a decision panel, including one
-that reviews you.". The panel list (`/committee/panels`) offers **New panel** only when creating a panel would be
+`GetDecisionPanelFormOptionsQuery` first and, where its `TraineeNote` is set, shows no form, no "Decides for" section and
+nothing about the panel: the rule is said first (round 3 S1), an info `Alert` (`#panel-trainee-note`) "You hold the
+Trainee role, so you cannot create or change a decision panel, including one that reviews you.", with "Go to Decision
+panels"; the h1 stays "New panel" or "Decision panel". The panel list (`/committee/panels`) offers **New panel** only when creating a panel would be
 accepted (`MayCreateAny`) and **Edit** only on a row whose form would open (`DecisionPanelSummaryDto.CallerMayManage`,
 the rule panel update and the form's read demand), so a committee member, a coordinator, or a speciality administrator
 looking at another speciality's panel is offered neither either. To someone who holds Trainee beside a role that manages
 panels it also says why, in a standing info `Alert` (no role) above the list (`#panels-trainee-note`), with the same
-sentence; the list of panels and who decides each EPA stay in view. Its empty card says "Create a panel before
-scheduling reviews." only to someone who may create one; otherwise "No decision panel runs at your institution yet.", or
-to a global Administrator, who belongs to no institution and lists every panel, "No decision panel has been created yet."
+sentence; the list of panels and who decides each EPA stay in view. A manager who may create no panel and holds no
+Trainee is told why New panel is missing, in the new-panel page's words (`#panels-none-creatable`, T260); a coordinator or
+a committee member, who manages none, is not. Its empty card says "Create a panel before scheduling reviews." only to
+someone who may create one; otherwise "No decision panel runs at your institution yet.", or to a global Administrator,
+who lists the institution they chose (§ Page-level patterns, Decision panels), "No decision panel runs at Kgosi Kgari
+Teaching Hospital yet."
 
 **Nobody who holds Trainee administers a user, and nobody changes their own account** (T278). Every Users read and
 command refuses someone who holds Trainee beside a role that administers users (the Administrator's included, T185's
@@ -2470,54 +2542,89 @@ panel's semester-1 sitting may be one too. Every page says so in the same words,
   progression; it does not say semester 1 never does. Choosing a panel takes its default type; choosing a period keeps
   the chosen type while the period allows it, and takes the default otherwise. Where the panel decides no EPA on the
   trainee's curriculum, the agenda preview says so first, since an entrustment-only review there is refused.
-- **The panel's College committee** ("Decides for" on the panel form) cannot change while a review before the panel is
-  scheduled, in progress or awaiting ratification: what the review decides was fixed from it. The select's help text
-  says so, and a refused save names the open review in the card's `Alert`.
+- **The panel's College committee** ("Decides for" on the panel's page) cannot change while a review before the panel
+  is scheduled, in progress or awaiting ratification: what the review decides was fixed from it. The select's help text
+  says so. While such a review is open the page says it first, and offers no select and no Save committee (T364, F5;
+  step 4.13): the saved value as `.readonly-value`, then an info `Alert` (`#panel-body-lock`) "It cannot change now.",
+  bold, and the refusal's own sentence ("Review #1 (2026 S2, scheduled) still sits before this panel. …",
+  `DecisionPanelDetailDto.DecisionBodyLock`), with "Open review #1" where the reader may open it. A save refused all the
+  same, by a review scheduled meanwhile (a second tab, C13; `DecisionBodyLockedException`), is said in the section's
+  summary (`#panel-body-refusal`, which takes the focus): "Not saved. The panel is still a general panel.", its line a
+  short clause linked to the select, "Decides for: review #1 now sits before this panel", then the rule; beside the
+  select "Not saved: review #1 (2026 S2, scheduled) now sits before this panel. The select shows what is saved.", and
+  the select is back on the saved value. Any other refusal reads the same way with the handler's sentence.
 
-**Decisions due** (T131 slice 6). `/committee/decisions-due` is a list page for the roles that schedule reviews
-(Coordinator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, Administrator). It lists, per current trainee the
-caller administers or coordinates at their institution (an active profile on an account that still holds Trainee and
-that an administrator has not locked, the rule scheduling reads, T238, T268), each EPA due for an entrustment decision
-in a period and where the decision stands, so every Schedule link it offers is one the scheduling handler accepts. Every
-sentence is built in C# (`DecisionsDueText`). A caller who also holds Trainee is shown nobody's decisions, whatever
-other role admits them (T185's trainee rung): the page shows its empty card.
+**Decisions due** (T131 slice 6; T364, flow 08, boards R2-3). `/committee/decisions-due` is a list page for the roles
+that schedule reviews (Coordinator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, Administrator). It lists, per
+current trainee the caller administers or coordinates at their institution (an active profile on an account that still
+holds Trainee and that an administrator has not locked, the rule scheduling reads, T238, T268), each EPA due for an
+entrustment decision in a period and where the decision stands, so every Schedule link it offers is one the scheduling
+handler accepts. Every sentence is built in C# (`DecisionsDueText`). A caller who also holds Trainee is shown nobody's
+decisions, whatever other role admits them (T185's trainee rung): the page shows its empty card. The page is wrapped in
+`.committee-calendar`, as the other four committee-calendar pages are, so its phone rules reach no other page.
 
-- **Filters**, in the `search-container`: Institution (an Administrator only, who belongs to none: nothing is read until
-  one is chosen, and `#due-choose-institution` says so), Period (the scheduling form's semesters, the current one by
-  default), Status ("Outstanding: not yet decided" by default, then "Every status", then each status), and EPA.
-- **The opening**: a `.muted` sentence (`#due-intro`) naming the period, how many trainees and where, and what Missed
-  means.
-- **By EPA**: a `.detail-card` holding a `.clinic-table--compact` of eight columns: EPA (the row header), Due, Decided,
-  Scheduled, Not decided, To schedule, Missed and Optional. Its caption says what the last three count. The filters do not
-  narrow it: it is the whole period at a glance. Its `.table-container` (`#due-summary-scroll`) is `tabindex="0"`,
-  `role="region"` and labelled by the card's heading, so a keyboard can scroll it at 390px: it holds nothing focusable.
-- **The count**: a `.muted` line (`#due-count`, `role="status"`), "4 of 15 decisions due in 2026 S2 shown.", which a
-  screen reader hears again whenever the Status or EPA filter changes it.
-- **The list**: a `.clinic-table` of five columns: Trainee (the row header, by name), EPA, window ("2026 S1", or "2026"
-  for an annual EPA), status, and action. The status cell holds the badge and, under it, a `.muted` line saying what it
-  means: the STAR and review for a decision, the open review holding it, the review that left it not decided, or why it is
-  optional. `PagerControls` pages it, 20 rows to start. When the filters leave nothing, a `.detail-card--empty` says so.
-- **Actions.** "Open review" where the status names a review and the caller passes that review's read ladder. "Schedule"
-  on every row neither decided nor scheduled: it opens `/committee/reviews` with the panel the EPA routes to for the
-  trainee, the trainee and the period a sitting that decides the window sits for, the window's last semester
-  (`?panel=…&trainee=…&period=2026-2`): semester 2 for an annual EPA, whichever semester the page shows (Decision 5).
-  The scheduling form takes each value only where it offers it, so the link authorizes nothing. Where no panel the
-  caller can schedule before decides the EPA, the cell says so. Each link's `aria-label` names the trainee and the EPA.
-- **An open review holding the seat.** A trainee has one open binding review per period in each seat (the general
-  committee, or a College committee), and scheduling a second is refused. Where one is already open for the row's
-  schedule period before the panel's seat, the row offers "Open review #N" (where the caller may open it) instead of
-  Schedule, and its `.muted` line says "Review #N is open for 2026 S2 before General CCC: decide it there, or ratify that
-  review before scheduling another." A line on that same open review reads "On the agenda of review #N, which is still
-  open.", beside its one "Open review" link. There is no deferral (D53): nothing on an open review is reinstated.
-- **States**: `StatePanel`'s skeletons while loading, its danger `Alert` on a failure, and its empty card ("Nothing due
-  for 2026 S2") when no trainee owes a decision.
+- **The opening**: the PageHeader's subtitle ("What the committee must decide, per registrar and per EPA, and where each
+  decision stands.", no "each semester": the annual EPAs are decided once a year, S4), then a `.muted` sentence
+  (`#due-intro`) naming the period, how many trainees and where, and what Missed means.
+- **Filters**, applied with Show (§ List page, F2): Institution (an Administrator only, who belongs to none: nothing is
+  read until one is chosen and shown, and `#due-choose-institution` says so; a failed institution list says so in fixed
+  words with Try again, T338), Period (the six of `CommitteeReviewPeriods.Around`, the current one by default, with its
+  help: "The College's semester 2 ends in November; its window runs to 31 December, so December's work counts.", F6),
+  Trainee ("Every trainee", then the current trainees in the caller's reach, by surname, Q2), Status ("Outstanding: not
+  yet decided" by default, then "Every status", then each status, in the order the page has always given them), and EPA.
+  The address carries them (`?institution=&period=2026-1&trainee=&status=&epa=`). Institution and Period choose what is
+  read; Trainee, Status and EPA narrow it, and Clear filters drops those three and keeps the other two.
+- **By EPA** (`section.list-section`, `h2` "By EPA", "The filters above do not narrow these counts."): `.rung-legend`'s
+  fold, shut by default, its summary "Counts for the 15 EPAs due in 2026 S2" with Show / Hide (`.fold-show` /
+  `.fold-hide`), 44px at every width. Inside it a `.table-container` (`tabindex="0"`, `role="region"`, named "By EPA, 2026
+  S2, scrollable") holds an eight-column `.clinic-table--stack.clinic-table--stack-wide`: EPA (the row header), Due,
+  Decided, Scheduled, Not decided, To schedule, Missed and Optional, each count `data-label`led. Its caption says what the
+  last three count. It is the whole period at a glance (M3).
+- **The Decisions heading** (`h2#due-list-heading`, `tabindex="-1"`) says the page while there is more than one
+  ("Decisions, page 2 of 4", `.list-section-page`), and takes the focus after Show and after a page turn (C9, T264). Under
+  it the count (`#due-count.list-section-count`, `role="status"`): "75 of 75 decisions due in 2026 S2 shown.", then what
+  narrows it, where anything does ("15 of 75 … shown: Lerato Molefe, every status."; "5 of 75 … shown: Not scheduled,
+  PAED-004.").
+- **The trainee line** (`.trainee-line`, C2), above the list while one trainee is filtered: one line for each panel the
+  trainee's rows name for Schedule, the general committee's first, read by the scheduling handler's seat rule
+  (`CommitteeReviewSeats`): "Review #1 (annual progression) holds 2026 S2 before Paed Annual Review Panel, scheduled on
+  2026-10-12." with "Open review #1", or "No open review holds 2026 S2." with "Schedule a review" (filled through
+  `ReviewLinks.Schedule`). Beside a second panel's line each names its panel ("No open review before Neonatal CCC holds
+  2026 S2." with "Schedule a review before Neonatal CCC"). Each open formative check-in for the period has a line of its
+  own: "Formative check-in #6 is open: it takes no seat." with "Open check-in #6", named "Open check-in #6 of Sipho
+  Ndlovu" (S7). Below 641px each line's link is a 44px row of its own.
+- **The list**: a `.clinic-table--stack` (stacked below 641px) of five columns: EPA (the row header), Trainee (left out
+  while one trainee is filtered), Window ("2026 S1", or "2026" for an annual EPA), Status, and a visually hidden
+  "Actions". Rows run by trainee surname, then EPA code (S4). Its caption says what it holds: "Decisions due in 2026 S2, by
+  trainee then EPA"; "Decisions due in 2026 S2: Not scheduled, PAED-004"; "Lerato Molefe's decisions due in 2026 S2,
+  every status, by EPA". The status cell (`.status-cell`) holds the badge over a sentence saying what it means: the STAR
+  and review for a decision, the open review holding it and the panel it sits before (T259), the review that left it not
+  decided, or why it is optional; the review it names is a link where the caller may open it (C3). `PagerControls` pages
+  it, 20 rows to start, its select labelled "Decisions per page" (T280) and the pager named "Decisions, pages". When the
+  filters leave nothing, the card says "No decision matches these filters.", what was asked ("Missed only, every trainee,
+  every EPA."), and Clear filters.
+- **One action a row** (C3). Decided: "Decided: nothing to schedule". Scheduled: "Open review #N", where the caller may
+  open it. A row whose seat an open binding review already holds (one per trainee, period and seat: the general committee,
+  or a College committee): "Open review #N" for that review, since Schedule would be refused; its sentence ends "Review #N
+  is open for 2026 S2 before Second CCC: decide it there, or ratify that review before scheduling another.", naming the
+  panel the holding review sits before. Any other row: Schedule, to `ReviewLinks.Schedule` with the panel the EPA routes
+  to for the trainee, the trainee, **the row's own period, an ended one included, for an annual EPA too** (F1: a sitting
+  for a later period plans only its own windows, so it never decides what this one missed), and this page's address with
+  its filters to return to. Its name is "Schedule a review of Anele Dlamini for PAED-001 before Paed Annual Review Panel",
+  with ", for 2026 S1" once the period has ended. The schedule page takes each value only where it offers it, so the link
+  authorizes nothing. Where no action can be offered the cell says why ("No panel you can schedule before decides it.").
+  There is no deferral (D53): nothing on an open review is reinstated.
+- **States**: while it reads, the header, the form and the two section headings at once, skeletons under them, and no
+  Schedule or Open review (C11, T329); an unexpected failure is "Could not load Decisions due. Nothing has changed. Try
+  again, or come back in a few minutes." with Try again (T338), whose answer's Decisions heading takes the focus, while a
+  handler's own refusal still shows in its words (S4); nothing due is the empty card ("Nothing due for 2026 S2"), with the
+  form still standing so another period can be read.
 
 | Status | Badge |
 |---|---|
 | Decided | `badge-completed` |
-| Scheduled | `badge-submitted` |
 | Not decided | `badge-accepted` |
-| Not scheduled, Due by year end, Partial period, As opportunity allows | `badge-draft` |
+| Scheduled (grey, as a scheduled review is on Committee reviews: S7), Not scheduled, Due by year end, Partial period, As opportunity allows | `badge-draft` |
 | Missed, Revoked: re-decide | `badge-declined` |
 
 Decided means a STAR from a sitting for a period in the window that still decides it, whether or not an agenda line
@@ -2561,15 +2668,18 @@ so it needs 3:1 against its ground; the ok and warn dots were 2.87 and 2.57:1 un
 
 `PagerControls.razor` is the one component for pagination. Use it on every list that can grow.
 - **Words.** "Showing 1–20 of 137", the range with an en dash; "Per page:" over 10, 20, 50 or 100 (T350 build review,
-  D1).
+  D1). The page-size select is named by a real `<label>`; a page gives it its list's words with `PageSizeLabel`
+  ("Decisions per page" on Decisions due; T280, T364).
 - **Its ends.** Previous on the first page and Next on the last are `aria-disabled="true"`, never `disabled`: the pressed
   button keeps its place and its focus, and a press there sends nothing (T350, C10 f).
-- **The focus is the page's job.** After a page turn the page focuses its list's heading, which says which list turned.
+- **The focus is the page's job.** After a page turn the page focuses its list's heading, which says which list turned
+  and, where the list has more than one page, which page it is on ("Decisions, page 2 of 4", `.list-section-page`; T364,
+  C9, T264).
   A change of page size leaves the focus on the select (Chrome and Edge fire `change` on every arrow of a closed
   select). A page turn whose read fails focuses the failure (`StatePanel.FocusFailureAfterRender`) (T350 build review,
   A1, A3).
 - **Its name.** Given `Label`, the pager is a `nav` landmark by that name: the Activity inbox's is "Decided by you,
-  pages". Without one it is a plain block, as on My activities and Decisions due (D2).
+  pages"; Decisions due's is "Decisions, pages" (T364). Without one it is a plain block, as on My activities (D2).
 
 ## The reconnect dialog and the error bar
 
@@ -3006,6 +3116,47 @@ skeleton with no action; its load error one fixed sentence, "The review could no
 changed.", with Try again (T329); an id out of the reader's reach is flow 01's Page not found with "The committee review
 could not be found among the reviews you can view." and "Back to Committee reviews".
 
+**Decision panels and a decision panel's page** (2026-10-13, T364, flow 08: boards R2-1, R2-2; Q5, Q6, Q8; C10–C13;
+round 3 M6–M8, F2, F5). Both draw inside `div.committee-calendar`, whose phone rules (44px controls below 641px) are
+theirs alone.
+
+- **Decision panels** (`/committee/panels`), a list the menu offers: "The panels that take entrustment and progression
+  decisions at Kgosi Kgari Teaching Hospital.", New panel in the header once the read is in and creating would be
+  accepted. The list is a stacked table at 900px and below (`.clinic-table--stack-wide`), captioned "Decision panels at
+  Kgosi Kgari Teaching Hospital": Name (the row header), Scope in words ("Speciality · Paediatrics", "Whole institution",
+  never the enum), Decides for ("General panel" or the College committee), Members (the count, then who sits by name as
+  stored: "4: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)"), and Edit, named for its
+  panel, where the form would open. An Administrator belongs to no institution, so chooses one first, in a GET form with
+  Show (F2: `?institution=`): until then the empty card says "Choose an institution" · "An administrator belongs to no
+  institution, so the panels are shown for the one chosen above.". Then **Who decides each EPA** (`h2#routing-title`):
+  the rule in a `.muted` paragraph, and per programme an h3 ("Paediatric EPA Curriculum 11.1") over a stack-wide table
+  captioned "Who decides each EPA of …", one row a distinct answer, its EPAs as ranges ("PAED-001 to PAED-003, PAED-006
+  to PAED-015"; two in a row read "PAED-004, PAED-005"), in the order of the first, each answered in one sentence:
+  "Paed Annual Review Panel", "[panel], sitting as the Neonatal team Clinical Competency Committee.", "Paed Annual Review
+  Panel. No panel covering this programme sits as the …, so the general panel decides.", or, with no panel at all, every
+  EPA in one row, "No panel at this institution covers this programme.". While the page reads: the header, a status line
+  "Loading Decision panels.", skeletons, and Who decides each EPA's heading over skeletons, never a sentence saying there
+  is no routing (T329). A failed read is "Could not load Decision panels. Nothing has changed. Try again, or come back in
+  a few minutes." with Try again, and Who decides each EPA is not drawn; its own failure is its own sentence and Try
+  again (T338).
+- **A decision panel's page** (`/committee/panels/{id}`) is titled by the panel: the h1, the tab and the crumb are its
+  name, the subtitle what it covers ("Speciality panel · Paediatrics · Kgosi Kgari Teaching Hospital"), and there is no
+  "Back to panels" (the trail is the way back, Q6). Three sections, each an h2: **About this panel** (a `.detail-card`
+  with a `details-list`: Scope "Speciality: Paediatrics", Institution, Open reviews "None" or "Review #1 (2026 S2,
+  scheduled) and 4 more", the first a link where the reader may open it; then "Its name, scope, institution and
+  speciality cannot change once it is created. Its members can, even while its reviews are open."), **Who sits on it**
+  (the seat picker and Save panel), and **Decides for** (§ Form system's committee rules above: a select and Save
+  committee, read-only "Only an institutional administrator can change which College committee a panel sits as." for a
+  speciality administrator, or locked). A new panel lands on its page with "Paed Annual Review Panel was created. Its
+  reviews can now be scheduled on Committee reviews." (`?created=1`), and every save's result takes the focus. While it
+  reads the h1 is "Decision panel" with "Loading the panel."; a failed read is "Could not load this panel. Nothing has
+  changed. …" with Try again; an id out of the reader's reach, or unknown, is flow 01's Page not found, word for word
+  (M7). **New panel** (`/committee/panels/new`) is one form (`.form-container`): the h1 "New panel", the subtitle "A
+  panel takes entrustment and progression decisions for the trainees it covers. Its name, scope, institution and
+  speciality cannot change once it is created.", About this panel (Panel name, Scope, Institution or Speciality, Decides
+  for for an institutional administrator), Who sits on it, then Cancel and Create panel. The Coordinator is refused both
+  pages (Access denied, unchanged).
+
 ### Record page under a personal link
 
 > **Added 2026-10-04, T355, flow 05** (R2, R5; R3-C-Epa): one EPA's page, `/portfolio/progress/{EpaId:int}`
@@ -3215,6 +3366,51 @@ id leaves the page as it is and names nobody.
   </EditForm>
 </div>
 ```
+
+#### Schedule a review (`/committee/reviews/new`, T364, flow 08)
+
+A form page of its own, owned by Committee reviews (the owner table; Q1), with its own title, trail and h1, "Schedule a
+review", and its subtitle "Put a trainee before a panel for a period. The review opens once it is created." Its content,
+like every committee calendar page's, is wrapped in `.committee-calendar`, to which every phone rule of flow 08 is scoped.
+
+- **Filled from the query** `?panel=&trainee=&period=&return=` (`ReviewLinks.Schedule`): Decisions due's Schedule names
+  the row's own period, an ended one included (F1). Each value is taken only where the page offers it: the panels the
+  caller may schedule on, the trainees the handler would accept on that panel, the six periods
+  (`CommitteeReviewPeriods.Around`, the same as Decisions due, M5). Opened from Committee reviews with no query, Panel,
+  Trainee and Period are empty and Trainee is disabled until a panel is chosen (C4).
+- **Cancel goes back where the page came from**, read only through `ReviewLinks.ScheduleReturn` (Decisions due with its
+  filters, or Committee reviews); a forged `return=` goes to Committee reviews.
+- **The grid** (`.schedule-grid`): the fields (`.schedule-fields`), the refusal summary and the actions on the left, the
+  Agenda aside (`.agenda-preview`) on the right from 1100px, the dashboard grid's line; below it the aside goes under the
+  fields, before the summary and the actions (M9). The evidence window's From and To sit side by side while they fit
+  (`.field-pair`).
+- **Period's help** leads with "2026 S1 has ended. A review can still sit for it: sittings are often held after the period
+  ends." when the period chosen has ended (F1), and a semester-2 period adds the window line (F6) under it, named by the
+  select.
+- **The Agenda aside is advice, never a gate** (C6). It holds one narrow live region (`.agenda-live`, `aria-live="polite"`,
+  no `role="alert"` inside it, S6) with only the words that change; the optional lines and the notes sit outside it. It
+  says, in order of precedence: a check-in's "A formative review carries no agenda: it decides no EPA."; **Already held**
+  before Create, by the create's own seat check (`GetSchedulingSeatQuery`, `CommitteeReviewSeats.HolderAsync`; Q3, T309
+  item 1), in the duplicate refusal's words, with "A formative check-in takes no seat: …"; the preview's failure, "The
+  agenda could not be read just now." with Try again and "The review can still be created: …" (T338, T272); "No EPA will
+  be on the agenda." with the handler's NothingToDecide sentence (S1); else the preview's count (`.agenda-count`) and what
+  is due.
+- **While the seat is held, Create is not offered**: the actions are a `.move-reasons--beside` line, "Create review is not
+  offered: review #1 already holds 2026 S2 for Lerato Molefe.", Cancel, and "Open review #1" (named "Open review #1 of
+  Lerato Molefe"). Choosing Formative check-in offers Create again.
+- **Create** runs as § Button system says: "Creating…" with `.is-running` and `aria-disabled`, never disabled, a second
+  press sending nothing; Cancel is a disabled button meanwhile, not a followable link (S6). Created, the page goes to the
+  review, flow 07's page, whose h1 takes the focus.
+- **Each refusal** is said in a summary above the actions (`.error-summary`, its title "The review was not created.",
+  "Everything you chose is kept below."), each line "Field: message" linking to its field, the focus on the summary once
+  drawn; and beside its field (§ Form system). The page's own checks are Wombat's words (T324): "Choose a panel.",
+  "Choose a trainee.", "Choose the period the review sits for.", "Choose the day the window starts.", "The window ends
+  before it starts. Choose a day on or after 2026-01-01.". A handler's own sentence shows as it is (S4); the race on a held
+  seat re-reads the seat, so the aside turns to Already held, and the summary links a short "Open review #1". An
+  unexpected failure is a fixed sentence, the failure to the log (T338).
+- **Loading and the load error** (C11): the header at once, the form's shape with Cancel and no Create, then the form, or
+  "Could not load what you can schedule. …" with Try again. A caller the command refuses outright (someone who also holds
+  Trainee, T216) is told so in an empty card, and offered no form.
 
 ### Dashboard page
 
@@ -3995,11 +4191,18 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
 /* ── The review sitting ─────────────────────────────── */
 "Flow 07: stacking and focus clearance (T361)": html (≥641px: scroll-padding-top over the top bar and --sitting-bar-h), .return-link, .activity-page--from-review (≤640px: no trail's back crumb, the return link 44px)
 "Flow 07: the review sitting (T361)": .review-page, .review-section-title, scroll-margin-top on the page's focus targets, .review-progress-link, .sitting-bar, .sitting-bar--reader, .sitting-bar--starts, .sitting-bar-line, .sitting-bar-state, .sitting-bar-count, .sitting-bar-mode, .sitting-bar-present, .sitting-bar-sentence, .sitting-bar-as-of, .sitting-bar-actions (≥641px: the chair's sticky, z-index 1; 641–1023px: Present hidden; ≤640px: stacked, 44px), .review-notes-list, .agenda-epa-code, .agenda-epa-title, .agenda-line-detail, .agenda-line-action, .agenda-draft-kept, .agenda-form-row, .agenda-result-row, .agenda-table-container (+ @container agenda below 760px: stacked, .agenda-line.is-editing), .agenda-form, .agenda-form-heading, .agenda-form-standing, .agenda-foot, .snapshot-pick, .snapshot-pick-line, .snapshot-pick-group, .snapshot-pick-more, .chart-jump, .chart-back, .evidence-reader(-back|-heading|-moved), .decision-actions, .decision-actions-text, .quorum-line, .decision-record, .snapshot-group-heading, .dialog-body, .dialog-list (+ ≤640px: 44px row actions, Read, Back and Record)
+
+/* ── The committee calendar ─────────────────────── */
+"Flow 08: the committee calendar, shared (T364)": .status-cell, .period-window, .list-section-page, .list-section-count, .choice-row, .choice-group, .choice-group.is-invalid (+ forced colours: a border), .person-cell, .readonly-value (+ ≤640px, inside .committee-calendar: 44px form controls and full-width 44px row, header and form actions; ≤900px: 44px stack-wide row actions)
+"Flow 08: Decisions due (T364)": .trainee-line, .rung-legend > .table-container (+ ≤640px: the trainee line's button 44px)
+"Flow 08: the schedule and Committee reviews (T364)": .schedule-grid, .schedule-fields, .field-pair, .agenda-preview, .agenda-live, .agenda-count, .agenda-lines (+ <1100px: the Agenda under the fields)
+"Flow 08: the panels (T364)": .panel-section, .form-section-title, .panel-seats, .panel-lock
 ```
 
 The Progress section replaced the Trajectory chart section that held T123's chart (2026-10-04, T355): every flow 05
 rule is in it, none elsewhere. The Programme section holds every flow 06 rule, none elsewhere (2026-10-05, T358). The
-review sitting section holds every flow 07 rule, none elsewhere (2026-10-12, T361).
+review sitting section holds every flow 07 rule, none elsewhere (2026-10-12, T361). The four Committee calendar sections hold
+every flow 08 rule, none elsewhere: the shared one first, then one per page group (2026-10-13, T364).
 
 When a new section is needed (say `/* ── Badges ── */`), add its heading in alphabetical-ish order inside the existing block and keep the rest of the file untouched.
 

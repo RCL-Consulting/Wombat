@@ -126,7 +126,7 @@ public sealed class PanelAdministrationTraineeFirstTests
         await using var db = await SeededDbAsync();
         var caller = Caller(role, holdsTrainee: true);
 
-        (await new GetDecisionPanelByIdQueryHandler(db).Handle(new GetDecisionPanelByIdQuery(PanelId, caller), CancellationToken.None))
+        (await new GetDecisionPanelByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(new GetDecisionPanelByIdQuery(PanelId, caller), CancellationToken.None))
             .Should().BeNull(role);
 
         var options = await new GetDecisionPanelFormOptionsQueryHandler(db).Handle(
@@ -150,7 +150,7 @@ public sealed class PanelAdministrationTraineeFirstTests
         await using var db = await SeededDbAsync();
         var caller = Caller(role, holdsTrainee: false);
 
-        (await new GetDecisionPanelByIdQueryHandler(db).Handle(new GetDecisionPanelByIdQuery(PanelId, caller), CancellationToken.None))
+        (await new GetDecisionPanelByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(new GetDecisionPanelByIdQuery(PanelId, caller), CancellationToken.None))
             .Should().NotBeNull(role);
 
         var options = await new GetDecisionPanelFormOptionsQueryHandler(db).Handle(

@@ -1,295 +1,407 @@
 @page "/committee/panels"
 @attribute [Authorize(Roles = "CommitteeMember,Coordinator,Administrator,InstitutionalAdmin,SpecialityAdmin,SubSpecialityAdmin")]
+@using Wombat.Web.Components.Pages.CommitteeDecisions.Panels
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject ILogger<PanelsList> Logger
+
+@*
+  Decision panels (T364, flow 08: boards R2-1-*; round 3 F2, M8, S6; C10, C11; T260, T329, T338).
+
+  - The list names what each panel covers and who sits on it: Name, Scope in words ("Speciality · Paediatrics"), Decides
+    for, Members by name (round 3 M8), and Edit where the panel form would open. It stacks at 900px and below
+    (.clinic-table--stack-wide), and is captioned.
+  - An Administrator belongs to no institution, so chooses one first, with Show (F2): the address carries it
+    (?institution=), and the list and Who decides each EPA read that institution.
+  - New panel is offered only once the read is in and creating a panel would be accepted; a manager who may create none
+    is told why (T260).
+  - Who decides each EPA is its own section (h2), read apart, and never says there is no routing while it loads (T329).
+  - Loading: the header at once, a status line and skeletons; a load error is fixed words with Try again, the failure
+    logged (C11, T338).
+*@
 
 <PageTitle>Decision panels · Wombat</PageTitle>
 
-<PageHeader Title="Decision panels" Subtitle="Reusable committees for progression reviews.">
-  <Actions>
-    @* T256: offered only when creating a panel would be accepted, by the rule the create handler demands
-       (GetDecisionPanelFormOptionsQuery): never to someone who holds Trainee, a committee member or a coordinator. *@
-    @if (_formOptions is { MayCreateAny: true })
-    {
-      <a class="btn btn-primary" href="/committee/panels/new">New panel</a>
-    }
-  </Actions>
-</PageHeader>
+<div class="committee-calendar">
+  <PageHeader Title="Decision panels" Subtitle="@PanelWords.ListSubtitle(InstitutionName, _isAdministrator)">
+    <Actions>
+      @* T256: offered only when creating a panel would be accepted, by the rule the create handler demands
+         (GetDecisionPanelFormOptionsQuery): never to someone who holds Trainee, a committee member or a coordinator.
+         Never while the read is out (C11). *@
+      @if (!_loading && _formOptions is { MayCreateAny: true })
+      {
+        <a class="btn btn-primary" href="/committee/panels/new">New panel</a>
+      }
+    </Actions>
+  </PageHeader>
 
-<div class="stack-list">
-  @* T256. Standing page content, there on every visit: an info Alert, which carries no role. *@
-  @if (_formOptions?.TraineeNote is { } traineeNote)
+  @* Present from the first render, so its words are announced when they come (C11). *@
+  <p class="visually-hidden" role="status">@(_loading ? PanelWords.ListLoading : null)</p>
+
+  @if (_isAdministrator)
   {
-    <Alert Kind="info" Id="panels-trainee-note">@traineeNote</Alert>
-  }
-  <StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _items.Count == 0)" EmptyTitle="No decision panels"
-              EmptyBody="@EmptyBody">
-    @* T239: each Edit is named by its panel, and by what it decides for, then its scope, where two panels share a name;
-       panels alike in all three (a name is not unique) are numbered. A caller who may manage no panel on the list (a
-       committee member) is not shown the actions column at all: it was a column of blank cells (T239 review). *@
-    @{
-      var rowNames = RowNames.Distinct(
-        _items, row => row.Id, row => row.Name, row => $" ({row.DecisionBodyName ?? "General panel"})", row => $", {row.Scope}");
-      var anyManaged = _items.Any(item => item.CallerMayManage);
-    }
-    <DataTable Items="_items">
-      <HeaderRow>
-        <tr>
-          <th>Name</th>
-          <th>Scope</th>
-          <th>Decides for</th>
-          <th>Members</th>
-          @if (anyManaged)
-          {
-            <th><span class="visually-hidden">Actions</span></th>
-          }
-        </tr>
-      </HeaderRow>
-      <Row Context="item">
-        <tr>
-          <td>@item.Name</td>
-          <td>@item.Scope</td>
-          <td>@(item.DecisionBodyName ?? "General panel")</td>
-          <td>@item.MemberCount</td>
-          @if (anyManaged)
-          {
-            <td>
-              <div class="actions-cell">
-                @* T256: Edit only where the panel form would open, by the rule its read and panel update demand. *@
-                @if (item.CallerMayManage)
-                {
-                  <a class="btn btn-outline btn-sm" href="@($"/committee/panels/{item.Id}")" aria-label="@($"Edit {rowNames[item.Id]}")">Edit</a>
-                }
-              </div>
-            </td>
-          }
-        </tr>
-      </Row>
-    </DataTable>
-  </StatePanel>
-
-  @* Who decides each EPA at the institution (T131 slice 3): GetCommitteeRoutingQuery, which asks the one routing rule of
-     every panel there. It loads in its own try, so a failure shows here and never replaces the list above. *@
-  <section class="detail-card" aria-labelledby="routing-title">
-    <h3 id="routing-title">Who decides each EPA</h3>
-
-    @if (_isAdministrator)
-    {
-      <div class="form-grid">
-        <FormField Label="Institution" InputId="routing-institution">
-          <select id="routing-institution" class="form-select" value="@_routingInstitutionId" @onchange="OnRoutingInstitutionChangedAsync">
-            <option value="">Select institution</option>
+    @* F2: an Administrator chooses the institution, then Show; nothing changes until Show, and the address carries it. *@
+    <form class="search-container" method="get" aria-label="Choose the institution" @onsubmit="ShowAsync" @onsubmit:preventDefault="true">
+      <div class="search-grid">
+        <div class="search-field">
+          <label for="panels-institution">@PanelWords.InstitutionLabel</label>
+          <select id="panels-institution" name="institution" class="form-select" @bind="_institutionField">
+            <option value="">@PanelWords.ChooseInstitutionOption</option>
             @foreach (var institution in _institutions)
             {
               <option value="@institution.Id">@institution.Name</option>
             }
           </select>
-        </FormField>
+        </div>
+        <div class="search-field filter-actions">
+          <button type="submit" class="btn btn-primary">Show</button>
+        </div>
       </div>
-    }
-
-    @if (_routingLoading)
-    {
-      <Skeleton Count="2" Height="2rem" />
-    }
-    else if (!string.IsNullOrWhiteSpace(_routingError))
-    {
-      <Alert Kind="danger">@_routingError</Alert>
-    }
-    else if (_routing is null)
-    {
-      <p class="muted">
-        @(_isAdministrator
-          ? "Choose an institution to see which panel decides each EPA there."
-          : "There is no committee routing to show for your institution.")
-      </p>
-    }
-    else if (_routing.Programmes.Count == 0)
-    {
-      <p class="muted">No programme is adopted or followed at @_routing.InstitutionName yet.</p>
-    }
-    else
-    {
-      <p class="muted">
-        Which panel takes each EPA's entrustment decision for a trainee of each programme at @_routing.InstitutionName.
-        An EPA the College gives to a named committee (EPAs 4 and 5 to the neonatal CCC) goes to a panel sitting as it,
-        one covering the trainee's speciality before an institution-wide one, and to the general panels while none does.
-      </p>
-
-      @foreach (var programme in _routing.Programmes)
+      @if (_institutionsFailed)
       {
-        var headingId = $"routing-programme-{programme.CurriculumId}";
-        <h4 id="@headingId">@programme.CurriculumName @programme.CurriculumVersion</h4>
-        <div class="table-container">
-          <table class="clinic-table clinic-table--compact" aria-labelledby="@headingId">
-            <thead>
-              <tr>
-                <th scope="col">EPAs</th>
-                <th scope="col">Decided by</th>
-              </tr>
-            </thead>
-            <tbody>
-              @foreach (var route in RoutesOf(programme))
+        <Alert Kind="danger">@PanelWords.InstitutionsLoadFailed</Alert>
+      }
+    </form>
+  }
+
+  @* T256. Standing page content, there on every visit: an info Alert, which carries no role. *@
+  @if (_formOptions?.TraineeNote is { } traineeNote)
+  {
+    <Alert Kind="info" Id="panels-trainee-note">@traineeNote</Alert>
+  }
+  else if (!_loading && _formOptions is { MayManagePanels: true, MayCreateAny: false })
+  {
+    @* T260: a manager not offered New panel is told why, in the words the new-panel page says. *@
+    <Alert Kind="info" Id="panels-none-creatable">@PanelWords.NoneCreatable</Alert>
+  }
+
+  <div id="panels-list" tabindex="-1" @ref="_listRegion">
+    <StatePanel IsLoading="_loading" LoadError="@_error" OnRetry="RetryAsync" IsEmpty="@IsEmpty"
+                EmptyTitle="@(AwaitsInstitution ? PanelWords.ChooseInstitutionTitle : PanelWords.NoPanels)"
+                EmptyBody="@EmptyBody" SkeletonCount="3">
+      @{
+        // T239: each Edit is named by its panel, and by what it decides for, then its scope, where two panels share a
+        // name; panels alike in all three (a name is not unique) are numbered. A caller who may manage no panel on the
+        // list (a committee member, the Coordinator) is not shown the actions column at all (T239 review).
+        var rowNames = RowNames.Distinct(
+          _items, row => row.Id, row => row.Name, row => $" ({PanelWords.DecidesFor(row.DecisionBodyName)})",
+          row => $", {PanelWords.ScopeCell(row.Scope, row.SpecialityName)}");
+        var anyManaged = _items.Any(item => item.CallerMayManage);
+      }
+      <div class="table-container shadow">
+        <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+          <caption>@PanelWords.ListCaption(InstitutionName)</caption>
+          <thead role="rowgroup">
+            <tr role="row">
+              <th scope="col" role="columnheader">Name</th>
+              <th scope="col" role="columnheader">Scope</th>
+              <th scope="col" role="columnheader">Decides for</th>
+              <th scope="col" role="columnheader">Members</th>
+              @if (anyManaged)
               {
-                <tr>
-                  <th scope="row">@route.Codes</th>
-                  <td>
-                    @if (route.Panels.Count == 0)
+                <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+              }
+            </tr>
+          </thead>
+          <tbody role="rowgroup">
+            @foreach (var item in _items)
+            {
+              <tr role="row" @key="item.Id">
+                <th scope="row" role="rowheader">@item.Name</th>
+                <td role="cell" data-label="Scope">@PanelWords.ScopeCell(item.Scope, item.SpecialityName)</td>
+                <td role="cell" data-label="Decides for">@PanelWords.DecidesFor(item.DecisionBodyName)</td>
+                <td role="cell" data-label="Members">@PanelWords.MembersCell(item.MemberCount, item.MemberNames)</td>
+                @if (anyManaged)
+                {
+                  <td role="cell">
+                    @* T256: Edit only where the panel form would open, by the rule its read and panel update demand. *@
+                    @if (item.CallerMayManage)
                     {
-                      <span class="muted">No panel at this institution covers this programme.</span>
-                    }
-                    else
-                    {
-                      @(string.Join(", ", route.Panels.Select(panel => panel.Name)))
-                    }
-                    @if (route.BodyName is not null && !route.FallsBackToGeneral)
-                    {
-                      <div class="muted">Sits as the @route.BodyName.</div>
-                    }
-                    @* The fallback names the panels above, so it is said only when there are some: with none, the line above
-                       already says nobody decides. "Covering this programme": a panel sitting as the body may exist for
-                       another speciality, and "no panel sits as it" would then be untrue. *@
-                    @if (route.FallsBackToGeneral && route.Panels.Count > 0)
-                    {
-                      <div class="muted">@FallbackLine(route)</div>
+                      <div class="actions-cell">
+                        <a class="btn btn-outline btn-sm" href="@($"/committee/panels/{item.Id}")" aria-label="@($"Edit {rowNames[item.Id]}")">Edit</a>
+                      </div>
                     }
                   </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </StatePanel>
+  </div>
+
+  @* Who decides each EPA at the institution (T131 slice 3): GetCommitteeRoutingQuery, which asks the one routing rule of
+     every panel there. Read apart, so a failure shows here and never replaces the list above. Not drawn while the list's
+     own read has failed: the page's alert says it. *@
+  @if (_error is null)
+  {
+    <section class="panel-section" aria-labelledby="routing-title">
+      <h2 id="routing-title">@PanelWords.RoutingTitle</h2>
+      @if (_routingLoading)
+      {
+        @* T329: never "no routing" while it loads; the heading and skeletons. *@
+        <Skeleton Count="2" Height="2rem" />
       }
-    }
-  </section>
+      else if (_routingFailed)
+      {
+        <Alert Kind="danger">
+          <div class="alert-row">
+            <span class="alert-row-text">@PanelWords.RoutingLoadFailed</span>
+            <button type="button" class="btn btn-outline btn-sm" @onclick="RetryRoutingAsync"><Icon Name="refresh-cw" />Try again</button>
+          </div>
+        </Alert>
+      }
+      else if (_routing is null)
+      {
+        <p class="muted">@(_isAdministrator ? PanelWords.RoutingChooseInstitution : PanelWords.RoutingNone)</p>
+      }
+      else if (_routing.Programmes.Count == 0)
+      {
+        <p class="muted">@PanelWords.RoutingNoProgramme(_routing.InstitutionName)</p>
+      }
+      else
+      {
+        <p class="muted">@PanelWords.RoutingIntro(_routing.InstitutionName)</p>
+
+        @foreach (var programme in _routing.Programmes)
+        {
+          var name = $"{programme.CurriculumName} {programme.CurriculumVersion}";
+          <h3 id="@($"routing-programme-{programme.CurriculumId}")">@name</h3>
+          <div class="table-container shadow">
+            <table id="@($"routing-table-{programme.CurriculumId}")" class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+              <caption>@PanelWords.RoutingCaption(name)</caption>
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th scope="col" role="columnheader">EPAs</th>
+                  <th scope="col" role="columnheader">Decided by</th>
+                </tr>
+              </thead>
+              <tbody role="rowgroup">
+                @foreach (var route in PanelWords.RoutesOf(programme))
+                {
+                  <tr role="row">
+                    <th scope="row" role="rowheader">@route.Codes</th>
+                    <td role="cell" data-label="Decided by">@route.DecidedBy</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+    </section>
+  }
 </div>
 
 @code {
+  /// <summary>The institution an Administrator chose, from the address (F2); ignored for anyone else.</summary>
+  [SupplyParameterFromQuery(Name = "institution")] public int? Institution { get; set; }
+
   private readonly List<DecisionPanelSummaryDto> _items = [];
   private bool _loading = true;
   private string? _error;
   private DecisionPanelFormOptionsDto? _formOptions;
-
-  // T256: someone not offered New panel is not told to create one. A global Administrator belongs to no institution and
-  // lists every panel, so their empty list is the system's, not "your institution's".
-  private string EmptyBody
-    => _formOptions is { MayCreateAny: true } ? "Create a panel before scheduling reviews."
-      : _isAdministrator ? "No decision panel has been created yet."
-      : "No decision panel runs at your institution yet.";
+  private System.Security.Claims.ClaimsPrincipal _user = new();
+  private ElementReference _listRegion;
 
   private bool _isAdministrator;
   private IReadOnlyList<InstitutionDto> _institutions = [];
-  private int? _routingInstitutionId;
+  private bool _institutionsFailed;
+  private string _institutionField = string.Empty;
+
+  // The institution the list was last read for; null until the first read (so a second read of the same is skipped).
+  private int? _readFor;
+  private bool _read;
+  private bool _focusList;
+
   private CommitteeRoutingDto? _routing;
   private bool _routingLoading;
-  private string? _routingError;
+  private bool _routingFailed;
+
+  // Each read's number: an answer to an earlier read, for an institution no longer asked for, is dropped, so a switch
+  // from A to B never shows A's panels under B (T364, build review R1; DecisionsDue.LoadAsync's rule).
+  private int _request;
+
+  /// <summary>An Administrator who has chosen no institution yet: the list waits for one (F2).</summary>
+  private bool AwaitsInstitution => _isAdministrator && Institution is null;
+
+  private bool IsEmpty => !_loading && (AwaitsInstitution || _items.Count == 0);
+
+  /// <summary>
+  /// The institution the page is about: Who decides each EPA's, else the chosen one's (an Administrator's), else the
+  /// panels' own; null until one of them is read.
+  /// </summary>
+  private string? InstitutionName
+    => _routing?.InstitutionName
+       ?? (_isAdministrator && Institution is int chosen ? _institutions.FirstOrDefault(institution => institution.Id == chosen)?.Name : null)
+       ?? (_isAdministrator ? null : _items.Select(item => item.InstitutionName).FirstOrDefault(name => name is not null));
+
+  // T256: someone not offered New panel is not told to create one. An Administrator belongs to no institution, so is
+  // told about the one chosen, by name.
+  private string EmptyBody
+    => AwaitsInstitution ? PanelWords.ChooseInstitutionBody
+      : _formOptions is { MayCreateAny: true } ? "Create a panel before scheduling reviews."
+      : _isAdministrator && InstitutionName is { } name ? $"No decision panel runs at {name} yet."
+      : "No decision panel runs at your institution yet.";
 
   protected override async Task OnInitializedAsync()
   {
-    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    _isAdministrator = authState.User.IsInRole(WombatRoles.Administrator);
-
-    // Whether New panel is offered, and why not to someone who holds Trainee (T256). In its own try: a failure offers no
-    // New panel and never replaces the list.
-    try
-    {
-      _formOptions = await Sender.Send(new GetDecisionPanelFormOptionsQuery(authState.User));
-    }
-    catch (Exception)
-    {
-      _formOptions = null;
-    }
-
-    try
-    {
-      _items.AddRange(await Sender.Send(new ListDecisionPanelsQuery(authState.User)));
-    }
-    catch (Exception exception)
-    {
-      _error = RefusalText.Of(exception);
-    }
-    finally
-    {
-      _loading = false;
-    }
+    _user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+    _isAdministrator = _user.IsInRole(WombatRoles.Administrator);
 
     if (_isAdministrator)
     {
-      // An Administrator belongs to no institution, so the card waits for one to be chosen.
       try
       {
-        _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
+        _institutions = await Sender.Send(new GetInstitutionsListQuery(_user));
       }
-      catch (Exception exception)
+      catch (Exception exception) when (exception is not OperationCanceledException)
       {
-        _routingError = RefusalText.Of(exception);
+        Logger.LogError(exception, "Decision panels could not read the institutions.");
+        _institutionsFailed = true;
       }
     }
-    else
-    {
-      await LoadRoutingAsync(null);
-    }
   }
 
-  private async Task OnRoutingInstitutionChangedAsync(ChangeEventArgs e)
+  /// <summary>Reads the page whenever the address asks for another institution (F2): on arrival, after Show, after Back.</summary>
+  protected override async Task OnParametersSetAsync()
   {
-    _routingInstitutionId = int.TryParse(e.Value?.ToString(), out var id) ? id : null;
+    var asked = _isAdministrator ? Institution : null;
+    if (_read && _readFor == asked)
+    {
+      return;
+    }
+
+    _read = true;
+    _readFor = asked;
+    _institutionField = asked?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    var request = ++_request;
+    _loading = true;
+    _error = null;
+    _items.Clear();
     _routing = null;
-    _routingError = null;
+    _routingFailed = false;
+    // T329: Who decides each EPA is reading from the first render, wherever there is something to read.
+    _routingLoading = !AwaitsInstitution;
+    StateHasChanged();
 
-    if (_routingInstitutionId is int chosen)
-    {
-      await LoadRoutingAsync(chosen);
-    }
-  }
-
-  private async Task LoadRoutingAsync(int? institutionId)
-  {
-    _routingLoading = true;
-    _routingError = null;
+    var routing = AwaitsInstitution ? Task.CompletedTask : LoadRoutingAsync(request);
 
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _routing = await Sender.Send(new GetCommitteeRoutingQuery(institutionId, authState.User));
+      // Whether New panel is offered, and why not (T256, T260). In its own try: a failure offers no New panel and never
+      // replaces the list.
+      DecisionPanelFormOptionsDto? formOptions;
+      try
+      {
+        formOptions = await Sender.Send(new GetDecisionPanelFormOptionsQuery(_user));
+      }
+      catch (Exception exception) when (exception is not OperationCanceledException)
+      {
+        Logger.LogWarning(exception, "Decision panels could not read whether a panel may be created.");
+        formOptions = null;
+      }
+
+      if (request != _request)
+      {
+        return;
+      }
+
+      _formOptions = formOptions;
+      if (!AwaitsInstitution)
+      {
+        var items = await Sender.Send(new ListDecisionPanelsQuery(_user, InstitutionId: _isAdministrator ? Institution : null));
+        if (request != _request)
+        {
+          return;
+        }
+
+        _items.AddRange(items);
+      }
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _routingError = RefusalText.Of(exception);
+      Logger.LogError(exception, "Decision panels could not be read.");
+      if (request == _request)
+      {
+        _error = PanelWords.ListLoadFailed;
+      }
     }
     finally
     {
-      _routingLoading = false;
+      if (request == _request)
+      {
+        _loading = false;
+      }
+    }
+
+    await routing;
+  }
+
+  private Task RetryAsync() => LoadAsync();
+
+  private Task RetryRoutingAsync() => LoadRoutingAsync(_request);
+
+  /// <summary>Who decides each EPA, for the read numbered <paramref name="request" />; dropped once another read began.</summary>
+  private async Task LoadRoutingAsync(int request)
+  {
+    _routingLoading = true;
+    _routingFailed = false;
+    try
+    {
+      var routing = await Sender.Send(new GetCommitteeRoutingQuery(_isAdministrator ? Institution : null, _user));
+      if (request == _request)
+      {
+        _routing = routing;
+      }
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "Who decides each EPA could not be read.");
+      if (request == _request)
+      {
+        _routingFailed = true;
+      }
+    }
+    finally
+    {
+      if (request == _request)
+      {
+        _routingLoading = false;
+      }
     }
   }
 
-  /// <summary>One row per distinct answer: the EPAs that go to the same panels for the same reason share a row.</summary>
-  private static IReadOnlyList<RouteRow> RoutesOf(CommitteeRoutingProgrammeDto programme)
-    => programme.Lines
-      .GroupBy(line => (
-        line.DecisionBodyKey,
-        line.FallsBackToGeneral,
-        Panels: string.Join(",", line.Panels.Select(panel => panel.Id))))
-      .Select(group => new RouteRow(
-        string.Join(", ", group.Select(line => line.EpaCode)),
-        group.First().Panels,
-        group.First().DecisionBodyName,
-        group.Key.FallsBackToGeneral))
-      .OrderBy(row => row.BodyName is null ? 1 : 0)
-      .ThenBy(row => row.Codes, StringComparer.Ordinal)
-      .ToArray();
-
   /// <summary>
-  /// Where an EPA the College gives to a named committee goes when no panel covering the programme sits as it: to the
-  /// general panels listed on its row, one or several.
+  /// Show (F2): to the page's own address with the institution as its query, which reads the page again; the same
+  /// institution asked again reads it here. Either way the list takes the focus once it is in.
   /// </summary>
-  private static string FallbackLine(RouteRow route)
-    => $"No panel covering this programme sits as the {route.BodyName ?? "College committee"}, so " +
-       (route.Panels.Count == 1 ? "the general panel decides." : "the general panels decide.");
+  private async Task ShowAsync()
+  {
+    int? chosen = int.TryParse(_institutionField, out var id) ? id : null;
+    _focusList = true;
+    if (chosen == Institution)
+    {
+      await LoadAsync();
+      return;
+    }
 
-  private sealed record RouteRow(
-    string Codes,
-    IReadOnlyList<CommitteeRoutedPanelDto> Panels,
-    string? BodyName,
-    bool FallsBackToGeneral);
+    Navigation.NavigateTo(chosen is int value ? $"/committee/panels?institution={value}" : "/committee/panels");
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusList && !_loading)
+    {
+      _focusList = false;
+      await _listRegion.FocusAsync();
+    }
+  }
 }

@@ -284,7 +284,7 @@ public sealed class DecisionPanelScopeTests
             CancellationToken.None);
 
     private static async Task<DecisionPanelDetailDto?> GetAsync(ApplicationDbContext db, ClaimsPrincipal principal, int panelId)
-        => await new GetDecisionPanelByIdQueryHandler(db).Handle(
+        => await new GetDecisionPanelByIdQueryHandler(db, FakeUserDirectory.Empty).Handle(
             new GetDecisionPanelByIdQuery(panelId, principal), CancellationToken.None);
 
     private static async Task<IReadOnlyList<string>> ListAsync(ApplicationDbContext db, ClaimsPrincipal principal)
