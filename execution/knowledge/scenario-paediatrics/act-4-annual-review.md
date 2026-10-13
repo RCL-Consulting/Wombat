@@ -96,14 +96,20 @@ Expect: The opening sentence names `<P>`, "5 trainees you oversee at Kgosi Kgari
   PAED-001 before Paed Annual Review Panel"). After Next the focus is on the heading, which reads "Decisions, page 2 of
   4" (T264). The filters leave five PAED-004 rows, one per registrar ("5 of 75 decisions due in `<P>` shown: Not
   scheduled, PAED-004."), with Clear filters offered; By EPA does not change. No Missed row exists.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Menu Home, Programme trainees, Waiting for assessors, Decisions
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Menu Home, Programme trainees, Waiting for assessors, Decisions
   due, MSF campaigns, Committee reviews, Decision panels, Data rights requests, My data rights; Decisions due lit.
-  Intro names 2026 S2, "the 5 trainees you oversee at Kgosi Kgari Teaching Hospital" and what Missed means. By EPA: Due
-  5 on all 15; To schedule 5 on twelve, Optional 5 on 008/009/013. "75 of 75 decisions due in 2026 S2 shown.", "Showing
-  1–20 of 75". 30 semester rows "No open review holds it, and 2026 S2 has not ended.", 30 annual rows "... and 2026 has
-  not ended.", 15 "As opportunity allows". Schedule named "Schedule a review of <trainee> for <EPA> before Paed Annual
-  Review Panel". Not scheduled + PAED-004: 5 rows, one per registrar; By EPA unchanged. No Missed row.
-Gap: [F-4.1a, T280] (still) The pager's page-size select has no accessible name: no label, id or aria-label.
+  Intro "The EPAs due for an entrustment decision in 2026 S2 for the 5 trainees you oversee at Kgosi Kgari Teaching
+  Hospital ..." and what Missed means. Period help "The College's semester 2 ends in November; its window runs to 31
+  December, so December's work counts." By EPA opens as a fold, "Counts for the 15 EPAs due in 2026 S2": Due 5 on all
+  15; To schedule 5 on twelve, Optional 5 on 008/009/013. "75 of 75 decisions due in 2026 S2 shown.", "Showing 1-20 of
+  75". 30 semester rows "No open review holds it, and 2026 S2 has not ended.", 30 annual rows "... and 2026 has not
+  ended.", 15 "As opportunity allows". One action per row (Schedule, 75 in all), named "Schedule a review of <trainee>
+  for <EPA> before Paed Annual Review Panel". Next: focus on h2 "Decisions, page 2 of 4" (and 3, 4). The pager select
+  is labelled "Decisions per page". Not scheduled + PAED-004: "5 of 75 decisions due in 2026 S2 shown: Not scheduled,
+  PAED-004.", five rows, one per registrar, Clear filters offered; By EPA unchanged. No Missed row. No sideways scroll
+  at 1280.
+Gap: none (T280 no longer occurs: the pager's select is named "Decisions per page"; T264 no longer occurs: after Next
+  the focus is on the heading "Decisions, page 2 of 4")
 
 ### Step 4.2 — Prof Mbatha reads the same period
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -126,11 +132,21 @@ Expect: No Institution filter is offered, because she reads her own institution.
   S1's plan as the planner gives it: "PAED-001, PAED-002, PAED-004, PAED-005, PAED-010 and PAED-012 are due at this
   sitting.", the six annual EPAs "Due by year end" and PAED-008, 009 and 013 "As opportunity allows". Cancel returns to
   Decisions due on `<Y>` S1. Nothing is created.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Filters Period, Status and EPA; no Institution filter. 2026 S2:
-  the same 5, "75 of 75". 2026 S1: "75 of 75 decisions due in 2026 S1 shown.", 30 rows Missed "2026 S1 has ended with
-  nothing decided or on an open review's agenda." (By EPA Missed 5 on 001/002/004/005/010/012, so Mahlangu's and
-  Ndlovu's count); 30 annual rows "Due by year end"; 15 "As opportunity allows". Back on 2026 S2: 75 of 75.
-Gap: none
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Filters Period, Trainee, Status, EPA (and Decisions per page);
+  no Institution filter. 2026 S2: the same 5, "75 of 75". 2026 S1: "75 of 75 decisions due in 2026 S1 shown."; 30 rows
+  Missed "2026 S1 has ended with nothing decided or on an open review's agenda." (six per registrar, Mahlangu and
+  Ndlovu too); 30 annual rows "Due by year end" (003 and 006 never Missed); 15 "As opportunity allows"; By EPA Missed 5
+  on 001/002/004/005/010/012. A Missed row's Schedule (named "... for 2026 S1") opened /committee/reviews/new filled:
+  Paed Annual Review Panel, Anele Dlamini, "2026 S1 · 1 Jan to 30 Jun 2026", window 2026-01-01 to 2026-06-30, Scheduled
+  on D; Period help begins "2026 S1 has ended. A review can still sit for it: sittings are often held after the period
+  ends."; Review type Annual progression (chosen), Pre-graduation, Entrustment-only, then Formative check-in. Agenda:
+  "15 EPAs will be on the agenda for 2026 S1.", "PAED-001, PAED-002, PAED-004, PAED-005, PAED-010 and PAED-012 are due
+  at this sitting.", then NINE lines "Due by year end": 003, 006, 007, 011, 014, 015 and also PAED-008, 009 and 013.
+  Cancel returned to Decisions due on 2026 S1 (href ?period=2026-1; one earlier run landed on S2 and could not be
+  reproduced); nothing created (0 reviews). Back on S2: 75 of 75.
+Gap: new: the schedule page's S1 Agenda lists the optional PAED-008, 009 and 013 as "Due by year end", where the
+  runbook and Decisions due for the same period read "As opportunity allows" (new-defect; the S2 agenda is checked in
+  Step 4.6)
 
 ### Step 4.3 — Dr Mokoena reads what is due in her speciality
 Role: SpecialityAdmin — Dr Refilwe Mokoena
@@ -144,12 +160,12 @@ Expect:
     badged "5 registrars".
   - **The page:** the same five registrars, all in Paediatrics, and 75 rows, each with one action, Schedule.
   - **Entrustment decisions** is in the menu (Step A.7.7 opens it from there); no card on Home names it.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Home "Speciality admin · Semester 2, 2026". Menu Home,
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Home "Speciality admin · Semester 2, 2026". Menu Home,
   Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels, Entrustment decisions,
-  My data rights; Decisions due lit on its page. Cards: Waiting for assessors "2 waiting, 1 overdue" (du Plessis's
-  Portfolio and Logbook Review, With Mohammed Patel, Awaiting review, Overdue, "Waiting 8 days"; his CBD, With Fatima
-  Khumalo, Requested), Registrars "5 registrars", Targets by EPA; no card names Entrustment decisions. Decisions due:
-  the five, "75 of 75 decisions due in 2026 S2 shown.", Schedule on all 75 rows.
+  My data rights; Decisions due lit on its page. Cards (after "Loading your Home"): Waiting for assessors "2 waiting, 1
+  overdue" (du Plessis's Portfolio and Logbook Review, With Mohammed Patel, Awaiting review, Overdue, "Waiting 8 days";
+  his CBD, With Fatima Khumalo, Requested), Registrars "5 registrars", Targets by EPA; no card names Entrustment
+  decisions. Decisions due: the five, "75 of 75 decisions due in 2026 S2 shown.", Schedule on all 75 rows.
 Gap: none
 
 ### Step 4.4 — Dr Sithole reads what is due in his sub-speciality
@@ -158,10 +174,10 @@ Route: /account/login → / → /committee/decisions-due
 Do: Sign in and open Decisions due.
 Expect: The same five registrars and 75 rows as Step 4.3: all five train in the Paediatrics sub-speciality Dr Sithole
   administers. Dr Sithole's menu and Home's cards read as Dr Mokoena's.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Home "Sub-speciality admin · Semester 2, 2026"; menu and the
-  three cards as Mokoena's (Waiting for assessors "2 waiting, 1 overdue", Registrars "5 registrars", Targets by EPA; no
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Home "Sub-speciality admin · Semester 2, 2026"; menu and the
+  three cards as Mokoena's (Waiting for assessors "2 waiting, 1 overdue", "5 registrars", Targets by EPA; no
   Entrustment decisions card). Decisions due lit: "the 5 trainees you oversee at Kgosi Kgari Teaching Hospital", "75 of
-  75 decisions due in 2026 S2 shown.", Schedule on every row.
+  75 decisions due in 2026 S2 shown.", Schedule on all 75 rows.
 Gap: none
 
 ### Step 4.5 — Dr Naidoo is not offered what is due
@@ -171,11 +187,11 @@ Do: He still acts as Assessor, his choice from Step 3.5: choose Switch to Commit
   Decisions due in the menu, then type its address.
 Expect: His menu has Committee reviews and Decision panels but no Decisions due. The typed address lands on the
   access-denied page, and nothing in his menu is lit there: the page is for the roles that schedule reviews.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Home "Assessor · Semester 2, 2026" (menu Home, Activity inbox,
-  My data rights) with "Switch to Committee member" (/dashboard/switch/CommitteeMember). After it: "You are now acting
-  as Committee member."; menu Home, Programme trainees, Committee reviews, Decision panels, My data rights; no
-  Decisions due. Typed /committee/decisions-due -> /access-denied?ReturnUrl=..., "You cannot open this page", "None of
-  your roles (Committee member, Assessor) opens this page."; no menu item lit.
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Home "Assessor · Semester 2, 2026" (menu Home, Activity inbox,
+  My data rights) with "Switch to Committee member". After it: "You are now acting as Committee member."; menu Home,
+  Programme trainees, Committee reviews, Decision panels, My data rights; no Decisions due. Typed
+  /committee/decisions-due -> /access-denied?ReturnUrl=..., "You cannot open this page", "None of your roles (Committee
+  member, Assessor) opens this page."; no menu item lit.
 Gap: none
 
 ## Phase 4.B — Scheduling the five reviews
@@ -219,16 +235,21 @@ Expect:
   - **Start review…** is offered to Smit in the sitting bar, since the coordinators of the panel's institution may start
     a review (E2). He leaves it for the chair.
   - **Evidence snapshot:** "No evidence has been frozen yet. Starting the review captures the current bundle."
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Committee reviews "Schedule progression reviews and open
-  existing ones.", "No reviews yet". The one panel; the Trainee select then lists the five. Period "2026 S2 · 1 Jul to
-  31 Dec 2026", window 2026-01-01 to 2026-12-31. Review type Annual progression / Pre-graduation, help "The semester-2
-  sitting decides the trainee's progression for the year." Preview "15 EPAs will be on the agenda for 2026 S2.",
-  "PAED-001, PAED-002, PAED-003, PAED-004, PAED-005, PAED-006, PAED-007, PAED-010, PAED-011, PAED-012, PAED-014 and
-  PAED-015 are due at this sitting.", 008/009/013 "As opportunity allows". Create review opened /committee/reviews/1:
-  h1 "Lerato Molefe · 2026 S2", tab "Lerato Molefe · 2026 S2 · Wombat", subtitle "Annual progression review · Paed
-  Annual Review Panel · Training year 4"; the bar Scheduled, "15 EPAs on the agenda", "Summative · evidence 2026-01-01
-  to 2026-12-31", "As of 13:49 SAST", Refresh and Start review… (offered to Smit, left). "No evidence has been frozen
-  yet. Starting the review captures the current bundle."
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Committee reviews "Schedule progression reviews and open
+  existing ones.", "No reviews yet". Schedule a review opened /committee/reviews/new, tab "Schedule a review · Wombat",
+  trail Home > Committee reviews > Schedule a review. Trainee disabled ("Choose a panel first. The list holds the
+  trainees at its institution you can schedule.") until the one panel is chosen, then the five, each "<name> · Training
+  year n" (Lerato Molefe · Training year 4). Period "2026 S2 · 1 Jul to 31 Dec 2026" filled the window 2026-01-01 to
+  2026-12-31 and added "The College's semester 2 ends in November; its window runs to 31 December, so December's work
+  counts."; Scheduled on 2026-10-13. Review type radios: Annual progression review (chosen) with "The semester-2
+  sitting decides the trainee's progression for the year.", Pre-graduation review, Formative check-in. Agenda "15 EPAs
+  will be on the agenda for 2026 S2.", "PAED-001, PAED-002, PAED-003, PAED-004, PAED-005, PAED-006, PAED-007, PAED-010,
+  PAED-011, PAED-012, PAED-014 and PAED-015 are due at this sitting.", PAED-008/009/013 "As opportunity allows". No
+  sideways scroll at 1280, 768 or 390. Create review opened /committee/reviews/1: h1 "Lerato Molefe · 2026 S2", tab
+  "Lerato Molefe · 2026 S2 · Wombat", subtitle "Annual progression review · Paed Annual Review Panel · Training year 4"
+  with "Lerato Molefe's progress"; the bar Scheduled, "15 EPAs on the agenda", "Summative · evidence 2026-01-01 to
+  2026-12-31", "As of 14:20 SAST", Refresh and Start review… (offered to Smit, left). "No evidence has been frozen yet.
+  Starting the review captures the current bundle."
 Gap: none
 
 ### Step 4.7 — Mr Smit schedules Dr Dlamini's and Dr du Plessis's reviews
@@ -244,10 +265,12 @@ Expect: Each opens as Scheduled with a 15-EPA preview like Step 4.6's. Committee
   - State Scheduled, a grey badge, as on Decisions due;
   - Decision Pending.
   There is no Mode column (C8). Each row's Open is named by the review it opens.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Reviews #2 (h1 "Anele Dlamini · 2026 S2", Training year 3) and
-  #3 ("Pieter du Plessis · 2026 S2", Training year 2), each Scheduled after the same 15-EPA preview. The list: three
-  rows "2026 S2 · 2026-01-01 to 2026-12-31", Annual progression, Summative, Scheduled, Pending; each Open named "Open
-  the 2026 S2 review of <trainee> before Paed Annual Review Panel".
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Reviews #2 (h1 "Anele Dlamini · 2026 S2", Training year 3) and
+  #3 ("Pieter du Plessis · 2026 S2", Training year 2), each Scheduled after "15 EPAs will be on the agenda for 2026
+  S2.". The list, under the College's semester-2 line and the caption "Committee reviews at Kgosi Kgari Teaching
+  Hospital, newest scheduled first": columns Trainee, Panel, Period, Type, State, Decision, Actions (no Mode column);
+  three rows "2026 S2 / 2026-01-01 to 2026-12-31", Annual progression, Scheduled (badge-draft, grey), Pending; each
+  Open named "Open the 2026 S2 review of <trainee> before Paed Annual Review Panel".
 Gap: none
 
 ### Step 4.8 — A second review of Dr Molefe for the same period is refused
@@ -263,12 +286,14 @@ Expect: Before Create, the Agenda says the seat is held (T309 item 1): "Already 
   holds three rows.
 Note: The race, a seat taken from a second tab after the page read it and refused at Create in the same sentence, is a
   scratch state in states.md, not played here (F5).
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): The preview still read "15 EPAs will be on the agenda for 2026
-  S2." with no warning. Create review refused: "Review #1 already puts this trainee before Paed Annual Review Panel for
-  2026 S2 (scheduled, scheduled 2026-10-12). A trainee has one binding review for each period ...". Stayed on
-  /committee/reviews; the list still three rows.
-Gap: [F-4.8a, T309] (still) The agenda preview gives no sign that the trainee already holds this period's binding seat;
-  the refusal comes only on Create review.
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Panel, Molefe and 2026 S2 chosen: before Create the Agenda
+  reads "Already held. Review #1 already puts Lerato Molefe before Paed Annual Review Panel for 2026 S2 (scheduled on
+  2026-10-13). A trainee has one binding review for each period before the panels that decide the same EPAs, until it
+  is ratified: open that review, or ratify it before scheduling another.", then "A formative check-in takes no seat:
+  choose Formative check-in under Review type to schedule one." and "Create review is not offered: review #1 already
+  holds 2026 S2 for Lerato Molefe."; the page offers Cancel and Open review #1 (/committee/reviews/1), no Create
+  review. No sideways scroll at 390. The list still three rows.
+Gap: none (T309 item 1 no longer occurs: the held seat is warned before Create)
 
 ### Step 4.9 — Dr Mokoena schedules Dr Mahlangu's review from what is due
 Role: SpecialityAdmin — Dr Refilwe Mokoena
@@ -288,12 +313,18 @@ Expect:
   - **The review opens as Scheduled,** and Start review… is not offered to her. Her sitting bar, static under the title,
     says: "Only the coordinators of the panel's institution, and those of its members who are active committee members
     there, can start this review." (T194, E2), with "As of hh:mm SAST" and Refresh.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): EPA PAED-001: Molefe, Dlamini and du Plessis Scheduled, "On the
-  agenda of review #1/#2/#3, which is still open.", each with Open review; By EPA Scheduled 3, To schedule 2. The
-  Schedule link (?panel=1&trainee=...&period=2026-2) opened the form filled: Paed Annual Review Panel, Nomsa Mahlangu,
-  2026 S2, window 2026-01-01 to 2026-12-31; preview 15 EPAs. Review #4 "Nomsa Mahlangu · 2026 S2", Scheduled; no Start
-  review; her bar static (reader) under the title: "Only the coordinators of the panel's institution, and those of its
-  members who are active committee members there, can start this review.", "As of 13:51 SAST" and Refresh.
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Decisions due, Every status + PAED-001: Molefe, Dlamini and du
+  Plessis Scheduled, "On the agenda of review #1/#2/#3 before Paed Annual Review Panel, which is still open.", each
+  with Open review #n; Mahlangu and Ndlovu Not scheduled; By EPA PAED-001 Scheduled 3, To schedule 2. Trainee Molefe:
+  the trainee line "Review #1 (annual progression) holds 2026 S2 before Paed Annual Review Panel, scheduled on
+  2026-10-13." with Open review #1. Trainee Mahlangu: the line offered the link "Schedule a review" (aria-label
+  "Schedule a review of Nomsa Mahlangu ..."; its own sentence was not captured before the review was made, Ndlovu's in
+  Step 4.10 reads "No open review holds 2026 S2."). The link opened
+  /committee/reviews/new?panel=1&trainee=...&period=2026-2&return=... filled: Paed Annual Review Panel, Nomsa Mahlangu
+  · Training year 1, 2026 S2, window 2026-01-01 to 2026-12-31, Scheduled on 2026-10-13; preview 15 EPAs. Review #4
+  "Nomsa Mahlangu · 2026 S2", Scheduled; no Start review…; her bar static (reader) under the title: "Only the
+  coordinators of the panel's institution, and those of its members who are active committee members there, can start
+  this review.", "As of 14:21 SAST" and Refresh.
 Gap: none
 
 ### Step 4.10 — Dr Sithole schedules Dr Ndlovu's review from what is due
@@ -304,10 +335,13 @@ Do: On Decisions due, press Schedule on one of Dr Ndlovu's rows. Set Scheduled o
 Expect: As Step 4.9: the form is filled, the review opens as Scheduled, and Start review… is not offered: the sitting
   bar says who can start it. Decisions due then reads Scheduled on all 75 rows, and By EPA reads Scheduled 5 and To
   schedule 0 for every EPA.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Ndlovu's PAED-002 Schedule link opened the form filled (panel,
-  Sipho Ndlovu, 2026 S2, Annual progression review); review #5 "Sipho Ndlovu · 2026 S2" Scheduled, no Start review, the
-  same "Only the coordinators ..." sentence with "As of 13:52 SAST" and Refresh. Decisions due "75 of 75 ...": all 75
-  rows Scheduled; By EPA Scheduled 5 and To schedule 0 on every EPA.
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Trainee Ndlovu: line "No open review holds 2026 S2." with the
+  link "Schedule a review" (aria-label "Schedule a review of Sipho Ndlovu for 2026 S2 before Paed Annual Review
+  Panel"). His PAED-002 Schedule opened the form filled (panel, Sipho Ndlovu · Training year 1, 2026 S2, window, Annual
+  progression review chosen); review #5 "Sipho Ndlovu · 2026 S2" Scheduled, no Start review, the same "Only the
+  coordinators ..." sentence with "As of 14:22 SAST" and Refresh. Decisions due, Every status: "75 of 75 decisions due
+  in 2026 S2 shown: every status.", all 75 rows Scheduled; By EPA Due 5, Scheduled 5 and To schedule 0 on every EPA
+  (optional ones too).
 Gap: none
 
 ### Step 4.11 — Dr Naidoo lists the panel's reviews
@@ -319,10 +353,10 @@ Expect:
     lists the five reviews of the panel he sits on, all Scheduled, with Decision Pending.
   - **Dlamini's review:** Start review… is offered to him in the sitting bar, as a member who may sit on the panel (E2).
     He leaves it.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Acting as Committee member (4.5). Subtitle "Open existing
-  committee reviews.", no Schedule review; five rows (Ndlovu, Mahlangu, du Plessis, Dlamini, Molefe), Annual
-  progression, Summative, Scheduled, Pending. Dlamini's review #2 offers him Start review… in a reader's bar (with "As
-  of 13:52 SAST" and Refresh); left.
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Acting as Committee member (kept from 4.5). Subtitle "Open
+  existing committee reviews.", no Schedule a review; five rows (Ndlovu, Mahlangu, du Plessis, Dlamini, Molefe), Annual
+  progression, Scheduled, Pending. Dlamini's review #2 offers him Start review… in a reader's bar (sitting-bar--reader,
+  with "As of 14:23 SAST" and Refresh); left.
 Gap: none
 
 ### Step 4.12 — Prof Mbatha checks the schedule
@@ -333,9 +367,10 @@ Expect: Committee reviews offers Schedule a review and lists all five reviews. D
   rows, each with Open review #N, which opens the review holding it; no row offers Schedule. With Dr Ndlovu filtered,
   the line reads "Review #N (annual progression) holds `<P>` before Paed Annual Review Panel, scheduled on `D`." with
   Open review #N.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Committee reviews offers Schedule review and lists the five.
-  Decisions due "75 of 75 ...": all 75 rows Scheduled, each Open review named "Open review #N for <trainee>, <EPA>" and
-  linking the review its row names (all 75 checked); no row offers Schedule.
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Committee reviews offers Schedule a review and lists the five.
+  Decisions due, Every status: "75 of 75 ...", all 75 rows Scheduled, each with an Open review link that opens the
+  review its sentence names (all 75 checked), and no row offers Schedule. Trainee Ndlovu: "Review #5 (annual
+  progression) holds 2026 S2 before Paed Annual Review Panel, scheduled on 2026-10-13." with Open review #5.
 Gap: none
 
 ### Step 4.13 — The panel cannot change what it decides while its reviews are open
@@ -349,12 +384,17 @@ Expect: Decides for reads "General panel", with no select and no Save committee:
   more".
 Note: The race, a review scheduled from a second tab while the select is open, refused at Save committee and said
   beside the select, is a scratch state in states.md, not played here (F5).
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Decision panels -> "Edit Paed Annual Review Panel" ->
-  /committee/panels/1. The College committee help ends "It cannot change while a review before the panel is scheduled,
-  in progress or awaiting ratification." Save committee with the Neonatal team CCC refused: "Review #1 (2026 S2,
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Decision panels -> "Edit Paed Annual Review Panel" ->
+  /committee/panels/1 (tab "Paed Annual Review Panel · Wombat"). About this panel: Scope Speciality: Paediatrics,
+  Institution, Open reviews "Review #1 (2026 S2, scheduled) and 4 more" (the review linked to /committee/reviews/1).
+  Who sits on it: the Chair select (Thandi Zulu chosen) and a seat radio group per member (Member, Member, External
+  member; Zulu "Chair · chosen above"). Decides for reads "General panel" with no select and no Save committee (the
+  only select on the page is the Chair, the only button Save panel): "It cannot change now. Review #1 (2026 S2,
   scheduled) still sits before this panel. What a review decides, and its agenda, follow the College committee the
-  panel sat as when it was scheduled, ...". SQL: DecisionBodyKey still null (General).
-Gap: none
+  panel sat as when it was scheduled, so the panel keeps what it sits as until its open reviews are ratified, or closed
+  if formative." with Open review #1. No sideways scroll at 768 or 390 on the list, the panel page or New panel.
+Gap: none (T260 no longer occurs: the panel's page is named "Paed Annual Review Panel" and says why Decides for is
+  locked before anything is pressed)
 
 ## Phase 4.C — Before the sitting
 
@@ -368,10 +408,12 @@ Expect:
     (T239, T256).
   - **Who decides each EPA:** curriculum 11.1's EPAs are decided by `Paed Annual Review Panel`. PAED-004 and 005 fall
     back to it, because no panel covering the programme sits as the neonatal CCC.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Acting as Committee member; Decision panels lit. One row: Paed
-  Annual Review Panel, Speciality, General panel, 4; no New panel, no Edit column, no control in main. Who decides each
-  EPA: PAED-004, PAED-005 -> Paed Annual Review Panel, "No panel covering this programme sits as the Neonatal team
-  Clinical Competency Committee, so the general panel decides."; the other 13 -> the same panel.
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Acting as Committee member; Decision panels lit. One row: Paed
+  Annual Review Panel, Speciality · Paediatrics, General panel, "4: Thandi Zulu (chair), Sarah Botha, David Naidoo,
+  John van Rensburg (external)"; no New panel, no Edit column, no control in main; typed /committee/panels/1 ->
+  /access-denied. Who decides each EPA: PAED-004, PAED-005 -> Paed Annual Review Panel, "No panel covering this
+  programme sits as the Neonatal team Clinical Competency Committee, so the general panel decides."; PAED-001 to
+  PAED-003 and PAED-006 to PAED-015 -> the same panel.
 Gap: none
 
 ### Step 4.15 — Dr Zulu reads Dr Molefe's review before starting it
@@ -409,23 +451,24 @@ Expect: The page is one column, the agenda its spine (T361, round 3):
     not named. "Not counted: 2 records in the review window with no rating by a named assessor …" says her two MSF
     records are not counted (T135, D44).
   - **Appeals:** "No appeal has been lodged against this review."
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Review #1: h1 and tab "Lerato Molefe · 2026 S2" ("… · Wombat"),
-  subtitle "Annual progression review · Paed Annual Review Panel · Training year 4" with "Lerato Molefe's progress"
-  (/programme/trainees/2); no Review or Pending card. The chair's bar (sticky): Scheduled, "15 EPAs on the agenda",
-  "Summative · evidence 2026-01-01 to 2026-12-31", Start review…. Sections in order: Before the committee decides
-  (first, no ×), Agenda, Decision ("No decision has been recorded yet."), Entrustment against Annexure A, MSF, Evidence
-  snapshot, trajectory, Appeals. Standing "In training year 4 on 2026-10-12", "0 at or above · 0 below · 15 with no
-  decision, of 15 EPAs", "0 of 15 EPAs at their exit level by STAR decision ...", all fifteen Not yet, "For information
-  only. ..."; PAED-001, 010, 012 link #trajectory-2/11/13-h. MSF: Semester 2 PAED-010 and 012 Covered ("Default MSF #1,
-  closed 2026-10-12"), the rest "None released" / "None released yet". Agenda caption "15 EPAs for 2026 S2", columns
-  EPA/Window/State/Evidence (no Action), 2026 S2 x6 and 2026 x9, twelve "Due at this sitting" with no sentence, three
-  "As opportunity allows" with "Decided as opportunity allows: optional.", 0 items each. "No evidence has been frozen
-  yet. ..." Trajectory: PAED-001 "Lerato Molefe · 3 ratings in the review window, 2026-01-01 to 2026-12-31, from Thandi
-  Zulu, David Naidoo and Mohammed Patel. 2 at the minimum, 1 below.", PAED-010 and 012 likewise, no Today, each with
-  its table. Sampling names PAED-010 (1 rating · 1 assessor · 1 source) and PAED-012 (2 · 2 · 2) in round 3's words,
-  not PAED-001; "Not counted: 2 records ...". "No appeal has been lodged against this review." Enter on the PAED-010
-  link focused its h3 at y 507, URL unchanged; 390 px no sideways scroll. T356: at 1280 and 768 px, scrolled through
-  the page, the sticky bar sits at 56-110 px under the top bar and Sign out (14-42 px) is never covered.
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Review #1: h1 and tab "Lerato Molefe · 2026 S2" ("... ·
+  Wombat"), subtitle "Annual progression review · Paed Annual Review Panel · Training year 4" with "Lerato Molefe's
+  progress" (/programme/trainees/2); no Review or Pending card. The chair's bar (sticky): Scheduled, "15 EPAs on the
+  agenda", "Summative · evidence 2026-01-01 to 2026-12-31", Start review…. Sections in order: Before the committee
+  decides (first, no close control), Agenda, Decision ("No decision has been recorded yet."), Entrustment against
+  Annexure A, MSF, Evidence snapshot, trajectory, Appeals. Standing "In training year 4 on 2026-10-13", "0 at or above
+  · 0 below · 15 with no decision, of 15 EPAs", "0 of 15 EPAs at their exit level by STAR decision ...", all fifteen
+  Not yet, "For information only. ..."; PAED-001, 010, 012 link #trajectory-2/11/13-h. MSF: Semester 2 PAED-010 and 012
+  Covered ("Default MSF #1, closed 2026-10-13"), the rest "None released" / "None released yet". Agenda caption "15
+  EPAs for 2026 S2", columns EPA/Window/State/Evidence (no Action), 2026 S2 x6 and 2026 x9, twelve "Due at this
+  sitting" with no sentence, three "As opportunity allows" with "Decided as opportunity allows: optional.", 0 items
+  each. "No evidence has been frozen yet. ..." Trajectory: PAED-001 "Lerato Molefe · 3 ratings in the review window,
+  2026-01-01 to 2026-12-31, from Thandi Zulu, David Naidoo and Mohammed Patel. 2 at the minimum, 1 below.", PAED-010 "1
+  rating ... from Thandi Zulu. At the minimum.", PAED-012 "2 ratings ... from Sarah Botha and Fatima Khumalo.", no
+  Today, each with its table. Sampling names PAED-010 (1 rating · 1 assessor · 1 source) and PAED-012 (2 · 2 · 2), not
+  PAED-001; "Not counted: 2 records ...". "No appeal has been lodged against this review." Enter on the PAED-010 link
+  focused its h3 at y 507, URL unchanged; 390 px no sideways scroll. T356: at 1280 and 768 px, scrolled through the
+  page, the sticky bar sits at 56-110 / 56-170 px under the top bar and Sign out (14-42 px) is never covered.
 Gap: none
 
 ## Phase 4.D — Dr Molefe's sitting
@@ -460,21 +503,21 @@ Expect:
     at least one other." It names no EPA: no line holds Record back (D53).
   - **Start** is also offered to a member who may sit, the Coordinator and the Administrator, never while the chair
     cannot act (E2).
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Dialog "Start Lerato Molefe's review for 2026 S2?": "Starting
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Dialog "Start Lerato Molefe's review for 2026 S2?": "Starting
   freezes the evidence: the 9 items observed from 2026-01-01 to 2026-12-31 (8 activities and the MSF campaign report)
   become this review's snapshot, each in the state it is in now. Anything finished later is not added."; no left-out
   sentence; focus on "Not yet"; confirm "Start review" (`4.16-2`). Then "Review started." atop the agenda, focused. Bar
   In progress, "None staged", "Present: the chair · one more member needed", Go to the decision. Caption "15 EPAs for
   2026 S2 · none staged"; each line counts its items (PAED-001 3, 010 2, 012 3, the rest 0) and offers Stage only.
-  Snapshot "Frozen when the review started, 2026-10-12 · 9 items", h3 per EPA, lines by instrument A-Z (PAED-001: CBD
+  Snapshot "Frozen when the review started, 2026-10-13 · 9 items", h3 per EPA, lines by instrument A-Z (PAED-001: CBD
   #13 David Naidoo 5, DOPS #14 Mohammed Patel 4, Mini-CEX #12 Thandi Zulu 5), each linking its activity with assessor,
-  rating, encounter and state; MSF #22/#23 "Not recorded", Recorded, under PAED-010/012; Default MSF #1 under "Not
-  about a single EPA". Decision form: Category "Select a category…", Rationale, "About the EPAs not decided (optional)"
-  with "The registrar sees this once the review is ratified.", Conditions, Present (Thandi Zulu (chair) ticked and
-  locked, David Naidoo, Sarah Botha, John van Rensburg (external)). Record decision… aria-disabled (not disabled) with
-  "Only the chair is ticked. A committee decision needs at least two panel members present: the chair and at least one
-  other."; no EPA named. T356 in progress: at 1280 and 768 px the bar sticks at 56-110 px, Sign out (14-42) never
-  covered.
+  rating, encounter and state; MSF #22/#23 "Not recorded", Recorded, under PAED-010/012; Default MSF #1 (Released, 6
+  responses) under "Not about a single EPA". Decision form: Category "Select a category…", Rationale, "About the EPAs
+  not decided (optional)" with "The registrar sees this once the review is ratified.", Conditions, Present (Thandi Zulu
+  (chair) ticked and locked, David Naidoo, Sarah Botha, John van Rensburg (external)). Record decision… aria-disabled
+  (not disabled) with "Only the chair is ticked. A committee decision needs at least two panel members present: the
+  chair and at least one other."; no EPA named. T356: at 1280 and 768 px the bar sticks at 56-110 / 56-170, Sign out
+  (14-42) never covered.
 Gap: none
 
 ### Step 4.17 — Dr Zulu stages PAED-001 at level 5
@@ -509,26 +552,25 @@ Expect:
     Staged, "Level 5 · issued `D` · no expiry." and "Rests on 2 items of the snapshot: Mini-CEX (Paediatrics) #12;
     Case-Based Discussion (Paediatrics) #13." (round 3 item 30), with Remove… in its Action cell. The caption and the
     bar read "1 staged".
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Snapshot line "Mini-CEX (Paediatrics) #12" ->
-  /activities/12?from=review-1&at=snap-8: status card Completed, "Done. You completed it on 2026-10-12 12:37 SAST.",
-  "Rated 5. Credited 1 item to PAED-001."; no control; its only back link "Back to Lerato Molefe · 2026 S2"
-  (/committee/reviews/1#snap-8). Followed, it lands on the review with scrollY 0 and the focus on the h1, the snap-8
-  row 7,440 px down (a typed /committee/reviews/1#snap-8 does scroll to it). Stage on PAED-001: "Stage a decision on
-  PAED-001" under its row, focus on Authorised level; standing "Year 4 target 5 · no STAR yet · 3 ratings in the review
-  window · MSF: None released yet", "Rating chart for PAED-001". Level "Choose a rung…", 1, 2, 3a, 3b, 4, 5 in the
-  optgroup "CPSA Paediatric Entrustment Scale v11.1", help "Rungs of CPSA Paediatric Entrustment Scale v11.1, the
-  ladder this EPA is assessed on."; Issued 2026-10-12. Evidence: CBD #13, DOPS #14, Mini-CEX #12 first, each with a
-  tick and Read, then "Show the other 6 snapshot lines". Read swapped in the Mini-CEX (focus on its h3, `4.17-3`);
-  "Back to PAED-001" restored level 5 and the rationale, focus back on Read. Stage pending decision aria-disabled with
-  "Name at least one item of the evidence snapshot."; one tick: "Only one item is named. The College's rule is that an
-  entrustment decision is never taken from a single form.", available. #12 then #13: "Pending entrustment decision
-  staged." under the line, focused; line Staged, "Level 5 · issued 2026-10-12 · no expiry.", "Rests on 2 items of the
-  snapshot: Mini-CEX (Paediatrics) #12; Case-Based Discussion (Paediatrics) #13.", Remove… (outline) in Action; caption
-  and bar "1 staged".
-Gap: new: the activity page's "Back to Lerato Molefe · 2026 S2" (/committee/reviews/1#snap-8) opens the review at its
-  top with the focus on the h1, not at the snapshot line: the page draws after the navigation, so the fragment is never
-  scrolled to.
-  Fixed in `59bb72fd`: replayed on the republished app (2026-10-12), the link lands with #snap-8 in view and focused.
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Snapshot line "Mini-CEX (Paediatrics) #12" ->
+  /activities/12?from=review-1&at=snap-8: status card Completed, "Done. You completed it on 2026-10-13 13:02 SAST.",
+  "Rated 5. Credited 1 item to PAED-001."; no move offered; its only back link "Back to Lerato Molefe · 2026 S2"
+  (/committee/reviews/1#snap-8). Followed, it lands on the review with scrollY 6,843, the snap-8 row at y 489 (in view)
+  and focus on that row. Stage on PAED-001: "Stage a decision on PAED-001" under its row, focus on Authorised level;
+  standing "Year 4 target 5 · no STAR yet · 3 ratings in the review window · MSF: None released yet", "Rating chart for
+  PAED-001". Level "Choose a rung…", 1, 2, 3a, 3b, 4, 5 in the optgroup "CPSA Paediatric Entrustment Scale v11.1", help
+  "Rungs of CPSA Paediatric Entrustment Scale v11.1, the ladder this EPA is assessed on."; Issued 2026-10-13. Evidence:
+  CBD #13, DOPS #14, Mini-CEX #12 first, each with a tick and Read, then "Show the other 6 snapshot lines". Read
+  swapped in the Mini-CEX (focus on its h3, `4.17-3`); "Back to PAED-001" restored level 5 and the rationale, focus
+  back on Read. Stage pending decision aria-disabled with "Name at least one item of the evidence snapshot."; one tick:
+  "Only one item is named. The College's rule is that an entrustment decision is never taken from a single form.",
+  available. #12 then #13: "Pending entrustment decision staged." under the line, focused; line Staged, "Level 5 ·
+  issued 2026-10-13 · no expiry.", "Rests on 2 items of the snapshot: Mini-CEX (Paediatrics) #12; Case-Based Discussion
+  (Paediatrics) #13.", Remove… (outline) in Action; caption and bar "1 staged". (The first run of this step was cut
+  short on my side while reading its output: I removed that staged decision through its dialog and played the step
+  again, so the audit log holds one extra stage and remove pair.)
+Gap: none (the earlier Gap, the activity page's "Back to" link not reaching its snapshot line, no longer occurs: the
+  link lands with #snap-8 in view and focused)
 
 ### Step 4.18 — An expiry before the issue date is refused
 Role: CommitteeMember (chair) — Dr Thandi Zulu
@@ -541,11 +583,12 @@ Expect: PAED-010's open line lists its two lines first: the Direct Observation [
   date." at the top of the line's form, with the focus there, and Expires on marked with "An expiry date must be after
   the issue date." (round 3 item 15). Nothing is staged, the form keeps what was typed, PAED-010 still reads Due at this
   sitting, and the bar still reads "1 staged".
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): PAED-010's open line lists its two lines first: Direct
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): PAED-010's open line lists its two lines first: Direct
   Observation (Paediatrics) #17 · Thandi Zulu Rated 5, and Multi-Source Feedback (Paediatrics) #22 "Not recorded".
-  Level 4, Issued 2026-10-12, Expires 2026-10-11, the rationale, both ticked: "Not staged. An expiry date must be after
-  the issue date." at the top of the line's form, focused; Expires on aria-invalid, described by "An expiry date must
-  be after the issue date.". Level, ticks and rationale kept; PAED-010 still "Due at this sitting"; bar "1 staged".
+  Level 4, Issued 2026-10-13, Expires 2026-10-12 (D-1), the rationale, both ticked: "Not staged. An expiry date must be
+  after the issue date." at the top of the line's form, focused (the message block); Expires on aria-invalid, described
+  by "An expiry date must be after the issue date.". Level, ticks and rationale kept; PAED-010 still "Due at this
+  sitting" with 2 items; bar "1 staged".
 Gap: none
 
 ### Step 4.19 — Dr Zulu stages PAED-010 with an expiry, and PAED-012
@@ -566,9 +609,9 @@ Expect: Both are staged, each with "Pending entrustment decision staged." under 
     decision removed." under the line, PAED-012's line reads Due at this sitting with Stage, and the bar reads "2
     staged".
   - **Staged again,** it reads Staged, and the bar reads "3 staged".
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Expires 2026-11-01 (D+20): staged, PAED-010 "Level 4 · issued
-  2026-10-12 · expires 2026-11-01." on #17 and MSF #22. PAED-012 at 5 on Mini-CEX #15 and CBD #16: "Pending entrustment
-  decision staged.", "Level 5 · issued 2026-10-12 · no expiry.", Evidence 3 items; bar "3 staged". Remove… named
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Expires 2026-11-02 (D+20): staged, PAED-010 "Level 4 · issued
+  2026-10-13 · expires 2026-11-02." on #17 and MSF #22. PAED-012 at 5 on Mini-CEX #15 and CBD #16: "Pending entrustment
+  decision staged.", "Level 5 · issued 2026-10-13 · no expiry.", Evidence 3 items; bar "3 staged". Remove… named
   "Remove the staged decision on PAED-012" opened the dialog "Remove the staged decision on PAED-012?", "Its level 5,
   its rationale and the 2 snapshot items it rests on are discarded. PAED-012 is due at this sitting again.", focus on
   "Keep it" (`4.19-2`). "Remove the decision": "Pending entrustment decision removed." under the line, focused;
@@ -583,10 +626,10 @@ Do: In "Stage a decision on an EPA not on this agenda", at the agenda's foot, ch
 Expect: Refused: "Not staged. An entrustment decision on PAED-001 is already staged at this review. Remove it to stage
   another." at the top of that form, with the focus there. PAED-001's line still holds exactly one decision, "Level 5
   · issued `D` · no expiry.", and the bar still reads "3 staged".
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Foot form "Stage a decision on an EPA not on this agenda": EPA
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Foot form "Stage a decision on an EPA not on this agenda": EPA
   PAED-001, level 4, a rationale and DOPS #14: "Not staged. An entrustment decision on PAED-001 is already staged at
   this review. Remove it to stage another." at the top of that form, focused. PAED-001 still one decision, "Level 5 ·
-  issued 2026-10-12 · no expiry."; bar "3 staged".
+  issued 2026-10-13 · no expiry."; bar "3 staged".
 Gap: none
 
 There is no Step 4.21: it deferred the other closing lines, and there is no deferral (D53, T361). The twelve lines
@@ -609,13 +652,13 @@ Expect: Dr Naidoo sees everything the chair sees:
   SAST" with Refresh. Refresh reads the review again in place, keeping the scroll and the focus, and says what changed:
   with nothing changed, "As of hh:mm SAST. No change." (round 3 item 21). Decision reads "No decision has been
   recorded yet."
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Naidoo (acting as Committee member) sees the sampling, agenda,
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Naidoo (acting as Committee member) sees the sampling, agenda,
   Decision, standing, MSF, snapshot, trajectory and Appeals sections; PAED-001/010/012 Staged with their decisions and
   "Rests on ..." in their lines, the rest "Due at this sitting". Agenda EPA/Window/State/Evidence (no Action); no
-  Stage, Remove…, foot form or decision form (no form control at all). His bar static (sitting-bar--reader): In
-  progress, "3 staged", "Only the panel's chair, Thandi Zulu, can stage entrustment decisions and record the
-  committee's decision.", "As of 13:56 SAST" and Refresh. Refresh: "As of 13:56 SAST. No change.", the focus kept on
-  Refresh, scroll unchanged. "No decision has been recorded yet."
+  Stage, Remove…, foot form or decision form (no form control at all). His bar static (sitting-bar--reader, position
+  static): In progress, "3 staged", "Only the panel's chair, Thandi Zulu, can stage entrustment decisions and record
+  the committee's decision.", "As of 14:27 SAST" and Refresh. Refresh from scroll 1,200: "As of 14:27 SAST. No
+  change.", the focus kept on Refresh, scroll unchanged. "No decision has been recorded yet."
 Gap: none
 
 ### Step 4.23 — Recording without a second member present is refused
@@ -629,11 +672,11 @@ Expect: Go to the decision moves the focus to the Decision heading. With only th
   other." (T165, D46). Pressing it moves the focus to that line, opens no dialog and sends nothing, so the audit log
   gains no row (Step 4.38). The review stays In progress, with nothing recorded; the server's refusal stays only as
   the backstop.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Go to the decision moved the focus to the h2 "Decision".
-  Satisfactory Progress and the rationale, only Thandi Zulu (chair) ticked (locked): Record decision… aria-disabled
-  (.is-unavailable), the quorum line beside it "Only the chair is ticked. A committee decision needs at least two panel
-  members present: the chair and at least one other." Pressed: the focus moved to that line, no dialog opened, nothing
-  sent (Step 4.38 finds no FAILED row). Still In progress, bar "Present: the chair · one more member needed".
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Go to the decision moved the focus to the h2 "Decision".
+  Satisfactory Progress and the rationale, only Thandi Zulu (chair) ticked (locked): Record decision… aria-disabled,
+  the quorum line beside it "Only the chair is ticked. A committee decision needs at least two panel members present:
+  the chair and at least one other." Pressed: the focus moved to that line, no dialog opened, nothing sent (Step 4.38
+  finds no FAILED row). Still In progress, bar "Present: the chair · one more member needed".
 Gap: none
 
 ### Step 4.24 — Recording without a category is refused
@@ -647,7 +690,7 @@ Expect: The quorum line reads "4 present: the chair and 3 others. The quorum is 
   decides the trainee's progression, so its decision records a progression category. Choose one." at the top of the
   Decision section, with the focus there, and Category marked "Choose a progression category." (T131 slice 5). Nothing
   is sent and nothing is recorded.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Naidoo, Botha and van Rensburg ticked: quorum line "4 present:
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Naidoo, Botha and van Rensburg ticked: quorum line "4 present:
   the chair and 3 others. The quorum is met.", bar "4 present · quorum met"; Record decision… available with "Recording
   fixes the 3 staged decisions, and records the 12 EPAs not staged as not decided." beside it. Category back to "Select
   a category…" and pressed: no dialog; "Not recorded. This review decides the trainee's progression, so its decision
@@ -678,8 +721,8 @@ Expect:
     this sitting" with "To be decided at her final review." (E1). No Action column.
   - **No chair-rated warning:** five assessors rated her lines, so "The chair rated all of this evidence" is not shown
     (D46 warns of that case and refuses nothing).
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Dialog "Record Satisfactory Progress for Lerato Molefe?":
-  "Fixes 3 staged decisions: PAED-001 at 5, PAED-010 at 4 (expires 2026-11-01), PAED-012 at 5.", "Records 12 EPAs as
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Dialog "Record Satisfactory Progress for Lerato Molefe?":
+  "Fixes 3 staged decisions: PAED-001 at 5, PAED-010 at 4 (expires 2026-11-02), PAED-012 at 5.", "Records 12 EPAs as
   not decided: PAED-002, PAED-003, PAED-004, PAED-005, PAED-006, PAED-007, PAED-008, PAED-009, PAED-011, PAED-013,
   PAED-014 and PAED-015.", "Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external).",
   "Afterwards only a decision that no longer fits the trainee's curriculum can be removed."; focus on "Not yet",
@@ -689,8 +732,8 @@ Actual (2026-10-12, T361 replay, wombat_scenario_t361): Dialog "Record Satisfact
   Naidoo, Sarah Botha, John van Rensburg (external)". Agenda "Fixed when the committee's decision was recorded:
   ratifying issues exactly these."; the three staged lines keep their decisions, no Remove…; the other twelve
   (008/009/013 too) "Not decided at this sitting" with "To be decided at her final review."; no Action column. No "The
-  chair rated all of this evidence". T356 decided: at 1280 and 768 px the bar sticks at 56-110 / 56-142 px, Sign out
-  (14-42) never covered.
+  chair rated all of this evidence". T356: at 1280 and 768 px the bar sticks at 56-110 / 56-142 px, Sign out (14-42)
+  never covered.
 Gap: none
 
 ### Step 4.26 — Prof Mbatha reads the decided review, and is not offered Ratify
@@ -704,12 +747,12 @@ Expect: The list reads Decided, Satisfactory Progress, for Dr Molefe's review. T
   admins (round 3 item 19). The sitting bar is a reader's, static: Decided, "Satisfactory Progress · 3 decisions to
   issue", "Only the panel's chair, Thandi Zulu, can ratify the committee's decision.", and "As of hh:mm SAST" with
   Refresh. Only the chair ratifies, with no administrator's bypass (D46).
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): List row: Molefe, Decided, Satisfactory Progress. Review #1:
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): List row: Molefe, Decided, Satisfactory Progress. Review #1:
   subtitle "Annual progression review · Paed Annual Review Panel · Training year 4" with no "Lerato Molefe's progress";
-  decision with its "Present:" line above the agenda; the three under "Fixed when the committee's decision was
-  recorded: ratifying issues exactly these."; no Ratify…, no Remove…, agenda EPA/Window/State/Evidence with no Action.
-  Her bar a reader's, static: Decided, "Satisfactory Progress · 3 decisions to issue", "Only the panel's chair, Thandi
-  Zulu, can ratify the committee's decision.", "As of 13:58 SAST", Refresh (her only control).
+  decision with its "Present:" line above the agenda; "Fixed when the committee's decision was recorded: ratifying
+  issues exactly these."; no Ratify…, no Remove…, agenda EPA/Window/State/Evidence with no Action. Her bar a reader's,
+  static: Decided, "Satisfactory Progress · 3 decisions to issue", "Only the panel's chair, Thandi Zulu, can ratify the
+  committee's decision.", "As of 14:27 SAST", Refresh (her only control).
 Gap: none
 
 ### Step 4.27 — Dr Zulu ratifies, and the STARs are issued
@@ -732,8 +775,8 @@ Expect:
     target of `5`, and PAED-010 at `4` is below it. The exit rule reads "2 of 15 EPAs at their exit level by STAR
     decision".
   - **What ratifying locks:** nothing on the review can now be staged, removed or recorded.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Dialog "Ratify and issue 3 STARs to Lerato Molefe?": "PAED-001
-  at 5, issued 2026-10-12", "PAED-010 at 4, issued 2026-10-12, expires 2026-11-01", "PAED-012 at 5, issued 2026-10-12",
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Dialog "Ratify and issue 3 STARs to Lerato Molefe?": "PAED-001
+  at 5, issued 2026-10-13", "PAED-010 at 4, issued 2026-10-13, expires 2026-11-02", "PAED-012 at 5, issued 2026-10-13",
   "PAED-002 and 11 others were not decided at this sitting.", "Ratifying cannot be undone: nothing on this review can
   change afterwards."; nothing about mail; focus "Not yet"; confirm "Ratify and issue 3 STARs" (`4.27-2`). "Decision
   ratified." under the bar, focused; bar Ratified, "Satisfactory Progress · 3 STARs issued", no control left on the
@@ -741,7 +784,7 @@ Actual (2026-10-12, T361 replay, wombat_scenario_t361): Dialog "Ratify and issue
   names each one." PAED-001 "Decided STAR #1.", PAED-010 "STAR #2.", PAED-012 "STAR #3."; the other twelve "Not decided
   at this sitting" with "To be decided at her final review.". "2 at or above · 1 below · 12 with no decision, of 15
   EPAs"; "2 of 15 EPAs at their exit level by STAR decision (level 5: 2 of 9 · level 4: 0 of 6)". The log's Stub email
-  count stayed 30.
+  count stayed 29.
 Gap: [F-4.27a, T320] (still) Ratifying issues three STARs and tells Dr Molefe nothing: no mail is written.
 
 ## Phase 4.E — The other four sittings
@@ -764,13 +807,13 @@ Expect:
     009 and 013 "As opportunity allows"; the bar reads "2 staged".
   - **Record decision…** is held back only by the quorum: it becomes available once a second member is ticked (Step
     4.29).
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Review #2: dialog counts "the 4 items observed from 2026-01-01
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Review #2: dialog counts "the 4 items observed from 2026-01-01
   to 2026-12-31 (4 activities)"; "Review started.". Snapshot PAED-001 CBD #18 Zulu 3b, CCA #19 Botha 4, Mini-CEX #1
   Naidoo 4 and PAED-004 Mini-CEX #20 Khumalo 4, all Completed. PAED-001 at 4 and PAED-002 at 3b, each on Mini-CEX #1
-  and CCA #19. PAED-002's open line lists no line of its own (the snapshot's lines grouped by EPA, shown at once); the
-  picker said "None of the named items is about PAED-002." and staged; the staged line repeats it. 001/002 Staged, the
-  other ten closing lines "Due at this sitting", 008/009/013 "As opportunity allows"; bar "2 staged". Record decision…
-  aria-disabled only on the quorum line ("Only the chair is ticked. ...").
+  and CCA #19. PAED-002's open line lists no line of its own first (the snapshot's lines grouped by EPA, shown at
+  once); the picker said "None of the named items is about PAED-002." and staged; the staged line repeats it. 001/002
+  Staged, the other ten closing lines "Due at this sitting", 008/009/013 "As opportunity allows"; bar "2 staged".
+  Record decision… aria-disabled only on the quorum line ("Only the chair is ticked. ...").
 Gap: none
 
 ### Step 4.29 — Dr Zulu records and ratifies Dr Dlamini's decision
@@ -790,7 +833,7 @@ Expect:
     sitting" with "Not at a decision point this year."
   - **Standing:** "1 at or above · 1 below · 13 with no decision, of 15 EPAs". PAED-001 at `4` meets year 3's target of
     `4`, and PAED-002 at `3b` is below it.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Naidoo and Botha ticked: "3 present: the chair and 2 others.
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Naidoo and Botha ticked: "3 present: the chair and 2 others.
   The quorum is met.". Record dialog "Fixes 2 staged decisions: PAED-001 at 4, PAED-002 at 3b." and "Records 13 EPAs as
   not decided: PAED-003, ... PAED-013, PAED-014 and PAED-015."; "Decision recorded."; Ratify dialog "Ratify and issue 2
   STARs to Anele Dlamini?", "PAED-003 and 12 others were not decided at this sitting."; "Decision ratified.", Ratified.
@@ -824,9 +867,9 @@ Expect:
     "Satisfactory with Observations · no STAR issued", and the agenda says "Nothing was staged when the review was
     ratified, so ratifying it issued no STAR." All fifteen lines read "Not decided at this sitting" with "Not at a
     decision point this year."
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Review #3 started (dialog "the 5 items ... (5 activities)").
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Review #3 started (dialog "the 5 items ... (5 activities)").
   Snapshot: PAED-002 CBD #9 Fatima Khumalo Requested and DOPS #8 Cancelled; PAED-004 Teaching Session Log #6 Logged;
-  PAED-015 Log #5 Logged and Portfolio and Logbook Review #10 Awaiting review; #7 (J−1y−56d) not in it. "No rating by a
+  PAED-015 Log #5 Logged and Portfolio and Logbook Review #10 Awaiting review; #7 (J-1y-56d) not in it. "No rating by a
   named assessor to chart in this review's window." David Naidoo ticked: Record available, hint "Recording records the
   15 EPAs not staged as not decided."; dialog "Fixes no staged decision." and "Records 15 EPAs as not decided:
   PAED-001, PAED-002, ... and PAED-015.". Decision "Satisfactory with Observations", "About the EPAs not decided: Not
@@ -853,7 +896,7 @@ Expect:
   - **Ratified:** the state reads Ratified. All fifteen lines read "Not decided at this sitting" with "Not enough
     observed evidence yet this year." (D53, E1).
   - **Present:** "Present: Thandi Zulu (chair), Sarah Botha, John van Rensburg (external)".
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Review #4 started ("the 2 items ... (2 activities)"). Snapshot
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Review #4 started ("the 2 items ... (2 activities)"). Snapshot
   PAED-002 DOPS #11 Mohammed Patel 3a and PAED-004 Mini-CEX #21 Thandi Zulu 3a, both Completed. Sampling names PAED-002
   and PAED-004, "1 rating · 1 assessor · 1 source". Record dialog "Fixes no staged decision.", "Records 15 EPAs as not
   decided: ...". "Inadequate Progress — Additional Training", "About the EPAs not decided: Not enough observed evidence
@@ -881,7 +924,7 @@ Expect:
   - **Trajectory:** PAED-002 alone, from Dr Botha's rating.
   - **Sampling:** "Before the committee decides" names PAED-002, one rating from one assessor.
   - **Ratified:** the review reads Ratified, with "Outcome Deferred".
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Review #5 started ("the 3 items ... (3 activities)"). Snapshot:
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Review #5 started ("the 3 items ... (3 activities)"). Snapshot:
   PAED-001 Reflective Exercise #4 Unrated Discussed; PAED-002 Mini-CEX #2 Fatima Khumalo Declined and #3 Sarah Botha 3a
   Completed. Trajectory PAED-002 alone, "Sipho Ndlovu · 1 rating in the review window, 2026-01-01 to 2026-12-31, from
   Sarah Botha. At the minimum." Sampling names PAED-002, "1 rating · 1 assessor · 1 source". "Outcome Deferred", "About
@@ -903,7 +946,8 @@ Expect: All five read Ratified, Type Annual progression; there is no Mode column
   - Outcome Deferred for Ndlovu.
   No state or category prints an enum name (T250). Molefe's review shows its decision, agenda and STAR numbers, and
   offers Smit no action.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): All five Ratified; Decision Satisfactory Progress (Molefe,
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Committee reviews: columns Trainee, Panel, Period, Type, State,
+  Decision, Actions (no Mode column); all five Ratified, Annual progression; Decision Satisfactory Progress (Molefe,
   Dlamini), Satisfactory with Observations (du Plessis), Inadequate Progress — Additional Training (Mahlangu), Outcome
   Deferred (Ndlovu); no enum name. Review #1: bar Ratified, "Satisfactory Progress · 3 STARs issued", no Refresh;
   "Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)"; STAR #1, #2, #3 in the
@@ -926,13 +970,14 @@ Expect:
   - **By EPA:** PAED-001 reads Due 5, Decided 2 and Not decided 3.
   - **Actions:** each row has one (C3). A Not decided row offers only Schedule, since no open review holds its seat now;
     its review is a link in its sentence. A Decided row offers none: "Decided: nothing to schedule".
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Default: "70 of 75 decisions due in 2026 S2 shown." (55 Not
-  decided, 15 As opportunity allows). Every status, 75 of 75: Decided 5 ("STAR #1/#2/#3, issued at review #1." for
-  Molefe 001/010/012, "STAR #4/#5, issued at review #2." for Dlamini 001/002); Not decided 55, badge amber
-  (badge-accepted, the warning colours), "Not decided at review #N. A later sitting for 2026 S2 plans it again." or
-  "... for 2026 plans it again."; As opportunity allows 15, "Decided as opportunity allows: optional, never missed.".
-  By EPA columns Due, Decided, Scheduled, Not decided, To schedule, Missed, Optional; PAED-001 Due 5, Decided 2, Not
-  decided 3. Every Not decided row offers Open review and Schedule.
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Default: "70 of 75 decisions due in 2026 S2 shown." (55 Not
+  decided, 15 As opportunity allows). Every status: "75 of 75 decisions due in 2026 S2 shown: every status.": Decided 5
+  ("STAR #1/#2/#3, issued at review #1." for Molefe 001/010/012, "STAR #4/#5, issued at review #2." for Dlamini
+  001/002), each reading "Decided: nothing to schedule" and offering no action; Not decided 55, badge amber
+  (badge-accepted), "Not decided at review #N. A later sitting for 2026 S2 plans it again." or "... for 2026 plans it
+  again.", each with the review as a link in its sentence and one action, Schedule; As opportunity allows 15, "Decided
+  as opportunity allows: optional, never missed." (grey badge). By EPA (the fold, columns Due, Decided, Scheduled, Not
+  decided, To schedule, Missed, Optional): PAED-001 Due 5, Decided 2, Not decided 3.
 Gap: none
 
 ### Step 4.35 — Prof Mbatha reads the issued STARs
@@ -951,13 +996,13 @@ Expect:
     - the rationale, and the evidence summary of the two snapshot lines;
     - Panel Paed Annual Review Panel, the review number, and Chair Thandi Zulu.
   - **The filter** leaves Molefe's three rows.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Home's "Entrustment decisions" link ->
-  /admin/entrustment-decisions (the menu marks it current): five rows, all Active, issued 2026-10-12: Molefe PAED-001
-  5, PAED-010 4 expiring 2026-11-01, PAED-012 5; Dlamini PAED-001 4, PAED-002 3b; Expires "—" where none. PAED-010
-  certificate (star-certificate-PAED-010-2-....pdf, 97,695 bytes): Kgosi Kgari Teaching Hospital, "Statement of Awarded
-  Responsibility", Lerato Molefe, PAED-010, Authorised level 4, Issued 12 October 2026, Expires 1 November 2026, Status
-  Active, the rationale, #17 and MSF #22, Panel Paed Annual Review Panel, Committee review #1, Chair Thandi Zulu.
-  Trainee "Molefe" + Apply filters leaves her three rows.
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Home's "Entrustment decisions" link ->
+  /admin/entrustment-decisions (the menu marks it current): five rows, all Active, issued 2026-10-13: Molefe PAED-001
+  5, PAED-010 4 expiring 2026-11-02, PAED-012 5; Dlamini PAED-001 4, PAED-002 3b; Expires "—" where none. PAED-010
+  certificate (star-certificate-PAED-010-2-....pdf, 97,568 bytes): Kgosi Kgari Teaching Hospital, "Statement of Awarded
+  Responsibility", Lerato Molefe, PAED-010, Authorised level 4, Issued on 13 October 2026, Expires on 2 November 2026,
+  Status Active, the rationale, Direct Observation #17 and MSF #22, Panel Paed Annual Review Panel, Committee review
+  #1, Chair Thandi Zulu. Trainee "Molefe" + Apply filters leaves her three rows.
 Gap: none
 
 ### Step 4.36 — Dr Mokoena revokes one of Dr Dlamini's STARs
@@ -976,12 +1021,12 @@ Expect:
     revocation.
 Note: Until T358 the page was linked from no nav item or dashboard card for her role, and was reached by typing its
   address. T260 (open): Confirm stays disabled until the reason box loses focus.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): From the menu's Entrustment decisions: lit, no breadcrumb
-  trail; the same five rows. "Revoke Anele Dlamini's PAED-002 decision, issued 2026-10-12" opened an inline "Revoke
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): From the menu's Entrustment decisions: lit, no breadcrumb
+  trail; the same five rows. "Revoke Anele Dlamini's PAED-002 decision, issued 2026-10-13" opened an inline "Revoke
   entrustment decision" section (no dialog role): "... PAED-002 — Managing common paediatric presentations held by
   Anele Dlamini. Revocation is immediate and irreversible. The trainee is notified." Confirm revocation stayed disabled
   while the reason was typed and enabled when the box lost focus. "Entrustment decision for PAED-002 revoked."; row
-  Revoked, only Download. The Stub email count stayed 30.
+  Revoked, only Download. The Stub email count stayed 29.
 Gap: [F-4.36a, T319] (still) "The trainee is notified." and nobody is: no mail to Dr Dlamini. T260 (still, its
   entrustment-decisions half, as the Note says): Confirm revocation enables only when the reason box loses focus.
 
@@ -1000,12 +1045,13 @@ Expect:
     revoked. Schedule a review to decide it again." Its one action is Schedule (C3).
   - **By EPA:** PAED-002 reads Decided 0, Not decided 4 and To schedule 1.
   - **Count, default filter:** "71 of 75 decisions due in `<P>` shown."
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): From the menu's Entrustment decisions: lit, no trail. Status
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): From the menu's Entrustment decisions: lit, no trail. Status
   Revoked + Apply filters leaves Dlamini's PAED-002; Active leaves four. The revoked certificate
-  (star-certificate-PAED-002-5-....pdf): Status Revoked, "REVOKED", "Revoked on 12 October 2026 by b6965f65-..." (a
-  user id) and the reason. Decisions due: default "71 of 75 decisions due in 2026 S2 shown."; Dlamini's PAED-002
-  "Revoked: re-decide", "STAR #5, issued for 2026 S2, was revoked. Schedule a review to decide it again.", Open review
-  and Schedule. By EPA PAED-002: Due 5, Decided 0, Not decided 4, To schedule 1.
+  (star-certificate-PAED-002-5-....pdf): Status Revoked, "REVOKED", "Revoked on 13 October 2026 by 259eb624-..." (a
+  user id) and the reason. Decisions due: default "71 of 75 decisions due in 2026 S2 shown."; Every status + PAED-002:
+  Dlamini's row "Revoked: re-decide", "STAR #5, issued for 2026 S2, was revoked. Schedule a review to decide it again."
+  with one action, Schedule (named "Schedule a review of Anele Dlamini for PAED-002 before Paed Annual Review Panel");
+  the other four Not decided. By EPA PAED-002: Due 5, Decided 0, Not decided 4, To schedule 1.
 Gap: [F-4.37a, T324] (still) The revoked certificate names the revoker by raw user id, not "Refilwe Mokoena".
 
 ### Step 4.38 — Prof Mbatha reads the sitting in the audit log
@@ -1021,9 +1067,9 @@ Expect:
     so she reads no summary. The stored summary, checked with SQL, keeps ReviewId, Category and PresentUserIds in the
     clear and holds Rationale, Conditions and UndecidedNote as "[REDACTED]" (T101, T361).
   - **The revocation's entry:** its actor is Dr Mokoena. Its stored Reason is "[REDACTED]".
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Audit log, Action RecordCommitteeDecisionCommand: five rows,
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Audit log, Action RecordCommitteeDecisionCommand: five rows,
   all OK, by zulu@kgk.wombat.local, none FAILED (4.23 and 4.24 sent nothing). An entry's detail shows Event and Actor
-  only, no Payload. SQL: each SummaryJson keeps category, reviewId and presentUserIds (4, 3, 2, 3, 2 ids) and holds
+  only, no Payload. SQL: each SummaryJson keeps category, reviewId and presentUserIds (3, 2, 2, 4, 3 ids) and holds
   rationale, conditions and undecidedNote as "[REDACTED]". RevokeEntrustmentDecisionCommand: one OK row by
   mokoena@kgk.wombat.local, stored reason "[REDACTED]".
 Gap: none
@@ -1043,14 +1089,14 @@ Expect: Home's My authorisations card reads "2 at or above · 1 below · 12 with
   - PAED-010 reads the date `D+20`, with the badge "Expires in 20 days".
   Each Download certificate is named by its EPA. The PAED-001 certificate downloads with Status Active and its evidence
   summary.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Home's My authorisations card: "2 at or above · 1 below · 12
-  with no decision, of 15 EPAs", one STAR "PAED-010 — Leading and operating within a clinical team" linking
-  /portfolio/progress/11, "4, below training year 4's level of 5 · expires 2026-11-01" under it, footer "Open My
-  authorisations" (`4.39-3`). It opens /portfolio/authorisations: three cards issued 12 October 2026 with the
-  rationale: PAED-001 5 "No expiry", PAED-010 4 "1 November 2026" with "Expires in 20 days", PAED-012 5 "No expiry".
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Home's My authorisations card: "2 at or above · 1 below · 12
+  with no decision, of 15 EPAs", one STAR "PAED-010 — Leading and operating within a clinical team" (a link to
+  /portfolio/progress/11), "4, below training year 4's level of 5 · expires 2026-11-02" under it, footer "Open My
+  authorisations" (`4.39-3`). It opens /portfolio/authorisations: three cards issued 13 October 2026 with the
+  rationale: PAED-001 5 "No expiry", PAED-010 4 "2 November 2026" with "Expires in 20 days", PAED-012 5 "No expiry".
   Downloads named "Download certificate for PAED-001/010/012". PAED-001 certificate
-  (star-certificate-PAED-001-1-....pdf): Status Active, evidence Mini-CEX #12 and CBD #13. No horizontal scroll at 390
-  px.
+  (star-certificate-PAED-001-1-....pdf, 96,338 bytes): Status Active, evidence Mini-CEX #12 and CBD #13. No horizontal
+  scroll at 390 px.
 Gap: none
 
 ### Step 4.40 — Dr Molefe reads her progress against Annexure A
@@ -1066,15 +1112,15 @@ Expect: The index's STAR column, headed "STAR against training year 4", reads "A
   - PAED-010 at `4`, "Below" the target of `5`, with its issue and expiry dates.
   Each EPA's name links to its page, and each Latest rating, "4 · Encounter <date>" and the like, is a link to its
   activity (T355). The exit rule says it gates nothing. The page reads the same table as the committee's (T166).
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): My progress (lit): index STAR column "STAR against training
-  year 4": PAED-001 and PAED-012 "At or above 5", PAED-010 "Below 4 · expires 2026-11-01", the others "No decision".
-  "You are in training year 4 on 2026-10-12." "2 at or above · 1 below · 12 with no decision, of 15 EPAs", "2 of 15
-  EPAs at their exit level by STAR decision (level 5: 2 of 9 · level 4: 0 of 6)". PAED-001 5 "Issued 2026-10-12", At or
-  above target 5, exit Reached; PAED-012 the same; PAED-010 4 "Issued 2026-10-12, expires 2026-11-01", Below target 5,
-  Not yet. Names link /portfolio/progress/<EpaId>; Latest rating "4 · Encounter 2026-10-03" -> /activities/14,
-  PAED-010's -> /activities/17, PAED-012's -> /activities/16. "For information only. ..."; the same table as the
-  committee's. EPA pages: PAED-010 4, Below, Issued, Expires 2026-11-01, "5 · not yet"; PAED-001 5, At or above, "5 ·
-  reached"; no horizontal scroll (`4.40-2`, `4.40-3`).
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): My progress (lit): index STAR column "STAR against training
+  year 4": PAED-001 and PAED-012 "At or above 5", PAED-010 "Below 4 · expires 2026-11-02", the others "No decision".
+  "You are in training year 4 on 2026-10-13." "2 at or above · 1 below · 12 with no decision, of 15 EPAs", "2 of 15
+  EPAs at their exit level by STAR decision (level 5: 2 of 9 · level 4: 0 of 6)". PAED-001 5 "Issued 2026-10-13", At or
+  above target 5, exit Reached; PAED-012 the same; PAED-010 4, Below target 5, Not yet. Names link
+  /portfolio/progress/<EpaId>; Latest rating "4 · Encounter 2026-10-04" -> /activities/14, PAED-010's ->
+  /activities/17, PAED-012's -> /activities/16. "For information only. ..."; the same table as the committee's. EPA
+  pages: PAED-010 4, Below, Issued, Expires 2026-11-02, "5 · not yet"; PAED-001 5, At or above, "5 · reached"; no
+  horizontal scroll (`4.40-2`, `4.40-3`).
 Gap: none
 
 ### Step 4.41 — Dr Molefe reads her review, and not the committee's page
@@ -1091,14 +1137,14 @@ Expect:
     - "Not decided at this sitting" with the committee's sentence "To be decided at her final review." on the other
       twelve, due and optional alike: no reason, and no Deferred (T361, D53, E1).
   - **The committee's page** lands on access-denied.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): One row: Paed Annual Review Panel, "2026 S2 · 2026-01-01 to
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): One row: Paed Annual Review Panel, "2026 S2 · 2026-01-01 to
   2026-12-31", Annual progression, Ratified, Satisfactory Progress; View named "View the 2026 S2 review before Paed
   Annual Review Panel". Detail: Sits for, Evidence window, Type "Annual progression review", State Ratified;
   "Satisfactory Progress", the rationale, "Present when this decision was taken: Thandi Zulu (chair), David Naidoo,
   Sarah Botha, John van Rensburg (external)". Agenda EPA/Window/Outcome: "Decided" "STAR #1./#2./#3." on 001/010/012;
   the other twelve, 008/009/013 too, "Not decided at this sitting" with "To be decided at her final review."; no
-  Deferred, no reason label. An Appeal reason form follows. No horizontal scroll at 390 px. Typed /committee/reviews/1
-  -> /access-denied, "Your role (Trainee) does not open this page."
+  Deferred, no reason label. No horizontal scroll at 390 px. Typed /committee/reviews/1 -> /access-denied, "Your role
+  (Trainee) does not open this page."
 Gap: none
 
 ### Step 4.42 — Dr Dlamini reads what stands after the revocation
@@ -1108,7 +1154,7 @@ Do: From her Home's My authorisations card, Open My authorisations. Then open he
 Expect: One card, PAED-001 at `4`: the revoked PAED-002 is no longer listed. Her review reads Ratified, Satisfactory
   Progress. The agenda still reads Decided with STAR numbers on PAED-001 and 002, because it records what the sitting
   did.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Home's Open My authorisations: one card, PAED-001 level 4, No
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Home's Open My authorisations: one card, PAED-001 level 4, No
   expiry, with its rationale; PAED-002 not listed. My committee reviews: Ratified, Satisfactory Progress, "Present when
   this decision was taken: Thandi Zulu (chair), David Naidoo, Sarah Botha"; the agenda still reads PAED-001 "Decided
   STAR #4." and PAED-002 "Decided STAR #5."
@@ -1128,11 +1174,11 @@ Expect:
       this year." (T361, D53, E1);
     - an Appeal reason form is offered.
   - **After lodging:** "Appeal lodged." The state reads Under appeal, the form is gone and the agenda stays in view.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): "Inadequate Progress — Additional Training" with "Present when
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): "Inadequate Progress — Additional Training" with "Present when
   this decision was taken: Thandi Zulu (chair), Sarah Botha, John van Rensburg (external)"; all fifteen lines "Not
   decided at this sitting" with "Not enough observed evidence yet this year." (no Deferred); Appeal reason with Lodge
   appeal. "Appeal lodged."; "State: Under appeal", the form gone, the 15-line agenda kept. The list row above still
-  reads Ratified. No mail (30).
+  reads Ratified. No mail (29).
 Gap: [F-4.43a, T308] (still) After lodging, the list row still reads State Ratified while the detail below it reads
   Under appeal.
 
@@ -1143,9 +1189,9 @@ Do: Open Dr Mahlangu's review.
 Expect: The list shows her review Under appeal. The Appeals card lists the appeal, with the date lodged, its reason and
   "(Open)". It offers him no form. It says "Only the appeal body can resolve the appeal: the panel's chair, Thandi Zulu,
   and its external member, John van Rensburg." (T213, T237)
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Acting as Committee member. The list shows Mahlangu's review
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Acting as Committee member. The list shows Mahlangu's review
   Under appeal, Inadequate Progress — Additional Training. Appeals: "Only the appeal body can resolve the appeal: the
-  panel's chair, Thandi Zulu, and its external member, John van Rensburg." and "2026-10-12 The single DOPS ... I ask
+  panel's chair, Thandi Zulu, and its external member, John van Rensburg." and "2026-10-13 The single DOPS ... I ask
   for reconsideration. (Open)"; no form, no control (only the closed dialogs' buttons in the DOM).
 Gap: none
 
@@ -1167,14 +1213,14 @@ Expect:
     - Replacement conditions, optional;
     - Present, with both Thandi Zulu (chair) and himself ticked and locked.
   - **Nothing changes** until he submits.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): "Acting as Committee member" (no other role). Committee reviews
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): "Acting as Committee member" (no other role). Committee reviews
   lists the five, Mahlangu's Under appeal. Outcome opens on "Select an outcome…", then "Dismissed: the decision stands"
   and "Remitted: the appeal body replaces the decision"; no Upheld; help "Dismissed leaves the committee's decision in
   force. Remitted replaces it ... Either closes the review, and nothing reopens it." Resolve appeal with none: "Choose
   an outcome.", aria-invalid, focus on the select. Remitted reveals Replacement category ("Select a category…"),
   Replacement rationale, Replacement conditions (optional) and Present, Thandi Zulu (chair) and John van Rensburg
-  (external) ticked and locked. Left unresolved. With Remitted chosen the Outcome select is 292 px wide and its text
-  304 px: it reads "Remitted: the appeal body replaces the" (`4.45-2`).
+  (external) ticked and locked (disabled). With Remitted chosen the Outcome select is 292 px wide and its text 304 px:
+  it reads "Remitted: the appeal body replaces the" (`4.45-2`). Left unresolved.
 Gap: [F-4.45c, T323] (still) At 1280 px, once Remitted opens the second column, the Outcome select is too narrow and
   its choice, "Remitted: the appeal body replaces the decision", is clipped (`4.45-2`).
 
@@ -1186,11 +1232,11 @@ Do: On Dr Mahlangu's review, choose Remitted, the replacement category Satisfact
 Expect: Resolve appeal is refused with "A committee decision needs at least two panel members present: the chair and
   at least one other." (T165: a remit records its own quorate sitting), in the Appeals section beside the form, with
   the focus on it (T361, round 3 item 15). The review stays Under appeal.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Outcome opened on "Select an outcome…". Remitted, Satisfactory
-  with Observations and 4.47's rationale, only Thandi Zulu (chair) ticked and locked (van Rensburg is unticked for
-  her): refused "A committee decision needs at least two panel members present: the chair and at least one other." at
-  the top of the Appeals section (y 7,695, its heading at 7,656), beside the form, with the focus on it (`4.46-1`). Bar
-  still Under appeal; outcome, category and rationale kept.
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Outcome opened on "Select an outcome…". Remitted, Satisfactory
+  with Observations and 4.47's rationale, only Thandi Zulu (chair) ticked and locked (van Rensburg unticked for her):
+  refused "A committee decision needs at least two panel members present: the chair and at least one other." at the top
+  of the Appeals section (y 7,695, its heading at 7,656), beside the form, with the focus on it (`4.46-1`). Bar still
+  Under appeal; outcome, category and rationale kept.
 Gap: none (F-4.46a, T299 no longer occurs: the remit's refusal sits in the Appeals section beside the form, focused,
   not at the head of the page)
 
@@ -1207,13 +1253,13 @@ Expect: "Appeal resolved." The state reads Closed (T250).
     decision stays below it, marked "Replaced on appeal by the decision above.".
   - **Appeals card:** the appeal reads "(Remitted)".
   - **No STAR changed:** the review issued none.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Conditions and Sarah Botha ticked: "Appeal resolved." in the
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Conditions and Sarah Botha ticked: "Appeal resolved." in the
   Appeals section; bar Closed, "Satisfactory with Observations · no STAR issued". Decision: "Satisfactory with
   Observations", the rationale, "About the EPAs not decided: Not enough observed evidence yet this year.", "Conditions:
   Two observed Mini-CEX and one DOPS before the next review.", "Present: Thandi Zulu (chair), Sarah Botha"; below it
   "Inadequate Progress — Additional Training", "Replaced on appeal by the decision above.", with its first Present
-  line. Appeals: "(Remitted)", no form. SQL: appeal 1 Outcome 3, resolved; decision 6 (category 2, the note carried,
-  the conditions) supersedes 4; review State 6; STARs still 5.
+  line. Appeals: "(Remitted)", no form. SQL (Outcome state query 3): decision 6 (category 2, note carried) supersedes
+  4; review State 6; STARs still 5.
 Gap: none
 
 ### Step 4.48 — Dr Mahlangu reads the outcome
@@ -1224,7 +1270,7 @@ Expect: The row reads State Closed and Decision Satisfactory with Observations. 
   replacement, with "Present when this decision was taken: Thandi Zulu (chair), Sarah Botha". The agenda's fifteen lines
   still read "Not decided at this sitting" with "Not enough observed evidence yet this year.": the replacement carries
   the first decision's sentence (T361, E5). No appeal form is offered.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Row: State Closed, Decision Satisfactory with Observations.
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Row: State Closed, Decision Satisfactory with Observations.
   Detail: "State: Closed", "Satisfactory with Observations", the replacement rationale, "Present when this decision was
   taken: Thandi Zulu (chair), Sarah Botha"; all fifteen agenda lines "Not decided at this sitting" with "Not enough
   observed evidence yet this year."; no appeal form. Nothing of her appeal, its outcome, the first decision or the
@@ -1253,16 +1299,21 @@ Expect:
     column (C8).
   - **Decisions due's line:** "No open review holds `<P>`." with Schedule a review, and "Formative check-in #N is open:
     it takes no seat." with Open check-in #N.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Panel, Sipho Ndlovu, 2026 S2, Scheduled on 2026-10-12,
-  Formative only ticked: the preview reads "A formative review carries no agenda: it decides no EPA."; the Review type
-  select stays offered (Annual progression review / Pre-graduation review). Accepted beside his binding review: review
-  #6, h1 "Sipho Ndlovu · 2026 S2", subtitle "Formative check-in · Paed Annual Review Panel · Training year 1". Bar
-  Scheduled, "Formative: an interim check-in, no binding decision · evidence 2026-01-01 to 2026-12-31", "As of 14:07
-  SAST", Refresh and Start review… for Smit. Sections: Before the committee decides, Evidence snapshot, standing, MSF,
-  trajectory; no Decision, Agenda or Appeals. List row: Type Formative, Mode Formative, Scheduled, Decision "—"; Open
-  "Open the 2026 S2 formative review of Sipho Ndlovu ...".
-Gap: [F-4.49a, T309] (still, item 3) With Formative only ticked the Review type select stays offered. (T309 item 2 no
-  longer occurs: the check-in reads "Formative check-in" in the subtitle and "Formative" in the list.)
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Schedule a review: Panel, Sipho Ndlovu · Training year 1, 2026
+  S2, Scheduled on 2026-10-13, Review type Formative check-in (a radio beside Annual progression review and
+  Pre-graduation review, so T309 item 3 is built): its help "Closes without a binding decision and cannot issue
+  entrustment decisions. Use for interim progress check-ins. It takes no seat for the period." The Agenda swaps to "A
+  formative review carries no agenda: it decides no EPA."; no "Already held" although his binding review exists (it is
+  Ratified); no sideways scroll at 390. Created: review #6, h1 "Sipho Ndlovu · 2026 S2", subtitle "Formative check-in ·
+  Paed Annual Review Panel · Training year 1" with "Sipho Ndlovu's progress". Bar Scheduled, "Formative: an interim
+  check-in, no binding decision · evidence 2026-01-01 to 2026-12-31", "As of 14:35 SAST", Refresh and Start review… for
+  Smit. Sections: The sitting, Before the committee decides, Evidence snapshot, standing, MSF, trajectory; no Decision,
+  Agenda or Appeals. List: columns Trainee, Panel, Period, Type, State, Decision, Actions (no Mode); row Type
+  "Formative check-in", Scheduled, Decision "— None"; Open named "Open the 2026 S2 formative review of Sipho Ndlovu
+  before Paed Annual Review Panel". Decisions due with Trainee Ndlovu: two lines, "No open review holds 2026 S2." with
+  Schedule a review, and "Formative check-in #6 is open: it takes no seat." with Open check-in #6
+  (/committee/reviews/6).
+Gap: none (T309 item 3 no longer occurs: Formative check-in is a Review type; F-4.49a closed)
 
 ### Step 4.50 — Dr Zulu starts and closes the check-in
 Role: CommitteeMember (chair) — Dr Thandi Zulu
@@ -1280,16 +1331,16 @@ Expect:
     decision recorded", and nothing is offered.
   - **Other readers** (Dr Naidoo, Mr Smit) read "Only the panel's chair, Thandi Zulu, can close this review." in a
     static bar while it is in progress, with "As of hh:mm SAST" and Refresh, and no button to close it.
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Subtitle "Formative check-in · Paed Annual Review Panel ·
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Subtitle "Formative check-in · Paed Annual Review Panel ·
   Training year 1". Start dialog ("the 3 items ... (3 activities)"), then "Review started." under the bar, focused; bar
   In progress, "Formative: an interim check-in, no binding decision", Close review…. The snapshot freezes the same
   three activities as review #5 (#4 Discussed; #2 Declined, #3 3a Completed); standing ("In training year 1 on
-  2026-10-12") and MSF follow it. Close review… offered to her alone: Naidoo and Smit read a static bar, "Only the
-  panel's chair, Thandi Zulu, can close this review.", "As of 14:07 SAST", Refresh, no close button. Dialog "Close
+  2026-10-13") and MSF follow it. Close review… offered to her alone: Naidoo and Smit read a static bar, "Only the
+  panel's chair, Thandi Zulu, can close this review.", "As of 14:36 SAST", Refresh, no close button. Dialog "Close
   Sipho Ndlovu's formative check-in?", "It records no decision and issues no STAR. Nothing on it can change once it is
   closed.", focus "Not yet", confirm "Close review" (`4.50-4`). "Formative review closed.", focused; bar Closed,
-  "Formative check-in · no decision recorded"; nothing offered. T356 in progress: at 1280 and 768 px the bar sticks at
-  56-110 / 56-168 px, Sign out (14-42) never covered.
+  "Formative check-in · no decision recorded"; nothing offered. T356: at 1280 and 768 px the bar sticks at 56-110 /
+  56-168 px, Sign out (14-42) never covered.
 Gap: none
 
 ### Step 4.51 — Dr Ndlovu reads both reviews
@@ -1299,21 +1350,21 @@ Do: Open My committee reviews.
 Expect: Two rows for `<P>`. The annual review reads Annual progression, Ratified, Outcome Deferred. The check-in reads
   Type "Formative check-in" (T309 item 2; T364, C8), State Closed, with Decision "No binding decision"; its detail's Type
   reads "Formative check-in".
-Actual (2026-10-12, T361 replay, wombat_scenario_t361): Two rows for 2026 S2: the annual review "Annual progression,
-  Ratified, Outcome Deferred" and the check-in "Formative, Closed, No binding decision" (View "View the 2026 S2
-  formative review before Paed Annual Review Panel"); the check-in's detail "Type: Formative check-in", "State:
+Actual (2026-10-13, T364 replay, wombat_scenario_t364): Two rows for 2026 S2: the annual review "Annual progression,
+  Ratified, Outcome Deferred" and the check-in "Formative check-in, Closed, No binding decision" (View "View the 2026
+  S2 formative review before Paed Annual Review Panel"); the check-in's detail "Type: Formative check-in", "State:
   Closed".
-Gap: none (T309 item 2 no longer occurs: the check-in reads Formative)
+Gap: none (T309 item 2 no longer occurs: the check-in reads Formative check-in; C8 holds)
 
 ## Outcome state
 
-Replay check (2026-10-12, T361 replay, wombat_scenario_t361): match on all six queries (six reviews: four binding
+Replay check (2026-10-13, T364 replay, wombat_scenario_t364): match on all six queries (six reviews: four binding
   Ratified, Mahlangu's Closed, Ndlovu's formative Closed, stored with ReviewType 1; 75 agenda lines, 5 Decided and 70
   Not decided: molefe 3/12, dlamini 2/13, the other three 0/15; six decisions, each with a note, Molefe 4, Dlamini 3,
   du Plessis 2, Mahlangu 3 then 2, Ndlovu 2 present, decision 6 superseding 4; five STARs, Dlamini's PAED-002 Revoked,
-  PAED-010 expiring 2026-11-01, 2 evidence links each; 0 pending, 1 remitted appeal; frozen lines Molefe 9, Dlamini 4,
-  du Plessis 5, Mahlangu 2, Ndlovu 3 and 3). The act wrote no mail (the log's Stub email count stayed 30). Snapshot
-  recovery/scenario-t361-post-act4.dump.
+  PAED-010 expiring 2026-11-02, 2 evidence links each; 0 pending, 1 remitted appeal; frozen lines Molefe 9, Dlamini 4,
+  du Plessis 5, Mahlangu 2, Ndlovu 3 and 3). The act wrote no mail (the log's Stub email count stayed 29). Snapshot
+  recovery/scenario-t364-post-act4.dump.
 
 These steps add, before the panel `Paed Annual Review Panel`, for the period `<P>`:
 - **Six reviews.** Five are binding Annual progression reviews: four Ratified, and Mahlangu's Closed after its appeal
