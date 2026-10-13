@@ -39,15 +39,15 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
 - **Proposed:** T363 (the page's four data gaps). T362 (live following) still waits. **T290** stays in progress.
 - **Next in the redesign:** flow 08, started (below).
 
-### T364, flow 08 (panels, what is due, the schedule): steps 1–5 done, 2026-10-12 to 10-13
+### T364, flow 08 (panels, what is due, the schedule): steps 1–6 done, 2026-10-12 to 10-13
 
-- Brief restated (`c6740da1`); canvas **Wombat 08** created by Claude (`0c37b4ef`, the mark copied). Round 1: A picked
-  (`6f051379`, `4cdea93e`); round 2 drawn (`716adffc`) and reviewed from three sides (`951b855d`); the operator took
-  F1–F6 (F1 reverses Q7). Round 3 drawn (`a41cc281`) and checked: **the design is final** (`round-3-check.md`).
-- **Step 6, the build, running** (2026-10-13): integration branch `t364` (worktree `.claude/worktrees/t364`) holds the
-  shared pieces (`94e14fee`: `ReviewLinks.Schedule`/`ScheduleReturn`, the pager's label, the calendar's shared CSS) and
-  `build-lanes.md`/`build-contracts.md` (`1e54fd25`). Three lanes on Opus in their own worktrees: `t364-panels`,
-  `t364-due`, `t364-schedule`. Then: merge, the runbook lane, a three-lens Sonnet review, one fix pass, the squash.
+- Design final (`round-3-check.md`; F1 reverses Q7). **Built and squashed: `622c5ad1`** (six suites green: 814 / 3782 /
+  1022 / 52 / 3636 / 491). Shared pieces, three page lanes, the runbook lane, three Sonnet reviews (0 high, 2 medium,
+  18 low), one fix pass: `build-lanes.md`, `build-contracts.md`, `build-review.md`. Branches `t364`, `t364-*` kept
+  locally; worktrees removed. Not pushed.
+- **Next: step 7, the replay** on a fresh database (`design/flows/07-review-sitting/replay-brief.md` as template); the
+  runbook's 4.2 S1 agenda lines are inferred from the planner, for the replay to confirm. Then steps 8 (design system
+  v20) and 9 (lessons).
 
 ### For the operator
 
