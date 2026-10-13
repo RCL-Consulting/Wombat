@@ -43,9 +43,12 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
 
 - Design final; **built and squashed `622c5ad1`**, pushed with the handoff (`74ffe579`). Six suites green.
 - **Step 7, the replay** (`design/flows/08-committee-calendar/replay-brief.md`; app :5180 on `wombat_scenario_t364`,
-  scratchpad `g364`): acts 1–4 played and committed (`b4dc3cd1`, `c29308d0`, `4ee62216`, `b9cd85be`), no regression;
-  dumps `scenario-t364-post-act{1..4}`. Act 5 running. **Next:** acts 5, 6, the appendix, the states; then steps 8
-  (design system v20) and 9 (lessons). 4.2's S1 Agenda showed an older defect: **T365 proposed** (`548c1c94`).
+  republished from `1ec7a352`; scratchpad `g364`): all six acts and the appendix played and committed (`b4dc3cd1` ..
+  `6a1daf0d`); dumps `scenario-t364-post-act{1..6,A}`, `-pre-a515`. One flow 08 fault, fixed: the 19 px sentence links
+  on Decisions due (`1ec7a352`). 4.2's S1 Agenda shows an older defect: **T365 proposed** (`548c1c94`). **States agent
+  running** (`g364/prompt-states.txt`, scratch DBs `wombat_scenario_t364_st*` on :5181). **Next:** commit its rows, close
+  the tasks the build fixed (T309, T259, T260, T264, T280, T324's half; check each), tick Verification, then steps 8
+  (design system v20) and 9 (lessons).
 
 ### For the operator
 
