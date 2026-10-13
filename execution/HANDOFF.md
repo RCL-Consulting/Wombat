@@ -42,13 +42,12 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
 ### T364, flow 08 (panels, what is due, the schedule): steps 1–6 done, step 7 under way, 2026-10-12 to 10-13
 
 - Design final; **built and squashed `622c5ad1`**, pushed with the handoff (`74ffe579`). Six suites green.
-- **Step 7, the replay** (`design/flows/08-committee-calendar/replay-brief.md`; app :5180 on `wombat_scenario_t364`,
-  republished from `1ec7a352`; scratchpad `g364`): all six acts and the appendix played and committed (`b4dc3cd1` ..
-  `6a1daf0d`); dumps `scenario-t364-post-act{1..6,A}`, `-pre-a515`. One flow 08 fault, fixed: the 19 px sentence links
-  on Decisions due (`1ec7a352`). 4.2's S1 Agenda shows an older defect: **T365 proposed** (`548c1c94`). **States agent
-  running** (`g364/prompt-states.txt`, scratch DBs `wombat_scenario_t364_st*` on :5181). **Next:** commit its rows, close
-  the tasks the build fixed (T309, T259, T260, T264, T280, T324's half; check each), tick Verification, then steps 8
-  (design system v20) and 9 (lessons).
+- **Step 7 done** (`a21f890e`): acts 1–6 and the appendix (`b4dc3cd1`..`6a1daf0d`), one flow 08 fault fixed (the
+  19 px sentence links, `1ec7a352`), states 56 of 59 hold, 3 rows corrected (`88f545f9`); missing 0. Closed T309, T259;
+  flow 08 halves noted on T260, T264, T272, T280, T324, T329, T338. **T365 proposed** (`548c1c94`). App :5180 on
+  `wombat_scenario_t364` (republished from `1ec7a352`); scratch DBs `wombat_scenario_t364_s515`, `_st1`..`_st6`.
+- **Step 8 running:** an implementer re-syncs `design/system/` (live v19 matched HEAD, compared 2026-10-13 in
+  `scratchpad/ds-live-v19`); then one Sonnet review, commit, publish v20. **Then step 9** (BRIEF § 11 "Flow 08").
 
 ### For the operator
 
