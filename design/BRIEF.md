@@ -1086,6 +1086,33 @@ already teach is here.
   the live version was v18, 1791814724, and all 131 `project/` files matched HEAD (two licence files differ only in line
   endings). *Changed:* nothing; the compare before the publish is what tells an edit from a version bump.
 
+**Flow 08 (T364, 2026-10-12 to 10-13): what the eighth flow added**
+
+Flow 08 ran the loop in two days: three rounds (F1 reversed Q7), the build (`622c5ad1`) in three page lanes and a runbook
+lane with three Sonnet reviewers, the replay (acts 1–6 and the appendix, one flow 08 fault), the states (56 of 59 hold,
+3 rows corrected) and the re-sync (design system version 20). Its record is `design/flows/08-committee-calendar/`. Only
+what flows 01–07 did not already teach is here.
+
+- **A note that names an act's flow steps reads as a limit.** Observed: act 5's prompt said it "plays flow 08 steps 5.1,
+  5.2 and 5.29", and the agent played those three, dumped and reported; resumed with a correction, it played the whole
+  act. *Changed:* a note names them as "the flow's steps inside your act" and says the remit is every step.
+- **An agent idles on its own background job after its work is done.** Observed: acts 4 and 6 wrote every line and took
+  their dumps, then sat on a background wait; the operator saw act 4 "stuck on the dump" for hours. *Changed:* every act
+  prompt says to report the moment the dump returns and to start no job after it; the integrator stops an agent that
+  reports with a job still running.
+- **A new page can show an old rule's fault.** Observed: the schedule page's Agenda aside labelled the optional EPAs
+  "Due by year end" at S1; the label comes from T131's `StatusOf`, which the review page's agenda shares, so it was
+  filed as T365, not fixed as a regression. *Changed:* nothing; classify a finding by where its rule was written
+  (`git log -S`), not by the page it showed on.
+- **A link in a sentence is a small target the floor still counts.** Observed: Decisions due's "review #n" links were
+  19 px tall at 390, under the runbook's 24 px floor (WCAG's inline exception aside). Inline block padding made them
+  27 px without moving the line (`1ec7a352`). *Changed:* nothing; pad a sentence's link, never make it a block.
+- **A stray command in a shared scratch folder rewrites the integrator's files.** Observed: an agent's `sed -i` on `*`
+  ran in the scratchpad root after a failed `cd`, rewriting the integrator's loose scripts. Nothing in use broke.
+  *Changed:* nothing; keep the integrator's live scripts in a folder of their own, apart from the agents'.
+- **A states row's timing is a measurement, not a guess.** Observed: two load-error rows said "held 35 s"; the pages
+  failed after about 60 s, apparently two reads in turn. *Changed:* the rows say to hold 75 s and wait for the alert.
+
 **What the brief keeps as it was**
 - The flows' order (§ 8), the invariants (§ 4.4) and the acceptance check (§ 9) held. The digest (§ 5.1) is restated
   for what flow 01 fixed: the shell, its components and the states it already designed. The brief template (§ 2.4)

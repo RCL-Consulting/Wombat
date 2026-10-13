@@ -2,7 +2,7 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Sessions 2026-10-11 to 10-12 (Opus): the harness upgraded to 3.4; 111 done tasks archived; T361 (flow 07) done
+## Sessions 2026-10-11 to 10-13 (Opus): harness 3.4; 111 done tasks archived; T361 (flow 07) and T364 (flow 08) done
 
 The operator said "upgrade the execution workspace", "move the done tasks" and "proceed". **The repo is `C:\dev\Wombat`,
 on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when the operator asks.** The harness is
@@ -39,15 +39,15 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
 - **Proposed:** T363 (the page's four data gaps). T362 (live following) still waits. **T290** stays in progress.
 - **Next in the redesign:** flow 08, started (below).
 
-### T364, flow 08 (panels, what is due, the schedule): steps 1–6 done, step 7 under way, 2026-10-12 to 10-13
+### T364 done (2026-10-12 to 10-13): flow 08 built, replayed, in the design system (version 20)
 
-- Design final; **built and squashed `622c5ad1`**, pushed with the handoff (`74ffe579`). Six suites green.
-- **Step 7 done** (`a21f890e`): acts 1–6 and the appendix (`b4dc3cd1`..`6a1daf0d`), one flow 08 fault fixed (the
-  19 px sentence links, `1ec7a352`), states 56 of 59 hold, 3 rows corrected (`88f545f9`); missing 0. Closed T309, T259;
-  flow 08 halves noted on T260, T264, T272, T280, T324, T329, T338. **T365 proposed** (`548c1c94`). App :5180 on
-  `wombat_scenario_t364` (republished from `1ec7a352`); scratch DBs `wombat_scenario_t364_s515`, `_st1`..`_st6`.
-- **Step 8 running:** an implementer re-syncs `design/system/` (live v19 matched HEAD, compared 2026-10-13 in
-  `scratchpad/ds-live-v19`); then one Sonnet review, commit, publish v20. **Then step 9** (BRIEF § 11 "Flow 08").
+- **Build** `622c5ad1` (six suites green), pushed with `74ffe579`. **Replay** on `wombat_scenario_t364`: acts 1–6 and
+  the appendix (`b4dc3cd1`..`6a1daf0d`), one flow 08 fault fixed and re-measured (19 px sentence links, `1ec7a352`);
+  states 56 of 59 hold, 3 rows corrected (`88f545f9`); missing 0. **Closed** T309, T259; flow 08 halves noted on T260,
+  T264, T272, T280, T324, T329, T338 (`a21f890e`). **Proposed** T365 (an S1 agenda's "Due by year end", older).
+- **Design system** re-synced (`84e22b0e`, one Sonnet review, no must-fix) and published as **version 20**
+  (1791917863-8f48); the live v19 matched HEAD first. **Lessons** in BRIEF § 11 "Flow 08".
+- **Not pushed:** everything since `74ffe579`. **Next in the redesign:** flow 09, when the operator says.
 
 ### For the operator
 
@@ -57,12 +57,13 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
 
 ### Environment left
 
-- **The replay app on `:5180`** runs `wombat_scenario_t361` (flow 07's appendix end state), published from `14378856`.
-  Dumps `recovery/scenario-t361-post-act{1..6,A}`, `scenario-t361-pre-a515`.
-- **Replay scratch:** this session's scratchpad `g361` (`replay-pw.env`; act and states scripts). Khumalo's and du
-  Plessis's pre-appendix passwords are the `_A` keys.
+- **The replay app on `:5180`** runs `wombat_scenario_t364` (flow 08's appendix end state), published from `1ec7a352`.
+  Dumps `recovery/scenario-t364-post-act{1..6,A}`, `scenario-t364-pre-a515`. Scratch DBs `wombat_scenario_t364_s515`,
+  `_st1`..`_st6` (states), and `wombat_scenario_t361` (flow 07's), can be dropped on the operator's word.
+- **Replay scratch:** this session's scratchpad `g364` (`replay-pw.env`; act, states scripts; `prompt-*.txt`).
+  Khumalo's and du Plessis's pre-appendix passwords are the `_A` keys.
 - **Databases:** 77 old `wombat_scenario_*` replay and scratch databases dropped 2026-10-12 (the operator's word);
-  every earlier flow's act dumps stay in `recovery/`. Left: `wombat_scenario_t361`, `wombat_scenario`, `_pdf`, and the
+  every earlier flow's act dumps stay in `recovery/`. Left: the T364 and T361 ones above, `wombat_scenario`, `_pdf`, and the
   non-scenario ones (`wombat`, `wombat_snapshot_pre_t130_*`, `wombat_t002_verify`, `wombat_t159`, `ClinicAssist*`).
 - **Branches:** `t358`, `t358-*` (merged, squashed into `85d5a508`), `t355*`, `t304`, `t350*`, `t342*` kept locally;
   worktrees removed. The orphaned `verify-master` worktree folder (pointing at the pre-move repo path) was deleted 2026-10-06.

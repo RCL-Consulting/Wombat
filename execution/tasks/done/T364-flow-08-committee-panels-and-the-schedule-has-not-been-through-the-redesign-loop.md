@@ -1,12 +1,13 @@
 ---
 id: T364
 title: Flow 08, committee panels and the schedule, has not been through the redesign loop
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-10-12
 started: 2026-10-12
+completed: 2026-10-13
 ---
 
 # T364 — Flow 08, committee panels and the schedule, has not been through the redesign loop
@@ -61,7 +62,8 @@ Run the loop as flow 07 ran it (`design/flows/07-review-sitting/`, BRIEF § 11 "
   `wombat_scenario_t364`: acts 1–6 and the appendix `b4dc3cd1`..`6a1daf0d`; one flow 08 fault, the 19 px sentence
   links, fixed and re-measured (`1ec7a352`); states 56 of 59 hold, 3 rows corrected (`88f545f9`); missing 0. T365
   proposed for an older label defect; T309 and T259 closed.)
-- [ ] The design system is re-synced and republished — its version number.
+- [x] The design system is re-synced and republished — its version number. (Version 20, 1791917863-8f48;
+  `84e22b0e`; the live v19 matched HEAD first; one Sonnet review, no must-fix; lessons in BRIEF § 11 "Flow 08".)
 
 ## Related
 
