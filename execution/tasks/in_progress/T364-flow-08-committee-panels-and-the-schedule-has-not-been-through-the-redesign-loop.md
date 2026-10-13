@@ -77,3 +77,6 @@ T361 (flow 07), T362, T363, T309 (the scheduling preview's seat warning), T329; 
   recommendation (2026-10-13): **F1 reverses Q7**, a Missed row schedules its own ended semester (an S2 review cannot
   decide an S1 EPA: `AgendaPlanner.cs:210`, `DecisionWindowRecords.cs:125`); Show; the browser's date input; type
   preselected; races tested, not replayed; the S2 line reworded. Round 3 is `round-3-ask.txt`.
+- **2026-10-13, round 3 drawn and checked** (`round-3/`, `round-3-check.md`): F1–F6, M1–M10 and S1–S8 done; the design
+  is final. F4's S1 default is drawn Entrustment-only; the code's `DefaultFor` makes it Annual progression (the build
+  moves it). Next: step 6, the build.
