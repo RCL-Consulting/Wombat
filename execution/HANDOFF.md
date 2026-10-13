@@ -39,15 +39,13 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
 - **Proposed:** T363 (the page's four data gaps). T362 (live following) still waits. **T290** stays in progress.
 - **Next in the redesign:** flow 08, started (below).
 
-### T364, flow 08 (panels, what is due, the schedule): steps 1–6 done, 2026-10-12 to 10-13
+### T364, flow 08 (panels, what is due, the schedule): steps 1–6 done, step 7 under way, 2026-10-12 to 10-13
 
-- Design final (`round-3-check.md`; F1 reverses Q7). **Built and squashed: `622c5ad1`** (six suites green: 814 / 3782 /
-  1022 / 52 / 3636 / 491). Shared pieces, three page lanes, the runbook lane, three Sonnet reviews (0 high, 2 medium,
-  18 low), one fix pass: `build-lanes.md`, `build-contracts.md`, `build-review.md`. Branches `t364`, `t364-*` kept
-  locally; worktrees removed. Not pushed.
-- **Next: step 7, the replay** on a fresh database (`design/flows/07-review-sitting/replay-brief.md` as template); the
-  runbook's 4.2 S1 agenda lines are inferred from the planner, for the replay to confirm. Then steps 8 (design system
-  v20) and 9 (lessons).
+- Design final; **built and squashed `622c5ad1`**, pushed with the handoff (`74ffe579`). Six suites green.
+- **Step 7, the replay** (`design/flows/08-committee-calendar/replay-brief.md`; app :5180 on `wombat_scenario_t364`,
+  scratchpad `g364`): acts 1–4 played and committed (`b4dc3cd1`, `c29308d0`, `4ee62216`, `b9cd85be`), no regression;
+  dumps `scenario-t364-post-act{1..4}`. Act 5 running. **Next:** acts 5, 6, the appendix, the states; then steps 8
+  (design system v20) and 9 (lessons). 4.2's S1 Agenda showed an older defect: **T365 proposed** (`548c1c94`).
 
 ### For the operator
 
