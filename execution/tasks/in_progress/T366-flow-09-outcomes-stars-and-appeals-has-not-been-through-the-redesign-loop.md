@@ -49,9 +49,12 @@ Run the loop as flow 08 ran it (`design/flows/08-committee-calendar/`, BRIEF § 
 
 ## Verification
 
-- [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit.
-- [ ] The canvas is created, with the mark copied in before round 1 — its link.
-- [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/09-outcomes-stars-appeals/`.
+- [x] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit.
+  `0058adf3`.
+- [x] The canvas is created, with the mark copied in before round 1 — its link.
+  https://claude.ai/artifact/5LfLPdcXJ2iRX6GSm2bbKP (`47f2850d`).
+- [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/09-outcomes-stars-appeals/`.
+  B; `round-2-review.md` (`4da096d1`), `round-3-check.md` (`13057800`).
 - [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 09) — the squash commit and counts.
   `49e7cf5e`: Domain 815, Application 3809, Infrastructure 1023, Architecture 52, Web 3735, Integration 491.
 - [ ] The whole runbook replays on a fresh database with no regression from flow 09, the baseline is re-captured, and
