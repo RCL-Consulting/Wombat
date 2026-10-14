@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Steps · the 17 runbook steps once B is built</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+
+/* ===== NEW for flow 09 (app.css, section "Outcomes, STARs and appeals", T308, T367). No NEW token. ===== */
+/* The trainee's review page (/committee/my-reviews/{id}): flow 07's one column (.review-page), its facts a definition list. */
+.review-facts { display: grid; gap: var(--space-xs) var(--space-lg); grid-template-columns: max-content minmax(0, 1fr); margin: 0; }
+.review-facts dt { color: var(--muted-text); font-weight: 600; }
+.review-facts dd { margin: 0; }
+.review-facts dd .badge { vertical-align: 1px; }
+
+/* DecisionHistory: flow 07's decision read branch, lifted and shared by both pages; newest first, a hairline between. */
+.decision-history { display: flex; flex-direction: column; gap: var(--space-lg); }
+.decision-history .decision-record + .decision-record { border-top: 1px solid var(--border-color); padding-top: var(--space-lg); }
+.decision-record p { margin: 0 0 var(--space-sm); }
+.decision-record p:last-child { margin-bottom: 0; }
+.decision-replaced, .decision-note { color: var(--muted-text); }
+
+/* AppealEntry: one appeal, the same on both pages: who, its state in words, lodged, heard by or resolved, the reason. */
+.appeal-list { display: flex; flex-direction: column; gap: var(--space-md); list-style: none; margin: 0; padding: 0; }
+.appeal-entry { border: 1px solid var(--border-color); border-radius: var(--radius-lg); display: flex; flex-direction: column; gap: var(--space-sm); padding: var(--space-md) var(--space-lg); }
+.appeal-entry-head { align-items: center; display: flex; flex-wrap: wrap; font-size: 1.05rem; gap: var(--space-sm); margin: 0; }
+.appeal-entry-meta { color: var(--muted-text); font-size: 0.9rem; margin: 0; }
+.appeal-entry-outcome { margin: 0; }
+.appeal-entry-label { font-weight: 600; margin: 0; }
+.appeal-entry-reason { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.appeal-entry-reason--clamped { -webkit-box-orient: vertical; -webkit-line-clamp: 6; display: -webkit-box; overflow: hidden; }
+.appeal-entry-more { align-self: flex-start; }
+.appeals-who { color: var(--muted-text); margin: 0 0 var(--space-md); }
+
+/* The lodge block: what happens next, then the reason and Lodge appeal. Read-width (48rem) at every width. */
+.lodge-block { display: flex; flex-direction: column; gap: var(--space-md); max-width: 48rem; }
+.lodge-next { display: flex; flex-direction: column; gap: var(--space-sm); margin: 0; padding-left: var(--space-lg); }
+.lodge-block .form-group, .resolve-form .form-group { margin: 0; }
+.lodge-block .form-actions, .resolve-form .form-actions { margin: 0; }
+textarea.form-control { font-family: var(--font-body); } /* T328: every reason box in the body font */
+.char-count { color: var(--muted-text); font-size: 0.9rem; margin: var(--space-xs) 0 0; }
+
+/* The committee's resolve form: one column, so the chosen Outcome reads whole at 1280 (T323). */
+.resolve-form { display: flex; flex-direction: column; gap: var(--space-md); max-width: 48rem; }
+.resolve-form .form-select { width: 100%; }
+.resolve-form .decision-actions { margin-top: var(--space-sm); }
+
+/* My authorisations: In force (cards) and No longer in force (a table). */
+.stars-section + .stars-section { margin-top: var(--space-xl); }
+.star-card { display: flex; flex-direction: column; gap: var(--space-sm); }
+.star-card h3 { font-size: 1.05rem; margin: 0; }
+.star-facts { display: grid; gap: var(--space-xs) var(--space-lg); grid-template-columns: max-content minmax(0, 1fr); margin: 0; }
+.star-facts dt { color: var(--muted-text); }
+.star-facts dd { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-sm); margin: 0; }
+.star-rationale { color: var(--muted-text); margin: 0; }
+.star-card .form-actions { align-items: flex-start; flex-direction: column; margin-top: auto; }
+.download-result { font-size: 0.9rem; margin: 0; }
+
+/* The register: a STAR's line under its row (revoked, superseded), and Issued's link to its review. */
+.clinic-table tbody tr.has-line > * { border-bottom: 0; }
+.clinic-table tbody tr.star-row-line > td { font-size: 0.9rem; padding-top: 0; }
+.issued-review { display: block; font-size: 0.9rem; }
+.row-actions { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
+
+@media (max-width: 900px) {
+  .clinic-table--stack-wide tbody tr.has-line { border-bottom: 0; padding-bottom: 0; }
+  .clinic-table--stack-wide tbody tr.star-row-line { padding-top: var(--space-xs); }
+  .clinic-table--stack-wide tbody tr.star-row-line > td { display: block; }
+}
+@media (max-width: 640.98px) {
+  .review-facts, .star-facts { gap: 0; grid-template-columns: minmax(0, 1fr); }
+  .review-facts dd, .star-facts dd { margin-bottom: var(--space-sm); }
+  .outcomes .form-actions .btn, .outcomes .row-actions .btn, .outcomes .decision-actions .btn,
+  .outcomes .appeal-entry-more, .outcomes td .btn { min-height: 44px; width: 100%; justify-content: center; }
+  .outcomes .row-actions { flex-direction: column; width: 100%; }
+  .outcomes .check-grid .form-check { min-height: 2.75rem; }
+}
+
+/* ===== Preview framing only (the canvas, not the product): flow 08's ===== */
+body { margin: 0; background-color: var(--header-bg); }
+.pv-board { display: flex; flex-direction: column; gap: var(--space-xl); padding: var(--space-lg) 0 var(--space-2xl); background-color: var(--header-bg); }
+.pv-head { margin: 0 var(--space-lg); background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--space-md) var(--space-lg); display: flex; flex-direction: column; gap: var(--space-xs); font-size: 0.9rem; }
+.pv-head h1 { font-size: 1.25rem; margin: 0 0 var(--space-xs); }
+.pv-head p { margin: 0; }
+.pv-head b { font-weight: 600; }
+.pv-frame { display: flex; flex-direction: column; }
+.pv-cap { margin: 0; padding: var(--space-sm) var(--space-lg); background-color: var(--primary-color); color: var(--on-fill); font-size: 0.9rem; line-height: 1.4; display: flex; flex-direction: column; gap: 2px; }
+.pv-cap b { font-weight: 600; font-size: 1rem; }
+.pv-stage { position: relative; }
+.pv-frame .page { position: relative; min-height: 0; background-color: var(--background-color); }
+@media (min-width: 641px) {
+  .pv-frame .sidebar { height: auto; position: static; align-self: stretch; }
+  .pv-frame .account-row { position: absolute; left: var(--sidebar-width); right: 0; top: 0; }
+  .pv-frame .sitting-bar:not(.sitting-bar--reader) { position: static; }
+}
+.pv-frame article { padding-bottom: var(--space-xl); }
+.pv-focus { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.pv-cut { border: 1px dashed var(--input-border); border-radius: var(--radius-md); color: var(--muted-text); font-size: 0.85rem; padding: var(--space-sm) var(--space-md); margin: var(--space-sm) 0; text-align: center; background-color: var(--surface-color); }
+.pv-scrim { position: absolute; inset: 0; background: var(--scrim); display: flex; align-items: flex-start; justify-content: center; padding: 140px var(--space-md) 0; z-index: 20; }
+.pv-scrim dialog { position: static; margin: 0; }
+.pv-tag { font-style: normal; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; border-radius: var(--radius-sm); padding: 0 6px; margin-left: 6px; align-self: flex-start; }
+.pv-tag--prop { background: var(--warning-bg); color: var(--text-color); }
+.pv-tag--new { background: var(--surface-color); color: var(--primary-color); }
+.pv-tag--t367 { background: var(--success-bg); color: var(--text-color); }
+.pv-cap .pv-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.pv-doc { margin: 0 var(--space-lg); background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--space-lg) var(--space-xl); }
+.pv-doc h2 { margin: var(--space-xl) 0 var(--space-sm); }
+.pv-doc h2:first-child { margin-top: 0; }
+.pv-doc h3 { margin: var(--space-lg) 0 var(--space-sm); }
+.pv-doc p, .pv-doc li { font-size: 0.95rem; }
+.pv-doc table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.pv-doc th, .pv-doc td { border-bottom: 1px solid var(--border-color); padding: 6px 8px; text-align: left; vertical-align: top; }
+.pv-doc th { background-color: var(--header-bg); font-weight: 600; }
+.pv-doc code { font-family: var(--font-mono); font-size: 0.85rem; }
+.pv-doc .pv-tag { margin-left: 0; }
+.pv-swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--input-border); vertical-align: -2px; margin-right: 6px; }
+.pv-order { display: flex; flex-direction: column; gap: var(--space-sm); }
+.pv-order .pv-cut { margin: 0; text-align: left; }
+</style>
+</helmet>
+<div class="pv-board" style="width: 1440px"><section class="pv-frame"><div class="pv-doc"><h2>The 17 steps once B is built</h2><p>Role, route and what each Expect will say. The round-1 Expects that quoted today's words change with these.</p><table><thead><tr><th>Step</th><th>Role</th><th>Route</th><th>Expect, once built</th></tr></thead><tbody><tr><td>4.35</td><td>Institutional admin, Nolwazi Mbatha</td><td><code>/ → /admin/entrustment-decisions</code></td><td>Five rows, all Active, newest issued first: Dlamini PAED-002 3b, PAED-001 4; Molefe PAED-012 5, PAED-010 4 expiring 2026-11-02, PAED-001 5. Each Issued reads 2026-10-13 with its review (#2, #1). The caption reads “Issued STARs (entrustment decisions) · 5 shown”. Filtered by “Molefe” with Apply filters: three rows, “· 3 shown”, and Clear filters.</td></tr><tr><td>4.36</td><td>Speciality admin, Refilwe Mokoena</td><td><code>/admin/entrustment-decisions</code></td><td>Revoke on Dlamini's PAED-002 row (named “Revoke Anele Dlamini's PAED-002 decision, issued 2026-10-13”) opens “Revoke Anele Dlamini's PAED-002 STAR?” with the focus in Revocation reason; the dialog says “Anele Dlamini is sent an email saying the STAR was revoked and by whom, with a link to My authorisations. The reason is not in the email …”. Revoke the STAR enables once the reason is typed (69 of 1,000). After: “Anele Dlamini's PAED-002 STAR is revoked.” with the focus; the row reads Revoked with Download only and the line “Revoked 2026-10-13 at hh:mm SAST by Refilwe Mokoena: Staged on evidence …”. The application log holds the mail to Dr Dlamini (T367).</td></tr><tr><td>4.37</td><td>Sub-speciality admin, Kabelo Sithole</td><td><code>/admin/entrustment-decisions → /committee/decisions-due</code></td><td>Revoked leaves Dlamini's PAED-002 with its line; Active leaves four. The revoked certificate reads Status Revoked, REVOKED, the date, “Refilwe Mokoena” by name (T324) and the reason. Decisions due unchanged (flow 08's).</td></tr><tr><td>4.39</td><td>Trainee, Lerato Molefe</td><td><code>/ → /portfolio/authorisations</code></td><td>Trail Home › My progress › My authorisations; “In force”: three cards, each Issued 2026-10-13 (ISO), the committee's rationale; PAED-001 and 012 “No expiry”; PAED-010 “2026-11-02” with “Expires in 20 days” (South African calendar). Download named “Download the certificate for PAED-001”. No “No longer in force”.</td></tr><tr><td>4.41</td><td>Trainee, Lerato Molefe</td><td><code>/committee/my-reviews → /committee/my-reviews/1 → /committee/reviews/1</code></td><td>The list: one row, State badge Ratified, View named by the review. View opens /committee/my-reviews/1: h1 and tab “2026 S2 annual progression review”, trail Home › My committee reviews › …, Sits for 2026 S2, the window, Type, State. Decision: Satisfactory Progress, its rationale, “About the EPAs not decided: To be decided at her final review.”, “Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)”. Appeal: the lodge block. Agenda: Decided “STAR #1.”, “#2.”, “#3.” on PAED-001, 010, 012; Not decided at this sitting on the twelve. /committee/reviews/1 is access denied, unchanged.</td></tr><tr><td>4.42</td><td>Trainee, Anele Dlamini</td><td><code>/ → /portfolio/authorisations → /committee/my-reviews/2</code></td><td>In force: PAED-001 at 4. No longer in force: PAED-002, 3b, Revoked, since 2026-10-13, “Revoked by Refilwe Mokoena: Staged on evidence about PAED-001, not PAED-002; to be decided again.”, “Download the certificate for PAED-002 (revoked)”. Her review: Ratified, Satisfactory Progress; the agenda still reads Decided “STAR #4.” and “STAR #5.”.</td></tr><tr><td>4.43</td><td>Trainee, Nomsa Mahlangu</td><td><code>/committee/my-reviews/4</code></td><td>Before: Decision “Inadequate Progress — Additional Training”, its rationale, “Present: Thandi Zulu (chair), Sarah Botha, John van Rensburg (external)”; fifteen lines “Not decided at this sitting”, “Not enough observed evidence yet this year.”; “What happens next” names the appeal body and every reader. Blank: “Give your reason for appealing.” under the field. Typed (153 of 4,000), Lodge appeal → “Lodge your appeal?” (focus Keep editing) → Lodge appeal. After: “Appeal lodged.” in the Appeal section with the focus; State Under appeal; her entry Open, “Lodged 2026-10-13”, “Heard by Thandi Zulu (chair) and John van Rensburg (external).”; no form; back on the list, the row reads Under appeal.</td></tr><tr><td>4.44</td><td>Committee member, David Naidoo</td><td><code>/committee/reviews → /committee/reviews/4</code></td><td>The list: Under appeal. The Appeals section, the page's last: “Appeal by Nomsa Mahlangu”, Open, Lodged 2026-10-13, Heard by the appeal body, the reason; no form; “Only the appeal body can resolve the appeal: the panel's chair, Thandi Zulu, and its external member, John van Rensburg.”</td></tr><tr><td>4.45</td><td>Committee member (external), John van Rensburg</td><td><code>/committee/reviews/4</code></td><td>The form inline: Outcome opens on “Select an outcome…”. Resolve appeal with none: “Choose an outcome.” under the select, the focus on it. Remitted: Replacement category (“Select a category…”), rationale, conditions, Present with Thandi Zulu (chair) and himself ticked and locked; the quorum line reads “2 present: the chair and 1 other. The quorum is met.”. Nothing changes.</td></tr><tr><td>4.46</td><td>Committee member (chair), Thandi Zulu</td><td><code>/committee/reviews/4</code></td><td>Remitted, Satisfactory with Observations, the rationale; only she ticked: the quorum line reads “Only the chair is ticked. …”; Resolve appeal is refused with “A committee decision needs at least two panel members present: the chair and at least one other.” under the button, with the focus; what she typed is kept; Under appeal.</td></tr><tr><td>4.47</td><td>Committee member (chair), Thandi Zulu</td><td><code>/committee/reviews/4</code></td><td>Sarah Botha ticked, the conditions typed, Resolve appeal → “Remit Nomsa Mahlangu's appeal?” (focus Go back) → Remit the appeal. “Appeal resolved.” heads the Appeals section with the focus; the entry Remitted, “Resolved 2026-10-13 by Thandi Zulu”; the bar Closed; the replacement heads the decision history with “Conditions: …” and “Present: Thandi Zulu (chair), Sarah Botha”; the first below it, “Replaced on appeal by the decision above.”; no STAR changed.</td></tr><tr><td>4.48</td><td>Trainee, Nomsa Mahlangu</td><td><code>/committee/my-reviews → /committee/my-reviews/4</code></td><td>The row: Closed, Satisfactory with Observations. Her page: both decisions, newest first, the first marked replaced, with its rationale and who sat; her entry Remitted, Resolved 2026-10-13 by Thandi Zulu; “This review is closed and cannot be appealed again.”; the agenda's fifteen lines unchanged; no form.</td></tr><tr><td>4.51</td><td>Trainee, Sipho Ndlovu</td><td><code>/committee/my-reviews</code></td><td>Two rows for 2026 S2: Annual progression, Ratified, Outcome Deferred; Formative check-in, Closed, No binding decision. Their pages' h1s differ: “2026 S2 annual progression review” and “2026 S2 formative check-in”.</td></tr><tr><td>5.7</td><td>Institutional admin, Nolwazi Mbatha</td><td><code>/ → /admin/entrustment-decisions</code></td><td>Molefe, Active: fifteen rows, “· 15 shown”. With All: sixteen, newest issued first; Act 4's PAED-010 reads Superseded with Download only and the line “Superseded on 2026-10-13 by STAR #18.”.</td></tr><tr><td>5.8</td><td>Trainee, Lerato Molefe</td><td><code>/committee/my-reviews/7 → /portfolio/authorisations</code></td><td>The list: Pre-graduation, Ratified, Graduate (programme complete). Her page “2026 S2 pre-graduation review”: the decision, its rationale, who was present; thirteen lines Decided with STAR #6 to #18; the lodge block offered, nothing lodged. My authorisations: fifteen cards in one card form, ISO dates, “No expiry”; the PAED-001 certificate downloads as star-certificate-PAED-001-&lt;id&gt;-&lt;8 hex&gt;.pdf.</td></tr><tr><td>6.22</td><td>Institutional admin, Nolwazi Mbatha</td><td><code>… → /admin/entrustment-decisions</code></td><td>Her fifteen read Active beside the Superseded PAED-010; PAED-012's EPA reads “… healthcare teams (no longer in use)” (T255).</td></tr><tr><td>A.7.7</td><td>Speciality admin, Refilwe Mokoena, 390px</td><td><code>… → /admin/entrustment-decisions</code></td><td>Entrustment decisions lit in the menu, no trail; every row a stacked block with Trainee, EPA, Level, Issued (and its review), Expires, Status and its actions; the revoked row's line wraps; nothing scrolls sideways.</td></tr></tbody></table></div></section><section class="pv-frame"><div class="pv-doc"><h2>C26: steps, presses and fields typed</h2><table><thead><tr><th>Journey</th><th>Presses and fields</th><th>1280</th><th>390</th></tr></thead><tbody><tr><td>Dr Molefe reads her review (4.41)</td><td>My committee reviews, View</td><td>2</td><td>3 (Menu first)</td></tr><tr><td>Dr Mahlangu lodges (4.43)</td><td>menu, View, reason typed, Lodge appeal, Lodge appeal in the dialog</td><td>5</td><td>6</td></tr><tr><td>Dr Mahlangu reads the outcome (4.48)</td><td>menu, View</td><td>2</td><td>3</td></tr><tr><td>Dr Naidoo reads the appeal (4.44)</td><td>Committee reviews, the review (then ~7,800px of scroll at 1280: the jump link PROPOSED would save it)</td><td>2</td><td>3</td></tr><tr><td>Dr van Rensburg: no outcome, then Remitted (4.45)</td><td>Committee reviews, the review, Resolve appeal, Outcome Remitted (the form is inline: no opening press)</td><td>4</td><td>5</td></tr><tr><td>Dr Zulu: refused, then remits (4.46–4.47)</td><td>Committee reviews, review, Remitted, category, rationale, Resolve appeal (refused), tick Sarah Botha, conditions, Resolve appeal, Remit the appeal</td><td>10</td><td>11</td></tr><tr><td>Dr Mokoena revokes (4.36)</td><td>Entrustment decisions, Revoke, reason typed, Revoke the STAR</td><td>4</td><td>5</td></tr><tr><td>Dr Dlamini's My authorisations (4.42)</td><td>Home's card, Open My authorisations</td><td>1</td><td>1</td></tr></tbody></table></div></section></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":6200}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

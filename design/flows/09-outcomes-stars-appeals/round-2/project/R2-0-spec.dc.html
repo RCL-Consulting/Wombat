@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Spec · flow 09 round 2</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+
+/* ===== NEW for flow 09 (app.css, section "Outcomes, STARs and appeals", T308, T367). No NEW token. ===== */
+/* The trainee's review page (/committee/my-reviews/{id}): flow 07's one column (.review-page), its facts a definition list. */
+.review-facts { display: grid; gap: var(--space-xs) var(--space-lg); grid-template-columns: max-content minmax(0, 1fr); margin: 0; }
+.review-facts dt { color: var(--muted-text); font-weight: 600; }
+.review-facts dd { margin: 0; }
+.review-facts dd .badge { vertical-align: 1px; }
+
+/* DecisionHistory: flow 07's decision read branch, lifted and shared by both pages; newest first, a hairline between. */
+.decision-history { display: flex; flex-direction: column; gap: var(--space-lg); }
+.decision-history .decision-record + .decision-record { border-top: 1px solid var(--border-color); padding-top: var(--space-lg); }
+.decision-record p { margin: 0 0 var(--space-sm); }
+.decision-record p:last-child { margin-bottom: 0; }
+.decision-replaced, .decision-note { color: var(--muted-text); }
+
+/* AppealEntry: one appeal, the same on both pages: who, its state in words, lodged, heard by or resolved, the reason. */
+.appeal-list { display: flex; flex-direction: column; gap: var(--space-md); list-style: none; margin: 0; padding: 0; }
+.appeal-entry { border: 1px solid var(--border-color); border-radius: var(--radius-lg); display: flex; flex-direction: column; gap: var(--space-sm); padding: var(--space-md) var(--space-lg); }
+.appeal-entry-head { align-items: center; display: flex; flex-wrap: wrap; font-size: 1.05rem; gap: var(--space-sm); margin: 0; }
+.appeal-entry-meta { color: var(--muted-text); font-size: 0.9rem; margin: 0; }
+.appeal-entry-outcome { margin: 0; }
+.appeal-entry-label { font-weight: 600; margin: 0; }
+.appeal-entry-reason { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.appeal-entry-reason--clamped { -webkit-box-orient: vertical; -webkit-line-clamp: 6; display: -webkit-box; overflow: hidden; }
+.appeal-entry-more { align-self: flex-start; }
+.appeals-who { color: var(--muted-text); margin: 0 0 var(--space-md); }
+
+/* The lodge block: what happens next, then the reason and Lodge appeal. Read-width (48rem) at every width. */
+.lodge-block { display: flex; flex-direction: column; gap: var(--space-md); max-width: 48rem; }
+.lodge-next { display: flex; flex-direction: column; gap: var(--space-sm); margin: 0; padding-left: var(--space-lg); }
+.lodge-block .form-group, .resolve-form .form-group { margin: 0; }
+.lodge-block .form-actions, .resolve-form .form-actions { margin: 0; }
+textarea.form-control { font-family: var(--font-body); } /* T328: every reason box in the body font */
+.char-count { color: var(--muted-text); font-size: 0.9rem; margin: var(--space-xs) 0 0; }
+
+/* The committee's resolve form: one column, so the chosen Outcome reads whole at 1280 (T323). */
+.resolve-form { display: flex; flex-direction: column; gap: var(--space-md); max-width: 48rem; }
+.resolve-form .form-select { width: 100%; }
+.resolve-form .decision-actions { margin-top: var(--space-sm); }
+
+/* My authorisations: In force (cards) and No longer in force (a table). */
+.stars-section + .stars-section { margin-top: var(--space-xl); }
+.star-card { display: flex; flex-direction: column; gap: var(--space-sm); }
+.star-card h3 { font-size: 1.05rem; margin: 0; }
+.star-facts { display: grid; gap: var(--space-xs) var(--space-lg); grid-template-columns: max-content minmax(0, 1fr); margin: 0; }
+.star-facts dt { color: var(--muted-text); }
+.star-facts dd { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-sm); margin: 0; }
+.star-rationale { color: var(--muted-text); margin: 0; }
+.star-card .form-actions { align-items: flex-start; flex-direction: column; margin-top: auto; }
+.download-result { font-size: 0.9rem; margin: 0; }
+
+/* The register: a STAR's line under its row (revoked, superseded), and Issued's link to its review. */
+.clinic-table tbody tr.has-line > * { border-bottom: 0; }
+.clinic-table tbody tr.star-row-line > td { font-size: 0.9rem; padding-top: 0; }
+.issued-review { display: block; font-size: 0.9rem; }
+.row-actions { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
+
+@media (max-width: 900px) {
+  .clinic-table--stack-wide tbody tr.has-line { border-bottom: 0; padding-bottom: 0; }
+  .clinic-table--stack-wide tbody tr.star-row-line { padding-top: var(--space-xs); }
+  .clinic-table--stack-wide tbody tr.star-row-line > td { display: block; }
+}
+@media (max-width: 640.98px) {
+  .review-facts, .star-facts { gap: 0; grid-template-columns: minmax(0, 1fr); }
+  .review-facts dd, .star-facts dd { margin-bottom: var(--space-sm); }
+  .outcomes .form-actions .btn, .outcomes .row-actions .btn, .outcomes .decision-actions .btn,
+  .outcomes .appeal-entry-more, .outcomes td .btn { min-height: 44px; width: 100%; justify-content: center; }
+  .outcomes .row-actions { flex-direction: column; width: 100%; }
+  .outcomes .check-grid .form-check { min-height: 2.75rem; }
+}
+
+/* ===== Preview framing only (the canvas, not the product): flow 08's ===== */
+body { margin: 0; background-color: var(--header-bg); }
+.pv-board { display: flex; flex-direction: column; gap: var(--space-xl); padding: var(--space-lg) 0 var(--space-2xl); background-color: var(--header-bg); }
+.pv-head { margin: 0 var(--space-lg); background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--space-md) var(--space-lg); display: flex; flex-direction: column; gap: var(--space-xs); font-size: 0.9rem; }
+.pv-head h1 { font-size: 1.25rem; margin: 0 0 var(--space-xs); }
+.pv-head p { margin: 0; }
+.pv-head b { font-weight: 600; }
+.pv-frame { display: flex; flex-direction: column; }
+.pv-cap { margin: 0; padding: var(--space-sm) var(--space-lg); background-color: var(--primary-color); color: var(--on-fill); font-size: 0.9rem; line-height: 1.4; display: flex; flex-direction: column; gap: 2px; }
+.pv-cap b { font-weight: 600; font-size: 1rem; }
+.pv-stage { position: relative; }
+.pv-frame .page { position: relative; min-height: 0; background-color: var(--background-color); }
+@media (min-width: 641px) {
+  .pv-frame .sidebar { height: auto; position: static; align-self: stretch; }
+  .pv-frame .account-row { position: absolute; left: var(--sidebar-width); right: 0; top: 0; }
+  .pv-frame .sitting-bar:not(.sitting-bar--reader) { position: static; }
+}
+.pv-frame article { padding-bottom: var(--space-xl); }
+.pv-focus { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.pv-cut { border: 1px dashed var(--input-border); border-radius: var(--radius-md); color: var(--muted-text); font-size: 0.85rem; padding: var(--space-sm) var(--space-md); margin: var(--space-sm) 0; text-align: center; background-color: var(--surface-color); }
+.pv-scrim { position: absolute; inset: 0; background: var(--scrim); display: flex; align-items: flex-start; justify-content: center; padding: 140px var(--space-md) 0; z-index: 20; }
+.pv-scrim dialog { position: static; margin: 0; }
+.pv-tag { font-style: normal; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; border-radius: var(--radius-sm); padding: 0 6px; margin-left: 6px; align-self: flex-start; }
+.pv-tag--prop { background: var(--warning-bg); color: var(--text-color); }
+.pv-tag--new { background: var(--surface-color); color: var(--primary-color); }
+.pv-tag--t367 { background: var(--success-bg); color: var(--text-color); }
+.pv-cap .pv-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.pv-doc { margin: 0 var(--space-lg); background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--space-lg) var(--space-xl); }
+.pv-doc h2 { margin: var(--space-xl) 0 var(--space-sm); }
+.pv-doc h2:first-child { margin-top: 0; }
+.pv-doc h3 { margin: var(--space-lg) 0 var(--space-sm); }
+.pv-doc p, .pv-doc li { font-size: 0.95rem; }
+.pv-doc table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.pv-doc th, .pv-doc td { border-bottom: 1px solid var(--border-color); padding: 6px 8px; text-align: left; vertical-align: top; }
+.pv-doc th { background-color: var(--header-bg); font-weight: 600; }
+.pv-doc code { font-family: var(--font-mono); font-size: 0.85rem; }
+.pv-doc .pv-tag { margin-left: 0; }
+.pv-swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--input-border); vertical-align: -2px; margin-right: 6px; }
+.pv-order { display: flex; flex-direction: column; gap: var(--space-sm); }
+.pv-order .pv-cut { margin: 0; text-align: left; }
+</style>
+</helmet>
+<div class="pv-board" style="width: 1440px"><section class="pv-frame"><div class="pv-doc"><h2>Flow 09, round 2: B, a review page of its own, and P, at full fidelity</h2>
+<p><b>The captures.</b> None arrived as chat attachments. All the ask names were read from the folder instead, <code>C:\dev\Wombat\design\upload</code>, with its <code>DESIGN.md</code>, <code>app.css</code> and the brief: act-4/4.35-2, 4.36-1, 4.36-2, 4.39-1, 4.41-1, 4.41-2 (390), 4.41-3, 4.42-1, 4.42-2, 4.43-1, 4.43-2, 4.44-1, 4.45-3, 4.46-1, 4.47-1 top and appeals, 4.48-1, 4.51-1, act-5/5.7-2, 5.8-2, 5.8-3, act-6/6.22-3, act-A/A.7.7-5, states/review-detail--appeal-dismissed, states/my-reviews--empty, states/my-authorisations--loading. Nothing is drawn from memory: where neither a capture nor the ask's FIXTURES give a word it is a bracket ‹…› (review #2's rationale, Act 5's STAR rationales, the revocation's time).</p>
+<p><b>On the design system installed here</b> (Wombat, namespace wombat: <code>ds/wombat/tokens.css</code> and <code>components/bundle.css</code>, the classes Razor writes). Every board is a column of states at one width, each under a dark caption naming the state, the step, the person, the correction it answers and where the focus lands. <em class="pv-tag pv-tag--prop">PROPOSED</em> marks what is not decided; <em class="pv-tag pv-tag--new">NEW</em> what is new; <em class="pv-tag pv-tag--t367">decided, T367</em> what rests on T367, which lands first.</p>
+<p><b>The boards.</b> 1 My committee reviews (1280, 768, 390) · 2 Her review page (1280 a–c, 768, 390 a–b) · 3 The committee's Appeals section (the page's order; 1280 a–c; 390 a–b) · 5 My authorisations (1280 a–b, 390) · 6 The STAR register (1280 a–c, 768, 390). Access denied and Not found are drawn on board 2.</p></div></section><section class="pv-frame"><div class="pv-doc"><h2>The operator's decisions, as drawn</h2><table><thead><tr><th></th><th>Decision</th><th>Where</th></tr></thead><tbody><tr><td>Pick</td><td>B, her review at /committee/my-reviews/{id}, one column at every width: header, Decision, Appeal, Agenda</td><td>2</td></tr><tr><td>Q1</td><td>The row's View links to that page; an id not hers or not yet ratified is flow 01's Page not found; /committee/reviews/{id} stays access denied</td><td>1; 2 c (Not found, Access denied)</td></tr><tr><td>Q2</td><td>One DecisionHistory, lifted from DecisionForm's read branch, the same on both sides</td><td>2 b, c; 3 b</td></tr><tr><td>Q3</td><td>One AppealEntry on both sides: “Your appeal” / “Appeal by {name}”, badge (Open amber, Dismissed and Remitted green), Lodged, Heard by while Open, Resolved {date} by {name}, the reason (clamped past six lines, “Show the whole reason”)</td><td>2 b, c; 3</td></tr><tr><td>Q4</td><td>The lodge block in C's “What happens next” shape; Lodge appeal → ConfirmDialog; “Appeal lodged.” in the block with the focus; row and page Under appeal at once</td><td>1; 2 b</td></tr><tr><td>Q5</td><td>Resolve appeal → ConfirmDialog with “What will be recorded”; flow 07's quorum line beside the button; refusal under it; “Appeal resolved.” heads the section</td><td>3 b, c</td></tr><tr><td>Q6</td><td>Certificates on My authorisations only; Decided lines keep “STAR #n.”</td><td>2 a</td></tr><tr><td>Q7</td><td>The revocation mail is sent <em class="pv-tag pv-tag--t367">decided, T367</em>: no reason, the reviser by name, a link; the dialog says so; the result claims no delivery</td><td>6 b</td></tr><tr><td>Q8</td><td>No longer in force: revoked and expired, superseded off; the reason on her page</td><td>5 a</td></tr><tr><td>Q9</td><td>No deadline; the reason readable by every reader of the committee's page, who are named on the form</td><td>2 b</td></tr><tr><td>Q10</td><td>My authorisations stays under My progress, trail Home › My progress › My authorisations</td><td>5</td></tr><tr><td>Q11</td><td>T367 first; T308 and these pages' halves of T260, T264, T324, T325, T328, T329, T272 drawn as fixed; T310, T311, T320, T362, T363, T365 not drawn</td><td>all</td></tr></tbody></table></div></section><section class="pv-frame"><div class="pv-doc"><h2>Components</h2><table><thead><tr><th>Component</th><th>Status</th><th>Classes</th><th>Where</th><th>DESIGN.md</th></tr></thead><tbody><tr><td>PageHeader, Breadcrumbs, NavMenu, DetailCard, DataTable (stack, stack-wide), Badge, Alert, ActionResult, ConfirmDialog, FormField, FilterBar, StatePanel, Skeleton, EpaLabel, AccessDenied, NotFound</td><td>used as built</td><td>header-container, breadcrumbs, detail-card, clinic-table--stack(-wide), badge-*, alert-*, action-result, dialog-scrim dialog-card, form-group, search-container, skeleton, paused-mark, system-panel</td><td>every board</td><td>unchanged</td></tr><tr><td>ReviewSitting, SittingBar (reader), AgendaTable, .decision-actions, p.quorum-line</td><td>flow 07's, reused</td><td>review-page, review-section-title, sitting-bar--reader, agenda-table(-container), quorum-line</td><td>2, 3</td><td>unchanged</td></tr><tr><td>The trainee's review page <em class="pv-tag pv-tag--new">NEW</em></td><td>new page</td><td>.review-page (flow 07's column), .review-facts</td><td>2</td><td>§ Detail page: add “The trainee's review (/committee/my-reviews/{id}) is one column as the committee's: header, its facts, Decision, Appeal, Agenda.” § the title rule: add “… and on her own review, the period and type: ‘2026 S2 annual progression review’.” Owner table: add “A trainee's review | Trainee: My committee reviews”.</td></tr><tr><td>DecisionHistory <em class="pv-tag pv-tag--new">NEW</em></td><td>lifted from DecisionForm.razor's read branch</td><td>.decision-history, .decision-record, .decision-replaced, .decision-note</td><td>2, 3</td><td>§ Entrustment-only reviews, “The trainee's reviews”: “… on her review's page, from the DecisionHistory the committee's page shows.”</td></tr><tr><td>AppealEntry <em class="pv-tag pv-tag--new">NEW</em></td><td>new</td><td>.appeal-list, .appeal-entry, -head, -meta, -outcome, -label, -reason(--clamped), -more</td><td>2, 3</td><td>§ Page-level patterns: “A person is shown by name” now covers who lodged and who resolved (data from T308).</td></tr><tr><td>The lodge block <em class="pv-tag pv-tag--new">NEW</em></td><td>new</td><td>.lodge-block, .lodge-next, .char-count</td><td>2 b</td><td>§ Form system: a counter under a box is a NEW pattern (see the flags).</td></tr><tr><td>The resolve form, one column</td><td>changed</td><td>.resolve-form</td><td>3</td><td>§ Form system: the Appeals form drops its three-column form-grid (T323).</td></tr><tr><td>My authorisations' cards and No longer in force <em class="pv-tag pv-tag--new">NEW</em></td><td>changed / new</td><td>.stars-section, .star-card, .star-facts, .star-rationale, .download-result</td><td>5</td><td>Owner table row unchanged; § Badges EntrustmentDecision unchanged.</td></tr><tr><td>The register's row line and Issued link <em class="pv-tag pv-tag--new">NEW</em></td><td>new</td><td>tr.has-line + tr.star-row-line, .issued-review, .row-actions</td><td>6</td><td>§ Table system: “A row's line: a following row spanning every column, its first row's rule dropped; stacked, it joins the row's block.”</td></tr><tr><td>The phone rule for these pages</td><td>new scope</td><td>.outcomes (wrapper): 44px buttons and ticks below 641px</td><td>all at 390</td><td>§ app.css section order: a section “Outcomes, STARs and appeals”.</td></tr></tbody></table></div></section><section class="pv-frame"><div class="pv-doc"><h2>Tokens and contrast</h2><p>No NEW token. Every colour is one of tokens.json's; the pairs drawn, computed from its values:</p><table><thead><tr><th>Pair</th><th>Ratio</th><th>Where</th></tr></thead><tbody><tr><td>text-color on surface-color</td><td>12.63:1</td><td>every card</td></tr><tr><td>muted-text on surface-color / background-color</td><td>5.09:1 / 4.83:1</td><td>subtitles, .appeal-entry-meta, .decision-replaced, .char-count, .star-rationale</td></tr><tr><td>muted-text on header-bg (paused-mark in a stacked row's header ground)</td><td>4.57:1</td><td>PAED-012 (no longer in use)</td></tr><tr><td>link-color on surface-color</td><td>6.70:1</td><td>Issued's review link, trail</td></tr><tr><td>secondary-color on surface-color (outline buttons, focus ring)</td><td>4.86:1</td><td>Download, Revoke, Keep editing, Go back; the 2px ring ≥ 3:1</td></tr><tr><td>on-fill on secondary-color / danger-color</td><td>4.86:1 / 5.95:1</td><td>Lodge appeal, Resolve appeal / Revoke the STAR</td></tr><tr><td>input-border on surface-color</td><td>3.80:1</td><td>boxes, selects, ticks</td></tr><tr><td>text on success-bg / warning-bg / danger-bg / header-bg</td><td>11.23 / 11.89 / 11.81 / 11.36:1</td><td>badges, alerts</td></tr><tr><td>badge edges success / warning / danger / neutral</td><td>5.23 / 5.43 / 5.56 / 3.42:1</td><td>Ratified, Under appeal, Revoked, Superseded</td></tr></tbody></table></div></section><section class="pv-frame"><div class="pv-doc"><h2>C1–C26, where each is drawn</h2><table><thead><tr><th></th><th>Correction</th><th>Board</th></tr></thead><tbody><tr><td>C1</td><td>The catalogue's titles on every board (PAED-001 “Providing paediatric emergency care to children”; PAED-015 wraps)</td><td>all</td></tr><tr><td>C2</td><td>Mahlangu's first decision: its rationale, its undecided sentence, Present without David Naidoo</td><td>2 b, c; 3</td></tr><tr><td>C3</td><td>Sits for “2026 S2”, the window its own line; no sitting date drawn</td><td>2</td></tr><tr><td>C4</td><td>153 of 4,000; 69 of 1,000; each counter NEW</td><td>2 b; 6 b</td></tr><tr><td>C5</td><td>One column at 1280, 768 and 390</td><td>2</td></tr><tr><td>C6</td><td>h1 and tab name period and type; Ndlovu's two and Molefe's two differ; trail My committee reviews › h1</td><td>1; 2 a</td></tr><tr><td>C7</td><td>Access denied unchanged; the redirect only here, PROPOSED</td><td>2 c; this board</td></tr><tr><td>C8</td><td>The lodge block's a–d, names PROPOSED data, readers named truly, “Give your reason for appealing.”</td><td>2 b</td></tr><tr><td>C9</td><td>Appeals the last section; the order board; the jump link PROPOSED here</td><td>3 order</td></tr><tr><td>C10</td><td>The resolve form inline, only for an appeal body member who can act, only Under appeal</td><td>3 a</td></tr><tr><td>C11</td><td>Flow 07's p.quorum-line and words; note on the external member</td><td>3 a, b</td></tr><tr><td>C12</td><td>a: nobody can act, no form, the line names nobody · b: cannot seat a quorum, the form offered, Remitted unavailable with the shortfall</td><td>3 c</td></tr><tr><td>C13</td><td>An appeal body member who cannot act reads the member's view; the line leaves him out</td><td>3 a</td></tr><tr><td>C14</td><td>Three dialogs, the safe button focused</td><td>2 b; 3 b, c</td></tr><tr><td>C15</td><td>Names on appeal entries (T308); ‹hh:mm› SAST</td><td>2; 3; 6</td></tr><tr><td>C16</td><td>“STAR #n.”, no download; STARs #1–#18 only</td><td>2 a</td></tr><tr><td>C17</td><td>The entrustment-only remit, Illustration, both sides</td><td>2 c; 3 b</td></tr><tr><td>C18</td><td>One card form for three and fifteen, with rationale; No longer in force hidden when empty</td><td>5</td></tr><tr><td>C19</td><td>No longer in force table, its columns, one download wording, refused and failed words</td><td>5 a</td></tr><tr><td>C20</td><td>Register keeps Active; In force only on My authorisations</td><td>6</td></tr><tr><td>C21</td><td>Revoke outline, named for its row; the dialog's words; refusal in the dialog; the result claims no delivery</td><td>6 b</td></tr><tr><td>C22</td><td>The revoked line, wrapping at every width; stacked rows show every field</td><td>6 b; 6 390</td></tr><tr><td>C23</td><td>Newest issued first; “Superseded on 2026-10-13 by STAR #18.”; Issued links to review #n</td><td>6 c</td></tr><tr><td>C24</td><td>Trainee binds on change; Apply filters, Clear filters; one caption with the count; two empty states</td><td>6 a</td></tr><tr><td>C25</td><td>Loading and load error on every page; one h1, h2 per section, h3 below; captions with scope; no sideways scroll; 768 for the three</td><td>1, 2, 5, 6</td></tr><tr><td>C26</td><td>Step counts</td><td>Steps board</td></tr></tbody></table></div></section><section class="pv-frame"><div class="pv-doc"><h2>Proposed, for the operator</h2><ul>
+<li><em class="pv-tag pv-tag--prop">PROPOSED</em> <b>C7, a shell change:</b> a trainee on /committee/reviews/{id} of her own ratified review is sent to /committee/my-reviews/{id} with an info line, “This is your view of the review.”, from Routes.razor's NotAuthorized branch (flow 01's). Any other review stays access denied. Not drawn on a state board.</li>
+<li><em class="pv-tag pv-tag--prop">PROPOSED</em> <b>C9, an in-page link:</b> while Under appeal, a reader's sitting bar carries “Go to the appeal” (<code>a.btn.btn-outline.btn-sm</code> in .sitting-bar-actions) jumping to #appeals, whose h2 takes the focus. Flow 07's page is otherwise unchanged.</li>
+<li><em class="pv-tag pv-tag--prop">PROPOSED</em> <b>C8a, data:</b> the appeal body's names in the lodge block need AppealBodyOf read while Ratified (today only Under appeal); fold into T308.</li>
+<li><em class="pv-tag pv-tag--prop">PROPOSED</em> <b>The lodge and resolve dialogs</b> are new confirmations (A5).</li>
+<li><em class="pv-tag pv-tag--prop">PROPOSED</em> <b>The counters</b> (C4): counted in the page's script module, client-side, so typing costs no round trip; announced only through aria-describedby, not live.</li>
+</ul>
+<h2>Flags for the build</h2><ul>
+<li><b>Revoke the STAR enables as the reason is typed</b> (T260): @bind:event="oninput", one SignalR round trip a keystroke while the dialog is open. The alternative is always enabled, with “Give a reason for the revocation.” under the box.</li>
+<li><b>FilterBar's word is “Show”</b>; C24 keeps “Apply filters” here. One of the two should give way.</li>
+<li><b>The Issued link</b> assumes register scope and review-read scope coincide for these four roles; otherwise it is plain text.</li>
+<li><b>“Appeal resolved.”</b> lands ~7,800 px below the top at 1280; the result takes the focus, so the page scrolls to it.</li>
+</ul>
+<h2>Edge cases</h2><ul>
+<li>An entrustment-only review appealed and remitted: no category, no STAR changes (2 c; 3 b).</li>
+<li>A panel that cannot seat a quorum; an appeal body nobody can act for; a member who cannot act (3 a, c).</li>
+<li>A STAR revoked on a paused EPA: its row reads Revoked with “(no longer in use)”; it moves to No longer in force with its paused mark.</li>
+<li>A superseded STAR beside its successor: the line names the successor; superseded never shows on My authorisations.</li>
+<li>A graduate: My authorisations goes with the Trainee role (flow 13's); not drawn.</li>
+<li>The 120-character title (PAED-015) wraps in cards, rows and stacked blocks.</li>
+<li>A 4,000-character reason: six lines, then “Show the whole reason” (aria-expanded), on both sides.</li>
+</ul>
+<h2>Accessibility (WCAG 2.1 AA)</h2><ul>
+<li>One h1 a page; each section an h2 (Decision, Appeal, Agenda, Appeals, In force, No longer in force); a decision and an appeal entry an h3; dialogs their own h2.</li>
+<li>Every table captioned; headers scope="col", the row's subject scope="row"; stacked cells keep their labels as generated content with empty alt.</li>
+<li>Every row action named for its row: View, Download, Revoke; badges are words.</li>
+<li>Focus: the h1 on arrival; the field on a blank reason; the safe button in Lodge, Remit and Dismiss dialogs; the reason box in Revoke; each result and refusal in an ActionResult (tabindex −1); Go back and Keep editing return it to their opener.</li>
+<li>Targets: 24px at 1280 and 768; 44px at 390 (.outcomes scope); ticks 2.75rem rows.</li>
+<li>The quorum line is aria-live polite, the one live region besides results.</li>
+</ul></div></section></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":6800}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
