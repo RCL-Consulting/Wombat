@@ -234,7 +234,7 @@ public sealed class EntrustmentDecisionAdminScopePostgresTests : IAsyncLifetime
             .ToArray();
 
     private static Task<EntrustmentDecisionDto> RevokeAsync(ApplicationDbContext db, int decisionId, ClaimsPrincipal principal)
-        => new RevokeEntrustmentDecisionCommandHandler(db).Handle(
+        => new RevokeEntrustmentDecisionCommandHandler(db, FakeUserDirectory.Empty, TestNotices.None(FakeUserDirectory.Empty)).Handle(
             new RevokeEntrustmentDecisionCommand(decisionId, "Concern raised at the site.", principal), CancellationToken.None);
 
     private static void AddProfile(ApplicationDbContext db, string userId, int institutionId, int curriculumId, bool isActive)

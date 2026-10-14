@@ -520,7 +520,7 @@ public sealed class CommitteeRequestsAuthoriseFirstTests
     }
 
     private static Task<EntrustmentDecisionDto> RevokeAsync(ApplicationDbContext db, int decisionId, ClaimsPrincipal principal)
-        => new RevokeEntrustmentDecisionCommandHandler(db).Handle(
+        => new RevokeEntrustmentDecisionCommandHandler(db, FakeUserDirectory.Empty, TestNotices.None(FakeUserDirectory.Empty)).Handle(
             new RevokeEntrustmentDecisionCommand(decisionId, "Concern raised.", principal), CancellationToken.None);
 
     // ─── The panel form offers what creating a panel accepts (T194) ─────────

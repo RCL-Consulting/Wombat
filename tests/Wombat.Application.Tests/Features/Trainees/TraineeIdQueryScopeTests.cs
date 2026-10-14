@@ -85,9 +85,9 @@ public sealed class TraineeIdQueryScopeTests
             (await new ListReviewsForTraineeQueryHandler(db).Handle(
                 new ListReviewsForTraineeQuery(TraineeUserId, principal), CancellationToken.None)).Count > 0,
 
-        ["GetActiveDecisionsForTrainee"] = async (db, principal) =>
-            (await new GetActiveDecisionsForTraineeQueryHandler(db).Handle(
-                new GetActiveDecisionsForTraineeQuery(TraineeUserId, principal), CancellationToken.None)).Count > 0,
+        ["GetDecisionsForTrainee"] = async (db, principal) =>
+            (await new GetDecisionsForTraineeQueryHandler(db, FakeUserDirectory.Empty).Handle(
+                new GetDecisionsForTraineeQuery(TraineeUserId, principal), CancellationToken.None)).Count > 0,
 
         ["GetDecisionHistoryForEpa"] = async (db, principal) =>
             (await new GetDecisionHistoryForEpaQueryHandler(db).Handle(

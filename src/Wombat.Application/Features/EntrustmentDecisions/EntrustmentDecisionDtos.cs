@@ -50,6 +50,13 @@ public sealed record EntrustmentDecisionDto(
     /// <c>EntrustmentDecisionMappings.ToDto</c> is shared by six handlers and does no lookup.
     /// </summary>
     public string? TraineeName { get; init; }
+
+    /// <summary>
+    /// Who revoked it, by name (<see cref="Wombat.Application.Common.Users.UserDisplayNames.NameOf" />), for a revoked
+    /// decision. Filled by <c>GetDecisionsForTraineeQuery</c> (T367); null from every other producer, as
+    /// <see cref="TraineeName" /> is.
+    /// </summary>
+    public string? RevokedByName { get; init; }
 }
 
 /// <summary>An entrustment decision staged at a review, before ratification issues it.</summary>

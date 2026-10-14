@@ -170,7 +170,7 @@ public sealed class EpaNoLongerInUseMarkTests : TestContext
         SignIn(WombatRoles.Trainee);
         Answer(new Dictionary<Type, object?>
         {
-            [typeof(GetActiveDecisionsForTraineeQuery)] = Decisions()
+            [typeof(GetDecisionsForTraineeQuery)] = Decisions()
         });
 
         var cut = RenderComponent<MyAuthorisations>();

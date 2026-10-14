@@ -78,12 +78,12 @@ public sealed class CallerPrincipalPageTests : TestContext
     public void MyAuthorisations_AsksForTheSignedInTraineesDecisions_AsThatTrainee()
     {
         SignIn(TraineeUserId, WombatRoles.Trainee);
-        _sender.On<GetActiveDecisionsForTraineeQuery>(_ => Array.Empty<EntrustmentDecisionDto>());
+        _sender.On<GetDecisionsForTraineeQuery>(_ => Array.Empty<EntrustmentDecisionDto>());
 
         var cut = RenderComponent<MyAuthorisations>();
         cut.WaitForState(() => cut.Markup.Contains("No active authorisations yet"));
 
-        var query = _sender.Single<GetActiveDecisionsForTraineeQuery>();
+        var query = _sender.Single<GetDecisionsForTraineeQuery>();
         query.TraineeUserId.Should().Be(TraineeUserId);
         CallerOf(query.Principal).Should().Be(TraineeUserId);
     }
@@ -133,7 +133,7 @@ public sealed class CallerPrincipalPageTests : TestContext
         // The handler answers a certificate the caller may not have, and one that does not exist, with null. (T183)
         SignIn(TraineeUserId, WombatRoles.Trainee);
         _sender
-            .On<GetActiveDecisionsForTraineeQuery>(_ => new[] { Decision(TraineeUserId) })
+            .On<GetDecisionsForTraineeQuery>(_ => new[] { Decision(TraineeUserId) })
             .On<DownloadEntrustmentCertificateCommand>(_ => null);
 
         var cut = RenderComponent<MyAuthorisations>();

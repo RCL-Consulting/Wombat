@@ -61,7 +61,7 @@ public class TraineeReadBoundaryTests
         [
             "GetCurriculumProgressForTraineeQuery",
             "ListReviewsForTraineeQuery",
-            "GetActiveDecisionsForTraineeQuery",
+            "GetDecisionsForTraineeQuery",
             "GetDecisionHistoryForEpaQuery",
             "ListMsfCampaignsForTraineeQuery"
         ]);

@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Audit;
 using Wombat.Application.Common.Behaviours;
+using Wombat.Application.Common.Email;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.MultiSourceFeedback;
 
@@ -24,6 +25,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
         services.AddSingleton<IInvitationTokenService, InvitationTokenService>();
         services.AddScoped<IMsfAggregationService, MsfAggregationService>();
+        services.AddScoped<AccountNotices>();
 
         return services;
     }

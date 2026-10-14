@@ -3,8 +3,11 @@ using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Audit;
+using Wombat.Application.Common.Email;
+using Wombat.Application.Common.Email.Templates;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.EntrustmentDecisions;
 
 namespace Wombat.Application.Features.EntrustmentDecisions;
@@ -35,10 +38,17 @@ public sealed class RevokeEntrustmentDecisionCommandValidator : AbstractValidato
 public sealed class RevokeEntrustmentDecisionCommandHandler : IRequestHandler<RevokeEntrustmentDecisionCommand, EntrustmentDecisionDto>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
+    private readonly AccountNotices _notices;
 
-    public RevokeEntrustmentDecisionCommandHandler(IApplicationDbContext dbContext)
+    public RevokeEntrustmentDecisionCommandHandler(
+        IApplicationDbContext dbContext,
+        IUserAdministrationService users,
+        AccountNotices notices)
     {
         _dbContext = dbContext;
+        _users = users;
+        _notices = notices;
     }
 
     /// <remarks>
@@ -73,6 +83,21 @@ public sealed class RevokeEntrustmentDecisionCommandHandler : IRequestHandler<Re
 
         decision.Revoke(request.Reason, actorUserId, DateTime.UtcNow);
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        // T367: the trainee is told, after the save, so a refused revoke mails nobody; a failed send is logged and the
+        // revocation stands. The mail names the reviser, never the reason (AccountNotices).
+        await _notices.SendAsync(decision.TraineeUserId, "entrustment-revoked", async trainee =>
+        {
+            var names = await _users.GetDisplayNamesAsync([actorUserId], CancellationToken.None);
+            return EntrustmentDecisionRevokedEmail.Build(
+                trainee.Email,
+                decision.Epa?.Code ?? string.Empty,
+                decision.Epa?.Title ?? string.Empty,
+                decision.AuthorisedLevel?.Label ?? string.Empty,
+                ProgrammeCalendar.DateOf(decision.RevokedOn!.Value),
+                names.TryGetValue(actorUserId, out var name) ? name : null,
+                _notices.LinkTo("/portfolio/authorisations"));
+        });
 
         return decision.ToDto();
     }

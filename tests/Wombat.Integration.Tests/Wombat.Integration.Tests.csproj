@@ -39,5 +39,7 @@
     <Compile Include="../Shared/StarEvidence.cs" Link="TestSupport/StarEvidence.cs" />
     <!-- T142: a user directory that answers the display-name lookup and counts the calls. -->
     <Compile Include="../Shared/FakeUserDirectory.cs" Link="TestSupport/FakeUserDirectory.cs" />
+    <!-- T367: the one-off notice sender, with a capturing mail sender. -->
+    <Compile Include="../Shared/TestNotices.cs" Link="TestSupport/TestNotices.cs" />
   </ItemGroup>
 </Project>

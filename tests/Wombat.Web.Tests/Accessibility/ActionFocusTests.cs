@@ -305,7 +305,7 @@ public sealed class ActionFocusTests : TestContext
             request => request is DownloadEntrustmentCertificateCommand,
             request => request switch
             {
-                GetActiveDecisionsForTraineeQuery => new[] { Decision(1, "PAED-001"), Decision(2, "PAED-002") },
+                GetDecisionsForTraineeQuery => new[] { Decision(1, "PAED-001"), Decision(2, "PAED-002") },
                 DownloadEntrustmentCertificateCommand => new EntrustmentCertificateResult([1, 2, 3], "star.pdf", "hash-1"),
                 _ => null
             }));
@@ -348,7 +348,7 @@ public sealed class ActionFocusTests : TestContext
             request => request is DownloadEntrustmentCertificateCommand,
             request => request switch
             {
-                GetActiveDecisionsForTraineeQuery => new[] { Decision(1, "PAED-001"), Decision(2, "PAED-002") },
+                GetDecisionsForTraineeQuery => new[] { Decision(1, "PAED-001"), Decision(2, "PAED-002") },
                 DownloadEntrustmentCertificateCommand => new EntrustmentCertificateResult([1, 2, 3], "star.pdf", "hash-1"),
                 _ => null
             }));

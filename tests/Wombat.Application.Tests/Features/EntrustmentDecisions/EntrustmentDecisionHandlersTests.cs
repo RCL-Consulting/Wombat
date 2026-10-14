@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.EntrustmentDecisions;
@@ -70,7 +71,7 @@ public sealed class EntrustmentDecisionHandlersTests
         var review = await SeedRatifiedReviewAsync(dbContext);
         var issued = await SeedStarAsync(dbContext, review.Id, 7, 3, new DateOnly(2026, 4, 1), new DateOnly(2027, 4, 1));
 
-        var revokeHandler = new RevokeEntrustmentDecisionCommandHandler(dbContext);
+        var revokeHandler = new RevokeEntrustmentDecisionCommandHandler(dbContext, FakeUserDirectory.Empty, TestNotices.None(FakeUserDirectory.Empty));
 
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => revokeHandler.Handle(
             new RevokeEntrustmentDecisionCommand(issued.Id, "Arbitrary revocation.", CreatePrincipal("trainee-1", [WombatRoles.Trainee])),
@@ -120,31 +121,151 @@ public sealed class EntrustmentDecisionHandlersTests
         decisions[1].EvidenceLinks.Select(link => link.CommitteeEvidenceId).Should().BeEquivalentTo([EvidenceOnEpa7, EvidenceOnEpa8]);
     }
 
+    /// <summary>
+    /// T367. My authorisations reads the STARs in force and those no longer in force: Active, Revoked (with its reason, its
+    /// reviser by name and its date) and Expired. A superseded STAR is left off: another replaced it.
+    /// </summary>
     [Fact]
-    public async Task GetActiveDecisionsForTrainee_ReturnsOnlyActive()
+    public async Task GetDecisionsForTrainee_ReadsActiveRevokedAndExpired_NotSuperseded()
     {
         await using var dbContext = CreateDbContext();
         var review = await SeedRatifiedReviewAsync(dbContext);
 
-        var first = await SeedStarAsync(dbContext, review.Id, 7, 3, new DateOnly(2026, 4, 1), null);
-        await SeedStarAsync(dbContext, review.Id, 8, 4, new DateOnly(2026, 4, 1), null);
+        var revoked = await SeedStarAsync(dbContext, review.Id, 7, 3, new DateOnly(2026, 4, 1), null);
+        var expired = await SeedStarAsync(dbContext, review.Id, 8, 4, new DateOnly(2026, 4, 1), new DateOnly(2026, 4, 30));
+        var replaced = await SeedStarAsync(dbContext, review.Id, 7, 4, new DateOnly(2026, 4, 2), null);
+        var current = await SeedStarAsync(dbContext, review.Id, 7, 5, new DateOnly(2026, 4, 3), null);
 
-        var revokeHandler = new RevokeEntrustmentDecisionCommandHandler(dbContext);
-        await revokeHandler.Handle(
-            new RevokeEntrustmentDecisionCommand(first.Id, "Revoked.", CreatePrincipal("admin-1", [WombatRoles.InstitutionalAdmin], institutionId: 1)),
+        expired.MarkExpired(new DateTime(2026, 5, 2, 8, 0, 0, DateTimeKind.Utc));
+        replaced.SupersedeBy(current);
+        await dbContext.SaveChangesAsync();
+
+        var users = new FakeUserDirectory(("admin-1", "Refilwe Mokoena"));
+        await new RevokeEntrustmentDecisionCommandHandler(dbContext, users, TestNotices.None(users)).Handle(
+            new RevokeEntrustmentDecisionCommand(revoked.Id, "Staged on the wrong evidence.", CreatePrincipal("admin-1", [WombatRoles.InstitutionalAdmin], institutionId: 1)),
+            CancellationToken.None);
+        dbContext.ChangeTracker.Clear();
+
+        var mine = await new GetDecisionsForTraineeQueryHandler(dbContext, users).Handle(
+            new GetDecisionsForTraineeQuery("trainee-1", CreatePrincipal("trainee-1", [WombatRoles.Trainee])),
             CancellationToken.None);
 
-        var queryHandler = new GetActiveDecisionsForTraineeQueryHandler(dbContext);
-        var active = await queryHandler.Handle(new GetActiveDecisionsForTraineeQuery("trainee-1", CreatePrincipal("trainee-1", [WombatRoles.Trainee])), CancellationToken.None);
+        mine.Select(decision => (decision.Id, decision.Status)).Should().BeEquivalentTo(new[]
+        {
+            (revoked.Id, EntrustmentDecisionStatus.Revoked),
+            (expired.Id, EntrustmentDecisionStatus.Expired),
+            (current.Id, EntrustmentDecisionStatus.Active),
+        });
 
-        active.Should().HaveCount(1);
-        active[0].EpaId.Should().Be(8);
-        active[0].EvidenceLinks.Should().ContainSingle().Which.CommitteeEvidenceId.Should().Be(EvidenceOnEpa8);
+        var withdrawn = mine.Single(decision => decision.Id == revoked.Id);
+        withdrawn.RevocationReason.Should().Be("Staged on the wrong evidence.");
+        withdrawn.RevokedByName.Should().Be("Refilwe Mokoena");
+        withdrawn.RevokedOn.Should().NotBeNull();
+        mine.Where(decision => decision.Id != revoked.Id).Should().AllSatisfy(decision => decision.RevokedByName.Should().BeNull());
+        mine.Single(decision => decision.Id == expired.Id).EvidenceLinks.Should().ContainSingle()
+            .Which.CommitteeEvidenceId.Should().Be(EvidenceOnEpa8);
     }
 
     /// <summary>
+    /// T367. A revoke mails the trainee once, after the save: the EPA, the level, the day on the South African calendar,
+    /// the reviser by name and a link to My authorisations. Never the reason.
+    /// </summary>
+    [Fact]
+    public async Task Revoke_MailsTheTraineeOnce_NamingTheReviser_WithoutTheReason()
+    {
+        await using var dbContext = CreateDbContext();
+        var review = await SeedRatifiedReviewAsync(dbContext);
+        var issued = await SeedStarAsync(dbContext, review.Id, 7, 3, new DateOnly(2026, 4, 1), null);
+        var users = RevocationDirectory();
+        var notices = new TestNotices(users);
+
+        var result = await new RevokeEntrustmentDecisionCommandHandler(dbContext, users, notices.Notices).Handle(
+            new RevokeEntrustmentDecisionCommand(issued.Id, "A concern about unsupervised practice.", CreatePrincipal("admin-1", [WombatRoles.InstitutionalAdmin], institutionId: 1)),
+            CancellationToken.None);
+
+        var mail = notices.Sender.Sent.Should().ContainSingle().Subject;
+        mail.To.Should().Be("trainee-1@test");
+        mail.Subject.Should().Be("Entrustment decision revoked: EPA-07");
+        mail.TextBody.Should().Contain("EPA-07 — Emergency triage at level Level 3")
+            .And.Contain($"revoked on {ProgrammeCalendar.DateOf(result.RevokedOn!.Value):yyyy-MM-dd} by Refilwe Mokoena.")
+            .And.Contain("https://wombat.test/portfolio/authorisations");
+        mail.TextBody.Should().NotContain("unsupervised");
+        mail.HtmlBody.Should().NotContain("unsupervised");
+    }
+
+    /// <summary>T367. A refused revoke mails nobody: neither one out of the caller's reach nor one already revoked.</summary>
+    [Fact]
+    public async Task Revoke_Refused_MailsNobody()
+    {
+        await using var dbContext = CreateDbContext();
+        var review = await SeedRatifiedReviewAsync(dbContext);
+        var issued = await SeedStarAsync(dbContext, review.Id, 7, 3, new DateOnly(2026, 4, 1), null);
+        var users = RevocationDirectory();
+        var notices = new TestNotices(users);
+        var handler = new RevokeEntrustmentDecisionCommandHandler(dbContext, users, notices.Notices);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => handler.Handle(
+            new RevokeEntrustmentDecisionCommand(issued.Id, "Not mine to revoke.", CreatePrincipal("trainee-1", [WombatRoles.Trainee])),
+            CancellationToken.None));
+        notices.Sender.Sent.Should().BeEmpty();
+
+        var admin = CreatePrincipal("admin-1", [WombatRoles.InstitutionalAdmin], institutionId: 1);
+        await handler.Handle(new RevokeEntrustmentDecisionCommand(issued.Id, "First.", admin), CancellationToken.None);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => handler.Handle(
+            new RevokeEntrustmentDecisionCommand(issued.Id, "Second.", admin), CancellationToken.None));
+        notices.Sender.Sent.Should().ContainSingle();
+    }
+
+    /// <summary>T367. A deactivated account is not mailed; the revocation stands.</summary>
+    [Fact]
+    public async Task Revoke_OfADeactivatedTrainee_MailsNobody_AndStands()
+    {
+        await using var dbContext = CreateDbContext();
+        var review = await SeedRatifiedReviewAsync(dbContext);
+        var issued = await SeedStarAsync(dbContext, review.Id, 7, 3, new DateOnly(2026, 4, 1), null);
+        var users = RevocationDirectory(traineeDeactivated: true);
+        var notices = new TestNotices(users);
+
+        var result = await new RevokeEntrustmentDecisionCommandHandler(dbContext, users, notices.Notices).Handle(
+            new RevokeEntrustmentDecisionCommand(issued.Id, "Revoked.", CreatePrincipal("admin-1", [WombatRoles.InstitutionalAdmin], institutionId: 1)),
+            CancellationToken.None);
+
+        result.Status.Should().Be(EntrustmentDecisionStatus.Revoked);
+        notices.Sender.Sent.Should().BeEmpty();
+        notices.Logger.Entries.Should().ContainSingle(entry => entry.Message.Contains("entrustment-revoked"));
+    }
+
+    /// <summary>T367. A send that fails is logged and does not fail the command: the revocation has committed.</summary>
+    [Fact]
+    public async Task Revoke_WhoseMailFails_StillRevokes_AndLogsTheFailure()
+    {
+        await using var dbContext = CreateDbContext();
+        var review = await SeedRatifiedReviewAsync(dbContext);
+        var issued = await SeedStarAsync(dbContext, review.Id, 7, 3, new DateOnly(2026, 4, 1), null);
+        var users = RevocationDirectory();
+        var notices = new TestNotices(users, failSendWith: new InvalidOperationException("The mail server is down."));
+
+        var result = await new RevokeEntrustmentDecisionCommandHandler(dbContext, users, notices.Notices).Handle(
+            new RevokeEntrustmentDecisionCommand(issued.Id, "Revoked.", CreatePrincipal("admin-1", [WombatRoles.InstitutionalAdmin], institutionId: 1)),
+            CancellationToken.None);
+        dbContext.ChangeTracker.Clear();
+
+        result.Status.Should().Be(EntrustmentDecisionStatus.Revoked);
+        (await dbContext.Set<EntrustmentDecision>().SingleAsync(d => d.Id == issued.Id)).Status
+            .Should().Be(EntrustmentDecisionStatus.Revoked);
+        notices.Logger.Entries.Should().ContainSingle(entry =>
+            entry.Level == Microsoft.Extensions.Logging.LogLevel.Error && entry.Message.Contains("entrustment-revoked"));
+    }
+
+    private static FakeUserDirectory RevocationDirectory(bool traineeDeactivated = false)
+        => new FakeUserDirectory(("admin-1", "Refilwe Mokoena"))
+            .With(new UserIdentityDetails(
+                "trainee-1", "trainee-1@test", "Anele", "Dlamini", 1, [], [], [WombatRoles.Trainee],
+                IsDeactivated: traineeDeactivated));
+
+    /// <summary>
     /// T255, D48. Both entrustment decision lists say whether each STAR's EPA is in force now, by the flag the EPA picker
-    /// labels by (<c>EpaOptionLabel</c>): My authorisations (<see cref="GetActiveDecisionsForTraineeQuery" />) and the
+    /// labels by (<c>EpaOptionLabel</c>): My authorisations (<see cref="GetDecisionsForTraineeQuery" />) and the
     /// admin's list (<see cref="ListEntrustmentDecisionsForAdminQuery" />). Deactivating an EPA leaves its STAR standing.
     /// </summary>
     [Fact]
@@ -160,8 +281,8 @@ public sealed class EntrustmentDecisionHandlersTests
         await dbContext.SaveChangesAsync();
         dbContext.ChangeTracker.Clear();
 
-        var mine = await new GetActiveDecisionsForTraineeQueryHandler(dbContext).Handle(
-            new GetActiveDecisionsForTraineeQuery("trainee-1", CreatePrincipal("trainee-1", [WombatRoles.Trainee])),
+        var mine = await new GetDecisionsForTraineeQueryHandler(dbContext, FakeUserDirectory.Empty).Handle(
+            new GetDecisionsForTraineeQuery("trainee-1", CreatePrincipal("trainee-1", [WombatRoles.Trainee])),
             CancellationToken.None);
         var administered = await new ListEntrustmentDecisionsForAdminQueryHandler(dbContext, FakeUserDirectory.Empty).Handle(
             new ListEntrustmentDecisionsForAdminQuery(null, null, CreatePrincipal("admin-1", [WombatRoles.InstitutionalAdmin], institutionId: 1)),

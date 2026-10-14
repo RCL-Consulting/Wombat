@@ -526,7 +526,7 @@ public sealed class EntrustmentDecisionAdminScopeTests
             .ToArray();
 
     private static Task<EntrustmentDecisionDto> RevokeAsync(ApplicationDbContext db, int decisionId, ClaimsPrincipal principal)
-        => new RevokeEntrustmentDecisionCommandHandler(db).Handle(
+        => new RevokeEntrustmentDecisionCommandHandler(db, FakeUserDirectory.Empty, TestNotices.None(FakeUserDirectory.Empty)).Handle(
             new RevokeEntrustmentDecisionCommand(decisionId, "Concern raised at the site.", principal), CancellationToken.None);
 
     private static async Task<Exception> RefusalAsync(Func<Task> act)

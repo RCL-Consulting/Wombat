@@ -34,7 +34,7 @@ namespace Wombat.Application.Features.EntrustmentDecisions;
 /// It is the rule revoking uses (<see cref="EntrustmentDecisionAuthorization.DemandRevocationAccessAsync" />), not the
 /// wider <see cref="TraineeScopeResolver.IsOverseenBy" />, so every row the page offers a Revoke button on is one the
 /// caller may revoke. A SpecialityAdmin who also sits on the committee oversees every trainee at their institution and
-/// may read their decisions (<see cref="GetActiveDecisionsForTraineeQuery" />), but administers only their own
+/// may read their decisions (<see cref="GetDecisionsForTraineeQuery" />), but administers only their own
 /// speciality's, and this list is the administrator's.
 /// </para>
 /// <para>
