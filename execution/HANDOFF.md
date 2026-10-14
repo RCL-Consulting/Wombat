@@ -15,8 +15,9 @@ STARs and appeals), filed and started.
   canvas **"Wombat 09"** https://claude.ai/artifact/5LfLPdcXJ2iRX6GSm2bbKP on design system v20, mark copied in.
 - **Round 1** (`58f8dc87`, assessed `71e02aa2`): **B** picked with A's inline resolve; the operator took every
   recommendation (T366 Notes). **T367** (T319's revocation half) filed, to land before the build; § 3F question 13 added.
-- **Next (operator):** send `round-2-ask.txt` (`ae89c12f`) in "Wombat 09" with all of `design/upload/` attached.
-  **Not pushed:** `0058adf3` onward.
+- **Round 2** (`1221c005`) reviewed from three sides (`4da096d1`); the operator said "yes" to F1–F9 (T366 Notes).
+- **Next (operator):** send `round-3-ask.txt` in "Wombat 09"; then check round 3 item by item (`round-3-check.md`) and
+  build. T367 lands before the build. **Not pushed:** `0058adf3` onward.
 
 ## Sessions 2026-10-11 to 10-13 (Opus): harness 3.4; 111 done tasks archived; T361 (flow 07) and T364 (flow 08) done
 

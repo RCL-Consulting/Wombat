@@ -80,3 +80,9 @@ T364 (flow 08), T361 (flow 07), T307, T309, D51, D53; BRIEF § 6, § 8, § 11.
   reason shown on her page; Q9 no appeal deadline (§ 3F question 13 added), the reason's readers named truthfully;
   Q10 no menu item; Q11 **T367** (T319's revocation half) lands before the build, T308 and these pages' halves of
   T260, T264, T324, T325, T328, T329, T272 fold in. Round 1 drew invented fixture data: re-attach and name the folder.
+- **2026-10-14, round 2** (canvas 1791962299-ac6d, `round-2/` at `1221c005`) reviewed from three sides (code, cast,
+  design system; `round-2-review.md`, `4da096d1`): 11 must-fixes, 13 should-fixes. The operator said "yes" to F1–F9:
+  newest first; the expired STAR a states row only; Revoke always enabled, a blank reason refused; "Download
+  certificate for PAED-001"; "Go to the appeal" via PageFocus; dialogs return focus to the opener; T279 kept (C13 a
+  Coordinator holding the External seat); `/committee/my-reviews/{id}` the review's own trainee only, ratified or later;
+  Show. Superseded reads "Superseded by STAR #18, issued …" (no stored date). Round 3 is `round-3-ask.txt`.

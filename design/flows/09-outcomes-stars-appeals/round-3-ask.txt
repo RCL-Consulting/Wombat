@@ -1,0 +1,147 @@
+ROUND 3: one correction round on B and P as round 2 drew them. Put round 3 on a page of its own, "Round 3": the same
+boards (R3- in place of R2-), each with its states, updated in place; round 1's and round 2's pages stay untouched.
+Change what follows, then say on the Spec, item by item (by the numbers below), what changed and where. Draw nothing
+the items do not ask for. The brand mark is at /_blob/19eee4d64e6ebc1818aa6f9007654872.
+
+THE OPERATOR'S DECISIONS (2026-10-14). The operator took every recommendation:
+  F1. My committee reviews lists newest first, consistently: by scheduled date, then by review number, both descending
+      (a build change). Dr Molefe's #7 above #1; Dr Ndlovu's #6 (the formative check-in) above #5. The caption's
+      "newest first" stays.
+  F2. The expired STAR is tested only as a states.md row, the clock moved past 2026-11-02 on a scratch database. Its
+      boards keep the label "Illustration"; no journey step reads it.
+  F3. Revoke the STAR is always enabled. Pressed with the reason blank, "Give a reason for the revocation." shows under
+      the box, tied to it, and the focus goes to the box; the dialog stays open.
+  F4. The download keeps DESIGN.md's wording, its visible text inside its name: on the cards "Download certificate"
+      named "Download certificate for PAED-001"; in No longer in force "Download" named "Download certificate for
+      PAED-002 (revoked)". The register keeps its row names ("Download the certificate of Anele Dlamini's PAED-002
+      decision, issued 2026-10-13"); C19's "one wording" means My authorisations' two.
+  F5. "Go to the appeal" is adopted: an outline small button in the reader's sitting bar while the review is Under
+      appeal, moving the focus to the Appeals h2 (tabindex -1) through PageFocus, not a bare #appeals link. Draw it at
+      1280 and 390 (say where it sits in the bar at 390), and give the 390 scroll distance it saves beside 1280's.
+  F6. Keep editing and Go back return the focus to the button that opened the dialog (Lodge appeal, Resolve appeal),
+      as the native dialog does; the text is kept.
+  F7. T279 stands: a committee member whose seat has lapsed cannot read the review at all. C13 is redrawn: a Coordinator
+      at Kgosi Kgari Teaching Hospital who also holds the panel's External seat and cannot act now reads the member's
+      view, and the who-may line leaves them out ("Only the appeal body can resolve the appeal: the panel's chair,
+      Thandi Zulu."). The Spec says: a lapsed member with no other rung is refused as "could not be found".
+  F8. /committee/my-reviews/{id} opens only for the review's own trainee, and only once it is ratified or later, for
+      every role; anything else is flow 01's not found. An Administrator reads a review at /committee/reviews/{id}.
+  F9. The register's filter button reads Show (flow 08's word for every list); Clear filters stays.
+
+MUST FIX (round 3's check takes each by number):
+  M1. My committee reviews as F1, on every board that draws it (1280, 768, 390): Molefe's two with #7 first, Ndlovu's
+      two with #6 first. Their row names are today's (ReviewRowNames adds the type to both rows that share a name):
+      "View the 2026 S2 review before Paed Annual Review Panel, Annual progression" and "…, Pre-graduation"; the
+      formative row "View the 2026 S2 formative review before Paed Annual Review Panel". No "pre-graduation review"
+      in the name.
+  M2. C13's board as F7: the reader is the Coordinator holding the External seat (name them ‹name›), never Dr van
+      Rensburg; their menu is a Coordinator's.
+  M3. "A lodge refused" reads "Only ratified reviews can be appealed." (a second tab after the first lodged). "An
+      unresolved appeal already exists for this review." is drawn nowhere.
+  M4. "A revoke refused, in the dialog" reads "Only active entrustment decisions can be revoked." (revoked from a
+      second tab first), the reason kept, the dialog open. The "could not be found among the decisions you may revoke"
+      sentence is drawn nowhere.
+  M5. The Spec lists ConfirmDialog as CHANGED (not "used as built"): in action mode, the first focus can go to a field
+      in its body, and a refusal the caller reports keeps the dialog open. Lodge, Remit and Dismiss use it as built.
+      Give the DESIGN.md sentence for § Button system's dialog paragraph.
+  M6. The revoke dialog as F3, at 1280 and 390: Revoke the STAR shown enabled with the box empty, and the blank-refused
+      state drawn. Nothing says "enables as the reason is typed"; drop the flag.
+  M7. The download names as F4 on every My authorisations board, cards and table.
+  M8. The appeal form's quorum line and its refusal under Resolve appeal are listed on the Spec as CHANGED (neither is
+      on flow 07's appeal form today: the quorum line is the decision form's, and a resolve refusal shows at the
+      section's head). The boards stay as drawn: the line beside Resolve appeal, the refusal after the form's actions.
+  M9. Issued's review link in the register is at least 24 px tall at 1280 and 768 (an inline block, not a 21.6 px
+      block line) and 44 px at 390, as the row's buttons are.
+  M10. A.7.7's board (the register at 390) reads "18 shown" and draws 18 stacked rows: Dr Molefe's 16 and Dr Dlamini's 2.
+  M11. Steps board: restore the certificate checks word for word. 4.35: Prof Mbatha downloads Dr Molefe's PAED-010
+      certificate: Kgosi Kgari Teaching Hospital, "Statement of Awarded Responsibility", Lerato Molefe, PAED-010 and
+      level 4; Issued on 2026-10-13 and Expires on 2026-11-02, Status Active; the rationale and the evidence summary
+      of its two snapshot lines; Panel Paed Annual Review Panel, the review number, Chair Thandi Zulu. 4.39: Dr Molefe
+      downloads the PAED-001 certificate: Status Active, evidence Mini-CEX #12 and CBD #13. 4.37 keeps its revoked
+      certificate clause as drawn.
+
+SHOULD FIX:
+  S1. States missing at 390, drawn: her review page for the pre-graduation review (5.8), the formative check-in and
+      Dr Ndlovu's annual review; on the register: none issued, five issued, filtered to Molefe, filtered to Revoked,
+      fifteen Active ("· 15 shown", 5.7), All with the Superseded row and its line, a paused EPA, the refused revoke,
+      loading. At 1280 as well: fifteen Active (no board draws it). At 768: My authorisations (the cards' grid, S9).
+  S2. My authorisations for a trainee whose STARs are all revoked or expired: "In force" with its empty sentence, then
+      No longer in force. Draw it at 1280 and 390.
+  S3. Expiry: "Expires in N days" counts on the South African calendar, "Expires today" on the last day and "Expires in
+      1 day" the day before. The expired illustration's Since reads 2026-11-03 (a STAR is valid through its expiry
+      date) and its Why "Its expiry date, 2026-11-02, passed."
+  S4. The superseded line reads "Superseded by STAR #18, issued 2026-10-13." (no supersession date is stored).
+  S5. After "A lodge refused", the page reads the review again: draw the state that follows, the form gone, State
+      Under appeal, the open entry, the refusal still shown with the focus.
+  S6. The revoke dialog's mail sentence stays true when T367 skips the send (a deactivated account): word it so, and
+      keep "Nothing claims delivery". A graduate's link is flow 13's; not drawn.
+  S7. Issued is a link only where the viewer may open that review; draw one row where it is plain text, and the Spec's
+      flag becomes the rule.
+  S8. Tables: the Spec says, for My committee reviews, No longer in force and the register, whether DataTable gains a
+      StackWide parameter (CHANGED) or the table is hand-written with both stack classes as flows 06 and 08's are.
+      FilterBar is a pattern (search-container), not a component: list it so.
+  S9. CSS, reuse what exists: div.actions-cell for the row's actions (no .row-actions); .detail-list for the review's
+      and the STAR's facts (no .review-facts, .star-facts; only the badge alignment is new); flow 03's
+      .has-note / .history-note pair generalised for the register's row line (no tr.has-line / .star-row-line); no
+      textarea font-family rule; the counter is .field-help, tied by aria-describedby. The phone rule is scoped to
+      .review-appeals and the trainee's review page, never the whole committee page, and repeats nothing flow 07 has.
+      The cards get an equal-column grid (.details-grid is 1fr 2fr): one column at 390, as many as fit at 768 and
+      1280.
+  S10. "Show the whole reason" shows when the clamped reason overflows (measured after render), not past a character
+      count; the Spec says so, with the unprefixed line-clamp beside the prefixed one.
+  S11. The register's filtered count is announced: a visually hidden role="status" carries "3 shown" after Show.
+  S12. The Spec's DESIGN.md list adds: § Badges (an appeal's Open, Dismissed, Remitted); § Button system (M5's dialog);
+      § Table system (S8); § Page-level patterns (My committee reviews' State a badge, View named by the review); §
+      Accessibility (label in name on cards, F4; the filtered count's status, S11); the app.css section's place
+      (after "The committee calendar") and its classes; loading and failed pages head "Committee review" on both the
+      committee's and the trainee's page.
+  S13. Placeholders filled from the captures: review #2's rationale "Steady progress in year 3; two EPAs entrusted at
+      this sitting."; Act 5's STAR rationales "PAED-0nn entrusted at its exit level; the panel recommends completion."
+      (with each EPA's code). The revocation time stays ‹hh:mm›. The formative page's "A formative check-in records no
+      decision and issues no STAR." is marked NEW.
+
+STEPS BOARD (revised; every Expect clause today's runbook carries stays, with the new one beside it):
+  - M11's certificate checks (4.35, 4.39; 4.37's kept).
+  - 4.35: Expires "—" where none; the menu marks the page; the five rows "newest issued first, then STAR number
+    descending" (one day's ties); Show, not Apply filters.
+  - 4.36: the Do opens a dialog, presses Revoke the STAR blank once (F3), types the reason; the time asserted as
+    "at HH:mm SAST" equal to RevokedOn + 2 h, as 4.50 does.
+  - 4.37: in place of "Decisions due unchanged": PAED-002 reads "Revoked: re-decide" with its sentence and one Schedule
+    action; By EPA PAED-002 Decided 0, Not decided 4, To schedule 1; "71 of 75".
+  - 4.39: Home's My authorisations card as today ("2 at or above · 1 below · 12 with no decision, of 15 EPAs", the
+    PAED-010 line, the footer); the names "Download certificate for PAED-001/010/012" (F4).
+  - 4.41: the list's columns (Period "2026 S2 · window", Type Annual progression, Decision Satisfactory Progress); no
+    Deferred and no reason label; the committee's sentence on each of the twelve lines and in "About the EPAs not
+    decided".
+  - 4.43: route /committee/my-reviews → /committee/my-reviews/4 → /committee/my-reviews; the Do presses Lodge appeal
+    blank, types the reason, Lodge appeal, then the dialog's Lodge appeal; Keep editing returns to Lodge appeal (F6).
+  - 4.44: "Heard by Thandi Zulu (chair) and John van Rensburg (external)." in place of "Heard by the appeal body"; the
+    jump link (F5) used.
+  - 4.45: the option words "Dismissed: the decision stands" and "Remitted: the appeal body replaces the decision", no
+    Upheld (T307, D51); the help text; Replacement conditions optional; the Outcome readable in full at 1280 (T323);
+    one clause that 4.46's chair ticks only herself.
+  - 4.46: the Do reads the quorum line before pressing Resolve appeal.
+  - 4.47: "About the EPAs not decided: Not enough observed evidence yet this year." carried onto the replacement; the
+    Outcome-state SQL check kept.
+  - 4.51: route on to /committee/my-reviews/6 and /5 ("View" each); #6 listed first (F1).
+  - 5.7: each Active row at its exit level, issued 2026-10-13, no expiry, Download and Revoke; the Superseded row
+    Download only, with S4's line; the order newest issued first, review #7's thirteen first.
+  - 5.8: #7 listed above #1 (F1); the names present; the lodge block offered and unused; each card's level.
+  - 6.22 and A.7.7: keep the EPA list (Inactive, Edit offered), 11.1's items "(inactive: not in force)" and "Set by the
+    College"; A.7.7's Home stacking, panels, Decisions due and menu, and "18 shown" (M10).
+  - The Gaps these steps close are listed for the runbook to clean: F-4.36a, F-4.37a, F-4.43a, F-4.45c, F-4.48a, and
+    T260's entrustment half.
+  - C26's counts recounted where the Do changed (4.36 gains the blank press; 4.44 gains the jump; say each).
+
+NITS (fix as you pass):
+  - The Spec's order line: "header (its facts), Decisions, Appeal, Agenda"; the heading reads Decisions.
+  - Board 3 at 390 (a): the caption that speaks of 1280 goes.
+  - The quorum refusal leads with "Resolve appeal was refused:" so it does not repeat the live quorum line word for word.
+  - Two "Entrustment decisions only" h3s in the entrustment-only history: the replaced one says so.
+  - "Issued 2026-10-13 at review #2" may read "Open review #2" in its name, keeping the visible words.
+
+SPEC BOARD: list F1–F9, M1–M11 and S1–S13 with where each is drawn or why it is Spec only. Keep "Data the build must
+add", adding: the appeal body read for her Ratified review and the review read again after Lodge; the panel's
+institution name; LodgedByName and ResolvedByName (T308); an appeal BadgeFor mapping; RevokedByName on both DTOs and the
+certificate's reviser by name (T324); the South African calendar for Expires; IssuingReviewReadable; the trainee query
+widened (decided, T367).
