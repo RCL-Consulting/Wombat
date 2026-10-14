@@ -1,12 +1,13 @@
 ---
 id: T367
 title: A revoked STAR reaches its trainee: the revocation mail, and My authorisations reads revoked and expired STARs (T319's revocation half)
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-10-14
 started: 2026-10-14
+completed: 2026-10-14
 ---
 
 # T367 — A revoked STAR reaches its trainee: the revocation mail, and My authorisations reads revoked and expired STARs (T319's revocation half)
@@ -46,10 +47,13 @@ T319 § What to build, "One way to send a one-off notice" and "Revocation", with
 
 ## Verification
 
-- [ ] A handler test: a revoke sends one `EntrustmentDecisionRevokedEmail` to the trainee after the save, none on a
+- [x] A handler test: a revoke sends one `EntrustmentDecisionRevokedEmail` to the trainee after the save, none on a
   refused revoke, none to a deactivated account, and a failed send does not fail the command.
-- [ ] A query test: the trainee's STARs include revoked and expired (with reason, reviser name, date) and not superseded.
-- [ ] The six suites green; Step 4.36's mail seen in the replay app's log.
+  `Revoke_MailsTheTraineeOnce_NamingTheReviser_WithoutTheReason`, `Revoke_Refused_MailsNobody`, `Revoke_OfADeactivatedTrainee_MailsNobody_AndStands`, `Revoke_WhoseMailFails_StillRevokes_AndLogsTheFailure` (`e9b29081`).
+- [x] A query test: the trainee's STARs include revoked and expired (with reason, reviser name, date) and not superseded.
+  `GetDecisionsForTrainee_ReadsActiveRevokedAndExpired_NotSuperseded` (`e9b29081`).
+- [x] The six suites green; Step 4.36's mail seen in the replay app's log.
+  Six suites green at `e9b29081` and again at `49e7cf5e`; 4.36 replayed 2026-10-14 on `wombat_scenario_t366`: the log's Stub email 31→32, "Entrustment decision revoked: PAED-002", Refilwe Mokoena named, the link to /portfolio/authorisations, no reason (act 4 Actual).
 
 ## Related
 
