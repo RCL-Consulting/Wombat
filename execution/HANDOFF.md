@@ -47,7 +47,7 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
   T264, T272, T280, T324, T329, T338 (`a21f890e`). **Proposed** T365 (an S1 agenda's "Due by year end", older).
 - **Design system** re-synced (`84e22b0e`, one Sonnet review, no must-fix) and published as **version 20**
   (1791917863-8f48); the live v19 matched HEAD first. **Lessons** in BRIEF § 11 "Flow 08".
-- **Not pushed:** everything since `74ffe579`. **Next in the redesign:** flow 09, when the operator says.
+- **Pushed** to origin 2026-10-14 (through `c368a54f`). **Next in the redesign:** flow 09, when the operator says.
 
 ### For the operator
 
@@ -57,7 +57,7 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
 
 ### Environment left
 
-- **The replay app on `:5180`** runs `wombat_scenario_t364` (flow 08's appendix end state), published from `1ec7a352`.
+- **The replay app on `:5180`** runs `wombat_scenario_t364` (flow 08's appendix end state), published from `1ec7a352`; restarted 2026-10-14 after the machine reset.
   Dumps `recovery/scenario-t364-post-act{1..6,A}`, `scenario-t364-pre-a515`. Scratch DBs `wombat_scenario_t364_s515`,
   `_st1`..`_st6` (states), and `wombat_scenario_t361` (flow 07's), can be dropped on the operator's word.
 - **Replay scratch:** this session's scratchpad `g364` (`replay-pw.env`; act, states scripts; `prompt-*.txt`).
