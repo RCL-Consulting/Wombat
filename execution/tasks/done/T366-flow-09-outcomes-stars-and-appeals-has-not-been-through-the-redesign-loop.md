@@ -1,12 +1,13 @@
 ---
 id: T366
 title: Flow 09, outcomes, STARs and appeals, has not been through the redesign loop
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-10-14
 started: 2026-10-14
+completed: 2026-10-14
 ---
 
 # T366 — Flow 09, outcomes, STARs and appeals, has not been through the redesign loop
@@ -61,7 +62,8 @@ Run the loop as flow 08 ran it (`design/flows/08-committee-calendar/`, BRIEF § 
   flow 09's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
   `wombat_scenario_t366` (2026-10-14): acts 1–6 and the appendix (`60840a5d`..`4506f65e`), 331 steps, 273 with no gap,
   no regression-t366; states 57 rows, 56 hold, 2 corrected (`851d398f`); `check_baseline_paths.py` missing 0.
-- [ ] The design system is re-synced and republished — its version number.
+- [x] The design system is re-synced and republished — its version number.
+  Version 23 (1791997100-4a21), from `e87e9627`, `9ba80586`, `63dd5d36`; the live v21 matched HEAD first.
 
 ## Related
 
@@ -119,3 +121,7 @@ T364 (flow 08), T361 (flow 07), T307, T309, D51, D53; BRIEF § 6, § 8, § 11.
   revocation." until the next press; the certificate's evidence summary prints UTC times. Dumps
   `recovery/scenario-t366-post-act{1..6,A}`, `-pre-a515-A`; scratch DBs `wombat_scenario_t366_s515`, `_s515b`,
   `_st1`..`_st3` (drop on the operator's word). Next: step 8, the design system.
+- **2026-10-14, steps 8 and 9 done.** The live design system matched HEAD; re-synced (`e87e9627`: 7 records added, 13
+  revised), one fault it found fixed (`9ba80586`: My committee reviews' View 44 px on a phone), one Sonnet review (no
+  must-fix; six wording fixes, `63dd5d36`), published as version 23 (1791997100-4a21; version 22 put the index beside
+  `project/`, corrected in the next call). Lessons in BRIEF § 11 "Flow 09" (`c9d33455`).

@@ -6,17 +6,17 @@ This is a reset point, not a diary.
 ## Focus
 
 Wombat is **deployed but not in service**: scenario data only. **The EPA v11.1 stream is built**, the runbook is a
-replayed journey catalogue with a screenshot baseline, and **eight redesign flows are done**: 01 the shell (T335),
+replayed journey catalogue with a screenshot baseline, and **nine redesign flows are done**: 01 the shell (T335),
 02 sign-in (T339), 03 filing an activity (T342), 04 an assessor's inbox (T350), 05 a registrar's progress (T355), 06
-programme oversight (T358), 07 the review sitting (T361, D53) and 08 the committee calendar (T364, `622c5ad1`), each
-designed, replayed and in the design system (version 20). Left: flows 09–20, the deploy, the College's, the P2s, P3
-polish. On GitHub (RCL-Consulting/Wombat, public).
+programme oversight (T358), 07 the review sitting (T361, D53), 08 the committee calendar (T364) and 09 outcomes, STARs
+and appeals (T366, `49e7cf5e`, with T367), each designed, replayed and in the design system (version 23). Left: flows
+10–20, the deploy, the College's, the P2s, P3 polish. On GitHub (RCL-Consulting/Wombat, public).
 
 ## Now
 
-- **The runbook** (`knowledge/scenario-paediatrics/`): last replayed against flow 08 (T364, `wombat_scenario_t364`,
-  2026-10-13: no open regression); `coverage.md`, `states.md`, `design/baseline/`.
-- **Open: 76 queued; T290 (its other items) in progress; 1 blocked.**
+- **The runbook** (`knowledge/scenario-paediatrics/`): last replayed against flow 09 (T366, `wombat_scenario_t366`,
+  2026-10-14: no open regression); `coverage.md`, `states.md`, `design/baseline/`.
+- **Open: 76 queued; T290 (its other items) in progress; 1 blocked; 4 proposed (T362, T363, T365, T368).**
   - **P1:** T157, the deploy, which waits for the operator.
   - **P2, before real users:** T288, T289, T311–T313, T315, T316, T319, T320, T329, T333, T334, T341.
   - **P3:** the presentation debt the redesign absorbs (BRIEF § 6–7), and polish.
@@ -33,7 +33,7 @@ polish. On GitHub (RCL-Consulting/Wombat, public).
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The redesign:** flow 09 (T366) at round 1: canvas "Wombat 09" ready, waiting for the operator to send the ask. T362, T363 and T365 wait in proposed.
+- **The redesign:** flow 10 (`design/flows/10-msf-campaign.md`), when the operator says. T362, T363, T365 and T368 wait in proposed.
 
 ## Open questions
 
@@ -55,6 +55,6 @@ polish. On GitHub (RCL-Consulting/Wombat, public).
 
 ## Recent
 
+- **2026-10-14:** T366, flow 09, done (`49e7cf5e`; T367 `e9b29081`; replay 331 steps, no regression; states 57, 2 corrected; one fix `9ba80586`; design system v23); Pkcs pinned (`a7f790b3`); T368 proposed.
 - **2026-10-13:** T364, flow 08, done (`622c5ad1`; replay, one fix `1ec7a352`; states 56/59; design system v20); T309, T259 closed; T365 proposed.
-- **2026-10-12:** T361, flow 07, done (`44de180b`; D53; replay 331 steps, five fixes; states 82/83; design system v19); T356, T273 closed; T363 proposed.
-- **10-05 and before:** T358, T355, T350, T342, T339, T335 (flows 06 to 01); T304, T305; the repo moved to GitHub. Earlier: `git log`.
+- **10-12 and before:** T361 (flow 07), T358, T355, T350, T342, T339, T335 (flows 06 to 01); the repo moved to GitHub. Earlier: `git log`.
