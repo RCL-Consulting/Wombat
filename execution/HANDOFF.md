@@ -18,8 +18,9 @@ STARs and appeals), filed and started.
 - **Round 2** (`1221c005`) reviewed from three sides (`4da096d1`); the operator said "yes" to F1–F9 (T366 Notes).
 - **Next (operator):** send `round-3-ask.txt` in "Wombat 09"; then check round 3 item by item (`round-3-check.md`) and
   build. T367 lands before the build. **Not pushed:** `0058adf3` onward.
-- **Later (2026-10-14):** the operator ran round 3 and found the previews bland: "Wombat 09" had no tokens stylesheet,
-  so every `var(--…)` was empty. Written from app.css's `:root` and published (canvas v18); round 3 renders in Wombat.
+- **Later (2026-10-14):** round 3's previews were bland: "Wombat 09" had no tokens stylesheet (fixed, canvas v18).
+  **Round 3 checked, the design final** (`4c0912ac`, `13057800`). **T367 built** (`e9b29081`, six suites green, one
+  review clean); it stays in progress until flow 09's replay sees step 4.36's mail. **Next: flow 09's build** (step 6).
 
 ## Sessions 2026-10-11 to 10-13 (Opus): harness 3.4; 111 done tasks archived; T361 (flow 07) and T364 (flow 08) done
 

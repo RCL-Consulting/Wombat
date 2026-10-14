@@ -86,3 +86,7 @@ T364 (flow 08), T361 (flow 07), T307, T309, D51, D53; BRIEF § 6, § 8, § 11.
   certificate for PAED-001"; "Go to the appeal" via PageFocus; dialogs return focus to the opener; T279 kept (C13 a
   Coordinator holding the External seat); `/committee/my-reviews/{id}` the review's own trainee only, ratified or later;
   Show. Superseded reads "Superseded by STAR #18, issued …" (no stored date). Round 3 is `round-3-ask.txt`.
+- **2026-10-14, round 3** (canvas 1791966935-56f8, `round-3/` at `4c0912ac`) checked item by item
+  (`round-3-check.md`, `13057800`): F1–F9, M1–M11, S1–S13 and the nits all done; **the design is final**. The canvas had
+  shipped without its tokens stylesheet (the operator saw bland previews), fixed before the check. Carried to the build:
+  the Outcome select at 390 (radios the fallback), F5's 390 saving measured in the replay. Next: T367, then the build.
