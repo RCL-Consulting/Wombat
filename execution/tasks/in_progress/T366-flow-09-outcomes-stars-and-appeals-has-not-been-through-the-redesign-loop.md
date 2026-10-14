@@ -90,3 +90,10 @@ T364 (flow 08), T361 (flow 07), T307, T309, D51, D53; BRIEF § 6, § 8, § 11.
   (`round-3-check.md`, `13057800`): F1–F9, M1–M11, S1–S13 and the nits all done; **the design is final**. The canvas had
   shipped without its tokens stylesheet (the operator saw bland previews), fixed before the check. Carried to the build:
   the Outcome select at 390 (radios the fallback), F5's 390 saving measured in the replay. Next: T367, then the build.
+- **2026-10-14, step 6 started.** `build-lanes.md` and `build-contracts.md` (`cc4256e6`); integration branch `t366`
+  (§ 0, `ReviewLinks.MyReview`, `1737db34`). Wave 1: lane T (her review: the list, `/committee/my-reviews/{id}`,
+  `DecisionHistory`, `AppealEntry`) on `t366-trainee`, lane S (My authorisations, the register, `ConfirmDialog`) on
+  `t366-stars`. Wave 2: lane C (the committee's Appeals section, the jump) after T merges. Then the runbook lane, three
+  Sonnet reviewers, one fix pass, the squash. A fresh restore failed NuGetAudit on `System.Security.Cryptography.Pkcs`
+  10.0.0 (GHSA-846f-f764-76mx high, GHSA-2fmv-rv2c-59x7, published 2026-10-13, via MailKit): pinned 10.0.13 on master
+  (`a7f790b3`) before the lanes were cut.
