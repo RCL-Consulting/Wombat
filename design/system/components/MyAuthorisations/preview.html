@@ -1,0 +1,205 @@
+<!-- @dsCard group="Progress" height=2500 width=974 subtitle="My authorisations: In force as an equal-column grid of cards, Expires in 20 days, Download certificate at each card's foot; No longer in force, Since and Why in the reviser's words; a failed download under its button; loading, failed, none" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyAuthorisations</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* At 900px and below app.css stacks .clinic-table--stack-wide; the 768 rendition repeats the media rules under .pv-narrow. */
+  .pv-narrow { width: 486px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Lerato Molefe, Trainee (Step 4.39): three STARs in force, by EPA code; PAED-010 expires in 20 days; each Download certificate named by its EPA; no "No longer in force"</p>
+<div class="my-authorisations">
+  <nav aria-label="Breadcrumb">
+    <ol class="breadcrumbs">
+      <li class="breadcrumb-ancestor">
+        <a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a>
+        <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+      </li>
+      <li class="breadcrumb-parent">
+        <a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>My progress</a>
+        <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+      </li>
+      <li class="breadcrumb-current"><span aria-current="page">My authorisations</span></li>
+    </ol>
+  </nav>
+  <div class="header-container">
+    <div>
+      <h1>My authorisations</h1>
+      <p class="page-subtitle">The Statements of Awarded Responsibility (STAR) the committee has issued you, and their certificates.</p>
+    </div>
+  </div>
+  <p class="visually-hidden" role="status"></p>
+  <section class="stars-section" aria-labelledby="pv-in-force-1">
+    <h2 class="list-section-title" id="pv-in-force-1">In force</h2>
+    <div class="star-grid">
+      <article class="detail-card star-card">
+        <h3>PAED-001 — Providing paediatric emergency care to children</h3>
+        <dl class="detail-list">
+          <dt>Authorised level</dt>
+          <dd>5</dd>
+          <dt>Issued</dt>
+          <dd>2026-10-14</dd>
+          <dt>Expires</dt>
+          <dd>No expiry</dd>
+        </dl>
+        <p class="star-rationale">Leads resuscitation and emergency care without prompting; ready for unsupervised practice.</p>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" aria-label="Download certificate for PAED-001"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>Download certificate</button>
+        </div>
+      </article>
+      <article class="detail-card star-card">
+        <h3>PAED-010 — Leading and operating within a clinical team</h3>
+        <dl class="detail-list">
+          <dt>Authorised level</dt>
+          <dd>4</dd>
+          <dt>Issued</dt>
+          <dd>2026-10-14</dd>
+          <dt>Expires</dt>
+          <dd>2026-11-03 <span class="badge badge-accepted">Expires in 20 days</span></dd>
+        </dl>
+        <p class="star-rationale">Leads the ward round safely; one observation so far, to be confirmed at her final review.</p>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" aria-label="Download certificate for PAED-010"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>Download certificate</button>
+        </div>
+      </article>
+      <article class="detail-card star-card">
+        <h3>PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams</h3>
+        <dl class="detail-list">
+          <dt>Authorised level</dt>
+          <dd>5</dd>
+          <dt>Issued</dt>
+          <dd>2026-10-14</dd>
+          <dt>Expires</dt>
+          <dd>No expiry</dd>
+        </dl>
+        <p class="star-rationale">Breaks difficult news clearly and kindly; consistent across settings.</p>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" aria-label="Download certificate for PAED-012"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>Download certificate</button>
+          <div class="download-result">
+            <div class="action-result" tabindex="-1">
+              <div class="alert alert-danger" role="alert">
+                <div class="alert-row">
+                  <span class="alert-row-text">The certificate could not be made just now.</span>
+                  <button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+</div>
+<p class="pv-cap">(PAED-012's card shows a failed download as it would read: under its own button, with the focus, and Try again.)</p>
+
+<p class="pv-cap">Anele Dlamini after the revocation (Step 4.42): one card in force; No longer in force, Revoked, Since and Why in the reviser's name and words, Download named "(revoked)"</p>
+<div class="my-authorisations">
+  <section class="stars-section" aria-labelledby="pv-in-force-2">
+    <h2 class="list-section-title" id="pv-in-force-2">In force</h2>
+    <div class="star-grid">
+      <article class="detail-card star-card">
+        <h3>PAED-001 — Providing paediatric emergency care to children</h3>
+        <dl class="detail-list">
+          <dt>Authorised level</dt>
+          <dd>4</dd>
+          <dt>Issued</dt>
+          <dd>2026-10-14</dd>
+          <dt>Expires</dt>
+          <dd>No expiry</dd>
+        </dl>
+        <p class="star-rationale">Manages the acutely ill child with the senior available on request.</p>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" aria-label="Download certificate for PAED-001"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>Download certificate</button>
+        </div>
+      </article>
+    </div>
+  </section>
+  <section class="stars-section" aria-labelledby="pv-ended-2">
+    <h2 class="list-section-title" id="pv-ended-2">No longer in force</h2>
+    <div class="table-container shadow">
+      <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>STARs that are no longer in force: revoked, or past their expiry</caption>
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">EPA</th>
+            <th scope="col" role="columnheader">Level</th>
+            <th scope="col" role="columnheader">Status</th>
+            <th scope="col" role="columnheader" class="col-fit">Since</th>
+            <th scope="col" role="columnheader">Why</th>
+            <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th scope="row" role="rowheader">PAED-002 — Managing common paediatric presentations</th>
+            <td role="cell" data-label="Level">3b</td>
+            <td role="cell" data-label="Status"><span class="badge badge-declined">Revoked</span></td>
+            <td role="cell" class="col-fit" data-label="Since">2026-10-14</td>
+            <td role="cell" data-label="Why">Revoked by Refilwe Mokoena: Staged on evidence about PAED-001, not PAED-002; to be decided again.</td>
+            <td role="cell"><div class="actions-cell"><button type="button" class="btn btn-outline btn-sm" aria-label="Download certificate for PAED-002 (revoked)"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>Download</button></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<p class="pv-cap">At 768: No longer in force stacks from 900px, the EPA heading its labelled cells; the cards as many a row as fit</p>
+<div class="pv-narrow my-authorisations">
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+      <caption>STARs that are no longer in force: revoked, or past their expiry</caption>
+      <thead role="rowgroup">
+        <tr role="row"><th scope="col">EPA</th><th scope="col">Level</th><th scope="col">Status</th><th scope="col">Since</th><th scope="col">Why</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr role="row">
+          <th scope="row" role="rowheader">PAED-002 — Managing common paediatric presentations</th>
+          <td role="cell" data-label="Level">3b</td>
+          <td role="cell" data-label="Status"><span class="badge badge-declined">Revoked</span></td>
+          <td role="cell" data-label="Since">2026-10-14</td>
+          <td role="cell" data-label="Why">Revoked by Refilwe Mokoena: Staged on evidence about PAED-001, not PAED-002; to be decided again.</td>
+          <td role="cell"><div class="actions-cell"><button type="button" class="btn btn-outline btn-sm" aria-label="Download certificate for PAED-002 (revoked)"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>Download</button></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<p class="pv-cap">Nothing in force, one STAR past its expiry (S2): In force keeps its heading and says so</p>
+<div class="my-authorisations">
+  <section class="stars-section" aria-labelledby="pv-in-force-3">
+    <h2 class="list-section-title" id="pv-in-force-3">In force</h2>
+    <p class="muted">No STAR is in force now. When a committee review ratifies a decision authorising you to perform an EPA, it will appear here.</p>
+  </section>
+</div>
+
+<p class="pv-cap">The read failed (T329): fixed words and Try again</p>
+<div class="action-result" tabindex="-1">
+<div class="alert alert-danger" role="alert">
+  <div class="alert-row">
+    <span class="alert-row-text">Could not load your authorisations. Nothing has changed. Try again, or come back in a few minutes.</span>
+    <button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button>
+  </div>
+</div>
+</div>
+
+<p class="pv-cap">No STAR at all</p>
+<div class="detail-card detail-card--empty" tabindex="-1">
+  <div class="state-panel-title">No active authorisations yet</div>
+  <div class="state-panel-copy">When a committee review ratifies a decision authorising you to perform an EPA, it will appear here. You can then download a STAR certificate for your records.</div>
+</div>
+</body>
+</html>

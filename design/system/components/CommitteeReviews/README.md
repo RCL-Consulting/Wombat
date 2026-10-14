@@ -40,4 +40,4 @@ No new colour token. Body text 12.63:1 and the window (`muted-text`) 5.09:1 on t
 
 ## Known gaps
 
-- None the replay met on this page. My committee reviews, the trainee's own list, is flow 09's, still pre-restructure.
+- None the replay met on this page. My committee reviews, the trainee's own list, is flow 09's (MyCommitteeReviews).

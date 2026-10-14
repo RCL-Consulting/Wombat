@@ -1,0 +1,175 @@
+<!-- @dsCard group="Committee" height=3900 width=900 subtitle="The committee review's Appeals: Go to the appeal in every reader's bar, the entry, the who-may line; the resolve form one column, Outcome as two radios, the quorum line, a refusal after the actions; Remit's dialog; Appeal resolved" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ReviewAppeals</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  .sitting-bar { position: static !important; }
+  /* The app opens the dialog with showModal() (wwwroot/js/dialog.js); a static preview paints its backdrop itself. */
+  .pv-stage { position: relative; background: var(--scrim); padding: var(--space-2xl) 0; box-sizing: border-box; }
+  .pv-stage dialog { position: static; margin: 0 auto; }
+</style>
+</head>
+<body>
+<p class="pv-cap">David Naidoo, Committee member, a reader (Step 4.44): the bar under appeal carries Go to the appeal, which moves the focus to the Appeals heading</p>
+<section class="sitting-bar sitting-bar--reader" aria-labelledby="pv-bar">
+  <h2 id="pv-bar" class="visually-hidden">The sitting</h2>
+  <div class="sitting-bar-line">
+    <span class="badge badge-accepted sitting-bar-state">Under appeal</span>
+    <span class="sitting-bar-count">Inadequate Progress — Additional Training · no STAR issued</span>
+  </div>
+  <div class="sitting-bar-actions">
+    <button type="button" class="btn btn-sm btn-outline" id="sitting-go-to-appeal">Go to the appeal</button>
+  </div>
+</section>
+
+<p class="pv-cap">… and at the page's end, the Appeals section: the entry, then who can resolve it, naming only those who can act now (F7)</p>
+<section class="detail-card review-appeals" aria-labelledby="pv-appeals-1">
+  <h2 id="pv-appeals-1" class="review-section-title" tabindex="-1">Appeals</h2>
+  <ul class="appeal-list">
+    <li class="appeal-entry">
+      <h3 class="appeal-entry-head">Appeal by Nomsa Mahlangu <span class="badge badge-accepted">Open</span></h3>
+      <p class="appeal-entry-meta">Lodged 2026-10-14</p>
+      <p class="appeal-entry-outcome">Heard by Thandi Zulu (chair) and John van Rensburg (external).</p>
+      <p class="appeal-entry-label">Reason</p>
+      <p class="appeal-entry-reason appeal-entry-reason--clamped">The single DOPS reflects the start of the year, and the Mini-CEX waited eight days on the assessor's side before it was rated. I ask for reconsideration.</p>
+    </li>
+  </ul>
+  <p id="appeal-body-note" class="appeals-who">Only the appeal body can resolve the appeal: the panel's chair, Thandi Zulu, and its external member, John van Rensburg.</p>
+</section>
+
+<p class="pv-cap">Thandi Zulu, the appeal body's chair (Steps 4.46, 4.47): Remitted chosen, the replacement, Present with the chair locked, and beside Resolve appeal the quorum line</p>
+<section class="detail-card review-appeals" aria-labelledby="pv-appeals-2">
+  <h2 id="pv-appeals-2" class="review-section-title" tabindex="-1">Appeals</h2>
+  <ul class="appeal-list">
+    <li class="appeal-entry">
+      <h3 class="appeal-entry-head">Appeal by Nomsa Mahlangu <span class="badge badge-accepted">Open</span></h3>
+      <p class="appeal-entry-meta">Lodged 2026-10-14</p>
+      <p class="appeal-entry-outcome">Heard by Thandi Zulu (chair) and John van Rensburg (external).</p>
+      <p class="appeal-entry-label">Reason</p>
+      <p class="appeal-entry-reason appeal-entry-reason--clamped">The single DOPS reflects the start of the year, and the Mini-CEX waited eight days on the assessor's side before it was rated. I ask for reconsideration.</p>
+    </li>
+  </ul>
+  <form class="resolve-form" aria-label="Resolve the appeal">
+    <div class="form-grid">
+      <fieldset class="form-group full-width" id="appeal-outcome" aria-describedby="appeal-outcome-help appeal-outcome-message">
+        <legend>
+          Outcome
+          <span aria-hidden="true">*</span>
+          <span class="visually-hidden">required</span>
+        </legend>
+        <div class="choice-group">
+          <div class="check-grid resolve-outcomes">
+            <div class="form-check"><input id="appeal-outcome-dismissed" class="form-check-input" type="radio" name="appeal-outcome" /><label for="appeal-outcome-dismissed">Dismissed: the decision stands</label></div>
+            <div class="form-check"><input id="appeal-outcome-remitted" class="form-check-input" type="radio" name="appeal-outcome" checked /><label for="appeal-outcome-remitted">Remitted: the appeal body replaces the decision</label></div>
+          </div>
+        </div>
+        <small class="page-subtitle" id="appeal-outcome-help">Dismissed leaves the committee's decision in force. Remitted replaces it with a decision the appeal body takes now, recorded below with who sat for it. Either closes the review, and nothing reopens it.</small>
+        <div id="appeal-outcome-message"></div>
+      </fieldset>
+      <div class="form-group full-width">
+        <label for="appeal-category">Replacement category <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+        <select id="appeal-category" class="form-select"><option>Select a category…</option><option selected>Satisfactory with Observations</option></select>
+      </div>
+      <div class="form-group full-width">
+        <label for="appeal-rationale">Replacement rationale <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+        <textarea id="appeal-rationale" class="form-control">The stalled Mini-CEX was the assessor's delay; progress is adequate, with observed assessments to follow.</textarea>
+      </div>
+      <div class="form-group full-width">
+        <label for="appeal-conditions">Replacement conditions</label>
+        <textarea id="appeal-conditions" class="form-control">Two observed Mini-CEX and one DOPS before the next review.</textarea>
+      </div>
+      <fieldset class="form-group full-width" aria-describedby="remit-present-help">
+        <legend>
+          Present
+          <span aria-hidden="true">*</span>
+          <span class="visually-hidden">required</span>
+        </legend>
+        <p id="remit-present-help" class="page-subtitle">Tick every panel member at this sitting. A committee decision needs at least two panel members present: the chair and at least one other.</p>
+        <div class="check-grid">
+          <div class="form-check"><input id="remit-present-0" class="form-check-input" type="checkbox" checked disabled /><label for="remit-present-0">Thandi Zulu (chair)</label></div>
+          <div class="form-check"><input id="remit-present-1" class="form-check-input" type="checkbox" /><label for="remit-present-1">David Naidoo</label></div>
+          <div class="form-check"><input id="remit-present-2" class="form-check-input" type="checkbox" checked /><label for="remit-present-2">Sarah Botha</label></div>
+          <div class="form-check"><input id="remit-present-3" class="form-check-input" type="checkbox" /><label for="remit-present-3">John van Rensburg (external)</label></div>
+        </div>
+      </fieldset>
+    </div>
+    <div class="decision-actions">
+      <button type="submit" id="resolve-appeal" class="btn btn-primary" aria-describedby="appeal-quorum-line">Resolve appeal</button>
+      <div class="decision-actions-text">
+        <p class="quorum-line" id="appeal-quorum-line" aria-live="polite">2 present: the chair and 1 other. The quorum is met.</p>
+      </div>
+    </div>
+  </form>
+</section>
+
+<p class="pv-cap">A remit short of a quorum (Step 4.46): refused on the page after the form's actions, led so it does not repeat the line, with the focus; nothing sent, everything kept</p>
+<section class="detail-card review-appeals" aria-labelledby="pv-appeals-3">
+  <h2 id="pv-appeals-3" class="review-section-title" tabindex="-1">Appeals</h2>
+  <form class="resolve-form" aria-label="Resolve the appeal">
+    <div class="form-grid">
+      <fieldset class="form-group full-width" aria-describedby="remit-present-help-3">
+        <legend>
+          Present
+          <span aria-hidden="true">*</span>
+          <span class="visually-hidden">required</span>
+        </legend>
+        <p id="remit-present-help-3" class="page-subtitle">Tick every panel member at this sitting. A committee decision needs at least two panel members present: the chair and at least one other.</p>
+        <div class="check-grid">
+          <div class="form-check"><input id="remit-present-3-0" class="form-check-input" type="checkbox" checked disabled /><label for="remit-present-3-0">Thandi Zulu (chair)</label></div>
+          <div class="form-check"><input id="remit-present-3-1" class="form-check-input" type="checkbox" /><label for="remit-present-3-1">David Naidoo</label></div>
+          <div class="form-check"><input id="remit-present-3-2" class="form-check-input" type="checkbox" /><label for="remit-present-3-2">Sarah Botha</label></div>
+          <div class="form-check"><input id="remit-present-3-3" class="form-check-input" type="checkbox" /><label for="remit-present-3-3">John van Rensburg (external)</label></div>
+        </div>
+      </fieldset>
+    </div>
+    <div class="decision-actions">
+      <button type="submit" class="btn btn-primary" aria-describedby="appeal-quorum-line-3">Resolve appeal</button>
+      <div class="decision-actions-text">
+        <p class="quorum-line" id="appeal-quorum-line-3" aria-live="polite">Only the chair is ticked. A committee decision needs at least two panel members present: the chair and at least one other.</p>
+      </div>
+    </div>
+    <div class="action-result" tabindex="-1">
+      <div class="alert alert-danger" role="alert">Resolve appeal was refused: A committee decision needs at least two panel members present: the chair and at least one other.</div>
+    </div>
+  </form>
+</section>
+
+<p class="pv-cap">Remit's dialog (C14b): Go back has the focus and returns it to Resolve appeal with everything typed kept</p>
+<div class="pv-stage">
+  <dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-remit-title" aria-describedby="pv-remit-body">
+    <div class="form-container">
+      <h2 id="pv-remit-title">Remit Nomsa Mahlangu's appeal?</h2>
+      <div id="pv-remit-body" class="dialog-body">
+        <p>Satisfactory with Observations replaces Inadequate Progress — Additional Training.</p>
+        <p>Present: Thandi Zulu (chair), Sarah Botha</p>
+        <p>This closes the 2026 S2 review. Nothing reopens it, and no STAR changes.</p>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline">Go back</button>
+        <button type="button" class="btn btn-primary">Remit the appeal</button>
+      </div>
+    </div>
+  </dialog>
+</div>
+
+<p class="pv-cap">Remitted (Step 4.47): "Appeal resolved." heads the section with the focus; the entry reads Remitted, resolved by whom; no form</p>
+<section class="detail-card review-appeals" aria-labelledby="pv-appeals-4">
+  <h2 id="pv-appeals-4" class="review-section-title" tabindex="-1">Appeals</h2>
+  <div class="action-result" tabindex="-1" id="review-result"><div class="alert alert-success" role="status">Appeal resolved.</div></div>
+  <ul class="appeal-list">
+    <li class="appeal-entry">
+      <h3 class="appeal-entry-head">Appeal by Nomsa Mahlangu <span class="badge badge-completed">Remitted</span></h3>
+      <p class="appeal-entry-meta">Lodged 2026-10-14 · Resolved 2026-10-14 by Thandi Zulu</p>
+      <p class="appeal-entry-outcome">Remitted: the appeal body replaced the decision. The replacement decision is above.</p>
+      <p class="appeal-entry-label">Reason</p>
+      <p class="appeal-entry-reason appeal-entry-reason--clamped">The single DOPS reflects the start of the year, and the Mini-CEX waited eight days on the assessor's side before it was rated. I ask for reconsideration.</p>
+    </li>
+  </ul>
+</section>
+</body>
+</html>

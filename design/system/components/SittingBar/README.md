@@ -7,13 +7,14 @@ The sitting bar (`Pages/CommitteeDecisions/Review/SittingBar.razor`, drawn from 
 ```razor
 <SittingBar View="@ReviewSitting.Bar(review, agenda, pending, present)" AsOf="@AsOf" Busy="@(_inFlight is not null)"
             Refreshing="@(_inFlight == RefreshAction)" OnStart="OpenStartAsync" OnGoToDecision="GoToDecisionAsync"
-            OnRatify="OpenRatifyAsync" OnClose="OpenCloseAsync" OnRefresh="RefreshAsync" Focus="FocusByIdAsync" />
+            OnGoToAppeal="GoToAppealAsync" OnRatify="OpenRatifyAsync" OnClose="OpenCloseAsync" OnRefresh="RefreshAsync"
+            Focus="FocusByIdAsync" />
 ```
 
-- `View` (required): a `SittingBarView`: `Chairs` (the chair's bar), the state label and its badge class (`ReviewSitting.StateBadge`), `Count`, `Mode`, `Present`, `Sentence`, the `Act` (None, Start, GoToDecision, Ratify, Close), `ActReason` (why the act is unavailable) and `Refresh`.
+- `View` (required): a `SittingBarView`: `Chairs` (the chair's bar), the state label and its badge class (`ReviewSitting.StateBadge`), `Count`, `Mode`, `Present`, `Sentence`, the `Act` (None, Start, GoToDecision, Ratify, Close, and since flow 09 GoToAppeal), `ActReason` (why the act is unavailable) and `Refresh`.
 - `AsOf`: a reader's "As of 14:02 SAST", with what the last Refresh found.
 - `Busy`: an action runs, so every act here would race it and is disabled; `Refreshing`: Refresh's own read runs.
-- `OnStart`, `OnGoToDecision`, `OnRatify`, `OnClose`, `OnRefresh`, and `Focus` (moves the focus to an element by id).
+- `OnStart`, `OnGoToDecision`, `OnGoToAppeal` (flow 09), `OnRatify`, `OnClose`, `OnRefresh`, and `Focus` (moves the focus to an element by id).
 
 ## Markup
 
@@ -30,7 +31,7 @@ The sitting bar (`Pages/CommitteeDecisions/Review/SittingBar.razor`, drawn from 
 | Count | before Start "15 EPAs on the agenda"; in progress "None staged", "3 staged"; decided "Satisfactory Progress · 3 decisions to issue" ("· no decision to issue"); ratified, under appeal or closed "Satisfactory Progress · 3 STARs issued" ("· no STAR issued"); a closed formative review "Formative check-in · no decision recorded" |
 | Mode (before Start; a formative review in progress) | "Summative · evidence 2026-01-01 to 2026-12-31", "Formative: an interim check-in, no binding decision · evidence …"; in progress, "Formative: an interim check-in, no binding decision" |
 | Present (the chair's bar, in progress, from the decision form's ticks; not live) | "Present: the chair · one more member needed", "4 present · quorum met", "Present: the chair · no other member may sit" |
-| The act | **Start review…** (`btn-primary`), **Go to the decision** (`btn-outline`; moves the focus to the Decision heading), **Ratify…** (`btn-primary`), **Close review…** (`btn-primary`; a formative review) |
+| The act | **Start review…** (`btn-primary`), **Go to the decision** (`btn-outline`; moves the focus to the Decision heading), **Ratify…** (`btn-primary`), **Close review…** (`btn-primary`; a formative review), **Go to the appeal** (`btn-sm btn-outline#sitting-go-to-appeal`; every reader's, while the review is under appeal; flow 09, F5) |
 | Sentence (a reader's bar) | "Only the panel's chair, Thandi Zulu, can stage entrustment decisions and record the committee's decision."; "… can ratify the committee's decision." ("… can remove a staged decision that no longer fits the trainee's curriculum and ratify …" where one does); "… can close this review."; to a reader not offered Start, "Only the coordinators of the panel's institution, and those of its members who are active committee members there, can start this review."; the trainee elsewhere or the chair unable to act, in those checks' own sentences; "Withdrawn on 2026-10-04. …" |
 | As of (a reader's, while the review can still change) | "As of 14:02 SAST", "As of 2026-10-04 14:02 SAST" when read on another day (E7); after Refresh "As of 14:31 SAST. Now Decided.", "… Now 4 staged.", "… No change."; a Refresh that failed, "The review could not be read again; it is shown as last read." |
 
@@ -44,6 +45,7 @@ The sitting bar (`Pages/CommitteeDecisions/Review/SittingBar.razor`, drawn from 
 - **Refresh** reads the review again in place, keeps the scroll, and keeps the focus on itself: its own read never disables it (`aria-disabled` while it runs, T234); the As of line, a status, says what changed (21). There is no live following (T362).
 - **Ratify short of a quorum** (`ActReason`, the review's `QuorumShortfall`): `aria-disabled="true"` with `.is-unavailable`, named by its reason (`aria-describedby="ratify-reason"`) beside it (`p.move-reasons.move-reasons--beside#ratify-reason`), never natively disabled (16); pressed, it moves the focus to the reason.
 - Start, Ratify and Close each open a ConfirmDialog (its safe button "Not yet"); the answer sits under the bar ("Decision ratified.", "Formative review closed.") or atop the agenda ("Review started."), taking the focus (ReviewSitting).
+- **Go to the appeal** (flow 09, T366, F5): while the review is under appeal every reader's bar carries it (the chair's too, the bar being a reader's then), at the bar's right end from 641px. It moves the focus through `PageFocus` to the Appeals heading (`#appeals-heading`, `tabindex="-1"`), which the browser brings into view: never an `href="#appeals"`, which `<base href="/">` would make a navigation to Home. The bar under appeal has no As of or Refresh (nothing on the review can change but the appeal). See ReviewAppeals.
 - Re-drawn after every action from the review read again (T260).
 
 ## Narrow widths

@@ -6,7 +6,7 @@ The page is a host. What it draws is in `Review/`: SittingBar, AgendaTable with 
 
 ## Who reads it
 
-Committee member, Coordinator, Administrator, Institutional admin and both speciality admins (`[Authorize(Roles = …)]`); the read ladder decides which reviews. The trainee reads theirs on My committee reviews, never here. In the menu it is under Committee reviews for each of those roles (`NavOwners`). An id that names nothing and one out of reach get the same answer (T194).
+Committee member, Coordinator, Administrator, Institutional admin and both speciality admins (`[Authorize(Roles = …)]`); the read ladder decides which reviews. The trainee reads theirs on her review's own page (`/committee/my-reviews/{id}`, MyReview, flow 09), never here. In the menu it is under Committee reviews for each of those roles (`NavOwners`). An id that names nothing and one out of reach get the same answer (T194).
 
 ## The header (the title rule; round 3 item 19, E6)
 
@@ -22,19 +22,19 @@ Committee member, Coordinator, Administrator, Institutional admin and both speci
 |---|---|
 | The sitting (SittingBar) | the state, the count, the next act; a visually hidden h2. The page's result sits under it for Start (formative), Ratify and Close. |
 | Before the committee decides (`#notes`) | only when it has something to say: "Sampling figures are incomplete" (a danger alert, not dismissible, each cause its own sentence, T135); "Sampling concentration warnings" (h3), one line per EPA, "PAED-010 · 1 rating · 1 assessor · 1 source. Fewer than three distinct assessors across this EPA's evidence.", "(no longer in use)" after a paused code (T273), and "Not counted: …" under them; an EPA whose STAR was revoked mid-review (a warning, T235) with "Stage PAED-003" for the chair, which chooses it in the foot form. |
-| The decision (DecisionForm) | **above the agenda once recorded**, below it until then. |
+| The decision (DecisionForm) | **above the agenda once recorded**, below it until then; the recorded decisions are DecisionHistory, newest first (flow 09). |
 | Agenda (AgendaTable) | the spine: one line per EPA, one open at a time; the foot form under it for the chair. |
 | Entrustment against Annexure A | EntrustmentStandingPanel, its EPA names moving the focus to the charts. |
 | Multi-source feedback by EPA | the MSF coverage panel (`MsfCoveragePanel`, not recorded here). |
 | Evidence snapshot (`#evidence-snapshot`) | "Frozen when the review started, 2026-10-05 · 9 items" (muted); an h3 per EPA (`.snapshot-group-heading`, "PAED-001 — Providing paediatric emergency care to children"), each a stacked table (Item, the row header, a link to flow 03's page with the review's way back, ReviewReturnLink; Assessor; Rating; Encounter; State), each row `id="snap-{itemId}"`; then "Not about a single EPA" and "Frozen before lines named their EPA" as lists. T173's info alert first when a campaign closed in the window is not in the snapshot. |
 | Rating trajectory by EPA | a `section.list-section.full-width`, one TrajectoryChart per EPA rated in the window at h3; "Back to PAED-001's line" in a card's head while that line is open. |
-| Appeals (`#appeals`, `.review-appeals`) | the appeal body's resolve form under appeal (Outcome, and for Remitted the replacement category, rationale, conditions and Present), else who resolves it; the appeals lodged, "No appeal has been lodged against this review." |
+| Appeals (`#appeals`, `.review-appeals`) | since flow 09 (T366, ReviewAppeals): the appeals lodged, each an AppealEntry ("Appeal by Nomsa Mahlangu"), or "No appeal has been lodged against this review."; then, under appeal, the appeal body's resolve form (one column; Outcome two radios, neither chosen; for Remitted the replacement category, rationale, conditions and Present; the quorum line beside Resolve appeal and a refusal after it), else who resolves it. Every reader's bar carries "Go to the appeal" to its heading (SittingBar) |
 
 **A formative review** has no agenda and no decision: the bar (its count "Formative check-in · no decision recorded" once closed; its act Close review…), the notes, the snapshot, the standing, the MSF coverage and the trajectories.
 
 ## The page's one result (round 3 item 15; T234, T260)
 
-One `ActionResult` (`#review-result`), drawn **beside the control it answers** and taking the focus once drawn: "Review started." atop the agenda; "Pending entrustment decision staged." or "… removed." in a row under its line (`tr.agenda-result-row`), or under the foot form (a removal on a line no longer on the agenda: atop the agenda); a stage's refusal at its form's top ("Not staged. An expiry date must be after the issue date."); "Decision recorded." or "Not recorded. Give the committee's rationale." in the Decision section; "Decision ratified." and "Formative review closed." under the bar; "Appeal resolved." in Appeals. A success is green (`alert-success`, `role="status"`), a refusal red (`alert-danger`, `role="alert"`), printed through `RefusalText.Of`. One action at a time: while one is on its way every other act is disabled, and the pressed one keeps the focus, `aria-disabled`.
+One `ActionResult` (`#review-result`), drawn **beside the control it answers** and taking the focus once drawn: "Review started." atop the agenda; "Pending entrustment decision staged." or "… removed." in a row under its line (`tr.agenda-result-row`), or under the foot form (a removal on a line no longer on the agenda: atop the agenda); a stage's refusal at its form's top ("Not staged. An expiry date must be after the issue date."); "Decision recorded." or "Not recorded. Give the committee's rationale." in the Decision section; "Decision ratified." and "Formative review closed." under the bar; "Appeal resolved." in Appeals, and Resolve appeal's refusal after the resolve form's actions, "Resolve appeal was refused: …" (flow 09, M8; ReviewAppeals). A success is green (`alert-success`, `role="status"`), a refusal red (`alert-danger`, `role="alert"`), printed through `RefusalText.Of`; since flow 09 (build review R1) Resolve appeal shows only a refusal's words (`CommitteeRefusals.IsRefusal`), and any other failure the fixed "The appeal could not be resolved just now. Try again, or come back in a few minutes.", logged, never framework text. One action at a time: while one is on its way every other act is disabled, and the pressed one keeps the focus, `aria-disabled`.
 
 The review is **read again after every action**, done or refused (T260), and on Refresh: the review with its agenda, then the staged decisions, the sampling report, the MSF count and the standing, each apart; the trajectories, the MSF coverage and the curriculum only when the state changed.
 
@@ -71,4 +71,4 @@ No new colour token; every pair is one the Spec measured: text 12.63:1, muted 5.
 
 - **What the page has no data for** (the T361 handoff): the ratified graduation summary; a chair's line's earlier STAR; a decided line's level and expiry on the agenda; who can start when the chair cannot act.
 - Readers follow the sitting only by Refresh (T362 proposes live following).
-- The appeals section is the pre-restructure form (flow 09's): `EditForm` with DataAnnotations, its Present ticks like the decision's.
+- The appeals section is flow 09's since T366 (ReviewAppeals); none of its gaps is open.

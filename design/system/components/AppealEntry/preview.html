@@ -1,0 +1,68 @@
+<!-- @dsCard group="Committee" height=1120 width=820 subtitle="One appeal, the same on both review pages: Open with who hears it, Remitted with its outcome sentence, the reason clamped to six lines with Show the whole reason only when it overflows" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AppealEntry</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The clamp is measured in the app; this frame is narrow, so the third reason overflows its six lines as it would at 390. */
+  .pv-phone { width: 358px; }
+</style>
+</head>
+<body>
+<p class="pv-cap">On the committee's page, while open (Step 4.44): "Appeal by Nomsa Mahlangu", amber Open, who hears it</p>
+<ul class="appeal-list">
+  <li class="appeal-entry" id="pv-appeal-1">
+    <h3 class="appeal-entry-head" id="pv-appeal-1-h">Appeal by Nomsa Mahlangu <span class="badge badge-accepted">Open</span></h3>
+    <p class="appeal-entry-meta">Lodged 2026-10-14</p>
+    <p class="appeal-entry-outcome">Heard by Thandi Zulu (chair) and John van Rensburg (external).</p>
+    <p class="appeal-entry-label" id="pv-appeal-1-label">Reason</p>
+    <p class="appeal-entry-reason appeal-entry-reason--clamped" id="pv-appeal-1-reason">The single DOPS reflects the start of the year, and the Mini-CEX waited eight days on the assessor's side before it was rated. I ask for reconsideration.</p>
+  </li>
+</ul>
+
+<p class="pv-cap">On her own page, once remitted (Step 4.48): "Your appeal", green Remitted, resolved by whom, and that it is final; then the closed line</p>
+<ul class="appeal-list">
+  <li class="appeal-entry" id="pv-appeal-2">
+    <h3 class="appeal-entry-head" id="pv-appeal-2-h">Your appeal <span class="badge badge-completed">Remitted</span></h3>
+    <p class="appeal-entry-meta">Lodged 2026-10-14 · Resolved 2026-10-14 by Thandi Zulu</p>
+    <p class="appeal-entry-outcome">Remitted: the appeal body replaced the decision. The decision above is theirs, and it is final.</p>
+    <p class="appeal-entry-label" id="pv-appeal-2-label">Reason</p>
+    <p class="appeal-entry-reason appeal-entry-reason--clamped" id="pv-appeal-2-reason">The single DOPS reflects the start of the year, and the Mini-CEX waited eight days on the assessor's side before it was rated. I ask for reconsideration.</p>
+  </li>
+</ul>
+<p class="muted appeal-closed">This review is closed and cannot be appealed again.</p>
+
+<p class="pv-cap">On the committee's page, dismissed: its outcome sentence without "final"</p>
+<ul class="appeal-list">
+  <li class="appeal-entry" id="pv-appeal-3">
+    <h3 class="appeal-entry-head" id="pv-appeal-3-h">Appeal by Nomsa Mahlangu <span class="badge badge-completed">Dismissed</span></h3>
+    <p class="appeal-entry-meta">Lodged 2026-10-14 · Resolved 2026-10-14 by Thandi Zulu</p>
+    <p class="appeal-entry-outcome">Dismissed: the decision stands.</p>
+    <p class="appeal-entry-label" id="pv-appeal-3-label">Reason</p>
+    <p class="appeal-entry-reason appeal-entry-reason--clamped" id="pv-appeal-3-reason">The single DOPS reflects the start of the year, and the Mini-CEX waited eight days on the assessor's side before it was rated. I ask for reconsideration.</p>
+  </li>
+</ul>
+
+<p class="pv-cap">A reason longer than six lines at 390 (illustrative): clamped, with Show the whole reason under it, 44px on a phone</p>
+<div class="pv-phone">
+  <ul class="appeal-list">
+    <li class="appeal-entry" id="pv-appeal-4">
+      <h3 class="appeal-entry-head" id="pv-appeal-4-h">Your appeal <span class="badge badge-accepted">Open</span></h3>
+      <p class="appeal-entry-meta">Lodged 2026-10-14</p>
+      <p class="appeal-entry-outcome">Heard by Thandi Zulu (chair) and John van Rensburg (external).</p>
+      <p class="appeal-entry-label" id="pv-appeal-4-label">Reason</p>
+      <p class="appeal-entry-reason appeal-entry-reason--clamped" id="pv-appeal-4-reason">The single DOPS reflects the start of the year, and the Mini-CEX waited eight days on the assessor's side before it was rated.
+
+Between March and August I was on the neonatal rotation, where two of the three consultants who could observe me were on leave, so the observations the committee looked for could not be booked in that window.
+
+I ask the appeal body to read the year as a whole, with the rotation's gap in it, and to reconsider Inadequate Progress — Additional Training.</p>
+      <button type="button" class="btn btn-sm btn-quiet appeal-entry-more" aria-controls="pv-appeal-4-reason" aria-expanded="false">Show the whole reason</button>
+    </li>
+  </ul>
+</div>
+</body>
+</html>

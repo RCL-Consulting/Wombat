@@ -1,0 +1,204 @@
+<!-- @dsCard group="Programme" height=2900 width=974 subtitle="The STAR register: filters applied with Show and the count announced, the trainee the row header, review #n linked only where readable, a revoked STAR's line under its row; Revoke's dialog with its reason field; filtered to nothing; stacked at 768" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>StarRegister</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The app opens the dialog with showModal() (wwwroot/js/dialog.js); a static preview paints its backdrop itself. */
+  .pv-stage { position: relative; background: var(--scrim); padding: var(--space-2xl) 0; box-sizing: border-box; }
+  .pv-stage dialog { position: static; margin: 0 auto; }
+  /* At 900px and below app.css stacks .clinic-table--stack-wide; the 768 rendition repeats the media rules under .pv-narrow. */
+  .pv-narrow { width: 486px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-narrow .clinic-table--stack-wide tbody tr.has-note { border-bottom: 0; padding-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td.history-note { display: block; padding: 0; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Refilwe Mokoena, Speciality admin, after revoking (Step 4.36): the result above the table with the focus; Dlamini's PAED-002 Revoked, Download only, its line under it; Revoke on each Active row</p>
+<div class="entrustment-list">
+  <div class="header-container">
+    <div>
+      <h1>Entrustment decisions</h1>
+      <p class="page-subtitle">Issued Statements of Awarded Responsibility across the programme.</p>
+    </div>
+  </div>
+  <p class="visually-hidden" role="status"></p>
+  <form class="search-container" method="get" aria-label="Filter Entrustment decisions">
+    <div class="search-grid">
+      <div class="search-field">
+        <label for="pv-filter-trainee">Trainee</label>
+        <input id="pv-filter-trainee" class="form-control" type="search" placeholder="Filter by name" />
+      </div>
+      <div class="search-field">
+        <label for="pv-filter-status">Status</label>
+        <select id="pv-filter-status" class="form-select"><option value="">All</option><option>Active</option><option>Expired</option><option>Revoked</option><option>Superseded</option></select>
+      </div>
+      <div class="search-field filter-actions">
+        <button type="submit" class="btn btn-primary">Show</button>
+      </div>
+    </div>
+  </form>
+  <div class="action-result" tabindex="-1">
+    <div class="alert alert-success" role="status">Anele Dlamini's PAED-002 STAR is revoked.</div>
+  </div>
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+      <caption>Issued STARs (entrustment decisions) · 5 shown</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">Trainee</th>
+          <th scope="col" role="columnheader">EPA</th>
+          <th scope="col" role="columnheader">Level</th>
+          <th scope="col" role="columnheader" class="col-fit">Issued</th>
+          <th scope="col" role="columnheader" class="col-fit">Expires</th>
+          <th scope="col" role="columnheader">Status</th>
+          <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr role="row" class="has-note">
+          <th scope="row" role="rowheader">Anele Dlamini</th>
+          <td role="cell" data-label="EPA">PAED-002 — Managing common paediatric presentations</td>
+          <td role="cell" data-label="Level">3b</td>
+          <td role="cell" class="col-fit" data-label="Issued">2026-10-14<br /><a class="issued-review" href="#" aria-label="Open review #2">review #2</a></td>
+          <td role="cell" class="col-fit" data-label="Expires">—</td>
+          <td role="cell" data-label="Status"><span class="badge badge-declined">Revoked</span></td>
+          <td role="cell"><div class="actions-cell"><button type="button" class="btn btn-sm btn-outline" aria-label="Download the certificate of Anele Dlamini's PAED-002 decision, issued 2026-10-14"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>Download</button></div></td>
+        </tr>
+        <tr role="row">
+          <td role="cell" colspan="7" class="history-note">Revoked 2026-10-14 at 16:50 SAST by Refilwe Mokoena: Staged on evidence about PAED-001, not PAED-002; to be decided again.</td>
+        </tr>
+        <tr role="row">
+          <th scope="row" role="rowheader">Anele Dlamini</th>
+          <td role="cell" data-label="EPA">PAED-001 — Providing paediatric emergency care to children</td>
+          <td role="cell" data-label="Level">4</td>
+          <td role="cell" class="col-fit" data-label="Issued">2026-10-14<br /><a class="issued-review" href="#" aria-label="Open review #2">review #2</a></td>
+          <td role="cell" class="col-fit" data-label="Expires">—</td>
+          <td role="cell" data-label="Status"><span class="badge badge-completed">Active</span></td>
+          <td role="cell"><div class="actions-cell"><button type="button" class="btn btn-sm btn-outline" aria-label="Download the certificate of Anele Dlamini's PAED-001 decision, issued 2026-10-14"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>Download</button><button type="button" class="btn btn-sm btn-outline" aria-label="Revoke Anele Dlamini's PAED-001 decision, issued 2026-10-14">Revoke</button></div></td>
+        </tr>
+        <tr role="row">
+          <th scope="row" role="rowheader">Lerato Molefe</th>
+          <td role="cell" data-label="EPA">PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams</td>
+          <td role="cell" data-label="Level">5</td>
+          <td role="cell" class="col-fit" data-label="Issued">2026-10-14<br /><a class="issued-review" href="#" aria-label="Open review #1">review #1</a></td>
+          <td role="cell" class="col-fit" data-label="Expires">—</td>
+          <td role="cell" data-label="Status"><span class="badge badge-completed">Active</span></td>
+          <td role="cell"><div class="actions-cell"><button type="button" class="btn btn-sm btn-outline" aria-label="Download the certificate of Lerato Molefe's PAED-012 decision, issued 2026-10-14"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>Download</button><button type="button" class="btn btn-sm btn-outline" aria-label="Revoke Lerato Molefe's PAED-012 decision, issued 2026-10-14">Revoke</button></div></td>
+        </tr>
+        <tr role="row">
+          <th scope="row" role="rowheader">Lerato Molefe</th>
+          <td role="cell" data-label="EPA">PAED-010 — Leading and operating within a clinical team</td>
+          <td role="cell" data-label="Level">4</td>
+          <td role="cell" class="col-fit" data-label="Issued">2026-10-14<br /><a class="issued-review" href="#" aria-label="Open review #1">review #1</a></td>
+          <td role="cell" class="col-fit" data-label="Expires">2026-11-03</td>
+          <td role="cell" data-label="Status"><span class="badge badge-completed">Active</span></td>
+          <td role="cell"><div class="actions-cell"><button type="button" class="btn btn-sm btn-outline" aria-label="Download the certificate of Lerato Molefe's PAED-010 decision, issued 2026-10-14"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>Download</button><button type="button" class="btn btn-sm btn-outline" aria-label="Revoke Lerato Molefe's PAED-010 decision, issued 2026-10-14">Revoke</button></div></td>
+        </tr>
+        <tr role="row">
+          <th scope="row" role="rowheader">Lerato Molefe</th>
+          <td role="cell" data-label="EPA">PAED-001 — Providing paediatric emergency care to children</td>
+          <td role="cell" data-label="Level">5</td>
+          <td role="cell" class="col-fit" data-label="Issued">2026-10-14<br /><a class="issued-review" href="#" aria-label="Open review #1">review #1</a></td>
+          <td role="cell" class="col-fit" data-label="Expires">—</td>
+          <td role="cell" data-label="Status"><span class="badge badge-completed">Active</span></td>
+          <td role="cell"><div class="actions-cell"><button type="button" class="btn btn-sm btn-outline" aria-label="Download the certificate of Lerato Molefe's PAED-001 decision, issued 2026-10-14"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>Download</button><button type="button" class="btn btn-sm btn-outline" aria-label="Revoke Lerato Molefe's PAED-001 decision, issued 2026-10-14">Revoke</button></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<p class="pv-cap">Revoke's dialog, pressed blank (Step 4.36): the reason box has the focus, refused under the box, its counter after the refusal; Revoke the STAR enabled from the start; the field outside the dialog's description</p>
+<div class="pv-stage">
+  <dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-revoke-title" aria-describedby="pv-revoke-body">
+    <div class="form-container">
+      <h2 id="pv-revoke-title">Revoke Anele Dlamini's PAED-002 STAR?</h2>
+      <div id="pv-revoke-body" class="dialog-body">
+        <p>PAED-002 — Managing common paediatric presentations, level 3b, issued 2026-10-14. Revocation is immediate and cannot be undone.</p>
+        <p>Anele Dlamini is sent an email saying the STAR was revoked and by whom, with a link to My authorisations, unless Anele Dlamini's account is deactivated. The reason is not in the email: Anele Dlamini reads it on My authorisations and on the certificate.</p>
+        <p>The EPA reads 'Revoked: re-decide' on Decisions due, and Anele Dlamini's review agenda keeps its line.</p>
+      </div>
+      <div class="dialog-body">
+        <div class="form-group">
+          <label for="revoke-reason">
+            Revocation reason
+            <span aria-hidden="true">*</span>
+            <span class="visually-hidden">required</span>
+          </label>
+          <textarea id="revoke-reason" class="form-control input-validation-error" rows="3" aria-invalid="true" aria-describedby="revoke-reason-error revoke-reason-count"></textarea>
+          <p id="revoke-reason-error" class="validation-message">Give a reason for the revocation.</p>
+          <p id="revoke-reason-count" class="field-help">0 of 1,000 characters</p>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline">Cancel</button>
+        <button type="button" class="btn btn-danger">Revoke the STAR</button>
+      </div>
+    </div>
+  </dialog>
+</div>
+
+<p class="pv-cap">Filtered to nothing (illustrative: Trainee "Mahlangu", Status Revoked, Show): the count stays, the card says what was asked, the filter bar's Clear filters is the one (D10)</p>
+<div class="entrustment-list">
+  <p class="visually-hidden" role="status">0 shown</p>
+  <form class="search-container" method="get" aria-label="Filter Entrustment decisions">
+    <div class="search-grid">
+      <div class="search-field">
+        <label for="pv-filter-trainee-2">Trainee</label>
+        <input id="pv-filter-trainee-2" class="form-control" type="search" placeholder="Filter by name" value="Mahlangu" />
+      </div>
+      <div class="search-field">
+        <label for="pv-filter-status-2">Status</label>
+        <select id="pv-filter-status-2" class="form-select"><option value="">All</option><option>Active</option><option>Expired</option><option selected>Revoked</option><option>Superseded</option></select>
+      </div>
+      <div class="search-field filter-actions">
+        <button type="submit" class="btn btn-primary">Show</button>
+        <button type="button" class="btn btn-outline">Clear filters</button>
+      </div>
+    </div>
+  </form>
+  <p class="list-section-count">Issued STARs (entrustment decisions) · 0 shown</p>
+  <div class="detail-card detail-card--empty">
+    <div class="state-panel-title">No STAR matches these filters.</div>
+    <div class="state-panel-copy">Trainee “Mahlangu”, status Revoked.</div>
+  </div>
+</div>
+
+<p class="pv-cap">At 768: the list stacks from 900px, the trainee heading the labelled cells, the revoked line joining its row, unpadded</p>
+<div class="pv-narrow entrustment-list">
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+      <caption>Issued STARs (entrustment decisions) · 1 shown</caption>
+      <thead role="rowgroup">
+        <tr role="row"><th scope="col">Trainee</th><th scope="col">EPA</th><th scope="col">Level</th><th scope="col">Issued</th><th scope="col">Expires</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr role="row" class="has-note">
+          <th scope="row" role="rowheader">Anele Dlamini</th>
+          <td role="cell" data-label="EPA">PAED-002 — Managing common paediatric presentations</td>
+          <td role="cell" data-label="Level">3b</td>
+          <td role="cell" class="col-fit" data-label="Issued">2026-10-14<br /><a class="issued-review" href="#" aria-label="Open review #2">review #2</a></td>
+          <td role="cell" class="col-fit" data-label="Expires">—</td>
+          <td role="cell" data-label="Status"><span class="badge badge-declined">Revoked</span></td>
+          <td role="cell"><div class="actions-cell"><button type="button" class="btn btn-sm btn-outline" aria-label="Download the certificate of Anele Dlamini's PAED-002 decision, issued 2026-10-14"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>Download</button></div></td>
+        </tr>
+        <tr role="row">
+          <td role="cell" colspan="7" class="history-note">Revoked 2026-10-14 at 16:50 SAST by Refilwe Mokoena: Staged on evidence about PAED-001, not PAED-002; to be decided again.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

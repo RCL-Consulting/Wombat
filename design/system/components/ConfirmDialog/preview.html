@@ -1,4 +1,4 @@
-<!-- @dsCard group="Actions" height=1180 width=960 subtitle="A native modal dialog: what the action does and cannot undo, then the safe button and the action; and its form mode, a real post" -->
+<!-- @dsCard group="Actions" height=1800 width=960 subtitle="A native modal dialog: what the action does and cannot undo, then the safe button and the action; its form mode, a real post; and a field in the action mode, the first focus, refused in place" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -58,6 +58,35 @@
       <div class="form-actions">
         <button type="button" class="btn btn-outline">Keep the request</button>
         <button type="button" class="btn btn-danger">Cancel request</button>
+      </div>
+    </div>
+  </dialog>
+</div>
+<p class="pv-cap">The action mode with a field (flow 09, the STAR register's Revoke, pressed blank): the reason box has the first focus, refused under the box, its counter after the refusal, outside the description; the dialog stays open</p>
+<div class="pv-stage">
+  <dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-d-title" aria-describedby="pv-d-body">
+    <div class="form-container">
+      <h2 id="pv-d-title">Revoke Anele Dlamini's PAED-002 STAR?</h2>
+      <div id="pv-d-body" class="dialog-body">
+        <p>PAED-002 — Managing common paediatric presentations, level 3b, issued 2026-10-14. Revocation is immediate and cannot be undone.</p>
+        <p>Anele Dlamini is sent an email saying the STAR was revoked and by whom, with a link to My authorisations, unless Anele Dlamini's account is deactivated. The reason is not in the email: Anele Dlamini reads it on My authorisations and on the certificate.</p>
+        <p>The EPA reads 'Revoked: re-decide' on Decisions due, and Anele Dlamini's review agenda keeps its line.</p>
+      </div>
+      <div class="dialog-body">
+        <div class="form-group">
+          <label for="pv-d-reason">
+            Revocation reason
+            <span aria-hidden="true">*</span>
+            <span class="visually-hidden">required</span>
+          </label>
+          <textarea id="pv-d-reason" class="form-control input-validation-error" rows="3" aria-invalid="true" aria-describedby="pv-d-error pv-d-count"></textarea>
+          <p id="pv-d-error" class="validation-message">Give a reason for the revocation.</p>
+          <p id="pv-d-count" class="field-help">0 of 1,000 characters</p>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline">Cancel</button>
+        <button type="button" class="btn btn-danger">Revoke the STAR</button>
       </div>
     </div>
   </dialog>

@@ -1,8 +1,8 @@
 /* Wombat — components/bundle.css
-   Wombat's component CSS as flows 01 to 08 built it (T335, b347e11c; T339, f50dffb2 and 6735fa98; T342, 725237ee,
+   Wombat's component CSS as flows 01 to 09 built it (T335, b347e11c; T339, f50dffb2 and 6735fa98; T342, 725237ee,
    daaf6386, 5fd5abcd and a341b44e; T350, 06aa51d7; T355, b020c942, db4c2d0a, 5f8e6639 and b389f7d2; T358, 85d5a508 and
    94edf2b7; T361, 44de180b, 59bb72fd, 6ad6c57a, 6b149fff and 14378856; T364, 622c5ad1 and
-   1ec7a352; master@77b8dd79),
+   1ec7a352; T366, 49e7cf5e; master@a0d4c8b1),
    extracted with every class name and declaration unchanged, so a design maps back to the classes Razor writes.
    - From src/Wombat.Web/wwwroot/app.css: everything after :root. tokens.css, which the page compiles from tokens.json,
      supplies the :root custom properties (colours, --space-*, --radius-*, --shadow-*, --sidebar-width, --motion-fast,
@@ -4891,6 +4891,309 @@ fieldset.form-group fieldset.form-group > legend {
   }
 }
 /* end Flow 08: the panels */
+
+/* Flow 09: her review (T366) */
+/* Boards R3-1, R3-2 (round 3 S9, S10): the trainee's review page (.my-review-page on flow 07's .review-page), the
+   decision history and the appeal entry both review pages draw, and the lodge block. No new token: every pair is one the
+   Spec measured (text 12.63:1, muted 5.09:1, link 6.70:1). Reuses .detail-list for the review's facts, .field-help for the
+   counter and flow 07's section titles; the phone rule is scoped to the trainee's page and the entry's own control. */
+
+/* A badge in a .detail-list's dd sits on the text's line: her review's State, a STAR card's "Expires in N days". Scoped to
+   the two pages (T366, D12), so no other detail list moves. */
+.my-review-page .detail-list dd .badge,
+.my-authorisations .detail-list dd .badge {
+  vertical-align: 1px;
+}
+
+/* DecisionHistory: newest first, a hairline between two decisions. */
+.decision-history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.decision-history .decision-record + .decision-record {
+  border-top: 1px solid var(--border-color);
+  padding-top: var(--space-lg);
+}
+
+.decision-record p {
+  margin: 0 0 var(--space-sm);
+}
+
+.decision-record p:last-child {
+  margin-bottom: 0;
+}
+
+/* "Replaced on appeal by the decision above.", and what an entrustment-only review decides. */
+.decision-replaced,
+.decision-note {
+  color: var(--muted-text);
+}
+
+/* AppealEntry: one appeal, the same on both pages, in a ul.appeal-list. */
+.appeal-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.appeal-entry {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+}
+
+.appeal-entry-head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 1.05rem;
+  gap: var(--space-sm);
+  margin: 0;
+}
+
+.appeal-entry-meta {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.appeal-entry-outcome,
+.appeal-entry-label {
+  margin: 0;
+}
+
+.appeal-entry-label {
+  font-weight: 600;
+}
+
+.appeal-entry-reason {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* Six lines, then "Show the whole reason", drawn only when the reason overflows them (S10, measured after render). */
+.appeal-entry-reason--clamped {
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  display: -webkit-box;
+  line-clamp: 6;
+  overflow: hidden;
+}
+
+.appeal-entry-more {
+  align-self: flex-start;
+}
+
+/* The committee's who-may line under its Appeals heading. */
+.appeals-who {
+  color: var(--muted-text);
+  margin: 0 0 var(--space-md);
+}
+
+/* "This review is closed and cannot be appealed again.", under the entry. */
+.appeal-list + .appeal-closed {
+  margin: var(--space-md) 0 0;
+}
+
+/* The lodge block, read-width (48rem) at every width; its counter is a second .field-help. */
+.lodge-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  max-width: 48rem;
+}
+
+.appeal-list + .lodge-block,
+.action-result + .lodge-block {
+  margin-top: var(--space-md);
+}
+
+.lodge-block .form-section-title {
+  margin: 0;
+}
+
+.lodge-next {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding-left: var(--space-lg);
+}
+
+.lodge-block .form-group,
+.lodge-block .form-actions {
+  margin: 0;
+}
+
+.lodge-block .form-actions {
+  justify-content: flex-start;
+}
+
+/* Below 641px: the trainee's page's actions and the entry's own control are 44px, the page's full width. Flow 07 already
+   gives the committee page's controls theirs, so nothing here reaches that page but the entry's button. */
+@media (max-width: 640.98px) {
+  .my-review-page .form-actions .btn,
+  .appeal-entry-more {
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .my-review-page .form-actions .btn {
+    width: 100%;
+  }
+}
+/* end Flow 09: her review */
+
+/* Flow 09: the committee's appeal (T366) */
+/* Board R3-3 (round 3 F5, F7, M8; T323): the committee review page's Appeals section, after lane T's entries. The bar's
+   "Go to the appeal" is flow 07's .sitting-bar-actions as it stands (the right end from 641px; stacked, full width and
+   44px below), so it needs no rule here. No new token. Below 641px flow 07 already gives this section what it needs (the
+   44px Resolve appeal at full width through .decision-actions, the 2.75rem radio and tick rows through
+   .review-page .check-grid), so there is no phone rule. */
+
+/* What follows the entries, the resolve form or the who-may line, stands clear of them. */
+.review-appeals .appeal-list + .resolve-form,
+.review-appeals .muted + .resolve-form {
+  margin-top: var(--space-lg);
+}
+
+.review-appeals .appeal-list + .appeals-who {
+  margin: var(--space-md) 0 0;
+}
+
+/* The resolve form: one column at read width (T323), so the Outcome and the replacement read whole at every width. */
+.resolve-form {
+  max-width: 48rem;
+}
+
+.resolve-form .form-grid,
+.resolve-form .check-grid.resolve-outcomes {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* A refusal after the form's actions (M8), under the quorum line. */
+.resolve-form .decision-actions + .action-result {
+  margin-top: var(--space-md);
+}
+/* end Flow 09: the committee's appeal */
+
+/* Flow 09: the STARs (T366) */
+/* My authorisations (boards R3-5) and the STAR register (R3-6). In force is an equal-column grid of cards (.details-grid
+   is 1fr 2fr): one column at 390, as many as fit at 768 and 1280 (S9). The register's revoked and superseded lines are
+   flow 03's note row, generalised from .history-table to any .clinic-table (S4, S9). Every phone rule is scoped to the
+   two pages' wrappers, .my-authorisations and .entrustment-list (S9). No new token. */
+
+/* A page section (In force, No longer in force), spaced from the one before. */
+.stars-section + .stars-section {
+  margin-top: var(--space-xl);
+}
+
+/* "No STAR is in force now." sits under its heading (S2). */
+.stars-section > .muted {
+  margin: 0;
+}
+
+.star-grid {
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
+}
+
+/* A card in the grid may shrink below its longest word's width: PAED-015's 120-character title wraps in its card. */
+.star-grid > .detail-card {
+  min-width: 0;
+}
+
+.star-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.star-card h3 {
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.star-rationale {
+  color: var(--muted-text);
+  margin: 0;
+}
+
+/* The card's Download at its foot, whatever the rationale's length, its result under it (C19). */
+.star-card .form-actions {
+  align-items: flex-start;
+  flex-direction: column;
+  margin-top: auto;
+}
+
+.download-result {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.actions-cell + .download-result {
+  margin-top: var(--space-sm);
+}
+
+/* Flow 03's note row, on any .clinic-table: the line under its row shares the row's edge (S4, C22). */
+.clinic-table .has-note > * {
+  border-bottom: 0;
+}
+
+.clinic-table .history-note {
+  padding-top: 0;
+  white-space: pre-line;
+}
+
+/* Issued's review link: a 24px target from 641px, as an inline box, never a 21.6px line (M9); 44px below. */
+.issued-review {
+  align-items: center;
+  display: inline-flex;
+  font-size: 0.9rem;
+  min-height: 24px;
+}
+
+/* Stacked at 900px and below, the line joins its row's block, and wraps, never cut (C22). */
+@media (max-width: 900px) {
+  .clinic-table--stack-wide tbody tr.has-note {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  /* The stacked row is padded already: the note cell adds none (T366, D4). */
+  .clinic-table--stack-wide td.history-note {
+    display: block;
+    padding: 0;
+  }
+}
+
+/* Below 641px the two pages' buttons and Issued's link are 44px targets, a failed download's Try again among them (D7);
+   the cards' Download is full width. */
+@media (max-width: 640.98px) {
+  .my-authorisations .form-actions .btn,
+  .my-authorisations .actions-cell .btn,
+  .my-authorisations .download-result .btn,
+  .entrustment-list .actions-cell .btn,
+  .entrustment-list .issued-review {
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .my-authorisations .form-actions .btn {
+    width: 100%;
+  }
+}
+/* end Flow 09: the STARs */
 
 /* ══ MainLayout.razor.css ═══════════════════════════════════════════════════════════════════════════════════════════
    Scoped to MainLayout.razor in the app; written unscoped here (see the header). */

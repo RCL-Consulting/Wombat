@@ -46,6 +46,10 @@ My activities' All activities was the first: the columns Activity, Who has it no
 
 Flow 08 (T364, round 3 M8) stacks its lists the same way from 900px: Decision panels and its Who decides each EPA (DecisionPanels), Decisions due's By EPA (DecisionsDue) and Committee reviews (CommitteeReviews); there a stack-wide row's button is 44px (`.committee-calendar .clinic-table--stack-wide .btn`). Decisions due's list and the seat picker (SeatPicker) stack below 641px only. A stack-wide row header keeps the header cell's tint; only the seat picker's drops it below 641px, so the name sits over its radios (build review D5).
 
+**Both stack classes on a hand-written table** (flow 09, T366, S8; DESIGN.md § Table system): a list that must stack at 900px writes `.clinic-table--stack .clinic-table--stack-wide`, as flows 06 and 08 write theirs; DataTable's `Stack` is the 641px one and gains no wider mode. Flow 09's three are written so: My committee reviews (MyCommitteeReviews, its Period the row's header, D11), My authorisations' No longer in force (MyAuthorisations) and the STAR register (StarRegister).
+
+**A row's line** (flow 03's note row, generalised by flow 09, T366, S4, S9, C22): a row that needs a sentence under it is `tr.has-note`, followed by a row whose one cell spans every column, `td.history-note` (`pre-line`, no top padding). Since flow 09 the pair works on **any `.clinic-table`**, not only the activity's `.history-table`: every cell of the noted row drops its bottom rule (`.clinic-table .has-note > *`), so the two share the row's edge; stacked at 900px the noted row drops its rule and bottom padding and the line joins its block, unpadded (D4), wrapping, never cut. The STAR register's revoked and superseded lines are the first outside the history: "Revoked 2026-10-14 at 16:50 SAST by Refilwe Mokoena: Staged on evidence about PAED-001, not PAED-002; to be decided again.", "Superseded by STAR #18, issued 2026-10-13.".
+
 ## Rules
 
 - Every `<table>` is a `.clinic-table` in a `.table-container`; never Bootstrap's `.table`, and no inline column widths.
@@ -56,13 +60,14 @@ Flow 08 (T364, round 3 M8) stacks its lists the same way from 900px: Decision pa
 - **A status cell** (flow 08, `.status-cell`): the badge over a sentence (0.9rem) saying what it means, a review it names a link whose line is padded to a 24px target (`.status-cell p a`, 1ec7a352).
 - **A period over its window** (flow 08, `.period-window`): "2026 S2" over "2026-01-01 to 2026-12-31" in `muted-text` at 0.9rem, each date unbroken (Committee reviews).
 - **A person over the address** (flow 08, `.person-cell`): the name over the whole address in `muted-text`, which wraps anywhere (the seat picker).
-- **On flow 08's pages** (`.committee-calendar`) every row action of a stacked table is 44px and the row's width below 641px.
+- **On flow 08's pages** (`.committee-calendar`) every row action of a stacked table is 44px and the row's width below 641px; **on flow 09's** two STAR pages (`.my-authorisations`, `.entrustment-list`) every row button, a failed download's Try again and the register's Issued link are 44px below 641px. My committee reviews draws no wrapper, so its View stays 28px (MyCommitteeReviews, Known gaps).
+- **A cell's link that is a second line** (flow 09, `.issued-review`): the register's "review #2" under its Issued date, an inline box 24px tall at 0.9rem, never a 21.6px line (M9), and only where the reader may open that review; plain text otherwise (S7).
 - An item open for editing keeps its row read-only ("Editing below") and puts its controls in a second row spanning the table.
 - Measure a table at 1280px against its longest real values before adding a column.
 
 ## Known gaps
 
-- My activities, the Activity inbox, flow 05's index, standing panel, trajectory table and Activities on this EPA, flow 06's Programme trainees and Waiting for assessors (from 900px), and flow 08's Decision panels, Who decides each EPA, By EPA and Committee reviews (from 900px), Decisions due's list and the seat picker stack. Every other list at 390px still scrolls sideways inside its container.
+- My activities, the Activity inbox, flow 05's index, standing panel, trajectory table and Activities on this EPA, flow 06's Programme trainees and Waiting for assessors (from 900px), flow 08's Decision panels, Who decides each EPA, By EPA and Committee reviews (from 900px), Decisions due's list and the seat picker, and flow 09's My committee reviews, No longer in force and the STAR register (from 900px) stack. Every other list at 390px still scrolls sideways inside its container.
 - A filtered list's form above it is FilterBar's (flow 06); the older lists' `.search-container` with `.search-input` fields acts as each page wires it.
 
 ## Appearance

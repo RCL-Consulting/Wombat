@@ -1,0 +1,138 @@
+<!-- @dsCard group="Committee" height=1300 width=974 subtitle="My committee reviews: the trainee's own list, newest first, Period the row's header over its window, State a badge, View opening her review's page; loading, failed, empty, and stacked at 768" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyCommitteeReviews</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* At 900px and below app.css stacks .clinic-table--stack-wide. This card is wider than that, so the 768 rendition
+     (a 486px main column beside the sidebar) repeats the media rules' declarations under .pv-narrow. */
+  .pv-narrow { width: 486px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Sipho Ndlovu, Trainee (Step 4.51): two reviews for 2026 S2, the check-in first (newest first, by scheduled date, then review number); a check-in's Type and Decision</p>
+<div class="header-container">
+  <div>
+    <h1>My committee reviews</h1>
+    <p class="page-subtitle">Ratified decisions, appeal status, and final outcomes.</p>
+  </div>
+</div>
+<p class="visually-hidden" role="status"></p>
+<div class="table-container shadow">
+  <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+    <caption>Your committee reviews, newest first</caption>
+    <thead role="rowgroup">
+      <tr role="row">
+        <th scope="col" role="columnheader">Panel</th>
+        <th scope="col" role="columnheader">Period</th>
+        <th scope="col" role="columnheader">Type</th>
+        <th scope="col" role="columnheader">State</th>
+        <th scope="col" role="columnheader">Decision</th>
+        <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody role="rowgroup">
+      <tr role="row">
+        <td role="cell" data-label="Panel">Paed Annual Review Panel</td>
+        <th scope="row" role="rowheader">2026 S2 <span class="period-window"><span>2026-01-01</span> to <span>2026-12-31</span></span></th>
+        <td role="cell" data-label="Type">Formative check-in</td>
+        <td role="cell" data-label="State"><span class="badge badge-completed">Closed</span></td>
+        <td role="cell" data-label="Decision">No binding decision</td>
+        <td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="View the 2026 S2 formative review before Paed Annual Review Panel">View</a></div></td>
+      </tr>
+      <tr role="row">
+        <td role="cell" data-label="Panel">Paed Annual Review Panel</td>
+        <th scope="row" role="rowheader">2026 S2 <span class="period-window"><span>2026-01-01</span> to <span>2026-12-31</span></span></th>
+        <td role="cell" data-label="Type">Annual progression</td>
+        <td role="cell" data-label="State"><span class="badge badge-completed">Ratified</span></td>
+        <td role="cell" data-label="Decision">Outcome Deferred</td>
+        <td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="View the 2026 S2 review before Paed Annual Review Panel">View</a></div></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p class="pv-cap">Nomsa Mahlangu after lodging her appeal (Step 4.43): her row reads Under appeal, amber</p>
+<div class="table-container shadow">
+  <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+    <caption>Your committee reviews, newest first</caption>
+    <thead role="rowgroup">
+      <tr role="row">
+        <th scope="col" role="columnheader">Panel</th>
+        <th scope="col" role="columnheader">Period</th>
+        <th scope="col" role="columnheader">Type</th>
+        <th scope="col" role="columnheader">State</th>
+        <th scope="col" role="columnheader">Decision</th>
+        <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody role="rowgroup">
+      <tr role="row">
+        <td role="cell" data-label="Panel">Paed Annual Review Panel</td>
+        <th scope="row" role="rowheader">2026 S2 <span class="period-window"><span>2026-01-01</span> to <span>2026-12-31</span></span></th>
+        <td role="cell" data-label="Type">Annual progression</td>
+        <td role="cell" data-label="State"><span class="badge badge-accepted">Under appeal</span></td>
+        <td role="cell" data-label="Decision">Inadequate Progress — Additional Training</td>
+        <td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="View the 2026 S2 review before Paed Annual Review Panel">View</a></div></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p class="pv-cap">Loading: the header at once, a visually hidden status "Loading your committee reviews.", three row skeletons, no View</p>
+<p class="visually-hidden" role="status">Loading your committee reviews.</p>
+<div aria-hidden="true">
+  <div class="skeleton" style="width:100%;height:3rem"></div>
+  <div class="skeleton" style="width:100%;height:3rem"></div>
+  <div class="skeleton" style="width:100%;height:3rem"></div>
+</div>
+
+<p class="pv-cap">The read failed (T329): fixed words and Try again</p>
+<div class="action-result" tabindex="-1">
+<div class="alert alert-danger" role="alert">
+  <div class="alert-row">
+    <span class="alert-row-text">Could not load your committee reviews. Nothing has changed. Try again, or come back in a few minutes.</span>
+    <button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button>
+  </div>
+</div>
+</div>
+
+<p class="pv-cap">No review yet</p>
+<div class="detail-card detail-card--empty" tabindex="-1">
+  <div class="state-panel-title">No decisions yet</div>
+  <div class="state-panel-copy">Ratified committee outcomes will appear here.</div>
+</div>
+
+<p class="pv-cap">At 768 (Step 4.41): the list stacks from 900px, the period and its window heading the labelled cells</p>
+<div class="pv-narrow">
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+      <caption>Your committee reviews, newest first</caption>
+      <thead role="rowgroup">
+        <tr role="row"><th scope="col">Panel</th><th scope="col">Period</th><th scope="col">Type</th><th scope="col">State</th><th scope="col">Decision</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr role="row">
+          <td role="cell" data-label="Panel">Paed Annual Review Panel</td>
+          <th scope="row" role="rowheader">2026 S2 <span class="period-window"><span>2026-01-01</span> to <span>2026-12-31</span></span></th>
+          <td role="cell" data-label="Type">Annual progression</td>
+          <td role="cell" data-label="State"><span class="badge badge-completed">Ratified</span></td>
+          <td role="cell" data-label="Decision">Satisfactory Progress</td>
+          <td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="View the 2026 S2 review before Paed Annual Review Panel">View</a></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body>
+</html>

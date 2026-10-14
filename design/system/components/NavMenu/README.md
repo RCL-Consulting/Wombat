@@ -57,7 +57,8 @@ Every page that is not an item's own, and the list it sits under for each acting
 |---|---|
 | An activity (`/activities/{id}`) | Assessor: Activity inbox · Trainee, Pending trainee: My activities · Speciality admin, Sub-speciality admin, Coordinator: Waiting for assessors, however the activity was reached (flow 06) |
 | A registrar's page (`/programme/trainees/{id}`, flow 06) | Committee member, Speciality admin, Sub-speciality admin, Coordinator: Programme trainees; its trail Home › Programme trainees › the registrar's name |
-| A committee review | Committee member, Coordinator, Speciality admin, Sub-speciality admin, Institutional admin, Administrator: Committee reviews (a trainee reads theirs on My committee reviews; this page does not admit them) |
+| A committee review | Committee member, Coordinator, Speciality admin, Sub-speciality admin, Institutional admin, Administrator: Committee reviews (a trainee reads theirs at `/committee/my-reviews/{id}`; this page does not admit them) |
+| A trainee's own review (`/committee/my-reviews/{id}`, flow 09) | Trainee: My committee reviews; its trail Home › My committee reviews › the review, "2026 S2 annual progression review" (T366, F8). Only the Trainee: the page admits an Administrator too, as the list does, but reads them nothing that is not their own |
 | A decision panel | Administrator, Institutional admin, Speciality admin, Sub-speciality admin: Decision panels. Not the Coordinator: the panel's page does not admit the role, and an owner is named only for a role the page admits, so the Coordinator reads the panels on the list, which lights itself (D4) |
 | Schedule a review (`/committee/reviews/new`, flow 08) | Coordinator, Speciality admin, Sub-speciality admin, Institutional admin, Administrator, the five that schedule: Committee reviews; its trail Home › Committee reviews › Schedule a review, whichever page's Schedule opened it (T364, Q1, D5). Not the Committee member: the page does not admit the role |
 | An MSF campaign, an MSF report (`/msf/reports/{id}`), MSF coverage (`/msf/coverage`) | Coordinator: MSF campaigns |
@@ -78,7 +79,7 @@ Every page that is not an item's own, and the list it sits under for each acting
 
 **A page under a personal link** (flow 05, T355, E3; `NavOwners.UnderAPersonalLink`, `IsPersonal`): an entry that names no role, under My progress or My data rights, is owned whatever the acting role, and for a graduate who holds none, since the menu offers the link whatever the role. It is lit only where the person is offered the link. An entry that names roles keeps them, whatever item it is under: My authorisations is under My progress for the Trainee alone.
 
-**Entrustment decisions** is not in the table: for both speciality admins it is a list the menu offers, which lights itself (flow 06, R2-Menus m5); for every other role it admits, the Institutional admin's Home link included, it is under no list until flow 09 places it.
+**Entrustment decisions** is not in the table: for both speciality admins it is a list the menu offers, which lights itself (flow 06, R2-Menus m5); for every other role it admits, the Institutional admin's Home link included, it is under no list: flow 09 (T366) rebuilt the page and left it so, under the trail Home › Entrustment decisions (StarRegister).
 
 A list that is an item of the acting role's menu lights itself and draws no trail. A list the acting role's menu does not offer (opened through another role held) lights nothing, with the trail Home › the list.
 
