@@ -57,8 +57,10 @@ Run the loop as flow 08 ran it (`design/flows/08-committee-calendar/`, BRIEF § 
   B; `round-2-review.md` (`4da096d1`), `round-3-check.md` (`13057800`).
 - [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 09) — the squash commit and counts.
   `49e7cf5e`: Domain 815, Application 3809, Infrastructure 1023, Architecture 52, Web 3735, Integration 491.
-- [ ] The whole runbook replays on a fresh database with no regression from flow 09, the baseline is re-captured, and
+- [x] The whole runbook replays on a fresh database with no regression from flow 09, the baseline is re-captured, and
   flow 09's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
+  `wombat_scenario_t366` (2026-10-14): acts 1–6 and the appendix (`60840a5d`..`4506f65e`), 331 steps, 273 with no gap,
+  no regression-t366; states 57 rows, 56 hold, 2 corrected (`851d398f`); `check_baseline_paths.py` missing 0.
 - [ ] The design system is re-synced and republished — its version number.
 
 ## Related
@@ -107,3 +109,13 @@ T364 (flow 08), T361 (flow 07), T307, T309, D51, D53; BRIEF § 6, § 8, § 11.
   (native disabled while busy), D13 ("they" for the appeal body). **For the replay:** D14 the script module under the
   CSP, D15/G7 the focus after Remit/Dismiss, D16 the radios' targets at 1280/768, D6's Escape in a browser, F5's 390
   saving, T367's 4.36 mail in the log. Branches `t366*` kept locally. Next: step 7, the replay.
+- **2026-10-14, step 7 done.** Replay on `wombat_scenario_t366` (published from `49e7cf5e`), one agent per act:
+  act 1 31/19, 2 44/35, 3 60/56, 4 50/48, 5 29/23, 6 42/32, A 75/60 (steps / no gap); every other gap an open task;
+  no regression from flow 09. Closed by the replay: F-4.36a, F-4.37a, F-4.43a, F-4.45c, F-4.48a, T260's entrustment
+  half, T308, T323; T367 done (`5c183bb9`). Browser checks all pass: D14 (the module 200, no CSP violation), D6 (Escape
+  to Lodge appeal), D15/G7 ("Appeal resolved." focused), D16 (radios 24 px at 1280/768, 44 at 390), F5 (the jump saves
+  7,129 px at 1280, 13,033 at 390). States: 57 rows, 56 hold, 2 corrected (`851d398f`). Proposed T368 (A.5.10: the
+  Coordinator's card stripe, unconfirmed). Observed, not filed: the revoke dialog keeps "Give a reason for the
+  revocation." until the next press; the certificate's evidence summary prints UTC times. Dumps
+  `recovery/scenario-t366-post-act{1..6,A}`, `-pre-a515-A`; scratch DBs `wombat_scenario_t366_s515`, `_s515b`,
+  `_st1`..`_st3` (drop on the operator's word). Next: step 8, the design system.
