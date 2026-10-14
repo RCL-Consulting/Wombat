@@ -16,7 +16,7 @@ STARs and appeals), filed and started.
 - **Round 1** (`58f8dc87`, assessed `71e02aa2`): **B** picked with A's inline resolve; the operator took every
   recommendation (T366 Notes). **T367** (T319's revocation half) filed, to land before the build; § 3F question 13 added.
 - **Round 2** (`1221c005`) reviewed from three sides (`4da096d1`); the operator said "yes" to F1–F9 (T366 Notes).
-- **Round 3** sent by the operator. **Not pushed:** `0058adf3` onward.
+- **Round 3** sent by the operator. Pushed through `01b4c1ed` (2026-10-14); later commits not pushed.
 - **Later (2026-10-14):** round 3's previews were bland: "Wombat 09" had no tokens stylesheet (fixed, canvas v18).
   **Round 3 checked, the design final** (`4c0912ac`, `13057800`). **T367 built** (`e9b29081`, six suites green, one
   review clean); it stays in progress until flow 09's replay sees step 4.36's mail. **Build started** (step 6): branch
