@@ -2,7 +2,7 @@
    Wombat's component CSS as flows 01 to 09 built it (T335, b347e11c; T339, f50dffb2 and 6735fa98; T342, 725237ee,
    daaf6386, 5fd5abcd and a341b44e; T350, 06aa51d7; T355, b020c942, db4c2d0a, 5f8e6639 and b389f7d2; T358, 85d5a508 and
    94edf2b7; T361, 44de180b, 59bb72fd, 6ad6c57a, 6b149fff and 14378856; T364, 622c5ad1 and
-   1ec7a352; T366, 49e7cf5e; master@a0d4c8b1),
+   1ec7a352; T366, 49e7cf5e and 9ba80586; master@9ba80586),
    extracted with every class name and declaration unchanged, so a design maps back to the classes Razor writes.
    - From src/Wombat.Web/wwwroot/app.css: everything after :root. tokens.css, which the page compiles from tokens.json,
      supplies the :root custom properties (colours, --space-*, --radius-*, --shadow-*, --sidebar-width, --motion-fast,

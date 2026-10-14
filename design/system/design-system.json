@@ -516,7 +516,7 @@
   "lastChange": {
     "by": "Renier Cloete",
     "at": "2026-10-14T16:50:00Z",
-    "via": "Claude Code · Wombat@a0d4c8b1",
+    "via": "Claude Code · Wombat@9ba80586",
     "note": "Re-synced to flow 09 as built (T366, 49e7cf5e with T367, e9b29081): no token added or changed; 7 records added: MyCommitteeReviews, MyReview, DecisionHistory, AppealEntry and ReviewAppeals in the Committee group, MyAuthorisations in Progress, StarRegister in Programme; revised ConfirmDialog (the field mode: FieldContent, InitialFocusId, OnConfirmClosesWhen; ReturnFocusId and the focus given back on Cancel and Escape; its preview gains the field mode), Badge (BadgeFor.Appeal: Open amber, Dismissed and Remitted green; its preview), DataTable (both stack classes on a hand-written table, the note row on any clinic-table, flow 09's 44px rows, the Issued link), FilterBar (the STAR register: Show, the filtered count announced, no second Clear filters, the circuit's form), FormField (the counter as a second field-help with no maxlength, sentences as radios, a required textarea), StatePanel (flow 09's fixed-word load failures), SittingBar (Go to the appeal; its preview), DecisionForm (its history lifted into DecisionHistory; its preview's .decision-history), ReviewSitting (the Appeals row, the resolve refusal), CommitteeReviews (its known gap closed), NavMenu (her review's owner row), Breadcrumbs (her review's trail), Icon, the Icons group, the README, tokens' ref and source map, and the bundle (app.css's three Flow 09 sections); no icon added (60 in all, 53 named by a page)."
   }
 }
