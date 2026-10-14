@@ -12,7 +12,13 @@ public enum SittingAct
     Start,
     GoToDecision,
     Ratify,
-    Close
+    Close,
+
+    /// <summary>
+    /// While the review is under appeal, every reader's bar carries "Go to the appeal" (T366, F5): the Appeals section is
+    /// the page's last, and the button moves the focus to its heading.
+    /// </summary>
+    GoToAppeal
 }
 
 /// <summary>
@@ -117,6 +123,7 @@ public static class ReviewSitting
             CommitteeReviewState.Scheduled when OffersStart(review) => SittingAct.Start,
             CommitteeReviewState.InProgress when chairMayAct => review.IsFormative ? SittingAct.Close : SittingAct.GoToDecision,
             CommitteeReviewState.Decided when chairMayAct && !review.IsFormative => SittingAct.Ratify,
+            CommitteeReviewState.UnderAppeal => SittingAct.GoToAppeal,
             _ => SittingAct.None
         };
         var chairs = chairMayAct && open && act != SittingAct.None;

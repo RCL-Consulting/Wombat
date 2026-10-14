@@ -708,7 +708,7 @@ Expect:
   - **The dialog** is titled "Record Satisfactory Progress for Lerato Molefe?" and reads "Fixes 3 staged decisions:
     PAED-001 at 5, PAED-010 at 4 (expires `D+20`), PAED-012 at 5.", "Records 12 EPAs as not decided: PAED-002,
     PAED-003, PAED-004, PAED-005, PAED-006, PAED-007, PAED-008, PAED-009, PAED-011, PAED-013, PAED-014 and PAED-015."
-    (E1), "Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)." and "Afterwards only
+    (E1), "Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)" and "Afterwards only
     a decision that no longer fits the trainee's curriculum can be removed." The focus is on its safe button, "Not yet"
     (round 3 item 22); the confirm is "Record decision".
   - **Recorded:** "Decision recorded." in the Decision section, which now sits above the agenda, with the focus there.
@@ -984,18 +984,26 @@ Gap: none
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/entrustment-decisions
 Do: Open Entrustment decisions from her dashboard's quick links. Download Dr Molefe's PAED-010 certificate. Filter by
-  trainee "Molefe" and apply.
+  trainee "Molefe" and press Show.
 Expect:
-  - **The list:** five rows, all Active, issued `D`.
-    - Molefe: PAED-001 `5`, PAED-010 `4` expiring `D+20`, PAED-012 `5`.
-    - Dlamini: PAED-001 `4`, PAED-002 `3b`.
+  - **The page:** under the trail Home › Entrustment decisions, since no menu item of hers leads to it (T358). Its
+    subtitle reads "Issued Statements of Awarded Responsibility across the programme."
+  - **The list:** captioned "Issued STARs (entrustment decisions) · 5 shown"; five rows, all Active, issued `D`, newest
+    issued first and then by STAR number, descending (one day's ties; T366, F1):
+    - Dlamini: PAED-002 `3b`, PAED-001 `4`.
+    - Molefe: PAED-012 `5`, PAED-010 `4` expiring `D+20`, PAED-001 `5`.
+    - Each row is headed by its trainee (the row's header), its EPA in the next column. Every date is ISO.
     - Expires reads "—" where none was set.
+    - Each Issued carries "review #n" under its date, a link to the review named "Open review #n" (T366, S7, M9).
+    - Each row offers Download and Revoke, named by the decision: "Download the certificate of Lerato Molefe's PAED-010
+      decision, issued `D`" (T239).
   - **The certificate PDF** names:
     - Kgosi Kgari Teaching Hospital, "Statement of Awarded Responsibility", Lerato Molefe, PAED-010 and level `4`;
     - Issued on `D` and Expires on `D+20`, Status Active;
     - the rationale, and the evidence summary of the two snapshot lines;
     - Panel Paed Annual Review Panel, the review number, and Chair Thandi Zulu.
-  - **The filter** leaves Molefe's three rows.
+  - **The filter** applies on Show (T366, F9) and leaves Molefe's three rows: the caption "… · 3 shown", a status line
+    "3 shown" for a screen reader (S11), and Clear filters beside Show.
 Actual (2026-10-13, T364 replay, wombat_scenario_t364): Home's "Entrustment decisions" link ->
   /admin/entrustment-decisions (the menu marks it current): five rows, all Active, issued 2026-10-13: Molefe PAED-001
   5, PAED-010 4 expiring 2026-11-02, PAED-012 5; Dlamini PAED-001 4, PAED-002 3b; Expires "—" where none. PAED-010
@@ -1008,39 +1016,52 @@ Gap: none
 ### Step 4.36 — Dr Mokoena revokes one of Dr Dlamini's STARs
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /admin/entrustment-decisions
-Do: Open Entrustment decisions from the menu. Choose Revoke on Dr Dlamini's PAED-002 decision. Give the reason "Staged
-  on evidence about PAED-001, not PAED-002; to be decided again." and confirm the revocation.
+Do: Open Entrustment decisions from the menu. Choose Revoke on Dr Dlamini's PAED-002 decision. Press Revoke the STAR
+  once with the reason blank. Then give the reason "Staged on evidence about PAED-001, not PAED-002; to be decided
+  again." and press Revoke the STAR.
 Expect:
   - **The menu:** Entrustment decisions is lit on its page, with no trail: a list her menu offers (T358, R2-Menus m5;
     as Step A.7.7).
   - **The list:** the same five rows as Step 4.35, since all five registrars are in her speciality.
-  - **The dialog** names PAED-002 and Anele Dlamini, and says "Revocation is immediate and irreversible. The trainee is
-    notified." Confirm revocation is enabled once a reason is typed.
-  - **After confirming:** "Entrustment decision for PAED-002 revoked." The row reads Revoked, with no Revoke button.
-  - **The trainee is notified,** as the dialog promises: the application log holds a mail to Dr Dlamini about the
-    revocation.
+  - **The dialog** is titled "Revoke Anele Dlamini's PAED-002 STAR?". It names the EPA, level `3b` and issued `D`, and
+    says "Revocation is immediate and cannot be undone." It says Anele Dlamini is sent an email saying the STAR was
+    revoked and by whom, "unless Anele Dlamini's account is deactivated", and that the reason is not in the email
+    (T367; nothing claims delivery, S6). The focus is in Revocation reason, and Revoke the STAR, beside Cancel, is
+    enabled from the start (T260).
+  - **Pressed blank:** "Give a reason for the revocation." under the box; the dialog stays open, with the focus in the
+    box, and nothing is sent (F3).
+  - **After revoking:** "Anele Dlamini's PAED-002 STAR is revoked." above the table, with the focus. The row reads
+    Revoked, offers Download only, and carries the line "Revoked `D` at hh:mm SAST by Refilwe Mokoena: Staged on
+    evidence about PAED-001, not PAED-002; to be decided again.", hh:mm the stored RevokedOn on the South African clock
+    (S4, C22).
+  - **Dr Dlamini is emailed:** the application log holds a mail to her, "Entrustment decision revoked: PAED-002", naming
+    Refilwe Mokoena and linking My authorisations, without the reason (T367).
 Note: Until T358 the page was linked from no nav item or dashboard card for her role, and was reached by typing its
-  address. T260 (open): Confirm stays disabled until the reason box loses focus.
+  address. Until T366 the revocation was an inline section whose Confirm revocation stayed disabled until the reason
+  box lost focus (T260), and which said "The trainee is notified." though nothing was sent (T319).
 Actual (2026-10-13, T364 replay, wombat_scenario_t364): From the menu's Entrustment decisions: lit, no breadcrumb
   trail; the same five rows. "Revoke Anele Dlamini's PAED-002 decision, issued 2026-10-13" opened an inline "Revoke
   entrustment decision" section (no dialog role): "... PAED-002 — Managing common paediatric presentations held by
   Anele Dlamini. Revocation is immediate and irreversible. The trainee is notified." Confirm revocation stayed disabled
   while the reason was typed and enabled when the box lost focus. "Entrustment decision for PAED-002 revoked."; row
   Revoked, only Download. The Stub email count stayed 29.
-Gap: [F-4.36a, T319] (still) "The trainee is notified." and nobody is: no mail to Dr Dlamini. T260 (still, its
-  entrustment-decisions half, as the Note says): Confirm revocation enables only when the reason box loses focus.
+Gap: [F-4.36a, T319] closed by T366 (with T367), for the replay to confirm: the dialog no longer says "The trainee is
+  notified."; it says Anele Dlamini is sent an email unless the account is deactivated, and the revocation mails her.
+  T260's entrustment-decisions half closed by T366, for the replay to confirm: Revoke the STAR is enabled from the
+  start, and a blank reason is refused under the box.
 
 ### Step 4.37 — Dr Sithole reads the list and what must be decided again
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /admin/entrustment-decisions → /committee/decisions-due
-Do: Open Entrustment decisions from the menu. Filter Status to Revoked and apply, then to Active and apply. Download
-  the revoked certificate. Then open Decisions due, read the count, set Status to "Every status", press Show, and open
-  By EPA.
+Do: Open Entrustment decisions from the menu. Set Status to Revoked and press Show, then to Active and press Show.
+  Download the revoked certificate. Then open Decisions due, read the count, set Status to "Every status", press Show,
+  and open By EPA.
 Expect:
   - **The menu:** Entrustment decisions is lit on its page, with no trail (T358, R2-Menus m5).
-  - **Filtered:** Revoked leaves Dlamini's PAED-002, and Active leaves four rows.
-  - **The revoked certificate** reads Status Revoked, with "REVOKED", the date, who revoked it (Dr Mokoena, by name,
-    T142) and the reason.
+  - **Filtered:** Revoked leaves Dlamini's PAED-002, with its line "Revoked `D` at hh:mm SAST by Refilwe Mokoena: …";
+    Active leaves four rows.
+  - **The revoked certificate** reads Status Revoked, with "REVOKED", "Revoked on `D` by Refilwe Mokoena" (the
+    South African day, ISO, T366 G6; who revoked it by name, T142, T324) and the reason.
   - **Decisions due:** Dlamini's PAED-002 reads "Revoked: re-decide". Its detail reads "STAR #n, issued for `<P>`, was
     revoked. Schedule a review to decide it again." Its one action is Schedule (C3).
   - **By EPA:** PAED-002 reads Decided 0, Not decided 4 and To schedule 1.
@@ -1052,7 +1073,8 @@ Actual (2026-10-13, T364 replay, wombat_scenario_t364): From the menu's Entrustm
   Dlamini's row "Revoked: re-decide", "STAR #5, issued for 2026 S2, was revoked. Schedule a review to decide it again."
   with one action, Schedule (named "Schedule a review of Anele Dlamini for PAED-002 before Paed Annual Review Panel");
   the other four Not decided. By EPA PAED-002: Due 5, Decided 0, Not decided 4, To schedule 1.
-Gap: [F-4.37a, T324] (still) The revoked certificate names the revoker by raw user id, not "Refilwe Mokoena".
+Gap: [F-4.37a, T324] closed by T366, for the replay to confirm: the revoked certificate names the revoker, "Refilwe
+  Mokoena", not a user id.
 
 ### Step 4.38 — Prof Mbatha reads the sitting in the audit log
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -1082,13 +1104,15 @@ Route: / → /portfolio/authorisations
 Do: From her Home's My authorisations card, Open My authorisations. Download the PAED-001 certificate.
 Expect: Home's My authorisations card reads "2 at or above · 1 below · 12 with no decision, of 15 EPAs" and lists one
   STAR, "PAED-010 — Leading and operating within a clinical team", a link to its EPA's page, with "4, below training
-  year 4's level of 5 · expires `D+20`" under it; its footer is Open My authorisations (T355). My authorisations holds
-  three cards, each issued on `D` with the committee's rationale: PAED-001 and PAED-012 at Authorised level `5`, and
-  PAED-010 at `4`.
+  year 4's level of 5 · expires `D+20`" under it; its footer is Open My authorisations (T355). My authorisations, under
+  the trail Home › My progress › My authorisations, is subtitled "The Statements of Awarded Responsibility (STAR) the
+  committee has issued you, and their certificates." In force holds three cards, by EPA code, each with its Authorised
+  level, Issued `D` and the committee's rationale: PAED-001 and PAED-012 at `5`, and PAED-010 at `4`.
   - PAED-001 and 012 read "No expiry".
-  - PAED-010 reads the date `D+20`, with the badge "Expires in 20 days".
-  Each Download certificate is named by its EPA. The PAED-001 certificate downloads with Status Active and its evidence
-  summary.
+  - PAED-010 reads the date `D+20`, with the badge "Expires in 20 days", counted on the South African calendar (T325).
+  Each Download certificate is named by its EPA: "Download certificate for PAED-001", "… PAED-010" and "… PAED-012"
+  (F4). There is no "No longer in force" section. The PAED-001 certificate downloads with Status Active and its
+  evidence summary.
 Actual (2026-10-13, T364 replay, wombat_scenario_t364): Home's My authorisations card: "2 at or above · 1 below · 12
   with no decision, of 15 EPAs", one STAR "PAED-010 — Leading and operating within a clinical team" (a link to
   /portfolio/progress/11), "4, below training year 4's level of 5 · expires 2026-11-02" under it, footer "Open My
@@ -1125,18 +1149,24 @@ Gap: none
 
 ### Step 4.41 — Dr Molefe reads her review, and not the committee's page
 Role: Trainee — Dr Lerato Molefe
-Route: /committee/my-reviews → /committee/reviews/{ReviewId:int} → /access-denied
+Route: /committee/my-reviews → /committee/my-reviews/{ReviewId:int} → /committee/reviews/{ReviewId:int} → /access-denied
 Do: Open My committee reviews and view her review. Then type the committee's own address for the same review.
 Expect:
-  - **The list:** one row, with Period "`<P>` · `<Y>`-01-01 to `<Y>`-12-31", Type Annual progression, State Ratified and
-    Decision Satisfactory Progress. Its View is named by the review.
-  - **The detail** shows Sits for, Evidence window, Type and State. Its decision is headed "Satisfactory Progress", with
-    the rationale and "Present when this decision was taken: …" naming all four.
+  - **The list,** captioned "Your committee reviews, newest first": one row, its header the Period "`<P>`" with the
+    window "`<Y>`-01-01 to `<Y>`-12-31" on its own line under it (T212; the row's header, T366 D11), Type Annual
+    progression, State Ratified (a badge) and Decision Satisfactory Progress. Its View is a
+    link named by the review, "View the `<P>` review before Paed Annual Review Panel", to her review's page (T366, F8).
+  - **Her review's page:** the h1 and the tab "`<P>` annual progression review", under the trail Home › My committee
+    reviews › `<P>` annual progression review, the panel as its subtitle. It shows Panel, Sits for, Evidence window,
+    Type "Annual progression review" and State Ratified.
+  - **Decisions:** "Satisfactory Progress", with the rationale, "About the EPAs not decided: To be decided at her final
+    review." and "Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)".
+  - **Appeal:** the lodge block is offered, and she lodges nothing.
   - **The agenda** has three columns:
     - Decided with "STAR #n." on PAED-001, 010 and 012;
     - "Not decided at this sitting" with the committee's sentence "To be decided at her final review." on the other
       twelve, due and optional alike: no reason, and no Deferred (T361, D53, E1).
-  - **The committee's page** lands on access-denied.
+  - **The committee's page** lands on access-denied, as before.
 Actual (2026-10-13, T364 replay, wombat_scenario_t364): One row: Paed Annual Review Panel, "2026 S2 · 2026-01-01 to
   2026-12-31", Annual progression, Ratified, Satisfactory Progress; View named "View the 2026 S2 review before Paed
   Annual Review Panel". Detail: Sits for, Evidence window, Type "Annual progression review", State Ratified;
@@ -1149,11 +1179,14 @@ Gap: none
 
 ### Step 4.42 — Dr Dlamini reads what stands after the revocation
 Role: Trainee — Dr Anele Dlamini
-Route: / → /portfolio/authorisations → /committee/my-reviews
-Do: From her Home's My authorisations card, Open My authorisations. Then open her review.
-Expect: One card, PAED-001 at `4`: the revoked PAED-002 is no longer listed. Her review reads Ratified, Satisfactory
-  Progress. The agenda still reads Decided with STAR numbers on PAED-001 and 002, because it records what the sitting
-  did.
+Route: / → /portfolio/authorisations → /committee/my-reviews → /committee/my-reviews/{ReviewId:int}
+Do: From her Home's My authorisations card, Open My authorisations. Then open My committee reviews and view her review.
+Expect: In force holds one card, PAED-001 at `4`, "No expiry". No longer in force, a table, holds the revoked PAED-002
+  (T366, F2; T367): Level `3b`, Status Revoked, Since `D`, Why "Revoked by Refilwe Mokoena: Staged on evidence about
+  PAED-001, not PAED-002; to be decided again.", and Download, named "Download certificate for PAED-002 (revoked)"
+  (F4). Her review's page reads Ratified, and its decision Satisfactory Progress with its rationale and "Present:
+  Thandi Zulu (chair), David Naidoo, Sarah Botha". The agenda still reads Decided with "STAR #4." on PAED-001 and "STAR
+  #5." on PAED-002, because it records what the sitting did.
 Actual (2026-10-13, T364 replay, wombat_scenario_t364): Home's Open My authorisations: one card, PAED-001 level 4, No
   expiry, with its rationale; PAED-002 not listed. My committee reviews: Ratified, Satisfactory Progress, "Present when
   this decision was taken: Thandi Zulu (chair), David Naidoo, Sarah Botha"; the agenda still reads PAED-001 "Decided
@@ -1164,31 +1197,45 @@ Gap: none
 
 ### Step 4.43 — Dr Mahlangu lodges an appeal
 Role: Trainee — Dr Nomsa Mahlangu
-Route: /committee/my-reviews
-Do: View her ratified review and read it. Lodge an appeal with the reason "The single DOPS reflects the start of the
-  year, and the Mini-CEX waited eight days on the assessor's side before it was rated. I ask for reconsideration."
+Route: /committee/my-reviews → /committee/my-reviews/{ReviewId:int} → /committee/my-reviews
+Do: View her ratified review and read it. Press Lodge appeal with the reason blank. Then give the reason "The single
+  DOPS reflects the start of the year, and the Mini-CEX waited eight days on the assessor's side before it was rated. I
+  ask for reconsideration.", press Lodge appeal, and lodge it in the dialog. Then go back to My committee reviews.
 Expect:
   - **Before lodging:**
-    - the decision reads "Inadequate Progress — Additional Training", with who was present;
+    - the decision reads "Inadequate Progress — Additional Training", with its rationale and "Present: Thandi Zulu
+      (chair), Sarah Botha, John van Rensburg (external)";
     - the agenda shows all fifteen lines "Not decided at this sitting", each with "Not enough observed evidence yet
       this year." (T361, D53, E1);
-    - an Appeal reason form is offered.
-  - **After lodging:** "Appeal lodged." The state reads Under appeal, the form is gone and the agenda stays in view.
+    - the Appeal section offers the lodge block: What happens next, naming the appeal body ("Your appeal is heard by the
+      panel's appeal body: today, Thandi Zulu (chair) and John van Rensburg (external).") and every reader of the
+      reason; then Why you are appealing, with "Up to 4,000 characters." and a counter; and Lodge appeal.
+  - **Pressed blank:** "Give your reason for appealing." under the field, which takes the focus; no dialog opens and
+    nothing is sent.
+  - **The dialog** is titled "Lodge your appeal?", against "the `<P>` annual progression review's decision, Inadequate
+    Progress — Additional Training", with the focus on Keep editing. Keep editing would close it and return the focus
+    to Lodge appeal, the reason kept (F6).
+  - **After lodging:** "Appeal lodged." heads the Appeal section, with the focus. The state reads Under appeal. Her
+    entry, "Your appeal", reads Open, "Lodged `D`" and "Heard by Thandi Zulu (chair) and John van Rensburg
+    (external).", with her reason. The form is gone and the agenda stays in view.
+  - **The list:** her row reads Under appeal (T308).
 Actual (2026-10-13, T364 replay, wombat_scenario_t364): "Inadequate Progress — Additional Training" with "Present when
   this decision was taken: Thandi Zulu (chair), Sarah Botha, John van Rensburg (external)"; all fifteen lines "Not
   decided at this sitting" with "Not enough observed evidence yet this year." (no Deferred); Appeal reason with Lodge
   appeal. "Appeal lodged."; "State: Under appeal", the form gone, the 15-line agenda kept. The list row above still
   reads Ratified. No mail (29).
-Gap: [F-4.43a, T308] (still) After lodging, the list row still reads State Ratified while the detail below it reads
-  Under appeal.
+Gap: [F-4.43a, T308] closed by T366, for the replay to confirm: her review is a page of its own, read again after the
+  lodge, and the list's row reads Under appeal once she goes back to it.
 
 ### Step 4.44 — Dr Naidoo sees who hears the appeal
 Role: CommitteeMember — Dr David Naidoo
 Route: /committee/reviews → /committee/reviews/{ReviewId:int}
-Do: Open Dr Mahlangu's review.
-Expect: The list shows her review Under appeal. The Appeals card lists the appeal, with the date lodged, its reason and
-  "(Open)". It offers him no form. It says "Only the appeal body can resolve the appeal: the panel's chair, Thandi Zulu,
-  and its external member, John van Rensburg." (T213, T237)
+Do: Open Dr Mahlangu's review, and press Go to the appeal.
+Expect: The list shows her review Under appeal. The sitting bar carries Go to the appeal (T366, F5); pressed, it moves
+  the focus to the Appeals heading. The Appeals section lists the appeal, "Appeal by Nomsa Mahlangu", Open, with "Lodged
+  `D`", "Heard by Thandi Zulu (chair) and John van Rensburg (external)." and its reason. It offers him no form. After
+  the entry it says "Only the appeal body can resolve the appeal: the panel's chair, Thandi Zulu, and its external
+  member, John van Rensburg." (T213, T237)
 Actual (2026-10-13, T364 replay, wombat_scenario_t364): Acting as Committee member. The list shows Mahlangu's review
   Under appeal, Inadequate Progress — Additional Training. Appeals: "Only the appeal body can resolve the appeal: the
   panel's chair, Thandi Zulu, and its external member, John van Rensburg." and "2026-10-13 The single DOPS ... I ask
@@ -1202,16 +1249,18 @@ Do: Open Committee reviews, then Dr Mahlangu's review. Read the resolve form, an
   an outcome. Then choose Remitted to see what it asks, and leave without resolving.
 Expect:
   - **The list:** the panel's five reviews.
-  - **The Appeals card** offers him the resolve form with an Outcome select opening on "Select an outcome…", then
-    "Dismissed: the decision stands" and "Remitted: the appeal body replaces the decision" (T307, D51: there is no
-    Upheld). Its help text says Dismissed leaves the decision in force, Remitted replaces it, and either closes the
-    review.
-  - **Resolve appeal with no outcome** says "Choose an outcome." under the select, and resolves nothing.
+  - **The Appeals section** offers him the resolve form after the entry. Its Outcome is a group of two radios under the
+    legend "Outcome", neither chosen: "Dismissed: the decision stands" and "Remitted: the appeal body replaces the
+    decision" (T307, D51: there is no Upheld), each read whole at every width (T323). Its help text says Dismissed
+    leaves the decision in force, Remitted replaces it, and either closes the review.
+  - **Resolve appeal with no outcome** says "Choose an outcome." under the group, with the focus on its first radio,
+    and resolves nothing.
   - **Remitted** reveals:
     - Replacement category, opening on "Select a category…";
     - Replacement rationale;
     - Replacement conditions, optional;
-    - Present, with both Thandi Zulu (chair) and himself ticked and locked.
+    - Present, with both Thandi Zulu (chair) and himself ticked and locked;
+    - beside Resolve appeal, the quorum line "2 present: the chair and 1 other. The quorum is met."
   - **Nothing changes** until he submits.
 Actual (2026-10-13, T364 replay, wombat_scenario_t364): "Acting as Committee member" (no other role). Committee reviews
   lists the five, Mahlangu's Under appeal. Outcome opens on "Select an outcome…", then "Dismissed: the decision stands"
@@ -1221,17 +1270,20 @@ Actual (2026-10-13, T364 replay, wombat_scenario_t364): "Acting as Committee mem
   Replacement rationale, Replacement conditions (optional) and Present, Thandi Zulu (chair) and John van Rensburg
   (external) ticked and locked (disabled). With Remitted chosen the Outcome select is 292 px wide and its text 304 px:
   it reads "Remitted: the appeal body replaces the" (`4.45-2`). Left unresolved.
-Gap: [F-4.45c, T323] (still) At 1280 px, once Remitted opens the second column, the Outcome select is too narrow and
-  its choice, "Remitted: the appeal body replaces the decision", is clipped (`4.45-2`).
+Gap: [F-4.45c, T323] closed by T366, for the replay to confirm: Outcome is two radios in a one-column form, each read
+  whole at every width, where the select clipped "Remitted: the appeal body replaces the decision" (`4.45-2`).
 
 ### Step 4.46 — A remit without a quorum is refused
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: On Dr Mahlangu's review, choose Remitted, the replacement category Satisfactory with Observations and a
-  rationale. Tick nobody besides herself as present, and resolve.
-Expect: Resolve appeal is refused with "A committee decision needs at least two panel members present: the chair and
-  at least one other." (T165: a remit records its own quorate sitting), in the Appeals section beside the form, with
-  the focus on it (T361, round 3 item 15). The review stays Under appeal.
+  rationale. Tick nobody besides herself as present, read the quorum line, and press Resolve appeal.
+Expect: Before pressing, the quorum line reads "Only the chair is ticked. A committee decision needs at least two panel
+  members present: the chair and at least one other." Resolve appeal is refused on the page, and nothing is sent
+  (T366, M8): "Resolve appeal was refused: A committee decision needs at least two panel members present: the chair
+  and at least one other." after the form's actions, in the Appeals section, with the focus on it (T165: a remit
+  records its own quorate sitting; T361, round 3 item 15). What she chose and typed is kept, and the review stays
+  Under appeal.
 Actual (2026-10-13, T364 replay, wombat_scenario_t364): Outcome opened on "Select an outcome…". Remitted, Satisfactory
   with Observations and 4.47's rationale, only Thandi Zulu (chair) ticked and locked (van Rensburg unticked for her):
   refused "A committee decision needs at least two panel members present: the chair and at least one other." at the top
@@ -1245,13 +1297,19 @@ Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: Keep Remitted, Satisfactory with Observations, and the rationale "The stalled Mini-CEX was the assessor's delay;
   progress is adequate, with observed assessments to follow." Write the Replacement conditions "Two observed Mini-CEX
-  and one DOPS before the next review." Tick Sarah Botha as present, and resolve the appeal.
-Expect: "Appeal resolved." The state reads Closed (T250).
+  and one DOPS before the next review." Tick Sarah Botha as present, press Resolve appeal, and remit it in the dialog.
+Expect:
+  - **The dialog** is titled "Remit Nomsa Mahlangu's appeal?" and reads "Satisfactory with Observations replaces
+    Inadequate Progress — Additional Training.", "Present: Thandi Zulu (chair), Sarah Botha" and "This closes the
+    `<P>` review. Nothing reopens it, and no STAR changes.", with the focus on Go back (F6). Its confirm is Remit the
+    appeal.
+  - **Remitted:** "Appeal resolved." heads the Appeals section, with the focus. The state reads Closed (T250).
   - **Decision:** the replacement heads it, "Satisfactory with Observations" with "About the EPAs not decided: Not
     enough observed evidence yet this year." (carried from the first decision, T361, E5), "Conditions: Two observed
     Mini-CEX and one DOPS before the next review." (T307) and "Present: Thandi Zulu (chair), Sarah Botha". The first
     decision stays below it, marked "Replaced on appeal by the decision above.".
-  - **Appeals card:** the appeal reads "(Remitted)".
+  - **Appeals:** the entry reads Remitted, "Lodged `D` · Resolved `D` by Thandi Zulu" and "Remitted: the appeal body
+    replaced the decision. The replacement decision is above."; no form.
   - **No STAR changed:** the review issued none.
 Actual (2026-10-13, T364 replay, wombat_scenario_t364): Conditions and Sarah Botha ticked: "Appeal resolved." in the
   Appeals section; bar Closed, "Satisfactory with Observations · no STAR issued". Decision: "Satisfactory with
@@ -1264,20 +1322,27 @@ Gap: none
 
 ### Step 4.48 — Dr Mahlangu reads the outcome
 Role: Trainee — Dr Nomsa Mahlangu
-Route: /committee/my-reviews
+Route: /committee/my-reviews → /committee/my-reviews/{ReviewId:int}
 Do: Open My committee reviews and view the review.
-Expect: The row reads State Closed and Decision Satisfactory with Observations. The detail's current decision is the
-  replacement, with "Present when this decision was taken: Thandi Zulu (chair), Sarah Botha". The agenda's fifteen lines
-  still read "Not decided at this sitting" with "Not enough observed evidence yet this year.": the replacement carries
-  the first decision's sentence (T361, E5). No appeal form is offered.
+Expect: The row reads State Closed and Decision Satisfactory with Observations. Her review's page reads Closed, and its
+  Decisions holds both decisions, newest first (T308):
+  - the replacement, "Satisfactory with Observations", with its rationale, "About the EPAs not decided: Not enough
+    observed evidence yet this year.", "Conditions: Two observed Mini-CEX and one DOPS before the next review." and
+    "Present: Thandi Zulu (chair), Sarah Botha";
+  - the first, "Inadequate Progress — Additional Training", marked "Replaced on appeal by the decision above.", with
+    its rationale and "Present: Thandi Zulu (chair), Sarah Botha, John van Rensburg (external)".
+  Her Appeal section holds "Your appeal", Remitted, "Lodged `D` · Resolved `D` by Thandi Zulu", "Remitted: the appeal
+  body replaced the decision. The decision above is theirs, and it is final." and her reason, then "This review is
+  closed and cannot be appealed again." No appeal form is offered. The agenda's fifteen lines still read "Not decided at
+  this sitting" with "Not enough observed evidence yet this year.": the replacement carries the first decision's
+  sentence (T361, E5).
 Actual (2026-10-13, T364 replay, wombat_scenario_t364): Row: State Closed, Decision Satisfactory with Observations.
   Detail: "State: Closed", "Satisfactory with Observations", the replacement rationale, "Present when this decision was
   taken: Thandi Zulu (chair), Sarah Botha"; all fifteen agenda lines "Not decided at this sitting" with "Not enough
   observed evidence yet this year."; no appeal form. Nothing of her appeal, its outcome, the first decision or the
   Conditions.
-Gap: [F-4.48a, T308] (still) The trainee's review shows no trace of her appeal, its outcome (Remitted), the decision it
-  replaced or the replacement's conditions, though the subtitle reads "Ratified decisions, appeal status, and final
-  outcomes."
+Gap: [F-4.48a, T308] closed by T366, for the replay to confirm: her review's page shows her appeal and its outcome
+  (Remitted), both decisions, the replaced one marked, and the replacement's conditions.
 
 ## Phase 4.I — A formative check-in
 
@@ -1345,11 +1410,14 @@ Gap: none
 
 ### Step 4.51 — Dr Ndlovu reads both reviews
 Role: Trainee — Dr Sipho Ndlovu
-Route: /committee/my-reviews
-Do: Open My committee reviews.
-Expect: Two rows for `<P>`. The annual review reads Annual progression, Ratified, Outcome Deferred. The check-in reads
-  Type "Formative check-in" (T309 item 2; T364, C8), State Closed, with Decision "No binding decision"; its detail's Type
-  reads "Formative check-in".
+Route: /committee/my-reviews → /committee/my-reviews/{ReviewId:int} → /committee/my-reviews/{ReviewId:int}
+Do: Open My committee reviews, and view each review.
+Expect: Two rows for `<P>`, the check-in first: newest first, by scheduled date and then review number (T366, F1). The
+  check-in reads Type "Formative check-in" (T309 item 2; T364, C8), State Closed, with Decision "No binding decision".
+  The annual review reads Annual progression, Ratified, Outcome Deferred. The check-in's page, "`<P>` formative
+  check-in", reads Type "Formative check-in" and State Closed, and under Decisions "No binding decision. A formative
+  check-in records no decision and issues no STAR."; it has no Appeal section and no agenda (S13). The annual review's
+  page, "`<P>` annual progression review", reads Outcome Deferred and offers the lodge block, unused.
 Actual (2026-10-13, T364 replay, wombat_scenario_t364): Two rows for 2026 S2: the annual review "Annual progression,
   Ratified, Outcome Deferred" and the check-in "Formative check-in, Closed, No binding decision" (View "View the 2026
   S2 formative review before Paed Annual Review Panel"); the check-in's detail "Type: Formative check-in", "State:
@@ -1364,7 +1432,9 @@ Replay check (2026-10-13, T364 replay, wombat_scenario_t364): match on all six q
   du Plessis 2, Mahlangu 3 then 2, Ndlovu 2 present, decision 6 superseding 4; five STARs, Dlamini's PAED-002 Revoked,
   PAED-010 expiring 2026-11-02, 2 evidence links each; 0 pending, 1 remitted appeal; frozen lines Molefe 9, Dlamini 4,
   du Plessis 5, Mahlangu 2, Ndlovu 3 and 3). The act wrote no mail (the log's Stub email count stayed 29). Snapshot
-  recovery/scenario-t364-post-act4.dump.
+  recovery/scenario-t364-post-act4.dump. Those counts are T364's: since T366 (with T367) the act writes one mail, Step
+  4.36's revocation mail to Dr Dlamini ("Entrustment decision revoked: PAED-002"), so the Stub email count ends one
+  higher than it began.
 
 These steps add, before the panel `Paed Annual Review Panel`, for the period `<P>`:
 - **Six reviews.** Five are binding Annual progression reviews: four Ratified, and Mahlangu's Closed after its appeal

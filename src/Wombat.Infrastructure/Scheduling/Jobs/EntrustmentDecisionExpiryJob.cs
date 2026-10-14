@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Wombat.Application.Common.Email.Templates;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Scheduling;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Infrastructure.Identity;
 
@@ -30,7 +31,9 @@ public sealed class EntrustmentDecisionExpiryJob : IScheduledJob
         var dbContext = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
         var emailSender = scope.ServiceProvider.GetRequiredService<IEmailSender>();
 
-        var today = DateOnly.FromDateTime(context.UtcNow);
+        // The South African calendar, as My authorisations reads a STAR's expiry (T325): a run between South African
+        // midnight and 02:00 SAST (a Run now) expires what expired there yesterday, and counts days from there (T366, G5).
+        var today = ProgrammeCalendar.DateOf(context.UtcNow);
         var reminderThreshold = today.AddDays(ReminderWindowDays);
 
         var expired = await dbContext.Set<EntrustmentDecision>()

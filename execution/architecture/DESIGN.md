@@ -38,7 +38,14 @@
 >   By EPA in the fold, Scheduled grey), § Pager (the page-size label, the focus on the list's heading), § Form system
 >   (the seat picker, Review type as radios, dates in the date input), § Table system (one action a row; Committee
 >   reviews), § Page-level patterns "Form page" (Schedule a review at /committee/reviews/new) and "Decision panels and
->   a decision panel's page", the owner table's new row, and § app.css section order (four Committee calendar sections)).
+>   a decision panel's page", the owner table's new row, and § app.css section order (four Committee calendar sections));
+>   flow 09, outcomes, STARs and appeals (2026-10-14, T366, with T367: § Badges (an appeal's Open, Dismissed, Remitted),
+>   § Button system (a dialog with a field), § Table system (both stack classes, flow 03's note row generalised, the STAR
+>   register), § Form system (the reason's counter; options that are sentences as radios), § Page-level patterns (My
+>   committee reviews, her review at /committee/my-reviews/{id}, the loading heads), § Detail page and § The chair's
+>   controls (Go to the appeal, the resolve form's quorum line and refusal), § Entrustment-only reviews "The trainee's
+>   reviews", § Accessibility (the label in the name, the filtered count's status), the owner table's new row, and §
+>   app.css section order (three Outcomes, STARs and appeals sections)).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 
@@ -637,6 +644,7 @@ there, and its trail is Home › the page (§ Page-level patterns).
 | An audit entry | Administrator, Institutional admin: Audit log |
 | The job run history | Administrator: Scheduled jobs |
 | My authorisations | Trainee: My progress |
+| A trainee's review (`/committee/my-reviews/{id}`) | Trainee: My committee reviews; its trail Home › My committee reviews › the review ("2026 S2 annual progression review"). The page admits an Administrator too, as the list does, but reads them nothing that is not their own (T366, flow 09, F8) |
 
 Entrustment decisions is not in the table: for both speciality admins it is a list the menu offers, which lights itself
 (T358, R2-Menus m5); for every other role it admits, the Institutional admin's Home link included, it is under no list
@@ -707,6 +715,23 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
 - The primary page action is `.btn .btn-primary` and lives in the `PageHeader` action slot, except on the committee
   review, where it lives in the sitting bar (T361, flow 07; § Committee agenda, "The sitting bar").
 - Destructive actions open a `ConfirmDialog` first; the red `.btn-danger` only appears inside the dialog's footer.
+- **Cancel and Escape give the focus back to the dialog's opener** (2026-10-14, T366, D6). Safari and Firefox on macOS
+  do not focus a clicked button, so the native dialog has nothing to return the focus to. `ConfirmDialog`'s script
+  records the opener when the dialog opens (`document.activeElement`, else the element `ReturnFocusId` names; Lodge
+  appeal's dialog and Remit's and Dismiss's name their buttons) and focuses it when Cancel or Escape closes the dialog. A
+  close after a confirm leaves the focus to the caller, which puts it on its result. The field's first focus
+  (`InitialFocusId`, below) waits for the dialog's render after it opens, so a field the caller has just drawn is there
+  (R5).
+- **A dialog with a field** (2026-10-14, T366, flow 09, M5). In the action mode a dialog may carry a field: the field,
+  not the safe button, takes the first focus, and a refusal of the action shows inside the dialog, under the field, with
+  what was typed kept; the dialog closes only on Cancel or success (the register's Revoke). `ConfirmDialog` takes
+  `FieldContent` (the field, its refusal and counter, drawn after the body and outside the id that describes the dialog,
+  so they are read once, as the field's; D9), `InitialFocusId` (the field's id, focused once the dialog is open) and
+  `OnConfirmClosesWhen` (run in `OnConfirm`'s place; false keeps the dialog open); a dialog that sets none is as it was,
+  and Lodge, Remit and Dismiss set none.
+  The confirm button is never disabled for a blank field: pressed blank, the field's own message shows under it, named
+  by its `aria-describedby`, and the field takes the focus (F3). Done, the result takes the focus once the dialog has
+  closed (`OnClosed`).
 - A destructive row action on a list (Withdraw on the MSF campaign list, T206) is one `ConfirmDialog` for the page,
   whose body names the row it was opened from and says what cannot be undone. The row's button carries an `aria-label`
   that starts with its visible label and names the row ("Withdraw the campaign for …"): a column of identical
@@ -753,7 +778,9 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
   or refused (below); the MSF campaign page keeps it on Open after a refused open, for the retry, and puts it in the email
   field after an invitee is added ("The MSF campaign page", below); the curriculum item editor moves it to the Add form's
   empty state after the Add that took the last EPA (§ Card system); and a certificate download (My authorisations) keeps
-  it on the button pressed: the page shows no result of its own, and the browser's download says what it did.
+  it on the button pressed: the page shows no result of its own, and the browser's download says what it did. Refused ("The certificate could not be found.") or failed ("The
+  certificate could not be made just now.", with Try again), its result is under its button, and takes the focus
+  (2026-10-14, T366, flow 09, C19, T272).
   `ActionFocusTests` (bUnit) holds each action in its `Scenarios` table to the rule (running, done, refused), and the
   pages with their own tests (EPA, trainee profile, curriculum items, panel, new activity) are held there. A new action
   gets a scenario. A page-load action is not one, having no button whose action runs in a circuit: its page's own tests
@@ -974,6 +1001,30 @@ Measure a table at 1280px against the longest real values before adding a column
 ```
 
 No inline `style="width:…"` on a table's cells. A column's width is one of the classes above.
+
+**A list that must stack at 900px** (2026-10-14, T366, flow 09, S8) writes its table with both stack classes
+(`.clinic-table--stack .clinic-table--stack-wide`), as flows 06 and 08 write theirs; `DataTable`'s `Stack` is the 641px
+one, and it gains no wider mode. My authorisations' No longer in force and the STAR register are written so.
+
+**A row's line** (flow 03's note row, generalised, T366, S4, S9). A row that needs a sentence under it (the activity
+page's history note, the register's revoked and superseded STARs) is `tr.has-note`, followed by a row whose one cell
+spans every column, `td.history-note`: the two share the row's edge, and stacked at 900px the line joins its row's block
+and wraps, never cut. The register's lines: "Revoked 2026-10-13 at 09:12 SAST by Refilwe Mokoena: {reason}" and
+"Superseded by STAR #18, issued 2026-10-13." (no supersession date is stored, so the successor's own).
+
+**The STAR register** (`/admin/entrustment-decisions`, T366, flow 09; boards R3-6):
+- The FilterBar pattern, a `search-container` form: Trainee (binds on change), Status (All, Active, Expired, Revoked,
+  Superseded), applied with **Show**, and Clear filters once a filter is applied (F9). Nothing issued at all is the
+  empty card "No STARs issued yet", with no form; filtered to nothing keeps the count ("· 0 shown") over "No STAR matches
+  these filters." and what was asked; the card offers no second Clear filters, the filter bar's just above being the one
+  (D10).
+- Captioned "Issued STARs (entrustment decisions) · 5 shown"; the trainee is the row header; newest issued first, then
+  STAR number descending. Issued's "review #2" is a link named "Open review #2" only where the reader may open that
+  review (`EntrustmentDecisionDto.IssuingReviewReadable`, the review read ladder), plain text otherwise (S7), a 24px
+  inline target, 44px at 390 (M9).
+- Download on every row, Revoke (an outline button) on an Active one, each named for its row (T239). Revoke opens the
+  page's one `ConfirmDialog` with its reason box (§ Button system, "A dialog with a field"); done, "Anele Dlamini's
+  PAED-002 STAR is revoked." above the table, claiming no delivery of the mail (S6).
 
 **One action per row** (T364, flow 08; round 2's C3). A row offers the one thing to do next, never two that compete:
 Decisions due's held row offers "Open review #n" and no Schedule, a row that can be scheduled offers only Schedule. A row
@@ -1262,9 +1313,20 @@ reordered). Log an activity is `NewActivity.razor`. Drawn in `design/flows/03-tr
 - **The required mark.** The label ends in `<span class="required-mark" aria-hidden="true"> *</span>`, and the control
   carries `aria-required="true"`. One line above the first section explains it: "* marks a field you must fill in."
   (A15). A required group keeps its legend's visually hidden "required".
+- **A counter is a second `.field-help`** (T366, flow 09, S9): "153 of 4,000 characters" under the help, named after it
+  in the control's `aria-describedby` (`appeal-reason-help appeal-reason-count`, then the refusal's id when refused). It
+  counts in the browser as the person types (`js/review-appeal.js`), so no keystroke costs a round trip, and the page
+  renders the same words from what it holds. The control carries no `maxlength`, which would cut a paste silently: the
+  counter shows the excess, and the action refuses it under the field. The lodge block's reason (4,000) and the
+  register's revocation reason (1,000, "Give the reason in 1,000 characters or fewer.", D2) both count this way.
 - **Help under the control**, `p.field-help` with id `<key>-help`, named first in the control's `aria-describedby`. An EPA
   or person select prints its chosen option in full under it (`.field-readback`, `aria-hidden`: the select already says
   it), so nothing is cut off at 390px (T323). The EPA picker stays a native `<select>` with each option's full text.
+- **A choice of sentences is radios, not a select** (T366, flow 09, T323): an option that is a sentence ("Remitted: the
+  appeal body replaces the decision") is cut by a closed select at 390px (measured: 322px of text in 262px), so the
+  appeal's Outcome is two radios in flow 08's `.choice-group` (`.is-invalid` when refused, the first radio taking the
+  focus), one a line (`.check-grid.resolve-outcomes`), neither chosen at first (T307). The resolve form is one column at
+  read width (`.resolve-form`, 48rem).
 - **The rung row** (`RungRow`): where the reader cannot write a scale field, its value is an `<ol class="rung-row">`, every
   rung of the ladder abreast, the chosen one filled (`--secondary-color`, `--on-fill`) and named in words ("4, chosen"),
   its descriptor under the row (`.rung-descriptor`). Before the section is filled the rungs are pending: dashed, and
@@ -1727,6 +1789,9 @@ fifteen keys the seeded workflows use.
   own workflow names, is grey: the badge's words, the state's label, say what it is, and grey claims nothing. The trainee's
   inbox holds no finished work, so it passes `false`.
 - `AgendaLine`, `AgendaElsewhere`, `DecisionDue`, `MsfCampaign` and `EntrustmentDecision` are the tables in this file.
+- `Appeal` (T366, flow 09): an appeal against a committee review. Open is amber (`badge-accepted`), the tint of a
+  review under appeal, waiting on the appeal body; Dismissed and Remitted are both green (`badge-completed`), an appeal
+  heard and closed. Neither outcome is a failure (D51); the badge's word says which it was.
 - `DataRightsRequest`: submitted blue, under review amber, approved and completed green, rejected red, withdrawn grey.
   `JobRun`: running amber, succeeded green, failed red. `AuditResult`: done green, failed red.
 - `Standing` is the comparison badges below.
@@ -2278,8 +2343,22 @@ quorum (and, on an entrustment-only review, by nothing staged, E4).
 - **What a reader reads** in the bar while a chair's action is open: "Only the panel's chair, Thandi Zulu, can stage
   entrustment decisions and record the committee's decision." (`CommitteeDecisionWording.OnlyTheChairSits`), "… can
   ratify the committee's decision." (with removing a staged decision that no longer fits, where one does), "… can close
-  this review.". Under appeal the Appeals section names who resolves it (`#appeal-body-note`), only those who can act
-  (`AppealBody`, T237); the appeal body alone is offered the resolve form, and only under appeal.
+  this review.". Under appeal the Appeals section names who resolves it (`#appeal-body-note`, `.appeals-who`), only those
+  who can act now (`AppealBody`, T237): a reader who holds a seat and cannot act now (a Coordinator in the External seat,
+  T366 F7) reads this line and is not named in it; the appeal body alone is offered the resolve form, and only under
+  appeal.
+- **The Appeals section** (T366, flow 09, board R3-3): each appeal as `AppealEntry` in `ul.appeal-list` ("Appeal by Nomsa
+  Mahlangu", its badge, "Heard by …" while open), then the resolve form or the who-may line. The resolve form
+  (`.resolve-form`) carries the quorum line beside Resolve appeal (`p.quorum-line#appeal-quorum-line`, `aria-live`
+  polite, filled while Remitted is chosen; the panel's shortfall in its place, Resolve appeal then `aria-disabled` with
+  `#remit-reason`), and its refusal after its actions, led "Resolve appeal was refused:" so it does not repeat the line
+  (M8). A remit short of a category, a rationale or a quorum is refused there with nothing sent; otherwise Remit opens
+  "Remit Nomsa Mahlangu's appeal?" ("Satisfactory with Observations replaces Inadequate Progress — Additional Training.",
+  who sat, "This closes the 2026 S2 review. Nothing reopens it, and no STAR changes.", Go back, Remit the appeal) and
+  Dismiss "Dismiss Nomsa Mahlangu's appeal?" ("… stays in force.", "This closes the 2026 S2 review. Nothing reopens
+  it.", Go back, Dismiss the appeal), each a `ConfirmDialog` as built: Go back takes the first focus, and closing returns
+  it to Resolve appeal with what was typed kept (F6). "Appeal resolved." heads the section; a refusal from the server
+  sits after the actions, or heads the section when the review read again no longer offers the form.
 - **Ratify…** opens a `ConfirmDialog`: "Ratify and issue 3 STARs to Lerato Molefe?", each STAR it issues ("PAED-010 at
   4, issued 2026-10-05, expires 2026-10-25"), "PAED-002 and 11 others were not decided at this sitting.", "Ratifying cannot
   be undone: nothing on this review can change afterwards.", "Not yet" and "Ratify and issue 3 STARs"; nothing about
@@ -2337,15 +2416,64 @@ coordinator of the panel's institution, say) is given the one refusal: the seat'
 names a review of their panel. The review page's `#chair-cannot-act-note` is said to the chair only where they can read
 it.
 
-**The trainee's own reviews** (`/committee/my-reviews`). The list's Period column names the period the review sat for,
-then its evidence window in a `.muted` span, as the schedule does: "2026 S2 · 2026-01-01 to 2026-12-31" (T212). The
-window alone read the same for a year's two sittings, since a semester-2 sitting's window is the whole year. The detail
-says the same on two lines, "Sits for" and "Evidence window", as the committee's review page does. A ratified review's
-detail shows its agenda read-only, as an
-`article.detail-card--compact` headed "Agenda": a muted sentence naming the period, then a `.clinic-table` of three
-columns, EPA (the row header), window and outcome. The outcome cell holds the same badge as the chair's table and, under
-it, a `.muted` line: the STAR a decided line names, or, under "Not decided at this sitting.", the decision's sentence
-about the EPAs not decided (O6; T361, D53: there is no deferral). No actions. Nothing is shown before ratify; the read ladder gives a trainee nothing sooner.
+**The trainee's own reviews** (`/committee/my-reviews`; rewritten 2026-10-14, T366, flow 09, boards R3-1). The list
+only: each review opens on her review's page (below). Newest first, by scheduled date, then review number, both
+descending (F1), so one day's ties read the later review first. A hand-written `.clinic-table.clinic-table--stack
+.clinic-table--stack-wide` (S8), captioned "Your committee reviews, newest first", `scope="col"` on its headers: Panel;
+Period, the row's header (`th scope="row"`, D11), the period the review sat for over its evidence window
+(`.period-window`, flow 08's: "2026 S2" over "2026-01-01 to 2026-12-31", T212); Type ("Formative check-in" for a formative review); State, a badge
+(`ReviewSitting.StateBadge`, the review page's tint: Ratified and Closed green, Under appeal amber); Decision; and View,
+an outline small link to `/committee/my-reviews/{id}` named by the review (`ReviewRowNames`, T239: "View the 2026 S2
+review before Paed Annual Review Panel", the type added where two rows share a name, ", Pre-graduation"). Loading: the
+header at once, a visually hidden status "Loading your committee reviews." and three row skeletons, no View. A failed
+read is fixed words with Try again (T329). None yet: "No decisions yet".
+
+**Her review's page** (`/committee/my-reviews/{id}`, `MyReview.razor`; T366, flow 09, boards R3-2, F8). Only the
+review's own trainee reads it, and only once it is ratified, under appeal or closed, for every role
+(`GetMyCommitteeReviewQuery`); anything else, an unknown id included, is flow 01's Page not found, drawn in place and
+lighting nothing. An Administrator reads a review at `/committee/reviews/{id}`. Its h1, tab and crumb are the period and
+the type, "2026 S2 annual progression review" (C6), its subtitle the panel; one column at every width
+(`.review-page.my-review-page`): the header's facts in a compact `.detail-card` (`.detail-list`: Panel, Sits for,
+Evidence window, Type, State as a badge), then **Decisions**, **Appeal**, **Agenda**, each an h2
+(`.review-section-title`).
+
+- **Decisions** is `DecisionHistory`, the committee page's history (below), newest first, with `ForTrainee`. A formative
+  check-in records none: "No binding decision. A formative check-in records no decision and issues no STAR.", and it has
+  no Appeal section and no agenda.
+- **Appeal** lists her appeals (`ul.appeal-list` of `AppealEntry`, headed "Your appeal"). While the review is Ratified
+  it carries the lodge block (`.lodge-block`, 48rem): "What happens next" (an h3) over a list naming who hears an
+  appeal, the appeal body read for her Ratified review ("today, Thandi Zulu (chair) and John van Rensburg (external)"),
+  what they may do (dismiss or remit, either final; D51), and every reader of the reason truly, the panel's institution
+  by name; then "Why you are appealing", required, a textarea with no `maxlength` (a paste is never cut), its help "Up to
+  4,000 characters." and its counter, a second `.field-help` (§ Form system); then Lodge appeal. Pressed blank, "Give
+  your reason for appealing." under the field, which takes the focus; over 4,000 characters, "Give your reason in 4,000
+  characters or fewer."; else `ConfirmDialog` as built, "Lodge your appeal?", its safe button Keep editing first, which
+  returns the focus to Lodge appeal with the reason kept (F6). After the lodge, done or refused, the page reads the
+  review again (S5): "Appeal lodged." heads the section in an `ActionResult` with the focus, the state Under appeal, her
+  open entry, no form; a refusal in Wombat's words ("Only ratified reviews can be appealed.", a second tab, M3) in the
+  same place. An unexpected failure is a fixed sentence, logged. Closed: "This review is closed and cannot be appealed
+  again." under her entry.
+- **Agenda** is read-only: a `.clinic-table.agenda-table` captioned with the period ("The EPAs this review was there to
+  decide for 2026 S2, and what the committee did with each."), three columns, EPA (the row header, code over title),
+  Window and Outcome: the agenda's badge and under it "STAR #n." on a decided line (no download, Q6), or the decision's
+  sentence about the EPAs not decided under "Not decided at this sitting" (T361, D53: no deferral). No actions.
+- **Loading and failed** (S12): the header reads "Committee review", as flow 07's does; a visually hidden "Loading your
+  review." and skeletons; a failure is flow 07's "The review could not be loaded. Nothing on it has changed." with Try
+  again.
+
+**The decision history and the appeal entry, on both review pages** (T366, contract § 1). `DecisionHistory`
+(`Review/DecisionHistory.razor`, `.decision-history`) is flow 07's read branch, lifted: `DecisionForm` renders it on the
+committee's page, and her page renders it with `ForTrainee`. Each decision a `.decision-record` (an h3, its outcome),
+newest first, a hairline between two; one an appeal remitted says "Replaced on appeal by the decision above."
+(`.decision-replaced`) with its own rationale and who sat; an entrustment-only one replaced on appeal is headed
+"Entrustment decisions only, replaced on appeal", so two h3s never read the same. `AppealEntry`
+(`Review/AppealEntry.razor`, `li.appeal-entry` in the page's `ul.appeal-list`) is one appeal: its h3 "Your appeal" on
+her page, "Appeal by Nomsa Mahlangu" on the committee's (T308), with its badge (`BadgeFor.Appeal`); "Lodged 2026-10-13",
+then "· Resolved 2026-10-13 by Thandi Zulu" (C15), on the South African calendar; while open, "Heard by …" naming the
+appeal body that can act, or nothing when nobody can (C12a); resolved, the outcome in a sentence, hers ending "and it is
+final"; then "Reason" and the reason, clamped to six lines (`-webkit-line-clamp` and `line-clamp`), with "Show the whole
+reason" only when it overflows, measured after render by `js/review-appeal.js` (S10). Pressed, the reason reads whole and
+takes the focus.
 
 **Scheduling a review.** The form asks for the period the review sits for: a select of semesters around today, labelled
 with the period itself, "2026 S2 · 1 Jul to 31 Dec 2026". Choosing one fills the evidence window, which stays editable,
@@ -2531,10 +2659,12 @@ panel's semester-1 sitting may be one too. Every page says so in the same words,
 - **A remitted appeal** on an entrustment-only review has no Replacement category either. A `.muted` line
   (`#remit-entrustment-only-note`) says why, and says what the remit does not do: the replacement changes no entrustment
   decision, the STARs the review issued stand, and one is changed by revoking it and re-deciding the EPA at a new review.
-- **The trainee's reviews.** Under the heading of an entrustment-only review's decision, a `.muted` line says "This
-  review decided entrustment only, so it records no progression outcome."; adds, when an appeal remitted the decision,
-  that the decision is the appeal body's and the review's STARs stand unless one is revoked; and adds "What it decided on
-  each EPA is on its agenda below." when the agenda is shown. The detail names the type.
+- **The trainee's reviews** (her review's page since T366, flow 09). Under the heading of each of an entrustment-only
+  review's decisions (`DecisionHistory` with `ForTrainee`), a `.decision-note` says "This review decided entrustment
+  only, so it records no progression outcome."; under the current decision it adds, when an appeal remitted it, that the
+  decision is the appeal body's and the review's STARs stand unless one is revoked, and "What it decided on each EPA is
+  on its agenda below." when the agenda is shown. The replaced decision is headed "Entrustment decisions only, replaced
+  on appeal". The header's facts name the type.
 - **Scheduling.** The Review type select offers only the types the handler accepts (`CommitteeReviewTypes.Allowed`):
   before a College committee, only "Entrustment-only review", with help text naming the committee; before a general
   panel, all three in semester 1 and the two progression types in semester 2. The semester-1 help text says when to
@@ -2801,6 +2931,13 @@ Both are `onclick` properties set from the runtime's own script, so the CSP has 
   is required, so a mark on each tells nothing; `required` exposes it to assistive technology, and the browser's own
   check names a blank field.
 - `.visually-hidden` is available for screen-reader-only copy.
+- **A filter's count is announced** (2026-10-14, T366, flow 09, S11): a list applied with Show carries a visually
+  hidden `role="status"`, present from the first render, which says "3 shown" once Show has read the list (the STAR
+  register; "Loading the STARs." while it reads).
+- **The label in the name** (T366, F4; WCAG 2.5.3): a button's accessible name contains its visible words. My
+  authorisations' cards read "Download certificate", named "Download certificate for PAED-001"; No longer in force's
+  "Download", named "Download certificate for PAED-002 (revoked)"; while one runs, "Generating…", named "Download
+  certificate for PAED-001, generating".
 - **The focus ring** (2026-09-27, T335, flow 01; T322, T328): every element a keyboard focuses shows a 2px solid
   `--focus-ring` outline at a 2px offset, from one `:focus-visible` rule for every element. Until T328 the rule was a list
   of classes, so a focusable scroll region (Decisions due's summary, `.table-container[tabindex="0"]`), a tab and a
@@ -3102,7 +3239,8 @@ A details grid whose second card comes and goes with the page's state can give a
 `.details-grid--lone-spans` (`> .detail-card:only-child` spans `1 / -1`, T266). The grid's first column is its narrow
 third, so a lone card sat there with the rest of the row empty: the MSF campaign page, whose Quick template card is only
 on the create page, showed a campaign's card 223px wide at 1000px, in a 694px row, with its invitees table scrolling 143px
-inside it. It is the only page that asks. It is opt-in (T266 review): on a grid of like cards (My authorisations' STARs)
+inside it. It is the only page that asks. It is opt-in (T266 review): on a grid of like cards (My authorisations' STARs,
+which since T366 are a `.star-grid`, equal columns, one at 390 and as many as fit at 768 and 1280, not a details grid)
 one card should look like each of several; on My MSF reports the list would jump from the whole row to a third of it
 when a report is selected. (The rule that a lone trajectory chart scales with its card is withdrawn: since T355 the chart
 is drawn at two fixed sizes and never scaled, § Entrustment standing, and the trajectory.)
@@ -3110,7 +3248,10 @@ is drawn at two fixed sizes and never scaled, § Entrustment standing, and the t
 **The committee review has no details-grid** (T361, flow 07): one column (`.review-page`, a flex column), the sitting bar
 under the header, then "Before the committee decides" (when it has something to say), the agenda, the decision (above
 the agenda once recorded), "Entrustment against Annexure A", "Multi-source feedback by EPA", the evidence snapshot, the
-rating trajectories and the appeals, each section an h2. A formative review shows the bar, the snapshot, the standing,
+rating trajectories and the appeals, each section an h2. While the review is under appeal every reader's bar carries "Go
+to the appeal" (T366, flow 09, F5): an outline small button (`#sitting-go-to-appeal`) at the bar's right end from 641px,
+under the state line at full width and 44px below, moving the focus through `PageFocus` to the Appeals h2
+(`tabindex="-1"`), never an `href="#appeals"`, which `<base href="/">` makes a navigation to Home. A formative review shows the bar, the snapshot, the standing,
 the MSF coverage and the trajectories. Its loading state is the header "Committee review", "Loading the review…" and a
 skeleton with no action; its load error one fixed sentence, "The review could not be loaded. Nothing on it has
 changed.", with Try again (T329); an id out of the reader's reach is flow 01's Page not found with "The committee review
@@ -4197,12 +4338,19 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
 "Flow 08: Decisions due (T364)": .trainee-line, .rung-legend > .table-container (+ ≤640px: the trainee line's button 44px)
 "Flow 08: the schedule and Committee reviews (T364)": .schedule-grid, .schedule-fields, .field-pair, .agenda-preview, .agenda-live, .agenda-count, .agenda-lines (+ <1100px: the Agenda under the fields)
 "Flow 08: the panels (T364)": .panel-section, .form-section-title, .panel-seats, .panel-lock
+
+/* ── Outcomes, STARs and appeals ────────────────── */
+"Flow 09: her review (T366)": .detail-list dd .badge (inside .my-review-page and .my-authorisations, D12), .decision-history, .decision-record p, .decision-replaced, .decision-note, .appeal-list, .appeal-entry(-head|-meta|-outcome|-label|-reason|-reason--clamped|-more), .appeals-who, .appeal-closed, .lodge-block, .lodge-next (+ ≤640px: inside .my-review-page, the form's buttons 44px and full width; .appeal-entry-more 44px)
+"Flow 09: the committee's appeal (T366)": .review-appeals spacing after .appeal-list, .resolve-form (48rem; .form-grid one column), .check-grid.resolve-outcomes (one column), the refusal after .decision-actions (no phone rule: flow 07's .decision-actions and .review-page .check-grid give the 44px targets)
+"Flow 09: the STARs (T366)": .stars-section, .star-grid, .star-card, .star-rationale, .download-result, .issued-review, .clinic-table .has-note, .clinic-table .history-note (flow 03's note row, generalised; + ≤900px: the line joins its stacked row, its cell unpadded, D4; ≤640px, inside .my-authorisations and .entrustment-list: 44px buttons, a failed download's Try again among them (D7), and Issued's link, the cards' Download full width)
 ```
 
 The Progress section replaced the Trajectory chart section that held T123's chart (2026-10-04, T355): every flow 05
 rule is in it, none elsewhere. The Programme section holds every flow 06 rule, none elsewhere (2026-10-05, T358). The
 review sitting section holds every flow 07 rule, none elsewhere (2026-10-12, T361). The four Committee calendar sections hold
-every flow 08 rule, none elsewhere: the shared one first, then one per page group (2026-10-13, T364).
+every flow 08 rule, none elsewhere: the shared one first, then one per page group (2026-10-13, T364). The three Outcomes,
+STARs and appeals sections hold every flow 09 rule, none elsewhere: her review, the committee's appeal, the STARs
+(2026-10-14, T366).
 
 When a new section is needed (say `/* ── Badges ── */`), add its heading in alphabetical-ish order inside the existing block and keep the rest of the file untouched.
 

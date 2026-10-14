@@ -182,7 +182,22 @@ public sealed record CommitteeAppealDto(
     string Reason,
     DateTime? ResolvedOn,
     string? ResolvedByUserId,
-    CommitteeAppealOutcome? Outcome);
+    CommitteeAppealOutcome? Outcome)
+{
+    /// <summary>
+    /// Who lodged the appeal, by name (<see cref="Wombat.Application.Common.Users.UserDisplayNames.NameOf" />): the
+    /// committee's "Appeal by Nomsa Mahlangu" (T366, T308). Filled by <c>GetCommitteeReviewByIdQuery</c> and
+    /// <c>GetMyCommitteeReviewQuery</c> for every reader, in the one lookup that names the page; null from the commands,
+    /// whose mapper names nobody.
+    /// </summary>
+    public string? LodgedByName { get; init; }
+
+    /// <summary>
+    /// Who resolved the appeal, by name, or null while it is open: "Resolved 2026-10-13 by Thandi Zulu" (T366, T308).
+    /// Filled as <see cref="LodgedByName" /> is.
+    /// </summary>
+    public string? ResolvedByName { get; init; }
+}
 
 /// <summary>
 /// One frozen line of a review's evidence snapshot. The parameters from <paramref name="EpaId" /> on are T167's and are
@@ -346,6 +361,13 @@ public sealed record CommitteeReviewDetailDto(
     /// <c>GetCommitteeReviewByIdQuery</c>; null from the commands that answer with the review.
     /// </summary>
     public int? TrainingYear { get; init; }
+
+    /// <summary>
+    /// The panel's institution by name, "Kgosi Kgari Teaching Hospital": whose coordinators and institutional
+    /// administrators read an appeal's reason, as the trainee's lodge block says (T366, round 2's data row). Filled by
+    /// <c>GetMyCommitteeReviewQuery</c>, the one page that says it; null everywhere else.
+    /// </summary>
+    public string? PanelInstitutionName { get; init; }
 
     /// <summary>The rule a decision's attendance is held to, as the review page states it (T165).</summary>
     public static string QuorumRule => CommitteeReview.QuorumRule;
@@ -520,9 +542,27 @@ public sealed record CommitteeReviewDetailDto(
         CommitteePersonDto Named(CommitteePersonDto person)
             => person.Name is null && names.TryGetValue(person.UserId, out var name) ? person with { Name = name } : person;
 
+        // T366 (T308): who lodged and resolved each appeal. The trainee lodges, and a member of the panel resolves, so
+        // both are among the names the earlier copy holds.
+        if (earlier.TraineeName is not null)
+        {
+            names.TryAdd(earlier.TraineeUserId, earlier.TraineeName);
+        }
+
+        string? NameOf(string? userId)
+            => userId is not null && names.TryGetValue(userId, out var name) ? name : null;
+
         return this with
         {
             TraineeName = earlier.TraineeName,
+            PanelInstitutionName = earlier.PanelInstitutionName,
+            Appeals = Appeals
+                .Select(appeal => appeal with
+                {
+                    LodgedByName = appeal.LodgedByName ?? NameOf(appeal.LodgedByUserId),
+                    ResolvedByName = appeal.ResolvedByName ?? NameOf(appeal.ResolvedByUserId)
+                })
+                .ToArray(),
             CallerChairs = earlier.CallerChairs,
             ChairCannotAct = earlier.ChairCannotAct,
             CallerMayStart = earlier.CallerMayStart,

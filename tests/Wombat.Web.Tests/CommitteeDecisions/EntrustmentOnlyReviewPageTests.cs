@@ -152,14 +152,16 @@ public sealed partial class EntrustmentOnlyReviewPageTests : TestContext
         SignInAs("external-1", "CommitteeMember");
         var cut = RenderReview(Review(CommitteeReviewType.EntrustmentOnly, CommitteeReviewState.UnderAppeal));
 
-        cut.Find("#appeal-outcome").Change(CommitteeAppealOutcome.Remitted.ToString());
+        cut.Find("#appeal-outcome-remitted").Change(CommitteeAppealOutcome.Remitted.ToString());
         cut.FindAll("#appeal-category").Should().BeEmpty();
         Text(cut.Find("#remit-entrustment-only-note")).Should().Be(
             "This review decides entrustment only, so the replacement decision records no progression category, and it " +
             "changes no entrustment decision: the STARs this review issued stand. To change one, revoke it and re-decide the " +
             "EPA at a new review.");
         cut.Find("#appeal-rationale").Change("Re-read on appeal: the level stands.");
-        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Resolve appeal").Click();
+        cut.FindAll("button").Single(button => button.Closest("dialog") is null && button.TextContent.Trim() == "Resolve appeal").Click();
+        // T366 (C14b): the remit confirms in its dialog.
+        cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Remit the appeal").Click();
         cut.WaitForState(() => _sender.Received.OfType<ResolveAppealCommand>().Any());
 
         var resolved = _sender.Received.OfType<ResolveAppealCommand>().Single();
@@ -173,7 +175,7 @@ public sealed partial class EntrustmentOnlyReviewPageTests : TestContext
         SignInAs("external-1", "CommitteeMember");
         var cut = RenderReview(Review(CommitteeReviewType.AnnualProgression, CommitteeReviewState.UnderAppeal));
 
-        cut.Find("#appeal-outcome").Change(CommitteeAppealOutcome.Remitted.ToString());
+        cut.Find("#appeal-outcome-remitted").Change(CommitteeAppealOutcome.Remitted.ToString());
 
         var first = cut.FindAll("#appeal-category option").First();
         first.GetAttribute("value").Should().BeEmpty();
@@ -182,19 +184,22 @@ public sealed partial class EntrustmentOnlyReviewPageTests : TestContext
 
         cut.Find("#appeal-category").Change(CommitteeDecisionCategory.InadequateProgressAdditionalTraining.ToString());
         cut.Find("#appeal-rationale").Change("Re-review in three months.");
-        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Resolve appeal").Click();
+        cut.FindAll("button").Single(button => button.Closest("dialog") is null && button.TextContent.Trim() == "Resolve appeal").Click();
+        // T366 (C14b): the remit confirms in its dialog.
+        cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Remit the appeal").Click();
         cut.WaitForState(() => _sender.Received.OfType<ResolveAppealCommand>().Any());
 
         _sender.Received.OfType<ResolveAppealCommand>().Single().RemittedCategory
             .Should().Be(CommitteeDecisionCategory.InadequateProgressAdditionalTraining);
     }
 
-    // ─── The trainee's reviews ───────────────────────────────────────────────
+    // ─── The trainee's reviews (T366: the list, then her review's page) ──────
 
     [Fact]
     public void TheTrainee_ReadsTheirEntrustmentOnlyReview_AsDecidingEntrustmentOnly_NeverAsPending()
     {
         SignInAs("trainee-1", WombatRoles.Trainee);
+        JSInterop.Mode = JSRuntimeMode.Loose;
         var review = Review(CommitteeReviewType.EntrustmentOnly, CommitteeReviewState.Ratified) with
         {
             Agenda = new CommitteeAgendaDto(30, 2026, 1, "2026 S1", false,
@@ -206,63 +211,66 @@ public sealed partial class EntrustmentOnlyReviewPageTests : TestContext
         };
         _sender
             .On<ListReviewsForTraineeQuery>(_ => new[] { ListItem(CommitteeReviewType.EntrustmentOnly, CommitteeReviewState.Ratified, null) })
-            .On<GetCommitteeReviewByIdQuery>(_ => review);
+            .On<GetMyCommitteeReviewQuery>(_ => review);
 
-        var cut = RenderComponent<MyReviews>();
-        cut.WaitForState(() => cut.FindAll("button").Any(button => button.TextContent.Trim() == "View"));
+        var list = RenderComponent<MyReviews>();
+        list.WaitForState(() => list.FindAll("tbody a").Any(view => view.TextContent.Trim() == "View"));
+        Text(list.FindAll("tbody tr").Single()).Should().Contain("Entrustment only").And.Contain("Entrustment decisions only").And.NotContain("Pending");
 
-        var row = Text(cut.FindAll("tbody tr").Single());
-        row.Should().Contain("Entrustment only").And.Contain("Entrustment decisions only").And.NotContain("Pending");
-
-        cut.FindAll("button").Single(button => button.TextContent.Trim() == "View").Click();
-        cut.WaitForState(() => cut.FindAll("#current-decision-outcome").Count == 1);
-
-        Text(cut.Find("#my-review-type")).Should().Be("Type: Entrustment-only review");
-        Text(cut.Find("#current-decision-outcome")).Should().Be("Entrustment decisions only");
-        Text(cut.Find("#entrustment-only-note")).Should().Be(
-            $"{CommitteeDecisionWording.EntrustmentOnlyForTheTrainee} {CommitteeDecisionWording.EntrustmentOnlySeeTheAgenda}");
+        var cut = RenderMyReview();
+        Text(cut.Find("#my-review-type")).Should().Be("Entrustment-only review");
+        Text(cut.Find("#decision-41 h3")).Should().Be("Entrustment decisions only");
+        cut.FindAll("#decision-41 .decision-note").Select(note => Text(note)).Should().Equal(
+            CommitteeDecisionWording.EntrustmentOnlyForTheTrainee, CommitteeDecisionWording.EntrustmentOnlySeeTheAgenda);
     }
 
     [Fact]
     public void TheTrainee_IsToldARemittedEntrustmentOnlyReviewChangedNoStar()
     {
         SignInAs("trainee-1", WombatRoles.Trainee);
+        JSInterop.Mode = JSRuntimeMode.Loose;
         var review = Review(CommitteeReviewType.EntrustmentOnly, CommitteeReviewState.Final) with
         {
             Decisions = [Decision(42, null) with { SupersedesDecisionId = 41 }, Decision(41, null)]
         };
-        _sender
-            .On<ListReviewsForTraineeQuery>(_ => new[] { ListItem(CommitteeReviewType.EntrustmentOnly, CommitteeReviewState.Final, null) })
-            .On<GetCommitteeReviewByIdQuery>(_ => review);
+        _sender.On<GetMyCommitteeReviewQuery>(_ => review);
 
-        var cut = RenderComponent<MyReviews>();
-        cut.WaitForState(() => cut.FindAll("button").Any(button => button.TextContent.Trim() == "View"));
-        cut.FindAll("button").Single(button => button.TextContent.Trim() == "View").Click();
-        cut.WaitForState(() => cut.FindAll("#current-decision-outcome").Count == 1);
+        var cut = RenderMyReview();
 
-        Text(cut.Find("#entrustment-only-note")).Should().Be(
-            "This review decided entrustment only, so it records no progression outcome. The appeal was remitted: this " +
-            "decision is the appeal body's, and the entrustment decisions this review issued stand unless one is revoked.");
+        cut.FindAll("#decision-42 .decision-note").Select(note => Text(note)).Should().Equal(
+            "This review decided entrustment only, so it records no progression outcome.",
+            "The appeal was remitted: this decision is the appeal body's, and the entrustment decisions this review issued " +
+            "stand unless one is revoked.");
+        Text(cut.Find("#decision-41 h3")).Should().Be("Entrustment decisions only, replaced on appeal",
+            "two h3s never read the same (round 3's nit)");
     }
 
     [Fact]
     public void TheTrainee_ReadsAProgressionReviewsCategory_InWords()
     {
         SignInAs("trainee-1", WombatRoles.Trainee);
+        JSInterop.Mode = JSRuntimeMode.Loose;
         _sender
             .On<ListReviewsForTraineeQuery>(_ => new[]
             {
                 ListItem(CommitteeReviewType.AnnualProgression, CommitteeReviewState.Ratified, CommitteeDecisionCategory.SatisfactoryWithObservations)
             })
-            .On<GetCommitteeReviewByIdQuery>(_ => Review(CommitteeReviewType.AnnualProgression, CommitteeReviewState.Ratified));
+            .On<GetMyCommitteeReviewQuery>(_ => Review(CommitteeReviewType.AnnualProgression, CommitteeReviewState.Ratified));
 
-        var cut = RenderComponent<MyReviews>();
-        cut.WaitForState(() => cut.FindAll("button").Any(button => button.TextContent.Trim() == "View"));
+        var list = RenderComponent<MyReviews>();
+        list.WaitForState(() => list.FindAll("tbody a").Any(view => view.TextContent.Trim() == "View"));
+        Text(list.FindAll("tbody tr").Single()).Should().Contain("Annual progression").And.Contain("Satisfactory with Observations");
 
-        Text(cut.FindAll("tbody tr").Single()).Should().Contain("Annual progression").And.Contain("Satisfactory with Observations");
-        cut.FindAll("button").Single(button => button.TextContent.Trim() == "View").Click();
-        cut.WaitForState(() => cut.FindAll("#current-decision-outcome").Count == 1);
-        cut.FindAll("#entrustment-only-note").Should().BeEmpty();
+        var cut = RenderMyReview();
+        Text(cut.Find("#decision-41 h3")).Should().Be("Satisfactory with Observations");
+        cut.FindAll(".decision-note").Should().BeEmpty();
+    }
+
+    private IRenderedComponent<MyReview> RenderMyReview()
+    {
+        var cut = RenderComponent<MyReview>(parameters => parameters.Add(page => page.ReviewId, 30));
+        cut.WaitForState(() => cut.FindAll(".review-page:not([aria-busy])").Count == 1);
+        return cut;
     }
 
     // ─── Scheduling ──────────────────────────────────────────────────────────

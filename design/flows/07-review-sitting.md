@@ -758,7 +758,7 @@ Expect:
   - **The dialog** is titled "Record Satisfactory Progress for Lerato Molefe?" and reads "Fixes 3 staged decisions:
     PAED-001 at 5, PAED-010 at 4 (expires `D+20`), PAED-012 at 5.", "Records 12 EPAs as not decided: PAED-002,
     PAED-003, PAED-004, PAED-005, PAED-006, PAED-007, PAED-008, PAED-009, PAED-011, PAED-013, PAED-014 and PAED-015."
-    (E1), "Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)." and "Afterwards only
+    (E1), "Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)" and "Afterwards only
     a decision that no longer fits the trainee's curriculum can be removed." The focus is on its safe button, "Not yet"
     (round 3 item 22); the confirm is "Record decision".
   - **Recorded:** "Decision recorded." in the Decision section, which now sits above the agenda, with the focus there.
@@ -905,7 +905,7 @@ Expect:
   - **Sampling:** "Before the committee decides" names PAED-002, one rating from one assessor.
   - **Ratified:** the review reads Ratified, with "Outcome Deferred".
 
-Step 4.50 — Dr Zulu starts and closes the check-in (act-4-annual-review.md:1318)
+Step 4.50 — Dr Zulu starts and closes the check-in (act-4-annual-review.md:1383)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: Start the formative review through its dialog, read it, and close it through its dialog.
@@ -1020,7 +1020,7 @@ Expect: Home's Registrars and Targets by EPA cards are one column: each registra
   the charts at 322 px. Nothing scrolls sideways. Checked at 768 px as well: the agenda still stacks, and nothing
   scrolls sideways.
 
-Step A.7.13 — Dr Zulu hears a populated review with a screen reader (appendix-cross-cutting.md:1461)
+Step A.7.13 — Dr Zulu hears a populated review with a screen reader (appendix-cross-cutting.md:1464)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: With NVDA (or Narrator) on, open Dr Molefe's final review (review #7). Walk it by headings, then by tables, then by

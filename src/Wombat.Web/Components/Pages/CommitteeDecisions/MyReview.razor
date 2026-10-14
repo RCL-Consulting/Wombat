@@ -1,0 +1,497 @@
+@page "/committee/my-reviews/{ReviewId:int}"
+@attribute [Authorize(Roles = "Trainee,Administrator")]
+@implements IAsyncDisposable
+@using System.Security.Claims
+@using Wombat.Web.Components.Pages.CommitteeDecisions.Review
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<MyReview> Logger
+@inject IJSRuntime JS
+
+@*
+  Her review (T366, flow 09; boards R3-2-*; round 3 F1, F6, F8, M3, S1, S5, S9, S10, S12, S13; T308). A page of its own,
+  owned by My committee reviews: its h1, tab and crumb the review's period and type ("2026 S2 annual progression review"),
+  one column at every width, in the order header (its facts), Decisions, Appeal, Agenda.
+
+  - Only the review's own trainee reads it, and only once it is ratified or later, whatever role they act in (F8,
+    GetMyCommitteeReviewQuery); anything else, an unknown id included, is flow 01's Page not found, word for word, drawn
+    in place so the shell lights nothing (as the EPA page does, T358 build review D1).
+  - Decisions: DecisionHistory, newest first, a replaced decision saying so (T308). A formative check-in records none
+    (S13) and has no Appeal section.
+  - Appeal: her AppealEntry list; while Ratified, the lodge block (C8): what happens next, naming the appeal body and every
+    reader of the reason truly; the reason with its counter, a second .field-help counted in the browser by the page's
+    script module; Lodge appeal refusing a blank reason under the field, else ConfirmDialog as built ("Lodge your
+    appeal?", Keep editing safe and returning the focus to Lodge appeal with the reason kept, F6).
+  - After Lodge, done or refused, the page reads the review again (T260, S5): done, "Appeal lodged." heads the section
+    with the focus, the state Under appeal, her open entry, no form; refused, the refusal in Wombat's words (M3) in the
+    same place with the focus. Never an exception's text: an unexpected failure is a fixed sentence, logged (T329, T338).
+  - Agenda: read-only, what the committee did with each EPA, each line not decided carrying the decision's sentence
+    (T361, D53).
+  - Loading and failed: the header reads "Committee review" (S12), a status line, skeletons; a failure is flow 07's fixed
+    sentence with Try again.
+*@
+
+<PageTitle>@Heading · Wombat</PageTitle>
+
+<PageHeader Title="@Heading" Subtitle="@Subtitle" Icon="@(_notFound ? "search" : null)"
+            Page="@(_notFound ? typeof(NotFound) : null)" />
+
+@* Always present, filled while the review is read: a live region added with its words in it is often not read. *@
+<p class="visually-hidden" role="status">@(_loading ? MyReviewWords.Loading : null)</p>
+
+<StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusHeadingAsync">
+  <LoadingContent>
+    <div class="review-page my-review-page" aria-busy="true">
+      <div aria-hidden="true">
+        <Skeleton Height="7rem" />
+        <Skeleton Height="9rem" />
+        <Skeleton Height="12rem" />
+      </div>
+    </div>
+  </LoadingContent>
+  <ChildContent>
+    @if (_notFound || _review is null)
+    {
+      @* Flow 01's NotFound, word for word (T233, T335; F8): a review that is not hers to read is no page at all. *@
+      <div class="system-panel">
+        <p>There is no page at this address.</p>
+        <p class="muted">Check the address, or start again from Home.</p>
+        <div class="actions-cell">
+          <a class="btn btn-primary" href="/"><Icon Name="home" />Go to Home</a>
+        </div>
+      </div>
+    }
+    else
+    {
+      var review = _review;
+      <div class="review-page my-review-page">
+        <section class="detail-card detail-card--compact" aria-label="@MyReviewWords.AboutLabel">
+          <dl class="detail-list">
+            <dt>Panel</dt>
+            <dd>@review.PanelName</dd>
+            <dt>Sits for</dt>
+            <dd id="my-review-period">@review.PeriodLabel</dd>
+            <dt>Evidence window</dt>
+            <dd id="my-review-window">@MyReviewWords.Window(review.ReviewPeriodFrom, review.ReviewPeriodTo)</dd>
+            <dt>Type</dt>
+            <dd id="my-review-type">@review.ReviewTypeLabel</dd>
+            <dt>State</dt>
+            <dd id="my-review-state"><span class="badge @ReviewSitting.StateBadge(review.State)">@review.StateLabel</span></dd>
+          </dl>
+        </section>
+
+        <section class="detail-card" id="decisions" aria-labelledby="decisions-heading">
+          <h2 class="review-section-title" id="decisions-heading">@MyReviewWords.DecisionsHeading</h2>
+          @if (review.IsFormative)
+          {
+            <p id="formative-note">@MyReviewWords.FormativeNoDecision</p>
+          }
+          else
+          {
+            <DecisionHistory Review="review" ForTrainee="true" />
+          }
+        </section>
+
+        @if (!review.IsFormative)
+        {
+          @AppealSection
+          @AgendaSection
+        }
+      </div>
+
+      <ConfirmDialog @ref="_lodgeDialog" Title="@AppealWords.DialogTitle" CancelLabel="@AppealWords.KeepEditing"
+                     ConfirmLabel="@AppealWords.LodgeLabel" OnConfirm="LodgeAsync" OnClosed="DialogClosedAsync"
+                     ReturnFocusId="@LodgeButtonId">
+        <BodyContent>
+          <p>@AppealWords.Against(Heading, review.Decisions.FirstOrDefault()?.Category)</p>
+          <p>@AppealWords.DialogHeardBy(review.AppealBody)</p>
+          <p>@AppealWords.Readers(review.PanelInstitutionName)</p>
+        </BodyContent>
+      </ConfirmDialog>
+    }
+  </ChildContent>
+</StatePanel>
+
+@code {
+  [Parameter] public int ReviewId { get; set; }
+
+  private const string ReasonId = "appeal-reason";
+  private const string ReasonHelpId = "appeal-reason-help";
+  private const string ReasonCountId = "appeal-reason-count";
+  private const string ReasonMessageId = "appeal-reason-message";
+  private const string LodgeButtonId = "lodge-appeal";
+
+  private bool _loading = true;
+  private string? _loadError;
+  private bool _notFound;
+  private ClaimsPrincipal _user = new();
+  private CommitteeReviewDetailDto? _review;
+
+  // What she has typed, kept through Keep editing (F6), a refusal and a re-read; and the field's own refusal.
+  private string _reason = string.Empty;
+  private string? _reasonRefusal;
+  private bool _focusReason;
+
+  // The lodge sent and not yet answered (T234), and its result: kind and words, at the head of the Appeal section.
+  private bool _lodging;
+  private string _resultKind = "success";
+  private string? _resultText;
+  private ActionResult? _result;
+  private bool _focusResult;
+
+  private ConfirmDialog? _lodgeDialog;
+  private ElementReference _reasonBox;
+  private ElementReference _counter;
+  private IJSObjectReference? _module;
+
+  /// <summary>The h1, the tab's stem and the crumb (the title rule): "Committee review" while it is read or failed (S12).</summary>
+  private string Heading => _loading || _loadError is not null ? MyReviewWords.LoadingHeading
+    : _notFound || _review is null ? "Page not found"
+    : MyReviewWords.Heading(_review);
+
+  private string? Subtitle => _loading || _loadError is not null || _notFound ? null : _review?.PanelName;
+
+  // ─── Reading ─────────────────────────────────────────────────────────────────
+
+  protected override async Task OnParametersSetAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    _resultText = null;
+    await LoadOrFailAsync();
+  }
+
+  private async Task LoadOrFailAsync()
+  {
+    try
+    {
+      _user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      await ReadAsync();
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // Never the exception's text (T329): flow 07's fixed sentence, the failure to the log.
+      Logger.LogError(exception, "Committee review {ReviewId} could not be loaded for its trainee.", ReviewId);
+      _loadError = MyReviewWords.LoadFailed;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  /// <summary>Her review, through the one read that admits only her (F8); null is not found.</summary>
+  private async Task ReadAsync()
+  {
+    var review = await Sender.Send(new GetMyCommitteeReviewQuery(ReviewId, _user));
+    _review = review;
+    _notFound = review is null;
+  }
+
+  private async Task RetryAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    StateHasChanged();
+    await LoadOrFailAsync();
+  }
+
+  private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  // ─── Sections ────────────────────────────────────────────────────────────────
+
+  private RenderFragment AppealSection => __builder =>
+  {
+    var review = _review!;
+    <section class="detail-card" id="appeal" aria-labelledby="appeal-heading">
+      <h2 class="review-section-title" id="appeal-heading">@AppealWords.AppealHeading</h2>
+
+      @if (_resultText is not null)
+      {
+        <ActionResult @ref="_result" Id="appeal-result">
+          <Alert Kind="@_resultKind">@_resultText</Alert>
+        </ActionResult>
+      }
+
+      @if (review.Appeals.Count > 0)
+      {
+        <ul class="appeal-list">
+          @foreach (var appeal in review.Appeals)
+          {
+            <AppealEntry @key="appeal.Id" Appeal="appeal" Review="review" ForTrainee="true" />
+          }
+        </ul>
+      }
+
+      @if (review.State == CommitteeReviewState.Ratified)
+      {
+        @LodgeBlock
+      }
+      else if (review.State == CommitteeReviewState.Final)
+      {
+        <p class="muted appeal-closed" id="appeal-closed">@AppealWords.ClosedNoMoreAppeals</p>
+      }
+    </section>
+  };
+
+  /// <summary>The lodge block (C8; S9): read-width, its counter a second .field-help.</summary>
+  private RenderFragment LodgeBlock => __builder =>
+  {
+    var review = _review!;
+    var refused = _reasonRefusal is not null;
+    <div class="lodge-block">
+      <h3 class="form-section-title">@AppealWords.WhatHappensNext</h3>
+      <ul class="lodge-next">
+        <li id="lodge-heard-by">@AppealWords.HeardByTheAppealBody(review.AppealBody)</li>
+        <li>@AppealWords.Outcomes</li>
+        <li id="lodge-readers">@AppealWords.Readers(review.PanelInstitutionName)</li>
+      </ul>
+      <div class="form-group">
+        <label for="@ReasonId">
+          @AppealWords.ReasonFieldLabel
+          <span aria-hidden="true">*</span>
+          <span class="visually-hidden">required</span>
+        </label>
+        <textarea id="@ReasonId" class="@(refused ? "form-control input-validation-error" : "form-control")" rows="5"
+                  aria-required="true" aria-invalid="@(refused ? "true" : null)"
+                  aria-describedby="@(refused ? $"{ReasonHelpId} {ReasonCountId} {ReasonMessageId}" : $"{ReasonHelpId} {ReasonCountId}")"
+                  @bind="_reason" @ref="_reasonBox"></textarea>
+        <p id="@ReasonHelpId" class="field-help">@AppealWords.ReasonHelp</p>
+        @if (refused)
+        {
+          <p id="@ReasonMessageId" class="validation-message">@_reasonRefusal</p>
+        }
+        <p id="@ReasonCountId" class="field-help" @ref="_counter">@AppealWords.Counter(_reason.Length)</p>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-primary" id="@LodgeButtonId"
+                aria-disabled="@InFlight.AriaDisabled(_lodging)" @onclick="OpenLodgeAsync">@AppealWords.LodgeLabel</button>
+      </div>
+    </div>
+  };
+
+  /// <summary>
+  /// The agenda, read-only (T131 slice 4, O6; T361, D53): each EPA the review was there to decide and what the committee
+  /// did with it, "STAR #n." under a decided line with no download (Q6).
+  /// </summary>
+  private RenderFragment AgendaSection => __builder =>
+  {
+    var review = _review!;
+    if (review.Agenda is not { Lines.Count: > 0 } agenda)
+    {
+      return;
+    }
+
+    var undecidedNote = review.Decisions.FirstOrDefault()?.UndecidedNote;
+    <section class="detail-card" id="agenda" aria-labelledby="agenda-heading">
+      <h2 class="review-section-title" id="agenda-heading">@MyReviewWords.AgendaHeading</h2>
+      <div class="table-container agenda-table-container">
+        <table class="clinic-table agenda-table" role="table">
+          <caption>@CommitteeAgendaText.TraineeAgendaIntro(agenda)</caption>
+          <thead role="rowgroup">
+            <tr role="row">
+              <th scope="col" role="columnheader">EPA</th>
+              <th scope="col" role="columnheader">Window</th>
+              <th scope="col" role="columnheader">Outcome</th>
+            </tr>
+          </thead>
+          <tbody role="rowgroup">
+            @foreach (var line in agenda.Lines)
+            {
+              var detail = CommitteeAgendaText.TraineeStatusDetail(line, undecidedNote);
+              <tr class="agenda-line" id="@($"my-agenda-line-{line.EpaId}")" role="row">
+                <th scope="row" role="rowheader">
+                  <span class="agenda-epa-code">@line.EpaCode</span>
+                  <span class="agenda-epa-title">@line.EpaTitle</span>
+                </th>
+                <td role="cell" data-label="Window">@line.WindowLabel</td>
+                <td role="cell" data-label="Outcome">
+                  <span class="badge @BadgeFor.AgendaLine(line.Status)">@CommitteeAgendaText.StatusLabel(line.Status)</span>
+                  @if (detail is not null)
+                  {
+                    @* The space keeps the sentence apart from the badge in the line's text, which a stacked line reads as one. *@
+                    <span class="agenda-line-detail">@($" {detail}")</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  };
+
+  // ─── Lodging ─────────────────────────────────────────────────────────────────
+
+  /// <summary>
+  /// Lodge appeal: a blank reason, or one over the limit, is refused under the field, which takes the focus; else the
+  /// dialog, whose safe button, Keep editing, takes the focus (ConfirmDialog as built, F6).
+  /// </summary>
+  private async Task OpenLodgeAsync()
+  {
+    if (_lodging)
+    {
+      return;
+    }
+
+    _resultText = null;
+    _reasonRefusal = string.IsNullOrWhiteSpace(_reason) ? AppealWords.GiveReason
+      : _reason.Length > LodgeAppealCommand.MaxReasonLength ? AppealWords.ReasonTooLong
+      : null;
+
+    if (_reasonRefusal is not null)
+    {
+      _focusReason = true;
+      return;
+    }
+
+    if (_lodgeDialog is not null)
+    {
+      await _lodgeDialog.ShowAsync();
+    }
+  }
+
+  /// <summary>
+  /// The dialog's Lodge appeal: the command, then the review read again, done or refused (T260, S5); the result heads the
+  /// Appeal section and takes the focus once the dialog has closed.
+  /// </summary>
+  private async Task LodgeAsync()
+  {
+    if (_lodging || _review is null)
+    {
+      return;
+    }
+
+    _lodging = true;
+    var before = _review;
+    CommitteeReviewDetailDto? answer = null;
+    try
+    {
+      answer = await Sender.Send(new LodgeAppealCommand(ReviewId, _reason, _user));
+      _reason = string.Empty;
+      ShowResult("success", AppealWords.Lodged);
+    }
+    catch (FluentValidation.ValidationException validation)
+    {
+      ShowResult("danger", RefusalText.Of(validation));
+    }
+    catch (CommitteeRefusedException refusal)
+    {
+      // The review's own rule, in its words ("Only ratified reviews can be appealed.", a second tab, M3).
+      ShowResult("danger", refusal.Message);
+    }
+    catch (UnauthorizedAccessException refusal)
+    {
+      ShowResult("danger", refusal.Message);
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // T338: an unexpected failure is a fixed sentence, and the failure goes to the log.
+      Logger.LogError(exception, "An appeal against committee review {ReviewId} could not be lodged.", ReviewId);
+      ShowResult("danger", AppealWords.LodgeFailed);
+    }
+    finally
+    {
+      _lodging = false;
+    }
+
+    await ReadAgainAsync(before, answer);
+  }
+
+  /// <summary>
+  /// The review read again after the lodge (S5). Where that fails, the command's answer named from the copy the page holds
+  /// (WithNamesFrom), with the agenda the page loaded, which lodging does not change.
+  /// </summary>
+  private async Task ReadAgainAsync(CommitteeReviewDetailDto before, CommitteeReviewDetailDto? answer)
+  {
+    try
+    {
+      var again = await Sender.Send(new GetMyCommitteeReviewQuery(ReviewId, _user));
+      if (again is not null)
+      {
+        _review = again;
+        return;
+      }
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogWarning(exception, "Committee review {ReviewId} could not be read again for its trainee.", ReviewId);
+    }
+
+    if (answer is not null)
+    {
+      _review = answer.WithNamesFrom(before) with { Agenda = before.Agenda };
+    }
+  }
+
+  private void ShowResult(string kind, string text)
+  {
+    _resultKind = kind;
+    _resultText = text;
+    _focusResult = true;
+  }
+
+  /// <summary>
+  /// The dialog closed, by Keep editing, Escape or a lodge: the dialog gives the focus back to Lodge appeal (F6; D6);
+  /// after a lodge, the result takes it, since the button may be gone with the form.
+  /// </summary>
+  private async Task DialogClosedAsync()
+  {
+    if (_resultText is not null && _result is not null)
+    {
+      _focusResult = false;
+      await _result.Element.FocusAsync();
+    }
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusResult && _result is not null)
+    {
+      _focusResult = false;
+      await _result.Element.FocusAsync();
+    }
+    else if (_focusReason)
+    {
+      _focusReason = false;
+      await _reasonBox.FocusAsync();
+    }
+
+    if (_review is { State: CommitteeReviewState.Ratified, IsFormative: false } && !_loading)
+    {
+      await CountAsync();
+    }
+  }
+
+  /// <summary>The counter, counted in the browser as she types (S9). A script that cannot run leaves Blazor's count.</summary>
+  private async Task CountAsync()
+  {
+    try
+    {
+      _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/review-appeal.js");
+      if (_module is not null)
+      {
+        await _module.InvokeVoidAsync("count", _reasonBox, _counter, LodgeAppealCommand.MaxReasonLength);
+      }
+    }
+    catch (Exception exception) when (exception is JSException or JSDisconnectedException or InvalidOperationException or TaskCanceledException)
+    {
+      // The counter is a convenience: Blazor's own count is on the page whenever the reason changes.
+    }
+  }
+
+  public async ValueTask DisposeAsync()
+  {
+    if (_module is not null)
+    {
+      try
+      {
+        await _module.DisposeAsync();
+      }
+      catch (JSDisconnectedException)
+      {
+        // The circuit has gone; so has the module.
+      }
+    }
+  }
+}

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
@@ -5,6 +6,7 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.EntrustmentDecisions;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Epas;
 using Wombat.Infrastructure.Identity;
@@ -186,7 +188,8 @@ internal sealed class EntrustmentCertificatePdfService : IEntrustmentCertificate
                 column.Item().Border(1).BorderColor(Colors.Red.Darken2).Background(Colors.Red.Lighten5).Padding(10).Column(c =>
                 {
                     c.Item().Text(t => t.Span("REVOKED").Bold().FontSize(11).FontColor(Colors.Red.Darken2));
-                    c.Item().Text(t => t.Span($"Revoked on {data.RevokedOn:d MMMM yyyy} by {data.RevokedByUserId}").FontSize(9));
+                    // T366, G6: the day it was revoked in South Africa, as My authorisations and the register say it, ISO.
+                    c.Item().Text(t => t.Span($"Revoked on {RevokedDay(data.RevokedOn)} by {data.RevokedByName}").FontSize(9));
                     if (!string.IsNullOrWhiteSpace(data.RevocationReason))
                     {
                         c.Item().Text(t => t.Span($"Reason: {data.RevocationReason}").FontSize(9));
@@ -235,6 +238,13 @@ internal sealed class EntrustmentCertificatePdfService : IEntrustmentCertificate
             .AsNoTracking()
             .SingleOrDefaultAsync(u => u.Id == decision.TraineeUserId, cancellationToken);
 
+        // T324 (T366): the reviser by name, as My authorisations and the register name them; the id only where no name is.
+        var reviser = decision.RevokedByUserId is null
+            ? null
+            : await _dbContext.Set<WombatIdentityUser>()
+                .AsNoTracking()
+                .SingleOrDefaultAsync(u => u.Id == decision.RevokedByUserId, cancellationToken);
+
         // The EPA is national now (T091); the issuing institution is where the trainee trained.
         var traineeProfile = await _dbContext.Set<Domain.Identity.TraineeProfile>()
             .AsNoTracking()
@@ -267,9 +277,14 @@ internal sealed class EntrustmentCertificatePdfService : IEntrustmentCertificate
                 .Select(link => new CertificateEvidence(link.SourceLabel, link.Summary))
                 .ToList(),
             RevokedOn: decision.RevokedOn,
-            RevokedByUserId: decision.RevokedByUserId,
+            RevokedByName: decision.RevokedByUserId is null ? null : FormatName(reviser) ?? decision.RevokedByUserId,
             RevocationReason: decision.RevocationReason);
     }
+
+    private static string RevokedDay(DateTime? revokedOn)
+        => revokedOn is { } utc
+            ? ProgrammeCalendar.DateOf(DateTime.SpecifyKind(utc, DateTimeKind.Utc)).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
+            : string.Empty;
 
     private static string? FormatName(WombatIdentityUser? user)
     {
@@ -301,7 +316,7 @@ internal sealed record CertificateData(
     string InstitutionName,
     List<CertificateEvidence> EvidenceLinks,
     DateTime? RevokedOn,
-    string? RevokedByUserId,
+    string? RevokedByName,
     string? RevocationReason);
 
 internal sealed record CertificateEvidence(string SourceLabel, string Summary);

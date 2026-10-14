@@ -53,10 +53,24 @@ public sealed record EntrustmentDecisionDto(
 
     /// <summary>
     /// Who revoked it, by name (<see cref="Wombat.Application.Common.Users.UserDisplayNames.NameOf" />), for a revoked
-    /// decision. Filled by <c>GetDecisionsForTraineeQuery</c> (T367); null from every other producer, as
-    /// <see cref="TraineeName" /> is.
+    /// decision. Filled by <c>GetDecisionsForTraineeQuery</c> (T367) and by <c>ListEntrustmentDecisionsForAdminQuery</c>
+    /// for the register's row line (T366); null from every other producer, as <see cref="TraineeName" /> is.
     /// </summary>
     public string? RevokedByName { get; init; }
+
+    /// <summary>
+    /// Whether the reader may open the review that issued it (<c>CommitteeReviewReadAccess</c>, the review page's own
+    /// ladder), so the register links Issued's "review #n" only where it will open, and prints it as text otherwise
+    /// (T366, S7). Filled by <c>ListEntrustmentDecisionsForAdminQuery</c>; false from every other producer.
+    /// </summary>
+    public bool IssuingReviewReadable { get; init; }
+
+    /// <summary>
+    /// The day the STAR that superseded this one was issued, for the register's "Superseded by STAR #18, issued
+    /// 2026-10-13." (T366, S4): no supersession date is stored, so the line reads the successor's own. Filled by
+    /// <c>ListEntrustmentDecisionsForAdminQuery</c> for a superseded decision; null otherwise and from every other producer.
+    /// </summary>
+    public DateOnly? SupersededByIssuedOn { get; init; }
 }
 
 /// <summary>An entrustment decision staged at a review, before ratification issues it.</summary>

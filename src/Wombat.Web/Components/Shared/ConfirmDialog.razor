@@ -11,10 +11,17 @@
     The browser posts it to an endpoint, which can issue the sign-in cookie again, as nothing in a circuit can. My
     account's Remove of an institutional sign-in is the first.
 
-  Either way the native <dialog> is opened modal, so Escape closes it and the browser returns the focus to the control that
-  opened it. In the form mode the first element the caller marks autofocus takes the focus on open (the refusal, else the
+  Either way the native <dialog> is opened modal, so Escape closes it. The browser returns the focus to the control that
+  opened it, except where a clicked button never took it (Safari, Firefox on macOS): so the dialog's script records the
+  opener (document.activeElement, else ReturnFocusId) and focuses it when Cancel or Escape closes the dialog (T366, D6). In the form mode the first element the caller marks autofocus takes the focus on open (the refusal, else the
   password), else Cancel, which carries autofocus itself; OnClosed tells the caller the dialog has closed, however it was
   closed, so a caller that opened it without a press (a refusal reopening it as the page loads) can put the focus back.
+
+  The action mode may carry a field (T366, flow 09, M5): FieldContent, drawn after the body and outside the id that
+  describes the dialog (D9); InitialFocusId names its element that takes the first focus in place of the safe button
+  (the register's revocation reason), and OnConfirmClosesWhen, run in OnConfirm's place, keeps the dialog open when it
+  answers false, so the caller shows its refusal under the field, with what was typed kept. Unset, the dialog behaves as
+  before.
 *@
 <dialog @ref="_dialog" class="dialog-scrim dialog-card @(IsFormMode ? "dialog-card--form" : null)"
         aria-labelledby="@TitleId" aria-describedby="@BodyId" @onclose="ClosedAsync">
@@ -54,6 +61,11 @@
       {
         <p id="@BodyId">@Body</p>
       }
+      @if (FieldContent is not null)
+      {
+        @* T366, D9: the field after the description, so its label and counter are read once, as the field's. *@
+        <div class="dialog-body">@FieldContent</div>
+      }
       <FormActions>
         @* While the confirmed action runs, the dialog stays open and the confirm button keeps the focus: it is not disabled,
            a second press sends nothing, and aria-disabled says so (DESIGN.md § Button system, T234 review). Cancel would
@@ -82,6 +94,12 @@
   /// that describes the dialog.
   /// </summary>
   [Parameter] public RenderFragment? BodyContent { get; set; }
+
+  /// <summary>
+  /// The action mode's field, after the body and outside the id that describes the dialog (T366, D9): the register's
+  /// revocation reason, its refusal and its counter, which the field's own label and <c>aria-describedby</c> name.
+  /// </summary>
+  [Parameter] public RenderFragment? FieldContent { get; set; }
   [Parameter] public string ConfirmLabel { get; set; } = "Confirm";
 
   /// <summary>
@@ -108,6 +126,29 @@
   /// <summary>The dialog has closed, by Cancel, by Escape or by the caller.</summary>
   [Parameter] public EventCallback OnClosed { get; set; }
 
+  /// <summary>
+  /// The action mode's first focus (T366, M5): the id of an element in <see cref="FieldContent" />, the register's
+  /// revocation reason, which takes the focus once the dialog is open, in place of the safe button. It is focused after
+  /// the dialog's next render (R5). Null keeps the native dialog's own first focus.
+  /// </summary>
+  [Parameter] public string? InitialFocusId { get; set; }
+
+  /// <summary>
+  /// The action mode's confirm, when a refusal must keep the dialog open (T366, M4, M5, F3): run in place of
+  /// <see cref="OnConfirm" />, and the dialog closes only when it answers true. A caller that refuses answers false and
+  /// shows its refusal under the field (<see cref="FieldContent" />), with what was typed kept; it re-renders itself
+  /// (the dialog re-renders its body). While it runs the confirm button is held as <see cref="OnConfirm" /> holds it.
+  /// Null keeps today's confirm: <see cref="OnConfirm" />, then close.
+  /// </summary>
+  [Parameter] public Func<Task<bool>>? OnConfirmClosesWhen { get; set; }
+
+  /// <summary>
+  /// The control that opened the dialog, by id, for a browser that does not focus a clicked button (Safari, Firefox on
+  /// macOS): the dialog records <c>document.activeElement</c> when it opens, else this element, and gives it the focus
+  /// back when Cancel or Escape closes it (T366, D6). Null records the active element alone.
+  /// </summary>
+  [Parameter] public string? ReturnFocusId { get; set; }
+
   /// <summary>The dialog's heading's id, which the dialog is named by.</summary>
   public string TitleId => $"{_id}-title";
 
@@ -116,11 +157,36 @@
 
   private bool IsFormMode => !string.IsNullOrEmpty(FormAction);
 
-  public ValueTask ShowAsync()
-    => JS.InvokeVoidAsync("wombatDialog.showModal", _dialog);
+  // The first focus waits for the render after ShowAsync, so the field the caller's body draws is there (T366, R5).
+  private bool _focusInitial;
 
-  public ValueTask CloseAsync()
-    => JS.InvokeVoidAsync("wombatDialog.close", _dialog);
+  public async ValueTask ShowAsync()
+  {
+    // The script records who opened the dialog, to give the focus back on Cancel or Escape (T366, D6).
+    await JS.InvokeVoidAsync("wombatDialog.showModal", _dialog, ReturnFocusId);
+    if (!IsFormMode && !string.IsNullOrEmpty(InitialFocusId))
+    {
+      // After the native dialog has put the focus on its first control, so the field wins (T366, M5); and after the
+      // dialog has rendered again, since the caller may have changed its body in the same handler (R5).
+      _focusInitial = true;
+      await InvokeAsync(StateHasChanged);
+    }
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusInitial && !string.IsNullOrEmpty(InitialFocusId))
+    {
+      _focusInitial = false;
+      await PageFocus.FocusByIdAsync(JS, InitialFocusId);
+    }
+  }
+
+  /// <summary>Closes the dialog; the focus is the caller's to place (its result, a field).</summary>
+  public ValueTask CloseAsync() => CloseAsync(returnFocus: false);
+
+  private ValueTask CloseAsync(bool returnFocus)
+    => JS.InvokeVoidAsync("wombatDialog.close", _dialog, returnFocus);
 
   private async Task ConfirmAsync()
   {
@@ -130,16 +196,27 @@
     }
 
     _confirming = true;
+    var closes = true;
     try
     {
-      await OnConfirm.InvokeAsync();
+      if (OnConfirmClosesWhen is not null)
+      {
+        closes = await OnConfirmClosesWhen();
+      }
+      else
+      {
+        await OnConfirm.InvokeAsync();
+      }
     }
     finally
     {
       _confirming = false;
     }
 
-    await CloseAsync();
+    if (closes)
+    {
+      await CloseAsync();
+    }
   }
 
   private async Task CancelAsync()
@@ -150,7 +227,7 @@
     }
 
     await OnCancel.InvokeAsync();
-    await CloseAsync();
+    await CloseAsync(returnFocus: true);
   }
 
   private Task ClosedAsync() => OnClosed.InvokeAsync();

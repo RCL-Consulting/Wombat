@@ -44,6 +44,14 @@ says the seat is held before Create, 4.8) and F-4.49a (T309 item 3: Formative on
 Formative check-in, 4.49); and the flow's halves of T259 (the panel a holding review sits before), T264 (the focus
 after a page turn on Decisions due), T272 and T338 (fixed words for a failure), T324 (the panel's and the schedule's
 field messages) and T329 (no "no routing" while Decision panels loads).
+T366 (flow 09, 2026-10-14) gave the trainee's review a page of its own, `/committee/my-reviews/{ReviewId:int}`
+(MyReview.razor), which My committee reviews' View opens and the steps that read a review now name: 331 steps, 73 page
+files and 86 templates. Its build closes, for its replay to confirm, the gaps the steps record: F-4.36a (T319, with
+T367: the revocation dialog no longer claims a notice, and the revocation mails the trainee, 4.36), T260's
+entrustment-decisions half (Revoke the STAR enabled from the start, a blank reason refused in the dialog, 4.36),
+F-4.37a (T324: the revoked certificate names the revoker, 4.37), F-4.43a and F-4.48a (T308: the list's row and her
+review's page read the appeal and its outcome, 4.43, 4.48) and F-4.45c (T323: Outcome two radios read whole at every
+width, 4.45).
 
 ## Pages
 
@@ -102,7 +110,8 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/admin/users` | Admin/Users/UsersList.razor | Administrator, InstitutionalAdmin | 2.12, 2.13, 2.28, 2.44, 5.10, A.1.14, A.4.5, A.5.1, A.6.4, A.6.9, A.7.9 |
 | `/admin/users/{UserId}` | Admin/Users/UserDetail.razor | Administrator, InstitutionalAdmin | 2.12, 2.13, 2.28, 5.10, 5.17, A.4.5, A.5.5, A.6.4, A.6.7, A.6.9, A.7.9, A.7.14 |
 | `/committee/decisions-due` | CommitteeDecisions/DecisionsDue.razor | Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 4.1, 4.2, 4.3, 4.4, 4.5, 4.9, 4.10, 4.12, 4.34, 4.37, 4.49, 5.1, 5.2, A.1.10, A.7.5, A.7.7, A.7.8 |
-| `/committee/my-reviews` | CommitteeDecisions/MyReviews.razor | Trainee, Administrator | 4.41, 4.42, 4.43, 4.48, 4.51, 5.8, 5.22 |
+| `/committee/my-reviews` | CommitteeDecisions/MyReviews.razor | Trainee, Administrator; the list only, each row's View opening her review's page (T366) | 4.41, 4.42, 4.43, 4.48, 4.51, 5.8, 5.22 |
+| `/committee/my-reviews/{ReviewId:int}` | CommitteeDecisions/MyReview.razor | Trainee, Administrator; only the review's own trainee, once it is ratified or later, whatever role they act in; any other id flow 01's "Page not found" (T366, F8) | 4.41, 4.42, 4.43, 4.48, 4.51, 5.8 |
 | `/committee/panels` | CommitteeDecisions/PanelsList.razor | CommitteeMember, Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 2.20, 2.23, 2.24, 2.25, 2.32, 2.35, 2.37, 4.13, 4.14, A.7.7 |
 | `/committee/panels/new`, `/committee/panels/{PanelId:int}` | CommitteeDecisions/PanelEdit.razor | Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 2.21, 2.22, 2.23, 2.25, 2.32, 4.13 |
 | `/committee/reviews` | CommitteeDecisions/ReviewsSchedule.razor | Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, CommitteeMember | 4.6, 4.7, 4.8, 4.11, 4.12, 4.15, 4.22, 4.26, 4.28, 4.30, 4.31, 4.32, 4.33, 4.44, 4.45, 4.49, 5.3, 5.29, A.1.10, A.1.14, A.7.6, A.7.8, A.7.14 |
@@ -127,7 +136,7 @@ institution, speciality or the record's own people; where that decides what a pe
 
 ## Not played
 
-No template is unplayed. Every one of the 84 templates is named by at least one step's `Route:` line, so this section
+No template is unplayed. Every one of the 86 templates is named by at least one step's `Route:` line, so this section
 has no rows. A row added here must name, in backticks, a template that no step plays, with its reason (T294).
 
 ## Flows and states not played
@@ -431,8 +440,8 @@ and Assessor) appears under each role for the jobs done in it.
 | Read my released MSF report | 3.47 | `/msf/my-reports`, `/msf/my-reports/{CampaignId:int}` |
 | Read my STARs and download a certificate | 4.39, 4.42, 5.8 | `/`, `/portfolio/authorisations` |
 | Read my standing against the College's exit levels | 4.40 | `/portfolio/progress` |
-| Read my committee review and its outcome | 4.41, 4.42, 4.48, 4.51, 5.8 | `/committee/my-reviews`, `/committee/reviews/{ReviewId:int}`, `/access-denied` |
-| Appeal a committee decision | 4.43 | `/committee/my-reviews` |
+| Read my committee review and its outcome | 4.41, 4.42, 4.48, 4.51, 5.8 | `/committee/my-reviews`, `/committee/my-reviews/{ReviewId:int}`, `/committee/reviews/{ReviewId:int}`, `/access-denied` |
+| Appeal a committee decision | 4.43 | `/committee/my-reviews`, `/committee/my-reviews/{ReviewId:int}` |
 | Export my portfolio | 5.9 | `/portfolio/export` |
 | Leave the programme part-way: an encounter after my last day stops counting, and I keep my record | 5.24, 5.26, 5.28, 6.41 | `/activities/new`, `/activities/{ActivityId:int}`, `/portfolio/progress`, `/`, `/activities/mine` |
 | See an EPA paused and restored in my progress and pickers | 6.15, 6.16, 6.19, 6.20, 6.24 | `/portfolio/progress`, `/portfolio/progress/{EpaId:int}`, `/activities/new`, `/activities/{ActivityId:int}`, `/activities/mine` |

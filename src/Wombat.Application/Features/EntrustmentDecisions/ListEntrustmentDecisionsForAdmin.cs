@@ -6,6 +6,8 @@ using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Common.Users;
+using Wombat.Application.Features.CommitteeDecisions;
+using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Identity;
 
@@ -108,11 +110,18 @@ public sealed class ListEntrustmentDecisionsForAdminQueryHandler
 
         // T142. The Trainee column by name, in one lookup for the rows listed, and only for them: the names follow
         // whatever this handler's scope (T183, above) lets through. The trainee filter matches those names, so it runs
-        // after the lookup and can only narrow what the scope has already let through.
+        // after the lookup and can only narrow what the scope has already let through. The same lookup names whoever
+        // revoked a STAR, for the row's line (T366).
         var names = await UserDisplayNames.ResolveAsync(
-            _users, decisions.Select(d => d.TraineeUserId), cancellationToken);
+            _users,
+            decisions.Select(d => d.TraineeUserId).Concat(decisions.Select(d => d.RevokedByUserId)),
+            cancellationToken);
 
-        var rows = decisions.Select(d => d.ToDto() with { TraineeName = names.NameOf(d.TraineeUserId) });
+        var rows = decisions.Select(d => d.ToDto() with
+        {
+            TraineeName = names.NameOf(d.TraineeUserId),
+            RevokedByName = d.RevokedByUserId is null ? null : names.NameOf(d.RevokedByUserId)
+        });
 
         var trainee = request.TraineeFilter?.Trim();
         if (!string.IsNullOrEmpty(trainee))
@@ -122,7 +131,75 @@ public sealed class ListEntrustmentDecisionsForAdminQueryHandler
                 string.Equals(row.TraineeUserId, trainee, StringComparison.Ordinal));
         }
 
-        return rows.ToArray();
+        var shown = rows.ToArray();
+        if (shown.Length == 0)
+        {
+            return shown;
+        }
+
+        var readable = await ReadableReviewIdsAsync(shown, request.Principal, cancellationToken);
+        var successors = await SuccessorIssueDaysAsync(shown, cancellationToken);
+
+        return shown
+            .Select(row => row with
+            {
+                IssuingReviewReadable = readable.Contains(row.IssuedByCommitteeReviewId),
+                SupersededByIssuedOn = row.Status == EntrustmentDecisionStatus.Superseded
+                                       && row.SupersededByDecisionId is { } successor
+                                       && successors.TryGetValue(successor, out var issuedOn)
+                    ? issuedOn
+                    : null
+            })
+            .ToArray();
+    }
+
+    /// <summary>
+    /// The issuing reviews among the rows shown that the caller may open, by the review page's own ladder (T366, S7), so
+    /// the register links a review exactly when it will open and never names one the caller may not read as a link.
+    /// </summary>
+    private async Task<HashSet<int>> ReadableReviewIdsAsync(
+        IReadOnlyCollection<EntrustmentDecisionDto> rows,
+        ClaimsPrincipal principal,
+        CancellationToken cancellationToken)
+    {
+        var reviewIds = rows.Select(row => row.IssuedByCommitteeReviewId).Distinct().ToArray();
+        var reviews = await _dbContext.Set<CommitteeReview>()
+            .AsNoTracking()
+            .Include(review => review.Panel)
+            .ThenInclude(panel => panel.Members)
+            .Where(review => reviewIds.Contains(review.Id))
+            .ToListAsync(cancellationToken);
+
+        if (reviews.Count == 0)
+        {
+            return [];
+        }
+
+        return (await CommitteeReviewReadAccess.ReadableAsync(_dbContext, _users, principal, reviews, cancellationToken))
+            .Select(review => review.Id)
+            .ToHashSet();
+    }
+
+    /// <summary>The day each superseded row's successor was issued, by the successor's id (T366, S4).</summary>
+    private async Task<Dictionary<int, DateOnly>> SuccessorIssueDaysAsync(
+        IReadOnlyCollection<EntrustmentDecisionDto> rows,
+        CancellationToken cancellationToken)
+    {
+        var successorIds = rows
+            .Where(row => row.Status == EntrustmentDecisionStatus.Superseded && row.SupersededByDecisionId.HasValue)
+            .Select(row => row.SupersededByDecisionId!.Value)
+            .Distinct()
+            .ToArray();
+
+        if (successorIds.Length == 0)
+        {
+            return [];
+        }
+
+        return await _dbContext.Set<EntrustmentDecision>()
+            .AsNoTracking()
+            .Where(d => successorIds.Contains(d.Id))
+            .ToDictionaryAsync(d => d.Id, d => d.IssuedOn, cancellationToken);
     }
 
     private static void DemandAdminAccess(ClaimsPrincipal principal)

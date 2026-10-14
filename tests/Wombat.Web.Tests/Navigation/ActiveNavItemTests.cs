@@ -194,6 +194,11 @@ public sealed class ActiveNavItemTests : TestContext
     public void ACommitteeReview_LightsCommitteeReviews(string role)
         => LitLabel(role, typeof(ReviewDetail)).Should().Be("Committee reviews");
 
+    // T366 (flow 09): her review's page, Home › My committee reviews › the review, for the Trainee only.
+    [Fact]
+    public void HerReview_LightsMyCommitteeReviews_ForTheTrainee()
+        => LitLabel(WombatRoles.Trainee, typeof(MyReview)).Should().Be("My committee reviews");
+
     [Fact]
     public void CurriculumProgress_LightsCurricula_ForTheAdministrator()
         => LitLabel(WombatRoles.Administrator, typeof(CurriculumProgressRebuild)).Should().Be("Curricula");
@@ -430,6 +435,8 @@ public sealed class ActiveNavItemTests : TestContext
         { typeof(ProgrammeTraineeDetail), "ProfileId", WombatRoles.CommitteeMember, "Programme trainees" },
         { typeof(ProgrammeTrainees), "", WombatRoles.Coordinator, "Programme trainees" },
         { typeof(EpaProgress), "EpaId", WombatRoles.Trainee, "My progress" },
+        // T366 (F8): a review that is not hers, or not yet ratified.
+        { typeof(MyReview), "ReviewId", WombatRoles.Trainee, "My committee reviews" },
     };
 
     [Theory]

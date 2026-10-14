@@ -184,7 +184,7 @@ public sealed class ReviewPageDecisionTests : ReviewPageTestBase
         dialog.QuerySelectorAll("p").Select(p => Text(p)).Should().Equal(
             "Fixes 1 staged decision: PAED-001 at 5.",
             "Records 2 EPAs as not decided: PAED-002 and PAED-008.",
-            "Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external).",
+            "Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)",
             "Afterwards only a decision that no longer fits the trainee's curriculum can be removed.");
         dialog.QuerySelectorAll("button").Select(button => Text(button)).Should().Equal("Not yet", "Record decision");
 

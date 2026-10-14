@@ -1328,6 +1328,9 @@ Expect: Home stacks Waiting for assessors, badged "3 waiting, 1 overdue", Regist
   by EPA, KGK-001 first among the EPAs neither registrar has met, by code (T358). Decision panels' list and Who
   decides each EPA stack, a block per panel and per row of EPAs (T364), and Decisions due reads as at Step A.7.5.
   Entrustment decisions is in the menu, lit on its page, with no trail: it is a list the menu offers (R2-Menus m5).
+  It is captioned "Issued STARs (entrustment decisions) · 18 shown" (M10), and its eighteen rows stack, each a block:
+  the trainee, then EPA, Level, Issued with its "review #n" link (44 px), Expires, Status and its actions (44 px). The
+  revoked and superseded rows' lines wrap under them, never cut (C22). Nothing scrolls sideways.
 Note: Until T358 no menu item led to Entrustment decisions for a speciality admin, and the page lit nothing, under the
   trail Home › Entrustment decisions.
 Actual (2026-10-13, T364 replay, wombat_scenario_t364): At 390 px. The bar reads "Acting as" over "Speciality admin".

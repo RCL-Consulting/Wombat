@@ -2,154 +2,89 @@
 @attribute [Authorize(Roles = "Trainee,Administrator")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<MyReviews> Logger
+@inject IJSRuntime JS
+@using Wombat.Web.Components.Pages.CommitteeDecisions.Review
+
+@*
+  My committee reviews (T366, flow 09; boards R3-1-*; round 3 F1, M1, S8; T329). The list only: each review opens on her
+  review's page (/committee/my-reviews/{id}), where the decisions, the appeal and the agenda are.
+
+  - Newest first: scheduled date, then review number, both descending (F1, ListReviewsForTraineeQuery).
+  - A hand-written table with both stack classes, stacking at 900px and below (S8), captioned, scope on its headers.
+  - State a badge (ReviewSitting.StateBadge: Ratified and Closed green, Under appeal amber); View a link to her review's
+    page, named by the review (ReviewRowNames, T239; the type added where two rows share a name, M1).
+  - Loading: the header at once, a status line and row skeletons; no View until the read is in. A failure is fixed words
+    with Try again, never the exception's text (T329), the failure to the log. None yet: today's words.
+*@
 
 <PageTitle>My committee reviews · Wombat</PageTitle>
 
-<PageHeader Title="My committee reviews" Subtitle="Ratified decisions, appeal status, and final outcomes." />
+<PageHeader Title="My committee reviews" Subtitle="@MyReviewWords.ListSubtitle" />
 
-@if (!string.IsNullOrWhiteSpace(_status))
-{
-  <Alert Kind="success">@_status</Alert>
-}
+@* Present from the first render, so its words are announced when they come. *@
+<p class="visually-hidden" role="status">@(_loading ? MyReviewWords.ListLoading : null)</p>
 
-@if (!string.IsNullOrWhiteSpace(_actionError))
-{
-  <Alert Kind="danger">@_actionError</Alert>
-}
-
-@{ var rowNames = ReviewRowNames.For(_reviews, withTrainee: false); }
-<StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="@(!_loading && _reviews.Count == 0)" EmptyTitle="No decisions yet" EmptyBody="Ratified committee outcomes will appear here.">
-  <DataTable Items="_reviews">
-    <HeaderRow>
-      <tr>
-        <th>Panel</th>
-        <th>Period</th>
-        <th>Type</th>
-        <th>State</th>
-        <th>Decision</th>
-        <th><span class="visually-hidden">Actions</span></th>
-      </tr>
-    </HeaderRow>
-    <Row Context="item">
-      <tr>
-        <td>@item.PanelName</td>
-        @* T212: the period the review sat for, then its evidence window, as the schedule prints them. The window alone
-           read the same for a year's two sittings, since a semester-2 sitting's window is the whole year. *@
-        <td>@item.PeriodLabel <span class="muted">@($"· {Window(item.ReviewPeriodFrom, item.ReviewPeriodTo)}")</span></td>
-        <td>@CommitteeDecisionWording.ReviewTypeShortLabel(item.ReviewType, item.IsFormative)</td>
-        <td>@item.StateLabel</td>
-        @* T131 slice 5: an entrustment-only review's decision has no category, and is not "Pending" for that. *@
-        <td>@CommitteeDecisionWording.OutcomeLabel(item)</td>
-        <td>
-          @* T239: named by the review it opens, "View the 2026 S2 review before General CCC"; every row's View read the same. *@
-          <div class="actions-cell">
-            <button type="button" class="btn btn-outline btn-sm" aria-label="@($"View {rowNames[item.Id]}")"
-                    @onclick="() => OpenReviewAsync(item.Id)">View</button>
-          </div>
-        </td>
-      </tr>
-    </Row>
-  </DataTable>
+<StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusHeadingAsync"
+            IsEmpty="@(!_loading && _reviews.Count == 0)" EmptyTitle="@MyReviewWords.EmptyTitle" EmptyBody="@MyReviewWords.EmptyBody">
+  <LoadingContent>
+    <div aria-hidden="true">
+      <Skeleton Count="3" Height="3rem" />
+    </div>
+  </LoadingContent>
+  <ChildContent>
+    @{ var rowNames = ReviewRowNames.For(_reviews, withTrainee: false); }
+    <div class="table-container shadow">
+      <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>@MyReviewWords.ListCaption</caption>
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">Panel</th>
+            <th scope="col" role="columnheader">Period</th>
+            <th scope="col" role="columnheader">Type</th>
+            <th scope="col" role="columnheader">State</th>
+            <th scope="col" role="columnheader">Decision</th>
+            <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          @foreach (var item in _reviews)
+          {
+            <tr role="row" @key="item.Id" id="@($"my-review-row-{item.Id}")">
+              <td role="cell" data-label="Panel">@item.PanelName</td>
+              @* T212: the period the review sat for, then its evidence window (flow 08's .period-window, C8); the row's
+                 header (T366, D11), as the trainee is the register's. *@
+              <th scope="row" role="rowheader">
+                @item.PeriodLabel
+                <span class="period-window">@PeriodWindow(item)</span>
+              </th>
+              <td role="cell" data-label="Type">@CommitteeDecisionWording.ReviewTypeShortLabel(item.ReviewType, item.IsFormative)</td>
+              <td role="cell" data-label="State"><span class="badge @ReviewSitting.StateBadge(item.State)">@item.StateLabel</span></td>
+              @* T131 slice 5: an entrustment-only review's decision has no category, and is not "Pending" for that. *@
+              <td role="cell" data-label="Decision">@CommitteeDecisionWording.OutcomeLabel(item)</td>
+              <td role="cell">
+                @* T239, M1: named by the review it opens; the visible word is inside the name. *@
+                <div class="actions-cell">
+                  <a class="btn btn-outline btn-sm" href="@ReviewLinks.MyReview(item.Id)"
+                     aria-label="@($"View {rowNames[item.Id]}")">View</a>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </ChildContent>
 </StatePanel>
-
-@if (_selectedReview is not null)
-{
-  <section class="detail-card">
-    <h3>Review detail</h3>
-    <p><strong>Panel:</strong> @_selectedReview.PanelName</p>
-    <p id="my-review-period"><strong>Sits for:</strong> @_selectedReview.PeriodLabel</p>
-    <p id="my-review-window"><strong>Evidence window:</strong> @Window(_selectedReview.ReviewPeriodFrom, _selectedReview.ReviewPeriodTo)</p>
-    <p id="my-review-type"><strong>Type:</strong> @_selectedReview.ReviewTypeLabel</p>
-    <p id="my-review-state"><strong>State:</strong> @_selectedReview.StateLabel</p>
-
-    @if (_selectedReview.Decisions.Count > 0)
-    {
-      var current = _selectedReview.Decisions[0];
-      <article class="detail-card detail-card--compact">
-        <h4 id="current-decision-outcome">@CommitteeDecisionWording.OutcomeLabel(current.Category)</h4>
-        @* T131 slice 5: an entrustment-only review's decision is its STARs; said, so no outcome reads as missing. *@
-        @if (!_selectedReview.DecidesProgression)
-        {
-          <p id="entrustment-only-note" class="muted">@EntrustmentOnlyNote(_selectedReview)</p>
-        }
-        <p>@current.Rationale</p>
-        @* T165: a committee's decision says who took it: this decision's own sitting, which for a decision an appeal
-           remitted is whoever sat for the appeal. *@
-        @if (current.Attendees.Count > 0)
-        {
-          <p id="current-decision-present">
-            <strong>Present when this decision was taken:</strong>
-            @string.Join(", ", current.Attendees.Select(attendee => attendee.Label))
-          </p>
-        }
-      </article>
-    }
-
-    @* The EPAs the review was there to decide, and what the committee did with each (T131 slice 4, O6): a line not decided
-       at this sitting reads so, with the decision's one sentence about such lines (T361, D53). Only once ratified: the
-       read ladder gives a trainee nothing sooner. *@
-    @if (IsRatified(_selectedReview.State) && _selectedReview.Agenda is { Lines.Count: > 0 } agenda)
-    {
-      <article class="detail-card detail-card--compact" aria-labelledby="my-review-agenda-heading">
-        <h4 id="my-review-agenda-heading">Agenda</h4>
-        <p class="muted">@CommitteeAgendaText.TraineeAgendaIntro(agenda)</p>
-        <div class="table-container">
-          <table class="clinic-table">
-            <thead>
-              <tr>
-                <th scope="col">EPA</th>
-                <th scope="col">Window</th>
-                <th scope="col">Outcome</th>
-              </tr>
-            </thead>
-            <tbody>
-              @foreach (var line in agenda.Lines)
-              {
-                var detail = CommitteeAgendaText.TraineeStatusDetail(line, _selectedReview.Decisions.FirstOrDefault()?.UndecidedNote);
-                <tr id="@($"my-agenda-line-{line.EpaId}")">
-                  <th scope="row">@line.EpaCode — @line.EpaTitle</th>
-                  <td>@line.WindowLabel</td>
-                  <td>
-                    <span class="badge @BadgeFor.AgendaLine(line.Status)">@CommitteeAgendaText.StatusLabel(line.Status)</span>
-                    @if (detail is not null)
-                    {
-                      <div class="muted">@detail</div>
-                    }
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </article>
-    }
-
-    @if (_selectedReview.State == CommitteeReviewState.Ratified)
-    {
-      <EditForm Model="_appeal" OnValidSubmit="LodgeAppealAsync" FormName="trainee-appeal">
-        <DataAnnotationsValidator />
-        <ValidationSummary class="validation-summary-errors" />
-        <FormField Label="Appeal reason" InputId="trainee-appeal-reason" Required="true">
-          <InputTextArea id="trainee-appeal-reason" class="form-control" @bind-Value="_appeal.Reason" />
-        </FormField>
-        <FormActions>
-          <button type="submit" class="btn btn-primary">Lodge appeal</button>
-        </FormActions>
-      </EditForm>
-    }
-  </section>
-}
 
 @code {
   private readonly List<CommitteeReviewListItemDto> _reviews = [];
-  private CommitteeReviewDetailDto? _selectedReview;
   private bool _loading = true;
-  private string? _status;
   private string? _loadError;
-  private string? _actionError;
-  private AppealFormModel _appeal = new();
 
-  protected override async Task OnInitializedAsync()
+  protected override Task OnInitializedAsync() => LoadAsync();
+
+  private async Task LoadAsync()
   {
     try
     {
@@ -157,11 +92,15 @@
       var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
         ?? throw new InvalidOperationException("The current user identifier is missing.");
 
+      _reviews.Clear();
       _reviews.AddRange(await Sender.Send(new ListReviewsForTraineeQuery(userId, authState.User)));
+      _loadError = null;
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _loadError = RefusalText.Of(exception);
+      // T329: fixed words, never the exception's text; the failure to the log.
+      Logger.LogError(exception, "The trainee's committee reviews could not be loaded.");
+      _loadError = MyReviewWords.ListFailed;
     }
     finally
     {
@@ -169,81 +108,21 @@
     }
   }
 
-  private async Task OpenReviewAsync(int reviewId)
+  private async Task RetryAsync()
   {
-    _actionError = null;
-    _status = null;
-
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _selectedReview = await Sender.Send(new GetCommitteeReviewByIdQuery(reviewId, authState.User));
-    }
-    catch (Exception exception)
-    {
-      _actionError = RefusalText.Of(exception);
-    }
+    _loading = true;
+    _loadError = null;
+    StateHasChanged();
+    await LoadAsync();
   }
 
-  private async Task LodgeAppealAsync()
+  private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  /// <summary>The evidence window, each date unbroken: "2026-01-01 to 2026-12-31".</summary>
+  private static RenderFragment PeriodWindow(CommitteeReviewListItemDto item) => __builder =>
   {
-    if (_selectedReview is null)
-    {
-      return;
-    }
-
-    _actionError = null;
-    _status = null;
-
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var agenda = _selectedReview.Agenda;
-      var updated = await Sender.Send(new LodgeAppealCommand(_selectedReview.Id, _appeal.Reason, authState.User));
-
-      // The command's answer is built by the lookup-free mapper, which names nobody and reads no agenda. Lodging an appeal
-      // changes neither the review's people nor its agenda lines, so the names and the agenda this page loaded with carry
-      // over (T142, T165, T131 slice 4).
-      _selectedReview = updated.WithNamesFrom(_selectedReview) with { Agenda = agenda };
-      _appeal = new();
-      _status = "Appeal lodged.";
-    }
-    catch (Exception exception)
-    {
-      _actionError = RefusalText.Of(exception);
-    }
-  }
-
-  /// <summary>A review's evidence window, in the words the committee's pages use: "2026-01-01 to 2026-12-31".</summary>
-  private static string Window(DateOnly from, DateOnly to)
-    => $"{from.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)} to " +
-       $"{to.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)}";
-
-  private static bool IsRatified(CommitteeReviewState state)
-    => state is CommitteeReviewState.Ratified or CommitteeReviewState.UnderAppeal or CommitteeReviewState.Final;
-
-  // The agenda is named only where the page shows it: once ratified, and only when it holds a line. A decision an appeal
-  // remitted replaced the committee's reasoning and changed no STAR, which is said too (T131 slice 5).
-  private static string EntrustmentOnlyNote(CommitteeReviewDetailDto review)
-  {
-    var sentences = new List<string> { CommitteeDecisionWording.EntrustmentOnlyForTheTrainee };
-
-    if (review.Decisions is [{ SupersedesDecisionId: not null }, ..])
-    {
-      sentences.Add(CommitteeDecisionWording.EntrustmentOnlyRemittedForTheTrainee);
-    }
-
-    if (IsRatified(review.State) && review.Agenda is { Lines.Count: > 0 })
-    {
-      sentences.Add(CommitteeDecisionWording.EntrustmentOnlySeeTheAgenda);
-    }
-
-    return string.Join(" ", sentences);
-  }
-
-  private sealed class AppealFormModel
-  {
-    [Required]
-    public string Reason { get; set; } = string.Empty;
-  }
+    <span>@item.ReviewPeriodFrom.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)</span>
+    @(" to ")
+    <span>@item.ReviewPeriodTo.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)</span>
+  };
 }

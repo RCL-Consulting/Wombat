@@ -22,6 +22,16 @@ public sealed class EntrustmentDecisionHandlersTests
     private const int EvidenceOnEpa8 = 502;
 
     [Fact]
+    public void ARevocationReasonOverTheLimit_IsRefusedInWombatsWords_NeverTheValidatorsDefault()
+    {
+        // T366, R3: the register says it under the box; the validator says the same, should the page be bypassed.
+        var result = new RevokeEntrustmentDecisionCommandValidator().Validate(new RevokeEntrustmentDecisionCommand(
+            4, new string('a', RevokeEntrustmentDecisionCommand.MaxReasonLength + 1), CreatePrincipal("admin", [WombatRoles.Administrator])));
+
+        result.Errors.Select(error => error.ErrorMessage).Should().Equal("Give the reason in 1,000 characters or fewer.");
+    }
+
+    [Fact]
     public async Task Ratify_OnlyByTheChair_IssuesTheStagedStar_AndSupersedesThePriorActiveOne()
     {
         await using var dbContext = CreateDbContext();
@@ -255,6 +265,106 @@ public sealed class EntrustmentDecisionHandlersTests
             .Should().Be(EntrustmentDecisionStatus.Revoked);
         notices.Logger.Entries.Should().ContainSingle(entry =>
             entry.Level == Microsoft.Extensions.Logging.LogLevel.Error && entry.Message.Contains("entrustment-revoked"));
+    }
+
+    /// <summary>
+    /// T366 (round 2's data rows; S4, C22): the register's row line says who revoked a STAR, by name, as My authorisations
+    /// does (T367), and a superseded STAR's line names its successor and the day it was issued, since no supersession date
+    /// is stored. One lookup for the trainees and the revisers together.
+    /// </summary>
+    [Fact]
+    public async Task TheRegister_NamesTheReviser_AndASupersededStarsSuccessor()
+    {
+        await using var dbContext = CreateDbContext();
+        var review = await SeedRatifiedReviewAsync(dbContext);
+        var revoked = await SeedStarAsync(dbContext, review.Id, 8, 3, new DateOnly(2026, 4, 1), null);
+        var replaced = await SeedStarAsync(dbContext, review.Id, 7, 3, new DateOnly(2026, 4, 1), null);
+        var current = await SeedStarAsync(dbContext, review.Id, 7, 4, new DateOnly(2026, 4, 3), null);
+        replaced.SupersedeBy(current);
+        await dbContext.SaveChangesAsync();
+
+        var users = new FakeUserDirectory(("admin-1", "Refilwe Mokoena"), ("trainee-1", "Anele Dlamini"));
+        var admin = CreatePrincipal("admin-1", [WombatRoles.InstitutionalAdmin], institutionId: 1);
+        await new RevokeEntrustmentDecisionCommandHandler(dbContext, users, TestNotices.None(users)).Handle(
+            new RevokeEntrustmentDecisionCommand(revoked.Id, "Staged on the wrong evidence.", admin), CancellationToken.None);
+        dbContext.ChangeTracker.Clear();
+        users.Lookups.Clear();
+
+        var rows = await new ListEntrustmentDecisionsForAdminQueryHandler(dbContext, users).Handle(
+            new ListEntrustmentDecisionsForAdminQuery(null, null, admin), CancellationToken.None);
+
+        rows.Single(row => row.Id == revoked.Id).RevokedByName.Should().Be("Refilwe Mokoena");
+        rows.Where(row => row.Id != revoked.Id).Should().AllSatisfy(row => row.RevokedByName.Should().BeNull());
+
+        var superseded = rows.Single(row => row.Id == replaced.Id);
+        superseded.SupersededByDecisionId.Should().Be(current.Id);
+        superseded.SupersededByIssuedOn.Should().Be(new DateOnly(2026, 4, 3));
+        rows.Where(row => row.Id != replaced.Id).Should().AllSatisfy(row => row.SupersededByIssuedOn.Should().BeNull());
+
+        users.Lookups.Should().ContainSingle().Which.Should().BeEquivalentTo(["trainee-1", "admin-1"]);
+    }
+
+    /// <summary>
+    /// T366 (S7): Issued links its review only where the viewer may open that review, by the review read ladder
+    /// (<see cref="CommitteeReviewReadAccess" />). An InstitutionalAdmin administers a trainee who trains at their
+    /// institution, so the register lists the STAR, but a review held by another institution's panel is not theirs to
+    /// read; an Administrator reads every review.
+    /// </summary>
+    [Fact]
+    public async Task TheRegister_SaysWhetherTheViewerMayOpenEachStarsIssuingReview()
+    {
+        await using var dbContext = CreateDbContext();
+        var review = await SeedRatifiedReviewAsync(dbContext);
+        await SeedStarAsync(dbContext, review.Id, 7, 3, new DateOnly(2026, 4, 1), null);
+        var handler = new ListEntrustmentDecisionsForAdminQueryHandler(dbContext, FakeUserDirectory.Empty);
+        var institutionalAdmin = CreatePrincipal("admin-1", [WombatRoles.InstitutionalAdmin], institutionId: 1);
+
+        (await handler.Handle(new ListEntrustmentDecisionsForAdminQuery(null, null, institutionalAdmin), CancellationToken.None))
+            .Should().ContainSingle().Which.IssuingReviewReadable.Should().BeTrue("the panel is at the admin's institution");
+
+        // The panel is another institution's now: the trainee is still the admin's, the review no longer is.
+        dbContext.Institutions.Add(new Institution { Id = 2, Name = "Other Hospital", IsActive = true, CreatedOn = DateTime.UtcNow });
+        (await dbContext.DecisionPanels.SingleAsync()).InstitutionId = 2;
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        (await handler.Handle(new ListEntrustmentDecisionsForAdminQuery(null, null, institutionalAdmin), CancellationToken.None))
+            .Should().ContainSingle().Which.IssuingReviewReadable.Should().BeFalse();
+        (await handler.Handle(new ListEntrustmentDecisionsForAdminQuery(null, null, CreatePrincipal("root", [WombatRoles.Administrator])), CancellationToken.None))
+            .Should().ContainSingle().Which.IssuingReviewReadable.Should().BeTrue("an Administrator reads every review");
+    }
+
+    /// <summary>
+    /// T366 (M4): which of a revoke's failures are its own refusals, shown in their words in the dialog, and which are
+    /// unexpected (a fixed sentence, logged). A second tab's revoke is refused by the decision itself.
+    /// </summary>
+    [Fact]
+    public async Task ARevokesOwnRefusals_AreKnown_AndNothingElseIs()
+    {
+        await using var dbContext = CreateDbContext();
+        var review = await SeedRatifiedReviewAsync(dbContext);
+        var issued = await SeedStarAsync(dbContext, review.Id, 7, 3, new DateOnly(2026, 4, 1), null);
+        var users = RevocationDirectory();
+        var handler = new RevokeEntrustmentDecisionCommandHandler(dbContext, users, TestNotices.None(users));
+        var admin = CreatePrincipal("admin-1", [WombatRoles.InstitutionalAdmin], institutionId: 1);
+        await handler.Handle(new RevokeEntrustmentDecisionCommand(issued.Id, "First.", admin), CancellationToken.None);
+
+        var second = await Assert.ThrowsAsync<InvalidOperationException>(() => handler.Handle(
+            new RevokeEntrustmentDecisionCommand(issued.Id, "Second.", admin), CancellationToken.None));
+        var unknown = await Assert.ThrowsAsync<InvalidOperationException>(() => handler.Handle(
+            new RevokeEntrustmentDecisionCommand(9999, "Nothing.", CreatePrincipal("root", [WombatRoles.Administrator])), CancellationToken.None));
+        var outOfReach = await Assert.ThrowsAsync<UnauthorizedAccessException>(() => handler.Handle(
+            new RevokeEntrustmentDecisionCommand(9999, "Nothing.", admin), CancellationToken.None));
+
+        second.Message.Should().Be(EntrustmentRevocationRefusals.NotActive);
+        unknown.Message.Should().Be(EntrustmentRevocationRefusals.NotFound);
+        EntrustmentRevocationRefusals.IsRefusal(second).Should().BeTrue();
+        EntrustmentRevocationRefusals.IsRefusal(unknown).Should().BeTrue();
+        EntrustmentRevocationRefusals.IsRefusal(outOfReach).Should().BeTrue();
+        EntrustmentRevocationRefusals.IsRefusal(new FluentValidation.ValidationException("Reason is required.")).Should().BeTrue();
+        EntrustmentRevocationRefusals.IsRefusal(new InvalidOperationException("A second operation was started on this context instance."))
+            .Should().BeFalse("the framework's own failure is never shown on the page (T338)");
+        EntrustmentRevocationRefusals.IsRefusal(new TimeoutException()).Should().BeFalse();
     }
 
     private static FakeUserDirectory RevocationDirectory(bool traineeDeactivated = false)

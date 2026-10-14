@@ -1,57 +1,163 @@
 @page "/portfolio/authorisations"
 @attribute [Authorize(Roles = "Trainee")]
 @rendermode InteractiveServer
+@using Wombat.Application.Features.Curricula.Quota
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JS
+@inject IServiceProvider ServiceProvider
+@inject ILogger<MyAuthorisations> Logger
 
 <PageTitle>My authorisations · Wombat</PageTitle>
 
-<PageHeader Title="My authorisations" Subtitle="Your Statements of Awarded Responsibility (STAR)." />
+@*
+  My authorisations (T366, flow 09, boards R3-5; F2, F4, M7, S1, S2, S3, S9, S13; T367): the trainee's STARs.
 
-@if (!string.IsNullOrWhiteSpace(_downloadError))
-{
-  <Alert Kind="danger">@_downloadError</Alert>
-}
+  - "In force": one card a STAR, by EPA code, in an equal-column grid (.star-grid: one column at 390, as many as fit at
+    768 and 1280), each with its level, Issued, Expires ("No expiry"; "Expires in 20 days" on the South African calendar,
+    S3), its rationale and "Download certificate", named for its EPA (F4). None in force keeps the heading and says so (S2).
+  - "No longer in force": a captioned table that stacks at 900px (S8), Revoked and Expired, each with Since and Why in
+    the reviser's name and words (T367, Q8), and "Download" named "Download certificate for PAED-002 (revoked)" (F4).
+    Hidden when empty (C18). No STAR at all is the empty card.
+  - A download runs on its button ("Generating…", aria-disabled; the others disabled); refused or failed, its result is
+    under its button with the focus, in fixed words (C19, T272), never an exception's text. Done, the browser's download
+    says what it did, and the focus stays on the button.
+*@
+<div class="my-authorisations">
+  <PageHeader Title="My authorisations" Subtitle="The Statements of Awarded Responsibility (STAR) the committee has issued you, and their certificates." />
 
-<StatePanel IsLoading="@(_decisions is null && _loadError is null)"
-            LoadError="@_loadError"
-            IsEmpty="@(_decisions is { Count: 0 })"
-            EmptyTitle="No active authorisations yet"
-            EmptyBody="When a committee review ratifies a decision authorising you to perform an EPA, it will appear here. You can then download a STAR certificate for your records.">
-  @* T367: the STARs in force as cards; the revoked and expired ones under "No longer in force", each with what ended it,
-     so the page the revocation mail links to says what happened. An interim section: flow 09 (T366) designs the page. *@
-  @if (InForce.Count == 0)
-  {
-    <p class="muted">None of your STARs is in force.</p>
-  }
-  else
-  {
-    <div class="details-grid">
-      @foreach (var decision in InForce)
+  @* Present from the first render, so its words are announced when they come (flow 04's C11). *@
+  <p class="visually-hidden" role="status">@(_loading ? LoadingWords : null)</p>
+
+  <StatePanel IsLoading="@_loading"
+              LoadError="@_loadError"
+              OnRetry="LoadAsync"
+              IsEmpty="@(_decisions is { Count: 0 })"
+              EmptyTitle="No active authorisations yet"
+              EmptyBody="When a committee review ratifies a decision authorising you to perform an EPA, it will appear here. You can then download a STAR certificate for your records.">
+    <LoadingContent>
+      @* No Download until the read is in (C25). *@
+      <div aria-hidden="true">
+        <Skeleton Count="2" Height="14rem" />
+      </div>
+    </LoadingContent>
+    <ChildContent>
+      <section class="stars-section" aria-labelledby="stars-in-force">
+        <h2 class="list-section-title" id="stars-in-force">In force</h2>
+        @if (InForce.Count == 0)
+        {
+          <p class="muted">@NoneInForce</p>
+        }
+        else
+        {
+          <div class="star-grid">
+            @foreach (var decision in InForce)
+            {
+              <article class="detail-card star-card" @key="decision.Id">
+                @* Deactivating an EPA leaves its STARs standing; the heading says the EPA is no longer in use (T255). *@
+                <h3><EpaLabel Code="@decision.EpaCode" Title="@decision.EpaTitle" InForce="@decision.EpaInForce" /></h3>
+                <dl class="detail-list">
+                  <dt>Authorised level</dt>
+                  <dd>@decision.AuthorisedLevelLabel</dd>
+                  <dt>Issued</dt>
+                  <dd>@StarWords.Iso(decision.IssuedOn)</dd>
+                  <dt>Expires</dt>
+                  <dd>
+                    @if (decision.ExpiresOn is { } expiresOn)
+                    {
+                      @StarWords.Iso(expiresOn)
+                      @if (StarWords.ExpiresIn(expiresOn, Today) is { } expiring)
+                      {
+                        @(" ")<span class="badge @BadgeFor.State(BadgeState.Accepted)">@expiring</span>
+                      }
+                    }
+                    else
+                    {
+                      @StarWords.NoExpiry
+                    }
+                  </dd>
+                </dl>
+                <p class="star-rationale">@decision.Rationale</p>
+                <div class="form-actions">
+                  @DownloadButton(decision, StarWords.DownloadCard(decision.EpaCode), "Download certificate", "btn btn-primary")
+                  @DownloadResult(decision)
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </section>
+
+      @if (NoLongerInForce.Count > 0)
       {
-        @Card(decision)
+        <section class="stars-section" aria-labelledby="stars-ended">
+          <h2 class="list-section-title" id="stars-ended">No longer in force</h2>
+          <div class="table-container shadow">
+            <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+              <caption>STARs that are no longer in force: revoked, or past their expiry</caption>
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th scope="col" role="columnheader">EPA</th>
+                  <th scope="col" role="columnheader">Level</th>
+                  <th scope="col" role="columnheader">Status</th>
+                  <th scope="col" role="columnheader" class="col-fit">Since</th>
+                  <th scope="col" role="columnheader">Why</th>
+                  <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody role="rowgroup">
+                @foreach (var decision in NoLongerInForce)
+                {
+                  <tr role="row" @key="decision.Id">
+                    <th scope="row" role="rowheader">@EpaOf(decision)</th>
+                    <td role="cell" data-label="Level">@decision.AuthorisedLevelLabel</td>
+                    <td role="cell" data-label="Status"><span class="badge @BadgeFor.EntrustmentDecision(decision.Status)">@decision.Status</span></td>
+                    <td role="cell" class="col-fit" data-label="Since">@(StarWords.Since(decision) is { } since ? StarWords.Iso(since) : "—")</td>
+                    <td role="cell" data-label="Why">@StarWords.Why(decision)</td>
+                    <td role="cell">
+                      <div class="actions-cell">
+                        @DownloadButton(decision, StarWords.DownloadEnded(decision), "Download", "btn btn-outline btn-sm")
+                      </div>
+                      @DownloadResult(decision)
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
       }
-    </div>
-  }
-  @if (NoLongerInForce.Count > 0)
-  {
-    <h2>No longer in force</h2>
-    <div class="details-grid">
-      @foreach (var decision in NoLongerInForce)
-      {
-        @Card(decision)
-      }
-    </div>
-  }
-</StatePanel>
+    </ChildContent>
+  </StatePanel>
+</div>
 
 @code {
+  /// <summary>The status line while the page is read (C25).</summary>
+  public const string LoadingWords = "Loading your authorisations.";
+
+  /// <summary>A failed read (T329): fixed words, the failure logged.</summary>
+  public const string LoadFailed = "Could not load your authorisations. Nothing has changed. Try again, or come back in a few minutes.";
+
+  /// <summary>"In force" with nothing in it, when some STAR is no longer in force (S2).</summary>
+  public const string NoneInForce =
+    "No STAR is in force now. When a committee review ratifies a decision authorising you to perform an EPA, it will appear here.";
+
   private IReadOnlyList<EntrustmentDecisionDto>? _decisions;
+  private bool _loading = true;
   private string? _loadError;
-  private string? _downloadError;
-  private bool _downloading;
+
+  // The certificate being generated: its button says so and the others wait (T234).
   private int? _downloadingId;
+
+  // The last download's refusal or failure, under its own button (C19).
+  private int? _resultId;
+  private bool _resultFailed;
+  private ActionResult? _result;
+
+  private TimeProvider Clock => ServiceProvider.GetService<TimeProvider>() ?? TimeProvider.System;
+
+  // "Expires in N days" counts on the South African calendar (S3, T325).
+  private DateOnly Today => QuotaCalendar.Today(Clock);
 
   private IReadOnlyList<EntrustmentDecisionDto> InForce
     => _decisions?.Where(decision => decision.Status == EntrustmentDecisionStatus.Active).ToArray() ?? [];
@@ -59,72 +165,66 @@
   private IReadOnlyList<EntrustmentDecisionDto> NoLongerInForce
     => _decisions?.Where(decision => decision.Status != EntrustmentDecisionStatus.Active).ToArray() ?? [];
 
-  private RenderFragment Card(EntrustmentDecisionDto decision) =>
-    @<section class="detail-card">
-      @* Deactivating an EPA leaves its STARs standing; the heading says the EPA is no longer in use (T255). *@
-      <h3><EpaLabel Code="@decision.EpaCode" Title="@decision.EpaTitle" InForce="@decision.EpaInForce" /></h3>
-      <dl class="details-list">
-        <div><dt>Authorised level</dt><dd>@decision.AuthorisedLevelLabel</dd></div>
-        <div><dt>Issued</dt><dd>@decision.IssuedOn.ToString("d MMMM yyyy")</dd></div>
-        @if (decision.Status == EntrustmentDecisionStatus.Revoked)
-        {
-          <div><dt>Status</dt><dd>Revoked</dd></div>
-          <div>
-            <dt>Revoked</dt>
-            <dd>@RevokedLine(decision)</dd>
-          </div>
-          <div><dt>Reason</dt><dd>@decision.RevocationReason</dd></div>
-        }
-        else if (decision.Status == EntrustmentDecisionStatus.Expired)
-        {
-          <div><dt>Status</dt><dd>Expired</dd></div>
-          <div><dt>Expired</dt><dd>@decision.ExpiresOn?.ToString("d MMMM yyyy")</dd></div>
-        }
-        else
-        {
-          <div>
-            <dt>Expires</dt>
-            <dd>
-              @if (decision.ExpiresOn.HasValue)
-              {
-                <span>@decision.ExpiresOn.Value.ToString("d MMMM yyyy")</span>
-                @if (IsExpiringSoon(decision.ExpiresOn.Value))
-                {
-                  <span class="badge @BadgeFor.State(BadgeState.Accepted)">Expires in @((decision.ExpiresOn.Value.DayNumber - DateOnly.FromDateTime(DateTime.UtcNow).DayNumber)) days</span>
-                }
-              }
-              else
-              {
-                <span>No expiry</span>
-              }
-            </dd>
-          </div>
-        }
-      </dl>
-      <p class="muted">@decision.Rationale</p>
-      <FormActions>
-        @* While a certificate is generated the other Download buttons are disabled, and the one pressed is not (T234): it
-           has the focus, and a browser drops the focus of a button it disables, to the page. The download says what it
-           did; a refusal is an alert, read at once. A second press sends nothing. *@
-        @* T239: named by its EPA at rest, since every card's button read "Download certificate"; while it runs, its own
-           "Generating…" is its name. *@
-        <button type="button" class="btn btn-primary" @onclick="() => DownloadAsync(decision.Id, decision.EpaCode)" disabled="@(_downloading && _downloadingId != decision.Id)"
-                aria-disabled="@InFlight.AriaDisabled(_downloading && _downloadingId == decision.Id)"
-                aria-label="@(_downloading && _downloadingId == decision.Id ? null : $"Download certificate for {decision.EpaCode}")">
-          @if (_downloading && _downloadingId == decision.Id)
-          {
-            <span>Generating…</span>
-          }
-          else
-          {
-            <span>Download certificate</span>
-          }
-        </button>
-      </FormActions>
-    </section>;
-
-  protected override async Task OnInitializedAsync()
+  /// <summary>
+  /// A certificate's download. While it runs, the button pressed keeps the focus and says "Generating…", aria-disabled,
+  /// and every other is disabled (T234); its name keeps its EPA (C19). At rest its visible words are inside its name (F4).
+  /// </summary>
+  private RenderFragment DownloadButton(EntrustmentDecisionDto decision, string name, string label, string classes)
   {
+    var running = _downloadingId == decision.Id;
+    return @<button type="button" id="@DownloadId(decision.Id)" class="@classes" @onclick="() => DownloadAsync(decision.Id)"
+                    disabled="@(_downloadingId is not null && !running)"
+                    aria-disabled="@InFlight.AriaDisabled(running)"
+                    aria-label="@(running ? $"{name}, generating" : name)">
+      @if (running)
+      {
+        @StarWords.Generating
+      }
+      else
+      {
+        <Icon Name="download" />@label
+      }
+    </button>;
+  }
+
+  /// <summary>The STAR's EPA, marked when it is no longer in use (T255): the row's header in No longer in force.</summary>
+  private static RenderFragment EpaOf(EntrustmentDecisionDto decision)
+    => @<EpaLabel Code="@decision.EpaCode" Title="@decision.EpaTitle" InForce="@decision.EpaInForce" />;
+
+  /// <summary>The download's refusal or failure, under its button, which takes the focus (C19, T272).</summary>
+  private RenderFragment DownloadResult(EntrustmentDecisionDto decision)
+    => @<text>
+      @if (_resultId == decision.Id)
+      {
+        <div class="download-result">
+          <ActionResult @ref="_result">
+            @if (_resultFailed)
+            {
+              <Alert Kind="danger">
+                <div class="alert-row">
+                  <span class="alert-row-text">@StarWords.CertificateFailed</span>
+                  <button type="button" class="btn btn-outline btn-sm" @onclick="() => DownloadAsync(decision.Id, retry: true)">
+                    <Icon Name="refresh-cw" />
+                    Try again
+                  </button>
+                </div>
+              </Alert>
+            }
+            else
+            {
+              <Alert Kind="danger">@StarWords.CertificateNotFound</Alert>
+            }
+          </ActionResult>
+        </div>
+      }
+    </text>;
+
+  protected override Task OnInitializedAsync() => LoadAsync();
+
+  private async Task LoadAsync()
+  {
+    _loading = true;
+    _loadError = null;
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -132,59 +232,83 @@
         ?? throw new InvalidOperationException("Current user identifier missing.");
       _decisions = await Sender.Send(new GetDecisionsForTraineeQuery(userId, authState.User));
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _loadError = exception.Message;
+      Logger.LogError(exception, "My authorisations could not be read.");
+      _loadError = LoadFailed;
+    }
+    finally
+    {
+      _loading = false;
     }
   }
 
-  private async Task DownloadAsync(int decisionId, string epaCode)
+  /// <summary>A download button's id: Try again, which goes with its alert, hands the focus to it (T366, D1).</summary>
+  private static string DownloadId(int decisionId) => $"download-{decisionId}";
+
+  private async Task DownloadAsync(int decisionId, bool retry = false)
   {
-    if (_downloading)
+    if (_downloadingId is not null)
     {
       return;
     }
 
-    _downloadError = null;
-    _downloading = true;
-    _downloadingId = decisionId;
+    if (retry)
+    {
+      // Try again is removed with its alert by this press; the focus moves to the STAR's Download, never to the page.
+      _focusDownloadId = decisionId;
+    }
 
+    _resultId = null;
+    _downloadingId = decisionId;
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var result = await Sender.Send(new DownloadEntrustmentCertificateCommand(decisionId, authState.User));
-      if (result is null)
+      var certificate = await Sender.Send(new DownloadEntrustmentCertificateCommand(decisionId, authState.User));
+      if (certificate is null)
       {
-        _downloadError = "The certificate could not be found.";
+        ShowResult(decisionId, failed: false);
         return;
       }
 
-      await JS.InvokeVoidAsync("wombatFileDownload", result.FileName, result.PdfBytes);
+      await JS.InvokeVoidAsync("wombatFileDownload", certificate.FileName, certificate.PdfBytes);
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _downloadError = exception.Message;
+      Logger.LogError(exception, "The certificate of entrustment decision {DecisionId} could not be made.", decisionId);
+      ShowResult(decisionId, failed: true);
     }
     finally
     {
-      _downloading = false;
       _downloadingId = null;
     }
   }
 
-  /// <summary>"13 October 2026 by Refilwe Mokoena": the day on the South African calendar, and the reviser by name.</summary>
-  private static string RevokedLine(EntrustmentDecisionDto decision)
+  private void ShowResult(int decisionId, bool failed)
   {
-    var day = decision.RevokedOn is { } revokedOn
-      ? Wombat.Domain.Curricula.ProgrammeCalendar.DateOf(revokedOn).ToString("d MMMM yyyy")
-      : string.Empty;
-    return decision.RevokedByName is { } by ? $"{day} by {by}" : day;
+    _resultId = decisionId;
+    _resultFailed = failed;
+    _focusResult = true;
   }
 
-  private static bool IsExpiringSoon(DateOnly expiresOn)
+  // The result region is drawn by the render that shows it, so it is asked to take the focus once it exists.
+  private bool _focusResult;
+
+  // Try again's STAR, whose Download takes the focus once the alert has gone (T366, D1).
+  private int? _focusDownloadId;
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
   {
-    var today = DateOnly.FromDateTime(DateTime.UtcNow);
-    var daysRemaining = expiresOn.DayNumber - today.DayNumber;
-    return daysRemaining is >= 0 and <= 30;
+    if (_focusDownloadId is { } downloadId)
+    {
+      _focusDownloadId = null;
+      await PageFocus.FocusByIdAsync(JS, DownloadId(downloadId));
+    }
+
+    if (_focusResult && _result is not null)
+    {
+      _focusResult = false;
+      await _result.Element.FocusAsync();
+    }
   }
 }

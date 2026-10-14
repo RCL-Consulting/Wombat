@@ -563,17 +563,26 @@ Expect:
 Step 4.36 — Dr Mokoena revokes one of Dr Dlamini's STARs
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /admin/entrustment-decisions
-Do: Open Entrustment decisions from the menu. Choose Revoke on Dr Dlamini's PAED-002 decision. Give the reason "Staged
-  on evidence about PAED-001, not PAED-002; to be decided again." and confirm the revocation.
+Do: Open Entrustment decisions from the menu. Choose Revoke on Dr Dlamini's PAED-002 decision. Press Revoke the STAR
+  once with the reason blank. Then give the reason "Staged on evidence about PAED-001, not PAED-002; to be decided
+  again." and press Revoke the STAR.
 Expect:
   - **The menu:** Entrustment decisions is lit on its page, with no trail: a list her menu offers (T358, R2-Menus m5;
     as Step A.7.7).
   - **The list:** the same five rows as Step 4.35, since all five registrars are in her speciality.
-  - **The dialog** names PAED-002 and Anele Dlamini, and says "Revocation is immediate and irreversible. The trainee is
-    notified." Confirm revocation is enabled once a reason is typed.
-  - **After confirming:** "Entrustment decision for PAED-002 revoked." The row reads Revoked, with no Revoke button.
-  - **The trainee is notified,** as the dialog promises: the application log holds a mail to Dr Dlamini about the
-    revocation.
+  - **The dialog** is titled "Revoke Anele Dlamini's PAED-002 STAR?". It names the EPA, level `3b` and issued `D`, and
+    says "Revocation is immediate and cannot be undone." It says Anele Dlamini is sent an email saying the STAR was
+    revoked and by whom, "unless Anele Dlamini's account is deactivated", and that the reason is not in the email
+    (T367; nothing claims delivery, S6). The focus is in Revocation reason, and Revoke the STAR, beside Cancel, is
+    enabled from the start (T260).
+  - **Pressed blank:** "Give a reason for the revocation." under the box; the dialog stays open, with the focus in the
+    box, and nothing is sent (F3).
+  - **After revoking:** "Anele Dlamini's PAED-002 STAR is revoked." above the table, with the focus. The row reads
+    Revoked, offers Download only, and carries the line "Revoked `D` at hh:mm SAST by Refilwe Mokoena: Staged on
+    evidence about PAED-001, not PAED-002; to be decided again.", hh:mm the stored RevokedOn on the South African clock
+    (S4, C22).
+  - **Dr Dlamini is emailed:** the application log holds a mail to her, "Entrustment decision revoked: PAED-002", naming
+    Refilwe Mokoena and linking My authorisations, without the reason (T367).
 
 Step 5.17 — Prof Mbatha marks Dr Molefe's programme complete on `D`
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha

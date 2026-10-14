@@ -19,6 +19,15 @@ public static class ReviewLinks
     private const string ReviewPrefix = "review-";
     private const string SnapshotPrefix = "snap-";
 
+    /// <summary>The trainee's list of her reviews: <c>/committee/my-reviews</c> (T366, flow 09).</summary>
+    public const string MyReviews = "/committee/my-reviews";
+
+    /// <summary>
+    /// The trainee's page for one review of hers: <c>/committee/my-reviews/30</c> (T366, F8). Only the review's own trainee
+    /// opens it, and only once it is ratified or later; an Administrator reads a review at <see cref="Review" />.
+    /// </summary>
+    public static string MyReview(int reviewId) => Invariant($"{MyReviews}/{reviewId}");
+
     /// <summary>The review's page: <c>/committee/reviews/30</c>.</summary>
     public static string Review(int reviewId) => Invariant($"/committee/reviews/{reviewId}");
 

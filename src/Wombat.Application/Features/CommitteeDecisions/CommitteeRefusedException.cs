@@ -26,3 +26,18 @@ public class CommitteeRefusedException : InvalidOperationException
     {
     }
 }
+
+/// <summary>Which exceptions from a committee command are its refusals, whose words a page shows (T366, R1).</summary>
+public static class CommitteeRefusals
+{
+    /// <summary>
+    /// The validator's (<see cref="FluentValidation.ValidationException" />), a scope refusal
+    /// (<see cref="UnauthorizedAccessException" />, in the handler's words), or the committee's own
+    /// (<see cref="CommitteeRefusedException" />). Anything else is an unexpected failure: a fixed sentence, logged.
+    /// </summary>
+    public static bool IsRefusal(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        return exception is FluentValidation.ValidationException or UnauthorizedAccessException or CommitteeRefusedException;
+    }
+}

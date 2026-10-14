@@ -59,8 +59,11 @@ public sealed class EntrustmentDecisionAdminScopePostgresTests : IAsyncLifetime
             listing.Should().ContainSingle("the decisions are read in one query, not one per trainee");
             listing[0].Should().Contain("\"TraineeProfiles\"", "the institution narrowing runs in SQL");
             listing[0].Should().Contain("NOT EXISTS", "the preferred-profile predicate runs in SQL");
-            commands.Texts.Should().ContainSingle(
+            // T366 (S7): one more read follows, the issuing reviews with their panels, for the review read ladder that
+            // decides IssuingReviewReadable; it judges no trainee's scope for an InstitutionalAdmin.
+            commands.Texts.Where(text => !text.Contains("\"CommitteeReviews\"", StringComparison.Ordinal)).Should().ContainSingle(
                 "T185: the scope is judged in the one query, not by reading every trainee's scope after it");
+            commands.Texts.Should().HaveCount(2, "the listing, then the issuing reviews in one read (T366)");
 
             // A SpecialityAdmin's narrowing to their speciality runs in the same query, through the curriculum and its
             // sub-speciality: until T185 every decision at the institution was read and then judged in memory.
@@ -71,7 +74,11 @@ public sealed class EntrustmentDecisionAdminScopePostgresTests : IAsyncLifetime
                     .Should().BeEquivalentTo([world.HostDecision]);
             }
 
-            var specialityListing = specialityCommands.Texts.Should().ContainSingle().Subject;
+            // T366 (S7): after the listing, the issuing reviews and the review ladder's own reads (where the trainees
+            // train, for a speciality administrator's rung): a fixed number, whatever the rows.
+            var specialityListing = specialityCommands.Texts
+                .Where(text => text.Contains("\"EntrustmentDecisions\"", StringComparison.Ordinal)).Should().ContainSingle().Subject;
+            specialityCommands.Texts.Should().HaveCountLessThanOrEqualTo(5, "the review ladder reads in one resolve, three queries at most");
             specialityListing.Should().Contain("\"Curricula\"", "the speciality narrowing runs in SQL");
             specialityListing.Should().Contain("\"SubSpecialities\"", "the speciality is read from the curriculum's sub-speciality");
 

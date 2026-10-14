@@ -393,30 +393,39 @@ Step 4.35 — Prof Mbatha reads the issued STARs
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/entrustment-decisions
 Do: Open Entrustment decisions from her dashboard's quick links. Download Dr Molefe's PAED-010 certificate. Filter by
-  trainee "Molefe" and apply.
+  trainee "Molefe" and press Show.
 Expect:
-  - **The list:** five rows, all Active, issued `D`.
-    - Molefe: PAED-001 `5`, PAED-010 `4` expiring `D+20`, PAED-012 `5`.
-    - Dlamini: PAED-001 `4`, PAED-002 `3b`.
+  - **The page:** under the trail Home › Entrustment decisions, since no menu item of hers leads to it (T358). Its
+    subtitle reads "Issued Statements of Awarded Responsibility across the programme."
+  - **The list:** captioned "Issued STARs (entrustment decisions) · 5 shown"; five rows, all Active, issued `D`, newest
+    issued first and then by STAR number, descending (one day's ties; T366, F1):
+    - Dlamini: PAED-002 `3b`, PAED-001 `4`.
+    - Molefe: PAED-012 `5`, PAED-010 `4` expiring `D+20`, PAED-001 `5`.
+    - Each row is headed by its trainee (the row's header), its EPA in the next column. Every date is ISO.
     - Expires reads "—" where none was set.
+    - Each Issued carries "review #n" under its date, a link to the review named "Open review #n" (T366, S7, M9).
+    - Each row offers Download and Revoke, named by the decision: "Download the certificate of Lerato Molefe's PAED-010
+      decision, issued `D`" (T239).
   - **The certificate PDF** names:
     - Kgosi Kgari Teaching Hospital, "Statement of Awarded Responsibility", Lerato Molefe, PAED-010 and level `4`;
     - Issued on `D` and Expires on `D+20`, Status Active;
     - the rationale, and the evidence summary of the two snapshot lines;
     - Panel Paed Annual Review Panel, the review number, and Chair Thandi Zulu.
-  - **The filter** leaves Molefe's three rows.
+  - **The filter** applies on Show (T366, F9) and leaves Molefe's three rows: the caption "… · 3 shown", a status line
+    "3 shown" for a screen reader (S11), and Clear filters beside Show.
 
 Step 4.37 — Dr Sithole reads the list and what must be decided again
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /admin/entrustment-decisions → /committee/decisions-due
-Do: Open Entrustment decisions from the menu. Filter Status to Revoked and apply, then to Active and apply. Download
-  the revoked certificate. Then open Decisions due, read the count, set Status to "Every status", press Show, and open
-  By EPA.
+Do: Open Entrustment decisions from the menu. Set Status to Revoked and press Show, then to Active and press Show.
+  Download the revoked certificate. Then open Decisions due, read the count, set Status to "Every status", press Show,
+  and open By EPA.
 Expect:
   - **The menu:** Entrustment decisions is lit on its page, with no trail (T358, R2-Menus m5).
-  - **Filtered:** Revoked leaves Dlamini's PAED-002, and Active leaves four rows.
-  - **The revoked certificate** reads Status Revoked, with "REVOKED", the date, who revoked it (Dr Mokoena, by name,
-    T142) and the reason.
+  - **Filtered:** Revoked leaves Dlamini's PAED-002, with its line "Revoked `D` at hh:mm SAST by Refilwe Mokoena: …";
+    Active leaves four rows.
+  - **The revoked certificate** reads Status Revoked, with "REVOKED", "Revoked on `D` by Refilwe Mokoena" (the
+    South African day, ISO, T366 G6; who revoked it by name, T142, T324) and the reason.
   - **Decisions due:** Dlamini's PAED-002 reads "Revoked: re-decide". Its detail reads "STAR #n, issued for `<P>`, was
     revoked. Schedule a review to decide it again." Its one action is Schedule (C3).
   - **By EPA:** PAED-002 reads Decided 0, Not decided 4 and To schedule 1.
@@ -428,26 +437,31 @@ Route: / → /portfolio/authorisations
 Do: From her Home's My authorisations card, Open My authorisations. Download the PAED-001 certificate.
 Expect: Home's My authorisations card reads "2 at or above · 1 below · 12 with no decision, of 15 EPAs" and lists one
   STAR, "PAED-010 — Leading and operating within a clinical team", a link to its EPA's page, with "4, below training
-  year 4's level of 5 · expires `D+20`" under it; its footer is Open My authorisations (T355). My authorisations holds
-  three cards, each issued on `D` with the committee's rationale: PAED-001 and PAED-012 at Authorised level `5`, and
-  PAED-010 at `4`.
+  year 4's level of 5 · expires `D+20`" under it; its footer is Open My authorisations (T355). My authorisations, under
+  the trail Home › My progress › My authorisations, is subtitled "The Statements of Awarded Responsibility (STAR) the
+  committee has issued you, and their certificates." In force holds three cards, by EPA code, each with its Authorised
+  level, Issued `D` and the committee's rationale: PAED-001 and PAED-012 at `5`, and PAED-010 at `4`.
   - PAED-001 and 012 read "No expiry".
-  - PAED-010 reads the date `D+20`, with the badge "Expires in 20 days".
-  Each Download certificate is named by its EPA. The PAED-001 certificate downloads with Status Active and its evidence
-  summary.
+  - PAED-010 reads the date `D+20`, with the badge "Expires in 20 days", counted on the South African calendar (T325).
+  Each Download certificate is named by its EPA: "Download certificate for PAED-001", "… PAED-010" and "… PAED-012"
+  (F4). There is no "No longer in force" section. The PAED-001 certificate downloads with Status Active and its
+  evidence summary.
 
 Step 5.8 — Dr Molefe reads her final review and keeps a STAR certificate
 Role: Trainee — Dr Lerato Molefe
-Route: /committee/my-reviews → / → /portfolio/authorisations
+Route: /committee/my-reviews → /committee/my-reviews/{ReviewId:int} → / → /portfolio/authorisations
 Do: Open My committee reviews and view the pre-graduation review. Then open My authorisations from her Home's card (its
   Open My authorisations), and download the certificate for PAED-001.
-Expect: The review is listed as Pre-graduation, Ratified, Graduate (programme complete). Its detail shows:
-  - the review type;
+Expect: The pre-graduation review is listed above the Act 4 annual review (T366, F1), as Pre-graduation, Ratified,
+  Graduate (programme complete). The two Views are named "View the `<P>` review before Paed Annual Review Panel,
+  Pre-graduation" and "…, Annual progression" (M1). Her review's page, "`<P>` pre-graduation review", shows:
+  - the review type, "Pre-graduation review";
   - the decision and its rationale;
-  - who was present;
-  - an agenda in which each EPA reads Decided, with its STAR number.
-  The Lodge appeal form is offered, and she lodges no appeal. My authorisations holds 15 cards, each with its level, its
-  issue date and "No expiry". The certificate downloads as `star-certificate-PAED-001-<id>-<8 hex digits>.pdf`.
+  - who was present: "Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)";
+  - an agenda in which each of its thirteen EPAs reads Decided, with its STAR number, #6 to #18.
+  The lodge block is offered, and she lodges no appeal. My authorisations holds 15 cards, each with its level, Issued
+  `D` and "No expiry", and no "No longer in force" section: a superseded STAR is not listed. The certificate downloads
+  as `star-certificate-PAED-001-<id>-<8 hex digits>.pdf`.
 
 Step 5.9 — Dr Molefe exports her portfolio
 Role: Trainee — Dr Lerato Molefe

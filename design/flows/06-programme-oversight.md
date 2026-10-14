@@ -860,8 +860,11 @@ Expect: Home stacks Waiting for assessors, badged "3 waiting, 1 overdue", Regist
   by EPA, KGK-001 first among the EPAs neither registrar has met, by code (T358). Decision panels' list and Who
   decides each EPA stack, a block per panel and per row of EPAs (T364), and Decisions due reads as at Step A.7.5.
   Entrustment decisions is in the menu, lit on its page, with no trail: it is a list the menu offers (R2-Menus m5).
+  It is captioned "Issued STARs (entrustment decisions) · 18 shown" (M10), and its eighteen rows stack, each a block:
+  the trainee, then EPA, Level, Issued with its "review #n" link (44 px), Expires, Status and its actions (44 px). The
+  revoked and superseded rows' lines wrap under them, never cut (C22). Nothing scrolls sideways.
 
-Step A.7.8 — Dr Sithole on his phone (appendix-cross-cutting.md:1347)
+Step A.7.8 — Dr Sithole on his phone (appendix-cross-cutting.md:1350)
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: / → /committee/reviews → /committee/decisions-due
 Do: At 390 px, open his dashboard, then Committee reviews and Decisions due from the menu.
@@ -871,7 +874,7 @@ Expect: As for Dr Mokoena, scoped to Dr Sithole's sub-speciality: Home stacks th
   header, and each review a block (the trainee, then Panel, Period over its window, Type, State, Decision, and Open
   44px). Decisions due reads as at Step A.7.5.
 
-Step A.7.8a — Programme trainees, a registrar's page and Waiting for assessors on a phone and a tablet (appendix-cross-cutting.md:1366)
+Step A.7.8a — Programme trainees, a registrar's page and Waiting for assessors on a phone and a tablet (appendix-cross-cutting.md:1369)
 Role: CommitteeMember and Coordinator — Dr Thandi Zulu and Mr Pieter Smit
 Route: /programme/trainees → /programme/trainees/{ProfileId:int} → /programme/waiting → /
 Do: At 390 px, Dr Zulu opens Programme trainees from the menu, then Dr Mahlangu's page; Mr Smit opens Waiting for

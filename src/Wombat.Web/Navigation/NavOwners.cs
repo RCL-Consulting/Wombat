@@ -155,6 +155,10 @@ public static class NavOwners
         [typeof(AuditDetail)] = [new([WombatRoles.Administrator, WombatRoles.InstitutionalAdmin], NavItems.AuditLog)],
         [typeof(ScheduledJobRunsList)] = [new([WombatRoles.Administrator], NavItems.ScheduledJobs)],
 
+        // Her own committee review (T366, flow 09, F8): Home › My committee reviews › the review. Only the Trainee: the page
+        // admits an Administrator too, as the list does, but reads them nothing that is not their own.
+        [typeof(MyReview)] = [new([WombatRoles.Trainee], NavItems.MyCommitteeReviews)],
+
         // A trainee's STARs are part of their record, reached from Home.
         [typeof(MyAuthorisations)] = [new([WombatRoles.Trainee], NavItems.MyProgress)],
 

@@ -104,7 +104,9 @@ public sealed partial class FormFieldHelpTextLinkTests : TestContext
         // line that belongs in the slot (the Add form's "Suggested because …") has an id its control names.
         var fields = FormFields();
 
-        fields.Should().HaveCountGreaterThanOrEqualTo(150, "guard: the scan finds every FormField (176), or it proves nothing");
+        // T366: flow 09's pages dropped three (My committee reviews' detail, My authorisations' interim cards, the
+        // register's old revoke section), leaving the scan 149; the floor guards the scan, not the count.
+        fields.Should().HaveCountGreaterThanOrEqualTo(140, "guard: the scan finds every FormField (149), or it proves nothing");
 
         var unnamed = fields
             .SelectMany(field => UnnamedSlotText(field.Markup, field.InputId)

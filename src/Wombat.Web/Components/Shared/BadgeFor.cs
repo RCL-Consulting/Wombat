@@ -1,5 +1,6 @@
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.EntrustmentDecisions;
+using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.DataRights;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.MultiSourceFeedback;
@@ -132,6 +133,17 @@ public static class BadgeFor
         EntrustmentDecisionStatus.Expired => BadgeState.Accepted,
         EntrustmentDecisionStatus.Revoked => BadgeState.Declined,
         _ => BadgeState.Draft
+    });
+
+    /// <summary>
+    /// An appeal against a committee review (T366, flow 09; DESIGN.md § Badges): open is amber, the tint of a review under
+    /// appeal, waiting on the appeal body; dismissed and remitted are both green, an appeal heard and closed. Neither
+    /// outcome is a failure: the badge's word says which it was (D51).
+    /// </summary>
+    public static string Appeal(CommitteeAppealOutcome? outcome) => State(outcome switch
+    {
+        null => BadgeState.Accepted,
+        _ => BadgeState.Completed
     });
 
     /// <summary>

@@ -132,6 +132,20 @@ public sealed class EntrustmentDecisionTests
     }
 
     [Fact]
+    public void MarkExpired_JudgesTheExpiryDate_OnTheSouthAfricanCalendar()
+    {
+        // T366, G5: 22:30 UTC on its expiry date is already the next day in South Africa, where My authorisations reads it.
+        var expiresOn = new DateOnly(2026, 11, 2);
+        var decision = EntrustmentDecision.Issue(
+            "trainee-1", 7, 3, new DateOnly(2026, 10, 13), expiresOn, 11, "chair-1", "Rationale.", [SampleEvidence()]);
+
+        Assert.Throws<InvalidOperationException>(() => decision.MarkExpired(new DateTime(2026, 11, 2, 21, 30, 0, DateTimeKind.Utc)));
+        decision.MarkExpired(new DateTime(2026, 11, 2, 22, 30, 0, DateTimeKind.Utc));
+
+        Assert.Equal(EntrustmentDecisionStatus.Expired, decision.Status);
+    }
+
+    [Fact]
     public void MarkExpired_RequiresExpiryDate()
     {
         var decision = EntrustmentDecision.Issue(

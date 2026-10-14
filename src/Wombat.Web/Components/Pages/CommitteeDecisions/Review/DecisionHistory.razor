@@ -1,0 +1,107 @@
+@using Wombat.Application.Features.CommitteeDecisions
+@using Wombat.Domain.CommitteeDecisions
+
+@*
+  A review's decision history (T366, flow 09; contract § 1), lifted from DecisionForm's read branch so both review pages
+  draw the one history: flow 07's committee page (DecisionForm renders it, unchanged for its readers) and the trainee's
+  own page (MyReview).
+
+  - Newest first, as the review's DTO orders them; a hairline between two (.decision-history .decision-record +).
+  - A decision an appeal remitted says so under its heading, "Replaced on appeal by the decision above."
+    (.decision-replaced), with its own rationale and who sat (T308).
+  - An entrustment-only review's decision has no category: its h3 reads "Entrustment decisions only", and the replaced one
+    "Entrustment decisions only, replaced on appeal", so two h3s never read the same (round 3's nit).
+  - ForTrainee: the trainee's own page says under an entrustment-only decision's heading what such a review decides, that a
+    remit changed no STAR, and where the agenda is (§ Entrustment-only reviews, "The trainee's reviews"); the committee's
+    page says it once, above the history (DecisionForm).
+*@
+@if (Review.Decisions.Count == 0)
+{
+  <p id="no-decision-note" class="muted">@(Review.State == CommitteeReviewState.Withdrawn ? ReviewWords.NoDecisionWithdrawn : ReviewWords.NoDecisionYet)</p>
+}
+else
+{
+  var replaced = Review.Decisions.Select(decision => decision.SupersedesDecisionId).OfType<int>().ToHashSet();
+  @if (Review.State == CommitteeReviewState.Withdrawn)
+  {
+    <p id="withdrawn-decision-note" class="muted">@CommitteeDecisionWording.WithdrawnDecisionNote</p>
+  }
+  <div class="decision-history">
+    @for (var index = 0; index < Review.Decisions.Count; index++)
+    {
+      var decision = Review.Decisions[index];
+      var isReplaced = replaced.Contains(decision.Id);
+      <article class="decision-record" id="@($"decision-{decision.Id}")" aria-labelledby="@($"decision-{decision.Id}-h")">
+        <h3 id="@($"decision-{decision.Id}-h")">@Heading(decision, isReplaced)</h3>
+        @if (ForTrainee && !Review.DecidesProgression)
+        {
+          @foreach (var sentence in EntrustmentOnlySentences(index, isReplaced))
+          {
+            <p class="decision-note">@sentence</p>
+          }
+        }
+        @if (isReplaced)
+        {
+          <p class="decision-replaced">@ReviewWords.ReplacedOnAppeal</p>
+        }
+        <p>@decision.Rationale</p>
+        @if (!string.IsNullOrWhiteSpace(decision.UndecidedNote))
+        {
+          <p>@ReviewWords.AboutNotDecided(decision.UndecidedNote)</p>
+        }
+        @if (!string.IsNullOrWhiteSpace(decision.Conditions))
+        {
+          <p>@ReviewWords.Conditions(decision.Conditions)</p>
+        }
+        @if (decision.Attendees.Count > 0)
+        {
+          <p>@ReviewWords.PresentList(decision.Attendees.Select(attendee => attendee.Label))</p>
+        }
+        else
+        {
+          <p class="decision-note">@ReviewWords.NobodyPresent</p>
+        }
+      </article>
+    }
+  </div>
+}
+
+@code {
+  /// <summary>The review whose decisions are drawn, newest first, as its DTO orders them.</summary>
+  [Parameter, EditorRequired] public CommitteeReviewDetailDto Review { get; set; } = default!;
+
+  /// <summary>
+  /// The trainee's own page (T366, additive to contract § 1): an entrustment-only decision says under its heading what such
+  /// a review decides. False on the committee's page, which says it once above the history.
+  /// </summary>
+  [Parameter] public bool ForTrainee { get; set; }
+
+  /// <summary>The decision's h3: its outcome, and a replaced entrustment-only one says it was replaced (round 3's nit).</summary>
+  private string Heading(CommitteeDecisionDto decision, bool isReplaced)
+    => decision.Category is null && isReplaced
+      ? $"{CommitteeDecisionWording.EntrustmentOnlyOutcome}, replaced on appeal"
+      : CommitteeDecisionWording.OutcomeLabel(decision.Category);
+
+  /// <summary>
+  /// What the trainee reads under an entrustment-only decision (C17): what such a review decides; on the current decision,
+  /// that a remit changed no STAR, and that the agenda says what was decided on each EPA, where it is shown.
+  /// </summary>
+  private IEnumerable<string> EntrustmentOnlySentences(int index, bool isReplaced)
+  {
+    yield return CommitteeDecisionWording.EntrustmentOnlyForTheTrainee;
+    if (index != 0 || isReplaced)
+    {
+      yield break;
+    }
+
+    if (Review.Decisions[0].SupersedesDecisionId is not null)
+    {
+      yield return CommitteeDecisionWording.EntrustmentOnlyRemittedForTheTrainee;
+    }
+
+    if (Review.Agenda is { Lines.Count: > 0 })
+    {
+      yield return CommitteeDecisionWording.EntrustmentOnlySeeTheAgenda;
+    }
+  }
+}

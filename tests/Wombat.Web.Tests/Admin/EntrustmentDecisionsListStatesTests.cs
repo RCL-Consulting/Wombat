@@ -17,7 +17,8 @@ namespace Wombat.Web.Tests.Admin;
 /// T266: the entrustment decisions list's three states are StatePanel's (DESIGN.md § Alerts, validation, empty states),
 /// and a refusal is shown in its own words (<c>RefusalText</c>). Until T266 the page said "Loading…" as text, a failed
 /// read left it there under the error, and every failure printed <c>exception.Message</c>, which for a validator's
-/// refusal is a log line ("Validation failed: -- Reason: …").
+/// refusal is a log line ("Validation failed: -- Reason: …"). Since T366 (flow 09, T329) a failed read is fixed words,
+/// the register's empty card is "No STARs issued yet", and a refused revocation shows in its dialog.
 /// </summary>
 public sealed class EntrustmentDecisionsListStatesTests : TestContext
 {
@@ -29,6 +30,9 @@ public sealed class EntrustmentDecisionsListStatesTests : TestContext
         auth.SetAuthorized("instadmin@test");
         auth.SetRoles(WombatRoles.InstitutionalAdmin);
         Services.AddSingleton<IScopedSender>(_sender);
+
+        // Revoke opens the register's ConfirmDialog, a native <dialog>, through the browser (T366, M5).
+        JSInterop.Mode = JSRuntimeMode.Loose;
     }
 
     [Fact]
@@ -39,22 +43,25 @@ public sealed class EntrustmentDecisionsListStatesTests : TestContext
         var cut = RenderComponent<DecisionsPage>();
 
         cut.FindAll(".skeleton").Should().NotBeEmpty("StatePanel's loading state");
-        cut.Markup.Should().NotContain("Loading");
+        // T366: the only loading words are the visually hidden status line's, never text in the list's place.
+        cut.Find("p.visually-hidden[role=status]").TextContent.Should().Be("Loading the STARs.");
+        cut.FindAll(".state-panel-title").Should().BeEmpty();
         cut.FindAll("table").Should().BeEmpty();
     }
 
     [Fact]
-    public void AFailedRead_IsStatePanelsAlert_InTheRefusalsOwnWords()
+    public void AFailedRead_IsStatePanelsAlert_InFixedWords()
     {
+        // T366 (T329): a read has no refusal of its own to show; any failure is fixed words, logged.
         _sender.List = Task.FromException<IReadOnlyList<EntrustmentDecisionDto>>(Refusal("Choose a status the list knows."));
 
         var cut = RenderComponent<DecisionsPage>();
 
         var alert = cut.Find(".alert.alert-danger");
-        alert.TextContent.Trim().Should().Be("Choose a status the list knows.");
+        alert.QuerySelector(".alert-row-text")!.TextContent.Trim().Should().Be(DecisionsPage.LoadFailed);
         alert.GetAttribute("role").Should().Be("alert");
         cut.FindAll(".skeleton").Should().BeEmpty("a failed read is not still loading");
-        cut.Markup.Should().NotContain("Validation failed").And.NotContain("Loading");
+        cut.Markup.Should().NotContain("Validation failed").And.NotContain("Choose a status");
     }
 
     [Fact]
@@ -64,9 +71,10 @@ public sealed class EntrustmentDecisionsListStatesTests : TestContext
 
         var cut = RenderComponent<DecisionsPage>();
 
+        // T366 (C24): none issued, with nothing to filter.
         var empty = cut.Find(".detail-card--empty");
-        empty.QuerySelector(".state-panel-title")!.TextContent.Should().Be("No entrustment decisions");
-        empty.QuerySelector(".state-panel-copy")!.TextContent.Should().Be("No entrustment decisions match the current filter.");
+        empty.QuerySelector(".state-panel-title")!.TextContent.Should().Be("No STARs issued yet");
+        empty.QuerySelector(".state-panel-copy")!.TextContent.Should().Be("When a committee ratifies an entrustment decision, its STAR is listed here.");
         cut.FindAll("table").Should().BeEmpty();
     }
 
@@ -80,10 +88,12 @@ public sealed class EntrustmentDecisionsListStatesTests : TestContext
         cut.WaitForState(() => cut.FindAll("tbody tr").Count == 1);
         cut.FindAll("button").Single(button => button.TextContent.Trim() == "Revoke").Click();
         cut.Find("#revoke-reason").Change("Concern raised.");
-        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Confirm revocation").Click();
+        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Revoke the STAR").Click();
 
-        cut.WaitForAssertion(() => cut.Find(".alert.alert-danger").TextContent.Trim()
+        // T366 (M4): in the dialog, under the reason, which is kept.
+        cut.WaitForAssertion(() => cut.Find("dialog .alert.alert-danger").TextContent.Trim()
             .Should().Be("Say why the decision is revoked, in no more than 1000 characters."));
+        cut.Find("#revoke-reason").GetAttribute("value").Should().Be("Concern raised.");
         cut.Markup.Should().NotContain("Validation failed");
         cut.FindAll("tbody tr").Should().HaveCount(1, "a refused action leaves the list in view");
     }

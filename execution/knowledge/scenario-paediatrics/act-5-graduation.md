@@ -283,14 +283,15 @@ Gap: none
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/entrustment-decisions
 Do: Open Entrustment decisions from her dashboard's quick links. Filter by the trainee name "Molefe", first with the
-  status Active and then with All, applying the filters each time.
-Expect: There are fifteen Active rows, one for each EPA from PAED-001 to PAED-015. Each row:
+  status Active and then with All, pressing Show each time.
+Expect: There are fifteen Active rows, captioned "… · 15 shown", one for each EPA from PAED-001 to PAED-015. Each row:
   - is at its EPA's exit level;
   - was issued on `D`, except PAED-001's and PAED-012's, which Act 4 issued;
   - has no expiry;
   - offers Download and Revoke.
-  With All, Act 4's PAED-010 STAR, which Step 5.6 superseded, reads Superseded and offers Download only. She revokes
-  nothing.
+  Newest issued first, then by STAR number descending: review #7's thirteen come first (T366, F1). With All, sixteen
+  ("… · 16 shown"): Act 4's PAED-010 STAR, which Step 5.6 superseded, reads Superseded, offers Download only, and
+  carries the line "Superseded by STAR #18, issued `D`." (no supersession date is stored; S4). She revokes nothing.
 Note: If PAED-010's Act 4 expiry passed and the expiry job ran before Step 5.6, that STAR reads Expired instead, and
   ratifying superseded none.
 Actual (2026-10-13, T364 replay, wombat_scenario_t364): Home's quick links: Invite a person, Users, Invitations,
@@ -303,16 +304,19 @@ Gap: none
 
 ### Step 5.8 — Dr Molefe reads her final review and keeps a STAR certificate
 Role: Trainee — Dr Lerato Molefe
-Route: /committee/my-reviews → / → /portfolio/authorisations
+Route: /committee/my-reviews → /committee/my-reviews/{ReviewId:int} → / → /portfolio/authorisations
 Do: Open My committee reviews and view the pre-graduation review. Then open My authorisations from her Home's card (its
   Open My authorisations), and download the certificate for PAED-001.
-Expect: The review is listed as Pre-graduation, Ratified, Graduate (programme complete). Its detail shows:
-  - the review type;
+Expect: The pre-graduation review is listed above the Act 4 annual review (T366, F1), as Pre-graduation, Ratified,
+  Graduate (programme complete). The two Views are named "View the `<P>` review before Paed Annual Review Panel,
+  Pre-graduation" and "…, Annual progression" (M1). Her review's page, "`<P>` pre-graduation review", shows:
+  - the review type, "Pre-graduation review";
   - the decision and its rationale;
-  - who was present;
-  - an agenda in which each EPA reads Decided, with its STAR number.
-  The Lodge appeal form is offered, and she lodges no appeal. My authorisations holds 15 cards, each with its level, its
-  issue date and "No expiry". The certificate downloads as `star-certificate-PAED-001-<id>-<8 hex digits>.pdf`.
+  - who was present: "Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)";
+  - an agenda in which each of its thirteen EPAs reads Decided, with its STAR number, #6 to #18.
+  The lodge block is offered, and she lodges no appeal. My authorisations holds 15 cards, each with its level, Issued
+  `D` and "No expiry", and no "No longer in force" section: a superseded STAR is not listed. The certificate downloads
+  as `star-certificate-PAED-001-<id>-<8 hex digits>.pdf`.
 Note: My authorisations requires the Trainee role, so this is the last point at which she can download a certificate
   from that page (see Step 5.22).
 Actual (2026-10-13, T364 replay, wombat_scenario_t364): Menu (Acting as Trainee) Home, Log an activity, My activities,

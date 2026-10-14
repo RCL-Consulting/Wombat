@@ -71,6 +71,24 @@ public sealed partial class EntrustmentCertificateTextLayerTests
         text.Should().Contain(Rationale);
     }
 
+    /// <summary>
+    /// T324 (T366, step 4.37): a revoked certificate names who revoked it, as My authorisations and the register do, never
+    /// their user id.
+    /// </summary>
+    [Fact]
+    public async Task ARevokedCertificate_NamesItsReviser_NotTheirUserId()
+    {
+        var pdf = await CertificateAsync(revokedBy: "admin-7");
+
+        var text = Whitespace().Replace(PdfTextLayer.Pages(pdf).Single(), " ");
+        text.Should().Contain("REVOKED");
+        text.Should().Contain("by Refilwe Mokoena");
+        text.Should().Contain("Revoked on 2026-10-14 by",
+            "G6: an ISO date on the South African calendar; 22:30 UTC is already the next day there");
+        text.Should().NotContain("admin-7");
+        text.Should().Contain("Reason: Staged on evidence about another EPA.");
+    }
+
     [Fact]
     public async Task EveryGlyph_IsDrawnFromTheEmbeddedLato()
     {
@@ -85,13 +103,14 @@ public sealed partial class EntrustmentCertificateTextLayerTests
             string.Join(", ", fonts));
     }
 
-    private static async Task<byte[]> CertificateAsync()
+    private static async Task<byte[]> CertificateAsync(string? revokedBy = null)
     {
         var database = Guid.NewGuid().ToString();
         await using var db = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(database).Options);
         db.Set<WombatIdentityUser>().Add(new WombatIdentityUser { Id = "trainee-1", FirstName = "Lerato", LastName = "Molefe" });
         db.Set<WombatIdentityUser>().Add(new WombatIdentityUser { Id = "chair-1", FirstName = "Thandi", LastName = "Nkosi" });
+        db.Set<WombatIdentityUser>().Add(new WombatIdentityUser { Id = "admin-7", FirstName = "Refilwe", LastName = "Mokoena" });
         db.Set<Institution>().Add(new Institution { Id = 1, Name = "Host Academic Hospital", ShortCode = "HOST" });
         db.Set<Speciality>().Add(new Speciality { Id = 1, CollegeId = 1, Name = "Paediatrics" });
         db.Set<SubSpeciality>().Add(new SubSpeciality { Id = 1, SpecialityId = 1, Name = "General Paediatrics" });
@@ -134,6 +153,13 @@ public sealed partial class EntrustmentCertificateTextLayerTests
                 })
             ]));
         await db.SaveChangesAsync();
+
+        if (revokedBy is not null)
+        {
+            (await db.Set<EntrustmentDecision>().SingleAsync())
+                .Revoke("Staged on evidence about another EPA.", revokedBy, new DateTime(2026, 10, 13, 22, 30, 0, DateTimeKind.Utc));
+            await db.SaveChangesAsync();
+        }
 
         var decisionId = await db.Set<EntrustmentDecision>().Select(decision => decision.Id).SingleAsync();
         var result = await new EntrustmentCertificatePdfService(db).GenerateAsync(

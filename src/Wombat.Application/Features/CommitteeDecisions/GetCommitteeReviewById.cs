@@ -7,6 +7,7 @@ using Wombat.Application.Common.Users;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
+using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.CommitteeDecisions;
 
@@ -27,16 +28,7 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
 
     public async Task<CommitteeReviewDetailDto> Handle(GetCommitteeReviewByIdQuery request, CancellationToken cancellationToken)
     {
-        var review = await _dbContext.Set<CommitteeReview>()
-            .AsNoTracking()
-            .Include(entity => entity.Panel)
-                .ThenInclude(panel => panel.Members)
-            .Include(entity => entity.Decisions)
-                .ThenInclude(decision => decision.Attendees)
-            .Include(entity => entity.Appeals)
-            .Include(entity => entity.EvidenceItems)
-            .Include(entity => entity.AgendaLines)
-            .SingleOrDefaultAsync(entity => entity.Id == request.ReviewId, cancellationToken);
+        var review = await LoadAsync(_dbContext, request.ReviewId, cancellationToken);
 
         // The ladder this handler used to spell out inline now lives beside the other committee
         // guards, because the two sibling queries on the same page have to climb the identical one.
@@ -47,16 +39,56 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
         review = await CommitteeDecisionAuthorization.DemandReviewAccessAsync(
             _dbContext, _users, request.Principal, review, cancellationToken);
 
+        return await DescribeAsync(_dbContext, _users, review, request.Principal, request.Today, forItsTrainee: false, cancellationToken);
+    }
+
+    /// <summary>
+    /// The review with everything the review pages read about it (T366: shared with <see cref="GetMyCommitteeReviewQuery" />,
+    /// the trainee's own page, so the two cannot drift). Null when no review has the id. Read only.
+    /// </summary>
+    internal static Task<CommitteeReview?> LoadAsync(IApplicationDbContext dbContext, int reviewId, CancellationToken cancellationToken)
+        => dbContext.Set<CommitteeReview>()
+            .AsNoTracking()
+            .Include(entity => entity.Panel)
+                .ThenInclude(panel => panel.Members)
+            .Include(entity => entity.Decisions)
+                .ThenInclude(decision => decision.Attendees)
+            .Include(entity => entity.Appeals)
+            .Include(entity => entity.EvidenceItems)
+            .Include(entity => entity.AgendaLines)
+            .SingleOrDefaultAsync(entity => entity.Id == reviewId, cancellationToken);
+
+    /// <summary>
+    /// The review as a page reads it, for a caller who has already passed its own read check: the committee's ladder
+    /// (<see cref="CommitteeDecisionAuthorization.DemandReviewAccessAsync" />), or the trainee's own-review check
+    /// (<see cref="GetMyCommitteeReviewQueryHandler" />, T366, F8).
+    /// </summary>
+    /// <param name="forItsTrainee">
+    /// The read is the trainee's own page (T366): the appeal body is read while the review is still Ratified too, for the
+    /// lodge block's "What happens next", and the panel's institution is named (round 2's data rows).
+    /// </param>
+    internal static async Task<CommitteeReviewDetailDto> DescribeAsync(
+        IApplicationDbContext dbContext,
+        IUserAdministrationService users,
+        CommitteeReview review,
+        ClaimsPrincipal principal,
+        DateOnly? today,
+        bool forItsTrainee,
+        CancellationToken cancellationToken)
+    {
         // T142. The trainee by name, looked up only once the caller has passed the review ladder above. T165 adds the
         // panel's members and those recorded as present at each decision, in the same one lookup.
         var detail = review.ToDetailDto();
         var names = await UserDisplayNames.ResolveAsync(
-            _users,
+            users,
             detail.PanelMembers
                 .Concat(detail.Decisions.SelectMany(decision => decision.Attendees))
                 .Select(person => person.UserId)
                 // T361 (round 3 items 23, 30): the snapshot names each line's assessor, in the same one lookup.
                 .Concat(detail.EvidenceItems.Select(item => item.AssessorUserId).OfType<string>())
+                // T366 (T308): who lodged and who resolved each appeal, in the same one lookup.
+                .Concat(detail.Appeals.Select(appeal => appeal.LodgedByUserId))
+                .Concat(detail.Appeals.Select(appeal => appeal.ResolvedByUserId).OfType<string>())
                 .Prepend(review.TraineeUserId),
             cancellationToken);
 
@@ -72,23 +104,33 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
         // body may act from the seat, which resolving demands (T237), and whether the panel's chair may take the chair's
         // actions, which each of them demands (T256), in every state one of them is open or about to be; and whether a
         // member may start it, in the one state Start takes (T279).
-        var holdsAppealSeat = CommitteeDecisionAuthorization.ResolvesAppeals(request.Principal, review.Panel);
-        var eligible = MayStillDecide(review) || review.State == CommitteeReviewState.UnderAppeal || holdsAppealSeat || actionOpen
-            ? await PanelSeat.EligibleAsync(_users, review.Panel.InstitutionId, cancellationToken)
+        var holdsAppealSeat = CommitteeDecisionAuthorization.ResolvesAppeals(principal, review.Panel);
+        var appealBodyRead = AppealBodyRead(review, forItsTrainee);
+        var eligible = MayStillDecide(review) || appealBodyRead || holdsAppealSeat || actionOpen
+            ? await PanelSeat.EligibleAsync(users, review.Panel.InstitutionId, cancellationToken)
             : null;
-        var seated = Seated(review, request.Principal, eligible);
-        var callerUserId = request.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var seated = Seated(review, principal, eligible);
+        var callerUserId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var traineeElsewhere =
-            actionOpen && !await CommitteeTraineeScope.MayActOnTraineeAsync(_dbContext, request.Principal, review, cancellationToken)
+            actionOpen && !await CommitteeTraineeScope.MayActOnTraineeAsync(dbContext, principal, review, cancellationToken)
                 ? CommitteeTraineeScope.TraineeNotAtPanelInstitution
                 : null;
 
         // T131 slice 4. The agenda, read by the reader GetCommitteeAgendaQuery shares, past the same ladder.
         var agenda = await CommitteeAgendaReader.ReadAsync(
-            _dbContext, review, request.Today ?? ProgrammeCalendar.DateOf(DateTime.UtcNow), cancellationToken);
+            dbContext, review, today ?? ProgrammeCalendar.DateOf(DateTime.UtcNow), cancellationToken);
 
         // T361 (round 2 review 10, E6): the registrar page's id and the training year the page's subtitle names.
-        var (traineeProfileId, trainingYear) = await TraineeOfAsync(review, cancellationToken);
+        var (traineeProfileId, trainingYear) = await TraineeOfAsync(dbContext, review, cancellationToken);
+
+        // T366 (round 2's data row): the panel's institution by name, whose staff read an appeal's reason. Her page only.
+        var institutionName = forItsTrainee
+            ? await dbContext.Set<Institution>()
+                .AsNoTracking()
+                .Where(institution => institution.Id == review.Panel.InstitutionId)
+                .Select(institution => institution.Name)
+                .SingleOrDefaultAsync(cancellationToken)
+            : null;
 
         return detail with
         {
@@ -96,14 +138,14 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
             Agenda = agenda,
             // T213: what the caller may do here, by the predicates the handlers demand, so the page offers each control to
             // exactly the people its handler lets use it. The chair's: the seat, and sitting at the review now (T256).
-            CallerChairs = eligible is not null && CommitteeDecisionAuthorization.Chairs(request.Principal, review, eligible),
+            CallerChairs = eligible is not null && CommitteeDecisionAuthorization.Chairs(principal, review, eligible),
             ChairCannotAct = actionOpen && eligible is not null
-                ? ChairCannotActOf(review, request.Principal, eligible, names)
+                ? ChairCannotActOf(review, principal, eligible, names)
                 : null,
             // Start's own predicate, and only in the one state it takes: a member of the panel only while they may sit (T279).
             CallerMayStart = review.State == CommitteeReviewState.Scheduled &&
                              eligible is not null &&
-                             CommitteeDecisionAuthorization.WorksOnReview(request.Principal, review, eligible),
+                             CommitteeDecisionAuthorization.WorksOnReview(principal, review, eligible),
             // The seat, and acting from it now: the two checks the resolve handler demands, in its order (T237).
             CallerResolvesAppeals = holdsAppealSeat &&
                                     eligible is not null &&
@@ -112,8 +154,16 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
             TraineeElsewhere = traineeElsewhere,
             TraineeProfileId = traineeProfileId,
             TrainingYear = trainingYear,
-            AppealBody = AppealBodyOf(review, eligible)
+            AppealBody = (appealBodyRead ? AppealBodyOf(review, eligible) : [])
                 .Select(person => person with { Name = names.NameOf(person.UserId) })
+                .ToArray(),
+            PanelInstitutionName = institutionName,
+            Appeals = detail.Appeals
+                .Select(appeal => appeal with
+                {
+                    LodgedByName = names.NameOf(appeal.LodgedByUserId),
+                    ResolvedByName = appeal.ResolvedByUserId is { } resolver ? names.NameOf(resolver) : null
+                })
                 .ToArray(),
             PanelMembers = detail.PanelMembers
                 .Select(person => person with
@@ -150,19 +200,20 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
     /// read everywhere (T252); null before the programme starts and for a trainee with no profile there.
     /// </para>
     /// </remarks>
-    private async Task<(int? ProfileId, int? TrainingYear)> TraineeOfAsync(
+    private static async Task<(int? ProfileId, int? TrainingYear)> TraineeOfAsync(
+        IApplicationDbContext dbContext,
         CommitteeReview review,
         CancellationToken cancellationToken)
     {
         var institutionId = review.Panel.InstitutionId;
-        var preferred = await TraineeScopeResolver.PreferredProfiles(_dbContext)
+        var preferred = await TraineeScopeResolver.PreferredProfiles(dbContext)
             .AsNoTracking()
             .Where(profile => profile.UserId == review.TraineeUserId)
             .SingleOrDefaultAsync(cancellationToken);
 
         var atPanel = preferred is not null && preferred.InstitutionId == institutionId
             ? preferred
-            : await _dbContext.Set<TraineeProfile>()
+            : await dbContext.Set<TraineeProfile>()
                 .AsNoTracking()
                 .Where(profile => profile.UserId == review.TraineeUserId && profile.InstitutionId == institutionId)
                 .OrderByDescending(profile => profile.Id)
@@ -241,15 +292,24 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
     }
 
     /// <summary>
+    /// Whether the appeal body is read (<see cref="AppealBodyOf" />): under appeal, for every reader; and on the trainee's
+    /// own page while the review is Ratified too, where "What happens next" names who would hear an appeal before she
+    /// lodges one (T366, round 2's data row: until then it was read under appeal only).
+    /// </summary>
+    private static bool AppealBodyRead(CommitteeReview review, bool forItsTrainee)
+        => review.State == CommitteeReviewState.UnderAppeal ||
+           (forItsTrainee && review.State == CommitteeReviewState.Ratified);
+
+    /// <summary>
     /// Who can resolve the appeal now (<see cref="CommitteeReviewDetailDto.AppealBody" />, T237): the appeal body that can
-    /// act (<see cref="PanelSeat.AppealBodyAt" />), the one list the resolve handler also demands the caller is on. Only
-    /// under appeal, and for every reader: the note it feeds tells the trainee too who resolves their appeal, and must name
-    /// nobody who cannot.
+    /// act (<see cref="PanelSeat.AppealBodyAt" />), the one list the resolve handler also demands the caller is on. Read
+    /// only where <see cref="AppealBodyRead" /> says, and for every reader: the note it feeds tells the trainee too who
+    /// resolves their appeal, and must name nobody who cannot.
     /// </summary>
     private static IReadOnlyList<CommitteePersonDto> AppealBodyOf(
         CommitteeReview review,
         IReadOnlyDictionary<string, Common.Interfaces.UserIdentityDetails>? eligible)
-        => eligible is null || review.State != CommitteeReviewState.UnderAppeal
+        => eligible is null
             ? []
             : PanelSeat.AppealBodyAt(review, eligible)
                 .Select(member => new CommitteePersonDto(member.UserId, member.Role))

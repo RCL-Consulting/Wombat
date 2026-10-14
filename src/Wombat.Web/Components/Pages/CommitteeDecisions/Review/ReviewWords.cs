@@ -71,6 +71,12 @@ public static class ReviewWords
     public const string CloseLabel = "Close review…";
     public const string RefreshLabel = "Refresh";
 
+    /// <summary>
+    /// The reader's jump while the review is under appeal (T366, F5): the Appeals section is the page's last, about
+    /// 7,800 px down at 1280 and 18,000 at 390.
+    /// </summary>
+    public const string GoToAppealLabel = "Go to the appeal";
+
     /// <summary>The mode of a formative review (round 3 item 28).</summary>
     public const string FormativeMode = "Formative: an interim check-in, no binding decision";
 
@@ -272,8 +278,11 @@ public static class ReviewWords
             : $"Records {Count(codes.Count, "EPA", "EPAs")} as not decided: {CommitteeAgendaText.Codes(codes)}.";
     }
 
-    /// <summary>"Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)."</summary>
-    public static string PresentList(IEnumerable<string> labels) => $"Present: {string.Join(", ", labels)}.";
+    /// <summary>
+    /// "Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)": one form, a list with no
+    /// full stop, in the decision history and in the dialogs alike (T366, the runbook lane's Present line).
+    /// </summary>
+    public static string PresentList(IEnumerable<string> labels) => $"Present: {string.Join(", ", labels)}";
 
     /// <summary>The last line of the Record dialog.</summary>
     public const string RecordAfterwards = "Afterwards only a decision that no longer fits the trainee's curriculum can be removed.";
@@ -722,6 +731,95 @@ public static class ReviewWords
     public const string TrajectoryFailed = "The rating trajectories could not be loaded. The rest of the review stands.";
     public const string AppealsHeading = "Appeals";
     public const string NoAppeal = "No appeal has been lodged against this review.";
+
+    // ─── The appeal's resolve form and its dialogs (T366, flow 09, boards R3-3; F6, F7, M8; T213, T237, T323) ──
+
+    /// <summary>The resolve form's name, and its one button's words.</summary>
+    public const string ResolveFormName = "Resolve the appeal";
+    public const string ResolveLabel = "Resolve appeal";
+    public const string OutcomeLegend = "Outcome";
+
+    /// <summary>
+    /// A refusal of Resolve appeal, after the form's actions (M8): led so it does not repeat the quorum line beside the
+    /// button word for word (round 3's nit).
+    /// </summary>
+    public static string ResolveRefused(string refusal) => $"Resolve appeal was refused: {refusal}";
+
+    /// <summary>
+    /// Resolve appeal failed for a reason that is no refusal (a database or concurrency failure): a fixed sentence, the
+    /// failure in the log, never its framework text (T366, R1; T338).
+    /// </summary>
+    public const string ResolveFailed = "The appeal could not be resolved just now. Try again, or come back in a few minutes.";
+
+    /// <summary>A remit pressed with no replacement rationale, refused before any dialog.</summary>
+    public const string GiveReplacementRationale = "Give the replacement rationale.";
+
+    /// <summary>
+    /// Who can resolve the appeal, to a reader not offered the form (T213, T237; F7): the appeal body that can act now,
+    /// chair first, so a reader who holds a seat but cannot act now is left out (C13). "Only the appeal body can resolve
+    /// the appeal: the panel's chair, Thandi Zulu, and its external member, John van Rensburg."
+    /// </summary>
+    public static string WhoResolvesTheAppeal(IReadOnlyList<CommitteePersonDto> appealBody)
+    {
+        ArgumentNullException.ThrowIfNull(appealBody);
+        var chair = appealBody.FirstOrDefault(member => member.Role == DecisionPanelMemberRole.Chair);
+        var externals = appealBody
+            .Where(member => member.Role == DecisionPanelMemberRole.External)
+            .Select(member => member.DisplayName)
+            .ToArray();
+        if (chair is null && externals.Length == 0)
+        {
+            return "Only the appeal body, the panel's chair or an external member, can resolve the appeal, and none of them " +
+                   "can act now. A panel administrator must seat a chair who can.";
+        }
+
+        var parts = new List<string>();
+        if (chair is not null)
+        {
+            parts.Add($"the panel's chair, {chair.DisplayName},");
+        }
+
+        if (externals.Length > 0)
+        {
+            parts.Add($"{(chair is null ? "the panel's" : "its")} external member{(externals.Length == 1 ? string.Empty : "s")}, " +
+                      CommitteeAgendaText.Codes(externals));
+        }
+
+        return $"Only the appeal body can resolve the appeal: {CommitteeAgendaText.Codes(parts).TrimEnd(',')}.";
+    }
+
+    /// <summary>Both dialogs' safe button: it returns the focus to Resolve appeal, the native dialog's opener (F6).</summary>
+    public const string GoBack = "Go back";
+
+    public const string RemitConfirm = "Remit the appeal";
+    public const string DismissConfirm = "Dismiss the appeal";
+
+    /// <summary>"Remit Nomsa Mahlangu's appeal?" (C14b).</summary>
+    public static string RemitTitle(string? traineeName) => $"Remit {Possessive(traineeName)} appeal?";
+
+    /// <summary>"Dismiss Nomsa Mahlangu's appeal?" (C14c).</summary>
+    public static string DismissTitle(string? traineeName) => $"Dismiss {Possessive(traineeName)} appeal?";
+
+    /// <summary>
+    /// What a remit replaces: "Satisfactory with Observations replaces Inadequate Progress — Additional Training.", or, on
+    /// an entrustment-only review, which records no category (C17), "The appeal body's decision replaces the committee's.".
+    /// </summary>
+    public static string Replaces(CommitteeDecisionCategory? replacement, CommitteeDecisionCategory? current)
+        => replacement is { } next && current is { } now
+            ? $"{CommitteeDecisionWording.CategoryLabel(next)} replaces {CommitteeDecisionWording.CategoryLabel(now)}."
+            : "The appeal body's decision replaces the committee's.";
+
+    /// <summary>What a dismissal leaves: "Inadequate Progress — Additional Training stays in force.".</summary>
+    public static string StaysInForce(CommitteeDecisionCategory? current)
+        => current is { } now
+            ? $"{CommitteeDecisionWording.CategoryLabel(now)} stays in force."
+            : "The committee's decision stays in force.";
+
+    /// <summary>"This closes the 2026 S2 review. Nothing reopens it, and no STAR changes." (a remit changes no STAR, C17)</summary>
+    public static string ClosesTheReview(string periodLabel, bool remitted)
+        => remitted
+            ? $"This closes the {periodLabel} review. Nothing reopens it, and no STAR changes."
+            : $"This closes the {periodLabel} review. Nothing reopens it.";
 
     // ─── Helpers ─────────────────────────────────────────────────────────────────
 

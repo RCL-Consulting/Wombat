@@ -1,121 +1,247 @@
 @page "/admin/entrustment-decisions"
 @attribute [Authorize(Roles = "Administrator,InstitutionalAdmin,SpecialityAdmin,SubSpecialityAdmin")]
 @rendermode InteractiveServer
+@implements IAsyncDisposable
+@using System.Globalization
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JS
+@inject ILogger<Index> Logger
 
 <PageTitle>Entrustment decisions · Wombat</PageTitle>
 
-<PageHeader Title="Entrustment decisions" Subtitle="Issued Statements of Awarded Responsibility across the programme." />
+@*
+  The STAR register (T366, flow 09, boards R3-6; F3, F9, M4, M6, M9, M10, S1, S4, S6, S7, S11):
 
-@if (!string.IsNullOrWhiteSpace(_status))
-{
-  <Alert Kind="success">@_status</Alert>
-}
+  - The FilterBar pattern (a search-container form; DESIGN.md § Page-level patterns, List page): Trainee binds on change,
+    Status, applied with Show (F9, flow 08's word), and Clear filters once a filter is applied. After Show a visually
+    hidden status says "3 shown" (S11). Nothing issued at all is the empty card, with no form to filter.
+  - A hand-written stacking table (S8): Trainee the row header, newest issued first then STAR number descending (the
+    query's order). Issued links its review only where the reader may open it (IssuingReviewReadable, S7), in a 24px
+    target (M9). A revoked or superseded row carries its line under it, flow 03's .has-note / .history-note pair (S4,
+    C22). Download on every row, Revoke on an Active one, both named for the row (T239).
+  - Revoke opens one ConfirmDialog with its reason box (M5): the box takes the first focus, Revoke the STAR is always
+    enabled, a blank press is refused under the box (F3), and a refusal shows in the dialog with the reason kept (M4).
+    Done, the result is above the table with the focus; nothing claims the mail's delivery (S6).
+*@
+<div class="entrustment-list">
+  <PageHeader Title="Entrustment decisions" Subtitle="Issued Statements of Awarded Responsibility across the programme." />
 
-@if (!string.IsNullOrWhiteSpace(_error))
-{
-  <Alert Kind="danger">@_error</Alert>
-}
+  @* Present from the first render, so its words are announced when they come (S11; flow 04's C11). *@
+  <p class="visually-hidden" role="status">@Announcement</p>
 
-@* The list page's filter (DESIGN.md § Table system): a search-container, whose bottom margin keeps it off the table. It was
-   a detail-card, which has none, and the table touched it (T226 review). *@
-<section class="search-container shadow">
-  <div class="search-grid">
-    <FormField Label="Trainee" InputId="filter-trainee">
-      <input id="filter-trainee" class="form-control" @bind="_traineeFilter" @bind:event="oninput" placeholder="Filter by name" />
-    </FormField>
-    <FormField Label="Status" InputId="filter-status">
-      <InputSelect id="filter-status" class="form-select" @bind-Value="_statusFilter">
-        <option value="">All</option>
-        @foreach (var status in Enum.GetValues<EntrustmentDecisionStatus>())
-        {
-          <option value="@status">@status</option>
-        }
-      </InputSelect>
-    </FormField>
-  </div>
-  <FormActions>
-    <button type="button" class="btn btn-primary" @onclick="LoadAsync">Apply filters</button>
-  </FormActions>
-</section>
+  @if (ShowsForm)
+  {
+    <form class="search-container" method="get" aria-label="Filter Entrustment decisions" @onsubmit="ShowAsync" @onsubmit:preventDefault="true">
+      <div class="search-grid">
+        <div class="search-field">
+          <label for="@TraineeFieldId">Trainee</label>
+          <input id="@TraineeFieldId" class="form-control" type="search" placeholder="Filter by name" @bind="_traineeField" />
+        </div>
+        <div class="search-field">
+          <label for="filter-status">Status</label>
+          <select id="filter-status" class="form-select" @bind="_statusField">
+            <option value="">All</option>
+            @foreach (var status in StatusOptions)
+            {
+              <option value="@status">@status</option>
+            }
+          </select>
+        </div>
+        <div class="search-field filter-actions">
+          <button type="submit" class="btn btn-primary">Show</button>
+          @if (IsFiltered)
+          {
+            <button type="button" class="btn btn-outline" @onclick="ClearFiltersAsync">Clear filters</button>
+          }
+        </div>
+      </div>
+    </form>
+  }
 
-@* The list page's three states are StatePanel's (DESIGN.md § Alerts, validation, empty states): skeletons while the list
-   is read, its danger alert when the read fails, and its empty card. Until T266 the page said "Loading…" as text, and a
-   failed read left it there, under the error. *@
-<StatePanel IsLoading="@(_decisions is null && _loadError is null)" LoadError="@_loadError"
-            IsEmpty="@(_decisions is { Count: 0 })"
-            EmptyTitle="No entrustment decisions" EmptyBody="No entrustment decisions match the current filter.">
-  @{ var decisionNames = DecisionNames(_decisions!); }
-  @* A list table (DESIGN.md § Table system): a clinic-table in its container, which scrolls sideways on a narrow screen
-     rather than widen the page. Until T226 it was a table class app.css does not define: the table was unstyled and, at
-     390px, 133px wider than the screen. *@
-  <div class="table-container shadow">
-    <table class="clinic-table">
-      <thead>
-        <tr>
-          <th>Trainee</th>
-          <th>EPA</th>
-          <th>Level</th>
-          @* A date on one line: at 1280px "2026-07-02" broke at its hyphen (T226 review). *@
-          <th class="col-fit">Issued</th>
-          <th class="col-fit">Expires</th>
-          <th>Status</th>
-          <th><span class="visually-hidden">Actions</span></th>
-        </tr>
-      </thead>
-      <tbody>
-        @foreach (var decision in _decisions!)
-        {
-          <tr>
-            <td>@decision.TraineeName</td>
-            @* A STAR on an EPA deactivated since says the EPA is no longer in use (T255). *@
-            <td><EpaLabel Code="@decision.EpaCode" Title="@decision.EpaTitle" InForce="@decision.EpaInForce" /></td>
-            <td>@decision.AuthorisedLevelLabel</td>
-            <td class="col-fit">@decision.IssuedOn.ToString("yyyy-MM-dd")</td>
-            <td class="col-fit">@(decision.ExpiresOn?.ToString("yyyy-MM-dd") ?? "—")</td>
-            <td><span class="badge @BadgeFor.EntrustmentDecision(decision.Status)">@decision.Status</span></td>
-            <td>
-              <div class="actions-cell">
-                @* T239: each named by the decision it acts on: whose, which EPA, and when it was issued. *@
-                <button type="button" class="btn btn-sm btn-outline" aria-label="@($"Download the certificate of {decisionNames[decision.Id]}")"
-                        @onclick="() => DownloadAsync(decision.Id)">Download</button>
-                @if (decision.Status == EntrustmentDecisionStatus.Active)
+  @* A download's or a revocation's answer, above the table; it takes the focus once drawn (DESIGN.md § Button system). *@
+  <ActionResult @ref="_result">
+    @if (_resultText is not null)
+    {
+      <Alert Kind="@(_resultIsRefusal ? "danger" : "success")" Role="@(_resultIsRefusal ? "alert" : "status")">@_resultText</Alert>
+    }
+  </ActionResult>
+
+  <StatePanel @ref="_panel"
+              IsLoading="@_loading"
+              LoadError="@_loadError"
+              OnRetry="LoadAsync">
+    <LoadingContent>
+      @* No Download or Revoke until the read is in (C25). *@
+      <div aria-hidden="true">
+        <Skeleton Count="5" Height="3rem" />
+      </div>
+    </LoadingContent>
+    <ChildContent>
+      @if (_decisions is { Count: 0 } && !IsFiltered)
+      {
+        <div class="detail-card detail-card--empty">
+          <div class="state-panel-title">No STARs issued yet</div>
+          <div class="state-panel-copy">When a committee ratifies an entrustment decision, its STAR is listed here.</div>
+        </div>
+      }
+      else if (_decisions is { Count: 0 })
+      {
+        <p class="list-section-count">@Caption(0)</p>
+        <div class="detail-card detail-card--empty">
+          <div class="state-panel-title">No STAR matches these filters.</div>
+          <div class="state-panel-copy">@Asked</div>
+          @* T366, D10: no second Clear filters; the filter bar's, just above, is the one. *@
+        </div>
+      }
+      else if (_decisions is not null)
+      {
+        var decisionNames = DecisionNames(_decisions);
+        <div class="table-container shadow">
+          <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+            <caption>@Caption(_decisions.Count)</caption>
+            <thead role="rowgroup">
+              <tr role="row">
+                <th scope="col" role="columnheader">Trainee</th>
+                <th scope="col" role="columnheader">EPA</th>
+                <th scope="col" role="columnheader">Level</th>
+                @* A date on one line: at 1280px "2026-07-02" broke at its hyphen (T226 review). *@
+                <th scope="col" role="columnheader" class="col-fit">Issued</th>
+                <th scope="col" role="columnheader" class="col-fit">Expires</th>
+                <th scope="col" role="columnheader">Status</th>
+                <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody role="rowgroup">
+              @foreach (var decision in _decisions)
+              {
+                var line = StarWords.RowLine(decision);
+                <tr role="row" class="@(line is null ? null : "has-note")" @key="decision.Id">
+                  <th scope="row" role="rowheader">@decision.TraineeName</th>
+                  @* A STAR on an EPA deactivated since says the EPA is no longer in use (T255). *@
+                  <td role="cell" data-label="EPA"><EpaLabel Code="@decision.EpaCode" Title="@decision.EpaTitle" InForce="@decision.EpaInForce" /></td>
+                  <td role="cell" data-label="Level">@decision.AuthorisedLevelLabel</td>
+                  <td role="cell" class="col-fit" data-label="Issued">
+                    @StarWords.Iso(decision.IssuedOn)<br />
+                    @* Its review only where the reader may open it (S7), at the committee's address; 24px, 44px at 390 (M9). *@
+                    @if (decision.IssuingReviewReadable)
+                    {
+                      <a class="issued-review" href="@ReviewLinks.Review(decision.IssuedByCommitteeReviewId)"
+                         aria-label="@($"Open review #{decision.IssuedByCommitteeReviewId}")">@($"review #{decision.IssuedByCommitteeReviewId}")</a>
+                    }
+                    else
+                    {
+                      <span>@($"review #{decision.IssuedByCommitteeReviewId}")</span>
+                    }
+                  </td>
+                  <td role="cell" class="col-fit" data-label="Expires">@(decision.ExpiresOn is { } expiresOn ? StarWords.Iso(expiresOn) : "—")</td>
+                  <td role="cell" data-label="Status"><span class="badge @BadgeFor.EntrustmentDecision(decision.Status)">@decision.Status</span></td>
+                  <td role="cell">
+                    <div class="actions-cell">
+                      @* T239: each named by the decision it acts on: whose, which EPA, and when it was issued. *@
+                      <button type="button" class="btn btn-sm btn-outline" aria-label="@($"Download the certificate of {decisionNames[decision.Id]}")"
+                              @onclick="() => DownloadAsync(decision.Id)"><Icon Name="download" />Download</button>
+                      @if (decision.Status == EntrustmentDecisionStatus.Active)
+                      {
+                        @* A row action is an outline button; the red one is the dialog's (C21; DESIGN.md § Button system). *@
+                        <button type="button" class="btn btn-sm btn-outline" aria-label="@($"Revoke {decisionNames[decision.Id]}")"
+                                @onclick="() => OpenRevokeDialogAsync(decision)">Revoke</button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+                @if (line is not null)
                 {
-                  <button type="button" class="btn btn-sm btn-danger" aria-label="@($"Revoke {decisionNames[decision.Id]}")"
-                          @onclick="() => OpenRevokeDialog(decision)">Revoke</button>
+                  <tr role="row">
+                    <td role="cell" colspan="7" class="history-note">@line</td>
+                  </tr>
                 }
-              </div>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
-</StatePanel>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </ChildContent>
+  </StatePanel>
 
-@if (_revokingDecision is not null)
-{
-  <section class="detail-card mt-3">
-    <h3>Revoke entrustment decision</h3>
-    <p>
-      You are about to revoke the entrustment decision for
-      <strong><EpaLabel Code="@_revokingDecision.EpaCode" Title="@_revokingDecision.EpaTitle" InForce="@_revokingDecision.EpaInForce" /></strong>
-      held by <strong>@_revokingDecision.TraineeName</strong>.
-      Revocation is immediate and irreversible. The trainee is notified.
-    </p>
-    <FormField Label="Revocation reason" InputId="revoke-reason" Required="true">
-      <InputTextArea id="revoke-reason" class="form-control" @bind-Value="_revokeReason" />
-    </FormField>
-    <FormActions>
-      <button type="button" class="btn btn-danger" @onclick="ConfirmRevokeAsync" disabled="@string.IsNullOrWhiteSpace(_revokeReason)">Confirm revocation</button>
-      <button type="button" class="btn btn-outline" @onclick="CancelRevoke">Cancel</button>
-    </FormActions>
-  </section>
-}
+  <ConfirmDialog @ref="_revokeDialog"
+                 Title="@RevokeTitle"
+                 ConfirmLabel="Revoke the STAR"
+                 DangerAction="true"
+                 InitialFocusId="@ReasonId"
+                 OnConfirmClosesWhen="RevokeAsync"
+                 OnClosed="RevokeDialogClosed">
+    <BodyContent>
+      @if (_revoking is { } revoking)
+      {
+        <p><EpaLabel Code="@revoking.EpaCode" Title="@revoking.EpaTitle" InForce="@revoking.EpaInForce" />, level @revoking.AuthorisedLevelLabel, issued @StarWords.Iso(revoking.IssuedOn). Revocation is immediate and cannot be undone.</p>
+        @* S6: true when T367 skips the send, as it does for a deactivated account; nothing claims delivery. *@
+        <p>@revoking.TraineeName is sent an email saying the STAR was revoked and by whom, with a link to My authorisations, unless @(revoking.TraineeName)'s account is deactivated. The reason is not in the email: @revoking.TraineeName reads it on My authorisations and on the certificate.</p>
+        <p>The EPA reads 'Revoked: re-decide' on Decisions due, and @(revoking.TraineeName)'s review agenda keeps its line.</p>
+      }
+    </BodyContent>
+    <FieldContent>
+      @* The field is drawn whenever the dialog is, so it is there to take the first focus as the dialog opens (M5); outside
+         the dialog's description, so its label and counter are read once (D9). *@
+      <FormField Label="Revocation reason" InputId="@ReasonId" Required="true">
+        @* Its refusal first, then its counter, both named by the box (F3; § Form system, a counter is a .field-help). *@
+        @* T366, D2: no maxlength, so a long paste is never cut silently; bound on change, the counter counted in the
+           browser by the page's script module, so no keystroke is a round trip (§ Form system). *@
+        <textarea id="@ReasonId" class="form-control @(_reasonError is null ? null : "input-validation-error")" rows="3"
+                  aria-describedby="@ReasonDescribedBy" aria-invalid="@(_reasonError is null ? null : "true")"
+                  @bind="_reason" @ref="_reasonBox"></textarea>
+        @if (_reasonError is not null)
+        {
+          <p id="@ReasonErrorId" class="validation-message">@_reasonError</p>
+        }
+        <p id="@ReasonCountId" class="field-help" @ref="_counter">@ReasonCount</p>
+      </FormField>
+      @* M4: a refusal in the dialog, under the reason, the reason kept; it takes the focus once drawn. *@
+      <ActionResult @ref="_revokeRefusal">
+        @if (_revokeRefusalText is not null)
+        {
+          <Alert Kind="danger" Role="alert">@_revokeRefusalText</Alert>
+        }
+      </ActionResult>
+    </FieldContent>
+  </ConfirmDialog>
+</div>
 
 @code {
+  /// <summary>The reason box's id: the dialog's first focus (M5) and a blank press's (F3).</summary>
+  public const string ReasonId = "revoke-reason";
+
+  /// <summary>The Trainee filter's id, which Clear filters returns the focus to once its button is gone.</summary>
+  public const string TraineeFieldId = "filter-trainee";
+
+  /// <summary>The caption's subject (C24): the h1 keeps the menu's words, the caption names the STARs once.</summary>
+  public const string CaptionSubject = "Issued STARs (entrustment decisions)";
+
+  /// <summary>A blank press of Revoke the STAR (F3).</summary>
+  public const string ReasonRequired = "Give a reason for the revocation.";
+
+  /// <summary>An unexpected failure of the revoke, logged; never the exception's text (T329, T338).</summary>
+  public const string RevokeFailed = "The STAR could not be revoked just now. Try again, or come back in a few minutes.";
+
+  /// <summary>A failed read of the list (T329).</summary>
+  public const string LoadFailed = "Could not load the STARs. Nothing has changed. Try again, or come back in a few minutes.";
+
+  /// <summary>The download's answer when the handler finds no certificate the reader oversees (T183).</summary>
+  public const string CertificateNotOverseen = "The certificate could not be found among the decisions you oversee.";
+
+  private const int ReasonMaxLength = RevokeEntrustmentDecisionCommand.MaxReasonLength;
+  private const string ReasonErrorId = "revoke-reason-error";
+  private const string ReasonCountId = "revoke-reason-count";
+
+  // The filter as the register's own order of states (F9; the boards' order).
+  private static readonly EntrustmentDecisionStatus[] StatusOptions =
+  [
+    EntrustmentDecisionStatus.Active,
+    EntrustmentDecisionStatus.Expired,
+    EntrustmentDecisionStatus.Revoked,
+    EntrustmentDecisionStatus.Superseded
+  ];
+
   /// <summary>
   /// Each decision as its row's actions name it (T239): "Thandi Nkosi's PAED-003 decision, issued 2026-07-02". A decision
   /// revoked or superseded and its re-issue can share all three, so a name two rows share adds each one's status and then
@@ -126,100 +252,322 @@
       decisions,
       decision => decision.Id,
       decision => $"{decision.TraineeName}'s {decision.EpaCode} decision, issued " +
-                  decision.IssuedOn.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+                  decision.IssuedOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
       decision => $", {decision.Status}",
       decision => $", level {decision.AuthorisedLevelLabel}");
 
   private IReadOnlyList<EntrustmentDecisionDto>? _decisions;
-
-  // A failed read of the list, which StatePanel shows in the list's place.
+  private bool _loading = true;
   private string? _loadError;
 
-  // A refused download or revocation, shown above the filter while the list stays in view.
-  private string? _error;
-  private string? _status;
-  private string _traineeFilter = string.Empty;
+  // The form's fields change nothing until Show (F9); the filters as last applied.
+  private string _traineeField = string.Empty;
+  private string _statusField = string.Empty;
+  private string? _traineeFilter;
   private EntrustmentDecisionStatus? _statusFilter;
-  private EntrustmentDecisionDto? _revokingDecision;
-  private string _revokeReason = string.Empty;
 
-  protected override async Task OnInitializedAsync()
+  // "3 shown" once Show or Clear filters has read the list (S11).
+  private string? _shownAnnouncement;
+
+  private ActionResult? _result;
+  private string? _resultText;
+  private bool _resultIsRefusal;
+  private bool _focusResultOnClose;
+  private StatePanel? _panel;
+
+  private ConfirmDialog? _revokeDialog;
+  private ActionResult? _revokeRefusal;
+  private EntrustmentDecisionDto? _revoking;
+  private string _reason = string.Empty;
+  private string? _reasonError;
+  private string? _revokeRefusalText;
+  private bool _focusReason;
+  private ElementReference _reasonBox;
+  private ElementReference _counter;
+  private IJSObjectReference? _module;
+
+  // Clear filters' button is gone once pressed: the Trainee field takes the focus.
+  private bool _focusTraineeField;
+
+  private bool IsFiltered => !string.IsNullOrEmpty(_traineeFilter) || _statusFilter.HasValue;
+
+  /// <summary>Nothing issued at all draws no form (FilterBar's rule); while it loads, or failed, the filters stand.</summary>
+  private bool ShowsForm => _loading || _loadError is not null || IsFiltered || _decisions is { Count: > 0 };
+
+  private string? Announcement => _loading ? "Loading the STARs." : _shownAnnouncement;
+
+  private string RevokeTitle => _revoking is null
+    ? "Revoke the STAR?"
+    : $"Revoke {_revoking.TraineeName}'s {_revoking.EpaCode} STAR?";
+
+  private string ReasonCount
+    => string.Create(CultureInfo.InvariantCulture, $"{_reason.Length:N0} of {ReasonMaxLength:N0} characters");
+
+  private string ReasonDescribedBy => _reasonError is null ? ReasonCountId : $"{ReasonErrorId} {ReasonCountId}";
+
+  /// <summary>What a filter that matched nothing asked: "Trainee “Mahlangu”, status Revoked."</summary>
+  private string Asked
   {
-    await LoadAsync();
+    get
+    {
+      var parts = new List<string>();
+      if (!string.IsNullOrEmpty(_traineeFilter))
+      {
+        parts.Add($"trainee “{_traineeFilter}”");
+      }
+
+      if (_statusFilter is { } status)
+      {
+        parts.Add($"status {status}");
+      }
+
+      var sentence = string.Join(", ", parts);
+      return sentence.Length == 0 ? string.Empty : char.ToUpperInvariant(sentence[0]) + sentence[1..] + ".";
+    }
   }
 
+  private static string Caption(int shown) => string.Create(CultureInfo.InvariantCulture, $"{CaptionSubject} · {shown} shown");
+
+  protected override Task OnInitializedAsync() => LoadAsync();
+
+  /// <summary>Reads the list as the filters were last applied, with the skeleton in its place; Try again reads it again.</summary>
   private async Task LoadAsync()
   {
+    _loading = true;
+    _loadError = null;
     try
     {
-      _error = null;
-      _loadError = null;
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var trainee = string.IsNullOrWhiteSpace(_traineeFilter) ? null : _traineeFilter.Trim();
-      _decisions = await Sender.Send(new ListEntrustmentDecisionsForAdminQuery(trainee, _statusFilter, authState.User));
+      await ReadAsync();
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      // In its own words, never a validator's log line (DESIGN.md § Alerts, T213).
-      _loadError = RefusalText.Of(exception);
+      Logger.LogError(exception, "The STAR register could not be read.");
+      _loadError = LoadFailed;
+      _panel?.FocusFailureAfterRender();
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private async Task ReadAsync()
+  {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    _decisions = await Sender.Send(new ListEntrustmentDecisionsForAdminQuery(_traineeFilter, _statusFilter, authState.User));
+  }
+
+  /// <summary>Show (F9): applies the fields and reads the list; the focus stays on Show, and the count is announced (S11).</summary>
+  private async Task ShowAsync()
+  {
+    _traineeFilter = string.IsNullOrWhiteSpace(_traineeField) ? null : _traineeField.Trim();
+    _statusFilter = Enum.TryParse<EntrustmentDecisionStatus>(_statusField, out var status) ? status : null;
+    await ReadAgainAsync();
+  }
+
+  /// <summary>Clear filters: every row again; its button is gone, so the focus goes to the Trainee field.</summary>
+  private async Task ClearFiltersAsync()
+  {
+    _traineeField = string.Empty;
+    _statusField = string.Empty;
+    _traineeFilter = null;
+    _statusFilter = null;
+    await ReadAgainAsync();
+    if (_loadError is null)
+    {
+      _focusTraineeField = true;
+    }
+  }
+
+  private async Task ReadAgainAsync()
+  {
+    _resultText = null;
+    _shownAnnouncement = null;
+    await LoadAsync();
+    if (_loadError is null && _decisions is not null)
+    {
+      _shownAnnouncement = string.Create(CultureInfo.InvariantCulture, $"{_decisions.Count} shown");
     }
   }
 
   private async Task DownloadAsync(int decisionId)
   {
+    _resultText = null;
     try
     {
-      _error = null;
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var result = await Sender.Send(new DownloadEntrustmentCertificateCommand(decisionId, authState.User));
-      if (result is null)
+      var certificate = await Sender.Send(new DownloadEntrustmentCertificateCommand(decisionId, authState.User));
+      if (certificate is null)
       {
-        _error = "The certificate could not be found among the decisions you oversee.";
+        ShowResult(CertificateNotOverseen, refusal: true);
         return;
       }
 
-      await JS.InvokeVoidAsync("wombatFileDownload", result.FileName, result.PdfBytes);
+      // A download says what it did itself: the focus stays on the button pressed (DESIGN.md § Button system).
+      await JS.InvokeVoidAsync("wombatFileDownload", certificate.FileName, certificate.PdfBytes);
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _error = RefusalText.Of(exception);
+      Logger.LogError(exception, "The certificate of entrustment decision {DecisionId} could not be made.", decisionId);
+      ShowResult(StarWords.CertificateFailed, refusal: true);
     }
   }
 
-  private void OpenRevokeDialog(EntrustmentDecisionDto decision)
+  private void ShowResult(string text, bool refusal)
   {
-    _revokingDecision = decision;
-    _revokeReason = string.Empty;
-    _status = null;
-    _error = null;
+    _resultText = text;
+    _resultIsRefusal = refusal;
+    _result?.FocusAfterRender();
   }
 
-  private void CancelRevoke()
+  private async Task OpenRevokeDialogAsync(EntrustmentDecisionDto decision)
   {
-    _revokingDecision = null;
-    _revokeReason = string.Empty;
-  }
-
-  private async Task ConfirmRevokeAsync()
-  {
-    if (_revokingDecision is null || string.IsNullOrWhiteSpace(_revokeReason))
+    _revoking = decision;
+    _reason = string.Empty;
+    _reasonError = null;
+    _revokeRefusalText = null;
+    _resultText = null;
+    if (_revokeDialog is not null)
     {
-      return;
+      await _revokeDialog.ShowAsync();
+      await CountAsync();
     }
+  }
 
+  /// <summary>
+  /// The counter, counted in the browser as the reason is typed (T366, D2; the lodge block's module, S9). A script that
+  /// cannot run leaves Blazor's count, which follows each change.
+  /// </summary>
+  private async Task CountAsync()
+  {
     try
     {
-      _error = null;
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      await Sender.Send(new RevokeEntrustmentDecisionCommand(_revokingDecision.Id, _revokeReason.Trim(), authState.User));
-      _status = $"Entrustment decision for {_revokingDecision.EpaCode} revoked.";
-      _revokingDecision = null;
-      _revokeReason = string.Empty;
-      await LoadAsync();
+      _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/review-appeal.js");
+      if (_module is not null)
+      {
+        await _module.InvokeVoidAsync("count", _reasonBox, _counter, ReasonMaxLength);
+      }
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is JSException or JSDisconnectedException or InvalidOperationException or TaskCanceledException)
     {
-      _error = RefusalText.Of(exception);
+      // The counter is a convenience: Blazor's own count is on the page whenever the reason changes.
+    }
+  }
+
+  public async ValueTask DisposeAsync()
+  {
+    if (_module is not null)
+    {
+      try
+      {
+        await _module.DisposeAsync();
+      }
+      catch (JSDisconnectedException)
+      {
+        // The circuit has gone; so has the module.
+      }
+    }
+  }
+
+  /// <summary>
+  /// Revoke the STAR (M5): false keeps the dialog open. A blank reason is refused under the box, which takes the focus
+  /// (F3); the command's own refusal shows under the reason, kept, and takes the focus (M4); anything else is a fixed
+  /// sentence, logged. Each refusal reads the list again behind the dialog, so a STAR a second tab revoked reads Revoked
+  /// once the dialog is closed (DESIGN.md § Table system, a refusal reads the page again).
+  /// </summary>
+  private async Task<bool> RevokeAsync()
+  {
+    if (_revoking is not { } revoking)
+    {
+      return true;
+    }
+
+    _revokeRefusalText = null;
+    if (string.IsNullOrWhiteSpace(_reason) || _reason.Length > ReasonMaxLength)
+    {
+      // Blank (F3), or over the limit (T366, R3, D2): refused under the box, which takes the focus, what was typed kept.
+      _reasonError = string.IsNullOrWhiteSpace(_reason) ? ReasonRequired : RevokeEntrustmentDecisionCommand.ReasonTooLong;
+      _focusReason = true;
+      StateHasChanged();
+      return false;
+    }
+
+    _reasonError = null;
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new RevokeEntrustmentDecisionCommand(revoking.Id, _reason.Trim(), authState.User));
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      if (EntrustmentRevocationRefusals.IsRefusal(exception))
+      {
+        _revokeRefusalText = RefusalText.Of(exception);
+      }
+      else
+      {
+        Logger.LogError(exception, "Entrustment decision {DecisionId} could not be revoked.", revoking.Id);
+        _revokeRefusalText = RevokeFailed;
+      }
+
+      _revokeRefusal?.FocusAfterRender();
+      await ReadQuietlyAsync();
+      StateHasChanged();
+      return false;
+    }
+
+    // Done: the result above the table, focused once the dialog has closed (OnClosed); nothing claims delivery (S6).
+    _resultText = $"{revoking.TraineeName}'s {revoking.EpaCode} STAR is revoked.";
+    _resultIsRefusal = false;
+    _focusResultOnClose = true;
+    await ReadQuietlyAsync();
+    StateHasChanged();
+    return true;
+  }
+
+  /// <summary>Reads the list again in place, without the skeleton; a failure is the load error.</summary>
+  private async Task ReadQuietlyAsync()
+  {
+    try
+    {
+      await ReadAsync();
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "The STAR register could not be read again.");
+      _loadError = LoadFailed;
+    }
+  }
+
+  /// <summary>
+  /// The dialog has closed, by Cancel, Escape or a done revoke: it is emptied only now, so it never redraws without its
+  /// STAR while it closes. After a revoke, its result takes the focus now that nothing modal holds it.
+  /// </summary>
+  private void RevokeDialogClosed()
+  {
+    _revoking = null;
+    _reason = string.Empty;
+    _reasonError = null;
+    _revokeRefusalText = null;
+    if (_focusResultOnClose)
+    {
+      _focusResultOnClose = false;
+      _result?.FocusAfterRender();
+    }
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusReason)
+    {
+      _focusReason = false;
+      await PageFocus.FocusByIdAsync(JS, ReasonId);
+    }
+
+    if (_focusTraineeField && !_loading)
+    {
+      _focusTraineeField = false;
+      await PageFocus.FocusByIdAsync(JS, TraineeFieldId);
     }
   }
 }

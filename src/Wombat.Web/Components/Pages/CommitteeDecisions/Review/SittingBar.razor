@@ -2,7 +2,7 @@
   The sitting bar (T361, flow 07; R2-Spec "SittingBar"; round 3 items 14, 16, 21, 28; E2, E7, E8): a section named "The
   sitting" by a visually hidden h2, under PageHeader. The state badge, the count, the mode and evidence window before
   Start, Present from the ticks (the chair's, not live), and the next act: Start review…, Go to the decision, Ratify… or
-  Close review….
+  Close review…; under appeal, every reader's "Go to the appeal" (T366, F5).
 
   - The chair's bar (.sitting-bar): an act is the chair's. From 641px it sticks under the top bar (z-index 1, under the
     sidebar's 10), one line; js/sticky-offset.js measures it into --sitting-bar-h, which scroll-padding-top reserves.
@@ -53,6 +53,11 @@
         case SittingAct.GoToDecision:
           <button type="button" class="btn btn-outline" id="sitting-go-to-decision" @onclick="OnGoToDecision">@ReviewWords.GoToDecisionLabel</button>
           break;
+        case SittingAct.GoToAppeal:
+          @* T366 (F5): a button moving the focus through PageFocus, never an #appeals link, which <base href="/"> would
+             make a navigation to Home. At the bar's right end from 641px; below, under the state line, full width, 44px. *@
+          <button type="button" class="btn btn-sm btn-outline" id="sitting-go-to-appeal" @onclick="OnGoToAppeal">@ReviewWords.GoToAppealLabel</button>
+          break;
         case SittingAct.Close:
           <button type="button" class="btn btn-primary" id="sitting-close" disabled="@Busy" @onclick="OnClose">@ReviewWords.CloseLabel</button>
           break;
@@ -88,6 +93,9 @@
 
   [Parameter] public EventCallback OnStart { get; set; }
   [Parameter] public EventCallback OnGoToDecision { get; set; }
+
+  /// <summary>"Go to the appeal" pressed (T366, F5).</summary>
+  [Parameter] public EventCallback OnGoToAppeal { get; set; }
   [Parameter] public EventCallback OnRatify { get; set; }
   [Parameter] public EventCallback OnClose { get; set; }
   [Parameter] public EventCallback OnRefresh { get; set; }

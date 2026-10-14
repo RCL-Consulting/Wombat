@@ -23,14 +23,24 @@ namespace Wombat.Application.Features.EntrustmentDecisions;
 public sealed record RevokeEntrustmentDecisionCommand(
     int DecisionId,
     [property: Redact] string Reason,
-    ClaimsPrincipal Principal) : IRequest<EntrustmentDecisionDto>;
+    ClaimsPrincipal Principal) : IRequest<EntrustmentDecisionDto>
+{
+    /// <summary>The longest reason a revocation keeps, in characters, as the register's counter says (T366).</summary>
+    public const int MaxReasonLength = 1000;
+
+    /// <summary>A reason over <see cref="MaxReasonLength" />, refused under the box (T366, R3, D2).</summary>
+    public const string ReasonTooLong = "Give the reason in 1,000 characters or fewer.";
+}
 
 public sealed class RevokeEntrustmentDecisionCommandValidator : AbstractValidator<RevokeEntrustmentDecisionCommand>
 {
     public RevokeEntrustmentDecisionCommandValidator()
     {
         RuleFor(command => command.DecisionId).GreaterThan(0);
-        RuleFor(command => command.Reason).NotEmpty().MaximumLength(1000);
+        // T366, R3: Wombat's words, as the register says them under the box, never the validator's default.
+        RuleFor(command => command.Reason)
+            .NotEmpty()
+            .MaximumLength(RevokeEntrustmentDecisionCommand.MaxReasonLength).WithMessage(RevokeEntrustmentDecisionCommand.ReasonTooLong);
         RuleFor(command => command.Principal).NotNull();
     }
 }
@@ -69,7 +79,7 @@ public sealed class RevokeEntrustmentDecisionCommandHandler : IRequestHandler<Re
 
         if (decision is null && EntrustmentDecisionAuthorization.MayRevokeEveryDecision(request.Principal))
         {
-            throw new InvalidOperationException("The entrustment decision could not be found.");
+            throw new InvalidOperationException(EntrustmentRevocationRefusals.NotFound);
         }
 
         if (decision is null)
@@ -100,5 +110,40 @@ public sealed class RevokeEntrustmentDecisionCommandHandler : IRequestHandler<Re
         });
 
         return decision.ToDto();
+    }
+}
+
+/// <summary>
+/// Which of a revoke's failures are its own refusals, written in Wombat's words for the person who pressed Revoke, and
+/// which are unexpected (T366, M4; T338). The register's dialog shows a refusal under the reason, the reason kept, and
+/// any other failure as a fixed sentence, logged: an exception's own text never reaches the page.
+/// </summary>
+/// <remarks>
+/// The decision refuses a second revoke with a plain <see cref="InvalidOperationException" />
+/// (<see cref="EntrustmentDecision.Revoke" />), as the handler refuses an unknown id to an Administrator, so a refusal is
+/// told from the framework's own failures by its words. <c>EntrustmentDecisionHandlersTests</c> holds the words to what
+/// the decision and the handler throw.
+/// </remarks>
+public static class EntrustmentRevocationRefusals
+{
+    /// <summary>A second tab revoked it first, or it has expired or been superseded since the list was read.</summary>
+    public const string NotActive = "Only active entrustment decisions can be revoked.";
+
+    /// <summary>An unknown id, told plainly only to an Administrator, who may revoke every decision.</summary>
+    public const string NotFound = "The entrustment decision could not be found.";
+
+    /// <summary>
+    /// Whether <paramref name="exception" /> is the revoke's own refusal: the validator's, a scope refusal
+    /// (<see cref="UnauthorizedAccessException" />, in the handler's words), or one of the two above.
+    /// </summary>
+    public static bool IsRefusal(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        return exception switch
+        {
+            ValidationException or UnauthorizedAccessException => true,
+            InvalidOperationException => exception.Message is NotActive or NotFound,
+            _ => false
+        };
     }
 }

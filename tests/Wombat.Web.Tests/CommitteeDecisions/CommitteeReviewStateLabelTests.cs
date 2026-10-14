@@ -62,9 +62,10 @@ public sealed partial class CommitteeReviewStateLabelTests : TestContext
     }
 
     [Fact]
-    public void TheTraineesOwnReviews_PrintEachStateInWords_InTheListAndTheDetail()
+    public void TheTraineesOwnReviews_PrintEachStateInWords_InTheListAndOnHerReviewsPage()
     {
         SignIn(WombatRoles.Trainee, TraineeId);
+        JSInterop.Mode = JSRuntimeMode.Loose;
         CommitteeReviewListItemDto[] reviews =
         [
             ListItem(50, CommitteeReviewState.Ratified),
@@ -76,14 +77,15 @@ public sealed partial class CommitteeReviewStateLabelTests : TestContext
         var cut = RenderComponent<MyReviews>();
         cut.WaitForState(() => cut.FindAll("tbody tr").Count == reviews.Length);
 
-        var stateColumn = Column(cut, "State");
-        cut.FindAll("tbody tr").Select(row => Text(row.QuerySelectorAll("td")[stateColumn])).Should().Equal(
+        // T366 (flow 09): State is a badge, its words the state's.
+        cut.FindAll("tbody td[data-label='State']").Select(cell => Text(cell)).Should().Equal(
             "Ratified", "Under appeal", "Closed");
 
-        cut.FindAll("button").Where(button => button.TextContent.Trim() == "View").ElementAt(1).Click();
-        cut.WaitForState(() => cut.FindAll("#my-review-state").Count == 1);
-        Text(cut.Find("#my-review-state")).Should().Be("State: Under appeal");
+        var page = RenderComponent<MyReview>(parameters => parameters.Add(review => review.ReviewId, 51));
+        page.WaitForState(() => page.FindAll("#my-review-state").Count == 1);
+        Text(page.Find("#my-review-state")).Should().Be("Under appeal");
         cut.Markup.Should().NotContain("UnderAppeal");
+        page.Markup.Should().NotContain("UnderAppeal");
     }
 
     [Theory]
@@ -159,6 +161,7 @@ public sealed partial class CommitteeReviewStateLabelTests : TestContext
                 ListReviewsForPanelQuery => reviews.ToArray(),
                 ListReviewsForTraineeQuery => reviews.ToArray(),
                 GetCommitteeReviewByIdQuery query => Detail(reviews.Single(review => review.Id == query.ReviewId)),
+                GetMyCommitteeReviewQuery query => Detail(reviews.Single(review => review.Id == query.ReviewId)),
                 ListPendingEntrustmentDecisionsForReviewQuery => Array.Empty<PendingEntrustmentDecisionDto>(),
                 GetSamplingConcentrationWarningsQuery => null,
                 CountMsfCampaignsOutsideSnapshotQuery => MsfCampaignsOutsideSnapshotDto.None,

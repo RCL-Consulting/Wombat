@@ -171,7 +171,7 @@ public sealed class CallerPrincipalPageTests : TestContext
 
         cut.FindAll("button").Single(button => button.TextContent.Trim() == "Revoke").Click();
         cut.Find("#revoke-reason").Change("Concern raised at the site.");
-        cut.FindAll("button").Single(button => button.TextContent.Contains("Confirm revocation")).Click();
+        cut.FindAll("button").Single(button => button.TextContent.Contains("Revoke the STAR")).Click();
         cut.WaitForState(() => cut.Markup.Contains("revoked"));
 
         var lists = _sender.Received.OfType<ListEntrustmentDecisionsForAdminQuery>().ToList();

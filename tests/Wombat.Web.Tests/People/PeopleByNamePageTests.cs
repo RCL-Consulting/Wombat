@@ -58,7 +58,8 @@ public sealed class PeopleByNamePageTests : TestContext
 
         cut.FindAll("button").First(button => button.TextContent.Trim() == "Revoke").Click();
 
-        cut.Find("section h3 + p").TextContent.Should().Contain("held by Thandi Nkosi.");
+        // T366 (M5): the register's ConfirmDialog names whose STAR it revokes.
+        cut.Find("dialog h2").TextContent.Should().Be("Revoke Thandi Nkosi's PAED-001 STAR?");
         cut.Markup.Should().NotContain("trainee-1");
     }
 
@@ -77,8 +78,9 @@ public sealed class PeopleByNamePageTests : TestContext
         cut.Find("label[for=filter-trainee]").TextContent.Should().NotContain("id");
         cut.Find("#filter-trainee").GetAttribute("placeholder").Should().Be("Filter by name");
 
-        cut.Find("#filter-trainee").Input("thandi");
-        cut.FindAll("button").First(button => button.TextContent.Trim() == "Apply filters").Click();
+        // T366 (F9): the field binds on change and applies with Show.
+        cut.Find("#filter-trainee").Change("thandi");
+        cut.Find("form.search-container").Submit();
 
         _sender.Received.OfType<ListEntrustmentDecisionsForAdminQuery>().Last().TraineeFilter.Should().Be("thandi");
     }

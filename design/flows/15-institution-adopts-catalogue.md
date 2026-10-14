@@ -411,17 +411,17 @@ Expect: Three scales, with their level counts: the CPSA ladder at 6, the O-R Sca
 Step 6.22 — Prof Mbatha sees the pause, and cannot lift it (act-6-catalogue.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/epas → /admin/curricula → /admin/curricula/{Id:int}/items → /admin/entrustment-decisions
-Do: Read the EPA list, then 11.1's items. Then open Entrustment decisions and filter by Dr Molefe's name. Revoke
-  nothing.
+Do: Read the EPA list, then 11.1's items. Then open Entrustment decisions, filter by Dr Molefe's name and press Show.
+  Revoke nothing.
 Expect:
   - **The EPA list.** PAED-012 reads Inactive. No national EPA offers her Edit: only its College changes one (T211's
     rule; `UpdateEpa`).
   - **11.1's items.** PAED-012's row is marked "(inactive: not in force)", under the same notice. Every row reads "Set
     by the College".
   - **Dr Molefe's STARs.** Her fifteen from Act 5 still read Active, beside Act 4's PAED-010, Superseded (the status
-    filter starts on All). The PAED-012 row names its EPA "PAED-012 — Communicating
-    with and counselling patients, caregivers and healthcare teams (no longer in use)" (T255): a pause leaves a STAR
-    standing.
+    filter starts on All): "… · 16 shown". Each row is headed by her name, its EPA in the next column. The PAED-012 row
+    names its EPA "PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams (no longer
+    in use)" (T255): a pause leaves a STAR standing.
 
 Step 6.25 — Prof Mbatha creates a KGK EPA (act-6-catalogue.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha

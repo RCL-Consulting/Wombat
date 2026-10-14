@@ -618,16 +618,22 @@ public sealed class CommitteeReview
         }
     }
 
+    /// <summary>The lodge's refusal for a review that is not Ratified: a second tab's lodge among them (T366, M3).</summary>
+    public const string OnlyRatifiedAppealed = "Only ratified reviews can be appealed.";
+
+    /// <summary>The lodge's refusal while an appeal is still open.</summary>
+    public const string AppealAlreadyOpen = "An unresolved appeal already exists for this review.";
+
     public CommitteeAppeal LodgeAppeal(string reason, string actorUserId, DateTime utcNow)
     {
         if (State != CommitteeReviewState.Ratified)
         {
-            throw new InvalidOperationException("Only ratified reviews can be appealed.");
+            throw new InvalidOperationException(OnlyRatifiedAppealed);
         }
 
         if (Appeals.Any(appeal => !appeal.ResolvedOn.HasValue))
         {
-            throw new InvalidOperationException("An unresolved appeal already exists for this review.");
+            throw new InvalidOperationException(AppealAlreadyOpen);
         }
 
         var appeal = CommitteeAppeal.Lodge(reason, actorUserId, utcNow);

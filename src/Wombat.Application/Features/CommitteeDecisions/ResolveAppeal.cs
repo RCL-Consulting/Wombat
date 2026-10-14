@@ -109,18 +109,27 @@ public sealed class ResolveAppealCommandHandler : IRequestHandler<ResolveAppealC
         // T165: a remitted appeal replaces the committee's decision, so the replacement is held to what any committee
         // decision is: a quorum of the panel present, each of whom may sit now and none the trainee. Checked here and in
         // the domain before ResolveAppeal changes anything: the audit pipeline saves the request's context from its catch.
-        var present = request.Outcome == CommitteeAppealOutcome.Remitted
-            ? PanelSeat.DemandPresent(review, request.PresentUserIds, eligible)
-            : null;
+        // T366, R1: the rules below, the seat's and the review's own, are refusals in Wombat's words, raised as the
+        // committee's refusal so the page shows them, and any other failure as a fixed sentence. Both read memory only.
+        try
+        {
+            var present = request.Outcome == CommitteeAppealOutcome.Remitted
+                ? PanelSeat.DemandPresent(review, request.PresentUserIds, eligible)
+                : null;
 
-        review.ResolveAppeal(
-            request.Outcome,
-            resolverUserId,
-            DateTime.UtcNow,
-            request.RemittedCategory,
-            request.RemittedRationale,
-            request.RemittedConditions,
-            present);
+            review.ResolveAppeal(
+                request.Outcome,
+                resolverUserId,
+                DateTime.UtcNow,
+                request.RemittedCategory,
+                request.RemittedRationale,
+                request.RemittedConditions,
+                present);
+        }
+        catch (InvalidOperationException refusal) when (refusal is not CommitteeRefusedException)
+        {
+            throw new CommitteeRefusedException(refusal.Message, refusal);
+        }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         return review.ToDetailDto();

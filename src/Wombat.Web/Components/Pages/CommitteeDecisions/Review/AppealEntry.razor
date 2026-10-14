@@ -1,0 +1,166 @@
+@implements IAsyncDisposable
+@using Wombat.Application.Features.CommitteeDecisions
+@using Wombat.Domain.CommitteeDecisions
+@inject IJSRuntime JS
+
+@*
+  One appeal, the same on both review pages (T366, flow 09; contract § 1; boards R3-2, R3-3). The page wraps the entries
+  in ul.appeal-list; each is an li.appeal-entry:
+
+  - Its h3, "Your appeal" on the trainee's own page, "Appeal by Nomsa Mahlangu" on the committee's (T308), with its badge:
+    Open amber, Dismissed and Remitted green (BadgeFor.Appeal).
+  - "Lodged 2026-10-13", then "· Resolved 2026-10-13 by Thandi Zulu" once resolved (C15), on the South African calendar.
+  - Open: who hears it, the appeal body that can act now, or nothing when nobody can (C12a). Resolved: the outcome in a
+    sentence, the trainee's ending "and it is final".
+  - The reason, clamped to six lines; "Show the whole reason" only when it overflows, measured after render by the page's
+    script module (S10), and again whenever the reason's box changes or the fonts load (T366, D5). Pressed, the reason
+    reads whole and takes the focus.
+*@
+<li class="appeal-entry" id="@EntryId">
+  <h3 class="appeal-entry-head" id="@($"{EntryId}-h")">
+    @(ForTrainee ? AppealWords.YourAppeal : AppealWords.AppealBy(Appeal.LodgedByName))
+    <span class="badge @BadgeFor.Appeal(Appeal.Outcome)">@AppealWords.StateWord(Appeal.Outcome)</span>
+  </h3>
+  <p class="appeal-entry-meta">@AppealWords.Meta(
+    ActivityMoments.Date(Appeal.LodgedOn),
+    Appeal.ResolvedOn is { } resolvedOn ? ActivityMoments.Date(resolvedOn) : null,
+    Appeal.ResolvedByName)</p>
+  @if (Appeal.Outcome is { } outcome)
+  {
+    <p class="appeal-entry-outcome">@AppealWords.Outcome(outcome, ForTrainee)</p>
+  }
+  else if (Review.State == CommitteeReviewState.UnderAppeal && AppealWords.HeardBy(Review.AppealBody) is { } heardBy)
+  {
+    <p class="appeal-entry-outcome">@heardBy</p>
+  }
+  <p class="appeal-entry-label" id="@($"{EntryId}-label")">@AppealWords.ReasonLabel</p>
+  <p class="@(_expanded ? "appeal-entry-reason" : "appeal-entry-reason appeal-entry-reason--clamped")" id="@ReasonId"
+     tabindex="@(_expanded ? "-1" : null)" @ref="_reason">@Appeal.Reason</p>
+  @if (_overflows && !_expanded)
+  {
+    <button type="button" class="btn btn-sm btn-quiet appeal-entry-more" aria-controls="@ReasonId" aria-expanded="false"
+            @onclick="ShowWhole">@AppealWords.ShowWholeReason</button>
+  }
+</li>
+
+@code {
+  /// <summary>The appeal drawn.</summary>
+  [Parameter, EditorRequired] public CommitteeAppealDto Appeal { get; set; } = default!;
+
+  /// <summary>Its review: the appeal body, for "Heard by …" while the appeal is open.</summary>
+  [Parameter, EditorRequired] public CommitteeReviewDetailDto Review { get; set; } = default!;
+
+  /// <summary>The trainee's own page heads it as hers, and says a resolved outcome is final.</summary>
+  [Parameter] public bool ForTrainee { get; set; }
+
+  private ElementReference _reason;
+  private IJSObjectReference? _module;
+  private DotNetObjectReference<AppealEntry>? _self;
+  private bool _watching;
+  private bool _measured;
+  private bool _overflows;
+  private bool _expanded;
+  private bool _focusReason;
+
+  private string EntryId => $"appeal-{Appeal.Id}";
+
+  private string ReasonId => $"{EntryId}-reason";
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (!_measured)
+    {
+      _measured = true;
+      var overflows = await MeasureAsync();
+      if (overflows != _overflows)
+      {
+        _overflows = overflows;
+        StateHasChanged();
+      }
+
+      await WatchAsync();
+    }
+
+    if (_focusReason)
+    {
+      _focusReason = false;
+      await _reason.FocusAsync();
+    }
+  }
+
+  /// <summary>Whether the clamped reason overflows its six lines (S10). A script that cannot run shows the button never.</summary>
+  private async Task<bool> MeasureAsync()
+  {
+    try
+    {
+      _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/review-appeal.js");
+      return _module is not null && await _module.InvokeAsync<bool>("overflows", _reason);
+    }
+    catch (Exception exception) when (exception is JSException or JSDisconnectedException or InvalidOperationException or TaskCanceledException)
+    {
+      return false;
+    }
+  }
+
+  /// <summary>
+  /// Measured once, a reason that fit at 1280 kept no button at 390: the module watches the reason (ResizeObserver, and
+  /// the fonts once loaded) and calls <see cref="OverflowChanged" /> when the answer changes (T366, D5).
+  /// </summary>
+  private async Task WatchAsync()
+  {
+    if (_module is null || _watching)
+    {
+      return;
+    }
+
+    try
+    {
+      _self ??= DotNetObjectReference.Create(this);
+      await _module.InvokeVoidAsync("watchOverflow", _reason, _self);
+      _watching = true;
+    }
+    catch (Exception exception) when (exception is JSException or JSDisconnectedException or InvalidOperationException or TaskCanceledException)
+    {
+      // No watch: the first measure stands.
+    }
+  }
+
+  /// <summary>The module's word that the clamped reason now overflows, or no longer does (T366, D5).</summary>
+  [JSInvokable]
+  public void OverflowChanged(bool overflows)
+  {
+    if (overflows != _overflows)
+    {
+      _overflows = overflows;
+      StateHasChanged();
+    }
+  }
+
+  private void ShowWhole()
+  {
+    _expanded = true;
+    _focusReason = true;
+  }
+
+  public async ValueTask DisposeAsync()
+  {
+    if (_module is not null)
+    {
+      try
+      {
+        if (_watching)
+        {
+          await _module.InvokeVoidAsync("unwatchOverflow", _reason);
+        }
+
+        await _module.DisposeAsync();
+      }
+      catch (JSDisconnectedException)
+      {
+        // The circuit has gone; so has the module.
+      }
+    }
+
+    _self?.Dispose();
+  }
+}

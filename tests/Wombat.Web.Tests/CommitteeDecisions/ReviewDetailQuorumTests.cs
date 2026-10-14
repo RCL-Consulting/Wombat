@@ -253,7 +253,7 @@ public sealed partial class ReviewDetailQuorumTests : TestContext
         var sender = new FakeSender(Review(CommitteeReviewState.UnderAppeal) with { CallerChairs = false });
         var (cut, _) = Render(sender);
 
-        cut.Find("#appeal-outcome").Change(CommitteeAppealOutcome.Remitted.ToString());
+        cut.Find("#appeal-outcome-remitted").Change(CommitteeAppealOutcome.Remitted.ToString());
         cut.Find("#appeal-category").Change(CommitteeDecisionCategory.SatisfactoryProgress.ToString());
         cut.Find("#appeal-rationale").Change("Conditions lifted on appeal.");
 
@@ -262,7 +262,8 @@ public sealed partial class ReviewDetailQuorumTests : TestContext
         boxes.Select(box => box.HasAttribute("disabled")).Should().Equal(true, false, true);
         boxes.Select(box => box.Id).Should().Equal("remit-present-0", "remit-present-1", "remit-present-2");
 
-        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Resolve appeal").Click();
+        cut.FindAll("button").Single(button => button.Closest("dialog") is null && button.TextContent.Trim() == "Resolve appeal").Click();
+        cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Remit the appeal").Click();
         cut.WaitForState(() => sender.Resolved.Count == 1);
 
         sender.Resolved.Single().PresentUserIds.Should().Equal("chair-1", "external-1");
@@ -275,9 +276,10 @@ public sealed partial class ReviewDetailQuorumTests : TestContext
         var (cut, _) = Render(sender);
 
         // The Outcome opens on none (T307): dismissing is chosen, as remitting is.
-        cut.Find("#appeal-outcome").Change(CommitteeAppealOutcome.Dismissed.ToString());
+        cut.Find("#appeal-outcome-dismissed").Change(CommitteeAppealOutcome.Dismissed.ToString());
         cut.FindAll("fieldset").Should().NotContain(set => set.QuerySelector("#remit-present-help") != null);
-        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Resolve appeal").Click();
+        cut.FindAll("button").Single(button => button.Closest("dialog") is null && button.TextContent.Trim() == "Resolve appeal").Click();
+        cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Dismiss the appeal").Click();
         cut.WaitForState(() => sender.Resolved.Count == 1);
 
         sender.Resolved.Single().PresentUserIds.Should().BeNull();
@@ -292,10 +294,10 @@ public sealed partial class ReviewDetailQuorumTests : TestContext
         };
         var (cut, _) = Render(review);
 
-        cut.Find("#appeal-outcome").Change(CommitteeAppealOutcome.Remitted.ToString());
+        cut.Find("#appeal-outcome-remitted").Change(CommitteeAppealOutcome.Remitted.ToString());
 
         // T361 (round 3 item 16): unavailable, never natively disabled.
-        var resolve = cut.FindAll("button").Single(button => button.TextContent.Trim() == "Resolve appeal");
+        var resolve = cut.FindAll("button").Single(button => button.Closest("dialog") is null && button.TextContent.Trim() == "Resolve appeal");
         resolve.HasAttribute("disabled").Should().BeFalse();
         resolve.GetAttribute("aria-disabled").Should().Be("true");
         resolve.GetAttribute("aria-describedby").Should().Be("remit-reason");

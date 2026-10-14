@@ -1,4 +1,5 @@
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.Epas;
 
 namespace Wombat.Domain.EntrustmentDecisions;
@@ -150,7 +151,8 @@ public sealed class EntrustmentDecision
             throw new InvalidOperationException("An entrustment decision without an expiry date cannot expire.");
         }
 
-        if (ExpiresOn.Value >= DateOnly.FromDateTime(utcNow))
+        // On the South African calendar, as the expiry job and My authorisations judge it (T325; T366, G5).
+        if (ExpiresOn.Value >= ProgrammeCalendar.DateOf(utcNow))
         {
             throw new InvalidOperationException("An entrustment decision cannot be marked expired before its expiry date.");
         }

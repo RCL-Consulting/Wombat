@@ -55,7 +55,8 @@ public sealed partial class EntrustmentDecisionsListTableTests : TestContext
         var cut = RenderComponent<DecisionsPage>();
         cut.WaitForState(() => cut.Markup.Contains("PAED-004"));
 
-        var filter = cut.Find("#filter-trainee").Closest("section")!;
+        // T366 (F9): the FilterBar pattern, a search-container form applied with Show.
+        var filter = cut.Find("#filter-trainee").Closest("form")!;
         filter.ClassList.Should().Contain("search-container").And.NotContain("detail-card");
         filter.QuerySelector(".search-grid").Should().NotBeNull();
         Declarations(".search-container").Should().Contain(declaration => declaration.StartsWith("margin-bottom:", StringComparison.Ordinal));

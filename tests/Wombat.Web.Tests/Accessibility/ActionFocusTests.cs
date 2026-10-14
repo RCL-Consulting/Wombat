@@ -358,8 +358,9 @@ public sealed class ActionFocusTests : TestContext
 
         DownloadButtons(cut)[0].Click();
         cut.WaitForAssertion(() => DownloadButtons(cut)[0].TextContent.Trim().Should().Be("Generating…"));
+        // T366 (C19, board R3-5): while it runs its name keeps its EPA and says it is generating.
         DownloadButtons(cut).Select(button => AccessibleNames.NameOf(cut, button))
-            .Should().Equal("Generating…", "Download certificate for PAED-002");
+            .Should().Equal("Download certificate for PAED-001, generating", "Download certificate for PAED-002");
 
         hold.Release();
         cut.WaitForAssertion(() => DownloadButtons(cut).Select(button => AccessibleNames.NameOf(cut, button))
@@ -1034,12 +1035,14 @@ public sealed class ActionFocusTests : TestContext
         ["ReviewDetail Resolve appeal"] = new(
             (test, hold) => test.ReviewPage(hold, request => request is ResolveAppealCommand,
                 Review(CommitteeReviewState.UnderAppeal), Review(CommitteeReviewState.Final)),
-            cut => Named(cut, "Resolve appeal"),
+            cut => InDialog(cut, "Dismiss the appeal"),
             cut =>
             {
-                // The Outcome opens on none (T307), so one is chosen, as a resolver must.
-                cut.Find("#appeal-outcome").Change(CommitteeAppealOutcome.Dismissed.ToString());
+                // The Outcome opens on none (T307), so one is chosen, as a resolver must; since T366 (C14c) the dismissal
+                // confirms in its dialog.
+                cut.Find("#appeal-outcome-dismissed").Change(CommitteeAppealOutcome.Dismissed.ToString());
                 cut.Find("#appeal-outcome").Closest("form")!.Submit();
+                InDialog(cut, "Dismiss the appeal").Click();
             },
             RefusalTakesFocus: true),
 
@@ -1471,7 +1474,9 @@ public sealed class ActionFocusTests : TestContext
 
         public void Release() => Pending.SetResult();
 
-        public void Refuse() => Pending.SetException(new InvalidOperationException(Refusal));
+        // A handler's refusal in Wombat's words. The committee's own type (an InvalidOperationException), since a page may
+        // show only a refusal's words and treat any other exception as a failure (T366, R1).
+        public void Refuse() => Pending.SetException(new CommitteeRefusedException(Refusal));
 
         private TaskCompletionSource Pending => _pending ?? throw new InvalidOperationException("Nothing was sent.");
     }

@@ -141,47 +141,8 @@
   }
   else
   {
-    @if (Review.Decisions.Count == 0)
-    {
-      <p id="no-decision-note" class="muted">@(Review.State == CommitteeReviewState.Withdrawn ? ReviewWords.NoDecisionWithdrawn : ReviewWords.NoDecisionYet)</p>
-    }
-    else
-    {
-      var replaced = Review.Decisions.Select(decision => decision.SupersedesDecisionId).OfType<int>().ToHashSet();
-      @if (Review.State == CommitteeReviewState.Withdrawn)
-      {
-        <p id="withdrawn-decision-note" class="muted">@CommitteeDecisionWording.WithdrawnDecisionNote</p>
-      }
-      <div class="stack-list">
-        @foreach (var decision in Review.Decisions)
-        {
-          <article class="decision-record" id="@($"decision-{decision.Id}")" aria-labelledby="@($"decision-{decision.Id}-h")">
-            <h3 id="@($"decision-{decision.Id}-h")">@CommitteeDecisionWording.OutcomeLabel(decision.Category)</h3>
-            @if (replaced.Contains(decision.Id))
-            {
-              <p class="muted">@ReviewWords.ReplacedOnAppeal</p>
-            }
-            <p>@decision.Rationale</p>
-            @if (!string.IsNullOrWhiteSpace(decision.UndecidedNote))
-            {
-              <p>@ReviewWords.AboutNotDecided(decision.UndecidedNote)</p>
-            }
-            @if (!string.IsNullOrWhiteSpace(decision.Conditions))
-            {
-              <p>@ReviewWords.Conditions(decision.Conditions)</p>
-            }
-            @if (decision.Attendees.Count > 0)
-            {
-              <p>@ReviewWords.PresentList(decision.Attendees.Select(attendee => attendee.Label)).TrimEnd('.')</p>
-            }
-            else
-            {
-              <p class="muted">@ReviewWords.NobodyPresent</p>
-            }
-          </article>
-        }
-      </div>
-    }
+    @* T366 (contract § 1): the recorded decisions, newest first, the one history both review pages draw. *@
+    <DecisionHistory Review="Review" />
   }
 </section>
 

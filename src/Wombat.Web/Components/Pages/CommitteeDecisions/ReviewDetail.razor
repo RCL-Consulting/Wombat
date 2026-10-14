@@ -63,7 +63,7 @@
       var decided = review.State is not (CommitteeReviewState.Scheduled or CommitteeReviewState.InProgress);
       <div class="review-page">
         <SittingBar View="@Bar" AsOf="@AsOf" Busy="@(_inFlight is not null)" Refreshing="@(_inFlight == RefreshAction)"
-                    OnStart="OpenStartAsync" OnGoToDecision="GoToDecisionAsync" OnRatify="OpenRatifyAsync"
+                    OnStart="OpenStartAsync" OnGoToDecision="GoToDecisionAsync" OnGoToAppeal="GoToAppealAsync" OnRatify="OpenRatifyAsync"
                     OnClose="OpenCloseAsync" OnRefresh="RefreshAsync" Focus="FocusByIdAsync" />
         @ResultAt(BarPlace)
 
@@ -127,6 +127,7 @@
   private const string AgendaPlace = "agenda";
   private const string DecisionPlace = "decision";
   private const string AppealsPlace = "appeals";
+  private const string AppealFormPlace = "appeal-form";
   private const string FootPlace = "foot";
 
   private static string LinePlace(int epaId) => $"line:{epaId}";
@@ -187,8 +188,11 @@
   private PendingEntrustmentDecisionDto? _removing;
 
   private AppealResolutionModel _appeal = new();
-  private InputSelect<CommitteeAppealOutcome?>? _appealOutcomeSelect;
+  private EditContext? _appealContext;
+  private InputRadio<CommitteeAppealOutcome?>? _firstOutcome;
   private bool _focusAppealOutcome;
+  private ConfirmDialog? _remitDialog;
+  private ConfirmDialog? _dismissDialog;
   private const string AppealOutcomeMessageId = "appeal-outcome-message";
 
   // The clock the host registers, else the system's: "today" on the South African calendar (T325).
@@ -529,7 +533,7 @@
     if (_focusAppealOutcome)
     {
       _focusAppealOutcome = false;
-      if (_appealOutcomeSelect?.Element is { } outcome)
+      if (_firstOutcome?.Element is { } outcome)
       {
         await outcome.FocusAsync();
       }
@@ -540,13 +544,18 @@
   /// Sends one of the review's commands, unless an action runs (T234), then reads the review again, done or refused
   /// (T260); the result sits beside the control and takes the focus.
   /// </summary>
+  /// <param name="failed">
+  /// Where given, only a refusal (<see cref="CommitteeRefusals.IsRefusal" />) shows its words; any other failure shows this
+  /// fixed sentence and goes to the log (T366, R1; T338).
+  /// </param>
   private async Task<bool> ExecuteAsync(
     string name,
     Func<ClaimsPrincipal, Task<CommitteeReviewDetailDto>> action,
     string donePlace,
     string done,
     string refusedPlace,
-    Func<string, string>? refusal = null)
+    Func<string, string>? refusal = null,
+    string? failed = null)
   {
     if (_inFlight is not null)
     {
@@ -564,9 +573,20 @@
       }
       catch (Exception exception) when (exception is not OperationCanceledException)
       {
-        var text = RefusalText.Of(exception);
+        string text;
+        if (failed is not null && !CommitteeRefusals.IsRefusal(exception))
+        {
+          Logger.LogError(exception, "Committee review {ReviewId}'s {Action} failed.", ReviewId, name);
+          text = failed;
+        }
+        else
+        {
+          var said = RefusalText.Of(exception);
+          text = refusal is null ? said : refusal(said);
+        }
+
         await ReadAgainAsync(null);
-        ShowResult(refusedPlace, "danger", refusal is null ? text : refusal(text));
+        ShowResult(refusedPlace, "danger", text);
         return false;
       }
 
@@ -602,6 +622,9 @@
       BarPlace);
 
   private async Task GoToDecisionAsync() => await FocusByIdAsync("decision-heading");
+
+  /// <summary>"Go to the appeal" (T366, F5): the focus to the Appeals heading, which the browser brings into view.</summary>
+  private async Task GoToAppealAsync() => await FocusByIdAsync("appeals-heading");
 
   private async Task OpenRatifyAsync() => await ShowAsync(_ratifyDialog);
 
@@ -997,8 +1020,64 @@
     }
   }
 
-  // ─── The appeal (T213, T307) ─────────────────────────────────────────────────
+  // ─── The appeal (T213, T307; T366, flow 09: F6, F7, M8, T323) ──────────────
 
+  /// <summary>Whether the resolve form is offered: to the appeal body that can act now, and only under appeal (T213, T237).</summary>
+  private bool OffersResolveForm => _review is { CallerResolvesAppeals: true, State: CommitteeReviewState.UnderAppeal };
+
+  private EditContext AppealContext => _appealContext ??= new EditContext(_appeal);
+
+  private bool Remitting => _appeal.Outcome == CommitteeAppealOutcome.Remitted;
+
+  /// <summary>The Outcome was refused for want of a choice: its group carries the invalid stripe.</summary>
+  private bool OutcomeRefused => AppealContext.GetValidationMessages(new FieldIdentifier(_appeal, nameof(AppealResolutionModel.Outcome))).Any();
+
+  /// <summary>
+  /// Resolve appeal pressed with an outcome chosen (M8, F6). A remit is checked first, as the handler would refuse it (a
+  /// category on a progression review, the rationale, a quorum present), and refused after the form's actions with nothing
+  /// sent; then the outcome's dialog opens, its Go back the safe button.
+  /// </summary>
+  private async Task OpenResolveAsync()
+  {
+    if (_inFlight is not null || _appeal.Outcome is not { } outcome)
+    {
+      return;
+    }
+
+    ClearResult();
+    if (outcome == CommitteeAppealOutcome.Remitted)
+    {
+      var refusals = new List<string>();
+      if (_review?.DecidesProgression == true && _appeal.RemittedCategory is null)
+      {
+        refusals.Add(ReviewWords.ChooseCategory);
+      }
+
+      if (string.IsNullOrWhiteSpace(_appeal.RemittedRationale))
+      {
+        refusals.Add(ReviewWords.GiveReplacementRationale);
+      }
+
+      if (PresentForAppeal().Count < CommitteeReview.Quorum)
+      {
+        refusals.Add(CommitteeReview.QuorumRule);
+      }
+
+      if (refusals.Count > 0)
+      {
+        ShowResult(AppealFormPlace, "danger", ReviewWords.ResolveRefused(string.Join(" ", refusals)));
+        return;
+      }
+    }
+
+    StateHasChanged();
+    await ShowAsync(outcome == CommitteeAppealOutcome.Remitted ? _remitDialog : _dismissDialog);
+  }
+
+  /// <summary>
+  /// The dialog's Remit the appeal or Dismiss the appeal. Done, "Appeal resolved." heads the section; refused, the refusal
+  /// sits after the form's actions, or heads the section when the review read again no longer offers the form.
+  /// </summary>
   private async Task ResolveAppealAsync()
   {
     if (_appeal.Outcome is not { } outcome)
@@ -1019,58 +1098,41 @@
         user)),
       AppealsPlace,
       ReviewWords.AppealResolved,
-      AppealsPlace);
+      AppealFormPlace,
+      ReviewWords.ResolveRefused,
+      ReviewWords.ResolveFailed);
 
     if (resolved)
     {
       _appeal = new AppealResolutionModel();
+      _appealContext = null;
+    }
+    else if (_resultPlace == AppealFormPlace && !OffersResolveForm)
+    {
+      _resultPlace = AppealsPlace;
     }
   }
 
   // The chair and whoever resolves the appeal always sat (CommitteeReview.ResolveAppeal), ticked and locked (T165).
-  private IReadOnlyList<string> PresentForAppeal()
+  private IReadOnlyList<string> PresentForAppeal() => SeatedForAppeal().Select(member => member.UserId).ToArray();
+
+  private IEnumerable<CommitteePersonDto> SeatedForAppeal()
   {
     var caller = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
     return (_review?.PanelMembers ?? [])
       .Where(member => member.MaySit)
       .Where(member => member.Role == DecisionPanelMemberRole.Chair ||
                        string.Equals(member.UserId, caller, StringComparison.Ordinal) ||
-                       _appeal.PresentUserIds.Contains(member.UserId))
-      .Select(member => member.UserId)
-      .ToArray();
+                       _appeal.PresentUserIds.Contains(member.UserId));
   }
 
   private void FocusAppealOutcome() => _focusAppealOutcome = true;
 
-  /// <summary>Who resolves the appeal, to a reader not offered the form (T213, T237).</summary>
-  private string AppealBodyNote
-  {
-    get
-    {
-      var body = _review?.AppealBody ?? [];
-      var chair = body.FirstOrDefault(member => member.Role == DecisionPanelMemberRole.Chair);
-      var externals = body.Where(member => member.Role == DecisionPanelMemberRole.External).Select(member => member.DisplayName).ToArray();
-      if (chair is null && externals.Length == 0)
-      {
-        return "Only the appeal body, the panel's chair or an external member, can resolve the appeal, and none of them " +
-               "can act now. A panel administrator must seat a chair who can.";
-      }
+  /// <summary>Pressed while the panel cannot seat a quorum (C12b): nothing is sent, the focus moves to the reason.</summary>
+  private async Task FocusRemitReasonAsync() => await FocusByIdAsync("remit-reason");
 
-      var parts = new List<string>();
-      if (chair is not null)
-      {
-        parts.Add($"the panel's chair, {chair.DisplayName},");
-      }
-
-      if (externals.Length > 0)
-      {
-        parts.Add($"{(chair is null ? "the panel's" : "its")} external member{(externals.Length == 1 ? string.Empty : "s")}, " +
-                  CommitteeAgendaText.Codes(externals));
-      }
-
-      return $"Only the appeal body can resolve the appeal: {CommitteeAgendaText.Codes(parts).TrimEnd(',')}.";
-    }
-  }
+  /// <summary>The current decision's category, which a remit replaces and a dismissal leaves in force.</summary>
+  private CommitteeDecisionCategory? CurrentCategory => _review?.Decisions.FirstOrDefault()?.Category;
 
   // ─── Sections ────────────────────────────────────────────────────────────────
 
@@ -1364,100 +1426,138 @@
        @onclick="() => FocusByIdAsync(jumpId)" @onclick:preventDefault>@ReviewWords.ChartBack(code)</a>
   };
 
+  /// <summary>
+  /// The Appeals section (T366, flow 09, boards R3-3): its h2 the target of the bar's "Go to the appeal" (F5), "Appeal
+  /// resolved." under it, each appeal as lane T's AppealEntry, then the resolve form for the appeal body that can act now,
+  /// or the who-may line for every other reader (F7). The form is one column at read width (.resolve-form, T323), its
+  /// Outcome two radios read whole at every width (round-3-check: the closed select cut "Remitted: the appeal body replaces
+  /// the decision" at 390), the quorum line beside Resolve appeal and its refusal after the actions (M8).
+  /// </summary>
   private RenderFragment AppealsSection => __builder =>
   {
     var review = _review!;
     <section class="detail-card review-appeals" id="appeals" aria-labelledby="appeals-heading">
-      <h2 id="appeals-heading" class="review-section-title">@ReviewWords.AppealsHeading</h2>
+      <h2 id="appeals-heading" class="review-section-title" tabindex="-1">@ReviewWords.AppealsHeading</h2>
       @ResultAt(AppealsPlace)
-      @if (review.CallerResolvesAppeals && review.State == CommitteeReviewState.UnderAppeal)
-      {
-        <EditForm Model="_appeal" OnValidSubmit="ResolveAppealAsync" OnInvalidSubmit="FocusAppealOutcome" FormName="committee-appeal-resolution">
-          <DataAnnotationsValidator />
-          <div class="form-grid">
-            <FormField Label="Outcome" InputId="appeal-outcome" Required="true" HelpText="@CommitteeDecisionWording.AppealOutcomeHelp">
-              <ChildContent>
-                <InputSelect id="appeal-outcome" class="form-select"
-                             aria-describedby="@FieldHelp.DescribedBy("appeal-outcome", CommitteeDecisionWording.AppealOutcomeHelp, AppealOutcomeMessageId)"
-                             @bind-Value="_appeal.Outcome" @ref="_appealOutcomeSelect">
-                  <option value="">Select an outcome…</option>
-                  @foreach (var outcome in Enum.GetValues<CommitteeAppealOutcome>())
-                  {
-                    <option value="@outcome">@CommitteeDecisionWording.AppealOutcomeLabel(outcome)</option>
-                  }
-                </InputSelect>
-              </ChildContent>
-              <ValidationContent>
-                <div id="@AppealOutcomeMessageId">
-                  <ValidationMessage For="() => _appeal.Outcome" />
-                </div>
-              </ValidationContent>
-            </FormField>
-            @if (_appeal.Outcome == CommitteeAppealOutcome.Remitted)
-            {
-              if (review.DecidesProgression)
-              {
-                <FormField Label="Replacement category" InputId="appeal-category" Required="true">
-                  <InputSelect id="appeal-category" class="form-select" @bind-Value="_appeal.RemittedCategory">
-                    <option value="">Select a category…</option>
-                    @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
-                    {
-                      <option value="@category">@CommitteeDecisionWording.CategoryLabel(category)</option>
-                    }
-                  </InputSelect>
-                </FormField>
-              }
-              else
-              {
-                <p id="remit-entrustment-only-note" class="full-width muted">@CommitteeDecisionWording.EntrustmentOnlyRemitForThePanel</p>
-              }
-              <FormField Label="Replacement rationale" InputId="appeal-rationale" Required="true">
-                <InputTextArea id="appeal-rationale" class="form-control" @bind-Value="_appeal.RemittedRationale" />
-              </FormField>
-              <FormField Label="Replacement conditions" InputId="appeal-conditions">
-                <InputTextArea id="appeal-conditions" class="form-control" @bind-Value="_appeal.RemittedConditions" />
-              </FormField>
-              @RemitPresent
-            }
-          </div>
-          <FormActions>
-            @if (_appeal.Outcome == CommitteeAppealOutcome.Remitted && review.PanelShortfall is not null)
-            {
-              <button type="button" class="btn btn-primary is-unavailable" aria-disabled="true" aria-describedby="remit-reason">Resolve appeal</button>
-            }
-            else
-            {
-              <button type="submit" class="btn btn-primary" disabled="@(_inFlight is not null && _inFlight != ResolveAction)"
-                      aria-disabled="@InFlight.AriaDisabled(_inFlight == ResolveAction)">Resolve appeal</button>
-            }
-          </FormActions>
-          @if (_appeal.Outcome == CommitteeAppealOutcome.Remitted && review.PanelShortfall is { } remitShortfall)
-          {
-            <ul class="workflow-action-reasons">
-              <li id="remit-reason"><strong>Resolve appeal:</strong> @remitShortfall</li>
-            </ul>
-          }
-        </EditForm>
-      }
-      else if (review.State == CommitteeReviewState.UnderAppeal)
-      {
-        <p id="appeal-body-note" class="muted">@AppealBodyNote</p>
-      }
-
       @if (review.Appeals.Count == 0)
       {
         <p class="muted">@ReviewWords.NoAppeal</p>
       }
       else
       {
-        <ul class="list-unstyled">
+        <ul class="appeal-list">
           @foreach (var appeal in review.Appeals)
           {
-            <li><strong>@ActivityMoments.Date(appeal.LodgedOn)</strong> @appeal.Reason (@(appeal.Outcome is { } resolvedAs ? CommitteeDecisionWording.AppealOutcomeName(resolvedAs) : "Open"))</li>
+            <AppealEntry @key="appeal.Id" Appeal="appeal" Review="review" />
           }
         </ul>
       }
+
+      @if (OffersResolveForm)
+      {
+        @ResolveForm
+      }
+      else if (review.State == CommitteeReviewState.UnderAppeal)
+      {
+        <p id="appeal-body-note" class="appeals-who">@ReviewWords.WhoResolvesTheAppeal(review.AppealBody)</p>
+      }
     </section>
+  };
+
+  private RenderFragment ResolveForm => __builder =>
+  {
+    var review = _review!;
+    var shortfall = Remitting ? review.PanelShortfall : null;
+    <EditForm EditContext="AppealContext" OnValidSubmit="OpenResolveAsync" OnInvalidSubmit="FocusAppealOutcome"
+              FormName="committee-appeal-resolution" class="resolve-form" aria-label="@ReviewWords.ResolveFormName">
+      <DataAnnotationsValidator />
+      <div class="form-grid">
+        @* T323: radios, so each outcome reads whole at 390, where the closed select cut the second. Opens on neither (T307). *@
+        <fieldset class="form-group full-width" id="appeal-outcome"
+                  aria-describedby="@FieldHelp.DescribedBy("appeal-outcome", CommitteeDecisionWording.AppealOutcomeHelp, AppealOutcomeMessageId)">
+          <legend>
+            @ReviewWords.OutcomeLegend
+            <span aria-hidden="true">*</span>
+            <span class="visually-hidden">required</span>
+          </legend>
+          <InputRadioGroup TValue="CommitteeAppealOutcome?" Name="appeal-outcome" @bind-Value="_appeal.Outcome">
+            <div class="@(OutcomeRefused ? "choice-group is-invalid" : "choice-group")">
+              <div class="check-grid resolve-outcomes">
+                @foreach (var outcome in Enum.GetValues<CommitteeAppealOutcome>())
+                {
+                  var id = $"appeal-outcome-{outcome.ToString().ToLowerInvariant()}";
+                  <div class="form-check">
+                    @if (outcome == CommitteeAppealOutcome.Dismissed)
+                    {
+                      <InputRadio id="@id" class="form-check-input" Value="(CommitteeAppealOutcome?)outcome" @ref="_firstOutcome" />
+                    }
+                    else
+                    {
+                      <InputRadio id="@id" class="form-check-input" Value="(CommitteeAppealOutcome?)outcome" />
+                    }
+                    <label for="@id">@CommitteeDecisionWording.AppealOutcomeLabel(outcome)</label>
+                  </div>
+                }
+              </div>
+            </div>
+          </InputRadioGroup>
+          <small class="page-subtitle" id="@FieldHelp.Id("appeal-outcome")">@CommitteeDecisionWording.AppealOutcomeHelp</small>
+          <div id="@AppealOutcomeMessageId">
+            <ValidationMessage For="() => _appeal.Outcome" />
+          </div>
+        </fieldset>
+        @if (Remitting)
+        {
+          if (review.DecidesProgression)
+          {
+            <FormField Label="Replacement category" InputId="appeal-category" Required="true" FullWidth="true">
+              <InputSelect id="appeal-category" class="form-select" @bind-Value="_appeal.RemittedCategory">
+                <option value="">@ReviewWords.SelectCategory</option>
+                @foreach (var category in Enum.GetValues<CommitteeDecisionCategory>())
+                {
+                  <option value="@category">@CommitteeDecisionWording.CategoryLabel(category)</option>
+                }
+              </InputSelect>
+            </FormField>
+          }
+          else
+          {
+            <p id="remit-entrustment-only-note" class="full-width muted">@CommitteeDecisionWording.EntrustmentOnlyRemitForThePanel</p>
+          }
+          <FormField Label="Replacement rationale" InputId="appeal-rationale" Required="true" FullWidth="true">
+            <InputTextArea id="appeal-rationale" class="form-control" @bind-Value="_appeal.RemittedRationale" />
+          </FormField>
+          <FormField Label="Replacement conditions" InputId="appeal-conditions" FullWidth="true">
+            <InputTextArea id="appeal-conditions" class="form-control" @bind-Value="_appeal.RemittedConditions" />
+          </FormField>
+          @RemitPresent
+        }
+      </div>
+      <div class="decision-actions">
+        @if (shortfall is not null)
+        {
+          @* C12b: unavailable, never natively disabled (T361 round 3 item 16); a press moves the focus to the reason. *@
+          <button type="button" class="btn btn-primary is-unavailable" aria-disabled="true" aria-describedby="remit-reason"
+                  @onclick="FocusRemitReasonAsync">@ReviewWords.ResolveLabel</button>
+        }
+        else
+        {
+          <button type="submit" id="resolve-appeal" class="btn btn-primary" disabled="@(_inFlight is not null && _inFlight != ResolveAction)"
+                  aria-disabled="@InFlight.AriaDisabled(_inFlight == ResolveAction)"
+                  aria-describedby="@(Remitting ? "appeal-quorum-line" : null)">@ReviewWords.ResolveLabel</button>
+        }
+        <div class="decision-actions-text">
+          @* M8: the quorum line, always here so a change is announced, filled while Remitted is chosen; the panel's
+             shortfall takes its place when the panel cannot seat a quorum. *@
+          <p class="quorum-line" id="appeal-quorum-line" aria-live="polite">@(Remitting && shortfall is null ? ReviewWords.Quorum(PresentForAppeal().Count) : null)</p>
+          @if (shortfall is not null)
+          {
+            <p class="move-reasons" id="remit-reason"><strong>@ReviewWords.ResolveLabel:</strong> @shortfall</p>
+          }
+        </div>
+      </div>
+      @ResultAt(AppealFormPlace)
+    </EditForm>
   };
 
   /// <summary>Who sat for a remitted replacement: the chair and the resolver locked (T165).</summary>
@@ -1544,6 +1644,30 @@
           <p>@ReviewWords.RecordAfterwards</p>
         </BodyContent>
       </ConfirmDialog>
+
+      @if (OffersResolveForm)
+      {
+        @* T366 (C14b, C14c; F6): Remit and Dismiss confirm here, as built; Go back is the safe button, and the dialog returns
+           the focus to Resolve appeal, its opener, with everything typed kept (D6: by id where the browser never focused it). *@
+        <ConfirmDialog @ref="_remitDialog" Title="@ReviewWords.RemitTitle(review.TraineeName)"
+                       CancelLabel="@ReviewWords.GoBack" ConfirmLabel="@ReviewWords.RemitConfirm" OnConfirm="ResolveAppealAsync"
+                       ReturnFocusId="resolve-appeal">
+          <BodyContent>
+            <p>@ReviewWords.Replaces(review.DecidesProgression ? _appeal.RemittedCategory : null, review.DecidesProgression ? CurrentCategory : null)</p>
+            <p>@ReviewWords.PresentList(SeatedForAppeal().Select(member => member.Label))</p>
+            <p>@ReviewWords.ClosesTheReview(review.PeriodLabel, remitted: true)</p>
+          </BodyContent>
+        </ConfirmDialog>
+
+        <ConfirmDialog @ref="_dismissDialog" Title="@ReviewWords.DismissTitle(review.TraineeName)"
+                       CancelLabel="@ReviewWords.GoBack" ConfirmLabel="@ReviewWords.DismissConfirm" OnConfirm="ResolveAppealAsync"
+                       ReturnFocusId="resolve-appeal">
+          <BodyContent>
+            <p>@ReviewWords.StaysInForce(review.DecidesProgression ? CurrentCategory : null)</p>
+            <p>@ReviewWords.ClosesTheReview(review.PeriodLabel, remitted: false)</p>
+          </BodyContent>
+        </ConfirmDialog>
+      }
 
       <ConfirmDialog @ref="_ratifyDialog" Title="@ReviewWords.RatifyTitle(staged.Count, review.TraineeName)"
                      CancelLabel="@ReviewWords.NotYet" ConfirmLabel="@ReviewWords.RatifyConfirm(staged.Count)" OnConfirm="RatifyAsync">

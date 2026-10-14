@@ -139,7 +139,8 @@ public sealed class EpaNoLongerInUseMarkTests : TestContext
         cut.WaitForState(() => cut.FindAll("tbody tr").Count == 2);
 
         var index = cut.FindAll("thead th").Select(cell => cell.TextContent.Trim()).ToList().IndexOf("EPA");
-        var cells = cut.FindAll("tbody tr").Select(row => row.QuerySelectorAll("td")[index]).ToList();
+        // T366: the trainee is the row's header now, so the EPA is the row's cell at the header's own index.
+        var cells = cut.FindAll("tbody tr").Select(row => row.Children[index]).ToList();
         Texts(cells).Should().Equal(InForce, Deactivated);
         MarkersIn(cells).Should().Equal([EpaOptionLabel.NoLongerInUse], "only the EPA that is not in force is marked, and muted");
     }
@@ -159,8 +160,9 @@ public sealed class EpaNoLongerInUseMarkTests : TestContext
 
         cut.FindAll("tbody tr").ElementAt(1).QuerySelectorAll("button").Single(button => button.TextContent.Trim() == "Revoke").Click();
 
-        var named = cut.Find(".detail-card strong");
-        Text(named).Should().Be(Deactivated);
+        // T366 (M5): the confirmation is the register's ConfirmDialog, its first sentence naming the EPA.
+        var named = cut.Find("dialog .dialog-body p");
+        Text(named).Should().StartWith(Deactivated + ",");
         MarkersIn([named]).Should().Equal([EpaOptionLabel.NoLongerInUse]);
     }
 

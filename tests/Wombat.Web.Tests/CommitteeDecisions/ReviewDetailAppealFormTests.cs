@@ -21,7 +21,8 @@ namespace Wombat.Web.Tests.CommitteeDecisions;
 /// leaves it there is told to choose one; each outcome is said in words, with what it does to the decision; and a remit
 /// records the replacement's conditions as a first-time decision does, on a progression and an entrustment-only review
 /// alike. Before T307 the select opened on Dismissed, so pressing Resolve appeal untouched dismissed the appeal, and the
-/// remit had no conditions box, so a remit to Satisfactory with Observations could not carry its observations.
+/// remit had no conditions box, so a remit to Satisfactory with Observations could not carry its observations. Since T366
+/// (flow 09, T323) the Outcome is two radios, read whole at every width, and each outcome confirms in its dialog.
 /// </summary>
 public sealed partial class ReviewDetailAppealFormTests : TestContext
 {
@@ -38,28 +39,25 @@ public sealed partial class ReviewDetailAppealFormTests : TestContext
         _auth.SetAuthorized("external-1@test");
         _auth.SetRoles("CommitteeMember");
         _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "external-1"));
+        // The appeal entry measures its reason, and Resolve appeal opens a native dialog (T366).
+        JSInterop.Mode = JSRuntimeMode.Loose;
     }
 
     [Fact]
-    public void TheOutcome_OpensOnSelectAnOutcome_AndSaysEachOutcomeInWords()
+    public void TheOutcome_OpensOnNeither_AndSaysEachOutcomeInWords()
     {
         var (cut, _) = Render(Review());
 
-        // The select carries no value and no option is marked selected, so the browser shows the first: the empty one.
-        var select = cut.Find("#appeal-outcome");
-        select.GetAttribute("value").Should().BeNullOrEmpty("the resolver has chosen nothing yet");
-
-        var options = cut.FindAll("#appeal-outcome option").ToList();
-        options.Should().NotContain(option => option.HasAttribute("selected"));
-        options[0].GetAttribute("value").Should().BeEmpty();
-        options.Select(option => option.TextContent.Trim()).Should().Equal(
-            "Select an outcome…",
+        // Two radios, neither checked: the resolver has chosen nothing yet (T307), and each reads whole (T323).
+        var radios = cut.FindAll("#appeal-outcome input[type=radio]").ToList();
+        radios.Should().NotContain(radio => radio.HasAttribute("checked"));
+        radios.Select(radio => radio.GetAttribute("value")).Should().Equal("Dismissed", "Remitted");
+        cut.FindAll("#appeal-outcome label").Select(label => label.TextContent.Trim()).Should().Equal(
             "Dismissed: the decision stands",
             "Remitted: the appeal body replaces the decision");
-        options.Skip(1).Select(option => option.GetAttribute("value")).Should().Equal("Dismissed", "Remitted");
 
-        // What each outcome does is said with the select, and a screen reader reads it with it (T193).
-        select.GetAttribute("aria-describedby").Should().Be("appeal-outcome-help appeal-outcome-message");
+        // What each outcome does is said with the group, and a screen reader reads it with it (T193).
+        cut.Find("#appeal-outcome").GetAttribute("aria-describedby").Should().Be("appeal-outcome-help appeal-outcome-message");
         Whitespace().Replace(cut.Find("#appeal-outcome-help").TextContent, " ").Trim()
             .Should().Be(CommitteeDecisionWording.AppealOutcomeHelp);
     }
@@ -81,27 +79,27 @@ public sealed partial class ReviewDetailAppealFormTests : TestContext
         }).SetVoidResult();
         JSInterop.Invocations.Should().NotContain(invocation => invocation.Identifier == FocusIdentifier,
             "nothing moves the focus before a submit");
-        // Read before the submit: once the select re-renders as invalid, bUnit's markup no longer carries its reference.
-        var outcomeReference = cut.Find("#appeal-outcome").GetAttribute("blazor:elementreference");
+        // Read before the submit: once the group re-renders as invalid, bUnit's markup no longer carries its reference.
+        var outcomeReference = cut.Find("#appeal-outcome-dismissed").GetAttribute("blazor:elementreference");
         outcomeReference.Should().NotBeNullOrEmpty();
 
         ResolveButton(cut).Click();
 
         cut.WaitForState(() => cut.Markup.Contains("Choose an outcome."));
         sender.Resolved.Should().BeEmpty("an appeal nobody chose an outcome for is not resolved");
-        cut.Find("#appeal-outcome").GetAttribute("value").Should().BeNullOrEmpty();
+        cut.FindAll("#appeal-outcome input[type=radio]").Should().NotContain(radio => radio.HasAttribute("checked"));
         Whitespace().Replace(cut.Find("#appeal-outcome-message").TextContent, " ").Trim().Should().Be("Choose an outcome.");
         cut.Find("#appeal-outcome").GetAttribute("aria-describedby")
-            .Should().Be("appeal-outcome-help appeal-outcome-message", "the message is read with the select");
+            .Should().Be("appeal-outcome-help appeal-outcome-message", "the message is read with the group");
 
         // The refused submit moves the focus to the Outcome, once, and only after the message saying why is on the page.
         cut.WaitForAssertion(() => JSInterop.VerifyFocusAsyncInvoke().Arguments[0]
             .Should().BeOfType<Microsoft.AspNetCore.Components.ElementReference>()
             .Which.Id.Should().Be(outcomeReference));
-        messageWhenFocused.Should().Be("Choose an outcome.", "the select is focused after its message is rendered");
+        messageWhenFocused.Should().Be("Choose an outcome.", "the radio is focused after its message is rendered");
 
         // Once: choosing an outcome afterwards renders the page again, and leaves the focus where the resolver put it.
-        cut.Find("#appeal-outcome").Change(CommitteeAppealOutcome.Remitted.ToString());
+        Choose(cut, CommitteeAppealOutcome.Remitted);
         cut.FindAll("#appeal-conditions").Should().ContainSingle();
         JSInterop.VerifyFocusAsyncInvoke(calledTimes: 1);
     }
@@ -114,12 +112,13 @@ public sealed partial class ReviewDetailAppealFormTests : TestContext
 
         cut.FindAll("#appeal-conditions").Should().BeEmpty("only a remit takes a decision");
 
-        cut.Find("#appeal-outcome").Change(CommitteeAppealOutcome.Remitted.ToString());
+        Choose(cut, CommitteeAppealOutcome.Remitted);
         cut.Find("label[for=appeal-conditions]").TextContent.Trim().Should().Be("Replacement conditions");
         cut.Find("#appeal-category").Change(CommitteeDecisionCategory.SatisfactoryWithObservations.ToString());
         cut.Find("#appeal-rationale").Change("Progress is adequate, with observed assessments to follow.");
         cut.Find("#appeal-conditions").Change(Conditions);
         ResolveButton(cut).Click();
+        Confirm(cut, "Remit the appeal");
         cut.WaitForState(() => sender.Resolved.Count == 1);
 
         var resolved = sender.Resolved.Single();
@@ -135,11 +134,12 @@ public sealed partial class ReviewDetailAppealFormTests : TestContext
         var sender = new FakeSender(Review() with { ReviewType = CommitteeReviewType.EntrustmentOnly });
         var (cut, _) = Render(sender);
 
-        cut.Find("#appeal-outcome").Change(CommitteeAppealOutcome.Remitted.ToString());
+        Choose(cut, CommitteeAppealOutcome.Remitted);
         cut.FindAll("#appeal-category").Should().BeEmpty();
         cut.Find("#appeal-rationale").Change("Re-read on appeal: the levels stand.");
         cut.Find("#appeal-conditions").Change(Conditions);
         ResolveButton(cut).Click();
+        Confirm(cut, "Remit the appeal");
         cut.WaitForState(() => sender.Resolved.Count == 1);
 
         sender.Resolved.Single().RemittedConditions.Should().Be(Conditions);
@@ -153,14 +153,15 @@ public sealed partial class ReviewDetailAppealFormTests : TestContext
         var sender = new FakeSender(Review());
         var (cut, _) = Render(sender);
 
-        cut.Find("#appeal-outcome").Change(CommitteeAppealOutcome.Remitted.ToString());
+        Choose(cut, CommitteeAppealOutcome.Remitted);
         cut.Find("#appeal-category").Change(CommitteeDecisionCategory.SatisfactoryWithObservations.ToString());
         cut.Find("#appeal-rationale").Change("Started as a remit.");
         cut.Find("#appeal-conditions").Change(Conditions);
-        cut.Find("#appeal-outcome").Change(CommitteeAppealOutcome.Dismissed.ToString());
+        Choose(cut, CommitteeAppealOutcome.Dismissed);
 
         cut.FindAll("#appeal-conditions").Should().BeEmpty();
         ResolveButton(cut).Click();
+        Confirm(cut, "Dismiss the appeal");
         cut.WaitForState(() => sender.Resolved.Count == 1);
 
         var resolved = sender.Resolved.Single();
@@ -195,9 +196,10 @@ public sealed partial class ReviewDetailAppealFormTests : TestContext
     [InlineData(CommitteeAppealOutcome.Dismissed, "Dismissed")]
     [InlineData(CommitteeAppealOutcome.Remitted, "Remitted")]
     [InlineData(null, "Open")]
-    public void TheAppealsList_NamesEachAppealsOutcome_InTheWordingsWords(CommitteeAppealOutcome? outcome, string expected)
+    public void EachAppealsEntry_NamesItsOutcome_InTheWordingsWords(CommitteeAppealOutcome? outcome, string expected)
     {
-        // The T307 review: the list printed the enum's name, so the page had two sources for how an outcome reads.
+        // The T307 review: the list printed the enum's name, so the page had two sources for how an outcome reads. Since
+        // T366 each appeal is lane T's AppealEntry, its badge the outcome's word.
         var review = Review() with
         {
             State = outcome is null ? CommitteeReviewState.UnderAppeal : CommitteeReviewState.Final,
@@ -206,12 +208,16 @@ public sealed partial class ReviewDetailAppealFormTests : TestContext
                 new CommitteeAppealDto(7, new DateTime(2026, 9, 20, 9, 0, 0, DateTimeKind.Utc), "trainee-1", "Reconsider.",
                     outcome is null ? null : new DateTime(2026, 9, 26, 9, 0, 0, DateTimeKind.Utc), outcome is null ? null : "chair-1",
                     outcome)
+                {
+                    LodgedByName = "Nomsa Mahlangu"
+                }
             ]
         };
         var (cut, _) = Render(review);
 
-        var line = cut.FindAll("li").Single(item => item.TextContent.Contains("Reconsider."));
-        Whitespace().Replace(line.TextContent, " ").Trim().Should().Be($"2026-09-20 Reconsider. ({expected})");
+        var entry = cut.Find("#appeals li.appeal-entry");
+        Whitespace().Replace(entry.QuerySelector("h3")!.TextContent, " ").Trim().Should().Be($"Appeal by Nomsa Mahlangu {expected}");
+        Whitespace().Replace(entry.TextContent, " ").Should().Contain("Lodged 2026-09-20").And.Contain("Reconsider.");
         if (outcome is { } resolved)
         {
             expected.Should().Be(CommitteeDecisionWording.AppealOutcomeName(resolved));
@@ -222,7 +228,14 @@ public sealed partial class ReviewDetailAppealFormTests : TestContext
     // ─── Fixture ─────────────────────────────────────────────────────────────
 
     private static AngleSharp.Dom.IElement ResolveButton(IRenderedComponent<ReviewDetail> cut)
-        => cut.FindAll("button").Single(button => button.TextContent.Trim() == "Resolve appeal");
+        => cut.FindAll("button").Single(button => button.Closest("dialog") is null && button.TextContent.Trim() == "Resolve appeal");
+
+    private static void Choose(IRenderedComponent<ReviewDetail> cut, CommitteeAppealOutcome outcome)
+        => cut.Find($"#appeal-outcome-{outcome.ToString().ToLowerInvariant()}").Change(outcome.ToString());
+
+    /// <summary>The outcome's dialog's confirm button (T366, C14b, C14c).</summary>
+    private static void Confirm(IRenderedComponent<ReviewDetail> cut, string words)
+        => cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == words).Click();
 
     private (IRenderedComponent<ReviewDetail> Cut, string Text) Render(CommitteeReviewDetailDto review)
         => Render(new FakeSender(review));

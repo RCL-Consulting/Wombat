@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using FluentAssertions;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.EntrustmentDecisions;
+using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.DataRights;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.MultiSourceFeedback;
@@ -174,6 +175,8 @@ public sealed partial class DefinedClassTests
             .Concat(Enum.GetValues<EntrustmentDecisionDueStatus>().Select(BadgeFor.DecisionDue))
             .Concat(Enum.GetValues<MsfCampaignState>().Select(BadgeFor.MsfCampaign))
             .Concat(Enum.GetValues<EntrustmentDecisionStatus>().Select(BadgeFor.EntrustmentDecision))
+            // T366 (flow 09): an appeal's Open, Dismissed and Remitted.
+            .Concat(Enum.GetValues<CommitteeAppealOutcome>().Select(outcome => BadgeFor.Appeal(outcome)).Append(BadgeFor.Appeal(null)))
             .Concat(Enum.GetValues<DataRightsRequestStatus>().Select(BadgeFor.DataRightsRequest))
             .Concat(Enum.GetNames<ScheduledJobRunStatus>().Append("Skipped").Append(null).Select(BadgeFor.JobRun))
             .Concat([BadgeFor.AuditResult(true), BadgeFor.AuditResult(false)])

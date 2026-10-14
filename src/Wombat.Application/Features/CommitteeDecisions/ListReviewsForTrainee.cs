@@ -40,7 +40,10 @@ public sealed class ListReviewsForTraineeQueryHandler : IRequestHandler<ListRevi
                 (review.State == CommitteeReviewState.Ratified ||
                  review.State == CommitteeReviewState.UnderAppeal ||
                  review.State == CommitteeReviewState.Final))
+            // T366 (F1): newest first, consistently. One day's ties read the later review first (review #7 above #1), not in
+            // stored order.
             .OrderByDescending(review => review.ScheduledOn)
+            .ThenByDescending(review => review.Id)
             .Select(review => new CommitteeReviewListItemDto(
                 review.Id,
                 review.TraineeUserId,
