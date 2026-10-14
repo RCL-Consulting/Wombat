@@ -72,3 +72,6 @@ Rectification that is approved stays Approved, because applying it is not built 
 ## Related
 
 The sibling task holds activity-move and committee-outcome mail (C59) and shares the one-off notice path; whichever lands first builds it. T274 skips deactivated accounts for expiry notices, and this task uses the same rule. T101 redacts the revocation reason and the decision notes. T112 covers data-rights scope and the unbuilt rectification apply. T240 wrote the help text saying one-off mail is still sent. T258 and T276 cover erasure. T282 logs mail by reference. Runbook: Steps 4.36, 4.37, 4.42, A.1.2, A.1.3, A.1.8, A.1.9, A.1.12, A.1.13. Findings F-4.36a, F-A.1.2a, F-A.1.9a.
+
+- **2026-10-14:** its revocation half split out as **T367**, to land before flow 09's build (T366, the operator's Q11).
+  The data-rights half stays here and reuses T367's one-off notice path.

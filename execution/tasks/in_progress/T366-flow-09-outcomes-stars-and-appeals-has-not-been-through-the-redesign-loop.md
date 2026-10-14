@@ -73,3 +73,10 @@ T364 (flow 08), T361 (flow 07), T307, T309, D51, D53; BRIEF § 6, § 8, § 11.
   and `-appeals` (each opened). Canvas "Wombat 09": https://claude.ai/artifact/5LfLPdcXJ2iRX6GSm2bbKP, design system v20
   (1791917863-8f48) installed, the mark copied in as `/_blob/19eee4d64e6ebc1818aa6f9007654872` and written into § 1 and
   `round-1-ask.txt`. Next: the operator sends `round-1-ask.txt` with the attachments (step 5).
+- **2026-10-14, round 1 picked: B** (`58f8dc87`, assessed in `round-1-assessment.md`, `71e02aa2`): a review page of its
+  own at `/committee/my-reviews/{id}`, one column at every width; A's inline resolve form and unchanged access denied;
+  C's "What happens next" and "What will be recorded" wording. The operator said "go ahead" on every recommendation:
+  Q7 send the revocation mail (no reason, the reviser by name); Q8 revoked and expired listed, superseded off, the
+  reason shown on her page; Q9 no appeal deadline (§ 3F question 13 added), the reason's readers named truthfully;
+  Q10 no menu item; Q11 **T367** (T319's revocation half) lands before the build, T308 and these pages' halves of
+  T260, T264, T324, T325, T328, T329, T272 fold in. Round 1 drew invented fixture data: re-attach and name the folder.

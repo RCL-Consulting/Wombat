@@ -576,6 +576,7 @@ optional. 11 gates [T170], which does not invent the form. They are listed so th
 11. **The candidate's self-assessment** ([T170]): is there a prescribed form for page 8's milestone self-reflection and
     learning plan, how often is it written, and who signs it off?
 12. **Clinical audit on EPA 10** ([T154], D45): descriptor 10.5 says "Conduct a clinical audit", but Annexure A's list for EPA 10 does not name the audit, so Wombat refuses an audit filed against PAED-010. Should the list include it?
+13. **An appeal window** ([T366], flow 09, *new 2026-10-14*): may a registrar appeal a ratified committee decision at any time, as Wombat allows now, or within a set period after it is ratified? If there is one, how long, and from which date?
 
 ### 3D. Decisions inside one task
 
