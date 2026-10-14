@@ -18,6 +18,8 @@ STARs and appeals), filed and started.
 - **Round 2** (`1221c005`) reviewed from three sides (`4da096d1`); the operator said "yes" to F1–F9 (T366 Notes).
 - **Next (operator):** send `round-3-ask.txt` in "Wombat 09"; then check round 3 item by item (`round-3-check.md`) and
   build. T367 lands before the build. **Not pushed:** `0058adf3` onward.
+- **Later (2026-10-14):** the operator ran round 3 and found the previews bland: "Wombat 09" had no tokens stylesheet,
+  so every `var(--…)` was empty. Written from app.css's `:root` and published (canvas v18); round 3 renders in Wombat.
 
 ## Sessions 2026-10-11 to 10-13 (Opus): harness 3.4; 111 done tasks archived; T361 (flow 07) and T364 (flow 08) done
 
@@ -25,21 +27,17 @@ The operator said "upgrade the execution workspace", "move the done tasks" and "
 on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when the operator asks.** The harness is
 `C:\dev\rcl_execution\bin\harness.py` (the hooks in `.claude/settings.local.json`).
 
-
 ### T361 done (2026-10-12): flow 07 built, replayed, in the design system (version 19)
 
-- **Build** `44de180b` (D53 with it), reviewed by three Sonnet lenses; six suites green (814 / 3750 / 1022 / 52 / 3557 /
-  489). **Pushed** to origin 2026-10-12. Branches `t361`, `t361-*` kept locally.
+- **Build** `44de180b` (D53 with it), three Sonnet reviews, six suites green; pushed 2026-10-12; branches `t361*` kept.
 - **Replay** (`wombat_scenario_t361`, one agent per act): 331 steps, 267 with no gap; five flow-07 faults found and
   fixed in the session, each re-checked in the browser: the return link's `#snap-n` (`59bb72fd`), the foot form's
   Issued on (`6ad6c57a`), 21 px snapshot links at 390 (`6b149fff`), the stacked caption and a pick line's space
   (`14378856`). States: 82 of 83 hold (`cdd12d9a`), the 83rd fixed. All other gaps are open tasks the act files cite.
 - **Closed by flow 07:** T356 (the shell's stacking), T273 (the "no longer in use" mark). Still open with their review
   halves confirmed fixed: T309 (item 2 done), T329, T260, T324 (the form's half).
-- **Design system** re-synced (`design/system/`, one Sonnet review) and published as **version 19** (1791816174-d002);
-  the live v18 matched HEAD first. **Lessons** in BRIEF § 11 "Flow 07".
+- **Design system** re-synced and published as **version 19** (1791816174-d002). **Lessons** in BRIEF § 11 "Flow 07".
 - **Proposed:** T363 (the page's four data gaps). T362 (live following) still waits. **T290** stays in progress.
-- **Next in the redesign:** flow 08, started (below).
 
 ### T364 done (2026-10-12 to 10-13): flow 08 built, replayed, in the design system (version 20)
 
@@ -74,6 +72,7 @@ on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when t
 
 - **A design-system publish:** `list` the files and `read` the artifact itself first (a typed artifact refuses a
   publish otherwise); `file_path` = the index, the rest in `files`, `root` = a folder holding `project/…`, one call.
+  A new canvas needs its tokens stylesheet written by hand (the system serves none): Wombat 09 lacked it until v18.
 - **A script must pass its base address explicitly** (a helper reading `BASE` at import wrote to the replay database).
 - **A killed background wait** (memory pressure): stop and report, never restart it unasked.
 - **Check new tables at 768 px** as well as 390 and 1280.
