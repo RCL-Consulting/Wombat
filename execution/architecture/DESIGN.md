@@ -647,8 +647,8 @@ there, and its trail is Home › the page (§ Page-level patterns).
 | A trainee's review (`/committee/my-reviews/{id}`) | Trainee: My committee reviews; its trail Home › My committee reviews › the review ("2026 S2 annual progression review"). The page admits an Administrator too, as the list does, but reads them nothing that is not their own (T366, flow 09, F8) |
 
 Entrustment decisions is not in the table: for both speciality admins it is a list the menu offers, which lights itself
-(T358, R2-Menus m5); for every other role it admits, the Institutional admin's Home link included, it is under no list
-until flow 09 places it.
+(T358, R2-Menus m5); for every other role it admits, the Institutional admin's Home link included, it is under no list,
+its trail Home › Entrustment decisions: flow 09 kept it so (T366, Q10).
 
 MSF coverage (`/msf/coverage`, T210) is reached from the MSF campaign list's header, an outline "MSF coverage" link
 (`#msf-coverage-link`) beside New campaign. The link is not offered to someone who holds Trainee, whom the page shows no

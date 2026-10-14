@@ -37,4 +37,4 @@ No new colour token. Body text 12.63:1 and the window (`muted-text`) 5.09:1 on t
 ## Known gaps
 
 - None the replay met (4.41, 4.43, 4.48, 4.51).
-- **Found re-syncing:** View stays the small button (28px) at every width. The 44px rules for stacked rows' actions are scoped to flow 08's wrapper (`.committee-calendar`) and flow 09's other two (`.my-authorisations`, `.entrustment-list`), and none reaches this list, whose page draws no wrapper of its own.
+- **Fixed re-syncing:** View was the small button (28px) at every width, no 44px rule reaching this list. The page now wraps its list in `.my-reviews-list`, and below 641px its row actions are 44px (T366 step 8).

@@ -25,6 +25,8 @@
 @* Present from the first render, so its words are announced when they come. *@
 <p class="visually-hidden" role="status">@(_loading ? MyReviewWords.ListLoading : null)</p>
 
+@* The list's own class carries its phone rule: View is 44px below 641px (T366 step 8). *@
+<div class="my-reviews-list">
 <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusHeadingAsync"
             IsEmpty="@(!_loading && _reviews.Count == 0)" EmptyTitle="@MyReviewWords.EmptyTitle" EmptyBody="@MyReviewWords.EmptyBody">
   <LoadingContent>
@@ -76,6 +78,7 @@
     </div>
   </ChildContent>
 </StatePanel>
+</div>
 
 @code {
   private readonly List<CommitteeReviewListItemDto> _reviews = [];

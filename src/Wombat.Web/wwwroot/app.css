@@ -5124,10 +5124,12 @@ fieldset.form-group fieldset.form-group > legend {
   justify-content: flex-start;
 }
 
-/* Below 641px: the trainee's page's actions and the entry's own control are 44px, the page's full width. Flow 07 already
+/* Below 641px: the trainee's page's actions, My committee reviews' View (.my-reviews-list) and the entry's own control
+   are 44px, the page's actions the page's full width. Flow 07 already
    gives the committee page's controls theirs, so nothing here reaches that page but the entry's button. */
 @media (max-width: 640.98px) {
   .my-review-page .form-actions .btn,
+  .my-reviews-list .actions-cell .btn,
   .appeal-entry-more {
     justify-content: center;
     min-height: 44px;
