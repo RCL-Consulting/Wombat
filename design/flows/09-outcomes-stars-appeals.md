@@ -38,10 +38,11 @@ Restated 2026-10-14 for T366 (the brief of 2026-09-26 predates flows 01–08). P
    the decision history) and its bottom 300 px (the Appeals section). The trainee's pages (2,500–3,500 px) go whole.
 2. **Start a new canvas** from the main app's Design page, on the Wombat design system v20
    (https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18). Not an earlier flow's canvas. Flow 09's canvas, "Wombat 09":
-   its link goes here once it is created.
+   https://claude.ai/artifact/5LfLPdcXJ2iRX6GSm2bbKP (created 2026-10-14 by
+   Claude Code from the Design type, the design system v20 installed and the mark copied in).
 3. **Copy the mark into the canvas before round 1** (`Artifact publish`, `asset: true`, `from_url` = the design
    system, `asset_ids: ["16c4e619b7ea0971d0c28ed6509be7a8"]`). Put the returned `/_blob/` URL in § 1 and in
-   `design/flows/09-outcomes-stars-appeals/round-1-ask.txt`, where they read `/_blob/MARK`.
+   `design/flows/09-outcomes-stars-appeals/round-1-ask.txt`, where they read `/_blob/19eee4d64e6ebc1818aa6f9007654872`.
 4. **Send § 1 and § 8 as ONE message** (`design/flows/09-outcomes-stars-appeals/round-1-ask.txt`), with the key
    screenshots in § 4. Read `project/canvas.json`'s version before and after: a send can draw nothing. Read round 1's
    notes for a line saying it never received the attachments (§ 11, flow 06); re-attach and name the folder before
@@ -67,7 +68,7 @@ This is flow 09 of a RESTRUCTURE with UX in scope (design/BRIEF.md § 4). Flows 
   built; these pages sit inside the shell. Structure first, then fidelity: round 1 is 2–3 structural variations of the
   appeal journey (the registrar's review, her appeal, the committee's Appeals section) as wireframes, plus ONE proposal
   for My authorisations and the STAR register for me to confirm or correct. I pick before round 2. The runbook steps
-  follow below in this same message. The brand mark is at /_blob/MARK: use it, never a drawn disc.
+  follow below in this same message. The brand mark is at /_blob/19eee4d64e6ebc1818aa6f9007654872: use it, never a drawn disc.
 
 GOAL: A registrar must be able to:
     - read the STARs in force (each the committee's entrustment of an EPA at a level), download each certificate, and

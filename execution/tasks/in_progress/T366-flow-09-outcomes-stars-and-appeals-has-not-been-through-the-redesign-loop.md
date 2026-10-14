@@ -68,3 +68,8 @@ T364 (flow 08), T361 (flow 07), T307, T309, D51, D53; BRIEF § 6, § 8, § 11.
   Active only); the revoke's "The trainee is notified." is false. Completeness exit 0, verbatim 424 steps 0 problems
   (153 stale step pointers in flows 01–07 re-synced), baseline missing 0. `round-1-ask.txt` is § 1 + § 8 as one paste,
   with `/_blob/MARK` until the mark is copied in.
+- **2026-10-14, steps 2–4.** Staged with `stage_upload.ps1 -Flow 09` (106 files, 10.3 MB); the staged copies of
+  `4.44-1`, `4.45-3` and `review-detail--appeal-dismissed` cropped to the Appeals section, `4.47-1` split into `-top`
+  and `-appeals` (each opened). Canvas "Wombat 09": https://claude.ai/artifact/5LfLPdcXJ2iRX6GSm2bbKP, design system v20
+  (1791917863-8f48) installed, the mark copied in as `/_blob/19eee4d64e6ebc1818aa6f9007654872` and written into § 1 and
+  `round-1-ask.txt`. Next: the operator sends `round-1-ask.txt` with the attachments (step 5).
