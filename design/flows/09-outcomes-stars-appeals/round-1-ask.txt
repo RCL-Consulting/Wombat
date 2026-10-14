@@ -1,0 +1,518 @@
+FLOW 09 — What the committee issued: STARs, the register, a revocation and an appeal
+
+This is flow 09 of a RESTRUCTURE with UX in scope (design/BRIEF.md § 4). Flows 01 (the shell), 02 (sign-in and
+  account), 03 (a registrar files an activity), 04 (an assessor's inbox), 05 (a registrar reads where she stands),
+  06 (watching the programme), 07 (the review sitting) and 08 (panels, what is due, the schedule) are designed and
+  built; these pages sit inside the shell. Structure first, then fidelity: round 1 is 2–3 structural variations of the
+  appeal journey (the registrar's review, her appeal, the committee's Appeals section) as wireframes, plus ONE proposal
+  for My authorisations and the STAR register for me to confirm or correct. I pick before round 2. The runbook steps
+  follow below in this same message. The brand mark is at /_blob/MARK: use it, never a drawn disc.
+
+GOAL: A registrar must be able to:
+    - read the STARs in force (each the committee's entrustment of an EPA at a level), download each certificate, and
+      see when one expires;
+    - see a STAR that is no longer in force (revoked or expired), when, and why, and still download its certificate;
+    - read each committee review of hers: what was decided, its conditions, who was present, what the agenda decided
+      EPA by EPA, and every earlier decision the appeal replaced;
+    - appeal a ratified review, knowing who hears it and that the outcome is final, and then follow her appeal to its
+      outcome.
+  The panel's appeal body (the chair and the external members) must be able to resolve an appeal, Dismissed or
+  Remitted, with a quorum for a replacement decision, knowing it cannot be undone; every other member reads who may.
+  Programme staff must be able to read the STAR register, filter it, download a certificate, and revoke a STAR issued
+  in error with a reason, knowing what the registrar is told.
+  What is wrong today (the attached screenshots show each; all on the shell as built, 2026-10-13):
+  - The registrar never sees her appeal, the decision it replaced, or any decision's Conditions: her review shows only
+    the current decision (4.48). After she lodges, "Appeal lodged." shows at the page top and the detail reads Under
+    appeal, but the list row above still reads Ratified (4.43).
+  - Her review opens below the list with View: no address of its own, no focus move, no loading state. At 390 the
+    list scrolls sideways in its box and cuts its words (4.41). Typing the committee's address for her review lands on
+    "You cannot open this page", which does not point to My committee reviews.
+  - The appeal form is one box, "Appeal reason", and Lodge appeal: it says nothing of who hears the appeal, that either
+    outcome is final, or that the reason is read by every committee reader; there is no confirmation. Left blank it
+    says "The Reason field is required.".
+  - A revoked STAR simply vanishes from My authorisations (4.42). The register's revoke confirmation promises "The
+    trainee is notified." and nothing is sent.
+  - The revoke confirmation is not a dialog: Revoke, a red button in the row, opens a section below the table, out of
+    view on a long list; Confirm revocation enables only when the reason box loses focus; the reason box is monospace;
+    the result and any refusal show at the page top, unfocused (4.36).
+  - The register names no revocation in its row (no date, no one, no reason), links no row to the review that issued
+    it, prints statuses as code words ("Active", "Superseded"), says "No entrustment decisions" for both nothing issued
+    and nothing matching, and at 390 scrolls inside its box (A.7.7). The revoked certificate names its reviser by a
+    user id (4.37).
+  - On the Appeals section the chosen Outcome is cut short once Remitted fills the row ("Remitted: the appeal body
+    replaces the" at 1280, 4.46). The quorum refusal shows at the section's head, above a six-field form, far from
+    Resolve appeal, and the Present ticks feed no live count as the sitting's Record does. Resolve appeal, which
+    nothing reopens, has no confirmation. The appeal list reads "{date} {reason} (Open)", with no resolved date and no
+    resolver.
+  - My authorisations prints dates long-form ("2 July 2026") where every other page is ISO; "Expires in N days" counts
+    on the UTC date; a failed read or download prints the exception's text.
+
+AUDIENCE:
+  - Trainees: Dr Lerato Molefe (training year 4; three STARs after Act 4, PAED-010 expiring in 20 days; fifteen at
+    exit level after her pre-graduation review), Dr Anele Dlamini (3; PAED-002 revoked), Dr Nomsa Mahlangu (1;
+    appeals "Inadequate Progress — Additional Training"; remitted to "Satisfactory with Observations"), Dr Sipho
+    Ndlovu (1; an annual review, Outcome Deferred, and a formative check-in).
+  - CommitteeMembers: Dr Thandi Zulu (chair), Dr David Naidoo, Dr Sarah Botha (each also an Assessor), Dr John van
+    Rensburg (external, CommitteeMember only). The appeal body is the chair and the external member.
+  - SpecialityAdmin: Dr Refilwe Mokoena, who revokes; SubSpecialityAdmin: Dr Kabelo Sithole; InstitutionalAdmin: Prof
+    Nolwazi Mbatha. They read the register.
+  - Kgosi Kgari Teaching Hospital (KGK), Paediatrics, on the College's (CPSA) curriculum 11.1, fifteen EPAs (PAED-001
+    to PAED-015). Frequency: STARs after each sitting (a review each semester or year); appeals are rare. Stakes:
+    high. Resolving an appeal cannot be undone; the certificate is the medico-legal record and leaves Wombat. Desktop
+    1280×800 and phone 390×844.
+
+THE RULES THE PAGES CARRY TODAY (real words; they are the data to draw with, and the rules hold whatever the shape):
+  - My authorisations (the Trainee only): "Your active Statements of Awarded Responsibility (STAR)."; one card per
+    Active STAR, by EPA code: the EPA ("PAED-012 — Communicating with … (no longer in use)" when the College has
+    paused it: a pause leaves a STAR standing), Authorised level ("5", "3b"), Issued, Expires ("No expiry", or the
+    date with "Expires in 20 days" when 30 days or fewer remain), the committee's rationale, and Download certificate
+    ("Download certificate for PAED-001"; "Generating…" while it runs). Empty: "No active authorisations yet" / "When
+    a committee review ratifies a decision authorising you to perform an EPA, it will appear here. You can then
+    download a STAR certificate for your records." A revoked, expired or superseded STAR is not listed. A graduate
+    loses the page with the Trainee role (flow 13's).
+  - A STAR's status: Active, Expired (past its expiry, by a nightly job), Revoked (by programme staff, with a reason),
+    Superseded (a later STAR for the same EPA was ratified). Only an Active STAR can be revoked, expire or be
+    superseded. Its certificate can be downloaded in any status, by the trainee and by staff who oversee her; a revoked
+    one prints "REVOKED", the date, the reviser and the reason.
+  - My committee reviews (the Trainee; "Ratified decisions, appeal status, and final outcomes."): her reviews once
+    ratified, newest first: Panel, Period ("2026 S2 · 2026-01-01 to 2026-12-31"), Type ("Annual progression",
+    "Pre-graduation", "Entrustment only", "Formative check-in"), State (Ratified, Under appeal, Closed), Decision (a
+    category: "Satisfactory Progress", "Satisfactory with Observations", "Inadequate Progress — Additional Training",
+    "Inadequate Progress — Repeat", "Release from Training", "Outcome Deferred", "Graduate (programme complete)"; or
+    "No binding decision" for a check-in; "Entrustment decisions only"), and View ("View the 2026 S2 review before
+    Paed Annual Review Panel"). Empty: "No decisions yet" / "Ratified committee outcomes will appear here."
+  - Her review's detail: Panel, Sits for, Evidence window, Type, State; the current decision (its category, its
+    rationale, "Present when this decision was taken: Thandi Zulu (chair), Sarah Botha, John van Rensburg
+    (external)"); for an entrustment-only review "This review decided entrustment only, so it records no progression
+    outcome." (and, once remitted, "The appeal was remitted: this decision is the appeal body's, and the entrustment
+    decisions this review issued stand unless one is revoked."); the Agenda, "The EPAs this review was there to decide
+    for 2026 S2, and what the committee did with each.": EPA, Window, Outcome, where Decided reads "STAR #1.", Not
+    decided at this sitting reads the decision's one sentence about the EPAs not decided ("To be decided at her final
+    review."), and Decided elsewhere "Decided at another sitting in this window." (D53: no deferral).
+  - Appeals, lodging: only the trainee herself (the Trainee role), only against a review that is Ratified, one open
+    appeal at a time, and a review that is Closed cannot be appealed again. There is no deadline and no window: a
+    ratified review can be appealed at any time until it is closed. A pre-graduation or entrustment-only review can be
+    appealed too. The reason is required, up to 4,000 characters, and every reader of the committee's page reads it.
+    Refusals: "Only ratified reviews can be appealed."; "An unresolved appeal already exists for this review."; "The
+    committee review could not be found among your own ratified reviews.". Lodged: "Appeal lodged.", the review Under
+    appeal.
+  - Appeals, resolving: only the panel's chair or an external member who may sit now (an active committee member at
+    the panel's institution, not a trainee, never the trainee under review), and never an Administrator. Everyone else
+    reads "Only the appeal body can resolve the appeal: the panel's chair, Thandi Zulu, and its external member, John
+    van Rensburg." (or, when none can act, "… and none of them can act now. A panel administrator must seat a chair
+    who can."). Outcome: "Select an outcome…", "Dismissed: the decision stands", "Remitted: the appeal body replaces
+    the decision" (no Upheld, D51), with "Dismissed leaves the committee's decision in force. Remitted replaces it with
+    a decision the appeal body takes now, recorded below with who sat for it. Either closes the review, and nothing
+    reopens it."; none chosen: "Choose an outcome.". Remitted asks Replacement category ("Select a category…"; none on
+    an entrustment-only review, which says "This review decides entrustment only, so the replacement decision records
+    no progression category, and it changes no entrustment decision: the STARs this review issued stand. To change
+    one, revoke it and re-decide the EPA at a new review."), Replacement rationale, Replacement conditions (optional),
+    and Present ("Tick every panel member at this sitting. A committee decision needs at least two panel members
+    present: the chair and at least one other."; the chair and the resolver ticked and locked). A quorum is two, the
+    chair among them; short of it: "A committee decision needs at least two panel members present: the chair and at
+    least one other.". A panel that cannot seat a quorum at all shows Resolve appeal unavailable, with its reason.
+    Resolved: "Appeal resolved.", the review Closed. Remitted adds the replacement above the first decision, which
+    reads "Replaced on appeal by the decision above."; the replacement keeps the first decision's sentence about the
+    EPAs not decided, and changes no STAR. Dismissed leaves the decision in force. Either outcome is final.
+  - The committee's decision history (flow 07's, on the review page): every decision, newest first, each with its
+    category, "Replaced on appeal by the decision above." where so, its rationale, "About the EPAs not decided: …",
+    "Conditions: …", and "Present: Thandi Zulu (chair), Sarah Botha". The appeals list under it: "2026-10-13 {reason}
+    (Open)", "(Dismissed)" or "(Remitted)"; "No appeal has been lodged against this review." when none.
+  - The STAR register (Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin; "Issued Statements of
+    Awarded Responsibility across the programme."): the trainees each oversees, newest issued first, unpaged. Filters
+    Trainee ("Filter by name") and Status (All, Active, Expired, Revoked, Superseded), applied with Apply filters.
+    Columns Trainee, EPA, Level, Issued, Expires (ISO, or "—"), Status (a badge), and the actions Download ("Download
+    the certificate of Lerato Molefe's PAED-010 decision, issued 2026-10-13") and, on an Active row only, Revoke.
+    Empty or filtered to nothing: "No entrustment decisions" / "No entrustment decisions match the current filter.".
+    A STAR out of scope is not listed; a refusal reads "The entrustment decision could not be found among the
+    decisions you may revoke.".
+  - Revoking: "You are about to revoke the entrustment decision for PAED-002 — Managing common paediatric
+    presentations held by Anele Dlamini. Revocation is immediate and irreversible. The trainee is notified."; Revocation
+    reason (required, up to 1,000 characters); Confirm revocation and Cancel. Done: "Entrustment decision for PAED-002
+    revoked."; the row reads Revoked with Download only. Nothing else changes: the EPA reads "Revoked: re-decide" on
+    Decisions due ("STAR #5, issued for 2026 S2, was revoked. Schedule a review to decide it again.", flow 08's page),
+    and the trainee's agenda still reads it Decided with its STAR number, because it records what the sitting did.
+  - Access denied (flow 01's): a Trainee on the committee's review page reads "You cannot open this page" / "Your role
+    (Trainee) does not open this page." with Go to Home. The Coordinator is refused the register.
+  - Data volumes: none (no STARs, no reviews); typical (three STARs and one review); heavy (fifteen STARs plus a
+    superseded one; fifteen agenda lines; an appealed review with two decisions; two reviews in one period, a binding
+    one and a check-in; a register of twenty rows for five registrars).
+
+WHAT FLOW 09 MAY CHANGE OF WHAT EARLIER FLOWS BUILT, AND WHAT IT MAY NOT:
+  May not: the shell (flow 01: the trail, the acting role, access denied, not found); the menus' items (flow 06
+    settled them; propose a change, do not draw it as settled); flow 07's review page above its Appeals section, except
+    the decision history where it is shared; Decisions due (flow 08's); the rules above (who may lodge and resolve, the
+    quorum of two, the two outcomes, that either is final, that a remit changes no STAR, which STARs can be revoked).
+  May, for these pages: their whole structure (the trainee's review in place, on a page of its own, or on a route of
+    its own; the decision history as one component shared by both sides; an Appeals block for the trainee; where the
+    lodge and resolve forms live; "No longer in force" on My authorisations; the revoke as a dialog), the order and
+    grouping of parts, titles and subtitles, where each result and refusal shows and where focus goes, confirmations,
+    the lists' stacking at 390, and the words. Mark PROPOSED any rule change (an appeal deadline, hiding the reason
+    from some readers, a STAR status shown to the trainee, a mail sent): those are the operator's. The runbook's
+    Expects change with the words.
+  Say which of these each variation changes, and why.
+
+SCREENS, in order:
+  1. My authorisations: none yet; three STARs, one expiring (4.39); fifteen at exit level (5.8); after a revocation,
+     with NEW "No longer in force" (4.42); a paused EPA's STAR; a download refused; loading; a load error.
+  2. My committee reviews, the list and her review: none yet; one review (4.41); the appeal form, before lodging
+     (4.43); under appeal, the row and the review agreeing, with NEW her Appeals block (4.43); closed after a remit,
+     with NEW the decision history and the appeal's outcome (4.48); closed after a dismissal; an annual review and a
+     check-in in one period (4.51); pre-graduation, every EPA Decided (5.8); an entrustment-only review; loading.
+  3. The committee's Appeals section (on the review page): a member's view (4.44); the appeal body's resolve form
+     (4.45); no outcome chosen; Remitted on a progression review and on an entrustment-only one; a remit short of a
+     quorum (4.46); a panel that cannot seat a quorum; closed after a remit, the replacement heading the history
+     (4.47); closed after a dismissal; no appeal lodged.
+  4. The STAR register: none issued; issued (4.35); filtered to one registrar (4.35, 5.7); filtered to nothing; the
+     revoke confirmation (4.36); revoked (4.36, 4.37); superseded (5.7); a paused EPA (6.22); a revoke refused;
+     loading; a load error.
+  5. 390 px for every page (A.7.7), and access denied (a trainee on the committee's address, 4.41).
+
+STEPS: 4.35–4.37, 4.39, 4.41–4.48, 4.51, 5.7, 5.8, 6.22 and A.7.7. Pasted verbatim below (Role / Route / Do /
+  Expect). In them, D is the day the story is replayed and <P> the semester holding D (for example 2026 S2) and <Y> its
+  year. Where an Expect quotes today's wording or layout, that is today's page, not a requirement on the new one; two
+  Expects describe what is not built: 4.36's dialog and mail, and 4.37's reviser by name.
+
+STATES TO SHOW:
+  Every state named in SCREENS; loading for every page (the header and a skeleton, no action offered until the read is
+  in); a load error (a sentence and Try again, never an exception's text); each confirmation the design adds, its
+  cancel, and the result after it with focus on it; 390 px for every page; the heavy volumes.
+
+REQUIREMENTS FROM KNOWN DEFECTS:
+  - A5 (BRIEF.md § 6): every action reports its outcome where the focus goes and where the person is working; a refusal
+    shows beside the control that caused it and keeps what was typed; a destructive action confirms, names its target,
+    and its trigger is an outline button.
+  - T308: after a lodge, her row reads Under appeal at once; she sees every decision (newest first, "Replaced on appeal
+    by the decision above.", rationale, Conditions, who was present) from one component shared with the committee's
+    page; she sees her appeals (date lodged, reason, outcome in words, date resolved).
+  - T319: My authorisations gains "No longer in force" (revoked and expired, each with its status, its date and its
+    certificate; superseded stays off, T319's recommendation). The revoke confirmation says only what is true.
+  - T264 and T260: Revoke is an outline button named for its row and opens a ConfirmDialog naming the trainee and the
+    EPA; Confirm revocation enables as the reason is typed; the result takes the focus.
+  - T324: a revocation names who revoked by name; no message prints a property name ("The Reason field is required.").
+  - T325: "Expires in N days" counts on the South African calendar; any time is SAST, with the zone.
+  - T328: the reason boxes use the body font. T323: nothing at 1280 is cut (the Outcome); nothing at 390 scrolls
+    sideways (the trainee's list, the register).
+  - T329, T272: a failed read is an alert with Try again; no exception's or framework's text on any page.
+  - T280: every table has a caption; headings in order (one h1, then h2).
+  - Content (BRIEF.md § 6): sentence case; people by name as stored; states, outcomes and categories by their labels;
+    ISO dates (flow 05's D1), My authorisations included.
+  - Done since the old brief, keep them: Outcome opening on "Select an outcome…", no Upheld (T307, D51); the refusal in
+    the Appeals section with the focus (flow 07); the formative label (T309 item 2); D53's Not decided; Entrustment
+    decisions in the speciality admins' menus (flow 06).
+
+QUESTIONS THE DESIGN MUST ANSWER:
+  1. Where does the trainee read one review: below the list as today, on a page of its own (a PROPOSED route), or as
+     the list's opened row? Where does a trainee who types the committee's address end up?
+  2. One decision history for both sides: what it shows the trainee that it shows the committee, and what not.
+  3. The trainee's Appeals block, and the committee's appeal list: what each entry shows (lodged, reason, outcome,
+     resolved, by whom), and where her appeal form sits.
+  4. Lodging: what the form tells her (who hears it, that the outcome is final, who reads the reason), and whether a
+     confirmation follows.
+  5. Resolving: a confirmation for an act nothing undoes; a live quorum count as the Present ticks change; where the
+     result and a refusal show.
+  6. Certificates: on My authorisations only, or also on the review's Decided lines?
+  7. (The operator's) The revoke says "The trainee is notified." and nothing is sent. Send the mail (T319's
+     recommendation: no reason in it, a link to My authorisations), or drop the sentence?
+  8. (The operator's) "No longer in force": revoked and expired only, superseded off (T319's recommendation)? Does
+     the trainee read the revocation's reason on the page, or only on the certificate?
+  9. (The operator's) There is no appeal deadline, and every committee reader reads the appellant's reason. Keep both?
+  10. (The operator's) My authorisations has no menu item (it lights My progress). Keep, or give it one?
+  11. (The operator's) T308, T319, T260, T264, T324, T325, T328, T329 and T272 touch these pages: fold them into the
+      build, or land any first as its own task?
+
+CONSTRAINTS:
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
+Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
+  over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
+Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
+  the error page, /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side
+  behaviour beyond a small script module; no live validation; the phone menu is CSS-only.
+Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
+  Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence (Source Sans 3 and Fraunces, OFL, ship).
+No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
+  colour as an existing token (the design system's tokens.json) or a NEW token with its value; prefer the spacing scale
+  xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48 px.
+Icons: Lucide line icons only, named by their Lucide name.
+The shell is designed and built (flow 01): design the page body inside it, not a new frame. The sidebar shows the
+  acting role's navigation (one role at a time; access is the union of the roles held), grouped above eight links, with
+  My progress and My data rights under a rule; the top bar holds the person's name and Sign out; below 641 px a phone
+  bar with a CSS-only menu. A new page names its owning list (its nav item lights, its breadcrumb follows it) and its
+  title "<Page> · Wombat", the same words as its h1 and its nav label, in sentence case.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, the trail from the
+  owning list, an optional icon, header actions), DataTable (.clinic-table in .table-container, PagerControls),
+  FormField / FormActions (.form-container, .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid,
+  loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
+  text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
+  (hand-drawn SVG, no chart library), ReferenceBlock.
+  Since flow 03 also: ActivityStatus, ActivityAbout, ActivityForm, ActivityWorkflowActions, SubmitCheck,
+  RefusalSummary, ActivityHistory, NeedsYouList, InstrumentPicker, and DataTable's stacked rows (Stack). Since flow 04:
+  the rung picker, WaitingList, WayOn, the Overdue badge and the other-role line. Since flow 05: the progress index
+  (an EPA per row, its name its own link), the figure over its caption, EntrustmentStandingPanel's stacked rows, and
+  TrajectoryChart's two drawings with its visible table. Since flow 06: the committee and coordinator Homes, the
+  registrar list with its filters. Since flow 07: ReviewSitting, SittingBar, AgendaTable (its container-query stack),
+  AgendaLineForm, EvidenceReader, DecisionForm, ReviewReturnLink. Since flow 08: one action a row, the seat
+  picker, a choice of a few kinds as radios (choice-group), the trainee line, a form page of its own (Schedule a
+  review).
+Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
+  denied, not found, the error page, the reconnect dialog and the in-app error bar. Still to design where a flow meets
+  them: field validation (invalid border plus a stripe, not colour alone; message under the field; the summary) and
+  session ended.
+Content: sentence case everywhere; people by name as stored (no titles); states and types by label; times in South
+  African time with the zone shown; an out-of-scope record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the sidebar's white ring included); targets
+  ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
+  reduced motion honoured.
+Viewports: 1280×800 and 390×844.
+Also: each page has exactly one h1, and its headings are in order. A confirmation is flow 01's native <dialog>
+  ConfirmDialog. Flow 07's review page is redrawn only in its Appeals section and its decision history.
+
+ASK:
+  - Round 1: 2–3 STRUCTURAL variations of the appeal journey as wireframes (screens 2–3): where her review lives, the
+    shared decision history, her Appeals block and the lodge, the committee's Appeals section with its quorum and
+    result, and both at 390. Give each its reasoning and its step count per journey, at 1280 and 390 px: Dr Molefe
+    reading her review (4.41); Dr Mahlangu lodging (4.43) and reading the outcome (4.48); Dr Naidoo reading the appeal
+    (4.44); Dr van Rensburg and Dr Zulu resolving, refused and then remitting (4.45–4.47). Plus ONE proposal for
+    screens 1 and 4 (Dr Molefe's and Dr Dlamini's My authorisations, 4.39 and 4.42; Dr Mokoena's revocation, 4.36;
+    Prof Mbatha's register, 4.35 and 5.7), wireframed, for me to confirm or correct. No colour or type choices yet.
+    Stop and wait for my pick.
+  - Round 2: the chosen structure at full fidelity on the design system's tokens, every screen and state above, at
+    1280 and 390 px, each role's view, every confirmation, and where the focus lands after each action.
+  - Name every design-system component you use, and mark anything else NEW. Say which DESIGN.md rule a variation
+    changes (§ Table system; § Form system; § Page-level patterns: List page, Detail page, and the title rule; the
+    owner table's rows for My authorisations and a review; § Entrustment-only reviews, "The trainee's reviews").
+  - Mark PROPOSED anything not built: a confirmation, a new route, a mail, a rule change.
+  - Flag edge cases: an entrustment-only review appealed and remitted (no category; no STAR changes); a panel that
+    cannot seat a quorum; an appeal body member who cannot act now; a STAR revoked on a paused EPA; a superseded STAR
+    beside its successor; a graduate (the page goes with the Trainee role: flow 13's); the 120-character EPA title
+    ("PAED-015 — Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and
+    research"); a 4,000-character appeal reason.
+  - Run an accessibility review against WCAG 2.1 AA: one h1, headings in order, every table captioned, every row
+    action named for its row, badges read as words, focus after every action and confirmation; targets ≥ 24 px (44 at
+    390).
+
+ATTACHED: act-4/4.39-1-molefe-my-authorisations.png, act-4/4.41-1-molefe-my-review.png,
+  act-4/4.43-2-mahlangu-appeal-lodged.png, act-4/4.48-1-mahlangu-remitted-outcome.png,
+  act-4/4.42-1-dlamini-authorisations-after-revocation.png, act-4/4.36-1-mokoena-revoke-reason-typed.png,
+  act-5/5.7-2-mbatha-molefe-all-superseded.png, act-4/4.46-1-zulu-remit-quorum-refused.png, and
+  act-4/4.47-1-zulu-appeal-remitted.png as two crops (the decision history; the Appeals section). The trainee's pages
+  are 2,500–3,500 px, which you will see scaled. In every tall capture at 1280 the sidebar's colour stops at 800 px:
+  that is the capture, not the page.
+
+RUNBOOK STEPS, VERBATIM (from execution/knowledge/scenario-paediatrics/; Role, Route, Do and Expect only):
+
+Step 4.35 — Prof Mbatha reads the issued STARs
+Role: InstitutionalAdmin — Prof Nolwazi Mbatha
+Route: / → /admin/entrustment-decisions
+Do: Open Entrustment decisions from her dashboard's quick links. Download Dr Molefe's PAED-010 certificate. Filter by
+  trainee "Molefe" and apply.
+Expect:
+  - **The list:** five rows, all Active, issued `D`.
+    - Molefe: PAED-001 `5`, PAED-010 `4` expiring `D+20`, PAED-012 `5`.
+    - Dlamini: PAED-001 `4`, PAED-002 `3b`.
+    - Expires reads "—" where none was set.
+  - **The certificate PDF** names:
+    - Kgosi Kgari Teaching Hospital, "Statement of Awarded Responsibility", Lerato Molefe, PAED-010 and level `4`;
+    - Issued on `D` and Expires on `D+20`, Status Active;
+    - the rationale, and the evidence summary of the two snapshot lines;
+    - Panel Paed Annual Review Panel, the review number, and Chair Thandi Zulu.
+  - **The filter** leaves Molefe's three rows.
+
+Step 4.36 — Dr Mokoena revokes one of Dr Dlamini's STARs
+Role: SpecialityAdmin — Dr Refilwe Mokoena
+Route: /admin/entrustment-decisions
+Do: Open Entrustment decisions from the menu. Choose Revoke on Dr Dlamini's PAED-002 decision. Give the reason "Staged
+  on evidence about PAED-001, not PAED-002; to be decided again." and confirm the revocation.
+Expect:
+  - **The menu:** Entrustment decisions is lit on its page, with no trail: a list her menu offers (T358, R2-Menus m5;
+    as Step A.7.7).
+  - **The list:** the same five rows as Step 4.35, since all five registrars are in her speciality.
+  - **The dialog** names PAED-002 and Anele Dlamini, and says "Revocation is immediate and irreversible. The trainee is
+    notified." Confirm revocation is enabled once a reason is typed.
+  - **After confirming:** "Entrustment decision for PAED-002 revoked." The row reads Revoked, with no Revoke button.
+  - **The trainee is notified,** as the dialog promises: the application log holds a mail to Dr Dlamini about the
+    revocation.
+
+Step 4.37 — Dr Sithole reads the list and what must be decided again
+Role: SubSpecialityAdmin — Dr Kabelo Sithole
+Route: /admin/entrustment-decisions → /committee/decisions-due
+Do: Open Entrustment decisions from the menu. Filter Status to Revoked and apply, then to Active and apply. Download
+  the revoked certificate. Then open Decisions due, read the count, set Status to "Every status", press Show, and open
+  By EPA.
+Expect:
+  - **The menu:** Entrustment decisions is lit on its page, with no trail (T358, R2-Menus m5).
+  - **Filtered:** Revoked leaves Dlamini's PAED-002, and Active leaves four rows.
+  - **The revoked certificate** reads Status Revoked, with "REVOKED", the date, who revoked it (Dr Mokoena, by name,
+    T142) and the reason.
+  - **Decisions due:** Dlamini's PAED-002 reads "Revoked: re-decide". Its detail reads "STAR #n, issued for `<P>`, was
+    revoked. Schedule a review to decide it again." Its one action is Schedule (C3).
+  - **By EPA:** PAED-002 reads Decided 0, Not decided 4 and To schedule 1.
+  - **Count, default filter:** "71 of 75 decisions due in `<P>` shown."
+
+Step 4.39 — Dr Molefe reads her STARs and downloads a certificate
+Role: Trainee — Dr Lerato Molefe
+Route: / → /portfolio/authorisations
+Do: From her Home's My authorisations card, Open My authorisations. Download the PAED-001 certificate.
+Expect: Home's My authorisations card reads "2 at or above · 1 below · 12 with no decision, of 15 EPAs" and lists one
+  STAR, "PAED-010 — Leading and operating within a clinical team", a link to its EPA's page, with "4, below training
+  year 4's level of 5 · expires `D+20`" under it; its footer is Open My authorisations (T355). My authorisations holds
+  three cards, each issued on `D` with the committee's rationale: PAED-001 and PAED-012 at Authorised level `5`, and
+  PAED-010 at `4`.
+  - PAED-001 and 012 read "No expiry".
+  - PAED-010 reads the date `D+20`, with the badge "Expires in 20 days".
+  Each Download certificate is named by its EPA. The PAED-001 certificate downloads with Status Active and its evidence
+  summary.
+
+Step 4.41 — Dr Molefe reads her review, and not the committee's page
+Role: Trainee — Dr Lerato Molefe
+Route: /committee/my-reviews → /committee/reviews/{ReviewId:int} → /access-denied
+Do: Open My committee reviews and view her review. Then type the committee's own address for the same review.
+Expect:
+  - **The list:** one row, with Period "`<P>` · `<Y>`-01-01 to `<Y>`-12-31", Type Annual progression, State Ratified and
+    Decision Satisfactory Progress. Its View is named by the review.
+  - **The detail** shows Sits for, Evidence window, Type and State. Its decision is headed "Satisfactory Progress", with
+    the rationale and "Present when this decision was taken: …" naming all four.
+  - **The agenda** has three columns:
+    - Decided with "STAR #n." on PAED-001, 010 and 012;
+    - "Not decided at this sitting" with the committee's sentence "To be decided at her final review." on the other
+      twelve, due and optional alike: no reason, and no Deferred (T361, D53, E1).
+  - **The committee's page** lands on access-denied.
+
+Step 4.42 — Dr Dlamini reads what stands after the revocation
+Role: Trainee — Dr Anele Dlamini
+Route: / → /portfolio/authorisations → /committee/my-reviews
+Do: From her Home's My authorisations card, Open My authorisations. Then open her review.
+Expect: One card, PAED-001 at `4`: the revoked PAED-002 is no longer listed. Her review reads Ratified, Satisfactory
+  Progress. The agenda still reads Decided with STAR numbers on PAED-001 and 002, because it records what the sitting
+  did.
+
+Step 4.43 — Dr Mahlangu lodges an appeal
+Role: Trainee — Dr Nomsa Mahlangu
+Route: /committee/my-reviews
+Do: View her ratified review and read it. Lodge an appeal with the reason "The single DOPS reflects the start of the
+  year, and the Mini-CEX waited eight days on the assessor's side before it was rated. I ask for reconsideration."
+Expect:
+  - **Before lodging:**
+    - the decision reads "Inadequate Progress — Additional Training", with who was present;
+    - the agenda shows all fifteen lines "Not decided at this sitting", each with "Not enough observed evidence yet
+      this year." (T361, D53, E1);
+    - an Appeal reason form is offered.
+  - **After lodging:** "Appeal lodged." The state reads Under appeal, the form is gone and the agenda stays in view.
+
+Step 4.44 — Dr Naidoo sees who hears the appeal
+Role: CommitteeMember — Dr David Naidoo
+Route: /committee/reviews → /committee/reviews/{ReviewId:int}
+Do: Open Dr Mahlangu's review.
+Expect: The list shows her review Under appeal. The Appeals card lists the appeal, with the date lodged, its reason and
+  "(Open)". It offers him no form. It says "Only the appeal body can resolve the appeal: the panel's chair, Thandi Zulu,
+  and its external member, John van Rensburg." (T213, T237)
+
+Step 4.45 — Dr van Rensburg, the external member, is offered the appeal
+Role: CommitteeMember (external) — Dr John van Rensburg
+Route: /committee/reviews → /committee/reviews/{ReviewId:int}
+Do: Open Committee reviews, then Dr Mahlangu's review. Read the resolve form, and press Resolve appeal without choosing
+  an outcome. Then choose Remitted to see what it asks, and leave without resolving.
+Expect:
+  - **The list:** the panel's five reviews.
+  - **The Appeals card** offers him the resolve form with an Outcome select opening on "Select an outcome…", then
+    "Dismissed: the decision stands" and "Remitted: the appeal body replaces the decision" (T307, D51: there is no
+    Upheld). Its help text says Dismissed leaves the decision in force, Remitted replaces it, and either closes the
+    review.
+  - **Resolve appeal with no outcome** says "Choose an outcome." under the select, and resolves nothing.
+  - **Remitted** reveals:
+    - Replacement category, opening on "Select a category…";
+    - Replacement rationale;
+    - Replacement conditions, optional;
+    - Present, with both Thandi Zulu (chair) and himself ticked and locked.
+  - **Nothing changes** until he submits.
+
+Step 4.46 — A remit without a quorum is refused
+Role: CommitteeMember (chair) — Dr Thandi Zulu
+Route: /committee/reviews/{ReviewId:int}
+Do: On Dr Mahlangu's review, choose Remitted, the replacement category Satisfactory with Observations and a
+  rationale. Tick nobody besides herself as present, and resolve.
+Expect: Resolve appeal is refused with "A committee decision needs at least two panel members present: the chair and
+  at least one other." (T165: a remit records its own quorate sitting), in the Appeals section beside the form, with
+  the focus on it (T361, round 3 item 15). The review stays Under appeal.
+
+Step 4.47 — Dr Zulu remits the decision
+Role: CommitteeMember (chair) — Dr Thandi Zulu
+Route: /committee/reviews/{ReviewId:int}
+Do: Keep Remitted, Satisfactory with Observations, and the rationale "The stalled Mini-CEX was the assessor's delay;
+  progress is adequate, with observed assessments to follow." Write the Replacement conditions "Two observed Mini-CEX
+  and one DOPS before the next review." Tick Sarah Botha as present, and resolve the appeal.
+Expect: "Appeal resolved." The state reads Closed (T250).
+  - **Decision:** the replacement heads it, "Satisfactory with Observations" with "About the EPAs not decided: Not
+    enough observed evidence yet this year." (carried from the first decision, T361, E5), "Conditions: Two observed
+    Mini-CEX and one DOPS before the next review." (T307) and "Present: Thandi Zulu (chair), Sarah Botha". The first
+    decision stays below it, marked "Replaced on appeal by the decision above.".
+  - **Appeals card:** the appeal reads "(Remitted)".
+  - **No STAR changed:** the review issued none.
+
+Step 4.48 — Dr Mahlangu reads the outcome
+Role: Trainee — Dr Nomsa Mahlangu
+Route: /committee/my-reviews
+Do: Open My committee reviews and view the review.
+Expect: The row reads State Closed and Decision Satisfactory with Observations. The detail's current decision is the
+  replacement, with "Present when this decision was taken: Thandi Zulu (chair), Sarah Botha". The agenda's fifteen lines
+  still read "Not decided at this sitting" with "Not enough observed evidence yet this year.": the replacement carries
+  the first decision's sentence (T361, E5). No appeal form is offered.
+
+Step 4.51 — Dr Ndlovu reads both reviews
+Role: Trainee — Dr Sipho Ndlovu
+Route: /committee/my-reviews
+Do: Open My committee reviews.
+Expect: Two rows for `<P>`. The annual review reads Annual progression, Ratified, Outcome Deferred. The check-in reads
+  Type "Formative check-in" (T309 item 2; T364, C8), State Closed, with Decision "No binding decision"; its detail's Type
+  reads "Formative check-in".
+
+Step 5.7 — Prof Mbatha reads Dr Molefe's STARs
+Role: InstitutionalAdmin — Prof Nolwazi Mbatha
+Route: / → /admin/entrustment-decisions
+Do: Open Entrustment decisions from her dashboard's quick links. Filter by the trainee name "Molefe", first with the
+  status Active and then with All, applying the filters each time.
+Expect: There are fifteen Active rows, one for each EPA from PAED-001 to PAED-015. Each row:
+  - is at its EPA's exit level;
+  - was issued on `D`, except PAED-001's and PAED-012's, which Act 4 issued;
+  - has no expiry;
+  - offers Download and Revoke.
+  With All, Act 4's PAED-010 STAR, which Step 5.6 superseded, reads Superseded and offers Download only. She revokes
+  nothing.
+
+Step 5.8 — Dr Molefe reads her final review and keeps a STAR certificate
+Role: Trainee — Dr Lerato Molefe
+Route: /committee/my-reviews → / → /portfolio/authorisations
+Do: Open My committee reviews and view the pre-graduation review. Then open My authorisations from her Home's card (its
+  Open My authorisations), and download the certificate for PAED-001.
+Expect: The review is listed as Pre-graduation, Ratified, Graduate (programme complete). Its detail shows:
+  - the review type;
+  - the decision and its rationale;
+  - who was present;
+  - an agenda in which each EPA reads Decided, with its STAR number.
+  The Lodge appeal form is offered, and she lodges no appeal. My authorisations holds 15 cards, each with its level, its
+  issue date and "No expiry". The certificate downloads as `star-certificate-PAED-001-<id>-<8 hex digits>.pdf`.
+
+Step 6.22 — Prof Mbatha sees the pause, and cannot lift it
+Role: InstitutionalAdmin — Prof Nolwazi Mbatha
+Route: /admin/epas → /admin/curricula → /admin/curricula/{Id:int}/items → /admin/entrustment-decisions
+Do: Read the EPA list, then 11.1's items. Then open Entrustment decisions and filter by Dr Molefe's name. Revoke
+  nothing.
+Expect:
+  - **The EPA list.** PAED-012 reads Inactive. No national EPA offers her Edit: only its College changes one (T211's
+    rule; `UpdateEpa`).
+  - **11.1's items.** PAED-012's row is marked "(inactive: not in force)", under the same notice. Every row reads "Set
+    by the College".
+  - **Dr Molefe's STARs.** Her fifteen from Act 5 still read Active, beside Act 4's PAED-010, Superseded (the status
+    filter starts on All). The PAED-012 row names its EPA "PAED-012 — Communicating
+    with and counselling patients, caregivers and healthcare teams (no longer in use)" (T255): a pause leaves a STAR
+    standing.
+
+Step A.7.7 — Dr Mokoena on her phone
+Role: SpecialityAdmin — Dr Refilwe Mokoena
+Route: / → /committee/panels → /committee/decisions-due → /admin/entrustment-decisions
+Do: At 390 px, open the dashboard, then Decision panels, Decisions due and Entrustment decisions from the menu.
+Expect: Home stacks Waiting for assessors, badged "3 waiting, 1 overdue", Registrars, badged "2 registrars", and Targets
+  by EPA, KGK-001 first among the EPAs neither registrar has met, by code (T358). Decision panels' list and Who
+  decides each EPA stack, a block per panel and per row of EPAs (T364), and Decisions due reads as at Step A.7.5.
+  Entrustment decisions is in the menu, lit on its page, with no trail: it is a list the menu offers (R2-Menus m5).
