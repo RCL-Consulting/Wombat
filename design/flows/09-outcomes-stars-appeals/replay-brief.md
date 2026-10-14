@@ -74,6 +74,9 @@ read-only steps meanwhile and saying so; never one long wait.
 Write your Actual and Gap lines into the act file as you go, at the end of each phase, not only at the end of the act:
 a replay can be killed part-way (BRIEF § 11, flow 03), and the lines already written are what survives.
 
+Your remit is EVERY step of your act, setup included: a step named elsewhere in this prompt is the flow's step inside
+your act, never a limit (BRIEF § 11, flows 08 and 09).
+
 For EVERY step in your act, in order:
 1. Play its Role, Route and Do as written.
 2. Check every clause of its Expect against what the app shows, and against the log or SQL where the Expect says so.

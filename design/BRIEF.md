@@ -1113,6 +1113,37 @@ what flows 01–07 did not already teach is here.
 - **A states row's timing is a measurement, not a guess.** Observed: two load-error rows said "held 35 s"; the pages
   failed after about 60 s, apparently two reads in turn. *Changed:* the rows say to hold 75 s and wait for the alert.
 
+**Flow 09 (T366, 2026-10-14): what the ninth flow added**
+
+Flow 09 ran the loop in one day: three rounds (B picked with A's inline resolve, F1–F9 the operator's), T367 landed
+first (the revocation mail), the build (`49e7cf5e`) in two waves of page lanes (T and S, then C on T's components) and a
+runbook lane with three Sonnet reviewers and one fix pass, the replay (acts 1–6 and the appendix, no flow 09 fault),
+the states (57 rows, 2 corrected) and the re-sync (design system version 23). Its record is
+`design/flows/09-outcomes-stars-appeals/`. Only what flows 01–08 did not already teach is here.
+
+- **A new canvas renders bland without its tokens stylesheet.** Observed: the boards linked `ds/wombat/tokens.css`, the
+  design system serves only `tokens.json`, and `bundle.css` defines no token, so every `var(--…)` was empty until the
+  file was written from app.css's `:root` (canvas version 18). *Changed:* the canvas step writes `tokens.css` by hand
+  (the memory note and the handoff's traps say so).
+- **A lesson in this brief does not reach a prompt built from an older one.** Observed: flow 08's "a note that names an
+  act's flow steps reads as a limit" was here, yet act 5's agent, told its flow 09 steps were 5.7 and 5.8, played only
+  those; resumed, it played the act. *Changed:* the replay brief's prompt itself says the remit is every step and that
+  a named step is the flow's step inside it.
+- **A fresh restore can fail where the last build passed.** Observed: two advisories against
+  `System.Security.Cryptography.Pkcs` 10.0.0 (via MailKit), published the day before, failed NuGetAudit in the first
+  new worktree; master built from its cached restore. *Changed:* nothing; restore a fresh worktree before cutting the
+  lanes, and pin a patched version with the other transitive pins (`a7f790b3`).
+- **Lanes that append their CSS at the same place conflict as interleaved hunks.** Observed: each lane's app.css
+  section ended at flow 08's last line, and git interleaved two lanes' rules. *Changed:* nothing; merge by rebuilding the
+  file from each lane's section verbatim, after checking that the lane changed nothing outside its section.
+- **A page with no wrapper class gets none of its flow's scoped phone rules.** Observed: My committee reviews' View
+  stayed 28 px on a phone, because the rule was scoped to the other pages' wrappers; the design-system re-sync found it,
+  three reviews and the replay did not (`9ba80586`). *Changed:* nothing; a lane plan gives every new page its own class.
+- **A design-system publish whose root is the system folder writes the index beside `project/`.** Observed: with
+  `root` = `design/system`, the index went to `design-system.json`, not `project/design-system.json` (version 22); a
+  second call from a staging folder put it right (version 23). *Changed:* nothing new; the handoff's trap already says
+  `root` is a folder holding `project/`. Publish from a staging copy.
+
 **What the brief keeps as it was**
 - The flows' order (§ 8), the invariants (§ 4.4) and the acceptance check (§ 9) held. The digest (§ 5.1) is restated
   for what flow 01 fixed: the shell, its components and the states it already designed. The brief template (§ 2.4)
