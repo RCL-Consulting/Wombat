@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A · The committee's Appeals section at 1280</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#ecece8;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#1d1d1b;font-size:14px;line-height:1.45}
+a{color:#1d1d1b}a:hover{color:#000}
+h1,h2,h3,h4,p{margin:0}
+.sheet{box-sizing:border-box;padding:48px;display:flex;flex-direction:column;gap:40px}
+.sheet-h{font-size:30px;font-weight:700}
+.sheet-sub{font-size:16px;color:#4a4a46;max-width:1400px}
+.row{display:flex;gap:80px;align-items:flex-start}
+.col{display:flex;flex-direction:column;gap:12px}
+.cap{font-size:16px;font-weight:700;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cap small{font-weight:400;color:#4a4a46;font-size:14px}
+.frame{background:#fff;border:1px solid #8e8e89;position:relative;overflow:hidden}
+.w1280{width:1280px}.w390{width:390px}.w720{width:720px}
+.shell{display:flex;min-height:760px}
+.side{width:208px;flex:none;background:#dcdcd7;padding:16px 12px;display:flex;flex-direction:column;gap:8px;box-sizing:border-box}
+.brand{display:flex;gap:8px;align-items:center;font-weight:700;padding-bottom:8px}
+.brand img{width:28px;height:28px}
+.nav{height:28px;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:13px;color:#4a4a46}
+.nav i{display:block;height:7px;width:70%;background:#b9b9b3;border-radius:2px}
+.nav.on{background:#3a3a37;color:#fff;font-weight:600}
+.nav.rule{border-top:1px solid #a9a9a3;border-radius:0;height:1px;padding:0;margin:4px 0}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{height:44px;border-bottom:1px solid #c9c9c4;display:flex;justify-content:flex-end;align-items:center;gap:16px;padding:0 24px;font-size:13px;color:#4a4a46}
+.phonebar{height:52px;border-bottom:1px solid #c9c9c4;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#dcdcd7}
+.body{padding:24px 32px 40px;display:flex;flex-direction:column;gap:20px}
+.pbody{padding:16px 16px 32px;display:flex;flex-direction:column;gap:16px}
+.trail{font-size:13px;color:#4a4a46;display:flex;gap:6px;align-items:center}
+.trail a{color:#1d1d1b}
+h1.h1{font-size:26px;font-weight:700}
+.sub{color:#4a4a46}
+h2.h2{font-size:19px;font-weight:700}
+h3.h3{font-size:16px;font-weight:700}
+.box{border:1px solid #9b9b96;border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px;background:#fff}
+.box.soft{background:#f6f6f3}
+.btn{font:inherit;font-size:14px;border:1px solid #2b2b28;background:#fff;color:#1d1d1b;border-radius:4px;padding:0 14px;min-height:36px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn.pri{background:#2b2b28;color:#fff}
+.btn.danger{border-width:2px}
+.btn.dis{opacity:.45}
+.btn.ph{min-height:44px}
+.lnk{text-decoration:underline;color:#1d1d1b}
+.actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;border:1px solid #2b2b28;border-radius:999px;padding:0 9px;font-size:12px;line-height:20px;font-weight:600;white-space:nowrap;background:#fff}
+.badge.fill{background:#3a3a37;color:#fff}
+.badge.dash{border-style:dashed}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:6px 16px;font-size:14px}
+.kv dt{color:#4a4a46;margin:0}.kv dd{margin:0}
+dl{margin:0}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl caption{text-align:left;font-weight:700;padding:0 0 8px;font-size:15px}
+.tbl th{text-align:left;font-size:13px;color:#4a4a46;border-bottom:2px solid #8e8e89;padding:8px 10px;font-weight:600}
+.tbl td{border-bottom:1px solid #d3d3ce;padding:10px;vertical-align:top}
+.tbl tr.open td{background:#f3f3ef}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.lbl{font-weight:600;font-size:14px}
+.hint{font-size:13px;color:#4a4a46}
+.ta{border:1px solid #6c6c67;border-radius:4px;min-height:96px;padding:8px;font-size:14px;background:#fff;white-space:pre-wrap}
+.ta.bad{border:2px solid #1d1d1b;box-shadow:inset 4px 0 0 #1d1d1b}
+.sel{border:1px solid #6c6c67;border-radius:4px;height:36px;padding:0 10px;display:flex;align-items:center;justify-content:space-between;background:#fff}
+.err{font-size:13px;font-weight:600;display:flex;gap:6px;align-items:flex-start}
+.alert{border:2px solid #2b2b28;border-radius:6px;padding:12px 14px;background:#f1f1ec;display:flex;gap:10px;align-items:flex-start}
+.alert .ic{width:18px;height:18px;border:2px solid #2b2b28;border-radius:50%;flex:none;margin-top:1px}
+.focus{outline:3px dashed #000;outline-offset:3px;position:relative}
+.focustag{position:absolute;right:-6px;top:-24px;background:#000;color:#fff;font-size:11px;font-weight:700;padding:1px 6px;letter-spacing:.04em}
+.tag{display:inline-flex;font-size:10.5px;font-weight:800;letter-spacing:.06em;padding:1px 6px;border-radius:3px;text-transform:uppercase;vertical-align:middle;white-space:nowrap}
+.tag.new{border:1.5px dashed #2b2b28;color:#2b2b28;background:#fff}
+.tag.prop{background:#1d1d1b;color:#fff}
+.comp{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#55554f;background:#f0f0ec;border:1px solid #d6d6d1;padding:0 5px;border-radius:3px;white-space:nowrap}
+.ln{height:8px;background:#d2d2cd;border-radius:2px}
+.muted{color:#4a4a46}
+.radio{display:flex;gap:10px;align-items:flex-start;border:1px solid #9b9b96;border-radius:6px;padding:10px 12px}
+.radio.on{border:2px solid #1d1d1b}
+.dot{width:16px;height:16px;border:2px solid #2b2b28;border-radius:50%;flex:none;margin-top:2px;box-sizing:border-box}
+.dot.on{background:radial-gradient(#2b2b28 0 4px,#fff 5px)}
+.chk{width:16px;height:16px;border:2px solid #2b2b28;border-radius:3px;flex:none;box-sizing:border-box;margin-top:2px}
+.chk.on{background:#2b2b28}
+.chk.lock{background:#8e8e89;border-color:#8e8e89}
+.chkrow{display:flex;gap:10px;align-items:flex-start;min-height:28px}
+.scrim{position:absolute;inset:0;background:rgba(30,30,28,.45);display:flex;align-items:center;justify-content:center;padding:16px}
+.dialog{background:#fff;border:2px solid #1d1d1b;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.hist{border-left:none;display:flex;flex-direction:column;gap:0}
+.dec{border:1px solid #9b9b96;border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.dec.old{background:#f6f6f3;border-style:dashed}
+.meta{font-size:13px;color:#4a4a46}
+.stack{display:flex;flex-direction:column;gap:12px}
+.card{border:1px solid #9b9b96;border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;align-items:start}
+.count{display:flex;gap:8px;align-items:center;font-weight:600;font-size:14px;border:1px solid #9b9b96;border-radius:4px;padding:6px 10px;background:#f6f6f3}
+.ann{font-size:12.5px;color:#3a3a37;font-style:italic;max-width:520px}
+.skel{background:#e2e2dd;border-radius:3px}
+
+</style>
+</helmet>
+<div class="sheet" style="width:4100px;height:2800px">
+<div class="col" style="gap:6px">
+<h1 class="sheet-h">A · The committee's Appeals section, in place on flow 07's review page</h1>
+<p class="sheet-sub">The section stays where it is, under the decision history. The form is redrawn in place: outcome radios, Remitted's fields as one group, Present with a live count, a confirmation, and the result and any refusal inside the section. Changes: DESIGN.md § Form system (radios for a two-way irreversible choice; a live count beside a fieldset).</p>
+</div>
+
+<div class="row">
+<!-- F1 -->
+<div class="col">
+<div class="cap">F1 · 4.44 a member's view <small>Dr Naidoo; no form</small></div>
+<div class="frame w1280"><div class="shell">
+<div class="side"><div class="brand"><img src="/_blob/19eee4d64e6ebc1818aa6f9007654872" alt="Wombat">Wombat</div><div class="nav"><i></i></div><div class="nav on">Committee reviews</div><div class="nav"><i></i></div><div class="nav"><i></i></div><div class="nav rule"></div><div class="nav">My progress</div><div class="nav">My data rights</div></div>
+<div class="main"><div class="top">David Naidoo <span class="btn">Sign out</span></div>
+<div class="body">
+<div class="trail"><a href="#">Committee reviews</a> › <span>Nomsa Mahlangu · 2026 S2</span></div>
+<div class="ln" style="width:34%;height:22px"></div><div class="ln" style="width:60%"></div>
+<div class="box soft" style="align-items:flex-start"><span class="muted">Flow 07's review page above its Appeals section: unchanged (SittingBar, agenda, record).</span><div class="ln" style="width:700px"></div><div class="ln" style="width:620px"></div></div>
+<div class="stack" style="gap:8px"><h2 class="h2">Decisions <span class="comp">DecisionHistory</span> <span class="tag new">New</span></h2>
+<div class="dec"><div class="actions" style="gap:8px"><b>Inadequate Progress — Additional Training</b><span class="badge fill">In force</span></div>
+<p class="meta">Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)</p><div class="ln" style="width:85%"></div>
+<p><span class="muted">About the EPAs not decided:</span> Not enough observed evidence yet this year.</p></div></div>
+<div class="stack" style="gap:10px"><h2 class="h2">Appeals</h2>
+<div class="card"><div class="actions" style="gap:8px"><b>Appeal by Nomsa Mahlangu</b><span class="badge dash">Open</span><span class="comp">AppealEntry</span> <span class="tag new">New</span></div>
+<p class="meta">Lodged 2026-10-13 · heard by Thandi Zulu (chair) and John van Rensburg (external)</p>
+<p style="white-space:pre-wrap">The single DOPS reflects the start of the year, and the Mini-CEX waited eight days on the assessor's side before it was rated. I ask for reconsideration.</p></div>
+<div class="alert" style="border-width:1px"><span class="ic"></span><p>Only the appeal body can resolve the appeal: the panel's chair, Thandi Zulu, and its external member, John van Rensburg.</p></div>
+</div>
+</div></div></div></div>
+<p class="ann">The appeals list replaces “2026-10-13 {reason} (Open)” with one entry per appeal: who lodged it, when, its state as a badge in words, who hears it, the reason. A 4,000-character reason shows its first six lines and “Read the whole reason” (a disclosure).</p>
+</div>
+
+<!-- F2 -->
+<div class="col">
+<div class="cap">F2 · 4.46 a remit short of a quorum <small>Dr Zulu, the chair; refused beside the control</small></div>
+<div class="frame w1280"><div class="shell">
+<div class="side"><div class="brand"><img src="/_blob/19eee4d64e6ebc1818aa6f9007654872" alt="Wombat">Wombat</div><div class="nav"><i></i></div><div class="nav on">Committee reviews</div><div class="nav"><i></i></div></div>
+<div class="main"><div class="top">Thandi Zulu</div>
+<div class="body">
+<p class="muted">… the review page, then Decisions, as F1 …</p>
+<div class="stack" style="gap:12px"><h2 class="h2">Appeals</h2>
+<div class="card"><div class="actions" style="gap:8px"><b>Appeal by Nomsa Mahlangu</b><span class="badge dash">Open</span></div><p class="meta">Lodged 2026-10-13</p><div class="ln" style="width:80%"></div></div>
+<div class="box"><h3 class="h3">Resolve the appeal</h3>
+<div class="stack" style="gap:8px"><span class="lbl">Outcome</span><span class="comp">choice-group</span>
+<div class="radio"><span class="dot"></span><div><b>Dismissed: the decision stands</b><br><span class="hint">The committee's decision stays in force.</span></div></div>
+<div class="radio on"><span class="dot on"></span><div><b>Remitted: the appeal body replaces the decision</b><br><span class="hint">You take a new decision now, recorded with who sat for it.</span></div></div>
+<p class="hint">Either closes the review, and nothing reopens it.</p></div>
+<div class="stack" style="gap:12px;border-top:1px solid #d3d3ce;padding-top:12px"><span class="lbl">The replacement decision</span>
+<div class="field"><label>Replacement category</label><div class="sel" style="width:420px">Satisfactory with Observations <span>▾</span></div></div>
+<div class="field"><label>Replacement rationale</label><div class="ta" style="min-height:60px">The stalled Mini-CEX was the assessor's delay; progress is adequate …</div></div>
+<div class="field"><label>Replacement conditions <span class="hint">(optional)</span></label><div class="ta" style="min-height:48px"></div></div>
+<div class="field"><span class="lbl">Present</span><span class="hint">Tick every panel member at this sitting. A committee decision needs at least two panel members present: the chair and at least one other.</span>
+<div class="chkrow"><span class="chk lock"></span>Thandi Zulu (chair) <span class="hint">· you; always present</span></div>
+<div class="chkrow"><span class="chk"></span>David Naidoo</div>
+<div class="chkrow"><span class="chk"></span>Sarah Botha</div>
+<div class="chkrow"><span class="chk"></span>John van Rensburg (external)</div>
+<div class="count">1 present: needs the chair and at least one other <span class="comp">QuorumCount</span> <span class="tag new">New</span></div>
+</div></div>
+<div class="alert focus"><span class="ic"></span><div><b>The appeal was not resolved.</b> A committee decision needs at least two panel members present: the chair and at least one other.</div><span class="focustag">FOCUS</span></div>
+<div class="actions"><span class="btn pri">Resolve appeal</span><span class="muted">What was typed is kept.</span></div>
+</div></div>
+</div></div></div></div>
+<p class="ann">The count updates on each tick (a click, so one round trip a tick). The button stays enabled: the refusal says why, beside it.</p>
+</div>
+
+<!-- F3 -->
+<div class="col">
+<div class="cap">F3 · 4.47 Resolve appeal pressed, quorate <small>ConfirmDialog <span class="tag prop">Proposed</span></small></div>
+<div class="frame w1280" style="height:900px"><div class="shell" style="min-height:900px">
+<div class="side"><div class="brand"><img src="/_blob/19eee4d64e6ebc1818aa6f9007654872" alt="Wombat">Wombat</div><div class="nav"><i></i></div><div class="nav on">Committee reviews</div></div>
+<div class="main"><div class="top">Thandi Zulu</div><div class="body"><div class="ln" style="width:40%;height:20px"></div><div class="ln" style="width:90%"></div><div class="ln" style="width:70%"></div></div></div></div>
+<div class="scrim"><div class="dialog" style="width:560px">
+<h2 class="h2 focus">Remit Nomsa Mahlangu's appeal?<span class="focustag">FOCUS</span></h2>
+<p>The appeal body replaces Inadequate Progress — Additional Training with <b>Satisfactory with Observations</b>.</p>
+<p class="meta">Present: Thandi Zulu (chair), Sarah Botha</p>
+<p>This closes the 2026 S2 review. Nothing reopens it, and no STAR changes.</p>
+<div class="actions" style="justify-content:flex-end"><span class="btn">Go back</span><span class="btn pri">Remit the appeal</span></div>
+</div></div>
+</div>
+<p class="ann">Dismissed reads “Dismiss Nomsa Mahlangu's appeal?” / “Inadequate Progress — Additional Training stays in force. This closes the 2026 S2 review. Nothing reopens it.” Go back returns the focus to Resolve appeal.</p>
+</div>
+</div>
+
+<div class="row">
+<!-- F4 -->
+<div class="col">
+<div class="cap">F4 · 4.47 resolved <small>the result heads the section; the replacement heads the history</small></div>
+<div class="frame w1280"><div class="shell">
+<div class="side"><div class="brand"><img src="/_blob/19eee4d64e6ebc1818aa6f9007654872" alt="Wombat">Wombat</div><div class="nav"><i></i></div><div class="nav on">Committee reviews</div><div class="nav"><i></i></div></div>
+<div class="main"><div class="top">Thandi Zulu</div>
+<div class="body">
+<p class="muted">… the review page; its state reads Closed …</p>
+<div class="stack" style="gap:8px"><h2 class="h2">Decisions</h2>
+<div class="dec"><div class="actions" style="gap:8px"><b>Satisfactory with Observations</b><span class="badge fill">In force</span><span class="meta">taken on appeal, 2026-10-13</span></div>
+<p class="meta">Present: Thandi Zulu (chair), Sarah Botha</p>
+<p>The stalled Mini-CEX was the assessor's delay; progress is adequate, with observed assessments to follow.</p>
+<p><span class="muted">About the EPAs not decided:</span> Not enough observed evidence yet this year.</p>
+<p><span class="muted">Conditions:</span> Two observed Mini-CEX and one DOPS before the next review.</p></div>
+<div class="dec old"><div class="actions" style="gap:8px"><b>Inadequate Progress — Additional Training</b><span class="badge">Replaced</span></div><p><b>Replaced on appeal by the decision above.</b></p><p class="meta">Present: Thandi Zulu (chair), David Naidoo, Sarah Botha, John van Rensburg (external)</p><div class="ln" style="width:80%"></div></div>
+</div>
+<div class="stack" style="gap:10px"><h2 class="h2">Appeals</h2>
+<div class="alert focus"><span class="ic"></span><div><b>Appeal resolved.</b> Remitted: the replacement decision is above, and the review is closed.</div><span class="focustag">FOCUS</span></div>
+<div class="card"><div class="actions" style="gap:8px"><b>Appeal by Nomsa Mahlangu</b><span class="badge fill">Remitted</span></div>
+<p class="meta">Lodged 2026-10-13 · resolved 2026-10-13 by Thandi Zulu</p><div class="ln" style="width:85%"></div></div>
+</div>
+</div></div></div></div>
+</div>
+
+<!-- F5 -->
+<div class="col">
+<div class="cap">F5 · The other states of the section <small>each drawn as the section alone</small></div>
+<div class="stack" style="gap:24px;width:1280px">
+<div class="frame" style="padding:20px"><div class="stack"><span class="lbl">4.45 · Resolve appeal with no outcome (Dr van Rensburg)</span>
+<div class="stack" style="gap:8px"><span class="lbl">Outcome</span>
+<div class="radio" style="border:2px solid #1d1d1b;box-shadow:inset 4px 0 0 #1d1d1b"><span class="dot"></span><b>Dismissed: the decision stands</b></div>
+<div class="radio" style="border:2px solid #1d1d1b;box-shadow:inset 4px 0 0 #1d1d1b"><span class="dot"></span><b>Remitted: the appeal body replaces the decision</b></div>
+<p class="err focus">Choose an outcome.<span class="focustag">FOCUS</span></p></div>
+<p class="ann">With radios nothing is chosen at first, which keeps today's “Select an outcome…” rule: nothing preselected.</p></div></div>
+<div class="frame" style="padding:20px"><div class="stack"><span class="lbl">Remitted on an entrustment-only review</span>
+<p class="hint">This review decides entrustment only, so the replacement decision records no progression category, and it changes no entrustment decision: the STARs this review issued stand. To change one, revoke it and re-decide the EPA at a new review.</p>
+<div class="actions"><span class="muted">No Replacement category field; Replacement rationale, conditions and Present as F2.</span></div></div></div>
+<div class="frame" style="padding:20px"><div class="stack"><span class="lbl">A panel that cannot seat a quorum</span>
+<div class="alert" style="border-width:1px"><span class="ic"></span><p>Only the appeal body can resolve the appeal: the panel's chair, Thandi Zulu, and its external member, John van Rensburg, and none of them can act now. A panel administrator must seat a chair who can.</p></div>
+<div class="actions"><span class="btn pri dis" aria-disabled="true">Resolve appeal</span><span class="muted">Resolve appeal unavailable: its reason is the line above.</span></div></div></div>
+<div class="frame" style="padding:20px"><div class="stack"><span class="lbl">No appeal lodged · closed after a dismissal</span>
+<p>No appeal has been lodged against this review.</p>
+<div class="card"><div class="actions" style="gap:8px"><b>Appeal by Nomsa Mahlangu</b><span class="badge fill">Dismissed</span></div><p>Dismissed: the decision stands.</p><p class="meta">Lodged 2026-10-13 · resolved 2026-10-13 by John van Rensburg</p></div></div></div>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":4100,"height":2800}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

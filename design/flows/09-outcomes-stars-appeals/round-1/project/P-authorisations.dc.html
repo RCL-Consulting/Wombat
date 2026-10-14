@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Proposal · My authorisations</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#ecece8;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#1d1d1b;font-size:14px;line-height:1.45}
+a{color:#1d1d1b}a:hover{color:#000}
+h1,h2,h3,h4,p{margin:0}
+.sheet{box-sizing:border-box;padding:48px;display:flex;flex-direction:column;gap:40px}
+.sheet-h{font-size:30px;font-weight:700}
+.sheet-sub{font-size:16px;color:#4a4a46;max-width:1400px}
+.row{display:flex;gap:80px;align-items:flex-start}
+.col{display:flex;flex-direction:column;gap:12px}
+.cap{font-size:16px;font-weight:700;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cap small{font-weight:400;color:#4a4a46;font-size:14px}
+.frame{background:#fff;border:1px solid #8e8e89;position:relative;overflow:hidden}
+.w1280{width:1280px}.w390{width:390px}.w720{width:720px}
+.shell{display:flex;min-height:760px}
+.side{width:208px;flex:none;background:#dcdcd7;padding:16px 12px;display:flex;flex-direction:column;gap:8px;box-sizing:border-box}
+.brand{display:flex;gap:8px;align-items:center;font-weight:700;padding-bottom:8px}
+.brand img{width:28px;height:28px}
+.nav{height:28px;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:13px;color:#4a4a46}
+.nav i{display:block;height:7px;width:70%;background:#b9b9b3;border-radius:2px}
+.nav.on{background:#3a3a37;color:#fff;font-weight:600}
+.nav.rule{border-top:1px solid #a9a9a3;border-radius:0;height:1px;padding:0;margin:4px 0}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{height:44px;border-bottom:1px solid #c9c9c4;display:flex;justify-content:flex-end;align-items:center;gap:16px;padding:0 24px;font-size:13px;color:#4a4a46}
+.phonebar{height:52px;border-bottom:1px solid #c9c9c4;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#dcdcd7}
+.body{padding:24px 32px 40px;display:flex;flex-direction:column;gap:20px}
+.pbody{padding:16px 16px 32px;display:flex;flex-direction:column;gap:16px}
+.trail{font-size:13px;color:#4a4a46;display:flex;gap:6px;align-items:center}
+.trail a{color:#1d1d1b}
+h1.h1{font-size:26px;font-weight:700}
+.sub{color:#4a4a46}
+h2.h2{font-size:19px;font-weight:700}
+h3.h3{font-size:16px;font-weight:700}
+.box{border:1px solid #9b9b96;border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px;background:#fff}
+.box.soft{background:#f6f6f3}
+.btn{font:inherit;font-size:14px;border:1px solid #2b2b28;background:#fff;color:#1d1d1b;border-radius:4px;padding:0 14px;min-height:36px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn.pri{background:#2b2b28;color:#fff}
+.btn.danger{border-width:2px}
+.btn.dis{opacity:.45}
+.btn.ph{min-height:44px}
+.lnk{text-decoration:underline;color:#1d1d1b}
+.actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;border:1px solid #2b2b28;border-radius:999px;padding:0 9px;font-size:12px;line-height:20px;font-weight:600;white-space:nowrap;background:#fff}
+.badge.fill{background:#3a3a37;color:#fff}
+.badge.dash{border-style:dashed}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:6px 16px;font-size:14px}
+.kv dt{color:#4a4a46;margin:0}.kv dd{margin:0}
+dl{margin:0}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl caption{text-align:left;font-weight:700;padding:0 0 8px;font-size:15px}
+.tbl th{text-align:left;font-size:13px;color:#4a4a46;border-bottom:2px solid #8e8e89;padding:8px 10px;font-weight:600}
+.tbl td{border-bottom:1px solid #d3d3ce;padding:10px;vertical-align:top}
+.tbl tr.open td{background:#f3f3ef}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.lbl{font-weight:600;font-size:14px}
+.hint{font-size:13px;color:#4a4a46}
+.ta{border:1px solid #6c6c67;border-radius:4px;min-height:96px;padding:8px;font-size:14px;background:#fff;white-space:pre-wrap}
+.ta.bad{border:2px solid #1d1d1b;box-shadow:inset 4px 0 0 #1d1d1b}
+.sel{border:1px solid #6c6c67;border-radius:4px;height:36px;padding:0 10px;display:flex;align-items:center;justify-content:space-between;background:#fff}
+.err{font-size:13px;font-weight:600;display:flex;gap:6px;align-items:flex-start}
+.alert{border:2px solid #2b2b28;border-radius:6px;padding:12px 14px;background:#f1f1ec;display:flex;gap:10px;align-items:flex-start}
+.alert .ic{width:18px;height:18px;border:2px solid #2b2b28;border-radius:50%;flex:none;margin-top:1px}
+.focus{outline:3px dashed #000;outline-offset:3px;position:relative}
+.focustag{position:absolute;right:-6px;top:-24px;background:#000;color:#fff;font-size:11px;font-weight:700;padding:1px 6px;letter-spacing:.04em}
+.tag{display:inline-flex;font-size:10.5px;font-weight:800;letter-spacing:.06em;padding:1px 6px;border-radius:3px;text-transform:uppercase;vertical-align:middle;white-space:nowrap}
+.tag.new{border:1.5px dashed #2b2b28;color:#2b2b28;background:#fff}
+.tag.prop{background:#1d1d1b;color:#fff}
+.comp{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#55554f;background:#f0f0ec;border:1px solid #d6d6d1;padding:0 5px;border-radius:3px;white-space:nowrap}
+.ln{height:8px;background:#d2d2cd;border-radius:2px}
+.muted{color:#4a4a46}
+.radio{display:flex;gap:10px;align-items:flex-start;border:1px solid #9b9b96;border-radius:6px;padding:10px 12px}
+.radio.on{border:2px solid #1d1d1b}
+.dot{width:16px;height:16px;border:2px solid #2b2b28;border-radius:50%;flex:none;margin-top:2px;box-sizing:border-box}
+.dot.on{background:radial-gradient(#2b2b28 0 4px,#fff 5px)}
+.chk{width:16px;height:16px;border:2px solid #2b2b28;border-radius:3px;flex:none;box-sizing:border-box;margin-top:2px}
+.chk.on{background:#2b2b28}
+.chk.lock{background:#8e8e89;border-color:#8e8e89}
+.chkrow{display:flex;gap:10px;align-items:flex-start;min-height:28px}
+.scrim{position:absolute;inset:0;background:rgba(30,30,28,.45);display:flex;align-items:center;justify-content:center;padding:16px}
+.dialog{background:#fff;border:2px solid #1d1d1b;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.hist{border-left:none;display:flex;flex-direction:column;gap:0}
+.dec{border:1px solid #9b9b96;border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.dec.old{background:#f6f6f3;border-style:dashed}
+.meta{font-size:13px;color:#4a4a46}
+.stack{display:flex;flex-direction:column;gap:12px}
+.card{border:1px solid #9b9b96;border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;align-items:start}
+.count{display:flex;gap:8px;align-items:center;font-weight:600;font-size:14px;border:1px solid #9b9b96;border-radius:4px;padding:6px 10px;background:#f6f6f3}
+.ann{font-size:12.5px;color:#3a3a37;font-style:italic;max-width:520px}
+.skel{background:#e2e2dd;border-radius:3px}
+
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+</style>
+</helmet>
+<div class="sheet" style="width:4100px;height:2400px">
+<div class="col" style="gap:6px">
+<h1 class="sheet-h">Proposal · My authorisations — Dr Molefe (4.39, 5.8) and Dr Dlamini (4.42)</h1>
+<p class="sheet-sub">Two sections under one h1: In force, the cards as today with ISO dates; and No longer in force <span class="tag prop">Proposed</span>, a captioned table of revoked and expired STARs, each with its status, date and certificate. Superseded stays off (T319). Changes: the owner table's row for My authorisations (its subtitle); § Page-level patterns, List page (two sections, one per status group).</p>
+</div>
+
+<div class="row">
+<div class="col">
+<div class="cap">F1 · 4.39 three STARs, one expiring <small>Dr Molefe</small></div>
+<div class="frame w1280"><div class="shell">
+<div class="side"><div class="brand"><img src="/_blob/19eee4d64e6ebc1818aa6f9007654872" alt="Wombat">Wombat</div><div class="nav"><i></i></div><div class="nav"><i></i></div><div class="nav"><i></i></div><div class="nav rule"></div><div class="nav on">My progress</div><div class="nav">My data rights</div></div>
+<div class="main"><div class="top">Lerato Molefe <span class="btn">Sign out</span></div>
+<div class="body">
+<div class="trail"><a href="#">My progress</a> › <span>My authorisations</span></div>
+<div class="col" style="gap:4px"><h1 class="h1">My authorisations</h1><p class="sub">The Statements of Awarded Responsibility (STAR) the committee has issued you, and their certificates.</p><span class="comp">PageHeader</span></div>
+<h2 class="h2">In force</h2>
+<div class="grid3">
+<div class="card"><h3 class="h3">PAED-001 — Managing the acutely ill child</h3><dl class="kv" style="grid-template-columns:110px 1fr"><dt>Authorised level</dt><dd>5</dd><dt>Issued</dt><dd>2026-10-13</dd><dt>Expires</dt><dd>No expiry</dd></dl><div class="ln"></div><div class="ln" style="width:70%"></div><span class="btn" style="align-self:flex-start">Download certificate</span><span class="comp">DashboardCard</span></div>
+<div class="card"><h3 class="h3">PAED-010 — Leading and operating within a clinical team</h3><dl class="kv" style="grid-template-columns:110px 1fr"><dt>Authorised level</dt><dd>4</dd><dt>Issued</dt><dd>2026-10-13</dd><dt>Expires</dt><dd>2026-11-02 <span class="badge dash">Expires in 20 days</span></dd></dl><div class="ln"></div><div class="ln" style="width:60%"></div><span class="btn" style="align-self:flex-start">Download certificate</span></div>
+<div class="card"><h3 class="h3">PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams</h3><dl class="kv" style="grid-template-columns:110px 1fr"><dt>Authorised level</dt><dd>5</dd><dt>Issued</dt><dd>2026-10-13</dd><dt>Expires</dt><dd>No expiry</dd></dl><div class="ln"></div><span class="btn" style="align-self:flex-start">Download certificate</span></div>
+</div>
+<p class="ann">Each button's name: “Download the certificate for PAED-010”. While it runs: “Generating…”, disabled. “Expires in 20 days” counts on the South African calendar (T325); it shows at 30 days or fewer. A STAR on a paused EPA keeps its card; its title ends “(no longer in use)”.</p>
+<h2 class="h2">No longer in force</h2>
+<p class="muted">None. A STAR that is revoked or expires moves here, with its certificate.</p>
+</div></div></div></div>
+<p class="ann">Nav: My authorisations still lights My progress (question 10, the operator's); the trail is drawn as one proposal for that, not as settled.</p>
+</div>
+
+<div class="col">
+<div class="cap">F2 · 4.42 after a revocation <small>Dr Dlamini</small></div>
+<div class="frame w1280"><div class="shell">
+<div class="side"><div class="brand"><img src="/_blob/19eee4d64e6ebc1818aa6f9007654872" alt="Wombat">Wombat</div><div class="nav"><i></i></div><div class="nav"><i></i></div><div class="nav rule"></div><div class="nav on">My progress</div><div class="nav">My data rights</div></div>
+<div class="main"><div class="top">Anele Dlamini</div>
+<div class="body">
+<div class="col" style="gap:4px"><h1 class="h1">My authorisations</h1><p class="sub">The Statements of Awarded Responsibility (STAR) the committee has issued you, and their certificates.</p></div>
+<h2 class="h2">In force</h2>
+<div class="grid3"><div class="card"><h3 class="h3">PAED-001 — Managing the acutely ill child</h3><dl class="kv" style="grid-template-columns:110px 1fr"><dt>Authorised level</dt><dd>4</dd><dt>Issued</dt><dd>2026-10-13</dd><dt>Expires</dt><dd>No expiry</dd></dl><div class="ln"></div><span class="btn" style="align-self:flex-start">Download certificate</span></div></div>
+<h2 class="h2">No longer in force <span class="tag prop">Proposed</span></h2>
+<table class="tbl"><caption>STARs that are no longer in force <span class="comp">DataTable</span></caption>
+<thead><tr><th>EPA</th><th>Level</th><th>Status</th><th>Since</th><th>Why</th><th><span class="muted">Certificate</span></th></tr></thead>
+<tbody><tr><td>PAED-002 — Managing common paediatric presentations</td><td>3b</td><td><span class="badge">Revoked</span></td><td>2026-10-13</td><td>Revoked by Refilwe Mokoena: Staged on evidence about PAED-001, not PAED-002; to be decided again.</td><td><a class="lnk" href="#">Download</a></td></tr>
+<tr><td class="muted">PAED-0xx — an expired STAR, for the shape</td><td class="muted">4</td><td><span class="badge">Expired</span></td><td class="muted">2026-11-02</td><td class="muted">Its expiry date passed.</td><td><a class="lnk" href="#">Download</a></td></tr></tbody></table>
+<p class="ann">Download is named “Download the revoked certificate for PAED-002”. The Why column shows the reason <span class="tag prop">Proposed</span> (question 8); without it the column reads “Revoked by Refilwe Mokoena. The reason is on the certificate.” The second row is an illustration, not step data.</p>
+</div></div></div></div>
+</div>
+
+<div class="col">
+<div class="cap">F3 · 5.8 fifteen at exit level <small>Dr Molefe, the heavy case</small></div>
+<div class="frame w1280"><div class="shell">
+<div class="side"><div class="brand"><img src="/_blob/19eee4d64e6ebc1818aa6f9007654872" alt="Wombat">Wombat</div><div class="nav"><i></i></div><div class="nav rule"></div><div class="nav on">My progress</div></div>
+<div class="main"><div class="top">Lerato Molefe</div>
+<div class="body">
+<h1 class="h1">My authorisations</h1>
+<h2 class="h2">In force <span class="muted" style="font-weight:400;font-size:15px">· 15</span></h2>
+<div class="grid3">
+<div class="card"><h3 class="h3">PAED-001 — Managing the acutely ill child</h3><p class="meta">Level 5 · issued ‹Act 4› · No expiry</p><span class="btn" style="align-self:flex-start">Download certificate</span></div>
+<div class="card"><h3 class="h3">PAED-002 — Managing common paediatric presentations</h3><p class="meta">Level 5 · issued 2026-10-13 · No expiry</p><span class="btn" style="align-self:flex-start">Download certificate</span></div>
+<div class="card"><h3 class="h3">PAED-003</h3><p class="meta">…</p><div class="ln" style="width:60%"></div></div>
+<div class="card"><h3 class="h3">PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams (no longer in use)</h3><p class="meta">Level 5 · No expiry</p><span class="btn" style="align-self:flex-start">Download certificate</span></div>
+<div class="card"><h3 class="h3">PAED-015 — Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research</h3><p class="meta">Level 5 · issued 2026-10-13 · No expiry</p><span class="btn" style="align-self:flex-start">Download certificate</span></div>
+<div class="card" style="justify-content:center;align-items:center"><span class="muted">… ten more, by EPA code</span></div>
+</div>
+<h2 class="h2">No longer in force</h2><p class="muted">None. (Act 4's PAED-010 was superseded, so it is not listed here: the later STAR above stands in its place.)</p>
+<p class="ann">The 120-character title wraps inside its card; the card grows, the row keeps its grid. The rationale and full labels are as F1; drawn short here.</p>
+</div></div></div></div>
+</div>
+</div>
+
+<div class="row">
+<div class="col">
+<div class="cap">F4 · 4.42 at 390 <small>Dr Dlamini</small></div>
+<div class="frame w390">
+<div class="phonebar"><span class="brand" style="padding:0"><img src="/_blob/19eee4d64e6ebc1818aa6f9007654872" alt="Wombat">Wombat</span><span class="btn ph">Menu</span></div>
+<div class="pbody">
+<h1 class="h1" style="font-size:22px">My authorisations</h1><p class="sub">The Statements of Awarded Responsibility (STAR) the committee has issued you, and their certificates.</p>
+<h2 class="h2">In force</h2>
+<div class="card"><h3 class="h3">PAED-001 — Managing the acutely ill child</h3><p class="meta">Authorised level 4 · issued 2026-10-13 · No expiry</p><div class="ln"></div><span class="btn ph" style="justify-content:center">Download certificate</span></div>
+<h2 class="h2">No longer in force</h2>
+<div class="card"><div class="actions" style="justify-content:space-between"><b>PAED-002 — Managing common paediatric presentations</b></div><div class="actions" style="gap:8px"><span class="badge">Revoked</span><span class="meta">2026-10-13 · level 3b</span></div><p class="meta">Revoked by Refilwe Mokoena: Staged on evidence about PAED-001, not PAED-002; to be decided again.</p><span class="btn ph" style="justify-content:center">Download</span></div>
+</div></div></div>
+
+<div class="col">
+<div class="cap">F5 · The other states <small>the page body only</small></div>
+<div class="grid3" style="width:2240px;grid-template-columns:repeat(4,minmax(0,1fr))">
+<div class="frame" style="padding:20px"><div class="stack"><span class="lbl">None yet</span><h2 class="h2">In force</h2><div class="box soft"><b>No active authorisations yet</b><p>When a committee review ratifies a decision authorising you to perform an EPA, it will appear here. You can then download a STAR certificate for your records.</p><span class="comp">StatePanel</span></div><p class="muted">No longer in force: not shown when empty and nothing is in force.</p></div></div>
+<div class="frame" style="padding:20px"><div class="stack"><span class="lbl">Loading</span><div class="skel" style="height:26px;width:60%"></div><div class="skel" style="height:120px"></div><div class="skel" style="height:120px"></div><span class="muted">The header shows; no download is offered until the read is in.</span></div></div>
+<div class="frame" style="padding:20px"><div class="stack"><span class="lbl">A load error (T329, T272)</span><div class="alert"><span class="ic"></span><div class="stack" style="gap:8px"><b>Your authorisations could not be loaded.</b><span class="btn">Try again</span></div></div></div></div>
+<div class="frame" style="padding:20px"><div class="stack"><span class="lbl">A download refused</span><div class="card"><h3 class="h3">PAED-001 — Managing the acutely ill child</h3><span class="btn" style="align-self:flex-start">Download certificate</span><p class="err focus">The certificate could not be made. Try again in a moment.<span class="focustag">FOCUS</span></p></div><p class="muted">Under the button that failed, on its card; never the exception's text.</p></div></div>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":4100,"height":2400}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

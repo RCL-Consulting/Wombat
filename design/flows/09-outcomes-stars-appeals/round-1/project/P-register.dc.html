@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Proposal · The STAR register</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#ecece8;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#1d1d1b;font-size:14px;line-height:1.45}
+a{color:#1d1d1b}a:hover{color:#000}
+h1,h2,h3,h4,p{margin:0}
+.sheet{box-sizing:border-box;padding:48px;display:flex;flex-direction:column;gap:40px}
+.sheet-h{font-size:30px;font-weight:700}
+.sheet-sub{font-size:16px;color:#4a4a46;max-width:1400px}
+.row{display:flex;gap:80px;align-items:flex-start}
+.col{display:flex;flex-direction:column;gap:12px}
+.cap{font-size:16px;font-weight:700;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cap small{font-weight:400;color:#4a4a46;font-size:14px}
+.frame{background:#fff;border:1px solid #8e8e89;position:relative;overflow:hidden}
+.w1280{width:1280px}.w390{width:390px}.w720{width:720px}
+.shell{display:flex;min-height:760px}
+.side{width:208px;flex:none;background:#dcdcd7;padding:16px 12px;display:flex;flex-direction:column;gap:8px;box-sizing:border-box}
+.brand{display:flex;gap:8px;align-items:center;font-weight:700;padding-bottom:8px}
+.brand img{width:28px;height:28px}
+.nav{height:28px;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:13px;color:#4a4a46}
+.nav i{display:block;height:7px;width:70%;background:#b9b9b3;border-radius:2px}
+.nav.on{background:#3a3a37;color:#fff;font-weight:600}
+.nav.rule{border-top:1px solid #a9a9a3;border-radius:0;height:1px;padding:0;margin:4px 0}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{height:44px;border-bottom:1px solid #c9c9c4;display:flex;justify-content:flex-end;align-items:center;gap:16px;padding:0 24px;font-size:13px;color:#4a4a46}
+.phonebar{height:52px;border-bottom:1px solid #c9c9c4;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#dcdcd7}
+.body{padding:24px 32px 40px;display:flex;flex-direction:column;gap:20px}
+.pbody{padding:16px 16px 32px;display:flex;flex-direction:column;gap:16px}
+.trail{font-size:13px;color:#4a4a46;display:flex;gap:6px;align-items:center}
+.trail a{color:#1d1d1b}
+h1.h1{font-size:26px;font-weight:700}
+.sub{color:#4a4a46}
+h2.h2{font-size:19px;font-weight:700}
+h3.h3{font-size:16px;font-weight:700}
+.box{border:1px solid #9b9b96;border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px;background:#fff}
+.box.soft{background:#f6f6f3}
+.btn{font:inherit;font-size:14px;border:1px solid #2b2b28;background:#fff;color:#1d1d1b;border-radius:4px;padding:0 14px;min-height:36px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn.pri{background:#2b2b28;color:#fff}
+.btn.danger{border-width:2px}
+.btn.dis{opacity:.45}
+.btn.ph{min-height:44px}
+.lnk{text-decoration:underline;color:#1d1d1b}
+.actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;border:1px solid #2b2b28;border-radius:999px;padding:0 9px;font-size:12px;line-height:20px;font-weight:600;white-space:nowrap;background:#fff}
+.badge.fill{background:#3a3a37;color:#fff}
+.badge.dash{border-style:dashed}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:6px 16px;font-size:14px}
+.kv dt{color:#4a4a46;margin:0}.kv dd{margin:0}
+dl{margin:0}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl caption{text-align:left;font-weight:700;padding:0 0 8px;font-size:15px}
+.tbl th{text-align:left;font-size:13px;color:#4a4a46;border-bottom:2px solid #8e8e89;padding:8px 10px;font-weight:600}
+.tbl td{border-bottom:1px solid #d3d3ce;padding:10px;vertical-align:top}
+.tbl tr.open td{background:#f3f3ef}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.lbl{font-weight:600;font-size:14px}
+.hint{font-size:13px;color:#4a4a46}
+.ta{border:1px solid #6c6c67;border-radius:4px;min-height:96px;padding:8px;font-size:14px;background:#fff;white-space:pre-wrap}
+.ta.bad{border:2px solid #1d1d1b;box-shadow:inset 4px 0 0 #1d1d1b}
+.sel{border:1px solid #6c6c67;border-radius:4px;height:36px;padding:0 10px;display:flex;align-items:center;justify-content:space-between;background:#fff}
+.err{font-size:13px;font-weight:600;display:flex;gap:6px;align-items:flex-start}
+.alert{border:2px solid #2b2b28;border-radius:6px;padding:12px 14px;background:#f1f1ec;display:flex;gap:10px;align-items:flex-start}
+.alert .ic{width:18px;height:18px;border:2px solid #2b2b28;border-radius:50%;flex:none;margin-top:1px}
+.focus{outline:3px dashed #000;outline-offset:3px;position:relative}
+.focustag{position:absolute;right:-6px;top:-24px;background:#000;color:#fff;font-size:11px;font-weight:700;padding:1px 6px;letter-spacing:.04em}
+.tag{display:inline-flex;font-size:10.5px;font-weight:800;letter-spacing:.06em;padding:1px 6px;border-radius:3px;text-transform:uppercase;vertical-align:middle;white-space:nowrap}
+.tag.new{border:1.5px dashed #2b2b28;color:#2b2b28;background:#fff}
+.tag.prop{background:#1d1d1b;color:#fff}
+.comp{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#55554f;background:#f0f0ec;border:1px solid #d6d6d1;padding:0 5px;border-radius:3px;white-space:nowrap}
+.ln{height:8px;background:#d2d2cd;border-radius:2px}
+.muted{color:#4a4a46}
+.radio{display:flex;gap:10px;align-items:flex-start;border:1px solid #9b9b96;border-radius:6px;padding:10px 12px}
+.radio.on{border:2px solid #1d1d1b}
+.dot{width:16px;height:16px;border:2px solid #2b2b28;border-radius:50%;flex:none;margin-top:2px;box-sizing:border-box}
+.dot.on{background:radial-gradient(#2b2b28 0 4px,#fff 5px)}
+.chk{width:16px;height:16px;border:2px solid #2b2b28;border-radius:3px;flex:none;box-sizing:border-box;margin-top:2px}
+.chk.on{background:#2b2b28}
+.chk.lock{background:#8e8e89;border-color:#8e8e89}
+.chkrow{display:flex;gap:10px;align-items:flex-start;min-height:28px}
+.scrim{position:absolute;inset:0;background:rgba(30,30,28,.45);display:flex;align-items:center;justify-content:center;padding:16px}
+.dialog{background:#fff;border:2px solid #1d1d1b;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.hist{border-left:none;display:flex;flex-direction:column;gap:0}
+.dec{border:1px solid #9b9b96;border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.dec.old{background:#f6f6f3;border-style:dashed}
+.meta{font-size:13px;color:#4a4a46}
+.stack{display:flex;flex-direction:column;gap:12px}
+.card{border:1px solid #9b9b96;border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;align-items:start}
+.count{display:flex;gap:8px;align-items:center;font-weight:600;font-size:14px;border:1px solid #9b9b96;border-radius:4px;padding:6px 10px;background:#f6f6f3}
+.ann{font-size:12.5px;color:#3a3a37;font-style:italic;max-width:520px}
+.skel{background:#e2e2dd;border-radius:3px}
+
+.filters{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.inp{border:1px solid #6c6c67;border-radius:4px;height:36px;padding:0 10px;display:flex;align-items:center;background:#fff;min-width:200px;box-sizing:border-box}
+.sub-row td{border-top:none;padding-top:0;font-size:13px}
+</style>
+</helmet>
+<div class="sheet" style="width:6080px;height:2400px">
+<div class="col" style="gap:6px">
+<h1 class="sheet-h">Proposal · The STAR register — Prof Mbatha (4.35, 5.7, 6.22), Dr Mokoena (4.36, A.7.7), Dr Sithole (4.37)</h1>
+<p class="sheet-sub">The list keeps its filters and columns. Issued links to the review that issued the STAR; a revoked row carries a line saying when, by whom and why; Revoke is an outline button named for its row that opens ConfirmDialog. Status badges read in words, matching My authorisations: In force, Expired, Revoked, Superseded <span class="tag prop">Proposed</span> wording (“Active” becomes “In force”). Changes: § Table system (a row's detail line spanning the columns); the owner table's row for the register (none).</p>
+</div>
+
+<div class="row">
+<div class="col">
+<div class="cap">F1 · 4.35 issued <small>Prof Mbatha; Download named for its row</small></div>
+<div class="frame w1280"><div class="shell">
+<div class="side"><div class="brand"><img src="/_blob/19eee4d64e6ebc1818aa6f9007654872" alt="Wombat">Wombat</div><div class="nav"><i></i></div><div class="nav"><i></i></div><div class="nav on">Entrustment decisions</div><div class="nav"><i></i></div><div class="nav rule"></div><div class="nav">My progress</div><div class="nav">My data rights</div></div>
+<div class="main"><div class="top">Nolwazi Mbatha <span class="btn">Sign out</span></div>
+<div class="body">
+<div class="col" style="gap:4px"><h1 class="h1">Entrustment decisions</h1><p class="sub">Issued Statements of Awarded Responsibility across the programme.</p></div>
+<div class="filters"><div class="field"><label>Trainee</label><div class="inp muted">Filter by name</div></div><div class="field"><label>Status</label><div class="sel" style="width:180px">All ▾</div></div><span class="btn">Apply filters</span></div>
+<p class="muted">5 STARs shown.</p>
+<table class="tbl"><caption>Issued STARs, newest first <span class="comp">DataTable</span></caption>
+<thead><tr><th>Trainee</th><th>EPA</th><th>Level</th><th>Issued</th><th>Expires</th><th>Status</th><th><span class="muted">Actions</span></th></tr></thead>
+<tbody>
+<tr><td>Lerato Molefe</td><td>PAED-001 — Managing the acutely ill child</td><td>5</td><td><a class="lnk" href="#">2026-10-13</a><br><span class="meta">2026 S2 review</span></td><td>—</td><td><span class="badge fill">In force</span></td><td><div class="actions" style="gap:8px"><a class="lnk" href="#">Download</a><span class="btn danger">Revoke</span></div></td></tr>
+<tr><td>Lerato Molefe</td><td>PAED-010 — Leading and operating within a clinical team</td><td>4</td><td><a class="lnk" href="#">2026-10-13</a></td><td>2026-11-02</td><td><span class="badge fill">In force</span></td><td><div class="actions" style="gap:8px"><a class="lnk" href="#">Download</a><span class="btn danger">Revoke</span></div></td></tr>
+<tr><td>Lerato Molefe</td><td>PAED-012 — Communicating with and counselling …</td><td>5</td><td><a class="lnk" href="#">2026-10-13</a></td><td>—</td><td><span class="badge fill">In force</span></td><td><div class="actions" style="gap:8px"><a class="lnk" href="#">Download</a><span class="btn danger">Revoke</span></div></td></tr>
+<tr><td>Anele Dlamini</td><td>PAED-001 — Managing the acutely ill child</td><td>4</td><td><a class="lnk" href="#">2026-10-13</a></td><td>—</td><td><span class="badge fill">In force</span></td><td><div class="actions" style="gap:8px"><a class="lnk" href="#">Download</a><span class="btn danger">Revoke</span></div></td></tr>
+<tr><td>Anele Dlamini</td><td>PAED-002 — Managing common paediatric presentations</td><td>3b</td><td><a class="lnk" href="#">2026-10-13</a></td><td>—</td><td><span class="badge fill">In force</span></td><td><div class="actions" style="gap:8px"><a class="lnk" href="#">Download</a><span class="btn danger">Revoke</span></div></td></tr>
+</tbody></table>
+<p class="ann">Names: “Download the certificate of Lerato Molefe's PAED-010 decision, issued 2026-10-13”; “Revoke Anele Dlamini's PAED-002 decision”. Revoke is outline (A5, T264), never red-filled. The Issued link opens the issuing review on the committee's page (for staff who may open it; otherwise plain text).</p>
+</div></div></div></div>
+</div>
+
+<div class="col">
+<div class="cap">F2 · 4.36 Revoke pressed <small>ConfirmDialog; reason typed</small></div>
+<div class="frame w1280" style="height:900px"><div class="shell" style="min-height:900px">
+<div class="side"><div class="brand"><img src="/_blob/19eee4d64e6ebc1818aa6f9007654872" alt="Wombat">Wombat</div><div class="nav"><i></i></div><div class="nav on">Entrustment decisions</div></div>
+<div class="main"><div class="top">Refilwe Mokoena</div><div class="body"><div class="ln" style="width:30%;height:22px"></div><div class="ln" style="width:90%"></div><div class="ln" style="width:90%"></div><div class="ln" style="width:90%"></div></div></div></div>
+<div class="scrim"><div class="dialog" style="width:600px">
+<h2 class="h2">Revoke Anele Dlamini's STAR for PAED-002?</h2>
+<p>PAED-002 — Managing common paediatric presentations, level 3b, issued 2026-10-13.</p>
+<p>Revocation is immediate and cannot be undone. The EPA reads “Revoked: re-decide” on Decisions due, and her review's agenda keeps its line.</p>
+<p>Anele Dlamini is sent an email saying a STAR was revoked, without the reason, with a link to My authorisations. <span class="tag prop">Proposed</span></p>
+<div class="field"><label>Revocation reason</label><div class="ta focus" style="min-height:80px">Staged on evidence about PAED-001, not PAED-002; to be decided again.<span class="focustag">FOCUS</span></div><span class="hint">Printed on the certificate. 68 of 1,000 characters.</span></div>
+<div class="actions" style="justify-content:flex-end"><span class="btn">Cancel</span><span class="btn pri">Revoke the STAR</span></div>
+<span class="comp">ConfirmDialog</span>
+</div></div></div>
+<p class="ann">The dialog opens with the focus in the reason box. Revoke the STAR enables as the reason is typed (T260): one round trip per keystroke on Blazor Server (@bind:event="oninput"), flagged; the alternative is always enabled with “Write a reason.” under the box. Cancel returns the focus to the row's Revoke. If question 7 drops the mail, the paragraph goes.</p>
+</div>
+
+<div class="col">
+<div class="cap">F3 · 4.36 / 4.37 revoked <small>the result takes the focus; the row says what happened</small></div>
+<div class="frame w1280"><div class="shell">
+<div class="side"><div class="brand"><img src="/_blob/19eee4d64e6ebc1818aa6f9007654872" alt="Wombat">Wombat</div><div class="nav"><i></i></div><div class="nav on">Entrustment decisions</div></div>
+<div class="main"><div class="top">Refilwe Mokoena</div>
+<div class="body">
+<div class="col" style="gap:4px"><h1 class="h1">Entrustment decisions</h1><p class="sub">Issued Statements of Awarded Responsibility across the programme.</p></div>
+<div class="filters"><div class="field"><label>Trainee</label><div class="inp muted">Filter by name</div></div><div class="field"><label>Status</label><div class="sel" style="width:180px">All ▾</div></div><span class="btn">Apply filters</span></div>
+<div class="alert focus"><span class="ic"></span><div><b>Anele Dlamini's STAR for PAED-002 is revoked.</b> She has been emailed. <span class="tag prop">Proposed</span></div><span class="focustag">FOCUS</span></div>
+<table class="tbl"><caption>Issued STARs, newest first</caption>
+<thead><tr><th>Trainee</th><th>EPA</th><th>Level</th><th>Issued</th><th>Expires</th><th>Status</th><th><span class="muted">Actions</span></th></tr></thead>
+<tbody>
+<tr><td colspan="7" class="muted">… four rows In force, as F1 …</td></tr>
+<tr><td style="border-bottom:none">Anele Dlamini</td><td style="border-bottom:none">PAED-002 — Managing common paediatric presentations</td><td style="border-bottom:none">3b</td><td style="border-bottom:none"><a class="lnk" href="#">2026-10-13</a></td><td style="border-bottom:none">—</td><td style="border-bottom:none"><span class="badge">Revoked</span></td><td style="border-bottom:none"><a class="lnk" href="#">Download</a></td></tr>
+<tr class="sub-row"><td></td><td colspan="6">Revoked 2026-10-13 ‹hh:mm› SAST by Refilwe Mokoena: Staged on evidence about PAED-001, not PAED-002; to be decided again.</td></tr>
+</tbody></table>
+<p class="ann">The alert sits above the table, under the filters, where the list starts; the row's Revoke is gone. A refusal (“The entrustment decision could not be found among the decisions you may revoke.”) shows in the dialog under the reason, the reason kept. The revoked certificate names Refilwe Mokoena, not a user id (T324).</p>
+</div></div></div></div>
+</div>
+
+<div class="col">
+<div class="cap">F4 · 5.7 / 6.22 one registrar, All <small>superseded beside its successor; a paused EPA</small></div>
+<div class="frame w1280"><div class="shell">
+<div class="side"><div class="brand"><img src="/_blob/19eee4d64e6ebc1818aa6f9007654872" alt="Wombat">Wombat</div><div class="nav"><i></i></div><div class="nav on">Entrustment decisions</div></div>
+<div class="main"><div class="top">Nolwazi Mbatha</div>
+<div class="body">
+<h1 class="h1">Entrustment decisions</h1>
+<div class="filters"><div class="field"><label>Trainee</label><div class="inp">Molefe</div></div><div class="field"><label>Status</label><div class="sel" style="width:180px">All ▾</div></div><span class="btn">Apply filters</span><a class="lnk" href="#">Clear filters</a></div>
+<p class="muted">16 STARs shown, for “Molefe”.</p>
+<table class="tbl"><caption>Issued STARs, newest first</caption>
+<thead><tr><th>Trainee</th><th>EPA</th><th>Level</th><th>Issued</th><th>Expires</th><th>Status</th><th><span class="muted">Actions</span></th></tr></thead>
+<tbody>
+<tr><td>Lerato Molefe</td><td>PAED-015 — Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and research</td><td>5</td><td><a class="lnk" href="#">‹D›</a></td><td>—</td><td><span class="badge fill">In force</span></td><td><div class="actions" style="gap:8px"><a class="lnk" href="#">Download</a><span class="btn danger">Revoke</span></div></td></tr>
+<tr><td>Lerato Molefe</td><td>PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams (no longer in use)</td><td>5</td><td><a class="lnk" href="#">2026-10-13</a></td><td>—</td><td><span class="badge fill">In force</span></td><td><div class="actions" style="gap:8px"><a class="lnk" href="#">Download</a><span class="btn danger">Revoke</span></div></td></tr>
+<tr><td>Lerato Molefe</td><td>PAED-010 — Leading and operating within a clinical team</td><td>5</td><td><a class="lnk" href="#">‹D›</a></td><td>—</td><td><span class="badge fill">In force</span></td><td><div class="actions" style="gap:8px"><a class="lnk" href="#">Download</a><span class="btn danger">Revoke</span></div></td></tr>
+<tr><td style="border-bottom:none">Lerato Molefe</td><td style="border-bottom:none">PAED-010 — Leading and operating within a clinical team</td><td style="border-bottom:none">4</td><td style="border-bottom:none"><a class="lnk" href="#">2026-10-13</a></td><td style="border-bottom:none">2026-11-02</td><td style="border-bottom:none"><span class="badge">Superseded</span></td><td style="border-bottom:none"><a class="lnk" href="#">Download</a></td></tr>
+<tr class="sub-row"><td></td><td colspan="6">Superseded on ‹D› by the level 5 STAR for PAED-010 above.</td></tr>
+<tr><td colspan="7" class="muted">… twelve more In force</td></tr>
+</tbody></table>
+<p class="ann">The list stays newest first; the superseded row's line names its successor so the pair reads together without regrouping. The paused EPA's title carries “(no longer in use)”; its STAR stands and can still be revoked.</p>
+</div></div></div></div>
+</div>
+</div>
+
+<div class="row">
+<div class="col">
+<div class="cap">F5 · A.7.7 at 390 <small>Dr Mokoena; rows stack</small></div>
+<div class="frame w390">
+<div class="phonebar"><span class="brand" style="padding:0"><img src="/_blob/19eee4d64e6ebc1818aa6f9007654872" alt="Wombat">Wombat</span><span class="btn ph">Menu</span></div>
+<div class="pbody">
+<h1 class="h1" style="font-size:22px">Entrustment decisions</h1><p class="sub">Issued Statements of Awarded Responsibility across the programme.</p>
+<div class="field"><label>Trainee</label><div class="inp muted" style="height:44px">Filter by name</div></div>
+<div class="field"><label>Status</label><div class="sel" style="height:44px">All ▾</div></div>
+<span class="btn ph" style="justify-content:center">Apply filters</span>
+<p class="muted">5 STARs shown.</p>
+<div class="card"><b>Anele Dlamini</b><span>PAED-002 — Managing common paediatric presentations</span><dl class="kv" style="grid-template-columns:80px 1fr;font-size:13px"><dt>Level</dt><dd>3b</dd><dt>Issued</dt><dd><a class="lnk" href="#">2026-10-13</a></dd><dt>Expires</dt><dd>—</dd><dt>Status</dt><dd><span class="badge">Revoked</span></dd></dl><p class="meta">Revoked 2026-10-13 ‹hh:mm› SAST by Refilwe Mokoena: Staged on evidence about PAED-001 …</p><span class="btn ph" style="justify-content:center">Download</span></div>
+<div class="card"><b>Anele Dlamini</b><span>PAED-001 — Managing the acutely ill child</span><dl class="kv" style="grid-template-columns:80px 1fr;font-size:13px"><dt>Level</dt><dd>4</dd><dt>Status</dt><dd><span class="badge fill">In force</span></dd></dl><div class="actions"><span class="btn ph" style="flex:1;justify-content:center">Download</span><span class="btn ph danger" style="flex:1;justify-content:center">Revoke</span></div></div>
+<p class="meta">… three more</p>
+</div></div></div>
+
+<div class="col">
+<div class="cap">F6 · The other states <small>the page body only</small></div>
+<div class="grid3" style="display:grid;width:3400px;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
+<div class="frame" style="padding:20px"><div class="stack"><span class="lbl">None issued</span><div class="box soft"><b>No STARs issued yet</b><p>A STAR appears here once a committee review that authorises an EPA is ratified.</p></div></div></div>
+<div class="frame" style="padding:20px"><div class="stack"><span class="lbl">Filtered to nothing</span><div class="box soft"><b>No STARs match these filters</b><p>Trainee “Mahlangu”, status Revoked.</p><a class="btn" href="#" style="align-self:flex-start">Clear filters</a></div></div></div>
+<div class="frame" style="padding:20px"><div class="stack"><span class="lbl">Loading</span><div class="skel" style="height:36px"></div><div class="skel" style="height:30px"></div><div class="skel" style="height:30px"></div><span class="muted">Filters shown but Apply filters waits; no Download or Revoke until the read is in.</span></div></div>
+<div class="frame" style="padding:20px"><div class="stack"><span class="lbl">A load error</span><div class="alert"><span class="ic"></span><div class="stack" style="gap:8px"><b>The STARs could not be loaded.</b><span class="btn">Try again</span></div></div></div></div>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":6080,"height":2400}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-10-14T10:00:00Z"
+ },
+ "title": "Wombat 09 \u00b7 Outcomes, STARs and appeals",
+ "launch": {
+  "view": "canvas"
+ },
+ "pages": [],
+ "boards": {
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 2400,
+   "h": 1500,
+   "title": "R1 \u00b7 Three structures for the appeal journey"
+  },
+  "A-trainee.dc.html": {
+   "x": 0,
+   "y": 1870,
+   "w": 4100,
+   "h": 2800,
+   "title": "A \u00b7 Opened row \u2014 the registrar at 1280"
+  },
+  "A-committee.dc.html": {
+   "x": 4180,
+   "y": 1870,
+   "w": 4100,
+   "h": 2800,
+   "title": "A \u00b7 Opened row \u2014 the committee's Appeals section at 1280"
+  },
+  "A-phone.dc.html": {
+   "x": 8360,
+   "y": 1870,
+   "w": 1900,
+   "h": 2800,
+   "title": "A \u00b7 Opened row \u2014 390"
+  },
+  "B-trainee.dc.html": {
+   "x": 0,
+   "y": 5060,
+   "w": 4100,
+   "h": 2800,
+   "title": "B \u00b7 A review page of its own \u2014 the registrar at 1280"
+  },
+  "B-committee.dc.html": {
+   "x": 4180,
+   "y": 5060,
+   "w": 4100,
+   "h": 2800,
+   "title": "B \u00b7 A review page of its own \u2014 the committee at 1280"
+  },
+  "B-phone.dc.html": {
+   "x": 8360,
+   "y": 5060,
+   "w": 1900,
+   "h": 2800,
+   "title": "B \u00b7 A review page of its own \u2014 390"
+  },
+  "C-trainee.dc.html": {
+   "x": 0,
+   "y": 8250,
+   "w": 4100,
+   "h": 2800,
+   "title": "C \u00b7 The appeal as a task of its own \u2014 the registrar at 1280"
+  },
+  "C-committee.dc.html": {
+   "x": 4180,
+   "y": 8250,
+   "w": 4100,
+   "h": 2800,
+   "title": "C \u00b7 The appeal as a task of its own \u2014 the committee at 1280"
+  },
+  "C-phone.dc.html": {
+   "x": 8360,
+   "y": 8250,
+   "w": 1900,
+   "h": 2800,
+   "title": "C \u00b7 The appeal as a task of its own \u2014 390"
+  },
+  "P-authorisations.dc.html": {
+   "x": 0,
+   "y": 11440,
+   "w": 4100,
+   "h": 2400,
+   "title": "Proposal \u00b7 My authorisations (1280 and 390)"
+  },
+  "P-register.dc.html": {
+   "x": 4180,
+   "y": 11440,
+   "w": 6080,
+   "h": 2400,
+   "title": "Proposal \u00b7 The STAR register (1280 and 390)"
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "A-trainee.dc.html",
+  "A-committee.dc.html",
+  "A-phone.dc.html",
+  "B-trainee.dc.html",
+  "B-committee.dc.html",
+  "B-phone.dc.html",
+  "C-trainee.dc.html",
+  "C-committee.dc.html",
+  "C-phone.dc.html",
+  "P-authorisations.dc.html",
+  "P-register.dc.html"
+ ],
+ "notes": {
+  "rowA": {
+   "x": 0,
+   "y": 1600,
+   "text": "A \u00b7 Opened row: her review opens inside the list; one address",
+   "kind": "title1",
+   "maxW": 10260
+  },
+  "rowB": {
+   "x": 0,
+   "y": 4790,
+   "text": "B \u00b7 A review page of its own: list \u2192 page; the appeal beside the decision",
+   "kind": "title1",
+   "maxW": 10260
+  },
+  "rowC": {
+   "x": 0,
+   "y": 7980,
+   "text": "C \u00b7 The appeal as a task of its own: lodge and resolve on form pages",
+   "kind": "title1",
+   "maxW": 10260
+  },
+  "rowP": {
+   "x": 0,
+   "y": 11170,
+   "text": "One proposal \u00b7 My authorisations and the STAR register",
+   "kind": "title1",
+   "maxW": 10260
+  }
+ },
+ "designSystems": [
+  {
+   "title": "Wombat",
+   "namespace": "wombat",
+   "artifact": "https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18",
+   "version": "1791917863-8f48",
+   "copiedAt": "2026-10-14T10:00:00Z"
+  }
+ ]
+}

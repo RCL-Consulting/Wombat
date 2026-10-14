@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 09 round 1 overview</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#ecece8;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#1d1d1b;font-size:14px;line-height:1.45}
+a{color:#1d1d1b}a:hover{color:#000}
+h1,h2,h3,h4,p{margin:0}
+.sheet{box-sizing:border-box;padding:48px;display:flex;flex-direction:column;gap:40px}
+.sheet-h{font-size:30px;font-weight:700}
+.sheet-sub{font-size:16px;color:#4a4a46;max-width:1400px}
+.row{display:flex;gap:80px;align-items:flex-start}
+.col{display:flex;flex-direction:column;gap:12px}
+.cap{font-size:16px;font-weight:700;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cap small{font-weight:400;color:#4a4a46;font-size:14px}
+.frame{background:#fff;border:1px solid #8e8e89;position:relative;overflow:hidden}
+.w1280{width:1280px}.w390{width:390px}.w720{width:720px}
+.shell{display:flex;min-height:760px}
+.side{width:208px;flex:none;background:#dcdcd7;padding:16px 12px;display:flex;flex-direction:column;gap:8px;box-sizing:border-box}
+.brand{display:flex;gap:8px;align-items:center;font-weight:700;padding-bottom:8px}
+.brand img{width:28px;height:28px}
+.nav{height:28px;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:13px;color:#4a4a46}
+.nav i{display:block;height:7px;width:70%;background:#b9b9b3;border-radius:2px}
+.nav.on{background:#3a3a37;color:#fff;font-weight:600}
+.nav.rule{border-top:1px solid #a9a9a3;border-radius:0;height:1px;padding:0;margin:4px 0}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{height:44px;border-bottom:1px solid #c9c9c4;display:flex;justify-content:flex-end;align-items:center;gap:16px;padding:0 24px;font-size:13px;color:#4a4a46}
+.phonebar{height:52px;border-bottom:1px solid #c9c9c4;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#dcdcd7}
+.body{padding:24px 32px 40px;display:flex;flex-direction:column;gap:20px}
+.pbody{padding:16px 16px 32px;display:flex;flex-direction:column;gap:16px}
+.trail{font-size:13px;color:#4a4a46;display:flex;gap:6px;align-items:center}
+.trail a{color:#1d1d1b}
+h1.h1{font-size:26px;font-weight:700}
+.sub{color:#4a4a46}
+h2.h2{font-size:19px;font-weight:700}
+h3.h3{font-size:16px;font-weight:700}
+.box{border:1px solid #9b9b96;border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px;background:#fff}
+.box.soft{background:#f6f6f3}
+.btn{font:inherit;font-size:14px;border:1px solid #2b2b28;background:#fff;color:#1d1d1b;border-radius:4px;padding:0 14px;min-height:36px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;text-decoration:none;box-sizing:border-box}
+.btn.pri{background:#2b2b28;color:#fff}
+.btn.danger{border-width:2px}
+.btn.dis{opacity:.45}
+.btn.ph{min-height:44px}
+.lnk{text-decoration:underline;color:#1d1d1b}
+.actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;border:1px solid #2b2b28;border-radius:999px;padding:0 9px;font-size:12px;line-height:20px;font-weight:600;white-space:nowrap;background:#fff}
+.badge.fill{background:#3a3a37;color:#fff}
+.badge.dash{border-style:dashed}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:6px 16px;font-size:14px}
+.kv dt{color:#4a4a46;margin:0}.kv dd{margin:0}
+dl{margin:0}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl caption{text-align:left;font-weight:700;padding:0 0 8px;font-size:15px}
+.tbl th{text-align:left;font-size:13px;color:#4a4a46;border-bottom:2px solid #8e8e89;padding:8px 10px;font-weight:600}
+.tbl td{border-bottom:1px solid #d3d3ce;padding:10px;vertical-align:top}
+.tbl tr.open td{background:#f3f3ef}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.lbl{font-weight:600;font-size:14px}
+.hint{font-size:13px;color:#4a4a46}
+.ta{border:1px solid #6c6c67;border-radius:4px;min-height:96px;padding:8px;font-size:14px;background:#fff;white-space:pre-wrap}
+.ta.bad{border:2px solid #1d1d1b;box-shadow:inset 4px 0 0 #1d1d1b}
+.sel{border:1px solid #6c6c67;border-radius:4px;height:36px;padding:0 10px;display:flex;align-items:center;justify-content:space-between;background:#fff}
+.err{font-size:13px;font-weight:600;display:flex;gap:6px;align-items:flex-start}
+.alert{border:2px solid #2b2b28;border-radius:6px;padding:12px 14px;background:#f1f1ec;display:flex;gap:10px;align-items:flex-start}
+.alert .ic{width:18px;height:18px;border:2px solid #2b2b28;border-radius:50%;flex:none;margin-top:1px}
+.focus{outline:3px dashed #000;outline-offset:3px;position:relative}
+.focustag{position:absolute;right:-6px;top:-24px;background:#000;color:#fff;font-size:11px;font-weight:700;padding:1px 6px;letter-spacing:.04em}
+.tag{display:inline-flex;font-size:10.5px;font-weight:800;letter-spacing:.06em;padding:1px 6px;border-radius:3px;text-transform:uppercase;vertical-align:middle;white-space:nowrap}
+.tag.new{border:1.5px dashed #2b2b28;color:#2b2b28;background:#fff}
+.tag.prop{background:#1d1d1b;color:#fff}
+.comp{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#55554f;background:#f0f0ec;border:1px solid #d6d6d1;padding:0 5px;border-radius:3px;white-space:nowrap}
+.ln{height:8px;background:#d2d2cd;border-radius:2px}
+.muted{color:#4a4a46}
+.radio{display:flex;gap:10px;align-items:flex-start;border:1px solid #9b9b96;border-radius:6px;padding:10px 12px}
+.radio.on{border:2px solid #1d1d1b}
+.dot{width:16px;height:16px;border:2px solid #2b2b28;border-radius:50%;flex:none;margin-top:2px;box-sizing:border-box}
+.dot.on{background:radial-gradient(#2b2b28 0 4px,#fff 5px)}
+.chk{width:16px;height:16px;border:2px solid #2b2b28;border-radius:3px;flex:none;box-sizing:border-box;margin-top:2px}
+.chk.on{background:#2b2b28}
+.chk.lock{background:#8e8e89;border-color:#8e8e89}
+.chkrow{display:flex;gap:10px;align-items:flex-start;min-height:28px}
+.scrim{position:absolute;inset:0;background:rgba(30,30,28,.45);display:flex;align-items:center;justify-content:center;padding:16px}
+.dialog{background:#fff;border:2px solid #1d1d1b;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.hist{border-left:none;display:flex;flex-direction:column;gap:0}
+.dec{border:1px solid #9b9b96;border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.dec.old{background:#f6f6f3;border-style:dashed}
+.meta{font-size:13px;color:#4a4a46}
+.stack{display:flex;flex-direction:column;gap:12px}
+.card{border:1px solid #9b9b96;border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;align-items:start}
+.count{display:flex;gap:8px;align-items:center;font-weight:600;font-size:14px;border:1px solid #9b9b96;border-radius:4px;padding:6px 10px;background:#f6f6f3}
+.ann{font-size:12.5px;color:#3a3a37;font-style:italic;max-width:520px}
+.skel{background:#e2e2dd;border-radius:3px}
+
+.map{display:flex;flex-direction:column;gap:10px}
+.pg{border:1.5px solid #2b2b28;border-radius:6px;padding:10px 12px;background:#fff;display:flex;flex-direction:column;gap:4px}
+.pg b{font-size:14px}
+.pg span{font-size:12.5px;color:#4a4a46}
+.arrow{font-size:13px;color:#4a4a46;padding-left:16px}
+.var{flex:1;min-width:0;display:flex;flex-direction:column;gap:16px;border:1px solid #9b9b96;border-radius:8px;padding:20px;background:#fafaf7}
+.var h2{font-size:22px;font-weight:700}
+.steps th,.steps td{text-align:center}
+.steps th:first-child,.steps td:first-child{text-align:left}
+</style>
+</helmet>
+<div class="sheet" style="width:2400px;height:1500px">
+<div class="col" style="gap:8px">
+<h1 class="sheet-h">Flow 09 · Round 1 — three structures for the appeal journey, and one proposal for the STAR pages</h1>
+<p class="sheet-sub">Wireframes: no colour or type choices. Greys stand for structure only. Each variation has three sheets: the registrar at 1280, the committee's Appeals section at 1280, and both at 390. The proposal row (bottom) covers My authorisations and the STAR register.</p>
+</div>
+
+<div class="actions" style="gap:20px">
+<span class="lbl">Key</span>
+<span class="tag new">New</span><span class="muted">a component not in the design system yet</span>
+<span class="tag prop">Proposed</span><span class="muted">not built: a route, a confirmation, a mail or a rule</span>
+<span class="comp">DataTable</span><span class="muted">the design-system component drawn</span>
+<span class="btn focus" style="margin-left:8px">Result<span class="focustag">FOCUS</span></span><span class="muted">where the focus lands after the action</span>
+</div>
+
+<div class="row" style="gap:32px;align-items:stretch">
+<div class="var">
+<h2>A · Opened row</h2>
+<p class="muted">Her review opens inside My committee reviews, under its row. One page, one list; the address carries the open review.</p>
+<div class="map">
+<div class="pg"><b>/committee/my-reviews?review=41</b><span>the list; the opened row holds Decisions, Appeal and Agenda</span><span><span class="tag prop">Proposed</span> query parameter, so the review has an address</span></div>
+<div class="arrow">↓ Lodge appeal → <span class="tag prop">Proposed</span> ConfirmDialog</div>
+<div class="pg"><b>Same page</b><span>row and review both read Under appeal; result in the Appeal block</span></div>
+<div class="arrow">committee side</div>
+<div class="pg"><b>/committee/reviews/41 · Appeals</b><span>resolve form inline, as today, redrawn: outcome radios, live quorum count, confirmation</span></div>
+<div class="arrow">trainee types the committee's address</div>
+<div class="pg"><b>/access-denied</b><span>unchanged (flow 01 owns it); nothing points her back</span></div>
+</div>
+</div>
+
+<div class="var">
+<h2>B · A review page of its own</h2>
+<p class="muted">The list links to a page per review. The appeal sits beside the decision it contests; the agenda follows.</p>
+<div class="map">
+<div class="pg"><b>/committee/my-reviews</b><span>the list only; stacks at 390</span></div>
+<div class="arrow">↓ the period is the row's link</div>
+<div class="pg"><b>/committee/my-reviews/41</b><span><span class="tag prop">Proposed</span> route; owning list My committee reviews; trail back</span><span>Decisions + Agenda in the main column, Appeal in a side column (after Decisions at 390)</span></div>
+<div class="arrow">↓ Lodge appeal → <span class="tag prop">Proposed</span> ConfirmDialog</div>
+<div class="arrow">committee side</div>
+<div class="pg"><b>/committee/reviews/41 · Appeals</b><span>the same appeal entry; the appeal body opens the resolve form with Resolve this appeal</span></div>
+<div class="arrow">trainee types the committee's address</div>
+<div class="pg"><b>→ /committee/my-reviews/41</b><span><span class="tag prop">Proposed</span> her own review only; any other review is access denied, as today</span></div>
+</div>
+</div>
+
+<div class="var">
+<h2>C · The appeal as a task of its own</h2>
+<p class="muted">The review page (as B) reads; lodging and resolving each happen on a form page of their own, like flow 08's Schedule a review.</p>
+<div class="map">
+<div class="pg"><b>/committee/my-reviews → /committee/my-reviews/41</b><span><span class="tag prop">Proposed</span> route, as B; Appeal block reads status only</span></div>
+<div class="arrow">↓ Appeal this decision</div>
+<div class="pg"><b>/committee/my-reviews/41/appeal</b><span><span class="tag prop">Proposed</span> form page: what she appeals, what follows, her reason, an acknowledgement in place of a dialog</span></div>
+<div class="arrow">committee side</div>
+<div class="pg"><b>/committee/reviews/41/appeal</b><span><span class="tag prop">Proposed</span> form page for the appeal body: outcome, replacement, who sat, a summary, then ConfirmDialog</span></div>
+<div class="arrow">trainee types the committee's address</div>
+<div class="pg"><b>→ /committee/my-reviews/41</b><span><span class="tag prop">Proposed</span> as B</span></div>
+</div>
+</div>
+</div>
+
+<div class="row" style="gap:32px">
+<div class="box" style="flex:1">
+<h2 class="h2">Shared by all three</h2>
+<div class="stack" style="gap:6px">
+<p><span class="comp">DecisionHistory</span> <span class="tag new">New</span> one component on both sides: every decision newest first, category, “Replaced on appeal by the decision above.”, rationale, About the EPAs not decided, Conditions, Present.</p>
+<p><span class="comp">AppealEntry</span> <span class="tag new">New</span> one entry on both sides: lodged (date, by), the reason, outcome in words, resolved (date, by), who hears it while open.</p>
+<p>Outcome as a two-radio <span class="comp">choice-group</span> (flow 08's), so Remitted's words are never cut (T323).</p>
+<p><span class="comp">QuorumCount</span> <span class="tag new">New</span> under Present, updated as each tick changes (a click, not a keystroke).</p>
+<p>Resolve appeal and Lodge appeal confirm (A, B: <span class="comp">ConfirmDialog</span>; C: Lodge confirms on its form page). <span class="tag prop">Proposed</span></p>
+<p>Refusals beside the control, in the section, with the focus; what was typed is kept (A5).</p>
+</div>
+</div>
+<div class="box" style="flex:1.3">
+<h2 class="h2">Steps per journey <span class="muted" style="font-weight:400;font-size:14px">(1280 / 390)</span></h2>
+<table class="tbl steps">
+<caption>A step is a click, a tap, a choice or a field filled, from the person's Home; scrolling is not counted; at 390 the phone menu adds one.</caption>
+<thead><tr><th>Journey</th><th>A</th><th>B</th><th>C</th></tr></thead>
+<tbody>
+<tr><td>Dr Molefe reads her review (4.41)</td><td>2 / 3</td><td>2 / 3</td><td>2 / 3</td></tr>
+<tr><td>Dr Mahlangu lodges (4.43)</td><td>5 / 6</td><td>5 / 6</td><td>6 / 7</td></tr>
+<tr><td>Dr Mahlangu reads the outcome (4.48)</td><td>2 / 3</td><td>2 / 3</td><td>2 / 3</td></tr>
+<tr><td>Dr Naidoo reads the appeal (4.44)</td><td>2 / 3</td><td>2 / 3</td><td>2 / 3</td></tr>
+<tr><td>Dr van Rensburg: no outcome, then Remitted (4.45)</td><td>4 / 5</td><td>5 / 6</td><td>5 / 6</td></tr>
+<tr><td>Dr Zulu: refused, then remits (4.46–4.47)</td><td>10 / 11</td><td>11 / 12</td><td>11 / 12</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2400,"height":1500}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
