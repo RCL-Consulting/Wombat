@@ -33,7 +33,7 @@ polish. On GitHub (RCL-Consulting/Wombat, public).
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The redesign:** flow 09 next (BRIEF § 8), when the operator says. T362, T363 and T365 wait in proposed.
+- **The redesign:** flow 09 (T366) at round 1: canvas "Wombat 09" ready, waiting for the operator to send the ask. T362, T363 and T365 wait in proposed.
 
 ## Open questions
 

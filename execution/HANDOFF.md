@@ -2,27 +2,26 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
+## Session 2026-10-14 (Opus): the reset checked; T366 (flow 09) started
+
+The machine reset overnight; nothing was in flight (tree clean, T364 closed at `c368a54f`). The operator said "tie up
+the loose ends": pushed through `adfa3700`, the replay app restarted. Then "lets go": **T366, flow 09** (outcomes,
+STARs and appeals), filed and started.
+
+- **Step 1** (`0058adf3`): the brief restated in flow 08's layout from two read-only audits at `adfa3700`. T308 and
+  T319 are unbuilt; the revoke's "The trainee is notified." is false (nothing mails). Eleven questions, five the
+  operator's (§ 6); 153 stale step pointers in flows 01–07 re-synced. Completeness 0, verbatim 0 problems, missing 0.
+- **Steps 2–4** (`47f2850d`): staged (106 files; four long captures cropped to the Appeals section in the staged copy);
+  canvas **"Wombat 09"** https://claude.ai/artifact/5LfLPdcXJ2iRX6GSm2bbKP on design system v20, mark copied in.
+- **Next (operator):** send `design/flows/09-outcomes-stars-appeals/round-1-ask.txt` in the canvas with `design/upload/`
+  (key screenshots first, § 4); then round 1's pick and § 6's answers. **Not pushed:** `0058adf3` onward.
+
 ## Sessions 2026-10-11 to 10-13 (Opus): harness 3.4; 111 done tasks archived; T361 (flow 07) and T364 (flow 08) done
 
 The operator said "upgrade the execution workspace", "move the done tasks" and "proceed". **The repo is `C:\dev\Wombat`,
 on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when the operator asks.** The harness is
 `C:\dev\rcl_execution\bin\harness.py` (the hooks in `.claude/settings.local.json`).
 
-### Done
-
-- **Harness 3.4** (`c5c4d41d`) and the archive of 111 done tasks (`bc9a6c4b`); `lint` clean.
-- **T361 steps 1–2** (flow 07, the review sitting): the brief restated in flow 06's layout (`9a204a5c`), from two
-  read-only audits (the review page's code at `bc9a6c4b`; the captures). Completeness exit 0, baseline paths missing 0,
-  all 26 verbatim steps match. Staged with `stage_upload.ps1 -Flow 07` (88 files, 18.7 MB);
-  `design/flows/07-review-sitting/round-1-ask.txt` is § 1 + § 8 as one paste. T361's Verification lines are now
-  flow 07's own.
-
-- **T361 steps 3–5** (2026-10-12): the canvas and the mark (`025da574`); round 1's 13 boards recorded (`7b00819a`):
-  A (the agenda is the page), B (three steps), C (a workspace per EPA). The operator took every recommendation:
-  **A**, with C's per-EPA content in an opened line and its evidence reader inside a staging line; the decisions and
-  C1–C9 are `design/flows/07-review-sitting/round-2-ask.txt` and T361's Notes. **D53** (EPA-PROGRAMME § 3D, the
-  operator's): no deferral; unstaged closing lines are recorded "Not decided at this sitting", overruling T131's O2.
-  Live following for members proposed as **T362**.
 
 ### T361 done (2026-10-12): flow 07 built, replayed, in the design system (version 19)
 
