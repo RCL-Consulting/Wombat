@@ -100,13 +100,13 @@ Expect: The picker offers eleven types, and no name appears twice: the ten hand-
   result "Draft saved. It has not been submitted. It is in nobody's inbox until you submit it." (T127). Its status card,
   "Who has it now", is badged Draft and reads "With you. Not submitted yet."; there is no "State:" line and no summary
   card (T342).
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): From Home ("Trainee · Semester 2, 2026") its header's Log an
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): From Home ("Trainee · Semester 2, 2026") the header's Log an
   activity: three groups, Rated by an assessor (7 types), Discussed or reviewed, not rated (3) and Logged by you (1),
   eleven names once each, no Multi-Source Feedback or Learner Feedback. Mini-CEX (Paediatrics) opened Request ("You
   fill this in"), Entrustment and Feedback locked, "The assessor you name fills this in", then "David Naidoo fills
-  this in" once he was named, the button then Submit to David Naidoo. EPA picker PAED-001 to 004, 006 to 008, 012,
-  013; Assessor picker Botha, Khumalo, Naidoo, Patel, Zulu by name and address, nobody else. No warning for
-  2026-10-03. Save draft opened activity 1 with the focused "Draft saved. It has not been submitted. It is in nobody's
+  this in" once he was named, the button then Submit to David Naidoo. EPA picker PAED-001 to 004, 006 to 008, 012, 013
+  (no PAED-010); Assessor picker Botha, Khumalo, Naidoo, Patel, Zulu by name and address, nobody else. No warning for
+  2026-10-04. Save draft opened activity 1 with the focused "Draft saved. It has not been submitted. It is in nobody's
   inbox until you submit it."; status card "Who has it now", Draft, "With you. Not submitted yet."; no "State:" line,
   no summary card.
 Gap: none
@@ -126,8 +126,8 @@ Expect: My activities opens with Needs you, badged 1: the draft, linked as "Mini
   — → Draft, by Anele Dlamini. The submit is refused: the summary "Not submitted. It is still a draft. Fix the field
   below and submit again." takes the focus, and its line "Presenting problem: A value is required." links to the field,
   which is marked and reads "A value is required." (T263). The activity stays a draft.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): My activities: Needs you badged 1, "Mini-CEX (Paediatrics) ·
-  PAED-001 · 2026-10-03, to David Naidoo", Draft, "Not submitted yet. It is in nobody's inbox until you submit it.";
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): My activities: Needs you badged 1, "Mini-CEX (Paediatrics) ·
+  PAED-001 · 2026-10-04, to David Naidoo", Draft, "Not submitted yet. It is in nobody's inbox until you submit it.";
   All activities (1): You, Draft, "—". The draft's page: Request open; status "With you. Not submitted yet." / "Finish
   the request and submit it. It is in nobody's inbox until you submit it."; actions Submit to David Naidoo, Save
   draft, Discard changes (aria-disabled, "Nothing to discard yet." beside it), Cancel this draft…; the check line
@@ -149,11 +149,11 @@ Expect: The focused result reads "Submitted. It is now Requested. It is in David
   Wombat mails nobody when an activity moves, so Dr Naidoo learns of the request from his inbox.
 Note: The AssessmentRequested, AssessmentCompleted and AssessmentDeclined email templates exist, but nothing in the
   product sends them.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): The focused result "Submitted. It is now Requested. It is in
-  David Naidoo's Activity inbox." Status card Requested, "With David Naidoo since 2026-10-13 12:52 SAST.", "Nothing
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): The focused result "Submitted. It is now Requested. It is in
+  David Naidoo's Activity inbox." Status card Requested, "With David Naidoo since 2026-10-14 15:19 SAST.", "Nothing
   for you to do. You can cancel the request until David Naidoo acts on it.", its one action Cancel request…. Request
-  "Filled in by Anele Dlamini, 2026-10-13"; Entrustment and Feedback locked, "David Naidoo fills this in". History
-  adds Submit, Draft → Requested, no lateness line. The log gained no "Stub email" line (18 before and after).
+  "Filled in by Anele Dlamini, 2026-10-14"; Entrustment and Feedback locked, "David Naidoo fills this in". History
+  adds Submit, Draft → Requested, no lateness line. The log gained no "Stub email" line for it (20 before, 20 after).
 Gap: none
 
 ### Step 3.4 — An assessor who was not named cannot open the request
@@ -165,7 +165,7 @@ Expect: The inbox's subtitle reads "What waits for you to rate, review or discus
   reads "No decisions yet." (T350). The activity's page is headed "Activity unavailable" and reads "This activity does
   not exist, or you cannot open it.", with Go to Activity inbox, the list his acting role opens activities from (T350).
   It reads exactly so for an id that does not exist, so walking ids discloses nothing (T101, C7).
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Inbox: "What waits for you to rate, review or discuss.";
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Inbox: "What waits for you to rate, review or discuss.";
   Waiting for you "Inbox clear" / "Nothing is waiting for you."; Decided by you "No decisions yet." /activities/1 and
   /activities/99999 both read "Activity unavailable" / "This activity does not exist, or you cannot open it." with Go
   to Activity inbox (/activities/inbox); main text and tab title ("Activity unavailable · Wombat") identical.
@@ -192,19 +192,19 @@ Expect: The inbox's row is its own link, "Mini-CEX (Paediatrics) · PAED-001 · 
   encounter counts at the minimum; nothing on the page says the minimum (Q7), so that is the tester's check.
 Note: Dr Naidoo also holds CommitteeMember, so his sessions open acting as a Committee member, whose menu has no
   Activity inbox. The switch is stored with his account, so he acts as Assessor until Step 4.5 switches back.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Home "Committee member · Semester 2, 2026", with the line "1
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Home "Committee member · Semester 2, 2026", with the line "1
   activity waits for you in the Activity inbox: …, waiting less than a day." and Open it; sidebar "Acting as Committee
   member" with Switch to Assessor; after it "You are now acting as Assessor.", "Assessor · Semester 2, 2026", menu
   Home, Activity inbox, My data rights. Inbox: Waiting for you "1 waiting", columns Activity, EPA, State, Waiting
-  only; the row's one link "Mini-CEX (Paediatrics) · PAED-001 · 2026-10-03" with "from Anele Dlamini", EPA "PAED-001 —
-  Providing paediatric emergency care to children", Requested, "Less than a day" over "since 2026-10-13 12:52 SAST";
-  no Open button. Status "Your move. Anele Dlamini asked you on 2026-10-13 12:52 SAST." / "Complete it, or decline it
-  with a note Anele Dlamini will read."; Request "Filled in by Anele Dlamini, 2026-10-13", Assessor "David Naidoo" (no
+  only; the row's one link "Mini-CEX (Paediatrics) · PAED-001 · 2026-10-04" with "from Anele Dlamini", EPA "PAED-001 —
+  Providing paediatric emergency care to children", Requested, "Less than a day" over "since 2026-10-14 15:19 SAST";
+  no Open button. Status "Your move. Anele Dlamini asked you on 2026-10-14 15:19 SAST." / "Complete it, or decline it
+  with a note Anele Dlamini will read."; Request "Filled in by Anele Dlamini, 2026-10-14", Assessor "David Naidoo" (no
   address); only the six radios and the three Feedback fields enabled; actions Complete, Discard changes
   (aria-disabled, "Nothing to discard yet."), Decline. Radios 1, 2, 3a, 3b, 4, 5 with "What each rung means" open;
   choosing 4 marked it "chosen" and put "Unsupervised practice. The trainee carries the responsibility for the
   activity." under the row. After Complete: the focused "Completed. Nothing else waits for you.", Go to Home after it;
-  status "Done. You completed it on 2026-10-13 12:53 SAST." / "Rated 4. Credited 1 item to PAED-001."; nothing enabled
+  status "Done. You completed it on 2026-10-14 15:20 SAST." / "Rated 4. Credited 1 item to PAED-001."; nothing enabled
   but the cancel dialog's buttons; history Complete, Requested → Completed, David Naidoo, "1 item". Nothing shows year
   3's minimum (Q7).
 Gap: none
@@ -221,15 +221,15 @@ Expect: Needs you is gone. Under All activities the row reads Who has it now "Do
   move is offered. The history holds Create, Submit and Complete, with Dr Naidoo as the actor of the Complete. Open My
   progress lands on PAED-001's page, `/portfolio/progress/{EpaId}`, whose h1, "PAED-001 — Providing paediatric emergency
   care to children", takes the focus; the menu's My progress is lit.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): My activities: no Needs you; All activities (1): "Mini-CEX
-  (Paediatrics) · PAED-001 · 2026-10-03", to David Naidoo, Done, Completed, Credit "1 item", a link to
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): My activities: no Needs you; All activities (1): "Mini-CEX
+  (Paediatrics) · PAED-001 · 2026-10-04", to David Naidoo, Done, Completed, Credit "1 item", a link to
   /portfolio/progress/2 named "1 item to PAED-001, in My progress". The page: no input enabled, no move; status
-  Completed, "Done. David Naidoo completed it on 2026-10-13 12:53 SAST.", "Rated 4. Credited 1 item to PAED-001.
+  Completed, "Done. David Naidoo completed it on 2026-10-14 15:20 SAST.", "Rated 4. Credited 1 item to PAED-001.
   PAED-001: 1 of 3 this semester.", with Open My progress (aria-label "Open My progress at PAED-001",
   /portfolio/progress/2); Entrustment 4 "chosen" with its descriptor, Feedback's three texts, each "Filled in by David
-  Naidoo, 2026-10-13"; history Create, Submit, Complete (David Naidoo, "1 item"). Open My progress landed on
+  Naidoo, 2026-10-14"; history Create, Submit, Complete (David Naidoo, "1 item"). Open My progress landed on
   /portfolio/progress/2, the focus on its h1 "PAED-001 — Providing paediatric emergency care to children"; the menu's
-  My progress lit (nav-link active, aria-current).
+  My progress lit.
 Gap: none
 
 ### Step 3.7 — Dr Dlamini's progress counts the Mini-CEX against this semester's target
@@ -251,16 +251,16 @@ Expect: My progress's subtitle reads "Training year 3 · Semester 2, 2026". The 
   At the minimum.", its chart marking Today, and its table one row: `D−10`, 4, "At or above (4, training year 3)", the
   Mini-CEX, David Naidoo. Activities on this EPA lists the Mini-CEX, Completed, Credit "1 item".
 Note: A figure is always "n of m" for a named window, never a lifetime total (T130, DESIGN.md § progress figures).
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): My progress (from the menu): "Training year 3 · Semester 2,
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): My progress (from the menu): "Training year 3 · Semester 2,
   2026"; This period "0 of 10" EPAs met this semester, "0 of 5" EPAs met in 2026, "Semester 2, 2026 ends on
   2026-11-30.", "Training year 3 — it sets the minimum level each encounter is judged against.", "Multi-source
   feedback: 0 of 15 EPAs covered by a released campaign that closed this semester. …". "Each semester · 10 EPAs":
   PAED-001 (its link) "1 of 3 this semester", "2 more by 2026-11-30", "Decided each semester", "No decision". No chart
   (no svg) on My progress. PAED-001's page /portfolio/progress/2: "3 a semester · Decided each semester · Exit level
   5"; Observations "1 of 3 this semester", "2 more by 2026-11-30.", "At the minimum level when observed: 1 of 1",
-  "Last encounter 2026-10-03", "Semester 1, 2026: 0 of 3, 3 short", "Training year 3: level 4, the minimum each
+  "Last encounter 2026-10-04", "Semester 1, 2026: 0 of 3, 3 short", "Training year 3: level 4, the minimum each
   encounter is judged against and your STAR's target."; Entrustment "No STAR yet."; trajectory "1 rating so far, from
-  David Naidoo. At the minimum.", the chart marking Today; table one row 2026-10-03, 4, "At or above (4, training year
+  David Naidoo. At the minimum.", the chart marking Today; table one row 2026-10-04, 4, "At or above (4, training year
   3)", the Mini-CEX, David Naidoo; Activities on this EPA the Mini-CEX, Completed, "1 item".
 Gap: none
 
@@ -276,10 +276,10 @@ Expect: The submit is refused. The summary "Nothing was saved. Everything you ty
   its line "Date observed: The date cannot be after today (`D`)." links to the date field. The field is marked, reads
   "The date cannot be after today (`D`).", and names the summary; everything typed is kept (T160, T263, C8). No activity
   exists.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): From Log an activity's picker, Mini-CEX (Paediatrics), every
-  field filled, date 2026-10-14. Submit to Fatima Khumalo refused: the focused summary "Nothing was saved. Everything
-  you typed is kept below." with "Date observed: The date cannot be after today (2026-10-13)." linking to
-  #observed_on-in; the field aria-invalid, reading "The date cannot be after today (2026-10-13).", described by the
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): From Log an activity's picker, Mini-CEX (Paediatrics), every
+  field filled, date 2026-10-15. Submit to Fatima Khumalo refused: the focused summary "Nothing was saved. Everything
+  you typed is kept below." with "Date observed: The date cannot be after today (2026-10-14)." linking to
+  #observed_on-in; the field aria-invalid, reading "The date cannot be after today (2026-10-14).", described by the
   summary; every typed value kept. No activity created (the next filed is id 2).
 Gap: none
 
@@ -293,7 +293,7 @@ Expect: Once the date is entered, the field is marked, and below it reads "This 
   Everything you typed is kept below.", with the line "Date observed: The date cannot be before your programme started
   (`J`)." A Mini-CEX can credit, so its date is held to the programme start (T160, T192). No activity exists. An
   assessor or the committee reading such a form reads "the trainee's programme" instead.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Typing 2026-01-14 marked the field with "This date is before
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Typing 2026-01-14 marked the field with "This date is before
   your programme started (2026-01-15), and will not be accepted." (worded to him). Submit refused: the focused summary
   "Nothing was saved. Everything you typed is kept below." with "Date observed: The date cannot be before your
   programme started (2026-01-15)." No activity created. Until that submit the summary still read the previous
@@ -310,12 +310,12 @@ Expect: Changing the date drops the last refusal's mark at once (T263), and the 
   succeeds: "Submitted. It is now Requested. It is in Fatima Khumalo's Activity inbox." The status card adds "Filed 20
   days after the encounter: recorded as late.", About's Filed reads "`D`, 20 days after the encounter (late)", and in
   the history the Submit row's time carries "Filed 20 days after the encounter" (D15, T160).
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Typing 2026-09-23 dropped the field's refusal mark at once
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Typing 2026-09-24 dropped the field's refusal mark at once
   (aria-invalid gone) and it warned "This encounter was 20 days ago. It can still be filed, but a filing more than 14
   days after the encounter is recorded as late."; the check line added "Filed today, 20 days after the encounter: it
   will be recorded as late." The summary kept the previous refusal's line until the submit. Submit to Fatima Khumalo:
   activity 2 (R2), "Submitted. It is now Requested. It is in Fatima Khumalo's Activity inbox."; status card adds
-  "Filed 20 days after the encounter: recorded as late."; About's Filed "2026-10-13, 20 days after the encounter
+  "Filed 20 days after the encounter: recorded as late."; About's Filed "2026-10-14, 20 days after the encounter
   (late)"; the Submit row's time carries "Filed 20 days after the encounter".
 Gap: none (the summary kept until the next submit is flow 03's 3.10, adopted in STATE's open questions)
 
@@ -335,17 +335,16 @@ Expect: The status card reads "Your move. Sipho Ndlovu asked you on …". Declin
   read-only, with no move left. The history's Decline row, Requested → Declined, is credited "—", with her note on a
   row of its own under it. Her inbox's Waiting for you reads "Inbox clear", and Decided by you ("1 decision") holds the
   request, Declined, decided "… SAST", Credit "—".
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Status "Your move. Sipho Ndlovu asked you on 2026-10-13 12:54
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Status "Your move. Sipho Ndlovu asked you on 2026-10-14 15:20
   SAST." Decline (aria-expanded true) opened "Decline this request" under the actions, focus in "Note for Sipho Ndlovu
   *" (aria-required), help "Sipho Ndlovu reads it on the activity's page. It is kept with the activity's history."
   Decline with this note, empty: refused, the panel stayed open, its summary focused, "Not declined. It is still
-  Requested." / "Note for Sipho Ndlovu: Decline requires a note." linking to #note-in, the note aria-invalid; still
-  Requested. Keep the request closed the panel and put the focus on Decline. With the reason: the focused "Declined.
-  Nothing else waits for you.", Go to Home after it; status Declined, "Closed. You declined it on 2026-10-13 12:55
-  SAST.", her reason quoted, "It credits nothing, and nothing more can happen to it."; nothing enabled, no move;
-  history Decline, Requested → Declined, Fatima Khumalo, "—", then "Note: I was not on the ward that day; …" on its
-  own row. Her inbox: Waiting for you "Inbox clear"; Decided by you "1 decision": the Mini-CEX, Declined, "2026-10-13
-  12:55 SAST", "—".
+  Requested." / "Note for Sipho Ndlovu: Decline requires a note." linking to #note-in; still Requested. Keep the
+  request closed the panel and put the focus on Decline. With the reason: the focused "Declined. Nothing else waits
+  for you.", Go to Home after it; status Declined, "Closed. You declined it on 2026-10-14 15:20 SAST.", her reason
+  quoted, "It credits nothing, and nothing more can happen to it."; nothing enabled, no move; history Decline,
+  Requested → Declined, Fatima Khumalo, "—", then her note on its own row. Her inbox: Waiting for you "Inbox clear";
+  Decided by you "1 decision": the Mini-CEX, Declined, "2026-10-14 15:20 SAST", "—".
 Gap: none
 
 ### Step 3.12 — Dr Ndlovu reads the decline and files the encounter again, naming Dr Botha
@@ -373,21 +372,21 @@ Expect: Home's Recent decisions holds one row: the link "Mini-CEX (Paediatrics) 
   until Step 3.13 completes it. Your targets' Furthest short reads PAED-001 to PAED-005, each "0 of 3 this semester · 3
   more by 2026-11-30".
 Note: Declined is a dead end by design: the seed's workflow has no move out of it. The declined record is kept.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Home: Needs you "Nothing needs you. Requests you have filed
-  are in My activities."; Recent decisions one row, the link "Mini-CEX (Paediatrics) · PAED-002 · 2026-09-23" with "to
-  Fatima Khumalo" on its second line, badge Declined (badge-declined), 2026-10-13, and under it its own link "File it
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Home: Needs you "Nothing needs you. Requests you have filed
+  are in My activities."; Recent decisions one row, the link "Mini-CEX (Paediatrics) · PAED-002 · 2026-09-24" with "to
+  Fatima Khumalo" on its second line, badge Declined (badge-declined), 2026-10-14, and under it its own link "File it
   again, to someone else" (aria-label "File it again, to someone else: Mini-CEX (Paediatrics) · PAED-002 ·
-  2026-09-23"); no link nests in another and no card is a link. Its page: Declined, "Closed. Fatima Khumalo declined
-  it on 2026-10-13 12:55 SAST.", her reason, "It credits nothing, and nothing more can happen to it. To be assessed on
-  this encounter, file it again and name someone else.", with File it again, to someone else (/activities/new?from=2).
-  That opened Log an activity under "Copied from your request to Fatima Khumalo, which was declined. The EPA, date and
-  request are as you filed them. Name someone else, then submit. Nothing is saved until you do.": everything copied,
-  Assessor empty; the date field at once "This encounter was 20 days ago. …recorded as late."; the button Submit, then
-  Submit to Sarah Botha. Activity 3 (R3): "Submitted. It is now Requested. It is in Sarah Botha's Activity inbox.",
-  heading "Mini-CEX (Paediatrics) · PAED-002 · 2026-09-23 · Sarah Botha", Submit row "Filed 20 days after the
-  encounter". My activities: "… · Sarah Botha" (Sarah Botha, Requested) and "… · Fatima Khumalo" (Closed, Declined).
-  Home after: Needs you still "Nothing needs you."; Recent decisions only the Declined row, now named "… · 2026-09-23
-  · Fatima Khumalo"; Furthest short PAED-001 to PAED-005, each "0 of 3 this semester · 3 more by 2026-11-30".
+  2026-09-24", /activities/new?from=2); no card is a link. Its page: Declined, "Closed. Fatima Khumalo declined it on
+  2026-10-14 15:20 SAST.", her reason, "It credits nothing, and nothing more can happen to it. To be assessed on this
+  encounter, file it again and name someone else.", with File it again, to someone else. That opened Log an activity
+  under "Copied from your request to Fatima Khumalo, which was declined. The EPA, date and request are as you filed
+  them. Name someone else, then submit. Nothing is saved until you do.": everything copied, Assessor empty; the date
+  field at once "This encounter was 20 days ago. …recorded as late."; the button Submit, then Submit to Sarah Botha.
+  Activity 3 (R3): "Submitted. It is now Requested. It is in Sarah Botha's Activity inbox.", heading "Mini-CEX
+  (Paediatrics) · PAED-002 · 2026-09-24 · Sarah Botha", status "Filed 20 days after the encounter: recorded as late.".
+  My activities: "… · Sarah Botha" (Sarah Botha, Requested) and "… · Fatima Khumalo" (Closed, Declined). Home after:
+  Needs you still "Nothing needs you."; Recent decisions only the Declined row, now named "… · 2026-09-24 · Fatima
+  Khumalo"; Furthest short PAED-001 to PAED-005, each "0 of 3 this semester · 3 more by 2026-11-30".
 Gap: none
 
 ### Step 3.13 — Dr Botha completes Dr Ndlovu's Mini-CEX
@@ -405,11 +404,12 @@ Note: Dr Botha also holds CommitteeMember, so her sessions open acting as a Comm
   inbox, and in-app navigation never switches the role (R2-Rules § 1). The switch is stored with her account, so she
   switches to rate and back after. Every step that sends her or Dr Zulu to rate does the same, which keeps the frames the
   later steps read: Step 3.33's first "Acting as Committee member", Step 4.14's Decision panels and Step A.5.11's head.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Switch to Assessor landed on Home, "You are now acting as
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Switch to Assessor landed on Home, "You are now acting as
   Assessor."; the menu's Activity inbox held only activity 3 under Waiting for you (Sipho Ndlovu, PAED-002,
-  2026-09-23, Requested). Rated 3a on the rung picker with feedback: "Completed. Nothing else waits for you.", Go to
-  Home; "Rated 3a. Credited 1 item to PAED-002.", credit "1 item". Activity 2 stays Declined, credit None. Switch to
-  Committee member landed on Home, "You are now acting as Committee member.", sidebar "Acting as Committee member".
+  2026-09-24, Requested). Rated 3a on the rung picker with feedback: the focused "Completed. Nothing else waits for
+  you.", Go to Home; "Rated 3a. Credited 1 item to PAED-002.", credit "1 item". Activity 2 stays Declined, credit
+  None. Switch to Committee member landed on Home, "You are now acting as Committee member.", sidebar "Acting as
+  Committee member".
 Gap: none
 
 ## Phase 3.C — A reflection returned for more detail
@@ -428,13 +428,13 @@ Expect: He finds it under Discussed or reviewed, not rated. The EPA picker offer
   is named. No lateness warning shows for `D−20`: a reflective exercise credits nothing, so its filing is late for
   nobody (T160). Submit to Sarah Botha reads "Submitted. It is now Awaiting discussion. It is in Sarah Botha's Activity
   inbox.", and the Submit row carries no lateness note.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Reflective Exercise (Paediatrics) sits under "Discussed or
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Reflective Exercise (Paediatrics) sits under "Discussed or
   reviewed, not rated". EPA picker PAED-001, 003, 008, 014. Fields EPA, Supervisor or mentor, Date of the case or
   incident, Reflecting on (A challenging case / A critical incident), What happened, What went well, and what could
   have gone differently, What I learned, What I will do differently; sections Reflection and Discussion ("Sarah Botha
-  fills this in" once named), no Entrustment. No warning for 2026-09-23 and no "Filed today" line. Submit to Sarah
+  fills this in" once named), no Entrustment. No warning for 2026-09-24 and no "Filed today" line. Submit to Sarah
   Botha: activity 4 (R4), "Submitted. It is now Awaiting discussion. It is in Sarah Botha's Activity inbox."; About's
-  Credit "None: a reflective exercise credits nothing"; Submit row Draft → Awaiting discussion, no lateness note.
+  Credit "None: a reflective exercise credits nothing"; no lateness note on the Submit row.
 Gap: none
 
 ### Step 3.15 — Dr Botha returns the reflection for more detail
@@ -452,16 +452,16 @@ Expect: The inbox lists the reflection under Waiting for you, badged Awaiting di
   it; the status card reads "With Sipho Ndlovu. Sarah Botha returned it on …" and "It is in nobody's inbox until Sipho
   Ndlovu submits it.", quoting her note, and the page offers Dr Botha nothing. The history's Return row (Awaiting
   discussion → Draft) carries her note.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Acting as Assessor ("You are now acting as Assessor."). Inbox
-  Waiting for you: "Reflective Exercise (Paediatrics) · PAED-001 · 2026-09-23", from Sipho Ndlovu, Awaiting
-  discussion. Status "Your move. Sipho Ndlovu asked you on 2026-10-13 12:56 SAST." / "Record the discussion, or return
-  it with a note Sipho Ndlovu will read."; moves Record discussion, Discard changes (aria-disabled, "Nothing to
-  discard yet."), Return; only discussion_notes enabled. Return opened "Return this reflection", focus in "Note for
-  Sipho Ndlovu *" (required), Return with this note and Keep the reflection; Keep the reflection closed the panel,
-  focus on Return. Return with this note: the focused "Returned to Sipho Ndlovu. Nothing else waits for you.", Go to
-  Home; status Draft, "With Sipho Ndlovu. Sarah Botha returned it on 2026-10-13 12:57 SAST.", her note quoted, "It is
-  in nobody's inbox until Sipho Ndlovu submits it."; nothing enabled for her; Return row Awaiting discussion → Draft
-  with her note. Switch to Committee member: "You are now acting as Committee member."
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Acting as Assessor ("You are now acting as Assessor."). Inbox
+  Waiting for you: "Reflective Exercise (Paediatrics) · PAED-001 · 2026-09-24", from Sipho Ndlovu, Awaiting
+  discussion. Status "Your move. Sipho Ndlovu asked you on 2026-10-14 15:22 SAST." / "Record the discussion, or return
+  it with a note Sipho Ndlovu will read."; moves Record discussion, Discard changes (aria-disabled), Return; only
+  discussion_notes enabled. Return opened "Return this reflection", focus in "Note for Sipho Ndlovu *" (required),
+  Return with this note and Keep the reflection; Keep the reflection closed the panel, focus on Return. Return with
+  this note: the focused "Returned to Sipho Ndlovu. Nothing else waits for you.", Go to Home; status Draft, "With
+  Sipho Ndlovu. Sarah Botha returned it on 2026-10-14 15:22 SAST.", her note quoted, "It is in nobody's inbox until
+  Sipho Ndlovu submits it."; nothing enabled for her; Return row Awaiting discussion → Draft with her note. Switch to
+  Committee member: "You are now acting as Committee member."
 Gap: none
 
 ### Step 3.16 — Dr Ndlovu finds the returned reflection in his inbox and submits it again
@@ -483,9 +483,9 @@ Expect: Needs you, badged 1, lists the reflection alone, linked as "Reflective E
   activities (T342).
 Note: A re-submission after a return is not a new filing (`Workflow.LeftInitialStateLeadingOn`, `ActivityService.IsTheFiling`).
   On this type nothing shows it, because a reflective exercise records no lateness at all.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Home's Needs you badged 1: "Reflective Exercise (Paediatrics)
-  · PAED-001 · 2026-09-23", "with Sarah Botha", Draft, "Returned to you by Sarah Botha on 2026-10-13. Change it and
-  submit again."; not the declined Mini-CEX. The page: "With you. Sarah Botha returned it on 2026-10-13 12:57 SAST.",
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Home's Needs you badged 1: "Reflective Exercise (Paediatrics)
+  · PAED-001 · 2026-09-24", "with Sarah Botha", Draft, "Returned to you by Sarah Botha on 2026-10-14. Change it and
+  submit again."; not the declined Mini-CEX. The page: "With you. Sarah Botha returned it on 2026-10-14 15:22 SAST.",
   her note, "Change your reflection and submit it again."; his eight fields open; Submit to Sarah Botha, Save draft,
   Discard changes, Cancel this draft…. Submit: "Submitted. It is now Awaiting discussion. It is in Sarah Botha's
   Activity inbox."; history Create, Submit, Return, Submit, no lateness note. Home then: "Nothing needs you. Requests
@@ -503,10 +503,10 @@ Expect: The result reads "Discussed. Nothing else waits for you.", with Go to Ho
   Discussed, finished and read-only to both of them. The Record discussion row is credited "—":
   the exercise credits nothing (D7), and no "counted towards no curriculum requirement" banner shows (T108). Dr Ndlovu's
   progress does not change.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Switch to Assessor ("You are now acting as Assessor."); the
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Switch to Assessor ("You are now acting as Assessor."); the
   inbox held the reflection alone under Waiting for you. Discussion notes written, Record discussion: the focused
   "Discussed. Nothing else waits for you.", Go to Home; status Discussed, "Done. You recorded the discussion on
-  2026-10-13 12:57 SAST." / "A reflective exercise credits nothing. Nothing more happens to it."; no move; history
+  2026-10-14 15:22 SAST." / "A reflective exercise credits nothing. Nothing more happens to it."; no move; history
   Record discussion, Awaiting discussion → Discussed, Sarah Botha, "—"; no "counted towards no curriculum requirement"
   banner. Switched back to Committee member. Ndlovu's view: read-only (nothing enabled), no move, no banner. His My
   progress PAED-001 "0 of 3 this semester" (PAED-002 "1 of 3" from Step 3.13).
@@ -528,11 +528,11 @@ Expect: The form is Act 1's: one section, Teaching session, with six fields, the
   lateness is recorded.
 Note: No seeded CPSA instrument is a procedure log; the generic `procedure_log` belongs to the Demo speciality. KGK's
   own self-logged type stands in for procedure-style logging.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): KGK Teaching Session Log under "Logged by you". One section,
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): KGK Teaching Session Log under "Logged by you". One section,
   Teaching session: Topic, EPA, Date delivered, Audience, Learning objectives (each required) and Supervising
   consultant (optional); no rating. EPA picker all 15. Buttons Log, Save draft; above them "When you log it: it is
-  Logged at once, and credits nothing. Nobody else acts on it." Activity 5 (R5, 2026-10-07): "Logged."; status Logged,
-  "Done. Logged on 2026-10-13 12:58 SAST." / "A KGK teaching session log credits nothing, and nobody else acts on
+  Logged at once, and credits nothing. Nobody else acts on it." Activity 5 (R5, 2026-10-08): "Logged."; status Logged,
+  "Done. Logged on 2026-10-14 15:22 SAST." / "A KGK teaching session log credits nothing, and nobody else acts on
   it."; Log row Draft → Logged, "—"; no lateness recorded.
 Gap: none
 
@@ -545,12 +545,10 @@ Do: Log two more sessions:
     (20 November 2024 on a replay in 2026), Nursing staff.
 Expect: Each reads "Logged.". `J−1y−56d` is before his programme started (`J−1y`), and it is accepted with no hint. A
   type that credits nothing is held only to "not after today" (T160).
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Activity 6 (R6, PAED-004, 2026-09-30, Medical students)
-  "Logged." with no hint, mark or warning. For the pre-programme session I first typed 2025-11-20 by mistake (that is
-  after his 2025-01-15 start): it logged as activity 7 with no hint. I then corrected activity 7 to J−1y−56d,
-  2024-11-20, with one UPDATE of its DataJson and ObservedOn (q2.sql; my slip, not a product finding), so the state is
-  the step's. A fresh form with 2024-11-20 typed showed no mark and no message on the date field (aria-invalid absent,
-  no describedby), and activity 7 now reads Logged, encounter 2024-11-20.
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Activity 6 (R6, PAED-004, 2026-10-01, Medical students):
+  "Logged." with no hint, mark or warning. Activity 7 (R7, PAED-015, Nursing staff) typed with 2024-11-20 (J−1y−56d,
+  before his 2025-01-15 start): "Logged.", the date field showed no mark and no message (aria-invalid absent, no
+  description), the page reads Logged, encounter 2024-11-20.
 Gap: none
 
 ### Step 3.20 — Dr du Plessis abandons a draft started on the wrong instrument
@@ -564,14 +562,16 @@ Expect: The draft saves with its other required fields empty, because saving a d
   Plessis's draft, cancelled", the status card, badged Cancelled, reads "Closed. You cancelled it on …" and "It was never
   submitted, and it credits nothing.", and nothing is offered after it. My activities has no Needs you. All activities lists the DOPS as Cancelled, Who has it now "Closed", Credit "—",
   beside the three Logged sessions, each "Done".
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): DOPS (Paediatrics) with only PAED-002: activity 8 (R8), "Draft
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): DOPS (Paediatrics) with only PAED-002: activity 8 (R8), "Draft
   saved. It has not been submitted. It is in nobody's inbox until you submit it.", heading "DOPS (Paediatrics) ·
   PAED-002 · no date". My activities then read Needs you badged 1, the DOPS draft (3.20-5). Cancel this draft…, last
   of Submit, Save draft, Discard changes and it, opened "Cancel this draft?" / "A cancelled draft cannot be reopened,
   and it credits nothing.", Keep the draft (focused) and Cancel draft, no note field. Cancel draft: "Cancelled.",
-  subtitle "Pieter du Plessis's draft, cancelled", status Cancelled, "Closed. You cancelled it on 2026-10-13 12:58
+  subtitle "Pieter du Plessis's draft, cancelled", status Cancelled, "Closed. You cancelled it on 2026-10-14 15:23
   SAST." / "It was never submitted, and it credits nothing.", no move. My activities: no Needs you; the DOPS Closed,
-  Cancelled, "—", then the three sessions Done, Logged, "—".
+  Cancelled, "—", then the three sessions Done, Logged, "—". Flow 09's ConfirmDialog return of focus, checked on the
+  open CBD's Cancel request… dialog (activity 9; the DOPS was already cancelled): focus opens on Keep the request, and
+  Escape and Keep the request both close it with the focus back on Cancel request….
 Gap: none
 
 ### Step 3.21 — Dr du Plessis asks Dr Khumalo for a CBD
@@ -581,8 +581,8 @@ Do: File a Case-Based Discussion (Paediatrics). Fill in the EPA PAED-002, the as
   case discussed (a toddler with a first febrile seizure) and the focus Clinical reasoning. Submit.
 Expect: Submit to Fatima Khumalo reads "Submitted. It is now Requested. It is in Fatima Khumalo's Activity inbox." The
   CBD ends Requested. It stays that way to the end of the act; Step 3.51 reads it from Dr Khumalo's side.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): CBD EPA picker PAED-001 to 005, 008, 009, 011 to 015; focus
-  options include Clinical reasoning. Activity 9 (R9), Khumalo, 2026-10-08: "Submitted. It is now Requested. It is in
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): CBD EPA picker PAED-001 to 005, 008, 009, 011 to 015; focus
+  options include Clinical reasoning. Activity 9 (R9), Khumalo, 2026-10-09: "Submitted. It is now Requested. It is in
   Fatima Khumalo's Activity inbox."
 Gap: none
 
@@ -599,11 +599,11 @@ Expect: The EPA picker offers PAED-015 only, the one EPA whose list names the po
   Mohammed Patel's Activity inbox." The status card reads "With Mohammed Patel since …", with Cancel request…. About
   reads Encounter `D−1`, the period's last day, and Credit "None: a portfolio and logbook review credits nothing". The
   review stays Awaiting review to the end of the act.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): EPA picker PAED-015 only. Fields EPA, Reviewer, Review period
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): EPA picker PAED-015 only. Fields EPA, Reviewer, Review period
   from, Review period to, Portfolio export (file name) and Notes for your reviewer (the last two not required);
-  sections Review request and Review ("Mohammed Patel fills this in"); no rating. Period 2026-08-14 to 2026-10-12,
+  sections Review request and Review ("Mohammed Patel fills this in"); no rating. Period 2026-08-15 to 2026-10-13,
   file name empty. Activity 10 (R10): "Submitted. It is now Awaiting review. It is in Mohammed Patel's Activity
-  inbox."; status "With Mohammed Patel since 2026-10-13 12:58 SAST." with Cancel request…; About Encounter 2026-10-12,
+  inbox."; status "With Mohammed Patel since 2026-10-14 15:23 SAST." with Cancel request…; About Encounter 2026-10-13,
   Credit "None: a portfolio and logbook review credits nothing".
 Gap: none
 
@@ -618,9 +618,9 @@ Expect: Request's fields follow the seed: EPA, Assessor, Date observed, Procedur
   PAED-010, whose list is Direct observation and MSF only (T122); the old runbook filed this DOPS there. Submit to
   Mohammed Patel reads "Submitted. It is now Requested. It is in Mohammed Patel's Activity inbox." The DOPS ends
   Requested.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Request's fields EPA, Assessor, Date observed, Procedure,
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Request's fields EPA, Assessor, Date observed, Procedure,
   Clinical setting, Procedure complexity. DOPS EPA picker PAED-001 to 008, no PAED-010. Filed PAED-002, Patel,
-  2026-10-05, "Lumbar puncture", Ward, Moderate: activity 11 (R11), "Submitted. It is now Requested. It is in Mohammed
+  2026-10-06, "Lumbar puncture", Ward, Moderate: activity 11 (R11), "Submitted. It is now Requested. It is in Mohammed
   Patel's Activity inbox."
 Gap: none
 
@@ -637,16 +637,16 @@ Expect: Home (Assessor view): "Waiting for you" is badged "2 waiting", with the 
   (T350). The DOPS is Completed, credited "1 item". Year 1's minimum on PAED-002 is 3a, so it counts at the minimum.
   The portfolio review stays in his inbox, Home's card is then badged "1 waiting", and Recent decisions lists "DOPS
   (Paediatrics) · PAED-002 · `D−8`", from Nomsa Mahlangu, Completed, dated `D`.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Home ("Assessor · Semester 2, 2026"): Waiting for you badged
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Home ("Assessor · Semester 2, 2026"): Waiting for you badged
   "2 waiting", "Oldest first. Overdue once it has waited 7 days.", "Portfolio and Logbook Review (Paediatrics) ·
-  PAED-015 · 2026-10-12", from Pieter du Plessis, Awaiting review, "Waiting less than a day", then "DOPS (Paediatrics)
-  · PAED-002 · 2026-10-05", from Nomsa Mahlangu, Requested; Open Activity inbox held the same two in the same order.
-  DOPS 11 rated 3a on the rung picker: "Completed. 1 more waits for you.", under it the review's row ("Waiting less
-  than a day, since 2026-10-13 12:58 SAST."), Open the next (/activities/10, labelled "Open the next: Portfolio and
-  Logbook Review (Paediatrics) · PAED-015 · 2026-10-12, from Pieter du Plessis") and Back to Activity inbox; "Rated
-  3a. Credited 1 item to PAED-002.", Complete row Mohammed Patel, "1 item". Home then "1 waiting" (the review), and
-  Recent decisions "DOPS (Paediatrics) · PAED-002 · 2026-10-05", from Nomsa Mahlangu, Completed, 2026-10-13, with All
-  your decisions.
+  PAED-015 · 2026-10-13", from Pieter du Plessis, Awaiting review, "Waiting less than a day", then "DOPS (Paediatrics)
+  · PAED-002 · 2026-10-06", from Nomsa Mahlangu, Requested; the inbox held the same two in the same order. DOPS 11
+  rated 3a on the rung picker: "Completed. 1 more waits for you.", under it the review's row ("Waiting less than a
+  day, since 2026-10-14 15:23 SAST."), Open the next (/activities/10, labelled "Open the next: Portfolio and Logbook
+  Review (Paediatrics) · PAED-015 · 2026-10-13, from Pieter du Plessis") and Back to Activity inbox; "Rated 3a.
+  Credited 1 item to PAED-002.", Complete row Mohammed Patel, "1 item". Home then "1 waiting" (the review), and Recent
+  decisions "DOPS (Paediatrics) · PAED-002 · 2026-10-06", from Nomsa Mahlangu, Completed, 2026-10-14, with All your
+  decisions.
 Gap: none
 
 ## Phase 3.E — Evidence for the annual review
@@ -669,12 +669,13 @@ Expect: Each ends Requested, with no lateness warning, since all six are within 
   each assessor: Thandi Zulu, Fatima Khumalo, Sarah Botha, Mohammed Patel, David Naidoo and Thandi Zulu. The Direct
   Observation's EPA picker offers PAED-010, because its list names Direct observation. The Mini-CEX and DOPS pickers do
   not offer it.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Activities 12 to 17 (R12 Mini-CEX 001 Zulu 2026-10-01, R13 CBD
-  001 Naidoo 10-02, R14 DOPS 001 Patel 10-04, R15 Mini-CEX 012 Botha 10-06, R16 CBD 012 Khumalo 10-08, R17 Direct
-  Observation 010 Zulu 10-09), each "Submitted. It is now Requested. It is in <assessor>'s Activity inbox." with its
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Activities 12 to 17 (R12 Mini-CEX 001 Zulu 2026-10-02, R13 CBD
+  001 Naidoo 10-03, R14 DOPS 001 Patel 10-05, R15 Mini-CEX 012 Botha 10-07, R16 CBD 012 Khumalo 10-09, R17 Direct
+  Observation 010 Zulu 10-10), each "Submitted. It is now Requested. It is in <assessor>'s Activity inbox." with its
   own name, no warning. PAED-010 offered only by the Direct Observation picker (not the Mini-CEX, CBD or DOPS). My
   activities: no Needs you; All activities (6), newest encounter first, each Requested, "—", Who has it now Thandi
-  Zulu, Fatima Khumalo, Sarah Botha, Mohammed Patel, David Naidoo, Thandi Zulu.
+  Zulu, Fatima Khumalo, Sarah Botha, Mohammed Patel, David Naidoo, Thandi Zulu. (A script slip filed the first two and
+  the rest in a second run; nothing duplicated.)
 Gap: none
 
 ### Step 3.26 — The consultants complete Dr Molefe's six
@@ -696,15 +697,16 @@ Expect: Each inbox's Waiting for you holds only that assessor's own requests. Ea
   you.", with Go to Home (T350). All six end Completed, each credited "1 item". Year 4's
   minimum is rung 5 on PAED-001, PAED-010 and PAED-012. So Dr Patel's rung 4 counts towards the target, but not at the
   minimum.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Each inbox's Waiting for you held only that assessor's own:
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Each inbox's Waiting for you held only that assessor's own:
   Zulu 12 and 17; Naidoo 13 (acting as Assessor, his choice from Step 3.5); Patel du Plessis's portfolio review 10 and
   14; Botha 15; Khumalo du Plessis's CBD 9 and 16. Each rated on the rung picker. Zulu after 12: "Completed. 1 more
   waits for you.", the observation's row, Open the next and Back to Activity inbox; after 17 "Completed. Nothing else
   waits for you.", Go to Home. Patel and Khumalo: "Completed. 1 more waits for you." with the portfolio review and the
   CBD as the next row; Naidoo and Botha "Completed. Nothing else waits for you.", Go to Home. All six Completed,
   "Credited 1 item" each (Zulu 5, 5; Naidoo 5; Patel 4; Botha 5; Khumalo 5); Zulu and Botha switched to Assessor and
-  back, each switch with its info alert. SQL: Molefe 2026 S2 PAED-001 3 counted, 2 at minimum; PAED-010 1/1; PAED-012
-  2/2.
+  back, each switch with its info alert (Zulu's first switch was played in a run that stopped at a stale text locator,
+  the second run found her already acting as Assessor). SQL after Step 3.29: Molefe 2026 S2 PAED-001 3 counted, 2 at
+  minimum; PAED-010 1/1; PAED-012 2/2.
 Gap: none
 
 ### Step 3.27 — Dr Dlamini files three more
@@ -718,9 +720,9 @@ Do: File and submit:
   - Mini-CEX, PAED-004, Dr Khumalo, `D−2`, Neonatal unit, complexity Moderate: a term neonate with respiratory
     distress.
 Expect: Each ends Requested, its result adding its assessor's inbox: Thandi Zulu's, Sarah Botha's and Fatima Khumalo's.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Activity 18 (R18, CBD 001 Zulu, 2026-10-04), 19 (R19, CCA 001
-  Botha, 2026-10-07, documents Admission notes and Progress notes stored) and 20 (R20, Mini-CEX 004 Khumalo,
-  2026-10-11): each "Submitted. It is now Requested.", adding "It is in Thandi Zulu's Activity inbox.", "…Sarah
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Activity 18 (R18, CBD 001 Zulu, 2026-10-05), 19 (R19, CCA 001
+  Botha, 2026-10-08, documents admission_notes and progress_notes stored) and 20 (R20, Mini-CEX 004 Khumalo,
+  2026-10-12): each "Submitted. It is now Requested.", adding "It is in Thandi Zulu's Activity inbox.", "…Sarah
   Botha's…" and "…Fatima Khumalo's…"; no warning.
 Gap: none
 
@@ -735,7 +737,7 @@ Expect: Each rates on the rung picker. Dr Khumalo, who also holds Dr du Plessis'
   All three end Completed, each credited "1 item". Dr Dlamini's PAED-001 now holds three encounters this semester.
   Two are at year 3's minimum of rung 4; the CBD at 3b counts towards the target only. Her PAED-004 holds one, at the
   minimum.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Each rated on the rung picker: 18 (Zulu, 3b) and 19 (Botha, 4)
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Each rated on the rung picker: 18 (Zulu, 3b) and 19 (Botha, 4)
   read "Completed. Nothing else waits for you.", Go to Home; 20 (Khumalo, 4) read "Completed. 1 more waits for you."
   with du Plessis's CBD 9 as the next row. Each Completed, "Credited 1 item"; each inbox held only its own; Zulu and
   Botha switched and back. SQL: Dlamini 2026 S2 PAED-001 3 counted, 2 at minimum; PAED-004 1 counted, 1 at minimum.
@@ -750,8 +752,8 @@ Do: File a Mini-CEX (Paediatrics): PAED-004, Dr Zulu, `D−3`, Neonatal unit, "T
   complexity Low. Submit. Dr Zulu does not act on it.
 Expect: Submit to Thandi Zulu reads "Submitted. It is now Requested. It is in Thandi Zulu's Activity inbox." The
   Mini-CEX ends Requested.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Mini-CEX EPA picker the nine Mini-CEX EPAs. Activity 21 (R21,
-  PAED-004, Zulu, 2026-10-10, Neonatal unit, Low): "Submitted. It is now Requested. It is in Thandi Zulu's Activity
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Mini-CEX EPA picker the nine Mini-CEX EPAs. Activity 21 (R21,
+  PAED-004, Zulu, 2026-10-11, Neonatal unit, Low): "Submitted. It is now Requested. It is in Thandi Zulu's Activity
   inbox."
 Gap: none
 
@@ -794,14 +796,14 @@ Note: To play this in one sitting, age both requests by eight days (the statemen
   once it has waited `DashboardThresholds:AssessorDueDays` (seven); the nudge mails after
   `DashboardThresholds:AssessorNudgeDays` (five). The eight days' ageing puts both past both. If either aged request is
   not marked Overdue, that is a Gap.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Both of the Note's UPDATEs ran: "UPDATE 2" (activities 10 and
-  21) and "UPDATE 4" (each one's Create and Submit, now 2026-10-05). Home "Coordinator · Semester 2, 2026", header
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Both of the Note's UPDATEs ran: "UPDATE 2" (activities 10 and
+  21) and "UPDATE 4" (each one's Create and Submit, now 2026-10-06). Home "Coordinator · Semester 2, 2026", header
   action Start an MSF campaign (/msf/campaigns/new), no Quick action card. "Waiting for assessors" is the warning card
   (detail-card--warning), badged "3 waiting, 2 overdue", rule line "Oldest first. Overdue once it has waited 7 days.
-  Its assessor is emailed after 5.": "Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-10-12", from Pieter
+  Its assessor is emailed after 5.": "Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-10-13", from Pieter
   du Plessis, Awaiting review, Overdue, "With Mohammed Patel", "Waiting 8 days"; "Mini-CEX (Paediatrics) · PAED-004 ·
-  2026-10-10", from Nomsa Mahlangu, Requested, Overdue, "With Thandi Zulu", "Waiting 8 days"; "Case-Based Discussion
-  (Paediatrics) · PAED-002 · 2026-10-08", from Pieter du Plessis, Requested, "With Fatima Khumalo", "Waiting less than
+  2026-10-11", from Nomsa Mahlangu, Requested, Overdue, "With Thandi Zulu", "Waiting 8 days"; "Case-Based Discussion
+  (Paediatrics) · PAED-002 · 2026-10-09", from Pieter du Plessis, Requested, "With Fatima Khumalo", "Waiting less than
   a day"; links /activities/10, 21 and 9; no "Sept" anywhere; foot Open Waiting for assessors (/programme/waiting).
   "Nothing filed in 30 days": "Every current registrar has filed something in the last 30 days." (with Open in
   Programme trainees); "Invitations nearing expiry": "No invitations expiring soon."
@@ -832,23 +834,23 @@ Expect: The menu reads Home, Programme trainees, Waiting for assessors, Decision
   listing "Mini-CEX (Paediatrics) from Nomsa Mahlangu — waiting 8 days". Nomsa Mahlangu is sent nothing. No page offers
   Reassign (C5). The old address is "Page not found" with status 404: the placeholder page went with the stubs (T335,
   flow 01).
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): The menu: Home, Programme trainees, Waiting for assessors,
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): The menu: Home, Programme trainees, Waiting for assessors,
   Decisions due, MSF campaigns, Committee reviews, Decision panels, Data rights requests, then My data rights; Waiting
   for assessors lit (aria-current) on /programme/waiting (tab "Waiting for assessors · Wombat"). Subtitle "Requests at
   Kgosi Kgari Teaching Hospital whose next move names an assessor, supervisor or reviewer, read as Coordinator. Your
   own requests are not listed."; filters Waiting (All / Overdue only), With (Anyone, Fatima Khumalo, Mohammed Patel,
   Thandi Zulu) and Show. Heading "3 waiting, 2 overdue", rule line "Oldest first. Overdue once it has waited 7 days.
   Its assessor is emailed after 5. Waiting counts from the last move: any save restarts it."; columns Activity, With,
-  State, Waiting; Step 3.30's three rows in its order, "8 days" over "since 2026-10-05 12:58 SAST", "8 days" over
-  "since 2026-10-05 13:08 SAST", "Less than a day" over "since 2026-10-13 12:58 SAST", each with Send a reminder. The
+  State, Waiting; Step 3.30's three rows in its order, "8 days" over "since 2026-10-06 15:23 SAST", "8 days" over
+  "since 2026-10-06 15:31 SAST", "Less than a day" over "since 2026-10-14 15:23 SAST", each with Send a reminder. The
   Mini-CEX's opened "Send Thandi Zulu a reminder?" with the body exactly as written, the focus on Don't send. Send the
-  reminder: the focused "Reminder sent to Thandi Zulu. It lists Mini-CEX (Paediatrics) · PAED-004 · 2026-10-10, from
+  reminder: the focused "Reminder sent to Thandi Zulu. It lists Mini-CEX (Paediatrics) · PAED-004 · 2026-10-11, from
   Nomsa Mahlangu, waiting 8 days. The request is still Requested; its wait is unchanged."; the row then "Reminded
-  2026-10-13 by Pieter Smit" in place of its button, still Requested, Overdue, "8 days"; the other two keep theirs.
+  2026-10-14 by Pieter Smit" in place of its button, still Requested, Overdue, "8 days"; the other two keep theirs.
   The log gained one stub mail (tags reminder, assessor-reminder) "Activities awaiting your assessment", "Hi Thandi",
   "Mini-CEX (Paediatrics) from Nomsa Mahlangu - waiting 8 days" (the console log writes the template's em dash as
-  "-"), and nothing to Nomsa Mahlangu. No Reassign. /placeholder/stalled-activities (tried first): HTTP 404, "Page not
-  found" (tab "Page not found · Wombat"), "There is no page at this address.", Go to Home.
+  "-"), and nothing to Nomsa Mahlangu. No Reassign. /placeholder/stalled-activities (tried first): "Page not found"
+  (tab "Page not found · Wombat"), "There is no page at this address.", Go to Home.
 Gap: none
 
 ### Step 3.32 — The daily nudge reminds the assessors
@@ -865,15 +867,14 @@ Expect: The job's last run updates. The application log then holds three stub em
   du Plessis's CBD has waited less than a day.
 Note: The job reads each activity's pinned workflow and nudges on anything untouched for five days in a state whose
   next move belongs to a `field:` nominee (`AssessorPendingNudgeJob`). D50 decides whom it skips.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Run now on assessor-pending-nudge: "Job
-  'assessor-pending-nudge' dispatched."; last run now 2026-10-13 13:11, Succeeded. (My first click, on a mis-matched
-  locator, ran activity-draft-nudge instead: it logged "trainees reminded 0 (drafts 0)" and mailed nobody; the audit
-  log therefore holds two RunScheduledJobNowCommand rows from devadmin.) The log gained two stub emails (tags nudge,
-  assessor-pending) "Activities awaiting your assessment", naming no address: "Hi Mohammed", Portfolio and Logbook
-  Review (Paediatrics) from Pieter du Plessis, waiting 8 days; "Hi Thandi", Mini-CEX (Paediatrics) from Nomsa
-  Mahlangu, waiting 8 days (reminded today, still nudged); with Step 3.31's reminder, three in all. Summary "assessors
-  nudged 2 (activities 2); nominees skipped: no such account 0, deactivated 0, opted out of digest emails 0, no email
-  address 0." The CBD (less than a day) was not nudged.
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Run now on assessor-pending-nudge (from /admin/jobs, row
+  selected by name): "Job 'assessor-pending-nudge' dispatched."; last run moved from the start-up run (13:42) to
+  2026-10-14 15:33, Succeeded. The log gained two stub emails (tags nudge, assessor-pending) "Activities awaiting your
+  assessment", naming no address: "Hi Mohammed", Portfolio and Logbook Review (Paediatrics) from Pieter du Plessis,
+  waiting 8 days; "Hi Thandi", Mini-CEX (Paediatrics) from Nomsa Mahlangu, waiting 8 days (reminded today, still
+  nudged); with Step 3.31's reminder, three in all (28 before, 30 after). The log's summary line:
+  "AssessorPendingNudgeJob: assessors nudged 2 (activities 2); nominees skipped: no such account 0, deactivated 0,
+  opted out of digest emails 0, no email address 0." The CBD (less than a day) was not nudged.
 Gap: none
 
 ### Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX
@@ -899,19 +900,19 @@ Note: The card and the line count what her inbox lists, less her own portfolio (
   can read 0 beside an inbox holding one; if one does, that is a Gap. The line's Open it is a second way in: it opens
   the activity with no switch, the trail Home › the activity with nothing lit in the menu (T350). The step keeps the
   switch, which later steps' frames depend on.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Home first "Committee member · Semester 2, 2026", sidebar
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Home first "Committee member · Semester 2, 2026", sidebar
   "Acting as Committee member" with Switch to Assessor; under the header, above Registrars and Targets by EPA, the
   warning line (alert alert-warning other-role-line) "1 activity waits for you in the Activity inbox, and it is
-  overdue: Mini-CEX (Paediatrics) · PAED-004 · 2026-10-10, from Nomsa Mahlangu, waiting 8 days." with Open it
+  overdue: Mini-CEX (Paediatrics) · PAED-004 · 2026-10-11, from Nomsa Mahlangu, waiting 8 days." with Open it
   (/activities/21). Open it, tried first: the activity with no switch, trail Home › the activity, nothing lit in the
-  menu, status "Your move. Nomsa Mahlangu asked you on 2026-10-05 13:08 SAST.". After the switch: "You are now acting
+  menu, status "Your move. Nomsa Mahlangu asked you on 2026-10-06 15:31 SAST.". After the switch: "You are now acting
   as Assessor." (alert-info), "Assessor · Semester 2, 2026", no line; sidebar "Acting as Assessor" over Home and
   Activity inbox; Waiting for you (detail-card--warning) badged "1 waiting, 1 overdue": "Mini-CEX (Paediatrics) ·
-  PAED-004 · 2026-10-10", from Nomsa Mahlangu, Requested, Overdue, "Waiting 8 days". The inbox: Requested, Overdue, "8
-  days" over "since 2026-10-05 13:08 SAST"; the page's status the same moment. Rated 3a on the rung picker:
+  PAED-004 · 2026-10-11", from Nomsa Mahlangu, Requested, Overdue, "Waiting 8 days". The inbox: Requested, Overdue, "8
+  days" over "since 2026-10-06 15:31 SAST"; the page's status the same moment. Rated 3a on the rung picker:
   "Completed. Nothing else waits for you.", Go to Home; "Rated 3a. Credited 1 item to PAED-004." Home then "Nothing is
-  waiting for you." Mr Smit's card and Waiting for assessors then read "2 waiting, 1 overdue", the portfolio review
-  and the CBD, no Mini-CEX, and With no longer offers Thandi Zulu.
+  waiting for you." Mr Smit's card then read "2 waiting, 1 overdue", the portfolio review and the CBD, no Mini-CEX,
+  and With no longer offers Thandi Zulu.
 Gap: none
 
 ## Phase 3.G — Multi-source feedback for Dr Molefe
@@ -924,10 +925,11 @@ Do: Open MSF campaigns and start a new campaign. The Template select is empty, s
 Expect: The list reads "No MSF campaigns", with MSF coverage and New campaign in its header. The create page shows a
   Quick template card and a Create campaign card. Adding the template reads "Template created.", and the Template
   select now offers Default MSF.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): MSF campaigns (from the menu): "No MSF campaigns", with MSF
-  coverage and New campaign in its header. The create page shows Quick template (kind Multi-source feedback, "Default
-  MSF", its scale and comment questions, pre-filled) and Create campaign, the Template select holding only "Select
-  template". Add template: "Template created.", and the select now offers Default MSF.
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): MSF campaigns (from the menu): "No MSF campaigns" / "Create
+  the first MSF campaign to start respondent outreach.", with MSF coverage and New campaign in its header. The create
+  page shows Quick template (kind Multi-source feedback, "Default MSF", its scale and comment questions, pre-filled)
+  and Create campaign, the Template select holding only "Select template". Add template: "Template created.", and the
+  select now offers Default MSF.
 Gap: none
 
 ### Step 3.35 — Mr Smit creates a campaign for Dr Molefe
@@ -944,11 +946,11 @@ Expect: The Trainee select offers KGK's five current trainees by name and addres
   beside the reporting categories says that two is the College's answer (D11). Creating it opens the campaign: Draft,
   Lerato Molefe, Default MSF (Multi-source feedback), window `D` to `D+14`, and "Nobody has been invited yet." Open
   campaign is shown disabled, with "Open campaign: add at least one invitee first…" below it (T225).
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Trainee select: the five KGK trainees by name and address,
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Trainee select: the five KGK trainees by name and address,
   nobody else; once Molefe was chosen, "Evidence for these EPAs" listed PAED-001 to 015; help "Two is the College's
-  answer: eight peer doctors alone are not multi-source feedback."; typed 5/2/2 (defaults 8/3/2); dates 2026-10-13 to
-  2026-10-27 (the defaults), evidence PAED-010 and PAED-012. Campaign 1: Draft, Lerato Molefe, Default MSF
-  (Multi-source feedback), 2026-10-13 to 2026-10-27, "Nobody has been invited yet.", Open campaign disabled with "Open
+  answer: eight peer doctors alone are not multi-source feedback."; typed 5/2/2 (defaults 8/3/2); dates 2026-10-14 to
+  2026-10-28 (the defaults), evidence PAED-010 and PAED-012. Campaign 1: Draft, Lerato Molefe, Default MSF
+  (Multi-source feedback), 2026-10-14 to 2026-10-28, "Nobody has been invited yet.", Open campaign disabled with "Open
   campaign: add at least one invitee first. …"
 Gap: none
 
@@ -969,11 +971,12 @@ Expect: Each add reads "Invitee added." and clears the address for the next one.
   emailed a link when it opens." In the end the counts read Peer doctor 2, Consultant 2, Nurse 2, Allied health
   professional 1 and All groups 7, with no Responded column. "Addresses invited" lists the seven, each with Remove, and
   Open campaign is enabled.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): All eight adds read "Invitee added." and cleared the address;
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): All eight adds read "Invitee added." and cleared the address;
   groups offered Peer doctor, Consultant, Nurse, Allied health professional and Other. Remove asked "Remove this
   invitee?", "Remove palesa.tau@kgk.wombat.local (Allied health professional) from this campaign? …", then "…has been
   removed from this campaign, and will not be emailed a link when it opens." End: 2/2/2/1, All groups 7, no Responded
-  column; "Addresses invited" lists the seven, each with Remove; Open campaign enabled.
+  column; "Addresses invited" lists the seven, each with Remove; Open campaign enabled. Flow 09's ConfirmDialog: focus
+  opens on Cancel; Cancel closes it and returns the focus to the row's Remove.
 Gap: none
 
 ### Step 3.37 — Mr Smit opens the campaign
@@ -985,12 +988,12 @@ Expect: The page reads "Campaign opened; links are being sent." and State: Open.
   Reload this page to see whether they were delivered." The invitees are now counted only, with a Responded column
   reading 0, and no address is listed (T217, T247). The actions are Withdraw campaign and View report. The application
   log holds seven "Feedback request: Lerato Molefe (Default MSF, …)" emails, each with a `/msf/respond` link.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): At 11:09 UTC: "Campaign opened; links are being sent.", State
-  Open; the note gives 2026-10-27 as the respondents' last day and says to close sooner with Close campaign on its
-  report; "7 links are still being sent. Reload this page to see whether they were delivered."; counts only, Responded
-  0 in every group, no address; Withdraw campaign and View report. The log holds seven stub emails "Feedback request:
-  Lerato Molefe (Default MSF, 2026-10-13 to 2026-10-27)" (tags msf-invite, campaign:1), each with a
-  /msf/respond?token= link on :5180.
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): At 13:32 UTC (15:32 SAST): "Campaign opened; links are being
+  sent.", State Open; the note gives 2026-10-28 as the respondents' last day and says to close sooner with Close
+  campaign on its report; "7 links are still being sent. Reload this page to see whether they were delivered."; counts
+  only, Responded 0 in every group, no address; Withdraw campaign and View report. The log holds seven stub emails
+  "Feedback request: Lerato Molefe (Default MSF, 2026-10-14 to 2026-10-28)" (tags msf-invite, campaign:1; 20 before,
+  27 after), each with a /msf/respond?token= link on :5180.
 Gap: none
 
 ### Step 3.38 — Mr Smit withdraws a campaign started in error
@@ -1005,13 +1008,14 @@ Expect: The list shows two rows, each with links named by its state (T225):
   cannot be undone. Confirmed, it reads "The campaign for Pieter du Plessis (…) has been withdrawn. Its respondents'
   links no longer work, and their email addresses have been removed." The row then reads Withdrawn, with only "View
   campaign".
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Campaign 2 created for du Plessis (defaults 8/3/2, 2026-10-13
-  to 2026-10-27, PAED-015). The list: Pieter du Plessis, Draft: Manage, Withdraw; Lerato Molefe, Open, 7 invitations:
-  Manage, View report, Withdraw (each labelled "…: the campaign for <trainee> (Default MSF, closing 2026-10-27)"). The
-  dialog: "Withdraw this campaign?", "Withdraw the campaign for Pieter du Plessis (Default MSF, closing 2026-10-27)? …
-  withdrawing cannot be undone." Confirmed: "The campaign for Pieter du Plessis (Default MSF, closing 2026-10-27) has
-  been withdrawn. Its respondents' links no longer work, and their email addresses have been removed."; the row reads
-  Withdrawn with only View campaign.
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Campaign 2 created for du Plessis (defaults 8/3/2, 2026-10-14
+  to 2026-10-28, PAED-015). The list: Pieter du Plessis, Draft: Manage, Withdraw; Lerato Molefe, Open, 7 invitations:
+  Manage, View report, Withdraw (each labelled "…: the campaign for <trainee> (Default MSF, closing 2026-10-28)"). The
+  dialog: "Withdraw this campaign?", "Withdraw the campaign for Pieter du Plessis (Default MSF, closing 2026-10-28)? …
+  withdrawing cannot be undone." (focus opens on Cancel; Escape closed it with the focus back on that row's Withdraw).
+  Confirmed: "The campaign for Pieter du Plessis (Default MSF, closing 2026-10-28) has been withdrawn. Its
+  respondents' links no longer work, and their email addresses have been removed."; the row reads Withdrawn with only
+  View campaign.
 Gap: none
 
 ### Step 3.39 — Three respondents answer from their links
@@ -1030,13 +1034,13 @@ Note: The stub emails name no address (T282), and a link's group decides where i
   to its invitee before handing it out: its `token=` begins with the `TokenSelector` of its row in
   `SELECT "RespondentEmail", "RespondentCategory", "TokenSelector" FROM "MsfInvitations"
   WHERE "CampaignId" = <the campaign's id>;`.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Signed out (a fresh browser context each), each link matched
-  to its invitee by TokenSelector. "Feedback on Lerato Molefe", "Default MSF · Last day to respond: 2026-10-27", "Your
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Signed out (a fresh browser context each), each link matched
+  to its invitee by TokenSelector. "Feedback on Lerato Molefe", "Default MSF · Last day to respond: 2026-10-28", "Your
   name and email address are never shown to Lerato Molefe. They see the feedback only after the request has closed and
   a coordinator has reviewed and released it, grouped by respondent role."; five required points from Well below
-  expectations to Well above expectations; the optional comment with "Up to 4000 characters. Your comments may be
-  shown to Lerato Molefe word for word…". All three (Mokwena Above, Tau Well above, Motsepe Meets): "Thank you", "Your
-  feedback on Lerato Molefe has been recorded."
+  expectations to Well above expectations; the optional comment with its help ("…may be shown to Lerato Molefe word
+  for word…"). All three (Mokwena Above, Tau Well above, Motsepe Meets): "Thank you", "Your feedback on Lerato Molefe
+  has been recorded." The captures show a questionnaire and thank-you pages, no registration link and no token.
 Gap: none
 
 ### Step 3.40 — A used link is refused
@@ -1044,7 +1048,7 @@ Role: Anonymous — Dr Kagiso Motsepe (MSF respondent)
 Route: /msf/respond
 Do: Open the same link again.
 Expect: The page reads "Feedback link already used" and shows no questionnaire.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): HTTP 410, "Feedback link already used", "This feedback link
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): HTTP 410, "Feedback link already used", "This feedback link
   has already been used: a response was submitted through it, and each link takes one response."; no questionnaire (no
   rating control).
 Gap: none
@@ -1058,7 +1062,7 @@ Expect: The report reads State Open, total responses 3, minimum responses 5, min
   written when the report is released. A Nurse card gives the rating's average, 4.50 from 2 responses, and both
   comments. A Peer doctor card reads "Insufficient responses in this category. Results are suppressed." A group that
   has not answered has no card. Close campaign is offered; Release is not.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): /msf/reports/1: State: Open, Total responses: 3, minimums 5
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): /msf/reports/1: State: Open, Total responses: 3, minimums 5
   and 2, "Reporting categories: 1 of 2 required". Evidence for PAED-010 and PAED-012, "One evidence record per EPA is
   written to the trainee's portfolio when the report is released." Nurse: "Average: 4.50 from 2 responses." with both
   comments; Peer doctor: "Insufficient responses in this category. Results are suppressed."; no other card. Only
@@ -1074,7 +1078,7 @@ Do: The three answer; Dr Khoza does not open her link.
   - Ms Sebego: Above expectations, "Refers early and listens to the therapists".
 Expect: Each submit ends on "Thank you" and "Your feedback on Lerato Molefe has been recorded." Six of the seven links
   have now been used; Step 3.43 reads the counts.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Signed out; Khumalo, Botha and Sebego each answered Above
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Signed out; Khumalo, Botha and Sebego each answered Above
   expectations with their comments, and each submit read "Thank you", "Your feedback on Lerato Molefe has been
   recorded." Khoza's link was not opened.
 Gap: none
@@ -1094,13 +1098,13 @@ Note: With `Email__SmtpHost` unset, nothing reports a delivery, so an hour after
   the warning then shows at once: `UPDATE "MsfInvitations" SET "SentOn" = NULL, "DeliveryFailedOn" = now() WHERE
   "CampaignId" = <the campaign's id> AND "RespondentEmail" = 'lindiwe.khoza@kgk.wombat.local' AND "RespondedOn" IS
   NULL;`
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): At 12:10 UTC, an hour after the open at 11:09 (the log sender
-  reports no delivery, so no stand-in was needed; Steps 3.50 to 3.54c were played in the wait, which was kept in short
-  background waits): Responded Peer doctor 1, Consultant 2, Nurse 2, Allied health professional 1, All groups 7 / 6.
-  The warning "1 link was not delivered. Resend sends each of these respondents a new link; this page never says who
-  they are." and "Resend 1 link". Resend: "1 new link is being sent." and the warning gone (before the resend the page
-  already read "1 link is still being sent."). The log holds one more "Feedback request: Lerato Molefe (Default MSF,
-  …)" stub email (8 in all), naming no address.
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): At 14:34 UTC (16:34 SAST), an hour after the open at 13:32
+  (the log sender reports no delivery, so no stand-in was needed; Steps 3.50 to 3.54c were played in the wait, which
+  was kept in short background waits): Responded Peer doctor 1, Consultant 2, Nurse 2, Allied health professional 1,
+  All groups 7 / 6. The warning "1 link was not delivered. Resend sends each of these respondents a new link; this
+  page never says who they are." and "Resend 1 link". Resend: "1 new link is being sent." with "1 link is still being
+  sent. Reload this page to see whether it was delivered." and the warning gone. The log holds one more "Feedback
+  request: Lerato Molefe (Default MSF, …)" stub email (7 before, 8 in all), naming no address.
 Gap: none
 
 ### Step 3.44 — Mr Smit closes the campaign
@@ -1114,7 +1118,7 @@ Expect: The report reads "Campaign closed and anonymised for review." and State:
   Release to trainee is enabled. Beside it are the narrative and the optional "Supervision level this feedback
   supports", which offers Not stated and the six rungs (D10). The campaign page says the campaign is closed to
   responses and every respondent's address has been removed. It offers Withdraw campaign and "Review and release".
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): The report's Close campaign (no confirmation dialog):
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): The report's Close campaign (no confirmation dialog):
   "Campaign closed and anonymised for review.", State: Under review, Total responses: 6, "Reporting categories: 2 of 2
   required"; Consultant "Average: 4.00 from 2 responses." and Nurse 4.50 from 2, each with its two comments; Peer
   doctor and Allied health professional "Insufficient responses in this category. Results are suppressed."; Release to
@@ -1128,7 +1132,7 @@ Role: Anonymous — Dr Lindiwe Khoza (MSF respondent)
 Route: /msf/respond
 Do: Open the resent link.
 Expect: The page reads "Feedback request closed" and shows no questionnaire.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Signed out, the resent link (the last invitation stub): HTTP
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Signed out, the resent link (the last invitation stub): HTTP
   410, "Feedback request closed", "This feedback request has closed and is no longer accepting responses."; no
   questionnaire.
 Gap: none
@@ -1142,10 +1146,10 @@ Expect: The report reads "Report released to the trainee." and State Released. T
   and "Not stated" as stored, with no form (T246). "Evidence for" lists PAED-010 and PAED-012, with the time they were
   recorded on the portfolio. In the list, the row reads Released, with "View campaign" and "View report" and no
   Withdraw.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Release (no confirmation dialog), narrative typed, supervision
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Release (no confirmation dialog), narrative typed, supervision
   level left Not stated: "Report released to the trainee.", State: Released; the actions card shows "Narrative:
   Consistently strong feedback …" and "Supervision level this feedback supports: Not stated" as text, with no form.
-  Evidence for PAED-010 and PAED-012, "Recorded on the portfolio: 2026-10-13 12:10 UTC". List row: Released, 7
+  Evidence for PAED-010 and PAED-012, "Recorded on the portfolio: 2026-10-14 14:34 UTC". List row: Released, 7
   invitations, 6 responses, View campaign and View report, no Withdraw.
 Gap: none
 
@@ -1156,12 +1160,12 @@ Do: Open MSF reports, then view the report.
 Expect: One row: Default MSF (Multi-source feedback), released just now, 6 responses. The report shows the narrative
   and two groups only, Nurse (4.50) and Consultant (4.00), each with its comments. It shows nothing of the peer doctor
   or the physiotherapist, not even that they answered, and no group's count (T249).
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): One row: Default MSF / Multi-source feedback, Released
-  "2026-10-13 14:10" (the coordinator's report said 12:10 UTC), Responses 6, View. The report: the narrative, then
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): One row: Default MSF / Multi-source feedback, Released
+  "2026-10-14 16:34" (the coordinator's report said 14:34 UTC), Responses 6, View. The report: the narrative, then
   Consultant ("Rates the trainee's overall professional performance.: 4.00") and Nurse ("….: 4.50"), each with both
   comments; nothing of Peer doctor or Allied health, and no group count.
 Gap: known T270 (still: each scale question prints as "<question>.: <average>", a stray colon after the question's
-  full stop); known T325 (still: the one release reads 14:10, unlabelled, on the trainee's list and 12:10 UTC on the
+  full stop); known T325 (still: the one release reads 16:34, unlabelled, on the trainee's list and 14:34 UTC on the
   coordinator's report)
 
 ### Step 3.48 — Dr Molefe's record and progress show her evidence and the feedback
@@ -1181,16 +1185,16 @@ Expect: My activities holds her six Completed WBAs and two Multi-Source Feedback
   Thandi Zulu, David Naidoo and Mohammed Patel. 2 at the minimum, 1 below." The pages of PAED-010 and PAED-012 each read
   "MSF in Semester 2, 2026: covered by a released campaign that closed on `D`." first among their MSF lines, chart their
   ratings, and say under the chart "Multi-source feedback is not plotted.": no chart plots an MSF point (D36).
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): My activities: six Completed WBAs, each Credit "1 item" a link
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): My activities: six Completed WBAs, each Credit "1 item" a link
   to its EPA's page (named "1 item to PAED-001, in My progress" and so on), and two Multi-Source Feedback
-  (Paediatrics) rows, PAED-012 and PAED-010, 2026-10-13, Done, Recorded, "—" as text. My progress: "Training year 4 ·
+  (Paediatrics) rows, PAED-012 and PAED-010, 2026-10-14, Done, Recorded, "—" as text. My progress: "Training year 4 ·
   Semester 2, 2026", "1 of 10" EPAs met this semester, "Multi-source feedback: 2 of 15 EPAs covered by a released
   campaign that closed this semester. MSF is tracked on its own and counts towards no target."; PAED-001 "3 of 3 this
   semester", "Target met for Semester 2, 2026."; PAED-012 "2 of 3" and PAED-010 "1 of 3" (their pages); no row carries
   an MSF line; no chart. PAED-001's page: "At the minimum level when observed: 2 of 3", "Training year 4: level 5, the
   minimum each encounter is judged against and your STAR's target."; trajectory "3 ratings in the 2026 academic year,
   from Thandi Zulu, David Naidoo and Mohammed Patel. 2 at the minimum, 1 below.". PAED-010's and PAED-012's pages each
-  read "MSF in Semester 2, 2026: covered by a released campaign that closed on 2026-10-13." first among their MSF
+  read "MSF in Semester 2, 2026: covered by a released campaign that closed on 2026-10-14." first among their MSF
   lines, chart their 1 and 2 ratings, and read "Multi-source feedback is not plotted." under the chart; their
   Activities list the MSF record, Recorded, "—".
 Gap: none
@@ -1206,7 +1210,7 @@ Expect: One programme: "Paediatric EPA Curriculum 11.1 at Kgosi Kgari Teaching H
     "0 of 5 trainees covered".
   - By trainee: Lerato Molefe reads "2 of 15 EPAs covered" in Semester 2, 2026; everyone else reads 0 of 15.
   There is no badge, tint or bar, because coverage is not a target (D8, D9). The withdrawn campaign counts for nothing.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): One programme, "Paediatric EPA Curriculum 11.1 at Kgosi Kgari
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): One programme, "Paediatric EPA Curriculum 11.1 at Kgosi Kgari
   Teaching Hospital"; Semester 1, 2026 "5 trainees, whose programme had started by 30 June 2026", Semester 2, 2026 "5
   trainees, whose programme had started by 31 December 2026". S2 PAED-010 and PAED-012 "1 of 5 trainees covered" in
   <strong>, every other cell "0 of 5 trainees covered"; Lerato Molefe S2 "2 of 15 EPAs covered" (in <strong>),
@@ -1231,12 +1235,12 @@ Expect:
   - My authorisations: "No STAR yet. When the committee issues one, it shows here against training year 3's level.",
     with Open My authorisations. The header offers "Log an activity" (T335: the Actions card is gone), and there is no
     Upcoming deadlines card (T355).
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Played in Step 3.43's hour's wait (after 3.42; nothing it
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Played in Step 3.43's hour's wait (after 3.42; nothing it
   reads depends on the MSF). Your targets: "Training year 3 — it sets the minimum level each encounter is judged
   against.", "1 of 10" EPAs met this semester, "0 of 5" EPAs met in 2026; Furthest short PAED-002, 003, 005, 010 and
   012, each its own link with "0 of 3 this semester · 3 more by 2026-11-30", then Open My progress. Needs you "Nothing
   needs you. Requests you have filed are in My activities." with Open My activities. Recent decisions, newest decision
-  first, each its own link and Completed on 2026-10-13: "Mini-CEX (Paediatrics) · PAED-004 · 2026-10-11", to Fatima
+  first, each its own link and Completed on 2026-10-14: "Mini-CEX (Paediatrics) · PAED-004 · 2026-10-12", to Fatima
   Khumalo, "PAED-004: 1 of 3 this semester."; then the CCA, CBD and Mini-CEX on PAED-001, each "PAED-001: 3 of 3 this
   semester, met."; no link nests in another and no card is a link. My authorisations "No STAR yet. When the committee
   issues one, it shows here against training year 3's level." with Open My authorisations; the header offers Log an
@@ -1263,13 +1267,13 @@ Expect:
 Note: "Waiting for you" is read as in Step 3.33, from her inbox: no badge beside an inbox holding the CBD is a Gap.
   Until T297 it was "Accepted, needing action"; until T335 it was split across Pending requests and Awaiting your
   review; until T350 it was "Waiting for your rating".
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Played in Step 3.43's wait. Waiting for you badged "1
-  waiting": "Case-Based Discussion (Paediatrics) · PAED-002 · 2026-10-08", from Pieter du Plessis, Requested, "Waiting
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Played in Step 3.43's wait. Waiting for you badged "1
+  waiting": "Case-Based Discussion (Paediatrics) · PAED-002 · 2026-10-09", from Pieter du Plessis, Requested, "Waiting
   less than a day". Recent decisions, newest first, each linked by its full name: "Mini-CEX (Paediatrics) · PAED-004 ·
-  2026-10-11", from Anele Dlamini, Completed (badge-completed), 2026-10-13; "Case-Based Discussion (Paediatrics) ·
-  PAED-012 · 2026-10-08", from Lerato Molefe, Completed; "Mini-CEX (Paediatrics) · PAED-002 · 2026-09-23", from Sipho
+  2026-10-12", from Anele Dlamini, Completed (badge-completed), 2026-10-14; "Case-Based Discussion (Paediatrics) ·
+  PAED-012 · 2026-10-09", from Lerato Molefe, Completed; "Mini-CEX (Paediatrics) · PAED-002 · 2026-09-24", from Sipho
   Ndlovu, Declined (badge-declined); its foot "All your decisions" (/activities/inbox#decided-h). Open Activity inbox:
-  Waiting for you the CBD alone, Requested, "Less than a day" over "since 2026-10-13 12:58 SAST"; Decided by you "3
+  Waiting for you the CBD alone, Requested, "Less than a day" over "since 2026-10-14 15:23 SAST"; Decided by you "3
   decisions", the same three, each with its moment (SAST) and credit ("1 item", "1 item", "—"). The menu reads Home
   and Activity inbox (aria-current), then My data rights; no Recent activities.
 Gap: none
@@ -1293,7 +1297,7 @@ Expect:
 Note: The cards read the current registrars at Dr Zulu's institution, as Committee member (`ProgrammeScope`, E4; T290),
   not the member's sub-speciality scopes: Dr Zulu's invitation carried none, and Dr Zulu's Paediatrics sub-speciality
   came with the assessor profile (Step 2.14).
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Played in Step 3.43's wait. Home opened "Assessor · Semester
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Played in Step 3.43's wait. Home opened "Assessor · Semester
   2, 2026" (3.33's choice kept). After the switch: "You are now acting as Committee member.", sidebar "Acting as
   Committee member", subtitle "Committee member · Semester 2, 2026". "Registrars", badged "5 registrars", "Fewest met
   first, then by surname.": Pieter du Plessis, Nomsa Mahlangu, Sipho Ndlovu, each "0 of 10" EPAs met this semester and
@@ -1323,7 +1327,7 @@ Expect:
 Note: The card is Waiting for assessors' first five, the page's own read (T358, E4): each activity's pinned workflow
   (`ActivityWaiting`, T297) says it awaits a reviewer, and a `field:` nominee holds it (E3): a request waits in
   `requested`, a portfolio review in `submitted`. Until T358 it was Pending reviews, a count that linked nowhere.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Played in Step 3.43's wait. "Speciality admin · Semester 2,
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Played in Step 3.43's wait. "Speciality admin · Semester 2,
   2026". "Waiting for assessors" (detail-card--warning) badged "2 waiting, 1 overdue": the portfolio review (Awaiting
   review, Overdue, "With Mohammed Patel", "Waiting 8 days") then the CBD (Requested, "With Fatima Khumalo", "Waiting
   less than a day"), linking to /activities/10 and /activities/9, with Open Waiting for assessors. Registrars and
@@ -1339,7 +1343,7 @@ Do: Read the dashboard.
 Expect: The same three cards and figures as Dr Mokoena's, read for Paediatrics: "2 waiting, 1 overdue", Registrars
   badged "5 registrars", and PAED-001 "2 of 5" last on Targets by EPA. Dr Sithole's menu reads as Dr Mokoena's, under
   "Acting as Sub-speciality admin".
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Played in Step 3.43's wait. "Acting as Sub-speciality admin",
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Played in Step 3.43's wait. "Acting as Sub-speciality admin",
   "Sub-speciality admin · Semester 2, 2026": Waiting for assessors "2 waiting, 1 overdue" with the same two rows,
   Registrars "5 registrars" in the same order, Targets by EPA with PAED-001 "2 of 5" last; the menu reads as Dr
   Mokoena's.
@@ -1363,7 +1367,7 @@ Expect: Programme trainees opens with Short on set to PAED-002 and Programme tra
   the bare word "year" (Q10).
 Note: The EPA's link carries the filter in the address (`?short=<EpaId>`, D3), so Back and a shared link show the same
   list. Played after Step 3.54, on its figures.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Played in Step 3.43's wait, after 3.54. From Home (acting as
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Played in Step 3.43's wait, after 3.54. From Home (acting as
   Committee member) PAED-002 on Targets by EPA opened /programme/trainees?short=3 (tab "Programme trainees · Wombat"),
   Short on set to PAED-002, Programme trainees lit. Subtitle "Current registrars at Kgosi Kgari Teaching Hospital,
   read as Committee member · Semester 2, 2026". The heading, focused, "5 of 5 current registrars are short on
@@ -1397,13 +1401,13 @@ Expect: The registrar page's h1 reads "Nomsa Mahlangu", its tab "Nomsa Mahlangu 
   - Committee reviews: "No review is scheduled for Nomsa Mahlangu."
   Dr Zulu, a Committee member, is offered no Send a reminder. No word on the page names Nomsa Mahlangu by a pronoun
   (round-3-check 1).
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Nomsa Mahlangu from Programme trainees: /programme/trainees/5,
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Nomsa Mahlangu from Programme trainees: /programme/trainees/5,
   h1 "Nomsa Mahlangu" (focused), tab "Nomsa Mahlangu · Wombat", subtitle "Training year 1 · Semester 2, 2026 · Kgosi
   Kgari Teaching Hospital, Paediatrics"; trail Home › Programme trainees › Nomsa Mahlangu, Programme trainees lit.
   Sections in order: This period ("0 of 10" EPAs met this semester, "0 of 5" EPAs met in 2026, "Semester 2, 2026 ends
   on 2026-11-30. Training year 1 sets the minimum level each encounter is judged against."); EPAs, in code order,
   names as text, PAED-001 "0 of 3 this semester", PAED-002 and PAED-004 "1 of 3 this semester"; Entrustment against
-  Annexure A, PAED-002's latest "3a · Encounter 2026-10-05" and PAED-004's "3a · Encounter 2026-10-10", each EPA
+  Annexure A, PAED-002's latest "3a · Encounter 2026-10-06" and PAED-004's "3a · Encounter 2026-10-11", each EPA
   charted linking to #trajectory-<id>; Rating trajectories, an h3 and a chart each for PAED-002 (DOPS, 3a, Mohammed
   Patel) and PAED-004 (Mini-CEX, 3a, Thandi Zulu), no Today rule; Waiting for assessors "Nothing of Nomsa Mahlangu's
   waits for an assessor."; Committee reviews "No review is scheduled for Nomsa Mahlangu." No button at all (no Send a
@@ -1423,7 +1427,7 @@ Expect: The subtitle reads "Requests in Paediatrics whose next move names an ass
   Mohammed Patel", over the portfolio review alone. After the second Show the heading reads "0 of 2 waiting", and under
   it "No request matches these filters.", "Overdue only, with Fatima Khumalo." and Clear filters (review 33). Clear
   filters returns the whole list, "2 waiting, 1 overdue". No reminder is sent.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Waiting for assessors from the menu, lit. Subtitle "Requests
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Waiting for assessors from the menu, lit. Subtitle "Requests
   in Paediatrics whose next move names an assessor, supervisor or reviewer, read as Speciality admin. Your own
   requests are not listed."; heading "2 waiting, 1 overdue", Step 3.53's two rows, each with Send a reminder. With
   offers Anyone, Fatima Khumalo, Mohammed Patel. Choosing Mohammed Patel changed nothing (address, heading, two rows,
@@ -1450,13 +1454,13 @@ Expect:
   - "Msf" leaves Mr Smit's seventeen commands: the template, two campaigns, eight invitations, one removal, the open,
     the withdrawal, the resend, the close and the release.
   - No respondent's submission and no devadmin row is listed, because those carry no institution (T101, T205).
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): From (UTC) 2026-10-13T10:50, the sitting's start: 165 KGK rows
-  over four pages of 50, newest first (60 Login, 24 Logout, 23 CreateActivityCommand, 40 TransitionActivityCommand, 17
-  MSF, 1 SendActivityReminderCommand), creates by all five registrars and moves by all five consultants, each with its
-  actor and OK; none from a respondent or devadmin. Failures only: four FAILED rows (Ndlovu's two creates, Dlamini's
-  submit, Khumalo's decline). "Msf": Mr Smit's 17 (template, two campaigns, eight invitations, one removal, open,
-  withdrawal, resend, close, release). The actor column is the account's email on command rows and the person's name
-  on Login rows.
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): From (UTC) 2026-10-14T13:18, the sitting's start: 161 KGK rows
+  (56 Login, 24 Logout, 23 CreateActivityCommand, 40 TransitionActivityCommand, 17 MSF, 1
+  SendActivityReminderCommand), newest first, creates by all five registrars and moves by all five consultants, each
+  with its actor and OK; none from a respondent or devadmin. Failures only: four FAILED rows (Ndlovu's two creates,
+  Dlamini's submit, Khumalo's decline). "Msf": Mr Smit's 17 (template, two campaigns, eight invitations, one removal,
+  open, withdrawal, resend, close, release). The actor column is the account's email on command rows and the person's
+  name on Login rows.
 Gap: known T286 (still: F-3.55a, the audit log names a command's actor by email but a Login's by display name, so one
   person reads two ways in one list)
 
@@ -1468,8 +1472,8 @@ Expect: The Event card shows the time to the millisecond, category Command, acti
   Failed with "Date observed: The date cannot be after today (…)." The Actor card shows Dr Ndlovu's user id, display
   name and IP address. There is no Payload card: only an Administrator reads the raw JSON. "Back to log" returns to the
   list.
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): Event: "2026-10-13 10:54:47.473", Command,
-  CreateActivityCommand, Failed, "Date observed: The date cannot be after today (2026-10-13)." Actor: user id,
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): Event: "When (UTC) 2026-10-14 13:20:36.766", Command,
+  CreateActivityCommand, Failed, "Date observed: The date cannot be after today (2026-10-14)." Actor: user id,
   "Display name ndlovu@kgk.wombat.local", IP "::/48". Only Event and Actor cards, no Payload. Back to log returns to
   /admin/audit with the filters cleared (From and Result empty).
 Gap: known T286 (still: F-3.56a, the Actor card's "Display name" is Dr Ndlovu's email); known T277 (still: F-3.56b,
@@ -1485,22 +1489,21 @@ Expect: The log holds every institution's rows and the rows with no institution.
   detail names no user and no display name, only a truncated address. Its payload shows the token and the answers as
   "[REDACTED]" (T101, T205). Dr Naidoo's payload shows the principal as "[PRINCIPAL]", and the data patch and note as
   "[REDACTED]".
-Actual (2026-10-13, T364 replay, wombat_scenario_t364): From 10:50 UTC: 178 rows (the 165 KGK rows of Step 3.55 plus
-  six SubmitMsfResponseCommand by "system", two RunScheduledJobNowCommand by devadmin (one is my mis-clicked
-  activity-draft-nudge run, see Step 3.32) and devadmin's sign-ins). A submission's detail: User ID "—", Display name
-  "—", IP "::/48"; payload {"token": "[REDACTED]", "answers": "[REDACTED]"}. Naidoo's complete of 13: principal
-  "[PRINCIPAL]", note and dataPatchJson "[REDACTED]", activityId, actorUserId and transitionKey in clear.
-Gap: none (the second RunScheduledJobNowCommand row is my mis-click, not a product finding)
+Actual (2026-10-14, T366 replay, wombat_scenario_t366): From 13:18 UTC: 173 rows (the KGK rows of Step 3.55 plus six
+  SubmitMsfResponseCommand by "system", one RunScheduledJobNowCommand by devadmin and devadmin's sign-ins). A
+  submission's detail: User ID "—", Display name "—", IP "::/48"; payload {"token": "[REDACTED]", "answers":
+  "[REDACTED]"}. Naidoo's complete of 13: principal "[PRINCIPAL]", note and dataPatchJson "[REDACTED]", activityId,
+  actorUserId and transitionKey in clear.
+Gap: none
 
 ## Act 3 outcome state
 
-Replay check (2026-10-13, T364 replay, wombat_scenario_t364): match on all five queries (23 activities in the 12
+Replay check (2026-10-14, T366 replay, wombat_scenario_t366): match on all five queries (23 activities in the 12
   groups; the 8 progress rows; recorded 15, late 2; MSF Released 1 and Withdrawn 1, 6 responses, 7 invitations with 0
   addresses, 1 template; ActivityReminders 1; failures CreateActivityCommand 2 and TransitionActivityCommand 2 since
-  10:50 UTC). Mail in the act was 11 stub emails (18 before, 29 after): 7 invitations, 1 resent link, Mr Smit's
+  13:18 UTC). Mail in the act was 11 stub emails (20 before, 31 after): 7 invitations, 1 resent link, Mr Smit's
   reminder to Dr Zulu and the two nudge digests (Step 3.30's ageing ran, both UPDATEs), none about an activity's move.
-  Steps 3.50 to 3.54c were played in Step 3.43's hour's wait. One correction by SQL: Step 3.19's pre-programme session
-  was first typed 2025-11-20 by mistake and set to 2024-11-20 afterwards (activity 7, see that step).
+  Steps 3.50 to 3.54c were played in Step 3.43's hour's wait. No correction by SQL was needed.
 
 - **23 activities**:
   - 13 WBAs Completed;
