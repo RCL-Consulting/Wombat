@@ -1,0 +1,763 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-10-14T10:00:00Z"
+ },
+ "title": "Wombat 09 \u00b7 Outcomes, STARs and appeals",
+ "launch": {
+  "view": "canvas",
+  "page": "r3"
+ },
+ "pages": [
+  {
+   "id": "r1",
+   "name": "Round 1"
+  },
+  {
+   "id": "r2",
+   "name": "Round 2"
+  },
+  {
+   "id": "r3",
+   "name": "Round 3"
+  }
+ ],
+ "boards": {
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 2400,
+   "h": 1500,
+   "title": "R1 \u00b7 Three structures for the appeal journey",
+   "page": "r1"
+  },
+  "A-trainee.dc.html": {
+   "x": 0,
+   "y": 1870,
+   "w": 4100,
+   "h": 2800,
+   "title": "A \u00b7 Opened row \u2014 the registrar at 1280",
+   "page": "r1"
+  },
+  "A-committee.dc.html": {
+   "x": 4180,
+   "y": 1870,
+   "w": 4100,
+   "h": 2800,
+   "title": "A \u00b7 Opened row \u2014 the committee's Appeals section at 1280",
+   "page": "r1"
+  },
+  "A-phone.dc.html": {
+   "x": 8360,
+   "y": 1870,
+   "w": 1900,
+   "h": 2800,
+   "title": "A \u00b7 Opened row \u2014 390",
+   "page": "r1"
+  },
+  "B-trainee.dc.html": {
+   "x": 0,
+   "y": 5060,
+   "w": 4100,
+   "h": 2800,
+   "title": "B \u00b7 A review page of its own \u2014 the registrar at 1280",
+   "page": "r1"
+  },
+  "B-committee.dc.html": {
+   "x": 4180,
+   "y": 5060,
+   "w": 4100,
+   "h": 2800,
+   "title": "B \u00b7 A review page of its own \u2014 the committee at 1280",
+   "page": "r1"
+  },
+  "B-phone.dc.html": {
+   "x": 8360,
+   "y": 5060,
+   "w": 1900,
+   "h": 2800,
+   "title": "B \u00b7 A review page of its own \u2014 390",
+   "page": "r1"
+  },
+  "C-trainee.dc.html": {
+   "x": 0,
+   "y": 8250,
+   "w": 4100,
+   "h": 2800,
+   "title": "C \u00b7 The appeal as a task of its own \u2014 the registrar at 1280",
+   "page": "r1"
+  },
+  "C-committee.dc.html": {
+   "x": 4180,
+   "y": 8250,
+   "w": 4100,
+   "h": 2800,
+   "title": "C \u00b7 The appeal as a task of its own \u2014 the committee at 1280",
+   "page": "r1"
+  },
+  "C-phone.dc.html": {
+   "x": 8360,
+   "y": 8250,
+   "w": 1900,
+   "h": 2800,
+   "title": "C \u00b7 The appeal as a task of its own \u2014 390",
+   "page": "r1"
+  },
+  "P-authorisations.dc.html": {
+   "x": 0,
+   "y": 11440,
+   "w": 4100,
+   "h": 2400,
+   "title": "Proposal \u00b7 My authorisations (1280 and 390)",
+   "page": "r1"
+  },
+  "P-register.dc.html": {
+   "x": 4180,
+   "y": 11440,
+   "w": 6080,
+   "h": 2400,
+   "title": "Proposal \u00b7 The STAR register (1280 and 390)",
+   "page": "r1"
+  },
+  "R2-0-spec.dc.html": {
+   "x": 0,
+   "y": 260,
+   "w": 1440,
+   "h": 6800,
+   "title": "Spec \u00b7 flow 09 round 2",
+   "page": "r2"
+  },
+  "R2-0-steps.dc.html": {
+   "x": 1520,
+   "y": 260,
+   "w": 1440,
+   "h": 6200,
+   "title": "Steps \u00b7 the 17 runbook steps once B is built",
+   "page": "r2"
+  },
+  "R2-1-my-reviews-1280.dc.html": {
+   "x": 0,
+   "y": 7440,
+   "w": 1280,
+   "h": 4200,
+   "title": "My committee reviews \u00b7 1280",
+   "page": "r2"
+  },
+  "R2-1-my-reviews-768.dc.html": {
+   "x": 1360,
+   "y": 7440,
+   "w": 768,
+   "h": 5200,
+   "title": "My committee reviews \u00b7 768",
+   "page": "r2"
+  },
+  "R2-1-my-reviews-390.dc.html": {
+   "x": 2208,
+   "y": 7440,
+   "w": 390,
+   "h": 6800,
+   "title": "My committee reviews \u00b7 390",
+   "page": "r2"
+  },
+  "R2-2-review-1280-a.dc.html": {
+   "x": 0,
+   "y": 14620,
+   "w": 1280,
+   "h": 12800,
+   "title": "Her review \u00b7 1280 \u00b7 a",
+   "page": "r2"
+  },
+  "R2-2-review-1280-b.dc.html": {
+   "x": 1360,
+   "y": 14620,
+   "w": 1280,
+   "h": 12600,
+   "title": "Her review \u00b7 1280 \u00b7 b",
+   "page": "r2"
+  },
+  "R2-2-review-1280-c.dc.html": {
+   "x": 2720,
+   "y": 14620,
+   "w": 1280,
+   "h": 9800,
+   "title": "Her review \u00b7 1280 \u00b7 c",
+   "page": "r2"
+  },
+  "R2-2-review-768.dc.html": {
+   "x": 4080,
+   "y": 14620,
+   "w": 768,
+   "h": 8600,
+   "title": "Her review \u00b7 768",
+   "page": "r2"
+  },
+  "R2-2-review-390-a.dc.html": {
+   "x": 4928,
+   "y": 14620,
+   "w": 390,
+   "h": 24000,
+   "title": "Her review \u00b7 390 \u00b7 a",
+   "page": "r2"
+  },
+  "R2-2-review-390-b.dc.html": {
+   "x": 5398,
+   "y": 14620,
+   "w": 390,
+   "h": 21000,
+   "title": "Her review \u00b7 390 \u00b7 b",
+   "page": "r2"
+  },
+  "R2-3-order-1280.dc.html": {
+   "x": 0,
+   "y": 39000,
+   "w": 1280,
+   "h": 2100,
+   "title": "Appeals \u00b7 the page's order",
+   "page": "r2"
+  },
+  "R2-3-appeals-1280-a.dc.html": {
+   "x": 1360,
+   "y": 39000,
+   "w": 1280,
+   "h": 6800,
+   "title": "Appeals \u00b7 1280 \u00b7 a",
+   "page": "r2"
+  },
+  "R2-3-appeals-1280-b.dc.html": {
+   "x": 2720,
+   "y": 39000,
+   "w": 1280,
+   "h": 7600,
+   "title": "Appeals \u00b7 1280 \u00b7 b",
+   "page": "r2"
+  },
+  "R2-3-appeals-1280-c.dc.html": {
+   "x": 4080,
+   "y": 39000,
+   "w": 1280,
+   "h": 6400,
+   "title": "Appeals \u00b7 1280 \u00b7 c",
+   "page": "r2"
+  },
+  "R2-3-appeals-390-a.dc.html": {
+   "x": 5440,
+   "y": 39000,
+   "w": 390,
+   "h": 17000,
+   "title": "Appeals \u00b7 390 \u00b7 a",
+   "page": "r2"
+  },
+  "R2-3-appeals-390-b.dc.html": {
+   "x": 5910,
+   "y": 39000,
+   "w": 390,
+   "h": 16000,
+   "title": "Appeals \u00b7 390 \u00b7 b",
+   "page": "r2"
+  },
+  "R2-5-auth-1280-a.dc.html": {
+   "x": 0,
+   "y": 56380,
+   "w": 1280,
+   "h": 7600,
+   "title": "My authorisations \u00b7 1280 \u00b7 a",
+   "page": "r2"
+  },
+  "R2-5-auth-1280-b.dc.html": {
+   "x": 1360,
+   "y": 56380,
+   "w": 1280,
+   "h": 5600,
+   "title": "My authorisations \u00b7 1280 \u00b7 b",
+   "page": "r2"
+  },
+  "R2-5-auth-390.dc.html": {
+   "x": 2720,
+   "y": 56380,
+   "w": 390,
+   "h": 22000,
+   "title": "My authorisations \u00b7 390",
+   "page": "r2"
+  },
+  "R2-6-register-1280-a.dc.html": {
+   "x": 0,
+   "y": 78760,
+   "w": 1280,
+   "h": 5000,
+   "title": "Register \u00b7 1280 \u00b7 a",
+   "page": "r2"
+  },
+  "R2-6-register-1280-b.dc.html": {
+   "x": 1360,
+   "y": 78760,
+   "w": 1280,
+   "h": 5600,
+   "title": "Register \u00b7 1280 \u00b7 b",
+   "page": "r2"
+  },
+  "R2-6-register-1280-c.dc.html": {
+   "x": 2720,
+   "y": 78760,
+   "w": 1280,
+   "h": 7600,
+   "title": "Register \u00b7 1280 \u00b7 c",
+   "page": "r2"
+  },
+  "R2-6-register-768.dc.html": {
+   "x": 4080,
+   "y": 78760,
+   "w": 768,
+   "h": 12000,
+   "title": "Register \u00b7 768",
+   "page": "r2"
+  },
+  "R2-6-register-390.dc.html": {
+   "x": 4928,
+   "y": 78760,
+   "w": 390,
+   "h": 26000,
+   "title": "Register \u00b7 390",
+   "page": "r2"
+  },
+  "R3-0-spec.dc.html": {
+   "x": 0,
+   "y": 260,
+   "w": 1440,
+   "h": 8200,
+   "title": "Spec \u00b7 flow 09 round 3",
+   "page": "r3"
+  },
+  "R3-0-steps.dc.html": {
+   "x": 1520,
+   "y": 260,
+   "w": 1440,
+   "h": 8400,
+   "title": "Steps \u00b7 the 17 runbook steps (round 3)",
+   "page": "r3"
+  },
+  "R3-1-my-reviews-1280.dc.html": {
+   "x": 0,
+   "y": 9040,
+   "w": 1280,
+   "h": 4400,
+   "title": "My committee reviews \u00b7 1280",
+   "page": "r3"
+  },
+  "R3-1-my-reviews-768.dc.html": {
+   "x": 1360,
+   "y": 9040,
+   "w": 768,
+   "h": 5400,
+   "title": "My committee reviews \u00b7 768",
+   "page": "r3"
+  },
+  "R3-1-my-reviews-390.dc.html": {
+   "x": 2208,
+   "y": 9040,
+   "w": 390,
+   "h": 7200,
+   "title": "My committee reviews \u00b7 390",
+   "page": "r3"
+  },
+  "R3-2-review-1280-a.dc.html": {
+   "x": 0,
+   "y": 16620,
+   "w": 1280,
+   "h": 12800,
+   "title": "Her review \u00b7 1280 \u00b7 a",
+   "page": "r3"
+  },
+  "R3-2-review-1280-b.dc.html": {
+   "x": 1360,
+   "y": 16620,
+   "w": 1280,
+   "h": 14000,
+   "title": "Her review \u00b7 1280 \u00b7 b",
+   "page": "r3"
+  },
+  "R3-2-review-1280-c.dc.html": {
+   "x": 2720,
+   "y": 16620,
+   "w": 1280,
+   "h": 9800,
+   "title": "Her review \u00b7 1280 \u00b7 c",
+   "page": "r3"
+  },
+  "R3-2-review-768.dc.html": {
+   "x": 4080,
+   "y": 16620,
+   "w": 768,
+   "h": 8600,
+   "title": "Her review \u00b7 768",
+   "page": "r3"
+  },
+  "R3-2-review-390-a.dc.html": {
+   "x": 4928,
+   "y": 16620,
+   "w": 390,
+   "h": 30000,
+   "title": "Her review \u00b7 390 \u00b7 a",
+   "page": "r3"
+  },
+  "R3-2-review-390-b.dc.html": {
+   "x": 5398,
+   "y": 16620,
+   "w": 390,
+   "h": 18000,
+   "title": "Her review \u00b7 390 \u00b7 b",
+   "page": "r3"
+  },
+  "R3-2-review-390-c.dc.html": {
+   "x": 5868,
+   "y": 16620,
+   "w": 390,
+   "h": 17000,
+   "title": "Her review \u00b7 390 \u00b7 c",
+   "page": "r3"
+  },
+  "R3-3-order-1280.dc.html": {
+   "x": 0,
+   "y": 47000,
+   "w": 1280,
+   "h": 3400,
+   "title": "Appeals \u00b7 the page's order \u00b7 1280",
+   "page": "r3"
+  },
+  "R3-3-order-390.dc.html": {
+   "x": 1360,
+   "y": 47000,
+   "w": 390,
+   "h": 5200,
+   "title": "Appeals \u00b7 the page's order \u00b7 390",
+   "page": "r3"
+  },
+  "R3-3-appeals-1280-a.dc.html": {
+   "x": 1830,
+   "y": 47000,
+   "w": 1280,
+   "h": 6800,
+   "title": "Appeals \u00b7 1280 \u00b7 a",
+   "page": "r3"
+  },
+  "R3-3-appeals-1280-b.dc.html": {
+   "x": 3190,
+   "y": 47000,
+   "w": 1280,
+   "h": 7600,
+   "title": "Appeals \u00b7 1280 \u00b7 b",
+   "page": "r3"
+  },
+  "R3-3-appeals-1280-c.dc.html": {
+   "x": 4550,
+   "y": 47000,
+   "w": 1280,
+   "h": 6400,
+   "title": "Appeals \u00b7 1280 \u00b7 c",
+   "page": "r3"
+  },
+  "R3-3-appeals-390-a.dc.html": {
+   "x": 5910,
+   "y": 47000,
+   "w": 390,
+   "h": 18000,
+   "title": "Appeals \u00b7 390 \u00b7 a",
+   "page": "r3"
+  },
+  "R3-3-appeals-390-b.dc.html": {
+   "x": 6380,
+   "y": 47000,
+   "w": 390,
+   "h": 16000,
+   "title": "Appeals \u00b7 390 \u00b7 b",
+   "page": "r3"
+  },
+  "R3-5-auth-1280-a.dc.html": {
+   "x": 0,
+   "y": 65380,
+   "w": 1280,
+   "h": 8600,
+   "title": "My authorisations \u00b7 1280 \u00b7 a",
+   "page": "r3"
+  },
+  "R3-5-auth-1280-b.dc.html": {
+   "x": 1360,
+   "y": 65380,
+   "w": 1280,
+   "h": 5400,
+   "title": "My authorisations \u00b7 1280 \u00b7 b",
+   "page": "r3"
+  },
+  "R3-5-auth-768.dc.html": {
+   "x": 2720,
+   "y": 65380,
+   "w": 768,
+   "h": 9600,
+   "title": "My authorisations \u00b7 768",
+   "page": "r3"
+  },
+  "R3-5-auth-390.dc.html": {
+   "x": 3568,
+   "y": 65380,
+   "w": 390,
+   "h": 24000,
+   "title": "My authorisations \u00b7 390",
+   "page": "r3"
+  },
+  "R3-6-register-1280-a.dc.html": {
+   "x": 0,
+   "y": 89760,
+   "w": 1280,
+   "h": 6400,
+   "title": "Register \u00b7 1280 \u00b7 a",
+   "page": "r3"
+  },
+  "R3-6-register-1280-b.dc.html": {
+   "x": 1360,
+   "y": 89760,
+   "w": 1280,
+   "h": 7600,
+   "title": "Register \u00b7 1280 \u00b7 b",
+   "page": "r3"
+  },
+  "R3-6-register-1280-c.dc.html": {
+   "x": 2720,
+   "y": 89760,
+   "w": 1280,
+   "h": 12000,
+   "title": "Register \u00b7 1280 \u00b7 c",
+   "page": "r3"
+  },
+  "R3-6-register-768.dc.html": {
+   "x": 4080,
+   "y": 89760,
+   "w": 768,
+   "h": 12500,
+   "title": "Register \u00b7 768",
+   "page": "r3"
+  },
+  "R3-6-register-390-a.dc.html": {
+   "x": 4928,
+   "y": 89760,
+   "w": 390,
+   "h": 30000,
+   "title": "Register \u00b7 390 \u00b7 a",
+   "page": "r3"
+  },
+  "R3-6-register-390-b.dc.html": {
+   "x": 5398,
+   "y": 89760,
+   "w": 390,
+   "h": 52000,
+   "title": "Register \u00b7 390 \u00b7 b",
+   "page": "r3"
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "A-trainee.dc.html",
+  "A-committee.dc.html",
+  "A-phone.dc.html",
+  "B-trainee.dc.html",
+  "B-committee.dc.html",
+  "B-phone.dc.html",
+  "C-trainee.dc.html",
+  "C-committee.dc.html",
+  "C-phone.dc.html",
+  "P-authorisations.dc.html",
+  "P-register.dc.html",
+  "R2-0-spec.dc.html",
+  "R2-0-steps.dc.html",
+  "R2-1-my-reviews-1280.dc.html",
+  "R2-1-my-reviews-768.dc.html",
+  "R2-1-my-reviews-390.dc.html",
+  "R2-2-review-1280-a.dc.html",
+  "R2-2-review-1280-b.dc.html",
+  "R2-2-review-1280-c.dc.html",
+  "R2-2-review-768.dc.html",
+  "R2-2-review-390-a.dc.html",
+  "R2-2-review-390-b.dc.html",
+  "R2-3-order-1280.dc.html",
+  "R2-3-appeals-1280-a.dc.html",
+  "R2-3-appeals-1280-b.dc.html",
+  "R2-3-appeals-1280-c.dc.html",
+  "R2-3-appeals-390-a.dc.html",
+  "R2-3-appeals-390-b.dc.html",
+  "R2-5-auth-1280-a.dc.html",
+  "R2-5-auth-1280-b.dc.html",
+  "R2-5-auth-390.dc.html",
+  "R2-6-register-1280-a.dc.html",
+  "R2-6-register-1280-b.dc.html",
+  "R2-6-register-1280-c.dc.html",
+  "R2-6-register-768.dc.html",
+  "R2-6-register-390.dc.html",
+  "R3-0-spec.dc.html",
+  "R3-0-steps.dc.html",
+  "R3-1-my-reviews-1280.dc.html",
+  "R3-1-my-reviews-768.dc.html",
+  "R3-1-my-reviews-390.dc.html",
+  "R3-2-review-1280-a.dc.html",
+  "R3-2-review-1280-b.dc.html",
+  "R3-2-review-1280-c.dc.html",
+  "R3-2-review-768.dc.html",
+  "R3-2-review-390-a.dc.html",
+  "R3-2-review-390-b.dc.html",
+  "R3-2-review-390-c.dc.html",
+  "R3-3-order-1280.dc.html",
+  "R3-3-order-390.dc.html",
+  "R3-3-appeals-1280-a.dc.html",
+  "R3-3-appeals-1280-b.dc.html",
+  "R3-3-appeals-1280-c.dc.html",
+  "R3-3-appeals-390-a.dc.html",
+  "R3-3-appeals-390-b.dc.html",
+  "R3-5-auth-1280-a.dc.html",
+  "R3-5-auth-1280-b.dc.html",
+  "R3-5-auth-768.dc.html",
+  "R3-5-auth-390.dc.html",
+  "R3-6-register-1280-a.dc.html",
+  "R3-6-register-1280-b.dc.html",
+  "R3-6-register-1280-c.dc.html",
+  "R3-6-register-768.dc.html",
+  "R3-6-register-390-a.dc.html",
+  "R3-6-register-390-b.dc.html"
+ ],
+ "notes": {
+  "rowA": {
+   "x": 0,
+   "y": 1600,
+   "text": "A \u00b7 Opened row: her review opens inside the list; one address",
+   "kind": "title1",
+   "maxW": 10260,
+   "page": "r1"
+  },
+  "rowB": {
+   "x": 0,
+   "y": 4790,
+   "text": "B \u00b7 A review page of its own: list \u2192 page; the appeal beside the decision",
+   "kind": "title1",
+   "maxW": 10260,
+   "page": "r1"
+  },
+  "rowC": {
+   "x": 0,
+   "y": 7980,
+   "text": "C \u00b7 The appeal as a task of its own: lodge and resolve on form pages",
+   "kind": "title1",
+   "maxW": 10260,
+   "page": "r1"
+  },
+  "rowP": {
+   "x": 0,
+   "y": 11170,
+   "text": "One proposal \u00b7 My authorisations and the STAR register",
+   "kind": "title1",
+   "maxW": 10260,
+   "page": "r1"
+  },
+  "r2row0": {
+   "x": 0,
+   "y": 30,
+   "text": "Spec and steps",
+   "kind": "title1",
+   "maxW": 2960,
+   "page": "r2"
+  },
+  "r2row1": {
+   "x": 0,
+   "y": 7210,
+   "text": "1 \u00b7 My committee reviews",
+   "kind": "title1",
+   "maxW": 2598,
+   "page": "r2"
+  },
+  "r2row2": {
+   "x": 0,
+   "y": 14390,
+   "text": "2 \u00b7 Her review page",
+   "kind": "title1",
+   "maxW": 5788,
+   "page": "r2"
+  },
+  "r2row3": {
+   "x": 0,
+   "y": 38770,
+   "text": "3 \u00b7 The committee's Appeals section",
+   "kind": "title1",
+   "maxW": 6300,
+   "page": "r2"
+  },
+  "r2row4": {
+   "x": 0,
+   "y": 56150,
+   "text": "5 \u00b7 My authorisations",
+   "kind": "title1",
+   "maxW": 3110,
+   "page": "r2"
+  },
+  "r2row5": {
+   "x": 0,
+   "y": 78530,
+   "text": "6 \u00b7 The STAR register",
+   "kind": "title1",
+   "maxW": 5318,
+   "page": "r2"
+  },
+  "r3row0": {
+   "x": 0,
+   "y": 30,
+   "text": "Spec and steps \u00b7 round 3",
+   "kind": "title1",
+   "maxW": 2960,
+   "page": "r3"
+  },
+  "r3row1": {
+   "x": 0,
+   "y": 8810,
+   "text": "1 \u00b7 My committee reviews",
+   "kind": "title1",
+   "maxW": 2598,
+   "page": "r3"
+  },
+  "r3row2": {
+   "x": 0,
+   "y": 16390,
+   "text": "2 \u00b7 Her review page",
+   "kind": "title1",
+   "maxW": 6258,
+   "page": "r3"
+  },
+  "r3row3": {
+   "x": 0,
+   "y": 46770,
+   "text": "3 \u00b7 The committee's page: the jump and the Appeals section",
+   "kind": "title1",
+   "maxW": 6770,
+   "page": "r3"
+  },
+  "r3row4": {
+   "x": 0,
+   "y": 65150,
+   "text": "5 \u00b7 My authorisations",
+   "kind": "title1",
+   "maxW": 3958,
+   "page": "r3"
+  },
+  "r3row5": {
+   "x": 0,
+   "y": 89530,
+   "text": "6 \u00b7 The STAR register",
+   "kind": "title1",
+   "maxW": 5788,
+   "page": "r3"
+  }
+ },
+ "designSystems": [
+  {
+   "title": "Wombat",
+   "namespace": "wombat",
+   "artifact": "https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18",
+   "version": "1791917863-8f48",
+   "copiedAt": "2026-10-14T10:00:00Z"
+  }
+ ]
+}
