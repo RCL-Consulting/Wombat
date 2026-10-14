@@ -52,7 +52,8 @@ Run the loop as flow 08 ran it (`design/flows/08-committee-calendar/`, BRIEF § 
 - [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit.
 - [ ] The canvas is created, with the mark copied in before round 1 — its link.
 - [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/09-outcomes-stars-appeals/`.
-- [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 09) — the squash commit and counts.
+- [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 09) — the squash commit and counts.
+  `49e7cf5e`: Domain 815, Application 3809, Infrastructure 1023, Architecture 52, Web 3735, Integration 491.
 - [ ] The whole runbook replays on a fresh database with no regression from flow 09, the baseline is re-captured, and
   flow 09's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
 - [ ] The design system is re-synced and republished — its version number.
@@ -97,3 +98,9 @@ T364 (flow 08), T361 (flow 07), T307, T309, D51, D53; BRIEF § 6, § 8, § 11.
   Sonnet reviewers, one fix pass, the squash. A fresh restore failed NuGetAudit on `System.Security.Cryptography.Pkcs`
   10.0.0 (GHSA-846f-f764-76mx high, GHSA-2fmv-rv2c-59x7, published 2026-10-13, via MailKit): pinned 10.0.13 on master
   (`a7f790b3`) before the lanes were cut.
+- **2026-10-14, step 6 done** (`49e7cf5e`, squashed from `t366`): lanes T (`t366-trainee`), S (`t366-stars`), C
+  (`t366-committee`, wave 2), the runbook lane (`t366-runbook`), three Sonnet reviews (`build-review.md`: no high; R1/D3
+  exception text on Resolve, D1 Try again's focus, D2 the revoke box), one fix pass (`t366-fix`, 14 commits). Kept: D8
+  (native disabled while busy), D13 ("they" for the appeal body). **For the replay:** D14 the script module under the
+  CSP, D15/G7 the focus after Remit/Dismiss, D16 the radios' targets at 1280/768, D6's Escape in a browser, F5's 390
+  saving, T367's 4.36 mail in the log. Branches `t366*` kept locally. Next: step 7, the replay.

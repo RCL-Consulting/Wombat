@@ -19,8 +19,9 @@ STARs and appeals), filed and started.
 - **Round 3** sent by the operator. Pushed through `01b4c1ed` (2026-10-14); later commits not pushed.
 - **Later (2026-10-14):** round 3's previews were bland: "Wombat 09" had no tokens stylesheet (fixed, canvas v18).
   **Round 3 checked, the design final** (`4c0912ac`, `13057800`). **T367 built** (`e9b29081`, six suites green, one
-  review clean); it stays in progress until flow 09's replay sees step 4.36's mail. **Build started** (step 6): branch
-  `t366`, wave 1 lanes T and S running (T366 Notes). **`a7f790b3` pins Pkcs 10.0.13** (two advisories of 10-13): the deploy carries it.
+  review clean); it stays in progress until flow 09's replay sees step 4.36's mail. **Built** (step 6, `49e7cf5e`, six
+  suites green; T366 Notes list what the replay must check). **`a7f790b3` pins Pkcs 10.0.13** (two advisories of 10-13): the deploy carries it.
+  **Next: step 7, the replay** on a fresh database, one agent per act, then the states.
 
 ## Sessions 2026-10-11 to 10-13 (Opus): harness 3.4; 111 done tasks archived; T361 (flow 07) and T364 (flow 08) done
 
