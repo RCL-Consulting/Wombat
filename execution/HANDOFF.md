@@ -13,8 +13,10 @@ STARs and appeals), filed and started.
   operator's (§ 6); 153 stale step pointers in flows 01–07 re-synced. Completeness 0, verbatim 0 problems, missing 0.
 - **Steps 2–4** (`47f2850d`): staged (106 files; four long captures cropped to the Appeals section in the staged copy);
   canvas **"Wombat 09"** https://claude.ai/artifact/5LfLPdcXJ2iRX6GSm2bbKP on design system v20, mark copied in.
-- **Next (operator):** send `design/flows/09-outcomes-stars-appeals/round-1-ask.txt` in the canvas with `design/upload/`
-  (key screenshots first, § 4); then round 1's pick and § 6's answers. **Not pushed:** `0058adf3` onward.
+- **Round 1** (`58f8dc87`, assessed `71e02aa2`): **B** picked with A's inline resolve; the operator took every
+  recommendation (T366 Notes). **T367** (T319's revocation half) filed, to land before the build; § 3F question 13 added.
+- **Next (operator):** send `round-2-ask.txt` (`ae89c12f`) in "Wombat 09" with all of `design/upload/` attached.
+  **Not pushed:** `0058adf3` onward.
 
 ## Sessions 2026-10-11 to 10-13 (Opus): harness 3.4; 111 done tasks archived; T361 (flow 07) and T364 (flow 08) done
 
