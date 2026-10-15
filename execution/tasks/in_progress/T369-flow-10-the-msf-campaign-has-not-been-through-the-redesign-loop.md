@@ -96,3 +96,9 @@ T366 (flow 09), T364 (flow 08), T162 (the system-managed MSF type), T153, T270, 
   `round-3-check.md`): 44 done, 8 partly, 1 not done; no anonymity leak; **final, no fourth round.** For the build: R8a/R9
   thresholds drawn 5 / 3 / 2 (the page shows the campaign's own); the Spec's class table and `Distribution`'s removal;
   K10's body is `MsfCampaignText.WithdrawBody` as built; R8b's reason links the campaign page; PAED-015's tool list.
+- **2026-10-15, step 6 begun.** Plan `build-lanes.md`, `build-contracts.md` (`6e842de3`): § 0 on `t369`, lanes K
+  (campaign) and R (report, the one migration `T369_MsfCampaignClosedBy`) in wave 1, T (her reports, respondent, coverage)
+  in wave 2, then the runbook lane. **F2's cast (the operator):** Sister Thandi Nkosi (`nkosi@kgk.wombat.local`, Nurse,
+  Above expectations, "Escalates early and keeps the nursing notes in step") and Dr Johan van Wyk
+  (`vanwyk@kgk.wombat.local`, Consultant, Above expectations, "Thorough on ward rounds; presents concisely"); both answer
+  in step 3.42.
