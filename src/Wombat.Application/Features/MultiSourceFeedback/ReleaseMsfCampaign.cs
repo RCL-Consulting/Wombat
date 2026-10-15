@@ -6,9 +6,12 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Wombat.Application.Audit;
+using Wombat.Application.Common.Email;
+using Wombat.Application.Common.Email.Templates;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Application.Features.MultiSourceFeedback;
@@ -63,6 +66,8 @@ public sealed class ReleaseMsfCampaignCommandHandler : IRequestHandler<ReleaseMs
     private readonly IMsfAggregationService _aggregationService;
     private readonly IActivityService _activityService;
     private readonly IActivityReferenceDataService _referenceDataService;
+    private readonly IUserAdministrationService _users;
+    private readonly AccountNotices _notices;
     private readonly ILogger<ReleaseMsfCampaignCommandHandler> _logger;
 
     public ReleaseMsfCampaignCommandHandler(
@@ -70,12 +75,16 @@ public sealed class ReleaseMsfCampaignCommandHandler : IRequestHandler<ReleaseMs
         IMsfAggregationService aggregationService,
         IActivityService activityService,
         IActivityReferenceDataService referenceDataService,
+        IUserAdministrationService users,
+        AccountNotices notices,
         ILogger<ReleaseMsfCampaignCommandHandler> logger)
     {
         _dbContext = dbContext;
         _aggregationService = aggregationService;
         _activityService = activityService;
         _referenceDataService = referenceDataService;
+        _users = users;
+        _notices = notices;
         _logger = logger;
     }
 
@@ -92,7 +101,7 @@ public sealed class ReleaseMsfCampaignCommandHandler : IRequestHandler<ReleaseMs
         // pending change). (T164)
         if (campaign.Template.Kind == MsfTemplateKind.LearnerFeedback && request.EntrustmentLevel is not null)
         {
-            throw new InvalidOperationException(
+            throw new MsfRefusedException(
                 "Learner feedback records no supervision level. Release it without one.");
         }
 
@@ -103,24 +112,29 @@ public sealed class ReleaseMsfCampaignCommandHandler : IRequestHandler<ReleaseMs
         // the same sentence as one that changed during the save.
         if (campaign.State is MsfCampaignState.Released or MsfCampaignState.Withdrawn)
         {
-            throw new InvalidOperationException(CampaignChanged);
+            throw new MsfRefusedException(CampaignChanged);
         }
 
         if (campaign.State != MsfCampaignState.UnderReview)
         {
-            throw new InvalidOperationException("Only under-review campaigns can be released.");
+            throw new MsfRefusedException("Only under-review campaigns can be released.");
         }
 
         // Only the release gates are read from this report, before the release has written any evidence.
         var report = _aggregationService.BuildReport(campaign, []);
         if (!report.ReadyForRelease)
         {
-            throw new InvalidOperationException(
+            throw new MsfRefusedException(
                 report.TotalResponses < report.MinimumResponses
                     ? "The campaign cannot be released until the minimum response count is met."
                     : $"The campaign cannot be released until at least {report.MinimumRespondentCategories} " +
-                      $"respondent categories report; only {report.SurvivingCategoryCount} did.");
+                      $"respondent groups report; only {report.SurvivingCategoryCount} did.");
         }
+
+        // Whether the trainee is current, read before anything is touched: once her programme has ended she can no longer
+        // open MSF reports, so no release mail is sent her (T369, F4). The release itself goes ahead (Q10).
+        var standing = await MsfCampaignRules.SubjectStandingAsync(
+            _dbContext, _users, campaign.SubjectUserId, cancellationToken);
 
         // EVERYTHING that can throw happens before the campaign is touched, and that ordering is the
         // point rather than a style. AuditWriter shares this scoped DbContext and saves, and
@@ -150,9 +164,35 @@ public sealed class ReleaseMsfCampaignCommandHandler : IRequestHandler<ReleaseMs
             // coordinator's release can race another's withdraw. Carried as the inner exception, so the audit pipeline
             // still sees a refused save, discards the staged evidence and writes its row alone (T201); EF's own message
             // names row counts and a documentation link. (T199 review)
-            throw new InvalidOperationException(CampaignChanged, exception);
+            throw new MsfRefusedException(CampaignChanged, exception);
+        }
+
+        if (standing.IsCurrent)
+        {
+            await SendReleasedNoticeAsync(campaign, request.ReviewerUserId, utcNow);
         }
     }
+
+    /// <summary>
+    /// The release mail (T369, Q8): after the save has committed, so a refused release mails nobody; a failed send is logged
+    /// and the release stands (<see cref="AccountNotices" />). It names the questionnaire, the day and the releaser, and
+    /// holds none of the feedback (<see cref="MsfReportReleasedEmail" />).
+    /// </summary>
+    private Task SendReleasedNoticeAsync(MsfCampaign campaign, string releasedByUserId, DateTime releasedOn)
+        => _notices.SendAsync(campaign.SubjectUserId, "msf-report-released", async trainee =>
+        {
+            var names = await _users.GetDisplayNamesAsync([releasedByUserId], CancellationToken.None);
+            return MsfReportReleasedEmail.Build(
+                trainee.Email,
+                campaign.Template.Name,
+                campaign.Template.Kind,
+                ProgrammeCalendar.DateOf(releasedOn),
+                names.TryGetValue(releasedByUserId, out var name) ? name : null,
+                _notices.LinkTo(MyReportsPath));
+        });
+
+    /// <summary>MSF reports, where the release mail links: the Web's <c>MsfLinks.MyReports</c> (a Web test holds the two equal).</summary>
+    public const string MyReportsPath = "/msf/my-reports";
 
     /// <summary>
     /// The refusal when the campaign changed between being read and the save: it was released or withdrawn elsewhere.

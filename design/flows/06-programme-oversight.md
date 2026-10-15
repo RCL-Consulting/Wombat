@@ -651,7 +651,7 @@ Expect: The sidebar first reads "Acting as Committee member", with "Switch to As
   Nothing of Dr Mahlangu's waits for an assessor any more: the Mini-CEX has left Waiting for assessors and Mr Smit's
   Home card.
 
-Step 3.52 — Dr Zulu's committee dashboard (act-3-operations.md:1281)
+Step 3.52 — Dr Zulu's committee dashboard (act-3-operations.md:1377)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → /
 Do: Choose Switch to Committee member in the sidebar and read the dashboard and the menu.
@@ -668,7 +668,7 @@ Expect:
     Short on it, its figure in words hidden after it. No card is one link around its rows (T280).
   - The menu is Home, Programme trainees, Committee reviews and Decision panels, then My data rights.
 
-Step 3.53 — Dr Mokoena's dashboard (act-3-operations.md:1313)
+Step 3.53 — Dr Mokoena's dashboard (act-3-operations.md:1409)
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /
 Do: Read the dashboard and the menu.
@@ -683,7 +683,7 @@ Expect:
     Entrustment decisions, then My data rights. The STAR review queue is not restored: Entrustment decisions takes its
     place.
 
-Step 3.54 — Dr Sithole's dashboard (act-3-operations.md:1339)
+Step 3.54 — Dr Sithole's dashboard (act-3-operations.md:1435)
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /
 Do: Read the dashboard.
@@ -691,7 +691,7 @@ Expect: The same three cards and figures as Dr Mokoena's, read for Paediatrics: 
   badged "5 registrars", and PAED-001 "2 of 5" last on Targets by EPA. Dr Sithole's menu reads as Dr Mokoena's, under
   "Acting as Sub-speciality admin".
 
-Step 3.54a — Dr Zulu reads who is short on PAED-002 (act-3-operations.md:1352)
+Step 3.54a — Dr Zulu reads who is short on PAED-002 (act-3-operations.md:1448)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /programme/trainees
 Do: On Home, choose PAED-002 on Targets by EPA. Then choose Clear filters.
@@ -708,7 +708,7 @@ Expect: Programme trainees opens with Short on set to PAED-002 and Programme tra
   for Nomsa Mahlangu, each over "0 of 3 each this semester" (D11). Nothing on the page reads "n / m", a percentage or
   the bare word "year" (Q10).
 
-Step 3.54b — Dr Zulu opens Dr Mahlangu's page (act-3-operations.md:1385)
+Step 3.54b — Dr Zulu opens Dr Mahlangu's page (act-3-operations.md:1481)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: /programme/trainees → /programme/trainees/{ProfileId:int}
 Do: On Programme trainees, choose Nomsa Mahlangu, and read the page to its foot.
@@ -728,7 +728,7 @@ Expect: The registrar page's h1 reads "Nomsa Mahlangu", its tab "Nomsa Mahlangu 
   Dr Zulu, a Committee member, is offered no Send a reminder. No word on the page names Nomsa Mahlangu by a pronoun
   (round-3-check 1).
 
-Step 3.54c — Dr Mokoena filters Waiting for assessors (act-3-operations.md:1417)
+Step 3.54c — Dr Mokoena filters Waiting for assessors (act-3-operations.md:1513)
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: / → /programme/waiting
 Do: Open Waiting for assessors from the menu. Choose With: Mohammed Patel and, before Show, look at the list; then Show.
@@ -828,13 +828,14 @@ Route: / → /msf/campaigns → /msf/campaigns/{CampaignId:int} → /committee/d
 Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue. On Decisions
   due, set Status to "Every status", press Show, and open By EPA.
 Expect: Home's header action, Start an MSF campaign, is a row of its own below the header's rule, 44px tall and the
-  page's width, and the cards stack in one column, each row's link a 44px block (T358, R2-Home k6). The campaign page
-  keeps its gutter (T226), and its invitee table (counts by respondent group: the page never lists an address) scrolls
-  within its card. Decisions due's filters stack, with Show and Clear filters each 44px tall; By EPA's fold summary is
+  page's width, and the cards stack in one column, each row's link a 44px block (T358, R2-Home k6). MSF campaigns
+  stacks its rows (T323): Pieter du Plessis's first, then Dr Molefe's, each a block with every field shown under its
+  column's name, each action a 44px block; nothing scrolls sideways. The campaign page keeps its gutter (T226), and its
+  invitee table (counts by respondent group: the page never lists an address) fits its card. Decisions due's filters stack, with Show and Clear filters each 44px tall; By EPA's fold summary is
   44px, and opened it reads one block per EPA; each decision is a block, its one action a 44px button the block's
   width; the pager's buttons are 44px (T364). The queue's filters stack above its table.
 
-Step A.7.6 — Dr Zulu on her phone (appendix-cross-cutting.md:1282)
+Step A.7.6 — Dr Zulu on her phone (appendix-cross-cutting.md:1283)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: At 390 px, open Committee reviews and Dr Molefe's final review.
@@ -852,7 +853,7 @@ Expect: Home's Registrars and Targets by EPA cards are one column: each registra
   the charts at 322 px. Nothing scrolls sideways. Checked at 768 px as well: the agenda still stacks, and nothing
   scrolls sideways.
 
-Step A.7.7 — Dr Mokoena on her phone (appendix-cross-cutting.md:1324)
+Step A.7.7 — Dr Mokoena on her phone (appendix-cross-cutting.md:1325)
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: / → /committee/panels → /committee/decisions-due → /admin/entrustment-decisions
 Do: At 390 px, open the dashboard, then Decision panels, Decisions due and Entrustment decisions from the menu.
@@ -864,7 +865,7 @@ Expect: Home stacks Waiting for assessors, badged "3 waiting, 1 overdue", Regist
   the trainee, then EPA, Level, Issued with its "review #n" link (44 px), Expires, Status and its actions (44 px). The
   revoked and superseded rows' lines wrap under them, never cut (C22). Nothing scrolls sideways.
 
-Step A.7.8 — Dr Sithole on his phone (appendix-cross-cutting.md:1354)
+Step A.7.8 — Dr Sithole on his phone (appendix-cross-cutting.md:1355)
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: / → /committee/reviews → /committee/decisions-due
 Do: At 390 px, open his dashboard, then Committee reviews and Decisions due from the menu.
@@ -874,7 +875,7 @@ Expect: As for Dr Mokoena, scoped to Dr Sithole's sub-speciality: Home stacks th
   header, and each review a block (the trainee, then Panel, Period over its window, Type, State, Decision, and Open
   44px). Decisions due reads as at Step A.7.5.
 
-Step A.7.8a — Programme trainees, a registrar's page and Waiting for assessors on a phone and a tablet (appendix-cross-cutting.md:1373)
+Step A.7.8a — Programme trainees, a registrar's page and Waiting for assessors on a phone and a tablet (appendix-cross-cutting.md:1374)
 Role: CommitteeMember and Coordinator — Dr Thandi Zulu and Mr Pieter Smit
 Route: /programme/trainees → /programme/trainees/{ProfileId:int} → /programme/waiting → /
 Do: At 390 px, Dr Zulu opens Programme trainees from the menu, then Dr Mahlangu's page; Mr Smit opens Waiting for

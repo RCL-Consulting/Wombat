@@ -47,7 +47,7 @@ public sealed partial class FieldGroupTests
         }
 
         fields.Distinct().Should().Contain(
-            ["ActivityForm.razor", "CampaignEdit.razor", "CurriculumItemsEdit.razor", "MsfRespond.razor", "ReviewDetail.razor",
+            ["ActivityForm.razor", "NewCampaign.razor", "CurriculumItemsEdit.razor", "MsfRespond.razor", "ReviewDetail.razor",
              "StageMinimaEditor.razor"],
             "guard: the scan finds the field-level groups, or it proves nothing");
         // An activity form's section is a <section> named by its heading since T342 (flow 03): a card one deep, not a

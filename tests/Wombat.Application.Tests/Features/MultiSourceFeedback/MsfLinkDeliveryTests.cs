@@ -390,7 +390,7 @@ public sealed class MsfLinkDeliveryTests
     private static async Task<Exception> RefusalAsync(Func<Task> act)
     {
         var thrown = await Record.ExceptionAsync(act);
-        thrown.Should().BeOfType<InvalidOperationException>("the command must refuse");
+        thrown.Should().BeOfType<MsfRefusedException>("the command must refuse");
         return thrown!;
     }
 

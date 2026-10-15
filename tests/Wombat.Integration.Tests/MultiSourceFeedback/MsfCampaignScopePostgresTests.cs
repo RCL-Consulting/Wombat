@@ -8,6 +8,7 @@ using Wombat.Application.Features.MultiSourceFeedback;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Domain.MultiSourceFeedback;
+using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
 using Wombat.Tests.Shared;
 
@@ -103,7 +104,7 @@ public sealed class MsfCampaignScopePostgresTests : IAsyncLifetime
                 // The single-campaign check reads the same definition, so it agrees with the list row for row.
                 (await TraineeScopeResolver.ResolveAsync(db, "trainee-two", CancellationToken.None))!
                     .InstitutionId.Should().Be(elsewhere);
-                (await new GetCampaignAggregateReportQueryHandler(db, new MsfAggregationService())
+                (await new GetCampaignAggregateReportQueryHandler(db, new MsfAggregationService(), FakeUserDirectory.Empty, new ActivityReferenceDataService(db))
                         .Handle(new GetCampaignAggregateReportQuery(twoProfiles, Coordinator(host)), CancellationToken.None))
                     .Should().BeNull();
             }

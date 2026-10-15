@@ -572,7 +572,7 @@ Expect: My progress's subtitle reads "Training year 3 · Semester 2, 2026". The 
   At the minimum.", its chart marking Today, and its table one row: `D−10`, 4, "At or above (4, training year 3)", the
   Mini-CEX, David Naidoo. Activities on this EPA lists the Mini-CEX, Completed, Credit "1 item".
 
-Step 3.48 — Dr Molefe's record and progress show her evidence and the feedback (act-3-operations.md:1171)
+Step 3.48 — Dr Molefe's record and progress show her evidence and the feedback (act-3-operations.md:1261)
 Role: Trainee — Dr Lerato Molefe
 Route: /activities/mine → /portfolio/progress → /portfolio/progress/{EpaId:int}
 Do: Open My activities, then My progress, then PAED-001, PAED-010 and PAED-012 from its index.
@@ -590,7 +590,7 @@ Expect: My activities holds her six Completed WBAs and two Multi-Source Feedback
   "MSF in Semester 2, 2026: covered by a released campaign that closed on `D`." first among their MSF lines, chart their
   ratings, and say under the chart "Multi-source feedback is not plotted.": no chart plots an MSF point (D36).
 
-Step 3.50 — Dr Dlamini's dashboard (act-3-operations.md:1222)
+Step 3.50 — Dr Dlamini's dashboard (act-3-operations.md:1314)
 Role: Trainee — Dr Anele Dlamini
 Route: /
 Do: Open the dashboard and read each card.

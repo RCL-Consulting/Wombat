@@ -2,6 +2,8 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Users;
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Application.Features.MultiSourceFeedback;
@@ -20,6 +22,12 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 /// It says it is the trainee's (<see cref="MsfCampaignAggregateReportDto.IsSubjectsCopy" />), so the coordinator's
 /// report page, which a trainee who also coordinates can open, sends them to their own copy instead (T269).
 /// </para>
+/// <para>
+/// It is the report page's one read (T369, build-contracts § 1): the trainee's name, the window, the invited count, who
+/// closed it and when it was released, the trainee's standing (<see cref="MsfCampaignRules.SubjectStandingAsync" />), and
+/// before release which named EPAs the release would record (<see cref="MsfCoveredEpaDto.WillBeRecorded" />, from the
+/// release's own predicate). No group's results while the campaign has not closed (F1), for every reader.
+/// </para>
 /// </remarks>
 public sealed record GetCampaignAggregateReportQuery(int CampaignId, ClaimsPrincipal Principal)
     : IRequest<MsfCampaignAggregateReportDto?>;
@@ -29,11 +37,19 @@ public sealed class GetCampaignAggregateReportQueryHandler
 {
     private readonly IApplicationDbContext _dbContext;
     private readonly IMsfAggregationService _aggregationService;
+    private readonly IUserAdministrationService _users;
+    private readonly IActivityReferenceDataService _referenceData;
 
-    public GetCampaignAggregateReportQueryHandler(IApplicationDbContext dbContext, IMsfAggregationService aggregationService)
+    public GetCampaignAggregateReportQueryHandler(
+        IApplicationDbContext dbContext,
+        IMsfAggregationService aggregationService,
+        IUserAdministrationService users,
+        IActivityReferenceDataService referenceData)
     {
         _dbContext = dbContext;
         _aggregationService = aggregationService;
+        _users = users;
+        _referenceData = referenceData;
     }
 
     public async Task<MsfCampaignAggregateReportDto?> Handle(GetCampaignAggregateReportQuery request, CancellationToken cancellationToken)
@@ -72,7 +88,58 @@ public sealed class GetCampaignAggregateReportQueryHandler
         // to send them to their own (T269).
         var callerIsSubject = MsfCampaignRules.IsCaller(request.Principal, campaign.SubjectUserId);
 
-        return _aggregationService.BuildReport(campaign, recorded[campaign.Id], nameTeachingContexts: !callerIsSubject)
-            with { IsSubjectsCopy = callerIsSubject };
+        var report = _aggregationService.BuildReport(campaign, recorded[campaign.Id], nameTeachingContexts: !callerIsSubject);
+
+        // Before release, which named EPAs the release would record: the predicate it drops an EPA by, asked now (T369,
+        // M6). Released, BuildReport has already set each to what was recorded.
+        var coveredEpas = report.CoveredEpas;
+        if (campaign.State != MsfCampaignState.Released && coveredEpas.Count > 0)
+        {
+            var coverable = await MsfCampaignRules.CoverableEpaIdsAsync(
+                _referenceData, campaign.SubjectUserId, campaign.Template.Kind, cancellationToken);
+            coveredEpas = coveredEpas.Select(epa => epa with { WillBeRecorded = coverable.Contains(epa.EpaId) }).ToList();
+        }
+
+        var standing = await MsfCampaignRules.SubjectStandingAsync(_dbContext, _users, campaign.SubjectUserId, cancellationToken);
+        var names = await UserDisplayNames.ResolveAsync(_users, [campaign.SubjectUserId], cancellationToken);
+
+        report = report with
+        {
+            IsSubjectsCopy = callerIsSubject,
+            CoveredEpas = coveredEpas,
+            SubjectName = names.NameOf(campaign.SubjectUserId),
+            SubjectIsCurrent = standing.IsCurrent,
+            SubjectEndedOn = standing.EndedOn
+        };
+
+        return callerIsSubject ? TraineesCopy(report) : report;
     }
+
+    /// <summary>
+    /// The trainee's copy carries only what the trainee's page may show (T369, build review R6; F3): no suppressed group, no
+    /// group's or question's count, no total, no invited count, no count of groups reporting, and not who closed it. Until
+    /// R6 only the page kept these out, so the copy itself still held a suppressed group's one answer counted. A question
+    /// nobody in a group rated carries no scale, so "answered" no longer needs its count.
+    /// </summary>
+    internal static MsfCampaignAggregateReportDto TraineesCopy(MsfCampaignAggregateReportDto report)
+        => report with
+        {
+            Categories = report.Categories
+                .Where(category => !category.IsSuppressed)
+                .Select(category => category with
+                {
+                    ResponseCount = 0,
+                    Questions = category.Questions
+                        .Select(question => question with
+                        {
+                            Scale = question.Scale is { ResponseCount: > 0 } scale ? scale with { ResponseCount = 0 } : null
+                        })
+                        .ToList()
+                })
+                .ToList(),
+            TotalResponses = 0,
+            SurvivingCategoryCount = 0,
+            InvitedTotal = 0,
+            ClosedByUserId = null
+        };
 }

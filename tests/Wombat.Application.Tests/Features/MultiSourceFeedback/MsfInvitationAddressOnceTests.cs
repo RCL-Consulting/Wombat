@@ -170,7 +170,7 @@ public sealed class MsfInvitationAddressOnceTests
 
         // Guard: the campaign's own coordinator, whom the check does answer, is told the address is already invited.
         var own = await RefusalAsync(campaignId, Invited.ToUpperInvariant(), TestPrincipals.Coordinator(HostInstitution));
-        own.Should().BeOfType<InvalidOperationException>().Which.Message.Should().Be(AddMsfInvitationCommandHandler.AlreadyInvited);
+        own.Should().BeOfType<MsfRefusedException>().Which.Message.Should().Be(AddMsfInvitationCommandHandler.AlreadyInvited);
 
         await using var read = CreateDb();
         (await read.MsfInvitations.AsNoTracking().CountAsync(invitation => invitation.CampaignId == campaignId))

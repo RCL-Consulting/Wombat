@@ -13,6 +13,13 @@ public sealed class MsfCampaign
     public int MinimumCategoryResponses { get; set; } = 3;
 
     /// <summary>
+    /// The least <see cref="MinimumCategoryResponses" /> a campaign may be created with, for either kind (T369, F2): a
+    /// respondent group shown from one or two answers lets whoever runs the campaign, who chose the invitees, tell whose
+    /// rating and comments they are.
+    /// </summary>
+    public const int MinimumCategoryResponsesFloor = 3;
+
+    /// <summary>
     /// How many respondent categories must survive suppression before the report may be released. (T121)
     /// </summary>
     /// <remarks>
@@ -54,6 +61,17 @@ public sealed class MsfCampaign
     public string? ReviewedByUserId { get; set; }
     public DateTime? OpenedOn { get; set; }
     public DateTime? ClosedOn { get; set; }
+
+    /// <summary>
+    /// Who closed the campaign to responses (<see cref="Close" />), or null when the hourly auto-close job did, once its
+    /// last day had passed. (T369, F5)
+    /// </summary>
+    /// <remarks>
+    /// The report says which: "Closed by itself on 2026-10-29, once 2026-10-28 had passed." when null. Null too on a
+    /// campaign closed before this column existed, and on one that never closed. An erasure pseudonymises it, as it does
+    /// <see cref="ReviewedByUserId" />.
+    /// </remarks>
+    public string? ClosedByUserId { get; set; }
     public DateTime? ReleasedOn { get; set; }
     public DateTime? WithdrawnOn { get; set; }
 
@@ -136,8 +154,12 @@ public sealed class MsfCampaign
     /// semester its coverage counts in, the committee window that sees it, and the date its evidence records carry. Its
     /// first value stands.
     /// </para>
+    /// <para>
+    /// <paramref name="closedByUserId" /> is who pressed Close campaign, or null for the auto-close job (T369, F5): stored
+    /// beside <see cref="ClosedOn" />, so the report can say the campaign closed by itself.
+    /// </para>
     /// </remarks>
-    public void Close(DateTime utcNow)
+    public void Close(string? closedByUserId, DateTime utcNow)
     {
         if (State != MsfCampaignState.Open)
         {
@@ -146,6 +168,7 @@ public sealed class MsfCampaign
 
         State = MsfCampaignState.UnderReview;
         ClosedOn = utcNow;
+        ClosedByUserId = string.IsNullOrWhiteSpace(closedByUserId) ? null : closedByUserId.Trim();
 
         foreach (var invitation in Invitations)
         {

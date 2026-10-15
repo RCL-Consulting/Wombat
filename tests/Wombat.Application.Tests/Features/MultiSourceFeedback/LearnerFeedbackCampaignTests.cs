@@ -300,12 +300,17 @@ public sealed class LearnerFeedbackCampaignTests
             (MsfRespondentCategory.Learner, "Ward round"),
             (MsfRespondentCategory.Learner, "Student tutorial"),
             (MsfRespondentCategory.Learner, "Student tutorial"));
+
+        // Before release, PAED-015's list names learner feedback, so the release will record it (T369, M6).
+        (await ReportAsync(db, campaign.Id, Coordinator()))!.CoveredEpas.Should().ContainSingle().Which.Should().Be(
+            new MsfCoveredEpaDto(Paed015, "PAED-015", "Teach and supervise", Recorded: false) { WillBeRecorded = true });
+
         await ReleaseAsync(db, campaign.Id, entrustmentLevel: null, narrative: null);
 
         var report = await ReportAsync(db, campaign.Id, Coordinator());
 
         report!.CoveredEpas.Should().ContainSingle().Which.Should().Be(
-            new MsfCoveredEpaDto(Paed015, "PAED-015", "Teach and supervise", Recorded: true));
+            new MsfCoveredEpaDto(Paed015, "PAED-015", "Teach and supervise", Recorded: true) { WillBeRecorded = true });
     }
 
     /// <summary>
@@ -517,6 +522,8 @@ public sealed class LearnerFeedbackCampaignTests
             new MsfAggregationService(),
             new ActivityService(db, new SchemaValidator(), new WorkflowEvaluator(), new CreditApplier(db), new FieldPermissionEvaluator()),
             new ActivityReferenceDataService(db),
+            FakeUserDirectory.Empty,
+            TestNotices.None(FakeUserDirectory.Empty),
             NullLogger<ReleaseMsfCampaignCommandHandler>.Instance);
 
         await handler.Handle(
@@ -525,7 +532,7 @@ public sealed class LearnerFeedbackCampaignTests
     }
 
     private static Task<MsfCampaignAggregateReportDto?> ReportAsync(ApplicationDbContext db, int campaignId, ClaimsPrincipal caller)
-        => new GetCampaignAggregateReportQueryHandler(db, new MsfAggregationService()).Handle(
+        => new GetCampaignAggregateReportQueryHandler(db, new MsfAggregationService(), FakeUserDirectory.Empty, new ActivityReferenceDataService(db)).Handle(
             new GetCampaignAggregateReportQuery(campaignId, caller), CancellationToken.None);
 
     private static Task<MsfCampaignSummaryDto> CreateAsync(

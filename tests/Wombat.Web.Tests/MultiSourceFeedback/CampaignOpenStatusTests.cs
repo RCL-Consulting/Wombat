@@ -63,14 +63,16 @@ public sealed class CampaignOpenStatusTests : TestContext
     [Fact]
     public void AFailedOpen_ShowsTheRefusal_AndNoSuccess()
     {
-        var sender = new FakeSender(new InvalidOperationException(OpenMsfCampaignCommandHandler.InvitationsNotSent));
+        var sender = new FakeSender(new MsfRefusedException(OpenMsfCampaignCommandHandler.InvitationsNotSent));
         Services.AddSingleton<IScopedSender>(sender);
         var cut = RenderComponent<CampaignEdit>(parameters => parameters.Add(page => page.CampaignId, CampaignId));
 
         OpenButton(cut).Click();
 
         cut.WaitForAssertion(() => cut.FindAll(".alert-danger").Should().ContainSingle());
-        cut.Find(".alert-danger").TextContent.Trim().Should().Be(OpenMsfCampaignCommandHandler.InvitationsNotSent);
+        // K20: beside the button, in the refusal's own words after "Not opened.".
+        cut.Find(".alert-danger").TextContent.Trim().Should().Be($"Not opened. {OpenMsfCampaignCommandHandler.InvitationsNotSent}");
+        cut.Find(".alert-danger").Closest(".status-actions").Should().NotBeNull();
         cut.FindAll(".alert-success").Should().BeEmpty();
     }
 
@@ -94,7 +96,8 @@ public sealed class CampaignOpenStatusTests : TestContext
                     Opened.Count > 0 ? MsfCampaignState.Open : MsfCampaignState.Draft,
                     [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Nurse])
                 {
-                    Invitees = [new MsfInviteeCountDto(MsfRespondentCategory.PeerDoctor, 3, 0)]
+                    Invitees = [new MsfInviteeCountDto(MsfRespondentCategory.PeerDoctor, 3, 0)],
+                    SubjectIsCurrent = true
                 },
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };

@@ -64,15 +64,10 @@ public sealed class MsfAggregationService : IMsfAggregationService
                                 .Select(answer => answer.ScaleValue!.Value)
                                 .ToList();
 
-                            var distribution = scaleValues
-                                .GroupBy(value => value)
-                                .OrderBy(grouping => grouping.Key)
-                                .ToDictionary(grouping => grouping.Key, grouping => grouping.Count());
-
+                            // The mean and its count only: no per-point counts, which no page draws (T369, F2).
                             var scaleAggregate = new MsfScaleAggregateDto(
                                 scaleValues.Count == 0 ? 0d : scaleValues.Average(),
-                                scaleValues.Count,
-                                distribution);
+                                scaleValues.Count);
 
                             return new MsfQuestionAggregateDto(question.Id, question.Prompt, question.Type, scaleAggregate, []);
                         }
@@ -103,6 +98,8 @@ public sealed class MsfAggregationService : IMsfAggregationService
             ? campaign.RespondedTeachingContexts()
             : null;
 
+        var released = campaign.State == MsfCampaignState.Released;
+
         return new MsfCampaignAggregateReportDto(
             campaign.Id,
             campaign.SubjectUserId,
@@ -114,7 +111,9 @@ public sealed class MsfAggregationService : IMsfAggregationService
             campaign.CoordinatorNarrative,
             campaign.Responses.Count >= campaign.MinimumResponses &&
                 survivingCategoryCount >= campaign.MinimumRespondentCategories,
-            categoryReports,
+            // F1: no group's results until the campaign has closed, for every reader; the counts above still say how far
+            // it is (T369).
+            ResponsesAreRead(campaign) ? categoryReports : [],
             campaign.MinimumRespondentCategories,
             survivingCategoryCount,
             campaign.CoveredEpas
@@ -123,13 +122,40 @@ public sealed class MsfAggregationService : IMsfAggregationService
                     covered.EpaId,
                     covered.Epa.Code,
                     covered.Epa.Title,
-                    recordedEpaIds.Contains(covered.EpaId)))
+                    recordedEpaIds.Contains(covered.EpaId))
+                {
+                    // Once released, what will be recorded is what was (T369, M6). Before, the report query asks the
+                    // release's own predicate; nothing here can.
+                    WillBeRecorded = released && recordedEpaIds.Contains(covered.EpaId)
+                })
                 .OrderBy(covered => covered.Code, StringComparer.Ordinal)
                 .ToList(),
             campaign.ReviewerEntrustmentLevel,
             campaign.EvidenceRecordedOn,
             campaign.Template.Kind,
             nameTeachingContexts ? teachingContexts : null,
-            teachingContexts?.Count);
+            teachingContexts?.Count)
+        {
+            // The campaign's own facts, for the report's header, status card and Close dialog (T369, build-contracts § 1).
+            OpensOn = campaign.OpensOn,
+            ClosesOn = campaign.ClosesOn,
+            InvitedTotal = campaign.Invitations.Count,
+            ClosedOn = campaign.ClosedOn,
+            ClosedByUserId = campaign.ClosedByUserId,
+            ReleasedOn = campaign.ReleasedOn
+        };
     }
+
+    /// <summary>
+    /// Whether the campaign's responses may be read by group: once it has closed to responses and every address has been
+    /// removed (T369, F1). Not while it is a draft or open; a campaign withdrawn while open never closed, and its responses
+    /// are never read either. One withdrawn after closing was read before it was withdrawn, and still is.
+    /// </summary>
+    internal static bool ResponsesAreRead(MsfCampaign campaign)
+        => campaign.State switch
+        {
+            MsfCampaignState.Closed or MsfCampaignState.UnderReview or MsfCampaignState.Released => true,
+            MsfCampaignState.Withdrawn => campaign.ClosedOn is not null,
+            _ => false
+        };
 }

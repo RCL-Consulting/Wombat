@@ -89,20 +89,32 @@ public sealed class CallerPrincipalPageTests : TestContext
     }
 
     [Fact]
-    public void MyMsfReports_ListsAndOpensAReport_AsTheSignedInTrainee()
+    public void MyMsfReports_ListsTheSignedInTraineesReports()
     {
         SignIn(TraineeUserId, WombatRoles.Trainee);
-        _sender
-            .On<ListMsfCampaignsForTraineeQuery>(_ => new[] { Summary(TraineeUserId) })
-            .On<GetCampaignAggregateReportQuery>(_ =>
-                Report(TraineeUserId, MsfCampaignState.Released) with { IsSubjectsCopy = true });
+        _sender.On<ListMsfCampaignsForTraineeQuery>(_ => new[] { Released() });
 
-        var cut = RenderComponent<MyMsfReports>(parameters => parameters.Add(page => page.CampaignId, CampaignId));
-        cut.WaitForState(() => cut.Markup.Contains("Selected report"));
+        var cut = RenderComponent<MyMsfReports>();
+        cut.WaitForState(() => cut.FindAll("tbody tr").Count == 1);
 
         var list = _sender.Single<ListMsfCampaignsForTraineeQuery>();
         list.SubjectUserId.Should().Be(TraineeUserId);
         CallerOf(list.Principal).Should().Be(TraineeUserId);
+    }
+
+    /// <summary>Her report's own page (T369, S6) asks for the report as the signed-in trainee.</summary>
+    [Fact]
+    public void MyMsfReport_OpensAReport_AsTheSignedInTrainee()
+    {
+        SignIn(TraineeUserId, WombatRoles.Trainee);
+        _sender.On<GetCampaignAggregateReportQuery>(_ => Report(TraineeUserId, MsfCampaignState.Released) with
+        {
+            IsSubjectsCopy = true,
+            ReleasedOn = new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Utc)
+        });
+
+        var cut = RenderComponent<MyMsfReport>(parameters => parameters.Add(page => page.CampaignId, CampaignId));
+        cut.WaitForState(() => cut.Markup.Contains(SecretNarrative));
 
         var report = _sender.Single<GetCampaignAggregateReportQuery>();
         report.CampaignId.Should().Be(CampaignId);
@@ -110,20 +122,22 @@ public sealed class CallerPrincipalPageTests : TestContext
     }
 
     [Fact]
-    public void MyMsfReports_NeverShowsSomeoneElsesReport_ThoughTheHandlerHandsItToAnAdministrator()
+    public void MyMsfReport_NeverShowsSomeoneElsesReport_ThoughTheHandlerHandsItToAnAdministrator()
     {
         // An Administrator may read any report, so the handler returns this one. The page is about the caller's OWN
         // reports: before T113 it raised its "not available" error but left the report assigned, and it rendered
-        // under the error.
+        // under the error. Since T369 it sends the caller to their own list, which says the report could not be found.
         SignIn("admin-1", WombatRoles.Administrator);
-        _sender
-            .On<ListMsfCampaignsForTraineeQuery>(_ => Array.Empty<MsfCampaignSummaryDto>())
-            .On<GetCampaignAggregateReportQuery>(_ => Report("trainee-2", MsfCampaignState.Released));
+        _sender.On<GetCampaignAggregateReportQuery>(_ => Report("trainee-2", MsfCampaignState.Released) with
+        {
+            ReleasedOn = new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Utc)
+        });
 
-        var cut = RenderComponent<MyMsfReports>(parameters => parameters.Add(page => page.CampaignId, CampaignId));
-        cut.WaitForState(() => cut.Markup.Contains("not available to the current trainee"));
+        var cut = RenderComponent<MyMsfReport>(parameters => parameters.Add(page => page.CampaignId, CampaignId));
+        var navigation = Services.GetRequiredService<FakeNavigationManager>();
+        cut.WaitForState(() => navigation.History.Count > 0);
 
-        cut.Markup.Should().NotContain("Selected report");
+        navigation.Uri.Should().EndWith("/msf/my-reports?unavailable=true");
         cut.Markup.Should().NotContain(SecretNarrative);
     }
 
@@ -227,12 +241,16 @@ public sealed class CallerPrincipalPageTests : TestContext
             .On<CloseMsfCampaignCommand>(_ => Report(TraineeUserId, MsfCampaignState.UnderReview));
 
         var cut = RenderComponent<CampaignReport>(parameters => parameters.Add(page => page.CampaignId, CampaignId));
-        cut.WaitForState(() => cut.FindAll("button").Any(button => button.TextContent.Contains("Close campaign")));
+        cut.WaitForState(() => cut.FindAll("#msf-close-campaign").Count > 0);
 
-        cut.FindAll("button").Single(button => button.TextContent.Contains("Close campaign")).Click();
+        // T369: Close campaign… confirms first, in its dialog (R2).
+        cut.Find("#msf-close-campaign").Click();
+        cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Close campaign").Click();
         cut.WaitForState(() => cut.Markup.Contains("Campaign closed"));
 
-        CallerOf(_sender.Single<GetCampaignAggregateReportQuery>().Principal).Should().Be(CoordinatorUserId);
+        // Read on arriving and again after the close (T225), each as the signed-in coordinator.
+        _sender.Received.OfType<GetCampaignAggregateReportQuery>().Should().HaveCount(2)
+            .And.OnlyContain(query => CallerOf(query.Principal) == CoordinatorUserId);
         var close = _sender.Single<CloseMsfCampaignCommand>();
         close.CampaignId.Should().Be(CampaignId);
         CallerOf(close.Principal).Should().Be(CoordinatorUserId);
@@ -249,7 +267,9 @@ public sealed class CallerPrincipalPageTests : TestContext
         var cut = RenderComponent<CampaignReport>(parameters => parameters.Add(page => page.CampaignId, CampaignId));
         cut.WaitForState(() => cut.FindAll("#msf-narrative").Count > 0);
 
-        cut.Find("form").Submit();
+        // T369: Release to trainee… confirms first, in its dialog (R6a).
+        cut.Find("#msf-release-campaign").Click();
+        cut.FindAll("dialog button").Single(button => button.TextContent.Trim().StartsWith("Release to ", StringComparison.Ordinal)).Click();
         cut.WaitForState(() => cut.Markup.Contains("Report released"));
 
         var release = _sender.Single<ReleaseMsfCampaignCommand>();
@@ -268,6 +288,7 @@ public sealed class CallerPrincipalPageTests : TestContext
             .On<OpenMsfCampaignCommand>(_ => null);
 
         var cut = RenderComponent<CampaignEdit>(parameters => parameters.Add(page => page.CampaignId, CampaignId));
+        cut.WaitForState(() => cut.FindAll("#msf-respondent-email").Count == 1);
 
         cut.Find("#msf-respondent-email").Change("peer-1@example.test");
         cut.Find("#msf-respondent-email").Closest("form")!.Submit();
@@ -291,7 +312,7 @@ public sealed class CallerPrincipalPageTests : TestContext
     }
 
     [Fact]
-    public void CampaignEdit_ReadsTheCurriculumOnlyOfATraineeThePickerOffered()
+    public void NewCampaign_ReadsTheCurriculumOnlyOfATraineeThePickerOffered()
     {
         // The select's value arrives from the browser. The reference service answers any id, so a value edited in the
         // page would read another institution's trainee's curriculum and confirm that the id names someone.
@@ -301,7 +322,9 @@ public sealed class CallerPrincipalPageTests : TestContext
             new Claim(WombatClaimTypes.InstitutionId, "1"));
         StubTheEditorsLists();
 
-        var cut = RenderComponent<CampaignEdit>();
+        Services.AddSingleton(TimeProvider.System);
+        var cut = RenderComponent<NewCampaign>();
+        cut.WaitForState(() => cut.FindAll("#msf-subject").Count == 1);
 
         cut.Find("#msf-subject").Change("trainee-elsewhere");
         _referenceData.CurriculumAskedFor.Should().BeEmpty();
@@ -351,8 +374,10 @@ public sealed class CallerPrincipalPageTests : TestContext
                 query.CampaignId, "Default MSF", MsfTemplateKind.Msf, MsfCampaignState.Draft,
                 [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Consultant, MsfRespondentCategory.Nurse])
             {
-                // Someone is invited: Open is disabled on a draft that invites nobody (T225).
-                Invitees = [new MsfInviteeCountDto(MsfRespondentCategory.PeerDoctor, 1, 0)]
+                // Someone is invited: Open is unavailable on a draft that invites nobody (T225), and on one whose
+                // trainee is not current (T369, K13).
+                Invitees = [new MsfInviteeCountDto(MsfRespondentCategory.PeerDoctor, 1, 0)],
+                SubjectIsCurrent = true
             });
 
     private static string? CallerOf(ClaimsPrincipal principal)
@@ -367,9 +392,8 @@ public sealed class CallerPrincipalPageTests : TestContext
             new DateOnly(2026, 7, 1), null, 30, "chair-1", "Consistent across the period.", EntrustmentDecisionStatus.Active,
             null, null, null, null, []);
 
-    private static MsfCampaignSummaryDto Summary(string subjectUserId)
-        => new(CampaignId, subjectUserId, "Default MSF", new DateOnly(2026, 1, 1), new DateOnly(2026, 1, 15), 8, 3,
-            MsfCampaignState.Released, 9, 9, new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Utc));
+    private static MsfReleasedReportDto Released()
+        => new(CampaignId, "Default MSF", MsfTemplateKind.Msf, new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Utc));
 
     private static MsfCampaignAggregateReportDto Report(string subjectUserId, MsfCampaignState state)
         => new(CampaignId, subjectUserId, "Default MSF", state, 8, 3, 9, SecretNarrative, true, [], 2, 2,

@@ -551,7 +551,7 @@ Expect: The sidebar first reads "Acting as Committee member", with "Switch to As
   Nothing of Dr Mahlangu's waits for an assessor any more: the Mini-CEX has left Waiting for assessors and Mr Smit's
   Home card.
 
-Step 3.52 — Dr Zulu's committee dashboard, and Programme Trainees (act-3-operations.md:1281)
+Step 3.52 — Dr Zulu's committee dashboard, and Programme Trainees (act-3-operations.md:1377)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → /
 Do: Choose Switch to Committee member in the sidebar and read the dashboard and the menu.
@@ -728,7 +728,7 @@ Expect: The dashboard's cards stack, each Furthest short row's figure under its 
   but the link and the state labelled by its column (T342), its Credit link 44 px tall, and the table of "Your requests"
   scrolls inside its container; each row's link or action stays reachable.
 
-Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1500)
+Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1501)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /account/login → / → /account/profile → /account/profile/submit → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: With a contrast checker (axe, or the browser's accessibility audit), check each pair below:

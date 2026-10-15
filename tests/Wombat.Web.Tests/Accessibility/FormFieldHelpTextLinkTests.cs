@@ -82,8 +82,9 @@ public sealed partial class FormFieldHelpTextLinkTests : TestContext
     {
         var fields = FormFieldsWithHelpText();
 
-        fields.Should().HaveCountGreaterThanOrEqualTo(40, "guard: the scan finds the callers (43 in 13 files), or it proves nothing");
-        fields.Select(field => field.File).Distinct().Should().HaveCountGreaterThanOrEqualTo(12);
+        // T369: the MSF create and campaign pages draw their fields by hand (the required mark, M7), so 39 in 12 files.
+        fields.Should().HaveCountGreaterThanOrEqualTo(36, "guard: the scan finds the callers (39 in 12 files), or it proves nothing");
+        fields.Select(field => field.File).Distinct().Should().HaveCountGreaterThanOrEqualTo(11);
 
         var unlinked = fields
             .Where(field => !InputNamesItsHelp(field.Markup, field.InputId))
@@ -106,7 +107,7 @@ public sealed partial class FormFieldHelpTextLinkTests : TestContext
 
         // T366: flow 09's pages dropped three (My committee reviews' detail, My authorisations' interim cards, the
         // register's old revoke section), leaving the scan 149; the floor guards the scan, not the count.
-        fields.Should().HaveCountGreaterThanOrEqualTo(140, "guard: the scan finds every FormField (149), or it proves nothing");
+        fields.Should().HaveCountGreaterThanOrEqualTo(130, "guard: the scan finds every FormField (134 since T369), or it proves nothing");
 
         var unnamed = fields
             .SelectMany(field => UnnamedSlotText(field.Markup, field.InputId)

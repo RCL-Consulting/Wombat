@@ -20,20 +20,24 @@ public sealed class GetMsfResponseFormQueryHandler : IRequestHandler<GetMsfRespo
     private readonly IApplicationDbContext _dbContext;
     private readonly IInvitationTokenService _tokenService;
     private readonly IUserAdministrationService _users;
+    private readonly TimeProvider _timeProvider;
 
     public GetMsfResponseFormQueryHandler(
         IApplicationDbContext dbContext,
         IInvitationTokenService tokenService,
-        IUserAdministrationService users)
+        IUserAdministrationService users,
+        TimeProvider? timeProvider = null)
     {
         _dbContext = dbContext;
         _tokenService = tokenService;
         _users = users;
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     public async Task<MsfResponseFormDto> Handle(GetMsfResponseFormQuery request, CancellationToken cancellationToken)
     {
-        var invitation = await MsfCampaignRules.GetActiveInvitationByTokenAsync(_dbContext, request.Token, _tokenService, cancellationToken);
+        var invitation = await MsfCampaignRules.GetActiveInvitationByTokenAsync(
+            _dbContext, request.Token, _tokenService, cancellationToken, _timeProvider);
         var campaign = invitation.Campaign;
         var scalePoints = await MsfRatingScale.ResolveAsync(_dbContext, campaign.Template, cancellationToken);
 

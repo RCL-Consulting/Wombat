@@ -35,6 +35,23 @@ public sealed class MsfInvitationReminderTests
         Assert.Equal(due, invitation.IsReminderDue(Open, At(ClosesOn.AddDays(daysFromClose))));
     }
 
+    /// <summary>
+    /// T369, build review R5: the days are South African (<c>ProgrammeCalendar.DateOf</c>), as the link's own expiry is
+    /// judged. At 22:30 UTC on the last day it is already the next day in South Africa, the link is refused as expired, and
+    /// no reminder goes out for it; at 21:30 UTC it is still the last day, and one does. Two hours early, the first
+    /// reminder day has begun.
+    /// </summary>
+    [Fact]
+    public void TheReminderDays_AreSouthAfricanDays()
+    {
+        var invitation = OpenedInvitation();
+
+        Assert.True(invitation.IsReminderDue(Open, ClosesOn.ToDateTime(new TimeOnly(21, 30), DateTimeKind.Utc)));
+        Assert.False(invitation.IsReminderDue(Open, ClosesOn.ToDateTime(new TimeOnly(22, 30), DateTimeKind.Utc)));
+        Assert.True(invitation.IsReminderDue(Open, ClosesOn.AddDays(-3).ToDateTime(new TimeOnly(22, 30), DateTimeKind.Utc)));
+        Assert.False(invitation.IsReminderDue(Open, ClosesOn.AddDays(-3).ToDateTime(new TimeOnly(21, 30), DateTimeKind.Utc)));
+    }
+
     [Fact]
     public void AnInvitationThatExpiresBeforeTheWindowCloses_IsDueTwoDaysBeforeItsExpiry()
     {

@@ -2,7 +2,10 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Common.Users;
+using Wombat.Application.Features.Curricula.Quota;
+using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Application.Features.MultiSourceFeedback;
@@ -127,6 +130,51 @@ public sealed record MsfCampaignSetupDto(
     /// (<see cref="MsfInvitation.LinkBeingSent" />). Zero in every other state. (T251)
     /// </summary>
     public int LinksBeingSent { get; init; }
+
+    /// <summary>Responses needed in all before the report can be released: About this campaign's Thresholds (T369).</summary>
+    public int MinimumResponses { get; init; }
+
+    /// <summary>The fewest responses a respondent group reports from; a group with fewer is suppressed. (T369)</summary>
+    public int MinimumCategoryResponses { get; init; }
+
+    /// <summary>How many respondent groups must clear the threshold before release (D11). (T369)</summary>
+    public int MinimumRespondentCategories { get; init; }
+
+    /// <summary>
+    /// The EPAs the campaign is declared to be evidence for, in code order, for About this campaign's Evidence (T369).
+    /// <see cref="MsfCoveredEpaDto.Recorded" /> is read from the evidence rows, so it is true only once a release recorded
+    /// the EPA; <c>WillBeRecorded</c>, the report's, is left false: no part of the campaign page reads it.
+    /// </summary>
+    public IReadOnlyList<MsfCoveredEpaDto> CoveredEpas { get; init; } = [];
+
+    /// <summary>
+    /// The trainee's training year today on the South African calendar (<see cref="TraineeProfile.StageOn" />), from the
+    /// programme they are in now; null when they are not a current trainee (<see cref="SubjectIsCurrent" />), whose
+    /// running programme, if any, says nothing about the campaign. (T369)
+    /// </summary>
+    public int? TrainingYear { get; init; }
+
+    /// <summary>
+    /// Whether the campaign was ever opened (<see cref="MsfCampaign.OpenedOn" />): its invitees' responses are counted only
+    /// then, so a draft, and a draft withdrawn, have no Responded column (T369, T270).
+    /// </summary>
+    public bool HasOpened { get; init; }
+
+    /// <summary>When the campaign closed to responses, by its coordinator or by the hourly job, or null. (T369)</summary>
+    public DateTime? ClosedOn { get; init; }
+
+    /// <summary>
+    /// Whether the campaign's trainee is a current trainee (<see cref="MsfCampaignRules.SubjectStandingAsync" />): the rule
+    /// add and open apply, so a draft whose trainee is not current offers neither, each with its reason (T369, K13; T270,
+    /// T284).
+    /// </summary>
+    public bool SubjectIsCurrent { get; init; }
+
+    /// <summary>
+    /// The day the trainee's programme ended, once none is running (<see cref="MsfSubjectStanding.EndedOn" />): a release
+    /// still records the evidence, but the trainee can no longer read it (T369, K14).
+    /// </summary>
+    public DateOnly? SubjectEndedOn { get; init; }
 }
 
 /// <summary>One respondent group's invitees on a campaign: how many were invited, and how many have responded. (T217)</summary>
@@ -215,6 +263,35 @@ public sealed class GetMsfCampaignSetupQueryHandler : IRequestHandler<GetMsfCamp
 
         var names = await UserDisplayNames.ResolveAsync(_users, [campaign.SubjectUserId], cancellationToken);
 
+        // About this campaign (T369): the EPAs it is evidence for, each recorded or not from the evidence rows (nothing is
+        // read for a campaign not released), and the trainee's standing and training year.
+        var coveredEpas = await _dbContext.Set<MsfCampaignEpa>()
+            .AsNoTracking()
+            .Where(covered => covered.CampaignId == campaign.Id && covered.Epa != null)
+            .Select(covered => new { covered.EpaId, covered.Epa.Code, covered.Epa.Title })
+            .ToListAsync(cancellationToken);
+        var recorded = await MsfCampaignCoverage.RecordedEpasAsync(
+            _dbContext,
+            campaign.SubjectUserId,
+            [(campaign.Id, campaign.State, campaign.Template.Kind)],
+            cancellationToken);
+        var recordedEpaIds = recorded[campaign.Id].Select(epa => epa.EpaId).ToHashSet();
+
+        var standing = await MsfCampaignRules.SubjectStandingAsync(
+            _dbContext, _users, campaign.SubjectUserId, cancellationToken);
+        int? trainingYear = null;
+        if (standing.IsCurrent)
+        {
+            var programmeStart = await TraineeScopeResolver.ActiveProfiles(_dbContext)
+                .Where(profile => profile.UserId == campaign.SubjectUserId)
+                .Select(profile => (DateOnly?)profile.ProgrammeStartDate)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (programmeStart is { } start)
+            {
+                trainingYear = TraineeProfile.StageOn(start, QuotaCalendar.Today(_timeProvider));
+            }
+        }
+
         return new MsfCampaignSetupDto(
             campaign.Id,
             campaign.Template.Name,
@@ -232,7 +309,20 @@ public sealed class GetMsfCampaignSetupQueryHandler : IRequestHandler<GetMsfCamp
                 .ToList(),
             DraftInvitees = draftInvitees,
             LinksNotDelivered = linksNotDelivered,
-            LinksBeingSent = linksBeingSent
+            LinksBeingSent = linksBeingSent,
+            MinimumResponses = campaign.MinimumResponses,
+            MinimumCategoryResponses = campaign.MinimumCategoryResponses,
+            MinimumRespondentCategories = campaign.MinimumRespondentCategories,
+            CoveredEpas = coveredEpas
+                .Select(covered => new MsfCoveredEpaDto(
+                    covered.EpaId, covered.Code, covered.Title, recordedEpaIds.Contains(covered.EpaId)))
+                .OrderBy(covered => covered.Code, StringComparer.Ordinal)
+                .ToList(),
+            TrainingYear = trainingYear,
+            HasOpened = campaign.OpenedOn is not null,
+            ClosedOn = campaign.ClosedOn,
+            SubjectIsCurrent = standing.IsCurrent,
+            SubjectEndedOn = standing.EndedOn
         };
     }
 }

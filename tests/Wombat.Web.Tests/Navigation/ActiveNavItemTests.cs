@@ -183,6 +183,7 @@ public sealed class ActiveNavItemTests : TestContext
     [InlineData(typeof(CampaignReport))]
     [InlineData(typeof(ProgrammeCoverage))]
     [InlineData(typeof(CampaignEdit))]
+    [InlineData(typeof(NewCampaign))]
     public void TheMsfReportAndCoverage_LightMsfCampaigns_ForACoordinator(Type page)
         => LitLabel(WombatRoles.Coordinator, page).Should().Be("MSF campaigns", "T331: they are reached from the campaigns");
 
@@ -199,6 +200,11 @@ public sealed class ActiveNavItemTests : TestContext
     [Fact]
     public void HerReview_LightsMyCommitteeReviews_ForTheTrainee()
         => LitLabel(WombatRoles.Trainee, typeof(MyReview)).Should().Be("My committee reviews");
+
+    // T369 (flow 10, S6): her MSF report's own page, Home › MSF reports › the report, for the Trainee only.
+    [Fact]
+    public void HerMsfReport_LightsMsfReports_ForTheTrainee()
+        => LitLabel(WombatRoles.Trainee, typeof(MyMsfReport)).Should().Be("MSF reports");
 
     [Fact]
     public void CurriculumProgress_LightsCurricula_ForTheAdministrator()

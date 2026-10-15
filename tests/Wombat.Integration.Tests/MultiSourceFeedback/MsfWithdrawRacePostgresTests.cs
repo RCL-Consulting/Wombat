@@ -222,6 +222,8 @@ public sealed class MsfWithdrawRacePostgresTests : IAsyncLifetime
                 db, new SchemaValidator(), new WorkflowEvaluator(), new CreditApplier(db), new FieldPermissionEvaluator(),
                 TimeProvider.System, new EpaCreditLock(db)),
             new ActivityReferenceDataService(db),
+            FakeUserDirectory.Empty,
+            TestNotices.None(FakeUserDirectory.Empty),
             NullLogger<ReleaseMsfCampaignCommandHandler>.Instance);
 
         await new AuditPipelineBehavior<ReleaseMsfCampaignCommand, Unit>(new AuditWriter(db), new FixedAuditContext())

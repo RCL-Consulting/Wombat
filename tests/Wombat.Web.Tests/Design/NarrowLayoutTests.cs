@@ -246,7 +246,7 @@ public sealed partial class NarrowLayoutTests
     }
 
     [Fact]
-    public void ADetailsGridOfOneCard_GivesItTheWholeRow_WhereThePageAsksForIt()
+    public void NoDetailsGrid_StretchesALoneCard_AndNoPageAsksForIt()
     {
         // T266. The grid's first column is its narrow third, so a lone card sat in it with the rest of the row empty: on
         // /msf/campaigns/{id} at 1000px, a 223px card with 447px of nothing beside it, and its table scrolled inside it.
@@ -256,12 +256,14 @@ public sealed partial class NarrowLayoutTests
 
         var grid = Rule(rules, string.Empty, ".details-grid");
         grid.Declarations.Should().Contain("grid-template-columns: 1fr 2fr");
-        Rule(rules, string.Empty, ".details-grid--lone-spans > .detail-card:only-child").Declarations.Should().Contain("grid-column: 1 / -1");
         rules.Where(rule => Selectors(rule).Any(selector => selector.StartsWith(".details-grid >", StringComparison.Ordinal)
                 && selector.Contains(":only-child", StringComparison.Ordinal)))
             .Should().BeEmpty("a lone card on every details grid is not what every page wants");
+        // T369 (flow 10): the campaign page, which asked for it, is a page column of cards now (.msf-page), not a grid,
+        // and no page asks: the opt-in .details-grid--lone-spans went with it (build review D8).
         File.ReadAllText(WebFile("Components", "Pages", "MultiSourceFeedback", "CampaignEdit.razor"))
-            .Should().Contain("""<div class="details-grid details-grid--lone-spans">""");
+            .Should().NotContain("details-grid").And.Contain("""<div class="msf-page">""");
+        rules.SelectMany(Selectors).Should().NotContain(selector => selector.Contains("details-grid--lone-spans", StringComparison.Ordinal));
     }
 
     [Fact]

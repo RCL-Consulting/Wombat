@@ -287,7 +287,7 @@ public sealed class MsfInvitationDeliveryTests
         }
         else
         {
-            campaign.Close(Late);
+            campaign.Close("coordinator-1", Late);
         }
 
         Assert.All(campaign.Invitations, invitation =>

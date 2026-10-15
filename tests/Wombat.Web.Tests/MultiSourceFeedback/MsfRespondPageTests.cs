@@ -28,15 +28,25 @@ public sealed class MsfRespondPageTests : TestContext
     {
         var cut = Render(new FakeRespondSender());
 
-        cut.Find("h2").TextContent.Should().Be($"Feedback on {FakeRespondSender.TraineeName}");
-        cut.Find(".page-subtitle").TextContent.Should().Contain("Annual MSF").And.Contain("Last day to respond: 2026-10-15");
+        cut.Find("h1").TextContent.Should().Be($"Feedback on {FakeRespondSender.TraineeName}");
+        cut.FindAll("h1").Should().ContainSingle("the card's heading is its one h1 (T369, T280)");
+        cut.Find("h1").HasAttribute("tabindex").Should().BeFalse("nothing moves the focus to it");
+        cut.Find(".respond-meta").TextContent.Trim().Should().Be("Annual MSF · Last day to respond: 2026-10-15");
         Words(cut.Find(".account-form-container").TextContent).Should().Contain(
             $"You have been asked to give multi-source feedback on {FakeRespondSender.TraineeName}, a trainee you have " +
             "worked with.").And.NotContain("learners");
-        Words(cut.Find(".account-form-container").TextContent).Should().Contain(
-            $"Your name and email address are never shown to {FakeRespondSender.TraineeName}. They see the feedback only " +
-            "after the request has closed and a coordinator has reviewed and released it, grouped by respondent role.",
-            "the page promises what the invitation email promises, and no more (T202)");
+        var privacy = cut.Find(".respond-privacy");
+        privacy.GetAttribute("role").Should().Be("group");
+        cut.Find($"#{privacy.GetAttribute("aria-labelledby")}").TextContent.Should().Be("Who sees your feedback");
+        privacy.QuerySelectorAll("li").Select(item => Words(item.TextContent).Trim()).Should().Equal(
+            [
+                $"Your name and email address are never shown to {FakeRespondSender.TraineeName}.",
+                $"{FakeRespondSender.TraineeName} sees the feedback only after the request has closed and a coordinator " +
+                "has reviewed and released it, grouped by respondent role."
+            ],
+            "the page promises what the invitation email promises, and no more (T202), before the first question (Q1)");
+        privacy.CompareDocumentPosition(cut.Find("fieldset")).HasFlag(AngleSharp.Dom.DocumentPositions.Following)
+            .Should().BeTrue("who sees the feedback is said before the rating");
 
         var legend = cut.Find("fieldset legend");
         legend.TextContent.Should().Contain(FakeRespondSender.ScalePrompt).And.Contain("required");
@@ -45,7 +55,8 @@ public sealed class MsfRespondPageTests : TestContext
         cut.FindAll("fieldset input[type=radio]").Should().OnlyContain(radio => radio.HasAttribute("required"));
 
         var comment = cut.Find($"textarea#msf-q{FakeRespondSender.CommentQuestionId}");
-        comment.GetAttribute("maxlength").Should().Be("4000");
+        comment.HasAttribute("maxlength").Should().BeFalse(
+            "a paste over the limit is refused in words, never cut silently (DESIGN.md § Form system; build review D4)");
         comment.HasAttribute("required").Should().BeFalse("the comment question is optional");
         cut.Find($"label[for='msf-q{FakeRespondSender.CommentQuestionId}']").TextContent.Should().Contain(FakeRespondSender.CommentPrompt);
     }
@@ -60,15 +71,15 @@ public sealed class MsfRespondPageTests : TestContext
         var sender = new FakeRespondSender { Form = FakeRespondSender.LearnerFeedbackForm() };
         var cut = Render(sender);
 
-        cut.Find("h2").TextContent.Should().Be($"Feedback on the teaching of {FakeRespondSender.TraineeName}");
+        cut.Find("h1").TextContent.Should().Be($"Feedback on the teaching of {FakeRespondSender.TraineeName}");
         var words = Words(cut.Find(".account-form-container").TextContent);
         words.Should().Contain(
             $"You have been asked to give feedback on the teaching of {FakeRespondSender.TraineeName}, a trainee who has " +
             "taught you.");
         words.Should().Contain(
-            $"Your name and email address are never shown to {FakeRespondSender.TraineeName}. They see the feedback only " +
-            "after the request has closed and a coordinator has reviewed and released it, together with the other " +
-            "learners' feedback.",
+            $"Your name and email address are never shown to {FakeRespondSender.TraineeName}.").And.Contain(
+            $"{FakeRespondSender.TraineeName} sees the feedback only after the request has closed and a coordinator has " +
+            "reviewed and released it, together with the other learners' feedback.",
             "the page promises what the learner's invitation email promises, and no more (T164)");
         words.Should().Contain($"For each rating, think of the teaching you had from {FakeRespondSender.TraineeName}.");
         words.Should().NotContain("multi-source").And.NotContain("worked with").And.NotContain("respondent role")
@@ -106,7 +117,7 @@ public sealed class MsfRespondPageTests : TestContext
             ],
             options => options.WithStrictOrdering());
 
-        cut.Find("h2").TextContent.Should().Be("Thank you");
+        cut.Find("h1").TextContent.Should().Be("Thank you");
         cut.Find(".alert-success").TextContent.Should().Be($"Your feedback on {FakeRespondSender.TraineeName} has been recorded.");
         Words(cut.Markup).Should().Contain("will not open the questionnaire again");
         cut.FindAll("input[type=radio], textarea, button[type=submit]").Should().BeEmpty();
@@ -123,7 +134,7 @@ public sealed class MsfRespondPageTests : TestContext
         const string message = "The refusal's own message, written for the respondent.";
         var cut = Render(new FakeRespondSender { FormFailure = new MsfResponseRefusedException(reason, message) });
 
-        cut.Find("h2").TextContent.Should().Be(title);
+        cut.Find("h1").TextContent.Should().Be(title);
         var alert = cut.Find(".alert");
         alert.TextContent.Trim().Should().Be(message);
         alert.GetAttribute("role").Should().Be("alert");
@@ -143,7 +154,7 @@ public sealed class MsfRespondPageTests : TestContext
         cut.Find($"#msf-q{FakeRespondSender.ScaleQuestionId}-3").Change("3");
         cut.Find("form").Submit();
 
-        cut.Find("h2").TextContent.Should().Be("Feedback link already used");
+        cut.Find("h1").TextContent.Should().Be("Feedback link already used");
         cut.Find(".alert").TextContent.Trim().Should().Be(MsfCampaignRules.LinkUsedMessage);
         cut.FindAll("button[type=submit]").Should().BeEmpty();
     }
@@ -162,7 +173,8 @@ public sealed class MsfRespondPageTests : TestContext
         cut.Find("form").Submit();
 
         var alert = cut.Find(".alert-danger");
-        alert.TextContent.Trim().Should().Be(missing);
+        Words(alert.TextContent).Trim().Should().Be($"Your feedback was not recorded. {missing}");
+        alert.QuerySelector("strong")!.TextContent.Should().Be("Your feedback was not recorded.");
         alert.GetAttribute("role").Should().Be("alert");
         cut.Find($"#msf-q{FakeRespondSender.CommentQuestionId}").TextContent.Should().Be("Kept after the refusal.");
         cut.FindAll("button[type=submit]").Should().ContainSingle();
@@ -173,7 +185,7 @@ public sealed class MsfRespondPageTests : TestContext
         cut.Find("form").Submit();
 
         sender.Submitted.Should().HaveCount(2);
-        cut.Find("h2").TextContent.Should().Be("Thank you");
+        cut.Find("h1").TextContent.Should().Be("Thank you");
     }
 
     /// <summary>
@@ -201,8 +213,9 @@ public sealed class MsfRespondPageTests : TestContext
         comment.GetAttribute("aria-invalid").Should().Be("true");
         comment.GetAttribute("aria-describedby").Should().Be($"{FieldHelp.Id(commentId)} {MsfRespond.ErrorSummaryId}");
         comment.ClassList.Should().Contain("input-validation-error");
-        cut.Find($"#{MsfRespond.ErrorSummaryId}").TextContent.Trim().Should().Be("Too long.");
-        cut.Find("fieldset").HasAttribute("aria-describedby").Should().BeFalse("the rating is not the question at fault");
+        Words(cut.Find($"#{MsfRespond.ErrorSummaryId}").TextContent).Trim().Should().Be("Your feedback was not recorded. Too long.");
+        cut.Find("fieldset").GetAttribute("aria-describedby").Should().Be(
+            MsfRespond.RatingHelpId(FakeRespondSender.ScaleQuestionId), "the rating is not the question at fault: its help alone");
     }
 
     [Fact]
@@ -217,7 +230,8 @@ public sealed class MsfRespondPageTests : TestContext
 
         cut.Find("form").Submit();
 
-        cut.Find(".alert-danger").TextContent.Trim().Should().Be("Please answer the questions below before submitting.");
+        Words(cut.Find(".alert-danger").TextContent).Trim().Should().Be(
+            "Your feedback was not recorded. Please answer the questions below before submitting.");
         cut.FindAll("fieldset input[type=radio]").Should().NotBeEmpty();
     }
 
@@ -226,7 +240,7 @@ public sealed class MsfRespondPageTests : TestContext
     {
         var cut = Render(new FakeRespondSender { Form = FakeRespondSender.SampleForm(traineeName: null) });
 
-        cut.Find("h2").TextContent.Should().Be("Feedback on the trainee named in your invitation");
+        cut.Find("h1").TextContent.Should().Be("Feedback on the trainee named in your invitation");
     }
 
     [Fact]
@@ -235,9 +249,77 @@ public sealed class MsfRespondPageTests : TestContext
         const string detail = "fault-detail-for-developers-only";
         var cut = Render(new FakeRespondSender { FormFailure = new InvalidOperationException(detail) });
 
-        cut.Find("h2").TextContent.Should().Be("Something went wrong");
+        cut.Find("h1").TextContent.Should().Be("Something went wrong");
         cut.Markup.Should().NotContain(detail);
         cut.FindAll("button[type=submit]").Should().BeEmpty();
+    }
+
+    // ─── T369 (flow 10, boards R3-Q1 to Q9) ──────────────────────────────────
+
+    /// <summary>
+    /// Each state keeps its Alert under its h1 (S9): info for a link already used, warning for a closed request and an
+    /// expired, revoked or unrecognised link; each says the page can be closed.
+    /// </summary>
+    [Theory]
+    [InlineData(MsfResponseRefusal.LinkUsed, "info")]
+    [InlineData(MsfResponseRefusal.CampaignNotOpen, "warning")]
+    [InlineData(MsfResponseRefusal.LinkExpired, "warning")]
+    [InlineData(MsfResponseRefusal.LinkRevoked, "warning")]
+    [InlineData(MsfResponseRefusal.LinkNotRecognised, "warning")]
+    public void EachDeadLink_HasItsOwnAlertKind_UnderItsHeading(MsfResponseRefusal reason, string kind)
+    {
+        var cut = Render(new FakeRespondSender { FormFailure = new MsfResponseRefusedException(reason, "Its message.") });
+
+        cut.FindAll("h1").Should().ContainSingle();
+        var alert = cut.Find(".alert");
+        alert.ClassList.Should().Contain($"alert-{kind}");
+        alert.PreviousElementSibling!.TagName.Should().Be("H1", "the state's Alert sits under its heading");
+        alert.NextElementSibling!.TextContent.Trim().Should().Be("You can close this page.");
+    }
+
+    /// <summary>The fault (Q8): a danger Alert under its h1, and "You can close this page." under it, as every dead link.</summary>
+    [Fact]
+    public void AFault_IsADangerAlert_AndSaysThePageCanBeClosed()
+    {
+        var cut = Render(new FakeRespondSender { FormFailure = new InvalidOperationException("fault") });
+
+        cut.FindAll("h1").Should().ContainSingle();
+        var alert = cut.Find(".alert");
+        alert.ClassList.Should().Contain("alert-danger");
+        alert.NextElementSibling!.TextContent.Trim().Should().Be("You can close this page.");
+    }
+
+    /// <summary>
+    /// The questionnaire (Q1): the mark at 44px; the rating one fieldset, its legend the question with the required mark
+    /// seen and "required" heard, its help under the legend and naming it; the optional comment says so, and its help
+    /// reads "Up to 4,000 characters" (no counter: the page carries no script).
+    /// </summary>
+    [Fact]
+    public void TheQuestionnaire_MarksWhatIsRequired_AndHelpsEachQuestion()
+    {
+        var cut = Render(new FakeRespondSender());
+
+        var mark = cut.Find(".account-brand-mark");
+        mark.GetAttribute("width").Should().Be("44");
+        mark.GetAttribute("height").Should().Be("44");
+
+        cut.Find(".respond-required").TextContent.Should().Be("Questions marked * must be answered.");
+        var legend = cut.Find("fieldset legend");
+        legend.QuerySelector(".required-mark")!.GetAttribute("aria-hidden").Should().Be("true");
+        legend.QuerySelector(".visually-hidden")!.TextContent.Trim().Should().Be("required");
+
+        var helpId = MsfRespond.RatingHelpId(FakeRespondSender.ScaleQuestionId);
+        cut.Find("fieldset").GetAttribute("aria-describedby").Should().Be(helpId);
+        cut.Find($"#{helpId}").TextContent.Should().Be(
+            $"For each rating, compare {FakeRespondSender.TraineeName} with what you would expect of a trainee at their " +
+            "stage of training.");
+
+        var commentId = $"msf-q{FakeRespondSender.CommentQuestionId}";
+        cut.Find($"label[for='{commentId}'] .respond-optional").TextContent.Trim().Should().Be("(optional)");
+        cut.Find($"#{FieldHelp.Id(commentId)}").TextContent.Should().StartWith("Up to 4,000 characters.");
+        cut.FindAll("script").Should().BeEmpty();
+        cut.Find("form").ClassList.Should().Contain("respond-form");
+        cut.Find("form > button[type=submit]").TextContent.Trim().Should().Be("Submit feedback");
     }
 
     /// <summary>Text with every run of whitespace, line breaks in the markup included, read as one space.</summary>

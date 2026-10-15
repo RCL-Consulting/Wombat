@@ -68,7 +68,7 @@ public sealed class MsfOpenCampaignSendFailureTests
         after.TokenHashes.Should().Equal(before.TokenHashes, "no token may be rotated by an open that did not happen");
 
         sender.Attempted.Should().Be(2, "the second send is the one that failed");
-        refusal.Should().BeOfType<InvalidOperationException>()
+        refusal.Should().BeOfType<MsfRefusedException>()
             .Which.Message.Should().Be(OpenMsfCampaignCommandHandler.InvitationsNotSent);
     }
 

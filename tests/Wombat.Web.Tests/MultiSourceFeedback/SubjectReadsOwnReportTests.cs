@@ -83,8 +83,8 @@ public sealed class SubjectReadsOwnReportTests : WombatTestContext
     }
 
     /// <summary>
-    /// Where the subject lands: their own copy, with the count of teaching contexts and no name, and no coordinator
-    /// card. Rendered as the page the coordinator's page sent them to, by the same sender.
+    /// Where the subject lands: their own copy, on its own page since T369 (S6), with the count of teaching contexts and no
+    /// name, and no coordinator card. Rendered as the page the coordinator's page sent them to, by the same sender.
     /// </summary>
     /// <remarks>
     /// The copy handed in names a context, which the handler never gives the subject, so that the page's own leaving
@@ -100,11 +100,11 @@ public sealed class SubjectReadsOwnReportTests : WombatTestContext
         RenderComponent<CampaignReport>(parameters => parameters.Add(page => page.CampaignId, CampaignId));
         Navigation.Uri.Should().EndWith($"/msf/my-reports/{CampaignId}");
 
-        var landed = RenderComponent<MyMsfReports>(parameters => parameters.Add(page => page.CampaignId, CampaignId));
-        landed.WaitForState(() => landed.Markup.Contains("Selected report"));
+        var landed = RenderComponent<MyMsfReport>(parameters => parameters.Add(page => page.CampaignId, CampaignId));
+        landed.WaitForState(() => landed.Markup.Contains(Narrative));
 
-        landed.Markup.Should().Contain("Teaching contexts that responded:</strong> 2")
-            .And.Contain(Narrative)
+        landed.Find("#my-report-contexts").TextContent.Should().Be("Teaching contexts that responded: 2");
+        landed.Markup.Should().Contain(Narrative)
             .And.NotContain(ContextName)
             .And.NotContain("Coordinator actions")
             .And.NotContain("Release to trainee");
@@ -129,7 +129,7 @@ public sealed class SubjectReadsOwnReportTests : WombatTestContext
         }));
 
         var cut = RenderComponent<CampaignReport>(parameters => parameters.Add(page => page.CampaignId, CampaignId));
-        cut.WaitForState(() => cut.Markup.Contains("Coordinator actions"));
+        cut.WaitForState(() => cut.Markup.Contains("Teaching contexts that responded")); // the status card (T369)
 
         Navigation.History.Should().BeEmpty();
         cut.Markup.Should().Contain($"2 ({ContextName}, Ward round)");
@@ -147,12 +147,16 @@ public sealed class SubjectReadsOwnReportTests : WombatTestContext
         Services.AddSingleton<IScopedSender>(
             new ReportSender(SubjectsCopy() with { SubjectUserId = $" {SubjectUserId} " }));
 
-        var cut = RenderComponent<MyMsfReports>(parameters => parameters.Add(page => page.CampaignId, CampaignId));
-        cut.WaitForState(() => cut.Markup.Contains("Selected report"));
+        var cut = RenderComponent<MyMsfReport>(parameters => parameters.Add(page => page.CampaignId, CampaignId));
+        cut.WaitForState(() => cut.Markup.Contains(Narrative));
         cut.FindAll(".alert-danger").Should().BeEmpty();
+        Navigation.History.Should().BeEmpty("her own copy is shown where it was asked for");
     }
 
-    /// <summary>A copy not marked the caller's is refused, even when its id is the caller's.</summary>
+    /// <summary>
+    /// A copy not marked the caller's is not shown, even when its id is the caller's: the page sends them to their own
+    /// list, which says the report could not be found (T369, M11), and shows nothing of it meanwhile.
+    /// </summary>
     [Fact]
     public void TheTraineesPage_RefusesACopyNotMarkedTheirs_ThoughItNamesThem()
     {
@@ -163,10 +167,13 @@ public sealed class SubjectReadsOwnReportTests : WombatTestContext
             TeachingContextsResponded = [ContextName]
         }));
 
-        var cut = RenderComponent<MyMsfReports>(parameters => parameters.Add(page => page.CampaignId, CampaignId));
-        cut.WaitForState(() => cut.Markup.Contains("not available to the current trainee"));
+        var cut = RenderComponent<MyMsfReport>(parameters => parameters.Add(page => page.CampaignId, CampaignId));
+        cut.WaitForState(() => Navigation.History.Count > 0);
 
-        cut.Markup.Should().NotContain("Selected report").And.NotContain(ContextName).And.NotContain(Narrative);
+        var navigation = Navigation.History.Should().ContainSingle().Subject;
+        navigation.Uri.Should().Be("/msf/my-reports?unavailable=true");
+        navigation.Options.ReplaceHistoryEntry.Should().BeTrue("Back must not return to a page that sends them on again");
+        cut.Markup.Should().NotContain(ContextName).And.NotContain(Narrative);
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
@@ -184,13 +191,16 @@ public sealed class SubjectReadsOwnReportTests : WombatTestContext
             [
                 new MsfCategoryAggregateDto(MsfRespondentCategory.Learner, 3, false,
                     [new MsfQuestionAggregateDto(1, "Teaching overall", MsfQuestionType.Scale,
-                        new MsfScaleAggregateDto(4, 3, new Dictionary<int, int> { [4] = 3 }), [])])
+                        new MsfScaleAggregateDto(4, 3), [])])
             ],
             1, 1, [new MsfCoveredEpaDto(115, "PAED-015", "Teach and supervise", true)], null, DateTime.UtcNow,
             MsfTemplateKind.LearnerFeedback,
             TeachingContextsResponded: null,
             TeachingContextCount: 2,
-            IsSubjectsCopy: true);
+            IsSubjectsCopy: true)
+        {
+            ReleasedOn = new DateTime(2026, 10, 14, 14, 34, 0, DateTimeKind.Utc)
+        };
 
     private sealed class RecordingReferenceData : StubActivityReferenceDataService
     {
@@ -213,7 +223,7 @@ public sealed class SubjectReadsOwnReportTests : WombatTestContext
             {
                 GetCampaignAggregateReportQuery => Task.FromResult((TResponse)(object)report),
                 ListMsfCampaignsForTraineeQuery =>
-                    Task.FromResult((TResponse)(object)(IReadOnlyList<MsfCampaignSummaryDto>)[]),
+                    Task.FromResult((TResponse)(object)(IReadOnlyList<MsfReleasedReportDto>)[]),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };
 

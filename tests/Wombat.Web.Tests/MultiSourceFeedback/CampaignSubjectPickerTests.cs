@@ -37,6 +37,7 @@ public sealed class CampaignSubjectPickerTests : TestContext
 
         Services.AddSingleton<IScopedSender>(_sender);
         Services.AddSingleton<IActivityReferenceDataService>(_referenceData);
+        Services.AddSingleton(TimeProvider.System);
     }
 
     [Fact]
@@ -44,7 +45,7 @@ public sealed class CampaignSubjectPickerTests : TestContext
     {
         SignIn("coordinator-1", WombatRoles.Coordinator);
 
-        OfferedSubjects(RenderComponent<CampaignEdit>()).Should().Equal(Registrar, Classmate);
+        OfferedSubjects(RenderComponent<NewCampaign>()).Should().Equal(Registrar, Classmate);
     }
 
     [Theory]
@@ -54,7 +55,7 @@ public sealed class CampaignSubjectPickerTests : TestContext
     {
         SignIn(Registrar, role);
 
-        OfferedSubjects(RenderComponent<CampaignEdit>()).Should().Equal(Classmate);
+        OfferedSubjects(RenderComponent<NewCampaign>()).Should().Equal(Classmate);
     }
 
     /// <summary>
@@ -67,7 +68,7 @@ public sealed class CampaignSubjectPickerTests : TestContext
     public void ACallerWhoHoldsTrainee_IsOfferedNobody_AndNoCurriculumIsRead(string role)
     {
         SignIn(Registrar, role, WombatRoles.Trainee);
-        var cut = RenderComponent<CampaignEdit>();
+        var cut = RenderComponent<NewCampaign>();
 
         cut.FindAll("#msf-subject").Should().BeEmpty();
         OfferedSubjects(cut).Should().BeEmpty();
@@ -82,7 +83,7 @@ public sealed class CampaignSubjectPickerTests : TestContext
     public void AForgedChoiceOfTheCaller_ReadsNoCurriculum()
     {
         SignIn(Registrar, WombatRoles.Coordinator);
-        var cut = RenderComponent<CampaignEdit>();
+        var cut = RenderComponent<NewCampaign>();
 
         cut.Find("#msf-subject").Change(Registrar);
         _referenceData.Asked.Should().BeEmpty();
@@ -118,7 +119,7 @@ public sealed class CampaignSubjectPickerTests : TestContext
             new Claim(WombatClaimTypes.InstitutionId, "1"));
     }
 
-    private static string[] OfferedSubjects(IRenderedComponent<CampaignEdit> cut)
+    private static string[] OfferedSubjects(IRenderedFragment cut)
         => cut.FindAll("#msf-subject option")
             .Select(option => option.GetAttribute("value") ?? string.Empty)
             .Where(value => value.Length > 0)

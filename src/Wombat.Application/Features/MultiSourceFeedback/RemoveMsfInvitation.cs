@@ -57,7 +57,7 @@ public sealed class RemoveMsfInvitationCommandHandler : IRequestHandler<RemoveMs
 
         var campaign = await _dbContext.Set<MsfCampaign>()
             .SingleOrDefaultAsync(candidate => candidate.Id == request.CampaignId, cancellationToken)
-            ?? throw new InvalidOperationException("The MSF campaign could not be found.");
+            ?? throw new MsfRefusedException("The MSF campaign could not be found.");
 
         // The state first, as the add asks it before the address (T228): once the campaign has opened, which of its
         // invitees an id names is asked of nobody, so an id that names nothing, or another campaign's invitee, gets this
@@ -65,7 +65,7 @@ public sealed class RemoveMsfInvitationCommandHandler : IRequestHandler<RemoveMs
         // a campaign withdrawn while still a draft is not told that its invitees were mailed a link. (T247 review)
         if (campaign.State != MsfCampaignState.Draft)
         {
-            throw new InvalidOperationException(
+            throw new MsfRefusedException(
                 campaign.State == MsfCampaignState.Withdrawn ? OnlyFromADraftWithdrawn : OnlyFromADraft);
         }
 
@@ -75,7 +75,7 @@ public sealed class RemoveMsfInvitationCommandHandler : IRequestHandler<RemoveMs
             .SingleOrDefaultAsync(
                 candidate => candidate.Id == request.InvitationId && candidate.CampaignId == campaign.Id,
                 cancellationToken)
-            ?? throw new InvalidOperationException(NotInvited);
+            ?? throw new MsfRefusedException(NotInvited);
 
         // Every check above changes nothing, so a refusal leaves nothing tracked for the audit pipeline's write to commit.
         _dbContext.Set<MsfInvitation>().Remove(invitation);
@@ -96,7 +96,7 @@ public sealed class RemoveMsfInvitationCommandHandler : IRequestHandler<RemoveMs
         {
             // Carried as the inner exception, so the audit pipeline still sees a refused save and writes its row alone
             // (T201): the refused delete is not sent again with it.
-            throw new InvalidOperationException(CampaignChanged, exception);
+            throw new MsfRefusedException(CampaignChanged, exception);
         }
     }
 

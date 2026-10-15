@@ -75,7 +75,7 @@ public sealed class MsfCampaignSetupInviteeTests
             (MsfRespondentCategory.PeerDoctor, true),
             (MsfRespondentCategory.Nurse, false));
         var campaign = await db.MsfCampaigns.Include(entity => entity.Invitations).SingleAsync(entity => entity.Id == campaignId);
-        campaign.Close(DateTime.UtcNow);
+        campaign.Close("coordinator-1", DateTime.UtcNow);
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
 

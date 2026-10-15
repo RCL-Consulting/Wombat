@@ -1,0 +1,90 @@
+@using System.Globalization
+@*
+  The cards of the respondent groups that cleared the threshold (T369, flow 10, build-contracts § 1; round 3 M2, S7; RB's
+  one-line header). The coordinator's report mounts it, and so does her own report (lane T, ForTrainee).
+
+  - Only the groups with IsSuppressed false, in the order given: the enum's (Peer doctor, Consultant, Nurse, Allied health
+    professional, Other), as MsfAggregationService orders them. Nothing about a suppressed group: the suppressed line and
+    the intro are the page's.
+  - Each card a section.detail-card.group-card. Its heading is the group by its label, and with one scale question its
+    average on the same line: "Consultant · 4.33 average rating, from 3 responses" for the coordinator, "Consultant · 4.33
+    average rating" for her (no count, T249). No scale question, or several: the group's name alone, then each question's
+    average under it (S7).
+  - A comment question once (.group-question, never "Prompt.: 4.00", T270), its comments verbatim (ul.group-comments). A
+    question nobody commented on is left out.
+  - The average to two decimals, invariant culture.
+*@
+
+@foreach (var group in Categories.Where(group => !group.IsSuppressed))
+{
+  var headingId = $"msf-group-{group.Category.ToString().ToLowerInvariant()}";
+  var scales = group.Questions.Where(question => question.Type == MsfQuestionType.Scale && IsRated(question.Scale)).ToList();
+  var inHeading = scales.Count == 1 ? scales[0].Scale : null;
+  <section class="detail-card group-card" aria-labelledby="@headingId">
+    @Heading(headingId, MsfRespondentCategories.Describe(group.Category), inHeading)
+    @if (inHeading is null)
+    {
+      @foreach (var question in scales)
+      {
+        <p class="group-question">@question.Prompt</p>
+        <p>@Average(question.Scale!)</p>
+      }
+    }
+    @foreach (var question in group.Questions.Where(question => question.Type != MsfQuestionType.Scale && question.Comments.Count > 0))
+    {
+      <p class="group-question">@question.Prompt</p>
+      <ul class="group-comments">
+        @foreach (var comment in question.Comments)
+        {
+          <li>@comment</li>
+        }
+      </ul>
+    }
+  </section>
+}
+
+@code {
+  /// <summary>
+  /// A question someone in the group rated. The trainee's copy carries no count (T369, build review R6), only a scale where
+  /// one was given; the coordinator's carries a scale with a count of none for a question nobody rated.
+  /// </summary>
+  private bool IsRated(MsfScaleAggregateDto? scale)
+    => scale is not null && (ForTrainee || scale.ResponseCount > 0);
+
+  /// <summary>Every group the report carries; the cards show those not suppressed.</summary>
+  [Parameter, EditorRequired] public IReadOnlyList<MsfCategoryAggregateDto> Categories { get; set; } = [];
+
+  /// <summary>Her copy: an average with no count (T249). False, the coordinator's: "from 3 responses".</summary>
+  [Parameter] public bool ForTrainee { get; set; }
+
+  /// <summary>The group's heading, "h3" by default: the cards sit under the page's h2 "By respondent group".</summary>
+  [Parameter] public string HeadingLevel { get; set; } = "h3";
+
+  /// <summary>The group's name, and with one scale question its average on the same line (RB's one line).</summary>
+  private RenderFragment Heading(string id, string name, MsfScaleAggregateDto? scale) => __builder =>
+  {
+    var level = HeadingLevel is "h2" or "h3" or "h4" or "h5" ? HeadingLevel : "h3";
+    __builder.OpenElement(0, level);
+    __builder.AddAttribute(1, "id", id);
+    if (scale is null)
+    {
+      __builder.AddContent(2, name);
+    }
+    else
+    {
+      __builder.AddContent(3, $"{name} · ");
+      __builder.AddContent(4, Average(scale));
+    }
+
+    __builder.CloseElement();
+  };
+
+  /// <summary>"<strong>4.33</strong> average rating, from 3 responses", the count left off her copy.</summary>
+  private RenderFragment Average(MsfScaleAggregateDto scale) => __builder =>
+  {
+    <span class="group-avg"><strong>@scale.Average.ToString("0.00", CultureInfo.InvariantCulture)</strong>@AverageTail(scale)</span>
+  };
+
+  private string AverageTail(MsfScaleAggregateDto scale)
+    => ForTrainee ? " average rating" : $" average rating, from {MsfReportText.Responses(scale.ResponseCount)}";
+}

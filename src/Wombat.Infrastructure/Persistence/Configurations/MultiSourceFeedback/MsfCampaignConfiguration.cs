@@ -16,6 +16,10 @@ public sealed class MsfCampaignConfiguration : IEntityTypeConfiguration<MsfCampa
         builder.Property(entity => entity.CoordinatorNarrative).HasMaxLength(4000);
         builder.Property(entity => entity.ReviewedByUserId).HasMaxLength(450);
 
+        // Who closed it, or null for the auto-close job (T369, F5). No foreign key, as ReviewedByUserId has none: an
+        // erasure pseudonymises it in place (ErasureExecutor).
+        builder.Property(entity => entity.ClosedByUserId).HasMaxLength(450);
+
         // Optimistic concurrency on the aggregate, and it is load-bearing rather than defensive since
         // T121. The once-only guarantee on the evidence fan-out rests on MsfCampaign.Release refusing
         // anything but UnderReview, and that refusal is an in-memory check on a row both of two

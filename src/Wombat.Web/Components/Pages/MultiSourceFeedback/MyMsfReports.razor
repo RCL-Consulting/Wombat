@@ -1,109 +1,110 @@
 @page "/msf/my-reports"
-@page "/msf/my-reports/{CampaignId:int}"
 @attribute [Authorize(Roles = "Trainee,Coordinator,Administrator")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<MyMsfReports> Logger
+@inject IJSRuntime JS
 
-@* Coordinator is admitted (T269) because the coordinator's report page sends a campaign's subject here, whatever role
-   brought them there, and every role that page admits must be admitted here, or the subject would be sent to a refusal.
-   A Coordinator who no longer holds Trainee still reads their own released reports: the handlers admit the subject
-   whatever their roles (MsfCampaignRules.CanReadReportAsync, TraineeScopeResolver.MayReadAsync). A coordinator who is
-   nobody's subject finds an empty list, and a report about anyone else is refused below, as an Administrator's is. The
-   nav offers the page to Trainee alone. *@
+@* Coordinator is admitted (T269) because the coordinator's report page sends a campaign's subject to their own copy,
+   whatever role brought them there, and every role that page admits must be admitted here and on MyMsfReport, or the
+   subject would be sent to a refusal. A Coordinator who no longer holds Trainee still reads their own released reports:
+   the handlers admit the subject whatever their roles (MsfCampaignRules.CanReadReportAsync,
+   TraineeScopeResolver.MayReadAsync). A coordinator who is nobody's subject finds an empty list. The nav offers the page
+   to Trainee alone.
+
+   MSF reports (T369, flow 10, lane T; boards R3-M1, M2, M5–M7, M11; round 3 F3, S8; T270, T280, T323, T325, T329). The
+   list only: each report opens on a page of its own, MyMsfReport (/msf/my-reports/{id}, S6).
+
+   - "Your released reports": a hand-written table with both stack classes (stacked at 900px and below, as M2 draws it at
+     768 and 390), captioned, the report its row's header (the template over its kind), Released in SAST, View named for
+     its row (RowNames.Distinct, T239). No Responses column (F3): her query carries no count.
+   - ?unavailable=true is where MyMsfReport sends an id that is not one of her released reports (not hers, not released,
+     unknown): one info alert above her list, focused (M5, M11, T270). A failed read is never that alert (M10).
+   - Loading: the header at once, the section's heading, a status line and row skeletons. A failure is fixed words with
+     Try again, never the exception's text (T329), the failure to the log. None: today's words. *@
 
 <PageTitle>MSF reports · Wombat</PageTitle>
 
-<PageHeader Title="MSF reports" Subtitle="Released aggregate feedback only. Individual responses are never shown." />
+<PageHeader Title="MSF reports" Subtitle="@MyMsfReportText.ListSubtitle" />
 
-@if (!string.IsNullOrWhiteSpace(_error))
-{
-  <Alert Kind="danger">@_error</Alert>
-}
+@* Present from the first render, so its words are announced when they come. *@
+<p class="visually-hidden" role="status">@(_loading ? MyMsfReportText.ListLoading : null)</p>
 
-<div class="details-grid">
-  <section class="detail-card">
-    <h3>Released reports</h3>
-    <StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _reports.Count == 0)" EmptyTitle="No released reports" EmptyBody="Released multi-source feedback will appear here.">
-      <DataTable Items="_reports">
-        <HeaderRow>
-          <tr>
-            <th>Template</th>
-            <th>Released</th>
-            <th>Responses</th>
-            <th><span class="visually-hidden">Actions</span></th>
-          </tr>
-        </HeaderRow>
-        <Row Context="item">
-          <tr>
-            <td>@item.TemplateName<br /><span class="muted">@MsfEvidenceKinds.Describe(item.Kind)</span></td>
-            <td>@item.ReleasedOn?.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
-            <td>@item.ResponseCount</td>
-            <td>
-              <div class="actions-cell">
-                @* T239: named by the report, its template and when it was released. *@
-                <a class="btn btn-outline btn-sm" href="@($"/msf/my-reports/{item.Id}")"
-                   aria-label="@($"View the {item.TemplateName} report, released {item.ReleasedOn?.ToLocalTime().ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture)}")">View</a>
-              </div>
-            </td>
-          </tr>
-        </Row>
-      </DataTable>
-    </StatePanel>
-  </section>
-
-  @if (_report is not null)
+<div class="msf-page">
+  @if (Unavailable)
   {
-    <section class="detail-card">
-      <h3>Selected report</h3>
-      <p><strong>Template:</strong> @_report.TemplateName (@MsfEvidenceKinds.Describe(_report.Kind))</p>
-      @* T164: the count, never the names. A context is a finer breakdown than the group the suppression threshold
-         protects, and a name beside a handful of answers can say which learner wrote which. *@
-      @if (_report.TeachingContextCount is int contextCount)
-      {
-        <p><strong>Teaching contexts that responded:</strong> @contextCount</p>
-      }
-      <p><strong>Narrative:</strong> @_report.CoordinatorNarrative</p>
-      @foreach (var category in _report.Categories.Where(category => !category.IsSuppressed))
-      {
-        <div class="mb-3">
-          @* By the group's label, never its key (T225). *@
-          <strong>@MsfRespondentCategories.Describe(category.Category)</strong>
-          @foreach (var question in category.Questions)
-          {
-            @if (question.Type == MsfQuestionType.Scale && question.Scale is not null)
-            {
-              <p>@question.Prompt: @question.Scale.Average.ToString("0.00")</p>
-            }
-            else if (question.Comments.Count > 0)
-            {
-              <p>@question.Prompt</p>
-              <ul>
-                @foreach (var comment in question.Comments)
-                {
-                  <li>@comment</li>
-                }
-              </ul>
-            }
-          }
-        </div>
-      }
-    </section>
+    <ActionResult Id="msf-report-unavailable" FocusOnLoad="true">
+      <Alert Kind="info">@MyMsfReportText.NotFound</Alert>
+    </ActionResult>
   }
+
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusHeadingAsync"
+              IsEmpty="@(!_loading && _reports.Count == 0)" EmptyTitle="@MyMsfReportText.EmptyTitle"
+              EmptyBody="@MyMsfReportText.EmptyBody">
+    <LoadingContent>
+      <section class="list-section" aria-busy="true">
+        <h2 class="list-section-title">@MyMsfReportText.ReportsHeading</h2>
+        <div aria-hidden="true">
+          <Skeleton Count="2" Height="3rem" />
+        </div>
+      </section>
+    </LoadingContent>
+    <ChildContent>
+      @{ var rowNames = RowNames.Distinct(_reports, report => report.CampaignId, MyMsfReportText.RowName,
+                                          report => $" at {MyMsfReportText.Released(report.ReleasedOn)}"); }
+      <section class="list-section msf-measure" aria-labelledby="msf-reports-heading">
+        <h2 id="msf-reports-heading" class="list-section-title">@MyMsfReportText.ReportsHeading</h2>
+        <div class="table-container shadow">
+          <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+            <caption>@MyMsfReportText.ReportsCaption</caption>
+            <thead role="rowgroup">
+              <tr role="row">
+                <th scope="col" role="columnheader">Report</th>
+                <th scope="col" role="columnheader">Released</th>
+                <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody role="rowgroup">
+              @foreach (var report in _reports)
+              {
+                <tr role="row" @key="report.CampaignId" id="@($"msf-my-report-row-{report.CampaignId}")">
+                  <th scope="row" role="rowheader" class="trainee-cell">
+                    @report.TemplateName
+                    <span class="kind-line">@MsfEvidenceKinds.Describe(report.Kind)</span>
+                  </th>
+                  <td role="cell" data-label="Released" class="nowrap">@MyMsfReportText.Released(report.ReleasedOn)</td>
+                  <td role="cell">
+                    <div class="actions-cell">
+                      <a class="btn btn-outline btn-sm" href="@MsfLinks.MyReport(report.CampaignId)"
+                         aria-label="@($"View {rowNames[report.CampaignId]}")">View</a>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </ChildContent>
+  </StatePanel>
 </div>
 
 @code {
-  [Parameter] public int? CampaignId { get; set; }
+  /// <summary>
+  /// Set by her report's page when the id it was given is not one of her released reports (M11): the list says so once,
+  /// above itself, and takes the focus.
+  /// </summary>
+  [SupplyParameterFromQuery(Name = "unavailable")]
+  public bool Unavailable { get; set; }
 
-  private readonly List<MsfCampaignSummaryDto> _reports = [];
-  private MsfCampaignAggregateReportDto? _report;
+  private readonly List<MsfReleasedReportDto> _reports = [];
   private bool _loading = true;
-  private string? _error;
+  private string? _loadError;
 
-  protected override async Task OnParametersSetAsync()
+  protected override Task OnInitializedAsync() => LoadAsync();
+
+  private async Task LoadAsync()
   {
-    _loading = true;
-    _error = null;
-
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -112,33 +113,27 @@
 
       _reports.Clear();
       _reports.AddRange(await Sender.Send(new ListMsfCampaignsForTraineeQuery(userId, authState.User)));
-
-      if (CampaignId.HasValue)
-      {
-        // The handler decides who may read it and returns null otherwise (T113): the subject, once released.
-        // The check below is not that gate; it keeps an Administrator or a Coordinator, who may read reports about
-        // others, on a page that is about their OWN reports. Whether a copy is the caller's own is the handler's
-        // answer (IsSubjectsCopy, T269), the one that also leaves the teaching contexts unnamed, so this page never
-        // shows a copy that names them (T164).
-        _report = await Sender.Send(new GetCampaignAggregateReportQuery(CampaignId.Value, authState.User));
-        if (_report is not { State: MsfCampaignState.Released, IsSubjectsCopy: true })
-        {
-          _report = null;
-          throw new InvalidOperationException("The selected report is not available to the current trainee.");
-        }
-      }
-      else
-      {
-        _report = null;
-      }
+      _loadError = null;
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _error = exception.Message;
+      // T329: fixed words, never the exception's text; the failure to the log.
+      Logger.LogError(exception, "The trainee's MSF reports could not be loaded.");
+      _loadError = MyMsfReportText.ListFailed;
     }
     finally
     {
       _loading = false;
     }
   }
+
+  private async Task RetryAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    StateHasChanged();
+    await LoadAsync();
+  }
+
+  private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
 }

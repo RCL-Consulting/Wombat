@@ -87,11 +87,11 @@ public sealed class ResendMsfLinksCommandHandler : IRequestHandler<ResendMsfLink
         var campaign = await _dbContext.Set<MsfCampaign>()
             .Include(candidate => candidate.Template)
             .SingleOrDefaultAsync(candidate => candidate.Id == request.CampaignId, cancellationToken)
-            ?? throw new InvalidOperationException("The MSF campaign could not be found.");
+            ?? throw new MsfRefusedException("The MSF campaign could not be found.");
 
         if (campaign.State != MsfCampaignState.Open)
         {
-            throw new InvalidOperationException(OnlyOpenCampaigns);
+            throw new MsfRefusedException(OnlyOpenCampaigns);
         }
 
         var utcNow = _timeProvider.GetUtcNow().UtcDateTime;
@@ -108,14 +108,14 @@ public sealed class ResendMsfLinksCommandHandler : IRequestHandler<ResendMsfLink
 
         if (undelivered.Count == 0)
         {
-            throw new InvalidOperationException(NothingToResend);
+            throw new MsfRefusedException(NothingToResend);
         }
 
         // Whom the links ask about, before the first mail, as the open resolves it (T202).
         var names = await _users.GetDisplayNamesAsync([campaign.SubjectUserId], cancellationToken);
         if (!names.TryGetValue(campaign.SubjectUserId, out var traineeName) || string.IsNullOrWhiteSpace(traineeName))
         {
-            throw new InvalidOperationException(TraineeHasNoName);
+            throw new MsfRefusedException(TraineeHasNoName);
         }
 
         var links = undelivered
@@ -147,7 +147,7 @@ public sealed class ResendMsfLinksCommandHandler : IRequestHandler<ResendMsfLink
             {
                 // Replaced rather than passed on, as the open does (T184): the audit row keeps a refusal's message, and a
                 // sender's own may name the respondent's address.
-                throw new InvalidOperationException(LinksNotSent, exception);
+                throw new MsfRefusedException(LinksNotSent, exception);
             }
         }
 
@@ -169,7 +169,7 @@ public sealed class ResendMsfLinksCommandHandler : IRequestHandler<ResendMsfLink
         {
             // Carried as the inner exception, so the audit pipeline still sees a refused save and writes its row alone
             // (T201).
-            throw new InvalidOperationException(CampaignChanged, exception);
+            throw new MsfRefusedException(CampaignChanged, exception);
         }
 
         return links.Count;

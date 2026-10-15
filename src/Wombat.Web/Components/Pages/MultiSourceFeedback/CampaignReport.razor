@@ -1,4 +1,6 @@
 @page "/msf/reports/{CampaignId:int}"
+@implements IAsyncDisposable
+@using System.Globalization
 @using System.Security.Claims
 @using Wombat.Application.Features.Activities.Services
 @attribute [Authorize(Roles = "Coordinator,Administrator")]
@@ -6,320 +8,519 @@
 @inject IActivityReferenceDataService ReferenceData
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
+@inject ILogger<CampaignReport> Logger
+@inject IJSRuntime JS
 
-<PageTitle>MSF report · Wombat</PageTitle>
+@*
+  The MSF report (T369, flow 10, lane R; boards R3-R1 to R3-R17; round 3 F1, F2, F4, F5, F7, F8, F9, F10, M2, M5, M6, M8,
+  M10, S1, S2, S7, S8, S15, S16). One column at the report's measure, in the order: the status card, the groups, the
+  release section, then what was released.
 
-<PageHeader Title="MSF report" Subtitle="Review aggregate results and release them to the trainee." />
+  - Header: "MSF report for {name}", the subtitle "{template} · {kind} · {opens} to {closes}", and "Open its campaign page"
+    alone on its line (F9). Loading and failed it reads "MSF report"; an unknown or out-of-scope id "Report unavailable".
+  - The status card (F7's stripe): its badge and its line, then for an open campaign F1's line (no group's results until
+    it has closed, which the handler enforces for every reader); "Closed by itself on …" when the job closed it (F5); the
+    checklist, or the released one-liner; Evidence for, with what the release will record (M6); and while Open, Close
+    campaign… with its help.
+  - By respondent group, once it has closed: MsfGroupCards and the suppressed line, named, never counted.
+  - The release section, under review: what a release does, the narrative with its counter (counted in the browser by
+    flow 09's script), the level, and Release to trainee…, aria-disabled with its reason beside it when a threshold is
+    short, every reason ending with the link to withdraw it on its campaign page (S15, check item 2).
+  - Close and Release confirm through ConfirmDialog, inside the page's column so § 0's phone rules reach it (M10): Close
+    danger, Release primary (F8). Either result, done, takes the focus at the head of the page once the dialog has closed.
+    A refusal shows beside the button that sent it, the focus back on that button (R16, R17), while the button is still
+    there; once the campaign read again offers it no more, the refusal heads the page and takes the focus.
+  - An unexpected failure is a fixed sentence, never the exception's text, and goes to the log (T329).
+*@
 
-@* What Close campaign or Release to trainee did, as on the campaign page (T217, T225). Given the focus whenever the
-   button that acted is gone: a closed campaign has no Close campaign, a released one no Release to trainee. The focus
-   would otherwise fall to the page. Until T225 an action's refusal was also the panel's load error, so a refused close
-   hid the whole report and showed its refusal twice. *@
-<div @ref="_result" class="action-result" tabindex="-1">
-  @if (!string.IsNullOrWhiteSpace(_status))
+<PageTitle>@Heading · Wombat</PageTitle>
+
+<PageHeader Title="@Heading" SubtitleContent="@SubtitleFragment" />
+
+@* Always present, filled while the report is read: a live region added with its words in it is often not read. *@
+<p class="visually-hidden" role="status">@(_loading ? MsfReportText.Loading : null)</p>
+
+<div class="msf-page msf-page--measure">
+  @if (_resultText is not null)
   {
-    <Alert Kind="success" Role="status">@_status</Alert>
+    <ActionResult @ref="_result" Id="msf-report-result">
+      <Alert Kind="@_resultKind">
+        <strong>@_resultText</strong>@_resultDetail
+      </Alert>
+    </ActionResult>
   }
 
-  @if (!string.IsNullOrWhiteSpace(_actionError))
-  {
-    <Alert Kind="danger" Role="alert">@_actionError</Alert>
-  }
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusHeadingAsync">
+    <LoadingContent>
+      <section class="detail-card detail-card--emphasis" aria-busy="true">
+        <Skeleton Count="3" Height="3rem" />
+      </section>
+      <section class="detail-card" aria-busy="true">
+        <Skeleton Count="3" Height="3rem" />
+      </section>
+    </LoadingContent>
+    <ChildContent>
+      @if (_report is null)
+      {
+        <div class="detail-card detail-card--empty" tabindex="-1" @ref="_unavailable">
+          <div class="state-panel-copy">@MsfReportText.UnavailableBody</div>
+          <div class="form-actions msf-centre">
+            <a class="btn btn-outline" href="@MsfLinks.Campaigns">@MsfReportText.GoToCampaigns</a>
+          </div>
+        </div>
+      }
+      else
+      {
+        @* The dialogs' bodies read this render's report: a dialog renders again once its action has answered, after the
+           page has read the report again, which may then have failed. *@
+        var report = _report;
+        var name = report.SubjectName ?? report.SubjectUserId;
+        @StatusCard
+        @GroupsSection
+        @if (CanBeReleased(report))
+        {
+          @ReleaseSection
+        }
+        @if (report.State == MsfCampaignState.Released)
+        {
+          @StoredSection
+        }
+
+        <ConfirmDialog @ref="_closeDialog" Title="@MsfReportText.CloseTitle" DangerAction="true"
+                       CancelLabel="@MsfReportText.KeepItOpen" ConfirmLabel="@MsfReportText.CloseConfirm"
+                       OnConfirm="CloseAsync" OnClosed="DialogClosedAsync" ReturnFocusId="@CloseButtonId">
+          <BodyContent>
+            <p>@MsfReportText.CloseLead(name, report.TemplateName, report.ClosesOn)</p>
+            <ul>
+              <li>@MsfReportText.CloseUnusedLinks(report.InvitedTotal - report.TotalResponses)</li>
+              <li>@MsfReportText.CloseAddresses</li>
+              <li>@MsfReportText.CloseKeeps(report.TotalResponses)</li>
+            </ul>
+            <p>@MsfReportText.CloseFinal</p>
+          </BodyContent>
+        </ConfirmDialog>
+
+        <ConfirmDialog @ref="_releaseDialog" Title="@MsfReportText.ReleaseTitle(name)"
+                       CancelLabel="@MsfReportText.NotYet" ConfirmLabel="@MsfReportText.ReleaseConfirm(name)"
+                       OnConfirm="ReleaseAsync" OnClosed="DialogClosedAsync" ReturnFocusId="@ReleaseButtonId">
+          <BodyContent>
+            @if (report is { SubjectIsCurrent: false, SubjectEndedOn: DateOnly endedOn })
+            {
+              <p>@MsfCampaignText.ProgrammeEnded(name, endedOn)</p>
+            }
+            <ul>
+              <li>@(report.SubjectIsCurrent ? MsfReportText.DialogWhoReads(name, report.Categories.Where(group => !group.IsSuppressed).ToList()) : MsfReportText.NoLongerOpens(name))</li>
+              <li>@MsfReportText.DialogRecords(name, report.CoveredEpas)</li>
+              @if (_levelOptions.Count > 0)
+              {
+                <li>@MsfReportText.DialogLevel(LevelText(ChosenLevel))</li>
+              }
+              <li>@MsfReportText.DialogMail(name, report.SubjectIsCurrent)</li>
+            </ul>
+            <p>@MsfReportText.ReleaseFinal(_levelOptions.Count > 0)</p>
+          </BodyContent>
+        </ConfirmDialog>
+      }
+    </ChildContent>
+  </StatePanel>
 </div>
-
-<StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="@(!_loading && _report is null)" EmptyTitle="Report unavailable" EmptyBody="The selected report could not be loaded.">
-  @if (_report is not null)
-  {
-    <div class="details-grid">
-      <section class="detail-card">
-        <h3>Summary</h3>
-        <p><strong>Template:</strong> @_report.TemplateName</p>
-        <p><strong>Kind:</strong> @MsfEvidenceKinds.Describe(_report.Kind)</p>
-        <p><strong>State:</strong> @MsfCampaignText.State(_report.State)</p>
-        <p><strong>Total responses:</strong> @_report.TotalResponses</p>
-        <p><strong>Minimum responses:</strong> @_report.MinimumResponses</p>
-        <p><strong>Minimum category responses:</strong> @_report.MinimumCategoryResponses</p>
-        <p><strong>Reporting categories:</strong> @_report.SurvivingCategoryCount of @_report.MinimumRespondentCategories required</p>
-        @if (_report.TeachingContextCount is int contextCount)
-        {
-          @* T164: EPA 15 asks for feedback across at least two teaching contexts. Reported, never enforced: how the
-             College counts two contexts is its open question (EPA-PROGRAMME § 3F question 9). Named only here, for
-             whoever runs the campaign: the trainee, the portfolio and the committee snapshot are given the count. *@
-          <p><strong>Teaching contexts that responded:</strong> @TeachingContextsText(contextCount, _report.TeachingContextsResponded)</p>
-          <p class="muted">EPA 15 asks for feedback from learners in at least two teaching contexts before entrustment. This count is for the committee to weigh; it does not hold the release. The trainee and the committee are told how many contexts responded, never their names.</p>
-        }
-      </section>
-
-      <section class="detail-card">
-        <h3>Evidence for</h3>
-        @if (_report.CoveredEpas.Count == 0)
-        {
-          <Alert Kind="warning" Role="">This campaign names no EPA, so releasing it will record no evidence on the trainee's portfolio.</Alert>
-        }
-        else
-        {
-          <ul>
-            @foreach (var epa in _report.CoveredEpas)
-            {
-              <li>
-                @epa.Code — @epa.Title
-                @if (_report.State == MsfCampaignState.Released && !epa.Recorded)
-                {
-                  <text> — not recorded</text>
-                }
-              </li>
-            }
-          </ul>
-          @if (_report.EvidenceRecordedOn is DateTime recordedOn)
-          {
-            <p><strong>Recorded on the portfolio:</strong> @recordedOn.ToString("yyyy-MM-dd HH:mm") UTC</p>
-          }
-          else
-          {
-            <p class="page-subtitle">One evidence record per EPA is written to the trainee's portfolio when the report is released.</p>
-          }
-        }
-      </section>
-
-      <section class="detail-card">
-        <h3>Coordinator actions</h3>
-        @if (!CanBeActedOn(_report))
-        {
-          @* T246 review: a campaign that can no longer be closed or released shows its narrative and level as stored,
-             never in fields. A tab that typed a narrative, then found the campaign released or withdrawn elsewhere when
-             its close or release was refused, kept that text in an editable box beside "State: Released", with nothing
-             to send it with, where the narrative the trainee was given belonged. *@
-          <p><strong>Narrative:</strong> @(string.IsNullOrWhiteSpace(_report.CoordinatorNarrative) ? "Not given" : _report.CoordinatorNarrative)</p>
-          @if (_levelOptions.Count > 0)
-          {
-            <p><strong>Supervision level this feedback supports:</strong> @LevelText(_report.ReviewerEntrustmentLevel)</p>
-          }
-        }
-        else
-        {
-          @if (_report.State == MsfCampaignState.UnderReview && !_report.ReadyForRelease)
-          {
-            @* T199 review: a campaign that cannot be released is the one a coordinator withdraws, never to be released,
-               and Withdraw is on its campaign page (as on the list), so the warning says where. Whoever sees this form
-               may withdraw it: release and withdraw ask the same caller rule. *@
-            <Alert Kind="warning" Role="">@BlockedReason(_report) If it should never be released, <a id="msf-withdraw-elsewhere" href="@($"/msf/campaigns/{CampaignId}")">withdraw it on its campaign page</a>.</Alert>
-          }
-          <EditForm Model="_review" OnValidSubmit="ReleaseAsync" FormName="msf-release">
-            <DataAnnotationsValidator />
-            <ValidationSummary class="validation-summary-errors" />
-            <FormField Label="Narrative" InputId="msf-narrative">
-              <InputTextArea id="msf-narrative" class="form-control" @bind-Value="_review.Narrative" />
-            </FormField>
-            @if (_levelOptions.Count > 0)
-            {
-              <FormField Label="Supervision level this feedback supports" InputId="msf-level"
-                         HelpText="Optional, and blank is a perfectly good answer. Your own judgement as the releasing clinician, informed by the aggregate below - never an average of respondent scores.">
-                <InputSelect id="msf-level" class="form-select" aria-describedby="@FieldHelp.Id("msf-level")" @bind-Value="_review.EntrustmentLevel">
-                  <option value="">Not stated</option>
-                  @foreach (var rung in _levelOptions)
-                  {
-                    <option value="@rung.Value">@rung.Label</option>
-                  }
-                </InputSelect>
-              </FormField>
-            }
-            @* Neither is disabled while it runs (T225 review, as Add invitee since T228): the button pressed has the focus,
-               and a browser drops the focus of a button it disables, to the page, where a refusal that leaves the button
-               would leave it. The page refuses a second press instead (_acting). *@
-            <FormActions>
-              @if (_report.State == MsfCampaignState.Open)
-              {
-                <button id="msf-close-campaign" type="button" class="btn btn-outline" @onclick="CloseAsync">Close campaign</button>
-              }
-              @if (_report.State == MsfCampaignState.UnderReview)
-              {
-                <button id="msf-release-campaign" type="submit" class="btn btn-primary" disabled="@(!_report.ReadyForRelease)">Release to trainee</button>
-              }
-            </FormActions>
-          </EditForm>
-        }
-      </section>
-    </div>
-
-    @foreach (var category in _report.Categories)
-    {
-      <section class="detail-card">
-        @* By the group's label, never its key (T225): "Peer doctor", not "PeerDoctor". *@
-        <h3>@MsfRespondentCategories.Describe(category.Category)</h3>
-        @if (category.IsSuppressed)
-        {
-          <Alert Kind="warning" Role="">Insufficient responses in this category. Results are suppressed.</Alert>
-        }
-        else
-        {
-          @foreach (var question in category.Questions)
-          {
-            <div class="mb-3">
-              <strong>@question.Prompt</strong>
-              @if (question.Type == MsfQuestionType.Scale && question.Scale is not null)
-              {
-                <p>Average: @question.Scale.Average.ToString("0.00") from @question.Scale.ResponseCount responses.</p>
-              }
-              else
-              {
-                <ul>
-                  @foreach (var comment in question.Comments)
-                  {
-                    <li>@comment</li>
-                  }
-                </ul>
-              }
-            </div>
-          }
-        }
-      </section>
-    }
-  }
-</StatePanel>
 
 @code {
   [Parameter] public int CampaignId { get; set; }
 
+  private const string CloseButtonId = "msf-close-campaign";
+  private const string ReleaseButtonId = "msf-release-campaign";
+  private const string ReleaseReasonId = "msf-release-reason";
+  private const string NarrativeId = "msf-narrative";
+  private const string CounterId = "msf-narrative-count";
+  private const string NarrativeMessageId = "msf-narrative-message";
+  private const string LevelId = "msf-level";
+  private const string LevelHelpId = "msf-level-help";
+
   /// <summary>
-  /// The rungs of the ladder <c>msf_cpsa</c> rates on, as the College prints them. Never a free number
-  /// box: on the CPSA ladder order 5 is rung "4" (T100), so a reviewer who means "4" and types 4 would
-  /// have stored rung "3b" and the portfolio would have printed that back at them. (T121)
+  /// The rungs of the ladder <c>msf_cpsa</c> rates on, as the College prints them. Never a free number box: on the CPSA
+  /// ladder order 5 is rung "4" (T100), so a reviewer who means "4" and types 4 would have stored rung "3b". (T121)
   /// </summary>
   private readonly List<ActivityCatalogueOption> _levelOptions = [];
 
   private MsfCampaignAggregateReportDto? _report;
-  private ReviewFormModel _review = new();
   private bool _loading = true;
-  private string? _status;
-
-  /// <summary>
-  /// Why the report could not be read at all, on arriving or after an action that was taken. The panel shows it in place
-  /// of the report.
-  /// </summary>
   private string? _loadError;
+  private ClaimsPrincipal _user = new();
 
-  /// <summary>Why Close campaign or Release to trainee was refused. Shown above the report, which stays. (T225)</summary>
-  private string? _actionError;
+  // What is typed for the release, kept through a dialog's Not yet, a refusal and a read again (T225).
+  private string? _narrative;
+  private string _level = string.Empty;
 
-  /// <summary>
-  /// A close or a release has been sent and has not yet answered, so neither may be sent again (T225). The buttons stay
-  /// enabled meanwhile, so the one pressed keeps the focus (T225 review); this flag is what refuses a second press.
-  /// </summary>
+  // An action has been sent and has not answered (T225): a second press sends nothing.
   private bool _acting;
 
-  private ElementReference _result;
+  // An action's result at the head of the page: done, or a refusal whose button is gone.
+  private string? _resultText;
+  private string? _resultDetail;
+  private string _resultKind = "success";
+  private ActionResult? _result;
 
-  /// <summary>An action has answered and its button is gone, so its result takes the focus after the next render.</summary>
-  private bool _focusResult;
+  // A narrative over the limit, refused under the field before the dialog opens; the field then takes the focus.
+  private string? _narrativeRefusal;
+  private bool _focusNarrative;
+
+  // A refusal beside the button that sent it, while that button is there (R16, R17).
+  private string? _closeRefusal;
+  private string? _releaseRefusal;
+
+  // Where the focus goes once an action has answered: after the page's render, and again once the dialog has closed,
+  // since nothing outside an open modal dialog can take the focus.
+  private FocusTarget _focusOnRender;
+  private FocusTarget _focusOnClose;
+
+  private ConfirmDialog? _closeDialog;
+  private ConfirmDialog? _releaseDialog;
+  private ElementReference _closeButton;
+  private ElementReference _releaseButton;
+  private ElementReference _narrativeBox;
+  private ElementReference _counter;
+  private ElementReference _unavailable;
+  private IJSObjectReference? _module;
+
+  private enum FocusTarget
+  {
+    None,
+    Result,
+    CloseButton,
+    ReleaseButton
+  }
 
   /// <summary>The region holding an action's result, which takes the focus once it has answered. For its tests.</summary>
-  internal ElementReference ResultRegion => _result;
+  internal ElementReference? ResultRegion => _result?.Element;
+
+  /// <summary>Close campaign…, which a refused close on a campaign still open gives the focus back to (R16). For its tests.</summary>
+  internal ElementReference CloseButton => _closeButton;
+
+  /// <summary>Release to trainee…, which a refused release on a campaign still under review gives it back to (R17). For its tests.</summary>
+  internal ElementReference ReleaseButton => _releaseButton;
+
+  /// <summary>The h1, the tab and the crumb: "MSF report" while it is read or failed (R13, R14).</summary>
+  private string Heading => _loading || _loadError is not null ? MsfReportText.LoadingHeading
+    : _report is null ? MsfReportText.UnavailableHeading
+    : MsfReportText.Heading(SubjectName);
+
+  private string SubjectName => _report?.SubjectName ?? _report?.SubjectUserId ?? string.Empty;
+
+  /// <summary>The day her programme ended, once she is no longer current and it has (M5, R10).</summary>
+  private DateOnly? Ended => _report is { SubjectIsCurrent: false, SubjectEndedOn: DateOnly endedOn } ? endedOn : null;
+
+  private RenderFragment? SubtitleFragment => _loading || _loadError is not null || _report is null
+    ? null
+    : __builder =>
+    {
+      var report = _report;
+      <span>@MsfReportText.Subtitle(report.TemplateName, report.Kind, report.OpensOn, report.ClosesOn)</span>
+      <a class="review-progress-link" href="@MsfLinks.Campaign(CampaignId)">@MsfReportText.CampaignPageLink</a>
+    };
+
+  // ─── Sections ────────────────────────────────────────────────────────────
+
+  private RenderFragment StatusCard => __builder =>
+  {
+    var report = _report!;
+    var open = report.State == MsfCampaignState.Open;
+    <section class="@($"detail-card {StripeOf(report.State)} status-card")" aria-labelledby="msf-status-heading">
+      <div class="status-head">
+        <span class="badge @BadgeFor.MsfCampaign(report.State)">@MsfCampaignText.State(report.State)</span>
+        <h2 id="msf-status-heading" class="status-line">@MsfReportText.StatusLine(report)</h2>
+      </div>
+
+      @if (Ended is DateOnly endedOn && CanBeActedOn(report))
+      {
+        <Alert Kind="warning" Role="">@MsfCampaignText.ProgrammeEnded(SubjectName, endedOn)</Alert>
+      }
+
+      @if (report.State is MsfCampaignState.Draft or MsfCampaignState.Open)
+      {
+        <p class="field-help">@MsfReportText.ReadOnceClosed</p>
+      }
+
+      @if (CanBeReleased(report) && report.ClosedOn is DateTime closedOn && report.ClosedByUserId is null)
+      {
+        <p class="status-note">@MsfReportText.ClosedByItself(closedOn, report.ClosesOn)</p>
+      }
+
+      @if (report.State == MsfCampaignState.Released)
+      {
+        var parts = MsfReportText.ReleasedLine(report);
+        <p class="report-line">
+          @for (var index = 0; index < parts.Count; index++)
+          {
+            if (index > 0)
+            {
+              <span class="sep" aria-hidden="true">·</span>
+            }
+            <span>@parts[index]</span>
+          }
+        </p>
+      }
+      else if (report.State != MsfCampaignState.Withdrawn)
+      {
+        <ul class="threshold-list">
+          @ThresholdLine(report.TotalResponses >= report.MinimumResponses,
+            MsfReportText.ResponsesNeeded(report.TotalResponses, report.MinimumResponses))
+          @ThresholdLine(report.SurvivingCategoryCount >= report.MinimumRespondentCategories,
+            MsfReportText.GroupsNeeded(report.SurvivingCategoryCount, report.MinimumRespondentCategories))
+          <li class="is-rule"><Icon Name="eye-off" /><span>@MsfReportText.GroupRule(report.MinimumCategoryResponses)</span></li>
+        </ul>
+      }
+
+      @if (report.TeachingContextCount is int contextCount)
+      {
+        @* T164: EPA 15 asks for feedback across at least two teaching contexts. Reported, never enforced (EPA-PROGRAMME
+           § 3F question 9). Named only here, for whoever runs the campaign. *@
+        <p class="status-note">@MsfReportText.TeachingContexts(contextCount, report.TeachingContextsResponded)</p>
+        <p class="field-help">@MsfReportText.TeachingContextsNote</p>
+      }
+
+      <div>
+        <h3 class="section-title section-title--h3">@MsfReportText.EvidenceHeading</h3>
+        @if (report.CoveredEpas.Count == 0)
+        {
+          <p>@MsfReportText.NoEpa</p>
+        }
+        else
+        {
+          var released = report.State == MsfCampaignState.Released;
+          <ul class="epa-lines">
+            @foreach (var epa in report.CoveredEpas)
+            {
+              <li>@(released && !epa.Recorded ? MsfReportText.EpaLine(epa) + MsfReportText.NotRecordedSuffix : MsfReportText.EpaLine(epa))</li>
+            }
+          </ul>
+          @if (released)
+          {
+            <p class="field-help">@(report.EvidenceRecordedOn is DateTime recordedOn ? MsfReportText.RecordedOn(recordedOn) : MsfReportText.NothingRecorded)</p>
+          }
+          else
+          {
+            var dropped = report.CoveredEpas.Where(epa => !epa.WillBeRecorded).Select(epa => epa.Code).ToList();
+            <p class="field-help">@(dropped.Count > 0 && report.State != MsfCampaignState.Withdrawn ? $"{MsfReportText.WillNotBeRecorded(SubjectName, dropped)} {MsfReportText.OneRecordPerEpa}" : MsfReportText.OneRecordPerEpa)</p>
+          }
+        }
+      </div>
+
+      @if (open)
+      {
+        <div class="status-actions">
+          @if (_closeRefusal is not null)
+          {
+            <Alert Kind="danger" Role="alert"><strong>@MsfReportText.NotClosed</strong> @_closeRefusal</Alert>
+          }
+          <button id="@CloseButtonId" type="button" class="btn btn-outline" @ref="_closeButton"
+                  aria-disabled="@InFlight.AriaDisabled(_acting)" @onclick="OpenCloseDialogAsync">@MsfReportText.CloseLabel</button>
+          <p class="field-help">@MsfReportText.CloseHelp(report.ClosesOn)</p>
+        </div>
+      }
+    </section>
+  };
+
+  private RenderFragment ThresholdLine(bool met, string text) => __builder =>
+  {
+    <li class="@(met ? "is-met" : "is-short")"><Icon Name="@(met ? "circle-check" : "circle-alert")" /><span>@text</span></li>
+  };
+
+  /// <summary>By respondent group, once the campaign has closed (F1: the handler sends none before).</summary>
+  private RenderFragment GroupsSection => __builder =>
+  {
+    var report = _report!;
+    if (report.Categories.Count == 0)
+    {
+      return;
+    }
+
+    var suppressed = report.Categories.Where(group => group.IsSuppressed).ToList();
+    <section class="msf-stack-card" aria-labelledby="msf-groups-heading">
+      <div>
+        <h2 id="msf-groups-heading">@MsfReportText.GroupsHeading</h2>
+        <p class="groups-intro">@MsfReportText.GroupsIntro(SubjectName, report.State, report.SubjectIsCurrent)</p>
+      </div>
+      <MsfGroupCards Categories="report.Categories" />
+      @if (suppressed.Count > 0)
+      {
+        <div class="detail-card detail-card--empty-compact">
+          <p class="suppressed-line">
+            <Icon Name="eye-off" />
+            <span><strong>@MsfReportText.SuppressedGroups(suppressed)</strong> @MsfReportText.SuppressedWhy(suppressed, report.MinimumCategoryResponses, SubjectName, report.State == MsfCampaignState.Released)</span>
+          </p>
+        </div>
+      }
+    </section>
+  };
+
+  /// <summary>The release section, last: what a release does, the narrative, the level, Release to trainee….</summary>
+  private RenderFragment ReleaseSection => __builder =>
+  {
+    var report = _report!;
+    var ready = report.ReadyForRelease;
+    var records = MsfReportText.RecordsLine(SubjectName, report.CoveredEpas);
+    var tooLong = _narrativeRefusal is not null;
+    <section class="detail-card detail-card--emphasis release-section" aria-labelledby="msf-release-heading">
+      <h2 id="msf-release-heading" class="section-title">@MsfReportText.ReleaseHeading(SubjectName)</h2>
+      <div class="submit-check">
+        <strong>@MsfReportText.WhenYouRelease</strong>
+        <ul>
+          <li>@MsfReportText.WhoReads(SubjectName, report.SubjectIsCurrent)</li>
+          @if (records is not null)
+          {
+            <li>@records</li>
+          }
+          <li>@MsfReportText.MailLine(SubjectName, report.SubjectIsCurrent)</li>
+          <li>@MsfReportText.CannotBeUndone</li>
+        </ul>
+      </div>
+      @* No maxlength, which would cut a paste silently (DESIGN.md § Form system): the counter shows the excess, and
+         Release to trainee… refuses it under the field. *@
+      <div class="form-group">
+        <label for="@NarrativeId">@MsfReportText.NarrativeLabel</label>
+        <textarea id="@NarrativeId" class="@(tooLong ? "form-control input-validation-error" : "form-control")" rows="4"
+                  aria-invalid="@(tooLong ? "true" : null)"
+                  aria-describedby="@(tooLong ? $"{CounterId} {NarrativeMessageId}" : CounterId)"
+                  @bind="_narrative" @ref="_narrativeBox"></textarea>
+        <p id="@CounterId" class="field-help" @ref="_counter">@MsfReportText.Counter(_narrative?.Length ?? 0)</p>
+        @if (tooLong)
+        {
+          <p id="@NarrativeMessageId" class="validation-message">@_narrativeRefusal</p>
+        }
+      </div>
+      @if (_levelOptions.Count > 0)
+      {
+        <div class="form-group msf-narrow-field">
+          <label for="@LevelId">@MsfReportText.LevelLabel</label>
+          <select id="@LevelId" class="form-select" aria-describedby="@LevelHelpId" @bind="_level">
+            <option value="">@MsfReportText.NotStated</option>
+            @foreach (var rung in _levelOptions)
+            {
+              <option value="@rung.Value">@rung.Label</option>
+            }
+          </select>
+          <p id="@LevelHelpId" class="field-help">@MsfReportText.LevelHelp</p>
+        </div>
+      }
+      <div class="release-actions">
+        @if (_releaseRefusal is not null)
+        {
+          <Alert Kind="danger" Role="alert"><strong>@MsfReportText.NotReleased</strong> @_releaseRefusal</Alert>
+        }
+        <button id="@ReleaseButtonId" type="button" class="@(ready ? "btn btn-outline" : "btn btn-outline is-unavailable")"
+                @ref="_releaseButton" aria-disabled="@(ready ? InFlight.AriaDisabled(_acting) : "true")"
+                aria-describedby="@(ready ? null : ReleaseReasonId)" @onclick="OpenReleaseDialogAsync">@MsfReportText.ReleaseLabel</button>
+        @if (ready)
+        {
+          <p class="field-help">@MsfReportText.NeverReleasedLead<a id="msf-withdraw-elsewhere" class="msf-inline-link" href="@MsfLinks.Campaign(CampaignId)">@MsfReportText.WithdrawLinkText</a>.</p>
+        }
+        else
+        {
+          <ul class="move-reasons">
+            <li id="@ReleaseReasonId"><strong>@MsfReportText.ReleaseReasonLead</strong> @($"{MsfReportText.BlockedReason(report)} {MsfReportText.NeverReleasedLead}")<a id="msf-withdraw-elsewhere" class="msf-inline-link" href="@MsfLinks.Campaign(CampaignId)">@MsfReportText.WithdrawLinkText</a>.</li>
+          </ul>
+        }
+      </div>
+    </section>
+  };
+
+  /// <summary>As released: the narrative and the level the trainee was given, in no field (T246 review).</summary>
+  private RenderFragment StoredSection => __builder =>
+  {
+    var report = _report!;
+    <section class="detail-card" aria-labelledby="msf-stored-heading">
+      <h2 id="msf-stored-heading" class="section-title">@MsfReportText.StoredHeading</h2>
+      <dl class="stored">
+        <dt>@MsfReportText.NarrativeLabel</dt>
+        <dd>@(string.IsNullOrWhiteSpace(report.CoordinatorNarrative) ? MsfReportText.NotGiven : report.CoordinatorNarrative)</dd>
+        @if (_levelOptions.Count > 0)
+        {
+          <dt>@MsfReportText.StoredLevel</dt>
+          <dd>@LevelText(report.ReviewerEntrustmentLevel)</dd>
+        }
+      </dl>
+    </section>
+  };
+
+  /// <summary>F7: the activity page's stripe, by class only (M8).</summary>
+  private static string StripeOf(MsfCampaignState state)
+    => state switch
+    {
+      MsfCampaignState.Open => "activity-status--others",
+      MsfCampaignState.Released => "activity-status--done",
+      MsfCampaignState.Withdrawn => "activity-status--declined",
+      _ => "detail-card--emphasis"
+    };
+
+  /// <summary>Whether this page can still close or release the campaign: only an open one closes (T246), and only one under review is released.</summary>
+  private static bool CanBeActedOn(MsfCampaignAggregateReportDto report)
+    => report.State is MsfCampaignState.Open || CanBeReleased(report);
+
+  private static bool CanBeReleased(MsfCampaignAggregateReportDto report)
+    => report.State is MsfCampaignState.UnderReview or MsfCampaignState.Closed;
+
+  private int? ChosenLevel
+    => int.TryParse(_level, NumberStyles.Integer, CultureInfo.InvariantCulture, out var level) ? level : null;
+
+  /// <summary>The level by its rung's label, as the select offers it, never its order (T100, T121).</summary>
+  private string LevelText(int? level)
+    => level is not int order
+      ? MsfReportText.NotStated
+      : _levelOptions.FirstOrDefault(option => option.Value == order.ToString(CultureInfo.InvariantCulture))?.Label
+        ?? order.ToString(CultureInfo.InvariantCulture);
+
+  // ─── Reading ─────────────────────────────────────────────────────────────
 
   protected override async Task OnParametersSetAsync()
   {
+    _loading = true;
+    _loadError = null;
+    _resultText = null;
     await LoadAsync();
 
     if (_report is { IsSubjectsCopy: true })
     {
       SendTheSubjectToTheirOwnCopy();
-      return;
     }
-
-    await LoadLevelOptionsAsync();
   }
 
   /// <summary>
-  /// The trainee the campaign is about reads their released report on their own page, <c>/msf/my-reports/{id}</c>,
-  /// never here: this is the coordinator's page, with its actions card and every group's card, suppressed ones
-  /// included. A trainee who also coordinates (or an Administrator who is the subject) is admitted to this page by
-  /// role, and the handler admits them to the released report (<c>MsfCampaignRules.CanReadReportAsync</c>), so this
-  /// page is where the two would otherwise meet. Their copy is not shown for the moment the navigation takes: the page
-  /// keeps its skeleton (<c>_loading</c>, which alone hides the report), and the copy is dropped besides, so nothing on
-  /// the page can read it. It replaces this address in the history, so Back does not return here only to be sent on
-  /// again. That is the circuit, where the page renders once more after this returns. A page load runs this in the
-  /// prerender instead, where the navigation is the server's 302 (<c>BlazorDisableThrowNavigationException</c>, so
-  /// nothing throws) and the prerender renders nothing after it: the redirect's body is the page as it stood before the
-  /// report was read, its skeleton, with or without the two lines above (<c>MsfReportPageFlowTests</c>). (T269)
+  /// The trainee the campaign is about reads their released report on their own page, <c>/msf/my-reports/{id}</c>, never
+  /// here (T269): this is the coordinator's page. Their copy is dropped at once and the page keeps its skeleton, so nothing
+  /// of it is shown for the moment the navigation takes; it replaces this address in the history. A page load runs this
+  /// in the prerender, where the navigation is the server's 302 (<c>MsfReportPageFlowTests</c>).
   /// </summary>
   private void SendTheSubjectToTheirOwnCopy()
   {
     _report = null;
     _loading = true;
-    Navigation.NavigateTo($"/msf/my-reports/{CampaignId}", replace: true);
+    Navigation.NavigateTo(MsfLinks.MyReport(CampaignId), replace: true);
   }
-
-  /// <summary>
-  /// The rungs of the type this campaign's release writes (<see cref="MsfEvidenceKinds.ActivityTypeKeyFor" />).
-  /// <c>learner_feedback_cpsa</c> rates nothing, so a learner-feedback release offers no level, and its command refuses
-  /// one (T164).
-  /// </summary>
-  private async Task LoadLevelOptionsAsync()
-  {
-    _levelOptions.Clear();
-    if (_report is null)
-    {
-      return;
-    }
-
-    try
-    {
-      _levelOptions.AddRange(await ReferenceData.GetRatedLevelOptionsForActivityTypeAsync(
-        MsfEvidenceKinds.ActivityTypeKeyFor(_report.Kind)));
-    }
-    catch (Exception exception)
-    {
-      _loadError = exception.Message;
-    }
-  }
-
-  /// <summary>
-  /// Whether this page can still close or release the campaign: only an open one closes (T246), and only one under
-  /// review is released. Anything else shows its narrative and level as stored (T246 review).
-  /// </summary>
-  private static bool CanBeActedOn(MsfCampaignAggregateReportDto report)
-    => report.State is MsfCampaignState.Open or MsfCampaignState.UnderReview;
-
-  /// <summary>The stored level by its rung's label, as the form's select offers it, never its order (T100, T121).</summary>
-  private string LevelText(int? level)
-    => level is not int order
-      ? "Not stated"
-      : _levelOptions.FirstOrDefault(option => option.Value == order.ToString(System.Globalization.CultureInfo.InvariantCulture))?.Label
-        ?? order.ToString(System.Globalization.CultureInfo.InvariantCulture);
-
-  private static string TeachingContextsText(int count, IReadOnlyList<string>? names)
-    => names is { Count: > 0 } ? $"{count} ({string.Join(", ", names)})" : $"{count}";
-
-  /// <summary>
-  /// Which of the two release gates is closed. Both are computed in one place — the aggregation
-  /// service — so this only has to phrase what that already decided.
-  /// </summary>
-  private static string BlockedReason(MsfCampaignAggregateReportDto report)
-    => report.TotalResponses < report.MinimumResponses
-      ? $"Release needs {report.MinimumResponses} responses; {report.TotalResponses} have come back."
-      : $"Release needs {report.MinimumRespondentCategories} respondent groups to report; " +
-        $"{report.SurvivingCategoryCount} cleared the {report.MinimumCategoryResponses}-response threshold. " +
-        (report.Kind == MsfTemplateKind.LearnerFeedback
-          ? "Below the threshold, the learners' answers are suppressed to keep them anonymous."
-          : "Feedback that survives from too few groups is not multi-source feedback.");
 
   private async Task LoadAsync()
   {
-    _loading = true;
-    _loadError = null;
-
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
 
-      // Null for a campaign that does not exist and for one about a trainee the caller does not run campaigns
-      // for, alike (T113); the panel renders both as "Report unavailable".
-      _report = await Sender.Send(new GetCampaignAggregateReportQuery(CampaignId, authState.User));
-      _review.Narrative = _report?.CoordinatorNarrative;
-      _review.EntrustmentLevel = _report?.ReviewerEntrustmentLevel;
+      // Null for a campaign that does not exist and for one about a trainee the caller does not run campaigns for,
+      // alike (T113): "Report unavailable".
+      _report = await Sender.Send(new GetCampaignAggregateReportQuery(CampaignId, _user));
+      _narrative = _report?.CoordinatorNarrative;
+      _level = _report?.ReviewerEntrustmentLevel?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+
+      if (_report is { IsSubjectsCopy: false })
+      {
+        await LoadLevelOptionsAsync(_report.Kind);
+      }
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _loadError = exception.Message;
+      // Never the exception's text (T329): the fixed sentence, the failure to the log.
+      Logger.LogError(exception, "MSF report {CampaignId} could not be loaded.", CampaignId);
+      _report = null;
+      _loadError = MsfReportText.LoadFailed;
     }
     finally
     {
@@ -328,45 +529,73 @@
   }
 
   /// <summary>
-  /// The report as it is now, read again after an action, refused or not (T225, as the campaign page does since T217): a
-  /// refusal is likeliest because the campaign changed elsewhere, and the page should show what it is now. The report
-  /// already shown stays in view while it is read, and the narrative and level typed are kept while the campaign can still
-  /// be closed or released. Once it cannot, the card shows them as stored instead (T246 review).
+  /// The rungs of the type this campaign's release writes (<see cref="MsfEvidenceKinds.ActivityTypeKeyFor" />).
+  /// <c>learner_feedback_cpsa</c> rates nothing, so a learner-feedback release offers no level, and its command refuses
+  /// one (T164).
   /// </summary>
-  /// <remarks>
-  /// An action's refusal is kept over a failed read that follows it: it says why the action was not taken, and the panel
-  /// then says the report is unavailable. After an action that was taken, a failed read is the panel's load error, as it
-  /// is on arriving: it is not a refusal, so it is not shown as one beside the action's result (T225 review).
-  /// </remarks>
-  private async Task ReadReportAsync()
+  private async Task LoadLevelOptionsAsync(MsfTemplateKind kind)
+  {
+    _levelOptions.Clear();
+    _levelOptions.AddRange(await ReferenceData.GetRatedLevelOptionsForActivityTypeAsync(MsfEvidenceKinds.ActivityTypeKeyFor(kind)));
+  }
+
+  private async Task RetryAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    StateHasChanged();
+    await LoadAsync();
+  }
+
+  private async ValueTask FocusHeadingAsync()
+  {
+    if (_report is null && _loadError is null)
+    {
+      await _unavailable.FocusAsync();
+      return;
+    }
+
+    await PageFocus.FocusHeadingAsync(JS);
+  }
+
+  /// <summary>
+  /// The report as it is now, read again after an action, done or refused (T225): a refusal is likeliest because the
+  /// campaign changed elsewhere. The narrative and level typed are kept. A read that fails is the panel's load error,
+  /// beside any result or refusal already at the head of the page.
+  /// </summary>
+  private async Task ReadAgainAsync()
   {
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _report = await Sender.Send(new GetCampaignAggregateReportQuery(CampaignId, authState.User));
+      _report = await Sender.Send(new GetCampaignAggregateReportQuery(CampaignId, _user));
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
+      Logger.LogError(exception, "MSF report {CampaignId} could not be read again after an action.", CampaignId);
       _report = null;
-      if (_actionError is null)
-      {
-        _loadError = exception.Message;
-      }
+      _loadError = MsfReportText.LoadFailed;
     }
   }
 
-  /// <remarks>
-  /// Sent at most once at a time, as the campaign page's open is (T202): the flag is set before the first await, so a
-  /// second click while this close runs sends nothing. The button is not disabled meanwhile, so a refusal on a campaign
-  /// still open leaves the focus on it, for the retry (T225 review). After a refusal the report is read again, so the
-  /// refusal (<see cref="CloseMsfCampaignCommandHandler.CampaignChanged" />) names no other page (T225).
-  /// <para>
-  /// A report loaded while the campaign was open still offers Close after another tab or the auto-close job has closed
-  /// it. The campaign refuses that close (<c>MsfCampaign.OnlyOpenCanBeClosed</c>), and its close date stands
-  /// (T246); the report read again shows it under review, as the campaign page shows a refused open (T217). Close is then
-  /// gone, so the refusal takes the focus.
-  /// </para>
-  /// </remarks>
+  // ─── Close ───────────────────────────────────────────────────────────────
+
+  private async Task OpenCloseDialogAsync()
+  {
+    if (_acting || _closeDialog is null)
+    {
+      return;
+    }
+
+    ClearResults();
+    await _closeDialog.ShowAsync();
+  }
+
+  /// <summary>
+  /// Close's dialog confirmed: the command, then the report read again (T225). Done, the result heads the page and takes
+  /// the focus (R3). Refused on a campaign still open (another tab's resend, R16), the refusal sits beside Close campaign…
+  /// and the focus goes back to it; refused because it has closed elsewhere (T246), Close is gone, so the refusal heads
+  /// the page and takes the focus.
+  /// </summary>
   private async Task CloseAsync()
   {
     if (_acting)
@@ -375,88 +604,215 @@
     }
 
     _acting = true;
-    _status = null;
-    _actionError = null;
-
+    string? refusal = null;
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _report = await Sender.Send(new CloseMsfCampaignCommand(CampaignId, authState.User));
-      _status = "Campaign closed and anonymised for review.";
+      await Sender.Send(new CloseMsfCampaignCommand(CampaignId, _user));
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _actionError = RefusalText.Of(exception);
-      await ReadReportAsync();
-    }
-    finally
-    {
-      _acting = false;
+      refusal = Refusal(exception, "closed");
     }
 
-    // Close campaign is offered only on an open campaign, so it is gone unless the close was refused on one still open.
-    _focusResult = _report is not { State: MsfCampaignState.Open };
+    await ReadAgainAsync();
+    _acting = false;
+
+    if (refusal is null)
+    {
+      ShowResult("success", MsfReportText.Closed, MsfReportText.ClosedDetail);
+    }
+    else if (_report is { State: MsfCampaignState.Open })
+    {
+      _closeRefusal = refusal;
+      Focus(FocusTarget.CloseButton);
+    }
+    else
+    {
+      ShowResult("danger", MsfReportText.NotClosed, $" {refusal}");
+    }
   }
 
+  // ─── Release ─────────────────────────────────────────────────────────────
+
+  private async Task OpenReleaseDialogAsync()
+  {
+    // aria-disabled, not disabled (DESIGN.md): a press on a release that is not ready does nothing, its reason beside it.
+    if (_acting || _releaseDialog is null || _report is not { ReadyForRelease: true })
+    {
+      return;
+    }
+
+    ClearResults();
+    if ((_narrative?.Length ?? 0) > MsfReportText.NarrativeLimit)
+    {
+      _narrativeRefusal = MsfReportText.NarrativeTooLong;
+      _focusNarrative = true;
+      return;
+    }
+
+    await _releaseDialog.ShowAsync();
+  }
+
+  /// <summary>
+  /// Release's dialog confirmed: the command, then the report read again. Done, "Report released to {name}." heads the
+  /// page and takes the focus (R7). Refused on a campaign still under review (R17), the refusal sits beside Release to
+  /// trainee…, "It is still Under review.", and the focus goes back to it; once it was released or withdrawn elsewhere,
+  /// Release is gone, so the refusal heads the page and takes the focus.
+  /// </summary>
   private async Task ReleaseAsync()
   {
-    if (_acting)
+    if (_acting || _report is null)
     {
       return;
     }
 
     _acting = true;
-    _status = null;
-    _actionError = null;
-
+    var name = SubjectName;
+    string? refusal = null;
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var principal = authState.User;
+      // No "coordinator" fallback: since T121 this id becomes CreatedByUserId on the evidence the release writes. A
+      // sign-in with no id is not a refusal in anyone's words: the fixed sentence, logged (T369, build review R1).
+      var userId = _user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        ?? throw new InvalidOperationException("The signed-in user carries no NameIdentifier claim.");
 
-      // No "coordinator" fallback. Since T121 this id becomes CreatedByUserId on the evidence
-      // activities the release writes, and `creator` is an actor rule — a literal placeholder would
-      // become a user id on a clinical record and a rule that matches nobody.
-      var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
-        ?? throw new InvalidOperationException("The current user identifier is missing.");
-
-      await Sender.Send(new ReleaseMsfCampaignCommand(CampaignId, userId, _review.Narrative, _review.EntrustmentLevel, principal));
-      _status = "Report released to the trainee.";
+      await Sender.Send(new ReleaseMsfCampaignCommand(CampaignId, userId, _narrative, ChosenLevel, _user));
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _actionError = RefusalText.Of(exception);
+      refusal = Refusal(exception, "released");
     }
 
-    try
+    await ReadAgainAsync();
+    _acting = false;
+
+    if (refusal is null)
     {
-      await ReadReportAsync();
+      ShowResult("success", MsfReportText.Released(name), null);
     }
-    finally
+    else if (_report is not null && CanBeReleased(_report))
     {
-      _acting = false;
+      _releaseRefusal = refusal + MsfReportText.StillUnderReview;
+      Focus(FocusTarget.ReleaseButton);
+    }
+    else
+    {
+      ShowResult("danger", MsfReportText.NotReleased, $" {refusal}");
+    }
+  }
+
+  // ─── Results and focus ───────────────────────────────────────────────────
+
+  /// <summary>
+  /// A refusal in its own words, when it is one (<see cref="MsfCampaignText.RefusalOf" />). Anything else, an
+  /// <see cref="InvalidOperationException" /> the framework threw among them, is a fixed sentence, and the failure goes to
+  /// the log (T329; T369, build review R1).
+  /// </summary>
+  private string Refusal(Exception exception, string what)
+  {
+    if (MsfCampaignText.RefusalOf(exception) is { } refusal)
+    {
+      return refusal;
     }
 
-    // Release to trainee is offered only on a campaign under review, so it is gone once released, here or elsewhere, and
-    // it is disabled on one no longer ready for release; either way the focus it had is lost (T225 review).
-    _focusResult = _report is not { State: MsfCampaignState.UnderReview, ReadyForRelease: true };
+    Logger.LogError(exception, "MSF campaign {CampaignId} could not be {What}.", CampaignId, what);
+    return MsfCampaignText.ActionFailed;
+  }
+
+  private void ClearResults()
+  {
+    _resultText = null;
+    _resultDetail = null;
+    _closeRefusal = null;
+    _releaseRefusal = null;
+    _narrativeRefusal = null;
+  }
+
+  private void ShowResult(string kind, string text, string? detail)
+  {
+    _resultKind = kind;
+    _resultText = text;
+    _resultDetail = detail;
+    Focus(FocusTarget.Result);
+  }
+
+  private void Focus(FocusTarget target)
+  {
+    _focusOnRender = target;
+    _focusOnClose = target;
+  }
+
+  /// <summary>The dialog has closed. After an action it gives the focus to where the action's answer is (D6 returns it to the opener on Cancel).</summary>
+  private async Task DialogClosedAsync()
+  {
+    var target = _focusOnClose;
+    _focusOnClose = FocusTarget.None;
+    await FocusAsync(target);
   }
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
-    if (_focusResult)
+    var target = _focusOnRender;
+    _focusOnRender = FocusTarget.None;
+    await FocusAsync(target);
+
+    if (_focusNarrative)
     {
-      _focusResult = false;
-      await _result.FocusAsync();
+      _focusNarrative = false;
+      await _narrativeBox.FocusAsync();
+    }
+
+    if (!_loading && _report is not null && CanBeReleased(_report))
+    {
+      await CountAsync();
     }
   }
 
-  private sealed class ReviewFormModel
+  private async Task FocusAsync(FocusTarget target)
   {
-    [MaxLength(4000)]
-    public string? Narrative { get; set; }
+    switch (target)
+    {
+      case FocusTarget.Result when _result is not null:
+        await _result.Element.FocusAsync();
+        break;
+      case FocusTarget.CloseButton when _report is { State: MsfCampaignState.Open }:
+        await _closeButton.FocusAsync();
+        break;
+      case FocusTarget.ReleaseButton when _report is not null && CanBeReleased(_report):
+        await _releaseButton.FocusAsync();
+        break;
+    }
+  }
 
-    [Range(1, 20)]
-    public int? EntrustmentLevel { get; set; }
+  /// <summary>The narrative's counter, counted in the browser as it is typed (flow 09's script). Blazor's count stands without it.</summary>
+  private async Task CountAsync()
+  {
+    try
+    {
+      _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/review-appeal.js");
+      if (_module is not null)
+      {
+        await _module.InvokeVoidAsync("count", _narrativeBox, _counter, MsfReportText.NarrativeLimit);
+      }
+    }
+    catch (Exception exception) when (exception is JSException or JSDisconnectedException or InvalidOperationException or TaskCanceledException)
+    {
+      // The counter is a convenience: Blazor's own count is on the page whenever the narrative changes.
+    }
+  }
+
+  public async ValueTask DisposeAsync()
+  {
+    if (_module is not null)
+    {
+      try
+      {
+        await _module.DisposeAsync();
+      }
+      catch (JSDisconnectedException)
+      {
+        // The circuit has gone; so has the module.
+      }
+    }
   }
 }

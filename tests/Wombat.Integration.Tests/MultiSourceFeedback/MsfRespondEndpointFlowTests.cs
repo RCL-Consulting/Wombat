@@ -262,8 +262,8 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
             template.Id,
             DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7)),
             DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
-            4,
-            2,
+            6,
+            3,
             2,
             [_coveredEpaId],
             "coordinator-1",
@@ -277,15 +277,15 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
 
         await SendAsync(new OpenMsfCampaignCommand(campaign.Id, _coordinator));
 
-        Factory.EmailSender.Messages.Should().HaveCount(8);
+        Factory.EmailSender.Messages.Should().HaveCount(10);
         Factory.EmailSender.Messages.Should().OnlyContain(message => message.TextBody.Contains("http://localhost/msf/respond?token=", StringComparison.Ordinal));
 
         // T202: through the real user directory, each invitation says whom it is about.
         Factory.EmailSender.Messages.Should().OnlyContain(message =>
             message.Subject.StartsWith($"Feedback request: {SubjectFirstName} {SubjectLastName} (Annual MSF, ", StringComparison.Ordinal));
 
-        // Two consultants and two nurses: two categories at the floor of two responses each, which is what the
-        // release gate (D11) asks of this campaign. Chosen by address rather than as "the first four messages",
+        // Three consultants and three nurses: two categories at the floor of three responses each (T369, F2), which is
+        // what the release gate (D11) asks of this campaign. Chosen by address rather than as "the first six messages",
         // because the open handler sends in whatever order the invitations load, and Postgres promises none.
         var respondentEmails = invitees
             .Where(invitee => invitee.Category is MsfRespondentCategory.Consultant or MsfRespondentCategory.Nurse)
@@ -294,7 +294,7 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
         var respondentMessages = Factory.EmailSender.Messages
             .Where(message => respondentEmails.Contains(message.To))
             .ToList();
-        respondentMessages.Should().HaveCount(4, "guard: two consultants and two nurses are invited");
+        respondentMessages.Should().HaveCount(6, "guard: three consultants and three nurses are invited");
 
         foreach (var message in respondentMessages)
         {
@@ -323,12 +323,12 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
         await using (var scope = Factory.Services.CreateAsyncScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            (await dbContext.MsfResponses.CountAsync()).Should().Be(4);
-            (await dbContext.MsfInvitations.CountAsync(invitation => invitation.RespondedOn != null)).Should().Be(4);
+            (await dbContext.MsfResponses.CountAsync()).Should().Be(6);
+            (await dbContext.MsfInvitations.CountAsync(invitation => invitation.RespondedOn != null)).Should().Be(6);
         }
 
         var closedReport = await SendAsync(new CloseMsfCampaignCommand(campaign.Id, _coordinator));
-        closedReport.TotalResponses.Should().Be(4);
+        closedReport.TotalResponses.Should().Be(6);
         closedReport.State.Should().Be(MsfCampaignState.UnderReview);
         closedReport.Categories.Should().Contain(category => !category.IsSuppressed);
         closedReport.Categories.Should().OnlyContain(category =>
@@ -371,7 +371,8 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
             .Should().BeNull();
 
         var traineeReports = await SendAsync(new ListMsfCampaignsForTraineeQuery("trainee-1", Trainee()));
-        traineeReports.Should().ContainSingle(report => report.Id == campaign.Id && report.ResponseCount == 4);
+        // Her list carries no count (T369, F3): the report, its template and when it was released.
+        traineeReports.Should().ContainSingle(report => report.CampaignId == campaign.Id && report.TemplateName == campaign.TemplateName);
 
         var releasedReport = (await SendAsync(new GetCampaignAggregateReportQuery(campaign.Id, Trainee())))!;
         releasedReport.State.Should().Be(MsfCampaignState.Released);
@@ -580,7 +581,7 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
                 DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7)),
                 DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
                 1,
-                1,
+                3,
                 1,
                 [_coveredEpaId],
                 "coordinator-1",
@@ -714,7 +715,7 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
             DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7)),
             DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
             4,
-            2,
+            3,
             2,
             [_coveredEpaId],
             "coordinator-1",
@@ -897,8 +898,10 @@ public sealed class MsfRespondEndpointFlowTests : IAsyncLifetime
         {
             ($"consultant-1-{campaignId}@example.test", MsfRespondentCategory.Consultant),
             ($"consultant-2-{campaignId}@example.test", MsfRespondentCategory.Consultant),
+            ($"consultant-3-{campaignId}@example.test", MsfRespondentCategory.Consultant),
             ($"nurse-1-{campaignId}@example.test", MsfRespondentCategory.Nurse),
             ($"nurse-2-{campaignId}@example.test", MsfRespondentCategory.Nurse),
+            ($"nurse-3-{campaignId}@example.test", MsfRespondentCategory.Nurse),
             ($"other-1-{campaignId}@example.test", MsfRespondentCategory.Other),
             ($"other-2-{campaignId}@example.test", MsfRespondentCategory.Other),
             ($"other-3-{campaignId}@example.test", MsfRespondentCategory.Other),

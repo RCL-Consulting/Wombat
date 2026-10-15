@@ -51,7 +51,8 @@ public sealed class ListMsfCampaignsForCoordinatorQueryHandler : IRequestHandler
                 campaign.Responses.Count,
                 campaign.ReleasedOn)
             {
-                Kind = campaign.Template.Kind
+                Kind = campaign.Template.Kind,
+                HasOpened = campaign.OpenedOn != null
             })
             .ToListAsync(cancellationToken);
 

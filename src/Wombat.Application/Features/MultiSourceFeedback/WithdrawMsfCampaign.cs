@@ -44,7 +44,7 @@ public sealed class WithdrawMsfCampaignCommandHandler : IRequestHandler<Withdraw
         // page showed it: a page loaded before another tab released the campaign still offers Withdraw (T206 review).
         if (!MsfCampaignRules.IsWithdrawable(campaign.State))
         {
-            throw new InvalidOperationException(NotWithdrawable(campaign.State));
+            throw new MsfRefusedException(NotWithdrawable(campaign.State));
         }
 
         // The withdraw the caller confirmed, not another one (T199 review). A page loaded while the campaign was open asks
@@ -56,7 +56,7 @@ public sealed class WithdrawMsfCampaignCommandHandler : IRequestHandler<Withdraw
         if (MsfCampaignRules.WithdrawingForgoesRelease(campaign.State) &&
             !MsfCampaignRules.WithdrawingForgoesRelease(request.ConfirmedState))
         {
-            throw new InvalidOperationException(ClosedSinceShown);
+            throw new MsfRefusedException(ClosedSinceShown);
         }
 
         campaign.Withdraw(DateTime.UtcNow);
@@ -69,7 +69,7 @@ public sealed class WithdrawMsfCampaignCommandHandler : IRequestHandler<Withdraw
         {
             // Carried as the inner exception, so the audit pipeline still sees a refused save and writes its row alone
             // (T201). EF's own message names row counts; the coordinator needs to know what happened (T206 review).
-            throw new InvalidOperationException(CampaignChanged, exception);
+            throw new MsfRefusedException(CampaignChanged, exception);
         }
     }
 

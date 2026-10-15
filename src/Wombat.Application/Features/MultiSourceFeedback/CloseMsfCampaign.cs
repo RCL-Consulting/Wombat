@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Application.Features.MultiSourceFeedback;
 
@@ -31,13 +32,29 @@ public sealed class CloseMsfCampaignCommandHandler : IRequestHandler<CloseMsfCam
         await MsfCampaignRules.EnsureCampaignIsInScopeAsync(
             _dbContext, request.Principal, request.CampaignId, cancellationToken);
 
+        // Who closed it is what the report tells a close by hand from the auto-close job's by (T369, F5): a caller with
+        // no id would be recorded as null, and the report would say the campaign closed by itself. Refused before
+        // anything is staged, as Release refuses a reviewer with no id (T369, build review R3).
+        var closedByUserId = request.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrWhiteSpace(closedByUserId))
+        {
+            throw new UnauthorizedAccessException(MsfCampaignRules.CallerUnknown);
+        }
+
         var campaign = await MsfCampaignRules.GetCampaignGraphAsync(_dbContext, request.CampaignId, cancellationToken);
 
         // Closing anonymises every respondent (MsfCampaign.Close), the same routine the auto-close job reaches. (T184)
         // Asked of the campaign as it is now, not as the caller's report showed it: a campaign another tab or the job has
         // closed already is refused (MsfCampaign.OnlyOpenCanBeClosed) before anything changes, so its ClosedOn stands and
-        // the audit pipeline's save in its catch finds nothing to commit (T246).
-        campaign.Close(DateTime.UtcNow);
+        // the audit pipeline's save in its catch finds nothing to commit (T246). The caller is recorded as who closed it, so
+        // the report tells a close by hand from the auto-close job's (T369, F5).
+        // The domain's rule asked here, in the handler, so that its refusal is one a page shows (T369, build review R1).
+        if (campaign.State != MsfCampaignState.Open)
+        {
+            throw new MsfRefusedException(MsfCampaign.OnlyOpenCanBeClosed);
+        }
+
+        campaign.Close(closedByUserId, DateTime.UtcNow);
 
         try
         {
@@ -49,7 +66,7 @@ public sealed class CloseMsfCampaignCommandHandler : IRequestHandler<CloseMsfCam
             // or the reminder job stored a respondent's new link, which writes the campaign row so that a close cannot
             // leave that link on an anonymised invitation (T214 review). Carried as the inner exception, so the audit
             // pipeline still sees a refused save and writes its row alone (T201); EF's own message names row counts.
-            throw new InvalidOperationException(CampaignChanged, exception);
+            throw new MsfRefusedException(CampaignChanged, exception);
         }
 
         // Closed, not released: nothing has been recorded yet. For the coordinator who closed it, who typed the teaching

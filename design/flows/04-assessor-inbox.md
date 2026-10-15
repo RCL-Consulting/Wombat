@@ -586,7 +586,7 @@ Expect: The sidebar first reads "Acting as Committee member", with "Switch to As
   Nothing of Dr Mahlangu's waits for an assessor any more: the Mini-CEX has left Waiting for assessors and Mr Smit's
   Home card.
 
-Step 3.51 — Dr Khumalo's dashboard, and Recent Activities (act-3-operations.md:1252)
+Step 3.51 — Dr Khumalo's dashboard, and Recent Activities (act-3-operations.md:1348)
 Role: Assessor — Dr Fatima Khumalo
 Route: / → /activities/inbox
 Do: Read the dashboard, then follow "Open Activity inbox". Then read the menu.

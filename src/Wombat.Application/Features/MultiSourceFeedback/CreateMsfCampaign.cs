@@ -28,12 +28,27 @@ public sealed record CreateMsfCampaignCommand(
 
 public sealed class CreateMsfCampaignCommandValidator : AbstractValidator<CreateMsfCampaignCommand>
 {
+    /// <summary>The most any of a campaign's response thresholds may ask for, as the create form's range says.</summary>
+    public const int MaximumThreshold = 100;
+
+    /// <summary>
+    /// The refusal of a respondent-group minimum below <see cref="MsfCampaign.MinimumCategoryResponsesFloor" /> (T369, F2,
+    /// C8): the field's name, then the create form's own words for it.
+    /// </summary>
+    public const string MinimumCategoryResponsesRefused =
+        "Minimum responses in a respondent group: enter a number from 3 to 100.";
+
     public CreateMsfCampaignCommandValidator()
     {
         RuleFor(command => command.SubjectUserId).NotEmpty();
         RuleFor(command => command.TemplateId).GreaterThan(0);
         RuleFor(command => command.MinimumResponses).GreaterThanOrEqualTo(1);
-        RuleFor(command => command.MinimumCategoryResponses).GreaterThanOrEqualTo(1);
+        // F2's floor (T369), for both kinds, in the words the create form gives the field: a group shown from fewer than
+        // three answers lets whoever chose the invitees tell whose they are. Learner feedback's one group is held to it
+        // too.
+        RuleFor(command => command.MinimumCategoryResponses)
+            .InclusiveBetween(MsfCampaign.MinimumCategoryResponsesFloor, MaximumThreshold)
+            .WithMessage(MinimumCategoryResponsesRefused);
         RuleFor(command => command.MinimumRespondentCategories).GreaterThanOrEqualTo(1);
         RuleFor(command => command.EpaIds).NotEmpty()
             .WithMessage("A campaign must say which EPAs it is evidence for.");
@@ -69,13 +84,13 @@ public sealed class CreateMsfCampaignCommandHandler : IRequestHandler<CreateMsfC
 
         var template = await _dbContext.Set<MsfTemplate>()
             .SingleOrDefaultAsync(candidate => candidate.Id == request.TemplateId && candidate.IsActive, cancellationToken)
-            ?? throw new InvalidOperationException("The selected MSF template could not be found.");
+            ?? throw new MsfRefusedException("The selected MSF template could not be found.");
 
         // A learner-feedback campaign invites learners only (MsfTemplate.Accepts), so one respondent group is all it can
         // ever have. Asking for two would leave it unreleasable whatever came back. (T164)
         if (template.Kind == MsfTemplateKind.LearnerFeedback && request.MinimumRespondentCategories > 1)
         {
-            throw new InvalidOperationException(
+            throw new MsfRefusedException(
                 "A learner-feedback campaign has one respondent group, learners, so it can require only one reporting " +
                 "category.");
         }
@@ -91,7 +106,7 @@ public sealed class CreateMsfCampaignCommandHandler : IRequestHandler<CreateMsfC
         var notCoverable = requestedEpaIds.Where(epaId => !coverableEpaIds.Contains(epaId)).ToArray();
         if (notCoverable.Length > 0)
         {
-            throw new InvalidOperationException(
+            throw new MsfRefusedException(
                 (template.Kind == MsfTemplateKind.LearnerFeedback
                     ? "These EPAs are not on the trainee's curriculum, or their College list does not name learner " +
                       "feedback, and cannot be covered by this campaign: "

@@ -359,7 +359,7 @@ public sealed class LockedTraineeScopePostgresTests : IAsyncLifetime
                 new DateOnly(2026, 9, 25),
                 new DateOnly(2026, 10, 15),
                 MinimumResponses: 1,
-                MinimumCategoryResponses: 1,
+                MinimumCategoryResponses: 3,
                 MinimumRespondentCategories: 1,
                 EpaIds: [],
                 CreatedByUserId: caller.FindFirst(ClaimTypes.NameIdentifier)!.Value,

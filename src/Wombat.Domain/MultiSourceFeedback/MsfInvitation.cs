@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Linq.Expressions;
+using Wombat.Domain.Curricula;
 
 namespace Wombat.Domain.MultiSourceFeedback;
 
@@ -228,14 +229,16 @@ public sealed class MsfInvitation
             return false;
         }
 
-        var today = DateOnly.FromDateTime(utcNow);
+        // South African days, as the link's own expiry and the campaign's window are judged (T369, build review R5): on
+        // the UTC date a reminder went out for two hours after the last day had ended, for a link already refused.
+        var today = ProgrammeCalendar.DateOf(utcNow);
         var lastDay = LastDayToRespond(campaign.ClosesOn, ExpiresOn);
         var firstReminderDay = lastDay.AddDays(-ReminderDaysBeforeLastDay);
 
         return today >= campaign.OpensOn &&
                today >= firstReminderDay &&
                today <= lastDay &&
-               IssuedOn < firstReminderDay.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc) &&
+               ProgrammeCalendar.DateOf(IssuedOn) < firstReminderDay &&
                utcNow - IssuedOn >= ReminderMinimumLinkAge;
     }
 

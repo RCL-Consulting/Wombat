@@ -11,6 +11,38 @@ public sealed class MsfCampaignOpenCloseTests
     private static readonly DateTime Earlier = new(2029, 5, 1, 8, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime FirstClosedAt = new(2029, 6, 28, 9, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime ClosedAt = new(2029, 6, 30, 23, 0, 0, DateTimeKind.Utc);
+    private const string Coordinator = "coordinator-1";
+
+    /// <summary>
+    /// Closing records who closed it: the coordinator who pressed Close campaign, or nobody when the hourly job closed it
+    /// once its last day had passed, which the report reads as "Closed by itself". (T369, F5)
+    /// </summary>
+    [Theory]
+    [InlineData("coordinator-1", "coordinator-1")]
+    [InlineData(" coordinator-1 ", "coordinator-1")]
+    [InlineData(null, null)]
+    [InlineData("  ", null)]
+    public void Close_RecordsWhoClosedIt_NullForTheJob(string? closedBy, string? stored)
+    {
+        var campaign = OpenCampaign(Invitation("nurse-1@example.test"));
+
+        campaign.Close(closedBy, ClosedAt);
+
+        Assert.Equal(stored, campaign.ClosedByUserId);
+        Assert.Equal(ClosedAt, campaign.ClosedOn);
+    }
+
+    /// <summary>A refused close leaves who closed it as it was: the first close's closer stands, as its time does. (T369, F5)</summary>
+    [Fact]
+    public void Close_ASecondCloseRefused_KeepsTheFirstCloser()
+    {
+        var campaign = OpenCampaign(Invitation("nurse-1@example.test"));
+        campaign.Close(closedByUserId: null, FirstClosedAt);
+
+        Assert.Throws<InvalidOperationException>(() => campaign.Close(Coordinator, ClosedAt));
+
+        Assert.Null(campaign.ClosedByUserId);
+    }
 
     [Fact]
     public void Close_AnonymisesEveryInvitation_AtTheCloseTime()
@@ -19,7 +51,7 @@ public sealed class MsfCampaignOpenCloseTests
             Invitation("nurse-1@example.test"),
             Invitation("consultant-1@example.test"));
 
-        campaign.Close(ClosedAt);
+        campaign.Close(Coordinator, ClosedAt);
 
         Assert.Equal(MsfCampaignState.UnderReview, campaign.State);
         Assert.All(campaign.Invitations, invitation =>
@@ -41,7 +73,7 @@ public sealed class MsfCampaignOpenCloseTests
     {
         var campaign = OpenCampaign(Invitation(address));
 
-        campaign.Close(ClosedAt);
+        campaign.Close(Coordinator, ClosedAt);
 
         var invitation = campaign.Invitations.Single();
         Assert.Equal(ClosedAt, invitation.AnonymizedOn);
@@ -58,7 +90,7 @@ public sealed class MsfCampaignOpenCloseTests
         anonymised.AnonymizedOn = Earlier;
         var campaign = OpenCampaign(anonymised);
 
-        campaign.Close(ClosedAt);
+        campaign.Close(Coordinator, ClosedAt);
 
         Assert.Null(anonymised.RespondentEmail);
         Assert.Equal(Earlier, anonymised.AnonymizedOn);
@@ -73,9 +105,9 @@ public sealed class MsfCampaignOpenCloseTests
     public void Close_ASecondClose_IsRefused_AndTheFirstCloseStands()
     {
         var campaign = OpenCampaign(Invitation("nurse-1@example.test"));
-        campaign.Close(FirstClosedAt);
+        campaign.Close(Coordinator, FirstClosedAt);
 
-        var refusal = Assert.Throws<InvalidOperationException>(() => campaign.Close(ClosedAt));
+        var refusal = Assert.Throws<InvalidOperationException>(() => campaign.Close(Coordinator, ClosedAt));
 
         Assert.Equal(MsfCampaign.OnlyOpenCanBeClosed, refusal.Message);
         Assert.Equal("Only open campaigns can be closed.", refusal.Message);
@@ -105,7 +137,7 @@ public sealed class MsfCampaignOpenCloseTests
         invitation.PreviousTokenHash = "previous-hash";
         var campaign = new MsfCampaign { State = state, ClosedOn = closedOn, Invitations = [invitation] };
 
-        var refusal = Assert.Throws<InvalidOperationException>(() => campaign.Close(ClosedAt));
+        var refusal = Assert.Throws<InvalidOperationException>(() => campaign.Close(Coordinator, ClosedAt));
 
         Assert.Equal(MsfCampaign.OnlyOpenCanBeClosed, refusal.Message);
         Assert.Equal(state, campaign.State);

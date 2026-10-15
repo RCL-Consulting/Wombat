@@ -59,7 +59,7 @@ public sealed class MsfReportPageFlowTests : IClassFixture<MsfRespondPageFlowTes
         using var coordinatorsLoad = await LoadPageAsync(coordinator, $"/msf/reports/{campaignId}");
         var coordinatorsPage = await coordinatorsLoad.Content.ReadAsStringAsync();
         coordinatorsLoad.StatusCode.Should().Be(HttpStatusCode.OK, coordinatorsPage);
-        coordinatorsPage.Should().Contain("Coordinator actions")
+        coordinatorsPage.Should().Contain("As released") // the released report's own section (T369)
             .And.Contain($"1 ({TeachingContext})", "whoever runs the campaign is told the contexts they typed")
             .And.Contain(Narrative);
 
@@ -87,10 +87,10 @@ public sealed class MsfReportPageFlowTests : IClassFixture<MsfRespondPageFlowTes
         ownLoad.StatusCode.Should().Be(HttpStatusCode.OK, own);
 
         var page = new HtmlParser().ParseDocument(own);
-        page.QuerySelector(".header-container h1")!.TextContent.Should().Be("MSF reports");
-        own.Should().Contain("Selected report")
-            .And.Contain(Narrative)
-            .And.Contain("Teaching contexts that responded:</strong> 1")
+        // Her report on a page of its own since T369 (S6): "{template}, released {date}".
+        page.QuerySelector(".header-container h1")!.TextContent.Should().MatchRegex(@", released \d{4}-\d{2}-\d{2}$");
+        page.QuerySelector("#my-report-contexts")!.TextContent.Should().Be("Teaching contexts that responded: 1");
+        own.Should().Contain(Narrative)
             .And.NotContain(TeachingContext, "the subject is told how many contexts responded, never which (T164)")
             .And.NotContain("Coordinator actions")
             .And.NotContain("Release to trainee");

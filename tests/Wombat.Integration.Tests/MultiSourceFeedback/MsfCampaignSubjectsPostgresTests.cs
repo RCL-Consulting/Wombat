@@ -175,7 +175,7 @@ public sealed class MsfCampaignSubjectsPostgresTests : IAsyncLifetime
                 new DateOnly(2026, 10, 1),
                 new DateOnly(2026, 10, 15),
                 MinimumResponses: 1,
-                MinimumCategoryResponses: 1,
+                MinimumCategoryResponses: 3,
                 MinimumRespondentCategories: 1,
                 EpaIds: [],
                 CreatedByUserId: principal.FindFirst(ClaimTypes.NameIdentifier)!.Value,

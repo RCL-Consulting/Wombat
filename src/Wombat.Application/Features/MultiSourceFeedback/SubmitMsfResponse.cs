@@ -40,17 +40,25 @@ public sealed class SubmitMsfResponseCommandHandler : IRequestHandler<SubmitMsfR
 {
     private readonly IApplicationDbContext _dbContext;
     private readonly IInvitationTokenService _tokenService;
+    private readonly TimeProvider _timeProvider;
 
-    public SubmitMsfResponseCommandHandler(IApplicationDbContext dbContext, IInvitationTokenService tokenService)
+    /// <param name="timeProvider">
+    /// The clock the link's last day is judged by, on the South African calendar (T369, T325); the system's unless a test
+    /// pins one.
+    /// </param>
+    public SubmitMsfResponseCommandHandler(
+        IApplicationDbContext dbContext, IInvitationTokenService tokenService, TimeProvider? timeProvider = null)
     {
         _dbContext = dbContext;
         _tokenService = tokenService;
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     public async Task Handle(SubmitMsfResponseCommand request, CancellationToken cancellationToken)
     {
         // Every refusal comes before the first mutation: the audit pipeline saves this request's context from its catch.
-        var invitation = await MsfCampaignRules.GetActiveInvitationByTokenAsync(_dbContext, request.Token, _tokenService, cancellationToken);
+        var invitation = await MsfCampaignRules.GetActiveInvitationByTokenAsync(
+            _dbContext, request.Token, _tokenService, cancellationToken, _timeProvider);
         var scalePoints = await MsfRatingScale.ResolveAsync(_dbContext, invitation.Campaign.Template, cancellationToken);
 
         // Measured and stored as the respondent typed it. A browser posts each line break of a text box as CRLF, while
@@ -64,7 +72,7 @@ public sealed class SubmitMsfResponseCommandHandler : IRequestHandler<SubmitMsfR
         {
             CampaignId = invitation.CampaignId,
             InvitationId = invitation.Id,
-            SubmittedOn = DateTime.UtcNow,
+            SubmittedOn = _timeProvider.GetUtcNow().UtcDateTime,
             Answers = answers
                 .Select(answer => new MsfResponseAnswer
                 {

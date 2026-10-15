@@ -2288,6 +2288,10 @@ namespace Wombat.Infrastructure.Persistence.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ClosedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
                     b.Property<DateTime?>("ClosedOn")
                         .HasColumnType("timestamp with time zone");
 

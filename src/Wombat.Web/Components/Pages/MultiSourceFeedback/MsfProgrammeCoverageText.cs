@@ -19,6 +19,20 @@ public static class MsfProgrammeCoverageText
         "You hold the Trainee role, so you see no other trainee's multi-source feedback coverage, whatever other role " +
         "you hold. Your own is on My progress.";
 
+    /// <summary>
+    /// The header's subtitle (T369, round 1's P6): what the page counts, and that it is not a target (D8, D9).
+    /// </summary>
+    public const string Subtitle =
+        "How many of each programme's trainees a released multi-source feedback campaign covered, per EPA and semester. " +
+        "Coverage is not a target.";
+
+    /// <summary>The status line while the coverage is read (V4).</summary>
+    public const string Loading = "Loading MSF coverage.";
+
+    /// <summary>A failed read (V5, T329): fixed words, never the exception's text, which goes to the log.</summary>
+    public const string LoadFailed =
+        "Could not load MSF coverage. Nothing has changed. Try again, or come back in a few minutes.";
+
     /// <summary>The empty card's title and body: nobody the caller may read about is on a programme now.</summary>
     public const string EmptyTitle = "No trainees to show";
 

@@ -675,8 +675,8 @@ Do: Open the sign-out confirmation by its address and press Cancel. Type `/accou
 Expect: A "Sign out" page, with no nav: "You are signed in as Pieter Smit (smit@kgk.wombat.local). Signing out ends
   your session in this browser.", with Cancel and Sign out. Cancel returns him to his dashboard, still signed in. A
   typed GET /account/logout draws the same page and signs nobody out (T317). Sign out lands on the sign-in page with
-  "You have signed out." MSF campaigns then asks him to sign in, and after signing in he is brought back to it. The
-  audit log records a Logout.
+  "You have signed out." MSF campaigns then asks him to sign in, and after signing in he is brought back to it, the
+  list as Step 3.46 left it (Pieter du Plessis's Withdrawn, Dr Molefe's Released). The audit log records a Logout.
 Note: Only the error page links to the confirmation page: its account row's Sign out is a link there, since a form
   drawn on the error page could carry a refused token. Everywhere else the account row's Sign out, in the top bar or
   the phone menu's foot, is a form that signs out at once.
@@ -1255,12 +1255,13 @@ Role: Coordinator — Mr Pieter Smit
 Route: / → /msf/campaigns → /msf/campaigns/{CampaignId:int} → /committee/decisions-due → /admin/data-rights
 Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue. On Decisions
   due, set Status to "Every status", press Show, and open By EPA.
-Expect: Home's header action, Start an MSF campaign, is a row of its own below the header's rule, 44px tall and the
-  page's width, and the cards stack in one column, each row's link a 44px block (T358, R2-Home k6). The campaign page
-  keeps its gutter (T226), and its invitee table (counts by respondent group: the page never lists an address) scrolls
-  within its card. Decisions due's filters stack, with Show and Clear filters each 44px tall; By EPA's fold summary is
-  44px, and opened it reads one block per EPA; each decision is a block, its one action a 44px button the block's
-  width; the pager's buttons are 44px (T364). The queue's filters stack above its table.
+Expect: Home's header action, Start an MSF campaign, is a row of its own below the header's rule, 44px tall and the page's
+  width, and the cards stack in one column, each row's link a 44px block (T358, R2-Home k6). MSF campaigns stacks its rows
+  (T323): Pieter du Plessis's first, then Dr Molefe's, each a block with every field shown under its column's name, each
+  action a 44px block; nothing scrolls sideways. The campaign page keeps its gutter (T226), and its invitee table (counts by
+  respondent group: the page never lists an address) fits its card. Decisions due's filters stack, with Show and Clear
+  filters each 44px tall; By EPA's fold summary is 44px, and opened it reads one block per EPA; each decision is a block, its
+  one action a 44px button the block's width; the pager's buttons are 44px (T364). The queue's filters stack above its table.
 Actual (2026-10-14, T366 replay, wombat_scenario_t366): At 390 px. The bar reads "Acting as Coordinator". Home's header
   action, Start an MSF campaign, is a row of its own under the header's rule (y155, the header ends y139 with its 2px
   rule), the page's width (16 to 374) and 44 px; the cards stack in one track (16 to 374): Waiting for assessors,

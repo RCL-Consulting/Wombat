@@ -45,6 +45,7 @@ public sealed class MsfPageLabelTests : TestContext
 
         Services.AddSingleton<IScopedSender>(new FakeSender());
         Services.AddSingleton<IActivityReferenceDataService>(new ReferenceData());
+        Services.AddSingleton(TimeProvider.System);
     }
 
     // ---- The campaign editor ----
@@ -52,7 +53,7 @@ public sealed class MsfPageLabelTests : TestContext
     [Fact]
     public void CreatingACampaign_BeforeATraineeIsChosen_EveryLabelNamesARealControl()
     {
-        var cut = RenderComponent<CampaignEdit>();
+        var cut = RenderComponent<NewCampaign>();
 
         IdReferences.Broken(cut).Should().BeEmpty();
     }
@@ -72,7 +73,7 @@ public sealed class MsfPageLabelTests : TestContext
     {
         var cut = RenderWithTraineeChosen();
 
-        var fieldset = cut.FindAll("fieldset").Should().ContainSingle().Subject;
+        var fieldset = cut.Find("fieldset#msf-epas");
 
         // The legend names the group, and says it is required the way FormField says it of a single field.
         var legend = fieldset.QuerySelector("legend")!;
@@ -80,7 +81,7 @@ public sealed class MsfPageLabelTests : TestContext
         legend.QuerySelector(".visually-hidden")!.TextContent.Trim().Should().Be("required");
 
         // Every checkbox is in the group's grid, each with a label naming it and only it.
-        var checks = fieldset.QuerySelectorAll(".check-grid > .form-check").ToList();
+        var checks = fieldset.QuerySelectorAll(".epa-checks > .form-check").ToList();
         checks.Select(check => check.QuerySelector("input[type=checkbox]")!.Id)
             .Should().Equal(TraineeEpas.Select(epa => $"msf-epa-{epa.Value}"));
         checks.Select(check => check.QuerySelector("label")!.TextContent.Trim())
@@ -109,6 +110,7 @@ public sealed class MsfPageLabelTests : TestContext
     [Fact]
     public void TheCampaignReport_EveryLabelNamesARealControl()
     {
+        JSInterop.Mode = JSRuntimeMode.Loose; // the report's narrative counter imports its script (T369)
         var cut = RenderComponent<CampaignReport>(parameters => parameters.Add(page => page.CampaignId, 5));
         cut.WaitForState(() => cut.FindAll("#msf-narrative").Count > 0);
 
@@ -119,9 +121,9 @@ public sealed class MsfPageLabelTests : TestContext
 
     // ---- helpers ----
 
-    private IRenderedComponent<CampaignEdit> RenderWithTraineeChosen()
+    private IRenderedComponent<NewCampaign> RenderWithTraineeChosen()
     {
-        var cut = RenderComponent<CampaignEdit>();
+        var cut = RenderComponent<NewCampaign>();
 
         cut.Find("#msf-subject").Change(TraineeUserId);
         cut.WaitForState(() => cut.FindAll("input[type=checkbox]").Count > 0);
@@ -159,7 +161,7 @@ public sealed class MsfPageLabelTests : TestContext
                 GetCampaignAggregateReportQuery => Report(),
                 GetMsfCampaignSetupQuery setup => new MsfCampaignSetupDto(
                     setup.CampaignId, "Default MSF", MsfTemplateKind.Msf, MsfCampaignState.Draft,
-                    [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Nurse]),
+                    [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Nurse]) { SubjectIsCurrent = true },
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };
 

@@ -143,7 +143,7 @@ public sealed class MsfInvitationPreviousLinkTests
         }
         else
         {
-            campaign.Close(RemindedAt.AddDays(3));
+            campaign.Close("coordinator-1", RemindedAt.AddDays(3));
         }
 
         Assert.All(campaign.Invitations, invitation =>

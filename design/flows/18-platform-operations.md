@@ -315,7 +315,7 @@ Expect:
     TransitionActivityCommand by each registrar and consultant, and Mr Smit's MSF commands, each with its actor and OK.
   - Failures only leaves four rows, each FAILED: Dr Ndlovu's two refused creates (the future date and the date before
     his programme started), Dr Dlamini's refused submit, and Dr Khumalo's decline without a note.
-  - "Msf" leaves Mr Smit's seventeen commands: the template, two campaigns, eight invitations, one removal, the open,
+  - "Msf" leaves Mr Smit's nineteen commands: the template, two campaigns, ten invitations, one removal, the open,
     the withdrawal, the resend, the close and the release.
   - No respondent's submission and no devadmin row is listed, because those carry no institution (T101, T205).
 
@@ -335,7 +335,7 @@ Role: Administrator — devadmin@wombat.local
 Route: /admin/audit → /admin/audit/{Id:guid}
 Do: Open Audit log, with From (UTC) set to the start of this act's sitting as in Step 3.55. Open one respondent's
   submission (SubmitMsfResponseCommand), then one of Dr Naidoo's TransitionActivityCommand rows.
-Expect: The log holds every institution's rows and the rows with no institution. Among them are six
+Expect: The log holds every institution's rows and the rows with no institution. Among them are eight
   SubmitMsfResponseCommand rows whose actor is "system", and devadmin's own RunScheduledJobNowCommand. The submission's
   detail names no user and no display name, only a truncated address. Its payload shows the token and the answers as
   "[REDACTED]" (T101, T205). Dr Naidoo's payload shows the principal as "[PRINCIPAL]", and the data patch and note as

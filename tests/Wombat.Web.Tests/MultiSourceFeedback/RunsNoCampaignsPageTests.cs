@@ -42,6 +42,7 @@ public sealed class RunsNoCampaignsPageTests : TestContext
 
         Services.AddSingleton<IScopedSender>(_sender);
         Services.AddSingleton<IActivityReferenceDataService>(new StubActivityReferenceDataService());
+        Services.AddSingleton(TimeProvider.System);
         JSInterop.SetupVoid("wombatDialog.showModal", _ => true).SetVoidResult();
         JSInterop.SetupVoid("wombatDialog.close", _ => true).SetVoidResult();
     }
@@ -91,7 +92,7 @@ public sealed class RunsNoCampaignsPageTests : TestContext
     {
         SignIn(role, WombatRoles.Trainee);
 
-        var cut = RenderComponent<CampaignEdit>();
+        var cut = RenderComponent<NewCampaign>();
 
         StandingReason(cut).Should().Be(MsfCampaignRules.TraineeRunsNoCampaigns);
         cut.FindAll("#msf-subject, #msf-template-id, #msf-opens").Should().BeEmpty();
@@ -111,7 +112,7 @@ public sealed class RunsNoCampaignsPageTests : TestContext
     {
         SignIn(WombatRoles.Coordinator);
 
-        var cut = RenderComponent<CampaignEdit>();
+        var cut = RenderComponent<NewCampaign>();
 
         cut.FindAll("#msf-runs-no-campaigns").Should().BeEmpty();
         cut.FindAll("#msf-subject").Should().ContainSingle();
@@ -131,7 +132,7 @@ public sealed class RunsNoCampaignsPageTests : TestContext
         _auth.SetRoles(WombatRoles.Coordinator);
         _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, CallerId));
 
-        var cut = RenderComponent<CampaignEdit>();
+        var cut = RenderComponent<NewCampaign>();
 
         StandingReason(cut).Should().Be(MsfCampaignRules.RunsCampaignsRoles);
         cut.FindAll("#msf-subject, #msf-template-id, #msf-template-name").Should().BeEmpty();

@@ -214,7 +214,7 @@ public sealed class MsfCampaignSubjectsTests
                 new DateOnly(2026, 9, 1),
                 new DateOnly(2026, 9, 21),
                 MinimumResponses: 1,
-                MinimumCategoryResponses: 1,
+                MinimumCategoryResponses: 3,
                 MinimumRespondentCategories: 1,
                 EpaIds: [],
                 CreatedByUserId: principal.FindFirst(ClaimTypes.NameIdentifier)!.Value,

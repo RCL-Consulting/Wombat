@@ -55,16 +55,24 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
             .Include(candidate => candidate.Template)
             .Include(candidate => candidate.Invitations)
             .SingleOrDefaultAsync(candidate => candidate.Id == request.CampaignId, cancellationToken)
-            ?? throw new InvalidOperationException("The MSF campaign could not be found.");
+            ?? throw new MsfRefusedException("The MSF campaign could not be found.");
 
         if (campaign.Invitations.Count == 0)
         {
-            throw new InvalidOperationException("At least one respondent invitation is required before opening a campaign.");
+            throw new MsfRefusedException("At least one respondent invitation is required before opening a campaign.");
         }
 
         // Refused before the first mail, not by Open() after it: an open campaign must not mail a second round of
         // links that its stored tokens do not match. (T184)
-        campaign.EnsureCanOpen();
+        // The domain's rule, carried as this handler's refusal so that a page shows its words (T369, build review R1).
+        try
+        {
+            campaign.EnsureCanOpen();
+        }
+        catch (InvalidOperationException exception)
+        {
+            throw new MsfRefusedException(exception.Message, exception);
+        }
 
         // Whom the invitations ask about, resolved before the first mail for the same reason as the check above. (T202)
         var traineeName = await ResolveTraineeNameAsync(campaign.SubjectUserId, cancellationToken);
@@ -118,7 +126,7 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
                 // Replaced rather than passed on, for two readers. The coordinator is told what state the campaign is
                 // in. And the audit row records a refusal's message: a sender's own message may name the respondent's
                 // address, which is exactly what AddMsfInvitationCommand keeps out of that log. (T184)
-                throw new InvalidOperationException(InvitationsNotSent, exception);
+                throw new MsfRefusedException(InvitationsNotSent, exception);
             }
         }
 
@@ -156,7 +164,7 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
         {
             // Carried as the inner exception, so the audit pipeline still sees a refused save and writes its row alone
             // (T201). EF's own message names row counts; the coordinator needs to know what to do next.
-            throw new InvalidOperationException(CampaignChanged, exception);
+            throw new MsfRefusedException(CampaignChanged, exception);
         }
     }
 
@@ -202,6 +210,6 @@ public sealed class OpenMsfCampaignCommandHandler : IRequestHandler<OpenMsfCampa
 
         return names.TryGetValue(subjectUserId, out var name) && !string.IsNullOrWhiteSpace(name)
             ? name.Trim()
-            : throw new InvalidOperationException(TraineeHasNoName);
+            : throw new MsfRefusedException(TraineeHasNoName);
     }
 }

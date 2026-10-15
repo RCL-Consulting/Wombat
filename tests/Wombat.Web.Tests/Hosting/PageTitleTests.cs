@@ -53,7 +53,7 @@ public sealed class PageTitleTests
         ["Admin.Institutions.MySpecialitiesRedirect"] =
             "it has no heading: it redirects as it opens, to the College's specialities or the colleges",
         ["MultiSourceFeedback.MsfRespond"] =
-            "each state has its own <h2>; MsfRespondPageHostingTests holds each state's tab to its heading",
+            "each state has its own <h1>; MsfRespondPageHostingTests holds each state's tab to its heading",
     };
 
     /// <summary>

@@ -11,10 +11,14 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 /// One trainee's released feedback campaigns, for the trainee themselves or anyone who may read about them
 /// (<see cref="TraineeScopeResolver.MayReadAsync" />); empty for anyone else, never a refusal. (T113)
 /// </summary>
+/// <remarks>
+/// Newest release first, released only, and no count (T369, F3): <see cref="MsfReleasedReportDto" /> carries none, so no
+/// count can reach her list.
+/// </remarks>
 public sealed record ListMsfCampaignsForTraineeQuery(string SubjectUserId, ClaimsPrincipal Principal)
-    : IRequest<IReadOnlyList<MsfCampaignSummaryDto>>;
+    : IRequest<IReadOnlyList<MsfReleasedReportDto>>;
 
-public sealed class ListMsfCampaignsForTraineeQueryHandler : IRequestHandler<ListMsfCampaignsForTraineeQuery, IReadOnlyList<MsfCampaignSummaryDto>>
+public sealed class ListMsfCampaignsForTraineeQueryHandler : IRequestHandler<ListMsfCampaignsForTraineeQuery, IReadOnlyList<MsfReleasedReportDto>>
 {
     private readonly IApplicationDbContext _dbContext;
 
@@ -23,7 +27,7 @@ public sealed class ListMsfCampaignsForTraineeQueryHandler : IRequestHandler<Lis
         _dbContext = dbContext;
     }
 
-    public async Task<IReadOnlyList<MsfCampaignSummaryDto>> Handle(ListMsfCampaignsForTraineeQuery request, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<MsfReleasedReportDto>> Handle(ListMsfCampaignsForTraineeQuery request, CancellationToken cancellationToken)
     {
         if (!await TraineeScopeResolver.MayReadAsync(_dbContext, request.Principal, request.SubjectUserId, cancellationToken))
         {
@@ -32,23 +36,16 @@ public sealed class ListMsfCampaignsForTraineeQueryHandler : IRequestHandler<Lis
 
         return await _dbContext.Set<MsfCampaign>()
             .AsNoTracking()
-            .Where(campaign => campaign.SubjectUserId == request.SubjectUserId && campaign.State == MsfCampaignState.Released)
+            .Where(campaign => campaign.SubjectUserId == request.SubjectUserId &&
+                               campaign.State == MsfCampaignState.Released &&
+                               campaign.ReleasedOn != null)
             .OrderByDescending(campaign => campaign.ReleasedOn)
-            .Select(campaign => new MsfCampaignSummaryDto(
+            .ThenByDescending(campaign => campaign.Id)
+            .Select(campaign => new MsfReleasedReportDto(
                 campaign.Id,
-                campaign.SubjectUserId,
                 campaign.Template.Name,
-                campaign.OpensOn,
-                campaign.ClosesOn,
-                campaign.MinimumResponses,
-                campaign.MinimumCategoryResponses,
-                campaign.State,
-                campaign.Invitations.Count,
-                campaign.Responses.Count,
-                campaign.ReleasedOn)
-            {
-                Kind = campaign.Template.Kind
-            })
+                campaign.Template.Kind,
+                campaign.ReleasedOn!.Value))
             .ToListAsync(cancellationToken);
     }
 }

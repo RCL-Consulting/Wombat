@@ -59,13 +59,14 @@ public sealed class CampaignLinkDeliveryTests : WombatTestContext
         var cut = Render(new DeliverySender(Open(notDelivered: notDelivered, beingSent: 0)));
 
         var alert = cut.Find("#msf-links-not-delivered");
-        Text(alert).Should().Be(warning);
+        Text(alert).Should().Be($"{warning} {label}");
         alert.ClassList.Should().Contain("alert-warning");
         alert.HasAttribute("role").Should().BeFalse("it is standing content, there on every visit until the links are resent");
 
-        var resend = cut.Find("#msf-resend-links");
+        // Resend sits in the warning it acts on (T369, K7), in the Links part with the hour rule under it.
+        var resend = alert.QuerySelector("#msf-resend-links")!;
         Text(resend).Should().Be(label);
-        resend.GetAttribute("aria-describedby").Should().Be("msf-links-not-delivered");
+        Text(cut.Find("#msf-links")).Should().EndWith("A link nothing was heard of for an hour counts as not delivered.");
         resend.HasAttribute("disabled").Should().BeFalse();
         resend.HasAttribute("aria-disabled").Should().BeFalse();
 
@@ -91,8 +92,9 @@ public sealed class CampaignLinkDeliveryTests : WombatTestContext
         cut.FindAll("#msf-links-not-delivered").Should().BeEmpty();
         cut.FindAll("#msf-links-being-sent").Should().BeEmpty();
         cut.FindAll("#msf-resend-links").Should().BeEmpty();
-        Text(cut.Find("#msf-campaign-state-note")).Should().StartWith("Open. Each respondent is emailed a link,")
+        Text(cut.Find(".status-note")).Should().StartWith("Each respondent is emailed a link,")
             .And.NotContain("has been emailed");
+        cut.FindAll("#msf-links").Should().BeEmpty("the Links part has nothing to say");
     }
 
     [Theory]
@@ -124,7 +126,11 @@ public sealed class CampaignLinkDeliveryTests : WombatTestContext
         running.HasAttribute("disabled").Should().BeFalse();
         running.GetAttribute("aria-disabled").Should().Be("true");
         Text(running).Should().Be("Resending links…");
-        cut.Find("#msf-withdraw-campaign").HasAttribute("disabled").Should().BeTrue("a withdraw would race the resend");
+        // Withdraw is never natively disabled (T234); pressed while the resend runs, it opens nothing.
+        cut.Find("#msf-withdraw-campaign").HasAttribute("disabled").Should().BeFalse();
+        cut.Find("#msf-withdraw-campaign").Click();
+        JSInterop.Invocations.Should().NotContain(invocation => invocation.Identifier == "wombatDialog.showModal",
+            "a withdraw would race the resend");
 
         cut.Find("#msf-resend-links").Click();
         sender.Resends.Should().Be(1, "one resend is in flight");
@@ -140,8 +146,10 @@ public sealed class CampaignLinkDeliveryTests : WombatTestContext
         cut.FindAll("#msf-resend-links").Should().BeEmpty();
         cut.FindAll("#msf-links-not-delivered").Should().BeEmpty();
         Text(cut.Find("#msf-links-being-sent")).Should().StartWith("2 links are still being sent.");
+        // K8: the result is in the Links part, which takes the focus.
+        cut.Find("#msf-links-result").TextContent.Should().Contain("2 new links are being sent.");
         cut.WaitForAssertion(() => JSInterop.VerifyFocusAsyncInvoke().Arguments[0]
-            .Should().BeOfType<ElementReference>().Which.Id.Should().Be(cut.Instance.ResultRegion.Id));
+            .Should().BeOfType<ElementReference>().Which.Id.Should().Be(cut.Instance.LinksResultRegion.Id));
     }
 
     [Fact]
@@ -149,7 +157,7 @@ public sealed class CampaignLinkDeliveryTests : WombatTestContext
     {
         var sender = new DeliverySender(Open(notDelivered: 2, beingSent: 0))
         {
-            Refusal = new InvalidOperationException(ResendMsfLinksCommandHandler.LinksNotSent)
+            Refusal = new MsfRefusedException(ResendMsfLinksCommandHandler.LinksNotSent)
         };
         var cut = Render(sender);
 
@@ -157,7 +165,7 @@ public sealed class CampaignLinkDeliveryTests : WombatTestContext
 
         cut.WaitForAssertion(() => cut.FindAll(".alert-danger").Should().ContainSingle());
         var refusal = cut.Find(".alert-danger");
-        Text(refusal).Should().Be(ResendMsfLinksCommandHandler.LinksNotSent);
+        Text(refusal).Should().Be($"Not resent. {ResendMsfLinksCommandHandler.LinksNotSent}", "K22");
         refusal.GetAttribute("role").Should().Be("alert");
         cut.FindAll(".alert-success").Should().BeEmpty();
 
@@ -180,7 +188,7 @@ public sealed class CampaignLinkDeliveryTests : WombatTestContext
     {
         var sender = new DeliverySender(Open(notDelivered: 2, beingSent: 0))
         {
-            Refusal = new InvalidOperationException(ResendMsfLinksCommandHandler.CampaignChanged),
+            Refusal = new MsfRefusedException(ResendMsfLinksCommandHandler.CampaignChanged),
             StateAfterRefusal = MsfCampaignState.UnderReview
         };
         var cut = Render(sender);
@@ -188,7 +196,7 @@ public sealed class CampaignLinkDeliveryTests : WombatTestContext
         cut.Find("#msf-resend-links").Click();
 
         cut.WaitForAssertion(() => Text(cut.Find("#msf-campaign-state")).Should().Be("Under review"));
-        Text(cut.Find(".alert-danger")).Should().Be(ResendMsfLinksCommandHandler.CampaignChanged);
+        Text(cut.Find(".alert-danger")).Should().Be($"Not resent. {ResendMsfLinksCommandHandler.CampaignChanged}");
         cut.FindAll("#msf-resend-links").Should().BeEmpty();
         cut.WaitForAssertion(() => JSInterop.VerifyFocusAsyncInvoke().Arguments[0]
             .Should().BeOfType<ElementReference>().Which.Id.Should().Be(cut.Instance.ResultRegion.Id));

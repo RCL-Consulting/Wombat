@@ -33,7 +33,14 @@ public sealed class AddMsfInvitationCommandValidator : AbstractValidator<AddMsfI
     public AddMsfInvitationCommandValidator()
     {
         RuleFor(command => command.CampaignId).GreaterThan(0);
-        RuleFor(command => command.RespondentEmail).NotEmpty().EmailAddress().MaximumLength(320);
+        // In the campaign page's words (T369, S4, T324): a blank address, then one that is not an address. Never the
+        // command's property name, which FluentValidation's own messages carry.
+        RuleFor(command => command.RespondentEmail)
+            .Cascade(CascadeMode.Stop)
+            .Must(address => !string.IsNullOrWhiteSpace(address))
+            .WithMessage(MsfRespondentAddress.Missing)
+            .Must(MsfRespondentAddress.IsWellFormed)
+            .WithMessage(MsfRespondentAddress.Malformed);
         RuleFor(command => command.Principal).NotNull();
         RuleFor(command => command.RespondentCategory).IsInEnum();
 
@@ -80,18 +87,18 @@ public sealed class AddMsfInvitationCommandHandler : IRequestHandler<AddMsfInvit
         var campaign = await _dbContext.Set<MsfCampaign>()
             .Include(candidate => candidate.Template)
             .SingleOrDefaultAsync(candidate => candidate.Id == request.CampaignId, cancellationToken)
-            ?? throw new InvalidOperationException("The MSF campaign could not be found.");
+            ?? throw new MsfRefusedException("The MSF campaign could not be found.");
 
         if (campaign.State != MsfCampaignState.Draft)
         {
-            throw new InvalidOperationException("Invitations can only be added while a campaign is in draft.");
+            throw new MsfRefusedException("Invitations can only be added while a campaign is in draft.");
         }
 
         // One rule for who answers which questionnaire (MsfTemplate.Accepts), the one the invitee picker offers from.
         // (T164)
         if (!campaign.Template.Accepts(request.RespondentCategory))
         {
-            throw new InvalidOperationException(RefusalFor(campaign.Template, request.RespondentCategory));
+            throw new MsfRefusedException(RefusalFor(campaign.Template, request.RespondentCategory));
         }
 
         // One invitation per address (T228). Until T228 an address added twice was mailed two working links, and one
@@ -109,7 +116,7 @@ public sealed class AddMsfInvitationCommandHandler : IRequestHandler<AddMsfInvit
                              candidate.RespondentEmail.ToLower() == key,
                 cancellationToken))
         {
-            throw new InvalidOperationException(AlreadyInvited);
+            throw new MsfRefusedException(AlreadyInvited);
         }
 
         var invitation = new MsfInvitation
@@ -144,7 +151,7 @@ public sealed class AddMsfInvitationCommandHandler : IRequestHandler<AddMsfInvit
         {
             // Carried as the inner exception, so the audit pipeline still sees a refused save and writes its row alone
             // (T201).
-            throw new InvalidOperationException(CampaignChanged, exception);
+            throw new MsfRefusedException(CampaignChanged, exception);
         }
         catch (DbUpdateException exception) when (exception.InnerException is DbException { SqlState: UniqueViolation })
         {
@@ -154,7 +161,7 @@ public sealed class AddMsfInvitationCommandHandler : IRequestHandler<AddMsfInvit
             // (MsfInvitationAddressOncePostgresTests). The address index is the only unique index a new invitation can
             // meet: it holds no link selector until the campaign opens, and PostgreSQL does not count NULLs as equal.
             // Carried, as above, so the refused insert is not sent again with the audit row (T201).
-            throw new InvalidOperationException(AlreadyInvited, exception);
+            throw new MsfRefusedException(AlreadyInvited, exception);
         }
 
         return invitation.Id;
@@ -186,4 +193,45 @@ public sealed class AddMsfInvitationCommandHandler : IRequestHandler<AddMsfInvit
     public const string CampaignChanged =
         "The campaign changed while this invitee was being added: it was opened or withdrawn, or another invitee was " +
         "added at the same moment. The invitee has not been added. If the campaign is still a draft, add them again.";
+}
+
+/// <summary>
+/// What an invitee's address must be before it is stored, and the words for one that is not (T369, S4, K5b, K5c): the add
+/// command's validator and the campaign page's add form ask the same rule, so the page refuses in the words the command
+/// would.
+/// </summary>
+public static class MsfRespondentAddress
+{
+    /// <summary>The longest address stored (<c>MsfInvitations.RespondentEmail</c>).</summary>
+    public const int MaximumLength = 320;
+
+    /// <summary>The refusal of an address left blank (K5b).</summary>
+    public const string Missing = "Enter the respondent's email address.";
+
+    /// <summary>The refusal of an address that is not one (K5c, S4).</summary>
+    public const string Malformed = "Enter a valid email address, for example name@example.org.";
+
+    /// <summary>
+    /// Whether <paramref name="address" />, trimmed, reads as an address a link can be mailed to: one <c>@</c> with
+    /// something before it, no space, and a domain of dotted parts, none of them empty. Stricter than the <c>@</c>
+    /// alone that <c>[EmailAddress]</c> and FluentValidation ask, so "naledi.sebego@kgk" (K5c) is refused while the
+    /// campaign is a draft, rather than mailed a link that never arrives once it opens.
+    /// </summary>
+    public static bool IsWellFormed(string? address)
+    {
+        var trimmed = address?.Trim();
+        if (string.IsNullOrEmpty(trimmed) || trimmed.Length > MaximumLength || trimmed.Any(char.IsWhiteSpace))
+        {
+            return false;
+        }
+
+        var at = trimmed.IndexOf('@');
+        if (at <= 0 || at != trimmed.LastIndexOf('@'))
+        {
+            return false;
+        }
+
+        var domainParts = trimmed[(at + 1)..].Split('.');
+        return domainParts.Length >= 2 && domainParts.All(part => part.Length > 0);
+    }
 }

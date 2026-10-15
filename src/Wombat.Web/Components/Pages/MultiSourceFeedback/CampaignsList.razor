@@ -1,7 +1,9 @@
 @page "/msf/campaigns"
+@using System.Globalization
 @attribute [Authorize(Roles = "Coordinator,Administrator")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<CampaignsList> Logger
 
 <PageTitle>MSF campaigns · Wombat</PageTitle>
 
@@ -9,118 +11,155 @@
    holds Trainee runs no campaign, whatever role brought them here (MsfCampaignRules.RunsNoCampaigns, T224), and is told
    so in the words a create refusal gives, as standing content. "MSF coverage" (T210), the programme's counts a
    coordinator plans the next campaigns from, only for a caller it shows a programme to: someone who holds Trainee reads
-   no other trainee's coverage (GetMsfProgrammeCoverageQuery.ShowsNoProgrammeTo). *@
-<PageHeader Title="MSF campaigns" Subtitle="Create and review multi-source feedback campaigns.">
-  <Actions>
-    @if (_showsCoverage is true)
-    {
-      <a id="msf-coverage-link" class="btn btn-outline" href="/msf/coverage">MSF coverage</a>
-    }
-    @if (_runsNoCampaigns is false)
-    {
-      <a class="btn btn-primary" href="/msf/campaigns/new">New campaign</a>
-    }
-  </Actions>
-</PageHeader>
-
-@if (_runsNoCampaigns is true)
-{
-  <Alert Id="msf-runs-no-campaigns" Kind="warning" Role="">@MsfCampaignRules.TraineeRunsNoCampaigns</Alert>
-}
-
-@* What a withdraw did. Announced as it appears, and given the focus once the dialog has closed: after a withdraw the
-   row's button that opened the dialog is gone, and the focus would otherwise fall to the page (T206 review). *@
-<div @ref="_result" class="action-result" tabindex="-1">
-  @if (!string.IsNullOrWhiteSpace(_status))
-  {
-    <Alert Kind="success" Role="status">@_status</Alert>
-  }
-
-  @if (!string.IsNullOrWhiteSpace(_actionError))
-  {
-    <Alert Kind="danger" Role="alert">@_actionError</Alert>
-  }
+   no other trainee's coverage (GetMsfProgrammeCoverageQuery.ShowsNoProgrammeTo). New campaign comes first, then MSF
+   coverage (T369, L1); .msf-header stacks them, each 44px and full width, below 641px. *@
+<div class="msf-header">
+  <PageHeader Title="MSF campaigns" Subtitle="@MsfCampaignText.ListSubtitle">
+    <Actions>
+      @if (_runsNoCampaigns is false)
+      {
+        <a class="btn btn-primary" href="@MsfLinks.NewCampaign"><Icon Name="plus" />New campaign</a>
+      }
+      @if (_showsCoverage is true)
+      {
+        <a id="msf-coverage-link" class="btn btn-outline" href="@MsfLinks.Coverage">MSF coverage</a>
+      }
+    </Actions>
+  </PageHeader>
 </div>
 
-@if (_runsNoCampaigns is not true)
-{
-  <StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && _items.Count == 0)" EmptyTitle="No MSF campaigns" EmptyBody="Create the first MSF campaign to start respondent outreach.">
-    <DataTable Items="_items" Caption="MSF campaigns">
-      <HeaderRow>
-        <tr>
-          <th>Subject</th>
-          <th>Template</th>
-          <th>State</th>
-          <th>Invitations</th>
-          <th>Responses</th>
-          <th>Closes</th>
-          <th><span class="visually-hidden">Actions</span></th>
-        </tr>
-      </HeaderRow>
-      <Row Context="item">
-        @{
-          var campaignLink = MsfCampaignText.CampaignLinkLabel(item.State);
-          var reportLink = MsfCampaignText.ReportLinkLabel(item.State);
-        }
-        <tr>
-          <td>@item.SubjectName</td>
-          <td>@item.TemplateName<br /><span class="muted">@MsfEvidenceKinds.Describe(item.Kind)</span></td>
-          <td>@MsfCampaignText.State(item.State)</td>
-          <td>@item.InvitationCount</td>
-          <td>@item.ResponseCount</td>
-          <td>@item.ClosesOn.ToString("yyyy-MM-dd")</td>
-          <td>
-            <div class="actions-cell">
-              @* Each link is named by what its page lets the coordinator do in this state, in the campaign page's words
-                 (T225): "Manage" a draft or an open campaign, "View campaign" otherwise; "Review and release" one under
-                 review, "View report" an open or a released one, and no report link on a draft or a withdrawn campaign,
-                 as the campaign page offers none there (T217). Until T225 every row read "Edit" and "Report". *@
-              <a class="btn btn-outline btn-sm" href="@($"/msf/campaigns/{item.Id}")"
-                 aria-label="@MsfCampaignText.RowLinkName(campaignLink, Describe(item))">@campaignLink</a>
-              @if (reportLink is not null)
-              {
-                <a class="btn btn-outline btn-sm" href="@($"/msf/reports/{item.Id}")"
-                   aria-label="@MsfCampaignText.RowLinkName(reportLink, Describe(item))">@reportLink</a>
-              }
-              @if (CanWithdraw(item))
-              {
-                @* The accessible name starts with the visible label and says which row it acts on (T206). *@
-                <button type="button" class="btn btn-sm btn-outline" disabled="@_withdrawing"
-                        aria-label="@($"Withdraw the campaign for {Describe(item)}")"
-                        @onclick="() => AskWithdrawAsync(item)">Withdraw</button>
-              }
-            </div>
-          </td>
-        </tr>
-      </Row>
-    </DataTable>
-  </StatePanel>
-}
+@* The page column (T369): its sections 24px apart, and the Withdraw dialog inside it, so the column's phone rules stack
+   the dialog's buttons, the action on top (M10). *@
+<div class="msf-page">
+  @if (_runsNoCampaigns is true)
+  {
+    <Alert Id="msf-runs-no-campaigns" Kind="warning" Role="">@MsfCampaignRules.TraineeRunsNoCampaigns</Alert>
+  }
 
-@* A destructive action opens a ConfirmDialog first (DESIGN.md § Button system): withdrawing kills every link a
-   respondent holds and removes their addresses for good (MsfCampaign.Withdraw, T202), and a closed campaign's report is
-   then never released (T199). *@
-<ConfirmDialog @ref="_confirmWithdraw"
-               Title="@MsfCampaignText.WithdrawTitle"
-               Body="@WithdrawBody"
-               ConfirmLabel="@MsfCampaignText.WithdrawConfirmLabel"
-               DangerAction="true"
-               OnConfirm="WithdrawAsync"
-               OnCancel="CancelWithdraw" />
+  @* What a withdraw did. Announced as it appears, and given the focus once the dialog has closed: after a withdraw the
+     row's button that opened the dialog is gone, and the focus would otherwise fall to the page (T206 review, T234). *@
+  <ActionResult @ref="_result" Id="msf-campaigns-result">
+    @if (!string.IsNullOrWhiteSpace(_status))
+    {
+      <Alert Kind="success" Role="status"><strong>@_status</strong> @_statusDetail</Alert>
+    }
+    @if (!string.IsNullOrWhiteSpace(_actionError))
+    {
+      <Alert Kind="danger" Role="alert"><strong>@MsfCampaignText.NotWithdrawn</strong> @_actionError</Alert>
+    }
+  </ActionResult>
+
+  @if (_runsNoCampaigns is not true)
+  {
+    @* Loading (L8): the section's heading at once, its rows as skeletons, said once to a screen reader. A failed read
+       (L9, T329) is a fixed sentence with Try again, never the exception's text, and the failure goes to the log. *@
+    <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusListAsync"
+                IsEmpty="@(_items.Count == 0)" EmptyTitle="@MsfCampaignText.ListEmptyTitle" EmptyBody="@MsfCampaignText.ListEmptyBody">
+      <LoadingContent>
+        <section class="list-section" aria-busy="true">
+          <h2 class="list-section-title">@MsfCampaignText.ListHeadingLoading</h2>
+          <p class="visually-hidden" role="status">@MsfCampaignText.ListLoading</p>
+          <Skeleton Count="4" Height="3rem" />
+        </section>
+      </LoadingContent>
+      <ChildContent>
+        <section class="list-section" aria-labelledby="msf-campaigns-heading">
+          <h2 id="msf-campaigns-heading" class="list-section-title" tabindex="-1" @ref="_heading">@MsfCampaignText.ListHeading(_items.Count)</h2>
+          @* Written by hand with both stack classes (build review D2; DESIGN.md § Table system, "A list that must stack at
+             900px"), as her MSF reports list is: seven columns and up to three buttons a row split names from 641 to
+             900px, so each row is a block there too, its cells labelled by their column, its actions 44px buttons (a
+             full-width column below 641px, T323, A.7.5). Newest first by creation (M1), as the query orders it. *@
+          <div class="table-container shadow">
+            <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+              <caption>@MsfCampaignText.ListCaption</caption>
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th scope="col" role="columnheader">Trainee</th>
+                  <th scope="col" role="columnheader">Template</th>
+                  <th scope="col" role="columnheader">State</th>
+                  <th scope="col" role="columnheader">Invitations</th>
+                  <th scope="col" role="columnheader">Responses</th>
+                  <th scope="col" role="columnheader">Closes</th>
+                  <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody role="rowgroup">
+                @foreach (var item in _items)
+                {
+                  var campaignLink = MsfCampaignText.CampaignLinkLabel(item.State);
+                  var reportLink = MsfCampaignText.ReportLinkLabel(item.State);
+                  var rowName = _rowNames.GetValueOrDefault(item.Id, Describe(item));
+                  <tr role="row" @key="item.Id">
+                    <th scope="row" role="rowheader" class="trainee-cell">@(item.SubjectName ?? item.SubjectUserId)</th>
+                    <td role="cell" data-label="Template">@item.TemplateName<span class="kind-line">@MsfEvidenceKinds.Describe(item.Kind)</span></td>
+                    <td role="cell" data-label="State"><span class="badge @BadgeFor.MsfCampaign(item.State)">@MsfCampaignText.State(item.State)</span></td>
+                    <td role="cell" data-label="Invitations">@item.InvitationCount</td>
+                    @* A campaign that never opened has no responses to count: "—", not "0" (T270). *@
+                    <td role="cell" data-label="Responses">@(item.HasOpened ? item.ResponseCount.ToString(CultureInfo.InvariantCulture) : "—")</td>
+                    <td role="cell" data-label="Closes" class="nowrap">@item.ClosesOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)</td>
+                    <td role="cell">
+                      <div class="actions-cell">
+                        @* Each link is named by what its page lets the coordinator do in this state, in the campaign page's
+                           words (T225): "Manage" a draft or an open campaign, "View campaign" otherwise; "Review and
+                           release" one under review, "View report" an open or a released one, and no report link on a
+                           draft or a withdrawn campaign, as the campaign page offers none there (T217). Each name starts
+                           with its label and names its row, told apart where two rows would read the same (RowNames,
+                           T280). *@
+                        <a class="btn btn-outline btn-sm" href="@MsfLinks.Campaign(item.Id)"
+                           aria-label="@MsfCampaignText.RowLinkName(campaignLink, rowName)">@campaignLink</a>
+                        @if (reportLink is not null)
+                        {
+                          <a class="btn btn-outline btn-sm" href="@MsfLinks.Report(item.Id)"
+                             aria-label="@MsfCampaignText.RowLinkName(reportLink, rowName)">@reportLink</a>
+                        }
+                        @if (CanWithdraw(item))
+                        {
+                          @* Not disabled while a withdraw runs (T234): a second press sends nothing (AskWithdrawAsync). *@
+                          <button type="button" class="btn btn-sm btn-outline"
+                                  aria-label="@MsfCampaignText.RowLinkName(MsfCampaignText.WithdrawRowLabel, rowName)"
+                                  @onclick="() => AskWithdrawAsync(item)">@MsfCampaignText.WithdrawRowLabel</button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </ChildContent>
+    </StatePanel>
+  }
+
+  @* A destructive action opens a ConfirmDialog first (DESIGN.md § Button system): withdrawing kills every link a
+     respondent holds and removes their addresses for good (MsfCampaign.Withdraw, T202), and a closed campaign's report is
+     then never released (T199). Its safe button says what it keeps (L3). *@
+  <ConfirmDialog @ref="_confirmWithdraw"
+                 Title="@MsfCampaignText.WithdrawTitle"
+                 Body="@WithdrawBody"
+                 ConfirmLabel="@MsfCampaignText.WithdrawConfirmLabel"
+                 CancelLabel="@MsfCampaignText.KeepCampaignLabel"
+                 DangerAction="true"
+                 OnConfirm="WithdrawAsync"
+                 OnCancel="CancelWithdraw" />
+</div>
 
 @code {
   private readonly List<MsfCampaignSummaryDto> _items = [];
+  private IReadOnlyDictionary<int, string> _rowNames = new Dictionary<int, string>();
   private ConfirmDialog? _confirmWithdraw;
-  private ElementReference _result;
+  private ActionResult? _result;
+  private ElementReference _heading;
 
   /// <summary>The region holding a withdraw's result, which takes the focus once it has answered. For its tests.</summary>
-  internal ElementReference ResultRegion => _result;
+  internal ElementReference ResultRegion => _result?.Element ?? default;
 
-  /// <summary>A withdraw has answered, and its result takes the focus after the next render. (T206 review)</summary>
-  private bool _focusResult;
   private bool _loading = true;
-  private string? _error;
+  private string? _loadError;
   private string? _status;
+
+  /// <summary>What the withdraw did, after its bold lead (L4; build review D11).</summary>
+  private string? _statusDetail;
   private string? _actionError;
 
   /// <summary>The campaign the open dialog asks about, or null when none is open. (T206)</summary>
@@ -143,35 +182,58 @@
 
   protected override async Task OnInitializedAsync()
   {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    _runsNoCampaigns = MsfCampaignRules.RunsNoCampaigns(authState.User);
+    _showsCoverage = !GetMsfProgrammeCoverageQuery.ShowsNoProgrammeTo(authState.User);
+
+    // Nothing is asked for a caller who runs none: the list would be empty whatever it held.
+    if (_runsNoCampaigns is false)
+    {
+      await LoadAsync();
+    }
+
+    _loading = false;
+  }
+
+  /// <summary>
+  /// Scoped by the handler to the campaigns this caller runs: their own institution's trainees (T113). A failed read is
+  /// the load error, its failure logged (T329); the rows already shown are kept beside an action's result.
+  /// </summary>
+  private async Task<bool> LoadAsync()
+  {
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _runsNoCampaigns = MsfCampaignRules.RunsNoCampaigns(authState.User);
-      _showsCoverage = !GetMsfProgrammeCoverageQuery.ShowsNoProgrammeTo(authState.User);
-
-      // Nothing is asked for a caller who runs none: the list would be empty whatever it held.
-      if (_runsNoCampaigns is false)
-      {
-        await LoadAsync();
-      }
+      var items = await Sender.Send(new ListMsfCampaignsForCoordinatorQuery(authState.User));
+      _items.Clear();
+      _items.AddRange(items);
+      _rowNames = RowNames.Distinct(_items, item => item.Id, Describe, item => $", {MsfCampaignText.State(item.State)}");
+      _loadError = null;
+      return true;
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _error = exception.Message;
-    }
-    finally
-    {
-      _loading = false;
+      Logger.LogError(exception, "The MSF campaign list could not be read.");
+      _loadError = MsfCampaignText.ListLoadFailed;
+      return false;
     }
   }
 
-  /// <summary>Scoped by the handler to the campaigns this caller runs: their own institution's trainees (T113).</summary>
-  private async Task LoadAsync()
+  private async Task RetryAsync()
   {
-    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    var items = await Sender.Send(new ListMsfCampaignsForCoordinatorQuery(authState.User));
-    _items.Clear();
-    _items.AddRange(items);
+    _loading = true;
+    StateHasChanged();
+    await LoadAsync();
+    _loading = false;
+  }
+
+  /// <summary>After a retry that read the list, the focus goes to its heading, which says how many there are.</summary>
+  private async ValueTask FocusListAsync()
+  {
+    if (_items.Count > 0)
+    {
+      await _heading.FocusAsync();
+    }
   }
 
   /// <summary>
@@ -180,7 +242,7 @@
   /// </summary>
   private static bool CanWithdraw(MsfCampaignSummaryDto item) => MsfCampaignRules.IsWithdrawable(item.State);
 
-  /// <summary>The campaign as its row's button, the dialog and the result name it, in the campaign page's words (T217).</summary>
+  /// <summary>The campaign as its row's buttons, the dialog and the result name it, in the campaign page's words (T217).</summary>
   private static string Describe(MsfCampaignSummaryDto item)
     => MsfCampaignText.Describe(item.SubjectName ?? item.SubjectUserId, item.TemplateName, item.ClosesOn);
 
@@ -196,6 +258,7 @@
 
     _pendingWithdraw = item;
     _status = null;
+    _statusDetail = null;
     _actionError = null;
 
     if (_confirmWithdraw is not null)
@@ -208,7 +271,9 @@
 
   /// <remarks>
   /// Sent at most once at a time, as the campaign editor's open is (T202): the flag is set before the first await, so a
-  /// second confirm that reaches the circuit before the re-render does nothing.
+  /// second confirm that reaches the circuit before the re-render does nothing. The result takes the focus, done or
+  /// refused, once the dialog has closed: after a withdraw the row's button is gone, and after a refusal the list is read
+  /// again, so the row may be rebuilt (T206 review).
   /// </remarks>
   private async Task WithdrawAsync()
   {
@@ -219,6 +284,7 @@
 
     _withdrawing = true;
     _status = null;
+    _statusDetail = null;
     _actionError = null;
 
     try
@@ -227,11 +293,17 @@
       // The state the dialog was worded by: a campaign closed since is refused, not withdrawn in words it was not
       // asked in (T199 review).
       await Sender.Send(new WithdrawMsfCampaignCommand(campaign.Id, campaign.State, authState.User));
-      _status = MsfCampaignText.Withdrawn(Describe(campaign), campaign.State);
+      _status = MsfCampaignText.WithdrawnLead(Describe(campaign));
+      _statusDetail = MsfCampaignText.WithdrawnDetail(campaign.State);
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _actionError = exception.Message;
+      _actionError = MsfCampaignText.RefusalOf(exception);
+      if (_actionError is null)
+      {
+        Logger.LogError(exception, "MSF campaign {CampaignId} could not be withdrawn from the list.", campaign.Id);
+        _actionError = MsfCampaignText.ActionFailed;
+      }
     }
     finally
     {
@@ -239,31 +311,9 @@
       _withdrawing = false;
     }
 
-    // Reloaded after a refusal too: the likeliest refusal is a campaign that changed elsewhere (released, say, or closed
+    // Read again after a refusal too: the likeliest refusal is a campaign that changed elsewhere (released, say, or closed
     // since the list was read), and the list should show what it is now, so a second Withdraw asks in its words.
-    try
-    {
-      await LoadAsync();
-    }
-    catch (Exception exception)
-    {
-      _error = exception.Message;
-    }
-
-    _focusResult = true;
-  }
-
-  /// <remarks>
-  /// The result takes the focus here, once the browser has acknowledged the render that follows the withdraw. By then the
-  /// dialog is closed: ConfirmDialog asks the browser to close it as soon as <see cref="WithdrawAsync" /> returns. It must
-  /// be: while a modal dialog is open, everything outside it is inert and cannot take the focus. (T206 review)
-  /// </remarks>
-  protected override async Task OnAfterRenderAsync(bool firstRender)
-  {
-    if (_focusResult)
-    {
-      _focusResult = false;
-      await _result.FocusAsync();
-    }
+    await LoadAsync();
+    _result?.FocusAfterRender();
   }
 }

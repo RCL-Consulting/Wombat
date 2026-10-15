@@ -46,7 +46,9 @@ public sealed partial class MsfRespondPageHostingTests
         sender.QueriedTokens.Should().Equal([Token], "the page asks for the questionnaire the link names");
 
         var document = Parse(html);
-        document.QuerySelector("h2")!.TextContent.Should().Be($"Feedback on {FakeRespondSender.TraineeName}");
+        document.QuerySelectorAll("h1").Should().ContainSingle("the card's heading is the page's one h1 (T369, T280)");
+        document.QuerySelector("h1")!.TextContent.Should().Be($"Feedback on {FakeRespondSender.TraineeName}");
+        document.QuerySelector("h1")!.HasAttribute("tabindex").Should().BeFalse();
         document.Title.Should().Be($"Feedback on {FakeRespondSender.TraineeName} · Wombat",
             "a static page's title still reaches the head, in its heading's words (T190)");
         document.Body!.TextContent.Should().Contain("Last day to respond: 2026-10-15").And.Contain("Annual MSF");
@@ -135,7 +137,7 @@ public sealed partial class MsfRespondPageHostingTests
         var html = await response.Content.ReadAsStringAsync();
 
         response.StatusCode.Should().Be(HttpStatusCode.OK, html);
-        Parse(html).QuerySelector("h2")!.TextContent.Should().Be("Thank you");
+        Parse(html).QuerySelector("h1")!.TextContent.Should().Be("Thank you");
         sender.Submitted.Should().ContainSingle().Which.Answers.Should().ContainSingle().Which.QuestionId.Should().Be(
             rating ? FakeRespondSender.ScaleQuestionId : FakeRespondSender.CommentQuestionId);
     }
@@ -204,7 +206,7 @@ public sealed partial class MsfRespondPageHostingTests
 
         var document = Parse(html);
         document.Title.Should().Be("Thank you · Wombat", "each state has its own title, its heading's words (T190)");
-        document.QuerySelector("h2")!.TextContent.Should().Be("Thank you");
+        document.QuerySelector("h1")!.TextContent.Should().Be("Thank you");
         document.Body!.TextContent.Should().Contain($"Your feedback on {FakeRespondSender.TraineeName} has been recorded.");
         document.QuerySelectorAll("input[type=radio], textarea, button[type=submit]").Should().BeEmpty("the link is spent");
     }
@@ -234,8 +236,8 @@ public sealed partial class MsfRespondPageHostingTests
         var document = Parse(html);
 
         response.StatusCode.Should().Be(status, "the page answers each refusal as the Api's endpoint does");
-        document.QuerySelector("h2").Should().NotBeNull($"the refusal is a page, whatever its status: {html}");
-        document.QuerySelector("h2")!.TextContent.Should().Be(title);
+        document.QuerySelector("h1").Should().NotBeNull($"the refusal is a page, whatever its status: {html}");
+        document.QuerySelector("h1")!.TextContent.Should().Be(title);
         document.Title.Should().Be($"{title} · Wombat", "the tab says what happened, in the heading's words (T190)");
         document.QuerySelector(".alert")!.TextContent.Trim().Should().Be(message);
         document.QuerySelectorAll("input[type=radio], textarea, button[type=submit]").Should().BeEmpty();
@@ -261,7 +263,7 @@ public sealed partial class MsfRespondPageHostingTests
         var document = Parse(await response.Content.ReadAsStringAsync());
 
         response.StatusCode.Should().Be(HttpStatusCode.Gone);
-        document.QuerySelector("h2")!.TextContent.Should().Be("Feedback request closed");
+        document.QuerySelector("h1")!.TextContent.Should().Be("Feedback request closed");
         document.QuerySelector(".alert")!.TextContent.Trim().Should().Be("This feedback request has closed.");
         sender.Submitted.Should().BeEmpty("nothing is sent through a link the page has just been told is dead");
     }
@@ -287,7 +289,8 @@ public sealed partial class MsfRespondPageHostingTests
         var document = Parse(await response.Content.ReadAsStringAsync());
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        document.QuerySelector(".alert-danger")!.TextContent.Trim().Should().Be(missing);
+        System.Text.RegularExpressions.Regex.Replace(document.QuerySelector(".alert-danger")!.TextContent, @"\s+", " ").Trim()
+            .Should().Be($"Your feedback was not recorded. {missing}", "the summary says the feedback was not recorded, then why (Q9)");
 
         // A refused submit is a full page load: its title says so, its summary takes the focus as the page loads, and the
         // question it is about points at it (T205 review).
@@ -297,7 +300,8 @@ public sealed partial class MsfRespondPageHostingTests
         summary.GetAttribute("tabindex").Should().Be("-1");
         summary.HasAttribute("autofocus").Should().BeTrue();
         var fieldsets = document.QuerySelectorAll("fieldset");
-        fieldsets.Should().ContainSingle().Which.GetAttribute("aria-describedby").Should().Be(MsfRespond.ErrorSummaryId);
+        fieldsets.Should().ContainSingle().Which.GetAttribute("aria-describedby").Should().Be(
+            $"{MsfRespond.RatingHelpId(FakeRespondSender.ScaleQuestionId)} {MsfRespond.ErrorSummaryId}", "its help, then the refusal (T369)");
         document.GetElementById($"msf-q{FakeRespondSender.CommentQuestionId}")!.HasAttribute("aria-invalid")
             .Should().BeFalse("only the question the refusal is about is marked");
         document.QuerySelector("textarea")!.TextContent.Should().Be("Kept after the refusal.");
@@ -319,7 +323,7 @@ public sealed partial class MsfRespondPageHostingTests
         response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         html.Should().Contain("Something went wrong on our side").And.NotContain(detail).And.NotContain("Exception");
         Parse(html).Title.Should().Be("Something went wrong · Wombat");
-        Parse(html).QuerySelector("h2")!.TextContent.Should().Be("Something went wrong", "the tab says what the heading says (T190)");
+        Parse(html).QuerySelector("h1")!.TextContent.Should().Be("Something went wrong", "the tab says what the heading says (T190)");
     }
 
     /// <summary>

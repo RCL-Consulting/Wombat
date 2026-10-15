@@ -53,6 +53,7 @@ public sealed class LearnerFeedbackPageTests : TestContext
 
         Services.AddSingleton<IScopedSender>(_sender);
         Services.AddSingleton<IActivityReferenceDataService>(_referenceData);
+        Services.AddSingleton(TimeProvider.System);
     }
 
     // ─── Creating a campaign ─────────────────────────────────────────────────
@@ -60,7 +61,7 @@ public sealed class LearnerFeedbackPageTests : TestContext
     [Fact]
     public void ChoosingALearnerFeedbackTemplate_OffersOnlyTheEpasItsListNames_AndOneRespondentGroup()
     {
-        var cut = RenderComponent<CampaignEdit>();
+        var cut = RenderComponent<NewCampaign>();
         cut.Find("#msf-subject").Change(TraineeUserId);
         cut.WaitForState(() => cut.FindAll("input[type=checkbox]").Count == WholeCurriculum.Count);
 
@@ -74,14 +75,19 @@ public sealed class LearnerFeedbackPageTests : TestContext
 
         var categories = cut.Find("#msf-min-category-count");
         categories.GetAttribute("value").Should().Be("1");
-        categories.HasAttribute("disabled").Should().BeTrue("learner feedback has one respondent group, learners");
+        // M4: unavailable, not disabled, so it is read with its help; readonly keeps its 1.
+        categories.GetAttribute("aria-disabled").Should().Be("true", "learner feedback has one respondent group, learners");
+        categories.HasAttribute("readonly").Should().BeTrue();
+        cut.Find("#msf-min-category-count-help").TextContent.Should().Be(
+            "Learner feedback has one respondent group, so its groups-reporting minimum is fixed at 1.");
 
         cut.Find("#msf-template-id").Change(MsfTemplateId.ToString());
         cut.WaitForState(() => cut.FindAll("input[type=checkbox]").Count == WholeCurriculum.Count);
 
         _referenceData.Asked.Last().Should().Be((TraineeUserId, (string?)null), "an MSF reads the curriculum unnarrowed, as before");
         cut.Find("#msf-min-category-count").GetAttribute("value").Should().Be("2");
-        cut.Find("#msf-min-category-count").HasAttribute("disabled").Should().BeFalse();
+        cut.Find("#msf-min-category-count").HasAttribute("aria-disabled").Should().BeFalse();
+        cut.Find("#msf-min-category-count").HasAttribute("readonly").Should().BeFalse();
     }
 
     /// <summary>
@@ -91,7 +97,7 @@ public sealed class LearnerFeedbackPageTests : TestContext
     [Fact]
     public void ChoosingALearnerFeedbackTemplate_StartsTheResponseMinimumAtThree_AndKeepsATypedOne()
     {
-        var cut = RenderComponent<CampaignEdit>();
+        var cut = RenderComponent<NewCampaign>();
         cut.Find("#msf-min-responses").GetAttribute("value").Should().Be("8");
 
         cut.Find("#msf-template-id").Change(LearnerFeedbackTemplateId.ToString());
@@ -108,24 +114,27 @@ public sealed class LearnerFeedbackPageTests : TestContext
     [Fact]
     public void TheTemplateList_MarksALearnerFeedbackTemplate()
     {
-        var cut = RenderComponent<CampaignEdit>();
+        var cut = RenderComponent<NewCampaign>();
 
         cut.FindAll("#msf-template-id option").Select(option => option.TextContent.Trim())
-            .Should().Equal("Select template", "Annual MSF", "Teaching feedback (Learner feedback)");
+            .Should().Equal(["Annual MSF (Multi-source feedback)", "Teaching feedback (Learner feedback)"],
+                "each by its kind (C2); the first is chosen, so a create needs no pick where there is one (3.35)");
     }
 
     [Fact]
     public void TheQuickTemplateForm_CreatesALearnerFeedbackTemplate_WithWordingLabelledInterim()
     {
         _sender.On<CreateMsfTemplateCommand>(command => new MsfTemplateDto(3, command.Name, null, false, true, [], command.Kind));
-        var cut = RenderComponent<CampaignEdit>();
+        var cut = RenderComponent<NewCampaign>();
 
-        cut.Find("#msf-template-kind").Change(MsfTemplateKind.LearnerFeedback.ToString());
+        cut.Find("#msf-template-kind-learner").Change(true);
 
         cut.Find("#msf-template-name").GetAttribute("value").Should().Be("Learner feedback (interim questionnaire)");
         cut.Find("#msf-template-scale").GetAttribute("value").Should().Contain("teaching");
 
-        cut.Find("#msf-template-name").Closest("form")!.Submit();
+        // S5: Add template is a button of its own, outside the campaign's form.
+        cut.Find("#msf-template-name").Closest("form").Should().BeNull();
+        cut.Find("#msf-add-template").Click();
         cut.WaitForState(() => _sender.Received.OfType<CreateMsfTemplateCommand>().Any());
 
         var command = _sender.Received.OfType<CreateMsfTemplateCommand>().Single();
@@ -147,7 +156,10 @@ public sealed class LearnerFeedbackPageTests : TestContext
         var cut = RenderComponent<CampaignEdit>(parameters => parameters.Add(page => page.CampaignId, 9));
         cut.WaitForState(() => cut.FindAll("#msf-teaching-context").Count == 1);
 
-        cut.FindAll("#msf-respondent-category option").Select(option => option.TextContent.Trim()).Should().Equal("Learner");
+        // K15: one respondent group, so no group select, and a teaching context for each.
+        cut.FindAll("#msf-respondent-category").Should().BeEmpty();
+        cut.Find("#msf-teaching-context").GetAttribute("aria-required").Should().Be("true");
+        cut.Markup.Should().Contain("Every invitee is in one respondent group, Learner.");
         cut.Markup.Should().Contain("Learner feedback");
         IdReferences.Broken(cut).Should().BeEmpty();
 
@@ -189,13 +201,15 @@ public sealed class LearnerFeedbackPageTests : TestContext
     [Fact]
     public void ALearnerFeedbackReport_CountsTheContextsThatAnswered_AndOffersNoLevel()
     {
+        JSInterop.Mode = JSRuntimeMode.Loose; // the report's narrative counter imports its script (T369)
         _sender.On<GetCampaignAggregateReportQuery>(_ => Report(MsfTemplateKind.LearnerFeedback, ["Student tutorial", "Ward round"]));
         var cut = RenderComponent<CampaignReport>(parameters => parameters.Add(page => page.CampaignId, 9));
         cut.WaitForState(() => cut.FindAll("#msf-narrative").Count > 0);
 
-        cut.Markup.Should().Contain("Teaching contexts that responded:</strong> 2 (Student tutorial, Ward round)");
+        // T369: the report's status card and subtitle (flow 10, lane R).
+        cut.Markup.Should().Contain("Teaching contexts that responded: 2 (Student tutorial, Ward round)");
         cut.Markup.Should().Contain("never their names");
-        cut.Markup.Should().Contain("Kind:</strong> Learner feedback");
+        cut.Find(".page-subtitle span").TextContent.Should().Contain("Learner feedback");
         cut.FindAll("#msf-level").Should().BeEmpty("learner_feedback_cpsa rates nothing, and its release refuses a level");
         _referenceData.RatedLevelsAskedFor.Should().Equal("learner_feedback_cpsa");
         IdReferences.Broken(cut).Should().BeEmpty();
@@ -204,6 +218,7 @@ public sealed class LearnerFeedbackPageTests : TestContext
     [Fact]
     public void AnMsfReport_StillOffersTheLevel_AndCountsNoContexts()
     {
+        JSInterop.Mode = JSRuntimeMode.Loose; // the report's narrative counter imports its script (T369)
         _sender.On<GetCampaignAggregateReportQuery>(_ => Report(MsfTemplateKind.Msf, null));
         var cut = RenderComponent<CampaignReport>(parameters => parameters.Add(page => page.CampaignId, 9));
         cut.WaitForState(() => cut.FindAll("#msf-level").Count > 0);
@@ -222,20 +237,27 @@ public sealed class LearnerFeedbackPageTests : TestContext
         _auth.SetRoles(WombatRoles.Trainee);
         _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, TraineeUserId));
         _sender
-            .On<ListMsfCampaignsForTraineeQuery>(_ => Array.Empty<MsfCampaignSummaryDto>())
             .On<GetCampaignAggregateReportQuery>(_ => Report(MsfTemplateKind.LearnerFeedback, ["Neonatal night teaching", "Ward round"])
-                with { State = MsfCampaignState.Released, IsSubjectsCopy = true });
-        var cut = RenderComponent<MyMsfReports>(parameters => parameters.Add(page => page.CampaignId, 9));
-        cut.WaitForState(() => cut.Markup.Contains("Selected report"));
+                with
+                {
+                    State = MsfCampaignState.Released,
+                    IsSubjectsCopy = true,
+                    ReleasedOn = new DateTime(2026, 10, 14, 14, 34, 0, DateTimeKind.Utc)
+                });
+        var cut = RenderComponent<MyMsfReport>(parameters => parameters.Add(page => page.CampaignId, 9));
+        cut.WaitForState(() => cut.FindAll("#my-report-contexts").Count > 0);
 
-        cut.Markup.Should().Contain("Teaching contexts that responded:</strong> 2");
+        cut.Find("#my-report-contexts").TextContent.Should().Be("Teaching contexts that responded: 2");
         cut.Markup.Should().NotContain("Neonatal night teaching").And.NotContain("Ward round");
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     private static MsfCampaignSetupDto Setup(int campaignId, MsfTemplateKind kind, IReadOnlyList<MsfRespondentCategory> categories)
-        => new(campaignId, kind == MsfTemplateKind.LearnerFeedback ? "Teaching feedback" : "Annual MSF", kind, MsfCampaignState.Draft, categories);
+        => new(campaignId, kind == MsfTemplateKind.LearnerFeedback ? "Teaching feedback" : "Annual MSF", kind, MsfCampaignState.Draft, categories)
+        {
+            SubjectIsCurrent = true
+        };
 
     private static MsfCampaignAggregateReportDto Report(MsfTemplateKind kind, IReadOnlyList<string>? contexts)
         => new(9, TraineeUserId, "Teaching feedback", MsfCampaignState.UnderReview, 3, 3, 3, null, true, [], 1, 1,

@@ -511,33 +511,46 @@ Expect: The job's last run updates. The application log then holds three stub em
   "assessors nudged 2 (activities 2)" and skips nobody. Nothing else has waited five days, so nobody else is nudged: Dr
   du Plessis's CBD has waited less than a day.
 
-Step 3.36 — Mr Smit invites seven colleagues, and removes one added under the wrong group
+Step 3.36 — Mr Smit invites nine colleagues, and removes one added under the wrong group
 Role: Coordinator — Mr Pieter Smit
 Route: /msf/campaigns/{CampaignId:int}
-Do: Add each colleague by address and respondent group:
+Do: Add each colleague by address and respondent group, in this order:
   - Sister Grace Mokwena, `grace.mokwena@kgk.wombat.local`, as a Nurse;
   - Sister Palesa Tau, `palesa.tau@kgk.wombat.local`, by mistake as an Allied health professional;
   - the registrars Dr Kagiso Motsepe, `kagiso.motsepe@kgk.wombat.local`, and Dr Lindiwe Khoza,
     `lindiwe.khoza@kgk.wombat.local`, as Peer doctors;
   - Dr Khumalo, `khumalo@kgk.wombat.local`, and Dr Botha, `botha@kgk.wombat.local`, as Consultants;
-  - the physiotherapist Ms Naledi Sebego, `naledi.sebego@kgk.wombat.local`, as an Allied health professional.
+  - the physiotherapist Ms Naledi Sebego, `naledi.sebego@kgk.wombat.local`, as an Allied health professional;
+  - Sister Thandi Nkosi, `nkosi@kgk.wombat.local`, as a Nurse;
+  - Dr Johan van Wyk, `vanwyk@kgk.wombat.local`, as a Consultant.
   Then remove Sister Tau's row and add her again as a Nurse.
-Expect: Each add reads "Invitee added." and clears the address for the next one. The group select offers Peer doctor,
-  Consultant, Nurse, Allied health professional and Other; it offers no Patient and no Learner. Remove asks "Remove this
-  invitee?", naming the address and group. Confirmed, it says she "has been removed from this campaign, and will not be
-  emailed a link when it opens." In the end the counts read Peer doctor 2, Consultant 2, Nurse 2, Allied health
-  professional 1 and All groups 7, with no Responded column. "Addresses invited" lists the seven, each with Remove, and
-  Open campaign is enabled.
+Expect:
+  - **The add form** ("Add an invitee", "* marks a field you must fill in."): Respondent email, and a Respondent group
+    select offering Peer doctor, Consultant, Nurse, Allied health professional and Other, in that order, Peer doctor
+    chosen; it offers no Patient and no Learner. The group is kept from one add to the next.
+  - **Each add** reads "Invitee added." alone (T369, F11), clears the address and puts the focus back in it.
+  - **The addresses:** "Addresses invited", listed only while the campaign is a draft. Under a count ("9 addresses"),
+    each address whole over its group, with a Remove… beside it named for its address and group ("Remove
+    palesa.tau@kgk.wombat.local (Allied health professional)").
+  - **Remove** asks "Remove this invitee?", naming the address and group; its buttons are Keep the invitee and Remove
+    invitee. Confirmed, the result above the rows, focused, says "palesa.tau@kgk.wombat.local (Allied health
+    professional) has been removed from this campaign, and will not be emailed a link when it opens."
+  - **In the end** the counts, captioned that once the campaign opens the page never lists who was invited, read Peer
+    doctor 2, Consultant 3, Nurse 3, Allied health professional 1 and All groups 9, with no Responded column. "9
+    addresses" lists the nine. Open campaign is offered, with "Opening emails each of the 9 invitees a link to respond,
+    with `D+14` as their last day." beside it.
 
 Step 3.43 — Mr Smit resends the undelivered link
 Role: Coordinator — Mr Pieter Smit
 Route: /msf/campaigns/{CampaignId:int}
 Do: At least an hour after the open, open the campaign and resend.
-Expect: The counts read Responded: Peer doctor 1, Consultant 2, Nurse 2 and Allied health professional 1, and All
-  groups 7 invited, 6 responded. A warning reads "1 link was not delivered. Resend sends each of these respondents a new
-  link; this page never says who they are.", with a "Resend 1 link" button. After the resend, the page reads "1 new link
-  is being sent." and "1 link is still being sent…", and the warning is gone. The log holds one more "Feedback request:
-  Lerato Molefe …" stub email. It names no address; it is Dr Khoza's, the only link not answered.
+Expect: The status card reads "8 of 9 invitees have responded." The counts read Invited and Responded: Peer doctor 2
+  and 1, Consultant 3 and 3, Nurse 3 and 3, Allied health professional 1 and 1, and All groups 9 and 8. In the Links
+  part, a warning reads "1 link was not delivered. Resend sends each of these respondents a new link; this page never
+  says who they are.", with the "Resend 1 link" button inside it, and "A link nothing was heard of for an hour counts as
+  not delivered." under it. After the resend, the Links part reads "1 new link is being sent.", focused, and "1 link is
+  still being sent. Reload this page to see whether it was delivered.", and the warning is gone. The log holds one more
+  "Feedback request: Lerato Molefe …" stub email. It names no address; it is Dr Khoza's, the only link not answered.
 
 Step 4.27 — Dr Zulu ratifies, and the STARs are issued
 Role: CommitteeMember (chair) — Dr Thandi Zulu

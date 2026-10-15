@@ -1,0 +1,922 @@
+@page "/msf/campaigns/new"
+@using System.Globalization
+@using System.Security.Claims
+@using Wombat.Application.Features.Activities.Services
+@using Wombat.Application.Features.Curricula.Quota
+@attribute [Authorize(Roles = "Coordinator,Administrator")]
+@inject IScopedSender Sender
+@inject IActivityReferenceDataService ReferenceData
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject TimeProvider Clock
+@inject IJSRuntime JS
+@inject ILogger<NewCampaign> Logger
+
+<PageTitle>New MSF campaign · Wombat</PageTitle>
+
+@* T369 (flow 10, C1–C8): the create page on its own, split from the campaign's page, which kept "MSF campaign for
+   {name}". Four cards, each an h2: Questionnaire, then Trainee and window, Thresholds and Evidence, which are the
+   campaign's form. *@
+<div class="msf-header">
+  <PageHeader Title="New MSF campaign" Subtitle="@MsfCampaignText.NewCampaignSubtitle" />
+</div>
+
+<div class="msf-page msf-form-column">
+  @* Someone who holds Trainee runs no campaign, whatever role brought them here (MsfCampaignRules.RunsNoCampaigns, T224);
+     nor does a Coordinator at no institution (MsfCampaignRules.RunsCampaigns, T248). Standing content, in the words the
+     create and template commands refuse them in, and nothing is read for them. *@
+  @if (_runsCampaigns is false)
+  {
+    <Alert Id="msf-runs-no-campaigns" Kind="warning" Role="">@_runsNoCampaignsReason</Alert>
+  }
+  else if (_runsCampaigns is true)
+  {
+    @* A refused create (M9): the summary takes the focus, its title what became of the work, its text what to do, each
+       line a link that moves the focus to its field, never navigating (<base href="/"> would go Home). *@
+    @if (_refusalText is not null)
+    {
+      <div @ref="_summary" id="msf-create-refusal" class="validation-summary-errors error-summary" role="alert" tabindex="-1">
+        <p><strong>@MsfCampaignText.NotCreated</strong> @_refusalText</p>
+        @if (_refusalLines.Count > 0)
+        {
+          <ul class="refusal-summary-list">
+            @foreach (var line in _refusalLines)
+            {
+              <li><a href="@($"#{line.FieldId}")" @onclick="() => FocusFieldAsync(line.FieldId)" @onclick:preventDefault>@line.Text</a></li>
+            }
+          </ul>
+        }
+      </div>
+    }
+
+    <p class="field-help">@MsfCampaignText.RequiredMarkLine</p>
+
+    @* T329: the templates and the trainees are read in a try, so a failed read is an alert with Try again, and the circuit
+       stays up (C6). Until T329 the page read them unguarded, and a failure ended the circuit. *@
+    <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync">
+      <LoadingContent>
+        <p class="visually-hidden" role="status">@MsfCampaignText.NewCampaignLoading</p>
+        <Skeleton Count="4" Height="3rem" />
+      </LoadingContent>
+      <ChildContent>
+        @Questionnaire()
+
+        @* The campaign's form: the three cards below. The Template select above joins it by form="campaign-form" (S5),
+           and the fold above is outside it, so nothing in the fold is part of a create. novalidate: the browser stays
+           quiet and the page refuses in its own words (T324). *@
+        <EditForm Model="_campaign" OnSubmit="CreateAsync" FormName="msf-campaign" id="campaign-form" novalidate>
+          @TraineeAndWindow()
+          @Thresholds()
+          @Evidence()
+        </EditForm>
+      </ChildContent>
+    </StatePanel>
+  }
+</div>
+
+@code {
+  private RenderFragment Questionnaire() => __builder =>
+  {
+    <section class="form-container" aria-labelledby="msf-questionnaire-heading">
+      <h2 id="msf-questionnaire-heading" class="msf-card-title">@MsfCampaignText.QuestionnaireHeading@(" ")<small>@MsfCampaignText.QuestionnaireNote</small></h2>
+      <ActionResult @ref="_templateResult" Id="msf-template-result">
+        @if (_templateStatus is not null)
+        {
+          <Alert Kind="success" Role="status"><strong>@MsfCampaignText.TemplateCreatedLead</strong> @_templateStatus</Alert>
+        }
+        @if (_templateRefusal is not null)
+        {
+          <Alert Kind="danger" Role="alert"><strong>@MsfCampaignText.NotAdded</strong> @_templateRefusal</Alert>
+        }
+      </ActionResult>
+      <div class="form-group msf-gap-top">
+        <label for="msf-template-id">Template<span class="required-mark" aria-hidden="true"> *</span></label>
+        @if (_templates.Count == 0)
+        {
+          @* Nothing to choose until a questionnaire is written (C1): the select says so, and is not a control. *@
+          <select id="msf-template-id" class="form-select" form="campaign-form" disabled aria-required="true"
+                  aria-describedby="msf-template-id-help">
+            <option value="">@MsfCampaignText.NoTemplateYet</option>
+          </select>
+          <p id="msf-template-id-help" class="field-help">@MsfCampaignText.NoTemplateHelp</p>
+        }
+        else
+        {
+          <select id="msf-template-id" class="@InputClass("msf-template-id", "form-select")" form="campaign-form"
+                  aria-required="true" aria-invalid="@Invalid("msf-template-id")"
+                  aria-describedby="@DescribedBy("msf-template-id", "msf-template-id-help")"
+                  @bind="_campaign.TemplateId" @bind:after="OnCampaignTemplateChangedAsync">
+            @foreach (var template in _templates)
+            {
+              <option value="@template.Id">@TemplateLabel(template)</option>
+            }
+          </select>
+          <p id="msf-template-id-help" class="field-help">@TemplateQuestions</p>
+          @FieldMessage("msf-template-id")
+        }
+      </div>
+
+      @* The fold (S5): open while no template exists (C1), its fields never posted with Create; Add template is a
+         button of its own, and the new template is chosen above (C2). *@
+      <details id="msf-template-fold" class="template-fold" open="@_foldOpen">
+        <summary><Icon Name="plus" />@MsfCampaignText.WriteQuestionnaire</summary>
+        <div class="form-grid template-form">
+          @* T164, D35: learner feedback is a template of its own kind. Only learners answer it, and its release records
+             learner-feedback evidence, not multi-source feedback. *@
+          <fieldset class="form-group full-width choice-row">
+            <legend>Kind</legend>
+            <div class="choice-stack">
+              <div class="form-check">
+                <input id="msf-template-kind-msf" class="form-check-input" type="radio" name="msf-template-kind"
+                       checked="@(_template.Kind == MsfTemplateKind.Msf)" @onchange="() => SetTemplateKind(MsfTemplateKind.Msf)" />
+                <label for="msf-template-kind-msf">@MsfEvidenceKinds.Describe(MsfTemplateKind.Msf)</label>
+              </div>
+              <div class="form-check">
+                <input id="msf-template-kind-learner" class="form-check-input" type="radio" name="msf-template-kind"
+                       checked="@(_template.Kind == MsfTemplateKind.LearnerFeedback)" @onchange="() => SetTemplateKind(MsfTemplateKind.LearnerFeedback)" />
+                <label for="msf-template-kind-learner">@MsfEvidenceKinds.Describe(MsfTemplateKind.LearnerFeedback)</label>
+              </div>
+            </div>
+          </fieldset>
+          <div class="form-group full-width">
+            <label for="msf-template-name">Template name<span class="required-mark" aria-hidden="true"> *</span></label>
+            <input id="msf-template-name" class="@InputClass("msf-template-name", "form-control")" maxlength="200"
+                   aria-required="true" aria-invalid="@Invalid("msf-template-name")"
+                   aria-describedby="@DescribedBy("msf-template-name", null)" @bind="_template.Name" />
+            @FieldMessage("msf-template-name")
+          </div>
+          <div class="form-group full-width">
+            <label for="msf-template-scale">Scale question<span class="required-mark" aria-hidden="true"> *</span></label>
+            <input id="msf-template-scale" class="@InputClass("msf-template-scale", "form-control")" maxlength="1000"
+                   aria-required="true" aria-invalid="@Invalid("msf-template-scale")"
+                   aria-describedby="@DescribedBy("msf-template-scale", "msf-template-scale-help")" @bind="_template.ScalePrompt" />
+            <p id="msf-template-scale-help" class="field-help">@MsfCampaignText.ScaleQuestionHelp</p>
+            @FieldMessage("msf-template-scale")
+          </div>
+          <div class="form-group full-width">
+            <label for="msf-template-comment">Comment question<span class="required-mark" aria-hidden="true"> *</span></label>
+            <input id="msf-template-comment" class="@InputClass("msf-template-comment", "form-control")" maxlength="1000"
+                   aria-required="true" aria-invalid="@Invalid("msf-template-comment")"
+                   aria-describedby="@DescribedBy("msf-template-comment", null)" @bind="_template.CommentPrompt" />
+            @FieldMessage("msf-template-comment")
+          </div>
+          <div class="form-group full-width">
+            @* Not disabled while it runs (T234): a second press sends nothing (CreateTemplateAsync). *@
+            <button id="msf-add-template" type="button" class="btn btn-outline" aria-disabled="@InFlight.AriaDisabled(_addingTemplate)"
+                    @onclick="CreateTemplateAsync">Add template</button>
+          </div>
+        </div>
+      </details>
+    </section>
+  };
+
+  private RenderFragment TraineeAndWindow() => __builder =>
+  {
+    <section class="form-container" aria-labelledby="msf-trainee-heading">
+      <h2 id="msf-trainee-heading" class="msf-card-title">@MsfCampaignText.TraineeWindowHeading</h2>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label for="msf-subject">Trainee<span class="required-mark" aria-hidden="true"> *</span></label>
+          <select id="msf-subject" class="@InputClass("msf-subject", "form-select")" aria-required="true"
+                  aria-invalid="@Invalid("msf-subject")" aria-describedby="@DescribedBy("msf-subject", "msf-subject-help")"
+                  @bind="_campaign.SubjectUserId" @bind:after="LoadEpaOptionsAsync">
+            <option value="">@MsfCampaignText.ChooseTrainee</option>
+            @foreach (var trainee in _trainees)
+            {
+              <option value="@trainee.UserId">@TraineeLabel(trainee)</option>
+            }
+          </select>
+          <p id="msf-subject-help" class="field-help">@MsfCampaignText.TraineeHelp</p>
+          @FieldMessage("msf-subject")
+        </div>
+        <div class="form-group">
+          <label for="msf-opens">Opens on<span class="required-mark" aria-hidden="true"> *</span></label>
+          <input id="msf-opens" type="date" class="@InputClass("msf-opens", "form-control")" aria-required="true"
+                 aria-invalid="@Invalid("msf-opens")" aria-describedby="@DescribedBy("msf-opens", "msf-opens-help")"
+                 @bind="_campaign.OpensOn" @bind:format="yyyy-MM-dd" />
+          <p id="msf-opens-help" class="field-help">@MsfCampaignText.OpensOnHelp</p>
+          @FieldMessage("msf-opens")
+        </div>
+        <div class="form-group">
+          <label for="msf-closes">Closes on<span class="required-mark" aria-hidden="true"> *</span></label>
+          <input id="msf-closes" type="date" class="@InputClass("msf-closes", "form-control")" aria-required="true"
+                 aria-invalid="@Invalid("msf-closes")" aria-describedby="@DescribedBy("msf-closes", "msf-closes-help")"
+                 @bind="_campaign.ClosesOn" @bind:format="yyyy-MM-dd" />
+          <p id="msf-closes-help" class="field-help">@MsfCampaignText.ClosesOnHelp</p>
+          @FieldMessage("msf-closes")
+        </div>
+      </div>
+    </section>
+  };
+
+  private RenderFragment Thresholds() => __builder =>
+  {
+    <section class="form-container" aria-labelledby="msf-thresholds-heading">
+      <h2 id="msf-thresholds-heading" class="msf-card-title">@MsfCampaignText.ThresholdsHeading@(" ")<small>@MsfCampaignText.ThresholdsNote</small></h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="msf-min-responses">@MsfCampaignText.MinimumResponsesLabel<span class="required-mark" aria-hidden="true"> *</span></label>
+          <input id="msf-min-responses" type="number" inputmode="numeric" min="1" max="100"
+                 class="@InputClass("msf-min-responses", "form-control")" aria-required="true"
+                 aria-invalid="@Invalid("msf-min-responses")"
+                 aria-describedby="@DescribedBy("msf-min-responses", "msf-min-responses-help")"
+                 @bind="_campaign.MinimumResponses" />
+          <p id="msf-min-responses-help" class="field-help">@MsfCampaignText.MinimumResponsesHelp</p>
+          @FieldMessage("msf-min-responses")
+        </div>
+        <div class="form-group">
+          <label for="msf-min-category">@MsfCampaignText.MinimumInGroupLabel<span class="required-mark" aria-hidden="true"> *</span></label>
+          <input id="msf-min-category" type="number" inputmode="numeric" min="3" max="100"
+                 class="@InputClass("msf-min-category", "form-control")" aria-required="true"
+                 aria-invalid="@Invalid("msf-min-category")"
+                 aria-describedby="@DescribedBy("msf-min-category", "msf-min-category-help")"
+                 @bind="_campaign.MinimumCategoryResponses" />
+          <p id="msf-min-category-help" class="field-help">@MsfCampaignText.MinimumInGroupHelp</p>
+          @FieldMessage("msf-min-category")
+        </div>
+        <div class="form-group">
+          <label for="msf-min-category-count">@MsfCampaignText.MinimumGroupsLabel<span class="required-mark" aria-hidden="true"> *</span></label>
+          @* Learner feedback has one respondent group, so it is fixed at 1 (M4): unavailable, not disabled, so it is still
+             read with its help; readonly keeps its value. *@
+          <input id="msf-min-category-count" type="number" inputmode="numeric" min="1" max="6"
+                 class="@InputClass("msf-min-category-count", "form-control")" aria-required="true"
+                 aria-invalid="@Invalid("msf-min-category-count")"
+                 aria-disabled="@(IsLearnerFeedback ? "true" : null)" readonly="@IsLearnerFeedback"
+                 aria-describedby="@DescribedBy("msf-min-category-count", "msf-min-category-count-help")"
+                 @bind="_campaign.MinimumRespondentCategories" />
+          <p id="msf-min-category-count-help" class="field-help">@MinimumGroupsHelp</p>
+          @FieldMessage("msf-min-category-count")
+        </div>
+      </div>
+    </section>
+  };
+
+  private RenderFragment Evidence() => __builder =>
+  {
+    var hasTrainee = !string.IsNullOrWhiteSpace(_campaign.SubjectUserId);
+    var epaError = _fieldErrors.ContainsKey(EpaGroupId);
+    var helpId = hasTrainee ? "msf-epas-help" : "msf-epas-trainee-first";
+    <section class="form-container" aria-labelledby="msf-evidence-heading">
+      <h2 id="msf-evidence-heading" class="msf-card-title">@MsfCampaignText.EvidenceHeading</h2>
+      @* A group of checkboxes has no single control for a <label for> to name, so it is a fieldset whose legend names
+         the group (DESIGN.md § Form system, T147), a form group (T188), its invalid state the choice group's stripe
+         (S12). The summary's link focuses its first box, never the legend (M9). *@
+      <fieldset id="@EpaGroupId" class="form-group choice-row choice-group @(epaError ? "is-invalid" : null)"
+                aria-describedby="@(epaError ? $"{helpId} {EpaGroupId}-error" : helpId)">
+        <legend>@MsfCampaignText.EvidenceLegend<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></legend>
+        <p id="@helpId" class="page-subtitle">@(hasTrainee ? EpasHelp : MsfCampaignText.SelectTraineeFirst)</p>
+        @if (epaError)
+        {
+          <p id="@($"{EpaGroupId}-error")" class="validation-message">@_fieldErrors[EpaGroupId]</p>
+        }
+        @if (hasTrainee)
+        {
+          @if (_epasLoadFailed)
+          {
+            <p class="validation-message">@EpasLoadFailed</p>
+          }
+          else if (_epaOptions.Count == 0)
+          {
+            <p class="page-subtitle">@NoEpasText</p>
+          }
+          else
+          {
+            <p class="page-subtitle" role="status"><strong>@MsfCampaignText.Ticked(_campaign.EpaIds.Count, _epaOptions.Count)</strong></p>
+            <div class="epa-checks">
+              @foreach (var epa in _epaOptions)
+              {
+                var id = EpaInputId(epa.Value);
+                <div class="form-check">
+                  <input id="@id" class="form-check-input" type="checkbox"
+                         checked="@_campaign.EpaIds.Contains(ParseEpaId(epa.Value))"
+                         @onchange="args => ToggleEpa(epa.Value, args.Value is bool isChecked && isChecked)" />
+                  <label for="@id">@epa.Label</label>
+                </div>
+              }
+            </div>
+          }
+        }
+      </fieldset>
+      <div class="form-actions">
+        <a class="btn btn-outline" href="@MsfLinks.Campaigns">Cancel</a>
+        @if (_templates.Count == 0)
+        {
+          @* No questionnaire to name (C1): unavailable with its reason, and no submit, so nothing can be sent. *@
+          <button id="msf-create-campaign" type="button" class="btn btn-primary" aria-disabled="true"
+                  aria-describedby="msf-create-reason">Create campaign</button>
+        }
+        else
+        {
+          <button id="msf-create-campaign" type="submit" class="btn btn-primary"
+                  aria-disabled="@InFlight.AriaDisabled(_creating)">Create campaign</button>
+        }
+      </div>
+      @if (_templates.Count == 0)
+      {
+        <ul class="move-reasons">
+          <li id="msf-create-reason"><strong>Create campaign:</strong> @MsfCampaignText.CreateNeedsTemplate</li>
+        </ul>
+      }
+    </section>
+  };
+
+  private RenderFragment FieldMessage(string fieldId) => __builder =>
+  {
+    if (_fieldErrors.TryGetValue(fieldId, out var message))
+    {
+      <p id="@($"{fieldId}-error")" class="validation-message">@message</p>
+    }
+  };
+}
+
+@code {
+  /// <summary>The id of the EPA group, whose message the summary's line names and whose first box it focuses.</summary>
+  private const string EpaGroupId = "msf-epas";
+
+  /// <summary>A failed read of the chosen trainee's EPAs (T329): the picker says so, and nothing is offered.</summary>
+  private const string EpasLoadFailed =
+    "Could not load this trainee's EPAs. Nothing has changed. Choose the trainee again, or come back in a few minutes.";
+
+  private readonly List<MsfTemplateDto> _templates = [];
+  private readonly List<TraineeProfileDto> _trainees = [];
+  private readonly List<ActivityCatalogueOption> _epaOptions = [];
+
+  /// <summary>Each refused field's message, by the id of its control (the EPA group's by the group's).</summary>
+  private readonly Dictionary<string, string> _fieldErrors = new(StringComparer.Ordinal);
+
+  /// <summary>The summary's lines, in the form's order, each a refused field's words and its control.</summary>
+  private readonly List<(string FieldId, string Text)> _refusalLines = [];
+
+  private bool _loading = true;
+  private string? _loadError;
+  private bool _epasLoadFailed;
+  private bool _foldOpen;
+  private bool _creating;
+  private bool _addingTemplate;
+  private bool _focusSummary;
+  private string? _refusalText;
+  private string? _templateStatus;
+  private string? _templateRefusal;
+  private ElementReference _summary;
+  private ActionResult? _templateResult;
+
+  /// <summary>The refusal summary, which takes the focus once a refused create is drawn. For its tests.</summary>
+  internal ElementReference Summary => _summary;
+
+  /// <summary>Add template's result region, which takes the focus once the template is added. For its tests.</summary>
+  internal ElementReference TemplateResultRegion => _templateResult?.Element ?? default;
+
+  private TemplateFormModel _template = new();
+  private CampaignFormModel _campaign = new();
+
+  /// <summary>
+  /// Whether the caller runs any campaign (<see cref="MsfCampaignRules.RunsCampaigns" />, T248): an Administrator, or a
+  /// Coordinator at an institution, who does not hold Trainee (T224). Null until the caller is known.
+  /// </summary>
+  private bool? _runsCampaigns;
+
+  private string _runsNoCampaignsReason = string.Empty;
+
+  /// <summary>The kind of the template the create form's defaults were last set for.</summary>
+  private MsfTemplateKind _campaignKind = MsfTemplateKind.Msf;
+
+  protected override async Task OnInitializedAsync()
+  {
+    var principal = await GetPrincipalAsync();
+    _runsCampaigns = MsfCampaignRules.RunsCampaigns(principal);
+    _runsNoCampaignsReason = MsfCampaignRules.RunsNoCampaigns(principal)
+      ? MsfCampaignRules.TraineeRunsNoCampaigns
+      : MsfCampaignRules.RunsCampaignsRoles;
+
+    // T325: the window opens today on the South African calendar, and runs two weeks, whatever the server's clock says.
+    var today = QuotaCalendar.Today(Clock);
+    _campaign.OpensOn = today;
+    _campaign.ClosesOn = today.AddDays(14);
+
+    // Nothing is read for someone who runs no campaign (T248).
+    if (_runsCampaigns is true)
+    {
+      await LoadAsync();
+    }
+
+    _loading = false;
+  }
+
+  /// <summary>
+  /// The templates and the trainees the create accepts, read in a try (T329, C6): a failure is the load error with Try
+  /// again, its cause in the log, and the circuit stays up. The first template is chosen when none is, so a create needs
+  /// no pick where there is one questionnaire (3.35's journey), and the fold opens while there is none (C1).
+  /// </summary>
+  private async Task LoadAsync()
+  {
+    try
+    {
+      await LoadTemplatesAsync();
+      await LoadTraineesAsync();
+      _loadError = null;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "The templates or the trainees for a new MSF campaign could not be read.");
+      _loadError = MsfCampaignText.NewCampaignLoadFailed;
+      return;
+    }
+
+    _foldOpen = _templates.Count == 0;
+    if (_campaign.TemplateId is null && _templates.Count > 0)
+    {
+      _campaign.TemplateId = _templates[0].Id;
+      await OnCampaignTemplateChangedAsync();
+    }
+  }
+
+  private async Task RetryAsync()
+  {
+    _loading = true;
+    StateHasChanged();
+    await LoadAsync();
+    _loading = false;
+  }
+
+  private async Task LoadTemplatesAsync()
+  {
+    var templates = await Sender.Send(new ListMsfTemplatesQuery());
+    _templates.Clear();
+    _templates.AddRange(templates);
+  }
+
+  /// <summary>
+  /// The trainees the create accepts (<see cref="ListMsfCampaignSubjectsQuery" />, T238): the current trainees at the
+  /// caller's institution, or everywhere for an Administrator, less the ones
+  /// <see cref="MsfCampaignRules.IsKeptFromCampaignsAbout" /> keeps the caller from (T224): never the caller themselves.
+  /// The EPA picker reads only a trainee offered here.
+  /// </summary>
+  private async Task LoadTraineesAsync()
+  {
+    var principal = await GetPrincipalAsync();
+    var trainees = await Sender.Send(new ListMsfCampaignSubjectsQuery(principal));
+    _trainees.Clear();
+    _trainees.AddRange(trainees.Where(trainee => !MsfCampaignRules.IsKeptFromCampaignsAbout(principal, trainee.UserId)));
+  }
+
+  /// <summary>The template chosen on the create form, or null.</summary>
+  private MsfTemplateDto? SelectedTemplate => _templates.FirstOrDefault(template => template.Id == _campaign.TemplateId);
+
+  /// <summary>Whether the create form's chosen template is learner feedback (T164).</summary>
+  private bool IsLearnerFeedback => SelectedTemplate?.Kind == MsfTemplateKind.LearnerFeedback;
+
+  /// <summary>The chosen template's questions, under the select (C2): "Rates the trainee's … · What should …".</summary>
+  private string TemplateQuestions
+    => SelectedTemplate is { } template
+      ? string.Join(" · ", template.Questions.OrderBy(question => question.Order).Select(question => question.Prompt))
+      : string.Empty;
+
+  private string MinimumGroupsHelp => IsLearnerFeedback ? MsfCampaignText.LearnerGroupsFixed : MsfCampaignText.MinimumGroupsHelp;
+
+  private string EpasHelp => IsLearnerFeedback
+    ? "Learner feedback is evidence only for an EPA whose College list names it (on v11.1, PAED-015). Each one selected here becomes a separate learner-feedback record on the trainee's portfolio when the report is released."
+    : "One campaign covers many EPAs and runs once a semester. Each one selected here becomes a separate evidence record on the trainee's portfolio when the report is released.";
+
+  private string NoEpasText => IsLearnerFeedback
+    ? "No EPA on this trainee's curriculum names learner feedback as an instrument, so a learner-feedback campaign cannot be recorded as evidence for anything."
+    : "This trainee's curriculum lists no EPAs, so a campaign cannot be recorded as evidence for anything.";
+
+  /// <summary>A template as the select names it, with its kind (C2): "Default MSF (Multi-source feedback)".</summary>
+  private static string TemplateLabel(MsfTemplateDto template) => $"{template.Name} ({MsfEvidenceKinds.Describe(template.Kind)})";
+
+  private static string TraineeLabel(TraineeProfileDto trainee)
+  {
+    var name = string.Join(" ", new[] { trainee.FirstName, trainee.LastName }.Where(part => !string.IsNullOrWhiteSpace(part)));
+    return string.IsNullOrWhiteSpace(name) ? trainee.Email : $"{name} ({trainee.Email})";
+  }
+
+  private static string EpaInputId(string value) => $"msf-epa-{value}";
+
+  private static int ParseEpaId(string value)
+    => int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var epaId) ? epaId : 0;
+
+  private string InputClass(string fieldId, string baseClass)
+    => _fieldErrors.ContainsKey(fieldId) ? $"{baseClass} input-validation-error" : baseClass;
+
+  private string? Invalid(string fieldId) => _fieldErrors.ContainsKey(fieldId) ? "true" : null;
+
+  /// <summary>A control's description: its help, then its refusal when it has one (T263's pattern).</summary>
+  private string? DescribedBy(string fieldId, string? helpId)
+  {
+    var parts = new[] { helpId, _fieldErrors.ContainsKey(fieldId) ? $"{fieldId}-error" : null }
+      .Where(part => part is not null)
+      .ToArray();
+    return parts.Length == 0 ? null : string.Join(' ', parts);
+  }
+
+  /// <summary>
+  /// A new template choice can change which EPAs the campaign may cover, and learner feedback has one respondent group,
+  /// so both follow the template. So does the response minimum while it is still the other kind's default: eight is
+  /// multi-source feedback's, and a learner-feedback campaign left at it could not be released with fewer than eight
+  /// learners. A minimum the coordinator typed is kept. (T164)
+  /// </summary>
+  private async Task OnCampaignTemplateChangedAsync()
+  {
+    var kind = SelectedTemplate?.Kind ?? MsfTemplateKind.Msf;
+    if (kind != _campaignKind)
+    {
+      if (_campaign.MinimumResponses == CampaignFormModel.DefaultMinimumResponsesFor(_campaignKind))
+      {
+        _campaign.MinimumResponses = CampaignFormModel.DefaultMinimumResponsesFor(kind);
+      }
+
+      _campaignKind = kind;
+    }
+
+    _campaign.MinimumRespondentCategories = IsLearnerFeedback ? 1 : CampaignFormModel.DefaultMinimumRespondentCategories;
+    await LoadEpaOptionsAsync();
+  }
+
+  /// <summary>
+  /// Swaps the template's wording for the other kind's, unless the coordinator has already changed it. Learner feedback
+  /// has no College questionnaire yet, so its wording is labelled interim. (T164)
+  /// </summary>
+  private void SetTemplateKind(MsfTemplateKind kind)
+  {
+    var from = TemplateFormModel.DefaultsFor(_template.Kind);
+    var to = TemplateFormModel.DefaultsFor(kind);
+    _template.Kind = kind;
+
+    if (_template.Name == from.Name)
+    {
+      _template.Name = to.Name;
+    }
+
+    if (_template.ScalePrompt == from.ScalePrompt)
+    {
+      _template.ScalePrompt = to.ScalePrompt;
+    }
+
+    if (_template.CommentPrompt == from.CommentPrompt)
+    {
+      _template.CommentPrompt = to.CommentPrompt;
+    }
+  }
+
+  /// <summary>
+  /// The EPAs this trainee's own curriculum lists. Deliberately the strict list, with no fallback to the coordinator's
+  /// own scope: release re-applies exactly this predicate, so an EPA offered here that release would silently drop would
+  /// be a picker that lies.
+  /// </summary>
+  /// <remarks>
+  /// Only for a trainee the picker offered. The select's value arrives from the browser, and the reference service
+  /// answers any id it is given, so a value edited in the page would otherwise read another institution's trainee's
+  /// curriculum, and confirm that the id names someone. (T113) A failed read says so in the picker (T329).
+  /// </remarks>
+  private async Task LoadEpaOptionsAsync()
+  {
+    _epaOptions.Clear();
+    _campaign.EpaIds.Clear();
+    _epasLoadFailed = false;
+
+    if (string.IsNullOrWhiteSpace(_campaign.SubjectUserId) ||
+        !_trainees.Any(trainee => string.Equals(trainee.UserId, _campaign.SubjectUserId, StringComparison.Ordinal)))
+    {
+      return;
+    }
+
+    try
+    {
+      // With the template's instrument, so learner feedback is offered only the EPAs whose list names it: the same
+      // question the create command and the release ask (MsfCampaignRules.CoverableEpaIdsAsync, T164).
+      var kind = SelectedTemplate?.Kind ?? MsfTemplateKind.Msf;
+      _epaOptions.AddRange(await ReferenceData.GetSubjectCurriculumEpaOptionsAsync(
+        _campaign.SubjectUserId, MsfEvidenceKinds.CoverageToolKeyFor(kind)));
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "The EPAs of a trainee could not be read for a new MSF campaign.");
+      _epasLoadFailed = true;
+    }
+  }
+
+  private void ToggleEpa(string value, bool isChecked)
+  {
+    var epaId = ParseEpaId(value);
+    if (epaId <= 0)
+    {
+      return;
+    }
+
+    if (isChecked)
+    {
+      if (!_campaign.EpaIds.Contains(epaId))
+      {
+        _campaign.EpaIds.Add(epaId);
+      }
+    }
+    else
+    {
+      _campaign.EpaIds.Remove(epaId);
+    }
+  }
+
+  /// <remarks>
+  /// Its fields are checked here, in their own words (T324), and refused under each: the focus goes to the first field
+  /// refused. Added, the new template is the campaign's (C2), the fold closes, and the result takes the focus. Sent at
+  /// most once at a time: a second press while it runs sends nothing. A refusal leaves the focus on Add template.
+  /// </remarks>
+  private async Task CreateTemplateAsync()
+  {
+    if (_addingTemplate)
+    {
+      return;
+    }
+
+    _templateStatus = null;
+    _templateRefusal = null;
+    foreach (var id in TemplateFieldIds)
+    {
+      _fieldErrors.Remove(id);
+    }
+
+    var refused = Refusals(_template, TemplateFields);
+    if (refused.Count > 0)
+    {
+      foreach (var (fieldId, message) in refused)
+      {
+        _fieldErrors[fieldId] = message;
+      }
+
+      StateHasChanged();
+      await PageFocus.FocusByIdAsync(JS, refused[0].FieldId);
+      return;
+    }
+
+    _addingTemplate = true;
+    try
+    {
+      var template = await Sender.Send(new CreateMsfTemplateCommand(
+        _template.Name.Trim(),
+        null,
+        _template.AllowPatientResponses,
+        [
+          new CreateMsfTemplateQuestionItem(_template.ScalePrompt.Trim(), MsfQuestionType.Scale, null, true),
+          new CreateMsfTemplateQuestionItem(_template.CommentPrompt.Trim(), MsfQuestionType.LongText, null, false)
+        ],
+        await GetPrincipalAsync(),
+        _template.Kind));
+
+      await LoadTemplatesAsync();
+      _campaign.TemplateId = template.Id;
+      _fieldErrors.Remove("msf-template-id");
+      await OnCampaignTemplateChangedAsync();
+      _template = new();
+      _foldOpen = false;
+      _templateStatus = MsfCampaignText.TemplateChosen(template.Name);
+      _templateResult?.FocusAfterRender();
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      _templateRefusal = MsfCampaignText.RefusalOf(exception);
+      if (_templateRefusal is null)
+      {
+        Logger.LogError(exception, "An MSF template could not be added.");
+        _templateRefusal = MsfCampaignText.ActionFailed;
+      }
+    }
+    finally
+    {
+      _addingTemplate = false;
+    }
+  }
+
+  /// <remarks>
+  /// Every field is checked first, in Wombat's words (T324), and a refused create is the summary (M9): it takes the
+  /// focus, each line a link to its field, the field's own message under it. A handler's refusal is the summary's text.
+  /// Created, the page goes to the campaign's own. Sent at most once at a time: a second press while it runs sends
+  /// nothing. Nothing is sent while no template exists (C1): the button is not a submit then, and this asks again.
+  /// </remarks>
+  private async Task CreateAsync()
+  {
+    if (_creating || _templates.Count == 0)
+    {
+      return;
+    }
+
+    _refusalText = null;
+    _refusalLines.Clear();
+    foreach (var id in CampaignFieldIds)
+    {
+      _fieldErrors.Remove(id);
+    }
+
+    var refused = Refusals(_campaign, CampaignFields);
+    if (_campaign is { OpensOn: { } opensOn, ClosesOn: { } closesOn } && closesOn < opensOn)
+    {
+      refused.Add(("msf-closes", MsfCampaignText.ClosesBeforeOpensMessage));
+      refused = [.. refused.OrderBy(refusal => Array.IndexOf(CampaignFieldIds, refusal.FieldId))];
+    }
+
+    if (refused.Count > 0)
+    {
+      foreach (var (fieldId, message) in refused)
+      {
+        _fieldErrors[fieldId] = message;
+        _refusalLines.Add((LinkTarget(fieldId), SummaryLine(fieldId, message)));
+      }
+
+      _refusalText = MsfCampaignText.FixFields(refused.Count);
+      _focusSummary = true;
+      return;
+    }
+
+    _creating = true;
+    try
+    {
+      var principal = await GetPrincipalAsync();
+      var result = await Sender.Send(new CreateMsfCampaignCommand(
+        _campaign.SubjectUserId!,
+        _campaign.TemplateId!.Value,
+        _campaign.OpensOn!.Value,
+        _campaign.ClosesOn!.Value,
+        _campaign.MinimumResponses!.Value,
+        _campaign.MinimumCategoryResponses!.Value,
+        _campaign.MinimumRespondentCategories!.Value,
+        _campaign.EpaIds.ToArray(),
+        GetUserId(principal),
+        principal));
+
+      NavigationManager.NavigateTo(MsfLinks.Campaign(result.Id));
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      _refusalText = MsfCampaignText.RefusalOf(exception);
+      if (_refusalText is null)
+      {
+        Logger.LogError(exception, "An MSF campaign could not be created.");
+        _refusalText = MsfCampaignText.ActionFailed;
+      }
+
+      _focusSummary = true;
+    }
+    finally
+    {
+      _creating = false;
+    }
+  }
+
+  /// <summary>The control a summary line moves the focus to: the field's own, or the EPA group's first box (M9).</summary>
+  private string LinkTarget(string fieldId)
+    => fieldId == EpaGroupId && _epaOptions.Count > 0 ? EpaInputId(_epaOptions[0].Value) : fieldId;
+
+  /// <summary>
+  /// A summary line: the field's label, then its message (C8, "Minimum responses in a respondent group: enter a number
+  /// from 3 to 100."); the EPA group's message alone, which names it (C4).
+  /// </summary>
+  private static string SummaryLine(string fieldId, string message)
+    => fieldId == EpaGroupId || !FieldLabels.TryGetValue(fieldId, out var label)
+      ? message
+      : $"{label}: {char.ToLowerInvariant(message[0])}{message[1..]}";
+
+  private async Task FocusFieldAsync(string fieldId) => await PageFocus.FocusByIdAsync(JS, fieldId);
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusSummary && _refusalText is not null)
+    {
+      _focusSummary = false;
+      await _summary.FocusAsync();
+    }
+  }
+
+  /// <summary>The campaign's fields in the form's order, each by its control's id and the model's member.</summary>
+  private static readonly (string FieldId, string Member)[] CampaignFields =
+  [
+    ("msf-template-id", nameof(CampaignFormModel.TemplateId)),
+    ("msf-subject", nameof(CampaignFormModel.SubjectUserId)),
+    ("msf-opens", nameof(CampaignFormModel.OpensOn)),
+    ("msf-closes", nameof(CampaignFormModel.ClosesOn)),
+    ("msf-min-responses", nameof(CampaignFormModel.MinimumResponses)),
+    ("msf-min-category", nameof(CampaignFormModel.MinimumCategoryResponses)),
+    ("msf-min-category-count", nameof(CampaignFormModel.MinimumRespondentCategories)),
+    (EpaGroupId, nameof(CampaignFormModel.EpaIds))
+  ];
+
+  private static readonly string[] CampaignFieldIds = [.. CampaignFields.Select(field => field.FieldId)];
+
+  private static readonly (string FieldId, string Member)[] TemplateFields =
+  [
+    ("msf-template-name", nameof(TemplateFormModel.Name)),
+    ("msf-template-scale", nameof(TemplateFormModel.ScalePrompt)),
+    ("msf-template-comment", nameof(TemplateFormModel.CommentPrompt))
+  ];
+
+  private static readonly string[] TemplateFieldIds = [.. TemplateFields.Select(field => field.FieldId)];
+
+  private static readonly Dictionary<string, string> FieldLabels = new(StringComparer.Ordinal)
+  {
+    ["msf-template-id"] = "Template",
+    ["msf-subject"] = "Trainee",
+    ["msf-opens"] = "Opens on",
+    ["msf-closes"] = "Closes on",
+    ["msf-min-responses"] = MsfCampaignText.MinimumResponsesLabel,
+    ["msf-min-category"] = MsfCampaignText.MinimumInGroupLabel,
+    ["msf-min-category-count"] = MsfCampaignText.MinimumGroupsLabel
+  };
+
+  /// <summary>
+  /// A model's refusals by its attributes, one a field (the first its attributes give), in the order of
+  /// <paramref name="fields" />. Every attribute carries its own words (T324), so none names a property.
+  /// </summary>
+  private static List<(string FieldId, string Message)> Refusals(object model, (string FieldId, string Member)[] fields)
+  {
+    var results = new List<ValidationResult>();
+    Validator.TryValidateObject(model, new ValidationContext(model), results, validateAllProperties: true);
+
+    return fields
+      .Select(field => (field.FieldId, Message: results
+        .FirstOrDefault(result => result.MemberNames.Contains(field.Member))?.ErrorMessage))
+      .Where(field => !string.IsNullOrWhiteSpace(field.Message))
+      .Select(field => (field.FieldId, field.Message!))
+      .ToList();
+  }
+
+  private sealed class TemplateFormModel
+  {
+    public MsfTemplateKind Kind { get; set; } = MsfTemplateKind.Msf;
+
+    [Required(AllowEmptyStrings = false, ErrorMessage = MsfCampaignText.TemplateNameMessage)]
+    [MaxLength(200, ErrorMessage = MsfCampaignText.TemplateNameTooLong)]
+    public string Name { get; set; } = DefaultsFor(MsfTemplateKind.Msf).Name;
+
+    [Required(AllowEmptyStrings = false, ErrorMessage = MsfCampaignText.ScaleQuestionMessage)]
+    [MaxLength(1000, ErrorMessage = MsfCampaignText.QuestionTooLong)]
+    public string ScalePrompt { get; set; } = DefaultsFor(MsfTemplateKind.Msf).ScalePrompt;
+
+    [Required(AllowEmptyStrings = false, ErrorMessage = MsfCampaignText.CommentQuestionMessage)]
+    [MaxLength(1000, ErrorMessage = MsfCampaignText.QuestionTooLong)]
+    public string CommentPrompt { get; set; } = DefaultsFor(MsfTemplateKind.Msf).CommentPrompt;
+
+    public bool AllowPatientResponses { get; set; }
+
+    /// <summary>
+    /// The wording a new template starts with. Learner feedback's is labelled interim: the College has supplied no
+    /// questionnaire for it (T164).
+    /// </summary>
+    public static (string Name, string ScalePrompt, string CommentPrompt) DefaultsFor(MsfTemplateKind kind)
+      => kind == MsfTemplateKind.LearnerFeedback
+        ? ("Learner feedback (interim questionnaire)",
+           "Rates the trainee's teaching overall.",
+           "What should the trainee keep doing or change in their teaching?")
+        : ("Default MSF",
+           "Rates the trainee's overall professional performance.",
+           "What should the trainee keep doing or improve?");
+  }
+
+  private sealed class CampaignFormModel
+  {
+    [Required(ErrorMessage = MsfCampaignText.ChooseTemplateMessage)]
+    public int? TemplateId { get; set; }
+
+    [Required(AllowEmptyStrings = false, ErrorMessage = MsfCampaignText.ChooseTraineeMessage)]
+    public string? SubjectUserId { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = MsfCampaignText.EnterOpensOnMessage)]
+    public DateOnly? OpensOn { get; set; }
+
+    [Required(ErrorMessage = MsfCampaignText.EnterClosesOnMessage)]
+    public DateOnly? ClosesOn { get; set; }
+
+    [Required(ErrorMessage = MsfCampaignText.MinimumResponsesRange)]
+    [Range(1, 100, ErrorMessage = MsfCampaignText.MinimumResponsesRange)]
+    public int? MinimumResponses { get; set; } = DefaultMinimumResponsesFor(MsfTemplateKind.Msf);
+
+    /// <summary>
+    /// The response minimum a campaign of this kind starts with: eight for multi-source feedback; for learner feedback,
+    /// three, the group floor below, which its one group must clear to report anything (T164).
+    /// </summary>
+    public static int DefaultMinimumResponsesFor(MsfTemplateKind kind)
+      => kind == MsfTemplateKind.LearnerFeedback ? 3 : 8;
+
+    /// <summary>F2's floor (T369): at least 3 in a respondent group, for both kinds, as the create command holds it.</summary>
+    [Required(ErrorMessage = MsfCampaignText.MinimumInGroupRange)]
+    [Range(MsfCampaign.MinimumCategoryResponsesFloor, 100, ErrorMessage = MsfCampaignText.MinimumInGroupRange)]
+    public int? MinimumCategoryResponses { get; set; } = MsfCampaign.MinimumCategoryResponsesFloor;
+
+    /// <summary>College decision D11's two groups, for multi-source feedback; learner feedback has one (T164).</summary>
+    public const int DefaultMinimumRespondentCategories = 2;
+
+    [Required(ErrorMessage = MsfCampaignText.MinimumGroupsRange)]
+    [Range(1, 6, ErrorMessage = MsfCampaignText.MinimumGroupsRange)]
+    public int? MinimumRespondentCategories { get; set; } = DefaultMinimumRespondentCategories;
+
+    [MinLength(1, ErrorMessage = MsfCampaignText.SelectAnEpa)]
+    public List<int> EpaIds { get; } = [];
+  }
+
+  private async Task<ClaimsPrincipal> GetPrincipalAsync()
+  {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    return authState.User;
+  }
+
+  private static string GetUserId(ClaimsPrincipal principal)
+    => principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
+      ?? throw new InvalidOperationException("The current user identifier is missing.");
+}

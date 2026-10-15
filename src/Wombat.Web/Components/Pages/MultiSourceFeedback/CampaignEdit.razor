@@ -1,411 +1,83 @@
-@page "/msf/campaigns/new"
 @page "/msf/campaigns/{CampaignId:int}"
-@using System.Globalization
 @using System.Security.Claims
-@using Wombat.Application.Features.Activities.Services
 @attribute [Authorize(Roles = "Coordinator,Administrator")]
 @inject IScopedSender Sender
-@inject IActivityReferenceDataService ReferenceData
-@inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<CampaignEdit> Logger
 
-<PageTitle>MSF campaign · Wombat</PageTitle>
+<PageTitle>@Heading · Wombat</PageTitle>
 
-<PageHeader Title="MSF campaign" Subtitle="Create a campaign, add respondents, then open the anonymous response window." />
-
-@* Someone who holds Trainee runs no campaign, whatever role brought them here (MsfCampaignRules.RunsNoCampaigns, T224);
-   nor does a Coordinator at no institution (MsfCampaignRules.RunsCampaigns, T248). Standing content, in the words the
-   create and template commands refuse them in: neither the create form nor the Quick template card is shown to them
-   (T248), and a campaign's page answers them with its "Campaign unavailable" card, which alone would not say why. *@
-@if (_runsCampaigns is false)
-{
-  <Alert Id="msf-runs-no-campaigns" Kind="warning" Role="">@_runsNoCampaignsReason</Alert>
-}
-
-@* What an action did. Given the focus whenever the button that acted is gone (T217): after an open or a withdraw, and
-   after an invitee add refused because the campaign left its draft elsewhere. The focus would otherwise fall to the
-   page, as on the campaign list (T206 review). *@
-<div @ref="_result" class="action-result" tabindex="-1">
-  @if (!string.IsNullOrWhiteSpace(_status))
-  {
-    <Alert Kind="success" Role="status">@_status</Alert>
-  }
-
-  @if (!string.IsNullOrWhiteSpace(_error))
-  {
-    <Alert Kind="danger" Role="alert">@_error</Alert>
-  }
+@* T369 (flow 10, K1–K22): a campaign's page. The create form went to New MSF campaign (NewCampaign.razor); this page is
+   the status card, a draft's addresses, and About this campaign, in the page column (.msf-page) that holds its dialogs. *@
+<div class="msf-header">
+  <PageHeader Title="@Heading" Subtitle="@Subtitle" />
 </div>
 
-@* details-grid--lone-spans: once the campaign exists its card is the grid's only one, and takes the whole row (T266). *@
-<div class="details-grid details-grid--lone-spans">
-  @* The Quick template card only where a campaign is being created (T225): a template is chosen at create, and a
-     campaign that exists already has its questionnaire. Until T225 it sat beside every campaign's own card. Only for
-     someone who runs campaigns (T248): creating a template is running campaigns, and the command refuses anyone else in
-     the standing alert's words (MsfCampaignRules.EnsureRunsCampaigns). Until T248 the card stayed for someone who holds
-     Trainee, since a template is about no trainee, and the command took no caller to refuse. *@
-  @if (!CampaignId.HasValue && _runsCampaigns is true)
+<div class="msf-page">
+  @* Someone who holds Trainee runs no campaign, whatever role brought them here (MsfCampaignRules.RunsNoCampaigns, T224);
+     nor does a Coordinator at no institution (MsfCampaignRules.RunsCampaigns, T248). Standing content, in the words the
+     commands refuse them in: the page answers them as unavailable, which alone would not say why. *@
+  @if (_runsCampaigns is false)
   {
-    <section class="detail-card">
-      <h3>Quick template</h3>
-      <EditForm Model="_template" OnValidSubmit="CreateTemplateAsync" FormName="msf-template">
-        <DataAnnotationsValidator />
-        <ValidationSummary class="validation-summary-errors" />
-        <div class="form-grid">
-          @* T164, D35: learner feedback is a template of its own kind. Only learners answer it, and its release records
-             learner-feedback evidence, not multi-source feedback. *@
-          <FormField Label="Kind" InputId="msf-template-kind" Required="true"
-                     HelpText="Learner feedback is answered only by people the trainee taught, and is recorded as learner feedback, not as multi-source feedback.">
-            <InputSelect id="msf-template-kind" class="form-select" aria-describedby="@FieldHelp.Id("msf-template-kind")" @bind-Value="_template.Kind" @bind-Value:after="OnTemplateKindChanged">
-              <option value="@MsfTemplateKind.Msf">@MsfEvidenceKinds.Describe(MsfTemplateKind.Msf)</option>
-              <option value="@MsfTemplateKind.LearnerFeedback">@MsfEvidenceKinds.Describe(MsfTemplateKind.LearnerFeedback)</option>
-            </InputSelect>
-          </FormField>
-          <FormField Label="Template name" InputId="msf-template-name" Required="true">
-            <InputText id="msf-template-name" class="form-control" @bind-Value="_template.Name" />
-          </FormField>
-          <FormField Label="Scale question" InputId="msf-template-scale" Required="true">
-            <InputText id="msf-template-scale" class="form-control" @bind-Value="_template.ScalePrompt" />
-          </FormField>
-          <FormField Label="Comment question" InputId="msf-template-comment" Required="true">
-            <InputText id="msf-template-comment" class="form-control" @bind-Value="_template.CommentPrompt" />
-          </FormField>
-        </div>
-        <FormActions>
-          <button type="submit" class="btn btn-outline">Add template</button>
-        </FormActions>
-      </EditForm>
-    </section>
+    <Alert Id="msf-runs-no-campaigns" Kind="warning" Role="">@_runsNoCampaignsReason</Alert>
   }
 
-  @if (CampaignId.HasValue || _runsCampaigns is true)
-  {
-    <section class="detail-card">
-      <h3>@(CampaignId.HasValue ? "Campaign details" : "Create campaign")</h3>
-      @if (!CampaignId.HasValue)
+  @* What an action did, wherever the button that sent it is gone: an open, a withdraw, and a refusal of an action on a
+     campaign that changed elsewhere (T217). It takes the focus once the action has answered (T234). *@
+  <ActionResult @ref="_result" Id="msf-campaign-result">
+    @if (_status is not null)
+    {
+      <Alert Kind="success" Role="status"><strong>@_status</strong> @_statusDetail</Alert>
+    }
+    @if (_refusal is not null)
+    {
+      <Alert Kind="danger" Role="alert"><strong>@_refusalLead</strong> @_refusal</Alert>
+    }
+  </ActionResult>
+
+  @* T329: a failed read is a fixed sentence with Try again (K18), never the exception's text; loading shows the header
+     at once and no action until the read is in (K17). *@
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync">
+    <LoadingContent>
+      <section class="detail-card detail-card--emphasis" aria-busy="true">
+        <p class="visually-hidden" role="status">@MsfCampaignText.CampaignLoading</p>
+        <Skeleton Count="3" Height="3rem" />
+      </section>
+      <section class="detail-card">
+        <Skeleton Count="2" Height="3rem" />
+      </section>
+    </LoadingContent>
+    <ChildContent>
+      @if (_setup is not { } setup)
       {
-        <EditForm Model="_campaign" OnValidSubmit="CreateCampaignAsync" FormName="msf-campaign">
-          <DataAnnotationsValidator />
-          <ValidationSummary class="validation-summary-errors" />
-          <div class="form-grid">
-            <FormField Label="Trainee" InputId="msf-subject" Required="true">
-              <InputSelect id="msf-subject" class="form-select" @bind-Value="_campaign.SubjectUserId" @bind-Value:after="LoadEpaOptionsAsync">
-                <option value="">Select trainee</option>
-                @foreach (var trainee in _trainees)
-                {
-                  <option value="@trainee.UserId">@TraineeLabel(trainee)</option>
-                }
-              </InputSelect>
-            </FormField>
-            <FormField Label="Template" InputId="msf-template-id" Required="true">
-              <InputSelect id="msf-template-id" class="form-select" @bind-Value="_campaign.TemplateId" @bind-Value:after="OnCampaignTemplateChangedAsync">
-                <option value="">Select template</option>
-                @foreach (var template in _templates)
-                {
-                  <option value="@template.Id">@TemplateLabel(template)</option>
-                }
-              </InputSelect>
-            </FormField>
-            <FormField Label="Opens on" InputId="msf-opens" Required="true">
-              <InputDate id="msf-opens" class="form-control" @bind-Value="_campaign.OpensOn" />
-            </FormField>
-            <FormField Label="Closes on" InputId="msf-closes" Required="true">
-              <InputDate id="msf-closes" class="form-control" @bind-Value="_campaign.ClosesOn" />
-            </FormField>
-            <FormField Label="Minimum responses" InputId="msf-min-responses" Required="true">
-              <InputNumber id="msf-min-responses" class="form-control" @bind-Value="_campaign.MinimumResponses" />
-            </FormField>
-            <FormField Label="Minimum category responses" InputId="msf-min-category" Required="true">
-              <InputNumber id="msf-min-category" class="form-control" @bind-Value="_campaign.MinimumCategoryResponses" />
-            </FormField>
-            <FormField Label="Minimum reporting categories" InputId="msf-min-category-count" Required="true"
-                       HelpText="@MinimumCategoriesHelp">
-              <InputNumber id="msf-min-category-count" class="form-control" aria-describedby="@FieldHelp.Id("msf-min-category-count")" @bind-Value="_campaign.MinimumRespondentCategories" disabled="@IsLearnerFeedback" />
-            </FormField>
-            @* A group of checkboxes has no single control for a <label for> to name, so it is a fieldset whose legend
-               names the group (DESIGN.md § Form system, T147). One field among the others, so a form group: its legend
-               reads as a field's label, like the labels beside it (T188). *@
-            <fieldset class="form-group full-width" aria-describedby="msf-epas-help">
-              <legend>
-                Evidence for these EPAs
-                <span aria-hidden="true">*</span>
-                <span class="visually-hidden">required</span>
-              </legend>
-              <p id="msf-epas-help" class="page-subtitle">@EpasHelp</p>
-              @if (string.IsNullOrWhiteSpace(_campaign.SubjectUserId))
-              {
-                <p class="page-subtitle">Select a trainee first.</p>
-              }
-              else if (_epaOptions.Count == 0)
-              {
-                <p class="page-subtitle">@NoEpasText</p>
-              }
-              else
-              {
-                <div class="check-grid">
-                  @foreach (var epa in _epaOptions)
-                  {
-                    <div class="form-check">
-                      <input
-                        id="@($"msf-epa-{epa.Value}")"
-                        class="form-check-input"
-                        type="checkbox"
-                        checked="@_campaign.EpaIds.Contains(ParseEpaId(epa.Value))"
-                        @onchange="args => ToggleEpa(epa.Value, args.Value is bool isChecked && isChecked)" />
-                      <label for="@($"msf-epa-{epa.Value}")">@epa.Label</label>
-                    </div>
-                  }
-                </div>
-              }
-            </fieldset>
+        @* K16: no such campaign, or one this caller does not run, alike (T113). *@
+        <div id="msf-campaign-unavailable" class="detail-card detail-card--empty">
+          <div class="state-panel-copy">@MsfCampaignText.CampaignUnavailableBody</div>
+          <div class="form-actions msf-centre">
+            <a class="btn btn-outline" href="@MsfLinks.Campaigns">@MsfCampaignText.GoToCampaigns</a>
           </div>
-          <FormActions>
-            <button type="submit" class="btn btn-primary">Create campaign</button>
-          </FormActions>
-        </EditForm>
+        </div>
       }
       else
       {
-        @* The campaign as it is now, and only what its state allows (T217). Until T217 this card showed the draft's invitee
-           form and its Open button in every state, so a campaign just opened still offered Open, and no state showed who
-           had been invited. *@
-        <StatePanel IsLoading="_setupLoading" IsEmpty="@(_setup is null)" SkeletonCount="3"
-                    EmptyTitle="Campaign unavailable" EmptyBody="The selected campaign could not be loaded.">
-          @if (_setup is { } setup)
-          {
-            <dl class="details-list">
-              <div><dt>Trainee</dt><dd>@(setup.SubjectName ?? "Not recorded")</dd></div>
-              <div><dt>Template</dt><dd>@setup.TemplateName (@MsfEvidenceKinds.Describe(setup.Kind))</dd></div>
-              <div>
-                <dt>State</dt>
-                <dd><span id="msf-campaign-state" class="badge @BadgeFor.MsfCampaign(setup.State)">@MsfCampaignText.State(setup.State)</span></dd>
-              </div>
-              <div><dt>Response window</dt><dd>@setup.OpensOn.ToString("yyyy-MM-dd") to @setup.ClosesOn.ToString("yyyy-MM-dd")</dd></div>
-            </dl>
-            <p id="msf-campaign-state-note">@StateNote(setup)</p>
-
-            @* What became of the links, while the campaign is open (T251): a count, never whose (T217). Mail leaves after
-               the request, so the open cannot say whether it arrived; the mail worker reports each outcome later. Standing
-               content, so the warning has no role: it is there on every visit until the links are sent again, and the
-               Resend button names it. *@
-            @if (setup.State == MsfCampaignState.Open && setup.LinksNotDelivered > 0)
-            {
-              <Alert Id="msf-links-not-delivered" Kind="warning" Role="">@MsfCampaignText.LinksNotDelivered(setup.LinksNotDelivered)</Alert>
-            }
-            @if (setup.State == MsfCampaignState.Open && setup.LinksBeingSent > 0)
-            {
-              <p id="msf-links-being-sent" class="muted">@MsfCampaignText.LinksBeingSent(setup.LinksBeingSent)</p>
-            }
-
-            @* Counted by respondent group, never a row per invitee once the campaign has opened
-               (MsfCampaignSetupDto.Invitees, T217): the coordinator knows which row is whom, so a "responded" mark on one
-               row would name the author of the comment that has just appeared on the report. A draft has no responses, so
-               it has no Responded column, and its addresses are listed below the counts, for Remove (T247). *@
-            <h4 id="msf-invitees-heading">Invitees</h4>
-            @if (setup.Invitees.Count == 0)
-            {
-              <p id="msf-invitees-none" class="muted">@(setup.State == MsfCampaignState.Draft ? "Nobody has been invited yet." : "Nobody was invited.")</p>
-            }
-            else
-            {
-              @* Says what the page does, and no more (T217 review): it cannot promise that no answer is traceable, since a
-                 campaign may set its category threshold at one, and then its report shows a one-person group's answers.
-                 On a draft it says when the addresses below stop being listed (T247). *@
-              <p id="msf-invitees-note" class="muted">@InviteesNote(setup)</p>
-              <div class="table-container shadow">
-                <table class="clinic-table" aria-labelledby="msf-invitees-heading" aria-describedby="msf-invitees-note">
-                  <thead>
-                    <tr>
-                      <th scope="col">Respondent group</th>
-                      <th scope="col">Invited</th>
-                      @if (ShowsResponses(setup))
-                      {
-                        <th scope="col">Responded</th>
-                      }
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @foreach (var group in setup.Invitees)
-                    {
-                      <tr>
-                        <th scope="row">@MsfRespondentCategories.Describe(group.Category)</th>
-                        <td>@group.Invited</td>
-                        @if (ShowsResponses(setup))
-                        {
-                          <td>@group.Responded</td>
-                        }
-                      </tr>
-                    }
-                  </tbody>
-                  @if (setup.Invitees.Count > 1)
-                  {
-                    <tfoot>
-                      <tr>
-                        <th scope="row">All groups</th>
-                        <td>@setup.Invitees.Sum(group => group.Invited)</td>
-                        @if (ShowsResponses(setup))
-                        {
-                          <td>@setup.Invitees.Sum(group => group.Responded)</td>
-                        }
-                      </tr>
-                    </tfoot>
-                  }
-                </table>
-              </div>
-            }
-
-            @* A draft's invitees one by one, by the address typed, so that one added by mistake can be removed (T247).
-               Only on a draft, whose invitees hold no working link and have given no response, so a row here says
-               nothing about anyone's answers (MsfCampaignSetupDto.DraftInvitees); once the campaign opens the query lists
-               no address, and the counts above are all the page shows. "No working link", not "no link": an open that
-               failed, or was refused at its save, may have mailed one that does not work (T184, T247 review). *@
-            @if (setup.State == MsfCampaignState.Draft && setup.DraftInvitees.Count > 0)
-            {
-              <h4 id="msf-draft-invitees-heading">Addresses invited</h4>
-              <p id="msf-draft-invitees-note" class="muted">Listed only while the campaign is a draft, so that an address added by mistake can be removed. No invitee holds a working link until the campaign opens.</p>
-              <div class="table-container shadow">
-                <table id="msf-draft-invitees" class="clinic-table" aria-labelledby="msf-draft-invitees-heading" aria-describedby="msf-draft-invitees-note">
-                  <thead>
-                    <tr>
-                      <th scope="col" class="col-wrap col-wrap--wide">Email address</th>
-                      <th scope="col">Respondent group</th>
-                      @if (setup.Kind == MsfTemplateKind.LearnerFeedback)
-                      {
-                        <th scope="col" class="col-wrap">Teaching context</th>
-                      }
-                      <th scope="col"><span class="visually-hidden">Actions</span></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @foreach (var invitee in setup.DraftInvitees)
-                    {
-                      <tr>
-                        <th scope="row" class="col-wrap">@invitee.Email</th>
-                        <td>@MsfRespondentCategories.Describe(invitee.Category)</td>
-                        @if (setup.Kind == MsfTemplateKind.LearnerFeedback)
-                        {
-                          <td class="col-wrap">@invitee.TeachingContext</td>
-                        }
-                        <td>
-                          @* The accessible name starts with the visible label and names the row (DESIGN.md § Button
-                             system, T206). Disabled while any action is in flight. *@
-                          <button type="button" class="btn btn-sm btn-outline" disabled="@Busy"
-                                  aria-label="@($"Remove {DescribeInvitee(invitee)}")"
-                                  @onclick="() => AskRemoveAsync(invitee)">Remove</button>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-            }
-
-            @if (setup.State == MsfCampaignState.Draft)
-            {
-              <h4>Add an invitee</h4>
-              <EditForm Model="_invitee" OnValidSubmit="AddInviteeAsync" FormName="msf-invitee">
-                <DataAnnotationsValidator />
-                <ValidationSummary class="validation-summary-errors" />
-                <div class="form-grid">
-                  <FormField Label="Respondent email" InputId="msf-respondent-email" Required="true">
-                    <InputText @ref="_emailInput" id="msf-respondent-email" class="form-control" @bind-Value="_invitee.Email" />
-                  </FormField>
-                  @* Only the categories this campaign's questionnaire accepts, which the invite command holds it to (T164),
-                     each by its label (T191, T217). *@
-                  <FormField Label="Category" InputId="msf-respondent-category" Required="true">
-                    <InputSelect id="msf-respondent-category" class="form-select" @bind-Value="_invitee.Category">
-                      @foreach (var category in AcceptedCategories)
-                      {
-                        <option value="@category">@MsfRespondentCategories.Describe(category)</option>
-                      }
-                    </InputSelect>
-                  </FormField>
-                  @if (_invitee.Category == MsfRespondentCategory.Learner)
-                  {
-                    <FormField Label="Teaching context" InputId="msf-teaching-context" Required="true"
-                               HelpText="Where this learner was taught, for example a ward round or a student tutorial. Describe the session, never a person. Type it the same way for each learner of one group: the report counts how many distinct contexts responded. Only this campaign's report names them; the trainee and the committee see the count.">
-                      <InputText id="msf-teaching-context" class="form-control" maxlength="200" aria-describedby="@FieldHelp.Id("msf-teaching-context")" @bind-Value="_invitee.TeachingContext" />
-                    </FormField>
-                  }
-                </div>
-                @* Disabled while an open, a withdraw or a remove is in flight (T202, T217, T247). An invitee added
-                   mid-open would be left out of the mailing yet stored on a campaign that is now open. That covers this tab; an invitee added from
-                   another tab is refused, or refuses the open, at the save (T206). Not disabled by its own add: it may hold
-                   the focus, which a refusal on a draft leaves where it was (T217); a second press while the add runs sends
-                   nothing (AddInviteeAsync, T228 review). *@
-                <FormActions>
-                  <button type="submit" class="btn btn-outline" disabled="@(_opening || _withdrawing || _removing)">Add invitee</button>
-                </FormActions>
-              </EditForm>
-            }
-
-            @* What the state allows, and nothing else (T217): a draft opens or is withdrawn; an open campaign is withdrawn
-               here or closed on its report, where its responses are; one under review is withdrawn here or released on
-               its report (T199); a released campaign's report is there to read; a withdrawn campaign offers nothing.
-               Withdraw is offered where the campaign list offers it (T206). *@
-            @if (setup.State != MsfCampaignState.Withdrawn)
-            {
-              <FormActions>
-                @if (CanResend(setup))
-                {
-                  @* Sends a new link to each respondent whose link was not delivered (T251). Not disabled by its own resend
-                     (T234): it has the focus, and a second press sends nothing (ResendLinksAsync). Named by the warning above,
-                     which says how many and that the page never says whose. *@
-                  <button id="msf-resend-links" type="button" class="btn btn-outline"
-                          disabled="@(_withdrawing || _adding || _removing || _opening)"
-                          aria-disabled="@InFlight.AriaDisabled(_resending)"
-                          aria-describedby="msf-links-not-delivered"
-                          @onclick="ResendLinksAsync">
-                    @(_resending ? "Resending links…" : MsfCampaignText.ResendLinksLabel(setup.LinksNotDelivered))
-                  </button>
-                }
-                @if (CanWithdraw(setup))
-                {
-                  <button id="msf-withdraw-campaign" type="button" class="btn btn-outline" disabled="@Busy" @onclick="AskWithdrawAsync">Withdraw campaign</button>
-                }
-                @if (setup.State == MsfCampaignState.Draft && !HasInvitees(setup))
-                {
-                  @* T107's pattern (T225): shown, not hidden, with its reason below the row, which it names. No click
-                     handler at all: pressing it could only be refused. Until T225 it was enabled, and the refusal came
-                     only after the press. *@
-                  <button id="msf-open-campaign" type="button" class="btn btn-primary" disabled aria-describedby="msf-open-reason">Open campaign</button>
-                }
-                else if (setup.State == MsfCampaignState.Draft)
-                {
-                  @* A second open would mail every respondent a second link (T202), so a click while one is in flight sends
-                     nothing (OpenCampaignAsync). Disabled while a withdraw, an add or a remove is in flight, but not
-                     while its own open runs (T225 review): it has the focus then, and a browser drops the focus of a button it disables,
-                     to the page, where a refused open that leaves the button would leave it. *@
-                  <button id="msf-open-campaign" type="button" class="btn btn-primary" disabled="@(_withdrawing || _adding || _removing)" @onclick="OpenCampaignAsync">
-                    @(_opening ? "Opening campaign…" : "Open campaign")
-                  </button>
-                }
-                else if (MsfCampaignText.ReportLinkLabel(setup.State) is { } reportLink)
-                {
-                  <a id="msf-campaign-report" class="btn btn-primary" href="@($"/msf/reports/{setup.CampaignId}")">@reportLink</a>
-                }
-              </FormActions>
-              @if (setup.State == MsfCampaignState.Draft && !HasInvitees(setup))
-              {
-                <ul class="workflow-action-reasons">
-                  <li id="msf-open-reason"><strong>Open campaign:</strong> @MsfCampaignText.OpenNeedsInvitees</li>
-                </ul>
-              }
-            }
-          }
-        </StatePanel>
+        @StatusCard(setup)
+        @if (setup.State == MsfCampaignState.Draft)
+        {
+          @Addresses(setup)
+        }
+        @About(setup)
       }
-    </section>
-  }
-</div>
+    </ChildContent>
+  </StatePanel>
 
-@if (CampaignId.HasValue)
-{
-  @* A destructive action opens a ConfirmDialog first (DESIGN.md § Button system), worded as the campaign list's (T206). *@
+  @* A destructive action opens a ConfirmDialog first (DESIGN.md § Button system), worded as the campaign list's (T206),
+     its safe button saying what it keeps (K10). Inside the page column, so its buttons stack at 390, the action on top
+     (M10). *@
   <ConfirmDialog @ref="_confirmWithdraw"
                  Title="@MsfCampaignText.WithdrawTitle"
                  Body="@WithdrawBody"
                  ConfirmLabel="@MsfCampaignText.WithdrawConfirmLabel"
+                 CancelLabel="@MsfCampaignText.KeepCampaignLabel"
                  DangerAction="true"
                  OnConfirm="WithdrawAsync" />
 
@@ -414,29 +86,421 @@
                  Title="@MsfCampaignText.RemoveInviteeTitle"
                  Body="@RemoveBody"
                  ConfirmLabel="@MsfCampaignText.RemoveInviteeConfirmLabel"
+                 CancelLabel="@MsfCampaignText.KeepInviteeLabel"
                  DangerAction="true"
                  OnConfirm="RemoveAsync"
                  OnCancel="CancelRemove" />
+</div>
+
+@code {
+  /// <summary>
+  /// The status card (F7): the state's badge and sentence on its stripe, what it means, the invitees counted by
+  /// respondent group (never a row per invitee once it has opened, T217), the Links part while open (T251), and the
+  /// actions the state allows, each refusal beside the button that was pressed (K20–K22).
+  /// </summary>
+  private RenderFragment StatusCard(MsfCampaignSetupDto setup) => __builder =>
+  {
+    var invited = setup.Invitees.Sum(group => group.Invited);
+    var responded = setup.Invitees.Sum(group => group.Responded);
+    var note = MsfCampaignText.StatusNote(setup.State, setup.ClosesOn);
+    <section id="msf-campaign-status" class="@StatusCardClass(setup.State)" aria-labelledby="msf-status-line">
+      <div class="status-head">
+        <span id="msf-campaign-state" class="badge @BadgeFor.MsfCampaign(setup.State)">@MsfCampaignText.State(setup.State)</span>
+        <h2 id="msf-status-line" class="status-line">@MsfCampaignText.StatusLine(setup.State, responded, invited)</h2>
+      </div>
+      @* K14 (Q10): the release still records the evidence, but the trainee can no longer read it. Standing content. *@
+      @if (setup.SubjectEndedOn is { } endedOn && setup.State is MsfCampaignState.Open or MsfCampaignState.Closed or MsfCampaignState.UnderReview)
+      {
+        <Alert Id="msf-programme-ended" Kind="warning" Role="">@MsfCampaignText.ProgrammeEnded(SubjectName(setup), endedOn)</Alert>
+      }
+      @if (note is not null)
+      {
+        <p class="status-note">@note</p>
+      }
+      @if (setup.Invitees.Count == 0)
+      {
+        <p id="msf-invitees-none" class="status-note">@(setup.State == MsfCampaignState.Draft ? MsfCampaignText.NobodyInvitedYet : MsfCampaignText.NobodyInvited)</p>
+        @if (setup.State == MsfCampaignState.Draft)
+        {
+          <p class="field-help">@MsfCampaignText.DraftNeverLists</p>
+        }
+      }
+      else if (setup.State == MsfCampaignState.Open)
+      {
+        <div class="status-split">
+          <div>
+            <h3 class="section-title section-title--h3">@MsfCampaignText.CountsHeading</h3>
+            @Counts(setup)
+          </div>
+          @Links(setup)
+        </div>
+      }
+      else
+      {
+        <div class="count-box">
+          @if (setup.State != MsfCampaignState.Draft)
+          {
+            <h3 class="section-title section-title--h3">@MsfCampaignText.CountsHeading</h3>
+          }
+          @Counts(setup)
+        </div>
+      }
+      @if (setup.State != MsfCampaignState.Withdrawn)
+      {
+        <div class="status-actions">
+          @* A refusal heads the actions it answers, above the buttons, as the report's do (build review D7). *@
+          @if (_openRefusal is not null)
+          {
+            <Alert Kind="danger" Role="alert"><strong>@MsfCampaignText.NotOpened</strong> @_openRefusal</Alert>
+          }
+          @if (_withdrawRefusal is not null)
+          {
+            <Alert Kind="danger" Role="alert"><strong>@MsfCampaignText.NotWithdrawn</strong> @_withdrawRefusal</Alert>
+          }
+          @if (setup.State == MsfCampaignState.Draft)
+          {
+            @if (OpenUnavailableReason(setup) is not null)
+            {
+              @* T107's pattern (T225, K1, K13): shown, unavailable, its reason beside it; no click handler, since
+                 pressing it could only be refused. *@
+              <button id="msf-open-campaign" type="button" class="btn btn-primary" aria-disabled="true"
+                      aria-describedby="msf-open-reason"><Icon Name="mail" />Open campaign</button>
+            }
+            else
+            {
+              @* A second open would mail every respondent a second link (T202), so a press while one is in flight
+                 sends nothing (OpenCampaignAsync). Never disabled (T234): it keeps the focus, which a refused open
+                 leaves on it for the retry a failed send asks for (T184, K20). *@
+              <button id="msf-open-campaign" type="button" class="btn btn-primary"
+                      aria-disabled="@InFlight.AriaDisabled(_opening)" @onclick="OpenCampaignAsync">
+                <Icon Name="mail" />@(_opening ? "Opening campaign…" : "Open campaign")
+              </button>
+            }
+          }
+          else if (MsfCampaignText.ReportLinkLabel(setup.State) is { } reportLink)
+          {
+            <a id="msf-campaign-report" class="btn btn-primary" href="@MsfLinks.Report(setup.CampaignId)">@reportLink</a>
+          }
+          @if (MsfCampaignRules.IsWithdrawable(setup.State))
+          {
+            @* Withdraw is where the campaign list offers it (T206): on every campaign not yet released. *@
+            <button @ref="_withdrawButton" id="msf-withdraw-campaign" type="button" class="btn btn-outline"
+                    @onclick="AskWithdrawAsync">@MsfCampaignText.WithdrawCampaignLabel</button>
+          }
+          @if (setup.State == MsfCampaignState.Draft)
+          {
+            @if (OpenUnavailableReason(setup) is { } reason)
+            {
+              <ul class="move-reasons">
+                <li id="msf-open-reason"><strong>Open campaign:</strong> @reason</li>
+              </ul>
+            }
+            else
+            {
+              <p id="msf-opening-emails" class="field-help">@MsfCampaignText.OpeningEmails(invited, setup.ClosesOn)</p>
+            }
+          }
+        </div>
+      }
+    </section>
+  };
+
+  /// <summary>
+  /// The invitees counted by respondent group (T217), unstacked at every width (S13), with "All groups" under them.
+  /// Responded only once the campaign has opened (T270): a draft, and a draft withdrawn, have no responses to count.
+  /// </summary>
+  private RenderFragment Counts(MsfCampaignSetupDto setup) => __builder =>
+  {
+    var showsResponses = setup.HasOpened;
+    <div class="table-container">
+      <table id="msf-invitee-counts" class="clinic-table count-table">
+        <caption><span class="anon-caption"><Icon Name="eye-off" /><span>@MsfCampaignText.CountsCaption(setup.State)</span></span></caption>
+        <thead>
+          <tr>
+            <th scope="col">Respondent group</th>
+            <th scope="col" class="num">Invited</th>
+            @if (showsResponses)
+            {
+              <th scope="col" class="num">Responded</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @foreach (var group in setup.Invitees)
+          {
+            <tr>
+              <th scope="row">@MsfRespondentCategories.Describe(group.Category)</th>
+              <td class="num">@group.Invited</td>
+              @if (showsResponses)
+              {
+                <td class="num">@group.Responded</td>
+              }
+            </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr>
+            <th scope="row">@MsfCampaignText.AllGroups</th>
+            <td class="num">@setup.Invitees.Sum(group => group.Invited)</td>
+            @if (showsResponses)
+            {
+              <td class="num">@setup.Invitees.Sum(group => group.Responded)</td>
+            }
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  };
+
+  /// <summary>
+  /// What became of the links while the campaign is open (T251): counts, never whose (T217). Resend sits in the warning
+  /// it acts on; its result, done or refused, comes under it (K8, K22), and the hour rule says what "not delivered" means.
+  /// Nothing is drawn when every link was sent and nothing was resent.
+  /// </summary>
+  private RenderFragment Links(MsfCampaignSetupDto setup) => __builder =>
+  {
+    var resendShown = _resendStatus is not null || _resendRefusal is not null;
+    if (setup.LinksNotDelivered == 0 && setup.LinksBeingSent == 0 && !resendShown)
+    {
+      return;
+    }
+
+    <div id="msf-links" class="links-part">
+      <h3 class="section-title section-title--h3">@MsfCampaignText.LinksHeading</h3>
+      @if (setup.LinksNotDelivered > 0)
+      {
+        @* Standing content, so the warning has no role: it is there on every visit until the links are sent again. *@
+        <Alert Id="msf-links-not-delivered" Kind="warning" Role="">
+          <div class="alert-row">
+            <span class="alert-row-text">@MsfCampaignText.LinksNotDelivered(setup.LinksNotDelivered)</span>
+            @* Not disabled by its own resend (T234): it has the focus, and a second press sends nothing. *@
+            <button id="msf-resend-links" type="button" class="btn btn-outline btn-sm"
+                    aria-disabled="@InFlight.AriaDisabled(_resending)" @onclick="ResendLinksAsync">
+              <Icon Name="mail" />@(_resending ? "Resending links…" : MsfCampaignText.ResendLinksLabel(setup.LinksNotDelivered))
+            </button>
+          </div>
+        </Alert>
+      }
+      <ActionResult @ref="_linksResult" Id="msf-links-result">
+        @if (_resendStatus is not null)
+        {
+          <Alert Kind="success" Role="status"><strong>@_resendStatus</strong></Alert>
+        }
+        @if (_resendRefusal is not null)
+        {
+          <Alert Kind="danger" Role="alert"><strong>@MsfCampaignText.NotResent</strong> @_resendRefusal</Alert>
+        }
+      </ActionResult>
+      @if (setup.LinksBeingSent > 0)
+      {
+        <Alert Id="msf-links-being-sent" Kind="info">@MsfCampaignText.LinksBeingSent(setup.LinksBeingSent)</Alert>
+      }
+      @if (setup.LinksNotDelivered > 0 || resendShown)
+      {
+        <p class="field-help">@MsfCampaignText.LinksHourRule</p>
+      }
+    </div>
+  };
+
+  /// <summary>
+  /// A draft's addresses, for Remove (T247): the add form, then the list, an address over its group in each item with
+  /// Remove beside it (T270: no table to scroll at 390). Only on a draft, whose invitees hold no working link and have
+  /// given no response, so a row here says nothing about anyone's answers (MsfCampaignSetupDto.DraftInvitees).
+  /// </summary>
+  private RenderFragment Addresses(MsfCampaignSetupDto setup) => __builder =>
+  {
+    var current = setup.SubjectIsCurrent;
+    var learner = setup.Kind == MsfTemplateKind.LearnerFeedback;
+    <section id="msf-addresses" class="detail-card msf-stack-card" aria-labelledby="msf-addresses-heading">
+      <div>
+        <h2 id="msf-addresses-heading" class="section-title">@MsfCampaignText.AddressesHeading</h2>
+        <p class="field-help">@MsfCampaignText.AddressesNote</p>
+      </div>
+      @* novalidate (S4): the email field is type="email", and the page, not the browser, refuses it in its words. *@
+      <EditForm Model="_invitee" OnSubmit="AddInviteeAsync" FormName="msf-invitee" class="add-form"
+                aria-labelledby="msf-add-heading" novalidate>
+        <h3 id="msf-add-heading" class="section-title section-title--h3">@MsfCampaignText.AddInviteeHeading</h3>
+        <p class="field-help">@MsfCampaignText.RequiredMarkLine</p>
+        @if (_addStatus is not null)
+        {
+          <Alert Id="msf-add-result" Kind="success" Role="status">@_addStatus</Alert>
+        }
+        <div class="add-invitee">
+          <div class="form-group">
+            <label for="msf-respondent-email">Respondent email<span class="required-mark" aria-hidden="true"> *</span></label>
+            @* K13: natively disabled while the trainee is not current, since nothing can be sent. *@
+            <input @ref="_emailInput" id="msf-respondent-email" type="email" maxlength="320"
+                   class="@(_emailError is null ? "form-control" : "form-control input-validation-error")"
+                   aria-required="true" aria-invalid="@(_emailError is null ? null : "true")"
+                   aria-describedby="@(_emailError is not null ? "msf-respondent-email-error" : _addStatus is not null ? "msf-add-result" : null)"
+                   disabled="@(!current)" @bind="_invitee.Email" />
+            @if (_emailError is not null)
+            {
+              <p id="msf-respondent-email-error" class="validation-message">@_emailError</p>
+            }
+          </div>
+          @if (learner)
+          {
+            <div class="form-group">
+              <label for="msf-teaching-context">Teaching context<span class="required-mark" aria-hidden="true"> *</span></label>
+              <input @ref="_contextInput" id="msf-teaching-context" maxlength="200"
+                     class="@(_contextError is null ? "form-control" : "form-control input-validation-error")"
+                     aria-required="true" aria-invalid="@(_contextError is null ? null : "true")"
+                     aria-describedby="@(_contextError is null ? "msf-teaching-context-help" : "msf-teaching-context-help msf-teaching-context-error")"
+                     disabled="@(!current)" @bind="_invitee.TeachingContext" />
+              @if (_contextError is not null)
+              {
+                <p id="msf-teaching-context-error" class="validation-message">@_contextError</p>
+              }
+            </div>
+          }
+          else
+          {
+            @* Only the respondent groups this campaign's questionnaire accepts, which the invite command holds it to
+               (T164), each by its label (T191), in the enum's order, Peer doctor chosen (M2). No mark: it always holds
+               a value. *@
+            <div class="form-group">
+              <label for="msf-respondent-category">Respondent group</label>
+              <select id="msf-respondent-category" class="form-select" disabled="@(!current)" @bind="_invitee.Category">
+                @foreach (var category in setup.AcceptedCategories)
+                {
+                  <option value="@category">@MsfRespondentCategories.Describe(category)</option>
+                }
+              </select>
+            </div>
+          }
+          @if (current)
+          {
+            @* Not disabled while it runs (T234, T228 review): it may hold the focus, and a second press while the add
+               runs sends nothing (AddInviteeAsync). *@
+            <button id="msf-add-invitee" type="submit" class="btn btn-outline" aria-disabled="@InFlight.AriaDisabled(_adding)">Add invitee</button>
+          }
+          else
+          {
+            <button id="msf-add-invitee" type="button" class="btn btn-outline" aria-disabled="true"
+                    aria-describedby="msf-add-reason">Add invitee</button>
+          }
+        </div>
+        @if (learner)
+        {
+          <p id="msf-teaching-context-help" class="field-help">@MsfCampaignText.LearnerInviteesNote</p>
+        }
+        @if (!current)
+        {
+          <ul class="move-reasons">
+            <li id="msf-add-reason"><strong>Add invitee:</strong> @MsfCampaignText.AddNeedsCurrentTrainee(SubjectName(setup))</li>
+          </ul>
+        }
+      </EditForm>
+      @* A remove's result, done or refused, above the rows it changed (K4); it takes the focus, since the row's button is
+         gone after a remove. *@
+      <ActionResult @ref="_rowsResult" Id="msf-addresses-result">
+        @if (_removeStatus is not null)
+        {
+          <Alert Kind="success" Role="status">@_removeStatus</Alert>
+        }
+        @if (_removeRefusal is not null)
+        {
+          <Alert Kind="danger" Role="alert"><strong>@MsfCampaignText.NotRemoved</strong> @_removeRefusal</Alert>
+        }
+      </ActionResult>
+      <h3 id="msf-address-count" class="section-title section-title--h3">@MsfCampaignText.AddressCount(setup.DraftInvitees.Count)</h3>
+      @if (setup.DraftInvitees.Count == 0)
+      {
+        <p class="field-help">@MsfCampaignText.NoAddressYet</p>
+      }
+      else
+      {
+        <ul id="msf-draft-invitees" class="invitee-rows" aria-labelledby="msf-address-count">
+          @foreach (var invitee in setup.DraftInvitees)
+          {
+            var at = invitee.Email.IndexOf('@');
+            <li class="invitee-row">
+              <span class="invitee-address">@if (at > 0){@(invitee.Email[..(at + 1)])<wbr />@(invitee.Email[(at + 1)..])}else{@invitee.Email}<span class="invitee-group">@(invitee.Category == MsfRespondentCategory.Learner ? MsfCampaignText.LearnerLine(invitee.TeachingContext) : MsfRespondentCategories.Describe(invitee.Category))</span></span>
+              @* The accessible name starts with the visible label's word and names the row (DESIGN.md § Button system,
+                 T206); the dialog says what removing does (T247). *@
+              <button type="button" class="btn btn-outline btn-sm" aria-label="@MsfCampaignText.RowActionName(MsfCampaignText.RemoveRowLabel, DescribeInvitee(invitee))"
+                      @onclick="() => AskRemoveAsync(invitee)">@MsfCampaignText.RemoveRowLabel</button>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  };
+
+  /// <summary>
+  /// About this campaign: whose it is (with their training year while current), the questionnaire, the thresholds, when
+  /// it closed, and the EPAs it is evidence for (T369; it replaced the campaign card's details list).
+  /// </summary>
+  private RenderFragment About(MsfCampaignSetupDto setup) => __builder =>
+  {
+    <section id="msf-about" class="detail-card" aria-labelledby="msf-about-heading">
+      <h2 id="msf-about-heading" class="section-title">@MsfCampaignText.AboutHeading</h2>
+      <dl class="msf-facts">
+        <div><dt>Trainee</dt><dd>@MsfCampaignText.AboutTrainee(SubjectName(setup), setup.SubjectIsCurrent ? setup.TrainingYear : null)</dd></div>
+        <div><dt>Template</dt><dd>@setup.TemplateName (@MsfEvidenceKinds.Describe(setup.Kind))</dd></div>
+        <div>
+          <dt>Thresholds</dt>
+          <dd>
+            @MsfCampaignText.AboutThresholds(setup.MinimumResponses, setup.MinimumCategoryResponses, setup.MinimumRespondentCategories)
+            @if (setup.Kind == MsfTemplateKind.LearnerFeedback)
+            {
+              @(" ")<span class="field-help msf-block">@MsfCampaignText.LearnerGroupsFixed</span>
+            }
+          </dd>
+        </div>
+        @if (setup.ClosedOn is { } closedOn)
+        {
+          <div><dt>Closed to responses</dt><dd>@MsfCampaignText.AboutClosed(closedOn)</dd></div>
+        }
+        <div class="msf-facts-wide">
+          <dt>Evidence</dt>
+          <dd>
+            @MsfCampaignText.AboutEvidence(setup.CoveredEpas.Select(epa => epa.Code).ToList())
+            @if (setup.CoveredEpas.Count > 0)
+            {
+              <ul class="epa-lines">
+                @foreach (var epa in setup.CoveredEpas)
+                {
+                  <li>@MsfCampaignText.EpaLine(epa.Code, epa.Title)</li>
+                }
+              </ul>
+            }
+          </dd>
+        </div>
+      </dl>
+    </section>
+  };
 }
 
 @code {
-  [Parameter] public int? CampaignId { get; set; }
-
-  private readonly List<MsfTemplateDto> _templates = [];
-  private readonly List<TraineeProfileDto> _trainees = [];
-  private readonly List<ActivityCatalogueOption> _epaOptions = [];
+  [Parameter] public int CampaignId { get; set; }
 
   /// <summary>
-  /// The campaign being edited: whose it is, its questionnaire's kind, its state, whom it may invite (T164) and how many
-  /// have been invited and have responded in each group (T217). Null on create, and for a campaign this caller does not
-  /// run.
+  /// The campaign: whose it is, its questionnaire's kind, its state, whom it may invite (T164), how many have been invited
+  /// and have responded in each group (T217), and About's facts (T369). Null for a campaign this caller does not run.
   /// </summary>
   private MsfCampaignSetupDto? _setup;
 
-  /// <summary>The campaign has not been read yet: on the first visit, or after moving to another campaign's page.</summary>
-  private bool _setupLoading = true;
+  private bool _loading = true;
+  private string? _loadError;
+
+  // An action's result where its button is gone, and the refusals beside the buttons that stay.
   private string? _status;
-  private string? _error;
+
+  /// <summary>What a withdraw did, after its bold lead, as the list words it (L4; build review D11).</summary>
+  private string? _statusDetail;
+  private string? _refusal;
+  private string _refusalLead = string.Empty;
+  private string? _openRefusal;
+  private string? _withdrawRefusal;
+  private string? _resendStatus;
+  private string? _resendRefusal;
+  private string? _removeStatus;
+  private string? _removeRefusal;
+  private string? _addStatus;
+  private string? _emailError;
+  private string? _contextError;
 
   /// <summary>An open has been sent and has not yet answered. (T202)</summary>
   private bool _opening;
@@ -458,45 +522,60 @@
 
   private ConfirmDialog? _confirmWithdraw;
   private ConfirmDialog? _confirmRemove;
-  private ElementReference _result;
+  private ActionResult? _result;
+  private ActionResult? _rowsResult;
+  private ActionResult? _linksResult;
+  private ElementReference _emailInput;
+  private ElementReference _contextInput;
+  private ElementReference _withdrawButton;
+
+  /// <summary>Where the focus goes after the next render, once an action has answered.</summary>
+  private Func<ValueTask>? _focusAfterRender;
+
+  /// <summary>The page's result region, which takes the focus where the pressed button is gone. For its tests.</summary>
+  internal ElementReference ResultRegion => _result?.Element ?? default;
+
+  /// <summary>The addresses' result region, above the rows (K4). For its tests.</summary>
+  internal ElementReference RowsResultRegion => _rowsResult?.Element ?? default;
+
+  /// <summary>The Links part's result region (K8). For its tests.</summary>
+  internal ElementReference LinksResultRegion => _linksResult?.Element ?? default;
+
+  internal ElementReference EmailInput => _emailInput;
+
+  internal ElementReference ContextInput => _contextInput;
+
+  internal ElementReference WithdrawButton => _withdrawButton;
 
   /// <summary>
-  /// An action has answered and the button that sent it is gone, so its result takes the focus after the next render.
-  /// (T217)
-  /// </summary>
-  private bool _focusResult;
-
-  /// <summary>The region holding an action's result, which takes the focus once it has answered. For its tests.</summary>
-  internal ElementReference ResultRegion => _result;
-
-  private InputText? _emailInput;
-  private bool _focusEmail;
-
-  internal ElementReference? EmailInput => _emailInput?.Element;
-
-  /// <summary>
-  /// An open, a withdraw, an invitee add, an invitee remove or a resend is in flight, so nothing else may be sent. (T202,
+  /// An open, a withdraw, an invitee add, an invitee remove or a resend is in flight, so nothing else is sent. (T202,
   /// T217, T228 review, T247, T251)
   /// </summary>
   private bool Busy => _opening || _withdrawing || _adding || _removing || _resending;
 
-  private TemplateFormModel _template = new();
-  private CampaignFormModel _campaign = new();
   private InviteeFormModel _invitee = new();
 
   /// <summary>
-  /// Whether the caller runs any campaign (<see cref="MsfCampaignRules.RunsCampaigns" />, T248): an Administrator, or a
-  /// Coordinator at an institution, who does not hold Trainee (T224). Null until the caller is known, so neither form is
-  /// shown to someone who is about to be told they cannot use it.
+  /// Whether the caller runs any campaign (<see cref="MsfCampaignRules.RunsCampaigns" />, T248). Null until the caller is
+  /// known.
   /// </summary>
   private bool? _runsCampaigns;
 
-  /// <summary>
-  /// Why the caller runs no campaign, in the words the create and template commands refuse them in: holding Trainee
-  /// (<see cref="MsfCampaignRules.TraineeRunsNoCampaigns" />), or else their roles
-  /// (<see cref="MsfCampaignRules.RunsCampaignsRoles" />).
-  /// </summary>
   private string _runsNoCampaignsReason = string.Empty;
+
+  /// <summary>
+  /// The heading and the tab (T369): "MSF campaign" while the campaign is read or could not be, "Campaign unavailable"
+  /// when there is none this caller runs (K16), and "MSF campaign for {name}" once read.
+  /// </summary>
+  private string Heading
+    => _loading || _loadError is not null
+      ? MsfCampaignText.CampaignLoadingTitle
+      : _setup is { } setup ? MsfCampaignText.CampaignTitle(SubjectName(setup)) : MsfCampaignText.CampaignUnavailableTitle;
+
+  private string? Subtitle
+    => _loading || _loadError is not null || _setup is not { } setup
+      ? null
+      : MsfCampaignText.CampaignSubtitle(setup.TemplateName, MsfEvidenceKinds.Describe(setup.Kind), setup.OpensOn, setup.ClosesOn);
 
   protected override async Task OnInitializedAsync()
   {
@@ -507,79 +586,72 @@
       : MsfCampaignRules.RunsCampaignsRoles;
   }
 
-  /// <remarks>
-  /// The templates and the trainees are read only where a campaign is being created: a campaign's own page has neither
-  /// the Quick template card nor the create form that lists them (T225, T248 review). Nor does the create page of someone
-  /// who runs no campaign (T248).
-  /// </remarks>
   protected override async Task OnParametersSetAsync()
   {
-    if (!CampaignId.HasValue && _runsCampaigns is true)
+    if (_setup?.CampaignId != CampaignId)
     {
-      await LoadTemplatesAsync();
-      await LoadTraineesAsync();
+      _setup = null;
+      _loading = true;
     }
 
     await LoadSetupAsync();
+    _loading = false;
   }
 
   /// <summary>
-  /// The edited campaign as it is now: its state and invitee counts (T217), and its kind and accepted categories, so the
-  /// invitee form offers only whom the invite command accepts (T164). Null for a campaign this caller does not run, as
-  /// the report page answers; the commands refuse those.
+  /// The campaign as it is now, or null for one this caller does not run, as the report page answers; the commands
+  /// refuse those. Read again after every action on the page, whatever it answered: a refusal is likeliest because the
+  /// campaign changed elsewhere (opened, withdrawn or closed), and the page should show what it is now. A failed read is
+  /// the load error, its failure in the log (T329).
   /// </summary>
-  /// <remarks>
-  /// Read again after every action on the page, whatever it answered: a refusal is likeliest because the campaign changed
-  /// elsewhere (opened, withdrawn or closed), and the page should show what it is now. The campaign already shown stays
-  /// in view while it is read again; only a first read, or another campaign's, shows the skeleton.
-  /// </remarks>
   private async Task LoadSetupAsync()
   {
-    if (!CampaignId.HasValue)
-    {
-      _setup = null;
-      _setupLoading = false;
-      return;
-    }
-
-    if (_setup?.CampaignId != CampaignId.Value)
-    {
-      _setup = null;
-      _setupLoading = true;
-    }
-
     try
     {
-      _setup = await Sender.Send(new GetMsfCampaignSetupQuery(CampaignId.Value, await GetPrincipalAsync()));
+      _setup = await Sender.Send(new GetMsfCampaignSetupQuery(CampaignId, await GetPrincipalAsync()));
+      _loadError = null;
       if (_setup is { AcceptedCategories.Count: > 0 } && !_setup.AcceptedCategories.Contains(_invitee.Category))
       {
         _invitee.Category = _setup.AcceptedCategories[0];
       }
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      // An action's refusal is kept over the failed read that follows it (T217 review): it says why the action was not
-      // taken, and the card already says that the campaign could not be loaded.
+      Logger.LogError(exception, "MSF campaign {CampaignId} could not be read.", CampaignId);
       _setup = null;
-      _error ??= RefusalText.Of(exception);
-    }
-    finally
-    {
-      _setupLoading = false;
+      _loadError = MsfCampaignText.CampaignLoadFailed;
     }
   }
 
-  /// <summary>Whether the campaign has been opened, so that its responses are counted beside its invitees. (T217)</summary>
-  private static bool ShowsResponses(MsfCampaignSetupDto setup) => setup.State != MsfCampaignState.Draft;
+  private async Task RetryAsync()
+  {
+    _loading = true;
+    StateHasChanged();
+    await LoadSetupAsync();
+    _loading = false;
+  }
+
+  /// <summary>The trainee by name, or "the trainee" when they have none on record.</summary>
+  private static string SubjectName(MsfCampaignSetupDto setup) => setup.SubjectName ?? "the trainee";
+
+  /// <summary>The status card's stripe (F7): the coordinator's move on a draft and under review; Open, someone else's.</summary>
+  private static string StatusCardClass(MsfCampaignState state)
+    => state switch
+    {
+      MsfCampaignState.Open => "detail-card activity-status--others status-card",
+      MsfCampaignState.Released => "detail-card activity-status--done status-card",
+      MsfCampaignState.Withdrawn => "detail-card activity-status--declined status-card",
+      _ => "detail-card detail-card--emphasis status-card"
+    };
 
   /// <summary>
-  /// What the counts show, and no more (T217 review). A draft says when its addresses stop being listed (T247); once the
-  /// campaign has opened, the page lists nobody.
+  /// Why a draft's Open campaign is unavailable, or null when it can be pressed: a trainee who is not current first (K13;
+  /// the rule open applies, T284), then a draft that invites nobody (K1, T225).
   /// </summary>
-  private static string InviteesNote(MsfCampaignSetupDto setup)
-    => setup.State == MsfCampaignState.Draft
-      ? "Counted by respondent group. Once the campaign opens, this page never lists who was invited or which of them responded."
-      : "Counted by respondent group. This page never lists who was invited or which of them responded.";
+  private static string? OpenUnavailableReason(MsfCampaignSetupDto setup)
+    => !setup.SubjectIsCurrent
+      ? MsfCampaignText.OpenNeedsCurrentTrainee(SubjectName(setup))
+      : setup.Invitees.Count == 0 ? MsfCampaignText.OpenNeedsInvitees : null;
 
   /// <summary>A draft invitee as the Remove button, the dialog and the result name them. (T247)</summary>
   private static string DescribeInvitee(MsfDraftInviteeDto invitee)
@@ -588,325 +660,97 @@
   private string RemoveBody
     => _pendingRemove is null ? string.Empty : MsfCampaignText.RemoveInviteeBody(DescribeInvitee(_pendingRemove));
 
-  /// <summary>An open campaign with a link that was not delivered: what Resend sends again (T251).</summary>
-  private static bool CanResend(MsfCampaignSetupDto setup)
-    => setup.State == MsfCampaignState.Open && setup.LinksNotDelivered > 0;
-
-  /// <summary>Any campaign not yet released, as the campaign list offers Withdraw on (T206, T199).</summary>
-  private static bool CanWithdraw(MsfCampaignSetupDto setup) => MsfCampaignRules.IsWithdrawable(setup.State);
-
-  /// <summary>What the state means and what comes next, in one sentence built in C#. (T217)</summary>
-  private string StateNote(MsfCampaignSetupDto setup)
-  {
-    var closesOn = setup.ClosesOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-    return setup.State switch
-    {
-      MsfCampaignState.Draft => InviteesIntro,
-      // "Is emailed", not "has been emailed" (T251): the mail leaves after the open, and whether it arrived is what the
-      // lines below this one say.
-      MsfCampaignState.Open =>
-        $"Open. Each respondent is emailed a link, which gives {closesOn} as their last day to respond. The campaign " +
-        "closes by itself once that day has passed; to close it sooner, use Close campaign on its report.",
-      MsfCampaignState.Closed or MsfCampaignState.UnderReview =>
-        "Closed to responses, and every respondent's email address has been removed. Review the responses on its " +
-        "report, and release it to the trainee there. If it should never be released, withdraw it here.",
-      MsfCampaignState.Released => "The report has been released to the trainee.",
-      _ =>
-        "Withdrawn. It takes no responses, any link sent no longer works, and every respondent's email address has " +
-        "been removed. It will never be released to the trainee."
-    };
-  }
-
-  /// <summary>
-  /// Whether anybody has been invited, so that the draft can be opened: the open handler refuses a campaign with no
-  /// invitation (T225). The same test the "Nobody has been invited yet." line makes.
-  /// </summary>
-  private static bool HasInvitees(MsfCampaignSetupDto setup) => setup.Invitees.Count > 0;
-
   /// <summary>The campaign as the withdraw dialog and its result name it, as the campaign list does (T206).</summary>
   private static string Described(MsfCampaignSetupDto setup)
-    => MsfCampaignText.Describe(setup.SubjectName ?? "the trainee", setup.TemplateName, setup.ClosesOn);
+    => MsfCampaignText.Describe(SubjectName(setup), setup.TemplateName, setup.ClosesOn);
 
   private string WithdrawBody => _setup is null ? string.Empty : MsfCampaignText.WithdrawBody(Described(_setup), _setup.State);
 
-  /// <summary>
-  /// The categories the invitee picker offers: the edited campaign's, or, until it has loaded, every category a
-  /// multi-source feedback campaign accepts.
-  /// </summary>
-  private IReadOnlyList<MsfRespondentCategory> AcceptedCategories
-    => _setup?.AcceptedCategories
-       ?? Enum.GetValues<MsfRespondentCategory>().Where(category => category != MsfRespondentCategory.Learner).ToArray();
-
-  /// <summary>The template chosen on the create form, or null.</summary>
-  private MsfTemplateDto? SelectedTemplate
-    => _templates.FirstOrDefault(template => template.Id == _campaign.TemplateId);
-
-  /// <summary>Whether the create form's chosen template is learner feedback (T164).</summary>
-  private bool IsLearnerFeedback => SelectedTemplate?.Kind == MsfTemplateKind.LearnerFeedback;
-
-  private string MinimumCategoriesHelp => IsLearnerFeedback
-    ? "Learner feedback has one respondent group, learners, so it is always one."
-    : "How many respondent groups must clear the threshold above before the report can be released. Two is the College's answer: eight peer doctors alone are not multi-source feedback.";
-
-  private string EpasHelp => IsLearnerFeedback
-    ? "Learner feedback is evidence only for an EPA whose College list names it (on v11.1, PAED-015). Each one selected here becomes a separate learner-feedback record on the trainee's portfolio when the report is released."
-    : "One campaign covers many EPAs and runs once a semester. Each one selected here becomes a separate evidence record on the trainee's portfolio when the report is released.";
-
-  private string NoEpasText => IsLearnerFeedback
-    ? "No EPA on this trainee's curriculum names learner feedback as an instrument, so a learner-feedback campaign cannot be recorded as evidence for anything."
-    : "This trainee's curriculum lists no EPAs, so a campaign cannot be recorded as evidence for anything.";
-
-  private string InviteesIntro => _setup?.Kind == MsfTemplateKind.LearnerFeedback
-    ? "Add the learners the trainee taught, each with where they were taught, then open the campaign to send anonymous response links."
-    : "Add invitees, then open the campaign to send anonymous response links.";
-
-  private static string TemplateLabel(MsfTemplateDto template)
-    => template.Kind == MsfTemplateKind.LearnerFeedback
-      ? $"{template.Name} ({MsfEvidenceKinds.Describe(template.Kind)})"
-      : template.Name;
-
-  /// <summary>
-  /// A new template choice can change which EPAs the campaign may cover, and learner feedback has one respondent group,
-  /// so both follow the template. So does the response minimum while it is still the other kind's default: eight is
-  /// multi-source feedback's, and a learner-feedback campaign left at it could not be released with fewer than eight
-  /// learners. A minimum the coordinator typed is kept. (T164)
-  /// </summary>
-  private async Task OnCampaignTemplateChangedAsync()
+  private void ClearResults()
   {
-    var kind = SelectedTemplate?.Kind ?? MsfTemplateKind.Msf;
-    if (kind != _campaignKind)
-    {
-      if (_campaign.MinimumResponses == CampaignFormModel.DefaultMinimumResponsesFor(_campaignKind))
-      {
-        _campaign.MinimumResponses = CampaignFormModel.DefaultMinimumResponsesFor(kind);
-      }
-
-      _campaignKind = kind;
-    }
-
-    _campaign.MinimumRespondentCategories = IsLearnerFeedback ? 1 : CampaignFormModel.DefaultMinimumRespondentCategories;
-    await LoadEpaOptionsAsync();
-  }
-
-  /// <summary>The kind of the template the create form's defaults were last set for.</summary>
-  private MsfTemplateKind _campaignKind = MsfTemplateKind.Msf;
-
-  /// <summary>
-  /// Swaps the quick template's wording for the other kind's, unless the coordinator has already changed it. Learner
-  /// feedback has no College questionnaire yet, so its wording is labelled interim. (T164)
-  /// </summary>
-  private void OnTemplateKindChanged()
-  {
-    var other = _template.Kind == MsfTemplateKind.LearnerFeedback ? MsfTemplateKind.Msf : MsfTemplateKind.LearnerFeedback;
-    var from = TemplateFormModel.DefaultsFor(other);
-    var to = TemplateFormModel.DefaultsFor(_template.Kind);
-
-    if (_template.Name == from.Name)
-    {
-      _template.Name = to.Name;
-    }
-
-    if (_template.ScalePrompt == from.ScalePrompt)
-    {
-      _template.ScalePrompt = to.ScalePrompt;
-    }
-
-    if (_template.CommentPrompt == from.CommentPrompt)
-    {
-      _template.CommentPrompt = to.CommentPrompt;
-    }
-  }
-
-  private async Task LoadTemplatesAsync()
-  {
-    _templates.Clear();
-    _templates.AddRange(await Sender.Send(new ListMsfTemplatesQuery()));
-  }
-
-  /// <summary>
-  /// The trainees the create accepts (<see cref="ListMsfCampaignSubjectsQuery" />, T238): the current trainees at the
-  /// caller's institution, or everywhere for an Administrator, less the ones
-  /// <see cref="MsfCampaignRules.IsKeptFromCampaignsAbout" /> keeps the caller from (T224): never the caller themselves.
-  /// Read only on the create page of someone who runs campaigns (T248): nobody is read for anyone else, or on a campaign's
-  /// own page, which has no create form. The EPA picker reads only a trainee offered here.
-  /// </summary>
-  /// <remarks>
-  /// The query leaves out whom the exclusions keep out already; the page asks them again because they read nothing, so
-  /// the caller is never offered whatever the list holds. Until T238 the list was every trainee profile at the caller's
-  /// institution, so it offered graduates, trainees who had withdrawn and a trainee who now trains elsewhere, whom the
-  /// create refused.
-  /// </remarks>
-  private async Task LoadTraineesAsync()
-  {
-    _trainees.Clear();
-    var principal = await GetPrincipalAsync();
-    _trainees.AddRange((await Sender.Send(new ListMsfCampaignSubjectsQuery(principal)))
-      .Where(trainee => !MsfCampaignRules.IsKeptFromCampaignsAbout(principal, trainee.UserId)));
-  }
-
-  /// <summary>
-  /// The EPAs this trainee's own curriculum lists. Deliberately the strict list, with no fallback to the
-  /// coordinator's own scope: release re-applies exactly this predicate, so an EPA offered here that
-  /// release would silently drop would be a picker that lies.
-  /// </summary>
-  /// <remarks>
-  /// Only for a trainee the picker offered. The select's value arrives from the browser, and the reference
-  /// service answers any id it is given, so a value edited in the page would otherwise read another institution's
-  /// trainee's curriculum, and confirm that the id names someone. (T113)
-  /// </remarks>
-  private async Task LoadEpaOptionsAsync()
-  {
-    _epaOptions.Clear();
-    _campaign.EpaIds.Clear();
-
-    if (string.IsNullOrWhiteSpace(_campaign.SubjectUserId) ||
-        !_trainees.Any(trainee => string.Equals(trainee.UserId, _campaign.SubjectUserId, StringComparison.Ordinal)))
-    {
-      return;
-    }
-
-    try
-    {
-      // With the template's instrument, so learner feedback is offered only the EPAs whose list names it: the same
-      // question the create command and the release ask (MsfCampaignRules.CoverableEpaIdsAsync, T164).
-      var kind = SelectedTemplate?.Kind ?? MsfTemplateKind.Msf;
-      _epaOptions.AddRange(await ReferenceData.GetSubjectCurriculumEpaOptionsAsync(
-        _campaign.SubjectUserId, MsfEvidenceKinds.CoverageToolKeyFor(kind)));
-    }
-    catch (Exception exception)
-    {
-      _error = RefusalText.Of(exception);
-    }
-  }
-
-  private void ToggleEpa(string value, bool isChecked)
-  {
-    var epaId = ParseEpaId(value);
-    if (epaId <= 0)
-    {
-      return;
-    }
-
-    if (isChecked)
-    {
-      if (!_campaign.EpaIds.Contains(epaId))
-      {
-        _campaign.EpaIds.Add(epaId);
-      }
-    }
-    else
-    {
-      _campaign.EpaIds.Remove(epaId);
-    }
-  }
-
-  private static int ParseEpaId(string value)
-    => int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var epaId) ? epaId : 0;
-
-  private static string TraineeLabel(TraineeProfileDto trainee)
-  {
-    var name = string.Join(" ", new[] { trainee.FirstName, trainee.LastName }.Where(part => !string.IsNullOrWhiteSpace(part)));
-    return string.IsNullOrWhiteSpace(name) ? trainee.Email : $"{name} ({trainee.Email})";
-  }
-
-  private async Task CreateTemplateAsync()
-  {
-    _error = null;
     _status = null;
-
-    try
-    {
-      await Sender.Send(new CreateMsfTemplateCommand(
-        _template.Name,
-        null,
-        _template.AllowPatientResponses,
-        [
-          new CreateMsfTemplateQuestionItem(_template.ScalePrompt, MsfQuestionType.Scale, null, true),
-          new CreateMsfTemplateQuestionItem(_template.CommentPrompt, MsfQuestionType.LongText, null, false)
-        ],
-        await GetPrincipalAsync(),
-        _template.Kind));
-
-      _template = new();
-      await LoadTemplatesAsync();
-      _status = "Template created.";
-    }
-    catch (Exception exception)
-    {
-      _error = RefusalText.Of(exception);
-    }
+    _statusDetail = null;
+    _refusal = null;
+    _openRefusal = null;
+    _withdrawRefusal = null;
+    _resendStatus = null;
+    _resendRefusal = null;
+    _removeStatus = null;
+    _removeRefusal = null;
+    _addStatus = null;
+    _emailError = null;
+    _contextError = null;
   }
 
-  private async Task CreateCampaignAsync()
+  /// <summary>A refusal in its own words, or the fixed sentence for any other failure, which goes to the log (T329).</summary>
+  private string RefusalWords(Exception exception, string action)
   {
-    _error = null;
-    _status = null;
-
-    try
+    if (MsfCampaignText.RefusalOf(exception) is { } refusal)
     {
-      var principal = await GetPrincipalAsync();
-      var result = await Sender.Send(new CreateMsfCampaignCommand(
-        _campaign.SubjectUserId,
-        _campaign.TemplateId ?? 0,
-        _campaign.OpensOn,
-        _campaign.ClosesOn,
-        _campaign.MinimumResponses,
-        _campaign.MinimumCategoryResponses,
-        _campaign.MinimumRespondentCategories,
-        _campaign.EpaIds.ToArray(),
-        GetUserId(principal),
-        principal));
+      return refusal;
+    }
 
-      NavigationManager.NavigateTo($"/msf/campaigns/{result.Id}");
-    }
-    catch (Exception exception)
-    {
-      _error = RefusalText.Of(exception);
-    }
+    Logger.LogError(exception, "MSF campaign {CampaignId}: {Action} failed.", CampaignId, action);
+    return MsfCampaignText.ActionFailed;
+  }
+
+  /// <summary>The page's result region takes the focus with a refusal whose button is gone.</summary>
+  private void RefuseAtTheTop(string lead, string refusal)
+  {
+    _refusalLead = lead;
+    _refusal = refusal;
+    _focusAfterRender = () => _result!.Element.FocusAsync();
   }
 
   /// <remarks>
-  /// Sent at most once at a time, as the open is (T202): the flag is set before the first await, so a second Enter or
-  /// click that reaches the circuit while this add runs does nothing, and Open and Withdraw campaign wait for it too.
-  /// Until the T228 review a double press sent the same address twice: the server now stores it once, but the page
-  /// showed "Invitee added." beside the second add's "already invites" refusal, which was read last, with the address
-  /// already cleared.
+  /// Checked first, in the page's words (K5b, K5c; T324), and refused under the field with the address kept and the focus
+  /// in it. Sent at most once at a time, as the open is (T202): the flag is set before the first await, so a second Enter
+  /// that reaches the circuit while this add runs does nothing, and Open, Withdraw and Remove wait for it too. Added, the
+  /// result is "Invitee added." alone (F11), the group and the context kept for the next one, the address cleared and
+  /// focused. A refusal on a campaign still a draft is under the field, the focus back in it (K5); one that finds the
+  /// form gone (the campaign opened elsewhere) is at the top, focused.
   /// </remarks>
   private async Task AddInviteeAsync()
   {
-    if (!CampaignId.HasValue || Busy)
+    if (Busy || _setup is not { State: MsfCampaignState.Draft, SubjectIsCurrent: true } setup)
     {
+      return;
+    }
+
+    ClearResults();
+    var learner = setup.Kind == MsfTemplateKind.LearnerFeedback;
+    var category = learner ? MsfRespondentCategory.Learner : _invitee.Category;
+    _emailError = string.IsNullOrWhiteSpace(_invitee.Email)
+      ? MsfRespondentAddress.Missing
+      : MsfRespondentAddress.IsWellFormed(_invitee.Email) ? null : MsfRespondentAddress.Malformed;
+    _contextError = learner && string.IsNullOrWhiteSpace(_invitee.TeachingContext) ? MsfCampaignText.TeachingContextMessage : null;
+    if (_emailError is not null || _contextError is not null)
+    {
+      // The first field refused takes the focus: the address, else the teaching context (build review D6).
+      _focusAfterRender = _emailError is not null ? () => _emailInput.FocusAsync() : () => _contextInput.FocusAsync();
       return;
     }
 
     _adding = true;
-    _error = null;
-    _status = null;
-
+    var added = false;
     try
     {
       await Sender.Send(new AddMsfInvitationCommand(
-        CampaignId.Value,
-        _invitee.Email,
-        _invitee.Category,
-        await GetPrincipalAsync(),
-        _invitee.Category == MsfRespondentCategory.Learner ? _invitee.TeachingContext : null));
+        CampaignId, _invitee.Email.Trim(), category, await GetPrincipalAsync(), learner ? _invitee.TeachingContext : null));
 
-      // The next learner is usually from the same group, so the category and the context are kept for them. The model
-      // is cleared in place: a new one would make EditForm rebuild its content, and the control that had the focus with
-      // it, leaving the focus on the page body (F2 browser check).
+      // The next one is usually from the same group, so the group and the context are kept. Cleared in place: a new
+      // model would rebuild the form, and the control that had the focus with it (F2 browser check).
       _invitee.Email = string.Empty;
-      _status = "Invitee added.";
-      _focusEmail = true;
+      _addStatus = MsfCampaignText.InviteeAdded;
+      added = true;
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _error = RefusalText.Of(exception);
+      _emailError = RefusalWords(exception, "an invitee add");
     }
 
     try
     {
-      // The counts include the invitee just added; after a refusal, the campaign may have been opened elsewhere (T217).
       await LoadSetupAsync();
     }
     finally
@@ -914,49 +758,48 @@
       _adding = false;
     }
 
-    // A campaign no longer a draft has no invitee form, so the submit button that had the focus is gone (T217 review).
-    // On a draft the form stays. After an add the focus goes to the email, for the next invitee; after a refusal it
-    // stays where it was, to correct this one.
-    _focusResult = _setup is not { State: MsfCampaignState.Draft };
-    _focusEmail &= !_focusResult;
+    if (_setup is { State: MsfCampaignState.Draft })
+    {
+      _focusAfterRender = () => _emailInput.FocusAsync();
+    }
+    else if (!added && _emailError is { } refusal)
+    {
+      _emailError = null;
+      RefuseAtTheTop(MsfCampaignText.NotAdded, refusal);
+    }
   }
 
   /// <remarks>
   /// <para>
-  /// Sent at most once at a time (T202). The flag is set before the first await, and a click that finds it set does
-  /// nothing. Until the T225 review the button was also disabled while its open ran, which was never enough on its own
-  /// (a second click can leave the browser before the render that disables it arrives) and dropped the focus to the page.
-  /// Before T202 a double-click raced two opens, and every respondent was mailed two links, one of them dead.
+  /// Sent at most once at a time (T202): the flag is set before the first await, and a press that finds it set does
+  /// nothing. Before T202 a double-click raced two opens, and every respondent was mailed two links, one of them dead.
   /// </para>
   /// <para>
-  /// The campaign is read again before the flag is released (T217), so the page shows it open, with no Open button,
-  /// the moment the open answers. Until T217 the page was never read again, and it went on offering Open. The result
-  /// takes the focus whenever the campaign is no longer a draft, opened here or elsewhere, because the Open button that
-  /// had it is gone. A refused open on a campaign still a draft leaves the button, and the focus on it, for the retry a
-  /// failed send asks for (T184).
+  /// Read again before the flag is released (T217), so the page shows it open, with no Open button, the moment the open
+  /// answers; the result takes the focus at the top, since the button is gone. A refused open on a campaign still a draft
+  /// shows its refusal beside the button and leaves the focus on it, for the retry a failed send asks for (T184, K20).
   /// </para>
   /// </remarks>
   private async Task OpenCampaignAsync()
   {
-    if (!CampaignId.HasValue || Busy)
+    if (Busy || _setup is null)
     {
       return;
     }
 
     _opening = true;
-    _error = null;
-    _status = null;
+    ClearResults();
+    string? refusal = null;
 
     try
     {
-      await Sender.Send(new OpenMsfCampaignCommand(CampaignId.Value, await GetPrincipalAsync()));
-      // It used to name the development sender, which only logs a mail, on every host (T184), and then said that each
-      // respondent had been emailed, which the open cannot know: the mail leaves after it (T251).
+      await Sender.Send(new OpenMsfCampaignCommand(CampaignId, await GetPrincipalAsync()));
+      // The open cannot say the links arrived: the mail leaves after it (T251).
       _status = MsfCampaignText.CampaignOpened;
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _error = RefusalText.Of(exception);
+      refusal = RefusalWords(exception, "an open");
     }
 
     try
@@ -965,41 +808,49 @@
     }
     finally
     {
-      // Released on a refusal too: a failed send asks the coordinator to open the campaign again (T184).
       _opening = false;
     }
 
-    _focusResult = _setup is not { State: MsfCampaignState.Draft };
+    if (refusal is null)
+    {
+      _focusAfterRender = () => _result!.Element.FocusAsync();
+    }
+    else if (_setup is { State: MsfCampaignState.Draft })
+    {
+      // The button that had the focus is still there, for the retry: the focus stays on it.
+      _openRefusal = refusal;
+    }
+    else
+    {
+      RefuseAtTheTop(MsfCampaignText.NotOpened, refusal);
+    }
   }
 
   /// <remarks>
-  /// Sent at most once at a time, as the open is (T202): the flag is set before the first await, so a second press that
-  /// reaches the circuit while this resend runs sends nothing. The campaign is read again whatever the answer, so the
-  /// count is what it is now. The result takes the focus once the resend is done, and after a refusal that leaves no
-  /// Resend button (every link was sent again elsewhere, or the campaign closed); a refusal that leaves it keeps the
-  /// focus on it, for the retry. (T251, T234)
+  /// Sent at most once at a time, as the open is (T202). The campaign is read again whatever the answer, so the count is
+  /// what it is now. Done, the result takes the focus in the Links part (K8); refused with Resend still there, the refusal
+  /// is under the warning and the focus stays on Resend (K22); refused with no Resend left (every link sent again
+  /// elsewhere, or the campaign closed), the refusal takes the focus. (T251, T234)
   /// </remarks>
   private async Task ResendLinksAsync()
   {
-    if (!CampaignId.HasValue || Busy)
+    if (Busy || _setup is null)
     {
       return;
     }
 
     _resending = true;
-    _status = null;
-    _error = null;
-    var resent = false;
+    ClearResults();
+    string? refusal = null;
 
     try
     {
-      var count = await Sender.Send(new ResendMsfLinksCommand(CampaignId.Value, await GetPrincipalAsync()));
-      _status = MsfCampaignText.LinksResent(count);
-      resent = true;
+      var count = await Sender.Send(new ResendMsfLinksCommand(CampaignId, await GetPrincipalAsync()));
+      _resendStatus = MsfCampaignText.LinksResent(count);
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _error = RefusalText.Of(exception);
+      refusal = RefusalWords(exception, "a resend");
     }
 
     try
@@ -1011,7 +862,22 @@
       _resending = false;
     }
 
-    _focusResult = resent || _setup is null || !CanResend(_setup);
+    if (_setup is not { State: MsfCampaignState.Open })
+    {
+      _resendStatus = null;
+      if (refusal is not null)
+      {
+        RefuseAtTheTop(MsfCampaignText.NotResent, refusal);
+      }
+
+      return;
+    }
+
+    // A refusal that leaves Resend leaves the focus on it, for the retry; otherwise the result takes it.
+    _resendRefusal = refusal;
+    _focusAfterRender = refusal is not null && _setup.LinksNotDelivered > 0
+      ? null
+      : () => _linksResult!.Element.FocusAsync();
   }
 
   private async Task AskWithdrawAsync()
@@ -1021,9 +887,7 @@
       return;
     }
 
-    _status = null;
-    _error = null;
-
+    ClearResults();
     if (_confirmWithdraw is not null)
     {
       await _confirmWithdraw.ShowAsync();
@@ -1031,31 +895,32 @@
   }
 
   /// <remarks>
-  /// Sent at most once at a time, as the open is (T202): the flag is set before the first await, so a second confirm that
-  /// reaches the circuit before the re-render does nothing. The result takes the focus whatever it was, as on the
-  /// campaign list (T206 review): a withdrawn campaign's Withdraw button is gone. (T217)
+  /// Sent at most once at a time, as the open is (T202). Withdrawn, the result takes the focus at the top, since the
+  /// button is gone (T206 review). Refused while the campaign can still be withdrawn, the refusal is beside the button and
+  /// the focus goes back to it (K21) once the dialog has closed: a closing dialog returns the focus to nothing.
   /// </remarks>
   private async Task WithdrawAsync()
   {
-    if (!CampaignId.HasValue || _setup is not { } campaign || Busy)
+    if (_setup is not { } campaign || Busy)
     {
       return;
     }
 
     _withdrawing = true;
-    _status = null;
-    _error = null;
+    ClearResults();
+    string? refusal = null;
 
     try
     {
-      // The state the dialog was worded by: a campaign closed since is refused, not withdrawn in words it was not
-      // asked in (T199 review).
-      await Sender.Send(new WithdrawMsfCampaignCommand(CampaignId.Value, campaign.State, await GetPrincipalAsync()));
-      _status = MsfCampaignText.Withdrawn(Described(campaign), campaign.State);
+      // The state the dialog was worded by: a campaign closed since is refused, not withdrawn in words it was not asked
+      // in (T199 review).
+      await Sender.Send(new WithdrawMsfCampaignCommand(CampaignId, campaign.State, await GetPrincipalAsync()));
+      _status = MsfCampaignText.WithdrawnLead(Described(campaign));
+      _statusDetail = MsfCampaignText.WithdrawnDetail(campaign.State);
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _error = RefusalText.Of(exception);
+      refusal = RefusalWords(exception, "a withdraw");
     }
 
     try
@@ -1067,7 +932,19 @@
       _withdrawing = false;
     }
 
-    _focusResult = true;
+    if (refusal is null)
+    {
+      _focusAfterRender = () => _result!.Element.FocusAsync();
+    }
+    else if (_setup is { } now && MsfCampaignRules.IsWithdrawable(now.State))
+    {
+      _withdrawRefusal = refusal;
+      _focusAfterRender = () => _withdrawButton.FocusAsync();
+    }
+    else
+    {
+      RefuseAtTheTop(MsfCampaignText.NotWithdrawn, refusal);
+    }
   }
 
   private async Task AskRemoveAsync(MsfDraftInviteeDto invitee)
@@ -1078,8 +955,7 @@
     }
 
     _pendingRemove = invitee;
-    _status = null;
-    _error = null;
+    ClearResults();
 
     if (_confirmRemove is not null)
     {
@@ -1090,32 +966,30 @@
   private void CancelRemove() => _pendingRemove = null;
 
   /// <remarks>
-  /// Sent at most once at a time, as the withdraw is (T217): the flag is set before the first await, so a second confirm
-  /// that reaches the circuit before the re-render does nothing. The campaign is read again whatever the answer, so its
-  /// counts and its list lose the invitee at once, and a refusal shows the campaign as it is now: opened elsewhere, it
-  /// lists nobody. The result takes the focus either way (T247): the row's Remove button is gone after a remove, and
-  /// after a refusal on a campaign opened elsewhere; the dialog closes before the focus moves.
+  /// Sent at most once at a time, as the withdraw is (T217). The campaign is read again whatever the answer, so its
+  /// counts and its list lose the invitee at once. The result, done or refused, is above the rows and takes the focus
+  /// (K4): the row's Remove is gone after a remove, and the dialog has closed. On a campaign opened elsewhere the list is
+  /// gone, so the refusal is at the top (T247).
   /// </remarks>
   private async Task RemoveAsync()
   {
-    if (!CampaignId.HasValue || _pendingRemove is not { } invitee || Busy)
+    if (_pendingRemove is not { } invitee || Busy)
     {
       return;
     }
 
     _removing = true;
-    _status = null;
-    _error = null;
+    ClearResults();
+    string? refusal = null;
 
     try
     {
-      await Sender.Send(
-        new RemoveMsfInvitationCommand(CampaignId.Value, invitee.InvitationId, await GetPrincipalAsync()));
-      _status = MsfCampaignText.InviteeRemoved(DescribeInvitee(invitee));
+      await Sender.Send(new RemoveMsfInvitationCommand(CampaignId, invitee.InvitationId, await GetPrincipalAsync()));
+      _removeStatus = MsfCampaignText.InviteeRemoved(DescribeInvitee(invitee));
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _error = RefusalText.Of(exception);
+      refusal = RefusalWords(exception, "an invitee remove");
     }
 
     try
@@ -1128,108 +1002,39 @@
       _removing = false;
     }
 
-    _focusResult = true;
+    if (_setup is { State: MsfCampaignState.Draft })
+    {
+      _removeRefusal = refusal;
+      _focusAfterRender = () => _rowsResult!.Element.FocusAsync();
+    }
+    else if (refusal is not null)
+    {
+      _removeStatus = null;
+      RefuseAtTheTop(MsfCampaignText.NotRemoved, refusal);
+    }
   }
 
   /// <remarks>
-  /// After a withdraw, the focus moves once the browser has acknowledged the render that follows it. By then the dialog
-  /// is closed: ConfirmDialog asks the browser to close it as soon as <see cref="WithdrawAsync" /> returns, and while a
-  /// modal dialog is open nothing outside it can take the focus (T206 review).
+  /// The focus moves once the browser has the render that shows the result. After a dialog's action that is also after
+  /// the dialog has closed: ConfirmDialog closes it as soon as the action returns, and while a modal dialog is open
+  /// nothing outside it can take the focus (T206 review).
   /// </remarks>
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
-    if (_focusResult)
+    if (_focusAfterRender is { } focus)
     {
-      _focusResult = false;
-      await _result.FocusAsync();
+      _focusAfterRender = null;
+      await focus();
     }
-    else if (_focusEmail && _emailInput?.Element is { } email)
-    {
-      _focusEmail = false;
-      await email.FocusAsync();
-    }
-  }
-
-  private sealed class TemplateFormModel
-  {
-    public MsfTemplateKind Kind { get; set; } = MsfTemplateKind.Msf;
-
-    [Required]
-    [MaxLength(200)]
-    public string Name { get; set; } = DefaultsFor(MsfTemplateKind.Msf).Name;
-
-    [Required]
-    [MaxLength(1000)]
-    public string ScalePrompt { get; set; } = DefaultsFor(MsfTemplateKind.Msf).ScalePrompt;
-
-    [Required]
-    [MaxLength(1000)]
-    public string CommentPrompt { get; set; } = DefaultsFor(MsfTemplateKind.Msf).CommentPrompt;
-
-    public bool AllowPatientResponses { get; set; }
-
-    /// <summary>
-    /// The wording a new template starts with. Learner feedback's is labelled interim: the College has supplied no
-    /// questionnaire for it (T164).
-    /// </summary>
-    public static (string Name, string ScalePrompt, string CommentPrompt) DefaultsFor(MsfTemplateKind kind)
-      => kind == MsfTemplateKind.LearnerFeedback
-        ? ("Learner feedback (interim questionnaire)",
-           "Rates the trainee's teaching overall.",
-           "What should the trainee keep doing or change in their teaching?")
-        : ("Default MSF",
-           "Rates the trainee's overall professional performance.",
-           "What should the trainee keep doing or improve?");
-  }
-
-  private sealed class CampaignFormModel
-  {
-    [Required]
-    public string SubjectUserId { get; set; } = string.Empty;
-
-    [Required]
-    public int? TemplateId { get; set; }
-
-    [Required]
-    public DateOnly OpensOn { get; set; } = DateOnly.FromDateTime(DateTime.Today);
-
-    [Required]
-    public DateOnly ClosesOn { get; set; } = DateOnly.FromDateTime(DateTime.Today.AddDays(14));
-
-    [Range(1, 100)]
-    public int MinimumResponses { get; set; } = DefaultMinimumResponsesFor(MsfTemplateKind.Msf);
-
-    /// <summary>
-    /// The response minimum a campaign of this kind starts with: eight for multi-source feedback; for learner feedback,
-    /// three, the default category threshold below, which its one group must clear to report anything (T164).
-    /// </summary>
-    public static int DefaultMinimumResponsesFor(MsfTemplateKind kind)
-      => kind == MsfTemplateKind.LearnerFeedback ? 3 : 8;
-
-    [Range(1, 100)]
-    public int MinimumCategoryResponses { get; set; } = 3;
-
-    /// <summary>College decision D11's two groups, for multi-source feedback; learner feedback has one (T164).</summary>
-    public const int DefaultMinimumRespondentCategories = 2;
-
-    [Range(1, 6)]
-    public int MinimumRespondentCategories { get; set; } = DefaultMinimumRespondentCategories;
-
-    [MinLength(1, ErrorMessage = "Select at least one EPA this campaign is evidence for.")]
-    public List<int> EpaIds { get; } = [];
   }
 
   private sealed class InviteeFormModel
   {
-    [Required]
-    [EmailAddress]
     public string Email { get; set; } = string.Empty;
 
-    [Required]
     public MsfRespondentCategory Category { get; set; } = MsfRespondentCategory.PeerDoctor;
 
     /// <summary>Where a learner was taught; sent only for a Learner (T164).</summary>
-    [MaxLength(200)]
     public string? TeachingContext { get; set; }
   }
 
@@ -1238,8 +1043,4 @@
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
     return authState.User;
   }
-
-  private static string GetUserId(ClaimsPrincipal principal)
-    => principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
-      ?? throw new InvalidOperationException("The current user identifier is missing.");
 }

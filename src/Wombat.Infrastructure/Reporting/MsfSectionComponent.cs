@@ -152,6 +152,18 @@ internal static class MsfSectionComponent
         });
     }
 
+    /// <summary>
+    /// A prompt as a label: a colon after it unless it already ends a sentence or a clause (T369, T270), so "Rates the trainee's
+    /// overall professional performance." prints as written, never "performance.:", and "Judgement" as "Judgement:".
+    /// </summary>
+    internal static string Labelled(string prompt)
+    {
+        var trimmed = prompt.TrimEnd();
+        return trimmed.Length > 0 && trimmed[^1] is '.' or '?' or '!' or ':' or ';' or '…'
+            ? trimmed
+            : $"{trimmed}:";
+    }
+
     private static void ComposeQuestion(IContainer container, MsfQuestionAggregateDto question)
     {
         container.Column(column =>
@@ -162,7 +174,7 @@ internal static class MsfSectionComponent
             {
                 column.Item().Text(text =>
                 {
-                    text.Span($"{question.Prompt}: ").FontSize(8);
+                    text.Span($"{Labelled(question.Prompt)} ").FontSize(8);
                     // Invariant, as the section's other numbers: "4.0" on any host, so an export is the same bytes (T078).
                     text.Span($"Avg {question.Scale.Average.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)}")
                         .FontSize(8).Bold();
@@ -171,7 +183,7 @@ internal static class MsfSectionComponent
             }
             else if (question.Comments.Count > 0)
             {
-                column.Item().Text($"{question.Prompt}:").FontSize(8).Bold();
+                column.Item().Text(Labelled(question.Prompt)).FontSize(8).Bold();
                 foreach (var comment in question.Comments)
                 {
                     column.Item().PaddingLeft(8).Text($"— {comment}").FontSize(8);

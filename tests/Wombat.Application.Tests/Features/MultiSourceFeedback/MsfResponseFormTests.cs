@@ -207,7 +207,7 @@ public sealed class MsfResponseFormTests
         var refusal = await SubmitRefusedAsync(dbContext, token, [new(scaleId, 4, null), new(commentId, null, tooLong)]);
 
         refusal.Reason.Should().Be(MsfResponseRefusal.AnswersIncomplete);
-        refusal.Message.Should().Be("The comment for 'Comment' is longer than 4000 characters. Please shorten it.");
+        refusal.Message.Should().Be("The comment for 'Comment' is longer than 4,000 characters. Please shorten it.");
         await ShouldHaveUsedNothingAsync(dbContext);
 
         // Surrounding whitespace is trimmed before it is stored, so it does not count against the respondent.

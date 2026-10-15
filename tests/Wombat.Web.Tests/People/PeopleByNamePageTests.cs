@@ -108,7 +108,8 @@ public sealed class PeopleByNamePageTests : TestContext
         var cut = RenderComponent<CampaignsList>();
         cut.WaitForState(() => cut.FindAll("tbody tr").Count == 1);
 
-        Column(cut, "Subject").Should().Equal("Thandi Nkosi");
+        // T369 (T280): the column is Trainee, as on every list of trainees.
+        Column(cut, "Trainee").Should().Equal("Thandi Nkosi");
         cut.Markup.Should().NotContain("trainee-1");
     }
 

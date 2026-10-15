@@ -172,6 +172,62 @@ public sealed class MsfCampaignAutoCloseJobTests
         }
     }
 
+    /// <summary>
+    /// The job closes as nobody, so the report says the campaign closed by itself (T369, F5); and "past its last day" is
+    /// the South African day (T369, T325): at 21:30 UTC on the last day it is still that day in South Africa, at 22:30 UTC
+    /// it is already the next.
+    /// </summary>
+    [Theory]
+    [InlineData(21, MsfCampaignState.Open)]
+    [InlineData(22, MsfCampaignState.UnderReview)]
+    public async Task ExecuteAsync_ClosesOnTheSouthAfricanDayAfterTheLastDay_AsNobody(int utcHour, MsfCampaignState expected)
+    {
+        var lastDay = new DateOnly(2026, 10, 28);
+        var now = new DateTime(2026, 10, 28, utcHour, 30, 0, DateTimeKind.Utc);
+
+        var services = new ServiceCollection();
+        var dbName = Guid.NewGuid().ToString();
+        services.AddDbContext<ApplicationDbContext>(o => o.UseInMemoryDatabase(dbName));
+        services.AddScoped<IApplicationDbContext>(p => p.GetRequiredService<ApplicationDbContext>());
+        var provider = services.BuildServiceProvider();
+
+        using (var scope = provider.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var template = new MsfTemplate { Name = "Default MSF", IsActive = true };
+            db.Set<MsfTemplate>().Add(template);
+            await db.SaveChangesAsync();
+
+            db.Set<MsfCampaign>().Add(new MsfCampaign
+            {
+                SubjectUserId = "trainee-1",
+                TemplateId = template.Id,
+                CreatedByUserId = "coordinator-1",
+                CreatedOn = now.AddDays(-20),
+                OpensOn = lastDay.AddDays(-14),
+                ClosesOn = lastDay,
+                State = MsfCampaignState.Open,
+                OpenedOn = now.AddDays(-14)
+            });
+            await db.SaveChangesAsync();
+        }
+
+        await new MsfCampaignAutoCloseJob(provider.GetRequiredService<IServiceScopeFactory>())
+            .ExecuteAsync(new ScheduledJobContext(now, NullLogger.Instance), CancellationToken.None);
+
+        using (var scope = provider.CreateScope())
+        {
+            var campaign = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+                .Set<MsfCampaign>().AsNoTracking().SingleAsync();
+            campaign.State.Should().Be(expected);
+            campaign.ClosedByUserId.Should().BeNull("the job closes as nobody");
+            if (expected == MsfCampaignState.UnderReview)
+            {
+                campaign.ClosedOn.Should().Be(now);
+            }
+        }
+    }
+
     /// <summary>Fails every save that would close <see cref="CampaignId" />, as a fault would, not a concurrent write.</summary>
     private sealed class FailTheSaveOf : SaveChangesInterceptor
     {

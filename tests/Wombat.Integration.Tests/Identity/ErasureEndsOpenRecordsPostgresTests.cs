@@ -167,6 +167,11 @@ public sealed class ErasureEndsOpenRecordsPostgresTests : IAsyncLifetime
             control.State.Should().Be(MsfCampaignState.Open);
             control.Invitations.Should().OnlyContain(invitation => invitation.RespondentEmail != null);
 
+            // Who closed a campaign is pseudonymised, not cleared: the report still says it was closed by hand (T369, F5).
+            var closedByErased = await db.MsfCampaigns.SingleAsync(campaign => campaign.Id == seeded.ClosedByErasedCampaignId);
+            closedByErased.ClosedByUserId.Should().Be(pseudonym);
+            closedByErased.State.Should().Be(MsfCampaignState.UnderReview, "another trainee's campaign is not ended");
+
             // And the appeal body can still answer the appeal the erased trainee lodged, through the real handler and user
             // store: resolving it reads no evidence and issues no STAR, and the review's trainee is not asked for (T182).
             await using (var resolve = root.CreateAsyncScope())
@@ -447,7 +452,8 @@ public sealed class ErasureEndsOpenRecordsPostgresTests : IAsyncLifetime
         int ClosedCampaignId,
         int UnderReviewCampaignId,
         int ReleasedCampaignId,
-        int ControlCampaignId);
+        int ControlCampaignId,
+        int ClosedByErasedCampaignId);
 
     /// <summary>
     /// The erased trainee (also an assessor) with an earlier profile completed and a current one; their reviews scheduled,
@@ -544,7 +550,11 @@ public sealed class ErasureEndsOpenRecordsPostgresTests : IAsyncLifetime
         var underReview = Campaign(ErasedUserId, template.Id, MsfCampaignState.UnderReview, now, respondent: null);
         var released = Campaign(ErasedUserId, template.Id, MsfCampaignState.Released, now, respondent: null);
         var controlCampaign = Campaign(ControlUserId, template.Id, MsfCampaignState.Open, now, "control.nurse@host.test");
-        db.MsfCampaigns.AddRange(draft, open, closed, underReview, released, controlCampaign);
+        // Another trainee's campaign that the erased person closed by hand (T369, F5): the closer is pseudonymised, as the
+        // releaser is, and the campaign is otherwise left as it was.
+        var closedByErased = Campaign(ControlUserId, template.Id, MsfCampaignState.UnderReview, now, respondent: null);
+        closedByErased.ClosedByUserId = ErasedUserId;
+        db.MsfCampaigns.AddRange(draft, open, closed, underReview, released, controlCampaign, closedByErased);
         await db.SaveChangesAsync();
 
         db.PendingEntrustmentDecisions.Add(PendingEntrustmentDecision.Stage(
@@ -579,7 +589,8 @@ public sealed class ErasureEndsOpenRecordsPostgresTests : IAsyncLifetime
             closed.Id,
             underReview.Id,
             released.Id,
-            controlCampaign.Id);
+            controlCampaign.Id,
+            closedByErased.Id);
     }
 
     /// <summary>The erased trainee, signed in, as the data-rights form sends their request.</summary>

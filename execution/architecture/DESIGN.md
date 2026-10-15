@@ -45,7 +45,12 @@
 >   committee reviews, her review at /committee/my-reviews/{id}, the loading heads), § Detail page and § The chair's
 >   controls (Go to the appeal, the resolve form's quorum line and refusal), § Entrustment-only reviews "The trainee's
 >   reviews", § Accessibility (the label in the name, the filtered count's status), the owner table's new row, and §
->   app.css section order (three Outcomes, STARs and appeals sections)).
+>   app.css section order (three Outcomes, STARs and appeals sections)); flow 10, the MSF campaign (2026-10-15, T369:
+>   § The MSF campaign page, New MSF campaign, the campaign list and the MSF report page (the status card, Close and
+>   Release in dialogs, no results before close), her MSF reports and her report at /msf/my-reports/{id}, § The
+>   programme's MSF coverage, § Anonymous static page (/msf/respond's h1 and Alert per state), § Form system (the
+>   required mark on the MSF forms, the narrative's counter without maxlength), § Table system (which MSF tables stack),
+>   the dialogs at 390, the owner table's new rows, and § app.css section order (four MSF campaign sections)).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 
@@ -647,6 +652,7 @@ there, and its trail is Home › the page (§ Page-level patterns).
 | The job run history | Administrator: Scheduled jobs |
 | My authorisations | Trainee: My progress |
 | A trainee's review (`/committee/my-reviews/{id}`) | Trainee: My committee reviews; its trail Home › My committee reviews › the review ("2026 S2 annual progression review"). The page admits an Administrator too, as the list does, but reads them nothing that is not their own (T366, flow 09, F8) |
+| Her MSF report (`/msf/my-reports/{id}`) | Trainee: MSF reports; its trail Home › MSF reports › the report ("Default MSF, released 2026-10-14"). The page admits a Coordinator and an Administrator too, as the list does (T269), but reads them nothing that is not their own (T369, flow 10, S6) |
 
 Entrustment decisions is not in the table: for both speciality admins it is a list the menu offers, which lights itself
 (T358, R2-Menus m5); for every other role it admits, the Institutional admin's Home link included, it is under no list,
@@ -717,6 +723,10 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
 - The primary page action is `.btn .btn-primary` and lives in the `PageHeader` action slot, except on the committee
   review, where it lives in the sitting bar (T361, flow 07; § Committee agenda, "The sitting bar").
 - Destructive actions open a `ConfirmDialog` first; the red `.btn-danger` only appears inside the dialog's footer.
+- **On the MSF pages a dialog's buttons stack at 390** (T369, M10): each `ConfirmDialog` is rendered inside the page's
+  `.msf-page` column, whose phone rules give its `.form-actions` `flex-direction: column-reverse` and its buttons 44px and
+  the full width. The DOM has the safe button first, so the action shows on top, the safe button last on screen and
+  first in the tab order. Flow 01's `ConfirmDialog` stacked nothing; a page outside the column keeps that.
 - **Cancel and Escape give the focus back to the dialog's opener** (2026-10-14, T366, D6). Safari and Firefox on macOS
   do not focus a clicked button, so the native dialog has nothing to return the focus to. `ConfirmDialog`'s script
   records the opener when the dialog opens (`document.activeElement`, else the element `ReturnFocusId` names; Lodge
@@ -736,8 +746,9 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
   closed (`OnClosed`).
 - A destructive row action on a list (Withdraw on the MSF campaign list, T206) is one `ConfirmDialog` for the page,
   whose body names the row it was opened from and says what cannot be undone. The row's button carries an `aria-label`
-  that starts with its visible label and names the row ("Withdraw the campaign for …"): a column of identical
-  "Withdraw" buttons is otherwise indistinguishable to a screen reader. It is disabled while the action is in flight.
+  that starts with its visible label's word and names the row ("Withdraw: the campaign for …", T369): a column of
+  identical "Withdraw…" buttons is otherwise indistinguishable to a screen reader. A second press while the action is in
+  flight sends nothing (T234).
   Its result is an `Alert` with `Role="status"` (done) or `Role="alert"` (refused) inside a `.action-result` region
   (`tabindex="-1"`), which takes the focus in `OnAfterRenderAsync`, after the dialog has closed: the row's button may be
   gone, and while the modal is open nothing outside it can take the focus (T206 review).
@@ -1006,7 +1017,10 @@ No inline `style="width:…"` on a table's cells. A column's width is one of the
 
 **A list that must stack at 900px** (2026-10-14, T366, flow 09, S8) writes its table with both stack classes
 (`.clinic-table--stack .clinic-table--stack-wide`), as flows 06 and 08 write theirs; `DataTable`'s `Stack` is the 641px
-one, and it gains no wider mode. My authorisations' No longer in force and the STAR register are written so.
+one, and it gains no wider mode. My authorisations' No longer in force and the STAR register are written so, and so are
+her MSF reports list (T369, flow 10, M2) and the MSF campaign list (seven columns and up to three buttons a row; build
+review D2). MSF coverage's two grids never stack: each scrolls inside its own named,
+focusable region, the one exception to "nothing scrolls sideways" at 390px (T369, S13).
 
 **A row's line** (flow 03's note row, generalised, T366, S4, S9). A row that needs a sentence under it (the activity
 page's history note, the register's revoked and superseded STARs) is `tr.has-note`, followed by a row whose one cell
@@ -1314,13 +1328,19 @@ reordered). Log an activity is `NewActivity.razor`. Drawn in `design/flows/03-tr
   `SectionHeadingLevel="4"` (G8).
 - **The required mark.** The label ends in `<span class="required-mark" aria-hidden="true"> *</span>`, and the control
   carries `aria-required="true"`. One line above the first section explains it: "* marks a field you must fill in."
-  (A15). A required group keeps its legend's visually hidden "required".
+  (A15). A required group keeps its legend's visually hidden "required". The MSF forms carry it too (T369, M7): New MSF
+  campaign on every field F6 names (Template, Trainee, Opens on, Closes on, the three minimums, the EPA legend, the fold's
+  three fields) and the campaign page's add form on the address and a learner's teaching context; never on a select that
+  always holds a value (the respondent group). They draw their fields by hand, not with `<FormField>`, whose mark is the
+  older one.
 - **A counter is a second `.field-help`** (T366, flow 09, S9): "153 of 4,000 characters" under the help, named after it
   in the control's `aria-describedby` (`appeal-reason-help appeal-reason-count`, then the refusal's id when refused). It
   counts in the browser as the person types (`js/review-appeal.js`), so no keystroke costs a round trip, and the page
   renders the same words from what it holds. The control carries no `maxlength`, which would cut a paste silently: the
-  counter shows the excess, and the action refuses it under the field. The lodge block's reason (4,000) and the
-  register's revocation reason (1,000, "Give the reason in 1,000 characters or fewer.", D2) both count this way.
+  counter shows the excess, and the action refuses it under the field. The lodge block's reason (4,000), the
+  register's revocation reason (1,000, "Give the reason in 1,000 characters or fewer.", D2) and the MSF report's
+  narrative (4,000, "106 of 4,000 characters"; "Write the narrative in 4,000 characters or fewer.", T369) all count this
+  way.
 - **Help under the control**, `p.field-help` with id `<key>-help`, named first in the control's `aria-describedby`. An EPA
   or person select prints its chosen option in full under it (`.field-readback`, `aria-hidden`: the select already says
   it), so nothing is cut off at 390px (T323). The EPA picker stays a native `<select>` with each option's full text.
@@ -1922,7 +1942,10 @@ line; a coverage read that fails says so above the cards, as on the running view
 your programme on …") is `QuotaText.ProgrammeEnded`, which the standing panel and the trainee dashboard's Curriculum
 targets card also use; that card says the programme ended and points here.
 
-**The programme's MSF coverage** (T210, `/msf/coverage`, Coordinator and Administrator, as the campaign pages). Per
+**The programme's MSF coverage** (T210, `/msf/coverage`, Coordinator and Administrator, as the campaign pages;
+rewritten 2026-10-15, T369, flow 10, boards R3-V1 to V5). Its header is "MSF coverage" with the subtitle "How many of
+each programme's trainees a released multi-source feedback campaign covered, per EPA and semester. Coverage is not a
+target." and no action: "Back to campaigns" went, since the trail (Home › MSF campaigns › MSF coverage) does that. Per
 programme, EPA and semester, how many of the programme's trainees were covered: "1 of 3 trainees covered". A programme
 is a curriculum as one institution follows it (`MsfProgrammeCoverageText.ProgrammeName`, "Paediatric EPA Curriculum 11.1
 at Demo Institution"), so an Administrator sees one per institution. The trainees are those the caller may read about
@@ -1937,109 +1960,153 @@ trainee is counted from their own card: the counts are read by `MsfSemesterCover
   counted from their own progress page, that MSF counts towards no target so an uncovered trainee is no shortfall, that a
   trainee counts in a semester once their programme has started by its last day, and that an ended semester can still
   gain a campaign released later.
-- One `section.detail-card` a programme, `aria-labelledby` its `<h2>`. A `details-list` gives each semester's trainees
-  ("3 trainees, whose programme had started by 30 June 2026"). Then two tables, each under an `<h3>` ("By EPA", "By
+- The page's column is `.msf-page` (24px between its sections). One `section.detail-card.coverage-programme` a programme,
+  `aria-labelledby` its `<h2>`. A `ul.coverage-windows` gives each semester's trainees, the semester's name bold ("**Semester
+  1, 2026:** 3 trainees, whose programme had started by 30 June 2026"). Then two tables, each under an `<h3>` ("By EPA", "By
   trainee"), each in a `.table-container` that is `tabindex="0"` and `role="region"`, as the decisions-due summary is,
   since neither holds anything focusable. Its `aria-labelledby` names its `<h3>` and then the programme's `<h2>`, so that
   where several programmes render (an Administrator's view, or an institution running two curricula) each region is
   named for whose it is ("By EPA Paediatric EPA Curriculum 11.1 at Demo Institution"), not one of several "By EPA"s.
-  Both are `.clinic-table--compact` with a row header per row and a column per semester.
-  - **By EPA**: "n of m trainees covered", bold when n is above 0 and muted when it is 0; "No trainee had started" where
+  Both are `.clinic-table--compact.coverage-table` with a row header per row and a column per semester; a cell keeps
+  its figure on one line, so a grid scrolls inside its region at 390px rather than the page (S13).
+  - **By EPA**: "n of m trainees covered", bold by `td.is-covered` when n is above 0 and plain when it is 0 (V1); "No
+    trainee had started" where
     m is 0, never "0 of 0". An institution's own EPA is marked under its title, as on the trainee's grid.
   - **By trainee**: "6 of 15 EPAs covered", the trainee's own count for the semester (for the current one, the count
-    their My progress "This period" line gives), or "Not started".
+    their My progress "This period" line gives), or "Not started"; bold by `td.is-covered` when above 0.
 - Like the trainee's grid it takes no badge, no warning tint and no bar: nothing here is a verdict against a target.
 - Someone who holds Trainee (T185's rung) reads no other trainee's record: the page opens with a standing `Alert`
   (`Kind="warning"`, `Role=""`, `#msf-coverage-trainee`) saying so and that their own coverage is on My progress, and asks
-  for nothing. Nobody to show is the `StatePanel`'s empty card; a failed read is its error.
+  for nothing. Nobody to show is the `StatePanel`'s empty card ("No trainees to show"). Loading is a status line ("Loading
+  MSF coverage.") and skeletons; a failed read is fixed words, "Could not load MSF coverage. Nothing has changed. Try
+  again, or come back in a few minutes.", with Try again (T329), never the exception's text, which goes to the log.
 
-**The MSF campaign page** (T217, `/msf/campaigns/{id}`). Its campaign card shows the campaign as it is now and offers
-only what its state allows. It is read again after every action on the page, refused or not: a refusal is likeliest
-because the campaign changed elsewhere. The Quick template card is only on the create page, `/msf/campaigns/new`: a
-campaign that exists already has its questionnaire, and its page reads no template list (T225). The card holds:
+**The MSF campaign page** (T217; rebuilt by T369, flow 10, K1–K22, `/msf/campaigns/{id}`). It shows the campaign as it
+is now and offers only what its state allows, and it is read again after every action on the page, refused or not: a
+refusal is likeliest because the campaign changed elsewhere. The create form is its own page, New MSF campaign
+(`NewCampaign.razor`, `/msf/campaigns/new`, below); a campaign that exists already has its questionnaire, and its page
+reads no template and no trainee list (T225, T248 review). Its h1 and tab are "MSF campaign for Lerato Molefe" (§ The
+title rule), "MSF campaign" while it is read or when the read failed, and "Campaign unavailable" for an id that names no
+campaign this caller runs (T113): that card says "The selected campaign could not be loaded." with "Go to MSF campaigns"
+(K16). The subtitle carries the rest: "Default MSF · Multi-source feedback · 2026-10-14 to 2026-10-28". Everything sits in
+the page column (`.msf-page`, 24px between sections), which holds the page's two `ConfirmDialog`s (M10, § Button
+system). The column's margin reset cancels only the element defaults (a nested `p` or `h2` at (0,0,1)) and `.alert`'s
+margin (0,1,0), never a class's: `.list-section-title`, `.msf-card-title` and `.section-title` keep their bottom margins
+inside it (build review D1; `StylesheetRuleTests.ATitleInsideTheMsfPage_KeepsItsBottomMargin`). Loading shows the header at once and skeleton cards, said once ("Loading the campaign."), and no action until
+the read is in (K17); a failed read is a fixed sentence with Try again, its cause in the log, never the exception's text
+(K18, T329). In order:
 
-- A `details-list`: Trainee (by name), Template (with its kind), State (a badge) and Response window. Then one sentence
-  saying what the state means and what comes next: an open campaign names its respondents' last day to respond and says
-  that Close campaign is on its report. It says each respondent "is emailed" a link, never "has been emailed": the mail
-  leaves after the open, and whether it arrived is what the next lines say (T251).
-- **What became of the links, on an open campaign, counted and never whose** (T251). The mail worker reports each link's
-  mail sent or dropped onto its invitation, and a link nothing was heard of for an hour (the host crashed, or stopped
-  mid-send) counts as dropped (`MsfInvitation.LinkNotDelivered`, `LinkBeingSent`). Links not delivered are a `warning` `Alert`
-  (`#msf-links-not-delivered`, `Role=""`: standing content, there on every visit until they are resent) reading "2 links
-  were not delivered. Resend sends each of these respondents a new link; this page never says who they are."
-  (`MsfCampaignText.LinksNotDelivered`). Links still being sent are a `.muted` line (`#msf-links-being-sent`) that says
-  how many and to reload the page to see whether they arrived. A number, never a row or an address, for the reason the
-  invitees are counted by group: an undelivered respondent is one who has not answered. Nothing is shown when every link
-  was sent, and nothing on any other state.
-- **Invitees, counted by respondent group, never listed once the campaign has opened.** An `<h4>`, a `.muted` line
-  saying the page never lists who was invited or which of them responded ("Once the campaign opens, …" on a draft), and
-  promising nothing more: a campaign whose category threshold is one shows a one-person group's answers on its report.
-  Then a `.clinic-table` with a row header per group (by its label, "Peer doctor", never the key) and Invited, then
-  Responded once the campaign has opened, with an "All groups" `tfoot` row when there are two groups or more. Not a row
-  per invitee, even without its address: the coordinator added the rows and knows which is whom, so a responded mark on
-  one row names the author of the comment that has just appeared on the report. A group's count adds little to the
-  report, which already shows the total and a card for each group that has responded. Until release it does add the
-  exact count of a group below the category threshold, which the report hides; that names nobody, and with one such group
-  it is already the total less the others. (T217 review)
-- **A draft's addresses, for Remove** (T247). On a draft that invites anyone, an `<h4>` "Addresses invited", a `.muted`
-  line saying they are listed only while the campaign is a draft, and a `.clinic-table` with a row per invitee in the
-  order they were added: the address as the row header (`.col-wrap`, so a long one wraps rather than widening the
-  table), the group by its label, the teaching context on learner feedback, and a `.visually-hidden` "Actions" header
-  over each row's Remove (`.btn .btn-sm .btn-outline`, `aria-label` "Remove peer-1@example.test (Peer doctor)"). This is
-  not the row per invitee the counts refuse to be: a draft's invitees hold no working link and have given no response,
-  so a row says nothing about anyone's answers. It does show the addresses to whoever runs the campaign, any coordinator
-  at the trainee's institution, not only the one who typed them; that is accepted (T247 review). The query lists them
-  only while the campaign row is a draft (`MsfCampaignSetupDto.DraftInvitees`), and the page asks the state too; once
-  the campaign opens, the list is gone. Remove opens the page's second `ConfirmDialog`, which names the invitee, says
-  that they hold no working link and will not be sent one, and that they can be added again while the campaign is a
-  draft. "No working link", never "no link": an open that failed or was refused at its save may have mailed one. Its result, done
-  (`Role="status"`) or refused (`Role="alert"`), takes the focus in the `.action-result` region once the dialog has
-  closed: the row's button is gone after a remove, and after a refusal the campaign is read again and may have opened
-  elsewhere. The counts and the list are read again with it, so a group loses the invitee at once, and removing the only
-  invitee disables Open campaign with its reason. While a remove is in flight, Open, Withdraw campaign, Add invitee and
-  every Remove are disabled (the focus is in the dialog), and a second confirm sends nothing.
-- The invitee form, only on a draft.
-- One `.form-actions` row, with nothing a state does not allow: a draft has Withdraw campaign and Open campaign; an
-  open campaign has Withdraw campaign and a "View report" link, where it is closed, and, first, "Resend 2 links"
-  (`.btn .btn-outline`, `#msf-resend-links`) while any link was not delivered, whose `aria-describedby` names the
-  warning above (T251); a closed one under review has Withdraw campaign and a "Review and release" link; a released one
-  "View report"; a withdrawn one has no row. Withdraw is where the campaign list offers it (T206): on every campaign not
-  yet released (`MsfCampaignRules.IsWithdrawable`, which the command asks too). Withdrawing a closed campaign is the
-  decision never to release its report, which whoever may release it may take (T199; until then a campaign nobody would
-  release stayed under review for good). Both pages use the same `ConfirmDialog` wording (`MsfCampaignText`). For a
-  closed campaign, the dialog and the result say that its report will never be released. They do not mention links or
-  addresses, which closing already removed, and its state note ends "If it should never be released, withdraw it here."
-  The command is sent the state the dialog was worded by (`WithdrawMsfCampaignCommand.ConfirmedState`), and refuses a
-  withdraw confirmed while the page showed the campaign as a draft or open once it has closed
-  (`MsfCampaignRules.WithdrawingForgoesRelease`, `WithdrawMsfCampaignCommandHandler.ClosedSinceShown`): a page loaded
-  before the auto-close job ran would otherwise withdraw, never to be released, a campaign whose coordinator was asked
-  only to stop its links (T199 review). Both pages read the campaign again after the refusal, so the next dialog asks in
-  the closed campaign's words. On a draft that invites nobody,
-  Open campaign is shown **disabled** with its reason (the T107 pattern above, T225): no click handler, and
-  `aria-describedby="msf-open-reason"`, a `.workflow-action-reasons` list below the row reading "Open campaign: add at
-  least one invitee first…" (`MsfCampaignText.OpenNeedsInvitees`). The handler's refusal of a campaign with no invitee
-  stays the rule; until T225 the button was enabled and the refusal came only after the press.
-- An action's result is an `Alert` in an `.action-result` region that takes the focus once it has answered, whenever
-  the button that sent it is gone: after an open or a withdraw, and after an invitee add refused because the campaign
-  was opened or withdrawn elsewhere (its form is gone). A refused open on a campaign that is still a draft leaves the
-  focus on Open, for the retry; an add on a draft leaves it in the form. An open reports "Campaign opened; links are
-  being sent." (`MsfCampaignText.CampaignOpened`, T251): the mail server answers after the request, so the open cannot say
-  the links arrived, and its "could not all be sent" refusal is only for a mail the queue would not take. A resend reports
-  "2 new links are being sent." and moves the focus to its result (its button is gone once no link awaits resending); a
-  refused resend that leaves the button (a hand-off that failed) leaves the focus on it for the retry, and one that finds
-  the campaign closed elsewhere moves the focus to the refusal, beside the campaign read again. Resend is never disabled
-  by its own resend (T234): it carries `aria-disabled` and reads "Resending links…" while it runs, and a second press
-  sends nothing; Withdraw campaign is disabled then. An address the campaign already invites, in any
-  capitals, is refused the same way (T228): a `role="alert"` refusal naming no address, with the address left typed to
-  correct and nobody counted. While an open is in flight, Withdraw campaign and Add invitee are disabled, and Open reads
-  "Opening campaign…" but stays enabled and a second click on it sends nothing (T225 review): it holds the focus, and a
-  browser drops the focus of a button it disables, to the page (observed in Chrome), so a refused open would otherwise
-  leave the focus nowhere. While a withdraw is in flight, Open, Withdraw campaign and Add invitee are disabled (the focus
-  is in the dialog). While an invitee add is in flight,
-  Open and Withdraw campaign are disabled and a second Enter or click on Add invitee sends nothing (T228 review); Add
-  invitee itself stays enabled, because it may hold the focus that a refusal on a draft leaves in place. A refusal is kept
-  when the campaign cannot then be read again: the card says it could not be loaded, and the refusal says why the action
-  was not taken.
+- **The status card** (F7): a `.detail-card.status-card` on the activity page's stripes, by class only (M8):
+  `.detail-card--emphasis` on Draft, Closed and Under review (the coordinator's move), `.activity-status--others` while
+  Open (the respondents'), `--done` Released, `--declined` Withdrawn. Its head is the state's badge
+  (`BadgeFor.MsfCampaign`) and the state's sentence as the card's `h2.status-line` (`MsfCampaignText.StatusLine`): "Add
+  invitees, then open the campaign to send anonymous response links."; "8 of 9 invitees have responded." while open
+  (singular where it counts one, T270); "Closed to responses, and every respondent's email address has been removed.";
+  "The report has been released to the trainee."; and the withdrawn sentence. Under it, `.status-note`, what comes next:
+  an open campaign names its respondents' last day and says Close campaign is on its report, saying each respondent "is
+  emailed" a link, never "has been emailed" (T251); one closed and under review says it is released on its report, and
+  "If it should never be released, withdraw it here." A campaign whose trainee's programme has ended (open, closed or
+  under review) says so as standing content (`Alert` warning, `Role=""`, `#msf-programme-ended`,
+  `MsfCampaignText.ProgrammeEnded`, K14): a release still records the evidence, but the trainee can no longer read it.
+- **The invitees, counted by respondent group, never listed once the campaign has opened** (T217). A `.clinic-table
+  .count-table`, never stacked (two or three narrow columns fit 358px, S13) and with no `.shadow` inside the card, whose
+  caption carries the eye-off icon and what the page never shows (`.anon-caption`, `MsfCampaignText.CountsCaption`): a row
+  header per group by its label, Invited, then Responded only once the campaign has opened (`HasOpened`, T270: a draft, and
+  a draft withdrawn, have no responses), and "All groups" in its `tfoot`, even under one group (K15). Counts are `.num`
+  (right-aligned, tabular figures). On a draft it sits in a `.count-box` with no heading; once opened the box has an
+  `h3` "Invitees by respondent group". Not a row per invitee, even without its address: the coordinator added the rows
+  and knows which is whom, so a responded mark on one row names the author of the comment that has just appeared on the
+  report. A count adds little to the report, which shows the total and a card for each group that clears the threshold;
+  until release it does add the exact count of a group below it, which names nobody (T217 review). A draft that invites
+  nobody says "Nobody has been invited yet." and when the page stops listing anyone; a campaign withdrawn before anyone
+  was invited, "Nobody was invited."
+- **The Links part, while open** (T251; K6–K8, K22), beside the counts in a `.status-split`: an `h3` "Links", then links
+  not delivered as a `warning` `Alert` (`#msf-links-not-delivered`, `Role=""`, standing content until they are resent)
+  with "Resend 2 links" inside it (`#msf-resend-links`, `.alert-row`); a resend's result or refusal under it
+  (`#msf-links-result`); links still being sent as an `info` `Alert` (`#msf-links-being-sent`) saying to reload; and,
+  wherever a link was not delivered or resent, "A link nothing was heard of for an hour counts as not delivered." A number,
+  never a row or an address. Nothing is drawn when every link was sent and nothing was resent, and nothing in any other
+  state.
+- **The actions** (`.status-actions`, over a rule): a draft has Open campaign (primary, mail icon) and Withdraw campaign…;
+  an open campaign "View report" (where it is closed) and Withdraw campaign…; one closed and under review "Review and
+  release" and Withdraw campaign…; a released one "View report"; a withdrawn one has no row. Withdraw is where the
+  campaign list offers it (T206): on every campaign not yet released (`MsfCampaignRules.IsWithdrawable`). Beside a draft's
+  Open, "Opening emails each of the 9 invitees a link to respond, with 2026-10-28 as their last day." Open is unavailable
+  (`aria-disabled`, no handler, its reason in a `.move-reasons` item it names) on a draft that invites nobody ("Open
+  campaign: add at least one invitee first. …", T225) and on one whose trainee is not current ("Open campaign: Pieter du
+  Plessis is no longer in a programme. Withdraw this campaign.", K13; T270, T284).
+- **A draft's addresses** (T247; T270), a card of its own, `h2` "Addresses invited", with a line saying they are listed
+  only while the campaign is a draft: the add form, then "9 addresses" (`h3`) over a list (`ul.invitee-rows`), each item
+  the address typed over its group (`.invitee-address`, `.invitee-group`; a learner's "Learner · Teaching context: Ward
+  round") with Remove… beside it, named "Remove peer-1@example.test (Peer doctor)". A list, not a table, so nothing
+  scrolls sideways at 390. This is not the row per invitee the counts refuse to be: a draft's invitees hold no working
+  link and have given no response. It shows the addresses to whoever runs the campaign, which is accepted (T247 review).
+  Once the campaign opens the card is gone.
+- **The add form** (`.add-form`, `novalidate`; S4): `h3` "Add an invitee", "* marks a field you must fill in.", then
+  Respondent email (`type="email"`, the required mark, `aria-required`), Respondent group (no mark: it always holds a
+  value; the groups the questionnaire accepts in the enum's order, Peer doctor chosen, M2) or, on learner feedback,
+  Teaching context (required, and a line saying every invitee is a Learner), and Add invitee: one row
+  (`.add-invitee`), stacked at 900px and below (S14). Added, the result is "Invitee added." alone (F11), the address is
+  cleared and takes the focus, named by the result, and the group and the context are kept for the next. A blank or
+  malformed address ("Enter the respondent's email address.", "Enter a valid email address, for example
+  name@example.org.", `MsfRespondentAddress`, the command's own rule) and an address already invited are refused under the
+  field (`.validation-message`, `aria-invalid`), the address kept and the focus in it (K5–K5c). On a draft whose trainee is
+  not current the address and the group are natively disabled and Add invitee is unavailable with its reason (K13): nothing
+  can be sent.
+- **About this campaign** (`.msf-facts`, a details list in columns): Trainee, with their training year while current
+  ("Lerato Molefe, training year 4"); Template, with its kind; Thresholds ("5 responses; 3 in a respondent group; 2
+  respondent groups reporting", and on learner feedback that its groups-reporting minimum is fixed at 1, M4); Closed to
+  responses, the South African day; Evidence across the row ("Evidence for PAED-010 and PAED-012", or "for 15 EPAs"), each
+  EPA on a line of its own (`.epa-lines`).
+- **Results and refusals** (BRIEF § 6 A5). A result whose button is gone is at the top of the column, in the page's
+  `ActionResult`, which takes the focus once the action has answered: an open ("Campaign opened; links are being sent.",
+  never that they arrived, T251), a withdraw, and a refusal of an action on a campaign that changed elsewhere ("Not
+  added. …", "Not removed. …"). A refusal whose button stays is a danger `Alert` beside it, its first words what did not
+  happen: "Not opened. …" before Open, where the focus stays for the retry a failed send asks for (K20, T184); "Not
+  withdrawn. …" there too, above the actions (build review D7), the focus back on Withdraw campaign… once the dialog has
+  closed (K21); "Not resent. …"
+  under the warning, the focus left on Resend (K22). A remove's result, done or refused, is above the rows, focused (K4).
+  A handler's own refusal shows in its words; any other failure is "Something went wrong. Nothing has changed. Try again,
+  or come back in a few minutes." and goes to the log (T329). No action is natively disabled (T234): while one is in
+  flight its button says so with `aria-disabled` ("Opening campaign…", "Resending links…") and a second press of any
+  sends nothing.
+- **Withdraw and Remove confirm first** (§ Button system): one `ConfirmDialog` each, Withdraw's "Keep the campaign" /
+  "Withdraw campaign", Remove's "Keep the invitee" / "Remove invitee", worded as the list's (`MsfCampaignText`). For a
+  campaign closed and under review the dialog and the result say its report will never be released and do not mention
+  links or addresses, which closing already removed (T199). The command is sent the state the dialog was worded by
+  (`WithdrawMsfCampaignCommand.ConfirmedState`) and refuses a withdraw confirmed for a draft or open campaign once it has
+  closed (T199 review); the page is read again, so the next dialog asks in the closed campaign's words.
+
+**New MSF campaign** (T369, flow 10, C1–C8, `/msf/campaigns/new`; `NavOwners`: MSF campaigns for the Coordinator). Its h1
+and tab are "New MSF campaign", its subtitle what a campaign is and that creating it makes a draft that emails nobody.
+"* marks a field you must fill in." stands above four `.form-container` cards in a 52rem column (`.msf-form-column`),
+each titled by an `h2.msf-card-title`, some with a muted line (`small`):
+
+- **Questionnaire**: the Template select (each template with its kind, its questions under it as help), which joins the
+  campaign's form by `form="campaign-form"`; the first template is chosen, so a create needs no pick where there is one
+  (3.35). Under it the fold, `details.template-fold` "Write a new questionnaire", outside the campaign's form (S5): Kind
+  (radios), Template name, Scale question and Comment question, and Add template, a `type="button"` with its own handler.
+  The fold is open while no template exists (C1), when the select reads "No template yet" and is natively disabled (the
+  one exception to `aria-disabled` on these forms: a select whose one option is a placeholder offers nothing to choose or
+  to explain; build review D5), and Create
+  campaign is unavailable ("Create campaign: write a questionnaire first.") and is no submit. Added, "Template created.
+  Default MSF is chosen as this campaign's template." takes the focus and the fold closes (C2).
+- **Trainee and window**: Trainee ("Current trainees you can run a campaign for.", `ListMsfCampaignSubjectsQuery`),
+  Opens on, today on the South African calendar ("Today, on the South African calendar.", T325), and Closes on, two weeks
+  later.
+- **Thresholds**: Minimum responses, Minimum responses in a respondent group ("At least 3 for multi-source feedback.",
+  F2: refused below 3 for either kind, "Enter a number from 3 to 100."), and Minimum respondent groups reporting
+  (unavailable at 1 on learner feedback, with its help, M4).
+- **Evidence**: `fieldset.form-group.choice-row.choice-group` (S12), its legend "Evidence for these EPAs" with the
+  mark and the hidden "required", its help, "2 of 15 ticked" (a `role="status"` line), and the boxes in two columns
+  (`.epa-checks`); then Cancel and Create campaign.
+
+A refused create is the refusal summary (M9; § Alerts): `div.validation-summary-errors.error-summary`, `role="alert"`,
+`tabindex="-1"`, "**Not created.** Fix the field below and create the campaign again.", each line a link that moves the
+focus to its field by `PageFocus.FocusByIdAsync` (the EPA group's to its first box, never the legend), and the summary takes
+the focus. A field's own message is under it (`.validation-message`, `aria-invalid`, named by `aria-describedby` after its
+help); the EPA group shows its invalid stripe (`.choice-group.is-invalid`). A handler's refusal is the summary's text. The
+templates and the trainees are read in a try (T329): a failure is the load error with Try again, the circuit stays up (C6).
 
 Nobody runs a campaign about themselves, and nobody who holds Trainee runs one at all (T224, T185's trainee rung;
 `MsfCampaignRules.IsKeptFromCampaignsAbout`). The create form's Trainee picker never offers the caller. It offers
@@ -2063,9 +2130,9 @@ released trainee's copy, on their own page (T269, below).
 Someone who holds Trainee is told so, whatever role brought them there (`MsfCampaignRules.RunsNoCampaigns`; § A row
 the caller cannot change). The campaign list and the campaign page open with a standing `Alert` (`Kind="warning"`,
 `Role=""`, `#msf-runs-no-campaigns`) in the words a create refusal gives (`MsfCampaignRules.TraineeRunsNoCampaigns`).
-The list then offers no "New campaign" and no empty card, and asks for nothing. The campaign page shows no create card
-and lists no trainee; on a campaign's own page the alert sits above its "Campaign unavailable" card. The create page
-shows them no Quick template card either, and reads no template list: creating a template is running campaigns, and the
+The list then offers no "New campaign" and no empty card, and asks for nothing. New MSF campaign shows them no form and
+lists no trainee; on a campaign's own page the alert sits above its "Campaign unavailable" card. New MSF campaign shows
+them no Questionnaire card either, and reads no template list: creating a template is running campaigns, and the
 template command refuses them in the alert's words (`MsfCampaignRules.EnsureRunsCampaigns`, T248; until then the card
 stayed, since a template is about no trainee, and the command took no caller to refuse). A Coordinator at no
 institution (an Administrator can add the role to such an account) runs no campaign either
@@ -2117,34 +2184,88 @@ every state:
 A draft has no responses to report and a withdrawn campaign is never released, so neither row links to a report, as
 the campaign page offers none there. Each link's `aria-label` starts with its visible label and names the row
 ("Manage: the campaign for Sipho Dlamini (Annual MSF, closing 2029-03-21)", `MsfCampaignText.RowLinkName`), as the row's
-Withdraw button does (T206).
+Withdraw… button does ("Withdraw: the campaign for …", T206); where two rows would read the same, `RowNames.Distinct`
+adds the state (T280).
 
-**The MSF report page** (`/msf/reports/{id}`) names each respondent group by its label ("Peer doctor", never
-"PeerDoctor"), as its card headings, as the trainee's copy (`/msf/my-reports`) and as the portfolio PDF print it
-(`MsfRespondentCategories.Describe`, T225). Close campaign and Release to trainee put their result in an
-`.action-result` region above the report, which takes the focus when the button that acted is gone, as on the campaign
-page; a load failure is the `StatePanel`'s, including a read that fails after an action that was taken, and a refusal
-never replaces the report. Neither can be sent twice at once, and neither is disabled while it runs (T225 review, as Add
-invitee): the page refuses the second press, and the button pressed keeps the focus, so a refusal that leaves it (a
-close refused on a campaign still open, a release refused on one still ready) leaves the focus on it for the retry.
-Release to trainee is disabled only on a report not ready for release; a refused release that finds it no longer ready
-moves the focus to the result. The warning that says why (a campaign under review short of responses or groups) is
-standing content (`Role=""`) and ends "If it should never be released, withdraw it on its campaign page.", the last
-words a link to `/msf/campaigns/{id}` (`#msf-withdraw-elsewhere`), where Withdraw is (T199 review). A release whose save
-a withdraw from another tab beat is refused in `ReleaseMsfCampaignCommandHandler.CampaignChanged`'s words, never EF's
-row counts; the report read again shows the campaign withdrawn, with no form (T199 review). After a refused close or release the report is read again, keeping the narrative and
-level typed, so a refusal names no other page: "If it is still open, close it again."
-(`CloseMsfCampaignCommandHandler.CampaignChanged`, worded as T217's open and withdraw refusals). Only an open campaign
-closes (T246): a report loaded while the campaign was open still offers Close after another tab or the auto-close job
-has closed it, and that close is refused in the campaign's words ("Only open campaigns can be closed.",
-`MsfCampaign.OnlyOpenCanBeClosed`), as the campaign page's refused open is (T217). Its close date stands, since it
-places the campaign's semester, committee window and evidence date. The report read again shows it as it is now, Close
-is gone, and the refusal takes the focus. A refused close or release is shown through `RefusalText.Of`. The Coordinator
-actions card holds the narrative and level fields only while the campaign can still be closed or released (Open, Under
-review). Otherwise (released, withdrawn, a draft) it shows them as stored, as `<p><strong>Narrative:</strong> …</p>` and
-the level by its rung's label ("Not given", "Not stated" when empty), with no form (T246 review): a tab that typed a
-narrative and then found the campaign released elsewhere kept its own text in an editable box beside "State: Released",
-where the narrative the trainee was given belonged.
+**The MSF campaign list** (T369, flow 10, L1–L9): its header's actions are New campaign (primary, plus icon) then MSF
+coverage, stacked full width at 390 (`.msf-header`). Its `h2` is "Campaigns (2)", a plain count, over a
+hand-written table with both stack classes, stacked at 900px and below (T323; build review D2: as a `DataTable` `Stack`
+its seven columns split names from 641 to 900px), captioned "MSF campaigns, newest first. Counted by respondent group: this list never shows who was
+invited or who responded.", newest first by creation (M1): Trainee (the row header, `.trainee-cell`, a name alone),
+Template over its kind (`.kind-line`), State (a badge), Invitations, Responses ("—" until the campaign has opened,
+`HasOpened`, T270), Closes (`.nowrap`), and the row's actions in `div.actions-cell`, a column of 44px buttons at 390
+(A.7.5). Withdraw… confirms in the page's `ConfirmDialog` ("Keep the campaign" / "Withdraw campaign"); its result (its first sentence bold, as on the campaign page; L4,
+build review D11), or "Not withdrawn. …", takes the focus at the top. Loading is the section's heading over skeleton rows ("Loading MSF
+campaigns."); a failed read is "Could not load MSF campaigns. …" with Try again (T329).
+
+**The MSF report page** (`/msf/reports/{id}`; T369, flow 10, round 3's R boards). One column at the report's measure
+(`.msf-page .msf-page--measure`), in this order: the status card, the groups, the release section, then what was released.
+Its words are `MsfReportText`'s; every date ISO and every moment "2026-10-14 16:34 SAST" (T325).
+
+- **Header.** "MSF report for Lerato Molefe" (h1, tab and crumb), the subtitle "Default MSF · Multi-source feedback ·
+  2026-10-14 to 2026-10-28", and "Open its campaign page" alone on its line under it (`.review-progress-link`, 24px, 44px
+  at 390; F9). Loading and failed it reads "MSF report"; an unknown or out-of-scope id is "Report unavailable", "The
+  selected report could not be loaded." and an outline "Go to MSF campaigns". A failed read is the fixed sentence "Could
+  not load this report. Nothing has changed. Try again, or come back in a few minutes." with Try again, never the
+  exception's text (T329).
+- **The status card** (`.status-card` on `.detail-card` with the activity page's stripe, by class only: `--emphasis` on
+  Draft and Under review, `activity-status--others` while Open, `--done` Released, `--declined` Withdrawn; F7, M8). Its
+  badge (`BadgeFor.MsfCampaign`) and its line as the card's h2 ("Still taking responses, until 2026-10-28.", "Ready to
+  release: every threshold is met.", "Not ready to release.", "The report has been released to the trainee."). Then:
+  - while Draft or Open, "The responses are read once the campaign has closed and every address has been removed." and
+    **no group's results** (F1). The handler sends none before the campaign has closed, for every reader
+    (`MsfAggregationService`), so the page cannot show them; the counts still say how far it is;
+  - once closed by the hourly job (`ClosedByUserId` null), "Closed by itself on 2026-10-29, once 2026-10-28 had passed."
+    (F5);
+  - the threshold checklist (`.threshold-list`): "3 responses, of the 5 needed.", "0 respondent groups reporting, of the 2
+    needed.", each `.is-met` or `.is-short` with its mark, then the rule line (`.is-rule`), "A respondent group reports
+    once 3 of it have responded; a group with fewer is suppressed." Released, R7's one-liner (`.report-line`) in its place:
+    "2026-10-14 16:34 SAST · 8 responses, with 5 needed · 2 respondent groups reporting, with 2 needed", the separators
+    `aria-hidden`;
+  - learner feedback's "Teaching contexts that responded: 2 (Student tutorial, Ward round)", named only here (T164);
+  - "Evidence for" (h3), each EPA "PAED-010 — …"; before release, an EPA the release would drop
+    (`MsfCoveredEpaDto.WillBeRecorded`, the release's own predicate; M6) is named, "PAED-012 is no longer on Lerato Molefe's
+    curriculum and will not be recorded." (the trainee named, never a pronoun, in every MSF sentence: T369, D3); released, "…: not recorded" after an EPA whose record was not written, and "Recorded on the
+    portfolio: …". A campaign naming no EPA says so;
+  - while Open, the actions over a rule: **Close campaign…** (outline) and "Release is offered once the campaign has
+    closed. It closes by itself once 2026-10-28 has passed; close it sooner here.";
+  - once the trainee's programme has ended, a standing warning under the line (`MsfCampaignText.ProgrammeEnded`).
+- **By respondent group** (h2, once closed): "As Lerato Molefe will read it once released." ("reads it" once released,
+  "would have read it" once her programme has ended, M5) and the rating scale's note; the groups' cards
+  (`MsfGroupCards`, in the enum's order, Consultant above Nurse, M2): "Consultant · 4.33 average rating, from 3 responses",
+  the question once, the comments verbatim; then the suppressed line, named and never counted: "Suppressed: Peer doctor,
+  Allied health professional. Fewer than 3 responses each, so their ratings and comments are not shown here. Lerato
+  Molefe sees nothing of them, not even that they answered." (the last sentence dropped once released).
+- **The release section**, last, while under review (`.release-section`, `--emphasis`): "Release to Lerato Molefe" (h2);
+  the check line (`.submit-check`) "When you release:" with who reads it, the evidence records it writes ("2 evidence
+  records are written to Lerato Molefe's portfolio, for PAED-010 and PAED-012."; the line drops for a campaign naming no
+  EPA), the mail ("Lerato Molefe is sent an email saying a report has been released, with a link to MSF reports.", or
+  "No email is sent: Lerato Molefe can no longer open MSF reports." once the programme has ended, F4), and "It cannot be undone.";
+  the narrative with its counter (§ Form system); the level (`.msf-narrow-field`), only for an MSF; then over a rule
+  (`.release-actions`) **Release to trainee…** (outline; the dialog's button is the primary) with "If it should never be
+  released, withdraw it on its campaign page." its last words a 24px inline link (`.msf-inline-link`, S15). A release not
+  ready is `aria-disabled` with `.is-unavailable`, its reason beside it in `.move-reasons` and named by
+  `aria-describedby`: "Release to trainee: Release needs 5 responses; 1 has come back. If it should never be released,
+  withdraw it on its campaign page." The groups' reason ends with the same link (round 3 check item 2).
+- **As released** (h2, released): the narrative and the level as they were given (`dl.stored`), in no field (T246 review).
+- **Close and Release confirm** through `ConfirmDialog`, rendered inside the page's column so the phone rules reach them
+  (M10). Close is danger, since it destroys (the unused links stop and every address goes): "Close this campaign now?",
+  "Close the campaign for Lerato Molefe (Default MSF, closing 2026-10-28) before its last day?", the unused links (the
+  invited less the responses, a count and never whose), the addresses removed, the responses kept, "Closing cannot be
+  undone.", Keep it open / Close campaign. Release is primary (F8): "Release this report to Lerato Molefe?", who reads
+  what (the groups shown by name), the records it writes and any it drops, the level, the mail line (or F4's), "Releasing
+  cannot be undone: …", Not yet / Release to Lerato Molefe.
+- **Results.** Close's result, "Campaign closed and anonymised for review. Every respondent's email address has been
+  removed.", and Release's, "Report released to Lerato Molefe.", head the page in an `ActionResult` and take the focus
+  once the dialog has closed. Either action reads the report again, done or refused (T225), keeping the narrative and
+  level typed. A refusal sits beside the button that sent it while that button is still there, a danger `Alert` with the
+  focus back on the button: "Not closed. …" in the status card's actions (R16), "Not released. … It is still Under
+  review." above Release (R17). Once the report read again no longer offers that button (closed, released or withdrawn
+  elsewhere, T246), the refusal heads the page instead and takes the focus. A handler's own refusal shows in its words
+  (`RefusalText.Of`); anything else is a fixed sentence and goes to the log. Neither action can be sent twice at once.
+- **The release mail** (round 1 Q8): sent after the release's save through `AccountNotices`, only while the trainee is
+  current (F4), naming the questionnaire, the day and the releaser, with a link to MSF reports and none of the feedback
+  (`MsfReportReleasedEmail`). A failed send never fails the release.
 
 The campaign's own subject never reads the report on this page (T269). A trainee who also coordinates, or an
 Administrator who is the subject, is admitted to it by role, and the handler admits the subject to the released report.
@@ -2172,6 +2293,28 @@ and the report print too. Its badge is `BadgeFor.MsfCampaign`:
 | Released | `badge-completed` |
 | Withdrawn | `badge-declined` |
 
+**Her MSF reports** (`/msf/my-reports`, `MyMsfReports.razor`; rewritten 2026-10-15, T369, flow 10, boards R3-M1 to
+M11). The list only: "Your released reports", a hand-written table with both stack classes (stacked at 900px and below),
+captioned "Your released MSF reports, newest first", `scope="col"` on its headers: Report (the row's header, the
+template over its kind, `.kind-line`), Released ("2026-10-14 16:34 SAST", `.nowrap`) and View, an outline small link
+named for its row ("View the Default MSF report, released 2026-10-14"; `RowNames.Distinct` where two would match). No
+Responses column (F3): `ListMsfCampaignsForTraineeQuery` returns `MsfReleasedReportDto`, which carries no count, since
+the campaign's total took in the suppressed groups. None: "No released reports". Loading: the section's heading, a status
+line and skeletons; a failed read fixed words with Try again (T329).
+
+**Her report** (`/msf/my-reports/{id}`, `MyMsfReport.razor`, S6) is a page of its own under MSF reports (the owner table):
+its h1, tab and crumb "{template}, released {yyyy-MM-dd}", its subtitle "{kind} · Released {SAST}". One column at the
+reading measure (`.my-report`, 52rem): Narrative (`.narrative`, its line breaks kept), What your colleagues said (the
+intro "Grouped by respondent role; no one is named." with the rating scale's note, then `MsfGroupCards` with
+`ForTrainee`: each shown group and its average, no count, T249; for learner feedback "Teaching contexts that responded:
+n", never their names, T164), On your portfolio ("Recorded as evidence on {SAST}:" and each recorded EPA a link to its
+page under My progress, `ul.portfolio-links`; an EPA not recorded is left out; none recorded, or none named, reads "This
+report records no evidence on your portfolio."). It shows a report only when the handler marks the copy hers
+(`IsSubjectsCopy`) and it is Released. Any other id, not hers, not released or unknown, sends her to her list, replacing
+the address in the history, where one info alert above the list says "That report could not be found. Your released
+reports are listed below." and takes the focus as the page loads (`/msf/my-reports?unavailable=true`, M11); a failed read
+is the load error with Try again, never that alert (M10). While loading or failed the header reads "MSF report".
+
 **The trainee's copies of a released report** (`/msf/my-reports` and the portfolio PDF's feedback section,
 `MsfSectionComponent`) print nothing of a respondent group below the category threshold: not its label, its answers or
 its own count (T249). The PDF used to print "Nurse: 1 responses" above "Below minimum threshold", an exact count under a
@@ -2181,12 +2324,15 @@ is the campaign's category threshold. The line explains why the printed groups a
 names none of them. A count of one is singular: "1 response", "(1 rating)", and every number prints the same on any
 host (invariant culture, so an export is the same bytes, T078).
 
-The two copies differ in one respect. The web copy prints the total (in its list) and no group's count. The PDF prints
+The two copies differ in one respect. The web copy prints no count at all: no total since T369's F3 dropped her list's
+Responses column, and no group's count. The PDF prints
 the total and each printed group's count ("Consultant: 3 responses"), and a required rating's "(3 ratings)" is the same
 figure. So the total less the printed counts is the hidden groups' count together, and with one hidden group it is that
 group's own; if the template allows only one other group, it also says which. That says at most who took part, never
 what anyone answered, and it is accepted, as the campaign page accepts it for the coordinator (T217 review above) (T249
-review). Dropping the group and rating counts from the PDF would match the web copy exactly; that is the operator's
+review). The PDF prints a question's prompt as a label, ": " after it only when the prompt does not already end a sentence
+(`MsfSectionComponent.Labelled`, T369, T270: never "performance.: Avg 4.0"). Dropping the group and rating counts from the
+PDF would match the web copy exactly; that is the operator's
 call, not made here, since T249 asked for the counts to be kept and pluralised. The coordinator's report page is not
 changed: it still shows a suppressed group's card, without its answers.
 
@@ -3018,7 +3164,8 @@ flow 01). Its nav label, its heading, its breadcrumb and its tab are the same wo
   "Activity type"), never nothing. An activity's page is named for its type ("Mini-CEX (Paediatrics) · Wombat").
 - **The title rule** (T361, flow 07): a record page's h1 names its subject, "Lerato Molefe · 2026 S2" on a committee
   review (tab "Lerato Molefe · 2026 S2 · Wombat"), and says what the page is, "Committee review", while it loads or when
-  its read failed. Its subtitle carries the rest ("Annual progression review · Paed Annual Review Panel · Training year
+  its read failed. An MSF campaign's page is "MSF campaign for Lerato Molefe" ("MSF campaign" while it loads), and the
+  create page "New MSF campaign" (T369). Its subtitle carries the rest ("Annual progression review · Paed Annual Review Panel · Training year
   4"), and on the committee review, for the four roles flow 06's registrar page admits, "Lerato Molefe's progress" under
   it, a link alone on its line (`.review-progress-link`, `PageHeader`'s `SubtitleContent`).
 - **After a refused post the title starts "Error: "** (WCAG technique G88): the change password page, the MSF respondent
@@ -3185,6 +3332,9 @@ yours to act on." · "This inbox holds work that assessors rate, discuss or revi
 are under My activities, in Needs you." with Open My activities. Unchanged by T350 but for the subtitle. Anyone holding
 another role gets the two sections.
 
+**Which MSF tables stack** (T369, S13): the campaign list and her list of reports, both written by hand with both stack
+classes, so at 900px and below (build review D2); the count tables on the campaign page and the report never, since two or three narrow columns fit 358px.
+
 **The stacked table** (`.clinic-table--stack`, `DataTable`'s `Stack`; T342, A8). Below 641px each row is a block of its
 cells, one under another. The `thead` stays in the table, visually hidden (never `display: none`), so a screen reader
 still has each cell's column; the table, row groups, rows, headers and cells carry explicit roles (`table`, `rowgroup`,
@@ -3237,14 +3387,12 @@ what was asked, and Clear filters; an empty list draws no form.
 </div>
 ```
 
-A details grid whose second card comes and goes with the page's state can give a lone card the whole row:
-`.details-grid--lone-spans` (`> .detail-card:only-child` spans `1 / -1`, T266). The grid's first column is its narrow
-third, so a lone card sat there with the rest of the row empty: the MSF campaign page, whose Quick template card is only
-on the create page, showed a campaign's card 223px wide at 1000px, in a 694px row, with its invitees table scrolling 143px
-inside it. It is the only page that asks. It is opt-in (T266 review): on a grid of like cards (My authorisations' STARs,
-which since T366 are a `.star-grid`, equal columns, one at 390 and as many as fit at 768 and 1280, not a details grid)
-one card should look like each of several; on My MSF reports the list would jump from the whole row to a third of it
-when a report is selected. (The rule that a lone trajectory chart scales with its card is withdrawn: since T355 the chart
+A details grid's lone card keeps the grid's first column. Until T369 a page could opt into giving it the whole row,
+`.details-grid--lone-spans` (T266), for the MSF campaign page, whose Quick template card was only on the create page and
+whose campaign card sat 223px wide at 1000px with its invitees table scrolling inside it. T369 made that page a column of
+cards (`.msf-page`), no page asked any more, and the modifier was deleted (build review D8). Do not stretch a lone card on
+every grid: on a grid of like cards one card should look like each of several (My authorisations' STARs, a `.star-grid`
+since T366). (The rule that a lone trajectory chart scales with its card is withdrawn: since T355 the chart
 is drawn at two fixed sizes and never scaled, § Entrustment standing, and the trajectory.)
 
 **The committee review has no details-grid** (T361, flow 07): one column (`.review-page`, a flex column), the sitting bar
@@ -4113,13 +4261,14 @@ in or not:
 @attribute [RequireAntiforgeryToken(required: false)]  @* the link is the post's authority *@
 @layout Layout.AuthLayout
 
-<PageTitle>@PageTitleText · Wombat</PageTitle>          @* one per state, its <h2>'s words; "Error: …" after a refused post *@
-<div class="account-form-container account-form-container--wide shadow">
-  brand lockup, <h2>, the state's Alert
+<PageTitle>@PageTitleText · Wombat</PageTitle>          @* one per state, its <h1>'s words; "Error: …" after a refused post *@
+<div class="account-form-container account-form-container--wide respond-card">
+  brand lockup (the mark at 44px), <h1> (no tabindex), the state's Alert, "You can close this page."
+  … the questionnaire's state: .respond-meta, its sentence, "Who sees your feedback" (.respond-privacy, role="group") …
   <div id="msf-error" class="error-summary" tabindex="-1" autofocus>  @* only after a refused post *@
-    <Alert Kind="danger" Role="alert">…</Alert>
+    <Alert Kind="danger" Role="alert"><strong>Your feedback was not recorded.</strong> …</Alert>
   </div>
-  <form method="post" @formname="…" @onsubmit="…" data-submit-once>
+  <form class="respond-form" method="post" @formname="…" @onsubmit="…" data-submit-once>
     … fields, only while the questionnaire is shown …
   </form>
 </div>
@@ -4137,8 +4286,22 @@ in or not:
 - `data-submit-once` (`wombat.js`) drops a second submit while the first is on its way: the link takes one response.
 - A refusal is the page's own state, with the status the Api would answer (`MsfResponseRefusals.Describe`), set as the
   response starts: .NET 10 writes no body for a page that ends its render at 404.
-- Every state has its own `<PageTitle>`, its `<h2>` in the same words ("Feedback link expired · Wombat", "Thank you ·
-  Wombat", "Feedback on Nomsa Mahlangu · Wombat"; T190), and a refused post's starts "Error:". A refused post
+- Every state has its own `<PageTitle>`, its `<h1>` in the same words ("Feedback link expired · Wombat", "Thank you ·
+  Wombat", "Feedback on Nomsa Mahlangu · Wombat"; T190), and a refused post's starts "Error:". The card's heading is the
+  page's one `<h1>` in every state, with no `tabindex`: nothing moves the focus to it (T369, flow 10, T280). Each state's
+  `Alert` sits under it (S9): success for Thank you, info for a link already used, warning for a closed request and an
+  expired, revoked or unrecognised link, danger for the fault; every state but the questionnaire and Thank you ends "You
+  can close this page.".
+- The questionnaire (Q1): "{template} · Last day to respond: {date}" (`.respond-meta`; the last day on the South African
+  calendar, `MsfCampaignRules.GetActiveInvitationByTokenAsync` judging "today" by `ProgrammeCalendar.DateOf`, T325), the
+  sentence saying what is asked, then "Who sees your feedback" (`.respond-privacy`, `role="group"` named by its title,
+  two lines with their icons) before the first question. In the form (`.respond-form`): "Questions marked * must be
+  answered." when one is; each rating a `fieldset.form-group` whose legend is the question, the required mark
+  (`.required-mark`, `aria-hidden`) and a visually hidden "required", its help a `page-subtitle` naming it by
+  `aria-describedby`; each point a 44px row tinted by `:has(:checked)` alone (a frame in forced colours); a comment's
+  label `.respond-label`, "(optional)" when it is, its help "Up to 4,000 characters. …" (no counter: the page carries no
+  script; no `maxlength`, which would cut a paste silently: a longer comment is refused, "… is longer than 4,000
+  characters. Please shorten it.", build review D4); Submit feedback last. A refused post
   reloads the whole page, so its summary is an `.error-summary` that takes the focus as the page loads
   (`tabindex="-1"` + `autofocus`), and the question the refusal names points at it: the rating's
   fieldset with `aria-describedby`, a comment box with `aria-invalid`, `.input-validation-error` and
@@ -4155,6 +4318,9 @@ in or not:
 
 ```css
 .account-form-container--wide  /* 44rem card for a questionnaire; less padding at ≤640px */
+.respond-card                  /* on the wide card: a column, 16px between blocks, the mark at 44px (T369) */
+.respond-meta, .respond-privacy, .respond-privacy-title, .respond-privacy-list, .respond-form, .respond-label,
+.respond-optional, .respond-required  /* the questionnaire's parts (T369, flow 10, R3-Q1) */
 .error-summary                 /* a refused post's summary, focused on load; a focus ring when focused (T205) */
 ```
 
@@ -4345,6 +4511,12 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
 "Flow 09: her review (T366)": .detail-list dd .badge (inside .my-review-page and .my-authorisations, D12), .decision-history, .decision-record p, .decision-replaced, .decision-note, .appeal-list, .appeal-entry(-head|-meta|-outcome|-label|-reason|-reason--clamped|-more), .appeals-who, .appeal-closed, .lodge-block, .lodge-next (+ ≤640px: .my-reviews-list's View 44px; inside .my-review-page, the form's buttons 44px and full width; .appeal-entry-more 44px)
 "Flow 09: the committee's appeal (T366)": .review-appeals spacing after .appeal-list, .resolve-form (48rem; .form-grid one column), .check-grid.resolve-outcomes (one column), the refusal after .decision-actions (no phone rule: flow 07's .decision-actions and .review-page .check-grid give the 44px targets)
 "Flow 09: the STARs (T366)": .stars-section, .star-grid, .star-card, .star-rationale, .download-result, .issued-review, .clinic-table .has-note, .clinic-table .history-note (flow 03's note row, generalised; + ≤900px: the line joins its stacked row, its cell unpadded, D4; ≤640px, inside .my-authorisations and .entrustment-list: 44px buttons, a failed download's Try again among them (D7), and Issued's link, the cards' Download full width)
+
+/* ── The MSF campaign ───────────────────────────── */
+"Flow 10: the MSF pages, shared (T369)": .msf-page, .msf-page--measure, .section-title(--h3), .msf-stack-card, .msf-centre, .status-card, .status-head, .status-line, .status-note, .status-actions, .trainee-cell, .kind-line, .nowrap, .msf-inline-link, .msf-page dialog .dialog-body ul (+ ≤640px: .msf-header's actions stacked, 44px, full width; .msf-page buttons 44px; the status actions stacked; .msf-page td .actions-cell, a stacked list's row actions, a full-width column, written once here, D9; a dialog's buttons stacked, the action on top, M10; ≤900px: .msf-page .clinic-table--stack-wide td .actions-cell .btn 44px, D2)
+"Flow 10: the report (T369)": .threshold-list (.is-met, .is-short, .is-rule), .report-line, .sep, .group-card, .group-avg, .group-question, .group-comments, .groups-intro, .suppressed-line, .release-section, .release-actions, .msf-narrow-field, .stored (+ the report's uses of .section-title, .submit-check, .move-reasons, .alert inside .msf-page)
+"Flow 10: the campaign (T369)": .msf-gap-top, .msf-block, .status-split, .count-box, .count-table caption/th/tfoot, .anon-caption, .num, .links-part, .invitee-rows, .invitee-row, .invitee-address, .invitee-group, .add-form, .add-invitee (≤900px: one column, S14), .msf-facts, .msf-facts-wide, .msf-facts .epa-lines, .msf-form-column, .msf-card-title, .template-fold, .template-form, .choice-stack, .epa-checks (+ ≤640px, inside .msf-page: 44px controls, .form-actions stacked, the add form's button full width, the fold's summary and the boxes 44px)
+"Flow 10: her reports, the respondent and coverage (T369)": .msf-measure, .my-report, .narrative, .portfolio-links, .respond-card, .account-brand(-mark), .respond-meta, .respond-privacy(-title, -list), .respond-form, .respond-label, .respond-optional, .respond-required, .coverage-windows, .coverage-programme, .coverage-table, .is-covered (+ /msf/respond's .error-summary, .scale-choices, .form-check inside .respond-card)
 ```
 
 The Progress section replaced the Trajectory chart section that held T123's chart (2026-10-04, T355): every flow 05

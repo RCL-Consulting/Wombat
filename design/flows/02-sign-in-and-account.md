@@ -533,8 +533,8 @@ Do: Open the sign-out confirmation by its address and press Cancel. Type `/accou
 Expect: A "Sign out" page, with no nav: "You are signed in as Pieter Smit (smit@kgk.wombat.local). Signing out ends
   your session in this browser.", with Cancel and Sign out. Cancel returns him to his dashboard, still signed in. A
   typed GET /account/logout draws the same page and signs nobody out (T317). Sign out lands on the sign-in page with
-  "You have signed out." MSF campaigns then asks him to sign in, and after signing in he is brought back to it. The
-  audit log records a Logout.
+  "You have signed out." MSF campaigns then asks him to sign in, and after signing in he is brought back to it, the
+  list as Step 3.46 left it (Pieter du Plessis's Withdrawn, Dr Molefe's Released). The audit log records a Logout.
 
 Step A.6.5 — Dr Patel's session ends, and he cannot sign in (appendix-cross-cutting.md:1043)
 Role: Assessor — Dr Mohammed Patel
@@ -560,7 +560,7 @@ Expect: The tab leaves for the sign-in page by itself, which says "Your session 
   information notice. Signing in is refused in the words an unknown address gets, "Invalid email or password.", with
   no mention of an erasure (T156). No email is sent to him.
 
-Step A.7.12 — The anonymous pages on a phone (appendix-cross-cutting.md:1453)
+Step A.7.12 — The anonymous pages on a phone (appendix-cross-cutting.md:1454)
 Role: Anonymous — a verifier
 Route: /account/login → /account/forgot-password → /portfolio/verify
 Do: At 390 px, open the sign-in page and the forgot-password page. Then verify Dr Molefe's portfolio PDF from Act 5 by
@@ -568,7 +568,7 @@ Do: At 390 px, open the sign-in page and the forgot-password page. Then verify D
 Expect: The sign-in card fits the width. Every field, toggle, button and link on the sign-in and forgot pages is
   44 px tall; Sign in is full width; the h1 is 1.5rem. The verify page's result fits the width.
 
-Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1500)
+Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1501)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /account/login → / → /account/profile → /account/profile/submit → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: With a contrast checker (axe, or the browser's accessibility audit), check each pair below:

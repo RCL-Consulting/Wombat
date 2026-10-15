@@ -33,7 +33,10 @@
 
 <PageTitle>@PageTitleText · Wombat</PageTitle>
 
-<div class="account-form-container account-form-container--wide shadow">
+@* T369 (flow 10, boards R3-Q1 to Q9; round 3 S9, T280): the card's heading is its one <h1> in every state, with no tabindex
+   (nothing moves the focus to it); each state's Alert under it (success thank you, info used, warning closed, expired,
+   revoked and not recognised, danger the fault); "Who sees your feedback" before the rating; the mark at 44px. *@
+<div class="account-form-container account-form-container--wide respond-card">
   <div class="account-brand">
     <img class="account-brand-mark" src="/brand/wombat-mark.svg" alt="" width="44" height="44" />
     <span class="account-brand-text">Wombat</span>
@@ -41,21 +44,22 @@
 
   @if (_fault)
   {
-    <h2>Something went wrong</h2>
+    <h1>Something went wrong</h1>
     <Alert Kind="danger" Role="alert">
       Something went wrong on our side, and this page could not be shown. Please try again in a few minutes. If you had
       submitted the form, opening your link again will say whether your feedback was recorded.
     </Alert>
+    <p>You can close this page.</p>
   }
   else if (_refusal is not null)
   {
-    <h2>@MsfResponseRefusals.Describe(_refusal.Reason).Title</h2>
-    <Alert Kind="warning" Role="alert">@_refusal.Message</Alert>
-    <p class="page-subtitle">You can close this page.</p>
+    <h1>@MsfResponseRefusals.Describe(_refusal.Reason).Title</h1>
+    <Alert Kind="@RefusalKind(_refusal.Reason)" Role="alert">@_refusal.Message</Alert>
+    <p>You can close this page.</p>
   }
   else if (_submitted)
   {
-    <h2>Thank you</h2>
+    <h1>Thank you</h1>
     <Alert Kind="success" Role="status">Your feedback on @FeedbackSubject has been recorded.</Alert>
     <p>
       The link in your invitation has now been used, so it will not open the questionnaire again. You can close this
@@ -64,48 +68,32 @@
   }
   else if (_form is not null)
   {
-    <h2>Feedback on @FeedbackSubject</h2>
-    <p class="page-subtitle">
-      @_form.TemplateName · Last day to respond: <strong>@_form.LastDayToRespond.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)</strong>
-    </p>
+    <h1>Feedback on @FeedbackSubject</h1>
+    <p class="respond-meta">@MetaLine</p>
     @if (IsLearnerFeedback)
     {
-      <p>
-        You have been asked to give feedback on the teaching of @TraineeLabel, a trainee who has taught you. Your name
-        and email address are never shown to @TraineeLabel. They see the feedback only after the request has closed and
-        a coordinator has reviewed and released it, together with the other learners' feedback.
-      </p>
+      <p>You have been asked to give feedback on the teaching of @TraineeLabel, a trainee who has taught you.</p>
     }
     else
     {
-      <p>
-        You have been asked to give multi-source feedback on @TraineeLabel, a trainee you have worked with. Your name and
-        email address are never shown to @TraineeLabel. They see the feedback only after the request has closed and a
-        coordinator has reviewed and released it, grouped by respondent role.
-      </p>
+      <p>You have been asked to give multi-source feedback on @TraineeLabel, a trainee you have worked with.</p>
     }
-    @if (_form.Questions.Any(question => question.Type == MsfQuestionType.Scale))
-    {
-      if (IsLearnerFeedback)
-      {
-        <p>For each rating, think of the teaching you had from @TraineeLabel.</p>
-      }
-      else
-      {
-        <p>For each rating, compare @TraineeLabel with what you would expect of a trainee at their stage of training.</p>
-      }
-    }
-    @if (_form.Questions.Any(question => question.Required))
-    {
-      <p class="page-subtitle">Questions marked * must be answered.</p>
-    }
+
+    @* What the invitation email promises, and no more (T202): set apart, before the first question (Q1). *@
+    <div class="respond-privacy" role="group" aria-labelledby="@PrivacyTitleId">
+      <p id="@PrivacyTitleId" class="respond-privacy-title">Who sees your feedback</p>
+      <ul class="respond-privacy-list">
+        <li><Icon Name="eye-off" /><span>@NeverShownText</span></li>
+        <li><Icon Name="users" /><span>@WhenSeenText</span></li>
+      </ul>
+    </div>
 
     @if (_submitError is not null)
     {
       @* A refused submit is a full page load, and a screen reader starts a new page at its top, where an alert present
          from the first paint is often not announced. So the summary takes the focus as the page loads. *@
       <div id="@ErrorSummaryId" class="error-summary" tabindex="-1" autofocus>
-        <Alert Kind="danger" Role="alert">@_submitError</Alert>
+        <Alert Kind="danger" Role="alert"><strong>Your feedback was not recorded.</strong> @_submitError</Alert>
       </div>
     }
   }
@@ -113,72 +101,69 @@
   @* Always in the tree, even when it holds nothing (then hidden). A post names this form, and Blazor answers a post whose
      form is not on the page with a bare 400 in place of the page. A link can die between loading the questionnaire and
      submitting it (the campaign closes, the day passes), and the respondent must then be told so, on this page. *@
-  <form method="post" @formname="@FormName" @onsubmit="SubmitAsync" data-submit-once hidden="@(!ShowsQuestionnaire)">
+  <form class="respond-form" method="post" @formname="@FormName" @onsubmit="SubmitAsync" data-submit-once hidden="@(!ShowsQuestionnaire)">
     @if (ShowsQuestionnaire)
     {
-      <div class="form-grid">
-        @foreach (var question in _form!.Questions)
-        {
-          var questionId = question.QuestionId;
-          if (question.Type == MsfQuestionType.Scale)
-          {
-            <fieldset class="form-group full-width" aria-describedby="@(IsAtFault(questionId) ? ErrorSummaryId : null)">
-              <legend>
-                @question.Prompt
-                @if (question.Required)
-                {
-                  <span aria-hidden="true">*</span>
-                  <span class="visually-hidden">required</span>
-                }
-              </legend>
-              <div class="scale-choices">
-                @foreach (var point in question.ScalePoints)
-                {
-                  var value = point.Value;
-                  var inputId = $"msf-q{questionId}-{value}";
-                  <div class="form-check">
-                    <input id="@inputId"
-                           class="form-check-input"
-                           type="radio"
-                           name="@ScaleFieldName(questionId)"
-                           value="@value"
-                           checked="@IsChosen(questionId, value)"
-                           required="@question.Required"
-                           @onchange="() => Choose(questionId, value)" />
-                    <label for="@inputId">
-                      @point.Label
-                      @if (!string.IsNullOrWhiteSpace(point.Description))
-                      {
-                        <small class="page-subtitle">@point.Description</small>
-                      }
-                    </label>
-                  </div>
-                }
-              </div>
-            </fieldset>
-          }
-          else
-          {
-            var inputId = $"msf-q{questionId}";
-            <FormField Label="@question.Prompt" InputId="@inputId" Required="@question.Required" FullWidth="true"
-                       HelpText="@CommentHelpText">
-              <textarea id="@inputId"
-                        class="@(IsAtFault(questionId) ? "form-control input-validation-error" : "form-control")"
-                        name="@CommentFieldName(questionId)"
-                        rows="5"
-                        maxlength="@MsfResponseAnswer.LongTextMaxLength"
-                        required="@question.Required"
-                        aria-invalid="@(IsAtFault(questionId) ? "true" : null)"
-                        aria-describedby="@CommentDescribedBy(inputId, questionId)"
-                        @oninput="args => Write(questionId, args.Value as string)">@CommentOf(questionId)</textarea>
-            </FormField>
-          }
-        }
-      </div>
+      @if (_form!.Questions.Any(question => question.Required))
+      {
+        <p class="respond-required">Questions marked * must be answered.</p>
+      }
 
-      <FormActions>
-        <button type="submit" class="btn btn-primary">Submit feedback</button>
-      </FormActions>
+      @foreach (var question in _form!.Questions)
+      {
+        var questionId = question.QuestionId;
+        if (question.Type == MsfQuestionType.Scale)
+        {
+          var helpId = RatingHelpId(questionId);
+          @* One field, so a form group whose legend is its label; its help a group's help line (DESIGN.md § Form system). *@
+          <fieldset class="form-group" aria-describedby="@(IsAtFault(questionId) ? $"{helpId} {ErrorSummaryId}" : helpId)">
+            <legend>@(question.Prompt)@QuestionMark(question.Required, optionalNoted: false)</legend>
+            <p id="@helpId" class="page-subtitle">@RatingHelpText</p>
+            <div class="scale-choices">
+              @foreach (var point in question.ScalePoints)
+              {
+                var value = point.Value;
+                var inputId = $"msf-q{questionId}-{value}";
+                <div class="form-check">
+                  <input id="@inputId"
+                         class="form-check-input"
+                         type="radio"
+                         name="@ScaleFieldName(questionId)"
+                         value="@value"
+                         checked="@IsChosen(questionId, value)"
+                         required="@question.Required"
+                         @onchange="() => Choose(questionId, value)" />
+                  <label for="@inputId">
+                    @point.Label
+                    @if (!string.IsNullOrWhiteSpace(point.Description))
+                    {
+                      <small class="page-subtitle">@point.Description</small>
+                    }
+                  </label>
+                </div>
+              }
+            </div>
+          </fieldset>
+        }
+        else
+        {
+          var inputId = $"msf-q{questionId}";
+          <div class="form-group">
+            <label for="@inputId" class="respond-label">@(question.Prompt)@QuestionMark(question.Required, optionalNoted: true)</label>
+            <p id="@FieldHelp.Id(inputId)" class="field-help">@CommentHelpText</p>
+            <textarea id="@inputId"
+                      class="@(IsAtFault(questionId) ? "form-control input-validation-error" : "form-control")"
+                      name="@CommentFieldName(questionId)"
+                      rows="5"
+                      required="@question.Required"
+                      aria-invalid="@(IsAtFault(questionId) ? "true" : null)"
+                      aria-describedby="@CommentDescribedBy(inputId, questionId)"
+                      @oninput="args => Write(questionId, args.Value as string)">@CommentOf(questionId)</textarea>
+          </div>
+        }
+      }
+
+      <button type="submit" class="btn btn-primary">Submit feedback</button>
     }
   </form>
 </div>
@@ -192,6 +177,9 @@
 
   /// <summary>The id of the summary of a refused submit, which the question at fault points at.</summary>
   internal const string ErrorSummaryId = "msf-error";
+
+  /// <summary>The id of "Who sees your feedback", which names its group.</summary>
+  private const string PrivacyTitleId = "msf-who-sees";
 
   /// <summary>The respondent's link, as the invitation email wrote it (<c>?token=</c>).</summary>
   [SupplyParameterFromQuery(Name = "token")]
@@ -240,8 +228,56 @@
   /// the respondent's name and email are hidden, so it says what that does not cover (T205).
   /// </summary>
   private string CommentHelpText =>
-    $"Up to {MsfResponseAnswer.LongTextMaxLength} characters. Your comments may be shown to {TraineeLabel} word for " +
-    "word, so leave out anything that would identify you.";
+    $"Up to {MsfResponseAnswer.LongTextMaxLength.ToString("N0", CultureInfo.InvariantCulture)} characters. Your " +
+    $"comments may be shown to {TraineeLabel} word for word, so leave out anything that would identify you.";
+
+  /// <summary>"Default MSF · Last day to respond: 2026-10-28", the day on the South African calendar (T325).</summary>
+  private string MetaLine =>
+    $"{_form!.TemplateName} · Last day to respond: {_form.LastDayToRespond.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}";
+
+  /// <summary>Who sees the feedback, as the invitation email promised it (T202), and no more.</summary>
+  private string NeverShownText => $"Your name and email address are never shown to {TraineeLabel}.";
+
+  private string WhenSeenText => IsLearnerFeedback
+    ? $"{TraineeLabel} sees the feedback only after the request has closed and a coordinator has reviewed and released " +
+      "it, together with the other learners' feedback."
+    : $"{TraineeLabel} sees the feedback only after the request has closed and a coordinator has reviewed and released " +
+      "it, grouped by respondent role.";
+
+  /// <summary>
+  /// How to rate, under each rating's question as its help (Q1): against a trainee at their stage, or for a learner the
+  /// teaching they had (T164). No counter anywhere: the page carries no script (T369).
+  /// </summary>
+  private string RatingHelpText => IsLearnerFeedback
+    ? $"For each rating, think of the teaching you had from {TraineeLabel}."
+    : $"For each rating, compare {TraineeLabel} with what you would expect of a trainee at their stage of training.";
+
+  /// <summary>The id of a rating's help, which its fieldset is described by.</summary>
+  internal static string RatingHelpId(int questionId)
+    => string.Create(CultureInfo.InvariantCulture, $"msf-q{questionId}-help");
+
+  /// <summary>
+  /// After a question's prompt: a required one's mark (M7's markup, flow 10), the star seen and "required" heard; an
+  /// optional comment's "(optional)" (Q1). An optional rating says nothing: its question says what it asks.
+  /// </summary>
+  private static RenderFragment QuestionMark(bool required, bool optionalNoted) => __builder =>
+  {
+    if (required)
+    {
+      <span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span>
+    }
+    else if (optionalNoted)
+    {
+      <span class="respond-optional"> (optional)</span>
+    }
+  };
+
+  /// <summary>
+  /// Each dead link's Alert (T369, S9): a link already used is information (the respondent's answer was recorded); a
+  /// closed request, an expired, revoked or unrecognised link is a warning.
+  /// </summary>
+  private static string RefusalKind(MsfResponseRefusal reason)
+    => reason == MsfResponseRefusal.LinkUsed ? "info" : "warning";
 
   protected override async Task OnInitializedAsync()
   {

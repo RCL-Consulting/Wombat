@@ -65,9 +65,9 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
         var page = Parse(await load.Content.ReadAsStringAsync());
         load.StatusCode.Should().Be(HttpStatusCode.OK, $"not a redirect to the sign-in page ({load.Headers.Location})");
 
-        page.QuerySelector("h2")!.TextContent.Should().Be($"Feedback on {WebHost.TraineeName}");
+        page.QuerySelector("h1")!.TextContent.Should().Be($"Feedback on {WebHost.TraineeName}");
         var lastDay = MsfInvitation.LastDayToRespond(campaign.ClosesOn, campaign.ClosesOn.AddDays(7));
-        page.QuerySelector(".page-subtitle")!.TextContent.Should().Contain(
+        page.QuerySelector(".respond-meta")!.TextContent.Should().Contain(
             $"Last day to respond: {lastDay.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}");
 
         var scale = await _host.QuestionIdAsync(campaign.TemplateId, MsfQuestionType.Scale);
@@ -85,7 +85,7 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
         ]);
         var thanks = Parse(await submit.Content.ReadAsStringAsync());
         submit.StatusCode.Should().Be(HttpStatusCode.OK);
-        thanks.QuerySelector("h2")!.TextContent.Should().Be("Thank you");
+        thanks.QuerySelector("h1")!.TextContent.Should().Be("Thank you");
 
         // Stored, against this respondent's invitation only.
         await using (var scope = _host.Factory.Services.CreateAsyncScope())
@@ -118,7 +118,7 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
         using var again = await _host.Client.GetAsync(link);
         var spent = Parse(await again.Content.ReadAsStringAsync());
         again.StatusCode.Should().Be(HttpStatusCode.Gone);
-        spent.QuerySelector("h2")!.TextContent.Should().Be("Feedback link already used");
+        spent.QuerySelector("h1")!.TextContent.Should().Be("Feedback link already used");
         spent.QuerySelector(".alert")!.TextContent.Trim().Should().Be(MsfCampaignRules.LinkUsedMessage);
         spent.QuerySelectorAll("input[type=radio], textarea").Should().BeEmpty();
     }
@@ -141,7 +141,7 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
         var page = Parse(html);
         load.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        page.QuerySelector("h2")!.TextContent.Should().Be($"Feedback on the teaching of {WebHost.TraineeName}");
+        page.QuerySelector("h1")!.TextContent.Should().Be($"Feedback on the teaching of {WebHost.TraineeName}");
         var words = Regex.Replace(page.QuerySelector(".account-form-container")!.TextContent, @"\s+", " ");
         words.Should().Contain(
             $"You have been asked to give feedback on the teaching of {WebHost.TraineeName}, a trainee who has taught you.");
@@ -323,7 +323,7 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
         using (var accepted = await _host.PostAsync(client, link, page,
                    [new($"Answers.Scale[{scale}]", "5"), new($"Answers.Comment[{comment}]", "Unflappable.")]))
         {
-            Parse(await accepted.Content.ReadAsStringAsync()).QuerySelector("h2")!.TextContent.Should().Be("Thank you");
+            Parse(await accepted.Content.ReadAsStringAsync()).QuerySelector("h1")!.TextContent.Should().Be("Thank you");
         }
 
         await using var scope = _host.Factory.Services.CreateAsyncScope();
@@ -353,8 +353,8 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
         var page = Parse(html);
 
         response.StatusCode.Should().Be(status, html);
-        page.QuerySelector("h2").Should().NotBeNull($"the refusal is a page: {html}");
-        page.QuerySelector("h2")!.TextContent.Should().Be(title);
+        page.QuerySelector("h1").Should().NotBeNull($"the refusal is a page: {html}");
+        page.QuerySelector("h1")!.TextContent.Should().Be(title);
         page.QuerySelector(".alert")!.TextContent.Should().NotBeNullOrWhiteSpace();
         page.QuerySelectorAll("input[type=radio], textarea").Should().BeEmpty();
         html.Should().NotContain("Exception");
@@ -481,7 +481,7 @@ public sealed class MsfRespondPageFlowTests : IClassFixture<MsfRespondPageFlowTe
                 DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7)),
                 DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
                 4,
-                2,
+                3,
                 learnerFeedback ? 1 : 2,
                 [learnerFeedback ? _learnerFeedbackEpaId : _coveredEpaId],
                 "coordinator-web-1",

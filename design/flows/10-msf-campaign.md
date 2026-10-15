@@ -9,6 +9,30 @@ and a release writes one evidence record per EPA on her portfolio (D8: it counts
 it. None has been touched since flow 01 gave them the shell, sentence-case titles and the lit owner (T331); the step
 captures are from flow 09's replay (2026-10-14), the state captures from 2026-09-26, on the old frame.
 
+**Built 2026-10-15 (T369, step 6),** from round 3 (`10-msf-campaign/round-3-check.md`): the proposal P; the report RA
+with RB's group header and RC's Released one-liner; MSF reports MA, her report on a page of its own; F1–F11. New MSF
+campaign is a page of its own (`M/NewCampaign.razor`), and so is her report (`M/MyMsfReport.razor`). F2's cast: a third
+Nurse, Sister Thandi Nkosi, and a third Consultant, Dr Johan van Wyk, both invited at 3.36 and answering at 3.42 (8 of
+9 respond): Consultant 4.00 from 3, Nurse 4.33 from 3, Peer doctor and Allied health professional suppressed. §§ 1–7
+below are the brief as round 1 was sent it, and describe the pages before the build, except § 5, whose rows say what
+the build closed; § 8 is re-synced to the runbook as built. The build's own record is `10-msf-campaign/build-*.md`.
+
+The journeys as built (presses + fields typed; a select left as it is counts no field; the same at 1280 and 390 unless
+noted):
+
+| Journey | Steps | Count |
+|---|---|---|
+| Create the questionnaire and the campaign, from Home's Start an MSF campaign: Add template; Trainee and Minimum responses; two EPAs ticked; Create campaign | 3.34–3.35 | 5 + 2 |
+| Invite nine and remove one: nine adds, Remove…, Remove invitee, one add (ten addresses, one per add; the group is kept between adds: seven of the nine adds change it, and the last, so eight group changes) | 3.36 | 12 + 18 |
+| Open | 3.37 | 1 + 0 |
+| Withdraw from the list: Withdraw…, Withdraw campaign | 3.38 | 2 + 0 |
+| A respondent answers: a point, the comment, Submit feedback | 3.39 | 2 + 1 |
+| Resend, from the list: Manage, Resend 1 link | 3.43 | 2 + 0 |
+| Close, from the list: View report, Close campaign…, Close campaign | 3.44 | 3 + 0 |
+| Release, from the list: Review and release, the narrative, Release to trainee…, Release to Lerato Molefe | 3.46 | 3 + 1 |
+| Dr Molefe reads her report, from Home: MSF reports, View | 3.47 | 2 + 0 (3 + 0 at 390, Menu first) |
+| Mr Smit reads coverage, from the list: MSF coverage | 3.49 | 1 + 0 |
+
 Restated 2026-10-15 for T369 (the brief of 2026-09-26 predates flows 01–09). Paths to screenshots are under
 `design/baseline/` (gitignored). Code is cited at `cc80d5b3`; `W/` is `src/Wombat.Web/Components/Pages/`, `M/` is
 `W/MultiSourceFeedback/`, `A/` is `src/Wombat.Application/Features/`, `MSF/` is `A/MultiSourceFeedback/`, `Nav/` is
@@ -553,21 +577,21 @@ The evidence column is for the operator and for Claude Code. Attach only what §
 
 | Task | What it means for the design | Evidence |
 |---|---|---|
-| **T270** (P3, queued) | "Average: 4.00 from 1 responses." (`M/CampaignReport.razor:161`), and the blocked reason's "1 have come back" (`:296–303`); the draft's address table at 390 (428 px in a 306 px container, Remove off-screen) and its mid-word breaks at 1280 (`col-wrap` on the address, `M/CampaignEdit.razor:270`, `:283`); a withdrawn draft's Responded column (`ShowsResponses` is "not a draft", `:573`); the stray colon (`M/MyMsfReports.razor:75`; the PDF's `src/Wombat.Infrastructure/Reporting/MsfSectionComponent.cs:165`, `:174` are flow 20's); a refused id on MSF reports shown twice and in place of her list (`M/MyMsfReports.razor:18–20`, `:26`, `:127`, `:137`); on a draft whose trainee is no longer current, Add invitee and Open stay enabled and are refused (T284 review: a `SubjectIsCurrent` flag on `MsfCampaignSetupDto`). | `act-3/3.36-2…`, `act-3/3.47-1…`, `states/my-msf-reports--foreign.png`; Steps 3.36, 3.47 |
-| **T325** (P3, queued; A9) | The registrar's list prints `ReleasedOn.ToLocalTime()` unlabelled (`M/MyMsfReports.razor:39`, `:45`); the report prints "… UTC" (`M/CampaignReport.razor:75`); the create page's defaults are `DateTime.Today` (`M/CampaignEdit.razor:1194`, `:1197`); a respondent's link is judged on the UTC date (`MSF/MsfCampaignRules.cs:704`), so it works up to two hours past its South African last day. | `act-3/3.46-1…` against `act-3/3.47-1…`; Steps 3.46, 3.47 |
-| **T329** (P2, queued), **T272** (P3, queued) | The create page awaits its template and trainee reads outside any try (`M/CampaignEdit.razor:515–524`, `:720`, `:739`): a failed read ends the circuit. Every other failed read prints `exception.Message` (`M/CampaignsList.razor:160`, `:234`, `:250`; `M/CampaignReport.razor:271`, `:322`, `:353`; `M/MyMsfReports.razor:137`; `M/ProgrammeCoverage.razor:173`); no page passes `OnRetry`. T272's MSF half (no foreign key on `MsfQuestion.ScaleId`) is backend. | — |
-| **T280** (P3, queued) | `/msf/campaigns` has duplicate accessible names across rows; MSF reports' table has no caption (`M/MyMsfReports.razor:27`); the Coordinator pages go h1 → h3 → h4 (`M/CampaignEdit.razor:50`, `:84`, `:204`; `M/CampaignReport.razor:35`); `/msf/respond` has no `<h1>`: each state is an `<h2>` (`M/MsfRespond.razor:44`, `:52`, `:58`, `:67`; DESIGN.md:373–374 keeps it so), where flow 02 made the auth card's heading its `<h1>`. | `act-3/3.39-1…` |
-| **T324** (P3, queued) | The forms' `DataAnnotations` messages name the property ("The Email field is required.", `M/CampaignEdit.razor:1224–1226`, `:306–308`). | — |
-| **T323** (A3; observed, not filed) | At 390 the campaign list scrolls sideways in its box with its actions off-screen (`DataTable` with no `Stack`, `M/CampaignsList.razor:48`); at 1280 the registrar's list is cut inside its card ("Respons", `M/MyMsfReports.razor:23–52`), and the list's Closes date wraps mid-date. | `act-A/A.7.5-2…`, `act-3/3.47-1…`, `act-3/3.46-2…` |
-| **A5** (BRIEF § 6; observed, not filed) | Close campaign and Release to trainee act on one press with no `ConfirmDialog` (`M/CampaignReport.razor:132`, `:136`; Steps 3.44 and 3.46's Actuals: "no confirmation dialog"), though closing anonymises for good (`MSF/CloseMsfCampaign.cs`) and releasing writes evidence that nothing takes back (`MSF/ReleaseMsfCampaign.cs:124–150`). Their results are page-top alerts in a hand-rolled `.action-result` (`:18–28`), as on the list and the campaign page; `ActionResult` is not used. | `act-3/3.44-1…`, `act-3/3.46-1…` |
-| Titles and words (observed, not filed) | The create page and every campaign share the title "MSF campaign" and one subtitle (`M/CampaignEdit.razor:12–14`); the list says "Subject" (`M/CampaignsList.razor:51`) where every other page says "Trainee"; the add form says "Category" (`M/CampaignEdit.razor:315`) and the report "Minimum category responses", "Reporting categories" (`M/CampaignReport.razor:41–42`) where the tables say "Respondent group"; the list prints the state as text (`M/CampaignsList.razor:68`), the campaign page as a badge (`M/CampaignEdit.razor:181`); MSF coverage has a "Back to campaigns" button beside its own trail (`M/ProgrammeCoverage.razor:16`). | `act-3/3.36-2…`, `act-3/3.46-2…`, `act-3/3.49-1…` |
-| The registrar's report (observed, not filed) | No heading of its own ("Selected report", an h3 in a card beside the list, `M/MyMsfReports.razor:54–91`), no focus move on View, no loading state of its own; nothing on her Home or in a mail says a report was released (`MSF/ReleaseMsfCampaign.cs` sends nothing; the trainee Home has no MSF card). Question 4, question 8. | `act-3/3.47-1…` |
-| **D54, D55 and the release** (observed, and one inference) | Observed: create, add invitee and open ask for a current trainee (`MSF/MsfCampaignRules.cs:108–122`, T284); close, resend, release and withdraw do not, deliberately (`:99–103`: "a close, release or withdraw finishes it"). The release writes `msf_cpsa` through `ActivityService.StageCompletedAsync` (`MSF/ReleaseMsfCampaign.cs:242`), which does not ask D55's `HasCurrentProgrammeAsync` (`src/Wombat.Infrastructure/Activities/ActivityService.cs:91`, `:176`, `:465`: the create and the filing move only). The registrar who has ended loses the Trainee role (D54) and so MSF reports (`M/MyMsfReports.razor:3`; Step 5.22). Inferred, not replayed: a campaign whose registrar graduates or withdraws while it is open can be released onto her ended record, its evidence dated by the close (possibly after her last day), and she cannot open the report. The MSF type credits nothing (D8), so T281's rule changes no count. No runbook step reaches it. Question 10. | — |
+| **T270** (P3, queued) | **Closed in the build (T369):** every count has its singular ("from 3 responses", "1 has come back"); a draft's addresses are a list, each whole over its group with Remove… beside it; a campaign that never opened shows Responses "—" and no Responded column; the question once, never ".:" (her page and the PDF); a refused id lands on her list with one alert; a draft whose trainee is not current has Add invitee and Open aria-disabled with their reasons (`SubjectIsCurrent`). "Average: 4.00 from 1 responses." (`M/CampaignReport.razor:161`), and the blocked reason's "1 have come back" (`:296–303`); the draft's address table at 390 (428 px in a 306 px container, Remove off-screen) and its mid-word breaks at 1280 (`col-wrap` on the address, `M/CampaignEdit.razor:270`, `:283`); a withdrawn draft's Responded column (`ShowsResponses` is "not a draft", `:573`); the stray colon (`M/MyMsfReports.razor:75`; the PDF's `src/Wombat.Infrastructure/Reporting/MsfSectionComponent.cs:165`, `:174` are flow 20's); a refused id on MSF reports shown twice and in place of her list (`M/MyMsfReports.razor:18–20`, `:26`, `:127`, `:137`); on a draft whose trainee is no longer current, Add invitee and Open stay enabled and are refused (T284 review: a `SubjectIsCurrent` flag on `MsfCampaignSetupDto`). | `act-3/3.36-2…`, `act-3/3.47-1…`, `states/my-msf-reports--foreign.png`; Steps 3.36, 3.47 |
+| **T325** (P3, queued; A9) | **Closed in the build (T369):** every moment "yyyy-MM-dd hh:mm SAST" on both pages; the create page's window and the respondent's last day, and the auto-close job, on the South African calendar. The registrar's list prints `ReleasedOn.ToLocalTime()` unlabelled (`M/MyMsfReports.razor:39`, `:45`); the report prints "… UTC" (`M/CampaignReport.razor:75`); the create page's defaults are `DateTime.Today` (`M/CampaignEdit.razor:1194`, `:1197`); a respondent's link is judged on the UTC date (`MSF/MsfCampaignRules.cs:704`), so it works up to two hours past its South African last day. | `act-3/3.46-1…` against `act-3/3.47-1…`; Steps 3.46, 3.47 |
+| **T329** (P2, queued), **T272** (P3, queued) | **Closed in the build (T369), T329's MSF half:** every failed read is fixed words with Try again, the failure to the log; the create page's reads are in a try. T272's foreign key stays backend. The create page awaits its template and trainee reads outside any try (`M/CampaignEdit.razor:515–524`, `:720`, `:739`): a failed read ends the circuit. Every other failed read prints `exception.Message` (`M/CampaignsList.razor:160`, `:234`, `:250`; `M/CampaignReport.razor:271`, `:322`, `:353`; `M/MyMsfReports.razor:137`; `M/ProgrammeCoverage.razor:173`); no page passes `OnRetry`. T272's MSF half (no foreign key on `MsfQuestion.ScaleId`) is backend. | — |
+| **T280** (P3, queued) | **Closed in the build (T369):** each row's actions named by its row; every table captioned; h1 → h2 → h3 on each page; `/msf/respond`'s card heading its one h1. `/msf/campaigns` has duplicate accessible names across rows; MSF reports' table has no caption (`M/MyMsfReports.razor:27`); the Coordinator pages go h1 → h3 → h4 (`M/CampaignEdit.razor:50`, `:84`, `:204`; `M/CampaignReport.razor:35`); `/msf/respond` has no `<h1>`: each state is an `<h2>` (`M/MsfRespond.razor:44`, `:52`, `:58`, `:67`; DESIGN.md:373–374 keeps it so), where flow 02 made the auth card's heading its `<h1>`. | `act-3/3.39-1…` |
+| **T324** (P3, queued) | **Closed in the build (T369):** every form message in Wombat's words, the field never named by its property. The forms' `DataAnnotations` messages name the property ("The Email field is required.", `M/CampaignEdit.razor:1224–1226`, `:306–308`). | — |
+| **T323** (A3; observed, not filed) | **Closed in the build (T369):** the campaign list stacks below 641 px (A.7.5); her list stacks at 900 px and below, with no Responses column (F3); the Closes date never wraps. At 390 the campaign list scrolls sideways in its box with its actions off-screen (`DataTable` with no `Stack`, `M/CampaignsList.razor:48`); at 1280 the registrar's list is cut inside its card ("Respons", `M/MyMsfReports.razor:23–52`), and the list's Closes date wraps mid-date. | `act-A/A.7.5-2…`, `act-3/3.47-1…`, `act-3/3.46-2…` |
+| **A5** (BRIEF § 6; observed, not filed) | **Closed in the build (T369):** Close campaign… and Release to trainee… confirm in a ConfirmDialog naming the campaign; each result is an `ActionResult`, focused; a refusal shows beside its button. Close campaign and Release to trainee act on one press with no `ConfirmDialog` (`M/CampaignReport.razor:132`, `:136`; Steps 3.44 and 3.46's Actuals: "no confirmation dialog"), though closing anonymises for good (`MSF/CloseMsfCampaign.cs`) and releasing writes evidence that nothing takes back (`MSF/ReleaseMsfCampaign.cs:124–150`). Their results are page-top alerts in a hand-rolled `.action-result` (`:18–28`), as on the list and the campaign page; `ActionResult` is not used. | `act-3/3.44-1…`, `act-3/3.46-1…` |
+| Titles and words (observed, not filed) | **Closed in the build (T369):** "New MSF campaign" is a page of its own (`M/NewCampaign.razor`), each campaign "MSF campaign for {name}"; Trainee, Respondent group and "respondent groups reporting" throughout; the state a badge on both; no Back to campaigns on MSF coverage. The create page and every campaign share the title "MSF campaign" and one subtitle (`M/CampaignEdit.razor:12–14`); the list says "Subject" (`M/CampaignsList.razor:51`) where every other page says "Trainee"; the add form says "Category" (`M/CampaignEdit.razor:315`) and the report "Minimum category responses", "Reporting categories" (`M/CampaignReport.razor:41–42`) where the tables say "Respondent group"; the list prints the state as text (`M/CampaignsList.razor:68`), the campaign page as a badge (`M/CampaignEdit.razor:181`); MSF coverage has a "Back to campaigns" button beside its own trail (`M/ProgrammeCoverage.razor:16`). | `act-3/3.36-2…`, `act-3/3.46-2…`, `act-3/3.49-1…` |
+| The registrar's report (observed, not filed) | **Closed in the build (T369):** her report is a page of its own, `/msf/my-reports/{CampaignId:int}` (`M/MyMsfReport.razor`), its h1 "{template}, released {date}"; a release mails her (Q8, `MsfReportReleasedEmail`); her Home is unchanged. No heading of its own ("Selected report", an h3 in a card beside the list, `M/MyMsfReports.razor:54–91`), no focus move on View, no loading state of its own; nothing on her Home or in a mail says a report was released (`MSF/ReleaseMsfCampaign.cs` sends nothing; the trainee Home has no MSF card). Question 4, question 8. | `act-3/3.47-1…` |
+| **D54, D55 and the release** (observed, and one inference) | **Closed in the build (T369), Q10 kept as now with a warning:** the campaign page and the report say once her programme has ended that she can no longer open MSF reports, and no release mail goes (F4). Observed: create, add invitee and open ask for a current trainee (`MSF/MsfCampaignRules.cs:108–122`, T284); close, resend, release and withdraw do not, deliberately (`:99–103`: "a close, release or withdraw finishes it"). The release writes `msf_cpsa` through `ActivityService.StageCompletedAsync` (`MSF/ReleaseMsfCampaign.cs:242`), which does not ask D55's `HasCurrentProgrammeAsync` (`src/Wombat.Infrastructure/Activities/ActivityService.cs:91`, `:176`, `:465`: the create and the filing move only). The registrar who has ended loses the Trainee role (D54) and so MSF reports (`M/MyMsfReports.razor:3`; Step 5.22). Inferred, not replayed: a campaign whose registrar graduates or withdraws while it is open can be released onto her ended record, its evidence dated by the close (possibly after her last day), and she cannot open the report. The MSF type credits nothing (D8), so T281's rule changes no count. No runbook step reaches it. Question 10. | — |
 | **T153** (P3, queued) | A campaign has no institution of its own: its scope follows the trainee's current profile, so it would move with a trainee who changes institution. Backend; not this flow's unless the operator folds it in. | — |
-| **T320** (P2, queued) | Mail is sent only on open and resend (and the reminder job); nothing tells the registrar of a release. Flow 19's, unless question 8 asks for a mail. | — |
+| **T320** (P2, queued) | **Partly closed in the build (T369):** a release now mails the registrar (Q8, T367's `AccountNotices`); the rest stays flow 19's. Mail is sent only on open and resend (and the reminder job); nothing tells the registrar of a release. Flow 19's, unless question 8 asks for a mail. | — |
 | **T334** (P2, queued), **T276** (P3, queued), **T311** (P2, queued) | The builder can edit `msf_cpsa` (flow 17's); an erased person's address stays on another's open campaign (flow 14's); a graduate loses MSF reports with the Trainee role (flow 13's; DESIGN keeps it role-only). Name them; do not design them here. | — |
-| Anonymity (T217, T247, T249, T251; DESIGN.md § The MSF campaign page, from :1956) | Once a campaign opens, `GetMsfCampaignSetup` lists no address (`MsfCampaignSetupDto.DraftInvitees` on a draft only); the counts are by group; not-delivered links are a number. The registrar's report drops suppressed groups (`M/MyMsfReports.razor:66`) and shows no count. A design that adds a respondent list, a per-invitee mark, or a group's count for the registrar breaks the rule. The aggregate also carries each point's count (`MSF/MsfDtos.cs:41`, `Distribution`), shown on no page: question 9. | Steps 3.37, 3.43, 3.47 |
-| The respondent's page (observed) | Static by design (`M/MsfRespond.razor:1–6`): no circuit, a form post, a rate limit per link, `Referrer-Policy: no-referrer`, not indexed, not stored (`:370–382`); a refused post focuses its summary as the page loads (`:103–110`). Three paragraphs and a note precede the first question (`:68–101`). | `act-3/3.39-1…` |
+| Anonymity (T217, T247, T249, T251; DESIGN.md § The MSF campaign page, from :1956) | **Held in the build (T369):** no group's results before the close (F1), a group reports from 3 responses (F2), `Distribution` dropped (Q9); the suppressed line names groups, never counts them. Once a campaign opens, `GetMsfCampaignSetup` lists no address (`MsfCampaignSetupDto.DraftInvitees` on a draft only); the counts are by group; not-delivered links are a number. The registrar's report drops suppressed groups (`M/MyMsfReports.razor:66`) and shows no count. A design that adds a respondent list, a per-invitee mark, or a group's count for the registrar breaks the rule. The aggregate also carries each point's count (`MSF/MsfDtos.cs:41`, `Distribution`), shown on no page: question 9. | Steps 3.37, 3.43, 3.47 |
+| The respondent's page (observed) | **Held in the build (T369):** still static, no script; one h1 per state, its Alert under it; "Who sees your feedback" before the rating. Static by design (`M/MsfRespond.razor:1–6`): no circuit, a form post, a rate limit per link, `Referrer-Policy: no-referrer`, not indexed, not stored (`:370–382`); a refused post focuses its summary as the page loads (`:103–110`). Three paragraphs and a note precede the first question (`:68–101`). | `act-3/3.39-1…` |
 
 **Dropped from the old brief (fixed since):** the unlit nav on the report and coverage pages (T331, `b347e11c`: MSF
 campaigns lights for the Coordinator, with the trail Home › MSF campaigns › the page); the alert and badge contrast
@@ -640,67 +664,103 @@ known T270 and T325). `D` is the replay day.
 Step 3.34 — Mr Smit creates the MSF questionnaire
 Role: Coordinator — Mr Pieter Smit
 Route: / → /msf/campaigns → /msf/campaigns/new
-Do: Open MSF campaigns and start a new campaign. The Template select is empty, so add the Quick template as it stands:
-  kind Multi-source feedback, name "Default MSF", with its scale question and its comment question.
-Expect: The list reads "No MSF campaigns", with MSF coverage and New campaign in its header. The create page shows a
-  Quick template card and a Create campaign card. Adding the template reads "Template created.", and the Template
-  select now offers Default MSF.
+Do: Open MSF campaigns and start a new campaign. No questionnaire exists yet, so add the one the page offers as it
+  stands: kind Multi-source feedback, name "Default MSF", with its scale question and its comment question.
+Expect:
+  - **The list:** "MSF campaigns", "Create and review multi-source feedback campaigns.", with New campaign and then MSF
+    coverage in its header; "No MSF campaigns" / "Create the first MSF campaign to start respondent outreach."
+  - **The create page** is "New MSF campaign" (its tab too), under the trail Home › MSF campaigns › New MSF campaign
+    with MSF campaigns lit. Its subtitle says creating it makes a draft and nobody is emailed until it opens. Four
+    cards, each an h2: Questionnaire, Trainee and window, Thresholds and Evidence.
+  - **No questionnaire yet (T369, C1):** the Template select reads "No template yet", with "Write the first one below;
+    it is chosen here once it is added."; the fold "Write a new questionnaire" is open, pre-filled (Multi-source
+    feedback, "Default MSF", "Rates the trainee's overall professional performance.", "What should the trainee keep
+    doing or improve?"). Create campaign is aria-disabled, with "Create campaign: write a questionnaire first." beside
+    it.
+  - **Add template:** "**Template created.** Default MSF is chosen as this campaign's template.", focused. The fold
+    closes, the select reads "Default MSF (Multi-source feedback)", chosen, with its two questions under it, and Create
+    campaign is offered.
 
 Step 3.35 — Mr Smit creates a campaign for Dr Molefe
 Role: Coordinator — Mr Pieter Smit
 Route: /msf/campaigns/new → /msf/campaigns/{CampaignId:int}
 Do: Fill in the campaign:
-  - trainee Dr Lerato Molefe and template Default MSF;
+  - trainee Dr Lerato Molefe, with template Default MSF as it is already chosen;
   - opens on `D` and closes on `D+14`, the defaults;
-  - minimum responses 5, minimum category responses 2 and minimum reporting categories 2;
+  - Minimum responses 5; Minimum responses in a respondent group 3 and Minimum respondent groups reporting 2, the
+    defaults;
   - evidence for PAED-010 and PAED-012.
   Create it.
-Expect: The Trainee select offers KGK's five current trainees by name and address, and nobody else. Once a trainee is
-  chosen, "Evidence for these EPAs" lists all 15 EPAs of her curriculum, since MSF is on every one (D37). The help
-  beside the reporting categories says that two is the College's answer (D11). Creating it opens the campaign: Draft,
-  Lerato Molefe, Default MSF (Multi-source feedback), window `D` to `D+14`, and "Nobody has been invited yet." Open
-  campaign is shown disabled, with "Open campaign: add at least one invitee first…" below it (T225).
+Expect:
+  - **The form:** the Trainee select offers KGK's five current trainees by name and address, and nobody else. The
+    thresholds open on 8 / 3 / 2. "Minimum responses in a respondent group" says a group with fewer is suppressed and
+    asks at least 3 for multi-source feedback (T369, F2); the help beside "Minimum respondent groups reporting" says
+    that two is the College's answer (D11). The window's help says both days are on the South African calendar (T325).
+  - **Evidence:** once a trainee is chosen, "Evidence for these EPAs" lists all 15 EPAs of her curriculum, since MSF is
+    on every one (D37), with a count over them: "2 of 15 ticked" once the two are ticked.
+  - **Created:** the campaign's own page, "MSF campaign for Lerato Molefe", subtitle "Default MSF · Multi-source
+    feedback · `D` to `D+14`". Its status card: Draft, "Add invitees, then open the campaign to send anonymous response
+    links.", "Nobody has been invited yet." Open campaign is aria-disabled, with "Open campaign: add at least one
+    invitee first. …" beside it (T225), and Withdraw campaign… is offered. About this campaign reads Trainee "Lerato
+    Molefe, training year 4", Template "Default MSF (Multi-source feedback)", Thresholds "5 responses; 3 in a respondent
+    group; 2 respondent groups reporting" and "Evidence for PAED-010 and PAED-012", each EPA by code and title.
 
-Step 3.36 — Mr Smit invites seven colleagues, and removes one added under the wrong group
+Step 3.36 — Mr Smit invites nine colleagues, and removes one added under the wrong group
 Role: Coordinator — Mr Pieter Smit
 Route: /msf/campaigns/{CampaignId:int}
-Do: Add each colleague by address and respondent group:
+Do: Add each colleague by address and respondent group, in this order:
   - Sister Grace Mokwena, `grace.mokwena@kgk.wombat.local`, as a Nurse;
   - Sister Palesa Tau, `palesa.tau@kgk.wombat.local`, by mistake as an Allied health professional;
   - the registrars Dr Kagiso Motsepe, `kagiso.motsepe@kgk.wombat.local`, and Dr Lindiwe Khoza,
     `lindiwe.khoza@kgk.wombat.local`, as Peer doctors;
   - Dr Khumalo, `khumalo@kgk.wombat.local`, and Dr Botha, `botha@kgk.wombat.local`, as Consultants;
-  - the physiotherapist Ms Naledi Sebego, `naledi.sebego@kgk.wombat.local`, as an Allied health professional.
+  - the physiotherapist Ms Naledi Sebego, `naledi.sebego@kgk.wombat.local`, as an Allied health professional;
+  - Sister Thandi Nkosi, `nkosi@kgk.wombat.local`, as a Nurse;
+  - Dr Johan van Wyk, `vanwyk@kgk.wombat.local`, as a Consultant.
   Then remove Sister Tau's row and add her again as a Nurse.
-Expect: Each add reads "Invitee added." and clears the address for the next one. The group select offers Peer doctor,
-  Consultant, Nurse, Allied health professional and Other; it offers no Patient and no Learner. Remove asks "Remove this
-  invitee?", naming the address and group. Confirmed, it says she "has been removed from this campaign, and will not be
-  emailed a link when it opens." In the end the counts read Peer doctor 2, Consultant 2, Nurse 2, Allied health
-  professional 1 and All groups 7, with no Responded column. "Addresses invited" lists the seven, each with Remove, and
-  Open campaign is enabled.
+Expect:
+  - **The add form** ("Add an invitee", "* marks a field you must fill in."): Respondent email, and a Respondent group
+    select offering Peer doctor, Consultant, Nurse, Allied health professional and Other, in that order, Peer doctor
+    chosen; it offers no Patient and no Learner. The group is kept from one add to the next.
+  - **Each add** reads "Invitee added." alone (T369, F11), clears the address and puts the focus back in it.
+  - **The addresses:** "Addresses invited", listed only while the campaign is a draft. Under a count ("9 addresses"),
+    each address whole over its group, with a Remove… beside it named for its address and group ("Remove
+    palesa.tau@kgk.wombat.local (Allied health professional)").
+  - **Remove** asks "Remove this invitee?", naming the address and group; its buttons are Keep the invitee and Remove
+    invitee. Confirmed, the result above the rows, focused, says "palesa.tau@kgk.wombat.local (Allied health
+    professional) has been removed from this campaign, and will not be emailed a link when it opens."
+  - **In the end** the counts, captioned that once the campaign opens the page never lists who was invited, read Peer
+    doctor 2, Consultant 3, Nurse 3, Allied health professional 1 and All groups 9, with no Responded column. "9
+    addresses" lists the nine. Open campaign is offered, with "Opening emails each of the 9 invitees a link to respond,
+    with `D+14` as their last day." beside it.
 
 Step 3.37 — Mr Smit opens the campaign
 Role: Coordinator — Mr Pieter Smit
 Route: /msf/campaigns/{CampaignId:int}
 Do: Open the campaign.
-Expect: The page reads "Campaign opened; links are being sent." and State: Open. The note names `D+14` as the
-  respondents' last day, and says the campaign can be closed sooner from its report. "7 links are still being sent.
-  Reload this page to see whether they were delivered." The invitees are now counted only, with a Responded column
-  reading 0, and no address is listed (T217, T247). The actions are Withdraw campaign and View report. The application
-  log holds seven "Feedback request: Lerato Molefe (Default MSF, …)" emails, each with a `/msf/respond` link.
+Expect: The page reads "Campaign opened; links are being sent.", focused. The status card reads Open and "0 of 9
+  invitees have responded." Its note names `D+14` as the respondents' last day, says the campaign closes by itself once
+  that day has passed, and that Close campaign on its report closes it sooner. Under "Invitees by respondent group" the
+  invitees are now counted only, with a Responded column reading 0, and no address is listed (T217, T247). Beside it,
+  the Links part reads "9 links are still being sent. Reload this page to see whether they were delivered." The
+  actions are View report and Withdraw campaign…. The application log holds nine "Feedback request: Lerato Molefe
+  (Default MSF, …)" emails, each with a `/msf/respond` link.
 
 Step 3.38 — Mr Smit withdraws a campaign started in error
 Role: Coordinator — Mr Pieter Smit
 Route: /msf/campaigns/new → /msf/campaigns/{CampaignId:int} → /msf/campaigns
 Do: Create a second campaign, for Dr Pieter du Plessis: Default MSF, the defaults, evidence for PAED-015. Then
   Dr Mokoena says his MSF belongs to next semester, so withdraw it from the campaign list.
-Expect: The list shows two rows, each with links named by its state (T225):
-  - Lerato Molefe, Open: "Manage", "View report" and Withdraw;
-  - Pieter du Plessis, Draft: "Manage" and Withdraw.
+Expect: The list, "Campaigns (2)", is captioned "MSF campaigns, newest first. Counted by respondent group: this list
+  never shows who was invited or who responded." Each row is headed by its trainee, with its links named by its state
+  (T225) and by the campaign:
+  - Pieter du Plessis first: Default MSF (Multi-source feedback), Draft, Invitations 0, Responses "—" (it never opened,
+    T270), closing `D+14`: "Manage" and "Withdraw…";
+  - then Lerato Molefe: Open, Invitations 9, Responses 0: "Manage", "View report" and "Withdraw…".
   Withdraw asks "Withdraw this campaign?", names "Pieter du Plessis (Default MSF, closing `D+14`)", and says withdrawing
-  cannot be undone. Confirmed, it reads "The campaign for Pieter du Plessis (…) has been withdrawn. Its respondents'
-  links no longer work, and their email addresses have been removed." The row then reads Withdrawn, with only "View
-  campaign".
+  cannot be undone; its buttons are Keep the campaign and Withdraw campaign. Confirmed, it reads "The campaign for
+  Pieter du Plessis (…) has been withdrawn. Its respondents' links no longer work, and their email addresses have been
+  removed.", focused. The row then reads Withdrawn, with only "View campaign".
 
 Step 3.39 — Three respondents answer from their links
 Role: Anonymous — Sister Grace Mokwena, Sister Palesa Tau and Dr Kagiso Motsepe (MSF respondents)
@@ -709,83 +769,135 @@ Do: Each respondent opens their own link from the log, in a browser signed in to
   - Sister Mokwena: Above expectations, "Calm and kind with parents at night; hands over clearly".
   - Sister Tau: Well above expectations, "Leads neonatal resuscitations and explains her decisions to the nurses".
   - Dr Motsepe: Meets expectations, "A supportive senior; could delegate more".
-Expect: The page reads "Feedback on Lerato Molefe", Default MSF, and last day to respond `D+14`. It says their name and
-  address are never shown to her, and that she sees the feedback only after it has closed and been released, grouped by
-  respondent role. The rating offers five points, from Well below expectations to Well above expectations (D47), and is
-  required. The comment is optional, with help warning that it may reach her word for word. Each submit ends on "Thank
-  you" and "Your feedback on Lerato Molefe has been recorded."
+Expect: The card's one h1 is "Feedback on Lerato Molefe" (T280), its tab the same, over "Default MSF · Last day to
+  respond: `D+14`" and the line asking for multi-source feedback on a trainee they have worked with. "Who sees your
+  feedback" comes before the rating: their name and address are never shown to her, and she sees the feedback only
+  after it has closed and been released, grouped by respondent role. The rating offers five points, from Well below
+  expectations to Well above expectations (D47), and is required. The comment is marked "(optional)", with help that
+  reads "Up to 4,000 characters." and warns that it may reach her word for word. Each submit ends on the h1 "Thank you"
+  and a success Alert, "Your feedback on Lerato Molefe has been recorded."
 
 Step 3.40 — A used link is refused
 Role: Anonymous — Dr Kagiso Motsepe (MSF respondent)
 Route: /msf/respond
 Do: Open the same link again.
-Expect: The page reads "Feedback link already used" and shows no questionnaire.
+Expect: The card's h1 reads "Feedback link already used", with an info Alert saying the link has already been used
+  and each link takes one response. No questionnaire is shown.
 
 Step 3.41 — Mr Smit reads the report while the campaign is open
 Role: Coordinator — Mr Pieter Smit
 Route: /msf/campaigns → /msf/reports/{CampaignId:int}
 Do: Open Dr Molefe's report from the campaign list.
-Expect: The report reads State Open, total responses 3, minimum responses 5, minimum category responses 2, and
-  reporting categories 1 of 2 required. "Evidence for" lists PAED-010 and PAED-012, and says one record per EPA is
-  written when the report is released. A Nurse card gives the rating's average, 4.50 from 2 responses, and both
-  comments. A Peer doctor card reads "Insufficient responses in this category. Results are suppressed." A group that
-  has not answered has no card. Close campaign is offered; Release is not.
+Expect: "MSF report for Lerato Molefe", subtitle "Default MSF · Multi-source feedback · `D` to `D+14`" with "Open its
+  campaign page". The status card reads Open, "Still taking responses, until `D+14`.", and "The responses are read once
+  the campaign has closed and every address has been removed." (T369, F1). Its checklist reads "3 responses, of the 5
+  needed.", "0 respondent groups reporting, of the 2 needed." (no group has 3 yet) and "A respondent group reports once
+  3 of it have responded; a group with fewer is suppressed." "Evidence for" lists PAED-010 and PAED-012, and says one
+  record per EPA is written when the report is released. No group card and no suppressed line are shown, whatever has
+  come back. Close campaign… is offered, with its help; Release is not.
 
-Step 3.42 — Three more respondents answer, and one never does
-Role: Anonymous — Dr Fatima Khumalo, Dr Sarah Botha and Ms Naledi Sebego (MSF respondents)
+Step 3.42 — Five more respondents answer, and one never does
+Role: Anonymous — Dr Fatima Khumalo, Dr Sarah Botha, Ms Naledi Sebego, Sister Thandi Nkosi and Dr Johan van Wyk (MSF respondents)
 Route: /msf/respond
-Do: The three answer; Dr Khoza does not open her link.
+Do: The five answer, each from their own link as in Step 3.39; Dr Khoza does not open hers.
   - Dr Khumalo: Above expectations, "Sound judgement in clinic; teaches the interns well".
   - Dr Botha: Above expectations, "Ready to run a ward; should document escalation decisions more fully".
   - Ms Sebego: Above expectations, "Refers early and listens to the therapists".
-Expect: Each submit ends on "Thank you" and "Your feedback on Lerato Molefe has been recorded." Six of the seven links
-  have now been used; Step 3.43 reads the counts.
+  - Sister Nkosi: Above expectations, "Escalates early and keeps the nursing notes in step".
+  - Dr van Wyk: Above expectations, "Thorough on ward rounds; presents concisely".
+Expect: Each submit ends on the h1 "Thank you" and "Your feedback on Lerato Molefe has been recorded." Eight of the
+  nine links have now been used; Step 3.43 reads the counts.
 
 Step 3.43 — Mr Smit resends the undelivered link
 Role: Coordinator — Mr Pieter Smit
 Route: /msf/campaigns/{CampaignId:int}
 Do: At least an hour after the open, open the campaign and resend.
-Expect: The counts read Responded: Peer doctor 1, Consultant 2, Nurse 2 and Allied health professional 1, and All
-  groups 7 invited, 6 responded. A warning reads "1 link was not delivered. Resend sends each of these respondents a new
-  link; this page never says who they are.", with a "Resend 1 link" button. After the resend, the page reads "1 new link
-  is being sent." and "1 link is still being sent…", and the warning is gone. The log holds one more "Feedback request:
-  Lerato Molefe …" stub email. It names no address; it is Dr Khoza's, the only link not answered.
+Expect: The status card reads "8 of 9 invitees have responded." The counts read Invited and Responded: Peer doctor 2
+  and 1, Consultant 3 and 3, Nurse 3 and 3, Allied health professional 1 and 1, and All groups 9 and 8. In the Links
+  part, a warning reads "1 link was not delivered. Resend sends each of these respondents a new link; this page never
+  says who they are.", with the "Resend 1 link" button inside it, and "A link nothing was heard of for an hour counts as
+  not delivered." under it. After the resend, the Links part reads "1 new link is being sent.", focused, and "1 link is
+  still being sent. Reload this page to see whether it was delivered.", and the warning is gone. The log holds one more
+  "Feedback request: Lerato Molefe …" stub email. It names no address; it is Dr Khoza's, the only link not answered.
 
 Step 3.44 — Mr Smit closes the campaign
 Role: Coordinator — Mr Pieter Smit
 Route: /msf/reports/{CampaignId:int} → /msf/campaigns/{CampaignId:int}
-Do: On the report, close the campaign. Then open its campaign page.
-Expect: The report reads "Campaign closed and anonymised for review." and State: Under review:
-  - total responses 6; reporting categories 2 of 2 required;
-  - the Nurse card (4.50 from 2) and the Consultant card (4.00 from 2) show their comments;
-  - Peer doctor and Allied health professional are suppressed.
-  Release to trainee is enabled. Beside it are the narrative and the optional "Supervision level this feedback
-  supports", which offers Not stated and the six rungs (D10). The campaign page says the campaign is closed to
-  responses and every respondent's address has been removed. It offers Withdraw campaign and "Review and release".
+Do: On the report, press Close campaign… and confirm. Then open its campaign page.
+Expect:
+  - **The dialog** (A5): "Close this campaign now?", "Close the campaign for Lerato Molefe (Default MSF, closing
+    `D+14`) before its last day?", then "It takes no more responses: the 1 link not yet used stops working.", "Every
+    respondent's email address is removed, so no link can be resent.", "The report keeps the 8 responses it has, for
+    you to review and release." and "Closing cannot be undone."; its buttons Keep it open and Close campaign.
+  - **Closed:** "Campaign closed and anonymised for review. Every respondent's email address has been removed.",
+    focused. The status card reads Under review, "Ready to release: every threshold is met.", with "8 responses, of
+    the 5 needed." and "2 respondent groups reporting, of the 2 needed." met.
+  - **By respondent group**, "As Lerato Molefe will read it once released." and how ratings are averaged, then the
+    groups that reported, in the groups' order: "Consultant · 4.00 average rating, from 3 responses" above "Nurse · 4.33
+    average rating, from 3 responses". Each card gives the comment question once, "What should the trainee keep doing
+    or improve?", and its three comments.
+  - **The suppressed line:** "Suppressed: Peer doctor, Allied health professional. Fewer than 3 responses each, so
+    their ratings and comments are not shown here. Lerato Molefe sees nothing of them, not even that they answered."
+    Named, never counted.
+  - **Release to Lerato Molefe**, after the groups: what a release does (she reads the narrative and the groups shown;
+    "2 evidence records are written to Lerato Molefe's portfolio, for PAED-010 and PAED-012."; she is sent an email
+    with a link to MSF reports; it cannot be undone), then the Narrative with its counter, "0 of 4,000 characters", and
+    the optional "Supervision level this feedback supports", which offers Not stated and the six rungs (D10). Release
+    to trainee… is offered.
+  - **The campaign page:** Under review, "Closed to responses, and every respondent's email address has been
+    removed.", the counts by group with their Responded column (9 and 8), and About's "Closed to responses: on `D`". It
+    offers "Review and release" and Withdraw campaign….
 
 Step 3.45 — A link opened after the close is refused
 Role: Anonymous — Dr Lindiwe Khoza (MSF respondent)
 Route: /msf/respond
 Do: Open the resent link.
-Expect: The page reads "Feedback request closed" and shows no questionnaire.
+Expect: The card's h1 reads "Feedback request closed", with a warning Alert saying the request has closed and is no
+  longer accepting responses. No questionnaire is shown.
 
 Step 3.46 — Mr Smit releases the report to Dr Molefe
 Role: Coordinator — Mr Pieter Smit
 Route: /msf/reports/{CampaignId:int} → /msf/campaigns
 Do: Write the narrative "Consistently strong feedback from nursing and consultant colleagues; keep documenting
-  escalation decisions". Leave the supervision level Not stated, since he is not a clinician. Release.
-Expect: The report reads "Report released to the trainee." and State Released. The actions card shows the narrative
-  and "Not stated" as stored, with no form (T246). "Evidence for" lists PAED-010 and PAED-012, with the time they were
-  recorded on the portfolio. In the list, the row reads Released, with "View campaign" and "View report" and no
-  Withdraw.
+  escalation decisions". Leave the supervision level Not stated, since he is not a clinician. Press Release to
+  trainee… and confirm.
+Expect:
+  - **The counter** reads "106 of 4,000 characters" once the narrative is typed.
+  - **The dialog** (A5): "Release this report to Lerato Molefe?": she can read it on MSF reports, the narrative and the
+    ratings and comments of the Consultant and Nurse groups, nothing of the other groups; "2 evidence records are
+    written to Lerato Molefe's portfolio: PAED-010 and PAED-012."; "Supervision level: Not stated."; "Lerato Molefe is
+    sent an email saying a report has been released, with a link to MSF reports. The email holds none of the
+    feedback."; and that releasing cannot be undone. Its buttons are Not yet and Release to Lerato Molefe.
+  - **Released:** "Report released to Lerato Molefe.", focused. The status card reads Released, "The report has been
+    released to the trainee.", and one line: "`D` hh:mm SAST · 8 responses, with 5 needed · 2 respondent groups
+    reporting, with 2 needed" (T325). "Evidence for" lists PAED-010 and PAED-012, "Recorded on the portfolio: `D` hh:mm
+    SAST". The groups read "As Lerato Molefe reads it.", the Consultant card first, and the suppressed line without its
+    last sentence. "As released" shows the narrative and Supervision level "Not stated" as stored, with no form (T246).
+  - **The mail:** the log holds one more stub email, "MSF report released: Default MSF": "Your multi-source feedback
+    report, Default MSF, was released to you on `D` by Pieter Smit.", that it holds none of the feedback, and the link
+    to `/msf/my-reports` (T369, Q8). The stub line prints no recipient (T282); it is Dr Molefe's.
+  - **The list:** the row reads Released, Invitations 9, Responses 8, with "View campaign" and "View report" and no
+    Withdraw.
 
 Step 3.47 — Dr Molefe reads her released report
 Role: Trainee — Dr Lerato Molefe
 Route: /msf/my-reports → /msf/my-reports/{CampaignId:int}
 Do: Open MSF reports, then view the report.
-Expect: One row: Default MSF (Multi-source feedback), released just now, 6 responses. The report shows the narrative
-  and two groups only, Nurse (4.50) and Consultant (4.00), each with its comments. It shows nothing of the peer doctor
-  or the physiotherapist, not even that they answered, and no group's count (T249).
+Expect:
+  - **MSF reports:** "Released aggregate feedback only. Individual responses are never shown."; "Your released
+    reports", a table captioned "Your released MSF reports, newest first", with the columns Report and Released and no
+    Responses (T369, F3). One row: Default MSF over Multi-source feedback, Released "`D` hh:mm SAST", the same moment the
+    coordinator's report gives (T325), and View, named "View the Default MSF report, released `D`".
+  - **Her report** is a page of its own at `/msf/my-reports/{CampaignId:int}`: h1 and tab "Default MSF, released `D`",
+    subtitle "Multi-source feedback · Released `D` hh:mm SAST", under the trail Home › MSF reports › Default MSF,
+    released `D`, with MSF reports lit.
+  - **Its sections:** Narrative, the coordinator's words. "What your colleagues said": "Grouped by respondent role; no
+    one is named.", how ratings are averaged, and that comments are word for word; then two groups only, "Consultant ·
+    4.00 average rating" first and "Nurse · 4.33 average rating", each with the comment question once and its three
+    comments, and no stray ".:" (T270). "On your portfolio": "Recorded as evidence on `D` hh:mm SAST:", with PAED-010
+    and PAED-012, each a link to its page under My progress.
+  - **Nothing of the others:** nothing of the peer doctors or the physiotherapist, not even that they answered, and no
+    group's count (T249).
 
 Step 3.48 — Dr Molefe's record and progress show her evidence and the feedback
 Role: Trainee — Dr Lerato Molefe
@@ -809,9 +921,11 @@ Step 3.49 — Mr Smit reads the programme's MSF coverage
 Role: Coordinator — Mr Pieter Smit
 Route: /msf/campaigns → /msf/coverage
 Do: Open MSF coverage from the campaign list.
-Expect: One programme: "Paediatric EPA Curriculum 11.1 at Kgosi Kgari Teaching Hospital".
-  - Semester 1, 2026 reads "5 trainees, whose programme had started by 30 June 2026". Semester 2, 2026 reads
-    "5 trainees, whose programme had started by 31 December 2026".
+Expect: "MSF coverage", under the trail Home › MSF campaigns › MSF coverage, with no Back to campaigns (T369); its
+  subtitle ends "Coverage is not a target." One programme: "Paediatric EPA Curriculum 11.1 at Kgosi Kgari Teaching
+  Hospital".
+  - Under it, a line for each semester: "Semester 1, 2026: 5 trainees, whose programme had started by 30 June 2026"
+    and "Semester 2, 2026: 5 trainees, whose programme had started by 31 December 2026".
   - By EPA, in Semester 2, 2026: PAED-010 and PAED-012 read "1 of 5 trainees covered", in bold. Every other cell reads
     "0 of 5 trainees covered".
   - By trainee: Lerato Molefe reads "2 of 15 EPAs covered" in Semester 2, 2026; everyone else reads 0 of 15.
@@ -825,8 +939,8 @@ Do: Open the sign-out confirmation by its address and press Cancel. Type `/accou
 Expect: A "Sign out" page, with no nav: "You are signed in as Pieter Smit (smit@kgk.wombat.local). Signing out ends
   your session in this browser.", with Cancel and Sign out. Cancel returns him to his dashboard, still signed in. A
   typed GET /account/logout draws the same page and signs nobody out (T317). Sign out lands on the sign-in page with
-  "You have signed out." MSF campaigns then asks him to sign in, and after signing in he is brought back to it. The
-  audit log records a Logout.
+  "You have signed out." MSF campaigns then asks him to sign in, and after signing in he is brought back to it, the
+  list as Step 3.46 left it (Pieter du Plessis's Withdrawn, Dr Molefe's Released). The audit log records a Logout.
 
 Step A.7.5 — Mr Smit on his phone
 Role: Coordinator — Mr Pieter Smit
@@ -834,9 +948,10 @@ Route: / → /msf/campaigns → /msf/campaigns/{CampaignId:int} → /committee/d
 Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue. On Decisions
   due, set Status to "Every status", press Show, and open By EPA.
 Expect: Home's header action, Start an MSF campaign, is a row of its own below the header's rule, 44px tall and the
-  page's width, and the cards stack in one column, each row's link a 44px block (T358, R2-Home k6). The campaign page
-  keeps its gutter (T226), and its invitee table (counts by respondent group: the page never lists an address) scrolls
-  within its card. Decisions due's filters stack, with Show and Clear filters each 44px tall; By EPA's fold summary is
+  page's width, and the cards stack in one column, each row's link a 44px block (T358, R2-Home k6). MSF campaigns
+  stacks its rows (T323): Pieter du Plessis's first, then Dr Molefe's, each a block with every field shown under its
+  column's name, each action a 44px block; nothing scrolls sideways. The campaign page keeps its gutter (T226), and its
+  invitee table (counts by respondent group: the page never lists an address) fits its card. Decisions due's filters stack, with Show and Clear filters each 44px tall; By EPA's fold summary is
   44px, and opened it reads one block per EPA; each decision is a block, its one action a 44px button the block's
   width; the pager's buttons are 44px (T364). The queue's filters stack above its table.
 ```

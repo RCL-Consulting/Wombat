@@ -59,7 +59,9 @@ public sealed class CampaignsListWithdrawTests : WombatTestContext
         button.ClassList.Should().Contain(["btn", "btn-sm", "btn-outline"])
             .And.NotContain("btn-danger", "the red button belongs only in the dialog's footer");
         button.GetAttribute("aria-label")
-            .Should().Be("Withdraw the campaign for Sipho Dlamini (Annual MSF, closing 2029-03-21)");
+            .Should().Be("Withdraw: the campaign for Sipho Dlamini (Annual MSF, closing 2029-03-21)",
+                "its visible label's word first, then the row it acts on (T369, L2)");
+        Text(button).Should().Be("Withdraw…", "it opens a dialog");
     }
 
     [Fact]
@@ -117,7 +119,8 @@ public sealed class CampaignsListWithdrawTests : WombatTestContext
         var cut = RenderPage(sender);
 
         WithdrawButton(cut, "Sipho Dlamini").Click();
-        cut.FindAll("dialog button").Single(button => Text(button) == "Cancel").Click();
+        // L3: the safe button says what it keeps.
+        cut.FindAll("dialog button").Single(button => Text(button) == "Keep the campaign").Click();
 
         sender.Commands.Should().BeEmpty();
     }
@@ -150,16 +153,33 @@ public sealed class CampaignsListWithdrawTests : WombatTestContext
     {
         var sender = new FakeSender(Campaign(2, "Sipho Dlamini", MsfCampaignState.Open))
         {
-            Refusal = new InvalidOperationException("Released campaigns cannot be withdrawn.")
+            Refusal = new MsfRefusedException("Released campaigns cannot be withdrawn.")
         };
         var cut = RenderPage(sender);
 
         WithdrawButton(cut, "Sipho Dlamini").Click();
         cut.FindAll("dialog button").Single(button => Text(button) == "Withdraw campaign").Click();
 
-        cut.WaitForAssertion(() => Text(cut.Find(".alert.alert-danger")).Should().Be("Released campaigns cannot be withdrawn."));
+        cut.WaitForAssertion(() => Text(cut.Find(".alert.alert-danger")).Should().Be("Not withdrawn. Released campaigns cannot be withdrawn."));
         cut.FindAll(".alert.alert-success").Should().BeEmpty();
         StateOf(cut, "Sipho Dlamini").Should().Be("Open");
+    }
+
+    /// <summary>T369, build review R1: an <see cref="InvalidOperationException" /> the framework threw is not a refusal.</summary>
+    [Fact]
+    public void AWithdrawThatFailsWithAFrameworkInvalidOperation_SaysTheFixedSentence()
+    {
+        var sender = new FakeSender(Campaign(2, "Sipho Dlamini", MsfCampaignState.Open))
+        {
+            Refusal = new InvalidOperationException("Sequence contains no elements.")
+        };
+        var cut = RenderPage(sender);
+
+        WithdrawButton(cut, "Sipho Dlamini").Click();
+        cut.FindAll("dialog button").Single(button => Text(button) == "Withdraw campaign").Click();
+
+        cut.WaitForAssertion(() => Text(cut.Find(".alert.alert-danger")).Should().Be("Not withdrawn. " + MsfCampaignText.ActionFailed));
+        cut.Markup.Should().NotContain("Sequence contains");
     }
 
     /// <summary>
@@ -172,7 +192,7 @@ public sealed class CampaignsListWithdrawTests : WombatTestContext
     {
         var sender = new FakeSender(Campaign(2, "Sipho Dlamini", MsfCampaignState.Open))
         {
-            Refusal = new InvalidOperationException(WithdrawMsfCampaignCommandHandler.ClosedSinceShown),
+            Refusal = new MsfRefusedException(WithdrawMsfCampaignCommandHandler.ClosedSinceShown),
             RefuseOnce = true,
             StateAfterRefusal = MsfCampaignState.UnderReview
         };
@@ -184,7 +204,7 @@ public sealed class CampaignsListWithdrawTests : WombatTestContext
 
         sender.Commands.Should().ContainSingle().Which.Should().BeOfType<WithdrawMsfCampaignCommand>()
             .Which.ConfirmedState.Should().Be(MsfCampaignState.Open);
-        cut.WaitForAssertion(() => Text(cut.Find(".alert.alert-danger")).Should().Be(WithdrawMsfCampaignCommandHandler.ClosedSinceShown));
+        cut.WaitForAssertion(() => Text(cut.Find(".alert.alert-danger")).Should().Be($"Not withdrawn. {WithdrawMsfCampaignCommandHandler.ClosedSinceShown}"));
         cut.Find(".alert.alert-danger").GetAttribute("role").Should().Be("alert");
         StateOf(cut, "Sipho Dlamini").Should().Be("Under review", "the list is read again after the refusal");
 
@@ -213,7 +233,10 @@ public sealed class CampaignsListWithdrawTests : WombatTestContext
         WithdrawButton(cut, "Sipho Dlamini").Click();
         var confirm = cut.FindAll("dialog button").Single(button => Text(button) == "Withdraw campaign");
         confirm.Click();
-        WithdrawButton(cut, "Sipho Dlamini").HasAttribute("disabled").Should().BeTrue("a withdraw is in flight");
+        // Never natively disabled (T234): a second press sends nothing, and the dialog's confirm says it is unavailable.
+        WithdrawButton(cut, "Sipho Dlamini").HasAttribute("disabled").Should().BeFalse();
+        cut.FindAll("dialog button").Single(button => Text(button) == "Withdraw campaign").GetAttribute("aria-disabled")
+            .Should().Be("true", "a withdraw is in flight");
         cut.FindAll("dialog button").Single(button => Text(button) == "Withdraw campaign").Click();
 
         sender.Commands.Should().ContainSingle();
@@ -244,7 +267,7 @@ public sealed class CampaignsListWithdrawTests : WombatTestContext
     {
         var cut = RenderPage(new FakeSender(Campaign(2, "Sipho Dlamini", MsfCampaignState.Open))
         {
-            Refusal = new InvalidOperationException("This campaign has already been withdrawn.")
+            Refusal = new MsfRefusedException("This campaign has already been withdrawn.")
         });
 
         WithdrawButton(cut, "Sipho Dlamini").Click();
@@ -288,20 +311,20 @@ public sealed class CampaignsListWithdrawTests : WombatTestContext
 
     private static IReadOnlyList<string> RowsWithAWithdrawButton(IRenderedFragment cut)
         => cut.FindAll("tbody tr")
-            .Where(row => row.QuerySelectorAll("button").Any(button => Text(button) == "Withdraw"))
-            .Select(row => Text(row.QuerySelector("td")!))
+            .Where(row => row.QuerySelectorAll("button").Any(button => Text(button) == "Withdraw…"))
+            .Select(row => Text(row.QuerySelector("th")!))
             .ToList();
 
     private static IElement WithdrawButton(IRenderedFragment cut, string subjectName)
         => cut.FindAll("tbody tr")
-            .Single(row => Text(row.QuerySelector("td")!) == subjectName)
+            .Single(row => Text(row.QuerySelector("th")!) == subjectName)
             .QuerySelectorAll("button")
-            .Single(button => Text(button) == "Withdraw");
+            .Single(button => Text(button) == "Withdraw…");
 
     private static string StateOf(IRenderedFragment cut, string subjectName)
         => Text(cut.FindAll("tbody tr")
-            .Single(row => Text(row.QuerySelector("td")!) == subjectName)
-            .QuerySelectorAll("td")[2]);
+            .Single(row => Text(row.QuerySelector("th")!) == subjectName)
+            .QuerySelectorAll("td")[1]);
 
     private static string Text(IElement element) => Regex.Replace(element.TextContent, @"\s+", " ").Trim();
 

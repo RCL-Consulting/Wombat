@@ -5,6 +5,7 @@ using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Identity;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Application.Features.MultiSourceFeedback;
@@ -24,7 +25,7 @@ public static class MsfCampaignRules
             .Include(campaign => campaign.Responses)
                 .ThenInclude(response => response.Answers)
             .SingleOrDefaultAsync(campaign => campaign.Id == campaignId, cancellationToken)
-            ?? throw new InvalidOperationException("The MSF campaign could not be found.");
+            ?? throw new MsfRefusedException("The MSF campaign could not be found.");
     }
 
     /// <summary>
@@ -123,6 +124,48 @@ public static class MsfCampaignRules
     }
 
     /// <summary>
+    /// The campaign's registrar as the campaign page, the report and the release read them (T369, flow 10, build-contracts
+    /// § 0): whether they are a current trainee, and the day their programme ended once none is running.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Current is <see cref="TraineeScopeResolver.ResolveCurrentAsync" />, the rule create, invite and open already apply
+    /// (<see cref="EnsureCampaignTakesNewWorkAsync" />), so a page never offers what the command would refuse. The end is
+    /// the most recent profile's <see cref="TraineeProfile.EndedOn" />, read only when no profile is running: a locked
+    /// registrar is not current but their programme has not ended, so they have no end (K13), and one whose programme has
+    /// ended reads its day (K14, R10). The release reads it too: no release mail once the programme has ended (F4).
+    /// </para>
+    /// <para>
+    /// It only reads, and asks nothing of scope: each caller has admitted the reader to the campaign first.
+    /// </para>
+    /// </remarks>
+    public static async Task<MsfSubjectStanding> SubjectStandingAsync(
+        IApplicationDbContext dbContext,
+        IUserAdministrationService users,
+        string subjectUserId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(dbContext);
+        ArgumentNullException.ThrowIfNull(users);
+
+        var isCurrent = await TraineeScopeResolver.ResolveCurrentAsync(dbContext, users, subjectUserId, cancellationToken)
+            is not null;
+
+        // EndedOn is computed on the entity, so the two days it is read from are what the query asks for.
+        var profiles = await dbContext.Set<TraineeProfile>()
+            .AsNoTracking()
+            .Where(profile => profile.UserId == subjectUserId)
+            .Select(profile => new { profile.IsActive, profile.CompletedOn, profile.DeactivatedOn })
+            .ToListAsync(cancellationToken);
+
+        var endedOn = profiles.Count == 0 || profiles.Any(profile => profile.IsActive)
+            ? null
+            : profiles.Max(profile => profile.CompletedOn ?? profile.DeactivatedOn);
+
+        return new MsfSubjectStanding(isCurrent, endedOn);
+    }
+
+    /// <summary>
     /// <see cref="EnsureCampaignIsInScopeAsync" />'s rule, answering the campaign's subject once the caller is admitted.
     /// </summary>
     private static async Task<string> SubjectOfCampaignInScopeAsync(
@@ -141,7 +184,7 @@ public static class MsfCampaignRules
 
         if (subjectUserId is null && principal.IsAdministrator() && !RunsNoCampaigns(principal))
         {
-            throw new InvalidOperationException("The MSF campaign could not be found.");
+            throw new MsfRefusedException("The MSF campaign could not be found.");
         }
 
         if (subjectUserId is null ||
@@ -393,6 +436,13 @@ public static class MsfCampaignRules
     internal const string OwnCampaignRefused =
         "A multi-source feedback campaign cannot be run by the trainee it is about. Another coordinator at your " +
         "institution can run yours.";
+
+    /// <summary>
+    /// The refusal of a close whose caller carries no user id, so who closed the campaign could not be recorded (T369,
+    /// build review R3). A sign-in in a good state always carries one.
+    /// </summary>
+    public const string CallerUnknown =
+        "Wombat could not tell who you are, so the campaign was not closed. Sign out, sign in again, and close it again.";
 
     /// <summary>
     /// The refusal, at create, of any campaign to a caller who holds the Trainee role; also what the campaign pages say to
@@ -657,12 +707,18 @@ public static class MsfCampaignRules
     /// until the respondent's last day to respond and is refused as expired after it; otherwise both are judged alike.
     /// Either way the invitation takes one response: the first answer retires the previous link, and the current one is
     /// then refused as used (<see cref="LinkUsedMessage" />), as is the loser of two answers racing through both.
+    /// <para>
+    /// "Today" is the South African calendar's (<see cref="ProgrammeCalendar.DateOf" />, T369, T325), the calendar the
+    /// last day to respond was given in: judged on the UTC date, a link was still open for the first two hours of the
+    /// day after its last day. <paramref name="timeProvider" /> is the system clock unless a test pins one.
+    /// </para>
     /// </remarks>
     public static async Task<MsfInvitation> GetActiveInvitationByTokenAsync(
         IApplicationDbContext dbContext,
         string rawToken,
         IInvitationTokenService tokenService,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        TimeProvider? timeProvider = null)
     {
         // A link no token could be is refused before anything is read (T205), and so is a link mailed before T163, which
         // carries no selector.
@@ -701,7 +757,7 @@ public static class MsfCampaignRules
             throw LinkNotRecognised();
         }
 
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = ProgrammeCalendar.DateOf((timeProvider ?? TimeProvider.System).GetUtcNow().UtcDateTime);
 
         // The link a reminder replaced lasts until the last day to respond, the one deadline the respondent was given,
         // and not a day past it while the campaign waits for the auto-close job (T214).
@@ -823,8 +879,11 @@ public static class MsfCampaignRules
 
             if (question.Type == MsfQuestionType.LongText && answer.LongText!.Trim().Length > MsfResponseAnswer.LongTextMaxLength)
             {
+                // "4,000", as the field's help gives the limit (T369, build review D4): the page no longer cuts a paste
+                // at the limit silently (no maxlength), so this sentence is what a long comment meets.
                 throw Incomplete(
-                    $"The comment for '{question.Prompt}' is longer than {MsfResponseAnswer.LongTextMaxLength} characters. " +
+                    $"The comment for '{question.Prompt}' is longer than " +
+                    $"{MsfResponseAnswer.LongTextMaxLength.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)} characters. " +
                     "Please shorten it.",
                     question.Id);
             }
@@ -834,3 +893,13 @@ public static class MsfCampaignRules
     private static MsfResponseRefusedException Incomplete(string message, int? questionId = null)
         => new(MsfResponseRefusal.AnswersIncomplete, message) { QuestionId = questionId };
 }
+
+/// <summary>
+/// The campaign's registrar's standing (T369, build-contracts § 0; <see cref="MsfCampaignRules.SubjectStandingAsync" />).
+/// </summary>
+/// <param name="IsCurrent">A current trainee: what create, invite and open ask for.</param>
+/// <param name="EndedOn">
+/// The day the most recent programme ended, once none is running; null while one is (a locked registrar too), or when there
+/// is none.
+/// </param>
+public sealed record MsfSubjectStanding(bool IsCurrent, DateOnly? EndedOn);

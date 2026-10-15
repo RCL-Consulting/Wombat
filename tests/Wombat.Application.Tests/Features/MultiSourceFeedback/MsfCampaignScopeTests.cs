@@ -141,7 +141,7 @@ public sealed class MsfCampaignScopeTests
 
         var missing = await RefusalAsync(() => RunAsync(command, db, campaignId + 1000, TestPrincipals.Administrator()));
 
-        missing.Should().BeOfType<InvalidOperationException>().Which.Message.Should().Be("The MSF campaign could not be found.");
+        missing.Should().BeOfType<MsfRefusedException>().Which.Message.Should().Be("The MSF campaign could not be found.");
     }
 
     [Fact]
@@ -401,7 +401,7 @@ public sealed class MsfCampaignScopeTests
             .Should().BeOfType<UnauthorizedAccessException>();
 
         (await RefusalAsync(() => CreateAsync(db, noSuchTemplate, SubjectUserId, TestPrincipals.Coordinator(HostInstitution))))
-            .Should().BeOfType<InvalidOperationException>()
+            .Should().BeOfType<MsfRefusedException>()
             .Which.Message.Should().Be("The selected MSF template could not be found.");
 
         await db.SaveChangesAsync();
@@ -474,7 +474,7 @@ public sealed class MsfCampaignScopeTests
                 DateOnly.FromDateTime(DateTime.UtcNow),
                 DateOnly.FromDateTime(DateTime.UtcNow).AddDays(14),
                 MinimumResponses: 1,
-                MinimumCategoryResponses: 1,
+                MinimumCategoryResponses: 3,
                 MinimumRespondentCategories: 1,
                 EpaIds: [],
                 CreatedByUserId: principal.FindFirst(ClaimTypes.NameIdentifier)!.Value,
@@ -565,6 +565,8 @@ public sealed class MsfCampaignScopeTests
                         new MsfAggregationService(),
                         new ActivityService(db, new SchemaValidator(), new WorkflowEvaluator(), new CreditApplier(db), new FieldPermissionEvaluator()),
                         new ActivityReferenceDataService(db),
+                        FakeUserDirectory.Empty,
+                        TestNotices.None(FakeUserDirectory.Empty),
                         NullLogger<ReleaseMsfCampaignCommandHandler>.Instance)
                     .Handle(
                         new ReleaseMsfCampaignCommand(campaignId, "coordinator-user", null, null, principal),
@@ -576,7 +578,7 @@ public sealed class MsfCampaignScopeTests
     }
 
     private static Task<MsfCampaignAggregateReportDto?> ReportAsync(ApplicationDbContext db, int campaignId, ClaimsPrincipal principal)
-        => new GetCampaignAggregateReportQueryHandler(db, new MsfAggregationService())
+        => new GetCampaignAggregateReportQueryHandler(db, new MsfAggregationService(), FakeUserDirectory.Empty, new ActivityReferenceDataService(db))
             .Handle(new GetCampaignAggregateReportQuery(campaignId, principal), CancellationToken.None);
 
     private static async Task<int[]> ListAsync(ApplicationDbContext db, ClaimsPrincipal principal)

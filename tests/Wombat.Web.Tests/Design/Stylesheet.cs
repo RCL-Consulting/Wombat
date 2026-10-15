@@ -206,6 +206,18 @@ internal sealed partial class Stylesheet
 
     private static IEnumerable<(string Property, string Value)> Longhands(CssDeclaration declaration)
     {
+        // The block sides of a horizontal writing mode, so the MSF column's margin-block reset competes with a class's
+        // margin-bottom as it does in the browser (T369, build review D1).
+        if (declaration.Property is "margin-block" or "padding-block")
+        {
+            var sides = SplitOutsideQuotes(declaration.Value, ' ').Where(value => value.Length > 0).ToArray();
+            var side = declaration.Property[..declaration.Property.IndexOf('-', StringComparison.Ordinal)];
+            yield return (declaration.Property, declaration.Value);
+            yield return ($"{side}-top", sides[0]);
+            yield return ($"{side}-bottom", sides.Length > 1 ? sides[1] : sides[0]);
+            yield break;
+        }
+
         if (declaration.Property is not ("margin" or "padding"))
         {
             yield return (declaration.Property, declaration.Value);

@@ -52,9 +52,12 @@ public sealed partial class ProgrammeCoveragePageTests : TestContext
         Text(cut.Find("#msf-programme-1-10-heading")).Should().Be("Paediatric EPA Curriculum 11.1 at Demo Institution");
         cut.Find("#msf-programme-1-10-heading").TagName.Should().Be("H2");
 
-        section.QuerySelectorAll(".details-list > div").Select(Text).Should().Equal(
-            "Semester 1, 2026 (January to June) 3 trainees, whose programme had started by 30 June 2026",
-            "Semester 2, 2026 (July to November) 4 trainees, whose programme had started by 31 December 2026");
+        // T369 (V1): each semester's line a list item, the semester's name bold before it.
+        section.QuerySelectorAll(".coverage-windows > li").Select(Text).Should().Equal(
+            "Semester 1, 2026: 3 trainees, whose programme had started by 30 June 2026",
+            "Semester 2, 2026: 4 trainees, whose programme had started by 31 December 2026");
+        section.QuerySelectorAll(".coverage-windows > li > strong").Select(Text).Should().Equal(
+            "Semester 1, 2026:", "Semester 2, 2026:");
 
         Text(cut.Find("#msf-coverage-intro")).Should().Contain("covering the EPA closed in the semester")
             .And.Contain("counts towards no target").And.NotContain("about the EPA");
@@ -78,19 +81,19 @@ public sealed partial class ProgrammeCoveragePageTests : TestContext
         Text(cut.Find("#msf-programme-1-10-epas")).Should().Be("By EPA");
 
         var table = region.QuerySelector("table")!;
-        table.ClassList.Should().Contain(["clinic-table", "clinic-table--compact"]);
+        table.ClassList.Should().Contain(["clinic-table", "clinic-table--compact", "coverage-table"]);
         Text(table.QuerySelector("caption")!).Should().Be(MsfProgrammeCoverageText.EpaCaption);
         table.QuerySelectorAll("thead th").Select(Text).Should().Equal("EPA", "Semester 1, 2026", "Semester 2, 2026");
 
         var paed001 = cut.Find("#msf-programme-1-10-epa-101");
         Text(paed001.QuerySelector("th[scope='row']")!).Should().Be("PAED-001 Assess and manage the unwell child");
         paed001.QuerySelectorAll("td").Select(Text).Should().Equal("1 of 3 trainees covered", "1 of 4 trainees covered");
-        paed001.QuerySelectorAll("td strong").Should().HaveCount(2);
+        paed001.QuerySelectorAll("td.is-covered").Should().HaveCount(2, "a covered cell is bold by its class (T369, V1)");
 
         var local = cut.Find("#msf-programme-1-10-epa-130");
         Text(local.QuerySelector("th")!).Should().EndWith("The institution's own EPA");
         local.QuerySelectorAll("td").Select(Text).Should().Equal("1 of 1 trainee covered", "0 of 4 trainees covered");
-        local.QuerySelectorAll("td")[1].QuerySelector("span.muted").Should().NotBeNull("an uncovered count is muted, not a warning");
+        local.QuerySelectorAll("td")[1].ClassList.Should().NotContain("is-covered", "an uncovered count is plain, not a warning");
 
         cut.FindAll(".badge, .alert-warning, [role='progressbar'], .progress-bar").Should().BeEmpty(
             "coverage is not a verdict against a target, and there is no shortfall to show");
@@ -157,7 +160,7 @@ public sealed partial class ProgrammeCoveragePageTests : TestContext
 
         cut.Find("#msf-programme-1-10-epa-101").QuerySelectorAll("td").Select(Text).Should().Equal(
             "No trainee had started", "1 of 1 trainee covered");
-        cut.Find("section .details-list > div").TextContent.Should().Contain("No trainee on the programme had started by 30 June 2026");
+        cut.Find("section .coverage-windows > li").TextContent.Should().Contain("No trainee on the programme had started by 30 June 2026");
     }
 
     [Fact]
@@ -172,17 +175,47 @@ public sealed partial class ProgrammeCoveragePageTests : TestContext
         cut.FindAll("section").Should().BeEmpty();
     }
 
+    /// <summary>
+    /// A failed read (V5, T329): fixed words and Try again, never the exception's text; Try again reads again, and the
+    /// coverage comes.
+    /// </summary>
     [Fact]
-    public void AFailedRead_IsTheStatePanelsError()
+    public void AFailedRead_IsFixedWords_WithTryAgain_AndTryAgainReadsAgain()
     {
         SignIn(WombatRoles.Coordinator);
-        _sender.Failure = new InvalidOperationException("The coverage could not be read.");
+        JSInterop.Mode = JSRuntimeMode.Loose; // the heading takes the focus once the retry has answered
+        _sender.Failure = new InvalidOperationException("developer detail");
 
         var cut = Render();
 
         var alert = cut.Find(".alert.alert-danger");
         alert.GetAttribute("role").Should().Be("alert");
-        Text(alert).Should().Be("The coverage could not be read.");
+        Text(alert).Should().Be($"{MsfProgrammeCoverageText.LoadFailed} Try again");
+        cut.Markup.Should().NotContain("developer detail");
+
+        _sender.Failure = null;
+        _sender.Answer = Coverage(Paediatrics());
+        cut.Find(".alert-row button").Click();
+
+        cut.WaitForState(() => cut.FindAll("section#msf-programme-1-10").Count == 1);
+        _sender.Asked.Should().HaveCount(2);
+    }
+
+    /// <summary>
+    /// The header (V1, T369): "Coverage is not a target." in the subtitle, and no "Back to campaigns": the trail is enough.
+    /// </summary>
+    [Fact]
+    public void TheHeader_SaysCoverageIsNotATarget_AndOffersNoBackButton()
+    {
+        SignIn(WombatRoles.Coordinator);
+        _sender.Answer = Coverage(Paediatrics());
+
+        var cut = Render();
+
+        Text(cut.Find(".page-subtitle")).Should().EndWith("Coverage is not a target.");
+        cut.Markup.Should().NotContain("Back to campaigns");
+        cut.FindAll(".header-container a, .header-container button").Should().BeEmpty();
+        cut.Find(".msf-page > section.coverage-programme").Should().NotBeNull("the page's column holds each programme");
     }
 
     [Theory]

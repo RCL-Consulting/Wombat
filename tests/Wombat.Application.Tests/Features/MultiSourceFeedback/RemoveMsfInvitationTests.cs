@@ -140,7 +140,7 @@ public sealed class RemoveMsfInvitationTests
 
         foreach (var refusal in new[] { nothing, anotherCampaigns })
         {
-            refusal.Should().BeOfType<InvalidOperationException>().Which.Message.Should().Be(NotADraftRefusal(state));
+            refusal.Should().BeOfType<MsfRefusedException>().Which.Message.Should().Be(NotADraftRefusal(state));
         }
     }
 
@@ -183,9 +183,9 @@ public sealed class RemoveMsfInvitationTests
 
         var nothing = await RefusalInItsOwnContextAsync(campaignId, 999_999, TestPrincipals.Coordinator(HostInstitution));
 
-        otherCampaigns.Should().BeOfType<InvalidOperationException>()
+        otherCampaigns.Should().BeOfType<MsfRefusedException>()
             .Which.Message.Should().Be(RemoveMsfInvitationCommandHandler.NotInvited);
-        nothing.Should().BeOfType<InvalidOperationException>().Which.Message.Should().Be(otherCampaigns.Message);
+        nothing.Should().BeOfType<MsfRefusedException>().Which.Message.Should().Be(otherCampaigns.Message);
 
         await ShouldStillInviteAsync(campaignId, Peer);
         await ShouldStillInviteAsync(otherCampaignId, Nurse);

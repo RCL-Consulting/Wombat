@@ -16,6 +16,7 @@ using Wombat.Domain.Identity;
 using Wombat.Domain.MultiSourceFeedback;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.MultiSourceFeedback;
 
@@ -35,7 +36,7 @@ namespace Wombat.Application.Tests.Features.MultiSourceFeedback;
 /// its actor rules and its empty <c>counts_for</c>.
 /// </para>
 /// </remarks>
-public sealed class MsfEvidenceFanOutTests
+public sealed partial class MsfEvidenceFanOutTests
 {
     private const int CurriculumId = 3000;
     private const int InstitutionId = 10;
@@ -325,7 +326,7 @@ public sealed class MsfEvidenceFanOutTests
         var release = () => ReleaseAsync(db, campaign.Id, entrustmentLevel: null, narrative: null);
 
         await release.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*respondent categories*");
+            .WithMessage("*respondent groups report*"); // "Respondent group", one label everywhere (T369)
         db.Activities.Should().BeEmpty();
     }
 
@@ -484,6 +485,8 @@ public sealed class MsfEvidenceFanOutTests
             new MsfAggregationService(),
             BuildActivityService(db),
             new ActivityReferenceDataService(db),
+            FakeUserDirectory.Empty,
+            TestNotices.None(FakeUserDirectory.Empty),
             NullLogger<ReleaseMsfCampaignCommandHandler>.Instance);
 
         var release = () => handler.Handle(
@@ -577,6 +580,8 @@ public sealed class MsfEvidenceFanOutTests
             new MsfAggregationService(),
             BuildActivityService(db),
             new ActivityReferenceDataService(db),
+            FakeUserDirectory.Empty,
+            TestNotices.None(FakeUserDirectory.Empty),
             NullLogger<ReleaseMsfCampaignCommandHandler>.Instance);
 
         await handler.Handle(
@@ -586,7 +591,7 @@ public sealed class MsfEvidenceFanOutTests
 
     /// <summary>The campaign's report as the coordinator who runs it reads it (<see cref="GetCampaignAggregateReportQuery" />).</summary>
     private static async Task<MsfCampaignAggregateReportDto> ReportAsync(ApplicationDbContext db, int campaignId)
-        => (await new GetCampaignAggregateReportQueryHandler(db, new MsfAggregationService())
+        => (await new GetCampaignAggregateReportQueryHandler(db, new MsfAggregationService(), FakeUserDirectory.Empty, new ActivityReferenceDataService(db))
             .Handle(new GetCampaignAggregateReportQuery(campaignId, Coordinator()), CancellationToken.None))!;
 
     private static ActivityService BuildActivityService(ApplicationDbContext db, TimeProvider? clock = null)

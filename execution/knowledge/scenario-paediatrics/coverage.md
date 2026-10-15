@@ -119,9 +119,11 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/committee/reviews/{ReviewId:int}` | CommitteeDecisions/ReviewDetail.razor | CommitteeMember, Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 4.6, 4.7, 4.9, 4.10, 4.11, 4.15, 4.16, 4.17, 4.18, 4.19, 4.20, 4.22, 4.23, 4.24, 4.25, 4.26, 4.27, 4.28, 4.29, 4.30, 4.31, 4.32, 4.33, 4.41, 4.44, 4.45, 4.46, 4.47, 4.49, 4.50, 5.2, 5.3, 5.4, 5.5, 5.6, A.1.10, A.1.14, A.7.6, A.7.13, A.7.14 |
 | `/Error` | Error.razor | Anyone, signed in or not (static; T321) | A.5.8 |
 | `/msf/campaigns` | MultiSourceFeedback/CampaignsList.razor | Coordinator, Administrator | 3.34, 3.38, 3.41, 3.46, 3.49, A.4.7, A.7.5 |
-| `/msf/campaigns/new`, `/msf/campaigns/{CampaignId:int}` | MultiSourceFeedback/CampaignEdit.razor | Coordinator, Administrator | 3.34, 3.35, 3.36, 3.37, 3.38, 3.43, 3.44, A.7.5 |
+| `/msf/campaigns/new` | MultiSourceFeedback/NewCampaign.razor | Coordinator, Administrator | 3.34, 3.35, 3.38 |
+| `/msf/campaigns/{CampaignId:int}` | MultiSourceFeedback/CampaignEdit.razor | Coordinator, Administrator | 3.35, 3.36, 3.37, 3.38, 3.43, 3.44, A.7.5 |
 | `/msf/coverage` | MultiSourceFeedback/ProgrammeCoverage.razor | Coordinator, Administrator | 3.49 |
-| `/msf/my-reports`, `/msf/my-reports/{CampaignId:int}` | MultiSourceFeedback/MyMsfReports.razor | Trainee, Coordinator, Administrator; a trainee reads only her own released reports | 3.47, 5.22 |
+| `/msf/my-reports` | MultiSourceFeedback/MyMsfReports.razor | Trainee, Coordinator, Administrator; a trainee reads only her own released reports | 3.47, 5.22 |
+| `/msf/my-reports/{CampaignId:int}` | MultiSourceFeedback/MyMsfReport.razor | Trainee, Coordinator, Administrator; only the subject's own released report, any other id goes to her list with one alert | 3.47 |
 | `/msf/reports/{CampaignId:int}` | MultiSourceFeedback/CampaignReport.razor | Coordinator, Administrator | 3.41, 3.44, 3.46 |
 | `/msf/respond` | MultiSourceFeedback/MsfRespond.razor | Anyone, signed in or not (a static page) | 3.39, 3.40, 3.42, 3.45 |
 | `/not-found` | NotFound.razor | Anyone, signed in or not | 1.23, A.5.4, A.5.5 |

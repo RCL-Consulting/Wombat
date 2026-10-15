@@ -291,9 +291,12 @@ public sealed class NotFoundPageFlowTests : IClassFixture<MsfRespondPageFlowTest
         var page = Parse(html);
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound, html);
-        page.QuerySelector("h2")!.TextContent.Should().Be("Feedback link not recognised");
+        page.QuerySelector("h1")!.TextContent.Should().Be("Feedback link not recognised");
         page.QuerySelector(".alert")!.TextContent.Should().NotBeNullOrWhiteSpace();
-        page.QuerySelector("h1").Should().BeNull("the respondent page's own refusal, not the app's not-found page");
+        // Since T369 the card's heading is the page's h1, so its card says whose refusal it is, not the heading's level.
+        page.QuerySelector(".account-form-container.respond-card").Should().NotBeNull(
+            "the respondent page's own refusal, not the app's not-found page");
+        page.QuerySelectorAll("h1").Should().ContainSingle();
     }
 
     private static async Task ShouldBeBareAsync(HttpResponseMessage response, HttpStatusCode status)

@@ -50,7 +50,9 @@ public sealed class CampaignOpenInFlightTests : WombatTestContext
         // page, where a refused open that leaves the button would leave it. A second click sends nothing (below).
         OpenButton(cut).HasAttribute("disabled").Should().BeFalse();
         OpenButton(cut).TextContent.Trim().Should().Be("Opening campaign…");
-        AddButton(cut).HasAttribute("disabled").Should().BeTrue("an invitee added mid-open would be left out of the mailing");
+        // Never natively disabled (T234): an invitee added mid-open would be left out of the mailing, so a press sends
+        // nothing while the open runs (AnInviteeSubmittedWhileAnOpenRuns_IsNotSent).
+        AddButton(cut).HasAttribute("disabled").Should().BeFalse();
 
         sender.Release();
 
@@ -105,7 +107,7 @@ public sealed class CampaignOpenInFlightTests : WombatTestContext
         var cut = Render(sender);
 
         OpenButton(cut).Click();
-        sender.Refuse(new InvalidOperationException(OpenMsfCampaignCommandHandler.InvitationsNotSent));
+        sender.Refuse(new MsfRefusedException(OpenMsfCampaignCommandHandler.InvitationsNotSent));
 
         cut.WaitForAssertion(() => cut.FindAll(".alert-danger").Should().ContainSingle(), AsyncWorkTimeout);
         OpenButton(cut).HasAttribute("disabled").Should().BeFalse();
@@ -168,7 +170,8 @@ public sealed class CampaignOpenInFlightTests : WombatTestContext
                     setup.CampaignId, "Default MSF", MsfTemplateKind.Msf, _state,
                     [MsfRespondentCategory.PeerDoctor, MsfRespondentCategory.Nurse])
                 {
-                    Invitees = [new MsfInviteeCountDto(MsfRespondentCategory.PeerDoctor, 3, 0)]
+                    Invitees = [new MsfInviteeCountDto(MsfRespondentCategory.PeerDoctor, 3, 0)],
+                    SubjectIsCurrent = true
                 },
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };

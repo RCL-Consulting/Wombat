@@ -79,7 +79,7 @@ public sealed class AuditOnRefusedSavePostgresTests : IAsyncLifetime
 
             // Since T206 the handler names the refusal for the coordinator, and carries the concurrency error inside it.
             var thrown = (await secondOpen.Should().ThrowAsync<InvalidOperationException>()).Which;
-            secondOutcome.Thrown.Should().BeOfType<InvalidOperationException>()
+            secondOutcome.Thrown.Should().BeOfType<MsfRefusedException>()
                 .Which.InnerException.Should().BeOfType<DbUpdateConcurrencyException>("the handler's own save was refused");
             thrown.Should().BeSameAs(
                 secondOutcome.Thrown,

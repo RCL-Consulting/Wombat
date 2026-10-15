@@ -69,11 +69,14 @@ public sealed class AuthCardStyleTests
     [Fact]
     public void TheWideCard_KeepsItsOwnFlow()
     {
-        // The MSF respondent's questionnaire (T205) keeps its margins and its <h2>s: the new rhythm is the auth card's.
+        // The MSF respondent's questionnaire (T205) keeps its margins: the new rhythm is the auth card's. Its heading is the
+        // card's one <h1> in every state since T369, so the wide card's h2 rule styled nothing and went (build review D8).
         var app = Stylesheet.AppCss();
 
         app.Computed(".account-form-container--wide")["display"].Should().Be("block");
-        app.Computed(".account-form-container--wide h2")["font-size"].Should().Be("2rem");
+        app.RulesFor(".account-form-container--wide h2").Should().BeEmpty();
+        File.ReadAllText(Stylesheet.WebFile("Components", "Pages", "MultiSourceFeedback", "MsfRespond.razor"))
+            .Should().NotContain("<h2");
     }
 
     [Fact]

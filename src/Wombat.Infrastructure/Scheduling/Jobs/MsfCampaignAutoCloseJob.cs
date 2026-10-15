@@ -4,13 +4,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Scheduling;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Infrastructure.Scheduling.Jobs;
 
 /// <summary>
-/// Closes, hourly, each open MSF campaign whose window has ended (<see cref="MsfCampaign.ClosesOn" /> before today), and
-/// so anonymises its respondents (<see cref="MsfCampaign.Close" />, T184).
+/// Closes, hourly, each open MSF campaign whose window has ended (<see cref="MsfCampaign.ClosesOn" /> before today on the
+/// South African calendar), and so anonymises its respondents (<see cref="MsfCampaign.Close" />, T184). It closes as
+/// nobody: the campaign's <see cref="MsfCampaign.ClosedByUserId" /> stays null (T369, F5).
 /// </summary>
 /// <remarks>
 /// <para>
@@ -21,9 +23,12 @@ namespace Wombat.Infrastructure.Scheduling.Jobs;
 /// same went for a resend of a campaign's links (<c>ResendMsfLinks</c>), which writes the campaign row, unchanged, to be
 /// checked against that token. An hour late is an hour more before its respondents are anonymised and its report is
 /// ready to release. <see cref="MsfCampaign.ClosedOn" /> places a campaign by its UTC day: the semester its coverage counts
-/// in, the committee window that sees it, and the date its evidence carries. A campaign falls due at midnight UTC, when
-/// the first run after it is due, so an hour late moves that day only for a campaign already nearly a day overdue, as
-/// after a host that was down; at the end of June or December that day is the semester's.
+/// in, the committee window that sees it, and the date its evidence carries. A campaign falls due once its last day has
+/// passed on the South African calendar (T369, T325: <see cref="ProgrammeCalendar.DateOf" />), the calendar its
+/// coordinator chose the day on and its respondents' links expire by: at 22:00 UTC, midnight in South Africa, not two
+/// hours later at midnight UTC. The first run after it closes it. An hour late moves its UTC day only for a campaign
+/// already nearly a day overdue, as after a host that was down; at the end of June or December that day is the
+/// semester's.
 /// </para>
 /// <para>
 /// <b>A save the token refuses</b> is followed by one more read of that campaign. Closed or withdrawn elsewhere, it is
@@ -52,7 +57,9 @@ public sealed class MsfCampaignAutoCloseJob : IScheduledJob
 
     public async Task ExecuteAsync(ScheduledJobContext context, CancellationToken cancellationToken)
     {
-        var today = DateOnly.FromDateTime(context.UtcNow);
+        // "Past its last day" on the South African calendar, as the report's "It closes by itself once 2026-10-28 has
+        // passed" means it (T369, T325).
+        var today = ProgrammeCalendar.DateOf(context.UtcNow);
 
         List<int> expired;
         await using (var scope = _scopeFactory.CreateAsyncScope())
@@ -177,7 +184,8 @@ public sealed class MsfCampaignAutoCloseJob : IScheduledJob
             return new Attempt(Outcome.NoLongerDue, stateNow);
         }
 
-        campaign.Close(utcNow);
+        // Closed by nobody: the report reads a null closer as "Closed by itself" (T369, F5).
+        campaign.Close(closedByUserId: null, utcNow);
 
         try
         {

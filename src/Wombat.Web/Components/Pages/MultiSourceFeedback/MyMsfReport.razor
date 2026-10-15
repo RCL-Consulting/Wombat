@@ -1,0 +1,173 @@
+@page "/msf/my-reports/{CampaignId:int}"
+@attribute [Authorize(Roles = "Trainee,Coordinator,Administrator")]
+@using Wombat.Web.Components.Shared.Progress
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject ILogger<MyMsfReport> Logger
+@inject IJSRuntime JS
+
+@*
+  Her report (T369, flow 10, lane T; boards R3-M3, M4, M8–M11; round 3 F3, M2, S6, S8; T270, T325). A page of its own,
+  owned by MSF reports (NavOwners: MSF reports lit, the trail Home › MSF reports › it); its h1, tab and crumb
+  "{template}, released {date}". One column at the reading measure: Narrative, What your colleagues said, On your
+  portfolio.
+
+  - Admits the roles MyMsfReports admits, for the reason given there (T269). Shown only when the handler marks the copy
+    the caller's own (IsSubjectsCopy, the answer that also leaves the teaching contexts unnamed, T164) and it is
+    Released. Anything else, an unknown id included, goes to her list with one info alert, "That report could not be
+    found." (M5, M11): an id confirms nothing. A failed read is the load error with Try again, never that alert (M10).
+  - What your colleagues said: MsfGroupCards for her (ForTrainee: the group and its average, no count, T249; the question
+    once, never "Prompt.: 4.00", T270), the groups that cleared the threshold only, and nothing of the others; for
+    learner feedback, how many teaching contexts responded, never their names (T164).
+  - On your portfolio: each EPA the release recorded, a link to its page under My progress; one not recorded is left
+    out, and a report that recorded none says so (M4).
+  - Every moment "yyyy-MM-dd hh:mm SAST", every date the South African calendar's (T325).
+*@
+
+<PageTitle>@Heading · Wombat</PageTitle>
+
+<PageHeader Title="@Heading" Subtitle="@Subtitle" />
+
+@* Always present, filled while the report is read: a live region added with its words in it is often not read. *@
+<p class="visually-hidden" role="status">@(_loading ? MsfReportText.Loading : null)</p>
+
+<div class="msf-page">
+  <StatePanel IsLoading="@(_loading || _leaving)" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusHeadingAsync">
+    <LoadingContent>
+      <section class="detail-card detail-card--emphasis" aria-busy="true">
+        <Skeleton Count="2" Height="3rem" />
+      </section>
+      <section class="detail-card" aria-busy="true">
+        <Skeleton Count="3" Height="3rem" />
+      </section>
+    </LoadingContent>
+    <ChildContent>
+      @if (_report is not null)
+      {
+        var report = _report;
+        var recorded = report.CoveredEpas.Where(epa => epa.Recorded).ToList();
+        <div class="my-report">
+          @if (!string.IsNullOrWhiteSpace(report.CoordinatorNarrative))
+          {
+            <section class="detail-card detail-card--emphasis" aria-labelledby="my-report-narrative">
+              <h2 id="my-report-narrative" class="section-title">@MyMsfReportText.NarrativeHeading</h2>
+              <p class="narrative">@report.CoordinatorNarrative</p>
+            </section>
+          }
+
+          <section class="msf-stack-card" aria-labelledby="my-report-groups">
+            <div>
+              <h2 id="my-report-groups">@MyMsfReportText.GroupsHeading</h2>
+              <p class="groups-intro">@MyMsfReportText.GroupsIntro(report.Kind)</p>
+              @if (report.TeachingContextCount is int contexts)
+              {
+                @* T164: the count, never the names. A context is a finer breakdown than the group the threshold
+                   protects, and a name beside a handful of answers can say which learner wrote which. *@
+                <p id="my-report-contexts">@MsfReportText.TeachingContexts(contexts, null)</p>
+              }
+            </div>
+            <MsfGroupCards Categories="report.Categories" ForTrainee="true" />
+          </section>
+
+          <section class="detail-card" aria-labelledby="my-report-portfolio">
+            <h2 id="my-report-portfolio" class="section-title">@MyMsfReportText.PortfolioHeading</h2>
+            @if (recorded.Count == 0)
+            {
+              <p id="my-report-no-evidence">@MyMsfReportText.NoEvidence</p>
+            }
+            else
+            {
+              <p>@MyMsfReportText.RecordedOn(report.EvidenceRecordedOn)</p>
+              <ul class="portfolio-links">
+                @foreach (var epa in recorded)
+                {
+                  <li @key="epa.EpaId"><a href="@ProgressLinks.Epa(epa.EpaId)">@MyMsfReportText.EpaLine(epa)</a></li>
+                }
+              </ul>
+            }
+          </section>
+        </div>
+      }
+    </ChildContent>
+  </StatePanel>
+</div>
+
+@code {
+  [Parameter] public int CampaignId { get; set; }
+
+  private MsfCampaignAggregateReportDto? _report;
+  private bool _loading = true;
+  private string? _loadError;
+
+  // Not hers to read here: the page is on its way to her list, and shows the skeleton meanwhile, never the report.
+  private bool _leaving;
+
+  /// <summary>The h1, the tab's stem and the crumb (S6): "MSF report" while it is read or failed (M9, M10).</summary>
+  private string Heading => _report is { ReleasedOn: DateTime releasedOn } report
+    ? MyMsfReportText.Heading(report.TemplateName, releasedOn)
+    : MsfReportText.LoadingHeading;
+
+  private string? Subtitle => _report is { ReleasedOn: DateTime releasedOn } report
+    ? MyMsfReportText.Subtitle(report.Kind, releasedOn)
+    : null;
+
+  protected override async Task OnParametersSetAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    _leaving = false;
+    _report = null;
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+      // The handler decides who may read it and returns null otherwise (T113): the subject, once released. The check
+      // below is not that gate; it keeps an Administrator or a Coordinator, who may read reports about others, on a page
+      // that is about their OWN reports. Whether a copy is the caller's own is the handler's answer (IsSubjectsCopy,
+      // T269), the one that also leaves the teaching contexts unnamed, so this page never shows a copy that names them
+      // (T164).
+      var report = await Sender.Send(new GetCampaignAggregateReportQuery(CampaignId, authState.User));
+      if (report is { State: MsfCampaignState.Released, IsSubjectsCopy: true, ReleasedOn: not null })
+      {
+        _report = report;
+      }
+      else
+      {
+        _leaving = true;
+      }
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // T329: fixed words, never the exception's text; the failure to the log. Never the not-found alert (M10).
+      Logger.LogError(exception, "MSF report {CampaignId} could not be loaded for its trainee.", CampaignId);
+      _loadError = MsfReportText.LoadFailed;
+    }
+    finally
+    {
+      _loading = false;
+    }
+
+    if (_leaving)
+    {
+      // Her list, with one alert above it (M11), in place of this address in the history: Back must not return to a
+      // page that sends her on again.
+      Navigation.NavigateTo($"{MsfLinks.MyReports}?unavailable=true", replace: true);
+    }
+  }
+
+  private async Task RetryAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    StateHasChanged();
+    await LoadAsync();
+  }
+
+  private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+}

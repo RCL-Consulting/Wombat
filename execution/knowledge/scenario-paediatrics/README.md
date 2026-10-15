@@ -151,6 +151,24 @@ on a `wombat.local` domain so that no email can reach a real person.
 The Administrator appears only where nobody else may act: creating KGK, inviting the CollegeAdmin and Prof Mbatha,
 the platform's own pages, and the catalogue's College-level records.
 
+Dr Molefe's MSF respondents (Act 3, Steps 3.36 to 3.45), nine colleagues who answer without signing in (Dr Khumalo and
+Dr Botha hold accounts; the link needs none), each by respondent group:
+
+| Respondent group | Person | Address | Answers |
+|---|---|---|---|
+| Nurse | Sister Grace Mokwena | `grace.mokwena@kgk.wombat.local` | Above expectations (3.39) |
+| Nurse | Sister Palesa Tau, first added as Allied health professional and re-added | `palesa.tau@kgk.wombat.local` | Well above expectations (3.39) |
+| Nurse | Sister Thandi Nkosi | `nkosi@kgk.wombat.local` | Above expectations (3.42) |
+| Peer doctor | Dr Kagiso Motsepe, registrar | `kagiso.motsepe@kgk.wombat.local` | Meets expectations (3.39) |
+| Peer doctor | Dr Lindiwe Khoza, registrar | `lindiwe.khoza@kgk.wombat.local` | never answers |
+| Consultant | Dr Fatima Khumalo | `khumalo@kgk.wombat.local` | Above expectations (3.42) |
+| Consultant | Dr Sarah Botha | `botha@kgk.wombat.local` | Above expectations (3.42) |
+| Consultant | Dr Johan van Wyk | `vanwyk@kgk.wombat.local` | Above expectations (3.42) |
+| Allied health professional | Ms Naledi Sebego, physiotherapist | `naledi.sebego@kgk.wombat.local` | Above expectations (3.42) |
+
+Eight of nine answer. A group reports once 3 of it have answered (the campaign's minimum, never under 3): Consultant
+(4.00 from 3) and Nurse (4.33 from 3) report; Peer doctor (1) and Allied health professional (1) are suppressed.
+
 ## The world
 
 - **The College** (owns the catalogue): the College of Paediatricians of South Africa (CPSA), a constituent College of

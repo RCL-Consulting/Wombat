@@ -128,6 +128,8 @@ public static class NavOwners
 
         // T331: the MSF report and the coverage are reached from the campaigns, though they live outside /msf/campaigns.
         [typeof(CampaignEdit)] = [new([WombatRoles.Coordinator], NavItems.MsfCampaigns)],
+        // T369: New MSF campaign is its own page, under the campaigns as the campaign page is.
+        [typeof(NewCampaign)] = [new([WombatRoles.Coordinator], NavItems.MsfCampaigns)],
         [typeof(CampaignReport)] = [new([WombatRoles.Coordinator], NavItems.MsfCampaigns)],
         [typeof(ProgrammeCoverage)] = [new([WombatRoles.Coordinator], NavItems.MsfCampaigns)],
 
@@ -158,6 +160,10 @@ public static class NavOwners
         // Her own committee review (T366, flow 09, F8): Home › My committee reviews › the review. Only the Trainee: the page
         // admits an Administrator too, as the list does, but reads them nothing that is not their own.
         [typeof(MyReview)] = [new([WombatRoles.Trainee], NavItems.MyCommitteeReviews)],
+
+        // Her own released MSF report (T369, flow 10, S6): Home › MSF reports › the report. Only the Trainee: the page
+        // admits a Coordinator and an Administrator too (T269), as the list does, but reads them nothing not their own.
+        [typeof(MyMsfReport)] = [new([WombatRoles.Trainee], NavItems.MsfReports)],
 
         // A trainee's STARs are part of their record, reached from Home.
         [typeof(MyAuthorisations)] = [new([WombatRoles.Trainee], NavItems.MyProgress)],

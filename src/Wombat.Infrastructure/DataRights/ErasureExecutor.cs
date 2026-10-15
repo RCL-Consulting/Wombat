@@ -271,12 +271,13 @@ public sealed class ErasureExecutor : IErasureExecutor
             $"UPDATE \"PendingEntrustmentDecisions\" SET \"StagedByUserId\" = {pseudonym} WHERE \"StagedByUserId\" = {userId}",
             cancellationToken);
 
-        // --- MSF campaigns: pseudonymise subject, creator, reviewer ---
+        // --- MSF campaigns: pseudonymise subject, creator, reviewer, closer (T369, F5) ---
         // The invitations are loaded because withdrawing a campaign anonymises them (MsfCampaign.Withdraw): an unloaded
         // collection is empty, and nothing would be anonymised.
         var campaigns = await _dbContext.Set<MsfCampaign>()
             .Include(c => c.Invitations)
-            .Where(c => c.SubjectUserId == userId || c.CreatedByUserId == userId || c.ReviewedByUserId == userId)
+            .Where(c => c.SubjectUserId == userId || c.CreatedByUserId == userId || c.ReviewedByUserId == userId ||
+                        c.ClosedByUserId == userId)
             .ToListAsync(cancellationToken);
         foreach (var campaign in campaigns)
         {
@@ -294,6 +295,7 @@ public sealed class ErasureExecutor : IErasureExecutor
             if (campaign.SubjectUserId == userId) campaign.SubjectUserId = pseudonym;
             if (campaign.CreatedByUserId == userId) campaign.CreatedByUserId = pseudonym;
             if (campaign.ReviewedByUserId == userId) campaign.ReviewedByUserId = pseudonym;
+            if (campaign.ClosedByUserId == userId) campaign.ClosedByUserId = pseudonym; // T369, F5
         }
         // MSF responses are already anonymous — no action needed.
 
