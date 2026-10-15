@@ -26,9 +26,9 @@ every remaining item, with tests; the task file's closing note lists them.
 - Environment: the replay app on `:5180` runs `wombat_scenario_t290` (old build: before the wording fixes).
   The 2.19 stand-in account (pending290@kgk.wombat.local) exists in that database only.
 - Pushed through `cc80d5b3`. **T369 (flow 10) started:** canvas "Wombat 10" https://claude.ai/artifact/CPUXS577gX2yo79AryKmVE
-  (v23 installed, `tokens.css` by hand, mark `/_blob/d5b5890c1eb0efaad13d0d347d1ebf4c`). **In flight:** one agent
-  restating `design/flows/10-msf-campaign.md` + `round-1-ask.txt` (uncommitted; placeholder `/_blob/MARK`). Next: check
-  it, put the mark in, commit, give the operator § 6's questions and the round-1 send.
+  (v23 installed, `tokens.css` by hand, mark `/_blob/d5b5890c1eb0efaad13d0d347d1ebf4c`). Brief restated (`ded43219`); round 1 drawn, assessed (`b389a526`); the operator
+  picked RA + MA and Q8–Q10 as recommended (Q7, Q11 taken as recommended). **Next:** the operator sends
+  `design/flows/10-msf-campaign/round-2-ask.txt` (`0da23187`) on the canvas; then review round 2 from three sides.
 
 ## Session 2026-10-14 (Opus): T366 (flow 09) done, with T367
 
