@@ -25,6 +25,10 @@ every remaining item, with tests; the task file's closing note lists them.
   dialog and result now say the role goes; My activities' empty state tells only a Trainee to log one.
 - Environment: the replay app on `:5180` runs `wombat_scenario_t290` (old build: before the wording fixes).
   The 2.19 stand-in account (pending290@kgk.wombat.local) exists in that database only.
+- Pushed through `cc80d5b3`. **T369 (flow 10) started:** canvas "Wombat 10" https://claude.ai/artifact/CPUXS577gX2yo79AryKmVE
+  (v23 installed, `tokens.css` by hand, mark `/_blob/d5b5890c1eb0efaad13d0d347d1ebf4c`). **In flight:** one agent
+  restating `design/flows/10-msf-campaign.md` + `round-1-ask.txt` (uncommitted; placeholder `/_blob/MARK`). Next: check
+  it, put the mark in, commit, give the operator § 6's questions and the round-1 send.
 
 ## Session 2026-10-14 (Opus): T366 (flow 09) done, with T367
 
@@ -54,26 +58,3 @@ The machine reset overnight; nothing was in flight. The operator said "tie up th
   Kept beside them: `wombat_scenario`, `_pdf`, and the non-scenario ones (`wombat`, `wombat_snapshot_pre_t130_*`, ...).
 - **Branches** `t366`, `t366-*` (and older flows' `t3xx*`) kept locally; `t366*` worktrees under `.claude/worktrees/`.
 - **Scratch:** this session's scratchpad `g366` (`replay-pw.env`; act and states scripts; `prompt-*.txt`).
-
-## Sessions 2026-10-11 to 10-13 (Opus): harness 3.4; 111 done tasks archived; T361 (flow 07) and T364 (flow 08) done
-
-The operator said "upgrade the execution workspace", "move the done tasks" and "proceed". **The repo is `C:\dev\Wombat`,
-on GitHub (`origin`, RCL-Consulting/Wombat, public). Commit locally; push when the operator asks.** The harness is
-`C:\dev\rcl_execution\bin\harness.py` (the hooks in `.claude/settings.local.json`).
-
-### For the operator
-
-- **Decide:** whether to rewrite history to remove the contributor (deferred).
-- **T157 (deploy), T128 (backup), the College questions:** unchanged. The deploy now carries flows 02–09 and the Pkcs pin.
-- **Tasks flow 05's build closed in part** (still in `queued/`): T306 (Home's half), T346, T323 (the chart), T328.
-
-### Traps
-
-- **A design-system publish:** `list` the files and `read` the artifact itself first (a typed artifact refuses a
-  publish otherwise); `file_path` = the index, the rest in `files`, `root` = a folder holding `project/…`, one call.
-  A new canvas needs its tokens stylesheet written by hand (the system serves none): Wombat 09 lacked it until v18.
-- **A script must pass its base address explicitly** (a helper reading `BASE` at import wrote to the replay database).
-- **A killed background wait** (memory pressure): stop and report, never restart it unasked.
-- **Check new tables at 768 px** as well as 390 and 1280.
-- **Copied replay scripts carry stale paths, ids and date helpers;** compute every date from D.
-- **Paths with `\0…` in a Python string** become a NUL byte; task titles over ~150 characters break Windows paths.

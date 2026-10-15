@@ -1,0 +1,71 @@
+---
+id: T369
+title: Flow 10, the MSF campaign, has not been through the redesign loop
+status: in_progress
+priority: P2
+owner: agent
+depends_on: []
+created: 2026-10-15
+started: 2026-10-15
+---
+
+# T369 — Flow 10, the MSF campaign, has not been through the redesign loop
+
+> **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
+> data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
+> activities or old behaviour. Prefer the correct end state: re-author seeds, write destructive migrations, empty and
+> re-seed a database. The scenario corpus is still the test corpus, so show the change working end to end.
+
+**Severity:** Medium. Flow 10 is the tenth flow of the restructure (W-008, BRIEF § 8): a Coordinator runs a
+registrar's multi-source feedback campaign, colleagues answer anonymously on `/msf/respond` (the only page people without
+an account see), and the registrar reads the released report. Anonymity must hold, and a released report is evidence.
+**Surfaced:** 2026-10-15, after T290, D54 and D55 closed; the operator said "yes" to starting flow 10.
+**Model:** Opus. Design rounds, a review, a build and an acceptance replay, as T335–T366 needed.
+
+## Symptom
+
+The MSF pages (the campaign list and set-up, a campaign's page with its nominees and release, `/msf/respond`, and the
+registrar's released report) have not been designed for the restructure. Brief: `design/flows/10-msf-campaign.md`,
+written 2026-09-26, before flows 01–09. Known faults it takes up include T270 (MSF page polish) and the MSF halves of
+T329 and T272; the audits in step 1 list the rest.
+
+## What to build
+
+Run the loop as flow 09 ran it (`design/flows/09-outcomes-stars-appeals/`, BRIEF § 11 "Flow 08" and "Flow 09"):
+1. **Restate the brief** in flow 09's layout, from read-only audits of the code and the captures; check the pages table
+   against the code, including what flows 01–09 and D55 already changed; run `check_flow_completeness.py` and
+   `check_verbatim_steps.py`.
+2. **Stage** (`stage_upload.ps1 -Flow 10`); write § 1 + § 8 as ONE paste file.
+3. **A new canvas** ("Wombat 10") on the Wombat design system (version 23), with `tokens.css` written by hand.
+4. **Copy the mark** into it before round 1.
+5. **Rounds:** structure (or straight to fidelity, as the brief says), pick, fidelity; a review of the boards against
+   the code and the runbook; the operator's decisions; one correction round; check it item by item.
+6. **Build** in waves (flow 09's build lanes as template), integrate, review sized to the change, one fix pass, squash;
+   DESIGN.md amended with its banner.
+7. **Replay** the whole runbook on a fresh database (flow 09's `replay-brief.md`); keep capture names;
+   `check_baseline_paths.py`; re-take the flow's states on scratch copies.
+8. **Re-sync the design system** and republish (read the live files and compare with HEAD first).
+9. **Lessons** into BRIEF § 11, only what is new.
+
+## Verification
+
+- [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit.
+- [ ] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link.
+- [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/10-msf-campaign/`.
+- [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 10) — the squash commit and counts.
+- [ ] The whole runbook replays on a fresh database with no regression from flow 10, the baseline is re-captured, and
+  flow 10's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
+- [ ] The design system is re-synced and republished — its version number.
+
+## Related
+
+T366 (flow 09), T364 (flow 08), T162 (the system-managed MSF type), T153, T270, T329, T272, T334, D9, D55; BRIEF § 6,
+§ 8, § 11.
+
+## Notes
+
+- **2026-10-15, step 3–4 (ahead of step 1's commit).** Canvas "Wombat 10":
+  https://claude.ai/artifact/CPUXS577gX2yo79AryKmVE, created from the Design type, empty boards; design system v23
+  (1791997100-4a21) installed: `tokens.json`, `components/bundle.css`, the three fonts copied from the system, and
+  `tokens.css` written by hand (flow 09's, whose 54 properties match app.css's `:root`; `--shadow-raised` resolves to
+  the same value). The mark copied in as `/_blob/d5b5890c1eb0efaad13d0d347d1ebf4c`.
