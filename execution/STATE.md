@@ -55,6 +55,6 @@ and appeals (T366, `49e7cf5e`, with T367), each designed, replayed and in the de
 
 ## Recent
 
-- **2026-10-15:** T290 done (D54); D55, only a running programme files; runbook Steps 2.19, 5.22, 5.27–5.28, 6.41, A.1.6, A.4.6 await replay.
+- **2026-10-15:** T290 done (D54); D55, only a running programme files; Act 5 replayed (29/29), the other D54/D55 steps checked.
 - **2026-10-14:** T366, flow 09, done (`49e7cf5e`; T367 `e9b29081`; replay 331 steps, no regression; states 57, 2 corrected; one fix `9ba80586`; design system v23); Pkcs pinned (`a7f790b3`); T368 proposed.
 - **10-13 and before:** T364 (flow 08), T361 (flow 07), T358, T355, T350, T342, T339, T335 (flows 06 to 01); the repo moved to GitHub. Earlier: `git log`.

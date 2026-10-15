@@ -237,13 +237,14 @@ public sealed class MyActivitiesTests : TestContext
     public void WithoutTheTraineeRole_NeitherLogAnActivityLinkIsOffered(params string[] roles)
     {
         // D55: /activities/new admits the Trainee role alone, so a graduate (no role), a pending trainee or an assessor
-        // reading their own list is not offered a page that would refuse them. The empty state keeps its words.
+        // reading their own list is not offered a page that would refuse them, nor told to log one.
         _auth.SetRoles(roles);
         _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "trainee-1"));
 
         var cut = RenderMine([], []);
 
         cut.Find(".state-panel-title").TextContent.Should().Be("No activities yet");
+        cut.Find(".state-panel-copy").TextContent.Should().Be("Nothing has been filed about you.");
         cut.FindAll("a[href='/activities/new']").Should().BeEmpty();
     }
 

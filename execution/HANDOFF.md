@@ -17,7 +17,14 @@ every remaining item, with tests; the task file's closing note lists them.
   with no active profile (`ActivityFilingRules`); PendingTrainee's menu is Home alone. T153's create half settled (note
   there; its MSF notes remain). One agent repaired ~90 fixtures (`NomineeSeed.AddCurrentProgramme`); suites green:
   Application 3823, Infrastructure 1023, Web 3740, Architecture 52, Integration 491. Runbook 2.19 and 5.22 rewritten.
-- Not pushed: the D55 commit.
+- Pushed `fb6e465e`. Then **the runbook check** (one agent): Act 5 replayed on `wombat_scenario_t290` (from T366's
+  post-act4; D = 10-15), **29/29 as expected**, gaps only known tasks (T311, T313, T287, T314) and 5.8's issue day (Act 4
+  played a day earlier); snapshot `scenario-t290-post-act5`. On that state, without rewriting their Actuals: 6.41
+  (bar KGK-001), A.1.6, A.4.5–A.4.6 and a 2.19 stand-in (a new pending trainee) all pass. The log: no "Navigation failed"
+  after du Plessis lost Trainee 15–30 s after signing out. Two wording fixes after it (not replayed): Deactivate's
+  dialog and result now say the role goes; My activities' empty state tells only a Trainee to log one.
+- Environment: the replay app on `:5180` runs `wombat_scenario_t290` (old build: before the wording fixes).
+  The 2.19 stand-in account (pending290@kgk.wombat.local) exists in that database only.
 
 ## Session 2026-10-14 (Opus): T366 (flow 09) done, with T367
 

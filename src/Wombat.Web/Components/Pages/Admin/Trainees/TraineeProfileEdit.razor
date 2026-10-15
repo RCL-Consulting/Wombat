@@ -157,7 +157,7 @@
 
   private const string EndDateHelp =
     "Mark complete records it as the graduation day, archives the profile and removes the Trainee role. Deactivate " +
-    "records it as the day the trainee left without completing. It cannot be after today, and it cannot be changed " +
+    "records it as the day the trainee left without completing, and also removes the Trainee role (D54). It cannot be after today, and it cannot be changed " +
     "afterwards. Either way, the period it falls in holds no target unless it is in that period's last month, and " +
     "encounters observed after it count towards nothing in this programme, even those already counted.";
 
@@ -366,7 +366,8 @@
   private string DeactivateBody => _model is null
     ? string.Empty
     : $"Deactivate {_model.FullName}'s profile, with {_model.EndDate:yyyy-MM-dd} as their last day in the programme?" +
-      AfterTheDay + " The day cannot be changed afterwards, and a deactivated profile cannot be made active again.";
+      " The Trainee role is removed; they keep their own record, read-only." + AfterTheDay +
+      " The day cannot be changed afterwards, and a deactivated profile cannot be made active again.";
 
   private string CompleteBody => _model is null
     ? string.Empty
@@ -389,7 +390,8 @@
     day =>
     {
       _model!.DeactivatedOn = day;
-      return $"Trainee profile deactivated. Their last day in the programme is recorded as {day:yyyy-MM-dd}.";
+      return $"Trainee profile deactivated. Their last day in the programme is recorded as {day:yyyy-MM-dd}, and the " +
+        "Trainee role has been removed.";
     });
 
   private Task CompleteAsync() => EndAsync(

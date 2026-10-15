@@ -131,7 +131,7 @@ public sealed class TraineeProfileEndDateTests : TestContext
         command.Id.Should().Be(ProfileId);
         command.DeactivatedOn.Should().Be(new DateOnly(2026, 5, 31));
         Text(cut.Find(".alert.alert-success")).Should()
-            .Be("Trainee profile deactivated. Their last day in the programme is recorded as 2026-05-31.");
+            .Be("Trainee profile deactivated. Their last day in the programme is recorded as 2026-05-31, and the Trainee role has been removed.");
         Text(cut.Find("aside.detail-card")).Should().Contain("Left the programme: 2026-05-31");
         cut.FindAll("#programme-end-date").Should().BeEmpty("an inactive profile has nothing left to end");
 

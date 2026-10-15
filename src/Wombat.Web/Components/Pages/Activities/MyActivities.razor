@@ -27,7 +27,7 @@
             FocusAfterRetry="FocusContentAsync"
             IsEmpty="@(_page is { TotalCount: 0 } && _needsYou.Count == 0)"
             EmptyTitle="No activities yet"
-            EmptyBody="Log an activity to ask an assessor to rate an encounter, or to log a teaching session.">
+            EmptyBody="@EmptyBody">
   <EmptyActions>
     <AuthorizeView Roles="@ActivityFilingRules.FilingRole">
       <a class="btn btn-outline" href="/activities/new">Log an activity</a>
@@ -116,6 +116,13 @@
   protected override Task OnInitializedAsync() => LoadAsync();
 
   /// <summary>Reads Needs you and the first page; Try again reads both again.</summary>
+  /// <summary>Whether the caller may file (D55): the empty state tells only them to log an activity.</summary>
+  private bool _mayFile;
+
+  private string EmptyBody => _mayFile
+    ? "Log an activity to ask an assessor to rate an encounter, or to log a teaching session."
+    : "Nothing has been filed about you.";
+
   private async Task LoadAsync()
   {
     _loading = true;
@@ -123,6 +130,7 @@
     try
     {
       var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      _mayFile = user.IsInRole(ActivityFilingRules.FilingRole);
       _needsYou = await Sender.Send(new ListNeedsYouQuery(user));
       await ReadPageAsync(user, 1);
     }
