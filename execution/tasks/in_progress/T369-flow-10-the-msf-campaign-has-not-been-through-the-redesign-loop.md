@@ -86,3 +86,9 @@ T366 (flow 09), T364 (flow 08), T162 (the system-managed MSF type), T153, T270, 
   T329, T280, T324, T323 into the build. Recorded in `round-1-assessment.md` § 9. `round-2-ask.txt` written (323 lines;
   spec and steps boards). Flagged PROPOSED in it: no release mail when her programme has ended (D54: the link would land
   on a page she cannot open); "Closed by itself" inferred from the close's date.
+- **2026-10-15, round 2** (canvas 1792061893-64a5, 159 boards in `round-2/`; drawn without its screenshots) reviewed
+  from three sides (code, cast, design system; merged in `round-2-review.md`: M1–M10, S1–S17, 13 nits). The operator
+  took every recommendation on F1–F11: F1 an Open report shows no results until it closes; F2 a group floor of 3 (the
+  cast gains a third Nurse and Consultant; `Distribution` dropped); F5 `ClosedByUserId` stored (a migration); F3 no
+  Responses column on her list; F4 no release mail once her programme has ended; F6–F11 as recommended. Round 3 is
+  `round-3-ask.txt`, with six screenshots re-attached.

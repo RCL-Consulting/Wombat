@@ -8,33 +8,33 @@ act-3/3.44-1-report-under-review.png, act-3/3.46-1-report-released.png, act-3/3.
 act-3/3.47-1-molefe-report.png, act-A/A.7.5-2-campaigns-390.png). Read the orders in them before drawing (the list's
 rows, the respondent groups). If they do not arrive, say so on the Spec and take the orders from M1 and M2 below.
 
-THE OPERATOR'S DECISIONS (2026-10-‹dd›):
-  F1. An Open campaign's report. [F1: pending — recommended: while Open the report shows the status card and the
+THE OPERATOR'S DECISIONS (2026-10-15):
+  F1. An Open campaign's report. [F1, decided (the operator, 2026-10-15): while Open the report shows the status card and the
       threshold checklist only; the group cards and the suppressed line appear once the campaign is closed and its
       addresses removed. R1 (and its 390 and 768) redrawn so; 3.41's Expect loses the Nurse card.]
-  F2. A respondent group's minimum. [F2: pending — recommended: a floor of 3 for multi-source feedback, refused below 3
+  F2. A respondent group's minimum. [F2, decided (the operator, 2026-10-15): a floor of 3 for multi-source feedback, refused below 3
       on create; the rating's per-point counts dropped from the data. The cast gains a third Nurse and a third
       Consultant (‹name›, ‹address›, their rating and comment ‹…›) and every figure is recomputed.]
-  F3. Her MSF reports list. [F3: pending — recommended: no Responses column; Report, Released, View.]
-  F4. The release mail when her programme has ended. [F4: pending — recommended: none is sent; R6d's "No email is sent:
+  F3. Her MSF reports list. [F3, decided (the operator, 2026-10-15): no Responses column; Report, Released, View.]
+  F4. The release mail when her programme has ended. [F4, decided (the operator, 2026-10-15): none is sent; R6d's "No email is sent:
       she can no longer open MSF reports." stays, its PROPOSED chip removed.]
-  F5. How a campaign closed. [F5: pending — recommended: stored (DATA: ClosedByUserId, null when the hourly job closed
+  F5. How a campaign closed. [F5, decided (the operator, 2026-10-15): stored (DATA: ClosedByUserId, null when the hourly job closed
       it); R4's "Closed by itself on ‹date›, once 2026-10-28 had passed." reads it; "nightly" becomes "hourly"; the
       PROPOSED chip removed.]
-  F6. The required mark. [F6: pending — recommended: on every required control at every width: Template, Trainee, Opens
+  F6. The required mark. [F6, decided (the operator, 2026-10-15): on every required control at every width: Template, Trainee, Opens
       on, Closes on, the three minimums, the EPA group (its legend), the fold's Template name, Scale question and
       Comment question, the invitee's email and K15's Teaching context; none on the respondent group select (it always
       holds a value); "* marks a field you must fill in." above the create form's first card and the add form.]
-  F7. The status card's stripe. [F7: pending — recommended: the activity page's rule, as classes: blue
+  F7. The status card's stripe. [F7, decided (the operator, 2026-10-15): the activity page's rule, as classes: blue
       (detail-card--emphasis) on Draft and Under review, the control edge (--others) while Open, green (--done) when
       Released, red (--declined) when Withdrawn; the same on K and R.]
-  F8. Close campaign danger, Release primary. [F8: pending — recommended: keep as drawn; the Spec says Close destroys
+  F8. Close campaign danger, Release primary. [F8, decided (the operator, 2026-10-15): keep as drawn; the Spec says Close destroys
       (links and addresses) and Release does not.]
-  F9. "Open its campaign page". [F9: pending — recommended: alone on its own line under the report's subtitle (flow
+  F9. "Open its campaign page". [F9, decided (the operator, 2026-10-15): alone on its own line under the report's subtitle (flow
       07's .review-progress-link pattern, 24 px, 44 px at 390), out of the dot-separated subtitle.]
-  F10. R8a and R9. [F10: pending — recommended: redrawn for Dr Anele Dlamini as states.md 627–628 reach them: "MSF
+  F10. R8a and R9. [F10, decided (the operator, 2026-10-15): redrawn for Dr Anele Dlamini as states.md 627–628 reach them: "MSF
       report for Anele Dlamini", evidence for PAED-012, one invitee, 1 response, thresholds ‹n›; no "Illustration".]
-  F11. The add result. [F11: pending — recommended: "Invitee added." alone, as built; the address goes from K2's
+  F11. The add result. [F11, decided (the operator, 2026-10-15): "Invitee added." alone, as built; the address goes from K2's
       result.]
 
 MUST FIX (round 3's check takes each by number):
