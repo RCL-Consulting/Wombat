@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Thank you · Wombat</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+.respond-card{display:flex;flex-direction:column;gap:var(--space-md)}
+.respond-card h1{margin:0}
+.respond-card p{margin:0}
+.respond-card .alert{margin:0}
+@media (max-width:640.98px){.account-brand-mark{width:44px;height:44px}.account-brand-text{font-size:2rem}.respond-card h1{font-size:1.5rem}}
+</style>
+</helmet>
+<div class="auth-page-shell">
+<main class="auth-page-main">
+<div class="account-form-container account-form-container--wide respond-card">
+<div class="account-brand">
+<img class="account-brand-mark" src="/_blob/d5b5890c1eb0efaad13d0d347d1ebf4c" alt="" width="56" height="56">
+<span class="account-brand-text">Wombat</span>
+</div>
+<h1 tabindex="-1">Thank you</h1>
+<div class="alert alert-success" role="status">Your feedback on Lerato Molefe has been recorded.</div>
+<p>The link in your invitation has now been used, so it will not open the questionnaire again.</p>
+<p>You can close this page.</p>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":640}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

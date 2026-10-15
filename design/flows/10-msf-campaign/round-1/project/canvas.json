@@ -1,0 +1,334 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-10-15T14:00:00Z"
+ },
+ "title": "Wombat 10 · The MSF campaign",
+ "launch": {
+  "view": "canvas"
+ },
+ "pages": [],
+ "boards": {
+  "P1-List.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1280,
+   "h": 1000,
+   "title": "Proposal · MSF campaigns · after Withdraw (3.38) · 1280",
+   "expand": "fill"
+  },
+  "P1-List-390.dc.html": {
+   "x": 1360,
+   "y": 0,
+   "w": 390,
+   "h": 1400,
+   "title": "Proposal · MSF campaigns · released and withdrawn (3.46) · 390"
+  },
+  "P2-Create.dc.html": {
+   "x": 0,
+   "y": 1820,
+   "w": 1280,
+   "h": 1900,
+   "title": "Proposal · New MSF campaign · template created, trainee chosen (3.34–3.35) · 1280",
+   "expand": "fill"
+  },
+  "P2-Create-390.dc.html": {
+   "x": 1360,
+   "y": 1820,
+   "w": 390,
+   "h": 2800,
+   "title": "Proposal · New MSF campaign · 390"
+  },
+  "P2-Draft.dc.html": {
+   "x": 0,
+   "y": 5040,
+   "w": 1280,
+   "h": 1700,
+   "title": "Proposal · Campaign · draft, seven invitees (3.36) · 1280",
+   "expand": "fill"
+  },
+  "P2-Open.dc.html": {
+   "x": 1360,
+   "y": 5040,
+   "w": 1280,
+   "h": 1300,
+   "title": "Proposal · Campaign · open, a link not delivered (3.43) · 1280",
+   "expand": "fill"
+  },
+  "P2-Review.dc.html": {
+   "x": 2720,
+   "y": 5040,
+   "w": 1280,
+   "h": 1150,
+   "title": "Proposal · Campaign · under review (3.44) · 1280",
+   "expand": "fill"
+  },
+  "P2-Open-390.dc.html": {
+   "x": 4080,
+   "y": 5040,
+   "w": 390,
+   "h": 1800,
+   "title": "Proposal · Campaign · open, resent (3.43) · 390"
+  },
+  "P-Dialogs.dc.html": {
+   "x": 0,
+   "y": 7260,
+   "w": 1280,
+   "h": 2100,
+   "title": "Confirmations · Withdraw, Remove, Close campaign, Release (all variations)"
+  },
+  "P4-Respond.dc.html": {
+   "x": 0,
+   "y": 9780,
+   "w": 1280,
+   "h": 1450,
+   "title": "Proposal · /msf/respond · the questionnaire (3.39) · 1280",
+   "expand": "fill"
+  },
+  "P4-Respond-390.dc.html": {
+   "x": 1360,
+   "y": 9780,
+   "w": 390,
+   "h": 1950,
+   "title": "Proposal · /msf/respond · the questionnaire · 390"
+  },
+  "P4-Thanks-390.dc.html": {
+   "x": 1830,
+   "y": 9780,
+   "w": 390,
+   "h": 640,
+   "title": "Proposal · /msf/respond · thank you (3.39) · 390"
+  },
+  "P4-Used-390.dc.html": {
+   "x": 2300,
+   "y": 9780,
+   "w": 390,
+   "h": 600,
+   "title": "Proposal · /msf/respond · link already used (3.40) · 390"
+  },
+  "P6-Coverage.dc.html": {
+   "x": 0,
+   "y": 12150,
+   "w": 1280,
+   "h": 1700,
+   "title": "Proposal · MSF coverage (3.49) · 1280",
+   "expand": "fill"
+  },
+  "P6-Coverage-390.dc.html": {
+   "x": 1360,
+   "y": 12150,
+   "w": 390,
+   "h": 2600,
+   "title": "Proposal · MSF coverage · 390"
+  },
+  "RA.dc.html": {
+   "x": 0,
+   "y": 14470,
+   "w": 1280,
+   "h": 2300,
+   "title": "Report A · Status first, release last · under review (3.44) · 1280",
+   "expand": "fill"
+  },
+  "RA-390.dc.html": {
+   "x": 1360,
+   "y": 14470,
+   "w": 390,
+   "h": 2400,
+   "title": "Report A · released (3.46) · 390"
+  },
+  "RA-Open.dc.html": {
+   "x": 1830,
+   "y": 14470,
+   "w": 1280,
+   "h": 1500,
+   "title": "Report A · open, Close campaign (3.41) · 1280",
+   "expand": "fill"
+  },
+  "RB.dc.html": {
+   "x": 0,
+   "y": 18190,
+   "w": 1280,
+   "h": 2000,
+   "title": "Report B · The decision beside the evidence · under review (3.44) · 1280",
+   "expand": "fill"
+  },
+  "RB-390.dc.html": {
+   "x": 1360,
+   "y": 18190,
+   "w": 390,
+   "h": 2800,
+   "title": "Report B · 390"
+  },
+  "RC.dc.html": {
+   "x": 0,
+   "y": 21910,
+   "w": 1280,
+   "h": 2100,
+   "title": "Report C · One table of groups · released (3.46) · 1280",
+   "expand": "fill"
+  },
+  "RC-390.dc.html": {
+   "x": 1360,
+   "y": 21910,
+   "w": 390,
+   "h": 3100,
+   "title": "Report C · under review (3.44) · 390"
+  },
+  "MA-List.dc.html": {
+   "x": 0,
+   "y": 25430,
+   "w": 1280,
+   "h": 760,
+   "title": "MSF reports A · A page of its own · the list (3.47) · 1280",
+   "expand": "fill"
+  },
+  "MA-Report.dc.html": {
+   "x": 1360,
+   "y": 25430,
+   "w": 1280,
+   "h": 1350,
+   "title": "MSF reports A · her report (3.47) · 1280",
+   "expand": "fill"
+  },
+  "MA-Report-390.dc.html": {
+   "x": 2720,
+   "y": 25430,
+   "w": 390,
+   "h": 1900,
+   "title": "MSF reports A · her report · 390"
+  },
+  "MB.dc.html": {
+   "x": 0,
+   "y": 27750,
+   "w": 1280,
+   "h": 1350,
+   "title": "MSF reports B · Beside the list, mended (3.47) · 1280",
+   "expand": "fill"
+  },
+  "MB-390.dc.html": {
+   "x": 1360,
+   "y": 27750,
+   "w": 390,
+   "h": 700,
+   "title": "MSF reports B · another trainee's id, typed by Anele Dlamini · 390"
+  }
+ },
+ "order": [
+  "P1-List.dc.html",
+  "P1-List-390.dc.html",
+  "P2-Create.dc.html",
+  "P2-Create-390.dc.html",
+  "P2-Draft.dc.html",
+  "P2-Open.dc.html",
+  "P2-Review.dc.html",
+  "P2-Open-390.dc.html",
+  "P-Dialogs.dc.html",
+  "P4-Respond.dc.html",
+  "P4-Respond-390.dc.html",
+  "P4-Thanks-390.dc.html",
+  "P4-Used-390.dc.html",
+  "P6-Coverage.dc.html",
+  "P6-Coverage-390.dc.html",
+  "RA.dc.html",
+  "RA-390.dc.html",
+  "RA-Open.dc.html",
+  "RB.dc.html",
+  "RB-390.dc.html",
+  "RC.dc.html",
+  "RC-390.dc.html",
+  "MA-List.dc.html",
+  "MA-Report.dc.html",
+  "MA-Report-390.dc.html",
+  "MB.dc.html",
+  "MB-390.dc.html"
+ ],
+ "notes": {
+  "t1": {
+   "x": 0,
+   "y": -300,
+   "text": "Proposal · Screen 1 · MSF campaigns",
+   "kind": "title1",
+   "maxW": 1750
+  },
+  "t2": {
+   "x": 0,
+   "y": 1520,
+   "text": "Proposal · Screen 2 · New MSF campaign",
+   "kind": "title1",
+   "maxW": 1750
+  },
+  "t3": {
+   "x": 0,
+   "y": 4740,
+   "text": "Proposal · Screen 2 · The campaign page",
+   "kind": "title1",
+   "maxW": 4470
+  },
+  "t4": {
+   "x": 0,
+   "y": 6960,
+   "text": "Confirmations",
+   "kind": "title1",
+   "maxW": 1280
+  },
+  "t5": {
+   "x": 0,
+   "y": 9480,
+   "text": "Proposal · Screen 4 · The respondent's page",
+   "kind": "title1",
+   "maxW": 2690
+  },
+  "t6": {
+   "x": 0,
+   "y": 11850,
+   "text": "Proposal · Screen 6 · MSF coverage",
+   "kind": "title1",
+   "maxW": 1750
+  },
+  "t7": {
+   "x": 0,
+   "y": 14170,
+   "text": "Screen 3 · Report A · Status first, release last",
+   "kind": "title1",
+   "maxW": 3110
+  },
+  "t8": {
+   "x": 0,
+   "y": 17890,
+   "text": "Screen 3 · Report B · The decision beside the evidence",
+   "kind": "title1",
+   "maxW": 1750
+  },
+  "t9": {
+   "x": 0,
+   "y": 21610,
+   "text": "Screen 3 · Report C · One table of groups",
+   "kind": "title1",
+   "maxW": 1750
+  },
+  "t10": {
+   "x": 0,
+   "y": 25130,
+   "text": "Screen 5 · MSF reports A · A page of its own",
+   "kind": "title1",
+   "maxW": 3110
+  },
+  "t11": {
+   "x": 0,
+   "y": 27450,
+   "text": "Screen 5 · MSF reports B · Beside the list, mended",
+   "kind": "title1",
+   "maxW": 1750
+  }
+ },
+ "designSystems": [
+  {
+   "title": "Wombat",
+   "namespace": "wombat",
+   "artifact": "https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18",
+   "version": "1791997100-4a21",
+   "copiedAt": "2026-10-15T14:00:00Z"
+  }
+ ]
+}

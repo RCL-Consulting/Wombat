@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Feedback on Lerato Molefe · Wombat</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--link-color)}a:hover{color:var(--link-hover)}
+.respond-card{display:flex;flex-direction:column;gap:var(--space-md)}
+.respond-card .account-brand{margin-bottom:var(--space-sm)}
+.respond-card h1{margin:0}
+.respond-meta{margin:0;color:var(--muted-text)}
+.respond-lead{margin:0}
+.respond-privacy{list-style:none;margin:0;padding:var(--space-md);background:var(--info-bg);border:1px solid var(--secondary-color);border-radius:var(--radius-md);display:grid;gap:var(--space-sm)}
+.respond-privacy li{display:flex;gap:var(--space-sm);align-items:flex-start}
+.respond-privacy .icon{flex:none;margin-top:0.2rem;color:var(--secondary-color)}
+.respond-form{display:flex;flex-direction:column;gap:var(--space-lg);margin-top:var(--space-sm)!important;border-top:1px solid var(--border-color);padding-top:var(--space-lg)}
+.respond-form fieldset{border:0;margin:0;padding:0;min-width:0}
+.respond-form legend{font-weight:600;font-size:1.1rem;padding:0;margin-bottom:var(--space-xs)}
+.respond-form .scale-choices{margin-top:var(--space-md)}
+.respond-form .scale-choices .form-check{min-height:2.75rem;padding:0 var(--space-md);border:1px solid var(--border-color);border-radius:var(--radius-md)}
+.respond-form .scale-choices .form-check-input{width:1.25rem;height:1.25rem}
+.respond-form .scale-choices label{flex:1;min-height:2.75rem;display:flex;align-items:center}
+.respond-label{font-weight:600;font-size:1.1rem}
+.respond-required{margin:0;color:var(--muted-text);font-size:0.9rem}
+.respond-form .btn{min-height:2.75rem;width:100%}
+@media (max-width:640.98px){.account-brand-mark{width:44px;height:44px}.account-brand-text{font-size:2rem}.respond-card h1{font-size:1.5rem}}
+</style>
+</helmet>
+<div class="auth-page-shell">
+<main class="auth-page-main">
+<div class="account-form-container account-form-container--wide respond-card">
+<div class="account-brand">
+<img class="account-brand-mark" src="/_blob/d5b5890c1eb0efaad13d0d347d1ebf4c" alt="" width="56" height="56">
+<span class="account-brand-text">Wombat</span>
+</div>
+<h1>Feedback on Lerato Molefe</h1>
+<p class="respond-meta">Default MSF · Last day to respond: 2026-10-28</p>
+<p class="respond-lead">You have been asked to give multi-source feedback on Lerato Molefe, a trainee you have worked with.</p>
+<ul class="respond-privacy" aria-label="Who sees your feedback">
+<li><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49M14.084 14.158a3 3 0 0 1-4.242-4.242M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143M2 2l20 20"></path></svg><span>Your name and email address are never shown to Lerato Molefe.</span></li>
+<li><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9"></path><circle cx="12" cy="9" r="3"></circle></svg><span>Lerato Molefe sees the feedback only after the request has closed and a coordinator has reviewed and released it, grouped by respondent role.</span></li>
+</ul>
+
+<form class="respond-form" method="post" action="#">
+<p class="respond-required">Questions marked * must be answered.</p>
+<fieldset aria-describedby="q1-help">
+<legend>Rates the trainee's overall professional performance. <span aria-hidden="true">*</span><span class="visually-hidden">required</span></legend>
+<p id="q1-help" class="field-help">Compare Lerato Molefe with what you would expect of a trainee at their stage of training.</p>
+<div class="scale-choices">
+<div class="form-check"><input id="r1" class="form-check-input" type="radio" name="rating" value="1" required><label for="r1">Well below expectations</label></div>
+<div class="form-check"><input id="r2" class="form-check-input" type="radio" name="rating" value="2"><label for="r2">Below expectations</label></div>
+<div class="form-check"><input id="r3" class="form-check-input" type="radio" name="rating" value="3"><label for="r3">Meets expectations</label></div>
+<div class="form-check"><input id="r4" class="form-check-input" type="radio" name="rating" value="4"><label for="r4">Above expectations</label></div>
+<div class="form-check"><input id="r5" class="form-check-input" type="radio" name="rating" value="5"><label for="r5">Well above expectations</label></div>
+</div>
+</fieldset>
+<div class="form-group">
+<label for="c1" class="respond-label">What should the trainee keep doing or improve?</label>
+<p id="c1-help" class="field-help">Optional. Up to 4,000 characters. Your comments may be shown to Lerato Molefe word for word, so leave out anything that would identify you.</p>
+<textarea id="c1" name="comment" class="form-control" rows="5" aria-describedby="c1-help"></textarea>
+</div>
+<button type="submit" class="btn btn-primary">Submit feedback</button>
+</form>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1950}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

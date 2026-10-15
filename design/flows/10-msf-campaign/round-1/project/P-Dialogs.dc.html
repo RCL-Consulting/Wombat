@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Confirmations · Wombat</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:var(--background-color);font-family:var(--font-body);color:var(--text-color)}
+.stage{position:relative;background:var(--scrim);padding:var(--space-2xl) var(--space-lg);box-sizing:border-box}
+.stage dialog{position:static;margin:0 auto}
+.stage-label{margin:0;padding:var(--space-sm) var(--space-lg);background:var(--header-bg);color:var(--text-color);font-size:0.9rem;font-weight:600}
+.dialog-body p{margin:0 0 var(--space-sm)}
+.dialog-body ul{margin:0 0 var(--space-sm);padding-left:1.25rem;display:grid;gap:var(--space-xs)}
+.ring{outline:2px solid var(--focus-ring);outline-offset:2px}
+.tag{display:inline-block;margin-left:var(--space-sm);font-size:0.75rem;font-weight:600;padding:0 0.5rem;border-radius:var(--radius-pill);border:1px solid var(--warning-color);background:var(--warning-bg)}
+</style>
+</helmet>
+<div>
+<p class="stage-label">Withdraw, from the list or the campaign page (built; the safe button renamed) · focus starts on Keep the campaign</p>
+<div class="stage">
+<dialog open class="dialog-scrim dialog-card" aria-labelledby="d1-t" aria-describedby="d1-b">
+<div class="form-container">
+<h2 id="d1-t">Withdraw this campaign?</h2>
+<p id="d1-b">Withdraw the campaign for Pieter du Plessis (Default MSF, closing 2026-10-28)? It will take no more responses: any link already sent stops working, and every respondent's email address is removed. A withdrawn campaign is never released to the trainee, and withdrawing cannot be undone.</p>
+<div class="form-actions">
+<button type="button" class="btn btn-outline ring">Keep the campaign</button>
+<button type="button" class="btn btn-danger">Withdraw campaign</button>
+</div>
+</div>
+</dialog>
+</div>
+
+<p class="stage-label">Remove, on a draft's address (built; the safe button renamed) · focus starts on Keep the invitee; after Remove, focus goes to the result above the list</p>
+<div class="stage">
+<dialog open class="dialog-scrim dialog-card" aria-labelledby="d2-t" aria-describedby="d2-b">
+<div class="form-container">
+<h2 id="d2-t">Remove this invitee?</h2>
+<p id="d2-b">Remove palesa.tau@kgk.wombat.local (Allied health professional) from this campaign? They hold no working link, and will not be sent one when the campaign opens. While the campaign is a draft, they can be added again.</p>
+<div class="form-actions">
+<button type="button" class="btn btn-outline ring">Keep the invitee</button>
+<button type="button" class="btn btn-danger">Remove invitee</button>
+</div>
+</div>
+</dialog>
+</div>
+
+<p class="stage-label">Close campaign, on the report while it is open <span class="tag">PROPOSED: not built</span> · focus starts on Keep it open; after Close, focus goes to the report's result</p>
+<div class="stage">
+<dialog open class="dialog-scrim dialog-card" aria-labelledby="d3-t" aria-describedby="d3-b">
+<div class="form-container">
+<h2 id="d3-t">Close this campaign now?</h2>
+<div id="d3-b" class="dialog-body">
+<p>Close the campaign for Lerato Molefe (Default MSF, closing 2026-10-28) before its last day?</p>
+<ul>
+<li>It takes no more responses: the 1 link not yet used stops working.</li>
+<li>Every respondent's email address is removed, so no link can be resent.</li>
+<li>The report keeps the 6 responses it has, for you to review and release.</li>
+</ul>
+<p>Closing cannot be undone.</p>
+</div>
+<div class="form-actions">
+<button type="button" class="btn btn-outline ring">Keep it open</button>
+<button type="button" class="btn btn-danger">Close campaign</button>
+</div>
+</div>
+</dialog>
+</div>
+
+<p class="stage-label">Release to trainee, on the report under review <span class="tag">PROPOSED: not built</span> · focus starts on Not yet; after Release, focus goes to the report's result</p>
+<div class="stage">
+<dialog open class="dialog-scrim dialog-card" aria-labelledby="d4-t" aria-describedby="d4-b">
+<div class="form-container">
+<h2 id="d4-t">Release this report to Lerato Molefe?</h2>
+<div id="d4-b" class="dialog-body">
+<ul>
+<li>Lerato Molefe can read it on MSF reports: your narrative, and the ratings and comments of the Nurse and Consultant groups. Nothing of the other groups is shown, not even that they answered.</li>
+<li>2 evidence records are written to Lerato Molefe's portfolio: PAED-010 and PAED-012.</li>
+<li>Supervision level: Not stated.</li>
+</ul>
+<p>Releasing cannot be undone: the narrative and the level cannot be changed afterwards.</p>
+</div>
+<div class="form-actions">
+<button type="button" class="btn btn-outline ring">Not yet</button>
+<button type="button" class="btn btn-primary">Release to Lerato Molefe</button>
+</div>
+</div>
+</dialog>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2100}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

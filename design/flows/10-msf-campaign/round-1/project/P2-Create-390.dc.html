@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>New MSF campaign · Wombat</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--link-color)}a:hover{color:var(--link-hover)}
+.msf-form-column{display:flex;flex-direction:column;gap:var(--space-lg);max-width:52rem}
+.msf-form-column .form-container{padding:var(--space-lg)}
+.msf-card-title{font-size:1.25rem;margin:0 0 var(--space-md)}
+.msf-card-title small{display:block;color:var(--muted-text);font-size:0.9rem;font-weight:400;margin-top:var(--space-xs)}
+.template-fold{border-top:1px solid var(--border-color);margin-top:var(--space-md);padding-top:var(--space-md)}
+.template-fold > summary{cursor:pointer;font-weight:600;color:var(--link-color);display:flex;align-items:center;gap:var(--space-sm);min-height:2.75rem}
+.template-fold .form-grid{margin-top:var(--space-md)}
+.choice-stack{display:flex;flex-direction:column;gap:var(--space-xs)}
+.choice-stack .form-check{min-height:2.75rem}
+.choice-stack .form-check-input{width:1.25rem;height:1.25rem}
+@media (max-width:640.98px){
+.msf-form-column .form-control,.msf-form-column .form-select,.msf-form-column .btn{min-height:2.75rem}
+.msf-form-column .form-actions{flex-direction:column-reverse;align-items:stretch}
+.msf-form-column .form-group > .btn{align-self:stretch}
+}
+</style>
+</helmet>
+<div class="page">
+<input type="checkbox" id="nav-toggle" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/d5b5890c1eb0efaad13d0d347d1ebf4c" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span> <span>Coordinator</span></p>
+<label class="nav-toggle-label" for="nav-toggle"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16"></path></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"></path></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main"></nav>
+<div class="account-row"></div>
+</header>
+<main>
+<article>
+<nav aria-label="Breadcrumb">
+<ol class="breadcrumbs">
+<li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></li>
+<li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>MSF campaigns</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></li>
+<li class="breadcrumb-current"><span aria-current="page">New MSF campaign</span></li>
+</ol>
+</nav>
+<div class="header-container">
+<div>
+<h1>New MSF campaign</h1>
+<p class="page-subtitle">One campaign for one current trainee: its questionnaire, its window, its thresholds and the EPAs it is evidence for. Creating it makes a draft; nobody is emailed until you open it.</p>
+</div>
+</div>
+
+<div class="msf-form-column">
+<section class="form-container" aria-labelledby="q-h">
+<h2 id="q-h" class="msf-card-title">Questionnaire<small>Written once, used by every campaign that names it.</small></h2>
+<div class="form-group">
+<label for="c-template">Template <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+<select id="c-template" class="form-select" disabled aria-describedby="c-template-help"><option>No template yet</option></select>
+<p id="c-template-help" class="field-help">Write the first one below; it is chosen here once it is added.</p>
+</div>
+<details class="template-fold" open>
+<summary><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Write a new questionnaire</summary>
+<form class="form-grid">
+<fieldset class="form-group full-width choice-row">
+<legend>Kind</legend>
+<div class="choice-stack">
+<div class="form-check"><input id="k-msf" class="form-check-input" type="radio" name="kind" checked><label for="k-msf">Multi-source feedback</label></div>
+<div class="form-check"><input id="k-lf" class="form-check-input" type="radio" name="kind"><label for="k-lf">Learner feedback</label></div>
+</div>
+</fieldset>
+<div class="form-group full-width">
+<label for="t-name">Template name</label>
+<input id="t-name" class="form-control" value="Default MSF">
+</div>
+<div class="form-group full-width">
+<label for="t-scale">Rating question</label>
+<input id="t-scale" class="form-control" value="Rates the trainee's overall professional performance." aria-describedby="t-scale-help">
+<p id="t-scale-help" class="field-help">Answered on five points, from Well below expectations to Well above expectations.</p>
+</div>
+<div class="form-group full-width">
+<label for="t-comment">Comment question</label>
+<input id="t-comment" class="form-control" value="What should the trainee keep doing or improve?">
+</div>
+<div class="form-group full-width"><button type="submit" class="btn btn-outline">Add template</button></div>
+</form>
+</details>
+</section>
+
+<section class="form-container" aria-labelledby="who-h">
+<h2 id="who-h" class="msf-card-title">Trainee and window</h2>
+<div class="form-grid">
+<div class="form-group full-width">
+<label for="c-trainee">Trainee <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+<select id="c-trainee" class="form-select" aria-describedby="c-trainee-help"><option>Choose a trainee</option></select>
+<p id="c-trainee-help" class="field-help">Kgosi Kgari Teaching Hospital's current trainees.</p>
+</div>
+<div class="form-group">
+<label for="c-opens">Opens on</label>
+<input id="c-opens" class="form-control" type="date" value="2026-10-14">
+</div>
+<div class="form-group">
+<label for="c-closes">Closes on</label>
+<input id="c-closes" class="form-control" type="date" value="2026-10-28" aria-describedby="c-closes-help">
+<p id="c-closes-help" class="field-help">The respondents' last day to answer, on the South African calendar.</p>
+</div>
+</div>
+</section>
+
+<section class="form-container" aria-labelledby="min-h">
+<h2 id="min-h" class="msf-card-title">Thresholds</h2>
+<div class="form-grid">
+<div class="form-group"><label for="c-min">Minimum responses</label><input id="c-min" class="form-control" type="number" value="8"></div>
+<div class="form-group"><label for="c-mincat">Minimum responses in a respondent group</label><input id="c-mincat" class="form-control" type="number" value="3"></div>
+<div class="form-group"><label for="c-mingroups">Minimum respondent groups reporting</label><input id="c-mingroups" class="form-control" type="number" value="2" aria-describedby="c-mingroups-help"><p id="c-mingroups-help" class="field-help">How many respondent groups must clear the threshold above before the report can be released. Two is the College's answer: eight peer doctors alone are not multi-source feedback.</p></div>
+</div>
+</section>
+
+<section class="form-container" aria-labelledby="epa-h">
+<fieldset class="form-group choice-row">
+<legend id="epa-h" class="msf-card-title">Evidence for these EPAs <span aria-hidden="true">*</span><span class="visually-hidden">required</span></legend>
+<p class="field-help">Choose a trainee first: the EPAs of the trainee's curriculum are listed here.</p>
+</fieldset>
+<div class="form-actions">
+<a class="btn btn-outline" href="#">Cancel</a>
+<button type="button" class="btn btn-primary" aria-disabled="true" aria-describedby="create-why">Create campaign</button>
+</div>
+<p id="create-why" class="field-help" style="margin-top: var(--space-sm)"><strong>Create campaign:</strong> write a questionnaire first.</p>
+</section>
+</div>
+</article>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":2800}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

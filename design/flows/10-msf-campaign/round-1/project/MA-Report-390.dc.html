@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Default MSF, released 2026-10-14 · Wombat</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--link-color)}a:hover{color:var(--link-hover)}
+.my-report{display:flex;flex-direction:column;gap:var(--space-lg)}
+.my-report h2{margin:0 0 var(--space-sm)}
+.my-report .detail-card{padding:var(--space-md)}
+.narrative{margin:0;white-space:pre-line}
+.groups-intro{margin:0;color:var(--muted-text);font-size:0.9rem}
+.group-card{display:grid;gap:var(--space-md)}
+.group-card h3{margin:0;font-size:1.1rem}
+.group-figure{display:flex;align-items:baseline;gap:var(--space-sm)}
+.group-figure .dashboard-metric-value{font-size:2rem;font-weight:700;color:var(--primary-color);line-height:1}
+.group-figure .dashboard-metric-label{color:var(--muted-text);font-size:0.9rem}
+.group-comments{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-sm)}
+.group-comments li{border-left:3px solid var(--border-color);padding:var(--space-xs) var(--space-md);overflow-wrap:anywhere}
+.group-comments-h{margin:0 0 var(--space-xs);font-size:0.9rem;color:var(--muted-text);font-weight:600}
+.evidence{margin:0;padding:0;list-style:none;display:grid;gap:var(--space-xs)}
+.evidence a{display:flex;align-items:center;min-height:2.75rem}
+</style>
+</helmet>
+<div class="page">
+<input type="checkbox" id="nav-toggle" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/d5b5890c1eb0efaad13d0d347d1ebf4c" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span> <span>Trainee</span></p>
+<label class="nav-toggle-label" for="nav-toggle"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16"></path></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"></path></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main"></nav>
+<div class="account-row"></div>
+</header>
+<main>
+<article>
+<nav aria-label="Breadcrumb">
+<ol class="breadcrumbs">
+<li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></li>
+<li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>MSF reports</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></li>
+<li class="breadcrumb-current"><span aria-current="page">Default MSF, released 2026-10-14</span></li>
+</ol>
+</nav>
+<div class="header-container">
+<div>
+<h1>Default MSF, released 2026-10-14</h1>
+<p class="page-subtitle">Multi-source feedback · Released 2026-10-14 16:34 SAST</p>
+</div>
+</div>
+
+<div class="my-report">
+<section class="detail-card detail-card--emphasis" aria-labelledby="narr-h">
+<h2 id="narr-h">Narrative</h2>
+<p class="narrative">Consistently strong feedback from nursing and consultant colleagues; keep documenting escalation decisions</p>
+</section>
+
+<section aria-labelledby="groups-h" style="display:grid;gap:var(--space-md)">
+<div>
+<h2 id="groups-h">What your colleagues said</h2>
+<p class="groups-intro">Grouped by respondent role; no one is named. Ratings are averaged from 1, Well below expectations, to 5, Well above expectations. Comments are word for word.</p>
+</div>
+<article class="detail-card group-card" aria-labelledby="g-nurse">
+<h3 id="g-nurse">Nurse</h3>
+<div class="group-figure"><span class="dashboard-metric-value">4.50</span><span class="dashboard-metric-label">average rating</span></div>
+<div><p class="group-comments-h">What should the trainee keep doing or improve?</p>
+<ul class="group-comments"><li>Calm and kind with parents at night; hands over clearly</li><li>Leads neonatal resuscitations and explains her decisions to the nurses</li></ul></div>
+</article>
+<article class="detail-card group-card" aria-labelledby="g-cons">
+<h3 id="g-cons">Consultant</h3>
+<div class="group-figure"><span class="dashboard-metric-value">4.00</span><span class="dashboard-metric-label">average rating</span></div>
+<div><p class="group-comments-h">What should the trainee keep doing or improve?</p>
+<ul class="group-comments"><li>Sound judgement in clinic; teaches the interns well</li><li>Ready to run a ward; should document escalation decisions more fully</li></ul></div>
+</article>
+</section>
+
+<section class="detail-card" aria-labelledby="ev-h">
+<h2 id="ev-h" style="font-size:1.1rem">On your portfolio</h2>
+<p style="margin:0 0 var(--space-xs)">Recorded as evidence on 2026-10-14 16:34 SAST for:</p>
+<ul class="evidence">
+<li><a href="#">PAED-010 — Leading and operating within a clinical team</a></li>
+<li><a href="#">PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams</a></li>
+</ul>
+</section>
+</div>
+</article>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

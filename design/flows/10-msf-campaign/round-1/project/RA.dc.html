@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MSF report for Lerato Molefe · Wombat</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--link-color)}a:hover{color:var(--link-hover)}
+.report-page{display:flex;flex-direction:column;gap:var(--space-lg);max-width:60rem}
+.report-status{display:grid;gap:var(--space-md)}
+.report-status-head{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-sm) var(--space-md)}
+.report-status-line{font-size:1.1rem;font-weight:600;line-height:1.35;margin:0}
+.threshold-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-xs)}
+.threshold-list li{display:flex;gap:var(--space-sm);align-items:flex-start}
+.threshold-list .icon{flex:none;margin-top:0.2rem}
+.threshold-list .is-met .icon{color:var(--success-color)}
+.threshold-list .is-rule .icon{color:var(--muted-text)}
+.report-sub{font-size:1rem;margin:0 0 var(--space-xs)}
+.evidence-list{margin:0;padding-left:1.25rem;display:grid;gap:var(--space-xs)}
+.section-head h2{margin:0}
+.section-head p{margin:var(--space-xs) 0 0;color:var(--muted-text);font-size:0.9rem}
+.group-card{display:grid;grid-template-columns:minmax(9rem,max-content) minmax(0,1fr);gap:var(--space-md) var(--space-xl)}
+.group-card h3{grid-column:1/-1;margin:0;font-size:1.1rem}
+.group-figure{display:flex;flex-direction:column;gap:var(--space-xs)}
+.group-figure .dashboard-metric-value{font-size:2rem;font-weight:700;color:var(--primary-color);line-height:1}
+.group-figure .dashboard-metric-label{color:var(--muted-text);font-size:0.9rem}
+.group-comments{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-sm)}
+.group-comments li{border-left:3px solid var(--border-color);padding:var(--space-xs) var(--space-md);white-space:pre-line;overflow-wrap:anywhere}
+.group-comments-h{margin:0 0 var(--space-xs);font-size:0.9rem;color:var(--muted-text);font-weight:600}
+.suppressed{display:flex;gap:var(--space-sm);align-items:flex-start;margin:0}
+.suppressed .icon{flex:none;margin-top:0.2rem}
+.check-line{background:var(--info-bg);border-left:4px solid var(--secondary-color);border-radius:var(--radius-md);padding:var(--space-md);margin:0}
+.check-line ul{margin:var(--space-xs) 0 0;padding-left:1.25rem}
+.release-form{display:grid;gap:var(--space-lg)}
+.release-actions{display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;border-top:1px solid var(--border-color);padding-top:var(--space-md)}
+.release-actions p{margin:0;flex-basis:100%}
+.scale-key{margin:0;color:var(--muted-text);font-size:0.9rem}
+</style>
+</helmet>
+<div class="page">
+<input type="checkbox" id="nav-toggle" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/d5b5890c1eb0efaad13d0d347d1ebf4c" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span> <span>Coordinator</span></p>
+<label class="nav-toggle-label" for="nav-toggle"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16"></path></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"></path></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main">
+<div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">Coordinator</span></p></div>
+<div class="nav-list">
+<ul class="nav-items">
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5"></path></svg><span class="nav-label">Home</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9"></path><circle cx="12" cy="9" r="3"></circle></svg><span class="nav-label">Programme trainees</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg><span class="nav-label">Waiting for assessors</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4"></path></svg><span class="nav-label">Decisions due</span></a></li>
+<li><a class="nav-link active" href="#" aria-current="true"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span class="nav-label">MSF campaigns</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6"></path></svg><span class="nav-label">Committee reviews</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path></svg><span class="nav-label">Decision panels</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg><span class="nav-label">Data rights requests</span></a></li>
+</ul>
+<ul class="nav-items nav-personal">
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg><span class="nav-label">My data rights</span></a></li>
+</ul>
+</div>
+</nav>
+<div class="account-row">
+<a class="account-link" href="#" title="Pieter Smit"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M6 20a6 6 0 0 1 12 0"></path></svg><span class="account-name">Pieter Smit</span></a>
+<form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"></path></svg>Sign out</button></form>
+</div>
+</header>
+<main>
+<article>
+<nav aria-label="Breadcrumb">
+<ol class="breadcrumbs">
+<li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></li>
+<li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>MSF campaigns</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></li>
+<li class="breadcrumb-current"><span aria-current="page">MSF report for Lerato Molefe</span></li>
+</ol>
+</nav>
+<div class="header-container">
+<div>
+<h1>MSF report for Lerato Molefe</h1>
+<p class="page-subtitle">Default MSF · Multi-source feedback · 2026-10-14 to 2026-10-28 · <a href="#">Open its campaign page</a></p>
+</div>
+</div>
+
+<div class="report-page">
+<div class="action-result" tabindex="-1" style="outline: 2px solid var(--focus-ring); outline-offset: 2px">
+<div class="alert alert-success" role="status" style="margin:0"><strong>Campaign closed and anonymised for review.</strong> Every respondent's email address has been removed. It is now Under review.</div>
+</div>
+
+<section class="detail-card detail-card--emphasis report-status" aria-labelledby="status-h">
+<div class="report-status-head">
+<span class="badge badge-accepted">Under review</span>
+<h2 id="status-h" class="report-status-line">Ready to release: every threshold is met.</h2>
+</div>
+<ul class="threshold-list">
+<li class="is-met"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg><span>6 responses, of the 5 needed.</span></li>
+<li class="is-met"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg><span>2 respondent groups reporting, of the 2 needed.</span></li>
+<li class="is-rule"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49M14.084 14.158a3 3 0 0 1-4.242-4.242M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143M2 2l20 20"></path></svg><span>A respondent group reports once 2 of it have responded; a group with fewer is suppressed.</span></li>
+</ul>
+<div>
+<h3 class="report-sub">Evidence for</h3>
+<ul class="evidence-list">
+<li>PAED-010 — Leading and operating within a clinical team</li>
+<li>PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams</li>
+</ul>
+<p class="field-help" style="margin-top:var(--space-xs)">One evidence record per EPA is written to the trainee's portfolio when the report is released.</p>
+</div>
+</section>
+
+<section aria-labelledby="groups-h" style="display:grid;gap:var(--space-md)">
+<div class="section-head">
+<h2 id="groups-h">By respondent group</h2>
+<p>As Lerato Molefe will read it once released. Ratings are averaged from 1, Well below expectations, to 5, Well above expectations.</p>
+</div>
+<article class="detail-card group-card" aria-labelledby="g-nurse">
+<h3 id="g-nurse">Nurse</h3>
+<div class="group-figure"><span class="dashboard-metric-value">4.50</span><span class="dashboard-metric-label">average rating, from 2 responses</span></div>
+<div><p class="group-comments-h">What should the trainee keep doing or improve?</p>
+<ul class="group-comments"><li>Calm and kind with parents at night; hands over clearly</li><li>Leads neonatal resuscitations and explains her decisions to the nurses</li></ul></div>
+</article>
+<article class="detail-card group-card" aria-labelledby="g-cons">
+<h3 id="g-cons">Consultant</h3>
+<div class="group-figure"><span class="dashboard-metric-value">4.00</span><span class="dashboard-metric-label">average rating, from 2 responses</span></div>
+<div><p class="group-comments-h">What should the trainee keep doing or improve?</p>
+<ul class="group-comments"><li>Sound judgement in clinic; teaches the interns well</li><li>Ready to run a ward; should document escalation decisions more fully</li></ul></div>
+</article>
+<div class="detail-card detail-card--empty-compact" style="text-align:left;color:var(--text-color)">
+<p class="suppressed"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49M14.084 14.158a3 3 0 0 1-4.242-4.242M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143M2 2l20 20"></path></svg><span><strong>Suppressed: Peer doctor, Allied health professional.</strong> Fewer than 2 responses each, so their ratings and comments are not shown here, and Lerato Molefe sees nothing of them, not even that they answered.</span></p>
+</div>
+</section>
+
+<section class="detail-card detail-card--emphasis" aria-labelledby="release-h">
+<h2 id="release-h" style="margin:0 0 var(--space-md)">Release to Lerato Molefe</h2>
+<form class="release-form">
+<div class="check-line">
+<strong>When you release:</strong>
+<ul>
+<li>Lerato Molefe can read your narrative and the two groups above on MSF reports.</li>
+<li>2 evidence records are written to Lerato Molefe's portfolio, for PAED-010 and PAED-012.</li>
+<li>It cannot be undone.</li>
+</ul>
+</div>
+<div class="form-group">
+<label for="narrative">Narrative</label>
+<textarea id="narrative" class="form-control" rows="4" aria-describedby="narrative-help narrative-count">Consistently strong feedback from nursing and consultant colleagues; keep documenting escalation decisions</textarea>
+<p id="narrative-help" class="field-help">Your summary for Lerato Molefe, shown above the groups.</p>
+<p id="narrative-count" class="field-help">106 of 4,000 characters</p>
+</div>
+<div class="form-group" style="max-width:24rem">
+<label for="level">Supervision level this feedback supports</label>
+<select id="level" class="form-select" aria-describedby="level-help"><option>Not stated</option><option>1</option><option>2</option><option>3a</option><option>3b</option><option>4</option><option>5</option></select>
+<p id="level-help" class="field-help">Optional, and blank is a perfectly good answer. Your own judgement as the releasing clinician, informed by the aggregate above — never an average of respondent scores.</p>
+</div>
+<div class="release-actions">
+<button type="button" class="btn btn-outline">Release to trainee…</button>
+<p class="field-help">If it should never be released, <a href="#">withdraw it on its campaign page</a>.</p>
+</div>
+</form>
+</section>
+</div>
+</article>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2300}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

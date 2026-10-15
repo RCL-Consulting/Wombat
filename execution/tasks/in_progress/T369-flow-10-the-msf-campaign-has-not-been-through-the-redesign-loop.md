@@ -76,3 +76,8 @@ T366 (flow 09), T364 (flow 08), T162 (the system-managed MSF type), T153, T270, 
   captures for these pages are old-frame (2026-09-26); the step captures are T366's. Operator questions Q7–Q11 in § 6
   (Q10: a campaign outliving its registrar's programme, D54/D55, inferred). Completeness exit 0, verbatim 424/0 (118
   stale steps in other briefs re-synced), baseline missing 0. The mark is written into § 1 and `round-1-ask.txt`.
+- **2026-10-15, round 1** (canvas 1792060099-c3ec, `round-1/` saved; assessed in `round-1-assessment.md`): the proposal
+  P1–P6 and dialogs, report variations RA/RB/RC, the registrar's MA/MB. Recommended: RA (with RB's group header, RC's
+  Released one-liner), MA (`/msf/my-reports/{id}`, MB-390's alert reworded "could not be found"). Corrections: DTO
+  additions (list, campaign page, report), Responded 3 at 3.38 is 0, placeholder EPA titles; anonymity holds. Round 2's
+  ask must require a spec and a steps board. The attachments arrived. Q7–Q11 to the operator.
