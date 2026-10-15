@@ -115,7 +115,6 @@
 
   protected override Task OnInitializedAsync() => LoadAsync();
 
-  /// <summary>Reads Needs you and the first page; Try again reads both again.</summary>
   /// <summary>Whether the caller may file (D55): the empty state tells only them to log an activity.</summary>
   private bool _mayFile;
 
@@ -123,6 +122,7 @@
     ? "Log an activity to ask an assessor to rate an encounter, or to log a teaching session."
     : "Nothing has been filed about you.";
 
+  /// <summary>Reads Needs you and the first page; Try again reads both again.</summary>
   private async Task LoadAsync()
   {
     _loading = true;
