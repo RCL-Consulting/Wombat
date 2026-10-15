@@ -1,0 +1,191 @@
+/* Flow 10, round 2: the classes this flow adds to app.css (§ MSF). Every colour a token from tokens.css; spacing on the
+   --space-* scale, with the shell's 6/10/12px literals only inside a row or a control. The .anno chips and .dlg-overlay
+   are the canvas's own (annotations and a dialog's backdrop drawn in place of showModal()), never shipped. */
+
+/* ---- canvas annotations (not shipped) ---- */
+.anno{display:inline-block;margin-left:var(--space-xs);padding:0 6px;border:1px dashed var(--input-border);border-radius:var(--radius-sm);background:var(--header-bg);color:var(--text-color);font:600 0.6875rem/1.6 var(--font-mono);letter-spacing:0.02em;vertical-align:middle;white-space:nowrap}
+.anno--data{border-color:var(--secondary-color)}
+.anno--new{border-color:var(--success-color)}
+.anno--proposed{border-color:var(--warning-color);background:var(--warning-bg)}
+.anno--ill{border-color:var(--danger-color)}
+.board-strip{margin:0 0 var(--space-md);padding:6px 12px;background:var(--header-bg);border:1px dashed var(--input-border);border-radius:var(--radius-md);font-size:0.85rem;color:var(--text-color)}
+.board-strip strong{font-weight:600}
+.dlg-overlay{position:fixed;inset:0;background:var(--scrim);display:flex;align-items:flex-start;justify-content:center;padding:6rem var(--space-md) var(--space-md);z-index:20;overflow:auto}
+.dlg-overlay dialog{position:static;margin:0;max-width:34rem;width:100%}
+.dlg-overlay .dialog-body p{margin:0 0 var(--space-sm)}
+.dlg-overlay .dialog-body ul{margin:0 0 var(--space-sm);padding-left:1.25rem;display:grid;gap:var(--space-xs)}
+.dlg-overlay .alert{margin:0 0 var(--space-sm)}
+.ring{outline:2px solid var(--focus-ring);outline-offset:2px}
+
+/* ---- the page column (NEW: .msf-page) ---- */
+.msf-page{display:flex;flex-direction:column;gap:var(--space-lg)}
+.msf-page > .action-result .alert,.msf-page .alert{margin:0}
+.msf-page h2{margin:0}
+.section-title{font-size:1.1rem;margin:0 0 var(--space-sm)}
+.nowrap{white-space:nowrap}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* ---- the status card, the campaign's and the report's (NEW: .status-card, on .detail-card--emphasis) ---- */
+.status-card{display:grid;gap:var(--space-md)}
+.status-head{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-sm) var(--space-md)}
+.status-line{font-size:1.1rem;font-weight:600;line-height:1.35;margin:0}
+.status-note{margin:0}
+.status-actions{display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;border-top:1px solid var(--border-color);padding-top:var(--space-md)}
+.status-actions > p{margin:0;flex:1 1 18rem}
+.status-actions .move-reasons{flex-basis:100%;margin:0}
+.status-split{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(22rem,100%),1fr));gap:var(--space-lg);align-items:start}
+
+/* ---- the facts of a campaign (NEW: .msf-facts, a details list in columns) ---- */
+.msf-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(16rem,100%),1fr));gap:var(--space-md) var(--space-lg);margin:0}
+.msf-facts dt{color:var(--muted-text);font-weight:500}
+.msf-facts dd{margin:0}
+.epa-lines{margin:var(--space-xs) 0 0;padding-left:1.25rem;display:grid;gap:var(--space-xs)}
+
+/* ---- a count table's caption: the anonymity rule with eye-off (NEW: .anon-caption) ---- */
+.anon-caption{display:flex;gap:var(--space-sm);align-items:flex-start}
+.anon-caption .icon{flex:none;margin-top:0.2rem}
+.count-table tbody th,.count-table tfoot th{font-weight:400;background:none}
+.count-table tfoot th,.count-table tfoot td{font-weight:600;border-bottom:0;padding:var(--space-md)}
+.count-box{max-width:34rem}
+
+/* ---- the Links part of an open campaign (NEW: .links-part) ---- */
+.links-part{display:grid;gap:var(--space-sm)}
+.links-part > p{margin:0}
+
+/* ---- the draft's address rows (NEW: .invitee-rows; replaces the address table) ---- */
+.invitee-rows{list-style:none;margin:0;padding:0;border:1px solid var(--border-color);border-radius:var(--radius-lg)}
+.invitee-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-xs) var(--space-md);align-items:center;padding:var(--space-sm) var(--space-md);border-bottom:1px solid var(--border-color)}
+.invitee-row:last-child{border-bottom:0}
+.invitee-address{font-weight:600;overflow-wrap:normal}
+.invitee-group{color:var(--muted-text);font-size:0.9rem;font-weight:400;display:block}
+.add-invitee{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.3fr) auto;gap:var(--space-md);align-items:start}
+.add-invitee > .btn{margin-top:1.95rem}
+.add-invitee .form-group{gap:var(--space-xs)}
+
+/* ---- the report's threshold checklist (NEW: .threshold-list) ---- */
+.threshold-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-xs)}
+.threshold-list li{display:flex;gap:var(--space-sm);align-items:flex-start}
+.threshold-list .icon{flex:none;margin-top:0.2rem}
+.threshold-list .is-met .icon{color:var(--success-color)}
+.threshold-list .is-short .icon{color:var(--warning-color)}
+.threshold-list .is-rule .icon{color:var(--muted-text)}
+.report-line{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-xs) var(--space-sm);margin:0;font-weight:600}
+.report-line .sep{color:var(--muted-text);font-weight:400}
+
+/* ---- a shown group (NEW: .group-card, its h3 row the name and the average) ---- */
+.group-card{display:grid;gap:var(--space-sm)}
+.group-card h3{margin:0;font-size:1.1rem;line-height:1.35}
+.group-card h3 .group-avg{font-weight:400;color:var(--muted-text)}
+.group-card h3 .group-avg strong{color:var(--primary-color);font-weight:700}
+.group-question{margin:0;color:var(--muted-text);font-size:0.9rem;font-weight:600}
+.group-comments{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-sm)}
+.group-comments li{border-left:3px solid var(--border-color);padding:var(--space-xs) var(--space-md);overflow-wrap:anywhere;white-space:pre-line}
+.groups-intro{margin:var(--space-xs) 0 0;color:var(--muted-text);font-size:0.9rem}
+
+/* ---- the suppressed groups, one line (NEW: .suppressed-line, on .detail-card--empty-compact) ---- */
+.suppressed-line{display:flex;gap:var(--space-sm);align-items:flex-start;margin:0;text-align:left;color:var(--text-color)}
+.suppressed-line .icon{flex:none;margin-top:0.2rem}
+
+/* ---- the release section (NEW: .release-section; its check line is SubmitCheck's .check-line on info-bg) ---- */
+.release-section form{display:grid;gap:var(--space-lg)}
+.check-line{background:var(--info-bg);border-left:4px solid var(--secondary-color);border-radius:var(--radius-md);padding:var(--space-md);margin:0}
+.check-line ul{margin:var(--space-xs) 0 0;padding-left:1.25rem;display:grid;gap:2px}
+.release-actions{display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;border-top:1px solid var(--border-color);padding-top:var(--space-md)}
+.release-actions > p{margin:0;flex-basis:100%}
+.release-actions .move-reasons{margin:0;flex-basis:100%}
+.stored{display:grid;grid-template-columns:minmax(12rem,max-content) minmax(0,1fr);gap:var(--space-sm) var(--space-lg);margin:0}
+.stored dt{color:var(--muted-text);font-weight:500}
+.stored dd{margin:0;white-space:pre-line;overflow-wrap:anywhere}
+
+/* ---- the create page (NEW: .msf-form-column, the questionnaire fold, the EPA list) ---- */
+.msf-form-column{display:flex;flex-direction:column;gap:var(--space-lg);max-width:52rem}
+.msf-form-column .form-container{padding:var(--space-lg)}
+.msf-card-title{font-size:1.25rem;margin:0 0 var(--space-md);padding:0}
+.msf-card-title small{display:block;color:var(--muted-text);font-size:0.9rem;font-weight:400;margin-top:var(--space-xs)}
+.template-fold{border-top:1px solid var(--border-color);margin-top:var(--space-md);padding-top:var(--space-md)}
+.template-fold > summary{cursor:pointer;font-weight:600;color:var(--link-color);min-height:1.5rem;display:flex;align-items:center;gap:var(--space-sm)}
+.template-fold form{margin-top:var(--space-md)}
+.epa-checks{display:grid;gap:var(--space-sm) var(--space-lg);grid-template-columns:repeat(auto-fill,minmax(min(22rem,100%),1fr))}
+.epa-checks .form-check{align-items:flex-start}
+.epa-checks .form-check-input{margin-top:0.3rem;flex:none}
+.epa-fieldset{border:0;margin:0;padding:0;min-width:0}
+.epa-fieldset.is-invalid{box-shadow:inset 4px 0 0 var(--danger-color);padding-left:var(--space-md)}
+.choice-stack{display:flex;flex-direction:column;gap:var(--space-xs)}
+
+/* ---- /msf/respond (the auth card, wide; NEW: its h1 per state, the privacy list, the chosen point) ---- */
+.respond-card{display:flex;flex-direction:column;gap:var(--space-md)}
+.respond-card .account-brand{margin-bottom:var(--space-sm)}
+.respond-card h1{margin:0}
+.respond-card p{margin:0}
+.respond-meta{color:var(--muted-text)}
+.respond-privacy{list-style:none;margin:0;padding:var(--space-md);background:var(--info-bg);border:1px solid var(--secondary-color);border-radius:var(--radius-md);display:grid;gap:var(--space-sm)}
+.respond-privacy-title{font-weight:600;margin:0 0 2px}
+.respond-privacy li{display:flex;gap:var(--space-sm);align-items:flex-start}
+.respond-privacy .icon{flex:none;margin-top:0.2rem;color:var(--secondary-color)}
+.respond-form{display:flex;flex-direction:column;gap:var(--space-lg);border-top:1px solid var(--border-color);padding-top:var(--space-lg)}
+.respond-form fieldset{border:0;margin:0;padding:0;min-width:0}
+.respond-form legend{font-weight:600;font-size:1.1rem;padding:0;margin-bottom:var(--space-xs)}
+.respond-form .scale-choices{margin-top:var(--space-md);position:relative}
+.respond-form .scale-choices .form-check{min-height:2.75rem;padding:0 var(--space-md);border:1px solid var(--border-color);border-radius:var(--radius-md)}
+.respond-form .scale-choices .form-check:has(:checked){border-color:var(--secondary-color);background:var(--info-bg)}
+.respond-form .scale-choices .form-check-input{width:1.25rem;height:1.25rem}
+.respond-form .scale-choices label{flex:1;min-height:2.75rem;display:flex;align-items:center}
+.respond-label{font-weight:600;font-size:1.1rem}
+.respond-required{color:var(--muted-text);font-size:0.9rem}
+.respond-form > .btn{align-self:flex-start;min-height:2.75rem}
+/* a picture of the browser's own required prompt (Chrome's), drawn for the board only */
+.browser-prompt{position:absolute;left:var(--space-md);top:3.1rem;z-index:2;display:flex;gap:var(--space-sm);align-items:center;background:var(--surface-color);color:var(--text-color);border:1px solid var(--input-border);border-radius:var(--radius-sm);box-shadow:var(--shadow-dialog);padding:var(--space-sm) 12px;font-size:0.9rem}
+.browser-prompt::before{content:"!";display:inline-flex;align-items:center;justify-content:center;width:1.25rem;height:1.25rem;border-radius:var(--radius-sm);background:var(--warning-color);color:var(--on-fill);font-weight:700}
+
+/* ---- her report (NEW: .my-report) ---- */
+.my-report{display:flex;flex-direction:column;gap:var(--space-lg);max-width:52rem}
+.my-report .narrative{margin:0;white-space:pre-line;overflow-wrap:anywhere}
+.portfolio-links{margin:0;padding-left:1.25rem;display:grid;gap:var(--space-xs)}
+
+/* ---- coverage ---- */
+.coverage-windows{margin:0 0 var(--space-lg);padding:0;list-style:none;display:grid;gap:var(--space-xs);color:var(--muted-text)}
+.coverage-windows strong{color:var(--text-color);font-weight:600}
+.coverage-table th[scope="row"]{font-weight:400;background:none;min-width:16rem}
+.coverage-table td{white-space:nowrap}
+.coverage-table td.is-covered{font-weight:700}
+.coverage-programme + .coverage-programme{margin-top:var(--space-lg)}
+.coverage-programme h3{font-size:1.1rem;margin:var(--space-lg) 0 var(--space-sm)}
+
+/* ---- a list's row actions (the campaign list) ---- */
+.row-actions{display:flex;flex-wrap:wrap;gap:var(--space-sm)}
+.trainee-cell{font-weight:600}
+.kind-line{display:block;color:var(--muted-text);font-size:0.9rem}
+
+/* ---- loading ---- */
+.skeleton-stack{display:grid;gap:var(--space-sm)}
+
+/* ---- below 641px: every control and row action 44px, action rows stacked (scoped to .msf-page) ---- */
+@media (max-width:640.98px){
+  .msf-page .btn,.msf-page .form-control,.msf-page .form-select,.msf-header .btn{min-height:2.75rem}
+  .msf-header .actions-cell{width:100%;flex-direction:column}
+  .msf-header .actions-cell .btn{width:100%}
+  .msf-page .row-actions{flex-direction:column;align-items:stretch;margin-top:var(--space-xs)}
+  .msf-page .row-actions .btn{width:100%}
+  .msf-page .status-actions,.msf-page .release-actions,.msf-page .form-actions{flex-direction:column;align-items:stretch}
+  .msf-page .status-actions .btn,.msf-page .release-actions .btn{width:100%}
+  .msf-page .detail-card,.msf-form-column .form-container{padding:var(--space-md)}
+  .msf-page .alert-row .btn{width:100%}
+  .add-invitee{grid-template-columns:minmax(0,1fr)}
+  .add-invitee > .btn{margin-top:0;width:100%}
+  .invitee-row .btn{min-height:2.75rem}
+  .stored{grid-template-columns:minmax(0,1fr);gap:var(--space-xs)}
+  .stored dd{margin-bottom:var(--space-sm)}
+  .template-fold > summary{min-height:2.75rem}
+  .epa-checks .form-check,.choice-stack .form-check{min-height:2.75rem}
+  .epa-checks .form-check-input,.choice-stack .form-check-input{width:1.25rem;height:1.25rem}
+  .portfolio-links{padding-left:0;list-style:none}
+  .portfolio-links a{display:flex;align-items:center;min-height:2.75rem}
+  .respond-form > .btn{width:100%}
+  .account-brand-mark{width:44px;height:44px}
+  .account-brand-text{font-size:2rem}
+  .respond-card h1{font-size:1.5rem}
+  .coverage-table th[scope="row"]{min-width:12rem}
+  .dlg-overlay{padding-top:var(--space-lg)}
+  .dlg-overlay .form-actions{flex-direction:column-reverse;align-items:stretch}
+  .dlg-overlay .btn{min-height:2.75rem}
+}

@@ -1,0 +1,149 @@
+ROUND 3: one correction round on P, RA and MA as round 2 drew them. Put round 3 on a page of its own, "Round 3": the
+same boards (R3- in place of R2-), each with its states, updated in place; round 1's and round 2's pages stay untouched.
+Change what follows, then say on the Spec, item by item (by the numbers below), what changed and where. Draw nothing
+the items do not ask for. The brand mark is at /_blob/d5b5890c1eb0efaad13d0d347d1ebf4c.
+
+THE SCREENSHOTS: round 2's did not arrive. They are attached to THIS message (act-3/3.36-2-seven-invitees.png,
+act-3/3.44-1-report-under-review.png, act-3/3.46-1-report-released.png, act-3/3.46-2-list-released.png,
+act-3/3.47-1-molefe-report.png, act-A/A.7.5-2-campaigns-390.png). Read the orders in them before drawing (the list's
+rows, the respondent groups). If they do not arrive, say so on the Spec and take the orders from M1 and M2 below.
+
+THE OPERATOR'S DECISIONS (2026-10-‹dd›):
+  F1. An Open campaign's report. [F1: pending — recommended: while Open the report shows the status card and the
+      threshold checklist only; the group cards and the suppressed line appear once the campaign is closed and its
+      addresses removed. R1 (and its 390 and 768) redrawn so; 3.41's Expect loses the Nurse card.]
+  F2. A respondent group's minimum. [F2: pending — recommended: a floor of 3 for multi-source feedback, refused below 3
+      on create; the rating's per-point counts dropped from the data. The cast gains a third Nurse and a third
+      Consultant (‹name›, ‹address›, their rating and comment ‹…›) and every figure is recomputed.]
+  F3. Her MSF reports list. [F3: pending — recommended: no Responses column; Report, Released, View.]
+  F4. The release mail when her programme has ended. [F4: pending — recommended: none is sent; R6d's "No email is sent:
+      she can no longer open MSF reports." stays, its PROPOSED chip removed.]
+  F5. How a campaign closed. [F5: pending — recommended: stored (DATA: ClosedByUserId, null when the hourly job closed
+      it); R4's "Closed by itself on ‹date›, once 2026-10-28 had passed." reads it; "nightly" becomes "hourly"; the
+      PROPOSED chip removed.]
+  F6. The required mark. [F6: pending — recommended: on every required control at every width: Template, Trainee, Opens
+      on, Closes on, the three minimums, the EPA group (its legend), the fold's Template name, Scale question and
+      Comment question, the invitee's email and K15's Teaching context; none on the respondent group select (it always
+      holds a value); "* marks a field you must fill in." above the create form's first card and the add form.]
+  F7. The status card's stripe. [F7: pending — recommended: the activity page's rule, as classes: blue
+      (detail-card--emphasis) on Draft and Under review, the control edge (--others) while Open, green (--done) when
+      Released, red (--declined) when Withdrawn; the same on K and R.]
+  F8. Close campaign danger, Release primary. [F8: pending — recommended: keep as drawn; the Spec says Close destroys
+      (links and addresses) and Release does not.]
+  F9. "Open its campaign page". [F9: pending — recommended: alone on its own line under the report's subtitle (flow
+      07's .review-progress-link pattern, 24 px, 44 px at 390), out of the dot-separated subtitle.]
+  F10. R8a and R9. [F10: pending — recommended: redrawn for Dr Anele Dlamini as states.md 627–628 reach them: "MSF
+      report for Anele Dlamini", evidence for PAED-012, one invitee, 1 response, thresholds ‹n›; no "Illustration".]
+  F11. The add result. [F11: pending — recommended: "Invitee added." alone, as built; the address goes from K2's
+      result.]
+
+MUST FIX (round 3's check takes each by number):
+  M1. The campaign list is newest first by creation: Pieter du Plessis's campaign above Lerato Molefe's on every board
+      that draws both (L2–L6 at every width; L7's semester-2 rows too).
+  M2. The respondent groups in the built order everywhere: Peer doctor, Consultant, Nurse, Allied health professional,
+      Other. On the report and her report the Consultant card above the Nurse card (R3–R11, M3, M4); the suppressed line
+      "Peer doctor, Allied health professional"; the add form's select in that order with Peer doctor chosen (K1–K5b,
+      K13). The Steps Expects follow.
+  M3. K4, after the remove: "Opening emails each of the 6 invitees …". K2 and K3 stay as drawn (Palesa Tau was an Allied
+      health professional before the remove and a Nurse after the re-add).
+  M4. K15, learner feedback's draft: Thresholds "‹n› responses; ‹n› in a respondent group; 1 respondent group
+      reporting", the minimum shown disabled at 1 with its help; Evidence for PAED-015 only, its whole title (only EPA
+      15's tool list names learner feedback, D35); the invitees ‹n› and the last day ‹closes›. The Spec's learner note
+      says the respondent-group minimum is fixed at 1.
+  M5. An ended programme (R10, R6d): the groups' intro reads "As Lerato Molefe would have read it."; the release
+      section's first line and R6d's first list item read "She can no longer open MSF reports; the report is kept with
+      the evidence on her record."; the mail line as F4.
+  M6. The Spec's DTO table restated from the DTOs as they stand: EvidenceRecordedOn, each EPA's Recorded, the list's
+      ReleasedOn and the report's TeachingContextCount exist and are not additions. Added: a per-EPA "will be recorded"
+      flag on the report (DATA), read before release by the release section's records line ("2 evidence records are
+      written … for PAED-010 and PAED-012") and by R6a–R6b; Recorded serves only after release.
+  M7. The required mark is DESIGN.md's: the label ends in <span class="required-mark" aria-hidden="true"> *</span>,
+      the control carries aria-required="true", the visually hidden "required" stays on the EPA legend only, and the
+      explaining line stands above the first card; on the fields F6 names. The Spec says R12 changes the markup.
+  M8. The status card's stripe as F7, by class on every K and R board; no inline colour (R7, R7b); K11 and R7 agree.
+  M9. C4's refused create is the system's refusal summary: class "validation-summary-errors error-summary",
+      role="alert", tabindex="-1"; a bold "Not created." then a line saying what to do; its field line a link that moves
+      the focus to the first EPA checkbox by script (PageFocus), never to the legend. The Spec says the summary takes the
+      focus and the fieldset's message stays under the legend.
+  M10. The dialogs at 390: the 44 px buttons and the stacked actions (safe button last on screen, first in tab order) are
+      written against what ships (e.g. .msf-page dialog .btn), never the canvas's .dlg-overlay; the Spec says where
+      each ConfirmDialog sits so the rule reaches it, and lists the stacked order as a rule it changes.
+
+SHOULD FIX:
+  S1. Dialog backdrops: R2 (Close) over 3.44's page (6 responses, of the 5 needed; 2 respondent groups reporting; the
+      Consultant and Nurse cards; the suppressed line); R6c over R9's page; R6d over R10's page. R6b, R6c and R6d carry
+      "Illustration" (R6d PROPOSED until F4).
+  S2. R8a and R9 as F10.
+  S3. New words chipped NEW or dropped: K7 and K8's "A link nothing was heard of for an hour counts as not delivered.";
+      K16 and R12's "Go to MSF campaigns"; "Today, on the South African calendar." (NEW and DATA: the default from the
+      South African date). C1–C5's trainee help names no institution: "Current trainees you can run a campaign for.".
+      K2's result as F11.
+  S4. Refusals that name no property (T324): K5b's malformed address "Enter a valid email address, for example
+      name@example.org." (NEW); one board with a threshold out of range, "Enter a number from 1 to 100." (or F2's floor);
+      the Spec says the email input is type="email" with novalidate, so the server's words show.
+  S5. The Spec says how the template fold sits beside the campaign form without a form inside a form (the fold outside
+      the campaign's EditForm, Add template a type="button"), and draws nothing differently.
+  S6. The Spec names a page component of its own for /msf/my-reports/{id} (its h1, tab title and trail), and keeps M5's
+      not-found alert apart from the load error.
+  S7. The Spec says what a group's h3 row reads with no scale question (the group's name alone) and with several (each
+      average under its own question).
+  S8. Boards added: fifteen EPAs in About and Evidence for on one K and one R board (390), PAED-015's title in the report,
+      the campaign facts and her "On your portfolio" (390); her report page loading, load error and unavailable; a
+      refused Open, Withdraw, Resend, Close and Release (the danger Alert, the focus left on the button) and Close's
+      result; /msf/respond's refused post ("Error: …" tab title, the error summary with tabindex -1 taking the focus,
+      aria-invalid on the comment); 768 for C, K7, V1 and one dialog.
+  S9. /msf/respond keeps the state's Alert under each h1 (info for already used; warning for closed and expired; danger
+      for the fault), or the Spec lists its removal.
+  S10. CSS reuse: div.actions-cell for row actions (no .row-actions); .submit-check (no .check-line); every class a board
+      uses gets a Spec row, NEW with its reason or "reuses .x": .msf-header, .section-title, .count-table, .count-box,
+      .num, .nowrap, .kind-line, .trainee-cell, .stored, .msf-facts, .groups-intro, .group-avg, .skeleton-stack,
+      .choice-stack, .coverage-windows, .coverage-programme, .is-covered, .respond-label, .respond-required,
+      .respond-meta; .person-cell, .details-list and Skeleton's Count used where they serve.
+  S11. The Spec's DESIGN.md list adds: § The MSF campaign page's h4s become h2 and h3; its campaign card gives way to the
+      status card and About (State to the badge, the window to the subtitle); the Quick template card becomes the
+      Questionnaire card with its fold; the required mark (M7); which tables do not stack (S13); /msf/respond's Alert
+      (S9); the status stripe (M8); the draft's Remove in a list item.
+  S12. The create page's EPA card opens with an h2 like the other three, the legend a label inside it; its invalid
+      state is .choice-group.is-invalid (with its forced-colors mark), not .epa-fieldset.is-invalid.
+  S13. Coverage: V1 drawn at 768; the Spec lists its named scroll region as R9's deliberate exception; the count tables
+      on K and R stay unstacked and the Spec says why.
+  S14. The add form stacks below 900 px (drawn so on K2-768), Add invitee aligned by align-self:end, no margin-top.
+  S15. "withdraw it on its campaign page" (field help and the disabled Release's reason) an inline-block padded link,
+      flow 08's rule; "Open its campaign page" as F9.
+  S16. No inline style: one measure for K and R's cards as a class; .section-title--h3 for the 1rem h3s; Skeleton's
+      Width and Height; R7's colour as M8.
+  S17. Placeholders filled: K10's Withdraw body under review and K12's withdrawn sentence from MsfCampaignText
+      (WithdrawBody, StateNote); R12's sentence as built; K5b as S4; R11's 4,000-character comment drawn at length. ‹date›
+      stays where the replay has none.
+
+STEPS BOARD (revised; every Expect clause today's runbook carries stays, with the new one beside it):
+  - 3.36: the select offers Peer doctor, Consultant, Nurse, Allied health professional, Other, Peer doctor chosen (M2);
+    each add reads "Invitee added." (F11); say whether keeping the default counts a field.
+  - 3.38 and A.7.5: Pieter du Plessis's row first (M1).
+  - 3.41: as F1.
+  - 3.44: the narrative and "Supervision level this feedback supports" (Not stated, 1, 2, 3a, 3b, 4, 5) stand beside
+    Release; the Consultant card above the Nurse card.
+  - 3.46 and 3.47: the Consultant card first; her list's columns as F3.
+  - The figures as F2 decides.
+  - The Create journey starts at Home's Start an MSF campaign (say so), and counts "5 + 2" (two minimums typed).
+  - A.4.7: L5 stands for it; say so.
+
+NITS (fix as you pass):
+  - R11: the status card's count agrees with the cards (14 responses, or the cards change).
+  - R8a, R8b: "withdraw it on its campaign page" stays a link inside the disabled Release's reason.
+  - Q1–Q8: the brand mark at 44 px, as MsfRespond renders it.
+  - The counter counts in the browser as flow 09's does; "Up to 4,000 characters" on /msf/respond as on the report.
+  - One convention for the dropped EPA on R6b, R7b and M4: PAED-012 throughout; R6b's backdrop matches.
+  - K13's strip: "a draft campaign for a registrar whose programme has since ended".
+  - C1, C2: the EPA fieldset's aria-describedby names an element that exists.
+  - L2–L7's count chips: a plain count, or badge-draft said on the Spec to be deliberate.
+  - C3–C5's 5 / 2 / 2: a note that Mr Smit typed them (the form's default is 8 / 3 / 2).
+  - R7, R7b and K11: one status heading for the Released card.
+  - 390 boards keep the closed menu's list and the account row, as flow 09's do.
+  - The canvas's ds/ (tokens.css, bundle.css) saved with the round.
+  - Count tables inside a card: say why no .shadow; the template fold's summary not in the link colour; K13's natively
+    disabled controls said on the Spec.
+
+SPEC BOARD: list F1–F11, M1–M10 and S1–S17 with where each is drawn or why it is Spec only. Keep "DTO additions, by
+query" as M6 restates it, adding: the "will be recorded" flag (M6); ClosedByUserId (F5); the South African default for
+Opens on (S3); HasOpened; the setup's and the report's additions as round 2 listed them.
