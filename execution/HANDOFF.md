@@ -31,6 +31,9 @@ every remaining item, with tests; the task file's closing note lists them.
   sides (`5cc29ec7`); the operator took F1–F11 as recommended (`f79586b5`). Round 3 drawn (canvas 1792071007-7a95, 188
   boards, saved in `round-3/`); checked final (`e825e2e2`). **Built** (`68327c9d`, six suites green; T369's notes); **next:** step 7, the replay on a fresh database
   (flow 09's `replay-brief.md`), then the design system and lessons. Branches `t369*` and their worktrees kept.
+- **Session finalised.** **Not pushed:** `6e842de3`, `f825fe60`, `68327c9d`, `d2d7f1dc` (push on the operator's word).
+  The replay app on `:5180` still runs `wombat_scenario_t290` (pre-flow-10 build); step 7 starts from a fresh database.
+  The replay's cautions are in T369's step-6 note (stub-mail counts +3, T282's log line, D1 margins at 1280/390).
 
 ## Session 2026-10-14 (Opus): T366 (flow 09) done, with T367
 
