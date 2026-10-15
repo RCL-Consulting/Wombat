@@ -81,3 +81,8 @@ T366 (flow 09), T364 (flow 08), T162 (the system-managed MSF type), T153, T270, 
   Released one-liner), MA (`/msf/my-reports/{id}`, MB-390's alert reworded "could not be found"). Corrections: DTO
   additions (list, campaign page, report), Responded 3 at 3.38 is 0, placeholder EPA titles; anonymity holds. Round 2's
   ask must require a spec and a steps board. The attachments arrived. Q7–Q11 to the operator.
+- **2026-10-15, the operator's round 1 decisions:** RA + MA; Q7 header link, no Administrator item; Q8 a release mail
+  (T367's path); Q9 nobody sees the spread; Q10 warn and keep the release; Q11 fold T270, T325 and the MSF halves of
+  T329, T280, T324, T323 into the build. Recorded in `round-1-assessment.md` § 9. `round-2-ask.txt` written (323 lines;
+  spec and steps boards). Flagged PROPOSED in it: no release mail when her programme has ended (D54: the link would land
+  on a page she cannot open); "Closed by itself" inferred from the close's date.

@@ -454,3 +454,27 @@ Q9.
 - **R11.** Every page: one h1 then h2s; every table captioned; Try again in place of an exception's text (T329, T272);
   no message naming a property (T324); 768 for the list, the draft's rows and the report (§ 11, flow 06).
 - **R12.** Q7–Q10 drawn as the operator decides; nothing else of flows 01–09 drawn as changed.
+
+## 9. The operator's decisions (2026-10-15)
+
+- **Picks:** the proposal (P) confirmed with § 8's corrections. Report **RA** (status first, release last, one column;
+  its checklist explains a blocked release), borrowing RB's group header (name and average on one line) and RC's
+  one-line summary for the Released state; RB's side column and RC's table are rejected. Registrar **MA**: her report
+  on a page of its own at the existing `/msf/my-reports/{id}`, borrowing MB-390's single alert above her list for an
+  id that is not hers, worded "could not be found" (never "not one of yours").
+- **Q1–Q6:** as recommended in § 7.
+- **Q7:** MSF coverage stays a header link; no Administrator menu item.
+- **Q8:** a mail on release, through T367's `AccountNotices` path: no feedback in it, a link to MSF reports; the
+  Release dialog says it will be sent.
+- **Q9:** nobody sees the rating spread; averages only.
+- **Q10:** warn on the campaign page, the report and the Release dialog when the registrar's programme has ended
+  (graduated or withdrew), and keep the release (needs T270's `SubjectIsCurrent`).
+- **Q11:** T270, T325 (including the respondent link's SA date), and the MSF halves of T329, T280, T324 and T323 fold
+  into the build, with the DTO additions; nothing lands first.
+
+Round 2's ask is `round-2-ask.txt` (R1–R12 there are § 8's, updated for these decisions). Settled in writing it, for
+the operator to overrule: the list drops the training year (no list DTO carries it; the campaign page keeps it as a
+DTO addition); the report DTO gains the campaign's name, window, invited total, `ClosedOn`, `ReleasedOn` and the
+subject's currency and end date in one read, rather than the page reading `GetMsfCampaignSetup` beside it; the
+campaign h1 stays "MSF campaign for {name}", the window in the subtitle telling two apart; and, PROPOSED, no release
+mail for a registrar whose programme has ended, since D54 has taken MSF reports from her (T311).

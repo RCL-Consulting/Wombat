@@ -1,0 +1,323 @@
+ROUND 1 CONFIRMED AND PICKED: the proposal (P) for the list, the create page, the campaign page, /msf/respond and MSF
+coverage, with the corrections below; the report RA, "status first, release last"; the registrar's MSF reports MA, "a
+page of its own". Round 2: P, RA and MA at full fidelity on the design system installed on this canvas (Wombat v23,
+namespace wombat): its tokens and components, real words, no grey bars or greys-as-wireframe. Every screen and state at
+1280 and 390; the campaign list, the draft campaign page, the report and MSF reports also at 768. Put round 2 on its own
+page of the canvas; keep round 1's boards on their page, untouched. The brand mark is at
+/_blob/d5b5890c1eb0efaad13d0d347d1ebf4c: use it, never a drawn disc.
+
+WHY RA: it reads in the order the decision is made (where the campaign stands, what it is evidence for, what the
+  groups said, then the release), its threshold checklist is where a blocked release explains itself, and it keeps one
+  column at every width, as flow 09 did. RB's side column goes (a 4,000-character narrative in 22 rem is cramped, and
+  the detail page has no side column); RC's table of groups goes (it parts the comments from their group's average,
+  repeats the campaign page's Invited counts, and carries the spread, which nobody sees: Q9).
+WHY MA: her report gets an address, an h1 and a title of its own at the route that exists today
+  (/msf/my-reports/{id}), as flow 09 gave My committee reviews a page per review, and her 390 needs no list above it.
+BORROW: from RB, the group header: the group's name and its average on one line (the card's h3 row). From RC, its
+  one-line summary for the Released state's status card, in place of RA-390's repeated checklist. From MB-390, another
+  trainee's id handled as one alert above her own list, focused, said once; worded as R8 says, never "not one of yours".
+
+ATTACHED, AGAIN: the screenshots are attached to THIS message, staged from C:\dev\Wombat\design\upload (baseline\act-3\…,
+  act-A\…, states\…). Round 1 received them (it drew the seed's titles and the cast found only there); read them again
+  before drawing: the words in them are the data. Key ones: act-3/3.36-2-seven-invitees.png,
+  act-3/3.43-1-link-not-delivered.png, act-3/3.44-1-report-under-review.png, act-3/3.46-1-report-released.png,
+  act-3/3.47-1-molefe-report.png, act-3/3.39-1-mokwena-questionnaire.png, act-3/3.40-1-link-already-used.png,
+  act-3/3.35-0-create-form.png, act-3/3.46-2-list-released.png, act-A/A.7.5-2-campaigns-390.png,
+  act-3/3.49-1-msf-coverage.png. Captures under states\ dated 2026-09-26 are the old frame: read their bodies only. If
+  any did not arrive, say so on the first board of round 2's page and draw nothing from memory in its place.
+
+DECISIONS (the operator's, 2026-10-15; one sentence each):
+  Picks: P confirmed with R2–R12; RA for the report, borrowing RB's group header and RC's released summary line; MA for
+    the registrar, her report on a page of its own at /msf/my-reports/{id} (an existing route: no new route), owned by
+    MSF reports (its nav item lit, the trail Home › MSF reports › {h1}), with MB-390's single alert for an id that is
+    not hers.
+  Q1: anonymity is kept in view by one caption on every count table, "Counted by respondent group. This page never
+    lists who was invited or which of them responded.", and the release dialog's "not even that they answered"; no
+    per-row marks, no repeated banner.
+  Q2: the respondent reads whom and why first, briefly, as P4 drew it: the h1 with the trainee's name, the last day,
+    one lead sentence, "Who sees your feedback" as two bullets, then the question; the "compare at their stage" note
+    becomes the rating fieldset's help.
+  Q3: RA as corrected in R5: Close in the status card while Open; Release the last section, an outline button opening
+    a ConfirmDialog; a blocked release says why in the checklist and beside the disabled button; results take the
+    focus at the top.
+  Q4: MA (above).
+  Q5: the open campaign's one status card: "6 of 7 invitees have responded.", the counts table, a Links part with the
+    not-delivered warning and "Resend 1 link" in its row, "N links are still being sent." as info; the resend's result
+    in the Links part, focused.
+  Q6: the questionnaire first, a Template select with "Write a new questionnaire" folded (open when there is none),
+    the fifteen EPAs as a fieldset with a live "2 of 15 ticked", Create disabled with its reason until a template
+    exists.
+  Q7: MSF coverage stays an outline link in the list's header; no tab, and no menu item for the Administrator.
+  Q8: a mail on release, through T367's one-off notice path (AccountNotices): no feedback in it, only that a report
+    was released, with a link to MSF reports; the Release dialog says it will be sent, and the result does not claim
+    delivery.
+  Q9: nobody sees a rating's spread, neither the coordinator nor the registrar: averages only.
+  Q10: when the registrar's programme has ended (graduated or withdrew), the campaign page, the report and the Release
+    dialog warn, and the release is kept (it needs T270's SubjectIsCurrent, and her end date, on both DTOs).
+  Q11: T270, T325 (its respondent half included: a link judged on the South African date), and the MSF halves of
+    T329, T280, T324 and T323 fold into this flow's build with the DTO additions below: draw each as fixed. Nothing
+    lands first. T272's foreign key, T153, T311, T320, T334 and T276 stay their own flows': draw none of them.
+
+CORRECTIONS TO P, RA AND MA (round 2's review checks each by number):
+  R1. Two boards of their own, as flow 09's round 2 had: a Spec board and a Steps board (ALSO, at the end).
+  R2. The cast's numbers and titles are true on every board:
+      a. At 3.38 Lerato Molefe's row reads Responses 0 (round 1 drew 3: nobody answers until 3.39); Pieter du Plessis's
+         withdrawn draft, Invitations 0, Responses "—".
+      b. Every EPA title is the seed's (FIXTURES), on the create page, the campaign page, the report, her report and
+         coverage. No "[title from the curriculum]" placeholder anywhere.
+      c. PAED-015's 119-character title wraps whole wherever it is drawn: "PAED-015 — Teaching and applying
+         evidence-based care responsibly and ethically in clinical decision-making and research".
+  R3. The campaign list:
+      a. Columns Trainee, Template (its kind under it), State (BadgeFor.MsfCampaign's badge: Draft, Open, Under review,
+         Released, Withdrawn), Invitations, Responses ("—" on a campaign that never opened), Closes (ClosesOn on every
+         row, one ISO date that never wraps), and the row's actions named for it ("Manage: the campaign for Lerato
+         Molefe (Default MSF, closing 2026-10-28)"). No "Closed" in the Closes column and no release time on the list:
+         that is the report's.
+      b. No training year under the name (no list DTO carries it): drop it.
+      c. The header: New campaign first (primary), then MSF coverage (outline), in that order at every width.
+      d. The caption names no institution (the Administrator sees every one): "MSF campaigns, newest first. Counted
+         by respondent group: this list never shows who was invited or who responded."
+      e. Stacked rows below 641 px (DataTable's Stack), every field shown, each action a 44 px block.
+  R4. The campaign page ("MSF campaign for Lerato Molefe"; the subtitle "Default MSF · Multi-source feedback ·
+      2026-10-14 to 2026-10-28" tells two campaigns for one trainee apart; trail Home › MSF campaigns › {h1}):
+      a. The status card is detail-card--emphasis in every state; the not-delivered warning is an Alert inside it,
+         never a tint on the whole card.
+      b. "About this campaign" shows the thresholds ("5 responses; 2 in a respondent group; 2 respondent groups
+         reporting"), the EPAs ("Evidence for PAED-010 and PAED-012", the titles under), "Lerato Molefe, training year
+         4", and once closed "Closed to responses on 2026-10-14" (the South African date). Mark each DATA: the setup
+         DTO gains them (MinimumResponses, MinimumCategoryResponses, MinimumRespondentCategories, CoveredEpas,
+         TrainingYear, ClosedOn, SubjectIsCurrent, SubjectEndedOn).
+      c. Draw: 3.37 opened ("Campaign opened; links are being sent." focused; "7 links are still being sent. Reload
+         this page to see whether they were delivered."; Responded 0 in every group); released; withdrawn as a draft
+         ("Nobody was invited.", no Responded column); unavailable ("Campaign unavailable" / "The selected campaign
+         could not be loaded."); loading.
+      d. A refused add shows under the address field, keeping what was typed, focused: the duplicate (T228, as
+         built: "This campaign already invites that address. Capitals are ignored, so the same address typed
+         differently is the same respondent. Each respondent is invited once, so that nobody can respond twice. The
+         invitee has not been added again.") and a malformed address (‹its refusal›). Left blank: "Enter the respondent's
+         email address." (T324; NEW wording, never "The Email field is required."). The add form's group reads
+         "Respondent group" (T270).
+      e. The draft's addresses are rows: the address whole at 1280, wrapping only after "@" at 390 (<wbr>), its group
+         beside it, Remove beside each, named "Remove grace.mokwena@kgk.wombat.local (Nurse)".
+      f. A draft whose trainee is no longer current (T270; "Illustration", ‹date›): Add invitee and Open campaign
+         aria-disabled, each with its reason beside it: "Add invitee: Pieter du Plessis is no longer in a programme,
+         so nobody can be invited." and "Open campaign: Pieter du Plessis is no longer in a programme. Withdraw this
+         campaign." (NEW wording); Withdraw still offered.
+      g. The Q10 warning on a campaign under review whose registrar's programme has ended ("Illustration"; Alert
+         warning, in the status card): "Lerato Molefe's programme ended on ‹date›. A release still records the
+         feedback as evidence on her record, but she can no longer open MSF reports to read it." (NEW wording; DATA:
+         SubjectIsCurrent, SubjectEndedOn).
+      h. Learner feedback's draft: one group, Learner; a Teaching context per invitee beside the address; the counts
+         by context are NOT shown (only the coordinator's report names contexts). Draw it once, labelled.
+  R5. The report on RA ("MSF report for Lerato Molefe", the same subtitle as R4, "Open its campaign page"; trail Home
+      › MSF campaigns › {h1}):
+      a. Status card: the badge, a sentence heading, the checklist (each line met, short or the rule), Evidence for,
+         and in the Open state Close campaign (outline) with "Release is offered once the campaign has closed. It
+         closes by itself once 2026-10-28 has passed; close it sooner here."
+      b. Blocked from release ("Illustration"): an is-short line and the disabled Release (aria-disabled) with its
+         reason beside it, in both of today's wordings with T270's singulars: "Release needs 5 responses; 1 has come
+         back. If it should never be released, withdraw it on its campaign page." and "Release needs 2 respondent
+         groups to report; 1 cleared the 2-response threshold. Feedback that survives from too few groups is not
+         multi-source feedback." The checklist says the same in its line.
+      c. Each shown group a card: the h3 row "Nurse · 4.50 average rating, from 2 responses" (RB's header; "from 1
+         response" when one), then the question and its comments verbatim, wrapping, never cut. Ratings are averaged
+         from 1, Well below expectations, to 5, Well above expectations. No spread, no bar (Q9).
+      d. The suppressed groups in one compact line, the coordinator's sentence: "Suppressed: Peer doctor, Allied health
+         professional. Fewer than 2 responses each, so their ratings and comments are not shown here." Under review,
+         add "Lerato Molefe sees nothing of them, not even that they answered." Keep this sentence and the registrar's
+         page apart: hers says nothing of them at all.
+      e. Names no EPA ("Illustration"): Evidence for reads "This campaign names no EPA, so releasing it will record no
+         evidence on the trainee's portfolio."; the release form's "When you release" drops its records line.
+      f. Under review after the nightly job closed it ("Illustration"): "Closed by itself on ‹date›, once 2026-10-28
+         had passed." PROPOSED DATA: ClosedOn on the report DTO; by hand or by the job is not stored, and is read from
+         ClosedOn's South African date falling after ClosesOn. Just closed by hand: "Campaign closed and anonymised for
+         review. Every respondent's email address has been removed." at the top, focused.
+      g. Released (3.46): the status card is RC's one line, "Released · 2026-10-14 16:34 SAST · 6 responses, with 5
+         needed · 2 respondent groups reporting, with 2 needed"; then "As released" (the narrative, "Supervision level:
+         Not stated"), and Evidence for with "Recorded on the portfolio: 2026-10-14 16:34 SAST" (SAST with the zone,
+         T325; never UTC). An EPA whose record was not written: "PAED-0nn — ‹title›: not recorded" ("Illustration").
+         The result at the top, focused: "Report released to Lerato Molefe." Nothing claims a mail was delivered.
+      h. Data the report DTO gains, marked DATA on the board: SubjectName, OpensOn, ClosesOn, the invited total (for
+         the Close dialog's unused links), ClosedOn, ReleasedOn (EvidenceRecordedOn is null when no EPA is named),
+         SubjectIsCurrent and SubjectEndedOn. One read, not GetMsfCampaignSetup beside it.
+      i. The narrative counter is true: "106 of 4,000 characters" for 3.46's narrative; a counter is NEW.
+      j. Unavailable ("Report unavailable"), loading, a load error with Try again; 390 and 768 for Open, Under review,
+         blocked and Released.
+  R6. The dialogs (flow 01's ConfirmDialog; the focus opens on the safe button, as flow 09's; cancel returns the focus
+      to the opener; the result takes the focus):
+      a. Withdraw, from the list and the campaign page: "Withdraw this campaign?", the built body (FIXTURES), Keep the
+         campaign / Withdraw campaign. Draw its under-review wording too: "It has closed, and its report has not been
+         released. …" (the rest as built).
+      b. Remove: "Remove this invitee?", "Remove palesa.tau@kgk.wombat.local (Allied health professional) from this
+         campaign? They hold no working link, and will not be sent one when the campaign opens. While the campaign is a
+         draft, they can be added again."; Keep the invitee / Remove invitee; the result above the address rows,
+         focused.
+      c. Close (PROPOSED, decided by the pick): "Close this campaign now?", "Close the campaign for Lerato Molefe
+         (Default MSF, closing 2026-10-28) before its last day?", three lines ("It takes no more responses: the 1 link
+         not yet used stops working." / "Every respondent's email address is removed, so no link can be resent." /
+         "The report keeps the 6 responses it has, for you to review and release."), "Closing cannot be undone."; Keep
+         it open / Close campaign. The 1 is DATA (the invited total less the responses).
+      d. Release (PROPOSED, decided by the pick): "Release this report to Lerato Molefe?"; "Lerato Molefe can read it on
+         MSF reports: your narrative, and the ratings and comments of the Nurse and Consultant groups. Nothing of the
+         other groups is shown, not even that they answered."; "2 evidence records are written to Lerato Molefe's
+         portfolio: PAED-010 and PAED-012."; "Supervision level: Not stated."; the mail line (Q8, decided, T367's
+         path): "Lerato Molefe is sent an email saying a report has been released, with a link to MSF reports. The
+         email holds none of the feedback."; "Releasing cannot be undone: the narrative and the level cannot be changed
+         afterwards."; Not yet / Release to Lerato Molefe. Draw three variants of its body: an EPA no longer on her
+         curriculum ("PAED-0nn: not recorded, no longer on her curriculum"; DATA); a campaign naming no EPA ("No
+         evidence is recorded."); and the ended programme (Q10): R4g's warning repeated as the dialog's first line, and
+         in place of the mail line "No email is sent: she can no longer open MSF reports." (PROPOSED: see the Spec
+         board's note).
+  R7. /msf/respond (static HTML, a form post, no script, no live validation; the sign-in card widened, no nav):
+      a. One <h1> per state: "Feedback on Lerato Molefe", "Thank you", "Feedback link already used", "Feedback request
+         closed", "Feedback link expired", "Feedback link not recognised", "Something went wrong"; no tabindex on any
+         h1.
+      b. The questionnaire as P4 drew it, the rating one fieldset whose legend is the question; the chosen point's tint
+         by CSS only (:has(:checked)); the comment's warning above its box, "Up to 4000 characters. …" as built.
+      c. Draw closed (3.45), expired, not recognised, the fault and the browser's own required prompt (FIXTURES), each
+         at 390 and 1280; each refusal a title, its sentence and "You can close this page."
+      d. Learner feedback's questionnaire in words: "feedback on the teaching of Lerato Molefe, a trainee who has
+         taught you".
+      e. The last day is the South African date (T325's respondent half): note it on the board, no visible change.
+  R8. MSF reports on MA:
+      a. The list: a captioned table ("Your released MSF reports, newest first"), columns Report (template and kind),
+         Released ("2026-10-14 16:34 SAST", T325), Responses ("6"), and View named for its row ("View the Default MSF
+         report, released 2026-10-14"); stacked at 390.
+      b. Her report at /msf/my-reports/{id}: h1 and tab "Default MSF, released 2026-10-14" (· Wombat), the trail Home ›
+         MSF reports › {h1}, MSF reports lit (a NavOwners trail entry: MSF reports lights itself today with no trail).
+         Order: Narrative; "What your colleagues said" (each shown group's h3 row "Nurse · 4.50 average rating", no
+         count, then the question once, never "….: 4.00"; comments verbatim); "On your portfolio" (PAED-010 and PAED-012
+         as links, "Recorded as evidence on 2026-10-14 16:34 SAST").
+      c. An EPA not recorded is left out of "On your portfolio"; a report with none recorded or none named reads "This
+         report records no evidence on your portfolio." (NEW wording).
+      d. Another trainee's id (Anele Dlamini on Lerato Molefe's id, after 3.46): her own list with one alert above it,
+         focused: "That report could not be found. Your released reports are listed below." Then "No released reports"
+         / "Released multi-source feedback will appear here." (she has none). Said once.
+      e. Learner feedback's report: "Teaching contexts that responded: ‹n›", never their names.
+      f. Empty; loading; a load error with Try again (never the exception's text, T329); 390 and 768.
+  R9. MSF coverage: no "Back to campaigns" (the trail does it); "Coverage is not a target." in the subtitle; both grids
+      in a captioned, focusable role="region" that scrolls within itself at 390 (T323's one exception); the seed's
+      titles; "No trainees to show"; loading; a load error with Try again; an Administrator's view with two programmes
+      ("Illustration": the second programme ‹programme› at ‹institution›).
+  R10. The heavy volumes, each labelled "Illustration" where the replay does not reach it: ten campaigns in the list at
+      390 (KGK's five trainees, two semesters); a group with a dozen comments, one of 4,000 characters (wrapping, never
+      cut, no "…"); fifteen EPAs ticked on create ("15 of 15 ticked") and listed in About and Evidence for; PAED-015's
+      title in the report, the campaign facts and her "On your portfolio".
+  R11. Every page: one h1, then h2 per section, h3 below (T280); every table captioned with scope on its headers; every
+      row action named for its row, no two alike; loading (the header at once and a skeleton, no action offered until
+      the read is in); a load error ("Could not load …" and Try again, never an exception's text, T329, T272); the
+      create page's template or trainee read failing is that alert, and the live connection survives; no message
+      names a property (T324); one label everywhere: "Respondent group" (never "Category"), "Minimum responses in a
+      respondent group", "Minimum respondent groups reporting"; ISO dates, times "16:34 SAST"; no sideways scroll at
+      390 but coverage's grids.
+  R12. Nothing of flows 01–09 drawn as changed: the shell, the menus (Q7), the sign-in card's frame (widened only),
+      My activities and My progress (3.48), the Coordinator's Home. The create page's "Template created. Default MSF is
+      chosen as this campaign's template." selects the new template: mark it NEW. Create disabled until a template
+      exists ("Create campaign: write a questionnaire first.", aria-disabled) is flow 01's disabled-with-reason: NEW
+      here. Opens on and Closes on carry the required mark at every width or at none: pick one and say which.
+
+FIXTURES (the T366 replay, D = 2026-10-14, D+14 = 2026-10-28; use these words, and a bracket ‹…› where none is given):
+  People: Coordinator Pieter Smit (KGK). Respondents, no account: Grace Mokwena (Nurse,
+    grace.mokwena@kgk.wombat.local), Palesa Tau (first added as Allied health professional, removed, re-added as
+    Nurse, palesa.tau@kgk.wombat.local), Kagiso Motsepe and Lindiwe Khoza (Peer doctor,
+    kagiso.motsepe@kgk.wombat.local, lindiwe.khoza@kgk.wombat.local), Fatima Khumalo and Sarah Botha (Consultant,
+    khumalo@kgk.wombat.local, botha@kgk.wombat.local), Naledi Sebego (Allied health professional,
+    naledi.sebego@kgk.wombat.local). Khoza never answers. Trainees: Lerato Molefe (training year 4,
+    molefe@kgk.wombat.local), Pieter du Plessis (year 2), Anele Dlamini (year 3); KGK's other two current trainees are
+    Nomsa Mahlangu and Sipho Ndlovu.
+  Lerato Molefe's campaign: Default MSF (Multi-source feedback), 2026-10-14 to 2026-10-28, minimums 5 / 2 / 2,
+    evidence for PAED-010 and PAED-012. Invited: Peer doctor 2, Consultant 2, Nurse 2, Allied health professional 1,
+    All groups 7. Responded at 3.37: 0 everywhere; at 3.41: 3 (Nurse 2, Peer doctor 1); at 3.43 and after: Peer doctor
+    1, Consultant 2, Nurse 2, Allied health professional 1, All groups 6 of 7; "1 link was not delivered. Resend sends
+    each of these respondents a new link; this page never says who they are." → "1 new link is being sent." and "1
+    link is still being sent. Reload this page to see whether it was delivered."
+  Ratings and comments (the question "What should the trainee keep doing or improve?"; the rating "Rates the trainee's
+    overall professional performance."):
+    Nurse 4.50 from 2: "Calm and kind with parents at night; hands over clearly" (Mokwena, Above), "Leads neonatal
+      resuscitations and explains her decisions to the nurses" (Tau, Well above).
+    Consultant 4.00 from 2: "Sound judgement in clinic; teaches the interns well" (Khumalo), "Ready to run a ward;
+      should document escalation decisions more fully" (Botha).
+    Suppressed: Peer doctor (Motsepe, Meets, "A supportive senior; could delegate more"), Allied health professional
+      (Sebego, Above, "Refers early and listens to the therapists"). Never drawn on any page: they are suppressed.
+  Narrative (106 characters): "Consistently strong feedback from nursing and consultant colleagues; keep documenting
+    escalation decisions"; supervision level Not stated. Released and recorded 2026-10-14 16:34 SAST.
+  Pieter du Plessis's campaign: Default MSF, 2026-10-14 to 2026-10-28, the defaults 8 / 3 / 2, evidence for PAED-015,
+    nobody invited, withdrawn as a draft at 3.38. Withdraw's body: "Withdraw the campaign for Pieter du Plessis
+    (Default MSF, closing 2026-10-28)? It will take no more responses: any link already sent stops working, and every
+    respondent's email address is removed. A withdrawn campaign is never released to the trainee, and withdrawing
+    cannot be undone."; done: "The campaign for Pieter du Plessis (Default MSF, closing 2026-10-28) has been
+    withdrawn. Its respondents' links no longer work, and their email addresses have been removed."
+  The seed's titles (curriculum 11.1): PAED-001 Providing paediatric emergency care to children; 002 Managing common
+    paediatric presentations; 003 Providing intensive care to children; 004 Managing common neonatal conditions; 005
+    Providing neonatal care in intensive and high-care settings; 006 Managing long-term health conditions (LTHCs); 007
+    Maintaining and promoting the health and well-being of children; 008 Evaluating and managing neurodevelopmental
+    and behavioural presentations in children; 009 Providing care for an adolescent patient; 010 Leading and operating
+    within a clinical team; 011 Managing population health challenges; 012 Communicating with and counselling
+    patients, caregivers and healthcare teams; 013 Managing child protection, legal and ethical aspects of children at
+    risk; 014 Providing palliative and end-of-life care; 015 Teaching and applying evidence-based care responsibly and
+    ethically in clinical decision-making and research.
+  Coverage (3.49): "Paediatric EPA Curriculum 11.1 at Kgosi Kgari Teaching Hospital"; Semester 1, 2026 "5 trainees,
+    whose programme had started by 30 June 2026"; Semester 2, 2026 "5 trainees, whose programme had started by 31
+    December 2026"; PAED-010 and PAED-012 "1 of 5 trainees covered" (bold) in Semester 2, every other cell "0 of 5
+    trainees covered"; Lerato Molefe "2 of 15 EPAs covered", everyone else 0 of 15.
+  /msf/respond's refusals, as built: used "This feedback link has already been used: a response was submitted through
+    it, and each link takes one response."; closed "This feedback request has closed and is no longer accepting
+    responses."; expired "This feedback link has expired, so it can no longer be used."; not recognised "This
+    feedback link is not recognised. If you were sent a reminder about this request, use the link in the most recent
+    email: it opens the questionnaire, or says whether your feedback has already been recorded."; the fault "Something
+    went wrong on our side, and this page could not be shown. Please try again in a few minutes. If you had submitted
+    the form, opening your link again will say whether your feedback was recorded."
+  Today's words that stay: "No MSF campaigns" / "Create the first MSF campaign to start respondent outreach."; "Nobody
+    has been invited yet."; "Invitee added."; "Open campaign: add at least one invitee first. Opening the campaign
+    emails each invitee a link to respond."; the state sentences in round 1's ask; "Select at least one EPA this
+    campaign is evidence for."; the D11 help on the respondent-groups minimum.
+
+STATES TO DRAW (each at 1280 and 390, with the role's menu and the shell; 768 where marked):
+  The campaign list (Mr Smit): none (3.34); a draft and an open campaign (3.38); the withdraw dialog and its result
+    (3.38); withdrawn and released rows (3.46); under review; ten campaigns (R10); signed back in (A.4.7, the list as
+    loaded); loading; load error; 768.
+  New MSF campaign: no template yet (the fold open, Create disabled with its reason); "Template created.", Default MSF
+    chosen (3.34); Molefe chosen, fifteen EPAs, 5/2/2, two ticked (3.35); no EPA ticked, refused under the fieldset;
+    fifteen ticked; a template or trainee read failing (R11); learner feedback's template in words.
+  The campaign page: draft, nobody invited, Open disabled (3.35); draft with seven invitees, the add form's result and
+    Remove's dialog (3.36), 768; a refused add (R4d); opened, links being sent (3.37); a link not delivered, then
+    resent (3.43); under review, the addresses gone (3.44); released (A.7.5 at 390); withdrawn as a draft; the withdraw
+    dialog under review; the trainee no longer current (R4f); the programme ended (R4g); learner feedback's draft
+    (R4h); unavailable; loading; load error.
+  The report: open, one group shown and one suppressed, Close (3.41); the close dialog; just closed, under review,
+    ready (3.44); closed by the job (R5f); the release form typed, the release dialog and its three variants (R6d);
+    released (3.46); blocked, both wordings (R5b); names no EPA (R5e); the programme ended (R4g's warning); a dozen
+    comments (R10); unavailable; loading; load error; 768 for open, under review, blocked and released.
+  /msf/respond (signed in to nothing, no nav): the questionnaire, a point chosen (3.39); the browser's required
+    prompt; thank you (3.39, 3.42); already used (3.40); request closed (3.45); expired; not recognised; something went
+    wrong; learner feedback's questionnaire in words.
+  MSF reports (Dr Molefe, Dr Dlamini): none released; the list (3.47); her report (3.47); an EPA not recorded;
+    another trainee's id (Dlamini); learner feedback's report in words; loading; load error; 768.
+  MSF coverage (Mr Smit): loaded (3.49); nobody to show; two programmes (Administrator, R9); loading; load error.
+
+ALSO, as flow 09's round 2 did:
+  - Name every design-system component you use, and mark anything else NEW (the report's status card and threshold
+    checklist, the group card with its h3 row, the suppressed line, the release section, the draft's address rows,
+    the Links part, the narrative counter, her report page). Say which DESIGN.md rule each changes (§ Table system;
+    § Form system; § Page-level patterns: List page, Detail page and the title rule; the owner table's row for
+    /msf/my-reports/{id}; § The MSF campaign page; § Multi-source feedback coverage and § The programme's MSF coverage;
+    § Anonymous static page, whose h2 becomes the card's h1). Mark PROPOSED anything not decided above (R5f's "by
+    itself" reading, R6d's no-mail line for an ended programme, R12's required mark); mark "decided, T367" what rests on
+    T367 (the release mail); mark DATA every value a DTO does not carry today (R4b, R5h, R6c, R6d).
+  - A Spec board, "R2-0-spec": every NEW and changed component, its classes, the DESIGN.md text each changes, the
+    tokens, the DTO additions grouped by query (ListMsfCampaignsForCoordinator, GetMsfCampaignSetup,
+    GetCampaignAggregateReport, ListMsfCampaignsForTrainee), and R1–R12 each with the board where it is drawn. Note on
+    it: an ended programme's registrar has lost the Trainee role (D54), so a mail linking to MSF reports would land on
+    a page she cannot open (T311): R6d proposes sending none; the operator decides.
+  - A Steps board, "R2-0-steps": each of the 18 runbook steps sent in round 1 (3.34–3.49, A.4.7, A.7.5), and what its
+    Expect will say once built (3.35's title "New MSF campaign" and the respondent-group labels; 3.36's "Respondent
+    group", the address rows and Remove named per row; 3.38's badges and Closes; 3.39's h1 and order; 3.41's checklist
+    and "from 2 responses"; 3.44's Close dialog and result; 3.46's Release dialog with the mail line, "16:34 SAST" and
+    RC's line; 3.47's own page, h1, trail, "16:34 SAST" and no ".:"; 3.49 without Back to campaigns; A.7.5's stacked
+    list; 3.40, 3.42, 3.45, 3.48 and A.4.7 unchanged, saying so). With each journey's count, presses + fields typed,
+    at 1280 and 390: Mr Smit creating the questionnaire and the campaign (3.34–3.35), inviting seven and removing one
+    (3.36), opening (3.37), withdrawing from the list (3.38), resending (3.43), closing (3.44: Close, confirm),
+    releasing (3.46: type the narrative, Release, confirm); Sister Mokwena answering (3.39); Dr Molefe reading her
+    report (3.47: MSF reports, View); Mr Smit reading coverage (3.49).
+  - Every colour an existing token from tokens.json or a NEW token with its value; contrast checked (text 4.5:1,
+    borders and the focus ring 3:1); targets 24 px, 44 at 390.
