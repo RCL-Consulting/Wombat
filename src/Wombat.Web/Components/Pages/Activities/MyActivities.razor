@@ -3,6 +3,7 @@
 @using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject
 @using Wombat.Application.Features.Activities.Queries.ListNeedsYou
 @using Wombat.Web.Components.Shared.Progress
+@using Wombat.Application.Features.Activities
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ILogger<MyActivities> Logger
@@ -13,7 +14,10 @@
    list's order: ListActivitiesBySubjectQuery orders by the encounter date, newest first. *@
 <PageHeader Title="My activities" Subtitle="Everything you have filed or logged, newest encounter first.">
   <Actions>
-    <a class="btn btn-primary home-action" href="/activities/new">Log an activity</a>
+    @* D55: offered only to whom the new-activity page admits. *@
+    <AuthorizeView Roles="@ActivityFilingRules.FilingRole">
+      <a class="btn btn-primary home-action" href="/activities/new">Log an activity</a>
+    </AuthorizeView>
   </Actions>
 </PageHeader>
 
@@ -25,7 +29,9 @@
             EmptyTitle="No activities yet"
             EmptyBody="Log an activity to ask an assessor to rate an encounter, or to log a teaching session.">
   <EmptyActions>
-    <a class="btn btn-outline" href="/activities/new">Log an activity</a>
+    <AuthorizeView Roles="@ActivityFilingRules.FilingRole">
+      <a class="btn btn-outline" href="/activities/new">Log an activity</a>
+    </AuthorizeView>
   </EmptyActions>
   <ChildContent>
     @if (_needsYou.Count > 0)

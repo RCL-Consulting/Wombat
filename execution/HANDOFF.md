@@ -12,7 +12,12 @@ every remaining item, with tests; the task file's closing note lists them.
 - Suites: Domain 815, Application 3820, Infrastructure 1023, Architecture 52, Web 3737, Integration 491; all green.
 - The disconnected-circuit fix (`CircuitConnection`) is unit-tested only; a replay's log should show no
   "Navigation failed" after a role change near a sign-out.
-- Not pushed.
+- Pushed (`f3471780`). Then "deal with D54": **D55 (the operator, two answers):** only a registrar whose programme is
+  running files. `/activities/new` admits only Trainee; `CreateDraftAsync` and a draft's filing move refuse a subject
+  with no active profile (`ActivityFilingRules`); PendingTrainee's menu is Home alone. T153's create half settled (note
+  there; its MSF notes remain). One agent repaired ~90 fixtures (`NomineeSeed.AddCurrentProgramme`); suites green:
+  Application 3823, Infrastructure 1023, Web 3740, Architecture 52, Integration 491. Runbook 2.19 and 5.22 rewritten.
+- Not pushed: the D55 commit.
 
 ## Session 2026-10-14 (Opus): T366 (flow 09) done, with T367
 

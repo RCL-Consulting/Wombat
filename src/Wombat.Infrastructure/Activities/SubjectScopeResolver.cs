@@ -52,7 +52,8 @@ internal static class SubjectScopeResolver
     /// <para>
     /// Not every activity is about a trainee. An invited user is given an institution and speciality
     /// scopes by <c>InvitedUserProvisioner</c> at acceptance, while a <c>TraineeProfile</c> is created
-    /// only later by <c>AdmitTrainee</c> — and nothing stops them filing a reflective note in between.
+    /// only later by <c>AdmitTrainee</c>. Since D55 nobody files in between (a create needs an active profile), so the
+    /// fallback serves only the create page's nominee picker and activities stored before then.
     /// </para>
     /// <para>
     /// Without this, such an activity was stamped with nothing, and the seeded reflective-note family

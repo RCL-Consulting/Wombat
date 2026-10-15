@@ -178,8 +178,8 @@ public static class NavItems
             // T154: the portfolio review asks the trainee to export the period and hand the PDF to the reviewer.
             [WombatRoles.Trainee] = [new(null, [LogAnActivity, MyActivities, MsfReports, MyCommitteeReviews, ExportPortfolio])],
 
-            // Only the pages that admit a pending trainee (T141).
-            [WombatRoles.PendingTrainee] = [new(null, [LogAnActivity, MyActivities])],
+            // Home alone (T141): a pending trainee files nothing until admitted, so has no activities to list (D55).
+            [WombatRoles.PendingTrainee] = [],
         };
 
     /// <summary>The roles the navigation has links for: every role there is.</summary>

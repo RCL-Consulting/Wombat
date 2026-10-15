@@ -603,18 +603,15 @@ Gap: [F-5.21a, T311] (still, as the Note records) A graduate's Home does not say
 
 ### Step 5.22 — What a graduate can no longer open
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
-Route: /committee/my-reviews → /access-denied → /portfolio/authorisations → /access-denied → /msf/my-reports → /access-denied → /activities/new
+Route: /committee/my-reviews → /access-denied → /portfolio/authorisations → /access-denied → /msf/my-reports → /access-denied → /activities/new → /access-denied
 Do: Type the addresses of My committee reviews, My authorisations and MSF reports in turn. Then type the address of the
   new-activity page.
 Expect: Each of the first three reads "You cannot open this page", "Your account holds no role that opens this page."
   and "If you need it for your work, ask your institution's Wombat administrator.", with Go to Home: those pages still
   require the Trainee role (DESIGN § The NavMenu).
-  Nothing offers her an activity to file: there is no menu link and no dashboard action. The new-activity page asks
-  only that she is signed in, so it opens when she types its address, on Log an activity's instrument picker. She
-  files nothing.
-Note: No decision says whether a graduate may still file about herself. Nothing refuses her today: the page and
-  `ActivityService.CreateDraftAsync` check no role. T281 decides only that an encounter after her last day credits
-  nothing.
+  Nothing offers her an activity to file: there is no menu link and no dashboard action, and the new-activity page
+  reads the same "You cannot open this page" when she types its address. Only a registrar whose programme is running
+  files (D55); the create refuses anyone else too.
 Actual (2026-10-14, T366 replay, wombat_scenario_t366): Typed /committee/my-reviews, /portfolio/authorisations and
   /msf/my-reports: each went to /access-denied?ReturnUrl=..., reading "You cannot open this page", "Your account holds
   no role that opens this page." and "If you need it for your work, ask your institution's Wombat administrator.",

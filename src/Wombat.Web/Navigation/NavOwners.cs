@@ -98,7 +98,7 @@ public static class NavOwners
         [typeof(ActivityView)] =
         [
             new([WombatRoles.Assessor], NavItems.ActivityInbox),
-            new([WombatRoles.Trainee, WombatRoles.PendingTrainee], NavItems.MyActivities),
+            new([WombatRoles.Trainee], NavItems.MyActivities),
             new([WombatRoles.SpecialityAdmin, WombatRoles.SubSpecialityAdmin, WombatRoles.Coordinator], NavItems.WaitingForAssessors),
         ],
 

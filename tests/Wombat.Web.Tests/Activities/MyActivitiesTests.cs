@@ -27,6 +27,9 @@ public sealed class MyActivitiesTests : TestContext
     {
         _auth = this.AddTestAuthorization();
         _auth.SetAuthorized("trainee@test");
+        // D55: the Log an activity links are offered to the Trainee role alone. Before the claims: bUnit's SetRoles drops
+        // the claims set before it.
+        _auth.SetRoles(WombatRoles.Trainee);
         _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "trainee-1"));
         // A page turn moves the focus (ElementReference.FocusAsync, a JS call).
         JSInterop.Mode = JSRuntimeMode.Loose;
@@ -225,6 +228,23 @@ public sealed class MyActivitiesTests : TestContext
         cut.Find(".state-panel-copy").TextContent.Should().Be("Log an activity to ask an assessor to rate an encounter, or to log a teaching session.");
         cut.Find(".detail-card--empty a[href='/activities/new']").TextContent.Trim().Should().Be("Log an activity");
         cut.FindAll("table").Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData]
+    [InlineData(WombatRoles.PendingTrainee)]
+    [InlineData(WombatRoles.Assessor)]
+    public void WithoutTheTraineeRole_NeitherLogAnActivityLinkIsOffered(params string[] roles)
+    {
+        // D55: /activities/new admits the Trainee role alone, so a graduate (no role), a pending trainee or an assessor
+        // reading their own list is not offered a page that would refuse them. The empty state keeps its words.
+        _auth.SetRoles(roles);
+        _auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "trainee-1"));
+
+        var cut = RenderMine([], []);
+
+        cut.Find(".state-panel-title").TextContent.Should().Be("No activities yet");
+        cut.FindAll("a[href='/activities/new']").Should().BeEmpty();
     }
 
     [Fact]

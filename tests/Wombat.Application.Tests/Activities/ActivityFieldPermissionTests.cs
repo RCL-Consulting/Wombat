@@ -196,6 +196,7 @@ public sealed class ActivityFieldPermissionTests
         SeedActivityType(dbContext);
         // T102: the named assessor must be an eligible nominee at the subject's institution for the create to land.
         NomineeSeed.AddUser(dbContext, "trainee-1", 10, WombatRoles.Trainee);
+        NomineeSeed.AddCurrentProgramme(dbContext, "trainee-1", 10);
         NomineeSeed.AddUser(dbContext, "assessor-1", 10, WombatRoles.Assessor);
         dbContext.SaveChanges();
 
@@ -305,6 +306,7 @@ public sealed class ActivityFieldPermissionTests
         // T102: a creator may name themself only if they are an eligible nominee, so this coordinator also assesses.
         // What the test proves is unchanged: naming yourself at create does not unlock the assessor's fields.
         NomineeSeed.AddUser(dbContext, "trainee-1", 10, WombatRoles.Trainee);
+        NomineeSeed.AddCurrentProgramme(dbContext, "trainee-1", 10);
         NomineeSeed.AddUser(dbContext, "coordinator-1", 10, WombatRoles.Coordinator, WombatRoles.Assessor);
         dbContext.SaveChanges();
 
@@ -339,6 +341,8 @@ public sealed class ActivityFieldPermissionTests
         await using var dbContext = CreateContext();
         var activityService = CreateService(dbContext);
         SeedActivityType(dbContext);
+        // D55: the subject's programme is running, so the refusal below is the nominee rule's.
+        NomineeSeed.AddCurrentProgramme(dbContext, "trainee-1", 10);
         dbContext.SaveChanges();
 
         var create = async () => await activityService.CreateDraftAsync(new CreateActivityInput(

@@ -239,7 +239,8 @@ public sealed partial class NavMenuAuthorizationTests : TestContext
     {
         var menu = NavItems.For(ActingAs(WombatRoles.PendingTrainee, WombatRoles.PendingTrainee), Holder([WombatRoles.PendingTrainee]));
 
-        menu.Items.Should().Contain(NavItems.MyActivities, "guard: the pending trainee's own links are there");
+        // D55: a pending trainee files nothing before admission, so Home is all their menu holds.
+        menu.Groups.SelectMany(group => group.Items).Should().Equal([NavItems.Home], "guard: the pending trainee's menu is Home alone");
         menu.Items.Select(item => item.Href).Should().NotContain(href);
     }
 

@@ -960,9 +960,10 @@ public sealed class NomineeGateTransitionTests
     {
         await using var db = new ApplicationDbContext(options);
 
-        // The trainee has no profile: the create stamps the institution from their Identity row, which is the same
-        // answer SubjectScopeResolver gives a profiled trainee at that institution.
+        // The trainee's programme is running (D55), at the institution: the create stamps that institution. The profile
+        // names no seeded curriculum, so it adds no scope and no credit.
         NomineeSeed.AddUser(db, TraineeId, InstitutionId, WombatRoles.Trainee);
+        NomineeSeed.AddCurrentProgramme(db, TraineeId, InstitutionId);
         NomineeSeed.AddUser(db, AssessorId, InstitutionId, WombatRoles.Assessor);
         NomineeSeed.AddUser(db, ReplacementAssessorId, InstitutionId, WombatRoles.Assessor);
         NomineeSeed.AddUser(db, CoordinatorId, InstitutionId, WombatRoles.Coordinator);

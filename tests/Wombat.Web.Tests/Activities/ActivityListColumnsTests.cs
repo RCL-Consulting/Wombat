@@ -9,6 +9,7 @@ using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject;
 using Wombat.Application.Features.Activities.Queries.ListNeedsYou;
 using Wombat.Application.Features.Epas;
+using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.Activities;
 using Wombat.Web.Services;
 
@@ -34,6 +35,9 @@ public sealed class ActivityListColumnsTests : TestContext
     {
         var auth = this.AddTestAuthorization();
         auth.SetAuthorized("trainee@test");
+        // D55: My activities offers Log an activity to the Trainee role alone. Before the claims: bUnit's SetRoles drops
+        // the claims set before it.
+        auth.SetRoles(WombatRoles.Trainee);
         auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "trainee-1"));
     }
 

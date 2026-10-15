@@ -250,8 +250,10 @@ public sealed class RefusalFieldLabelTests
 
         await using var db = new ApplicationDbContext(options);
 
-        // The assessor is an eligible nominee at the trainee's institution (T102), so every refusal here is validation's.
+        // The trainee's programme is running (D55) and the assessor is an eligible nominee at the trainee's institution
+        // (T102), so every refusal here is validation's.
         NomineeSeed.AddUser(db, TraineeId, InstitutionId, WombatRoles.Trainee);
+        NomineeSeed.AddCurrentProgramme(db, TraineeId, InstitutionId);
         NomineeSeed.AddUser(db, AssessorId, InstitutionId, WombatRoles.Assessor);
         db.ActivityTypes.Add(FromSeed(CpsaMiniCexTypeId, "mini_cex_cpsa"));
         db.ActivityTypes.Add(FromSeed(QiProjectTypeId, "qi_project"));

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Wombat.Domain.Identity;
 using Wombat.Infrastructure.Identity;
 using Wombat.Infrastructure.Persistence;
 
@@ -52,6 +53,41 @@ public static class NomineeSeed
 
         return user;
     }
+
+    /// <summary>
+    /// Gives a subject the active trainee profile D55 asks of anyone an activity is filed about: their programme is
+    /// running. Before D55 a fixture could file for a subject with no profile, whose stamp came from their Identity row.
+    /// </summary>
+    /// <remarks>
+    /// The default curriculum id is one no fixture seeds, so the profile changes nothing but the filing rule: the stamp is
+    /// the institution alone, as the Identity row of a user with no speciality scopes gave; no curriculum item is credited;
+    /// and the default start bounds no encounter date a fixture uses. Pass a curriculum when the fixture's scope or credit
+    /// needs one.
+    /// </remarks>
+    public static TraineeProfile AddCurrentProgramme(
+        ApplicationDbContext db,
+        string userId,
+        int institutionId,
+        int curriculumId = NoCurriculumId,
+        DateOnly? programmeStartDate = null)
+    {
+        var start = programmeStartDate ?? new DateOnly(2000, 1, 1);
+        var profile = new TraineeProfile
+        {
+            UserId = userId,
+            InstitutionId = institutionId,
+            CurriculumId = curriculumId,
+            ProgrammeStartDate = start,
+            AdmittedOn = start,
+            ExpectedCompletionDate = start.AddYears(40),
+            IsActive = true
+        };
+        db.TraineeProfiles.Add(profile);
+        return profile;
+    }
+
+    /// <summary>The curriculum id <see cref="AddCurrentProgramme" /> uses when none is given: one no fixture seeds.</summary>
+    public const int NoCurriculumId = -1;
 
     /// <summary>Gives an already-seeded user another role.</summary>
     public static void AddRole(ApplicationDbContext db, string userId, string role)

@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Features.Activities;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
@@ -314,21 +315,47 @@ public sealed class NomineeGateTests
     {
         // A trainee with no profile and no institution on their Identity row stamps null. Null is not "anywhere": a
         // nominee with a null institution must not match it by null-equals-null either.
+        // D55: such a trainee's create is now refused before any stamp, so the null-stamped draft is stored directly, as
+        // one written before D55 would be, and the nominee is named by a draft save.
         var options = NewDatabase();
         await SeedAsync(options);
 
+        (await RefusedAtCreateAsync(options, StandardTypeId, Data(("presenting_problem", "Fever")), subject: UnplacedTraineeId))
+            .Should().Be(ActivityFilingRules.NoCurrentProgramme, "guard: a create no longer reaches the stamp for this subject");
+
+        int draftId;
+        await using (var db = new ApplicationDbContext(options))
+        {
+            var utcNow = DateTime.UtcNow;
+            var draft = new Activity
+            {
+                ActivityTypeId = StandardTypeId,
+                SchemaVersion = 1,
+                SubjectUserId = UnplacedTraineeId,
+                CreatedByUserId = UnplacedTraineeId,
+                CurrentState = "draft",
+                DataJson = Data(("presenting_problem", "Fever")),
+                InstitutionId = null,
+                CreatedOn = utcNow,
+                UpdatedOn = utcNow
+            };
+            db.Activities.Add(draft);
+            await db.SaveChangesAsync();
+            draftId = draft.Id;
+        }
+
         foreach (var nominee in new[] { AssessorId, UnplacedAssessorId })
         {
-            var message = await RefusedAtCreateAsync(
-                options, StandardTypeId, Data(("assessor_user_id", nominee)), subject: UnplacedTraineeId);
+            var message = await ShouldBeRefusedAsync(options, service => service.SaveDraftAsync(
+                new SaveActivityDraftInput(draftId, UnplacedTraineeId, Principal(UnplacedTraineeId), Data(("assessor_user_id", nominee)))));
 
             message.Should().StartWith("Assessor: ").And.Contain(GateRefusal);
             message.Should().Contain("that person", "with no institution to be in, nobody is named");
         }
 
-        // Guard: the same subject with nobody named can still file, so the refusals are the gate's.
-        var created = await CreateAsync(options, StandardTypeId, Data(("presenting_problem", "Fever")), subject: UnplacedTraineeId);
-        created.InstitutionId.Should().BeNull("guard: this subject really stamps no institution");
+        // Guard: the same draft saved with nobody named is accepted, so the refusals are the gate's.
+        var saved = await SaveDraftAsync(options, draftId, UnplacedTraineeId, Data(("presenting_problem", "Fever, day 2")));
+        saved.InstitutionId.Should().BeNull("guard: this draft really carries no institution");
     }
 
     [Fact]
@@ -600,6 +627,16 @@ public sealed class NomineeGateTests
         await using var db = new ApplicationDbContext(options);
         return await Service(db).CreateDraftAsync(
             new CreateActivityInput(activityTypeId, subject, createdBy, dataJson, principal ?? Principal(createdBy)));
+    }
+
+    private static async Task<ActivityDto> SaveDraftAsync(
+        DbContextOptions<ApplicationDbContext> options,
+        int activityId,
+        string actor,
+        string dataPatchJson)
+    {
+        await using var db = new ApplicationDbContext(options);
+        return await Service(db).SaveDraftAsync(new SaveActivityDraftInput(activityId, actor, Principal(actor), dataPatchJson));
     }
 
     private static async Task AddRoleAsync(DbContextOptions<ApplicationDbContext> options, string userId, string role)

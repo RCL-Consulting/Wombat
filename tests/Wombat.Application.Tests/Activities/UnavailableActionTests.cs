@@ -151,6 +151,7 @@ public sealed class UnavailableActionTests
         await using (var db = new ApplicationDbContext(options))
         {
             NomineeSeed.AddUser(db, TraineeId, 10, WombatRoles.Trainee);
+            NomineeSeed.AddCurrentProgramme(db, TraineeId, 10);
             NomineeSeed.AddUser(db, AssessorId, 10, WombatRoles.Assessor);
             db.ActivityTypes.Add(FromSeed(402, "mini_cex_cpsa"));
             await db.SaveChangesAsync();

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Features.Activities;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
@@ -30,6 +31,10 @@ namespace Wombat.Infrastructure.Tests.Activities;
 /// writes. The second is what "the same answer ActivityService stamped before" means in practice, and the first is what
 /// the picker reads.
 /// </para>
+/// <para>
+/// D55: the create now refuses a subject with no active profile, so for the cases without one the second assertion is
+/// that refusal, with nothing stamped; the identity-row fallback is asserted against the resolver alone.
+/// </para>
 /// </remarks>
 public sealed class SubjectScopeResolverTests
 {
@@ -58,6 +63,46 @@ public sealed class SubjectScopeResolverTests
         { "no profile and no identity row", null, null, null }
     };
 
+    /// <summary>The cases whose subject has an active profile: the only ones the create still accepts (D55).</summary>
+    private static readonly HashSet<string> CasesWithARunningProgramme =
+    [
+        "the active profile, over a newer inactive one",
+        "the newest active profile, when several are active",
+        "a profile, over the subject's own identity row",
+        "a profile whose curriculum is missing keeps its institution",
+        "a profile whose sub-speciality is missing keeps the sub-speciality id"
+    ];
+
+    public static TheoryData<string, int?, int?, int?> CreatableCases => Filter(running: true);
+
+    public static TheoryData<string> RefusedCases
+    {
+        get
+        {
+            var data = new TheoryData<string>();
+            foreach (var row in Filter(running: false))
+            {
+                data.Add((string)row[0]);
+            }
+
+            return data;
+        }
+    }
+
+    private static TheoryData<string, int?, int?, int?> Filter(bool running)
+    {
+        var data = new TheoryData<string, int?, int?, int?>();
+        foreach (var row in Cases)
+        {
+            if (CasesWithARunningProgramme.Contains((string)row[0]) == running)
+            {
+                data.Add((string)row[0], (int?)row[1], (int?)row[2], (int?)row[3]);
+            }
+        }
+
+        return data;
+    }
+
     [Theory]
     [MemberData(nameof(Cases))]
     public async Task TheResolverGivesT101sAnswer(string @case, int? institutionId, int? specialityId, int? subSpecialityId)
@@ -71,7 +116,7 @@ public sealed class SubjectScopeResolverTests
     }
 
     [Theory]
-    [MemberData(nameof(Cases))]
+    [MemberData(nameof(CreatableCases))]
     public async Task TheCreateStampsExactlyWhatTheResolverAnswers(string @case, int? institutionId, int? specialityId, int? subSpecialityId)
     {
         await using var db = CreateDb();
@@ -83,6 +128,22 @@ public sealed class SubjectScopeResolverTests
         var stored = await db.Activities.AsNoTracking().SingleAsync(activity => activity.Id == created.Id);
         (stored.InstitutionId, stored.SpecialityId, stored.SubSpecialityId)
             .Should().Be((institutionId, specialityId, subSpecialityId), @case);
+    }
+
+    [Theory]
+    [MemberData(nameof(RefusedCases))]
+    public async Task TheCreateRefusesASubjectWithNoRunningProgramme_AndStampsNothing(string @case)
+    {
+        // D55: a subject with no profile, or only an ended one, files nothing, so the identity-row fallback and the
+        // newest-inactive-profile answer are never stamped by a create; the resolver still gives them (above).
+        await using var db = CreateDb();
+        await SeedAsync(db, @case);
+
+        var create = () => Service(db).CreateDraftAsync(
+            new CreateActivityInput(ScopeTypeId, SubjectId, SubjectId, """{ "title": "Stamped" }""", Principal(SubjectId)));
+
+        await create.Should().ThrowAsync<InvalidOperationException>().WithMessage(ActivityFilingRules.NoCurrentProgramme);
+        (await db.Activities.AsNoTracking().AnyAsync()).Should().BeFalse(@case);
     }
 
     [Fact]

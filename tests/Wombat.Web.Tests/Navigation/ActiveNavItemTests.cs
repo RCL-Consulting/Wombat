@@ -154,7 +154,8 @@ public sealed class ActiveNavItemTests : TestContext
     [Theory]
     [InlineData(WombatRoles.Assessor, "Activity inbox")]
     [InlineData(WombatRoles.Trainee, "My activities")]
-    [InlineData(WombatRoles.PendingTrainee, "My activities")]
+    // D55: a pending trainee has no My activities to come from.
+    [InlineData(WombatRoles.PendingTrainee, null)]
     [InlineData(WombatRoles.CommitteeMember, null)]
     // T358, flow 06 (round 3 item 10): an activity opened from Waiting for assessors lights it for the three it serves.
     [InlineData(WombatRoles.Coordinator, "Waiting for assessors")]

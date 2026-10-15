@@ -38,7 +38,8 @@ internal static class CreditTargetResolver
     /// <remarks>
     /// <para>
     /// Deliberately NOT filtered on IsActive. TraineeProfile.Complete() clears IsActive on graduation, so filtering
-    /// here meant a graduated trainee earned no credit — harmless for live submissions (they no longer submit), but
+    /// here meant a graduated trainee earned no credit. For a live completion that is a request filed before the end
+    /// and completed after it (D55 refuses a create once the programme has ended), and it is
     /// destructive under RebuildCurriculumProgress, which zeroes every progress row before replaying: alumni would
     /// come back with nothing.
     /// </para>

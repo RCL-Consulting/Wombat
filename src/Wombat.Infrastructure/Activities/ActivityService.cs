@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
+using Wombat.Application.Features.Activities;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
@@ -83,9 +84,17 @@ public sealed class ActivityService : IActivityService
                 $"'{activityType.Name}' records are written by the system, not filed by hand, so one cannot be created here.");
         }
 
+        var subjectUserId = input.SubjectUserId.Trim();
+
+        // D55. Only a registrar whose programme is running files: one with an active trainee profile, which the Trainee
+        // role travels with (D54). Before anything is built, so the refusal leaves nothing for the audit pipeline to commit.
+        if (!await HasCurrentProgrammeAsync(subjectUserId, cancellationToken))
+        {
+            throw new InvalidOperationException(ActivityFilingRules.NoCurrentProgramme);
+        }
+
         var (schema, workflow) = ParsePublished(activityType);
 
-        var subjectUserId = input.SubjectUserId.Trim();
         var subjectScope = await SubjectScopeResolver.ResolveAsync(_dbContext, subjectUserId, cancellationToken);
 
         var utcNow = UtcNow();
@@ -162,6 +171,11 @@ public sealed class ActivityService : IActivityService
 
         return Map(activity);
     }
+
+    /// <summary>Whether this subject's programme is running: an active trainee profile (D55).</summary>
+    private Task<bool> HasCurrentProgrammeAsync(string subjectUserId, CancellationToken cancellationToken)
+        => _dbContext.Set<TraineeProfile>()
+            .AnyAsync(profile => profile.UserId == subjectUserId && profile.IsActive, cancellationToken);
 
     /// <summary>
     /// Whether creating this activity files it: no move out of the initial state that leads on is the author's to take
@@ -442,8 +456,16 @@ public sealed class ActivityService : IActivityService
         // Asked before the move, while the activity is still in the state the move leaves. Only a type that can credit
         // records its filing's lateness (EncounterDatePolicy.CanCredit); its rules are parsed here, before the first
         // mutation, because RecordFiling runs where nothing may fail.
-        var recordsTheFiling = IsTheFiling(workflow, activity, transition, input.ActorUserId) &&
-                               EncounterDatePolicy.CanCredit(version.CreditRulesJson);
+        var isTheFiling = IsTheFiling(workflow, activity, transition, input.ActorUserId);
+        var recordsTheFiling = isTheFiling && EncounterDatePolicy.CanCredit(version.CreditRulesJson);
+
+        // D55. A draft saved while the programme ran is filed only while it still runs: the filing is new work, as the
+        // create is, and an ended programme's archived record gains none. A move after the filing (an assessor's
+        // completion, a resubmission after a return) is not asked. Before the first mutation, like the create's check.
+        if (isTheFiling && !await HasCurrentProgrammeAsync(activity.SubjectUserId, cancellationToken))
+        {
+            throw new InvalidOperationException(ActivityFilingRules.NoCurrentProgramme);
+        }
 
         // T122, D20: a changed credit target is checked on any move that can still lead to credit; an unchanged one is
         // re-checked only when the author, before anyone else has acted, hands it on while still able to correct it

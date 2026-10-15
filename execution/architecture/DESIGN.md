@@ -566,8 +566,10 @@ change to this table.
 | Coordinator | Home, Programme trainees, Waiting for assessors, Decisions due, MSF campaigns, Committee reviews, Decision panels, Data rights requests |
 | Assessor | Home, Activity inbox |
 | Trainee | Home, Log an activity, My activities, MSF reports, My committee reviews, Export portfolio |
-| PendingTrainee | Home, Log an activity, My activities |
+| PendingTrainee | Home |
 | No role | Home |
+
+A pending trainee is offered Home alone (D55): nothing is filed before admission, so there is nothing to list.
 
 Flow 06 (2026-10-05, T358; R2-Menus; Q7, C10) gave the four roles that watch the programme its pages: Programme
 trainees for all four; Waiting for assessors for the three that chase it, not the Committee member, whose work is not

@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Features.Activities;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
@@ -441,14 +442,19 @@ public sealed class ToolPermissionGateTests
     }
 
     [Fact]
-    public async Task D21_ASubjectWithNoTraineeProfile_IsAccepted()
+    public async Task D21_ASubjectWithNoTraineeProfile_IsRefused_ByTheFilingRule_NotByTheGate()
     {
-        // Nothing would be credited today, and refusing would turn the gate into a curriculum-membership check that
-        // neither D20 nor D21 decided.
+        // The gate still makes no curriculum-membership check of its own, which neither D20 nor D21 decided. D55 made
+        // one instead, before the gate is asked: a subject with no programme running files nothing, whatever the tool.
         var options = NewDatabase();
         await SeedAsync(options);
 
-        await AssertAcceptedAsync(options, MiniCexTypeId, ForbiddingEpaId, subject: UnprofiledTraineeId);
+        foreach (var epaId in new[] { ForbiddingEpaId, PermittingEpaId })
+        {
+            (await ShouldBeRefusedAsync(options, service => service.CreateDraftAsync(new CreateActivityInput(
+                MiniCexTypeId, UnprofiledTraineeId, UnprofiledTraineeId, RequestData(epaId), Principal(UnprofiledTraineeId)))))
+                .Should().Be(ActivityFilingRules.NoCurrentProgramme);
+        }
     }
 
     [Fact]
@@ -515,18 +521,17 @@ public sealed class ToolPermissionGateTests
     // ---- 12 ---------------------------------------------------------------------------------------------------
 
     [Fact]
-    public async Task D20Boundary_AProfileCreatedAfterSubmission_IsNotReChecked_AndTheForbiddenEpaIsCredited()
+    public async Task D20Boundary_AProfileRePointedAfterSubmission_IsNotReChecked_AndTheForbiddenEpaIsCredited()
     {
         // KNOWN BEHAVIOUR, pinned deliberately (design change 12). The gate evaluates the curriculum the subject is on
-        // at the moment of the gated write, and a subject with no profile passes (D21). A profile created, or
-        // re-pointed, between submission and completion is not re-checked when the assessor completes, because
-        // credit never re-litigates (D20), so CreditApplier credits the forbidden EPA. If this test starts failing,
-        // the D20 boundary has moved: that needs a decision in EPA-PROGRAMME, not a test edit.
+        // at the moment of the gated write. A profile created, or re-pointed, between submission and completion is not
+        // re-checked when the assessor completes, because credit never re-litigates (D20), so CreditApplier credits the
+        // forbidden EPA. If this test starts failing, the D20 boundary has moved: that needs a decision in EPA-PROGRAMME,
+        // not a test edit.
+        // D55: a subject with no profile files nothing, so the "created" half can no longer be reached; this pins the
+        // "re-pointed" half. The trainee files on a curriculum with no item for the EPA, which nothing forbids.
         var options = NewDatabase();
         await SeedAsync(options);
-
-        var request = await CreateAsync(options, MiniCexTypeId, ForbiddingEpaId, subject: UnprofiledTraineeId);
-        await TransitionAsync(options, request.Id, "submit", UnprofiledTraineeId);
 
         await using (var admin = new ApplicationDbContext(options))
         {
@@ -535,11 +540,20 @@ public sealed class ToolPermissionGateTests
                 Id = 2,
                 UserId = UnprofiledTraineeId,
                 InstitutionId = InstitutionId,
-                CurriculumId = CurriculumId,
+                CurriculumId = OtherCurriculumId,
                 ProgrammeStartDate = new DateOnly(2025, 4, 14),
                 ExpectedCompletionDate = new DateOnly(2029, 4, 13),
                 IsActive = true
             });
+            await admin.SaveChangesAsync();
+        }
+
+        var request = await CreateAsync(options, MiniCexTypeId, ForbiddingEpaId, subject: UnprofiledTraineeId);
+        await TransitionAsync(options, request.Id, "submit", UnprofiledTraineeId);
+
+        await using (var admin = new ApplicationDbContext(options))
+        {
+            (await admin.TraineeProfiles.SingleAsync(profile => profile.Id == 2)).CurriculumId = CurriculumId;
             await admin.SaveChangesAsync();
         }
 
@@ -1581,8 +1595,8 @@ public sealed class ToolPermissionGateTests
             Item(4015, CurriculumId, 15, """["cbd"]"""));
 
         // T102: the assessor every request names is an eligible nominee, so these tests keep proving what they proved
-        // about the tool gate. The unprofiled trainee has an Identity row at the same institution, which is where the
-        // create stamps them from; with no profile they still have no curriculum, which is what D21's case needs.
+        // about the tool gate. The unprofiled trainee has an Identity row at the same institution and no profile, so
+        // files nothing (D55) until a test gives them one.
         NomineeSeed.AddUser(db, AssessorId, InstitutionId, WombatRoles.Assessor);
         NomineeSeed.AddUser(db, TraineeId, InstitutionId, WombatRoles.Trainee);
         NomineeSeed.AddUser(db, UnprofiledTraineeId, InstitutionId, WombatRoles.Trainee);

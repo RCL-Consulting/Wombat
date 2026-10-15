@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Features.Activities;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Activities.Queries.GetProgrammeStartForTrainee;
@@ -185,16 +186,20 @@ public sealed class EncounterDateBoundsTests
     }
 
     [Fact]
-    public async Task ASubjectWithNoTraineeProfile_GetsTheFutureCheckOnly()
+    public async Task ASubjectWithNoTraineeProfile_FilesNothing_WhateverTheDate()
     {
+        // D55: a subject with no profile used to get the future check alone, there being no programme to precede. They
+        // now get no filing at all, refused before any date is judged.
         var options = await SeededAsync();
 
-        var old = await CreateAsync(options, CpsaTypeId, CpsaRequest(new DateOnly(2019, 3, 1)), UnadmittedId);
-        (await StoredAsync(options, old.Id)).ObservedOn.Should().Be(new DateOnly(2019, 3, 1), "there is no programme to precede");
+        foreach (var observedOn in new[] { new DateOnly(2019, 3, 1), Today, Today.AddDays(1) })
+        {
+            (await ShouldBeRefusedAsync(options, service => service.CreateDraftAsync(
+                CreateInput(CpsaTypeId, UnadmittedId, CpsaRequest(observedOn)))))
+                .Should().Be(ActivityFilingRules.NoCurrentProgramme, observedOn.ToString("O", CultureInfo.InvariantCulture));
+        }
 
-        var message = await ShouldBeRefusedAsync(options, service => service.CreateDraftAsync(
-            CreateInput(CpsaTypeId, UnadmittedId, CpsaRequest(Today.AddDays(1)))));
-        message.Should().Contain("cannot be after today");
+        await AssertNoActivitiesAsync(options);
     }
 
     // ---- a transition's patch --------------------------------------------------------------------------------------

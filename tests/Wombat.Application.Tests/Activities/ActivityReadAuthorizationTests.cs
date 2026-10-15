@@ -2,6 +2,7 @@ using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Security;
+using Wombat.Application.Features.Activities;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Identity;
@@ -293,29 +294,26 @@ public sealed class ActivityReadAuthorizationTests
     }
 
     /// <summary>
-    /// A subject with no trainee profile leaves the stamp null rather than guessing. The activity is
-    /// then readable only by the people named on it.
+    /// A subject with no trainee profile used to be filed for with a null stamp rather than a guess. D55: such a
+    /// subject's programme is not running, so the create is refused and there is no stamp to guess at.
     /// </summary>
     [Fact]
-    public async Task CreatingAnActivityForASubjectWithNoProfileLeavesTheStampNull()
+    public async Task CreatingAnActivityForASubjectWithNoProfileIsRefused()
     {
         await using var dbContext = CreateContext();
         SeedActivityType(dbContext);
         dbContext.SaveChanges();
 
-        // No assessor named: against a null stamp the nominee gate accepts nobody (T102; NomineeGateTests covers it),
-        // so naming one would make this a nominee-gate test. The stamp is what this test is about.
-        await CreateService(dbContext).CreateDraftAsync(new CreateActivityInput(
+        // No assessor named, so the only rule that can refuse is D55's.
+        var create = () => CreateService(dbContext).CreateDraftAsync(new CreateActivityInput(
             600,
             "unenrolled-1",
             "unenrolled-1",
             """{ "epa_id": 5000 }""",
             Principal("unenrolled-1")));
 
-        var created = await dbContext.Activities.SingleAsync();
-        created.InstitutionId.Should().BeNull();
-        created.SpecialityId.Should().BeNull();
-        created.SubSpecialityId.Should().BeNull();
+        await create.Should().ThrowAsync<InvalidOperationException>().WithMessage(ActivityFilingRules.NoCurrentProgramme);
+        (await dbContext.Activities.AnyAsync()).Should().BeFalse();
     }
 
     /// <summary>

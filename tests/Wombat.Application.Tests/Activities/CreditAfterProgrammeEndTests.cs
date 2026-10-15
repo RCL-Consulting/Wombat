@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Moq;
 using Wombat.Application.Common.Email;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Activities;
 using Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgress;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
@@ -124,15 +125,22 @@ public sealed class CreditAfterProgrammeEndTests
     // ---- the live path ---------------------------------------------------------------------------------------------
 
     [Fact]
-    public async Task AMiniCexObservedAfterTheLastDay_IsFiledAndCompleted_ButCreditsNothing_AndItsCompletionSaysSo()
+    public async Task AMiniCexObservedAfterTheLastDay_FiledBeforeTheEndWasRecorded_IsCompleted_ButCreditsNothing_AndItsCompletionSaysSo()
     {
-        // Not refused at filing, as a date before the programme start is (T160): the record is kept, and its completion is
-        // stamped zero, which is the activity page's "counted towards no curriculum requirement" warning (T108).
+        // Not refused for its date, as a date before the programme start is (T160): the record is kept, and its completion
+        // is stamped zero, which is the activity page's "counted towards no curriculum requirement" warning (T108).
+        // D55: once the end is recorded nothing more is filed, so the request is filed while the programme still runs and
+        // the end, dated before the encounter, is recorded before the assessor completes it.
         var options = await SeededAsync();
-        await EndDirectlyAsync(options, LastDay, completed: false);
 
         var draft = await CreateAsync(options, MiniCexRequest(After));
         (await TransitionAsync(options, draft.Id, "submit", TraineeId)).CurrentState.Should().Be("requested");
+        await EndDirectlyAsync(options, LastDay, completed: false);
+
+        var refused = () => CreateAsync(options, MiniCexRequest(After));
+        await refused.Should().ThrowAsync<InvalidOperationException>().WithMessage(
+            ActivityFilingRules.NoCurrentProgramme, "guard: after the end is recorded, the same encounter files nothing");
+
         var done = await TransitionAsync(options, draft.Id, "complete", AssessorId, CompletionPatch);
 
         done.CurrentState.Should().Be("completed");
@@ -146,17 +154,64 @@ public sealed class CreditAfterProgrammeEndTests
     [Fact]
     public async Task AMiniCexObservedOnTheLastDay_Credits()
     {
+        // D55: filed while the programme runs, completed after its end is recorded.
         var options = await SeededAsync();
-        await EndDirectlyAsync(options, LastDay, completed: false);
 
         var draft = await CreateAsync(options, MiniCexRequest(LastDay));
         await TransitionAsync(options, draft.Id, "submit", TraineeId);
+        await EndDirectlyAsync(options, LastDay, completed: false);
         var done = await TransitionAsync(options, draft.Id, "complete", AssessorId, CompletionPatch);
 
         done.Transitions.Single(transition => transition.TransitionKey == "complete").CreditedItemCount.Should().Be(1);
 
         await using var verify = new ApplicationDbContext(options);
         (await verify.CurriculumItemProgresses.SingleAsync()).LastObservedOn.Should().Be(LastDay);
+    }
+
+    // ---- the filing, after the end (D55) ---------------------------------------------------------------------------
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ADraftStartedWhileTheProgrammeRan_IsNotFiledOnceItHasEnded_AndNothingChanges(bool completed)
+    {
+        // D55: filing is the author's first hand-on out of the initial state, and it asks the same question the create
+        // does. A draft opened before the end is still the registrar's to keep or cancel, not to file.
+        var options = await SeededAsync();
+        var draft = await CreateAsync(options, MiniCexRequest(Inside));
+        await EndDirectlyAsync(options, LastDay, completed);
+
+        await using (var db = new ApplicationDbContext(options))
+        {
+            var submit = () => Service(db).TransitionAsync(
+                new TransitionActivityInput(draft.Id, "submit", TraineeId, Principal(TraineeId), null, Note: null));
+
+            await submit.Should().ThrowAsync<InvalidOperationException>().WithMessage(ActivityFilingRules.NoCurrentProgramme);
+            await AssertNothingToCommitAsync(db);
+        }
+
+        await using var verify = new ApplicationDbContext(options);
+        var stored = await verify.Activities.Include(activity => activity.Transitions).SingleAsync();
+        stored.CurrentState.Should().Be("draft");
+        stored.Transitions.Should().ContainSingle("the refused submit left no history row");
+        (await verify.CurriculumItemProgresses.CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task ARequestFiledBeforeTheEnd_IsStillCompletedByItsAssessor_AndCredits()
+    {
+        // The control for D55's filing rule: it judges the author's filing only. The assessor's completion of a request
+        // filed while the programme ran is not a filing, so the end does not strand it, and an encounter inside the
+        // programme still credits.
+        var options = await SeededAsync();
+        var draft = await CreateAsync(options, MiniCexRequest(Inside));
+        (await TransitionAsync(options, draft.Id, "submit", TraineeId)).CurrentState.Should().Be("requested");
+        await EndDirectlyAsync(options, LastDay, completed: false);
+
+        var done = await TransitionAsync(options, draft.Id, "complete", AssessorId, CompletionPatch);
+
+        done.CurrentState.Should().Be("completed");
+        done.Transitions.Single(transition => transition.TransitionKey == "complete").CreditedItemCount.Should().Be(1);
     }
 
     // ---- the rebuild -----------------------------------------------------------------------------------------------

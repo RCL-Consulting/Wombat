@@ -111,11 +111,11 @@ programme oversight (T358), 07 the review sitting (T361, D53), 08 the committee 
 ## Recent commits
 
 ```
+f3471780 fix(security): trainee-first on trainees and invitations, one refusal for unseen ids, the panel seat rule (T290, D54)
 d42e11b6 chore(execution): dashboard regenerated at the session's end
 0ffe0290 chore(execution): T366 done; state and handoff for flow 09 (T366)
 c9d33455 docs(design): flow 09's lessons in BRIEF § 11; the replay prompt says the remit is every step (T366 step 9)
 63dd5d36 docs(design): the design system review's six findings (T366 step 8)
-9ba80586 fix(committee): My committee reviews' View 44px on a phone; DESIGN.md's Entrustment decisions note (T366 step 8)
 ```
 
 ## For the reviewer
@@ -162,6 +162,7 @@ _Nothing flagged._
 #### Commits
 
 ```
+f3471780 fix(security): trainee-first on trainees and invitations, one refusal for unseen ids, the panel seat rule (T290, D54)
 d42e11b6 chore(execution): dashboard regenerated at the session's end
 0ffe0290 chore(execution): T366 done; state and handoff for flow 09 (T366)
 c9d33455 docs(design): flow 09's lessons in BRIEF § 11; the replay prompt says the remit is every step (T366 step 9)
@@ -191,6 +192,5 @@ cc4256e6 docs(design): flow 09's build lanes and contracts (T366 step 6)
 17ea6a47 chore(execution): T367 built; flow 09 round 3 checked, the build next (T366, T367)
 e9b29081 feat(entrustment): mail the trainee when a STAR is revoked; My authorisations reads revoked and expired STARs (T367)
 13057800 docs(design): flow 09 round 3 checked item by item; the design is final (T366 step 5)
-4c0912ac docs(design): flow 09 round 3 recorded: B and P corrected, 29 boards (T366 step 5)
 ```
-_186 more; see `git log`._
+_187 more; see `git log`._

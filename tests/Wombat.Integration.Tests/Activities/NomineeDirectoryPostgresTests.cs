@@ -10,7 +10,9 @@ using Npgsql;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Domain.Activities;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
+using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Activities;
 using Wombat.Infrastructure.Persistence;
 using Wombat.Tests.Shared;
@@ -317,9 +319,36 @@ public sealed class NomineeDirectoryPostgresTests : IAsyncLifetime
     /// </summary>
     private async Task SeedMatrixAsync(string schema)
     {
+        // D55: the subject's programme is running, at the institution every nominee is judged against, so a create is
+        // stamped there. A profile needs real rows to point at, unlike the users' institution ids.
+        int curriculumId;
+        await using (var db = NewContext(schema))
+        {
+            var curriculum = new Curriculum
+            {
+                SubSpeciality = new SubSpeciality
+                {
+                    Name = "General Paediatrics",
+                    Speciality = new Speciality
+                    {
+                        Name = "Paediatrics",
+                        College = new College { Name = "D55 College of Paediatricians", ShortCode = "D55CP" }
+                    }
+                },
+                Name = "General Paediatrics",
+                Version = "1",
+                EffectiveFrom = new DateOnly(2025, 1, 1)
+            };
+            db.Curricula.Add(curriculum);
+            db.Institutions.Add(new Institution { Id = InstitutionId, Name = "D55 Teaching Hospital", ShortCode = "D55TH" });
+            await db.SaveChangesAsync();
+            curriculumId = curriculum.Id;
+        }
+
         await using (var db = NewContext(schema))
         {
             NomineeSeed.AddUser(db, SubjectId, InstitutionId, WombatRoles.Trainee, WombatRoles.Assessor);
+            NomineeSeed.AddCurrentProgramme(db, SubjectId, InstitutionId, curriculumId);
 
             NomineeSeed.AddUser(db, Eligible, InstitutionId, WombatRoles.Assessor);
             NomineeSeed.AddUser(db, EligibleWithExtraRole, InstitutionId, WombatRoles.Assessor, WombatRoles.Coordinator);

@@ -103,13 +103,16 @@ public sealed class CreditOutcomeSignalTests
     [Fact]
     public async Task ASubjectWithNoTraineeProfile_IsStampedZeroRatherThanSilentlyPassing()
     {
-        // CreditApplier returns nothing at all without a profile. A PendingTrainee can reach
-        // /activities/new, so this is reachable rather than hypothetical — and "nothing counted" is
-        // an honest thing to tell them either way.
+        // CreditApplier returns nothing at all without a profile, and "nothing counted" is an honest thing to say.
+        // D55: nobody files without a running programme, so the profile is filed with and goes before the completion.
         await using var db = CreateDb();
-        Seed(db, CreditsAnEpa, seedTraineeProfile: false);
+        Seed(db, CreditsAnEpa);
 
-        var activity = await CompleteAsync(db, CreditedEpaId);
+        var activity = await CompleteAsync(db, CreditedEpaId, beforeCompletion: async () =>
+        {
+            db.Set<TraineeProfile>().RemoveRange(db.Set<TraineeProfile>());
+            await db.SaveChangesAsync();
+        });
 
         Completion(activity).CreditedItemCount.Should().Be(0);
     }
@@ -182,7 +185,7 @@ public sealed class CreditOutcomeSignalTests
             .SingleAsync(activity => activity.Id == draft.Id);
     }
 
-    private static void Seed(ApplicationDbContext db, string creditRulesJson, bool seedTraineeProfile = true)
+    private static void Seed(ApplicationDbContext db, string creditRulesJson)
     {
         db.Epas.Add(new Epa { Id = CreditedEpaId, SubSpecialityId = 1, Code = "EPA-1", Title = "Take a history" });
         db.Epas.Add(new Epa { Id = UncreditableEpaId, SubSpecialityId = 1, Code = "EPA-X", Title = "From an unadopted catalogue" });
@@ -197,19 +200,16 @@ public sealed class CreditOutcomeSignalTests
             WindowMonths = 12
         });
 
-        if (seedTraineeProfile)
+        db.Set<TraineeProfile>().Add(new TraineeProfile
         {
-            db.Set<TraineeProfile>().Add(new TraineeProfile
-            {
-                Id = 1,
-                UserId = "trainee-1",
-                InstitutionId = 10,
-                CurriculumId = 3000,
-                ProgrammeStartDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-1),
-                ExpectedCompletionDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2),
-                IsActive = true
-            });
-        }
+            Id = 1,
+            UserId = "trainee-1",
+            InstitutionId = 10,
+            CurriculumId = 3000,
+            ProgrammeStartDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-1),
+            ExpectedCompletionDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2),
+            IsActive = true
+        });
 
         const string schemaJson = """
             {

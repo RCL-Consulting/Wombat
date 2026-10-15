@@ -342,9 +342,10 @@ public sealed class TransitionValidationTests
 
         await using var db = new ApplicationDbContext(options);
 
-        // The trainee's Identity row is where the create stamps their institution; the assessor is an eligible nominee
-        // there (T102), so every refusal below comes from validation.
+        // The trainee's running programme (D55) is where the create stamps their institution; the assessor is an eligible
+        // nominee there (T102), so every refusal below comes from validation.
         NomineeSeed.AddUser(db, TraineeId, InstitutionId, WombatRoles.Trainee);
+        NomineeSeed.AddCurrentProgramme(db, TraineeId, InstitutionId);
         NomineeSeed.AddUser(db, AssessorId, InstitutionId, WombatRoles.Assessor);
 
         db.ActivityTypes.Add(FromSeed(CpsaMiniCexTypeId, "mini_cex_cpsa"));

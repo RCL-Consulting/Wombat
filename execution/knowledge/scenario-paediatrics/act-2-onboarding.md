@@ -343,16 +343,12 @@ Gap: none
 ### Step 2.19 — What a registrar sees before admission
 Role: PendingTrainee — Dr Nomsa Mahlangu
 Route: / → /account/profile → /activities/mine → /activities/new → /portfolio/progress → /access-denied → /
-Do: Read the menu. Follow Review your account, then open My activities and Log an activity, and file nothing. Type the
-  My progress address.
-Expect: The sidebar reads "Acting as Pending trainee" over Home, Log an activity and My activities, then My data rights
-  under the rule. It has no MSF reports, My committee reviews, My progress or Export portfolio, because those pages do
-  not admit a pending trainee (T141). My account lists her role as "Pending trainee", and her institution, Kgosi Kgari
-  Teaching Hospital. My activities reads "No activities yet" and "Log an activity to ask an assessor to rate an
-  encounter, or to log a teaching session.", with Log an activity. Log an activity opens its instrument picker: the
-  eleven instruments of Step 2.42, in its three groups. Her invitation's Paediatrics scope selects them, and with no
-  curriculum yet no ladder narrows them. My progress shows "You cannot open this page" ("Your role (Pending trainee)
-  does not open this page.") with Go to Home (T335).
+Do: Read the menu. Follow Review your account. Type the addresses of My activities, Log an activity and My progress.
+Expect: The sidebar reads "Acting as Pending trainee" over Home, then My data rights under the rule, and nothing else: a
+  pending trainee files nothing until admitted, so has no activities to list (D55, T141). My account lists her role as
+  "Pending trainee", and her institution, Kgosi Kgari Teaching Hospital. My activities reads "No activities yet", with
+  no Log an activity. Log an activity and My progress each show "You cannot open this page" ("Your role (Pending
+  trainee) does not open this page.") with Go to Home (T335).
 Actual (2026-10-14, T366 replay, wombat_scenario_t366): The sidebar reads "Acting as Pending trainee" over Home, Log
   an activity and My activities, then My data rights, and nothing else. Review your account: My account, Institution
   Kgosi Kgari Teaching Hospital, Roles "Pending trainee". My activities: "No activities yet" and the quoted sentence,
