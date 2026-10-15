@@ -29,7 +29,8 @@ every remaining item, with tests; the task file's closing note lists them.
   (v23 installed, `tokens.css` by hand, mark `/_blob/d5b5890c1eb0efaad13d0d347d1ebf4c`). Brief restated (`ded43219`); round 1 drawn, assessed (`b389a526`); the operator
   picked RA + MA and Q8–Q10 as recommended (Q7, Q11 taken as recommended). Round 2 (159 boards) reviewed from three
   sides (`5cc29ec7`); the operator took F1–F11 as recommended (`f79586b5`). Round 3 drawn (canvas 1792071007-7a95, 188
-  boards, saved in `round-3/`); checked final (`round-3-check.md`); **next:** the build (step 6).
+  boards, saved in `round-3/`); checked final (`e825e2e2`). **Built** (`68327c9d`, six suites green; T369's notes); **next:** step 7, the replay on a fresh database
+  (flow 09's `replay-brief.md`), then the design system and lessons. Branches `t369*` and their worktrees kept.
 
 ## Session 2026-10-14 (Opus): T366 (flow 09) done, with T367
 

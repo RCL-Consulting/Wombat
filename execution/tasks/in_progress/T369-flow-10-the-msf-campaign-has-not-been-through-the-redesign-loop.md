@@ -51,8 +51,10 @@ Run the loop as flow 09 ran it (`design/flows/09-outcomes-stars-appeals/`, BRIEF
 
 - [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit.
 - [ ] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link.
-- [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/10-msf-campaign/`.
-- [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 10) — the squash commit and counts.
+- [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/10-msf-campaign/`.
+  Round 3 checked final (`e825e2e2`, `round-3-check.md`).
+- [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 10) — the squash commit and counts.
+  `68327c9d`: Domain 821, Application 3879, Infrastructure 1029, Architecture 52, Web 3837, Integration 491.
 - [ ] The whole runbook replays on a fresh database with no regression from flow 10, the baseline is re-captured, and
   flow 10's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
 - [ ] The design system is re-synced and republished — its version number.
@@ -102,3 +104,8 @@ T366 (flow 09), T364 (flow 08), T162 (the system-managed MSF type), T153, T270, 
   Above expectations, "Escalates early and keeps the nursing notes in step") and Dr Johan van Wyk
   (`vanwyk@kgk.wombat.local`, Consultant, Above expectations, "Thorough on ward rounds; presents concisely"); both answer
   in step 3.42.
+- **2026-10-15, step 6 done** (`68327c9d`, squashed from `t369`): § 0 (`dae634f0`), lanes R, K, T, the runbook lane;
+  three Sonnet reviews (`build-review.md`: no high; R1 refusals classified as flow 09's, D2 the list hand-written to
+  stack at 768, D3 no pronoun); the operator kept R7 (per-group responded counts while open); one fix pass. **For the
+  replay:** stub-mail counts +3; the release mail's log names no recipient (T282); the D1 margins at 1280 and 390;
+  3.34–3.50's Actuals and Gaps (T270, T325) are stale until rewritten.
