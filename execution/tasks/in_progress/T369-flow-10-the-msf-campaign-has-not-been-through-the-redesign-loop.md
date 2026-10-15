@@ -69,3 +69,10 @@ T366 (flow 09), T364 (flow 08), T162 (the system-managed MSF type), T153, T270, 
   (1791997100-4a21) installed: `tokens.json`, `components/bundle.css`, the three fonts copied from the system, and
   `tokens.css` written by hand (flow 09's, whose 54 properties match app.css's `:root`; `--shadow-raised` resolves to
   the same value). The mark copied in as `/_blob/d5b5890c1eb0efaad13d0d347d1ebf4c`.
+- **2026-10-15, step 1.** Restated from read-only audits at `cc80d5b3` (one agent): flow 09's layout; Mode kept (F:
+  one proposal for the list, the campaign page, coverage and `/msf/respond`, 2–3 variations for the coordinator's report
+  and the registrar's MSF reports). T331 and T322 dropped (done in flow 01); new observed defects in § 5 (no confirm on
+  Close/Release, no `<h1>` on `/msf/respond`, the 1280 cut on My MSF reports, the list's 390 scroll, …). The `states/`
+  captures for these pages are old-frame (2026-09-26); the step captures are T366's. Operator questions Q7–Q11 in § 6
+  (Q10: a campaign outliving its registrar's programme, D54/D55, inferred). Completeness exit 0, verbatim 424/0 (118
+  stale steps in other briefs re-synced), baseline missing 0. The mark is written into § 1 and `round-1-ask.txt`.

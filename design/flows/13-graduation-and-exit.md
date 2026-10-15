@@ -535,15 +535,15 @@ Expect: The sidebar has no "Acting as" head, since she holds no role, and the me
 
 Step 5.22 — What a graduate can no longer open (act-5-graduation.md)
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
-Route: /committee/my-reviews → /access-denied → /portfolio/authorisations → /access-denied → /msf/my-reports → /access-denied → /activities/new
+Route: /committee/my-reviews → /access-denied → /portfolio/authorisations → /access-denied → /msf/my-reports → /access-denied → /activities/new → /access-denied
 Do: Type the addresses of My committee reviews, My authorisations and MSF reports in turn. Then type the address of the
   new-activity page.
 Expect: Each of the first three reads "You cannot open this page", "Your account holds no role that opens this page."
   and "If you need it for your work, ask your institution's Wombat administrator.", with Go to Home: those pages still
   require the Trainee role (DESIGN § The NavMenu).
-  Nothing offers her an activity to file: there is no menu link and no dashboard action. The new-activity page asks
-  only that she is signed in, so it opens when she types its address, on Log an activity's instrument picker. She
-  files nothing.
+  Nothing offers her an activity to file: there is no menu link and no dashboard action, and the new-activity page
+  reads the same "You cannot open this page" when she types its address. Only a registrar whose programme is running
+  files (D55); the create refuses anyone else too.
 
 Step 5.23 — Dr Molefe exports her portfolio as a graduate (act-5-graduation.md)
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
@@ -593,24 +593,25 @@ Step 5.27 — Prof Mbatha records his withdrawal (act-5-graduation.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/trainees → /admin/trainees/edit → /admin/trainees
 Do: Open Dr du Plessis's profile and set the last day in the programme to `D−2`. Press Deactivate and confirm.
-Expect: The confirmation names `D−2` as his last day. It says that encounters after that day will count towards
-  nothing, including any already counted, and that neither the day nor the profile can be changed back. After
-  confirming:
-  - the page says "Trainee profile deactivated. Their last day in the programme is recorded as `D−2`.";
+Expect: The confirmation names `D−2` as his last day. It says that the Trainee role is removed and he keeps his own
+  record, that encounters after that day will count towards nothing, including any already counted, and that neither
+  the day nor the profile can be changed back. After confirming:
+  - the page says "Trainee profile deactivated. Their last day in the programme is recorded as `D−2`, and the Trainee
+    role has been removed.";
   - the summary reads Status Inactive, "Left the programme: `D−2`", and the profile's details read-only, as on Step
     5.17, with no Save profile (T305);
   - on Trainees he is listed under Completed & closed profiles, with the outcome "Withdrawn `D−2`";
   - in the same save, the credit from the `D−1` Mini-CEX is taken back (T281);
-  - he keeps the Trainee role and is not emailed.
+  - the Trainee role is taken away, as a completion takes it (T290), and he is not emailed.
 
 Step 5.28 — Dr du Plessis's record after he left (act-5-graduation.md)
-Role: Trainee — Dr Pieter du Plessis
+Role: Former trainee (no role; a trainee record) — Dr Pieter du Plessis
 Route: /account/login → /account/login/submit → / → /portfolio/progress → /activities/mine
 Do: Sign in, then read Home, My progress and My activities.
 Expect: Each page records that his programme ended on `D−2`, every date ISO (T355, D1):
-  - Home's Your targets card says "Your programme ended on `D−2`, so no target applies to you any more. Your progress in
-    each period is kept on My progress, read-only.", with no figures and no Furthest short, and ends with Open My
-    progress. My authorisations reads "No STAR yet." alone.
+  - He holds no role (T290: withdrawal takes Trainee away, as completion does), so the phone bar shows no "Acting as"
+    and the menu holds Home, My progress and My data rights. Home shows the former trainee's card, "Your training
+    record", pointing to My progress, as Dr Molefe's does at Step 5.21 (T252; that it names no end day is T311).
   - My progress opens with "Your programme ended on `D−2`. This page is your record of it and is read-only…". Its "Your
     programme" card reads Ended `D−2`. PAED-002's period holding `D−2` reads "no target (your programme ended part-way
     through) · n−1 recorded".
@@ -649,7 +650,7 @@ Expect:
     programme reads "0 of 1, 1 short". KGK's own item on 11.1 is read live, into a record that has ended.
 
 Step 6.41 — Dr du Plessis's record after the rebuild (act-6-catalogue.md)
-Role: Trainee — Dr Pieter du Plessis
+Role: Former trainee (no role; a trainee record) — Dr Pieter du Plessis
 Route: /portfolio/progress → /activities/mine
 Do: Read his record and his activities.
 Expect:

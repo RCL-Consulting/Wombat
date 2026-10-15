@@ -500,7 +500,7 @@ A.5.14–A.5.16 and A.7.9, but the runbook's own 3.55–3.57 (the audit trail) a
 those numbers, so the new ones take a letter after the step they follow, as Step 6.14a did. `D` is the replay day.
 
 ```text
-Step 2.32 — Mr Smit, Coordinator (act-2-onboarding.md:601)
+Step 2.32 — Mr Smit, Coordinator (act-2-onboarding.md:600)
 Role: Coordinator — Mr Pieter Smit
 Route: /account/login → / → /admin/invitations → /access-denied → /committee/panels → /committee/panels/new → /access-denied
 Do: Sign in and read the dashboard and nav. Type the invitations address. Open Decision panels from the menu, then type
@@ -521,7 +521,7 @@ Expect: Home reads "Coordinator · Semester N, YYYY", with the header action "St
   panel and no Edit column, and Decision panels is lit there (T358, C10). The panel form reads "You cannot open this
   page" in the same words: the Coordinator reads panels, and edits none (D4).
 
-Step 2.33 — Dr Zulu's first view: committee member (act-2-onboarding.md:633)
+Step 2.33 — Dr Zulu's first view: committee member (act-2-onboarding.md:632)
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
 Route: /account/login → /
 Do: Sign in and read the dashboard and nav.
@@ -572,7 +572,7 @@ Expect: Each sees "Speciality admin · Semester N, YYYY" or "Sub-speciality admi
   Sub-speciality admin", over Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews,
   Decision panels and Entrustment decisions, then My data rights.
 
-Step 3.30 — Mr Smit's dashboard shows the stalled requests (act-3-operations.md:758)
+Step 3.30 — Mr Smit's dashboard shows the stalled requests (act-3-operations.md:760)
 Role: Coordinator — Mr Pieter Smit
 Route: /
 Do: Once Dr Mahlangu's Mini-CEX and Dr du Plessis's portfolio review have waited more than seven days, open the
@@ -592,7 +592,7 @@ Expect: Home's "Waiting for assessors" is in the warning stripe, badged "3 waiti
   in the last 30 days." and "Invitations nearing expiry" "No invitations expiring soon.". "Start an MSF campaign" is
   Home's header action; there is no Quick action card.
 
-Step 3.31 — Mr Smit looks for a page of stalled requests (act-3-operations.md:810)
+Step 3.31 — Mr Smit looks for a page of stalled requests (act-3-operations.md:812)
 Role: Coordinator — Mr Pieter Smit
 Route: / → /programme/waiting → /not-found
 Do: Open Waiting for assessors from the menu. On the Mini-CEX's row choose Send a reminder, read the dialog, then choose
@@ -618,7 +618,7 @@ Expect: The menu reads Home, Programme trainees, Waiting for assessors, Decision
   Reassign (C5). The old address is "Page not found" with status 404: the placeholder page went with the stubs (T335,
   flow 01).
 
-Step 3.32 — The daily nudge reminds the assessors (act-3-operations.md:854)
+Step 3.32 — The daily nudge reminds the assessors (act-3-operations.md:856)
 Role: Administrator — devadmin@wombat.local
 Route: /admin/jobs
 Do: Run `assessor-pending-nudge` now.
@@ -631,7 +631,7 @@ Expect: The job's last run updates. The application log then holds three stub em
   "assessors nudged 2 (activities 2)" and skips nobody. Nothing else has waited five days, so nobody else is nudged: Dr
   du Plessis's CBD has waited less than a day.
 
-Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:879)
+Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:880)
 Role: Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int}
 Do: Her sessions open acting as a Committee member; choose Switch to Assessor in the sidebar. From "Waiting for you",
@@ -651,7 +651,7 @@ Expect: The sidebar first reads "Acting as Committee member", with "Switch to As
   Nothing of Dr Mahlangu's waits for an assessor any more: the Mini-CEX has left Waiting for assessors and Mr Smit's
   Home card.
 
-Step 3.52 — Dr Zulu's committee dashboard (act-3-operations.md:1277)
+Step 3.52 — Dr Zulu's committee dashboard (act-3-operations.md:1281)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → /
 Do: Choose Switch to Committee member in the sidebar and read the dashboard and the menu.
@@ -668,7 +668,7 @@ Expect:
     Short on it, its figure in words hidden after it. No card is one link around its rows (T280).
   - The menu is Home, Programme trainees, Committee reviews and Decision panels, then My data rights.
 
-Step 3.53 — Dr Mokoena's dashboard (act-3-operations.md:1309)
+Step 3.53 — Dr Mokoena's dashboard (act-3-operations.md:1313)
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /
 Do: Read the dashboard and the menu.
@@ -683,7 +683,7 @@ Expect:
     Entrustment decisions, then My data rights. The STAR review queue is not restored: Entrustment decisions takes its
     place.
 
-Step 3.54 — Dr Sithole's dashboard (act-3-operations.md:1335)
+Step 3.54 — Dr Sithole's dashboard (act-3-operations.md:1339)
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /
 Do: Read the dashboard.
@@ -691,7 +691,7 @@ Expect: The same three cards and figures as Dr Mokoena's, read for Paediatrics: 
   badged "5 registrars", and PAED-001 "2 of 5" last on Targets by EPA. Dr Sithole's menu reads as Dr Mokoena's, under
   "Acting as Sub-speciality admin".
 
-Step 3.54a — Dr Zulu reads who is short on PAED-002 (act-3-operations.md:1348)
+Step 3.54a — Dr Zulu reads who is short on PAED-002 (act-3-operations.md:1352)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /programme/trainees
 Do: On Home, choose PAED-002 on Targets by EPA. Then choose Clear filters.
@@ -708,7 +708,7 @@ Expect: Programme trainees opens with Short on set to PAED-002 and Programme tra
   for Nomsa Mahlangu, each over "0 of 3 each this semester" (D11). Nothing on the page reads "n / m", a percentage or
   the bare word "year" (Q10).
 
-Step 3.54b — Dr Zulu opens Dr Mahlangu's page (act-3-operations.md:1381)
+Step 3.54b — Dr Zulu opens Dr Mahlangu's page (act-3-operations.md:1385)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: /programme/trainees → /programme/trainees/{ProfileId:int}
 Do: On Programme trainees, choose Nomsa Mahlangu, and read the page to its foot.
@@ -728,7 +728,7 @@ Expect: The registrar page's h1 reads "Nomsa Mahlangu", its tab "Nomsa Mahlangu 
   Dr Zulu, a Committee member, is offered no Send a reminder. No word on the page names Nomsa Mahlangu by a pronoun
   (round-3-check 1).
 
-Step 3.54c — Dr Mokoena filters Waiting for assessors (act-3-operations.md:1413)
+Step 3.54c — Dr Mokoena filters Waiting for assessors (act-3-operations.md:1417)
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: / → /programme/waiting
 Do: Open Waiting for assessors from the menu. Choose With: Mohammed Patel and, before Show, look at the list; then Show.
@@ -752,7 +752,7 @@ Expect: The log holds a stub mail "You have draft activities waiting" beginning 
   which lists "Mini-CEX (Paediatrics) from Nomsa Mahlangu — waiting 6 days". Each job logs one line counting whom it
   reminded and whom it skipped, and why (T151, T240).
 
-Step A.5.10 — Mr Smit's stalled requests (appendix-cross-cutting.md:826)
+Step A.5.10 — Mr Smit's stalled requests (appendix-cross-cutting.md:824)
 Role: Coordinator — Mr Pieter Smit
 Route: / → /programme/waiting
 Do: Read the dashboard's "Waiting for assessors" card, then open Waiting for assessors from its foot.
@@ -766,7 +766,7 @@ Expect: The card, in the warning stripe, is badged "3 waiting, 1 overdue", and l
   Waiting for assessors lists the same three in that order under "3 waiting, 1 overdue", each with Send a reminder (none
   is sent here). Nothing offers Reassign (C5).
 
-Step A.5.11 — Dr Botha's menu offers no Programme trainees (appendix-cross-cutting.md:854)
+Step A.5.11 — Dr Botha's menu offers no Programme trainees (appendix-cross-cutting.md:857)
 Role: CommitteeMember — Dr Sarah Botha
 Route: /
 Do: Read the menu.
@@ -774,7 +774,7 @@ Expect: "Acting as Committee member", with "Switch to Assessor" under it, over H
   reviews and Decision panels, then My data rights. There is no Waiting for assessors: chasing work is not a Committee
   member's (T358, Q7).
 
-Step A.5.12 — Dr Mokoena's menu offers no Programme trainees or STAR review queue (appendix-cross-cutting.md:866)
+Step A.5.12 — Dr Mokoena's menu offers no Programme trainees or STAR review queue (appendix-cross-cutting.md:869)
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /
 Do: Read the menu.
@@ -782,7 +782,7 @@ Expect: Home, Programme trainees, Waiting for assessors, Decisions due, Committe
   Entrustment decisions, then My data rights (T358, R2-Menus). The STAR review queue is not restored: Entrustment
   decisions, the programme's register of STARs, takes its place (DESIGN.md § The NavMenu).
 
-Step A.5.14 — Registrar pages Dr Zulu may not read, by address (appendix-cross-cutting.md:889)
+Step A.5.14 — Registrar pages Dr Zulu may not read, by address (appendix-cross-cutting.md:892)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: /programme/trainees/{ProfileId:int} → /programme/trainees/{ProfileId:int}
 Do: Type the registrar page's address with the trainee profile id of the dev trainee `trainee@wombat.local`, at the Demo
@@ -792,7 +792,7 @@ Expect: Each is flow 01's Page not found, word for word: the h1 "Page not found"
   nothing in the menu lit. Neither page confirms that the profile exists (T358, C2; CLAUDE.md: 404, not 403), and
   nothing of either registrar is read.
 
-Step A.5.15 — A reminder Wombat cannot send (appendix-cross-cutting.md:911)
+Step A.5.15 — A reminder Wombat cannot send (appendix-cross-cutting.md:914)
 Role: Coordinator and Administrator — Mr Pieter Smit and devadmin
 Route: /programme/waiting → /admin/users/{UserId} → /programme/waiting → /admin/users/{UserId} → /programme/waiting
 Do: On a scratch database (the Note), Mr Smit opens Waiting for assessors and leaves it open. devadmin locks Dr Khumalo
@@ -809,7 +809,7 @@ Expect: The first answer stands above the table and takes the focus: "Not sent. 
   Neither request moves: each keeps its state and its wait, and no "Reminded …" line is recorded. The log gains no
   reminder mail. A reminder is never refused because an assessor opted out of digest emails (E1).
 
-Step A.5.16 — Mr Smit looks for registrars with nothing filed (appendix-cross-cutting.md:947)
+Step A.5.16 — Mr Smit looks for registrars with nothing filed (appendix-cross-cutting.md:950)
 Role: Coordinator — Mr Pieter Smit
 Route: / → /programme/trainees
 Do: On Home, choose Open in Programme trainees under "Nothing filed in 30 days".
@@ -822,7 +822,7 @@ Expect: Home's "Nothing filed in 30 days" reads "Every current registrar has fil
   filed, and a recorded MSF is. The heading then takes the count's own form, singular or plural: "1 of 2 current
   registrars has filed nothing in 30 days", "2 of 2 current registrars have filed nothing in 30 days" (D9).
 
-Step A.7.5 — Mr Smit on his phone (appendix-cross-cutting.md:1248)
+Step A.7.5 — Mr Smit on his phone (appendix-cross-cutting.md:1253)
 Role: Coordinator — Mr Pieter Smit
 Route: / → /msf/campaigns → /msf/campaigns/{CampaignId:int} → /committee/decisions-due → /admin/data-rights
 Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue. On Decisions
@@ -834,7 +834,7 @@ Expect: Home's header action, Start an MSF campaign, is a row of its own below t
   44px, and opened it reads one block per EPA; each decision is a block, its one action a 44px button the block's
   width; the pager's buttons are 44px (T364). The queue's filters stack above its table.
 
-Step A.7.6 — Dr Zulu on her phone (appendix-cross-cutting.md:1281)
+Step A.7.6 — Dr Zulu on her phone (appendix-cross-cutting.md:1282)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: At 390 px, open Committee reviews and Dr Molefe's final review.
@@ -852,7 +852,7 @@ Expect: Home's Registrars and Targets by EPA cards are one column: each registra
   the charts at 322 px. Nothing scrolls sideways. Checked at 768 px as well: the agenda still stacks, and nothing
   scrolls sideways.
 
-Step A.7.7 — Dr Mokoena on her phone (appendix-cross-cutting.md:1323)
+Step A.7.7 — Dr Mokoena on her phone (appendix-cross-cutting.md:1324)
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: / → /committee/panels → /committee/decisions-due → /admin/entrustment-decisions
 Do: At 390 px, open the dashboard, then Decision panels, Decisions due and Entrustment decisions from the menu.
@@ -864,7 +864,7 @@ Expect: Home stacks Waiting for assessors, badged "3 waiting, 1 overdue", Regist
   the trainee, then EPA, Level, Issued with its "review #n" link (44 px), Expires, Status and its actions (44 px). The
   revoked and superseded rows' lines wrap under them, never cut (C22). Nothing scrolls sideways.
 
-Step A.7.8 — Dr Sithole on his phone (appendix-cross-cutting.md:1350)
+Step A.7.8 — Dr Sithole on his phone (appendix-cross-cutting.md:1354)
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: / → /committee/reviews → /committee/decisions-due
 Do: At 390 px, open his dashboard, then Committee reviews and Decisions due from the menu.
@@ -874,7 +874,7 @@ Expect: As for Dr Mokoena, scoped to Dr Sithole's sub-speciality: Home stacks th
   header, and each review a block (the trainee, then Panel, Period over its window, Type, State, Decision, and Open
   44px). Decisions due reads as at Step A.7.5.
 
-Step A.7.8a — Programme trainees, a registrar's page and Waiting for assessors on a phone and a tablet (appendix-cross-cutting.md:1369)
+Step A.7.8a — Programme trainees, a registrar's page and Waiting for assessors on a phone and a tablet (appendix-cross-cutting.md:1373)
 Role: CommitteeMember and Coordinator — Dr Thandi Zulu and Mr Pieter Smit
 Route: /programme/trainees → /programme/trainees/{ProfileId:int} → /programme/waiting → /
 Do: At 390 px, Dr Zulu opens Programme trainees from the menu, then Dr Mahlangu's page; Mr Smit opens Waiting for

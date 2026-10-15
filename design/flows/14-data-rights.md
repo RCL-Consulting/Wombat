@@ -422,7 +422,7 @@ Expect: The row reads Completed and offers a Download named for the request.
   - No email is sent.
 
 Step A.1.6 — Dr du Plessis asks for access, then withdraws the request (appendix-cross-cutting.md)
-Role: Trainee — Dr Pieter du Plessis
+Role: Former trainee (no role; a trainee record) — Dr Pieter du Plessis
 Route: /account/data-rights
 Do: Submit an Access request with the reason "Everything held about me." Then withdraw it from "Your requests".
 Expect: The request lists as Submitted, with a Withdraw named for its type and time. Once withdrawn, the page says
