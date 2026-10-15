@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Wombat.Application.Common.Email.Templates;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Users;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Common.Security;
 using Wombat.Domain.Identity;
@@ -59,6 +60,10 @@ public sealed class IssueInvitationCommandHandler : IRequestHandler<IssueInvitat
 
     public async Task<IssuedInvitationResult> Handle(IssueInvitationCommand request, CancellationToken cancellationToken)
     {
+        // A trainee first (T290), as on the Users surface (T278): a registrar who also administers their institution
+        // invites nobody.
+        UserAdministrationRules.DemandUserAdministration(request.Principal);
+
         // A CollegeAdmin is provisioned against a national College and is Administrator-only; every
         // other (institution-scoped) role is gated by the caller's institution claim. (T093)
         if (request.TargetRole == WombatRoles.CollegeAdmin)

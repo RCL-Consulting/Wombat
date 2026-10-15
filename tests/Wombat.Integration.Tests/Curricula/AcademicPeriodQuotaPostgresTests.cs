@@ -663,8 +663,7 @@ public sealed class AcademicPeriodQuotaPostgresTests : IAsyncLifetime
         await using (var db = NewContext(fixture.Schema))
         {
             profileId = await db.TraineeProfiles.Where(profile => profile.UserId == TraineeUserId).Select(profile => profile.Id).SingleAsync();
-            await new DeactivateTraineeProfileCommandHandler(
-                    db, new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(new DateTimeOffset(2026, 9, 25, 8, 0, 0, TimeSpan.Zero)))
+            await new DeactivateTraineeProfileCommandHandler(db, new Wombat.Tests.Shared.FakeUserDirectory().AllowingRoleRemoval(), new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(new DateTimeOffset(2026, 9, 25, 8, 0, 0, TimeSpan.Zero)))
                 .Handle(new DeactivateTraineeProfileCommand(profileId, new DateOnly(2026, 8, 20), Administrator()), CancellationToken.None);
         }
 

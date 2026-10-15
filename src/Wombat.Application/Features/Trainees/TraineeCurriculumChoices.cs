@@ -40,6 +40,8 @@ public sealed class GetTraineeCurriculumChoicesQueryHandler
 
     public async Task<IReadOnlyList<CurriculumChoiceDto>> Handle(GetTraineeCurriculumChoicesQuery request, CancellationToken cancellationToken)
     {
+        TraineeAdministrationRules.DemandTraineeAdministration(request.Principal);
+
         var profile = await _dbContext.Set<TraineeProfile>()
             .AsNoTracking()
             .Where(entity => entity.Id == request.TraineeProfileId)
@@ -76,6 +78,8 @@ public sealed class GetAdmissionCurriculumChoicesQueryHandler
 
     public async Task<IReadOnlyList<CurriculumChoiceDto>> Handle(GetAdmissionCurriculumChoicesQuery request, CancellationToken cancellationToken)
     {
+        TraineeAdministrationRules.DemandTraineeAdministration(request.Principal);
+
         var user = await _userAdministrationService.GetByIdAsync(request.UserId, cancellationToken);
 
         // The admission's own scope rule (AdmitTraineeCommand): a registrar of another institution is not the caller's.

@@ -301,7 +301,7 @@ public sealed class PortfolioEpaProgressTests
         (await LoadAsync(db)).EpaProgress.Rows.Single(row => row.EpaCode == "PAED-001").Periods[0].Count
             .Should().Be(3, "guard: while the programme runs, the Mini-CEXes of 5 August, 12 August and 10 September count");
 
-        await new DeactivateTraineeProfileCommandHandler(db, new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(Now))
+        await new DeactivateTraineeProfileCommandHandler(db, new Wombat.Tests.Shared.FakeUserDirectory().AllowingRoleRemoval(), new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(Now))
             .Handle(new DeactivateTraineeProfileCommand(1, new DateOnly(2026, 8, 8), Administrator()), CancellationToken.None);
         db.ChangeTracker.Clear();
 

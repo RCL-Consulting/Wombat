@@ -2,6 +2,18 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
+## Session 2026-10-15 (Opus): pushed; T290 closed
+
+The operator asked "what is next", then "push then close T290". Pushed `7b421079..d42e11b6`. **T290 done** (commit below):
+every remaining item, with tests; the task file's closing note lists them.
+
+- **D54 (the operator):** withdrawal takes the Trainee role away, as completion does. CLAUDE.md § Roles and the runbook
+  follow; **Steps 5.27, 5.28, 6.41, A.1.6 and A.4.6 have new Expects whose Actuals are T366's: the next replay checks them.**
+- Suites: Domain 815, Application 3820, Infrastructure 1023, Architecture 52, Web 3737, Integration 491; all green.
+- The disconnected-circuit fix (`CircuitConnection`) is unit-tested only; a replay's log should show no
+  "Navigation failed" after a role change near a sign-out.
+- Not pushed.
+
 ## Session 2026-10-14 (Opus): T366 (flow 09) done, with T367
 
 The machine reset overnight; nothing was in flight. The operator said "tie up the loose ends", then "lets go",

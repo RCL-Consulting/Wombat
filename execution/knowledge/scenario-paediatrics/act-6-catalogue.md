@@ -8,7 +8,7 @@ narrative only: every date a step types is relative to the replay day `D` (READM
 - Dr Anton Kruger (CollegeAdmin, CPSA) keeps the national catalogue.
 - Prof Nolwazi Mbatha (InstitutionalAdmin, KGK) keeps KGK's adoption and KGK's own additions.
 - Dr Dlamini, Dr Mahlangu and Dr Ndlovu (Trainees), Dr Molefe (a former trainee), Dr du Plessis (withdrawn in Act 5,
-  still holding Trainee) and Dr Patel (Assessor) act only to show what each catalogue change does to the people it
+  with no role) and Dr Patel (Assessor) act only to show what each catalogue change does to the people it
   measures.
 
 **Why.** A national catalogue is not written once. The College:
@@ -921,7 +921,7 @@ Gap: F-6.40a, T312 (still: the page matches the Expect, but a completed record g
   question).
 
 ### Step 6.41 — Dr du Plessis's record after the rebuild
-Role: Trainee — Dr Pieter du Plessis
+Role: Former trainee (no role; a trainee record) — Dr Pieter du Plessis
 Route: /portfolio/progress → /activities/mine
 Do: Read his record and his activities.
 Expect:
@@ -931,7 +931,8 @@ Expect:
     Act 5 Step 5.28 read: the Mini-CEX observed after his last day still counts towards nothing (T281).
   - A KGK-001 card has appeared on his record too, as on Dr Molefe's.
   - My activities lists that Mini-CEX as Completed, its Credit None.
-Note: He keeps the Trainee role after withdrawing (Act 5), so he reads his own record like any trainee.
+Note: Withdrawal took his Trainee role away (Act 5, T290); he reads his own record through the trainee record, as Dr
+  Molefe does.
 Actual (2026-10-14, T366 replay, wombat_scenario_t366): My progress still opens "Your programme ended on 2026-10-12.
   This page is your record of it and is read-only: …". Against Act 5 Step 5.28's text the only differences are
   PAED-006's title and KGK-001: PAED-002 "Semester 2, 2026 / no target (your programme ended part-way through) · 0
@@ -1062,7 +1063,7 @@ WHERE u."Email" = 'duplessis@kgk.wombat.local' AND a."ObservedOn" > p."Deactivat
   - two Paediatric versions in use at KGK: Dr Ndlovu on 11.2, Dr Dlamini and Dr Mahlangu on 11.1, whose profiles
     cannot be saved while 11.2 is KGK's active adoption (Step 6.34);
   - three current trainees (Dr Dlamini, Dr Mahlangu and Dr Ndlovu), a graduate (Dr Molefe) and a withdrawn registrar
-    (Dr du Plessis, still holding Trainee), as Act 5 handed them on;
+    (Dr du Plessis, with no role), as Act 5 handed them on;
   - KGK-001, and KGK's own item on each version;
   - PAED-006's corrected title;
   - one rebuild already run.

@@ -89,6 +89,52 @@ public sealed class CompleteTraineeProfileCommandHandlerTests
         email.Verify(s => s.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    [Fact]
+    public async Task Handle_RefusesATraineeWhoAdministersTheirInstitution_TheirOwnProfileIncluded_BeforeAnythingIsRead()
+    {
+        // T290: until now a registrar who also held InstitutionalAdmin could mark their own programme complete, which took
+        // their own Trainee role away and with it every trainee-first refusal.
+        await using var db = SeededDb();
+        var users = new Mock<IUserAdministrationService>();
+        var email = new Mock<IEmailSender>();
+        var self = TestPrincipals.InRoles([WombatRoles.Trainee, WombatRoles.InstitutionalAdmin], "trainee-1", InstitutionA);
+
+        var complete = () => Handler(db, users, email).Handle(
+            new CompleteTraineeProfileCommand(1, new DateOnly(2029, 12, 15), self), CancellationToken.None);
+        var withdraw = () => new DeactivateTraineeProfileCommandHandler(db, users.Object, new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(Now))
+            .Handle(new DeactivateTraineeProfileCommand(1, new DateOnly(2029, 12, 15), self), CancellationToken.None);
+        var read = () => new GetTraineeProfileByIdQueryHandler(db, users.Object)
+            .Handle(new GetTraineeProfileByIdQuery(1, self), CancellationToken.None);
+        var list = () => new ListTraineesForSpecialityQueryHandler(db, users.Object)
+            .Handle(new ListTraineesForSpecialityQuery(null, self), CancellationToken.None);
+
+        foreach (var act in new Func<Task>[] { complete, withdraw, read, list })
+        {
+            (await act.Should().ThrowAsync<UnauthorizedAccessException>()).Which.Message
+                .Should().Be(TraineeAdministrationRules.TraineeAdministersNoTrainee);
+        }
+
+        db.ChangeTracker.Clear();
+        (await db.Set<TraineeProfile>().SingleAsync(p => p.Id == 1)).IsActive.Should().BeTrue();
+        users.VerifyNoOtherCalls();
+        email.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task AWithdrawal_TakesTheTraineeRoleAway_AsACompletionDoes()
+    {
+        // T290, the operator's decision: a withdrawn registrar files nothing more, since nothing after their last day could
+        // credit (T281), and reads their own record through the trainee_record claim (T252).
+        await using var db = SeededDb();
+        var users = new Mock<IUserAdministrationService>();
+
+        await new DeactivateTraineeProfileCommandHandler(db, users.Object, new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(Now))
+            .Handle(new DeactivateTraineeProfileCommand(1, new DateOnly(2029, 12, 15), TestPrincipals.Administrator()), CancellationToken.None);
+
+        (await db.Set<TraineeProfile>().SingleAsync(p => p.Id == 1)).IsActive.Should().BeFalse();
+        users.Verify(s => s.RemoveRoleAsync("trainee-1", WombatRoles.Trainee, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private static CompleteTraineeProfileCommandHandler Handler(
         ApplicationDbContext db, Mock<IUserAdministrationService> users, Mock<IEmailSender> email)
         => new(db, users.Object, email.Object, new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(Now));

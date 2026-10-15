@@ -253,7 +253,7 @@ public sealed class CreditAfterProgrammeEndTests
 
         await using (var db = new ApplicationDbContext(options))
         {
-            await new DeactivateTraineeProfileCommandHandler(db, new ThrowingCreditApplier(), new TraineeCreditLock(db), new FixedClock(Now)).Handle(
+            await new DeactivateTraineeProfileCommandHandler(db, Mock.Of<IUserAdministrationService>(), new ThrowingCreditApplier(), new TraineeCreditLock(db), new FixedClock(Now)).Handle(
                 new DeactivateTraineeProfileCommand(ProfileId, new DateOnly(2026, 9, 20), TestPrincipals.Administrator()),
                 CancellationToken.None);
         }
@@ -271,7 +271,7 @@ public sealed class CreditAfterProgrammeEndTests
 
         await using (var db = new ApplicationDbContext(options))
         {
-            var act = () => new DeactivateTraineeProfileCommandHandler(db, new ThrowingCreditApplier(), new TraineeCreditLock(db), new FixedClock(Now)).Handle(
+            var act = () => new DeactivateTraineeProfileCommandHandler(db, Mock.Of<IUserAdministrationService>(), new ThrowingCreditApplier(), new TraineeCreditLock(db), new FixedClock(Now)).Handle(
                 new DeactivateTraineeProfileCommand(ProfileId, LastDay, TestPrincipals.Administrator()), CancellationToken.None);
 
             await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*induced*");
@@ -332,7 +332,7 @@ public sealed class CreditAfterProgrammeEndTests
             }
             else
             {
-                await new DeactivateTraineeProfileCommandHandler(db, new CreditApplier(db), hold, new FixedClock(Now))
+                await new DeactivateTraineeProfileCommandHandler(db, Mock.Of<IUserAdministrationService>(), new CreditApplier(db), hold, new FixedClock(Now))
                     .Handle(new DeactivateTraineeProfileCommand(ProfileId, LastDay, TestPrincipals.Administrator()), CancellationToken.None);
             }
         }
@@ -353,7 +353,7 @@ public sealed class CreditAfterProgrammeEndTests
 
         await using (var db = new ApplicationDbContext(options))
         {
-            var act = () => new DeactivateTraineeProfileCommandHandler(db, new CreditApplier(db), new FailingEndLock(), new FixedClock(Now))
+            var act = () => new DeactivateTraineeProfileCommandHandler(db, Mock.Of<IUserAdministrationService>(), new CreditApplier(db), new FailingEndLock(), new FixedClock(Now))
                 .Handle(new DeactivateTraineeProfileCommand(ProfileId, LastDay, TestPrincipals.Administrator()), CancellationToken.None);
 
             await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*induced*");
@@ -417,7 +417,7 @@ public sealed class CreditAfterProgrammeEndTests
     }
 
     private static DeactivateTraineeProfileCommandHandler DeactivateHandler(ApplicationDbContext db)
-        => new(db, new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(Now));
+        => new(db, Moq.Mock.Of<Wombat.Application.Common.Interfaces.IUserAdministrationService>(), new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(Now));
 
     /// <summary>What the audit pipeline's catch does: save the request's context. Nothing may be dirty, or it is committed.</summary>
     private static async Task AssertNothingToCommitAsync(ApplicationDbContext db)

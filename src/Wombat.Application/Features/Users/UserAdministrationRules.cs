@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Wombat.Application.Common.Extensions;
+using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
 using Wombat.Domain.Identity;
 
@@ -183,6 +184,34 @@ public static class UserAdministrationRules
         {
             throw new UnauthorizedAccessException(refusal);
         }
+    }
+
+    /// <summary>
+    /// The user, if this caller may change them; otherwise one refusal, <paramref name="refusal" />, whether the id names
+    /// nobody or someone outside the caller's institution. (T290, T194's rule)
+    /// </summary>
+    /// <remarks>
+    /// Asked straight after the lookup, before any check of what the user holds. Until T290 Add role, Remove role and
+    /// password reset said "The user could not be found." where scope would refuse, and Add and Remove role and
+    /// <c>SetUserLockout</c> gave the global-administrator refusal before the scope check, so an InstitutionalAdmin could
+    /// tell which ids existed elsewhere and which belonged to an administrator. A global Administrator sees every user, so
+    /// is told plainly that an id names nobody.
+    /// </remarks>
+    public static UserIdentityDetails DemandInScope(ClaimsPrincipal principal, UserIdentityDetails? user, string refusal)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+
+        if (principal.IsAdministrator())
+        {
+            return user ?? throw new InvalidOperationException("The user could not be found.");
+        }
+
+        if (user?.InstitutionId is not int institutionId || !principal.CanAccessInstitution(institutionId))
+        {
+            throw new UnauthorizedAccessException(refusal);
+        }
+
+        return user;
     }
 
     /// <summary>

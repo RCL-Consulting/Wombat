@@ -16,7 +16,7 @@ and appeals (T366, `49e7cf5e`, with T367), each designed, replayed and in the de
 
 - **The runbook** (`knowledge/scenario-paediatrics/`): last replayed against flow 09 (T366, `wombat_scenario_t366`,
   2026-10-14: no open regression); `coverage.md`, `states.md`, `design/baseline/`.
-- **Open: 76 queued; T290 (its other items) in progress; 1 blocked; 4 proposed (T362, T363, T365, T368).**
+- **Open: 76 queued; none in progress; 1 blocked; 4 proposed (T362, T363, T365, T368).**
   - **P1:** T157, the deploy, which waits for the operator.
   - **P2, before real users:** T288, T289, T311–T313, T315, T316, T319, T320, T329, T333, T334, T341.
   - **P3:** the presentation debt the redesign absorbs (BRIEF § 6–7), and polish.
@@ -48,13 +48,13 @@ and appeals (T366, `49e7cf5e`, with T367), each designed, replayed and in the de
 ## Files to open first
 
 - `CLAUDE.md`: conventions, footguns, and the "nothing is live" section.
-- `execution/knowledge/EPA-PROGRAMME.md`: § 2A (what is left), § 3 (decisions D1–D52), and § 3F (College asks).
+- `execution/knowledge/EPA-PROGRAMME.md`: § 2A (what is left), § 3 (decisions D1–D54), and § 3F (College asks).
 - `execution/architecture/DESIGN.md`: mandatory before any Razor work.
 - `design/BRIEF.md` and `execution/knowledge/scenario-paediatrics/coverage.md`: the redesign brief and the journeys.
 - `deploy/verify/drift-check.sh`: run before trusting any claim about the server.
 
 ## Recent
 
+- **2026-10-15:** T290 done (trainee-first, unseen ids, the panel seat rule, the circuit exit; D54); 5 runbook steps await replay.
 - **2026-10-14:** T366, flow 09, done (`49e7cf5e`; T367 `e9b29081`; replay 331 steps, no regression; states 57, 2 corrected; one fix `9ba80586`; design system v23); Pkcs pinned (`a7f790b3`); T368 proposed.
-- **2026-10-13:** T364, flow 08, done (`622c5ad1`; replay, one fix `1ec7a352`; states 56/59; design system v20); T309, T259 closed; T365 proposed.
-- **10-12 and before:** T361 (flow 07), T358, T355, T350, T342, T339, T335 (flows 06 to 01); the repo moved to GitHub. Earlier: `git log`.
+- **10-13 and before:** T364 (flow 08), T361 (flow 07), T358, T355, T350, T342, T339, T335 (flows 06 to 01); the repo moved to GitHub. Earlier: `git log`.

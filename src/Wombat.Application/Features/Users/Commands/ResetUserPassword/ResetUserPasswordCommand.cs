@@ -52,19 +52,15 @@ public sealed class ResetUserPasswordCommandHandler : IRequestHandler<ResetUserP
         UserAdministrationRules.DemandUserAdministration(request.Principal);
         UserAdministrationRules.DemandNotCaller(request.Principal, request.UserId, UserAdministrationRules.OwnPasswordNotResettable);
 
-        var user = await _userAdministrationService.GetByIdAsync(request.UserId, cancellationToken)
-            ?? throw new InvalidOperationException("The user could not be found.");
+        var user = UserAdministrationRules.DemandInScope(
+            request.Principal,
+            await _userAdministrationService.GetByIdAsync(request.UserId, cancellationToken),
+            "You do not have permission to reset this user's password.");
 
         if (user.Roles.Contains(WombatRoles.Administrator, StringComparer.Ordinal)
             && !request.Principal.IsAdministrator())
         {
             throw new UnauthorizedAccessException("You do not have permission to reset a global administrator's password.");
-        }
-
-        if (!request.Principal.IsAdministrator()
-            && (!user.InstitutionId.HasValue || !request.Principal.CanAccessInstitution(user.InstitutionId.Value)))
-        {
-            throw new UnauthorizedAccessException("You do not have permission to reset this user's password.");
         }
 
         await _userAdministrationService.ResetPasswordAsync(request.UserId, request.NewPassword, cancellationToken);

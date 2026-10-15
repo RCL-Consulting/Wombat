@@ -22,6 +22,8 @@ public sealed class GetTraineeProfileByIdQueryHandler : IRequestHandler<GetTrain
 
     public async Task<TraineeProfileDto> Handle(GetTraineeProfileByIdQuery request, CancellationToken cancellationToken)
     {
+        TraineeAdministrationRules.DemandTraineeAdministration(request.Principal);
+
         var profile = await _dbContext.Set<TraineeProfile>()
             .AsNoTracking()
             .Include(entity => entity.Curriculum)

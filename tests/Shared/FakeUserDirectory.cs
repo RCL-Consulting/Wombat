@@ -180,7 +180,30 @@ internal sealed class FakeUserDirectory : IUserAdministrationService
         => throw new NotSupportedException();
 
     public Task RemoveRoleAsync(string userId, string role, CancellationToken cancellationToken = default)
-        => throw new NotSupportedException();
+    {
+        if (!_allowsRoleRemoval)
+        {
+            throw new NotSupportedException();
+        }
+
+        RemovedRoles.Add((userId, role));
+        return Task.CompletedTask;
+    }
+
+    private bool _allowsRoleRemoval;
+
+    /// <summary>The roles removed, in order, once <see cref="AllowingRoleRemoval" /> allows it.</summary>
+    public List<(string UserId, string Role)> RemovedRoles { get; } = [];
+
+    /// <summary>
+    /// A directory that records a role's removal instead of refusing it: for the handlers that end a programme, which
+    /// take the Trainee role away after their save (T290).
+    /// </summary>
+    public FakeUserDirectory AllowingRoleRemoval()
+    {
+        _allowsRoleRemoval = true;
+        return this;
+    }
 
     public Task ResetPasswordAsync(string userId, string newPassword, CancellationToken cancellationToken = default)
         => throw new NotSupportedException();

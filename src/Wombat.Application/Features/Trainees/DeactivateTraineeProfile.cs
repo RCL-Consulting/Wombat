@@ -19,7 +19,9 @@ namespace Wombat.Application.Features.Trainees;
 /// calendar: the profile ends now, and a later day would hold the trainee to every period up to it (T209 review).
 /// An encounter observed after the day credits nothing on the profile, so recording it takes back any credit such an
 /// encounter already earned, in the same save (T281, <see cref="ProgrammeEndCredit" />), under a hold on the profile that
-/// keeps every completion of the trainee's out until it commits (<see cref="ITraineeCreditLock" />).
+/// keeps every completion of the trainee's out until it commits (<see cref="ITraineeCreditLock" />). It takes the Trainee
+/// role away, as a completion does (T290): a withdrawn registrar files nothing more, since nothing after their last day
+/// could credit, and reads their own record through the profile they ended on (T252's <c>trainee_record</c> claim).
 /// </summary>
 public sealed record DeactivateTraineeProfileCommand(int Id, DateOnly DeactivatedOn, ClaimsPrincipal Principal) : IRequest;
 
@@ -35,17 +37,20 @@ public sealed class DeactivateTraineeProfileCommandValidator : AbstractValidator
 public sealed class DeactivateTraineeProfileCommandHandler : IRequestHandler<DeactivateTraineeProfileCommand>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _userAdministrationService;
     private readonly ICreditApplier _creditApplier;
     private readonly ITraineeCreditLock _traineeCreditLock;
     private readonly TimeProvider _timeProvider;
 
     public DeactivateTraineeProfileCommandHandler(
         IApplicationDbContext dbContext,
+        IUserAdministrationService userAdministrationService,
         ICreditApplier creditApplier,
         ITraineeCreditLock traineeCreditLock,
         TimeProvider? timeProvider = null)
     {
         _dbContext = dbContext;
+        _userAdministrationService = userAdministrationService;
         _creditApplier = creditApplier;
         _traineeCreditLock = traineeCreditLock;
         _timeProvider = timeProvider ?? TimeProvider.System;
@@ -53,6 +58,8 @@ public sealed class DeactivateTraineeProfileCommandHandler : IRequestHandler<Dea
 
     public async Task Handle(DeactivateTraineeProfileCommand request, CancellationToken cancellationToken)
     {
+        TraineeAdministrationRules.DemandTraineeAdministration(request.Principal);
+
         // T281. Held before the profile is read, and until the save below commits, so no completion of the trainee's can
         // credit in between: one in flight is waited for, and its credit is then read below and taken back if it is after
         // the last day; one that comes after waits for this save and reads the end. A second end of the same profile waits
@@ -85,5 +92,8 @@ public sealed class DeactivateTraineeProfileCommandHandler : IRequestHandler<Dea
         await ProgrammeEndCredit.SaveAsync(
             _dbContext, _creditApplier, _dbContext.Set<Activity>(), profile, takesCreditBack, cancellationToken);
         await hold.CommitAsync(cancellationToken);
+
+        // As a completion (T290): the role goes with the programme, after the save, which writes nothing the hold is for.
+        await _userAdministrationService.RemoveRoleAsync(profile.UserId, WombatRoles.Trainee, cancellationToken);
     }
 }

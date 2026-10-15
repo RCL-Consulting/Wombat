@@ -977,8 +977,8 @@ member can meet it. None is captured.
   decision's attendance down in SQL would draw a state the product cannot produce, so it is not staged that way.
 - **Decisions due reading "Due by year end" after a semester-1 sitting left an annual EPA unstaged** (T361, E3): the
   story sits in semester 2, where every annual EPA closes. A replay in semester 1 reaches it at Step 4.34.
-- **The "holds Trainee" notes** on Users, a user, the panel list and form, Committee reviews, the MSF campaign pages and
-  MSF coverage (T218, T224, T237, T256, T278): no cast member holds Trainee beside a staff role. So is the panel form's
+- **The "holds Trainee" notes** on Users, a user, Invitations, Trainees, the panel list and form, Committee reviews, the
+  MSF campaign pages and MSF coverage (T218, T224, T237, T256, T278, T290): no cast member holds Trainee beside a staff role. So is the panel form's
   "You cannot create a decision panel" card (T194): every panel manager in the cast has a scope to create in.
 - **MSF respondent refusals.** "Feedback link revoked": nothing in the product sets an MSF link's revoked time, so the
   refusal cannot happen. "The response is not complete": the browser's required check stops the submit before the

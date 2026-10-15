@@ -58,6 +58,8 @@ public sealed class CompleteTraineeProfileCommandHandler : IRequestHandler<Compl
 
     public async Task Handle(CompleteTraineeProfileCommand request, CancellationToken cancellationToken)
     {
+        TraineeAdministrationRules.DemandTraineeAdministration(request.Principal);
+
         // T281. Held before the profile is read, and until the save below commits, as a withdrawal holds it
         // (DeactivateTraineeProfileCommandHandler): no completion of the trainee's credits in between.
         await using var hold = await _traineeCreditLock.HoldForEndAsync(request.Id, cancellationToken);

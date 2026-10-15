@@ -19,6 +19,8 @@ public sealed class ListPendingTraineesQueryHandler : IRequestHandler<ListPendin
 
     public async Task<IReadOnlyList<PendingTraineeDto>> Handle(ListPendingTraineesQuery request, CancellationToken cancellationToken)
     {
+        TraineeAdministrationRules.DemandTraineeAdministration(request.Principal);
+
         var users = await _userAdministrationService.ListUsersInRoleAsync(WombatRoles.PendingTrainee, cancellationToken);
         var query = users.AsEnumerable();
 

@@ -144,7 +144,7 @@ Wombat has 10 roles (`WombatRoles.All`), checked via ASP.NET Core Identity:
 9. **Trainee** — the learner working through a curriculum.
 10. **PendingTrainee** — invited but not yet admitted by admin.
 
-A graduate holds no role for their old programme: a `trainee_record` claim keeps their record readable
+A graduate, or a registrar who withdrew (T290), holds no role for their old programme: a `trainee_record` claim keeps their record readable
 (`TraineeOrFormerTrainee`, T252).
 
 Users can hold multiple roles. Onboarding is admin-controlled via invitations or SSO

@@ -1,12 +1,13 @@
 ---
 id: T290
 title: Trainee-first and existence leftovers: completing your own profile, invitations, the Users commands' refusals, and two committee queries that read claims
-status: in_progress
+status: done
 priority: P3
 owner: agent
 depends_on: []
 created: 2026-09-25
 started: 2026-10-05
+completed: 2026-10-15
 ---
 
 # T290 — Trainee-first and existence leftovers: completing your own profile, invitations, the Users commands' refusals, and two committee queries that read claims
@@ -34,7 +35,7 @@ started: 2026-10-05
 
 ## Verification
 
-- [ ] Each item fixed has a test, or its decision is recorded.
+- [x] Each item fixed has a test, or its decision is recorded (2026-10-15; see the closing note).
 
 ## Related
 
@@ -50,3 +51,26 @@ harmless, but it is noise: treat a cancelled navigation on a gone circuit as exp
 - **T295 replay, 2026-09-26 (C63).** Note, 2026-09-26 (T295 replay, steps 2.13 and 2.29): seen again, four times. `.scenario-app/wombat_scenario.log` holds three pairs, around lines 19512-19545, of 'fail: RemoteNavigationManager … Navigation failed when changing the location to /account/session-ended?returnUrl=%2F' and 'fail: CircuitHost[111] Unhandled exception in circuit' (TaskCanceledException). There is one pair each for Dr Zulu, Dr Naidoo and Dr Botha, whose Assessor role Prof Mbatha added 1 to 2 minutes after they signed out. A fourth pair (line 29253) came at the admissions in 2.29, probably du Plessis's. The repro is therefore wider than a closed tab. Signing out leaves the old circuit disconnected but retained (Program.cs sets no DisconnectedCircuitRetentionPeriod, so the 3-minute default applies; inferred). A role change within that time fails its revalidation, and `EndedSessionExit.Leave` (EndedSessionExit.cs:37) then navigates a circuit that has no client. The item's scope is unchanged: when the circuit has no client, skip that navigation or treat the cancellation as expected. Test that a role change on a disconnected circuit writes nothing at fail level.
 - **Question from T303, 2026-09-26 (not decided).** A graduate cannot enter a second programme at all. `AdmitTrainee` requires PendingTrainee (`AdmitTrainee.cs:44-47`); Add role never offered PendingTrainee and, since T303 (`4824d62`), does not offer Trainee; and an invitation to an address an account already holds cannot be completed (T285: the provisioner reports the address Taken). A second programme needs an admission path of its own (for example admitting a graduate directly, or an admin-only "return to pending admission"), never Add role.
 - **2026-10-05: the committee item is done** (with T298, before flow 06's build, the operator's Q8). `GetCommitteeMemberDashboardSummaryQuery` reads every current trainee at the caller's institution (`IsOverseenBy`'s rule), not the sub-speciality claims; handler tests `CommitteeMemberDashboard_ForAMemberWithNoSubSpeciality_ListsTheInstitutionsCurrentTrainees` and the updated institution-wide ones; Step 2.37's Expect and states.md's empty row rewritten; browser: Dr van Rensburg reads the five registrars on `wombat_scenario_t290`. **Every other item above is still open**; the task stays in progress only because the harness cannot requeue it.
+
+- **2026-10-15: closed (Opus).** Every remaining item, one session, at the operator's "close T290":
+  - **Trainee-first on Trainees and Invitations.** `TraineeAdministrationRules` (the Users rule, its own words) is asked
+    first by every Trainees handler (admit, update, withdraw, complete, read, both lists, both curriculum-choice reads),
+    so nobody marks their own programme complete; `UserAdministrationRules.DemandUserAdministration` first by issue,
+    list, resend and revoke. `/admin/trainees` and `/admin/invitations` show an info note in its place, as Users does.
+    Tests: `CompleteTraineeProfileCommandHandlerTests.Handle_RefusesATraineeWhoAdministersTheirInstitution_…`,
+    `InvitationTraineeFirstTests`.
+  - **Existence.** `UserAdministrationRules.DemandInScope`: add role, remove role, lockout and password reset give a
+    non-Administrator one refusal for an unknown id, an id at another institution and a global administrator, before
+    any check of what the user holds. Revoke and resend by id likewise. Tests: `UserCommandsExistenceTests`,
+    `InvitationTraineeFirstTests`.
+  - **`ListReviewsForChairQuery`** deleted (no caller).
+  - **`ListDecisionPanels`**: the "sits on it" arm is the seat rule (`PanelSeat.MaySit`, from the user store), not the
+    member list. Two tests that pinned an External member from another institution listing the panel were rewritten
+    (`DecisionPanelScopeTests`, `CommitteeRequestsAuthoriseFirstTests`).
+  - **The disconnected circuit.** `CircuitConnection` (a scoped `CircuitHandler`); `EndedSessionExit` does not navigate a
+    circuit with no browser and leaves on reconnection. Test: `EndedSessionExitConnectionTests`. Not yet seen in a log:
+    the next replay that changes a role soon after a sign-out shows it.
+  - **Withdrawn trainees: D54** (the operator): withdrawal takes the Trainee role away, as completion does, so there is no
+    one to warn about an after-end date. Runbook Steps 5.27, 5.28, 6.41, A.1.6, A.4.6, the Act 5 outcome and the
+    appendix cast rewritten; **their Actuals are from T366 and wait for the next replay.**
+  - Not done here (T303's question, unchanged): a graduate's or withdrawn registrar's second programme.

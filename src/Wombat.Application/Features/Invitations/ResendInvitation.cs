@@ -6,6 +6,7 @@ using Wombat.Application.Common;
 using Wombat.Application.Common.Email.Templates;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Users;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Common.Security;
 using Wombat.Domain.Identity;
@@ -79,10 +80,15 @@ public sealed class ResendInvitationCommandHandler : IRequestHandler<ResendInvit
     /// </remarks>
     public async Task<IssuedInvitationResult> Handle(ResendInvitationCommand request, CancellationToken cancellationToken)
     {
+        // A trainee first (T290), then one refusal for an id that names nothing and one out of scope, as the revoke.
+        UserAdministrationRules.DemandUserAdministration(request.Principal);
+
         var invitation = await _dbContext.Set<Invitation>()
             .AsNoTracking()
             .SingleOrDefaultAsync(entity => entity.Id == request.InvitationId, cancellationToken)
-            ?? throw new InvalidOperationException("The invitation was not found.");
+            ?? throw (request.Principal.IsAdministrator()
+                ? (Exception)new InvalidOperationException("The invitation was not found.")
+                : new UnauthorizedAccessException("You do not have permission to resend this invitation."));
 
         // As the issue, not the revoke: a resend hands its caller a new registration link, so only whoever may issue the
         // invitation may resend it. A CollegeAdmin invitation is the Administrator's alone: CanAccessCollege would also

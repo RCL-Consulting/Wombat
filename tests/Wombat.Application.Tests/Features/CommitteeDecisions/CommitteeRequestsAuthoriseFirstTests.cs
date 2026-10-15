@@ -662,7 +662,7 @@ public sealed class CommitteeRequestsAuthoriseFirstTests
     // ─── The scheduling page's panel list (T194 item 3) ──────────────────────
 
     [Fact]
-    public async Task AnExternalMemberFromAnotherInstitution_IsNotOfferedThatPanelToScheduleOn_ThoughTheyListIt()
+    public async Task AnExternalMemberFromAnotherInstitution_NeitherListsNorIsOfferedThatPanel()
     {
         // A Coordinator of A who sits as an External member on B's panel. They schedule nobody before it: a panel reviews
         // its own institution's trainees, and a Coordinator oversees only their own institution's.
@@ -672,7 +672,7 @@ public sealed class CommitteeRequestsAuthoriseFirstTests
         var listed = await PanelIdsAsync(db, coordinator, forScheduling: false);
         var offered = await PanelIdsAsync(db, coordinator, forScheduling: true);
 
-        listed.Should().Contain(PanelB, "the panels page lists a panel they sit on");
+        listed.Should().NotContain(PanelB, "nobody sits on another institution's panel, so its member list is no seat (T290)");
         offered.Should().NotContain(PanelB);
         offered.Should().BeEquivalentTo(new[] { PanelA, PaediatricsPanelA });
         (await TraineesOfferedAsync(db, coordinator, PanelB)).Should().BeEmpty("the picker offers nobody on it");

@@ -36,18 +36,14 @@ public sealed class SetUserLockoutCommandHandler : IRequestHandler<SetUserLockou
         UserAdministrationRules.DemandUserAdministration(request.Principal);
         UserAdministrationRules.DemandNotCaller(request.Principal, request.UserId, UserAdministrationRules.OwnLockoutNotChangeable);
 
-        var user = await _userAdministrationService.GetByIdAsync(request.UserId, cancellationToken)
-            ?? throw new InvalidOperationException("The user could not be found.");
+        var user = UserAdministrationRules.DemandInScope(
+            request.Principal,
+            await _userAdministrationService.GetByIdAsync(request.UserId, cancellationToken),
+            "You do not have permission to modify this user.");
 
         if (user.Roles.Contains(WombatRoles.Administrator, StringComparer.Ordinal))
         {
             throw new InvalidOperationException("A global administrator cannot be locked out from this surface.");
-        }
-
-        if (!request.Principal.IsAdministrator()
-            && (!user.InstitutionId.HasValue || !request.Principal.CanAccessInstitution(user.InstitutionId.Value)))
-        {
-            throw new UnauthorizedAccessException("You do not have permission to modify this user.");
         }
 
         await _userAdministrationService.SetLockoutAsync(request.UserId, request.Locked, cancellationToken);

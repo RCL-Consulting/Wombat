@@ -25,6 +25,12 @@ public static class CircuitServiceCollectionExtensions
         // A circuit whose sign-in has ended leaves by a full page load, once (the T279 review).
         services.AddScoped<EndedSessionExit>();
 
+        // Whether the circuit has a browser now, so the exit does not navigate one that has none (T290). One instance,
+        // registered as a circuit handler too, so the framework's connection events reach the instance the exit reads.
+        services.AddScoped<CircuitConnection>();
+        services.AddScoped<Microsoft.AspNetCore.Components.Server.Circuits.CircuitHandler>(
+            provider => provider.GetRequiredService<CircuitConnection>());
+
         return services;
     }
 }

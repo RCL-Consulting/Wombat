@@ -175,6 +175,18 @@ public static class PanelSeat
     /// The half of the rule a committee member's own record answers: not deactivated, at the panel's institution, and
     /// holding CommitteeMember. Private, so nothing asks it without the Trainee half (<see cref="EligibleAsync" />).
     /// </summary>
+    /// <summary>
+    /// Whether this one user, read whole from the store (<see cref="IUserAdministrationService.GetByIdAsync" />, which
+    /// carries every role), may sit on a panel run at <paramref name="panelInstitutionId" />: the rule
+    /// <see cref="EligibleAsync" /> applies to a whole institution, asked of one. (T290)
+    /// </summary>
+    public static bool MaySit(UserIdentityDetails user, int panelInstitutionId)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+        return IsActiveCommitteeMemberAt(user, panelInstitutionId) &&
+               !user.Roles.Contains(WombatRoles.Trainee, StringComparer.OrdinalIgnoreCase);
+    }
+
     private static bool IsActiveCommitteeMemberAt(UserIdentityDetails user, int panelInstitutionId)
         => !user.IsDeactivated &&
            user.InstitutionId == panelInstitutionId &&

@@ -135,6 +135,8 @@ public sealed class UpdateTraineeProfileCommandHandler : IRequestHandler<UpdateT
 
     public async Task<UpdateTraineeProfileResult> Handle(UpdateTraineeProfileCommand request, CancellationToken cancellationToken)
     {
+        TraineeAdministrationRules.DemandTraineeAdministration(request.Principal);
+
         // T304. Held before the profile is read, and until the save below commits, as an end holds it: no completion of the
         // trainee's credits against the curriculum or start this save replaces. Every save takes it, because whether this
         // one moves anything is read after the profile.

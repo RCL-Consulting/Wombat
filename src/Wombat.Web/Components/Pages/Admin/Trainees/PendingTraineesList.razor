@@ -5,7 +5,16 @@
 
 <PageTitle>Trainees · Wombat</PageTitle>
 
-<PageHeader Title="Trainees" Subtitle="Admit pending trainees into a curriculum and maintain active trainee profiles." />
+<PageHeader Title="Trainees" Subtitle="@Subtitle" />
+
+@* Someone who holds Trainee beside a role that administers trainees admits, changes and ends no programme, their own
+   included (T290): nothing is read for them, and the note says why, in the words the handlers refuse with. *@
+@if (_traineeNote is not null)
+{
+  <Alert Kind="info" Id="trainees-trainee-note">@_traineeNote</Alert>
+}
+else
+{
 
 @if (!string.IsNullOrWhiteSpace(_errorMessage))
 {
@@ -108,7 +117,15 @@
   </div>
 </StatePanel>
 
+}
+
 @code {
+  private string? _traineeNote;
+
+  private string? Subtitle => _traineeNote is not null
+    ? null
+    : "Admit pending trainees into a curriculum and maintain active trainee profiles.";
+
   // T239: a profile's Edit is named by its trainee, then by their email where two trainees share a name, then by the
   // curriculum where one trainee has two profiles on the list.
   private static IReadOnlyDictionary<int, string> ProfileNames(IEnumerable<TraineeProfileDto> profiles)
@@ -133,6 +150,12 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _traineeNote = TraineeAdministrationRules.TraineeNoteOnTraineePages(authState.User);
+      if (_traineeNote is not null)
+      {
+        return;
+      }
+
       _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
       _pendingTrainees = await Sender.Send(new ListPendingTraineesQuery(authState.User));
       _trainees = await Sender.Send(new ListTraineesForSpecialityQuery(authState.User));

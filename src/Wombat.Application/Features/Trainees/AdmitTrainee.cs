@@ -57,6 +57,8 @@ public sealed class AdmitTraineeCommandHandler : IRequestHandler<AdmitTraineeCom
 
     public async Task<TraineeProfileDto> Handle(AdmitTraineeCommand request, CancellationToken cancellationToken)
     {
+        TraineeAdministrationRules.DemandTraineeAdministration(request.Principal);
+
         var user = await _userAdministrationService.GetByIdAsync(request.UserId, cancellationToken)
             ?? throw new InvalidOperationException("The trainee user could not be found.");
 

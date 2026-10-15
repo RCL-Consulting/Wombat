@@ -17,8 +17,12 @@ namespace Wombat.Web.Security;
 /// antiforgery token, which antiforgery refuses once the cookie is refused (<see cref="SessionEnd" />). Leaving also ends
 /// the anonymous circuit, which App.razor never gives anyone.
 /// </para>
+/// <para>
+/// A circuit with no browser connected (<see cref="CircuitConnection" />, T290) is not navigated: there is nothing to
+/// receive it, and the attempt was logged as a failure. It leaves when the browser reconnects, if it ever does.
+/// </para>
 /// </remarks>
-public sealed class EndedSessionExit(NavigationManager navigation)
+public sealed class EndedSessionExit(NavigationManager navigation, CircuitConnection? connection = null)
 {
     private bool _leaving;
 
@@ -34,8 +38,16 @@ public sealed class EndedSessionExit(NavigationManager navigation)
         }
 
         _leaving = true;
-        navigation.NavigateTo(SessionEnd.Url(CurrentPath(navigation)), forceLoad: true);
+        if (connection is { IsConnected: false })
+        {
+            connection.WhenReconnected(Go);
+            return;
+        }
+
+        Go();
     }
+
+    private void Go() => navigation.NavigateTo(SessionEnd.Url(CurrentPath(navigation)), forceLoad: true);
 
     /// <summary>The page the tab is on, as a path on this site with its query: where signing in again comes back to.</summary>
     public static string CurrentPath(NavigationManager navigation)

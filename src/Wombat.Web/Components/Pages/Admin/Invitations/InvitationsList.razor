@@ -7,7 +7,16 @@
 
 <PageTitle>Invitations · Wombat</PageTitle>
 
-<PageHeader Title="Invitations" Subtitle="Issue invitation-only onboarding links and review active invitations." />
+<PageHeader Title="Invitations" Subtitle="@Subtitle" />
+
+@* Someone who holds Trainee beside a role that administers users issues, resends and revokes no invitation (T290), as
+   they administer no user (T278): nothing is read for them, and the note says why. *@
+@if (_traineeNote is not null)
+{
+  <Alert Kind="info" Id="invitations-trainee-note">@_traineeNote</Alert>
+}
+else
+{
 
 @* What an issue, a resend or a revoke did, and the link an issue or a resend made. It takes the focus once any is done
    (T234; DESIGN.md § Button system): an issue rebuilds its form, and the button with it, a resent invitation's row is
@@ -193,7 +202,15 @@
   </section>
 </div>
 
+}
+
 @code {
+  private string? _traineeNote;
+
+  private string? Subtitle => _traineeNote is not null
+    ? null
+    : "Issue invitation-only onboarding links and review active invitations.";
+
   private static readonly string[] _roles =
   [
     WombatRoles.CollegeAdmin,
@@ -265,6 +282,12 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _traineeNote = UserAdministrationRules.TraineeNoteOnUserPages(authState.User);
+      if (_traineeNote is not null)
+      {
+        return;
+      }
+
       _isAdministrator = authState.User.IsInRole(WombatRoles.Administrator);
       _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
       _colleges = await Sender.Send(new GetCollegesListQuery(authState.User));

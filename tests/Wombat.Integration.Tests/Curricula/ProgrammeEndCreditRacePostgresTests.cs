@@ -251,7 +251,7 @@ public sealed class ProgrammeEndCreditRacePostgresTests : IAsyncLifetime
         await using var completion = await HoldTheProfileAsync(fixture, $"""WHERE "UserId" = '{TraineeUserId}' FOR SHARE""");
 
         await using var db = NewContext(fixture, "end", commandTimeoutSeconds: 1);
-        var record = () => new DeactivateTraineeProfileCommandHandler(db, new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(RecordedAt))
+        var record = () => new DeactivateTraineeProfileCommandHandler(db, new Wombat.Tests.Shared.FakeUserDirectory().AllowingRoleRemoval(), new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(RecordedAt))
             .Handle(new DeactivateTraineeProfileCommand(fixture.ProfileId, LastDay, Administrator()), CancellationToken.None);
         var refusal = (await record.Should().ThrowAsync<InvalidOperationException>()).Which;
 
@@ -305,7 +305,7 @@ public sealed class ProgrammeEndCreditRacePostgresTests : IAsyncLifetime
     private async Task RecordTheEndAsync(Fixture fixture, string connection, Gate? beforeSave = null)
     {
         await using var db = NewContext(fixture, connection, beforeSave);
-        await new DeactivateTraineeProfileCommandHandler(db, new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(RecordedAt))
+        await new DeactivateTraineeProfileCommandHandler(db, new Wombat.Tests.Shared.FakeUserDirectory().AllowingRoleRemoval(), new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(RecordedAt))
             .Handle(new DeactivateTraineeProfileCommand(fixture.ProfileId, LastDay, Administrator()), CancellationToken.None);
     }
 

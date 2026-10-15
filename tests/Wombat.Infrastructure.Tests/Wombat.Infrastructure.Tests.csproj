@@ -36,5 +36,7 @@
     <Compile Include="../Shared/NomineeSeed.cs" Link="TestSupport/NomineeSeed.cs" />
     <!-- T131: the evidence a STAR stored directly by a test rests on (D38). -->
     <Compile Include="../Shared/StarEvidence.cs" Link="TestSupport/StarEvidence.cs" />
+    <!-- T290: withdrawal takes the Trainee role away, through the user store. -->
+    <Compile Include="../Shared/FakeUserDirectory.cs" Link="TestSupport/FakeUserDirectory.cs" />
   </ItemGroup>
 </Project>

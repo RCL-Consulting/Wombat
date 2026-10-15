@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Users;
 using Wombat.Domain.Institutions;
 using Wombat.Domain.Invitations;
 
@@ -23,6 +24,8 @@ public sealed class ListActiveInvitationsQueryHandler : IRequestHandler<ListActi
 
     public async Task<IReadOnlyList<ActiveInvitationDto>> Handle(ListActiveInvitationsQuery request, CancellationToken cancellationToken)
     {
+        UserAdministrationRules.DemandUserAdministration(request.Principal);
+
         var utcNow = _timeProvider.GetUtcNow().UtcDateTime;
         var today = DateOnly.FromDateTime(utcNow);
 

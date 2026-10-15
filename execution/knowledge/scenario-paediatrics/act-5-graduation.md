@@ -717,7 +717,7 @@ Expect: The confirmation names `D−2` as his last day. It says that encounters 
     5.17, with no Save profile (T305);
   - on Trainees he is listed under Completed & closed profiles, with the outcome "Withdrawn `D−2`";
   - in the same save, the credit from the `D−1` Mini-CEX is taken back (T281);
-  - he keeps the Trainee role and is not emailed.
+  - the Trainee role is taken away, as a completion takes it (T290), and he is not emailed.
 Actual (2026-10-14, T366 replay, wombat_scenario_t366): Trainees, Edit Pieter du Plessis (/admin/trainees/edit?id=4),
   last day 2026-10-12 (D-2), Deactivate: "Deactivate Pieter du Plessis's profile, with 2026-10-12 as their last day in
   the programme? Encounters observed after that day will count towards nothing in this programme, including any
@@ -732,13 +732,13 @@ Actual (2026-10-14, T366 replay, wombat_scenario_t366): Trainees, Edit Pieter du
 Gap: none
 
 ### Step 5.28 — Dr du Plessis's record after he left
-Role: Trainee — Dr Pieter du Plessis
+Role: Former trainee (no role; a trainee record) — Dr Pieter du Plessis
 Route: /account/login → /account/login/submit → / → /portfolio/progress → /activities/mine
 Do: Sign in, then read Home, My progress and My activities.
 Expect: Each page records that his programme ended on `D−2`, every date ISO (T355, D1):
-  - Home's Your targets card says "Your programme ended on `D−2`, so no target applies to you any more. Your progress in
-    each period is kept on My progress, read-only.", with no figures and no Furthest short, and ends with Open My
-    progress. My authorisations reads "No STAR yet." alone.
+  - He holds no role (T290: withdrawal takes Trainee away, as completion does), so the phone bar shows no "Acting as"
+    and the menu holds Home, My progress and My data rights. Home shows the former trainee's card, "Your training
+    record", pointing to My progress, as Dr Molefe's does at Step 5.21 (T252; that it names no end day is T311).
   - My progress opens with "Your programme ended on `D−2`. This page is your record of it and is read-only…". Its "Your
     programme" card reads Ended `D−2`. PAED-002's period holding `D−2` reads "no target (your programme ended part-way
     through) · n−1 recorded".
@@ -789,7 +789,7 @@ Replay check (2026-10-14, T366 replay, wombat_scenario_t366): match on every que
     one she made after completion.
 - **Dr du Plessis** has withdrawn:
   - his profile is deactivated with the last day `D−2`;
-  - he still holds the Trainee role;
+  - he holds no role, and sign-in still gives him the trainee record (T290);
   - his `D−1` Mini-CEX is completed and credits nothing.
 - **Current KGK trainees:** Dr Dlamini, Dr Mahlangu and Dr Ndlovu.
 
@@ -802,13 +802,13 @@ FROM "TraineeProfiles" p JOIN "AspNetUsers" u ON u."Id" = p."UserId"
 WHERE u."Email" IN ('molefe@kgk.wombat.local', 'duplessis@kgk.wombat.local');
 -- molefe: false, D, null · duplessis: false, null, D−2
 
--- Molefe holds no role; du Plessis still holds Trainee.
+-- Neither holds a role: withdrawal takes Trainee away, as completion does (T290).
 SELECT u."Email", r."Name"
 FROM "AspNetUsers" u
 LEFT JOIN "AspNetUserRoles" ur ON ur."UserId" = u."Id"
 LEFT JOIN "AspNetRoles" r ON r."Id" = ur."RoleId"
 WHERE u."Email" IN ('molefe@kgk.wombat.local', 'duplessis@kgk.wombat.local');
--- molefe: one row, Name null · duplessis: Trainee
+-- molefe: one row, Name null · duplessis: one row, Name null
 
 -- The current KGK trainees.
 SELECT u."Email" FROM "TraineeProfiles" p JOIN "AspNetUsers" u ON u."Id" = p."UserId"
@@ -878,6 +878,5 @@ ORDER BY 1 DESC, 2 DESC;
 - **Nothing later may schedule, credit or run an MSF campaign for Dr Molefe or Dr du Plessis**, because neither is a
   current trainee.
 - **The appendix:**
-  - Dr Molefe, with no role, and Dr du Plessis, withdrawn but still holding Trainee, both keep Data Rights in their
-    menus.
+  - Dr Molefe and Dr du Plessis, both with no role, keep Data Rights in their menus.
   - Dr Ndlovu is the account erased there.

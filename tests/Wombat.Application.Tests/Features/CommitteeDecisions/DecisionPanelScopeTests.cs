@@ -240,9 +240,11 @@ public sealed class DecisionPanelScopeTests
     }
 
     [Fact]
-    public async Task ThePanelList_AlsoHoldsAPanelTheCallerSitsOnElsewhere()
+    public async Task ThePanelList_HoldsNoPanelElsewhere_ThoughTheCallerIsListedOnIt()
     {
-        // An External member may come from another institution; the panel is still theirs to see.
+        // T290: a seat counts by the seat rule (PanelSeat.MaySit), read from the user store, never by the member list
+        // alone. Every seat, External included, must be at the panel's institution, so a member from B listed on A's panel
+        // cannot sit on it, and every action from the seat refuses them: the list no longer shows them the panel either.
         await using var db = await SeededDbAsync();
         await AddPanelAsync(db, DecisionPanelScope.Institution, InstitutionA, name: "A institution", external: "external-from-b");
         await AddPanelAsync(db, DecisionPanelScope.Institution, InstitutionB, name: "B institution");
@@ -250,7 +252,7 @@ public sealed class DecisionPanelScopeTests
 
         var listed = await ListAsync(db, TestPrincipals.InRole(WombatRoles.CommitteeMember, "external-from-b", InstitutionB));
 
-        listed.Should().BeEquivalentTo("A institution", "B institution");
+        listed.Should().BeEquivalentTo("B institution");
     }
 
     [Fact]

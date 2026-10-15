@@ -104,7 +104,7 @@ public sealed class TraineeScopeGuardTests : IAsyncLifetime
     [Fact]
     public async Task DeactivateTraineeProfile_InstitutionalAdmin_RejectsOtherInstitution()
     {
-        var handler = new DeactivateTraineeProfileCommandHandler(_db, new CreditApplier(_db), new TraineeCreditLock(_db));
+        var handler = new DeactivateTraineeProfileCommandHandler(_db, Mock.Of<IUserAdministrationService>(), new CreditApplier(_db), new TraineeCreditLock(_db));
         var act = () => handler.Handle(
             new DeactivateTraineeProfileCommand(_institutionBProfileId, new DateOnly(2026, 5, 31), TestPrincipals.InstitutionalAdmin(_institutionAId)),
             CancellationToken.None);

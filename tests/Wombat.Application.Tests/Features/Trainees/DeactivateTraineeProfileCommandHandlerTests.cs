@@ -118,7 +118,7 @@ public sealed class DeactivateTraineeProfileCommandHandlerTests
         await AssertStillActiveAfterTheAuditSave(db);
     }
 
-    private static DeactivateTraineeProfileCommandHandler Handler(ApplicationDbContext db) => new(db, new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(Now));
+    private static DeactivateTraineeProfileCommandHandler Handler(ApplicationDbContext db) => new(db, Moq.Mock.Of<Wombat.Application.Common.Interfaces.IUserAdministrationService>(), new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(Now));
 
     /// <summary>What the audit pipeline does after a throw: save the request's context. Nothing may have changed.</summary>
     private static async Task AssertStillActiveAfterTheAuditSave(ApplicationDbContext db)

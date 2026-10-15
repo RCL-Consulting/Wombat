@@ -9,8 +9,8 @@ left the programme, and the other three registrars are still in it.
 
 **Who acts.** devadmin (the Administrator); Prof Mbatha (InstitutionalAdmin); Mr Smit (Coordinator); Dr Mokoena
 (SpecialityAdmin); Dr Sithole (SubSpecialityAdmin); Dr Kruger (CollegeAdmin); Dr Zulu and Dr Botha (CommitteeMember and
-Assessor); Dr Patel and Dr Khumalo (Assessor); Dr Dlamini, Dr du Plessis, Dr Mahlangu and Dr Ndlovu (Trainee); Dr
-Molefe (former trainee); and anonymous visitors.
+Assessor); Dr Patel and Dr Khumalo (Assessor); Dr Dlamini, Dr Mahlangu and Dr Ndlovu (Trainee); Dr Molefe and Dr du
+Plessis (former trainees); and anonymous visitors.
 
 **Why.** Some of Wombat belongs to no act: a person's rights over their own data, the jobs that run on their own, the
 institutional sign-in, each person's own account, the pages a wrong address or a wrong role lands on, the platform's own
@@ -19,7 +19,7 @@ pages, and whether all of it works on a phone, from a keyboard and through a scr
 **Starting state.** Everything Act 6 left (`recovery/scenario-post-act6.dump`):
 - KGK and its cast, each with the roles the README gives, and no review left open (Act 4, Act 5).
 - Dr Molefe is a former trainee: no role, and a trainee record (Act 5).
-- Dr du Plessis left the programme in Act 5: his profile ended on that act's `D−2`, and he still holds the Trainee role.
+- Dr du Plessis left the programme in Act 5: his profile ended on that act's `D−2`, and he holds no role (T290).
 - Dr Dlamini, Dr Mahlangu and Dr Ndlovu are current trainees, Dr Ndlovu on curriculum 11.2 since Act 6, each with the
   activities of Act 3 and the reviews Act 4 ratified.
 - Dr Molefe's MSF campaign was released in Act 3, and her portfolio PDF exported and verified in Act 5.
@@ -146,7 +146,7 @@ Actual (2026-10-14, T366 replay, wombat_scenario_t366): My data rights from the 
 Gap: none
 
 ### Step A.1.6 — Dr du Plessis asks for access, then withdraws the request
-Role: Trainee — Dr Pieter du Plessis
+Role: Former trainee (no role; a trainee record) — Dr Pieter du Plessis
 Route: /account/data-rights
 Do: Submit an Access request with the reason "Everything held about me." Then withdraw it from "Your requests".
 Expect: The request lists as Submitted, with a Withdraw named for its type and time. Once withdrawn, the page says
@@ -651,13 +651,12 @@ Actual (2026-10-14, T366 replay, wombat_scenario_t366): Users -> "Manage Pieter 
 Gap: F-2.28b, T323 (still: "TraineeSystem-managed").
 
 ### Step A.4.6 — Dr du Plessis signs in with it and chooses his own
-Role: Trainee — Dr Pieter du Plessis
+Role: Former trainee (no role; a trainee record) — Dr Pieter du Plessis
 Route: /account/login → / → /account/profile → /account/change-password → /account/profile
 Do: Sign in with the password Prof Mbatha set. Then change it, from My account (the name in the top bar), to one of
   his own. Record it in `pwd_DO_NOT_COMMIT.txt`.
-Expect: He lands on his Trainee dashboard, whose Your targets card still says that his programme ended (Step 5.28):
-  "Your programme ended on <Step 5.28's `D−2`, as `YYYY-MM-DD`>, so no target applies to you any more. Your progress in
-  each period is kept on My progress, read-only." (T355, D1). The change lands on My account with "Password updated."
+Expect: He lands on Home, with the former trainee's card "Your training record" pointing to My progress, as at Step 5.28
+  (T290: he holds no role). The change lands on My account with "Password updated."
 Actual (2026-10-14, T366 replay, wombat_scenario_t366): With the password Prof Mbatha set he lands on /, "Trainee ·
   Semester 2, 2026". Your targets reads "Your programme ended on 2026-10-12, so no target applies to you any more. Your
   progress in each period is kept on My progress, read-only." with Open My progress; Needs you "Nothing needs you.

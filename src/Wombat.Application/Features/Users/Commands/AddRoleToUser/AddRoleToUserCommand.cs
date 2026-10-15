@@ -41,19 +41,15 @@ public sealed class AddRoleToUserCommandHandler : IRequestHandler<AddRoleToUserC
         UserAdministrationRules.DemandAssignableRole(
             request.Role, role => $"The role '{role}' cannot be assigned via the Users admin surface.");
 
-        var user = await _userAdministrationService.GetByIdAsync(request.UserId, cancellationToken)
-            ?? throw new InvalidOperationException("The user could not be found.");
+        var user = UserAdministrationRules.DemandInScope(
+            request.Principal,
+            await _userAdministrationService.GetByIdAsync(request.UserId, cancellationToken),
+            "You do not have permission to modify this user.");
 
         if (user.Roles.Contains(WombatRoles.Administrator, StringComparer.Ordinal)
             && !request.Principal.IsAdministrator())
         {
             throw new UnauthorizedAccessException("You do not have permission to modify a global administrator.");
-        }
-
-        if (!request.Principal.IsAdministrator()
-            && (!user.InstitutionId.HasValue || !request.Principal.CanAccessInstitution(user.InstitutionId.Value)))
-        {
-            throw new UnauthorizedAccessException("You do not have permission to modify this user.");
         }
 
         await _userAdministrationService.AddRoleAsync(request.UserId, request.Role, cancellationToken);

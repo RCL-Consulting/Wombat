@@ -25,6 +25,8 @@ public sealed class ListTraineesForSpecialityQueryHandler : IRequestHandler<List
 
     public async Task<IReadOnlyList<TraineeProfileDto>> Handle(ListTraineesForSpecialityQuery request, CancellationToken cancellationToken)
     {
+        TraineeAdministrationRules.DemandTraineeAdministration(request.Principal);
+
         var query = _dbContext.Set<TraineeProfile>()
             .AsNoTracking()
             .Include(entity => entity.Curriculum)

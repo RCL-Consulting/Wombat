@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Security;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Institutions;
 
@@ -64,11 +65,11 @@ public sealed class ListDecisionPanelsQueryHandler : IRequestHandler<ListDecisio
         else
         {
             var institutionId = request.Principal.GetInstitutionId();
-            var userId = request.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var seatedPanelIds = await SeatedPanelIdsAsync(request.Principal, cancellationToken);
 
             panels = panels.Where(panel =>
                 (institutionId != null && panel.InstitutionId == institutionId) ||
-                (userId != null && panel.Members.Any(member => member.UserId == userId)));
+                seatedPanelIds.Contains(panel.Id));
         }
 
         if (request.ForScheduling)
@@ -151,6 +152,44 @@ public sealed class ListDecisionPanelsQueryHandler : IRequestHandler<ListDecisio
             .ToList();
 
         return await WithReachAsync(summaries, request.Principal, cancellationToken);
+    }
+
+    /// <summary>
+    /// The panels the caller is listed on and may sit on now, by the seat rule (<see cref="PanelSeat.MaySit" />), read from
+    /// the user store, never from claims: an active committee member at the panel's institution who does not hold Trainee.
+    /// (T290)
+    /// </summary>
+    /// <remarks>
+    /// Until T290 any panel naming the caller among its members was listed: a member since deactivated, moved to another
+    /// institution, stripped of CommitteeMember or given Trainee still read the panel and its members by name, though every
+    /// action from the seat refuses them (T237, T256, T279). Someone who holds Trainee by their claims is asked no further,
+    /// as every seat predicate asks it first (<c>CommitteeDecisionAuthorization.HoldsSeat</c>).
+    /// </remarks>
+    private async Task<int[]> SeatedPanelIdsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
+    {
+        var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId) || TraineeScopeResolver.ActsAsTrainee(principal))
+        {
+            return [];
+        }
+
+        var listed = await _dbContext.Set<DecisionPanel>()
+            .AsNoTracking()
+            .Where(panel => panel.Members.Any(member => member.UserId == userId))
+            .Select(panel => new { panel.Id, panel.InstitutionId })
+            .ToListAsync(cancellationToken);
+        if (listed.Count == 0)
+        {
+            return [];
+        }
+
+        var caller = await _users.GetByIdAsync(userId, cancellationToken);
+        return caller is null
+            ? []
+            : listed
+                .Where(panel => PanelSeat.MaySit(caller, panel.InstitutionId))
+                .Select(panel => panel.Id)
+                .ToArray();
     }
 
     /// <summary>
