@@ -1,0 +1,3762 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-10-15T14:00:00Z"
+ },
+ "title": "Wombat 10 · The MSF campaign",
+ "launch": {
+  "view": "canvas",
+  "page": "r3"
+ },
+ "pages": [
+  {
+   "id": "r1",
+   "name": "Round 1"
+  },
+  {
+   "id": "r2",
+   "name": "Round 2"
+  },
+  {
+   "id": "r3",
+   "name": "Round 3"
+  }
+ ],
+ "boards": {
+  "P1-List.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1280,
+   "h": 1000,
+   "title": "Proposal · MSF campaigns · after Withdraw (3.38) · 1280",
+   "expand": "fill"
+  },
+  "P1-List-390.dc.html": {
+   "x": 1360,
+   "y": 0,
+   "w": 390,
+   "h": 1400,
+   "title": "Proposal · MSF campaigns · released and withdrawn (3.46) · 390"
+  },
+  "P2-Create.dc.html": {
+   "x": 0,
+   "y": 1820,
+   "w": 1280,
+   "h": 1900,
+   "title": "Proposal · New MSF campaign · template created, trainee chosen (3.34–3.35) · 1280",
+   "expand": "fill"
+  },
+  "P2-Create-390.dc.html": {
+   "x": 1360,
+   "y": 1820,
+   "w": 390,
+   "h": 2800,
+   "title": "Proposal · New MSF campaign · 390"
+  },
+  "P2-Draft.dc.html": {
+   "x": 0,
+   "y": 5040,
+   "w": 1280,
+   "h": 1700,
+   "title": "Proposal · Campaign · draft, seven invitees (3.36) · 1280",
+   "expand": "fill"
+  },
+  "P2-Open.dc.html": {
+   "x": 1360,
+   "y": 5040,
+   "w": 1280,
+   "h": 1300,
+   "title": "Proposal · Campaign · open, a link not delivered (3.43) · 1280",
+   "expand": "fill"
+  },
+  "P2-Review.dc.html": {
+   "x": 2720,
+   "y": 5040,
+   "w": 1280,
+   "h": 1150,
+   "title": "Proposal · Campaign · under review (3.44) · 1280",
+   "expand": "fill"
+  },
+  "P2-Open-390.dc.html": {
+   "x": 4080,
+   "y": 5040,
+   "w": 390,
+   "h": 1800,
+   "title": "Proposal · Campaign · open, resent (3.43) · 390"
+  },
+  "P-Dialogs.dc.html": {
+   "x": 0,
+   "y": 7260,
+   "w": 1280,
+   "h": 2100,
+   "title": "Confirmations · Withdraw, Remove, Close campaign, Release (all variations)"
+  },
+  "P4-Respond.dc.html": {
+   "x": 0,
+   "y": 9780,
+   "w": 1280,
+   "h": 1450,
+   "title": "Proposal · /msf/respond · the questionnaire (3.39) · 1280",
+   "expand": "fill"
+  },
+  "P4-Respond-390.dc.html": {
+   "x": 1360,
+   "y": 9780,
+   "w": 390,
+   "h": 1950,
+   "title": "Proposal · /msf/respond · the questionnaire · 390"
+  },
+  "P4-Thanks-390.dc.html": {
+   "x": 1830,
+   "y": 9780,
+   "w": 390,
+   "h": 640,
+   "title": "Proposal · /msf/respond · thank you (3.39) · 390"
+  },
+  "P4-Used-390.dc.html": {
+   "x": 2300,
+   "y": 9780,
+   "w": 390,
+   "h": 600,
+   "title": "Proposal · /msf/respond · link already used (3.40) · 390"
+  },
+  "P6-Coverage.dc.html": {
+   "x": 0,
+   "y": 12150,
+   "w": 1280,
+   "h": 1700,
+   "title": "Proposal · MSF coverage (3.49) · 1280",
+   "expand": "fill"
+  },
+  "P6-Coverage-390.dc.html": {
+   "x": 1360,
+   "y": 12150,
+   "w": 390,
+   "h": 2600,
+   "title": "Proposal · MSF coverage · 390"
+  },
+  "RA.dc.html": {
+   "x": 0,
+   "y": 14470,
+   "w": 1280,
+   "h": 2300,
+   "title": "Report A · Status first, release last · under review (3.44) · 1280",
+   "expand": "fill"
+  },
+  "RA-390.dc.html": {
+   "x": 1360,
+   "y": 14470,
+   "w": 390,
+   "h": 2400,
+   "title": "Report A · released (3.46) · 390"
+  },
+  "RA-Open.dc.html": {
+   "x": 1830,
+   "y": 14470,
+   "w": 1280,
+   "h": 1500,
+   "title": "Report A · open, Close campaign (3.41) · 1280",
+   "expand": "fill"
+  },
+  "RB.dc.html": {
+   "x": 0,
+   "y": 18190,
+   "w": 1280,
+   "h": 2000,
+   "title": "Report B · The decision beside the evidence · under review (3.44) · 1280",
+   "expand": "fill"
+  },
+  "RB-390.dc.html": {
+   "x": 1360,
+   "y": 18190,
+   "w": 390,
+   "h": 2800,
+   "title": "Report B · 390"
+  },
+  "RC.dc.html": {
+   "x": 0,
+   "y": 21910,
+   "w": 1280,
+   "h": 2100,
+   "title": "Report C · One table of groups · released (3.46) · 1280",
+   "expand": "fill"
+  },
+  "RC-390.dc.html": {
+   "x": 1360,
+   "y": 21910,
+   "w": 390,
+   "h": 3100,
+   "title": "Report C · under review (3.44) · 390"
+  },
+  "MA-List.dc.html": {
+   "x": 0,
+   "y": 25430,
+   "w": 1280,
+   "h": 760,
+   "title": "MSF reports A · A page of its own · the list (3.47) · 1280",
+   "expand": "fill"
+  },
+  "MA-Report.dc.html": {
+   "x": 1360,
+   "y": 25430,
+   "w": 1280,
+   "h": 1350,
+   "title": "MSF reports A · her report (3.47) · 1280",
+   "expand": "fill"
+  },
+  "MA-Report-390.dc.html": {
+   "x": 2720,
+   "y": 25430,
+   "w": 390,
+   "h": 1900,
+   "title": "MSF reports A · her report · 390"
+  },
+  "MB.dc.html": {
+   "x": 0,
+   "y": 27750,
+   "w": 1280,
+   "h": 1350,
+   "title": "MSF reports B · Beside the list, mended (3.47) · 1280",
+   "expand": "fill"
+  },
+  "MB-390.dc.html": {
+   "x": 1360,
+   "y": 27750,
+   "w": 390,
+   "h": 700,
+   "title": "MSF reports B · another trainee's id, typed by Anele Dlamini · 390"
+  },
+  "R2-0-spec.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1280,
+   "h": 5400,
+   "title": "R2-0-spec · components, DESIGN.md, tokens, DTOs, R1–R12",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-0-steps.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1280,
+   "h": 3400,
+   "title": "R2-0-steps · the 18 steps' Expects once built, and each journey's count",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-L1-none-1280.dc.html": {
+   "x": 0,
+   "y": 5920,
+   "w": 1280,
+   "h": 900,
+   "title": "MSF campaigns · none (3.34) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-L1-none-390.dc.html": {
+   "x": 1360,
+   "y": 5920,
+   "w": 390,
+   "h": 1500,
+   "title": "MSF campaigns · none (3.34) · 390",
+   "page": "r2"
+  },
+  "R2-L2-draft-open-1280.dc.html": {
+   "x": 1990,
+   "y": 5920,
+   "w": 1280,
+   "h": 900,
+   "title": "MSF campaigns · a draft and an open campaign (3.38) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-L2-draft-open-768.dc.html": {
+   "x": 3350,
+   "y": 5920,
+   "w": 768,
+   "h": 1300,
+   "title": "MSF campaigns · a draft and an open campaign (3.38) · 768",
+   "page": "r2"
+  },
+  "R2-L2-draft-open-390.dc.html": {
+   "x": 4198,
+   "y": 5920,
+   "w": 390,
+   "h": 1500,
+   "title": "MSF campaigns · a draft and an open campaign (3.38) · 390",
+   "page": "r2"
+  },
+  "R2-L3-withdraw-dialog-1280.dc.html": {
+   "x": 4828,
+   "y": 5920,
+   "w": 1280,
+   "h": 900,
+   "title": "MSF campaigns · Withdraw's dialog, focus on Keep the campaign (3.38) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-L3-withdraw-dialog-390.dc.html": {
+   "x": 6188,
+   "y": 5920,
+   "w": 390,
+   "h": 1500,
+   "title": "MSF campaigns · Withdraw's dialog, focus on Keep the campaign (3.38) · 390",
+   "page": "r2"
+  },
+  "R2-L4-withdrawn-1280.dc.html": {
+   "x": 6818,
+   "y": 5920,
+   "w": 1280,
+   "h": 900,
+   "title": "MSF campaigns · withdrawn, the result focused (3.38) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-L4-withdrawn-390.dc.html": {
+   "x": 8178,
+   "y": 5920,
+   "w": 390,
+   "h": 1500,
+   "title": "MSF campaigns · withdrawn, the result focused (3.38) · 390",
+   "page": "r2"
+  },
+  "R2-L5-released-1280.dc.html": {
+   "x": 8808,
+   "y": 5920,
+   "w": 1280,
+   "h": 900,
+   "title": "MSF campaigns · released and withdrawn (3.46; A.4.7 as loaded) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-L5-released-768.dc.html": {
+   "x": 10168,
+   "y": 5920,
+   "w": 768,
+   "h": 1300,
+   "title": "MSF campaigns · released and withdrawn (3.46; A.4.7 as loaded) · 768",
+   "page": "r2"
+  },
+  "R2-L5-released-390.dc.html": {
+   "x": 11016,
+   "y": 5920,
+   "w": 390,
+   "h": 1500,
+   "title": "MSF campaigns · released and withdrawn (3.46; A.4.7 as loaded) · 390",
+   "page": "r2"
+  },
+  "R2-L6-under-review-1280.dc.html": {
+   "x": 11646,
+   "y": 5920,
+   "w": 1280,
+   "h": 900,
+   "title": "MSF campaigns · under review (3.44) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-L6-under-review-390.dc.html": {
+   "x": 13006,
+   "y": 5920,
+   "w": 390,
+   "h": 1500,
+   "title": "MSF campaigns · under review (3.44) · 390",
+   "page": "r2"
+  },
+  "R2-L7-ten-1280.dc.html": {
+   "x": 13636,
+   "y": 5920,
+   "w": 1280,
+   "h": 1700,
+   "title": "MSF campaigns · ten campaigns, two semesters (R10, Illustration) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-L7-ten-390.dc.html": {
+   "x": 14996,
+   "y": 5920,
+   "w": 390,
+   "h": 6200,
+   "title": "MSF campaigns · ten campaigns, two semesters (R10, Illustration) · 390",
+   "page": "r2"
+  },
+  "R2-L8-loading-1280.dc.html": {
+   "x": 15626,
+   "y": 5920,
+   "w": 1280,
+   "h": 900,
+   "title": "MSF campaigns · loading · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-L8-loading-390.dc.html": {
+   "x": 16986,
+   "y": 5920,
+   "w": 390,
+   "h": 1500,
+   "title": "MSF campaigns · loading · 390",
+   "page": "r2"
+  },
+  "R2-L9-error-1280.dc.html": {
+   "x": 17616,
+   "y": 5920,
+   "w": 1280,
+   "h": 900,
+   "title": "MSF campaigns · load error · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-L9-error-390.dc.html": {
+   "x": 18976,
+   "y": 5920,
+   "w": 390,
+   "h": 1500,
+   "title": "MSF campaigns · load error · 390",
+   "page": "r2"
+  },
+  "R2-C1-no-template-1280.dc.html": {
+   "x": 0,
+   "y": 12640,
+   "w": 1280,
+   "h": 2000,
+   "title": "New MSF campaign · no template yet: the fold open, Create disabled (3.34) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-C1-no-template-390.dc.html": {
+   "x": 1360,
+   "y": 12640,
+   "w": 390,
+   "h": 3000,
+   "title": "New MSF campaign · no template yet: the fold open, Create disabled (3.34) · 390",
+   "page": "r2"
+  },
+  "R2-C2-template-created-1280.dc.html": {
+   "x": 1990,
+   "y": 12640,
+   "w": 1280,
+   "h": 1500,
+   "title": "New MSF campaign · Template created, Default MSF chosen (3.34) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-C2-template-created-390.dc.html": {
+   "x": 3350,
+   "y": 12640,
+   "w": 390,
+   "h": 2300,
+   "title": "New MSF campaign · Template created, Default MSF chosen (3.34) · 390",
+   "page": "r2"
+  },
+  "R2-C3-molefe-1280.dc.html": {
+   "x": 3980,
+   "y": 12640,
+   "w": 1280,
+   "h": 2000,
+   "title": "New MSF campaign · Lerato Molefe, 5/2/2, PAED-010 and PAED-012 ticked (3.35) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-C3-molefe-390.dc.html": {
+   "x": 5340,
+   "y": 12640,
+   "w": 390,
+   "h": 3900,
+   "title": "New MSF campaign · Lerato Molefe, 5/2/2, PAED-010 and PAED-012 ticked (3.35) · 390",
+   "page": "r2"
+  },
+  "R2-C4-refused-1280.dc.html": {
+   "x": 5970,
+   "y": 12640,
+   "w": 1280,
+   "h": 2100,
+   "title": "New MSF campaign · no EPA ticked, refused under the fieldset · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-C4-refused-390.dc.html": {
+   "x": 7330,
+   "y": 12640,
+   "w": 390,
+   "h": 4000,
+   "title": "New MSF campaign · no EPA ticked, refused under the fieldset · 390",
+   "page": "r2"
+  },
+  "R2-C5-fifteen-1280.dc.html": {
+   "x": 7960,
+   "y": 12640,
+   "w": 1280,
+   "h": 2000,
+   "title": "New MSF campaign · all fifteen ticked (R10) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-C5-fifteen-390.dc.html": {
+   "x": 9320,
+   "y": 12640,
+   "w": 390,
+   "h": 3900,
+   "title": "New MSF campaign · all fifteen ticked (R10) · 390",
+   "page": "r2"
+  },
+  "R2-C6-read-failed-1280.dc.html": {
+   "x": 9950,
+   "y": 12640,
+   "w": 1280,
+   "h": 700,
+   "title": "New MSF campaign · the templates or trainees could not be read (R11) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-C6-read-failed-390.dc.html": {
+   "x": 11310,
+   "y": 12640,
+   "w": 390,
+   "h": 900,
+   "title": "New MSF campaign · the templates or trainees could not be read (R11) · 390",
+   "page": "r2"
+  },
+  "R2-C7-loading-1280.dc.html": {
+   "x": 11940,
+   "y": 12640,
+   "w": 1280,
+   "h": 800,
+   "title": "New MSF campaign · loading · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-C7-loading-390.dc.html": {
+   "x": 13300,
+   "y": 12640,
+   "w": 390,
+   "h": 1000,
+   "title": "New MSF campaign · loading · 390",
+   "page": "r2"
+  },
+  "R2-K1-draft-empty-1280.dc.html": {
+   "x": 0,
+   "y": 17160,
+   "w": 1280,
+   "h": 1400,
+   "title": "Campaign · draft, nobody invited, Open disabled with its reason (3.35) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-K1-draft-empty-390.dc.html": {
+   "x": 1360,
+   "y": 17160,
+   "w": 390,
+   "h": 2100,
+   "title": "Campaign · draft, nobody invited, Open disabled with its reason (3.35) · 390",
+   "page": "r2"
+  },
+  "R2-K2-draft-seven-1280.dc.html": {
+   "x": 1990,
+   "y": 17160,
+   "w": 1280,
+   "h": 2000,
+   "title": "Campaign · draft, seven invitees, Invitee added, focus back in the cleared address (3.36) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-K2-draft-seven-768.dc.html": {
+   "x": 3350,
+   "y": 17160,
+   "w": 768,
+   "h": 2500,
+   "title": "Campaign · draft, seven invitees, Invitee added, focus back in the cleared address (3.36) · 768",
+   "page": "r2"
+  },
+  "R2-K2-draft-seven-390.dc.html": {
+   "x": 4198,
+   "y": 17160,
+   "w": 390,
+   "h": 3000,
+   "title": "Campaign · draft, seven invitees, Invitee added, focus back in the cleared address (3.36) · 390",
+   "page": "r2"
+  },
+  "R2-K3-remove-dialog-1280.dc.html": {
+   "x": 4828,
+   "y": 17160,
+   "w": 1280,
+   "h": 2000,
+   "title": "Campaign · Remove's dialog on Palesa Tau's address, focus on Keep the invitee (3.36) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-K3-remove-dialog-390.dc.html": {
+   "x": 6188,
+   "y": 17160,
+   "w": 390,
+   "h": 3000,
+   "title": "Campaign · Remove's dialog on Palesa Tau's address, focus on Keep the invitee (3.36) · 390",
+   "page": "r2"
+  },
+  "R2-K4-removed-1280.dc.html": {
+   "x": 6818,
+   "y": 17160,
+   "w": 1280,
+   "h": 2000,
+   "title": "Campaign · removed, the result above the address rows, focused (3.36) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-K4-removed-390.dc.html": {
+   "x": 8178,
+   "y": 17160,
+   "w": 390,
+   "h": 3000,
+   "title": "Campaign · removed, the result above the address rows, focused (3.36) · 390",
+   "page": "r2"
+  },
+  "R2-K5-refused-duplicate-1280.dc.html": {
+   "x": 8808,
+   "y": 17160,
+   "w": 1280,
+   "h": 2050,
+   "title": "Campaign · a refused add: the duplicate, under the field, typed address kept, focused (R4d, T228) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-K5-refused-duplicate-390.dc.html": {
+   "x": 10168,
+   "y": 17160,
+   "w": 390,
+   "h": 3150,
+   "title": "Campaign · a refused add: the duplicate, under the field, typed address kept, focused (R4d, T228) · 390",
+   "page": "r2"
+  },
+  "R2-K5b-refused-blank-1280.dc.html": {
+   "x": 10798,
+   "y": 17160,
+   "w": 1280,
+   "h": 2050,
+   "title": "Campaign · a refused add: left blank, and a malformed address (R4d, T324) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-K5b-refused-blank-390.dc.html": {
+   "x": 12158,
+   "y": 17160,
+   "w": 390,
+   "h": 3150,
+   "title": "Campaign · a refused add: left blank, and a malformed address (R4d, T324) · 390",
+   "page": "r2"
+  },
+  "R2-K6-opened-1280.dc.html": {
+   "x": 12788,
+   "y": 17160,
+   "w": 1280,
+   "h": 1400,
+   "title": "Campaign · opened, links being sent, the result focused (3.37) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-K6-opened-390.dc.html": {
+   "x": 14148,
+   "y": 17160,
+   "w": 390,
+   "h": 2200,
+   "title": "Campaign · opened, links being sent, the result focused (3.37) · 390",
+   "page": "r2"
+  },
+  "R2-K7-not-delivered-1280.dc.html": {
+   "x": 14778,
+   "y": 17160,
+   "w": 1280,
+   "h": 1350,
+   "title": "Campaign · a link not delivered, Resend in its row (3.43) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-K7-not-delivered-390.dc.html": {
+   "x": 16138,
+   "y": 17160,
+   "w": 390,
+   "h": 2200,
+   "title": "Campaign · a link not delivered, Resend in its row (3.43) · 390",
+   "page": "r2"
+  },
+  "R2-K8-resent-1280.dc.html": {
+   "x": 16768,
+   "y": 17160,
+   "w": 1280,
+   "h": 1350,
+   "title": "Campaign · resent, the result in the Links part, focused (3.43) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-K8-resent-390.dc.html": {
+   "x": 18128,
+   "y": 17160,
+   "w": 390,
+   "h": 2200,
+   "title": "Campaign · resent, the result in the Links part, focused (3.43) · 390",
+   "page": "r2"
+  },
+  "R2-K9-under-review-1280.dc.html": {
+   "x": 18758,
+   "y": 17160,
+   "w": 1280,
+   "h": 1350,
+   "title": "Campaign · under review, the addresses gone (3.44) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-K9-under-review-390.dc.html": {
+   "x": 20118,
+   "y": 17160,
+   "w": 390,
+   "h": 2100,
+   "title": "Campaign · under review, the addresses gone (3.44) · 390",
+   "page": "r2"
+  },
+  "R2-K10-withdraw-under-review-1280.dc.html": {
+   "x": 20748,
+   "y": 17160,
+   "w": 1280,
+   "h": 1350,
+   "title": "Campaign · Withdraw's dialog under review (R6a) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-K10-withdraw-under-review-390.dc.html": {
+   "x": 22108,
+   "y": 17160,
+   "w": 390,
+   "h": 2100,
+   "title": "Campaign · Withdraw's dialog under review (R6a) · 390",
+   "page": "r2"
+  },
+  "R2-K11-released-1280.dc.html": {
+   "x": 22738,
+   "y": 17160,
+   "w": 1280,
+   "h": 1300,
+   "title": "Campaign · released (A.7.5 at 390) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-K11-released-390.dc.html": {
+   "x": 24098,
+   "y": 17160,
+   "w": 390,
+   "h": 2000,
+   "title": "Campaign · released (A.7.5 at 390) · 390",
+   "page": "r2"
+  },
+  "R2-K12-withdrawn-draft-1280.dc.html": {
+   "x": 24728,
+   "y": 17160,
+   "w": 1280,
+   "h": 900,
+   "title": "Campaign · Pieter du Plessis's, withdrawn as a draft (3.38) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-K12-withdrawn-draft-390.dc.html": {
+   "x": 26088,
+   "y": 17160,
+   "w": 390,
+   "h": 1500,
+   "title": "Campaign · Pieter du Plessis's, withdrawn as a draft (3.38) · 390",
+   "page": "r2"
+  },
+  "R2-K13-not-current-1280.dc.html": {
+   "x": 26718,
+   "y": 17160,
+   "w": 1280,
+   "h": 1500,
+   "title": "Campaign · a draft whose trainee is no longer current (R4f, T270, Illustration) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-K13-not-current-390.dc.html": {
+   "x": 28078,
+   "y": 17160,
+   "w": 390,
+   "h": 2300,
+   "title": "Campaign · a draft whose trainee is no longer current (R4f, T270, Illustration) · 390",
+   "page": "r2"
+  },
+  "R2-K14-programme-ended-1280.dc.html": {
+   "x": 28708,
+   "y": 17160,
+   "w": 1280,
+   "h": 1450,
+   "title": "Campaign · under review, the registrar's programme has ended (R4g, Q10, Illustration) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-K14-programme-ended-390.dc.html": {
+   "x": 30068,
+   "y": 17160,
+   "w": 390,
+   "h": 2300,
+   "title": "Campaign · under review, the registrar's programme has ended (R4g, Q10, Illustration) · 390",
+   "page": "r2"
+  },
+  "R2-K15-learner-draft-1280.dc.html": {
+   "x": 30698,
+   "y": 17160,
+   "w": 1280,
+   "h": 1700,
+   "title": "Campaign · learner feedback's draft: one group, a teaching context per invitee (R4h, Illustration) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-K15-learner-draft-390.dc.html": {
+   "x": 32058,
+   "y": 17160,
+   "w": 390,
+   "h": 2600,
+   "title": "Campaign · learner feedback's draft: one group, a teaching context per invitee (R4h, Illustration) · 390",
+   "page": "r2"
+  },
+  "R2-K16-unavailable-1280.dc.html": {
+   "x": 32688,
+   "y": 17160,
+   "w": 1280,
+   "h": 700,
+   "title": "Campaign · unavailable · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-K16-unavailable-390.dc.html": {
+   "x": 34048,
+   "y": 17160,
+   "w": 390,
+   "h": 900,
+   "title": "Campaign · unavailable · 390",
+   "page": "r2"
+  },
+  "R2-K17-loading-1280.dc.html": {
+   "x": 34678,
+   "y": 17160,
+   "w": 1280,
+   "h": 800,
+   "title": "Campaign · loading: the header at once, no action until the read is in · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-K17-loading-390.dc.html": {
+   "x": 36038,
+   "y": 17160,
+   "w": 390,
+   "h": 1000,
+   "title": "Campaign · loading: the header at once, no action until the read is in · 390",
+   "page": "r2"
+  },
+  "R2-K18-error-1280.dc.html": {
+   "x": 36668,
+   "y": 17160,
+   "w": 1280,
+   "h": 700,
+   "title": "Campaign · load error · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-K18-error-390.dc.html": {
+   "x": 38028,
+   "y": 17160,
+   "w": 390,
+   "h": 900,
+   "title": "Campaign · load error · 390",
+   "page": "r2"
+  },
+  "R2-R1-open-1280.dc.html": {
+   "x": 0,
+   "y": 20830,
+   "w": 1280,
+   "h": 1400,
+   "title": "Report · open, one group shown and one suppressed, Close in the status card (3.41) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-R1-open-768.dc.html": {
+   "x": 1360,
+   "y": 20830,
+   "w": 768,
+   "h": 1900,
+   "title": "Report · open, one group shown and one suppressed, Close in the status card (3.41) · 768",
+   "page": "r2"
+  },
+  "R2-R1-open-390.dc.html": {
+   "x": 2208,
+   "y": 20830,
+   "w": 390,
+   "h": 2300,
+   "title": "Report · open, one group shown and one suppressed, Close in the status card (3.41) · 390",
+   "page": "r2"
+  },
+  "R2-R2-close-dialog-1280.dc.html": {
+   "x": 2838,
+   "y": 20830,
+   "w": 1280,
+   "h": 1400,
+   "title": "Report · Close's dialog, focus on Keep it open (3.44; PROPOSED, decided by the pick) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-R2-close-dialog-390.dc.html": {
+   "x": 4198,
+   "y": 20830,
+   "w": 390,
+   "h": 2300,
+   "title": "Report · Close's dialog, focus on Keep it open (3.44; PROPOSED, decided by the pick) · 390",
+   "page": "r2"
+  },
+  "R2-R3-under-review-1280.dc.html": {
+   "x": 4828,
+   "y": 20830,
+   "w": 1280,
+   "h": 2200,
+   "title": "Report · just closed, under review, ready (3.44) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-R3-under-review-768.dc.html": {
+   "x": 6188,
+   "y": 20830,
+   "w": 768,
+   "h": 2900,
+   "title": "Report · just closed, under review, ready (3.44) · 768",
+   "page": "r2"
+  },
+  "R2-R3-under-review-390.dc.html": {
+   "x": 7036,
+   "y": 20830,
+   "w": 390,
+   "h": 3500,
+   "title": "Report · just closed, under review, ready (3.44) · 390",
+   "page": "r2"
+  },
+  "R2-R4-closed-by-job-1280.dc.html": {
+   "x": 7666,
+   "y": 20830,
+   "w": 1280,
+   "h": 2200,
+   "title": "Report · closed by the nightly job, not by hand (R5f, Illustration) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-R4-closed-by-job-390.dc.html": {
+   "x": 9026,
+   "y": 20830,
+   "w": 390,
+   "h": 3500,
+   "title": "Report · closed by the nightly job, not by hand (R5f, Illustration) · 390",
+   "page": "r2"
+  },
+  "R2-R5-typed-1280.dc.html": {
+   "x": 9656,
+   "y": 20830,
+   "w": 1280,
+   "h": 2150,
+   "title": "Report · the narrative typed, 106 of 4,000 characters (3.46) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-R5-typed-390.dc.html": {
+   "x": 11016,
+   "y": 20830,
+   "w": 390,
+   "h": 3500,
+   "title": "Report · the narrative typed, 106 of 4,000 characters (3.46) · 390",
+   "page": "r2"
+  },
+  "R2-R6a-release-dialog-1280.dc.html": {
+   "x": 11646,
+   "y": 20830,
+   "w": 1280,
+   "h": 2150,
+   "title": "Report · Release's dialog, focus on Not yet (3.46) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-R6a-release-dialog-390.dc.html": {
+   "x": 13006,
+   "y": 20830,
+   "w": 390,
+   "h": 3500,
+   "title": "Report · Release's dialog, focus on Not yet (3.46) · 390",
+   "page": "r2"
+  },
+  "R2-R6b-release-dialog-dropped-1280.dc.html": {
+   "x": 13636,
+   "y": 20830,
+   "w": 1280,
+   "h": 2150,
+   "title": "Report · Release's dialog: an EPA no longer on her curriculum (R6d, Illustration) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-R6b-release-dialog-dropped-390.dc.html": {
+   "x": 14996,
+   "y": 20830,
+   "w": 390,
+   "h": 3500,
+   "title": "Report · Release's dialog: an EPA no longer on her curriculum (R6d, Illustration) · 390",
+   "page": "r2"
+  },
+  "R2-R6c-release-dialog-no-epa-1280.dc.html": {
+   "x": 15626,
+   "y": 20830,
+   "w": 1280,
+   "h": 2150,
+   "title": "Report · Release's dialog: a campaign naming no EPA (R6d, Illustration) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-R6c-release-dialog-no-epa-390.dc.html": {
+   "x": 16986,
+   "y": 20830,
+   "w": 390,
+   "h": 3500,
+   "title": "Report · Release's dialog: a campaign naming no EPA (R6d, Illustration) · 390",
+   "page": "r2"
+  },
+  "R2-R6d-release-dialog-ended-1280.dc.html": {
+   "x": 17616,
+   "y": 20830,
+   "w": 1280,
+   "h": 2150,
+   "title": "Report · Release's dialog: the programme ended (R6d, Q10, Illustration) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-R6d-release-dialog-ended-390.dc.html": {
+   "x": 18976,
+   "y": 20830,
+   "w": 390,
+   "h": 3500,
+   "title": "Report · Release's dialog: the programme ended (R6d, Q10, Illustration) · 390",
+   "page": "r2"
+  },
+  "R2-R7-released-1280.dc.html": {
+   "x": 19606,
+   "y": 20830,
+   "w": 1280,
+   "h": 1700,
+   "title": "Report · released, as stored, the result focused (3.46) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-R7-released-768.dc.html": {
+   "x": 20966,
+   "y": 20830,
+   "w": 768,
+   "h": 2300,
+   "title": "Report · released, as stored, the result focused (3.46) · 768",
+   "page": "r2"
+  },
+  "R2-R7-released-390.dc.html": {
+   "x": 21814,
+   "y": 20830,
+   "w": 390,
+   "h": 2900,
+   "title": "Report · released, as stored, the result focused (3.46) · 390",
+   "page": "r2"
+  },
+  "R2-R7b-released-not-recorded-1280.dc.html": {
+   "x": 22444,
+   "y": 20830,
+   "w": 1280,
+   "h": 1650,
+   "title": "Report · released, an EPA whose record was not written (R5g, Illustration) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-R7b-released-not-recorded-390.dc.html": {
+   "x": 23804,
+   "y": 20830,
+   "w": 390,
+   "h": 2800,
+   "title": "Report · released, an EPA whose record was not written (R5g, Illustration) · 390",
+   "page": "r2"
+  },
+  "R2-R8a-blocked-responses-1280.dc.html": {
+   "x": 24434,
+   "y": 20830,
+   "w": 1280,
+   "h": 1700,
+   "title": "Report · blocked: too few responses (R5b, Illustration) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-R8a-blocked-responses-768.dc.html": {
+   "x": 25794,
+   "y": 20830,
+   "w": 768,
+   "h": 2300,
+   "title": "Report · blocked: too few responses (R5b, Illustration) · 768",
+   "page": "r2"
+  },
+  "R2-R8a-blocked-responses-390.dc.html": {
+   "x": 26642,
+   "y": 20830,
+   "w": 390,
+   "h": 2900,
+   "title": "Report · blocked: too few responses (R5b, Illustration) · 390",
+   "page": "r2"
+  },
+  "R2-R8b-blocked-groups-1280.dc.html": {
+   "x": 27272,
+   "y": 20830,
+   "w": 1280,
+   "h": 1900,
+   "title": "Report · blocked: too few respondent groups (R5b, Illustration) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-R8b-blocked-groups-390.dc.html": {
+   "x": 28632,
+   "y": 20830,
+   "w": 390,
+   "h": 3100,
+   "title": "Report · blocked: too few respondent groups (R5b, Illustration) · 390",
+   "page": "r2"
+  },
+  "R2-R9-no-epa-1280.dc.html": {
+   "x": 29262,
+   "y": 20830,
+   "w": 1280,
+   "h": 2150,
+   "title": "Report · a campaign that names no EPA (R5e, Illustration) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-R9-no-epa-390.dc.html": {
+   "x": 30622,
+   "y": 20830,
+   "w": 390,
+   "h": 3400,
+   "title": "Report · a campaign that names no EPA (R5e, Illustration) · 390",
+   "page": "r2"
+  },
+  "R2-R10-programme-ended-1280.dc.html": {
+   "x": 31252,
+   "y": 20830,
+   "w": 1280,
+   "h": 2250,
+   "title": "Report · the registrar's programme has ended (R4g, Q10, Illustration) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-R10-programme-ended-390.dc.html": {
+   "x": 32612,
+   "y": 20830,
+   "w": 390,
+   "h": 3600,
+   "title": "Report · the registrar's programme has ended (R4g, Q10, Illustration) · 390",
+   "page": "r2"
+  },
+  "R2-R11-dozen-1280.dc.html": {
+   "x": 33242,
+   "y": 20830,
+   "w": 1280,
+   "h": 3600,
+   "title": "Report · a respondent group with a dozen comments, one of 4,000 characters (R10, Illustration) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-R11-dozen-390.dc.html": {
+   "x": 34602,
+   "y": 20830,
+   "w": 390,
+   "h": 9200,
+   "title": "Report · a respondent group with a dozen comments, one of 4,000 characters (R10, Illustration) · 390",
+   "page": "r2"
+  },
+  "R2-R12-unavailable-1280.dc.html": {
+   "x": 35232,
+   "y": 20830,
+   "w": 1280,
+   "h": 700,
+   "title": "Report · unavailable · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-R12-unavailable-390.dc.html": {
+   "x": 36592,
+   "y": 20830,
+   "w": 390,
+   "h": 900,
+   "title": "Report · unavailable · 390",
+   "page": "r2"
+  },
+  "R2-R13-loading-1280.dc.html": {
+   "x": 37222,
+   "y": 20830,
+   "w": 1280,
+   "h": 900,
+   "title": "Report · loading · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-R13-loading-390.dc.html": {
+   "x": 38582,
+   "y": 20830,
+   "w": 390,
+   "h": 1100,
+   "title": "Report · loading · 390",
+   "page": "r2"
+  },
+  "R2-R14-error-1280.dc.html": {
+   "x": 39212,
+   "y": 20830,
+   "w": 1280,
+   "h": 700,
+   "title": "Report · load error · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-R14-error-390.dc.html": {
+   "x": 40572,
+   "y": 20830,
+   "w": 390,
+   "h": 900,
+   "title": "Report · load error · 390",
+   "page": "r2"
+  },
+  "R2-Q1-questionnaire-1280.dc.html": {
+   "x": 0,
+   "y": 30550,
+   "w": 1280,
+   "h": 1450,
+   "title": "/msf/respond · the questionnaire, a point chosen, Sister Mokwena (3.39) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-Q1-questionnaire-390.dc.html": {
+   "x": 1360,
+   "y": 30550,
+   "w": 390,
+   "h": 1950,
+   "title": "/msf/respond · the questionnaire, a point chosen, Sister Mokwena (3.39) · 390",
+   "page": "r2"
+  },
+  "R2-Q2-required-1280.dc.html": {
+   "x": 1990,
+   "y": 30550,
+   "w": 1280,
+   "h": 1450,
+   "title": "/msf/respond · Submit with no rating: the browser's own required prompt · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-Q2-required-390.dc.html": {
+   "x": 3350,
+   "y": 30550,
+   "w": 390,
+   "h": 1950,
+   "title": "/msf/respond · Submit with no rating: the browser's own required prompt · 390",
+   "page": "r2"
+  },
+  "R2-Q3-thanks-1280.dc.html": {
+   "x": 3980,
+   "y": 30550,
+   "w": 1280,
+   "h": 640,
+   "title": "/msf/respond · thank you (3.39, 3.42) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-Q3-thanks-390.dc.html": {
+   "x": 5340,
+   "y": 30550,
+   "w": 390,
+   "h": 640,
+   "title": "/msf/respond · thank you (3.39, 3.42) · 390",
+   "page": "r2"
+  },
+  "R2-Q4-used-1280.dc.html": {
+   "x": 5970,
+   "y": 30550,
+   "w": 1280,
+   "h": 640,
+   "title": "/msf/respond · link already used (3.40) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-Q4-used-390.dc.html": {
+   "x": 7330,
+   "y": 30550,
+   "w": 390,
+   "h": 640,
+   "title": "/msf/respond · link already used (3.40) · 390",
+   "page": "r2"
+  },
+  "R2-Q5-closed-1280.dc.html": {
+   "x": 7960,
+   "y": 30550,
+   "w": 1280,
+   "h": 640,
+   "title": "/msf/respond · request closed (3.45) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-Q5-closed-390.dc.html": {
+   "x": 9320,
+   "y": 30550,
+   "w": 390,
+   "h": 640,
+   "title": "/msf/respond · request closed (3.45) · 390",
+   "page": "r2"
+  },
+  "R2-Q6-expired-1280.dc.html": {
+   "x": 9950,
+   "y": 30550,
+   "w": 1280,
+   "h": 640,
+   "title": "/msf/respond · link expired · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-Q6-expired-390.dc.html": {
+   "x": 11310,
+   "y": 30550,
+   "w": 390,
+   "h": 640,
+   "title": "/msf/respond · link expired · 390",
+   "page": "r2"
+  },
+  "R2-Q7-not-recognised-1280.dc.html": {
+   "x": 11940,
+   "y": 30550,
+   "w": 1280,
+   "h": 680,
+   "title": "/msf/respond · link not recognised · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-Q7-not-recognised-390.dc.html": {
+   "x": 13300,
+   "y": 30550,
+   "w": 390,
+   "h": 720,
+   "title": "/msf/respond · link not recognised · 390",
+   "page": "r2"
+  },
+  "R2-Q8-fault-1280.dc.html": {
+   "x": 13930,
+   "y": 30550,
+   "w": 1280,
+   "h": 680,
+   "title": "/msf/respond · something went wrong · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-Q8-fault-390.dc.html": {
+   "x": 15290,
+   "y": 30550,
+   "w": 390,
+   "h": 760,
+   "title": "/msf/respond · something went wrong · 390",
+   "page": "r2"
+  },
+  "R2-M1-none-1280.dc.html": {
+   "x": 0,
+   "y": 33020,
+   "w": 1280,
+   "h": 700,
+   "title": "MSF reports · none released · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-M1-none-390.dc.html": {
+   "x": 1360,
+   "y": 33020,
+   "w": 390,
+   "h": 900,
+   "title": "MSF reports · none released · 390",
+   "page": "r2"
+  },
+  "R2-M2-list-1280.dc.html": {
+   "x": 1990,
+   "y": 33020,
+   "w": 1280,
+   "h": 700,
+   "title": "MSF reports · the list (3.47) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-M2-list-768.dc.html": {
+   "x": 3350,
+   "y": 33020,
+   "w": 768,
+   "h": 900,
+   "title": "MSF reports · the list (3.47) · 768",
+   "page": "r2"
+  },
+  "R2-M2-list-390.dc.html": {
+   "x": 4198,
+   "y": 33020,
+   "w": 390,
+   "h": 1000,
+   "title": "MSF reports · the list (3.47) · 390",
+   "page": "r2"
+  },
+  "R2-M3-report-1280.dc.html": {
+   "x": 4828,
+   "y": 33020,
+   "w": 1280,
+   "h": 1300,
+   "title": "Her report, a page of its own at /msf/my-reports/{id} (3.47) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-M3-report-768.dc.html": {
+   "x": 6188,
+   "y": 33020,
+   "w": 768,
+   "h": 1700,
+   "title": "Her report, a page of its own at /msf/my-reports/{id} (3.47) · 768",
+   "page": "r2"
+  },
+  "R2-M3-report-390.dc.html": {
+   "x": 7036,
+   "y": 33020,
+   "w": 390,
+   "h": 2000,
+   "title": "Her report, a page of its own at /msf/my-reports/{id} (3.47) · 390",
+   "page": "r2"
+  },
+  "R2-M4-not-recorded-1280.dc.html": {
+   "x": 7666,
+   "y": 33020,
+   "w": 1280,
+   "h": 1250,
+   "title": "Her report · an EPA not recorded is left out (R8c, Illustration) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-M4-not-recorded-390.dc.html": {
+   "x": 9026,
+   "y": 33020,
+   "w": 390,
+   "h": 1900,
+   "title": "Her report · an EPA not recorded is left out (R8c, Illustration) · 390",
+   "page": "r2"
+  },
+  "R2-M5-not-hers-1280.dc.html": {
+   "x": 9656,
+   "y": 33020,
+   "w": 1280,
+   "h": 800,
+   "title": "MSF reports · another trainee's id: Anele Dlamini on Lerato Molefe's (R8d) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-M5-not-hers-390.dc.html": {
+   "x": 11016,
+   "y": 33020,
+   "w": 390,
+   "h": 1000,
+   "title": "MSF reports · another trainee's id: Anele Dlamini on Lerato Molefe's (R8d) · 390",
+   "page": "r2"
+  },
+  "R2-M6-loading-1280.dc.html": {
+   "x": 11646,
+   "y": 33020,
+   "w": 1280,
+   "h": 700,
+   "title": "MSF reports · loading · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-M6-loading-390.dc.html": {
+   "x": 13006,
+   "y": 33020,
+   "w": 390,
+   "h": 900,
+   "title": "MSF reports · loading · 390",
+   "page": "r2"
+  },
+  "R2-M7-error-1280.dc.html": {
+   "x": 13636,
+   "y": 33020,
+   "w": 1280,
+   "h": 700,
+   "title": "MSF reports · load error · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-M7-error-390.dc.html": {
+   "x": 14996,
+   "y": 33020,
+   "w": 390,
+   "h": 900,
+   "title": "MSF reports · load error · 390",
+   "page": "r2"
+  },
+  "R2-V1-loaded-1280.dc.html": {
+   "x": 0,
+   "y": 35540,
+   "w": 1280,
+   "h": 1900,
+   "title": "MSF coverage · loaded (3.49) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-V1-loaded-390.dc.html": {
+   "x": 1360,
+   "y": 35540,
+   "w": 390,
+   "h": 3300,
+   "title": "MSF coverage · loaded (3.49) · 390",
+   "page": "r2"
+  },
+  "R2-V2-nobody-1280.dc.html": {
+   "x": 1990,
+   "y": 35540,
+   "w": 1280,
+   "h": 600,
+   "title": "MSF coverage · nobody to show · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-V2-nobody-390.dc.html": {
+   "x": 3350,
+   "y": 35540,
+   "w": 390,
+   "h": 800,
+   "title": "MSF coverage · nobody to show · 390",
+   "page": "r2"
+  },
+  "R2-V3-two-programmes-1280.dc.html": {
+   "x": 3980,
+   "y": 35540,
+   "w": 1280,
+   "h": 3500,
+   "title": "MSF coverage · an Administrator's view, two programmes (R9, Illustration) · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-V3-two-programmes-390.dc.html": {
+   "x": 5340,
+   "y": 35540,
+   "w": 390,
+   "h": 6200,
+   "title": "MSF coverage · an Administrator's view, two programmes (R9, Illustration) · 390",
+   "page": "r2"
+  },
+  "R2-V4-loading-1280.dc.html": {
+   "x": 5970,
+   "y": 35540,
+   "w": 1280,
+   "h": 800,
+   "title": "MSF coverage · loading · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-V4-loading-390.dc.html": {
+   "x": 7330,
+   "y": 35540,
+   "w": 390,
+   "h": 1000,
+   "title": "MSF coverage · loading · 390",
+   "page": "r2"
+  },
+  "R2-V5-error-1280.dc.html": {
+   "x": 7960,
+   "y": 35540,
+   "w": 1280,
+   "h": 600,
+   "title": "MSF coverage · load error · 1280",
+   "page": "r2",
+   "expand": "fill"
+  },
+  "R2-V5-error-390.dc.html": {
+   "x": 9320,
+   "y": 35540,
+   "w": 390,
+   "h": 800,
+   "title": "MSF coverage · load error · 390",
+   "page": "r2"
+  },
+  "R3-0-spec.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1280,
+   "h": 7200,
+   "title": "R3-0-spec · F1–F11, M1–M10, S1–S17, classes, DESIGN.md, DTOs",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-0-steps.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1280,
+   "h": 3800,
+   "title": "R3-0-steps · the 18 steps' Expects, and each journey's count",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-L1-none-1280.dc.html": {
+   "x": 0,
+   "y": 7720,
+   "w": 1280,
+   "h": 900,
+   "title": "MSF campaigns · none (3.34) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-L1-none-390.dc.html": {
+   "x": 1360,
+   "y": 7720,
+   "w": 390,
+   "h": 1700,
+   "title": "MSF campaigns · none (3.34) · 390",
+   "page": "r3"
+  },
+  "R3-L2-draft-open-1280.dc.html": {
+   "x": 1990,
+   "y": 7720,
+   "w": 1280,
+   "h": 900,
+   "title": "MSF campaigns · a draft and an open campaign, newest first (3.38) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-L2-draft-open-768.dc.html": {
+   "x": 3350,
+   "y": 7720,
+   "w": 768,
+   "h": 1400,
+   "title": "MSF campaigns · a draft and an open campaign, newest first (3.38) · 768",
+   "page": "r3"
+  },
+  "R3-L2-draft-open-390.dc.html": {
+   "x": 4198,
+   "y": 7720,
+   "w": 390,
+   "h": 1700,
+   "title": "MSF campaigns · a draft and an open campaign, newest first (3.38) · 390",
+   "page": "r3"
+  },
+  "R3-L3-withdraw-dialog-1280.dc.html": {
+   "x": 4828,
+   "y": 7720,
+   "w": 1280,
+   "h": 900,
+   "title": "MSF campaigns · Withdraw's dialog, focus on Keep the campaign (3.38) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-L3-withdraw-dialog-390.dc.html": {
+   "x": 6188,
+   "y": 7720,
+   "w": 390,
+   "h": 1700,
+   "title": "MSF campaigns · Withdraw's dialog, focus on Keep the campaign (3.38) · 390",
+   "page": "r3"
+  },
+  "R3-L4-withdrawn-1280.dc.html": {
+   "x": 6818,
+   "y": 7720,
+   "w": 1280,
+   "h": 900,
+   "title": "MSF campaigns · withdrawn, the result focused (3.38) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-L4-withdrawn-390.dc.html": {
+   "x": 8178,
+   "y": 7720,
+   "w": 390,
+   "h": 1700,
+   "title": "MSF campaigns · withdrawn, the result focused (3.38) · 390",
+   "page": "r3"
+  },
+  "R3-L5-released-1280.dc.html": {
+   "x": 8808,
+   "y": 7720,
+   "w": 1280,
+   "h": 900,
+   "title": "MSF campaigns · released and withdrawn (3.46; stands for A.4.7) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-L5-released-768.dc.html": {
+   "x": 10168,
+   "y": 7720,
+   "w": 768,
+   "h": 1400,
+   "title": "MSF campaigns · released and withdrawn (3.46; stands for A.4.7) · 768",
+   "page": "r3"
+  },
+  "R3-L5-released-390.dc.html": {
+   "x": 11016,
+   "y": 7720,
+   "w": 390,
+   "h": 1700,
+   "title": "MSF campaigns · released and withdrawn (3.46; stands for A.4.7) · 390",
+   "page": "r3"
+  },
+  "R3-L6-under-review-1280.dc.html": {
+   "x": 11646,
+   "y": 7720,
+   "w": 1280,
+   "h": 900,
+   "title": "MSF campaigns · under review (3.44) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-L6-under-review-390.dc.html": {
+   "x": 13006,
+   "y": 7720,
+   "w": 390,
+   "h": 1700,
+   "title": "MSF campaigns · under review (3.44) · 390",
+   "page": "r3"
+  },
+  "R3-L7-ten-1280.dc.html": {
+   "x": 13636,
+   "y": 7720,
+   "w": 1280,
+   "h": 1700,
+   "title": "MSF campaigns · ten campaigns, two semesters (R10, Illustration) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-L7-ten-390.dc.html": {
+   "x": 14996,
+   "y": 7720,
+   "w": 390,
+   "h": 6600,
+   "title": "MSF campaigns · ten campaigns, two semesters (R10, Illustration) · 390",
+   "page": "r3"
+  },
+  "R3-L8-loading-1280.dc.html": {
+   "x": 15626,
+   "y": 7720,
+   "w": 1280,
+   "h": 900,
+   "title": "MSF campaigns · loading · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-L8-loading-390.dc.html": {
+   "x": 16986,
+   "y": 7720,
+   "w": 390,
+   "h": 1700,
+   "title": "MSF campaigns · loading · 390",
+   "page": "r3"
+  },
+  "R3-L9-error-1280.dc.html": {
+   "x": 17616,
+   "y": 7720,
+   "w": 1280,
+   "h": 900,
+   "title": "MSF campaigns · load error · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-L9-error-390.dc.html": {
+   "x": 18976,
+   "y": 7720,
+   "w": 390,
+   "h": 1700,
+   "title": "MSF campaigns · load error · 390",
+   "page": "r3"
+  },
+  "R3-C1-no-template-1280.dc.html": {
+   "x": 0,
+   "y": 14840,
+   "w": 1280,
+   "h": 2100,
+   "title": "New MSF campaign · no template yet: the fold open, Create disabled (3.34) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-C1-no-template-390.dc.html": {
+   "x": 1360,
+   "y": 14840,
+   "w": 390,
+   "h": 3200,
+   "title": "New MSF campaign · no template yet: the fold open, Create disabled (3.34) · 390",
+   "page": "r3"
+  },
+  "R3-C2-template-created-1280.dc.html": {
+   "x": 1990,
+   "y": 14840,
+   "w": 1280,
+   "h": 1650,
+   "title": "New MSF campaign · Template created, Default MSF chosen (3.34) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-C2-template-created-390.dc.html": {
+   "x": 3350,
+   "y": 14840,
+   "w": 390,
+   "h": 2500,
+   "title": "New MSF campaign · Template created, Default MSF chosen (3.34) · 390",
+   "page": "r3"
+  },
+  "R3-C3-molefe-1280.dc.html": {
+   "x": 3980,
+   "y": 14840,
+   "w": 1280,
+   "h": 2150,
+   "title": "New MSF campaign · Lerato Molefe, 5 / 3 / 2, PAED-010 and PAED-012 ticked (3.35) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-C3-molefe-768.dc.html": {
+   "x": 5340,
+   "y": 14840,
+   "w": 768,
+   "h": 3000,
+   "title": "New MSF campaign · Lerato Molefe, 5 / 3 / 2, PAED-010 and PAED-012 ticked (3.35) · 768",
+   "page": "r3"
+  },
+  "R3-C3-molefe-390.dc.html": {
+   "x": 6188,
+   "y": 14840,
+   "w": 390,
+   "h": 4200,
+   "title": "New MSF campaign · Lerato Molefe, 5 / 3 / 2, PAED-010 and PAED-012 ticked (3.35) · 390",
+   "page": "r3"
+  },
+  "R3-C4-refused-1280.dc.html": {
+   "x": 6818,
+   "y": 14840,
+   "w": 1280,
+   "h": 2300,
+   "title": "New MSF campaign · no EPA ticked: the refusal summary takes the focus (M9) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-C4-refused-390.dc.html": {
+   "x": 8178,
+   "y": 14840,
+   "w": 390,
+   "h": 4400,
+   "title": "New MSF campaign · no EPA ticked: the refusal summary takes the focus (M9) · 390",
+   "page": "r3"
+  },
+  "R3-C5-fifteen-1280.dc.html": {
+   "x": 8808,
+   "y": 14840,
+   "w": 1280,
+   "h": 2150,
+   "title": "New MSF campaign · all fifteen ticked (R10) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-C5-fifteen-390.dc.html": {
+   "x": 10168,
+   "y": 14840,
+   "w": 390,
+   "h": 4200,
+   "title": "New MSF campaign · all fifteen ticked (R10) · 390",
+   "page": "r3"
+  },
+  "R3-C8-threshold-refused-1280.dc.html": {
+   "x": 10798,
+   "y": 14840,
+   "w": 1280,
+   "h": 2300,
+   "title": "New MSF campaign · a threshold out of range: 2 in a respondent group, under F2's floor (S4) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-C8-threshold-refused-390.dc.html": {
+   "x": 12158,
+   "y": 14840,
+   "w": 390,
+   "h": 4400,
+   "title": "New MSF campaign · a threshold out of range: 2 in a respondent group, under F2's floor (S4) · 390",
+   "page": "r3"
+  },
+  "R3-C6-read-failed-1280.dc.html": {
+   "x": 12788,
+   "y": 14840,
+   "w": 1280,
+   "h": 700,
+   "title": "New MSF campaign · the templates or trainees could not be read (R11) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-C6-read-failed-390.dc.html": {
+   "x": 14148,
+   "y": 14840,
+   "w": 390,
+   "h": 900,
+   "title": "New MSF campaign · the templates or trainees could not be read (R11) · 390",
+   "page": "r3"
+  },
+  "R3-C7-loading-1280.dc.html": {
+   "x": 14778,
+   "y": 14840,
+   "w": 1280,
+   "h": 800,
+   "title": "New MSF campaign · loading · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-C7-loading-390.dc.html": {
+   "x": 16138,
+   "y": 14840,
+   "w": 390,
+   "h": 1000,
+   "title": "New MSF campaign · loading · 390",
+   "page": "r3"
+  },
+  "R3-K1-draft-empty-1280.dc.html": {
+   "x": 0,
+   "y": 19760,
+   "w": 1280,
+   "h": 1450,
+   "title": "Campaign · draft, nobody invited, Open disabled with its reason (3.35) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K1-draft-empty-390.dc.html": {
+   "x": 1360,
+   "y": 19760,
+   "w": 390,
+   "h": 2400,
+   "title": "Campaign · draft, nobody invited, Open disabled with its reason (3.35) · 390",
+   "page": "r3"
+  },
+  "R3-K2-draft-nine-1280.dc.html": {
+   "x": 1990,
+   "y": 19760,
+   "w": 1280,
+   "h": 2300,
+   "title": "Campaign · draft, nine invitees, Invitee added, focus back in the cleared address (3.36) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K2-draft-nine-768.dc.html": {
+   "x": 3350,
+   "y": 19760,
+   "w": 768,
+   "h": 3000,
+   "title": "Campaign · draft, nine invitees, Invitee added, focus back in the cleared address (3.36) · 768",
+   "page": "r3"
+  },
+  "R3-K2-draft-nine-390.dc.html": {
+   "x": 4198,
+   "y": 19760,
+   "w": 390,
+   "h": 3600,
+   "title": "Campaign · draft, nine invitees, Invitee added, focus back in the cleared address (3.36) · 390",
+   "page": "r3"
+  },
+  "R3-K3-remove-dialog-1280.dc.html": {
+   "x": 4828,
+   "y": 19760,
+   "w": 1280,
+   "h": 2300,
+   "title": "Campaign · Remove's dialog on Palesa Tau's address, focus on Keep the invitee (3.36) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K3-remove-dialog-390.dc.html": {
+   "x": 6188,
+   "y": 19760,
+   "w": 390,
+   "h": 3600,
+   "title": "Campaign · Remove's dialog on Palesa Tau's address, focus on Keep the invitee (3.36) · 390",
+   "page": "r3"
+  },
+  "R3-K4-removed-1280.dc.html": {
+   "x": 6818,
+   "y": 19760,
+   "w": 1280,
+   "h": 2300,
+   "title": "Campaign · removed, the result above the address rows, focused (3.36) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K4-removed-390.dc.html": {
+   "x": 8178,
+   "y": 19760,
+   "w": 390,
+   "h": 3600,
+   "title": "Campaign · removed, the result above the address rows, focused (3.36) · 390",
+   "page": "r3"
+  },
+  "R3-K5-refused-duplicate-1280.dc.html": {
+   "x": 8808,
+   "y": 19760,
+   "w": 1280,
+   "h": 2350,
+   "title": "Campaign · a refused add: the duplicate, under the field, typed address kept, focused (R4d, T228) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K5-refused-duplicate-390.dc.html": {
+   "x": 10168,
+   "y": 19760,
+   "w": 390,
+   "h": 3750,
+   "title": "Campaign · a refused add: the duplicate, under the field, typed address kept, focused (R4d, T228) · 390",
+   "page": "r3"
+  },
+  "R3-K5b-refused-blank-1280.dc.html": {
+   "x": 10798,
+   "y": 19760,
+   "w": 1280,
+   "h": 2350,
+   "title": "Campaign · a refused add: left blank (R4d, T324) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K5b-refused-blank-390.dc.html": {
+   "x": 12158,
+   "y": 19760,
+   "w": 390,
+   "h": 3700,
+   "title": "Campaign · a refused add: left blank (R4d, T324) · 390",
+   "page": "r3"
+  },
+  "R3-K5c-refused-malformed-1280.dc.html": {
+   "x": 12788,
+   "y": 19760,
+   "w": 1280,
+   "h": 2350,
+   "title": "Campaign · a refused add: a malformed address (S4) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K5c-refused-malformed-390.dc.html": {
+   "x": 14148,
+   "y": 19760,
+   "w": 390,
+   "h": 3700,
+   "title": "Campaign · a refused add: a malformed address (S4) · 390",
+   "page": "r3"
+  },
+  "R3-K6-opened-1280.dc.html": {
+   "x": 14778,
+   "y": 19760,
+   "w": 1280,
+   "h": 1450,
+   "title": "Campaign · opened, links being sent, the result focused (3.37) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K6-opened-390.dc.html": {
+   "x": 16138,
+   "y": 19760,
+   "w": 390,
+   "h": 2400,
+   "title": "Campaign · opened, links being sent, the result focused (3.37) · 390",
+   "page": "r3"
+  },
+  "R3-K7-not-delivered-1280.dc.html": {
+   "x": 16768,
+   "y": 19760,
+   "w": 1280,
+   "h": 1400,
+   "title": "Campaign · a link not delivered, Resend in its row (3.43) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K7-not-delivered-768.dc.html": {
+   "x": 18128,
+   "y": 19760,
+   "w": 768,
+   "h": 2000,
+   "title": "Campaign · a link not delivered, Resend in its row (3.43) · 768",
+   "page": "r3"
+  },
+  "R3-K7-not-delivered-390.dc.html": {
+   "x": 18976,
+   "y": 19760,
+   "w": 390,
+   "h": 2400,
+   "title": "Campaign · a link not delivered, Resend in its row (3.43) · 390",
+   "page": "r3"
+  },
+  "R3-K8-resent-1280.dc.html": {
+   "x": 19606,
+   "y": 19760,
+   "w": 1280,
+   "h": 1400,
+   "title": "Campaign · resent, the result in the Links part, focused (3.43) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K8-resent-390.dc.html": {
+   "x": 20966,
+   "y": 19760,
+   "w": 390,
+   "h": 2400,
+   "title": "Campaign · resent, the result in the Links part, focused (3.43) · 390",
+   "page": "r3"
+  },
+  "R3-K9-under-review-1280.dc.html": {
+   "x": 21596,
+   "y": 19760,
+   "w": 1280,
+   "h": 1400,
+   "title": "Campaign · under review, the addresses gone (3.44) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K9-under-review-390.dc.html": {
+   "x": 22956,
+   "y": 19760,
+   "w": 390,
+   "h": 2300,
+   "title": "Campaign · under review, the addresses gone (3.44) · 390",
+   "page": "r3"
+  },
+  "R3-K10-withdraw-under-review-1280.dc.html": {
+   "x": 23586,
+   "y": 19760,
+   "w": 1280,
+   "h": 1400,
+   "title": "Campaign · Withdraw's dialog under review (R6a; WithdrawBody's under-review form) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K10-withdraw-under-review-390.dc.html": {
+   "x": 24946,
+   "y": 19760,
+   "w": 390,
+   "h": 2300,
+   "title": "Campaign · Withdraw's dialog under review (R6a; WithdrawBody's under-review form) · 390",
+   "page": "r3"
+  },
+  "R3-K11-released-1280.dc.html": {
+   "x": 25576,
+   "y": 19760,
+   "w": 1280,
+   "h": 1350,
+   "title": "Campaign · released (A.7.5 at 390) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K11-released-390.dc.html": {
+   "x": 26936,
+   "y": 19760,
+   "w": 390,
+   "h": 2200,
+   "title": "Campaign · released (A.7.5 at 390) · 390",
+   "page": "r3"
+  },
+  "R3-K12-withdrawn-draft-1280.dc.html": {
+   "x": 27566,
+   "y": 19760,
+   "w": 1280,
+   "h": 950,
+   "title": "Campaign · Pieter du Plessis's, withdrawn as a draft (3.38) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K12-withdrawn-draft-390.dc.html": {
+   "x": 28926,
+   "y": 19760,
+   "w": 390,
+   "h": 1700,
+   "title": "Campaign · Pieter du Plessis's, withdrawn as a draft (3.38) · 390",
+   "page": "r3"
+  },
+  "R3-K13-not-current-1280.dc.html": {
+   "x": 29556,
+   "y": 19760,
+   "w": 1280,
+   "h": 1550,
+   "title": "Campaign · a draft whose trainee is no longer current (R4f, T270, Illustration) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K13-not-current-390.dc.html": {
+   "x": 30916,
+   "y": 19760,
+   "w": 390,
+   "h": 2500,
+   "title": "Campaign · a draft whose trainee is no longer current (R4f, T270, Illustration) · 390",
+   "page": "r3"
+  },
+  "R3-K14-programme-ended-1280.dc.html": {
+   "x": 31546,
+   "y": 19760,
+   "w": 1280,
+   "h": 1500,
+   "title": "Campaign · under review, the registrar's programme has ended (R4g, Q10, Illustration) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K14-programme-ended-390.dc.html": {
+   "x": 32906,
+   "y": 19760,
+   "w": 390,
+   "h": 2500,
+   "title": "Campaign · under review, the registrar's programme has ended (R4g, Q10, Illustration) · 390",
+   "page": "r3"
+  },
+  "R3-K15-learner-draft-1280.dc.html": {
+   "x": 33536,
+   "y": 19760,
+   "w": 1280,
+   "h": 1800,
+   "title": "Campaign · learner feedback's draft: one group, a teaching context per invitee (R4h, M4, Illustration) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K15-learner-draft-390.dc.html": {
+   "x": 34896,
+   "y": 19760,
+   "w": 390,
+   "h": 2900,
+   "title": "Campaign · learner feedback's draft: one group, a teaching context per invitee (R4h, M4, Illustration) · 390",
+   "page": "r3"
+  },
+  "R3-K16-unavailable-1280.dc.html": {
+   "x": 35526,
+   "y": 19760,
+   "w": 1280,
+   "h": 700,
+   "title": "Campaign · unavailable · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K16-unavailable-390.dc.html": {
+   "x": 36886,
+   "y": 19760,
+   "w": 390,
+   "h": 900,
+   "title": "Campaign · unavailable · 390",
+   "page": "r3"
+  },
+  "R3-K17-loading-1280.dc.html": {
+   "x": 37516,
+   "y": 19760,
+   "w": 1280,
+   "h": 800,
+   "title": "Campaign · loading: the header at once, no action until the read is in · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K17-loading-390.dc.html": {
+   "x": 38876,
+   "y": 19760,
+   "w": 390,
+   "h": 1000,
+   "title": "Campaign · loading: the header at once, no action until the read is in · 390",
+   "page": "r3"
+  },
+  "R3-K18-error-1280.dc.html": {
+   "x": 39506,
+   "y": 19760,
+   "w": 1280,
+   "h": 700,
+   "title": "Campaign · load error · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K18-error-390.dc.html": {
+   "x": 40866,
+   "y": 19760,
+   "w": 390,
+   "h": 900,
+   "title": "Campaign · load error · 390",
+   "page": "r3"
+  },
+  "R3-K20-refused-open-1280.dc.html": {
+   "x": 41496,
+   "y": 19760,
+   "w": 1280,
+   "h": 2300,
+   "title": "Campaign · a refused Open: the danger Alert beside the button, the focus left on it (S8) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K20-refused-open-390.dc.html": {
+   "x": 42856,
+   "y": 19760,
+   "w": 390,
+   "h": 3600,
+   "title": "Campaign · a refused Open: the danger Alert beside the button, the focus left on it (S8) · 390",
+   "page": "r3"
+  },
+  "R3-K21-refused-withdraw-1280.dc.html": {
+   "x": 43486,
+   "y": 19760,
+   "w": 1280,
+   "h": 1450,
+   "title": "Campaign · a refused Withdraw (after its dialog): the danger Alert, the focus back on Withdraw campaign… (S8) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K21-refused-withdraw-390.dc.html": {
+   "x": 44846,
+   "y": 19760,
+   "w": 390,
+   "h": 2400,
+   "title": "Campaign · a refused Withdraw (after its dialog): the danger Alert, the focus back on Withdraw campaign… (S8) · 390",
+   "page": "r3"
+  },
+  "R3-K22-refused-resend-1280.dc.html": {
+   "x": 45476,
+   "y": 19760,
+   "w": 1280,
+   "h": 1450,
+   "title": "Campaign · a refused Resend: the danger Alert in the Links part, the focus left on Resend (S8) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-K22-refused-resend-390.dc.html": {
+   "x": 46836,
+   "y": 19760,
+   "w": 390,
+   "h": 2500,
+   "title": "Campaign · a refused Resend: the danger Alert in the Links part, the focus left on Resend (S8) · 390",
+   "page": "r3"
+  },
+  "R3-K19-fifteen-390.dc.html": {
+   "x": 47466,
+   "y": 19760,
+   "w": 390,
+   "h": 3200,
+   "title": "Campaign · fifteen EPAs in About (S8, R10, Illustration) · 390",
+   "page": "r3"
+  },
+  "R3-R1-open-1280.dc.html": {
+   "x": 0,
+   "y": 24030,
+   "w": 1280,
+   "h": 1000,
+   "title": "Report · open: the status card and the checklist only (3.41, F1) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R1-open-768.dc.html": {
+   "x": 1360,
+   "y": 24030,
+   "w": 768,
+   "h": 1300,
+   "title": "Report · open: the status card and the checklist only (3.41, F1) · 768",
+   "page": "r3"
+  },
+  "R3-R1-open-390.dc.html": {
+   "x": 2208,
+   "y": 24030,
+   "w": 390,
+   "h": 1700,
+   "title": "Report · open: the status card and the checklist only (3.41, F1) · 390",
+   "page": "r3"
+  },
+  "R3-R2-close-dialog-1280.dc.html": {
+   "x": 2838,
+   "y": 24030,
+   "w": 1280,
+   "h": 1000,
+   "title": "Report · Close's dialog over 3.44's open page, focus on Keep it open (3.44) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R2-close-dialog-390.dc.html": {
+   "x": 4198,
+   "y": 24030,
+   "w": 390,
+   "h": 1700,
+   "title": "Report · Close's dialog over 3.44's open page, focus on Keep it open (3.44) · 390",
+   "page": "r3"
+  },
+  "R3-R3-under-review-1280.dc.html": {
+   "x": 4828,
+   "y": 24030,
+   "w": 1280,
+   "h": 2350,
+   "title": "Report · just closed, Close's result focused; under review, ready (3.44) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R3-under-review-768.dc.html": {
+   "x": 6188,
+   "y": 24030,
+   "w": 768,
+   "h": 3100,
+   "title": "Report · just closed, Close's result focused; under review, ready (3.44) · 768",
+   "page": "r3"
+  },
+  "R3-R3-under-review-390.dc.html": {
+   "x": 7036,
+   "y": 24030,
+   "w": 390,
+   "h": 3800,
+   "title": "Report · just closed, Close's result focused; under review, ready (3.44) · 390",
+   "page": "r3"
+  },
+  "R3-R4-closed-by-job-1280.dc.html": {
+   "x": 7666,
+   "y": 24030,
+   "w": 1280,
+   "h": 2350,
+   "title": "Report · closed by the hourly job, not by hand (R5f, F5, Illustration) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R4-closed-by-job-390.dc.html": {
+   "x": 9026,
+   "y": 24030,
+   "w": 390,
+   "h": 3800,
+   "title": "Report · closed by the hourly job, not by hand (R5f, F5, Illustration) · 390",
+   "page": "r3"
+  },
+  "R3-R5-typed-1280.dc.html": {
+   "x": 9656,
+   "y": 24030,
+   "w": 1280,
+   "h": 2300,
+   "title": "Report · the narrative typed, 106 of 4,000 characters (3.46) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R5-typed-390.dc.html": {
+   "x": 11016,
+   "y": 24030,
+   "w": 390,
+   "h": 3800,
+   "title": "Report · the narrative typed, 106 of 4,000 characters (3.46) · 390",
+   "page": "r3"
+  },
+  "R3-R6a-release-dialog-1280.dc.html": {
+   "x": 11646,
+   "y": 24030,
+   "w": 1280,
+   "h": 2300,
+   "title": "Report · Release's dialog, focus on Not yet (3.46) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R6a-release-dialog-768.dc.html": {
+   "x": 13006,
+   "y": 24030,
+   "w": 768,
+   "h": 3000,
+   "title": "Report · Release's dialog, focus on Not yet (3.46) · 768",
+   "page": "r3"
+  },
+  "R3-R6a-release-dialog-390.dc.html": {
+   "x": 13854,
+   "y": 24030,
+   "w": 390,
+   "h": 3800,
+   "title": "Report · Release's dialog, focus on Not yet (3.46) · 390",
+   "page": "r3"
+  },
+  "R3-R6b-release-dialog-dropped-1280.dc.html": {
+   "x": 14484,
+   "y": 24030,
+   "w": 1280,
+   "h": 2300,
+   "title": "Report · Release's dialog: PAED-012 no longer on her curriculum (R6d, Illustration) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R6b-release-dialog-dropped-390.dc.html": {
+   "x": 15844,
+   "y": 24030,
+   "w": 390,
+   "h": 3800,
+   "title": "Report · Release's dialog: PAED-012 no longer on her curriculum (R6d, Illustration) · 390",
+   "page": "r3"
+  },
+  "R3-R6c-release-dialog-no-epa-1280.dc.html": {
+   "x": 16474,
+   "y": 24030,
+   "w": 1280,
+   "h": 2300,
+   "title": "Report · Release's dialog: a campaign naming no EPA (R6d, Illustration) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R6c-release-dialog-no-epa-390.dc.html": {
+   "x": 17834,
+   "y": 24030,
+   "w": 390,
+   "h": 3800,
+   "title": "Report · Release's dialog: a campaign naming no EPA (R6d, Illustration) · 390",
+   "page": "r3"
+  },
+  "R3-R6d-release-dialog-ended-1280.dc.html": {
+   "x": 18464,
+   "y": 24030,
+   "w": 1280,
+   "h": 2400,
+   "title": "Report · Release's dialog: the programme ended (R6d, Q10, F4, Illustration) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R6d-release-dialog-ended-390.dc.html": {
+   "x": 19824,
+   "y": 24030,
+   "w": 390,
+   "h": 3900,
+   "title": "Report · Release's dialog: the programme ended (R6d, Q10, F4, Illustration) · 390",
+   "page": "r3"
+  },
+  "R3-R7-released-1280.dc.html": {
+   "x": 20454,
+   "y": 24030,
+   "w": 1280,
+   "h": 1850,
+   "title": "Report · released, as stored, the result focused (3.46) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R7-released-768.dc.html": {
+   "x": 21814,
+   "y": 24030,
+   "w": 768,
+   "h": 2500,
+   "title": "Report · released, as stored, the result focused (3.46) · 768",
+   "page": "r3"
+  },
+  "R3-R7-released-390.dc.html": {
+   "x": 22662,
+   "y": 24030,
+   "w": 390,
+   "h": 3100,
+   "title": "Report · released, as stored, the result focused (3.46) · 390",
+   "page": "r3"
+  },
+  "R3-R7b-released-not-recorded-1280.dc.html": {
+   "x": 23292,
+   "y": 24030,
+   "w": 1280,
+   "h": 1800,
+   "title": "Report · released, PAED-012's record not written (R5g, Illustration) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R7b-released-not-recorded-390.dc.html": {
+   "x": 24652,
+   "y": 24030,
+   "w": 390,
+   "h": 3000,
+   "title": "Report · released, PAED-012's record not written (R5g, Illustration) · 390",
+   "page": "r3"
+  },
+  "R3-R8a-blocked-responses-1280.dc.html": {
+   "x": 25282,
+   "y": 24030,
+   "w": 1280,
+   "h": 1800,
+   "title": "Report · blocked: too few responses, Anele Dlamini's campaign (R5b, F10) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R8a-blocked-responses-768.dc.html": {
+   "x": 26642,
+   "y": 24030,
+   "w": 768,
+   "h": 2400,
+   "title": "Report · blocked: too few responses, Anele Dlamini's campaign (R5b, F10) · 768",
+   "page": "r3"
+  },
+  "R3-R8a-blocked-responses-390.dc.html": {
+   "x": 27490,
+   "y": 24030,
+   "w": 390,
+   "h": 3000,
+   "title": "Report · blocked: too few responses, Anele Dlamini's campaign (R5b, F10) · 390",
+   "page": "r3"
+  },
+  "R3-R8b-blocked-groups-1280.dc.html": {
+   "x": 28120,
+   "y": 24030,
+   "w": 1280,
+   "h": 2000,
+   "title": "Report · blocked: too few respondent groups (R5b, Illustration) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R8b-blocked-groups-390.dc.html": {
+   "x": 29480,
+   "y": 24030,
+   "w": 390,
+   "h": 3300,
+   "title": "Report · blocked: too few respondent groups (R5b, Illustration) · 390",
+   "page": "r3"
+  },
+  "R3-R9-no-epa-1280.dc.html": {
+   "x": 30110,
+   "y": 24030,
+   "w": 1280,
+   "h": 1800,
+   "title": "Report · a campaign that names no EPA, Anele Dlamini's (R5e, F10) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R9-no-epa-390.dc.html": {
+   "x": 31470,
+   "y": 24030,
+   "w": 390,
+   "h": 3000,
+   "title": "Report · a campaign that names no EPA, Anele Dlamini's (R5e, F10) · 390",
+   "page": "r3"
+  },
+  "R3-R10-programme-ended-1280.dc.html": {
+   "x": 32100,
+   "y": 24030,
+   "w": 1280,
+   "h": 2400,
+   "title": "Report · the registrar's programme has ended (R4g, Q10, M5, Illustration) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R10-programme-ended-390.dc.html": {
+   "x": 33460,
+   "y": 24030,
+   "w": 390,
+   "h": 3900,
+   "title": "Report · the registrar's programme has ended (R4g, Q10, M5, Illustration) · 390",
+   "page": "r3"
+  },
+  "R3-R11-dozen-1280.dc.html": {
+   "x": 34090,
+   "y": 24030,
+   "w": 1280,
+   "h": 3800,
+   "title": "Report · a respondent group with a dozen comments, one of 4,000 characters (R10, Illustration) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R11-dozen-390.dc.html": {
+   "x": 35450,
+   "y": 24030,
+   "w": 390,
+   "h": 9600,
+   "title": "Report · a respondent group with a dozen comments, one of 4,000 characters (R10, Illustration) · 390",
+   "page": "r3"
+  },
+  "R3-R12-unavailable-1280.dc.html": {
+   "x": 36080,
+   "y": 24030,
+   "w": 1280,
+   "h": 700,
+   "title": "Report · unavailable · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R12-unavailable-390.dc.html": {
+   "x": 37440,
+   "y": 24030,
+   "w": 390,
+   "h": 900,
+   "title": "Report · unavailable · 390",
+   "page": "r3"
+  },
+  "R3-R13-loading-1280.dc.html": {
+   "x": 38070,
+   "y": 24030,
+   "w": 1280,
+   "h": 900,
+   "title": "Report · loading · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R13-loading-390.dc.html": {
+   "x": 39430,
+   "y": 24030,
+   "w": 390,
+   "h": 1100,
+   "title": "Report · loading · 390",
+   "page": "r3"
+  },
+  "R3-R14-error-1280.dc.html": {
+   "x": 40060,
+   "y": 24030,
+   "w": 1280,
+   "h": 700,
+   "title": "Report · load error · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R14-error-390.dc.html": {
+   "x": 41420,
+   "y": 24030,
+   "w": 390,
+   "h": 900,
+   "title": "Report · load error · 390",
+   "page": "r3"
+  },
+  "R3-R15-fifteen-390.dc.html": {
+   "x": 42050,
+   "y": 24030,
+   "w": 390,
+   "h": 2300,
+   "title": "Report · fifteen EPAs in Evidence for, PAED-015's title whole (S8, Illustration) · 390",
+   "page": "r3"
+  },
+  "R3-R16-refused-close-1280.dc.html": {
+   "x": 42680,
+   "y": 24030,
+   "w": 1280,
+   "h": 1100,
+   "title": "Report · a refused Close: the danger Alert, the focus back on Close campaign… (S8) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R16-refused-close-390.dc.html": {
+   "x": 44040,
+   "y": 24030,
+   "w": 390,
+   "h": 1800,
+   "title": "Report · a refused Close: the danger Alert, the focus back on Close campaign… (S8) · 390",
+   "page": "r3"
+  },
+  "R3-R17-refused-release-1280.dc.html": {
+   "x": 44670,
+   "y": 24030,
+   "w": 1280,
+   "h": 2400,
+   "title": "Report · a refused Release: the danger Alert beside the button, the focus back on it (S8) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-R17-refused-release-390.dc.html": {
+   "x": 46030,
+   "y": 24030,
+   "w": 390,
+   "h": 3900,
+   "title": "Report · a refused Release: the danger Alert beside the button, the focus back on it (S8) · 390",
+   "page": "r3"
+  },
+  "R3-Q1-questionnaire-1280.dc.html": {
+   "x": 0,
+   "y": 34150,
+   "w": 1280,
+   "h": 1500,
+   "title": "/msf/respond · the questionnaire, a point chosen, Sister Mokwena (3.39) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-Q1-questionnaire-390.dc.html": {
+   "x": 1360,
+   "y": 34150,
+   "w": 390,
+   "h": 2000,
+   "title": "/msf/respond · the questionnaire, a point chosen, Sister Mokwena (3.39) · 390",
+   "page": "r3"
+  },
+  "R3-Q2-required-1280.dc.html": {
+   "x": 1990,
+   "y": 34150,
+   "w": 1280,
+   "h": 1500,
+   "title": "/msf/respond · Submit with no rating: the browser's own required prompt · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-Q2-required-390.dc.html": {
+   "x": 3350,
+   "y": 34150,
+   "w": 390,
+   "h": 2000,
+   "title": "/msf/respond · Submit with no rating: the browser's own required prompt · 390",
+   "page": "r3"
+  },
+  "R3-Q9-refused-post-1280.dc.html": {
+   "x": 3980,
+   "y": 34150,
+   "w": 1280,
+   "h": 1650,
+   "title": "/msf/respond · a refused post: the error summary takes the focus (S8) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-Q9-refused-post-390.dc.html": {
+   "x": 5340,
+   "y": 34150,
+   "w": 390,
+   "h": 2200,
+   "title": "/msf/respond · a refused post: the error summary takes the focus (S8) · 390",
+   "page": "r3"
+  },
+  "R3-Q3-thanks-1280.dc.html": {
+   "x": 5970,
+   "y": 34150,
+   "w": 1280,
+   "h": 640,
+   "title": "/msf/respond · thank you (3.39, 3.42) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-Q3-thanks-390.dc.html": {
+   "x": 7330,
+   "y": 34150,
+   "w": 390,
+   "h": 700,
+   "title": "/msf/respond · thank you (3.39, 3.42) · 390",
+   "page": "r3"
+  },
+  "R3-Q4-used-1280.dc.html": {
+   "x": 7960,
+   "y": 34150,
+   "w": 1280,
+   "h": 640,
+   "title": "/msf/respond · link already used (3.40) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-Q4-used-390.dc.html": {
+   "x": 9320,
+   "y": 34150,
+   "w": 390,
+   "h": 700,
+   "title": "/msf/respond · link already used (3.40) · 390",
+   "page": "r3"
+  },
+  "R3-Q5-closed-1280.dc.html": {
+   "x": 9950,
+   "y": 34150,
+   "w": 1280,
+   "h": 640,
+   "title": "/msf/respond · request closed (3.45) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-Q5-closed-390.dc.html": {
+   "x": 11310,
+   "y": 34150,
+   "w": 390,
+   "h": 700,
+   "title": "/msf/respond · request closed (3.45) · 390",
+   "page": "r3"
+  },
+  "R3-Q6-expired-1280.dc.html": {
+   "x": 11940,
+   "y": 34150,
+   "w": 1280,
+   "h": 640,
+   "title": "/msf/respond · link expired · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-Q6-expired-390.dc.html": {
+   "x": 13300,
+   "y": 34150,
+   "w": 390,
+   "h": 700,
+   "title": "/msf/respond · link expired · 390",
+   "page": "r3"
+  },
+  "R3-Q7-not-recognised-1280.dc.html": {
+   "x": 13930,
+   "y": 34150,
+   "w": 1280,
+   "h": 720,
+   "title": "/msf/respond · link not recognised · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-Q7-not-recognised-390.dc.html": {
+   "x": 15290,
+   "y": 34150,
+   "w": 390,
+   "h": 800,
+   "title": "/msf/respond · link not recognised · 390",
+   "page": "r3"
+  },
+  "R3-Q8-fault-1280.dc.html": {
+   "x": 15920,
+   "y": 34150,
+   "w": 1280,
+   "h": 720,
+   "title": "/msf/respond · something went wrong · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-Q8-fault-390.dc.html": {
+   "x": 17280,
+   "y": 34150,
+   "w": 390,
+   "h": 840,
+   "title": "/msf/respond · something went wrong · 390",
+   "page": "r3"
+  },
+  "R3-M1-none-1280.dc.html": {
+   "x": 0,
+   "y": 36870,
+   "w": 1280,
+   "h": 700,
+   "title": "MSF reports · none released · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-M1-none-390.dc.html": {
+   "x": 1360,
+   "y": 36870,
+   "w": 390,
+   "h": 1000,
+   "title": "MSF reports · none released · 390",
+   "page": "r3"
+  },
+  "R3-M2-list-1280.dc.html": {
+   "x": 1990,
+   "y": 36870,
+   "w": 1280,
+   "h": 700,
+   "title": "MSF reports · the list: Report, Released, View (3.47, F3) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-M2-list-768.dc.html": {
+   "x": 3350,
+   "y": 36870,
+   "w": 768,
+   "h": 900,
+   "title": "MSF reports · the list: Report, Released, View (3.47, F3) · 768",
+   "page": "r3"
+  },
+  "R3-M2-list-390.dc.html": {
+   "x": 4198,
+   "y": 36870,
+   "w": 390,
+   "h": 1100,
+   "title": "MSF reports · the list: Report, Released, View (3.47, F3) · 390",
+   "page": "r3"
+  },
+  "R3-M3-report-1280.dc.html": {
+   "x": 4828,
+   "y": 36870,
+   "w": 1280,
+   "h": 1400,
+   "title": "Her report, a page of its own at /msf/my-reports/{id} (3.47) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-M3-report-768.dc.html": {
+   "x": 6188,
+   "y": 36870,
+   "w": 768,
+   "h": 1800,
+   "title": "Her report, a page of its own at /msf/my-reports/{id} (3.47) · 768",
+   "page": "r3"
+  },
+  "R3-M3-report-390.dc.html": {
+   "x": 7036,
+   "y": 36870,
+   "w": 390,
+   "h": 2200,
+   "title": "Her report, a page of its own at /msf/my-reports/{id} (3.47) · 390",
+   "page": "r3"
+  },
+  "R3-M4-not-recorded-1280.dc.html": {
+   "x": 7666,
+   "y": 36870,
+   "w": 1280,
+   "h": 1350,
+   "title": "Her report · PAED-012 not recorded, left out (R8c, Illustration) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-M4-not-recorded-390.dc.html": {
+   "x": 9026,
+   "y": 36870,
+   "w": 390,
+   "h": 2100,
+   "title": "Her report · PAED-012 not recorded, left out (R8c, Illustration) · 390",
+   "page": "r3"
+  },
+  "R3-M8-fifteen-390.dc.html": {
+   "x": 9656,
+   "y": 36870,
+   "w": 390,
+   "h": 2900,
+   "title": "Her report · fifteen EPAs on her portfolio, PAED-015's title whole (S8, Illustration) · 390",
+   "page": "r3"
+  },
+  "R3-M5-not-hers-1280.dc.html": {
+   "x": 10286,
+   "y": 36870,
+   "w": 1280,
+   "h": 800,
+   "title": "MSF reports · another trainee's id: Anele Dlamini on Lerato Molefe's (R8d) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-M5-not-hers-390.dc.html": {
+   "x": 11646,
+   "y": 36870,
+   "w": 390,
+   "h": 1100,
+   "title": "MSF reports · another trainee's id: Anele Dlamini on Lerato Molefe's (R8d) · 390",
+   "page": "r3"
+  },
+  "R3-M6-loading-1280.dc.html": {
+   "x": 12276,
+   "y": 36870,
+   "w": 1280,
+   "h": 700,
+   "title": "MSF reports · loading · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-M6-loading-390.dc.html": {
+   "x": 13636,
+   "y": 36870,
+   "w": 390,
+   "h": 1000,
+   "title": "MSF reports · loading · 390",
+   "page": "r3"
+  },
+  "R3-M7-error-1280.dc.html": {
+   "x": 14266,
+   "y": 36870,
+   "w": 1280,
+   "h": 700,
+   "title": "MSF reports · load error · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-M7-error-390.dc.html": {
+   "x": 15626,
+   "y": 36870,
+   "w": 390,
+   "h": 1000,
+   "title": "MSF reports · load error · 390",
+   "page": "r3"
+  },
+  "R3-M9-report-loading-1280.dc.html": {
+   "x": 16256,
+   "y": 36870,
+   "w": 1280,
+   "h": 800,
+   "title": "Her report · loading (S8) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-M9-report-loading-390.dc.html": {
+   "x": 17616,
+   "y": 36870,
+   "w": 390,
+   "h": 1100,
+   "title": "Her report · loading (S8) · 390",
+   "page": "r3"
+  },
+  "R3-M10-report-error-1280.dc.html": {
+   "x": 18246,
+   "y": 36870,
+   "w": 1280,
+   "h": 700,
+   "title": "Her report · load error, kept apart from the not-found alert (S8, S6) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-M10-report-error-390.dc.html": {
+   "x": 19606,
+   "y": 36870,
+   "w": 390,
+   "h": 1000,
+   "title": "Her report · load error, kept apart from the not-found alert (S8, S6) · 390",
+   "page": "r3"
+  },
+  "R3-M11-report-unavailable-1280.dc.html": {
+   "x": 20236,
+   "y": 36870,
+   "w": 1280,
+   "h": 900,
+   "title": "Her report · an id that is not one of her released reports: her list, one alert, focused (S8, S6) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-M11-report-unavailable-390.dc.html": {
+   "x": 21596,
+   "y": 36870,
+   "w": 390,
+   "h": 1300,
+   "title": "Her report · an id that is not one of her released reports: her list, one alert, focused (S8, S6) · 390",
+   "page": "r3"
+  },
+  "R3-V1-loaded-1280.dc.html": {
+   "x": 0,
+   "y": 40290,
+   "w": 1280,
+   "h": 1950,
+   "title": "MSF coverage · loaded (3.49) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-V1-loaded-768.dc.html": {
+   "x": 1360,
+   "y": 40290,
+   "w": 768,
+   "h": 2800,
+   "title": "MSF coverage · loaded (3.49) · 768",
+   "page": "r3"
+  },
+  "R3-V1-loaded-390.dc.html": {
+   "x": 2208,
+   "y": 40290,
+   "w": 390,
+   "h": 3400,
+   "title": "MSF coverage · loaded (3.49) · 390",
+   "page": "r3"
+  },
+  "R3-V2-nobody-1280.dc.html": {
+   "x": 2838,
+   "y": 40290,
+   "w": 1280,
+   "h": 600,
+   "title": "MSF coverage · nobody to show · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-V2-nobody-390.dc.html": {
+   "x": 4198,
+   "y": 40290,
+   "w": 390,
+   "h": 900,
+   "title": "MSF coverage · nobody to show · 390",
+   "page": "r3"
+  },
+  "R3-V3-two-programmes-1280.dc.html": {
+   "x": 4828,
+   "y": 40290,
+   "w": 1280,
+   "h": 3600,
+   "title": "MSF coverage · an Administrator's view, two programmes (R9, Illustration) · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-V3-two-programmes-390.dc.html": {
+   "x": 6188,
+   "y": 40290,
+   "w": 390,
+   "h": 6400,
+   "title": "MSF coverage · an Administrator's view, two programmes (R9, Illustration) · 390",
+   "page": "r3"
+  },
+  "R3-V4-loading-1280.dc.html": {
+   "x": 6818,
+   "y": 40290,
+   "w": 1280,
+   "h": 800,
+   "title": "MSF coverage · loading · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-V4-loading-390.dc.html": {
+   "x": 8178,
+   "y": 40290,
+   "w": 390,
+   "h": 1100,
+   "title": "MSF coverage · loading · 390",
+   "page": "r3"
+  },
+  "R3-V5-error-1280.dc.html": {
+   "x": 8808,
+   "y": 40290,
+   "w": 1280,
+   "h": 600,
+   "title": "MSF coverage · load error · 1280",
+   "page": "r3",
+   "expand": "fill"
+  },
+  "R3-V5-error-390.dc.html": {
+   "x": 10168,
+   "y": 40290,
+   "w": 390,
+   "h": 900,
+   "title": "MSF coverage · load error · 390",
+   "page": "r3"
+  }
+ },
+ "order": [
+  "P1-List.dc.html",
+  "P1-List-390.dc.html",
+  "P2-Create.dc.html",
+  "P2-Create-390.dc.html",
+  "P2-Draft.dc.html",
+  "P2-Open.dc.html",
+  "P2-Review.dc.html",
+  "P2-Open-390.dc.html",
+  "P-Dialogs.dc.html",
+  "P4-Respond.dc.html",
+  "P4-Respond-390.dc.html",
+  "P4-Thanks-390.dc.html",
+  "P4-Used-390.dc.html",
+  "P6-Coverage.dc.html",
+  "P6-Coverage-390.dc.html",
+  "RA.dc.html",
+  "RA-390.dc.html",
+  "RA-Open.dc.html",
+  "RB.dc.html",
+  "RB-390.dc.html",
+  "RC.dc.html",
+  "RC-390.dc.html",
+  "MA-List.dc.html",
+  "MA-Report.dc.html",
+  "MA-Report-390.dc.html",
+  "MB.dc.html",
+  "MB-390.dc.html",
+  "R2-0-spec.dc.html",
+  "R2-0-steps.dc.html",
+  "R2-L1-none-1280.dc.html",
+  "R2-L1-none-390.dc.html",
+  "R2-L2-draft-open-1280.dc.html",
+  "R2-L2-draft-open-768.dc.html",
+  "R2-L2-draft-open-390.dc.html",
+  "R2-L3-withdraw-dialog-1280.dc.html",
+  "R2-L3-withdraw-dialog-390.dc.html",
+  "R2-L4-withdrawn-1280.dc.html",
+  "R2-L4-withdrawn-390.dc.html",
+  "R2-L5-released-1280.dc.html",
+  "R2-L5-released-768.dc.html",
+  "R2-L5-released-390.dc.html",
+  "R2-L6-under-review-1280.dc.html",
+  "R2-L6-under-review-390.dc.html",
+  "R2-L7-ten-1280.dc.html",
+  "R2-L7-ten-390.dc.html",
+  "R2-L8-loading-1280.dc.html",
+  "R2-L8-loading-390.dc.html",
+  "R2-L9-error-1280.dc.html",
+  "R2-L9-error-390.dc.html",
+  "R2-C1-no-template-1280.dc.html",
+  "R2-C1-no-template-390.dc.html",
+  "R2-C2-template-created-1280.dc.html",
+  "R2-C2-template-created-390.dc.html",
+  "R2-C3-molefe-1280.dc.html",
+  "R2-C3-molefe-390.dc.html",
+  "R2-C4-refused-1280.dc.html",
+  "R2-C4-refused-390.dc.html",
+  "R2-C5-fifteen-1280.dc.html",
+  "R2-C5-fifteen-390.dc.html",
+  "R2-C6-read-failed-1280.dc.html",
+  "R2-C6-read-failed-390.dc.html",
+  "R2-C7-loading-1280.dc.html",
+  "R2-C7-loading-390.dc.html",
+  "R2-K1-draft-empty-1280.dc.html",
+  "R2-K1-draft-empty-390.dc.html",
+  "R2-K2-draft-seven-1280.dc.html",
+  "R2-K2-draft-seven-768.dc.html",
+  "R2-K2-draft-seven-390.dc.html",
+  "R2-K3-remove-dialog-1280.dc.html",
+  "R2-K3-remove-dialog-390.dc.html",
+  "R2-K4-removed-1280.dc.html",
+  "R2-K4-removed-390.dc.html",
+  "R2-K5-refused-duplicate-1280.dc.html",
+  "R2-K5-refused-duplicate-390.dc.html",
+  "R2-K5b-refused-blank-1280.dc.html",
+  "R2-K5b-refused-blank-390.dc.html",
+  "R2-K6-opened-1280.dc.html",
+  "R2-K6-opened-390.dc.html",
+  "R2-K7-not-delivered-1280.dc.html",
+  "R2-K7-not-delivered-390.dc.html",
+  "R2-K8-resent-1280.dc.html",
+  "R2-K8-resent-390.dc.html",
+  "R2-K9-under-review-1280.dc.html",
+  "R2-K9-under-review-390.dc.html",
+  "R2-K10-withdraw-under-review-1280.dc.html",
+  "R2-K10-withdraw-under-review-390.dc.html",
+  "R2-K11-released-1280.dc.html",
+  "R2-K11-released-390.dc.html",
+  "R2-K12-withdrawn-draft-1280.dc.html",
+  "R2-K12-withdrawn-draft-390.dc.html",
+  "R2-K13-not-current-1280.dc.html",
+  "R2-K13-not-current-390.dc.html",
+  "R2-K14-programme-ended-1280.dc.html",
+  "R2-K14-programme-ended-390.dc.html",
+  "R2-K15-learner-draft-1280.dc.html",
+  "R2-K15-learner-draft-390.dc.html",
+  "R2-K16-unavailable-1280.dc.html",
+  "R2-K16-unavailable-390.dc.html",
+  "R2-K17-loading-1280.dc.html",
+  "R2-K17-loading-390.dc.html",
+  "R2-K18-error-1280.dc.html",
+  "R2-K18-error-390.dc.html",
+  "R2-R1-open-1280.dc.html",
+  "R2-R1-open-768.dc.html",
+  "R2-R1-open-390.dc.html",
+  "R2-R2-close-dialog-1280.dc.html",
+  "R2-R2-close-dialog-390.dc.html",
+  "R2-R3-under-review-1280.dc.html",
+  "R2-R3-under-review-768.dc.html",
+  "R2-R3-under-review-390.dc.html",
+  "R2-R4-closed-by-job-1280.dc.html",
+  "R2-R4-closed-by-job-390.dc.html",
+  "R2-R5-typed-1280.dc.html",
+  "R2-R5-typed-390.dc.html",
+  "R2-R6a-release-dialog-1280.dc.html",
+  "R2-R6a-release-dialog-390.dc.html",
+  "R2-R6b-release-dialog-dropped-1280.dc.html",
+  "R2-R6b-release-dialog-dropped-390.dc.html",
+  "R2-R6c-release-dialog-no-epa-1280.dc.html",
+  "R2-R6c-release-dialog-no-epa-390.dc.html",
+  "R2-R6d-release-dialog-ended-1280.dc.html",
+  "R2-R6d-release-dialog-ended-390.dc.html",
+  "R2-R7-released-1280.dc.html",
+  "R2-R7-released-768.dc.html",
+  "R2-R7-released-390.dc.html",
+  "R2-R7b-released-not-recorded-1280.dc.html",
+  "R2-R7b-released-not-recorded-390.dc.html",
+  "R2-R8a-blocked-responses-1280.dc.html",
+  "R2-R8a-blocked-responses-768.dc.html",
+  "R2-R8a-blocked-responses-390.dc.html",
+  "R2-R8b-blocked-groups-1280.dc.html",
+  "R2-R8b-blocked-groups-390.dc.html",
+  "R2-R9-no-epa-1280.dc.html",
+  "R2-R9-no-epa-390.dc.html",
+  "R2-R10-programme-ended-1280.dc.html",
+  "R2-R10-programme-ended-390.dc.html",
+  "R2-R11-dozen-1280.dc.html",
+  "R2-R11-dozen-390.dc.html",
+  "R2-R12-unavailable-1280.dc.html",
+  "R2-R12-unavailable-390.dc.html",
+  "R2-R13-loading-1280.dc.html",
+  "R2-R13-loading-390.dc.html",
+  "R2-R14-error-1280.dc.html",
+  "R2-R14-error-390.dc.html",
+  "R2-Q1-questionnaire-1280.dc.html",
+  "R2-Q1-questionnaire-390.dc.html",
+  "R2-Q2-required-1280.dc.html",
+  "R2-Q2-required-390.dc.html",
+  "R2-Q3-thanks-1280.dc.html",
+  "R2-Q3-thanks-390.dc.html",
+  "R2-Q4-used-1280.dc.html",
+  "R2-Q4-used-390.dc.html",
+  "R2-Q5-closed-1280.dc.html",
+  "R2-Q5-closed-390.dc.html",
+  "R2-Q6-expired-1280.dc.html",
+  "R2-Q6-expired-390.dc.html",
+  "R2-Q7-not-recognised-1280.dc.html",
+  "R2-Q7-not-recognised-390.dc.html",
+  "R2-Q8-fault-1280.dc.html",
+  "R2-Q8-fault-390.dc.html",
+  "R2-M1-none-1280.dc.html",
+  "R2-M1-none-390.dc.html",
+  "R2-M2-list-1280.dc.html",
+  "R2-M2-list-768.dc.html",
+  "R2-M2-list-390.dc.html",
+  "R2-M3-report-1280.dc.html",
+  "R2-M3-report-768.dc.html",
+  "R2-M3-report-390.dc.html",
+  "R2-M4-not-recorded-1280.dc.html",
+  "R2-M4-not-recorded-390.dc.html",
+  "R2-M5-not-hers-1280.dc.html",
+  "R2-M5-not-hers-390.dc.html",
+  "R2-M6-loading-1280.dc.html",
+  "R2-M6-loading-390.dc.html",
+  "R2-M7-error-1280.dc.html",
+  "R2-M7-error-390.dc.html",
+  "R2-V1-loaded-1280.dc.html",
+  "R2-V1-loaded-390.dc.html",
+  "R2-V2-nobody-1280.dc.html",
+  "R2-V2-nobody-390.dc.html",
+  "R2-V3-two-programmes-1280.dc.html",
+  "R2-V3-two-programmes-390.dc.html",
+  "R2-V4-loading-1280.dc.html",
+  "R2-V4-loading-390.dc.html",
+  "R2-V5-error-1280.dc.html",
+  "R2-V5-error-390.dc.html",
+  "R3-0-spec.dc.html",
+  "R3-0-steps.dc.html",
+  "R3-L1-none-1280.dc.html",
+  "R3-L1-none-390.dc.html",
+  "R3-L2-draft-open-1280.dc.html",
+  "R3-L2-draft-open-768.dc.html",
+  "R3-L2-draft-open-390.dc.html",
+  "R3-L3-withdraw-dialog-1280.dc.html",
+  "R3-L3-withdraw-dialog-390.dc.html",
+  "R3-L4-withdrawn-1280.dc.html",
+  "R3-L4-withdrawn-390.dc.html",
+  "R3-L5-released-1280.dc.html",
+  "R3-L5-released-768.dc.html",
+  "R3-L5-released-390.dc.html",
+  "R3-L6-under-review-1280.dc.html",
+  "R3-L6-under-review-390.dc.html",
+  "R3-L7-ten-1280.dc.html",
+  "R3-L7-ten-390.dc.html",
+  "R3-L8-loading-1280.dc.html",
+  "R3-L8-loading-390.dc.html",
+  "R3-L9-error-1280.dc.html",
+  "R3-L9-error-390.dc.html",
+  "R3-C1-no-template-1280.dc.html",
+  "R3-C1-no-template-390.dc.html",
+  "R3-C2-template-created-1280.dc.html",
+  "R3-C2-template-created-390.dc.html",
+  "R3-C3-molefe-1280.dc.html",
+  "R3-C3-molefe-768.dc.html",
+  "R3-C3-molefe-390.dc.html",
+  "R3-C4-refused-1280.dc.html",
+  "R3-C4-refused-390.dc.html",
+  "R3-C5-fifteen-1280.dc.html",
+  "R3-C5-fifteen-390.dc.html",
+  "R3-C8-threshold-refused-1280.dc.html",
+  "R3-C8-threshold-refused-390.dc.html",
+  "R3-C6-read-failed-1280.dc.html",
+  "R3-C6-read-failed-390.dc.html",
+  "R3-C7-loading-1280.dc.html",
+  "R3-C7-loading-390.dc.html",
+  "R3-K1-draft-empty-1280.dc.html",
+  "R3-K1-draft-empty-390.dc.html",
+  "R3-K2-draft-nine-1280.dc.html",
+  "R3-K2-draft-nine-768.dc.html",
+  "R3-K2-draft-nine-390.dc.html",
+  "R3-K3-remove-dialog-1280.dc.html",
+  "R3-K3-remove-dialog-390.dc.html",
+  "R3-K4-removed-1280.dc.html",
+  "R3-K4-removed-390.dc.html",
+  "R3-K5-refused-duplicate-1280.dc.html",
+  "R3-K5-refused-duplicate-390.dc.html",
+  "R3-K5b-refused-blank-1280.dc.html",
+  "R3-K5b-refused-blank-390.dc.html",
+  "R3-K5c-refused-malformed-1280.dc.html",
+  "R3-K5c-refused-malformed-390.dc.html",
+  "R3-K6-opened-1280.dc.html",
+  "R3-K6-opened-390.dc.html",
+  "R3-K7-not-delivered-1280.dc.html",
+  "R3-K7-not-delivered-768.dc.html",
+  "R3-K7-not-delivered-390.dc.html",
+  "R3-K8-resent-1280.dc.html",
+  "R3-K8-resent-390.dc.html",
+  "R3-K9-under-review-1280.dc.html",
+  "R3-K9-under-review-390.dc.html",
+  "R3-K10-withdraw-under-review-1280.dc.html",
+  "R3-K10-withdraw-under-review-390.dc.html",
+  "R3-K11-released-1280.dc.html",
+  "R3-K11-released-390.dc.html",
+  "R3-K12-withdrawn-draft-1280.dc.html",
+  "R3-K12-withdrawn-draft-390.dc.html",
+  "R3-K13-not-current-1280.dc.html",
+  "R3-K13-not-current-390.dc.html",
+  "R3-K14-programme-ended-1280.dc.html",
+  "R3-K14-programme-ended-390.dc.html",
+  "R3-K15-learner-draft-1280.dc.html",
+  "R3-K15-learner-draft-390.dc.html",
+  "R3-K16-unavailable-1280.dc.html",
+  "R3-K16-unavailable-390.dc.html",
+  "R3-K17-loading-1280.dc.html",
+  "R3-K17-loading-390.dc.html",
+  "R3-K18-error-1280.dc.html",
+  "R3-K18-error-390.dc.html",
+  "R3-K20-refused-open-1280.dc.html",
+  "R3-K20-refused-open-390.dc.html",
+  "R3-K21-refused-withdraw-1280.dc.html",
+  "R3-K21-refused-withdraw-390.dc.html",
+  "R3-K22-refused-resend-1280.dc.html",
+  "R3-K22-refused-resend-390.dc.html",
+  "R3-K19-fifteen-390.dc.html",
+  "R3-R1-open-1280.dc.html",
+  "R3-R1-open-768.dc.html",
+  "R3-R1-open-390.dc.html",
+  "R3-R2-close-dialog-1280.dc.html",
+  "R3-R2-close-dialog-390.dc.html",
+  "R3-R3-under-review-1280.dc.html",
+  "R3-R3-under-review-768.dc.html",
+  "R3-R3-under-review-390.dc.html",
+  "R3-R4-closed-by-job-1280.dc.html",
+  "R3-R4-closed-by-job-390.dc.html",
+  "R3-R5-typed-1280.dc.html",
+  "R3-R5-typed-390.dc.html",
+  "R3-R6a-release-dialog-1280.dc.html",
+  "R3-R6a-release-dialog-768.dc.html",
+  "R3-R6a-release-dialog-390.dc.html",
+  "R3-R6b-release-dialog-dropped-1280.dc.html",
+  "R3-R6b-release-dialog-dropped-390.dc.html",
+  "R3-R6c-release-dialog-no-epa-1280.dc.html",
+  "R3-R6c-release-dialog-no-epa-390.dc.html",
+  "R3-R6d-release-dialog-ended-1280.dc.html",
+  "R3-R6d-release-dialog-ended-390.dc.html",
+  "R3-R7-released-1280.dc.html",
+  "R3-R7-released-768.dc.html",
+  "R3-R7-released-390.dc.html",
+  "R3-R7b-released-not-recorded-1280.dc.html",
+  "R3-R7b-released-not-recorded-390.dc.html",
+  "R3-R8a-blocked-responses-1280.dc.html",
+  "R3-R8a-blocked-responses-768.dc.html",
+  "R3-R8a-blocked-responses-390.dc.html",
+  "R3-R8b-blocked-groups-1280.dc.html",
+  "R3-R8b-blocked-groups-390.dc.html",
+  "R3-R9-no-epa-1280.dc.html",
+  "R3-R9-no-epa-390.dc.html",
+  "R3-R10-programme-ended-1280.dc.html",
+  "R3-R10-programme-ended-390.dc.html",
+  "R3-R11-dozen-1280.dc.html",
+  "R3-R11-dozen-390.dc.html",
+  "R3-R12-unavailable-1280.dc.html",
+  "R3-R12-unavailable-390.dc.html",
+  "R3-R13-loading-1280.dc.html",
+  "R3-R13-loading-390.dc.html",
+  "R3-R14-error-1280.dc.html",
+  "R3-R14-error-390.dc.html",
+  "R3-R15-fifteen-390.dc.html",
+  "R3-R16-refused-close-1280.dc.html",
+  "R3-R16-refused-close-390.dc.html",
+  "R3-R17-refused-release-1280.dc.html",
+  "R3-R17-refused-release-390.dc.html",
+  "R3-Q1-questionnaire-1280.dc.html",
+  "R3-Q1-questionnaire-390.dc.html",
+  "R3-Q2-required-1280.dc.html",
+  "R3-Q2-required-390.dc.html",
+  "R3-Q9-refused-post-1280.dc.html",
+  "R3-Q9-refused-post-390.dc.html",
+  "R3-Q3-thanks-1280.dc.html",
+  "R3-Q3-thanks-390.dc.html",
+  "R3-Q4-used-1280.dc.html",
+  "R3-Q4-used-390.dc.html",
+  "R3-Q5-closed-1280.dc.html",
+  "R3-Q5-closed-390.dc.html",
+  "R3-Q6-expired-1280.dc.html",
+  "R3-Q6-expired-390.dc.html",
+  "R3-Q7-not-recognised-1280.dc.html",
+  "R3-Q7-not-recognised-390.dc.html",
+  "R3-Q8-fault-1280.dc.html",
+  "R3-Q8-fault-390.dc.html",
+  "R3-M1-none-1280.dc.html",
+  "R3-M1-none-390.dc.html",
+  "R3-M2-list-1280.dc.html",
+  "R3-M2-list-768.dc.html",
+  "R3-M2-list-390.dc.html",
+  "R3-M3-report-1280.dc.html",
+  "R3-M3-report-768.dc.html",
+  "R3-M3-report-390.dc.html",
+  "R3-M4-not-recorded-1280.dc.html",
+  "R3-M4-not-recorded-390.dc.html",
+  "R3-M8-fifteen-390.dc.html",
+  "R3-M5-not-hers-1280.dc.html",
+  "R3-M5-not-hers-390.dc.html",
+  "R3-M6-loading-1280.dc.html",
+  "R3-M6-loading-390.dc.html",
+  "R3-M7-error-1280.dc.html",
+  "R3-M7-error-390.dc.html",
+  "R3-M9-report-loading-1280.dc.html",
+  "R3-M9-report-loading-390.dc.html",
+  "R3-M10-report-error-1280.dc.html",
+  "R3-M10-report-error-390.dc.html",
+  "R3-M11-report-unavailable-1280.dc.html",
+  "R3-M11-report-unavailable-390.dc.html",
+  "R3-V1-loaded-1280.dc.html",
+  "R3-V1-loaded-768.dc.html",
+  "R3-V1-loaded-390.dc.html",
+  "R3-V2-nobody-1280.dc.html",
+  "R3-V2-nobody-390.dc.html",
+  "R3-V3-two-programmes-1280.dc.html",
+  "R3-V3-two-programmes-390.dc.html",
+  "R3-V4-loading-1280.dc.html",
+  "R3-V4-loading-390.dc.html",
+  "R3-V5-error-1280.dc.html",
+  "R3-V5-error-390.dc.html"
+ ],
+ "notes": {
+  "t1": {
+   "x": 0,
+   "y": -300,
+   "text": "Proposal · Screen 1 · MSF campaigns",
+   "kind": "title1",
+   "maxW": 1750
+  },
+  "t2": {
+   "x": 0,
+   "y": 1520,
+   "text": "Proposal · Screen 2 · New MSF campaign",
+   "kind": "title1",
+   "maxW": 1750
+  },
+  "t3": {
+   "x": 0,
+   "y": 4740,
+   "text": "Proposal · Screen 2 · The campaign page",
+   "kind": "title1",
+   "maxW": 4470
+  },
+  "t4": {
+   "x": 0,
+   "y": 6960,
+   "text": "Confirmations",
+   "kind": "title1",
+   "maxW": 1280
+  },
+  "t5": {
+   "x": 0,
+   "y": 9480,
+   "text": "Proposal · Screen 4 · The respondent's page",
+   "kind": "title1",
+   "maxW": 2690
+  },
+  "t6": {
+   "x": 0,
+   "y": 11850,
+   "text": "Proposal · Screen 6 · MSF coverage",
+   "kind": "title1",
+   "maxW": 1750
+  },
+  "t7": {
+   "x": 0,
+   "y": 14170,
+   "text": "Screen 3 · Report A · Status first, release last",
+   "kind": "title1",
+   "maxW": 3110
+  },
+  "t8": {
+   "x": 0,
+   "y": 17890,
+   "text": "Screen 3 · Report B · The decision beside the evidence",
+   "kind": "title1",
+   "maxW": 1750
+  },
+  "t9": {
+   "x": 0,
+   "y": 21610,
+   "text": "Screen 3 · Report C · One table of groups",
+   "kind": "title1",
+   "maxW": 1750
+  },
+  "t10": {
+   "x": 0,
+   "y": 25130,
+   "text": "Screen 5 · MSF reports A · A page of its own",
+   "kind": "title1",
+   "maxW": 3110
+  },
+  "t11": {
+   "x": 0,
+   "y": 27450,
+   "text": "Screen 5 · MSF reports B · Beside the list, mended",
+   "kind": "title1",
+   "maxW": 1750
+  },
+  "r2t0": {
+   "x": 0,
+   "y": -300,
+   "text": "Round 2 · Spec and steps",
+   "kind": "title1",
+   "maxW": 4000,
+   "page": "r2"
+  },
+  "r2t1": {
+   "x": 0,
+   "y": 5620,
+   "text": "Round 2 · MSF campaigns",
+   "kind": "title1",
+   "maxW": 4000,
+   "page": "r2"
+  },
+  "r2t2": {
+   "x": 0,
+   "y": 12340,
+   "text": "Round 2 · New MSF campaign",
+   "kind": "title1",
+   "maxW": 4000,
+   "page": "r2"
+  },
+  "r2t3": {
+   "x": 0,
+   "y": 16860,
+   "text": "Round 2 · The campaign page",
+   "kind": "title1",
+   "maxW": 4000,
+   "page": "r2"
+  },
+  "r2t4": {
+   "x": 0,
+   "y": 20530,
+   "text": "Round 2 · The report (RA)",
+   "kind": "title1",
+   "maxW": 4000,
+   "page": "r2"
+  },
+  "r2t5": {
+   "x": 0,
+   "y": 30250,
+   "text": "Round 2 · /msf/respond",
+   "kind": "title1",
+   "maxW": 4000,
+   "page": "r2"
+  },
+  "r2t6": {
+   "x": 0,
+   "y": 32720,
+   "text": "Round 2 · MSF reports (MA)",
+   "kind": "title1",
+   "maxW": 4000,
+   "page": "r2"
+  },
+  "r2t7": {
+   "x": 0,
+   "y": 35240,
+   "text": "Round 2 · MSF coverage",
+   "kind": "title1",
+   "maxW": 4000,
+   "page": "r2"
+  },
+  "r3t0": {
+   "x": 0,
+   "y": -300,
+   "text": "Round 3 · Spec and steps",
+   "kind": "title1",
+   "maxW": 4000,
+   "page": "r3"
+  },
+  "r3t1": {
+   "x": 0,
+   "y": 7420,
+   "text": "Round 3 · MSF campaigns",
+   "kind": "title1",
+   "maxW": 4000,
+   "page": "r3"
+  },
+  "r3t2": {
+   "x": 0,
+   "y": 14540,
+   "text": "Round 3 · New MSF campaign",
+   "kind": "title1",
+   "maxW": 4000,
+   "page": "r3"
+  },
+  "r3t3": {
+   "x": 0,
+   "y": 19460,
+   "text": "Round 3 · The campaign page",
+   "kind": "title1",
+   "maxW": 4000,
+   "page": "r3"
+  },
+  "r3t4": {
+   "x": 0,
+   "y": 23730,
+   "text": "Round 3 · The report (RA)",
+   "kind": "title1",
+   "maxW": 4000,
+   "page": "r3"
+  },
+  "r3t5": {
+   "x": 0,
+   "y": 33850,
+   "text": "Round 3 · /msf/respond",
+   "kind": "title1",
+   "maxW": 4000,
+   "page": "r3"
+  },
+  "r3t6": {
+   "x": 0,
+   "y": 36570,
+   "text": "Round 3 · MSF reports (MA)",
+   "kind": "title1",
+   "maxW": 4000,
+   "page": "r3"
+  },
+  "r3t7": {
+   "x": 0,
+   "y": 39990,
+   "text": "Round 3 · MSF coverage",
+   "kind": "title1",
+   "maxW": 4000,
+   "page": "r3"
+  }
+ },
+ "designSystems": [
+  {
+   "title": "Wombat",
+   "namespace": "wombat",
+   "artifact": "https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18",
+   "version": "1791997100-4a21",
+   "copiedAt": "2026-10-15T14:00:00Z"
+  }
+ ]
+}

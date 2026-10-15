@@ -27,8 +27,9 @@ every remaining item, with tests; the task file's closing note lists them.
   The 2.19 stand-in account (pending290@kgk.wombat.local) exists in that database only.
 - Pushed through `cc80d5b3`. **T369 (flow 10) started:** canvas "Wombat 10" https://claude.ai/artifact/CPUXS577gX2yo79AryKmVE
   (v23 installed, `tokens.css` by hand, mark `/_blob/d5b5890c1eb0efaad13d0d347d1ebf4c`). Brief restated (`ded43219`); round 1 drawn, assessed (`b389a526`); the operator
-  picked RA + MA and Q8–Q10 as recommended (Q7, Q11 taken as recommended). **Next:** the operator sends
-  `design/flows/10-msf-campaign/round-2-ask.txt` (`0da23187`) on the canvas; then review round 2 from three sides.
+  picked RA + MA and Q8–Q10 as recommended (Q7, Q11 taken as recommended). Round 2 (159 boards) reviewed from three
+  sides (`5cc29ec7`); the operator took F1–F11 as recommended (`f79586b5`). Round 3 drawn (canvas 1792071007-7a95, 188
+  boards, saved in `round-3/`); checked final (`round-3-check.md`); **next:** the build (step 6).
 
 ## Session 2026-10-14 (Opus): T366 (flow 09) done, with T367
 

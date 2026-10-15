@@ -92,3 +92,7 @@ T366 (flow 09), T364 (flow 08), T162 (the system-managed MSF type), T153, T270, 
   cast gains a third Nurse and Consultant; `Distribution` dropped); F5 `ClosedByUserId` stored (a migration); F3 no
   Responses column on her list; F4 no release mail once her programme has ended; F6–F11 as recommended. Round 3 is
   `round-3-ask.txt`, with six screenshots re-attached.
+- **2026-10-15, round 3** (canvas 1792071007-7a95, 188 boards in `round-3/`) checked item by item (one Sonnet agent,
+  `round-3-check.md`): 44 done, 8 partly, 1 not done; no anonymity leak; **final, no fourth round.** For the build: R8a/R9
+  thresholds drawn 5 / 3 / 2 (the page shows the campaign's own); the Spec's class table and `Distribution`'s removal;
+  K10's body is `MsfCampaignText.WithdrawBody` as built; R8b's reason links the campaign page; PAED-015's tool list.

@@ -1,0 +1,197 @@
+/* Flow 10, round 3: the classes this flow adds to app.css (§ MSF). Every colour a token from tokens.css; spacing on the
+   --space-* scale. The .anno chips, .board-strip, .doc-board, .ring, .browser-prompt and .dlg-overlay are the canvas's
+   own (annotations, a drawn focus ring, a picture of the browser's prompt, and a dialog's backdrop painted in place of
+   showModal()), never shipped. Reused, not redefined: .actions-cell, .submit-check, .move-reasons, .choice-group,
+   .review-progress-link, .required-mark, .error-summary, .activity-status--others/--done/--declined (the stripes). */
+
+/* ---- canvas only (not shipped) ---- */
+.anno{display:inline-block;margin-left:var(--space-xs);padding:0 6px;border:1px dashed var(--input-border);border-radius:var(--radius-sm);background:var(--header-bg);color:var(--text-color);font:600 0.6875rem/1.6 var(--font-mono);letter-spacing:0.02em;vertical-align:middle;white-space:nowrap}
+.anno--data{border-color:var(--secondary-color)}
+.anno--new{border-color:var(--success-color)}
+.anno--proposed{border-color:var(--warning-color);background:var(--warning-bg)}
+.anno--ill{border-color:var(--danger-color)}
+.board-strip{margin:0 0 var(--space-md);padding:6px 12px;background:var(--header-bg);border:1px dashed var(--input-border);border-radius:var(--radius-md);font-size:0.85rem;color:var(--text-color)}
+.dlg-overlay{position:fixed;inset:0;background:var(--scrim);display:flex;align-items:flex-start;justify-content:center;padding:6rem var(--space-md) var(--space-md);z-index:20;overflow:auto}
+.dlg-overlay dialog{position:static;margin:0;max-width:34rem;width:100%}
+.ring{outline:2px solid var(--focus-ring);outline-offset:2px}
+.doc-board{padding:var(--space-xl);background:var(--background-color);min-height:100vh;box-sizing:border-box;font-family:var(--font-body);color:var(--text-color)}
+.doc-board h1{font-size:1.75rem;margin:0 0 var(--space-sm)}
+.doc-board h2{font-size:1.25rem;margin:var(--space-xl) 0 var(--space-sm);padding-top:var(--space-md);border-top:2px solid var(--secondary-color)}
+.doc-board h3{font-size:1.05rem;margin:var(--space-lg) 0 var(--space-xs)}
+.doc-board td,.doc-board th{vertical-align:top;font-size:0.9rem}
+.doc-board .clinic-table th,.doc-board .clinic-table td{padding:var(--space-sm) var(--space-md)}
+.doc-board code{font-family:var(--font-mono);font-size:0.85rem;background:var(--header-bg);padding:0 4px;border-radius:var(--radius-sm)}
+.browser-prompt{position:absolute;left:var(--space-md);top:3.1rem;z-index:2;display:flex;gap:var(--space-sm);align-items:center;background:var(--surface-color);color:var(--text-color);border:1px solid var(--input-border);border-radius:var(--radius-sm);box-shadow:var(--shadow-dialog);padding:var(--space-sm) 12px;font-size:0.9rem}
+.browser-prompt::before{content:"!";display:inline-flex;align-items:center;justify-content:center;width:1.25rem;height:1.25rem;border-radius:var(--radius-sm);background:var(--warning-color);color:var(--on-fill);font-weight:700}
+
+/* ---- the page column (NEW .msf-page: a flex column of sections 24px apart; .msf-page--measure caps the report at 60rem) ---- */
+.msf-page{display:flex;flex-direction:column;gap:var(--space-lg)}
+.msf-page--measure{max-width:60rem}
+.msf-measure{max-width:52rem}
+.msf-page .alert,.msf-page p{margin:0}
+.msf-page h2{margin:0}
+.msf-stack-card{display:grid;gap:var(--space-md)}
+.section-title{font-size:1.1rem;margin:0 0 var(--space-sm)}
+.section-title--h3{font-size:1rem}
+.nowrap{white-space:nowrap}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.msf-gap-top{margin-top:var(--space-md)}
+.msf-centre{justify-content:center}
+.msf-block{display:block}
+.msf-narrow-field{max-width:24rem}
+/* a link in running text, flow 08's rule (DecisionsDue's "review #n"): an inline-block 24px target, 44px below 641px */
+.msf-inline-link{display:inline-block;min-height:24px;padding:2px 0}
+
+/* ---- the status card (NEW: on .detail-card plus its stripe: --emphasis Draft and Under review; activity-status--others Open; --done Released; --declined Withdrawn) ---- */
+.status-card{display:grid;gap:var(--space-md)}
+.status-head{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-sm) var(--space-md)}
+.status-line{font-size:1.1rem;font-weight:600;line-height:1.35;margin:0}
+.status-actions{display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;border-top:1px solid var(--border-color);padding-top:var(--space-md)}
+.status-actions > p{flex:1 1 18rem}
+.status-actions .move-reasons,.status-actions > .alert{flex-basis:100%;margin:0}
+.status-split{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(22rem,100%),1fr));gap:var(--space-lg);align-items:start}
+
+/* ---- a ConfirmDialog's body (inside the page column) ---- */
+.msf-page dialog .dialog-body p{margin:0 0 var(--space-sm)}
+.msf-page dialog .dialog-body ul{margin:0 0 var(--space-sm);padding-left:1.25rem;display:grid;gap:var(--space-xs)}
+.msf-page dialog .dialog-body .alert{margin:0 0 var(--space-sm)}
+
+/* ---- About this campaign (NEW .msf-facts: a details list in columns) ---- */
+.msf-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(16rem,100%),1fr));gap:var(--space-md) var(--space-lg);margin:0}
+.msf-facts dt{color:var(--muted-text);font-weight:500}
+.msf-facts dd{margin:0}
+.msf-facts-wide{grid-column:1/-1}
+.epa-lines{margin:var(--space-xs) 0 0;padding-left:1.25rem;display:grid;gap:var(--space-xs)}
+
+/* ---- count tables: unstacked at every width (two or three narrow columns), no .shadow inside a card ---- */
+.anon-caption{display:flex;gap:var(--space-sm);align-items:flex-start}
+.anon-caption .icon{flex:none;margin-top:0.2rem}
+.count-table tbody th,.count-table tfoot th{font-weight:400;background:none}
+.count-table tfoot th,.count-table tfoot td{font-weight:600;border-bottom:0;padding:var(--space-md)}
+.count-box{max-width:34rem}
+.links-part{display:grid;gap:var(--space-sm)}
+
+/* ---- the draft's address rows (NEW: a list, Remove in each item) and the add form ---- */
+.invitee-rows{list-style:none;margin:0;padding:0;border:1px solid var(--border-color);border-radius:var(--radius-lg)}
+.invitee-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-xs) var(--space-md);align-items:center;padding:var(--space-sm) var(--space-md);border-bottom:1px solid var(--border-color)}
+.invitee-row:last-child{border-bottom:0}
+.invitee-address{font-weight:600}
+.invitee-group{color:var(--muted-text);font-size:0.9rem;font-weight:400;display:block}
+.add-form{display:grid;gap:var(--space-sm)}
+.add-invitee{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.3fr) auto;gap:var(--space-md);align-items:start}
+.add-invitee > .btn{align-self:end}
+.add-invitee .form-group{gap:var(--space-xs)}
+@media (max-width:900px){.add-invitee{grid-template-columns:minmax(0,1fr)}.add-invitee > .btn{justify-self:start}}
+
+/* ---- the report ---- */
+.threshold-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-xs)}
+.threshold-list li{display:flex;gap:var(--space-sm);align-items:flex-start}
+.threshold-list .icon{flex:none;margin-top:0.2rem}
+.threshold-list .is-met .icon{color:var(--success-color)}
+.threshold-list .is-short .icon{color:var(--warning-color)}
+.threshold-list .is-rule .icon{color:var(--muted-text)}
+.report-line{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-xs) var(--space-sm);font-weight:600}
+.report-line .sep{color:var(--muted-text);font-weight:400}
+.group-card{display:grid;gap:var(--space-sm)}
+.group-card h3{margin:0;font-size:1.1rem;line-height:1.35}
+.group-avg{font-weight:400;color:var(--muted-text)}
+.group-avg strong{color:var(--primary-color);font-weight:700}
+.group-question{color:var(--muted-text);font-size:0.9rem;font-weight:600}
+.group-comments{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-sm)}
+.group-comments li{border-left:3px solid var(--border-color);padding:var(--space-xs) var(--space-md);overflow-wrap:anywhere;white-space:pre-line}
+.groups-intro{margin-top:var(--space-xs);color:var(--muted-text);font-size:0.9rem}
+.suppressed-line{display:flex;gap:var(--space-sm);align-items:flex-start;text-align:left;color:var(--text-color)}
+.suppressed-line .icon{flex:none;margin-top:0.2rem}
+.release-section form{display:grid;gap:var(--space-lg)}
+.submit-check ul{margin:var(--space-xs) 0 0;padding-left:1.25rem;display:grid;gap:2px}
+.release-actions{display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;border-top:1px solid var(--border-color);padding-top:var(--space-md)}
+.release-actions > p,.release-actions .move-reasons,.release-actions > .alert{flex-basis:100%;margin:0}
+.stored{display:grid;grid-template-columns:minmax(12rem,max-content) minmax(0,1fr);gap:var(--space-sm) var(--space-lg);margin:0}
+.stored dt{color:var(--muted-text);font-weight:500}
+.stored dd{margin:0;white-space:pre-line;overflow-wrap:anywhere}
+
+/* ---- the create page ---- */
+.msf-form-column{max-width:52rem}
+.msf-form-column .form-container{padding:var(--space-lg)}
+.msf-card-title{font-size:1.25rem;margin:0 0 var(--space-md)}
+.msf-card-title small{display:block;color:var(--muted-text);font-size:0.9rem;font-weight:400;margin-top:var(--space-xs)}
+.template-fold{border-top:1px solid var(--border-color);margin-top:var(--space-md);padding-top:var(--space-md)}
+.template-fold > summary{cursor:pointer;font-weight:600;color:var(--text-color);min-height:1.5rem;display:flex;align-items:center;gap:var(--space-sm)}
+.template-form{margin-top:var(--space-md)}
+.epa-checks{display:grid;gap:var(--space-sm) var(--space-lg);grid-template-columns:repeat(auto-fill,minmax(min(22rem,100%),1fr))}
+.epa-checks .form-check{align-items:flex-start}
+.epa-checks .form-check-input{margin-top:0.3rem;flex:none}
+.choice-group > legend{font-weight:600;margin-bottom:var(--space-xs)}
+.choice-group > p{margin:0 0 var(--space-sm)}
+.choice-stack{display:flex;flex-direction:column;gap:var(--space-xs)}
+.error-summary p{margin:0 0 var(--space-xs)}
+
+/* ---- /msf/respond ---- */
+.respond-card{display:flex;flex-direction:column;gap:var(--space-md)}
+.respond-card .account-brand{margin-bottom:var(--space-sm)}
+.respond-card .account-brand-mark{width:44px;height:44px}
+.respond-card h1,.respond-card p,.respond-card .alert{margin:0}
+.respond-meta{color:var(--muted-text)}
+.respond-privacy{margin:0;padding:var(--space-md);background:var(--info-bg);border:1px solid var(--secondary-color);border-radius:var(--radius-md)}
+.respond-privacy-title{font-weight:600;margin:0 0 var(--space-xs)}
+.respond-privacy-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-sm)}
+.respond-privacy-list li{display:flex;gap:var(--space-sm);align-items:flex-start}
+.respond-privacy-list .icon{flex:none;margin-top:0.2rem;color:var(--secondary-color)}
+.respond-form{display:flex;flex-direction:column;gap:var(--space-lg);border-top:1px solid var(--border-color);padding-top:var(--space-lg)}
+.respond-form fieldset{border:0;margin:0;padding:0;min-width:0}
+.respond-form legend{font-weight:600;font-size:1.1rem;padding:0;margin-bottom:var(--space-xs)}
+.respond-form .scale-choices{margin-top:var(--space-md);position:relative}
+.respond-form .scale-choices .form-check{min-height:2.75rem;padding:0 var(--space-md);border:1px solid var(--border-color);border-radius:var(--radius-md)}
+.respond-form .scale-choices .form-check:has(:checked){border-color:var(--secondary-color);background:var(--info-bg)}
+.respond-form .scale-choices .form-check-input{width:1.25rem;height:1.25rem}
+.respond-form .scale-choices label{flex:1;min-height:2.75rem;display:flex;align-items:center}
+.respond-label{font-weight:600;font-size:1.1rem}
+.respond-optional{font-weight:400;color:var(--muted-text);font-size:0.9rem}
+.respond-required{color:var(--muted-text);font-size:0.9rem}
+.respond-form > .btn{align-self:flex-start;min-height:2.75rem}
+
+/* ---- her report and the lists ---- */
+.my-report{display:flex;flex-direction:column;gap:var(--space-lg);max-width:52rem}
+.my-report .narrative{white-space:pre-line;overflow-wrap:anywhere}
+.portfolio-links{margin:var(--space-xs) 0 0;padding-left:1.25rem;display:grid;gap:var(--space-xs)}
+.trainee-cell{font-weight:600}
+.kind-line{display:block;color:var(--muted-text);font-size:0.9rem;font-weight:400}
+.skeleton-stack{display:grid;gap:var(--space-sm)}
+
+/* ---- coverage ---- */
+.coverage-windows{margin:var(--space-sm) 0 var(--space-lg);padding:0;list-style:none;display:grid;gap:var(--space-xs);color:var(--muted-text)}
+.coverage-windows strong{color:var(--text-color);font-weight:600}
+.coverage-table th[scope="row"]{font-weight:400;background:none;min-width:16rem}
+.coverage-table td{white-space:nowrap}
+.coverage-table td.is-covered{font-weight:700}
+.coverage-programme h3{font-size:1.1rem;margin:var(--space-lg) 0 var(--space-sm)}
+
+/* ---- below 641px: every control and row action 44px, action rows stacked; dialogs as they ship (M10) ---- */
+@media (max-width:640.98px){
+  .msf-page .btn,.msf-page .form-control,.msf-page .form-select,.msf-header .btn,.msf-page .review-progress-link,.msf-header .review-progress-link{min-height:2.75rem}
+  .msf-header .actions-cell{width:100%;flex-direction:column}
+  .msf-header .actions-cell .btn{width:100%}
+  .msf-page td .actions-cell{flex-direction:column;align-items:stretch;margin-top:var(--space-xs)}
+  .msf-page td .actions-cell .btn{width:100%}
+  .msf-page .status-actions,.msf-page .release-actions,.msf-page .form-actions{flex-direction:column;align-items:stretch}
+  .msf-page .status-actions .btn,.msf-page .release-actions .btn{width:100%}
+  .msf-page .detail-card,.msf-form-column .form-container{padding:var(--space-md)}
+  .msf-page .alert-row .btn{width:100%}
+  .add-invitee > .btn{width:100%}
+  .stored{grid-template-columns:minmax(0,1fr);gap:var(--space-xs)}
+  .template-fold > summary{min-height:2.75rem}
+  .epa-checks .form-check,.choice-stack .form-check{min-height:2.75rem}
+  .epa-checks .form-check-input,.choice-stack .form-check-input{width:1.25rem;height:1.25rem}
+  .portfolio-links{padding-left:0;list-style:none}
+  .portfolio-links a{display:flex;align-items:center;min-height:2.75rem}
+  .msf-inline-link{min-height:2.75rem;display:inline-flex;align-items:center}
+  .respond-form > .btn{width:100%}
+  .account-brand-text{font-size:2rem}
+  .respond-card h1{font-size:1.5rem}
+  .coverage-table th[scope="row"]{min-width:12rem}
+  /* a ConfirmDialog is rendered inside the page column: the rule reaches it there; the action on top, the safe button
+     last on screen and first in the tab order (DOM: safe, then action) */
+  .msf-page dialog .form-actions{flex-direction:column-reverse;align-items:stretch}
+  .msf-page dialog .btn{min-height:2.75rem;width:100%}
+  .dlg-overlay{padding-top:var(--space-lg)}
+}
