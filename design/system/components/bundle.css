@@ -5739,6 +5739,13 @@ fieldset.form-group fieldset.form-group > legend {
   max-width: 52rem;
 }
 
+/* The campaign form's three cards: the page's gap spaces only its own children, and these sit inside the form. */
+.msf-form-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
 .msf-form-column .form-container {
   padding: var(--space-lg);
 }
@@ -5956,7 +5963,8 @@ fieldset.form-group fieldset.form-group > legend {
   padding: 0;
 }
 
-.respond-form legend {
+/* fieldset > legend: as specific as the field-level group's legend rule, and later, so the question reads as one. */
+.respond-form fieldset > legend {
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: var(--space-xs);

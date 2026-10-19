@@ -43,5 +43,5 @@ The page shows the respondent their own questionnaire and nothing else. Who sent
 
 ## Known gaps
 
-- **Found re-syncing, not filed:** the rating question's legend renders at body size and weight, where the comment question's label is 1.1rem at 600 (`msf-respond--form.png`): `fieldset.form-group > legend` (app.css, T177/T188: `font-size: inherit; font-weight: inherit`, specificity 0,1,2) outweighs `.respond-form legend` (0,1,1), since the rating's fieldset carries `.form-group`.
-- **Found re-syncing, not filed:** two sentences still say "Please", which the voice drops: the fault's "Please try again in a few minutes." and a refused post's "Please answer the questions below before submitting." The rating's help says "their stage of training", a pronoun for the trainee.
+- **Found re-syncing, fixed in step 8:** the rating question's legend rendered at body size and weight, `fieldset.form-group > legend` (0,1,2) outweighing `.respond-form legend` (0,1,1); the rule is now `.respond-form fieldset > legend`, as specific and later, so both questions read at 1.1rem/600.
+- **Found re-syncing, fixed in step 8:** two sentences said "Please": they now read "Try again in a few minutes." and "Answer the questions below before submitting.". The rating's help says "their stage of training": singular they, kept.

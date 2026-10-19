@@ -64,7 +64,7 @@
         @* The campaign's form: the three cards below. The Template select above joins it by form="campaign-form" (S5),
            and the fold above is outside it, so nothing in the fold is part of a create. novalidate: the browser stays
            quiet and the page refuses in its own words (T324). *@
-        <EditForm Model="_campaign" OnSubmit="CreateAsync" FormName="msf-campaign" id="campaign-form" novalidate>
+        <EditForm Model="_campaign" OnSubmit="CreateAsync" FormName="msf-campaign" id="campaign-form" class="msf-form-cards" novalidate>
           @TraineeAndWindow()
           @Thresholds()
           @Evidence()

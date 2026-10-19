@@ -46,7 +46,7 @@
   {
     <h1>Something went wrong</h1>
     <Alert Kind="danger" Role="alert">
-      Something went wrong on our side, and this page could not be shown. Please try again in a few minutes. If you had
+      Something went wrong on our side, and this page could not be shown. Try again in a few minutes. If you had
       submitted the form, opening your link again will say whether your feedback was recorded.
     </Alert>
     <p>You can close this page.</p>
@@ -333,7 +333,7 @@
     catch (FluentValidation.ValidationException)
     {
       // The command's validator refuses a submission with no answers at all.
-      _submitError = "Please answer the questions below before submitting.";
+      _submitError = "Answer the questions below before submitting.";
       SetStatus(MsfResponseRefusals.Describe(MsfResponseRefusal.AnswersIncomplete).Status);
     }
     catch (Exception exception)

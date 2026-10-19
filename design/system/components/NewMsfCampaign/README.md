@@ -34,4 +34,4 @@ No new colour token. Labels and text 12.63:1; help and the cards' muted titles 5
 
 ## Known gaps
 
-- **Found re-syncing:** the three cards inside the campaign's form (Trainee and window, Thresholds, Evidence) touch, with no space between them: `.msf-page`'s 24px gap spaces its children, and the three are children of `form#campaign-form`, which has no gap of its own (`campaign-edit--new.png`). Not filed.
+- **Found re-syncing, fixed in step 8:** the three cards inside the campaign's form (Trainee and window, Thresholds, Evidence) touched, `.msf-page`'s 24px gap spacing only its own children; the form is now `.msf-form-cards`, a column with the same 24px gap.

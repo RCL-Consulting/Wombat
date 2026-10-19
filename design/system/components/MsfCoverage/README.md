@@ -34,5 +34,5 @@ No new colour token. Cells 12.63:1 on the surface, bold where covered (weight, n
 
 ## Known gaps
 
-- **Found re-syncing, not filed:** each semester's line writes its last day long, "whose programme had started by 30 June 2026" (`MsfProgrammeCoverageText.TraineesLine`, `QuotaText.LongDate`), where every date on a screen is ISO (D1).
+- **Kept:** each semester's line writes its last day long, "whose programme had started by 30 June 2026" (`QuotaText.LongDate`): D1's ISO date is for the screens a registrar reads, and the coordinator's coverage text keeps its long dates (`QuotaText.Iso`'s note).
 - The opening and the captions say "their" of a trainee, a pronoun the voice avoids.

@@ -231,7 +231,7 @@ public sealed class MsfRespondPageTests : TestContext
         cut.Find("form").Submit();
 
         Words(cut.Find(".alert-danger").TextContent).Trim().Should().Be(
-            "Your feedback was not recorded. Please answer the questions below before submitting.");
+            "Your feedback was not recorded. Answer the questions below before submitting.");
         cut.FindAll("fieldset input[type=radio]").Should().NotBeEmpty();
     }
 

@@ -45,5 +45,5 @@ Words 11.23 to 11.89:1 on every tint. Edges and icons: success 5.23:1, warning 5
 
 ## Known gaps
 
-- **Found re-syncing flow 10, not filed:** `/msf/respond`'s fault alert says "Please try again in a few minutes.", and a refused post's "Please answer the questions below before submitting." (MsfRespond).
+- **Found re-syncing flow 10, fixed in step 8:** `/msf/respond`'s two sentences that said "Please" (MsfRespond).
 - A dismissible alert's × wraps under content wider than the row (the `.actions-cell` wraps), as the committee review's sampling warnings do (seen in a static render of the stylesheet).
