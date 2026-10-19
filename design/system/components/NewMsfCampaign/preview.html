@@ -1,0 +1,172 @@
+<!-- @dsCard group="MSF" height=2350 width=974 subtitle="New MSF campaign: four cards at the form's measure; the template chosen, its fold outside the campaign's form; the window on the South African calendar; a group's minimum never under 3; the EPAs counted as ticked; no template yet; a refused create" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NewMsfCampaign</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Pieter Smit, after Add template and with Lerato Molefe's campaign filled in (Steps 3.34 and 3.35): the result focused, the fold closed; 2 of 15 ticked (eight of the fifteen boxes shown)</p>
+<div class="msf-header">
+  <div class="header-container">
+    <div>
+      <h1>New MSF campaign</h1>
+      <p class="page-subtitle">One campaign for one current trainee: its questionnaire, its window, its thresholds and the EPAs it is evidence for. Creating it makes a draft; nobody is emailed until you open it.</p>
+    </div>
+  </div>
+</div>
+<div class="msf-page msf-form-column">
+  <p class="field-help">* marks a field you must fill in.</p>
+  <section class="form-container" aria-labelledby="pv-q-heading">
+    <h2 id="pv-q-heading" class="msf-card-title">Questionnaire <small>Written once, used by every campaign that names it.</small></h2>
+    <div class="action-result" tabindex="-1">
+      <div class="alert alert-success" role="status"><strong>Template created.</strong> Default MSF is chosen as this campaign's template.</div>
+    </div>
+    <div class="form-group msf-gap-top">
+      <label for="pv-template">Template<span class="required-mark" aria-hidden="true"> *</span></label>
+      <select id="pv-template" class="form-select" aria-required="true" aria-describedby="pv-template-help"><option>Default MSF (Multi-source feedback)</option></select>
+      <p id="pv-template-help" class="field-help">Rates the trainee's overall professional performance. · What should the trainee keep doing or improve?</p>
+    </div>
+    <details class="template-fold">
+      <summary><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Write a new questionnaire</summary>
+    </details>
+  </section>
+  <form id="campaign-form" novalidate>
+    <section class="form-container" aria-labelledby="pv-t-heading">
+      <h2 id="pv-t-heading" class="msf-card-title">Trainee and window</h2>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label for="pv-subject">Trainee<span class="required-mark" aria-hidden="true"> *</span></label>
+          <select id="pv-subject" class="form-select" aria-required="true" aria-describedby="pv-subject-help"><option>Lerato Molefe (molefe@kgk.wombat.local)</option></select>
+          <p id="pv-subject-help" class="field-help">Current trainees you can run a campaign for.</p>
+        </div>
+        <div class="form-group">
+          <label for="pv-opens">Opens on<span class="required-mark" aria-hidden="true"> *</span></label>
+          <input id="pv-opens" type="date" class="form-control" value="2026-10-19" aria-required="true" aria-describedby="pv-opens-help" />
+          <p id="pv-opens-help" class="field-help">Today, on the South African calendar.</p>
+        </div>
+        <div class="form-group">
+          <label for="pv-closes">Closes on<span class="required-mark" aria-hidden="true"> *</span></label>
+          <input id="pv-closes" type="date" class="form-control" value="2026-11-02" aria-required="true" aria-describedby="pv-closes-help" />
+          <p id="pv-closes-help" class="field-help">The respondents' last day to answer, on the South African calendar.</p>
+        </div>
+      </div>
+    </section>
+    <section class="form-container" aria-labelledby="pv-th-heading">
+      <h2 id="pv-th-heading" class="msf-card-title">Thresholds <small>Nothing is shown of a respondent group that falls short, so no answer can be traced to its author.</small></h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="pv-min">Minimum responses<span class="required-mark" aria-hidden="true"> *</span></label>
+          <input id="pv-min" type="number" class="form-control" value="5" aria-required="true" />
+          <p class="field-help">Responses needed in all before the report can be released.</p>
+        </div>
+        <div class="form-group">
+          <label for="pv-min-group">Minimum responses in a respondent group<span class="required-mark" aria-hidden="true"> *</span></label>
+          <input id="pv-min-group" type="number" min="3" class="form-control" value="3" aria-required="true" />
+          <p class="field-help">A respondent group with fewer is suppressed: its rating and comments are never shown. At least 3 for multi-source feedback.</p>
+        </div>
+        <div class="form-group">
+          <label for="pv-min-groups">Minimum respondent groups reporting<span class="required-mark" aria-hidden="true"> *</span></label>
+          <input id="pv-min-groups" type="number" class="form-control" value="2" aria-required="true" />
+          <p class="field-help">How many respondent groups must clear the threshold beside it before the report can be released. Two is the College's answer: eight peer doctors alone are not multi-source feedback.</p>
+        </div>
+      </div>
+    </section>
+    <section class="form-container" aria-labelledby="pv-e-heading">
+      <h2 id="pv-e-heading" class="msf-card-title">Evidence</h2>
+      <fieldset class="form-group choice-row choice-group" aria-describedby="pv-epas-help">
+        <legend>Evidence for these EPAs<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></legend>
+        <p id="pv-epas-help" class="page-subtitle">One campaign covers many EPAs and runs once a semester. Each one selected here becomes a separate evidence record on the trainee's portfolio when the report is released.</p>
+        <p class="page-subtitle" role="status"><strong>2 of 15 ticked</strong></p>
+        <div class="epa-checks">
+          <div class="form-check"><input id="pv-e7" class="form-check-input" type="checkbox"><label for="pv-e7">PAED-007 — Maintaining and promoting the health and well-being of children</label></div>
+          <div class="form-check"><input id="pv-e8" class="form-check-input" type="checkbox"><label for="pv-e8">PAED-008 — Evaluating and managing neurodevelopmental and behavioural presentations in children</label></div>
+          <div class="form-check"><input id="pv-e9" class="form-check-input" type="checkbox"><label for="pv-e9">PAED-009 — Providing care for an adolescent patient</label></div>
+          <div class="form-check"><input id="pv-e10" class="form-check-input" type="checkbox" checked><label for="pv-e10">PAED-010 — Leading and operating within a clinical team</label></div>
+          <div class="form-check"><input id="pv-e11" class="form-check-input" type="checkbox"><label for="pv-e11">PAED-011 — Managing population health challenges</label></div>
+          <div class="form-check"><input id="pv-e12" class="form-check-input" type="checkbox" checked><label for="pv-e12">PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams</label></div>
+          <div class="form-check"><input id="pv-e13" class="form-check-input" type="checkbox"><label for="pv-e13">PAED-013 — Managing child protection, legal and ethical aspects of children at risk</label></div>
+          <div class="form-check"><input id="pv-e14" class="form-check-input" type="checkbox"><label for="pv-e14">PAED-014 — Providing palliative and end-of-life care</label></div>
+        </div>
+      </fieldset>
+      <div class="form-actions">
+        <a class="btn btn-outline" href="#">Cancel</a>
+        <button type="submit" class="btn btn-primary">Create campaign</button>
+      </div>
+    </section>
+  </form>
+</div>
+
+<p class="pv-cap">No template yet (Step 3.34, C1): the select natively disabled on its placeholder, the fold open and pre-filled, outside the campaign's form; Create campaign is aria-disabled with its reason beside it</p>
+<div class="msf-page msf-form-column">
+  <section class="form-container" aria-labelledby="pv-q2-heading">
+    <h2 id="pv-q2-heading" class="msf-card-title">Questionnaire <small>Written once, used by every campaign that names it.</small></h2>
+    <div class="form-group msf-gap-top">
+      <label for="pv-template-2">Template<span class="required-mark" aria-hidden="true"> *</span></label>
+      <select id="pv-template-2" class="form-select" disabled aria-required="true" aria-describedby="pv-template-2-help"><option>No template yet</option></select>
+      <p id="pv-template-2-help" class="field-help">Write the first one below; it is chosen here once it is added.</p>
+    </div>
+    <details class="template-fold" open>
+      <summary><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Write a new questionnaire</summary>
+      <div class="form-grid template-form">
+        <fieldset class="form-group full-width choice-row">
+          <legend>Kind</legend>
+          <div class="choice-stack">
+            <div class="form-check"><input id="pv-kind-msf" class="form-check-input" type="radio" name="pv-kind" checked><label for="pv-kind-msf">Multi-source feedback</label></div>
+            <div class="form-check"><input id="pv-kind-learner" class="form-check-input" type="radio" name="pv-kind"><label for="pv-kind-learner">Learner feedback</label></div>
+          </div>
+        </fieldset>
+        <div class="form-group full-width">
+          <label for="pv-tname">Template name<span class="required-mark" aria-hidden="true"> *</span></label>
+          <input id="pv-tname" class="form-control" value="Default MSF" aria-required="true" />
+        </div>
+        <div class="form-group full-width">
+          <label for="pv-tscale">Scale question<span class="required-mark" aria-hidden="true"> *</span></label>
+          <input id="pv-tscale" class="form-control" value="Rates the trainee's overall professional performance." aria-required="true" aria-describedby="pv-tscale-help" />
+          <p id="pv-tscale-help" class="field-help">Answered on five points, from Well below expectations to Well above expectations.</p>
+        </div>
+        <div class="form-group full-width">
+          <label for="pv-tcomment">Comment question<span class="required-mark" aria-hidden="true"> *</span></label>
+          <input id="pv-tcomment" class="form-control" value="What should the trainee keep doing or improve?" aria-required="true" />
+        </div>
+        <div class="form-group full-width">
+          <button type="button" class="btn btn-outline">Add template</button>
+        </div>
+      </div>
+    </details>
+  </section>
+  <section class="form-container" aria-labelledby="pv-e2-heading">
+    <h2 id="pv-e2-heading" class="msf-card-title">Evidence</h2>
+    <div class="form-actions">
+      <a class="btn btn-outline" href="#">Cancel</a>
+      <button type="button" class="btn btn-primary" aria-disabled="true" aria-describedby="pv-create-reason">Create campaign</button>
+    </div>
+    <ul class="move-reasons"><li id="pv-create-reason"><strong>Create campaign:</strong> write a questionnaire first.</li></ul>
+  </section>
+</div>
+
+<p class="pv-cap">A refused create (M9): the summary focused, what became of the work, each line a link to its field; the field's own message under it</p>
+<div class="msf-page msf-form-column">
+  <div class="validation-summary-errors error-summary" role="alert" tabindex="-1">
+    <p><strong>Not created.</strong> Fix the field below and create the campaign again.</p>
+    <ul class="refusal-summary-list"><li><a href="#pv-min-group-3">Enter a number from 3 to 100.</a></li></ul>
+  </div>
+  <section class="form-container" aria-labelledby="pv-th3-heading">
+    <h2 id="pv-th3-heading" class="msf-card-title">Thresholds</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="pv-min-group-3">Minimum responses in a respondent group<span class="required-mark" aria-hidden="true"> *</span></label>
+        <input id="pv-min-group-3" type="number" class="form-control input-validation-error" value="2" aria-required="true" aria-invalid="true" aria-describedby="pv-min-group-3-help pv-min-group-3-error" />
+        <p id="pv-min-group-3-help" class="field-help">A respondent group with fewer is suppressed: its rating and comments are never shown. At least 3 for multi-source feedback.</p>
+        <p id="pv-min-group-3-error" class="validation-message">Enter a number from 3 to 100.</p>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

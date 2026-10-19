@@ -1,8 +1,8 @@
 /* Wombat — components/bundle.css
-   Wombat's component CSS as flows 01 to 09 built it (T335, b347e11c; T339, f50dffb2 and 6735fa98; T342, 725237ee,
+   Wombat's component CSS as flows 01 to 10 built it (T335, b347e11c; T339, f50dffb2 and 6735fa98; T342, 725237ee,
    daaf6386, 5fd5abcd and a341b44e; T350, 06aa51d7; T355, b020c942, db4c2d0a, 5f8e6639 and b389f7d2; T358, 85d5a508 and
    94edf2b7; T361, 44de180b, 59bb72fd, 6ad6c57a, 6b149fff and 14378856; T364, 622c5ad1 and
-   1ec7a352; T366, 49e7cf5e and 9ba80586; master@9ba80586),
+   1ec7a352; T366, 49e7cf5e and 9ba80586; T369, 68327c9d; master@72aaf968),
    extracted with every class name and declaration unchanged, so a design maps back to the classes Razor writes.
    - From src/Wombat.Web/wwwroot/app.css: everything after :root. tokens.css, which the page compiles from tokens.json,
      supplies the :root custom properties (colours, --space-*, --radius-*, --shadow-*, --sidebar-width, --motion-fast,
@@ -707,11 +707,6 @@ dl.form-group > dd {
 
 .account-form-container--wide .account-brand {
   margin-bottom: var(--space-lg);
-}
-
-.account-form-container--wide h2 {
-  font-size: 2rem;
-  margin: 0 0 var(--space-sm);
 }
 
 .account-form-container--wide form {
@@ -2083,16 +2078,6 @@ textarea[aria-invalid="true"] {
 .details-grid > .detail-card,
 .details-grid > .list-section {
   min-width: 0;
-}
-
-/* Opt-in: a details grid whose second card comes and goes with the page's state gives a lone card the whole row (T266).
-   The grid's first column is its narrow one, so a lone card sat in a third of the row with the rest empty beside it: on
-   /msf/campaigns/{id} at 1000px, a 223px card in a 694px row, and its invitees table scrolled 143px inside it; at
-   1280px, 317px of 974px. With the modifier the card is 694px at 1000px and the table does not scroll. Not on every
-   details grid (T266 review): on a grid of like cards (My authorisations' STARs) one card should look like each of
-   several; and on My MSF reports the list would jump from the whole row to a third of it when a report is selected. */
-.details-grid--lone-spans > .detail-card:only-child {
-  grid-column: 1 / -1;
 }
 
 @media (max-width: 900px) {
@@ -5196,6 +5181,906 @@ fieldset.form-group fieldset.form-group > legend {
   }
 }
 /* end Flow 09: the STARs */
+
+/* Flow 10: the MSF pages, shared (T369) */
+/* The classes two lanes draw (the campaign page and its list, the report, her reports), written once before the build's
+   lanes so each uses them as given (build-contracts § 0). Rebuilt from round 3's R3-msf.css on the spacing scale; the
+   stripes are .detail-card--emphasis and .activity-status--others/--done/--declined as they are (F7). Every phone rule is
+   scoped to .msf-page or .msf-header (BRIEF § 11 "Flow 09"). */
+
+/* The page column: its sections 24px apart, the gap doing what each one's margin did. Every ConfirmDialog is rendered
+   inside it, so the phone rules below reach it (M10); the resets leave the dialog's own spacing alone.
+   The resets cancel the element defaults (h2's and p's) and .alert's margin, and nothing a class sets: a p or an h2 is
+   reset at (0,0,1), an .alert at (0,1,0), so any class's margin written later wins. Until build review D1 the reset was
+   (0,2,1), and .list-section-title, .msf-card-title and .section-title sat on what followed them (DESIGN.md § The MSF
+   campaign page; Design/MsfStylesheetTests). */
+.msf-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.msf-page > :not(dialog),
+:where(.msf-page p, .msf-page h2):not(dialog *),
+.msf-page :where(.alert):where(:not(dialog *)) {
+  margin-block: 0;
+}
+
+/* The report's measure (R1–R11). */
+.msf-page--measure {
+  max-width: 60rem;
+}
+
+/* A card's h2 at 1.1rem and its h3 at 1rem, on .list-section-title's scale; the card's gap spaces them. */
+.section-title {
+  font-size: 1.1rem;
+  margin: 0 0 var(--space-sm);
+}
+
+.section-title--h3 {
+  font-size: 1rem;
+}
+
+/* A section's cards, or a card's parts, stacked 16px apart. */
+.msf-stack-card {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.msf-centre {
+  justify-content: center;
+}
+
+/* The status card (F7): on .detail-card with its stripe, the state's badge and line first, what it means, then the
+   actions the state allows over a rule. */
+.status-card {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.status-head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+}
+
+.status-line {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.status-note {
+  margin: 0;
+}
+
+.status-actions {
+  align-items: center;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  padding-top: var(--space-md);
+}
+
+.status-actions > p {
+  flex: 1 1 18rem;
+}
+
+/* A reason under the actions, or a refusal above them (build review D7), takes its own line. */
+.status-actions .move-reasons,
+.status-actions > .alert {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+/* List rows: the registrar's name alone (.person-cell is a name over an address), the template over its kind. */
+.trainee-cell {
+  font-weight: 600;
+}
+
+.kind-line {
+  color: var(--muted-text);
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+/* A link in running text (flow 08's rule; round 3 S15): an inline box, a 24px target without moving the line. */
+.msf-inline-link {
+  display: inline-block;
+  min-height: 24px;
+  padding-block: 2px;
+}
+
+/* A ConfirmDialog's body inside the page column (Close, Release, Withdraw, Remove). */
+.msf-page dialog .dialog-body ul {
+  display: grid;
+  gap: var(--space-xs);
+  margin: 0 0 var(--space-sm);
+  padding-left: 1.25rem;
+}
+
+/* Below 641px: the header's actions stack, each 44px and full width; the page's buttons and the status card's actions
+   44px; a dialog shows its action on top and its safe button last on screen, first in the tab order (DOM: safe, then
+   action; M10). */
+@media (max-width: 640.98px) {
+  .msf-header .actions-cell {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .msf-header .actions-cell .btn,
+  .msf-page .btn {
+    min-height: 2.75rem;
+  }
+
+  .msf-header .actions-cell .btn {
+    width: 100%;
+  }
+
+  .msf-page .detail-card {
+    padding: var(--space-md);
+  }
+
+  .msf-page .status-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .msf-page .status-actions .btn {
+    width: 100%;
+  }
+
+  /* A row's actions in a stacked list (the campaign list, her reports): a full-width column (T323, A.7.5; build
+     review D9, written once here). */
+  .msf-page td .actions-cell {
+    align-items: stretch;
+    flex-direction: column;
+    margin-top: var(--space-xs);
+  }
+
+  .msf-page td .actions-cell .btn {
+    width: 100%;
+  }
+
+  .msf-inline-link {
+    align-items: center;
+    display: inline-flex;
+    min-height: 2.75rem;
+  }
+
+  .msf-page dialog .form-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .msf-page dialog .btn {
+    min-height: 2.75rem;
+    width: 100%;
+  }
+}
+/* From 641 to 900px a list written with both stack classes is stacked too (the campaign list, her reports; build review
+   D2): its row actions keep their 44px targets there. */
+@media (max-width: 900px) {
+  .msf-page .clinic-table--stack-wide td .actions-cell .btn {
+    min-height: 2.75rem;
+  }
+}
+/* end Flow 10: the MSF pages, shared */
+
+/* Flow 10: the report (T369) */
+/* The MSF report (/msf/reports/{id}; round 3's R boards), rebuilt from R3-msf.css on the spacing scale: the threshold
+   checklist and the released one-liner in the status card, the group cards, the suppressed line, the release section and
+   what was released. Every phone rule is scoped to .msf-page (BRIEF § 11 "Flow 09"). */
+
+/* The checklist (R1–R11): a mark before each line, met green, short amber, the rule muted. The words carry the meaning;
+   the mark only repeats it. */
+.threshold-list {
+  display: grid;
+  gap: var(--space-xs);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.threshold-list li {
+  align-items: flex-start;
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.threshold-list .icon {
+  flex: none;
+  margin-top: var(--space-xs);
+}
+
+.threshold-list .is-met .icon {
+  color: var(--success-color);
+}
+
+.threshold-list .is-short .icon {
+  color: var(--warning-color);
+}
+
+.threshold-list .is-rule {
+  color: var(--muted-text);
+}
+
+/* R7's released one-liner: the moment, the responses and the groups, a muted separator between (aria-hidden). */
+.report-line {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  font-weight: 600;
+  gap: var(--space-xs) var(--space-sm);
+}
+
+.report-line .sep {
+  color: var(--muted-text);
+  font-weight: 400;
+}
+
+/* A respondent group's card (MsfGroupCards): the group and its average on one line, the question once, the comments
+   verbatim, each a quote rule, wrapping anywhere so a 4,000-character comment with no space stays in the column (R11). */
+.group-card {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.group-card :is(h2, h3, h4, h5) {
+  font-size: 1.1rem;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.group-card p {
+  margin: 0;
+}
+
+.group-avg {
+  color: var(--muted-text);
+  font-weight: 400;
+}
+
+.group-avg strong {
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.group-question {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.group-comments {
+  display: grid;
+  gap: var(--space-sm);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.group-comments li {
+  border-left: 3px solid var(--border-color);
+  overflow-wrap: anywhere;
+  padding: var(--space-xs) var(--space-md);
+  white-space: pre-line;
+}
+
+.groups-intro {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  margin-top: var(--space-xs);
+}
+
+/* The suppressed line: the groups named, never counted, in a compact empty card. */
+.suppressed-line {
+  align-items: flex-start;
+  color: var(--text-color);
+  display: flex;
+  gap: var(--space-sm);
+  text-align: left;
+}
+
+.suppressed-line .icon {
+  flex: none;
+  margin-top: var(--space-xs);
+}
+
+/* The release section, last (R3–R10): what a release does, the narrative, the level, then Release over a rule. */
+.release-section {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.release-section .section-title {
+  margin: 0;
+}
+
+.release-section .submit-check ul {
+  display: grid;
+  gap: var(--space-xs);
+  margin: var(--space-xs) 0 0;
+  padding-left: 1.25rem;
+}
+
+.release-actions {
+  align-items: center;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  padding-top: var(--space-md);
+}
+
+.release-actions > p,
+.release-actions .move-reasons,
+.release-actions > .alert {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+/* The level's select at the width of its longest rung, not the column's. */
+.msf-narrow-field {
+  max-width: 22rem;
+}
+
+/* As released: the narrative and the level as they were given, in no field. */
+.stored {
+  display: grid;
+  gap: var(--space-sm) var(--space-lg);
+  grid-template-columns: minmax(12rem, max-content) minmax(0, 1fr);
+  margin: 0;
+}
+
+.stored dt {
+  color: var(--muted-text);
+  font-weight: 500;
+}
+
+.stored dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+@media (max-width: 640.98px) {
+  .msf-page .stored {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .msf-page .stored dt + dd {
+    margin-bottom: var(--space-sm);
+  }
+
+  .msf-page .release-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .msf-page .release-actions .btn {
+    width: 100%;
+  }
+
+  .msf-page .msf-narrow-field {
+    max-width: none;
+  }
+}
+/* end Flow 10: the report */
+
+/* Flow 10: the campaign (T369) */
+/* The campaign list (/msf/campaigns), New MSF campaign (/msf/campaigns/new) and a campaign's page
+   (/msf/campaigns/{id}): round 3's R3-L, R3-C and R3-K boards, rebuilt from R3-msf.css on the spacing scale. The page
+   column, the section titles and the status card are the shared section's. Every phone rule is scoped to .msf-page. */
+
+/* A part of a card set off from the part above it (the fold's Template help). */
+.msf-gap-top {
+  margin-top: var(--space-md);
+}
+
+/* A line of its own inside running text (About's learner-feedback note under its thresholds). */
+.msf-block {
+  display: block;
+}
+
+/* Beside a count table, the open campaign's Links part: two columns while they fit, one under the other below. */
+.status-split {
+  align-items: start;
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr));
+}
+
+/* The counts by respondent group (S13): unstacked at every width, since two or three narrow columns fit 358px, and
+   with no .shadow inside a card, whose own frame is the lift. Its caption says what it never shows, by an eye-off icon. */
+.count-box {
+  max-width: 34rem;
+}
+
+.count-table caption {
+  caption-side: top;
+  text-align: left;
+}
+
+.anon-caption {
+  align-items: flex-start;
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.anon-caption .icon {
+  flex: none;
+  margin-top: var(--space-xs);
+}
+
+.count-table tbody th,
+.count-table tfoot th {
+  background: none;
+  font-weight: 400;
+}
+
+.count-table tfoot th,
+.count-table tfoot td {
+  border-bottom: 0;
+  font-weight: 600;
+}
+
+/* A count's column: right-aligned, its digits of one width. */
+.num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* The open campaign's Links: what became of the links, Resend, and the hour line (T251, round 3 S3). */
+.links-part {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+/* A draft's addresses (T247, T270): a list, each item the address over its group, Remove beside it, so nothing scrolls
+   sideways at 390px as the table did. */
+.invitee-rows {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.invitee-row {
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  display: grid;
+  gap: var(--space-xs) var(--space-md);
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: var(--space-sm) var(--space-md);
+}
+
+.invitee-row:last-child {
+  border-bottom: 0;
+}
+
+.invitee-address {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.invitee-group {
+  color: var(--muted-text);
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+/* Add an invitee: the address, the group and the button on one row, stacked at 900px and below (S14). */
+.add-form {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.add-invitee {
+  align-items: start;
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.3fr) auto;
+}
+
+.add-invitee > .btn {
+  align-self: end;
+}
+
+@media (max-width: 900px) {
+  .add-invitee {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .add-invitee > .btn {
+    justify-self: start;
+  }
+}
+
+/* About this campaign: a details list in columns (.details-list stacks one a row); the evidence takes the whole row. */
+.msf-facts {
+  display: grid;
+  gap: var(--space-md) var(--space-lg);
+  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+  margin: 0;
+}
+
+.msf-facts dt {
+  color: var(--muted-text);
+  font-weight: 500;
+}
+
+.msf-facts dd {
+  margin: 0;
+}
+
+.msf-facts-wide {
+  grid-column: 1 / -1;
+}
+
+.msf-facts .epa-lines {
+  gap: var(--space-xs);
+  margin: var(--space-xs) 0 0;
+  padding-left: 1.25rem;
+}
+
+/* New MSF campaign: four cards in a column of the form's measure, each titled by an h2 with a muted line under it. */
+.msf-form-column {
+  max-width: 52rem;
+}
+
+.msf-form-column .form-container {
+  padding: var(--space-lg);
+}
+
+.msf-card-title {
+  font-size: 1.25rem;
+  margin: 0 0 var(--space-md);
+}
+
+.msf-card-title small {
+  color: var(--muted-text);
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 400;
+  margin-top: var(--space-xs);
+}
+
+/* The Questionnaire card's fold (S5): outside the campaign's form, so nothing in it posts with Create. */
+.template-fold {
+  border-top: 1px solid var(--border-color);
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+}
+
+.template-fold > summary {
+  align-items: center;
+  color: var(--text-color);
+  cursor: pointer;
+  display: flex;
+  font-weight: 600;
+  gap: var(--space-sm);
+  min-height: 1.5rem;
+}
+
+.template-form {
+  margin-top: var(--space-md);
+}
+
+/* The Kind radios, one under the other. */
+.choice-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+/* The EPA checkboxes (S12): two columns while they fit, each label wrapping beside its box. */
+.epa-checks {
+  display: grid;
+  gap: var(--space-sm) var(--space-lg);
+  grid-template-columns: repeat(auto-fill, minmax(min(22rem, 100%), 1fr));
+}
+
+.epa-checks .form-check {
+  align-items: flex-start;
+}
+
+.epa-checks .form-check-input {
+  flex: none;
+  margin-top: var(--space-xs);
+}
+
+/* Below 641px: every control 44px (a row's actions are stacked by the shared section's rule), the add form's button full
+   width, and the boxes and the fold's summary 44px targets. */
+@media (max-width: 640.98px) {
+  .msf-page .form-control,
+  .msf-page .form-select {
+    min-height: 2.75rem;
+  }
+
+  .msf-page .form-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .msf-page .alert-row .btn,
+  .msf-page .add-invitee > .btn {
+    width: 100%;
+  }
+
+  .msf-form-column .form-container {
+    padding: var(--space-md);
+  }
+
+  .msf-page .template-fold > summary,
+  .msf-page .epa-checks .form-check,
+  .msf-page .choice-stack .form-check {
+    min-height: 2.75rem;
+  }
+
+  .msf-page .epa-checks .form-check-input,
+  .msf-page .choice-stack .form-check-input {
+    height: 1.25rem;
+    width: 1.25rem;
+  }
+}
+/* end Flow 10: the campaign */
+
+/* Flow 10: her reports, the respondent and coverage (T369) */
+/* Lane T's pages (boards R3-M*, R3-Q*, R3-V*): her MSF reports and her report, the respondent's card, the programme's
+   coverage. Rebuilt from round 3's R3-msf.css on the spacing scale. Every phone rule is scoped to the page's own class:
+   .msf-page (her pages, coverage) or .respond-card (/msf/respond), never bare. */
+
+/* Her list's reading measure (M2): three columns need no more. */
+.msf-measure {
+  max-width: 52rem;
+}
+
+/* Her report (M3): one column at the reading measure, its sections 24px apart; the narrative keeps its line breaks and
+   breaks a long token rather than widen the page. */
+.my-report {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 52rem;
+}
+
+.narrative {
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+/* On your portfolio: each EPA a link to its page under My progress, its title whole (M8). */
+.portfolio-links {
+  display: grid;
+  gap: var(--space-xs);
+  margin: var(--space-xs) 0 0;
+  padding-left: 1.25rem;
+}
+
+/* /msf/respond (Q1–Q9): the wide auth card as a column, its blocks 16px apart, the mark at 44px (round 2 N18). The
+   card's own h1 rule (2rem, 1.5rem below 641px) is the auth card's. */
+.respond-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.respond-card .account-brand {
+  margin: 0 0 var(--space-sm);
+}
+
+.respond-card .account-brand-mark {
+  height: 2.75rem;
+  width: 2.75rem;
+}
+
+.respond-card > :is(h1, p, .alert, .error-summary),
+.respond-card .error-summary .alert {
+  margin: 0;
+}
+
+.respond-meta {
+  color: var(--muted-text);
+}
+
+/* Who sees your feedback: set apart on the info tint, its edge the action colour as an info alert's. */
+.respond-privacy {
+  background: var(--info-bg);
+  border: 1px solid var(--secondary-color);
+  border-radius: var(--radius-md);
+  margin: 0;
+  padding: var(--space-md);
+}
+
+.respond-privacy-title {
+  font-weight: 600;
+  margin: 0 0 var(--space-xs);
+}
+
+.respond-privacy-list {
+  display: grid;
+  gap: var(--space-sm);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.respond-privacy-list li {
+  align-items: flex-start;
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.respond-privacy-list .icon {
+  color: var(--secondary-color);
+  flex: none;
+  margin-top: var(--space-xs);
+}
+
+/* The questionnaire: ruled off from the card's words, each question 24px from the next; the rating one fieldset whose
+   legend is the question, each point a 44px row, the chosen one tinted by CSS alone (no script on this page). */
+/* .respond-card's, so it outweighs the wide card's own form margin. */
+.respond-card .respond-form {
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  margin: 0;
+  padding-top: var(--space-lg);
+}
+
+.respond-form[hidden] {
+  display: none;
+}
+
+.respond-form > p,
+.respond-form .form-group {
+  margin: 0;
+}
+
+.respond-form fieldset {
+  border: 0;
+  margin: 0;
+  min-width: 0;
+  padding: 0;
+}
+
+.respond-form legend {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+  padding: 0;
+}
+
+.respond-form .scale-choices {
+  margin-top: var(--space-md);
+}
+
+.respond-form .scale-choices .form-check {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  min-height: 2.75rem;
+  padding: 0 var(--space-md);
+}
+
+.respond-form .scale-choices .form-check:has(:checked) {
+  background: var(--info-bg);
+  border-color: var(--secondary-color);
+}
+
+.respond-form .scale-choices .form-check-input {
+  height: 1.25rem;
+  width: 1.25rem;
+}
+
+.respond-form .scale-choices label {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 0 var(--space-sm);
+  min-height: 2.75rem;
+}
+
+.respond-label {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+}
+
+.respond-optional {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.respond-required {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+}
+
+.respond-form > .btn {
+  align-self: flex-start;
+  min-height: 2.75rem;
+}
+
+/* Windows' forced colours draw no tint: the chosen point keeps a frame of its own. */
+@media (forced-colors: active) {
+  .respond-form .scale-choices .form-check:has(:checked) {
+    border: 2px solid CanvasText;
+  }
+}
+
+/* MSF coverage (V1–V5): each semester's trainees a list under the programme's h2; the grids' row headers keep their
+   titles readable and a cell's figure unbroken, so the grid scrolls inside its named region rather than the page
+   (S13, the one exception); a covered cell bold by its class, never by a tint (D8, D9). */
+.coverage-windows {
+  color: var(--muted-text);
+  display: grid;
+  gap: var(--space-xs);
+  list-style: none;
+  margin: var(--space-sm) 0 0;
+  padding: 0;
+}
+
+.coverage-windows strong {
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.coverage-programme h3 {
+  font-size: 1.1rem;
+  margin: var(--space-lg) 0 var(--space-sm);
+}
+
+.coverage-table th[scope="row"] {
+  min-width: 16rem;
+}
+
+.coverage-table td {
+  white-space: nowrap;
+}
+
+.coverage-table td.is-covered {
+  font-weight: 700;
+}
+
+/* Below 641px: her portfolio's links 44px rows, the respondent's Submit the card's width, the grids' row headers
+   narrower (the regions still scroll). Her list's View is stacked by the shared section's rule. */
+@media (max-width: 640.98px) {
+  .msf-page .portfolio-links {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .msf-page .portfolio-links a {
+    align-items: center;
+    display: flex;
+    min-height: 2.75rem;
+  }
+
+  .respond-card .respond-form > .btn {
+    align-self: stretch;
+  }
+
+  .msf-page .coverage-table th[scope="row"] {
+    min-width: 12rem;
+  }
+}
+
+/* end Flow 10: her reports, the respondent and coverage */
 
 /* ══ MainLayout.razor.css ═══════════════════════════════════════════════════════════════════════════════════════════
    Scoped to MainLayout.razor in the app; written unscoped here (see the header). */

@@ -1,0 +1,59 @@
+# MsfReport
+
+The MSF report (`/msf/reports/{id}`, `Pages/MultiSourceFeedback/CampaignReport.razor`; its words in `MsfReportText.cs`), with **the respondent groups' cards** (`MsfGroupCards.razor`, which her own report draws too, MyMsfReports): **what the coordinator reviews and releases**, one column at the report's measure, in this order: the status card, the groups, the release section, then what was released. Flow 10 (T369, 2026-10-19, 68327c9d; boards R3-R1 to R17; round 3 F1, F2, F4, F5, F7–F10, M2, M5, M6, M8, M10, S1, S2, S7, S8, S15, S16; T225, T246, T249, T269, T270, T325, T329; build review D3, R1–R3, R6) rebuilt it. Until then every group's results showed while the campaign was still open, Distribution listed each group's ratings, Close and Release were pressed with no confirmation, a group heading read "Prompt.: 4.00", and the times were UTC.
+
+## Who reads it
+
+Coordinator and Administrator, each only a campaign in their scope; anything else is "Report unavailable". Owned by MSF campaigns (NavMenu). **The campaign's own subject never reads it here** (T269): a subject admitted by role is sent to their own copy, `/msf/my-reports/{id}` (MyMsfReports), replacing the address in the history (a page load is a 302 with nothing of the report in it).
+
+## The page
+
+- **The header**: "MSF report for Lerato Molefe" (h1, tab and crumb), the subtitle "Default MSF · Multi-source feedback · 2026-10-19 to 2026-11-02", and **"Open its campaign page"** alone on its line under it (`.review-progress-link`, 24px; 44px at 390; F9). "MSF report" while read or failed. An always-present status says "Loading the report." while it reads.
+- **The column**: `.msf-page.msf-page--measure` (60rem). The result of Close or Release heads it in an `ActionResult` that takes the focus once the dialog has closed: "**Campaign closed and anonymised for review.** Every respondent's email address has been removed.", "**Report released to Lerato Molefe.**".
+- **The status card** (`.detail-card.status-card` with the activity page's stripe by state, as the campaign page's; F7, M8): `.status-head`, the badge and the line as its `h2.status-line`: Draft "Not open yet: nobody has been asked for feedback.", Open "Still taking responses, until 2026-11-02.", Under review "Ready to release: every threshold is met." or "Not ready to release.", Released "The report has been released to the trainee.", Withdrawn "Withdrawn: this report is never released to the trainee." Then:
+  - while Draft or Open, **"The responses are read once the campaign has closed and every address has been removed."**, and no group's results (F1);
+  - closed by the hourly job, "Closed by itself on 2026-11-03, once 2026-11-02 had passed." (F5; who closed it is stored, pseudonymised on erasure);
+  - **the threshold checklist** (`ul.threshold-list`): "8 responses, of the 5 needed.", "2 respondent groups reporting, of the 2 needed.", each `li.is-met` with `circle-check` in `success-color` or `li.is-short` with `circle-alert` in `warning-color`, the words carrying the meaning; then the rule line, `li.is-rule` with `eye-off`, muted: "A respondent group reports once 3 of it have responded; a group with fewer is suppressed." **Released**, the one-liner in its place (`p.report-line`, R7): "2026-10-19 13:43 SAST · 8 responses, with 5 needed · 2 respondent groups reporting, with 2 needed", its separators `span.sep`, `aria-hidden`;
+  - learner feedback: "Teaching contexts that responded: 2 (Student tutorial, Ward round)", named only here (T164), and why it is reported, never enforced;
+  - **Evidence for** (`h3`), each EPA "PAED-010 — Leading and operating within a clinical team" (`ul.epa-lines`), then "One evidence record per EPA is written to the trainee's portfolio when the report is released."; before release an EPA the release would drop is named, "PAED-012 is no longer on Lerato Molefe's curriculum and will not be recorded." (M6); released, "…: not recorded" after an EPA not written and "Recorded on the portfolio: 2026-10-19 13:43 SAST";
+  - while Open, the actions over a rule: **Close campaign…** (outline) and "Release is offered once the campaign has closed. It closes by itself once 2026-11-02 has passed; close it sooner here."; a refusal, "**Not closed.** …", above it with the focus back on it (R16).
+- **By respondent group** (`h2`, once closed; `section.msf-stack-card`): `p.groups-intro` "As Lerato Molefe will read it once released. Ratings are averaged from 1, Well below expectations, to 5, Well above expectations." ("As Lerato Molefe reads it." once released; "would have read it" once the programme has ended, M5). Then **the groups' cards** (MsfGroupCards), only the groups that cleared the minimum, in the enum's order (Peer doctor, Consultant, Nurse, Allied health professional, Other; M2): `section.detail-card.group-card`, its `h3` the group and, with one scale question, its average on the same line, "Consultant · **4.00** average rating, from 3 responses" (`.group-avg`; the count left off her copy, T249); the comment question once (`p.group-question`, never "Prompt.: 4.00", T270), the comments verbatim (`ul.group-comments`, each on a 3px rule). With no scale question, or several, the group's name alone and each question's average under it (S7). Then **the suppressed line**, named and never counted, in a compact empty card (`.detail-card--empty-compact`, `p.suppressed-line` with `eye-off`): "**Suppressed: Peer doctor, Allied health professional.** Fewer than 3 responses each, so their ratings and comments are not shown here. Lerato Molefe sees nothing of them, not even that they answered." (the last sentence dropped once released).
+- **The release section**, last, while under review (`section.detail-card.detail-card--emphasis.release-section`): `h2` "Release to Lerato Molefe"; the check line (`.submit-check`) "**When you release:**" · "Lerato Molefe can read your narrative and the groups shown above on MSF reports." · "2 evidence records are written to Lerato Molefe's portfolio, for PAED-010 and PAED-012." (dropped for a campaign naming no EPA) · "Lerato Molefe is sent an email saying a report has been released, with a link to MSF reports." ("No email is sent: Lerato Molefe can no longer open MSF reports." once the programme has ended, F4) · "It cannot be undone."; **Narrative** (a `textarea`, 4 rows, **no `maxlength`**, its counter "0 of 4,000 characters" a second `.field-help` counted in the browser; over 4,000 refused under it, "Write the narrative in 4,000 characters or fewer."); **Supervision level this feedback supports** (`.msf-narrow-field`, the select at its longest rung's width; "Not stated" and the rungs; its help "Optional, and blank is a perfectly good answer. …"; only for an MSF); then over a rule (`.release-actions`) **Release to trainee…** (outline; the dialog's button is the primary) and "If it should never be released, **withdraw it on its campaign page**." (`a.msf-inline-link`, a 24px inline box, S15). **Not ready**: Release to trainee… is `aria-disabled` with `.is-unavailable` and its reason beside it in `.move-reasons`, named by `aria-describedby`: "**Release to trainee:** Release needs 5 responses; 3 have come back. If it should never be released, withdraw it on its campaign page." (or "Release needs 2 respondent groups to report; 1 cleared the 3-response threshold. Feedback that survives from too few groups is not multi-source feedback."). A refusal, "**Not released.** … It is still Under review.", above the button (R17).
+- **As released** (`h2`, released): `dl.stored`, the narrative and the level as they were given ("Not given"), in no field (T246 review).
+
+## Close and Release (ConfirmDialog, inside the column; M10)
+
+- **Close**, `DangerAction` (it destroys: the unused links stop and every address goes): "Close this campaign now?" · "Close the campaign for Lerato Molefe (Default MSF, closing 2026-11-02) before its last day?" · "It takes no more responses: the 1 link not yet used stops working." · "Every respondent's email address is removed, so no link can be resent." · "The report keeps the 8 responses it has, for you to review and release." · "Closing cannot be undone." · **Keep it open** · Close campaign. The unused links are a count (invited less responses), never whose.
+- **Release**, primary (F8): "Release this report to Lerato Molefe?" · "Lerato Molefe can read it on MSF reports: your narrative, and the ratings and comments of the Consultant and Nurse groups. Nothing of the other groups is shown, not even that they answered." · "2 evidence records are written to Lerato Molefe's portfolio: PAED-010 and PAED-012." · "Supervision level: Not stated." · the mail line ("… The email holds none of the feedback.") · "Releasing cannot be undone: the narrative and the level cannot be changed afterwards." · **Not yet** · Release to Lerato Molefe.
+
+Either action reads the report again, done or refused, keeping the narrative and level typed; neither can be sent twice at once. Once the report read again no longer offers the button (closed, released or withdrawn elsewhere, T246), its refusal heads the page instead and takes the focus. A handler's own refusal shows its words; anything else is "Something went wrong. Nothing has changed. Try again, or come back in a few minutes." and goes to the log (build review R1, R2). Close refuses a caller with no id before staging (R3).
+
+## The release mail (round 1 Q8, F4)
+
+Sent after the release's save through `AccountNotices`, only while the trainee is current (`MsfReportReleasedEmail`): the questionnaire, the day and the releaser, with a link to MSF reports, and none of the feedback. A failed send never fails the release.
+
+## States (T329)
+
+- **Loading**: two skeleton cards, the status said once.
+- **Load failed**: "Could not load this report. Nothing has changed. Try again, or come back in a few minutes." with Try again, never the exception's text.
+- **Unavailable**: "Report unavailable", "The selected report could not be loaded." and an outline **Go to MSF campaigns**.
+
+## Narrow widths
+
+Below 641px every button is 44px and the width of its card (the release actions stack, Release to trainee… on top), the inline link a 44px block, the level's select the column's width, `dl.stored` one term over its value, the dialogs' buttons stacked with the action on top. Nothing scrolls sideways at 390.
+
+## Contrast
+
+No new colour token. A met mark `success-color` 5.88:1 and a short mark `warning-color` 5.77:1 on the surface (marks 3:1 or more; the words carry the meaning); the rule line, the intro and the one-liner's separators `muted-text` 5.09:1; a group's average `primary-color` 10.98:1; comments 12.63:1 beside a `border-color` rule (decoration); the stripes and badges as ActivityStatus's and Badge's.
+
+## Anonymity
+
+- **No group's results reach any reader before the campaign has closed** (F1): `MsfAggregationService` sends none for Draft, Open or a campaign withdrawn while open, so the page cannot show them.
+- **A group under the campaign's minimum is suppressed**, and the minimum is never under 3 for either kind (F2): nothing of it is shown, its name only on this page, in the suppressed line, uncounted. Distribution is gone.
+- Comments are verbatim and unnamed; no address survives the close.
+- The subject's copy from the handler carries no suppressed group and no counts (build review R6).
+
+## Known gaps
+
+- **Needs confirmation (T371, proposed):** a group's comments are listed in the order they were submitted, which, beside the per-group responded counts the coordinator watched while the campaign was open, may tie a comment to the moment someone answered.
+- **Open (T282's rule):** the release mail's stub log line names no recipient, by T282's rule, so the replay checks only its subject and body (Step 3.46).

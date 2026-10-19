@@ -4,7 +4,7 @@ The shell for the signed-out account pages: **the auth card**, a 480px `.account
 
 ## What the consumer provides
 
-A page with `@layout Layout.AuthLayout` whose body is the card: sign in (SignInCard), sign out, link your institutional sign-in, forgotten password, register, and the MSF respondent's `/msf/respond` (the `--wide` card).
+A page with `@layout Layout.AuthLayout` whose body is the card: sign in (SignInCard), sign out, link your institutional sign-in, forgotten password, register, and the MSF respondent's `/msf/respond` (the `--wide` card, MsfRespond).
 
 ```html
 <div class="auth-page-shell">
@@ -29,7 +29,7 @@ A page with `@layout Layout.AuthLayout` whose body is the card: sign in (SignInC
 - **Below 641px** (E7): every `.btn` and `.form-control` on the card is 44px; an action row stacks, each button the row's width and the primary on top (`column-reverse`); the Remember me row is 44px, its label filling it so the tick is pressed anywhere on it (6735fa98), the box 20px; and `.account-link` is a 44px target.
 - **The words' classes:** `p.account-purpose`, the muted line under the lockup; `strong.account-email`, an email in the card's words at 600, breaking anywhere rather than widen the card; `ol.account-steps`, numbered steps 8px apart; `p.account-note`, a condition ruled off by a hairline, muted, 16px under it; `a.account-link`, a link on its own line.
 - **One message slot**, under the h1 (or, on link, above Password inside the form): a refusal as a danger Alert that takes the focus itself (`tabindex="-1"` + `autofocus`) and is named by the fields; a notice as an info Alert, `role="status"`. SignInCard has the focus rule.
-- **The `--wide` card** (`/msf/respond`, T205) keeps its own flow: block layout, 44rem, an `<h2>` a state at 2rem, and its margins. Flow 10 designs it.
+- **The `--wide` card** (`/msf/respond`, T205): 44rem (`width: min(100%, 44rem)`). Flow 10 (T369) designed it as `.respond-card`, a flex column whose blocks are 16px apart: the lockup with the mark at 44px, the card's one `<h1>` in every state at the auth card's size (its 2rem `<h2>` rule, `.account-form-container--wide h2`, is gone from app.css), an Alert per state under it, "Who sees your feedback" on the info tint, then the questionnaire ruled off (MsfRespond).
 
 The page is `div.auth-page-shell` (a radial `secondary-color` glow at 12% over a 135deg `background-color` to `header-bg` gradient, both from tokens) holding `main.auth-page-main`. No text sits on that ground outside the card: muted words on its blue corner would be 4.13:1.
 
@@ -52,6 +52,5 @@ The page is `div.auth-page-shell` (a radial `secondary-color` glow at 12% over a
 ## Known gaps
 
 - Register's page body other than its passwords (the name and email fields in `.mb-3` wrappers, its invitation states) is still pre-restructure; flow 11 designs it.
-- `/msf/respond`'s `--wide` card is pre-restructure; flow 10 designs it.
 - The account outcomes travel in the address (`?error=`, `?status=`), so a reload or a shared link shows the message again: T341.
 - Wombat sends no password-reset email: T340.

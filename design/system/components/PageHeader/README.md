@@ -8,8 +8,8 @@ The top of every page: its trail (from the owner table), its one `<h1>` with an 
 <PageTitle>MSF campaigns · Wombat</PageTitle>
 <PageHeader Title="MSF campaigns" Subtitle="Create and review multi-source feedback campaigns.">
   <Actions>
+    <a class="btn btn-primary" href="/msf/campaigns/new"><Icon Name="plus" />New campaign</a>
     <a id="msf-coverage-link" class="btn btn-outline" href="/msf/coverage">MSF coverage</a>
-    <a class="btn btn-primary" href="/msf/campaigns/new">New campaign</a>
   </Actions>
 </PageHeader>
 ```
@@ -19,7 +19,7 @@ The top of every page: its trail (from the owner table), its one `<h1>` with an 
 - `TitleContent` (flow 05, T355, C5): a heading that holds more than words, drawn in the h1 in place of `Title`: an EPA's page, "PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams" with "(no longer in use)" in `span.paused-mark` (EpaLabel) and an institution's own EPA's badge. `Title` still names the crumb unless `CurrentCrumb` does, and must read as the h1 does, mark included, since the tab is the same words.
 - `SubtitleContent` (flow 03, T342): a subtitle that holds more than words, drawn in the same `p.page-subtitle` in place of `Subtitle`: Log an activity's "Mini-CEX (Paediatrics) · Choose another type", whose last part is a link back to the picker.
 - **An activity's page** (flow 03): the title is the activity's name, "Mini-CEX (Paediatrics) · PAED-001 · 2026-09-20" (" · <nominee>" where two share the rest, E7), which is also its tab's stem and its last crumb; the subtitle names its people, "Anele Dlamini's request to David Naidoo", "Sipho Ndlovu's reflection, for discussion with Sarah Botha", "Pieter du Plessis's draft, cancelled" (`ActivityPageModel.Subtitle`). No "State:" line: the status card says who has it. One header heads every state, its title changing, so the h1 FocusOnNavigate focused on arrival is the loaded page's: "Loading the activity" (the crumb "Loading…") while it loads, "Activity" when the read fails, "Activity unavailable" for one it cannot show.
-- `Actions`: the primary action as `.btn-primary`, a companion as `.btn-outline`; on a form page a small outline way back ("Back to EPAs").
+- `Actions`: the primary action as `.btn-primary`, first, then a companion as `.btn-outline` (flow 10, L1: the campaign list's New campaign before MSF coverage; below 641px `.msf-header` stacks them, each 44px and the page's width); on a form page a small outline way back ("Back to EPAs").
 - `Icon` and `IconTone` (the system pages): a 24px Lucide icon before the heading, aria-hidden. `IconTone` is `info` (the default, `secondary-color`), `warning` or `danger`.
 - `Trail`: crumbs between the owner and the page, where the owner table names one (the College on a College's specialities, for the Administrator).
 - `CurrentCrumb`: the page's own crumb when it is not its title (a data-rights request's id; an EPA's page, its code: "PAED-012", "Loading…" while it loads, "EPA" when the read fails).

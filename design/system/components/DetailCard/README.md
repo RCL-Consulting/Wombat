@@ -22,7 +22,7 @@ The element and its content: usually an `h2` or `h3`, then a `.details-list` (`<
 
 ## Layout
 
-- A detail page is `.details-grid`: a summary card beside the main card, 1fr 2fr, one column at 900px and below. `.details-grid--lone-spans` lets a lone card take the row, opt-in.
+- A detail page is `.details-grid`: a summary card beside the main card, 1fr 2fr, one column at 900px and below. (`.details-grid--lone-spans`, T266's opt-in for a lone card, went with flow 10: its one user, the campaign page, is now a column of cards, `.msf-page`.)
 - `.stack-list` stacks cards with a `space-md` gap.
 
 ## Rules

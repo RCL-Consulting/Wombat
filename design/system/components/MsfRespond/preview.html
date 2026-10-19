@@ -1,0 +1,95 @@
+<!-- @dsCard group="MSF" height=2050 width=974 subtitle="The respondent's questionnaire in the wide sign-in card: the h1 in every state, who sees the feedback before the first question, five 44px rating rows, the comment with no maxlength; thank you; a link already used; a request closed" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MsfRespond</title>
+<style>
+  /* The sign-in layout's page: the card centred on the page's tint (AuthLayout). */
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  .pv-centre { display: flex; justify-content: center; }
+</style>
+</head>
+<body>
+<p class="pv-cap">A respondent's link (Step 3.39): the questionnaire, a rating chosen (tinted by CSS alone); no count, no other response, no threshold</p>
+<div class="pv-centre">
+  <div class="account-form-container account-form-container--wide respond-card">
+    <div class="account-brand">
+      <img class="account-brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="44" height="44" />
+      <span class="account-brand-text">Wombat</span>
+    </div>
+    <h1>Feedback on Lerato Molefe</h1>
+    <p class="respond-meta">Default MSF · Last day to respond: 2026-11-02</p>
+    <p>You have been asked to give multi-source feedback on Lerato Molefe, a trainee you have worked with.</p>
+    <div class="respond-privacy" role="group" aria-labelledby="pv-privacy">
+      <p id="pv-privacy" class="respond-privacy-title">Who sees your feedback</p>
+      <ul class="respond-privacy-list">
+        <li><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" /><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" /><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143" /><path d="m2 2 20 20" /></svg><span>Your name and email address are never shown to Lerato Molefe.</span></li>
+        <li><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9" /><circle cx="12" cy="9" r="3" /></svg><span>Lerato Molefe sees the feedback only after the request has closed and a coordinator has reviewed and released it, grouped by respondent role.</span></li>
+      </ul>
+    </div>
+    <form class="respond-form" method="post">
+      <p class="respond-required">Questions marked * must be answered.</p>
+      <fieldset class="form-group" aria-describedby="pv-rating-help">
+        <legend>Rates the trainee's overall professional performance.<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></legend>
+        <p id="pv-rating-help" class="page-subtitle">For each rating, compare Lerato Molefe with what you would expect of a trainee at their stage of training.</p>
+        <div class="scale-choices">
+          <div class="form-check"><input id="pv-r1" class="form-check-input" type="radio" name="pv-r"><label for="pv-r1">Well below expectations</label></div>
+          <div class="form-check"><input id="pv-r2" class="form-check-input" type="radio" name="pv-r"><label for="pv-r2">Below expectations</label></div>
+          <div class="form-check"><input id="pv-r3" class="form-check-input" type="radio" name="pv-r"><label for="pv-r3">Meets expectations</label></div>
+          <div class="form-check"><input id="pv-r4" class="form-check-input" type="radio" name="pv-r" checked><label for="pv-r4">Above expectations</label></div>
+          <div class="form-check"><input id="pv-r5" class="form-check-input" type="radio" name="pv-r"><label for="pv-r5">Well above expectations</label></div>
+        </div>
+      </fieldset>
+      <div class="form-group">
+        <label for="pv-comment" class="respond-label">What should the trainee keep doing or improve?<span class="respond-optional"> (optional)</span></label>
+        <p id="pv-comment-help" class="field-help">Up to 4,000 characters. Your comments may be shown to Lerato Molefe word for word, so leave out anything that would identify you.</p>
+        <textarea id="pv-comment" class="form-control" rows="5" aria-describedby="pv-comment-help"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit feedback</button>
+    </form>
+  </div>
+</div>
+
+<p class="pv-cap">Submitted (Step 3.39): the h1 "Thank you", the success alert under it; the form hidden</p>
+<div class="pv-centre">
+  <div class="account-form-container account-form-container--wide respond-card">
+    <div class="account-brand">
+      <img class="account-brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="44" height="44" />
+      <span class="account-brand-text">Wombat</span>
+    </div>
+    <h1>Thank you</h1>
+    <div class="alert alert-success" role="status">Your feedback on Lerato Molefe has been recorded.</div>
+    <p>The link in your invitation has now been used, so it will not open the questionnaire again. You can close this page.</p>
+  </div>
+</div>
+
+<p class="pv-cap">The same link opened again (Step 3.40): information, since the answer was recorded</p>
+<div class="pv-centre">
+  <div class="account-form-container account-form-container--wide respond-card">
+    <div class="account-brand">
+      <img class="account-brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="44" height="44" />
+      <span class="account-brand-text">Wombat</span>
+    </div>
+    <h1>Feedback link already used</h1>
+    <div class="alert alert-info" role="alert">This feedback link has already been used: a response was submitted through it, and each link takes one response.</div>
+    <p>You can close this page.</p>
+  </div>
+</div>
+
+<p class="pv-cap">A link opened after the close (Step 3.45): a warning</p>
+<div class="pv-centre">
+  <div class="account-form-container account-form-container--wide respond-card">
+    <div class="account-brand">
+      <img class="account-brand-mark" src="/_blob/16c4e619b7ea0971d0c28ed6509be7a8" alt="" width="44" height="44" />
+      <span class="account-brand-text">Wombat</span>
+    </div>
+    <h1>Feedback request closed</h1>
+    <div class="alert alert-warning" role="alert">This feedback request has closed and is no longer accepting responses.</div>
+    <p>You can close this page.</p>
+  </div>
+</div>
+</body>
+</html>

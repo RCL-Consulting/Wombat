@@ -34,6 +34,9 @@ A message block in one of four kinds (`success`, `info`, `warning`, `danger`): b
 - **A refusal that names fields is not an Alert** (flow 03, T342): it is a RefusalSummary, which takes the focus and links each line to its field. A refusal that names no field stays a `danger` Alert above the page's cards.
 - **A result on a record page** (flow 03, the activity page): an ActionResult at the head of the page body, `id="activity-result"`, its success Alert `role="status"`, taking the focus after every move: the move's sentence in bold, then, plain, whose inbox it is in. "**Submitted. It is now Requested.** It is in David Naidoo's Activity inbox." A result handed over from another page (Log an activity's filing) arrives with the page, `FocusOnLoad`, and wins over the h1. A standing notice (File it again's "Copied from your request to Fatima Khumalo, which was declined. …") is `Kind="info"` with no role.
 - A load error says that nothing changed and offers the read again; it draws nothing the read would have filled. Home's DashboardFrame, My account (StatePanel with `OnRetry`, T339) and flow 03's four activity pages do; every other StatePanel `LoadError` prints the page's own string with no Try again (StatePanel's Known gaps).
+- **Standing content is an Alert with no role** (`Role=""`): read on every visit, so announced by none. Flow 10 (T369) has five: the campaign pages' and MSF coverage's notice to someone who holds Trainee (`#msf-runs-no-campaigns`, `#msf-coverage-trainee`, warning), a campaign whose trainee's programme has ended (`#msf-programme-ended`, warning, K14), and links not delivered (`#msf-links-not-delivered`, warning, its Resend inside it in an `.alert-row`) (MsfCampaigns, MsfCampaignPage, MsfReport, MsfCoverage).
+- **A result whose first sentence is the news is bold, the rest plain** (flow 10, L4, build review D11): "**Campaign closed and anonymised for review.** Every respondent's email address has been removed.", "**Not withdrawn.** …". A refusal sits beside the button that sent it while that button is still there, and heads the page once it is gone (MsfCampaignPage, MsfReport).
+- **One Alert per state on a static page** (flow 10, S9; `/msf/respond`, MsfRespond): under the card's one h1, success for the thank-you, **info for a link already used** (the respondent's answer was recorded), warning for a request closed and for a link expired, revoked or not recognised, danger for the fault.
 - A refusal that arrives by URL travels as a code and the page chooses the sentence, so a crafted link cannot put words on Wombat's page. No sentence says "Please" (flow 02, C5).
 
 ## Contrast
@@ -42,4 +45,5 @@ Words 11.23 to 11.89:1 on every tint. Edges and icons: success 5.23:1, warning 5
 
 ## Known gaps
 
-A dismissible alert's × wraps under content wider than the row (the `.actions-cell` wraps), as the committee review's sampling warnings do (seen in a static render of the stylesheet).
+- **Found re-syncing flow 10, not filed:** `/msf/respond`'s fault alert says "Please try again in a few minutes.", and a refused post's "Please answer the questions below before submitting." (MsfRespond).
+- A dismissible alert's × wraps under content wider than the row (the `.actions-cell` wraps), as the committee review's sampling warnings do (seen in a static render of the stylesheet).

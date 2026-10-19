@@ -1,0 +1,101 @@
+<!-- @dsCard group="MSF" height=1900 width=974 subtitle="Her MSF reports: the list with no count, View named for its row, the not-found alert focused; her report on a page of its own, the narrative, the groups that report with their averages and no count, and the EPAs it recorded as links" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyMsfReports</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Lerato Molefe, Trainee, after the release (Step 3.47): her list, the report its row's header, Released in SAST, no Responses column</p>
+<div class="header-container">
+  <div>
+    <h1>MSF reports</h1>
+    <p class="page-subtitle">Released aggregate feedback only. Individual responses are never shown.</p>
+  </div>
+</div>
+<div class="msf-page">
+  <section class="list-section msf-measure" aria-labelledby="pv-reports">
+    <h2 id="pv-reports" class="list-section-title">Your released reports</h2>
+    <div class="table-container shadow">
+      <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>Your released MSF reports, newest first</caption>
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">Report</th>
+            <th scope="col" role="columnheader">Released</th>
+            <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th scope="row" role="rowheader" class="trainee-cell">Default MSF <span class="kind-line">Multi-source feedback</span></th>
+            <td role="cell" data-label="Released" class="nowrap">2026-10-19 13:43 SAST</td>
+            <td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="View the Default MSF report, released 2026-10-19">View</a></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<p class="pv-cap">An id that is not one of her released reports (the states' my-msf-reports--foreign and --unreleased): sent to her list, one info alert focused as the page loads</p>
+<div class="msf-page">
+  <div class="action-result" tabindex="-1">
+    <div class="alert alert-info">That report could not be found. Your released reports are listed below.</div>
+  </div>
+</div>
+
+<p class="pv-cap">Her report (Step 3.47): a page of its own under MSF reports; the narrative, then the Consultant and Nurse groups with their averages and no count, nothing of the two suppressed; the EPAs recorded, each a link to its page</p>
+<div class="header-container">
+  <div>
+    <h1>Default MSF, released 2026-10-19</h1>
+    <p class="page-subtitle">Multi-source feedback · Released 2026-10-19 13:43 SAST</p>
+  </div>
+</div>
+<div class="msf-page">
+  <div class="my-report">
+    <section class="detail-card detail-card--emphasis" aria-labelledby="pv-narrative">
+      <h2 id="pv-narrative" class="section-title">Narrative</h2>
+      <p class="narrative">Consistently strong feedback from nursing and consultant colleagues; keep documenting escalation decisions</p>
+    </section>
+    <section class="msf-stack-card" aria-labelledby="pv-groups">
+      <div>
+        <h2 id="pv-groups">What your colleagues said</h2>
+        <p class="groups-intro">Grouped by respondent role; no one is named. Ratings are averaged from 1, Well below expectations, to 5, Well above expectations. Comments are word for word.</p>
+      </div>
+      <section class="detail-card group-card" aria-labelledby="pv-g-consultant">
+        <h3 id="pv-g-consultant">Consultant · <span class="group-avg"><strong>4.00</strong> average rating</span></h3>
+        <p class="group-question">What should the trainee keep doing or improve?</p>
+        <ul class="group-comments">
+          <li>Sound judgement in clinic; teaches the interns well</li>
+          <li>Ready to run a ward; should document escalation decisions more fully</li>
+          <li>Thorough on ward rounds; presents concisely</li>
+        </ul>
+      </section>
+      <section class="detail-card group-card" aria-labelledby="pv-g-nurse">
+        <h3 id="pv-g-nurse">Nurse · <span class="group-avg"><strong>4.33</strong> average rating</span></h3>
+        <p class="group-question">What should the trainee keep doing or improve?</p>
+        <ul class="group-comments">
+          <li>Calm and kind with parents at night; hands over clearly</li>
+          <li>Leads neonatal resuscitations and explains her decisions to the nurses</li>
+          <li>Escalates early and keeps the nursing notes in step</li>
+        </ul>
+      </section>
+    </section>
+    <section class="detail-card" aria-labelledby="pv-portfolio">
+      <h2 id="pv-portfolio" class="section-title">On your portfolio</h2>
+      <p>Recorded as evidence on 2026-10-19 13:43 SAST:</p>
+      <ul class="portfolio-links">
+        <li><a href="#">PAED-010 — Leading and operating within a clinical team</a></li>
+        <li><a href="#">PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams</a></li>
+      </ul>
+    </section>
+  </div>
+</div>
+</body>
+</html>

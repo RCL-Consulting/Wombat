@@ -1,0 +1,165 @@
+<!-- @dsCard group="MSF" height=1900 width=974 subtitle="The campaign list: New campaign first, the trainee the row header, Responses a dash until opened, each row's links named by what its page offers; the withdraw dialog and its result; stacked at 768" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MsfCampaigns</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The app opens the dialog with showModal() (wwwroot/js/dialog.js); a static preview paints its backdrop itself. */
+  .pv-stage { position: relative; background: var(--scrim); padding: var(--space-2xl) 0; box-sizing: border-box; }
+  .pv-stage dialog { position: static; margin: 0 auto; }
+  /* At 900px and below app.css stacks .clinic-table--stack-wide; the 768 rendition repeats the media rules under .pv-narrow. */
+  .pv-narrow { width: 486px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-narrow .msf-page .clinic-table--stack-wide td .actions-cell .btn { min-height: 2.75rem; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Pieter Smit, Coordinator, after withdrawing a campaign started in error (Step 3.38): the result at the top with the focus, its first sentence bold; Lerato Molefe's campaign released (Step 3.46)</p>
+<div class="msf-header">
+  <div class="header-container">
+    <div>
+      <h1>MSF campaigns</h1>
+      <p class="page-subtitle">Create and review multi-source feedback campaigns.</p>
+    </div>
+    <div class="actions-cell">
+      <a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>New campaign</a>
+      <a id="msf-coverage-link" class="btn btn-outline" href="#">MSF coverage</a>
+    </div>
+  </div>
+</div>
+<div class="msf-page">
+  <div class="action-result" tabindex="-1">
+    <div class="alert alert-success" role="status"><strong>The campaign for Pieter du Plessis (Default MSF, closing 2026-11-02) has been withdrawn.</strong> Its respondents' links no longer work, and their email addresses have been removed.</div>
+  </div>
+  <section class="list-section" aria-labelledby="pv-campaigns-heading">
+    <h2 id="pv-campaigns-heading" class="list-section-title" tabindex="-1">Campaigns (2)</h2>
+    <div class="table-container shadow">
+      <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>MSF campaigns, newest first. Counted by respondent group: this list never shows who was invited or who responded.</caption>
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">Trainee</th>
+            <th scope="col" role="columnheader">Template</th>
+            <th scope="col" role="columnheader">State</th>
+            <th scope="col" role="columnheader">Invitations</th>
+            <th scope="col" role="columnheader">Responses</th>
+            <th scope="col" role="columnheader">Closes</th>
+            <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th scope="row" role="rowheader" class="trainee-cell">Pieter du Plessis</th>
+            <td role="cell" data-label="Template">Default MSF<span class="kind-line">Multi-source feedback</span></td>
+            <td role="cell" data-label="State"><span class="badge badge-declined">Withdrawn</span></td>
+            <td role="cell" data-label="Invitations">0</td>
+            <td role="cell" data-label="Responses">—</td>
+            <td role="cell" data-label="Closes" class="nowrap">2026-11-02</td>
+            <td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="View campaign: the campaign for Pieter du Plessis (Default MSF, closing 2026-11-02)">View campaign</a></div></td>
+          </tr>
+          <tr role="row">
+            <th scope="row" role="rowheader" class="trainee-cell">Lerato Molefe</th>
+            <td role="cell" data-label="Template">Default MSF<span class="kind-line">Multi-source feedback</span></td>
+            <td role="cell" data-label="State"><span class="badge badge-completed">Released</span></td>
+            <td role="cell" data-label="Invitations">9</td>
+            <td role="cell" data-label="Responses">8</td>
+            <td role="cell" data-label="Closes" class="nowrap">2026-11-02</td>
+            <td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="View campaign: the campaign for Lerato Molefe (Default MSF, closing 2026-11-02)">View campaign</a><a class="btn btn-outline btn-sm" href="#" aria-label="View report: the campaign for Lerato Molefe (Default MSF, closing 2026-11-02)">View report</a></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<p class="pv-cap">Before it (Steps 3.37 and 3.38): Lerato Molefe's open campaign, Manage and View report; a draft for Pieter du Plessis, Manage and Withdraw… with no report link and Responses "—"</p>
+<div class="msf-page">
+  <div class="table-container shadow">
+    <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+      <caption>MSF campaigns, newest first. Counted by respondent group: this list never shows who was invited or who responded.</caption>
+      <thead role="rowgroup">
+        <tr role="row">
+          <th scope="col" role="columnheader">Trainee</th>
+          <th scope="col" role="columnheader">Template</th>
+          <th scope="col" role="columnheader">State</th>
+          <th scope="col" role="columnheader">Invitations</th>
+          <th scope="col" role="columnheader">Responses</th>
+          <th scope="col" role="columnheader">Closes</th>
+          <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody role="rowgroup">
+        <tr role="row">
+          <th scope="row" role="rowheader" class="trainee-cell">Pieter du Plessis</th>
+          <td role="cell" data-label="Template">Default MSF<span class="kind-line">Multi-source feedback</span></td>
+          <td role="cell" data-label="State"><span class="badge badge-draft">Draft</span></td>
+          <td role="cell" data-label="Invitations">0</td>
+          <td role="cell" data-label="Responses">—</td>
+          <td role="cell" data-label="Closes" class="nowrap">2026-11-02</td>
+          <td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#">Manage</a><button type="button" class="btn btn-sm btn-outline">Withdraw…</button></div></td>
+        </tr>
+        <tr role="row">
+          <th scope="row" role="rowheader" class="trainee-cell">Lerato Molefe</th>
+          <td role="cell" data-label="Template">Default MSF<span class="kind-line">Multi-source feedback</span></td>
+          <td role="cell" data-label="State"><span class="badge badge-submitted">Open</span></td>
+          <td role="cell" data-label="Invitations">9</td>
+          <td role="cell" data-label="Responses">0</td>
+          <td role="cell" data-label="Closes" class="nowrap">2026-11-02</td>
+          <td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#">Manage</a><a class="btn btn-outline btn-sm" href="#">View report</a><button type="button" class="btn btn-sm btn-outline">Withdraw…</button></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<p class="pv-cap">Withdraw…'s dialog, inside the page column (Step 3.38): it names the campaign, says what goes and that it cannot be undone; the safe button says what it keeps and has the focus</p>
+<div class="pv-stage">
+  <dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-withdraw-title" aria-describedby="pv-withdraw-body">
+    <div class="form-container">
+      <h2 id="pv-withdraw-title">Withdraw this campaign?</h2>
+      <div id="pv-withdraw-body" class="dialog-body">
+        <p>Withdraw the campaign for Pieter du Plessis (Default MSF, closing 2026-11-02)? It will take no more responses: any link already sent stops working, and every respondent's email address is removed. A withdrawn campaign is never released to the trainee, and withdrawing cannot be undone.</p>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline">Keep the campaign</button>
+        <button type="button" class="btn btn-danger">Withdraw campaign</button>
+      </div>
+    </div>
+  </dialog>
+</div>
+
+<p class="pv-cap">At 768: stacked from 900px, the trainee heading its labelled cells, the row's buttons 44px</p>
+<div class="pv-narrow">
+  <div class="msf-page">
+    <div class="table-container shadow">
+      <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>MSF campaigns, newest first. Counted by respondent group: this list never shows who was invited or who responded.</caption>
+        <thead role="rowgroup">
+          <tr role="row"><th scope="col">Trainee</th><th scope="col">Template</th><th scope="col">State</th><th scope="col">Invitations</th><th scope="col">Responses</th><th scope="col">Closes</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th scope="row" role="rowheader" class="trainee-cell">Lerato Molefe</th>
+            <td role="cell" data-label="Template">Default MSF<span class="kind-line">Multi-source feedback</span></td>
+            <td role="cell" data-label="State"><span class="badge badge-completed">Released</span></td>
+            <td role="cell" data-label="Invitations">9</td>
+            <td role="cell" data-label="Responses">8</td>
+            <td role="cell" data-label="Closes" class="nowrap">2026-11-02</td>
+            <td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#">View campaign</a><a class="btn btn-outline btn-sm" href="#">View report</a></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>

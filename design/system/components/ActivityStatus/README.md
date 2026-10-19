@@ -19,6 +19,8 @@
 
 **The stripe** (4px, the card's left edge; its frame is every card's hairline): the viewer's move `.detail-card--emphasis` (`secondary-color`); someone else's `.activity-status--others` (`input-border`); done `.activity-status--done` (`success-color`); declined `.activity-status--declined` (`danger-color`).
 
+**The stripe outside the activity page** (flow 10, T369, F7, M8): the MSF campaign page's and the MSF report's status cards (`.status-card` on `.detail-card`) take the same classes by state, so the stripe means the same: `.detail-card--emphasis` where the move is the coordinator's (Draft, Closed, Under review), `.activity-status--others` while Open (the respondents'), `--done` Released, `--declined` Withdrawn; its head the state's badge beside the line as the card's `h2.status-line` (MsfCampaignPage, MsfReport).
+
 ## The words, by holder
 
 | Holder, viewer | Headline | Body | Action |
