@@ -69,3 +69,11 @@ T369 (flow 10), T366 (flow 09), T264, T286, T289, T303, T304, T306, T315, T317, 
   (1792413020-e2bb) installed: `tokens.json`, `components/bundle.css`, the three fonts copied from the system, and
   `tokens.css` by hand (flow 10's; its 54 properties match app.css's `:root`). The mark copied in as
   `/_blob/b3cd1c9ecfc87765138aec8743e383bc`.
+- **2026-10-19, steps 1–2.** Restated from read-only audits at `a1a9b120` (one agent, `11a77b0c`): flow 10's layout;
+  Mode kept but for the pending registrar's pages, now ONE proposal at fidelity (D55 and T141 left nothing to vary);
+  Invitations 2–3 variations at fidelity, Register one proposal, Trainees and admission 2–3 wireframes. Dropped as done:
+  T303, T304, D55/T141's picker and menu, flow 01's and 02's parts, T285, T290, T306's dashboard half. ~20 observed
+  defects added (§ 5). Operator questions Q1–Q14 in § 6, each with a recommendation. Completeness exit 0, verbatim
+  424/0 (130 stale steps in other briefs re-synced), baseline missing 0. Staged: `design/upload/`, 119 files; every
+  capture with a live link left out. Mark written in (`9f81d865`). **Next:** the operator sends `round-1-ask.txt` to
+  the canvas with § 4's key screenshots. Note for step 7: states.md's `new-activity--pending-trainee` row predates D55.

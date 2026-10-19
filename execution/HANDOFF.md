@@ -17,6 +17,11 @@ The operator said "proceed". Pushed `e825e2e2..e598c490`; **everything after it 
 - **Proposed:** T370 (panel member order), **T371 (a report's comments in submission order: anonymity, needs the
   operator's answer)**, T372 (an empty band above the campaign page's status card).
 
+- **Then "carry on": T373 (flow 11, onboarding) started.** Brief restated (`11a77b0c`), canvas "Wombat 11"
+  https://claude.ai/artifact/SFn6dDmJnoww2fhYrQD416 (v25 installed, `tokens.css` by hand, mark
+  `/_blob/b3cd1c9ecfc87765138aec8743e383bc`, `9f81d865`), staged in `design/upload/`. **Next:** the operator sends
+  `design/flows/11-onboarding/round-1-ask.txt` to the canvas with § 4's key screenshots; Q1–Q14 (§ 6) wait for them.
+
 ### Environment left
 
 - **The replay app on `:5180`** runs `wombat_scenario_t369` (the appendix's end state), republished from `e4b480e2`.
