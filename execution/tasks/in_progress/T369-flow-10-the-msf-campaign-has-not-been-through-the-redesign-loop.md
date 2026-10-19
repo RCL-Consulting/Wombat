@@ -49,14 +49,17 @@ Run the loop as flow 09 ran it (`design/flows/09-outcomes-stars-appeals/`, BRIEF
 
 ## Verification
 
-- [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit.
-- [ ] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link.
+- [x] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit. `ded43219` (step 1's note).
+- [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link.
+  https://claude.ai/artifact/CPUXS577gX2yo79AryKmVE (step 3–4's note).
 - [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/10-msf-campaign/`.
   Round 3 checked final (`e825e2e2`, `round-3-check.md`).
 - [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 10) — the squash commit and counts.
   `68327c9d`: Domain 821, Application 3879, Infrastructure 1029, Architecture 52, Web 3837, Integration 491.
-- [ ] The whole runbook replays on a fresh database with no regression from flow 10, the baseline is re-captured, and
+- [x] The whole runbook replays on a fresh database with no regression from flow 10, the baseline is re-captured, and
   flow 10's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
+  2026-10-19 on `wombat_scenario_t369` (`652749d0` and its parent): 331 steps, 281 with no gap, no flow 10
+  regression; states 62 rows hold, 5 refusal rows given their exact words; missing 0.
 - [ ] The design system is re-synced and republished — its version number.
 
 ## Related
@@ -109,3 +112,10 @@ T366 (flow 09), T364 (flow 08), T162 (the system-managed MSF type), T153, T270, 
   stack at 768, D3 no pronoun); the operator kept R7 (per-group responded counts while open); one fix pass. **For the
   replay:** stub-mail counts +3; the release mail's log names no recipient (T282); the D1 margins at 1280 and 390;
   3.34–3.50's Actuals and Gaps (T270, T325) are stale until rewritten.
+- **2026-10-19, step 7 done.** Brief `d3379233`; published from `e598c490`; fresh `wombat_scenario_t369`. Acts 1–6 and
+  the appendix: 31/19, 44/38, 60/58, 50/45, 29/23, 42/36, 75/62; every other Gap a known task, or the panel's member
+  order (4.25, 4.41, 4.42, 5.8: **T370 proposed**). Flow 10's checks (D1 margins, dialogs' focus, `<h1>`, 390, the
+  refusals' `role="alert"`, anonymity) pass. Old Gaps closed: T270, T325, F-3.50a, T329 (2.20), T260 (2.22), T290
+  (2.37). T368 did not recur (5 of 5). States: 62 rows hold, 5 corrected; 3.43's stand-in SQL fixed (it needs
+  `DeliveryLinkSelector`). Proposed: **T371** (comments in submission order, anonymity: needs the operator) and
+  **T372** (an empty band on the campaign page). Scratch DBs `wombat_scenario_t369_st0..st3`, `_s515`.

@@ -1134,9 +1134,10 @@ Expect: The status card reads "8 of 9 invitees have responded." The counts read 
 Note: With `Email__SmtpHost` unset, nothing reports a delivery, so an hour after the open every unanswered link reads as
   not delivered (INFRASTRUCTURE.md § After T251). Where the mail reaches a server that accepts it (a local SMTP sink),
   every link is reported sent and none ever reads as not delivered, so stand in for a dropped mail on Dr Khoza's link;
-  the warning then shows at once: `UPDATE "MsfInvitations" SET "SentOn" = NULL, "DeliveryFailedOn" = now() WHERE
-  "CampaignId" = <the campaign's id> AND "RespondentEmail" = 'lindiwe.khoza@kgk.wombat.local' AND "RespondedOn" IS
-  NULL;`
+  the warning then shows at once: `UPDATE "MsfInvitations" SET "SentOn" = NULL, "DeliveryFailedOn" = now(),
+  "DeliveryLinkSelector" = "TokenSelector" WHERE "CampaignId" = <the campaign's id> AND "RespondentEmail" =
+  'lindiwe.khoza@kgk.wombat.local' AND "RespondedOn" IS NULL;` (a failure counts only against the current link,
+  `MsfInvitation.LinkNotDelivered`; T369's states pass).
 Actual (2026-10-19, T369 replay, wombat_scenario_t369): At 10:05 UTC (12:05 SAST), an hour after the open at 09:03 (no
   stand-in needed: the log sender reports no delivery; Steps 3.50 to 3.54c were played in the wait, kept in short
   background waits of under ten minutes, each followed by a read-only look at the Links part, which read "1 link is
