@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>R2-0-spec · flow 11 round 2</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--link-color)}a:hover{color:var(--link-hover)}
+</style>
+</helmet>
+<div class="doc"><h1>R2-0-spec · flow 11 round 2 (1 of 2)</h1>
+<p>Invitations (B), Invite a person, Register, the pending registrar's Home, Trainees and Admit &lt;name&gt; (W1). Wombat v25, every colour an existing token: no new token. Part 2 holds the messages, the mail, the routes' DATA, the corrections and the proposals.</p>
+
+<h2>Components</h2>
+<div class="table-container"><table class="clinic-table"><caption>Built components used, and the NEW ones with their classes</caption>
+<thead><tr><th scope="col">Component</th><th scope="col">Where</th><th scope="col">Classes</th></tr></thead><tbody>
+<tr><td>PageHeader</td><td>every signed-in page; Invite a person and Admit &lt;name&gt; with their trail</td><td>.header-container, .page-subtitle, .actions-cell, .breadcrumbs</td></tr>
+<tr><td>DataTable with Stack</td><td>Active invitations, Expired, not used, Waiting to be admitted, Current trainees: stacked from 900px, each field labelled</td><td>.table-container.shadow, .clinic-table--stack, --stack-wide</td></tr>
+<tr><td>FormField, FormActions, FieldHelp</td><td>Invite a person, Admit &lt;name&gt;, Register</td><td>.form-container, .form-grid, .form-group, .field-help, .form-actions</td></tr>
+<tr><td>choice-group</td><td>Role on Invite a person</td><td>.choice-row, .choice-group</td></tr>
+<tr><td>Alert, ActionResult</td><td>revoke, admission, prefilled notices, T290, Register's info line</td><td>.alert-success/-info/-warning/-danger, .result-block  <span class="anno anno--new">NEW</span></td></tr>
+<tr><td>ConfirmDialog</td><td>Revoke… (a new use)</td><td>.dialog-card, .dialog-body, .dialog-list</td></tr>
+<tr><td>StatePanel with Try again, Skeleton</td><td>every list and form page</td><td>.detail-card--empty, .state-panel-title/-copy, .skeleton</td></tr>
+<tr><td>DashboardCard</td><td>the wait card; Q8's line (for flow 12)</td><td>.detail-card--emphasis</td></tr>
+<tr><td>The auth card, PasswordField, PasswordRules</td><td>Register and its cards</td><td>.account-form-container, .account-brand, .account-purpose, .password-field, .password-rules</td></tr>
+<tr><td>Field validation</td><td>every refusal beside its field</td><td>.validation-message, aria-invalid, the field's stripe</td></tr>
+<tr><td>Icon</td><td>mail, user-plus, user, user-check, copy, check, clock, circle-check, circle-alert, refresh-cw, log-in, eye; send  <span class="anno anno--new">NEW</span> and hourglass  <span class="anno anno--new">NEW</span> (C11)</td><td>.icon</td></tr>
+<tr><td>OneTimeLink  <span class="anno anno--new">NEW</span></td><td>the issue's and the resend's result</td><td>.otl, .otl-result, .otl-row, .otl-copied, .otl-help, .otl-next</td></tr>
+<tr><td>Delivery state word and note row  <span class="anno anno--new">NEW</span></td><td>Active invitations</td><td>.delivery, --sending, --sent, --warn; tr.inv-has-note, tr.inv-note</td></tr>
+<tr><td>Radios' descriptions  <span class="anno anno--new">NEW</span></td><td>Role</td><td>.inv-radios, .inv-radio, .inv-radio-name, .inv-radio-desc</td></tr>
+<tr><td>Scope read-out  <span class="anno anno--new">NEW</span></td><td>the Institutional admin's only institution; Admit's only curriculum</td><td>.field-label, .inv-readback</td></tr>
+<tr><td>Expired, not used  <span class="anno anno--new">NEW</span></td><td>Invitations (Q9)</td><td>.inv-section, the table above, Invite again</td></tr>
+<tr><td>Training-year line  <span class="anno anno--new">NEW</span></td><td>Admit &lt;name&gt;</td><td>.ty-line, .ty-value (aria-live polite)</td></tr>
+<tr><td>Consequence block  <span class="anno anno--new">NEW</span></td><td>Admit &lt;name&gt;</td><td>.consequence (flow 03's check line, on info-bg with the secondary stripe)</td></tr>
+<tr><td>Who is being admitted  <span class="anno anno--new">NEW</span></td><td>Admit &lt;name&gt;</td><td>.admit-facts-card, .admit-facts</td></tr>
+<tr><td>Refused-link cards, Q11's card  <span class="anno anno--new">NEW</span></td><td>Register</td><td>the auth card with an h1 per state</td></tr>
+<tr><td>Wait card's parts  <span class="anno anno--new">NEW</span></td><td>the pending Home</td><td>.wait-card, .wait-facts, .wait-steps, .wait-links</td></tr>
+<tr><td>Page column  <span class="anno anno--new">NEW</span></td><td>the four pages</td><td>.inv-page, .inv-page--form (48rem), .inv-section, .inv-section-head, .inv-count</td></tr>
+</tbody></table></div>
+
+<h2>DESIGN.md, the text each change writes</h2>
+<h3>§ The invitations list (replaces DESIGN.md:2145–2157, "the text, not a badge … nothing on the row is a verdict to tint")</h3>
+<blockquote>The list is the page: Invitee (the row header, the address breaking after its @), Role and scope (the role's label over its scope; the institution or College too for the Administrator), Issued (date and time in SAST, never wrapping), Expires, Delivery, and the row's actions. <b>Delivery is a state word with an icon</b>: Being sent (clock, muted), Sent (circle-check, success), Not delivered and Check the address (circle-alert, warning, 600). The word carries the meaning; the icon only repeats it. <b>Its explanation is a note row</b> under its row, body text on warning-bg with the warning stripe, spanning every column, and the row's Resend is described by it. Rows not delivered come first, newest first among them, then the rest newest first. A not-delivered row offers Resend before Revoke…; any other row Revoke… alone. An invitation that expires unused moves to Expired, not used for 30 days, with Invite again. The issue's link is never on this page except as the resend's OneTimeLink.</blockquote>
+<h3>§ Form system</h3>
+<blockquote>A field the chosen option does not take is not drawn: never disabled. A field that depends on another appears when that one is chosen (Sub-speciality after Speciality), with a hint under the first until then. A choice of a few kinds is radios, each with a one-line description under its name, linked by aria-describedby. A single possible value is read out as text, not offered as a picker. A refusal sits under its field, the field marked and focused, everything typed kept.</blockquote>
+<h3>§ Button system's destructive action</h3>
+<blockquote>Revoke… is an outline button named for its row; its ConfirmDialog names the invitee and says the link stops working; the danger fill is the dialog's action alone. The dialog opens on its safe button ("Keep the invitation"); Escape and the safe button return the focus to the opener.</blockquote>
+<h3>§ Table system</h3>
+<blockquote>A note row explains its row: tr.inv-note after tr.inv-has-note, one cell across every column; stacked, it follows its row's block.</blockquote>
+<h3>§ Page-level patterns: Form page, the title rule, the owner table</h3>
+<blockquote>Invite a person and Admit &lt;name&gt; are form pages of their own under their lists (flow 10's New MSF campaign). The h1, the trail's last crumb and the tab stem are the same words ("Invite a person", "Admit Lerato Molefe"); the owning list stays lit with aria-current="true". After the action: Invite a person stays, its result on top and the form reset under "Invite the next person"; Admit returns to Trainees with its result directly above the next waiting registrar.</blockquote>
+<h3>§ Account / auth page (DESIGN.md:3986's "sign in only")</h3>
+<blockquote>The lockup and "Work-based assessment for specialist training." head sign in and Register. Every refused registration link is a card of its own: an h1 naming the state and a next step (Sign in for a used link and an existing account; "Ask the person who invited you for a new invitation." otherwise), never a form.</blockquote>
+
+<h2>Routes</h2>
+<div class="table-container"><table class="clinic-table"><caption>Each route with its owner, trail, lit item and tab</caption>
+<thead><tr><th scope="col">Route</th><th scope="col">Owner and lit item</th><th scope="col">Trail</th><th scope="col">Tab</th></tr></thead><tbody>
+<tr><td>/admin/invitations</td><td>Invitations (aria-current="page")</td><td>none (a list the menu offers)</td><td>Invitations · Wombat</td></tr>
+<tr><td>/admin/invitations/new  <span class="anno anno--proposed">PROPOSED</span></td><td>Invitations (aria-current="true")</td><td>Home › Invitations › Invite a person</td><td>Invite a person · Wombat; Error: … after a refusal</td></tr>
+<tr><td>/account/register</td><td>none (static, signed out)</td><td>none</td><td>Complete registration · Wombat; each card its h1 · Wombat</td></tr>
+<tr><td>/account/register/submit</td><td>the form's post</td><td>—</td><td>—</td></tr>
+<tr><td>/</td><td>Home</td><td>none</td><td>Home · Wombat</td></tr>
+<tr><td>/admin/trainees</td><td>Trainees (Institutional admin); none for the Administrator</td><td>none; Home › Trainees for the Administrator</td><td>Trainees · Wombat</td></tr>
+<tr><td>/admin/trainees/admit?userId=…  <span class="anno anno--proposed">PROPOSED</span></td><td>Trainees (aria-current="true")</td><td>Home › Trainees › Admit Lerato Molefe</td><td>Admit Lerato Molefe · Wombat</td></tr>
+<tr><td>/admin/trainees/edit?id=…</td><td>unchanged (flows 13, 15)</td><td>unchanged</td><td>unchanged</td></tr>
+</tbody></table></div>
+
+<h2>Focus after each action</h2>
+<ul>
+<li>Issue, resend: the OneTimeLink (its section, tabindex −1); Copy link next; "Link copied." through aria-live.</li>
+<li>A refusal: its field, described by its message.</li>
+<li>Revoke…: the dialog on Keep the invitation; Escape or Keep back to the row's Revoke…; Revoke invitation to the result.</li>
+<li>Admit: the result on Trainees, directly above the next Admit…; Cancel back to the registrar's Admit….</li>
+<li>Register refused: Password (the names kept); a refused-link card: its h1 (the page's FocusOnNavigate).</li>
+<li>Loading: nothing actionable until the read is in. A failed read: its panel, then Try again.</li>
+</ul>
+
+<h2>Accessibility (WCAG 2.1 AA)</h2>
+<ul>
+<li>One h1 a page; h2 per section (Active invitations, Expired, not used; Programme, Who is being admitted; Waiting to be admitted, Current trainees, Completed and closed); the wait card an h2 with h3 parts; the dialog an h2.</li>
+<li>Every table captioned with what is listed and its order, never its heading again; scope on every header.</li>
+<li>Every row action named for its row and none alike: "Resend the Trainee invitation to duplessis@kgk.wombat.local", "Revoke the Trainee invitation to ndlvou@kgk.wombat.local", "Invite duplessis@kgk.wombat.local again as Trainee, Paediatrics / Paediatrics", "Admit Anele Dlamini", "Edit Lerato Molefe's profile".</li>
+<li>Contrast from the system's own table: text on every tint 11.2:1 or more; muted on surface 5.09:1; secondary on surface 4.86:1; input-border 3.80:1; the focus ring 4.86:1. The warning icon on warning-bg 5.43:1.</li>
+<li>Targets 36 and 28px at 1280 and 768; 44px at 390 (row actions, radios, Copy link, the wait card's links, every auth-card control). Date inputs in the body font (T328).</li>
+<li>Delivery never colour alone: a word, an icon, a weight. An invalid field: the stripe and the message.</li>
+</ul>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":6400}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

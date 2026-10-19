@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>R2-0-spec · flow 11 round 2, continued</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--link-color)}a:hover{color:var(--link-hover)}
+</style>
+</helmet>
+<div class="doc"><h1>R2-0-spec · flow 11 round 2 (2 of 2)</h1>
+
+<h2>DATA reads, by query</h2>
+<ul>
+<li><b>GetInvitationPreview</b>: the institution or College name, the speciality and sub-speciality names, ExpiresOn (Register's info line and its note).</li>
+<li><b>IssueInvitation</b>: an account with the address; an active invitation to it; each judged against the caller's scope (T286 / Q12, Q10).</li>
+<li><b>ListActiveInvitations</b>: the expired, unused ones of the last 30 days (Q9); the resend's time (ResentOn, L10).</li>
+<li><b>GetTraineeDashboardSummary</b>: the used invitation's issuer, role and date (found by her address and UsedOn); her scope names; the curriculum when exactly one version is adopted.</li>
+<li><b>ListPendingTrainees</b>: the speciality and sub-speciality names; Registered from the used invitation's UsedOn ("—" with none); the institution for the Administrator.</li>
+<li><b>ListTraineesForSpeciality</b>: the programme start; TrainingYear.</li>
+<li><b>The Admit page</b>: the training year for a chosen start (on the date's change, one round trip); the derived completion; the registrar's invited scope and registration date.</li>
+<li><b>AdmitTrainee</b>: Q7's mail (decided, T367).</li>
+<li><b>wombat.js</b>: the clipboard call behind Copy link; the old clearInvitationTokenFromUrl (wombat.js:3) goes.</li>
+<li><b>Q8</b>: the count waiting, for flow 12.</li>
+</ul>
+
+<h2>Every message, by kind</h2>
+<div class="table-container"><table class="clinic-table"><caption>Built words stay as written; NEW words beside those they replace (C6)</caption>
+<thead><tr><th scope="col">Kind</th><th scope="col">Words</th><th scope="col">Built or NEW (old words)</th></tr></thead><tbody>
+<tr><td>result</td><td>Invitation issued for smit@kgk.wombat.local. Its email is being sent. Copy the link below — it is shown only once.</td><td>built, Issued(email)</td></tr>
+<tr><td>result</td><td>A new invitation link is being emailed to duplessis@kgk.wombat.local. The link it replaces no longer works. Copy the new link below — it is shown only once.</td><td>built, Resent(email)</td></tr>
+<tr><td>result</td><td>Invitation revoked. The link sent to ndlvou@kgk.wombat.local no longer works: nobody can register from it.</td><td>NEW <span class="old">Invitation revoked.</span></td></tr>
+<tr><td>result</td><td>Lerato Molefe admitted to the Paediatric EPA Curriculum (11.1), training year 4, from 2023-01-15.</td><td>NEW (today: the profile page, no result)</td></tr>
+<tr><td>result</td><td>… Expected completion 2027-01-15, derived from the curriculum window: change it under Edit.</td><td>NEW, after an empty completion</td></tr>
+<tr><td>notice</td><td>Link copied.</td><td>NEW (aria-live)</td></tr>
+<tr><td>notice</td><td>Role and scope filled from the revoked invitation to ndlvou@kgk.wombat.local. Type the right address.</td><td>NEW</td></tr>
+<tr><td>notice</td><td>Filled from the invitation to duplessis@kgk.wombat.local that expired on 2026-11-02. Check it, then issue.</td><td>NEW</td></tr>
+<tr><td>notice</td><td>This invitation is for smit@kgk.wombat.local, as Coordinator at Kgosi Kgari Teaching Hospital.</td><td>NEW <span class="old">Registering smit@kgk.wombat.local as Coordinator.</span></td></tr>
+<tr><td>notice</td><td>You hold the Trainee role, so you cannot view or change user accounts, including your own. / … trainee profiles …</td><td>built, T290</td></tr>
+<tr><td>hint</td><td>the eight role descriptions (C10: Assessor "Assesses the registrars who ask them, at this institution."; Speciality admin "Runs one speciality's committee work: panels, reviews and decisions due.")</td><td>NEW</td></tr>
+<tr><td>hint</td><td>Leave it at Any speciality for the whole institution. / Then choose its sub-speciality. / Any speciality (Q18)</td><td>NEW</td></tr>
+<tr><td>hint</td><td>It expires on 2026-11-02, in 14 days. It is shown here until your next action, then never again. If the email is not delivered, share this link another way, or resend it from Invitations, which emails a new link in place of this one.</td><td>NEW (C21) <span class="old">… The link is shown here only on this page-load …</span></td></tr>
+<tr><td>hint</td><td>Resend emails a new link in place of the current one, which then stops working. / Its email has failed 2 times, …</td><td>built (now a note row)</td></tr>
+<tr><td>hint</td><td>Leave this empty to derive it from the curriculum window. (+ "Left empty, it will be 2027-01-15.")</td><td>built (+ NEW)</td></tr>
+<tr><td>hint</td><td>Whole years from the programme start, as of 2026-10-19. It follows the date when you change it. / Not started: the programme starts on 2027-01-15</td><td>NEW (ProgrammeWords "Not started", C4)</td></tr>
+<tr><td>hint</td><td>When you admit: … becomes a Trainee …; any session … ends once …; an email tells … so.</td><td>NEW</td></tr>
+<tr><td>hint</td><td>Not expecting this invitation? Ignore it: its link stops working on 2026-11-02.</td><td>NEW</td></tr>
+<tr><td>refusal</td><td>A college is required for a college administrator. · Speciality administrators must be scoped to a speciality. · The selected role requires speciality and sub-speciality scope. · The selected role may not be scoped to a sub-speciality. · An institution is required. · You do not have permission to issue invitations for that institution.</td><td>built, now under their fields</td></tr>
+<tr><td>refusal</td><td>Enter the person's email address.</td><td>NEW (T324) <span class="old">the model's "The Email field is required."</span></td></tr>
+<tr><td>refusal</td><td>Enter a valid email address, for example name@example.org.</td><td>built (flow 10's)</td></tr>
+<tr><td>refusal</td><td>smit@kgk.wombat.local already has a Wombat account (Pieter Smit), so it cannot be invited. To give Pieter Smit another role, open Pieter Smit under Users.</td><td>NEW, in scope (Q12, C15)</td></tr>
+<tr><td>refusal</td><td>An account with this address already exists. Ask a Wombat administrator to add the role.</td><td>NEW, out of scope (Q12, Q16)</td></tr>
+<tr><td>refusal</td><td>molefe@kgk.wombat.local already has an active invitation, issued 2026-10-19 and expiring 2026-11-02. Resend it or revoke it under Invitations.</td><td>NEW, in scope (Q10, C16)</td></tr>
+<tr><td>refusal</td><td>This address already has an active invitation from another institution. Ask a Wombat administrator.</td><td>NEW, out of scope (Q10, Q16)</td></tr>
+<tr><td>refusal</td><td>The new password needs: At least 12 characters. · Enter your first name and last name, each of at most 100 characters, and a password.</td><td>built, now under their fields</td></tr>
+<tr><td>refusal</td><td>The password confirmation does not match. Type the password again in both fields.</td><td>NEW <span class="old">The password confirmation does not match.</span></td></tr>
+<tr><td>refusal (card)</td><td>Invitation already used: This invitation has already been used: an account was registered from it. If it was yours, sign in with that account. [Sign in]</td><td>NEW <span class="old">This invitation has already been used.</span></td></tr>
+<tr><td>refusal (card)</td><td>Invitation revoked: This invitation has been revoked. Ask the person who invited you for a new invitation.</td><td>built + NEW next step</td></tr>
+<tr><td>refusal (card)</td><td>Invitation link not recognised: This invitation is invalid. The link may be incomplete, or a newer invitation email may have replaced it. Open the link in the most recent invitation email, or ask the person who invited you for a new invitation.</td><td>NEW <span class="old">This invitation is invalid.</span></td></tr>
+<tr><td>refusal (card)</td><td>Invitation expired: This invitation has expired: an invitation lasts 14 days. Ask the person who invited you for a new invitation.</td><td>NEW <span class="old">This invitation has expired.</span></td></tr>
+<tr><td>refusal (card)</td><td>Account already exists: A user with this email address already exists. Sign in with that account. [Sign in]</td><td>built + NEW next step</td></tr>
+<tr><td>refusal (card)</td><td>Address not accepted: This email address cannot be used for an account. Ask your administrator for an invitation to another address.</td><td>built</td></tr>
+<tr><td>refusal (card)</td><td>Invitation link incomplete: The invitation token is missing. Open the link from the invitation email again. If the email split it over two lines, copy all of it into the address bar.</td><td>NEW next step</td></tr>
+<tr><td>refusal (card)</td><td>Registration not completed: Registration could not be completed. Nothing was saved. The invitation is still open in this browser for 30 minutes from when you opened its link. [Try again]</td><td>NEW <span class="old">Registration could not be completed. Try again.</span></td></tr>
+<tr><td>refusal (card)</td><td>Registered, but not signed in: The invited user could not be loaded after registration. Your account was created. Sign in with this email address and the password you chose. [Sign in]</td><td>built + PROPOSED next step</td></tr>
+<tr><td>refusal (card)</td><td>Invitation timed out: This page held the invitation for 30 minutes, and that time has passed. Nothing was saved. Try again: open the link in the invitation email once more.</td><td>NEW</td></tr>
+<tr><td>refusal (card)</td><td>Signed in as someone else: You are signed in as Pieter Smit. This invitation is for patel@kgk.wombat.local. To register it, sign out first. Your own account is not changed. [Sign out and continue] Go to Home</td><td>NEW (Q11)</td></tr>
+<tr><td>refusal</td><td>This institution has adopted no curriculum yet, … · Only users in the PendingTrainee role can be admitted. · This user already has an active trainee profile.</td><td>built, in words</td></tr>
+<tr><td>refusal</td><td>Registrar not found: No registrar waiting for admission has this link. Those waiting are listed on Trainees.</td><td>PROPOSED (f)</td></tr>
+<tr><td>warning</td><td>This start is more than four years ago. Check the date before you admit.</td><td>NEW (f)</td></tr>
+<tr><td>empty</td><td>No active invitations / Issue an invitation to create the first onboarding link.</td><td>built</td></tr>
+<tr><td>empty</td><td>Nobody is waiting to be admitted. / A registrar appears here after registering from a Trainee invitation.</td><td>NEW <span class="old">No pending trainees found.</span></td></tr>
+<tr><td>empty</td><td>No current trainees / A registrar appears here once admitted.</td><td>NEW <span class="old">No active trainee profiles found.</span></td></tr>
+<tr><td>load error</td><td>Could not load the invitations. · Could not load what you can invite. · Could not load the trainees. · Could not load this registrar. — each with "Nothing has changed. Try again, or come back in a few minutes." and Try again</td><td>NEW (C13, T329)</td></tr>
+</tbody></table></div>
+
+<h2>Q7's mail (decided, T367)</h2>
+<blockquote><b>Subject:</b> You are admitted in Wombat<br><b>Body:</b> You have been admitted to the Paediatric EPA Curriculum (11.1), in training year 4. [For a start in the future: Your programme starts on 2027-01-15.] If you were signed in to Wombat, you have been signed out once: sign in again to log activities and follow your progress. [Sign in] — sent through AccountNotices; no other data in it. The admission's result claims no delivery.</blockquote>
+
+<h2>Build notes</h2>
+<ul>
+<li><b>C5, the token cookie:</b> GET /account/register?token=… checks the token, writes it to a cookie (SameSite=Lax, protected by Data Protection, HttpOnly, Secure, Path=/account/register, 30 minutes) and answers 303 to /account/register. The submit reads it; registering, or any refused-link card, deletes it. A refused registration's redirect carries neither the token nor the codes (T341: the cookie carries them). No novalidate on the form (C7).</li>
+<li>A signed-in visitor's pages are interactive (App.razor:110-114): Q11's card and the cookie's redirect must be served static for them too.</li>
+<li>Cookie lapsed (G16): no Try again button: the invitation is gone from the browser, and a button cannot carry the token; the card says to open the email's link again. If you want the button, it can only reopen this card.</li>
+<li><b>C3, the sweep:</b> accepting one invitation revokes every other active invitation to that address, other institutions' included (AcceptInvitation.cs:99-113, T061). Two admins inviting one registrar: whichever link is used, the other stops working; Q10 now refuses the second at issue.</li>
+<li>The Admit page's training year is one round trip on the date's change (onchange), never per keystroke.</li>
+</ul>
+
+<h2>Corrections, each where drawn</h2>
+<div class="table-container"><table class="clinic-table"><caption>C1 to C22 and the boards that answer them</caption>
+<thead><tr><th scope="col">Correction</th><th scope="col">Where</th></tr></thead><tbody>
+<tr><td>C1 Being sent on every step; Sent once</td><td>L03–L10, L13; Sent only on L11 "Against a mail server"</td></tr>
+<tr><td>C2 Mahlangu's own address</td><td>P02</td></tr>
+<tr><td>C3 the sweep</td><td>this board, Build notes</td></tr>
+<tr><td>C4 Not started</td><td>M06</td></tr>
+<tr><td>C5 the cookie</td><td>this board; G01, G14, G16</td></tr>
+<tr><td>C6 changed built words marked</td><td>the message table; G05, G07, G09, G10, G13, G14; L07</td></tr>
+<tr><td>C7 no novalidate on Register</td><td>G01–G06, G17</td></tr>
+<tr><td>C8 the replay's times</td><td>L04, L05, L07–L10, L13</td></tr>
+<tr><td>C9 the College picker's order</td><td>N02</td></tr>
+<tr><td>C10 two descriptions</td><td>N01–N21</td></tr>
+<tr><td>C11 icons</td><td>the component table</td></tr>
+<tr><td>C13 load errors</td><td>L16, N23, T09, M11</td></tr>
+<tr><td>C14 the not delivered newest first</td><td>L13</td></tr>
+<tr><td>C15, C16 scope-judged refusals</td><td>N15–N18</td></tr>
+<tr><td>C17 the Administrator's list</td><td>L02, L03</td></tr>
+<tr><td>C18 the Administrator's Waiting list</td><td>T06</td></tr>
+<tr><td>C19 no Invited by</td><td>P04, P05</td></tr>
+<tr><td>C21 the count as text; Resend it from Invitations</td><td>every list; N03, N06, N09</td></tr>
+<tr><td>C22 the heavy list at 1280 and 768</td><td>L13</td></tr>
+<tr><td>C12, C20</td><td>moot (W2, C dropped)</td></tr>
+</tbody></table></div>
+
+<h2>PROPOSED, for the operator</h2>
+<ol type="a">
+<li>Q10's out-of-scope words name "another institution", but an Institutional admin's refused address may hold a College's invitation (Kruger's kind): "This address already has an active invitation from a College. Ask a Wombat administrator."</li>
+<li>Q10's and Q12's in-scope words point to another page under B: "Resend it or revoke it under Invitations." with Invitations a link; "open Pieter Smit under Users" a link to his page (drawn so, N15, N17).</li>
+<li>Q12's advice cannot hold for Role Trainee (Add role never offers Trainee, T303; Trainees admits only a Pending trainee): "… already has a Wombat account (Pieter Smit), and a trainee is admitted only from a Trainee invitation, so this address cannot be invited as a trainee. Ask a Wombat administrator." (in scope); outside it, Q12's words without "to add the role".</li>
+<li>An expired row leaves Expired, not used once a new invitation to its address is issued; its 30 days count from its expiry on the South African calendar.</li>
+<li>Waiting's Registered is the used invitation's date, "—" for an SSO-provisioned registrar.</li>
+<li>The Admit page's not-found words (M08) and the five-years warning (M07), both NEW.</li>
+<li>The routes /admin/invitations/new and /admin/trainees/admit; Home's "Invite a person" retargeted (HomeFrame.cs:51) and Q8's line, both for flow 12 (X01).</li>
+<li>G15's next step after "could not be loaded" (Sign in), and G16's card for a lapsed cookie.</li>
+</ol>
+
+<h2>Edge cases</h2>
+<ul>
+<li>A 64-character address breaks after its @ (N21, and every Invitee cell).</li>
+<li>A refused issue after an issue: no link remains (N10, N11).</li>
+<li>Two invitations to one address: refused at issue (N17, N18); a registrar invited by two admins: the second refused, and the sweep (C3) for any that slipped through.</li>
+<li>An expired, unused invitation: Expired, not used, Invite again (L14, N20).</li>
+<li>The Administrator admitting: the institution kept (T06); an institution with nothing adopted: M04; a second adopted version: M05.</li>
+<li>A future start: Not started (M06); a start over four years back: Training year 5 and a warning (M07).</li>
+<li>A signed-in visitor on someone's link: G18; Register with script blocked: G17.</li>
+</ul>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":7600}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

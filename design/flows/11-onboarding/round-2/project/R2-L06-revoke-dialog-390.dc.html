@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Invitations · Wombat</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="r2.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--link-color)}a:hover{color:var(--link-hover)}
+</style>
+</helmet>
+<div class="stage"><dialog open class="dialog-scrim dialog-card" aria-labelledby="dt" aria-describedby="db"><div class="form-container"><h2 id="dt">Revoke this invitation?</h2><div id="db" class="dialog-body"><p>Revoke the Trainee invitation to <strong>ndlvou@<wbr>kgk.wombat.local</strong> (Paediatrics / Paediatrics)?</p><ul class="dialog-list"><li>The registration link already emailed to that address stops working at once: nobody can register from it.</li><li>The invitation leaves this list. An address is never corrected in place: to invite the right one, issue a new invitation.</li></ul><p>Revoking cannot be undone.</p></div><div class="form-actions"><button type="button" class="btn btn-outline ring">Keep the invitation</button><button type="button" class="btn btn-danger">Revoke invitation</button></div></div></dialog></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
