@@ -1,0 +1,291 @@
+ROUND 1 PICKED: Invitations B, "a page of its own": the list page at /admin/invitations and Invite a person at
+/admin/invitations/new (PROPOSED route); Trainees W1, "two lists, admission a page": Trainees with its two lists and
+Admit <name> at /admin/trainees/admit?userId=… (PROPOSED route); Register (R) and the pending registrar's Home (H)
+confirmed, revised as below. A, C, W2 and W3 are dropped: draw none of them again. Round 2: B, W1, R and H at full
+fidelity on the design system installed on this canvas (Wombat v25, namespace wombat; its tokens.css, bundle.css and
+components in ds/wombat/): its tokens and components, real words, no grey bars or greys-as-wireframe. Every screen and
+state at 1280 and 390; the invitations list, Waiting to be admitted and Current trainees also at 768. Put round 2 on its
+own page of the canvas; keep round 1's 53 boards on their page, untouched. The brand mark is at
+/_blob/b3cd1c9ecfc87765138aec8743e383bc: use it, never a drawn disc. Every person, address, role, scope, date, time and
+count comes from this message (FIXTURES) and round 1's steps; invent none (flow 09's round 1 invented people). Where a
+value is not given, write a bracket ‹…›, and label a state the replay never reaches "Illustration".
+
+WHY B: Q1's page of its own, as flow 10 gave New MSF campaign: a morning of nine issues keeps the link with the form and
+  never scrolls past a list, and the list gets the page's width for Delivery and the actions at 1280. A reorders its
+  results to the page's top over a 20-row table; C's form column reorders against the DOM below 1100 px (WCAG 1.3.2).
+WHY W1: admission gets a title, a trail and a page of its own, with room for every edge case, and never lands on the
+  profile page that offers Deactivate and Mark complete (flows 13 and 15's). W2's status chips and form dialog are new
+  patterns with no room for the edge cases; W3's open row pushes the list down and leaves the result nowhere to sit.
+BORROW: from A, the list page's table and caption as A drew them, and one link in the issue's result, "Open
+  Invitations", so the row just issued is a press away. From W3, its aim: after Admit, the result sits directly above
+  the next waiting registrar's Admit… (W1d drew it), so five admissions are five round trips with no scrolling.
+
+ATTACHED, AGAIN: the eleven key screenshots are attached to THIS message, staged from C:\dev\Wombat\design\upload:
+  baseline\act-2\2.26-1-duplessis-not-delivered.png, baseline\act-1\1.5-1-refused-no-college.png,
+  crop-first\baseline\states\invitations-list--check-address.png (old frame, a fresh load), baseline\act-2\2.8-1-smit-
+  register-form.png, baseline\act-2\2.9-1-too-short.png, baseline\act-1\1.9-1-used-link.png,
+  baseline\act-2\2.18-1-molefe-pending.png, baseline\act-2\2.28-4-trainees-pending.png,
+  baseline\act-2\2.29-1-admit-form.png, baseline\act-2\2.29-3-four-admitted.png and
+  baseline\act-A\A.7.9-4-trainees-390.png. Read them again before drawing: the words in them are the data. A capture
+  dated 2026-09-26 under states\ is the old frame: read its body only. No attached capture shows a registration link,
+  a token or a password; every capture that does was left out on purpose. If any did not arrive, say so on the first
+  board of round 2's page and draw nothing from memory in its place. Round 1 never said whether they arrived: say so.
+
+DECISIONS (the operator's, 2026-10-19; every recommendation in round 1's assessment taken; one sentence each):
+  Q1: B, Invite a person at /admin/invitations/new (trail Home › Invitations › Invite a person, Invitations lit, tab
+    "Invite a person · Wombat"), reached from the list's header and from Home's "Invite a person", retargeted there
+    (PROPOSED: HomeFrame.cs:51 opens the list today; draw it as a note, not a new Home).
+  Q2: the OneTimeLink (NEW) is the issue's or the resend's result: the link in a read-only field drawn
+    "…/account/register?token=•••", Copy link (NEW: a clipboard call in wombat.js), "Link copied." announced through
+    aria-live, the expiry date; it clears on any next action, refusal or navigation, and never comes back.
+  Q3: no role chosen until one is; only the fields the chosen role takes are shown (never disabled); the caller's only
+    institution is shown as text; Role is radios with a description each (C10's two corrected); each refusal under its
+    field, keeping what was typed.
+  Q4: the Awaiting admission card as H1 drew it, corrected: "Invited by" only when an Institutional admin issued the
+    invitation; "Then you can log activities…" holds once the programme has started.
+  Q5: W1 as above; Admit returns to Trainees with "Lerato Molefe admitted to the Paediatric EPA Curriculum (11.1),
+    training year 4, from 2023-01-15." focused, directly above the next Admit…; Current trainees gains Programme start
+    and Training year.
+  Q6: Register as R1–R7 drew it, with the token cookie SameSite=Lax (C5), no novalidate (C7), and every reworded refusal
+    marked NEW with its Expect (C6).
+  Q7: a mail on admission through T367's AccountNotices path (decided, T367): it names the curriculum, her training year
+    (or the day her programme starts), says she signs in again, and links to Sign in; no data in it. The admission's
+    result claims no delivery.
+  Q8: a "Waiting for admission: 5" line linking to Trainees on the Institutional admin's Home, PROPOSED for flow 12 to
+    place; no mail. Draw it once, on a board labelled "for flow 12", never as her Home redesigned.
+  Q9: expired, unused invitations are listed for 30 days under "Expired, not used", each with "Invite again", which
+    opens Invite a person prefilled with its address, role and scope (the mechanism of "Invite another address as …").
+  Q10: a second active invitation to one address is refused at issue, beside Email, in any institution: in the caller's
+    scope with S3's words; outside it "This address already has an active invitation from another institution. Ask a
+    Wombat administrator." with no date.
+  Q11: a signed-in visitor on Register gets R7's "Signed in as someone else" card, served static; it never registers over
+    a live session.
+  Q12: an address that already has an account is refused at issue, beside Email, before anything is stored or mailed:
+    in the caller's scope with S3's words and the link to the user; outside it "An account with this address already
+    exists. Ask a Wombat administrator to add the role." with no name. Register keeps its refusal, with Sign in.
+  Q13: role labels (WombatRoleLabels) everywhere on flow 11's pages, the radios included; the users pages stay flow 12's.
+  Q14: the build folds in T264's invitations half, T315, T317's registration half, T286's issue half, T306's admission
+    half, the T323, T324, T280, T325, T328 and T329 halves of these pages, T341's register half (the cookie carries the
+    codes), Q7's mail and every DATA read below: draw each as fixed. Nothing lands first. T333, T289, T291 and the other
+    halves stay their own flows': draw none of them.
+  Q15: Delivery is a state word with an icon; its explanation sits in a warning-tinted note row under its row; rows not
+    delivered come first. Round 2 writes the DESIGN.md § The invitations list text that replaces "the text, not a badge
+    … nothing on the row is a verdict to tint" (DESIGN.md:2145-2157).
+  Q16: a refusal about an address outside the caller's scope says the address is taken and whom to ask: never a name, a
+    date or a link.
+  Q17: the h1 "Admit Lerato Molefe", tab "Admit Lerato Molefe · Wombat", trail Home › Trainees › Admit Lerato Molefe,
+    Trainees lit (aria-current).
+  Q18: an unscoped Coordinator's or Committee member's scope cell reads "Any speciality", marked NEW.
+
+CORRECTIONS (round 1's assessment § 4 and § 5; round 2's review checks each by number; the board each fixes):
+  C1 (must; A1–A5, A7, B3, B5, B8, C1–C5, C8): with the log sender nothing is delivered: every row reads "Being sent"
+    for its first hour, then "Not delivered.". Draw "Being sent" on every step board; "Sent" only on one board labelled
+    "Against a mail server".
+  C2 (must; H3): Dr Mahlangu's card names mahlangu@kgk.wombat.local, never molefe@.
+  C3 (must; Z1): accepting one invitation revokes every other active invitation to that address, other institutions'
+    included (AcceptInvitation.cs:99-113, T061). Say so on the Spec board; never "both stay active".
+  C4 (must; Z1, and the brief's edge case): a future start gives no training year: "Not started: the programme starts
+    on 2027-01-15" (ProgrammeWords: "Not started"), never "Training year 1".
+  C5 (must; R7): the token cookie is SameSite=Lax, protected by Data Protection, HttpOnly, Secure, Path=/account/register,
+    30 minutes; a refused registration's redirect carries neither the token nor the codes (T341).
+  C6 (should; R4, R5, R7, B3): each built word changed is marked NEW on the Spec's message list, with its old words beside
+    it: R4's added "Type the password again in both fields.", R5's ": an account was registered from it.", R7's no
+    token, expired, invalid and fault wordings, and B3's "Invitation revoked." become two sentences.
+  C7 (should; R1–R4): no novalidate on Register's form: the browser's own required check stays.
+  C8 (should; every Invitations board): the replay's times: the nine staff 09:19 SAST, the five registrars and ndlovu@
+    09:22 SAST, du Plessis's resend 10:23 SAST; same-minute rows by issue, newest first.
+  C9 (nit; B6): the College picker reads College of Paediatricians of South Africa, then Demo College.
+  C10 (should; B1–B7): Assessor "Assesses the registrars who ask them, at this institution."; Speciality admin "Runs one
+    speciality's committee work: panels, reviews and decisions due."
+  C11 (nit; Z1): mail, user-plus, graduation-cap and copy exist; "refresh" is refresh-cw; send and hourglass are NEW.
+  C13 (nit; S5, S6): "Could not load the invitations. Nothing has changed. Try again, or come back in a few minutes."
+    with Try again; likewise "Could not load the trainees. …" and "Could not load this registrar. …".
+  C14 (nit; B5, B8): inside the not-delivered group, newest first, as the caption says.
+  C15 (must; S3, Z1): T286's refusal names and links the holder only when the account is in the caller's scope (Q12).
+  C16 (must; S3, Z1): Q10's refusal gives dates only for an invitation in the caller's scope (Q10, Q16).
+  C17 (should; B3–B8): the caption names no institution for the Administrator, who sees every one; draw her list with
+    1.7's two rows, the College or institution in Role and scope.
+  C18 (should; W1a–W1d): the Administrator's Waiting list keeps the institution (a column, or in "Invited as").
+  C19 (should; H1–H3): no "Invited by", and no "ask Nolwazi Mbatha", for an Administrator-issued or SSO-provisioned
+    registrar (Q4).
+  C21 (nit; B1, the counts): the "N active" count is plain text, not a badge; B1's link help says "Resend it from
+    Invitations", not "press Resend on its row".
+  C22 (should; B5): the list at 1280 with the not-delivered rows' Resend and Revoke…, un-scrolled; and at 768.
+  C12 (W2) and C20 (C's order:-1) are moot: W2 and C are dropped.
+  Also (nits): the heavy set's ndlvou@ "failed 2 times" is labelled "Illustration (composite)"; "Any speciality" is
+    NEW (Q18).
+
+REGISTER AND THE HOME, AS § 4 CONFIRMS AND CORRECTS:
+  Register keeps the lockup and "Work-based assessment for specialist training." (NEW here: DESIGN.md:3986's "sign in
+    only" changes); the info line "This invitation is for smit@kgk.wombat.local, as Coordinator at Kgosi Kgari Teaching
+    Hospital." (NEW words; DATA: InvitationPreviewDto gains the institution or College, speciality and sub-speciality
+    names and ExpiresOn); Email readonly with autocomplete="username" (disabled today); given-name and family-name; no
+    "*"; each refusal under its field with aria-invalid and aria-describedby; the names kept, both passwords empty;
+    the focus on Password after a refused password (the names are kept); each refused link an h1 with its next step:
+    Sign in for used and for an existing account, "Ask the person who invited you for a new invitation." otherwise;
+    "Not expecting this invitation? Ignore it: its link stops working on 2026-11-02."; Q11's card.
+  Build notes on the Spec board: a signed-in visitor's pages are interactive (App.razor:110-114), so Q11's card and the
+    cookie's redirect must be served static for them too; the old clearInvitationTokenFromUrl (wombat.js:3) goes.
+  The Home: one emphasis card "Awaiting admission"; "You are registered, and waiting to be admitted to the Paediatrics
+    programme at Kgosi Kgari Teaching Hospital. Until then, nothing can be filed by you or about you."; Institution;
+    Programme "Paediatrics / Paediatrics" from her own scopes, "on the Paediatric EPA Curriculum (11.1)" only while
+    exactly one version is adopted; "Invited by Nolwazi Mbatha, Institutional admin, on 2026-10-19" (DATA: the used
+    invitation found by her address and UsedOn); "Who admits you"; "When you are admitted": her start and training
+    year set, signed out once, back as a Trainee, "Then, once your programme has started, you can log activities and
+    follow your progress.", and Q7's "An email tells you, at mahlangu@kgk.wombat.local, that it has happened." (decided,
+    T367); "Meanwhile": Review your account → and Open My data rights →; the menu Home, then My data rights; no header
+    action.
+
+FIXTURES (the T369 replay, D = 2026-10-19, J = 2026-01-15, D+14 = 2026-11-02; use these words):
+  People: the Administrator "Demo Administrator" (devadmin@wombat.local). Dr Anton Kruger, College admin,
+    kruger@cmsa.wombat.local, College of Paediatricians of South Africa (CPSA). Prof Nolwazi Mbatha, Institutional admin,
+    mbatha@kgk.wombat.local, Kgosi Kgari Teaching Hospital (KGK). Staff, each invited 09:19 SAST in this order: Pieter
+    Smit, Coordinator, smit@kgk.wombat.local, no speciality; Thandi Zulu, David Naidoo and Sarah Botha, Committee member,
+    Paediatrics, zulu@, naidoo@, botha@kgk.wombat.local; Mohammed Patel and Fatima Khumalo, Assessor, Paediatrics /
+    Paediatrics, patel@, khumalo@kgk.wombat.local; John van Rensburg, Committee member, no speciality,
+    vanrensburg@sun.wombat.local; Refilwe Mokoena, Speciality admin, Paediatrics, mokoena@kgk.wombat.local; Kabelo
+    Sithole, Sub-speciality admin, Paediatrics / Paediatrics, sithole@kgk.wombat.local. Registrars, Trainee, Paediatrics
+    / Paediatrics, invited 09:22 SAST in this order: Lerato Molefe molefe@, Anele Dlamini dlamini@, Pieter du Plessis
+    duplessis@, Nomsa Mahlangu mahlangu@, and Sipho Ndlovu at the mistyped ndlvou@kgk.wombat.local (revoked at 2.17;
+    ndlovu@kgk.wombat.local issued 09:22 SAST). Names as stored, no titles, on every page.
+  Places: Demo Institution and Kgosi Kgari Teaching Hospital; the Colleges College of Paediatricians of South Africa and
+    Demo College; speciality Paediatrics, sub-speciality Paediatrics; the curriculum "Paediatric EPA Curriculum (11.1)",
+    KGK's only adopted version. Home's role line "Semester 2, 2026".
+  The Administrator's list (1.5–1.7): Kruger's row College admin, College of Paediatricians of South Africa; Mbatha's
+    Institutional admin, Kgosi Kgari Teaching Hospital; both Being sent, issued 2026-10-19 ‹time› SAST, expiring
+    2026-11-02. 1.11 and 2.1: "No active invitations" / "Issue an invitation to create the first onboarding link.".
+  Mbatha's list: after 2.7, nine rows, 09:19 SAST, Being sent, Sithole first; after 2.16, the five registrars (the
+    staff registered at 2.8–2.10), 09:22 SAST, Being sent, ndlvou@ first; after 2.17, four plus ndlovu@ (five); at
+    2.26, du Plessis alone, issued 09:22 SAST, "Not delivered." and "Resend emails a new link in place of the current
+    one, which then stops working.", Resend before Revoke…; resent at 10:23 SAST, Being sent, expiring 2026-11-02, only
+    Revoke…; at 2.28, "No active invitations".
+  Words that stay (built): Issued(email) and Resent(email) (InvitationText.cs:64-70); the refusals "A college is
+    required for a college administrator.", "Speciality administrators must be scoped to a speciality.", "The selected
+    role requires speciality and sub-speciality scope.", "The selected role may not be scoped to a sub-speciality.",
+    "An institution is required.", "You do not have permission to issue invitations for that institution.", the
+    malformed address "Enter a valid email address, for example name@example.org." (flow 10's); CheckAddress's "Its
+    email has failed 2 times, …"; the six password rules; Register's built refusals as T285 fixed them, unless marked
+    NEW (C6); "The invited user could not be loaded after registration." (UserNotLoaded); the T290 notes "You hold the
+    Trainee role, so you cannot view or change user accounts, including your own." (Invitations) and "You hold the
+    Trainee role, so you cannot view or change trainee profiles, including your own." (Trainees); the admission's
+    "Leave this empty to derive it from the curriculum window.", NothingAdopted ("This institution has adopted no
+    curriculum yet, so no trainee can be admitted. Adopt one under Curriculum adoptions, then admit the trainee."),
+    "Only users in the PendingTrainee role can be admitted." and "This user already has an active trainee profile."
+    (each a refusal the page shows in words, never the exception).
+  Admission (2.29, 2.30), each start written from J, the start pre-filled with today (2026-10-19, "Training year 1"):
+    Lerato Molefe 2023-01-15, training year 4, completion 2027-01-14; Anele Dlamini 2024-01-15, 3, 2028-01-14; Pieter du
+    Plessis 2025-01-15, 2, 2029-01-14; Nomsa Mahlangu 2026-01-15, 1, 2030-01-14; Sipho Ndlovu 2026-01-15, 1, the
+    completion left empty and derived as 2027-01-15, then set to 2030-01-14 on his profile page (flow 13's, unchanged:
+    "Trainee profile saved."). Registered: 2026-10-19 for all five.
+
+STATES TO DRAW (each at 1280 and 390, with the role's menu and the shell; 768 where marked):
+  Invitations, the list (Mbatha unless named): none (2.1, the Administrator at 1.5 and 1.11); the Administrator's two
+    rows (1.7, C17); nine rows Being sent (2.7); five Being sent (2.16); the revoke dialog (2.17, S1's words, focus on
+    Keep the invitation, Escape returning to the row's Revoke…) and its result, focused, with no link and "Invite
+    another address as Trainee, Paediatrics / Paediatrics"; five again with ndlovu@ (2.17); du Plessis not delivered
+    (2.26 before Resend), then resent, the OneTimeLink at the top, focused; none after registration (2.28); Sent
+    (labelled "Against a mail server"); check the address ("Illustration (composite)"); the heavy set ("Illustration":
+    about twenty rows, three not delivered, one at check the address, the further rows ‹a further registrar's
+    address›); Expired, not used (Q9; "Illustration": duplessis@'s invitation had it never been resent, expired
+    2026-11-02, read on ‹a date before 2026-12-02›) with Invite again; loading; the load error (C13); the T290 note;
+    768 for the nine, the five and the heavy set.
+  Invite a person: empty, no role chosen (2.1); the Administrator's eight radios, College admin chosen, the College
+    picker, refused beside College (1.5), then issued (Kruger); Institutional admin with the Institution picker (Demo
+    Institution, Kgosi Kgari Teaching Hospital) (1.7); Coordinator chosen, Speciality optional, no Sub-speciality
+    (2.2); issued (Smit): the OneTimeLink, "Link copied.", "Open Invitations", "Invite the next person" below; Committee
+    member with Paediatrics (2.3); Assessor with both (2.4); van Rensburg issued with "Any speciality" (2.5); refused
+    beside Speciality with no link on screen (2.6: van Rensburg's link gone); refused beside Sub-speciality with no
+    link (2.7: Mokoena's gone); Trainee (2.16); Email left blank ("Enter the person's email address.", NEW, T324); a
+    malformed address; T286 in scope and outside it (Q12, C15); Q10 in scope and outside it (C16); prefilled from
+    "Invite another address as …" and from "Invite again"; a 64-character address wrapping after its @; loading; load
+    error.
+  Register (signed in to nothing, the auth card): the form (Smit 2.8; Kruger 1.8 "as College admin at College of
+    Paediatricians of South Africa"; Mbatha 1.10); a password refused, the names Mohammed and Patel kept (2.9); the
+    confirmation refused (2.9); details invalid; used (1.9, 2.11); revoked (2.17, ndlvou@'s link); invalid (2.27); expired;
+    the address has an account, with Sign in; the address not accepted; no token; could not be completed; the user not
+    loaded; the cookie lapsed after 30 minutes, with Try again; script blocked (no Show toggles); Q11's card (Pieter Smit
+    opening patel@'s link). Every one at 390 as well (R7 was 1280 only).
+  The pending Home: Molefe (2.18); Mahlangu with her menu open at 390 (2.19, C2); du Plessis (2.27); an
+    Administrator-issued invitation ("Illustration": no Invited by); an SSO-provisioned registrar ("Illustration":
+    ‹a registrar's address›, no Invited by, no "ask"; T333 stays its own); two adopted versions ("Illustration": no
+    curriculum named).
+  Trainees (Mbatha): five waiting, nobody admitted (2.28); one admitted, the result above Dlamini's Admit…, focused;
+    four admitted, one waiting (2.29); none waiting (2.30), with the built words or NEW ones marked; the Administrator's
+    view with the institution (C18); the T290 note; loading; load error; 768 for each list.
+  Admit <name>: Molefe as opened (today, Training year 1), then 2023-01-15 chosen (Training year 4, on the date's
+    change), the completion 2027-01-14; Ndlovu with the completion empty and its help (2.30); nothing adopted; two
+    adopted versions (a select; "Illustration"); a future start ("Illustration": 2027-01-15, "Not started: the
+    programme starts on 2027-01-15", C4); a start more than four years back ("Illustration": 2022-01-15, "Training
+    year 5" with a warning, NEW words); a userId not found or not waiting (PROPOSED: "Registrar not found" / "No
+    registrar waiting for admission has this link. Those waiting are listed on Trainees.", never the exception's text);
+    the refusal "This user already has an active trainee profile." (a second Admit from a stale tab); loading; load
+    error; Cancel returning to Trainees.
+  Q8's line, once ("for flow 12"; PROPOSED): "Waiting for admission: 5", linking to Trainees.
+
+ALSO, as flow 10's round 2 did:
+  - The list page (A's table): columns Invitee (the row header, the address breaking after its @ with <wbr>), Role
+    and scope (the label, then the scope: "Trainee" over "Paediatrics / Paediatrics"; the College or institution too
+    for the Administrator), Issued ("2026-10-19 09:22 SAST", T325, never wrapping), Expires (2026-11-02), Delivery
+    (Q15), Actions (Resend before Revoke… on a not-delivered row, each named for its row: "Resend the Trainee
+    invitation to duplessis@kgk.wombat.local", "Revoke the Trainee invitation to ndlvou@kgk.wombat.local"); Revoke…
+    an outline button (§ Button system); stacked below 641 px (DataTable's Stack), every field shown, each action a
+    44 px block. The caption says what is listed and its order, not the heading again (T280).
+  - Every page: one h1, then h2 per section, h3 below (T280); every table captioned with scope on its headers; every
+    row action named for its row, no two alike; loading (the header at once and a skeleton, no action until the read
+    is in); a load error in fixed words with Try again, never an exception's text (T329); no message names a property
+    (T324); date inputs in the body font (T328); ISO dates, times "09:22 SAST"; no sideways scroll at 1280, 768 or 390.
+  - Focus after every action: the issue's and the resend's result (the OneTimeLink); a refusal's field; the revoke's
+    result; the admission's result on Trainees; a dialog opening on its safe button, cancel returning to the opener.
+  - Nothing of flows 01–10 drawn as changed: the shell, the menus, the auth card's frame and PasswordField, My account,
+    the session-ended notice (2.31), access denied (2.19, 2.32), the Homes (1.8, 1.10, 2.8–2.10, 2.32, 2.44), the
+    profile page's Deactivate and Mark complete (flow 13) and a move (flow 15). Home's "Invite a person" target (Q1)
+    and Q8's line are the only exceptions, each a note marked PROPOSED.
+  - Name every design-system component you use (PageHeader, DataTable with Stack, FormField, FormActions, FieldHelp,
+    choice-group, Alert, ActionResult, ConfirmDialog, StatePanel with Try again, Skeleton, DashboardCard, Icon, the
+    auth card, PasswordField, PasswordRules, RefusalSummary), and mark anything else NEW (the OneTimeLink, the
+    Delivery state word and its note row, the radios' descriptions, the Admit page's training-year line and its
+    consequence block, the Expired, not used section, the refused-link cards, Q11's card, the wait card's parts).
+  - Mark PROPOSED anything not decided above (see the Spec board's note); mark "decided, T367" what rests on T367 (Q7's
+    mail); mark DATA every value a page does not read today.
+  - A Spec board, "R2-0-spec": every NEW and changed component with its classes; the DESIGN.md text each changes (§ The
+    invitations list rewritten for Q15; § Form system: fields shown per role, never disabled, radios with
+    descriptions; § Button system: Revoke outline with confirmation; § Table system: the note row; § Page-level
+    patterns: Form page, the title rule, and the owner table's rows for /admin/invitations/new and /admin/trainees/admit;
+    § Account / auth page: the lockup and the refused-link cards); the tokens; the routes (/admin/invitations,
+    /admin/invitations/new, /account/register, /account/register/submit, /, /admin/trainees, /admin/trainees/admit,
+    /admin/trainees/edit unchanged for a profile), each with its owner, trail, lit item and tab title; the DATA reads
+    grouped by query (GetInvitationPreview: the scope names and ExpiresOn; IssueInvitation: an account with the
+    address and an active invitation to it, each judged against the caller's scope; ListActiveInvitations: the
+    expired, unused ones of the last 30 days, Q9; GetTraineeDashboardSummary: the used invitation's issuer, role and
+    date, her scope names, the curriculum when one version is adopted; ListPendingTrainees: the speciality and
+    sub-speciality names, Registered from the used invitation's UsedOn ("—" with none); ListTraineesForSpeciality:
+    TrainingYear; the Admit page: the training year for a chosen start, the derived completion, the registrar's
+    invited scope and registration date; AdmitTrainee: Q7's mail; wombat.js: the clipboard call; Q8's count); every
+    message by kind (result, refusal, hint, notice, empty) with its words, built or NEW, and NEW ones beside the words
+    they replace (C6); Q7's mail in words (subject and body, NEW); C3's sweep; C5's cookie; and C1–C22 each with the
+    board where it is drawn. Note on it, PROPOSED for the operator: (a) Q10's out-of-scope words name "another
+    institution", but an Institutional admin's refused address may hold a College's invitation (Kruger's kind): it
+    reads "This address already has an active invitation from a College. Ask a Wombat administrator."; (b) Q10's and
+    Q12's in-scope words point to a list on another page under B: "Resend it or revoke it under Invitations." with
+    Invitations a link, and "open Pieter Smit under Users" a link to his page; (c) Q12's advice to add the role cannot
+    hold for a Trainee invitation (Add role never offers Trainee, T303; Trainees admits only a Pending trainee):
+    for Role Trainee the refusal reads "… already has a Wombat account (Pieter Smit), and a trainee is admitted only
+    from a Trainee invitation, so this address cannot be invited as a trainee. Ask a Wombat administrator." (in scope;
+    outside it, Q12's words without "to add the role"); (d) an expired row leaves "Expired, not used" once a new
+    invitation to its address is issued, and its 30 days count from its expiry on the South African calendar; (e) the
+    Waiting list's Registered column is the used invitation's date, "—" for an SSO-provisioned registrar; (f) the
+    Admit page's not-found words and the five-years warning (both NEW).
+  - A Steps board, "R2-0-steps": each of the 29 runbook steps of round 1 (1.5, 1.7–1.11, 2.1–2.11, 2.16–2.19,
+    2.26–2.32, 2.44), its board, and what its Expect will say once built, quoting today's words and giving the new
+    ones: the labels (Q13: 1.5, 1.7, 1.8, 1.10, 2.1, 2.6, 2.8, 2.10, 2.18); 1.5's and 1.7's form on its own page and
+    the refusal beside its field; 2.1's defaults (no role, KGK as text); 2.2–2.7 and 2.16 issuing on Invite a person
+    with the link, and no link under 2.6's and 2.7's refusals; 2.9 the names kept and the focus on Password; 2.11, 1.9
+    and 2.27's refused-link cards with their next step; 2.17 the dialog and no link; 2.18 and 2.27 the card; 2.26
+    Delivery's state word and note row, the resend's OneTimeLink; 2.28–2.30 Waiting and Current trainees, Admit <name>,
+    its result, the training year 4, 3, 2, 1; 1.11, 2.19, 2.31, 2.32 and 2.44 unchanged, saying so. With each journey's
+    count, presses + fields typed, at 1280 and 390: inviting one person from Home (Q1), issuing nine in a row, revoking
+    and reissuing (2.17), resending (2.26), registering (2.8), a refused registration (2.9), admitting one registrar
+    (2.29), and admitting with the completion left empty (2.30).
+  - Every colour an existing token from tokens.json or a NEW token with its value; contrast checked (text 4.5:1,
+    borders and the focus ring 3:1); targets 24 px, 44 at 390. A live registration link is a credential: every board
+    writes "…/account/register?token=•••".

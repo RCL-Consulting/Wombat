@@ -517,3 +517,59 @@ Q15–Q18 are new.
   person" target (Q1) and, if taken, Q8's line, marked for flow 12.
 - **R7. Every person, address and value from § 1 and § 8.** Re-attach the eleven key screenshots and name the folder
   (`design/baseline/`, § 4's list), and ask round 2 to say if any did not arrive.
+
+## 8. The operator's decisions (2026-10-19)
+
+The operator took every recommendation in § 6 as recommended. Each in one line, with what it means for round 2 and the
+build:
+
+- **Q1:** B. Invite a person at `/admin/invitations/new` (PROPOSED route), Home's "Invite a person" retargeted to it
+  (`HomeFrame.cs:51`); A's list page and an "Open Invitations" link in the result. A and C are dropped.
+- **Q2:** the OneTimeLink as drawn; the build adds a clipboard call to `wombat.js` and clears the link on any next
+  action.
+- **Q3:** the issue form as drawn: no role chosen, only the role's fields, the only institution as text, radios with
+  descriptions (C10's two corrected), refusals under their field.
+- **Q4:** the wait card as drawn, with § 4's corrections: "Invited by" only for an Institutional admin's invitation,
+  "log activities" once the programme has started; the card's DATA reads join `GetTraineeDashboardSummary`.
+- **Q5:** W1. Admission at `/admin/trainees/admit?userId=…` (PROPOSED route), returning to Trainees with "Lerato Molefe
+  admitted to the Paediatric EPA Curriculum (11.1), training year 4, from 2023-01-15." focused; Current trainees gains
+  Programme start and Training year. W2 and W3 are dropped.
+- **Q6:** Register as drawn, with a Lax, Data-Protection-protected cookie, no `novalidate`, and each reworded refusal
+  marked NEW with its Expect.
+- **Q7:** a mail on admission through T367's `AccountNotices`, naming the curriculum and the training year (or the
+  start), with a Sign in link; the result claims no delivery. Folded into the build.
+- **Q8:** a "Waiting for admission: 5" line on the Institutional admin's Home, PROPOSED here for flow 12 to place; no mail.
+  Round 2 draws it once, as a note.
+- **Q9:** expired, unused invitations listed for 30 days under "Expired, not used", with "Invite again" prefilling Invite
+  a person; the build adds the read.
+- **Q10:** a second active invitation to one address refused at issue, in any institution; dates only in the caller's
+  scope, otherwise "… from another institution. Ask a Wombat administrator."
+- **Q11:** Register's "Signed in as someone else" card, served static, also for a signed-in visitor (build note).
+- **Q12:** an address with an account refused at issue: in scope with the name and the link to the user, otherwise
+  "An account with this address already exists. Ask a Wombat administrator to add the role."; Register keeps its
+  refusal with Sign in.
+- **Q13:** role labels everywhere on flow 11's pages; Expects 1.5, 1.7, 1.8, 1.10, 2.1, 2.6, 2.8, 2.10 and 2.18 change.
+- **Q14:** the build folds in the brief's list, T341's register half, Q7's mail and § 5's DATA reads; nothing lands
+  first; T333, T289, T291 and the other halves stay their own.
+- **Q15:** Delivery a state word with an icon, its explanation in a tinted note row, rows not delivered first; round 2
+  writes the DESIGN.md § The invitations list text that replaces :2145-2157.
+- **Q16:** an out-of-scope refusal says the address is taken and whom to ask: no name, date or link.
+- **Q17:** the h1 "Admit Lerato Molefe", its tab, the trail Home › Trainees › Admit Lerato Molefe, Trainees lit.
+- **Q18:** "Any speciality" for an unscoped Coordinator or Committee member, marked NEW.
+
+Round 2's ask is `round-2-ask.txt`: the decisions as requirements, C1–C22 each with the board it fixes (C12 and C20
+moot with W2 and C dropped), § 7's states, and the Spec and Steps boards. Settled in writing it, PROPOSED there for the
+operator to overrule:
+- Q4's "Invited by only for an Institutional admin" wins over § 4's "say 'a Wombat administrator'": the line is
+  dropped for an Administrator's invitation.
+- Q10's out-of-scope words name "another institution"; an address holding a College's invitation reads "… from a
+  College. Ask a Wombat administrator."
+- Under B the list is another page, so Q10's and Q12's in-scope words say "under Invitations" and "under Users" as links
+  (C21's reasoning).
+- Q12's "add the role" cannot hold for a Trainee invitation: Add role never offers Trainee (T303) and Trainees admits only
+  a Pending trainee, so an existing account cannot be invited as a trainee at all. The ask words that refusal and leaves
+  the gap (a registrar who already holds an account) to the operator.
+- An expired row leaves "Expired, not used" once its address is invited again; its 30 days count from its expiry on the
+  South African calendar.
+- The Waiting list keeps Registered, read from the used invitation's `UsedOn`, "—" without one.
+- The Admit page's not-found words and the training-year-5 warning are NEW words.
