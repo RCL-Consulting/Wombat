@@ -86,3 +86,6 @@ T369 (flow 10), T366 (flow 09), T264, T286, T289, T303, T304, T306, T315, T317, 
 - **2026-10-19, round 2** (canvas 1792419753-ee69, 192 boards in `round-2/`) reviewed from three sides (code, cast,
   design system; merged in `round-2-review.md`: M1–M11, S1–S24, 14 nits). F1–F10 to the operator. The gap behind
   T374 (an existing account onto a programme) stays proposed, outside this flow.
+- **2026-10-19, round 2's decisions.** The operator took F1–F10 as recommended (`round-2-review.md` § The operator's
+  decisions). Round 3's ask written (`round-3-ask.txt`: F1–F10, M1–M11, S1–S24, the Steps board, the nits, the Spec's
+  DATA list). **Next:** the operator sends it to the canvas; then save round 3 and check it item by item.

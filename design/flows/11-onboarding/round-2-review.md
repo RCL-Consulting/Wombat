@@ -265,3 +265,12 @@ Settled from the evidence (no decision needed):
 | S24 | K25 | C2–C4, C7–C10 | |
 | Nits | K23, K26, K27, K30, K32 | C12 | D27, D28, D30–D33 |
 | Dropped | K31 (the service sorts by surname) | | |
+
+## The operator's decisions (2026-10-19)
+
+"Yes": F1–F10 all taken as recommended. F1 no admission into another discipline (the invited sub-speciality's curriculum,
+as text; the no-scope SSO registrar the one select); F2 "Resent" dropped; F3 `Invitation.IssuedAsRole` stored at issue;
+F4 an empty completion whose derived date has passed is refused; F5 a fixed `returnTo` of `/account/register` through
+sign-out; F6 "Illustration" in the title and as a chip; F7 expiry on the South African calendar, "works until", the
+column "Last day"; F8 the wait card a plain DashboardCard inside DashboardFrame; F9 "(optional)" dropped; F10
+provisioning and accept in one transaction. Round 3's ask is `round-3-ask.txt`.

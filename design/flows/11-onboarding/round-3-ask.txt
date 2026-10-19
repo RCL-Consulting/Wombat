@@ -1,0 +1,184 @@
+ROUND 3: one correction round on B, W1, R and H as round 2 drew them. Put round 3 on a page of its own, "Round 3": the
+same boards (R3- in place of R2-), each with its states, updated in place; round 1's and round 2's pages stay untouched.
+Change what follows, then say on the Spec, item by item (by the numbers below), what changed and where. Draw nothing
+the items do not ask for. The brand mark is at /_blob/b3cd1c9ecfc87765138aec8743e383bc. Every person, address, role,
+scope, date, time and count stays as round 2 drew it unless an item below changes it: the reviews found them true.
+Invent nothing; where a value is not given, write a bracket ‹…›.
+
+THE SCREENSHOTS: the eleven key captures are in C:\dev\Wombat\design\upload as round 2 read them (2.26-1, 1.5-1,
+invitations-list--check-address, 2.8-1, 2.9-1, 1.9-1, 2.18-1, 2.28-4, 2.29-1, 2.29-3, A.7.9-4). Read them again before
+drawing. If they do not arrive, say so on the first board of round 3's page and draw nothing from memory in their place.
+
+THE OPERATOR'S DECISIONS: Q1–Q18 (2026-10-19) stand as round 2 drew them; nothing below reopens them. Added
+(2026-10-19, every recommendation taken):
+  F1. Another discipline's curriculum. [F1, decided: no. Admit offers only the curriculum adopted for the registrar's
+      INVITED sub-speciality, read out as text (a dl with dd.readonly-value), never a select; none adopted is M04's
+      NothingAdopted. Home names that curriculum whenever it is adopted. M05 and P06 are dropped, with P04's and P06's
+      molefe@ and M05's year before a version is chosen. A registrar with no invited scope (an SSO registrar) is the one
+      case offered the institution's adopted curricula as a select, and the admission sets the scope then: one board,
+      Illustration.]
+  F2. "Resent". [F2, decided: dropped. L10's row has no "Resent" and no ResentOn; Issued is the current link's issue
+      time (a resend overwrites it). The Spec's DATA line goes.]
+  F3. "Invited by". [F3, decided: the acting role is stored at issue (DATA: Invitation.IssuedAsRole, one migration).
+      "Invited by ‹name›, Institutional admin" shows only when IssuedAsRole is InstitutionalAdmin, the name read now;
+      no line for an erased or deactivated issuer: one P board draws that case, Illustration.]
+  F4. An empty completion whose derived date has passed. [F4, decided: refused. The hint reads "Left empty, it would be
+      2024-01-15, which has passed. Enter the expected completion." (NEW), and Admit refuses it beside Expected
+      completion. One board: Molefe with Programme start 2023-01-15 and Expected completion empty, after Admit.]
+  F5. "Sign out and continue". [F5, decided: a fixed return. G18's button posts the sign-out with returnTo, which the
+      endpoint accepts only when it equals /account/register (never an open redirect); the person lands on Register
+      with the card the cookie's token reads. The Spec says it touches flow 02's sign-out endpoint.]
+  F6. "Illustration". [F6, decided: in the board's title AND as a chip on its face, as NEW, DATA and PROPOSED are. The
+      Spec lists every Illustration board (G10–G17, N13, N14, T06 at least, and the new ones below).]
+  F7. When a link stops working. [F7, decided: expiry judged on the South African calendar (DATA: the ProgrammeCalendar
+      date, not the UTC date). Every sentence says "works until 2026-11-02": Register's note, the OneTimeLink, the mail;
+      the list's column is headed "Last day" (was Expires). Expired's 30 days count on the same calendar.]
+  F8. The wait card. [F8, decided: no emphasis. DashboardCard Title="Awaiting admission" Icon="hourglass" with the
+      control edge, inside Home's DashboardFrame; no blue stripe on any P board.]
+  F9. "(optional)". [F9, decided: dropped everywhere (.inv-optional goes). The star and "* marks a field you must fill
+      in." are the one convention; the field's help says what leaving it empty does.]
+  F10. "Nothing was saved." [F10, decided: the build makes provisioning and accepting the invitation one transaction,
+      so G14 keeps its sentence. The Spec says so; no board changes.]
+
+MUST FIX (round 3's check takes each by number):
+  M1. L17 and T07, a Trainee-holding admin: the page header and the T290 note ONLY: no Invite a person, no tables, no
+      Admit…, no list. Invite a person and Admit ‹name› show the same note before any read: a board each (1280, 390),
+      or the Spec says they share L17's and T07's words and say which.
+  M2. P01–P03 drop "only while exactly one version is adopted": Home names the curriculum adopted for her invited
+      sub-speciality ("the Paediatric EPA Curriculum (11.1)"), and none when none is. M05 and P06 go (F1).
+  M3. The Spec, build rule: Q10's and Q12's refusals are a typed refusal (reason, field, the holder's id and name only
+      when judged in scope); the exception's message is fixed generic words in every case and the page maps the reason
+      to its words. Nothing of another institution or College reaches the caller's audit row. No board changes.
+  M4. The Spec, build rule: POST /account/register/submit refuses a signed-in caller (back to G18's card; nothing
+      accepted, no account created, no session replaced). G18's caption says it is reached by the page AND by a stale
+      tab's submit.
+  M5. The Spec, build rule: the OneTimeLink clears at the start of every action, refusal or navigation, on Invite a
+      person (its reset form too) and on the list (Revoke, Resend, Invite again). N10, N11 and L07 show no link.
+  M6. Nothing scrolls sideways. Issued and Last day wrap date over time (.inv-when span{display:block}); Delivery wraps
+      (.col-wrap); the actions cell wraps its buttons (.col-actions); width:1% and nowrap dropped; Invitee's
+      min-width:11rem dropped; the ask's "never wrapping" for Issued gives way. The same for Current trainees' actions
+      (.tr-act). Re-measure L04, L12, L13 (its longest values, a 64-character address among them) and T03 at 1280, 1100,
+      1000, 901, 900, 768 and 390, and write the table of measurements on the Spec: 0 px sideways at each.
+  M7. A long address at 390: overflow-wrap:anywhere on the result and <wbr> after the @ in every sentence naming an
+      address (N21's result, N19/N20's notices, N15–N18's refusals). N21-390 redrawn with the 64-character address;
+      one list board at 390 carries it in a row.
+  M8. The revoke dialog at 390 (L06-390): its two buttons 44 px, stacked column-reverse (the safe "Keep the invitation"
+      last on screen, first in tab order), by a GENERAL rule in app.css: .dialog-card .form-actions .btn
+      {min-height:2.75rem} below 641 px, not a wrapper the top-layer dialog is outside. The Spec lists it for
+      ConfirmDialog's DESIGN.md text and says flows 08's and 10's scoped copies fold into it.
+  M9. The header's buttons at 390: "Invite a person" on every list board and M04's "Back to trainees" 44 px, by a
+      general .header-container .actions-cell .btn rule below 641 px; stand-alone buttons by .inv-page .btn. Redraw
+      every 390 board's header.
+  M10. Load errors as StatePanel draws them: L16, M11, N23 and T09 become a danger Alert (a bold first sentence naming
+      what failed, then "Nothing has changed. Try again, or come back in a few minutes.", an outline btn-sm "Try again"
+      with refresh-cw) inside ActionResult; no empty-state card, no inline style; the focus on the alert after a failed
+      retry (say it in the caption).
+  M11. The required mark (DESIGN.md § Form system): the label ends in <span class="required-mark" aria-hidden="true">
+      *</span>, the control carries aria-required="true", the visually hidden "required" on Role's legend only, and
+      "* marks a field you must fill in." above each form's first field. On Invite a person: Email, Role, the College
+      or the Institution where it is a control, and the scope the chosen role requires. On Admit: Programme start (and
+      the curriculum select in F1's no-scope case). No mark on Register (Q6). "(optional)" as F9. Every Invite and Admit
+      form state redrawn with it.
+
+SHOULD FIX:
+  S1. The Spec: a refused registration keeps token, codes and the two names in the Data Protection cookie for its 30
+      minutes (deleted on success; no password stored); no refused redirect URL holds a name, code or token.
+  S2. The Spec: the mail's link opens a distinct path, /account/register/start?token=… (PROPOSED), which sets the
+      cookie and redirects to /account/register; the page and the GET never share a route.
+  S3. Times on the South African clock, labelled SAST, in every cell and row name (ActivityMoments.When); Registered
+      and the expired dates as dates (ActivityMoments.Date). No board changes if they already read SAST: say so.
+  S4. The Spec: addresses compared normalised (Q10's check, the sweep, the used-invitation reads, Expired's leaving
+      rule); P01's Invited by and L14 read the stored spelling.
+  S5. P05, an SSO registrar: no Programme line; Waiting's Invited as reads "—"; Admit as F1's no-scope case.
+  S6. A deactivated pending account: left off Waiting to be admitted; Admit refuses it in words: "Not admitted. ‹name›'s
+      account is deactivated. Reactivate it under Users first." (NEW; the M refusals gain the board, Illustration).
+  S7. G13 and G16 told apart: G13 is a GET with neither cookie nor token, G16 a POST without the cookie. Say it in each
+      caption, or draw one card for both and say so.
+  S8. The admission's result across the navigation: Trainees reads ?admitted=‹profileId› and re-reads it in scope; the
+      sentence carries the name, curriculum and date, never in the URL. The Spec names it.
+  S9. The Spec: trainee administration's refusals are typed (as M3's); any other fault is logged and shown in M10's
+      words. Never exception.Message on a page.
+  S10. The OneTimeLink inside ActionResult: a success Alert, then the link's row (a read-only field holding the real
+      link, selectable, drawn "…/account/register/start?token=•••"), Copy link, "Link copied." or "Could not copy.
+      Select the link and copy it yourself." (NEW) in the same live region; a :focus-visible ring from the system, none
+      drawn inline. One board: the copy failure.
+  S11. Results in ActionResult (.result-block goes); .inv-page .action-result .alert{margin:0} if a margin needs it.
+  S12. The invitation mail: "as Institutional admin" (the role's label, never its key) and the scope in the page's
+      words, "works until 2026-11-02" (F7). On the Spec's mail section, beside Q7's, in the changed-words list.
+  S13. Invite a person with nothing adopted (one board, Illustration): under Speciality "Nothing is adopted at Kgosi Kgari
+      Teaching Hospital yet, so roles that need a speciality cannot be invited. Adopt a curriculum under Curriculum
+      adoptions." (NEW, the last two words a link); Issue stays available for the roles that need none.
+  S14. Missing boards: P loading and P load error (DashboardFrame's); Issue with no role chosen ("Choose a role." under
+      the legend, the first radio focused, .choice-group.is-invalid); N08 before a speciality is chosen ("Then choose
+      its sub-speciality."), or 2.4's Expect drops that hint (say which); F4's board.
+  S15. The Spec's DESIGN.md text: AuthLayout's one message slot becomes a message per field, the focus on the field;
+      PasswordRules' refusal is the field's message and the field is described by it and the list (G04); G05 keeps the
+      focus on Password, both fields emptied, "Type the password again in both fields.", Password described by the
+      confirmation's message too; "never disabled" narrowed to Invite a person; Resend's aria-disabled and link Alert
+      text replaced; .readonly-value cited; the Button system's and ConfirmDialog's restatements dropped.
+  S16. Stacked tables as built: DataTable gains StackWide (stack below 900, the explicit roles Stack gives); a note row
+      is a second <tr> from the Row fragment; row buttons 44 px from 900 down. The Spec says so; boards unchanged.
+  S17. Role's radios named by their label alone: the description outside the <label>, in aria-describedby (flow 08's
+      .form-check.review-type-choice and .review-type-help); fieldset.form-group.choice-row in place of the five
+      .inv-radio* classes and the hand-sized legend.
+  S18. Read-outs: a single value as dl.form-group with dd.readonly-value (.field-label and .inv-readback go); Training
+      year an <output for="start"> under a real label, its help outside it.
+  S19. CSS reuse, each a row on the Spec's class table ("NEW, because …" or "reuses .x"): tr.has-note/td.history-note
+      (a .history-note--warning modifier if the tint stays) for tr.inv-has-note/tr.inv-note; SubmitCheck for
+      .consequence; .list-section/.list-section-title for .inv-section*; .detail-list for .admit-facts/.wait-facts;
+      .account-steps for .wait-steps; .person-cell for .inv-role/.inv-scope. Delete .reg-card-icon, .ty-value--wait, the
+      auth card's three phone rules and the date-input font rule.
+  S20. No inline style: no width:100%, no inline rings. Register's submit in FormActions as Sign in's, or the Spec states
+      the change. M08 is the system's not-found card.
+  S21. G06: no maxlength on the names (DESIGN.md); the 101-character last name is typed and refused: "Last name: enter
+      100 characters or fewer." (NEW) under the field.
+  S22. Admit's refusals in the system's voice: M09 "Not admitted. Lerato Molefe already has an active trainee profile.
+      …" (bold first two words); M04's standing warning with no role="alert"; loading lines that name what loads:
+      "Loading the invitations.", "Loading this registrar.", "Loading what you can invite.", "Loading the trainees.".
+  S23. L13's heavy set: with duplessis@ and ndlvou@ Not delivered the reading time is at least 10:22, so no 09:19 or
+      09:22 row is still Being sent. Redraw each row as it reads then; Being sent only within the hour of its issue.
+  S24. The Steps board, below.
+
+STEPS BOARD (revised; every Expect clause today's runbook carries stays, with the new one beside it):
+  - 1.10 and 2.44: Invite a person opens the new page /admin/invitations/new (PROPOSED, Q1; X01), not "unchanged".
+  - 2.28–2.30: quote today's words beside the new: "Pending admission", "Active profiles", "Admit to curriculum:
+    ‹name›", "No active trainee profiles found.", "Trainee profile" / "Admit a pending trainee into a curriculum.",
+    and today's landing on the profile (?id=) with Deactivate and Mark complete.
+  - The scope phrase's rule once: "in ‹speciality›[ / ‹sub-speciality›]" only when the invitation has one, then "at
+    ‹institution›".
+  - Say whether "Invite the next person" is a press, and recompute the journey's count (40 + 9 or 48 + 9).
+  - 2.9's row names G05's focus (Password).
+  - 2.26's row: no "Resent" (F2); the full stop goes with the split.
+  - 2.19's card names mahlangu@; the last line reads "Changed: 25 steps".
+  - F7's "Last day" and "works until" wherever an Expect quotes the column or the note.
+
+NITS (fix as you pass):
+  - Training years turn every 365 days from the programme start: say so in those words where the help explains it.
+  - T06, the Administrator's Current trainees: an Institution column, as Waiting has.
+  - M04, a registrar with no institution (Administrator only): "This registrar belongs to no institution, so no
+    curriculum can be offered." (NEW).
+  - The Spec's owner table: Admit ‹name› under Trainees for the Institutional admin; for the Administrator, whose menu
+    has no Trainees, an explicit trail crumb to /admin/trainees.
+  - The Spec: the register cookie's Secure follows the request's scheme, so the http replay registers.
+  - N14: the malformed address drawn as ‹a malformed address›, never one beside the cast's real typo.
+  - N15: one link, "open Pieter Smit under Users".
+  - Inline links at 390 (19–21 px): on the Spec as the accepted inline exception, as flow 10.
+  - "Cancel" for leaving Invite a person, as on Admit.
+  - T04's "‹Flow 13's list, unchanged.›" and X01's "‹Flow 12's card›" as annotation pills, not page content.
+  - P01–P06: the arrow-right Icon or no arrow, never "→".
+  - No form aria-label that repeats the h1.
+  - Save the canvas's ds/ (tokens.css, bundle.css) with the round.
+
+SPEC BOARD: list F1–F10, M1–M11 and S1–S24 with where each is drawn or why it is Spec only; the Illustration list (F6);
+M6's measurement table; the build rules (M3, M4, M5, S1, S2, S7, S8, S9, F5, F10); the DESIGN.md text (S15, M8, M9,
+S16, and round 2's § The invitations list text with "Last day"); the class table (S19). "DATA the build must add",
+restated: InvitationPreviewDto gains the institution or College name, the speciality and sub-speciality names and
+ExpiresOn; IssueInvitation's find-by-address and unfiltered active-invitation lookup with the typed refusal (M3);
+ListExpiredUnusedInvitationsQuery and the Invite again prefill; the in-memory Not-delivered-first order; Invitation.
+IssuedAsRole (F3, one migration); expiry on the South African calendar (F7); the pending registrar's Home part (her
+institution, scope names, the curriculum for her sub-speciality, the used invitation's issuer, role and UsedOn);
+PendingTraineeDto's scope names and Registered, deactivated excluded (S6); TraineeProfileDto.TrainingYear;
+GetAdmissionCandidateQuery and the start's year and derived completion read (F4's refusal with it); the admission's
+mail and the ?admitted= result (S8); wombat.js's clipboard call; the /account/register/start path and its cookie
+(S1, S2); the register POST's signed-in refusal (M4); one transaction for provisioning and accept (F10). No ResentOn
+(F2).
