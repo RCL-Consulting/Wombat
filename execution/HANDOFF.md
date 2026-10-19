@@ -2,6 +2,22 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
+## Session 2026-10-19 (Opus): T369 step 7, the replay, under way
+
+The operator said "proceed". Pushed `e825e2e2..e598c490`. Flow 10's replay brief (`d3379233`,
+`design/flows/10-msf-campaign/replay-brief.md`); published from `e598c490`; fresh `wombat_scenario_t369` on `:5180`;
+one agent per act, prompts in scratchpad `g369` (this session's; `replay-pw.env` there).
+
+- Act 1: 31 steps, 19 clean, 12 known. Its re-run left 2 extra failed `AdoptCurriculumCommand` audit rows (live DB
+  only) and overwrote `design/baseline/act-1/1.20-1-adopted.png` (local, gitignored) with the refusal: re-take it in the states pass.
+- Act 2: 44 / 38, 6 known; T329 (2.20), T260 (2.22), T290 (2.37) no longer occur. Two unprompted weekly-digest stubs.
+- Act 3 (flow 10): 60 / 58, 2 known (T286, T277); **no flow 10 regression**; D1, dialogs, `<h1>`, 390 checks pass;
+  `role="alert"` refusals not reached (states pass). Mail 34 after.
+- Act 4: 50 / 45; 4.25, 4.41, 4.42 runbook order only (**T370 proposed**: `PanelSeat.SittingAt` has no OrderBy);
+  T365, T320 known. Mail 35.
+- **In flight:** Act 5; then 6, A, the states pass (flow 10's rows, `1.20-1`), `check_baseline_paths.py`, then steps
+  8–9. Act files edited by the agents are **not committed** yet. Dumps scenario-t369-post-act1 to 4 (in recovery, gitignored).
+
 ## Session 2026-10-15 (Opus): pushed; T290 closed
 
 The operator asked "what is next", then "push then close T290". Pushed `7b421079..d42e11b6`. **T290 done** (commit below):
@@ -34,32 +50,3 @@ every remaining item, with tests; the task file's closing note lists them.
 - **Session finalised.** **Not pushed:** `6e842de3`, `f825fe60`, `68327c9d`, `d2d7f1dc` (push on the operator's word).
   The replay app on `:5180` still runs `wombat_scenario_t290` (pre-flow-10 build); step 7 starts from a fresh database.
   The replay's cautions are in T369's step-6 note (stub-mail counts +3, T282's log line, D1 margins at 1280/390).
-
-## Session 2026-10-14 (Opus): T366 (flow 09) done, with T367
-
-The machine reset overnight; nothing was in flight. The operator said "tie up the loose ends", then "lets go",
-"proceed" and "push": **T366, flow 09** (outcomes, STARs and appeals) ran the whole loop in the day, and is done.
-
-- **Design:** brief (`0058adf3`), canvas "Wombat 09" (https://claude.ai/artifact/5LfLPdcXJ2iRX6GSm2bbKP), rounds 1–3,
-  the operator's F1–F9; round 3 checked final (`13057800`). The canvas had no tokens stylesheet (bland previews):
-  written by hand (canvas v18); the memory note and the traps say so now.
-- **T367 done** (`e9b29081`, `5c183bb9`): `AccountNotices` (the one-off notice path T319's data-rights half reuses),
-  the revocation mail, `GetDecisionsForTraineeQuery` (Active, Revoked, Expired).
-- **Build** (`49e7cf5e`): lanes T, S, then C; the runbook lane; three Sonnet reviews (`build-review.md`, no high); one
-  fix pass. Six suites green: 815 / 3809 / 1023 / 52 / 3735 / 491. **`a7f790b3` pins Pkcs 10.0.13** (GHSA-846f-f764-76mx,
-  GHSA-2fmv-rv2c-59x7, published 10-13; NuGetAudit failed a fresh restore): **the deploy (T157) carries it.**
-- **Replay** (`wombat_scenario_t366`): acts 1–6 and the appendix, 331 steps, 273 with no gap, no flow 09 fault; every
-  browser check passed; states 57 rows, 2 corrected (`851d398f`). **T368 proposed** (A.5.10, unconfirmed).
-- **Design system:** re-synced (`e87e9627`), the View 44 px fix it found (`9ba80586`), review fixes (`63dd5d36`),
-  published as **version 23** (1791997100-4a21; v22 put the index beside `project/`, fixed in the next call).
-  **Lessons** in BRIEF § 11 "Flow 09" (`c9d33455`); the replay prompt now says the remit is every step.
-- **Pushed** through `7b421079`; the replay, design-system and lessons commits after it are **not pushed**.
-
-### Environment left
-
-- **The replay app on `:5180`** runs `wombat_scenario_t366` (the appendix's end state), published from `49e7cf5e`.
-  Dumps `recovery/scenario-t366-post-act{1..6,A}`, `-pre-a515-A`. **Scratch DBs to drop on the operator's word:**
-  `wombat_scenario_t366_s515`, `_s515b`, `_st1`..`_st3`, and the older `wombat_scenario_t364*`, `wombat_scenario_t361`.
-  Kept beside them: `wombat_scenario`, `_pdf`, and the non-scenario ones (`wombat`, `wombat_snapshot_pre_t130_*`, ...).
-- **Branches** `t366`, `t366-*` (and older flows' `t3xx*`) kept locally; `t366*` worktrees under `.claude/worktrees/`.
-- **Scratch:** this session's scratchpad `g366` (`replay-pw.env`; act and states scripts; `prompt-*.txt`).
