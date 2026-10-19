@@ -1,0 +1,507 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-10-19T12:38:46Z"
+ },
+ "title": "Wombat 11",
+ "launch": {
+  "view": "canvas"
+ },
+ "pages": [],
+ "boards": {
+  "A1-issued-1280.dc.html": {
+   "x": 0,
+   "y": 260,
+   "w": 1280,
+   "h": 1700,
+   "title": "A1 · 2.5 issued: the link above the reset form · focus on the result"
+  },
+  "A2-refused-1280.dc.html": {
+   "x": 1360,
+   "y": 260,
+   "w": 1280,
+   "h": 1500,
+   "title": "A2 · 2.6 refused: under Speciality, van Rensburg's link gone · focus on Speciality"
+  },
+  "A3-revoked-1280.dc.html": {
+   "x": 2720,
+   "y": 260,
+   "w": 1280,
+   "h": 1300,
+   "title": "A3 · 2.17 after Revoke invitation: the result above the form · focus on the result"
+  },
+  "A4-resent-1280.dc.html": {
+   "x": 4080,
+   "y": 260,
+   "w": 1280,
+   "h": 1200,
+   "title": "A4 · 2.26 after Resend: the new link at the top · focus on the result"
+  },
+  "A5-heavy-1280.dc.html": {
+   "x": 5440,
+   "y": 260,
+   "w": 1280,
+   "h": 2500,
+   "title": "A5 · heavy: 20 rows, 3 not delivered first, 1 at check the address"
+  },
+  "A6-admin-1280.dc.html": {
+   "x": 6800,
+   "y": 260,
+   "w": 1280,
+   "h": 1000,
+   "title": "A6 · 1.5 the Administrator: College admin chosen, the College refused · focus on College"
+  },
+  "A7-issued-390.dc.html": {
+   "x": 8160,
+   "y": 260,
+   "w": 390,
+   "h": 2050,
+   "title": "A7 · 390 · 2.16 Molefe issued, Copy link pressed: Copied, announced"
+  },
+  "A8-heavy-390.dc.html": {
+   "x": 8630,
+   "y": 260,
+   "w": 390,
+   "h": 2700,
+   "title": "A8 · 390 · heavy: rows stacked, not delivered first, 44px actions"
+  },
+  "B1-issued-1280.dc.html": {
+   "x": 0,
+   "y": 3480,
+   "w": 1280,
+   "h": 1700,
+   "title": "B1 · 2.5 issued on Invite a person: link above, form reset for the next · focus on the result"
+  },
+  "B2-refused-1280.dc.html": {
+   "x": 1360,
+   "y": 3480,
+   "w": 1280,
+   "h": 1400,
+   "title": "B2 · 2.6 refused under Speciality; no link on the page · focus on Speciality"
+  },
+  "B3-revoked-1280.dc.html": {
+   "x": 2720,
+   "y": 3480,
+   "w": 1280,
+   "h": 900,
+   "title": "B3 · 2.17 the list after Revoke invitation · focus on the result; its button opens Invite a person, prefilled"
+  },
+  "B4-resent-1280.dc.html": {
+   "x": 4080,
+   "y": 3480,
+   "w": 1280,
+   "h": 820,
+   "title": "B4 · 2.26 the list after Resend · focus on the result"
+  },
+  "B5-heavy-1280.dc.html": {
+   "x": 5440,
+   "y": 3480,
+   "w": 1280,
+   "h": 2100,
+   "title": "B5 · heavy on the list page: nothing but the list"
+  },
+  "B6-admin-1280.dc.html": {
+   "x": 6800,
+   "y": 3480,
+   "w": 1280,
+   "h": 1500,
+   "title": "B6 · 1.5 the Administrator's page: eight roles as radios, College refused · focus on College"
+  },
+  "B7-issued-390.dc.html": {
+   "x": 8160,
+   "y": 3480,
+   "w": 390,
+   "h": 2300,
+   "title": "B7 · 390 · 2.16 Molefe issued, Copied announced; radios as 44px rows"
+  },
+  "B8-heavy-390.dc.html": {
+   "x": 8630,
+   "y": 3480,
+   "w": 390,
+   "h": 2050,
+   "title": "B8 · 390 · heavy list stacked; Invite a person the header's full-width action"
+  },
+  "C1-issued-1280.dc.html": {
+   "x": 0,
+   "y": 6300,
+   "w": 1280,
+   "h": 1500,
+   "title": "C1 · 2.5 issued: the link heads the form's column · focus on the result"
+  },
+  "C2-refused-1280.dc.html": {
+   "x": 1360,
+   "y": 6300,
+   "w": 1280,
+   "h": 1300,
+   "title": "C2 · 2.6 refused under Speciality · focus on Speciality"
+  },
+  "C3-revoked-1280.dc.html": {
+   "x": 2720,
+   "y": 6300,
+   "w": 1280,
+   "h": 1000,
+   "title": "C3 · 2.17 the revoked row stays as its result until the next action · focus on it"
+  },
+  "C4-resent-1280.dc.html": {
+   "x": 4080,
+   "y": 6300,
+   "w": 1280,
+   "h": 1000,
+   "title": "C4 · 2.26 the new link opens in the row it was resent from · focus on it"
+  },
+  "C5-heavy-1280.dc.html": {
+   "x": 5440,
+   "y": 6300,
+   "w": 1280,
+   "h": 3000,
+   "title": "C5 · heavy: 20 rows beside the form"
+  },
+  "C6-admin-1280.dc.html": {
+   "x": 6800,
+   "y": 6300,
+   "w": 1280,
+   "h": 900,
+   "title": "C6 · 1.5 the Administrator · focus on College"
+  },
+  "C7-issued-390.dc.html": {
+   "x": 8160,
+   "y": 6300,
+   "w": 390,
+   "h": 1900,
+   "title": "C7 · 390 · the form's column goes first, then the rows"
+  },
+  "C8-heavy-390.dc.html": {
+   "x": 8630,
+   "y": 6300,
+   "w": 390,
+   "h": 2600,
+   "title": "C8 · 390 · heavy: the form first, then the rows"
+  },
+  "S1-revoke-dialog-1280.dc.html": {
+   "x": 0,
+   "y": 9820,
+   "w": 1280,
+   "h": 1050,
+   "title": "S1 · the revoke confirmation (all variations)"
+  },
+  "S2-revoke-dialog-390.dc.html": {
+   "x": 1360,
+   "y": 9820,
+   "w": 390,
+   "h": 844,
+   "title": "S2 · 390 · the revoke confirmation"
+  },
+  "S3-issue-refusals-1280.dc.html": {
+   "x": 1830,
+   "y": 9820,
+   "w": 1280,
+   "h": 1500,
+   "title": "S3 · every issue refusal, beside its field, keeping what was typed"
+  },
+  "S4-loading-1280.dc.html": {
+   "x": 3190,
+   "y": 9820,
+   "w": 1280,
+   "h": 800,
+   "title": "S4 · loading: the header and a skeleton; no Issue invitation, Resend or Revoke until the read is in"
+  },
+  "S5-load-error-1280.dc.html": {
+   "x": 4550,
+   "y": 9820,
+   "w": 1280,
+   "h": 700,
+   "title": "S5 · a failed read: fixed words and Try again; no form offered until the read succeeds"
+  },
+  "S6-load-error-390.dc.html": {
+   "x": 5910,
+   "y": 9820,
+   "w": 390,
+   "h": 844,
+   "title": "S6 · 390 · the failed read"
+  },
+  "R1-register-1280.dc.html": {
+   "x": 0,
+   "y": 11840,
+   "w": 1280,
+   "h": 1350,
+   "title": "R1 · 2.8 Smit's form: the lockup and purpose, whom and what it is for; the token already gone from the address"
+  },
+  "R2-register-390.dc.html": {
+   "x": 1360,
+   "y": 11840,
+   "w": 390,
+   "h": 1450,
+   "title": "R2 · 390 · 2.8"
+  },
+  "R3-password-refused-1280.dc.html": {
+   "x": 1830,
+   "y": 11840,
+   "w": 1280,
+   "h": 1420,
+   "title": "R3 · 2.9 first try: the refusal under Password, the names kept · focus on Password"
+  },
+  "R4-confirm-refused-390.dc.html": {
+   "x": 3190,
+   "y": 11840,
+   "w": 390,
+   "h": 1550,
+   "title": "R4 · 390 · 2.9 second try: the refusal under Confirm password, the names kept · focus on Password (described by the refusal)"
+  },
+  "R5-used-1280.dc.html": {
+   "x": 3660,
+   "y": 11840,
+   "w": 1280,
+   "h": 720,
+   "title": "R5 · 1.9, 2.11 a used link: says why, offers Sign in · no form"
+  },
+  "R6-used-390.dc.html": {
+   "x": 5020,
+   "y": 11840,
+   "w": 390,
+   "h": 760,
+   "title": "R6 · 390 · the used link"
+  },
+  "R7-refused-links-1280.dc.html": {
+   "x": 5490,
+   "y": 11840,
+   "w": 1280,
+   "h": 1900,
+   "title": "R7 · every other refused link, each an h1 and what to do next"
+  },
+  "H1-pending-1280.dc.html": {
+   "x": 0,
+   "y": 14260,
+   "w": 1280,
+   "h": 900,
+   "title": "H1 · 2.18 Molefe's Home: who, where, who admits, what happens next"
+  },
+  "H2-pending-390.dc.html": {
+   "x": 1360,
+   "y": 14260,
+   "w": 390,
+   "h": 1350,
+   "title": "H2 · 390 · the same card"
+  },
+  "H3-pending-menu-390.dc.html": {
+   "x": 1830,
+   "y": 14260,
+   "w": 390,
+   "h": 844,
+   "title": "H3 · 390 · 2.19 Mahlangu's menu open: Home, then My data rights (unchanged, flow 01)"
+  },
+  "W1a-list-1280.dc.html": {
+   "x": 0,
+   "y": 16130,
+   "w": 1280,
+   "h": 820,
+   "title": "W1a · 2.28 two lists: Waiting to be admitted over Current trainees"
+  },
+  "W1b-admit-1280.dc.html": {
+   "x": 1360,
+   "y": 16130,
+   "w": 1280,
+   "h": 820,
+   "title": "W1b · 2.29 a page of its own: training year 4 read out as the start is chosen"
+  },
+  "W1c-derived-1280.dc.html": {
+   "x": 2720,
+   "y": 16130,
+   "w": 1280,
+   "h": 900,
+   "title": "W1c · 2.30 Admit lands back on Trainees, the result focused; nobody waiting"
+  },
+  "W1d-list-390.dc.html": {
+   "x": 4080,
+   "y": 16130,
+   "w": 390,
+   "h": 1300,
+   "title": "W1d · 390 · both lists stacked; Admit… a 44px row action"
+  },
+  "W2a-list-1280.dc.html": {
+   "x": 4550,
+   "y": 16130,
+   "w": 1280,
+   "h": 700,
+   "title": "W2a · 2.28 one list, filtered by status (Waiting chosen)"
+  },
+  "W2b-dialog-1280.dc.html": {
+   "x": 5910,
+   "y": 16130,
+   "w": 1280,
+   "h": 980,
+   "title": "W2b · 2.29 admission in a dialog over the list; training year in the dialog"
+  },
+  "W2c-four-1280.dc.html": {
+   "x": 7270,
+   "y": 16130,
+   "w": 1280,
+   "h": 760,
+   "title": "W2c · 2.29 four admitted, one waiting; the result above the list"
+  },
+  "W2d-dialog-390.dc.html": {
+   "x": 8630,
+   "y": 16130,
+   "w": 390,
+   "h": 1250,
+   "title": "W2d · 390 · the dialog full width, buttons stacked"
+  },
+  "W3a-inline-1280.dc.html": {
+   "x": 9100,
+   "y": 16130,
+   "w": 1280,
+   "h": 1000,
+   "title": "W3a · 2.29 the row opens its admission under it (the editing stripe); one open at a time"
+  },
+  "W3b-four-1280.dc.html": {
+   "x": 10460,
+   "y": 16130,
+   "w": 1280,
+   "h": 900,
+   "title": "W3b · 2.29 four admitted: each left Waiting; the result where the row was"
+  },
+  "W3c-inline-390.dc.html": {
+   "x": 11820,
+   "y": 16130,
+   "w": 390,
+   "h": 1500,
+   "title": "W3c · 390 · the open row stacks its fields"
+  },
+  "Z1-spec.dc.html": {
+   "x": 0,
+   "y": 18150,
+   "w": 1280,
+   "h": 4300,
+   "title": "Spec · round 1"
+  },
+  "Z2-steps.dc.html": {
+   "x": 1360,
+   "y": 18150,
+   "w": 1280,
+   "h": 3700,
+   "title": "Steps · round 1"
+  }
+ },
+ "order": [
+  "A1-issued-1280.dc.html",
+  "A2-refused-1280.dc.html",
+  "A3-revoked-1280.dc.html",
+  "A4-resent-1280.dc.html",
+  "A5-heavy-1280.dc.html",
+  "A6-admin-1280.dc.html",
+  "A7-issued-390.dc.html",
+  "A8-heavy-390.dc.html",
+  "B1-issued-1280.dc.html",
+  "B2-refused-1280.dc.html",
+  "B3-revoked-1280.dc.html",
+  "B4-resent-1280.dc.html",
+  "B5-heavy-1280.dc.html",
+  "B6-admin-1280.dc.html",
+  "B7-issued-390.dc.html",
+  "B8-heavy-390.dc.html",
+  "C1-issued-1280.dc.html",
+  "C2-refused-1280.dc.html",
+  "C3-revoked-1280.dc.html",
+  "C4-resent-1280.dc.html",
+  "C5-heavy-1280.dc.html",
+  "C6-admin-1280.dc.html",
+  "C7-issued-390.dc.html",
+  "C8-heavy-390.dc.html",
+  "S1-revoke-dialog-1280.dc.html",
+  "S2-revoke-dialog-390.dc.html",
+  "S3-issue-refusals-1280.dc.html",
+  "S4-loading-1280.dc.html",
+  "S5-load-error-1280.dc.html",
+  "S6-load-error-390.dc.html",
+  "R1-register-1280.dc.html",
+  "R2-register-390.dc.html",
+  "R3-password-refused-1280.dc.html",
+  "R4-confirm-refused-390.dc.html",
+  "R5-used-1280.dc.html",
+  "R6-used-390.dc.html",
+  "R7-refused-links-1280.dc.html",
+  "H1-pending-1280.dc.html",
+  "H2-pending-390.dc.html",
+  "H3-pending-menu-390.dc.html",
+  "W1a-list-1280.dc.html",
+  "W1b-admit-1280.dc.html",
+  "W1c-derived-1280.dc.html",
+  "W1d-list-390.dc.html",
+  "W2a-list-1280.dc.html",
+  "W2b-dialog-1280.dc.html",
+  "W2c-four-1280.dc.html",
+  "W2d-dialog-390.dc.html",
+  "W3a-inline-1280.dc.html",
+  "W3b-four-1280.dc.html",
+  "W3c-inline-390.dc.html",
+  "Z1-spec.dc.html",
+  "Z2-steps.dc.html"
+ ],
+ "notes": {
+  "tA": {
+   "x": 0,
+   "y": 0,
+   "text": "Screen 1 · Invitations — A: issue above the list",
+   "kind": "title1",
+   "maxW": 9020
+  },
+  "tB": {
+   "x": 0,
+   "y": 3220,
+   "text": "Screen 1 · Invitations — B: a page of its own (recommended)",
+   "kind": "title1",
+   "maxW": 9020
+  },
+  "tC": {
+   "x": 0,
+   "y": 6040,
+   "text": "Screen 1 · Invitations — C: beside the list, as rows",
+   "kind": "title1",
+   "maxW": 9020
+  },
+  "tS": {
+   "x": 0,
+   "y": 9560,
+   "text": "Screen 1 · shared: the revoke confirmation, every issue refusal, loading and a failed read",
+   "kind": "title1",
+   "maxW": 6300
+  },
+  "tR": {
+   "x": 0,
+   "y": 11580,
+   "text": "Screen 2 · Register — one proposal",
+   "kind": "title1",
+   "maxW": 6770
+  },
+  "tH": {
+   "x": 0,
+   "y": 14000,
+   "text": "Screen 3 · The pending registrar's Home — one proposal",
+   "kind": "title1",
+   "maxW": 2220
+  },
+  "tW": {
+   "x": 0,
+   "y": 15870,
+   "text": "Screen 4 · Trainees and admission — three structures (wireframes): W1 recommended",
+   "kind": "title1",
+   "maxW": 12210
+  },
+  "tZ": {
+   "x": 0,
+   "y": 17890,
+   "text": "Spec and Steps",
+   "kind": "title1",
+   "maxW": 2640
+  }
+ },
+ "designSystems": [
+  {
+   "title": "Wombat",
+   "namespace": "wombat",
+   "artifact": "https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18",
+   "version": "1792413020-e2bb",
+   "copiedAt": "2026-10-19T12:38:46Z"
+  }
+ ]
+}

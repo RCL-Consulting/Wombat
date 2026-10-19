@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 11 round 1 · Spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="f11.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--link-color)}a:hover{color:var(--link-hover)}
+</style>
+</helmet>
+<div class="doc">
+<h1>Flow 11 · round 1 · Spec</h1>
+<p>Invitations, Register, the pending registrar's Home, and Trainees with admission. Every name, address, role, date and count is the brief's. Issued times other than 09:22 SAST are drawn only to order rows; the replay's own times stand. Rows past the cast are written ‹a further registrar's address›. J-dates stay symbolic on the wireframes (J−3y, J+1y−1d).</p>
+
+<h2>Screen 1 · Invitations: the three variations</h2>
+<div class="cols">
+<div><h3>A · Issue above the list</h3>
+<p>One page, as today, re-stacked: the result and its one-time link, then the issue form at full width, then the list at full width.</p>
+<p><b>Why:</b> keeps today's single page and the list in view as each issue lands; the form gets the width a scope row needs, and the table gets the page's full width, so Delivery and the actions fit at 1280.</p>
+<p><b>Components:</b> PageHeader; FormField / FormActions (.form-container, .form-grid); OneTimeLink <span class="anno anno--new">NEW</span>; Alert, ActionResult; DataTable with both stacks (.clinic-table--stack, --stack-wide) and a note row <span class="anno anno--new">NEW</span> (tr.inv-note); ConfirmDialog; StatePanel; Skeleton; Icon (mail <span class="anno anno--new">NEW</span>, user-plus <span class="anno anno--new">NEW</span>, hourglass <span class="anno anno--new">NEW</span>, graduation-cap <span class="anno anno--new">NEW</span>, refresh, copy, send, circle-alert, circle-check, clock).</p>
+<p><b>DESIGN.md:</b> § The invitations list (columns and Delivery), § Form system (fields shown per role, not disabled), § Button system's destructive action (Revoke outline + confirmation), § Table system (a note row under its row).</p>
+<p><b>Routes:</b> none new.</p></div>
+<div><h3>B · A page of its own</h3>
+<p>Invitations is the list alone, with "Invite a person" in its header. Invite a person <span class="anno anno--proposed">PROPOSED</span> (/admin/invitations/new) is a form page: role as radios with what each role does, the scope fields it takes, Issue invitation. After an issue it stays, the link above a reset form headed "Invite the next person".</p>
+<p><b>Why:</b> Home's "Invite a person" lands on the form itself (as flow 10 gave New MSF campaign); nine invitations in a row never scroll past a list; the list page is only the list, the widest table of the three.</p>
+<p><b>Components:</b> as A, plus a form page of its own (flow 08's pattern) and choice-group radios (flow 08's) for Role.</p>
+<p><b>DESIGN.md:</b> as A, plus § Page-level patterns: Form page (a new form page under Invitations, the title rule: "Invite a person" is the h1, the crumb and the tab stem; Invitations stays lit, aria-current="true").</p>
+<p><b>Routes:</b> /admin/invitations/new <span class="anno anno--proposed">PROPOSED</span>; the revoke result's "Invite another address…" opens it with the role and scope filled <span class="anno anno--proposed">PROPOSED</span>.</p></div>
+<div><h3>C · Beside the list, as rows</h3>
+<p>Today's arrangement, kept but rebuilt: the list in the wide column as rows, not a ten-column table; the form in a 22rem column beside it, the link at its head. A resend's new link opens in its own row; a revoked row stays as its result until the next action.</p>
+<p><b>Why:</b> the smallest move from today; each result sits where the press was (A5).</p>
+<p><b>Components:</b> as A, with stack-list rows <span class="anno anno--new">NEW</span> (.inv-rows, .inv-row; the warning stripe of a row waiting too long, flow 04's) in place of DataTable; .inv-grid <span class="anno anno--new">NEW</span> (flow 08's advice-beside grid, reversed: from 1100px; below it the form goes first).</p>
+<p><b>DESIGN.md:</b> as A, plus § Layout (a form beside its list) and § The invitations list becomes a row list.</p>
+<p><b>Routes:</b> none new.</p></div>
+</div>
+<p><b>My recommendation: B</b>, then A. B lands Prof Mbatha on the form from Home, keeps the link and the form together while she issues nine in a row, and gives the list the whole page; its cost is one press from the list page. C carries the most layout risk at 1280 (a 22rem form beside rows at 974px is tight once a not-delivered note is open).</p>
+
+<h3>The same in all three</h3>
+<ul>
+<li><b>No role chosen</b> ("Choose a role"); the Institutional admin's only institution is shown as text, not a picker; the Administrator chooses an institution (or a College for a College admin). Fields a role does not take are not drawn; Sub-speciality reads "Choose a speciality first" (aria-disabled) until a speciality is chosen.</li>
+<li><b>Each role's help</b> under Role says what it does and which scope it takes (words <span class="anno anno--new">NEW</span>).</li>
+<li><b>A refusal sits under its field</b> (.validation-message, aria-invalid, the field's stripe), the field takes the focus, everything typed stays, and the tab reads "Error: Invitations · Wombat".</li>
+<li><b>OneTimeLink <span class="anno anno--new">NEW</span>:</b> the result (T283's words), the link in a read-only field (…/account/register?token=•••), Copy link (wombat.js's clipboard call; "Copied" and an aria-live "Link copied."), the expiry date and what Resend does. It is component state only: never in the address, never after the next issue, refusal, resend, revoke or navigation (T264).</li>
+<li><b>Delivery</b> is a short state with an icon (Being sent · Sent · Not delivered · Check the address); the explanation is a note row under its row, which Resend is described by. Not delivered rows first <span class="anno anno--proposed">PROPOSED</span>.</li>
+<li><b>Revoke…</b> is an outline button named for its row and opens the ConfirmDialog (S1). Its result: "Invitation revoked. The link sent to … no longer works: nobody can register from it."</li>
+<li><b>Times</b> "2026-10-19 09:22 SAST"; expiry the South African calendar date.</li>
+</ul>
+
+<h2>Screen 2 · Register (one proposal)</h2>
+<ul>
+<li>The auth card with the lockup and purpose line, as sign-in carries them (§ Account / auth page changes: Register joins sign-in and the MSF card).</li>
+<li>The info line names the address, the role by its label, the scope and the institution: "This invitation is for smit@kgk.wombat.local, as Coordinator at Kgosi Kgari Teaching Hospital." <span class="anno anno--proposed">PROPOSED</span> words; the institution's and speciality's names <span class="anno anno--data">DATA</span>.</li>
+<li>Email is a read-only input with autocomplete="username", so a password manager saves the pair.</li>
+<li>A refused password or confirmation comes back with the names as typed (T317), the message under its field, the focus on Password.</li>
+<li>Every refused link is an h1 and what to do next: Sign in for a used link or an existing account; ask for a new invitation otherwise (R5–R7) <span class="anno anno--proposed">PROPOSED</span> headings.</li>
+<li>T315: the token leaves the address bar by a cookie and a 303 redirect <span class="anno anno--proposed">PROPOSED</span>: no script needed.</li>
+</ul>
+
+<h2>Screen 3 · The pending registrar's Home (one proposal)</h2>
+<p>The one card, "Awaiting admission", says where (Kgosi Kgari Teaching Hospital), what programme (<span class="anno anno--data">DATA</span>: the invitation's speciality and sub-speciality and the institution's adopted curriculum), who invited (<span class="anno anno--data">DATA</span>: the invitation's issuer and date), who admits, what happens on admission (the sign-out once, then Trainee), and what to do meanwhile. Menu and access denied unchanged.</p>
+
+<h2>Screen 4 · Trainees and admission: three structures (wireframes)</h2>
+<div class="cols">
+<div><h3>W1 · Two lists, admission a page</h3><p>"Waiting to be admitted" over "Current trainees" (renamed from Pending admission and Active profiles), then Completed and closed. Admit… opens Admit &lt;name&gt; <span class="anno anno--proposed">PROPOSED</span> (/admin/trainees/admit?userId=…), and Admit returns to Trainees with the result focused. Never lands on the profile page with Deactivate and Mark complete.</p></div>
+<div><h3>W2 · One list, a dialog</h3><p>One list, filtered by status (Waiting, Current, Completed and closed); admission in ConfirmDialog's form mode over it. No page change; the dialog is the narrowest place for two dates and a read-out.</p></div>
+<div><h3>W3 · Admission in the row</h3><p>Two lists; Admit… opens the admission under its row (the editing stripe), one at a time, so the next registrar stays in view for five in a morning.</p></div>
+</div>
+<p>All three: the curriculum read out when one is adopted (a choice when two are); Programme start, today until changed; "Training year N" read-only, following the date on change (T306); Expected completion optional, its derivation said; a check line saying the registrar is signed out once; Current trainees shows Programme start and Training year <span class="anno anno--data">DATA</span>. <b>My recommendation: W1</b> (a page holds the edge cases: nothing adopted, an unknown id, a future start, a start over four years back).</p>
+
+<h2>Everything PROPOSED</h2>
+<ul>
+<li>Route /admin/invitations/new (B); route /admin/trainees/admit (W1).</li>
+<li>The revoke confirmation (ConfirmDialog is built; using it here is new).</li>
+<li>T286 at issue: "smit@kgk.wombat.local already has a Wombat account (Pieter Smit), so it cannot be invited. To give Pieter Smit another role, open Pieter Smit under Users."</li>
+<li>Q10, a second active invitation refused: "… already has an active invitation, issued 2026-10-19 and expiring 2026-11-02. Resend it or revoke it in the list."</li>
+<li>"Invite another address as Trainee, Paediatrics / Paediatrics" after a revoke (A, B).</li>
+<li>Not delivered rows first.</li>
+<li>Register: the token cookie and redirect; the refused-link h1s and their next step; "Signed in as someone else" (Q11).</li>
+<li>Q7, a mail on admission; Q8, a line on the Institutional admin's Home (flow 12's) when someone is waiting; Q9, expired invitations shown for 7 days with "Invite again" (my lean: keep today's and add Q8's line instead).</li>
+</ul>
+
+<h2>DATA a page would read that it does not today</h2>
+<ul>
+<li>Register: the invitation's institution, College, speciality and sub-speciality names.</li>
+<li>Pending Home: the invitation's issuer and issue date; its scope; the institution's adopted curriculum for that speciality.</li>
+<li>Trainees: each pending registrar's registration date and invited scope; Current trainees' programme start (stored) and training year (computed: TrainingYear).</li>
+<li>Admission: TrainingYear for a chosen start (server-computed on the date's change); the derived completion date for an empty field.</li>
+<li>Invitations: the address's existing account (T286) and active invitation (Q10) at issue.</li>
+</ul>
+
+<h2>Answers to the questions</h2>
+<ol>
+<li>Where issuing lives: three answers drawn, B recommended. All three show Delivery and the actions at 1280.</li>
+<li>The link: in OneTimeLink, with Copy link; it is cleared by the next action of any kind and never reaches the URL.</li>
+<li>The form: fields per role, not disabled ones; no role by default; the only institution shown as text; refusals under the field.</li>
+<li>The wait: H1.</li>
+<li>Admission: W1 recommended; the training year beside the start; two lists.</li>
+<li>Register: Sign in for used and existing; ask for a new invitation for revoked, expired, invalid; the card carries the lockup and purpose.</li>
+<li>Q7–Q11 are yours: drawn where they would show, each marked.</li>
+</ol>
+
+<h2>Edge cases</h2>
+<ul>
+<li>A 64-character address breaks after its @, then anywhere; never widens a column (S3).</li>
+<li>A refused issue after an issue: the link is gone before the refusal shows (A2, B2, C2).</li>
+<li>Two invitations to one address, or one registrar invited by two admins: Q10's refusal beside Email; today both stay active, and the first used spends only itself.</li>
+<li>An invitation that expires unused leaves the list (today); Q9 is the alternative.</li>
+<li>An Administrator admitting a registrar with no institution: refused, "An institution is required." on the issue side; on admission the page names the registrar's institution or says it has none and offers no Admit.</li>
+<li>Nothing adopted: the admission's built words, with Curriculum adoptions linked; no Admit.</li>
+<li>A second adopted version: only the adopted one offered (T091, T304).</li>
+<li>A start in the future: "Training year 1 · the programme starts on &lt;date&gt;"; nothing can be filed before it.</li>
+<li>A start more than four years back: the year still shown (training year 5 or more), with a warning, not a refusal (.field-warning).</li>
+<li>A signed-in visitor on someone's link: Q11's card.</li>
+<li>Register with script blocked: the Show toggles are hidden; the token still leaves the address bar (the redirect needs no script).</li>
+</ul>
+
+<h2>Accessibility review (WCAG 2.1 AA)</h2>
+<ul>
+<li>One h1 a page; then h2 (Invite a person, Active invitations); the dialog's title an h2 in the top layer. Every table captioned, never repeating its heading.</li>
+<li>Every row action named for its row ("Revoke the Trainee invitation to ndlvou@kgk.wombat.local"); Resend described by its note row.</li>
+<li>Focus: an issue or resend to the result; a refusal to its field; a revoke's dialog starts on Keep the invitation, Escape returns to the row's Revoke…, the action to the result; an admission to its result.</li>
+<li>Refusals tied by aria-describedby and marked by the field's stripe, not colour alone.</li>
+<li>Copy link announced through an aria-live line ("Link copied."); the button's state is in its words, not its colour.</li>
+<li>Targets: 36px buttons and 28px small ones at 1280; 44px at 390 (row actions, radios, Copy link, links on the wait card).</li>
+<li>Delivery's states are words with an icon; the warning stripe repeats, never replaces, the words.</li>
+<li>Contrast: every pair from the system's table (text on the tints, muted on surface 5.09:1).</li>
+</ul>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4300}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
