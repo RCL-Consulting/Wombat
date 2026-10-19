@@ -56,4 +56,4 @@ No new colour token. A met mark `success-color` 5.88:1 and a short mark `warning
 ## Known gaps
 
 - **Needs confirmation (T371, proposed):** a group's comments are listed in the order they were submitted, which, beside the per-group responded counts the coordinator watched while the campaign was open, may tie a comment to the moment someone answered.
-- **Open (T282's rule):** the release mail's stub log line names no recipient, by T282's rule, so the replay checks only its subject and body (Step 3.46).
+- **By design (T282, done):** the release mail's stub log line names no recipient, so the replay checks only its subject and body (Step 3.46).

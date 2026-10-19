@@ -2079,7 +2079,8 @@ the read is in (K17); a failed read is a fixed sentence with Try again, its caus
 
 **New MSF campaign** (T369, flow 10, C1–C8, `/msf/campaigns/new`; `NavOwners`: MSF campaigns for the Coordinator). Its h1
 and tab are "New MSF campaign", its subtitle what a campaign is and that creating it makes a draft that emails nobody.
-"* marks a field you must fill in." stands above four `.form-container` cards in a 52rem column (`.msf-form-column`),
+"* marks a field you must fill in." stands above four `.form-container` cards in a 52rem column (`.msf-form-column`; the
+form's own three `.msf-form-cards`, 24px apart, T369 step 8),
 each titled by an `h2.msf-card-title`, some with a muted line (`small`):
 
 - **Questionnaire**: the Template select (each template with its kind, its questions under it as help), which joins the
@@ -4296,7 +4297,8 @@ in or not:
   calendar, `MsfCampaignRules.GetActiveInvitationByTokenAsync` judging "today" by `ProgrammeCalendar.DateOf`, T325), the
   sentence saying what is asked, then "Who sees your feedback" (`.respond-privacy`, `role="group"` named by its title,
   two lines with their icons) before the first question. In the form (`.respond-form`): "Questions marked * must be
-  answered." when one is; each rating a `fieldset.form-group` whose legend is the question, the required mark
+  answered." when one is; each rating a `fieldset.form-group` whose legend is the question (1.1rem/600, as the comment's label, by
+  `.respond-form fieldset > legend`), the required mark
   (`.required-mark`, `aria-hidden`) and a visually hidden "required", its help a `page-subtitle` naming it by
   `aria-describedby`; each point a 44px row tinted by `:has(:checked)` alone (a frame in forced colours); a comment's
   label `.respond-label`, "(optional)" when it is, its help "Up to 4,000 characters. …" (no counter: the page carries no
@@ -4515,7 +4517,7 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
 /* ── The MSF campaign ───────────────────────────── */
 "Flow 10: the MSF pages, shared (T369)": .msf-page, .msf-page--measure, .section-title(--h3), .msf-stack-card, .msf-centre, .status-card, .status-head, .status-line, .status-note, .status-actions, .trainee-cell, .kind-line, .nowrap, .msf-inline-link, .msf-page dialog .dialog-body ul (+ ≤640px: .msf-header's actions stacked, 44px, full width; .msf-page buttons 44px; the status actions stacked; .msf-page td .actions-cell, a stacked list's row actions, a full-width column, written once here, D9; a dialog's buttons stacked, the action on top, M10; ≤900px: .msf-page .clinic-table--stack-wide td .actions-cell .btn 44px, D2)
 "Flow 10: the report (T369)": .threshold-list (.is-met, .is-short, .is-rule), .report-line, .sep, .group-card, .group-avg, .group-question, .group-comments, .groups-intro, .suppressed-line, .release-section, .release-actions, .msf-narrow-field, .stored (+ the report's uses of .section-title, .submit-check, .move-reasons, .alert inside .msf-page)
-"Flow 10: the campaign (T369)": .msf-gap-top, .msf-block, .status-split, .count-box, .count-table caption/th/tfoot, .anon-caption, .num, .links-part, .invitee-rows, .invitee-row, .invitee-address, .invitee-group, .add-form, .add-invitee (≤900px: one column, S14), .msf-facts, .msf-facts-wide, .msf-facts .epa-lines, .msf-form-column, .msf-card-title, .template-fold, .template-form, .choice-stack, .epa-checks (+ ≤640px, inside .msf-page: 44px controls, .form-actions stacked, the add form's button full width, the fold's summary and the boxes 44px)
+"Flow 10: the campaign (T369)": .msf-gap-top, .msf-block, .status-split, .count-box, .count-table caption/th/tfoot, .anon-caption, .num, .links-part, .invitee-rows, .invitee-row, .invitee-address, .invitee-group, .add-form, .add-invitee (≤900px: one column, S14), .msf-facts, .msf-facts-wide, .msf-facts .epa-lines, .msf-form-column, .msf-form-cards, .msf-card-title, .template-fold, .template-form, .choice-stack, .epa-checks (+ ≤640px, inside .msf-page: 44px controls, .form-actions stacked, the add form's button full width, the fold's summary and the boxes 44px)
 "Flow 10: her reports, the respondent and coverage (T369)": .msf-measure, .my-report, .narrative, .portfolio-links, .respond-card, .account-brand(-mark), .respond-meta, .respond-privacy(-title, -list), .respond-form, .respond-label, .respond-optional, .respond-required, .coverage-windows, .coverage-programme, .coverage-table, .is-covered (+ /msf/respond's .error-summary, .scale-choices, .form-check inside .respond-card)
 ```
 
