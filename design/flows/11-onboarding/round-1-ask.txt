@@ -7,7 +7,7 @@ This is flow 11 of a RESTRUCTURE with UX in scope (design/BRIEF.md § 4). Flows 
   Register sits on flow 02's auth card. Round 1: 2–3 variations at FULL FIDELITY for Invitations (where issuing lives
   is open); ONE proposal at fidelity for Register and for the pending registrar's Home, to confirm or correct; and 2–3
   STRUCTURES as wireframes for Trainees and the admission form. I pick before round 2. The runbook steps follow below
-  in this same message. The brand mark is at {{MARK_URL}}: use it, never a drawn disc. Every person, address, role,
+  in this same message. The brand mark is at /_blob/b3cd1c9ecfc87765138aec8743e383bc: use it, never a drawn disc. Every person, address, role,
   date and count comes from this message and the steps below; invent none.
 
 GOAL: The Administrator and the Institutional admin must be able to:

@@ -43,8 +43,9 @@ under `design/baseline/` (gitignored). Code is cited at `a1a9b120`; `W/` is `src
    (https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18). Not an earlier flow's canvas. Write its `tokens.css` by hand
    from app.css's `:root` before round 1 (§ 11, flow 09: the system serves only `tokens.json`).
 3. **Copy the mark into the canvas before round 1** (`Artifact publish`, `asset: true`, `from_url` = the design
-   system, `asset_ids: ["16c4e619b7ea0971d0c28ed6509be7a8"]`). Put the returned `/_blob/` URL in § 1 and in
-   `design/flows/11-onboarding/round-1-ask.txt`, where they read `{{MARK_URL}}` until then.
+   system, `asset_ids: ["16c4e619b7ea0971d0c28ed6509be7a8"]`). Done 2026-10-19: the canvas is
+   https://claude.ai/artifact/SFn6dDmJnoww2fhYrQD416 and its mark `/_blob/b3cd1c9ecfc87765138aec8743e383bc`, written
+   into § 1 and `design/flows/11-onboarding/round-1-ask.txt`.
 4. **Send § 1 and § 8 as ONE message** (`design/flows/11-onboarding/round-1-ask.txt`), with the key screenshots in
    § 4. Read `project/canvas.json`'s version before and after: a send can draw nothing. Read round 1's notes for a line
    saying it never received the attachments (§ 11, flow 06); re-attach and name the folder before round 2 if so. Say
@@ -72,7 +73,7 @@ This is flow 11 of a RESTRUCTURE with UX in scope (design/BRIEF.md § 4). Flows 
   Register sits on flow 02's auth card. Round 1: 2–3 variations at FULL FIDELITY for Invitations (where issuing lives
   is open); ONE proposal at fidelity for Register and for the pending registrar's Home, to confirm or correct; and 2–3
   STRUCTURES as wireframes for Trainees and the admission form. I pick before round 2. The runbook steps follow below
-  in this same message. The brand mark is at {{MARK_URL}}: use it, never a drawn disc. Every person, address, role,
+  in this same message. The brand mark is at /_blob/b3cd1c9ecfc87765138aec8743e383bc: use it, never a drawn disc. Every person, address, role,
   date and count comes from this message and the steps below; invent none.
 
 GOAL: The Administrator and the Institutional admin must be able to:
