@@ -6,17 +6,17 @@ This is a reset point, not a diary.
 ## Focus
 
 Wombat is **deployed but not in service**: scenario data only. **The EPA v11.1 stream is built**, the runbook is a
-replayed journey catalogue with a screenshot baseline, and **nine redesign flows are done**: 01 the shell (T335),
+replayed journey catalogue with a screenshot baseline, and **ten redesign flows are done**: 01 the shell (T335),
 02 sign-in (T339), 03 filing an activity (T342), 04 an assessor's inbox (T350), 05 a registrar's progress (T355), 06
-programme oversight (T358), 07 the review sitting (T361, D53), 08 the committee calendar (T364) and 09 outcomes, STARs
-and appeals (T366, `49e7cf5e`, with T367), each designed, replayed and in the design system (version 23). Left: flows
-10–20, the deploy, the College's, the P2s, P3 polish. On GitHub (RCL-Consulting/Wombat, public).
+programme oversight (T358), 07 the review sitting (T361, D53), 08 the committee calendar (T364), 09 outcomes, STARs
+and appeals (T366, with T367) and 10 the MSF campaign (T369, `68327c9d`), each designed, replayed and in the design
+system (version 25). Left: flows 11–20, the deploy, the College's, the P2s, P3 polish. On GitHub (RCL-Consulting/Wombat, public).
 
 ## Now
 
-- **The runbook** (`knowledge/scenario-paediatrics/`): last replayed against flow 09 (T366, `wombat_scenario_t366`,
-  2026-10-14: no open regression); `coverage.md`, `states.md`, `design/baseline/`.
-- **Open: 76 queued; none in progress; 1 blocked; 4 proposed (T362, T363, T365, T368).**
+- **The runbook** (`knowledge/scenario-paediatrics/`): last replayed whole against flow 10 (T369,
+  `wombat_scenario_t369`, 2026-10-19: no open regression); `coverage.md`, `states.md`, `design/baseline/`.
+- **Open: 76 queued; none in progress; 1 blocked; 7 proposed (T362, T363, T365, T368, T370, T371, T372).**
   - **P1:** T157, the deploy, which waits for the operator.
   - **P2, before real users:** T288, T289, T311–T313, T315, T316, T319, T320, T329, T333, T334, T341.
   - **P3:** the presentation debt the redesign absorbs (BRIEF § 6–7), and polish.
@@ -33,7 +33,7 @@ and appeals (T366, `49e7cf5e`, with T367), each designed, replayed and in the de
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The redesign:** flow 10 (`design/flows/10-msf-campaign.md`), when the operator says. T362, T363, T365 and T368 wait in proposed.
+- **The redesign:** flow 11 (`design/flows/11-onboarding.md`), when the operator says. T371 needs an answer; six more wait in proposed.
 
 ## Open questions
 
@@ -55,6 +55,6 @@ and appeals (T366, `49e7cf5e`, with T367), each designed, replayed and in the de
 
 ## Recent
 
+- **2026-10-19:** T369, flow 10, done (`68327c9d`; replay 331 steps, 281 clean, no regression; states 62; fixes `e4b480e2`; design system v25); T370–T372 proposed.
 - **2026-10-15:** T290 done (D54); D55, only a running programme files; Act 5 replayed (29/29), the other D54/D55 steps checked.
-- **2026-10-14:** T366, flow 09, done (`49e7cf5e`; T367 `e9b29081`; replay 331 steps, no regression; states 57, 2 corrected; one fix `9ba80586`; design system v23); Pkcs pinned (`a7f790b3`); T368 proposed.
-- **10-13 and before:** T364 (flow 08), T361 (flow 07), T358, T355, T350, T342, T339, T335 (flows 06 to 01); the repo moved to GitHub. Earlier: `git log`.
+- **10-14 and before:** T366 (flow 09), T364 (flow 08), T361 (flow 07), T358, T355, T350, T342, T339, T335 (flows 06 to 01); the repo moved to GitHub. Earlier: `git log`.

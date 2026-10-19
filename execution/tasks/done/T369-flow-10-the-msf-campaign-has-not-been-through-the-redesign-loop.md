@@ -1,12 +1,13 @@
 ---
 id: T369
 title: Flow 10, the MSF campaign, has not been through the redesign loop
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-10-15
 started: 2026-10-15
+completed: 2026-10-19
 ---
 
 # T369 — Flow 10, the MSF campaign, has not been through the redesign loop
@@ -60,7 +61,8 @@ Run the loop as flow 09 ran it (`design/flows/09-outcomes-stars-appeals/`, BRIEF
   flow 10's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
   2026-10-19 on `wombat_scenario_t369` (`652749d0` and its parent): 331 steps, 281 with no gap, no flow 10
   regression; states 62 rows hold, 5 refusal rows given their exact words; missing 0.
-- [ ] The design system is re-synced and republished — its version number.
+- [x] The design system is re-synced and republished — its version number. Version 25 (1792413020-e2bb), from
+  `1f639c60`.
 
 ## Related
 
@@ -119,3 +121,10 @@ T366 (flow 09), T364 (flow 08), T162 (the system-managed MSF type), T153, T270, 
   (2.37). T368 did not recur (5 of 5). States: 62 rows hold, 5 corrected; 3.43's stand-in SQL fixed (it needs
   `DeliveryLinkSelector`). Proposed: **T371** (comments in submission order, anonymity: needs the operator) and
   **T372** (an empty band on the campaign page). Scratch DBs `wombat_scenario_t369_st0..st3`, `_s515`.
+- **2026-10-19, steps 8 and 9 done.** The live design system matched HEAD (174 files, three CRLF-only). Re-synced
+  (`da19e284`: 7 records in a new MSF group, 16 revised); the re-sync found three page faults, fixed (`e4b480e2`: the
+  campaign form's cards 24px apart, `.msf-form-cards`; the respondent's legend 1.1rem/600; two "Please"s; Web 3837 green;
+  checked in the browser at 1280 and 390, the two states re-taken), and one kept (MSF coverage's long date, by
+  `QuotaText.Iso`'s note). One Sonnet review (F1 must-fix, the preview's form class; F2–F8; `be67b0a7`). The two icons
+  uploaded and in the index; published as **version 25** (1792413020-e2bb, `1f639c60`). Lessons in BRIEF § 11 "Flow 10"
+  (`324c6abf`); the replay brief keeps scratch files out of the repo (`a81b0b73`).

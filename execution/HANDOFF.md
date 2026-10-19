@@ -2,21 +2,28 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-10-19 (Opus): T369 step 7, the replay, under way
+## Session 2026-10-19 (Opus): T369, flow 10, done
 
-The operator said "proceed". Pushed `e825e2e2..e598c490`. Flow 10's replay brief (`d3379233`,
-`design/flows/10-msf-campaign/replay-brief.md`); published from `e598c490`; fresh `wombat_scenario_t369` on `:5180`;
-one agent per act, prompts in scratchpad `g369` (this session's; `replay-pw.env` there).
+The operator said "proceed". Pushed `e825e2e2..e598c490`; **everything after it is not pushed** (push on the word).
 
-- Act 1: 31 steps, 19 clean, 12 known. Its re-run left 2 extra failed `AdoptCurriculumCommand` audit rows (live DB
-  only) and overwrote `design/baseline/act-1/1.20-1-adopted.png` (local, gitignored) with the refusal: re-take it in the states pass.
-- Act 2: 44 / 38, 6 known; T329 (2.20), T260 (2.22), T290 (2.37) no longer occur. Two unprompted weekly-digest stubs.
-- Act 3 (flow 10): 60 / 58, 2 known (T286, T277); **no flow 10 regression**; D1, dialogs, `<h1>`, 390 checks pass;
-  `role="alert"` refusals not reached (states pass). Mail 34 after.
-- Act 4: 50 / 45; 4.25, 4.41, 4.42 runbook order only (**T370 proposed**: `PanelSeat.SittingAt` has no OrderBy);
-  T365, T320 known. Mail 35.
-- **In flight:** Act 5; then 6, A, the states pass (flow 10's rows, `1.20-1`), `check_baseline_paths.py`, then steps
-  8–9. Act files edited by the agents are **not committed** yet. Dumps scenario-t369-post-act1 to 4 (in recovery, gitignored).
+- **Step 7, the replay** (`d3379233` brief; fresh `wombat_scenario_t369`, published from `e598c490`; one agent an act):
+  331 steps, 281 with no gap, **no flow 10 regression**; the rest known tasks, or the panel's member order at 4.25, 4.41,
+  4.42, 5.8 (**T370 proposed**). Flow 10's checks pass, anonymity holds; T368 did not recur (5 of 5). States: 62 rows
+  hold, 5 corrected; 3.43's stand-in SQL fixed. Results `3a91991e`, `652749d0`, `72aaf968`.
+- **Step 8:** the live system matched HEAD; re-synced (`da19e284`), its three page faults fixed (`e4b480e2`: the campaign
+  form's card gap, the respondent's legend, two "Please"s; Web 3837 green; browser-checked, two states re-taken), one
+  Sonnet review (`be67b0a7`), icons uploaded; **design system version 25** (1792413020-e2bb, `1f639c60`).
+- **Step 9:** BRIEF § 11 "Flow 10" (`324c6abf`); the replay brief keeps scratch files out of the repo (`a81b0b73`).
+- **Proposed:** T370 (panel member order), **T371 (a report's comments in submission order: anonymity, needs the
+  operator's answer)**, T372 (an empty band above the campaign page's status card).
+
+### Environment left
+
+- **The replay app on `:5180`** runs `wombat_scenario_t369` (the appendix's end state), republished from `e4b480e2`.
+  Dumps `recovery/scenario-t369-post-act{1..6,A}`, `-pre-a515-A`. Its live DB holds 2 extra failed adoption audit rows.
+- **Scratch DBs to drop on the operator's word:** `wombat_scenario_t369_st0`..`_st4`, `_s515`, and T366's
+  (`wombat_scenario_t366*`) and older ones listed in the 10-14 handoff (`log/`).
+- **Scratch:** this session's scratchpad `g369` (`replay-pw.env`, the act, states and step 8 scripts, prompts).
 
 ## Session 2026-10-15 (Opus): pushed; T290 closed
 
