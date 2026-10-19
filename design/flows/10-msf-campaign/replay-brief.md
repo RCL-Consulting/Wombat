@@ -114,6 +114,8 @@ For EVERY step in your act, in order:
    - Say in your notes which captures show a registration link.
 
 Edit no file but your act file, your tmp dir and the baseline images.
+Write SQL, scripts and scratch files under your act dir, never in the repo. A script re-run after its step has changed
+the state is refused but still leaves audit rows and overwrites captures: re-run only a read, and say so if you did.
 
 At the end of your act:
 - Check its outcome state (the act file's closing SQL, if any).
