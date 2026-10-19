@@ -77,3 +77,9 @@ T369 (flow 10), T366 (flow 09), T264, T286, T289, T303, T304, T306, T315, T317, 
   424/0 (130 stale steps in other briefs re-synced), baseline missing 0. Staged: `design/upload/`, 119 files; every
   capture with a live link left out. Mark written in (`9f81d865`). **Next:** the operator sends `round-1-ask.txt` to
   the canvas with § 4's key screenshots. Note for step 7: states.md's `new-activity--pending-trainee` row predates D55.
+- **2026-10-19, round 1** (canvas 1792417019-5603, 53 boards in `round-1/`; assessed in `round-1-assessment.md`):
+  Invitations A/B/C, Register R, the pending Home H, Trainees W1–W3, Spec and Steps. Recommended: B (a page of its
+  own) and W1 (admission a page); R and H confirmed with corrections. Must-fix: "Sent" on replay rows (the log sender
+  reports none), H3 names Molefe for Mahlangu, Z1's "stays active" (accepting revokes the others, T061), a future start
+  is "Not started", the T315 cookie must be Lax, and the T286 and Q10 refusals leak across institutions. Decisions
+  Q1–Q18 (§ 6) to the operator.
