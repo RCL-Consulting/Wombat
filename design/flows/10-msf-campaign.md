@@ -947,11 +947,11 @@ Role: Coordinator — Mr Pieter Smit
 Route: / → /msf/campaigns → /msf/campaigns/{CampaignId:int} → /committee/decisions-due → /admin/data-rights
 Do: At 390 px, open his dashboard, Dr Molefe's released campaign, Decisions due and the data-rights queue. On Decisions
   due, set Status to "Every status", press Show, and open By EPA.
-Expect: Home's header action, Start an MSF campaign, is a row of its own below the header's rule, 44px tall and the
-  page's width, and the cards stack in one column, each row's link a 44px block (T358, R2-Home k6). MSF campaigns
-  stacks its rows (T323): Pieter du Plessis's first, then Dr Molefe's, each a block with every field shown under its
-  column's name, each action a 44px block; nothing scrolls sideways. The campaign page keeps its gutter (T226), and its
-  invitee table (counts by respondent group: the page never lists an address) fits its card. Decisions due's filters stack, with Show and Clear filters each 44px tall; By EPA's fold summary is
-  44px, and opened it reads one block per EPA; each decision is a block, its one action a 44px button the block's
-  width; the pager's buttons are 44px (T364). The queue's filters stack above its table.
+Expect: Home's header action, Start an MSF campaign, is a row of its own below the header's rule, 44px tall and the page's
+  width, and the cards stack in one column, each row's link a 44px block (T358, R2-Home k6). MSF campaigns stacks its rows
+  (T323): Pieter du Plessis's first, then Dr Molefe's, each a block with every field shown under its column's name, each
+  action a 44px block; nothing scrolls sideways. The campaign page keeps its gutter (T226), and its invitee table (counts by
+  respondent group: the page never lists an address) fits its card. Decisions due's filters stack, with Show and Clear
+  filters each 44px tall; By EPA's fold summary is 44px, and opened it reads one block per EPA; each decision is a block, its
+  one action a 44px button the block's width; the pager's buttons are 44px (T364). The queue's filters stack above its table.
 ```

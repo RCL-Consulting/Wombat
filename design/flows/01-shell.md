@@ -494,7 +494,7 @@ describes the product as it is today. Steps 2.34 and 3.33 describe the Assessor 
 "Waiting for your rating"; F04 designs the cards.
 
 ```text
-Step 2.33 — Dr Zulu's first view: committee member (act-2-onboarding.md:632)
+Step 2.33 — Dr Zulu's first view: committee member (act-2-onboarding.md:628)
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
 Route: /account/login → /
 Do: Sign in and read the dashboard and nav.
@@ -513,7 +513,7 @@ Expect: Home reads "Committee member · Semester N, YYYY" under its heading. The
   The menu is the Committee member's alone, never the union of Dr Zulu's roles: Home, Programme trainees, Committee
   reviews and Decision panels, then My data rights.
 
-Step 2.34 — Dr Zulu switches between her dashboards (act-2-onboarding.md:661)
+Step 2.34 — Dr Zulu switches between her dashboards (act-2-onboarding.md:657)
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /account/logout/submit → /account/login → / → /dashboard/switch/{role} → / → /dashboard/switch/{role} → /
 Do: Choose Switch to Assessor in the sidebar, and reload the page. Sign out and in again. Then type
@@ -531,7 +531,7 @@ Expect: Under the header an info alert reads "You are now acting as Assessor." a
   member · Semester N, YYYY" under Home's heading, and the alert "You are now acting as Committee member.", the
   role Step 3.33 starts from.
 
-Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:880)
+Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:845)
 Role: Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int}
 Do: Her sessions open acting as a Committee member; choose Switch to Assessor in the sidebar. From "Waiting for you",
@@ -551,7 +551,7 @@ Expect: The sidebar first reads "Acting as Committee member", with "Switch to As
   Nothing of Dr Mahlangu's waits for an assessor any more: the Mini-CEX has left Waiting for assessors and Mr Smit's
   Home card.
 
-Step 3.52 — Dr Zulu's committee dashboard, and Programme Trainees (act-3-operations.md:1377)
+Step 3.52 — Dr Zulu's committee dashboard, and Programme Trainees (act-3-operations.md:1395)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → /
 Do: Choose Switch to Committee member in the sidebar and read the dashboard and the menu.
@@ -568,7 +568,7 @@ Expect:
     Short on it, its figure in words hidden after it. No card is one link around its rows (T280).
   - The menu is Home, Programme trainees, Committee reviews and Decision panels, then My data rights.
 
-Step 3.31 — Mr Smit opens Stalled Activities (act-3-operations.md:812)
+Step 3.31 — Mr Smit opens Stalled Activities (act-3-operations.md:781)
 Role: Coordinator — Mr Pieter Smit
 Route: / → /programme/waiting → /not-found
 Do: Open Waiting for assessors from the menu. On the Mini-CEX's row choose Send a reminder, read the dialog, then choose
@@ -617,7 +617,7 @@ Expect: For both, "You cannot open this page": "Your role (Institutional admin) 
   need it for your work, ask the platform administrator.", with Go to Home. They are the Administrator's alone, her menu
   offers neither, and nothing in it is lit on the refusal.
 
-Step A.6.3 — Prof Mbatha edits her own institution (appendix-cross-cutting.md:1006)
+Step A.6.3 — Prof Mbatha edits her own institution (appendix-cross-cutting.md:1002)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/institutions/{Id:int} → /
 Do: Open KGK's page by its address (no nav link leads there). Set its contact email to
@@ -694,7 +694,7 @@ Expect: The card, in the warning stripe, is badged "3 waiting, 1 overdue", and l
   Waiting for assessors lists the same three in that order under "3 waiting, 1 overdue", each with Send a reminder (none
   is sent here). Nothing offers Reassign (C5).
 
-Step A.5.11 — Dr Botha's Programme Trainees (appendix-cross-cutting.md:857)
+Step A.5.11 — Dr Botha's Programme Trainees (appendix-cross-cutting.md:852)
 Role: CommitteeMember — Dr Sarah Botha
 Route: /
 Do: Read the menu.
@@ -702,7 +702,7 @@ Expect: "Acting as Committee member", with "Switch to Assessor" under it, over H
   reviews and Decision panels, then My data rights. There is no Waiting for assessors: chasing work is not a Committee
   member's (T358, Q7).
 
-Step A.5.12 — Dr Mokoena's Programme Trainees and STAR Review Queue (appendix-cross-cutting.md:869)
+Step A.5.12 — Dr Mokoena's Programme Trainees and STAR Review Queue (appendix-cross-cutting.md:864)
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /
 Do: Read the menu.
@@ -710,13 +710,13 @@ Expect: Home, Programme trainees, Waiting for assessors, Decisions due, Committe
   Entrustment decisions, then My data rights (T358, R2-Menus). The STAR review queue is not restored: Entrustment
   decisions, the programme's register of STARs, takes its place (DESIGN.md § The NavMenu).
 
-Step A.5.13 — devadmin's System page (appendix-cross-cutting.md:881)
+Step A.5.13 — devadmin's System page (appendix-cross-cutting.md:876)
 Role: Administrator — devadmin
 Route: /
 Do: Read the menu.
 Expect: The grouped menu of Step 1.1, with no System item: the flow 01 pick dropped it, with its placeholder.
 
-Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1203)
+Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1199)
 Role: Trainee — Dr Anele Dlamini
 Route: / → /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/mine → /account/data-rights
 Do: At 390 px, sign in and open her dashboard, My progress and one EPA's page from its index, My activities and My data
