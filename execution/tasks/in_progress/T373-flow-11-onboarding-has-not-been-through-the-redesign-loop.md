@@ -83,3 +83,6 @@ T369 (flow 10), T366 (flow 09), T264, T286, T289, T303, T304, T306, T315, T317, 
   reports none), H3 names Molefe for Mahlangu, Z1's "stays active" (accepting revokes the others, T061), a future start
   is "Not started", the T315 cookie must be Lax, and the T286 and Q10 refusals leak across institutions. Decisions
   Q1–Q18 (§ 6) to the operator.
+- **2026-10-19, round 2** (canvas 1792419753-ee69, 192 boards in `round-2/`) reviewed from three sides (code, cast,
+  design system; merged in `round-2-review.md`: M1–M11, S1–S24, 14 nits). F1–F10 to the operator. The gap behind
+  T374 (an existing account onto a programme) stays proposed, outside this flow.
