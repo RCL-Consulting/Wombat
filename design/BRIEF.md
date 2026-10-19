@@ -1144,6 +1144,37 @@ the states (57 rows, 2 corrected) and the re-sync (design system version 23). It
   second call from a staging folder put it right (version 23). *Changed:* nothing new; the handoff's trap already says
   `root` is a folder holding `project/`. Publish from a staging copy.
 
+**Flow 10 (T369, 2026-10-15 to 10-19): what the tenth flow added**
+
+Flow 10 ran the loop in two sittings: three rounds (RA and MA picked, F1–F11 the operator's), the build (`68327c9d`) in
+two waves of lanes (K and R, then T) and a runbook lane, three Sonnet reviews and one fix pass, the replay on a fresh
+database (331 steps, 281 with no gap, no flow 10 fault), the states (62 rows, 5 corrected) and the re-sync (design system
+version 25). Its record is `design/flows/10-msf-campaign/`. Only what flows 01–09 did not already teach is here.
+
+- **A form inside a gap-spaced column gets none of its gap.** Observed: New MSF campaign's three cards sat inside
+  `form#campaign-form`, a child of `.msf-page`, whose gap spaced only its own children, so the cards touched; three
+  reviews and the replay passed it, the re-sync found it (`e4b480e2`). The respondent's rating legend lost to the
+  field-level legend rule (0,1,2 over 0,1,1) the same way. *Changed:* nothing; a lane's contract names the element that
+  holds its cards, and the re-sync stays the last look at the built pages.
+- **A fresh database exposes an order no query sets.** Observed: the review's Present line read Botha before Naidoo on
+  the fresh replay and Naidoo first on T366's, with the same steps played (`PanelSeat.SittingAt` has no `OrderBy`).
+  *Changed:* nothing in the process; T370 proposed. A runbook line that quotes a list's order needs a query that sets it.
+- **An act's script is not idempotent.** Observed: Act 1's and Act 6's agents re-ran a script after its step had
+  changed the state: the re-runs were refused, but they left audit rows and overwrote captures (`1.20-1`, `6.3-1`,
+  `6.3-2`) with the refusal, and the states pass re-took them on scratch databases. An agent also wrote a query file to
+  the repo's root. *Changed:* the integrator's notes to the next act name what the last one left; the prompts say to
+  write SQL and scratch files under the act's own folder.
+- **A stand-in SQL line can be wrong for months.** Observed: Step 3.43's stand-in for a dropped mail never made a link
+  "not delivered" (a failure counts only against the current link, `DeliveryLinkSelector`); no replay had needed it,
+  since the log sender reports no delivery anyway. *Changed:* the line is fixed; a stand-in is checked when a states
+  pass first uses it.
+- **A replay played on a Monday meets the weekly job.** Observed: two "Your weekly Wombat digest" stubs arrived in Act 2
+  from no step, and the acts' mail counts had to allow for them. *Changed:* nothing; the integrator passes each act the
+  running count from the log.
+- **The re-sync's agent cannot upload an icon.** Observed: flow 10's two icons were left out of the index until the
+  integrator uploaded them (`asset: true`) and wrote their records in the index, which is read again and sent last.
+  *Changed:* nothing; the integrator uploads before the publish, as flows 03 and 05 did.
+
 **What the brief keeps as it was**
 - The flows' order (§ 8), the invariants (§ 4.4) and the acceptance check (§ 9) held. The digest (§ 5.1) is restated
   for what flow 01 fixed: the shell, its components and the states it already designed. The brief template (§ 2.4)
