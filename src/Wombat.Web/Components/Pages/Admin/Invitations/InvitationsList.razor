@@ -1,303 +1,302 @@
 @page "/admin/invitations"
 @attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@implements IDisposable
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IOptions<Wombat.Application.Common.Options.WombatOptions> WombatOptionsAccessor
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject ILogger<InvitationsList> Logger
 @using Microsoft.Extensions.Options
 
 <PageTitle>Invitations · Wombat</PageTitle>
 
-<PageHeader Title="Invitations" Subtitle="@Subtitle" />
+@*
+  T373 (flow 11, boards R3-L01–L17): the list is the page. Invite a person is a page of its own (Q1), the header's action,
+  shown once the list has loaded (L15) and never with the T290 note (L17). Two sections, each an h2 with its count:
+  Active invitations, then Expired, not used (Q9) when it has rows. Each a stack-wide table (S16) whose row header is the
+  address, breaking only after its @ (check rule 1: no .col-wrap there). A row not delivered carries a note row under it
+  (tr.has-note, then td.history-note.history-note--warning), which its Resend names.
+*@
+<PageHeader Title="Invitations" Subtitle="@InvitationText.ListSubtitle" Actions="@HeaderAction" />
 
-@* Someone who holds Trainee beside a role that administers users issues, resends and revokes no invitation (T290), as
-   they administer no user (T278): nothing is read for them, and the note says why. *@
-@if (_traineeNote is not null)
-{
-  <Alert Kind="info" Id="invitations-trainee-note">@_traineeNote</Alert>
-}
-else
-{
-
-@* What an issue, a resend or a revoke did, and the link an issue or a resend made. It takes the focus once any is done
-   (T234; DESIGN.md § Button system): an issue rebuilds its form, and the button with it, a resent invitation's row is
-   being sent again and offers no Resend, and a revoked invitation's row is gone. A refusal leaves the focus where it
-   was: it is an alert, read at once. A refused resend whose row no longer offers Resend moves it here too (T283). *@
-<ActionResult @ref="_result">
-  @if (!string.IsNullOrWhiteSpace(_statusMessage))
+<div class="inv-page">
+  @* Someone who holds Trainee beside a role that administers users issues, resends and revokes no invitation (T290), as
+     they administer no user (T278): nothing is read for them, and the note says why (M1). *@
+  @if (_traineeNote is not null)
   {
-    <Alert Kind="success">@_statusMessage</Alert>
+    <Alert Kind="info" Id="invitations-trainee-note">@_traineeNote</Alert>
   }
-
-  @if (!string.IsNullOrWhiteSpace(_errorMessage))
+  else
   {
-    <Alert Kind="danger">@_errorMessage</Alert>
-  }
+    @* What a resend or a revoke did, and the link a resend made (L07, L10). It takes the focus once either is done (T234;
+       DESIGN.md § Button system). The link is cleared at the start of every action on this page (M5). *@
+    <ActionResult @ref="_result" Id="invitations-result">
+      @if (_resent is { } resent)
+      {
+        <OneTimeLink Email="@resent.Email" Link="@resent.Link" Rest="@InvitationText.ResentRest"
+                     Help="@InvitationText.ResentLinkHelp(resent.ExpiresOn)">
+          <Lead>A new invitation link is being emailed to @InvitationText.Address(resent.Email).</Lead>
+        </OneTimeLink>
+      }
+      @if (_revoked is { } revoked)
+      {
+        <Alert Kind="success">
+          <div class="alert-row">
+            <p class="alert-row-text"><strong>Invitation revoked.</strong> The link sent to @InvitationText.Address(revoked.Email) no longer works: nobody can register from it.</p>
+            <a class="btn btn-outline btn-sm" href="@OnboardingLinks.InviteFrom(revoked.Id)" @onclick="ClearLink"><Icon Name="user-plus" />Invite another address as @InvitationText.RoleWithScope(revoked.TargetRole, ScopeLine(revoked))</a>
+          </div>
+        </Alert>
+      }
+      @if (_refusal is not null)
+      {
+        <Alert Kind="danger">@_refusal</Alert>
+      }
+    </ActionResult>
 
-  @if (!string.IsNullOrWhiteSpace(_lastIssuedRegistrationUrl))
-  {
-    <Alert Kind="info">
-      <p>
-        <strong>Share this registration link with the invitee.</strong>
-        It expires in 14 days. The link is shown here only on this page-load — copy it now;
-        it cannot be retrieved later. @InvitationText.LinkIsBeingEmailed
-      </p>
-      <p>
-        <code style="word-break:break-all">@_lastIssuedRegistrationUrl</code>
-      </p>
-    </Alert>
-  }
-</ActionResult>
-
-<div class="details-grid">
-  <section class="detail-card">
-    <h3>Issue invitation</h3>
-    <EditForm Model="_model" OnValidSubmit="IssueAsync" FormName="issue-invitation">
-      <DataAnnotationsValidator />
-      <ValidationSummary class="validation-summary-errors" />
-
-      <div class="form-grid form-grid--wide">
-        <FormField Label="Email" InputId="invitation-email" Required="true">
-          <InputText id="invitation-email" class="form-control" @bind-Value="_model.Email" />
-          <ValidationMessage For="() => _model.Email" />
-        </FormField>
-
-        <FormField Label="Role" InputId="invitation-role" Required="true">
-          <InputSelect id="invitation-role" class="form-select" @bind-Value="_model.TargetRole">
-            @foreach (var role in AvailableRoles)
-            {
-              <option value="@role">@role</option>
-            }
-          </InputSelect>
-        </FormField>
-
-        @if (IsCollegeAdminRole)
+    @* A Try again that loads hands the focus to Active invitations' heading (T373 fix pass, P2). *@
+    <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="LoadAsync" FocusAfterRetry="FocusActiveAsync">
+      <LoadingContent>
+        <p class="loading-line" role="status">@InvitationText.LoadingList</p>
+        <div class="detail-card" aria-hidden="true">
+          <div class="skeleton skel-title"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line skel-short"></div>
+        </div>
+      </LoadingContent>
+      <ChildContent>
+        @Active()
+        @if (_expired.Count > 0)
         {
-          <FormField Label="College" InputId="invitation-college" Required="true">
-            <InputSelect id="invitation-college" class="form-select" @bind-Value="_model.CollegeId">
-              <option value="">Select college</option>
-              @foreach (var college in _colleges)
-              {
-                <option value="@college.Id">@college.Name</option>
-              }
-            </InputSelect>
-          </FormField>
+          @Expired()
         }
-        else
+      </ChildContent>
+    </StatePanel>
+  }
+</div>
+
+<ConfirmDialog @ref="_revokeDialog"
+               Title="@InvitationText.RevokeTitle"
+               CancelLabel="@InvitationText.RevokeKeep"
+               ConfirmLabel="@InvitationText.RevokeConfirm"
+               DangerAction="true"
+               OnConfirm="RevokeAsync">
+  <BodyContent>
+    @if (_revoking is { } revoking)
+    {
+      var scope = ScopeLine(revoking);
+      <p>Revoke the @WombatRoleLabels.For(revoking.TargetRole) invitation to <strong>@InvitationText.Address(revoking.Email)</strong>@(scope is null ? null : $" ({scope})")?</p>
+      <ul class="dialog-list">
+        <li>@InvitationText.RevokeStopsTheLink</li>
+        <li>@InvitationText.RevokeLeavesTheList</li>
+      </ul>
+      <p>@InvitationText.RevokeCannotBeUndone</p>
+    }
+  </BodyContent>
+</ConfirmDialog>
+
+@code {
+  private RenderFragment Active() => __builder =>
+  {
+    <section class="list-section" aria-labelledby="active-invitations-heading">
+      <h2 id="active-invitations-heading" class="list-section-title">
+        Active invitations
+        @if (_invitations.Count > 0)
         {
-          <FormField Label="Institution" InputId="invitation-institution" Required="true">
-            <InputSelect id="invitation-institution" class="form-select" @bind-Value="_model.InstitutionId">
-              <option value="">Select institution</option>
-              @foreach (var institution in _institutions)
-              {
-                <option value="@institution.Id">@institution.Name</option>
-              }
-            </InputSelect>
-          </FormField>
+          <span class="inv-count">@InvitationText.ActiveCount(_invitations.Count)</span>
         }
-
-        <FormField Label="Speciality" InputId="invitation-speciality">
-          <InputSelect id="invitation-speciality" class="form-select" @bind-Value="_model.SpecialityId" disabled="@(!RequiresSpeciality)">
-            <option value="">Select speciality</option>
-            @foreach (var speciality in FilteredSpecialities)
-            {
-              <option value="@speciality.Id">@speciality.Name</option>
-            }
-          </InputSelect>
-        </FormField>
-
-        <FormField Label="Sub-speciality" InputId="invitation-sub-speciality">
-          <InputSelect id="invitation-sub-speciality" class="form-select" @bind-Value="_model.SubSpecialityId" disabled="@(!RequiresSubSpeciality)">
-            <option value="">Select sub-speciality</option>
-            @foreach (var subSpeciality in FilteredSubSpecialities)
-            {
-              <option value="@subSpeciality.Id">@subSpeciality.Name</option>
-            }
-          </InputSelect>
-        </FormField>
-      </div>
-
-      <FormActions>
-        @* Not disabled while its issue runs (T234): it has the focus. A second press sends nothing, and aria-disabled says
-           so. Disabled while a revoke or a resend runs. *@
-        <button type="submit" class="btn btn-primary" disabled="@RowActionRunning"
-                aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Issuing..." : "Issue invitation")</button>
-      </FormActions>
-    </EditForm>
-  </section>
-
-  <section class="detail-card">
-    <h3>Active invitations</h3>
-    <StatePanel IsLoading="_loading" LoadError="@(null)" IsEmpty="@(_invitations.Count == 0)" EmptyTitle="No active invitations" EmptyBody="Issue an invitation to create the first onboarding link.">
-      @{
+      </h2>
+      @if (_invitations.Count == 0)
+      {
+        <div class="detail-card detail-card--empty">
+          <p class="state-panel-title">No active invitations</p>
+          <p class="state-panel-copy">Issue an invitation to create the first onboarding link.</p>
+        </div>
+      }
+      else
+      {
         var rowNames = RowNames.Distinct(
           _invitations,
           row => row.Id,
-          row => $"the {row.TargetRole} invitation to {row.Email}",
-          row => $", issued {row.IssuedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture)}",
+          row => $"the {WombatRoleLabels.For(row.TargetRole)} invitation to {row.Email}",
+          row => $", issued {Wombat.Web.Components.Shared.Activities.ActivityMoments.When(row.IssuedOn)}",
           row => $", invitation {row.Id}");
+        <DataTable TItem="ActiveInvitationDto" Items="_invitations" StackWide="true" Caption="@ActiveCaption">
+          <HeaderRow>
+            <tr role="row">
+              <th scope="col" role="columnheader">Invitee</th>
+              <th scope="col" role="columnheader">Role and scope</th>
+              <th scope="col" role="columnheader">Issued</th>
+              <th scope="col" role="columnheader">Last day</th>
+              <th scope="col" role="columnheader" class="col-wrap">Delivery</th>
+              <th scope="col" role="columnheader" class="col-actions"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </HeaderRow>
+          <Row Context="invitation">
+            @{
+              var offersResend = InvitationText.OffersResend(invitation);
+              var issued = InvitationText.IssuedParts(invitation.IssuedOn);
+              var scope = ScopeLine(invitation);
+            }
+            <tr role="row" class="@(offersResend ? "has-note" : null)" @key="invitation.Id">
+              <th scope="row" role="rowheader">@InvitationText.Address(invitation.Email)</th>
+              <td role="cell" data-label="Role and scope">
+                <span class="person-cell">@WombatRoleLabels.For(invitation.TargetRole)@if (scope is not null){@(" ")<span>@scope</span>}</span>
+              </td>
+              <td role="cell" data-label="Issued" class="inv-when">@issued.Date<span>@issued.Time</span></td>
+              <td role="cell" data-label="Last day" class="inv-when">@InvitationText.Iso(invitation.ExpiresOn)</td>
+              <td role="cell" data-label="Delivery" class="col-wrap">
+                <span id="@DeliveryId(invitation.Id)" class="@InvitationText.DeliveryClass(invitation.Delivery)"><Icon Name="@InvitationText.DeliveryIcon(invitation.Delivery)" />@InvitationText.Delivery(invitation)</span>
+              </td>
+              <td role="cell" class="col-actions">
+                <div class="actions-cell">
+                  @* T283: only on an invitation whose mail was not delivered; it emails a new link and retires the old one,
+                     which its note says (L09). The one pressed stays enabled while it runs (T234 review). *@
+                  @if (offersResend)
+                  {
+                    <button type="button" class="btn btn-sm btn-outline" aria-label="@($"Resend {rowNames[invitation.Id]}")"
+                            aria-describedby="@NoteId(invitation.Id)"
+                            disabled="@(_resendingId is not null && _resendingId != invitation.Id)"
+                            aria-disabled="@InFlight.AriaDisabled(_resendingId == invitation.Id)"
+                            @onclick="() => ResendAsync(invitation.Id)"><Icon Name="refresh-cw" />Resend</button>
+                  }
+                  @* T264: Revoke confirms; a row action is an outline button, the red one is the dialog's. *@
+                  <button type="button" class="btn btn-sm btn-outline" aria-label="@($"Revoke {rowNames[invitation.Id]}")"
+                          disabled="@(_resendingId is not null)"
+                          @onclick="() => OpenRevokeAsync(invitation)">Revoke…</button>
+                </div>
+              </td>
+            </tr>
+            @if (offersResend)
+            {
+              <tr role="row">
+                <td role="cell" colspan="6" class="history-note history-note--warning"><p id="@NoteId(invitation.Id)">@InvitationText.Note(invitation)</p></td>
+              </tr>
+            }
+          </Row>
+        </DataTable>
       }
-      <DataTable TItem="ActiveInvitationDto" Items="_invitations" Caption="Active invitations">
+    </section>
+  };
+
+  private RenderFragment Expired() => __builder =>
+  {
+    <section class="list-section" aria-labelledby="expired-invitations-heading">
+      <h2 id="expired-invitations-heading" class="list-section-title">Expired, not used <span class="inv-count">@InvitationText.ExpiredCount(_expired.Count)</span></h2>
+      <DataTable TItem="ExpiredInvitationDto" Items="_expired" StackWide="true" Caption="@InvitationText.ExpiredCaption">
         <HeaderRow>
-          <tr>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Institution</th>
-            <th>College</th>
-            <th>Speciality</th>
-            <th>Sub-speciality</th>
-            <th>Issued</th>
-            <th>Expires</th>
-            <th class="col-wrap">Delivery</th>
-            <th><span class="visually-hidden">Actions</span></th>
+          <tr role="row">
+            <th scope="col" role="columnheader">Invitee</th>
+            <th scope="col" role="columnheader">Role and scope</th>
+            <th scope="col" role="columnheader">Issued</th>
+            <th scope="col" role="columnheader">Last day</th>
+            <th scope="col" role="columnheader" class="col-actions"><span class="visually-hidden">Actions</span></th>
           </tr>
         </HeaderRow>
         <Row Context="invitation">
-          <tr>
-            <td>@invitation.Email</td>
-            <td>@invitation.TargetRole</td>
-            <td>@invitation.InstitutionName</td>
-            <td>@invitation.CollegeName</td>
-            <td>@invitation.SpecialityName</td>
-            <td>@invitation.SubSpecialityName</td>
-            <td>@invitation.IssuedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
-            <td>@invitation.ExpiresOn.ToString("yyyy-MM-dd")</td>
-            @* What became of the current link's mail (T283): sent, still being sent, or not delivered, when the mail worker
-               gave up on it or nothing was heard of it for an hour. After a second failure it says to check the address.
-               A row not delivered ends by saying that Resend retires the current link, which may have been shared another
-               way (T283 review). Resend names it, so a screen reader hears why the row offers it and what it does. *@
-            <td class="col-wrap">
-              @if (InvitationText.OffersResend(invitation))
-              {
-                <span id="@DeliveryId(invitation.Id)"><strong>@InvitationText.Delivery(invitation.Delivery)</strong>
-                  @InvitationText.CheckAddress(invitation) @InvitationText.ResendRetiresTheLink</span>
-              }
-              else
-              {
-                <span id="@DeliveryId(invitation.Id)" class="@(InvitationText.IsBeingSent(invitation) ? "muted" : null)">@InvitationText.Delivery(invitation.Delivery)</span>
-              }
+          @{
+            var issued = InvitationText.IssuedParts(invitation.IssuedOn);
+            var scope = ScopeLine(invitation);
+          }
+          <tr role="row" @key="invitation.Id">
+            <th scope="row" role="rowheader">@InvitationText.Address(invitation.Email)</th>
+            <td role="cell" data-label="Role and scope">
+              <span class="person-cell">@WombatRoleLabels.For(invitation.TargetRole)@if (scope is not null){@(" ")<span>@scope</span>}</span>
             </td>
-            <td>
+            <td role="cell" data-label="Issued" class="inv-when">@issued.Date<span>@issued.Time</span></td>
+            <td role="cell" data-label="Last day" class="inv-when">@InvitationText.Iso(invitation.ExpiresOn)</td>
+            <td role="cell" class="col-actions">
               <div class="actions-cell">
-                @* The one pressed stays enabled while it runs, and a second press sends nothing (T234 review). *@
-                @* T283: only on an invitation whose mail was not delivered. It emails a new link and retires the old one. *@
-                @if (InvitationText.OffersResend(invitation))
-                {
-                  <button type="button" class="btn btn-sm btn-outline" aria-label="@($"Resend {rowNames[invitation.Id]}")"
-                          aria-describedby="@DeliveryId(invitation.Id)"
-                          disabled="@(_saving || _revokingId is not null || (_resendingId is not null && _resendingId != invitation.Id))"
-                          aria-disabled="@InFlight.AriaDisabled(_resendingId == invitation.Id)"
-                          @onclick="() => ResendAsync(invitation.Id)">Resend</button>
-                }
-                @* T239: named by the invitation, "Revoke the Assessor invitation to a@example.test". *@
-                <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Revoke {rowNames[invitation.Id]}")"
-                        disabled="@(_saving || _resendingId is not null || (_revokingId is not null && _revokingId != invitation.Id))"
-                        aria-disabled="@InFlight.AriaDisabled(_revokingId == invitation.Id)"
-                        @onclick="() => RevokeAsync(invitation.Id)">Revoke</button>
+                <a class="btn btn-sm btn-outline" href="@OnboardingLinks.InviteFrom(invitation.Id)" @onclick="ClearLink"
+                   aria-label="@($"Invite again {invitation.Email} as {InvitationText.RoleWithScope(invitation.TargetRole, scope)}")"><Icon Name="user-plus" />Invite again</a>
               </div>
             </td>
           </tr>
         </Row>
       </DataTable>
-    </StatePanel>
-  </section>
-</div>
+    </section>
+  };
 
-}
+  private RenderFragment InviteAction => __builder =>
+  {
+    <a class="btn btn-primary" href="@OnboardingLinks.InviteAPerson" @onclick="ClearLink"><Icon Name="user-plus" />Invite a person</a>
+  };
 
-@code {
+  /// <summary>The header's action: once the list has loaded (L15), never with the T290 note (L17) or a failed read (L16).</summary>
+  private RenderFragment? HeaderAction => _traineeNote is null && !_loading && _loadError is null ? InviteAction : null;
+
+  /// <summary>A link a resend made, while it is shown (M5): cleared at the start of the next action, never restored.</summary>
+  private sealed record ShownLink(string Email, string Link, DateOnly ExpiresOn);
+
   private string? _traineeNote;
-
-  private string? Subtitle => _traineeNote is not null
-    ? null
-    : "Issue invitation-only onboarding links and review active invitations.";
-
-  private static readonly string[] _roles =
-  [
-    WombatRoles.CollegeAdmin,
-    WombatRoles.InstitutionalAdmin,
-    WombatRoles.SpecialityAdmin,
-    WombatRoles.SubSpecialityAdmin,
-    WombatRoles.Coordinator,
-    WombatRoles.CommitteeMember,
-    WombatRoles.Assessor,
-    WombatRoles.Trainee
-  ];
-
-  private InvitationFormModel _model = new();
-  private IReadOnlyList<InstitutionDto> _institutions = [];
-  private IReadOnlyList<CollegeDto> _colleges = [];
-  private IReadOnlyList<SpecialityDto> _specialities = [];
-  private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
-  private IReadOnlyList<ActiveInvitationDto> _invitations = [];
   private bool _isAdministrator;
-  private string? _statusMessage;
-  private string? _errorMessage;
-  private string? _lastIssuedRegistrationUrl;
+  private IReadOnlyList<ActiveInvitationDto> _invitations = [];
+  private IReadOnlyList<ExpiredInvitationDto> _expired = [];
   private bool _loading = true;
-  private bool _saving;
+  private string? _loadError;
 
-  /// <summary>The invitation whose revoke has been sent and has not answered, or null. (T234 review)</summary>
-  private int? _revokingId;
+  private ShownLink? _resent;
+  private ActiveInvitationDto? _revoked;
+  private string? _refusal;
+  private ActionResult? _result;
+
+  private ConfirmDialog? _revokeDialog;
+  private ActiveInvitationDto? _revoking;
 
   /// <summary>The invitation whose resend has been sent and has not answered, or null. (T283)</summary>
   private int? _resendingId;
 
-  /// <summary>A row's revoke or resend is in flight, so nothing else may be sent.</summary>
-  private bool RowActionRunning => _revokingId is not null || _resendingId is not null;
 
-  /// <summary>The id of a row's Delivery text, which its Resend names with <c>aria-describedby</c>. (T283)</summary>
+  private string ActiveCaption => _isAdministrator || _invitations.Count == 0
+    ? InvitationText.ActiveCaptionEverywhere
+    : InvitationText.ActiveCaptionAt(_invitations[0].InstitutionName);
+
+  /// <summary>The id of a row's Delivery word.</summary>
   private static string DeliveryId(int invitationId) => $"invitation-delivery-{invitationId}";
 
-  private ActionResult? _result;
+  /// <summary>The id of a row's note, which its Resend names with <c>aria-describedby</c> (L09).</summary>
+  private static string NoteId(int invitationId) => $"invitation-note-{invitationId}";
 
-  // Only a global Administrator may provision a CollegeAdmin (the handler enforces this too);
-  // hide the option from InstitutionalAdmins so they aren't offered a path that will be rejected. (T093)
-  private IEnumerable<string> AvailableRoles
-    => _isAdministrator ? _roles : _roles.Where(role => role != WombatRoles.CollegeAdmin);
+  private string? ScopeLine(ActiveInvitationDto row)
+    => InvitationText.ScopeLine(row.TargetRole, row.InstitutionName, row.CollegeName, row.SpecialityName, row.SubSpecialityName, _isAdministrator);
 
-  private bool IsCollegeAdminRole => _model.TargetRole == WombatRoles.CollegeAdmin;
-
-  private bool RequiresSpeciality
-    => _model.TargetRole is WombatRoles.SpecialityAdmin or WombatRoles.SubSpecialityAdmin or WombatRoles.Coordinator or WombatRoles.CommitteeMember or WombatRoles.Assessor or WombatRoles.Trainee;
-
-  private bool RequiresSubSpeciality
-    => _model.TargetRole is WombatRoles.SubSpecialityAdmin or WombatRoles.Assessor or WombatRoles.Trainee;
-
-  // Specialities are a national catalogue now (T091); not filtered by the selected institution.
-  private IEnumerable<SpecialityDto> FilteredSpecialities => _specialities;
-
-  private IEnumerable<SubSpecialityDto> FilteredSubSpecialities
-    => _subSpecialities.Where(entity => _model.SpecialityId.HasValue && entity.SpecialityId == _model.SpecialityId.Value);
+  private string? ScopeLine(ExpiredInvitationDto row)
+    => InvitationText.ScopeLine(row.TargetRole, row.InstitutionName, row.CollegeName, row.SpecialityName, row.SubSpecialityName, _isAdministrator);
 
   protected override async Task OnInitializedAsync()
   {
+    // M5: a navigation clears the link too, whatever started it.
+    Navigation.LocationChanged += OnLocationChanged;
+
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    // Asked before anything is read (M1), so the note says nothing about what there is.
+    _traineeNote = UserAdministrationRules.TraineeNoteOnUserPages(authState.User);
+    if (_traineeNote is not null)
+    {
+      _loading = false;
+      return;
+    }
+
+    _isAdministrator = authState.User.IsAdministrator();
     await LoadAsync();
   }
+
+  /// <summary>Reads both lists; a failure is logged and said in fixed words, with Try again (L16, T329).</summary>
+  private ValueTask FocusActiveAsync() => PageFocus.FocusByIdAsync(JS, "active-invitations-heading");
 
   private async Task LoadAsync()
   {
     _loading = true;
-    _errorMessage = null;
-
+    _loadError = null;
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _traineeNote = UserAdministrationRules.TraineeNoteOnUserPages(authState.User);
-      if (_traineeNote is not null)
-      {
-        return;
-      }
-
-      _isAdministrator = authState.User.IsInRole(WombatRoles.Administrator);
-      _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
-      _colleges = await Sender.Send(new GetCollegesListQuery(authState.User));
-      _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
-      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery(authState.User));
-      _invitations = await Sender.Send(new ListActiveInvitationsQuery(authState.User));
+      await ReadAsync();
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = RefusalText.Of(exception);
+      Logger.LogError(exception, "The invitations could not be read.");
+      _loadError = InvitationText.ListLoadFailed;
     }
     finally
     {
@@ -305,87 +304,47 @@ else
     }
   }
 
-  private async Task IssueAsync()
+  private async Task ReadAsync()
   {
-    if (_saving || RowActionRunning)
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    _invitations = await Sender.Send(new ListActiveInvitationsQuery(authState.User));
+    _expired = await Sender.Send(new ListExpiredUnusedInvitationsQuery(authState.User));
+  }
+
+  /// <summary>M5: the start of every action clears the link and what the last one said.</summary>
+  private void ClearLink()
+  {
+    _resent = null;
+    _revoked = null;
+    _refusal = null;
+  }
+
+  private void OnLocationChanged(object? sender, LocationChangedEventArgs args)
+  {
+    if (_resent is null)
     {
       return;
     }
 
-    _saving = true;
-    _errorMessage = null;
-    _statusMessage = null;
-
-    try
-    {
-      if (IsCollegeAdminRole)
-      {
-        // A CollegeAdmin is scoped to a college only.
-        _model.InstitutionId = null;
-        _model.SpecialityId = null;
-        _model.SubSpecialityId = null;
-      }
-      else
-      {
-        _model.CollegeId = null;
-        if (!RequiresSpeciality)
-        {
-          _model.SpecialityId = null;
-          _model.SubSpecialityId = null;
-        }
-        else if (!RequiresSubSpeciality)
-        {
-          _model.SubSpecialityId = null;
-        }
-      }
-
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var issuedByUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-        ?? throw new InvalidOperationException("The current user identifier is missing.");
-
-      var issued = await Sender.Send(new IssueInvitationCommand(
-        _model.Email,
-        _model.TargetRole,
-        _model.InstitutionId,
-        _model.CollegeId,
-        _model.SpecialityId,
-        _model.SubSpecialityId,
-        issuedByUserId,
-        authState.User));
-
-      _lastIssuedRegistrationUrl = InvitationLinks.RegistrationUrl(WombatOptionsAccessor.Value, issued.Token);
-      _statusMessage = InvitationText.Issued(_model.Email);
-      _model = new InvitationFormModel();
-      _invitations = await Sender.Send(new ListActiveInvitationsQuery(authState.User));
-      _result?.FocusAfterRender();
-    }
-    catch (Exception exception)
-    {
-      _errorMessage = RefusalText.Of(exception);
-    }
-    finally
-    {
-      _saving = false;
-    }
+    _resent = null;
+    _ = InvokeAsync(StateHasChanged);
   }
 
   /// <summary>
-  /// Emails a new link for an invitation whose mail was not delivered, and shows it, as an issue does: the old link no
-  /// longer works (T283). The list is read again whatever the answer, since a refusal is likeliest because the invitation
-  /// changed elsewhere (resent, used, revoked, or delivered after all). The result takes the focus once the resend is done,
-  /// and after a refusal that leaves the row no Resend; a refusal that leaves it keeps the focus on it, for the retry.
+  /// Emails a new link for an invitation whose mail was not delivered, and shows it once (T283; L10). The list is read again
+  /// whatever the answer, since a refusal is likeliest because the invitation changed elsewhere (resent, used, revoked, or
+  /// delivered after all). The result takes the focus once the resend is done, and after a refusal that leaves the row no
+  /// Resend; a refusal that leaves it keeps the focus on it, for the retry.
   /// </summary>
   private async Task ResendAsync(int invitationId)
   {
-    if (_saving || RowActionRunning)
+    if (_resendingId is not null)
     {
       return;
     }
 
+    ClearLink();
     _resendingId = invitationId;
-    _errorMessage = null;
-    _statusMessage = null;
-    _lastIssuedRegistrationUrl = null;
     var resent = false;
 
     try
@@ -396,20 +355,23 @@ else
       try
       {
         var issued = await Sender.Send(new ResendInvitationCommand(invitationId, authState.User));
-        _lastIssuedRegistrationUrl = InvitationLinks.RegistrationUrl(WombatOptionsAccessor.Value, issued.Token);
-        _statusMessage = InvitationText.Resent(email);
+        _resent = new ShownLink(
+          email ?? string.Empty,
+          InvitationLinks.RegistrationUrl(WombatOptionsAccessor.Value, issued.Token),
+          issued.ExpiresOn);
         resent = true;
       }
-      catch (Exception exception)
+      catch (Exception exception) when (exception is not OperationCanceledException)
       {
-        _errorMessage = RefusalText.Of(exception);
+        _refusal = RefusalOf(exception, "resent", invitationId);
       }
 
-      _invitations = await Sender.Send(new ListActiveInvitationsQuery(authState.User));
+      await ReadAsync();
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage ??= RefusalText.Of(exception);
+      Logger.LogError(exception, "The invitations could not be read again after a resend.");
+      _refusal ??= InvitationText.ActionFailed;
     }
     finally
     {
@@ -422,50 +384,55 @@ else
     }
   }
 
-  private async Task RevokeAsync(int invitationId)
+  /// <summary>Revoke… (T264): confirms first; the link a resend made is cleared as the dialog opens (M5).</summary>
+  private async Task OpenRevokeAsync(ActiveInvitationDto invitation)
   {
-    if (_saving || RowActionRunning)
+    ClearLink();
+    _revoking = invitation;
+    if (_revokeDialog is not null)
+    {
+      await _revokeDialog.ShowAsync();
+    }
+  }
+
+  /// <summary>
+  /// The dialog's Revoke invitation: the result (L07) names the address and offers to invite another as the same role and
+  /// scope; the list is read again. A refusal is shown in the result in its own words, anything else in fixed words, logged.
+  /// Either takes the focus once the dialog has closed.
+  /// </summary>
+  private async Task RevokeAsync()
+  {
+    if (_revoking is not { } revoking)
     {
       return;
     }
 
-    _revokingId = invitationId;
-    _errorMessage = null;
-    _statusMessage = null;
-
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      await Sender.Send(new RevokeInvitationCommand(invitationId, authState.User));
-      _statusMessage = "Invitation revoked.";
-      _invitations = await Sender.Send(new ListActiveInvitationsQuery(authState.User));
-      _result?.FocusAfterRender();
+      await Sender.Send(new RevokeInvitationCommand(revoking.Id, authState.User));
+      _revoked = revoking;
+      await ReadAsync();
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = RefusalText.Of(exception);
+      _refusal = RefusalOf(exception, "revoked", revoking.Id);
     }
-    finally
-    {
-      _revokingId = null;
-    }
+
+    _result?.FocusAfterRender();
   }
 
-  private sealed class InvitationFormModel
+  /// <summary>A refusal's own words (S9); anything else logged and said in fixed words, never the exception's (T329).</summary>
+  private string RefusalOf(Exception exception, string action, int invitationId)
   {
-    [Required]
-    [EmailAddress]
-    public string Email { get; set; } = string.Empty;
+    if (InvitationIssueRefusals.IsRefusal(exception))
+    {
+      return RefusalText.Of(exception);
+    }
 
-    [Required]
-    public string TargetRole { get; set; } = WombatRoles.InstitutionalAdmin;
-
-    // Institution (institution-scoped roles) vs College (CollegeAdmin) is validated server-side by
-    // InvitationRules.ValidateScope, which depends on the chosen role. (T093)
-    public int? InstitutionId { get; set; }
-    public int? CollegeId { get; set; }
-
-    public int? SpecialityId { get; set; }
-    public int? SubSpecialityId { get; set; }
+    Logger.LogError(exception, "Invitation {InvitationId} could not be {Action}.", invitationId, action);
+    return InvitationText.ActionFailed;
   }
+
+  public void Dispose() => Navigation.LocationChanged -= OnLocationChanged;
 }

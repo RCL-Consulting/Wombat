@@ -1,0 +1,509 @@
+@page "/admin/trainees/admit"
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@using System.Security.Claims
+@inject IScopedSender Sender
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject ILogger<AdmitRegistrar> Logger
+
+<PageTitle>@Heading · Wombat</PageTitle>
+
+@*
+  Admit ‹name› (T373, flow 11, M01–M15; Q5, Q17): a form page of its own, split from the trainee profile page, whose
+  admission branch it replaces. Under Trainees for the Institutional admin (the owner table); the Administrator, whose menu
+  has no Trainees, gets the trail Home › Trainees › Admit ‹name› explicitly, nothing lit (M04b). Who is being admitted,
+  then Programme: the curriculum adopted for the invited sub-speciality read out (F1; a select only for a registrar
+  invited to none, M14), Programme start with its Training year output (S18, T306), Expected completion, what admitting
+  does, and the actions. Admitted, the page goes to Trainees with ?admitted=‹profileId› (S8). Each refusal is the
+  admission's own, typed (S9): beside its field, or a result at the top, focused; an unknown, foreign or no longer waiting
+  registrar is the not-found panel (M08); anything else is logged and said in fixed words (T329).
+*@
+<PageHeader Title="@Heading" Subtitle="@Subtitle" Trail="@AdministratorTrail" Icon="@(_notFound ? "search" : null)" />
+
+@if (_traineeNote is not null)
+{
+  @* M1, check rule 2: the header and T290's note, asked before any read, so no name is shown. *@
+  <div class="inv-page">
+    <Alert Kind="info" Id="admit-trainee-note">@_traineeNote</Alert>
+  </div>
+}
+else if (_notFound)
+{
+  @* M08: not waiting, out of scope or unknown read alike, the system's not-found panel (S20). *@
+  <div class="system-panel">
+    <p>@AdmissionText.NotFoundBody</p>
+    <p class="muted">@AdmissionText.NotFoundNext</p>
+    <div class="actions-cell">
+      <a class="btn btn-primary" href="@OnboardingLinks.Trainees">@AdmissionText.GoToTrainees</a>
+    </div>
+  </div>
+}
+else
+{
+  <div class="@(_loading || _loadError is not null ? "inv-page" : "inv-page inv-page--form")" aria-busy="@(_loading ? "true" : null)">
+    @* A Try again that loads hands the focus to Who is being admitted (T373 fix pass, P2). *@
+    <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusWhoAsync">
+      <LoadingContent>
+        <p class="loading-line" role="status">@AdmissionText.AdmitLoading</p>
+        <div class="detail-card">
+          <div class="skeleton skel-title"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line skel-short"></div>
+        </div>
+      </LoadingContent>
+      <ChildContent>
+        @if (_candidate is { } candidate)
+        {
+          @if (candidate.Standing != AdmissionStanding.Ready)
+          {
+            @* M04, M04b, check rule 3: standing content, so a warning with no role (S22); no form. *@
+            <Alert Kind="warning" Role="">@Standing(candidate)</Alert>
+            <p><a class="btn btn-outline" href="@OnboardingLinks.Trainees">@AdmissionText.BackToTrainees</a></p>
+          }
+          else
+          {
+            <ActionResult @ref="_result" Id="admit-result">
+              @if (_refusal is not null)
+              {
+                <Alert Kind="danger" Role="alert">@_refusal</Alert>
+              }
+            </ActionResult>
+            @Who(candidate)
+            @Programme(candidate)
+          }
+        }
+      </ChildContent>
+    </StatePanel>
+  </div>
+}
+
+@code {
+  [SupplyParameterFromQuery(Name = "userId")]
+  public string? UserId { get; set; }
+
+  private const string CurriculumField = "admit-curriculum";
+  private const string StartField = "admit-start";
+  private const string EndField = "admit-end";
+
+  private static readonly IReadOnlyList<Crumb> TraineesCrumb = [new("Trainees", OnboardingLinks.Trainees)];
+
+  private string? _traineeNote;
+  private bool _isAdministrator;
+  private bool _loading = true;
+  private string? _loadError;
+  private bool _notFound;
+  private AdmissionCandidateDto? _candidate;
+  private AdmissionDatesDto? _dates;
+  private readonly AdmitForm _form = new();
+  private readonly Dictionary<string, string> _fieldErrors = new(StringComparer.Ordinal);
+  private RenderFragment? _refusal;
+  private ActionResult? _result;
+  private string? _focusField;
+
+  // The page became the not-found panel after an action (a refusal, or a retry): its heading, the h1, takes the focus
+  // (T373 fix pass, P3).
+  private bool _focusHeading;
+  private bool _admitting;
+
+  /// <summary>
+  /// The page's name (check rule 2): "Admit a registrar" until the registrar is read, and for the T290 note, so no name is
+  /// shown before a read the caller may not make; "Registrar not found" for M08; else "Admit ‹name›" (Q17).
+  /// </summary>
+  private string Heading => _notFound
+    ? AdmissionText.NotFoundHeading
+    : _candidate is { } candidate && _traineeNote is null
+      ? AdmissionText.Admit(candidate.FullName)
+      : AdmissionText.AdmitARegistrar;
+
+  private string? Subtitle => _traineeNote is null && !_notFound && _loadError is null ? AdmissionText.AdmitSubtitle : null;
+
+  /// <summary>M04b, the owner table: the Administrator's menu has no Trainees, so its crumb is given here, nothing lit.</summary>
+  private IReadOnlyList<Crumb>? AdministratorTrail => _isAdministrator ? TraineesCrumb : null;
+
+  private CurriculumChoiceDto? Chosen
+    => _candidate?.Curricula.FirstOrDefault(curriculum => curriculum.Id == _form.CurriculumId);
+
+  /// <summary>One curriculum to admit to, read out (F1, S18); a registrar invited to none chooses (M14).</summary>
+  private bool ReadsOut => _candidate is { HasInvitedScope: true, Curricula.Count: 1 };
+
+  private RenderFragment Who(AdmissionCandidateDto candidate) => __builder =>
+  {
+    <section class="detail-card" aria-labelledby="admit-who-heading">
+      <h2 id="admit-who-heading" class="dashboard-card-title">@AdmissionText.WhoHeading</h2>
+      <dl class="detail-list">
+        <dt>Email</dt>
+        <dd>@Address(candidate.Email)</dd>
+        <dt>Institution</dt>
+        <dd>@(candidate.InstitutionName ?? Dash)</dd>
+        <dt>Invited as</dt>
+        <dd>@(candidate.InvitedAs ?? Dash)</dd>
+        <dt>Registered</dt>
+        <dd>@(candidate.RegisteredOn is { } registered ? AdmissionText.Iso(registered) : Dash)</dd>
+      </dl>
+    </section>
+  };
+
+  private RenderFragment Programme(AdmissionCandidateDto candidate) => __builder =>
+  {
+    var chosen = Chosen;
+    var curriculumLabel = chosen is null ? null : $"{chosen.Name} ({chosen.Version})";
+    var completionEmpty = _form.ExpectedCompletion is null;
+    var derived = _dates?.DerivedCompletion;
+    var passed = completionEmpty && _dates is { DerivedHasPassed: true };
+    var endRefused = _fieldErrors.ContainsKey(EndField);
+    <EditForm Model="_form" OnSubmit="AdmitAsync" FormName="admit-registrar" class="form-container" novalidate
+              aria-labelledby="admit-programme-heading">
+      <h2 id="admit-programme-heading">@AdmissionText.ProgrammeHeading</h2>
+      <p class="field-help">@AdmissionText.RequiredMarkLine</p>
+
+      @if (ReadsOut)
+      {
+        <dl class="form-group">
+          <dt>Curriculum</dt>
+          <dd class="readonly-value">@curriculumLabel</dd>
+          <dd class="field-help">@AdmissionText.AdoptedFor(candidate.InstitutionName, candidate.InvitedAs)</dd>
+        </dl>
+      }
+      else
+      {
+        <div class="form-group">
+          <label for="@CurriculumField">Curriculum<span class="required-mark" aria-hidden="true"> *</span></label>
+          <select id="@CurriculumField" class="@InputClass(CurriculumField, "form-select")" aria-required="true"
+                  aria-invalid="@Invalid(CurriculumField)" aria-describedby="@DescribedBy(CurriculumField, $"{CurriculumField}-help")"
+                  @bind="_form.CurriculumId" @bind:after="OnDatesChangedAsync">
+            <option value="">@AdmissionText.ChooseCurriculum</option>
+            @foreach (var curriculum in candidate.Curricula)
+            {
+              <option value="@curriculum.Id">@($"{curriculum.Name} ({curriculum.Version})")</option>
+            }
+          </select>
+          <p id="@($"{CurriculumField}-help")" class="field-help">@AdmissionText.ChooseFromAdopted(candidate.InstitutionName)</p>
+          @FieldMessage(CurriculumField)
+        </div>
+      }
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="@StartField">Programme start<span class="required-mark" aria-hidden="true"> *</span></label>
+          <input id="@StartField" type="date" class="@InputClass(StartField, "form-control")" aria-required="true"
+                 aria-invalid="@Invalid(StartField)"
+                 aria-describedby="@DescribedBy(StartField, _dates is { StartsMoreThanFourYearsAgo: true } ? $"{StartField}-warning" : null)"
+                 @bind="_form.ProgrammeStart" @bind:format="yyyy-MM-dd" @bind:after="OnDatesChangedAsync" />
+          @if (_dates is { StartsMoreThanFourYearsAgo: true })
+          {
+            @* M07: a warning, never a refusal; standing text, so no role. *@
+            <p id="@($"{StartField}-warning")" class="field-warning">@AdmissionText.StartLongAgo</p>
+          }
+          @FieldMessage(StartField)
+        </div>
+        <div class="form-group">
+          @* S18: the training year is an output of the start, read out, not a field (T306's admission half). *@
+          <label for="admit-training-year">Training year</label>
+          <output id="admit-training-year" for="@StartField" class="ty-output" aria-live="polite">@TrainingYearText</output>
+          <p class="field-help">@AdmissionText.TrainingYearHelp(_dates?.Today ?? candidate.Today)</p>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="@EndField">Expected completion</label>
+          <input id="@EndField" type="date" class="@InputClass(EndField, "form-control")"
+                 aria-invalid="@Invalid(EndField)" aria-describedby="@DescribedBy(EndField, $"{EndField}-help")"
+                 @bind="_form.ExpectedCompletion" @bind:format="yyyy-MM-dd" @bind:after="OnCompletionChanged" />
+          @* F4, check rule 7: one sentence for the hint and the refusal, shown once: the hint until Admit is refused, then
+             the field's message, the help back to its first words. *@
+          <p id="@($"{EndField}-help")" class="field-help">@(passed && !endRefused && derived is { } gone
+            ? TraineeAdmissionRefusals.CompletionPassed(gone)
+            : completionEmpty && derived is { } date && !passed
+              ? $"{AdmissionText.CompletionHelp} {AdmissionText.LeftEmpty(date)}"
+              : AdmissionText.CompletionHelp)</p>
+          @FieldMessage(EndField)
+        </div>
+      </div>
+
+      @* What admitting does (M01, M06's variant): the system's check line (.submit-check), its three lines a list. *@
+      <div class="submit-check">
+        <strong>@AdmissionText.Lead</strong>
+        <ul>
+          @foreach (var line in AdmissionText.WhenYouAdmit(candidate.FullName, curriculumLabel, _dates?.TrainingYear, _form.ProgrammeStart ?? candidate.Today))
+          {
+            <li>@line</li>
+          }
+        </ul>
+      </div>
+
+      <FormActions>
+        <a class="btn btn-outline" href="@OnboardingLinks.BackFromAdmit(candidate.UserId)">Cancel</a>
+        @* Not disabled while it runs (T234): a second press sends nothing (AdmitAsync). *@
+        <button type="submit" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_admitting)">@AdmissionText.Admit(candidate.FullName)</button>
+      </FormActions>
+    </EditForm>
+  };
+
+  private string TrainingYearText => _form.ProgrammeStart is { } start
+    ? AdmissionText.TrainingYearOutput(_dates?.TrainingYear, start)
+    : string.Empty;
+
+  private RenderFragment Standing(AdmissionCandidateDto candidate) => __builder =>
+  {
+    switch (candidate.Standing)
+    {
+      case AdmissionStanding.NoInstitution:
+        @TraineeAdmissionRefusals.NoInstitution
+        break;
+      case AdmissionStanding.NothingAdoptedForInvitedScope:
+        @AdmissionText.NothingAdoptedForScope(candidate.InstitutionName, candidate.InvitedAs, candidate.FullName)
+        break;
+      default:
+        @AdmissionText.NothingAdoptedAtAllBefore<a href="@OnboardingLinks.CurriculumAdoptions">@AdmissionText.NothingAdoptedAtAllLink</a>@AdmissionText.NothingAdoptedAtAllAfter
+        break;
+    }
+  };
+
+  private RenderFragment FieldMessage(string fieldId) => __builder =>
+  {
+    if (_fieldErrors.TryGetValue(fieldId, out var message))
+    {
+      <p id="@($"{fieldId}-error")" class="validation-message">@message</p>
+    }
+  };
+
+  private string? Invalid(string fieldId) => _fieldErrors.ContainsKey(fieldId) ? "true" : null;
+
+  private string InputClass(string fieldId, string baseClass) => _fieldErrors.ContainsKey(fieldId) ? $"{baseClass} input-validation-error" : baseClass;
+
+  private string? DescribedBy(string fieldId, string? helpId)
+  {
+    var ids = new[] { helpId, _fieldErrors.ContainsKey(fieldId) ? $"{fieldId}-error" : null }.Where(id => id is not null);
+    var joined = string.Join(" ", ids);
+    return joined.Length == 0 ? null : joined;
+  }
+
+  private const string Dash = "—";
+
+  /// <summary>M7: an address breaks after its @, in markup, never in the stored string.</summary>
+  private static RenderFragment Address(string email) => __builder =>
+  {
+    var at = email.IndexOf('@');
+    if (at > 0)
+    {
+      @(email[..(at + 1)])<wbr />@(email[(at + 1)..])
+    }
+    else
+    {
+      @email
+    }
+  };
+
+  protected override async Task OnInitializedAsync()
+  {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    _traineeNote = TraineeAdministrationRules.TraineeNoteOnTraineePages(authState.User);
+    _isAdministrator = authState.User.IsAdministrator();
+    if (_traineeNote is not null)
+    {
+      _loading = false;
+      return;
+    }
+
+    await LoadAsync(authState.User);
+  }
+
+  private async Task LoadAsync(ClaimsPrincipal user)
+  {
+    _loading = true;
+    _loadError = null;
+    try
+    {
+      _candidate = string.IsNullOrWhiteSpace(UserId) ? null : await Sender.Send(new GetAdmissionCandidateQuery(UserId, user));
+      _notFound = _candidate is null;
+      if (_candidate is { Standing: AdmissionStanding.Ready } candidate)
+      {
+        _form.CurriculumId = ReadsOut ? candidate.Curricula[0].Id : null;
+        _form.ProgrammeStart ??= candidate.Today;
+        _dates = await Sender.Send(new GetAdmissionDatesQuery(candidate.UserId, _form.CurriculumId, _form.ProgrammeStart.Value, user));
+      }
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // M10, T329: a fixed sentence and Try again; the failure to the log, never its text on the page.
+      Logger.LogError(exception, "The registrar {UserId} could not be loaded for admission.", UserId);
+      _candidate = null;
+      _loadError = AdmissionText.AdmitLoadFailed;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private async Task RetryAsync()
+  {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    await LoadAsync(authState.User);
+
+    // The panel replaces the StatePanel, which can then hand the focus to nothing.
+    _focusHeading = _notFound;
+  }
+
+  private ValueTask FocusWhoAsync() => PageFocus.FocusByIdAsync(JS, "admit-who-heading");
+
+  /// <summary>The training year and the derived completion follow the start and the curriculum as they change (M02, M03).</summary>
+  private async Task OnDatesChangedAsync()
+  {
+    _fieldErrors.Remove(EndField);
+    if (_form.ProgrammeStart is not { } start)
+    {
+      _dates = null;
+      return;
+    }
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _dates = await Sender.Send(new GetAdmissionDatesQuery(_candidate?.UserId ?? string.Empty, _form.CurriculumId, start, authState.User));
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // The output and the hint say nothing rather than something stale; Admit still judges the dates itself.
+      Logger.LogWarning(exception, "The admission dates could not be read.");
+      _dates = null;
+    }
+  }
+
+  private void OnCompletionChanged() => _fieldErrors.Remove(EndField);
+
+  private async Task AdmitAsync()
+  {
+    if (_candidate is null || _admitting)
+    {
+      return;
+    }
+
+    _refusal = null;
+    _fieldErrors.Clear();
+
+    // The page's own checks, in Wombat's words (T324), each beside its field with the focus on it.
+    if (_form.CurriculumId is null)
+    {
+      _fieldErrors[CurriculumField] = AdmissionText.ChooseCurriculumRefusal;
+    }
+
+    if (_form.ProgrammeStart is null)
+    {
+      _fieldErrors[StartField] = AdmissionText.StartRequired;
+    }
+
+    if (_fieldErrors.Count > 0)
+    {
+      _focusField = _fieldErrors.ContainsKey(CurriculumField) ? CurriculumField : StartField;
+      return;
+    }
+
+    _admitting = true;
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var admitted = await Sender.Send(new AdmitTraineeCommand(
+        _candidate.UserId,
+        _form.CurriculumId!.Value,
+        _form.ProgrammeStart!.Value,
+        _form.ExpectedCompletion,
+        authState.User));
+
+      // S8: the result is Trainees', read again there in scope; the address carries the id alone.
+      Navigation.NavigateTo(OnboardingLinks.Admitted(admitted.Id));
+    }
+    catch (TraineeAdmissionRefusedException refusal)
+    {
+      Refused(refusal);
+    }
+    catch (Exception exception) when (TraineeAdmissionRefusals.IsRefusal(exception))
+    {
+      _refusal = NotAdmitted(RefusalText.Of(exception));
+      _result?.FocusAfterRender();
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException and not NavigationException)
+    {
+      // S9: any other fault is logged and said in fixed words, never its text.
+      Logger.LogError(exception, "The registrar {UserId} could not be admitted.", _candidate.UserId);
+      _refusal = NotAdmitted(AdmissionText.AdmitFailed);
+      _result?.FocusAfterRender();
+    }
+    finally
+    {
+      _admitting = false;
+    }
+  }
+
+  /// <summary>Maps the admission's typed refusal to the board's words and place (S9).</summary>
+  private void Refused(TraineeAdmissionRefusedException refusal)
+  {
+    var name = _candidate!.FullName;
+    var userId = _candidate.UserId;
+    switch (refusal.Reason)
+    {
+      case TraineeAdmissionRefusal.NotPending:
+        // M08: no longer waiting, or no longer in scope: the page is the not-found panel, the focus on its heading (P3).
+        // The panel, not a danger Alert over the form: it is what the board draws for a registrar no longer waiting, and
+        // the form's Admit could only be refused again.
+        _candidate = null;
+        _notFound = true;
+        _focusHeading = true;
+        return;
+      case TraineeAdmissionRefusal.CompletionPassed:
+        // F4, M15: beside Expected completion, the focus on it.
+        _fieldErrors[EndField] = refusal.Message;
+        _focusField = EndField;
+        return;
+      case TraineeAdmissionRefusal.AlreadyAdmitted:
+        // M09: a second Admit from a stale tab.
+        _refusal = __builder =>
+        {
+          <strong>@AdmissionText.NotAdmitted</strong>@(" ")@AdmissionText.AlreadyAdmitted(name)@(" ")<a href="@OnboardingLinks.Trainees">@AdmissionText.OpenTrainees</a>
+        };
+        break;
+      case TraineeAdmissionRefusal.Deactivated:
+        // M13, S6.
+        _refusal = __builder =>
+        {
+          <strong>@AdmissionText.NotAdmitted</strong>@(" ")@AdmissionText.DeactivatedBefore(name)<a href="@OnboardingLinks.User(userId)">@AdmissionText.DeactivatedLink</a>@AdmissionText.DeactivatedAfter
+        };
+        break;
+      default:
+        _refusal = NotAdmitted(refusal.Message);
+        break;
+    }
+
+    _result?.FocusAfterRender();
+  }
+
+  private static RenderFragment NotAdmitted(string text) => __builder =>
+  {
+    <strong>@AdmissionText.NotAdmitted</strong>@(" ")@text
+  };
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusHeading)
+    {
+      _focusHeading = false;
+      await PageFocus.FocusHeadingAsync(JS);
+    }
+
+    if (_focusField is { } field)
+    {
+      _focusField = null;
+      await PageFocus.FocusByIdAsync(JS, field);
+    }
+  }
+
+  private sealed class AdmitForm
+  {
+    public int? CurriculumId { get; set; }
+    public DateOnly? ProgrammeStart { get; set; }
+    public DateOnly? ExpectedCompletion { get; set; }
+  }
+}

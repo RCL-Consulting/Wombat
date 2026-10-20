@@ -8,6 +8,7 @@ using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.Trainees;
 
@@ -23,7 +24,7 @@ public sealed class AdmitTraineeCommandHandlerTests
         await using var dbContext = new ApplicationDbContext(options);
         SeedCurriculum(dbContext);
 
-        var userAdministrationService = new Mock<IUserAdministrationService>();
+        var userAdministrationService = new Mock<IUserAdministrationService>().RunsTransactions();
         userAdministrationService
             .Setup(service => service.GetByIdAsync("user-1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new UserIdentityDetails(
@@ -36,7 +37,7 @@ public sealed class AdmitTraineeCommandHandlerTests
                 [1000],
                 [WombatRoles.PendingTrainee]));
 
-        var handler = new AdmitTraineeCommandHandler(dbContext, userAdministrationService.Object);
+        var handler = new AdmitTraineeCommandHandler(dbContext, userAdministrationService.Object, TestNotices.None(userAdministrationService.Object));
 
         var result = await handler.Handle(
             new AdmitTraineeCommand(
@@ -56,7 +57,9 @@ public sealed class AdmitTraineeCommandHandlerTests
         profile.CurriculumId.Should().Be(3000);
         profile.IsActive.Should().BeTrue();
 
-        userAdministrationService.Verify(service => service.UpdateScopeAsync("user-1", 10, It.Is<IReadOnlyCollection<int>>(ids => ids.SequenceEqual(new[] { 100 })), It.Is<IReadOnlyCollection<int>>(ids => ids.SequenceEqual(new[] { 1000 })), It.IsAny<CancellationToken>()), Times.Once);
+        // T373 (F1): the invited scope is kept, so the admission writes none. Until T373 it rewrote the scope to the chosen
+        // curriculum's discipline, which this test asserted (UpdateScopeAsync once with [100], [1000]).
+        userAdministrationService.Verify(service => service.UpdateScopeAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()), Times.Never);
         userAdministrationService.Verify(service => service.PromotePendingTraineeAsync("user-1", It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -70,7 +73,7 @@ public sealed class AdmitTraineeCommandHandlerTests
         await using var dbContext = new ApplicationDbContext(options);
         SeedCurriculum(dbContext);
 
-        var userAdministrationService = new Mock<IUserAdministrationService>();
+        var userAdministrationService = new Mock<IUserAdministrationService>().RunsTransactions();
         userAdministrationService
             .Setup(service => service.GetByIdAsync("user-2", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new UserIdentityDetails(
@@ -83,7 +86,7 @@ public sealed class AdmitTraineeCommandHandlerTests
                 [1000],
                 [WombatRoles.Trainee]));
 
-        var handler = new AdmitTraineeCommandHandler(dbContext, userAdministrationService.Object);
+        var handler = new AdmitTraineeCommandHandler(dbContext, userAdministrationService.Object, TestNotices.None(userAdministrationService.Object));
 
         var act = () => handler.Handle(
             new AdmitTraineeCommand(
@@ -94,8 +97,10 @@ public sealed class AdmitTraineeCommandHandlerTests
                 TestPrincipals.Administrator()),
             CancellationToken.None);
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("Only users in the PendingTrainee role can be admitted.");
+        // T373 (S9): a typed refusal, one reason for not waiting, out of scope and unknown (M08). Until T373: "Only users in
+        // the PendingTrainee role can be admitted."
+        (await act.Should().ThrowAsync<TraineeAdmissionRefusedException>())
+            .Which.Reason.Should().Be(TraineeAdmissionRefusal.NotPending);
 
         dbContext.TraineeProfiles.Should().BeEmpty();
         userAdministrationService.Verify(service => service.PromotePendingTraineeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -123,7 +128,7 @@ public sealed class AdmitTraineeCommandHandlerTests
                 "user-3", "sso@example.test", "Mapped", "Registrar", 10, [], [],
                 [WombatRoles.PendingTrainee, WombatRoles.Trainee]));
 
-        var handler = new AdmitTraineeCommandHandler(dbContext, userAdministrationService.Object);
+        var handler = new AdmitTraineeCommandHandler(dbContext, userAdministrationService.Object, TestNotices.None(userAdministrationService.Object));
 
         foreach (var caller in new[] { TestPrincipals.Administrator(), TestPrincipals.InstitutionalAdmin(10) })
         {
@@ -209,13 +214,13 @@ public sealed class AdmitTraineeCommandHandlerTests
         await using var dbContext = new ApplicationDbContext(options);
         SeedCurriculum(dbContext);
 
-        var userAdministrationService = new Mock<IUserAdministrationService>();
+        var userAdministrationService = new Mock<IUserAdministrationService>().RunsTransactions();
         userAdministrationService
             .Setup(service => service.GetByIdAsync("user-1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new UserIdentityDetails(
                 "user-1", "trainee@example.test", "Pending", "Trainee", 10, [100], [1000], [WombatRoles.PendingTrainee]));
 
-        var handler = new AdmitTraineeCommandHandler(dbContext, userAdministrationService.Object);
+        var handler = new AdmitTraineeCommandHandler(dbContext, userAdministrationService.Object, TestNotices.None(userAdministrationService.Object));
 
         await handler.Handle(
             new AdmitTraineeCommand("user-1", 3000, new DateOnly(2026, 1, 15), null, TestPrincipals.Administrator()),
@@ -239,14 +244,14 @@ public sealed class AdmitTraineeCommandHandlerTests
         await using var dbContext = new ApplicationDbContext(options);
         SeedCurriculum(dbContext);
 
-        var userAdministrationService = new Mock<IUserAdministrationService>();
+        var userAdministrationService = new Mock<IUserAdministrationService>().RunsTransactions();
         userAdministrationService
             .Setup(service => service.GetByIdAsync("user-1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new UserIdentityDetails(
                 "user-1", "trainee@example.test", "Pending", "Trainee", 10, [100], [1000], [WombatRoles.PendingTrainee]));
 
         var clock = new FixedClock(new DateTimeOffset(2026, 10, 4, 22, 30, 0, TimeSpan.Zero));
-        var handler = new AdmitTraineeCommandHandler(dbContext, userAdministrationService.Object, clock);
+        var handler = new AdmitTraineeCommandHandler(dbContext, userAdministrationService.Object, TestNotices.None(userAdministrationService.Object), clock);
 
         await handler.Handle(
             new AdmitTraineeCommand("user-1", 3000, new DateOnly(2026, 1, 15), null, TestPrincipals.Administrator()),
@@ -271,20 +276,21 @@ public sealed class AdmitTraineeCommandHandlerTests
         dbContext.Set<InstitutionCurriculumAdoption>().RemoveRange(dbContext.Set<InstitutionCurriculumAdoption>());
         dbContext.SaveChanges();
 
-        var userAdministrationService = new Mock<IUserAdministrationService>();
+        var userAdministrationService = new Mock<IUserAdministrationService>().RunsTransactions();
         userAdministrationService
             .Setup(service => service.GetByIdAsync("user-1", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new UserIdentityDetails(
                 "user-1", "trainee@example.test", "Pending", "Trainee", 10, [100], [1000], [WombatRoles.PendingTrainee]));
 
-        var handler = new AdmitTraineeCommandHandler(dbContext, userAdministrationService.Object);
+        var handler = new AdmitTraineeCommandHandler(dbContext, userAdministrationService.Object, TestNotices.None(userAdministrationService.Object));
 
         var act = () => handler.Handle(
             new AdmitTraineeCommand("user-1", 3000, new DateOnly(2026, 1, 15), null, TestPrincipals.Administrator()),
             CancellationToken.None);
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*not adopted a curriculum*");
+        // T373 (S9, M04): a typed refusal. Until T373: "This institution has not adopted a curriculum for this discipline. …"
+        (await act.Should().ThrowAsync<TraineeAdmissionRefusedException>())
+            .Which.Reason.Should().Be(TraineeAdmissionRefusal.NothingAdopted);
         dbContext.TraineeProfiles.Should().BeEmpty();
     }
 

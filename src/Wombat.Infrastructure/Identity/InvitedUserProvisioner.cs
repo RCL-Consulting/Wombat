@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Invitations;
 using Wombat.Domain.Identity;
@@ -120,6 +121,16 @@ public sealed class InvitedUserProvisioner : IInvitedUserProvisioner
         await _dbContext.SaveChangesAsync(cancellationToken);
         return new ProvisionedInvitationUser(user.Id, assignedRole);
     }
+
+    /// <summary>
+    /// The Identity store shares this context (<c>AddEntityFrameworkStores&lt;ApplicationDbContext&gt;</c>), so the user,
+    /// role and scope rows <see cref="ProvisionAsync" /> writes and the accept's own save are one transaction here
+    /// (T373, flow 11, F10). Until T373 each was saved on its own: a fault after the account was created left an account
+    /// whose invitation was still unused, and the page said nothing was saved. A provider with no transactions (the
+    /// in-memory one the unit tests use) runs the work as it is.
+    /// </summary>
+    public Task<T> InOneTransactionAsync<T>(Func<CancellationToken, Task<T>> work, CancellationToken cancellationToken = default)
+        => IdentityTransaction.RunAsync(_dbContext, work, cancellationToken);
 
     /// <summary>What Identity's refusal of an account says about its address; <see cref="InvitedAddressStatus.Available" /> when nothing.</summary>
     private static InvitedAddressStatus StatusOf(IReadOnlyCollection<string> codes)

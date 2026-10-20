@@ -203,9 +203,14 @@ public sealed class TraineeRoleSystemManagedPostgresTests : IAsyncLifetime
             }
 
             // The control: the same InstitutionalAdmin admits a plain pending registrar into the same curriculum, through
-            // the same real store and pipeline.
-            (await AdmitAsync(root, new AdmitTraineeCommand(PendingRegistrar, curriculumId, new DateOnly(2026, 1, 15), null, callers[1])))
+            // the same real store and pipeline. Its completion is given: an empty one derived from 2026-01-15 passes on
+            // 2027-01-15, and is then refused (T373, F4).
+            var mail = new List<Wombat.Application.Common.Email.EmailMessage>();
+            (await AdmitAsync(root, new AdmitTraineeCommand(PendingRegistrar, curriculumId, new DateOnly(2026, 1, 15), new DateOnly(2029, 1, 14), callers[1]), mail))
                 .Should().BeNull();
+
+            // T373 (Q7): one mail, after the commit, to the registrar's address, in the admission's words.
+            mail.Should().ContainSingle().Which.Subject.Should().Be("You are admitted in Wombat");
 
             await using (var read = root.CreateAsyncScope())
             {
@@ -215,6 +220,99 @@ public sealed class TraineeRoleSystemManagedPostgresTests : IAsyncLifetime
                 profile.UserId.Should().Be(PendingRegistrar);
                 profile.AdoptionId.Should().Be(adoptionId);
                 (await db.AuditEntries.AsNoTracking().CountAsync(entry => entry.Success)).Should().Be(1);
+            }
+        }
+        finally
+        {
+            await _schemas.DropAllAsync();
+        }
+    }
+
+    /// <summary>
+    /// T373 fix pass, B2: the profile, the scope and the role swap are one transaction, as F10's accept is. The promotion
+    /// fails after PendingTrainee is taken away (here the Trainee role row does not exist yet, so Identity refuses the
+    /// add): nothing of the admission stays, the registrar is still pending with no profile and no scope, and no mail is
+    /// sent. Once the role exists, the same admission is done. Until the fix the profile and the scope were committed, and
+    /// the registrar held no role at all, while a retry was refused as already admitted.
+    /// </summary>
+    [Fact]
+    public async Task OnPostgres_AFaultInTheRoleSwap_LeavesTheRegistrarPending_WithNothingSaved_AndARetryAdmits()
+    {
+        var schema = await _schemas.CreateAsync();
+
+        try
+        {
+            await using var root = await MigratedServicesAsync(schema);
+
+            int institutionId, curriculumId;
+            await using (var arrange = root.CreateAsyncScope())
+            {
+                var db = arrange.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var institution = new Institution { Name = "A", ShortCode = "A", IsActive = true, CreatedOn = DateTime.UtcNow };
+                var college = new College { Name = "CMSA", ShortCode = "CMSA", IsActive = true };
+                var paediatrics = new Speciality { College = college, Name = "Paediatrics", IsActive = true };
+                var curriculum = new Curriculum
+                {
+                    SubSpeciality = new SubSpeciality { Speciality = paediatrics, Name = "General Paediatrics", IsActive = true },
+                    Name = "General Paediatrics",
+                    Version = "1",
+                    EffectiveFrom = new DateOnly(2024, 1, 1)
+                };
+                db.AddRange(institution, college, paediatrics, curriculum);
+                await db.SaveChangesAsync();
+
+                db.Add(new InstitutionCurriculumAdoption
+                {
+                    InstitutionId = institution.Id,
+                    CurriculumId = curriculum.Id,
+                    SubSpecialityId = curriculum.SubSpecialityId,
+                    AdoptedOn = new DateOnly(2024, 1, 1),
+                    IsActive = true
+                });
+
+                // Invited to no sub-speciality, so the admission also writes the scope (F1). No one holds Trainee, so its
+                // role row does not exist: Identity refuses the add after the remove has run.
+                NomineeSeed.AddUser(db, PendingRegistrar, institution.Id, WombatRoles.PendingTrainee);
+                await db.SaveChangesAsync();
+
+                (await db.Roles.AsNoTracking().AnyAsync(role => role.Name == WombatRoles.Trainee)).Should().BeFalse("guard");
+                (institutionId, curriculumId) = (institution.Id, curriculum.Id);
+            }
+
+            var caller = Caller(InstitutionalAdmin, institutionId, WombatRoles.InstitutionalAdmin);
+            var command = new AdmitTraineeCommand(PendingRegistrar, curriculumId, new DateOnly(2026, 1, 15), new DateOnly(2029, 1, 14), caller);
+            var mail = new List<Wombat.Application.Common.Email.EmailMessage>();
+
+            (await AdmitAsync(root, command, mail)).Should().NotBeNull("guard: the role swap failed");
+
+            await using (var read = root.CreateAsyncScope())
+            {
+                var db = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                (await RolesOf(db, PendingRegistrar)).Should().BeEquivalentTo([WombatRoles.PendingTrainee], "the remove was rolled back");
+                (await db.TraineeProfiles.AsNoTracking().AnyAsync()).Should().BeFalse("the profile was rolled back");
+                (await db.UserSubSpecialityScopes.AsNoTracking().AnyAsync(scope => scope.UserId == PendingRegistrar)).Should().BeFalse();
+                (await db.UserSpecialityScopes.AsNoTracking().AnyAsync(scope => scope.UserId == PendingRegistrar)).Should().BeFalse();
+                (await db.AuditEntries.AsNoTracking().ToListAsync()).Should().ContainSingle().Which.Success.Should().BeFalse();
+            }
+
+            mail.Should().BeEmpty("a failed admission mails nobody");
+
+            await using (var repair = root.CreateAsyncScope())
+            {
+                var db = repair.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                db.Roles.Add(new IdentityRole(WombatRoles.Trainee) { NormalizedName = WombatRoles.Trainee.ToUpperInvariant() });
+                await db.SaveChangesAsync();
+            }
+
+            (await AdmitAsync(root, command, mail)).Should().BeNull("the retry admits");
+            mail.Should().ContainSingle();
+
+            await using (var read = root.CreateAsyncScope())
+            {
+                var db = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                (await RolesOf(db, PendingRegistrar)).Should().BeEquivalentTo([WombatRoles.Trainee]);
+                (await db.TraineeProfiles.AsNoTracking().SingleAsync()).UserId.Should().Be(PendingRegistrar);
+                (await db.UserSubSpecialityScopes.AsNoTracking().CountAsync(scope => scope.UserId == PendingRegistrar)).Should().Be(1);
             }
         }
         finally
@@ -235,23 +333,30 @@ public sealed class TraineeRoleSystemManagedPostgresTests : IAsyncLifetime
     /// Runs one admission as <see cref="RunAsync{TCommand}" /> runs a role command: its own request scope, the real audit
     /// pipeline, and the real store on the request's context. Returns the refusal's words, or null when it was done.
     /// </summary>
-    private static async Task<string?> AdmitAsync(ServiceProvider root, AdmitTraineeCommand command)
+    private static async Task<string?> AdmitAsync(ServiceProvider root, AdmitTraineeCommand command, List<Wombat.Application.Common.Email.EmailMessage>? mail = null)
     {
         await using var request = root.CreateAsyncScope();
         var db = request.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var users = new UserAdministrationService(request.ServiceProvider.GetRequiredService<UserManager<WombatIdentityUser>>(), db);
 
+        // T373 (Q7): the admission's mail, on the stub sender, handed to a caller that asks for it.
+        var notices = new TestNotices(users);
+
         try
         {
             await new AuditPipelineBehavior<AdmitTraineeCommand, TraineeProfileDto>(new AuditWriter(db), new FixedAuditContext()).Handle(
                 command,
-                () => new AdmitTraineeCommandHandler(db, users).Handle(command, CancellationToken.None),
+                () => new AdmitTraineeCommandHandler(db, users, notices.Notices).Handle(command, CancellationToken.None),
                 CancellationToken.None);
             return null;
         }
         catch (InvalidOperationException refusal)
         {
             return refusal.Message;
+        }
+        finally
+        {
+            mail?.AddRange(notices.Sender.Sent);
         }
     }
 

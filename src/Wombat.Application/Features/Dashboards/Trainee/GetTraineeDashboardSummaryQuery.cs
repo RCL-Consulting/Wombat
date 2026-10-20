@@ -1,10 +1,13 @@
 using System.Security.Claims;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Queries.ListNeedsYou;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Application.Features.EntrustmentDecisions;
+using Wombat.Application.Features.Trainees;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.Dashboards.Trainee;
@@ -61,7 +64,10 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
 
         if (isPending)
         {
-            return new TraineeDashboardSummaryDto(null, [], [], null, IsPendingTrainee: true);
+            return new TraineeDashboardSummaryDto(null, [], [], null, IsPendingTrainee: true)
+            {
+                Pending = await PendingAdmissionReader.ReadAsync(_dbContext, _users, userId, cancellationToken)
+            };
         }
 
         var today = QuotaCalendar.Today(_clock);
@@ -99,4 +105,69 @@ public sealed class GetTraineeDashboardSummaryQueryHandler
 
     public static int? ComputeTraineeStage(DateOnly programmeStart, DateOnly today)
         => new TraineeProfile { ProgrammeStartDate = programmeStart }.GetStage(today);
+}
+
+/// <summary>
+/// The pending registrar's wait card (T373, flow 11, P01–P07; build-contracts § 3): her own account, read by her id, and
+/// the facts beside it. Read inside Home's one read, so a failure is Home's one load error (P09).
+/// </summary>
+internal static class PendingAdmissionReader
+{
+    public static async Task<PendingAdmissionDto?> ReadAsync(
+        IApplicationDbContext dbContext,
+        IUserAdministrationService users,
+        string userId,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(userId) || await users.GetByIdAsync(userId, cancellationToken) is not { } user)
+        {
+            return null;
+        }
+
+        var names = await RegistrarFacts.ScopeNamesAsync(dbContext, [user], cancellationToken);
+        var (speciality, subSpeciality) = names.Of(user);
+        var institutionName = user.InstitutionId is { } institutionId ? names.Institutions.GetValueOrDefault(institutionId) : null;
+
+        // M2: the curriculum adopted at her institution for her invited sub-speciality; none when none is, and none with no
+        // invited scope (S5), whose Programme line is not shown at all.
+        string? curriculumName = null;
+        string? curriculumVersion = null;
+        if (user.InstitutionId is { } at && AdmissionCurricula.HasInvitedScope(user))
+        {
+            var curriculum = await AdmissionCurricula.Offered(dbContext, at, user)
+                .AsNoTracking()
+                .OrderBy(entity => entity.Name)
+                .ThenBy(entity => entity.Version)
+                .Select(entity => new { entity.Name, entity.Version })
+                .FirstOrDefaultAsync(cancellationToken);
+            curriculumName = curriculum?.Name;
+            curriculumVersion = curriculum?.Version;
+        }
+
+        // F3, check rule 7: who invited her, only when the invitation she registered from was issued as an Institutional
+        // admin and its issuer is still an account that signs in; the day it was issued (after a resend, the current
+        // link's, F2), never the day she registered. An Administrator's issue names nobody: she cannot ask them.
+        string? invitedByName = null;
+        DateOnly? invitedOn = null;
+        var used = await RegistrarFacts.UsedInvitationAsync(dbContext, user.Email, cancellationToken);
+        if (used is not null
+            && string.Equals(used.IssuedAsRole, WombatRoles.InstitutionalAdmin, StringComparison.Ordinal)
+            && !string.IsNullOrWhiteSpace(used.IssuedByUserId)
+            && await users.GetByIdAsync(used.IssuedByUserId, cancellationToken) is { IsDeactivated: false } issuer
+            && $"{issuer.FirstName} {issuer.LastName}".Trim() is { Length: > 0 } issuerName)
+        {
+            invitedByName = issuerName;
+            invitedOn = ProgrammeCalendar.DateOf(used.IssuedOn);
+        }
+
+        return new PendingAdmissionDto(
+            user.Email,
+            institutionName,
+            speciality,
+            names.InvitedAs(user),
+            curriculumName,
+            curriculumVersion,
+            invitedByName,
+            invitedOn);
+    }
 }

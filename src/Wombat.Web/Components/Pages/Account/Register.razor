@@ -1,148 +1,371 @@
 @page "/account/register"
 @attribute [AllowAnonymous]
+@attribute [ExcludeFromInteractiveRouting]
 @layout Layout.AuthLayout
+@using System.Security.Claims
 @using Microsoft.Extensions.Options
 @using Wombat.Web.Security
 @inject IScopedSender Sender
-@inject IJSRuntime JS
-@inject IdentityErrorDescriber ErrorDescriber
+@inject RegisterCookie RegisterCookie
 @inject IOptions<IdentityOptions> IdentityOptions
 @inject ILogger<Register> Logger
 
-<PageTitle>Complete registration · Wombat</PageTitle>
+@*
+  Complete registration (T373, flow 11; R3-G01–G18). Static, for a visitor signed in or not ([ExcludeFromInteractiveRouting];
+  App.razor): the form is an HTTP post, and a signed-in visitor (G18) is shown a card, not a circuit. Nothing here needs
+  component code after load: the token left the address bar by the start path's 303 (S2, T315), not by script, so
+  wombat.clearInvitationTokenFromUrl went.
+
+  What the page shows is read from the register cookie (RegisterCookie, S1), never the address:
+  - no cookie: G13, the link incomplete; a submit that arrived after the 30 minutes: G16;
+  - the account created but not read back: G15;
+  - the invitation's preview refused: its card (G07–G12), the first sentence the refusal's own; a fault: G14;
+  - someone signed in on this browser: G18, which signs out and comes back here (F5);
+  - a fault at the last submit: G14, whose Try again reopens the form from the cookie;
+  - a form shown for another invitation than the cookie's (a second link opened since): its card, naming the one held now,
+    whose Continue shows that one's form (T373 fix pass, B1);
+  - otherwise the form, a refusal under its field (S15): the field aria-invalid and described by it, and the focus on it
+    (autofocus, on a static page). The names are kept; the passwords never are.
+  The codes are shown once: the page rewrites the cookie without them, so a reload, or G14's Try again, shows the form.
+*@
+
+<PageTitle>@Heading · Wombat</PageTitle>
 
 <div class="account-form-container">
-  <h1>Complete registration</h1>
+  <div class="account-brand">
+    <img class="account-brand-mark" src="/brand/wombat-mark.svg" alt="" width="56" height="56" />
+    <span class="account-brand-text">Wombat</span>
+  </div>
+  <p class="account-purpose">Work-based assessment for specialist training.</p>
+  <h1>@Heading</h1>
 
-  @if (_loading)
+  @switch (_card)
   {
-    <Skeleton Count="4" Height="2.75rem" />
-  }
-  else if (_unavailable is not null)
-  {
-    @* The invitation cannot be used, so there is no form: no token, or the preview refused it. *@
-    <Alert Kind="danger">@_unavailable</Alert>
-  }
-  else if (_preview is not null)
-  {
-    <Alert Kind="info">Registering @_preview.Email as @_preview.TargetRole.</Alert>
+    case RegisterCard.Form:
+      @* Standing page content, present on arrival: no role (Alert's doc; T373 fix pass, P8). *@
+      <Alert Kind="info">This invitation is for <span class="account-email">@Address(Preview.Email)</span>@RegisterText.AsRoleAndScope(Preview)</Alert>
 
-    @* A refused registration reloads this page with a code for each refusal, and the page says each in words of its own,
-       never the query's text (RegisterOutcome, T285). The form is offered only while the preview finds the invitation
-       usable, and the preview refuses what no input can put right: an invitation revoked, used, expired or unknown, and an
-       address no account can be created for, one an account already holds included. So a refusal under the form is the
-       person's to put right. The first field takes the focus, and every field names the refusal, which an alert already
-       there when the page loads is not reliably announced (T193). *@
-    @if (_refusals.Count > 0)
-    {
-      <Alert Kind="danger" Id="@RefusalId">@string.Join(" ", _refusals)</Alert>
-    }
+      @* data-submit-once (wombat.js): a second press while the post is on its way sends nothing. *@
+      <form method="post" action="@RegisterOutcome.SubmitPath" data-submit-once>
+        <AntiforgeryToken />
+        @* The form's binding to the invitation it shows, never the token (T373 fix pass, B1): the submit refuses a cookie
+           another link replaced since this form was drawn. *@
+        <input type="hidden" name="Invitation" value="@_fingerprint" />
 
-    <form method="post" action="@RegisterOutcome.SubmitPath">
-      <AntiforgeryToken />
-      <div class="mb-3">
-        <label for="register-email">Email</label>
-        <input id="register-email" class="form-control" type="email" value="@_preview.Email" autocomplete="username" disabled />
-      </div>
+        <FormField Label="Email" InputId="@EmailId" HelpText="@RegisterText.EmailHelp">
+          <input id="@EmailId" class="form-control" type="email" autocomplete="username" readonly value="@Preview.Email"
+                 aria-describedby="@FieldHelp.DescribedBy(EmailId, RegisterText.EmailHelp)" />
+        </FormField>
 
-      <div class="mb-3">
-        <label for="register-first-name">First name</label>
-        <input id="register-first-name" class="form-control" type="text" name="FirstName" required maxlength="100"
-               autofocus="@(_refusals.Count > 0)" aria-describedby="@RefusalReference" />
-      </div>
+        <FormField Label="First name" InputId="@FirstNameId">
+          <ChildContent>
+            <input id="@FirstNameId" class="form-control" type="text" name="FirstName" autocomplete="given-name" required
+                   value="@_firstName" autofocus="@(_focus == FirstNameId)" aria-invalid="@Invalid(_firstNameMessage)"
+                   aria-describedby="@(_firstNameMessage is null ? null : FirstNameMessageId)" />
+          </ChildContent>
+          <ValidationContent>
+            @if (_firstNameMessage is not null)
+            {
+              <div class="validation-message" id="@FirstNameMessageId">@_firstNameMessage</div>
+            }
+          </ValidationContent>
+        </FormField>
 
-      <div class="mb-3">
-        <label for="register-last-name">Last name</label>
-        <input id="register-last-name" class="form-control" type="text" name="LastName" required maxlength="100"
-               aria-describedby="@RefusalReference" />
-      </div>
+        <FormField Label="Last name" InputId="@LastNameId">
+          <ChildContent>
+            <input id="@LastNameId" class="form-control" type="text" name="LastName" autocomplete="family-name" required
+                   value="@_lastName" autofocus="@(_focus == LastNameId)" aria-invalid="@Invalid(_lastNameMessage)"
+                   aria-describedby="@(_lastNameMessage is null ? null : LastNameMessageId)" />
+          </ChildContent>
+          <ValidationContent>
+            @if (_lastNameMessage is not null)
+            {
+              <div class="validation-message" id="@LastNameMessageId">@_lastNameMessage</div>
+            }
+          </ValidationContent>
+        </FormField>
 
-      @* The password fields and their Show toggles (PasswordField), and the six rules before anything is typed, which the
-         password names until a refusal is shown (T339, flow 02, E11). The rest of the page is flow 11's. *@
-      <PasswordField Label="Password" Id="register-password" Name="Password" Autocomplete="new-password" Required="true"
-                     DescribedBy="@(RefusalReference ?? RulesId)">
-        <PasswordRules Id="@RulesId" />
-      </PasswordField>
+        @* The six rules under the password before anything is typed (T339, flow 02, E11). A broken rule is the field's own
+           message, which the field names before the list (G04); a refused confirmation keeps the focus here, and the
+           field names the confirmation's message first (G05). *@
+        <PasswordField Label="Password" Id="@PasswordId" Name="Password" Autocomplete="new-password" Required="true"
+                       Autofocus="@(_focus == PasswordId)" Invalid="@(_passwordMessage is not null)"
+                       DescribedBy="@PasswordDescribedBy">
+          @if (_passwordMessage is not null)
+          {
+            <div class="validation-message" id="@PasswordMessageId">@_passwordMessage</div>
+          }
+          <PasswordRules Id="@RulesId" />
+        </PasswordField>
 
-      <PasswordField Label="Confirm password" Id="register-confirm-password" Name="ConfirmPassword" Autocomplete="new-password"
-                     Required="true" DescribedBy="@RefusalReference" />
+        <PasswordField Label="Confirm password" Id="@ConfirmId" Name="ConfirmPassword" Autocomplete="new-password"
+                       Required="true" Invalid="@_confirmationRefused"
+                       DescribedBy="@(_confirmationRefused ? ConfirmMessageId : null)">
+          @if (_confirmationRefused)
+          {
+            <div class="validation-message" id="@ConfirmMessageId">@RegisterOutcome.ConfirmationFieldMessage</div>
+          }
+        </PasswordField>
 
-      <input type="hidden" name="Token" value="@_token" />
+        <FormActions>
+          <button type="submit" class="btn btn-primary">Register</button>
+        </FormActions>
+      </form>
+
+      <p class="account-note">@RegisterText.Note(Preview.ExpiresOn)</p>
+      break;
+
+    case RegisterCard.Used:
+      <p>@RegisterText.UsedMessage</p>
+      <p>@RegisterText.UsedNextStep</p>
       <FormActions>
-        <button type="submit" class="btn btn-primary">Register</button>
+        <a class="btn btn-primary" href="/account/login"><Icon Name="log-in" />Sign in</a>
       </FormActions>
-    </form>
+      <a class="account-link" href="/account/forgot-password">Forgotten your password?</a>
+      break;
+
+    case RegisterCard.Revoked:
+      <p>@InvitationRefusals.Describe(InvitationRefusal.Revoked)</p>
+      <p>@RegisterText.AskForANewInvitation</p>
+      break;
+
+    case RegisterCard.Invalid:
+      <p>@InvitationRefusals.Describe(InvitationRefusal.Invalid)</p>
+      <p>@RegisterText.InvalidNextStep</p>
+      break;
+
+    case RegisterCard.Expired:
+      <p>@RegisterText.ExpiredMessage(_lastDay)</p>
+      <p>@RegisterText.AskForANewInvitation</p>
+      break;
+
+    case RegisterCard.AccountExists:
+      <p>@InvitationRefusals.Describe(InvitationRefusal.AccountExists)</p>
+      <p>@RegisterText.AccountExistsNextStep</p>
+      <FormActions>
+        <a class="btn btn-primary" href="/account/login"><Icon Name="log-in" />Sign in</a>
+      </FormActions>
+      <a class="account-link" href="/account/forgot-password">Forgotten your password?</a>
+      break;
+
+    case RegisterCard.AddressNotAccepted:
+      <p>@InvitationRefusals.Describe(InvitationRefusal.AddressNotAccepted)</p>
+      break;
+
+    case RegisterCard.LinkIncomplete:
+      <p>@RegisterOutcome.TokenMissingMessage</p>
+      <p>@RegisterText.LinkIncompleteNextStep</p>
+      break;
+
+    case RegisterCard.NotCompleted:
+      <p>@RegisterOutcome.NotCompletedMessage</p>
+      <p>@RegisterText.NotCompletedNextStep</p>
+      <FormActions>
+        <a class="btn btn-outline" href="@RegisterOutcome.PagePath"><Icon Name="refresh-cw" />Try again</a>
+      </FormActions>
+      break;
+
+    case RegisterCard.NotSignedIn:
+      <p>@RegisterOutcome.UserNotLoadedMessage</p>
+      <p>@RegisterText.NotSignedInNextStep</p>
+      <FormActions>
+        <a class="btn btn-primary" href="/account/login"><Icon Name="log-in" />Sign in</a>
+      </FormActions>
+      break;
+
+    case RegisterCard.OtherInvitation:
+      <p>@RegisterText.OtherInvitationMessage</p>
+      <p>@RegisterText.OtherInvitationHeldNow<span class="account-email">@Address(Preview.Email)</span>. @RegisterText.OtherInvitationNextStep</p>
+      <FormActions>
+        <a class="btn btn-primary" href="@RegisterOutcome.PagePath"><Icon Name="arrow-right" />Continue</a>
+      </FormActions>
+      break;
+
+    case RegisterCard.TimedOut:
+      <p>@RegisterText.TimedOutMessage</p>
+      <p>@RegisterText.TimedOutNextStep</p>
+      break;
+
+    case RegisterCard.SignedInElsewhere:
+      <p>You are signed in as @(_signedInAs). This invitation is for @Address(Preview.Email).</p>
+      <p>@RegisterText.SignedInElsewhereNextStep</p>
+      @* Flow 02's sign-out, which comes back here only for this path (F5); the cookie still holds the invitation. *@
+      <form method="post" action="@SignOutOutcome.SubmitPath">
+        <AntiforgeryToken />
+        <input type="hidden" name="@SignOutOutcome.ReturnToField" value="@RegisterOutcome.PagePath" />
+        <FormActions>
+          <button type="submit" class="btn btn-primary"><Icon Name="log-out" />Sign out and continue</button>
+        </FormActions>
+      </form>
+      <a class="account-link" href="/">Go to Home</a>
+      break;
   }
 </div>
 
 @code {
-  /// <summary>The refusal's id, which each field names, so the refusal is read with the field that has the focus.</summary>
-  public const string RefusalId = "register-error";
-
-  /// <summary>The six rules' id, which the password names until a refusal is shown.</summary>
+  /// <summary>The six rules' id, which Password names (T339, flow 02, E11).</summary>
   public const string RulesId = "register-password-rules";
 
-  [SupplyParameterFromQuery(Name = "token")]
-  public string? Token { get; set; }
+  public const string EmailId = "register-email";
+  public const string FirstNameId = "register-first-name";
+  public const string LastNameId = "register-last-name";
+  public const string PasswordId = "register-password";
+  public const string ConfirmId = "register-confirm-password";
 
-  /// <summary>The codes of the refusals that sent the browser back here (<see cref="RegisterOutcome" />), never their words.</summary>
-  [SupplyParameterFromQuery(Name = "error")]
-  public string[]? Error { get; set; }
+  public const string FirstNameMessageId = "register-first-name-message";
+  public const string LastNameMessageId = "register-last-name-message";
+  public const string PasswordMessageId = "register-password-message";
+  public const string ConfirmMessageId = "register-confirm-password-message";
 
+  [CascadingParameter]
+  private HttpContext? HttpContext { get; set; }
+
+  private RegisterCard _card = RegisterCard.LinkIncomplete;
   private InvitationPreviewDto? _preview;
-  private string? _token;
-  private string? _unavailable;
-  private IReadOnlyList<string> _refusals = [];
-  private bool _loading = true;
-  private bool _urlCleaned;
+  private DateOnly? _lastDay;
+  private string? _signedInAs;
+  private string? _firstName;
+  private string? _lastName;
+  private string? _firstNameMessage;
+  private string? _lastNameMessage;
+  private string? _passwordMessage;
+  private bool _confirmationRefused;
+  private string? _focus;
+  private string? _fingerprint;
 
-  private string? RefusalReference => _refusals.Count > 0 ? RefusalId : null;
+  // Read only by the form and G18, which are shown only once the preview answered.
+  private InvitationPreviewDto Preview => _preview ?? throw new InvalidOperationException("No invitation was previewed.");
 
-  protected override async Task OnParametersSetAsync()
+  // G04: the field's message, then the list; G05: the confirmation's message, then the list; otherwise the list.
+  private string PasswordDescribedBy => _passwordMessage is not null
+    ? $"{PasswordMessageId} {RulesId}"
+    : _confirmationRefused ? $"{ConfirmMessageId} {RulesId}" : RulesId;
+
+  protected override async Task OnInitializedAsync()
   {
-    _loading = true;
-    _unavailable = null;
-    _preview = null;
-    _token = Token;
-    _refusals = RegisterOutcome.Describe(Error, ErrorDescriber, IdentityOptions.Value.Password);
-
-    if (string.IsNullOrWhiteSpace(_token))
+    var context = HttpContext;
+    var state = context is null ? null : RegisterCookie.Read(context);
+    if (state is null)
     {
-      _unavailable = RegisterOutcome.TokenMissingMessage;
-      _loading = false;
+      _card = RegisterCard.LinkIncomplete;
+      return;
+    }
+
+    if (state.TimedOut)
+    {
+      _card = RegisterCard.TimedOut;
+      return;
+    }
+
+    var codes = state.Codes;
+
+    // The account exists, and the invitation is used: the preview would say so, not that registering worked.
+    if (codes.Contains(RegisterOutcome.UserNotLoaded, StringComparer.Ordinal))
+    {
+      RegisterCookie.Delete(context!);
+      _card = RegisterCard.NotSignedIn;
       return;
     }
 
     try
     {
-      _preview = await Sender.Send(new GetInvitationPreviewQuery(_token));
+      _preview = await Sender.Send(new GetInvitationPreviewQuery(state.Token!));
     }
     catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      // A refused invitation (revoked, used, expired, not recognised) is said in the page's words; anything else is a
-      // fault, logged, and never shown in its own (T285).
-      if (!RegisterOutcome.IsRefusal(exception))
+      if (exception is InvitationRefusedException refused && refused.Reason != InvitationRefusal.AccountNotCreated)
       {
+        _card = RegisterText.CardFor(refused.Reason);
+        _lastDay = refused.LastDay;
+      }
+      else
+      {
+        // A fault, logged, and never shown in its own words (T285).
         Logger.LogError(exception, "An invitation could not be previewed.");
+        _card = RegisterCard.NotCompleted;
       }
 
-      _unavailable = string.Join(" ", RegisterOutcome.Describe(
-        RegisterOutcome.CodesFor(exception), ErrorDescriber, IdentityOptions.Value.Password));
-    }
-    finally
-    {
-      _loading = false;
-    }
-  }
-
-  protected override async Task OnAfterRenderAsync(bool firstRender)
-  {
-    if (_urlCleaned || string.IsNullOrWhiteSpace(_token))
-    {
       return;
     }
 
-    _urlCleaned = true;
-    await JS.InvokeVoidAsync("wombat.clearInvitationTokenFromUrl");
+    if (context!.User.Identities.Any(identity => identity.IsAuthenticated))
+    {
+      _signedInAs = context.User.GetDisplayName() ?? context.User.FindFirst(ClaimTypes.Name)?.Value ?? "another account";
+      _card = RegisterCard.SignedInElsewhere;
+      return;
+    }
+
+    // Shown once: a reload, or G14's Try again, reopens the form with the names and no refusal.
+    if (codes.Count > 0)
+    {
+      RegisterCookie.Write(context, state with { Codes = [] });
+    }
+
+    var cardCode = codes.FirstOrDefault(code => !RegisterOutcome.IsFieldCode(code));
+    if (string.Equals(cardCode, RegisterOutcome.OtherInvitation, StringComparison.Ordinal))
+    {
+      _card = RegisterCard.OtherInvitation;
+      return;
+    }
+
+    if (cardCode is not null)
+    {
+      _card = RegisterOutcome.InvitationRefusalOf(cardCode) is { } reason ? RegisterText.CardFor(reason) : RegisterCard.NotCompleted;
+      return;
+    }
+
+    _card = RegisterCard.Form;
+    _fingerprint = RegisterCookie.Fingerprint(state.Token!);
+    _firstName = state.FirstName;
+    _lastName = state.LastName;
+    _firstNameMessage = RegisterOutcome.NameMessage("First name", codes, RegisterOutcome.FirstNameMissing, RegisterOutcome.FirstNameTooLong);
+    _lastNameMessage = RegisterOutcome.NameMessage("Last name", codes, RegisterOutcome.LastNameMissing, RegisterOutcome.LastNameTooLong);
+    _passwordMessage = codes.Contains(RegisterOutcome.PasswordMissing, StringComparer.Ordinal)
+      ? RegisterOutcome.PasswordMissingMessage
+      : RegisterOutcome.PasswordRulesMessage(codes, IdentityOptions.Value.Password);
+    _confirmationRefused = codes.Contains(RegisterOutcome.ConfirmationMismatch, StringComparer.Ordinal);
+
+    // The first field refused, in the form's order; a refused confirmation empties both passwords, so the focus goes to
+    // Password, where typing starts again (G05).
+    _focus = _firstNameMessage is not null ? FirstNameId
+      : _lastNameMessage is not null ? LastNameId
+      : _passwordMessage is not null || _confirmationRefused ? PasswordId
+      : null;
   }
+
+  /// <summary>Each card's h1, and its tab's title (build-contracts "Titles").</summary>
+  private string Heading => _card switch
+  {
+    RegisterCard.Form => "Complete registration",
+    RegisterCard.Used => "Invitation already used",
+    RegisterCard.Revoked => "Invitation revoked",
+    RegisterCard.Invalid => "Invitation link not recognised",
+    RegisterCard.Expired => "Invitation expired",
+    RegisterCard.AccountExists => "Account already exists",
+    RegisterCard.AddressNotAccepted => "Address not accepted",
+    RegisterCard.LinkIncomplete => "Invitation link incomplete",
+    RegisterCard.NotCompleted => "Registration not completed",
+    RegisterCard.NotSignedIn => "Registered, but not signed in",
+    RegisterCard.TimedOut => "Invitation timed out",
+    RegisterCard.OtherInvitation => "Another invitation opened",
+    RegisterCard.SignedInElsewhere => "Signed in as someone else",
+    _ => throw new InvalidOperationException($"A register card with no heading: {_card}.")
+  };
+
+  private static string? Invalid(string? message) => message is null ? null : "true";
+
+  /// <summary>The address with a break opportunity after its @ (M7), written in markup, never stored.</summary>
+  private static RenderFragment Address(string email) => builder =>
+  {
+    var at = email.IndexOf('@');
+    if (at < 0)
+    {
+      builder.AddContent(0, email);
+      return;
+    }
+
+    builder.AddContent(1, email[..(at + 1)]);
+    builder.AddMarkupContent(2, "<wbr>");
+    builder.AddContent(3, email[(at + 1)..]);
+  };
 }

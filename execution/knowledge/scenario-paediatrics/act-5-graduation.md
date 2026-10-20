@@ -467,7 +467,7 @@ Gap: none
 ### Step 5.16 — Prof Mbatha tries to record the story's graduation day
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/trainees → /admin/trainees/edit
-Do: Open Dr Molefe's profile from Active profiles. Set the last day in the programme to the story's graduation day,
+Do: Open Dr Molefe's profile from Current trainees (Edit). Set the last day in the programme to the story's graduation day,
   `J+1y−1d`. Press Mark complete and confirm.
 Expect: The last-day field opens on `D`. Among the rest, its help says that:
   - Mark complete records the graduation day, archives the profile and removes the Trainee role;
@@ -500,7 +500,7 @@ Expect: The page says "Trainee marked complete. The Trainee role has been remove
     that has ended.", and the profile's details read as a list under "This programme has ended, so its record is
     archived and cannot be changed.": Curriculum Paediatric EPA Curriculum (11.1), Programme start date `J−3y`,
     Expected completion date `J+1y−1d`. There are no inputs and no Save profile; Back to trainees stays (T305).
-  - On Trainees she is no longer under Active profiles. She is listed under Completed & closed profiles with the outcome
+  - On Trainees she is no longer under Current trainees. She is listed under "Completed and closed" with the outcome
     "Completed `D`".
   - Her user page says "This user has no roles.", and its Add role offers no Trainee (T303).
   - No credit is taken back, because nothing of hers is observed after `D` (T281; Step 5.27 shows a take-back).
@@ -698,7 +698,7 @@ Gap: none
 ### Step 5.27 — Prof Mbatha records his withdrawal
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/trainees → /admin/trainees/edit → /admin/trainees
-Do: Open Dr du Plessis's profile and set the last day in the programme to `D−2`. Press Deactivate and confirm.
+Do: Open Dr du Plessis's profile from Current trainees (Edit) and set the last day in the programme to `D−2`. Press Deactivate and confirm.
 Expect: The confirmation names `D−2` as his last day. It says that the Trainee role is removed and he keeps his own
   record, that encounters after that day will count towards nothing, including any already counted, and that neither
   the day nor the profile can be changed back. After confirming:
@@ -706,7 +706,7 @@ Expect: The confirmation names `D−2` as his last day. It says that the Trainee
     role has been removed.";
   - the summary reads Status Inactive, "Left the programme: `D−2`", and the profile's details read-only, as on Step
     5.17, with no Save profile (T305);
-  - on Trainees he is listed under Completed & closed profiles, with the outcome "Withdrawn `D−2`";
+  - on Trainees he is listed under "Completed and closed", with the outcome "Withdrawn `D−2`";
   - in the same save, the credit from the `D−1` Mini-CEX is taken back (T281);
   - the Trainee role is taken away, as a completion takes it (T290), and he is not emailed.
 Actual (2026-10-19, T369 replay, wombat_scenario_t369): Trainees, Edit Pieter du Plessis (/admin/trainees/edit?id=4),

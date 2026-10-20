@@ -50,7 +50,14 @@
 >   Release in dialogs, no results before close), her MSF reports and her report at /msf/my-reports/{id}, § The
 >   programme's MSF coverage, § Anonymous static page (/msf/respond's h1 and Alert per state), § Form system (the
 >   required mark on the MSF forms, the narrative's counter without maxlength), § Table system (which MSF tables stack),
->   the dialogs at 390, the owner table's new rows, and § app.css section order (four MSF campaign sections)).
+>   the dialogs at 390, the owner table's new rows, and § app.css section order (four MSF campaign sections)); flow 11,
+>   onboarding (2026-10-20, T373: § The invitations list (the list is the page; Delivery a word with its note row;
+>   Expired, not used; Revoke… confirmed) and the OneTimeLink, § Page-level patterns "Invite a person" and "Admit ‹name›"
+>   (Trainees' three sections, the result on Trainees), § Dashboard page (the pending registrar's wait card), § Account /
+>   auth page (Register's start path and cookie, its cards, its refusals under their fields), § Form system (the required
+>   mark, only the chosen role's fields, a value that follows another is an `<output>`), § Table system (`StackWide`),
+>   § Button system (every dialog's buttons and the header's actions at 390), the owner table's two rows, and § app.css
+>   section order (three Onboarding sections)).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 
@@ -646,8 +653,10 @@ there, and its trail is Home › the page (§ Page-level patterns).
 | A curriculum | Administrator, College admin: Curricula |
 | `/admin/curriculum-progress` | Administrator: Curricula (a link on Curricula, now that Home's Maintenance card is dropped) |
 | An entrustment scale | Administrator: Entrustment scales |
+| Invite a person (`/admin/invitations/new`) | Administrator, Institutional admin: Invitations; its trail Home › Invitations › Invite a person (T373, flow 11, Q1) |
 | A user | Administrator, Institutional admin: Users |
 | A trainee's profile, an assessor's profile | Institutional admin: Trainees, Assessors |
+| Admit ‹name› (`/admin/trainees/admit`) | Institutional admin: Trainees; its trail Home › Trainees › Admit ‹name›. The Administrator, whose menu has no Trainees, has nothing lit and the trail Home › Trainees › Admit ‹name›, the Trainees crumb given by the page (`PageHeader`'s `Trail`; T373, flow 11, M04b) |
 | An audit entry | Administrator, Institutional admin: Audit log |
 | The job run history | Administrator: Scheduled jobs |
 | My authorisations | Trainee: My progress |
@@ -723,10 +732,14 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
 - The primary page action is `.btn .btn-primary` and lives in the `PageHeader` action slot, except on the committee
   review, where it lives in the sitting bar (T361, flow 07; § Committee agenda, "The sitting bar").
 - Destructive actions open a `ConfirmDialog` first; the red `.btn-danger` only appears inside the dialog's footer.
-- **On the MSF pages a dialog's buttons stack at 390** (T369, M10): each `ConfirmDialog` is rendered inside the page's
-  `.msf-page` column, whose phone rules give its `.form-actions` `flex-direction: column-reverse` and its buttons 44px and
-  the full width. The DOM has the safe button first, so the action shows on top, the safe button last on screen and
-  first in the tab order. Flow 01's `ConfirmDialog` stacked nothing; a page outside the column keeps that.
+- **Every dialog's buttons stack at 390** (2026-10-20, T373, flow 11, M8; first on the MSF pages, T369, M10): below
+  641px `.dialog-card .form-actions` is `flex-direction: column-reverse` and its buttons are 44px and the row's width. One
+  general rule in `app.css`, since the top-layer dialog is outside every page wrapper, so a page's own class cannot reach
+  it; flows 08's and 10's scoped copies folded into it. The DOM has the safe button first, so the action shows on top,
+  the safe button last on screen and first in the tab order. A form-mode dialog (`.dialog-actions`) is not covered.
+- **Every page header's actions take the row at 390** (T373, M9): below 641px `.header-container .actions-cell` is the
+  row's width and each of its buttons 44px (`flex: 1 1 auto`), on every page, as Home's one action already was; flows
+  08's and 10's scoped copies folded into it. The MSF list's two header actions still stack (`.msf-header`).
 - **Cancel and Escape give the focus back to the dialog's opener** (2026-10-14, T366, D6). Safari and Firefox on macOS
   do not focus a clicked button, so the native dialog has nothing to return the focus to. `ConfirmDialog`'s script
   records the opener when the dialog opens (`document.activeElement`, else the element `ReturnFocusId` names; Lodge
@@ -1017,7 +1030,10 @@ No inline `style="width:…"` on a table's cells. A column's width is one of the
 
 **A list that must stack at 900px** (2026-10-14, T366, flow 09, S8) writes its table with both stack classes
 (`.clinic-table--stack .clinic-table--stack-wide`), as flows 06 and 08 write theirs; `DataTable`'s `Stack` is the 641px
-one, and it gains no wider mode. My authorisations' No longer in force and the STAR register are written so, and so are
+one. Since T373 (2026-10-20, flow 11, S16) `DataTable` has the wider mode too: `StackWide` writes both classes and the
+explicit roles `Stack` gives, and a row that needs a note under it writes a second `<tr>` from its `Row` fragment. A
+stack-wide table's row buttons are 44px from 900px down, on every page (`.clinic-table--stack-wide .btn`; flows 08's and
+10's scoped copies folded into it). My authorisations' No longer in force and the STAR register are written so, and so are
 her MSF reports list (T369, flow 10, M2) and the MSF campaign list (seven columns and up to three buttons a row; build
 review D2). MSF coverage's two grids never stack: each scrolls inside its own named,
 focusable region, the one exception to "nothing scrolls sideways" at 390px (T369, S13).
@@ -1166,6 +1182,15 @@ dl.form-group     /* no margin on it or its <dd>s: a field shown as text to a ca
   padding shift), puts the refusal at the group's top as its `.validation-message` (`#panel-seats-msg`), which the group
   names with `aria-describedby`, and the summary's "Seats: …" line focuses the first radio. `Design/MultiSelectOptionKeyTests`
   holds each person's group keyed.
+- **Required marks** (T373, flow 11, M11): a required field's label ends in the required mark (`span.required-mark`,
+  `aria-hidden`), its control carries `aria-required="true"`, and "* marks a field you must fill in." stands above the
+  form's first field; a group's legend adds a visually hidden " required". No "(optional)": a field's help says what leaving
+  it empty does ("Leave it at Any speciality for the whole institution."). A single possible value is read out as
+  `dl.form-group` with `dd.readonly-value` (S18). **On Invite a person, a field the chosen role does not take is not drawn,
+  never disabled** (S15); elsewhere the form system's disabled rules stand. Each refusal sits under its field
+  (`.validation-message`), the control marked (`aria-invalid`, `.input-validation-error`) and described by it, the focus on
+  it; a radio group's under its legend, the group `.choice-group.is-invalid`, the first radio focused; never a summary
+  (Q3). Resend's `aria-disabled` and the old link Alert are gone with the OneTimeLink.
 - Validation summaries render as `.validation-summary-errors` (red panel) at the top of the form. Per-field errors render as `.validation-message` under the field.
 - **An invalid field shows it on the control**, not only in the message under it (T236). Blazor's inputs carry `.invalid`
   and `aria-invalid="true"` while the `EditContext` holds a message for them. A control a page marks by hand, where the
@@ -1289,6 +1314,18 @@ so a password typed in a circuit does not cross it keystroke by keystroke. It re
   to a `ValidationMessageStore`, so Blazor's own `.invalid` and `aria-invalid` mark the control and app.css's rule styles
   it; its message is a `.validation-message` under it (`{id}-msg`), which the control names, then the summary. A radio
   group takes no mark: its message is named by the fieldset. No refusal points at a disabled control.
+- **A value that follows from another field is an `<output>`, not a field** (T373, flow 11, S18; T306): Admit's Training
+  year is `<output for="admit-start" class="ty-output" aria-live="polite">` under a real `<label>` "Training year", reading
+  "Training year 4" or "Not started: the programme starts on 2027-01-15", its help "Training years turn every 365 days
+  from the programme start, counted to ‹today›. It follows the date when you change it." The page asks the Application
+  for it (`GetAdmissionDatesQuery`) each time the start changes; Razor never counts the blocks itself.
+- **A date left empty says what it will be** (T373, M03, F4, check rule 7): Expected completion's help is "Leave this
+  empty to derive it from the curriculum window." and, while empty, "Left empty, it will be 2027-01-15." When the date it
+  would be derived as has passed, the help is the refusal's one sentence, "Left empty, it would be 2024-01-15, which has
+  passed. Enter the expected completion."; once Admit is refused, that sentence moves to the field's
+  `.validation-message` (`admit-end-error`), the field is `aria-invalid` and described by both, the help goes back to its
+  first words and the focus goes to the field: the sentence is shown once. A start more than four years back is a
+  `.field-warning` under Programme start, which names it (M07): a warning, never a refusal.
 
 ### The activity form (T342, flow 03)
 
@@ -2142,33 +2179,56 @@ template commands refuse them in (`MsfCampaignRules.RunsCampaignsRoles`), and ne
 campaigns nav link stays, as Committee reviews and Decisions due stay for the same people (T185); the page it opens
 now says why nothing is there. (T224 review)
 
-**The invitations list** (T283, `/admin/invitations`). Each active invitation's row says what became of the email
-carrying its current link, in a `.col-wrap` "Delivery" column before the actions: "Sent"; "Being sent" (a `.muted`
-span: nothing is wrong yet); or "**Not delivered.**", when the mail worker gave up on it or nothing was heard of it for
-an hour (`Invitation.DeliveryOf`, the same hour as an MSF link's). From the second failed email of one invitation
-(`Invitation.FailuresBeforeAddressCheck`) the cell goes on to say that the mail server may be refusing the address, to
-check it, and to revoke and issue again if it is wrong: an address is never corrected in place, since the invitation
-names who may register (`InvitationText.CheckAddress`). A row not delivered then ends "Resend emails a new link in place
-of the current one, which then stops working." (`InvitationText.ResendRetiresTheLink`, T283 review): the link alert
-tells whoever issued it to share the link another way, and the row goes on offering Resend, so anyone about to press it
-is told first that it would stop a shared link working. The cell's text is a `span` with an id
-(`#invitation-delivery-{id}`), and it is the text, not a badge: the words are the state, and nothing on the row is a
-verdict to tint.
-- A row not delivered offers **Resend** (`.btn .btn-sm .btn-outline`) before Revoke, both in a `div.actions-cell`. It is
-  named by the row as Revoke is ("Resend the Coordinator invitation to a@example.test", T239), and its `aria-describedby`
-  names the row's Delivery text, so a screen reader hears why it is offered and what it will do. No other row offers it.
-- Resend emails a new link and retires the old one (`ResendInvitationCommand`). Its result is the issue's: a `success`
-  `Alert`, "A new invitation link is being emailed to …. The link it replaces no longer works. Copy the new link below —
-  it is shown only once.", and the `info` `Alert` holding the link, both in the page's `ActionResult`, which takes the
-  focus (the row now reads "Being sent" and offers no Resend). The link's alert says the link is also being emailed and
-  that the Delivery column says whether it arrived (`InvitationText.LinkIsBeingEmailed`); until T283 it said email
-  delivery was "configured separately".
-- The list is read again after every resend, refused or not: a refusal is likeliest because the invitation changed
-  elsewhere (resent, used, revoked, or delivered after all), and its refusal says so. A refused resend leaves the focus
-  on Resend while the row still offers it, for the retry, and moves it to the refusal once the row no longer does.
+**The invitations list** (T283; T373, flow 11, boards R3-L01–L17; `/admin/invitations`). The list is the page, in
+`.inv-page`: `PageHeader` "Invitations", "Invitations not yet used, with the state of each one's email.", its action
+"Invite a person" (`user-plus`) to `OnboardingLinks.InviteAPerson` once the list has loaded (none while it loads, after a
+failed read, or with the T290 note, which is all a Trainee-holding admin sees: nothing is read for them, M1). Two sections,
+each `section.list-section` with an h2 `.list-section-title` and its `.inv-count` ("4 active", "1 expired"): Active
+invitations, then Expired, not used, only when it has rows. Each is a `DataTable` with `StackWide`.
+- Columns: Invitee (the row header, the stored spelling with `<wbr>` after the @, no `.col-wrap`: it breaks only there),
+  Role and scope (`.person-cell`: the role's label over its scope, "Any speciality" for a Coordinator or Committee member
+  kept to none, Q18; the institution or College too for the Administrator), Issued (`.inv-when`: the South African date
+  over its time, "09:22 SAST"; a resend's is the new link's, and nothing says "Resent", F2), Last day (the last South
+  African calendar day the link works, F7), Delivery, and the row's actions (`.col-actions`). Only the dates hold to one
+  line; Delivery is `.col-wrap` with a 7.5rem floor, so "delivered" and "address" stay whole between 901 and 1100px.
+- Delivery is a state word with an icon, no badge (Q15): Being sent (`clock`, muted), Sent (`circle-check`, success), Not
+  delivered and Check the address (`circle-alert`, warning, 600) (`.delivery`, `--sending`, `--sent`, `--warn`). Its
+  explanation is a note row under its row (`tr.has-note`, then a second `<tr>` with `td.history-note.history-note--warning`
+  across every column): from the second failed email of one invitation (`Invitation.FailuresBeforeAddressCheck`) that the
+  mail server may be refusing the address, to check it, and to revoke and issue again if it is wrong
+  (`InvitationText.CheckAddress`); then "Resend emails a new link in place of the current one, which then stops working."
+  (`InvitationText.ResendRetiresTheLink`). The row's Resend names the note's paragraph with `aria-describedby`.
+- Rows not delivered come first, newest first among them, then the rest newest first (`ListActiveInvitations`, after
+  `Invitation.DeliveryOf`). A row not delivered offers Resend (`refresh-cw`) before Revoke…; any other row Revoke… alone;
+  both `.btn .btn-sm .btn-outline`, named by the row ("Resend the Trainee invitation to …", distinct by
+  `RowNames.Distinct` with the SAST time).
+- Revoke… confirms (T264): `ConfirmDialog` "Revoke this invitation?", its body the invitation and its scope, what stops
+  working, that an address is never corrected in place, "Revoking cannot be undone.", "Keep the invitation" and the red
+  "Revoke invitation". Its result, in the page's `ActionResult`, focused: "**Invitation revoked.** The link sent to … no
+  longer works: nobody can register from it." with "Invite another address as Trainee, Paediatrics / Paediatrics" to
+  `OnboardingLinks.InviteFrom(id)`, which Invite a person fills from it.
+- Resend's result is the OneTimeLink (below), with "It works until ‹last day›. It is shown here until your next action,
+  then never again." A refusal is the command's own words (`InvitationIssueRefusedException`), anything else fixed words,
+  logged; the list is read again after every resend, and a refusal takes the focus once its row no longer offers Resend.
+- Expired, not used (Q9): past their last day unused, for 30 days on the South African calendar, newest first; each leaves
+  once a new invitation goes to its address or an account holds it (compared normalised, S4). "Invite again" (`user-plus`)
+  to `OnboardingLinks.InviteFrom(id)`, named "Invite again ‹address› as ‹role and scope›" (the visible label first).
+- Loading: `p.loading-line[role=status]` "Loading the invitations." and a skeleton card of `.skel-*` bars. A failed read:
+  `StatePanel`'s danger Alert with Try again, "Could not load the invitations. Nothing has changed. Try again, or come back
+  in a few minutes.", never the exception's text (T329).
+
+**The OneTimeLink** (T373, S10; `Admin/Invitations/OneTimeLink.razor`): what an issue or a resend made, inside the page's
+`ActionResult`, which takes the focus. A success `Alert` (its first sentence bold), `label for="otl-link"` "Registration
+link for ‹address›", `input#otl-link.form-control` read-only holding the real link (`InvitationLinks.RegistrationUrl`,
+selectable, in the mono face), Copy link (`copy`; `wombat.copyText`, no inline script), `p#otl-said` `aria-live="polite"`
+("Link copied." and the button "Copied", or "Could not copy. Select the link and copy it yourself."), and `p.otl-help`.
+Below 641px the field stacks over its button, both full width and 44px. **The link is cleared at the start of every action,
+refusal or navigation** on the page that holds it, and never restored (M5): nothing stores it.
 - Resend is never disabled by its own resend (T234): it carries `aria-disabled` while it runs, and a second press sends
-  nothing. The issue form's submit and every other row's Resend and Revoke are disabled then, as they are while a
-  revoke runs. Every refusal on the page is shown through `RefusalText.Of`.
+  nothing. Every other row's Resend, and every row's Revoke…, is disabled while it runs (the issue form is a page of
+  its own since T373, Q1): the native `disabled` of T234's race rule above (§ Button system), which is not the
+  `aria-disabled` and `.is-unavailable` of an action the design says is unavailable, since the rows are available again
+  the moment the resend answers (T373 fix pass, R3). Every refusal on the page is shown through `RefusalText.Of`.
 
 **The MSF campaign list's row links** (T225, `/msf/campaigns`) are named by what their page lets the coordinator do in
 the row's state, in the campaign page's words (`MsfCampaignText.CampaignLinkLabel`, `ReportLinkLabel`), never "Edit" in
@@ -2738,7 +2798,7 @@ email that has an account cannot be accepted. Both pages show a refusal or a fai
 the profile and the adoption pin, and Mark complete (`CompleteTraineeProfile`) takes it away, so Add role never offers
 it (`UserAdministrationRules.AssignableRoles`: InstitutionalAdmin to Assessor) and a held Trainee reads "System-managed"
 with no Remove. The Add role field's help text (`TraineeRoleNotOffered`, named by the select's `aria-describedby`) says
-where a registrar is made a trainee: Trainees, "Admit to curriculum". Add role and Remove role refuse Trainee before the
+where a registrar is made a trainee: Trainees, "Admit…" (T373; "Admit to curriculum" until then). Add role and Remove role refuse Trainee before the
 user is looked up (`DemandAssignableRole`, `TraineeRoleByAdmissionOnly`).
 
 **Who is offered scheduling** (T216). The page reads it from `GetCommitteeReviewsAccessQuery`, never from the caller's
@@ -3659,6 +3719,24 @@ id leaves the page as it is and names nobody.
 </div>
 ```
 
+#### Invite a person (`/admin/invitations/new`, T373, flow 11, Q1)
+
+A form page of its own, owned by Invitations (the owner table), in `.inv-page.inv-page--form`: h1 and tab "Invite a
+person", "One person, one role. The registration link is shown here once, and emailed to them.", the T290 note before any
+read. The form names no `aria-label` repeating the h1. Email, then Role as `fieldset.form-group.choice-row` of
+`.form-check.review-type-choice` radios named by their label alone, each description a `p.page-subtitle.review-type-help`
+outside the label in its `aria-describedby`, none chosen (College admin offered to the Administrator only); then only the
+chosen role's fields: College; Institution read out for an Institutional admin, a select for the Administrator; Speciality
+(starred where the role needs one; "Any speciality" and its help for a Coordinator or Committee member), then
+Sub-speciality once a speciality is chosen ("Then choose its sub-speciality." until then). With nothing adopted, Speciality
+says so with a link to Curriculum adoptions, and Issue stays for the roles that need none (N26). `FormActions`: Cancel (to
+the list) and "Issue invitation". Opened with `?from=‹id›` (`OnboardingLinks.InviteFrom`) it is filled from a revoked
+invitation (role and scope, the address empty and focused) or an expired one (all), re-read in scope; an id not the
+caller's fills nothing and says nothing. Issued: the OneTimeLink with "Open Invitations", focused, then the form again,
+empty, under h2 "Invite the next person". Refusals at issue (`InvitationIssueRefusedException`, M3): the scope sentences
+under College, Speciality, Sub-speciality; an address an account holds or an active invitation names, under Email, naming
+the holder and linking it only in the caller's scope (N15–N18).
+
 #### Schedule a review (`/committee/reviews/new`, T364, flow 08)
 
 A form page of its own, owned by Committee reviews (the owner table; Q1), with its own title, trail and h1, "Schedule a
@@ -3703,6 +3781,43 @@ like every committee calendar page's, is wrapped in `.committee-calendar`, to wh
 - **Loading and the load error** (C11): the header at once, the form's shape with Cancel and no Create, then the form, or
   "Could not load what you can schedule. …" with Try again. A caller the command refuses outright (someone who also holds
   Trainee, T216) is told so in an empty card, and offered no form.
+
+#### Admit ‹name› (`/admin/trainees/admit?userId=`, T373, flow 11)
+
+A form page of its own (Q5, Q17), split from the trainee profile page, whose `?userId=` address now redirects here. In the
+onboarding column (`.inv-page.inv-page--form`); h1, tab and crumb "Admit ‹name›", subtitle "Admit a registrar who is waiting
+into the institution's curriculum." While it loads, when its read failed and for someone who holds Trainee (T290's note,
+asked before any read), the page is "Admit a registrar": no name before the read (check rule 2).
+
+- **Who is being admitted** (h2, `.detail-list`): Email (with `<wbr>` after the @), Institution, Invited as
+  (`InvitationScopeWords.Disciplines`, "—" with none), Registered (the used invitation's day, "—" with none).
+- **Programme** (an `EditForm`, `aria-labelledby` its h2, `novalidate`): "* marks a field you must fill in."; the
+  curriculum adopted for the invited sub-speciality read out (`dl.form-group`, `dd.readonly-value`, F1) with "Adopted at
+  ‹institution› for ‹disciplines›, the invited sub-speciality."; only a registrar invited to none chooses, from a select
+  starting "Choose a curriculum" (M14); Programme start * (today on the South African calendar); the Training year output;
+  Expected completion (§ Form system); the check line (`.submit-check`, "When you admit:" over three lines, M06's variant
+  before the programme starts); Cancel (back to Trainees, `?back=‹userId›`, whose Admit… takes the focus, T10) and
+  "Admit ‹name›".
+- **Nothing to offer** is standing content with no form: a warning `Alert` with no role and "Back to trainees": "No
+  curriculum is adopted at ‹institution› for ‹disciplines›, so ‹name› cannot be admitted." when other curricula are
+  (check rule 3), the institution-wide sentence when none is, and "This registrar belongs to no institution, so no
+  curriculum can be offered." (M04b).
+- **Refusals are the admission's own** (`TraineeAdmissionRefusedException`, S9): a stale tab's second Admit ("**Not
+  admitted.** ‹name› already has an active trainee profile. Open Trainees", M09) and a deactivated account ("… Reactivate it
+  under Users first.", M13) in the `ActionResult` at the column's top, focused; F4's beside Expected completion; a
+  registrar not waiting, out of scope or unknown is the system's not-found panel, "Registrar not found" (M08). Anything
+  else is logged and said in fixed words.
+- **Admitted**, the page goes to `/admin/trainees?admitted=‹profileId›` (S8): Trainees reads the profile again in the
+  caller's scope and says, in an `ActionResult` focused as it loads directly above the Waiting table, "‹name› admitted to
+  the ‹curriculum› (‹version›), training year ‹n›, from ‹start›." and, for a derived completion, " Expected completion
+  ‹date›, derived from the curriculum window: change it under Edit." The address carries the id alone.
+- **Trainees** (`/admin/trainees`) is the onboarding column too: "Waiting to be admitted" (h2 with "5 waiting") and
+  "Current trainees" (h2 with "1 current"), both `DataTable` `StackWide`, then flow 13's "Completed and closed". Waiting's
+  columns are Name (the row header), Email, Invited as, Registered and a row's one "Admit…" (`.col-actions--single`,
+  named "Admit ‹name›"); the Administrator's adds Institution (check rule 6). Current trainees' are Name (the
+  Administrator's with the institution under it), Curriculum and sub-speciality (`.person-cell`; the header
+  `.col-wrap.col-wrap--curriculum`, floored at 7rem so its words never split from 901 to 1100px), Programme start
+  (`.inv-when`: the date over "Training year ‹n›"), Expected completion and Edit.
 
 ### Dashboard page
 
@@ -3760,6 +3875,19 @@ Dashboards are a composition, not a standalone page pattern.
     `@if (Summary is { } summary)`. `HomeFrameTests` renders every role's Home with a read that never returns, and with
     one that fails.
 - **The cards** belong to later flows (S20); today's are kept, less the duplicates the boards drop:
+  - **the pending registrar's Home is the wait card** (2026-10-20, T373, flow 11, P01–P09; F8): one `DashboardCard`
+    "Awaiting admission" with the `hourglass` icon, spanning three, no stripe, the control edge (`Class="wait-card"`,
+    `#card-awaiting`). Its lead names the invited speciality's programme and her institution ("…waiting to be admitted
+    to the Paediatrics programme at Kgosi Kgari Teaching Hospital. Until then, nothing can be filed by you or about
+    you."), and no discipline for a registrar invited to none (check rule 4). A `.detail-list`: Institution; Programme,
+    "‹disciplines›, on the ‹curriculum› (‹version›)", the curriculum adopted for her invited sub-speciality (M2), no line
+    with no scope (S5); Invited by, "‹name›, Institutional admin, on ‹the invitation's issue day›", only when the
+    invitation was issued as an Institutional admin (`Invitation.IssuedAsRole`) and the issuer, read now, is neither
+    deactivated nor erased (F3, check rule 7); Who admits you, "An Institutional admin at ‹institution›." with " If it is
+    taking long, ask ‹name›." beside an Invited by line. Then "When you are admitted" (h3, `.account-steps`, four lines,
+    the last naming her address) and "Meanwhile" with `.wait-links`: "Review your account" and "Open My data rights",
+    each with the `arrow-right` icon, 44px below 641px. Read inside Home's one read (`PendingAdmissionDto`), so a
+    failure is `DashboardFrame`'s "Could not load your Home." (P09).
   - **the Assessor's Home is two cards** (2026-09-30, T350, flow 04, R1; R3-C-Home), each the Activity inbox's own read,
     so a card and the section it opens cannot disagree (T297):
     - **"Waiting for you"** (`#card-waiting`, spanning two): the inbox's first five rows, from the same read
@@ -3983,7 +4111,7 @@ role, and following a link inside Wombat never switches it.
 
 ```
 <div class="account-form-container">                       @* the auth card, in AuthLayout *@
-  <div class="account-brand"> the mark at 56px + .account-brand-text "Wombat" </div>   @* sign in only *@
+  <div class="account-brand"> the mark at 56px + .account-brand-text "Wombat" </div>   @* sign in and Register *@
   <p class="account-purpose">Work-based assessment for specialist training.</p>
   <h1>Sign in</h1>                                           @* the page's one h1 (§ Typography) *@
   @* one slot: a refusal <Alert Kind="danger" Id="login-error" tabindex="-1" autofocus>, or a notice
@@ -4041,8 +4169,32 @@ lane B: the auth card", with `.change-password`.
   administrator can set a new password for you.", three steps (`.account-steps`) worded for an account with an
   institution and one without (C4), and Back to sign in; no field. Where an institution signs people in, an
   `.account-note`: its password is the institution's to reset.
-- **Register** (`/account/register`, static; flow 11 designs the rest). Its h1 is "Complete registration", its password
-  fields are `PasswordField`s, and the six rules stand under the password before anything is typed.
+- **Register** (`/account/register`, static for every visitor, `[ExcludeFromInteractiveRouting]`; T373, flow 11,
+  `R3-G01`–`G18`). The lockup and the purpose line head it, as sign in's (Q6). **The link and the cookie** (S1, S2): the
+  invitation mail's link opens `/account/register/start?token=…` (`RegisterOutcome.StartPath`, which
+  `InvitationLinks.RegistrationUrl` writes), which keeps the token in **the register cookie** (`RegisterCookie`: Data
+  Protection, `HttpOnly`, `SameSite=Lax`, `Path=/account/register`, 30 minutes from when the link was opened, `Secure`
+  as the request's scheme) and answers 303 to the page with no query; the page and that GET never share a route, and no
+  script cleans the address bar (T315). The form posts to `/account/register/submit`, which reads the token from the
+  cookie; a refusal writes its codes and the two names into the cookie (never a password) and redirects to the page with
+  no query, so no address holds a name, a code or a token; success deletes the cookie. The page shows the codes once.
+  **The form** (G01–G06): h1 "Complete registration"; an info notice, `role="status"`, "This invitation is for
+  ‹address›, as ‹role and scope›." (the address in `.account-email`, `<wbr>` after its @; `InvitationScopeWords`); then
+  `FormField`s: Email read-only (`readonly`, not `disabled`, no `name`), its help "The address this invitation is for. It
+  cannot be changed here."; First name (`given-name`), Last name (`family-name`), with no `maxlength` (S21); the two
+  `PasswordField`s with `PasswordRules`; Register in `FormActions`; and an `.account-note`, "Not expecting this
+  invitation? Ignore it: its link works until ‹last day›." **The cards** (G07–G16, G18), each its own h1 and tab title,
+  its sentences as plain paragraphs, no alert: "Invitation already used" and "Account already exists" (Sign in, and
+  "Forgotten your password?"), "Invitation revoked", "Invitation link not recognised", "Invitation expired" ("its link
+  worked until ‹last day›"), "Address not accepted", "Invitation link incomplete" (a GET with neither cookie nor token,
+  S7), "Registration not completed" ("… Nothing was saved.", which F10's one transaction makes true; Try again, an
+  outline link back to the page, reopens the form from the cookie), "Registered, but not signed in" (Sign in),
+  "Invitation timed out" (a submit after the cookie's 30 minutes, S7). **Signed in as someone else** (G18; Q11, M4, F5):
+  a signed-in visitor gets no form, but "You are signed in as ‹name›. This invitation is for ‹address›.", "To register it,
+  sign out first. Your own account is not changed.", a form posting `/account/logout/submit` with its token and a hidden
+  `returnTo=/account/register` ("Sign out and continue"), and "Go to Home". The sign-out endpoint lands on Register only
+  when `returnTo` is exactly that path (`SignOutOutcome.LandingFor`), never anywhere else. The submit refuses a signed-in
+  caller before its own antiforgery check, back to this card, accepting nothing and replacing no session (M4).
 - **Change password** (`/account/change-password`) is **static in the shell**, `[ExcludeFromInteractiveRouting]`: its
   toggles are `wombat.js`'s now, so nothing on it needs a circuit, and `/Error` shows the shell works without one. Until
   T339 it stayed interactive for its Show buttons. Its trail is Home › My account › Change password; one column,
@@ -4066,8 +4218,8 @@ lane B: the auth card", with `.change-password`.
 
 **Every field on these forms is required, and none is marked `*`** (R3-Spec; § Accessibility): a mark on each tells
 nothing, `required` exposes it to assistive technology, and the browser's own check names a blank field. The fields are
-`.form-group`s (`FormField`'s markup), and a password is a `PasswordField` (§ Form system). Register's other fields (name,
-email) are flow 11's and still sit in `.mb-3` wrappers; only its passwords are `PasswordField`s.
+`.form-group`s (`FormField`'s markup), and a password is a `PasswordField` (§ Form system). Register's fields are
+`FormField`s and `PasswordField`s too (T373, flow 11).
 
 **A refusal travels as a code, and the page chooses the words** (T265, T285). Every endpoint that sends the browser back
 to an account page with a refusal puts a code in `?error=`, never a sentence, and never an exception's message: sign-in
@@ -4077,12 +4229,19 @@ holds for each code it knows, and one general sentence for any other, so a craft
 cannot put words of its choosing on Wombat's own page. No sentence says "Please" (C5). The institutional sign-in's
 refusals are `ExternalLoginRefusal` codes, which the sign-in and link pages read alike. An exception that is not a
 refusal is logged, and the page says the action could not be completed. Until T285 the sign-in, link and register pages
-printed their `?error=` as it arrived. A refused registration keeps the form under its refusal while the invitation can
-still be used, the first field taking the focus and every field naming the refusal; an invitation that cannot be used
-says why and offers no form. Whether it can be used is the invitation preview's answer, never the code's: the preview
-refuses whatever no input could put right, an invitation revoked, used, expired or unknown and an address no account can
-be created for (one an account already holds, or one Identity will not take as a user name), by the provisioner's own
-test. So the form never comes back under the same refusal on every submit.
+printed their `?error=` as it arrived. Register's codes travel in the register cookie, not the address (T373, flow 11,
+S1). **On Register a refusal is its field's message** (S15): AuthLayout's one message slot becomes a message per field. A
+refusal sits under its field (`.validation-message`), the field marked (`aria-invalid`) and described by it, and the
+focus goes to the field (`autofocus`, on a static page). PasswordRules' refusal is the Password field's message, "The
+new password needs: At least 12 characters.", and the field is described by it and by the rules' list (G04). A refused
+confirmation empties both password fields, keeps the focus on Password, says "The password confirmation does not
+match. Type the password again in both fields." under Confirm password, and Password is described by the
+confirmation's message too (G05). A name the validator refuses says so under it, "Last name: enter 100 characters or
+fewer." (G06). The names are kept; the passwords never are. An invitation that cannot be used is its own card and offers
+no form. Whether it can be used is the invitation preview's answer, never the code's: the preview refuses whatever no
+input could put right, an invitation revoked, used, expired or unknown and an address no account can be created for
+(one an account already holds, or one Identity will not take as a user name), by the provisioner's own test. So the form
+never comes back under the same refusal on every submit.
 
 **The six password rules** (C2, E11) have one heading, "The new password needs:", one order and one sentence each
 (`PasswordRuleMessages`, from `WombatIdentityErrorDescriber`): at least 12 characters; at least 4 different characters;
@@ -4504,7 +4663,7 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
 "Flow 07: the review sitting (T361)": .review-page, .review-section-title, scroll-margin-top on the page's focus targets, .review-progress-link, .sitting-bar, .sitting-bar--reader, .sitting-bar--starts, .sitting-bar-line, .sitting-bar-state, .sitting-bar-count, .sitting-bar-mode, .sitting-bar-present, .sitting-bar-sentence, .sitting-bar-as-of, .sitting-bar-actions (≥641px: the chair's sticky, z-index 1; 641–1023px: Present hidden; ≤640px: stacked, 44px), .review-notes-list, .agenda-epa-code, .agenda-epa-title, .agenda-line-detail, .agenda-line-action, .agenda-draft-kept, .agenda-form-row, .agenda-result-row, .agenda-table-container (+ @container agenda below 760px: stacked, .agenda-line.is-editing), .agenda-form, .agenda-form-heading, .agenda-form-standing, .agenda-foot, .snapshot-pick, .snapshot-pick-line, .snapshot-pick-group, .snapshot-pick-more, .chart-jump, .chart-back, .evidence-reader(-back|-heading|-moved), .decision-actions, .decision-actions-text, .quorum-line, .decision-record, .snapshot-group-heading, .dialog-body, .dialog-list (+ ≤640px: 44px row actions, Read, Back and Record)
 
 /* ── The committee calendar ─────────────────────── */
-"Flow 08: the committee calendar, shared (T364)": .status-cell, .period-window, .list-section-page, .list-section-count, .choice-row, .choice-group, .choice-group.is-invalid (+ forced colours: a border), .person-cell, .readonly-value (+ ≤640px, inside .committee-calendar: 44px form controls and full-width 44px row, header and form actions; ≤900px: 44px stack-wide row actions)
+"Flow 08: the committee calendar, shared (T364)": .status-cell, .period-window, .list-section-page, .list-section-count, .choice-row, .choice-group, .choice-group.is-invalid (+ forced colours: a border), .person-cell, .readonly-value (+ ≤640px, inside .committee-calendar: 44px form controls and full-width 44px row and form actions; its header actions and its 44px stack-wide row actions are flow 11's general rules since T373)
 "Flow 08: Decisions due (T364)": .trainee-line, .rung-legend > .table-container (+ ≤640px: the trainee line's button 44px)
 "Flow 08: the schedule and Committee reviews (T364)": .schedule-grid, .schedule-fields, .field-pair, .agenda-preview, .agenda-live, .agenda-count, .agenda-lines (+ <1100px: the Agenda under the fields)
 "Flow 08: the panels (T364)": .panel-section, .form-section-title, .panel-seats, .panel-lock
@@ -4515,10 +4674,15 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
 "Flow 09: the STARs (T366)": .stars-section, .star-grid, .star-card, .star-rationale, .download-result, .issued-review, .clinic-table .has-note, .clinic-table .history-note (flow 03's note row, generalised; + ≤900px: the line joins its stacked row, its cell unpadded, D4; ≤640px, inside .my-authorisations and .entrustment-list: 44px buttons, a failed download's Try again among them (D7), and Issued's link, the cards' Download full width)
 
 /* ── The MSF campaign ───────────────────────────── */
-"Flow 10: the MSF pages, shared (T369)": .msf-page, .msf-page--measure, .section-title(--h3), .msf-stack-card, .msf-centre, .status-card, .status-head, .status-line, .status-note, .status-actions, .trainee-cell, .kind-line, .nowrap, .msf-inline-link, .msf-page dialog .dialog-body ul (+ ≤640px: .msf-header's actions stacked, 44px, full width; .msf-page buttons 44px; the status actions stacked; .msf-page td .actions-cell, a stacked list's row actions, a full-width column, written once here, D9; a dialog's buttons stacked, the action on top, M10; ≤900px: .msf-page .clinic-table--stack-wide td .actions-cell .btn 44px, D2)
+"Flow 10: the MSF pages, shared (T369)": .msf-page, .msf-page--measure, .section-title(--h3), .msf-stack-card, .msf-centre, .status-card, .status-head, .status-line, .status-note, .status-actions, .trainee-cell, .kind-line, .nowrap, .msf-inline-link, .msf-page dialog .dialog-body ul (+ ≤640px: .msf-header's actions stacked, 44px, full width; .msf-page buttons 44px; the status actions stacked; .msf-page td .actions-cell, a stacked list's row actions, a full-width column, written once here, D9; its dialog's stacked buttons, M10, and its 44px stack-wide row actions, D2, are flow 11's general rules since T373)
 "Flow 10: the report (T369)": .threshold-list (.is-met, .is-short, .is-rule), .report-line, .sep, .group-card, .group-avg, .group-question, .group-comments, .groups-intro, .suppressed-line, .release-section, .release-actions, .msf-narrow-field, .stored (+ the report's uses of .section-title, .submit-check, .move-reasons, .alert inside .msf-page)
 "Flow 10: the campaign (T369)": .msf-gap-top, .msf-block, .status-split, .count-box, .count-table caption/th/tfoot, .anon-caption, .num, .links-part, .invitee-rows, .invitee-row, .invitee-address, .invitee-group, .add-form, .add-invitee (≤900px: one column, S14), .msf-facts, .msf-facts-wide, .msf-facts .epa-lines, .msf-form-column, .msf-form-cards, .msf-card-title, .template-fold, .template-form, .choice-stack, .epa-checks (+ ≤640px, inside .msf-page: 44px controls, .form-actions stacked, the add form's button full width, the fold's summary and the boxes 44px)
 "Flow 10: her reports, the respondent and coverage (T369)": .msf-measure, .my-report, .narrative, .portfolio-links, .respond-card, .account-brand(-mark), .respond-meta, .respond-privacy(-title, -list), .respond-form, .respond-label, .respond-optional, .respond-required, .coverage-windows, .coverage-programme, .coverage-table, .is-covered (+ /msf/respond's .error-summary, .scale-choices, .form-check inside .respond-card)
+
+/* ── Onboarding ─────────────────────────────────── */
+"Flow 11: the onboarding pages, shared (T373)": .inv-page, .inv-page--form, .inv-count, .inv-when (span), .action-result .alert / .validation-message / .alert overflow-wrap (M7), .loading-line, .skel-title, .skel-line, .skel-short (+ ≤900px: .clinic-table--stack-wide .btn 44px, S16; ≤640px, on every page: .dialog-card .form-actions stacked column-reverse with 44px full-width buttons, M8; .header-container .actions-cell full width with 44px buttons, M9; .inv-page .btn 44px)
+"Flow 11: invitations (T373)": .inv-page .action-result:empty, .delivery, .delivery--sending, .delivery--sent, .delivery--warn (+ .icon), .inv-page .clinic-table th.col-wrap (Delivery's floor, 901 to 1100px), .clinic-table .history-note--warning, .otl, .otl-row, .otl-help, .otl-said:empty (+ ≤640px, inside .inv-page: the link's field over Copy link, both full width and 44px; the form's actions and each role's row 44px)
+"Flow 11: admission (T373)": .wait-card (+ .dashboard-card-body, h3), .wait-links, .ty-output, .clinic-table .col-actions--single, .clinic-table th.col-wrap--curriculum (+ ≤640px: .wait-card .wait-links a 44px)
 ```
 
 The Progress section replaced the Trajectory chart section that held T123's chart (2026-10-04, T355): every flow 05
@@ -4526,7 +4690,9 @@ rule is in it, none elsewhere. The Programme section holds every flow 06 rule, n
 review sitting section holds every flow 07 rule, none elsewhere (2026-10-12, T361). The four Committee calendar sections hold
 every flow 08 rule, none elsewhere: the shared one first, then one per page group (2026-10-13, T364). The three Outcomes,
 STARs and appeals sections hold every flow 09 rule, none elsewhere: her review, the committee's appeal, the STARs
-(2026-10-14, T366).
+(2026-10-14, T366). The three Onboarding sections hold every flow 11 rule, none elsewhere: the shared one first,
+with the general phone rules flows 08 and 10 had each written for their own pages, then the invitations and the admission
+(2026-10-20, T373). Register is on the auth card and needs no rule of its own.
 
 When a new section is needed (say `/* ── Badges ── */`), add its heading in alphabetical-ish order inside the existing block and keep the rest of the file untouched.
 

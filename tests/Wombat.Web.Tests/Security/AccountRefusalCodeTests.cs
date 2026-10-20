@@ -53,7 +53,8 @@ public sealed class AccountRefusalCodeTests
     {
         SignInOutcome.Describe(code, institutionalSignInOffered: false, Lockout).Should().Be(SignInOutcome.GeneralRefusal);
         LinkExternalOutcome.Describe(code).Should().Be(LinkExternalOutcome.GeneralRefusal);
-        RegisterOutcome.Describe([code], new(), new()).Should().Equal(RegisterOutcome.GeneralRefusal);
+        RegisterOutcome.IsFieldCode(code).Should().BeFalse("the register page shows a code it does not know as G14 (T373)");
+        RegisterOutcome.InvitationRefusalOf(code).Should().BeNull();
     }
 
     [Fact]
@@ -83,17 +84,6 @@ public sealed class AccountRefusalCodeTests
             .Should().Be("/account/link-external?returnUrl=%2F&error=SsoLinkRefused");
     }
 
-    [Fact]
-    public void TheRegisterPagesAddress_CarriesTheTokenAndEachCodeOnce_AndAFailureWithNoCodeStillSaysSomething()
-    {
-        RegisterOutcome.Url("a+b/c", [RegisterOutcome.ConfirmationMismatch])
-            .Should().Be("/account/register?token=a%2Bb%2Fc&error=ConfirmationMismatch");
-        RegisterOutcome.Url("t", ["PasswordTooShort", "PasswordRequiresDigit", "PasswordTooShort", " "])
-            .Should().Be("/account/register?token=t&error=PasswordTooShort&error=PasswordRequiresDigit");
-        RegisterOutcome.Url("t", []).Should().Be("/account/register?token=t&error=Failed");
-        RegisterOutcome.Url(null, [RegisterOutcome.TokenMissing]).Should().Be("/account/register?error=TokenMissing");
-    }
-
     [Theory]
     [InlineData(InvitationRefusal.Invalid, "InvitationInvalid")]
     [InlineData(InvitationRefusal.Revoked, "InvitationRevoked")]
@@ -107,7 +97,7 @@ public sealed class AccountRefusalCodeTests
 
         RegisterOutcome.IsRefusal(refusal).Should().BeTrue();
         RegisterOutcome.CodesFor(refusal).Should().Equal(code);
-        RegisterOutcome.Describe([code], new(), new()).Should().Equal(InvitationRefusals.Describe(reason));
+        RegisterOutcome.InvitationRefusalOf(code).Should().Be(reason, "the page shows the refusal's own card (T373)");
     }
 
     /// <summary>
@@ -122,7 +112,7 @@ public sealed class AccountRefusalCodeTests
             var codes = RegisterOutcome.CodesFor(new InvitationRefusedException(reason));
 
             codes.Should().ContainSingle().Which.Should().NotBe(RegisterOutcome.Failed, $"{reason} has a code of its own");
-            RegisterOutcome.Describe(codes, new(), new()).Should().Equal(InvitationRefusals.Describe(reason));
+            RegisterOutcome.InvitationRefusalOf(codes[0]).Should().Be(reason);
         }
     }
 
@@ -135,20 +125,34 @@ public sealed class AccountRefusalCodeTests
             ["PasswordTooShort", "InvalidEmail"]);
 
         RegisterOutcome.CodesFor(refusal).Should().Equal("PasswordTooShort", "InvalidEmail");
-        RegisterOutcome.Describe(RegisterOutcome.CodesFor(refusal), new(), new() { RequiredLength = 12 })
-            .Should().Equal(RegisterOutcome.GeneralRefusal, "The new password needs:", "At least 12 characters.");
+        RegisterOutcome.PasswordRulesMessage(RegisterOutcome.CodesFor(refusal), new() { RequiredLength = 12 })
+            .Should().Be("The new password needs: At least 12 characters.", "G04: Password's own message (T373)");
 
         RegisterOutcome.CodesFor(new InvitationRefusedException(InvitationRefusal.AccountNotCreated, "no codes", []))
             .Should().Equal(RegisterOutcome.Failed);
     }
 
+    /// <summary>
+    /// T373 (flow 11, S15, G06): a validator's refusal travels as one code for each field it refused, so the page puts each
+    /// message under its field. Until T373 every one was DetailsInvalid, one sentence above the form.
+    /// </summary>
     [Fact]
-    public void AValidatorsRefusal_TravelsAsDetailsInvalid()
+    public void AValidatorsRefusal_TravelsAsACodeForEachFieldItRefused()
     {
-        var refusal = new ValidationException([new ValidationFailure("FirstName", "'First Name' must not be empty.")]);
+        var refusal = new ValidationException(
+        [
+            new ValidationFailure("FirstName", "'First Name' must not be empty.") { ErrorCode = "NotEmptyValidator" },
+            new ValidationFailure("LastName", "too long") { ErrorCode = "MaximumLengthValidator" },
+            new ValidationFailure("LastName", "too long again") { ErrorCode = "MaximumLengthValidator" },
+            new ValidationFailure("Password", "'Password' must not be empty.") { ErrorCode = "NotEmptyValidator" }
+        ]);
 
         RegisterOutcome.IsRefusal(refusal).Should().BeTrue();
-        RegisterOutcome.CodesFor(refusal).Should().Equal(RegisterOutcome.DetailsInvalid);
+        RegisterOutcome.CodesFor(refusal).Should().Equal(
+            RegisterOutcome.FirstNameMissing, RegisterOutcome.LastNameTooLong, RegisterOutcome.PasswordMissing);
+        RegisterOutcome.CodesFor(refusal).Should().OnlyContain(code => RegisterOutcome.IsFieldCode(code));
+        RegisterOutcome.CodesFor(new ValidationException([new ValidationFailure("Token", "empty")]))
+            .Should().Equal(new[] { RegisterOutcome.Failed }, "the token is no field of the form's");
     }
 
     [Fact]
@@ -158,6 +162,5 @@ public sealed class AccountRefusalCodeTests
 
         RegisterOutcome.IsRefusal(fault).Should().BeFalse("the caller logs it");
         RegisterOutcome.CodesFor(fault).Should().Equal(RegisterOutcome.Failed);
-        RegisterOutcome.Url("t", RegisterOutcome.CodesFor(fault)).Should().Be("/account/register?token=t&error=Failed");
     }
 }

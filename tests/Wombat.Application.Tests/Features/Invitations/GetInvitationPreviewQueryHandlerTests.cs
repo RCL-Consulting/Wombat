@@ -82,7 +82,8 @@ public sealed class GetInvitationPreviewQueryHandlerTests
         var preview = await new GetInvitationPreviewQueryHandler(dbContext, _tokenService, _provisioner)
             .Handle(new GetInvitationPreviewQuery(token), CancellationToken.None);
 
-        preview.Should().Be(new InvitationPreviewDto("invitee@example.test", "Assessor"));
+        preview.Email.Should().Be("invitee@example.test");
+        preview.TargetRole.Should().Be("Assessor");
         _provisioner.AskedAbout.Should().Equal("invitee@example.test");
     }
 
@@ -174,6 +175,9 @@ public sealed class GetInvitationPreviewQueryHandlerTests
             int? subSpecialityId,
             CancellationToken cancellationToken = default)
             => throw new NotSupportedException("A preview creates no account.");
+
+        public Task<T> InOneTransactionAsync<T>(Func<CancellationToken, Task<T>> work, CancellationToken cancellationToken = default)
+            => work(cancellationToken);
     }
 
     private async Task<(ApplicationDbContext DbContext, string Token)> CreateDbContextWithInvitationAsync(Action<Invitation>? configure = null)

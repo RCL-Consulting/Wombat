@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Users;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.Institutions;
 using Wombat.Domain.Invitations;
 
@@ -27,7 +28,8 @@ public sealed class ListActiveInvitationsQueryHandler : IRequestHandler<ListActi
         UserAdministrationRules.DemandUserAdministration(request.Principal);
 
         var utcNow = _timeProvider.GetUtcNow().UtcDateTime;
-        var today = DateOnly.FromDateTime(utcNow);
+        // A link works through its last day on the South African calendar (Invitation.HasPassedLastDay; T373, F7).
+        var today = ProgrammeCalendar.DateOf(utcNow);
 
         var institutions = _dbContext.Set<Institution>();
         var colleges = _dbContext.Set<College>();
@@ -81,7 +83,10 @@ public sealed class ListActiveInvitationsQueryHandler : IRequestHandler<ListActi
             })
             .ToListAsync(cancellationToken);
 
-        // What became of each link's mail is the Domain's one rule (T283), which the resend asks too.
+        // What became of each link's mail is the Domain's one rule (T283), which the resend asks too. Then the order the
+        // page states (T373, flow 11, L04, L12): the rows not delivered first, newest first among them, then the rest newest
+        // first. In memory, after DeliveryOf, since delivery is judged against now and is no column; here, so every
+        // reader of the list agrees.
         return rows
             .Select(row =>
             {
@@ -104,6 +109,9 @@ public sealed class ListActiveInvitationsQueryHandler : IRequestHandler<ListActi
                     row.DeliveryFailures,
                     Invitation.SuggestsCheckingAddress(delivery, row.DeliveryFailures));
             })
+            .OrderBy(row => row.Delivery == InvitationDelivery.NotDelivered ? 0 : 1)
+            .ThenByDescending(row => row.IssuedOn)
+            .ThenByDescending(row => row.Id)
             .ToList();
     }
 }

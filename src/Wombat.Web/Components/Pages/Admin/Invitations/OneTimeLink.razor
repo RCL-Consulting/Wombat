@@ -1,0 +1,97 @@
+@inject IJSRuntime JS
+
+@*
+  The OneTimeLink (T373, flow 11, S10; boards N03, N06, N06b, N09, N21, L10): what an issue or a resend made, inside the
+  page's ActionResult, which takes the focus. A success Alert (its first sentence bold), the link in a read-only field the
+  person can select, Copy link, and one live region that says whether the copy worked. The link is the real one
+  (InvitationLinks.RegistrationUrl), shown once: the page that holds it clears it at the start of its next action (M5),
+  and nothing stores it. No inline script: the clipboard is wombat.js's copyText.
+*@
+<div class="otl">
+  <Alert Kind="success"><strong>@Lead</strong> @Rest</Alert>
+  <label for="@LinkId">Registration link for @InvitationText.Address(Email)</label>
+  <div class="otl-row">
+    <input id="@LinkId" class="form-control" readonly value="@Link" aria-describedby="@HelpId @SaidId" />
+    <button type="button" class="btn btn-outline" aria-describedby="@SaidId" @onclick="CopyAsync">
+      @if (_copied is true)
+      {
+        <Icon Name="check" />@InvitationText.Copied
+      }
+      else
+      {
+        <Icon Name="copy" />@InvitationText.CopyLink
+      }
+    </button>
+  </div>
+  <p id="@SaidId" class="otl-said field-help" aria-live="polite">@Said</p>
+  <p id="@HelpId" class="otl-help">@Help</p>
+  @if (ShowOpenInvitations)
+  {
+    <p><a href="@OnboardingLinks.Invitations">@InvitationText.OpenInvitations</a></p>
+  }
+</div>
+
+@code {
+  /// <summary>The link field's id: the label names it, a test finds it.</summary>
+  public const string LinkId = "otl-link";
+
+  private const string SaidId = "otl-said";
+  private const string HelpId = "otl-help";
+
+  // Null until Copy link is pressed; then whether the browser took the link.
+  private bool? _copied;
+
+  /// <summary>The address the link is for: named in the label, with a break after its @ (M7).</summary>
+  [Parameter, EditorRequired] public string Email { get; set; } = default!;
+
+  /// <summary>The registration link itself.</summary>
+  [Parameter, EditorRequired] public string Link { get; set; } = default!;
+
+  /// <summary>The result's first sentence, bold ("Invitation issued for ‹address›.").</summary>
+  [Parameter, EditorRequired] public RenderFragment Lead { get; set; } = default!;
+
+  /// <summary>The rest of the result's words.</summary>
+  [Parameter, EditorRequired] public string Rest { get; set; } = default!;
+
+  /// <summary>Until when it works and that it is shown once (F7).</summary>
+  [Parameter, EditorRequired] public string Help { get; set; } = default!;
+
+  /// <summary>Invite a person links back to the list (N03); the list itself does not (L10).</summary>
+  [Parameter] public bool ShowOpenInvitations { get; set; }
+
+  private string? Said => _copied switch
+  {
+    true => InvitationText.LinkCopied,
+    false => InvitationText.CopyFailed,
+    _ => null
+  };
+
+  protected override void OnParametersSet()
+  {
+    // A new link has not been copied.
+    if (!string.Equals(_shownLink, Link, StringComparison.Ordinal))
+    {
+      _shownLink = Link;
+      _copied = null;
+    }
+  }
+
+  private string? _shownLink;
+
+  /// <summary>
+  /// Copies the link through the clipboard (S10): "Link copied." and the button "Copied" when the browser took it; when it
+  /// refused (no permission, no clipboard, an insecure page) or the call failed, the same live region says to select the link
+  /// and copy it by hand, and the button keeps its words.
+  /// </summary>
+  private async Task CopyAsync()
+  {
+    try
+    {
+      _copied = await JS.InvokeAsync<bool>("wombat.copyText", Link);
+    }
+    catch (Exception exception) when (exception is JSException or JSDisconnectedException or InvalidOperationException or TaskCanceledException)
+    {
+      _copied = false;
+    }
+  }
+}

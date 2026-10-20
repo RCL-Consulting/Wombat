@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
+using Wombat.Domain.Institutions;
 using Wombat.Domain.Invitations;
 
 namespace Wombat.Application.Features.Invitations;
@@ -21,15 +22,19 @@ public sealed class GetInvitationPreviewQueryHandler : IRequestHandler<GetInvita
     private readonly IApplicationDbContext _dbContext;
     private readonly IInvitationTokenService _tokenService;
     private readonly IInvitedUserProvisioner _provisioner;
+    private readonly TimeProvider _timeProvider;
 
+    /// <param name="timeProvider">What a link's last day is judged against (T373, F7); the system clock unless a test pins it.</param>
     public GetInvitationPreviewQueryHandler(
         IApplicationDbContext dbContext,
         IInvitationTokenService tokenService,
-        IInvitedUserProvisioner provisioner)
+        IInvitedUserProvisioner provisioner,
+        TimeProvider? timeProvider = null)
     {
         _dbContext = dbContext;
         _tokenService = tokenService;
         _provisioner = provisioner;
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     public async Task<InvitationPreviewDto> Handle(GetInvitationPreviewQuery request, CancellationToken cancellationToken)
@@ -40,7 +45,18 @@ public sealed class GetInvitationPreviewQueryHandler : IRequestHandler<GetInvita
 
         // The invitation's own state first: an accepted invitation's address is held by the account it created, and it
         // reads as used, not as taken.
-        var invitation = InvitationRules.GetActiveInvitationOrThrow(invitations, request.Token, _tokenService);
+        Invitation invitation;
+        try
+        {
+            invitation = InvitationRules.GetActiveInvitationOrThrow(
+                invitations, request.Token, _tokenService, _timeProvider.GetUtcNow().UtcDateTime);
+        }
+        catch (InvitationRefusedException refused) when (refused.Reason == InvitationRefusal.Expired)
+        {
+            // The card names the day the link worked until (T373, flow 11, G10).
+            var expired = invitations.First(entity => _tokenService.VerifyToken(request.Token, entity.TokenHash));
+            throw new InvitationRefusedException(InvitationRefusal.Expired) { LastDay = expired.ExpiresOn };
+        }
 
         var status = await _provisioner.GetAddressStatusAsync(invitation.Email, cancellationToken);
         if (InvitationRefusals.For(status) is { } refusal)
@@ -48,6 +64,31 @@ public sealed class GetInvitationPreviewQueryHandler : IRequestHandler<GetInvita
             throw new InvitationRefusedException(refusal);
         }
 
-        return new InvitationPreviewDto(invitation.Email, invitation.TargetRole);
+        // The scope's names and the link's last day, for the card's "as ‹role and scope›" and its note (T373, flow 11, Q6, F7).
+        var institutionName = invitation.InstitutionId is int institutionId
+            ? await _dbContext.Set<Institution>().Where(entity => entity.Id == institutionId).Select(entity => entity.Name)
+                .FirstOrDefaultAsync(cancellationToken)
+            : null;
+        var collegeName = invitation.CollegeId is int collegeId
+            ? await _dbContext.Set<College>().Where(entity => entity.Id == collegeId).Select(entity => entity.Name)
+                .FirstOrDefaultAsync(cancellationToken)
+            : null;
+        var specialityName = invitation.SpecialityId is int specialityId
+            ? await _dbContext.Set<Speciality>().Where(entity => entity.Id == specialityId).Select(entity => entity.Name)
+                .FirstOrDefaultAsync(cancellationToken)
+            : null;
+        var subSpecialityName = invitation.SubSpecialityId is int subSpecialityId
+            ? await _dbContext.Set<SubSpeciality>().Where(entity => entity.Id == subSpecialityId).Select(entity => entity.Name)
+                .FirstOrDefaultAsync(cancellationToken)
+            : null;
+
+        return new InvitationPreviewDto(
+            invitation.Email,
+            invitation.TargetRole,
+            institutionName,
+            collegeName,
+            specialityName,
+            subSpecialityName,
+            invitation.ExpiresOn);
     }
 }

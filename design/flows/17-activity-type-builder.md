@@ -410,8 +410,9 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/users → /admin/users/{UserId} → /admin/trainees → /admin/trainees/edit → /admin/activity-types/{ActivityTypeId:int}
 Do: At 390 px, open Users and Dr Dlamini's account, Trainees and Dr Dlamini's profile, then the KGK Teaching Session
   Log in the builder.
-Expect: The user page's cards stack, and its buttons wrap rather than overflow. The trainee profile form stacks its
-  fields. The builder's editor and live preview stack in one column (DESIGN.md § Builder layout, T266), and its tab bar
+Expect: The user page's cards stack, and its buttons wrap rather than overflow. On Trainees, Current trainees is
+  stacked, a block per row with its Edit 44 px, and does not scroll sideways (T373, S16); Completed and closed is flow
+  13's list as built. The trainee profile form stacks its fields. The builder's editor and live preview stack in one column (DESIGN.md § Builder layout, T266), and its tab bar
   stays usable.
 
 [appendix-cross-cutting.md]

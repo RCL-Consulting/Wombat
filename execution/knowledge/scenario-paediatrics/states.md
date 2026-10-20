@@ -70,8 +70,9 @@ END $$;
 
 ### Typed codes on the account pages
 
-The sign-in, register, change-password and My account pages choose their words from a code in the address (`?error=`,
-and `?status=` on My account), never from text in it (T265, T285). Typing a code shows exactly the page a real refusal
+The sign-in, change-password and My account pages choose their words from a code in the address (`?error=`, and
+`?status=` on My account), never from text in it (T265, T285). Register's codes travel in the register cookie since T373
+(flow 11, S1), so none of its states is typed: each row below plays it. Typing a code shows exactly the page a real refusal
 shows, with nothing sent. Where the story plays the real refusal, the row uses the story; the rest are typed.
 
 - **Sign-in** (`/account/login?error=<code>`): `FieldsMissing`, `Refused`, `TooManyAttempts`, `SessionEnded`,
@@ -94,9 +95,8 @@ shows, with nothing sent. Where the story plays the real refusal, the row uses t
   `RemoveTooManyAttempts`, `RemoveAccountLocked` (with `&minutes=N`), `RemoveLastSignIn`, `RemoveFailed`. With no institutional sign-in linked (every cast account
   on dev) each shows in the card, naming no institution; the dialog reopened with its refusal needs a linked sign-in
   (States no local replay reaches).
-- **Register** (`/account/register?token=<a usable token>&error=<code>`): `ConfirmationMismatch`, `DetailsInvalid`,
-  `Failed` and Identity's password codes, shown under the form. With an unusable token the page says why the invitation
-  cannot be used, whatever the code.
+- **Register**: none since T373. The page reads what it shows from the register cookie (`RegisterCookie`), which
+  `/account/register/start` writes from the link, never from the address (S1, S2; T315, T341).
 
 ## Shell and framework
 
@@ -161,7 +161,10 @@ dashboard Home shows, and the page it lands on says so once ("You are now acting
 | SpecialityAdmin | `states/home--speciality-admin.png` | Dr Mokoena | At Step 2.38: Waiting for assessors "Nothing is waiting for an assessor.", Registrars, Targets by EPA; no Pending reviews, no Trainees in programme (T358). |
 | SpecialityAdmin with figures | `states/home--speciality-admin-figures.png` | Dr Mokoena | At Step 3.53: "2 waiting, 1 overdue", the five, PAED-001 last at "2 of 5". |
 | SubSpecialityAdmin | `states/home--sub-speciality-admin.png` | Dr Sithole | At Step 3.54. |
-| Trainee awaiting admission | `states/home--awaiting-admission.png` | Dr Mahlangu (PendingTrainee) | At Step 2.18: the one Awaiting admission card, and the pending trainee's nav. |
+| Trainee awaiting admission | `states/home--awaiting-admission.png` | Dr Mahlangu (PendingTrainee) | At Step 2.18: the one Awaiting admission card (the control edge, no stripe): the lead, Institution, Programme "Paediatrics / Paediatrics, on the Paediatric EPA Curriculum (11.1)", Invited by "Nolwazi Mbatha, Institutional admin, on `D`", Who admits you, the four steps and Meanwhile's two links (T373, P01), and the pending trainee's nav. |
+| Awaiting admission, invited by the Administrator | `states/home--awaiting-admission-admin-issued.png` | A scratch registrar | Scratch (post-appendix): devadmin invites `waiting2@kgk.wombat.local` as Trainee at KGK, Paediatrics / Paediatrics, and it registers: no Invited by line, and Who admits you reads "An Institutional admin at Kgosi Kgari Teaching Hospital." with no "ask" (F3, P04). |
+| Awaiting admission, the issuer gone | `states/home--awaiting-admission-issuer-gone.png` | A scratch registrar | Scratch (post-appendix): Prof Mbatha invites `waiting3@kgk.wombat.local` as Trainee at KGK, Paediatrics / Paediatrics, and it registers; devadmin then locks Prof Mbatha out (Lock out user on her page), and the registrar's Home is reloaded: no Invited by line, since the issuer no longer signs in (F3, P07). Then devadmin presses Reactivate user on her page, so the later rows that sign in as Prof Mbatha on this database can. |
+| Awaiting admission, no invited scope | `states/home--awaiting-admission-no-scope.png` | A scratch registrar | Scratch (post-appendix), on Awaiting admission's scratch registrar: `DELETE FROM "UserSpecialityScopes" s USING "AspNetUsers" u WHERE u."Id" = s."UserId" AND u."Email" = 'waiting2@kgk.wombat.local';` and the same for `"UserSubSpecialityScopes"`: the lead "… waiting to be admitted at Kgosi Kgari Teaching Hospital." and no Programme line, as for an SSO-provisioned registrar (S5, P05). |
 | Trainee, admitted, nothing filed | `states/home--trainee-first.png` | Dr Molefe | At Step 2.39: Your targets "Training year 4 — it sets the minimum level each encounter is judged against.", "0 of 10" and "0 of 5", Furthest short PAED-001 to 005, each "0 of 3 this semester · 3 more by 2026-11-30"; Needs you; Recent decisions "No decisions yet."; My authorisations "No STAR yet. When the committee issues one, it shows here against training year 4's level." No Upcoming deadlines (T355). |
 | Trainee with activity | `states/home--trainee.png` | Dr Dlamini | At Step 3.50: Furthest short PAED-002, 003, 005, 010 and 012; Recent decisions, four Completed rows, each with its count line ("PAED-004: 1 of 3 this semester.", "PAED-001: 3 of 3 this semester, met."). |
 | Trainee with a declined request | `states/home--trainee-declined.png` | Dr Ndlovu | At Step 3.12, before opening it: Recent decisions' one row, Declined in red, with "File it again, to someone else" under it in place of a count (T355, E5). |
@@ -224,17 +227,21 @@ sign-out page (`/account/logout` and `/account/logout-confirm`) sends a visitor 
 | `/account/login` | Each institutional sign-in refusal | `states/login--sso-<code>.png` | Anonymous | Typed, one capture per code of § Typed codes, `SsoNoEmail` to `SsoLinkFailed`, and `SsoFailed`. No change. |
 | `/account/login` | Unknown code | `states/login--general-refusal.png` | Anonymous | Typed: `?error=Call012`: "Sign-in could not be completed. Try again." No change. |
 | `/account/login` | Narrow | `states/login--narrow.png` | Anonymous | At Step A.7.12. |
-| `/account/register` | No token | `states/register--token-missing.png` | Anonymous | Typed: `/account/register`: "The invitation token is missing." No change. |
-| `/account/register` | The form | `states/register--form.png` | Anonymous | At Step 1.8, before Register: "Registering kruger@cmsa.wombat.local as CollegeAdmin.", and the six password rules under Password. |
-| `/account/register` | Password too short | `states/register--password-short.png` | Anonymous | At Step 2.9, the first attempt: "The new password needs: At least 12 characters." |
-| `/account/register` | Confirmation differs | `states/register--confirmation.png` | Anonymous | At Step 2.9, the second attempt. |
-| `/account/register` | Details invalid | `states/register--details-invalid.png` | Anonymous | After Step 2.26, before 2.27: Dr du Plessis's resent link with `&error=DetailsInvalid` added. No change. |
-| `/account/register` | Used | `states/register--used.png` | Anonymous | At Step 1.9. |
-| `/account/register` | Revoked | `states/register--revoked.png` | Anonymous | At Step 2.17. |
-| `/account/register` | Invalid | `states/register--invalid.png` | Anonymous | At Step 2.27, the replaced link. |
-| `/account/register` | Expired | `states/register--expired.png` | Anonymous | Scratch (post-appendix): Prof Mbatha invites `expired@kgk.wombat.local`; copy the link; `UPDATE "Invitations" SET "ExpiresOn" = now() - interval '1 day' WHERE "Email" = 'expired@kgk.wombat.local';`; open the link: "This invitation has expired." |
-| `/account/register` | Address already has an account | `states/register--account-exists.png` | Anonymous | Scratch (post-appendix): Prof Mbatha invites `botha@kgk.wombat.local` as Assessor; open the link: "A user with this email address already exists." |
-| `/account/register` | Could not be completed | `states/register--general-refusal.png` | Anonymous | Hold a read, open any registration link (static), wait 35 s: "Registration could not be completed. Try again." No change. |
+| `/account/register` | Link incomplete | `states/register--token-missing.png` | Anonymous | Typed, in a fresh session: `/account/register`, or `/account/register/start` with no token: "Invitation link incomplete", "The invitation token is missing." and "Open the link from the invitation email again. …" (G13). No change. |
+| `/account/register` | The form | `states/register--form.png` | Anonymous | At Step 1.8, before Register: "Complete registration", "This invitation is for kruger@cmsa.wombat.local, as College admin at College of Paediatricians of South Africa.", the read-only Email and its help, the six password rules under Password, and "Not expecting this invitation? Ignore it: its link works until `D+14`." (G02); the address bar reads `/account/register`. |
+| `/account/register` | Password too short | `states/register--password-short.png` | Anonymous | At Step 2.9, the first attempt: "The new password needs: At least 12 characters." under Password, which has the focus; the names kept (G04). |
+| `/account/register` | Confirmation differs | `states/register--confirmation.png` | Anonymous | At Step 2.9, the second attempt: "The password confirmation does not match. Type the password again in both fields." under Confirm password, both password fields empty, the focus on Password (G05). |
+| `/account/register` | Details invalid | `states/register--details-invalid.png` | Anonymous | Scratch (post-appendix): Prof Mbatha invites `details@kgk.wombat.local` as Trainee at KGK, Paediatrics / Paediatrics; open its link and Register with a Last name of 101 characters: "Last name: enter 100 characters or fewer." under Last name, focused, both names kept (G06; no `maxlength`, S21). |
+| `/account/register` | Used | `states/register--used.png` | Anonymous | At Step 1.9: "Invitation already used", with Sign in (G07). |
+| `/account/register` | Revoked | `states/register--revoked.png` | Anonymous | At Step 2.17: "Invitation revoked" (G08). |
+| `/account/register` | Invalid | `states/register--invalid.png` | Anonymous | At Step 2.27, the replaced link: "Invitation link not recognised" (G09). |
+| `/account/register` | Expired | `states/register--expired.png` | Anonymous | Scratch (post-appendix): Prof Mbatha invites `expired@kgk.wombat.local` as Trainee at KGK, Paediatrics / Paediatrics, and copies the link; `UPDATE "Invitations" SET "ExpiresOn" = (now() AT TIME ZONE 'Africa/Johannesburg')::date - 1 WHERE "Email" = 'expired@kgk.wombat.local';`; open the link: "Invitation expired", "This invitation has expired: its link worked until `D−1`." and "Ask the person who invited you for a new invitation." (G10, F7). The same scratch gives Invitations' Expired, not used. |
+| `/account/register` | Address already has an account | `states/register--account-exists.png` | Anonymous | Scratch (post-appendix): Invite a person refuses an address that has an account since T373 (N15), so a stand-in: Prof Mbatha invites `exists@kgk.wombat.local` as Assessor and copies the link; `UPDATE "Invitations" SET "Email" = 'botha@kgk.wombat.local' WHERE "Email" = 'exists@kgk.wombat.local';`; open the link: "Account already exists", "A user with this email address already exists." and "Sign in with that account.", with Sign in (G11). |
+| `/account/register` | Address not accepted | `states/register--not-accepted.png` | Anonymous | Scratch (post-appendix): Prof Mbatha invites `o'brien@kgk.wombat.local` (an apostrophe, which Identity's user names refuse) as Trainee; open its link: "Address not accepted", "This email address cannot be used for an account. Ask your administrator for an invitation to another address." (G12). |
+| `/account/register` | Could not be completed | `states/register--general-refusal.png` | Anonymous | Hold a read, open any registration link (static), wait 35 s: "Registration not completed", "Registration could not be completed. Nothing was saved." and "The invitation is still open in this browser for 30 minutes from when you opened its link.", with Try again, which shows the form again once the hold is released (G14, F10). No change. |
+| `/account/register` | Timed out | `states/register--timed-out.png` | Anonymous | At Step 2.18, Dr Molefe's link before she registers: delete the register cookie (DevTools, Application, Cookies), then press Register: "Invitation timed out", "This page held the invitation for 30 minutes, and that time has passed. Nothing was saved." (G16). Open her link again to go on. No change. |
+| `/account/register` | Scripts blocked | `states/register--no-script.png` | Anonymous | At Step 2.18, Dr Molefe's link with JavaScript disabled: the form, its password fields with no Show toggle, and no token in the address (the redirect needs no script, G17). No change. |
+| `/account/register` | Signed in as someone else | `states/register--signed-in.png` | Prof Mbatha | At Step 2.18, Dr Ndlovu's link opened in Prof Mbatha's signed-in browser: "Signed in as someone else", "You are signed in as Nolwazi Mbatha. This invitation is for ndlovu@kgk.wombat.local." and "To register it, sign out first. Your own account is not changed.", with Sign out and continue and Go to Home (Q11, G18). Press Go to Home. No change. |
 | `/account/register` | Narrow | `states/register--narrow.png` | Anonymous | At Step 2.18, Dr Molefe's link at 390 px before registering. No change. |
 | `/account/forgot-password` | The page | `states/forgot-password--stub.png` | Anonymous | At Step A.4.4: "Forgotten password", who to ask, three steps, and Back to sign in. |
 | `/account/forgot-password` | Narrow | `states/forgot-password--narrow.png` | Anonymous | At Step A.7.12. |
@@ -807,20 +814,44 @@ until Show, and the address carries it (D3), so a filtered state is reached by i
 | `/admin/activity-types/{ActivityTypeId:int}` | Unknown id | `states/activity-type-edit--not-found.png` | Prof Mbatha | Typed: `/admin/activity-types/999999`: "The activity type could not be found." No change. |
 | `/admin/activity-types/{ActivityTypeId:int}` | Loading | `states/activity-type-edit--loading.png` | Prof Mbatha | Hold a read, then Edit on a row. No change. |
 | `/admin/activity-types/{ActivityTypeId:int}` | Narrow | `states/activity-type-edit--narrow.png` | Prof Mbatha | At Step A.7.9. |
-| `/admin/invitations` | No active invitations | `states/invitations-list--empty.png` | devadmin | At Step 1.5, before the first press. |
-| `/admin/invitations` | The CollegeAdmin form | `states/invitations-list--college-admin.png` | devadmin | At Step 1.5, CollegeAdmin chosen: the College picker. |
-| `/admin/invitations` | Refused | `states/invitations-list--refused.png` | devadmin | At Step 1.5, the first press. |
-| `/admin/invitations` | Issued, with its link | `states/invitations-list--issued.png` | devadmin | At Step 1.5, the second press. |
-| `/admin/invitations` | An institution's form | `states/invitations-list--institution.png` | Prof Mbatha | At Step 2.1. |
-| `/admin/invitations` | Rows being sent | `states/invitations-list--being-sent.png` | Prof Mbatha | At Step 2.16. |
-| `/admin/invitations` | Revoked | `states/invitations-list--revoked.png` | Prof Mbatha | At Step 2.17. |
-| `/admin/invitations` | Not delivered | `states/invitations-list--not-delivered.png` | Prof Mbatha | At Step 2.26, before Resend. |
-| `/admin/invitations` | Resent | `states/invitations-list--resent.png` | Prof Mbatha | At Step 2.26. |
-| `/admin/invitations` | Invalid address | `states/invitations-list--invalid.png` | Prof Mbatha | At Step 2.1, Issue invitation with the email `not-an-address`: the field's message. Nothing is sent. No change. |
-| `/admin/invitations` | Sent | `states/invitations-list--sent.png` | Prof Mbatha | Scratch (post-appendix), with an SMTP sink that accepts mail on the scratch instance's `Email__SmtpHost`: issue one invitation and reload once the worker reports it. |
-| `/admin/invitations` | Check the address | `states/invitations-list--check-address.png` | Prof Mbatha | Scratch (post-appendix), with a sink that refuses the address: issue, then Resend after each failure until the row says to check the address. |
-| `/admin/invitations` | Loading | `states/invitations-list--loading.png` | Prof Mbatha | Hold a read, then Invitations in the menu. No change. |
-| `/admin/invitations` | Narrow | `states/invitations-list--narrow.png` | Prof Mbatha | At Step 2.16, at 390 px, after the issues. No change. |
+| `/admin/invitations` | No active invitations | `states/invitations-list--empty.png` | devadmin | At Step 1.5, before Invite a person: "No active invitations", Invite a person in the header (L02). |
+| `/admin/invitations` | An Administrator's rows | `states/invitations-list--administrator.png` | devadmin | At Step 1.7, after Open Invitations: "2 active", each role over its institution or College, the Administrator's caption (L03). |
+| `/admin/invitations` | Nine rows | `states/invitations-list--nine.png` | Prof Mbatha | At Step 2.7, after Open Invitations: "9 active", her caption, newest first, Issued over its time in SAST (L04). |
+| `/admin/invitations` | Rows being sent | `states/invitations-list--being-sent.png` | Prof Mbatha | At Step 2.16 (L05). |
+| `/admin/invitations` | The revoke dialog | `states/invitations-list--revoke-dialog.png` | Prof Mbatha | At Step 2.17, Revoke… on `ndlvou@`: "Revoke this invitation?", Keep the invitation and Revoke invitation; at 390 px stacked, 44 px (L06). Before Step 2.17's confirm, Keep the invitation returns the focus to Revoke…. No change. |
+| `/admin/invitations` | Revoked | `states/invitations-list--revoked.png` | Prof Mbatha | At Step 2.17: the result, focused, with Invite another address, and no link (L07). |
+| `/admin/invitations` | Not delivered | `states/invitations-list--not-delivered.png` | Prof Mbatha | At Step 2.26, before Resend: Delivery "Not delivered" and its note row (L09). |
+| `/admin/invitations` | Resent | `states/invitations-list--resent.png` | Prof Mbatha | At Step 2.26: the new link in the result, focused, the row Issued at the resend's time (L10). |
+| `/admin/invitations` | Copy refused | `states/invitations-list--copy-failed.png` | Prof Mbatha | At Step 2.26, after Resend, in a browser whose clipboard permission is blocked (site settings), press Copy link: "Could not copy. Select the link and copy it yourself." under the field, the button still Copy link (S10). No change. |
+| `/admin/invitations` | Expired, not used | `states/invitations-list--expired.png` | Prof Mbatha | Scratch (post-appendix), Register's Expired scratch, then Invitations: "Expired, not used" "1 expired", its caption, the row with Last day `D−1` and Invite again (Q9, L14). Invite again opens Invite a person filled from it. |
+| `/admin/invitations` | Sent | `states/invitations-list--sent.png` | Prof Mbatha | Scratch (post-appendix), with an SMTP sink that accepts mail on the scratch instance's `Email__SmtpHost`: issue one invitation and reload once the worker reports it (L11). |
+| `/admin/invitations` | Check the address | `states/invitations-list--check-address.png` | Prof Mbatha | Scratch (post-appendix), with a sink that refuses the address: issue, then Resend after each failure until the row's note says to check the address (L12). |
+| `/admin/invitations` | Loading | `states/invitations-list--loading.png` | Prof Mbatha | Hold a read, then Invitations in the menu: "Loading the invitations." and a skeleton, no header action (L15). No change. |
+| `/admin/invitations` | Load failed | `states/invitations-list--load-failed.png` | Prof Mbatha | Hold a read, then Invitations in the menu, and wait 35 s: "Could not load the invitations. Nothing has changed. Try again, or come back in a few minutes." with Try again (L16). No change. |
+| `/admin/invitations` | Narrow | `states/invitations-list--narrow.png` | Prof Mbatha | At Step 2.16, at 390 px, after the issues: each row a block, Revoke… 44 px. No change. |
+| `/admin/invitations/new` | The Administrator's form | `states/invite-a-person--administrator.png` | devadmin | At Step 1.5, before choosing a role: eight radios, none chosen, no scope field. |
+| `/admin/invitations/new` | College admin, refused | `states/invite-a-person--refused.png` | devadmin | At Step 1.5, the first press: the refusal under College, focused (N02). |
+| `/admin/invitations/new` | Issued, with its link | `states/invite-a-person--issued.png` | devadmin | At Step 1.5, the second press: the OneTimeLink, the form under "Invite the next person" (N03). |
+| `/admin/invitations/new` | Institutional admin | `states/invite-a-person--institutional-admin.png` | devadmin | At Step 1.7: Institution starred, at "Choose an institution" (N04). |
+| `/admin/invitations/new` | An institution's form | `states/invite-a-person--institution.png` | Prof Mbatha | At Step 2.1: seven radios, the institution read out (N01). |
+| `/admin/invitations/new` | Coordinator | `states/invite-a-person--coordinator.png` | Prof Mbatha | At Step 2.2, Coordinator chosen: Speciality at Any speciality, no star, its help (N05). |
+| `/admin/invitations/new` | Link copied | `states/invite-a-person--copied.png` | Prof Mbatha | At Step 2.2, after Copy link: "Link copied.", the button Copied (N06). |
+| `/admin/invitations/new` | Assessor, before a speciality | `states/invite-a-person--assessor-before.png` | Prof Mbatha | At Step 2.4, Assessor chosen: "Then choose its sub-speciality." (N08a). |
+| `/admin/invitations/new` | Assessor | `states/invite-a-person--assessor.png` | Prof Mbatha | At Step 2.4, Paediatrics chosen: Sub-speciality drawn, starred (N08). |
+| `/admin/invitations/new` | Refused under Speciality | `states/invite-a-person--refused-speciality.png` | Prof Mbatha | At Step 2.6, the first press (N10). |
+| `/admin/invitations/new` | Refused under Sub-speciality | `states/invite-a-person--refused-sub.png` | Prof Mbatha | At Step 2.7, the first press (N11). |
+| `/admin/invitations/new` | Nothing chosen | `states/invite-a-person--blank.png` | Prof Mbatha | At Step 2.1, Issue invitation with nothing filled in: "Enter the person's email address." under Email, focused, and "Choose a role." under Role (N13, N25). Nothing is sent. No change. |
+| `/admin/invitations/new` | Invalid address | `states/invite-a-person--invalid.png` | Prof Mbatha | At Step 2.1, Issue invitation with the email `not-an-address` and a role: "Enter a valid email address, for example name@example.org." under Email (N14). Nothing is sent. No change. |
+| `/admin/invitations/new` | Filled from a revoked invitation | `states/invite-a-person--from-revoked.png` | Prof Mbatha | At Step 2.17, from Invite another address: "Role and scope filled from the revoked invitation to ndlvou@kgk.wombat.local. Type the right address.", Email empty and focused (N19). |
+| `/admin/invitations/new` | Filled from an expired invitation | `states/invite-a-person--from-expired.png` | Prof Mbatha | Scratch (post-appendix), from Expired, not used's Invite again: "Filled from the invitation to expired@kgk.wombat.local, whose last day was `D−1`. Check it, then issue.", the address, role and scope filled (N20). |
+| `/admin/invitations/new` | An address with an account | `states/invite-a-person--account-exists.png` | Prof Mbatha | Scratch (post-appendix): invite `smit@kgk.wombat.local` as Coordinator: under Email, "smit@kgk.wombat.local already has a Wombat account (Pieter Smit), so it cannot be invited. To give Pieter Smit another role, open Pieter Smit under Users." with its link (T286, N15). |
+| `/admin/invitations/new` | An account elsewhere | `states/invite-a-person--account-elsewhere.png` | Prof Mbatha | Scratch (post-appendix): invite `devadmin@wombat.local` as Coordinator: "An account with this address already exists. Ask a Wombat administrator to add the role.", naming nobody (N16, M3). |
+| `/admin/invitations/new` | An active invitation | `states/invite-a-person--active-invitation.png` | Prof Mbatha | Scratch (post-appendix): invite `twice@kgk.wombat.local` as Coordinator, then again: "twice@kgk.wombat.local already has an active invitation, issued `D` ‹hh:mm› SAST, which works until `D+14`. Resend it or revoke it under Invitations." (Q10, N17). |
+| `/admin/invitations/new` | An active invitation elsewhere | `states/invite-a-person--active-elsewhere.png` | Prof Mbatha | Scratch (post-appendix): devadmin invites `elsewhere@wombat.local` at the Demo Institution; then Prof Mbatha invites it: "This address already has an active invitation from another institution. Ask a Wombat administrator." (N18). |
+| `/admin/invitations/new` | Nothing adopted | `states/invite-a-person--nothing-adopted.png` | Prof Mbatha | Scratch (post-appendix): `UPDATE "InstitutionCurriculumAdoptions" SET "IsActive" = false WHERE "InstitutionId" = {InstitutionId};`, then choose Trainee: "Nothing is adopted at Kgosi Kgari Teaching Hospital yet, so roles that need a speciality cannot be invited. Adopt a curriculum under Curriculum adoptions." (S13, N26). Needs-confirmation: that the speciality list follows the active adoptions (T092). |
+| `/admin/invitations/new` | Loading | `states/invite-a-person--loading.png` | Prof Mbatha | Hold a read, then Invite a person from Invitations' header: "Loading what you can invite." (N22). No change. |
+| `/admin/invitations/new` | Load failed | `states/invite-a-person--load-failed.png` | Prof Mbatha | Hold a read, open Invite a person, wait 35 s: "Could not load what you can invite. Nothing has changed. Try again, or come back in a few minutes." with Try again (N23). No change. |
+| `/admin/invitations/new` | Narrow | `states/invite-a-person--narrow.png` | Prof Mbatha | At Step 2.16, at 390 px, Trainee chosen: each role's row 44 px; after the issue, the link's field over Copy link, both full width. No change. |
 | `/admin/users` | KGK's staff | `states/users-list--staff.png` | Prof Mbatha | At Step 2.12. |
 | `/admin/users` | Filtered | `states/users-list--filtered.png` | Prof Mbatha | At Step 2.12, "zulu". |
 | `/admin/users` | No match | `states/users-list--no-match.png` | Prof Mbatha | At Step 2.12, filter "zzz": "No users match the current filter." No change. |
@@ -852,14 +883,31 @@ until Show, and the address carries it (D3), so a filtered state is reached by i
 | `/admin/assessors/edit` | Saved | `states/assessor-profile-edit--saved.png` | Prof Mbatha | At Step 2.14: "Assessor profile saved." |
 | `/admin/assessors/edit` | Unknown id | `states/assessor-profile-edit--not-found.png` | Prof Mbatha | Typed: `/admin/assessors/edit?id=999999`: the load's danger alert. No change. |
 | `/admin/assessors/edit` | Narrow | `states/assessor-profile-edit--narrow.png` | Prof Mbatha | At Step 2.14, at 390 px. No change. |
-| `/admin/trainees` | Pending admission | `states/pending-trainees-list--pending.png` | Prof Mbatha | At Step 2.28. |
-| `/admin/trainees` | Some admitted | `states/pending-trainees-list--admitted.png` | Prof Mbatha | At Step 2.29. |
-| `/admin/trainees` | None pending | `states/pending-trainees-list--none-pending.png` | Prof Mbatha | At Step 2.30. |
+| `/admin/trainees` | Waiting | `states/pending-trainees-list--pending.png` | Prof Mbatha | At Step 2.28: "Waiting to be admitted" "5 waiting", each Admit…; "Current trainees" "No current trainees" (T01). |
+| `/admin/trainees` | Admitted | `states/pending-trainees-list--admitted.png` | Prof Mbatha | At Step 2.29, after Molefe: the result, focused, directly above Dlamini's Admit… (S8, T02). |
+| `/admin/trainees` | None waiting | `states/pending-trainees-list--none-pending.png` | Prof Mbatha | At Step 2.30: the result with the derived completion, and "Nobody is waiting to be admitted." (T04). |
+| `/admin/trainees` | The Administrator's view | `states/pending-trainees-list--administrator.png` | devadmin | At Step 2.28, typed `/admin/trainees` as devadmin: Waiting with its Institution column and its caption "… at any institution …"; nothing lit (T06). No change. |
+| `/admin/trainees` | Back from Admit | `states/pending-trainees-list--cancelled.png` | Prof Mbatha | At Step 2.29, Cancel on Admit Lerato Molefe before admitting: back on Trainees, the focus on her Admit… (T10). No change. |
 | `/admin/trainees` | Completed and closed | `states/pending-trainees-list--closed.png` | Prof Mbatha | At Step 5.27. |
-| `/admin/trainees` | Loading | `states/pending-trainees-list--loading.png` | Prof Mbatha | Hold a read, then Trainees in the menu. No change. |
-| `/admin/trainees` | Narrow | `states/pending-trainees-list--narrow.png` | Prof Mbatha | At Step A.7.9. |
-| `/admin/trainees/edit` | Admission | `states/trainee-profile-edit--admission.png` | Prof Mbatha | At Step 2.29, before saving. |
-| `/admin/trainees/edit` | An active profile | `states/trainee-profile-edit--active.png` | Prof Mbatha | At Step 2.29, after the admission. |
+| `/admin/trainees` | Loading | `states/pending-trainees-list--loading.png` | Prof Mbatha | Hold a read, then Trainees in the menu: "Loading the trainees." (T08). No change. |
+| `/admin/trainees` | Load failed | `states/pending-trainees-list--load-failed.png` | Prof Mbatha | Hold a read, then Trainees in the menu, and wait 35 s: "Could not load the trainees. Nothing has changed. Try again, or come back in a few minutes." with Try again (T09). No change. |
+| `/admin/trainees` | Narrow | `states/pending-trainees-list--narrow.png` | Prof Mbatha | At Step A.7.9: Current trainees stacked. At Step 2.28 at 390 px, Waiting stacked too. No change. |
+| `/admin/trainees/admit` | Opened | `states/admit-registrar--opened.png` | Prof Mbatha | At Step 2.29, Molefe's Admit…: the curriculum read out, the start today, "Training year 1" (M01). |
+| `/admin/trainees/admit` | Start chosen | `states/admit-registrar--start-chosen.png` | Prof Mbatha | At Step 2.29, start `J−3y`: "Training year 4", and Expected completion's help "Left empty, it would be ‹`J−2y`›, which has passed. Enter the expected completion." (M02). |
+| `/admin/trainees/admit` | Derived completion | `states/admit-registrar--derived.png` | Prof Mbatha | At Step 2.30, start `J`, the completion empty: "Left empty, it will be `J+1y`." (M03). |
+| `/admin/trainees/admit` | A start in the future | `states/admit-registrar--future-start.png` | Prof Mbatha | At Step 2.29, a start of `J+1y` typed and then put back: "Not started: the programme starts on `J+1y`", and "When you admit:" saying nothing can be filed before then (M06). No change. |
+| `/admin/trainees/admit` | A start long ago | `states/admit-registrar--long-ago.png` | Prof Mbatha | At Step 2.29, a start of `J−5y` typed and then put back: "Training year 6" (or 7 in the last days before the next 15 January: `StageOn` counts 365-day years) and "This start is more than four years ago. Check the date before you admit." (M07). No change. |
+| `/admin/trainees/admit` | Not found | `states/admit-registrar--not-found.png` | Prof Mbatha | Typed: `/admin/trainees/admit?userId=nobody`: "Registrar not found", "No registrar waiting for admission has this link.", Go to Trainees (M08). No change. |
+| `/admin/trainees/admit` | Already admitted | `states/admit-registrar--already-admitted.png` | Prof Mbatha | Scratch (post-appendix): a scratch registrar invited and registered; open her Admit… in two tabs and admit in one, then press Admit in the other: "Not admitted. ‹name› already has an active trainee profile." with Open Trainees, focused (M09). |
+| `/admin/trainees/admit` | Account deactivated | `states/admit-registrar--deactivated.png` | Prof Mbatha | Scratch (post-appendix): a scratch registrar's Admit… open; lock her under Users in another tab; press Admit: "Not admitted. ‹name›'s account is deactivated. Reactivate it under Users first." (S6, M13). |
+| `/admin/trainees/admit` | Derived completion passed | `states/admit-registrar--completion-passed.png` | Prof Mbatha | Scratch (post-appendix): a scratch registrar, start `J−3y`, the completion empty, Admit: the refusal beside Expected completion, "Left empty, it would be ‹`J−2y`›, which has passed. Enter the expected completion.", focused (F4, M15). |
+| `/admin/trainees/admit` | Nothing adopted for the invited scope | `states/admit-registrar--nothing-adopted.png` | Prof Mbatha | Scratch (post-appendix): a scratch registrar; `UPDATE "InstitutionCurriculumAdoptions" SET "IsActive" = false WHERE "InstitutionId" = {InstitutionId};`; open her Admit…: "This institution has adopted no curriculum yet, so no trainee can be admitted. Adopt one under Curriculum adoptions, then admit the trainee." and Back to trainees, no form (M04). Needs-confirmation: check rule 3's other sentence, "No curriculum is adopted at ‹institution› for ‹sub-speciality›, …", needs another curriculum adopted, which this SQL does not reach; a replay that does not reach it records no gap. |
+| `/admin/trainees/admit` | No invited scope | `states/admit-registrar--no-scope.png` | Prof Mbatha | Scratch (post-appendix), Awaiting admission, no invited scope's registrar: Invited as "—" and Curriculum a select, with "This registrar was invited to no sub-speciality, so choose from the curricula Kgosi Kgari Teaching Hospital has adopted. …" (M14). |
+| `/admin/trainees/admit` | The Administrator's | `states/admit-registrar--administrator.png` | devadmin | At Step 2.29, typed as devadmin before Prof Mbatha admits Molefe: the trail Home › Trainees › Admit Lerato Molefe, nothing lit (M04b's owner row). No change. |
+| `/admin/trainees/admit` | Loading | `states/admit-registrar--loading.png` | Prof Mbatha | Hold a read, then an Admit…: "Loading this registrar.", the heading "Admit a registrar" (M10; check rule 2). No change. |
+| `/admin/trainees/admit` | Load failed | `states/admit-registrar--load-failed.png` | Prof Mbatha | Hold a read, then an Admit…, and wait 35 s: "Could not load this registrar. Nothing has changed. Try again, or come back in a few minutes." with Try again (M11). No change. |
+| `/admin/trainees/admit` | Narrow | `states/admit-registrar--narrow.png` | Prof Mbatha | At Step 2.29, at 390 px, before admitting. No change. |
+| `/admin/trainees/edit` | An active profile | `states/trainee-profile-edit--active.png` | Prof Mbatha | After Step 2.29, Edit on a current trainee. No change. |
 | `/admin/trainees/edit` | Saved | `states/trainee-profile-edit--saved.png` | Prof Mbatha | At Step 2.30: "Trainee profile saved." |
 | `/admin/trainees/edit` | Mark complete dialog | `states/trainee-profile-edit--complete-dialog.png` | Prof Mbatha | At Step 5.16. |
 | `/admin/trainees/edit` | A future day refused | `states/trainee-profile-edit--future-refused.png` | Prof Mbatha | At Step 5.16. |
@@ -869,7 +917,6 @@ until Show, and the address carries it (D3), so a filtered state is reached by i
 | `/admin/trainees/edit` | Moved to a new version | `states/trainee-profile-edit--moved.png` | Prof Mbatha | At Step 6.36: "Trainee profile saved. 1 completion was checked against 11.2, and 1 counts towards it." (T304) |
 | `/admin/trainees/edit` | Unknown id | `states/trainee-profile-edit--not-found.png` | Prof Mbatha | Typed: `/admin/trainees/edit?id=999999`: "Profile unavailable" under the load's alert. No change. |
 | `/admin/trainees/edit` | Narrow | `states/trainee-profile-edit--narrow.png` | Prof Mbatha | At Step A.7.9. |
-
 ## Platform operations
 
 | Page | State | Screenshot | Account | How to reach it |
@@ -989,7 +1036,7 @@ member can meet it. None is captured.
   decision's attendance down in SQL would draw a state the product cannot produce, so it is not staged that way.
 - **Decisions due reading "Due by year end" after a semester-1 sitting left an annual EPA unstaged** (T361, E3): the
   story sits in semester 2, where every annual EPA closes. A replay in semester 1 reaches it at Step 4.34.
-- **The "holds Trainee" notes** on Users, a user, Invitations, Trainees, the panel list and form, Committee reviews, the
+- **The "holds Trainee" notes** on Users, a user, Invitations, Invite a person, Trainees, Admit ‹name›, the panel list and form, Committee reviews, the
   MSF campaign pages and MSF coverage (T218, T224, T237, T256, T278, T290): no cast member holds Trainee beside a staff role. So is the panel form's
   "You cannot create a decision panel" card (T194): every panel manager in the cast has a scope to create in.
 - **MSF respondent refusals.** "Feedback link revoked": nothing in the product sets an MSF link's revoked time, so the
@@ -1001,6 +1048,10 @@ member can meet it. None is captured.
   state).
 - **Scheduled jobs.** A Failed run badge (no job fails on the replay) and Run now refused while the job runs (timing).
 - **The register page's skeleton**: the page is static for its only audience, so its read runs before the page is sent.
+- **Register's "Registered, but not signed in"** (G15): the account was made but could not be read back, which needs a
+  fault between the save and the read.
+- **Admit for a registrar with no institution** (M04b): every registrar the story or a scratch invitation makes belongs
+  to KGK.
 - **`/admin/specialities`**: it redirects before it renders, so it has no state of its own.
 - **The error page through a real failure, on the replay**: the replay runs in Development, whose developer exception
   page answers a failure. Outside Development the error page does (`ErrorPages`, T321): § System pages' "After a

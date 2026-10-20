@@ -12,6 +12,7 @@ using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Domain.Invitations;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.Invitations;
 
@@ -83,7 +84,7 @@ public sealed class InvitationTraineeFirstTests
     }
 
     private IssueInvitationCommandHandler IssueHandler(ApplicationDbContext db)
-        => new(db, _tokenService, Mock.Of<IEmailSender>(), Options.Create(new WombatOptions { BaseUrl = "https://x" }));
+        => new(db, _tokenService, Mock.Of<IEmailSender>(), FakeUserDirectory.Empty, Options.Create(new WombatOptions { BaseUrl = "https://x" }));
 
     private ResendInvitationCommandHandler ResendHandler(ApplicationDbContext db)
         => new(db, _tokenService, Mock.Of<IEmailSender>(), Options.Create(new WombatOptions { BaseUrl = "https://x" }));

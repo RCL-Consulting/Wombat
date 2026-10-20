@@ -1,0 +1,629 @@
+@page "/admin/invitations/new"
+@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@implements IDisposable
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IOptions<Wombat.Application.Common.Options.WombatOptions> WombatOptionsAccessor
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject ILogger<InviteAPerson> Logger
+@using Microsoft.Extensions.Options
+
+<PageTitle>Invite a person · Wombat</PageTitle>
+
+@*
+  T373 (flow 11, Q1, boards R3-N01–N26): the issue form on a page of its own, one person and one role. Only the chosen
+  role's fields are drawn, never a disabled one (S15). A refusal sits under its field, which is marked, described by it
+  and focused (Q3); never a summary. An issue shows the OneTimeLink in the result (S10), focused, and the form again under
+  "Invite the next person"; the link is cleared at the start of the next action, refusal or navigation (M5).
+*@
+<PageHeader Title="Invite a person" Subtitle="@InvitationText.InviteSubtitle" />
+
+@if (_traineeNote is not null)
+{
+  @* M1 (N24): someone who holds Trainee is told so before anything is read. *@
+  <div class="inv-page">
+    <Alert Kind="info" Id="invite-trainee-note">@_traineeNote</Alert>
+  </div>
+}
+else
+{
+  <div class="inv-page inv-page--form">
+    <ActionResult @ref="_result" Id="invitation-result">
+      @if (_issued is { } issued)
+      {
+        <OneTimeLink Email="@issued.Email" Link="@issued.Link" ShowOpenInvitations="true"
+                     Rest="@InvitationText.IssuedRest"
+                     Help="@InvitationText.IssuedLinkHelp(issued.ExpiresOn)">
+          <Lead>Invitation issued for @InvitationText.Address(issued.Email).</Lead>
+        </OneTimeLink>
+      }
+      @if (_refusal is not null)
+      {
+        <Alert Kind="danger">@_refusal</Alert>
+      }
+    </ActionResult>
+
+    @* A Try again that loads hands the focus to the form's first field (T373 fix pass, P2). *@
+    <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="LoadAsync" FocusAfterRetry="FocusEmailAsync">
+      <LoadingContent>
+        <p class="loading-line" role="status">@InvitationText.LoadingForm</p>
+        <div class="detail-card" aria-hidden="true">
+          <div class="skeleton skel-title"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line skel-short"></div>
+        </div>
+      </LoadingContent>
+      <ChildContent>
+        @* novalidate: the browser stays quiet and the page refuses in its own words under each field (T324). *@
+        <EditForm Model="_model" OnSubmit="IssueAsync" class="form-container" novalidate
+                  aria-labelledby="@(_issued is null ? null : NextPersonId)">
+          @if (_issued is not null)
+          {
+            <h2 id="@NextPersonId">@InvitationText.NextPersonHeading</h2>
+          }
+          @if (_prefill is { } prefill)
+          {
+            <Alert Kind="info" Role="status">
+              @if (prefill.Source == InvitationPrefillSource.Revoked)
+              {
+                @:Role and scope filled from the revoked invitation to @InvitationText.Address(prefill.Email). Type the right address.
+              }
+              else
+              {
+                @:Filled from the invitation to @InvitationText.Address(prefill.Email), whose last day was @InvitationText.Iso(prefill.ExpiresOn). Check it, then issue.
+              }
+            </Alert>
+          }
+          <p class="field-help">@InvitationText.RequiredMarkLine</p>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="@EmailId">Email<span class="required-mark" aria-hidden="true"> *</span></label>
+              <input id="@EmailId" type="email" class="@InputClass(EmailId, "form-control")" aria-required="true"
+                     autocomplete="off" spellcheck="false" aria-invalid="@Invalid(EmailId)"
+                     aria-describedby="@MessageIdIf(EmailId)" @bind="_model.Email" @bind:after="() => ClearField(EmailId)" />
+              @EmailMessage()
+            </div>
+          </div>
+
+          <fieldset id="@RoleId" class="form-group choice-row" aria-describedby="@MessageIdIf(RoleId)">
+            <legend>Role<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></legend>
+            @FieldMessage(RoleId)
+            <div class="choice-group @(HasError(RoleId) ? "is-invalid" : null)">
+              @foreach (var role in OfferedRoles)
+              {
+                var inputId = InvitationText.RoleInputId(role);
+                var helpId = $"{inputId}-help";
+                <div class="form-check review-type-choice" @key="role">
+                  <input class="form-check-input" type="radio" name="invitation-role" id="@inputId" value="@role"
+                         aria-describedby="@helpId" checked="@(_model.Role == role)" @onchange="() => ChooseRole(role)" />
+                  <label for="@inputId">@WombatRoleLabels.For(role)</label>
+                  <p id="@helpId" class="page-subtitle review-type-help">@InvitationText.RoleHelp(role)</p>
+                </div>
+              }
+            </div>
+          </fieldset>
+
+          @if (HasScopeFields)
+          {
+            <div class="form-grid">
+              @ScopeFields()
+            </div>
+          }
+
+          <FormActions>
+            <a class="btn btn-outline" href="@OnboardingLinks.Invitations">Cancel</a>
+            @* Not disabled while its issue runs (T234): it has the focus. A second press sends nothing, and aria-disabled
+               says so. *@
+            <button type="submit" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_saving)">Issue invitation</button>
+          </FormActions>
+        </EditForm>
+      </ChildContent>
+    </StatePanel>
+  </div>
+}
+
+@code {
+  private RenderFragment ScopeFields() => __builder =>
+  {
+    var role = _model.Role;
+    if (role == WombatRoles.CollegeAdmin)
+    {
+      <div class="form-group">
+        <label for="@CollegeId">College<span class="required-mark" aria-hidden="true"> *</span></label>
+        <select id="@CollegeId" class="@InputClass(CollegeId, "form-select")" aria-required="true" aria-invalid="@Invalid(CollegeId)"
+                aria-describedby="@MessageIdIf(CollegeId)" @bind="_model.CollegeId" @bind:after="() => ClearField(CollegeId)">
+          <option value="">@InvitationText.ChooseCollege</option>
+          @foreach (var college in _colleges)
+          {
+            <option value="@college.Id">@college.Name</option>
+          }
+        </select>
+        @FieldMessage(CollegeId)
+      </div>
+      return;
+    }
+
+    if (_fixedInstitution is { } institution)
+    {
+      @* A single possible value is read out, not offered (S18). *@
+      <dl class="form-group">
+        <dt>Institution</dt>
+        <dd class="readonly-value">@institution.Name</dd>
+      </dl>
+    }
+    else if (role is not null)
+    {
+      <div class="form-group">
+        <label for="@InstitutionId">Institution<span class="required-mark" aria-hidden="true"> *</span></label>
+        <select id="@InstitutionId" class="@InputClass(InstitutionId, "form-select")" aria-required="true"
+                aria-invalid="@Invalid(InstitutionId)" aria-describedby="@MessageIdIf(InstitutionId)"
+                @bind="_model.InstitutionId" @bind:after="() => ClearField(InstitutionId)">
+          <option value="">@InvitationText.ChooseInstitution</option>
+          @foreach (var option in _institutions)
+          {
+            <option value="@option.Id">@option.Name</option>
+          }
+        </select>
+        @FieldMessage(InstitutionId)
+      </div>
+    }
+
+    var needsSpeciality = InvitationText.NeedsSpeciality(role);
+    if (!needsSpeciality && !InvitationText.MayHaveSpeciality(role))
+    {
+      return;
+    }
+
+    if (_specialities.Count == 0)
+    {
+      if (needsSpeciality)
+      {
+        @* N26 (S13): nothing adopted, so nothing to choose; Issue stays for the roles that need no speciality. *@
+        <div class="form-group">
+          <span>Speciality</span>
+          <p class="field-warning">@InvitationText.NothingAdopted(InstitutionName) <a href="@OnboardingLinks.CurriculumAdoptions">Curriculum adoptions</a>.</p>
+        </div>
+      }
+
+      return;
+    }
+
+    var specialityHelp = needsSpeciality
+      // R4 (R3-0-steps 2.4): the hint stays once a speciality is chosen, until its sub-speciality is (T373 fix pass).
+      ? (InvitationText.NeedsSubSpeciality(role) && _model.SubSpecialityId is null ? InvitationText.ThenSubSpecialityHelp : null)
+      : InvitationText.AnySpecialityHelp;
+    <div class="form-group">
+      <label for="@SpecialityId">@("Speciality")@if (needsSpeciality){<span class="required-mark" aria-hidden="true"> *</span>}</label>
+      <select id="@SpecialityId" class="@InputClass(SpecialityId, "form-select")" aria-required="@(needsSpeciality ? "true" : null)"
+              aria-invalid="@Invalid(SpecialityId)" aria-describedby="@DescribedBy(SpecialityId, specialityHelp is null ? null : SpecialityHelpId)"
+              @bind="_model.SpecialityId" @bind:after="SpecialityChanged">
+        <option value="">@(needsSpeciality ? InvitationText.ChooseSpeciality : InvitationText.AnySpeciality)</option>
+        @foreach (var speciality in _specialities)
+        {
+          <option value="@speciality.Id">@speciality.Name</option>
+        }
+      </select>
+      @if (specialityHelp is not null)
+      {
+        <p id="@SpecialityHelpId" class="field-help">@specialityHelp</p>
+      }
+      @FieldMessage(SpecialityId)
+    </div>
+
+    if (InvitationText.NeedsSubSpeciality(role) && _model.SpecialityId is int chosenSpeciality)
+    {
+      <div class="form-group">
+        <label for="@SubSpecialityId">Sub-speciality<span class="required-mark" aria-hidden="true"> *</span></label>
+        <select id="@SubSpecialityId" class="@InputClass(SubSpecialityId, "form-select")" aria-required="true"
+                aria-invalid="@Invalid(SubSpecialityId)" aria-describedby="@MessageIdIf(SubSpecialityId)"
+                @bind="_model.SubSpecialityId" @bind:after="() => ClearField(SubSpecialityId)">
+          <option value="">@InvitationText.ChooseSubSpeciality</option>
+          @foreach (var subSpeciality in _subSpecialities.Where(entity => entity.SpecialityId == chosenSpeciality))
+          {
+            <option value="@subSpeciality.Id">@subSpeciality.Name</option>
+          }
+        </select>
+        @FieldMessage(SubSpecialityId)
+      </div>
+    }
+  };
+
+  /// <summary>Email's message: the page's own words, or N15–N18's, with their one link.</summary>
+  private RenderFragment EmailMessage() => __builder =>
+  {
+    if (_emailRefusal is { } refusal)
+    {
+      <p id="@MessageId(EmailId)" class="validation-message">@AddressRefusal(refusal)</p>
+    }
+    else
+    {
+      @FieldMessage(EmailId)
+    }
+  };
+
+  /// <summary>N15–N18: the holder named and linked only in the caller's scope (M3).</summary>
+  private RenderFragment AddressRefusal(InvitationIssueRefusedException refusal) => __builder =>
+  {
+    var email = _model.Email.Trim();
+    if (refusal.Reason == InvitationIssueRefusal.AccountExists)
+    {
+      if (refusal is { InCallerScope: true, HolderUserId: { } holderId, HolderName: { } name } && !string.IsNullOrWhiteSpace(name))
+      {
+        @InvitationText.Address(email)@InvitationText.AccountHereAfterAddress(name)@(" ")<a href="@OnboardingLinks.User(holderId)">@InvitationText.OpenUnderUsers(name)</a>@(".")
+      }
+      else if (refusal is { InCallerScope: true, HolderUserId: { } namelessId })
+      {
+        @* An erased or nameless account in scope: the account, never a blank name (T373 fix pass, B6). *@
+        @InvitationText.Address(email)@InvitationText.AccountHereAfterAddressNoName@(" ")<a href="@OnboardingLinks.User(namelessId)">@InvitationText.OpenItUnderUsers</a>@(".")
+      }
+      else
+      {
+        @InvitationText.AccountElsewhere
+      }
+    }
+    else if (refusal is { InCallerScope: true, ActiveIssuedOn: { } issuedOn, ActiveExpiresOn: { } lastDay })
+    {
+      @InvitationText.Address(email)@InvitationText.ActiveHereAfterAddress(issuedOn, lastDay)@(" ")<a href="@OnboardingLinks.Invitations">Invitations</a>@(".")
+    }
+    else
+    {
+      @(refusal.HeldByCollege ? InvitationText.ActiveAtACollege : InvitationText.ActiveElsewhere)
+    }
+  };
+
+  private RenderFragment FieldMessage(string fieldId) => __builder =>
+  {
+    if (_fieldErrors.TryGetValue(fieldId, out var message))
+    {
+      <p id="@MessageId(fieldId)" class="validation-message">@message</p>
+    }
+  };
+
+  /// <summary>Email's id: the first field, and the focus after a revoked invitation's prefill (N19).</summary>
+  public const string EmailId = "invitation-email";
+  public const string RoleId = "invitation-role";
+  public const string CollegeId = "invitation-college";
+  public const string InstitutionId = "invitation-institution";
+  public const string SpecialityId = "invitation-speciality";
+  public const string SubSpecialityId = "invitation-sub-speciality";
+  private const string SpecialityHelpId = "invitation-speciality-help";
+  private const string NextPersonId = "invite-next-person";
+
+  /// <summary>An issued link while it is shown (M5): cleared at the start of the next action, never restored.</summary>
+  private sealed record ShownLink(string Email, string Link, DateOnly ExpiresOn);
+
+  private sealed class InvitationFormModel
+  {
+    // T324: in Wombat's words, never a property's name. The page checks them before it sends (N13, N14, N25), as the
+    // command's validator does after.
+    [Required(ErrorMessage = IssueInvitationCommandValidator.EmailMissing)]
+    [EmailAddress(ErrorMessage = IssueInvitationCommandValidator.EmailMalformed)]
+    public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = IssueInvitationCommandValidator.RoleMissing)]
+    public string? Role { get; set; }
+
+    public int? InstitutionId { get; set; }
+    public int? CollegeId { get; set; }
+    public int? SpecialityId { get; set; }
+    public int? SubSpecialityId { get; set; }
+  }
+
+  [SupplyParameterFromQuery(Name = "from")]
+  public int? From { get; set; }
+
+  private string? _traineeNote;
+  private bool _isAdministrator;
+  private bool _loading = true;
+  private string? _loadError;
+  private bool _saving;
+
+  private InvitationFormModel _model = new();
+  private IReadOnlyList<InstitutionDto> _institutions = [];
+  private IReadOnlyList<CollegeDto> _colleges = [];
+  private IReadOnlyList<SpecialityDto> _specialities = [];
+  private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
+
+  /// <summary>The caller's one institution, read out (N01); null for the Administrator, who chooses one (N04).</summary>
+  private InstitutionDto? _fixedInstitution;
+
+  private InvitationPrefillDto? _prefill;
+  private ShownLink? _issued;
+  private string? _refusal;
+  private ActionResult? _result;
+
+  private readonly Dictionary<string, string> _fieldErrors = new(StringComparer.Ordinal);
+  private InvitationIssueRefusedException? _emailRefusal;
+  private string? _focusFieldId;
+
+  private IEnumerable<string> OfferedRoles
+    => _isAdministrator ? InvitationText.Roles : InvitationText.Roles.Where(role => role != WombatRoles.CollegeAdmin);
+
+  private bool HasScopeFields => _fixedInstitution is not null || _model.Role is not null;
+
+  private string InstitutionName
+    => _fixedInstitution?.Name
+       ?? _institutions.FirstOrDefault(option => option.Id == _model.InstitutionId)?.Name
+       ?? "this institution";
+
+  protected override async Task OnInitializedAsync()
+  {
+    Navigation.LocationChanged += OnLocationChanged;
+
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    _traineeNote = UserAdministrationRules.TraineeNoteOnUserPages(authState.User);
+    if (_traineeNote is not null)
+    {
+      _loading = false;
+      return;
+    }
+
+    _isAdministrator = authState.User.IsAdministrator();
+    await LoadAsync();
+  }
+
+  /// <summary>Reads what may be invited, then any invitation the page is filled from (N19, N20); a failure is N23's.</summary>
+  private ValueTask FocusEmailAsync() => PageFocus.FocusByIdAsync(JS, EmailId);
+
+  private async Task LoadAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var user = authState.User;
+      _institutions = (await Sender.Send(new GetInstitutionsListQuery(user))).Where(option => option.IsActive).ToList();
+      _colleges = _isAdministrator ? (await Sender.Send(new GetCollegesListQuery(user))).Where(option => option.IsActive).ToList() : [];
+      _specialities = (await Sender.Send(new GetSpecialitiesListQuery(user))).Where(option => option.IsActive).ToList();
+      _subSpecialities = (await Sender.Send(new GetSubSpecialitiesListQuery(user))).Where(option => option.IsActive).ToList();
+      _fixedInstitution = !_isAdministrator && user.GetInstitutionId() is int own
+        ? _institutions.FirstOrDefault(option => option.Id == own)
+        : null;
+
+      if (From is int from && _prefill is null && _issued is null)
+      {
+        _prefill = await Sender.Send(new GetInvitationPrefillQuery(from, user));
+        Fill(_prefill);
+      }
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "What Invite a person offers could not be read.");
+      _loadError = InvitationText.FormLoadFailed;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  /// <summary>
+  /// N19: a revoked invitation's role and scope, the address left empty and focused. N20: an expired one's address too. A
+  /// role this caller is not offered fills nothing.
+  /// </summary>
+  private void Fill(InvitationPrefillDto? prefill)
+  {
+    if (prefill is null || !OfferedRoles.Contains(prefill.TargetRole))
+    {
+      _prefill = null;
+      return;
+    }
+
+    _model = new InvitationFormModel
+    {
+      Email = prefill.Source == InvitationPrefillSource.Expired ? prefill.Email : string.Empty,
+      Role = prefill.TargetRole,
+      InstitutionId = prefill.InstitutionId,
+      CollegeId = prefill.CollegeId,
+      SpecialityId = prefill.SpecialityId,
+      SubSpecialityId = prefill.SubSpecialityId
+    };
+
+    if (prefill.Source == InvitationPrefillSource.Revoked)
+    {
+      _focusFieldId = EmailId;
+    }
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusFieldId is { } fieldId)
+    {
+      _focusFieldId = null;
+      await PageFocus.FocusByIdAsync(JS, fieldId);
+    }
+  }
+
+  private void ChooseRole(string role)
+  {
+    _model.Role = role;
+    ClearField(RoleId);
+  }
+
+  /// <summary>A change of speciality clears the sub-speciality, which belongs to the speciality chosen before (N08).</summary>
+  private void SpecialityChanged()
+  {
+    _model.SubSpecialityId = null;
+    ClearField(SpecialityId);
+    ClearField(SubSpecialityId);
+  }
+
+  private void ClearField(string fieldId)
+  {
+    _fieldErrors.Remove(fieldId);
+    if (fieldId == EmailId)
+    {
+      _emailRefusal = null;
+    }
+  }
+
+  /// <summary>
+  /// Issue invitation. The link shown before is cleared first (M5). The page's own checks first (N13, N14, N25), each under
+  /// its field, the first one focused; then the command, whose refusals sit under their fields too (N02, N10, N11, N15–N18).
+  /// Issued, the OneTimeLink takes the focus and the form is drawn again, empty, under "Invite the next person".
+  /// </summary>
+  private async Task IssueAsync()
+  {
+    if (_saving)
+    {
+      return;
+    }
+
+    _issued = null;
+    _refusal = null;
+    _emailRefusal = null;
+    _fieldErrors.Clear();
+
+    if (CheckFields() is { } firstInvalid)
+    {
+      _focusFieldId = firstInvalid;
+      return;
+    }
+
+    _saving = true;
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var issuedBy = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+      var command = Command(issuedBy, authState.User);
+      var issued = await Sender.Send(command);
+
+      _issued = new ShownLink(
+        command.Email.Trim(),
+        InvitationLinks.RegistrationUrl(WombatOptionsAccessor.Value, issued.Token),
+        issued.ExpiresOn);
+      _model = new InvitationFormModel();
+      _prefill = null;
+      _result?.FocusAfterRender();
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      ShowRefusal(exception);
+    }
+    finally
+    {
+      _saving = false;
+    }
+  }
+
+  /// <summary>The page's own checks, in the form's order; the first refused field's id, or null when all pass.</summary>
+  private string? CheckFields()
+  {
+    var results = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
+    System.ComponentModel.DataAnnotations.Validator.TryValidateObject(
+      _model, new System.ComponentModel.DataAnnotations.ValidationContext(_model), results, validateAllProperties: true);
+
+    foreach (var result in results)
+    {
+      var fieldId = result.MemberNames.Contains(nameof(InvitationFormModel.Role)) ? RoleId : EmailId;
+      _fieldErrors.TryAdd(fieldId, result.ErrorMessage ?? string.Empty);
+    }
+
+    if (_fieldErrors.ContainsKey(EmailId))
+    {
+      return EmailId;
+    }
+
+    // N25: the first radio takes the focus.
+    return _fieldErrors.ContainsKey(RoleId) ? InvitationText.RoleInputId(OfferedRoles.First()) : null;
+  }
+
+  /// <summary>The command, with only the fields the chosen role takes (S15): a field not drawn sends nothing.</summary>
+  private IssueInvitationCommand Command(string issuedBy, System.Security.Claims.ClaimsPrincipal user)
+  {
+    var role = _model.Role!;
+    if (role == WombatRoles.CollegeAdmin)
+    {
+      return new IssueInvitationCommand(_model.Email, role, null, _model.CollegeId, null, null, issuedBy, user);
+    }
+
+    var institutionId = _fixedInstitution?.Id ?? _model.InstitutionId;
+    var specialityId = InvitationText.NeedsSpeciality(role) || InvitationText.MayHaveSpeciality(role) ? _model.SpecialityId : null;
+    var subSpecialityId = InvitationText.NeedsSubSpeciality(role) ? _model.SubSpecialityId : null;
+    return new IssueInvitationCommand(_model.Email, role, institutionId, null, specialityId, subSpecialityId, issuedBy, user);
+  }
+
+  /// <summary>
+  /// A refusal under its field, focused (Q3); one about no field in the result; anything else logged and said in fixed
+  /// words, never the exception's (T329).
+  /// </summary>
+  private void ShowRefusal(Exception exception)
+  {
+    switch (exception)
+    {
+      case InvitationIssueRefusedException { Reason: InvitationIssueRefusal.AccountExists or InvitationIssueRefusal.ActiveInvitationExists } address:
+        _emailRefusal = address;
+        _focusFieldId = EmailId;
+        return;
+      case InvitationIssueRefusedException { Field: not InvitationIssueField.None } scoped when FieldIdOf(scoped.Field) is { } fieldId:
+        _fieldErrors[fieldId] = scoped.Message;
+        _focusFieldId = fieldId == RoleId ? InvitationText.RoleInputId(OfferedRoles.First()) : fieldId;
+        return;
+      case FluentValidation.ValidationException validation:
+        foreach (var failure in validation.Errors)
+        {
+          var failed = failure.PropertyName == nameof(IssueInvitationCommand.TargetRole) ? RoleId : EmailId;
+          _fieldErrors.TryAdd(failed, failure.ErrorMessage);
+        }
+
+        _focusFieldId = _fieldErrors.ContainsKey(EmailId) ? EmailId : InvitationText.RoleInputId(OfferedRoles.First());
+        return;
+    }
+
+    if (InvitationIssueRefusals.IsRefusal(exception))
+    {
+      _refusal = RefusalText.Of(exception);
+    }
+    else
+    {
+      Logger.LogError(exception, "An invitation could not be issued.");
+      _refusal = InvitationText.IssueFailed;
+    }
+
+    _result?.FocusAfterRender();
+  }
+
+  /// <summary>The field a refusal is about, when the form draws it.</summary>
+  private string? FieldIdOf(InvitationIssueField field) => field switch
+  {
+    InvitationIssueField.Email => EmailId,
+    InvitationIssueField.Role => RoleId,
+    InvitationIssueField.College when _model.Role == WombatRoles.CollegeAdmin => CollegeId,
+    InvitationIssueField.Institution when _fixedInstitution is null => InstitutionId,
+    InvitationIssueField.Speciality when _specialities.Count > 0 => SpecialityId,
+    InvitationIssueField.SubSpeciality when _model.SpecialityId is not null => SubSpecialityId,
+    InvitationIssueField.SubSpeciality => SpecialityId,
+    _ => null
+  };
+
+  private bool HasError(string fieldId) => _fieldErrors.ContainsKey(fieldId) || (fieldId == EmailId && _emailRefusal is not null);
+
+  private static string MessageId(string fieldId) => $"{fieldId}-msg";
+
+  private string? MessageIdIf(string fieldId) => HasError(fieldId) ? MessageId(fieldId) : null;
+
+  private string? DescribedBy(string fieldId, string? helpId)
+    => string.Join(' ', new[] { helpId, MessageIdIf(fieldId) }.Where(id => id is not null)) is { Length: > 0 } ids ? ids : null;
+
+  private string? Invalid(string fieldId) => HasError(fieldId) ? "true" : null;
+
+  private string InputClass(string fieldId, string baseClass) => HasError(fieldId) ? $"{baseClass} input-validation-error" : baseClass;
+
+  /// <summary>M5: a navigation clears the link, whatever started it (Open Invitations, Cancel, the menu).</summary>
+  private void OnLocationChanged(object? sender, LocationChangedEventArgs args)
+  {
+    if (_issued is null)
+    {
+      return;
+    }
+
+    _issued = null;
+    _ = InvokeAsync(StateHasChanged);
+  }
+
+  public void Dispose() => Navigation.LocationChanged -= OnLocationChanged;
+}

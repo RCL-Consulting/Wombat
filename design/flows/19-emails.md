@@ -427,48 +427,87 @@ Paste this as the second message. It is each step's Role, Route, Do and Expect, 
 ```text
 Step 1.5 — Invite Dr Kruger as the CPSA's CollegeAdmin
 Role: Administrator — the platform operator
-Route: /admin/invitations
-Do: Under Issue invitation, enter `kruger@cmsa.wombat.local` and choose the role CollegeAdmin. Press Issue invitation
-  before choosing a College. Then choose `College of Paediatricians of South Africa` and issue the invitation.
-Expect: Before the issue, Active invitations reads "No active invitations".
-  - The Role picker offers the eight roles an invitation can carry, and never Administrator.
-  - Choosing CollegeAdmin replaces the Institution picker with a College picker, which offers the Demo College and the
-    CPSA. Speciality and Sub-speciality stay disabled.
-  - The first press is refused: "A college is required for a college administrator."
-  - The second press reads "Invitation issued for kruger@cmsa.wombat.local. Its email is being sent. Copy the link below
-    — it is shown only once." (T283's wording). The registration link is shown beneath it, and it expires in 14 days.
-  - The new row reads CollegeAdmin, with College `College of Paediatricians of South Africa`, no institution, an expiry
-    of `D+14` and a Delivery of "Being sent".
-  - The application log holds a stub email "Your Wombat invitation", tagged `invitation, role:CollegeAdmin`. It invites
-    the reader to register as CollegeAdmin, with the same link and its expiry date. The log never names the address
-    (T282), so the role tells this mail from Mbatha's.
+Route: /admin/invitations → /admin/invitations/new → /admin/invitations
+Do: Open Invitations and press Invite a person. Enter `kruger@cmsa.wombat.local` and choose College admin. Press Issue
+  invitation before choosing a College. Then choose `College of Paediatricians of South Africa` and issue the
+  invitation. Copy the link, then press Open Invitations.
+Expect:
+  - **The list:** "Invitations", "Invitations not yet used, with the state of each one's email.", with Invite a person
+    in its header; Active invitations reads "No active invitations" / "Issue an invitation to create the first
+    onboarding link.".
+  - **Invite a person** is a page of its own (its tab too), under Home › Invitations › Invite a person with Invitations
+    lit (T373, Q1): "One person, one role. The registration link is shown here once, and emailed to them.", then "*
+    marks a field you must fill in.". Email is starred. Role is a group of eight radios by label, each with its
+    description and none chosen: College admin, Institutional admin, Speciality admin, Sub-speciality admin,
+    Coordinator, Committee member, Assessor and Trainee; never Administrator. No scope field is drawn before a role is.
+  - **College admin** draws College alone, starred, at "Choose a College", offering the Demo College and the CPSA. No
+    Institution, Speciality or Sub-speciality field is drawn, disabled or otherwise (S15).
+  - **The first press** is refused under College: "A college is required for a college administrator.", the field
+    marked and focused. Nothing is issued and no link is shown.
+  - **The second press** puts the result above the form, focused: "**Invitation issued for kruger@cmsa.wombat.local.**
+    Its email is being sent. Copy the link below — it is shown only once." Under it, "Registration link for
+    kruger@cmsa.wombat.local" labels the link (a `/account/register/start?token=…` address) in a read-only field, with
+    Copy link beside it, and "It works until `D+14`. It is shown here until your next action, then never again. If the
+    email is not delivered, share this link another way, or resend it from Invitations, which emails a new link in place
+    of this one.", then Open Invitations. Copy link says "Link copied." under the field, and the button reads "Copied"
+    (or, where the browser refuses the clipboard, "Could not copy. Select the link and copy it yourself."). The form is
+    drawn again, empty, under "Invite the next person".
+  - **The row** (L03): "Active invitations" "1 active", captioned "Every institution and College. Not delivered first,
+    then newest first. A used or revoked invitation leaves this list."; Invitee kruger@cmsa.wombat.local; Role and
+    scope "College admin" over "College of Paediatricians of South Africa"; Issued `D` over its time, "hh:mm SAST";
+    Last day `D+14`; Delivery "Being sent"; Revoke…. No Expired, not used section.
+  - **The mail:** the application log holds a stub email "Your Wombat invitation", tagged `invitation` and nothing
+    else (T373, S12: the role left the tags). Its text reads "You are invited to Wombat as College admin at College of
+    Paediatricians of South Africa." and "Register with this link; it works until `D+14`.", then the same link. The log
+    never names the address (T282), so the mail's own words tell it from Mbatha's.
 
 Step 2.16 — Mbatha invites the five registrars, one to a mistyped address
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/invitations
-Do: Invite `molefe@`, `dlamini@`, `duplessis@` and `mahlangu@kgk.wombat.local` as Trainee at KGK, Paediatrics /
-  Paediatrics. Copy each link. For Dr Ndlovu she types `ndlvou@kgk.wombat.local`.
-Expect: A Trainee invitation needs both speciality and sub-speciality, and the Sub-speciality select is enabled for it.
-  Five rows read Trainee, KGK, Paediatrics, Paediatrics, and each Delivery reads "Being sent".
+Route: /admin/invitations → /admin/invitations/new → /admin/invitations
+Do: From Invitations, press Invite a person. Invite `molefe@`, `dlamini@`, `duplessis@` and `mahlangu@kgk.wombat.local`
+  as Trainee at KGK, Paediatrics / Paediatrics. Copy each link. For Dr Ndlovu she types `ndlvou@kgk.wombat.local`.
+  Then press Open Invitations.
+Expect: A Trainee invitation needs both speciality and sub-speciality: Speciality is starred, and Sub-speciality is
+  drawn, starred, once Paediatrics is chosen. Each stub reads "You are invited to Wombat as Trainee in Paediatrics /
+  Paediatrics at Kgosi Kgari Teaching Hospital." Active invitations reads "5 active": five rows "Trainee" over
+  "Paediatrics / Paediatrics", newest first (`ndlvou@` first), each Issued `D` over its time in SAST, Last day `D+14`
+  and Delivery "Being sent".
 
 Step 2.17 — Mbatha revokes the mistyped invitation and issues the right one
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/invitations → /account/register
-Do: Revoke the `ndlvou@` row and issue a Trainee invitation to `ndlovu@kgk.wombat.local` with the same scope. Then open
-  the revoked link, as anyone holding it could.
-Expect: The row's button is named "Revoke the Trainee invitation to ndlvou@kgk.wombat.local" (T239). Pressing it shows
-  "Invitation revoked." and the row is gone, with no link shown (see Step 2.6's note). An address is never corrected in
-  place: the invitation names who may register (T283). A new row reads `ndlovu@`. The revoked link shows no form, only
-  "This invitation has been revoked."
+Route: /admin/invitations → /admin/invitations/new → /account/register/start → /account/register
+Do: Press Revoke… on the `ndlvou@` row and confirm. From the result, press Invite another address as Trainee,
+  Paediatrics / Paediatrics, enter `ndlovu@kgk.wombat.local`, issue it and copy the link. Then open the revoked link,
+  as anyone holding it could.
+Expect:
+  - **Revoke…** is an outline button named "Revoke the Trainee invitation to ndlvou@kgk.wombat.local" (T239). It opens
+    "Revoke this invitation?": "Revoke the Trainee invitation to **ndlvou@kgk.wombat.local** (Paediatrics /
+    Paediatrics)?", then "The registration link already emailed to that address stops working at once: nobody can
+    register from it." and "The invitation leaves this list. An address is never corrected in place: to invite the
+    right one, issue a new invitation.", then "Revoking cannot be undone.", with Keep the invitation and Revoke
+    invitation (T264). At 390 px the two are stacked, 44 px each, Keep the invitation last.
+  - **Revoke invitation:** the result, focused: "**Invitation revoked.** The link sent to ndlvou@kgk.wombat.local no
+    longer works: nobody can register from it.", with "Invite another address as Trainee, Paediatrics / Paediatrics".
+    No registration link is on the page. The row is gone: "4 active".
+  - **Invite another address** opens Invite a person with "Role and scope filled from the revoked invitation to
+    ndlvou@kgk.wombat.local. Type the right address.", Trainee, Paediatrics and Paediatrics chosen, and Email empty and
+    focused. The issue reads as Step 2.2's, for ndlovu@kgk.wombat.local.
+  - **The revoked link:** "Invitation revoked" (its tab too): "This invitation has been revoked." and "Ask the person
+    who invited you for a new invitation."; no form.
 
 Step 2.26 — Mbatha resends Dr du Plessis's invitation
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/invitations
 Do: At least an hour after Step 2.16, open Invitations and press Resend on du Plessis's row. Copy the new link.
-Expect: His is the only row left. Its Delivery reads "Not delivered. Resend emails a new link in place of the current
-  one, which then stops working.", and it offers Resend before Revoke. Afterwards the page reads "A new invitation link
-  is being emailed to duplessis@kgk.wombat.local. The link it replaces no longer works. Copy the new link below — it is
-  shown only once.", with the link below it. The row reads "Being sent", offers no Resend and expires 14 days from now.
+Expect: His is the only row left. Its Delivery reads "Not delivered", with the warning icon, and a note row under it
+  reads "Resend emails a new link in place of the current one, which then stops working." The row offers Resend
+  (named "Resend the Trainee invitation to duplessis@kgk.wombat.local", described by the note) before Revoke….
+  Afterwards the result, focused: "**A new invitation link is being emailed to duplessis@kgk.wombat.local.** The link
+  it replaces no longer works. Copy the new link below — it is shown only once.", then the link with Copy link and "It
+  works until `D+14`. It is shown here until your next action, then never again." The row reads Issued `D` over the
+  resend's time in SAST, with no "Resent" mark (F2), Last day `D+14` and "Being sent"; it has no note row and offers
+  only Revoke…. The log holds one more stub "Your Wombat invitation", "… as Trainee in Paediatrics / Paediatrics at
+  Kgosi Kgari Teaching Hospital."
 
 Step 3.3 — Dr Dlamini completes the request and submits it
 Role: Trainee — Dr Anele Dlamini
@@ -607,7 +646,7 @@ Expect: The page says "Trainee marked complete. The Trainee role has been remove
     that has ended.", and the profile's details read as a list under "This programme has ended, so its record is
     archived and cannot be changed.": Curriculum Paediatric EPA Curriculum (11.1), Programme start date `J−3y`,
     Expected completion date `J+1y−1d`. There are no inputs and no Save profile; Back to trainees stays (T305).
-  - On Trainees she is no longer under Active profiles. She is listed under Completed & closed profiles with the outcome
+  - On Trainees she is no longer under Current trainees. She is listed under "Completed and closed" with the outcome
     "Completed `D`".
   - Her user page says "This user has no roles.", and its Add role offers no Trainee (T303).
   - No credit is taken back, because nothing of hers is observed after `D` (T281; Step 5.27 shows a take-back).

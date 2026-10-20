@@ -69,6 +69,13 @@ public sealed class InvitationRefusedException : InvalidOperationException
     /// <c>PasswordTooShort</c> and the like. Empty for every other reason.
     /// </summary>
     public IReadOnlyList<string> ErrorCodes { get; }
+
+    /// <summary>
+    /// The link's last day, for <see cref="InvitationRefusal.Expired" /> when the preview refused it: Register's card says
+    /// "its link worked until ‹date›" (T373, flow 11, F7, G10). Null for every other reason. Not in the message, which the
+    /// audit row keeps.
+    /// </summary>
+    public DateOnly? LastDay { get; init; }
 }
 
 /// <summary>What each refusal says, on the register page and in the audit row (T285).</summary>

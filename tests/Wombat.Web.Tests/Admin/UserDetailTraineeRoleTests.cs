@@ -31,7 +31,7 @@ public sealed class UserDetailTraineeRoleTests : TestContext
     private const int InstitutionA = 1;
 
     private const string TraineeRoleNotOffered =
-        "Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit to curriculum'.";
+        "Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit…'.";
 
     /// <summary>Every role Add role may offer, in its order: InstitutionalAdmin to Assessor.</summary>
     private static readonly string[] ManagedHere =

@@ -176,6 +176,23 @@ public sealed class SignOutFlowTests : IClassFixture<MsfRespondPageFlowTests.Web
             .Should().BeEmpty("the browser applies a deletion to the cookies it holds, whether or not it sent them");
     }
 
+    /// <summary>
+    /// T373 fix pass, B8: since flow 11 the endpoint reads the form for <c>returnTo</c> before it knows who is signed in. A
+    /// body the form reader refuses (here past its 1,024 values) is no <c>returnTo</c>, never a 500.
+    /// </summary>
+    [Fact]
+    public async Task ABodyTheFormReaderRefuses_IsNoReturnTo_NeverAFault()
+    {
+        using var browser = NewBrowser();
+        var body = string.Join("&", Enumerable.Range(0, 1100).Select(index => $"k{index}=v"));
+
+        using var post = await browser.PostAsync(SignOutOutcome.SubmitPath,
+            new StringContent(body, System.Text.Encoding.UTF8, "application/x-www-form-urlencoded"));
+
+        post.StatusCode.Should().Be(HttpStatusCode.Redirect);
+        post.Headers.Location!.ToString().Should().Be(SignOutOutcome.SignedOutUrl);
+    }
+
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     private HttpClient NewBrowser() => _host.NewBrowser($"10.239.{Interlocked.Increment(ref _nextSubnet)}.7");

@@ -57,6 +57,8 @@ public sealed partial class RowActionMarkupTests
     [InlineData("""<button type="button" class="btn btn-sm" @onclick="() => RemoveAsync(item)">Remove</button>""", false)]
     [InlineData("""<button class="btn btn-sm">@(job.IsEnabled ? "Disable" : "Enable")</button>""", false)]
     [InlineData("""<a class="btn btn-sm" href="/x" aria-label="@($"Edit {item.Name}")">Edit</a>""", true)]
+    [InlineData("""<a class="btn btn-sm" href="/x" aria-label="@($"Admit {item.Name}")">Admit…</a>""", true)]
+    [InlineData("""<a class="btn btn-sm" href="/x" aria-label="@($"Open {item.Name}")">Admit…</a>""", false)]
     [InlineData("""<button class="btn btn-sm" @onclick="() => Go()" aria-label="@($"Move level {level} up")">Up</button>""", true)]
     [InlineData("""<a href="/activities/@item.ActivityId">@item.ActivityTypeName</a>""", true)]
     [InlineData("""<a href="/activities/inbox">Open</a>""", false)]
@@ -66,6 +68,8 @@ public sealed partial class RowActionMarkupTests
     [InlineData("""<button class="btn btn-sm" aria-label="@("Edit")">Edit</button>""", false)]
     [InlineData("""<button class="btn btn-sm" aria-label="@(item.Name)">Edit</button>""", false)]
     [InlineData("""<button class="btn btn-sm" aria-label="@($"Remove {item.Name}")">Delete</button>""", false)]
+    [InlineData("""<button class="btn btn-sm" aria-label="@($"Revoke {rowNames[item.Id]}")">Revoke…</button>""", true)]
+    [InlineData("""<button class="btn btn-sm" aria-label="@($"Withdraw {rowNames[item.Id]}")">Revoke…</button>""", false)]
     [InlineData("""<button class="btn btn-sm" aria-label="@($"Editor of {item.Name}")">Edit</button>""", false)]
     [InlineData("""<button class="btn btn-sm" aria-label="@($"{(job.IsEnabled ? "Disable" : "Enable")} {job.Key}")">@(job.IsEnabled ? "Disable" : "Enable")</button>""", true)]
     [InlineData("""<button class="btn btn-sm" aria-label="@($"{(job.IsEnabled ? "Enable" : "Disable")} {job.Key}")">@(job.IsEnabled ? "Disable" : "Enable")</button>""", false)]
@@ -116,8 +120,15 @@ public sealed partial class RowActionMarkupTests
     // interpolated @($"Open review #{id}")), the aria-label is built from the same expression.
     private static bool CarriesTheVisibleLabel(string value, string visible)
     {
+        // An opener's ellipsis ("Revoke…", T373, T264: it opens a dialog) is punctuation, not a word a speech-input user
+        // says: "Revoke" is in "Revoke the Trainee invitation to …".
+        visible = visible.TrimEnd('…');
         if (!visible.StartsWith('@'))
         {
+            // A trailing "…" says the action asks first or opens a page of its own ("Admit…", "Revoke…"; T373, flow 11): the
+            // eye's mark, not a word a speech-input user says, so the name carries the word before it ("Admit Lerato
+            // Molefe").
+            visible = visible.TrimEnd('…');
             return visible.Length > 0
                    && Regex.IsMatch(value, $@"(?<!\w){Regex.Escape(visible)}(?!\w)", RegexOptions.IgnoreCase);
         }

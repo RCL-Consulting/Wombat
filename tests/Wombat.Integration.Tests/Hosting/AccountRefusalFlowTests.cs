@@ -18,6 +18,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Options;
+using Wombat.Application.Features.Invitations;
 using Wombat.Application.Common.Security;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Invitations;
@@ -189,152 +191,253 @@ public sealed class AccountRefusalFlowTests : IClassFixture<MsfRespondPageFlowTe
         Refusal(await LoadAsync(browser, wrong)).Should().Be("The account could not be linked. Check your password and try again.");
     }
 
-    // ─── Register ────────────────────────────────────────────────────────────
+    // ─── Register (T373, flow 11) ────────────────────────────────────────────
 
+    /// <summary>
+    /// S2, S1 and the cookie nit: the mail's link opens the start path, which keeps the token in the register cookie and
+    /// answers 303 to the page with no query; the page reads the invitation from the cookie. Until T373 the link opened the
+    /// page with the token in its address, which a script took out after the load (T315).
+    /// </summary>
     [Fact]
-    public async Task TheRegisterPage_ShowsOnlyTheGeneralSentence_ForWordsOfTheAddressesOwn_AndStillOffersTheForm()
-    {
-        var (token, _) = await InviteAsync();
-        using var browser = NewBrowser();
-
-        var page = await LoadAsync(browser, $"/account/register?token={Uri.EscapeDataString(token)}&error=Call%20012");
-
-        Refusal(page).Should().Be("Registration could not be completed. Try again.");
-        page.DocumentElement.OuterHtml.Should().NotContain("Call 012");
-        page.QuerySelector("form[action='/account/register/submit']").Should().NotBeNull("the invitation can still be used");
-    }
-
-    [Fact]
-    public async Task ARefusedRegistration_TravelsAsCodes_AndReadsAsItDidBefore_ThenTheRightOneRegisters()
+    public async Task TheMailsLink_KeepsTheTokenInTheCookie_AndSendsTheBrowserOnToThePageWithNoQuery()
     {
         var (token, email) = await InviteAsync();
         using var browser = NewBrowser();
-        var registerPage = $"/account/register?token={Uri.EscapeDataString(token)}";
 
-        var mismatch = await RegisterAsync(browser, registerPage, NewUserPassword, "Something-else-1!");
-        mismatch.Should().Be($"{registerPage}&error=ConfirmationMismatch");
-        var afterMismatch = await LoadAsync(browser, mismatch);
-        Refusal(afterMismatch).Should().Be("The password confirmation does not match.");
-        afterMismatch.QuerySelector("form[action='/account/register/submit']").Should().NotBeNull(
-            "the person puts it right on the same page; until T285 the refusal replaced the form");
+        using var start = await browser.GetAsync(StartLink(token));
 
-        // Identity's rules, as codes: until T285 the address carried Identity's descriptions, joined with "; ".
-        var weak = await RegisterAsync(browser, registerPage, "short", "short");
-        weak.Should().StartWith($"{registerPage}&error=PasswordTooShort").And.NotContain("%20").And.NotContain("Passwords");
-        var afterWeak = await LoadAsync(browser, weak);
-        Refusal(afterWeak).Should().Be(
-            "The new password needs: At least 12 characters. A digit (0 to 9). An upper-case letter. A symbol, such as ! or #.",
-            "the rules broken, in the one order the rules are listed in (T339, flow 02, E11)");
+        start.StatusCode.Should().Be(HttpStatusCode.SeeOther);
+        start.Headers.Location!.ToString().Should().Be("/account/register");
+        start.Headers.CacheControl!.NoStore.Should().BeTrue("S2: the answer that held the token is never kept (B11)");
+        var cookie = start.Headers.GetValues("Set-Cookie").Should().ContainSingle(value => value.StartsWith("wombat_register=")).Which;
+        var attributes = cookie.Split(';', StringSplitOptions.TrimEntries).Skip(1).Select(part => part.ToLowerInvariant()).ToList();
+        attributes.Should().Contain("httponly").And.Contain("samesite=lax").And.Contain("path=/account/register");
+        attributes.Should().NotContain("secure", "the request was http, as the replay's is, so the browser sends it back");
+        cookie.Should().NotContain(token, "the value is protected");
 
-        var registered = await RegisterAsync(browser, registerPage, NewUserPassword, NewUserPassword);
-        registered.Should().Be("/", "guard: the right details register the account and sign it in");
-        (await FindUserAsync(email)).Should().NotBeNull();
-
-        // The same invitation again: refused as used, on the page and in the address.
-        using var again = NewBrowser();
-        var formPage = await LoadAsync(again, "/account/login");
-        var used = await PostRegisterAsync(again, AntiforgeryToken(formPage), token, NewUserPassword, NewUserPassword);
-        used.Should().Be($"{registerPage}&error=InvitationUsed");
-        var afterUsed = await LoadAsync(again, used);
-        Refusal(afterUsed).Should().Be("This invitation has already been used.");
-        afterUsed.QuerySelector("form[action='/account/register/submit']").Should().BeNull(
-            "an invitation that cannot be used offers no form");
+        var page = await LoadAsync(browser, "/account/register");
+        page.QuerySelector("h1")!.TextContent.Trim().Should().Be("Complete registration");
+        page.QuerySelector(".alert-info")!.TextContent.Trim().Should().Be(
+            $"This invitation is for {email}, as Coordinator at {await DemoInstitutionNameAsync()}.");
+        page.QuerySelector("form[action='/account/register/submit']").Should().NotBeNull();
+        page.QuerySelector("input[name=Token]").Should().BeNull("the token is the cookie's");
+        page.DocumentElement.OuterHtml.Should().NotContain(token);
     }
 
     [Fact]
-    public async Task ARevokedInvitation_AndAMissingToken_ReadAsTheyDidBefore()
+    public async Task ARefusedRegistration_ComesBackToThePageWithNoQuery_KeepingTheNames_ThenTheRightOneRegisters()
+    {
+        var (token, email) = await InviteAsync();
+        using var browser = NewBrowser();
+        await OpenLinkAsync(browser, token);
+
+        var mismatch = await RegisterAsync(browser, NewUserPassword, "Something-else-1!");
+        mismatch.Should().Be("/account/register", "no redirect holds a name, a code or a token (S1)");
+        var afterMismatch = await LoadAsync(browser, mismatch);
+        FieldMessage(afterMismatch, "register-confirm-password").Should().Be(
+            "The password confirmation does not match. Type the password again in both fields.");
+        afterMismatch.GetElementById("register-first-name")!.GetAttribute("value").Should().Be("Refilwe", "the names are kept");
+        afterMismatch.GetElementById("register-last-name")!.GetAttribute("value").Should().Be("Dlamini");
+        afterMismatch.GetElementById("register-password")!.HasAttribute("autofocus").Should().BeTrue();
+
+        // Identity's rules, under Password, in the one order they are listed in (T339, flow 02, E11).
+        var weak = await RegisterAsync(browser, "short", "short");
+        weak.Should().Be("/account/register");
+        FieldMessage(await LoadAsync(browser, weak), "register-password").Should().Be(
+            "The new password needs: At least 12 characters. A digit (0 to 9). An upper-case letter. A symbol, such as ! or #.");
+
+        var reloaded = await LoadAsync(browser, "/account/register");
+        reloaded.QuerySelectorAll("[aria-invalid]").Should().BeEmpty("a refusal is shown once");
+        reloaded.GetElementById("register-first-name")!.GetAttribute("value").Should().Be("Refilwe");
+
+        using (var registered = await PostRegisterAsync(browser, AntiforgeryToken(reloaded), InvitationField(reloaded), NewUserPassword, NewUserPassword))
+        {
+            registered.Headers.Location!.ToString().Should().Be("/", "guard: the right details register the account and sign it in");
+            registered.Headers.GetValues("Set-Cookie").Should().Contain(value => value.StartsWith("wombat_register=;"),
+                "the cookie is deleted on success");
+        }
+
+        (await FindUserAsync(email)).Should().NotBeNull();
+
+        // The same link again, in another browser: the card says it was used.
+        using var again = NewBrowser();
+        await OpenLinkAsync(again, token);
+        var used = await LoadAsync(again, "/account/register");
+        used.QuerySelector("h1")!.TextContent.Trim().Should().Be("Invitation already used");
+        used.QuerySelector("form[action='/account/register/submit']").Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ARevokedLink_ReadsAsItsCard_NoCookieAsAnIncompleteLink_AndASubmitWithoutOneAsTimedOut()
     {
         var (token, _) = await InviteAsync(revoked: true);
         using var browser = NewBrowser();
+
+        var incomplete = await LoadAsync(browser, "/account/register");
+        incomplete.QuerySelector("h1")!.TextContent.Trim().Should().Be("Invitation link incomplete");
+
         var formPage = await LoadAsync(browser, "/account/login");
+        using (var lapsed = await PostRegisterAsync(browser, AntiforgeryToken(formPage), invitation: null, NewUserPassword, NewUserPassword))
+        {
+            lapsed.Headers.Location!.ToString().Should().Be("/account/register");
+        }
 
-        var revoked = await PostRegisterAsync(browser, AntiforgeryToken(formPage), token, NewUserPassword, NewUserPassword);
-        revoked.Should().Be($"/account/register?token={Uri.EscapeDataString(token)}&error=InvitationRevoked");
-        Refusal(await LoadAsync(browser, revoked)).Should().Be("This invitation has been revoked.");
+        (await LoadAsync(browser, "/account/register")).QuerySelector("h1")!.TextContent.Trim().Should().Be("Invitation timed out");
 
-        var missing = await PostRegisterAsync(browser, AntiforgeryToken(formPage), token: null, NewUserPassword, NewUserPassword);
-        missing.Should().Be("/account/register?error=TokenMissing");
-        Refusal(await LoadAsync(browser, missing)).Should().Be("The invitation token is missing.");
+        await OpenLinkAsync(browser, token);
+        var revoked = await LoadAsync(browser, "/account/register");
+        revoked.QuerySelector("h1")!.TextContent.Trim().Should().Be("Invitation revoked");
+        revoked.QuerySelector(".account-form-container > p:not(.account-purpose)")!.TextContent.Trim()
+            .Should().Be("This invitation has been revoked.");
     }
 
     /// <summary>
-    /// T285 review: an invitation to an address an account already holds. Issuing does not check for one, and the register
-    /// page keeps its form under a refusal the person can put right, so until the review every submit came back to the form
-    /// refused as AccountExists again, with the invitation still unused. The preview now refuses the address as the submit
-    /// does, so the page says so and offers no form, before a submit and after one.
+    /// T285 review, kept: an invitation to an address an account holds offers no form, and a form posted anyway is refused
+    /// as the page was, with nothing registered.
     /// </summary>
     [Fact]
-    public async Task AnInvitationToAnAddressAnAccountHolds_SaysSo_AndOffersNoForm_BeforeOrAfterASubmit()
+    public async Task AnInvitationToAnAddressAnAccountHolds_IsItsCard_BeforeOrAfterASubmit()
     {
         var email = NewEmail();
         await _host.CreateAssessorAsync(email);
         var (token, _) = await InviteAsync(email: email);
         using var browser = NewBrowser();
-        var registerPage = $"/account/register?token={Uri.EscapeDataString(token)}";
+        await OpenLinkAsync(browser, token);
 
-        var page = await LoadAsync(browser, registerPage);
-        Refusal(page).Should().Be("A user with this email address already exists.");
+        var page = await LoadAsync(browser, "/account/register");
+        page.QuerySelector("h1")!.TextContent.Trim().Should().Be("Account already exists");
         page.QuerySelector("form[action='/account/register/submit']").Should().BeNull("no submit could succeed");
 
-        // A form posted anyway (one loaded before the account was created, say) is refused as the page was.
+        // Posted with the binding the cookie's invitation would have had (B1), so it is the invitation's own refusal.
         var formPage = await LoadAsync(browser, "/account/login");
-        var refused = await PostRegisterAsync(browser, AntiforgeryToken(formPage), token, NewUserPassword, NewUserPassword);
-        refused.Should().Be($"{registerPage}&error=AccountExists");
+        using (var refused = await PostRegisterAsync(
+                   browser, AntiforgeryToken(formPage), RegisterCookie.Fingerprint(token), NewUserPassword, NewUserPassword))
+        {
+            refused.Headers.Location!.ToString().Should().Be("/account/register");
+        }
 
-        var afterSubmit = await LoadAsync(browser, refused);
-        afterSubmit.QuerySelectorAll(".alert-danger").Should().ContainSingle()
-            .Which.TextContent.Trim().Should().Be("A user with this email address already exists.");
-        afterSubmit.QuerySelector("form[action='/account/register/submit']").Should().BeNull(
-            "until the T285 review the form came back here, to be refused the same way on every submit");
+        (await LoadAsync(browser, "/account/register")).QuerySelector("h1")!.TextContent.Trim().Should().Be("Account already exists");
         (await InvitationUsedOnAsync(token)).Should().BeNull("nothing was registered");
     }
 
     /// <summary>
-    /// An invitation to an address Identity will not take as a user name can never be registered. Until T285 the refusal
-    /// was Identity's own words, which quoted the address, and the form was hidden; T285 sent Identity's code, which read as
-    /// the general sentence under a form that could never succeed. The preview now refuses it in a sentence of its own.
+    /// T373 fix pass, B1: a form registers only the invitation it shows. The link for X is opened and its form loaded, then
+    /// the link for Y is opened in the same browser (another tab), which the one cookie now holds. X's form, posted, accepts
+    /// nothing, and the page says another invitation was opened, naming Y's address; Y's form then registers Y.
     /// </summary>
     [Fact]
-    public async Task AnInvitationToAnAddressIdentityWillNotTake_SaysSo_AndOffersNoForm()
+    public async Task AFormPostedAfterAnotherInvitationsLinkWasOpened_AcceptsNothing_AndSaysSo()
+    {
+        var (first, firstEmail) = await InviteAsync();
+        var (second, secondEmail) = await InviteAsync();
+        using var browser = NewBrowser();
+        await OpenLinkAsync(browser, first);
+        var firstForm = await LoadAsync(browser, "/account/register");
+        InvitationField(firstForm).Should().Be(RegisterCookie.Fingerprint(first), "guard: the form carries its invitation's binding");
+        firstForm.DocumentElement.OuterHtml.Should().NotContain(first, "the binding is not the token");
+
+        await OpenLinkAsync(browser, second);
+        using (var refused = await PostRegisterAsync(
+                   browser, AntiforgeryToken(firstForm), InvitationField(firstForm), NewUserPassword, NewUserPassword))
+        {
+            refused.Headers.Location!.ToString().Should().Be("/account/register");
+        }
+
+        (await FindUserAsync(firstEmail)).Should().BeNull("nothing was accepted");
+        (await FindUserAsync(secondEmail)).Should().BeNull("the details typed for the first address never reach the second");
+        (await InvitationUsedOnAsync(first)).Should().BeNull();
+        (await InvitationUsedOnAsync(second)).Should().BeNull();
+
+        var card = await LoadAsync(browser, "/account/register");
+        card.QuerySelector("h1")!.TextContent.Trim().Should().Be("Another invitation opened");
+        card.QuerySelectorAll(".account-form-container > p:not(.account-purpose)").Select(p => p.TextContent.Trim()).Should().Equal(
+            "Another invitation's link was opened in this browser after this form was shown, so nothing was registered.",
+            $"The invitation open in this browser now is for {secondEmail}. Continue to register it, or open the link in your own invitation email again.");
+
+        var form = await LoadAsync(browser, card.QuerySelector(".form-actions a")!.GetAttribute("href")!);
+        InvitationField(form).Should().Be(RegisterCookie.Fingerprint(second), "Continue shows the form of the invitation the cookie holds");
+        using (var registered = await PostRegisterAsync(browser, AntiforgeryToken(form), InvitationField(form), NewUserPassword, NewUserPassword))
+        {
+            registered.Headers.Location!.ToString().Should().Be("/");
+        }
+
+        (await FindUserAsync(secondEmail)).Should().NotBeNull();
+    }
+
+    /// <summary>T373 fix pass, B10: a blind post after the 30 minutes leaves the timed-out cookie as it was, never extended.</summary>
+    [Fact]
+    public async Task ASecondPostAfterTheTimeOut_DoesNotRewriteTheTimedOutCookie()
+    {
+        using var browser = NewBrowser();
+        var formPage = await LoadAsync(browser, "/account/login");
+        using (var first = await PostRegisterAsync(browser, AntiforgeryToken(formPage), invitation: null, NewUserPassword, NewUserPassword))
+        {
+            first.Headers.GetValues("Set-Cookie").Should().Contain(value => value.StartsWith("wombat_register="),
+                "guard: the first post leaves the timed-out state");
+        }
+
+        using (var second = await PostRegisterAsync(browser, AntiforgeryToken(formPage), invitation: null, NewUserPassword, NewUserPassword))
+        {
+            second.Headers.Location!.ToString().Should().Be("/account/register");
+            (second.Headers.TryGetValues("Set-Cookie", out var cookies) ? cookies : [])
+                .Should().NotContain(value => value.StartsWith("wombat_register="), "the window runs from the first, not the last");
+        }
+
+        (await LoadAsync(browser, "/account/register")).QuerySelector("h1")!.TextContent.Trim().Should().Be("Invitation timed out");
+    }
+
+    [Fact]
+    public async Task AnInvitationToAnAddressIdentityWillNotTake_IsItsCard()
     {
         var address = $"o'brien-{Guid.NewGuid():N}@example.test";
         var (token, _) = await InviteAsync(email: address);
         using var browser = NewBrowser();
-        var registerPage = $"/account/register?token={Uri.EscapeDataString(token)}";
+        await OpenLinkAsync(browser, token);
 
-        var page = await LoadAsync(browser, registerPage);
-        Refusal(page).Should().Be(
+        var page = await LoadAsync(browser, "/account/register");
+        page.QuerySelector("h1")!.TextContent.Trim().Should().Be("Address not accepted");
+        page.QuerySelector(".account-form-container > p:not(.account-purpose)")!.TextContent.Trim().Should().Be(
             "This email address cannot be used for an account. Ask your administrator for an invitation to another address.");
-        page.QuerySelector("form[action='/account/register/submit']").Should().BeNull();
-
-        var formPage = await LoadAsync(browser, "/account/login");
-        var refused = await PostRegisterAsync(browser, AntiforgeryToken(formPage), token, NewUserPassword, NewUserPassword);
-        refused.Should().Be($"{registerPage}&error=AddressNotAccepted");
         (await FindUserAsync(address)).Should().BeNull();
     }
 
-    /// <summary>
-    /// A name of spaces passes the browser's <c>required</c>, and the command's own validator refuses it through the real
-    /// pipeline: until T285 the page showed the validator's log text ("Validation failed: -- FirstName: ...").
-    /// </summary>
     [Fact]
-    public async Task ABlankName_IsRefusedByTheValidator_AsDetailsInvalid_AndKeepsTheForm()
+    public async Task AnExpiredLink_SaysTheDayItWorkedUntil()
+    {
+        var (token, _) = await InviteAsync(expiresOn: new DateOnly(2026, 1, 15));
+        using var browser = NewBrowser();
+        await OpenLinkAsync(browser, token);
+
+        var page = await LoadAsync(browser, "/account/register");
+        page.QuerySelector("h1")!.TextContent.Trim().Should().Be("Invitation expired");
+        page.QuerySelector(".account-form-container > p:not(.account-purpose)")!.TextContent.Trim().Should().Be(
+            "This invitation has expired: its link worked until 2026-01-15.");
+    }
+
+    /// <summary>
+    /// A name of spaces passes the browser's <c>required</c>, and a 101-character name the field (no <c>maxlength</c>, S21):
+    /// the command's own validator refuses each through the real pipeline, and the page says it under that field.
+    /// </summary>
+    [Theory]
+    [InlineData("   ", "Dlamini", "register-first-name", "Enter your first name.")]
+    [InlineData("Refilwe", null, "register-last-name", "Last name: enter 100 characters or fewer.")]
+    public async Task ANameTheValidatorRefuses_IsSaidUnderItsField(string firstName, string? lastName, string field, string expected)
     {
         var (token, email) = await InviteAsync();
         using var browser = NewBrowser();
-        var registerPage = $"/account/register?token={Uri.EscapeDataString(token)}";
+        await OpenLinkAsync(browser, token);
 
-        var refused = await RegisterAsync(browser, registerPage, NewUserPassword, NewUserPassword, firstName: "   ");
+        var refused = await RegisterAsync(browser, NewUserPassword, NewUserPassword, firstName, lastName ?? new string('d', 101));
 
-        refused.Should().Be($"{registerPage}&error=DetailsInvalid");
+        refused.Should().Be("/account/register");
         var page = await LoadAsync(browser, refused);
-        Refusal(page).Should().Be("Enter your first name and last name, each of at most 100 characters, and a password.");
-        page.QuerySelector("form[action='/account/register/submit']").Should().NotBeNull("the person puts it right here");
+        FieldMessage(page, field).Should().Be(expected);
+        page.GetElementById(field)!.HasAttribute("autofocus").Should().BeTrue();
         (await FindUserAsync(email)).Should().BeNull();
     }
 
     [Fact]
-    public async Task AFaultInRegistration_IsLogged_AndTheAddressCarriesOnlyACode()
+    public async Task AFaultInRegistration_IsLogged_SaysNothingWasSaved_AndTryAgainReopensTheForm()
     {
         var (token, _) = await InviteAsync();
         var logs = new CapturingLoggerProvider();
@@ -344,19 +447,142 @@ public sealed class AccountRefusalFlowTests : IClassFixture<MsfRespondPageFlowTe
             services.AddScoped<IInvitedUserProvisioner, FaultingProvisioner>();
             services.AddSingleton<ILoggerProvider>(logs);
         }));
-        using var browser = app.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
-        browser.DefaultRequestHeaders.Add("X-Forwarded-For", NextAddress());
-        var registerPage = $"/account/register?token={Uri.EscapeDataString(token)}";
+        using var browser = BrowserOf(app);
+        await OpenLinkAsync(browser, token);
 
-        var failed = await RegisterAsync(browser, registerPage, NewUserPassword, NewUserPassword);
+        var failed = await RegisterAsync(browser, NewUserPassword, NewUserPassword);
 
-        failed.Should().Be($"{registerPage}&error=Failed", "an exception's message is never put in an address");
-        Refusal(await LoadAsync(browser, failed)).Should().Be("Registration could not be completed. Try again.");
+        failed.Should().Be("/account/register", "an exception's message is never put in an address");
+        var page = await LoadAsync(browser, failed);
+        page.QuerySelector("h1")!.TextContent.Trim().Should().Be("Registration not completed");
+        page.DocumentElement.OuterHtml.Should().NotContain("012 345 6789");
         logs.Entries.Should().Contain(entry => entry.Category == RegisterOutcome.LogCategory
                                                && entry.Level == LogLevel.Error
                                                && entry.Exception != null
                                                && entry.Exception.Message == FaultingProvisioner.Message,
             "the fault is logged, where an operator can read it");
+
+        var tryAgain = page.QuerySelector(".form-actions a")!.GetAttribute("href")!;
+        (await LoadAsync(browser, tryAgain)).QuerySelector("form[action='/account/register/submit']").Should().NotBeNull(
+            "the invitation is still in the cookie");
+    }
+
+    /// <summary>
+    /// F10: a fault after the account is created, before the invitation is marked used, leaves no account and an unused
+    /// invitation: one transaction. Until T373 the provisioner's own save had committed the account by then.
+    /// </summary>
+    [Fact]
+    public async Task AFaultBetweenTheAccountAndTheAccept_LeavesNoAccount_AndTheInvitationUnused()
+    {
+        var (token, email) = await InviteAsync();
+        await using var app = _host.Factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        {
+            services.RemoveAll<IInvitedUserProvisioner>();
+            services.AddScoped<InvitedUserProvisioner>();
+            services.AddScoped<IInvitedUserProvisioner>(provider =>
+                new FaultAfterProvisioning(provider.GetRequiredService<InvitedUserProvisioner>()));
+        }));
+        using var browser = BrowserOf(app);
+        await OpenLinkAsync(browser, token);
+
+        var failed = await RegisterAsync(browser, NewUserPassword, NewUserPassword);
+
+        failed.Should().Be("/account/register");
+        (await LoadAsync(browser, failed)).QuerySelector("h1")!.TextContent.Trim().Should().Be("Registration not completed");
+        (await FindUserAsync(email)).Should().BeNull("the account's rows were rolled back with the accept");
+        (await InvitationUsedOnAsync(token)).Should().BeNull(
+            "the invitation is still open: the failed command's audit row, saved after the rollback, commits nothing of it");
+    }
+
+    /// <summary>
+    /// M4 and G18: a form loaded while signed out, posted after someone signed in on the same browser (a stale tab), is
+    /// refused back to the page, which says who is signed in. Nothing is accepted, no account is created, and the session
+    /// is not replaced. Then F5: Sign out and continue lands back on Register, which still holds the invitation.
+    /// </summary>
+    [Fact]
+    public async Task ASubmitWhileSignedIn_IsRefusedToTheSignedInCard_ThenSignOutAndContinueReturnsToTheForm()
+    {
+        var (token, email) = await InviteAsync();
+        var someoneElse = NewEmail();
+        await _host.CreateAssessorAsync(someoneElse);
+        using var browser = NewBrowser();
+        await OpenLinkAsync(browser, token);
+        var staleForm = await LoadAsync(browser, "/account/register");
+
+        await _host.SignInAsync(browser, someoneElse);
+        using (var refused = await PostRegisterAsync(browser, AntiforgeryToken(staleForm), InvitationField(staleForm), NewUserPassword, NewUserPassword))
+        {
+            refused.StatusCode.Should().Be(HttpStatusCode.Redirect, "not a bare 400: the antiforgery check comes after this one");
+            refused.Headers.Location!.ToString().Should().Be("/account/register");
+            refused.Headers.Contains("Set-Cookie").Should().BeFalse("no session is replaced, and the invitation is kept");
+        }
+
+        (await FindUserAsync(email)).Should().BeNull("nothing was accepted");
+        (await InvitationUsedOnAsync(token)).Should().BeNull();
+        (await SignedInAsync(browser)).Should().BeTrue("the person signed in is still signed in");
+
+        var card = await LoadAsync(browser, "/account/register");
+        card.QuerySelector("h1")!.TextContent.Trim().Should().Be("Signed in as someone else");
+        var said = card.QuerySelector(".account-form-container > p:not(.account-purpose)")!.TextContent.Trim();
+        said.Should().StartWith("You are signed in as ").And.EndWith($". This invitation is for {email}.");
+
+        var signOut = card.QuerySelector($"form[action='{SignOutOutcome.SubmitPath}']")!;
+        using (var signedOut = await browser.PostAsync(SignOutOutcome.SubmitPath, new FormUrlEncodedContent(
+               [
+                   new("__RequestVerificationToken", signOut.QuerySelector("input[name=__RequestVerificationToken]")!.GetAttribute("value")!),
+                   new("returnTo", signOut.QuerySelector("input[name=returnTo]")!.GetAttribute("value")!)
+               ])))
+        {
+            signedOut.Headers.Location!.ToString().Should().Be("/account/register", "F5");
+        }
+
+        (await SignedInAsync(browser)).Should().BeFalse();
+        (await LoadAsync(browser, "/account/register")).QuerySelector("form[action='/account/register/submit']")
+            .Should().NotBeNull("the person lands on Register with the form the cookie's token reads");
+    }
+
+    [Theory]
+    [InlineData("/progress")]
+    [InlineData("//evil.example/")]
+    [InlineData("https://evil.example/account/register")]
+    [InlineData("/ACCOUNT/REGISTER")]
+    [InlineData("/account/register/")]
+    [InlineData("/account/register?token=x")]
+    public async Task SignOut_IgnoresAnyOtherReturnTo(string returnTo)
+    {
+        var email = NewEmail();
+        await _host.CreateAssessorAsync(email);
+        using var browser = NewBrowser();
+        await _host.SignInAsync(browser, email);
+        var page = await LoadAsync(browser, "/account/logout");
+
+        using var signedOut = await browser.PostAsync(SignOutOutcome.SubmitPath, new FormUrlEncodedContent(
+        [
+            new("__RequestVerificationToken", AntiforgeryToken(page)),
+            new("returnTo", returnTo)
+        ]));
+
+        signedOut.Headers.Location!.ToString().Should().Be("/account/login?error=SignedOut");
+    }
+
+    /// <summary>B11: two returnTo values, even both Register's, are read joined by a comma, and land where signing out does.</summary>
+    [Fact]
+    public async Task SignOut_IgnoresTwoReturnTos()
+    {
+        var email = NewEmail();
+        await _host.CreateAssessorAsync(email);
+        using var browser = NewBrowser();
+        await _host.SignInAsync(browser, email);
+        var page = await LoadAsync(browser, "/account/logout");
+
+        using var signedOut = await browser.PostAsync(SignOutOutcome.SubmitPath, new FormUrlEncodedContent(
+        [
+            new("__RequestVerificationToken", AntiforgeryToken(page)),
+            new("returnTo", RegisterOutcome.PagePath),
+            new("returnTo", RegisterOutcome.PagePath)
+        ]));
+
+        signedOut.Headers.Location!.ToString().Should().Be("/account/login?error=SignedOut");
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
@@ -413,58 +639,98 @@ public sealed class AccountRefusalFlowTests : IClassFixture<MsfRespondPageFlowTe
         return answer.Headers.Location!.ToString();
     }
 
-    /// <summary>Loads the register page for an invitation and posts its form, as the browser does.</summary>
-    private static async Task<string> RegisterAsync(
-        HttpClient browser,
-        string registerPage,
-        string password,
-        string confirmation,
-        string firstName = "Refilwe")
-    {
-        var page = await LoadAsync(browser, registerPage);
-        var form = page.QuerySelector("form[action='/account/register/submit']");
-        form.Should().NotBeNull("guard: the invitation can be used, so the page offers the form");
+    /// <summary>The mail's link for <paramref name="token" />, as <c>InvitationLinks</c> writes it, without the host.</summary>
+    private static string StartLink(string token) => InvitationLinks.RegistrationUrl(new WombatOptions(), token);
 
-        return await PostRegisterAsync(
-            browser,
-            AntiforgeryToken(page),
-            form!.QuerySelector("input[name=Token]")!.GetAttribute("value"),
-            password,
-            confirmation,
-            firstName);
+    /// <summary>Opens the mail's link, as the browser does: the cookie is set, and the answer is the page.</summary>
+    private static async Task OpenLinkAsync(HttpClient browser, string token)
+    {
+        using var start = await browser.GetAsync(StartLink(token));
+        start.StatusCode.Should().Be(HttpStatusCode.SeeOther, "guard: the start path answers 303");
+        start.Headers.Location!.ToString().Should().Be("/account/register");
     }
 
-    private static async Task<string> PostRegisterAsync(
+    /// <summary>Loads the register page, which the cookie names the invitation of, and posts its form; returns where it sends.</summary>
+    private static async Task<string> RegisterAsync(
         HttpClient browser,
-        string antiforgeryToken,
-        string? token,
         string password,
         string confirmation,
-        string firstName = "Refilwe")
+        string firstName = "Refilwe",
+        string lastName = "Dlamini")
     {
-        var fields = new List<KeyValuePair<string, string>>
+        var page = await LoadAsync(browser, "/account/register");
+        page.QuerySelector("form[action='/account/register/submit']").Should().NotBeNull(
+            "guard: the invitation can be used, so the page offers the form");
+
+        using var answer = await PostRegisterAsync(browser, AntiforgeryToken(page), InvitationField(page), password, confirmation, firstName, lastName);
+        var location = answer.Headers.Location!.ToString();
+        location.Should().NotContain("?", "S1: no redirect carries a query");
+        if (!string.IsNullOrWhiteSpace(firstName))
         {
-            new("__RequestVerificationToken", antiforgeryToken),
-            new("FirstName", firstName),
-            new("LastName", "Dlamini"),
-            new("Password", password),
-            new("ConfirmPassword", confirmation)
-        };
-        if (token is not null)
+            location.Should().NotContain(firstName, "S1: no redirect holds a name");
+        }
+        return location;
+    }
+
+    private static async Task<HttpResponseMessage> PostRegisterAsync(
+        HttpClient browser,
+        string antiforgeryToken,
+        string? invitation,
+        string password,
+        string confirmation,
+        string firstName = "Refilwe",
+        string lastName = "Dlamini")
+    {
+        List<KeyValuePair<string, string>> fields = [new("__RequestVerificationToken", antiforgeryToken)];
+        if (invitation is not null)
         {
-            fields.Add(new("Token", token));
+            fields.Add(new("Invitation", invitation));
         }
 
-        using var answer = await browser.PostAsync("/account/register/submit", new FormUrlEncodedContent(fields));
+        var answer = await browser.PostAsync("/account/register/submit", new FormUrlEncodedContent(
+        [
+            .. fields,
+            new("FirstName", firstName),
+            new("LastName", lastName),
+            new("Password", password),
+            new("ConfirmPassword", confirmation)
+        ]));
         answer.StatusCode.Should().Be(HttpStatusCode.Redirect, "guard: the form was accepted and answered");
-        return answer.Headers.Location!.ToString();
+        return answer;
+    }
+
+    /// <summary>The form's binding to the invitation it shows (B1); null when the page offers no form.</summary>
+    private static string? InvitationField(IHtmlDocument page)
+        => page.QuerySelector("form[action='/account/register/submit'] input[type=hidden][name=Invitation]")?.GetAttribute("value");
+
+    /// <summary>What the field <paramref name="fieldId" /> says under it, when it is refused and names its message.</summary>
+    private static string? FieldMessage(IHtmlDocument page, string fieldId)
+    {
+        var field = page.GetElementById(fieldId)!;
+        field.GetAttribute("aria-invalid").Should().Be("true", $"guard: {fieldId} is refused");
+        var messageId = field.GetAttribute("aria-describedby")!.Split(' ')[0];
+        return page.GetElementById(messageId)?.TextContent.Trim();
+    }
+
+    private static HttpClient BrowserOf(WebApplicationFactory<WombatWeb::Program> app)
+    {
+        var browser = app.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        browser.DefaultRequestHeaders.Add("X-Forwarded-For", NextAddress());
+        return browser;
+    }
+
+    /// <summary>Whether the browser is signed in: My account answers, rather than sending it to sign in.</summary>
+    private static async Task<bool> SignedInAsync(HttpClient browser)
+    {
+        using var response = await browser.GetAsync("/account/profile");
+        return response.StatusCode == HttpStatusCode.OK;
     }
 
     /// <summary>
     /// A Coordinator invitation to the demo institution, for <paramref name="email" /> or a new address, stored as issuing one
     /// stores it; returns its token.
     /// </summary>
-    private async Task<(string Token, string Email)> InviteAsync(bool revoked = false, string? email = null)
+    private async Task<(string Token, string Email)> InviteAsync(bool revoked = false, string? email = null, DateOnly? expiresOn = null)
     {
         var institutionId = await DemoInstitutionIdAsync();
         await using var scope = _host.Factory.Services.CreateAsyncScope();
@@ -481,7 +747,7 @@ public sealed class AccountRefusalFlowTests : IClassFixture<MsfRespondPageFlowTe
             InstitutionId = institutionId,
             IssuedByUserId = "coordinator-web-1",
             IssuedOn = DateTime.UtcNow,
-            ExpiresOn = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
+            ExpiresOn = expiresOn ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
             RevokedOn = revoked ? DateTime.UtcNow : null
         });
         await dbContext.SaveChangesAsync();
@@ -513,6 +779,16 @@ public sealed class AccountRefusalFlowTests : IClassFixture<MsfRespondPageFlowTe
     }
 
     private async Task<int> InstitutionOfAsync(string email) => (await FindUserAsync(email))!.InstitutionId!.Value;
+
+    private async Task<string> DemoInstitutionNameAsync()
+    {
+        var id = await DemoInstitutionIdAsync();
+        await using var scope = _host.Factory.Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Institutions
+            .Where(entity => entity.Id == id)
+            .Select(entity => entity.Name)
+            .SingleAsync();
+    }
 
     private async Task<int> DemoInstitutionIdAsync()
     {
@@ -604,6 +880,40 @@ public sealed class AccountRefusalFlowTests : IClassFixture<MsfRespondPageFlowTe
             int? subSpecialityId,
             CancellationToken cancellationToken = default)
             => throw new InvalidOperationException(Message);
+
+        public Task<T> InOneTransactionAsync<T>(Func<CancellationToken, Task<T>> work, CancellationToken cancellationToken = default)
+            => work(cancellationToken);
+    }
+
+    /// <summary>
+    /// The real provisioner, which creates the account, then a fault before the accept marks the invitation used (F10):
+    /// the transaction is the real one's.
+    /// </summary>
+    private sealed class FaultAfterProvisioning(InvitedUserProvisioner inner) : IInvitedUserProvisioner
+    {
+        public Task<InvitedAddressStatus> GetAddressStatusAsync(string email, CancellationToken cancellationToken = default)
+            => inner.GetAddressStatusAsync(email, cancellationToken);
+
+        public async Task<ProvisionedInvitationUser> ProvisionAsync(
+            string email,
+            string password,
+            string firstName,
+            string lastName,
+            string targetRole,
+            int? institutionId,
+            int? collegeId,
+            int? specialityId,
+            int? subSpecialityId,
+            CancellationToken cancellationToken = default)
+        {
+            await inner.ProvisionAsync(
+                email, password, firstName, lastName, targetRole, institutionId, collegeId, specialityId, subSpecialityId,
+                cancellationToken);
+            throw new InvalidOperationException("The database went away between the account and the accept.");
+        }
+
+        public Task<T> InOneTransactionAsync<T>(Func<CancellationToken, Task<T>> work, CancellationToken cancellationToken = default)
+            => inner.InOneTransactionAsync(work, cancellationToken);
     }
 
     private sealed record LogEntry(string Category, LogLevel Level, Exception? Exception);

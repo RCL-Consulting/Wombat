@@ -24,19 +24,21 @@ public sealed partial class StylesheetRuleTests
     }
 
     /// <summary>
-    /// M10: a ConfirmDialog inside the page column, below 641px, shows its action on top and the safe button last on
-    /// screen (the DOM has the safe button first, so it stays first in the tab order), each button 44px and full width.
+    /// M10: a ConfirmDialog on an MSF page, below 641px, shows its action on top and the safe button last on screen (the
+    /// DOM has the safe button first, so it stays first in the tab order), each button 44px and full width. Since T373
+    /// (flow 11, M8) that is the general rule on every dialog, which this section's scoped copy folded into
+    /// (<see cref="EveryDialog_OnAPhone_StacksItsButtons_TheActionOnTop" />).
     /// </summary>
     [Fact]
     public void AnMsfDialog_OnAPhone_StacksItsButtons_TheActionOnTop()
     {
         var css = Stylesheet.AppCss();
 
-        css.RulesFor(".msf-page dialog .form-actions", Flow10Phone).Should().ContainSingle()
+        css.RulesFor(".dialog-card .form-actions", Flow10Phone).Should().ContainSingle()
             .Which.Value("flex-direction").Should().Be("column-reverse");
-        var button = css.RulesFor(".msf-page dialog .btn", Flow10Phone).Should().ContainSingle().Subject;
-        button.Value("min-height").Should().Be("2.75rem");
-        button.Value("width").Should().Be("100%");
+        var button = css.ComputedIn(Flow10Phone, ".dialog-card .form-actions .btn");
+        button["min-height"].Should().Be("2.75rem");
+        button["width"].Should().Be("100%");
     }
 
     /// <summary>
@@ -79,7 +81,7 @@ public sealed partial class StylesheetRuleTests
     /// <summary>
     /// T369, build review D2 and D9: a stacked list's row actions are written once, in the shared section: a full-width
     /// column below 641px, and 44px buttons from 641 to 900px, where a list with both stack classes is stacked too (the
-    /// campaign list and her reports).
+    /// campaign list and her reports). The 44px from 900px down is the general stack-wide rule since T373 (flow 11, S16).
     /// </summary>
     [Fact]
     public void AStackedMsfListsRowActions_AreWrittenOnce_44pxTo900px()
@@ -90,7 +92,7 @@ public sealed partial class StylesheetRuleTests
             .Which.Value("flex-direction").Should().Be("column");
         css.RulesFor(".msf-page td .actions-cell .btn", Flow10Phone).Should().ContainSingle()
             .Which.Value("width").Should().Be("100%");
-        css.RulesFor(".msf-page .clinic-table--stack-wide td .actions-cell .btn", "@media (max-width: 900px)").Should().ContainSingle()
+        css.RulesFor(".clinic-table--stack-wide .btn", "@media (max-width: 900px)").Should().ContainSingle()
             .Which.Value("min-height").Should().Be("2.75rem");
     }
 

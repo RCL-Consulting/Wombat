@@ -132,6 +132,9 @@ public static class NavOwners
         [typeof(NewCampaign)] = [new([WombatRoles.Coordinator], NavItems.MsfCampaigns)],
         [typeof(CampaignReport)] = [new([WombatRoles.Coordinator], NavItems.MsfCampaigns)],
         [typeof(ProgrammeCoverage)] = [new([WombatRoles.Coordinator], NavItems.MsfCampaigns)],
+        // T373 (flow 11, Q1): Invite a person is its own page, under Invitations, for both roles that invite.
+        [typeof(Components.Pages.Admin.Invitations.InviteAPerson)] =
+            [new([WombatRoles.Administrator, WombatRoles.InstitutionalAdmin], NavItems.Invitations)],
 
         [typeof(RequestDetail)] = [new([WombatRoles.Coordinator, WombatRoles.Administrator], NavItems.DataRightsRequests)],
 
@@ -153,6 +156,10 @@ public static class NavOwners
 
         [typeof(UserDetail)] = [new([WombatRoles.Administrator, WombatRoles.InstitutionalAdmin], NavItems.Users)],
         [typeof(TraineeProfileEdit)] = [new([WombatRoles.InstitutionalAdmin], NavItems.Trainees)],
+
+        // Admit ‹name› (T373, flow 11, Q17): under Trainees for the Institutional admin. The Administrator's menu has no
+        // Trainees, so nothing is lit for him and the page gives its trail's Trainees crumb itself (M04b).
+        [typeof(AdmitRegistrar)] = [new([WombatRoles.InstitutionalAdmin], NavItems.Trainees)],
         [typeof(AssessorProfileEdit)] = [new([WombatRoles.InstitutionalAdmin], NavItems.Assessors)],
         [typeof(AuditDetail)] = [new([WombatRoles.Administrator, WombatRoles.InstitutionalAdmin], NavItems.AuditLog)],
         [typeof(ScheduledJobRunsList)] = [new([WombatRoles.Administrator], NavItems.ScheduledJobs)],

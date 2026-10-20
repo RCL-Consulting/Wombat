@@ -1,17 +1,5 @@
 window.wombat = window.wombat || {};
 
-window.wombat.clearInvitationTokenFromUrl = function () {
-    const url = new URL(window.location.href);
-    if (!url.searchParams.has("token")) {
-        return;
-    }
-
-    url.searchParams.delete("token");
-    const search = url.searchParams.toString();
-    const next = `${url.pathname}${search ? `?${search}` : ""}${url.hash}`;
-    window.history.replaceState({}, "", next);
-};
-
 // A password field's Show toggle on a page with no circuit (PasswordField.razor; T339, flow 02, the round 2 review's A3
 // to A5). The button is rendered hidden with data-password-toggle, so a page whose script is blocked has no dead button;
 // this shows it as the page loads and after an enhanced navigation. One delegated listener drives every toggle: pressed,
@@ -180,4 +168,20 @@ window.wombat.focusById = function (id) {
 // activity page's Try again. FocusOnNavigate moves the focus only when the page itself changes.
 window.wombat.focusHeading = function () {
     return window.wombat.focusElement(document.querySelector("h1"));
+};
+
+// Invite a person's and the invitations list's Copy link (T373, flow 11, S10): the registration link to the clipboard.
+// True when the browser took it; false when it refused (no permission, an insecure page) or has no clipboard, and the page
+// then says to select the link and copy it by hand. The link is never kept here.
+window.wombat.copyText = async function (text) {
+    if (typeof text !== "string" || !navigator.clipboard || typeof navigator.clipboard.writeText !== "function") {
+        return false;
+    }
+
+    try {
+        await navigator.clipboard.writeText(text);
+        return true;
+    } catch {
+        return false;
+    }
 };

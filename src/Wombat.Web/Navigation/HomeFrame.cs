@@ -1,6 +1,7 @@
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
+using Wombat.Web.Components.Shared;
 
 namespace Wombat.Web.Navigation;
 
@@ -40,7 +41,7 @@ public static class HomeFrame
     /// </summary>
     /// <remarks>
     /// Three roles have one. The Trainee's main job is filing an observation, the Institutional admin's is inviting a
-    /// person (the invitation form is on the invitations page), and the Coordinator's is starting an MSF campaign, MSF
+    /// person (Invite a person, T373), and the Coordinator's is starting an MSF campaign, MSF
     /// campaigns' new-campaign form (T358, flow 06, Q6; review 26: until then a "Quick action" card on the Coordinator's
     /// Home). Every other role's main job is a row of a card on Home, or a nav link, and a pending trainee can file nothing
     /// yet. The link opens a page that admits the role, as every link on Home does (DashboardLinkAuthorizationTests).
@@ -48,7 +49,8 @@ public static class HomeFrame
     public static HomeAction? ActionFor(string? actingRole) => actingRole switch
     {
         WombatRoles.Trainee => new HomeAction("Log an activity", "/activities/new", "circle-plus"),
-        WombatRoles.InstitutionalAdmin => new HomeAction("Invite a person", "/admin/invitations", "user-plus"),
+        // T373 (flow 11, Q1, X01): Invite a person, the issue form's own page, no longer the list.
+        WombatRoles.InstitutionalAdmin => new HomeAction("Invite a person", OnboardingLinks.InviteAPerson, "user-plus"),
         WombatRoles.Coordinator => new HomeAction("Start an MSF campaign", "/msf/campaigns/new", "plus"),
         _ => null
     };

@@ -11,6 +11,7 @@ using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Domain.Invitations;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.Invitations;
 
@@ -41,7 +42,7 @@ public sealed class InvitationDeliveryTests
         await db.SaveChangesAsync();
         var sender = new CapturingSender();
 
-        var issued = await new IssueInvitationCommandHandler(db, _tokens, sender, Options(), new FixedClock(Now)).Handle(
+        var issued = await new IssueInvitationCommandHandler(db, _tokens, sender, FakeUserDirectory.Empty, Options(), new FixedClock(Now)).Handle(
             new IssueInvitationCommand(
                 "registrar@hospital.test", WombatRoles.InstitutionalAdmin, InstitutionId, null, null, null, "admin-1",
                 TestPrincipals.Administrator()),

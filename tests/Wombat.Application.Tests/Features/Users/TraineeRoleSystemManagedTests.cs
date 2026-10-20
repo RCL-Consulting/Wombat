@@ -37,7 +37,7 @@ public sealed class TraineeRoleSystemManagedTests
 
     private const string TraineeRoleByAdmissionOnly =
         "The Trainee role cannot be added or removed here. A registrar becomes a trainee when admitted to a curriculum: " +
-        "open Trainees and choose 'Admit to curriculum'. Marking their programme complete takes the role away.";
+        "open Trainees and choose 'Admit…'. Marking their programme complete takes the role away.";
 
     public static TheoryData<string> UserAdministrationRoles => new()
     {

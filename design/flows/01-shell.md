@@ -494,7 +494,7 @@ describes the product as it is today. Steps 2.34 and 3.33 describe the Assessor 
 "Waiting for your rating"; F04 designs the cards.
 
 ```text
-Step 2.33 — Dr Zulu's first view: committee member (act-2-onboarding.md:628)
+Step 2.33 — Dr Zulu's first view: committee member (act-2-onboarding.md:735)
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
 Route: /account/login → /
 Do: Sign in and read the dashboard and nav.
@@ -513,7 +513,7 @@ Expect: Home reads "Committee member · Semester N, YYYY" under its heading. The
   The menu is the Committee member's alone, never the union of Dr Zulu's roles: Home, Programme trainees, Committee
   reviews and Decision panels, then My data rights.
 
-Step 2.34 — Dr Zulu switches between her dashboards (act-2-onboarding.md:657)
+Step 2.34 — Dr Zulu switches between her dashboards (act-2-onboarding.md:764)
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /account/logout/submit → /account/login → / → /dashboard/switch/{role} → / → /dashboard/switch/{role} → /
 Do: Choose Switch to Assessor in the sidebar, and reload the page. Sign out and in again. Then type
@@ -728,7 +728,7 @@ Expect: The dashboard's cards stack, each Furthest short row's figure under its 
   but the link and the state labelled by its column (T342), its Credit link 44 px tall, and the table of "Your requests"
   scrolls inside its container; each row's link or action stays reachable.
 
-Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1501)
+Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1502)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /account/login → / → /account/profile → /account/profile/submit → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: With a contrast checker (axe, or the browser's accessibility audit), check each pair below:

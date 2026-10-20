@@ -451,8 +451,8 @@ Route: /admin/users → /admin/users/{UserId}
 Do: For each of the three, open Manage, choose Assessor under Add role and press Add role.
 Expect: Before the change, Roles lists CommitteeMember with Remove. Add role offers InstitutionalAdmin, SpecialityAdmin,
   SubSpecialityAdmin, Coordinator and Assessor, never Administrator, CollegeAdmin, PendingTrainee or Trainee (T303).
-  Its help reads "Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit to
-  curriculum'.", on every user's page.
+  Its help reads "Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with
+  'Admit…'.", on every user's page.
   A Lockout card lists what a lock does (T284), and Pending invitations reads "No active invitations are outstanding for
   this email.". After the change the page reads "Role 'Assessor' added.", Roles lists both, and Add role no longer offers
   Assessor. The users list's Roles column shows both.
@@ -480,11 +480,11 @@ Expect: Five rows, each at KGK in Paediatrics / Paediatrics. Training status rea
 
 Step 2.44 — Prof Mbatha's dashboard after onboarding
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: / → /admin/users → /admin/assessors
-Do: Open Home. Then open Users and Assessors.
-Expect: Home reads "Institutional admin · Semester N, YYYY" and offers "Invite a person". Users reads InstitutionalAdmin
-  1, SpecialityAdmin 1, SubSpecialityAdmin 1, Coordinator 1, CommitteeMember 4, Assessor 5 and Trainee 5, with no
-  PendingTrainee line.
+Route: / → /admin/invitations/new → / → /admin/users → /admin/assessors
+Do: Open Home and press Invite a person, then go back to Home. Then open Users and Assessors.
+Expect: Home reads "Institutional admin · Semester N, YYYY" and offers "Invite a person", which opens Invite a person
+  (`/admin/invitations/new`), not the list (T373, Q1). Users reads InstitutionalAdmin 1, SpecialityAdmin 1,
+  SubSpecialityAdmin 1, Coordinator 1, CommitteeMember 4, Assessor 5 and Trainee 5, with no PendingTrainee line.
   Specialities & sub-specialities reads 1 and 1, what KGK has adopted. Quick links reads Users, Invitations, Curriculum
   adoptions and Entrustment decisions. The users and assessors lists both name Fatima Khumalo (Step 2.41).
 
@@ -563,8 +563,9 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/users → /admin/users/{UserId} → /admin/trainees → /admin/trainees/edit → /admin/activity-types/{ActivityTypeId:int}
 Do: At 390 px, open Users and Dr Dlamini's account, Trainees and Dr Dlamini's profile, then the KGK Teaching Session
   Log in the builder.
-Expect: The user page's cards stack, and its buttons wrap rather than overflow. The trainee profile form stacks its
-  fields. The builder's editor and live preview stack in one column (DESIGN.md § Builder layout, T266), and its tab bar
+Expect: The user page's cards stack, and its buttons wrap rather than overflow. On Trainees, Current trainees is
+  stacked, a block per row with its Edit 44 px, and does not scroll sideways (T373, S16); Completed and closed is flow
+  13's list as built. The trainee profile form stacks its fields. The builder's editor and live preview stack in one column (DESIGN.md § Builder layout, T266), and its tab bar
   stays usable.
 
 Step A.7.14 — Prof Mbatha's pages, checked for contrast

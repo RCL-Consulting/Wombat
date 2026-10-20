@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Wombat.Infrastructure.Identity;
+using Wombat.Web.Components.Pages.Account;
 using Wombat.Web.Security;
 
 namespace Wombat.Web.Tests.Security;
@@ -75,7 +76,18 @@ public sealed class AccountWordsTests
             .Concat(ExternalLoginRefusal.All.Select(LinkExternalOutcome.Describe))
             .Append(LinkExternalOutcome.Describe(LinkExternalOutcome.PasswordRequired))
             .Append(LinkExternalOutcome.GeneralRefusal)
-            .Append(RegisterOutcome.GeneralRefusal)
+            .Append(RegisterOutcome.NotCompletedMessage)
+            .Append(RegisterOutcome.ConfirmationFieldMessage)
+            .Append(RegisterOutcome.PasswordMissingMessage)
+            .Append(RegisterOutcome.NameMessage("Last name", [RegisterOutcome.LastNameTooLong], RegisterOutcome.LastNameMissing, RegisterOutcome.LastNameTooLong))
+            .Append(RegisterOutcome.NameMessage("Last name", [RegisterOutcome.LastNameMissing], RegisterOutcome.LastNameMissing, RegisterOutcome.LastNameTooLong))
+            .Append(RegisterText.InvalidNextStep)
+            .Append(RegisterText.LinkIncompleteNextStep)
+            .Append(RegisterText.NotCompletedNextStep)
+            .Append(RegisterText.NotSignedInNextStep)
+            .Append(RegisterText.TimedOutMessage)
+            .Append(RegisterText.TimedOutNextStep)
+            .Append(RegisterText.SignedInElsewhereNextStep)
             .Concat(ChangePasswordOutcome.Describe(
                 ["FieldsMissing", "ConfirmationMismatch", "TooManyAttempts", "InstitutionalSignIn", "PasswordMismatch", "Failed",
                     ChangePasswordOutcome.AccountLocked],
@@ -296,12 +308,12 @@ public sealed class AccountWordsTests
         ChangePasswordOutcome.Refusal([" "], new IdentityErrorDescriber(), Rules).Any.Should().BeFalse();
     }
 
+    /// <summary>
+    /// The rules broken, in the one order, as Password's own message since T373 (flow 11, G04): the heading and the rules in
+    /// one sentence under the field. Until T373 they were sentences of one alert above the form, with the confirmation's.
+    /// </summary>
     [Fact]
     public void RegistersRuleRefusal_UsesTheSameHeadingOrderAndSentences()
-        => RegisterOutcome.Describe(["PasswordRequiresUpper", "ConfirmationMismatch", "PasswordTooShort"], new IdentityErrorDescriber(), Rules)
-            .Should().Equal(
-                "The password confirmation does not match.",
-                "The new password needs:",
-                "At least 12 characters.",
-                "An upper-case letter.");
+        => RegisterOutcome.PasswordRulesMessage(["PasswordRequiresUpper", "ConfirmationMismatch", "PasswordTooShort"], Rules)
+            .Should().Be("The new password needs: At least 12 characters. An upper-case letter.");
 }

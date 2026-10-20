@@ -116,11 +116,14 @@ from one client. Audit rows keep the address's /24 (IPv6 /48), never the whole o
 Every path goes to Wombat.Web on 5080, which is all the MSF respondent page needs (`/msf/respond`, T205): it is a page
 of Wombat.Web, anonymous, static (no Blazor circuit) and rate-limited in the app, so Caddy carries no route, header or
 exemption for it. The access log (`/var/log/caddy/wombat.log`) records each request's full URI, so a respondent's
-unused link (`/msf/respond?token=…`) is readable there, as a registration link (`/account/register?token=…`) always has
-been. Both die once used; filtering `token` out of the log is not done. The page sends `Referrer-Policy: no-referrer`,
-so the link is not also copied into the `Referer` of the stylesheets and scripts it loads (the app's own policy,
-`strict-origin-when-cross-origin`, sends the full address on a same-origin request). If filtering is ever wanted, it
-must cover `request>uri` and `request>headers>Referer` both: the registration page still sends its link as a Referer.
+unused link (`/msf/respond?token=…`) is readable there, as is a registration link (`/account/register/start?token=…`).
+Both die once used; filtering `token` out of the log is not done. The MSF page sends `Referrer-Policy: no-referrer`,
+so its link is not also copied into the `Referer` of the stylesheets and scripts it loads (the app's own policy,
+`strict-origin-when-cross-origin`, sends the full address on a same-origin request). A registration link's token appears
+only at `/account/register/start`, which keeps it in the register cookie (a Data Protection cookie, 30 minutes) and
+answers 303 to `/account/register` with `Cache-Control: no-store` and no query (T373, flow 11, S1, S2; T315). So the
+registration page's own address never holds the token, and neither does the `Referer` of what it loads. If filtering is
+ever wanted, `request>uri` is where both tokens are; the MSF page's `Referer` would matter only were its policy changed.
 The page also sends `X-Robots-Tag: noindex, nofollow`: a leaked link must not put a trainee's name in a search engine.
 
 Caddy handles TLS automatically via Let's Encrypt. No manual cert management.

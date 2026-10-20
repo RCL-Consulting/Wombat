@@ -87,7 +87,7 @@ public sealed class ResendInvitationCommandHandler : IRequestHandler<ResendInvit
             .AsNoTracking()
             .SingleOrDefaultAsync(entity => entity.Id == request.InvitationId, cancellationToken)
             ?? throw (request.Principal.IsAdministrator()
-                ? (Exception)new InvalidOperationException("The invitation was not found.")
+                ? (Exception)Refused("The invitation was not found.")
                 : new UnauthorizedAccessException("You do not have permission to resend this invitation."));
 
         // As the issue, not the revoke: a resend hands its caller a new registration link, so only whoever may issue the
@@ -107,23 +107,33 @@ public sealed class ResendInvitationCommandHandler : IRequestHandler<ResendInvit
 
         if (invitation.UsedOn.HasValue)
         {
-            throw new InvalidOperationException(AlreadyUsed);
+            throw Refused(AlreadyUsed);
         }
 
         if (invitation.RevokedOn.HasValue)
         {
-            throw new InvalidOperationException(Revoked);
+            throw Refused(Revoked);
         }
 
-        if (invitation.ExpiresOn < DateOnly.FromDateTime(utcNow))
+        if (Invitation.HasPassedLastDay(invitation.ExpiresOn, utcNow))
         {
-            throw new InvalidOperationException(Expired);
+            throw Refused(Expired);
         }
 
         if (invitation.DeliveryAt(utcNow) != InvitationDelivery.NotDelivered)
         {
-            throw new InvalidOperationException(NothingToResend);
+            throw Refused(NothingToResend);
         }
+
+        // The mail's words before anything is stored (S12): read now, so a failed read stores no link.
+        var roleAndScope = await InvitationRules.RoleAndScopeAsync(
+            _dbContext,
+            invitation.TargetRole,
+            invitation.InstitutionId,
+            invitation.CollegeId,
+            invitation.SpecialityId,
+            invitation.SubSpecialityId,
+            cancellationToken);
 
         var token = _tokenService.GenerateToken();
         var tokenHash = _tokenService.HashToken(token);
@@ -147,20 +157,24 @@ public sealed class ResendInvitationCommandHandler : IRequestHandler<ResendInvit
 
         if (stored == 0)
         {
-            throw new InvalidOperationException(InvitationChanged);
+            throw Refused(InvitationChanged);
         }
 
         await _emailSender.SendAsync(
             InvitationEmail.Build(
                 invitation.Email,
-                invitation.TargetRole,
+                roleAndScope,
                 InvitationLinks.RegistrationUrl(_options, token),
                 expiresOn,
                 Invitation.DeliveryKey(invitation.Id, tokenHash)),
             CancellationToken.None);
 
-        return new IssuedInvitationResult(invitation.Id, token);
+        return new IssuedInvitationResult(invitation.Id, token) { ExpiresOn = expiresOn };
     }
+
+    /// <summary>A refusal in the resend's own words, typed so the page shows them and nothing else (T373, S9).</summary>
+    private static InvitationIssueRefusedException Refused(string message)
+        => new(InvitationIssueRefusal.CannotResend, InvitationIssueField.None, message);
 
     /// <summary>The refusal of an invitation someone has registered with.</summary>
     public const string AlreadyUsed =

@@ -34,4 +34,18 @@ public static class SignOutOutcome
 
     /// <summary>Where signing out lands: the sign-in page, saying so.</summary>
     public static string SignedOutUrl { get; } = SignInOutcome.Url(SignInOutcome.SignedOut);
+
+    /// <summary>
+    /// The form field Register's "Sign out and continue" sends (T373, flow 11, F5; G18): the page to land on instead of
+    /// <see cref="SignedOutUrl" />. Flow 02's page and the shell's Sign out send none.
+    /// </summary>
+    public const string ReturnToField = "returnTo";
+
+    /// <summary>
+    /// Where a sign-out lands: <see cref="RegisterOutcome.PagePath" /> when <paramref name="returnTo" /> is exactly that
+    /// path (ordinal), so the person goes on to the invitation the register cookie still holds; <see cref="SignedOutUrl" />
+    /// for anything else, so the field is never an open redirect (F5).
+    /// </summary>
+    public static string LandingFor(string? returnTo)
+        => string.Equals(returnTo, RegisterOutcome.PagePath, StringComparison.Ordinal) ? RegisterOutcome.PagePath : SignedOutUrl;
 }

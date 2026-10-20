@@ -17,6 +17,7 @@
     if (linked) css += " detail-card--interactive";
     if (Span == 2) css += " dashboard-span-2";
     if (Span == 3) css += " dashboard-span-3";
+    if (!string.IsNullOrWhiteSpace(Class)) css += $" {Class}";
 }
 
 @if (linked)
@@ -57,6 +58,12 @@ else
     [Parameter] public bool Warning { get; set; }
 
     [Parameter] public int Span { get; set; }
+
+    /// <summary>
+    /// A class of the card's own, after the system's: the pending registrar's wait card (<c>.wait-card</c>, T373, flow 11,
+    /// F8), which takes the control edge and no stripe. Null adds none.
+    /// </summary>
+    [Parameter] public string? Class { get; set; }
 
     /// <summary>The dashboard's read has not returned: the title and a skeleton, nothing to act on.</summary>
     [Parameter] public bool IsLoading { get; set; }

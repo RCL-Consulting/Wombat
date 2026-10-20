@@ -3,6 +3,21 @@ namespace Wombat.Application.Common.Interfaces;
 public interface IUserAdministrationService
 {
     Task<UserIdentityDetails?> GetByIdAsync(string userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The account whose email is <paramref name="email" />, compared trimmed and whatever its case (T373, flow 11, Q12,
+    /// S4); null when none holds it. An invitation is refused at issue for an address an account already holds (T286's issue
+    /// half). The default implementation reads every user; the real service overrides it with one query on Identity's
+    /// normalised email.
+    /// </summary>
+    async Task<UserIdentityDetails?> FindByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(email);
+        var wanted = email.Trim();
+        return (await ListAllUsersAsync(cancellationToken))
+            .FirstOrDefault(user => string.Equals(user.Email.Trim(), wanted, StringComparison.OrdinalIgnoreCase));
+    }
+
     Task<IReadOnlyList<UserIdentityDetails>> ListUsersInRoleAsync(string role, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<UserIdentityDetails>> ListAllUsersAsync(CancellationToken cancellationToken = default);
 
@@ -106,6 +121,21 @@ public interface IUserAdministrationService
         IReadOnlyCollection<int> subSpecialityIds,
         CancellationToken cancellationToken = default);
     Task PromotePendingTraineeAsync(string userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Runs <paramref name="work" /> in one database transaction on the context the user store saves through, committed
+    /// only when it returns (T373 fix pass, B2). The admission saves the profile, the scope and the role swap inside it, so
+    /// a fault in the swap leaves the registrar pending with nothing saved, and a retry admits; until the fix the remove of
+    /// PendingTrainee committed before the add of Trainee could fail. On a fault what the work left tracked is discarded,
+    /// as the accept's (<see cref="IInvitedUserProvisioner.InOneTransactionAsync{T}" />). The default implementation runs
+    /// the work as it is: a test directory has no database to hold it in.
+    /// </summary>
+    Task<T> InOneTransactionAsync<T>(Func<CancellationToken, Task<T>> work, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(work);
+        return work(cancellationToken);
+    }
+
     Task AddRoleAsync(string userId, string role, CancellationToken cancellationToken = default);
     Task RemoveRoleAsync(string userId, string role, CancellationToken cancellationToken = default);
     Task ResetPasswordAsync(string userId, string newPassword, CancellationToken cancellationToken = default);

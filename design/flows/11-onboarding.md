@@ -542,24 +542,24 @@ neither.
 
 | Task | What it means for the design | Evidence |
 |---|---|---|
-| **T264** (P3, queued; the invitations half) | **Revoke:** an outline button named for its row, confirming in a ConfirmDialog that names the invitee and says the link stops working. **The link:** shown only for the issue or resend that made it. Observed: a refused issue leaves the previous invitee's live link under the refusal (Steps 2.6, 2.7, F-2.6a), and a revoke leaves the revoked link under "Invitation revoked." (2.17). Code: `IssueAsync`'s catch and `RevokeAsync` never clear `_lastIssuedRegistrationUrl` (`I/InvitationsList.razor:362–365`, `:436–442`); only Resend does (`:388`). Revoke is `btn-danger`, one press (`:192–195`). | Steps 2.6, 2.7, 2.17's Actuals; `states/invitations-list--check-address.png` |
-| **T323** (A3; the invitations and trainees halves) | **Invitations at 1280:** the table is cut after Speciality; Issued, Expires, Delivery, Resend and Revoke sit behind a sideways scroll (observed, `act-2/2.26-1…`), because a 10-column `DataTable` shares `.details-grid` with the form (`:51–203`); at the old frame the not-delivered cell runs one word a line and breaks "delivere / d." (`.col-wrap`, `:150`, `:168`). **Trainees at 1280:** Pending admission is cut (email clipped; Institution and Admit off-screen, observed `act-2/2.28-4…`), its rows about 130 px tall. **At 390:** both Trainees tables scroll sideways with Edit off-screen (observed, A.7.9); no `Stack` on any of the four tables. | `act-2/2.26-1…`, `act-2/2.28-4…`, `act-A/A.7.9-4…` |
-| **T315** (P2, queued) | The token leaves the address bar on load. Code: `Register.razor:138–147` clears it in `OnAfterRenderAsync`, which a static page never runs (`App.razor` `PageRenderMode`: a signed-out visitor gets none). Observed at 2.8 and 2.27 (F-2.8a). The design adds nothing that needs component code after load. | Steps 2.8, 2.27's Gaps |
-| **T317** (P3, queued; the registration half) | A refused registration keeps the names, never a password, never in the address. Code: the endpoint redirects with the token and codes only (`Program.cs:343–393`, `RegisterOutcome.Url`); the inputs render empty (`Register.razor:50–57`). Observed at 2.9 (F-2.9a). T317 recommends a short-lived cookie bound to the token. | `act-2/2.9-1…`, `act-2/2.9-2…` |
-| **T286** (P3, queued; the issue half) | **At issue:** an address that already has an account is refused beside Email before anything is stored or mailed. Code: `A/Invitations/IssueInvitation.cs` checks scope only; Register's preview catches it later ("A user with this email address already exists.", no Sign in). **New, code:** nothing refuses a second active invitation to the same address, so two live links can name one person (Q10). | `states/register--account-exists.png` |
-| **T306** (P3, queued; the admission half) | **The admission form:** a read-only "Training year N" that follows the start as chosen. **Active profiles:** the programme start and the training year. Observed: neither shows them (2.29, F-2.29a; `T/PendingTraineesList.razor:68–84`, `T/TraineeProfileEdit.razor:94–100`). The Trainee's Home shows it since flow 05 (`b020c942`), so that half is done. | `act-2/2.29-1…`, `act-2/2.29-3…` |
-| **T324** (A8; observed) | Roles by label. Code: the Role picker, the rows and the row names print keys (`I/InvitationsList.razor:68`, `:135`, `:157`), Register's line too (`Register.razor:28`: "as CollegeAdmin."), though `WombatRoleLabels` exists and the shell uses it. The form's `DataAnnotations` give framework messages ("The Email field is not a valid e-mail address.", `:456–458`). The users pages' keys (2.28, 2.44) are flow 12's. | `act-1/1.5-1…`, `act-2/2.8-1…` |
-| **T280** (headings, captions; observed) | The cards' titles are `<h3>` under the page's `<h1>` on all three admin pages (`I/InvitationsList.razor:53`, `:129`; `T/PendingTraineesList.razor:27`, `:59`, `:93`; `T/TraineeProfileEdit.razor:41`, `:56`); each table's visible caption repeats its card's heading ("Active invitations" twice, observed). | `act-2/2.26-1…`, `act-2/2.28-4…` |
-| **T325** (A9; code) | Issued prints `ToLocalTime()` with no zone (`I/InvitationsList.razor:136`, `:162`): the server's clock. An invitation's expiry is a date compared with "today" (`A/Invitations/ListActiveInvitations.cs:59–61`). | — |
-| **T329 / T272's family** (code) | A failed read prints the exception's text on Trainees (`T/PendingTraineesList.razor:165`) and the profile page (`T/TraineeProfileEdit.razor:269`, `:353`, `:431`); an admission form for nobody pending prints "The pending trainee could not be found." (`:249`), and one with no id "A trainee profile id or user id is required." (`:264`). No `StatePanel` here takes a `LoadError` or `OnRetry` (`I/InvitationsList.razor:130`, `T/PendingTraineesList.razor:24`, `T/TraineeProfileEdit.razor:36`); Invitations shows a load failure as a page-top danger alert (`:298–301`). | `states/trainee-profile-edit--not-found.png` |
-| **T328** (code; observed) | Date inputs render in another face, not the body font (the admission form's two dates). | `act-2/2.29-1…` |
-| **A5: the admission's result** (observed, not filed) | Admit trainee navigates to the profile page (`T/TraineeProfileEdit.razor:326`), whose load clears every message (`:206–211`): nothing says the admission happened. The page it lands on offers Deactivate and Mark complete with today as the last day (`:103–125`, `:240`). The summary reads "Status: Active" for someone not yet admitted (`:44`; the model's default, `:479`). Q5. | `act-2/2.29-1…`, `act-2/2.29-2-molefe-admitted.png` |
-| **The issue form** (observed, not filed) | Refusals show at the page's top (`ActionResult`, `I/InvitationsList.razor:25–49`), not beside the field (observed, 1.5). The default role is InstitutionalAdmin (`:461`); Institution reads "Select institution" though the caller has one (observed, 2.1, 2.26); Speciality and Sub-speciality stay on screen, disabled, for roles that take neither (`:98–116`). Inferred: Sub-speciality keeps its bound value when the speciality changes (`:269–270` filters the options only), so a change of speciality can be refused "The selected sub-speciality does not belong to the selected speciality." An inline `style` on the link (`:45`). Q3. | `act-1/1.5-1…`, `act-2/2.26-1…` |
-| **The wait** (observed, not filed) | The pending card names nobody and nothing: no institution, programme or person, no word that admission will sign her out (`W/Dashboards/TraineeDashboard.razor:20–28`). Nothing tells her when she is admitted: admission sends no mail (`A/Trainees/AdmitTrainee.cs`; no template in `Common/Email/Templates/`), her open sessions just end (T279). Nothing tells Prof Mbatha a registrar is waiting: her Home has no such line (`W/Dashboards/InstitutionalAdminDashboard.razor`). Q4, Q7, Q8. | `act-2/2.18-1…` |
-| **Register's refusals and frame** (observed, not filed) | A refused link is one danger alert and nothing else: no Sign in for "already been used" or "already exists", no "ask for a new invitation" for revoked, invalid or expired (`Register.razor:21–25`). The card has no lockup (DESIGN.md: "sign in only"), though it is the first Wombat page an invitee sees. Names and email sit in `.mb-3` wrappers, not `FormField` (`:43–58`; DESIGN.md:4069), with no `given-name`/`family-name` autocomplete. The skeleton (`:17–20`) never shows: the page is static. Q6. | `act-1/1.9-1…`, `act-2/2.8-1…` |
-| **Register for a signed-in visitor** (inferred) | `Register.razor` has no signed-in check, and a signed-in visitor's pages are interactive (`App.razor` `PageRenderMode`), so a person who opens another's link gets the form, and Register signs the new account in over their session (`Program.cs:374`). Not replayed. Q11. | — |
-| **T341** (P2, queued; the register half) | Register's refusals ride in the address as codes (`?error=InvitationUsed`), so a crafted link shows a fixed refusal over a working form. T317's cookie could carry them too. | — |
-| **Expired invitations** (code, not filed) | An invitation that expires unused leaves the list (`A/Invitations/ListActiveInvitations.cs:59–61`), and nothing tells the admin; only the Coordinator's Home lists invitations nearing expiry. Q9. | — |
+| **T264** (P3, queued; the invitations half) | **Closed in the build (T373):** Revoke… is an outline button named for its row, confirming in a `ConfirmDialog` that names the invitee and says the link stops working (Keep the invitation / Revoke invitation); its result names the address and offers Invite another address, filled from the revoked one (N19); the link is shown only by the issue or resend that made it, in the OneTimeLink, and cleared at the start of the next action or navigation (M5). **Revoke:** an outline button named for its row, confirming in a ConfirmDialog that names the invitee and says the link stops working. **The link:** shown only for the issue or resend that made it. Observed: a refused issue leaves the previous invitee's live link under the refusal (Steps 2.6, 2.7, F-2.6a), and a revoke leaves the revoked link under "Invitation revoked." (2.17). Code: `IssueAsync`'s catch and `RevokeAsync` never clear `_lastIssuedRegistrationUrl` (`I/InvitationsList.razor:362–365`, `:436–442`); only Resend does (`:388`). Revoke is `btn-danger`, one press (`:192–195`). | Steps 2.6, 2.7, 2.17's Actuals; `states/invitations-list--check-address.png` |
+| **T323** (A3; the invitations and trainees halves) | **Closed in the build (T373):** the list is the page, the form a page of its own; both Invitations tables and both Trainees tables stack from 900 px down (`StackWide`, S16), the row header breaking only after its `<wbr>` (check rule 1); Delivery and Curriculum keep a floor between 901 and 1100 px (the replay measures at 901, 1000 and 1100). **Invitations at 1280:** the table is cut after Speciality; Issued, Expires, Delivery, Resend and Revoke sit behind a sideways scroll (observed, `act-2/2.26-1…`), because a 10-column `DataTable` shares `.details-grid` with the form (`:51–203`); at the old frame the not-delivered cell runs one word a line and breaks "delivere / d." (`.col-wrap`, `:150`, `:168`). **Trainees at 1280:** Pending admission is cut (email clipped; Institution and Admit off-screen, observed `act-2/2.28-4…`), its rows about 130 px tall. **At 390:** both Trainees tables scroll sideways with Edit off-screen (observed, A.7.9); no `Stack` on any of the four tables. | `act-2/2.26-1…`, `act-2/2.28-4…`, `act-A/A.7.9-4…` |
+| **T315** (P2, queued) | **Closed in the build (T373):** the link opens `/account/register/start`, which keeps the token in the register cookie and answers 303 to `/account/register` with `no-store` (S1, S2); no script is involved. The token leaves the address bar on load. Code: `Register.razor:138–147` clears it in `OnAfterRenderAsync`, which a static page never runs (`App.razor` `PageRenderMode`: a signed-out visitor gets none). Observed at 2.8 and 2.27 (F-2.8a). The design adds nothing that needs component code after load. | Steps 2.8, 2.27's Gaps |
+| **T317** (P3, queued; the registration half) | **Closed in the build (T373):** a refusal keeps the two names (in the register cookie, never a password, never the address); the refusal sits under its field, focused (G04, G05). A refused registration keeps the names, never a password, never in the address. Code: the endpoint redirects with the token and codes only (`Program.cs:343–393`, `RegisterOutcome.Url`); the inputs render empty (`Register.razor:50–57`). Observed at 2.9 (F-2.9a). T317 recommends a short-lived cookie bound to the token. | `act-2/2.9-1…`, `act-2/2.9-2…` |
+| **T286** (P3, queued; the issue half) | **Closed in the build (T373):** Invite a person refuses under Email, before anything is stored or mailed, an address that has an account (N15, N16) or an active invitation (Q10, N17, N18), naming and linking only what is in the caller's scope (M3). **At issue:** an address that already has an account is refused beside Email before anything is stored or mailed. Code: `A/Invitations/IssueInvitation.cs` checks scope only; Register's preview catches it later ("A user with this email address already exists.", no Sign in). **New, code:** nothing refuses a second active invitation to the same address, so two live links can name one person (Q10). | `states/register--account-exists.png` |
+| **T306** (P3, queued; the admission half) | **Closed in the build (T373):** Admit's Training year is an `<output>` that follows the start (S18); Current trainees shows the programme start over its training year. **The admission form:** a read-only "Training year N" that follows the start as chosen. **Active profiles:** the programme start and the training year. Observed: neither shows them (2.29, F-2.29a; `T/PendingTraineesList.razor:68–84`, `T/TraineeProfileEdit.razor:94–100`). The Trainee's Home shows it since flow 05 (`b020c942`), so that half is done. | `act-2/2.29-1…`, `act-2/2.29-3…` |
+| **T324** (A8; observed) | **Closed in the build (T373), the flow 11 half:** roles by label on the form, the rows, the row names, Register's card and the invitation mail (`WombatRoleLabels`, `InvitationScopeWords`); every form message in Wombat's words. The users pages' keys stay flow 12's. Roles by label. Code: the Role picker, the rows and the row names print keys (`I/InvitationsList.razor:68`, `:135`, `:157`), Register's line too (`Register.razor:28`: "as CollegeAdmin."), though `WombatRoleLabels` exists and the shell uses it. The form's `DataAnnotations` give framework messages ("The Email field is not a valid e-mail address.", `:456–458`). The users pages' keys (2.28, 2.44) are flow 12's. | `act-1/1.5-1…`, `act-2/2.8-1…` |
+| **T280** (headings, captions; observed) | **Closed in the build (T373), the flow 11 half:** each section an `<h2>` with its count under the page's `<h1>`; each table's caption says what the list holds, not its heading. The cards' titles are `<h3>` under the page's `<h1>` on all three admin pages (`I/InvitationsList.razor:53`, `:129`; `T/PendingTraineesList.razor:27`, `:59`, `:93`; `T/TraineeProfileEdit.razor:41`, `:56`); each table's visible caption repeats its card's heading ("Active invitations" twice, observed). | `act-2/2.26-1…`, `act-2/2.28-4…` |
+| **T325** (A9; code) | **Closed in the build (T373):** Issued is "yyyy-MM-dd" over "hh:mm SAST" (`ActivityMoments.When`); an invitation's last day is a date on the South African calendar (F7), in the list, the OneTimeLink, Register's note and the mail. Issued prints `ToLocalTime()` with no zone (`I/InvitationsList.razor:136`, `:162`): the server's clock. An invitation's expiry is a date compared with "today" (`A/Invitations/ListActiveInvitations.cs:59–61`). | — |
+| **T329 / T272's family** (code) | **Closed in the build (T373), the flow 11 half:** every failed read on Invitations, Invite a person, Trainees and Admit is fixed words with Try again, the failure to the log; an unknown or out-of-scope registrar is Admit's not-found panel (M08). A failed read prints the exception's text on Trainees (`T/PendingTraineesList.razor:165`) and the profile page (`T/TraineeProfileEdit.razor:269`, `:353`, `:431`); an admission form for nobody pending prints "The pending trainee could not be found." (`:249`), and one with no id "A trainee profile id or user id is required." (`:264`). No `StatePanel` here takes a `LoadError` or `OnRetry` (`I/InvitationsList.razor:130`, `T/PendingTraineesList.razor:24`, `T/TraineeProfileEdit.razor:36`); Invitations shows a load failure as a page-top danger alert (`:298–301`). | `states/trainee-profile-edit--not-found.png` |
+| **T328** (code; observed) | **For the replay (T373):** every control takes the body's font since flow 01 (`font: inherit`, app.css); the build adds no rule of its own, so the replay judges Admit's two dates. Date inputs render in another face, not the body font (the admission form's two dates). | `act-2/2.29-1…` |
+| **A5: the admission's result** (observed, not filed) | **Closed in the build (T373):** Admit lands on Trainees with `?admitted=` and the result, read again in scope, focused above the Waiting table (S8); the profile page lost its admission branch, and admission mails the registrar (Q7). Admit trainee navigates to the profile page (`T/TraineeProfileEdit.razor:326`), whose load clears every message (`:206–211`): nothing says the admission happened. The page it lands on offers Deactivate and Mark complete with today as the last day (`:103–125`, `:240`). The summary reads "Status: Active" for someone not yet admitted (`:44`; the model's default, `:479`). Q5. | `act-2/2.29-1…`, `act-2/2.29-2-molefe-admitted.png` |
+| **The issue form** (observed, not filed) | **Closed in the build (T373):** Invite a person, a page of its own (Q1): no role chosen; the institution read out for an Institutional admin; only the chosen role's fields drawn (S15); a refusal under its field, focused (Q3); a change of speciality clears the sub-speciality; no inline `style`. Refusals show at the page's top (`ActionResult`, `I/InvitationsList.razor:25–49`), not beside the field (observed, 1.5). The default role is InstitutionalAdmin (`:461`); Institution reads "Select institution" though the caller has one (observed, 2.1, 2.26); Speciality and Sub-speciality stay on screen, disabled, for roles that take neither (`:98–116`). Inferred: Sub-speciality keeps its bound value when the speciality changes (`:269–270` filters the options only), so a change of speciality can be refused "The selected sub-speciality does not belong to the selected speciality." An inline `style` on the link (`:45`). Q3. | `act-1/1.5-1…`, `act-2/2.26-1…` |
+| **The wait** (observed, not filed) | **Closed in the build (T373), Q4 and Q7:** the wait card names the institution, the programme and its curriculum, who invited her and who admits her, what admission does, and her address; admission mails her. Q8's line on Prof Mbatha's Home is flow 12's. The pending card names nobody and nothing: no institution, programme or person, no word that admission will sign her out (`W/Dashboards/TraineeDashboard.razor:20–28`). Nothing tells her when she is admitted: admission sends no mail (`A/Trainees/AdmitTrainee.cs`; no template in `Common/Email/Templates/`), her open sessions just end (T279). Nothing tells Prof Mbatha a registrar is waiting: her Home has no such line (`W/Dashboards/InstitutionalAdminDashboard.razor`). Q4, Q7, Q8. | `act-2/2.18-1…` |
+| **Register's refusals and frame** (observed, not filed) | **Closed in the build (T373):** each refusal a card with its heading and next step (Sign in for used and exists; ask for a new invitation for revoked and expired); the lockup; `FormField`s with `given-name`/`family-name`. A refused link is one danger alert and nothing else: no Sign in for "already been used" or "already exists", no "ask for a new invitation" for revoked, invalid or expired (`Register.razor:21–25`). The card has no lockup (DESIGN.md: "sign in only"), though it is the first Wombat page an invitee sees. Names and email sit in `.mb-3` wrappers, not `FormField` (`:43–58`; DESIGN.md:4069), with no `given-name`/`family-name` autocomplete. The skeleton (`:17–20`) never shows: the page is static. Q6. | `act-1/1.9-1…`, `act-2/2.8-1…` |
+| **Register for a signed-in visitor** (inferred) | **Closed in the build (T373), Q11 and M4:** the page shows "Signed in as someone else" with Sign out and continue (F5), and the submit refuses a signed-in caller first, creating nothing. `Register.razor` has no signed-in check, and a signed-in visitor's pages are interactive (`App.razor` `PageRenderMode`), so a person who opens another's link gets the form, and Register signs the new account in over their session (`Program.cs:374`). Not replayed. Q11. | — |
+| **T341** (P2, queued; the register half) | **Closed in the build (T373):** Register's codes travel in the register cookie, so no address carries a refusal. Register's refusals ride in the address as codes (`?error=InvitationUsed`), so a crafted link shows a fixed refusal over a working form. T317's cookie could carry them too. | — |
+| **Expired invitations** (code, not filed) | **Closed in the build (T373), Q9:** Invitations' Expired, not used lists them for 30 days, with Invite again (N20). An invitation that expires unused leaves the list (`A/Invitations/ListActiveInvitations.cs:59–61`), and nothing tells the admin; only the Coordinator's Home lists invitations nearing expiry. Q9. | — |
 | **T333** (P2, queued), **T289** (P2, queued), **T291** (P3, queued) | SSO mappings that grant Trainee round admission; the assessor profile form; Home's specialities count (1.10, 2.44). Flow 12's pages; name them, do not design them here. | — |
 
 **Dropped from the old brief (done since):**
@@ -667,70 +667,99 @@ A flow is done when BRIEF.md § 9's four checks hold. For this flow:
 
 ## 8. The runbook steps, verbatim (sent with § 1, in the same message)
 
-These are pasted from `execution/knowledge/scenario-paediatrics/` (Role, Route, Do and Expect only). Each Expect
-describes the product as flow 10's replay left it (T369, 2026-10-19; the Gaps it recorded are 1.10's and 2.44's T291,
-2.6, 2.7 and 2.17's T264, 2.8 and 2.27's T315, 2.9's T317, 2.28's T323 and 2.29's T306). `D` is the replay day and `J`
-the January anchor (README § How to play).
+These are pasted from `execution/knowledge/scenario-paediatrics/` (Role, Route, Do and Expect only). Round 3 was drawn
+against each Expect as flow 10's replay left it (T369, 2026-10-19; the Gaps it recorded are 1.10's and 2.44's T291, 2.6,
+2.7 and 2.17's T264, 2.8 and 2.27's T315, 2.9's T317, 2.28's T323 and 2.29's T306). Since the build (T373, 2026-10-20)
+each Expect describes the product as flow 11 built it, from `R3-0-steps` and the code: 26 of the 29 changed (1.11, 2.31
+and 2.32 did not; 1.5's rows are L03's, check rule 5), and each journey's count is in its step's Note (the nine in a
+row, 40 presses and 9 fields). `D` is the replay day and `J` the January anchor (README § How to play).
 
 ```text
 Step 1.5 — Invite Dr Kruger as the CPSA's CollegeAdmin
 Role: Administrator — the platform operator
-Route: /admin/invitations
-Do: Under Issue invitation, enter `kruger@cmsa.wombat.local` and choose the role CollegeAdmin. Press Issue invitation
-  before choosing a College. Then choose `College of Paediatricians of South Africa` and issue the invitation.
-Expect: Before the issue, Active invitations reads "No active invitations".
-  - The Role picker offers the eight roles an invitation can carry, and never Administrator.
-  - Choosing CollegeAdmin replaces the Institution picker with a College picker, which offers the Demo College and the
-    CPSA. Speciality and Sub-speciality stay disabled.
-  - The first press is refused: "A college is required for a college administrator."
-  - The second press reads "Invitation issued for kruger@cmsa.wombat.local. Its email is being sent. Copy the link below
-    — it is shown only once." (T283's wording). The registration link is shown beneath it, and it expires in 14 days.
-  - The new row reads CollegeAdmin, with College `College of Paediatricians of South Africa`, no institution, an expiry
-    of `D+14` and a Delivery of "Being sent".
-  - The application log holds a stub email "Your Wombat invitation", tagged `invitation, role:CollegeAdmin`. It invites
-    the reader to register as CollegeAdmin, with the same link and its expiry date. The log never names the address
-    (T282), so the role tells this mail from Mbatha's.
+Route: /admin/invitations → /admin/invitations/new → /admin/invitations
+Do: Open Invitations and press Invite a person. Enter `kruger@cmsa.wombat.local` and choose College admin. Press Issue
+  invitation before choosing a College. Then choose `College of Paediatricians of South Africa` and issue the
+  invitation. Copy the link, then press Open Invitations.
+Expect:
+  - **The list:** "Invitations", "Invitations not yet used, with the state of each one's email.", with Invite a person
+    in its header; Active invitations reads "No active invitations" / "Issue an invitation to create the first
+    onboarding link.".
+  - **Invite a person** is a page of its own (its tab too), under Home › Invitations › Invite a person with Invitations
+    lit (T373, Q1): "One person, one role. The registration link is shown here once, and emailed to them.", then "*
+    marks a field you must fill in.". Email is starred. Role is a group of eight radios by label, each with its
+    description and none chosen: College admin, Institutional admin, Speciality admin, Sub-speciality admin,
+    Coordinator, Committee member, Assessor and Trainee; never Administrator. No scope field is drawn before a role is.
+  - **College admin** draws College alone, starred, at "Choose a College", offering the Demo College and the CPSA. No
+    Institution, Speciality or Sub-speciality field is drawn, disabled or otherwise (S15).
+  - **The first press** is refused under College: "A college is required for a college administrator.", the field
+    marked and focused. Nothing is issued and no link is shown.
+  - **The second press** puts the result above the form, focused: "**Invitation issued for kruger@cmsa.wombat.local.**
+    Its email is being sent. Copy the link below — it is shown only once." Under it, "Registration link for
+    kruger@cmsa.wombat.local" labels the link (a `/account/register/start?token=…` address) in a read-only field, with
+    Copy link beside it, and "It works until `D+14`. It is shown here until your next action, then never again. If the
+    email is not delivered, share this link another way, or resend it from Invitations, which emails a new link in place
+    of this one.", then Open Invitations. Copy link says "Link copied." under the field, and the button reads "Copied"
+    (or, where the browser refuses the clipboard, "Could not copy. Select the link and copy it yourself."). The form is
+    drawn again, empty, under "Invite the next person".
+  - **The row** (L03): "Active invitations" "1 active", captioned "Every institution and College. Not delivered first,
+    then newest first. A used or revoked invitation leaves this list."; Invitee kruger@cmsa.wombat.local; Role and
+    scope "College admin" over "College of Paediatricians of South Africa"; Issued `D` over its time, "hh:mm SAST";
+    Last day `D+14`; Delivery "Being sent"; Revoke…. No Expired, not used section.
+  - **The mail:** the application log holds a stub email "Your Wombat invitation", tagged `invitation` and nothing
+    else (T373, S12: the role left the tags). Its text reads "You are invited to Wombat as College admin at College of
+    Paediatricians of South Africa." and "Register with this link; it works until `D+14`.", then the same link. The log
+    never names the address (T282), so the mail's own words tell it from Mbatha's.
 
 Step 1.7 — Invite Prof Mbatha as KGK's InstitutionalAdmin
 Role: Administrator — the platform operator
-Route: /admin/invitations
-Do: Invite `mbatha@kgk.wombat.local` as InstitutionalAdmin at `Kgosi Kgari Teaching Hospital`, with no speciality.
-Expect: InstitutionalAdmin is the form's default role. The Institution picker offers the Demo Institution and KGK.
-  Speciality and Sub-speciality stay disabled for this role. The status line and the link read as in Step 1.5.
-  Active invitations now holds two rows: Kruger's, and Mbatha's, which reads InstitutionalAdmin at `Kgosi Kgari Teaching
-  Hospital` with no College. The log holds a second stub email, tagged `role:InstitutionalAdmin`, which invites the
-  reader to register as InstitutionalAdmin.
+Route: /admin/invitations → /admin/invitations/new → /admin/invitations
+Do: Press Invite a person. Invite `mbatha@kgk.wombat.local` as Institutional admin at `Kgosi Kgari Teaching Hospital`.
+  Copy the link, then press Open Invitations.
+Expect: No role is chosen until one is picked: Institutional admin is chosen here, not a default. It draws Institution
+  alone, starred, at "Choose an institution", offering the Demo Institution and KGK; no Speciality or Sub-speciality
+  field is drawn. The result and the link read as in Step 1.5, for mbatha@kgk.wombat.local. Active invitations reads
+  "2 active": Mbatha's row first (newest first), "Institutional admin" over "Kgosi Kgari Teaching Hospital", then
+  Kruger's. The log holds a second stub email "Your Wombat invitation", tagged `invitation`, reading "You are invited
+  to Wombat as Institutional admin at Kgosi Kgari Teaching Hospital."
 
 Step 1.8 — Dr Kruger registers
 Role: Anonymous — Dr Anton Kruger, invited
-Route: /account/register → /
-Do: In a fresh browser session, open the link from the CollegeAdmin stub email in the application log (the link Step
+Route: /account/register/start → /account/register → /
+Do: In a fresh browser session, open the link from the College admin stub email in the application log (the link Step
   1.5 showed). Enter:
   - First name `Anton` and Last name `Kruger`;
   - a password, twice, that meets the policy: at least 12 characters, with an upper-case and a lower-case letter, a
     digit and a symbol.
   Press Register. Write the password to `pwd_DO_NOT_COMMIT.txt`.
-Expect: The page reads "Registering kruger@cmsa.wombat.local as CollegeAdmin.", and the address is shown but cannot be
-  edited. Register signs Kruger in and lands on Home, with "College admin · Semester N, YYYY" under its heading. The
-  dashboard has one card, National catalogue, with Specialities, EPAs and Curricula. The sidebar reads "Acting as College
-  admin" over Home, Specialities, EPAs, Curricula and Activity types, then My data rights: the College writes its
-  disciplines' activity types in the builder (T300, D52). The top bar names him "Anton Kruger".
+Expect: The link answers with a redirect to `/account/register`, so the address bar never holds the token (T315; S2).
+  The page is "Complete registration" (its tab too), under the Wombat lockup, and reads "This invitation is for
+  kruger@cmsa.wombat.local, as College admin at College of Paediatricians of South Africa." Email holds the address,
+  read-only, with "The address this invitation is for. It cannot be changed here."; then First name, Last name,
+  Password with the six rules under it, Confirm password, and Register. Under the form: "Not expecting this
+  invitation? Ignore it: its link works until `D+14`." Register signs Kruger in and lands on Home, with "College admin
+  · Semester N, YYYY" under its heading. The dashboard has one card, National catalogue, with Specialities, EPAs and
+  Curricula. The sidebar reads "Acting as College admin" over Home, Specialities, EPAs, Curricula and Activity types,
+  then My data rights: the College writes its disciplines' activity types in the builder (T300, D52). The top bar
+  names him "Anton Kruger".
 
 Step 1.9 — A used link is refused
 Role: Anonymous — anyone who holds Kruger's link
-Route: /account/register
+Route: /account/register/start → /account/register
 Do: In another fresh session, open Kruger's link again.
-Expect: The page reads "This invitation has already been used." and offers no form. The page refuses up front whatever
-  no input could put right (T285).
+Expect: The page is "Invitation already used" (its tab too): "This invitation has already been used: an account was
+  registered from it." and "If it was yours, sign in with that account.", with Sign in and "Forgotten your password?".
+  It offers no form. The page refuses up front whatever no input could put right (T285).
 
 Step 1.10 — Prof Mbatha registers
 Role: Anonymous — Prof Nolwazi Mbatha, invited
-Route: /account/register → /
-Do: Register as in Step 1.8, from the InstitutionalAdmin stub email in the log, with First name `Nolwazi` and Last name
+Route: /account/register/start → /account/register → /
+Do: Register as in Step 1.8, from the Institutional admin stub email in the log, with First name `Nolwazi` and Last name
   `Mbatha`. Write her password to `pwd_DO_NOT_COMMIT.txt`.
-Expect: The page reads "Registering mbatha@kgk.wombat.local as InstitutionalAdmin." Register lands her on Home, with
-  "Institutional admin · Semester N, YYYY" under its heading and "Invite a person" in its header, which opens the
-  invitations page. The dashboard has three cards:
+Expect: The page reads "This invitation is for mbatha@kgk.wombat.local, as Institutional admin at Kgosi Kgari Teaching
+  Hospital." Register lands her on Home, with "Institutional admin · Semester N, YYYY" under its heading and "Invite a
+  person" in its header, which opens Invite a person (`/admin/invitations/new`), not the list (T373, Q1). The dashboard
+  has three cards:
   - Users, which lists InstitutionalAdmin 1;
   - Specialities & sub-specialities, which reads 0 and 0, because KGK has adopted nothing yet;
   - Quick links: Users, Invitations, Curriculum adoptions and Entrustment decisions.
@@ -747,160 +776,226 @@ Expect: Active invitations reads "No active invitations", because a used invitat
 
 Step 2.1 — Prof Mbatha opens the invitations page
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /account/login → / → /admin/invitations
-Do: Sign in and open Invitations from the nav. Read what the issue form offers before issuing anything.
-Expect: Active invitations is empty: "No active invitations". Kruger's CollegeAdmin invitation is the College's, not
-  KGK's, and Mbatha's own has been used. Role offers InstitutionalAdmin (the default), SpecialityAdmin,
-  SubSpecialityAdmin, Coordinator, CommitteeMember, Assessor and Trainee, but not CollegeAdmin, which only an
-  Administrator issues (T093). Institution offers KGK only. Speciality is disabled for the default role.
+Route: /account/login → / → /admin/invitations → /admin/invitations/new
+Do: Sign in and open Invitations from the nav, then press Invite a person. Read what the form offers before issuing
+  anything.
+Expect: Active invitations is empty: "No active invitations". Kruger's College admin invitation is the College's, not
+  KGK's, and Mbatha's own has been used. Invite a person reads "* marks a field you must fill in." Role offers seven
+  radios by label, none chosen: Institutional admin, Speciality admin, Sub-speciality admin, Coordinator, Committee
+  member, Assessor and Trainee, each with its description; not College admin, which only an Administrator issues
+  (T093). Institution is read out, not offered: "Kgosi Kgari Teaching Hospital" (S18). No speciality field is drawn
+  until a role that takes one is chosen.
 
 Step 2.2 — Mbatha invites Mr Smit as Coordinator
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/invitations
-Do: Issue an invitation to `smit@kgk.wombat.local` as Coordinator at KGK, with speciality and sub-speciality left blank.
-  Copy the link.
-Expect: For a Coordinator, Speciality is optional and Sub-speciality stays disabled (T060). The page reads "Invitation
-  issued for smit@kgk.wombat.local. Its email is being sent. Copy the link below — it is shown only once." (T283's
-  wording). Below it the link says it expires in 14 days. Active invitations gains a row: Coordinator, KGK, no
-  speciality, expiring `D+14`, Delivery "Being sent". The form goes back to its defaults, and the log holds a stub
-  "Your Wombat invitation" tagged `role:Coordinator`.
+Route: /admin/invitations/new
+Do: Issue an invitation to `smit@kgk.wombat.local` as Coordinator at KGK, with the speciality left at Any speciality.
+  Press Copy link. Stay on the page for the next issue.
+Expect: Coordinator draws Speciality with no star, at "Any speciality" (offering Paediatrics), with "Leave it at Any
+  speciality for the whole institution."; no Sub-speciality field (T060). The result, focused, reads "**Invitation
+  issued for smit@kgk.wombat.local.** Its email is being sent. Copy the link below — it is shown only once.", then the
+  link with Copy link and "It works until `D+14`. …" as in Step 1.5, and Open Invitations. Copy link says "Link
+  copied.". The form is drawn again, empty, under "Invite the next person". The log holds a stub "Your Wombat
+  invitation", tagged `invitation`, reading "You are invited to Wombat as Coordinator at Kgosi Kgari Teaching
+  Hospital." His row, read at Step 2.7, is "Coordinator" over "Any speciality", Issued `D` over its time in SAST, Last
+  day `D+14`, Delivery "Being sent".
 
 Step 2.3 — Mbatha invites Dr Zulu, Dr Naidoo and Dr Botha as committee members
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/invitations
-Do: Issue one invitation each to `zulu@`, `naidoo@` and `botha@kgk.wombat.local` as CommitteeMember at KGK, with
-  speciality Paediatrics and no sub-speciality. Copy each link before issuing the next.
-Expect: Speciality offers Paediatrics alone: KGK's adopted specialities (T092). Sub-speciality stays disabled, because a
-  committee member may not be scoped to one. Three rows read CommitteeMember, KGK, Paediatrics, with the sub-speciality
-  blank.
+Route: /admin/invitations/new
+Do: Issue one invitation each to `zulu@`, `naidoo@` and `botha@kgk.wombat.local` as Committee member at KGK, with
+  speciality Paediatrics. Copy each link before issuing the next.
+Expect: Committee member draws Speciality with no star, offering Paediatrics alone: KGK's adopted specialities (T092).
+  No Sub-speciality field is drawn, because a committee member may not be scoped to one. Each issue reads as Step
+  2.2's, and each stub reads "You are invited to Wombat as Committee member in Paediatrics at Kgosi Kgari Teaching
+  Hospital." Their rows (Step 2.7) read "Committee member" over "Paediatrics".
 
 Step 2.4 — Mbatha invites Dr Patel and Dr Khumalo as assessors
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/invitations
+Route: /admin/invitations/new
 Do: Issue an invitation each to `patel@` and `khumalo@kgk.wombat.local` as Assessor at KGK, with speciality Paediatrics
   and sub-speciality Paediatrics.
-Expect: For an Assessor the Sub-speciality select is enabled. Once Paediatrics is chosen as the speciality, it offers
-  that speciality's sub-speciality, Paediatrics. Two rows read Assessor, KGK, Paediatrics, Paediatrics.
+Expect: For an Assessor, Speciality is starred, with "Then choose its sub-speciality." under it until the
+  sub-speciality is chosen. Once Paediatrics is chosen, Sub-speciality is drawn, starred, offering that speciality's
+  sub-speciality, Paediatrics, and the hint stays; it goes once Paediatrics is chosen as the sub-speciality. Each stub reads "You are invited to Wombat as Assessor in Paediatrics / Paediatrics at Kgosi Kgari
+  Teaching Hospital." Their rows (Step 2.7) read "Assessor" over "Paediatrics / Paediatrics".
 
 Step 2.5 — Mbatha invites Dr van Rensburg as an external committee member
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/invitations
-Do: Issue an invitation to `vanrensburg@sun.wombat.local` as CommitteeMember at KGK, with speciality and sub-speciality
-  blank.
-Expect: It is issued with no speciality (T060). The row reads CommitteeMember, KGK, with both scope columns blank. The
-  address's domain does not matter: the invitation scopes him to KGK.
+Route: /admin/invitations/new
+Do: Issue an invitation to `vanrensburg@sun.wombat.local` as Committee member at KGK, with the speciality left at Any
+  speciality.
+Expect: It is issued with no speciality (T060). Its stub reads "You are invited to Wombat as Committee member at Kgosi
+  Kgari Teaching Hospital.", and its row (Step 2.7) reads "Committee member" over "Any speciality". The address's
+  domain does not matter: the invitation scopes him to KGK.
 
 Step 2.6 — Mbatha invites Dr Mokoena as the programme's SpecialityAdmin
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/invitations
-Do: Issue `mokoena@kgk.wombat.local` as SpecialityAdmin at KGK with no speciality. Then issue it again with speciality
-  Paediatrics.
-Expect: The first is refused: "Speciality administrators must be scoped to a speciality." (T060). Nothing is issued and
-  no link is shown. The second is issued. Sub-speciality stays disabled for this role, and the row reads SpecialityAdmin,
-  KGK, Paediatrics.
+Route: /admin/invitations/new
+Do: Issue `mokoena@kgk.wombat.local` as Speciality admin at KGK with no speciality chosen. Then choose Paediatrics and
+  issue it again.
+Expect: Speciality admin draws Speciality, starred, at "Choose a speciality", and no Sub-speciality. The first press is
+  refused under Speciality: "Speciality administrators must be scoped to a speciality." (T060), the field marked and
+  focused. Nothing is issued, and no registration link is on the page: van Rensburg's, from Step 2.5, went when the
+  press began (T264, M5). The second is issued; its stub reads "… as Speciality admin in Paediatrics at Kgosi Kgari
+  Teaching Hospital.", and its row (Step 2.7) reads "Speciality admin" over "Paediatrics".
 
 Step 2.7 — Mbatha invites Dr Sithole as the SubSpecialityAdmin
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/invitations
-Do: Issue `sithole@kgk.wombat.local` as SubSpecialityAdmin at KGK with speciality Paediatrics and no sub-speciality.
-  Then issue it again with sub-speciality Paediatrics.
-Expect: The first is refused: "The selected role requires speciality and sub-speciality scope." The second is issued.
-  Active invitations now holds nine rows: Smit, Zulu, Naidoo, Botha, Patel, Khumalo, van Rensburg, Mokoena and Sithole,
-  each with the role and scope above.
+Route: /admin/invitations/new → /admin/invitations
+Do: Issue `sithole@kgk.wombat.local` as Sub-speciality admin at KGK with speciality Paediatrics and no sub-speciality.
+  Then choose sub-speciality Paediatrics and issue it again. Copy the link, then press Open Invitations.
+Expect: The first is refused under Sub-speciality: "The selected role requires speciality and sub-speciality scope.",
+  focused; no registration link is on the page. The second is issued. Active invitations reads "9 active", captioned
+  "At Kgosi Kgari Teaching Hospital. Not delivered first, then newest first. A used or revoked invitation leaves this
+  list; one that passes its last day unused moves to Expired, not used." Its nine rows, newest first:
+  - Sithole, "Sub-speciality admin" over "Paediatrics / Paediatrics"; Mokoena, "Speciality admin" over "Paediatrics";
+  - van Rensburg, "Committee member" over "Any speciality"; Khumalo and Patel, "Assessor" over "Paediatrics /
+    Paediatrics";
+  - Botha, Naidoo and Zulu, "Committee member" over "Paediatrics"; Smit, "Coordinator" over "Any speciality".
+  Each reads Issued `D` over its time in SAST, Last day `D+14` and Delivery "Being sent", with Revoke… named for its
+  row ("Revoke the Committee member invitation to zulu@kgk.wombat.local"). There is no Expired, not used section. The
+  log holds 11 invitation stubs (Act 1's two and these nine), each tagged `invitation`.
 
 Step 2.8 — Mr Smit registers from his link
 Role: Anonymous — Mr Pieter Smit, holding his invitation link
-Route: /account/register → / → /account/logout/submit → /account/login
+Route: /account/register/start → /account/register → / → /account/logout/submit → /account/login
 Do: Open the link and enter first name Pieter, last name Smit and a password that meets the rules. Confirm it and
   register. Read the landing page, then sign out.
-Expect: The page reads "Registering smit@kgk.wombat.local as Coordinator.", with the email filled in and not editable.
-  The token is cleared from the address bar once the page loads. Registering signs him in and lands on Home, headed
-  "Home" with "Coordinator · Semester N, YYYY" under it. Signing out (the top bar's Sign out, one press) returns him to
-  the sign-in page, which reads "You have signed out."
+Expect: The link's redirect leaves `/account/register` in the address bar, with no token (T315). The page reads "This
+  invitation is for smit@kgk.wombat.local, as Coordinator at Kgosi Kgari Teaching Hospital.", Email read-only with
+  its help, and under the form "Not expecting this invitation? Ignore it: its link works until `D+14`."; Register is
+  in the form's actions. Registering signs him in and lands on Home, headed "Home" with "Coordinator · Semester N,
+  YYYY" under it. Signing out (the top bar's Sign out, one press) returns him to the sign-in page, which reads "You
+  have signed out."
 
 Step 2.9 — Dr Patel's first two attempts are refused
 Role: Anonymous — Dr Mohammed Patel, holding his invitation link
-Route: /account/register → / → /account/logout/submit → /account/login
+Route: /account/register/start → /account/register → / → /account/logout/submit → /account/login
 Do: Register with a 10-character password that mixes upper case, lower case, a digit and a symbol. Then use a
   12-character password with a different confirmation. Then use a 12-character password confirmed correctly. Sign out.
 Expect: Before anything is typed, the six rules stand under Password: "The new password needs:" and "At least 12
   characters.", "At least 4 different characters.", "A digit (0 to 9).", "An upper-case letter.", "A lower-case
   letter.", "A symbol, such as ! or #."; each password field has its Show toggle. The first attempt returns to the
-  form with "The new password needs: At least 12 characters." The first field takes the focus and no account is
-  created (T285). The second returns with "The password confirmation does not match." The third registers him and
-  lands on Home, "Assessor · Semester N, YYYY". Signing out lands on the sign-in page with "You have signed out."
+  form with "The new password needs: At least 12 characters." under Password, which is marked and takes the focus;
+  First name and Last name keep what he typed (T317), and no account is created (T285). The second returns with "The
+  password confirmation does not match. Type the password again in both fields." under Confirm password, both
+  password fields empty and the focus on Password. The address bar reads `/account/register` throughout: the refusals
+  travel in the register cookie, not the address (T341). The third registers him and lands on Home, "Assessor ·
+  Semester N, YYYY". Signing out lands on the sign-in page with "You have signed out."
 
 Step 2.10 — The other seven staff register
 Role: Anonymous — Dr Zulu, Dr Naidoo, Dr Botha, Dr Khumalo, Dr van Rensburg, Dr Mokoena and Dr Sithole
-Route: /account/register → / → /account/logout/submit → /account/login
+Route: /account/register/start → /account/register → / → /account/logout/submit → /account/login
 Do: Each registers from their own link with the cast's name and signs out. Dr Khumalo types her first name as "Fatma"
   by mistake (she corrects it in Step 2.41).
-Expect: Each page names the address and the invited role, and lists the six password rules under Password (Step 2.9).
-  Each person lands on Home viewing as that role. Zulu, Naidoo, Botha and van Rensburg view as CommitteeMember, Khumalo
-  as Assessor, Mokoena as SpecialityAdmin and Sithole as SubSpecialityAdmin. Each sign-out lands on the sign-in page
-  with "You have signed out."
+Expect: Each page names the address, the role's label and its scope, and the link's last day: "This invitation is for
+  zulu@kgk.wombat.local, as Committee member in Paediatrics at Kgosi Kgari Teaching Hospital.", "… as Assessor in
+  Paediatrics / Paediatrics at …", "… as Committee member at …" for van Rensburg, "… as Speciality admin in
+  Paediatrics at …", "… as Sub-speciality admin in Paediatrics / Paediatrics at …", each with "… its link works until
+  `D+14`." under the form. Each lists the six password rules under Password (Step 2.9). Each person lands on Home
+  viewing as that role. Zulu, Naidoo, Botha and van Rensburg view as CommitteeMember, Khumalo as Assessor, Mokoena as
+  SpecialityAdmin and Sithole as SubSpecialityAdmin. Each sign-out lands on the sign-in page with "You have signed
+  out."
 
 Step 2.11 — A used link cannot be used again
 Role: Anonymous — Mr Pieter Smit
-Route: /account/register
+Route: /account/register/start → /account/register
 Do: Open his invitation link a second time.
-Expect: No form is shown, only "This invitation has already been used." (T285's words).
+Expect: As Step 1.9: "Invitation already used", "This invitation has already been used: an account was registered from
+  it." and "If it was yours, sign in with that account.", with Sign in; no form.
 
 Step 2.16 — Mbatha invites the five registrars, one to a mistyped address
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/invitations
-Do: Invite `molefe@`, `dlamini@`, `duplessis@` and `mahlangu@kgk.wombat.local` as Trainee at KGK, Paediatrics /
-  Paediatrics. Copy each link. For Dr Ndlovu she types `ndlvou@kgk.wombat.local`.
-Expect: A Trainee invitation needs both speciality and sub-speciality, and the Sub-speciality select is enabled for it.
-  Five rows read Trainee, KGK, Paediatrics, Paediatrics, and each Delivery reads "Being sent".
+Route: /admin/invitations → /admin/invitations/new → /admin/invitations
+Do: From Invitations, press Invite a person. Invite `molefe@`, `dlamini@`, `duplessis@` and `mahlangu@kgk.wombat.local`
+  as Trainee at KGK, Paediatrics / Paediatrics. Copy each link. For Dr Ndlovu she types `ndlvou@kgk.wombat.local`.
+  Then press Open Invitations.
+Expect: A Trainee invitation needs both speciality and sub-speciality: Speciality is starred, and Sub-speciality is
+  drawn, starred, once Paediatrics is chosen. Each stub reads "You are invited to Wombat as Trainee in Paediatrics /
+  Paediatrics at Kgosi Kgari Teaching Hospital." Active invitations reads "5 active": five rows "Trainee" over
+  "Paediatrics / Paediatrics", newest first (`ndlvou@` first), each Issued `D` over its time in SAST, Last day `D+14`
+  and Delivery "Being sent".
 
 Step 2.17 — Mbatha revokes the mistyped invitation and issues the right one
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/invitations → /account/register
-Do: Revoke the `ndlvou@` row and issue a Trainee invitation to `ndlovu@kgk.wombat.local` with the same scope. Then open
-  the revoked link, as anyone holding it could.
-Expect: The row's button is named "Revoke the Trainee invitation to ndlvou@kgk.wombat.local" (T239). Pressing it shows
-  "Invitation revoked." and the row is gone, with no link shown (see Step 2.6's note). An address is never corrected in
-  place: the invitation names who may register (T283). A new row reads `ndlovu@`. The revoked link shows no form, only
-  "This invitation has been revoked."
+Route: /admin/invitations → /admin/invitations/new → /account/register/start → /account/register
+Do: Press Revoke… on the `ndlvou@` row and confirm. From the result, press Invite another address as Trainee,
+  Paediatrics / Paediatrics, enter `ndlovu@kgk.wombat.local`, issue it and copy the link. Then open the revoked link,
+  as anyone holding it could.
+Expect:
+  - **Revoke…** is an outline button named "Revoke the Trainee invitation to ndlvou@kgk.wombat.local" (T239). It opens
+    "Revoke this invitation?": "Revoke the Trainee invitation to **ndlvou@kgk.wombat.local** (Paediatrics /
+    Paediatrics)?", then "The registration link already emailed to that address stops working at once: nobody can
+    register from it." and "The invitation leaves this list. An address is never corrected in place: to invite the
+    right one, issue a new invitation.", then "Revoking cannot be undone.", with Keep the invitation and Revoke
+    invitation (T264). At 390 px the two are stacked, 44 px each, Keep the invitation last.
+  - **Revoke invitation:** the result, focused: "**Invitation revoked.** The link sent to ndlvou@kgk.wombat.local no
+    longer works: nobody can register from it.", with "Invite another address as Trainee, Paediatrics / Paediatrics".
+    No registration link is on the page. The row is gone: "4 active".
+  - **Invite another address** opens Invite a person with "Role and scope filled from the revoked invitation to
+    ndlvou@kgk.wombat.local. Type the right address.", Trainee, Paediatrics and Paediatrics chosen, and Email empty and
+    focused. The issue reads as Step 2.2's, for ndlovu@kgk.wombat.local.
+  - **The revoked link:** "Invitation revoked" (its tab too): "This invitation has been revoked." and "Ask the person
+    who invited you for a new invitation."; no form.
 
 Step 2.18 — Four registrars register and are pending
 Role: Anonymous — Dr Molefe, Dr Dlamini, Dr Mahlangu and Dr Ndlovu
-Route: /account/register → / → /account/logout/submit → /account/login
+Route: /account/register/start → /account/register → / → /account/logout/submit → /account/login
 Do: Each registers from their own link. Molefe, Dlamini and Ndlovu sign out. Dr Mahlangu stays signed in with Home open
   in her tab, which Step 2.31 uses. Dr du Plessis cannot register: he says no email reached him.
-Expect: Each page reads "Registering <address> as Trainee." Each registrar lands on Home, "Pending trainee · Semester N,
-  YYYY", because a Trainee invitation registers as PendingTrainee until admission. Home shows one card, "Awaiting
-  admission": "You are registered and waiting to be admitted to a curriculum by your programme administrator." It has a
-  "Review your account →" link, and the header offers no action. Each sign-out lands on the sign-in page with "You
-  have signed out."
+Expect: Each page reads "This invitation is for ‹address›, as Trainee in Paediatrics / Paediatrics at Kgosi Kgari
+  Teaching Hospital." Each registrar lands on Home, "Pending trainee · Semester N, YYYY", because a Trainee invitation
+  registers as PendingTrainee until admission. Home shows one card, "Awaiting admission", with the hourglass icon and
+  the control edge, no stripe (F8):
+  - "You are registered, and waiting to be admitted to the Paediatrics programme at Kgosi Kgari Teaching Hospital.
+    Until then, nothing can be filed by you or about you.";
+  - Institution "Kgosi Kgari Teaching Hospital"; Programme "Paediatrics / Paediatrics, on the Paediatric EPA
+    Curriculum (11.1)"; Invited by "Nolwazi Mbatha, Institutional admin, on `D`"; Who admits you "An Institutional
+    admin at Kgosi Kgari Teaching Hospital. If it is taking long, ask Nolwazi Mbatha.";
+  - "When you are admitted", four numbered steps: "Your programme start date is set, and with it your training
+    year.", "You are signed out once, and sign in again as a Trainee.", "Then, once your programme has started, you
+    can log activities and follow your progress." and "An email tells you, at ‹address›, that it has happened.";
+  - "Meanwhile": "You can check your account and your data rights.", with Review your account and Open My data
+    rights, each with its arrow.
+  The header offers no action. Each sign-out lands on the sign-in page with "You have signed out."
 
 Step 2.19 — What a registrar sees before admission
 Role: PendingTrainee — Dr Nomsa Mahlangu
 Route: / → /account/profile → /activities/mine → /activities/new → /portfolio/progress → /access-denied → /
 Do: Read the menu. Follow Review your account. Type the addresses of My activities, Log an activity and My progress.
 Expect: The sidebar reads "Acting as Pending trainee" over Home, then My data rights under the rule, and nothing else: a
-  pending trainee files nothing until admitted, so has no activities to list (D55, T141). My account lists her role as
-  "Pending trainee", and her institution, Kgosi Kgari Teaching Hospital. My activities reads "No activities yet", with
-  no Log an activity. Log an activity and My progress each show "You cannot open this page" ("Your role (Pending
-  trainee) does not open this page.") with Go to Home (T335).
+  pending trainee files nothing until admitted, so has no activities to list (D55, T141). Her Home's card is Step
+  2.18's, its last step naming mahlangu@kgk.wombat.local. My account lists her role as "Pending trainee", and her
+  institution, Kgosi Kgari Teaching Hospital. My activities reads "No activities yet", with no Log an activity. Log
+  an activity and My progress each show "You cannot open this page" ("Your role (Pending trainee) does not open this
+  page.") with Go to Home (T335).
 
 Step 2.26 — Mbatha resends Dr du Plessis's invitation
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/invitations
 Do: At least an hour after Step 2.16, open Invitations and press Resend on du Plessis's row. Copy the new link.
-Expect: His is the only row left. Its Delivery reads "Not delivered. Resend emails a new link in place of the current
-  one, which then stops working.", and it offers Resend before Revoke. Afterwards the page reads "A new invitation link
-  is being emailed to duplessis@kgk.wombat.local. The link it replaces no longer works. Copy the new link below — it is
-  shown only once.", with the link below it. The row reads "Being sent", offers no Resend and expires 14 days from now.
+Expect: His is the only row left. Its Delivery reads "Not delivered", with the warning icon, and a note row under it
+  reads "Resend emails a new link in place of the current one, which then stops working." The row offers Resend
+  (named "Resend the Trainee invitation to duplessis@kgk.wombat.local", described by the note) before Revoke….
+  Afterwards the result, focused: "**A new invitation link is being emailed to duplessis@kgk.wombat.local.** The link
+  it replaces no longer works. Copy the new link below — it is shown only once.", then the link with Copy link and "It
+  works until `D+14`. It is shown here until your next action, then never again." The row reads Issued `D` over the
+  resend's time in SAST, with no "Resent" mark (F2), Last day `D+14` and "Being sent"; it has no note row and offers
+  only Revoke…. The log holds one more stub "Your Wombat invitation", "… as Trainee in Paediatrics / Paediatrics at
+  Kgosi Kgari Teaching Hospital."
 
 Step 2.27 — Dr du Plessis registers from the new link
 Role: Anonymous — Dr Pieter du Plessis
-Route: /account/register → / → /account/logout/submit → /account/login
+Route: /account/register/start → /account/register → / → /account/logout/submit → /account/login
 Do: Open the first link, then the resent one. Register from the resent link and sign out.
-Expect: The first link shows no form, only "This invitation is invalid.": the resend replaced the link's hash, so the old
-  token matches no invitation. The resent link registers him and lands on Home, "Pending trainee · Semester N, YYYY",
-  with the Awaiting admission card. Signing out lands on the sign-in page with "You have signed out."
+Expect: The first link reads "Invitation link not recognised" (its tab too): "This invitation is invalid." and "The link
+  may be incomplete, or a newer invitation email may have replaced it. Open the link in the most recent invitation
+  email, or ask the person who invited you for a new invitation."; no form. The resend replaced the link's hash, so
+  the old token matches no invitation. The resent link reads "This invitation is for duplessis@kgk.wombat.local, as
+  Trainee in Paediatrics / Paediatrics at Kgosi Kgari Teaching Hospital.", registers him and lands on Home, "Pending
+  trainee · Semester N, YYYY", with Step 2.18's Awaiting admission card. Signing out lands on the sign-in page with
+  "You have signed out."
 
 Step 2.28 — The pending registrars, as Mbatha sees them
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -909,31 +1004,60 @@ Do: Open Invitations. Read the users list and open Dr Molefe's page. Then open T
 Expect: Active invitations reads "No active invitations". Users lists 15, with the five registrars as PendingTrainee. On
   Molefe's page, PendingTrainee reads "System-managed" and has no Remove. Add role offers InstitutionalAdmin,
   SpecialityAdmin, SubSpecialityAdmin, Coordinator, CommitteeMember and Assessor, not Trainee, and its help reads "Trainee
-  is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit to curriculum'." (T303).
-  Trainees' Pending admission lists the five with their emails and KGK, each with an
-  "Admit to curriculum" named for the registrar. Active profiles reads "No active trainee profiles found."
+  is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit…'." (T303).
+  Trainees reads "Admit registrars who are waiting, and keep current trainees' programmes." under its heading:
+  - "Waiting to be admitted" "5 waiting", captioned "Registered from a Trainee invitation, by surname. A deactivated
+    account is not listed. Nothing can be filed about them until they are admitted.": Dlamini, du Plessis, Mahlangu,
+    Molefe and Ndlovu, each with Email, Invited as "Paediatrics / Paediatrics", Registered `D` and an outline Admit…
+    named "Admit ‹name›". There is no Institution column: her list is KGK's.
+  - "Current trainees": "No current trainees" / "A registrar appears here once admitted." There is no Completed and
+    closed section.
 
 Step 2.29 — Mbatha admits four registrars
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/trainees → /admin/trainees/edit → /admin/trainees
-Do: Admit each with its programme start and expected completion. Molefe starts `J−3y` and completes `J+1y−1d`. Dlamini
-  starts `J−2y` and completes `J+2y−1d`. Du Plessis starts `J−1y` and completes `J+3y−1d`. Mahlangu starts `J` and
-  completes `J+4y−1d`.
-Expect: The form reads "Trainee profile" / "Admit a pending trainee into a curriculum.". Curriculum offers only
-  "Paediatric EPA Curriculum (11.1)", KGK's adopted version (T091). The start date is pre-filled with today. There is no
-  training-year field, because the year is derived. Each admission moves to the profile's edit page (`?id=`). That page
-  shows Status Active and "Update curriculum and completion details for this trainee.", with Last day in the programme,
-  Deactivate and Mark complete, none of them used here. The four appear under Active profiles with the curriculum,
-  Paediatrics and the completion date entered.
+Route: /admin/trainees → /admin/trainees/admit → /admin/trainees
+Do: Admit each from its Admit…, with its programme start and expected completion. Molefe starts `J−3y` and completes
+  `J+1y−1d`. Dlamini starts `J−2y` and completes `J+2y−1d`. Du Plessis starts `J−1y` and completes `J+3y−1d`.
+  Mahlangu starts `J` and completes `J+4y−1d`.
+Expect:
+  - **Admit ‹name›** is a page of its own: "Admit Lerato Molefe" (its tab too), under Home › Trainees › Admit Lerato
+    Molefe with Trainees lit, and "Admit a registrar who is waiting into the institution's curriculum.". "Who is being
+    admitted" reads Email, Institution "Kgosi Kgari Teaching Hospital", Invited as "Paediatrics / Paediatrics" and
+    Registered `D`.
+  - **Programme:** "* marks a field you must fill in."; Curriculum is read out, not offered: "Paediatric EPA
+    Curriculum (11.1)", with "Adopted at Kgosi Kgari Teaching Hospital for Paediatrics / Paediatrics, the invited
+    sub-speciality." (KGK's adopted version, T091). Programme start is starred and pre-filled with today. Beside it,
+    Training year is an output of the start, not a field (S18, T306): "Training year 1" for today, "Training year 4"
+    once `J−3y` is entered, with "Training years turn every 365 days from the programme start, counted to `D`. It
+    follows the date when you change it." Expected completion's help is "Leave this empty to derive it from the
+    curriculum window."; once a start is typed, while the field is empty, the help says what it would be. Where that
+    date has passed the help is replaced by "Left empty, it would be ‹`J−2y`›, which has passed. Enter the expected
+    completion." (Molefe's start; Dlamini's too); otherwise it adds "Left empty, it will be ‹date›." to the first
+    sentence.
+  - **"When you admit:"** "Lerato Molefe becomes a Trainee on the Paediatric EPA Curriculum (11.1), in training year
+    4.", "Any session Lerato Molefe has open ends once, and Lerato Molefe signs in again as a Trainee." and "An email
+    tells Lerato Molefe so."; then Cancel and "Admit Lerato Molefe".
+  - **The result:** each admission lands on Trainees with, focused, directly above the Waiting table, "**Lerato Molefe
+    admitted to the Paediatric EPA Curriculum (11.1), training year 4, from `J−3y`.**" (S8); Waiting then reads "4
+    waiting", Dlamini's Admit… first. After the four, Waiting reads "1 waiting", and "Current trainees" "4 current",
+    captioned "Admitted to a curriculum, by surname. Training years turn every 365 days from the programme start.",
+    lists each with "Paediatric EPA Curriculum (11.1)" over "Paediatrics", the programme start over "Training year N"
+    (Dlamini 3, du Plessis 2, Mahlangu 1, Molefe 4), the completion entered, and Edit named "Edit ‹name›'s profile".
+  - **The mail:** each admission writes a stub "You are admitted in Wombat", tagged `trainee, admitted`: "You have been
+    admitted to the Paediatric EPA Curriculum (11.1), in training year 4." and "If you were signed in to Wombat, you
+    have been signed out once: sign in again to log activities and follow your progress.", with the sign-in link.
 
 Step 2.30 — Dr Ndlovu's completion date is derived, then corrected
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/trainees → /admin/trainees/edit → /admin/trainees
-Do: Admit Ndlovu with start `J` and the completion date left empty. Then set completion to `J+4y−1d` on his profile and
-  save the profile.
-Expect: Left empty, the completion date is derived as `J` + 12 months, the longest item window on v11.1. The help text
-  says so ("Leave this empty to derive it from the curriculum window."). The save reads "Trainee profile saved.", and
-  the list shows `J+4y−1d`. Pending admission reads "No pending trainees found."
+Route: /admin/trainees → /admin/trainees/admit → /admin/trainees → /admin/trainees/edit → /admin/trainees
+Do: Admit Ndlovu with start `J` and the completion date left empty. Then open his profile from Current trainees (Edit),
+  set completion to `J+4y−1d` and save the profile.
+Expect: With start `J` and the completion empty, its help reads "Leave this empty to derive it from the curriculum
+  window. Left empty, it will be `J+1y`.": `J` + 12 months, the longest item window on v11.1. The result reads
+  "**Sipho Ndlovu admitted to the Paediatric EPA Curriculum (11.1), training year 1, from `J`. Expected completion
+  `J+1y`, derived from the curriculum window: change it under Edit.**", and Waiting to be admitted reads "Nobody is
+  waiting to be admitted." / "A registrar appears here after registering from a Trainee invitation." On his profile
+  the save reads "Trainee profile saved.", and Current trainees shows `J+4y−1d`.
 
 Step 2.31 — Dr Mahlangu's open session ends, and she signs back in as a Trainee
 Role: Trainee — Dr Nomsa Mahlangu
@@ -967,11 +1091,11 @@ Expect: Home reads "Coordinator · Semester N, YYYY", with the header action "St
 
 Step 2.44 — Prof Mbatha's dashboard after onboarding
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: / → /admin/users → /admin/assessors
-Do: Open Home. Then open Users and Assessors.
-Expect: Home reads "Institutional admin · Semester N, YYYY" and offers "Invite a person". Users reads InstitutionalAdmin
-  1, SpecialityAdmin 1, SubSpecialityAdmin 1, Coordinator 1, CommitteeMember 4, Assessor 5 and Trainee 5, with no
-  PendingTrainee line.
+Route: / → /admin/invitations/new → / → /admin/users → /admin/assessors
+Do: Open Home and press Invite a person, then go back to Home. Then open Users and Assessors.
+Expect: Home reads "Institutional admin · Semester N, YYYY" and offers "Invite a person", which opens Invite a person
+  (`/admin/invitations/new`), not the list (T373, Q1). Users reads InstitutionalAdmin 1, SpecialityAdmin 1,
+  SubSpecialityAdmin 1, Coordinator 1, CommitteeMember 4, Assessor 5 and Trainee 5, with no PendingTrainee line.
   Specialities & sub-specialities reads 1 and 1, what KGK has adopted. Quick links reads Users, Invitations, Curriculum
   adoptions and Entrustment decisions. The users and assessors lists both name Fatima Khumalo (Step 2.41).
 ```

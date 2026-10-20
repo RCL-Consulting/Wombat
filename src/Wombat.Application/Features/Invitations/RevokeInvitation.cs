@@ -36,7 +36,8 @@ public sealed class RevokeInvitationCommandHandler : IRequestHandler<RevokeInvit
 
         if (invitation is null && request.Principal.IsAdministrator())
         {
-            throw new InvalidOperationException("The invitation was not found.");
+            throw new InvitationIssueRefusedException(
+                InvitationIssueRefusal.CannotRevoke, InvitationIssueField.None, "The invitation was not found.");
         }
 
         // CollegeAdmin invitations are college-scoped (Administrator-only); every other invitation
@@ -52,7 +53,9 @@ public sealed class RevokeInvitationCommandHandler : IRequestHandler<RevokeInvit
 
         if (invitation.UsedOn.HasValue)
         {
-            throw new InvalidOperationException("Used invitations cannot be revoked.");
+            // Typed, so the page shows these words and no other exception's (T373, S9).
+            throw new InvitationIssueRefusedException(
+                InvitationIssueRefusal.CannotRevoke, InvitationIssueField.None, "Used invitations cannot be revoked.");
         }
 
         if (!invitation.RevokedOn.HasValue)

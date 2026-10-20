@@ -20,14 +20,6 @@ public sealed record CurriculumChoiceDto(int Id, string Name, string Version, in
 public sealed record GetTraineeCurriculumChoicesQuery(int TraineeProfileId, ClaimsPrincipal Principal)
     : IRequest<IReadOnlyList<CurriculumChoiceDto>>;
 
-/// <summary>
-/// The curricula a pending trainee may be admitted into (T304): their institution's active adoptions, one per discipline,
-/// the versions <see cref="AdmitTraineeCommand" /> accepts. For an Administrator too: before T304 the admit form offered
-/// them every curriculum in the catalogue, and after a re-adoption it offered everyone the superseded version.
-/// </summary>
-public sealed record GetAdmissionCurriculumChoicesQuery(string UserId, ClaimsPrincipal Principal)
-    : IRequest<IReadOnlyList<CurriculumChoiceDto>>;
-
 public sealed class GetTraineeCurriculumChoicesQueryHandler
     : IRequestHandler<GetTraineeCurriculumChoicesQuery, IReadOnlyList<CurriculumChoiceDto>>
 {
@@ -64,42 +56,8 @@ public sealed class GetTraineeCurriculumChoicesQueryHandler
     }
 }
 
-public sealed class GetAdmissionCurriculumChoicesQueryHandler
-    : IRequestHandler<GetAdmissionCurriculumChoicesQuery, IReadOnlyList<CurriculumChoiceDto>>
-{
-    private readonly IApplicationDbContext _dbContext;
-    private readonly IUserAdministrationService _userAdministrationService;
-
-    public GetAdmissionCurriculumChoicesQueryHandler(IApplicationDbContext dbContext, IUserAdministrationService userAdministrationService)
-    {
-        _dbContext = dbContext;
-        _userAdministrationService = userAdministrationService;
-    }
-
-    public async Task<IReadOnlyList<CurriculumChoiceDto>> Handle(GetAdmissionCurriculumChoicesQuery request, CancellationToken cancellationToken)
-    {
-        TraineeAdministrationRules.DemandTraineeAdministration(request.Principal);
-
-        var user = await _userAdministrationService.GetByIdAsync(request.UserId, cancellationToken);
-
-        // The admission's own scope rule (AdmitTraineeCommand): a registrar of another institution is not the caller's.
-        if (user is null || (user.InstitutionId is { } own && !request.Principal.CanAccessInstitution(own)))
-        {
-            throw new InvalidOperationException("The pending trainee could not be found.");
-        }
-
-        // The institution the admission pins the trainee to, as AdmitTraineeCommand resolves it. None, none offered.
-        if ((user.InstitutionId ?? request.Principal.GetInstitutionId()) is not int institutionId)
-        {
-            return [];
-        }
-
-        var active = TraineeAdoptionResolver.ActiveAdoptions(_dbContext, institutionId).Select(adoption => adoption.CurriculumId);
-        return await CurriculumChoices.ListAsync(
-            _dbContext.Set<Curriculum>().Where(curriculum => active.Contains(curriculum.Id)),
-            cancellationToken);
-    }
-}
+// The admission's own picker (GetAdmissionCurriculumChoicesQuery, T304) is gone with the profile page's admission branch:
+// the Admit page reads what it offers from GetAdmissionCandidateQuery, narrowed to the invited sub-speciality (T373, F1).
 
 internal static class CurriculumChoices
 {

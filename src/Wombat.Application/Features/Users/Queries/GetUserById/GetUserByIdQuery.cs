@@ -3,6 +3,8 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Invitations;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.Institutions;
 using Wombat.Domain.Invitations;
 
@@ -14,11 +16,17 @@ public sealed class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, 
 {
     private readonly IUserAdministrationService _userAdministrationService;
     private readonly IApplicationDbContext _dbContext;
+    private readonly TimeProvider _clock;
 
-    public GetUserByIdQueryHandler(IUserAdministrationService userAdministrationService, IApplicationDbContext dbContext)
+    /// <param name="clock">What "today" is read from, on the South African calendar (T373 fix pass, B3); the system clock unless a test pins it.</param>
+    public GetUserByIdQueryHandler(
+        IUserAdministrationService userAdministrationService,
+        IApplicationDbContext dbContext,
+        TimeProvider? clock = null)
     {
         _userAdministrationService = userAdministrationService;
         _dbContext = dbContext;
+        _clock = clock ?? TimeProvider.System;
     }
 
     /// <remarks>
@@ -55,11 +63,14 @@ public sealed class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, 
                 .SingleOrDefaultAsync(cancellationToken);
         }
 
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        // The account's address whatever the invitation's spelling (S4), and a link that works through its last South
+        // African day (F7), as Register, the list and the resend judge them (T373 fix pass, B3). Until the fix this read
+        // compared the stored text byte for byte and took the UTC date.
+        var today = ProgrammeCalendar.DateOf(_clock.GetUtcNow().UtcDateTime);
         var invitations = await _dbContext.Set<Invitation>()
             .AsNoTracking()
+            .ToAddress(user.Email)
             .Where(entity =>
-                entity.Email == user.Email &&
                 !entity.UsedOn.HasValue &&
                 !entity.RevokedOn.HasValue &&
                 entity.ExpiresOn >= today)

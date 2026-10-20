@@ -23,6 +23,8 @@ public sealed class InvitationConfiguration : IEntityTypeConfiguration<Invitatio
         builder.Property(entity => entity.TokenHash).HasMaxLength(64).IsRequired();
         builder.Property(entity => entity.TargetRole).HasMaxLength(64).IsRequired();
         builder.Property(entity => entity.IssuedByUserId).HasMaxLength(450).IsRequired();
+        // The role the issue was authorised as (T373, F3): a role key, as TargetRole. Null on rows before T373.
+        builder.Property(entity => entity.IssuedAsRole).HasMaxLength(64);
         builder.Property(entity => entity.ExpiresOn).HasColumnType("date");
 
         builder.HasIndex(entity => entity.TokenHash);

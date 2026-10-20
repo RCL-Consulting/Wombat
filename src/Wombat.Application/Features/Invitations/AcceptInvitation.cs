@@ -39,17 +39,21 @@ public sealed class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvit
     private readonly IInvitationTokenService _tokenService;
     private readonly IInvitedUserProvisioner _invitedUserProvisioner;
     private readonly IAuditContextProvider _auditContext;
+    private readonly TimeProvider _timeProvider;
 
+    /// <param name="timeProvider">What a link's last day is judged against (T373, F7); the system clock unless a test pins it.</param>
     public AcceptInvitationCommandHandler(
         IApplicationDbContext dbContext,
         IInvitationTokenService tokenService,
         IInvitedUserProvisioner invitedUserProvisioner,
-        IAuditContextProvider auditContext)
+        IAuditContextProvider auditContext,
+        TimeProvider? timeProvider = null)
     {
         _dbContext = dbContext;
         _tokenService = tokenService;
         _invitedUserProvisioner = invitedUserProvisioner;
         _auditContext = auditContext;
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     public async Task<AcceptedInvitationResult> Handle(AcceptInvitationCommand request, CancellationToken cancellationToken)
@@ -79,42 +83,50 @@ public sealed class AcceptInvitationCommandHandler : IRequestHandler<AcceptInvit
             _auditContext.DeclareInstitution(invitedInstitutionId);
         }
 
-        var invitation = InvitationRules.GetActiveInvitationOrThrow(invitations, request.Token, _tokenService);
+        var now = _timeProvider.GetUtcNow().UtcDateTime;
+        var invitation = InvitationRules.GetActiveInvitationOrThrow(invitations, request.Token, _tokenService, now);
 
-        var provisionedUser = await _invitedUserProvisioner.ProvisionAsync(
-            invitation.Email,
-            request.Password,
-            request.FirstName,
-            request.LastName,
-            invitation.TargetRole,
-            invitation.InstitutionId,
-            invitation.CollegeId,
-            invitation.SpecialityId,
-            invitation.SubSpecialityId,
-            cancellationToken);
-
-        var now = DateTime.UtcNow;
-        invitation.UsedOn = now;
-
-        // T061: sweep stale invitations for the same email. Once a user is provisioned,
-        // any other active invitation for that email cannot be accepted (the registration
-        // path rejects "user already exists"), so leaving them open is just clutter.
-        // Multi-role onboarding goes through /admin/users after first registration.
-        var staleInvitations = await _dbContext.Set<Invitation>()
-            .Where(entity =>
-                entity.Email == invitation.Email &&
-                entity.Id != invitation.Id &&
-                !entity.UsedOn.HasValue &&
-                !entity.RevokedOn.HasValue)
-            .ToListAsync(cancellationToken);
-
-        foreach (var stale in staleInvitations)
+        // One transaction (T373, flow 11, F10): the account (the user, its role, its scopes) and the invitation marked used,
+        // with the sweep, commit together or not at all. Until T373 the provisioner saved the account before this save, so
+        // a fault between them left an account whose invitation was still open, and the register page, which says
+        // "Nothing was saved.", was wrong. Every refusal above comes before the first write.
+        return await _invitedUserProvisioner.InOneTransactionAsync(async ct =>
         {
-            stale.RevokedOn = now;
-        }
+            var provisionedUser = await _invitedUserProvisioner.ProvisionAsync(
+                invitation.Email,
+                request.Password,
+                request.FirstName,
+                request.LastName,
+                invitation.TargetRole,
+                invitation.InstitutionId,
+                invitation.CollegeId,
+                invitation.SpecialityId,
+                invitation.SubSpecialityId,
+                ct);
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+            invitation.UsedOn = now;
 
-        return new AcceptedInvitationResult(provisionedUser.UserId, provisionedUser.AssignedRole);
+            // T061: sweep stale invitations for the same email. Once a user is provisioned,
+            // any other active invitation for that email cannot be accepted (the registration
+            // path rejects "user already exists"), so leaving them open is just clutter.
+            // Multi-role onboarding goes through /admin/users after first registration.
+            // The address in any spelling (T373, flow 11, S4): an invitation stores it as typed.
+            var staleInvitations = await _dbContext.Set<Invitation>()
+                .ToAddress(invitation.Email)
+                .Where(entity =>
+                    entity.Id != invitation.Id &&
+                    !entity.UsedOn.HasValue &&
+                    !entity.RevokedOn.HasValue)
+                .ToListAsync(ct);
+
+            foreach (var stale in staleInvitations)
+            {
+                stale.RevokedOn = now;
+            }
+
+            await _dbContext.SaveChangesAsync(ct);
+
+            return new AcceptedInvitationResult(provisionedUser.UserId, provisionedUser.AssignedRole);
+        }, cancellationToken);
     }
 }

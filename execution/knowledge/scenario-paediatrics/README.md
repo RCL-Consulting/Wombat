@@ -75,7 +75,9 @@ Rewritten 2026-09-26 (T293) from the single file that T091 and T159 had re-basel
   - After a replay, run `design/tools/check_baseline_paths.py`; it must report `missing 0` (BRIEF § 11).
 - **The browser.** Any browser a script can drive will do. The T335 replay drove Chrome with the Playwright library
   (`chromium.launch({ channel: 'chrome' })`), and the Playwright MCP is not needed. Scripts read passwords from
-  environment variables and never print them.
+  environment variables and never print them. Grant the context `clipboard-read` and `clipboard-write` for the replay's
+  origin (`context.grantPermissions`), or Copy link answers "Could not copy…" (Step 1.5 shows both wordings;
+  `states.md`'s Copy refused row blocks it on purpose).
 
 ## The step format
 

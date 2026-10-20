@@ -2233,6 +2233,10 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.Property<int?>("InstitutionId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("IssuedAsRole")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("IssuedByUserId")
                         .IsRequired()
                         .HasMaxLength(450)

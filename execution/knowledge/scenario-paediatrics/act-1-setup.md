@@ -119,24 +119,42 @@ Gap: none
 
 ### Step 1.5 — Invite Dr Kruger as the CPSA's CollegeAdmin
 Role: Administrator — the platform operator
-Route: /admin/invitations
-Do: Under Issue invitation, enter `kruger@cmsa.wombat.local` and choose the role CollegeAdmin. Press Issue invitation
-  before choosing a College. Then choose `College of Paediatricians of South Africa` and issue the invitation.
-Expect: Before the issue, Active invitations reads "No active invitations".
-  - The Role picker offers the eight roles an invitation can carry, and never Administrator.
-  - Choosing CollegeAdmin replaces the Institution picker with a College picker, which offers the Demo College and the
-    CPSA. Speciality and Sub-speciality stay disabled.
-  - The first press is refused: "A college is required for a college administrator."
-  - The second press reads "Invitation issued for kruger@cmsa.wombat.local. Its email is being sent. Copy the link below
-    — it is shown only once." (T283's wording). The registration link is shown beneath it, and it expires in 14 days.
-  - The new row reads CollegeAdmin, with College `College of Paediatricians of South Africa`, no institution, an expiry
-    of `D+14` and a Delivery of "Being sent".
-  - The application log holds a stub email "Your Wombat invitation", tagged `invitation, role:CollegeAdmin`. It invites
-    the reader to register as CollegeAdmin, with the same link and its expiry date. The log never names the address
-    (T282), so the role tells this mail from Mbatha's.
-Note: Only an Administrator is offered the CollegeAdmin role (T093). With `Email__SmtpHost` unset, nothing ever reports
-  the mail as sent. After an hour the row reads "Not delivered." and offers Resend (T283). That state belongs to
-  `states.md`.
+Route: /admin/invitations → /admin/invitations/new → /admin/invitations
+Do: Open Invitations and press Invite a person. Enter `kruger@cmsa.wombat.local` and choose College admin. Press Issue
+  invitation before choosing a College. Then choose `College of Paediatricians of South Africa` and issue the
+  invitation. Copy the link, then press Open Invitations.
+Expect:
+  - **The list:** "Invitations", "Invitations not yet used, with the state of each one's email.", with Invite a person
+    in its header; Active invitations reads "No active invitations" / "Issue an invitation to create the first
+    onboarding link.".
+  - **Invite a person** is a page of its own (its tab too), under Home › Invitations › Invite a person with Invitations
+    lit (T373, Q1): "One person, one role. The registration link is shown here once, and emailed to them.", then "*
+    marks a field you must fill in.". Email is starred. Role is a group of eight radios by label, each with its
+    description and none chosen: College admin, Institutional admin, Speciality admin, Sub-speciality admin,
+    Coordinator, Committee member, Assessor and Trainee; never Administrator. No scope field is drawn before a role is.
+  - **College admin** draws College alone, starred, at "Choose a College", offering the Demo College and the CPSA. No
+    Institution, Speciality or Sub-speciality field is drawn, disabled or otherwise (S15).
+  - **The first press** is refused under College: "A college is required for a college administrator.", the field
+    marked and focused. Nothing is issued and no link is shown.
+  - **The second press** puts the result above the form, focused: "**Invitation issued for kruger@cmsa.wombat.local.**
+    Its email is being sent. Copy the link below — it is shown only once." Under it, "Registration link for
+    kruger@cmsa.wombat.local" labels the link (a `/account/register/start?token=…` address) in a read-only field, with
+    Copy link beside it, and "It works until `D+14`. It is shown here until your next action, then never again. If the
+    email is not delivered, share this link another way, or resend it from Invitations, which emails a new link in place
+    of this one.", then Open Invitations. Copy link says "Link copied." under the field, and the button reads "Copied"
+    (or, where the browser refuses the clipboard, "Could not copy. Select the link and copy it yourself."). The form is
+    drawn again, empty, under "Invite the next person".
+  - **The row** (L03): "Active invitations" "1 active", captioned "Every institution and College. Not delivered first,
+    then newest first. A used or revoked invitation leaves this list."; Invitee kruger@cmsa.wombat.local; Role and
+    scope "College admin" over "College of Paediatricians of South Africa"; Issued `D` over its time, "hh:mm SAST";
+    Last day `D+14`; Delivery "Being sent"; Revoke…. No Expired, not used section.
+  - **The mail:** the application log holds a stub email "Your Wombat invitation", tagged `invitation` and nothing
+    else (T373, S12: the role left the tags). Its text reads "You are invited to Wombat as College admin at College of
+    Paediatricians of South Africa." and "Register with this link; it works until `D+14`.", then the same link. The log
+    never names the address (T282), so the mail's own words tell it from Mbatha's.
+Note: Only an Administrator is offered College admin (T093). With `Email__SmtpHost` unset, nothing ever reports the mail
+  as sent. After an hour the row reads "Not delivered", with a note row under it, and offers Resend (T283). That state
+  belongs to `states.md`.
 Actual (2026-10-19, T369 replay, wombat_scenario_t369): As expected: before the issue "No active invitations"; the
   Role picker offers eight roles, no Administrator; CollegeAdmin swaps in a College picker (CPSA, Demo College),
   Speciality and Sub-speciality disabled; the first press refused with "A college is required for a college
@@ -176,13 +194,15 @@ Gap: [F-1.6a, T326] still: the Institutions list's subtitle promises a specialit
 
 ### Step 1.7 — Invite Prof Mbatha as KGK's InstitutionalAdmin
 Role: Administrator — the platform operator
-Route: /admin/invitations
-Do: Invite `mbatha@kgk.wombat.local` as InstitutionalAdmin at `Kgosi Kgari Teaching Hospital`, with no speciality.
-Expect: InstitutionalAdmin is the form's default role. The Institution picker offers the Demo Institution and KGK.
-  Speciality and Sub-speciality stay disabled for this role. The status line and the link read as in Step 1.5.
-  Active invitations now holds two rows: Kruger's, and Mbatha's, which reads InstitutionalAdmin at `Kgosi Kgari Teaching
-  Hospital` with no College. The log holds a second stub email, tagged `role:InstitutionalAdmin`, which invites the
-  reader to register as InstitutionalAdmin.
+Route: /admin/invitations → /admin/invitations/new → /admin/invitations
+Do: Press Invite a person. Invite `mbatha@kgk.wombat.local` as Institutional admin at `Kgosi Kgari Teaching Hospital`.
+  Copy the link, then press Open Invitations.
+Expect: No role is chosen until one is picked: Institutional admin is chosen here, not a default. It draws Institution
+  alone, starred, at "Choose an institution", offering the Demo Institution and KGK; no Speciality or Sub-speciality
+  field is drawn. The result and the link read as in Step 1.5, for mbatha@kgk.wombat.local. Active invitations reads
+  "2 active": Mbatha's row first (newest first), "Institutional admin" over "Kgosi Kgari Teaching Hospital", then
+  Kruger's. The log holds a second stub email "Your Wombat invitation", tagged `invitation`, reading "You are invited
+  to Wombat as Institutional admin at Kgosi Kgari Teaching Hospital."
 Actual (2026-10-19, T369 replay, wombat_scenario_t369): As expected: InstitutionalAdmin preselected; Institution
   offers Demo Institution and KGK; Speciality and Sub-speciality disabled; the same status line (for
   mbatha@kgk.wombat.local) and link; Active invitations holds two rows, the new one reading InstitutionalAdmin, KGK,
@@ -195,18 +215,23 @@ Gap: none
 
 ### Step 1.8 — Dr Kruger registers
 Role: Anonymous — Dr Anton Kruger, invited
-Route: /account/register → /
-Do: In a fresh browser session, open the link from the CollegeAdmin stub email in the application log (the link Step
+Route: /account/register/start → /account/register → /
+Do: In a fresh browser session, open the link from the College admin stub email in the application log (the link Step
   1.5 showed). Enter:
   - First name `Anton` and Last name `Kruger`;
   - a password, twice, that meets the policy: at least 12 characters, with an upper-case and a lower-case letter, a
     digit and a symbol.
   Press Register. Write the password to `pwd_DO_NOT_COMMIT.txt`.
-Expect: The page reads "Registering kruger@cmsa.wombat.local as CollegeAdmin.", and the address is shown but cannot be
-  edited. Register signs Kruger in and lands on Home, with "College admin · Semester N, YYYY" under its heading. The
-  dashboard has one card, National catalogue, with Specialities, EPAs and Curricula. The sidebar reads "Acting as College
-  admin" over Home, Specialities, EPAs, Curricula and Activity types, then My data rights: the College writes its
-  disciplines' activity types in the builder (T300, D52). The top bar names him "Anton Kruger".
+Expect: The link answers with a redirect to `/account/register`, so the address bar never holds the token (T315; S2).
+  The page is "Complete registration" (its tab too), under the Wombat lockup, and reads "This invitation is for
+  kruger@cmsa.wombat.local, as College admin at College of Paediatricians of South Africa." Email holds the address,
+  read-only, with "The address this invitation is for. It cannot be changed here."; then First name, Last name,
+  Password with the six rules under it, Confirm password, and Register. Under the form: "Not expecting this
+  invitation? Ignore it: its link works until `D+14`." Register signs Kruger in and lands on Home, with "College admin
+  · Semester N, YYYY" under its heading. The dashboard has one card, National catalogue, with Specialities, EPAs and
+  Curricula. The sidebar reads "Acting as College admin" over Home, Specialities, EPAs, Curricula and Activity types,
+  then My data rights: the College writes its disciplines' activity types in the builder (T300, D52). The top bar
+  names him "Anton Kruger".
 Actual (2026-10-19, T369 replay, wombat_scenario_t369): As expected: "Registering kruger@cmsa.wombat.local as
   CollegeAdmin.", Email disabled; both password fields carry a Show toggle and the policy list. Register landed on
   Home, "College admin · Semester 2, 2026", one National catalogue card with Specialities, EPAs and Curricula; the
@@ -217,22 +242,24 @@ Gap: none
 
 ### Step 1.9 — A used link is refused
 Role: Anonymous — anyone who holds Kruger's link
-Route: /account/register
+Route: /account/register/start → /account/register
 Do: In another fresh session, open Kruger's link again.
-Expect: The page reads "This invitation has already been used." and offers no form. The page refuses up front whatever
-  no input could put right (T285).
+Expect: The page is "Invitation already used" (its tab too): "This invitation has already been used: an account was
+  registered from it." and "If it was yours, sign in with that account.", with Sign in and "Forgotten your password?".
+  It offers no form. The page refuses up front whatever no input could put right (T285).
 Actual (2026-10-19, T369 replay, wombat_scenario_t369): As expected: in a fresh session the link shows "Complete
   registration" and "This invitation has already been used.", with no form and no input.
 Gap: none
 
 ### Step 1.10 — Prof Mbatha registers
 Role: Anonymous — Prof Nolwazi Mbatha, invited
-Route: /account/register → /
-Do: Register as in Step 1.8, from the InstitutionalAdmin stub email in the log, with First name `Nolwazi` and Last name
+Route: /account/register/start → /account/register → /
+Do: Register as in Step 1.8, from the Institutional admin stub email in the log, with First name `Nolwazi` and Last name
   `Mbatha`. Write her password to `pwd_DO_NOT_COMMIT.txt`.
-Expect: The page reads "Registering mbatha@kgk.wombat.local as InstitutionalAdmin." Register lands her on Home, with
-  "Institutional admin · Semester N, YYYY" under its heading and "Invite a person" in its header, which opens the
-  invitations page. The dashboard has three cards:
+Expect: The page reads "This invitation is for mbatha@kgk.wombat.local, as Institutional admin at Kgosi Kgari Teaching
+  Hospital." Register lands her on Home, with "Institutional admin · Semester N, YYYY" under its heading and "Invite a
+  person" in its header, which opens Invite a person (`/admin/invitations/new`), not the list (T373, Q1). The dashboard
+  has three cards:
   - Users, which lists InstitutionalAdmin 1;
   - Specialities & sub-specialities, which reads 0 and 0, because KGK has adopted nothing yet;
   - Quick links: Users, Invitations, Curriculum adoptions and Entrustment decisions.

@@ -82,7 +82,8 @@ public sealed class HomeFrameTests : WombatTestContext
 
     [Theory]
     [InlineData(WombatRoles.Trainee, "Log an activity", "/activities/new")]
-    [InlineData(WombatRoles.InstitutionalAdmin, "Invite a person", "/admin/invitations")]
+    // T373 (flow 11, Q1, X01): Invite a person's own page, no longer the list.
+    [InlineData(WombatRoles.InstitutionalAdmin, "Invite a person", "/admin/invitations/new")]
     // T358, flow 06 (Q6, review 26): the Coordinator's "Quick action" card is gone to the header.
     [InlineData(WombatRoles.Coordinator, "Start an MSF campaign", "/msf/campaigns/new")]
     public void TheHeader_OffersTheRolesOneAction(string role, string label, string href)

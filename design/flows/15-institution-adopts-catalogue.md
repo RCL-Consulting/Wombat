@@ -483,7 +483,7 @@ Expect:
 Step 6.34 — Prof Mbatha cannot save Dr Dlamini's profile while she stays on 11.1 (act-6-catalogue.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/trainees → /admin/trainees/edit
-Do: Open Dr Dlamini's profile, which is on Paediatric EPA Curriculum (11.1). Move the expected completion date six
+Do: Open Dr Dlamini's profile from Current trainees (Edit), which is on Paediatric EPA Curriculum (11.1). Move the expected completion date six
   months later than it reads, leave the curriculum as it is, and save the profile. Then reopen the profile.
 Expect:
   - The curriculum picker offers 11.1 and 11.2, with 11.1 chosen.
@@ -501,7 +501,7 @@ Expect: Sixteen rows in Your EPAs, "Each semester · 10 EPAs" and "Once a year �
 Step 6.36 — Prof Mbatha moves Dr Ndlovu to 11.2 (act-6-catalogue.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/trainees → /admin/trainees/edit
-Do: Open Dr Ndlovu's profile. Choose Paediatric EPA Curriculum (11.2), keep his programme start (`J`, from Act 2) and
+Do: Open Dr Ndlovu's profile from Current trainees (Edit). Choose Paediatric EPA Curriculum (11.2), keep his programme start (`J`, from Act 2) and
   his expected completion as they read, and save the profile.
 Expect: The save reads "Trainee profile saved. N completion(s) was/were checked against 11.2, and M count(s) towards
   it." The profile reads 11.2. By SQL his PAED-002 tally is on 11.2 and none is left on 11.1. Reopened, the picker

@@ -136,5 +136,8 @@ public sealed class AcceptInvitationAuditScopeTests
             int? subSpecialityId,
             CancellationToken cancellationToken = default)
             => Task.FromResult(new ProvisionedInvitationUser("provisioned-1", targetRole));
+
+        public Task<T> InOneTransactionAsync<T>(Func<CancellationToken, Task<T>> work, CancellationToken cancellationToken = default)
+            => work(cancellationToken);
     }
 }

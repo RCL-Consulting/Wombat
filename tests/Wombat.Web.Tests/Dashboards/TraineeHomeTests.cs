@@ -387,7 +387,7 @@ public sealed class TraineeHomeTests : WombatTestContext
         card.QuerySelector(".dashboard-card-footer a")!.GetAttribute("href").Should().Be("/portfolio/authorisations");
     }
 
-    // ---- a pending trainee: unchanged ----
+    // ---- a pending trainee ----
 
     [Fact]
     public void APendingTrainee_SeesOnlyAwaitingAdmission()
@@ -396,6 +396,62 @@ public sealed class TraineeHomeTests : WombatTestContext
 
         Titles(cut).Should().Equal("Awaiting admission");
     }
+
+    // ---- the pending registrar's wait card (T373, flow 11, P01–P07) ----
+
+    [Fact]
+    public void P01_TheWaitCard_SaysWhereAndAsWhatSheWaits_WhoInvitedHer_AndWhatAdmissionDoes()
+    {
+        var cut = RenderHome(Waiting(new PendingAdmissionDto(
+            "molefe@kgk.wombat.local", "Kgosi Kgari Teaching Hospital", "Paediatrics", "Paediatrics / Paediatrics",
+            "Paediatric EPA Curriculum", "11.1", "Nolwazi Mbatha", new DateOnly(2026, 10, 19))));
+
+        var card = cut.Find("section[aria-labelledby='card-awaiting']");
+        card.ClassList.Should().Contain("wait-card").And.NotContain("detail-card--emphasis", "F8: no stripe");
+        card.QuerySelector("h2 svg use")!.GetAttribute("href").Should().Be("/icons/hourglass.svg#i");
+        Text(card.QuerySelector("p")!).Should().Be(
+            "You are registered, and waiting to be admitted to the Paediatrics programme at Kgosi Kgari Teaching Hospital. Until then, nothing can be filed by you or about you.");
+        card.QuerySelectorAll("dt").Select(Text).Should().Equal("Institution", "Programme", "Invited by", "Who admits you");
+        card.QuerySelectorAll("dd").Select(Text).Should().Equal(
+            "Kgosi Kgari Teaching Hospital",
+            "Paediatrics / Paediatrics, on the Paediatric EPA Curriculum (11.1)",
+            "Nolwazi Mbatha, Institutional admin, on 2026-10-19",
+            "An Institutional admin at Kgosi Kgari Teaching Hospital. If it is taking long, ask Nolwazi Mbatha.");
+        card.QuerySelectorAll("h3").Select(Text).Should().Equal("When you are admitted", "Meanwhile");
+        var steps = card.QuerySelectorAll("ol.account-steps li").ToList();
+        steps.Should().HaveCount(4);
+        steps[3].InnerHtml.Should().Be("An email tells you, at molefe@<wbr>kgk.wombat.local, that it has happened.");
+        card.QuerySelectorAll(".wait-links a").Select(link => (Text(link), link.GetAttribute("href"))).Should().Equal(
+            ("Review your account", "/account/profile"), ("Open My data rights", "/account/data-rights"));
+        card.QuerySelectorAll(".wait-links a svg use").Select(use => use.GetAttribute("href")).Should().AllBe("/icons/arrow-right.svg#i");
+    }
+
+    [Fact]
+    public void P04_AnAdministratorsIssue_NamesNobody_AndAsksNobody()
+    {
+        var cut = RenderHome(Waiting(new PendingAdmissionDto(
+            "x@kgk.wombat.local", "Kgosi Kgari Teaching Hospital", "Paediatrics", "Paediatrics / Paediatrics",
+            "Paediatric EPA Curriculum", "11.1", null, null)));
+
+        var card = cut.Find("section[aria-labelledby='card-awaiting']");
+        card.QuerySelectorAll("dt").Select(Text).Should().Equal("Institution", "Programme", "Who admits you");
+        Text(card.QuerySelectorAll("dd").Last()).Should().Be("An Institutional admin at Kgosi Kgari Teaching Hospital.");
+    }
+
+    [Fact]
+    public void P05_ARegistrarInvitedToNone_HasNoProgramme_AndTheLeadNamesNoDiscipline()
+    {
+        var cut = RenderHome(Waiting(new PendingAdmissionDto(
+            "x@kgk.wombat.local", "Kgosi Kgari Teaching Hospital", null, null, null, null, null, null)));
+
+        var card = cut.Find("section[aria-labelledby='card-awaiting']");
+        Text(card.QuerySelector("p")!).Should().Be(
+            "You are registered, and waiting to be admitted at Kgosi Kgari Teaching Hospital. Until then, nothing can be filed by you or about you.");
+        card.QuerySelectorAll("dt").Select(Text).Should().Equal("Institution", "Who admits you");
+    }
+
+    private static TraineeDashboardSummaryDto Waiting(PendingAdmissionDto pending)
+        => new(null, [], [], null, IsPendingTrainee: true) { Pending = pending };
 
     // ---- the cast ----
 

@@ -296,6 +296,71 @@ public sealed class UserAdministrationTests
         await act.Should().ThrowAsync<UnauthorizedAccessException>();
     }
 
+    /// <summary>
+    /// T373 fix pass, B3 (S4): an invitation stored as typed, in another case and with spaces round it, is the account's
+    /// address to the user page and to its revoke. Until the fix both compared the stored text byte for byte.
+    /// </summary>
+    [Fact]
+    public async Task TheUserPage_AndItsRevoke_FindAnInvitationToTheAccountsAddressInAnotherCase()
+    {
+        await using var db = NewDb();
+        SeedInstitutions(db);
+        var issued = new DateTime(2026, 10, 19, 6, 0, 0, DateTimeKind.Utc);
+        db.Set<Invitation>().Add(new Invitation
+        {
+            Email = "Molefe@KGK.wombat.local", TokenHash = "h1", TargetRole = WombatRoles.Assessor, InstitutionId = InstitutionA,
+            IssuedByUserId = "admin", IssuedOn = issued, ExpiresOn = new DateOnly(2026, 11, 2)
+        });
+        await db.SaveChangesAsync();
+
+        var users = new RecordingUserAdministrationService();
+        users.Add(new UserIdentityDetails("u-m", "molefe@kgk.wombat.local", "Lerato", "Molefe", InstitutionA, [], [], [WombatRoles.Coordinator]));
+
+        var page = await new GetUserByIdQueryHandler(users, db, new FixedClock(issued)).Handle(
+            new GetUserByIdQuery("u-m", TestPrincipals.InstitutionalAdmin(InstitutionA)), CancellationToken.None);
+        page!.PendingInvitations.Should().ContainSingle("the address is one, whatever its case");
+
+        var revoked = await new RevokePendingInvitationsForEmailCommandHandler(db).Handle(
+            new RevokePendingInvitationsForEmailCommand(" molefe@kgk.wombat.local ", TestPrincipals.InstitutionalAdmin(InstitutionA)),
+            CancellationToken.None);
+        revoked.Should().Be(1);
+    }
+
+    /// <summary>
+    /// T373 fix pass, B3 (F7): a link works through its last day on the South African calendar. At 22:30 UTC on its last
+    /// day it is already the next day in South Africa, and the user page no longer lists it, as Register, the list and the
+    /// resend do not; at 21:30 UTC it still does.
+    /// </summary>
+    [Theory]
+    [InlineData(21, true)]
+    [InlineData(22, false)]
+    public async Task TheUserPage_ListsAPendingInvitation_ThroughItsLastSouthAfricanDay(int utcHour, bool listed)
+    {
+        await using var db = NewDb();
+        SeedInstitutions(db);
+        var lastDay = new DateOnly(2026, 11, 2);
+        db.Set<Invitation>().Add(new Invitation
+        {
+            Email = "x@kgk", TokenHash = "h1", TargetRole = WombatRoles.Assessor, InstitutionId = InstitutionA,
+            IssuedByUserId = "admin", IssuedOn = new DateTime(2026, 10, 19, 6, 0, 0, DateTimeKind.Utc), ExpiresOn = lastDay
+        });
+        await db.SaveChangesAsync();
+
+        var users = new RecordingUserAdministrationService();
+        users.Add(new UserIdentityDetails("u-x", "x@kgk", "X", "User", InstitutionA, [], [], [WombatRoles.Coordinator]));
+        var now = new DateTime(2026, 11, 2, utcHour, 30, 0, DateTimeKind.Utc);
+
+        var page = await new GetUserByIdQueryHandler(users, db, new FixedClock(now)).Handle(
+            new GetUserByIdQuery("u-x", TestPrincipals.InstitutionalAdmin(InstitutionA)), CancellationToken.None);
+
+        page!.PendingInvitations.Should().HaveCount(listed ? 1 : 0);
+    }
+
+    private sealed class FixedClock(DateTime utcNow) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => new(utcNow, TimeSpan.Zero);
+    }
+
     [Fact]
     public void AssignableRoles_ExcludesAdministratorPendingTraineeAndTrainee()
     {

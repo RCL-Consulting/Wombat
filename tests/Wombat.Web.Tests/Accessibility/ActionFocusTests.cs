@@ -32,6 +32,8 @@ using Wombat.Application.Features.Epas;
 using Wombat.Application.Features.Epas.Commands.UpdateEntrustmentScale;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Application.Features.Institutions;
+using Wombat.Application.Features.Institutions.Queries.GetSpecialitiesList;
+using Wombat.Application.Features.Institutions.Queries.GetSubSpecialitiesList;
 using Wombat.Application.Features.Institutions.Commands.DeactivateInstitution;
 using Wombat.Application.Features.Institutions.Commands.DeactivateSpeciality;
 using Wombat.Application.Features.Institutions.Commands.DeactivateSubSpeciality;
@@ -647,14 +649,20 @@ public sealed class ActionFocusTests : TestContext
                 Named(cut, "Adopt", "Adopting...").Click();
             }),
 
-        ["InvitationsList Issue invitation"] = new(
+        // T373 (flow 11, Q1): the issue is Invite a person's. A refusal sits under its field, which takes the focus
+        // (InviteAPersonTests), so it is not this table's "stays where it was".
+        ["InviteAPerson Issue invitation"] = new(
             (test, hold) =>
             {
                 test.Services.AddSingleton(Options.Create(new WombatOptions { BaseUrl = "https://wombat.test" }));
-                return test.Page<InvitationsList>(
+                return test.Page<InviteAPerson>(
                     new Sender(hold, request => request is IssueInvitationCommand, request => request switch
                     {
-                        IssueInvitationCommand => new IssuedInvitationResult(1, "token-1"),
+                        GetInstitutionsListQuery => new[] { new InstitutionDto(4, "Groote Schuur Hospital", "GSH", null, true, Created) },
+                        GetCollegesListQuery => Array.Empty<CollegeDto>(),
+                        GetSpecialitiesListQuery => Array.Empty<SpecialityDto>(),
+                        GetSubSpecialitiesListQuery => Array.Empty<SubSpecialityDto>(),
+                        IssueInvitationCommand => new IssuedInvitationResult(1, "token-1") { ExpiresOn = new DateOnly(2026, 1, 15) },
                         _ => null
                     }));
             },
@@ -662,8 +670,19 @@ public sealed class ActionFocusTests : TestContext
             cut =>
             {
                 cut.Find("#invitation-email").Change("registrar@hospital.test");
+                if (cut.Find("#role-coordinator") is { } coordinator && !coordinator.HasAttribute("checked"))
+                {
+                    coordinator.Change(true);
+                }
+
+                if (cut.FindAll("#invitation-institution").Count == 1)
+                {
+                    cut.Find("#invitation-institution").Change("4");
+                }
+
                 Submit(cut);
-            }),
+            },
+            CanBeRefused: false),
 
         ["GroupMappings Add mapping"] = new(
             (test, hold) =>
@@ -867,11 +886,14 @@ public sealed class ActionFocusTests : TestContext
                                 null, null, 5, "Paediatrics", 9, "Neonatology", Created, new DateOnly(2026, 12, 31),
                                 InvitationDelivery.Sent, 0, false)
                         },
+                        ListExpiredUnusedInvitationsQuery => Array.Empty<ExpiredInvitationDto>(),
                         _ => null
                     }));
             },
-            cut => Named(cut, "Revoke"),
-            cut => Named(cut, "Revoke").Click()),
+            // T264 (T373): Revoke… confirms; the dialog's Revoke invitation is the action.
+            cut => InDialog(cut, "Revoke invitation"),
+            cut => Confirm(cut, "Revoke…", "Revoke invitation"),
+            CanBeRefused: false),
 
         // T283: a resend's result (the new link) takes the focus; a refusal that leaves the row its Resend keeps it there.
         ["InvitationsList Resend"] = new(
@@ -887,12 +909,14 @@ public sealed class ActionFocusTests : TestContext
                                 null, null, 5, "Paediatrics", 9, "Neonatology", Created, new DateOnly(2026, 12, 31),
                                 InvitationDelivery.NotDelivered, 1, false)
                         },
+                        ListExpiredUnusedInvitationsQuery => Array.Empty<ExpiredInvitationDto>(),
                         ResendInvitationCommand => new IssuedInvitationResult(11, "token-2"),
                         _ => null
                     }));
             },
             cut => Named(cut, "Resend"),
-            cut => Named(cut, "Resend").Click()),
+            cut => Named(cut, "Resend").Click(),
+            CanBeRefused: false),
 
         ["GroupMappings Delete"] = new(
             (test, hold) =>

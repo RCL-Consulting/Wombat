@@ -133,7 +133,6 @@ public sealed class DashboardLinkAuthorizationTests
     // The judge is not vacuous: each link T261 took off a dashboard answers no page, and none is offered now.
     [Theory]
     [InlineData(WombatRoles.PendingTrainee, "/account/manage")]
-    [InlineData(WombatRoles.Coordinator, "/admin/invitations/new")]
     public void ALinkTakenOffADashboard_AnswersNoPage(string role, string href)
     {
         PageFor(href).Should().BeNull($"no page answers {href}");
@@ -144,6 +143,8 @@ public sealed class DashboardLinkAuthorizationTests
     // it admits only an Administrator or an InstitutionalAdmin (T178).
     [Theory]
     [InlineData(WombatRoles.Coordinator, "/admin/invitations")]
+    // T373 (flow 11, Q1): Invite a person is a page now, and it admits the Coordinator no more than the list does.
+    [InlineData(WombatRoles.Coordinator, "/admin/invitations/new")]
     [InlineData(WombatRoles.InstitutionalAdmin, "/admin/institutions")]
     [InlineData(WombatRoles.InstitutionalAdmin, "/admin/specialities")]
     [InlineData(WombatRoles.CollegeAdmin, "/portfolio/progress")]
@@ -165,11 +166,12 @@ public sealed class DashboardLinkAuthorizationTests
         home.Hrefs.Should().Equal("/admin/specialities", "/admin/epas", "/admin/curricula");
     }
 
-    // A pending trainee is sent to the account page, and to nothing a Trainee alone may open.
+    // A pending trainee is sent to the account page and, since T373 (flow 11, P01's Meanwhile), to My data rights, which
+    // her menu offers too; to nothing a Trainee alone may open.
     [Fact]
     public void APendingTrainee_IsSentToTheAccountPage()
     {
-        RenderHomeFor(WombatRoles.PendingTrainee).Hrefs.Should().Equal("/account/profile");
+        RenderHomeFor(WombatRoles.PendingTrainee).Hrefs.Should().Equal("/account/profile", "/account/data-rights");
     }
 
     // The T261 review: a user who holds no role (an administrator removed the last one, which RemoveRoleFromUser allows)

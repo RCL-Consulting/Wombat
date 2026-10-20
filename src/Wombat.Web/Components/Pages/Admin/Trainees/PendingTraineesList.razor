@@ -2,129 +2,267 @@
 @attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject ILogger<PendingTraineesList> Logger
 
 <PageTitle>Trainees · Wombat</PageTitle>
 
-<PageHeader Title="Trainees" Subtitle="@Subtitle" />
+@*
+  Trainees (T373, flow 11, T01–T10): Waiting to be admitted, then Current trainees, then flow 13's Completed and closed,
+  each an h2 section in the onboarding column (.inv-page). Waiting's rows open Admit ‹name› (/admin/trainees/admit), and an
+  admission lands back here with ?admitted=‹profileId›, which the page reads again in the caller's scope to say what was
+  done, focused, directly above the Waiting table (S8). Both tables stack from 900px down (StackWide). Until T373 the page
+  printed a failed read's exception (T329), its two tables sat in cards headed by h3s whose captions repeated them (T280),
+  and an admission landed on the profile page saying nothing (A5).
+*@
+<PageHeader Title="Trainees" Subtitle="@AdmissionText.TraineesSubtitle" />
 
 @* Someone who holds Trainee beside a role that administers trainees admits, changes and ends no programme, their own
-   included (T290): nothing is read for them, and the note says why, in the words the handlers refuse with. *@
+   included (T290): nothing is read for them, and the note says why, in the words the handlers refuse with (M1, T07). *@
 @if (_traineeNote is not null)
 {
-  <Alert Kind="info" Id="trainees-trainee-note">@_traineeNote</Alert>
+  <div class="inv-page">
+    <Alert Kind="info" Id="trainees-trainee-note">@_traineeNote</Alert>
+  </div>
 }
 else
 {
-
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
-{
-  <Alert Kind="danger">@_errorMessage</Alert>
-}
-
-<StatePanel IsLoading="_loading" IsEmpty="false" EmptyTitle="" EmptyBody="">
-  <div class="details-grid">
-    <section class="detail-card">
-      <h3>Pending admission</h3>
-      @if (_pendingTrainees.Count == 0)
-      {
-        <div class="detail-card detail-card--empty-compact">No pending trainees found.</div>
-      }
-      else
-      {
-        var pendingNames = RowNames.Distinct(
-          _pendingTrainees, row => row.UserId, row => $"{row.FirstName} {row.LastName}", row => $" ({row.Email})");
-        <DataTable TItem="PendingTraineeDto" Items="_pendingTrainees" Caption="Pending trainees">
-          <HeaderRow>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Institution</th>
-              <th><span class="visually-hidden">Actions</span></th>
-            </tr>
-          </HeaderRow>
-          <Row Context="trainee">
-            <tr>
-              <td>@($"{trainee.FirstName} {trainee.LastName}")</td>
-              <td>@trainee.Email</td>
-              <td>@GetInstitutionName(trainee.InstitutionId)</td>
-              @* T239: each row's action is named by the trainee, and their email where two share a name. *@
-              <td><a class="btn btn-primary btn-sm" href="@($"/admin/trainees/edit?userId={Uri.EscapeDataString(trainee.UserId)}")" aria-label="@($"Admit to curriculum: {pendingNames[trainee.UserId]}")">Admit to curriculum</a></td>
-            </tr>
-          </Row>
-        </DataTable>
-      }
-    </section>
-
-    <section class="detail-card">
-      <h3>Active profiles</h3>
-      @if (_activeTrainees.Count == 0)
-      {
-        <div class="detail-card detail-card--empty-compact">No active trainee profiles found.</div>
-      }
-      else
-      {
-        var activeNames = ProfileNames(_activeTrainees);
-        <DataTable TItem="TraineeProfileDto" Items="_activeTrainees" Caption="Active trainee profiles">
-          <HeaderRow>
-            <tr>
-              <th>Name</th>
-              <th>Curriculum</th>
-              <th>Sub-speciality</th>
-              <th>Expected completion</th>
-              <th><span class="visually-hidden">Actions</span></th>
-            </tr>
-          </HeaderRow>
-          <Row Context="trainee">
-            <tr>
-              <td>@($"{trainee.FirstName} {trainee.LastName}")</td>
-              <td>@($"{trainee.CurriculumName} ({trainee.CurriculumVersion})")</td>
-              <td>@trainee.SubSpecialityName</td>
-              <td>@trainee.ExpectedCompletionDate.ToString("yyyy-MM-dd")</td>
-              <td><a class="btn btn-outline btn-sm" href="@($"/admin/trainees/edit?id={trainee.Id}")" aria-label="@($"Edit {activeNames[trainee.Id]}")">Edit</a></td>
-            </tr>
-          </Row>
-        </DataTable>
-      }
-    </section>
-
-    @if (_closedTrainees.Count > 0)
-    {
-      <section class="detail-card">
-        <h3>Completed &amp; closed profiles</h3>
-        @{ var closedNames = ProfileNames(_closedTrainees); }
-        <DataTable TItem="TraineeProfileDto" Items="_closedTrainees" Caption="Completed and closed trainee profiles">
-          <HeaderRow>
-            <tr>
-              <th>Name</th>
-              <th>Curriculum</th>
-              <th>Sub-speciality</th>
-              <th>Outcome</th>
-              <th><span class="visually-hidden">Actions</span></th>
-            </tr>
-          </HeaderRow>
-          <Row Context="trainee">
-            <tr>
-              <td>@($"{trainee.FirstName} {trainee.LastName}")</td>
-              <td>@($"{trainee.CurriculumName} ({trainee.CurriculumVersion})")</td>
-              <td>@trainee.SubSpecialityName</td>
-              <td>@(trainee.CompletedOn.HasValue ? $"Completed {trainee.CompletedOn.Value:yyyy-MM-dd}" : trainee.DeactivatedOn.HasValue ? $"Withdrawn {trainee.DeactivatedOn.Value:yyyy-MM-dd}" : "Withdrawn")</td>
-              <td><a class="btn btn-outline btn-sm" href="@($"/admin/trainees/edit?id={trainee.Id}")" aria-label="@($"Edit {closedNames[trainee.Id]}")">Edit</a></td>
-            </tr>
-          </Row>
-        </DataTable>
-      </section>
-    }
+  <div class="inv-page" aria-busy="@(_loading ? "true" : null)">
+    <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusWaitingAsync">
+      <LoadingContent>
+        <p class="loading-line" role="status">@AdmissionText.TraineesLoading</p>
+        <div class="detail-card">
+          <div class="skeleton skel-title"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line skel-short"></div>
+        </div>
+      </LoadingContent>
+      <ChildContent>
+        @Waiting()
+        @Current()
+        @Closed()
+      </ChildContent>
+    </StatePanel>
   </div>
-</StatePanel>
-
 }
 
 @code {
-  private string? _traineeNote;
+  /// <summary>Set by Admit after an admission (S8): the profile it made, read again here in the caller's scope.</summary>
+  [SupplyParameterFromQuery(Name = "admitted")]
+  public int? Admitted { get; set; }
 
-  private string? Subtitle => _traineeNote is not null
-    ? null
-    : "Admit pending trainees into a curriculum and maintain active trainee profiles.";
+  /// <summary>Set by Admit's Cancel (T10): the registrar whose Admit… takes the focus once the list is drawn.</summary>
+  [SupplyParameterFromQuery(Name = "back")]
+  public string? Back { get; set; }
+
+  private string? _traineeNote;
+  private bool _isAdministrator;
+  private bool _loading = true;
+  private string? _loadError;
+  private AdmissionResultDto? _result;
+  private bool _focusBack;
+
+  // What the page last read the address for (T373 fix pass, P4): the router keeps this page when the address loses its
+  // ?admitted= or ?back= (the menu's Trainees, the trail, Back), and the page reads again for the new one, so a result
+  // never outlives its address.
+  private bool _initialised;
+  private int? _readAdmitted;
+  private string? _readBack;
+  private ElementReference _waitingHeading;
+
+  private IReadOnlyList<PendingTraineeDto> _pendingTrainees = [];
+  private IReadOnlyList<TraineeProfileDto> _trainees = [];
+
+  private IReadOnlyList<TraineeProfileDto> _activeTrainees => _trainees.Where(trainee => trainee.IsActive).ToList();
+  private IReadOnlyList<TraineeProfileDto> _closedTrainees => _trainees.Where(trainee => !trainee.IsActive).ToList();
+
+  private RenderFragment Waiting() => __builder =>
+  {
+    <section class="list-section" aria-labelledby="trainees-waiting-heading">
+      <h2 id="trainees-waiting-heading" class="list-section-title" tabindex="-1" @ref="_waitingHeading">
+        @AdmissionText.WaitingHeading
+        @if (_pendingTrainees.Count > 0)
+        {
+          @(" ")<span class="inv-count">@AdmissionText.Waiting(_pendingTrainees.Count)</span>
+        }
+      </h2>
+      @if (_result is not null)
+      {
+        @* S8: what Admit did, read again in scope, directly above the Waiting table, focused as the page loads. *@
+        <ActionResult Id="trainees-admitted" FocusOnLoad="true">
+          <Alert Kind="success" Role="status"><strong>@AdmissionText.Admitted(_result)</strong></Alert>
+        </ActionResult>
+      }
+      @if (_pendingTrainees.Count == 0)
+      {
+        <div class="detail-card detail-card--empty">
+          <div class="state-panel-title">@AdmissionText.NobodyWaiting</div>
+          <div class="state-panel-copy">@AdmissionText.NobodyWaitingBody</div>
+        </div>
+      }
+      else
+      {
+        var names = RowNames.Distinct(_pendingTrainees, row => row.UserId, row => row.FullName, row => $" ({row.Email})");
+        <DataTable TItem="PendingTraineeDto" Items="_pendingTrainees" StackWide="true"
+                   Caption="@(_isAdministrator ? AdmissionText.WaitingCaptionAdministrator : AdmissionText.WaitingCaption)">
+          <HeaderRow>
+            <tr role="row">
+              <th scope="col" role="columnheader">Name</th>
+              <th scope="col" role="columnheader" class="col-wrap">Email</th>
+              @if (_isAdministrator)
+              {
+                @* Check rule 6: the Administrator's Waiting keeps an Institution column (round 2's nit). *@
+                <th scope="col" role="columnheader">Institution</th>
+              }
+              <th scope="col" role="columnheader">Invited as</th>
+              <th scope="col" role="columnheader">Registered</th>
+              <th scope="col" role="columnheader" class="col-actions col-actions--single"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </HeaderRow>
+          <Row Context="trainee">
+            <tr role="row">
+              <th scope="row" role="rowheader">@trainee.FullName</th>
+              <td role="cell" data-label="Email" class="col-wrap">@Address(trainee.Email)</td>
+              @if (_isAdministrator)
+              {
+                <td role="cell" data-label="Institution">@(trainee.InstitutionName ?? Dash)</td>
+              }
+              <td role="cell" data-label="Invited as">@(trainee.InvitedAs ?? Dash)</td>
+              <td role="cell" data-label="Registered">@(trainee.RegisteredOn is { } registered ? AdmissionText.Iso(registered) : Dash)</td>
+              <td role="cell" class="col-actions col-actions--single">
+                @* T239: named by the registrar, and their email where two share a name; the ellipsis (a page follows) is
+                   the eye's mark, so the name a speech-input user says is "Admit ‹name›" (WCAG 2.5.3, RowActionMarkupTests). *@
+                <a id="@AdmitId(trainee.UserId)" class="btn btn-outline btn-sm" href="@OnboardingLinks.Admit(trainee.UserId)"
+                   aria-label="@($"Admit {names[trainee.UserId]}")">Admit…</a>
+              </td>
+            </tr>
+          </Row>
+        </DataTable>
+      }
+    </section>
+  };
+
+  private RenderFragment Current() => __builder =>
+  {
+    var active = _activeTrainees;
+    <section class="list-section" aria-labelledby="trainees-current-heading">
+      <h2 id="trainees-current-heading" class="list-section-title">
+        @AdmissionText.CurrentHeading
+        @if (active.Count > 0)
+        {
+          @(" ")<span class="inv-count">@AdmissionText.Current(active.Count)</span>
+        }
+      </h2>
+      @if (active.Count == 0)
+      {
+        <div class="detail-card detail-card--empty">
+          <div class="state-panel-title">@AdmissionText.NoCurrent</div>
+          <div class="state-panel-copy">@AdmissionText.NoCurrentBody</div>
+        </div>
+      }
+      else
+      {
+        var names = ProfileNames(active);
+        <DataTable TItem="TraineeProfileDto" Items="active" StackWide="true" Caption="@AdmissionText.CurrentCaption">
+          <HeaderRow>
+            <tr role="row">
+              <th scope="col" role="columnheader">@(_isAdministrator ? "Name and institution" : "Name")</th>
+              <th scope="col" role="columnheader" class="col-wrap col-wrap--curriculum">Curriculum and sub-speciality</th>
+              <th scope="col" role="columnheader">Programme start</th>
+              <th scope="col" role="columnheader">Expected completion</th>
+              <th scope="col" role="columnheader" class="col-actions col-actions--single"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </HeaderRow>
+          <Row Context="trainee">
+            <tr role="row">
+              @if (_isAdministrator)
+              {
+                @* Check rule 6: the Administrator's Current trainees has the institution under each name, as T06 draws. *@
+                <th scope="row" role="rowheader"><span class="person-cell">@($"{trainee.FirstName} {trainee.LastName}")@(" ")<span>@trainee.InstitutionName</span></span></th>
+              }
+              else
+              {
+                <th scope="row" role="rowheader">@($"{trainee.FirstName} {trainee.LastName}")</th>
+              }
+              <td role="cell" data-label="Curriculum and sub-speciality" class="col-wrap">
+                <span class="person-cell">@($"{trainee.CurriculumName} ({trainee.CurriculumVersion})")@(" ")<span>@trainee.SubSpecialityName</span></span>
+              </td>
+              <td role="cell" data-label="Programme start" class="inv-when">
+                @AdmissionText.Iso(trainee.ProgrammeStartDate)
+                @if (trainee.TrainingYear is { } year)
+                {
+                  @(" ")<span>@AdmissionText.TrainingYear(year)</span>
+                }
+              </td>
+              <td role="cell" data-label="Expected completion">@AdmissionText.Iso(trainee.ExpectedCompletionDate)</td>
+              <td role="cell" class="col-actions col-actions--single">
+                <a class="btn btn-outline btn-sm" href="@($"/admin/trainees/edit?id={trainee.Id}")"
+                   aria-label="@($"Edit {names[trainee.Id]}'s profile")">Edit</a>
+              </td>
+            </tr>
+          </Row>
+        </DataTable>
+      }
+    </section>
+  };
+
+  @* Flow 13's list as built (T04's chip): only its heading becomes an h2 (T280). *@
+  private RenderFragment Closed() => __builder =>
+  {
+    if (_closedTrainees.Count == 0)
+    {
+      return;
+    }
+
+    var closedNames = ProfileNames(_closedTrainees);
+    <section class="list-section" aria-labelledby="trainees-closed-heading">
+      <h2 id="trainees-closed-heading" class="list-section-title">@AdmissionText.ClosedHeading</h2>
+      <DataTable TItem="TraineeProfileDto" Items="_closedTrainees" Caption="Completed and closed trainee profiles">
+        <HeaderRow>
+          <tr>
+            <th>Name</th>
+            <th>Curriculum</th>
+            <th>Sub-speciality</th>
+            <th>Outcome</th>
+            <th><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </HeaderRow>
+        <Row Context="trainee">
+          <tr>
+            <td>@($"{trainee.FirstName} {trainee.LastName}")</td>
+            <td>@($"{trainee.CurriculumName} ({trainee.CurriculumVersion})")</td>
+            <td>@trainee.SubSpecialityName</td>
+            <td>@(trainee.CompletedOn.HasValue ? $"Completed {AdmissionText.Iso(trainee.CompletedOn.Value)}" : trainee.DeactivatedOn.HasValue ? $"Withdrawn {AdmissionText.Iso(trainee.DeactivatedOn.Value)}" : "Withdrawn")</td>
+            <td><a class="btn btn-outline btn-sm" href="@($"/admin/trainees/edit?id={trainee.Id}")" aria-label="@($"Edit {closedNames[trainee.Id]}")">Edit</a></td>
+          </tr>
+        </Row>
+      </DataTable>
+    </section>
+  };
+
+  private const string Dash = "—";
+
+  /// <summary>M7: an address breaks after its @, written in markup, never in the stored string.</summary>
+  private static RenderFragment Address(string email) => __builder =>
+  {
+    var at = email.IndexOf('@');
+    if (at > 0)
+    {
+      @(email[..(at + 1)])<wbr />@(email[(at + 1)..])
+    }
+    else
+    {
+      @email
+    }
+  };
+
+  /// <summary>The id of a registrar's Admit…, which Cancel on Admit brings the focus back to (T10).</summary>
+  private string AdmitId(string userId)
+  {
+    var index = _pendingTrainees.ToList().FindIndex(row => string.Equals(row.UserId, userId, StringComparison.Ordinal));
+    return $"trainees-admit-{index}";
+  }
 
   // T239: a profile's Edit is named by its trainee, then by their email where two trainees share a name, then by the
   // curriculum where one trainee has two profiles on the list.
@@ -136,33 +274,53 @@ else
       profile => $" ({profile.Email})",
       profile => $", {profile.CurriculumName} ({profile.CurriculumVersion})");
 
-  private IReadOnlyList<PendingTraineeDto> _pendingTrainees = [];
-  private IReadOnlyList<TraineeProfileDto> _trainees = [];
-  private IReadOnlyList<InstitutionDto> _institutions = [];
-
-  private IReadOnlyList<TraineeProfileDto> _activeTrainees => _trainees.Where(trainee => trainee.IsActive).ToList();
-  private IReadOnlyList<TraineeProfileDto> _closedTrainees => _trainees.Where(trainee => !trainee.IsActive).ToList();
-  private bool _loading = true;
-  private string? _errorMessage;
-
   protected override async Task OnInitializedAsync()
   {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    _traineeNote = TraineeAdministrationRules.TraineeNoteOnTraineePages(authState.User);
+    if (_traineeNote is not null)
+    {
+      _loading = false;
+      return;
+    }
+
+    _isAdministrator = authState.User.IsAdministrator();
+    await LoadAsync(authState.User);
+    _initialised = true;
+  }
+
+  protected override async Task OnParametersSetAsync()
+  {
+    if (!_initialised || (Admitted == _readAdmitted && string.Equals(Back, _readBack, StringComparison.Ordinal)))
+    {
+      return;
+    }
+
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    await LoadAsync(authState.User);
+  }
+
+  private async Task LoadAsync(System.Security.Claims.ClaimsPrincipal user)
+  {
+    _loading = true;
+    _loadError = null;
+    _readAdmitted = Admitted;
+    _readBack = Back;
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _traineeNote = TraineeAdministrationRules.TraineeNoteOnTraineePages(authState.User);
-      if (_traineeNote is not null)
-      {
-        return;
-      }
+      _pendingTrainees = await Sender.Send(new ListPendingTraineesQuery(user));
+      _trainees = await Sender.Send(new ListTraineesForSpecialityQuery(user));
 
-      _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
-      _pendingTrainees = await Sender.Send(new ListPendingTraineesQuery(authState.User));
-      _trainees = await Sender.Send(new ListTraineesForSpecialityQuery(authState.User));
+      // S8: an id not the caller's, or unknown, says nothing.
+      _result = Admitted is { } profileId ? await Sender.Send(new GetAdmissionResultQuery(profileId, user)) : null;
+      _focusBack = _result is null && !string.IsNullOrWhiteSpace(Back)
+        && _pendingTrainees.Any(row => string.Equals(row.UserId, Back, StringComparison.Ordinal));
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = exception.Message;
+      // T329: a fixed sentence on the page, the failure to the log; never the exception's text.
+      Logger.LogError(exception, "Trainees could not be loaded.");
+      _loadError = AdmissionText.TraineesLoadFailed;
     }
     finally
     {
@@ -170,6 +328,21 @@ else
     }
   }
 
-  private string GetInstitutionName(int? institutionId)
-    => _institutions.FirstOrDefault(entity => entity.Id == institutionId)?.Name ?? "Unscoped";
+  private async Task RetryAsync()
+  {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    await LoadAsync(authState.User);
+  }
+
+  private ValueTask FocusWaitingAsync() => _waitingHeading.FocusAsync();
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusBack && !_loading && Back is { } back)
+    {
+      // T10: Cancel on Admit comes back to the registrar's own Admit….
+      _focusBack = false;
+      await PageFocus.FocusByIdAsync(JS, AdmitId(back));
+    }
+  }
 }

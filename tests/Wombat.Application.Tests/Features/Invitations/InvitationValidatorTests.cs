@@ -11,6 +11,7 @@ using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.Invitations;
 
@@ -244,6 +245,7 @@ public sealed class InvitationValidatorTests
             db,
             _tokenService,
             Mock.Of<IEmailSender>(),
+            FakeUserDirectory.Empty,
             Options.Create(new WombatOptions { BaseUrl = "https://wombat.example.test" }));
 
     private static ApplicationDbContext CreateDbWithInstitution(int institutionId)

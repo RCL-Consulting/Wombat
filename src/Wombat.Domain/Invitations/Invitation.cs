@@ -1,4 +1,5 @@
 using System.Globalization;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.MultiSourceFeedback;
 
 namespace Wombat.Domain.Invitations;
@@ -31,6 +32,14 @@ public sealed class Invitation
     public int? SpecialityId { get; set; }
     public int? SubSpecialityId { get; set; }
     public string IssuedByUserId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The role the issue was authorised as (T373, flow 11, F3): <c>Administrator</c> when the issuer held it, otherwise
+    /// <c>InstitutionalAdmin</c>. Stored, not read from the issuer's roles later, which may since have changed. The
+    /// pending registrar's Home names who invited her only when this is <c>InstitutionalAdmin</c>. Null on an invitation
+    /// issued before T373.
+    /// </summary>
+    public string? IssuedAsRole { get; set; }
 
     /// <summary>
     /// When the current link was issued: when the invitation was issued, then when a resend replaced its link (T283). The
@@ -91,8 +100,29 @@ public sealed class Invitation
     /// </summary>
     public static TimeSpan DeliveryReportDeadline => MsfInvitation.DeliveryReportDeadline;
 
-    /// <summary>The last day a link issued at <paramref name="utcNow" /> works.</summary>
-    public static DateOnly LinkExpiresOn(DateTime utcNow) => DateOnly.FromDateTime(utcNow.Date.AddDays(LinkLifetimeDays));
+    /// <summary>
+    /// The last day a link issued at <paramref name="utcNow" /> works: <see cref="LinkLifetimeDays" /> days after the South
+    /// African day it was issued on (T373, flow 11, F7). Until T373 it was the UTC date's, so the boundary fell at 02:00 SAST
+    /// and a link issued at 01:00 SAST had 13 of its reader's days.
+    /// </summary>
+    public static DateOnly LinkExpiresOn(DateTime utcNow) => ProgrammeCalendar.DateOf(utcNow).AddDays(LinkLifetimeDays);
+
+    /// <summary>
+    /// Whether a link whose last day is <paramref name="expiresOn" /> no longer works at <paramref name="utcNow" />: the
+    /// South African day has passed it (T373, flow 11, F7). A link works through its last day, until midnight SAST.
+    /// </summary>
+    public static bool HasPassedLastDay(DateOnly expiresOn, DateTime utcNow) => expiresOn < ProgrammeCalendar.DateOf(utcNow);
+
+    /// <summary>
+    /// An address as invitations compare it: trimmed and lower-cased (T373, flow 11, S4). An invitation stores the address
+    /// as it was typed, and a page shows that spelling; every check that asks whether two invitations, or an invitation and
+    /// an account, name one address compares this.
+    /// </summary>
+    public static string NormaliseAddress(string email)
+    {
+        ArgumentNullException.ThrowIfNull(email);
+        return email.Trim().ToLowerInvariant();
+    }
 
     /// <summary>What became of the current link's mail, as of <paramref name="utcNow" />. (T283)</summary>
     public InvitationDelivery DeliveryAt(DateTime utcNow) => DeliveryOf(SentOn, DeliveryFailedOn, IssuedOn, utcNow);

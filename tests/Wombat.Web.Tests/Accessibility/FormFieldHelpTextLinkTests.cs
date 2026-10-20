@@ -107,7 +107,9 @@ public sealed partial class FormFieldHelpTextLinkTests : TestContext
 
         // T366: flow 09's pages dropped three (My committee reviews' detail, My authorisations' interim cards, the
         // register's old revoke section), leaving the scan 149; the floor guards the scan, not the count.
-        fields.Should().HaveCountGreaterThanOrEqualTo(130, "guard: the scan finds every FormField (134 since T369), or it proves nothing");
+        // 125 since T373: the invitations page's six FormFields went with its issue form; Invite a person writes its fields'
+        // required marks itself (M11).
+        fields.Should().HaveCountGreaterThanOrEqualTo(120, "guard: the scan finds every FormField (125 since T373), or it proves nothing");
 
         var unnamed = fields
             .SelectMany(field => UnnamedSlotText(field.Markup, field.InputId)

@@ -26,6 +26,7 @@ using Wombat.Infrastructure.Email;
 using Wombat.Infrastructure.Invitations;
 using Wombat.Infrastructure.Persistence;
 using Wombat.Integration.Tests.TestSupport;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Integration.Tests.Identity;
 
@@ -155,6 +156,50 @@ public sealed class AccountInvitationDeliveryPostgresTests : IAsyncLifetime
     }
 
     /// <summary>
+    /// T373 (flow 11, S10, S12, F2, F3): the link the OneTimeLink shows and the link the mail carries are one, both built by
+    /// <see cref="InvitationLinks.RegistrationUrl" />; the mail says the role's label and "works until". After a resend the
+    /// list reads the new link's issue time and last day, being sent again, and the invitation keeps the role it was issued
+    /// as.
+    /// </summary>
+    [Fact]
+    public async Task TheMailsLink_IsThePagesLink_AndAfterAResendTheListReadsTheNewLink()
+    {
+        try
+        {
+            var schema = await MigratedSchemaAsync();
+
+            var sender = new CapturingSender();
+            var issued = await IssueAsync(schema, sender);
+
+            var mail = sender.Sent.Should().ContainSingle().Which;
+            var pagesLink = InvitationLinks.RegistrationUrl(Options().Value, issued.Token);
+            mail.TextBody.Should().Contain(pagesLink);
+            mail.TextBody.Should().Contain("You are invited to Wombat as Institutional admin at Groote Schuur Hospital.");
+            mail.TextBody.Should().Contain($"it works until {issued.ExpiresOn:yyyy-MM-dd}.");
+            mail.TextBody.Should().NotContain(WombatRoles.InstitutionalAdmin);
+
+            await AgeTheLinkAsync(schema);
+            (await ListAsync(schema)).Single().Delivery.Should().Be(InvitationDelivery.NotDelivered);
+
+            var resender = new CapturingSender();
+            var resent = await ResendAsync(schema, issued.InvitationId, resender);
+
+            resender.Sent.Single().TextBody.Should().Contain(InvitationLinks.RegistrationUrl(Options().Value, resent.Token));
+            var listed = (await ListAsync(schema)).Should().ContainSingle().Which;
+            listed.Delivery.Should().Be(InvitationDelivery.BeingSent);
+            listed.IssuedOn.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(1));
+            listed.ExpiresOn.Should().Be(resent.ExpiresOn);
+
+            await using var db = NewContext(schema);
+            (await db.Set<Invitation>().SingleAsync()).IssuedAsRole.Should().Be(WombatRoles.Administrator, "the resend keeps it");
+        }
+        finally
+        {
+            await _schemas.DropAllAsync();
+        }
+    }
+
+    /// <summary>
     /// An address the mail server always refuses stays not delivered however often it is resent. From the second failure
     /// the list says to check the address; Resend is still offered, since a mail server down twice looks the same.
     /// </summary>
@@ -212,7 +257,7 @@ public sealed class AccountInvitationDeliveryPostgresTests : IAsyncLifetime
                 }
 
                 await using var db = NewContext(schema);
-                issued = await new IssueInvitationCommandHandler(db, _tokens, new CapturingSender(), Options())
+                issued = await new IssueInvitationCommandHandler(db, _tokens, new CapturingSender(), FakeUserDirectory.Empty, Options())
                     .Handle(
                         new IssueInvitationCommand(
                             Invitee, WombatRoles.CollegeAdmin, null, collegeId, null, null, "admin-1", Administrator()),
@@ -400,7 +445,7 @@ public sealed class AccountInvitationDeliveryPostgresTests : IAsyncLifetime
 
         await using var db = NewContext(schema);
         var institutionId = await db.Institutions.Select(institution => institution.Id).SingleAsync();
-        return await new IssueInvitationCommandHandler(db, _tokens, sender, Options())
+        return await new IssueInvitationCommandHandler(db, _tokens, sender, FakeUserDirectory.Empty, Options())
             .Handle(
                 new IssueInvitationCommand(
                     Invitee, WombatRoles.InstitutionalAdmin, institutionId, null, null, null, "admin-1", Administrator()),
@@ -572,6 +617,9 @@ public sealed class AccountInvitationDeliveryPostgresTests : IAsyncLifetime
             string email, string password, string firstName, string lastName, string targetRole, int? institutionId,
             int? collegeId, int? specialityId, int? subSpecialityId, CancellationToken cancellationToken = default)
             => throw new NotSupportedException();
+
+        public Task<T> InOneTransactionAsync<T>(Func<CancellationToken, Task<T>> work, CancellationToken cancellationToken = default)
+            => work(cancellationToken);
     }
 
     private sealed class FixedAuditContext : IAuditContextProvider

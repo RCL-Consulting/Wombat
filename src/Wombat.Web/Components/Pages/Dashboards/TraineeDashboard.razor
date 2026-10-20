@@ -17,13 +17,57 @@
 <DashboardFrame IsLoading="IsLoading" Failed="Failed" OnRetry="LoadAsync">
   @if (Pending)
   {
-    <DashboardCard Title="Awaiting admission" Icon="info" Emphasis="true" Span="3" IsLoading="IsLoading">
-      <p>You are registered and waiting to be admitted to a curriculum by your programme administrator.</p>
-      <div class="dashboard-card-footer">
+    @* The wait card (T373, flow 11, P01–P07; F8): a DashboardCard with the control edge and no stripe (.wait-card), where
+       and as what she waits, who invited her, who admits her, what admission does, and what she can do meanwhile. Until
+       T373 it named nobody and nothing ("…by your programme administrator."). *@
+    <DashboardCard Title="Awaiting admission" Icon="hourglass" HeadingId="card-awaiting" Span="3" Class="wait-card" IsLoading="IsLoading">
+      @{ var pending = Summary?.Pending; }
+      <p>@PendingLead(pending)</p>
+      @if (pending is not null)
+      {
+        <dl class="detail-list">
+          @if (pending.InstitutionName is { } institution)
+          {
+            <dt>Institution</dt>
+            <dd>@institution</dd>
+          }
+          @if (pending.InvitedAs is { } invitedAs)
+          {
+            @* M2: the curriculum adopted for her invited sub-speciality, none when none is; no line with no scope (S5). *@
+            <dt>Programme</dt>
+            <dd>@(pending.CurriculumName is { } curriculum ? $"{invitedAs}, on the {curriculum} ({pending.CurriculumVersion})" : invitedAs)</dd>
+          }
+          @if (pending.InvitedByName is { } invitedBy && pending.InvitedOn is { } invitedOn)
+          {
+            @* F3, check rule 7: only an Institutional admin's issue, the issuer read now; the day the invitation was issued. *@
+            <dt>Invited by</dt>
+            <dd>@($"{invitedBy}, Institutional admin, on {invitedOn:yyyy-MM-dd}")</dd>
+          }
+          <dt>Who admits you</dt>
+          <dd>@WhoAdmits(pending)</dd>
+        </dl>
+      }
+      <h3>When you are admitted</h3>
+      <ol class="account-steps">
+        <li>Your programme start date is set, and with it your training year.</li>
+        <li>You are signed out once, and sign in again as a Trainee.</li>
+        <li>Then, once your programme has started, you can log activities and follow your progress.</li>
+        @if (pending is not null)
+        {
+          <li>An email tells you, at @Address(pending.Email), that it has happened.</li>
+        }
+        else
+        {
+          <li>An email tells you that it has happened.</li>
+        }
+      </ol>
+      <h3>Meanwhile</h3>
+      <p>You can check your account and your data rights.</p>
+      <div class="wait-links">
         @* The account page, "My account": the pending trainee's name and the roles they hold. It admits every signed-in
-           user (T261). Not "Complete your profile": the name came with the registration or the SSO sign-in, so nothing
-           is left to complete. *@
-        <a href="/account/profile" class="btn btn-sm btn-outline">Review your account &rarr;</a>
+           user (T261). Not "Complete your profile": the name came with the registration or the SSO sign-in. *@
+        <a href="/account/profile">Review your account<Icon Name="arrow-right" /></a>
+        <a href="/account/data-rights">Open My data rights<Icon Name="arrow-right" /></a>
       </div>
     </DashboardCard>
   }
@@ -210,6 +254,43 @@
   /// </summary>
   private bool Pending => Summary?.IsPendingTrainee
     ?? string.Equals(Acting?.Role, WombatRoles.PendingTrainee, StringComparison.Ordinal);
+
+  /// <summary>
+  /// The wait card's lead (P01; check rule 4): the invited speciality's programme at her institution, and no discipline
+  /// for a registrar invited to none (P05).
+  /// </summary>
+  private static string PendingLead(PendingAdmissionDto? pending)
+  {
+    var where = pending switch
+    {
+      { SpecialityName: { } speciality, InstitutionName: { } institution } => $" to the {speciality} programme at {institution}",
+      { SpecialityName: { } speciality } => $" to the {speciality} programme",
+      { InstitutionName: { } institution } => $" at {institution}",
+      _ => string.Empty
+    };
+    return $"You are registered, and waiting to be admitted{where}. Until then, nothing can be filed by you or about you.";
+  }
+
+  /// <summary>"An Institutional admin at Kgosi Kgari Teaching Hospital." and, with an Invited by line, " If it is taking long, ask Nolwazi Mbatha."</summary>
+  private static string WhoAdmits(PendingAdmissionDto pending)
+  {
+    var who = pending.InstitutionName is { } institution ? $"An Institutional admin at {institution}." : "An Institutional admin.";
+    return pending.InvitedByName is { } name && pending.InvitedOn is not null ? $"{who} If it is taking long, ask {name}." : who;
+  }
+
+  /// <summary>M7: her address breaks after its @, in markup.</summary>
+  private static RenderFragment Address(string email) => __builder =>
+  {
+    var at = email.IndexOf('@');
+    if (at > 0)
+    {
+      @(email[..(at + 1)])<wbr />@(email[(at + 1)..])
+    }
+    else
+    {
+      @email
+    }
+  };
 
   protected override IRequest<TraineeDashboardSummaryDto> QueryFor(ClaimsPrincipal user)
     => new GetTraineeDashboardSummaryQuery(user);

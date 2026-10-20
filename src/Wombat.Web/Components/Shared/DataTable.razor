@@ -13,15 +13,15 @@ else
     @* Stack (T342, flow 03, A8): below 641px each row is a block, its header row visually hidden but still read. The
        roles are explicit, as display: grid on a row drops a table's semantics in some browsers; the caller's rows
        carry role="row", role="columnheader" and role="cell". *@
-    <table class="clinic-table @StackClass" role="@(Stack ? "table" : null)">
+    <table class="clinic-table @StackClass" role="@(Stacks ? "table" : null)">
       @if (!string.IsNullOrWhiteSpace(Caption))
       {
         <caption>@Caption</caption>
       }
-      <thead role="@(Stack ? "rowgroup" : null)">
+      <thead role="@(Stacks ? "rowgroup" : null)">
         @HeaderRow
       </thead>
-      <tbody role="@(Stack ? "rowgroup" : null)">
+      <tbody role="@(Stacks ? "rowgroup" : null)">
         @foreach (var item in Items)
         {
           @Row(item)
@@ -41,5 +41,17 @@ else
   /// <summary>The stacked table below 641px (<c>.clinic-table--stack</c>, DESIGN.md § Table system; T342).</summary>
   [Parameter] public bool Stack { get; set; }
 
-  private string? StackClass => Stack ? "clinic-table--stack" : null;
+  /// <summary>
+  /// The stacked table from 900px down (<c>.clinic-table--stack .clinic-table--stack-wide</c>; T373, flow 11, S16), as
+  /// flows 06, 08 and 10 hand-wrote theirs: for a list too wide for the main column beside the sidebar. It implies
+  /// <see cref="Stack" />, and the same explicit roles. A row that needs a note under it (the invitations list's Delivery
+  /// explanation) writes a second <c>&lt;tr&gt;</c> from its Row fragment.
+  /// </summary>
+  [Parameter] public bool StackWide { get; set; }
+
+  private bool Stacks => Stack || StackWide;
+
+  private string? StackClass => StackWide
+    ? "clinic-table--stack clinic-table--stack-wide"
+    : Stack ? "clinic-table--stack" : null;
 }

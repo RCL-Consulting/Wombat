@@ -3,7 +3,9 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Identity;
+using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.Trainees;
 
@@ -16,11 +18,17 @@ public sealed class ListTraineesForSpecialityQueryHandler : IRequestHandler<List
 {
     private readonly IApplicationDbContext _dbContext;
     private readonly IUserAdministrationService _userAdministrationService;
+    private readonly TimeProvider _clock;
 
-    public ListTraineesForSpecialityQueryHandler(IApplicationDbContext dbContext, IUserAdministrationService userAdministrationService)
+    /// <param name="clock">"Today" on the South African calendar, which each profile's training year is counted to (T373); the system clock unless a test pins it.</param>
+    public ListTraineesForSpecialityQueryHandler(
+        IApplicationDbContext dbContext,
+        IUserAdministrationService userAdministrationService,
+        TimeProvider? clock = null)
     {
         _dbContext = dbContext;
         _userAdministrationService = userAdministrationService;
+        _clock = clock ?? TimeProvider.System;
     }
 
     public async Task<IReadOnlyList<TraineeProfileDto>> Handle(ListTraineesForSpecialityQuery request, CancellationToken cancellationToken)
@@ -70,6 +78,14 @@ public sealed class ListTraineesForSpecialityQueryHandler : IRequestHandler<List
             }
         }
 
+        // T373 (T306's admission half): Current trainees shows each programme's training year today, the same 365-day
+        // blocks the Trainee's Home and the credit read (TraineeProfile.StageOn).
+        var today = QuotaCalendar.Today(_clock);
+        var institutionIds = profiles.Select(profile => profile.InstitutionId).Distinct().ToArray();
+        var institutionNames = await _dbContext.Set<Institution>()
+            .AsNoTracking()
+            .Where(institution => institutionIds.Contains(institution.Id))
+            .ToDictionaryAsync(institution => institution.Id, institution => institution.Name, cancellationToken);
         return profiles
             .Where(profile => usersById.ContainsKey(profile.UserId))
             .Select(profile =>
@@ -92,7 +108,11 @@ public sealed class ListTraineesForSpecialityQueryHandler : IRequestHandler<List
                     profile.ExpectedCompletionDate,
                     profile.IsActive,
                     profile.CompletedOn,
-                    profile.DeactivatedOn);
+                    profile.DeactivatedOn)
+                {
+                    TrainingYear = TraineeProfile.StageOn(profile.ProgrammeStartDate, today),
+                    InstitutionName = institutionNames.GetValueOrDefault(profile.InstitutionId)
+                };
             })
             .OrderBy(profile => profile.LastName)
             .ThenBy(profile => profile.FirstName)

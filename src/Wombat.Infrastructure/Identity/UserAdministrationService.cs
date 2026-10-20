@@ -45,6 +45,33 @@ public sealed class UserAdministrationService : IUserAdministrationService
         return Map(user, roles.ToArray());
     }
 
+    /// <summary>
+    /// One query on Identity's normalised email, the column its own unique-email rule reads (T373, flow 11, Q12, S4): an
+    /// address typed in another case, or with spaces round it, finds the account that holds it.
+    /// </summary>
+    public async Task<UserIdentityDetails?> FindByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(email);
+        var normalised = _userManager.NormalizeEmail(email.Trim());
+        if (string.IsNullOrEmpty(normalised))
+        {
+            return null;
+        }
+
+        var user = await LoadUsersQuery()
+            .Where(entity => entity.NormalizedEmail == normalised)
+            .OrderBy(entity => entity.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (user is null)
+        {
+            return null;
+        }
+
+        var roles = await _userManager.GetRolesAsync(user);
+        return Map(user, roles.ToArray());
+    }
+
     public async Task<IReadOnlyList<UserIdentityDetails>> ListUsersInRoleAsync(string role, CancellationToken cancellationToken = default)
     {
         var usersInRole = await _userManager.GetUsersInRoleAsync(role);
@@ -372,6 +399,10 @@ public sealed class UserAdministrationService : IUserAdministrationService
 
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    /// <summary>One transaction on the context the user store shares (T373 fix pass, B2; <see cref="IdentityTransaction" />).</summary>
+    public Task<T> InOneTransactionAsync<T>(Func<CancellationToken, Task<T>> work, CancellationToken cancellationToken = default)
+        => IdentityTransaction.RunAsync(_dbContext, work, cancellationToken);
 
     public async Task PromotePendingTraineeAsync(string userId, CancellationToken cancellationToken = default)
     {

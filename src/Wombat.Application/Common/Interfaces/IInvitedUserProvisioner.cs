@@ -35,4 +35,14 @@ public interface IInvitedUserProvisioner
         int? specialityId,
         int? subSpecialityId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Runs <paramref name="work" /> in one database transaction on the context the account is created in, and commits
+    /// it only when the work returns (T373, flow 11, F10). The accept provisions the account (the user, the role, the
+    /// scopes) and marks the invitation used inside it, so a fault between the two leaves no account and an unused
+    /// invitation, and the register page's "Nothing was saved." holds. On a fault the transaction is rolled back and
+    /// what the work left tracked is discarded, so the failed command's audit row, saved through the same context, commits
+    /// nothing the rollback undid (<c>AuditPipelineBehavior</c>). Inside a transaction already open, the work joins it.
+    /// </summary>
+    Task<T> InOneTransactionAsync<T>(Func<CancellationToken, Task<T>> work, CancellationToken cancellationToken = default);
 }

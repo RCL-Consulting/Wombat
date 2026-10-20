@@ -1020,7 +1020,7 @@ Expect: Home's Registrars and Targets by EPA cards are one column: each registra
   the charts at 322 px. Nothing scrolls sideways. Checked at 768 px as well: the agenda still stacks, and nothing
   scrolls sideways.
 
-Step A.7.13 — Dr Zulu hears a populated review with a screen reader (appendix-cross-cutting.md:1469)
+Step A.7.13 — Dr Zulu hears a populated review with a screen reader (appendix-cross-cutting.md:1470)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: With NVDA (or Narrator) on, open Dr Molefe's final review (review #7). Walk it by headings, then by tables, then by

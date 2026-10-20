@@ -162,6 +162,14 @@ internal sealed class FakeUserDirectory : IUserAdministrationService
     public Task<IReadOnlyList<UserIdentityDetails>> ListAllUsersAsync(CancellationToken cancellationToken = default)
         => throw new NotSupportedException();
 
+    /// <summary>
+    /// A user added with <see cref="With" /> whose email is <paramref name="email" />, trimmed and whatever its case, as the
+    /// real store compares Identity's normalised email; null for any other address (T373, Q12).
+    /// </summary>
+    public Task<UserIdentityDetails?> FindByEmailAsync(string email, CancellationToken cancellationToken = default)
+        => Task.FromResult(_users.FirstOrDefault(user =>
+            string.Equals(user.Email.Trim(), email.Trim(), StringComparison.OrdinalIgnoreCase)));
+
     public Task UpdateNamesAsync(string userId, string firstName, string lastName, CancellationToken cancellationToken = default)
         => throw new NotSupportedException();
 

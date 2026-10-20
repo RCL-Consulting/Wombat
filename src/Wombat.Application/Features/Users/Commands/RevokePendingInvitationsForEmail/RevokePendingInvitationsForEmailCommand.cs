@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Invitations;
 using Wombat.Domain.Invitations;
 
 namespace Wombat.Application.Features.Users.Commands.RevokePendingInvitationsForEmail;
@@ -36,11 +37,11 @@ public sealed class RevokePendingInvitationsForEmailCommandHandler : IRequestHan
     {
         UserAdministrationRules.DemandUserAdministration(request.Principal);
 
-        var normalisedEmail = request.Email.Trim();
-
+        // The address whatever the invitation's spelling (T373 fix pass, B3; S4): until the fix an invitation stored as
+        // Molefe@… was not the account molefe@…'s, and the revoke revoked nothing.
         var invitations = await _dbContext.Set<Invitation>()
+            .ToAddress(request.Email)
             .Where(entity =>
-                entity.Email == normalisedEmail &&
                 !entity.UsedOn.HasValue &&
                 !entity.RevokedOn.HasValue)
             .ToListAsync(cancellationToken);

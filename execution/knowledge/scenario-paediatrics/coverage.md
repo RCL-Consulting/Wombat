@@ -98,7 +98,8 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/admin/epas/new`, `/admin/epas/{Id:int}` | Admin/Epas/EpaEdit.razor | Administrator, CollegeAdmin, InstitutionalAdmin | 6.14, 6.17, 6.23, 6.25, 6.28 |
 | `/admin/institutions` | Admin/Institutions/InstitutionsList.razor | Administrator | 1.6, A.5.2, A.6.1, A.7.11 |
 | `/admin/institutions/new`, `/admin/institutions/{Id:int}` | Admin/Institutions/InstitutionEdit.razor | Administrator, InstitutionalAdmin; only an Administrator creates or deactivates one, and an InstitutionalAdmin edits her own | 1.6, 1.23, A.5.5, A.6.1, A.6.3 |
-| `/admin/invitations` | Admin/Invitations/InvitationsList.razor | Administrator, InstitutionalAdmin | 1.5, 1.7, 1.11, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.12, 2.16, 2.17, 2.26, 2.28, 2.32 |
+| `/admin/invitations` | Admin/Invitations/InvitationsList.razor | Administrator, InstitutionalAdmin | 1.5, 1.7, 1.11, 2.1, 2.7, 2.12, 2.16, 2.17, 2.26, 2.28, 2.32 |
+| `/admin/invitations/new` | Admin/Invitations/InviteAPerson.razor | Administrator, InstitutionalAdmin; College admin is offered to the Administrator only | 1.5, 1.7, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.16, 2.17, 2.44 |
 | `/admin/jobs` | Admin/Jobs/ScheduledJobsList.razor | Administrator | 3.32, A.2.1, A.2.2, A.2.4, A.2.6, A.2.8, A.2.9, A.2.10, A.5.1, A.5.2, A.7.11 |
 | `/admin/jobs/runs` | Admin/Jobs/ScheduledJobRunsList.razor | Administrator | A.2.10, A.7.11 |
 | `/admin/specialities` | Admin/Institutions/MySpecialitiesRedirect.razor | Administrator, CollegeAdmin | 1.12, 6.11 |
@@ -106,7 +107,8 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/admin/specialities/{SpecialityId:int}/sub-specialities/new`, `/admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}` | Admin/Institutions/SubSpecialityEdit.razor | Administrator, CollegeAdmin | 1.14, 6.4, 6.7, 6.12 |
 | `/admin/sso/group-mappings` | Admin/Sso/GroupMappings.razor | Administrator, InstitutionalAdmin | A.3.1 |
 | `/admin/trainees` | Admin/Trainees/PendingTraineesList.razor | Administrator, InstitutionalAdmin | 2.28, 2.29, 2.30, 5.16, 5.17, 5.27, 6.34, 6.36, A.1.14, A.7.9 |
-| `/admin/trainees/edit` | Admin/Trainees/TraineeProfileEdit.razor | Administrator, InstitutionalAdmin | 2.29, 2.30, 5.16, 5.17, 5.27, 6.34, 6.36, A.7.9 |
+| `/admin/trainees/admit` | Admin/Trainees/AdmitRegistrar.razor | Administrator, InstitutionalAdmin; a registrar waiting in the caller's scope, any other id reads as not found | 2.29, 2.30 |
+| `/admin/trainees/edit` | Admin/Trainees/TraineeProfileEdit.razor | Administrator, InstitutionalAdmin | 2.30, 5.16, 5.17, 5.27, 6.34, 6.36, A.7.9 |
 | `/admin/users` | Admin/Users/UsersList.razor | Administrator, InstitutionalAdmin | 2.12, 2.13, 2.28, 2.44, 5.10, A.1.14, A.4.5, A.5.1, A.6.4, A.6.9, A.7.9 |
 | `/admin/users/{UserId}` | Admin/Users/UserDetail.razor | Administrator, InstitutionalAdmin | 2.12, 2.13, 2.28, 5.10, 5.17, A.4.5, A.5.5, A.6.4, A.6.7, A.6.9, A.7.9, A.7.14 |
 | `/committee/decisions-due` | CommitteeDecisions/DecisionsDue.razor | Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 4.1, 4.2, 4.3, 4.4, 4.5, 4.9, 4.10, 4.12, 4.34, 4.37, 4.49, 5.1, 5.2, A.1.10, A.7.5, A.7.7, A.7.8 |
@@ -138,7 +140,7 @@ institution, speciality or the record's own people; where that decides what a pe
 
 ## Not played
 
-No template is unplayed. Every one of the 86 templates is named by at least one step's `Route:` line, so this section
+No template is unplayed. Every one of the 88 templates is named by at least one step's `Route:` line, so this section
 has no rows. A row added here must name, in backticks, a template that no step plays, with its reason (T294).
 
 ## Flows and states not played
@@ -165,7 +167,7 @@ state, `states.md` is where it belongs.
 | Applying and completing an approved data-rights rectification | No page calls `ApplyRectificationCommand` or `CompleteRectificationRequestCommand` (T112, Still open). A.1.8 rejects the request instead. | Not built |
 | An email when an activity is requested, completed, declined or returned | Nothing sends the `AssessmentRequested`, `AssessmentAccepted`, `AssessmentCompleted` or `AssessmentDeclined` templates. Steps 3.3, 5.24, A.2.7 and A.7.2 expect that nothing is sent. | Undecided |
 | An assessor's training status (`AssessorProfile.TrainingStatus`) changing an assessment | Nothing on the activity path reads it (2.14 records it). | Undecided |
-| An invitation's Delivery reading "Sent", or "check the address" after a second failure | The replay logs mail (`Email__SmtpHost` unset), so nothing reports a delivery or a refusal. Rows read "Being sent", then "Not delivered." | `states.md`, with an SMTP sink |
+| An invitation's Delivery reading "Sent", or "check the address" after a second failure | The replay logs mail (`Email__SmtpHost` unset), so nothing reports a delivery or a refusal. Rows read "Being sent", then "Not delivered" with its note row. | `states.md`, with an SMTP sink |
 | The Administrator adopting for an institution through the institution picker on `/admin/adoptions` | The story's InstitutionalAdmin adopts for her own institution (1.20, 6.32). | `states.md` |
 | Discard draft in the activity-type builder | The story publishes KGK's draft (1.30) and keeps the College's unpublished (6.14a), discarding neither. | `states.md` |
 | Deactivating a College, speciality or sub-speciality | Nothing in Application or Infrastructure reads their `IsActive`, no decision says what it should stop, and the button does not ask first (T264). | A decision first |
@@ -194,6 +196,10 @@ state, `states.md` is where it belongs.
 | An erasure refused because the person changed at the same moment (`ErasureExecutor.PersonChanged`) | Needs a concurrent write. | `states.md` |
 | `/health` reporting Unhealthy | Needs PostgreSQL stopped mid-replay. A.6.10 plays the healthy state. | `states.md` |
 | A pending trainee's pages, and `/msf/respond`, at 390 px | No pending trainee or open campaign exists when the appendix runs. | `states.md`, from Act 2's and Act 3's states |
+| An invitation past its last day unused: Invitations' Expired, not used and its Invite again, and Register's "Invitation expired" (T373, Q9, F7) | Every invitation in the story is used or revoked within its 14 days. | `states.md`, by moving `ExpiresOn` back on a scratch invitation |
+| Invite a person's address refusals (an address that has an account, or an active invitation, here or elsewhere: N15 to N18), and its nothing-adopted warning (N26) | Every address the story invites is new, and KGK adopts before it invites. | `states.md` |
+| Register for a visitor signed in on the browser ("Signed in as someone else", G18), a form posted after the register cookie's 30 minutes (G16), and a link with no token (G13) | No step opens a link while signed in, waits half an hour on the form, or cuts a link short. | `states.md` |
+| Admit's refusals and warnings: a start more than four years ago, a derived completion that has passed and is left empty, a registrar already admitted or deactivated, and no curriculum adopted for the invited sub-speciality (M04, M07, M09, M13, M15) | The story admits each registrar once, with dates that pass, into KGK's one adoption. | `states.md` |
 
 ## Reached only by address
 
@@ -223,7 +229,8 @@ Routes Wombat.Web maps outside the router. A step names one in its `Route:` line
 | `/account/sso-challenge/{providerKey}` | Starts an institutional sign-in | A.3.2 (no provider configured) |
 | `/account/sso-callback` | Where the identity provider returns | A.3.3 (no sign-in in progress) |
 | `/health` | The public health check, database included | A.6.10 |
-| `/account/register/submit` | The registration form's post | Not named; every registration in 1.8, 1.10, 2.8–2.10, 2.18 and 2.27 posts it |
+| `/account/register/start` | The invitation mail's link: keeps the token in the register cookie (30 minutes) and answers 303 to `/account/register` with no query and `Cache-Control: no-store`, so no address the page shows holds the token (T373, S1, S2; T315). A link with no token clears the cookie | 1.8, 1.9, 1.10, 2.8, 2.9, 2.10, 2.11, 2.17, 2.18, 2.27 |
+| `/account/register/submit` | The registration form's post: reads the token from the register cookie, and writes a refusal's codes and the two names back into it (T373, S1); a signed-in caller is refused first (M4) | Not named; every registration in 1.8, 1.10, 2.8–2.10, 2.18 and 2.27 posts it |
 | `/account/change-password/submit` | The change-password form's post: a change lands on My account with "Password updated."; a refusal returns to the page; the fifth wrong current password locks the account and signs it out to the sign-in page (T339, E2); an account already locked by someone else is refused on the page with the wait, and stays signed in | Not named; A.4.2 and A.4.6 post it |
 | `/account/profile/submit` | My account's name form's post: saves the name, issues the sign-in cookie again so the top bar names the person as saved, and returns to My account with "Name saved." or the refusal | 2.41, A.4.1, A.7.14 |
 | `/account/external-logins/remove` | My account's Remove dialog's post: removes one institutional sign-in, asking for the password when the account has one, and never the last way in; a GET returns to My account (T339) | Not played: needs a linked institutional sign-in (see above) |
@@ -249,7 +256,7 @@ and Assessor) appears under each role for the jobs done in it.
 | Delete a scale, and be told what still uses it | 6.8 | `/admin/entrustment-scales` |
 | Create an institution | 1.6 | `/admin/institutions`, `/admin/institutions/new`, `/admin/institutions/{Id:int}` |
 | Keep an institution's record up to date | A.6.1 | `/admin/institutions`, `/admin/institutions/{Id:int}` |
-| Invite the first person to run a College, and the first to run an institution | 1.5, 1.7, 1.11 | `/admin/invitations` |
+| Invite the first person to run a College, and the first to run an institution | 1.5, 1.7, 1.11 | `/admin/invitations`, `/admin/invitations/new` |
 | Remind assessors of work waiting on them, now | 3.32, A.2.8 | `/admin/jobs` |
 | Run a scheduled job now and read what it did | A.2.4, A.2.6, A.2.9 | `/admin/jobs` |
 | Pause a scheduled job and resume it | A.2.2 | `/admin/jobs` |
@@ -265,7 +272,7 @@ and Assessor) appears under each role for the jobs done in it.
 
 | Job | Steps | Pages |
 |---|---|---|
-| Accept my invitation to run the College's catalogue | 1.8 | `/account/register`, `/` |
+| Accept my invitation to run the College's catalogue | 1.8 | `/account/register/start`, `/account/register`, `/` |
 | Check my College's specialities, sub-specialities and their default ladder | 1.12, 1.13, 1.14 | `/admin/specialities`, `/admin/colleges/{CollegeId:int}/specialities`, `/admin/specialities/{SpecialityId:int}/sub-specialities`, `/admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}` |
 | Check the national EPAs | 1.16 | `/admin/epas` |
 | Check a curriculum version and its items' targets | 1.17, 1.18 | `/admin/curricula`, `/admin/curricula/{Id:int}/items` |
@@ -284,19 +291,19 @@ and Assessor) appears under each role for the jobs done in it.
 
 | Job | Steps | Pages |
 |---|---|---|
-| Accept my invitation to run my institution | 1.10 | `/account/register`, `/` |
+| Accept my invitation to run my institution | 1.10 | `/account/register/start`, `/account/register`, `/` |
 | Adopt the College's curriculum so that we can admit registrars | 1.19, 1.20, 1.21 | `/admin/curricula`, `/admin/epas`, `/admin/adoptions`, `/admin/curricula/{Id:int}/items`, `/` |
 | Adopt a newer curriculum version | 6.32 | `/admin/adoptions` |
 | Read the entrustment ladders | 1.22, 6.9 | `/admin/entrustment-scales` |
 | Keep my institution's own record, and nobody else's | 1.23, A.5.5, A.6.3 | `/admin/institutions/{Id:int}`, `/not-found`, `/admin/users/{UserId}`, `/access-denied` |
 | Check the College's assessment instruments | 1.24, 1.25 | `/admin/activity-types`, `/admin/activity-types/{ActivityTypeId:int}` |
 | Build and publish an activity type of our own | 1.26, 1.27, 1.28, 1.29, 1.30, 1.31 | `/admin/activity-types`, `/admin/activity-types/new`, `/admin/activity-types/{ActivityTypeId:int}` |
-| Invite staff, each with the right role and scope | 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7 | `/admin/invitations` |
-| Invite registrars, replace a mistyped invitation, and resend one whose email was lost | 2.16, 2.17, 2.26 | `/admin/invitations`, `/account/register` |
-| Review my institution's users, and my own account | 2.12, 2.28, 2.44 | `/admin/invitations`, `/admin/users`, `/admin/users/{UserId}`, `/` |
+| Invite staff, each with the right role and scope | 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7 | `/admin/invitations`, `/admin/invitations/new` |
+| Invite registrars, replace a mistyped invitation, and resend one whose email was lost | 2.16, 2.17, 2.26 | `/admin/invitations`, `/admin/invitations/new`, `/account/register/start`, `/account/register` |
+| Review my institution's users, and my own account | 2.12, 2.28, 2.44 | `/admin/invitations`, `/admin/invitations/new`, `/admin/users`, `/admin/users/{UserId}`, `/` |
 | Give a consultant a second role | 2.13 | `/admin/users`, `/admin/users/{UserId}` |
 | Record each assessor's training status | 2.14, 2.15 | `/admin/assessors`, `/admin/assessors/edit` |
-| Admit registrars to the curriculum, with their programme dates | 2.28, 2.29, 2.30 | `/admin/trainees`, `/admin/trainees/edit` |
+| Admit registrars to the curriculum, with their programme dates | 2.28, 2.29, 2.30 | `/admin/trainees`, `/admin/trainees/admit`, `/admin/trainees/edit` |
 | Form the review panel, and see who decides each EPA | 2.20, 2.21, 2.22, 2.24 | `/committee/panels`, `/committee/panels/new`, `/committee/panels/{PanelId:int}` |
 | Change which College committee a panel sits as | 4.13 | `/committee/panels`, `/committee/panels/{PanelId:int}` |
 | Read my institution's audit trail | 3.55, 3.56, 4.38 | `/admin/audit`, `/admin/audit/{Id:guid}` |
@@ -320,7 +327,7 @@ and Assessor) appears under each role for the jobs done in it.
 
 | Job | Steps | Pages |
 |---|---|---|
-| Accept my invitation | 2.10 | `/account/register`, `/` |
+| Accept my invitation | 2.10 | `/account/register/start`, `/account/register`, `/` |
 | Add a consultant to my programme's review panel | 2.23 | `/committee/panels`, `/committee/panels/{PanelId:int}` |
 | Read my programme's dashboard: what waits for an assessor, the registrars, the targets by EPA | 2.38, 3.53, 4.3 | `/` |
 | See which requests wait for an assessor, filter them by assessor and how overdue | 3.54c | `/programme/waiting` |
@@ -335,7 +342,7 @@ and Assessor) appears under each role for the jobs done in it.
 
 | Job | Steps | Pages |
 |---|---|---|
-| Accept my invitation | 2.10 | `/account/register`, `/` |
+| Accept my invitation | 2.10 | `/account/register/start`, `/account/register`, `/` |
 | See which panels I may create | 2.25 | `/committee/panels`, `/committee/panels/new` |
 | Read my sub-speciality's dashboard: what waits for an assessor, the registrars, the targets by EPA | 2.38, 3.54, 4.4 | `/` |
 | See what the committee must decide in my sub-speciality | 4.4 | `/committee/decisions-due` |
@@ -348,7 +355,7 @@ and Assessor) appears under each role for the jobs done in it.
 
 | Job | Steps | Pages |
 |---|---|---|
-| Accept my invitation | 2.8, 2.11 | `/account/register`, `/`, `/account/logout/submit`, `/account/login` |
+| Accept my invitation | 2.8, 2.11 | `/account/register/start`, `/account/register`, `/`, `/account/logout/submit`, `/account/login` |
 | Learn what my dashboard offers, and which pages are not mine | 2.32 | `/`, `/admin/invitations`, `/committee/panels`, `/committee/panels/new`, `/access-denied` |
 | See which requests wait for an assessor, and which are overdue | 3.30, 3.31, A.5.10 | `/`, `/programme/waiting` |
 | Send an assessor a reminder about one waiting request | 3.31 | `/programme/waiting`, `/not-found` |
@@ -378,7 +385,7 @@ and Assessor) appears under each role for the jobs done in it.
 
 | Job | Steps | Pages |
 |---|---|---|
-| Accept my invitation | 2.10 | `/account/register`, `/` |
+| Accept my invitation | 2.10 | `/account/register/start`, `/account/register`, `/` |
 | See how the programme's registrars stand against this period's targets | 2.33, 2.35, 2.37, 3.52 | `/account/login`, `/`, `/committee/panels` |
 | See which registrars are short on one EPA, and how far | 3.54a | `/`, `/programme/trainees` |
 | Read one registrar's progress, standing and trajectories, and what waits for an assessor | 3.54b | `/programme/trainees`, `/programme/trainees/{ProfileId:int}` |
@@ -405,7 +412,7 @@ and Assessor) appears under each role for the jobs done in it.
 
 | Job | Steps | Pages |
 |---|---|---|
-| Accept my invitation, getting the password rules right | 2.9, 2.10 | `/account/register`, `/`, `/account/logout/submit`, `/account/login` |
+| Accept my invitation, getting the password rules right | 2.9, 2.10 | `/account/register/start`, `/account/register`, `/`, `/account/logout/submit`, `/account/login` |
 | See my empty assessor dashboard on first sign-in | 2.36 | `/account/login`, `/` |
 | Rate a Mini-CEX a registrar sent me | 3.5, 3.13, 3.26, 3.33, 5.25 | `/dashboard/switch/{role}`, `/`, `/activities/inbox`, `/activities/{ActivityId:int}` |
 | Rate the other WBAs sent to me: a DOPS, a CBD, a CCA, a direct observation | 3.24, 3.26, 3.28 | `/`, `/dashboard/switch/{role}`, `/activities/inbox`, `/activities/{ActivityId:int}` |
@@ -462,7 +469,7 @@ and Assessor) appears under each role for the jobs done in it.
 
 | Job | Steps | Pages |
 |---|---|---|
-| Register from my invitation and wait to be admitted | 2.18, 2.27 | `/account/register`, `/`, `/account/logout/submit`, `/account/login` |
+| Register from my invitation and wait to be admitted | 2.18, 2.27 | `/account/register/start`, `/account/register`, `/`, `/account/logout/submit`, `/account/login` |
 | See what I can do before admission | 2.19 | `/`, `/account/profile`, `/activities/mine`, `/activities/new`, `/portfolio/progress`, `/access-denied` |
 
 ### Former trainee (Dr Lerato Molefe after Step 5.17: no role, a trainee record)
@@ -481,8 +488,8 @@ and Assessor) appears under each role for the jobs done in it.
 
 | Job | Steps | Pages |
 |---|---|---|
-| (Invitee) Register from the link in my invitation | 1.8, 1.10, 2.8, 2.9, 2.10, 2.18, 2.27 | `/account/register`, `/`, `/account/logout/submit`, `/account/login` |
-| (Invitee) Open a link that was used, revoked or replaced | 1.9, 2.11, 2.17, 2.27 | `/account/register` |
+| (Invitee) Register from the link in my invitation | 1.8, 1.10, 2.8, 2.9, 2.10, 2.18, 2.27 | `/account/register/start`, `/account/register`, `/`, `/account/logout/submit`, `/account/login` |
+| (Invitee) Open a link that was used, revoked or replaced | 1.9, 2.11, 2.17, 2.27 | `/account/register/start`, `/account/register` |
 | (MSF respondent) Give anonymous feedback on a registrar from my emailed link | 3.39, 3.42 | `/msf/respond` |
 | (MSF respondent) Open my link after I answered, or after the campaign closed | 3.40, 3.45 | `/msf/respond` |
 | (Verifier) Check that a portfolio PDF is one Wombat produced, and spot a tampered copy | 5.13, 5.14, A.7.12 | `/portfolio/verify` |

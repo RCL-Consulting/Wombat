@@ -87,6 +87,10 @@ builder.Services.AddHttpContextAccessor();
 // The acting role's switch and the one-time word it leaves for the page it lands on (T335, flow 01).
 builder.Services.AddActingRoleSwitch();
 
+// What the register page holds for the browser that opened an invitation's link: the token, and after a refusal its codes
+// and the names, in a Data Protection cookie, never in an address (T373, flow 11, S1, S2).
+builder.Services.AddSingleton<RegisterCookie>();
+
 // A failed page load's reference goes to the log with the failure, as the error page shows it (T321; ErrorPages).
 builder.Services.AddExceptionHandler<ErrorPages.ReferenceLog>();
 
@@ -338,29 +342,101 @@ app.MapPost("/account/login/submit", async (
 .AllowAnonymous()
 ;
 
+// The invitation mail's link (T373, flow 11, S2; T315): the token goes into the register cookie, and the browser is sent on
+// to the page with no query, so the token leaves the address bar by this redirect, not by a script after the page loads.
+// The page and this GET never share a route. A link with no token clears any invitation the browser held, and the page
+// says the link is incomplete (G13).
+app.MapGet(RegisterOutcome.StartPath, (HttpContext httpContext, RegisterCookie registerCookie, [FromQuery] string? token) =>
+{
+    // A token far past the 43 characters one is would make a cookie the browser drops: it is read as none (T373 fix pass, B7).
+    if (RegisterCookie.CanHold(token))
+    {
+        registerCookie.Open(httpContext, token!);
+    }
+    else
+    {
+        RegisterCookie.Delete(httpContext);
+    }
+
+    httpContext.Response.Headers.Location = RegisterOutcome.PagePath;
+    httpContext.Response.Headers.CacheControl = "no-store";
+    return Results.StatusCode(StatusCodes.Status303SeeOther);
+})
+.AllowAnonymous();
+
 // A refusal goes back to the register page as codes (RegisterOutcome), never as a sentence, and never as an exception's
-// message: a fault is logged, and the page says registration could not be completed (T285).
+// message: a fault is logged, and the page says registration could not be completed (T285). Since T373 (flow 11, S1) the
+// token is read from the register cookie, and a refusal's codes and the two names are written into it: the redirect is to
+// the page with no query, so no address holds a name, a code or a token.
+//
+// A signed-in caller is refused first (M4): a stale tab's submit, posted after someone signed in on this browser, goes
+// back to the page, which says who is signed in (G18). Nothing is accepted, no account is created, and no session is
+// replaced. That is why the antiforgery check is the endpoint's own, after it: the form's token was issued to the visitor
+// who was not signed in, so the framework's check would answer that submit with a bare 400.
 app.MapPost(RegisterOutcome.SubmitPath, async (
     ISender sender,
     UserManager<WombatIdentityUser> userManager,
     SignInManager<WombatIdentityUser> signInManager,
     ILoggerFactory loggerFactory,
+    IAntiforgery antiforgery,
+    RegisterCookie registerCookie,
+    HttpContext httpContext,
     [FromForm] RegisterRequest request) =>
 {
-    if (string.IsNullOrWhiteSpace(request.Token))
+    if (httpContext.User.Identities.Any(identity => identity.IsAuthenticated))
     {
-        return Results.LocalRedirect(RegisterOutcome.Url(null, [RegisterOutcome.TokenMissing]));
+        return Results.LocalRedirect(RegisterOutcome.PagePath);
+    }
+
+    if (!await antiforgery.IsRequestValidAsync(httpContext))
+    {
+        return Results.BadRequest();
+    }
+
+    // No cookie: its 30 minutes passed with the form open (G16, S7). A timed-out cookie already there is left as it is, so
+    // a blind post never extends its window (T373 fix pass, B10).
+    var state = registerCookie.Read(httpContext);
+    if (state is null || state.TimedOut || string.IsNullOrWhiteSpace(state.Token))
+    {
+        if (state is not { TimedOut: true })
+        {
+            registerCookie.TimeOut(httpContext);
+        }
+
+        return Results.LocalRedirect(RegisterOutcome.PagePath);
+    }
+
+    // The form was shown for another invitation than the cookie's (B1): this browser opened a second link since, and the
+    // one cookie holds the last one opened. Nothing is accepted, and the names typed for the other address are not kept;
+    // the page says so and names the invitation held now.
+    if (!RegisterCookie.Fingerprints(state.Token, request.Invitation))
+    {
+        registerCookie.Write(httpContext, state with { Codes = [RegisterOutcome.OtherInvitation] });
+        return Results.LocalRedirect(RegisterOutcome.PagePath);
+    }
+
+    IResult Refuse(IReadOnlyList<string> codes)
+    {
+        // The names are kept for the form (T317's registration half), cut to a length a cookie can carry: a name past the
+        // validator's 100 characters is refused all the same (S21). Never a password.
+        registerCookie.Write(httpContext, state with
+        {
+            Codes = codes.Distinct(StringComparer.Ordinal).ToList(),
+            FirstName = RegisterRequest.Kept(request.FirstName),
+            LastName = RegisterRequest.Kept(request.LastName)
+        });
+        return Results.LocalRedirect(RegisterOutcome.PagePath);
     }
 
     if (!string.Equals(request.Password, request.ConfirmPassword, StringComparison.Ordinal))
     {
-        return Results.LocalRedirect(RegisterOutcome.Url(request.Token, [RegisterOutcome.ConfirmationMismatch]));
+        return Refuse([RegisterOutcome.ConfirmationMismatch]);
     }
 
     try
     {
         var result = await sender.Send(new AcceptInvitationCommand(
-            request.Token,
+            state.Token,
             request.Password ?? string.Empty,
             request.FirstName ?? string.Empty,
             request.LastName ?? string.Empty));
@@ -368,9 +444,10 @@ app.MapPost(RegisterOutcome.SubmitPath, async (
         var user = await userManager.FindByIdAsync(result.UserId);
         if (user is null)
         {
-            return Results.LocalRedirect(RegisterOutcome.Url(request.Token, [RegisterOutcome.UserNotLoaded]));
+            return Refuse([RegisterOutcome.UserNotLoaded]);
         }
 
+        RegisterCookie.Delete(httpContext);
         await signInManager.SignInAsync(user, isPersistent: false);
         return Results.LocalRedirect(GetLandingPath(result.AssignedRole));
     }
@@ -387,9 +464,10 @@ app.MapPost(RegisterOutcome.SubmitPath, async (
             logger.LogError(exception, "A registration failed.");
         }
 
-        return Results.LocalRedirect(RegisterOutcome.Url(request.Token, codes));
+        return Refuse(codes);
     }
 })
+.DisableAntiforgery()
 .AllowAnonymous()
 ;
 
@@ -763,9 +841,29 @@ app.MapPost(SignOutOutcome.SubmitPath, async (
     IAntiforgery antiforgery,
     HttpContext httpContext) =>
 {
+    // Register's "Sign out and continue" (G18) sends returnTo, and lands back on Register, which the register cookie still
+    // tells which invitation; any other value lands where signing out always does (T373, flow 11, F5).
+    // A body the form reader refuses is no returnTo, never a fault (T373 fix pass, B8): the endpoint reads it before it
+    // knows whether anyone is signed in, so any visitor's malformed post reaches here.
+    string? returnTo = null;
+    if (httpContext.Request.HasFormContentType)
+    {
+        try
+        {
+            var form = await httpContext.Request.ReadFormAsync();
+            returnTo = form[SignOutOutcome.ReturnToField].ToString();
+        }
+        catch (Exception exception) when (exception is InvalidDataException or IOException or BadHttpRequestException)
+        {
+            returnTo = null;
+        }
+    }
+
+    var landing = SignOutOutcome.LandingFor(returnTo);
+
     if (!httpContext.User.Identities.Any(identity => identity.IsAuthenticated))
     {
-        return Results.LocalRedirect(SignOutOutcome.SignedOutUrl);
+        return Results.LocalRedirect(landing);
     }
 
     if (!await antiforgery.IsRequestValidAsync(httpContext))
@@ -795,7 +893,7 @@ app.MapPost(SignOutOutcome.SubmitPath, async (
         actorIpAddress: TruncateLoginIp(httpContext.Connection.RemoteIpAddress),
         institutionId: institutionId));
 
-    return Results.LocalRedirect(SignOutOutcome.SignedOutUrl);
+    return Results.LocalRedirect(landing);
 })
 .AllowAnonymous();
 
@@ -901,13 +999,22 @@ internal sealed class LoginRequest
     public string? ReturnUrl { get; init; }
 }
 
+/// <summary>The register form. No token: the endpoint reads it from the register cookie (T373, flow 11, S1).</summary>
 internal sealed class RegisterRequest
 {
-    public string? Token { get; init; }
+    /// <summary>The longest name the register cookie keeps for the form after a refusal.</summary>
+    private const int KeptNameLength = 256;
+
+    /// <summary>The form's binding to the invitation it shows (<c>RegisterCookie.Fingerprint</c>; T373 fix pass, B1).</summary>
+    public string? Invitation { get; init; }
+
     public string? FirstName { get; init; }
     public string? LastName { get; init; }
     public string? Password { get; init; }
     public string? ConfirmPassword { get; init; }
+
+    /// <summary>A name as the cookie keeps it: as typed, cut at <see cref="KeptNameLength" />.</summary>
+    public static string? Kept(string? name) => name is { Length: > KeptNameLength } ? name[..KeptNameLength] : name;
 }
 
 /// <summary>

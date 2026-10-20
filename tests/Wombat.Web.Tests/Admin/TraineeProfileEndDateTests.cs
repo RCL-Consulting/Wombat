@@ -270,15 +270,23 @@ public sealed class TraineeProfileEndDateTests : TestContext
             .NotContain(nameof(GetCurriculaListQuery), "that lists every curriculum the caller can open, not what a save accepts");
     }
 
+    /// <summary>
+    /// T373 (flow 11): admission is Admit ‹name›'s page. The old address, ?userId=, lands there, and the profile page reads
+    /// nothing for it. Until T373 it was the admission form (TheAdmitForm_ListsWhatTheAdmissionChoicesQueryAnswers,
+    /// AnAdmissionWithNothingAdopted_SaysWhatIsMissing_AndCannotBeSent, both retired with it).
+    /// </summary>
     [Fact]
-    public void TheAdmitForm_ListsWhatTheAdmissionChoicesQueryAnswers()
+    public void TheOldAdmissionAddress_LandsOnAdmit()
     {
         var sender = new FakeSender();
-        var cut = RenderAdmission(sender);
+        Services.AddSingleton<IScopedSender>(sender);
+        var navigation = Services.GetRequiredService<NavigationManager>();
+        navigation.NavigateTo(navigation.GetUriWithQueryParameter("userId", PendingUserId));
 
-        Options(cut).Should().Equal(("2", "CPSA Paediatrics (11.2)"));
-        PageButton(cut, "Admit trainee").Should().NotBeNull();
-        sender.Queries.Should().Contain(nameof(GetAdmissionCurriculumChoicesQuery)).And.NotContain(nameof(GetCurriculaListQuery));
+        RenderComponent<TraineeProfileEdit>();
+
+        navigation.Uri.Should().EndWith("/admin/trainees/admit?userId=pending-1");
+        sender.Queries.Should().BeEmpty();
     }
 
     [Fact]
@@ -308,18 +316,6 @@ public sealed class TraineeProfileEndDateTests : TestContext
         cut.WaitForAssertion(() => sender.Queries.Count(name => name == nameof(GetTraineeCurriculumChoicesQuery)).Should().Be(2));
         cut.Find("#curriculum-id").GetAttribute("value").Should().Be("2");
         cut.Find("#expected-completion-date").GetAttribute("value").Should().Be("2029-01-01", "the saved, derived date");
-    }
-
-    [Fact]
-    public void AnAdmissionWithNothingAdopted_SaysWhatIsMissing_AndCannotBeSent()
-    {
-        var sender = new FakeSender { AdmissionChoices = [] };
-        var cut = RenderAdmission(sender);
-
-        Text(cut.Find("#curriculum-id-none")).Should().Be(
-            "This institution has adopted no curriculum yet, so no trainee can be admitted. Adopt one under Curriculum adoptions, then admit the trainee.");
-        PageButton(cut, "Admit trainee").HasAttribute("disabled").Should().BeTrue();
-        cut.FindAll("#curriculum-id").Should().BeEmpty("an empty select offers nothing to choose");
     }
 
     [Fact]
@@ -392,19 +388,6 @@ public sealed class TraineeProfileEndDateTests : TestContext
     private static IEnumerable<(string Value, string Label)> Options(IRenderedFragment cut)
         => cut.FindAll("#curriculum-id option").Select(option => (option.GetAttribute("value") ?? string.Empty, Text(option))).ToList();
 
-    private IRenderedComponent<TraineeProfileEdit> RenderAdmission(FakeSender sender)
-    {
-        Services.AddSingleton<IScopedSender>(sender);
-
-        var navigation = Services.GetRequiredService<NavigationManager>();
-        navigation.NavigateTo(navigation.GetUriWithQueryParameter("userId", PendingUserId));
-
-        var cut = RenderComponent<TraineeProfileEdit>();
-        cut.WaitForState(() => cut.FindAll("aside.detail-card").Count > 0);
-
-        return cut;
-    }
-
     private IRenderedComponent<TraineeProfileEdit> RenderPage(FakeSender sender)
     {
         Services.AddSingleton<IScopedSender>(sender);
@@ -462,9 +445,6 @@ public sealed class TraineeProfileEndDateTests : TestContext
             new(2, "CPSA Paediatrics", "11.2", 1, 1)
         ];
 
-        /// <summary>What the admission's curriculum picker query answers (T304): the institution's active adoptions.</summary>
-        public IReadOnlyList<CurriculumChoiceDto> AdmissionChoices { get; init; } = [new(2, "CPSA Paediatrics", "11.2", 1, 1)];
-
         /// <summary>The replay a save reports (T304), or none.</summary>
         public TraineeCreditRecount? Recount { get; init; }
 
@@ -503,11 +483,6 @@ public sealed class TraineeProfileEndDateTests : TestContext
             object response = request switch
             {
                 GetTraineeCurriculumChoicesQuery query when query.TraineeProfileId == ProfileId => ProfileChoices,
-                GetAdmissionCurriculumChoicesQuery query when query.UserId == PendingUserId => AdmissionChoices,
-                ListPendingTraineesQuery => new[]
-                {
-                    new PendingTraineeDto(PendingUserId, "new@wombat.local", "Ayanda", "Zulu", 1, [1], [1])
-                },
                 GetTraineeProfileByIdQuery query when query.Id == ProfileId => Profile(),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };

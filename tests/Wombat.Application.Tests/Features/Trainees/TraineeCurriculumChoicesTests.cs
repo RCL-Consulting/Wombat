@@ -61,6 +61,11 @@ public sealed class TraineeCurriculumChoicesTests
         await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("The trainee profile could not be found.");
     }
 
+    /// <summary>
+    /// T373 (F1): the Admit page reads its choices from <see cref="GetAdmissionCandidateQuery" />, which replaced
+    /// GetAdmissionCurriculumChoicesQuery. A registrar invited to no sub-speciality (this one) is offered the institution's
+    /// active adoptions alone, as before; one invited to a sub-speciality, its adopted curriculum alone (below).
+    /// </summary>
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
@@ -70,21 +75,37 @@ public sealed class TraineeCurriculumChoicesTests
         await using var db = Seeded(profileOn: V111);
         var principal = administrator ? TestPrincipals.Administrator() : TestPrincipals.InstitutionalAdmin(Kgk);
 
-        var choices = await new GetAdmissionCurriculumChoicesQueryHandler(db, Users().Object).Handle(
-            new GetAdmissionCurriculumChoicesQuery("pending-1", principal), CancellationToken.None);
+        var candidate = await new GetAdmissionCandidateQueryHandler(db, Users().Object).Handle(
+            new GetAdmissionCandidateQuery("pending-1", principal), CancellationToken.None);
 
-        choices.Select(choice => choice.Id).Should().BeEquivalentTo([V112, Neonatology]);
+        candidate!.Curricula.Select(choice => choice.Id).Should().BeEquivalentTo([V112, Neonatology]);
     }
 
+    /// <summary>T373 (F1): invited to General Paediatrics, the admission offers its active adoption (11.2) alone.</summary>
     [Fact]
-    public async Task AnAdmission_OfAnotherInstitutionsRegistrar_IsRefused()
+    public async Task AnAdmission_OfARegistrarInvitedToASubSpeciality_IsOfferedItsAdoptedCurriculumAlone()
+    {
+        await using var db = Seeded(profileOn: V111);
+        var users = new Mock<IUserAdministrationService>();
+        users.Setup(s => s.GetByIdAsync("pending-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserIdentityDetails("pending-1", "new@kgk", "Ayanda", "Zulu", Kgk, [1], [1], [WombatRoles.PendingTrainee]));
+
+        var candidate = await new GetAdmissionCandidateQueryHandler(db, users.Object).Handle(
+            new GetAdmissionCandidateQuery("pending-1", TestPrincipals.InstitutionalAdmin(Kgk)), CancellationToken.None);
+
+        candidate!.Curricula.Select(choice => choice.Id).Should().Equal(V112);
+    }
+
+    /// <summary>T373 (M08): another institution's registrar reads as no registrar at all. Until T373 the query threw "The pending trainee could not be found."</summary>
+    [Fact]
+    public async Task AnAdmission_OfAnotherInstitutionsRegistrar_IsNotFound()
     {
         await using var db = Seeded(profileOn: V111);
 
-        var act = () => new GetAdmissionCurriculumChoicesQueryHandler(db, Users().Object).Handle(
-            new GetAdmissionCurriculumChoicesQuery("pending-1", TestPrincipals.InstitutionalAdmin(Other)), CancellationToken.None);
+        var candidate = await new GetAdmissionCandidateQueryHandler(db, Users().Object).Handle(
+            new GetAdmissionCandidateQuery("pending-1", TestPrincipals.InstitutionalAdmin(Other)), CancellationToken.None);
 
-        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("The pending trainee could not be found.");
+        candidate.Should().BeNull();
     }
 
     private static Mock<IUserAdministrationService> Users()

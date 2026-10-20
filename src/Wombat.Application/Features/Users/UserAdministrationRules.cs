@@ -41,13 +41,14 @@ public static class UserAdministrationRules
     /// </remarks>
     public const string TraineeRoleByAdmissionOnly =
         "The Trainee role cannot be added or removed here. A registrar becomes a trainee when admitted to a curriculum: " +
-        "open Trainees and choose 'Admit to curriculum'. Marking their programme complete takes the role away.";
+        "open Trainees and choose 'Admit…'. Marking their programme complete takes the role away.";
 
     /// <summary>
     /// What the user page's Add role field says: that Trainee is not offered, and where a registrar is made one. (T303)
+    /// Since T373 the button is Waiting to be admitted's "Admit…" (fix pass, C5/R1): until then it was "Admit to curriculum".
     /// </summary>
     public const string TraineeRoleNotOffered =
-        "Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit to curriculum'.";
+        "Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit…'.";
 
     /// <summary>
     /// Refuses the Trainee role (<see cref="TraineeRoleByAdmissionOnly" />), then any other role the surface does not

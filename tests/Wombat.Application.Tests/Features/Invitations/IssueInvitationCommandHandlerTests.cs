@@ -10,6 +10,7 @@ using Wombat.Domain.Identity;
 using Wombat.Application.Features.Invitations;
 using Wombat.Application.Tests.TestHelpers;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.Features.Invitations;
 
@@ -27,7 +28,7 @@ public sealed class IssueInvitationCommandHandlerTests
         var emailSender = new Mock<IEmailSender>();
         var options = Options.Create(new WombatOptions { BaseUrl = "https://wombat.example.test" });
 
-        var handler = new IssueInvitationCommandHandler(db, _tokenService, emailSender.Object, options);
+        var handler = new IssueInvitationCommandHandler(db, _tokenService, emailSender.Object, FakeUserDirectory.Empty, options);
 
         var command = new IssueInvitationCommand(
             Email: "invitee@example.test",
@@ -52,7 +53,7 @@ public sealed class IssueInvitationCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_EmailBodyContainsRoleAndExpiryDate()
+    public async Task Handle_EmailBodyContainsRolesLabelAndLastDay()
     {
         await using var db = CreateDb();
         db.Institutions.Add(new Domain.Institutions.Institution { Id = 1, Name = "Test" });
@@ -66,15 +67,17 @@ public sealed class IssueInvitationCommandHandlerTests
             .Returns(Task.CompletedTask);
 
         var options = Options.Create(new WombatOptions { BaseUrl = "https://wombat.example.test" });
-        var handler = new IssueInvitationCommandHandler(db, _tokenService, emailSender.Object, options);
+        var handler = new IssueInvitationCommandHandler(db, _tokenService, emailSender.Object, FakeUserDirectory.Empty, options);
 
         await handler.Handle(
             new IssueInvitationCommand("t@e.test", WombatRoles.InstitutionalAdmin, 1, null, null, null, "admin-1", TestPrincipals.Administrator()),
             CancellationToken.None);
 
         captured.Should().NotBeNull();
-        captured!.TextBody.Should().Contain(WombatRoles.InstitutionalAdmin);
-        captured.TextBody.Should().MatchRegex(@"\d{4}-\d{2}-\d{2}"); // expiry date
+        // T373 (S12): the role's label and its scope, never its key; the link's last day as "works until".
+        captured!.TextBody.Should().Contain("as Institutional admin at Test.");
+        captured.TextBody.Should().NotContain(WombatRoles.InstitutionalAdmin);
+        captured.TextBody.Should().MatchRegex(@"it works until \d{4}-\d{2}-\d{2}\.");
         captured.Tags.Should().Contain("invitation");
     }
 
