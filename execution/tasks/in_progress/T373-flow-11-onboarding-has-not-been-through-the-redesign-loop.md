@@ -93,3 +93,15 @@ T369 (flow 10), T366 (flow 09), T264, T286, T289, T303, T304, T306, T315, T317, 
   rendered in Chromium (`round-3-check.md`): F 9/1, M 10/1, S 22/2 done/partly, none not done; 0 px sideways on every
   board at every width; no invented data. Two must-fixes (the Invitee header's `.col-wrap`; M12's name before a read)
   and five partlies taken into the build as rules (the check's last section). **Final.** **Next:** step 6, the build.
+- **2026-10-20, step 6, built** (`69a17c70`, squashed from `t373`). The operator's word: push, drop the scratch DBs, T371
+  no, proceed. One planner (Opus: `build-lanes.md`, `build-contracts.md`, `round-3/boards-text.md`, and § 0 with the one
+  migration `T373_InvitationIssuedAsRole`), lanes I, G and A in one wave (Opus), the runbook lane (Opus), three Sonnet
+  reviews (`build-review-code.md`, `-pages.md`, `-runbook.md`, merged in `build-review.md`: no must-fix, 15
+  should-fix), one fix pass (Opus; every finding held and was fixed; B1 a new card "Another invitation opened"; B2
+  admission in one transaction; R3 native `disabled` kept under T234's rule). Suites: Domain 829, Application 3980,
+  Infrastructure 1029, Architecture 52, Web 3980, Integration 507. Lanes I and A could not finish their own suites (the
+  machine ran low on memory with three lanes testing): run suites one at a time. For step 7: the clipboard permission
+  in the Playwright context (README § The browser); invitation stubs are tagged `invitation` only (no `role:`), so
+  match a link to a person by the mail's text; 5 more stub mails from admissions; check 901, 1000 and 1100 px for words
+  split in Delivery and Curriculum; flow 13's Completed table still scrolls in its container at 390. Branches `t373*`
+  and their worktrees kept. **Next:** step 7, the whole-runbook replay on a fresh database.

@@ -20,7 +20,8 @@ The operator said "proceed". Pushed `e825e2e2..e598c490`, then (10-20, the opera
   https://claude.ai/artifact/SFn6dDmJnoww2fhYrQD416 (v25 installed, `tokens.css` by hand, mark
   `/_blob/b3cd1c9ecfc87765138aec8743e383bc`, `9f81d865`), staged in `design/upload/`. Rounds 1 and 2 drawn and
   reviewed; the operator took Q1–Q18 and F1–F10 as recommended (`f5ed1cc5`). Round 3 drawn (203 boards),
-  saved and checked final (`round-3-check.md`). **Next:** step 6, the build (flow 10's build lanes as template).
+  checked final. **Built** (`69a17c70`; six suites green; T373's step-6 note has the replay's cautions). **Next:**
+  step 7, the replay on a fresh database (flow 10's `replay-brief.md`), on the operator's word.
 
 ### Environment left
 
