@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>R3-0-spec · flow 11 round 3, continued</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="r3.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--link-color)}a:hover{color:var(--link-hover)}
+</style>
+</helmet>
+<div class="doc"><h1>R3-0-spec · flow 11 round 3 (2 of 2)</h1>
+<h2>DESIGN.md text</h2>
+<h3>§ The invitations list (round 2's text, with Last day)</h3>
+<blockquote>The list is the page: Invitee (the row header, the address breaking after its @), Role and scope (the role's label over its scope; the institution or College too for the Administrator), Issued (the date over the time in SAST), Last day (the last South African calendar day the link works), Delivery, and the row's actions. Delivery is a state word with an icon: Being sent (clock, muted), Sent (circle-check, success), Not delivered and Check the address (circle-alert, warning, 600). Its explanation is a note row under its row (tr.has-note, then a second &lt;tr&gt; with td.history-note.history-note--warning across every column), and the row's Resend is described by it. Rows not delivered come first, newest first among them, then the rest newest first. A not-delivered row offers Resend before Revoke…; any other row Revoke… alone. An invitation that passes its last day unused moves to Expired, not used for 30 days on the same calendar, with Invite again. Nothing in the table holds a column to one line: Issued and Last day wrap, Delivery is .col-wrap, the actions .col-actions.</blockquote>
+<h3>§ Account / auth page (S15)</h3>
+<blockquote>AuthLayout's one message slot becomes a message per field: a refusal sits under its field (.validation-message), the field marked and described by it, and the focus goes to the field. PasswordRules' refusal is the Password field's message, and the field is described by it and by the rules' list (G04). A refused confirmation empties both password fields, keeps the focus on Password, says "Type the password again in both fields.", and Password is described by the confirmation's message too (G05). The lockup and the purpose line head sign in and Register.</blockquote>
+<h3>§ Form system (S15, M11)</h3>
+<blockquote>A required field's label ends in the required mark (span.required-mark, aria-hidden), its control carries aria-required="true", and "* marks a field you must fill in." stands above the form's first field; a group's legend adds a visually hidden "required". No "(optional)": a field's help says what leaving it empty does. A single possible value is read out as dl.form-group with dd.readonly-value. On Invite a person, a field the chosen role does not take is not drawn (never disabled there); elsewhere the form system's disabled rules stand. Resend's aria-disabled and the old link Alert text are gone with the OneTimeLink.</blockquote>
+<h3>§ ConfirmDialog (M8)</h3>
+<blockquote>Below 641px a dialog's buttons are 44px and the row's width, stacked column-reverse: the action on top, the safe button last on screen and first in tab order. One rule in app.css: .dialog-card .form-actions .btn { min-height: 2.75rem } with .dialog-card .form-actions { flex-direction: column-reverse }; the top-layer dialog is outside any page wrapper, so the rule cannot be scoped to one. Flows 08's and 10's scoped copies fold into it.</blockquote>
+<h3>§ Page header and buttons (M9)</h3>
+<blockquote>Below 641px every header action is 44px and the row's width (.header-container .actions-cell .btn), and every stand-alone button in a page column is 44px (.inv-page .btn).</blockquote>
+<h3>§ Table system (S16)</h3>
+<blockquote>DataTable gains StackWide: it stacks below 900px with the explicit roles Stack gives. A note row is a second &lt;tr&gt; from the Row fragment. Row buttons are 44px from 900px down.</blockquote>
+<p>The Button system's and ConfirmDialog's restatements of round 2 are dropped (S15).</p>
+
+<h2>Classes (S19)</h2>
+<div class="table-container"><table class="clinic-table"><caption>Each round 2 class, reused or NEW</caption><thead><tr><th scope="col">Class</th><th scope="col">Round 3</th></tr></thead><tbody><tr><th scope="row">tr.inv-has-note / tr.inv-note</th><td>reuses tr.has-note / td.history-note (flow 03); NEW modifier .history-note--warning, because the explanation keeps the warning tint and stripe</td></tr><tr><th scope="row">.consequence</th><td>reuses .submit-check (SubmitCheck)</td></tr><tr><th scope="row">.inv-section, .inv-section-head</th><td>reuses .list-section, .list-section-title</td></tr><tr><th scope="row">.admit-facts, .wait-facts</th><td>reuses .detail-list</td></tr><tr><th scope="row">.wait-steps</th><td>reuses .account-steps</td></tr><tr><th scope="row">.inv-role / .inv-scope</th><td>reuses .person-cell (name over the scope)</td></tr><tr><th scope="row">.field-label / .inv-readback</th><td>reuses dl.form-group + dd.readonly-value (S18)</td></tr><tr><th scope="row">.inv-radio*, the hand-sized legend</th><td>reuses fieldset.form-group.choice-row, .form-check.review-type-choice, .review-type-help (S17)</td></tr><tr><th scope="row">.result-block</th><td>gone: ActionResult (.action-result) (S11)</td></tr><tr><th scope="row">.inv-optional</th><td>gone (F9)</td></tr><tr><th scope="row">.reg-card-icon, .ty-value--wait, the auth card's three phone rules, the date-input font rule</th><td>deleted (S19)</td></tr><tr><th scope="row">.inv-when span</th><td>kept: the date over the time (M6)</td></tr><tr><th scope="row">.delivery, --sending, --sent, --warn</th><td>NEW, because Delivery is a state word with an icon and no badge (Q15)</td></tr><tr><th scope="row">.otl, .otl-row, .otl-help, .otl-said</th><td>NEW, because the OneTimeLink has no system equivalent (S10)</td></tr><tr><th scope="row">.inv-page, .inv-page--form, .inv-count</th><td>NEW, because the four pages share a column of parts 24px apart and a plain-text count</td></tr><tr><th scope="row">.wait-card, .wait-links</th><td>NEW, because DashboardCard takes the control edge here (F8) and its links an arrow icon</td></tr><tr><th scope="row">.ty-output</th><td>NEW: the Training year &lt;output&gt;'s size</td></tr><tr><th scope="row">.col-actions--single</th><td>NEW, because .col-actions' 12rem made Current trainees scroll at 901px (M6)</td></tr><tr><th scope="row">.skel-title, .skel-line, .skel-short, .loading-line</th><td>NEW, because Skeleton's sizes were inline styles (S20)</td></tr><tr><th scope="row">general rules below 641px</th><td>NEW in app.css: .dialog-card .form-actions (M8), .header-container .actions-cell .btn (M9), .inv-page .btn (M9); from 900px .clinic-table--stack-wide .btn (S16). Flows 08's and 10's scoped copies (.committee-calendar, .msf-page) fold into them</td></tr></tbody></table></div>
+
+<h2>Mails (Q7, S12)</h2>
+<blockquote><b>The invitation (S12).</b> Subject: Your Wombat invitation. "You are invited to Wombat as Institutional admin at Kgosi Kgari Teaching Hospital." [the role's label, never its key; the scope in the page's words: "in Paediatrics / Paediatrics at Kgosi Kgari Teaching Hospital", "at College of Paediatricians of South Africa"] "Register with this link; it works until 2026-11-02." [the link to /account/register/start?token=…] <span class="old">Register as InstitutionalAdmin … expires …</span></blockquote>
+<blockquote><b>The admission (Q7, decided, T367).</b> Subject: You are admitted in Wombat. "You have been admitted to the Paediatric EPA Curriculum (11.1), in training year 4." [or "Your programme starts on 2027-01-15."] "If you were signed in to Wombat, you have been signed out once: sign in again to log activities and follow your progress." [Sign in]. No other data. The admission's result claims no delivery.</blockquote>
+
+<h2>Words changed this round (beside the old)</h2>
+<ul>
+<li>"It works until 2026-11-02." <span class="old">It expires on 2026-11-02, in 14 days.</span> (OneTimeLink, Register's note, G10, N17, N20)</li>
+<li>Column "Last day" <span class="old">Expires</span></li>
+<li>"Could not copy. Select the link and copy it yourself." NEW (N06b)</li>
+<li>"Choose a role." NEW (N25)</li>
+<li>"Nothing is adopted at Kgosi Kgari Teaching Hospital yet, so roles that need a speciality cannot be invited. Adopt a curriculum under Curriculum adoptions." NEW (N26)</li>
+<li>"Left empty, it would be 2024-01-15, which has passed. Enter the expected completion." NEW (M15)</li>
+<li>"Not admitted. Lerato Molefe already has an active trainee profile." <span class="old">This user already has an active trainee profile.</span> (M09)</li>
+<li>"Not admitted. Lerato Molefe's account is deactivated. Reactivate it under Users first." NEW (M13)</li>
+<li>"This registrar belongs to no institution, so no curriculum can be offered." NEW (M04b)</li>
+<li>"Last name: enter 100 characters or fewer." <span class="old">Enter your first name and last name, each of at most 100 characters, and a password.</span> (G06)</li>
+<li>"Loading the invitations." / "Loading what you can invite." / "Loading the trainees." / "Loading this registrar." NEW</li>
+<li>"Training years turn every 365 days from the programme start." NEW (Admit's help, Current trainees' caption)</li>
+<li>"Cancel" <span class="old">Back to invitations</span> (Invite a person)</li>
+</ul>
+
+<h2>Owner table and the accepted exceptions</h2>
+<ul>
+<li>/admin/invitations/new: Invitations lit (aria-current="true"), Home › Invitations › Invite a person.</li>
+<li>/admin/trainees/admit: for the Institutional admin, Trainees lit (aria-current="true"), Home › Trainees › Admit ‹name›. For the Administrator, whose menu has no Trainees: nothing lit, the trail Home › Trainees › Admit ‹name› with an explicit crumb to /admin/trainees (M04b).</li>
+<li>Inline links at 390 (19–21px, in running text: N15, N17, M04, M09, M13) are the accepted inline exception (WCAG 2.5.8's inline case), as flow 10.</li>
+</ul>
+
+<h2>DATA the build must add</h2>
+<ul>
+<li>InvitationPreviewDto: the institution or College name, the speciality and sub-speciality names, ExpiresOn (the South African calendar date).</li>
+<li>IssueInvitation: find-by-address and an unfiltered active-invitation lookup, with the typed refusal (M3).</li>
+<li>ListExpiredUnusedInvitationsQuery, and the Invite again prefill.</li>
+<li>The in-memory Not-delivered-first order.</li>
+<li>Invitation.IssuedAsRole (F3; one migration).</li>
+<li>Expiry on the South African calendar: the ProgrammeCalendar date, not the UTC date (F7).</li>
+<li>The pending registrar's Home part: her institution, scope names, the curriculum adopted for her sub-speciality, the used invitation's issuer, IssuedAsRole and UsedOn.</li>
+<li>PendingTraineeDto: scope names and Registered; deactivated accounts excluded (S6).</li>
+<li>TraineeProfileDto.TrainingYear.</li>
+<li>GetAdmissionCandidateQuery, and the start's training year and derived completion read (with F4's refusal).</li>
+<li>The admission's mail and the ?admitted= result (S8).</li>
+<li>wombat.js's clipboard call (with its failure, S10).</li>
+<li>The /account/register/start path and its cookie (S1, S2).</li>
+<li>The register POST's signed-in refusal (M4).</li>
+<li>One transaction for provisioning and accept (F10).</li>
+<li>No ResentOn (F2).</li>
+</ul>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":6400}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,4166 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-10-19T12:38:46Z"
+ },
+ "title": "Wombat 11",
+ "launch": {
+  "view": "canvas",
+  "page": "r3"
+ },
+ "pages": [
+  {
+   "id": "r1",
+   "name": "Round 1"
+  },
+  {
+   "id": "r2",
+   "name": "Round 2"
+  },
+  {
+   "id": "r3",
+   "name": "Round 3"
+  }
+ ],
+ "boards": {
+  "A1-issued-1280.dc.html": {
+   "x": 0,
+   "y": 260,
+   "w": 1280,
+   "h": 1700,
+   "title": "A1 · 2.5 issued: the link above the reset form · focus on the result",
+   "page": "r1"
+  },
+  "A2-refused-1280.dc.html": {
+   "x": 1360,
+   "y": 260,
+   "w": 1280,
+   "h": 1500,
+   "title": "A2 · 2.6 refused: under Speciality, van Rensburg's link gone · focus on Speciality",
+   "page": "r1"
+  },
+  "A3-revoked-1280.dc.html": {
+   "x": 2720,
+   "y": 260,
+   "w": 1280,
+   "h": 1300,
+   "title": "A3 · 2.17 after Revoke invitation: the result above the form · focus on the result",
+   "page": "r1"
+  },
+  "A4-resent-1280.dc.html": {
+   "x": 4080,
+   "y": 260,
+   "w": 1280,
+   "h": 1200,
+   "title": "A4 · 2.26 after Resend: the new link at the top · focus on the result",
+   "page": "r1"
+  },
+  "A5-heavy-1280.dc.html": {
+   "x": 5440,
+   "y": 260,
+   "w": 1280,
+   "h": 2500,
+   "title": "A5 · heavy: 20 rows, 3 not delivered first, 1 at check the address",
+   "page": "r1"
+  },
+  "A6-admin-1280.dc.html": {
+   "x": 6800,
+   "y": 260,
+   "w": 1280,
+   "h": 1000,
+   "title": "A6 · 1.5 the Administrator: College admin chosen, the College refused · focus on College",
+   "page": "r1"
+  },
+  "A7-issued-390.dc.html": {
+   "x": 8160,
+   "y": 260,
+   "w": 390,
+   "h": 2050,
+   "title": "A7 · 390 · 2.16 Molefe issued, Copy link pressed: Copied, announced",
+   "page": "r1"
+  },
+  "A8-heavy-390.dc.html": {
+   "x": 8630,
+   "y": 260,
+   "w": 390,
+   "h": 2700,
+   "title": "A8 · 390 · heavy: rows stacked, not delivered first, 44px actions",
+   "page": "r1"
+  },
+  "B1-issued-1280.dc.html": {
+   "x": 0,
+   "y": 3480,
+   "w": 1280,
+   "h": 1700,
+   "title": "B1 · 2.5 issued on Invite a person: link above, form reset for the next · focus on the result",
+   "page": "r1"
+  },
+  "B2-refused-1280.dc.html": {
+   "x": 1360,
+   "y": 3480,
+   "w": 1280,
+   "h": 1400,
+   "title": "B2 · 2.6 refused under Speciality; no link on the page · focus on Speciality",
+   "page": "r1"
+  },
+  "B3-revoked-1280.dc.html": {
+   "x": 2720,
+   "y": 3480,
+   "w": 1280,
+   "h": 900,
+   "title": "B3 · 2.17 the list after Revoke invitation · focus on the result; its button opens Invite a person, prefilled",
+   "page": "r1"
+  },
+  "B4-resent-1280.dc.html": {
+   "x": 4080,
+   "y": 3480,
+   "w": 1280,
+   "h": 820,
+   "title": "B4 · 2.26 the list after Resend · focus on the result",
+   "page": "r1"
+  },
+  "B5-heavy-1280.dc.html": {
+   "x": 5440,
+   "y": 3480,
+   "w": 1280,
+   "h": 2100,
+   "title": "B5 · heavy on the list page: nothing but the list",
+   "page": "r1"
+  },
+  "B6-admin-1280.dc.html": {
+   "x": 6800,
+   "y": 3480,
+   "w": 1280,
+   "h": 1500,
+   "title": "B6 · 1.5 the Administrator's page: eight roles as radios, College refused · focus on College",
+   "page": "r1"
+  },
+  "B7-issued-390.dc.html": {
+   "x": 8160,
+   "y": 3480,
+   "w": 390,
+   "h": 2300,
+   "title": "B7 · 390 · 2.16 Molefe issued, Copied announced; radios as 44px rows",
+   "page": "r1"
+  },
+  "B8-heavy-390.dc.html": {
+   "x": 8630,
+   "y": 3480,
+   "w": 390,
+   "h": 2050,
+   "title": "B8 · 390 · heavy list stacked; Invite a person the header's full-width action",
+   "page": "r1"
+  },
+  "C1-issued-1280.dc.html": {
+   "x": 0,
+   "y": 6300,
+   "w": 1280,
+   "h": 1500,
+   "title": "C1 · 2.5 issued: the link heads the form's column · focus on the result",
+   "page": "r1"
+  },
+  "C2-refused-1280.dc.html": {
+   "x": 1360,
+   "y": 6300,
+   "w": 1280,
+   "h": 1300,
+   "title": "C2 · 2.6 refused under Speciality · focus on Speciality",
+   "page": "r1"
+  },
+  "C3-revoked-1280.dc.html": {
+   "x": 2720,
+   "y": 6300,
+   "w": 1280,
+   "h": 1000,
+   "title": "C3 · 2.17 the revoked row stays as its result until the next action · focus on it",
+   "page": "r1"
+  },
+  "C4-resent-1280.dc.html": {
+   "x": 4080,
+   "y": 6300,
+   "w": 1280,
+   "h": 1000,
+   "title": "C4 · 2.26 the new link opens in the row it was resent from · focus on it",
+   "page": "r1"
+  },
+  "C5-heavy-1280.dc.html": {
+   "x": 5440,
+   "y": 6300,
+   "w": 1280,
+   "h": 3000,
+   "title": "C5 · heavy: 20 rows beside the form",
+   "page": "r1"
+  },
+  "C6-admin-1280.dc.html": {
+   "x": 6800,
+   "y": 6300,
+   "w": 1280,
+   "h": 900,
+   "title": "C6 · 1.5 the Administrator · focus on College",
+   "page": "r1"
+  },
+  "C7-issued-390.dc.html": {
+   "x": 8160,
+   "y": 6300,
+   "w": 390,
+   "h": 1900,
+   "title": "C7 · 390 · the form's column goes first, then the rows",
+   "page": "r1"
+  },
+  "C8-heavy-390.dc.html": {
+   "x": 8630,
+   "y": 6300,
+   "w": 390,
+   "h": 2600,
+   "title": "C8 · 390 · heavy: the form first, then the rows",
+   "page": "r1"
+  },
+  "S1-revoke-dialog-1280.dc.html": {
+   "x": 0,
+   "y": 9820,
+   "w": 1280,
+   "h": 1050,
+   "title": "S1 · the revoke confirmation (all variations)",
+   "page": "r1"
+  },
+  "S2-revoke-dialog-390.dc.html": {
+   "x": 1360,
+   "y": 9820,
+   "w": 390,
+   "h": 844,
+   "title": "S2 · 390 · the revoke confirmation",
+   "page": "r1"
+  },
+  "S3-issue-refusals-1280.dc.html": {
+   "x": 1830,
+   "y": 9820,
+   "w": 1280,
+   "h": 1500,
+   "title": "S3 · every issue refusal, beside its field, keeping what was typed",
+   "page": "r1"
+  },
+  "S4-loading-1280.dc.html": {
+   "x": 3190,
+   "y": 9820,
+   "w": 1280,
+   "h": 800,
+   "title": "S4 · loading: the header and a skeleton; no Issue invitation, Resend or Revoke until the read is in",
+   "page": "r1"
+  },
+  "S5-load-error-1280.dc.html": {
+   "x": 4550,
+   "y": 9820,
+   "w": 1280,
+   "h": 700,
+   "title": "S5 · a failed read: fixed words and Try again; no form offered until the read succeeds",
+   "page": "r1"
+  },
+  "S6-load-error-390.dc.html": {
+   "x": 5910,
+   "y": 9820,
+   "w": 390,
+   "h": 844,
+   "title": "S6 · 390 · the failed read",
+   "page": "r1"
+  },
+  "R1-register-1280.dc.html": {
+   "x": 0,
+   "y": 11840,
+   "w": 1280,
+   "h": 1350,
+   "title": "R1 · 2.8 Smit's form: the lockup and purpose, whom and what it is for; the token already gone from the address",
+   "page": "r1"
+  },
+  "R2-register-390.dc.html": {
+   "x": 1360,
+   "y": 11840,
+   "w": 390,
+   "h": 1450,
+   "title": "R2 · 390 · 2.8",
+   "page": "r1"
+  },
+  "R3-password-refused-1280.dc.html": {
+   "x": 1830,
+   "y": 11840,
+   "w": 1280,
+   "h": 1420,
+   "title": "R3 · 2.9 first try: the refusal under Password, the names kept · focus on Password",
+   "page": "r1"
+  },
+  "R4-confirm-refused-390.dc.html": {
+   "x": 3190,
+   "y": 11840,
+   "w": 390,
+   "h": 1550,
+   "title": "R4 · 390 · 2.9 second try: the refusal under Confirm password, the names kept · focus on Password (described by the refusal)",
+   "page": "r1"
+  },
+  "R5-used-1280.dc.html": {
+   "x": 3660,
+   "y": 11840,
+   "w": 1280,
+   "h": 720,
+   "title": "R5 · 1.9, 2.11 a used link: says why, offers Sign in · no form",
+   "page": "r1"
+  },
+  "R6-used-390.dc.html": {
+   "x": 5020,
+   "y": 11840,
+   "w": 390,
+   "h": 760,
+   "title": "R6 · 390 · the used link",
+   "page": "r1"
+  },
+  "R7-refused-links-1280.dc.html": {
+   "x": 5490,
+   "y": 11840,
+   "w": 1280,
+   "h": 1900,
+   "title": "R7 · every other refused link, each an h1 and what to do next",
+   "page": "r1"
+  },
+  "H1-pending-1280.dc.html": {
+   "x": 0,
+   "y": 14260,
+   "w": 1280,
+   "h": 900,
+   "title": "H1 · 2.18 Molefe's Home: who, where, who admits, what happens next",
+   "page": "r1"
+  },
+  "H2-pending-390.dc.html": {
+   "x": 1360,
+   "y": 14260,
+   "w": 390,
+   "h": 1350,
+   "title": "H2 · 390 · the same card",
+   "page": "r1"
+  },
+  "H3-pending-menu-390.dc.html": {
+   "x": 1830,
+   "y": 14260,
+   "w": 390,
+   "h": 844,
+   "title": "H3 · 390 · 2.19 Mahlangu's menu open: Home, then My data rights (unchanged, flow 01)",
+   "page": "r1"
+  },
+  "W1a-list-1280.dc.html": {
+   "x": 0,
+   "y": 16130,
+   "w": 1280,
+   "h": 820,
+   "title": "W1a · 2.28 two lists: Waiting to be admitted over Current trainees",
+   "page": "r1"
+  },
+  "W1b-admit-1280.dc.html": {
+   "x": 1360,
+   "y": 16130,
+   "w": 1280,
+   "h": 820,
+   "title": "W1b · 2.29 a page of its own: training year 4 read out as the start is chosen",
+   "page": "r1"
+  },
+  "W1c-derived-1280.dc.html": {
+   "x": 2720,
+   "y": 16130,
+   "w": 1280,
+   "h": 900,
+   "title": "W1c · 2.30 Admit lands back on Trainees, the result focused; nobody waiting",
+   "page": "r1"
+  },
+  "W1d-list-390.dc.html": {
+   "x": 4080,
+   "y": 16130,
+   "w": 390,
+   "h": 1300,
+   "title": "W1d · 390 · both lists stacked; Admit… a 44px row action",
+   "page": "r1"
+  },
+  "W2a-list-1280.dc.html": {
+   "x": 4550,
+   "y": 16130,
+   "w": 1280,
+   "h": 700,
+   "title": "W2a · 2.28 one list, filtered by status (Waiting chosen)",
+   "page": "r1"
+  },
+  "W2b-dialog-1280.dc.html": {
+   "x": 5910,
+   "y": 16130,
+   "w": 1280,
+   "h": 980,
+   "title": "W2b · 2.29 admission in a dialog over the list; training year in the dialog",
+   "page": "r1"
+  },
+  "W2c-four-1280.dc.html": {
+   "x": 7270,
+   "y": 16130,
+   "w": 1280,
+   "h": 760,
+   "title": "W2c · 2.29 four admitted, one waiting; the result above the list",
+   "page": "r1"
+  },
+  "W2d-dialog-390.dc.html": {
+   "x": 8630,
+   "y": 16130,
+   "w": 390,
+   "h": 1250,
+   "title": "W2d · 390 · the dialog full width, buttons stacked",
+   "page": "r1"
+  },
+  "W3a-inline-1280.dc.html": {
+   "x": 9100,
+   "y": 16130,
+   "w": 1280,
+   "h": 1000,
+   "title": "W3a · 2.29 the row opens its admission under it (the editing stripe); one open at a time",
+   "page": "r1"
+  },
+  "W3b-four-1280.dc.html": {
+   "x": 10460,
+   "y": 16130,
+   "w": 1280,
+   "h": 900,
+   "title": "W3b · 2.29 four admitted: each left Waiting; the result where the row was",
+   "page": "r1"
+  },
+  "W3c-inline-390.dc.html": {
+   "x": 11820,
+   "y": 16130,
+   "w": 390,
+   "h": 1500,
+   "title": "W3c · 390 · the open row stacks its fields",
+   "page": "r1"
+  },
+  "Z1-spec.dc.html": {
+   "x": 0,
+   "y": 18150,
+   "w": 1280,
+   "h": 4300,
+   "title": "Spec · round 1",
+   "page": "r1"
+  },
+  "Z2-steps.dc.html": {
+   "x": 1360,
+   "y": 18150,
+   "w": 1280,
+   "h": 3700,
+   "title": "Steps · round 1",
+   "page": "r1"
+  },
+  "R2-00-captures-1280.dc.html": {
+   "x": 0,
+   "y": 260,
+   "w": 1280,
+   "h": 900,
+   "title": "R2-00 · the captures: none in round 1, all eleven in round 2",
+   "page": "r2"
+  },
+  "R2-0-spec-2.dc.html": {
+   "x": 1520,
+   "y": 260,
+   "w": 1280,
+   "h": 7600,
+   "title": "R2-0-spec (2 of 2)",
+   "page": "r2"
+  },
+  "R2-0-spec.dc.html": {
+   "x": 3040,
+   "y": 260,
+   "w": 1280,
+   "h": 6400,
+   "title": "R2-0-spec (1 of 2)",
+   "page": "r2"
+  },
+  "R2-0-steps.dc.html": {
+   "x": 4560,
+   "y": 260,
+   "w": 1280,
+   "h": 5200,
+   "title": "R2-0-steps",
+   "page": "r2"
+  },
+  "R2-L01-none-1280.dc.html": {
+   "x": 0,
+   "y": 8540,
+   "w": 1280,
+   "h": 620,
+   "title": "L01 · 2.1, 2.28 none (Mbatha) · 1280",
+   "page": "r2"
+  },
+  "R2-L01-none-390.dc.html": {
+   "x": 1360,
+   "y": 8540,
+   "w": 390,
+   "h": 760,
+   "title": "L01 · 2.1, 2.28 none (Mbatha) · 390",
+   "page": "r2"
+  },
+  "R2-L02-admin-none-1280.dc.html": {
+   "x": 1990,
+   "y": 8540,
+   "w": 1280,
+   "h": 620,
+   "title": "L02 · 1.5, 1.11 none (the Administrator) · 1280",
+   "page": "r2"
+  },
+  "R2-L02-admin-none-390.dc.html": {
+   "x": 3350,
+   "y": 8540,
+   "w": 390,
+   "h": 760,
+   "title": "L02 · 1.5, 1.11 none (the Administrator) · 390",
+   "page": "r2"
+  },
+  "R2-L03-admin-two-1280.dc.html": {
+   "x": 3980,
+   "y": 8540,
+   "w": 1280,
+   "h": 720,
+   "title": "L03 · 1.7 the Administrator's two rows (C17) · 1280",
+   "page": "r2"
+  },
+  "R2-L03-admin-two-390.dc.html": {
+   "x": 5340,
+   "y": 8540,
+   "w": 390,
+   "h": 1100,
+   "title": "L03 · 1.7 the Administrator's two rows (C17) · 390",
+   "page": "r2"
+  },
+  "R2-L04-nine-1280.dc.html": {
+   "x": 5970,
+   "y": 8540,
+   "w": 1280,
+   "h": 1350,
+   "title": "L04 · 2.7 nine rows, all Being sent (C1, C8) · 1280",
+   "page": "r2"
+  },
+  "R2-L04-nine-768.dc.html": {
+   "x": 7330,
+   "y": 8540,
+   "w": 768,
+   "h": 2800,
+   "title": "L04 · 2.7 nine rows, all Being sent (C1, C8) · 768",
+   "page": "r2"
+  },
+  "R2-L04-nine-390.dc.html": {
+   "x": 8178,
+   "y": 8540,
+   "w": 390,
+   "h": 3000,
+   "title": "L04 · 2.7 nine rows, all Being sent (C1, C8) · 390",
+   "page": "r2"
+  },
+  "R2-L05-five-1280.dc.html": {
+   "x": 0,
+   "y": 11740,
+   "w": 1280,
+   "h": 920,
+   "title": "L05 · 2.16 five registrars, Being sent · 1280",
+   "page": "r2"
+  },
+  "R2-L05-five-768.dc.html": {
+   "x": 1360,
+   "y": 11740,
+   "w": 768,
+   "h": 1700,
+   "title": "L05 · 2.16 five registrars, Being sent · 768",
+   "page": "r2"
+  },
+  "R2-L05-five-390.dc.html": {
+   "x": 2208,
+   "y": 11740,
+   "w": 390,
+   "h": 1850,
+   "title": "L05 · 2.16 five registrars, Being sent · 390",
+   "page": "r2"
+  },
+  "R2-L06-revoke-dialog-1280.dc.html": {
+   "x": 2838,
+   "y": 11740,
+   "w": 1280,
+   "h": 620,
+   "title": "L06 · 2.17 Revoke… → the dialog · focus Keep the invitation; Escape returns to the row's Revoke… · 1280",
+   "page": "r2"
+  },
+  "R2-L06-revoke-dialog-390.dc.html": {
+   "x": 4198,
+   "y": 11740,
+   "w": 390,
+   "h": 844,
+   "title": "L06 · 2.17 Revoke… → the dialog · focus Keep the invitation; Escape returns to the row's Revoke… · 390",
+   "page": "r2"
+  },
+  "R2-L07-revoked-1280.dc.html": {
+   "x": 4828,
+   "y": 11740,
+   "w": 1280,
+   "h": 950,
+   "title": "L07 · 2.17 revoked: the result focused, no link; Invite another address… · 1280",
+   "page": "r2"
+  },
+  "R2-L07-revoked-390.dc.html": {
+   "x": 6188,
+   "y": 11740,
+   "w": 390,
+   "h": 1750,
+   "title": "L07 · 2.17 revoked: the result focused, no link; Invite another address… · 390",
+   "page": "r2"
+  },
+  "R2-L08-five-ndlovu-1280.dc.html": {
+   "x": 6818,
+   "y": 11740,
+   "w": 1280,
+   "h": 920,
+   "title": "L08 · 2.17 after ndlovu@ is issued: five again · 1280",
+   "page": "r2"
+  },
+  "R2-L08-five-ndlovu-390.dc.html": {
+   "x": 8178,
+   "y": 11740,
+   "w": 390,
+   "h": 1700,
+   "title": "L08 · 2.17 after ndlovu@ is issued: five again · 390",
+   "page": "r2"
+  },
+  "R2-L09-not-delivered-1280.dc.html": {
+   "x": 8808,
+   "y": 11740,
+   "w": 1280,
+   "h": 620,
+   "title": "L09 · 2.26 before Resend: Not delivered and its note row · 1280",
+   "page": "r2"
+  },
+  "R2-L09-not-delivered-390.dc.html": {
+   "x": 10168,
+   "y": 11740,
+   "w": 390,
+   "h": 900,
+   "title": "L09 · 2.26 before Resend: Not delivered and its note row · 390",
+   "page": "r2"
+  },
+  "R2-L10-resent-1280.dc.html": {
+   "x": 0,
+   "y": 13790,
+   "w": 1280,
+   "h": 900,
+   "title": "L10 · 2.26 after Resend: the OneTimeLink on top, focused; only Revoke… · 1280",
+   "page": "r2"
+  },
+  "R2-L10-resent-390.dc.html": {
+   "x": 1360,
+   "y": 13790,
+   "w": 390,
+   "h": 1350,
+   "title": "L10 · 2.26 after Resend: the OneTimeLink on top, focused; only Revoke… · 390",
+   "page": "r2"
+  },
+  "R2-L11-sent-1280.dc.html": {
+   "x": 1990,
+   "y": 13790,
+   "w": 1280,
+   "h": 1350,
+   "title": "L11 · Against a mail server: the nine rows Sent · 1280",
+   "page": "r2"
+  },
+  "R2-L11-sent-390.dc.html": {
+   "x": 3350,
+   "y": 13790,
+   "w": 390,
+   "h": 3000,
+   "title": "L11 · Against a mail server: the nine rows Sent · 390",
+   "page": "r2"
+  },
+  "R2-L12-check-address-1280.dc.html": {
+   "x": 3980,
+   "y": 13790,
+   "w": 1280,
+   "h": 820,
+   "title": "L12 · Illustration (composite): ndlvou@ at Check the address, duplessis@ Not delivered · 1280",
+   "page": "r2"
+  },
+  "R2-L12-check-address-390.dc.html": {
+   "x": 5340,
+   "y": 13790,
+   "w": 390,
+   "h": 1300,
+   "title": "L12 · Illustration (composite): ndlvou@ at Check the address, duplessis@ Not delivered · 390",
+   "page": "r2"
+  },
+  "R2-L13-heavy-1280.dc.html": {
+   "x": 5970,
+   "y": 13790,
+   "w": 1280,
+   "h": 2500,
+   "title": "L13 · Illustration: the heavy set, 19 rows, the not delivered first (C14, C22) · 1280",
+   "page": "r2"
+  },
+  "R2-L13-heavy-768.dc.html": {
+   "x": 7330,
+   "y": 13790,
+   "w": 768,
+   "h": 5400,
+   "title": "L13 · Illustration: the heavy set, 19 rows, the not delivered first (C14, C22) · 768",
+   "page": "r2"
+  },
+  "R2-L13-heavy-390.dc.html": {
+   "x": 8178,
+   "y": 13790,
+   "w": 390,
+   "h": 6000,
+   "title": "L13 · Illustration: the heavy set, 19 rows, the not delivered first (C14, C22) · 390",
+   "page": "r2"
+  },
+  "R2-L14-expired-1280.dc.html": {
+   "x": 8808,
+   "y": 13790,
+   "w": 1280,
+   "h": 820,
+   "title": "L14 · Illustration (Q9): Expired, not used, read on ‹a date before 2026-12-02› · 1280",
+   "page": "r2"
+  },
+  "R2-L14-expired-390.dc.html": {
+   "x": 10168,
+   "y": 13790,
+   "w": 390,
+   "h": 1250,
+   "title": "L14 · Illustration (Q9): Expired, not used, read on ‹a date before 2026-12-02› · 390",
+   "page": "r2"
+  },
+  "R2-L15-loading-1280.dc.html": {
+   "x": 0,
+   "y": 19990,
+   "w": 1280,
+   "h": 620,
+   "title": "L15 · loading: the header at once, a skeleton, no action · 1280",
+   "page": "r2"
+  },
+  "R2-L15-loading-390.dc.html": {
+   "x": 1360,
+   "y": 19990,
+   "w": 390,
+   "h": 844,
+   "title": "L15 · loading: the header at once, a skeleton, no action · 390",
+   "page": "r2"
+  },
+  "R2-L16-load-error-1280.dc.html": {
+   "x": 1990,
+   "y": 19990,
+   "w": 1280,
+   "h": 560,
+   "title": "L16 · a failed read (C13) · focus on it · 1280",
+   "page": "r2"
+  },
+  "R2-L16-load-error-390.dc.html": {
+   "x": 3350,
+   "y": 19990,
+   "w": 390,
+   "h": 844,
+   "title": "L16 · a failed read (C13) · focus on it · 390",
+   "page": "r2"
+  },
+  "R2-L17-t290-1280.dc.html": {
+   "x": 3980,
+   "y": 19990,
+   "w": 1280,
+   "h": 700,
+   "title": "L17 · Illustration: T290's note, for an admin who also holds Trainee · 1280",
+   "page": "r2"
+  },
+  "R2-L17-t290-390.dc.html": {
+   "x": 5340,
+   "y": 19990,
+   "w": 390,
+   "h": 900,
+   "title": "L17 · Illustration: T290's note, for an admin who also holds Trainee · 390",
+   "page": "r2"
+  },
+  "R2-N01-empty-1280.dc.html": {
+   "x": 0,
+   "y": 21570,
+   "w": 1280,
+   "h": 900,
+   "title": "N01 · 2.1 opened from Home or the list: no role chosen; KGK as text · 1280",
+   "page": "r2"
+  },
+  "R2-N01-empty-390.dc.html": {
+   "x": 1360,
+   "y": 21570,
+   "w": 390,
+   "h": 1600,
+   "title": "N01 · 2.1 opened from Home or the list: no role chosen; KGK as text · 390",
+   "page": "r2"
+  },
+  "R2-N02-admin-college-refused-1280.dc.html": {
+   "x": 1990,
+   "y": 21570,
+   "w": 1280,
+   "h": 1050,
+   "title": "N02 · 1.5 College admin, refused beside College · focus College · 1280",
+   "page": "r2"
+  },
+  "R2-N02-admin-college-refused-390.dc.html": {
+   "x": 3350,
+   "y": 21570,
+   "w": 390,
+   "h": 1900,
+   "title": "N02 · 1.5 College admin, refused beside College · focus College · 390",
+   "page": "r2"
+  },
+  "R2-N03-admin-kruger-issued-1280.dc.html": {
+   "x": 3980,
+   "y": 21570,
+   "w": 1280,
+   "h": 1350,
+   "title": "N03 · 1.5 Kruger issued: the OneTimeLink, then the form reset · 1280",
+   "page": "r2"
+  },
+  "R2-N03-admin-kruger-issued-390.dc.html": {
+   "x": 5340,
+   "y": 21570,
+   "w": 390,
+   "h": 2350,
+   "title": "N03 · 1.5 Kruger issued: the OneTimeLink, then the form reset · 390",
+   "page": "r2"
+  },
+  "R2-N04-admin-institutional-1280.dc.html": {
+   "x": 5970,
+   "y": 21570,
+   "w": 1280,
+   "h": 1050,
+   "title": "N04 · 1.7 Institutional admin: the Institution picker · 1280",
+   "page": "r2"
+  },
+  "R2-N04-admin-institutional-390.dc.html": {
+   "x": 7330,
+   "y": 21570,
+   "w": 390,
+   "h": 1950,
+   "title": "N04 · 1.7 Institutional admin: the Institution picker · 390",
+   "page": "r2"
+  },
+  "R2-N05-coordinator-1280.dc.html": {
+   "x": 7960,
+   "y": 21570,
+   "w": 1280,
+   "h": 1000,
+   "title": "N05 · 2.2 Coordinator: Speciality optional, no Sub-speciality · 1280",
+   "page": "r2"
+  },
+  "R2-N05-coordinator-390.dc.html": {
+   "x": 9320,
+   "y": 21570,
+   "w": 390,
+   "h": 1750,
+   "title": "N05 · 2.2 Coordinator: Speciality optional, no Sub-speciality · 390",
+   "page": "r2"
+  },
+  "R2-N06-smit-issued-1280.dc.html": {
+   "x": 0,
+   "y": 24120,
+   "w": 1280,
+   "h": 1300,
+   "title": "N06 · 2.2 Smit issued, Copy link pressed: Link copied announced; Open Invitations · 1280",
+   "page": "r2"
+  },
+  "R2-N06-smit-issued-390.dc.html": {
+   "x": 1360,
+   "y": 24120,
+   "w": 390,
+   "h": 2200,
+   "title": "N06 · 2.2 Smit issued, Copy link pressed: Link copied announced; Open Invitations · 390",
+   "page": "r2"
+  },
+  "R2-N07-committee-1280.dc.html": {
+   "x": 1990,
+   "y": 24120,
+   "w": 1280,
+   "h": 1000,
+   "title": "N07 · 2.3 Committee member with Paediatrics · 1280",
+   "page": "r2"
+  },
+  "R2-N07-committee-390.dc.html": {
+   "x": 3350,
+   "y": 24120,
+   "w": 390,
+   "h": 1750,
+   "title": "N07 · 2.3 Committee member with Paediatrics · 390",
+   "page": "r2"
+  },
+  "R2-N08-assessor-1280.dc.html": {
+   "x": 3980,
+   "y": 24120,
+   "w": 1280,
+   "h": 1050,
+   "title": "N08 · 2.4 Assessor: Speciality, then Sub-speciality · 1280",
+   "page": "r2"
+  },
+  "R2-N08-assessor-390.dc.html": {
+   "x": 5340,
+   "y": 24120,
+   "w": 390,
+   "h": 1850,
+   "title": "N08 · 2.4 Assessor: Speciality, then Sub-speciality · 390",
+   "page": "r2"
+  },
+  "R2-N09-vanrensburg-issued-1280.dc.html": {
+   "x": 5970,
+   "y": 24120,
+   "w": 1280,
+   "h": 1300,
+   "title": "N09 · 2.5 van Rensburg issued (Any speciality) · 1280",
+   "page": "r2"
+  },
+  "R2-N09-vanrensburg-issued-390.dc.html": {
+   "x": 7330,
+   "y": 24120,
+   "w": 390,
+   "h": 2200,
+   "title": "N09 · 2.5 van Rensburg issued (Any speciality) · 390",
+   "page": "r2"
+  },
+  "R2-N10-refused-speciality-1280.dc.html": {
+   "x": 7960,
+   "y": 24120,
+   "w": 1280,
+   "h": 1050,
+   "title": "N10 · 2.6 refused beside Speciality; van Rensburg's link gone · focus Speciality · 1280",
+   "page": "r2"
+  },
+  "R2-N10-refused-speciality-390.dc.html": {
+   "x": 9320,
+   "y": 24120,
+   "w": 390,
+   "h": 1850,
+   "title": "N10 · 2.6 refused beside Speciality; van Rensburg's link gone · focus Speciality · 390",
+   "page": "r2"
+  },
+  "R2-N11-refused-sub-1280.dc.html": {
+   "x": 0,
+   "y": 26520,
+   "w": 1280,
+   "h": 1100,
+   "title": "N11 · 2.7 refused beside Sub-speciality; Mokoena's link gone · focus Sub-speciality · 1280",
+   "page": "r2"
+  },
+  "R2-N11-refused-sub-390.dc.html": {
+   "x": 1360,
+   "y": 26520,
+   "w": 390,
+   "h": 1950,
+   "title": "N11 · 2.7 refused beside Sub-speciality; Mokoena's link gone · focus Sub-speciality · 390",
+   "page": "r2"
+  },
+  "R2-N12-trainee-1280.dc.html": {
+   "x": 1990,
+   "y": 26520,
+   "w": 1280,
+   "h": 1050,
+   "title": "N12 · 2.16 Trainee · 1280",
+   "page": "r2"
+  },
+  "R2-N12-trainee-390.dc.html": {
+   "x": 3350,
+   "y": 26520,
+   "w": 390,
+   "h": 1850,
+   "title": "N12 · 2.16 Trainee · 390",
+   "page": "r2"
+  },
+  "R2-N13-email-blank-1280.dc.html": {
+   "x": 3980,
+   "y": 26520,
+   "w": 1280,
+   "h": 1000,
+   "title": "N13 · Email left blank: NEW words (T324) · focus Email · 1280",
+   "page": "r2"
+  },
+  "R2-N13-email-blank-390.dc.html": {
+   "x": 5340,
+   "y": 26520,
+   "w": 390,
+   "h": 1800,
+   "title": "N13 · Email left blank: NEW words (T324) · focus Email · 390",
+   "page": "r2"
+  },
+  "R2-N14-malformed-1280.dc.html": {
+   "x": 5970,
+   "y": 26520,
+   "w": 1280,
+   "h": 1100,
+   "title": "N14 · a malformed address · focus Email · 1280",
+   "page": "r2"
+  },
+  "R2-N14-malformed-390.dc.html": {
+   "x": 7330,
+   "y": 26520,
+   "w": 390,
+   "h": 1900,
+   "title": "N14 · a malformed address · focus Email · 390",
+   "page": "r2"
+  },
+  "R2-N15-t286-in-scope-1280.dc.html": {
+   "x": 7960,
+   "y": 26520,
+   "w": 1280,
+   "h": 1050,
+   "title": "N15 · Illustration: T286 in scope (Q12, C15): names and links the holder · 1280",
+   "page": "r2"
+  },
+  "R2-N15-t286-in-scope-390.dc.html": {
+   "x": 9320,
+   "y": 26520,
+   "w": 390,
+   "h": 1850,
+   "title": "N15 · Illustration: T286 in scope (Q12, C15): names and links the holder · 390",
+   "page": "r2"
+  },
+  "R2-N16-t286-out-of-scope-1280.dc.html": {
+   "x": 0,
+   "y": 28670,
+   "w": 1280,
+   "h": 1050,
+   "title": "N16 · Illustration: T286 outside the caller's scope (Q12, Q16): no name, no link · 1280",
+   "page": "r2"
+  },
+  "R2-N16-t286-out-of-scope-390.dc.html": {
+   "x": 1360,
+   "y": 28670,
+   "w": 390,
+   "h": 1850,
+   "title": "N16 · Illustration: T286 outside the caller's scope (Q12, Q16): no name, no link · 390",
+   "page": "r2"
+  },
+  "R2-N17-q10-in-scope-1280.dc.html": {
+   "x": 1990,
+   "y": 28670,
+   "w": 1280,
+   "h": 1100,
+   "title": "N17 · Illustration: Q10 in scope (C16): the dates, Invitations linked · 1280",
+   "page": "r2"
+  },
+  "R2-N17-q10-in-scope-390.dc.html": {
+   "x": 3350,
+   "y": 28670,
+   "w": 390,
+   "h": 1950,
+   "title": "N17 · Illustration: Q10 in scope (C16): the dates, Invitations linked · 390",
+   "page": "r2"
+  },
+  "R2-N18-q10-out-of-scope-1280.dc.html": {
+   "x": 3980,
+   "y": 28670,
+   "w": 1280,
+   "h": 1100,
+   "title": "N18 · Illustration: Q10 outside the caller's scope (Q16): no date · 1280",
+   "page": "r2"
+  },
+  "R2-N18-q10-out-of-scope-390.dc.html": {
+   "x": 5340,
+   "y": 28670,
+   "w": 390,
+   "h": 1950,
+   "title": "N18 · Illustration: Q10 outside the caller's scope (Q16): no date · 390",
+   "page": "r2"
+  },
+  "R2-N19-prefilled-revoke-1280.dc.html": {
+   "x": 5970,
+   "y": 28670,
+   "w": 1280,
+   "h": 1100,
+   "title": "N19 · 2.17 from Invite another address…: role and scope filled, Email empty · focus Email · 1280",
+   "page": "r2"
+  },
+  "R2-N19-prefilled-revoke-390.dc.html": {
+   "x": 7330,
+   "y": 28670,
+   "w": 390,
+   "h": 1950,
+   "title": "N19 · 2.17 from Invite another address…: role and scope filled, Email empty · focus Email · 390",
+   "page": "r2"
+  },
+  "R2-N20-prefilled-expired-1280.dc.html": {
+   "x": 7960,
+   "y": 28670,
+   "w": 1280,
+   "h": 1100,
+   "title": "N20 · Illustration (Q9): from Invite again: address, role and scope filled · 1280",
+   "page": "r2"
+  },
+  "R2-N20-prefilled-expired-390.dc.html": {
+   "x": 9320,
+   "y": 28670,
+   "w": 390,
+   "h": 1950,
+   "title": "N20 · Illustration (Q9): from Invite again: address, role and scope filled · 390",
+   "page": "r2"
+  },
+  "R2-N21-long-address-1280.dc.html": {
+   "x": 0,
+   "y": 30820,
+   "w": 1280,
+   "h": 1300,
+   "title": "N21 · Illustration: a 64-character address, wrapping after its @ · 1280",
+   "page": "r2"
+  },
+  "R2-N21-long-address-390.dc.html": {
+   "x": 1360,
+   "y": 30820,
+   "w": 390,
+   "h": 2250,
+   "title": "N21 · Illustration: a 64-character address, wrapping after its @ · 390",
+   "page": "r2"
+  },
+  "R2-N22-loading-1280.dc.html": {
+   "x": 1990,
+   "y": 30820,
+   "w": 1280,
+   "h": 620,
+   "title": "N22 · loading: no Issue invitation until the read is in · 1280",
+   "page": "r2"
+  },
+  "R2-N22-loading-390.dc.html": {
+   "x": 3350,
+   "y": 30820,
+   "w": 390,
+   "h": 844,
+   "title": "N22 · loading: no Issue invitation until the read is in · 390",
+   "page": "r2"
+  },
+  "R2-N23-load-error-1280.dc.html": {
+   "x": 3980,
+   "y": 30820,
+   "w": 1280,
+   "h": 600,
+   "title": "N23 · a failed read of the roles and scopes · focus on it · 1280",
+   "page": "r2"
+  },
+  "R2-N23-load-error-390.dc.html": {
+   "x": 5340,
+   "y": 30820,
+   "w": 390,
+   "h": 844,
+   "title": "N23 · a failed read of the roles and scopes · focus on it · 390",
+   "page": "r2"
+  },
+  "R2-G01-smit-1280.dc.html": {
+   "x": 0,
+   "y": 33750,
+   "w": 1280,
+   "h": 1400,
+   "title": "G01 · 2.8 Smit's form; the token already gone from the address bar · 1280",
+   "page": "r2"
+  },
+  "R2-G01-smit-390.dc.html": {
+   "x": 1360,
+   "y": 33750,
+   "w": 390,
+   "h": 1560,
+   "title": "G01 · 2.8 Smit's form; the token already gone from the address bar · 390",
+   "page": "r2"
+  },
+  "R2-G02-kruger-1280.dc.html": {
+   "x": 1990,
+   "y": 33750,
+   "w": 1280,
+   "h": 1400,
+   "title": "G02 · 1.8 Kruger's form · 1280",
+   "page": "r2"
+  },
+  "R2-G02-kruger-390.dc.html": {
+   "x": 3350,
+   "y": 33750,
+   "w": 390,
+   "h": 1590,
+   "title": "G02 · 1.8 Kruger's form · 390",
+   "page": "r2"
+  },
+  "R2-G03-mbatha-1280.dc.html": {
+   "x": 3980,
+   "y": 33750,
+   "w": 1280,
+   "h": 1400,
+   "title": "G03 · 1.10 Mbatha's form · 1280",
+   "page": "r2"
+  },
+  "R2-G03-mbatha-390.dc.html": {
+   "x": 5340,
+   "y": 33750,
+   "w": 390,
+   "h": 1590,
+   "title": "G03 · 1.10 Mbatha's form · 390",
+   "page": "r2"
+  },
+  "R2-G04-password-refused-1280.dc.html": {
+   "x": 5970,
+   "y": 33750,
+   "w": 1280,
+   "h": 1450,
+   "title": "G04 · 2.9 first try: under Password, Mohammed and Patel kept · focus Password · 1280",
+   "page": "r2"
+  },
+  "R2-G04-password-refused-390.dc.html": {
+   "x": 7330,
+   "y": 33750,
+   "w": 390,
+   "h": 1640,
+   "title": "G04 · 2.9 first try: under Password, Mohammed and Patel kept · focus Password · 390",
+   "page": "r2"
+  },
+  "R2-G05-confirm-refused-1280.dc.html": {
+   "x": 7960,
+   "y": 33750,
+   "w": 1280,
+   "h": 1450,
+   "title": "G05 · 2.9 second try: under Confirm password, the names kept · focus Password · 1280",
+   "page": "r2"
+  },
+  "R2-G05-confirm-refused-390.dc.html": {
+   "x": 9320,
+   "y": 33750,
+   "w": 390,
+   "h": 1660,
+   "title": "G05 · 2.9 second try: under Confirm password, the names kept · focus Password · 390",
+   "page": "r2"
+  },
+  "R2-G06-details-invalid-1280.dc.html": {
+   "x": 0,
+   "y": 35610,
+   "w": 1280,
+   "h": 1450,
+   "title": "G06 · Illustration: details invalid (a last name over 100 characters) · focus Last name · 1280",
+   "page": "r2"
+  },
+  "R2-G06-details-invalid-390.dc.html": {
+   "x": 1360,
+   "y": 35610,
+   "w": 390,
+   "h": 1660,
+   "title": "G06 · Illustration: details invalid (a last name over 100 characters) · focus Last name · 390",
+   "page": "r2"
+  },
+  "R2-G07-used-1280.dc.html": {
+   "x": 1990,
+   "y": 35610,
+   "w": 1280,
+   "h": 720,
+   "title": "G07 · 1.9, 2.11 used: Sign in · 1280",
+   "page": "r2"
+  },
+  "R2-G07-used-390.dc.html": {
+   "x": 3350,
+   "y": 35610,
+   "w": 390,
+   "h": 780,
+   "title": "G07 · 1.9, 2.11 used: Sign in · 390",
+   "page": "r2"
+  },
+  "R2-G08-revoked-1280.dc.html": {
+   "x": 3980,
+   "y": 35610,
+   "w": 1280,
+   "h": 620,
+   "title": "G08 · 2.17 ndlvou@'s revoked link · 1280",
+   "page": "r2"
+  },
+  "R2-G08-revoked-390.dc.html": {
+   "x": 5340,
+   "y": 35610,
+   "w": 390,
+   "h": 660,
+   "title": "G08 · 2.17 ndlvou@'s revoked link · 390",
+   "page": "r2"
+  },
+  "R2-G09-invalid-1280.dc.html": {
+   "x": 5970,
+   "y": 35610,
+   "w": 1280,
+   "h": 660,
+   "title": "G09 · 2.27 the link a resend replaced · 1280",
+   "page": "r2"
+  },
+  "R2-G09-invalid-390.dc.html": {
+   "x": 7330,
+   "y": 35610,
+   "w": 390,
+   "h": 760,
+   "title": "G09 · 2.27 the link a resend replaced · 390",
+   "page": "r2"
+  },
+  "R2-G10-expired-1280.dc.html": {
+   "x": 7960,
+   "y": 35610,
+   "w": 1280,
+   "h": 620,
+   "title": "G10 · expired · 1280",
+   "page": "r2"
+  },
+  "R2-G10-expired-390.dc.html": {
+   "x": 9320,
+   "y": 35610,
+   "w": 390,
+   "h": 680,
+   "title": "G10 · expired · 390",
+   "page": "r2"
+  },
+  "R2-G11-exists-1280.dc.html": {
+   "x": 0,
+   "y": 37470,
+   "w": 1280,
+   "h": 720,
+   "title": "G11 · the address already has an account: Sign in · 1280",
+   "page": "r2"
+  },
+  "R2-G11-exists-390.dc.html": {
+   "x": 1360,
+   "y": 37470,
+   "w": 390,
+   "h": 760,
+   "title": "G11 · the address already has an account: Sign in · 390",
+   "page": "r2"
+  },
+  "R2-G12-not-accepted-1280.dc.html": {
+   "x": 1990,
+   "y": 37470,
+   "w": 1280,
+   "h": 600,
+   "title": "G12 · the address not accepted · 1280",
+   "page": "r2"
+  },
+  "R2-G12-not-accepted-390.dc.html": {
+   "x": 3350,
+   "y": 37470,
+   "w": 390,
+   "h": 640,
+   "title": "G12 · the address not accepted · 390",
+   "page": "r2"
+  },
+  "R2-G13-no-token-1280.dc.html": {
+   "x": 3980,
+   "y": 37470,
+   "w": 1280,
+   "h": 660,
+   "title": "G13 · no token · 1280",
+   "page": "r2"
+  },
+  "R2-G13-no-token-390.dc.html": {
+   "x": 5340,
+   "y": 37470,
+   "w": 390,
+   "h": 740,
+   "title": "G13 · no token · 390",
+   "page": "r2"
+  },
+  "R2-G14-fault-1280.dc.html": {
+   "x": 5970,
+   "y": 37470,
+   "w": 1280,
+   "h": 700,
+   "title": "G14 · could not be completed: Try again reopens the form from the cookie · 1280",
+   "page": "r2"
+  },
+  "R2-G14-fault-390.dc.html": {
+   "x": 7330,
+   "y": 37470,
+   "w": 390,
+   "h": 760,
+   "title": "G14 · could not be completed: Try again reopens the form from the cookie · 390",
+   "page": "r2"
+  },
+  "R2-G15-user-not-loaded-1280.dc.html": {
+   "x": 7960,
+   "y": 37470,
+   "w": 1280,
+   "h": 700,
+   "title": "G15 · the user not loaded after registration: Sign in · 1280",
+   "page": "r2"
+  },
+  "R2-G15-user-not-loaded-390.dc.html": {
+   "x": 9320,
+   "y": 37470,
+   "w": 390,
+   "h": 760,
+   "title": "G15 · the user not loaded after registration: Sign in · 390",
+   "page": "r2"
+  },
+  "R2-G16-cookie-lapsed-1280.dc.html": {
+   "x": 0,
+   "y": 38430,
+   "w": 1280,
+   "h": 640,
+   "title": "G16 · the cookie lapsed after 30 minutes: try again from the email (no button: the invitation is gone from the browser) · 1280",
+   "page": "r2"
+  },
+  "R2-G16-cookie-lapsed-390.dc.html": {
+   "x": 1360,
+   "y": 38430,
+   "w": 390,
+   "h": 700,
+   "title": "G16 · the cookie lapsed after 30 minutes: try again from the email (no button: the invitation is gone from the browser) · 390",
+   "page": "r2"
+  },
+  "R2-G17-script-blocked-1280.dc.html": {
+   "x": 1990,
+   "y": 38430,
+   "w": 1280,
+   "h": 1400,
+   "title": "G17 · script blocked: no Show toggles; the token still gone (the redirect needs no script) · 1280",
+   "page": "r2"
+  },
+  "R2-G17-script-blocked-390.dc.html": {
+   "x": 3350,
+   "y": 38430,
+   "w": 390,
+   "h": 1540,
+   "title": "G17 · script blocked: no Show toggles; the token still gone (the redirect needs no script) · 390",
+   "page": "r2"
+  },
+  "R2-G18-signed-in-elsewhere-1280.dc.html": {
+   "x": 3980,
+   "y": 38430,
+   "w": 1280,
+   "h": 720,
+   "title": "G18 · Q11: Pieter Smit, signed in, opens patel@'s link (served static) · 1280",
+   "page": "r2"
+  },
+  "R2-G18-signed-in-elsewhere-390.dc.html": {
+   "x": 5340,
+   "y": 38430,
+   "w": 390,
+   "h": 800,
+   "title": "G18 · Q11: Pieter Smit, signed in, opens patel@'s link (served static) · 390",
+   "page": "r2"
+  },
+  "R2-P01-molefe-1280.dc.html": {
+   "x": 0,
+   "y": 40650,
+   "w": 1280,
+   "h": 980,
+   "title": "P01 · 2.18 Molefe · 1280",
+   "page": "r2"
+  },
+  "R2-P01-molefe-390.dc.html": {
+   "x": 1360,
+   "y": 40650,
+   "w": 390,
+   "h": 1500,
+   "title": "P01 · 2.18 Molefe · 390",
+   "page": "r2"
+  },
+  "R2-P02-mahlangu-1280.dc.html": {
+   "x": 1990,
+   "y": 40650,
+   "w": 1280,
+   "h": 980,
+   "title": "P02 · 2.19 Mahlangu; at 390 her menu open (C2) · 1280",
+   "page": "r2"
+  },
+  "R2-P02-mahlangu-390.dc.html": {
+   "x": 3350,
+   "y": 40650,
+   "w": 390,
+   "h": 1500,
+   "title": "P02 · 2.19 Mahlangu; at 390 her menu open (C2) · 390",
+   "page": "r2"
+  },
+  "R2-P03-duplessis-1280.dc.html": {
+   "x": 3980,
+   "y": 40650,
+   "w": 1280,
+   "h": 980,
+   "title": "P03 · 2.27 du Plessis, from the resent link · 1280",
+   "page": "r2"
+  },
+  "R2-P03-duplessis-390.dc.html": {
+   "x": 5340,
+   "y": 40650,
+   "w": 390,
+   "h": 1500,
+   "title": "P03 · 2.27 du Plessis, from the resent link · 390",
+   "page": "r2"
+  },
+  "R2-P04-admin-issued-1280.dc.html": {
+   "x": 5970,
+   "y": 40650,
+   "w": 1280,
+   "h": 940,
+   "title": "P04 · Illustration: an Administrator-issued invitation: no Invited by, no ask (C19) · 1280",
+   "page": "r2"
+  },
+  "R2-P04-admin-issued-390.dc.html": {
+   "x": 7330,
+   "y": 40650,
+   "w": 390,
+   "h": 1400,
+   "title": "P04 · Illustration: an Administrator-issued invitation: no Invited by, no ask (C19) · 390",
+   "page": "r2"
+  },
+  "R2-P05-sso-1280.dc.html": {
+   "x": 7960,
+   "y": 40650,
+   "w": 1280,
+   "h": 940,
+   "title": "P05 · Illustration: SSO-provisioned: no Invited by, no ask (T333 stays its own) · 1280",
+   "page": "r2"
+  },
+  "R2-P05-sso-390.dc.html": {
+   "x": 9320,
+   "y": 40650,
+   "w": 390,
+   "h": 1400,
+   "title": "P05 · Illustration: SSO-provisioned: no Invited by, no ask (T333 stays its own) · 390",
+   "page": "r2"
+  },
+  "R2-P06-two-versions-1280.dc.html": {
+   "x": 0,
+   "y": 42350,
+   "w": 1280,
+   "h": 980,
+   "title": "P06 · Illustration: two adopted versions: no curriculum named · 1280",
+   "page": "r2"
+  },
+  "R2-P06-two-versions-390.dc.html": {
+   "x": 1360,
+   "y": 42350,
+   "w": 390,
+   "h": 1500,
+   "title": "P06 · Illustration: two adopted versions: no curriculum named · 390",
+   "page": "r2"
+  },
+  "R2-T01-five-waiting-1280.dc.html": {
+   "x": 0,
+   "y": 44530,
+   "w": 1280,
+   "h": 1000,
+   "title": "T01 · 2.28 five waiting, nobody admitted · 1280",
+   "page": "r2"
+  },
+  "R2-T01-five-waiting-768.dc.html": {
+   "x": 1360,
+   "y": 44530,
+   "w": 768,
+   "h": 1700,
+   "title": "T01 · 2.28 five waiting, nobody admitted · 768",
+   "page": "r2"
+  },
+  "R2-T01-five-waiting-390.dc.html": {
+   "x": 2208,
+   "y": 44530,
+   "w": 390,
+   "h": 2050,
+   "title": "T01 · 2.28 five waiting, nobody admitted · 390",
+   "page": "r2"
+  },
+  "R2-T02-one-admitted-1280.dc.html": {
+   "x": 2838,
+   "y": 44530,
+   "w": 1280,
+   "h": 1150,
+   "title": "T02 · 2.29 Molefe admitted: the result directly above Dlamini's Admit… · focus on it · 1280",
+   "page": "r2"
+  },
+  "R2-T02-one-admitted-390.dc.html": {
+   "x": 4198,
+   "y": 44530,
+   "w": 390,
+   "h": 2350,
+   "title": "T02 · 2.29 Molefe admitted: the result directly above Dlamini's Admit… · focus on it · 390",
+   "page": "r2"
+  },
+  "R2-T03-four-admitted-1280.dc.html": {
+   "x": 4828,
+   "y": 44530,
+   "w": 1280,
+   "h": 1150,
+   "title": "T03 · 2.29 four admitted, Ndlovu waiting; Mahlangu's result above Ndlovu's Admit… · 1280",
+   "page": "r2"
+  },
+  "R2-T03-four-admitted-768.dc.html": {
+   "x": 6188,
+   "y": 44530,
+   "w": 768,
+   "h": 1900,
+   "title": "T03 · 2.29 four admitted, Ndlovu waiting; Mahlangu's result above Ndlovu's Admit… · 768",
+   "page": "r2"
+  },
+  "R2-T03-four-admitted-390.dc.html": {
+   "x": 7036,
+   "y": 44530,
+   "w": 390,
+   "h": 2650,
+   "title": "T03 · 2.29 four admitted, Ndlovu waiting; Mahlangu's result above Ndlovu's Admit… · 390",
+   "page": "r2"
+  },
+  "R2-T04-none-waiting-1280.dc.html": {
+   "x": 7666,
+   "y": 44530,
+   "w": 1280,
+   "h": 1200,
+   "title": "T04 · 2.30 Ndlovu admitted, completion derived; nobody waiting (NEW words) · 1280",
+   "page": "r2"
+  },
+  "R2-T04-none-waiting-768.dc.html": {
+   "x": 9026,
+   "y": 44530,
+   "w": 768,
+   "h": 2100,
+   "title": "T04 · 2.30 Ndlovu admitted, completion derived; nobody waiting (NEW words) · 768",
+   "page": "r2"
+  },
+  "R2-T04-none-waiting-390.dc.html": {
+   "x": 9874,
+   "y": 44530,
+   "w": 390,
+   "h": 2900,
+   "title": "T04 · 2.30 Ndlovu admitted, completion derived; nobody waiting (NEW words) · 390",
+   "page": "r2"
+  },
+  "R2-T05-after-profile-save-1280.dc.html": {
+   "x": 0,
+   "y": 47630,
+   "w": 1280,
+   "h": 1100,
+   "title": "T05 · 2.30 back from his profile (flow 13's \"Trainee profile saved.\"): 2030-01-14 · 1280",
+   "page": "r2"
+  },
+  "R2-T05-after-profile-save-390.dc.html": {
+   "x": 1360,
+   "y": 47630,
+   "w": 390,
+   "h": 2700,
+   "title": "T05 · 2.30 back from his profile (flow 13's \"Trainee profile saved.\"): 2030-01-14 · 390",
+   "page": "r2"
+  },
+  "R2-T06-admin-view-1280.dc.html": {
+   "x": 1990,
+   "y": 47630,
+   "w": 1280,
+   "h": 1050,
+   "title": "T06 · the Administrator (no menu item, nothing lit): the institution kept (C18) · 1280",
+   "page": "r2"
+  },
+  "R2-T06-admin-view-390.dc.html": {
+   "x": 3350,
+   "y": 47630,
+   "w": 390,
+   "h": 2200,
+   "title": "T06 · the Administrator (no menu item, nothing lit): the institution kept (C18) · 390",
+   "page": "r2"
+  },
+  "R2-T07-t290-1280.dc.html": {
+   "x": 3980,
+   "y": 47630,
+   "w": 1280,
+   "h": 1080,
+   "title": "T07 · Illustration: T290's note · 1280",
+   "page": "r2"
+  },
+  "R2-T07-t290-390.dc.html": {
+   "x": 5340,
+   "y": 47630,
+   "w": 390,
+   "h": 2150,
+   "title": "T07 · Illustration: T290's note · 390",
+   "page": "r2"
+  },
+  "R2-T08-loading-1280.dc.html": {
+   "x": 5970,
+   "y": 47630,
+   "w": 1280,
+   "h": 620,
+   "title": "T08 · loading: no Admit… until the read is in · 1280",
+   "page": "r2"
+  },
+  "R2-T08-loading-390.dc.html": {
+   "x": 7330,
+   "y": 47630,
+   "w": 390,
+   "h": 844,
+   "title": "T08 · loading: no Admit… until the read is in · 390",
+   "page": "r2"
+  },
+  "R2-T09-load-error-1280.dc.html": {
+   "x": 7960,
+   "y": 47630,
+   "w": 1280,
+   "h": 560,
+   "title": "T09 · a failed read (C13) · focus on it · 1280",
+   "page": "r2"
+  },
+  "R2-T09-load-error-390.dc.html": {
+   "x": 9320,
+   "y": 47630,
+   "w": 390,
+   "h": 844,
+   "title": "T09 · a failed read (C13) · focus on it · 390",
+   "page": "r2"
+  },
+  "R2-T10-cancelled-1280.dc.html": {
+   "x": 0,
+   "y": 50530,
+   "w": 1280,
+   "h": 1000,
+   "title": "T10 · Cancel on Admit Lerato Molefe: back, focus on her Admit… · 1280",
+   "page": "r2"
+  },
+  "R2-T10-cancelled-390.dc.html": {
+   "x": 1360,
+   "y": 50530,
+   "w": 390,
+   "h": 2050,
+   "title": "T10 · Cancel on Admit Lerato Molefe: back, focus on her Admit… · 390",
+   "page": "r2"
+  },
+  "R2-M01-opened-1280.dc.html": {
+   "x": 0,
+   "y": 53260,
+   "w": 1280,
+   "h": 1250,
+   "title": "M01 · 2.29 opened: today, Training year 1 · 1280",
+   "page": "r2"
+  },
+  "R2-M01-opened-390.dc.html": {
+   "x": 1360,
+   "y": 53260,
+   "w": 390,
+   "h": 2000,
+   "title": "M01 · 2.29 opened: today, Training year 1 · 390",
+   "page": "r2"
+  },
+  "R2-M02-start-chosen-1280.dc.html": {
+   "x": 1990,
+   "y": 53260,
+   "w": 1280,
+   "h": 1250,
+   "title": "M02 · 2.29 2023-01-15 chosen: Training year 4 on the date's change; 2027-01-14 · 1280",
+   "page": "r2"
+  },
+  "R2-M02-start-chosen-390.dc.html": {
+   "x": 3350,
+   "y": 53260,
+   "w": 390,
+   "h": 2000,
+   "title": "M02 · 2.29 2023-01-15 chosen: Training year 4 on the date's change; 2027-01-14 · 390",
+   "page": "r2"
+  },
+  "R2-M03-ndlovu-empty-1280.dc.html": {
+   "x": 3980,
+   "y": 53260,
+   "w": 1280,
+   "h": 1250,
+   "title": "M03 · 2.30 Ndlovu, the completion left empty: what it will be · 1280",
+   "page": "r2"
+  },
+  "R2-M03-ndlovu-empty-390.dc.html": {
+   "x": 5340,
+   "y": 53260,
+   "w": 390,
+   "h": 2050,
+   "title": "M03 · 2.30 Ndlovu, the completion left empty: what it will be · 390",
+   "page": "r2"
+  },
+  "R2-M04-nothing-adopted-1280.dc.html": {
+   "x": 5970,
+   "y": 53260,
+   "w": 1280,
+   "h": 560,
+   "title": "M04 · Illustration: nothing adopted: no form, no Admit · 1280",
+   "page": "r2"
+  },
+  "R2-M04-nothing-adopted-390.dc.html": {
+   "x": 7330,
+   "y": 53260,
+   "w": 390,
+   "h": 844,
+   "title": "M04 · Illustration: nothing adopted: no form, no Admit · 390",
+   "page": "r2"
+  },
+  "R2-M05-two-versions-1280.dc.html": {
+   "x": 7960,
+   "y": 53260,
+   "w": 1280,
+   "h": 1300,
+   "title": "M05 · Illustration: two adopted versions: a choice · 1280",
+   "page": "r2"
+  },
+  "R2-M05-two-versions-390.dc.html": {
+   "x": 9320,
+   "y": 53260,
+   "w": 390,
+   "h": 2050,
+   "title": "M05 · Illustration: two adopted versions: a choice · 390",
+   "page": "r2"
+  },
+  "R2-M06-future-start-1280.dc.html": {
+   "x": 0,
+   "y": 55510,
+   "w": 1280,
+   "h": 1300,
+   "title": "M06 · Illustration: a start in the future: Not started (C4) · 1280",
+   "page": "r2"
+  },
+  "R2-M06-future-start-390.dc.html": {
+   "x": 1360,
+   "y": 55510,
+   "w": 390,
+   "h": 2100,
+   "title": "M06 · Illustration: a start in the future: Not started (C4) · 390",
+   "page": "r2"
+  },
+  "R2-M07-five-years-1280.dc.html": {
+   "x": 1990,
+   "y": 55510,
+   "w": 1280,
+   "h": 1300,
+   "title": "M07 · Illustration: a start more than four years back: Training year 5 and a warning (NEW) · 1280",
+   "page": "r2"
+  },
+  "R2-M07-five-years-390.dc.html": {
+   "x": 3350,
+   "y": 55510,
+   "w": 390,
+   "h": 2100,
+   "title": "M07 · Illustration: a start more than four years back: Training year 5 and a warning (NEW) · 390",
+   "page": "r2"
+  },
+  "R2-M08-not-found-1280.dc.html": {
+   "x": 3980,
+   "y": 55510,
+   "w": 1280,
+   "h": 560,
+   "title": "M08 · a userId not found or not waiting (PROPOSED) · 1280",
+   "page": "r2"
+  },
+  "R2-M08-not-found-390.dc.html": {
+   "x": 5340,
+   "y": 55510,
+   "w": 390,
+   "h": 844,
+   "title": "M08 · a userId not found or not waiting (PROPOSED) · 390",
+   "page": "r2"
+  },
+  "R2-M09-already-admitted-1280.dc.html": {
+   "x": 5970,
+   "y": 55510,
+   "w": 1280,
+   "h": 1320,
+   "title": "M09 · Illustration: a second Admit from a stale tab: the refusal on top · focus on it · 1280",
+   "page": "r2"
+  },
+  "R2-M09-already-admitted-390.dc.html": {
+   "x": 7330,
+   "y": 55510,
+   "w": 390,
+   "h": 2100,
+   "title": "M09 · Illustration: a second Admit from a stale tab: the refusal on top · focus on it · 390",
+   "page": "r2"
+  },
+  "R2-M10-loading-1280.dc.html": {
+   "x": 7960,
+   "y": 55510,
+   "w": 1280,
+   "h": 640,
+   "title": "M10 · loading · 1280",
+   "page": "r2"
+  },
+  "R2-M10-loading-390.dc.html": {
+   "x": 9320,
+   "y": 55510,
+   "w": 390,
+   "h": 844,
+   "title": "M10 · loading · 390",
+   "page": "r2"
+  },
+  "R2-M11-load-error-1280.dc.html": {
+   "x": 0,
+   "y": 57810,
+   "w": 1280,
+   "h": 600,
+   "title": "M11 · a failed read (C13) · focus on it · 1280",
+   "page": "r2"
+  },
+  "R2-M11-load-error-390.dc.html": {
+   "x": 1360,
+   "y": 57810,
+   "w": 390,
+   "h": 844,
+   "title": "M11 · a failed read (C13) · focus on it · 390",
+   "page": "r2"
+  },
+  "R2-X01-for-flow-12-1280.dc.html": {
+   "x": 0,
+   "y": 59334,
+   "w": 1280,
+   "h": 520,
+   "title": "X01 · for flow 12: Q8's line and Q1's retarget (PROPOSED)",
+   "page": "r2"
+  },
+  "R3-00-captures-1280.dc.html": {
+   "x": 0,
+   "y": 260,
+   "w": 1280,
+   "h": 760,
+   "title": "R3-00 · the captures: all eleven read again",
+   "page": "r3"
+  },
+  "R3-0-spec-2.dc.html": {
+   "x": 1520,
+   "y": 260,
+   "w": 1280,
+   "h": 6400,
+   "title": "R3-0-spec (2 of 2): DESIGN.md, classes, mails, DATA",
+   "page": "r3"
+  },
+  "R3-0-spec.dc.html": {
+   "x": 3040,
+   "y": 260,
+   "w": 1280,
+   "h": 7200,
+   "title": "R3-0-spec (1 of 2): the items, Illustration, M6, build rules",
+   "page": "r3"
+  },
+  "R3-0-steps.dc.html": {
+   "x": 4560,
+   "y": 260,
+   "w": 1280,
+   "h": 5600,
+   "title": "R3-0-steps",
+   "page": "r3"
+  },
+  "R3-L01-none-1280.dc.html": {
+   "x": 0,
+   "y": 8140,
+   "w": 1280,
+   "h": 620,
+   "title": "L01 · 2.1, 2.28 none (Mbatha) · 1280",
+   "page": "r3"
+  },
+  "R3-L01-none-390.dc.html": {
+   "x": 1360,
+   "y": 8140,
+   "w": 390,
+   "h": 800,
+   "title": "L01 · 2.1, 2.28 none (Mbatha) · 390",
+   "page": "r3"
+  },
+  "R3-L02-admin-none-1280.dc.html": {
+   "x": 1990,
+   "y": 8140,
+   "w": 1280,
+   "h": 620,
+   "title": "L02 · 1.5, 1.11 none (the Administrator) · 1280",
+   "page": "r3"
+  },
+  "R3-L02-admin-none-390.dc.html": {
+   "x": 3350,
+   "y": 8140,
+   "w": 390,
+   "h": 800,
+   "title": "L02 · 1.5, 1.11 none (the Administrator) · 390",
+   "page": "r3"
+  },
+  "R3-L03-admin-two-1280.dc.html": {
+   "x": 3980,
+   "y": 8140,
+   "w": 1280,
+   "h": 760,
+   "title": "L03 · 1.7 the Administrator's two rows · 1280",
+   "page": "r3"
+  },
+  "R3-L03-admin-two-390.dc.html": {
+   "x": 5340,
+   "y": 8140,
+   "w": 390,
+   "h": 1200,
+   "title": "L03 · 1.7 the Administrator's two rows · 390",
+   "page": "r3"
+  },
+  "R3-L04-nine-1280.dc.html": {
+   "x": 5970,
+   "y": 8140,
+   "w": 1280,
+   "h": 1500,
+   "title": "L04 · 2.7 nine rows, Being sent; Issued and Last day wrap (M6) · 1280",
+   "page": "r3"
+  },
+  "R3-L04-nine-768.dc.html": {
+   "x": 7330,
+   "y": 8140,
+   "w": 768,
+   "h": 3000,
+   "title": "L04 · 2.7 nine rows, Being sent; Issued and Last day wrap (M6) · 768",
+   "page": "r3"
+  },
+  "R3-L04-nine-390.dc.html": {
+   "x": 8178,
+   "y": 8140,
+   "w": 390,
+   "h": 3400,
+   "title": "L04 · 2.7 nine rows, Being sent; Issued and Last day wrap (M6) · 390",
+   "page": "r3"
+  },
+  "R3-L05-five-1280.dc.html": {
+   "x": 0,
+   "y": 11740,
+   "w": 1280,
+   "h": 1000,
+   "title": "L05 · 2.16 five registrars, Being sent · 1280",
+   "page": "r3"
+  },
+  "R3-L05-five-768.dc.html": {
+   "x": 1360,
+   "y": 11740,
+   "w": 768,
+   "h": 1800,
+   "title": "L05 · 2.16 five registrars, Being sent · 768",
+   "page": "r3"
+  },
+  "R3-L05-five-390.dc.html": {
+   "x": 2208,
+   "y": 11740,
+   "w": 390,
+   "h": 2000,
+   "title": "L05 · 2.16 five registrars, Being sent · 390",
+   "page": "r3"
+  },
+  "R3-L06-revoke-dialog-1280.dc.html": {
+   "x": 2838,
+   "y": 11740,
+   "w": 1280,
+   "h": 620,
+   "title": "L06 · 2.17 the dialog: at 390 its buttons 44px, Keep last on screen, first in tab order (M8) · focus Keep the invitation · 1280",
+   "page": "r3"
+  },
+  "R3-L06-revoke-dialog-390.dc.html": {
+   "x": 4198,
+   "y": 11740,
+   "w": 390,
+   "h": 844,
+   "title": "L06 · 2.17 the dialog: at 390 its buttons 44px, Keep last on screen, first in tab order (M8) · focus Keep the invitation · 390",
+   "page": "r3"
+  },
+  "R3-L07-revoked-1280.dc.html": {
+   "x": 4828,
+   "y": 11740,
+   "w": 1280,
+   "h": 1000,
+   "title": "L07 · 2.17 revoked: ActionResult focused, no link (M5) · 1280",
+   "page": "r3"
+  },
+  "R3-L07-revoked-390.dc.html": {
+   "x": 6188,
+   "y": 11740,
+   "w": 390,
+   "h": 1900,
+   "title": "L07 · 2.17 revoked: ActionResult focused, no link (M5) · 390",
+   "page": "r3"
+  },
+  "R3-L08-five-ndlovu-1280.dc.html": {
+   "x": 6818,
+   "y": 11740,
+   "w": 1280,
+   "h": 1000,
+   "title": "L08 · 2.17 after ndlovu@ is issued: five again · 1280",
+   "page": "r3"
+  },
+  "R3-L08-five-ndlovu-390.dc.html": {
+   "x": 8178,
+   "y": 11740,
+   "w": 390,
+   "h": 1900,
+   "title": "L08 · 2.17 after ndlovu@ is issued: five again · 390",
+   "page": "r3"
+  },
+  "R3-L09-not-delivered-1280.dc.html": {
+   "x": 8808,
+   "y": 11740,
+   "w": 1280,
+   "h": 640,
+   "title": "L09 · 2.26 before Resend: Not delivered and its note row · 1280",
+   "page": "r3"
+  },
+  "R3-L09-not-delivered-390.dc.html": {
+   "x": 10168,
+   "y": 11740,
+   "w": 390,
+   "h": 1000,
+   "title": "L09 · 2.26 before Resend: Not delivered and its note row · 390",
+   "page": "r3"
+  },
+  "R3-L10-resent-1280.dc.html": {
+   "x": 0,
+   "y": 13940,
+   "w": 1280,
+   "h": 950,
+   "title": "L10 · 2.26 after Resend: the OneTimeLink in ActionResult, focused; Issued 10:23 SAST (F2: no Resent) · 1280",
+   "page": "r3"
+  },
+  "R3-L10-resent-390.dc.html": {
+   "x": 1360,
+   "y": 13940,
+   "w": 390,
+   "h": 1500,
+   "title": "L10 · 2.26 after Resend: the OneTimeLink in ActionResult, focused; Issued 10:23 SAST (F2: no Resent) · 390",
+   "page": "r3"
+  },
+  "R3-L11-sent-1280.dc.html": {
+   "x": 1990,
+   "y": 13940,
+   "w": 1280,
+   "h": 1500,
+   "title": "L11 · Against a mail server: the nine rows Sent · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-L11-sent-390.dc.html": {
+   "x": 3350,
+   "y": 13940,
+   "w": 390,
+   "h": 3400,
+   "title": "L11 · Against a mail server: the nine rows Sent · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-L12-check-address-1280.dc.html": {
+   "x": 3980,
+   "y": 13940,
+   "w": 1280,
+   "h": 860,
+   "title": "L12 · ndlvou@ at Check the address, duplessis@ Not delivered · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-L12-check-address-390.dc.html": {
+   "x": 5340,
+   "y": 13940,
+   "w": 390,
+   "h": 1450,
+   "title": "L12 · ndlvou@ at Check the address, duplessis@ Not delivered · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-L13-heavy-1280.dc.html": {
+   "x": 5970,
+   "y": 13940,
+   "w": 1280,
+   "h": 2700,
+   "title": "L13 · the heavy set, read after 10:22 against a mail server (S23); the 64-character address in a row (M7) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-L13-heavy-768.dc.html": {
+   "x": 7330,
+   "y": 13940,
+   "w": 768,
+   "h": 6000,
+   "title": "L13 · the heavy set, read after 10:22 against a mail server (S23); the 64-character address in a row (M7) · 768 · Illustration",
+   "page": "r3"
+  },
+  "R3-L13-heavy-390.dc.html": {
+   "x": 8178,
+   "y": 13940,
+   "w": 390,
+   "h": 6800,
+   "title": "L13 · the heavy set, read after 10:22 against a mail server (S23); the 64-character address in a row (M7) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-L14-expired-1280.dc.html": {
+   "x": 8808,
+   "y": 13940,
+   "w": 1280,
+   "h": 860,
+   "title": "L14 · Expired, not used (Q9), read on ‹a date before 2026-12-02› · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-L14-expired-390.dc.html": {
+   "x": 10168,
+   "y": 13940,
+   "w": 390,
+   "h": 1350,
+   "title": "L14 · Expired, not used (Q9), read on ‹a date before 2026-12-02› · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-L15-loading-1280.dc.html": {
+   "x": 0,
+   "y": 20940,
+   "w": 1280,
+   "h": 620,
+   "title": "L15 · loading: \"Loading the invitations.\" and a skeleton; no action (S22) · 1280",
+   "page": "r3"
+  },
+  "R3-L15-loading-390.dc.html": {
+   "x": 1360,
+   "y": 20940,
+   "w": 390,
+   "h": 844,
+   "title": "L15 · loading: \"Loading the invitations.\" and a skeleton; no action (S22) · 390",
+   "page": "r3"
+  },
+  "R3-L16-load-error-1280.dc.html": {
+   "x": 1990,
+   "y": 20940,
+   "w": 1280,
+   "h": 560,
+   "title": "L16 · a failed read: a danger Alert in ActionResult (M10); focus on it after a failed retry too · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-L16-load-error-390.dc.html": {
+   "x": 3350,
+   "y": 20940,
+   "w": 390,
+   "h": 844,
+   "title": "L16 · a failed read: a danger Alert in ActionResult (M10); focus on it after a failed retry too · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-L17-t290-1280.dc.html": {
+   "x": 3980,
+   "y": 20940,
+   "w": 1280,
+   "h": 480,
+   "title": "L17 · a Trainee-holding admin: the header and T290's note only (M1) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-L17-t290-390.dc.html": {
+   "x": 5340,
+   "y": 20940,
+   "w": 390,
+   "h": 700,
+   "title": "L17 · a Trainee-holding admin: the header and T290's note only (M1) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-N01-empty-1280.dc.html": {
+   "x": 0,
+   "y": 22464,
+   "w": 1280,
+   "h": 1250,
+   "title": "N01 · 2.1 no role chosen; the institution read out (S18); * marks (M11) · 1280",
+   "page": "r3"
+  },
+  "R3-N01-empty-390.dc.html": {
+   "x": 1360,
+   "y": 22464,
+   "w": 390,
+   "h": 2400,
+   "title": "N01 · 2.1 no role chosen; the institution read out (S18); * marks (M11) · 390",
+   "page": "r3"
+  },
+  "R3-N02-admin-college-refused-1280.dc.html": {
+   "x": 1990,
+   "y": 22464,
+   "w": 1280,
+   "h": 1350,
+   "title": "N02 · 1.5 College admin, refused beside College · focus College · 1280",
+   "page": "r3"
+  },
+  "R3-N02-admin-college-refused-390.dc.html": {
+   "x": 3350,
+   "y": 22464,
+   "w": 390,
+   "h": 2600,
+   "title": "N02 · 1.5 College admin, refused beside College · focus College · 390",
+   "page": "r3"
+  },
+  "R3-N03-admin-kruger-issued-1280.dc.html": {
+   "x": 3980,
+   "y": 22464,
+   "w": 1280,
+   "h": 1700,
+   "title": "N03 · 1.5 Kruger issued: the OneTimeLink, the form reset under Invite the next person · 1280",
+   "page": "r3"
+  },
+  "R3-N03-admin-kruger-issued-390.dc.html": {
+   "x": 5340,
+   "y": 22464,
+   "w": 390,
+   "h": 3150,
+   "title": "N03 · 1.5 Kruger issued: the OneTimeLink, the form reset under Invite the next person · 390",
+   "page": "r3"
+  },
+  "R3-N04-admin-institutional-1280.dc.html": {
+   "x": 5970,
+   "y": 22464,
+   "w": 1280,
+   "h": 1350,
+   "title": "N04 · 1.7 Institutional admin: the Institution picker, required · 1280",
+   "page": "r3"
+  },
+  "R3-N04-admin-institutional-390.dc.html": {
+   "x": 7330,
+   "y": 22464,
+   "w": 390,
+   "h": 2650,
+   "title": "N04 · 1.7 Institutional admin: the Institution picker, required · 390",
+   "page": "r3"
+  },
+  "R3-N05-coordinator-1280.dc.html": {
+   "x": 7960,
+   "y": 22464,
+   "w": 1280,
+   "h": 1300,
+   "title": "N05 · 2.2 Coordinator: Speciality has no star, its help says what empty does (F9) · 1280",
+   "page": "r3"
+  },
+  "R3-N05-coordinator-390.dc.html": {
+   "x": 9320,
+   "y": 22464,
+   "w": 390,
+   "h": 2450,
+   "title": "N05 · 2.2 Coordinator: Speciality has no star, its help says what empty does (F9) · 390",
+   "page": "r3"
+  },
+  "R3-N06-smit-issued-1280.dc.html": {
+   "x": 0,
+   "y": 25814,
+   "w": 1280,
+   "h": 1650,
+   "title": "N06 · 2.2 Smit issued, Copy link pressed: \"Link copied.\" in the live region · 1280",
+   "page": "r3"
+  },
+  "R3-N06-smit-issued-390.dc.html": {
+   "x": 1360,
+   "y": 25814,
+   "w": 390,
+   "h": 2950,
+   "title": "N06 · 2.2 Smit issued, Copy link pressed: \"Link copied.\" in the live region · 390",
+   "page": "r3"
+  },
+  "R3-N06b-copy-failed-1280.dc.html": {
+   "x": 1990,
+   "y": 25814,
+   "w": 1280,
+   "h": 1650,
+   "title": "N06b · S10 the copy failed: \"Could not copy. Select the link and copy it yourself.\" (NEW) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-N06b-copy-failed-390.dc.html": {
+   "x": 3350,
+   "y": 25814,
+   "w": 390,
+   "h": 2950,
+   "title": "N06b · S10 the copy failed: \"Could not copy. Select the link and copy it yourself.\" (NEW) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-N07-committee-1280.dc.html": {
+   "x": 3980,
+   "y": 25814,
+   "w": 1280,
+   "h": 1300,
+   "title": "N07 · 2.3 Committee member with Paediatrics · 1280",
+   "page": "r3"
+  },
+  "R3-N07-committee-390.dc.html": {
+   "x": 5340,
+   "y": 25814,
+   "w": 390,
+   "h": 2450,
+   "title": "N07 · 2.3 Committee member with Paediatrics · 390",
+   "page": "r3"
+  },
+  "R3-N08-assessor-1280.dc.html": {
+   "x": 5970,
+   "y": 25814,
+   "w": 1280,
+   "h": 1350,
+   "title": "N08 · 2.4 Assessor: Speciality, then Sub-speciality, both starred · 1280",
+   "page": "r3"
+  },
+  "R3-N08-assessor-390.dc.html": {
+   "x": 7330,
+   "y": 25814,
+   "w": 390,
+   "h": 2550,
+   "title": "N08 · 2.4 Assessor: Speciality, then Sub-speciality, both starred · 390",
+   "page": "r3"
+  },
+  "R3-N08a-assessor-before-1280.dc.html": {
+   "x": 7960,
+   "y": 25814,
+   "w": 1280,
+   "h": 1300,
+   "title": "N08a · 2.4 Assessor before a speciality: \"Then choose its sub-speciality.\" (S14) · 1280",
+   "page": "r3"
+  },
+  "R3-N08a-assessor-before-390.dc.html": {
+   "x": 9320,
+   "y": 25814,
+   "w": 390,
+   "h": 2450,
+   "title": "N08a · 2.4 Assessor before a speciality: \"Then choose its sub-speciality.\" (S14) · 390",
+   "page": "r3"
+  },
+  "R3-N09-vanrensburg-issued-1280.dc.html": {
+   "x": 0,
+   "y": 28964,
+   "w": 1280,
+   "h": 1650,
+   "title": "N09 · 2.5 van Rensburg issued (Any speciality) · 1280",
+   "page": "r3"
+  },
+  "R3-N09-vanrensburg-issued-390.dc.html": {
+   "x": 1360,
+   "y": 28964,
+   "w": 390,
+   "h": 2950,
+   "title": "N09 · 2.5 van Rensburg issued (Any speciality) · 390",
+   "page": "r3"
+  },
+  "R3-N10-refused-speciality-1280.dc.html": {
+   "x": 1990,
+   "y": 28964,
+   "w": 1280,
+   "h": 1350,
+   "title": "N10 · 2.6 refused beside Speciality; no link (M5) · focus Speciality · 1280",
+   "page": "r3"
+  },
+  "R3-N10-refused-speciality-390.dc.html": {
+   "x": 3350,
+   "y": 28964,
+   "w": 390,
+   "h": 2550,
+   "title": "N10 · 2.6 refused beside Speciality; no link (M5) · focus Speciality · 390",
+   "page": "r3"
+  },
+  "R3-N11-refused-sub-1280.dc.html": {
+   "x": 3980,
+   "y": 28964,
+   "w": 1280,
+   "h": 1400,
+   "title": "N11 · 2.7 refused beside Sub-speciality; no link (M5) · focus Sub-speciality · 1280",
+   "page": "r3"
+  },
+  "R3-N11-refused-sub-390.dc.html": {
+   "x": 5340,
+   "y": 28964,
+   "w": 390,
+   "h": 2650,
+   "title": "N11 · 2.7 refused beside Sub-speciality; no link (M5) · focus Sub-speciality · 390",
+   "page": "r3"
+  },
+  "R3-N12-trainee-1280.dc.html": {
+   "x": 5970,
+   "y": 28964,
+   "w": 1280,
+   "h": 1350,
+   "title": "N12 · 2.16 Trainee · 1280",
+   "page": "r3"
+  },
+  "R3-N12-trainee-390.dc.html": {
+   "x": 7330,
+   "y": 28964,
+   "w": 390,
+   "h": 2550,
+   "title": "N12 · 2.16 Trainee · 390",
+   "page": "r3"
+  },
+  "R3-N13-email-blank-1280.dc.html": {
+   "x": 7960,
+   "y": 28964,
+   "w": 1280,
+   "h": 1300,
+   "title": "N13 · Email left blank: NEW words (T324) · focus Email · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-N13-email-blank-390.dc.html": {
+   "x": 9320,
+   "y": 28964,
+   "w": 390,
+   "h": 2500,
+   "title": "N13 · Email left blank: NEW words (T324) · focus Email · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-N14-malformed-1280.dc.html": {
+   "x": 0,
+   "y": 32114,
+   "w": 1280,
+   "h": 1400,
+   "title": "N14 · a malformed address · focus Email · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-N14-malformed-390.dc.html": {
+   "x": 1360,
+   "y": 32114,
+   "w": 390,
+   "h": 2650,
+   "title": "N14 · a malformed address · focus Email · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-N15-t286-in-scope-1280.dc.html": {
+   "x": 1990,
+   "y": 32114,
+   "w": 1280,
+   "h": 1350,
+   "title": "N15 · T286 in scope: one link, \"open Pieter Smit under Users\" · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-N15-t286-in-scope-390.dc.html": {
+   "x": 3350,
+   "y": 32114,
+   "w": 390,
+   "h": 2550,
+   "title": "N15 · T286 in scope: one link, \"open Pieter Smit under Users\" · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-N16-t286-out-of-scope-1280.dc.html": {
+   "x": 3980,
+   "y": 32114,
+   "w": 1280,
+   "h": 1350,
+   "title": "N16 · T286 outside the caller's scope: no name, no link · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-N16-t286-out-of-scope-390.dc.html": {
+   "x": 5340,
+   "y": 32114,
+   "w": 390,
+   "h": 2550,
+   "title": "N16 · T286 outside the caller's scope: no name, no link · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-N17-q10-in-scope-1280.dc.html": {
+   "x": 5970,
+   "y": 32114,
+   "w": 1280,
+   "h": 1400,
+   "title": "N17 · Q10 in scope: the dates, Invitations linked · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-N17-q10-in-scope-390.dc.html": {
+   "x": 7330,
+   "y": 32114,
+   "w": 390,
+   "h": 2650,
+   "title": "N17 · Q10 in scope: the dates, Invitations linked · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-N18-q10-out-of-scope-1280.dc.html": {
+   "x": 7960,
+   "y": 32114,
+   "w": 1280,
+   "h": 1400,
+   "title": "N18 · Q10 outside the caller's scope: no date · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-N18-q10-out-of-scope-390.dc.html": {
+   "x": 9320,
+   "y": 32114,
+   "w": 390,
+   "h": 2650,
+   "title": "N18 · Q10 outside the caller's scope: no date · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-N19-prefilled-revoke-1280.dc.html": {
+   "x": 0,
+   "y": 34964,
+   "w": 1280,
+   "h": 1450,
+   "title": "N19 · 2.17 from Invite another address…: Email empty · focus Email · 1280",
+   "page": "r3"
+  },
+  "R3-N19-prefilled-revoke-390.dc.html": {
+   "x": 1360,
+   "y": 34964,
+   "w": 390,
+   "h": 2750,
+   "title": "N19 · 2.17 from Invite another address…: Email empty · focus Email · 390",
+   "page": "r3"
+  },
+  "R3-N20-prefilled-expired-1280.dc.html": {
+   "x": 1990,
+   "y": 34964,
+   "w": 1280,
+   "h": 1450,
+   "title": "N20 · from Invite again (Q9): address, role and scope filled · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-N20-prefilled-expired-390.dc.html": {
+   "x": 3350,
+   "y": 34964,
+   "w": 390,
+   "h": 2750,
+   "title": "N20 · from Invite again (Q9): address, role and scope filled · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-N21-long-address-1280.dc.html": {
+   "x": 3980,
+   "y": 34964,
+   "w": 1280,
+   "h": 1700,
+   "title": "N21 · a 64-character address: the result and the label break after the @ (M7) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-N21-long-address-390.dc.html": {
+   "x": 5340,
+   "y": 34964,
+   "w": 390,
+   "h": 3050,
+   "title": "N21 · a 64-character address: the result and the label break after the @ (M7) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-N22-loading-1280.dc.html": {
+   "x": 5970,
+   "y": 34964,
+   "w": 1280,
+   "h": 640,
+   "title": "N22 · loading: \"Loading what you can invite.\" · 1280",
+   "page": "r3"
+  },
+  "R3-N22-loading-390.dc.html": {
+   "x": 7330,
+   "y": 34964,
+   "w": 390,
+   "h": 844,
+   "title": "N22 · loading: \"Loading what you can invite.\" · 390",
+   "page": "r3"
+  },
+  "R3-N23-load-error-1280.dc.html": {
+   "x": 7960,
+   "y": 34964,
+   "w": 1280,
+   "h": 600,
+   "title": "N23 · a failed read: the danger Alert in ActionResult (M10) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-N23-load-error-390.dc.html": {
+   "x": 9320,
+   "y": 34964,
+   "w": 390,
+   "h": 844,
+   "title": "N23 · a failed read: the danger Alert in ActionResult (M10) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-N24-t290-1280.dc.html": {
+   "x": 0,
+   "y": 38214,
+   "w": 1280,
+   "h": 520,
+   "title": "N24 · a Trainee-holding admin: the header and Invitations' T290 note, before any read (M1) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-N24-t290-390.dc.html": {
+   "x": 1360,
+   "y": 38214,
+   "w": 390,
+   "h": 760,
+   "title": "N24 · a Trainee-holding admin: the header and Invitations' T290 note, before any read (M1) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-N25-no-role-1280.dc.html": {
+   "x": 1990,
+   "y": 38214,
+   "w": 1280,
+   "h": 1300,
+   "title": "N25 · Issue with no role: \"Choose a role.\" under the legend, the first radio focused (S14) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-N25-no-role-390.dc.html": {
+   "x": 3350,
+   "y": 38214,
+   "w": 390,
+   "h": 2450,
+   "title": "N25 · Issue with no role: \"Choose a role.\" under the legend, the first radio focused (S14) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-N26-nothing-adopted-1280.dc.html": {
+   "x": 3980,
+   "y": 38214,
+   "w": 1280,
+   "h": 1300,
+   "title": "N26 · nothing adopted (S13): Issue stays for the roles that need no speciality · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-N26-nothing-adopted-390.dc.html": {
+   "x": 5340,
+   "y": 38214,
+   "w": 390,
+   "h": 2450,
+   "title": "N26 · nothing adopted (S13): Issue stays for the roles that need no speciality · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-G01-smit-1280.dc.html": {
+   "x": 0,
+   "y": 41344,
+   "w": 1280,
+   "h": 1450,
+   "title": "G01 · 2.8 Smit's form; Register in FormActions (S20); no marks (Q6) · 1280",
+   "page": "r3"
+  },
+  "R3-G01-smit-390.dc.html": {
+   "x": 1360,
+   "y": 41344,
+   "w": 390,
+   "h": 1600,
+   "title": "G01 · 2.8 Smit's form; Register in FormActions (S20); no marks (Q6) · 390",
+   "page": "r3"
+  },
+  "R3-G02-kruger-1280.dc.html": {
+   "x": 1990,
+   "y": 41344,
+   "w": 1280,
+   "h": 1450,
+   "title": "G02 · 1.8 Kruger's form · 1280",
+   "page": "r3"
+  },
+  "R3-G02-kruger-390.dc.html": {
+   "x": 3350,
+   "y": 41344,
+   "w": 390,
+   "h": 1630,
+   "title": "G02 · 1.8 Kruger's form · 390",
+   "page": "r3"
+  },
+  "R3-G03-mbatha-1280.dc.html": {
+   "x": 3980,
+   "y": 41344,
+   "w": 1280,
+   "h": 1450,
+   "title": "G03 · 1.10 Mbatha's form · 1280",
+   "page": "r3"
+  },
+  "R3-G03-mbatha-390.dc.html": {
+   "x": 5340,
+   "y": 41344,
+   "w": 390,
+   "h": 1630,
+   "title": "G03 · 1.10 Mbatha's form · 390",
+   "page": "r3"
+  },
+  "R3-G04-password-refused-1280.dc.html": {
+   "x": 5970,
+   "y": 41344,
+   "w": 1280,
+   "h": 1500,
+   "title": "G04 · 2.9 first: under Password, which is described by it and the rules; names kept · focus Password · 1280",
+   "page": "r3"
+  },
+  "R3-G04-password-refused-390.dc.html": {
+   "x": 7330,
+   "y": 41344,
+   "w": 390,
+   "h": 1680,
+   "title": "G04 · 2.9 first: under Password, which is described by it and the rules; names kept · focus Password · 390",
+   "page": "r3"
+  },
+  "R3-G05-confirm-refused-1280.dc.html": {
+   "x": 7960,
+   "y": 41344,
+   "w": 1280,
+   "h": 1500,
+   "title": "G05 · 2.9 second: under Confirm password; both emptied; Password described by it too · focus Password · 1280",
+   "page": "r3"
+  },
+  "R3-G05-confirm-refused-390.dc.html": {
+   "x": 9320,
+   "y": 41344,
+   "w": 390,
+   "h": 1700,
+   "title": "G05 · 2.9 second: under Confirm password; both emptied; Password described by it too · focus Password · 390",
+   "page": "r3"
+  },
+  "R3-G06-details-invalid-1280.dc.html": {
+   "x": 0,
+   "y": 43244,
+   "w": 1280,
+   "h": 1500,
+   "title": "G06 · a 101-character last name typed and refused (S21; no maxlength) · focus Last name · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-G06-details-invalid-390.dc.html": {
+   "x": 1360,
+   "y": 43244,
+   "w": 390,
+   "h": 1700,
+   "title": "G06 · a 101-character last name typed and refused (S21; no maxlength) · focus Last name · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-G07-used-1280.dc.html": {
+   "x": 1990,
+   "y": 43244,
+   "w": 1280,
+   "h": 740,
+   "title": "G07 · 1.9, 2.11 used: Sign in · 1280",
+   "page": "r3"
+  },
+  "R3-G07-used-390.dc.html": {
+   "x": 3350,
+   "y": 43244,
+   "w": 390,
+   "h": 820,
+   "title": "G07 · 1.9, 2.11 used: Sign in · 390",
+   "page": "r3"
+  },
+  "R3-G08-revoked-1280.dc.html": {
+   "x": 3980,
+   "y": 43244,
+   "w": 1280,
+   "h": 620,
+   "title": "G08 · 2.17 ndlvou@'s revoked link · 1280",
+   "page": "r3"
+  },
+  "R3-G08-revoked-390.dc.html": {
+   "x": 5340,
+   "y": 43244,
+   "w": 390,
+   "h": 680,
+   "title": "G08 · 2.17 ndlvou@'s revoked link · 390",
+   "page": "r3"
+  },
+  "R3-G09-invalid-1280.dc.html": {
+   "x": 5970,
+   "y": 43244,
+   "w": 1280,
+   "h": 680,
+   "title": "G09 · 2.27 the link a resend replaced · 1280",
+   "page": "r3"
+  },
+  "R3-G09-invalid-390.dc.html": {
+   "x": 7330,
+   "y": 43244,
+   "w": 390,
+   "h": 780,
+   "title": "G09 · 2.27 the link a resend replaced · 390",
+   "page": "r3"
+  },
+  "R3-G10-expired-1280.dc.html": {
+   "x": 7960,
+   "y": 43244,
+   "w": 1280,
+   "h": 640,
+   "title": "G10 · expired: the day after its last day on the SA calendar (F7) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-G10-expired-390.dc.html": {
+   "x": 9320,
+   "y": 43244,
+   "w": 390,
+   "h": 700,
+   "title": "G10 · expired: the day after its last day on the SA calendar (F7) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-G11-exists-1280.dc.html": {
+   "x": 0,
+   "y": 45144,
+   "w": 1280,
+   "h": 740,
+   "title": "G11 · the address already has an account: Sign in · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-G11-exists-390.dc.html": {
+   "x": 1360,
+   "y": 45144,
+   "w": 390,
+   "h": 800,
+   "title": "G11 · the address already has an account: Sign in · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-G12-not-accepted-1280.dc.html": {
+   "x": 1990,
+   "y": 45144,
+   "w": 1280,
+   "h": 600,
+   "title": "G12 · the address not accepted · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-G12-not-accepted-390.dc.html": {
+   "x": 3350,
+   "y": 45144,
+   "w": 390,
+   "h": 660,
+   "title": "G12 · the address not accepted · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-G13-no-token-1280.dc.html": {
+   "x": 3980,
+   "y": 45144,
+   "w": 1280,
+   "h": 680,
+   "title": "G13 · a GET of /account/register with neither the cookie nor a token (S7) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-G13-no-token-390.dc.html": {
+   "x": 5340,
+   "y": 45144,
+   "w": 390,
+   "h": 760,
+   "title": "G13 · a GET of /account/register with neither the cookie nor a token (S7) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-G14-fault-1280.dc.html": {
+   "x": 5970,
+   "y": 45144,
+   "w": 1280,
+   "h": 720,
+   "title": "G14 · could not be completed; one transaction, so nothing was saved (F10); Try again reopens the form from the cookie · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-G14-fault-390.dc.html": {
+   "x": 7330,
+   "y": 45144,
+   "w": 390,
+   "h": 800,
+   "title": "G14 · could not be completed; one transaction, so nothing was saved (F10); Try again reopens the form from the cookie · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-G15-user-not-loaded-1280.dc.html": {
+   "x": 7960,
+   "y": 45144,
+   "w": 1280,
+   "h": 720,
+   "title": "G15 · the user not loaded after registration: Sign in · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-G15-user-not-loaded-390.dc.html": {
+   "x": 9320,
+   "y": 45144,
+   "w": 390,
+   "h": 800,
+   "title": "G15 · the user not loaded after registration: Sign in · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-G16-cookie-lapsed-1280.dc.html": {
+   "x": 0,
+   "y": 46144,
+   "w": 1280,
+   "h": 660,
+   "title": "G16 · a POST of the form after the cookie's 30 minutes (S7) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-G16-cookie-lapsed-390.dc.html": {
+   "x": 1360,
+   "y": 46144,
+   "w": 390,
+   "h": 720,
+   "title": "G16 · a POST of the form after the cookie's 30 minutes (S7) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-G17-script-blocked-1280.dc.html": {
+   "x": 1990,
+   "y": 46144,
+   "w": 1280,
+   "h": 1450,
+   "title": "G17 · script blocked: no Show toggles; the token still gone (the redirect needs no script) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-G17-script-blocked-390.dc.html": {
+   "x": 3350,
+   "y": 46144,
+   "w": 390,
+   "h": 1580,
+   "title": "G17 · script blocked: no Show toggles; the token still gone (the redirect needs no script) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-G18-signed-in-elsewhere-1280.dc.html": {
+   "x": 3980,
+   "y": 46144,
+   "w": 1280,
+   "h": 760,
+   "title": "G18 · Q11: reached by the page AND by a stale tab's submit (M4); the button posts sign-out with returnTo=/account/register (F5) · 1280",
+   "page": "r3"
+  },
+  "R3-G18-signed-in-elsewhere-390.dc.html": {
+   "x": 5340,
+   "y": 46144,
+   "w": 390,
+   "h": 840,
+   "title": "G18 · Q11: reached by the page AND by a stale tab's submit (M4); the button posts sign-out with returnTo=/account/register (F5) · 390",
+   "page": "r3"
+  },
+  "R3-P01-molefe-1280.dc.html": {
+   "x": 0,
+   "y": 48404,
+   "w": 1280,
+   "h": 980,
+   "title": "P01 · 2.18 Molefe: DashboardCard, the control edge, no stripe (F8) · 1280",
+   "page": "r3"
+  },
+  "R3-P01-molefe-390.dc.html": {
+   "x": 1360,
+   "y": 48404,
+   "w": 390,
+   "h": 1550,
+   "title": "P01 · 2.18 Molefe: DashboardCard, the control edge, no stripe (F8) · 390",
+   "page": "r3"
+  },
+  "R3-P02-mahlangu-1280.dc.html": {
+   "x": 1990,
+   "y": 48404,
+   "w": 1280,
+   "h": 980,
+   "title": "P02 · 2.19 Mahlangu; at 390 her menu open · 1280",
+   "page": "r3"
+  },
+  "R3-P02-mahlangu-390.dc.html": {
+   "x": 3350,
+   "y": 48404,
+   "w": 390,
+   "h": 1550,
+   "title": "P02 · 2.19 Mahlangu; at 390 her menu open · 390",
+   "page": "r3"
+  },
+  "R3-P03-duplessis-1280.dc.html": {
+   "x": 3980,
+   "y": 48404,
+   "w": 1280,
+   "h": 980,
+   "title": "P03 · 2.27 du Plessis, from the resent link · 1280",
+   "page": "r3"
+  },
+  "R3-P03-duplessis-390.dc.html": {
+   "x": 5340,
+   "y": 48404,
+   "w": 390,
+   "h": 1550,
+   "title": "P03 · 2.27 du Plessis, from the resent link · 390",
+   "page": "r3"
+  },
+  "R3-P04-admin-issued-1280.dc.html": {
+   "x": 5970,
+   "y": 48404,
+   "w": 1280,
+   "h": 940,
+   "title": "P04 · an Administrator-issued invitation: no Invited by, no ask (F3) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-P04-admin-issued-390.dc.html": {
+   "x": 7330,
+   "y": 48404,
+   "w": 390,
+   "h": 1450,
+   "title": "P04 · an Administrator-issued invitation: no Invited by, no ask (F3) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-P05-sso-1280.dc.html": {
+   "x": 7960,
+   "y": 48404,
+   "w": 1280,
+   "h": 900,
+   "title": "P05 · SSO-provisioned: no Programme, no Invited by, no ask (S5) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-P05-sso-390.dc.html": {
+   "x": 9320,
+   "y": 48404,
+   "w": 390,
+   "h": 1400,
+   "title": "P05 · SSO-provisioned: no Programme, no Invited by, no ask (S5) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-P07-issuer-gone-1280.dc.html": {
+   "x": 0,
+   "y": 50154,
+   "w": 1280,
+   "h": 940,
+   "title": "P07 · the issuer erased or deactivated: no Invited by line (F3) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-P07-issuer-gone-390.dc.html": {
+   "x": 1360,
+   "y": 50154,
+   "w": 390,
+   "h": 1450,
+   "title": "P07 · the issuer erased or deactivated: no Invited by line (F3) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-P08-loading-1280.dc.html": {
+   "x": 1990,
+   "y": 50154,
+   "w": 1280,
+   "h": 560,
+   "title": "P08 · loading (DashboardFrame's) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-P08-loading-390.dc.html": {
+   "x": 3350,
+   "y": 50154,
+   "w": 390,
+   "h": 844,
+   "title": "P08 · loading (DashboardFrame's) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-P09-load-error-1280.dc.html": {
+   "x": 3980,
+   "y": 50154,
+   "w": 1280,
+   "h": 560,
+   "title": "P09 · a failed read (DashboardFrame's built words, M10's Alert) · focus on it · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-P09-load-error-390.dc.html": {
+   "x": 5340,
+   "y": 50154,
+   "w": 390,
+   "h": 844,
+   "title": "P09 · a failed read (DashboardFrame's built words, M10's Alert) · focus on it · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-T01-five-waiting-1280.dc.html": {
+   "x": 0,
+   "y": 52284,
+   "w": 1280,
+   "h": 1050,
+   "title": "T01 · 2.28 five waiting, nobody admitted · 1280",
+   "page": "r3"
+  },
+  "R3-T01-five-waiting-768.dc.html": {
+   "x": 1360,
+   "y": 52284,
+   "w": 768,
+   "h": 1850,
+   "title": "T01 · 2.28 five waiting, nobody admitted · 768",
+   "page": "r3"
+  },
+  "R3-T01-five-waiting-390.dc.html": {
+   "x": 2208,
+   "y": 52284,
+   "w": 390,
+   "h": 2250,
+   "title": "T01 · 2.28 five waiting, nobody admitted · 390",
+   "page": "r3"
+  },
+  "R3-T02-one-admitted-1280.dc.html": {
+   "x": 2838,
+   "y": 52284,
+   "w": 1280,
+   "h": 1250,
+   "title": "T02 · 2.29 Molefe admitted: ActionResult directly above Dlamini's Admit… (S8: ?admitted=) · focus on it · 1280",
+   "page": "r3"
+  },
+  "R3-T02-one-admitted-390.dc.html": {
+   "x": 4198,
+   "y": 52284,
+   "w": 390,
+   "h": 2600,
+   "title": "T02 · 2.29 Molefe admitted: ActionResult directly above Dlamini's Admit… (S8: ?admitted=) · focus on it · 390",
+   "page": "r3"
+  },
+  "R3-T03-four-admitted-1280.dc.html": {
+   "x": 4828,
+   "y": 52284,
+   "w": 1280,
+   "h": 1300,
+   "title": "T03 · 2.29 four admitted, Ndlovu waiting; Mahlangu's result above Ndlovu's Admit… · 1280",
+   "page": "r3"
+  },
+  "R3-T03-four-admitted-768.dc.html": {
+   "x": 6188,
+   "y": 52284,
+   "w": 768,
+   "h": 2200,
+   "title": "T03 · 2.29 four admitted, Ndlovu waiting; Mahlangu's result above Ndlovu's Admit… · 768",
+   "page": "r3"
+  },
+  "R3-T03-four-admitted-390.dc.html": {
+   "x": 7036,
+   "y": 52284,
+   "w": 390,
+   "h": 3000,
+   "title": "T03 · 2.29 four admitted, Ndlovu waiting; Mahlangu's result above Ndlovu's Admit… · 390",
+   "page": "r3"
+  },
+  "R3-T04-none-waiting-1280.dc.html": {
+   "x": 7666,
+   "y": 52284,
+   "w": 1280,
+   "h": 1350,
+   "title": "T04 · 2.30 Ndlovu admitted, completion derived; nobody waiting · 1280",
+   "page": "r3"
+  },
+  "R3-T04-none-waiting-768.dc.html": {
+   "x": 9026,
+   "y": 52284,
+   "w": 768,
+   "h": 2400,
+   "title": "T04 · 2.30 Ndlovu admitted, completion derived; nobody waiting · 768",
+   "page": "r3"
+  },
+  "R3-T04-none-waiting-390.dc.html": {
+   "x": 9874,
+   "y": 52284,
+   "w": 390,
+   "h": 3300,
+   "title": "T04 · 2.30 Ndlovu admitted, completion derived; nobody waiting · 390",
+   "page": "r3"
+  },
+  "R3-T05-after-profile-save-1280.dc.html": {
+   "x": 0,
+   "y": 55784,
+   "w": 1280,
+   "h": 1250,
+   "title": "T05 · 2.30 back from his profile (flow 13's, unchanged): 2030-01-14 · 1280",
+   "page": "r3"
+  },
+  "R3-T05-after-profile-save-390.dc.html": {
+   "x": 1360,
+   "y": 55784,
+   "w": 390,
+   "h": 3100,
+   "title": "T05 · 2.30 back from his profile (flow 13's, unchanged): 2030-01-14 · 390",
+   "page": "r3"
+  },
+  "R3-T06-admin-view-1280.dc.html": {
+   "x": 1990,
+   "y": 55784,
+   "w": 1280,
+   "h": 1350,
+   "title": "T06 · the Administrator (no menu item, nothing lit): the institution under each name · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-T06-admin-view-390.dc.html": {
+   "x": 3350,
+   "y": 55784,
+   "w": 390,
+   "h": 3100,
+   "title": "T06 · the Administrator (no menu item, nothing lit): the institution under each name · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-T07-t290-1280.dc.html": {
+   "x": 3980,
+   "y": 55784,
+   "w": 1280,
+   "h": 480,
+   "title": "T07 · a Trainee-holding admin: the header and T290's note only (M1) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-T07-t290-390.dc.html": {
+   "x": 5340,
+   "y": 55784,
+   "w": 390,
+   "h": 700,
+   "title": "T07 · a Trainee-holding admin: the header and T290's note only (M1) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-T08-loading-1280.dc.html": {
+   "x": 5970,
+   "y": 55784,
+   "w": 1280,
+   "h": 620,
+   "title": "T08 · loading: \"Loading the trainees.\" · 1280",
+   "page": "r3"
+  },
+  "R3-T08-loading-390.dc.html": {
+   "x": 7330,
+   "y": 55784,
+   "w": 390,
+   "h": 844,
+   "title": "T08 · loading: \"Loading the trainees.\" · 390",
+   "page": "r3"
+  },
+  "R3-T09-load-error-1280.dc.html": {
+   "x": 7960,
+   "y": 55784,
+   "w": 1280,
+   "h": 560,
+   "title": "T09 · a failed read: the danger Alert in ActionResult (M10) · focus on it, after a failed retry too · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-T09-load-error-390.dc.html": {
+   "x": 9320,
+   "y": 55784,
+   "w": 390,
+   "h": 844,
+   "title": "T09 · a failed read: the danger Alert in ActionResult (M10) · focus on it, after a failed retry too · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-T10-cancelled-1280.dc.html": {
+   "x": 0,
+   "y": 59084,
+   "w": 1280,
+   "h": 1050,
+   "title": "T10 · Cancel on Admit Lerato Molefe: back, focus on her Admit… · 1280",
+   "page": "r3"
+  },
+  "R3-T10-cancelled-390.dc.html": {
+   "x": 1360,
+   "y": 59084,
+   "w": 390,
+   "h": 2250,
+   "title": "T10 · Cancel on Admit Lerato Molefe: back, focus on her Admit… · 390",
+   "page": "r3"
+  },
+  "R3-M01-opened-1280.dc.html": {
+   "x": 0,
+   "y": 62014,
+   "w": 1280,
+   "h": 1400,
+   "title": "M01 · 2.29 opened: today, Training year 1; the curriculum read out (F1, S18) · 1280",
+   "page": "r3"
+  },
+  "R3-M01-opened-390.dc.html": {
+   "x": 1360,
+   "y": 62014,
+   "w": 390,
+   "h": 2300,
+   "title": "M01 · 2.29 opened: today, Training year 1; the curriculum read out (F1, S18) · 390",
+   "page": "r3"
+  },
+  "R3-M02-start-chosen-1280.dc.html": {
+   "x": 1990,
+   "y": 62014,
+   "w": 1280,
+   "h": 1400,
+   "title": "M02 · 2.29 2023-01-15 chosen: Training year 4 on the date's change; 2027-01-14 · 1280",
+   "page": "r3"
+  },
+  "R3-M02-start-chosen-390.dc.html": {
+   "x": 3350,
+   "y": 62014,
+   "w": 390,
+   "h": 2300,
+   "title": "M02 · 2.29 2023-01-15 chosen: Training year 4 on the date's change; 2027-01-14 · 390",
+   "page": "r3"
+  },
+  "R3-M03-ndlovu-empty-1280.dc.html": {
+   "x": 3980,
+   "y": 62014,
+   "w": 1280,
+   "h": 1450,
+   "title": "M03 · 2.30 Ndlovu, the completion empty: what it will be · 1280",
+   "page": "r3"
+  },
+  "R3-M03-ndlovu-empty-390.dc.html": {
+   "x": 5340,
+   "y": 62014,
+   "w": 390,
+   "h": 2350,
+   "title": "M03 · 2.30 Ndlovu, the completion empty: what it will be · 390",
+   "page": "r3"
+  },
+  "R3-M04-nothing-adopted-1280.dc.html": {
+   "x": 5970,
+   "y": 62014,
+   "w": 1280,
+   "h": 560,
+   "title": "M04 · nothing adopted for the invited sub-speciality: a standing warning, no form · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-M04-nothing-adopted-390.dc.html": {
+   "x": 7330,
+   "y": 62014,
+   "w": 390,
+   "h": 844,
+   "title": "M04 · nothing adopted for the invited sub-speciality: a standing warning, no form · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-M04b-no-institution-1280.dc.html": {
+   "x": 7960,
+   "y": 62014,
+   "w": 1280,
+   "h": 560,
+   "title": "M04b · the Administrator: a registrar with no institution · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-M04b-no-institution-390.dc.html": {
+   "x": 9320,
+   "y": 62014,
+   "w": 390,
+   "h": 844,
+   "title": "M04b · the Administrator: a registrar with no institution · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-M06-future-start-1280.dc.html": {
+   "x": 0,
+   "y": 64564,
+   "w": 1280,
+   "h": 1450,
+   "title": "M06 · a start in the future: Not started (C4) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-M06-future-start-390.dc.html": {
+   "x": 1360,
+   "y": 64564,
+   "w": 390,
+   "h": 2400,
+   "title": "M06 · a start in the future: Not started (C4) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-M07-five-years-1280.dc.html": {
+   "x": 1990,
+   "y": 64564,
+   "w": 1280,
+   "h": 1450,
+   "title": "M07 · a start more than four years back: Training year 5 and a warning (NEW) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-M07-five-years-390.dc.html": {
+   "x": 3350,
+   "y": 64564,
+   "w": 390,
+   "h": 2400,
+   "title": "M07 · a start more than four years back: Training year 5 and a warning (NEW) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-M08-not-found-1280.dc.html": {
+   "x": 3980,
+   "y": 64564,
+   "w": 1280,
+   "h": 560,
+   "title": "M08 · a userId not found or not waiting: the system's not-found panel (S20) · 1280",
+   "page": "r3"
+  },
+  "R3-M08-not-found-390.dc.html": {
+   "x": 5340,
+   "y": 64564,
+   "w": 390,
+   "h": 844,
+   "title": "M08 · a userId not found or not waiting: the system's not-found panel (S20) · 390",
+   "page": "r3"
+  },
+  "R3-M09-already-admitted-1280.dc.html": {
+   "x": 5970,
+   "y": 64564,
+   "w": 1280,
+   "h": 1500,
+   "title": "M09 · a second Admit from a stale tab (S22) · focus on the refusal · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-M09-already-admitted-390.dc.html": {
+   "x": 7330,
+   "y": 64564,
+   "w": 390,
+   "h": 2450,
+   "title": "M09 · a second Admit from a stale tab (S22) · focus on the refusal · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-M10-loading-1280.dc.html": {
+   "x": 7960,
+   "y": 64564,
+   "w": 1280,
+   "h": 640,
+   "title": "M10 · loading: \"Loading this registrar.\" · 1280",
+   "page": "r3"
+  },
+  "R3-M10-loading-390.dc.html": {
+   "x": 9320,
+   "y": 64564,
+   "w": 390,
+   "h": 844,
+   "title": "M10 · loading: \"Loading this registrar.\" · 390",
+   "page": "r3"
+  },
+  "R3-M11-load-error-1280.dc.html": {
+   "x": 0,
+   "y": 67214,
+   "w": 1280,
+   "h": 600,
+   "title": "M11 · a failed read (M10) · focus on it · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-M11-load-error-390.dc.html": {
+   "x": 1360,
+   "y": 67214,
+   "w": 390,
+   "h": 844,
+   "title": "M11 · a failed read (M10) · focus on it · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-M12-t290-1280.dc.html": {
+   "x": 1990,
+   "y": 67214,
+   "w": 1280,
+   "h": 520,
+   "title": "M12 · a Trainee-holding admin: the header and Trainees' T290 note, before any read (M1) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-M12-t290-390.dc.html": {
+   "x": 3350,
+   "y": 67214,
+   "w": 390,
+   "h": 760,
+   "title": "M12 · a Trainee-holding admin: the header and Trainees' T290 note, before any read (M1) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-M13-deactivated-1280.dc.html": {
+   "x": 3980,
+   "y": 67214,
+   "w": 1280,
+   "h": 1500,
+   "title": "M13 · S6 a deactivated pending account · focus on the refusal · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-M13-deactivated-390.dc.html": {
+   "x": 5340,
+   "y": 67214,
+   "w": 390,
+   "h": 2450,
+   "title": "M13 · S6 a deactivated pending account · focus on the refusal · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-M14-no-scope-1280.dc.html": {
+   "x": 5970,
+   "y": 67214,
+   "w": 1280,
+   "h": 1500,
+   "title": "M14 · F1's one select: an SSO registrar with no invited scope; Invited as \"—\" (S5) · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-M14-no-scope-390.dc.html": {
+   "x": 7330,
+   "y": 67214,
+   "w": 390,
+   "h": 2450,
+   "title": "M14 · F1's one select: an SSO registrar with no invited scope; Invited as \"—\" (S5) · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-M15-derived-passed-1280.dc.html": {
+   "x": 7960,
+   "y": 67214,
+   "w": 1280,
+   "h": 1500,
+   "title": "M15 · F4: start 2023-01-15, completion empty, after Admit: refused beside Expected completion · focus on it · 1280 · Illustration",
+   "page": "r3"
+  },
+  "R3-M15-derived-passed-390.dc.html": {
+   "x": 9320,
+   "y": 67214,
+   "w": 390,
+   "h": 2450,
+   "title": "M15 · F4: start 2023-01-15, completion empty, after Admit: refused beside Expected completion · focus on it · 390 · Illustration",
+   "page": "r3"
+  },
+  "R3-X01-for-flow-12-1280.dc.html": {
+   "x": 0,
+   "y": 70344,
+   "w": 1280,
+   "h": 520,
+   "title": "X01 · for flow 12: Q8's line and Q1's retarget (PROPOSED)",
+   "page": "r3"
+  }
+ },
+ "order": [
+  "A1-issued-1280.dc.html",
+  "A2-refused-1280.dc.html",
+  "A3-revoked-1280.dc.html",
+  "A4-resent-1280.dc.html",
+  "A5-heavy-1280.dc.html",
+  "A6-admin-1280.dc.html",
+  "A7-issued-390.dc.html",
+  "A8-heavy-390.dc.html",
+  "B1-issued-1280.dc.html",
+  "B2-refused-1280.dc.html",
+  "B3-revoked-1280.dc.html",
+  "B4-resent-1280.dc.html",
+  "B5-heavy-1280.dc.html",
+  "B6-admin-1280.dc.html",
+  "B7-issued-390.dc.html",
+  "B8-heavy-390.dc.html",
+  "C1-issued-1280.dc.html",
+  "C2-refused-1280.dc.html",
+  "C3-revoked-1280.dc.html",
+  "C4-resent-1280.dc.html",
+  "C5-heavy-1280.dc.html",
+  "C6-admin-1280.dc.html",
+  "C7-issued-390.dc.html",
+  "C8-heavy-390.dc.html",
+  "S1-revoke-dialog-1280.dc.html",
+  "S2-revoke-dialog-390.dc.html",
+  "S3-issue-refusals-1280.dc.html",
+  "S4-loading-1280.dc.html",
+  "S5-load-error-1280.dc.html",
+  "S6-load-error-390.dc.html",
+  "R1-register-1280.dc.html",
+  "R2-register-390.dc.html",
+  "R3-password-refused-1280.dc.html",
+  "R4-confirm-refused-390.dc.html",
+  "R5-used-1280.dc.html",
+  "R6-used-390.dc.html",
+  "R7-refused-links-1280.dc.html",
+  "H1-pending-1280.dc.html",
+  "H2-pending-390.dc.html",
+  "H3-pending-menu-390.dc.html",
+  "W1a-list-1280.dc.html",
+  "W1b-admit-1280.dc.html",
+  "W1c-derived-1280.dc.html",
+  "W1d-list-390.dc.html",
+  "W2a-list-1280.dc.html",
+  "W2b-dialog-1280.dc.html",
+  "W2c-four-1280.dc.html",
+  "W2d-dialog-390.dc.html",
+  "W3a-inline-1280.dc.html",
+  "W3b-four-1280.dc.html",
+  "W3c-inline-390.dc.html",
+  "Z1-spec.dc.html",
+  "Z2-steps.dc.html",
+  "R2-00-captures-1280.dc.html",
+  "R2-0-spec-2.dc.html",
+  "R2-0-spec.dc.html",
+  "R2-0-steps.dc.html",
+  "R2-L01-none-1280.dc.html",
+  "R2-L01-none-390.dc.html",
+  "R2-L02-admin-none-1280.dc.html",
+  "R2-L02-admin-none-390.dc.html",
+  "R2-L03-admin-two-1280.dc.html",
+  "R2-L03-admin-two-390.dc.html",
+  "R2-L04-nine-1280.dc.html",
+  "R2-L04-nine-768.dc.html",
+  "R2-L04-nine-390.dc.html",
+  "R2-L05-five-1280.dc.html",
+  "R2-L05-five-768.dc.html",
+  "R2-L05-five-390.dc.html",
+  "R2-L06-revoke-dialog-1280.dc.html",
+  "R2-L06-revoke-dialog-390.dc.html",
+  "R2-L07-revoked-1280.dc.html",
+  "R2-L07-revoked-390.dc.html",
+  "R2-L08-five-ndlovu-1280.dc.html",
+  "R2-L08-five-ndlovu-390.dc.html",
+  "R2-L09-not-delivered-1280.dc.html",
+  "R2-L09-not-delivered-390.dc.html",
+  "R2-L10-resent-1280.dc.html",
+  "R2-L10-resent-390.dc.html",
+  "R2-L11-sent-1280.dc.html",
+  "R2-L11-sent-390.dc.html",
+  "R2-L12-check-address-1280.dc.html",
+  "R2-L12-check-address-390.dc.html",
+  "R2-L13-heavy-1280.dc.html",
+  "R2-L13-heavy-768.dc.html",
+  "R2-L13-heavy-390.dc.html",
+  "R2-L14-expired-1280.dc.html",
+  "R2-L14-expired-390.dc.html",
+  "R2-L15-loading-1280.dc.html",
+  "R2-L15-loading-390.dc.html",
+  "R2-L16-load-error-1280.dc.html",
+  "R2-L16-load-error-390.dc.html",
+  "R2-L17-t290-1280.dc.html",
+  "R2-L17-t290-390.dc.html",
+  "R2-N01-empty-1280.dc.html",
+  "R2-N01-empty-390.dc.html",
+  "R2-N02-admin-college-refused-1280.dc.html",
+  "R2-N02-admin-college-refused-390.dc.html",
+  "R2-N03-admin-kruger-issued-1280.dc.html",
+  "R2-N03-admin-kruger-issued-390.dc.html",
+  "R2-N04-admin-institutional-1280.dc.html",
+  "R2-N04-admin-institutional-390.dc.html",
+  "R2-N05-coordinator-1280.dc.html",
+  "R2-N05-coordinator-390.dc.html",
+  "R2-N06-smit-issued-1280.dc.html",
+  "R2-N06-smit-issued-390.dc.html",
+  "R2-N07-committee-1280.dc.html",
+  "R2-N07-committee-390.dc.html",
+  "R2-N08-assessor-1280.dc.html",
+  "R2-N08-assessor-390.dc.html",
+  "R2-N09-vanrensburg-issued-1280.dc.html",
+  "R2-N09-vanrensburg-issued-390.dc.html",
+  "R2-N10-refused-speciality-1280.dc.html",
+  "R2-N10-refused-speciality-390.dc.html",
+  "R2-N11-refused-sub-1280.dc.html",
+  "R2-N11-refused-sub-390.dc.html",
+  "R2-N12-trainee-1280.dc.html",
+  "R2-N12-trainee-390.dc.html",
+  "R2-N13-email-blank-1280.dc.html",
+  "R2-N13-email-blank-390.dc.html",
+  "R2-N14-malformed-1280.dc.html",
+  "R2-N14-malformed-390.dc.html",
+  "R2-N15-t286-in-scope-1280.dc.html",
+  "R2-N15-t286-in-scope-390.dc.html",
+  "R2-N16-t286-out-of-scope-1280.dc.html",
+  "R2-N16-t286-out-of-scope-390.dc.html",
+  "R2-N17-q10-in-scope-1280.dc.html",
+  "R2-N17-q10-in-scope-390.dc.html",
+  "R2-N18-q10-out-of-scope-1280.dc.html",
+  "R2-N18-q10-out-of-scope-390.dc.html",
+  "R2-N19-prefilled-revoke-1280.dc.html",
+  "R2-N19-prefilled-revoke-390.dc.html",
+  "R2-N20-prefilled-expired-1280.dc.html",
+  "R2-N20-prefilled-expired-390.dc.html",
+  "R2-N21-long-address-1280.dc.html",
+  "R2-N21-long-address-390.dc.html",
+  "R2-N22-loading-1280.dc.html",
+  "R2-N22-loading-390.dc.html",
+  "R2-N23-load-error-1280.dc.html",
+  "R2-N23-load-error-390.dc.html",
+  "R2-G01-smit-1280.dc.html",
+  "R2-G01-smit-390.dc.html",
+  "R2-G02-kruger-1280.dc.html",
+  "R2-G02-kruger-390.dc.html",
+  "R2-G03-mbatha-1280.dc.html",
+  "R2-G03-mbatha-390.dc.html",
+  "R2-G04-password-refused-1280.dc.html",
+  "R2-G04-password-refused-390.dc.html",
+  "R2-G05-confirm-refused-1280.dc.html",
+  "R2-G05-confirm-refused-390.dc.html",
+  "R2-G06-details-invalid-1280.dc.html",
+  "R2-G06-details-invalid-390.dc.html",
+  "R2-G07-used-1280.dc.html",
+  "R2-G07-used-390.dc.html",
+  "R2-G08-revoked-1280.dc.html",
+  "R2-G08-revoked-390.dc.html",
+  "R2-G09-invalid-1280.dc.html",
+  "R2-G09-invalid-390.dc.html",
+  "R2-G10-expired-1280.dc.html",
+  "R2-G10-expired-390.dc.html",
+  "R2-G11-exists-1280.dc.html",
+  "R2-G11-exists-390.dc.html",
+  "R2-G12-not-accepted-1280.dc.html",
+  "R2-G12-not-accepted-390.dc.html",
+  "R2-G13-no-token-1280.dc.html",
+  "R2-G13-no-token-390.dc.html",
+  "R2-G14-fault-1280.dc.html",
+  "R2-G14-fault-390.dc.html",
+  "R2-G15-user-not-loaded-1280.dc.html",
+  "R2-G15-user-not-loaded-390.dc.html",
+  "R2-G16-cookie-lapsed-1280.dc.html",
+  "R2-G16-cookie-lapsed-390.dc.html",
+  "R2-G17-script-blocked-1280.dc.html",
+  "R2-G17-script-blocked-390.dc.html",
+  "R2-G18-signed-in-elsewhere-1280.dc.html",
+  "R2-G18-signed-in-elsewhere-390.dc.html",
+  "R2-P01-molefe-1280.dc.html",
+  "R2-P01-molefe-390.dc.html",
+  "R2-P02-mahlangu-1280.dc.html",
+  "R2-P02-mahlangu-390.dc.html",
+  "R2-P03-duplessis-1280.dc.html",
+  "R2-P03-duplessis-390.dc.html",
+  "R2-P04-admin-issued-1280.dc.html",
+  "R2-P04-admin-issued-390.dc.html",
+  "R2-P05-sso-1280.dc.html",
+  "R2-P05-sso-390.dc.html",
+  "R2-P06-two-versions-1280.dc.html",
+  "R2-P06-two-versions-390.dc.html",
+  "R2-T01-five-waiting-1280.dc.html",
+  "R2-T01-five-waiting-768.dc.html",
+  "R2-T01-five-waiting-390.dc.html",
+  "R2-T02-one-admitted-1280.dc.html",
+  "R2-T02-one-admitted-390.dc.html",
+  "R2-T03-four-admitted-1280.dc.html",
+  "R2-T03-four-admitted-768.dc.html",
+  "R2-T03-four-admitted-390.dc.html",
+  "R2-T04-none-waiting-1280.dc.html",
+  "R2-T04-none-waiting-768.dc.html",
+  "R2-T04-none-waiting-390.dc.html",
+  "R2-T05-after-profile-save-1280.dc.html",
+  "R2-T05-after-profile-save-390.dc.html",
+  "R2-T06-admin-view-1280.dc.html",
+  "R2-T06-admin-view-390.dc.html",
+  "R2-T07-t290-1280.dc.html",
+  "R2-T07-t290-390.dc.html",
+  "R2-T08-loading-1280.dc.html",
+  "R2-T08-loading-390.dc.html",
+  "R2-T09-load-error-1280.dc.html",
+  "R2-T09-load-error-390.dc.html",
+  "R2-T10-cancelled-1280.dc.html",
+  "R2-T10-cancelled-390.dc.html",
+  "R2-M01-opened-1280.dc.html",
+  "R2-M01-opened-390.dc.html",
+  "R2-M02-start-chosen-1280.dc.html",
+  "R2-M02-start-chosen-390.dc.html",
+  "R2-M03-ndlovu-empty-1280.dc.html",
+  "R2-M03-ndlovu-empty-390.dc.html",
+  "R2-M04-nothing-adopted-1280.dc.html",
+  "R2-M04-nothing-adopted-390.dc.html",
+  "R2-M05-two-versions-1280.dc.html",
+  "R2-M05-two-versions-390.dc.html",
+  "R2-M06-future-start-1280.dc.html",
+  "R2-M06-future-start-390.dc.html",
+  "R2-M07-five-years-1280.dc.html",
+  "R2-M07-five-years-390.dc.html",
+  "R2-M08-not-found-1280.dc.html",
+  "R2-M08-not-found-390.dc.html",
+  "R2-M09-already-admitted-1280.dc.html",
+  "R2-M09-already-admitted-390.dc.html",
+  "R2-M10-loading-1280.dc.html",
+  "R2-M10-loading-390.dc.html",
+  "R2-M11-load-error-1280.dc.html",
+  "R2-M11-load-error-390.dc.html",
+  "R2-X01-for-flow-12-1280.dc.html",
+  "R3-00-captures-1280.dc.html",
+  "R3-0-spec-2.dc.html",
+  "R3-0-spec.dc.html",
+  "R3-0-steps.dc.html",
+  "R3-L01-none-1280.dc.html",
+  "R3-L01-none-390.dc.html",
+  "R3-L02-admin-none-1280.dc.html",
+  "R3-L02-admin-none-390.dc.html",
+  "R3-L03-admin-two-1280.dc.html",
+  "R3-L03-admin-two-390.dc.html",
+  "R3-L04-nine-1280.dc.html",
+  "R3-L04-nine-768.dc.html",
+  "R3-L04-nine-390.dc.html",
+  "R3-L05-five-1280.dc.html",
+  "R3-L05-five-768.dc.html",
+  "R3-L05-five-390.dc.html",
+  "R3-L06-revoke-dialog-1280.dc.html",
+  "R3-L06-revoke-dialog-390.dc.html",
+  "R3-L07-revoked-1280.dc.html",
+  "R3-L07-revoked-390.dc.html",
+  "R3-L08-five-ndlovu-1280.dc.html",
+  "R3-L08-five-ndlovu-390.dc.html",
+  "R3-L09-not-delivered-1280.dc.html",
+  "R3-L09-not-delivered-390.dc.html",
+  "R3-L10-resent-1280.dc.html",
+  "R3-L10-resent-390.dc.html",
+  "R3-L11-sent-1280.dc.html",
+  "R3-L11-sent-390.dc.html",
+  "R3-L12-check-address-1280.dc.html",
+  "R3-L12-check-address-390.dc.html",
+  "R3-L13-heavy-1280.dc.html",
+  "R3-L13-heavy-768.dc.html",
+  "R3-L13-heavy-390.dc.html",
+  "R3-L14-expired-1280.dc.html",
+  "R3-L14-expired-390.dc.html",
+  "R3-L15-loading-1280.dc.html",
+  "R3-L15-loading-390.dc.html",
+  "R3-L16-load-error-1280.dc.html",
+  "R3-L16-load-error-390.dc.html",
+  "R3-L17-t290-1280.dc.html",
+  "R3-L17-t290-390.dc.html",
+  "R3-N01-empty-1280.dc.html",
+  "R3-N01-empty-390.dc.html",
+  "R3-N02-admin-college-refused-1280.dc.html",
+  "R3-N02-admin-college-refused-390.dc.html",
+  "R3-N03-admin-kruger-issued-1280.dc.html",
+  "R3-N03-admin-kruger-issued-390.dc.html",
+  "R3-N04-admin-institutional-1280.dc.html",
+  "R3-N04-admin-institutional-390.dc.html",
+  "R3-N05-coordinator-1280.dc.html",
+  "R3-N05-coordinator-390.dc.html",
+  "R3-N06-smit-issued-1280.dc.html",
+  "R3-N06-smit-issued-390.dc.html",
+  "R3-N06b-copy-failed-1280.dc.html",
+  "R3-N06b-copy-failed-390.dc.html",
+  "R3-N07-committee-1280.dc.html",
+  "R3-N07-committee-390.dc.html",
+  "R3-N08-assessor-1280.dc.html",
+  "R3-N08-assessor-390.dc.html",
+  "R3-N08a-assessor-before-1280.dc.html",
+  "R3-N08a-assessor-before-390.dc.html",
+  "R3-N09-vanrensburg-issued-1280.dc.html",
+  "R3-N09-vanrensburg-issued-390.dc.html",
+  "R3-N10-refused-speciality-1280.dc.html",
+  "R3-N10-refused-speciality-390.dc.html",
+  "R3-N11-refused-sub-1280.dc.html",
+  "R3-N11-refused-sub-390.dc.html",
+  "R3-N12-trainee-1280.dc.html",
+  "R3-N12-trainee-390.dc.html",
+  "R3-N13-email-blank-1280.dc.html",
+  "R3-N13-email-blank-390.dc.html",
+  "R3-N14-malformed-1280.dc.html",
+  "R3-N14-malformed-390.dc.html",
+  "R3-N15-t286-in-scope-1280.dc.html",
+  "R3-N15-t286-in-scope-390.dc.html",
+  "R3-N16-t286-out-of-scope-1280.dc.html",
+  "R3-N16-t286-out-of-scope-390.dc.html",
+  "R3-N17-q10-in-scope-1280.dc.html",
+  "R3-N17-q10-in-scope-390.dc.html",
+  "R3-N18-q10-out-of-scope-1280.dc.html",
+  "R3-N18-q10-out-of-scope-390.dc.html",
+  "R3-N19-prefilled-revoke-1280.dc.html",
+  "R3-N19-prefilled-revoke-390.dc.html",
+  "R3-N20-prefilled-expired-1280.dc.html",
+  "R3-N20-prefilled-expired-390.dc.html",
+  "R3-N21-long-address-1280.dc.html",
+  "R3-N21-long-address-390.dc.html",
+  "R3-N22-loading-1280.dc.html",
+  "R3-N22-loading-390.dc.html",
+  "R3-N23-load-error-1280.dc.html",
+  "R3-N23-load-error-390.dc.html",
+  "R3-N24-t290-1280.dc.html",
+  "R3-N24-t290-390.dc.html",
+  "R3-N25-no-role-1280.dc.html",
+  "R3-N25-no-role-390.dc.html",
+  "R3-N26-nothing-adopted-1280.dc.html",
+  "R3-N26-nothing-adopted-390.dc.html",
+  "R3-G01-smit-1280.dc.html",
+  "R3-G01-smit-390.dc.html",
+  "R3-G02-kruger-1280.dc.html",
+  "R3-G02-kruger-390.dc.html",
+  "R3-G03-mbatha-1280.dc.html",
+  "R3-G03-mbatha-390.dc.html",
+  "R3-G04-password-refused-1280.dc.html",
+  "R3-G04-password-refused-390.dc.html",
+  "R3-G05-confirm-refused-1280.dc.html",
+  "R3-G05-confirm-refused-390.dc.html",
+  "R3-G06-details-invalid-1280.dc.html",
+  "R3-G06-details-invalid-390.dc.html",
+  "R3-G07-used-1280.dc.html",
+  "R3-G07-used-390.dc.html",
+  "R3-G08-revoked-1280.dc.html",
+  "R3-G08-revoked-390.dc.html",
+  "R3-G09-invalid-1280.dc.html",
+  "R3-G09-invalid-390.dc.html",
+  "R3-G10-expired-1280.dc.html",
+  "R3-G10-expired-390.dc.html",
+  "R3-G11-exists-1280.dc.html",
+  "R3-G11-exists-390.dc.html",
+  "R3-G12-not-accepted-1280.dc.html",
+  "R3-G12-not-accepted-390.dc.html",
+  "R3-G13-no-token-1280.dc.html",
+  "R3-G13-no-token-390.dc.html",
+  "R3-G14-fault-1280.dc.html",
+  "R3-G14-fault-390.dc.html",
+  "R3-G15-user-not-loaded-1280.dc.html",
+  "R3-G15-user-not-loaded-390.dc.html",
+  "R3-G16-cookie-lapsed-1280.dc.html",
+  "R3-G16-cookie-lapsed-390.dc.html",
+  "R3-G17-script-blocked-1280.dc.html",
+  "R3-G17-script-blocked-390.dc.html",
+  "R3-G18-signed-in-elsewhere-1280.dc.html",
+  "R3-G18-signed-in-elsewhere-390.dc.html",
+  "R3-P01-molefe-1280.dc.html",
+  "R3-P01-molefe-390.dc.html",
+  "R3-P02-mahlangu-1280.dc.html",
+  "R3-P02-mahlangu-390.dc.html",
+  "R3-P03-duplessis-1280.dc.html",
+  "R3-P03-duplessis-390.dc.html",
+  "R3-P04-admin-issued-1280.dc.html",
+  "R3-P04-admin-issued-390.dc.html",
+  "R3-P05-sso-1280.dc.html",
+  "R3-P05-sso-390.dc.html",
+  "R3-P07-issuer-gone-1280.dc.html",
+  "R3-P07-issuer-gone-390.dc.html",
+  "R3-P08-loading-1280.dc.html",
+  "R3-P08-loading-390.dc.html",
+  "R3-P09-load-error-1280.dc.html",
+  "R3-P09-load-error-390.dc.html",
+  "R3-T01-five-waiting-1280.dc.html",
+  "R3-T01-five-waiting-768.dc.html",
+  "R3-T01-five-waiting-390.dc.html",
+  "R3-T02-one-admitted-1280.dc.html",
+  "R3-T02-one-admitted-390.dc.html",
+  "R3-T03-four-admitted-1280.dc.html",
+  "R3-T03-four-admitted-768.dc.html",
+  "R3-T03-four-admitted-390.dc.html",
+  "R3-T04-none-waiting-1280.dc.html",
+  "R3-T04-none-waiting-768.dc.html",
+  "R3-T04-none-waiting-390.dc.html",
+  "R3-T05-after-profile-save-1280.dc.html",
+  "R3-T05-after-profile-save-390.dc.html",
+  "R3-T06-admin-view-1280.dc.html",
+  "R3-T06-admin-view-390.dc.html",
+  "R3-T07-t290-1280.dc.html",
+  "R3-T07-t290-390.dc.html",
+  "R3-T08-loading-1280.dc.html",
+  "R3-T08-loading-390.dc.html",
+  "R3-T09-load-error-1280.dc.html",
+  "R3-T09-load-error-390.dc.html",
+  "R3-T10-cancelled-1280.dc.html",
+  "R3-T10-cancelled-390.dc.html",
+  "R3-M01-opened-1280.dc.html",
+  "R3-M01-opened-390.dc.html",
+  "R3-M02-start-chosen-1280.dc.html",
+  "R3-M02-start-chosen-390.dc.html",
+  "R3-M03-ndlovu-empty-1280.dc.html",
+  "R3-M03-ndlovu-empty-390.dc.html",
+  "R3-M04-nothing-adopted-1280.dc.html",
+  "R3-M04-nothing-adopted-390.dc.html",
+  "R3-M04b-no-institution-1280.dc.html",
+  "R3-M04b-no-institution-390.dc.html",
+  "R3-M06-future-start-1280.dc.html",
+  "R3-M06-future-start-390.dc.html",
+  "R3-M07-five-years-1280.dc.html",
+  "R3-M07-five-years-390.dc.html",
+  "R3-M08-not-found-1280.dc.html",
+  "R3-M08-not-found-390.dc.html",
+  "R3-M09-already-admitted-1280.dc.html",
+  "R3-M09-already-admitted-390.dc.html",
+  "R3-M10-loading-1280.dc.html",
+  "R3-M10-loading-390.dc.html",
+  "R3-M11-load-error-1280.dc.html",
+  "R3-M11-load-error-390.dc.html",
+  "R3-M12-t290-1280.dc.html",
+  "R3-M12-t290-390.dc.html",
+  "R3-M13-deactivated-1280.dc.html",
+  "R3-M13-deactivated-390.dc.html",
+  "R3-M14-no-scope-1280.dc.html",
+  "R3-M14-no-scope-390.dc.html",
+  "R3-M15-derived-passed-1280.dc.html",
+  "R3-M15-derived-passed-390.dc.html",
+  "R3-X01-for-flow-12-1280.dc.html"
+ ],
+ "notes": {
+  "tA": {
+   "x": 0,
+   "y": 0,
+   "text": "Screen 1 · Invitations — A: issue above the list",
+   "kind": "title1",
+   "maxW": 9020,
+   "page": "r1"
+  },
+  "tB": {
+   "x": 0,
+   "y": 3220,
+   "text": "Screen 1 · Invitations — B: a page of its own (recommended)",
+   "kind": "title1",
+   "maxW": 9020,
+   "page": "r1"
+  },
+  "tC": {
+   "x": 0,
+   "y": 6040,
+   "text": "Screen 1 · Invitations — C: beside the list, as rows",
+   "kind": "title1",
+   "maxW": 9020,
+   "page": "r1"
+  },
+  "tS": {
+   "x": 0,
+   "y": 9560,
+   "text": "Screen 1 · shared: the revoke confirmation, every issue refusal, loading and a failed read",
+   "kind": "title1",
+   "maxW": 6300,
+   "page": "r1"
+  },
+  "tR": {
+   "x": 0,
+   "y": 11580,
+   "text": "Screen 2 · Register — one proposal",
+   "kind": "title1",
+   "maxW": 6770,
+   "page": "r1"
+  },
+  "tH": {
+   "x": 0,
+   "y": 14000,
+   "text": "Screen 3 · The pending registrar's Home — one proposal",
+   "kind": "title1",
+   "maxW": 2220,
+   "page": "r1"
+  },
+  "tW": {
+   "x": 0,
+   "y": 15870,
+   "text": "Screen 4 · Trainees and admission — three structures (wireframes): W1 recommended",
+   "kind": "title1",
+   "maxW": 12210,
+   "page": "r1"
+  },
+  "tZ": {
+   "x": 0,
+   "y": 17890,
+   "text": "Spec and Steps",
+   "kind": "title1",
+   "maxW": 2640,
+   "page": "r1"
+  },
+  "r2Z": {
+   "x": 0,
+   "y": 0,
+   "text": "Round 2 · the captures, the Spec and the Steps",
+   "kind": "title1",
+   "maxW": 6080,
+   "page": "r2"
+  },
+  "r2L": {
+   "x": 0,
+   "y": 8280,
+   "text": "Invitations · the list (/admin/invitations)",
+   "kind": "title1",
+   "maxW": 10798,
+   "page": "r2"
+  },
+  "r2N": {
+   "x": 0,
+   "y": 21310,
+   "text": "Invite a person (/admin/invitations/new, PROPOSED route)",
+   "kind": "title1",
+   "maxW": 9950,
+   "page": "r2"
+  },
+  "r2G": {
+   "x": 0,
+   "y": 33490,
+   "text": "Register (/account/register): the form and every refused link",
+   "kind": "title1",
+   "maxW": 9950,
+   "page": "r2"
+  },
+  "r2P": {
+   "x": 0,
+   "y": 40390,
+   "text": "The pending registrar's Home",
+   "kind": "title1",
+   "maxW": 9950,
+   "page": "r2"
+  },
+  "r2T": {
+   "x": 0,
+   "y": 44270,
+   "text": "Trainees (/admin/trainees)",
+   "kind": "title1",
+   "maxW": 10504,
+   "page": "r2"
+  },
+  "r2M": {
+   "x": 0,
+   "y": 53000,
+   "text": "Admit <name> (/admin/trainees/admit, PROPOSED route)",
+   "kind": "title1",
+   "maxW": 9950,
+   "page": "r2"
+  },
+  "r2X": {
+   "x": 0,
+   "y": 59074,
+   "text": "For flow 12 (PROPOSED notes)",
+   "kind": "title1",
+   "maxW": 2000,
+   "page": "r2"
+  },
+  "r3Z": {
+   "x": 0,
+   "y": 0,
+   "text": "Round 3 · the captures, the Spec and the Steps",
+   "kind": "title1",
+   "maxW": 6080,
+   "page": "r3"
+  },
+  "r3L": {
+   "x": 0,
+   "y": 7880,
+   "text": "Invitations · the list (/admin/invitations)",
+   "kind": "title1",
+   "maxW": 10798,
+   "page": "r3"
+  },
+  "r3N": {
+   "x": 0,
+   "y": 22204,
+   "text": "Invite a person (/admin/invitations/new, PROPOSED route)",
+   "kind": "title1",
+   "maxW": 9950,
+   "page": "r3"
+  },
+  "r3G": {
+   "x": 0,
+   "y": 41084,
+   "text": "Register (/account/register): the form and every refused link",
+   "kind": "title1",
+   "maxW": 9950,
+   "page": "r3"
+  },
+  "r3P": {
+   "x": 0,
+   "y": 48144,
+   "text": "The pending registrar's Home",
+   "kind": "title1",
+   "maxW": 9950,
+   "page": "r3"
+  },
+  "r3T": {
+   "x": 0,
+   "y": 52024,
+   "text": "Trainees (/admin/trainees)",
+   "kind": "title1",
+   "maxW": 10504,
+   "page": "r3"
+  },
+  "r3M": {
+   "x": 0,
+   "y": 61754,
+   "text": "Admit <name> (/admin/trainees/admit, PROPOSED route)",
+   "kind": "title1",
+   "maxW": 9950,
+   "page": "r3"
+  },
+  "r3X": {
+   "x": 0,
+   "y": 70084,
+   "text": "For flow 12 (PROPOSED notes)",
+   "kind": "title1",
+   "maxW": 2000,
+   "page": "r3"
+  }
+ },
+ "designSystems": [
+  {
+   "title": "Wombat",
+   "namespace": "wombat",
+   "artifact": "https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18",
+   "version": "1792413020-e2bb",
+   "copiedAt": "2026-10-19T12:38:46Z"
+  }
+ ]
+}

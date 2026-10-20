@@ -1,0 +1,168 @@
+/* Flow 11, round 2: the classes these boards add. Every NEW class here would be written in app.css first; .anno, .stage,
+   .note-board and .doc are the canvas's own. Every colour is an existing token (tokens.json, Wombat v25). */
+
+/* Annotation pills (canvas only) */
+.anno{display:inline-block;vertical-align:middle;margin-left:var(--space-xs);font-family:var(--font-body);font-size:0.72rem;font-weight:700;line-height:1.5;letter-spacing:0.02em;padding:0 0.45rem;border-radius:var(--radius-pill);border:1px solid;color:var(--text-color);white-space:nowrap}
+.anno--new{background:var(--info-bg);border-color:var(--secondary-color)}
+.anno--proposed{background:var(--warning-bg);border-color:var(--warning-color)}
+.anno--data{background:var(--header-bg);border-color:var(--input-border)}
+.anno--ill{background:var(--surface-color);border-color:var(--text-color)}
+.anno--t367{background:var(--success-bg);border-color:var(--success-color)}
+
+/* A page's column of parts (NEW: .inv-page, also the Admit page and Trainees) */
+.inv-page{display:flex;flex-direction:column;gap:var(--space-lg)}
+.inv-page > *{margin:0}
+.inv-page--form{max-width:48rem}
+.inv-section{display:flex;flex-direction:column;gap:var(--space-sm)}
+.inv-section > *{margin:0}
+.inv-section-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--space-xs) var(--space-md)}
+.inv-section-head h2{margin:0;font-size:1.25rem}
+.inv-count{color:var(--muted-text);font-size:0.9rem}
+.inv-section-help{color:var(--muted-text);font-size:0.9rem}
+
+/* Invite a person's form (FormField, FormActions, choice-group; the radios' descriptions NEW) */
+.inv-form{display:flex;flex-direction:column;gap:var(--space-lg)}
+.inv-form > *{margin:0}
+.inv-form h2{margin:0;font-size:1.25rem}
+.inv-form .form-grid{margin:0}
+.inv-form .form-actions{margin-top:0}
+.field-label{display:block;margin-bottom:var(--space-sm)}
+.inv-readback{margin:0;font-weight:600;min-height:2.375rem;display:flex;align-items:center;overflow-wrap:anywhere}
+.inv-optional{color:var(--muted-text)}
+.inv-radios-legend{font-size:1rem;font-weight:400;margin-bottom:var(--space-sm)}
+.inv-radios{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(17rem,100%),1fr));gap:var(--space-sm) var(--space-lg)}
+.inv-radio{display:flex;gap:var(--space-sm);align-items:flex-start;margin:0;min-height:1.5rem;cursor:pointer}
+.inv-radio input{margin-top:0.3rem;flex:none;width:1rem;height:1rem;accent-color:var(--secondary-color)}
+.inv-radio-name{display:block;font-weight:600}
+.inv-radio-desc{display:block;color:var(--muted-text);font-size:0.9rem}
+.inv-filled{margin:0}
+@media (max-width:640.98px){
+  .inv-radio{min-height:2.75rem}
+  .inv-form .form-control,.inv-form .form-select{min-height:2.75rem}
+  .inv-form .form-actions{flex-direction:column-reverse}
+  .inv-form .form-actions .btn{width:100%;min-height:2.75rem}
+}
+
+/* OneTimeLink (NEW): the issue's or the resend's result, then the link, Copy link, its expiry */
+.otl{display:flex;flex-direction:column;gap:var(--space-sm);background:var(--surface-color);border:1px solid var(--border-color);border-left:4px solid var(--success-color);border-radius:var(--radius-lg);box-shadow:var(--shadow-raised);padding:var(--space-md) var(--space-lg)}
+.otl > *{margin:0}
+.otl-result{font-size:1.05rem}
+.otl-row{display:flex;gap:var(--space-sm);align-items:stretch}
+.otl-row .form-control{flex:1 1 auto;min-width:0;font-family:var(--font-mono);font-size:0.9rem;background:var(--header-bg)}
+.otl-row .btn{flex:none}
+.otl-copied{background:var(--secondary-color);color:var(--on-fill)}
+.otl-help{color:var(--muted-text);font-size:0.9rem}
+.otl-next{display:flex;flex-wrap:wrap;gap:var(--space-sm) var(--space-lg);align-items:center}
+@media (max-width:640.98px){
+  .otl{padding:var(--space-md)}
+  .otl-row{flex-direction:column}
+  .otl-row .btn,.otl-row .form-control{min-height:2.75rem}
+  .otl-next .btn{width:100%;min-height:2.75rem}
+  .otl-next a{min-height:2.75rem;display:inline-flex;align-items:center}
+}
+
+/* A result with a next step (Alert + ActionResult) */
+.result-block{display:flex;flex-direction:column;gap:var(--space-sm)}
+.result-block .alert{margin:0}
+@media (max-width:640.98px){.result-block .btn{width:100%;min-height:2.75rem}}
+
+/* The invitations table (DataTable with Stack); Delivery's state word and note row NEW */
+.inv-table .inv-email{font-weight:600;overflow-wrap:anywhere;min-width:11rem}
+.inv-role{display:block;font-weight:600}
+.inv-scope{display:block;color:var(--muted-text);font-size:0.9rem}
+.inv-when{white-space:nowrap}
+.inv-when span{display:block;color:var(--muted-text);font-size:0.9rem}
+.inv-actions{white-space:nowrap;width:1%}
+.inv-actions .actions-cell{flex-wrap:nowrap;justify-content:flex-end}
+.delivery{display:inline-flex;gap:var(--space-xs);align-items:flex-start;white-space:nowrap}
+.delivery .icon{flex:none;margin-top:0.2rem}
+.delivery--sending{color:var(--muted-text)}
+.delivery--sent .icon{color:var(--success-color)}
+.delivery--warn{font-weight:600}
+.delivery--warn .icon{color:var(--warning-color)}
+.clinic-table tr.inv-has-note > *{border-bottom:0}
+.clinic-table tr.inv-note td{padding-top:0}
+.inv-note p{margin:0;background:var(--warning-bg);border-left:4px solid var(--warning-color);border-radius:var(--radius-sm);padding:var(--space-xs) var(--space-sm);font-size:0.9rem;color:var(--text-color)}
+@media (max-width:900px){
+  .inv-table .inv-email{min-width:0}
+  .inv-actions{width:auto;white-space:normal}
+  .inv-actions .actions-cell{justify-content:flex-start;flex-wrap:wrap}
+  .clinic-table--stack-wide tbody tr.inv-has-note{border-bottom:0;padding-bottom:0}
+  .clinic-table--stack-wide tbody tr.inv-note{padding-top:var(--space-sm)}
+}
+@media (max-width:640.98px){
+  .inv-actions .actions-cell{display:grid;grid-template-columns:minmax(0,1fr)}
+  .inv-actions .btn{width:100%;min-height:2.75rem}
+}
+
+/* Trainees' tables and Admit (NEW: training-year line, consequence block) */
+.tr-table .tr-name{font-weight:600}
+.tr-table td,.tr-table th{vertical-align:top}
+.tr-act{white-space:nowrap;width:1%}
+@media (max-width:900px){.tr-act{width:auto}}
+@media (max-width:640.98px){.tr-act .btn{width:100%;min-height:2.75rem}}
+.admit-facts{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--space-xs) var(--space-lg);margin:0}
+.admit-facts dt{color:var(--muted-text);font-weight:500}
+.admit-facts dd{margin:0;overflow-wrap:anywhere}
+.admit-facts-card{display:flex;flex-direction:column;gap:var(--space-md)}
+.admit-facts-card h2{margin:0;font-size:1.1rem}
+.ty-line{margin:0;display:flex;flex-direction:column;gap:2px}
+.ty-value{font-size:1.1rem;font-weight:600}
+.ty-value--wait{color:var(--text-color)}
+.consequence{background:var(--info-bg);border-left:4px solid var(--secondary-color);border-radius:var(--radius-md);padding:var(--space-md);margin:0}
+.consequence ul{margin:var(--space-xs) 0 0;padding-left:1.25rem}
+.consequence li + li{margin-top:var(--space-xs)}
+input[type="date"].form-control{font-family:var(--font-body)}
+@media (max-width:640.98px){
+  .admit-facts{grid-template-columns:minmax(0,1fr);gap:0}
+  .admit-facts dd{margin-bottom:var(--space-sm)}
+}
+
+/* The auth card's additions (NEW: refused-link cards, Q11's card) */
+.reg-for{margin:0}
+.reg-email[readonly]{background:var(--header-bg)}
+.reg-card-icon{display:flex;align-items:center;gap:var(--space-sm)}
+.reg-state-lead{font-weight:600}
+@media (max-width:640.98px){
+  .account-form-container .btn,.account-form-container .form-control{min-height:2.75rem}
+  .account-form-container h1{font-size:1.5rem}
+  .account-form-container .account-link{min-height:2.75rem}
+}
+
+/* The pending registrar's Home (NEW: .wait-card's parts) */
+.wait-card{display:flex;flex-direction:column;gap:var(--space-md);max-width:52rem}
+.wait-card > *{margin:0}
+.wait-card h2{display:flex;align-items:center;gap:var(--space-sm);font-size:1.1rem;margin:0}
+.wait-card h3{font-size:1rem;margin:0}
+.wait-facts{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--space-xs) var(--space-lg);margin:0}
+.wait-facts dt{color:var(--muted-text);font-weight:500}
+.wait-facts dd{margin:0;overflow-wrap:anywhere}
+.wait-steps{margin:0;padding-left:1.375rem;display:flex;flex-direction:column;gap:var(--space-xs)}
+.wait-links{display:flex;flex-wrap:wrap;gap:var(--space-sm) var(--space-lg)}
+@media (max-width:640.98px){
+  .wait-facts{grid-template-columns:minmax(0,1fr);gap:0}
+  .wait-facts dd{margin-bottom:var(--space-sm)}
+  .wait-links a{min-height:2.75rem;display:inline-flex;align-items:center}
+}
+
+/* Canvas only: dialog stages, focus marks, note boards, Spec and Steps */
+.stage{background:var(--scrim);padding:var(--space-2xl) var(--space-lg);box-sizing:border-box;min-height:100%}
+.stage dialog{position:static;margin:0 auto}
+.ring{outline:2px solid var(--focus-ring);outline-offset:2px}
+.note-board{padding:var(--space-xl);background:var(--background-color);font-family:var(--font-body);color:var(--text-color);min-height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:var(--space-md)}
+.note-board > *{margin:0}
+.note-board h1{font-size:1.5rem}
+.doc{padding:var(--space-xl);background:var(--background-color);min-height:100%;box-sizing:border-box;font-family:var(--font-body);color:var(--text-color)}
+.doc h1{font-size:1.75rem;margin:0 0 var(--space-sm)}
+.doc h2{font-size:1.25rem;margin:var(--space-xl) 0 var(--space-sm);padding-top:var(--space-md);border-top:2px solid var(--secondary-color)}
+.doc h3{font-size:1.05rem;margin:var(--space-lg) 0 var(--space-xs)}
+.doc p,.doc li{max-width:80rem}
+.doc ul,.doc ol{padding-left:1.25rem}
+.doc li{margin-bottom:var(--space-xs)}
+.doc table{width:100%}
+.doc td,.doc th{vertical-align:top;font-size:0.88rem}
+.doc .clinic-table th,.doc .clinic-table td{padding:var(--space-sm) var(--space-md)}
+.doc code{font-family:var(--font-mono);font-size:0.85rem;background:var(--header-bg);padding:0 4px;border-radius:var(--radius-sm)}
+.doc blockquote{margin:0 0 var(--space-md);padding:var(--space-md);background:var(--surface-color);border-left:4px solid var(--secondary-color);border-radius:var(--radius-md)}
+.doc .num{white-space:nowrap}
+.doc .old{color:var(--muted-text);text-decoration:line-through}

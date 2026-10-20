@@ -1,0 +1,103 @@
+/* Flow 11, round 3: what these boards add to the system. Each rule is either NEW (written in app.css first) or a general
+   rule that replaces a page's own (M8, M9, S16). Reused classes are the system's own and are not restated here:
+   .list-section, .list-section-title, .detail-list, .readonly-value, .person-cell, .account-steps, .submit-check,
+   .has-note / .history-note, .form-check.review-type-choice / .review-type-help, .col-wrap, .col-actions,
+   .choice-group(.is-invalid), .required-mark, .action-result, .alert-row, .system-panel. Every colour an existing token.
+   The canvas's own: .anno, .canvas-focus (stands in for the system's :focus-visible ring), .stage, .note-board, .doc. */
+
+/* ---- canvas only ---- */
+.anno{display:inline-block;vertical-align:middle;margin-left:var(--space-xs);font-family:var(--font-body);font-size:0.72rem;font-weight:700;line-height:1.5;letter-spacing:0.02em;padding:0 0.45rem;border-radius:var(--radius-pill);border:1px solid;color:var(--text-color);white-space:nowrap}
+.anno--new{background:var(--info-bg);border-color:var(--secondary-color)}
+.anno--proposed{background:var(--warning-bg);border-color:var(--warning-color)}
+.anno--data{background:var(--header-bg);border-color:var(--input-border)}
+.anno--ill{background:var(--surface-color);border-color:var(--text-color)}
+.anno--t367{background:var(--success-bg);border-color:var(--success-color)}
+.anno-line{margin:0 0 var(--space-sm)}
+.canvas-focus{outline:2px solid var(--focus-ring);outline-offset:2px}
+.stage{background:var(--scrim);padding:var(--space-2xl) var(--space-lg);box-sizing:border-box;min-height:100%}
+.stage dialog{position:static;margin:0 auto}
+.note-board{padding:var(--space-xl);background:var(--background-color);font-family:var(--font-body);color:var(--text-color);min-height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:var(--space-md)}
+.note-board > *{margin:0}
+.note-board h1{font-size:1.5rem}
+.note-board .detail-card{max-width:28rem}
+.doc{padding:var(--space-xl);background:var(--background-color);min-height:100%;box-sizing:border-box;font-family:var(--font-body);color:var(--text-color)}
+.doc h1{font-size:1.75rem;margin:0 0 var(--space-sm)}
+.doc h2{font-size:1.25rem;margin:var(--space-xl) 0 var(--space-sm);padding-top:var(--space-md);border-top:2px solid var(--secondary-color)}
+.doc h3{font-size:1.05rem;margin:var(--space-lg) 0 var(--space-xs)}
+.doc p,.doc li{max-width:80rem}
+.doc ul,.doc ol{padding-left:1.25rem}
+.doc li{margin-bottom:var(--space-xs)}
+.doc table{width:100%}
+.doc td,.doc th{vertical-align:top;font-size:0.86rem}
+.doc .clinic-table th,.doc .clinic-table td{padding:var(--space-sm) var(--space-md)}
+.doc code{font-family:var(--font-mono);font-size:0.85rem;background:var(--header-bg);padding:0 4px;border-radius:var(--radius-sm)}
+.doc blockquote{margin:0 0 var(--space-md);padding:var(--space-md);background:var(--surface-color);border-left:4px solid var(--secondary-color);border-radius:var(--radius-md)}
+.doc .old{color:var(--muted-text);text-decoration:line-through}
+
+/* ---- NEW: the page column (.inv-page), shared by the four pages ---- */
+.inv-page{display:flex;flex-direction:column;gap:var(--space-lg)}
+.inv-page > *{margin:0}
+.inv-page--form{max-width:48rem}
+.inv-page .list-section-title{margin:0}
+.inv-page .action-result .alert{margin:0}
+.inv-count{color:var(--muted-text);font-size:0.9rem;font-weight:400}
+
+/* ---- NEW: OneTimeLink (S10): inside ActionResult, a success Alert, then the link's row ---- */
+.otl{display:flex;flex-direction:column;gap:var(--space-sm)}
+.otl > *{margin:0}
+.otl-row{display:flex;gap:var(--space-sm);align-items:stretch}
+.otl-row .form-control{flex:1 1 auto;min-width:0;font-family:var(--font-mono);font-size:0.9rem}
+.otl-row .btn{flex:none}
+.otl-help{color:var(--muted-text);font-size:0.9rem}
+.otl-said:empty{display:none}
+
+/* M7: a result, a notice or a refusal naming an address breaks anywhere rather than widen the page. */
+.action-result .alert,.validation-message,.alert{overflow-wrap:anywhere}
+
+/* ---- the invitations table: system classes; M6's two changes ---- */
+.inv-when span{display:block;color:var(--muted-text);font-size:0.9rem}
+.delivery{display:inline-flex;gap:var(--space-xs);align-items:flex-start}
+.delivery .icon{flex:none;margin-top:0.2rem}
+.delivery--sending{color:var(--muted-text)}
+.delivery--sent .icon{color:var(--success-color)}
+.delivery--warn{font-weight:600}
+.delivery--warn .icon{color:var(--warning-color)}
+/* NEW modifier on flow 03's note row: the explanation on the warning tint, its stripe the warning colour. */
+.history-note--warning p{margin:0;background:var(--warning-bg);border-left:4px solid var(--warning-color);border-radius:var(--radius-sm);padding:var(--space-xs) var(--space-sm);font-size:0.9rem;color:var(--text-color)}
+
+/* ---- the wait card (F8): DashboardCard with the control edge, no emphasis stripe ---- */
+.wait-card{border-color:var(--input-border);display:flex;flex-direction:column;gap:var(--space-md)}
+.wait-card > *{margin:0}
+.wait-card h3{font-size:1rem;margin:0}
+.wait-links{display:flex;flex-wrap:wrap;gap:var(--space-sm) var(--space-lg)}
+.wait-links a{display:inline-flex;align-items:center;gap:var(--space-xs)}
+
+/* ---- Admit: Training year as <output> ---- */
+.ty-output{display:block;font-size:1.1rem;font-weight:600}
+
+/* ---- general rules below 641px (M8, M9, S16 from 900) ---- */
+@media (max-width:900px){
+  .clinic-table--stack-wide .btn{min-height:2.75rem}
+}
+@media (max-width:640.98px){
+  .dialog-card .form-actions{flex-direction:column-reverse}
+  .dialog-card .form-actions .btn{min-height:2.75rem;width:100%}
+  .header-container .actions-cell{width:100%}
+  .header-container .actions-cell .btn{min-height:2.75rem;flex:1 1 auto}
+  .inv-page .btn{min-height:2.75rem}
+  .inv-page .form-actions .btn,.otl-row .btn{width:100%}
+  .otl-row{flex-direction:column}
+  .otl-row .form-control{min-height:2.75rem}
+  .review-type-choice{min-height:2.75rem}
+  .wait-links a{min-height:2.75rem}
+}
+
+/* ---- loading (Skeleton's sizes, as classes) ---- */
+.skel-title{height:1.25rem;width:30%}
+.skel-line{height:1rem}
+.skel-short{width:60%}
+.loading-line{margin:0;color:var(--muted-text)}
+
+/* NEW (M6): a row's one button. .col-actions claims 12rem for three buttons, which pushed Current trainees 48px sideways
+   at 901px; one Edit or one Admit… needs only its own width, and still wraps where it must. */
+.clinic-table .col-actions--single{width:auto}

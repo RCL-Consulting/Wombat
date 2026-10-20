@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Complete registration · Wombat</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="r3.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--link-color)}a:hover{color:var(--link-hover)}
+</style>
+</helmet>
+<div class="auth-page-shell"><main class="auth-page-main"><div class="account-form-container"><div class="account-brand"><img class="account-brand-mark" src="/_blob/b3cd1c9ecfc87765138aec8743e383bc" alt="" width="56" height="56"><span class="account-brand-text">Wombat</span></div><p class="account-purpose">Work-based assessment for specialist training.</p><h1>Complete registration</h1><div class="alert alert-info" role="status">This invitation is for <span class="account-email">smit@<wbr>kgk.wombat.local</span>, as Coordinator at Kgosi Kgari Teaching Hospital. <span class="anno anno--new">NEW: words</span> <span class="anno anno--data">DATA: scope names</span></div><form method="post" action="#"><div class="form-group"><label for="email">Email</label><input id="email" class="form-control" type="email" autocomplete="username" readonly value="smit@kgk.wombat.local" aria-describedby="email-help"><p id="email-help" class="field-help">The address this invitation is for. It cannot be changed here.</p></div><div class="form-group"><label for="first">First name</label><input id="first" class="form-control" type="text" autocomplete="given-name" required value=""></div><div class="form-group"><label for="last">Last name</label><input id="last" class="form-control" type="text" autocomplete="family-name" required value=""></div><div class="form-group"><label for="password">Password</label><div class="password-field"><input id="password" class="form-control" type="password" autocomplete="new-password" required aria-describedby="password-rules"><button type="button" class="btn btn-outline password-toggle" aria-pressed="false" aria-controls="password" aria-label="Show password"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path><circle cx="12" cy="12" r="3"></circle></svg>Show</button></div><div id="password-rules" class="password-rules"><p>The new password needs:</p><ul><li>At least 12 characters.</li><li>At least 4 different characters.</li><li>A digit (0 to 9).</li><li>An upper-case letter.</li><li>A lower-case letter.</li><li>A symbol, such as ! or #.</li></ul></div></div><div class="form-group"><label for="confirm">Confirm password</label><div class="password-field"><input id="confirm" class="form-control" type="password" autocomplete="new-password" required><button type="button" class="btn btn-outline password-toggle" aria-pressed="false" aria-controls="confirm" aria-label="Show confirm password"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path><circle cx="12" cy="12" r="3"></circle></svg>Show</button></div></div><div class="form-actions"><button type="submit" class="btn btn-primary">Register</button></div></form><p class="account-note">Not expecting this invitation? Ignore it: its link works until 2026-11-02. <span class="anno anno--data">DATA: ExpiresOn, SA calendar</span></p></div></main></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1450}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

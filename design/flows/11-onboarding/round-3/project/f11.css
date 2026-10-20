@@ -1,0 +1,185 @@
+/* Flow 11 canvas: the classes these boards add. Every class marked NEW in the Spec board is defined here first, as it
+   would be in app.css; the .anno, .wf-* and .doc rules are the canvas's own (annotation, wireframes, Spec and Steps). */
+
+/* Annotation pills (canvas only) */
+.anno{display:inline-block;vertical-align:middle;margin-left:var(--space-xs);font-family:var(--font-body);font-size:0.72rem;font-weight:700;line-height:1.5;letter-spacing:0.02em;padding:0 0.45rem;border-radius:var(--radius-pill);border:1px solid;color:var(--text-color);white-space:nowrap}
+.anno--new{background:var(--info-bg);border-color:var(--secondary-color)}
+.anno--proposed{background:var(--warning-bg);border-color:var(--warning-color)}
+.anno--data{background:var(--header-bg);border-color:var(--input-border)}
+
+/* The invitations pages (NEW) */
+.inv-page{display:flex;flex-direction:column;gap:var(--space-lg)}
+.inv-page > *{margin:0}
+.inv-form{display:flex;flex-direction:column;gap:var(--space-md)}
+.inv-form h2,.inv-section h2{margin:0;font-size:1.25rem}
+.inv-form .form-grid{margin:0}
+.inv-form .form-actions{margin-top:0}
+.inv-required{margin:0;color:var(--muted-text);font-size:0.9rem}
+.field-label{display:block}
+.inv-readback{margin:0;font-weight:600;min-height:2.375rem;display:flex;align-items:center}
+.inv-section{display:flex;flex-direction:column;gap:var(--space-sm)}
+.inv-section-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:var(--space-sm) var(--space-md)}
+.inv-section-head h2{display:flex;align-items:center;gap:var(--space-sm)}
+
+/* One-time link (NEW: OneTimeLink): the result, then the link in a read-only field with Copy link beside it. */
+.otl{display:flex;flex-direction:column;gap:var(--space-sm);background:var(--surface-color);border:1px solid var(--border-color);border-left:4px solid var(--success-color);border-radius:var(--radius-lg);box-shadow:var(--shadow-raised);padding:var(--space-md) var(--space-lg)}
+.otl > *{margin:0}
+.otl-result{font-size:1.05rem}
+.otl-row{display:flex;gap:var(--space-sm);align-items:stretch}
+.otl-row .form-control{flex:1 1 auto;min-width:0;font-family:var(--font-mono);font-size:0.9rem;background:var(--header-bg)}
+.otl-row .btn{flex:none}
+.otl-copied{background:var(--secondary-color);color:var(--on-fill)}
+.otl-help{color:var(--muted-text);font-size:0.9rem}
+.otl-next{display:flex;flex-wrap:wrap;gap:var(--space-sm);align-items:center}
+@media (max-width:640.98px){
+  .otl{padding:var(--space-md)}
+  .otl-row{flex-direction:column}
+  .otl-row .btn,.otl-row .form-control{min-height:2.75rem}
+  .otl-next .btn{width:100%;min-height:2.75rem}
+}
+
+/* The invitations table (A, B) */
+.inv-table .inv-email{font-weight:600;overflow-wrap:anywhere;min-width:12rem}
+.inv-role{display:block;font-weight:600}
+.inv-scope{display:block;color:var(--muted-text);font-size:0.9rem}
+.inv-when{white-space:nowrap}
+.inv-when span{display:block;color:var(--muted-text);font-size:0.9rem}
+.inv-actions{white-space:nowrap;width:1%}
+.inv-actions .actions-cell{flex-wrap:nowrap;justify-content:flex-end}
+.delivery{display:inline-flex;gap:var(--space-xs);align-items:flex-start;white-space:nowrap}
+.delivery .icon{flex:none;margin-top:0.2rem}
+.delivery--muted{color:var(--muted-text)}
+.delivery--ok .icon{color:var(--success-color)}
+.delivery--warn{font-weight:600}
+.delivery--warn .icon{color:var(--warning-color)}
+.clinic-table tr.inv-has-note > *{border-bottom:0}
+.clinic-table tr.inv-note td{padding-top:0}
+.inv-note p{margin:0;background:var(--warning-bg);border-left:4px solid var(--warning-color);border-radius:var(--radius-sm);padding:var(--space-xs) var(--space-sm);font-size:0.9rem;color:var(--text-color)}
+@media (max-width:900px){
+  .inv-table .inv-email{min-width:0}
+  .inv-actions{width:auto;white-space:normal}
+  .inv-actions .actions-cell{justify-content:stretch;flex-wrap:wrap}
+  .clinic-table--stack-wide tbody tr.inv-has-note{border-bottom:0;padding-bottom:0}
+  .clinic-table--stack-wide tbody tr.inv-note{padding-top:var(--space-sm)}
+}
+@media (max-width:640.98px){
+  .inv-actions .btn{flex:1 1 auto;min-height:2.75rem}
+}
+
+/* The invitations as rows (C) */
+.inv-grid{display:grid;grid-template-columns:minmax(0,1fr) 22rem;gap:var(--space-lg);align-items:start}
+.inv-grid > *{min-width:0}
+@media (max-width:1099.98px){.inv-grid{grid-template-columns:minmax(0,1fr)}.inv-aside{order:-1}}
+.inv-aside{display:flex;flex-direction:column;gap:var(--space-md)}
+.inv-rows{list-style:none;margin:0;padding:0;background:var(--surface-color);border:1px solid var(--border-color);border-radius:var(--radius-xl);box-shadow:var(--shadow-raised)}
+.inv-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-sm) var(--space-md);padding:var(--space-md);border-top:1px solid var(--border-color)}
+.inv-row:first-child{border-top:0}
+.inv-row p{margin:0}
+.inv-row--warn{box-shadow:inset 4px 0 0 var(--warning-color)}
+.inv-row--done{background:var(--success-bg);box-shadow:inset 4px 0 0 var(--success-color)}
+.inv-row-main{display:flex;flex-direction:column;gap:2px}
+.inv-row .inv-email{font-weight:600;overflow-wrap:anywhere}
+.inv-meta{color:var(--muted-text);font-size:0.9rem}
+.inv-row-side{display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-sm)}
+.inv-row .inv-note{grid-column:1/-1}
+.inv-row .otl{grid-column:1/-1;box-shadow:none}
+@media (max-width:640.98px){
+  .inv-row{grid-template-columns:minmax(0,1fr)}
+  .inv-row-side{align-items:stretch}
+  .inv-row-side .btn{min-height:2.75rem;flex:1 1 auto}
+}
+
+/* Register (auth card additions, NEW) */
+.reg-for{margin:0}
+.reg-email{font-family:var(--font-body)}
+.reg-email[readonly]{background:var(--header-bg)}
+.reg-state-icon{color:var(--warning-color)}
+.reg-sheet{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-lg);padding:var(--space-xl);align-items:start;background:var(--background-color);font-family:var(--font-body);color:var(--text-color)}
+.reg-sheet .account-form-container{width:100%;max-width:none;padding:var(--space-lg)}
+.reg-sheet .account-form-container h1{font-size:1.5rem}
+.sheet-label{margin:0 0 var(--space-xs);font-size:0.85rem;font-weight:600;color:var(--muted-text)}
+@media (max-width:640.98px){
+  .account-form-container .btn,.account-form-container .form-control{min-height:2.75rem}
+  .account-form-container h1{font-size:1.5rem}
+}
+
+/* The pending registrar's Home (NEW: .wait-card) */
+.wait-card{display:flex;flex-direction:column;gap:var(--space-md);max-width:52rem}
+.wait-card > *{margin:0}
+.wait-card h2{display:flex;align-items:center;gap:var(--space-sm);font-size:1.1rem;margin:0}
+.wait-card h3{font-size:1rem;margin:0}
+.wait-facts{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--space-xs) var(--space-lg);margin:0}
+.wait-facts dt{color:var(--muted-text);font-weight:500}
+.wait-facts dd{margin:0;overflow-wrap:anywhere}
+.wait-steps{margin:0;padding-left:1.375rem;display:flex;flex-direction:column;gap:var(--space-xs)}
+.wait-links{display:flex;flex-wrap:wrap;gap:var(--space-sm) var(--space-lg)}
+@media (max-width:640.98px){
+  .wait-facts{grid-template-columns:minmax(0,1fr);gap:0}
+  .wait-facts dd{margin-bottom:var(--space-sm)}
+  .wait-links a{min-height:2.75rem;display:inline-flex;align-items:center}
+}
+
+/* Dialog stages (canvas only) */
+.stage{background:var(--scrim);padding:var(--space-2xl) var(--space-lg);box-sizing:border-box}
+.stage dialog{position:static;margin:0 auto}
+.stage-label{margin:0;padding:var(--space-sm) var(--space-lg);background:var(--header-bg);font-size:0.9rem;font-weight:600;font-family:var(--font-body);color:var(--text-color)}
+.ring{outline:2px solid var(--focus-ring);outline-offset:2px}
+
+/* Wireframes (canvas only): structure, not look */
+.wf{font-family:var(--font-body);color:var(--text-color);background:var(--surface-color);min-height:100%;display:grid;grid-template-columns:200px minmax(0,1fr)}
+.wf--phone{grid-template-columns:minmax(0,1fr)}
+.wf-side{background:var(--header-bg);border-right:1px dashed var(--input-border);padding:var(--space-md);display:flex;flex-direction:column;gap:var(--space-xs);font-size:0.85rem}
+.wf-side .on{font-weight:700;text-decoration:underline}
+.wf-bar{background:var(--header-bg);border-bottom:1px dashed var(--input-border);padding:var(--space-sm) var(--space-md);font-size:0.85rem;display:flex;justify-content:space-between}
+.wf-main{padding:var(--space-lg) var(--space-xl);display:flex;flex-direction:column;gap:var(--space-md);min-width:0}
+.wf--phone .wf-main{padding:var(--space-md)}
+.wf-main > *{margin:0}
+.wf h1{font-size:1.4rem;margin:0;border-bottom:2px solid var(--text-color);padding-bottom:var(--space-xs)}
+.wf h2{font-size:1.1rem;margin:0}
+.wf-crumb{font-size:0.85rem;color:var(--muted-text)}
+.wf-box{border:1px dashed var(--input-border);border-radius:var(--radius-md);padding:var(--space-md);display:flex;flex-direction:column;gap:var(--space-sm)}
+.wf-box > *{margin:0}
+.wf-box--edit{border-left:4px solid var(--text-color)}
+.wf-box--result{border:2px solid var(--text-color)}
+.wf-row{display:grid;gap:var(--space-sm) var(--space-md);align-items:center;border-bottom:1px solid var(--border-color);padding:var(--space-sm) 0;font-size:0.92rem}
+.wf-row:last-child{border-bottom:0}
+.wf-row--head{font-weight:700;font-size:0.85rem;color:var(--muted-text)}
+.wf-btn{display:inline-flex;align-items:center;justify-content:center;border:1.5px solid var(--text-color);border-radius:var(--radius-md);padding:2px 10px;font-size:0.85rem;font-weight:600;white-space:nowrap;background:var(--surface-color)}
+.wf-btn--primary{background:var(--text-color);color:var(--surface-color)}
+.wf-field{display:flex;flex-direction:column;gap:2px;font-size:0.9rem}
+.wf-input{border:1.5px solid var(--input-border);border-radius:var(--radius-sm);min-height:30px;display:flex;align-items:center;padding:0 var(--space-sm);background:var(--surface-color)}
+.wf-readout{border:1.5px dashed var(--text-color);border-radius:var(--radius-sm);padding:var(--space-xs) var(--space-sm);font-weight:700}
+.wf-help{font-size:0.82rem;color:var(--muted-text)}
+.wf-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:var(--space-md)}
+.wf-chips{display:flex;gap:var(--space-sm);flex-wrap:wrap}
+.wf-chip{border:1.5px solid var(--text-color);border-radius:var(--radius-pill);padding:0 10px;font-size:0.85rem}
+.wf-chip.on{background:var(--text-color);color:var(--surface-color)}
+.wf-dialog{border:2px solid var(--text-color);border-radius:var(--radius-xl);background:var(--surface-color);padding:var(--space-lg);display:flex;flex-direction:column;gap:var(--space-sm);max-width:30rem;margin:0 auto;box-shadow:var(--shadow-dialog)}
+.wf-dialog > *{margin:0}
+.wf-scrim{background:var(--scrim);padding:var(--space-xl) var(--space-md);border-radius:var(--radius-md)}
+.wf-actions{display:flex;gap:var(--space-sm);justify-content:flex-end;flex-wrap:wrap;border-top:1px solid var(--border-color);padding-top:var(--space-sm)}
+.wf-count{font-size:0.82rem;font-weight:700;border:1px solid var(--input-border);background:var(--header-bg);padding:var(--space-xs) var(--space-sm);border-radius:var(--radius-sm)}
+
+/* Spec and Steps (canvas only) */
+.doc{padding:var(--space-xl);background:var(--background-color);min-height:100%;box-sizing:border-box;font-family:var(--font-body);color:var(--text-color)}
+.doc h1{font-size:1.75rem;margin:0 0 var(--space-sm)}
+.doc h2{font-size:1.25rem;margin:var(--space-xl) 0 var(--space-sm);padding-top:var(--space-md);border-top:2px solid var(--secondary-color)}
+.doc h3{font-size:1.05rem;margin:var(--space-lg) 0 var(--space-xs)}
+.doc p,.doc li{max-width:76rem}
+.doc ul,.doc ol{padding-left:1.25rem}
+.doc li{margin-bottom:var(--space-xs)}
+.doc table{width:100%}
+.doc td,.doc th{vertical-align:top;font-size:0.9rem}
+.doc .clinic-table th,.doc .clinic-table td{padding:var(--space-sm) var(--space-md)}
+.doc code{font-family:var(--font-mono);font-size:0.85rem;background:var(--header-bg);padding:0 4px;border-radius:var(--radius-sm)}
+.doc .cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-lg)}
+.doc .cols > div{background:var(--surface-color);border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:var(--space-md)}
+.doc .cols h3{margin-top:0}
+.doc .num{text-align:right;white-space:nowrap}
+
+/* Role as radios (B) and the optional mark */
+.inv-optional{color:var(--muted-text);font-size:0.9rem}
+.inv-radios{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(16rem,100%),1fr));gap:var(--space-sm) var(--space-lg)}
+.inv-radios .form-check{display:flex;gap:var(--space-sm);align-items:flex-start;margin:0;min-height:1.5rem}
+.inv-radios .form-check-input{margin-top:0.3rem;flex:none}
+@media (max-width:640.98px){.inv-radios .form-check{min-height:2.75rem}}
