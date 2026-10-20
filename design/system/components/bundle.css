@@ -1,8 +1,8 @@
 /* Wombat — components/bundle.css
-   Wombat's component CSS as flows 01 to 10 built it (T335, b347e11c; T339, f50dffb2 and 6735fa98; T342, 725237ee,
+   Wombat's component CSS as flows 01 to 11 built it (T335, b347e11c; T339, f50dffb2 and 6735fa98; T342, 725237ee,
    daaf6386, 5fd5abcd and a341b44e; T350, 06aa51d7; T355, b020c942, db4c2d0a, 5f8e6639 and b389f7d2; T358, 85d5a508 and
    94edf2b7; T361, 44de180b, 59bb72fd, 6ad6c57a, 6b149fff and 14378856; T364, 622c5ad1 and
-   1ec7a352; T366, 49e7cf5e and 9ba80586; T369, 68327c9d; master@e4b480e2),
+   1ec7a352; T366, 49e7cf5e and 9ba80586; T369, 68327c9d and e4b480e2; T373, 69a17c70; master@15bee480),
    extracted with every class name and declaration unchanged, so a design maps back to the classes Razor writes.
    - From src/Wombat.Web/wwwroot/app.css: everything after :root. tokens.css, which the page compiles from tokens.json,
      supplies the :root custom properties (colours, --space-*, --radius-*, --shadow-*, --sidebar-width, --motion-fast,
@@ -4637,23 +4637,14 @@ fieldset.form-group fieldset.form-group > legend {
   }
 
   .committee-calendar .clinic-table--stack .btn,
-  .committee-calendar .header-container .actions-cell .btn,
   .committee-calendar .form-actions .btn {
     min-height: 2.75rem;
     width: 100%;
   }
-
-  .committee-calendar .header-container .actions-cell {
-    width: 100%;
-  }
 }
 
-/* Up to 900px, where the stack-wide lists stack: their row actions 44px too. */
-@media (max-width: 900px) {
-  .committee-calendar .clinic-table--stack-wide .btn {
-    min-height: 2.75rem;
-  }
-}
+/* The header's actions and the stack-wide lists' row actions (44px up to 900px) are the general rules of "Flow 11: the
+   onboarding pages, shared" since T373 (M9, S16). */
 
 /* Flow 08: Decisions due (T364). The trainee line above the list while one trainee is filtered (C2), and By EPA's table
    inside .rung-legend's fold (M3). Every phone rule is scoped to .committee-calendar (round 3 S6). */
@@ -5355,24 +5346,9 @@ fieldset.form-group fieldset.form-group > legend {
     display: inline-flex;
     min-height: 2.75rem;
   }
-
-  .msf-page dialog .form-actions {
-    align-items: stretch;
-    flex-direction: column-reverse;
-  }
-
-  .msf-page dialog .btn {
-    min-height: 2.75rem;
-    width: 100%;
-  }
 }
-/* From 641 to 900px a list written with both stack classes is stacked too (the campaign list, her reports; build review
-   D2): its row actions keep their 44px targets there. */
-@media (max-width: 900px) {
-  .msf-page .clinic-table--stack-wide td .actions-cell .btn {
-    min-height: 2.75rem;
-  }
-}
+/* A dialog's stacked buttons (M10) and a stack-wide list's 44px row actions from 641 to 900px (D2) are the general rules
+   of "Flow 11: the onboarding pages, shared" since T373 (M8, S16). */
 /* end Flow 10: the MSF pages, shared */
 
 /* Flow 10: the report (T369) */
@@ -6089,6 +6065,315 @@ fieldset.form-group fieldset.form-group > legend {
 }
 
 /* end Flow 10: her reports, the respondent and coverage */
+
+/* ── Onboarding ─────────────────────────────────────── */
+
+/* Flow 11: the onboarding pages, shared (T373). The four pages' column (Invitations, Invite a person, Trainees, Admit),
+   its count and the date-over-time cell, the loading skeleton's sizes as classes (S20: Skeleton's own sizes are inline
+   styles), M7's long-address rule, and the general phone rules round 3 asked for (M8, M9, S16), which replace flows 08's
+   and 10's scoped copies: the top-layer dialog is outside every page wrapper, so a page's own class cannot reach it, and
+   a third flow needing the same header and row rules made them the system's. */
+
+/* The page column: its parts 24px apart, each with no margin of its own; the two form pages at a 48rem measure. */
+.inv-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.inv-page > * {
+  margin: 0;
+}
+
+.inv-page--form {
+  max-width: 48rem;
+}
+
+.inv-page .list-section-title,
+.inv-page .action-result .alert {
+  margin: 0;
+}
+
+/* A section's count beside its title ("4 active", "5 waiting"): plain text, not a badge. */
+.inv-count {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+/* A cell's date over its second line (Issued's time in SAST; Programme start's training year): the date never splits on
+   its hyphens (round 3 check, carried 2), the line under it muted. */
+.inv-when {
+  white-space: nowrap;
+}
+
+.inv-when span {
+  color: var(--muted-text);
+  display: block;
+  font-size: 0.9rem;
+  white-space: normal;
+}
+
+/* M7: a result, a notice or a refusal naming an address breaks inside it rather than widen the page (N21-390, a
+   64-character address). A sentence also writes <wbr> after the @. */
+.action-result .alert,
+.validation-message,
+.alert {
+  overflow-wrap: anywhere;
+}
+
+/* A page's loading state (L15, N22, T08, M10): "Loading the invitations." as a status line, then a skeleton card whose
+   bars are sized by class (div.skeleton.skel-title, .skel-line, .skel-line.skel-short). */
+.loading-line {
+  color: var(--muted-text);
+  margin: 0;
+}
+
+.skel-title {
+  height: 1.25rem;
+  width: 30%;
+}
+
+.skel-line {
+  height: 1rem;
+}
+
+.skel-short {
+  width: 60%;
+}
+
+/* S16: a stack-wide table (DataTable's StackWide) is stacked from 900px down, and its row buttons are 44px wherever it is
+   (flows 08 and 10 wrote this under their own wrappers). */
+@media (max-width: 900px) {
+  .clinic-table--stack-wide .btn {
+    min-height: 2.75rem;
+  }
+}
+
+/* Below 641px, on every page:
+   - M8: a ConfirmDialog's buttons take the row, 44px, the action on top and the safe button last on screen (the DOM has
+     the safe button first, so it stays first in the tab order);
+   - M9: a page header's actions take the row, each 44px; a stand-alone button in the onboarding column is 44px. */
+@media (max-width: 640.98px) {
+  .dialog-card .form-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .dialog-card .form-actions .btn,
+  .dialog-card .dialog-actions .btn {
+    min-height: 2.75rem;
+    width: 100%;
+  }
+
+  .header-container .actions-cell {
+    width: 100%;
+  }
+
+  .header-container .actions-cell .btn {
+    flex: 1 1 auto;
+    min-height: 2.75rem;
+  }
+
+  .inv-page .btn {
+    min-height: 2.75rem;
+  }
+}
+/* end Flow 11: the onboarding pages, shared */
+
+/* Flow 11: invitations (T373). The invitations list's Delivery word and its note row, the OneTimeLink (S10), and the phone
+   rules of the list and Invite a person, scoped to .inv-page. */
+
+/* An empty result region takes no row of the column (its 24px gap included). */
+.inv-page .action-result:empty {
+  display: none;
+}
+
+/* Delivery: a state word with its icon, no badge (Q15). Being sent muted; Sent its icon in the success colour; Not
+   delivered and Check the address 600 with the warning icon. */
+.delivery {
+  align-items: flex-start;
+  display: inline-flex;
+  gap: var(--space-xs);
+}
+
+.delivery .icon {
+  flex: none;
+  margin-top: 0.2rem;
+}
+
+.delivery--sending {
+  color: var(--muted-text);
+}
+
+.delivery--sent .icon {
+  color: var(--success-color);
+}
+
+.delivery--warn {
+  font-weight: 600;
+}
+
+.delivery--warn .icon {
+  color: var(--warning-color);
+}
+
+/* Narrow desktops (round 3 check, carried 1): Delivery's .col-wrap floor holds "delivered" and "address" whole beside
+   their icon between 901 and 1100px, where the table is still a table beside the sidebar. */
+.inv-page .clinic-table th.col-wrap {
+  min-width: 7.5rem;
+}
+
+/* Flow 03's note row with the warning's tint and stripe: why a row was not delivered, and what Resend does (L09, L12). */
+.clinic-table .history-note--warning p {
+  background-color: var(--warning-bg);
+  border-left: 4px solid var(--warning-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-color);
+  font-size: 0.9rem;
+  margin: 0;
+  padding: var(--space-xs) var(--space-sm);
+}
+
+/* The OneTimeLink (S10): inside ActionResult, a success Alert, the link's label, its field beside Copy link, the live line
+   that says whether the copy worked, and the help. The field holds the real link, selectable, in the mono face. */
+.otl {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.otl > * {
+  margin: 0;
+}
+
+.otl-row {
+  align-items: stretch;
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.otl-row .form-control {
+  flex: 1 1 auto;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  min-width: 0;
+}
+
+.otl-row .btn {
+  flex: none;
+}
+
+.otl-help {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+}
+
+/* The live line stays in the accessibility tree while empty, or a screen reader may not announce the copy's result when
+   it arrives (T373 fix pass, P1): hidden the visually-hidden way, never display: none. Out of the flex flow while empty,
+   so it takes no gap. */
+.otl-said:empty {
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+/* Below 641px: the link's field over its button, both full width and 44px; the form's actions and each role's row 44px. */
+@media (max-width: 640.98px) {
+  .inv-page .otl-row {
+    flex-direction: column;
+  }
+
+  .inv-page .otl-row .form-control {
+    min-height: 2.75rem;
+  }
+
+  .inv-page .otl-row .btn,
+  .inv-page .form-actions .btn {
+    width: 100%;
+  }
+
+  /* The primary on top, as every stacked action row (DESIGN.md § The auth card, § Button system); Cancel stays first in
+     the tab order. */
+  .inv-page .form-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .inv-page .review-type-choice {
+    min-height: 2.75rem;
+  }
+}
+/* end Flow 11: invitations */
+
+/* Flow 11: admission (T373). Trainees, Admit ‹name› and the pending registrar's Home (lane A): the wait card (F8), a
+   DashboardCard with the control edge in place of a stripe, its parts 16px apart and its two links each with an arrow;
+   the Training year output (S18), read out large under its label; a row's one button (M6); and the Curriculum column's
+   floor, so "Curriculum" and "Paediatric" never split between 901 and 1100px (check, carried 1). */
+
+/* F8: no emphasis stripe; the control edge (3.80:1) says this card is the page's one subject. */
+.wait-card {
+  border-color: var(--input-border);
+}
+
+.wait-card .dashboard-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.wait-card .dashboard-card-body > * {
+  margin: 0;
+}
+
+.wait-card h3 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.wait-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-lg);
+}
+
+.wait-links a {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--space-xs);
+}
+
+/* S18: "Training year 4" (or "Not started: …") is the start's output, not a field: block text at the card title's size. */
+.ty-output {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* M6: a row's one button (Admit…, Edit) needs only its own width; .col-actions' 12rem is for three, and pushed Current
+   trainees 48px sideways at 901px. */
+.clinic-table .col-actions--single {
+  width: auto;
+}
+
+/* Carried 1: Curriculum and sub-speciality keeps its share, but never falls below its longest word ("Curriculum",
+   "Paediatric"), so it wraps between words from 901 to 1100px. */
+.clinic-table th.col-wrap--curriculum {
+  min-width: 7rem;
+}
+
+/* Below 641px: the wait card's two links are 44px targets. The onboarding column's buttons are 44px by the shared rule. */
+@media (max-width: 640.98px) {
+  .wait-card .wait-links a {
+    min-height: 2.75rem;
+  }
+}
+/* end Flow 11: admission */
 
 /* ══ MainLayout.razor.css ═══════════════════════════════════════════════════════════════════════════════════════════
    Scoped to MainLayout.razor in the app; written unscoped here (see the header). */

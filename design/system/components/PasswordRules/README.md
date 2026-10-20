@@ -33,6 +33,7 @@ The sentences are `WombatIdentityErrorDescriber`'s (through `PasswordRuleMessage
 - **A refusal lists only the rules broken**, in the same order, under the same heading, inside its danger Alert: `ul.password-rules-broken` (4px under the words, indented 1.25rem). On change password it reads "**Your password was not changed.** The new password needs:" and then the broken rules.
 - **The field is marked**: `aria-invalid`, and its own `.validation-message`, "The new password does not meet the rules below." (`PasswordRuleMessages.FieldMessage`).
 - **The field names the list until a refusal is shown** (A15); then it names its own message and the refusal, not the list, which still stands under it saying all six.
+- **On Register** (flow 11, T373, G04, S15) a broken rule is Password's own message, under the field, in the rules' heading and words, only the broken ones: "The new password needs: At least 12 characters."; the field is described by that message, then by the list, and takes the focus. A refused confirmation (G05) empties both fields and puts "The password confirmation does not match. Type the password again in both fields." under Confirm password, which Password names before the list (Register).
 - The reset card does the same for a refusal that lists rules; any other refusal leaves its field alone. It has no 8-character rule: Reset password is enabled once anything is typed.
 
 ## Contrast

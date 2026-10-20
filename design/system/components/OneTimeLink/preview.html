@@ -1,0 +1,65 @@
+<!-- @dsCard group="Onboarding" height=950 width=974 subtitle="The registration link, shown once: a success alert, the link in a read-only field in the mono face, Copy link and the live line that says whether it worked, until when it works; at 390 the field over its button" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>OneTimeLink</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* Below 641px app.css stacks the field over its button inside .inv-page; the 390 rendition repeats that media rule. */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .inv-page .otl-row { flex-direction: column; }
+  .pv-narrow .inv-page .otl-row .form-control { min-height: 2.75rem; }
+  .pv-narrow .inv-page .otl-row .btn { width: 100%; min-height: 2.75rem; }
+</style>
+</head>
+<body>
+<p class="pv-cap">After an issue on Invite a person (Step 2.2): the result with the focus, the link not yet copied (the live line empty, hidden the visually-hidden way), Open Invitations under it</p>
+<div class="inv-page inv-page--form">
+  <div class="action-result" tabindex="-1">
+    <div class="otl">
+      <div class="alert alert-success" role="status"><strong>Invitation issued for smit@<wbr>kgk.wombat.local.</strong> Its email is being sent. Copy the link below — it is shown only once.</div>
+      <label for="pv-a">Registration link for smit@<wbr>kgk.wombat.local</label>
+      <div class="otl-row">
+        <input id="pv-a" class="form-control" readonly value="https://wombat.rcl.co.za/account/register/start?token=…" aria-describedby="pv-a-help pv-a-said">
+        <button type="button" class="btn btn-outline" aria-describedby="pv-a-said"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>Copy link</button>
+      </div>
+      <p id="pv-a-said" class="otl-said field-help" aria-live="polite"></p>
+      <p id="pv-a-help" class="otl-help">It works until 2026-11-03. It is shown here until your next action, then never again. If the email is not delivered, share this link another way, or resend it from Invitations, which emails a new link in place of this one.</p>
+      <p><a href="#">Open Invitations</a></p>
+    </div>
+  </div>
+</div>
+
+<p class="pv-cap">The clipboard refused (a blocked permission): the button keeps its words, and the live line says what to do instead</p>
+<div class="inv-page inv-page--form">
+  <div class="otl">
+    <label for="pv-b">Registration link for duplessis@<wbr>kgk.wombat.local</label>
+    <div class="otl-row">
+      <input id="pv-b" class="form-control" readonly value="https://wombat.rcl.co.za/account/register/start?token=…" aria-describedby="pv-b-help pv-b-said">
+      <button type="button" class="btn btn-outline" aria-describedby="pv-b-said"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>Copy link</button>
+    </div>
+    <p id="pv-b-said" class="otl-said field-help" aria-live="polite">Could not copy. Select the link and copy it yourself.</p>
+    <p id="pv-b-help" class="otl-help">It works until 2026-11-03. It is shown here until your next action, then never again.</p>
+  </div>
+</div>
+
+<p class="pv-cap">At 390: the field over Copy link, both the row's width and 44px; copied, the button says so with its tick</p>
+<div class="pv-narrow">
+  <div class="inv-page">
+    <div class="otl">
+      <div class="alert alert-success" role="status"><strong>Invitation issued for mahlangu@<wbr>kgk.wombat.local.</strong> Its email is being sent. Copy the link below — it is shown only once.</div>
+      <label for="pv-c">Registration link for mahlangu@<wbr>kgk.wombat.local</label>
+      <div class="otl-row">
+        <input id="pv-c" class="form-control" readonly value="https://wombat.rcl.co.za/account/register/start?token=…" aria-describedby="pv-c-help pv-c-said">
+        <button type="button" class="btn btn-outline" aria-describedby="pv-c-said"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>Copied</button>
+      </div>
+      <p id="pv-c-said" class="otl-said field-help" aria-live="polite">Link copied.</p>
+      <p id="pv-c-help" class="otl-help">It works until 2026-11-03. It is shown here until your next action, then never again. If the email is not delivered, share this link another way, or resend it from Invitations, which emails a new link in place of this one.</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!-- @dsCard group="Onboarding" height=3650 width=974 subtitle="The invitations list: the list is the page, Invite a person its header action; Delivery a word with its icon, a row not delivered first with its note row and Resend; the resend's one-time link; Revoke… confirmed and its result; Expired, not used; stacked at 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Invitations</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The app opens the dialog with showModal() (wwwroot/js/dialog.js); a static preview paints its backdrop itself. */
+  .pv-stage { position: relative; background: var(--scrim); padding: var(--space-2xl) 0; box-sizing: border-box; }
+  .pv-stage dialog { position: static; margin: 0 auto; }
+  /* At 900px and below app.css stacks .clinic-table--stack-wide, and below 641px the dialog's buttons stack; the 390
+     rendition repeats those media rules under .pv-narrow (a 358px column: 390 less the phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr.has-note { border-bottom: 0; padding-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-narrow .clinic-table--stack-wide .btn { min-height: 2.75rem; }
+  .pv-narrow .dialog-card .form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .pv-narrow .dialog-card .form-actions .btn { min-height: 2.75rem; width: 100%; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Nolwazi Mbatha, Institutional admin, at Step 2.26: one invitation left, its mail not delivered an hour on; its note row says what Resend does, and Resend comes before Revoke…</p>
+<div class="header-container">
+  <div>
+    <h1>Invitations</h1>
+    <p class="page-subtitle">Invitations not yet used, with the state of each one's email.</p>
+  </div>
+  <div class="actions-cell">
+    <a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6" /><path d="M22 11h-6" /></svg>Invite a person</a>
+  </div>
+</div>
+<div class="inv-page">
+  <div id="invitations-result" class="action-result" tabindex="-1"></div>
+  <section class="list-section" aria-labelledby="pv-active-heading">
+    <h2 id="pv-active-heading" class="list-section-title">Active invitations <span class="inv-count">1 active</span></h2>
+    <div class="table-container shadow">
+      <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>At Kgosi Kgari Teaching Hospital. Not delivered first, then newest first. A used or revoked invitation leaves this list; one that passes its last day unused moves to Expired, not used.</caption>
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">Invitee</th>
+            <th scope="col" role="columnheader">Role and scope</th>
+            <th scope="col" role="columnheader">Issued</th>
+            <th scope="col" role="columnheader">Last day</th>
+            <th scope="col" role="columnheader" class="col-wrap">Delivery</th>
+            <th scope="col" role="columnheader" class="col-actions"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row" class="has-note">
+            <th scope="row" role="rowheader">duplessis@<wbr>kgk.wombat.local</th>
+            <td role="cell" data-label="Role and scope"><span class="person-cell">Trainee <span>Paediatrics / Paediatrics</span></span></td>
+            <td role="cell" data-label="Issued" class="inv-when">2026-10-20<span>11:21 SAST</span></td>
+            <td role="cell" data-label="Last day" class="inv-when">2026-11-03</td>
+            <td role="cell" data-label="Delivery" class="col-wrap"><span id="pv-delivery" class="delivery delivery--warn"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>Not delivered</span></td>
+            <td role="cell" class="col-actions">
+              <div class="actions-cell">
+                <button type="button" class="btn btn-sm btn-outline" aria-label="Resend the Trainee invitation to duplessis@kgk.wombat.local" aria-describedby="pv-note"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Resend</button>
+                <button type="button" class="btn btn-sm btn-outline" aria-label="Revoke the Trainee invitation to duplessis@kgk.wombat.local">Revoke…</button>
+              </div>
+            </td>
+          </tr>
+          <tr role="row">
+            <td role="cell" colspan="6" class="history-note history-note--warning"><p id="pv-note">Resend emails a new link in place of the current one, which then stops working.</p></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<p class="pv-cap">After Resend (Step 2.26): the new link, shown once, in the result with the focus; the row Issued at the resend's time, Being sent, no note row, only Revoke…</p>
+<div class="inv-page">
+  <div id="invitations-result-2" class="action-result" tabindex="-1">
+    <div class="otl">
+      <div class="alert alert-success" role="status"><strong>A new invitation link is being emailed to duplessis@<wbr>kgk.wombat.local.</strong> The link it replaces no longer works. Copy the new link below — it is shown only once.</div>
+      <label for="pv-otl-link">Registration link for duplessis@<wbr>kgk.wombat.local</label>
+      <div class="otl-row">
+        <input id="pv-otl-link" class="form-control" readonly value="https://wombat.rcl.co.za/account/register/start?token=…" aria-describedby="pv-otl-help pv-otl-said">
+        <button type="button" class="btn btn-outline" aria-describedby="pv-otl-said"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>Copy link</button>
+      </div>
+      <p id="pv-otl-said" class="otl-said field-help" aria-live="polite"></p>
+      <p id="pv-otl-help" class="otl-help">It works until 2026-11-03. It is shown here until your next action, then never again.</p>
+    </div>
+  </div>
+  <section class="list-section" aria-labelledby="pv-active-heading-2">
+    <h2 id="pv-active-heading-2" class="list-section-title">Active invitations <span class="inv-count">1 active</span></h2>
+    <div class="table-container shadow">
+      <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>At Kgosi Kgari Teaching Hospital. Not delivered first, then newest first. A used or revoked invitation leaves this list; one that passes its last day unused moves to Expired, not used.</caption>
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">Invitee</th>
+            <th scope="col" role="columnheader">Role and scope</th>
+            <th scope="col" role="columnheader">Issued</th>
+            <th scope="col" role="columnheader">Last day</th>
+            <th scope="col" role="columnheader" class="col-wrap">Delivery</th>
+            <th scope="col" role="columnheader" class="col-actions"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th scope="row" role="rowheader">duplessis@<wbr>kgk.wombat.local</th>
+            <td role="cell" data-label="Role and scope"><span class="person-cell">Trainee <span>Paediatrics / Paediatrics</span></span></td>
+            <td role="cell" data-label="Issued" class="inv-when">2026-10-20<span>12:24 SAST</span></td>
+            <td role="cell" data-label="Last day" class="inv-when">2026-11-03</td>
+            <td role="cell" data-label="Delivery" class="col-wrap"><span class="delivery delivery--sending"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>Being sent</span></td>
+            <td role="cell" class="col-actions"><div class="actions-cell"><button type="button" class="btn btn-sm btn-outline" aria-label="Revoke the Trainee invitation to duplessis@kgk.wombat.local">Revoke…</button></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<p class="pv-cap">The three Delivery words beside each other, as a row reads them (Q15): no badge, the icon and the word; Not delivered and Check the address 600 with the warning icon</p>
+<p>
+  <span class="delivery delivery--sending"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>Being sent</span>
+  &nbsp;&nbsp;
+  <span class="delivery delivery--sent"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" /></svg>Sent</span>
+  &nbsp;&nbsp;
+  <span class="delivery delivery--warn"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>Check the address</span>
+</p>
+
+<p class="pv-cap">Revoke… on the mistyped address (Step 2.17): the dialog names the invitation and its scope, says what stops working and that an address is never corrected in place; the safe button says what it keeps</p>
+<div class="pv-stage">
+  <dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-revoke-title" aria-describedby="pv-revoke-body">
+    <div class="form-container">
+      <h2 id="pv-revoke-title">Revoke this invitation?</h2>
+      <div id="pv-revoke-body" class="dialog-body">
+        <p>Revoke the Trainee invitation to <strong>ndlvou@<wbr>kgk.wombat.local</strong> (Paediatrics / Paediatrics)?</p>
+        <ul class="dialog-list">
+          <li>The registration link already emailed to that address stops working at once: nobody can register from it.</li>
+          <li>The invitation leaves this list. An address is never corrected in place: to invite the right one, issue a new invitation.</li>
+        </ul>
+        <p>Revoking cannot be undone.</p>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline">Keep the invitation</button>
+        <button type="button" class="btn btn-danger">Revoke invitation</button>
+      </div>
+    </div>
+  </dialog>
+</div>
+
+<p class="pv-cap">Revoked (Step 2.17): the result with the focus, no link on the page, and the way to invite the right address</p>
+<div class="inv-page">
+  <div class="action-result" tabindex="-1">
+    <div class="alert alert-success" role="status">
+      <div class="alert-row">
+        <p class="alert-row-text"><strong>Invitation revoked.</strong> The link sent to ndlvou@<wbr>kgk.wombat.local no longer works: nobody can register from it.</p>
+        <a class="btn btn-outline btn-sm" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6" /><path d="M22 11h-6" /></svg>Invite another address as Trainee, Paediatrics / Paediatrics</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="pv-cap">Expired, not used (a scratch invitation whose last day was 2026-10-19): Invite again, named by its address and what it was for</p>
+<div class="inv-page">
+  <section class="list-section" aria-labelledby="pv-expired-heading">
+    <h2 id="pv-expired-heading" class="list-section-title">Expired, not used <span class="inv-count">1 expired</span></h2>
+    <div class="table-container shadow">
+      <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>Past their last day unused, in the last 30 days on the South African calendar, newest first. Each leaves this list 30 days after its last day, or once a new invitation goes to its address.</caption>
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">Invitee</th>
+            <th scope="col" role="columnheader">Role and scope</th>
+            <th scope="col" role="columnheader">Issued</th>
+            <th scope="col" role="columnheader">Last day</th>
+            <th scope="col" role="columnheader" class="col-actions"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th scope="row" role="rowheader">expired@<wbr>kgk.wombat.local</th>
+            <td role="cell" data-label="Role and scope"><span class="person-cell">Trainee <span>Paediatrics / Paediatrics</span></span></td>
+            <td role="cell" data-label="Issued" class="inv-when">2026-10-20<span>‹hh:mm› SAST</span></td>
+            <td role="cell" data-label="Last day" class="inv-when">2026-10-19</td>
+            <td role="cell" class="col-actions"><div class="actions-cell"><a class="btn btn-sm btn-outline" href="#" aria-label="Invite again expired@kgk.wombat.local as Trainee, Paediatrics / Paediatrics"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6" /><path d="M22 11h-6" /></svg>Invite again</a></div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<p class="pv-cap">The loading state (L15): a status line and a skeleton card, no header action</p>
+<div class="inv-page">
+  <p class="loading-line" role="status">Loading the invitations.</p>
+  <div class="detail-card" aria-hidden="true">
+    <div class="skeleton skel-title"></div>
+    <div class="skeleton skel-line"></div>
+    <div class="skeleton skel-line"></div>
+    <div class="skeleton skel-line skel-short"></div>
+  </div>
+</div>
+
+<p class="pv-cap">At 390 (Step 2.26): stacked, the address heading its labelled cells, the note row joining its block, Resend and Revoke… 44px; the revoke dialog's buttons stacked, the action on top</p>
+<div class="pv-narrow">
+  <div class="inv-page">
+    <section class="list-section" aria-labelledby="pv-narrow-heading">
+      <h2 id="pv-narrow-heading" class="list-section-title">Active invitations <span class="inv-count">1 active</span></h2>
+      <div class="table-container shadow">
+        <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+          <caption>At Kgosi Kgari Teaching Hospital. Not delivered first, then newest first. A used or revoked invitation leaves this list; one that passes its last day unused moves to Expired, not used.</caption>
+          <thead role="rowgroup">
+            <tr role="row"><th scope="col">Invitee</th><th scope="col">Role and scope</th><th scope="col">Issued</th><th scope="col">Last day</th><th scope="col">Delivery</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr>
+          </thead>
+          <tbody role="rowgroup">
+            <tr role="row" class="has-note">
+              <th scope="row" role="rowheader">duplessis@<wbr>kgk.wombat.local</th>
+              <td role="cell" data-label="Role and scope"><span class="person-cell">Trainee <span>Paediatrics / Paediatrics</span></span></td>
+              <td role="cell" data-label="Issued" class="inv-when">2026-10-20<span>11:21 SAST</span></td>
+              <td role="cell" data-label="Last day" class="inv-when">2026-11-03</td>
+              <td role="cell" data-label="Delivery" class="col-wrap"><span class="delivery delivery--warn"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>Not delivered</span></td>
+              <td role="cell" class="col-actions"><div class="actions-cell"><button type="button" class="btn btn-sm btn-outline"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Resend</button><button type="button" class="btn btn-sm btn-outline">Revoke…</button></div></td>
+            </tr>
+            <tr role="row">
+              <td role="cell" colspan="6" class="history-note history-note--warning"><p>Resend emails a new link in place of the current one, which then stops working.</p></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+  <div class="pv-stage">
+    <dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-revoke-title-n">
+      <div class="form-container">
+        <h2 id="pv-revoke-title-n">Revoke this invitation?</h2>
+        <div class="dialog-body">
+          <p>Revoke the Trainee invitation to <strong>ndlvou@<wbr>kgk.wombat.local</strong> (Paediatrics / Paediatrics)?</p>
+          <ul class="dialog-list">
+            <li>The registration link already emailed to that address stops working at once: nobody can register from it.</li>
+            <li>The invitation leaves this list. An address is never corrected in place: to invite the right one, issue a new invitation.</li>
+          </ul>
+          <p>Revoking cannot be undone.</p>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline">Keep the invitation</button>
+          <button type="button" class="btn btn-danger">Revoke invitation</button>
+        </div>
+      </div>
+    </dialog>
+  </div>
+</div>
+</body>
+</html>

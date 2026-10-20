@@ -1,0 +1,182 @@
+<!-- @dsCard group="Onboarding" height=2950 width=974 subtitle="Invite a person: one person, one role; the roles as described radios, none chosen; only the chosen role's fields, the institution read out; issued, the one-time link and the form again; refusals under their fields, the holder named only in scope" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>InviteAPerson</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Nolwazi Mbatha, Institutional admin, at Step 2.16: Trainee chosen; the institution read out; Speciality and Sub-speciality starred, the hint kept until a sub-speciality is chosen</p>
+<div class="header-container">
+  <div>
+    <h1>Invite a person</h1>
+    <p class="page-subtitle">One person, one role. The registration link is shown here once, and emailed to them.</p>
+  </div>
+</div>
+<div class="inv-page inv-page--form">
+  <form class="form-container" novalidate>
+    <p class="field-help">* marks a field you must fill in.</p>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="pv-email">Email<span class="required-mark" aria-hidden="true"> *</span></label>
+        <input id="pv-email" type="email" class="form-control" aria-required="true" autocomplete="off" spellcheck="false" value="molefe@kgk.wombat.local">
+      </div>
+    </div>
+    <fieldset id="pv-role" class="form-group choice-row">
+      <legend>Role<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></legend>
+      <div class="choice-group">
+        <div class="form-check review-type-choice"><input class="form-check-input" type="radio" name="pv-role" id="pv-r-ia" aria-describedby="pv-r-ia-help"><label for="pv-r-ia">Institutional admin</label><p id="pv-r-ia-help" class="page-subtitle review-type-help">Runs an institution in Wombat: invites and admits people, adopts curricula.</p></div>
+        <div class="form-check review-type-choice"><input class="form-check-input" type="radio" name="pv-role" id="pv-r-sa" aria-describedby="pv-r-sa-help"><label for="pv-r-sa">Speciality admin</label><p id="pv-r-sa-help" class="page-subtitle review-type-help">Runs one speciality's committee work: panels, reviews and decisions due.</p></div>
+        <div class="form-check review-type-choice"><input class="form-check-input" type="radio" name="pv-role" id="pv-r-ssa" aria-describedby="pv-r-ssa-help"><label for="pv-r-ssa">Sub-speciality admin</label><p id="pv-r-ssa-help" class="page-subtitle review-type-help">Runs one sub-speciality's committee work. Choose the speciality, then the sub-speciality.</p></div>
+        <div class="form-check review-type-choice"><input class="form-check-input" type="radio" name="pv-role" id="pv-r-co" aria-describedby="pv-r-co-help"><label for="pv-r-co">Coordinator</label><p id="pv-r-co-help" class="page-subtitle review-type-help">Works across the institution. Choose a speciality only to keep them to it.</p></div>
+        <div class="form-check review-type-choice"><input class="form-check-input" type="radio" name="pv-role" id="pv-r-cm" aria-describedby="pv-r-cm-help"><label for="pv-r-cm">Committee member</label><p id="pv-r-cm-help" class="page-subtitle review-type-help">Sits committee reviews. Choose a speciality only to keep them to it.</p></div>
+        <div class="form-check review-type-choice"><input class="form-check-input" type="radio" name="pv-role" id="pv-r-as" aria-describedby="pv-r-as-help"><label for="pv-r-as">Assessor</label><p id="pv-r-as-help" class="page-subtitle review-type-help">Assesses the registrars who ask them, at this institution.</p></div>
+        <div class="form-check review-type-choice"><input class="form-check-input" type="radio" name="pv-role" id="pv-r-tr" aria-describedby="pv-r-tr-help" checked><label for="pv-r-tr">Trainee</label><p id="pv-r-tr-help" class="page-subtitle review-type-help">A registrar. Registers as Pending trainee, and waits to be admitted under Trainees.</p></div>
+      </div>
+    </fieldset>
+    <div class="form-grid">
+      <dl class="form-group">
+        <dt>Institution</dt>
+        <dd class="readonly-value">Kgosi Kgari Teaching Hospital</dd>
+      </dl>
+      <div class="form-group">
+        <label for="pv-spec">Speciality<span class="required-mark" aria-hidden="true"> *</span></label>
+        <select id="pv-spec" class="form-select" aria-required="true" aria-describedby="pv-spec-help">
+          <option value="">Choose a speciality</option>
+          <option selected>Paediatrics</option>
+        </select>
+        <p id="pv-spec-help" class="field-help">Then choose its sub-speciality.</p>
+      </div>
+      <div class="form-group">
+        <label for="pv-sub">Sub-speciality<span class="required-mark" aria-hidden="true"> *</span></label>
+        <select id="pv-sub" class="form-select" aria-required="true">
+          <option value="" selected>Choose a sub-speciality</option>
+          <option>Paediatrics</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <a class="btn btn-outline" href="#">Cancel</a>
+      <button type="submit" class="btn btn-primary">Issue invitation</button>
+    </div>
+  </form>
+</div>
+
+<p class="pv-cap">Issued (Step 2.5), the link copied: the one-time link in the result with the focus, Open Invitations under it, then the form again, empty, under "Invite the next person"</p>
+<div class="inv-page inv-page--form">
+  <div id="invitation-result" class="action-result" tabindex="-1">
+    <div class="otl">
+      <div class="alert alert-success" role="status"><strong>Invitation issued for vanrensburg@<wbr>sun.wombat.local.</strong> Its email is being sent. Copy the link below — it is shown only once.</div>
+      <label for="pv-otl-link">Registration link for vanrensburg@<wbr>sun.wombat.local</label>
+      <div class="otl-row">
+        <input id="pv-otl-link" class="form-control" readonly value="https://wombat.rcl.co.za/account/register/start?token=…" aria-describedby="pv-otl-help pv-otl-said">
+        <button type="button" class="btn btn-outline" aria-describedby="pv-otl-said"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>Copied</button>
+      </div>
+      <p id="pv-otl-said" class="otl-said field-help" aria-live="polite">Link copied.</p>
+      <p id="pv-otl-help" class="otl-help">It works until 2026-11-03. It is shown here until your next action, then never again. If the email is not delivered, share this link another way, or resend it from Invitations, which emails a new link in place of this one.</p>
+      <p><a href="#">Open Invitations</a></p>
+    </div>
+  </div>
+  <form class="form-container" novalidate aria-labelledby="pv-next">
+    <h2 id="pv-next">Invite the next person</h2>
+    <p class="field-help">* marks a field you must fill in.</p>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="pv-email-2">Email<span class="required-mark" aria-hidden="true"> *</span></label>
+        <input id="pv-email-2" type="email" class="form-control" aria-required="true">
+      </div>
+    </div>
+  </form>
+</div>
+
+<p class="pv-cap">A Coordinator (Step 2.2): Speciality with no mark, at Any speciality, and what leaving it there does</p>
+<div class="inv-page inv-page--form">
+  <div class="form-container">
+    <div class="form-grid">
+      <dl class="form-group">
+        <dt>Institution</dt>
+        <dd class="readonly-value">Kgosi Kgari Teaching Hospital</dd>
+      </dl>
+      <div class="form-group">
+        <label for="pv-spec-co">Speciality</label>
+        <select id="pv-spec-co" class="form-select" aria-describedby="pv-spec-co-help">
+          <option value="" selected>Any speciality</option>
+          <option>Paediatrics</option>
+        </select>
+        <p id="pv-spec-co-help" class="field-help">Leave it at Any speciality for the whole institution.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="pv-cap">Refused at issue (Step 2.6, Speciality admin with no speciality): the scope's sentence under its field, the select marked, described by it and focused; never a summary</p>
+<div class="inv-page inv-page--form">
+  <div class="form-container">
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="pv-spec-r">Speciality<span class="required-mark" aria-hidden="true"> *</span></label>
+        <select id="pv-spec-r" class="form-select input-validation-error" aria-required="true" aria-invalid="true" aria-describedby="pv-spec-r-msg">
+          <option value="" selected>Choose a speciality</option>
+          <option>Paediatrics</option>
+        </select>
+        <p id="pv-spec-r-msg" class="validation-message">Speciality administrators must be scoped to a speciality.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="pv-cap">An address an account holds, in the caller's scope (N15): under Email, the holder named and linked; nothing is issued</p>
+<div class="inv-page inv-page--form">
+  <div class="form-container">
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="pv-email-r">Email<span class="required-mark" aria-hidden="true"> *</span></label>
+        <input id="pv-email-r" type="email" class="form-control input-validation-error" aria-required="true" aria-invalid="true" aria-describedby="pv-email-r-msg" value="smit@kgk.wombat.local">
+        <p id="pv-email-r-msg" class="validation-message">smit@<wbr>kgk.wombat.local already has a Wombat account (Pieter Smit), so it cannot be invited. To give Pieter Smit another role, <a href="#">open Pieter Smit under Users</a>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="pv-cap">Opened from a revoke (Step 2.17): what it was filled from, Trainee and its scope chosen, Email empty and focused</p>
+<div class="inv-page inv-page--form">
+  <div class="form-container">
+    <div class="alert alert-info" role="status">Role and scope filled from the revoked invitation to ndlvou@<wbr>kgk.wombat.local. Type the right address.</div>
+    <p class="field-help">* marks a field you must fill in.</p>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="pv-email-f">Email<span class="required-mark" aria-hidden="true"> *</span></label>
+        <input id="pv-email-f" type="email" class="form-control" aria-required="true">
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="pv-cap">Nothing adopted (N26): a role that needs a speciality is told why, with the way to adopt; the roles that need none can still be issued</p>
+<div class="inv-page inv-page--form">
+  <div class="form-container">
+    <div class="form-group">
+      <span>Speciality</span>
+      <p class="field-warning">Nothing is adopted at Kgosi Kgari Teaching Hospital yet, so roles that need a speciality cannot be invited. Adopt a curriculum under <a href="#">Curriculum adoptions</a>.</p>
+    </div>
+  </div>
+</div>
+
+<p class="pv-cap">The load failure (N23): fixed words and Try again</p>
+<div class="inv-page inv-page--form">
+  <div class="action-result" tabindex="-1">
+    <div class="alert alert-danger" role="alert">
+      <div class="alert-row">
+        <span class="alert-row-text">Could not load what you can invite. Nothing has changed. Try again, or come back in a few minutes.</span>
+        <button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

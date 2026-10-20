@@ -9,7 +9,7 @@ Coordinator and Administrator (`[Authorize(Roles = "Coordinator,Administrator")]
 ## The page
 
 - **The header** (`.msf-header`): "MSF campaigns", the subtitle "Create and review multi-source feedback campaigns.", and its actions **New campaign** (primary, `plus`, `/msf/campaigns/new`) **then MSF coverage** (outline, `#msf-coverage-link`, only for a caller it shows a programme to) (L1). Below 641px they stack, each 44px and the page's width.
-- **The column** (`.msf-page`): its sections 24px apart; the page's one `ConfirmDialog` is rendered inside it, so its phone rules reach it (M10).
+- **The column** (`.msf-page`): its sections 24px apart; the page's one `ConfirmDialog` is rendered inside it (M10); since flow 11 its buttons stack at 390 by the general dialog rule (ConfirmDialog).
 - **The result** (`ActionResult`, `#msf-campaigns-result`, focused once the dialog has closed): "**The campaign for Lerato Molefe (Default MSF, closing 2026-11-02) has been withdrawn.** Its respondents' links no longer work, and their email addresses have been removed." (its first sentence bold, as on the campaign page; L4, build review D11), or for one closed, "… Its report will never be released to the trainee."; refused, a danger alert "**Not withdrawn.** …".
 - **The list** (`section.list-section`): `h2.list-section-title` "Campaigns (2)", a plain count, over a hand-written `.clinic-table.clinic-table--stack.clinic-table--stack-wide` in a `.table-container.shadow` (D2; DataTable), captioned "MSF campaigns, newest first. Counted by respondent group: this list never shows who was invited or who responded." **Newest first by creation** (M1):
 
@@ -37,7 +37,7 @@ Coordinator and Administrator (`[Authorize(Roles = "Coordinator,Administrator")]
 
 ## Narrow widths
 
-**Stacked at 900px and below** (both stack classes): each row a block, the trainee heading its labelled cells; a row's buttons are 44px from 900px (`.msf-page .clinic-table--stack-wide td .actions-cell .btn`) and, below 641px, a full-width column (A.7.5). No sideways scroll at 1280, 768 or 390.
+**Stacked at 900px and below** (both stack classes): each row a block, the trainee heading its labelled cells; a row's buttons are 44px from 900px (`.clinic-table--stack-wide .btn`, the general rule since flow 11; until then `.msf-page .clinic-table--stack-wide td .actions-cell .btn`) and, below 641px, a full-width column (A.7.5). No sideways scroll at 1280, 768 or 390.
 
 ## Contrast
 

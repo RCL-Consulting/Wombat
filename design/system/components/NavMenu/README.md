@@ -34,7 +34,7 @@ Nothing: MainLayout renders it in its header. What it offers is `NavItems.For(ac
 | Coordinator | Home, Programme trainees, Waiting for assessors, Decisions due, MSF campaigns, Committee reviews, Decision panels, Data rights requests |
 | Assessor | Home, Activity inbox |
 | Trainee | Home, Log an activity, My activities, MSF reports, My committee reviews, Export portfolio |
-| Pending trainee | Home, Log an activity, My activities |
+| Pending trainee | Home (then My data rights among the personal links; D55: a pending registrar files nothing, so Log an activity and My activities went; the Home is flow 11's wait card, AwaitingAdmission) |
 | No role | Home |
 
 Then the personal links. Icons: home, circle-plus, list, message-square, file-text, download, inbox, calendar-check, scale, stethoscope, list-checks, book-open, book-check, clipboard-list, gauge, building, graduation-cap, users, mail, user-round, user-check, clock, history, key, shield-check, trending-up, lock, award.
@@ -55,7 +55,7 @@ Every page that is not an item's own, and the list it sits under for each acting
 
 | Page | Lit item, by acting role |
 |---|---|
-| An activity (`/activities/{id}`) | Assessor: Activity inbox · Trainee, Pending trainee: My activities · Speciality admin, Sub-speciality admin, Coordinator: Waiting for assessors, however the activity was reached (flow 06) |
+| An activity (`/activities/{id}`) | Assessor: Activity inbox · Trainee: My activities · Speciality admin, Sub-speciality admin, Coordinator: Waiting for assessors, however the activity was reached (flow 06) |
 | A registrar's page (`/programme/trainees/{id}`, flow 06) | Committee member, Speciality admin, Sub-speciality admin, Coordinator: Programme trainees; its trail Home › Programme trainees › the registrar's name |
 | A committee review | Committee member, Coordinator, Speciality admin, Sub-speciality admin, Institutional admin, Administrator: Committee reviews (a trainee reads theirs at `/committee/my-reviews/{id}`; this page does not admit them) |
 | A trainee's own review (`/committee/my-reviews/{id}`, flow 09) | Trainee: My committee reviews; its trail Home › My committee reviews › the review, "2026 S2 annual progression review" (T366, F8). Only the Trainee: the page admits an Administrator too, as the list does, but reads them nothing that is not their own |
@@ -71,8 +71,10 @@ Every page that is not an item's own, and the list it sits under for each acting
 | A curriculum | Administrator, College admin: Curricula |
 | Curriculum progress (`/admin/curriculum-progress`) | Administrator: Curricula (linked from Curricula) |
 | An entrustment scale | Administrator: Entrustment scales |
+| Invite a person (`/admin/invitations/new`, flow 11) | Administrator, Institutional admin: Invitations; its trail Home › Invitations › Invite a person (T373, Q1) |
 | A user | Administrator, Institutional admin: Users |
 | A trainee's profile; an assessor's profile | Institutional admin: Trainees; Assessors |
+| Admit ‹name› (`/admin/trainees/admit`, flow 11) | Institutional admin: Trainees; its trail Home › Trainees › Admit Lerato Molefe. The Administrator, whose menu has no Trainees, has nothing lit and the same trail, its Trainees crumb given by the page (`PageHeader`'s `Trail`; T373, M04b) |
 | An audit entry | Administrator, Institutional admin: Audit log |
 | A scheduled job's run history | Administrator: Scheduled jobs |
 | My authorisations | Trainee: My progress |

@@ -4,7 +4,7 @@ The sign-in page (`/account/login`, `Login.razor`) on the auth card: the lockup,
 
 ## The order, top to bottom
 
-1. **The lockup** (`div.account-brand`): the mark as `<img alt="" width="56" height="56">` and "Wombat" in `wordmark-large` (Fraunces 500, 2.4rem, `primary-color`). The sign-in page and `/msf/respond` alone carry it; on `/msf/respond` the mark is 44px (`.respond-card .account-brand-mark`, flow 10, round 2 N18; MsfRespond).
+1. **The lockup** (`div.account-brand`): the mark as `<img alt="" width="56" height="56">` and "Wombat" in `wordmark-large` (Fraunces 500, 2.4rem, `primary-color`). The sign-in page, Register (flow 11, Q6; Register) and `/msf/respond` alone carry it; on `/msf/respond` the mark is 44px (`.respond-card .account-brand-mark`, flow 10, round 2 N18; MsfRespond).
 2. **The purpose line** (`p.account-purpose`, muted): "Work-based assessment for specialist training."
 3. **`<h1>Sign in</h1>`**, 2rem (1.5rem below 641px). Until T339 it was an `<h2>`, so the page had no h1.
 4. **One message slot**, empty, or one Alert (below).

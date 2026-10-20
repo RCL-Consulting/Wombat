@@ -1,0 +1,180 @@
+<!-- @dsCard group="Onboarding" height=2300 width=974 subtitle="Trainees: Waiting to be admitted and Current trainees, each an h2 with its count over a list that stacks at 900px; a row's one Admit…; the admission's result focused directly above the waiting list; the programme start over its training year; stacked at 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Trainees</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* At 900px and below app.css stacks .clinic-table--stack-wide; the 390 rendition repeats the media rules under .pv-narrow. */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-narrow .clinic-table--stack-wide .btn { min-height: 2.75rem; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Nolwazi Mbatha, Institutional admin, at Step 2.29 after admitting Lerato Molefe: the result focused directly above the waiting list, "4 waiting", Anele Dlamini's Admit… first; Current trainees "1 current"</p>
+<div class="header-container">
+  <div>
+    <h1>Trainees</h1>
+    <p class="page-subtitle">Admit registrars who are waiting, and keep current trainees' programmes.</p>
+  </div>
+</div>
+<div class="inv-page">
+  <section class="list-section" aria-labelledby="pv-waiting">
+    <h2 id="pv-waiting" class="list-section-title" tabindex="-1">Waiting to be admitted <span class="inv-count">4 waiting</span></h2>
+    <div id="trainees-admitted" class="action-result" tabindex="-1">
+      <div class="alert alert-success" role="status"><strong>Lerato Molefe admitted to the Paediatric EPA Curriculum (11.1), training year 4, from 2023-01-15.</strong></div>
+    </div>
+    <div class="table-container shadow">
+      <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>Registered from a Trainee invitation, by surname. A deactivated account is not listed. Nothing can be filed about them until they are admitted.</caption>
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">Name</th>
+            <th scope="col" role="columnheader" class="col-wrap">Email</th>
+            <th scope="col" role="columnheader">Invited as</th>
+            <th scope="col" role="columnheader">Registered</th>
+            <th scope="col" role="columnheader" class="col-actions col-actions--single"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th scope="row" role="rowheader">Anele Dlamini</th>
+            <td role="cell" data-label="Email" class="col-wrap">dlamini@<wbr>kgk.wombat.local</td>
+            <td role="cell" data-label="Invited as">Paediatrics / Paediatrics</td>
+            <td role="cell" data-label="Registered">2026-10-20</td>
+            <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="Admit Anele Dlamini">Admit…</a></td>
+          </tr>
+          <tr role="row">
+            <th scope="row" role="rowheader">Pieter du Plessis</th>
+            <td role="cell" data-label="Email" class="col-wrap">duplessis@<wbr>kgk.wombat.local</td>
+            <td role="cell" data-label="Invited as">Paediatrics / Paediatrics</td>
+            <td role="cell" data-label="Registered">2026-10-20</td>
+            <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="Admit Pieter du Plessis">Admit…</a></td>
+          </tr>
+          <tr role="row">
+            <th scope="row" role="rowheader">Nomsa Mahlangu</th>
+            <td role="cell" data-label="Email" class="col-wrap">mahlangu@<wbr>kgk.wombat.local</td>
+            <td role="cell" data-label="Invited as">Paediatrics / Paediatrics</td>
+            <td role="cell" data-label="Registered">2026-10-20</td>
+            <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="Admit Nomsa Mahlangu">Admit…</a></td>
+          </tr>
+          <tr role="row">
+            <th scope="row" role="rowheader">Sipho Ndlovu</th>
+            <td role="cell" data-label="Email" class="col-wrap">ndlovu@<wbr>kgk.wombat.local</td>
+            <td role="cell" data-label="Invited as">Paediatrics / Paediatrics</td>
+            <td role="cell" data-label="Registered">2026-10-20</td>
+            <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="Admit Sipho Ndlovu">Admit…</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section class="list-section" aria-labelledby="pv-current">
+    <h2 id="pv-current" class="list-section-title">Current trainees <span class="inv-count">1 current</span></h2>
+    <div class="table-container shadow">
+      <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>Admitted to a curriculum, by surname. Training years turn every 365 days from the programme start.</caption>
+        <thead role="rowgroup">
+          <tr role="row">
+            <th scope="col" role="columnheader">Name</th>
+            <th scope="col" role="columnheader" class="col-wrap col-wrap--curriculum">Curriculum and sub-speciality</th>
+            <th scope="col" role="columnheader">Programme start</th>
+            <th scope="col" role="columnheader">Expected completion</th>
+            <th scope="col" role="columnheader" class="col-actions col-actions--single"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th scope="row" role="rowheader">Lerato Molefe</th>
+            <td role="cell" data-label="Curriculum and sub-speciality" class="col-wrap"><span class="person-cell">Paediatric EPA Curriculum (11.1) <span>Paediatrics</span></span></td>
+            <td role="cell" data-label="Programme start" class="inv-when">2023-01-15 <span>Training year 4</span></td>
+            <td role="cell" data-label="Expected completion">2027-01-14</td>
+            <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit Lerato Molefe's profile">Edit</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<p class="pv-cap">At Step 2.30, the last admission with its completion left empty: the derived date said, and where to change it; nobody waiting</p>
+<div class="inv-page">
+  <section class="list-section" aria-labelledby="pv-waiting-2">
+    <h2 id="pv-waiting-2" class="list-section-title" tabindex="-1">Waiting to be admitted</h2>
+    <div class="action-result" tabindex="-1">
+      <div class="alert alert-success" role="status"><strong>Sipho Ndlovu admitted to the Paediatric EPA Curriculum (11.1), training year 1, from 2026-01-15.</strong> Expected completion 2027-01-15, derived from the curriculum window: change it under Edit.</div>
+    </div>
+    <div class="detail-card detail-card--empty">
+      <div class="state-panel-title">Nobody is waiting to be admitted.</div>
+      <div class="state-panel-copy">A registrar appears here after registering from a Trainee invitation.</div>
+    </div>
+  </section>
+</div>
+
+<p class="pv-cap">The loading state (T08): a status line and a skeleton card</p>
+<div class="inv-page">
+  <p class="loading-line" role="status">Loading the trainees.</p>
+  <div class="detail-card">
+    <div class="skeleton skel-title"></div>
+    <div class="skeleton skel-line"></div>
+    <div class="skeleton skel-line"></div>
+    <div class="skeleton skel-line skel-short"></div>
+  </div>
+</div>
+
+<p class="pv-cap">At 390: each row a block under its name, its cells labelled, Admit… and Edit 44px</p>
+<div class="pv-narrow">
+  <div class="inv-page">
+    <section class="list-section" aria-labelledby="pv-waiting-n">
+      <h2 id="pv-waiting-n" class="list-section-title">Waiting to be admitted <span class="inv-count">4 waiting</span></h2>
+      <div class="table-container shadow">
+        <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+          <caption>Registered from a Trainee invitation, by surname. A deactivated account is not listed. Nothing can be filed about them until they are admitted.</caption>
+          <thead role="rowgroup">
+            <tr role="row"><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Invited as</th><th scope="col">Registered</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr>
+          </thead>
+          <tbody role="rowgroup">
+            <tr role="row">
+              <th scope="row" role="rowheader">Anele Dlamini</th>
+              <td role="cell" data-label="Email" class="col-wrap">dlamini@<wbr>kgk.wombat.local</td>
+              <td role="cell" data-label="Invited as">Paediatrics / Paediatrics</td>
+              <td role="cell" data-label="Registered">2026-10-20</td>
+              <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#">Admit…</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section class="list-section" aria-labelledby="pv-current-n">
+      <h2 id="pv-current-n" class="list-section-title">Current trainees <span class="inv-count">1 current</span></h2>
+      <div class="table-container shadow">
+        <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+          <caption>Admitted to a curriculum, by surname. Training years turn every 365 days from the programme start.</caption>
+          <thead role="rowgroup">
+            <tr role="row"><th scope="col">Name</th><th scope="col">Curriculum and sub-speciality</th><th scope="col">Programme start</th><th scope="col">Expected completion</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr>
+          </thead>
+          <tbody role="rowgroup">
+            <tr role="row">
+              <th scope="row" role="rowheader">Lerato Molefe</th>
+              <td role="cell" data-label="Curriculum and sub-speciality" class="col-wrap"><span class="person-cell">Paediatric EPA Curriculum (11.1) <span>Paediatrics</span></span></td>
+              <td role="cell" data-label="Programme start" class="inv-when">2023-01-15 <span>Training year 4</span></td>
+              <td role="cell" data-label="Expected completion">2027-01-14</td>
+              <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#">Edit</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+</body>
+</html>

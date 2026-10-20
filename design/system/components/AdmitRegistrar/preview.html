@@ -1,0 +1,130 @@
+<!-- @dsCard group="Onboarding" height=2150 width=974 subtitle="Admit ‹name›: who is being admitted; the curriculum adopted for the invited sub-speciality read out; the training year an output of the start; what an empty completion would be; what admitting does; nothing to offer; a refusal at the top; Registrar not found" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AdmitRegistrar</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Nolwazi Mbatha at Step 2.29, Lerato Molefe's start typed as 2023-01-15: Training year 4; the completion left empty would have passed, so its help says so and asks for it</p>
+<div class="header-container">
+  <div>
+    <h1>Admit Lerato Molefe</h1>
+    <p class="page-subtitle">Admit a registrar who is waiting into the institution's curriculum.</p>
+  </div>
+</div>
+<div class="inv-page inv-page--form">
+  <div id="admit-result" class="action-result" tabindex="-1"></div>
+  <section class="detail-card" aria-labelledby="pv-who">
+    <h2 id="pv-who" class="dashboard-card-title">Who is being admitted</h2>
+    <dl class="detail-list">
+      <dt>Email</dt>
+      <dd>molefe@<wbr>kgk.wombat.local</dd>
+      <dt>Institution</dt>
+      <dd>Kgosi Kgari Teaching Hospital</dd>
+      <dt>Invited as</dt>
+      <dd>Paediatrics / Paediatrics</dd>
+      <dt>Registered</dt>
+      <dd>2026-10-20</dd>
+    </dl>
+  </section>
+  <form class="form-container" novalidate aria-labelledby="pv-programme">
+    <h2 id="pv-programme">Programme</h2>
+    <p class="field-help">* marks a field you must fill in.</p>
+    <dl class="form-group">
+      <dt>Curriculum</dt>
+      <dd class="readonly-value">Paediatric EPA Curriculum (11.1)</dd>
+      <dd class="field-help">Adopted at Kgosi Kgari Teaching Hospital for Paediatrics / Paediatrics, the invited sub-speciality.</dd>
+    </dl>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="admit-start">Programme start<span class="required-mark" aria-hidden="true"> *</span></label>
+        <input id="admit-start" type="date" class="form-control" aria-required="true" value="2023-01-15">
+      </div>
+      <div class="form-group">
+        <label for="admit-training-year">Training year</label>
+        <output id="admit-training-year" for="admit-start" class="ty-output" aria-live="polite">Training year 4</output>
+        <p class="field-help">Training years turn every 365 days from the programme start, counted to 2026-10-20. It follows the date when you change it.</p>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="admit-end">Expected completion</label>
+        <input id="admit-end" type="date" class="form-control" aria-describedby="admit-end-help">
+        <p id="admit-end-help" class="field-help">Left empty, it would be 2024-01-15, which has passed. Enter the expected completion.</p>
+      </div>
+    </div>
+    <div class="submit-check">
+      <strong>When you admit:</strong>
+      <ul>
+        <li>Lerato Molefe becomes a Trainee on the Paediatric EPA Curriculum (11.1), in training year 4.</li>
+        <li>Any session Lerato Molefe has open ends once, and Lerato Molefe signs in again as a Trainee.</li>
+        <li>An email tells Lerato Molefe so.</li>
+      </ul>
+    </div>
+    <div class="form-actions">
+      <a class="btn btn-outline" href="#">Cancel</a>
+      <button type="submit" class="btn btn-primary">Admit Lerato Molefe</button>
+    </div>
+  </form>
+</div>
+
+<p class="pv-cap">Step 2.30, Sipho Ndlovu started 2026-01-15, the completion empty: the help says what it will be</p>
+<div class="inv-page inv-page--form">
+  <div class="form-container">
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="pv-end-2">Expected completion</label>
+        <input id="pv-end-2" type="date" class="form-control" aria-describedby="pv-end-2-help">
+        <p id="pv-end-2-help" class="field-help">Leave this empty to derive it from the curriculum window. Left empty, it will be 2027-01-15.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="pv-cap">A start more than four years back: a warning under the field, never a refusal</p>
+<div class="inv-page inv-page--form">
+  <div class="form-container">
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="pv-start-3">Programme start<span class="required-mark" aria-hidden="true"> *</span></label>
+        <input id="pv-start-3" type="date" class="form-control" aria-required="true" aria-describedby="pv-start-3-warning">
+        <p id="pv-start-3-warning" class="field-warning">This start is more than four years ago. Check the date before you admit.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="pv-cap">A stale tab's second Admit (M09): the admission's own refusal at the column's top, focused</p>
+<div class="inv-page inv-page--form">
+  <div class="action-result" tabindex="-1">
+    <div class="alert alert-danger" role="alert"><strong>Not admitted.</strong> Lerato Molefe already has an active trainee profile. <a href="#">Open Trainees</a></div>
+  </div>
+</div>
+
+<p class="pv-cap">Nothing to offer (M04): standing content, a warning with no role, and no form</p>
+<div class="inv-page">
+  <div class="alert alert-warning">This institution has adopted no curriculum yet, so no trainee can be admitted. Adopt one under <a href="#">Curriculum adoptions</a>, then admit the trainee.</div>
+  <p><a class="btn btn-outline" href="#">Back to trainees</a></p>
+</div>
+
+<p class="pv-cap">Not waiting, out of scope or unknown (M08): the system's not-found panel</p>
+<div class="header-container">
+  <div>
+    <h1 class="page-title-with-icon"><svg class="icon page-title-icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>Registrar not found</h1>
+  </div>
+</div>
+<div class="system-panel">
+  <p>No registrar waiting for admission has this link.</p>
+  <p class="muted">Those waiting are listed on Trainees.</p>
+  <div class="actions-cell">
+    <a class="btn btn-primary" href="#">Go to Trainees</a>
+  </div>
+</div>
+</body>
+</html>

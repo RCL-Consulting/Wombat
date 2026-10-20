@@ -29,6 +29,7 @@ Body text on `info-bg`, a 4px `secondary-color` stripe down its left, `radius-md
 
 - **Plain text, not a live region.** It is read in its place, above the button; a change to it is not announced.
 - Only where the next move is the author's filing: never on a request someone else holds.
+- **The class outside the activity pages** (flow 11, T373, M01, M06): Admit ‹name› writes `.submit-check` on its own markup, its lead `strong` "When you admit:" over a `ul` of three sentences, what admitting does ("Lerato Molefe becomes a Trainee on the Paediatric EPA Curriculum (11.1), in training year 4.", the session line, the email line), above the form's `FormActions`, whose top rule it keeps (AdmitRegistrar). Flow 10's report writes it the same way.
 
 ## Contrast
 
