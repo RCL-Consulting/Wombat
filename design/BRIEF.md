@@ -1175,6 +1175,38 @@ version 25). Its record is `design/flows/10-msf-campaign/`. Only what flows 01�
   integrator uploaded them (`asset: true`) and wrote their records in the index, which is read again and sent last.
   *Changed:* nothing; the integrator uploads before the publish, as flows 03 and 05 did.
 
+**Flow 11 (T373, 2026-10-19 to 10-20): what the eleventh flow added**
+
+Flow 11 ran the loop in two sittings: three rounds (B and W1 picked, Q1–Q18 and F1–F10 the operator's), the build
+(`69a17c70`) in one wave of lanes (I, G, A) and a runbook lane, three Sonnet reviews and one fix pass, the replay on a
+fresh database (331 steps, 280 with no gap, no flow 11 fault), the states (83 rows and 2 more, 12 corrected) and the
+re-sync (design system version 29). Its record is `design/flows/11-onboarding/`. Only what flows 01–10 did not already
+teach is here.
+
+- **A board's CSS can break a system rule the build then copies.** Observed: round 3's `r3.css` stacked Invite a
+  person's and Admit's actions with Cancel on top at 390; the lanes built it, three reviews and the replay passed it, and
+  the re-sync found it against DESIGN.md's stacked-row rule (the primary on top). The admitted result bolded both its
+  sentences where the board bolds one. Both fixed in `27ff8779`. *Changed:* nothing; the re-sync stays the last look,
+  and a round's check reads the boards' stacked rows against DESIGN.md as well as against the ask.
+- **An act agent may re-base the last replay's Actuals instead of playing.** Observed: Act 3's agent rewrote 3.1–3.42
+  and 3.50–3.54c from T369's text with today's dates, checked only in part. *Changed:* each later act's notes said to
+  play every step fresh and to name any re-based Actual; Acts 4 to A re-based none.
+- **A flow with many new states needs the states pass split.** Observed: flow 11 added ~80 rows, 54 never captured; two
+  agents in turn (ports 5181 and 5182, their own scratch databases) took them, one after the other, since the machine
+  could not hold two browsers and two apps beside the replay app. *Changed:* nothing; the integrator splits by page.
+- **A scratch database keeps a stand-in's damage.** Observed: the second states agent deleted a stand-in registrar's
+  scope rows for "No invited scope"; the re-sync's re-take of Admit's narrow state then drew the no-scope page until the
+  rows were put back. *Changed:* nothing; a re-take on a used scratch copy checks the row's state first, or restores.
+- **Some states need a mail sink or a refused clipboard.** Observed: "Sent" and "Check the address" were reached for the
+  first time with a local SMTP sink (accepting, then answering 550); headless Chrome would not deny the clipboard, so
+  "Copy refused" was reached by an init script that makes `writeText` reject. *Changed:* nothing; the states rows say so.
+- **A newer design system version is not always someone's edit.** Observed: the live system was a version past v25, but
+  its 183 `project/` files matched HEAD byte for byte: the type's own release had moved. *Changed:* nothing; the
+  compare stays the check.
+- **`file_path` publishes at its path under `root`.** Observed: publishing with `root` = `design/system` put
+  `README.md` at the artifact's root, not `project/README.md`. *Changed:* the publish stages the changed files under a
+  folder holding `project/` and passes that folder as `root`; the stray file was removed in the index's call.
+
 **What the brief keeps as it was**
 - The flows' order (§ 8), the invariants (§ 4.4) and the acceptance check (§ 9) held. The digest (§ 5.1) is restated
   for what flow 01 fixed: the shell, its components and the states it already designed. The brief template (§ 2.4)
