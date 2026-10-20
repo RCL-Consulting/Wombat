@@ -1072,7 +1072,7 @@ WHERE u."Email" = 'duplessis@kgk.wombat.local' AND a."ObservedOn" > p."Deactivat
   - the College's `CPSA Case Presentation Log` is a draft, never published, so no registrar is offered it (Step 6.14a).
 - **What the appendix inherits:**
   - two Paediatric versions in use at KGK: Dr Ndlovu on 11.2, Dr Dlamini and Dr Mahlangu on 11.1, whose profiles
-    cannot be saved while 11.2 is KGK's active adoption (Step 6.34);
+    stay pinned to 11.1's superseded adoption when saved unchanged (Step 6.34);
   - three current trainees (Dr Dlamini, Dr Mahlangu and Dr Ndlovu), a graduate (Dr Molefe) and a withdrawn registrar
     (Dr du Plessis, with no role), as Act 5 handed them on;
   - KGK-001, and KGK's own item on each version;

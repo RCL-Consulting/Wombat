@@ -675,7 +675,7 @@ Expect:
     follows the date when you change it." Expected completion's help is "Leave this empty to derive it from the
     curriculum window."; once a start is typed, while the field is empty, the help says what it would be. Where that
     date has passed the help is replaced by "Left empty, it would be ‹`J−2y`›, which has passed. Enter the expected
-    completion." (Molefe's start; Dlamini's too); otherwise it adds "Left empty, it will be ‹date›." to the first
+    completion." (Molefe's start; Dlamini's and du Plessis's too); otherwise it adds "Left empty, it will be ‹date›." to the first
     sentence.
   - **"When you admit:"** "Lerato Molefe becomes a Trainee on the Paediatric EPA Curriculum (11.1), in training year
     4.", "Any session Lerato Molefe has open ends once, and Lerato Molefe signs in again as a Trainee." and "An email
@@ -710,8 +710,8 @@ Actual (2026-10-20, T373 replay, wombat_scenario_t373): "Admit Lerato Molefe" (i
   and no word split mid-word. Four stubs "You are admitted in Wombat" (tags: trainee, admitted), "You have been
   admitted to the Paediatric EPA Curriculum (11.1), in training year 4." (3, 2, 1) and the signed-out sentence, with
   the sign-in link.
-Gap: runbook: du Plessis's start (`J−1y`) also derives a completion that has passed (`J`), so his help reads "has
-  passed" too; the Expect names Molefe and Dlamini only. (T306 no longer occurs: the form and Current trainees show
+Gap: none (the Expect named only Molefe and Dlamini for "has passed"; du Plessis's start (`J−1y`) derives `J`, which
+  has passed too, and the Expect now says so. T306 no longer occurs: the form and Current trainees show
   the start and the training year.)
 
 ### Step 2.30 — Dr Ndlovu's completion date is derived, then corrected
