@@ -57,5 +57,4 @@ system (version 29). Left: flows 12–20, the deploy, the College's, the P2s, P3
 
 - **2026-10-20:** T373, flow 11, done (`69a17c70`, fix `27ff8779`; replay 331 steps, 280 clean, no regression; states 85; design system v29); T375 proposed.
 - **2026-10-19:** T369, flow 10, done (`68327c9d`; replay 331 steps, 281 clean, no regression; states 62; fixes `e4b480e2`; design system v25); T370–T372 proposed.
-- **2026-10-15:** T290 done (D54); D55, only a running programme files; Act 5 replayed (29/29), the other D54/D55 steps checked.
-- **10-14 and before:** T366 (flow 09), T364 (flow 08), T361 (flow 07), T358, T355, T350, T342, T339, T335 (flows 06 to 01); the repo moved to GitHub. Earlier: `git log`.
+- **10-15 and before:** T290 (D54, D55); T366 (flow 09), T364 (flow 08), T361 (flow 07), T358, T355, T350, T342, T339, T335 (flows 06 to 01); the repo moved to GitHub. Earlier: `git log`.
