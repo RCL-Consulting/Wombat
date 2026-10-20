@@ -75,7 +75,7 @@
 </div>
 
 <div>
-<p class="pv-cap">Refused (Step 2.9, the second attempt): the confirmation's sentence under Confirm password, both password fields emptied, the focus on Password, which the message describes; the names kept. A broken rule reads under Password instead: "The new password needs: At least 12 characters."</p>
+<p class="pv-cap">Refused (Step 2.9, the second attempt): the confirmation's sentence under Confirm password, both password fields emptied, the focus on Password, which the message describes; only Confirm password is marked invalid; the names kept. A broken rule reads under Password instead: "The new password needs: At least 12 characters."</p>
 <div class="auth-page-shell"><main class="auth-page-main">
   <div class="account-form-container">
     <div class="account-brand">
@@ -102,7 +102,7 @@
       <div class="form-group">
         <label for="b-password">Password</label>
         <div class="password-field">
-          <input id="b-password" class="form-control" type="password" autocomplete="new-password" required aria-invalid="true" aria-describedby="b-confirm-msg b-rules">
+          <input id="b-password" class="form-control" type="password" autocomplete="new-password" required aria-describedby="b-confirm-msg b-rules">
           <button type="button" class="btn btn-outline password-toggle" aria-controls="b-password" aria-pressed="false" aria-label="Show password"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>Show</button>
         </div>
         <div id="b-rules" class="password-rules">

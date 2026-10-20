@@ -8,7 +8,7 @@ A Pending trainee: a registrar who registered from a Trainee invitation, or was 
 
 ## The card
 
-A `DashboardCard` "Awaiting admission" (`section.detail-card.dashboard-span-3.wait-card`, `#card-awaiting`), its title `h2.dashboard-card-title` with **`hourglass`** (18px): **spanning three, no stripe, the control edge** (F8; `.wait-card`: `border-color: var(--input-border)`, 3.80:1, where a card's hairline is `border-color`): the page's one subject, and nothing for her to act on. Its body is a flex column, its parts 16px apart, none with a margin of its own.
+A `DashboardCard` "Awaiting admission" (`section.detail-card.dashboard-span-3.wait-card`, named by its title), its title `h2#card-awaiting.dashboard-card-title` with **`hourglass`** (18px): **spanning three, no stripe, the control edge** (F8; `.wait-card`: `border-color: var(--input-border)`, 3.80:1, where a card's hairline is `border-color`): the page's one subject, and nothing for her to act on. Its body is a flex column, its parts 16px apart, none with a margin of its own.
 
 1. **The lead**: "You are registered, and waiting to be admitted to the Paediatrics programme at Kgosi Kgari Teaching Hospital. Until then, nothing can be filed by you or about you."; with no invited speciality, "… waiting to be admitted at Kgosi Kgari Teaching Hospital. …" (check rule 4: no discipline named).
 2. **A details list** (`dl.detail-list`):

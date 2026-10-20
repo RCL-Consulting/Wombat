@@ -26,7 +26,7 @@ The header: "Trainees", "Admit registrars who are waiting, and keep current trai
 | Column | What |
 |---|---|
 | Name | **the row's header**; the Administrator's "Name and institution", the institution under the name (`.person-cell`, check rule 6) |
-| Curriculum and sub-speciality | `.person-cell`: "Paediatric EPA Curriculum (11.1)" over "Paediatrics"; its header `.col-wrap.col-wrap--curriculum`, floored at 7rem, so "Curriculum" and "Paediatric" never split from 901 to 1100px |
+| Curriculum and sub-speciality | `.person-cell`: "Paediatric EPA Curriculum (11.1)" over "Paediatrics"; its header `.col-wrap.col-wrap--curriculum`, floored at 7.5rem by the onboarding column's `th.col-wrap` rule (its own 7rem rule loses to it; Known gaps), so "Curriculum" and "Paediatric" never split from 901 to 1100px |
 | Programme start | `.inv-when`: "2023-01-15" over "Training year 4" (T306's list half) |
 | Expected completion | "2027-01-14" |
 | (Actions) | `.col-actions--single`: Edit, named "Edit Lerato Molefe's profile", to the trainee profile page |
@@ -49,7 +49,7 @@ Both tables stack at 900px and below (`StackWide`): each row a block, the name h
 
 ## Known gaps
 
-- **Found re-syncing, not filed:** the onboarding column's floor for a wrapping header (`.inv-page .clinic-table th.col-wrap`, 7.5rem), written for Invitations' Delivery, also reaches Waiting's Email column, which is `.col-wrap` too.
+- **Found re-syncing, not filed:** the onboarding column's floor for a wrapping header (`.inv-page .clinic-table th.col-wrap`, 7.5rem, specificity 0,3,1), written for Invitations' Delivery, also reaches Waiting's Email and Current trainees' Curriculum and sub-speciality, both `.col-wrap`; it beats `.clinic-table th.col-wrap--curriculum` (7rem, 0,2,1), which is dead on this page, its one user.
 
 ## Contrast
 

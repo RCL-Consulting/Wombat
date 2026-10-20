@@ -45,7 +45,7 @@ The top of every page: its trail (from the owner table), its one `<h1>` with an 
 - `.header-container`: flex, wrapping, space-between, the actions on the heading's **baseline**; the h1 has no margin, the subtitle sits 0.25rem under it, the rule 0.75rem under that, and the page begins `space-lg` (24px) under the rule.
 - The h1 is 1.5rem/600 (1.375rem below 641px), never larger; line height 1.25.
 - **Every page header's actions take the row at 390** (flow 11, T373, M9; DESIGN.md § Button system): below 641px `.header-container .actions-cell` is the row's width and each of its buttons 44px (`flex: 1 1 auto`), on every page (Invitations' Invite a person; Committee reviews' Schedule a review). One general rule, into which flows 08's and 10's scoped copies were folded; the MSF list's two actions still stack (`.msf-header`).
-- **Home's one header action** (`.home-action`: the Trainee's "Log an activity", the Institutional admin's "Invite a person", and since flow 06 the Coordinator's "Start an MSF campaign") is, below 641px, its own 44px row the page's width under the rule.
+- **Home's one header action** (`.home-action`: the Trainee's "Log an activity", the Institutional admin's "Invite a person" (`/admin/invitations/new` since flow 11, not the list), and since flow 06 the Coordinator's "Start an MSF campaign") is, below 641px, its own 44px row the page's width under the rule.
 - **With an icon**, `.page-title-with-icon` lays the icon and the words out in a row with a 12px gap; in a signed-out system card the icon stands above the heading and the rule is gone.
 
 ## The trail (Breadcrumbs; NavOwners.TrailTo)

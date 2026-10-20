@@ -10,7 +10,7 @@ Administrator and Institutional admin, as Invitations. Owned by Invitations (Nav
 
 The header: "Invite a person" (h1 and tab), "One person, one role. The registration link is shown here once, and emailed to them." Then `.inv-page.inv-page--form` (48rem): the result (`ActionResult`, `#invitation-result`), then the form, `form.form-container`, `novalidate` (the page refuses in its own words, T324), named by no `aria-label` that repeats the h1:
 
-1. "* marks a field you must fill in." (`p.field-help`; FormField's required marks).
+1. "* marks a field you must fill in." (`p.field-help`). The fields are written by hand on this page, not with the FormField component: each `.form-group`, its `label` ending in `span.required-mark` (`aria-hidden`), the control with `aria-required`.
 2. **Email** * (`#invitation-email`, `type="email"`, `aria-required`, `autocomplete="off"`, `spellcheck="false"`).
 3. **Role** * (`fieldset#invitation-role.form-group.choice-row`, its legend "Role" with the mark and a hidden " required"): one `.form-check.review-type-choice` a role, a radio named by its label alone, its description a `p.page-subtitle.review-type-help` outside the label, in the radio's `aria-describedby` (S17). **None chosen** at first. In this order, College admin to the Administrator only (N01, N02):
    - College admin: "Keeps a College's specialities, EPAs and curricula. Choose the College."

@@ -3818,7 +3818,7 @@ asked before any read), the page is "Admit a registrar": no name before the read
   columns are Name (the row header), Email, Invited as, Registered and a row's one "Admit…" (`.col-actions--single`,
   named "Admit ‹name›"); the Administrator's adds Institution (check rule 6). Current trainees' are Name (the
   Administrator's with the institution under it), Curriculum and sub-speciality (`.person-cell`; the header
-  `.col-wrap.col-wrap--curriculum`, floored at 7rem so its words never split from 901 to 1100px), Programme start
+  `.col-wrap.col-wrap--curriculum`, floored at 7.5rem by the onboarding column's `.inv-page .clinic-table th.col-wrap`, which outranks `col-wrap--curriculum`'s 7rem, so its words never split from 901 to 1100px), Programme start
   (`.inv-when`: the date over "Training year ‹n›"), Expected completion and Edit.
 
 ### Dashboard page
@@ -4180,7 +4180,7 @@ lane B: the auth card", with `.change-password`.
   script cleans the address bar (T315). The form posts to `/account/register/submit`, which reads the token from the
   cookie; a refusal writes its codes and the two names into the cookie (never a password) and redirects to the page with
   no query, so no address holds a name, a code or a token; success deletes the cookie. The page shows the codes once.
-  **The form** (G01–G06): h1 "Complete registration"; an info notice, `role="status"`, "This invitation is for
+  **The form** (G01–G06): h1 "Complete registration"; an info notice, with no role (a standing notice, P8), "This invitation is for
   ‹address›, as ‹role and scope›." (the address in `.account-email`, `<wbr>` after its @; `InvitationScopeWords`); then
   `FormField`s: Email read-only (`readonly`, not `disabled`, no `name`), its help "The address this invitation is for. It
   cannot be changed here."; First name (`given-name`), Last name (`family-name`), with no `maxlength` (S21); the two
