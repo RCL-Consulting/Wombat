@@ -184,6 +184,9 @@ public sealed class AdmissionPagesTests : TestContext
         Text(waiting.QuerySelector(".action-result")!).Should().Be(
             "Sipho Ndlovu admitted to the Paediatric EPA Curriculum (11.1), training year 1, from 2026-01-15. Expected completion " +
             "2027-01-15, derived from the curriculum window: change it under Edit.");
+        // Only the first sentence is bold, as the board draws it (T373 step 8).
+        Text(waiting.QuerySelector(".action-result strong")!).Should().Be(
+            "Sipho Ndlovu admitted to the Paediatric EPA Curriculum (11.1), training year 1, from 2026-01-15.");
         Text(waiting.QuerySelector("h2")!).Should().Be("Waiting to be admitted");
         Text(waiting.QuerySelector(".state-panel-title")!).Should().Be("Nobody is waiting to be admitted.");
         Text(waiting.QuerySelector(".state-panel-copy")!).Should().Be("A registrar appears here after registering from a Trainee invitation.");

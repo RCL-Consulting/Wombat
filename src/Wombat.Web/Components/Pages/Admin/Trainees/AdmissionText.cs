@@ -55,20 +55,24 @@ public static class AdmissionText
     public static string TrainingYear(int year) => $"Training year {year}";
 
     /// <summary>
-    /// S8's result (T02–T04): "Lerato Molefe admitted to the Paediatric EPA Curriculum (11.1), training year 4, from
-    /// 2023-01-15." and, when the completion was derived, " Expected completion 2027-01-15, derived from the curriculum
-    /// window: change it under Edit." Before the programme starts no training year is named.
+    /// S8's result (T02–T04), its bold first sentence: "Lerato Molefe admitted to the Paediatric EPA Curriculum (11.1),
+    /// training year 4, from 2023-01-15." Before the programme starts no training year is named.
     /// </summary>
     public static string Admitted(AdmissionResultDto result)
     {
         var where = $"{result.FullName} admitted to the {result.CurriculumName} ({result.CurriculumVersion})";
-        var sentence = result.TrainingYear is { } year
+        return result.TrainingYear is { } year
             ? $"{where}, training year {year}, from {Iso(result.ProgrammeStart)}."
             : $"{where}, from {Iso(result.ProgrammeStart)}, when the programme starts.";
-        return result.CompletionWasDerived
-            ? $"{sentence} Expected completion {Iso(result.ExpectedCompletion)}, derived from the curriculum window: change it under Edit."
-            : sentence;
     }
+
+    /// <summary>
+    /// The result's second sentence, in plain weight, when the completion was derived: "Expected completion 2027-01-15,
+    /// derived from the curriculum window: change it under Edit."; else null.
+    /// </summary>
+    public static string? AdmittedDerived(AdmissionResultDto result) => result.CompletionWasDerived
+        ? $"Expected completion {Iso(result.ExpectedCompletion)}, derived from the curriculum window: change it under Edit."
+        : null;
 
     // ── Admit ‹name› ───────────────────────────────────────────────────────────
 

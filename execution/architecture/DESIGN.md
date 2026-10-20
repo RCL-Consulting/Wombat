@@ -736,7 +736,8 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
   641px `.dialog-card .form-actions` is `flex-direction: column-reverse` and its buttons are 44px and the row's width. One
   general rule in `app.css`, since the top-layer dialog is outside every page wrapper, so a page's own class cannot reach
   it; flows 08's and 10's scoped copies folded into it. The DOM has the safe button first, so the action shows on top,
-  the safe button last on screen and first in the tab order. A form-mode dialog (`.dialog-actions`) is not covered.
+  the safe button last on screen and first in the tab order. A form-mode dialog's `.dialog-actions` already stacked by
+  its own rule (T339); since the fix pass's P13 its buttons are 44px and the row's width too.
 - **Every page header's actions take the row at 390** (T373, M9): below 641px `.header-container .actions-cell` is the
   row's width and each of its buttons 44px (`flex: 1 1 auto`), on every page, as Home's one action already was; flows
   08's and 10's scoped copies folded into it. The MSF list's two header actions still stack (`.msf-header`).
@@ -3808,9 +3809,10 @@ asked before any read), the page is "Admit a registrar": no name before the read
   registrar not waiting, out of scope or unknown is the system's not-found panel, "Registrar not found" (M08). Anything
   else is logged and said in fixed words.
 - **Admitted**, the page goes to `/admin/trainees?admitted=‹profileId›` (S8): Trainees reads the profile again in the
-  caller's scope and says, in an `ActionResult` focused as it loads directly above the Waiting table, "‹name› admitted to
-  the ‹curriculum› (‹version›), training year ‹n›, from ‹start›." and, for a derived completion, " Expected completion
-  ‹date›, derived from the curriculum window: change it under Edit." The address carries the id alone.
+  caller's scope and says, in an `ActionResult` focused as it loads directly above the Waiting table, "**‹name› admitted
+  to the ‹curriculum› (‹version›), training year ‹n›, from ‹start›.**" (bold, the system's first sentence) and, for a
+  derived completion, in plain weight, " Expected completion ‹date›, derived from the curriculum window: change it under
+  Edit." (`AdmissionText.AdmittedDerived`; T373 step 8). The address carries the id alone.
 - **Trainees** (`/admin/trainees`) is the onboarding column too: "Waiting to be admitted" (h2 with "5 waiting") and
   "Current trainees" (h2 with "1 current"), both `DataTable` `StackWide`, then flow 13's "Completed and closed". Waiting's
   columns are Name (the row header), Email, Invited as, Registered and a row's one "Admit…" (`.col-actions--single`,
@@ -4189,7 +4191,9 @@ lane B: the auth card", with `.change-password`.
   worked until ‹last day›"), "Address not accepted", "Invitation link incomplete" (a GET with neither cookie nor token,
   S7), "Registration not completed" ("… Nothing was saved.", which F10's one transaction makes true; Try again, an
   outline link back to the page, reopens the form from the cookie), "Registered, but not signed in" (Sign in),
-  "Invitation timed out" (a submit after the cookie's 30 minutes, S7). **Signed in as someone else** (G18; Q11, M4, F5):
+  "Invitation timed out" (a submit after the cookie's 30 minutes, S7), and "Another invitation opened" (build review B1:
+  another invitation's link was opened in this browser after the form was shown, so nothing was registered; it names
+  the address the cookie holds now, with Continue and `arrow-right`). **Signed in as someone else** (G18; Q11, M4, F5):
   a signed-in visitor gets no form, but "You are signed in as ‹name›. This invitation is for ‹address›.", "To register it,
   sign out first. Your own account is not changed.", a form posting `/account/logout/submit` with its token and a hidden
   `returnTo=/account/register` ("Sign out and continue"), and "Go to Home". The sign-out endpoint lands on Register only
@@ -4681,7 +4685,7 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
 
 /* ── Onboarding ─────────────────────────────────── */
 "Flow 11: the onboarding pages, shared (T373)": .inv-page, .inv-page--form, .inv-count, .inv-when (span), .action-result .alert / .validation-message / .alert overflow-wrap (M7), .loading-line, .skel-title, .skel-line, .skel-short (+ ≤900px: .clinic-table--stack-wide .btn 44px, S16; ≤640px, on every page: .dialog-card .form-actions stacked column-reverse with 44px full-width buttons, M8; .header-container .actions-cell full width with 44px buttons, M9; .inv-page .btn 44px)
-"Flow 11: invitations (T373)": .inv-page .action-result:empty, .delivery, .delivery--sending, .delivery--sent, .delivery--warn (+ .icon), .inv-page .clinic-table th.col-wrap (Delivery's floor, 901 to 1100px), .clinic-table .history-note--warning, .otl, .otl-row, .otl-help, .otl-said:empty (+ ≤640px, inside .inv-page: the link's field over Copy link, both full width and 44px; the form's actions and each role's row 44px)
+"Flow 11: invitations (T373)": .inv-page .action-result:empty, .delivery, .delivery--sending, .delivery--sent, .delivery--warn (+ .icon), .inv-page .clinic-table th.col-wrap (Delivery's floor, 901 to 1100px), .clinic-table .history-note--warning, .otl, .otl-row, .otl-help, .otl-said:empty (+ ≤640px, inside .inv-page: the link's field over Copy link, both full width and 44px; the form's actions and each role's row 44px; .inv-page .form-actions stacked column-reverse, the primary on top, T373 step 8)
 "Flow 11: admission (T373)": .wait-card (+ .dashboard-card-body, h3), .wait-links, .ty-output, .clinic-table .col-actions--single, .clinic-table th.col-wrap--curriculum (+ ≤640px: .wait-card .wait-links a 44px)
 ```
 

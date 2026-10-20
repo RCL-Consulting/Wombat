@@ -721,8 +721,8 @@ Do: Admit Ndlovu with start `J` and the completion date left empty. Then open hi
   set completion to `J+4y−1d` and save the profile.
 Expect: With start `J` and the completion empty, its help reads "Leave this empty to derive it from the curriculum
   window. Left empty, it will be `J+1y`.": `J` + 12 months, the longest item window on v11.1. The result reads
-  "**Sipho Ndlovu admitted to the Paediatric EPA Curriculum (11.1), training year 1, from `J`. Expected completion
-  `J+1y`, derived from the curriculum window: change it under Edit.**", and Waiting to be admitted reads "Nobody is
+  "**Sipho Ndlovu admitted to the Paediatric EPA Curriculum (11.1), training year 1, from `J`.** Expected completion
+  `J+1y`, derived from the curriculum window: change it under Edit." (only the first sentence bold), and Waiting to be admitted reads "Nobody is
   waiting to be admitted." / "A registrar appears here after registering from a Trainee invitation." On his profile
   the save reads "Trainee profile saved.", and Current trainees shows `J+4y−1d`.
 Note: A 12-month window for a four-year programme is T139's open College question. Admitting with the completion empty

@@ -6384,6 +6384,13 @@ fieldset.form-group fieldset.form-group > legend {
     width: 100%;
   }
 
+  /* The primary on top, as every stacked action row (DESIGN.md § The auth card, § Button system); Cancel stays first in
+     the tab order. */
+  .inv-page .form-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
   .inv-page .review-type-choice {
     min-height: 2.75rem;
   }

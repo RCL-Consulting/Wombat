@@ -91,7 +91,7 @@ else
       {
         @* S8: what Admit did, read again in scope, directly above the Waiting table, focused as the page loads. *@
         <ActionResult Id="trainees-admitted" FocusOnLoad="true">
-          <Alert Kind="success" Role="status"><strong>@AdmissionText.Admitted(_result)</strong></Alert>
+          <Alert Kind="success" Role="status"><strong>@AdmissionText.Admitted(_result)</strong>@(AdmissionText.AdmittedDerived(_result) is { } derived ? " " + derived : null)</Alert>
         </ActionResult>
       }
       @if (_pendingTrainees.Count == 0)
