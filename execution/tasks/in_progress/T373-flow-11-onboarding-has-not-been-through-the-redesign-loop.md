@@ -105,3 +105,14 @@ T369 (flow 10), T366 (flow 09), T264, T286, T289, T303, T304, T306, T315, T317, 
   match a link to a person by the mail's text; 5 more stub mails from admissions; check 901, 1000 and 1100 px for words
   split in Delivery and Curriculum; flow 13's Completed table still scrolls in its container at 390. Branches `t373*`
   and their worktrees kept. **Next:** step 7, the whole-runbook replay on a fresh database.
+- **2026-10-20, step 7, replayed** on fresh `wombat_scenario_t373` (D = 2026-10-20; one Sonnet agent an act): **no flow
+  11 regression in any act.** Acts 1-2 `42f171b5`, 3 `40525efc`, 4 `c1f03dd1`, 5 `783af7b5`, 6 `d771aa91`, A
+  `f67ade0c`; every gap a known task (T370 recurs at 4.25, 4.29, 4.41, 4.42, 5.8). Flow 11's browser checks pass (901,
+  1000, 1100, 390 px; 44 px; the dialog's order and focus; no token after the start link; the one-time link clears).
+  Act 3's 3.1-3.42 and 3.50-3.54c Actuals were re-based from T369's text, not played fresh. Runbook fixes `a70f030b`.
+  **States:** two agents in turn, 83 rows plus the access-denied row and `new-activity--pending-trainee` (corrected:
+  D55's access-denied page). All reached; 12 rows' words corrected, none for a defect; refusals are role="alert" in
+  page or tied by aria-describedby. Some captures use stand-in registrars (Wanda Waiting, etc.) on a post-act1 scratch
+  copy where the row names a cast member. **T375 proposed** (a described radio's hit area, flow 08's pattern too).
+  `check_baseline_paths.py`: missing 0 (7 named but never taken, BRIEF § 10). Scratch DBs `_s10`-`_s12`, `_s20`,
+  `_s21`, `_s515` kept for the operator's word. **Next:** step 8.
