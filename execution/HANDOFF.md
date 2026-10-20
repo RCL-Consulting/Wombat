@@ -4,7 +4,7 @@ Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest
 
 ## Session 2026-10-19 (Opus): T369, flow 10, done
 
-The operator said "proceed". Pushed `e825e2e2..e598c490`; **everything after it is not pushed** (push on the word).
+The operator said "proceed". Pushed `e825e2e2..e598c490`, then (10-20, the operator's word) `..69a7df20`.
 
 - **Step 7, the replay** (`d3379233` brief; fresh `wombat_scenario_t369`, published from `e598c490`; one agent an act):
   331 steps, 281 with no gap, **no flow 10 regression**; the rest known tasks, or the panel's member order at 4.25, 4.41,
@@ -14,8 +14,7 @@ The operator said "proceed". Pushed `e825e2e2..e598c490`; **everything after it 
   form's card gap, the respondent's legend, two "Please"s; Web 3837 green; browser-checked, two states re-taken), one
   Sonnet review (`be67b0a7`), icons uploaded; **design system version 25** (1792413020-e2bb, `1f639c60`).
 - **Step 9:** BRIEF § 11 "Flow 10" (`324c6abf`); the replay brief keeps scratch files out of the repo (`a81b0b73`).
-- **Proposed:** T370 (panel member order), **T371 (a report's comments in submission order: anonymity, needs the
-  operator's answer)**, T372 (an empty band above the campaign page's status card).
+- **Proposed:** T370 (panel member order), T371 (dropped 10-20: the operator said no, order is not identifying), T372 (an empty band above the campaign page's status card).
 
 - **Then "carry on": T373 (flow 11, onboarding) started.** Brief restated (`11a77b0c`), canvas "Wombat 11"
   https://claude.ai/artifact/SFn6dDmJnoww2fhYrQD416 (v25 installed, `tokens.css` by hand, mark
@@ -27,8 +26,8 @@ The operator said "proceed". Pushed `e825e2e2..e598c490`; **everything after it 
 
 - **The replay app on `:5180`** runs `wombat_scenario_t369` (the appendix's end state), republished from `e4b480e2`.
   Dumps `recovery/scenario-t369-post-act{1..6,A}`, `-pre-a515-A`. Its live DB holds 2 extra failed adoption audit rows.
-- **Scratch DBs to drop on the operator's word:** `wombat_scenario_t369_st0`..`_st4`, `_s515`, and T366's
-  (`wombat_scenario_t366*`) and older ones listed in the 10-14 handoff (`log/`).
+- **Scratch DBs dropped** (10-20, the operator's word): T369's `_st0`..`_st4`, `_s515`, every `t366*`, `t364*`, `t361`. Kept:
+  `wombat_scenario_t369` (the replay app), `_t290`, `wombat_scenario`, `_pdf`, and the non-scenario ones.
 - **Scratch:** this session's scratchpad `g369` (`replay-pw.env`, the act, states and step 8 scripts, prompts).
 
 ## Session 2026-10-15 (Opus): pushed; T290 closed

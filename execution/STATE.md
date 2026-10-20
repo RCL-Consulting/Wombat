@@ -16,7 +16,7 @@ system (version 25). Left: flows 11–20, the deploy, the College's, the P2s, P3
 
 - **The runbook** (`knowledge/scenario-paediatrics/`): last replayed whole against flow 10 (T369,
   `wombat_scenario_t369`, 2026-10-19: no open regression); `coverage.md`, `states.md`, `design/baseline/`.
-- **Open: 76 queued; none in progress; 1 blocked; 7 proposed (T362, T363, T365, T368, T370, T371, T372).**
+- **Open: 76 queued; T373 in progress; 1 blocked; 7 proposed (T362, T363, T365, T368, T370, T372, T374).**
   - **P1:** T157, the deploy, which waits for the operator.
   - **P2, before real users:** T288, T289, T311–T313, T315, T316, T319, T320, T329, T333, T334, T341.
   - **P3:** the presentation debt the redesign absorbs (BRIEF § 6–7), and polish.
@@ -33,7 +33,7 @@ system (version 25). Left: flows 11–20, the deploy, the College's, the P2s, P3
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The redesign:** flow 11 (`design/flows/11-onboarding.md`), when the operator says. T371 needs an answer; six more wait in proposed.
+- **The redesign:** flow 11 (`design/flows/11-onboarding.md`), when the operator says. Seven wait in proposed.
 
 ## Open questions
 
