@@ -46,6 +46,7 @@
         "arrow-down.svg",
         "arrow-left-right.svg",
         "arrow-left.svg",
+        "arrow-right.svg",
         "arrow-up.svg",
         "award.svg",
         "ban.svg",
@@ -73,6 +74,7 @@
         "graduation-cap.svg",
         "history.svg",
         "home.svg",
+        "hourglass.svg",
         "inbox.svg",
         "info.svg",
         "key-round.svg",
@@ -477,6 +479,18 @@
           "blob": "dd1ea75c1ec459173a2ed3d28ac5126b",
           "size": 151,
           "type": "image/svg+xml"
+        },
+        "arrow-right.svg": {
+          "name": "arrow-right.svg",
+          "blob": "02e29d12cf3d980ed8d688f5f24c1d0c",
+          "size": 115,
+          "type": "image/svg+xml"
+        },
+        "hourglass.svg": {
+          "name": "hourglass.svg",
+          "blob": "0685fb5c79c8d4a0ad5b8518a98eaf86",
+          "size": 254,
+          "type": "image/svg+xml"
         }
       }
     },
@@ -529,8 +543,8 @@
   },
   "lastChange": {
     "by": "Renier Cloete",
-    "at": "2026-10-19T17:30:00Z",
-    "via": "Claude Code · Wombat@be67b0a7",
-    "note": "Re-synced to flow 10 as built (T369, 68327c9d): no token added or changed; 7 records added in a new MSF group: MsfCampaigns, NewMsfCampaign, MsfCampaignPage, MsfReport (with MsfGroupCards), MsfRespond, MyMsfReports (her list and her report), MsfCoverage; revised ConfirmDialog (flow 10's four dialogs, inside the page column, stacked at 390), Alert (standing warnings with no role, a bold first sentence, an Alert per state on /msf/respond; two 'Please' sentences found), Badge (BadgeFor.MsfCampaign), ActivityStatus (the stripe on the MSF status cards), DataTable (both stack classes on the two MSF lists, tables that never stack, MSF coverage's scroll regions), FormField (the required mark on the MSF forms, the narrative's counter, no maxlength on the respondent's comment, the narrow select, the rating rows), StatePanel (flow 10's fixed-word load failures), PageHeader (the primary action first; its preview), Breadcrumbs (the MSF trails), NavMenu (New MSF campaign's and her report's owner rows), AuthLayout (the wide card designed), SignInCard and the Logos group (the respondent's 44px mark), DetailCard (.details-grid--lone-spans deleted), ErrorBar's preview (the header's order), Icon and the Icons group (circle-check and circle-alert added: 62 icons, 55 named by a page; both uploaded to the group), the README, tokens' ref, source map and two usages, and the bundle (app.css's four Flow 10 sections; two dead rules removed). Then the review's findings (be67b0a7) and three page fixes it found (e4b480e2)."
+    "at": "2026-10-20T15:30:00Z",
+    "via": "Claude Code · Wombat@0b800f29",
+    "note": "Re-synced to flow 11 as built (T373, 69a17c70, with 27ff8779): no token added or changed; 7 records added in a new Onboarding group: Invitations, InviteAPerson, OneTimeLink, Register, Trainees, AdmitRegistrar, AwaitingAdmission; revised DataTable, ConfirmDialog, PageHeader, Alert, FormField, StatePanel, DashboardCard, SubmitCheck, PasswordRules, AuthLayout, SignInCard, NavMenu, Breadcrumbs and MsfCampaigns; Icon and the Icons group (arrow-right and hourglass added: 64 icons, 58 named by a page; both uploaded to the group); the README, tokens' ref, source map and three usages, and the bundle (app.css's three Flow 11 sections). Then the review's findings (0b800f29) and two page fixes the re-sync found (27ff8779: the primary on top at 390, only the admitted result's first sentence bold)."
   }
 }
