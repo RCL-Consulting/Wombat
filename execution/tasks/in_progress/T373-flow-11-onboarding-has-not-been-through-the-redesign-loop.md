@@ -89,3 +89,7 @@ T369 (flow 10), T366 (flow 09), T264, T286, T289, T303, T304, T306, T315, T317, 
 - **2026-10-19, round 2's decisions.** The operator took F1–F10 as recommended (`round-2-review.md` § The operator's
   decisions). Round 3's ask written (`round-3-ask.txt`: F1–F10, M1–M11, S1–S24, the Steps board, the nits, the Spec's
   DATA list). **Next:** the operator sends it to the canvas; then save round 3 and check it item by item.
+- **2026-10-20, round 3** (canvas 1792460548-2e63, 203 boards in `round-3/`): checked item by item by one Sonnet agent,
+  rendered in Chromium (`round-3-check.md`): F 9/1, M 10/1, S 22/2 done/partly, none not done; 0 px sideways on every
+  board at every width; no invented data. Two must-fixes (the Invitee header's `.col-wrap`; M12's name before a read)
+  and five partlies taken into the build as rules (the check's last section). **Final.** **Next:** step 6, the build.

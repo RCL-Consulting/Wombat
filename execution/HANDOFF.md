@@ -20,8 +20,8 @@ The operator said "proceed". Pushed `e825e2e2..e598c490`; **everything after it 
 - **Then "carry on": T373 (flow 11, onboarding) started.** Brief restated (`11a77b0c`), canvas "Wombat 11"
   https://claude.ai/artifact/SFn6dDmJnoww2fhYrQD416 (v25 installed, `tokens.css` by hand, mark
   `/_blob/b3cd1c9ecfc87765138aec8743e383bc`, `9f81d865`), staged in `design/upload/`. Rounds 1 and 2 drawn and
-  reviewed; the operator took Q1–Q18 and F1–F10 as recommended (`f5ed1cc5`). **Next:** the operator sends
-  `design/flows/11-onboarding/round-3-ask.txt` to the canvas; then save round 3 and check it item by item.
+  reviewed; the operator took Q1–Q18 and F1–F10 as recommended (`f5ed1cc5`). Round 3 drawn (203 boards),
+  saved and checked final (`round-3-check.md`). **Next:** step 6, the build (flow 10's build lanes as template).
 
 ### Environment left
 
