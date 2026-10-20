@@ -2,6 +2,26 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
+## Session 2026-10-20 (Opus): T373, flow 11, step 7 (the replay)
+
+The operator said "proceed" (push and start the replay). Pushed through `9d979834`. **Not pushed:** `c0e5d0cc` onwards.
+
+- **Step 7, the replay** (fresh `wombat_scenario_t373`, D = 2026-10-20; one Sonnet agent an act; `replay-brief.md`
+  `c0e5d0cc`): **no flow 11 regression in any act.** Acts 1-2 `42f171b5`, 3 `40525efc`, 4 `c1f03dd1`, 5 `783af7b5`,
+  6 `d771aa91`, A `f67ade0c`; every gap a known task (T370 at 4.25/4.29/4.41/4.42/5.8). Act 3's 3.1-3.42 and
+  3.50-3.54c Actuals were re-based from T369's, the rest played fresh. Runbook fixes `a70f030b` (2.29, Act 6 handoff).
+  Dumps `recovery/scenario-t373-post-act{1..6,A}`, `-pre-a515-A`.
+- **States pass**, two agents in turn (`g373/prompt-states-{1,2}.txt`): half 1 (Invitations, Invite a person, 39 rows)
+  all hold, 5 rows' words corrected in `states.md` (uncommitted); **T375 proposed** (`11fd5203`: a described radio's
+  hit area). **Half 2 (Register, Home, Trainees, Admit) is running.** Then: commit states.md, `check_baseline_paths.py`.
+- **Next:** step 8 (re-sync the design system; read the live files first), step 9 (BRIEF § 11), `task done T373`.
+
+### Environment left
+
+- The replay app on `:5180` runs `wombat_scenario_t373` (the appendix's end state). Scratch DBs `wombat_scenario_t373_s1{0,1,2}`
+  (and half 2's `_s2N`), `_s515`: drop on the operator's word. Old: `wombat_scenario_t369` and T369's dumps.
+- Scratch: this session's `g373` (`replay-pw.env` must never be printed; act and states scripts).
+
 ## Session 2026-10-19 (Opus): T369, flow 10, done
 
 The operator said "proceed". Pushed `e825e2e2..e598c490`, then (10-20, the operator's word) `..69a7df20`.
@@ -30,36 +50,3 @@ The operator said "proceed". Pushed `e825e2e2..e598c490`, then (10-20, the opera
 - **Scratch DBs dropped** (10-20, the operator's word): T369's `_st0`..`_st4`, `_s515`, every `t366*`, `t364*`, `t361`. Kept:
   `wombat_scenario_t369` (the replay app), `_t290`, `wombat_scenario`, `_pdf`, and the non-scenario ones.
 - **Scratch:** this session's scratchpad `g369` (`replay-pw.env`, the act, states and step 8 scripts, prompts).
-
-## Session 2026-10-15 (Opus): pushed; T290 closed
-
-The operator asked "what is next", then "push then close T290". Pushed `7b421079..d42e11b6`. **T290 done** (commit below):
-every remaining item, with tests; the task file's closing note lists them.
-
-- **D54 (the operator):** withdrawal takes the Trainee role away, as completion does. CLAUDE.md § Roles and the runbook
-  follow; **Steps 5.27, 5.28, 6.41, A.1.6 and A.4.6 have new Expects whose Actuals are T366's: the next replay checks them.**
-- Suites: Domain 815, Application 3820, Infrastructure 1023, Architecture 52, Web 3737, Integration 491; all green.
-- The disconnected-circuit fix (`CircuitConnection`) is unit-tested only; a replay's log should show no
-  "Navigation failed" after a role change near a sign-out.
-- Pushed (`f3471780`). Then "deal with D54": **D55 (the operator, two answers):** only a registrar whose programme is
-  running files. `/activities/new` admits only Trainee; `CreateDraftAsync` and a draft's filing move refuse a subject
-  with no active profile (`ActivityFilingRules`); PendingTrainee's menu is Home alone. T153's create half settled (note
-  there; its MSF notes remain). One agent repaired ~90 fixtures (`NomineeSeed.AddCurrentProgramme`); suites green:
-  Application 3823, Infrastructure 1023, Web 3740, Architecture 52, Integration 491. Runbook 2.19 and 5.22 rewritten.
-- Pushed `fb6e465e`. Then **the runbook check** (one agent): Act 5 replayed on `wombat_scenario_t290` (from T366's
-  post-act4; D = 10-15), **29/29 as expected**, gaps only known tasks (T311, T313, T287, T314) and 5.8's issue day (Act 4
-  played a day earlier); snapshot `scenario-t290-post-act5`. On that state, without rewriting their Actuals: 6.41
-  (bar KGK-001), A.1.6, A.4.5–A.4.6 and a 2.19 stand-in (a new pending trainee) all pass. The log: no "Navigation failed"
-  after du Plessis lost Trainee 15–30 s after signing out. Two wording fixes after it (not replayed): Deactivate's
-  dialog and result now say the role goes; My activities' empty state tells only a Trainee to log one.
-- Environment: the replay app on `:5180` runs `wombat_scenario_t290` (old build: before the wording fixes).
-  The 2.19 stand-in account (pending290@kgk.wombat.local) exists in that database only.
-- Pushed through `cc80d5b3`. **T369 (flow 10) started:** canvas "Wombat 10" https://claude.ai/artifact/CPUXS577gX2yo79AryKmVE
-  (v23 installed, `tokens.css` by hand, mark `/_blob/d5b5890c1eb0efaad13d0d347d1ebf4c`). Brief restated (`ded43219`); round 1 drawn, assessed (`b389a526`); the operator
-  picked RA + MA and Q8–Q10 as recommended (Q7, Q11 taken as recommended). Round 2 (159 boards) reviewed from three
-  sides (`5cc29ec7`); the operator took F1–F11 as recommended (`f79586b5`). Round 3 drawn (canvas 1792071007-7a95, 188
-  boards, saved in `round-3/`); checked final (`e825e2e2`). **Built** (`68327c9d`, six suites green; T369's notes); **next:** step 7, the replay on a fresh database
-  (flow 09's `replay-brief.md`), then the design system and lessons. Branches `t369*` and their worktrees kept.
-- **Session finalised.** **Not pushed:** `6e842de3`, `f825fe60`, `68327c9d`, `d2d7f1dc` (push on the operator's word).
-  The replay app on `:5180` still runs `wombat_scenario_t290` (pre-flow-10 build); step 7 starts from a fresh database.
-  The replay's cautions are in T369's step-6 note (stub-mail counts +3, T282's log line, D1 margins at 1280/390).
