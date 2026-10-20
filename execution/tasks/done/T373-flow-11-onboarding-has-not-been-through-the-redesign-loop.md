@@ -1,12 +1,13 @@
 ---
 id: T373
 title: Flow 11, onboarding, has not been through the redesign loop
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-10-19
 started: 2026-10-19
+completed: 2026-10-20
 ---
 
 # T373 — Flow 11, onboarding, has not been through the redesign loop
@@ -51,13 +52,13 @@ Run the loop as flow 10 ran it (`design/flows/10-msf-campaign/`, BRIEF § 11 "Fl
 
 ## Verification
 
-- [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit.
-- [ ] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link.
-- [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/11-onboarding/`.
-- [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 11) — the squash commit and counts.
-- [ ] The whole runbook replays on a fresh database with no regression from flow 11, the baseline is re-captured, and
-  flow 11's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
-- [ ] The design system is re-synced and republished — its version number.
+- [x] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit. (`11a77b0c`, exit 0)
+- [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link. (https://claude.ai/artifact/SFn6dDmJnoww2fhYrQD416, `9f81d865`)
+- [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/11-onboarding/`. (round 3 final, `round-3-check.md`; decisions in `round-2-review.md`)
+- [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 11) — the squash commit and counts. (`69a17c70`: Domain 829, Application 3980, Infrastructure 1029, Architecture 52, Web 3980, Integration 507; step 8's fix `27ff8779`, Web 3980)
+- [x] The whole runbook replays on a fresh database with no regression from flow 11, the baseline is re-captured, and
+  flow 11's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines. (`42f171b5`..`f67ade0c`, `15bee480`; 331 steps, 280 no gap)
+- [x] The design system is re-synced and republished — its version number. (version 29, 1792508645-23ab; `79e2312f`, `0b800f29`, `4829f210`)
 
 ## Related
 
@@ -116,3 +117,10 @@ T369 (flow 10), T366 (flow 09), T264, T286, T289, T303, T304, T306, T315, T317, 
   copy where the row names a cast member. **T375 proposed** (a described radio's hit area, flow 08's pattern too).
   `check_baseline_paths.py`: missing 0 (7 named but never taken, BRIEF § 10). Scratch DBs `_s10`-`_s12`, `_s20`,
   `_s21`, `_s515` kept for the operator's word. **Next:** step 8.
+- **2026-10-20, steps 8-9, done.** The live system matched HEAD (183 files; the newer version was the type's release).
+  Re-synced by one Opus agent (`79e2312f`: 7 records in an Onboarding group, ~16 revised, 64 icons, the bundle); it found
+  two page faults, fixed in `27ff8779` (the primary on top at 390 on Invite a person and Admit; only the admitted
+  result's first sentence bold; Web 3980; checked in Chromium; two narrow states re-taken) and three DESIGN.md slips.
+  One Sonnet review (no wrong words; `0b800f29`). Icons uploaded; **design system version 29** (1792508645-23ab,
+  `4829f210`). Lessons in BRIEF § 11 "Flow 11" (`18f872ee`). Found, not filed: the 7.5rem Delivery floor reaches
+  Trainees' Email and Curriculum columns, leaving `col-wrap--curriculum`'s 7rem dead there.

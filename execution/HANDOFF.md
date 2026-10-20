@@ -2,25 +2,30 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-10-20 (Opus): T373, flow 11, step 7 (the replay)
+## Session 2026-10-20 (Opus): T373, flow 11, done
 
-The operator said "proceed" (push and start the replay). Pushed through `9d979834`. **Not pushed:** `c0e5d0cc` onwards.
+The operator said "proceed" (push and start the replay). Pushed through `9d979834`. **Not pushed:** `c0e5d0cc` to HEAD
+(push on the operator's word).
 
-- **Step 7, the replay** (fresh `wombat_scenario_t373`, D = 2026-10-20; one Sonnet agent an act; `replay-brief.md`
-  `c0e5d0cc`): **no flow 11 regression in any act.** Acts 1-2 `42f171b5`, 3 `40525efc`, 4 `c1f03dd1`, 5 `783af7b5`,
-  6 `d771aa91`, A `f67ade0c`; every gap a known task (T370 at 4.25/4.29/4.41/4.42/5.8). Act 3's 3.1-3.42 and
-  3.50-3.54c Actuals were re-based from T369's, the rest played fresh. Runbook fixes `a70f030b` (2.29, Act 6 handoff).
-  Dumps `recovery/scenario-t373-post-act{1..6,A}`, `-pre-a515-A`.
-- **States pass**, two agents in turn (`g373/prompt-states-{1,2}.txt`): half 1 (Invitations, Invite a person, 39 rows)
-  all hold, 5 rows' words corrected in `states.md` (uncommitted); **T375 proposed** (`11fd5203`: a described radio's
-  hit area). **Half 2 (Register, Home, Trainees, Admit) is running.** Then: commit states.md, `check_baseline_paths.py`.
-- **Next:** step 8 (re-sync the design system; read the live files first), step 9 (BRIEF § 11), `task done T373`.
+- **Step 7, the replay** (fresh `wombat_scenario_t373`, D = 2026-10-20; one Sonnet agent an act): 331 steps, 280 with no
+  gap, **no flow 11 regression**; every gap a known task (T370 at 4.25/4.29/4.41/4.42/5.8). Results `42f171b5`,
+  `40525efc`, `c1f03dd1`, `783af7b5`, `d771aa91`, `f67ade0c`; runbook fixes `a70f030b`. Act 3's 3.1-3.42 and 3.50-3.54c
+  Actuals were re-based from T369's text, not played fresh. **States:** two agents in turn, 85 rows, 12 corrected
+  (`15bee480`); **T375 proposed** (`11fd5203`: a described radio's hit area).
+- **Step 8:** the live system matched HEAD; re-synced (`79e2312f`); two page faults it found fixed (`27ff8779`: the primary
+  on top at 390 on Invite a person and Admit; only the admitted result's first sentence bold; Web 3980; browser-checked,
+  two narrow states re-taken); one Sonnet review (`0b800f29`); icons uploaded; **design system version 29**
+  (1792508645-23ab, `4829f210`).
+- **Step 9:** BRIEF § 11 "Flow 11" (`18f872ee`). **T373 done.**
+- **Next:** flow 12 (`design/flows/12-people-admin.md`) on the operator's word; T375 and seven others wait in proposed.
 
 ### Environment left
 
-- The replay app on `:5180` runs `wombat_scenario_t373` (the appendix's end state). Scratch DBs `wombat_scenario_t373_s1{0,1,2}`
-  (and half 2's `_s2N`), `_s515`: drop on the operator's word. Old: `wombat_scenario_t369` and T369's dumps.
-- Scratch: this session's `g373` (`replay-pw.env` must never be printed; act and states scripts).
+- **The replay app on `:5180`** runs `wombat_scenario_t373` (the appendix's end state), republished from the working tree
+  at `27ff8779`'s code. Dumps `recovery/scenario-t373-post-act{1..6,A}`, `-pre-a515-A`.
+- **Scratch DBs** `wombat_scenario_t373_s10`, `_s11`, `_s12`, `_s20` (Wim Gone admitted there by step 8's check; Wanda
+  Waiting's scope rows restored), `_s21`, `_s515`: drop on the operator's word. Old: `wombat_scenario_t369`.
+- Scratch: this session's `g373` (`replay-pw.env` must never be printed; act, states and step 8 scripts).
 
 ## Session 2026-10-19 (Opus): T369, flow 10, done
 
