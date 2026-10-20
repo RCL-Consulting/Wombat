@@ -26,6 +26,8 @@ The operator said "proceed" (push and start the replay). Pushed through `9d97983
 - **Scratch DBs** `wombat_scenario_t373_s10`, `_s11`, `_s12`, `_s20` (Wim Gone admitted there by step 8's check; Wanda
   Waiting's scope rows restored), `_s21`, `_s515`: drop on the operator's word. Old: `wombat_scenario_t369`.
 - Scratch: this session's `g373` (`replay-pw.env` must never be printed; act, states and step 8 scripts).
+- **Session finalised.** Tree clean, lint ok. 18 commits after `9d979834` unpushed (push on the operator's word). The scratch
+  app on :5182 is stopped; :5180 left running.
 
 ## Session 2026-10-19 (Opus): T369, flow 10, done
 
