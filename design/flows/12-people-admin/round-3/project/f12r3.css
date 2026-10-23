@@ -1,0 +1,113 @@
+/* Flow 12, round 3: what these boards add to the system. NEW rules are written in app.css first; the Spec's class
+   table (S24) gives each row and why. Reused system classes are not restated. Every colour is an existing token.
+   The canvas's own (not app.css): .anno, .anno-line, .canvas-focus, .stage, .stage-label, .doc. */
+
+/* ---- canvas only ---- */
+.anno{display:inline-block;vertical-align:middle;margin-left:var(--space-xs);font-family:var(--font-body);font-size:0.72rem;font-weight:700;line-height:1.5;letter-spacing:0.02em;padding:0 0.45rem;border-radius:var(--radius-pill);border:1px solid;color:var(--text-color);white-space:nowrap}
+.anno--new{background:var(--info-bg);border-color:var(--secondary-color)}
+.anno--proposed{background:var(--warning-bg);border-color:var(--warning-color)}
+.anno--data{background:var(--header-bg);border-color:var(--input-border)}
+.anno--ill{background:var(--surface-color);border-color:var(--text-color)}
+.anno--pre{background:var(--danger-bg);border-color:var(--danger-color)}
+.anno--r3{background:var(--success-bg);border-color:var(--success-color)}
+.anno-line{margin:0 0 var(--space-xs)}
+.canvas-focus{outline:2px solid var(--focus-ring);outline-offset:2px}
+.stage{background:var(--scrim);padding:var(--space-2xl) var(--space-lg);box-sizing:border-box;min-height:100%;font-family:var(--font-body);color:var(--text-color)}
+.stage dialog{position:static;margin:0 auto var(--space-xl)}
+.stage-label{max-width:28rem;margin:0 auto var(--space-md)}
+.doc{padding:var(--space-xl);background:var(--background-color);min-height:100%;box-sizing:border-box;font-family:var(--font-body);color:var(--text-color)}
+.doc h1{font-size:1.75rem;margin:0 0 var(--space-sm)}
+.doc h2{font-size:1.25rem;margin:var(--space-xl) 0 var(--space-sm);padding-top:var(--space-md);border-top:2px solid var(--secondary-color)}
+.doc h3{font-size:1.05rem;margin:var(--space-lg) 0 var(--space-xs)}
+.doc p,.doc li{max-width:92rem}
+.doc ul,.doc ol{padding-left:1.25rem}
+.doc li{margin-bottom:var(--space-xs)}
+.doc table{width:100%}
+.doc td,.doc th{vertical-align:top;font-size:0.84rem}
+.doc .clinic-table th,.doc .clinic-table td{padding:var(--space-xs) var(--space-sm)}
+.doc code{font-family:var(--font-mono);font-size:0.82rem;background:var(--header-bg);padding:0 4px;border-radius:var(--radius-sm)}
+.doc pre{font-family:var(--font-mono);font-size:0.8rem;background:var(--surface-color);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:var(--space-sm) var(--space-md);white-space:pre-wrap;margin:0 0 var(--space-sm)}
+@media (max-width:640.98px){.anno{white-space:normal}}
+
+/* ---- NEW: the user page, a column of sections ---- */
+.user-page{display:flex;flex-direction:column;gap:var(--space-lg);max-width:60rem}
+.user-page > *{margin:0}
+.user-page .detail-list dd{overflow-wrap:anywhere;min-width:0}
+.user-section{display:flex;flex-direction:column;gap:var(--space-md)}
+.user-section > *{margin:0}
+.user-section h2{font-size:1.25rem;margin:0}
+.user-section h3{font-size:1.1rem;margin:0}
+.user-section .actions-cell{justify-content:flex-start}
+.user-page .action-result .alert{margin:0}
+.section-part{display:flex;flex-direction:column;gap:var(--space-sm);padding-top:var(--space-md);border-top:1px solid var(--border-color)}
+.section-part:first-of-type{padding-top:0;border-top:0}
+.section-part > *{margin:0}
+.section-part ul{margin:0}
+.role-rows{list-style:none;margin:0;padding:0}
+.role-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-sm) var(--space-lg);padding:var(--space-sm) 0;border-top:1px solid var(--border-color)}
+.role-row:first-child{border-top:0;padding-top:0}
+.role-row-label{font-weight:600}
+.role-row-note{color:var(--muted-text);font-size:0.9rem}
+.no-role{display:flex;flex-direction:column;gap:var(--space-xs)}
+.no-role > *{margin:0}
+/* The note panel holding a form (F11): the system's .note-panel, its gap the form's own */
+.note-panel--form{gap:var(--space-lg)}
+.note-panel--form > *{margin:0}
+.note-panel--form .form-actions{margin:0}
+/* Radios with help under each, one column (M9; the shipped .choice-stack is the MSF Kind radios, untouched) */
+.choice-help-stack{display:flex;flex-direction:column;gap:var(--space-sm);border:0;margin:0}
+.choice-help-stack legend{padding:0;margin-bottom:var(--space-xs)}
+.choice-help-stack .form-check{flex-wrap:wrap;align-items:center}
+.choice-help{flex-basis:100%;margin:0 0 0 1.5rem;color:var(--muted-text);font-size:0.9rem}
+dl.form-group{margin:0}
+dl.form-group dd{margin:0}
+
+/* ---- NEW: Users' cells and filter ---- */
+.role-cell{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.role-cell li{overflow-wrap:anywhere}
+.no-role-cell{display:flex;flex-direction:column;gap:2px}
+.status-locked{gap:var(--space-xs)}
+.people-page{display:flex;flex-direction:column;gap:var(--space-lg)}
+.people-page > *{margin:0}
+.people-filter{display:flex;flex-direction:column;gap:var(--space-md)}
+.people-filter > *{margin:0}
+.people-filter .search-grid{align-items:start}
+.people-filter .form-group{margin:0}
+.people-filter .filter-actions{display:flex;flex-wrap:wrap;gap:var(--space-sm)}
+
+/* ---- Home (M7, S18, S19) ---- */
+.dashboard-grid .detail-list{grid-template-columns:minmax(0,max-content) minmax(0,1fr)}
+.dashboard-grid .detail-list dd{overflow-wrap:anywhere;min-width:0}
+.dashboard-card-footer .field-help{margin-right:auto}
+a.dashboard-metric{text-decoration:none;flex:1 1 6.5rem;min-width:0}
+.dashboard-grid .detail-list dd p{margin:0}
+a.dashboard-metric .dashboard-metric-label{color:var(--link-color);text-decoration:underline;text-underline-offset:0.2em}
+a.dashboard-metric:hover .dashboard-metric-label{color:var(--link-hover)}
+
+/* ---- NEW: the record and SSO ---- */
+.record-page{display:flex;flex-direction:column;gap:var(--space-lg);max-width:52rem}
+.record-page > *{margin:0}
+.record-page .form-container{margin:0}
+.not-set-up{display:flex;flex-direction:column;gap:var(--space-sm);max-width:48rem}
+.not-set-up > *{margin:0}
+.not-set-up h2{display:flex;align-items:center;gap:var(--space-sm);font-size:1.1rem}
+
+@media (max-width:900px){
+  .clinic-table--stack-wide .btn{min-height:2.75rem}
+}
+@media (max-width:640.98px){
+  .dialog-card .form-actions{flex-direction:column-reverse}
+  .dialog-card .form-actions .btn{min-height:2.75rem;width:100%}
+  .header-container .actions-cell{width:100%}
+  .header-container .actions-cell .btn{min-height:2.75rem;flex:1 1 auto}
+  /* M6: full width only for what stacks; the Show toggle keeps the system's 44px high, its own width */
+  .user-page .form-actions,.record-page .form-actions,.note-panel--form .form-actions{flex-direction:column-reverse;align-items:stretch}
+  .user-page .form-actions .btn,.user-page .section-part > .btn,.record-page .form-actions .btn,.people-filter .filter-actions .btn{width:100%}
+  .user-page .btn,.record-page .btn,.people-page .btn,.dashboard-grid .btn{min-height:2.75rem}
+  .user-page .form-control,.user-page .form-select,.record-page .form-control,.people-page .form-control,.people-page .form-select{min-height:2.75rem}
+  /* S17: the radio's label is the target */
+  .choice-group .form-check label,.choice-help-stack .form-check label{min-height:2.75rem;display:flex;align-items:center}
+  .role-row{flex-direction:column;align-items:stretch}
+  a.dashboard-metric{min-height:44px}
+  .dashboard-card-footer a{min-height:44px;display:inline-flex;align-items:center}
+}

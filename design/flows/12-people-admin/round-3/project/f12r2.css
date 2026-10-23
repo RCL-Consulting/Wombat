@@ -1,0 +1,128 @@
+/* Flow 12, round 2: what these boards add to the system. Each rule is NEW (written in app.css first) unless marked
+   "canvas only". Reused system classes are not restated: .page shell, .header-container, .breadcrumbs, .detail-card,
+   .dashboard-grid, .dashboard-card-title, .dashboard-metric*, .list-row, .detail-list, .clinic-table(--stack,
+   --stack-wide), .col-wrap, .col-actions, .person-cell, .badge*, .alert*, .alert-row, .action-result, .form-*,
+   .choice-group, .form-check, .field-help, .validation-message, .input-validation-error, .required-mark,
+   .readonly-value, .search-grid, .filter-actions, .pager*, .password-field, .password-toggle, .password-rules,
+   .signin-methods/.signin-method*, .dialog-card, .dialog-body, .dialog-list, .skeleton, .state-panel-title,
+   .state-panel-copy, .detail-card--empty, .inv-count, .loading-line. Every colour is an existing token. */
+
+/* ---- canvas only ---- */
+.anno{display:inline-block;vertical-align:middle;margin-left:var(--space-xs);font-family:var(--font-body);font-size:0.72rem;font-weight:700;line-height:1.5;letter-spacing:0.02em;padding:0 0.45rem;border-radius:var(--radius-pill);border:1px solid;color:var(--text-color);white-space:nowrap}
+.anno--new{background:var(--info-bg);border-color:var(--secondary-color)}
+.anno--proposed{background:var(--warning-bg);border-color:var(--warning-color)}
+.anno--data{background:var(--header-bg);border-color:var(--input-border)}
+.anno--ill{background:var(--surface-color);border-color:var(--text-color)}
+.anno-line{margin:0 0 var(--space-xs)}
+.canvas-focus{outline:2px solid var(--focus-ring);outline-offset:2px}
+.stage{background:var(--scrim);padding:var(--space-2xl) var(--space-lg);box-sizing:border-box;min-height:100%;font-family:var(--font-body);color:var(--text-color)}
+.stage dialog{position:static;margin:0 auto}
+.stage-label{max-width:28rem;margin:0 auto var(--space-md);color:var(--on-fill);font-weight:600}
+.doc{padding:var(--space-xl);background:var(--background-color);min-height:100%;box-sizing:border-box;font-family:var(--font-body);color:var(--text-color)}
+.doc h1{font-size:1.75rem;margin:0 0 var(--space-sm)}
+.doc h2{font-size:1.25rem;margin:var(--space-xl) 0 var(--space-sm);padding-top:var(--space-md);border-top:2px solid var(--secondary-color)}
+.doc h3{font-size:1.05rem;margin:var(--space-lg) 0 var(--space-xs)}
+.doc p,.doc li{max-width:90rem}
+.doc ul,.doc ol{padding-left:1.25rem}
+.doc li{margin-bottom:var(--space-xs)}
+.doc table{width:100%}
+.doc td,.doc th{vertical-align:top;font-size:0.86rem}
+.doc .clinic-table th,.doc .clinic-table td{padding:var(--space-sm) var(--space-md)}
+.doc code{font-family:var(--font-mono);font-size:0.85rem;background:var(--header-bg);padding:0 4px;border-radius:var(--radius-sm)}
+.doc .old{color:var(--muted-text)}
+.doc .captures{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-xs) var(--space-lg)}
+
+/* ---- NEW: the user page, a column of sections (Detail page as sections, Q1) ---- */
+.user-page{display:flex;flex-direction:column;gap:var(--space-lg);max-width:60rem}
+.user-page > *{margin:0}
+/* The who line: address, institution, status, the one scope; terms muted, wraps at any width (C27) */
+.who-line{display:flex;flex-wrap:wrap;gap:var(--space-sm) var(--space-xl);margin:0;padding:0}
+.who-line > div{display:flex;flex-direction:column;min-width:0}
+.who-line dt{color:var(--muted-text);font-weight:500;font-size:0.9rem}
+.who-line dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.user-section{display:flex;flex-direction:column;gap:var(--space-md)}
+.user-section > *{margin:0}
+.user-section h2{font-size:1.25rem;margin:0}
+.user-section h3{font-size:1.1rem;margin:0}
+.user-section .action-result .alert,.user-page .action-result .alert{margin:0}
+.section-part{display:flex;flex-direction:column;gap:var(--space-sm);padding-top:var(--space-md);border-top:1px solid var(--border-color)}
+.section-part:first-of-type{padding-top:0;border-top:0}
+.section-part > *{margin:0}
+/* A role row: the label, then after a gap its Remove… or why it has none (T323) */
+.role-rows{list-style:none;margin:0;padding:0}
+.role-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-sm) var(--space-lg);padding:var(--space-sm) 0;border-top:1px solid var(--border-color)}
+.role-row:first-child{border-top:0;padding-top:0}
+.role-row-label{font-weight:600}
+.role-row-note{color:var(--muted-text);font-size:0.9rem}
+/* The disclosure (Q21, C25): a trigger with aria-expanded; the form in place under it, stripe as a row open for editing */
+.disclosure-panel{display:flex;flex-direction:column;gap:var(--space-md);padding:var(--space-md) var(--space-lg);border:1px solid var(--border-color);border-left:4px solid var(--secondary-color);border-radius:var(--radius-lg);background:var(--surface-color)}
+.disclosure-panel > *{margin:0}
+.disclosure-panel .form-actions{margin:0}
+.choice-stack{display:flex;flex-direction:column;gap:var(--space-sm);border:0;margin:0;padding:0}
+.choice-stack legend{padding:0;margin-bottom:var(--space-xs);font-weight:400}
+.choice-stack .form-check{display:flex;gap:var(--space-sm);align-items:flex-start;margin:0}
+.choice-stack .form-check-input{margin-top:0.3rem;flex:none}
+.choice-stack .form-check label{display:flex;flex-direction:column}
+.choice-stack .choice-help{color:var(--muted-text);font-size:0.9rem}
+.readback-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(14rem,100%),1fr));gap:var(--space-md)}
+.readback-pair .form-group{margin:0}
+.no-role{display:flex;flex-direction:column;gap:var(--space-xs)}
+.no-role > *{margin:0}
+.lock-list{margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:var(--space-xs)}
+.waiting-request{margin:0;padding:var(--space-sm) var(--space-md);background:var(--warning-bg);border-left:4px solid var(--warning-color);border-radius:var(--radius-sm)}
+.action-reason{color:var(--muted-text);font-size:0.9rem;margin:0}
+
+/* ---- NEW: Users' cells ---- */
+.role-cell{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.role-cell li{overflow-wrap:anywhere}
+.no-role-cell{display:flex;flex-direction:column;gap:2px}
+.no-role-cell span{color:var(--muted-text);font-size:0.9rem}
+.person-cell .person-address{color:var(--muted-text);font-size:0.9rem;font-weight:400;overflow-wrap:anywhere}
+.status-locked{display:inline-flex;align-items:center;gap:var(--space-xs)}
+.people-page{display:flex;flex-direction:column;gap:var(--space-lg)}
+.people-page > *{margin:0}
+.people-filter{display:flex;flex-direction:column;gap:var(--space-md)}
+.people-filter > *{margin:0}
+.people-filter .search-grid{align-items:start}
+.people-filter .form-group{margin:0}
+.people-filter .filter-actions{display:flex;flex-wrap:wrap;gap:var(--space-sm)}
+.list-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--space-sm)}
+
+/* ---- NEW: Home's waiting line and institution card ---- */
+.waiting-line{margin:0}
+.waiting-line .alert-row-text{margin:0}
+.count-rows{list-style:none;margin:0;padding:0}
+.count-rows li{display:flex;justify-content:space-between;align-items:baseline;gap:var(--space-md);padding:var(--space-xs) 0}
+.count-rows b{font-variant-numeric:tabular-nums}
+.card-link{display:inline-flex;align-items:center;gap:var(--space-xs);min-height:24px;font-weight:600}
+.inst-status p{margin:0}
+
+/* ---- NEW: the record and SSO ---- */
+.record-page{display:flex;flex-direction:column;gap:var(--space-lg);max-width:52rem}
+.record-page > *{margin:0}
+.record-page .form-container{margin:0}
+.status-readout{display:flex;flex-direction:column;gap:2px}
+.status-readout p{margin:0}
+.not-set-up{display:flex;flex-direction:column;gap:var(--space-sm);max-width:48rem}
+.not-set-up > *{margin:0}
+.not-set-up h2{display:flex;align-items:center;gap:var(--space-sm);font-size:1.1rem}
+
+@media (max-width:900px){
+  .clinic-table--stack-wide .btn{min-height:2.75rem}
+}
+@media (max-width:640.98px){
+  .dialog-card .form-actions{flex-direction:column-reverse}
+  .dialog-card .form-actions .btn{min-height:2.75rem;width:100%}
+  .header-container .actions-cell{width:100%}
+  .header-container .actions-cell .btn{min-height:2.75rem;flex:1 1 auto}
+  .user-page .form-actions,.record-page .form-actions{flex-direction:column-reverse;align-items:stretch}
+  .user-page .btn,.record-page .btn,.people-page .btn,.dashboard-grid .btn{min-height:2.75rem}
+  .user-page .btn,.record-page .form-actions .btn,.people-filter .filter-actions .btn{width:100%}
+  .user-page .form-control,.record-page .form-control,.people-page .form-control,.people-page .form-select{min-height:2.75rem}
+  .choice-stack .form-check{min-height:2.75rem}
+  .role-row{flex-direction:column;align-items:stretch}
+  .who-line{flex-direction:column;gap:var(--space-xs)}
+  .card-link{min-height:44px}
+  .count-rows a{display:inline-flex;align-items:center;min-height:44px}
+  .disclosure-panel{padding:var(--space-md)}
+}
