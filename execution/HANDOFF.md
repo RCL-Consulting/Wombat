@@ -13,10 +13,12 @@ The operator said "push, then start flow 12". Pushed `9d979834..98584921`. T376 
   crop-first captures opened, nothing to crop). T376's notes have the Mode, the drops and § 6's Q1–Q16.
 - **Round 1 drawn and assessed:** 44 boards in `round-1/` (`62f6ec41`); `round-1-assessment.md` (picks S1, H1, UA;
   4 must-fixes; Q1–Q22 for the operator). **T377 proposed** (SSO can strip a hand-given role). **The operator took Q1–Q22 as recommended**
-  (2026-10-23). Recorded in the assessment's § 10; **round 2's
-  ask written** (`round-2-ask.txt`, 335 lines, ~160 boards). **Next:** the operator sends it to "Wombat 12" with the
-  captures from `design/upload/` re-attached; then save round 2, review it (code, cast, design system), the operator's
-  decisions, one correction round.
+  (2026-10-23). Recorded in the assessment's § 10.
+- **Round 2 drawn:** 178 files in `round-2/` (`a944726e`); the captures were read from `design/upload/` (not attached).
+  Reviewed by three Sonnet agents (`round-2-review-{code,cast,ds}.md`, committed); K1, K3, D3, D4 and C9 checked
+  here. Merged in `round-2-review.md` (`9a51ee7a`: 10 must, 24 should, 16 nits). **The operator took F1–F11 as
+  recommended.** Recorded; `round-3-ask.txt` written. **Next:** the operator sends round 3; save it and check it
+  item by item (`round-3-check.md`, flow 11's shape), then step 6, the build.
 
 ## Session 2026-10-20 (Opus): T373, flow 11, done
 

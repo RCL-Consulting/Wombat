@@ -273,6 +273,33 @@ Settled from the evidence (no decision needed):
 | Nits | K21, K23–K28, K30 | C10, C11, C13–C15 | D17, D18, D20 |
 | Dropped | | | D12 (f) (no owner row needed: K19) |
 
-## The operator's decisions
+## The operator's decisions (2026-10-23)
 
-(pending)
+"Yes": F1–F11 all taken as recommended. Round 3's ask is `round-3-ask.txt`; what each means for round 3 and the build:
+
+- **F1** Add role judges the role's own need against the resulting scope; the invitation-only "may not be scoped to a
+  sub-speciality" is not applied to a scope the person holds. Round 3 draws the Assessor-first order; the build adds a
+  handler test for it.
+- **F2** A second role may narrow the first, said before the save ("Pieter Smit's scope becomes Paediatrics, for every
+  role he holds.", NEW) and repeated in the result; round 3 draws Smit's board.
+- **F3** An SSO-provisioned account holds no password: for `AllowLocalPassword` false the Password part reads "‹name›
+  signs in only through ‹provider›. A password cannot be set for them." (NEW), no reset field, and Remove's refusal loses
+  its hint; the page reads `AllowLocalPassword` and `HasPassword`. P20–P22 redrawn.
+- **F4** The assessor profile's `SpecialityId` and `SubSpecialityId` are dropped in one migration; `InstitutionId` is kept,
+  written from the person's institution at save. Spec and build only.
+- **F5** Q16 as decided: T288, T333 and T289 land first as their own tasks; T264's, T326's and T286's halves are this
+  build's. A Prerequisites block on the Spec, and every O board and T03–T07 says its prerequisite on its face.
+- **F6** A new `GetRequestsWaitingForUserQuery(userId, principal)`, read when the lock or Remove dialog opens, sharing an
+  Application service with the nudge job: a count, up to five rows and the oldest waiting-since. Round 3 draws N = 2 and
+  N > 5 ("and 3 more").
+- **F7** A new `RemoveUserInstitutionalSignInCommand(userId, provider, principal)` behind `DemandUserAdministration`,
+  `DemandNotCaller` and `DemandInScope`, the last-way-in guard reused, in an action-mode ConfirmDialog; round 3 draws
+  another person's sign-in removed. Mbatha's own stays flow 02's.
+- **F8** The Delete dialog says what the code keeps: "From each person's next sign-in, belonging to ‹group› no longer
+  gives Assessor." and "The scope it gave stays." (NEW); T377 stays its own. O07 redrawn.
+- **F9** PagerControls as built, guarded here with `total > 10`: no pager on the small lists, no "Page n of N" (U10
+  redrawn); the shared component and flows 06 and 08 untouched.
+- **F10** Entrustment decisions joins her menu under Reviews (an owner row; `ActiveNavItemTests` checks it); every round 3
+  board of hers carries it.
+- **F11** The disclosures are the note panel's pattern, `.detail-card.note-panel` with a form-gap modifier, Cancel as its
+  quiet button; DESIGN.md says a form in a note panel leaves with Cancel and a note with Keep. `.disclosure-panel` goes.

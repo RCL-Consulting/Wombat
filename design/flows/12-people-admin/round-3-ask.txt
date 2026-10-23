@@ -1,0 +1,249 @@
+ROUND 3: one correction round on S1, H1, UA, I and O as round 2 drew them. Put round 3 on a page of its own, "Round 3":
+the boards the items below touch (R3- in place of R2-), each with its states, updated in place, and the new boards they
+ask for; round 1's and round 2's pages stay untouched, and a round 2 board no item touches is not redrawn. Change what
+follows, then say on the Spec, item by item (by the numbers below), what changed and where. Draw nothing the items do
+not ask for. The brand mark is at /_blob/b8532f490e278114d4c3b43f9a0533f6. Every person, address, role, scope, date,
+time, count and order stays as round 2 drew it unless an item below changes it: the reviews found them true. D is
+2026-10-20; Khumalo is "Fatma Khumalo" until 2.41 and "Fatima Khumalo" from 2.44. KGK's contact email is the one in
+force at each board's step: paeds-admin@kgk.wombat.local from Act 1 (act-1-setup.md:184) through 1.23 and 2.44;
+paediatrics@kgk.wombat.local after A.6.1 (appendix-cross-cutting.md:979), so A.6.3's form opens on it;
+hod.paediatrics@kgk.wombat.local after A.6.3's save (:1012). Invent nothing; where a value is not given, write a
+bracket ‹…›. Label a state the replay never reaches "Illustration", in its title and as a chip on its face.
+
+THE SCREENSHOTS: round 2's ten key captures are attached again, staged from C:\dev\Wombat\design\upload (copies of
+design/baseline/): baseline\act-A\A.6.4-2-patel-locked.png, crop-first\baseline\act-A\A.4.5-1-reset-refused.png,
+baseline\act-A\A.7.9-3-user-390.png, baseline\act-2\2.12-2-users-list.png, baseline\act-A\A.7.9-2-users-390.png,
+baseline\act-2\2.44-1-mbatha-home.png, baseline\act-2\2.14-2-empty-save.png, baseline\act-2\2.15-1-assessors-five.png,
+baseline\act-A\A.3.1-1-sso-no-provider.png and baseline\act-A\A.6.3-1-contact-saved.png. With them, the seven round 2
+copied but did not open (S16): baseline\act-2\2.13-1-zulu-before.png, baseline\act-1\1.23-1-kgk-own-record.png,
+baseline\act-5\5.17-3-mbatha-user-no-roles.png, baseline\act-A\A.7.9-1-home-390.png,
+baseline\act-2\2.12-3-users-filter-zulu.png, baseline\states\users-list--loading.png and
+baseline\act-A\A.6.7-1-patel-reactivated.png. Read all seventeen before drawing; if they are not attached, read them
+from the folder. SAY ON THE SPEC BOARD, FIRST, WHETHER THEY ARRIVED (as attachments, or read from the folder) and which
+were read; if any could not be read, draw nothing from memory in its place.
+
+THE OPERATOR'S DECISIONS: Q1–Q22 (2026-10-23) stand as round 2 drew them; nothing below reopens them. Added
+(2026-10-23, every recommendation taken):
+  F1. Add role after a sub-speciality. [F1, decided: yes. Add role judges the role's own need against the resulting
+      scope (Assessor and Sub-speciality admin: a speciality and a sub-speciality; Speciality admin: a speciality);
+      "may not be scoped to a sub-speciality" is an invitation rule, never applied to a scope the person holds. One
+      board pair, Illustration: Mohammed Patel (Assessor, Paediatrics / Paediatrics) given Committee member, no
+      refusal, the who line still "Paediatrics / Paediatrics". The Spec names the handler test for that order.]
+  F2. A second role that narrows the first. [F2, decided: allowed and said before the save. Under the scope in Add role
+      for Pieter Smit (Coordinator, Any speciality) choosing Speciality admin: "Pieter Smit's scope becomes Paediatrics,
+      for every role he holds." (NEW), Paediatrics as text (the only one adopted); the result repeats it. Boards: the
+      form and the result, Illustration (no step adds it). P06's "Thandi Zulu's scope stays" says what it means.]
+  F3. The last way in. [F3, decided: an SSO-provisioned account holds no password. For AllowLocalPassword false the
+      Password part reads "‹name› signs in only through ‹provider›. A password cannot be set for them." (NEW), with no
+      reset field; Remove's refusal is the built "The institutional sign-in is the account's only way in." with no
+      hint ("Reset a password first …" goes). DATA: the page reads AllowLocalPassword and HasPassword.]
+  F4. The assessor profile's dead columns. [F4, decided: SpecialityId and SubSpecialityId dropped in one migration;
+      InstitutionId kept, written from the person's institution at save. Spec only.]
+  F5. What lands before the build. [F5, decided: Q16 as decided. The Prerequisites block below; every O board and
+      T03–T07 says its prerequisite on its face, as an annotation pill.]
+  F6. The waiting-request line. [F6, decided: GetRequestsWaitingForUserQuery(userId, principal), read when the lock or
+      Remove dialog opens, never on a page view; the person scope-checked; the AwaitsReviewer predicate and the nominee
+      extraction in an Application service the nudge job shares. The line gives the count, up to five rows (trainee,
+      type, PAED number, waiting since, overdue) and the oldest waiting-since. Two boards, Illustration: N = 2 and
+      N > 5 ("and 3 more"), the rows past Patel's PAED-015 in brackets.]
+  F7. Another person's institutional sign-in. [F7, decided: RemoveUserInstitutionalSignInCommand(userId, provider,
+      principal) behind DemandUserAdministration, DemandNotCaller and DemandInScope, the last-way-in guard reused; an
+      action-mode ConfirmDialog. One board, Illustration: Thandi Zulu's ‹provider› sign-in removed, the result in
+      Sign-in and access, naming her, focused. Mbatha's own sign-in stays flow 02's My account.]
+  F8. The Delete dialog's words. [F8, decided: "From each person's next sign-in, belonging to ‹group› no longer gives
+      Assessor." and "The scope it gave stays." (NEW); "anyone who had Assessor only from this group loses it" goes.
+      T377 stays its own.]
+  F9. The pager. [F9, decided: PagerControls as built, guarded here with total > 10: no pager on a list of ten or
+      fifteen; U10 loses "Page 1 of ‹10›". No change to the shared component; flows 06 and 08 untouched.]
+  F10. Entrustment decisions. [F10, decided: an item in her menu under Reviews (/admin/entrustment-decisions; an owner
+      row; ActiveNavItemTests checks it). Every round 3 board of hers draws it in the menu; round 2's boards are read
+      as carrying it.]
+  F11. The disclosure. [F11, decided: the note panel's pattern. Add a role… and Record training open a
+      .detail-card.note-panel (a modifier for a form's gap only), Cancel its quiet button; .disclosure-panel goes. The
+      Spec's DESIGN.md text: a form in a note panel leaves with Cancel, a note with Keep.]
+
+PREREQUISITES (a block on the Spec, F5, M4): T288, T333 and T289 land first, as their own tasks: the O family after
+T288 and T333; the training section's refusals after T289 (T03–T07). Built in this flow, drawn as fixed: T264's users
+and SSO half, T326's assessors and SSO items, T286's external-logins half, and Q16's other halves (T291 items 4 and 8,
+T323, T324, T280, T325, T329, every DATA read, Q4's scope on Add role). At HEAD today all six tasks are queued.
+
+MUST FIX (round 3's check takes each by number):
+  M1. Training split from scope. The Spec writes the command: CreateOrUpdateAssessorProfileCommand(UserId,
+      TrainingStatus, TrainingCompletedOn, Qualifications, Principal), institution from the person, no
+      UpdateScopeAsync; F4's columns. Test: saving training for a Committee member who is also an Assessor leaves the
+      scope and the security stamp alone. T03–T07 ask no institution, speciality or sub-speciality (as drawn); the
+      Spec says T289 is a prerequisite for their refusals only.
+  M2. Add role's write. The Spec writes AddRoleToUserCommand(UserId, Role, SpecialityId?, SubSpecialityId?,
+      Principal): the role added, then UpdateScopeAsync with the UNION of the held ids and the new ones, inside
+      InOneTransactionAsync; the role's need as F1; the narrowing as F2; what Add role does for a person with no
+      institution (U14's College admin), in words. Handler tests: union, atomicity, the Assessor-first order.
+  M3. P21–P22 redrawn as F3: no "Reset a password first to give the account another way in."; P22's Password part the
+      SSO-only words with no reset field; P20 and P21 for an account that also holds a password (Zulu), Remove…
+      allowed.
+  M4. Every O board (O01–O10) and T03–T07 carries its prerequisite on its face ("after T288 and T333" / "after
+      T289"), as an annotation pill, not page content.
+  M5. The Steps board's 2.15 row by row: Botha Trained, Not recorded; Khumalo Provisional (awaiting sign-off),
+      2026-09-20; Naidoo Trained, 2020-10-20; Patel In training, Not recorded; Zulu Trained, 2018-10-20. T08 stays as
+      drawn.
+  M6. The 390 password field: the full width only for what stacks (.user-page .form-actions .btn, .user-page
+      .section-part > .btn), never the bare .btn; the Show toggle keeps the system's 44 px high, auto wide. Every P and
+      T board at 390 redrawn under the scoped rule; re-measure P03, P14 and P20 at 390 and write the input's and the
+      toggle's widths on the Spec.
+  M7. Home's "Your institution" card: .dashboard-grid .detail-list dd{overflow-wrap:anywhere;min-width:0} and
+      minmax(0,1fr) in a card; the inline style goes. H01–H05 redrawn; one of them carries a 64-character contact
+      address (Illustration); re-measure H01–H05 at 1280, 1100 and 390 and write the table on the Spec: 0 px sideways
+      at each.
+  M8. Every read-out as FormField's: dl.form-group with dt and dd.readonly-value; .field-label goes, .status-readout
+      becomes that and leaves the NEW list. The record's Status (I01–I04), the mapping's provider and Role (O04–O06),
+      the training read-out, Add role's scope as text (P04, P05, F2's board).
+  M9. The note panel (F11) in place of .disclosure-panel; the radios .choice-group with .form-check; a column-with-help
+      rule renamed .choice-help-stack, so the shipped .choice-stack (the MSF Kind radios) is untouched. Every
+      disclosure state redrawn: P03, P04, P05 (the closed trigger), P08, F1's and F2's boards, T03, T05, T06.
+  M10. The disclosure's wiring: aria-controls only while the panel exists (or the panel rendered hidden); no
+      role="group" on the panel (the fieldset is the group); each radio's help outside its <label>, kept in
+      aria-describedby (flow 11's D7, T375). The same boards as M9; say it in each caption.
+
+SHOULD FIX:
+  S1. The scope cell's rule on the Spec (PROPOSED): Institutional admin, the institution's name; College admin, the
+      College's; otherwise the speciality names comma-joined, then " / " and the sub-speciality names; none, "Any
+      speciality". One board for a person with two speciality ids (Illustration, ‹second speciality›), or the Spec
+      says Add role refuses a second speciality (say which).
+  S2. Three no-role states. Ended profile: Q13's words with the date (du Plessis, Molefe, as drawn). No profile: "‹name›
+      holds no role. They can sign in to My account and My data rights." (NEW): one board, Illustration (a staff
+      member whose last role was removed). The Users cell's sentence for the first only; the state written into
+      DESIGN.md's Table system and the user page's text.
+  S3. A Remove dialog per role, each one sentence from the lockout list's facts: Committee member (off panels; a chair's
+      removal stalls ratification, T256), Speciality admin (the programme's oversight), Sub-speciality admin,
+      Coordinator, Institutional admin, and the last role (S2). A waiting request "stays with them; it does not move to
+      anyone else", never "stays with them" alone. One sheet of dialogs at 1280 (Illustration), one at 390; P06
+      (Assessor's) redrawn with the same sentence.
+  S4. The SSO form: O06 relabelled "handler refusal (a posted role the select does not offer)"; O04's caption says when
+      Speciality and Sub-speciality appear (a role that needs them chosen); Group display name stays required.
+  S5. O03, mappings whose provider is gone: no Delete for her because Delete refuses them to anyone but the
+      Administrator (the Spec: a handler check and a test; ProviderGone from IOptions<SsoOptions>; roles already given
+      remain).
+  S6. The Users filter: "thandi zulu", "zulu thandi" and the address all find her (one board pair for "thandi zulu",
+      the count and the focus as U02); Administrator and College admin in the Role select for the Administrator only
+      (U14); role, q, status, page and size in the query string, so Home's role links open a filtered Users and the
+      user page's Users crumb returns to it (an allow-listed return, as flow 11's sign-out).
+  S7. The Spec: one order on every server, LastName.ToLower(), FirstName.ToLower(), Id in the query, pinned by a test
+      with "van Rensburg" and "du Plessis". No board changes.
+  S8. U13 and P26, the Trainee notes, redrawn with no subtitle (T278, as built).
+  S9. I05 and I06: h1 "Institution", tab "Institution · Wombat"; U11, U12, T12 and T13's subtitles from
+      GetMyInstitutionNameQuery read first, or without the name until it loads (say which).
+  S10. The Spec: /admin/assessors/edit?id= is the PROFILE id: profile → UserId → /admin/users/{id}?section=training;
+      unknown, out-of-scope or missing → "User unavailable"; an unknown section opens nothing; a person without
+      Assessor gets the section's absence said once.
+  S11. T10 without "Thandi Zulu is not listed" (P07's result already says she leaves Assessors).
+  S12. The Spec: InstitutionCreate split off (the Administrator policy) so /admin/institutions/new is access denied for
+      her; the Administrator's variant is flow 18's.
+  S13. Add role's adopted set is the PERSON's institution's (GetAdoptedDisciplinesForInstitutionQuery): P04, P27 and the
+      Spec.
+  S14. U14 and T14 (and their 768s) marked Illustration, the missing rows bracketed (‹Demo account› ×5,
+      collegeadmin@wombat.local Global, College admin, ‹Demo Institution assessor›), T14's count 6
+      (assessor@wombat.local), or both redrawn at A.6.9; name the step on both (say which).
+  S15. The Steps board, below.
+  S16. The seven captures named above opened; the Spec says what each changed, or that P02, I01, P12, U02 and P17 hold.
+  S17. The radio's label as the target at 390 (min-height:2.75rem; display:flex; align-items:center) on P03, P04 and T06,
+      or the Spec states the exception (T375).
+  S18. No inline style on any board: the 69 actions-cell[style="justify-content:flex-start"] become .user-section
+      .actions-cell; .dashboard-card-footer .field-help; M7's wrap; margin-right:auto, margin:0 and max-width:14rem
+      deleted.
+  S19. System pieces, not hand-built: the waiting request an Alert (warning, Role="") in the dialog (P15, P06, S3's,
+      F6's); the who line a dl.detail-list (every P board redrawn); .card-link and .count-rows as DashboardCard's
+      footer link and .dashboard-metric-row (H01–H05), or the Spec says why not; the count inside the link's name.
+  S20. Stacked tables' roles (role="table", rowgroup, row, columnheader, cell, as DataTable's Stack emits): a line in
+      the Spec's build note; every stacked table redrawn here carries them.
+  S21. The filter card: form.detail-card.people-filter, NEW, listed once, role="search", its name decided for flows 06
+      and 12 alike; the heading Show focuses keeps tabindex="-1" and gains a visually hidden live count. Every U board.
+  S22. The Spec's DESIGN.md text: the note panel (M9, F11); the one-scope rule's exemptions (Home's People card, flow
+      11's forms); the read-out as dd.readonly-value (M8); the destructive trigger as DESIGN.md:734 restated,
+      superseding :3442's filled Delete; the waiting line with flow 06's oversight line as precedent; the single-field
+      refusal beside its field with no RefusalSummary as the stated exception; the record page's ValidationSummary
+      removed and the first invalid field focused.
+  S23. Standing notices are not live regions: H04's waiting line, O03's caption note, P01's own-account note and P26's
+      Trainee note Role=""; status only for what arrives with a result.
+  S24. The class table on the Spec, a row for every class (NEW and why, or reuses .x): .person-address, .list-head,
+      .status-locked, .no-role-cell, .role-cell, .card-link, .action-reason, .inst-status, .who-line > div added;
+      .choice-stack out (M9); the canvas-only .captures, .doc, .old and the redundant phone .form-control rule deleted.
+
+STEPS BOARD (revised; every Expect clause today's runbook carries stays, with the new one beside it):
+  - 2.15 as M5.
+  - 5.28 off the crossing list; the no-role sentence first appears at A.4.5.
+  - A.6.4's Today quotes the four-bullet list with the trainee line and "no dialog (T264)"; its Expect says both go.
+  - A.5.15 (devadmin's "Lock out…" and its dialog), 5.10 and A.6.1 join the crossing list; A.6.1 "unchanged: the
+    Administrator's page is flow 18's".
+  - 2.14's Note retired, 2.37 and 3.52 listed, the scope arriving at 2.13; 2.14's Today "stays on /admin/assessors/edit
+    (the ?id= move was never built)" with both old refusals quoted.
+  - 2.28's Do gains "open Home".
+  - A.6.3's field starts at paediatrics@kgk.wombat.local (A.6.1's save); I01's paeds-admin@kgk.wombat.local is 1.23's.
+  - 2.12's "Scope 'Paediatrics'" for all ten becomes "each person's one scope as invited (U01)".
+  - A.1.14's Expect: "(new: the No role cell and its sentence)".
+  - F10's menu item wherever an Expect quotes her menu; F8's words at the Delete step's Expect if one quotes it.
+  - Each journey's count, presses + fields typed, at 1280 and 390, recomputed after S6 (finding a person by "thandi
+    zulu"), F11 (Cancel in the note panel) and F9.
+
+NITS (fix as you pass):
+  - Add role's help under options that ask no speciality: a RoleHelp variant for an already-scoped person, never "Choose
+    a speciality only to keep them to it." there (P03, P04, F1's board).
+  - The lockout list's "They sit on no committee panel." only for a Committee member and "They cannot be named as an
+    activity's assessor." only for an Assessor, as the trainee line is for a Trainee: P15 (Patel) and P18 (Dlamini)
+    redrawn with the list as it then reads; the Spec counts each.
+  - Home's adopted counts and distinct account count are DATA reads; one board with a locked account
+    (Illustration), or the locked read dropped (say which).
+  - The Spec: "Locked out" is also Identity's self-lifting lockout; the badge tells an administrative lock
+    (UserDeactivation.IsDeactivated) from it, or the Spec says it does not.
+  - The Spec: ListAllUsersAsync's N+1 GetRolesAsync goes with S6's paged query.
+  - Training's small text: drop Not started from the new form, or define the cell against "Not recorded"; Botha's
+    no-date result "Training saved for Sarah Botha: Trained, no date." (T02, T08, and the save it follows).
+  - Three undrawn cases: Mbatha's own institutional sign-in (a Spec line: flow 02's My account); the record's result
+    when the contact email is cleared (a board, Illustration); "An institution with the same name or short code
+    already exists." on its field (a board, Illustration).
+  - The Spec lists what Q9 deletes: the card, RevokePendingInvitationsForEmailCommand,
+    UserDetailDto.PendingInvitations, UserPendingInvitationDto, the read in GetUserByIdQuery, the CSS state and their
+    tests.
+  - T11's and U10's placeholder rows where they would sort, or the caption "order not shown".
+  - I04's malformed address as ‹a malformed address›, never one that reads as a typo of A.6.3's.
+  - The Families row's "/new and the Demo id": one note board for I and T, or the words dropped; the Demo Institution's
+    id is 1.
+  - The I and O boards at 390: the canvas-only .anno chip white-space:normal, so nothing scrolls sideways.
+  - The Spec: the breadcrumb's "Home" (39×24) the accepted inline exception, as flows 03–11.
+  - O07: "Delete the mapping" names its mapping.
+  - Save the canvas's ds/ (tokens.css, bundle.css) with the round.
+
+ALSO (flows 10 and 11, BRIEF § 11):
+  - In every stacked row and every stacked form's actions the primary is on top (DESIGN.md); flow 11's round 3 put
+    Cancel on top and the build copied it. Round 3's check reads each 390 board against DESIGN.md as well as this ask.
+  - A form inside a gap-spaced column gets none of its gap: each section's form spaces its own children; name the
+    element that holds each form's parts on the Spec.
+  - Re-measure every table redrawn at 1280, 1100, 1000, 901, 900, 768 and 390 and add it to M7's table: 0 px sideways
+    at each, and every 390 control, the radio's label included, 44 px.
+  - Never two states on one board that cannot hold at once. No password drawn: the reset field empty or masked.
+
+BOARDS ROUND 3 DRAWS (about 180; every other round 2 board stays as drawn):
+  - Spec, Spec-2 and Steps (R3-0-spec, R3-0-spec-2, R3-0-steps; more if they run long), redrawn WHOLE, so each can be
+    checked item by item.
+  - H01–H05 at 1280 and 390 (M7, S19, S23; F10's menu).
+  - U01–U14 at every width drawn (S21, S6, F9, S8, S14, C10's nit), and the "thandi zulu" pair (S6).
+  - P01–P27 at 390 (M6, S18, S19); at 1280 P03–P08, P15, P18, P19–P22, P26, P27, and the 768s of P05, P09 and P16;
+    new: F1's pair, F2's form and result, F6's N = 2 and N > 5, F7's result, S1's two ids, S2's no-profile state, S3's
+    sheet at 1280 and one at 390.
+  - T01–T14 at 390; at 1280 T02–T08, T10–T14, and the 768s of T08 and T11 (M1, M4, M6, F11, S9, S11, S14).
+  - I01–I06 at 1280 and 390 (M8, S9, the nits), and the two record cases.
+  - O01–O10 at 1280 and 390 (M4, M8, F8, S4, S5, the .anno nit).
+
+SPEC BOARD: FIRST, the screenshots: which arrived and how, which were read. Then F1–F11, M1–M10 and S1–S24 with where
+each is drawn or why it is Spec only; the Prerequisites block (F5, M4); the Illustration list; M6's widths and M7's
+table of measurements; the commands as written (M1, M2, F7, F6's query); the build rules (M1, M2, S5, S7, S10, S12,
+F4's migration); the DESIGN.md text (S22, F11, S2, S20); the class table (S24); every message by kind with its words,
+built or NEW, NEW ones beside the words they replace, F2's, F3's, F8's and S2's among them. "DATA the build must add",
+restated from the review's table: ListUsers as one paged SQL query (the filter as S6, the order as S7, no N+1); the
+scope names, CollegeId and CollegeName and the cell rule (S1); the latest ended trainee profile in GetUserById and
+Users' no-role rows (S2); the institutional sign-ins, AllowLocalPassword and HasPassword, the training record joined,
+the invitations read removed (F3, Q9); GetRequestsWaitingForUserQuery on open (F6); GetAdoptedDisciplinesForInstitutionQuery
+for the person's institution (S13); AddRoleToUserCommand with the union in one transaction (M2); the training-only
+command and F4's migration (M1); RemoveUserInstitutionalSignInCommand (F7); Assessors as every Assessor holder joined to
+a record, with scope names, and the redirect (S10); ListSsoGroupMappings's ProviderGone, Create refusing Institutional
+admin to a non-Administrator, Delete of a gone-provider mapping the Administrator's alone (S4, S5); Home's distinct
+account count, Pending trainee count, adopted specialities and sub-specialities, the institution's name and record;
+GetMyInstitutionNameQuery (S9); her menu's Entrustment decisions (F10); Pending invitations: nothing, removed.

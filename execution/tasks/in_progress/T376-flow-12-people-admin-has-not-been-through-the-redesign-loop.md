@@ -86,3 +86,4 @@ T373 (flow 11), T369 (flow 10), T264, T286, T288, T289, T291, T317, T323, T324, 
   questions Q17–Q22. Q20 checked and proposed as **T377** (no code writes a Manual role assignment, so SSO can strip a
   hand-given role). The Spec board says no capture arrived: re-attach for round 2.
 - **2026-10-23, round 2's ask.** The operator took Q1–Q22 as recommended (assessment § 10). `round-2-ask.txt` written (335 lines, ~160 boards: Home, Users, the user page, training, the record, SSO, Spec and Steps).
+- **2026-10-23, round 2** (178 files in `round-2/`, `a944726e`): reviewed from the code, the cast and the design system (`6b4d39dc`), merged (`round-2-review.md`: 10 must, 24 should, 16 nits; K1, K3, D3, D4, C9 checked in the main session). The operator took F1–F11 as recommended. `round-3-ask.txt` written (249 lines, ~180 boards).
