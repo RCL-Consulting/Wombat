@@ -70,6 +70,85 @@ public static class UserAdministrationRules
         }
     }
 
+    // ─── Add a role… (T376, flow 12) ────────────────────────────────────────
+
+    /// <summary>The roles whose need includes a sub-speciality: Sub-speciality admin and Assessor (Spec 2, F1).</summary>
+    public static bool RoleTakesSubSpeciality(string role)
+        => role is WombatRoles.SubSpecialityAdmin or WombatRoles.Assessor;
+
+    /// <summary>The roles that need a speciality: Speciality admin, and those that need a sub-speciality too.</summary>
+    public static bool RoleNeedsSpeciality(string role)
+        => role is WombatRoles.SpecialityAdmin || RoleTakesSubSpeciality(role);
+
+    /// <summary>
+    /// The roles a speciality may keep to one, or leave at Any speciality (Coordinator, Committee member): Add a role… offers
+    /// a speciality to a person at Any speciality, with no need to choose one.
+    /// </summary>
+    public static bool RoleMayKeepToSpeciality(string role)
+        => role is WombatRoles.Coordinator or WombatRoles.CommitteeMember;
+
+    /// <summary>The refusal of a role the person already holds; the page never offers one.</summary>
+    public static string RoleAlreadyHeld(string role) => $"They already hold {WombatRoleLabels.For(role)}.";
+
+    /// <summary>The refusal for a person with no institution (U14's College admin): every role offered here works at one.</summary>
+    public const string RoleNeedsAnInstitution =
+        "This person has no institution, so no role can be added here: every role offered here works at an institution.";
+
+    /// <summary>The refusal of a speciality the person's institution has not adopted (S13).</summary>
+    public const string SpecialityNotAdopted = "Choose a speciality this person's institution has adopted.";
+
+    /// <summary>The refusal of a sub-speciality the person's institution has not adopted (S13).</summary>
+    public const string SubSpecialityNotAdopted = "Choose a sub-speciality this person's institution has adopted.";
+
+    /// <summary>The refusal of a sub-speciality outside the specialities the person will hold.</summary>
+    public const string SubSpecialityNotUnderScope = "Choose a sub-speciality of the speciality this person is scoped to.";
+
+    /// <summary>
+    /// What each role's radio says under it in Add a role… (P03, P04, P08, P28; the nit). For a person scoped to a speciality
+    /// the roles that may keep to one say the scope they will work in, and Sub-speciality admin asks nothing more; for a
+    /// person at Any speciality they say what to choose, as Invite a person's do.
+    /// </summary>
+    /// <param name="role">The role.</param>
+    /// <param name="personName">"Thandi Zulu".</param>
+    /// <param name="scope">The person's scope in words (<see cref="PersonScopeWords" />).</param>
+    /// <param name="holdsSpeciality">Whether the person's scope names a speciality.</param>
+    public static string RoleHelp(string role, string personName, string scope, bool holdsSpeciality) => role switch
+    {
+        WombatRoles.InstitutionalAdmin => "Runs an institution in Wombat: invites and admits people, adopts curricula.",
+        WombatRoles.SpecialityAdmin => "Runs one speciality's committee work: panels, reviews and decisions due.",
+        WombatRoles.SubSpecialityAdmin => holdsSpeciality
+            ? "Runs one sub-speciality's committee work."
+            : "Runs one sub-speciality's committee work. Choose the speciality, then the sub-speciality.",
+        WombatRoles.Coordinator => holdsSpeciality
+            ? $"Works across the institution, kept to {personName}'s scope: {scope}."
+            : "Works across the institution. Choose a speciality only to keep them to it.",
+        WombatRoles.CommitteeMember => holdsSpeciality
+            ? $"Sits committee reviews, in {personName}'s scope: {scope}."
+            : "Sits committee reviews. Choose a speciality only to keep them to it.",
+        WombatRoles.Assessor => "Assesses the registrars who ask them, at this institution.",
+        _ => WombatRoleLabels.For(role)
+    };
+
+    // ─── Sign-in and access (T376, flow 12, F3, F7) ─────────────────────────
+
+    /// <summary>
+    /// The reset's refusal for an account that may not use a Wombat password (F3: <c>AllowLocalPassword</c> false): the
+    /// page offers no field for one, and the command refuses it, so a reset never sets a password no sign-in accepts.
+    /// </summary>
+    public const string PasswordNotSettable =
+        "The password was not reset. This account signs in only through its institution, so a password cannot be set for it.";
+
+    /// <summary>F7: the refusal of an institutional sign-in the account no longer has (another tab removed it).</summary>
+    public const string SignInNotLinked = "That institutional sign-in is no longer linked to this account. Nothing was removed.";
+
+    /// <summary>F7: the refusal when the account changed while the sign-in was being removed.</summary>
+    public const string SignInChanged =
+        "This account's sign-ins changed while the sign-in was being removed. Nothing was removed. Try again.";
+
+    /// <summary>The refusal to remove the caller's own institutional sign-in here (flow 02's My account does it).</summary>
+    public const string OwnSignInNotRemovable =
+        "You cannot remove your own institutional sign-in here. Remove it from My account, which asks for your password.";
+
     // ─── Who administers users (T278) ───────────────────────────────────────
 
     /// <summary>The refusal to administer users for a caller who holds no role that administers them.</summary>

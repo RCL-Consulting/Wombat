@@ -7,179 +7,365 @@
 @using Wombat.Application.Features.Users
 @inject IScopedSender Sender
 @inject IOptions<SsoOptions> SsoOptions
+@inject IJSRuntime JS
+@inject ILogger<GroupMappings> Logger
 
 <PageTitle>SSO mappings · Wombat</PageTitle>
 
-<PageHeader Title="SSO mappings" Subtitle="Map external identity provider groups to Wombat roles. Changes take effect on the next login for each user." />
+@*
+  T376 (flow 12, boards R3-O01–O10), in .people-page. With no provider for her institution, O01's card in her terms and
+  no form (Q11, T326); the Administrator's O02 as built. With one, the form: Provider and Institution read out (M8), Group
+  id, Group display name, Wombat role (never Institutional admin for her, Q19), then Speciality and Sub-speciality only once
+  the role needs them (S4). Then the current mappings, each Delete… an outline trigger whose ConfirmDialog says F8's words
+  (T264); then any mapping whose provider is gone, read only to her (S5). A refusal about a field is under it, focused,
+  with no summary (S22).
+*@
+<PageHeader Title="SSO mappings" Subtitle="@(_isAdministrator ? SsoMappingWords.AdministratorSubtitle : SsoMappingWords.Subtitle)" />
 
-@* What an add or a delete did. It takes the focus once either is done (T234; DESIGN.md § Button system): an add
-   rebuilds its form, and the button with it, and a deleted mapping's row is gone. A refusal leaves the focus where it
-   was: it is an alert, read at once. *@
-@if (_traineeNote is not null)
-{
-  @* T288: someone who holds Trainee beside an admin role manages no mapping (a trainee first), as on Users (T278). *@
-  <Alert Kind="info" Id="sso-mappings-trainee-note">@_traineeNote</Alert>
-}
-else
-{
-<ActionResult @ref="_result">
-  @if (!string.IsNullOrWhiteSpace(_statusMessage))
+<div class="people-page">
+  @if (_traineeNote is not null)
   {
-    <Alert Kind="success">@_statusMessage</Alert>
-  }
-
-  @if (!string.IsNullOrWhiteSpace(_errorMessage))
-  {
-    <Alert Kind="danger">@_errorMessage</Alert>
-  }
-</ActionResult>
-
-<div class="details-grid">
-  @if (_providers.Count > 0)
-  {
-    <section class="detail-card">
-      <h3>Add mapping</h3>
-      <EditForm Model="_model" OnValidSubmit="CreateAsync" FormName="create-sso-mapping">
-        <DataAnnotationsValidator />
-        <ValidationSummary class="validation-summary-errors" />
-
-        <div class="form-grid form-grid--wide">
-          <FormField Label="Provider" InputId="mapping-provider" Required="true">
-            <InputSelect id="mapping-provider" class="form-select" @bind-Value="_model.ProviderKey">
-              @foreach (var provider in _providers)
-              {
-                <option value="@provider.Key">@provider.DisplayName</option>
-              }
-            </InputSelect>
-          </FormField>
-
-          <FormField Label="External Group ID" InputId="mapping-group-id" Required="true">
-            <InputText id="mapping-group-id" class="form-control" @bind-Value="_model.ExternalGroupId" />
-            <ValidationMessage For="() => _model.ExternalGroupId" />
-          </FormField>
-
-          <FormField Label="Group Display Name" InputId="mapping-group-name" Required="true">
-            <InputText id="mapping-group-name" class="form-control" @bind-Value="_model.ExternalGroupDisplayName" />
-            <ValidationMessage For="() => _model.ExternalGroupDisplayName" />
-          </FormField>
-
-          <FormField Label="Wombat Role" InputId="mapping-role" Required="true">
-            <InputSelect id="mapping-role" class="form-select" @bind-Value="_model.WombatRole">
-              @foreach (var role in _assignableRoles)
-              {
-                <option value="@role">@role</option>
-              }
-            </InputSelect>
-          </FormField>
-
-          <FormField Label="Institution" InputId="mapping-institution" Required="true">
-            <InputSelect id="mapping-institution" class="form-select" @bind-Value="_model.InstitutionId">
-              <option value="">Select institution</option>
-              @foreach (var institution in _institutions)
-              {
-                <option value="@institution.Id">@institution.Name</option>
-              }
-            </InputSelect>
-          </FormField>
-
-          <FormField Label="Speciality" InputId="mapping-speciality">
-            <InputSelect id="mapping-speciality" class="form-select" @bind-Value="_model.SpecialityId">
-              <option value="">None</option>
-              @foreach (var speciality in FilteredSpecialities)
-              {
-                <option value="@speciality.Id">@speciality.Name</option>
-              }
-            </InputSelect>
-          </FormField>
-
-          <FormField Label="Sub-speciality" InputId="mapping-sub-speciality">
-            <InputSelect id="mapping-sub-speciality" class="form-select" @bind-Value="_model.SubSpecialityId">
-              <option value="">None</option>
-              @foreach (var subSpeciality in FilteredSubSpecialities)
-              {
-                <option value="@subSpeciality.Id">@subSpeciality.Name</option>
-              }
-            </InputSelect>
-          </FormField>
-        </div>
-
-        <FormActions>
-          @* Not disabled while its add runs (T234): it has the focus. A second press sends nothing, and aria-disabled says
-             so. Disabled while a delete runs. *@
-          <button type="submit" class="btn btn-primary" disabled="@(_deletingId is not null)"
-                  aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Adding..." : "Add mapping")</button>
-        </FormActions>
-      </EditForm>
-    </section>
+    @* T288: someone who holds Trainee beside an admin role manages no mapping (a trainee first), as on Users (T278). A
+       standing notice, so no live region (S23). *@
+    <Alert Kind="info" Id="sso-mappings-trainee-note">@_traineeNote</Alert>
   }
   else
   {
-    <section class="detail-card">
-      <p>No SSO providers are configured. Add providers to the <code>Sso:Providers</code> section in application settings and restart.</p>
-    </section>
-  }
-
-  <section class="detail-card">
-    <h3>Current mappings</h3>
-    <StatePanel IsLoading="_loading" LoadError="@(null)" IsEmpty="@(_mappings.Count == 0)" EmptyTitle="No group mappings" EmptyBody="Add a mapping above to link external groups to Wombat roles.">
-      @{
-        var rowNames = RowNames.Distinct(
-          _mappings,
-          row => row.Id,
-          row => $"the mapping of {row.ExternalGroupDisplayName} to {row.WombatRole}",
-          row => $" ({row.ProviderKey})",
-          row => $" ({row.ExternalGroupId})");
+    @* What an add or a delete did. It takes the focus once either is done (T234; DESIGN.md § Button system): an add
+       rebuilds its form, and a deleted mapping's row is gone. *@
+    <ActionResult @ref="_result" Id="sso-mappings-result">
+      @if (_done is { } done)
+      {
+        <Alert Kind="success"><strong>@done.Lead</strong> @done.Rest</Alert>
       }
-      <DataTable TItem="SsoGroupMappingDto" Items="_mappings" Caption="SSO group mappings">
-        <HeaderRow>
-          <tr>
-            <th>Provider</th>
-            <th>External Group</th>
-            <th>Wombat Role</th>
-            <th>Institution</th>
-            <th>Speciality</th>
-            <th>Sub-speciality</th>
-            <th><span class="visually-hidden">Actions</span></th>
-          </tr>
-        </HeaderRow>
-        <Row Context="mapping">
-          <tr>
-            <td>@mapping.ProviderKey</td>
-            <td title="@mapping.ExternalGroupId">@mapping.ExternalGroupDisplayName</td>
-            <td>@mapping.WombatRole</td>
-            <td>@mapping.InstitutionName</td>
-            <td>@mapping.SpecialityName</td>
-            <td>@mapping.SubSpecialityName</td>
-            <td>
-              @* The one pressed stays enabled while it runs, and a second press sends nothing (T234 review). *@
-              @* T239: named by the mapping, "Delete the mapping of Paediatric registrars to Trainee". *@
-              <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Delete {rowNames[mapping.Id]}")"
-                      disabled="@(_saving || (_deletingId is not null && _deletingId != mapping.Id))"
-                      aria-disabled="@InFlight.AriaDisabled(_deletingId == mapping.Id)"
-                      @onclick="() => DeleteAsync(mapping.Id)">Delete</button>
-            </td>
-          </tr>
-        </Row>
-      </DataTable>
+      @if (_refusal is not null)
+      {
+        <Alert Kind="danger">@_refusal</Alert>
+      }
+    </ActionResult>
+
+    <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="LoadAsync" FocusAfterRetry="FocusAfterRetryAsync">
+      <LoadingContent>
+        <p class="loading-line" role="status">@SsoMappingWords.LoadingLine</p>
+        <div class="detail-card" aria-hidden="true">
+          <div class="skeleton skel-title"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line skel-short"></div>
+        </div>
+      </LoadingContent>
+      <ChildContent>
+        @if (_providers.Count == 0)
+        {
+          @NotSetUp()
+        }
+        else
+        {
+          @Form()
+          @LiveMappings()
+        }
+        @if (GoneMappings.Count > 0)
+        {
+          @Gone()
+        }
+      </ChildContent>
     </StatePanel>
-  </section>
+  }
 </div>
-}
+
+<ConfirmDialog @ref="_deleteDialog"
+               Title="@SsoMappingWords.DeleteTitle"
+               CancelLabel="@SsoMappingWords.DeleteKeep"
+               ConfirmLabel="@(_deleting is null ? "Delete" : SsoMappingWords.DeleteConfirm(_deleting.ExternalGroupDisplayName))"
+               DangerAction="true"
+               OnConfirm="DeleteAsync">
+  <BodyContent>
+    @if (_deleting is { } deleting)
+    {
+      var role = SsoMappingWords.Role(deleting);
+      <p>Delete the mapping of <strong>@deleting.ExternalGroupDisplayName</strong> to <strong>@role</strong> (@SsoMappingWords.Scope(deleting))?</p>
+      <p>@SsoMappingWords.NoLongerGives(deleting.ExternalGroupDisplayName, role)</p>
+      <p>@SsoMappingWords.ScopeStays</p>
+    }
+  </BodyContent>
+</ConfirmDialog>
 
 @code {
-  // Administrator cannot be SSO-assigned, and Trainee and PendingTrainee are admission's alone (T333): none is offered.
-  private static readonly string[] _assignableRoles =
-  [
-    WombatRoles.InstitutionalAdmin,
-    WombatRoles.SpecialityAdmin,
-    WombatRoles.SubSpecialityAdmin,
-    WombatRoles.Coordinator,
-    WombatRoles.CommitteeMember,
-    WombatRoles.Assessor
-  ];
+  private RenderFragment NotSetUp() => __builder =>
+  {
+    @if (_isAdministrator)
+    {
+      @* O02: the Administrator's, as built: the setting's name, which is his to change. *@
+      <section class="detail-card" id="sso-not-configured" tabindex="-1">
+        <p>No SSO providers are configured. Add providers to the <code>Sso:Providers</code> section in application settings and restart.</p>
+      </section>
+    }
+    else
+    {
+      @* O01 (Q11, T326): in her terms, with nothing to do on the page until a provider is set up. *@
+      <section class="detail-card not-set-up" aria-labelledby="sso-not-set-up-heading">
+        <h2 id="sso-not-set-up-heading" tabindex="-1"><Icon Name="key-round" />@SsoMappingWords.NotSetUpHeading</h2>
+        <p>@SsoMappingWords.NotSetUpFor(InstitutionName)</p>
+        <p>@SsoMappingWords.NotSetUpUntilThen</p>
+      </section>
+    }
+  };
+
+  private RenderFragment Form() => __builder =>
+  {
+    <EditForm Model="_model" OnSubmit="CreateAsync" FormName="create-sso-mapping" class="form-container" novalidate
+              aria-labelledby="sso-add-heading">
+      <h2 id="sso-add-heading" tabindex="-1">@SsoMappingWords.AddHeading</h2>
+      <p class="field-help">@SsoMappingWords.FormHelp</p>
+
+      <div class="form-grid">
+        @if (_providers.Count == 1)
+        {
+          @* M8: one provider is a read-out, not a select of one. *@
+          <dl class="form-group">
+            <dt>Provider</dt>
+            <dd class="readonly-value">@ProviderName(_providers[0])</dd>
+            <dd class="field-help">@SsoMappingWords.OneProviderFor(InstitutionNameOf(_providers[0]))</dd>
+          </dl>
+        }
+        else
+        {
+          <div class="form-group">
+            <label for="@ProviderId">Provider<span class="required-mark" aria-hidden="true"> *</span></label>
+            <select id="@ProviderId" class="@InputClass(ProviderId, "form-select")" aria-required="true"
+                    aria-invalid="@Invalid(ProviderId)" aria-describedby="@MessageIdIf(ProviderId)"
+                    @bind="_model.ProviderKey" @bind:after="ProviderChanged">
+              @foreach (var provider in _providers)
+              {
+                <option value="@provider.Key">@ProviderName(provider)</option>
+              }
+            </select>
+            @FieldMessage(ProviderId)
+          </div>
+        }
+
+        <div class="form-group">
+          <label for="@GroupId">External group ID<span class="required-mark" aria-hidden="true"> *</span></label>
+          <input id="@GroupId" class="@InputClass(GroupId, "form-control")" aria-required="true" autocomplete="off"
+                 spellcheck="false" aria-invalid="@Invalid(GroupId)" aria-describedby="@MessageIdIf(GroupId)"
+                 @bind="_model.ExternalGroupId" @bind:after="() => ClearField(GroupId)" />
+          @FieldMessage(GroupId)
+        </div>
+
+        <div class="form-group">
+          <label for="@GroupNameId">Group display name<span class="required-mark" aria-hidden="true"> *</span></label>
+          <input id="@GroupNameId" class="@InputClass(GroupNameId, "form-control")" aria-required="true" autocomplete="off"
+                 aria-invalid="@Invalid(GroupNameId)" aria-describedby="@MessageIdIf(GroupNameId)"
+                 @bind="_model.ExternalGroupDisplayName" @bind:after="() => ClearField(GroupNameId)" />
+          @FieldMessage(GroupNameId)
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="@RoleId">Wombat role<span class="required-mark" aria-hidden="true"> *</span></label>
+          <select id="@RoleId" class="@InputClass(RoleId, "form-select")" aria-required="true"
+                  aria-invalid="@Invalid(RoleId)" aria-describedby="@DescribedBy(RoleId, RoleHelpId)"
+                  @bind="_model.WombatRole" @bind:after="RoleChanged">
+            <option value="">@SsoMappingWords.ChooseARole</option>
+            @foreach (var role in OfferedRoles)
+            {
+              <option value="@role">@WombatRoleLabels.For(role)</option>
+            }
+          </select>
+          @FieldMessage(RoleId)
+          <p id="@RoleHelpId" class="field-help">@SsoMappingWords.RoleHelp</p>
+        </div>
+
+        @* T288: a mapping applies only at its provider's institution, so the institution is the provider's, read out. *@
+        <dl class="form-group">
+          <dt>Institution</dt>
+          <dd id="@InstitutionId" class="readonly-value">@InstitutionNameOf(ChosenProvider)</dd>
+        </dl>
+      </div>
+
+      @if (UsesSpeciality)
+      {
+        <div class="form-grid">
+          @ScopeFields()
+        </div>
+      }
+
+      <FormActions>
+        @* Not disabled while its add runs (T234): it has the focus. A second press sends nothing, and aria-disabled says
+           so. Disabled while a delete runs. *@
+        <button type="submit" class="btn btn-primary" disabled="@(_deletingId is not null)"
+                aria-disabled="@InFlight.AriaDisabled(_saving)"><Icon Name="plus" />Add mapping</button>
+      </FormActions>
+    </EditForm>
+  };
+
+  /// <summary>
+  /// S4: Speciality, then Sub-speciality, once the role needs them, from what the institution has adopted. One choice is a
+  /// read-out (M8, O04b), more a select; Coordinator and Committee member may be kept to a speciality or left at Any.
+  /// </summary>
+  private RenderFragment ScopeFields() => __builder =>
+  {
+    var institution = InstitutionNameOf(ChosenProvider);
+    var specialityFixed = SpecialityIsFixed;
+    var subFixed = UsesSubSpeciality && SubSpecialityIsFixed;
+
+    @if (specialityFixed)
+    {
+      <dl class="form-group">
+        <dt>Speciality</dt>
+        <dd id="@SpecialityId" class="readonly-value">@_specialities[0].Name</dd>
+        @if (!subFixed)
+        {
+          <dd class="field-help">@SsoMappingWords.OnlySpecialityAdopted(institution)</dd>
+        }
+      </dl>
+    }
+    else
+    {
+      <div class="form-group">
+        <label for="@SpecialityId">Speciality@if (NeedsSpeciality){<span class="required-mark" aria-hidden="true"> *</span>}</label>
+        <select id="@SpecialityId" class="@InputClass(SpecialityId, "form-select")" aria-required="@(NeedsSpeciality ? "true" : null)"
+                aria-invalid="@Invalid(SpecialityId)" aria-describedby="@MessageIdIf(SpecialityId)"
+                @bind="_model.SpecialityId" @bind:after="SpecialityChanged">
+          <option value="">@(NeedsSpeciality ? "Choose a speciality" : SsoMappingWords.AnySpeciality)</option>
+          @foreach (var speciality in _specialities)
+          {
+            <option value="@speciality.Id">@speciality.Name</option>
+          }
+        </select>
+        @FieldMessage(SpecialityId)
+      </div>
+    }
+
+    @if (UsesSubSpeciality)
+    {
+      @if (subFixed)
+      {
+        var only = SubSpecialitiesOffered[0];
+        <dl class="form-group">
+          <dt>Sub-speciality</dt>
+          <dd id="@SubSpecialityId" class="readonly-value">@only.Name</dd>
+          <dd class="field-help">@(specialityFixed
+            ? SsoMappingWords.OnlyOnesAdopted(institution)
+            : SsoMappingWords.OnlySubSpecialityAdopted(institution, SpecialityName(only.SpecialityId)))</dd>
+        </dl>
+      }
+      else
+      {
+        <div class="form-group">
+          <label for="@SubSpecialityId">Sub-speciality<span class="required-mark" aria-hidden="true"> *</span></label>
+          <select id="@SubSpecialityId" class="@InputClass(SubSpecialityId, "form-select")" aria-required="true"
+                  aria-invalid="@Invalid(SubSpecialityId)" aria-describedby="@MessageIdIf(SubSpecialityId)"
+                  @bind="_model.SubSpecialityId" @bind:after="() => ClearField(SubSpecialityId)">
+            <option value="">Choose a sub-speciality</option>
+            @foreach (var subSpeciality in SubSpecialitiesOffered)
+            {
+              <option value="@subSpeciality.Id">@subSpeciality.Name</option>
+            }
+          </select>
+          @FieldMessage(SubSpecialityId)
+        </div>
+      }
+    }
+  };
+
+  private RenderFragment LiveMappings() => __builder =>
+  {
+    var live = LiveMappingsList;
+    <section class="list-section" aria-labelledby="sso-live-heading">
+      <h2 id="sso-live-heading" class="list-section-title">@SsoMappingWords.LiveHeading <span class="inv-count">@live.Count</span></h2>
+      @if (live.Count == 0)
+      {
+        <div class="detail-card detail-card--empty detail-card--empty-compact">
+          <p class="state-panel-copy">@SsoMappingWords.Empty</p>
+        </div>
+      }
+      else
+      {
+        @MappingTable(live, SsoMappingWords.LiveCaption(_isAdministrator ? null : InstitutionName), deletable: true)
+      }
+    </section>
+  };
+
+  private RenderFragment Gone() => __builder =>
+  {
+    var gone = GoneMappings;
+    <section class="list-section" aria-labelledby="sso-gone-heading">
+      <h2 id="sso-gone-heading" class="list-section-title">@SsoMappingWords.GoneHeading <span class="inv-count">@gone.Count</span></h2>
+      @MappingTable(gone, SsoMappingWords.GoneCaption(InstitutionName, _isAdministrator), deletable: _isAdministrator)
+    </section>
+  };
+
+  /// <summary>
+  /// A stack-wide table of mappings (S20): the group over its id as the row header (no .col-wrap, check Left 3), the
+  /// provider, the role over its scope, the institution for the Administrator, and Delete… or why there is none.
+  /// </summary>
+  private RenderFragment MappingTable(IReadOnlyList<SsoGroupMappingDto> rows, string caption, bool deletable) => __builder =>
+  {
+    var rowNames = RowNames.Distinct(
+      rows,
+      row => row.Id,
+      row => $"the mapping of {row.ExternalGroupDisplayName} to {SsoMappingWords.Role(row)}",
+      row => $" ({SsoMappingWords.Scope(row)})",
+      row => $" ({row.ExternalGroupId})");
+    <DataTable TItem="SsoGroupMappingDto" Items="rows" StackWide="true" Caption="@caption">
+      <HeaderRow>
+        <tr role="row">
+          <th scope="col" role="columnheader">External group</th>
+          <th scope="col" role="columnheader">Provider</th>
+          <th scope="col" role="columnheader">Wombat role and scope</th>
+          @if (_isAdministrator)
+          {
+            <th scope="col" role="columnheader">Institution</th>
+          }
+          <th scope="col" role="columnheader" class="col-actions"><span class="visually-hidden">Actions</span></th>
+        </tr>
+      </HeaderRow>
+      <Row Context="mapping">
+        <tr role="row" @key="mapping.Id">
+          <th scope="row" role="rowheader"><span class="person-cell">@mapping.ExternalGroupDisplayName <span class="group-id">@mapping.ExternalGroupId</span></span></th>
+          <td role="cell" data-label="Provider">@(mapping.ProviderName ?? mapping.ProviderKey)</td>
+          <td role="cell" data-label="Wombat role and scope"><span class="person-cell">@SsoMappingWords.Role(mapping) <span>@SsoMappingWords.Scope(mapping)</span></span></td>
+          @if (_isAdministrator)
+          {
+            <td role="cell" data-label="Institution">@mapping.InstitutionName</td>
+          }
+          <td role="cell" class="col-actions">
+            <div class="actions-cell">
+              @if (deletable)
+              {
+                @* T264, S22: Delete confirms; a row's trigger is an outline button named for its row, the red one the
+                   dialog's. The one pressed stays enabled while it runs (T234 review). *@
+                <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Delete {rowNames[mapping.Id]}")"
+                        aria-haspopup="dialog"
+                        disabled="@(_saving || (_deletingId is not null && _deletingId != mapping.Id))"
+                        aria-disabled="@InFlight.AriaDisabled(_deletingId == mapping.Id)"
+                        @onclick="() => OpenDeleteAsync(mapping)"><Icon Name="trash" />Delete…</button>
+              }
+              else
+              {
+                <span class="field-help">@SsoMappingWords.GoneRowNote</span>
+              }
+            </div>
+          </td>
+        </tr>
+      </Row>
+    </DataTable>
+  };
+
+  public const string ProviderId = "mapping-provider";
+  public const string GroupId = "mapping-group-id";
+  public const string GroupNameId = "mapping-group-name";
+  public const string RoleId = "mapping-role";
+  private const string RoleHelpId = "mapping-role-help";
+  public const string InstitutionId = "mapping-institution";
+  public const string SpecialityId = "mapping-speciality";
+  public const string SubSpecialityId = "mapping-sub-speciality";
 
   private MappingFormModel _model = new();
   private string? _traineeNote;
+  private bool _isAdministrator;
 
   /// <summary>
   /// The providers a mapping may be made for: the caller's own institution's, or every one for the Administrator. A
@@ -190,21 +376,62 @@ else
   private IReadOnlyList<SpecialityDto> _specialities = [];
   private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
   private IReadOnlyList<SsoGroupMappingDto> _mappings = [];
-  private string? _statusMessage;
-  private string? _errorMessage;
+  private string? _loadError;
   private bool _loading = true;
   private bool _saving;
+
+  private Done? _done;
+  private string? _refusal;
+  private readonly Dictionary<string, string> _fieldErrors = new(StringComparer.Ordinal);
+  private string? _focusFieldId;
 
   /// <summary>The mapping whose delete has been sent and has not answered, or null. (T234 review)</summary>
   private int? _deletingId;
 
+  /// <summary>The mapping the open Delete dialog is about.</summary>
+  private SsoGroupMappingDto? _deleting;
+
+  private ConfirmDialog? _deleteDialog;
   private ActionResult? _result;
 
-  // Specialities are a national catalogue now (T091); not filtered by the selected institution.
-  private IEnumerable<SpecialityDto> FilteredSpecialities => _specialities;
+  /// <summary>A result: its bold first sentence, then the rest (O05, O08).</summary>
+  private sealed record Done(string Lead, string Rest);
 
-  private IEnumerable<SubSpecialityDto> FilteredSubSpecialities
-    => _subSpecialities.Where(entity => _model.SpecialityId.HasValue && entity.SpecialityId == _model.SpecialityId.Value);
+  /// <summary>
+  /// The roles offered (S4, Q19): the staff roles, Institutional admin the Administrator's alone. Administrator, Trainee
+  /// and Pending trainee are never offered (T333), and the command refuses each of them.
+  /// </summary>
+  private IEnumerable<string> OfferedRoles => _isAdministrator
+    ? CreateSsoGroupMappingCommandHandler.MappableRoles
+    : CreateSsoGroupMappingCommandHandler.MappableRoles.Where(role => role != WombatRoles.InstitutionalAdmin);
+
+  private IReadOnlyList<SsoGroupMappingDto> LiveMappingsList => _mappings.Where(row => !row.ProviderGone).ToList();
+
+  private IReadOnlyList<SsoGroupMappingDto> GoneMappings => _mappings.Where(row => row.ProviderGone).ToList();
+
+  private SsoProviderOptions? ChosenProvider
+    => _providers.FirstOrDefault(provider => provider.Key == _model.ProviderKey) ?? _providers.FirstOrDefault();
+
+  /// <summary>Her institution's name, from the institutions she may read (hers alone).</summary>
+  private string InstitutionName => _institutions.FirstOrDefault()?.Name ?? "your institution";
+
+  private bool NeedsSpeciality => _model.WombatRole is WombatRoles.SpecialityAdmin or WombatRoles.SubSpecialityAdmin or WombatRoles.Assessor;
+
+  private bool UsesSpeciality => NeedsSpeciality || _model.WombatRole is WombatRoles.Coordinator or WombatRoles.CommitteeMember;
+
+  private bool UsesSubSpeciality => _model.WombatRole is WombatRoles.SubSpecialityAdmin or WombatRoles.Assessor;
+
+  private bool SpecialityIsFixed => NeedsSpeciality && _specialities.Count == 1;
+
+  private IReadOnlyList<SubSpecialityDto> SubSpecialitiesOffered
+    => _subSpecialities.Where(entity => EffectiveSpecialityId is int id && entity.SpecialityId == id).ToList();
+
+  private bool SubSpecialityIsFixed => SubSpecialitiesOffered.Count == 1;
+
+  private int? EffectiveSpecialityId => SpecialityIsFixed ? _specialities[0].Id : _model.SpecialityId;
+
+  private int? EffectiveSubSpecialityId
+    => !UsesSubSpeciality ? null : SubSpecialityIsFixed ? SubSpecialitiesOffered[0].Id : _model.SubSpecialityId;
 
   protected override async Task OnInitializedAsync()
   {
@@ -217,10 +444,12 @@ else
       return;
     }
 
+    _isAdministrator = authState.User.IsAdministrator();
     var institutionId = authState.User.GetInstitutionId();
-    _providers = authState.User.IsAdministrator()
+    _providers = _isAdministrator
       ? SsoOptions.Value.Providers
       : SsoOptions.Value.Providers.Where(provider => provider.InstitutionId == institutionId).ToList();
+    _model = NewModel();
 
     await LoadAsync();
   }
@@ -228,24 +457,20 @@ else
   private async Task LoadAsync()
   {
     _loading = true;
-    _errorMessage = null;
+    _loadError = null;
 
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
-      _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
-      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery(authState.User));
+      _specialities = (await Sender.Send(new GetSpecialitiesListQuery(authState.User))).Where(entity => entity.IsActive).ToList();
+      _subSpecialities = (await Sender.Send(new GetSubSpecialitiesListQuery(authState.User))).Where(entity => entity.IsActive).ToList();
       _mappings = await Sender.Send(new ListSsoGroupMappingsQuery(authState.User));
-
-      if (_providers.Count > 0)
-      {
-        _model.ProviderKey = _providers[0].Key;
-      }
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = exception.Message;
+      Logger.LogError(exception, "The SSO mappings could not be read.");
+      _loadError = SsoMappingWords.LoadFailed;
     }
     finally
     {
@@ -253,6 +478,49 @@ else
     }
   }
 
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusFieldId is { } fieldId)
+    {
+      _focusFieldId = null;
+      await PageFocus.FocusByIdAsync(JS, fieldId);
+    }
+  }
+
+  private MappingFormModel NewModel() => new() { ProviderKey = _providers.Count > 0 ? _providers[0].Key : string.Empty };
+
+  private static string ProviderName(SsoProviderOptions provider)
+    => string.IsNullOrWhiteSpace(provider.DisplayName) ? provider.Key : provider.DisplayName;
+
+  private string InstitutionNameOf(SsoProviderOptions? provider)
+    => _institutions.FirstOrDefault(institution => institution.Id == provider?.InstitutionId)?.Name ?? InstitutionName;
+
+  private string SpecialityName(int specialityId) => _specialities.FirstOrDefault(entity => entity.Id == specialityId)?.Name ?? string.Empty;
+
+  private void ProviderChanged() => ClearField(ProviderId);
+
+  /// <summary>A change of role clears the scope chosen for the last one (S4: its fields come and go with the role).</summary>
+  private void RoleChanged()
+  {
+    _model.SpecialityId = null;
+    _model.SubSpecialityId = null;
+    ClearField(RoleId);
+    ClearField(SpecialityId);
+    ClearField(SubSpecialityId);
+  }
+
+  private void SpecialityChanged()
+  {
+    _model.SubSpecialityId = null;
+    ClearField(SpecialityId);
+    ClearField(SubSpecialityId);
+  }
+
+  /// <summary>
+  /// Add mapping. The page's own checks first, each under its field, the first focused; then the command, whose refusals
+  /// about Wombat role or Provider sit under that field (O06), and any other in the result. Added, the result takes the
+  /// focus and the form is empty again.
+  /// </summary>
   private async Task CreateAsync()
   {
     if (_saving || _deletingId is not null)
@@ -260,34 +528,42 @@ else
       return;
     }
 
-    _saving = true;
-    _errorMessage = null;
-    _statusMessage = null;
+    ClearResults();
+    if (CheckFields() is { } firstInvalid)
+    {
+      _focusFieldId = firstInvalid;
+      return;
+    }
 
+    _saving = true;
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var provider = ChosenProvider!;
+      var role = _model.WombatRole!;
+      var specialityId = UsesSpeciality ? EffectiveSpecialityId : null;
+      var subSpecialityId = EffectiveSubSpecialityId;
+      var group = _model.ExternalGroupDisplayName.Trim();
+
       await Sender.Send(new CreateSsoGroupMappingCommand(
-        _model.ProviderKey,
-        _model.ExternalGroupId,
-        _model.ExternalGroupDisplayName,
-        _model.WombatRole,
-        _model.InstitutionId ?? 0,
-        _model.SpecialityId,
-        _model.SubSpecialityId,
+        provider.Key,
+        _model.ExternalGroupId.Trim(),
+        group,
+        role,
+        provider.InstitutionId,
+        specialityId,
+        subSpecialityId,
         authState.User));
 
-      _statusMessage = $"Mapping added for group '{_model.ExternalGroupDisplayName}'.";
-      _model = new MappingFormModel
-      {
-        ProviderKey = _providers.Count > 0 ? _providers[0].Key : string.Empty
-      };
+      var scope = ScopeWords(role, specialityId, subSpecialityId, InstitutionNameOf(provider));
+      _done = new Done("Mapping added.", SsoMappingWords.AddedRest(group, WombatRoleLabels.For(role), scope));
+      _model = NewModel();
       _mappings = await Sender.Send(new ListSsoGroupMappingsQuery(authState.User));
       _result?.FocusAfterRender();
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = exception.Message;
+      ShowRefusal(exception, adding: true);
     }
     finally
     {
@@ -295,52 +571,193 @@ else
     }
   }
 
-  private async Task DeleteAsync(int mappingId)
+  /// <summary>What the result says the group gives beside the role, or null for a role kept to no speciality.</summary>
+  private string? ScopeWords(string role, int? specialityId, int? subSpecialityId, string institution)
+  {
+    if (role == WombatRoles.InstitutionalAdmin)
+    {
+      return institution;
+    }
+
+    var speciality = _specialities.FirstOrDefault(entity => entity.Id == specialityId)?.Name;
+    var subSpeciality = _subSpecialities.FirstOrDefault(entity => entity.Id == subSpecialityId)?.Name;
+    return PersonScopeWords.Disciplines(
+      speciality is null ? [] : [speciality],
+      subSpeciality is null ? [] : [subSpeciality]);
+  }
+
+  /// <summary>The page's own checks, in the form's order; the first refused field's id, or null when all pass.</summary>
+  private string? CheckFields()
+  {
+    if (string.IsNullOrWhiteSpace(_model.ExternalGroupId))
+    {
+      _fieldErrors[GroupId] = SsoMappingWords.GroupIdMissing;
+    }
+
+    if (string.IsNullOrWhiteSpace(_model.ExternalGroupDisplayName))
+    {
+      _fieldErrors[GroupNameId] = SsoMappingWords.GroupNameMissing;
+    }
+
+    if (string.IsNullOrWhiteSpace(_model.WombatRole))
+    {
+      _fieldErrors[RoleId] = SsoMappingWords.RoleMissing;
+    }
+    else if (NeedsSpeciality && EffectiveSpecialityId is null)
+    {
+      _fieldErrors[SpecialityId] = _model.WombatRole == WombatRoles.SpecialityAdmin
+        ? SsoMappingWords.SpecialityAdminNeedsSpeciality
+        : SsoMappingWords.NeedsSpecialityAndSubSpeciality;
+    }
+    else if (UsesSubSpeciality && EffectiveSubSpecialityId is null)
+    {
+      _fieldErrors[SubSpecialityId] = SsoMappingWords.NeedsSpecialityAndSubSpeciality;
+    }
+
+    return new[] { GroupId, GroupNameId, RoleId, SpecialityId, SubSpecialityId }.FirstOrDefault(_fieldErrors.ContainsKey);
+  }
+
+  private async Task OpenDeleteAsync(SsoGroupMappingDto mapping)
   {
     if (_saving || _deletingId is not null)
     {
       return;
     }
 
-    _deletingId = mappingId;
-    _errorMessage = null;
-    _statusMessage = null;
+    _deleting = mapping;
+    if (_deleteDialog is not null)
+    {
+      await _deleteDialog.ShowAsync();
+    }
+  }
+
+  private async Task DeleteAsync()
+  {
+    if (_deleting is not { } mapping || _saving || _deletingId is not null)
+    {
+      return;
+    }
+
+    _deletingId = mapping.Id;
+    ClearResults();
 
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      await Sender.Send(new DeleteSsoGroupMappingCommand(mappingId, authState.User));
-      _statusMessage = "Mapping deleted.";
+      await Sender.Send(new DeleteSsoGroupMappingCommand(mapping.Id, authState.User));
+      _done = new Done("Mapping deleted.", SsoMappingWords.DeletedRest(mapping.ExternalGroupDisplayName, SsoMappingWords.Role(mapping)));
       _mappings = await Sender.Send(new ListSsoGroupMappingsQuery(authState.User));
       _result?.FocusAfterRender();
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = exception.Message;
+      ShowRefusal(exception, adding: false);
     }
     finally
     {
       _deletingId = null;
+      _deleting = null;
     }
   }
 
+  /// <summary>
+  /// A refusal about Wombat role or Provider under that field, focused (O06, S22); any other refusal in the result; an
+  /// unexpected failure logged and said in fixed words, never the exception's (T329).
+  /// </summary>
+  private void ShowRefusal(Exception exception, bool adding)
+  {
+    if (exception is SsoMappingRefusedException { Field: SsoMappingField.Role } onRole)
+    {
+      _fieldErrors[RoleId] = onRole.Message;
+      _focusFieldId = RoleId;
+      return;
+    }
+
+    if (exception is SsoMappingRefusedException { Field: SsoMappingField.Provider } onProvider && _providers.Count > 1)
+    {
+      _fieldErrors[ProviderId] = onProvider.Message;
+      _focusFieldId = ProviderId;
+      return;
+    }
+
+    // A posted scope the institution has not adopted, or a role's need unmet (T376 build review, B3): under the select it is
+    // about while the form shows one; a read-out takes no message, so the refusal goes to the result.
+    if (exception is SsoMappingRefusedException { Field: SsoMappingField.Speciality } onSpeciality && UsesSpeciality && !SpecialityIsFixed)
+    {
+      _fieldErrors[SpecialityId] = onSpeciality.Message;
+      _focusFieldId = SpecialityId;
+      return;
+    }
+
+    if (exception is SsoMappingRefusedException { Field: SsoMappingField.SubSpeciality } onSub && UsesSubSpeciality && !SubSpecialityIsFixed)
+    {
+      _fieldErrors[SubSpecialityId] = onSub.Message;
+      _focusFieldId = SubSpecialityId;
+      return;
+    }
+
+    if (SsoMappingRefusals.IsRefusal(exception))
+    {
+      _refusal = RefusalText.Of(exception);
+    }
+    else
+    {
+      if (adding)
+      {
+        Logger.LogError(exception, "An SSO mapping could not be added.");
+      }
+      else
+      {
+        Logger.LogError(exception, "An SSO mapping could not be deleted.");
+      }
+
+      _refusal = SsoMappingWords.ActionFailed;
+    }
+
+    _result?.FocusAfterRender();
+  }
+
+  /// <summary>
+  /// A Try again that loads takes the focus to the first heading it drew, never leaving it on the body where the alert and
+  /// its button were (T376 build review, P7; flow 11's P2): Add a mapping, or the not-set-up card.
+  /// </summary>
+  private ValueTask FocusAfterRetryAsync()
+    => PageFocus.FocusByIdAsync(JS, _providers.Count > 0 ? "sso-add-heading" : _isAdministrator ? "sso-not-configured" : "sso-not-set-up-heading");
+
+  private void ClearResults()
+  {
+    _done = null;
+    _refusal = null;
+    _fieldErrors.Clear();
+  }
+
+  private void ClearField(string fieldId) => _fieldErrors.Remove(fieldId);
+
+  private RenderFragment FieldMessage(string fieldId) => __builder =>
+  {
+    if (_fieldErrors.TryGetValue(fieldId, out var message))
+    {
+      <p id="@MessageId(fieldId)" class="validation-message">@message</p>
+    }
+  };
+
+  private static string MessageId(string fieldId) => $"{fieldId}-msg";
+
+  private string? MessageIdIf(string fieldId) => _fieldErrors.ContainsKey(fieldId) ? MessageId(fieldId) : null;
+
+  private string? DescribedBy(string fieldId, string helpId)
+    => string.Join(' ', new[] { helpId, MessageIdIf(fieldId) }.Where(id => id is not null));
+
+  private string? Invalid(string fieldId) => _fieldErrors.ContainsKey(fieldId) ? "true" : null;
+
+  private string InputClass(string fieldId, string baseClass) => _fieldErrors.ContainsKey(fieldId) ? $"{baseClass} input-validation-error" : baseClass;
+
   private sealed class MappingFormModel
   {
-    [Required]
     public string ProviderKey { get; set; } = string.Empty;
-
-    [Required]
     public string ExternalGroupId { get; set; } = string.Empty;
-
-    [Required]
     public string ExternalGroupDisplayName { get; set; } = string.Empty;
-
-    [Required]
-    public string WombatRole { get; set; } = WombatRoles.InstitutionalAdmin;
-
-    [Required]
-    public int? InstitutionId { get; set; }
-
+    public string? WombatRole { get; set; }
     public int? SpecialityId { get; set; }
     public int? SubSpecialityId { get; set; }
   }

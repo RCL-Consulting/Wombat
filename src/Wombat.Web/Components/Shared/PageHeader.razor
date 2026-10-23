@@ -80,10 +80,22 @@
   /// </summary>
   [CascadingParameter] public PageDrawn? Drawn { get; set; }
 
+  /// <summary>
+  /// Where the crumb of the item the page is under leads, when it is not the item's own address (T376, flow 12, S6): the
+  /// user page's Users crumb returns to the filtered Users page it was opened from. The page passes an address it has
+  /// allow-listed (<c>PeopleLinks.SafeUsersReturn</c>); null keeps the item's.
+  /// </summary>
+  [Parameter] public string? OwnerHref { get; set; }
+
   protected override void OnParametersSet()
   {
     Drawn?.Draw(Route, Page);
     var before = NavOwners.TrailTo(Page ?? Route?.PageType, Acting?.Role, Menu);
+    if (before is { Count: > 1 } && !string.IsNullOrEmpty(OwnerHref))
+    {
+      before = [.. before.Take(before.Count - 1), before[^1] with { Href = OwnerHref }];
+    }
+
     _trail = before is null ? null : [.. before, .. Trail ?? [], new Crumb(CurrentCrumb ?? Title)];
   }
 

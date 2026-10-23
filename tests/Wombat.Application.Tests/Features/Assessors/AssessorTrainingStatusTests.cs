@@ -33,12 +33,9 @@ public sealed class AssessorTrainingStatusTests
         var dto = await handler.Handle(
             new CreateOrUpdateAssessorProfileCommand(
                 "assessor-1",
-                "MBChB, FCP(SA)",
-                1,
-                SpecialityId: null,
-                SubSpecialityId: null,
                 TrainingStatus: AssessorTrainingStatus.Trained,
                 TrainingCompletedOn: completedOn,
+                Qualifications: "MBChB, FCP(SA)",
                 Principal: TestPrincipals.Administrator()),
             CancellationToken.None);
 
@@ -71,12 +68,9 @@ public sealed class AssessorTrainingStatusTests
         var dto = await handler.Handle(
             new CreateOrUpdateAssessorProfileCommand(
                 "assessor-1",
-                "MBChB",
-                1,
-                SpecialityId: null,
-                SubSpecialityId: null,
                 TrainingStatus: AssessorTrainingStatus.InTraining,
                 TrainingCompletedOn: new DateOnly(2026, 2, 14),
+                Qualifications: "MBChB",
                 Principal: TestPrincipals.Administrator()),
             CancellationToken.None);
 
@@ -85,7 +79,7 @@ public sealed class AssessorTrainingStatusTests
     }
 
     [Fact]
-    public async Task GetById_ExposesTrainingCompletedOn()
+    public async Task TheTrainingRead_ExposesTrainingCompletedOn()
     {
         await using var db = CreateDb();
         Seed(db);
@@ -103,10 +97,11 @@ public sealed class AssessorTrainingStatusTests
             "assessor-2", "b@example.org", "Bea", "Assessor", 1,
             Array.Empty<int>(), Array.Empty<int>(), new[] { WombatRoles.Assessor }));
 
-        var handler = new GetAssessorProfileByIdQueryHandler(db, users);
-        var dto = await handler.Handle(new GetAssessorProfileByIdQuery(5, TestPrincipals.Administrator()), CancellationToken.None);
+        // T376 (lane T): the user page's training section reads the record by the person, not by the profile's id.
+        var handler = new GetAssessorTrainingQueryHandler(db, users);
+        var dto = await handler.Handle(new GetAssessorTrainingQuery("assessor-2", TestPrincipals.Administrator()), CancellationToken.None);
 
-        dto.TrainingCompletedOn.Should().Be(new DateOnly(2025, 9, 1));
+        dto!.TrainingCompletedOn.Should().Be(new DateOnly(2025, 9, 1));
     }
 
     [Fact]
@@ -123,8 +118,9 @@ public sealed class AssessorTrainingStatusTests
             new UserIdentityDetails("a1", "a1@x", "Alpha", "One", 1, Array.Empty<int>(), Array.Empty<int>(), new[] { WombatRoles.Assessor }),
             new UserIdentityDetails("a2", "a2@x", "Beta", "Two", 1, Array.Empty<int>(), Array.Empty<int>(), new[] { WombatRoles.Assessor }));
 
-        var handler = new ListAssessorsForSpecialityQueryHandler(db, users);
-        var dtos = await handler.Handle(new ListAssessorsForSpecialityQuery(TestPrincipals.Administrator()), CancellationToken.None);
+        // T376 (lane T, Q2): the list is of every Assessor holder, each joined to their record.
+        var handler = new ListAssessorsQueryHandler(db, users);
+        var dtos = (await handler.Handle(new ListAssessorsQuery(TestPrincipals.Administrator()), CancellationToken.None)).Rows;
 
         dtos.Should().HaveCount(2);
         dtos.Single(d => d.UserId == "a1").TrainingCompletedOn.Should().Be(new DateOnly(2025, 5, 5));

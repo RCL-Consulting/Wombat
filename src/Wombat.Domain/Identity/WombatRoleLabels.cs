@@ -31,4 +31,32 @@ public static class WombatRoleLabels
         ArgumentNullException.ThrowIfNull(role);
         return All.TryGetValue(role, out var label) ? label : role;
     }
+
+    /// <summary>
+    /// The roles held, in <see cref="WombatRoles.All" />'s order, each once: one order on every page that lists a person's
+    /// roles (T376, flow 12: Users' Roles cell, the user page's Roles and scope; build-contracts § 0). A key that names no
+    /// role sorts last, ordinally. Keys, not labels: a page prints each through <see cref="For" />.
+    /// </summary>
+    public static IReadOnlyList<string> InOrder(IEnumerable<string> roles)
+    {
+        ArgumentNullException.ThrowIfNull(roles);
+        return roles
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(Rank)
+            .ThenBy(role => role, StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private static int Rank(string role)
+    {
+        for (var index = 0; index < WombatRoles.All.Count; index++)
+        {
+            if (string.Equals(WombatRoles.All[index], role, StringComparison.Ordinal))
+            {
+                return index;
+            }
+        }
+
+        return int.MaxValue;
+    }
 }

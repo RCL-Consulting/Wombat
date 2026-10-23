@@ -3,6 +3,7 @@ using FluentAssertions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Users.Commands.AddRoleToUser;
 using Wombat.Application.Features.Users.Commands.RemoveRoleFromUser;
+using Wombat.Application.Features.Users.Commands.RemoveUserInstitutionalSignIn;
 using Wombat.Application.Features.Users.Commands.ResetUserPassword;
 using Wombat.Application.Features.Users.Commands.SetUserLockout;
 using Wombat.Application.Tests.TestHelpers;
@@ -35,14 +36,17 @@ public sealed class UserCommandsExistenceTests
         var users = Store();
         var caller = TestPrincipals.InstitutionalAdmin(InstitutionA);
 
-        (await Refusal(() => new AddRoleToUserCommandHandler(users).Handle(
-            new AddRoleToUserCommand(userId, WombatRoles.Assessor, caller), CancellationToken.None))).Should().Be(MayNotModify);
+        (await Refusal(() => new AddRoleToUserCommandHandler(users, UsersTestDb.Empty()).Handle(
+            new AddRoleToUserCommand(userId, WombatRoles.Assessor, null, null, caller), CancellationToken.None))).Should().Be(MayNotModify);
         (await Refusal(() => new RemoveRoleFromUserCommandHandler(users).Handle(
             new RemoveRoleFromUserCommand(userId, WombatRoles.Assessor, caller), CancellationToken.None))).Should().Be(MayNotModify);
         (await Refusal(() => new SetUserLockoutCommandHandler(users).Handle(
             new SetUserLockoutCommand(userId, true, caller), CancellationToken.None))).Should().Be(MayNotModify);
         (await Refusal(() => new ResetUserPasswordCommandHandler(users).Handle(
             new ResetUserPasswordCommand(userId, "a-long-new-password", caller), CancellationToken.None))).Should().Be(MayNotReset);
+        // T376, F7: another person's institutional sign-in, by the same rule.
+        (await Refusal(() => new RemoveUserInstitutionalSignInCommandHandler(users).Handle(
+            new RemoveUserInstitutionalSignInCommand(userId, "kgk-sso", caller), CancellationToken.None))).Should().Be(MayNotModify);
 
         users.Changes.Should().Be(0);
     }
@@ -51,8 +55,8 @@ public sealed class UserCommandsExistenceTests
     public async Task AnAdministrator_IsToldThatAnIdNamesNobody()
     {
         var users = Store();
-        var act = () => new AddRoleToUserCommandHandler(users).Handle(
-            new AddRoleToUserCommand(Nobody, WombatRoles.Assessor, TestPrincipals.Administrator()), CancellationToken.None);
+        var act = () => new AddRoleToUserCommandHandler(users, UsersTestDb.Empty()).Handle(
+            new AddRoleToUserCommand(Nobody, WombatRoles.Assessor, null, null, TestPrincipals.Administrator()), CancellationToken.None);
 
         (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be("The user could not be found.");
     }
@@ -61,12 +65,21 @@ public sealed class UserCommandsExistenceTests
     public async Task AnInstitutionalAdmin_StillChangesSomeoneAtTheirOwnInstitution()
     {
         var users = Store();
-        await new AddRoleToUserCommandHandler(users).Handle(
-            new AddRoleToUserCommand("someone-at-a", WombatRoles.Assessor, TestPrincipals.InstitutionalAdmin(InstitutionA)),
+        await new AddRoleToUserCommandHandler(users, UsersTestDb.Empty()).Handle(
+            new AddRoleToUserCommand("someone-at-a", WombatRoles.CommitteeMember, null, null, TestPrincipals.InstitutionalAdmin(InstitutionA)),
             CancellationToken.None);
 
-        users.AddRoleCalls.Should().Equal(("someone-at-a", WombatRoles.Assessor));
+        users.AddRoleCalls.Should().Equal(("someone-at-a", WombatRoles.CommitteeMember));
     }
+
+    /// <summary>
+    /// Q9 (T376, flow 12): the user page's Pending invitations card went, and its command with it: Invitations lists and
+    /// revokes every invitation, and one to an address an account holds can be neither issued nor accepted.
+    /// </summary>
+    [Fact]
+    public void RevokingAnEmailsPendingInvitations_IsNoLongerAUsersCommand()
+        => typeof(RemoveRoleFromUserCommand).Assembly.GetTypes()
+            .Should().NotContain(type => type.Name.StartsWith("RevokePendingInvitationsForEmail", StringComparison.Ordinal));
 
     private static async Task<string> Refusal(Func<Task> act)
         => (await act.Should().ThrowAsync<UnauthorizedAccessException>()).Which.Message;

@@ -10,27 +10,31 @@ using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.Assessors;
 
+/// <summary>
+/// Records one assessor's training (T376, flow 12, M1, F4): the status, its completion date and the qualifications, and
+/// nothing else. The institution is the person's own, written onto the profile at every save; the command asks for no
+/// institution, speciality or sub-speciality and writes no scope, since an assessor's discipline is the person's scope
+/// (Q12), kept on the user page (Add a role). Until T376 the save took the form's scope ids and passed them to
+/// <c>UpdateScopeAsync</c>, which replaces the person's whole scope and changes their security stamp: saving training for a
+/// Committee member who was also an Assessor would have stripped her speciality and signed her out.
+/// </summary>
 public sealed record CreateOrUpdateAssessorProfileCommand(
     string UserId,
-    string Qualifications,
-    int InstitutionId,
-    int? SpecialityId,
-    int? SubSpecialityId,
     AssessorTrainingStatus TrainingStatus,
     DateOnly? TrainingCompletedOn,
+    string Qualifications,
     ClaimsPrincipal Principal) : IRequest<AssessorProfileDto>;
 
 public sealed class CreateOrUpdateAssessorProfileCommandValidator : AbstractValidator<CreateOrUpdateAssessorProfileCommand>
 {
     public CreateOrUpdateAssessorProfileCommandValidator()
     {
+        // The words are the training section's (T376, lane T, T05), so a refusal never names a property (T324).
         RuleFor(command => command.UserId).NotEmpty();
-        RuleFor(command => command.Qualifications).NotEmpty().MaximumLength(4000);
-        RuleFor(command => command.InstitutionId).GreaterThan(0);
-        RuleFor(command => command.TrainingStatus).IsInEnum();
-        RuleFor(command => command.SubSpecialityId)
-            .Must((command, subSpecialityId) => !subSpecialityId.HasValue || command.SpecialityId.HasValue)
-            .WithMessage("A sub-speciality requires a speciality.");
+        RuleFor(command => command.Qualifications)
+            .NotEmpty().WithMessage(AssessorTrainingWords.TypeQualifications)
+            .MaximumLength(4000).WithMessage("Keep the qualifications to 4,000 characters.");
+        RuleFor(command => command.TrainingStatus).IsInEnum().WithMessage(AssessorTrainingWords.ChooseStatus);
         // Note: a completion date is only meaningful for Provisional/Trained; rather than
         // rejecting a stale value (the edit form hides the field for other statuses), the
         // handler normalizes it away. See CreateOrUpdateAssessorProfileCommandHandler.
@@ -48,81 +52,58 @@ public sealed class CreateOrUpdateAssessorProfileCommandHandler : IRequestHandle
         _userAdministrationService = userAdministrationService;
     }
 
-    /// <summary>
-    /// The refusal to record a profile at an institution the assessor does not belong to. (T289)
-    /// </summary>
-    public const string AssessorAtAnotherInstitution =
-        "An assessor's profile is recorded at the assessor's own institution. Move the user to another institution from " +
-        "Users first.";
+    /// <summary>The refusal to record your own training (T376, M1: the Users surface changes nobody's own account, T278).</summary>
+    public const string OwnTrainingRefused = "You cannot record your own assessor training.";
+
+    /// <summary>The refusal for an id that names nobody the caller may change (T289; T290's one refusal for both).</summary>
+    public const string AssessorNotInScope = "You do not have permission to manage this assessor.";
+
+    /// <summary>The refusal for an account that belongs to no institution, so has nowhere to record a profile (T376, M1).</summary>
+    public const string AssessorHasNoInstitution =
+        "This person belongs to no institution, so no assessor training can be recorded.";
+
+    /// <summary>The refusal for a person who does not hold Assessor.</summary>
+    public const string NotAnAssessor = "Only users in the Assessor role can have an assessor profile.";
 
     /// <remarks>
     /// <para>
     /// <b>A trainee first</b> (<see cref="UserAdministrationRules.DemandUserAdministration" />, T278), asked before
-    /// anything is looked up: the save writes the user's scope, and until T289 a registrar who also administered could
-    /// move their own panel's chair to another discipline and stall their own review.
+    /// anything is looked up; then <b>not the caller</b> (<see cref="UserAdministrationRules.DemandNotCaller" />); then
+    /// <b>in scope</b> (<see cref="UserAdministrationRules.DemandInScope" />, T289): an id outside the caller's institution
+    /// is refused as one that names nobody.
     /// </para>
     /// <para>
-    /// <b>The assessor's own institution</b>, for every caller, the Administrator included (T289). The scope write sets
-    /// the user's institution, and a move between institutions drops their external logins, so a form value naming
-    /// another institution must not move anyone: an id outside the caller's institution is refused as one that names
-    /// nobody (<see cref="UserAdministrationRules.DemandInScope" />), and an in-scope user is refused a profile anywhere
-    /// but where they are. A move is Users' to make.
+    /// <b>No scope is written</b> (M1): no <c>UpdateScopeAsync</c>, so neither the person's scope nor their security stamp
+    /// changes. The profile's institution is stamped from the person's own (F4), so a person moved by Users carries their
+    /// profile with them at the next save; T289's refusal of a form value naming another institution has nothing left to
+    /// refuse, since no form names one.
     /// </para>
     /// </remarks>
     public async Task<AssessorProfileDto> Handle(CreateOrUpdateAssessorProfileCommand request, CancellationToken cancellationToken)
     {
         UserAdministrationRules.DemandUserAdministration(request.Principal);
-
-        if (!request.Principal.CanAccessInstitution(request.InstitutionId))
-        {
-            throw new UnauthorizedAccessException("You do not have permission to manage assessors in that institution.");
-        }
+        UserAdministrationRules.DemandNotCaller(request.Principal, request.UserId, OwnTrainingRefused);
 
         var user = UserAdministrationRules.DemandInScope(
             request.Principal,
             await _userAdministrationService.GetByIdAsync(request.UserId, cancellationToken),
-            "You do not have permission to manage this assessor.");
+            AssessorNotInScope);
 
-        if (user.InstitutionId != request.InstitutionId)
+        // Typed (T376, lane T): the section words each from its reason, never from this message.
+        if (user.InstitutionId is not int institutionId)
         {
-            throw new InvalidOperationException(AssessorAtAnotherInstitution);
+            throw new AssessorTrainingRefusedException(AssessorTrainingRefusal.NoInstitution, AssessorHasNoInstitution);
         }
 
         if (!user.Roles.Contains(WombatRoles.Assessor, StringComparer.Ordinal))
         {
-            throw new InvalidOperationException("Only users in the Assessor role can have an assessor profile.");
+            throw new AssessorTrainingRefusedException(AssessorTrainingRefusal.NotAnAssessor, NotAnAssessor);
         }
 
         var institution = await _dbContext.Set<Institution>()
             .AsNoTracking()
-            .SingleOrDefaultAsync(entity => entity.Id == request.InstitutionId, cancellationToken)
-            ?? throw new InvalidOperationException("The selected institution could not be found.");
-
-        Speciality? speciality = null;
-        if (request.SpecialityId.HasValue)
-        {
-            speciality = await _dbContext.Set<Speciality>()
-                .AsNoTracking()
-                .SingleOrDefaultAsync(entity => entity.Id == request.SpecialityId.Value, cancellationToken)
-                ?? throw new InvalidOperationException("The selected speciality could not be found.");
-
-            // Specialities are national now (T091); the assessor's speciality denotes a discipline, not an
-            // institution tie, so no institution-consistency check is required.
-        }
-
-        SubSpeciality? subSpeciality = null;
-        if (request.SubSpecialityId.HasValue)
-        {
-            subSpeciality = await _dbContext.Set<SubSpeciality>()
-                .AsNoTracking()
-                .SingleOrDefaultAsync(entity => entity.Id == request.SubSpecialityId.Value, cancellationToken)
-                ?? throw new InvalidOperationException("The selected sub-speciality could not be found.");
-
-            if (!request.SpecialityId.HasValue || subSpeciality.SpecialityId != request.SpecialityId.Value)
-            {
-                throw new InvalidOperationException("The selected sub-speciality does not belong to the selected speciality.");
-            }
-        }
+            .SingleOrDefaultAsync(entity => entity.Id == institutionId, cancellationToken)
+            ?? throw new InvalidOperationException("The assessor's institution could not be found.");
 
         var profile = await _dbContext.Set<AssessorProfile>()
             .SingleOrDefaultAsync(entity => entity.UserId == request.UserId, cancellationToken);
@@ -136,15 +117,9 @@ public sealed class CreateOrUpdateAssessorProfileCommandHandler : IRequestHandle
 
             _dbContext.Set<AssessorProfile>().Add(profile);
         }
-        else if (!request.Principal.CanAccessInstitution(profile.InstitutionId))
-        {
-            throw new UnauthorizedAccessException("You do not have permission to update this assessor profile.");
-        }
 
         profile.Qualifications = request.Qualifications.Trim();
-        profile.InstitutionId = request.InstitutionId;
-        profile.SpecialityId = request.SpecialityId;
-        profile.SubSpecialityId = request.SubSpecialityId;
+        profile.InstitutionId = institutionId;
         profile.TrainingStatus = request.TrainingStatus;
         profile.TrainingCompletedOn =
             request.TrainingStatus is AssessorTrainingStatus.Provisional or AssessorTrainingStatus.Trained
@@ -152,13 +127,6 @@ public sealed class CreateOrUpdateAssessorProfileCommandHandler : IRequestHandle
                 : null;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
-
-        await _userAdministrationService.UpdateScopeAsync(
-            request.UserId,
-            request.InstitutionId,
-            request.SpecialityId.HasValue ? [request.SpecialityId.Value] : [],
-            request.SubSpecialityId.HasValue ? [request.SubSpecialityId.Value] : [],
-            cancellationToken);
 
         return new AssessorProfileDto(
             profile.Id,
@@ -169,10 +137,6 @@ public sealed class CreateOrUpdateAssessorProfileCommandHandler : IRequestHandle
             profile.Qualifications,
             institution.Id,
             institution.Name,
-            speciality?.Id,
-            speciality?.Name,
-            subSpeciality?.Id,
-            subSpeciality?.Name,
             profile.TrainingStatus,
             profile.TrainingCompletedOn);
     }

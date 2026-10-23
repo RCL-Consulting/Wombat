@@ -1,0 +1,427 @@
+@using Wombat.Domain.Identity
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject ILogger<AssessorTrainingSection> Logger
+
+@*
+  T376 (flow 12), lane T: the user page's "Assessor training" section (Q1, Q2, M1; boards T03–T07, S10), a component of its
+  own so the user page (lane P) and the training section (lane T) are built side by side in one wave. Lane P mounts it on
+  /admin/users/{UserId}, between "Roles and scope" and "Sign-in and access", with the parameters below; this component
+  writes everything it renders, the read it makes (GetAssessorTrainingQuery) and the save
+  (CreateOrUpdateAssessorProfileCommand, training only: it asks no institution or speciality and writes no scope, M1).
+
+  The contract (build-contracts § 0; lane T added no parameter):
+  - UserId: the person the page shows.
+  - PersonName: "Thandi Zulu", as the page's h1 writes it (the section's words name the person).
+  - HoldsAssessor: whether the person holds Assessor now, from the page's own read. False hides the section (Q18: the
+    record is kept, not deleted, and shown again with the role), unless Open is true, when the section says once why
+    there is nothing here (S10).
+  - Open: the page was opened with ?section=training (PeopleLinks.TrainingSection): the section opens its note panel and
+    takes the focus, on its first radio (T03). Read by lane P from the query string; any other section value is false.
+  - OnActed: raised when the section starts an action (opening, saving, cancelling), so the page can clear its own result:
+    one result on the page at a time. Optional.
+  - PageResultVersion: bumped by the page whenever its own action starts or says a result; the section then clears its
+    own result, so the two never stand together (T376 build review, P9). Optional.
+
+  The form is a note panel (F11, M9, M10): its trigger, Record training or Edit training, has aria-expanded, and
+  aria-controls only while the panel exists; the panel is not a group, its fieldset is. A refusal is said under its field,
+  the field marked on its inputs (check Left 4: aria-invalid on each radio and on the qualifications, never the fieldset)
+  and the group by .choice-group.is-invalid, and the focus goes to the first refused field, with no summary (S22). The
+  saved result is said in the section, focused, its first sentence bold (T04, T07).
+*@
+
+@if (HoldsAssessor)
+{
+  <section class="detail-card user-section" aria-labelledby="@HeadingId">
+    <h2 id="@HeadingId" tabindex="-1">Assessor training</h2>
+
+    <ActionResult @ref="_result" Id="@ResultId">
+      @if (_saved is { } saved)
+      {
+        <Alert Kind="success"><strong>@AssessorTrainingWords.SavedLead(PersonName)</strong> @AssessorTrainingWords.SavedWhat(saved.Status, saved.CompletedOn)</Alert>
+      }
+      @if (_refusal is not null)
+      {
+        <Alert Kind="danger">@_refusal</Alert>
+      }
+    </ActionResult>
+
+    <StatePanel @ref="_panel" IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusAfterRetryAsync">
+      <LoadingContent>
+        <p class="loading-line" role="status">Loading the assessor training.</p>
+      </LoadingContent>
+      <ChildContent>
+        @Body()
+      </ChildContent>
+    </StatePanel>
+  </section>
+}
+else if (Open)
+{
+  @* S10: the page was opened for a training section this person has none of. Said once, in the section's place, and
+     focused in place of the first radio. *@
+  <section class="detail-card user-section" aria-labelledby="@HeadingId">
+    <h2 id="@HeadingId" tabindex="-1">Assessor training</h2>
+    <p id="@AbsentId" tabindex="-1">@AssessorTrainingWords.NotAnAssessor(PersonName)</p>
+  </section>
+}
+
+@code {
+  [Parameter, EditorRequired] public string UserId { get; set; } = string.Empty;
+
+  [Parameter, EditorRequired] public string PersonName { get; set; } = string.Empty;
+
+  [Parameter] public bool HoldsAssessor { get; set; }
+
+  [Parameter] public bool Open { get; set; }
+
+  [Parameter] public EventCallback OnActed { get; set; }
+
+  [Parameter] public int PageResultVersion { get; set; }
+
+  private int _seenPageResultVersion;
+
+  private const string HeadingId = "training-heading";
+  private const string ResultId = "training-result";
+  private const string AbsentId = "training-absent";
+  private const string TriggerId = "training-trigger";
+  private const string PanelId = "training-panel";
+  private const string StatusGroupId = "training-status";
+  private const string StatusErrorId = "training-status-error";
+  private const string StatusHelpId = "training-status-help";
+  private const string CompletedId = "training-completed";
+  private const string CompletedHelpId = "training-completed-help";
+  private const string QualificationsId = "training-qualifications";
+  private const string QualificationsErrorId = "training-qualifications-error";
+
+  /// <summary>A failed read (T329): a fixed sentence; the failure to the log.</summary>
+  private const string LoadFailed =
+    "Could not load the assessor training. Nothing has changed. Try again, or come back in a few minutes.";
+
+  /// <summary>A save that failed for no reason the handler gave (T329).</summary>
+  private const string SaveFailed =
+    "The training was not saved. Nothing has changed. Try again, or come back in a few minutes.";
+
+  private bool _loading = true;
+  private string? _loadError;
+  private string? _loadedFor;
+  private AssessorTrainingDto? _record;
+  private bool _isOwn;
+
+  private bool _panelOpen;
+  private bool _openedFromAddress;
+  private TrainingForm _form = new();
+  private string? _statusError;
+  private string? _qualificationsError;
+  private bool _saving;
+
+  private (AssessorTrainingStatus Status, DateOnly? CompletedOn)? _saved;
+  private string? _refusal;
+
+  private ActionResult? _result;
+  private StatePanel? _panel;
+  private string? _focusId;
+  private bool _focusAbsent;
+
+  private string TriggerLabel => _record is null ? "Record training" : "Edit training";
+
+  private static string StatusInputId(int index) => $"training-status-{index}";
+
+  private RenderFragment Body() => __builder =>
+  {
+    if (_record is { } record)
+    {
+      @* T04, T07: the record read out. *@
+      <dl class="detail-list">
+        <dt>Training status</dt>
+        <dd class="readonly-value">@AssessorTrainingWords.Status(record.TrainingStatus)</dd>
+        <dt>Training completed</dt>
+        <dd class="readonly-value">@AssessorTrainingWords.CompletedOn(record.TrainingCompletedOn)</dd>
+        <dt>Qualifications</dt>
+        <dd class="readonly-value">@record.Qualifications</dd>
+      </dl>
+    }
+
+    if (_isOwn)
+    {
+      @* M1, T278: nobody records their own training; the handler refuses it, so the page offers none. A standing notice. *@
+      <Alert Kind="info" Role="">@AssessorTrainingWords.OwnTraining</Alert>
+      return;
+    }
+
+    <div class="actions-cell">
+      <button type="button" id="@TriggerId" class="btn btn-outline" aria-label="@($"{TriggerLabel} for {PersonName}")"
+              aria-expanded="@(_panelOpen ? "true" : "false")" aria-controls="@(_panelOpen ? PanelId : null)"
+              @onclick="ToggleAsync">@TriggerLabel</button>
+    </div>
+
+    if (_panelOpen)
+    {
+      <div id="@PanelId" class="detail-card note-panel note-panel--form">
+        <fieldset id="@StatusGroupId" class="form-group choice-row choice-group @(_statusError is null ? null : "is-invalid")">
+          <legend>Training status<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></legend>
+          @for (var index = 0; index < AssessorTrainingWords.Statuses.Count; index++)
+          {
+            var status = AssessorTrainingWords.Statuses[index];
+            var inputId = StatusInputId(index);
+            <div class="form-check" @key="status">
+              <input class="form-check-input" type="radio" name="training-status" id="@inputId" value="@status"
+                     checked="@(_form.Status == status)" aria-invalid="@(_statusError is null ? null : "true")"
+                     aria-describedby="@(_statusError is null ? StatusHelpId : $"{StatusErrorId} {StatusHelpId}")"
+                     @onchange="() => Choose(status)" />
+              <label for="@inputId">@AssessorTrainingWords.Status(status)</label>
+            </div>
+          }
+          @if (_statusError is not null)
+          {
+            <p id="@StatusErrorId" class="validation-message">@_statusError</p>
+          }
+          <p id="@StatusHelpId" class="page-subtitle">@AssessorTrainingWords.StatusHelp</p>
+        </fieldset>
+
+        @if (_form.Status is { } chosen && AssessorTrainingWords.HasCompletion(chosen))
+        {
+          @* Only a finished status records its date (the built rule; the handler drops one sent with any other). *@
+          <div class="form-group">
+            <label for="@CompletedId">Training completed</label>
+            <input id="@CompletedId" type="date" class="form-control" aria-describedby="@CompletedHelpId"
+                   @bind="_form.CompletedOn" @bind:format="yyyy-MM-dd" />
+            <p id="@CompletedHelpId" class="field-help">@AssessorTrainingWords.CompletedOnHelp</p>
+          </div>
+        }
+
+        <div class="form-group">
+          <label for="@QualificationsId">Qualifications<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label>
+          <textarea id="@QualificationsId" class="form-control @(_qualificationsError is null ? null : "input-validation-error")" rows="2"
+                    aria-required="true" aria-invalid="@(_qualificationsError is null ? null : "true")"
+                    aria-describedby="@(_qualificationsError is null ? null : QualificationsErrorId)"
+                    @bind="_form.Qualifications"></textarea>
+          @if (_qualificationsError is not null)
+          {
+            <p id="@QualificationsErrorId" class="validation-message">@_qualificationsError</p>
+          }
+        </div>
+
+        <FormActions>
+          @* F11: a form in a note panel leaves with a quiet Cancel. The DOM has Cancel first; on a phone the actions stack
+             with the primary on top (§ 0's column-reverse). *@
+          <button type="button" class="btn btn-quiet" @onclick="CancelAsync">Cancel</button>
+          @* Not disabled while its save runs (T234): it has the focus. A second press sends nothing. *@
+          <button type="button" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_saving)" @onclick="SaveAsync">Save training</button>
+        </FormActions>
+      </div>
+    }
+  };
+
+  protected override async Task OnParametersSetAsync()
+  {
+    // P9: the page acted, so the section's result goes (one result on the page at a time).
+    if (PageResultVersion != _seenPageResultVersion)
+    {
+      _seenPageResultVersion = PageResultVersion;
+      _saved = null;
+      _refusal = null;
+    }
+
+    if (!HoldsAssessor)
+    {
+      // Q18: hidden, kept. The read is made again when the role comes back (Add role's Assessor shows it at once).
+      _loadedFor = null;
+      _panelOpen = false;
+      _saved = null;
+      _refusal = null;
+      _focusAbsent = Open && !_openedFromAddress;
+      _openedFromAddress |= Open;
+      return;
+    }
+
+    if (string.Equals(_loadedFor, UserId, StringComparison.Ordinal))
+    {
+      return;
+    }
+
+    await LoadAsync();
+
+    // T03: opened at ?section=training, the panel is open and its first radio has the focus, once.
+    if (Open && !_openedFromAddress && _loadError is null && !_isOwn)
+    {
+      _openedFromAddress = true;
+      OpenPanel();
+      _focusId = StatusInputId(0);
+    }
+  }
+
+  private async Task LoadAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    try
+    {
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      _isOwn = UserAdministrationRules.IsCaller(user, UserId);
+      _record = await Sender.Send(new GetAssessorTrainingQuery(UserId, user));
+      _loadedFor = UserId;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "A person's assessor training could not be loaded.");
+      _loadError = LoadFailed;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private Task RetryAsync() => LoadAsync();
+
+  private ValueTask FocusAfterRetryAsync() => PageFocus.FocusByIdAsync(JS, _isOwn ? HeadingId : TriggerId);
+
+  private void OpenPanel()
+  {
+    _panelOpen = true;
+    _statusError = null;
+    _qualificationsError = null;
+    _form = _record is { } record
+      ? new TrainingForm { Status = record.TrainingStatus, CompletedOn = record.TrainingCompletedOn, Qualifications = record.Qualifications }
+      : new TrainingForm();
+  }
+
+  private async Task ToggleAsync()
+  {
+    if (_panelOpen)
+    {
+      await CancelAsync();
+      return;
+    }
+
+    _saved = null;
+    _refusal = null;
+    OpenPanel();
+    _focusId = StatusInputId(0);
+    await OnActed.InvokeAsync();
+  }
+
+  private void Choose(AssessorTrainingStatus status)
+  {
+    _form.Status = status;
+    _statusError = null;
+  }
+
+  private async Task CancelAsync()
+  {
+    _panelOpen = false;
+    _statusError = null;
+    _qualificationsError = null;
+    _refusal = null;
+    // The focus goes back to the trigger that opened the panel.
+    _focusId = TriggerId;
+    await OnActed.InvokeAsync();
+  }
+
+  private async Task SaveAsync()
+  {
+    if (_saving)
+    {
+      return;
+    }
+
+    _saved = null;
+    _refusal = null;
+    _statusError = _form.Status is null ? AssessorTrainingWords.ChooseStatus : null;
+    _qualificationsError = string.IsNullOrWhiteSpace(_form.Qualifications) ? AssessorTrainingWords.TypeQualifications : null;
+    await OnActed.InvokeAsync();
+    if (FocusFirstRefusedField())
+    {
+      return;
+    }
+
+    var status = _form.Status!.Value;
+    var completedOn = AssessorTrainingWords.HasCompletion(status) ? _form.CompletedOn : null;
+    _saving = true;
+    try
+    {
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      var saved = await Sender.Send(new CreateOrUpdateAssessorProfileCommand(UserId, status, completedOn, _form.Qualifications, user));
+
+      _record = new AssessorTrainingDto(saved.Id, saved.TrainingStatus, saved.TrainingCompletedOn, saved.Qualifications);
+      _saved = (saved.TrainingStatus, saved.TrainingCompletedOn);
+      _panelOpen = false;
+      _result?.FocusAfterRender();
+    }
+    catch (FluentValidation.ValidationException validation)
+    {
+      // The validator's words, under their fields (T05's), as the page's own check says them.
+      foreach (var failure in validation.Errors)
+      {
+        if (failure.PropertyName == nameof(CreateOrUpdateAssessorProfileCommand.TrainingStatus))
+        {
+          _statusError ??= failure.ErrorMessage;
+        }
+        else if (failure.PropertyName == nameof(CreateOrUpdateAssessorProfileCommand.Qualifications))
+        {
+          _qualificationsError ??= failure.ErrorMessage;
+        }
+      }
+
+      if (!FocusFirstRefusedField())
+      {
+        _refusal = SaveFailed;
+        _result?.FocusAfterRender();
+      }
+    }
+    catch (AssessorTrainingRefusedException refused)
+    {
+      // Worded from its reason, never from the message (the audit row's).
+      _refusal = AssessorTrainingRefusedException.Words(refused.Reason, PersonName);
+      _result?.FocusAfterRender();
+    }
+    catch (UnauthorizedAccessException refused)
+    {
+      // The caller and scope refusals, in UserAdministrationRules' words, which name nobody.
+      _refusal = refused.Message;
+      _result?.FocusAfterRender();
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "A person's assessor training could not be saved.");
+      _refusal = SaveFailed;
+      _result?.FocusAfterRender();
+    }
+    finally
+    {
+      _saving = false;
+    }
+  }
+
+  /// <summary>S22: a refusal beside its field takes the focus to the first refused field; true when there was one.</summary>
+  private bool FocusFirstRefusedField()
+  {
+    _focusId = _statusError is not null ? StatusInputId(0) : _qualificationsError is not null ? QualificationsId : null;
+    return _focusId is not null;
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusAbsent)
+    {
+      _focusAbsent = false;
+      await PageFocus.FocusByIdAsync(JS, AbsentId);
+      return;
+    }
+
+    if (_focusId is { } id && !_loading)
+    {
+      _focusId = null;
+      await PageFocus.FocusByIdAsync(JS, id);
+    }
+  }
+
+  private sealed class TrainingForm
+  {
+    public AssessorTrainingStatus? Status { get; set; }
+    public DateOnly? CompletedOn { get; set; }
+    public string Qualifications { get; set; } = string.Empty;
+  }
+}

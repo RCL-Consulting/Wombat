@@ -22,8 +22,9 @@ namespace Wombat.Web.Tests.Admin;
 /// <summary>
 /// The administrator's reset card (T339, flow 02, E11; R3-CP-AdminReset): New password is a <c>PasswordField</c> in the
 /// circuit, the six rules under it before anything is typed, no 8-character rule, and a refusal that breaks a rule marks
-/// the field, which then names its own message and the refusal instead of the rules (A15). The card's other words are
-/// flow 12's.
+/// the field, which then names its own message and the refusal instead of the rules (A15). Since T376 (flow 12, P10, P11)
+/// it is Sign-in and access's Password part: Reset password is never disabled, an empty field is refused beside it, and
+/// the refusal and the result show in the part.
 /// </summary>
 public sealed class UserDetailResetCardTests : TestContext
 {
@@ -57,6 +58,19 @@ public sealed class UserDetailResetCardTests : TestContext
     }
 
     [Fact]
+    public void F3_AnAccountThatMayNotUseAPassword_IsOfferedNone()
+    {
+        _sender.SsoOnly = true;
+        SetRendererInfo(new RendererInfo("Server", isInteractive: true));
+        var cut = RenderComponent<UserDetail>(parameters => parameters.Add(page => page.UserId, "user-9"));
+        cut.WaitForState(() => cut.FindAll(".section-part").Count > 0);
+
+        cut.FindAll("#reset-password-input").Should().BeEmpty();
+        cut.FindAll("button").Should().NotContain(button => button.TextContent.Trim() == "Reset password");
+        cut.Markup.Should().Contain("Rene Registrar signs in only through their institution. A password cannot be set for them.");
+    }
+
+    [Fact]
     public void NewPassword_HasItsCircuitToggle_AndNamesTheRules_ListedUnderIt()
     {
         var cut = Render();
@@ -73,16 +87,35 @@ public sealed class UserDetailResetCardTests : TestContext
     }
 
     [Fact]
-    public void ResetPassword_IsEnabledOnceAnythingIsTyped_WithNo8CharacterRule()
+    public void ResetPassword_IsNeverDisabled_WithNo8CharacterRule_AndAnEmptyFieldIsRefusedBesideIt()
     {
         var cut = Render();
 
-        ResetButton(cut).HasAttribute("disabled").Should().BeTrue("nothing typed yet");
+        ResetButton(cut).HasAttribute("disabled").Should().BeFalse("an action is never natively disabled (T376)");
         cut.Find("#reset-password-input").HasAttribute("minlength").Should().BeFalse();
 
-        cut.Find("#reset-password-input").Input("short");
+        ResetButton(cut).Click();
 
-        ResetButton(cut).HasAttribute("disabled").Should().BeFalse("the rule is 12, the rules are listed, and a refusal names each broken");
+        var input = cut.Find("#reset-password-input");
+        input.GetAttribute("aria-invalid").Should().Be("true");
+        cut.Find("#reset-password-error").TextContent.Trim().Should().Be("Type the new password.");
+        input.GetAttribute("aria-describedby")!.Split(' ').Should().Contain("reset-password-error");
+        _sender.Resets.Should().Be(0, "nothing is sent");
+    }
+
+    [Fact]
+    public void A45_TheReset_IsSaidInPassword_NamingThePerson()
+    {
+        var cut = Render();
+
+        cut.Find("#reset-password-input").Input("A-long-password-1");
+        ResetButton(cut).Click();
+
+        var part = cut.FindAll(".section-part").Single(candidate => candidate.QuerySelector("h3")!.TextContent.Trim() == "Password");
+        var alert = part.QuerySelector(".action-result .alert-success")!;
+        alert.TextContent.Trim().Should().Be("Password reset for Rene Registrar. Share the new password with Rene Registrar out-of-band.");
+        alert.QuerySelector("strong")!.TextContent.Trim().Should().Be("Password reset for Rene Registrar.");
+        cut.Find("#reset-password-input").GetAttribute("value").Should().BeNullOrEmpty("the password is not left on the page");
     }
 
     [Fact]
@@ -94,7 +127,7 @@ public sealed class UserDetailResetCardTests : TestContext
         cut.Find("#reset-password-input").Input("short");
         ResetButton(cut).Click();
 
-        var refusal = cut.Find(".action-result .alert.alert-danger");
+        var refusal = cut.Find(".section-part .action-result .alert.alert-danger");
         refusal.TextContent.Trim().Should().Be(RuleRefusal);
         var input = cut.Find("#reset-password-input");
         input.GetAttribute("aria-invalid").Should().Be("true");
@@ -154,16 +187,27 @@ public sealed class UserDetailResetCardTests : TestContext
     {
         public string? ResetRefusal { get; set; }
 
+        /// <summary>F3: the account may not use a Wombat password, and has no institutional sign-in listed.</summary>
+        public bool SsoOnly { get; set; }
+
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
             => request is GetUserByIdQuery
                 ? Task.FromResult((TResponse)(object)new UserDetailDto(
                     "user-9", "registrar@hospital.test", "Rene", "Registrar", 4, "Groote Schuur Hospital", [], [],
-                    [WombatRoles.CommitteeMember], false, []))
+                    [WombatRoles.CommitteeMember], false) { AllowsLocalPassword = !SsoOnly, HasLocalPassword = !SsoOnly })
                 : throw new NotSupportedException(request.GetType().Name);
 
+        public int Resets { get; private set; }
+
         public Task Send(IRequest request, CancellationToken cancellationToken = default)
-            => request is ResetUserPasswordCommand
-                ? ResetRefusal is null ? Task.CompletedTask : throw new InvalidOperationException(ResetRefusal)
-                : throw new NotSupportedException(request.GetType().Name);
+        {
+            if (request is not ResetUserPasswordCommand)
+            {
+                throw new NotSupportedException(request.GetType().Name);
+            }
+
+            Resets++;
+            return ResetRefusal is null ? Task.CompletedTask : throw new InvalidOperationException(ResetRefusal);
+        }
     }
 }

@@ -559,23 +559,23 @@ neither.
 
 | Task | What it means for the design | Evidence |
 |---|---|---|
-| **T264** (P3, queued; the users and SSO half) | **Lock out:** a ConfirmDialog naming the person and the lock's effects; an outline trigger; today `btn-danger`, one press (`U/UserDetail.razor:166`; observed A.6.4's Actual "no dialog"). **A role's Remove:** outline, named for its row, confirmed naming the person and the role; today `btn-danger` at once (`:82`). **Revoke all pending invitations:** `btn-danger` at once (`:205`); Q9 drops it. **SSO Delete:** `btn-danger` at once (`W/Admin/Sso/GroupMappings.razor:148`). Flow 11 closed the invitations half; CollegeEdit, SpecialityEdit and SubSpecialityEdit stay flow 16's, the scales list flow 15's. | `act-A/A.6.4-2…`, `states/user-detail--pending-invitations.png` |
-| **T323** (A3; the users half) | **Card values:** the user page's email is cut at the card's edge at 1280 (observed: "duplessis@kgk.wombat.lc", `A.4.5-1`; "patel@kgk.wombat.local" at the edge, `A.6.4-2`), because `.detail-list dd` sets only a margin (T323's root cause). **Role rows:** two spans in an unstyled `li` (`U/UserDetail.razor:74–88`), so "AssessorRemove" and "TraineeSystem-managed" (observed, `A.6.4-2`, `A.7.9-3`; F-2.28b). **Tables:** no `Stack`/`StackWide` on Users (`U/UsersList.razor:35`), Assessors (`As/AssessorsList.razor:20`) or mappings (`GroupMappings.razor:125`); at 390 Users scrolls in its box, 807 px (observed, A.7.9's Actual). **Pending invitations:** a five-column table in the grid's narrow column, cut (old frame, `states/user-detail--pending-invitations.png`). | `act-A/A.4.5-1…`, `act-A/A.7.9-2…`, `-3…` |
-| **T324** (A8; the users half) | **Keys everywhere:** the Users list's Roles (`U/UsersList.razor:51`), the user page's roles (`U/UserDetail.razor:75`), Add role's options (`:105`), the result "Role 'Assessor' added." (`:372`, `:385`), the row name "Remove the CommitteeMember role" (`:82`), the pending invitations' Role (`:196`), Home's Users card (`W/Dashboards/InstitutionalAdminDashboard.razor:22`), the SSO picker and rows (`GroupMappings.razor:62`, `:141`), though `WombatRoleLabels` (`src/Wombat.Domain/Identity/WombatRoleLabels.cs`) exists and My account uses it (2.41). **Property names:** "The UserId field is required." and "The Qualifications field is required." (observed 2.14; `As/AssessorProfileEdit.razor:221–239`); the institution's record (`InstitutionEdit.razor:369–383`) and the mapping form (`GroupMappings.razor:299–318`) the same. | `act-2/2.12-2…`, `act-2/2.14-2…`, `act-2/2.44-1…` |
-| **T326** (A10; the assessors and SSO items) | **Assessors' empty body** says a profile makes assessors "selectable in the workflow" (`As/AssessorsList.razor:19`; observed 2.14, F-2.14c); `NomineeDirectory` reads the Assessor role alone. **SSO with no provider:** the card names `Sso:Providers` and a restart to her (`GroupMappings.razor:110`), and the empty state points at a form that is not drawn (`:116`; observed A.3.1, F-A.3.1a). | `act-2/2.14-1…`, `act-A/A.3.1-1…` |
-| **T289** (P2, queued; lands before the build, Q12) | **The profile command** never asks the trainee-first rule, never checks that the user is at the caller's institution (`A/Assessors/CreateOrUpdateAssessorProfile.cs:50–60`), and finds a profile by user, so a "new" profile for someone profiled overwrites theirs (`:96–111`, inferred). **The save rewrites the user's whole speciality scope** (`:125–130` → `UpdateScopeAsync`), stripping a SpecialityAdmin's or CommitteeMember's (code, T289's C24). **The page** stays on its new form after a save (`As/AssessorProfileEdit.razor:207–209`) and the picker never narrows (`A/Assessors/ListAssessorUsers.cs:28–43`; observed 2.14, F-2.14a, F-2.14b). | `act-2/2.14-3…`, `-4…` |
-| **T288** and **T333** (P2, queued; land before the build, Q11) | **Cross-institution mappings:** create checks only the chosen institution, never the provider's (`A/Sso/CreateSsoGroupMapping.cs:37–40`). **Trainee round admission:** the page offers Trainee and Pending trainee (`GroupMappings.razor:162–172`) and the command refuses only Administrator (`CreateSsoGroupMapping.cs:41–44`). The page's Institution reads "Select institution" over her one (`:69`) and Speciality the national catalogue (`:190`). Not reachable on the replay. | `coverage.md` § Flows and states not played |
-| **T291** (P3, queued; items 4 and 8) | **Item 4:** Home counts every Speciality and SubSpeciality row (`A/Dashboards/InstitutionalAdmin/GetInstitutionalAdminDashboardSummaryQuery.cs:46–55`, under a stale "phase 4" comment); observed 2 and 2 at 1.10, 1.21 and 2.44 (F-2.44a). **Item 8:** typed by her, `/admin/institutions/new` draws "Create institution" (`InstitutionEdit.razor:1–3`), which `CreateInstitutionCommand` always refuses (observed 1.23, F-1.23c). Items 1, 2, 3, 5 and 6 are flows 15, 16 and 17's. | `act-2/2.44-1…`, `act-1/1.23-4…` |
-| **T286** (P3, queued; the external-logins half, Q10) | No page lists a person's institutional sign-in links, and only an institution move or an erasure removes one; whether a reset drops them is undecided. Flow 11 closed the issue half. The audit, unique-email and link-race items stay T286's own. | — |
-| **T329 / T272's family** (code) | **Exception text:** Users' and the user page's load (`U/UsersList.razor:111`, `U/UserDetail.razor:313`, `RefusalText.Of`, which is the message for anything but a validation failure), Assessors (`As/AssessorsList.razor:63`), the assessor form's load and save (`As/AssessorProfileEdit.razor:175`, `:213`; an unknown id prints "The assessor profile could not be found." as a danger alert), SSO (`GroupMappings.razor:220`, `:262`, `:291`). **No Try again:** no `StatePanel` here takes `OnRetry`; SSO's passes `LoadError="@(null)"` (`:116`). **The institution's record** has no load error at all: `StatePanel IsEmpty="false"` (`InstitutionEdit.razor:39`) draws the empty form with Save under the failure. | `states/assessor-profile-edit--not-found.png` |
-| **T280** (headings, captions; code) | Every card title is `<h3>` under the page's `<h1>` (`U/UserDetail.razor:54`, `:64`, `:119`, `:143`, `:177`; `GroupMappings.razor:33`, `:115`), Add role an `<h4>` with an inline `style` (`U/UserDetail.razor:96`); Users' caption "Users" repeats its `<h1>` (`U/UsersList.razor:35`). | `act-2/2.12-2…` |
-| **T325** (A9; code) | The pending invitations' Issued prints `ToLocalTime()` with no zone (`U/UserDetail.razor:199`). | — |
-| **Users** (observed, not filed) | The filter runs per keystroke (`@bind:event="oninput"`, `U/UsersList.razor:23`); no pager, everything sorted by surname (`A/Users/Queries/ListUsers/ListUsersQuery.cs:69–70`); an Institution column that reads KGK on every row for her (observed, 2.12); the subtitle says "across the institutions you administer" (`U/UsersList.razor:76`) to someone who administers one; a person with no role (D54) gets an empty Roles cell (`:51`, inferred). Q6. | `act-2/2.12-2…` |
-| **The user page** (observed and code, not filed) | **Scope never shown:** `UserDetailDto` carries `SpecialityIds` and `SubSpecialityIds` (`A/Users/UserDtos.cs:21–22`); the page reads neither (`U/UserDetail.razor:52–61`). **Add role grants no scope** (`A/Users/Commands/AddRoleToUser/AddRoleToUserCommand.cs`, no scope written): a Speciality admin added here holds whatever speciality the person already had, or none (inferred). Q4. **A person with no role** (D54: du Plessis after 5.27, Molefe after 5.17) reads "This user has no roles." and is offered every staff role (observed A.4.5, `5.17-3`); nothing says they are a former trainee whose record stays readable to them. Q13. **Words:** the subtitle "…pending-invitation cleanup for a single user." (`:265`); "Global administrators cannot be locked out from this surface." (`:171`); Back to users repeats the trail and is a full-width 44 px button at 390 (`:11`; observed A.7.9). **Results at the page's top**, far from the card that acted (`:28–38`; observed A.4.5, A.6.4). | `act-A/A.4.5-1…`, `act-5/5.17-3…`, `act-A/A.7.9-3…` |
-| **Pending invitations** (code; inferred) | Unreachable since flow 11: issue refuses an address that has an account (`A/Invitations/IssueInvitation.cs:191`), and registering revokes the person's other invitations (`A/Invitations/AcceptInvitation.cs:119–124`). Only an account made by SSO after an invitation was issued could still show one. `states.md`'s way to reach `user-detail--pending-invitations` (invite Dr Botha again) is now refused. Q9. | `states/user-detail--pending-invitations.png` |
-| **Assessors** (observed and code, not filed) | Institution is a one-option select (`As/AssessorProfileEdit.razor:48–55`); Speciality offers the national catalogue with "All" (`:57–65`, `:130`), not KGK's adopted Paediatrics; the list says "Provisional" where the form says "Provisional (awaiting sign-off)" (`As/AssessorsList.razor:74`); "across institutions" in the list's subtitle (`:9`); one title, "Assessor profile", for new and existing; jargon help ("Faculty-development lifecycle.", `:83`); `@using Wombat.Domain.Identity` and the Domain enum in both `.razor` files (`As/AssessorsList.razor:3`, `As/AssessorProfileEdit.razor:3`), against CLAUDE.md's "only via DTOs". The Administrator is admitted with no menu item and nothing lit (`Nav/NavItems.cs:144–149`, `Nav/NavOwners.cs:164`). Q2. | `act-2/2.14-2…`, `act-2/2.15-1…` |
-| **Her institution's record** (observed, not filed) | Reached only by address (`coverage.md` § Reached only by address: 1.23, A.6.3); nothing lit, trail Home › Edit institution (`Nav/NavOwners.cs:150` owns it for the Administrator alone; observed A.6.3); titled "Edit institution", not KGK's name, with the generic subtitle "Maintain the institution record used for scoping and onboarding." (`InstitutionEdit.razor:9–11`); Contact email has no address check (`:379–380`). Q3. | `act-A/A.6.3-1…`, `act-1/1.23-1…` |
-| **Her Home** (observed and code, not filed) | Roles as keys and locked accounts counted (`GetInstitutionalAdminDashboardSummaryQuery.cs:33–42`); two inline `style`s (`InstitutionalAdminDashboard.razor:23`, `:38`); Quick links repeat four menu items; nothing says a registrar is waiting (flow 11's Q8, decided as recommended and left to this flow to place); no way to her institution's record. Q7, Q8. | `act-2/2.44-1…` |
+| **T264** (P3, queued; the users and SSO half) | **Closed in the build (T376):** Lock out… is an outline trigger named for the person, opening "Lock out ‹name›?" with the effects that apply to them and the requests waiting for them (F6), Keep access focused; each role's Remove… is an outline trigger named "Remove ‹role› from ‹name›", confirmed per role (S3, P36); Revoke all pending invitations is gone (Q9); SSO's Delete… confirms in F8's words. **Lock out:** a ConfirmDialog naming the person and the lock's effects; an outline trigger; today `btn-danger`, one press (`U/UserDetail.razor:166`; observed A.6.4's Actual "no dialog"). **A role's Remove:** outline, named for its row, confirmed naming the person and the role; today `btn-danger` at once (`:82`). **Revoke all pending invitations:** `btn-danger` at once (`:205`); Q9 drops it. **SSO Delete:** `btn-danger` at once (`W/Admin/Sso/GroupMappings.razor:148`). Flow 11 closed the invitations half; CollegeEdit, SpecialityEdit and SubSpecialityEdit stay flow 16's, the scales list flow 15's. | `act-A/A.6.4-2…`, `states/user-detail--pending-invitations.png` |
+| **T323** (A3; the users half) | **Closed in the build (T376), the users half:** Users, Assessors and the mappings are `StackWide` tables, the name over the address with `<wbr>` after the @ and no `.col-wrap` (check Left 3); the user page is one page of sections, each role a `.role-row` with its action after a gap ("Trainee" and "System-managed" apart); the who line and Home's card wrap an address (M7); Pending invitations is gone. The replay measures 0 px sideways at 390 and 768, and 901, 1000 and 1100 px (A.7.9). **Card values:** the user page's email is cut at the card's edge at 1280 (observed: "duplessis@kgk.wombat.lc", `A.4.5-1`; "patel@kgk.wombat.local" at the edge, `A.6.4-2`), because `.detail-list dd` sets only a margin (T323's root cause). **Role rows:** two spans in an unstyled `li` (`U/UserDetail.razor:74–88`), so "AssessorRemove" and "TraineeSystem-managed" (observed, `A.6.4-2`, `A.7.9-3`; F-2.28b). **Tables:** no `Stack`/`StackWide` on Users (`U/UsersList.razor:35`), Assessors (`As/AssessorsList.razor:20`) or mappings (`GroupMappings.razor:125`); at 390 Users scrolls in its box, 807 px (observed, A.7.9's Actual). **Pending invitations:** a five-column table in the grid's narrow column, cut (old frame, `states/user-detail--pending-invitations.png`). | `act-A/A.4.5-1…`, `act-A/A.7.9-2…`, `-3…` |
+| **T324** (A8; the users half) | **Closed in the build (T376), the users half:** every role by `WombatRoleLabels` in `InOrder`'s order: Users, the user page, Add a role…'s radios, every result ("Assessor added to Thandi Zulu."), Home's People, the SSO select and rows; every message in Wombat's words ("Choose the training status.", "Type the qualifications, as they should read.", "Type a short code. The record was not saved.", "Enter a valid email address, for example name@example.org."). **Keys everywhere:** the Users list's Roles (`U/UsersList.razor:51`), the user page's roles (`U/UserDetail.razor:75`), Add role's options (`:105`), the result "Role 'Assessor' added." (`:372`, `:385`), the row name "Remove the CommitteeMember role" (`:82`), the pending invitations' Role (`:196`), Home's Users card (`W/Dashboards/InstitutionalAdminDashboard.razor:22`), the SSO picker and rows (`GroupMappings.razor:62`, `:141`), though `WombatRoleLabels` (`src/Wombat.Domain/Identity/WombatRoleLabels.cs`) exists and My account uses it (2.41). **Property names:** "The UserId field is required." and "The Qualifications field is required." (observed 2.14; `As/AssessorProfileEdit.razor:221–239`); the institution's record (`InstitutionEdit.razor:369–383`) and the mapping form (`GroupMappings.razor:299–318`) the same. | `act-2/2.12-2…`, `act-2/2.14-2…`, `act-2/2.44-1…` |
+| **T326** (A10; the assessors and SSO items) | **Closed in the build (T376):** Assessors' empty body says what a training record holds and where it is recorded (T01); with no provider SSO mappings is her card, "Institutional sign-in is not set up for ‹institution›. …", with no form, no list and no setting named (O01). **Assessors' empty body** says a profile makes assessors "selectable in the workflow" (`As/AssessorsList.razor:19`; observed 2.14, F-2.14c); `NomineeDirectory` reads the Assessor role alone. **SSO with no provider:** the card names `Sso:Providers` and a restart to her (`GroupMappings.razor:110`), and the empty state points at a form that is not drawn (`:116`; observed A.3.1, F-A.3.1a). | `act-2/2.14-1…`, `act-A/A.3.1-1…` |
+| **T289** (P2, queued; lands before the build, Q12) | **Closed before and in the build (T376):** T289 landed (`b8ed8fd6`); the build makes the profile training only (F4's migration drops its speciality and sub-speciality), recorded on the person's page, whose save writes no scope (M1), and `/admin/assessors/edit` a redirect (S10): no picker, no "new" form. **The profile command** never asks the trainee-first rule, never checks that the user is at the caller's institution (`A/Assessors/CreateOrUpdateAssessorProfile.cs:50–60`), and finds a profile by user, so a "new" profile for someone profiled overwrites theirs (`:96–111`, inferred). **The save rewrites the user's whole speciality scope** (`:125–130` → `UpdateScopeAsync`), stripping a SpecialityAdmin's or CommitteeMember's (code, T289's C24). **The page** stays on its new form after a save (`As/AssessorProfileEdit.razor:207–209`) and the picker never narrows (`A/Assessors/ListAssessorUsers.cs:28–43`; observed 2.14, F-2.14a, F-2.14b). | `act-2/2.14-3…`, `-4…` |
+| **T288** and **T333** (P2, queued; land before the build, Q11) | **Closed before the build; for the replay (T376):** T288 (`964a2c4e`) and T333 (`5f9bb9bb`) landed; the build adds Q19 (Institutional admin never offered to her) and S5 (a removed provider's rows read only). T333's browser check is carried to step 7 on a scratch instance with a provider (A.3.1's Note, `states.md`, the mappings page's The form row). **Cross-institution mappings:** create checks only the chosen institution, never the provider's (`A/Sso/CreateSsoGroupMapping.cs:37–40`). **Trainee round admission:** the page offers Trainee and Pending trainee (`GroupMappings.razor:162–172`) and the command refuses only Administrator (`CreateSsoGroupMapping.cs:41–44`). The page's Institution reads "Select institution" over her one (`:69`) and Speciality the national catalogue (`:190`). Not reachable on the replay. | `coverage.md` § Flows and states not played |
+| **T291** (P3, queued; items 4 and 8) | **Closed in the build (T376), items 4 and 8:** Home's Curriculum counts KGK's active adoptions (1.10 0 and 0, 1.21 and 2.44 1 and 1); `/admin/institutions/new` is InstitutionCreate.razor with the Administrator policy, Access denied to her (S12, 1.23). **Item 4:** Home counts every Speciality and SubSpeciality row (`A/Dashboards/InstitutionalAdmin/GetInstitutionalAdminDashboardSummaryQuery.cs:46–55`, under a stale "phase 4" comment); observed 2 and 2 at 1.10, 1.21 and 2.44 (F-2.44a). **Item 8:** typed by her, `/admin/institutions/new` draws "Create institution" (`InstitutionEdit.razor:1–3`), which `CreateInstitutionCommand` always refuses (observed 1.23, F-1.23c). Items 1, 2, 3, 5 and 6 are flows 15, 16 and 17's. | `act-2/2.44-1…`, `act-1/1.23-4…` |
+| **T286** (P3, queued; the external-logins half, Q10) | **Closed in the build (T376), the external-logins half:** Institutional sign-in lists another person's sign-ins by provider, each with Remove… confirmed (F7), the last way in refused in the built words; played on a scratch row (`states.md`). A reset does not drop them. No page lists a person's institutional sign-in links, and only an institution move or an erasure removes one; whether a reset drops them is undecided. Flow 11 closed the issue half. The audit, unique-email and link-race items stay T286's own. | — |
+| **T329 / T272's family** (code) | **Closed in the build (T376), the flow 12 half:** every read on Users, the user page, the training section, Assessors, her record and SSO mappings fails in fixed words with Try again (`StatePanel`, `FocusAfterRetry`), the failure to the log; her record has a load error with no form under it (I06). **Exception text:** Users' and the user page's load (`U/UsersList.razor:111`, `U/UserDetail.razor:313`, `RefusalText.Of`, which is the message for anything but a validation failure), Assessors (`As/AssessorsList.razor:63`), the assessor form's load and save (`As/AssessorProfileEdit.razor:175`, `:213`; an unknown id prints "The assessor profile could not be found." as a danger alert), SSO (`GroupMappings.razor:220`, `:262`, `:291`). **No Try again:** no `StatePanel` here takes `OnRetry`; SSO's passes `LoadError="@(null)"` (`:116`). **The institution's record** has no load error at all: `StatePanel IsEmpty="false"` (`InstitutionEdit.razor:39`) draws the empty form with Save under the failure. | `states/assessor-profile-edit--not-found.png` |
+| **T280** (headings, captions; code) | **Closed in the build (T376), the flow 12 half:** each section an `<h2>` (the user page's parts `<h3>`), no inline `style`; each caption says what the table holds, never its heading. Every card title is `<h3>` under the page's `<h1>` (`U/UserDetail.razor:54`, `:64`, `:119`, `:143`, `:177`; `GroupMappings.razor:33`, `:115`), Add role an `<h4>` with an inline `style` (`U/UserDetail.razor:96`); Users' caption "Users" repeats its `<h1>` (`U/UsersList.razor:35`). | `act-2/2.12-2…` |
+| **T325** (A9; code) | **Closed in the build (T376):** the pending invitations' table is gone (Q9); the waiting requests print "yyyy-MM-dd HH:mm SAST" (`ActivityMoments.When`). The pending invitations' Issued prints `ToLocalTime()` with no zone (`U/UserDetail.razor:199`). | — |
+| **Users** (observed, not filed) | **Closed in the build (T376):** the filter applied by Show, every value in the address (S6, S21); a pager only past 20 matches (F9); no Institution column for her; her subtitle names her institution; No role with the ended programme's sentence (S2). The filter runs per keystroke (`@bind:event="oninput"`, `U/UsersList.razor:23`); no pager, everything sorted by surname (`A/Users/Queries/ListUsers/ListUsersQuery.cs:69–70`); an Institution column that reads KGK on every row for her (observed, 2.12); the subtitle says "across the institutions you administer" (`U/UsersList.razor:76`) to someone who administers one; a person with no role (D54) gets an empty Roles cell (`:51`, inferred). Q6. | `act-2/2.12-2…` |
+| **The user page** (observed and code, not filed) | **Closed in the build (T376):** the who line's Scope, one scope a person (S1, Q4); Add a role… asks and writes the scope in one transaction (M2, F1, F2, S13); the no-role sentences (S2, Q13); her own page's subtitle; no Back to users; each result in the section that acted, focused (A5). **Scope never shown:** `UserDetailDto` carries `SpecialityIds` and `SubSpecialityIds` (`A/Users/UserDtos.cs:21–22`); the page reads neither (`U/UserDetail.razor:52–61`). **Add role grants no scope** (`A/Users/Commands/AddRoleToUser/AddRoleToUserCommand.cs`, no scope written): a Speciality admin added here holds whatever speciality the person already had, or none (inferred). Q4. **A person with no role** (D54: du Plessis after 5.27, Molefe after 5.17) reads "This user has no roles." and is offered every staff role (observed A.4.5, `5.17-3`); nothing says they are a former trainee whose record stays readable to them. Q13. **Words:** the subtitle "…pending-invitation cleanup for a single user." (`:265`); "Global administrators cannot be locked out from this surface." (`:171`); Back to users repeats the trail and is a full-width 44 px button at 390 (`:11`; observed A.7.9). **Results at the page's top**, far from the card that acted (`:28–38`; observed A.4.5, A.6.4). | `act-A/A.4.5-1…`, `act-5/5.17-3…`, `act-A/A.7.9-3…` |
+| **Pending invitations** (code; inferred) | **Closed in the build (T376), Q9:** the card, `RevokePendingInvitationsForEmailCommand` and the state `user-detail--pending-invitations` are gone. Unreachable since flow 11: issue refuses an address that has an account (`A/Invitations/IssueInvitation.cs:191`), and registering revokes the person's other invitations (`A/Invitations/AcceptInvitation.cs:119–124`). Only an account made by SSO after an invitation was issued could still show one. `states.md`'s way to reach `user-detail--pending-invitations` (invite Dr Botha again) is now refused. Q9. | `states/user-detail--pending-invitations.png` |
+| **Assessors** (observed and code, not filed) | **Closed in the build (T376), Q2:** Assessors lists every holder of the role, Record training or Edit training to the person's page; "Provisional (awaiting sign-off)" everywhere; no Domain type in the `.razor` files; the old route a redirect under Users. Institution is a one-option select (`As/AssessorProfileEdit.razor:48–55`); Speciality offers the national catalogue with "All" (`:57–65`, `:130`), not KGK's adopted Paediatrics; the list says "Provisional" where the form says "Provisional (awaiting sign-off)" (`As/AssessorsList.razor:74`); "across institutions" in the list's subtitle (`:9`); one title, "Assessor profile", for new and existing; jargon help ("Faculty-development lifecycle.", `:83`); `@using Wombat.Domain.Identity` and the Domain enum in both `.razor` files (`As/AssessorsList.razor:3`, `As/AssessorProfileEdit.razor:3`), against CLAUDE.md's "only via DTOs". The Administrator is admitted with no menu item and nothing lit (`Nav/NavItems.cs:144–149`, `Nav/NavOwners.cs:164`). Q2. | `act-2/2.14-2…`, `act-2/2.15-1…` |
+| **Her institution's record** (observed, not filed) | **Closed in the build (T376), Q3:** reached from Home's Your institution card; titled by its name, trail Home › ‹name›; "Your institution's name, short code and contact email."; Contact email checked; Save changes and a result naming the address (I02). Reached only by address (`coverage.md` § Reached only by address: 1.23, A.6.3); nothing lit, trail Home › Edit institution (`Nav/NavOwners.cs:150` owns it for the Administrator alone; observed A.6.3); titled "Edit institution", not KGK's name, with the generic subtitle "Maintain the institution record used for scoping and onboarding." (`InstitutionEdit.razor:9–11`); Contact email has no address check (`:379–380`). Q3. | `act-A/A.6.3-1…`, `act-1/1.23-1…` |
+| **Her Home** (observed and code, not filed) | **Closed in the build (T376), Q7, Q8:** People by label with distinct accounts and each count a link (S19), no locked line (K24); no inline `style`; Quick links gone, Entrustment decisions in her menu (F10); the waiting line (Q8, S23); Your institution with its link. Roles as keys and locked accounts counted (`GetInstitutionalAdminDashboardSummaryQuery.cs:33–42`); two inline `style`s (`InstitutionalAdminDashboard.razor:23`, `:38`); Quick links repeat four menu items; nothing says a registrar is waiting (flow 11's Q8, decided as recommended and left to this flow to place); no way to her institution's record. Q7, Q8. | `act-2/2.44-1…` |
 
 **Dropped from the old brief (done since):**
 - T302 (`41be531`): her institution's Status is text, "Set by a global administrator.", with no box and no Deactivate;
@@ -688,85 +688,163 @@ A flow is done when BRIEF.md § 9's four checks hold. For this flow:
 
 ## 8. The runbook steps, verbatim (sent with § 1, in the same message)
 
-These are pasted from `execution/knowledge/scenario-paediatrics/` (Role, Route, Do and Expect only), as flow 11's replay
-left them (T373, 2026-10-20; the Gaps it recorded are 1.23's T291 item 8, 2.14's T289, T326 and T324, 2.44's T291 item
-4, A.3.1's T326 and A.7.9's T323). `D` is the replay day (README § How to play).
+These are pasted from `execution/knowledge/scenario-paediatrics/` (Role, Route, Do and Expect only). Round 3 was drawn
+against each Expect as flow 11's replay left it (T373, 2026-10-20; the Gaps it recorded are 1.23's T291 item 8, 2.14's
+T289, T326 and T324, 2.44's T291 item 4, A.3.1's T326 and A.7.9's T323). Since the build (T376, 2026-10-23) each Expect
+describes the product as flow 12 built it, from `R3-0-steps` and the code: all 15 changed (A.7.14 only in its
+danger pair's control), 2.14's Note retired, and each journey's count is in its step's Note (2.12, 2.13, 2.14, 1.23,
+A.4.5, A.6.3, A.6.4). 2.15 now types the old `/admin/assessors/edit?id=` link (S10). `D` is the replay day (README §
+How to play).
 
 ```text
 Step 1.23 — KGK's own record
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/institutions/{Id:int} → /not-found
-Do: Open KGK's record at `/admin/institutions/{InstitutionId}` by typing its address, since nothing in her nav leads
-  there. Read it and change nothing. Then open the Demo Institution's id the same way.
-Expect: KGK's page is headed "Edit institution" and shows KGK's name, the short code `KGK`, the contact email, and
-  that KGK is active. Save is offered for the name, short code and contact email.
+Route: / → /admin/institutions/{Id:int} → /admin/institutions/new → /access-denied → /not-found
+Do: From Home, press Open Kgosi Kgari Teaching Hospital on the Your institution card. Read the record and change
+  nothing. Then type `/admin/institutions/new`, and the Demo Institution's id at `/admin/institutions/{Id}`.
+Expect: KGK's record opens at `/admin/institutions/{InstitutionId}`, titled by its name: the heading and the tab read
+  "Kgosi Kgari Teaching Hospital", under the trail Home › Kgosi Kgari Teaching Hospital, with nothing lit in her menu
+  (T376, Q3). Its subtitle reads "Your institution's name, short code and contact email.", then "* marks a field you
+  must fill in.":
+  - Name * (KGK's name), Short code * (`KGK`) and Contact email (`paeds-admin@kgk.wombat.local`);
+  - Status read out, not a field: "Active" over "Set by a Wombat administrator." (M8);
+  - Cancel, to Home, and Save changes. There is no Back link beside the heading.
   She is offered nothing that would deactivate KGK, neither a Deactivate nor an Active she can untick, and no link
-  (Back or Cancel) to the Institutions list: deactivating an institution and listing them belong to an Administrator
-  alone (`DeactivateInstitutionCommand`; DESIGN.md § Table system, T211).
+  to the Institutions list: deactivating an institution and listing them belong to an Administrator alone
+  (`DeactivateInstitutionCommand`; DESIGN.md § Table system, T211).
+  `/admin/institutions/new` is "You cannot open this page" ("Your role (Institutional admin) does not open this page."),
+  not a Create institution form: creating an institution is the Administrator's alone (T376, S12; T291 item 8).
   The Demo Institution's id sends her to Page not found, not "You cannot open this page". The product never confirms
   that a record outside her institution exists (CLAUDE.md § InstitutionalAdmin scope-aware powers).
 
 Step 2.12 — Mbatha reviews KGK's users
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/invitations → /admin/users → /admin/users/{UserId}
-Do: Open Invitations. Then read the user list, filter it by "zulu" and clear the filter. Open Manage on her own
-  row.
-Expect: Active invitations reads "No active invitations": all nine staff invitations have been used. The user list has
-  ten rows: Mbatha and the nine staff, each at KGK with the invited role and status Active. No Demo account,
-  `devadmin` or Dr Kruger appears: an InstitutionalAdmin lists only her institution's users (T056). The filter leaves
-  Zulu alone. Her own page's subtitle reads "Your own account's summary, roles and pending invitations." A note says
-  "This is your own account, so you cannot change its roles, lockout or password here. Another administrator can change
-  your roles or lockout.", followed by a Change your password link. It offers no Remove, Add role, Reset password or
-  Lockout (T278).
+Do: Open Invitations. Then open Users and read the list. Type "zulu" in Name or email and press Show, then press Clear.
+  Open Manage on her own row.
+Expect: Active invitations reads "No active invitations": all nine staff invitations have been used.
+  - **Users** reads "Everyone with an account at Kgosi Kgari Teaching Hospital: the roles each holds, their scope, and
+    whether they can sign in.", with Invite a person in its header. A search form, "Filter people", offers Name or email
+    ("A name in either order, part of one, or an address."), Role (Any role, then each role by label, then No role) and
+    Status (Any status, Active, Locked out), with Show and Clear. Nothing filters as she types (T376, Q6).
+  - **People** reads "10", captioned "At Kgosi Kgari Teaching Hospital, by last name: each person's roles, one scope for
+    all of them, and whether they can sign in.": ten rows, Mbatha and the nine staff, by last name, with no pager.
+    Columns: Name (the name over the address), Roles (each by label, one a line), Scope, Status, and a Manage named for
+    its person. There is no Institution column (T376, U01). Each reads the invited role and its scope, and Active:
+    Botha, Naidoo and Zulu Committee member, Paediatrics; Khumalo and Patel Assessor, Paediatrics / Paediatrics; Mbatha
+    Institutional admin, Kgosi Kgari Teaching Hospital; Mokoena Speciality admin, Paediatrics; Sithole Sub-speciality
+    admin, Paediatrics / Paediatrics; Smit Coordinator, Any speciality; van Rensburg Committee member, Any speciality.
+  - No Demo account, `devadmin` or Dr Kruger appears: an InstitutionalAdmin lists only her institution's users (T056).
+  - **Show** with "zulu" leaves Zulu alone: the heading reads "People 1 of 10 match “zulu”" and takes the focus, a
+    screen reader hears "1 of 10 people match “zulu”.", and the address carries `?q=zulu`. Clear shows the ten again.
+  - **Her own page**, under Home › Users › Nolwazi Mbatha, is titled by her name. Its subtitle reads "Your own account:
+    your roles and how you sign in." The account line reads Email, Institution Kgosi Kgari Teaching Hospital, Status
+    Active and Scope Kgosi Kgari Teaching Hospital. A note says "This is your own account, so you cannot change its
+    roles, lockout or password here. Another administrator can change your roles or lockout.", followed by "Change your
+    password from your account." with its link. Roles and scope lists Institutional admin with no Remove…, and offers
+    no Add a role…; Sign-in and access has no Password and no Lockout (T278), only Institutional sign-in: "No
+    institutional sign-in is linked. Nolwazi Mbatha signs in with an email and a password." There is no Pending
+    invitations card and no Back to users (T376, Q9).
+  - Her menu lists Entrustment decisions under Reviews (T376, F10).
 
 Step 2.13 — Mbatha adds Assessor to Dr Zulu, Dr Naidoo and Dr Botha
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/users/{UserId}
-Do: For each of the three, open Manage, choose Assessor under Add role and press Add role.
-Expect: Before the change, Roles lists CommitteeMember with Remove. Add role offers InstitutionalAdmin, SpecialityAdmin,
-  SubSpecialityAdmin, Coordinator and Assessor, never Administrator, CollegeAdmin, PendingTrainee or Trainee (T303).
-  Its help reads "Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with
-  'Admit…'.", on every user's page.
-  A Lockout card lists what a lock does (T284), and Pending invitations reads "No active invitations are outstanding for
-  this email.". After the change the page reads "Role 'Assessor' added.", Roles lists both, and Add role no longer offers
-  Assessor. The users list's Roles column shows both.
+Do: For each of the three, open Manage, press Add a role…, choose Assessor and press Add role.
+Expect: Before the change, the page is titled by the person's name, "Roles, sign-in and lockout for one person at Kgosi
+  Kgari Teaching Hospital, with assessor training for an Assessor.", and its account line reads Scope Paediatrics.
+  - **Roles and scope** lists Committee member with an outline Remove… named "Remove Committee member from Thandi Zulu".
+    Under it, Add a role… and "Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees
+    with 'Admit…'.", on every user's page.
+  - **Add a role…** opens a panel in place, the first choice focused: Role *, a group of radios by label, each with its
+    description (Assessor's "Assesses the registrars who ask them, at this institution."): Institutional admin,
+    Speciality admin, Sub-speciality admin, Coordinator and Assessor, never Administrator, College admin, Pending
+    trainee or Trainee (T303), and not Committee member, which the person holds.
+  - **Assessor** draws its scope as read-outs, not selects: Speciality "Paediatrics", "Already held by Thandi Zulu.", and
+    Sub-speciality "Paediatrics", "The only sub-speciality Kgosi Kgari Teaching Hospital has adopted." (M8, S13). Then
+    Cancel and Add role.
+  - **Lockout**, under Sign-in and access, lists what a lock does to this person (T284, Q17): "They sit on no committee
+    panel." and "They are sent no activity reminders or weekly digests.". There is no Pending invitations card (Q9).
+  - **After the change**, in Roles and scope, focused: "**Assessor added to Thandi Zulu.** Thandi Zulu's scope is now
+    Paediatrics / Paediatrics. Any open session ends within a minute." The scope arrives here, with the role (T376, M2,
+    Q4). Roles lists Committee member and Assessor, each with Remove…; the account line reads Scope Paediatrics /
+    Paediatrics; an Assessor training section appears, offering Record training; Lockout adds "They cannot be named as
+    an activity's assessor."; and Add a role… no longer offers Assessor.
+  - **Users** reads, for all three, Roles "Committee member" over "Assessor" and Scope Paediatrics / Paediatrics.
 
 Step 2.14 — Mbatha creates five assessor profiles
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/assessors → /admin/assessors/edit → /admin/assessors
-Do: Create a profile for each assessor at KGK, Paediatrics / Paediatrics, with qualifications "MBChB, MMed (Paed), FC
-  Paed (SA)". Zulu is Trained, completed `D−8 years`. Naidoo is Trained, `D−6 years`. Botha is Trained with the date
-  left blank. Patel is In training. Khumalo is Provisional (awaiting sign-off), `D−1 month`.
-Expect: The list first reads "No assessor profiles". The form's Assessor user offers the five KGK Assessors, and not van
-  Rensburg or any Demo account. Institution offers KGK alone. Sub-speciality is enabled once a speciality is chosen.
-  Training status offers Not started, In training, Provisional (awaiting sign-off) and Trained, and the completion date
-  is asked for only when the status is Provisional or Trained. Each save reads "Assessor profile saved.", and the page
-  moves to `?id=` for the saved profile. The next new form's picker leaves out everyone already profiled.
+Route: /admin/assessors → /admin/users/{UserId} → /admin/assessors
+Do: Open Assessors. For each assessor, press Record training on their row, which opens their page at Assessor
+  training. On Dr Zulu's, press Save training first with nothing chosen and nothing typed. Then choose the status, the
+  date where it is asked, and the qualifications "MBChB, MMed (Paed), FC Paed (SA)", and press Save training; open
+  Assessors again for the next. Zulu is Trained, completed `D−8 years`. Naidoo is Trained, `D−6 years`. Botha is Trained
+  with the date left blank. Patel is In training. Khumalo is Provisional (awaiting sign-off), `D−1 month`.
+Expect: Training is recorded on the person's page, for anyone who holds Assessor (T376, Q2); nothing asks for an
+  institution, speciality or sub-speciality, and the save writes no scope (M1, T289).
+  - **Assessors** reads "Everyone at Kgosi Kgari Teaching Hospital who holds the Assessor role, with the assessor
+    training recorded for each.", with no Create assessor profile. "Assessors at Kgosi Kgari Teaching Hospital 5",
+    captioned "At Kgosi Kgari Teaching Hospital, by last name: each holder of the Assessor role, and the training recorded
+    on their page.": Botha, Khumalo, Naidoo, Patel and Zulu, each with Scope Paediatrics / Paediatrics, Training status
+    "Not recorded", Training completed "—" and Record training, named "Record training for ‹name›". Van Rensburg and
+    every Demo account are absent.
+  - **Record training** opens `/admin/users/{UserId}?section=training`: the person's page with Assessor training's
+    panel open and Not started focused. Training status * offers Not started, In training, Provisional (awaiting
+    sign-off) and Trained as radios, with "Faculty-development lifecycle. In-training assessors may assess under
+    supervision."; Training completed is drawn only for Provisional or Trained, with "Date the assessor completed
+    assessor training. Leave blank if unrecorded."; then Qualifications *, Cancel and Save training.
+  - **The empty save** reads "Choose the training status." under the status and "Type the qualifications, as they
+    should read." under Qualifications, each input marked, the focus on the first radio. Nothing is saved (T324).
+  - **Each save** says, in the section, focused: "**Training saved for Thandi Zulu:** Trained, completed `D−8 years`."
+    Khumalo's reads "**Training saved for Fatma Khumalo:** Provisional (awaiting sign-off), completed `D−1 month`.",
+    Botha's "… Trained, no date." and Patel's "… In training.". The page stays the person's: the section reads the record
+    out (Training status, Training completed, Qualifications) with Edit training. Back on Assessors the row reads Edit
+    training, named "Edit training for ‹name›".
 
 Step 2.15 — The assessor list and who is not on it
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/assessors
-Do: Read the list.
-Expect: Five rows, each at KGK in Paediatrics / Paediatrics. Training status reads Trained for Zulu, Naidoo and Botha, In
-  training for Patel and Provisional for Khumalo. Training completed reads `D−8 years`, `D−6 years`, "Not recorded",
-  "Not recorded" and `D−1 month` respectively. Each row has an Edit named for its assessor. Van Rensburg is neither listed
-  nor offered, because he does not hold the Assessor role.
+Route: /admin/assessors → /admin/assessors/edit → /admin/users/{UserId}
+Do: Read the list. Then type the address an old link to Dr Zulu's profile had, `/admin/assessors/edit?id=‹her profile
+  id›` (`SELECT a."Id" FROM "AssessorProfiles" a JOIN "AspNetUsers" u ON u."Id" = a."UserId" WHERE u."Email" =
+  'zulu@kgk.wombat.local'`).
+Expect: Five rows, each with Scope Paediatrics / Paediatrics and no Institution, Speciality or Sub-speciality column
+  (T376, Q2):
+  - Botha: Trained, Training completed "Not recorded";
+  - Khumalo: Provisional (awaiting sign-off), `D−1 month`;
+  - Naidoo: Trained, `D−6 years`;
+  - Patel: In training, "Not recorded";
+  - Zulu: Trained, `D−8 years`.
+  Each row has an Edit training named for its assessor ("Edit training for Thandi Zulu"). Van Rensburg is not listed,
+  because he does not hold the Assessor role. The old address replaces itself, leaving no history entry, with Dr Zulu's
+  page at `?section=training`, the panel open (T376, S10).
 
 Step 2.44 — Prof Mbatha's dashboard after onboarding
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/invitations/new → / → /admin/users → /admin/assessors
-Do: Open Home and press Invite a person, then go back to Home. Then open Users and Assessors.
+Do: Open Home and press Invite a person, then go back to Home. Press the count beside Assessor on People. Then open
+  Users and Assessors.
 Expect: Home reads "Institutional admin · Semester N, YYYY" and offers "Invite a person", which opens Invite a person
-  (`/admin/invitations/new`), not the list (T373, Q1). Users reads InstitutionalAdmin 1, SpecialityAdmin 1,
-  SubSpecialityAdmin 1, Coordinator 1, CommitteeMember 4, Assessor 5 and Trainee 5, with no PendingTrainee line.
-  Specialities & sub-specialities reads 1 and 1, what KGK has adopted. Quick links reads Users, Invitations, Curriculum
-  adoptions and Entrustment decisions. The users and assessors lists both name Fatima Khumalo (Step 2.41).
+  (`/admin/invitations/new`), not the list (T373, Q1). No waiting line: nobody waits to be admitted (Q8). Three cards
+  and no Quick links (T376, Q7):
+  - **People:** Institutional admin 1, Speciality admin 1, Sub-speciality admin 1, Coordinator 1, Committee member 4,
+    Assessor 5 and Trainee 5, each count a link named by it ("5 Assessor"), with no Pending trainee; "15 accounts." and
+    Open Users;
+  - **Curriculum:** "1" over "speciality adopted" and "1" over "sub-speciality adopted", what KGK has adopted, with
+    "Paediatrics / Paediatrics, from the CPSA's Paediatric EPA Curriculum (11.1)." and Open Curriculum adoptions;
+  - **Your institution:** Name Kgosi Kgari Teaching Hospital, Short code KGK, Contact email
+    paeds-admin@kgk.wombat.local, Status "Active" over "Set by a Wombat administrator.", and Open Kgosi Kgari Teaching
+    Hospital.
+  Assessor's count opens Users filtered by that role (`?role=Assessor`, Role reading Assessor): "People 5 of 15 hold
+  Assessor". The users and assessors lists both name Fatima Khumalo (Step 2.41).
 
 Step A.1.14 — What the erasure left, as KGK sees it
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/trainees → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Look for Dr Ndlovu among KGK's users, its trainees and its committee reviews. Open the check-in from A.1.10.
 Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
+  - Users reads "People 14", with no pseudonym among them. Dr du Plessis's and Dr Molefe's Roles cells read "No role"
+    over "A completed or withdrawn registrar keeps an account and its records.", each with Scope Paediatrics /
+    Paediatrics and Status Active (T376, S2, U07).
   - Committee reviews lists his reviews under a pseudonym, `deleted_user_…`, that names nobody: Act 4's ratified
     review as it was; the closed check-in, Type "Formative check-in", State Closed and Decision "—" (read as "None");
     and A.1.10's check-in, Type "Formative check-in", State Withdrawn and Decision "None: the review was withdrawn".
@@ -779,20 +857,31 @@ Step A.3.1 — Prof Mbatha opens SSO Mappings with no provider configured
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/sso/group-mappings
 Do: Open SSO mappings from the menu.
-Expect: A card says that no SSO providers are configured, and to add them to the `Sso:Providers` section of the
-  application settings and restart. No form for adding a mapping is offered. Current mappings is empty ("No group
-  mappings"), although its empty state still says to add a mapping above. Nothing on the page can be changed.
+Expect: "SSO mappings", subtitled "Which of your institution's sign-in groups give which Wombat role. A change applies at
+  each person's next sign-in." One card, headed "Institutional sign-in is not set up", reads "Institutional sign-in is
+  not set up for Kgosi Kgari Teaching Hospital. A Wombat administrator sets it up; ask them if your hospital signs
+  staff in through its own system." and "Until then, your people sign in with an email and a password, and there is
+  nothing to change on this page." It names no setting and no restart (T326, Q11). There is no form, no Wombat role
+  select, no list of mappings and no Delete…: nothing on the page can be changed, and nothing on it offers Trainee or
+  Pending trainee (T333). At 390 px nothing scrolls sideways.
 
 Step A.4.5 — Prof Mbatha resets his password
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/users/{UserId}
-Do: Open Dr du Plessis's account. Set a new password of 10 characters, then one that meets every rule. Record the
-  second in `pwd_DO_NOT_COMMIT.txt`, as the password to give him out of band.
-Expect: The Reset password card says it sets a password directly and that the user is not emailed. Its field has the
-  Show toggle ("Show new password") and the six rules under it, and Reset password is enabled once anything is typed.
-  The 10-character password is refused with "The password was not reset. The new password needs:" and the rules it
-  breaks, in the six rules' order. The second is accepted, and the field is cleared. The audit log records the reset
-  with the password redacted (T101).
+Do: Open Dr du Plessis's account. Under Sign-in and access, in Password, set a new password of 10 characters, then one
+  that meets every rule. Record the second in `pwd_DO_NOT_COMMIT.txt`, as the password to give him out of band.
+Expect: Roles and scope reads "**Pieter du Plessis holds no role: they left the programme on `D−2`.** They can still sign
+  in to read their training record (My progress) and their data rights." (T376, S2, Q13; D54), in place of "This user
+  has no roles.". His Lockout lists only "They are sent no activity reminders or weekly digests.".
+  - **Password** says "Sets a new password directly. The user is not emailed; share the password securely
+    out-of-band." Its field has the Show toggle ("Show new password") and the six rules under it. Reset password is
+    always offered, never disabled.
+  - **The 10-character password** is refused in Password, under its heading, not at the page's top: "The password was
+    not reset. The new password needs:" and the rules it breaks, in the six rules' order. The field is marked "The new
+    password does not meet the rules below." and cleared.
+  - **The second** is accepted. In Password, focused: "**Password reset for Pieter du Plessis.** Share the new password
+    with Pieter du Plessis out-of-band." The field is cleared.
+  - The audit log records the reset with the password redacted (T101).
 
 Step A.5.5 — Another institution's records, by id
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -800,47 +889,71 @@ Route: /admin/institutions/{Id:int} → /not-found → /admin/users/{UserId}
 Do: Open the Demo Institution's page by its id. Then open the page of the dev trainee `trainee@wombat.local` by that
   account's id.
 Expect: The institution shows Page not found, not "You cannot open this page". The user shows "User unavailable" ("The
-  user could not be found or is outside your scope."). Neither page confirms that the record exists (CLAUDE.md: 404, not
-  403).
+  user could not be found or is outside your scope."), headed and tabbed "User", under Home › Users › User, with Go to
+  Users and no Back to users (T376, P23). Neither page confirms that the record exists (CLAUDE.md: 404, not 403).
 
 Step A.6.3 — Prof Mbatha edits her own institution
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/institutions/{Id:int} → /
-Do: Open KGK's page by its address (no nav link leads there). Set its contact email to
-  `hod.paediatrics@kgk.wombat.local` and save. Read Status, then look at Back to home and Cancel.
-Expect: "Institution saved." takes the focus. Status reads "Active" as text, with "Set by a global administrator."
-  beneath: there is no Active box and no Deactivate, because an institution's state is the Administrator's alone
-  (T302). "Back to home" and Cancel both lead to `/`. SQL:
+Route: / → /admin/institutions/{Id:int} → /
+Do: From Home, press Open Kgosi Kgari Teaching Hospital. Set its contact email to `hod.paediatrics@kgk.wombat.local`
+  and press Save changes. Read Status, then press Cancel.
+Expect: The contact email starts at `paediatrics@kgk.wombat.local`, A.6.1's save. Above the form, focused: "**Kgosi Kgari
+  Teaching Hospital saved.** Its contact email is now hod.paediatrics@kgk.wombat.local." (T376, I02). Status reads
+  "Active", read out, over "Set by a Wombat administrator.": there is no Active box and no Deactivate, because an
+  institution's state is the Administrator's alone (T302). There is no Back link; Cancel leads to `/`, whose Your
+  institution card reads Contact email hod.paediatrics@kgk.wombat.local. SQL:
   `SELECT "Id","ContactEmail","IsActive" FROM "Institutions" WHERE "ShortCode"='KGK'` gives
   `2|hod.paediatrics@kgk.wombat.local|t`.
 
 Step A.6.4 — Prof Mbatha locks Dr Patel out
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/users/{UserId}
-Do: With Dr Patel signed in on another browser, open his account, read the Lockout card, and lock him out.
-Expect: Once locked, his status reads "Locked out" and the card offers Reactivate user. The focus moves to the result.
-  No confirmation is asked first (T264). Before the lock, the card lists what it does until he is reactivated, and says
-  his records stay as they are (T284):
-  - he sits on no committee panel;
-  - he is not a current trainee;
-  - he is sent no reminders or digests;
-  - he cannot be named as an activity's assessor.
+Do: With Dr Patel signed in on another browser, open his account and read Lockout, under Sign-in and access. Press
+  Lock out…, read the dialog and press Keep access. Then press Lock out… again and Lock out Mohammed Patel.
+Expect: Before the lock, Lockout reads "Locking out the user prevents sign-in immediately. Until they are reactivated:",
+  then only what applies to him, an Assessor (T376, Q17):
+  - "They are sent no activity reminders or weekly digests.";
+  - "They cannot be named as an activity's assessor.";
+  then "Their records stay as they are, and a review or feedback campaign already under way can still be finished.
+  Reactivating clears the lockout." (T284), and an outline Lock out…, named "Lock out Mohammed Patel". There is no
+  Pending invitations card.
+  - **The dialog** (T264, Q5), "Lock out Mohammed Patel?": "Mohammed Patel can no longer sign in, and any open session
+    ends within a minute. Until they are reactivated:", the same two lines, then a warning: "**1 request is waiting for
+    Mohammed Patel**, since `D−8` hh:mm SAST. It stays with them; it does not move to anyone else, and no reminder is
+    sent about it.", over its row "Pieter du Plessis · Portfolio and Logbook Review (Paediatrics) · PAED-015 · waiting
+    since `D−8` hh:mm SAST · overdue" (F6); then the records sentence. Keep access, which has the focus, and Lock out
+    Mohammed Patel.
+  - **Keep access** closes it and locks nothing; the focus returns to Lock out….
+  - **Once locked**, in Lockout, focused: "**Mohammed Patel is locked out.** Any open session ends within a minute." His
+    Status reads the Locked out badge, with its lock icon; Lockout reads "This user is currently locked out and cannot
+    sign in." and offers Reactivate user. On Users his Status reads Locked out.
 
 Step A.6.7 — Prof Mbatha reactivates Dr Patel
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users/{UserId}
-Do: Reactivate Dr Patel.
-Expect: His status reads Active, the card offers Lock out user again, and the focus moves to the result.
+Do: Press Reactivate user.
+Expect: One press, no dialog (Q5). In Lockout, focused: "Mohammed Patel is reactivated and can sign in again." His Status
+  reads Active, and Lockout lists his two lines again with Lock out…. Roles and scope lists Assessor with Remove….
 
 Step A.7.9 — Prof Mbatha on her phone
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/users → /admin/users/{UserId} → /admin/trainees → /admin/trainees/edit → /admin/activity-types/{ActivityTypeId:int}
-Do: At 390 px, open Users and Dr Dlamini's account, Trainees and Dr Dlamini's profile, then the KGK Teaching Session
-  Log in the builder.
-Expect: The user page's cards stack, and its buttons wrap rather than overflow. On Trainees, Current trainees is
-  stacked, a block per row with its Edit 44 px, and does not scroll sideways (T373, S16); Completed and closed is flow
-  13's list as built. The trainee profile form stacks its fields. The builder's editor and live preview stack in one column (DESIGN.md § Builder layout, T266), and its tab bar
-  stays usable.
+Do: At 390 px, read Home, then open Users and Dr Dlamini's account, Trainees and Dr Dlamini's profile, then the KGK
+  Teaching Session Log in the builder.
+Expect: Nothing scrolls sideways on any of them (T323).
+  - **Home's** three cards stack; People's counts and each card's footer link are 44 px tall, and a long contact address
+    wraps (M7).
+  - **Users** stacks: the filter's fields one under another, Show and Clear full width; People a block per person, the
+    name over the address, then Roles, Scope, Status and Manage, 44 px (T376; until T376 the table scrolled 807 px
+    in its box).
+  - **Dr Dlamini's account** stacks its account line and sections: Roles and scope reads "Trainee" and "System-managed"
+    apart (F-2.28b), with Add a role…; Sign-in and access's Password, Institutional sign-in and Lockout one under another,
+    the password field's Show toggle 44 px tall, its buttons wrapping rather than overflowing. Her Lockout lists two
+    lines: the trainee line and the reminders line. There is no Back to users.
+  - **Trainees:** Current trainees is stacked, a block per row with its Edit 44 px, and does not scroll sideways (T373,
+    S16); Completed and closed is flow 13's list as built.
+  - **The trainee profile form** stacks its fields. The builder's editor and live preview stack in one column (DESIGN.md
+    § Builder layout, T266), and its tab bar stays usable.
 
 Step A.7.14 — Prof Mbatha's pages, checked for contrast
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -854,8 +967,9 @@ Do: With a contrast checker (axe, or the browser's accessibility audit), check e
   - a success alert (save My account's name, from the name in the top bar, unchanged: "Name saved.") and a danger
     alert (Change password with a confirmation that differs, which checks no password and changes nothing);
   - a password field's Show toggle, pressed (white on the action blue, 4.86:1);
-  - white on the primary, danger (Lock out user on Dr Patel's page, not pressed) and success (Publish in the builder,
-    not pressed; with no draft it is disabled, and a disabled control is exempt) buttons;
+  - white on the primary, danger (the dialog's Lock out Mohammed Patel: open Lock out… on Dr Patel's page, read it,
+    then Keep access; T376, S22) and success (Publish in the builder, not pressed; with no draft it is disabled, and a
+    disabled control is exempt) buttons;
   - the focus ring on white and on the page background;
   - an input's border.
 Expect: Every pair meets WCAG 2.1 AA: text 4.5:1, large text 3:1, and 3:1 for a control's boundary and the focus

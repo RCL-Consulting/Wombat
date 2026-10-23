@@ -581,11 +581,12 @@ describes the product as flow 08's replay left it (T364, 2026-10-13), except whe
 Step 4.35 — Prof Mbatha reads the issued STARs
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/entrustment-decisions
-Do: Open Entrustment decisions from her dashboard's quick links. Download Dr Molefe's PAED-010 certificate. Filter by
+Do: Open Entrustment decisions from the menu, under Reviews. Download Dr Molefe's PAED-010 certificate. Filter by
   trainee "Molefe" and press Show.
 Expect:
-  - **The page:** under the trail Home › Entrustment decisions, since no menu item of hers leads to it (T358). Its
-    subtitle reads "Issued Statements of Awarded Responsibility across the programme."
+  - **The page:** lit in her menu, with no trail: a list her menu offers since T376 (flow 12, F10; Home's Quick links,
+    its only way in until then, are gone). Its subtitle reads "Issued Statements of Awarded Responsibility across the
+    programme."
   - **The list:** captioned "Issued STARs (entrustment decisions) · 5 shown"; five rows, all Active, issued `D`, newest
     issued first and then by STAR number, descending (one day's ties; T366, F1):
     - Dlamini: PAED-002 `3b`, PAED-001 `4`.
@@ -811,7 +812,7 @@ Expect: Two rows for `<P>`, the check-in first: newest first, by scheduled date 
 Step 5.7 — Prof Mbatha reads Dr Molefe's STARs
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/entrustment-decisions
-Do: Open Entrustment decisions from her dashboard's quick links. Filter by the trainee name "Molefe", first with the
+Do: Open Entrustment decisions from the menu. Filter by the trainee name "Molefe", first with the
   status Active and then with All, pressing Show each time.
 Expect: There are fifteen Active rows, captioned "… · 15 shown", one for each EPA from PAED-001 to PAED-015. Each row:
   - is at its EPA's exit level;

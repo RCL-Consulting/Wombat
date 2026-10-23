@@ -321,7 +321,7 @@ public sealed class HomeFrameTests : WombatTestContext
         private static object Answer(object request) => request switch
         {
             GetAdministratorDashboardSummaryQuery => new AdministratorDashboardSummaryDto(DatabaseHealthy: true, TotalUserCount: 12),
-            GetInstitutionalAdminDashboardSummaryQuery => new InstitutionalAdminDashboardSummaryDto([], SpecialityCount: 1, SubSpecialityCount: 1),
+            GetInstitutionalAdminDashboardSummaryQuery => new InstitutionalAdminDashboardSummaryDto([], AccountCount: 1, OnlyAccountIsYours: true, WaitingCount: 0, AdoptedSpecialityCount: 1, AdoptedSubSpecialityCount: 1, Adoptions: [], Institution: null),
             GetSpecialityAdminDashboardSummaryQuery => OversightHomeFixtures.SpecialityAdmin(),
             GetSubSpecialityAdminDashboardSummaryQuery => OversightHomeFixtures.SubSpecialityAdmin(),
             GetCommitteeMemberDashboardSummaryQuery => OversightHomeFixtures.Committee(),

@@ -3,7 +3,7 @@
 **Scenario date:** Tuesday 13 January 2026, the morning after Act 1. The date is narrative only (README § The clock).
 
 **Who acts:** Prof Nolwazi Mbatha (InstitutionalAdmin, KGK) issues every invitation, gives the second roles and the
-assessor profiles, admits the registrars and forms the review panel. Each invitee plays in a browser of their own (a
+assessors' training, admits the registrars and forms the review panel. Each invitee plays in a browser of their own (a
 private window per person). Dr Mokoena and Dr Sithole handle the panel once it exists. No Administrator is needed.
 
 **Why:** Act 1 set up the catalogue KGK trains against. Nothing can be filed, rated or decided until the people are in:
@@ -22,7 +22,7 @@ consultants with the roles they work in, registrars admitted to the adopted curr
 1. Nine staff onboarded with the cast's roles: Smit (Coordinator); Zulu, Naidoo and Botha (CommitteeMember, then
    Assessor too); Patel and Khumalo (Assessor); van Rensburg (external CommitteeMember); Mokoena (SpecialityAdmin,
    Paediatrics); Sithole (SubSpecialityAdmin, Paediatrics).
-2. Five assessor profiles with a training status (T065). Van Rensburg has none.
+2. Five assessors' training recorded, each a status on their page (T065, T376). Van Rensburg has none.
 3. Five registrars registered and admitted to curriculum 11.1, pinned to KGK's adoption (T091), in training years 4, 3,
    2, 1 and 1.
 4. One decision panel, `Paed Annual Review Panel`: Zulu chairs, Naidoo and Botha are members and van Rensburg is the
@@ -268,20 +268,39 @@ Actual (2026-10-20, T373 replay, wombat_scenario_t373): The link went through th
   and "If it was yours, sign in with that account.", with Sign in (and Forgotten your password?); no input.
 Gap: none
 
-## Phase 2.C — Second roles and assessor profiles
+## Phase 2.C — Second roles and assessor training
 
 ### Step 2.12 — Mbatha reviews KGK's users
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/invitations → /admin/users → /admin/users/{UserId}
-Do: Open Invitations. Then read the user list, filter it by "zulu" and clear the filter. Open Manage on her own
-  row.
-Expect: Active invitations reads "No active invitations": all nine staff invitations have been used. The user list has
-  ten rows: Mbatha and the nine staff, each at KGK with the invited role and status Active. No Demo account,
-  `devadmin` or Dr Kruger appears: an InstitutionalAdmin lists only her institution's users (T056). The filter leaves
-  Zulu alone. Her own page's subtitle reads "Your own account's summary, roles and pending invitations." A note says
-  "This is your own account, so you cannot change its roles, lockout or password here. Another administrator can change
-  your roles or lockout.", followed by a Change your password link. It offers no Remove, Add role, Reset password or
-  Lockout (T278).
+Do: Open Invitations. Then open Users and read the list. Type "zulu" in Name or email and press Show, then press Clear.
+  Open Manage on her own row.
+Expect: Active invitations reads "No active invitations": all nine staff invitations have been used.
+  - **Users** reads "Everyone with an account at Kgosi Kgari Teaching Hospital: the roles each holds, their scope, and
+    whether they can sign in.", with Invite a person in its header. A search form, "Filter people", offers Name or email
+    ("A name in either order, part of one, or an address."), Role (Any role, then each role by label, then No role) and
+    Status (Any status, Active, Locked out), with Show and Clear. Nothing filters as she types (T376, Q6).
+  - **People** reads "10", captioned "At Kgosi Kgari Teaching Hospital, by last name: each person's roles, one scope for
+    all of them, and whether they can sign in.": ten rows, Mbatha and the nine staff, by last name, with no pager.
+    Columns: Name (the name over the address), Roles (each by label, one a line), Scope, Status, and a Manage named for
+    its person. There is no Institution column (T376, U01). Each reads the invited role and its scope, and Active:
+    Botha, Naidoo and Zulu Committee member, Paediatrics; Khumalo and Patel Assessor, Paediatrics / Paediatrics; Mbatha
+    Institutional admin, Kgosi Kgari Teaching Hospital; Mokoena Speciality admin, Paediatrics; Sithole Sub-speciality
+    admin, Paediatrics / Paediatrics; Smit Coordinator, Any speciality; van Rensburg Committee member, Any speciality.
+  - No Demo account, `devadmin` or Dr Kruger appears: an InstitutionalAdmin lists only her institution's users (T056).
+  - **Show** with "zulu" leaves Zulu alone: the heading reads "People 1 of 10 match “zulu”" and takes the focus, a
+    screen reader hears "1 of 10 people match “zulu”.", and the address carries `?q=zulu`. Clear shows the ten again.
+  - **Her own page**, under Home › Users › Nolwazi Mbatha, is titled by her name. Its subtitle reads "Your own account:
+    your roles and how you sign in." The account line reads Email, Institution Kgosi Kgari Teaching Hospital, Status
+    Active and Scope Kgosi Kgari Teaching Hospital. A note says "This is your own account, so you cannot change its
+    roles, lockout or password here. Another administrator can change your roles or lockout.", followed by "Change your
+    password from your account." with its link. Roles and scope lists Institutional admin with no Remove…, and offers
+    no Add a role…; Sign-in and access has no Password and no Lockout (T278), only Institutional sign-in: "No
+    institutional sign-in is linked. Nolwazi Mbatha signs in with an email and a password." There is no Pending
+    invitations card and no Back to users (T376, Q9).
+  - Her menu lists Entrustment decisions under Reviews (T376, F10).
+Note: Finding a person ("thandi zulu") from Home is 3 presses and 1 field (Users, the name, Show, Manage), 4 and 1 at
+  390; by role from Home's People card, 2 presses (the count, Manage). Users draws a pager only past 20 matches (F9).
 Actual (2026-10-20, T373 replay, wombat_scenario_t373): "No active invitations". Users: ten rows (Mbatha and the
   nine), all KGK, Active, each with its invited role; no Demo, devadmin or Kruger row. "zulu" left Thandi Zulu alone;
   cleared, ten again. Manage on her row: Home › Users › Nolwazi Mbatha, "Your own account's summary, roles and pending
@@ -293,15 +312,30 @@ Gap: none
 ### Step 2.13 — Mbatha adds Assessor to Dr Zulu, Dr Naidoo and Dr Botha
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/users/{UserId}
-Do: For each of the three, open Manage, choose Assessor under Add role and press Add role.
-Expect: Before the change, Roles lists CommitteeMember with Remove. Add role offers InstitutionalAdmin, SpecialityAdmin,
-  SubSpecialityAdmin, Coordinator and Assessor, never Administrator, CollegeAdmin, PendingTrainee or Trainee (T303).
-  Its help reads "Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with
-  'Admit…'.", on every user's page.
-  A Lockout card lists what a lock does (T284), and Pending invitations reads "No active invitations are outstanding for
-  this email.". After the change the page reads "Role 'Assessor' added.", Roles lists both, and Add role no longer offers
-  Assessor. The users list's Roles column shows both.
+Do: For each of the three, open Manage, press Add a role…, choose Assessor and press Add role.
+Expect: Before the change, the page is titled by the person's name, "Roles, sign-in and lockout for one person at Kgosi
+  Kgari Teaching Hospital, with assessor training for an Assessor.", and its account line reads Scope Paediatrics.
+  - **Roles and scope** lists Committee member with an outline Remove… named "Remove Committee member from Thandi Zulu".
+    Under it, Add a role… and "Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees
+    with 'Admit…'.", on every user's page.
+  - **Add a role…** opens a panel in place, the first choice focused: Role *, a group of radios by label, each with its
+    description (Assessor's "Assesses the registrars who ask them, at this institution."): Institutional admin,
+    Speciality admin, Sub-speciality admin, Coordinator and Assessor, never Administrator, College admin, Pending
+    trainee or Trainee (T303), and not Committee member, which the person holds.
+  - **Assessor** draws its scope as read-outs, not selects: Speciality "Paediatrics", "Already held by Thandi Zulu.", and
+    Sub-speciality "Paediatrics", "The only sub-speciality Kgosi Kgari Teaching Hospital has adopted." (M8, S13). Then
+    Cancel and Add role.
+  - **Lockout**, under Sign-in and access, lists what a lock does to this person (T284, Q17): "They sit on no committee
+    panel." and "They are sent no activity reminders or weekly digests.". There is no Pending invitations card (Q9).
+  - **After the change**, in Roles and scope, focused: "**Assessor added to Thandi Zulu.** Thandi Zulu's scope is now
+    Paediatrics / Paediatrics. Any open session ends within a minute." The scope arrives here, with the role (T376, M2,
+    Q4). Roles lists Committee member and Assessor, each with Remove…; the account line reads Scope Paediatrics /
+    Paediatrics; an Assessor training section appears, offering Record training; Lockout adds "They cannot be named as
+    an activity's assessor."; and Add a role… no longer offers Assessor.
+  - **Users** reads, for all three, Roles "Committee member" over "Assessor" and Scope Paediatrics / Paediatrics.
 Note: A role change ends any session the account still has open within a minute (T279). Step 2.10 signed everyone out.
+  Adding a role with its scope is 3 presses (Add a role…, Assessor, Add role), at 1280 and at 390; abandoning it is 2
+  (Add a role…, Cancel), at 1280.
 Actual (2026-10-20, T373 replay, wombat_scenario_t373): Before: Roles CommitteeMember with Remove ("Remove the
   CommitteeMember role"); Add role offers exactly InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, Coordinator
   and Assessor, with "Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with
@@ -311,19 +345,36 @@ Actual (2026-10-20, T373 replay, wombat_scenario_t373): Before: Roles CommitteeM
   three.
 Gap: none
 
-### Step 2.14 — Mbatha creates five assessor profiles
+### Step 2.14 — Mbatha records five assessors' training
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/assessors → /admin/assessors/edit → /admin/assessors
-Do: Create a profile for each assessor at KGK, Paediatrics / Paediatrics, with qualifications "MBChB, MMed (Paed), FC
-  Paed (SA)". Zulu is Trained, completed `D−8 years`. Naidoo is Trained, `D−6 years`. Botha is Trained with the date
-  left blank. Patel is In training. Khumalo is Provisional (awaiting sign-off), `D−1 month`.
-Expect: The list first reads "No assessor profiles". The form's Assessor user offers the five KGK Assessors, and not van
-  Rensburg or any Demo account. Institution offers KGK alone. Sub-speciality is enabled once a speciality is chosen.
-  Training status offers Not started, In training, Provisional (awaiting sign-off) and Trained, and the completion date
-  is asked for only when the status is Provisional or Trained. Each save reads "Assessor profile saved.", and the page
-  moves to `?id=` for the saved profile. The next new form's picker leaves out everyone already profiled.
-Note: T064 decided both the `?id=` move and the narrowing; the code has neither (T064 is closed, and the T159 replay found
-  both missing), so expect a Gap. Saving a profile sets the user's scope to the profile's (T279: open sessions end).
+Route: /admin/assessors → /admin/users/{UserId} → /admin/assessors
+Do: Open Assessors. For each assessor, press Record training on their row, which opens their page at Assessor
+  training. On Dr Zulu's, press Save training first with nothing chosen and nothing typed. Then choose the status, the
+  date where it is asked, and the qualifications "MBChB, MMed (Paed), FC Paed (SA)", and press Save training; open
+  Assessors again for the next. Zulu is Trained, completed `D−8 years`. Naidoo is Trained, `D−6 years`. Botha is Trained
+  with the date left blank. Patel is In training. Khumalo is Provisional (awaiting sign-off), `D−1 month`.
+Expect: Training is recorded on the person's page, for anyone who holds Assessor (T376, Q2); nothing asks for an
+  institution, speciality or sub-speciality, and the save writes no scope (M1, T289).
+  - **Assessors** reads "Everyone at Kgosi Kgari Teaching Hospital who holds the Assessor role, with the assessor
+    training recorded for each.", with no Create assessor profile. "Assessors at Kgosi Kgari Teaching Hospital 5",
+    captioned "At Kgosi Kgari Teaching Hospital, by last name: each holder of the Assessor role, and the training recorded
+    on their page.": Botha, Khumalo, Naidoo, Patel and Zulu, each with Scope Paediatrics / Paediatrics, Training status
+    "Not recorded", Training completed "—" and Record training, named "Record training for ‹name›". Van Rensburg and
+    every Demo account are absent.
+  - **Record training** opens `/admin/users/{UserId}?section=training`: the person's page with Assessor training's
+    panel open and Not started focused. Training status * offers Not started, In training, Provisional (awaiting
+    sign-off) and Trained as radios, with "Faculty-development lifecycle. In-training assessors may assess under
+    supervision."; Training completed is drawn only for Provisional or Trained, with "Date the assessor completed
+    assessor training. Leave blank if unrecorded."; then Qualifications *, Cancel and Save training.
+  - **The empty save** reads "Choose the training status." under the status and "Type the qualifications, as they
+    should read." under Qualifications, each input marked, the focus on the first radio. Nothing is saved (T324).
+  - **Each save** says, in the section, focused: "**Training saved for Thandi Zulu:** Trained, completed `D−8 years`."
+    Khumalo's reads "**Training saved for Fatma Khumalo:** Provisional (awaiting sign-off), completed `D−1 month`.",
+    Botha's "… Trained, no date." and Patel's "… In training.". The page stays the person's: the section reads the record
+    out (Training status, Training completed, Qualifications) with Edit training. Back on Assessors the row reads Edit
+    training, named "Edit training for ‹name›".
+Note: Recording one assessor's training is 4 presses and 2 fields from Home (Assessors, Record training, the status,
+  Save training; the date and the qualifications), 5 and 2 at 390; from the person's page, 3 and 2.
 Actual (2026-10-20, T373 replay, wombat_scenario_t373): The list first read "No assessor profiles" / "Create the first
   assessor profile to make assessors selectable in the workflow.". Picker: the five KGK Assessors only, each
   "(email)"; Institution KGK alone; Sub-speciality "All", disabled, until a speciality is chosen; Training status
@@ -336,12 +387,20 @@ Gap: [F-2.14a, T289] (still) No move to `?id=` after a save (T064). [F-2.14b, T2
 
 ### Step 2.15 — The assessor list and who is not on it
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/assessors
-Do: Read the list.
-Expect: Five rows, each at KGK in Paediatrics / Paediatrics. Training status reads Trained for Zulu, Naidoo and Botha, In
-  training for Patel and Provisional for Khumalo. Training completed reads `D−8 years`, `D−6 years`, "Not recorded",
-  "Not recorded" and `D−1 month` respectively. Each row has an Edit named for its assessor. Van Rensburg is neither listed
-  nor offered, because he does not hold the Assessor role.
+Route: /admin/assessors → /admin/assessors/edit → /admin/users/{UserId}
+Do: Read the list. Then type the address an old link to Dr Zulu's profile had, `/admin/assessors/edit?id=‹her profile
+  id›` (`SELECT a."Id" FROM "AssessorProfiles" a JOIN "AspNetUsers" u ON u."Id" = a."UserId" WHERE u."Email" =
+  'zulu@kgk.wombat.local'`).
+Expect: Five rows, each with Scope Paediatrics / Paediatrics and no Institution, Speciality or Sub-speciality column
+  (T376, Q2):
+  - Botha: Trained, Training completed "Not recorded";
+  - Khumalo: Provisional (awaiting sign-off), `D−1 month`;
+  - Naidoo: Trained, `D−6 years`;
+  - Patel: In training, "Not recorded";
+  - Zulu: Trained, `D−8 years`.
+  Each row has an Edit training named for its assessor ("Edit training for Thandi Zulu"). Van Rensburg is not listed,
+  because he does not hold the Assessor role. The old address replaces itself, leaving no history entry, with Dr Zulu's
+  page at `?section=training`, the panel open (T376, S10).
 Actual (2026-10-20, T373 replay, wombat_scenario_t373): Five rows, KGK, Paediatrics / Paediatrics: Botha Trained "Not
   recorded", Khumalo (Fatma) Provisional 2026-09-20, Naidoo Trained 2020-10-20, Patel In training "Not recorded", Zulu
   Trained 2018-10-20. Each Edit is named "Edit <name>". Van Rensburg is not listed and was never offered.
@@ -632,12 +691,20 @@ Gap: none (T315 no longer occurs: no token in the address bar)
 
 ### Step 2.28 — The pending registrars, as Mbatha sees them
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/invitations → /admin/users → /admin/users/{UserId} → /admin/trainees
-Do: Open Invitations. Read the users list and open Dr Molefe's page. Then open Trainees.
-Expect: Active invitations reads "No active invitations". Users lists 15, with the five registrars as PendingTrainee. On
-  Molefe's page, PendingTrainee reads "System-managed" and has no Remove. Add role offers InstitutionalAdmin,
-  SpecialityAdmin, SubSpecialityAdmin, Coordinator, CommitteeMember and Assessor, not Trainee, and its help reads "Trainee
-  is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit…'." (T303).
+Route: / → /admin/invitations → /admin/users → /admin/users/{UserId} → / → /admin/trainees
+Do: Open Home and read it. Open Invitations. Read the users list and open Dr Molefe's page; press Add a role…, read
+  it and press Cancel. Then go Home and press Open Trainees on the line above its cards.
+Expect: Home reads, above its cards, "**5 registrars are waiting to be admitted.** Nothing can be filed about them until
+  then." with Open Trainees: a standing line, not announced (T376, Q8, S23). People reads Institutional admin 1,
+  Speciality admin 1, Sub-speciality admin 1, Coordinator 1, Committee member 4, Assessor 5 and Pending trainee 5, and
+  "15 accounts.".
+  - Active invitations reads "No active invitations".
+  - Users reads "People 15", the five registrars' Roles "Pending trainee" and Scope Paediatrics / Paediatrics.
+  - **Molefe's page:** Roles and scope lists Pending trainee, then "System-managed: waiting to be admitted." with Open
+    Trainees, and no Remove…, the label and the note apart (T323, F-2.28b). Add a role… offers Institutional admin,
+    Speciality admin, Sub-speciality admin, Coordinator, Committee member and Assessor, each with its description, not
+    Trainee, and "Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with
+    'Admit…'." (T303). Cancel closes it and adds nothing.
   Trainees reads "Admit registrars who are waiting, and keep current trainees' programmes." under its heading:
   - "Waiting to be admitted" "5 waiting", captioned "Registered from a Trainee invitation, by surname. A deactivated
     account is not listed. Nothing can be filed about them until they are admitted.": Dlamini, du Plessis, Mahlangu,
@@ -881,10 +948,11 @@ Expect: Dr van Rensburg sees "Committee member · Semester N, YYYY" on Home, and
   Committee member" with no switch, over Home, Programme trainees, Committee reviews and Decision panels, then My data
   rights. Decision panels lists the panel Dr van Rensburg sits on as external member, its Members marking him
   "(external)", with no New panel and no Edit.
-Note: Zulu, Naidoo and Botha hold the Paediatrics sub-speciality only through their assessor profiles (Step 2.14), and a
-  CommitteeMember invitation may carry none (Step 2.3). So a committee member with no assessor profile sees no trainee
-  here, although he sits on the panel and may read every KGK trainee's record (T113). Fixed by T290 (2026-10-05):
-  the card no longer reads sub-speciality claims.
+Note: Zulu, Naidoo and Botha hold the Paediatrics sub-speciality only because Step 2.13 gave them Assessor (since T376
+  Add a role writes the role's scope; until then the assessor profile did, Step 2.14), and a Committee member invitation
+  may carry none (Step 2.3). So a committee member with no sub-speciality saw no trainee here, although he sits on the
+  panel and may read every KGK trainee's record (T113). Fixed by T290 (2026-10-05): the card no longer reads
+  sub-speciality claims.
 Actual (2026-10-20, T373 replay, wombat_scenario_t373): Home, "Committee member · Semester 2, 2026", "Acting as
   Committee member" with no switch, over Home, Programme trainees, Committee reviews and Decision panels, then My data
   rights. "Registrars", badged "5 registrars", lists the five in Step 2.33's order, each "0 of 10" / "0 of 5"; Targets
@@ -1030,14 +1098,23 @@ Gap: none
 ### Step 2.44 — Prof Mbatha's dashboard after onboarding
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/invitations/new → / → /admin/users → /admin/assessors
-Do: Open Home and press Invite a person, then go back to Home. Then open Users and Assessors.
+Do: Open Home and press Invite a person, then go back to Home. Press the count beside Assessor on People. Then open
+  Users and Assessors.
 Expect: Home reads "Institutional admin · Semester N, YYYY" and offers "Invite a person", which opens Invite a person
-  (`/admin/invitations/new`), not the list (T373, Q1). Users reads InstitutionalAdmin 1, SpecialityAdmin 1,
-  SubSpecialityAdmin 1, Coordinator 1, CommitteeMember 4, Assessor 5 and Trainee 5, with no PendingTrainee line.
-  Specialities & sub-specialities reads 1 and 1, what KGK has adopted. Quick links reads Users, Invitations, Curriculum
-  adoptions and Entrustment decisions. The users and assessors lists both name Fatima Khumalo (Step 2.41).
-Note: The adopted count is T291 item 4's decision, still queued: the query counts the whole national catalogue, which
-  with the Demo world reads 2 and 2, so expect a Gap until T291 lands.
+  (`/admin/invitations/new`), not the list (T373, Q1). No waiting line: nobody waits to be admitted (Q8). Three cards
+  and no Quick links (T376, Q7):
+  - **People:** Institutional admin 1, Speciality admin 1, Sub-speciality admin 1, Coordinator 1, Committee member 4,
+    Assessor 5 and Trainee 5, each count a link named by it ("5 Assessor"), with no Pending trainee; "15 accounts." and
+    Open Users;
+  - **Curriculum:** "1" over "speciality adopted" and "1" over "sub-speciality adopted", what KGK has adopted, with
+    "Paediatrics / Paediatrics, from the CPSA's Paediatric EPA Curriculum (11.1)." and Open Curriculum adoptions;
+  - **Your institution:** Name Kgosi Kgari Teaching Hospital, Short code KGK, Contact email
+    paeds-admin@kgk.wombat.local, Status "Active" over "Set by a Wombat administrator.", and Open Kgosi Kgari Teaching
+    Hospital.
+  Assessor's count opens Users filtered by that role (`?role=Assessor`, Role reading Assessor): "People 5 of 15 hold
+  Assessor". The users and assessors lists both name Fatima Khumalo (Step 2.41).
+Note: Until T376 (flow 12) the card was Specialities & sub-specialities, which counted the whole national catalogue
+  (2 and 2 with the Demo world, T291 item 4, F-2.44a), beside Users by role key and four Quick links.
 Actual (2026-10-20, T373 replay, wombat_scenario_t373): Home, "Institutional admin · Semester 2, 2026", header action
   "Invite a person", which opened /admin/invitations/new (Invite a person); Home from the menu. Users 1/1/1/1/4/5/5,
   no PendingTrainee line; Specialities & sub-specialities reads 2 and 2; Quick links Users, Invitations, Curriculum
@@ -1057,7 +1134,8 @@ reviews 0 | 0. The log holds 23 stubs: 18 invitations (Act 1's two among them) a
 - **15 KGK users:** Mbatha (InstitutionalAdmin); Smit (Coordinator); Zulu, Naidoo and Botha (CommitteeMember and
   Assessor); Patel and Khumalo (Assessor); van Rensburg (CommitteeMember); Mokoena (SpecialityAdmin); Sithole
   (SubSpecialityAdmin); the five registrars (Trainee, no longer PendingTrainee).
-- **5 assessor profiles** at KGK, Paediatrics / Paediatrics: three Trained, one In training, one Provisional.
+- **5 assessors' training** recorded at KGK, each assessor's scope Paediatrics / Paediatrics: three Trained, one In
+  training, one Provisional.
 - **5 trainee profiles** on curriculum 11.1, each pinned to KGK's adoption. They start on `J−3y`, `J−2y`, `J−1y`, `J`
   and `J`, which gives training years 4, 3, 2, 1 and 1.
 - **1 decision panel,** `Paed Annual Review Panel`: Speciality · Paediatrics, a general panel. Zulu chairs, Naidoo and
@@ -1079,7 +1157,7 @@ SELECT u."Email", string_agg(r."Name", '+' ORDER BY r."Name") AS roles
   -- mokoena SpecialityAdmin; sithole SubSpecialityAdmin; smit Coordinator; vanrensburg CommitteeMember;
   -- dlamini, duplessis, mahlangu, molefe, ndlovu Trainee
 
--- Scope: what the invitations, the assessor profiles and the admissions wrote
+-- Scope: what the invitations, Add a role (Step 2.13) and the admissions wrote
 SELECT u."Email",
        (SELECT count(*) FROM "UserSpecialityScopes" s WHERE s."UserId" = u."Id") AS specialities,
        (SELECT count(*) FROM "UserSubSpecialityScopes" s WHERE s."UserId" = u."Id") AS sub_specialities
@@ -1101,16 +1179,14 @@ SELECT u."Email", p."ProgrammeStartDate", p."ExpectedCompletionDate", p."IsActiv
   -- 5 rows, all active and pinned: molefe J−3y / J+1y−1d; dlamini J−2y / J+2y−1d; duplessis J−1y / J+3y−1d;
   -- mahlangu and ndlovu J / J+4y−1d
 
--- Assessor profiles (TrainingStatus 1 = In training, 2 = Provisional, 3 = Trained)
-SELECT u."Email", a."TrainingStatus", a."TrainingCompletedOn", s."Name" AS speciality, ss."Name" AS sub_speciality
+-- Assessor training (TrainingStatus 1 = In training, 2 = Provisional, 3 = Trained). Since T376 a profile records
+-- training only: its speciality and sub-speciality columns are gone, and the scope is the person's (the query above).
+SELECT u."Email", a."TrainingStatus", a."TrainingCompletedOn"
   FROM "AssessorProfiles" a
   JOIN "AspNetUsers" u ON u."Id" = a."UserId"
   JOIN "Institutions" i ON i."Id" = a."InstitutionId"
-  LEFT JOIN "Specialities" s ON s."Id" = a."SpecialityId"
-  LEFT JOIN "SubSpecialities" ss ON ss."Id" = a."SubSpecialityId"
  WHERE i."Name" = 'Kgosi Kgari Teaching Hospital' ORDER BY 1;
-  -- 5 rows, each Paediatrics | Paediatrics: botha 3, no date; khumalo 2, D−1 month; naidoo 3, D−6 years;
-  -- patel 1, no date; zulu 3, D−8 years
+  -- 5 rows: botha 3, no date; khumalo 2, D−1 month; naidoo 3, D−6 years; patel 1, no date; zulu 3, D−8 years
 
 -- The panel (Scope 2 = Speciality; Role 1 = Chair, 2 = Member, 3 = External)
 SELECT p."Name", p."Scope", p."DecisionBodyKey", m."Role", u."Email"

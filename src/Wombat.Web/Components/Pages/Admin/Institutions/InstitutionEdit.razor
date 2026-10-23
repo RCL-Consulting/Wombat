@@ -1,107 +1,138 @@
-@page "/admin/institutions/new"
 @page "/admin/institutions/{Id:int}"
 @attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IAuthorizationService AuthorizationService
+@inject IJSRuntime JS
+@inject ILogger<InstitutionEdit> Logger
+@using Wombat.Web.Components.Pages.Admin.Invitations
 
-<PageTitle>@(IsNew ? "Create institution" : "Edit institution") · Wombat</PageTitle>
+<PageTitle>@PageHeading · Wombat</PageTitle>
 
-<PageHeader Title="@(IsNew ? "Create institution" : "Edit institution")" Subtitle="Maintain the institution record used for scoping and onboarding.">
+@*
+  T376 (flow 12, boards R3-I01–I08): her institution's record, for the Institutional admin, in .record-page. h1 and tab
+  the institution's name, "Institution" before the read and on a failed one (S9); trail Home › ‹name› (no owner row for
+  her). Name, Short code, Contact email; Status read out over "Set by a Wombat administrator." (M8). Cancel to Home, and
+  "Save changes". A refusal sits under its field, marked, described by it and focused, with no summary (S22); the result
+  above the form names the contact email as saved. The create route is InstitutionCreate's, the Administrator's alone
+  (S12). The Administrator's own view (Edit institution, Active, Deactivate) is flow 18's, kept as built.
+*@
+<PageHeader Title="@PageHeading" Subtitle="@Subtitle">
   <Actions>
-    @* T291 item 7. The institutions list admits only an Administrator (InstitutionsList.razor), so Back leads there only
-       for those its policy admits; an InstitutionalAdmin's leads home, not to Access denied. Rendered once that is
-       known, so no one is shown a link that then changes. *@
-    @if (_accessKnown)
+    @* T291 item 7. The institutions list admits only an Administrator (InstitutionsList.razor), so Back is his alone;
+       hers is the trail's Home (T376). Rendered once that is known, so no one is shown a link that then changes. *@
+    @if (_accessKnown && _isAdministrator)
     {
-      <a class="btn btn-outline btn-sm" href="@LeaveHref">@(_isAdministrator ? "Back to institutions" : "Back to home")</a>
+      <a class="btn btn-outline btn-sm" href="/admin/institutions">Back to institutions</a>
     }
   </Actions>
 </PageHeader>
 
-@* What a Save or a Deactivate did. It takes the focus once either is done (T234; DESIGN.md § Button system), after the
-   dialog that sent a deactivation has closed: the Deactivate button that had the focus is gone by then. A refusal leaves
-   the focus where it was: it is an alert, read at once, and a refused deactivation leaves Deactivate, to which the
-   dialog hands the focus back. *@
-<ActionResult @ref="_result">
-  @if (!string.IsNullOrWhiteSpace(_statusMessage))
-  {
-    <Alert Kind="success">@_statusMessage</Alert>
-  }
+<div class="record-page">
+  @* What a Save or a Deactivate did. It takes the focus once either is done (T234; DESIGN.md § Button system), after the
+     dialog that sent a deactivation has closed. A refusal about one field is under that field instead (S22). *@
+  <ActionResult @ref="_result" Id="institution-result">
+    @if (_saved is not null)
+    {
+      <Alert Kind="success"><strong>@_saved.Lead</strong>@if (_saved.Email is { } email){@(" Its contact email is now ")@InvitationText.Address(email)@(".")}else if (_saved.NoEmail){@(" It has no contact email now.")}</Alert>
+    }
+    @if (!string.IsNullOrWhiteSpace(_statusMessage))
+    {
+      <Alert Kind="success">@_statusMessage</Alert>
+    }
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+      <Alert Kind="danger">@_errorMessage</Alert>
+    }
+  </ActionResult>
 
-  @if (!string.IsNullOrWhiteSpace(_errorMessage))
-  {
-    <Alert Kind="danger">@_errorMessage</Alert>
-  }
-</ActionResult>
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="LoadAsync" FocusAfterRetry="FocusNameAsync">
+    <LoadingContent>
+      <p class="loading-line" role="status">@LoadingLine</p>
+      <div class="detail-card" aria-hidden="true">
+        <div class="skeleton skel-title"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line skel-short"></div>
+      </div>
+    </LoadingContent>
+    <ChildContent>
+      @* novalidate: the browser stays quiet and the page refuses in its own words under each field (T324). *@
+      <EditForm Model="_model" OnSubmit="SaveAsync" FormName="institution-edit" class="form-container" novalidate
+                aria-label="@(_isAdministrator ? null : _storedName)">
+        <p class="field-help">@InvitationText.RequiredMarkLine</p>
 
-<StatePanel IsLoading="_loading" IsEmpty="false" EmptyTitle="" EmptyBody="">
-  <div class="form-container">
-    <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="institution-edit">
-      <DataAnnotationsValidator />
-      <ValidationSummary class="validation-summary-errors" />
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="@NameId">Name<span class="required-mark" aria-hidden="true"> *</span></label>
+            <input id="@NameId" class="@InputClass(NameId)" aria-required="true" autocomplete="off"
+                   aria-invalid="@Invalid(NameId)" aria-describedby="@MessageIdIf(NameId)"
+                   @bind="_model.Name" @bind:after="() => ClearField(NameId)" />
+            @FieldMessage(NameId)
+          </div>
 
-      <div class="form-grid">
-        <FormField Label="Name" InputId="institution-name" Required="true">
-          <InputText id="institution-name" class="form-control" @bind-Value="_model.Name" />
-          <ValidationMessage For="() => _model.Name" />
-        </FormField>
+          <div class="form-group">
+            <label for="@ShortCodeId">Short code<span class="required-mark" aria-hidden="true"> *</span></label>
+            <input id="@ShortCodeId" class="@InputClass(ShortCodeId)" aria-required="true" autocomplete="off"
+                   aria-invalid="@Invalid(ShortCodeId)" aria-describedby="@MessageIdIf(ShortCodeId)"
+                   @bind="_model.ShortCode" @bind:after="() => ClearField(ShortCodeId)" />
+            @FieldMessage(ShortCodeId)
+          </div>
 
-        <FormField Label="Short code" InputId="institution-short-code" Required="true">
-          <InputText id="institution-short-code" class="form-control" @bind-Value="_model.ShortCode" />
-          <ValidationMessage For="() => _model.ShortCode" />
-        </FormField>
+          <div class="form-group">
+            <label for="@EmailId">Contact email</label>
+            <input id="@EmailId" type="email" class="@InputClass(EmailId)" autocomplete="off" spellcheck="false"
+                   aria-invalid="@Invalid(EmailId)" aria-describedby="@MessageIdIf(EmailId)"
+                   @bind="_model.ContactEmail" @bind:after="() => ClearField(EmailId)" />
+            @FieldMessage(EmailId)
+          </div>
 
-        <FormField Label="Contact email" InputId="institution-email">
-          <InputText id="institution-email" class="form-control" @bind-Value="_model.ContactEmail" />
-          <ValidationMessage For="() => _model.ContactEmail" />
-        </FormField>
+          @if (_isAdministrator)
+          {
+            @* T302. Whether an institution is active is the Administrator's alone: Deactivate and Reactivate refuse anyone
+               else, and the update carries no state. A changed box is sent on Save as the state's own command, and
+               unticking it asks first, as Deactivate does. *@
+            <FormField Label="Status" InputId="institution-active" HelpText="@ActiveHelpText">
+              <div class="form-check">
+                <InputCheckbox id="institution-active" class="form-check-input" @bind-Value="_model.IsActive" aria-describedby="@FieldHelp.Id("institution-active")" />
+                <label for="institution-active">Active</label>
+              </div>
+            </FormField>
+          }
+        </div>
 
-        @if (!IsNew && _isAdministrator)
+        @if (!_isAdministrator)
         {
-          @* T302. Whether an institution is active is the Administrator's alone: Deactivate and Reactivate refuse anyone
-             else, and the update carries no state. A changed box is sent on Save as the state's own command, and
-             unticking it asks first, as Deactivate does. *@
-          <FormField Label="Status" InputId="institution-active" HelpText="@ActiveHelpText">
-            <div class="form-check">
-              <InputCheckbox id="institution-active" class="form-check-input" @bind-Value="_model.IsActive" aria-describedby="@FieldHelp.Id("institution-active")" />
-              <label for="institution-active">Active</label>
-            </div>
-          </FormField>
-        }
-        else if (!IsNew)
-        {
-          @* T302. Everyone else reads the state as it is stored. Until T302 an InstitutionalAdmin was shown the box, and the
-             update wrote it: she saved her own institution inactive beside a Deactivate that refused her. *@
+          @* T302, M8. Everyone else reads the state as it is stored, as a read-out in a field's place. *@
           <dl class="form-group">
             <dt>Status</dt>
-            <dd id="institution-status">@(_storedIsActive ? "Active" : "Inactive")</dd>
-            <dd class="muted text-sm">Set by a global administrator.</dd>
+            <dd id="institution-status" class="readonly-value">@(_storedIsActive ? "Active" : "Inactive")</dd>
+            <dd class="field-help">Set by a Wombat administrator.</dd>
           </dl>
         }
-      </div>
 
-      <FormActions>
-        <a class="btn btn-outline" href="@LeaveHref">Cancel</a>
-        @* Offered to an Administrator, on an institution that is active as stored (T302, T291 item 7; T264, following the
-           EPA page, T196). An inactive one is reactivated by ticking Active and saving. It opens the dialog, whose confirm
-           button has the focus while the deactivation runs; this one is disabled then, as Save is (T234). *@
-        @if (!IsNew && _isAdministrator && _storedIsActive)
-        {
-          <button type="button" class="btn btn-outline" @onclick="AskDeactivateAsync" disabled="@Busy">Deactivate</button>
-        }
-        @* Not disabled while its own save runs (T234): it has the focus, and a browser drops the focus of a button it
-           disables, to the page. A second press sends nothing. *@
-        <button type="submit" class="btn btn-primary" disabled="@_deactivating" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : "Save")</button>
-      </FormActions>
-    </EditForm>
-  </div>
-</StatePanel>
+        <FormActions>
+          <a class="btn btn-outline" href="@LeaveHref">Cancel</a>
+          @* Offered to an Administrator, on an institution that is active as stored (T302, T291 item 7; T264). It opens the
+             dialog, whose confirm button has the focus while the deactivation runs; this one is disabled then (T234). *@
+          @if (_isAdministrator && _storedIsActive)
+          {
+            <button type="button" class="btn btn-outline" @onclick="AskDeactivateAsync" disabled="@Busy">Deactivate</button>
+          }
+          @* Not disabled while its own save runs (T234): it has the focus, and a browser drops the focus of a button it
+             disables, to the page. A second press sends nothing. *@
+          <button type="submit" class="btn btn-primary" disabled="@_deactivating" aria-disabled="@InFlight.AriaDisabled(_saving)">
+@(_isAdministrator ? (_saving ? "Saving..." : "Save") : "Save changes")</button>
+        </FormActions>
+      </EditForm>
+    </ChildContent>
+  </StatePanel>
+</div>
 
 @* A destructive action opens a ConfirmDialog first, naming its target (DESIGN.md § Button system; T264). Two actions
    deactivate, the Deactivate button and saving with Active unticked, and both open this dialog. *@
-@if (!IsNew && _isAdministrator)
+@if (_isAdministrator)
 {
   <ConfirmDialog @ref="_confirmDeactivate"
                  Title="@($"Deactivate {_storedName}?")"
@@ -124,57 +155,95 @@
     "An inactive institution cannot be named on a new invitation. Its people, their records and the invitations " +
     "already sent are kept.";
 
+  /// <summary>Her record's subtitle (T376, I01).</summary>
+  public const string RecordSubtitle = "Your institution's name, short code and contact email.";
+
+  /// <summary>The h1 and tab before the read and on a failed one (T376, S9; build-contracts "Titles").</summary>
+  public const string HeadingBeforeTheRead = "Institution";
+
+  public const string LoadingLine = "Loading the institution.";
+
+  /// <summary>A failed read (T376, I06; T329): fixed words, the failure logged.</summary>
+  public const string LoadFailed =
+    "Could not load the institution. Nothing has changed. Try again, or come back in a few minutes.";
+
+  /// <summary>A save that failed for a reason that is no refusal (T376; T329): fixed words, the failure logged.</summary>
+  public const string SaveFailed =
+    "Could not save the institution. Nothing has changed. Try again, or come back in a few minutes.";
+
+  public const string NameId = "institution-name";
+  public const string ShortCodeId = "institution-short-code";
+  public const string EmailId = "institution-email";
+
   [Parameter]
-  public int? Id { get; set; }
+  public int Id { get; set; }
 
   private InstitutionFormModel _model = new();
   private ConfirmDialog? _confirmDeactivate;
   private string? _errorMessage;
   private string? _statusMessage;
+  private SavedRecord? _saved;
+  private string? _loadError;
   private bool _loading = true;
   private bool _saving;
   private bool _deactivating;
   private ActionResult? _result;
 
+  private readonly Dictionary<string, string> _fieldErrors = new(StringComparer.Ordinal);
+  private string? _focusFieldId;
+
   // Whether the Administrator policy admits the caller, and whether that has been asked yet.
   private bool _isAdministrator;
   private bool _accessKnown;
 
-  // What the database says, as against the form, which the user can change without saving.
+  // What the database says, as against the form, which the user can change without saving. Null before the read.
   private bool _storedIsActive = true;
-  private string _storedName = string.Empty;
+  private string? _storedName;
 
   // Whether the open dialog was opened by Save (with Active unticked) rather than by the Deactivate button: confirming it
   // then saves every edit on the form as well as the deactivation.
   private bool _saveOnConfirm;
 
+  /// <summary>Her result: "‹name› saved." in bold, then what the contact email is now (I02, I07).</summary>
+  private sealed record SavedRecord(string Lead, string? Email, bool NoEmail);
+
   /// <summary>A save or a deactivation has been sent and has not answered, so nothing else may be sent. (T234)</summary>
   private bool Busy => _saving || _deactivating;
 
-  private bool IsNew => !Id.HasValue;
+  /// <summary>The Administrator's heading as built (flow 18's); hers the name, "Institution" until it is read (S9).</summary>
+  private string PageHeading => _isAdministrator ? "Edit institution" : _storedName ?? HeadingBeforeTheRead;
 
-  /// <summary>Where Back and Cancel lead: the institutions list for those it admits, and home for everyone else.</summary>
+  private string Subtitle => _isAdministrator
+    ? "Maintain the institution record used for scoping and onboarding."
+    : RecordSubtitle;
+
+  /// <summary>Where Cancel leads: the institutions list for those it admits, and Home for everyone else (I01).</summary>
   private string LeaveHref => _isAdministrator ? "/admin/institutions" : "/";
 
   protected override async Task OnParametersSetAsync()
   {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    _isAdministrator = (await AuthorizationService.AuthorizeAsync(authState.User, AdministratorPolicy)).Succeeded;
+    _accessKnown = true;
+    await LoadAsync();
+  }
+
+  private ValueTask FocusNameAsync() => PageFocus.FocusByIdAsync(JS, NameId);
+
+  /// <summary>
+  /// Reads the record. One outside the caller's scope reads as one that is not there: Page not found, as the Demo
+  /// Institution's id is for her (1.23). Any other failure is I06's fixed words, logged (T329).
+  /// </summary>
+  private async Task LoadAsync()
+  {
     _loading = true;
-    _errorMessage = null;
-    _statusMessage = null;
+    _loadError = null;
+    _storedName = null;
 
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _isAdministrator = (await AuthorizationService.AuthorizeAsync(authState.User, AdministratorPolicy)).Succeeded;
-      _accessKnown = true;
-
-      if (IsNew)
-      {
-        _model = new InstitutionFormModel { IsActive = true };
-        return;
-      }
-
-      var institution = await Sender.Send(new GetInstitutionByIdQuery(Id!.Value, authState.User));
+      var institution = await Sender.Send(new GetInstitutionByIdQuery(Id, authState.User));
 
       if (institution is null)
       {
@@ -192,13 +261,23 @@
       _storedIsActive = institution.IsActive;
       _storedName = institution.Name;
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = RefusalText.Of(exception);
+      Logger.LogError(exception, "Institution {InstitutionId} could not be read.", Id);
+      _loadError = LoadFailed;
     }
     finally
     {
       _loading = false;
+    }
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusFieldId is { } fieldId)
+    {
+      _focusFieldId = null;
+      await PageFocus.FocusByIdAsync(JS, fieldId);
     }
   }
 
@@ -207,8 +286,8 @@
   /// button, so it asks the same question first, and the dialog's confirm saves.
   /// </summary>
   /// <remarks>
-  /// A press while something is in flight sends nothing (T234). Save is not disabled while its own save runs, so a second
-  /// Enter or click reaches here, and the flag, set before the first await, turns it away.
+  /// A press while something is in flight sends nothing (T234). The page's own checks come first (I03, I04), each under
+  /// its field, the first one focused, and nothing is sent.
   /// </remarks>
   private async Task SaveAsync()
   {
@@ -217,7 +296,14 @@
       return;
     }
 
-    if (!IsNew && _isAdministrator && _storedIsActive && !_model.IsActive && _confirmDeactivate is not null)
+    ClearResults();
+    if (CheckFields() is { } firstInvalid)
+    {
+      _focusFieldId = firstInvalid;
+      return;
+    }
+
+    if (_isAdministrator && _storedIsActive && !_model.IsActive && _confirmDeactivate is not null)
     {
       _saveOnConfirm = true;
       await _confirmDeactivate.ShowAsync();
@@ -230,21 +316,18 @@
   /// <remarks>
   /// <para>
   /// T302. The update carries the name, short code and contact email, and no state. An Administrator's changed Active box
-  /// is then sent as the state's own command, once the fields have saved, so a refused update changes nothing. The two
-  /// commands' rule is the Administrator policy's, which is also what shows the box.
+  /// is then sent as the state's own command, once the fields have saved, so a refused update changes nothing.
   /// </para>
   /// <para>
-  /// A state command is sent only for what the user did: the box changed from the state it was shown with, which is the
-  /// state <see cref="SaveAsync" /> asked about. Another Administrator may have changed the state since the page loaded,
-  /// and the update answers with it as stored; a box left alone then takes that state, and sends nothing. Compared with
-  /// the fresh state instead, an untouched box would undo her change, and a deactivation would go without its question.
+  /// A state command is sent only for what the user did: the box changed from the state it was shown with. Another
+  /// Administrator may have changed the state since the page loaded, and the update answers with it as stored; a box left
+  /// alone then takes that state, and sends nothing.
   /// </para>
   /// </remarks>
   private async Task SaveCoreAsync()
   {
     _saving = true;
-    _errorMessage = null;
-    _statusMessage = null;
+    ClearResults();
 
     // Once the update has landed, what the state command that follows it was to do; a refusal of that command then says
     // the fields saved, in one line, rather than a success beside a refusal.
@@ -253,16 +336,8 @@
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-
-      if (IsNew)
-      {
-        var created = await Sender.Send(new CreateInstitutionCommand(_model.Name, _model.ShortCode, EmptyToNull(_model.ContactEmail), authState.User));
-        Navigation.NavigateTo($"/admin/institutions/{created.Id}", forceLoad: true);
-        return;
-      }
-
       var shownIsActive = _storedIsActive;
-      var institution = await Sender.Send(new UpdateInstitutionCommand(Id!.Value, _model.Name, _model.ShortCode, EmptyToNull(_model.ContactEmail), authState.User));
+      var institution = await Sender.Send(new UpdateInstitutionCommand(Id, _model.Name, _model.ShortCode, EmptyToNull(_model.ContactEmail), authState.User));
       _storedName = institution.Name;
       _storedIsActive = institution.IsActive;
 
@@ -272,38 +347,158 @@
         if (_model.IsActive)
         {
           stateChange = "reactivated";
-          await Sender.Send(new ReactivateInstitutionCommand(Id.Value, authState.User));
+          await Sender.Send(new ReactivateInstitutionCommand(Id, authState.User));
         }
         else
         {
           stateChange = "deactivated";
-          await Sender.Send(new DeactivateInstitutionCommand(Id.Value, authState.User));
+          await Sender.Send(new DeactivateInstitutionCommand(Id, authState.User));
         }
 
         _storedIsActive = _model.IsActive;
         _statusMessage = $"Institution saved and {stateChange}.";
       }
-      else
+      else if (_isAdministrator)
       {
         _statusMessage = "Institution saved.";
       }
+      else
+      {
+        // I02, I07: what she changed is said back, the address as stored.
+        _saved = new SavedRecord($"{institution.Name} saved.", institution.ContactEmail, institution.ContactEmail is null);
+      }
 
+      _model.Name = institution.Name;
+      _model.ShortCode = institution.ShortCode;
+      _model.ContactEmail = institution.ContactEmail;
       _model.IsActive = _storedIsActive;
       _result?.FocusAfterRender();
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      // A refused state command leaves the box as the user set it, unsaved, as cancelling the question does; Save asks
-      // again.
-      _errorMessage = stateChange is null
-        ? RefusalText.Of(exception)
-        : $"Institution saved, but not {stateChange}: {RefusalText.Of(exception)}";
+      if (stateChange is not null)
+      {
+        // A refused state command leaves the box as the user set it, unsaved, as cancelling the question does.
+        _errorMessage = $"Institution saved, but not {stateChange}: {RefusalText.Of(exception)}";
+      }
+      else
+      {
+        ShowRefusal(exception);
+      }
     }
     finally
     {
       _saving = false;
     }
   }
+
+  /// <summary>
+  /// A refusal about a field under that field, focused (S22, I08); one about none in the result; anything else logged and
+  /// said in fixed words, never the exception's (T329).
+  /// </summary>
+  private void ShowRefusal(Exception exception)
+  {
+    switch (exception)
+    {
+      case InstitutionUpdateRefusedException { Field: not InstitutionRecordField.None } refusal when FieldIdOf(refusal.Field) is { } fieldId:
+        _fieldErrors[fieldId] = refusal.Message;
+        _focusFieldId = fieldId;
+        return;
+      case FluentValidation.ValidationException validation:
+        foreach (var failure in validation.Errors)
+        {
+          var failed = failure.PropertyName switch
+          {
+            nameof(UpdateInstitutionCommand.Name) => NameId,
+            nameof(UpdateInstitutionCommand.ShortCode) => ShortCodeId,
+            _ => EmailId
+          };
+          _fieldErrors.TryAdd(failed, failure.ErrorMessage);
+        }
+
+        _focusFieldId = FirstInvalid();
+        return;
+    }
+
+    if (InstitutionUpdateRefusals.IsRefusal(exception))
+    {
+      _errorMessage = RefusalText.Of(exception);
+    }
+    else
+    {
+      Logger.LogError(exception, "Institution {InstitutionId} could not be saved.", Id);
+      _errorMessage = SaveFailed;
+    }
+
+    _result?.FocusAfterRender();
+  }
+
+  private static string? FieldIdOf(InstitutionRecordField field) => field switch
+  {
+    InstitutionRecordField.Name => NameId,
+    InstitutionRecordField.ShortCode => ShortCodeId,
+    InstitutionRecordField.ContactEmail => EmailId,
+    _ => null
+  };
+
+  /// <summary>The page's own checks, the validator's words (T324); the first refused field's id, or null when all pass.</summary>
+  private string? CheckFields()
+  {
+    if (string.IsNullOrWhiteSpace(_model.Name))
+    {
+      _fieldErrors[NameId] = UpdateInstitutionCommandValidator.NameMissing;
+    }
+    else if (_model.Name.Trim().Length > 200)
+    {
+      _fieldErrors[NameId] = UpdateInstitutionCommandValidator.NameTooLong;
+    }
+
+    if (string.IsNullOrWhiteSpace(_model.ShortCode))
+    {
+      _fieldErrors[ShortCodeId] = UpdateInstitutionCommandValidator.ShortCodeMissing;
+    }
+    else if (_model.ShortCode.Trim().Length > 32)
+    {
+      _fieldErrors[ShortCodeId] = UpdateInstitutionCommandValidator.ShortCodeTooLong;
+    }
+
+    if (EmptyToNull(_model.ContactEmail) is { } email
+        && (email.Length > 320 || !new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(email)))
+    {
+      _fieldErrors[EmailId] = UpdateInstitutionCommandValidator.ContactEmailMalformed;
+    }
+
+    return FirstInvalid();
+  }
+
+  private string? FirstInvalid()
+    => new[] { NameId, ShortCodeId, EmailId }.FirstOrDefault(_fieldErrors.ContainsKey);
+
+  private void ClearResults()
+  {
+    _errorMessage = null;
+    _statusMessage = null;
+    _saved = null;
+    _fieldErrors.Clear();
+  }
+
+  private void ClearField(string fieldId) => _fieldErrors.Remove(fieldId);
+
+  private RenderFragment FieldMessage(string fieldId) => __builder =>
+  {
+    if (_fieldErrors.TryGetValue(fieldId, out var message))
+    {
+      <p id="@MessageId(fieldId)" class="validation-message">@message</p>
+    }
+  };
+
+  private static string MessageId(string fieldId) => $"{fieldId}-msg";
+
+  private string? MessageIdIf(string fieldId) => _fieldErrors.ContainsKey(fieldId) ? MessageId(fieldId) : null;
+
+  private string? Invalid(string fieldId) => _fieldErrors.ContainsKey(fieldId) ? "true" : null;
+
+  private string InputClass(string fieldId) => _fieldErrors.ContainsKey(fieldId) ? "form-control input-validation-error" : "form-control";
 
   private async Task AskDeactivateAsync()
   {
@@ -342,13 +537,12 @@
   private async Task DeactivateAsync()
   {
     _deactivating = true;
-    _errorMessage = null;
-    _statusMessage = null;
+    ClearResults();
 
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      await Sender.Send(new DeactivateInstitutionCommand(Id!.Value, authState.User));
+      await Sender.Send(new DeactivateInstitutionCommand(Id, authState.User));
       _model.IsActive = false;
       _storedIsActive = false;
       _statusMessage = "Institution deactivated.";
@@ -368,15 +562,10 @@
 
   private sealed class InstitutionFormModel
   {
-    [Required]
-    [StringLength(200)]
     public string Name { get; set; } = string.Empty;
 
-    [Required]
-    [StringLength(32)]
     public string ShortCode { get; set; } = string.Empty;
 
-    [StringLength(320)]
     public string? ContactEmail { get; set; }
 
     public bool IsActive { get; set; } = true;

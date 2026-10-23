@@ -495,6 +495,9 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/trainees → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Look for Dr Ndlovu among KGK's users, its trainees and its committee reviews. Open the check-in from A.1.10.
 Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
+  - Users reads "People 14", with no pseudonym among them. Dr du Plessis's and Dr Molefe's Roles cells read "No role"
+    over "A completed or withdrawn registrar keeps an account and its records.", each with Scope Paediatrics /
+    Paediatrics and Status Active (T376, S2, U07).
   - Committee reviews lists his reviews under a pseudonym, `deleted_user_…`, that names nobody: Act 4's ratified
     review as it was; the closed check-in, Type "Formative check-in", State Closed and Decision "—" (read as "None");
     and A.1.10's check-in, Type "Formative check-in", State Withdrawn and Decision "None: the review was withdrawn".

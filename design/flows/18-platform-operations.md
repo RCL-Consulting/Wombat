@@ -279,7 +279,9 @@ Do: Open Institutions and read the list. Then press Create institution and enter
 Expect: The list holds one row, the `Demo Institution` (`DEMO`), Active, offering Edit only. The create form asks for
   Name, Short code and Contact email, and has no Status field. Save lands on KGK's own record, headed "Edit
   institution", with the browser tab reading "Edit institution · Wombat" (T190). There, Active is ticked and
-  Deactivate is offered. Back on the list, KGK is a second row: Active, and created today.
+  Deactivate is offered. Back on the list, KGK is a second row: Active, and created today. An empty Save reads "Type the
+  institution's name. The record was not saved." under Name and "Type a short code. The record was not saved." under
+  Short code.
 
 [act-1-setup.md]
 ### Step 1.11 — Both invitations are spent
@@ -503,10 +505,13 @@ Expect: Database connection is green. The card's other two lines, Email queue an
 ### Step A.6.9 — devadmin opens his own account
 Role: Administrator — devadmin
 Route: /admin/users → /admin/users/{UserId}
-Do: Find his own account in Users and open it.
-Expect: A note says it is his own account, so he cannot change its roles, lockout or password here, and another
-  administrator can change his roles or lockout. It links to Change password on his own account. No Remove, Add role,
-  Reset password or Lockout is offered (T278).
+Do: Find his own account in Users (type "devadmin" in Name or email and press Show) and open it.
+Expect: The page's subtitle reads "Your own account: your roles and how you sign in." A note says it is his own
+  account, so he cannot change its roles, lockout or password here, and another administrator can change his roles or
+  lockout. It links to Change password on his own account. No Remove…, Add a role…, Password or Lockout is offered
+  (T278), and no Pending invitations card (T376, Q9). Sign-in and access holds only Institutional sign-in: "No
+  institutional sign-in is linked. Demo Administrator signs in with an email and a password." On Users his row reads Institution "Global (no institution)",
+  Roles Administrator and Scope "—" (U14).
 
 [appendix-cross-cutting.md]
 ### Step A.6.10 — The health endpoint

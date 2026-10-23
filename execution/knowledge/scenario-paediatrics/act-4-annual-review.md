@@ -970,11 +970,12 @@ Gap: none
 ### Step 4.35 — Prof Mbatha reads the issued STARs
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/entrustment-decisions
-Do: Open Entrustment decisions from her dashboard's quick links. Download Dr Molefe's PAED-010 certificate. Filter by
+Do: Open Entrustment decisions from the menu, under Reviews. Download Dr Molefe's PAED-010 certificate. Filter by
   trainee "Molefe" and press Show.
 Expect:
-  - **The page:** under the trail Home › Entrustment decisions, since no menu item of hers leads to it (T358). Its
-    subtitle reads "Issued Statements of Awarded Responsibility across the programme."
+  - **The page:** lit in her menu, with no trail: a list her menu offers since T376 (flow 12, F10; Home's Quick links,
+    its only way in until then, are gone). Its subtitle reads "Issued Statements of Awarded Responsibility across the
+    programme."
   - **The list:** captioned "Issued STARs (entrustment decisions) · 5 shown"; five rows, all Active, issued `D`, newest
     issued first and then by STAR number, descending (one day's ties; T366, F1):
     - Dlamini: PAED-002 `3b`, PAED-001 `4`.

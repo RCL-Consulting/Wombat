@@ -638,8 +638,9 @@ Expect:
 
 Step 5.17 — Prof Mbatha marks Dr Molefe's programme complete on `D`
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/trainees/edit → /admin/trainees → /admin/users/{UserId}
+Route: /admin/trainees/edit → /admin/trainees → /admin/users → /admin/users/{UserId}
 Do: Set the last day to `D`, press Mark complete and confirm. Then go back to Trainees, and open Dr Molefe in Users.
+  On her page, press Add a role…, read it and press Cancel.
 Expect: The page says "Trainee marked complete. The Trainee role has been removed and a graduation email sent."
   - The summary reads Status Completed, Completed `D`.
   - The last-day field, Deactivate and Mark complete are gone. The page's subtitle reads "The record of a programme
@@ -648,7 +649,10 @@ Expect: The page says "Trainee marked complete. The Trainee role has been remove
     Expected completion date `J+1y−1d`. There are no inputs and no Save profile; Back to trainees stays (T305).
   - On Trainees she is no longer under Current trainees. She is listed under "Completed and closed" with the outcome
     "Completed `D`".
-  - Her user page says "This user has no roles.", and its Add role offers no Trainee (T303).
+  - Her user page's Roles and scope says "**Lerato Molefe holds no role: they completed the programme on `D`.** They can
+    still sign in to read their training record (My progress) and their data rights." (T376, S2, Q13; D54), and its Add
+    a role… offers the six staff roles and no Trainee (T303). On Users her Roles cell reads "No role" over "A completed
+    or withdrawn registrar keeps an account and its records."
   - No credit is taken back, because nothing of hers is observed after `D` (T281; Step 5.27 shows a take-back).
 
 Step 5.18 — Dr Molefe is emailed

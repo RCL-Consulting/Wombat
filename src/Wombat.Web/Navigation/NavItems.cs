@@ -151,7 +151,8 @@ public static class NavItems
             [
                 new("People", [Invitations, Trainees, Assessors, Users]),
                 new("Curriculum", [CurriculumAdoptions, Curricula, Epas, ActivityTypes, EntrustmentScales]),
-                new("Reviews", [DecisionsDue, CommitteeReviews, DecisionPanels]),
+                // T376, flow 12, F10: Entrustment decisions admits her, and Home's Quick links were its only way in (Q7).
+                new("Reviews", [DecisionsDue, CommitteeReviews, DecisionPanels, EntrustmentDecisions]),
                 new("Access and audit", [SsoMappings, AuditLog]),
             ],
 

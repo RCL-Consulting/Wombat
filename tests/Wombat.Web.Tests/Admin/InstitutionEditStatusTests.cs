@@ -20,7 +20,8 @@ namespace Wombat.Web.Tests.Admin;
 /// <summary>
 /// T302: the institution page offers the controls that change an institution's state only to those the Administrator
 /// policy admits, the rule of the two commands behind them. An InstitutionalAdmin reads the state as text. T291 item 7:
-/// her Back and Cancel lead home, not to the Administrator's institutions list. T264: Deactivate asks first.
+/// her Cancel leads home, not to the Administrator's institutions list, and T376 (flow 12, I01) gives her no Back link:
+/// the trail's Home is her way back. T264: Deactivate asks first.
 /// </summary>
 /// <remarks>
 /// Before T302 every caller saw the Active box on an existing record, and the update sent it: Prof Mbatha, KGK's
@@ -58,17 +59,17 @@ public sealed class InstitutionEditStatusTests : TestContext
         cut.FindAll("#institution-active").Should().BeEmpty();
         Text(cut.Find("#institution-status")).Should().Be(status);
         Text(cut.Find("#institution-status").Closest("dl")!.QuerySelector("dt")!).Should().Be("Status");
-        PageButtons(cut).Select(Text).Should().Equal(["Save"], "neither Deactivate nor Reactivate is hers");
+        PageButtons(cut).Select(Text).Should().Equal(["Save changes"], "neither Deactivate nor Reactivate is hers");
         cut.FindAll("dialog").Should().BeEmpty("she is offered nothing to confirm");
     }
 
     [Fact]
-    public void AnInstitutionalAdmin_IsSentHome_ByBackAndCancel_NotToTheInstitutionsList()
+    public void AnInstitutionalAdmin_IsSentHome_ByCancel_NotToTheInstitutionsList_AndHasNoBackLink()
     {
         SignInAsInstitutionalAdmin();
         var cut = RenderPage(new FakeSender());
 
-        Links(cut).Should().Equal(("Back to home", "/"), ("Cancel", "/"));
+        Links(cut).Should().Equal(("Cancel", "/"));
     }
 
     [Fact]
@@ -83,7 +84,8 @@ public sealed class InstitutionEditStatusTests : TestContext
 
         sender.Commands.Should().ContainSingle().Which.Should().BeOfType<UpdateInstitutionCommand>()
             .Which.ContactEmail.Should().Be("hod.paediatrics@kgk.wombat.local");
-        Text(cut.Find(".action-result .alert.alert-success")).Should().Be("Institution saved.");
+        Text(cut.Find(".action-result .alert.alert-success")).Should().Be(
+            "Kgosi Kgari Teaching Hospital saved. Its contact email is now hod.paediatrics@kgk.wombat.local.");
         Text(cut.Find("#institution-status")).Should().Be("Active");
         JSInterop.VerifyNotInvoke("wombatDialog.showModal");
     }
@@ -317,8 +319,8 @@ public sealed class InstitutionEditStatusTests : TestContext
 
         cut.FindAll("#institution-active").Should().BeEmpty("the page asks the policy (DESIGN.md § Table system, T211)");
         Text(cut.Find("#institution-status")).Should().Be("Active");
-        PageButtons(cut).Select(Text).Should().Equal(["Save"]);
-        Links(cut).Should().Equal(("Back to home", "/"), ("Cancel", "/"));
+        PageButtons(cut).Select(Text).Should().Equal(["Save changes"]);
+        Links(cut).Should().Equal(("Cancel", "/"));
     }
 
     [Fact]
@@ -358,7 +360,7 @@ public sealed class InstitutionEditStatusTests : TestContext
         Services.AddSingleton<IScopedSender>(sender);
 
         var cut = RenderComponent<InstitutionEdit>(parameters => parameters.Add(page => page.Id, KgkId));
-        cut.WaitForState(() => cut.FindAll("#institution-name").Count > 0 && cut.FindAll(".header-container a").Count > 0);
+        cut.WaitForState(() => cut.FindAll("#institution-name").Count > 0);
         return cut;
     }
 

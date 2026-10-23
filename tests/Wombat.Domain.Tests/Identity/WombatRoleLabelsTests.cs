@@ -59,4 +59,17 @@ public sealed class WombatRoleLabelsTests
     {
         Assert.Equal("committeemember", WombatRoleLabels.For("committeemember"));
     }
+
+    // T376 (flow 12; build-contracts § 0): a person's roles are listed in WombatRoles.All's order on every page, each once;
+    // a key that names no role comes last.
+    [Fact]
+    public void InOrder_ListsTheRolesHeld_InTheCatalogueOrder_EachOnce()
+    {
+        var ordered = WombatRoleLabels.InOrder(
+            ["Registrar", WombatRoles.Assessor, WombatRoles.CommitteeMember, WombatRoles.Assessor, WombatRoles.InstitutionalAdmin]);
+
+        Assert.Equal(
+            new[] { WombatRoles.InstitutionalAdmin, WombatRoles.CommitteeMember, WombatRoles.Assessor, "Registrar" },
+            ordered);
+    }
 }

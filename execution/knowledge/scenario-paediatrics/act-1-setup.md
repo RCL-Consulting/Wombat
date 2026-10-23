@@ -186,9 +186,12 @@ Do: Open Institutions and read the list. Then press Create institution and enter
 Expect: The list holds one row, the `Demo Institution` (`DEMO`), Active, offering Edit only. The create form asks for
   Name, Short code and Contact email, and has no Status field. Save lands on KGK's own record, headed "Edit
   institution", with the browser tab reading "Edit institution · Wombat" (T190). There, Active is ticked and
-  Deactivate is offered. Back on the list, KGK is a second row: Active, and created today.
+  Deactivate is offered. Back on the list, KGK is a second row: Active, and created today. An empty Save reads "Type the
+  institution's name. The record was not saved." under Name and "Type a short code. The record was not saved." under
+  Short code.
 Note: This step used to be an SQL stand-in (T159). Played through the page, the save now writes KGK's audit row, which
-  the stand-in never did.
+  the stand-in never did. Since T376 the create form refuses in Wombat's words (InstitutionCreate.razor, the record's
+  own refusals), so F-1.6b is expected closed.
 Actual (2026-10-20, T373 replay, wombat_scenario_t373): As expected: one row, Demo Institution (DEMO), Active, Edit
   only; the form asks Name, Short code, Contact email, no Status. Save landed on /admin/institutions/2, "Edit
   institution", tab "Edit institution · Wombat", Active ticked, Deactivate offered; the list then shows KGK Active,
@@ -271,16 +274,24 @@ Do: Register as in Step 1.8, from the Institutional admin stub email in the log,
   `Mbatha`. Write her password to `pwd_DO_NOT_COMMIT.txt`.
 Expect: The page reads "This invitation is for mbatha@kgk.wombat.local, as Institutional admin at Kgosi Kgari Teaching
   Hospital." Register lands her on Home, with "Institutional admin · Semester N, YYYY" under its heading and "Invite a
-  person" in its header, which opens Invite a person (`/admin/invitations/new`), not the list (T373, Q1). The dashboard
-  has three cards:
-  - Users, which lists InstitutionalAdmin 1;
-  - Specialities & sub-specialities, which reads 0 and 0, because KGK has adopted nothing yet;
-  - Quick links: Users, Invitations, Curriculum adoptions and Entrustment decisions.
+  person" in its header, which opens Invite a person (`/admin/invitations/new`), not the list (T373, Q1). No waiting
+  line stands above the cards: nobody waits to be admitted (T376, Q8). The dashboard has three cards and no Quick links
+  (T376, Q7):
+  - **People:** "1" over "Institutional admin", a link to Users filtered by that role (its name "1 Institutional
+    admin"); then "1 account: yours." and Open Users;
+  - **Curriculum:** "0" over "specialities adopted" and "0" over "sub-specialities adopted", because KGK has adopted
+    nothing yet (T291 item 4); "Nothing is adopted yet. Adopt the College's curriculum to set up a programme."; Open
+    Curriculum adoptions;
+  - **Your institution:** Name Kgosi Kgari Teaching Hospital, Short code KGK, Contact email
+    paeds-admin@kgk.wombat.local, Status "Active" over "Set by a Wombat administrator.", and Open Kgosi Kgari Teaching
+    Hospital.
   The sidebar reads "Acting as Institutional admin" over her menu, grouped: Home; People: Invitations, Trainees,
   Assessors, Users; Curriculum: Curriculum adoptions, Curricula, EPAs, Activity types, Entrustment scales; Reviews:
-  Decisions due, Committee reviews, Decision panels; Access and audit: SSO mappings, Audit log; then My data rights.
-Note: The specialities card is meant to count what the institution has adopted (T291 item 4). Until that fix lands, it
-  counts the whole national catalogue: 2 and 2.
+  Decisions due, Committee reviews, Decision panels, Entrustment decisions (T376, F10); Access and audit: SSO mappings,
+  Audit log; then My data rights.
+Note: Until T376 (flow 12) the specialities card counted the whole national catalogue, 2 and 2 (T291 item 4, F-1.10a),
+  and Entrustment decisions was reached only from Home's Quick links. The build counts KGK's adoptions, for the replay
+  to confirm.
 Actual (2026-10-20, T373 replay, wombat_scenario_t373): The link redirected to /account/register with no token in the
   address or source; the page reads "This invitation is for mbatha@kgk.wombat.local, as Institutional admin at Kgosi
   Kgari Teaching Hospital." Register landed her on Home, "Institutional admin · Semester 2, 2026", with "Invite a
@@ -523,7 +534,8 @@ Expect: Each page now shows the adopted catalogue:
     KGK's own items apply only to KGK's trainees. Its 15 rows match Step 1.18, and each reads "Set by the College".
   - The form below the items is headed "Add your institution's own item". It says every EPA KGK could add is already on
     the curriculum: to add an item of its own, KGK must first create a local EPA of Paediatrics.
-  - Home's Specialities & sub-specialities card reads 1 and 1 (T291 item 4).
+  - Home's Curriculum card reads "1" over "speciality adopted" and "1" over "sub-speciality adopted", with "Paediatrics
+    / Paediatrics, from the CPSA's Paediatric EPA Curriculum (11.1)." (T291 item 4, T376).
 Actual (2026-10-20, T373 replay, wombat_scenario_t373): EPAs lists the 15 PAED EPAs only, but every row still offers
   Edit (and the header Create EPA). Curricula: one row with Items only, no Edit, no Create curriculum. Items: the
   College-sets-national-items warning, 15 rows matching Step 1.18 (compared by script, 0 differences), each "Set by
@@ -548,16 +560,26 @@ Gap: [F-1.22a, T326] still: the read-only scales list tells an InstitutionalAdmi
 
 ### Step 1.23 — KGK's own record
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/institutions/{Id:int} → /not-found
-Do: Open KGK's record at `/admin/institutions/{InstitutionId}` by typing its address, since nothing in her nav leads
-  there. Read it and change nothing. Then open the Demo Institution's id the same way.
-Expect: KGK's page is headed "Edit institution" and shows KGK's name, the short code `KGK`, the contact email, and
-  that KGK is active. Save is offered for the name, short code and contact email.
+Route: / → /admin/institutions/{Id:int} → /admin/institutions/new → /access-denied → /not-found
+Do: From Home, press Open Kgosi Kgari Teaching Hospital on the Your institution card. Read the record and change
+  nothing. Then type `/admin/institutions/new`, and the Demo Institution's id at `/admin/institutions/{Id}`.
+Expect: KGK's record opens at `/admin/institutions/{InstitutionId}`, titled by its name: the heading and the tab read
+  "Kgosi Kgari Teaching Hospital", under the trail Home › Kgosi Kgari Teaching Hospital, with nothing lit in her menu
+  (T376, Q3). Its subtitle reads "Your institution's name, short code and contact email.", then "* marks a field you
+  must fill in.":
+  - Name * (KGK's name), Short code * (`KGK`) and Contact email (`paeds-admin@kgk.wombat.local`);
+  - Status read out, not a field: "Active" over "Set by a Wombat administrator." (M8);
+  - Cancel, to Home, and Save changes. There is no Back link beside the heading.
   She is offered nothing that would deactivate KGK, neither a Deactivate nor an Active she can untick, and no link
-  (Back or Cancel) to the Institutions list: deactivating an institution and listing them belong to an Administrator
-  alone (`DeactivateInstitutionCommand`; DESIGN.md § Table system, T211).
+  to the Institutions list: deactivating an institution and listing them belong to an Administrator alone
+  (`DeactivateInstitutionCommand`; DESIGN.md § Table system, T211).
+  `/admin/institutions/new` is "You cannot open this page" ("Your role (Institutional admin) does not open this page."),
+  not a Create institution form: creating an institution is the Administrator's alone (T376, S12; T291 item 8).
   The Demo Institution's id sends her to Page not found, not "You cannot open this page". The product never confirms
   that a record outside her institution exists (CLAUDE.md § InstitutionalAdmin scope-aware powers).
+Note: Until T376 nothing in her nav or Home led to the record, which was headed "Edit institution", and `/new` drew a
+  Create institution form that `CreateInstitutionCommand` always refused her (F-1.23c). Correcting the contact email is
+  2 presses and 1 field from Home (Open Kgosi Kgari Teaching Hospital, the email, Save changes), at 1280 and at 390.
 Actual (2026-10-20, T373 replay, wombat_scenario_t373): As expected: typed, /admin/institutions/2 is headed "Edit
   institution", "Back to home" beside the heading, KGK's name, KGK and the contact email, Status "Active" as text with
   "Set by a global administrator.", then Cancel (to /) and Save; no checkbox, no Deactivate, no link to the

@@ -52,6 +52,15 @@ entrustment-decisions half (Revoke the STAR enabled from the start, a blank reas
 F-4.37a (T324: the revoked certificate names the revoker, 4.37), F-4.43a and F-4.48a (T308: the list's row and her
 review's page read the appeal and its outcome, 4.43, 4.48) and F-4.45c (T323: Outcome two radios read whole at every
 width, 4.45).
+T376 (flow 12, 2026-10-23) gave creating an institution a page of its own, `/admin/institutions/new`
+(InstitutionCreate.razor, the Administrator's alone; 1.23 meets its refusal), made `/admin/assessors/edit` a redirect to
+the person's page (2.15 types it), and moved an assessor's training onto the user page, `?section=training` (2.14): 331
+steps, 78 page files and 88 templates. Its build closes, for its replay to confirm, the gaps the steps record: F-1.6b
+(T324: the create form's refusals in Wombat's words), F-1.10a,
+F-1.21b and F-2.44a (T291 item 4: Home counts what KGK adopted), F-1.23c (T291 item 8), F-2.14a to F-2.14d (T289, T326,
+T324: training on the person's page, no picker), F-2.28b (T323: a role's label and its note apart), F-A.3.1a (T326: the
+not-set-up card in her words) and A.7.9's 807 px (T323: Users stacks); and the people pages' halves of T264 (the lock and
+a role's Remove confirmed), T280, T286 (another person's sign-in, F7), T324, T325 and T329.
 
 ## Pages
 
@@ -60,8 +69,8 @@ institution, speciality or the record's own people; where that decides what a pe
 
 | Templates | Page | Who may open it | Steps |
 |---|---|---|---|
-| `/` | Home.razor | Any signed-in user | 1.1, 1.8, 1.10, 1.11, 1.21, 2.1, 2.8, 2.9, 2.10, 2.18, 2.19, 2.23, 2.25, 2.27, 2.31, 2.32, 2.33, 2.34, 2.35, 2.36, 2.37, 2.38, 2.39, 2.40, 2.44, 3.1, 3.12, 3.13, 3.15, 3.16, 3.17, 3.24, 3.26, 3.28, 3.30, 3.33, 3.34, 3.50, 3.51, 3.52, 3.53, 3.54, 4.1, 4.2, 4.3, 4.4, 4.35, 4.39, 4.42, 5.7, 5.8, 5.15, 5.21, 5.25, 5.28, 6.10, 6.38, A.1.1, A.2.1, A.4.1, A.4.6, A.4.7, A.5.3, A.5.10, A.6.1, A.6.2, A.6.8, A.7.3, A.7.4, A.7.5, A.7.6, A.7.7, A.7.8, A.7.9, A.7.10, A.7.11, A.7.14 |
-| `/access-denied` | AccessDenied.razor | Anyone, signed in or not | 1.15, 2.19, 2.32, 4.5, 4.41, 5.22, 6.10, A.5.1, A.5.2, A.6.3 |
+| `/` | Home.razor | Any signed-in user | 1.1, 1.8, 1.10, 1.11, 1.21, 1.23, 2.1, 2.8, 2.9, 2.10, 2.18, 2.19, 2.23, 2.25, 2.27, 2.28, 2.31, 2.32, 2.33, 2.34, 2.35, 2.36, 2.37, 2.38, 2.39, 2.40, 2.44, 3.1, 3.5, 3.12, 3.13, 3.15, 3.16, 3.17, 3.24, 3.26, 3.28, 3.30, 3.31, 3.33, 3.34, 3.50, 3.51, 3.52, 3.53, 3.54, 3.54a, 3.54c, 4.1, 4.2, 4.3, 4.4, 4.5, 4.35, 4.39, 4.42, 5.7, 5.8, 5.15, 5.21, 5.25, 5.28, 6.10, A.1.1, A.2.1, A.4.1, A.4.6, A.4.7, A.5.3, A.5.9, A.5.10, A.5.11, A.5.12, A.5.13, A.5.16, A.6.1, A.6.2, A.6.3, A.6.8, A.7.3, A.7.4, A.7.5, A.7.6, A.7.7, A.7.8, A.7.8a, A.7.9, A.7.10, A.7.11, A.7.14 |
+| `/access-denied` | AccessDenied.razor | Anyone, signed in or not | 1.15, 1.23, 2.19, 2.32, 4.5, 4.41, 5.22, 6.10, A.5.1, A.5.2 |
 | `/account/change-password` | Account/ChangePassword.razor | Any signed-in user | A.4.2, A.4.6, A.7.14 |
 | `/account/data-rights` | Profile/DataRights.razor | Any signed-in user | A.1.1, A.1.2, A.1.5, A.1.6, A.1.7, A.1.9, A.1.11, A.2.3, A.2.5, A.7.3 |
 | `/account/forgot-password` | Account/ForgotPassword.razor | Anyone, signed in or not | A.4.4, A.7.12 |
@@ -78,7 +87,7 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/admin/activity-types/new`, `/admin/activity-types/{ActivityTypeId:int}` | Admin/ActivityTypes/ActivityTypeEdit.razor | Administrator, CollegeAdmin, InstitutionalAdmin; a type the caller may not write opens read-only, and Scope offers only the scopes the caller may write: an InstitutionalAdmin her institution, a CollegeAdmin his College's specialities and sub-specialities (T300, D52) | 1.25, 1.26, 1.27, 1.28, 1.29, 1.30, 6.14a, A.7.9, A.7.14 |
 | `/admin/adoptions` | Admin/Adoptions/AdoptionsList.razor | Administrator, InstitutionalAdmin | 1.20, 6.32 |
 | `/admin/assessors` | Admin/Assessors/AssessorsList.razor | Administrator, InstitutionalAdmin | 2.14, 2.15, 2.44 |
-| `/admin/assessors/edit` | Admin/Assessors/AssessorProfileEdit.razor | Administrator, InstitutionalAdmin | 2.14 |
+| `/admin/assessors/edit` | Admin/Assessors/AssessorProfileEdit.razor | Administrator, InstitutionalAdmin; since T376 (S10) a redirect kept for old links: a profile id in the caller's scope opens its person's page at Assessor training, anything else reads "User unavailable" | 2.15 |
 | `/admin/audit` | Admin/Audit/AuditList.razor | Administrator, InstitutionalAdmin | 3.55, 3.56, 3.57, 4.38 |
 | `/admin/audit/{Id:guid}` | Admin/Audit/AuditDetail.razor | Administrator, InstitutionalAdmin | 3.56, 3.57, 4.38 |
 | `/admin/colleges` | Admin/Colleges/CollegesList.razor | Administrator | 1.2, 1.3, 6.1, 6.2, 6.3 |
@@ -97,7 +106,8 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/admin/epas` | Admin/Epas/EpasList.razor | Administrator, CollegeAdmin, InstitutionalAdmin | 1.16, 1.19, 1.21, 6.14, 6.17, 6.22, 6.23, 6.25, 6.28, A.7.10 |
 | `/admin/epas/new`, `/admin/epas/{Id:int}` | Admin/Epas/EpaEdit.razor | Administrator, CollegeAdmin, InstitutionalAdmin | 6.14, 6.17, 6.23, 6.25, 6.28 |
 | `/admin/institutions` | Admin/Institutions/InstitutionsList.razor | Administrator | 1.6, A.5.2, A.6.1, A.7.11 |
-| `/admin/institutions/new`, `/admin/institutions/{Id:int}` | Admin/Institutions/InstitutionEdit.razor | Administrator, InstitutionalAdmin; only an Administrator creates or deactivates one, and an InstitutionalAdmin edits her own | 1.6, 1.23, A.5.5, A.6.1, A.6.3 |
+| `/admin/institutions/new` | Admin/Institutions/InstitutionCreate.razor | Administrator; an InstitutionalAdmin is refused as access denied (T376, S12) | 1.6, 1.23 |
+| `/admin/institutions/{Id:int}` | Admin/Institutions/InstitutionEdit.razor | Administrator, InstitutionalAdmin; only an Administrator deactivates one, and an InstitutionalAdmin edits her own, another's reading as not found | 1.6, 1.23, A.5.5, A.6.1, A.6.3 |
 | `/admin/invitations` | Admin/Invitations/InvitationsList.razor | Administrator, InstitutionalAdmin | 1.5, 1.7, 1.11, 2.1, 2.7, 2.12, 2.16, 2.17, 2.26, 2.28, 2.32 |
 | `/admin/invitations/new` | Admin/Invitations/InviteAPerson.razor | Administrator, InstitutionalAdmin; College admin is offered to the Administrator only | 1.5, 1.7, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.16, 2.17, 2.44 |
 | `/admin/jobs` | Admin/Jobs/ScheduledJobsList.razor | Administrator | 3.32, A.2.1, A.2.2, A.2.4, A.2.6, A.2.8, A.2.9, A.2.10, A.5.1, A.5.2, A.7.11 |
@@ -109,8 +119,8 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/admin/trainees` | Admin/Trainees/PendingTraineesList.razor | Administrator, InstitutionalAdmin | 2.28, 2.29, 2.30, 5.16, 5.17, 5.27, 6.34, 6.36, A.1.14, A.7.9 |
 | `/admin/trainees/admit` | Admin/Trainees/AdmitRegistrar.razor | Administrator, InstitutionalAdmin; a registrar waiting in the caller's scope, any other id reads as not found | 2.29, 2.30 |
 | `/admin/trainees/edit` | Admin/Trainees/TraineeProfileEdit.razor | Administrator, InstitutionalAdmin | 2.30, 5.16, 5.17, 5.27, 6.34, 6.36, A.7.9 |
-| `/admin/users` | Admin/Users/UsersList.razor | Administrator, InstitutionalAdmin | 2.12, 2.13, 2.28, 2.44, 5.10, A.1.14, A.4.5, A.5.1, A.6.4, A.6.9, A.7.9 |
-| `/admin/users/{UserId}` | Admin/Users/UserDetail.razor | Administrator, InstitutionalAdmin | 2.12, 2.13, 2.28, 5.10, 5.17, A.4.5, A.5.5, A.6.4, A.6.7, A.6.9, A.7.9, A.7.14 |
+| `/admin/users` | Admin/Users/UsersList.razor | Administrator, InstitutionalAdmin | 2.12, 2.13, 2.28, 2.44, 5.10, 5.17, A.1.14, A.4.5, A.5.1, A.6.4, A.6.9, A.7.9 |
+| `/admin/users/{UserId}` | Admin/Users/UserDetail.razor | Administrator, InstitutionalAdmin; since T376 it holds an Assessor's training (`?section=training` opens it) | 2.12, 2.13, 2.14, 2.15, 2.28, 5.10, 5.17, A.4.5, A.5.5, A.5.15, A.6.4, A.6.7, A.6.9, A.7.9, A.7.14 |
 | `/committee/decisions-due` | CommitteeDecisions/DecisionsDue.razor | Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 4.1, 4.2, 4.3, 4.4, 4.5, 4.9, 4.10, 4.12, 4.34, 4.37, 4.49, 5.1, 5.2, A.1.10, A.7.5, A.7.7, A.7.8 |
 | `/committee/my-reviews` | CommitteeDecisions/MyReviews.razor | Trainee, Administrator; the list only, each row's View opening her review's page (T366) | 4.41, 4.42, 4.43, 4.48, 4.51, 5.8, 5.22 |
 | `/committee/my-reviews/{ReviewId:int}` | CommitteeDecisions/MyReview.razor | Trainee, Administrator; only the review's own trainee, once it is ratified or later, whatever role they act in; any other id flow 01's "Page not found" (T366, F8) | 4.41, 4.42, 4.43, 4.48, 4.51, 5.8 |
@@ -128,7 +138,7 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/msf/my-reports/{CampaignId:int}` | MultiSourceFeedback/MyMsfReport.razor | Trainee, Coordinator, Administrator; only the subject's own released report, any other id goes to her list with one alert | 3.47 |
 | `/msf/reports/{CampaignId:int}` | MultiSourceFeedback/CampaignReport.razor | Coordinator, Administrator | 3.41, 3.44, 3.46 |
 | `/msf/respond` | MultiSourceFeedback/MsfRespond.razor | Anyone, signed in or not (a static page) | 3.39, 3.40, 3.42, 3.45 |
-| `/not-found` | NotFound.razor | Anyone, signed in or not | 1.23, A.5.4, A.5.5 |
+| `/not-found` | NotFound.razor | Anyone, signed in or not | 1.23, 3.31, A.5.4, A.5.5 |
 | `/portfolio/authorisations` | Portfolio/MyAuthorisations.razor | Trainee | 4.39, 4.42, 5.8, 5.22 |
 | `/portfolio/export`, `/portfolio/export/{TraineeUserId}` | Portfolio/ExportPortfolio.razor | Any signed-in user; the export admits a trainee to her own portfolio, and staff to a trainee they oversee | 5.9, 5.10, 5.12, 5.23 |
 | `/portfolio/progress/{EpaId:int}` | Portfolio/EpaProgress.razor | Trainee, or a former trainee (trainee record); the caller's own curriculum's EPAs only, any other id "Page not found". Reached from My progress's index, Home's Furthest short and My authorisations rows, My activities' Credit links, a completed activity's Open My progress, and an ended record's EPA codes (T355) | 3.6, 3.7, 3.48, 5.26, 6.15, 6.19, 6.21, 6.24, 6.27, A.7.3 |
@@ -153,9 +163,10 @@ state, `states.md` is where it belongs.
 |---|---|---|
 | Institutional sign-in against a provider: `/account/sso-challenge/{providerKey}` to the identity provider and back to `/account/sso-callback`. This covers provisioning by group mapping, an unmatched group landing as PendingTrainee, Administrator never granted by SSO, the refusal of a deactivated or other-institution account, and the verified-email rules. | Needs an identity provider; `Sso:Providers` is empty on dev. The invariants are unit-tested (`SsoGroupMapperTests`, `SsoGroupMappingCommandTests`, `SsoScopeGuardTests`). A.3.2 and A.3.3 play the no-provider states. | A replay against a test IdP |
 | Linking an account on `/account/link-external` with an institutional sign-in in progress, and its post, `/account/link-external/submit` (password check, throttle, lockout) | Needs an identity provider to start an external sign-in. A.3.3 plays only the expired state. | A replay against a test IdP |
-| Adding and deleting SSO group mappings on `/admin/sso/group-mappings`, and T288's cross-institution refusal | The add form appears only when a provider is configured. A.3.1 plays the read-only, empty page. | T288; a replay against a test IdP |
+| Adding and deleting SSO group mappings on `/admin/sso/group-mappings`: the form (Provider and Institution read out, a Wombat role select of staff roles only, never Trainee or Pending trainee, T333, and never Institutional admin to an Institutional admin, Q19), its result, the Delete dialog (F8) and a removed provider's read-only rows (S5) | The form appears only when a provider is configured. A.3.1 plays the not-set-up card. T288's cross-institution refusal and Q19's are unit-tested. | `states.md`, on a scratch instance with a provider; a replay against a test IdP |
 | Self-service password reset by emailed link | Not built, by design: `/account/forgot-password` says to ask a Wombat administrator (A.4.4), and nothing sends the `PasswordResetEmail` template. The administrator's reset stands in (A.4.5). | Not built |
 | Removing an institutional sign-in on My account: the Remove dialog with and without a password, its post `/account/external-logins/remove`, its refusals (a wrong password, the throttle, the last way in) and the lock a fifth wrong password causes | Needs an account with a linked institutional sign-in, and so an identity provider. The card's results are reachable as typed codes (`states.md` § Typed codes). | A replay against a test IdP |
+| Another person's institutional sign-in on their user page: listed by its provider, removed with its dialog, and refused when it is the account's last way in (T376, F7, Q10); an account that signs in only through its institution, whose Password part offers no field (F3) | Needs an account with a linked institutional sign-in, and so an identity provider; every cast account signs in with a password. | `states.md`, by a scratch row in `AspNetUserLogins`; a replay against a test IdP |
 | Change password for an account that signs in only through its institution: the page's reason and Back to My account in place of the form; My account's How you sign in with no Password row | Needs an SSO-provisioned account (no Wombat password); every cast account has one. | A replay against a test IdP |
 | The lock a fifth wrong current password on Change password causes: the session ends and the sign-in page gives the lock notice (T339, E2) | A.4.2 plays one wrong current password; five would lock Dr Khumalo for 15 minutes and end her other session before A.4.3. | `states.md`, on a scratch database |
 | Change password or Remove for an account someone else has already locked: refused on the page with the wait, the session kept (T339 review) | No step locks an account from outside while its owner is signed in. | `states.md`, on a scratch database |
@@ -204,13 +215,12 @@ state, `states.md` is where it belongs.
 ## Reached only by address
 
 Pages a role is admitted to, played in the story, that its menu and dashboard do not link to. The redesign should decide
-whether each deserves a link.
+whether each deserves a link. Since T376 (flow 12) her institution's record is linked from her Home's Your institution
+card, and Entrustment decisions is in her menu under Reviews (F10), so neither is listed here.
 
 | Page | Who is admitted but has no link | Steps |
 |---|---|---|
 | `/portfolio/export/{TraineeUserId}` | Every member of staff who may export a trainee's portfolio: no page links to it | 5.10, 5.12 |
-| `/admin/entrustment-decisions` | InstitutionalAdmin: reached only from Prof Mbatha's dashboard's quick links. The speciality admins have it in their menu since T358 | 4.35, 5.7, 6.22 |
-| `/admin/institutions/{Id:int}` | InstitutionalAdmin, for her own institution | 1.23, A.6.3 |
 | `/account/logout-confirm`, `/account/logout` | Everyone: only the error page's Sign out links to the confirmation address (on the replay no failure leads there, A.5.8), and nothing links to `/account/logout`; everywhere else the account row's Sign out posts to `/account/logout/submit` and signs out at once | A.4.7 |
 | `/Error` | Everyone: on the replay (Development) no failure leads to it | A.5.8 |
 | `/portfolio/authorisations` | Trainee: reached from Home's My authorisations card (its Open My authorisations; its STAR rows open the EPA page) and from an EPA page's Entrustment, not from the menu, which lights My progress on it (T355) | 4.39, 4.42, 5.8 |
@@ -295,14 +305,14 @@ and Assessor) appears under each role for the jobs done in it.
 | Adopt the College's curriculum so that we can admit registrars | 1.19, 1.20, 1.21 | `/admin/curricula`, `/admin/epas`, `/admin/adoptions`, `/admin/curricula/{Id:int}/items`, `/` |
 | Adopt a newer curriculum version | 6.32 | `/admin/adoptions` |
 | Read the entrustment ladders | 1.22, 6.9 | `/admin/entrustment-scales` |
-| Keep my institution's own record, and nobody else's | 1.23, A.5.5, A.6.3 | `/admin/institutions/{Id:int}`, `/not-found`, `/admin/users/{UserId}`, `/access-denied` |
+| Keep my institution's own record, and nobody else's | 1.23, A.5.5, A.6.3 | `/`, `/admin/institutions/{Id:int}`, `/admin/institutions/new`, `/access-denied`, `/not-found`, `/admin/users/{UserId}` |
 | Check the College's assessment instruments | 1.24, 1.25 | `/admin/activity-types`, `/admin/activity-types/{ActivityTypeId:int}` |
 | Build and publish an activity type of our own | 1.26, 1.27, 1.28, 1.29, 1.30, 1.31 | `/admin/activity-types`, `/admin/activity-types/new`, `/admin/activity-types/{ActivityTypeId:int}` |
 | Invite staff, each with the right role and scope | 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7 | `/admin/invitations`, `/admin/invitations/new` |
 | Invite registrars, replace a mistyped invitation, and resend one whose email was lost | 2.16, 2.17, 2.26 | `/admin/invitations`, `/admin/invitations/new`, `/account/register/start`, `/account/register` |
 | Review my institution's users, and my own account | 2.12, 2.28, 2.44 | `/admin/invitations`, `/admin/invitations/new`, `/admin/users`, `/admin/users/{UserId}`, `/` |
 | Give a consultant a second role | 2.13 | `/admin/users`, `/admin/users/{UserId}` |
-| Record each assessor's training status | 2.14, 2.15 | `/admin/assessors`, `/admin/assessors/edit` |
+| Record each assessor's training status, on their page | 2.14, 2.15 | `/admin/assessors`, `/admin/users/{UserId}`, `/admin/assessors/edit` |
 | Admit registrars to the curriculum, with their programme dates | 2.28, 2.29, 2.30 | `/admin/trainees`, `/admin/trainees/admit`, `/admin/trainees/edit` |
 | Form the review panel, and see who decides each EPA | 2.20, 2.21, 2.22, 2.24 | `/committee/panels`, `/committee/panels/new`, `/committee/panels/{PanelId:int}` |
 | Change which College committee a panel sits as | 4.13 | `/committee/panels`, `/committee/panels/{PanelId:int}` |
@@ -311,7 +321,7 @@ and Assessor) appears under each role for the jobs done in it.
 | Read a decided review before the chair ratifies it | 4.26 | `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
 | Read the STARs the committee issued, and download a certificate | 4.35, 5.7 | `/`, `/admin/entrustment-decisions` |
 | Export a registrar's portfolio | 5.10, 5.11 | `/admin/users`, `/admin/users/{UserId}`, `/portfolio/export/{TraineeUserId}` |
-| Record a registrar's graduation | 5.16, 5.17 | `/admin/trainees`, `/admin/trainees/edit`, `/admin/users/{UserId}` |
+| Record a registrar's graduation | 5.16, 5.17 | `/admin/trainees`, `/admin/trainees/edit`, `/admin/users`, `/admin/users/{UserId}` |
 | Record a registrar leaving the programme | 5.27 | `/admin/trainees`, `/admin/trainees/edit` |
 | See an EPA the College has paused, and a graduate's STARs on it | 6.22 | `/admin/epas`, `/admin/curricula`, `/admin/curricula/{Id:int}/items`, `/admin/entrustment-decisions` |
 | Add an EPA and a curriculum item of our own | 6.25, 6.26, 6.33 | `/admin/epas`, `/admin/epas/new`, `/admin/epas/{Id:int}`, `/admin/curricula`, `/admin/curricula/{Id:int}/items` |

@@ -1,0 +1,106 @@
+@page "/admin/institutions/new"
+@attribute [Authorize(Policy = "Administrator")]
+@inject IScopedSender Sender
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Create institution · Wombat</PageTitle>
+
+@*
+  T376 (flow 12, S12): creating an institution is the Administrator's alone, as the command is (CreateInstitutionCommand
+  refuses anyone else), so the route is a page of its own with the Administrator policy, and an Institutional admin's
+  /admin/institutions/new is Access denied, not a form whose save she is then refused. Until T376 it was InstitutionEdit's
+  second route, admitted by AdministratorOrInstitutionalAdmin. The form is as built (flow 18's to redesign), its refusals
+  in Wombat's words (T324).
+*@
+<PageHeader Title="Create institution" Subtitle="Maintain the institution record used for scoping and onboarding.">
+  <Actions>
+    <a class="btn btn-outline btn-sm" href="/admin/institutions">Back to institutions</a>
+  </Actions>
+</PageHeader>
+
+<ActionResult @ref="_result">
+  @if (!string.IsNullOrWhiteSpace(_errorMessage))
+  {
+    <Alert Kind="danger">@_errorMessage</Alert>
+  }
+</ActionResult>
+
+<div class="form-container">
+  <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="institution-create">
+    <DataAnnotationsValidator />
+
+    <div class="form-grid">
+      <FormField Label="Name" InputId="institution-name" Required="true">
+        <InputText id="institution-name" class="form-control" @bind-Value="_model.Name" />
+        <ValidationMessage For="() => _model.Name" />
+      </FormField>
+
+      <FormField Label="Short code" InputId="institution-short-code" Required="true">
+        <InputText id="institution-short-code" class="form-control" @bind-Value="_model.ShortCode" />
+        <ValidationMessage For="() => _model.ShortCode" />
+      </FormField>
+
+      <FormField Label="Contact email" InputId="institution-email">
+        <InputText id="institution-email" type="email" class="form-control" @bind-Value="_model.ContactEmail" />
+        <ValidationMessage For="() => _model.ContactEmail" />
+      </FormField>
+    </div>
+
+    <FormActions>
+      <a class="btn btn-outline" href="/admin/institutions">Cancel</a>
+      @* Not disabled while its own save runs (T234): it has the focus. A second press sends nothing. *@
+      <button type="submit" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : "Save")</button>
+    </FormActions>
+  </EditForm>
+</div>
+
+@code {
+  private InstitutionFormModel _model = new();
+  private string? _errorMessage;
+  private bool _saving;
+  private ActionResult? _result;
+
+  private async Task SaveAsync()
+  {
+    if (_saving)
+    {
+      return;
+    }
+
+    _saving = true;
+    _errorMessage = null;
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var contactEmail = string.IsNullOrWhiteSpace(_model.ContactEmail) ? null : _model.ContactEmail.Trim();
+      var created = await Sender.Send(new CreateInstitutionCommand(_model.Name, _model.ShortCode, contactEmail, authState.User));
+      Navigation.NavigateTo($"/admin/institutions/{created.Id}", forceLoad: true);
+    }
+    catch (Exception exception)
+    {
+      _errorMessage = RefusalText.Of(exception);
+      _result?.FocusAfterRender();
+    }
+    finally
+    {
+      _saving = false;
+    }
+  }
+
+  private sealed class InstitutionFormModel
+  {
+    // T324: in Wombat's words, never a property's name; the record page's words (UpdateInstitutionCommandValidator).
+    [Required(ErrorMessage = UpdateInstitutionCommandValidator.NameMissing)]
+    [StringLength(200, ErrorMessage = UpdateInstitutionCommandValidator.NameTooLong)]
+    public string Name { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = UpdateInstitutionCommandValidator.ShortCodeMissing)]
+    [StringLength(32, ErrorMessage = UpdateInstitutionCommandValidator.ShortCodeTooLong)]
+    public string ShortCode { get; set; } = string.Empty;
+
+    [StringLength(320, ErrorMessage = UpdateInstitutionCommandValidator.ContactEmailMalformed)]
+    public string? ContactEmail { get; set; }
+  }
+}

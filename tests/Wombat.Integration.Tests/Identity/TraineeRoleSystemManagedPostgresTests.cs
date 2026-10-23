@@ -77,8 +77,9 @@ public sealed class TraineeRoleSystemManagedPostgresTests : IAsyncLifetime
                 NomineeSeed.AddUser(db, InstitutionalAdmin, institutionId, WombatRoles.InstitutionalAdmin);
                 NomineeSeed.AddUser(db, GlobalAdmin, institutionId: null, WombatRoles.Administrator);
 
-                // An assessor, so the Assessor role the control adds exists, as it does on a seeded database.
-                NomineeSeed.AddUser(db, "assessor-a", institutionId, WombatRoles.Assessor);
+                // A committee member, so the role the control adds exists, as it does on a seeded database. Since T376 (M2)
+                // the control adds one that needs no speciality: an Assessor needs a sub-speciality this fixture adopts none of.
+                NomineeSeed.AddUser(db, "member-a", institutionId, WombatRoles.CommitteeMember);
                 await db.SaveChangesAsync();
             }
 
@@ -90,9 +91,9 @@ public sealed class TraineeRoleSystemManagedPostgresTests : IAsyncLifetime
 
             foreach (var caller in callers)
             {
-                (await AddRoleAsync(root, new AddRoleToUserCommand(PendingRegistrar, WombatRoles.Trainee, caller)))
+                (await AddRoleAsync(root, new AddRoleToUserCommand(PendingRegistrar, WombatRoles.Trainee, null, null, caller)))
                     .Should().Be(UserAdministrationRules.TraineeRoleByAdmissionOnly);
-                (await AddRoleAsync(root, new AddRoleToUserCommand(Graduate, WombatRoles.Trainee, caller)))
+                (await AddRoleAsync(root, new AddRoleToUserCommand(Graduate, WombatRoles.Trainee, null, null, caller)))
                     .Should().Be(UserAdministrationRules.TraineeRoleByAdmissionOnly);
                 (await RemoveRoleAsync(root, new RemoveRoleFromUserCommand(RunningTrainee, WombatRoles.Trainee, caller)))
                     .Should().Be(UserAdministrationRules.TraineeRoleByAdmissionOnly);
@@ -112,12 +113,12 @@ public sealed class TraineeRoleSystemManagedPostgresTests : IAsyncLifetime
 
             // The control: the same InstitutionalAdmin adds a role the surface manages to the same pending registrar,
             // through the same real store and pipeline.
-            (await AddRoleAsync(root, new AddRoleToUserCommand(PendingRegistrar, WombatRoles.Assessor, callers[1]))).Should().BeNull();
+            (await AddRoleAsync(root, new AddRoleToUserCommand(PendingRegistrar, WombatRoles.CommitteeMember, null, null, callers[1]))).Should().BeNull();
 
             await using (var read = root.CreateAsyncScope())
             {
                 var db = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                (await RolesOf(db, PendingRegistrar)).Should().BeEquivalentTo([WombatRoles.PendingTrainee, WombatRoles.Assessor]);
+                (await RolesOf(db, PendingRegistrar)).Should().BeEquivalentTo([WombatRoles.PendingTrainee, WombatRoles.CommitteeMember]);
                 (await db.AuditEntries.AsNoTracking().CountAsync(entry => entry.Success)).Should().Be(1);
             }
         }
@@ -321,13 +322,144 @@ public sealed class TraineeRoleSystemManagedPostgresTests : IAsyncLifetime
         }
     }
 
+    /// <summary>
+    /// T376 (flow 12, round 3 M2): Add role writes the role and the union of the scope in one transaction. A fault after
+    /// the role (here the scope's write) leaves neither: Zulu is still a Committee member kept to Paediatrics, with no
+    /// sub-speciality, and the failure row the audit pipeline saves commits nothing else. The same command through the real
+    /// store then adds both, the speciality she held kept.
+    /// </summary>
+    [Fact]
+    public async Task OnPostgres_AddRole_CommitsTheRoleAndTheScopeTogether_AndNeitherAfterAFault()
+    {
+        var schema = await _schemas.CreateAsync();
+
+        try
+        {
+            await using var root = await MigratedServicesAsync(schema);
+
+            int institutionId, specialityId, subSpecialityId;
+            await using (var arrange = root.CreateAsyncScope())
+            {
+                var db = arrange.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var institution = new Institution { Name = "KGK", ShortCode = "KGK", IsActive = true, CreatedOn = DateTime.UtcNow };
+                var college = new College { Name = "CMSA", ShortCode = "CMSA", IsActive = true };
+                var paediatrics = new Speciality { College = college, Name = "Paediatrics", IsActive = true };
+                var curriculum = new Curriculum
+                {
+                    SubSpeciality = new SubSpeciality { Speciality = paediatrics, Name = "Paediatrics", IsActive = true },
+                    Name = "Paediatrics",
+                    Version = "1",
+                    EffectiveFrom = new DateOnly(2024, 1, 1)
+                };
+                db.AddRange(institution, college, paediatrics, curriculum);
+                await db.SaveChangesAsync();
+                institutionId = institution.Id;
+                specialityId = paediatrics.Id;
+                subSpecialityId = curriculum.SubSpecialityId;
+
+                db.Add(new InstitutionCurriculumAdoption
+                {
+                    InstitutionId = institutionId,
+                    CurriculumId = curriculum.Id,
+                    SubSpecialityId = subSpecialityId,
+                    AdoptedOn = new DateOnly(2024, 1, 1),
+                    IsActive = true
+                });
+                NomineeSeed.AddUser(db, "zulu", institutionId, WombatRoles.CommitteeMember);
+                db.UserSpecialityScopes.Add(new WombatIdentityUserSpecialityScope { UserId = "zulu", SpecialityId = specialityId });
+                // So the Assessor role exists, as it does on a seeded database.
+                NomineeSeed.AddUser(db, "assessor-a", institutionId, WombatRoles.Assessor);
+                await db.SaveChangesAsync();
+            }
+
+            var caller = Caller(InstitutionalAdmin, institutionId, WombatRoles.InstitutionalAdmin);
+            var command = new AddRoleToUserCommand("zulu", WombatRoles.Assessor, null, subSpecialityId, caller);
+
+            (await AddRoleAsync(root, command, users => new ScopeWriteFails(users)))
+                .Should().Be(ScopeWriteFails.Message);
+
+            await using (var read = root.CreateAsyncScope())
+            {
+                var db = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                (await RolesOf(db, "zulu")).Should().BeEquivalentTo([WombatRoles.CommitteeMember], "the role rolled back with the scope");
+                (await db.UserSubSpecialityScopes.AsNoTracking().CountAsync(scope => scope.UserId == "zulu")).Should().Be(0);
+                (await db.UserSpecialityScopes.AsNoTracking().Where(scope => scope.UserId == "zulu").Select(scope => scope.SpecialityId).ToListAsync())
+                    .Should().Equal(specialityId);
+            }
+
+            (await AddRoleAsync(root, command)).Should().BeNull();
+
+            await using (var read = root.CreateAsyncScope())
+            {
+                var db = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                (await RolesOf(db, "zulu")).Should().BeEquivalentTo([WombatRoles.CommitteeMember, WombatRoles.Assessor]);
+                (await db.UserSubSpecialityScopes.AsNoTracking().Where(scope => scope.UserId == "zulu").Select(scope => scope.SubSpecialityId).ToListAsync())
+                    .Should().Equal(subSpecialityId);
+                (await db.UserSpecialityScopes.AsNoTracking().Where(scope => scope.UserId == "zulu").Select(scope => scope.SpecialityId).ToListAsync())
+                    .Should().Equal([specialityId], "a union: the Committee member's speciality is kept");
+            }
+        }
+        finally
+        {
+            await _schemas.DropAllAsync();
+        }
+    }
+
+    /// <summary>The real store, whose scope write fails once the role is written: a fault between M2's two writes.</summary>
+    private sealed class ScopeWriteFails(IUserAdministrationService inner) : IUserAdministrationService
+    {
+        public const string Message = "The scope could not be written.";
+
+        public Task<UserIdentityDetails?> GetByIdAsync(string userId, CancellationToken cancellationToken = default)
+            => inner.GetByIdAsync(userId, cancellationToken);
+
+        public Task<IReadOnlyList<UserIdentityDetails>> ListUsersInRoleAsync(string role, CancellationToken cancellationToken = default)
+            => inner.ListUsersInRoleAsync(role, cancellationToken);
+
+        public Task<IReadOnlyList<UserIdentityDetails>> ListAllUsersAsync(CancellationToken cancellationToken = default)
+            => inner.ListAllUsersAsync(cancellationToken);
+
+        public Task UpdateNamesAsync(string userId, string firstName, string lastName, CancellationToken cancellationToken = default)
+            => inner.UpdateNamesAsync(userId, firstName, lastName, cancellationToken);
+
+        public Task UpdateScopeAsync(
+            string userId,
+            int institutionId,
+            IReadOnlyCollection<int> specialityIds,
+            IReadOnlyCollection<int> subSpecialityIds,
+            CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException(Message);
+
+        public Task PromotePendingTraineeAsync(string userId, CancellationToken cancellationToken = default)
+            => inner.PromotePendingTraineeAsync(userId, cancellationToken);
+
+        public Task<T> InOneTransactionAsync<T>(Func<CancellationToken, Task<T>> work, CancellationToken cancellationToken = default)
+            => inner.InOneTransactionAsync(work, cancellationToken);
+
+        public Task AddRoleAsync(string userId, string role, CancellationToken cancellationToken = default)
+            => inner.AddRoleAsync(userId, role, cancellationToken);
+
+        public Task RemoveRoleAsync(string userId, string role, CancellationToken cancellationToken = default)
+            => inner.RemoveRoleAsync(userId, role, cancellationToken);
+
+        public Task ResetPasswordAsync(string userId, string newPassword, CancellationToken cancellationToken = default)
+            => inner.ResetPasswordAsync(userId, newPassword, cancellationToken);
+
+        public Task SetLockoutAsync(string userId, bool locked, CancellationToken cancellationToken = default)
+            => inner.SetLockoutAsync(userId, locked, cancellationToken);
+    }
+
     // ─── The commands, as a request runs them ────────────────────────────────
 
-    private static Task<string?> AddRoleAsync(ServiceProvider root, AddRoleToUserCommand command)
-        => RunAsync(root, command, (users, request) => new AddRoleToUserCommandHandler(users).Handle(request, CancellationToken.None));
+    private static Task<string?> AddRoleAsync(
+        ServiceProvider root,
+        AddRoleToUserCommand command,
+        Func<IUserAdministrationService, IUserAdministrationService>? wrap = null)
+        => RunAsync(root, command, (users, db, request)
+            => new AddRoleToUserCommandHandler(wrap is null ? users : wrap(users), db).Handle(request, CancellationToken.None));
 
     private static Task<string?> RemoveRoleAsync(ServiceProvider root, RemoveRoleFromUserCommand command)
-        => RunAsync(root, command, (users, request) => new RemoveRoleFromUserCommandHandler(users).Handle(request, CancellationToken.None));
+        => RunAsync(root, command, (users, _, request) => new RemoveRoleFromUserCommandHandler(users).Handle(request, CancellationToken.None));
 
     /// <summary>
     /// Runs one admission as <see cref="RunAsync{TCommand}" /> runs a role command: its own request scope, the real audit
@@ -368,7 +500,7 @@ public sealed class TraineeRoleSystemManagedPostgresTests : IAsyncLifetime
     private static async Task<string?> RunAsync<TCommand>(
         ServiceProvider root,
         TCommand command,
-        Func<IUserAdministrationService, TCommand, Task> handle)
+        Func<IUserAdministrationService, ApplicationDbContext, TCommand, Task> handle)
         where TCommand : notnull
     {
         await using var request = root.CreateAsyncScope();
@@ -381,7 +513,7 @@ public sealed class TraineeRoleSystemManagedPostgresTests : IAsyncLifetime
                 command,
                 async () =>
                 {
-                    await handle(users, command);
+                    await handle(users, db, command);
                     return Unit.Value;
                 },
                 CancellationToken.None);

@@ -1,66 +1,181 @@
 @page "/admin/assessors"
 @attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
-@using Wombat.Domain.Identity
+@using Wombat.Application.Features.Institutions.Queries.GetMyInstitutionName
+@using Wombat.Web.Components.Pages.Admin.Invitations
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<AssessorsList> Logger
 
 <PageTitle>Assessors · Wombat</PageTitle>
 
-<PageHeader Title="Assessors" Subtitle="Create and maintain assessor profiles across institutions and specialities.">
-  <Actions>
-    <a class="btn btn-primary" href="/admin/assessors/edit">
-      <Icon Name="plus" />
-      Create assessor profile
-    </a>
-  </Actions>
-</PageHeader>
+@*
+  Assessors (T376, flow 12, lane T; boards T01–T14): every holder of the Assessor role in the caller's scope, by last name,
+  with the training recorded on each person's page (Q2). Each row's Record training or Edit training opens that page at
+  ?section=training (PeopleLinks.UserTraining); the list records nothing itself. Until T376 it listed assessor profiles,
+  so a holder with no profile was missing and a removed Assessor was still listed; it offered "Create assessor profile"
+  (a form that asked an institution and a speciality and rewrote the person's scope, M1), printed a failed read's
+  exception (T329), and said a profile made assessors "selectable in the workflow" (T326).
+*@
+<PageHeader Title="Assessors" Subtitle="@Subtitle" />
 
-@{ var rowNames = RowNames.Distinct(_assessors, profile => profile.Id, profile => $"{profile.FirstName} {profile.LastName}", profile => $" ({profile.Email})"); }
-<StatePanel IsLoading="_loading" IsEmpty="@(_assessors.Count == 0)" EmptyTitle="No assessor profiles" EmptyBody="Create the first assessor profile to make assessors selectable in the workflow." LoadError="@_errorMessage">
-  <DataTable TItem="AssessorProfileDto" Items="_assessors" Caption="Assessor profiles">
-    <HeaderRow>
-      <tr>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Institution</th>
-        <th>Speciality</th>
-        <th>Sub-speciality</th>
-        <th>Training status</th>
-        <th>Training completed</th>
-        <th><span class="visually-hidden">Actions</span></th>
-      </tr>
-    </HeaderRow>
-    <Row Context="assessor">
-      <tr>
-        <td>@($"{assessor.FirstName} {assessor.LastName}")</td>
-        <td>@assessor.Email</td>
-        <td>@assessor.InstitutionName</td>
-        <td>@(assessor.SpecialityName ?? "All")</td>
-        <td>@(assessor.SubSpecialityName ?? "All")</td>
-        <td>@DescribeStatus(assessor.TrainingStatus)</td>
-        <td>@(assessor.TrainingCompletedOn?.ToString("yyyy-MM-dd") ?? "Not recorded")</td>
-        @* T239: named by the assessor, and their email where two share a name. *@
-        <td><a class="btn btn-outline btn-sm" href="@($"/admin/assessors/edit?id={assessor.Id}")" aria-label="@($"Edit {rowNames[assessor.Id]}")">Edit</a></td>
-      </tr>
-    </Row>
-  </DataTable>
-</StatePanel>
+@* S8: someone who holds Trainee beside an admin role reads nobody (T278, T290): the note, asked before any read, and no
+   subtitle. A standing notice, not a live region (S23). *@
+@if (_traineeNote is not null)
+{
+  <div class="people-page">
+    <Alert Kind="info" Role="" Id="assessors-trainee-note">@_traineeNote</Alert>
+  </div>
+}
+else
+{
+  <div class="people-page" aria-busy="@(_loading ? "true" : null)">
+    <StatePanel @ref="_panel" IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusHeadingAsync">
+      <LoadingContent>
+        <p class="loading-line" role="status">@AssessorsText.Loading</p>
+        <div class="detail-card">
+          <div class="skeleton skel-title"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line skel-short"></div>
+        </div>
+      </LoadingContent>
+      <ChildContent>
+        @if (_list is { TotalCount: 0 })
+        {
+          @* T01: nobody holds the role. Focusable by script only: a Try again answered by it focuses it. *@
+          <div class="detail-card detail-card--empty" id="assessors-empty" tabindex="-1" @ref="_empty">
+            <p class="state-panel-title">@AssessorsText.EmptyTitle</p>
+            <p class="state-panel-copy">@AssessorsText.EmptyBody</p>
+          </div>
+        }
+        else if (_list is not null)
+        {
+          @Holders(_list)
+        }
+      </ChildContent>
+    </StatePanel>
+  </div>
+}
 
 @code {
-  private IReadOnlyList<AssessorProfileDto> _assessors = [];
+  private string? _traineeNote;
+  private bool _isAdministrator;
+  private string? _institutionName;
   private bool _loading = true;
-  private string? _errorMessage;
+  private string? _loadError;
+  private AssessorListDto? _list;
+  private int _page = 1;
+  private int _pageSize = ListAssessorsQuery.DefaultPageSize;
+  private bool _focusHeading;
+  private ElementReference _heading;
+  private ElementReference _empty;
+  private StatePanel? _panel;
+
+  // S9: her institution's name only once it is read; the Administrator's own words (T14); none for the Trainee note.
+  private string? Subtitle => _traineeNote is not null
+    ? null
+    : _isAdministrator
+      ? AssessorsText.SubtitleAdministrator
+      : _institutionName is { } name && _loadError is null && !_loading
+        ? AssessorsText.Subtitle(name)
+        : AssessorsText.SubtitleWithoutName;
+
+  private RenderFragment Holders(AssessorListDto list) => __builder =>
+  {
+    var names = RowNames.Distinct(list.Rows, row => row.UserId, row => row.FullName, row => $" ({row.Email})");
+    <section class="list-section" aria-labelledby="assessors-heading">
+      <h2 id="assessors-heading" class="list-section-title" tabindex="-1" @ref="_heading">@(_isAdministrator ? AssessorsText.HeadingAdministrator : AssessorsText.Heading(_institutionName)) <span class="inv-count">@list.TotalCount</span></h2>
+      <DataTable TItem="AssessorRowDto" Items="list.Rows" StackWide="true"
+                 Caption="@(_isAdministrator ? AssessorsText.CaptionAdministrator : AssessorsText.Caption(_institutionName))">
+        <HeaderRow>
+          <tr role="row">
+            <th scope="col" role="columnheader">Name</th>
+            @if (_isAdministrator)
+            {
+              @* S14 (T14): the Administrator reads every institution's holders, so each row names its institution. *@
+              <th scope="col" role="columnheader">Institution</th>
+            }
+            <th scope="col" role="columnheader">Scope</th>
+            <th scope="col" role="columnheader">Training status</th>
+            <th scope="col" role="columnheader">Training completed</th>
+            <th scope="col" role="columnheader" class="col-actions col-actions--single"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </HeaderRow>
+        <Row Context="row">
+          <tr role="row">
+            @* Check Left 3: no .col-wrap on the row header; the name over the address, which breaks after its @. *@
+            <th scope="row" role="rowheader"><span class="person-cell">@row.FullName<span>@InvitationText.Address(row.Email)</span></span></th>
+            @if (_isAdministrator)
+            {
+              <td role="cell" data-label="Institution">@(row.InstitutionName ?? PersonScopeWords.NoInstitution)</td>
+            }
+            <td role="cell" data-label="Scope">@row.Scope</td>
+            <td role="cell" data-label="Training status">
+              @(row.TrainingStatus is { } status ? AssessorTrainingWords.Status(status) : AssessorTrainingWords.NotRecorded)
+            </td>
+            <td role="cell" data-label="Training completed" class="inv-when">
+              @(row.ProfileId is null ? AssessorsText.NoRecordDate : AssessorTrainingWords.CompletedOn(row.TrainingCompletedOn))
+            </td>
+            <td role="cell" class="col-actions col-actions--single">
+              @{ var verb = row.ProfileId is null ? "Record training" : "Edit training"; }
+              @* T239: named by the person, and their address where two share a name. *@
+              <a class="btn btn-outline btn-sm" href="@PeopleLinks.UserTraining(row.UserId)"
+                 aria-label="@($"{verb} for {names[row.UserId]}")">@verb</a>
+            </td>
+          </tr>
+        </Row>
+      </DataTable>
+      @* F9 (check Left 2): the pager only when the holders fill more than one page; its focus goes to the heading. *@
+      @if (list.TotalCount > list.PageSize)
+      {
+        <PagerControls Label="@AssessorsText.PagerLabel" PageSizeLabel="@AssessorsText.PageSizeLabel"
+                       Page="list.Page" PageSize="list.PageSize" TotalCount="list.TotalCount"
+                       OnPageChanged="ChangePageAsync" OnPageSizeChanged="ChangePageSizeAsync" />
+      }
+    </section>
+  };
 
   protected override async Task OnInitializedAsync()
   {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    _traineeNote = UserAdministrationRules.TraineeNoteOnUserPages(authState.User);
+    if (_traineeNote is not null)
+    {
+      _loading = false;
+      return;
+    }
+
+    _isAdministrator = authState.User.IsAdministrator();
+    await LoadAsync();
+  }
+
+  /// <param name="showLoading">
+  /// False for a change of rows per page: the list is read in place, so the select is never taken out of the page and the
+  /// focus stays on it (T376 build review, P6; Users' rule, T350 build review, A1).
+  /// </param>
+  private async Task LoadAsync(bool showLoading = true)
+  {
+    _loading = showLoading;
+    _loadError = null;
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _assessors = await Sender.Send(new ListAssessorsForSpecialityQuery(authState.User));
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+      // S9: the name first, so the subtitle, the heading and the caption name her institution together.
+      if (!_isAdministrator)
+      {
+        _institutionName = await Sender.Send(new GetMyInstitutionNameQuery(user));
+      }
+
+      _list = await Sender.Send(new ListAssessorsQuery(user, _page, _pageSize));
+      _page = _list.Page;
+      _pageSize = _list.PageSize;
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = exception.Message;
+      // T329: a fixed sentence on the page, the failure to the log; never the exception's text.
+      Logger.LogError(exception, "The assessors could not be loaded.");
+      _loadError = AssessorsText.LoadFailed;
     }
     finally
     {
@@ -68,11 +183,50 @@
     }
   }
 
-  private static string DescribeStatus(AssessorTrainingStatus status) => status switch
+  private Task RetryAsync() => LoadAsync();
+
+  private ValueTask FocusHeadingAsync() => _list is { TotalCount: 0 } ? _empty.FocusAsync() : _heading.FocusAsync();
+
+  private async Task ChangePageAsync(int page)
   {
-    AssessorTrainingStatus.InTraining => "In training",
-    AssessorTrainingStatus.Provisional => "Provisional",
-    AssessorTrainingStatus.Trained => "Trained",
-    _ => "Not started"
-  };
+    _page = page;
+    await LoadAsync();
+    AfterTurn();
+  }
+
+  // A change of rows per page reads the first page at that size; the focus stays on the select (T376 build review, P6),
+  // unless the page answers with a failure, or no longer draws the pager (the holders now fit one page).
+  private async Task ChangePageSizeAsync(int pageSize)
+  {
+    _pageSize = pageSize;
+    _page = 1;
+    await LoadAsync(showLoading: false);
+    if (_loadError is not null || _list is null || _list.TotalCount <= _list.PageSize)
+    {
+      AfterTurn();
+    }
+  }
+
+  // A page turn's answer takes the focus: the heading of the new page, or the failure that replaced it (T350, A3).
+  private void AfterTurn()
+  {
+    if (_loadError is null)
+    {
+      _focusHeading = true;
+    }
+    else
+    {
+      _panel?.FocusFailureAfterRender();
+    }
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusHeading && !_loading)
+    {
+      // F9 (flow 08): a page turn's focus is the list's heading, once the new page is drawn.
+      _focusHeading = false;
+      await _heading.FocusAsync();
+    }
+  }
 }

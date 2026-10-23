@@ -144,6 +144,8 @@ public static class NavOwners
         [typeof(SubSpecialityEdit)] = UnderTheCollege,
         [typeof(CollegeEdit)] = [new([WombatRoles.Administrator], NavItems.Colleges)],
         [typeof(InstitutionEdit)] = [new([WombatRoles.Administrator], NavItems.Institutions)],
+        // T376 (flow 12, S12): creating an institution is a page of its own, the Administrator's alone, under Institutions.
+        [typeof(InstitutionCreate)] = [new([WombatRoles.Administrator], NavItems.Institutions)],
 
         [typeof(EpaEdit)] = [new(CatalogueAuthors, NavItems.Epas)],
         [typeof(ActivityTypeEdit)] = [new(CatalogueAuthors, NavItems.ActivityTypes)],
@@ -160,7 +162,9 @@ public static class NavOwners
         // Admit ‹name› (T373, flow 11, Q17): under Trainees for the Institutional admin. The Administrator's menu has no
         // Trainees, so nothing is lit for him and the page gives its trail's Trainees crumb itself (M04b).
         [typeof(AdmitRegistrar)] = [new([WombatRoles.InstitutionalAdmin], NavItems.Trainees)],
-        [typeof(AssessorProfileEdit)] = [new([WombatRoles.InstitutionalAdmin], NavItems.Assessors)],
+        // The old assessor form's route (T376, flow 12, S10): it leads to the person's page, and says what that page says
+        // when it cannot, so it sits under Users as the person's page does: Home › Users › User.
+        [typeof(AssessorProfileEdit)] = [new([WombatRoles.Administrator, WombatRoles.InstitutionalAdmin], NavItems.Users)],
         [typeof(AuditDetail)] = [new([WombatRoles.Administrator, WombatRoles.InstitutionalAdmin], NavItems.AuditLog)],
         [typeof(ScheduledJobRunsList)] = [new([WombatRoles.Administrator], NavItems.ScheduledJobs)],
 

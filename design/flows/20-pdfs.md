@@ -392,11 +392,12 @@ Paste this as the second message. It is each step's Role, Route, Do and Expect, 
 Step 4.35 — Prof Mbatha reads the issued STARs
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/entrustment-decisions
-Do: Open Entrustment decisions from her dashboard's quick links. Download Dr Molefe's PAED-010 certificate. Filter by
+Do: Open Entrustment decisions from the menu, under Reviews. Download Dr Molefe's PAED-010 certificate. Filter by
   trainee "Molefe" and press Show.
 Expect:
-  - **The page:** under the trail Home › Entrustment decisions, since no menu item of hers leads to it (T358). Its
-    subtitle reads "Issued Statements of Awarded Responsibility across the programme."
+  - **The page:** lit in her menu, with no trail: a list her menu offers since T376 (flow 12, F10; Home's Quick links,
+    its only way in until then, are gone). Its subtitle reads "Issued Statements of Awarded Responsibility across the
+    programme."
   - **The list:** captioned "Issued STARs (entrustment decisions) · 5 shown"; five rows, all Active, issued `D`, newest
     issued first and then by STAR number, descending (one day's ties; T366, F1):
     - Dlamini: PAED-002 `3b`, PAED-001 `4`.
@@ -475,8 +476,8 @@ Expect: The page opens with the last twelve months filled in. After the export i
 Step 5.10 — Prof Mbatha exports Dr Molefe's portfolio by its address
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/users/{UserId} → /portfolio/export/{TraineeUserId}
-Do: Find Dr Molefe in Users and open her. Take her user id from the page's address, then type the export address with
-  that id. Set the dates to `J−3y` and `D`, and export.
+Do: Find Dr Molefe in Users (type "Molefe" in Name or email and press Show) and open her. Take her user id from the
+  path of the page's address (before any `?`: Manage adds `?back=`), then type the export address with that id. Set the dates to `J−3y` and `D`, and export.
 Expect: The export succeeds as in Step 5.9. The downloaded file has the same name as Dr Molefe's and is identical to it
   byte for byte. Compare the two with `fc /b`, or by their SHA-256.
 

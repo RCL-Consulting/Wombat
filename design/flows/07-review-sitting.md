@@ -905,7 +905,7 @@ Expect:
   - **Sampling:** "Before the committee decides" names PAED-002, one rating from one assessor.
   - **Ratified:** the review reads Ratified, with "Outcome Deferred".
 
-Step 4.50 — Dr Zulu starts and closes the check-in (act-4-annual-review.md:1418)
+Step 4.50 — Dr Zulu starts and closes the check-in (act-4-annual-review.md:1419)
 Role: CommitteeMember (chair) — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: Start the formative review through its dialog, read it, and close it through its dialog.
@@ -1002,7 +1002,7 @@ Expect: The dialog, "Ratify and issue 13 STARs to Lerato Molefe?", lists the thi
   The standing's exit rule reads "15 of 15 EPAs at their exit level by STAR decision (level 5: 9 of 9 · level 4: 6 of
   6). Every EPA is at its exit level." Its year line reads "15 at or above · 0 below · 0 with no decision, of 15 EPAs".
 
-Step A.7.6 — Dr Zulu on her phone (appendix-cross-cutting.md:1291)
+Step A.7.6 — Dr Zulu on her phone (appendix-cross-cutting.md:1330)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: At 390 px, open Committee reviews and Dr Molefe's final review.
@@ -1020,7 +1020,7 @@ Expect: Home's Registrars and Targets by EPA cards are one column: each registra
   the charts at 322 px. Nothing scrolls sideways. Checked at 768 px as well: the agenda still stacks, and nothing
   scrolls sideways.
 
-Step A.7.13 — Dr Zulu hears a populated review with a screen reader (appendix-cross-cutting.md:1478)
+Step A.7.13 — Dr Zulu hears a populated review with a screen reader (appendix-cross-cutting.md:1527)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: /committee/reviews/{ReviewId:int}
 Do: With NVDA (or Narrator) on, open Dr Molefe's final review (review #7). Walk it by headings, then by tables, then by

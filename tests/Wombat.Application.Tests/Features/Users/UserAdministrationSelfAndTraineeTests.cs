@@ -5,7 +5,6 @@ using Wombat.Application.Features.Users;
 using Wombat.Application.Features.Users.Commands.AddRoleToUser;
 using Wombat.Application.Features.Users.Commands.RemoveRoleFromUser;
 using Wombat.Application.Features.Users.Commands.ResetUserPassword;
-using Wombat.Application.Features.Users.Commands.RevokePendingInvitationsForEmail;
 using Wombat.Application.Features.Users.Commands.SetUserLockout;
 using Wombat.Application.Features.Users.Queries.GetUserById;
 using Wombat.Application.Features.Users.Queries.ListUsers;
@@ -72,8 +71,8 @@ public sealed class UserAdministrationSelfAndTraineeTests
         var users = Store();
         var caller = Caller(role, holdsTrainee: false);
 
-        var add = () => new AddRoleToUserCommandHandler(users).Handle(
-            new AddRoleToUserCommand(Self, WombatRoles.CommitteeMember, caller), CancellationToken.None);
+        var add = () => new AddRoleToUserCommandHandler(users, UsersTestDb.Empty()).Handle(
+            new AddRoleToUserCommand(Self, WombatRoles.CommitteeMember, null, null, caller), CancellationToken.None);
         (await add.Should().ThrowAsync<UnauthorizedAccessException>(role)).Which.Message.Should().Be(OwnRolesNotChangeable);
 
         var remove = () => new RemoveRoleFromUserCommandHandler(users).Handle(
@@ -139,8 +138,8 @@ public sealed class UserAdministrationSelfAndTraineeTests
         var users = Store();
         var caller = Caller(role, holdsTrainee: false);
 
-        await new AddRoleToUserCommandHandler(users).Handle(
-            new AddRoleToUserCommand(Other, WombatRoles.Assessor, caller), CancellationToken.None);
+        await new AddRoleToUserCommandHandler(users, UsersTestDb.Empty()).Handle(
+            new AddRoleToUserCommand(Other, WombatRoles.Coordinator, null, null, caller), CancellationToken.None);
         await new RemoveRoleFromUserCommandHandler(users).Handle(
             new RemoveRoleFromUserCommand(Other, WombatRoles.CommitteeMember, caller), CancellationToken.None);
         await new SetUserLockoutCommandHandler(users).Handle(
@@ -150,7 +149,7 @@ public sealed class UserAdministrationSelfAndTraineeTests
         await new ResetUserPasswordCommandHandler(users).Handle(
             new ResetUserPasswordCommand(Other, "A-new-password-1", caller), CancellationToken.None);
 
-        users.AddRoleCalls.Should().Equal((Other, WombatRoles.Assessor));
+        users.AddRoleCalls.Should().Equal((Other, WombatRoles.Coordinator));
         users.RemoveRoleCalls.Should().Equal((Other, WombatRoles.CommitteeMember));
         users.LockoutCalls.Should().Equal((Other, true), (Other, false));
         users.ResetPasswordCalls.Should().Equal((Other, "A-new-password-1"));
@@ -224,51 +223,8 @@ public sealed class UserAdministrationSelfAndTraineeTests
         var listed = await new ListUsersQueryHandler(users, db).Handle(new ListUsersQuery(caller), CancellationToken.None);
         var opened = await new GetUserByIdQueryHandler(users, db).Handle(new GetUserByIdQuery(Other, caller), CancellationToken.None);
 
-        listed.Select(user => user.UserId).Should().BeEquivalentTo([Self, Other]);
+        listed.Rows.Select(user => user.UserId).Should().BeEquivalentTo([Self, Other]);
         opened!.UserId.Should().Be(Other);
-    }
-
-    [Theory]
-    [MemberData(nameof(UserAdministrationRoles))]
-    public async Task ATraineeWhoAdministersUsers_RevokesNoInvitation_AndNothingIsLeftForTheAuditSave(string role)
-    {
-        await using var db = NewDb();
-        db.Set<Invitation>().Add(PendingInvitation("colleague@a.test"));
-        await db.SaveChangesAsync();
-        db.ChangeTracker.Clear();
-
-        var revoke = () => new RevokePendingInvitationsForEmailCommandHandler(db).Handle(
-            new RevokePendingInvitationsForEmailCommand("colleague@a.test", Caller(role, holdsTrainee: true)),
-            CancellationToken.None);
-
-        (await revoke.Should().ThrowAsync<UnauthorizedAccessException>()).Which.Message.Should().Be(TraineeAdministersNoUser);
-
-        // As the audit pipeline's catch would: it saves the request's context.
-        await db.SaveChangesAsync();
-        db.ChangeTracker.Clear();
-        (await db.Set<Invitation>().SingleAsync()).RevokedOn.Should().BeNull();
-
-        // The control: the same caller without Trainee revokes it.
-        var revoked = await new RevokePendingInvitationsForEmailCommandHandler(db).Handle(
-            new RevokePendingInvitationsForEmailCommand("colleague@a.test", Caller(role, holdsTrainee: false)),
-            CancellationToken.None);
-        revoked.Should().Be(1);
-    }
-
-    [Theory]
-    [MemberData(nameof(UserAdministrationRoles))]
-    public async Task TheirOwnEmailsInvitations_AreStillRevocable_ByAnAdministratorWhoIsNotATrainee(string role)
-    {
-        // Not refused: an invitation creates an account, and one addressed to an account that exists cannot be accepted.
-        await using var db = NewDb();
-        db.Set<Invitation>().Add(PendingInvitation($"{Self}@a.test"));
-        await db.SaveChangesAsync();
-
-        var revoked = await new RevokePendingInvitationsForEmailCommandHandler(db).Handle(
-            new RevokePendingInvitationsForEmailCommand($"{Self}@a.test", Caller(role, holdsTrainee: false)),
-            CancellationToken.None);
-
-        revoked.Should().Be(1);
     }
 
     public static TheoryData<string> NonAdministrationRoles => new()
@@ -327,8 +283,8 @@ public sealed class UserAdministrationSelfAndTraineeTests
     private static IEnumerable<(string Name, Func<Task> Act)> Commands(
         RecordingUserAdministrationService users, string userId, ClaimsPrincipal caller)
     {
-        yield return ("add a role", () => new AddRoleToUserCommandHandler(users).Handle(
-            new AddRoleToUserCommand(userId, WombatRoles.Assessor, caller), CancellationToken.None));
+        yield return ("add a role", () => new AddRoleToUserCommandHandler(users, UsersTestDb.Empty()).Handle(
+            new AddRoleToUserCommand(userId, WombatRoles.Assessor, null, null, caller), CancellationToken.None));
         yield return ("remove CommitteeMember", () => new RemoveRoleFromUserCommandHandler(users).Handle(
             new RemoveRoleFromUserCommand(userId, WombatRoles.CommitteeMember, caller), CancellationToken.None));
         yield return ("lock out", () => new SetUserLockoutCommandHandler(users).Handle(
@@ -365,18 +321,6 @@ public sealed class UserAdministrationSelfAndTraineeTests
             [WombatRoles.CommitteeMember]));
         return users;
     }
-
-    private static Invitation PendingInvitation(string email)
-        => new()
-        {
-            Email = email,
-            TokenHash = Guid.NewGuid().ToString("N"),
-            TargetRole = WombatRoles.Assessor,
-            InstitutionId = InstitutionA,
-            IssuedByUserId = "admin",
-            IssuedOn = DateTime.UtcNow,
-            ExpiresOn = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(14)
-        };
 
     private static ApplicationDbContext NewDb()
     {

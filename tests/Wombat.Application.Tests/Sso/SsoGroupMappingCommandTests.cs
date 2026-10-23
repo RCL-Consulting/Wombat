@@ -30,13 +30,13 @@ public sealed class SsoGroupMappingCommandTests
         var handler = new CreateSsoGroupMappingCommandHandler(db, Providers());
 
         var id = await handler.Handle(new CreateSsoGroupMappingCommand(
-            "uct", "group-1", "Surgery", WombatRoles.Assessor, 1, null, null, TestPrincipals.Administrator()), CancellationToken.None);
+            "uct", "group-1", "Surgery", WombatRoles.Coordinator, 1, null, null, TestPrincipals.Administrator()), CancellationToken.None);
 
         id.Should().BeGreaterThan(0);
         var mapping = await db.SsoGroupRoleMappings.FindAsync(id);
         mapping.Should().NotBeNull();
         mapping!.ProviderKey.Should().Be("uct");
-        mapping.WombatRole.Should().Be(WombatRoles.Assessor);
+        mapping.WombatRole.Should().Be(WombatRoles.Coordinator, "a role kept to no speciality needs no scope (an Assessor's is T376 B3's test)");
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public sealed class SsoGroupMappingCommandTests
         });
         await db.SaveChangesAsync();
 
-        var handler = new DeleteSsoGroupMappingCommandHandler(db);
+        var handler = new DeleteSsoGroupMappingCommandHandler(db, Providers());
         await handler.Handle(new DeleteSsoGroupMappingCommand(1, TestPrincipals.Administrator()), CancellationToken.None);
 
         db.SsoGroupRoleMappings.Should().BeEmpty();
@@ -76,7 +76,7 @@ public sealed class SsoGroupMappingCommandTests
     public async Task Delete_NonExistentMapping_Throws()
     {
         await using var db = CreateDb();
-        var handler = new DeleteSsoGroupMappingCommandHandler(db);
+        var handler = new DeleteSsoGroupMappingCommandHandler(db, Providers());
 
         var act = () => handler.Handle(new DeleteSsoGroupMappingCommand(999, TestPrincipals.Administrator()), CancellationToken.None);
 

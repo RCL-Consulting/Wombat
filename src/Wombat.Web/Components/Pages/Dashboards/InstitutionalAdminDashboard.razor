@@ -1,57 +1,117 @@
 @using System.Security.Claims
 @using MediatR
 @using Wombat.Application.Features.Dashboards.InstitutionalAdmin
+@using Wombat.Web.Components.Pages.Admin.Invitations
 @attribute [Authorize(Roles = "InstitutionalAdmin")]
 @rendermode InteractiveServer
 @inherits RoleDashboard<InstitutionalAdminDashboardSummaryDto>
 
+@*
+  Her Home (T376, flow 12, boards R3-H01–H05; Q3, Q7, Q8; K24; T291 items 4 and 8). Inviting a person stays Home's header
+  action (T335, flow 01).
+
+  - The waiting line (Q8, S23): above the cards, only while someone waits to be admitted, with Open Trainees. Standing
+    page content, so an Alert with no role; flow 06's oversight line is the precedent (DESIGN.md § Dashboard page).
+  - People: each role held at her institution by its label, its count a link to Users filtered by it (S19: the count
+    inside the link's name), then the distinct account count and Open Users.
+  - Curriculum: what her institution has adopted, not the College's catalogue (T291 item 4), the disciplines' line, and
+    Open Curriculum adoptions.
+  - Your institution: its name, short code, contact email (breaking after its @, M7) and Status, which a Wombat
+    administrator sets, with Open ‹institution›. Quick links are gone (Q7): each card's footer is its way on.
+*@
+
+@if (Summary is { WaitingCount: > 0 } waiting)
+{
+  <Alert Kind="info" Role="" Id="home-waiting-line">
+    <div class="alert-row">
+      <p class="alert-row-text"><strong>@InstitutionalAdminHomeWords.WaitingLead(waiting.WaitingCount)</strong> @InstitutionalAdminHomeWords.WaitingRest</p>
+      <a class="btn btn-outline btn-sm" href="@OnboardingLinks.Trainees">@InstitutionalAdminHomeWords.OpenTrainees<Icon Name="arrow-right" /></a>
+    </div>
+  </Alert>
+}
+
 <DashboardFrame IsLoading="IsLoading" Failed="Failed" OnRetry="LoadAsync">
-  <DashboardCard Title="Users" Icon="users" Emphasis="true" IsLoading="IsLoading">
+  <DashboardCard Title="@InstitutionalAdminHomeWords.PeopleTitle" Icon="users" HeadingId="home-card-people" IsLoading="IsLoading">
     @if (Summary is { } summary)
     {
-      if (summary.UsersByRole.Count == 0)
+      @if (summary.UsersByRole.Count > 0)
       {
-        <p class="muted">No users found.</p>
+        <div class="dashboard-metric-row">
+          @foreach (var item in summary.UsersByRole)
+          {
+            <a class="dashboard-metric" href="@PeopleLinks.UsersFiltered(role: item.Role)">
+              <span class="dashboard-metric-value">@item.Count</span>
+              <span class="dashboard-metric-label">@WombatRoleLabels.For(item.Role)</span>
+            </a>
+          }
+        </div>
+      }
+      <div class="dashboard-card-footer">
+        <span class="field-help">@InstitutionalAdminHomeWords.Accounts(summary.AccountCount, summary.OnlyAccountIsYours)</span>
+        <a class="btn btn-outline btn-sm" href="@PeopleLinks.Users">@InstitutionalAdminHomeWords.OpenUsers<Icon Name="arrow-right" /></a>
+      </div>
+    }
+  </DashboardCard>
+
+  <DashboardCard Title="@InstitutionalAdminHomeWords.CurriculumTitle" Icon="book" HeadingId="home-card-curriculum" IsLoading="IsLoading">
+    @if (Summary is { } summary)
+    {
+      <div class="dashboard-metric-row">
+        <div class="dashboard-metric">
+          <span class="dashboard-metric-value">@summary.AdoptedSpecialityCount</span>
+          <span class="dashboard-metric-label">@InstitutionalAdminHomeWords.SpecialitiesAdopted(summary.AdoptedSpecialityCount)</span>
+        </div>
+        <div class="dashboard-metric">
+          <span class="dashboard-metric-value">@summary.AdoptedSubSpecialityCount</span>
+          <span class="dashboard-metric-label">@InstitutionalAdminHomeWords.SubSpecialitiesAdopted(summary.AdoptedSubSpecialityCount)</span>
+        </div>
+      </div>
+      @if (summary.Adoptions.Count == 0)
+      {
+        <p class="field-help">@InstitutionalAdminHomeWords.NothingAdopted</p>
       }
       else
       {
-        <ul class="list-unstyled">
-          @foreach (var item in summary.UsersByRole)
-          {
-            <li class="list-row">
-              <span>@item.Role</span>
-              <span class="dashboard-metric-value" style="font-size:1rem">@item.Count</span>
-            </li>
-          }
-        </ul>
+        @foreach (var adoption in summary.Adoptions)
+        {
+          <p class="field-help">@InstitutionalAdminHomeWords.Adoption(adoption)</p>
+        }
       }
+      <div class="dashboard-card-footer">
+        <a class="btn btn-outline btn-sm" href="@OnboardingLinks.CurriculumAdoptions">@InstitutionalAdminHomeWords.OpenAdoptions<Icon Name="arrow-right" /></a>
+      </div>
     }
   </DashboardCard>
 
-  <DashboardCard Title="Specialities &amp; sub-specialities" Icon="book" IsLoading="IsLoading">
-    @if (Summary is { } summary)
+  <DashboardCard Title="@InstitutionalAdminHomeWords.InstitutionTitle" Icon="building-2" HeadingId="home-card-institution" IsLoading="IsLoading">
+    @if (Summary is { Institution: { } institution })
     {
-      <div class="dashboard-metric">
-        <span class="dashboard-metric-value">@summary.SpecialityCount</span>
-        <span class="dashboard-metric-label">specialities</span>
-      </div>
-      <div class="dashboard-metric" style="margin-top:var(--space-sm)">
-        <span class="dashboard-metric-value">@summary.SubSpecialityCount</span>
-        <span class="dashboard-metric-label">sub-specialities</span>
+      <dl class="detail-list home-institution-list">
+        <dt>Name</dt>
+        <dd>@institution.Name</dd>
+        <dt>Short code</dt>
+        <dd>@institution.ShortCode</dd>
+        <dt>Contact email</dt>
+        <dd>
+          @if (string.IsNullOrWhiteSpace(institution.ContactEmail))
+          {
+            @InstitutionalAdminHomeWords.NoContactEmail
+          }
+          else
+          {
+            @InvitationText.Address(institution.ContactEmail)
+          }
+        </dd>
+        <dt>Status</dt>
+        <dd>
+          <p>@InstitutionalAdminHomeWords.Status(institution.IsActive)</p>
+          <p class="field-help">@InstitutionalAdminHomeWords.StatusSetBy</p>
+        </dd>
+      </dl>
+      <div class="dashboard-card-footer">
+        <a class="btn btn-outline btn-sm" href="@PeopleLinks.Institution(institution.Id)">@InstitutionalAdminHomeWords.OpenInstitution(institution.Name)<Icon Name="arrow-right" /></a>
       </div>
     }
-  </DashboardCard>
-
-  @* Not Institutions, whose list admits only an Administrator, and not Specialities, the College's national catalogue
-     (T091): an institution takes part in a speciality by adopting its curriculum (T261). Inviting a person is Home's
-     header action (T335, flow 01). *@
-  <DashboardCard Title="Quick links" Icon="settings" IsLoading="IsLoading">
-    <div class="actions-cell">
-      <a href="/admin/users" class="btn btn-outline">Users</a>
-      <a href="/admin/invitations" class="btn btn-outline">Invitations</a>
-      <a href="/admin/adoptions" class="btn btn-outline">Curriculum adoptions</a>
-      <a href="/admin/entrustment-decisions" class="btn btn-outline">Entrustment decisions</a>
-    </div>
   </DashboardCard>
 </DashboardFrame>
 

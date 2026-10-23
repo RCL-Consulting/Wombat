@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -9,7 +8,6 @@ using Wombat.Application.Common.Options;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Scheduling;
 using Wombat.Domain.Activities;
-using Wombat.Domain.Activities.Workflow;
 
 namespace Wombat.Infrastructure.Scheduling.Jobs;
 
@@ -62,57 +60,22 @@ public sealed class AssessorPendingNudgeJob : IScheduledJob
 
         var cutoff = context.UtcNow.AddDays(-_nudgeDays);
 
-        var activities = await dbContext.Set<Activity>()
-            .Include(a => a.ActivityType)
-            .ThenInclude(t => t.Versions)
-            .Where(a => a.UpdatedOn < cutoff)
-            .ToListAsync(cancellationToken);
+        // Whom each activity waits on, by the reading the user page's waiting requests share (AwaitingNominees, T376,
+        // flow 12, F6): awaiting a reviewer by its pinned workflow (ActivityWaiting, T297), so a request this mails about is
+        // on the Coordinator's stalled card once it has waited the stall days, and named in a field, to mail. A move for a
+        // role (a SpecialityAdmin's review of a teaching session) awaits a reviewer too, but names nobody to write to.
+        var awaiting = await AwaitingNominees.LoadAsync(
+            dbContext,
+            dbContext.Set<Activity>().Where(a => a.UpdatedOn < cutoff),
+            cancellationToken);
 
-        var pendingItems = new List<(string AssessorUserId, string ActivityTypeName, string TraineeUserId, int DaysWaiting)>();
-
-        foreach (var activity in activities)
-        {
-            // The version the activity is pinned to, as the inbox reads it (T102): the nominee gate judged the
-            // pinned version's field: rules, so a later version's rules must not decide whom this activity emails.
-            var pinnedVersion = activity.ActivityType.Versions.SingleOrDefault(v => v.Version == activity.SchemaVersion);
-            if (pinnedVersion is null || string.IsNullOrWhiteSpace(pinnedVersion.WorkflowJson))
-                continue;
-
-            Workflow workflow;
-            try
-            {
-                workflow = WorkflowParser.Parse(pinnedVersion.WorkflowJson);
-            }
-            catch
-            {
-                continue;
-            }
-
-            // Awaiting a reviewer, by the predicate the Coordinator's stalled card and the programme admins' tile read
-            // (ActivityWaiting, T297), so a request this mails about is on the card once it has waited the stall days.
-            if (!ActivityWaiting.AwaitsReviewer(workflow, activity.CurrentState))
-                continue;
-
-            // The nudge's own further need: a nominee named in a field, to mail. A move for a role (a SpecialityAdmin's
-            // review of a teaching session) awaits a reviewer too, but names nobody to write to.
-            var assessorFieldTransition = workflow.Transitions
-                .Where(t => t.From.Contains(activity.CurrentState))
-                .FirstOrDefault(t => HasFieldUserActor(t.Actor));
-
-            if (assessorFieldTransition is null)
-                continue;
-
-            var fieldName = GetFieldName(assessorFieldTransition.Actor);
-            if (fieldName is null)
-                continue;
-
-            var assessorUserId = ExtractFieldValue(activity.DataJson, fieldName);
-            if (string.IsNullOrWhiteSpace(assessorUserId))
-                continue;
-
-            var daysWaiting = (int)(context.UtcNow - activity.UpdatedOn).TotalDays;
-            pendingItems.Add((assessorUserId, activity.ActivityType.Name, activity.SubjectUserId, daysWaiting));
-        }
+        var pendingItems = awaiting
+            .Select(row => (
+                AssessorUserId: row.NomineeUserId,
+                ActivityTypeName: row.Activity.ActivityType.Name,
+                TraineeUserId: row.Activity.SubjectUserId,
+                DaysWaiting: (int)(context.UtcNow - row.Activity.UpdatedOn).TotalDays))
+            .ToList();
 
         // What became of each nudge is logged once the mail worker has reported on them all (T283).
         var mail = scope.ServiceProvider.GetRequiredService<ScheduledJobMailTally>().Start(nameof(AssessorPendingNudgeJob), context);
@@ -195,32 +158,5 @@ public sealed class AssessorPendingNudgeJob : IScheduledJob
         public int NudgedActivities { get; set; }
 
         public SkipTally<ReminderSkipReason> Skipped { get; } = new();
-    }
-
-    private static bool HasFieldUserActor(ActorRule rule) => rule switch
-    {
-        FieldUserActorRule => true,
-        CombinedActorRule combined => combined.Rules.Any(HasFieldUserActor),
-        _ => false
-    };
-
-    private static string? GetFieldName(ActorRule rule) => rule switch
-    {
-        FieldUserActorRule field => field.Field,
-        CombinedActorRule combined => combined.Rules.OfType<FieldUserActorRule>().FirstOrDefault()?.Field,
-        _ => null
-    };
-
-    private static string? ExtractFieldValue(string dataJson, string fieldName)
-    {
-        try
-        {
-            using var doc = JsonDocument.Parse(dataJson);
-            return doc.RootElement.TryGetProperty(fieldName, out var value) ? value.GetString() : null;
-        }
-        catch
-        {
-            return null;
-        }
     }
 }

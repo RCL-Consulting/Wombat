@@ -408,12 +408,22 @@ Expect:
 ### Step A.7.9 — Prof Mbatha on her phone
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/users → /admin/users/{UserId} → /admin/trainees → /admin/trainees/edit → /admin/activity-types/{ActivityTypeId:int}
-Do: At 390 px, open Users and Dr Dlamini's account, Trainees and Dr Dlamini's profile, then the KGK Teaching Session
-  Log in the builder.
-Expect: The user page's cards stack, and its buttons wrap rather than overflow. On Trainees, Current trainees is
-  stacked, a block per row with its Edit 44 px, and does not scroll sideways (T373, S16); Completed and closed is flow
-  13's list as built. The trainee profile form stacks its fields. The builder's editor and live preview stack in one column (DESIGN.md § Builder layout, T266), and its tab bar
-  stays usable.
+Do: At 390 px, read Home, then open Users and Dr Dlamini's account, Trainees and Dr Dlamini's profile, then the KGK
+  Teaching Session Log in the builder.
+Expect: Nothing scrolls sideways on any of them (T323).
+  - **Home's** three cards stack; People's counts and each card's footer link are 44 px tall, and a long contact address
+    wraps (M7).
+  - **Users** stacks: the filter's fields one under another, Show and Clear full width; People a block per person, the
+    name over the address, then Roles, Scope, Status and Manage, 44 px (T376; until T376 the table scrolled 807 px
+    in its box).
+  - **Dr Dlamini's account** stacks its account line and sections: Roles and scope reads "Trainee" and "System-managed"
+    apart (F-2.28b), with Add a role…; Sign-in and access's Password, Institutional sign-in and Lockout one under another,
+    the password field's Show toggle 44 px tall, its buttons wrapping rather than overflowing. Her Lockout lists two
+    lines: the trainee line and the reminders line. There is no Back to users.
+  - **Trainees:** Current trainees is stacked, a block per row with its Edit 44 px, and does not scroll sideways (T373,
+    S16); Completed and closed is flow 13's list as built.
+  - **The trainee profile form** stacks its fields. The builder's editor and live preview stack in one column (DESIGN.md
+    § Builder layout, T266), and its tab bar stays usable.
 
 [appendix-cross-cutting.md]
 ### Step A.7.14 — Prof Mbatha's pages, checked for contrast
@@ -428,8 +438,9 @@ Do: With a contrast checker (axe, or the browser's accessibility audit), check e
   - a success alert (save My account's name, from the name in the top bar, unchanged: "Name saved.") and a danger
     alert (Change password with a confirmation that differs, which checks no password and changes nothing);
   - a password field's Show toggle, pressed (white on the action blue, 4.86:1);
-  - white on the primary, danger (Lock out user on Dr Patel's page, not pressed) and success (Publish in the builder,
-    not pressed; with no draft it is disabled, and a disabled control is exempt) buttons;
+  - white on the primary, danger (the dialog's Lock out Mohammed Patel: open Lock out… on Dr Patel's page, read it,
+    then Keep access; T376, S22) and success (Publish in the builder, not pressed; with no draft it is disabled, and a
+    disabled control is exempt) buttons;
   - the focus ring on white and on the page background;
   - an input's border.
 Expect: Every pair meets WCAG 2.1 AA: text 4.5:1, large text 3:1, and 3:1 for a control's boundary and the focus

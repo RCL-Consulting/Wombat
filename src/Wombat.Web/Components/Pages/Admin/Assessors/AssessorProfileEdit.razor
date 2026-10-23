@@ -1,240 +1,97 @@
 @page "/admin/assessors/edit"
 @attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
-@using Wombat.Domain.Identity
+@using Wombat.Web.Components.Pages.Admin.Users
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject ILogger<AssessorProfileEdit> Logger
 
-<PageTitle>Assessor profile · Wombat</PageTitle>
+@*
+  The old assessor form's route, kept only so an old link or bookmark lands somewhere (T376, flow 12, S10). Its ?id= is
+  a profile id: the page follows it, in the caller's scope, to the person's page with Assessor training open
+  (PeopleLinks.UserTraining), replacing this address in the history. An id that names no profile, one whose person is
+  outside the caller's scope, a missing id and a malformed one all read as the user page's "User unavailable"
+  (UserPageWords, T194's one answer), so a stale link reads the same wherever it lands. Until T376 this was a form that
+  asked an institution and a speciality and rewrote the person's whole scope (M1); training is recorded on the user page
+  now (Q2).
+*@
+@* "User", UserPageWords.Heading (a test holds them equal): the title is literal, as every page's is. *@
+<PageTitle>User · Wombat</PageTitle>
 
-<PageHeader Title="Assessor profile" Subtitle="Assign the assessor to an institution and optional speciality scope.">
-  <Actions>
-    <a class="btn btn-outline btn-sm" href="/admin/assessors">Back to assessors</a>
-  </Actions>
-</PageHeader>
+<PageHeader Title="User" />
 
-@* What a Save did. It takes the focus once the save is done (T234; DESIGN.md § Button system). A refusal leaves the
-   focus where it was: it is an alert, read at once. *@
-<ActionResult @ref="_result">
-  @if (!string.IsNullOrWhiteSpace(_actionError))
-  {
-    <Alert Kind="danger">@_actionError</Alert>
-  }
-
-  @if (!string.IsNullOrWhiteSpace(_statusMessage))
-  {
-    <Alert Kind="success">@_statusMessage</Alert>
-  }
-</ActionResult>
-
-<StatePanel IsLoading="_loading" IsEmpty="@(_model is null)" EmptyTitle="Profile unavailable" EmptyBody="The assessor profile could not be loaded." LoadError="@_loadError">
-  @if (_model is not null)
-  {
-    <div class="form-container">
-      <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="assessor-profile">
-        <DataAnnotationsValidator />
-        <ValidationSummary class="validation-summary-errors" />
-
-        <div class="form-grid form-grid--wide">
-          <FormField Label="Assessor user" InputId="assessor-user-id" Required="true">
-            <InputSelect id="assessor-user-id" class="form-select" @bind-Value="_model.UserId" disabled="@_isExisting">
-              <option value="">Select assessor</option>
-              @foreach (var user in _assessorUsers)
-              {
-                <option value="@user.UserId">@($"{user.FirstName} {user.LastName} ({user.Email})")</option>
-              }
-            </InputSelect>
-          </FormField>
-
-          <FormField Label="Institution" InputId="assessor-institution-id" Required="true">
-            <InputSelect id="assessor-institution-id" class="form-select" @bind-Value="_model.InstitutionId">
-              @foreach (var institution in _institutions)
-              {
-                <option value="@institution.Id">@institution.Name</option>
-              }
-            </InputSelect>
-          </FormField>
-
-          <FormField Label="Speciality" InputId="assessor-speciality-id">
-            <InputSelect id="assessor-speciality-id" class="form-select" @bind-Value="_model.SpecialityId">
-              <option value="">All</option>
-              @foreach (var speciality in FilteredSpecialities)
-              {
-                <option value="@speciality.Id">@speciality.Name</option>
-              }
-            </InputSelect>
-          </FormField>
-
-          <FormField Label="Sub-speciality" InputId="assessor-sub-speciality-id">
-            <InputSelect id="assessor-sub-speciality-id" class="form-select" @bind-Value="_model.SubSpecialityId" disabled="@(!_model.SpecialityId.HasValue)">
-              <option value="">All</option>
-              @foreach (var subSpeciality in FilteredSubSpecialities)
-              {
-                <option value="@subSpeciality.Id">@subSpeciality.Name</option>
-              }
-            </InputSelect>
-          </FormField>
-
-          <FormField Label="Qualifications" InputId="assessor-qualifications" Required="true" FullWidth="true">
-            <InputTextArea id="assessor-qualifications" class="form-control" @bind-Value="_model.Qualifications" />
-            <ValidationMessage For="() => _model.Qualifications" />
-          </FormField>
-
-          <FormField Label="Assessor training status" InputId="assessor-training-status" Required="true"
-                     HelpText="Faculty-development lifecycle. In-training assessors may assess under supervision.">
-            <InputSelect id="assessor-training-status" class="form-select" aria-describedby="@FieldHelp.Id("assessor-training-status")" @bind-Value="_model.TrainingStatus">
-              <option value="@AssessorTrainingStatus.NotStarted">Not started</option>
-              <option value="@AssessorTrainingStatus.InTraining">In training</option>
-              <option value="@AssessorTrainingStatus.Provisional">Provisional (awaiting sign-off)</option>
-              <option value="@AssessorTrainingStatus.Trained">Trained</option>
-            </InputSelect>
-          </FormField>
-
-          @if (_model.TrainingStatus is AssessorTrainingStatus.Provisional or AssessorTrainingStatus.Trained)
-          {
-            <FormField Label="Assessor training completed" InputId="assessor-training-completed"
-                       HelpText="Date the assessor completed assessor training. Leave blank if unrecorded.">
-              <InputDate id="assessor-training-completed" class="form-control" aria-describedby="@FieldHelp.Id("assessor-training-completed")" @bind-Value="_model.TrainingCompletedOn" />
-            </FormField>
-          }
-        </div>
-
-        <FormActions>
-          <a class="btn btn-outline" href="/admin/assessors">Cancel</a>
-          @* Not disabled while its save runs (T234): it has the focus, and a browser drops the focus of a button it
-             disables, to the page. A second press sends nothing. *@
-          <button type="submit" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : "Save assessor profile")</button>
-        </FormActions>
-      </EditForm>
-    </div>
-  }
-</StatePanel>
+@if (_traineeNote is not null)
+{
+  <div class="user-page">
+    <Alert Kind="info" Role="" Id="assessor-edit-trainee-note">@_traineeNote</Alert>
+  </div>
+}
+else
+{
+  <div class="user-page" aria-busy="@(_loading ? "true" : null)">
+    <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="ResolveAsync" IsEmpty="true"
+                EmptyTitle="@UserPageWords.UnavailableTitle" EmptyBody="@UserPageWords.UnavailableBody">
+      <EmptyActions>
+        <a class="btn btn-outline btn-sm" href="@PeopleLinks.Users">@UserPageWords.GoToUsers<Icon Name="arrow-right" /></a>
+      </EmptyActions>
+      <ChildContent />
+    </StatePanel>
+  </div>
+}
 
 @code {
+  /// <summary>The profile id, as the old list linked it. Read as text, so a malformed one is "User unavailable", not a fault.</summary>
   [SupplyParameterFromQuery(Name = "id")]
-  public int? Id { get; set; }
+  public string? Id { get; set; }
 
-  private IReadOnlyList<InstitutionDto> _institutions = [];
-  private IReadOnlyList<SpecialityDto> _specialities = [];
-  private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
-  private IReadOnlyList<AssessorUserDto> _assessorUsers = [];
-  private AssessorProfileFormModel? _model;
+  private string? _traineeNote;
   private bool _loading = true;
-  private bool _saving;
-  private ActionResult? _result;
-  private bool _isExisting;
   private string? _loadError;
-  private string? _actionError;
-  private string? _statusMessage;
 
-  // Specialities are a national catalogue now (T091); not filtered by the selected institution.
-  private IEnumerable<SpecialityDto> FilteredSpecialities => _specialities;
-
-  private IEnumerable<SubSpecialityDto> FilteredSubSpecialities
-    => _subSpecialities.Where(entity => entity.SpecialityId == _model?.SpecialityId);
+  /// <summary>A failed read (T329): a fixed sentence; the failure to the log.</summary>
+  private const string LoadFailed = "Could not load this person. Nothing has changed. Try again, or come back in a few minutes.";
 
   protected override async Task OnParametersSetAsync()
   {
-    _loading = true;
-    _loadError = null;
-    _actionError = null;
-    _statusMessage = null;
-
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
-      _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
-      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery(authState.User));
-      _assessorUsers = await Sender.Send(new ListAssessorUsersQuery(authState.User));
-
-      if (Id.HasValue)
-      {
-        var profile = await Sender.Send(new GetAssessorProfileByIdQuery(Id.Value, authState.User));
-        _isExisting = true;
-        _model = new AssessorProfileFormModel
-        {
-          UserId = profile.UserId,
-          InstitutionId = profile.InstitutionId,
-          SpecialityId = profile.SpecialityId,
-          SubSpecialityId = profile.SubSpecialityId,
-          Qualifications = profile.Qualifications,
-          TrainingStatus = profile.TrainingStatus,
-          TrainingCompletedOn = profile.TrainingCompletedOn
-        };
-      }
-      else
-      {
-        _model = new AssessorProfileFormModel
-        {
-          InstitutionId = _institutions.FirstOrDefault()?.Id ?? 0
-        };
-      }
-    }
-    catch (Exception exception)
-    {
-      _loadError = exception.Message;
-    }
-    finally
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    _traineeNote = UserAdministrationRules.TraineeNoteOnUserPages(authState.User);
+    if (_traineeNote is not null)
     {
       _loading = false;
-    }
-  }
-
-  private async Task SaveAsync()
-  {
-    if (_model is null || _saving)
-    {
       return;
     }
 
-    _saving = true;
-    _actionError = null;
-    _statusMessage = null;
-
-    try
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      await Sender.Send(new CreateOrUpdateAssessorProfileCommand(
-        _model.UserId,
-        _model.Qualifications,
-        _model.InstitutionId,
-        _model.SpecialityId,
-        _model.SubSpecialityId,
-        _model.TrainingStatus,
-        _model.TrainingCompletedOn,
-        authState.User));
-
-      _statusMessage = "Assessor profile saved.";
-      _isExisting = true;
-      _result?.FocusAfterRender();
-    }
-    catch (Exception exception)
-    {
-      _actionError = exception.Message;
-    }
-    finally
-    {
-      _saving = false;
-    }
+    await ResolveAsync();
   }
 
-  private sealed class AssessorProfileFormModel
+  private async Task ResolveAsync()
   {
-    [Required]
-    public string UserId { get; set; } = string.Empty;
+    _loading = true;
+    _loadError = null;
+    string? userId = null;
+    try
+    {
+      if (int.TryParse(Id, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var profileId)
+          && profileId > 0)
+      {
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+        userId = await Sender.Send(new GetAssessorProfileOwnerQuery(profileId, user));
+      }
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "The assessor profile's person could not be read.");
+      _loadError = LoadFailed;
+    }
 
-    [Required]
-    [Range(1, int.MaxValue)]
-    public int InstitutionId { get; set; }
+    if (userId is not null)
+    {
+      // S10: the person's page, its training open; no history entry for this address. Outside the catch: a static render
+      // redirects by throwing, and the page stays loading rather than say "User unavailable" for a moment.
+      Navigation.NavigateTo(PeopleLinks.UserTraining(userId), replace: true);
+      return;
+    }
 
-    public int? SpecialityId { get; set; }
-    public int? SubSpecialityId { get; set; }
-
-    [Required]
-    [MaxLength(4000)]
-    public string Qualifications { get; set; } = string.Empty;
-
-    public AssessorTrainingStatus TrainingStatus { get; set; } = AssessorTrainingStatus.NotStarted;
-    public DateOnly? TrainingCompletedOn { get; set; }
+    _loading = false;
   }
 }

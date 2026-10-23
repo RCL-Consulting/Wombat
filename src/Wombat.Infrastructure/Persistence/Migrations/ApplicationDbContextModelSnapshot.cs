@@ -1791,12 +1791,6 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
-                    b.Property<int?>("SpecialityId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("SubSpecialityId")
-                        .HasColumnType("integer");
-
                     b.Property<DateOnly?>("TrainingCompletedOn")
                         .HasColumnType("date");
 
@@ -1811,10 +1805,6 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("InstitutionId");
-
-                    b.HasIndex("SpecialityId");
-
-                    b.HasIndex("SubSpecialityId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -3266,21 +3256,7 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Wombat.Domain.Institutions.Speciality", "Speciality")
-                        .WithMany()
-                        .HasForeignKey("SpecialityId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Wombat.Domain.Institutions.SubSpeciality", "SubSpeciality")
-                        .WithMany()
-                        .HasForeignKey("SubSpecialityId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("Institution");
-
-                    b.Navigation("Speciality");
-
-                    b.Navigation("SubSpeciality");
                 });
 
             modelBuilder.Entity("Wombat.Domain.Identity.TraineeProfile", b =>

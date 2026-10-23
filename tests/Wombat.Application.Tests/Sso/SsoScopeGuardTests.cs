@@ -30,7 +30,7 @@ public sealed class SsoScopeGuardTests
             new SsoGroupRoleMapping { ProviderKey = "p", ExternalGroupId = "g2", ExternalGroupDisplayName = "B", WombatRole = WombatRoles.Trainee, InstitutionId = 2 });
         await db.SaveChangesAsync();
 
-        var handler = new ListSsoGroupMappingsQueryHandler(db);
+        var handler = new ListSsoGroupMappingsQueryHandler(db, SsoGroupMappingCommandTests.Providers());
         var result = await handler.Handle(
             new ListSsoGroupMappingsQuery(TestPrincipals.InstitutionalAdmin(institutionId: 1)),
             CancellationToken.None);
@@ -38,19 +38,26 @@ public sealed class SsoScopeGuardTests
         result.Select(m => m.InstitutionId).Should().AllBeEquivalentTo(1);
     }
 
+    /// <summary>
+    /// Another institution's mapping reads as one that is not there (T376; CLAUDE.md § Roles: 404 words, not 403), so the
+    /// refusal confirms no other institution's id.
+    /// </summary>
     [Fact]
-    public async Task Delete_InstitutionalAdmin_OtherInstitution_Rejected()
+    public async Task Delete_InstitutionalAdmin_OtherInstitution_ReadsAsNotFound()
     {
         await using var db = CreateDb();
         var mapping = new SsoGroupRoleMapping { ProviderKey = "p", ExternalGroupId = "g", ExternalGroupDisplayName = "X", WombatRole = WombatRoles.Trainee, InstitutionId = 2 };
         db.SsoGroupRoleMappings.Add(mapping);
         await db.SaveChangesAsync();
 
-        var handler = new DeleteSsoGroupMappingCommandHandler(db);
+        var handler = new DeleteSsoGroupMappingCommandHandler(db, SsoGroupMappingCommandTests.Providers());
         var act = () => handler.Handle(
             new DeleteSsoGroupMappingCommand(mapping.Id, TestPrincipals.InstitutionalAdmin(institutionId: 1)),
             CancellationToken.None);
 
-        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        var refusal = (await act.Should().ThrowAsync<SsoMappingRefusedException>()).Which;
+        refusal.Reason.Should().Be(SsoMappingRefusal.NotFound);
+        refusal.Message.Should().Be(DeleteSsoGroupMappingCommandHandler.NotFound);
+        db.SsoGroupRoleMappings.Should().ContainSingle();
     }
 }

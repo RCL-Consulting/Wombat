@@ -11,9 +11,10 @@ using Wombat.Infrastructure.Persistence;
 namespace Wombat.Application.Tests.Features.Assessors;
 
 /// <summary>
-/// The assessor-profile save writes the user's scope, and with it their institution. A registrar who also administers
-/// may not make it (a trainee first), and nobody, the Administrator included, may name an institution the assessor does
-/// not belong to. Every refusal leaves the profile table and the user store untouched. (T289)
+/// The assessor-profile save records training only (T376, flow 12, M1, F4): it writes no scope, so it cannot move anyone or
+/// strip a held speciality, and the profile's institution is the person's own. A registrar who also administers may not
+/// make it (a trainee first, T289), nor anyone for their own account, and an id outside the caller's institution reads as
+/// one that names nobody. Every refusal leaves the profile table and the user store untouched.
 /// </summary>
 public sealed class AssessorProfileRefusalTests
 {
@@ -31,7 +32,7 @@ public sealed class AssessorProfileRefusalTests
         var users = Users();
         var principal = TestPrincipals.InRoles([role, WombatRoles.Trainee], "registrar-admin", HomeInstitution);
 
-        var act = () => Handler(db, users).Handle(Command(Assessor, HomeInstitution, principal), CancellationToken.None);
+        var act = () => Handler(db, users).Handle(Command(Assessor, principal), CancellationToken.None);
 
         (await act.Should().ThrowAsync<UnauthorizedAccessException>())
             .Which.Message.Should().Be(UserAdministrationRules.TraineeAdministersNoUser);
@@ -41,58 +42,68 @@ public sealed class AssessorProfileRefusalTests
     }
 
     [Fact]
-    public async Task AnInstitutionalAdmin_CannotPullAnAssessorFromAnotherInstitution_AndIsToldNothingAboutTheId()
+    public async Task AnInstitutionalAdmin_CannotRecordAnotherInstitutionsAssessor_AndIsToldNothingAboutTheId()
     {
         await using var db = CreateDb();
         var users = Users();
         var principal = TestPrincipals.InstitutionalAdmin(HomeInstitution);
 
-        var other = () => Handler(db, users).Handle(Command(OtherAssessor, HomeInstitution, principal), CancellationToken.None);
-        var nobody = () => Handler(db, users).Handle(Command("no-such-user", HomeInstitution, principal), CancellationToken.None);
+        var other = () => Handler(db, users).Handle(Command(OtherAssessor, principal), CancellationToken.None);
+        var nobody = () => Handler(db, users).Handle(Command("no-such-user", principal), CancellationToken.None);
 
         var otherMessage = (await other.Should().ThrowAsync<UnauthorizedAccessException>()).Which.Message;
         var nobodyMessage = (await nobody.Should().ThrowAsync<UnauthorizedAccessException>()).Which.Message;
         otherMessage.Should().Be(nobodyMessage, "an id at another institution reads as one that names nobody");
-        users.ScopeUpdates.Should().BeEmpty("the forged form value moves nobody");
+        users.ScopeUpdates.Should().BeEmpty();
         (await db.Set<AssessorProfile>().CountAsync()).Should().Be(0);
     }
 
     [Fact]
-    public async Task TheAdministrator_CannotMoveAnAssessorBetweenInstitutionsHere()
+    public async Task NobodyRecordsTheirOwnTraining()
+    {
+        await using var db = CreateDb();
+        var users = Users();
+        var principal = TestPrincipals.InRoles([WombatRoles.InstitutionalAdmin], Assessor, HomeInstitution);
+
+        var act = () => Handler(db, users).Handle(Command(Assessor, principal), CancellationToken.None);
+
+        (await act.Should().ThrowAsync<UnauthorizedAccessException>())
+            .Which.Message.Should().Be(CreateOrUpdateAssessorProfileCommandHandler.OwnTrainingRefused);
+        (await db.Set<AssessorProfile>().CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task TheProfileIsRecordedAtThePersonsOwnInstitution_ForTheAdministratorToo()
     {
         await using var db = CreateDb();
         var users = Users();
 
-        var act = () => Handler(db, users)
-            .Handle(Command(OtherAssessor, HomeInstitution, TestPrincipals.Administrator()), CancellationToken.None);
+        var dto = await Handler(db, users)
+            .Handle(Command(OtherAssessor, TestPrincipals.Administrator()), CancellationToken.None);
 
-        (await act.Should().ThrowAsync<InvalidOperationException>())
-            .Which.Message.Should().Be(CreateOrUpdateAssessorProfileCommandHandler.AssessorAtAnotherInstitution);
-        users.ScopeUpdates.Should().BeEmpty("a move between institutions is Users' to make");
-        (await db.Set<AssessorProfile>().CountAsync()).Should().Be(0);
+        dto.InstitutionId.Should().Be(OtherInstitution);
+        (await db.Set<AssessorProfile>().SingleAsync()).InstitutionId.Should().Be(OtherInstitution);
+        users.ScopeUpdates.Should().BeEmpty("the save records training and moves nobody (M1)");
     }
 
     [Fact]
-    public async Task TheAdministrator_CannotMoveAnExistingProfileToAnotherInstitution()
+    public async Task AnExistingProfile_FollowsThePersonsInstitution_AtTheNextSave()
     {
         await using var db = CreateDb();
-        db.Set<AssessorProfile>().Add(new AssessorProfile { Id = 7, UserId = Assessor, InstitutionId = HomeInstitution, Qualifications = "MBChB" });
+        db.Set<AssessorProfile>().Add(new AssessorProfile { Id = 7, UserId = OtherAssessor, InstitutionId = HomeInstitution, Qualifications = "MBChB" });
         await db.SaveChangesAsync();
         var users = Users();
 
-        var act = () => Handler(db, users)
-            .Handle(Command(Assessor, OtherInstitution, TestPrincipals.Administrator()), CancellationToken.None);
+        await Handler(db, users).Handle(Command(OtherAssessor, TestPrincipals.Administrator()), CancellationToken.None);
 
-        (await act.Should().ThrowAsync<InvalidOperationException>())
-            .Which.Message.Should().Be(CreateOrUpdateAssessorProfileCommandHandler.AssessorAtAnotherInstitution);
+        (await db.Set<AssessorProfile>().SingleAsync()).InstitutionId.Should().Be(OtherInstitution, "F4: written from the person at save");
         users.ScopeUpdates.Should().BeEmpty();
-        (await db.Set<AssessorProfile>().SingleAsync()).InstitutionId.Should().Be(HomeInstitution);
     }
 
     [Theory]
     [InlineData(WombatRoles.Administrator)]
     [InlineData(WombatRoles.InstitutionalAdmin)]
-    public async Task TheControl_AnAdminWithoutTrainee_SavesAProfileAtTheAssessorsOwnInstitution(string role)
+    public async Task TheControl_AnAdminWithoutTrainee_SavesTraining_AndWritesNoScope(string role)
     {
         await using var db = CreateDb();
         var users = Users();
@@ -100,19 +111,19 @@ public sealed class AssessorProfileRefusalTests
             ? TestPrincipals.Administrator()
             : TestPrincipals.InstitutionalAdmin(HomeInstitution);
 
-        var dto = await Handler(db, users).Handle(Command(Assessor, HomeInstitution, principal), CancellationToken.None);
+        var dto = await Handler(db, users).Handle(Command(Assessor, principal), CancellationToken.None);
 
         dto.InstitutionId.Should().Be(HomeInstitution);
-        users.ScopeUpdates.Should().Equal((Assessor, HomeInstitution));
+        dto.TrainingStatus.Should().Be(AssessorTrainingStatus.Trained);
+        users.ScopeUpdates.Should().BeEmpty("M1: no UpdateScopeAsync, so the scope and the security stamp stay as they are");
     }
 
     private static CreateOrUpdateAssessorProfileCommandHandler Handler(ApplicationDbContext db, RecordingUsers users)
         => new(db, users);
 
     private static CreateOrUpdateAssessorProfileCommand Command(
-        string userId, int institutionId, System.Security.Claims.ClaimsPrincipal principal)
-        => new(userId, "MBChB", institutionId, SpecialityId: null, SubSpecialityId: null,
-            AssessorTrainingStatus.Trained, new DateOnly(2026, 2, 14), principal);
+        string userId, System.Security.Claims.ClaimsPrincipal principal)
+        => new(userId, AssessorTrainingStatus.Trained, new DateOnly(2026, 2, 14), "MBChB", principal);
 
     private static RecordingUsers Users() => new(
         new UserIdentityDetails(Assessor, "a1@kgk.example", "Al", "One", HomeInstitution,

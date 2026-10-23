@@ -758,14 +758,21 @@ Do: Register as in Step 1.8, from the Institutional admin stub email in the log,
   `Mbatha`. Write her password to `pwd_DO_NOT_COMMIT.txt`.
 Expect: The page reads "This invitation is for mbatha@kgk.wombat.local, as Institutional admin at Kgosi Kgari Teaching
   Hospital." Register lands her on Home, with "Institutional admin · Semester N, YYYY" under its heading and "Invite a
-  person" in its header, which opens Invite a person (`/admin/invitations/new`), not the list (T373, Q1). The dashboard
-  has three cards:
-  - Users, which lists InstitutionalAdmin 1;
-  - Specialities & sub-specialities, which reads 0 and 0, because KGK has adopted nothing yet;
-  - Quick links: Users, Invitations, Curriculum adoptions and Entrustment decisions.
+  person" in its header, which opens Invite a person (`/admin/invitations/new`), not the list (T373, Q1). No waiting
+  line stands above the cards: nobody waits to be admitted (T376, Q8). The dashboard has three cards and no Quick links
+  (T376, Q7):
+  - **People:** "1" over "Institutional admin", a link to Users filtered by that role (its name "1 Institutional
+    admin"); then "1 account: yours." and Open Users;
+  - **Curriculum:** "0" over "specialities adopted" and "0" over "sub-specialities adopted", because KGK has adopted
+    nothing yet (T291 item 4); "Nothing is adopted yet. Adopt the College's curriculum to set up a programme."; Open
+    Curriculum adoptions;
+  - **Your institution:** Name Kgosi Kgari Teaching Hospital, Short code KGK, Contact email
+    paeds-admin@kgk.wombat.local, Status "Active" over "Set by a Wombat administrator.", and Open Kgosi Kgari Teaching
+    Hospital.
   The sidebar reads "Acting as Institutional admin" over her menu, grouped: Home; People: Invitations, Trainees,
   Assessors, Users; Curriculum: Curriculum adoptions, Curricula, EPAs, Activity types, Entrustment scales; Reviews:
-  Decisions due, Committee reviews, Decision panels; Access and audit: SSO mappings, Audit log; then My data rights.
+  Decisions due, Committee reviews, Decision panels, Entrustment decisions (T376, F10); Access and audit: SSO mappings,
+  Audit log; then My data rights.
 
 Step 1.11 — Both invitations are spent
 Role: Administrator — the platform operator
@@ -999,12 +1006,20 @@ Expect: The first link reads "Invitation link not recognised" (its tab too): "Th
 
 Step 2.28 — The pending registrars, as Mbatha sees them
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/invitations → /admin/users → /admin/users/{UserId} → /admin/trainees
-Do: Open Invitations. Read the users list and open Dr Molefe's page. Then open Trainees.
-Expect: Active invitations reads "No active invitations". Users lists 15, with the five registrars as PendingTrainee. On
-  Molefe's page, PendingTrainee reads "System-managed" and has no Remove. Add role offers InstitutionalAdmin,
-  SpecialityAdmin, SubSpecialityAdmin, Coordinator, CommitteeMember and Assessor, not Trainee, and its help reads "Trainee
-  is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit…'." (T303).
+Route: / → /admin/invitations → /admin/users → /admin/users/{UserId} → / → /admin/trainees
+Do: Open Home and read it. Open Invitations. Read the users list and open Dr Molefe's page; press Add a role…, read
+  it and press Cancel. Then go Home and press Open Trainees on the line above its cards.
+Expect: Home reads, above its cards, "**5 registrars are waiting to be admitted.** Nothing can be filed about them until
+  then." with Open Trainees: a standing line, not announced (T376, Q8, S23). People reads Institutional admin 1,
+  Speciality admin 1, Sub-speciality admin 1, Coordinator 1, Committee member 4, Assessor 5 and Pending trainee 5, and
+  "15 accounts.".
+  - Active invitations reads "No active invitations".
+  - Users reads "People 15", the five registrars' Roles "Pending trainee" and Scope Paediatrics / Paediatrics.
+  - **Molefe's page:** Roles and scope lists Pending trainee, then "System-managed: waiting to be admitted." with Open
+    Trainees, and no Remove…, the label and the note apart (T323, F-2.28b). Add a role… offers Institutional admin,
+    Speciality admin, Sub-speciality admin, Coordinator, Committee member and Assessor, each with its description, not
+    Trainee, and "Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with
+    'Admit…'." (T303). Cancel closes it and adds nothing.
   Trainees reads "Admit registrars who are waiting, and keep current trainees' programmes." under its heading:
   - "Waiting to be admitted" "5 waiting", captioned "Registered from a Trainee invitation, by surname. A deactivated
     account is not listed. Nothing can be filed about them until they are admitted.": Dlamini, du Plessis, Mahlangu,
@@ -1092,10 +1107,19 @@ Expect: Home reads "Coordinator · Semester N, YYYY", with the header action "St
 Step 2.44 — Prof Mbatha's dashboard after onboarding
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/invitations/new → / → /admin/users → /admin/assessors
-Do: Open Home and press Invite a person, then go back to Home. Then open Users and Assessors.
+Do: Open Home and press Invite a person, then go back to Home. Press the count beside Assessor on People. Then open
+  Users and Assessors.
 Expect: Home reads "Institutional admin · Semester N, YYYY" and offers "Invite a person", which opens Invite a person
-  (`/admin/invitations/new`), not the list (T373, Q1). Users reads InstitutionalAdmin 1, SpecialityAdmin 1,
-  SubSpecialityAdmin 1, Coordinator 1, CommitteeMember 4, Assessor 5 and Trainee 5, with no PendingTrainee line.
-  Specialities & sub-specialities reads 1 and 1, what KGK has adopted. Quick links reads Users, Invitations, Curriculum
-  adoptions and Entrustment decisions. The users and assessors lists both name Fatima Khumalo (Step 2.41).
+  (`/admin/invitations/new`), not the list (T373, Q1). No waiting line: nobody waits to be admitted (Q8). Three cards
+  and no Quick links (T376, Q7):
+  - **People:** Institutional admin 1, Speciality admin 1, Sub-speciality admin 1, Coordinator 1, Committee member 4,
+    Assessor 5 and Trainee 5, each count a link named by it ("5 Assessor"), with no Pending trainee; "15 accounts." and
+    Open Users;
+  - **Curriculum:** "1" over "speciality adopted" and "1" over "sub-speciality adopted", what KGK has adopted, with
+    "Paediatrics / Paediatrics, from the CPSA's Paediatric EPA Curriculum (11.1)." and Open Curriculum adoptions;
+  - **Your institution:** Name Kgosi Kgari Teaching Hospital, Short code KGK, Contact email
+    paeds-admin@kgk.wombat.local, Status "Active" over "Set by a Wombat administrator.", and Open Kgosi Kgari Teaching
+    Hospital.
+  Assessor's count opens Users filtered by that role (`?role=Assessor`, Role reading Assessor): "People 5 of 15 hold
+  Assessor". The users and assessors lists both name Fatima Khumalo (Step 2.41).
 ```

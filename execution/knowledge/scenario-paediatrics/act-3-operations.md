@@ -1409,7 +1409,7 @@ Expect:
   - The menu is Home, Programme trainees, Committee reviews and Decision panels, then My data rights.
 Note: The cards read the current registrars at Dr Zulu's institution, as Committee member (`ProgrammeScope`, E4; T290),
   not the member's sub-speciality scopes: Dr Zulu's invitation carried none, and Dr Zulu's Paediatrics sub-speciality
-  came with the assessor profile (Step 2.14).
+  came with Assessor at Step 2.13 (since T376 Add a role writes the role's scope; until then the assessor profile did).
 Actual (2026-10-20, T373 replay, wombat_scenario_t373): Played in Step 3.43's wait. Home opened "Assessor · Semester
   2, 2026" (3.33's choice kept). After the switch: "You are now acting as Committee member.", sidebar "Acting as
   Committee member", "Committee member · Semester 2, 2026". "Registrars" "5 registrars": Pieter du Plessis, Nomsa

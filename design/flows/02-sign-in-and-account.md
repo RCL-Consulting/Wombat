@@ -413,7 +413,7 @@ Expect: The link's redirect leaves `/account/register` in the address bar, with 
   YYYY" under it. Signing out (the top bar's Sign out, one press) returns him to the sign-in page, which reads "You
   have signed out."
 
-Step 2.31 — Dr Mahlangu's open session ends, and she signs back in as a Trainee (act-2-onboarding.md:739)
+Step 2.31 — Dr Mahlangu's open session ends, and she signs back in as a Trainee (act-2-onboarding.md:806)
 Role: Trainee — Dr Nomsa Mahlangu
 Route: / → /account/session-ended → /account/login → /
 Do: Her tab from Step 2.18 has stayed open through her admission. Once it leaves Home, she signs in again.
@@ -422,7 +422,7 @@ Expect: Within a minute of her admission the tab moves to the sign-in page, whic
   and a role change ends open sessions (T279). Signed in again, she sees
   "Trainee · Semester N, YYYY" under Home's heading and the trainee dashboard of Step 2.39.
 
-Step 2.41 — Everyone reviews their account; Dr Khumalo corrects her name (act-2-onboarding.md:965)
+Step 2.41 — Everyone reviews their account; Dr Khumalo corrects her name (act-2-onboarding.md:1033)
 Role: Every role in this act — each person onboarded here, signed in as themselves
 Route: /account/profile → /account/profile/submit → /account/profile
 Do: Each opens My account (the name in the top bar). Dr Khumalo changes her first name from "Fatma" to "Fatima" and
@@ -433,7 +433,7 @@ Expect: The page reads "My account" and "Your name, your roles, and how you sign
   password. Khumalo's Save name reloads the page with "Name saved." in the Your name card, which takes the focus, and
   the top bar's account row now reads "Fatima Khumalo" (the lists are checked on Mbatha's in Step 2.44).
 
-Step A.3.2 — The sign-in page offers no institutional sign-in (appendix-cross-cutting.md:504)
+Step A.3.2 — The sign-in page offers no institutional sign-in (appendix-cross-cutting.md:515)
 Role: Anonymous — a KGK consultant
 Route: /account/login → /account/sso-challenge/{providerKey} → /account/login
 Do: Look for an institutional sign-in button. Sign in with a wrong password. Then open the challenge address for a
@@ -445,7 +445,7 @@ Expect: Under the line "Work-based assessment for specialist training." and the 
   that is not configured returns to the sign-in page, which says "That institution's sign-in is not set up in Wombat.
   Sign in with your email and password."
 
-Step A.3.3 — The callback and link pages with no institutional sign-in in progress (appendix-cross-cutting.md:524)
+Step A.3.3 — The callback and link pages with no institutional sign-in in progress (appendix-cross-cutting.md:535)
 Role: Anonymous — a KGK consultant
 Route: /account/sso-callback → /account/login → /account/link-external
 Do: Open the callback address, then the link-your-account page, directly.
@@ -454,7 +454,7 @@ Expect: The callback returns to the sign-in page, which says "Your institution's
   headed "Institutional sign-in expired" and says "Your institutional sign-in has expired. Start again from the
   sign-in page." It offers Back to sign in and no password field (T149).
 
-Step A.4.1 — Dr Botha reviews and edits her account (appendix-cross-cutting.md:541)
+Step A.4.1 — Dr Botha reviews and edits her account (appendix-cross-cutting.md:552)
 Role: CommitteeMember — Dr Sarah Botha
 Route: / → /account/profile → /account/profile/submit → /account/profile → /account/profile/submit → /account/profile
 Do: Open My account from her name in the top bar. Clear her last name and save. Then type a single space as her last
@@ -468,7 +468,7 @@ Expect: On My account her name in the top bar is the current page (underlined), 
   "Error: My account · Wombat"; nothing is saved. Restored, Save name reloads the page with "Name saved.", which takes
   the focus (T234), and the top bar's account row names her as saved, "Sarah Botha".
 
-Step A.4.2 — Dr Khumalo changes her password, getting it wrong first (appendix-cross-cutting.md:564)
+Step A.4.2 — Dr Khumalo changes her password, getting it wrong first (appendix-cross-cutting.md:575)
 Role: Assessor — Dr Fatima Khumalo
 Route: /account/profile → /account/change-password → /account/profile
 Do: Open My account (the name in the top bar), then its Change password. Try four times, and record the password (d)
@@ -490,7 +490,7 @@ Expect: The page, "Change password" with "Choose a new password for signing in t
   - (d) lands on My account with "Password updated." under its header, which takes the focus, and she stays signed in
     in this browser.
 
-Step A.4.3 — Dr Khumalo's other session ends (appendix-cross-cutting.md:605)
+Step A.4.3 — Dr Khumalo's other session ends (appendix-cross-cutting.md:616)
 Role: Assessor — Dr Fatima Khumalo (the second browser)
 Route: /activities/inbox → /account/session-ended → /account/login → /activities/inbox
 Do: Go back to the second browser and wait up to a minute. Sign in with the old password, then with the new one.
@@ -498,7 +498,7 @@ Expect: The tab leaves for the sign-in page by a full page load, which says "You
   (T279), an information notice. The old password is refused, and "Invalid email or password." takes the notice's
   place. The new one brings her back to her Activity inbox: the return address survives the refusal.
 
-Step A.4.4 — Dr du Plessis has forgotten his password (appendix-cross-cutting.md:619)
+Step A.4.4 — Dr du Plessis has forgotten his password (appendix-cross-cutting.md:630)
 Role: Anonymous — Dr Pieter du Plessis
 Route: /account/login → /account/forgot-password → /account/login
 Do: Follow "Forgotten your password?" from the sign-in page.
@@ -508,18 +508,25 @@ Expect: A "Forgotten password" page: "A Wombat administrator can set a new passw
   it." "Choose your own password on My account, under Change password."), and Back to sign in. There is no field, and
   no email is sent.
 
-Step A.4.5 — Prof Mbatha resets his password (appendix-cross-cutting.md:636)
+Step A.4.5 — Prof Mbatha resets his password (appendix-cross-cutting.md:647)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/users/{UserId}
-Do: Open Dr du Plessis's account. Set a new password of 10 characters, then one that meets every rule. Record the
-  second in `pwd_DO_NOT_COMMIT.txt`, as the password to give him out of band.
-Expect: The Reset password card says it sets a password directly and that the user is not emailed. Its field has the
-  Show toggle ("Show new password") and the six rules under it, and Reset password is enabled once anything is typed.
-  The 10-character password is refused with "The password was not reset. The new password needs:" and the rules it
-  breaks, in the six rules' order. The second is accepted, and the field is cleared. The audit log records the reset
-  with the password redacted (T101).
+Do: Open Dr du Plessis's account. Under Sign-in and access, in Password, set a new password of 10 characters, then one
+  that meets every rule. Record the second in `pwd_DO_NOT_COMMIT.txt`, as the password to give him out of band.
+Expect: Roles and scope reads "**Pieter du Plessis holds no role: they left the programme on `D−2`.** They can still sign
+  in to read their training record (My progress) and their data rights." (T376, S2, Q13; D54), in place of "This user
+  has no roles.". His Lockout lists only "They are sent no activity reminders or weekly digests.".
+  - **Password** says "Sets a new password directly. The user is not emailed; share the password securely
+    out-of-band." Its field has the Show toggle ("Show new password") and the six rules under it. Reset password is
+    always offered, never disabled.
+  - **The 10-character password** is refused in Password, under its heading, not at the page's top: "The password was
+    not reset. The new password needs:" and the rules it breaks, in the six rules' order. The field is marked "The new
+    password does not meet the rules below." and cleared.
+  - **The second** is accepted. In Password, focused: "**Password reset for Pieter du Plessis.** Share the new password
+    with Pieter du Plessis out-of-band." The field is cleared.
+  - The audit log records the reset with the password redacted (T101).
 
-Step A.4.6 — Dr du Plessis signs in with it and chooses his own (appendix-cross-cutting.md:657)
+Step A.4.6 — Dr du Plessis signs in with it and chooses his own (appendix-cross-cutting.md:676)
 Role: Former trainee (no role; a trainee record) — Dr Pieter du Plessis
 Route: /account/login → / → /account/profile → /account/change-password → /account/profile
 Do: Sign in with the password Prof Mbatha set. Then change it, from My account (the name in the top bar), to one of
@@ -527,7 +534,7 @@ Do: Sign in with the password Prof Mbatha set. Then change it, from My account (
 Expect: He lands on Home, with the former trainee's card "Your training record" pointing to My progress, as at Step 5.28
   (T290: he holds no role). The change lands on My account with "Password updated."
 
-Step A.4.7 — Mr Smit signs out through the confirmation page (appendix-cross-cutting.md:673)
+Step A.4.7 — Mr Smit signs out through the confirmation page (appendix-cross-cutting.md:692)
 Role: Coordinator — Mr Pieter Smit
 Route: /account/logout-confirm → / → /account/logout → / → /account/logout-confirm → /account/logout/submit → /account/login → /msf/campaigns → /account/login → /msf/campaigns
 Do: Open the sign-out confirmation by its address and press Cancel. Type `/account/logout` and press Cancel. Open the
@@ -538,14 +545,14 @@ Expect: A "Sign out" page, with no nav: "You are signed in as Pieter Smit (smit@
   "You have signed out." MSF campaigns then asks him to sign in, and after signing in he is brought back to it, the
   list as Step 3.46 left it (Pieter du Plessis's Withdrawn, Dr Molefe's Released). The audit log records a Logout.
 
-Step A.6.5 — Dr Patel's session ends, and he cannot sign in (appendix-cross-cutting.md:1046)
+Step A.6.5 — Dr Patel's session ends, and he cannot sign in (appendix-cross-cutting.md:1081)
 Role: Assessor — Dr Mohammed Patel
 Route: /account/session-ended → /account/login
 Do: Wait up to a minute on the page he had open, then sign in.
 Expect: The tab leaves for the sign-in page, which says "Your session has ended. Sign in again.", an information
   notice. Signing in is refused: "Invalid email or password." (T287).
 
-Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:1081)
+Step A.6.8 — Dr Patel signs in again (appendix-cross-cutting.md:1117)
 Role: Assessor — Dr Mohammed Patel
 Route: /account/login → /
 Do: Sign in with his own password.
@@ -562,7 +569,7 @@ Expect: The tab leaves for the sign-in page by itself, which says "Your session 
   information notice. Signing in is refused in the words an unknown address gets, "Invalid email or password.", with
   no mention of an erasure (T156). No email is sent to him.
 
-Step A.7.12 — The anonymous pages on a phone (appendix-cross-cutting.md:1463)
+Step A.7.12 — The anonymous pages on a phone (appendix-cross-cutting.md:1512)
 Role: Anonymous — a verifier
 Route: /account/login → /account/forgot-password → /portfolio/verify
 Do: At 390 px, open the sign-in page and the forgot-password page. Then verify Dr Molefe's portfolio PDF from Act 5 by
@@ -570,7 +577,7 @@ Do: At 390 px, open the sign-in page and the forgot-password page. Then verify D
 Expect: The sign-in card fits the width. Every field, toggle, button and link on the sign-in and forgot pages is
   44 px tall; Sign in is full width; the h1 is 1.5rem. The verify page's result fits the width.
 
-Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1511)
+Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1560)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /account/login → / → /account/profile → /account/profile/submit → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: With a contrast checker (axe, or the browser's accessibility audit), check each pair below:
@@ -582,14 +589,15 @@ Do: With a contrast checker (axe, or the browser's accessibility audit), check e
   - a success alert (save My account's name, from the name in the top bar, unchanged: "Name saved.") and a danger
     alert (Change password with a confirmation that differs, which checks no password and changes nothing);
   - a password field's Show toggle, pressed (white on the action blue, 4.86:1);
-  - white on the primary, danger (Lock out user on Dr Patel's page, not pressed) and success (Publish in the builder,
-    not pressed; with no draft it is disabled, and a disabled control is exempt) buttons;
+  - white on the primary, danger (the dialog's Lock out Mohammed Patel: open Lock out… on Dr Patel's page, read it,
+    then Keep access; T376, S22) and success (Publish in the builder, not pressed; with no draft it is disabled, and a
+    disabled control is exempt) buttons;
   - the focus ring on white and on the page background;
   - an input's border.
 Expect: Every pair meets WCAG 2.1 AA: text 4.5:1, large text 3:1, and 3:1 for a control's boundary and the focus
   ring. Muted text passes on the page background since T086.
 
-Step 5.19 — Dr Molefe's open session ends (act-5-graduation.md:538)
+Step 5.19 — Dr Molefe's open session ends (act-5-graduation.md:542)
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: /portfolio/progress → /account/session-ended → /account/login
 Do: Go back to the tab left open at Step 5.15 and wait up to a minute.

@@ -244,8 +244,103 @@ public sealed class UserAdministrationService : IUserAdministrationService
             .ThenBy(signIn => signIn.Provider, StringComparer.Ordinal)
             .ToList();
 
-        return new AccountSignInMethods(account.AllowLocalPassword && account.HasPassword, signIns);
+        return new AccountSignInMethods(account.AllowLocalPassword && account.HasPassword, signIns, account.AllowLocalPassword);
     }
+
+    #region Users, one page (T376, flow 12, lane U)
+
+    /// <summary>
+    /// One page of Users in SQL (T376, flow 12, S6, S7, K26): two counts (the scope's and the match's), the page's accounts
+    /// with their scopes, and the roles of exactly those accounts in one query, whatever the page's size. Until T376 Users
+    /// read every account and then each one's roles in turn (<see cref="ListAllUsersAsync" />'s N+1).
+    /// </summary>
+    /// <remarks>
+    /// Each word is matched case-blind as part of the first name, the last name or the email, so a name in either order or
+    /// part of one finds its person. The order is the database's (S7): <c>lower(LastName)</c>, <c>lower(FirstName)</c>, then
+    /// the id, so "du Plessis" and "van Rensburg" sort by their letters, not by the capital a particle lacks. Locked out is
+    /// the administrative lock's threshold (<see cref="UserDeactivation" />, K25), a constant, as
+    /// <see cref="WhichActivelyHoldRoleAsync" /> reads it.
+    /// </remarks>
+    public async Task<UserDirectoryPage> ListUsersPageAsync(UserDirectoryFilter filter, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(filter);
+
+        var scoped = _dbContext.Users.AsNoTracking();
+        if (filter.InstitutionId is int institutionId)
+        {
+            scoped = scoped.Where(entity => entity.InstitutionId == institutionId);
+        }
+
+        var totalCount = await scoped.CountAsync(cancellationToken);
+
+        var matching = scoped;
+        foreach (var word in filter.Words)
+        {
+            var part = word.ToLowerInvariant();
+            matching = matching.Where(entity =>
+                entity.FirstName.ToLower().Contains(part) ||
+                entity.LastName.ToLower().Contains(part) ||
+                (entity.Email != null && entity.Email.ToLower().Contains(part)));
+        }
+
+        if (filter.NoRole)
+        {
+            matching = matching.Where(entity => !_dbContext.UserRoles.Any(link => link.UserId == entity.Id));
+        }
+        else if (filter.Role is { } role)
+        {
+            var normalizedRole = _userManager.NormalizeName(role);
+            matching = matching.Where(entity => _dbContext.UserRoles.Any(link =>
+                link.UserId == entity.Id &&
+                _dbContext.Roles.Any(candidate => candidate.Id == link.RoleId && candidate.NormalizedName == normalizedRole)));
+        }
+
+        matching = filter.Status switch
+        {
+            UserDirectoryStatus.LockedOut => matching.Where(entity =>
+                entity.LockoutEnd != null && entity.LockoutEnd >= UserDeactivation.Threshold),
+            UserDirectoryStatus.Active => matching.Where(entity =>
+                entity.LockoutEnd == null || entity.LockoutEnd < UserDeactivation.Threshold),
+            _ => matching
+        };
+
+        var matchCount = await matching.CountAsync(cancellationToken);
+        var page = filter.PageWithin(matchCount);
+        var size = Math.Max(1, filter.PageSize);
+
+        var users = await matching
+            .Include(entity => entity.SpecialityScopes)
+            .Include(entity => entity.SubSpecialityScopes)
+            .OrderBy(entity => entity.LastName.ToLower())
+            .ThenBy(entity => entity.FirstName.ToLower())
+            .ThenBy(entity => entity.Id)
+            .Skip((page - 1) * size)
+            .Take(size)
+            .ToListAsync(cancellationToken);
+
+        var rolesByUser = new Dictionary<string, string[]>(StringComparer.Ordinal);
+        var ids = users.Select(entity => entity.Id).ToArray();
+        if (ids.Length > 0)
+        {
+            var links = await _dbContext.UserRoles
+                .AsNoTracking()
+                .Where(link => ids.Contains(link.UserId))
+                .Join(_dbContext.Roles, link => link.RoleId, entity => entity.Id, (link, entity) => new { link.UserId, entity.Name })
+                .ToListAsync(cancellationToken);
+            foreach (var group in links.Where(link => link.Name is not null).GroupBy(link => link.UserId, StringComparer.Ordinal))
+            {
+                rolesByUser[group.Key] = group.Select(link => link.Name!).ToArray();
+            }
+        }
+
+        return new UserDirectoryPage(
+            users.Select(user => Map(user, rolesByUser.TryGetValue(user.Id, out var held) ? held : [])).ToArray(),
+            totalCount,
+            matchCount,
+            page);
+    }
+
+    #endregion
 
     /// <summary>
     /// The guard and the removal, in that order (T339, flow 02; the round 2 review's B-D6). The account is read before its
@@ -553,7 +648,8 @@ public sealed class UserAdministrationService : IUserAdministrationService
             user.SubSpecialityScopes.Select(scope => scope.SubSpecialityId).Distinct().ToArray(),
             roles,
             IsLockedOut: user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow,
-            IsDeactivated: UserDeactivation.IsDeactivated(user.LockoutEnd));
+            IsDeactivated: UserDeactivation.IsDeactivated(user.LockoutEnd),
+            CollegeId: user.CollegeId);
 
     private static void SyncScopes<TScope>(
         ICollection<TScope> currentScopes,

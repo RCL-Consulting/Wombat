@@ -346,10 +346,12 @@ public sealed class ActiveNavItemTests : TestContext
     }
 
     // T358, flow 06 (R2-Menus m5): Entrustment decisions is a list both speciality admins' menus offer, so it lights itself
-    // and draws no trail; it was Home › Entrustment decisions with nothing lit.
+    // and draws no trail; it was Home › Entrustment decisions with nothing lit. T376, flow 12, F10: the Institutional
+    // admin's menu offers it too.
     [Theory]
     [InlineData(WombatRoles.SpecialityAdmin)]
     [InlineData(WombatRoles.SubSpecialityAdmin)]
+    [InlineData(WombatRoles.InstitutionalAdmin)]
     public void EntrustmentDecisions_LightsItself_WithNoTrail(string role)
     {
         var lit = RenderNav(role, typeof(EntrustmentDecisionsPage)).FindAll("a.active").Should().ContainSingle().Which;

@@ -5,7 +5,6 @@ using Wombat.Application.Features.Users;
 using Wombat.Application.Features.Users.Commands.AddRoleToUser;
 using Wombat.Application.Features.Users.Commands.RemoveRoleFromUser;
 using Wombat.Application.Features.Users.Commands.ResetUserPassword;
-using Wombat.Application.Features.Users.Commands.RevokePendingInvitationsForEmail;
 using Wombat.Application.Features.Users.Commands.SetUserLockout;
 using Wombat.Application.Features.Users.Queries.GetUserById;
 using Wombat.Application.Features.Users.Queries.ListUsers;
@@ -18,8 +17,8 @@ using Wombat.Infrastructure.Persistence;
 namespace Wombat.Application.Tests.Features.Users;
 
 /// <summary>
-/// T061: scope-guard + role-mutation + reset-password + revoke-invitation tests for
-/// the admin Users surface. Uses an in-memory DbContext + a recording stub for
+/// T061: scope-guard + role-mutation + reset-password tests for
+/// the admin Users surface (the revoke-invitation tests went with the command, T376, Q9). Uses an in-memory DbContext + a recording stub for
 /// <see cref="IUserAdministrationService"/> so the tests don't carry Identity infra.
 /// </summary>
 public sealed class UserAdministrationTests
@@ -42,7 +41,7 @@ public sealed class UserAdministrationTests
         var result = await handler.Handle(new ListUsersQuery(TestPrincipals.InstitutionalAdmin(InstitutionA)), CancellationToken.None);
 
         // Unscoped global accounts (e.g. Administrators) are NOT exposed to a tenant-level admin.
-        result.Select(user => user.UserId).Should().BeEquivalentTo("u-a");
+        result.Rows.Select(user => user.UserId).Should().BeEquivalentTo("u-a");
     }
 
     [Fact]
@@ -59,7 +58,7 @@ public sealed class UserAdministrationTests
         var handler = new ListUsersQueryHandler(users, db);
         var result = await handler.Handle(new ListUsersQuery(TestPrincipals.Administrator()), CancellationToken.None);
 
-        result.Select(user => user.UserId).Should().BeEquivalentTo("u-a", "u-b", "u-g");
+        result.Rows.Select(user => user.UserId).Should().BeEquivalentTo("u-a", "u-b", "u-g");
     }
 
     [Fact]
@@ -133,24 +132,31 @@ public sealed class UserAdministrationTests
         var users = new RecordingUserAdministrationService();
         users.Add(new UserIdentityDetails("u-a", "a@kgk", "A", "User", InstitutionA, [], [], [WombatRoles.Coordinator]));
 
-        var handler = new AddRoleToUserCommandHandler(users);
-        var act = () => handler.Handle(new AddRoleToUserCommand("u-a", role, TestPrincipals.Administrator()), CancellationToken.None);
+        await using var db = NewDb();
+        var handler = new AddRoleToUserCommandHandler(users, db);
+        var act = () => handler.Handle(new AddRoleToUserCommand("u-a", role, null, null, TestPrincipals.Administrator()), CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*cannot be assigned*");
         users.AddRoleCalls.Should().BeEmpty();
     }
 
+    /// <remarks>
+    /// Since T376 (M2) the role is written with the scope, the one the person holds when the role needs nothing more: a
+    /// Committee member needs no speciality. An Assessor without a sub-speciality is refused (AddRoleToUserScopeTests).
+    /// </remarks>
     [Fact]
     public async Task AddRole_ToAssignableRole_PassesThroughToService()
     {
         var users = new RecordingUserAdministrationService();
         users.Add(new UserIdentityDetails("u-a", "a@kgk", "A", "User", InstitutionA, [], [], [WombatRoles.Coordinator]));
 
-        var handler = new AddRoleToUserCommandHandler(users);
-        await handler.Handle(new AddRoleToUserCommand("u-a", WombatRoles.Assessor, TestPrincipals.Administrator()), CancellationToken.None);
+        await using var db = NewDb();
+        var handler = new AddRoleToUserCommandHandler(users, db);
+        await handler.Handle(new AddRoleToUserCommand("u-a", WombatRoles.CommitteeMember, null, null, TestPrincipals.Administrator()), CancellationToken.None);
 
-        users.AddRoleCalls.Should().ContainSingle().Which.Should().Be(("u-a", WombatRoles.Assessor));
+        users.AddRoleCalls.Should().ContainSingle().Which.Should().Be(("u-a", WombatRoles.CommitteeMember));
+        users.UpdateScopeCalls.Should().ContainSingle().Which.InstitutionId.Should().Be(InstitutionA);
     }
 
     [Fact]
@@ -159,9 +165,10 @@ public sealed class UserAdministrationTests
         var users = new RecordingUserAdministrationService();
         users.Add(new UserIdentityDetails("u-b", "b@b", "B", "User", InstitutionB, [], [], [WombatRoles.Coordinator]));
 
-        var handler = new AddRoleToUserCommandHandler(users);
+        await using var db = NewDb();
+        var handler = new AddRoleToUserCommandHandler(users, db);
         var act = () => handler.Handle(
-            new AddRoleToUserCommand("u-b", WombatRoles.Assessor, TestPrincipals.InstitutionalAdmin(InstitutionA)),
+            new AddRoleToUserCommand("u-b", WombatRoles.Assessor, null, null, TestPrincipals.InstitutionalAdmin(InstitutionA)),
             CancellationToken.None);
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>();
@@ -245,120 +252,31 @@ public sealed class UserAdministrationTests
             .WithMessage("*administrator*");
     }
 
-    [Fact]
-    public async Task RevokePendingInvitations_SweepsOnlyActiveSameEmail()
-    {
-        await using var db = NewDb();
-        SeedInstitutions(db);
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        db.Set<Invitation>().AddRange(
-            new Invitation { Email = "x@kgk", TokenHash = "h1", TargetRole = WombatRoles.Assessor, InstitutionId = InstitutionA, IssuedByUserId = "admin", IssuedOn = DateTime.UtcNow.AddDays(-1), ExpiresOn = today.AddDays(13) },
-            new Invitation { Email = "x@kgk", TokenHash = "h2", TargetRole = WombatRoles.Coordinator, InstitutionId = InstitutionA, IssuedByUserId = "admin", IssuedOn = DateTime.UtcNow.AddDays(-2), ExpiresOn = today.AddDays(12) },
-            new Invitation { Email = "x@kgk", TokenHash = "h3", TargetRole = WombatRoles.Assessor, InstitutionId = InstitutionA, IssuedByUserId = "admin", IssuedOn = DateTime.UtcNow.AddDays(-3), ExpiresOn = today.AddDays(11), RevokedOn = DateTime.UtcNow },
-            new Invitation { Email = "other@kgk", TokenHash = "h4", TargetRole = WombatRoles.Assessor, InstitutionId = InstitutionA, IssuedByUserId = "admin", IssuedOn = DateTime.UtcNow, ExpiresOn = today.AddDays(14) });
-        await db.SaveChangesAsync();
-
-        var handler = new RevokePendingInvitationsForEmailCommandHandler(db);
-        var count = await handler.Handle(
-            new RevokePendingInvitationsForEmailCommand("x@kgk", TestPrincipals.InstitutionalAdmin(InstitutionA)),
-            CancellationToken.None);
-
-        count.Should().Be(2);
-        var remaining = await db.Set<Invitation>().Where(entity => entity.Email == "x@kgk" && !entity.RevokedOn.HasValue).CountAsync();
-        remaining.Should().Be(0);
-        var other = await db.Set<Invitation>().SingleAsync(entity => entity.Email == "other@kgk");
-        other.RevokedOn.Should().BeNull();
-    }
-
-    [Fact]
-    public async Task RevokePendingInvitations_CrossInstitution_IsRejected()
-    {
-        await using var db = NewDb();
-        SeedInstitutions(db);
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        db.Set<Invitation>().Add(new Invitation
-        {
-            Email = "x@b",
-            TokenHash = "h1",
-            TargetRole = WombatRoles.Assessor,
-            InstitutionId = InstitutionB,
-            IssuedByUserId = "admin",
-            IssuedOn = DateTime.UtcNow,
-            ExpiresOn = today.AddDays(14)
-        });
-        await db.SaveChangesAsync();
-
-        var handler = new RevokePendingInvitationsForEmailCommandHandler(db);
-        var act = () => handler.Handle(
-            new RevokePendingInvitationsForEmailCommand("x@b", TestPrincipals.InstitutionalAdmin(InstitutionA)),
-            CancellationToken.None);
-
-        await act.Should().ThrowAsync<UnauthorizedAccessException>();
-    }
-
     /// <summary>
-    /// T373 fix pass, B3 (S4): an invitation stored as typed, in another case and with spaces round it, is the account's
-    /// address to the user page and to its revoke. Until the fix both compared the stored text byte for byte.
+    /// Q9 (T376, flow 12): the user page reads no invitation. An invitation to an address an account holds can neither be
+    /// issued (T286) nor accepted, and Invitations lists every one; the DTO carries none.
     /// </summary>
     [Fact]
-    public async Task TheUserPage_AndItsRevoke_FindAnInvitationToTheAccountsAddressInAnotherCase()
+    public async Task TheUserPage_ReadsNoInvitation()
     {
+        typeof(UserDetailDto).GetProperty("PendingInvitations").Should().BeNull();
+        typeof(UserDetailDto).Assembly.GetTypes().Should().NotContain(type => type.Name == "UserPendingInvitationDto");
+
         await using var db = NewDb();
         SeedInstitutions(db);
-        var issued = new DateTime(2026, 10, 19, 6, 0, 0, DateTimeKind.Utc);
-        db.Set<Invitation>().Add(new Invitation
-        {
-            Email = "Molefe@KGK.wombat.local", TokenHash = "h1", TargetRole = WombatRoles.Assessor, InstitutionId = InstitutionA,
-            IssuedByUserId = "admin", IssuedOn = issued, ExpiresOn = new DateOnly(2026, 11, 2)
-        });
-        await db.SaveChangesAsync();
-
-        var users = new RecordingUserAdministrationService();
-        users.Add(new UserIdentityDetails("u-m", "molefe@kgk.wombat.local", "Lerato", "Molefe", InstitutionA, [], [], [WombatRoles.Coordinator]));
-
-        var page = await new GetUserByIdQueryHandler(users, db, new FixedClock(issued)).Handle(
-            new GetUserByIdQuery("u-m", TestPrincipals.InstitutionalAdmin(InstitutionA)), CancellationToken.None);
-        page!.PendingInvitations.Should().ContainSingle("the address is one, whatever its case");
-
-        var revoked = await new RevokePendingInvitationsForEmailCommandHandler(db).Handle(
-            new RevokePendingInvitationsForEmailCommand(" molefe@kgk.wombat.local ", TestPrincipals.InstitutionalAdmin(InstitutionA)),
-            CancellationToken.None);
-        revoked.Should().Be(1);
-    }
-
-    /// <summary>
-    /// T373 fix pass, B3 (F7): a link works through its last day on the South African calendar. At 22:30 UTC on its last
-    /// day it is already the next day in South Africa, and the user page no longer lists it, as Register, the list and the
-    /// resend do not; at 21:30 UTC it still does.
-    /// </summary>
-    [Theory]
-    [InlineData(21, true)]
-    [InlineData(22, false)]
-    public async Task TheUserPage_ListsAPendingInvitation_ThroughItsLastSouthAfricanDay(int utcHour, bool listed)
-    {
-        await using var db = NewDb();
-        SeedInstitutions(db);
-        var lastDay = new DateOnly(2026, 11, 2);
         db.Set<Invitation>().Add(new Invitation
         {
             Email = "x@kgk", TokenHash = "h1", TargetRole = WombatRoles.Assessor, InstitutionId = InstitutionA,
-            IssuedByUserId = "admin", IssuedOn = new DateTime(2026, 10, 19, 6, 0, 0, DateTimeKind.Utc), ExpiresOn = lastDay
+            IssuedByUserId = "admin", IssuedOn = DateTime.UtcNow, ExpiresOn = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(14)
         });
         await db.SaveChangesAsync();
-
         var users = new RecordingUserAdministrationService();
         users.Add(new UserIdentityDetails("u-x", "x@kgk", "X", "User", InstitutionA, [], [], [WombatRoles.Coordinator]));
-        var now = new DateTime(2026, 11, 2, utcHour, 30, 0, DateTimeKind.Utc);
 
-        var page = await new GetUserByIdQueryHandler(users, db, new FixedClock(now)).Handle(
+        var page = await new GetUserByIdQueryHandler(users, db).Handle(
             new GetUserByIdQuery("u-x", TestPrincipals.InstitutionalAdmin(InstitutionA)), CancellationToken.None);
 
-        page!.PendingInvitations.Should().HaveCount(listed ? 1 : 0);
-    }
-
-    private sealed class FixedClock(DateTime utcNow) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => new(utcNow, TimeSpan.Zero);
+        page!.InstitutionName.Should().Be("Institution A");
     }
 
     [Fact]

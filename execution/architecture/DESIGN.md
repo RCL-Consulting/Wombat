@@ -57,7 +57,10 @@
 >   auth page (Register's start path and cookie, its cards, its refusals under their fields), § Form system (the required
 >   mark, only the chosen role's fields, a value that follows another is an `<output>`), § Table system (`StackWide`),
 >   § Button system (every dialog's buttons and the header's actions at 390), the owner table's two rows, and § app.css
->   section order (three Onboarding sections)).
+>   section order (three Onboarding sections)); flow 12, people admin (2026-10-23, T376: § Button system (a destructive
+>   action is an outline trigger), § Form system (a form in a note panel, the assessor training form), § Table system
+>   (Users' table), § Page-level patterns (Users, Assessors, the user page, her institution's record, SSO mappings, her
+>   Home), the owner table's rows, and § app.css section order (five People admin sections)).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 
@@ -570,7 +573,7 @@ change to this table.
 | Acting role | Links |
 |---|---|
 | Administrator | Home; Platform: Scheduled jobs, Audit log, SSO mappings, Data rights requests; Organisations: Institutions, Colleges; People: Users, Invitations; Catalogue: EPAs, Curricula, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision panels |
-| InstitutionalAdmin | Home; People: Invitations, Trainees, Assessors, Users; Curriculum: Curriculum adoptions, Curricula, EPAs, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision panels; Access and audit: SSO mappings, Audit log |
+| InstitutionalAdmin | Home; People: Invitations, Trainees, Assessors, Users; Curriculum: Curriculum adoptions, Curricula, EPAs, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision panels, Entrustment decisions; Access and audit: SSO mappings, Audit log |
 | CollegeAdmin | Home, Specialities, EPAs, Curricula, Activity types |
 | SpecialityAdmin | Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels, Entrustment decisions |
 | SubSpecialityAdmin | Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels, Entrustment decisions |
@@ -648,14 +651,15 @@ there, and its trail is Home › the page (§ Page-level patterns).
 | A data-rights request | Coordinator, Administrator: Data rights requests. Its crumb is the request's id once loaded (R2-Rules § 3). R2-Rules also names the requester, under My data rights: that row was dropped, since the page admits only Administrator and Coordinator, so the owner table may not name the requester's role (the review of the t335 branch) |
 | A College's specialities and sub-specialities, and their edit pages | College admin: Specialities · Administrator: Colleges (T331) |
 | A College | Administrator: Colleges |
-| An institution | Administrator: Institutions |
+| An institution, New institution (`/admin/institutions/new`) | Administrator: Institutions. Creating one is the Administrator's alone (`InstitutionCreate`, T376, S12). Her own institution's record has no owner: its trail is Home › ‹name› |
 | An EPA, an activity type, a curriculum's items | Administrator, College admin, Institutional admin: EPAs, Activity types, Curricula |
 | A curriculum | Administrator, College admin: Curricula |
 | `/admin/curriculum-progress` | Administrator: Curricula (a link on Curricula, now that Home's Maintenance card is dropped) |
 | An entrustment scale | Administrator: Entrustment scales |
 | Invite a person (`/admin/invitations/new`) | Administrator, Institutional admin: Invitations; its trail Home › Invitations › Invite a person (T373, flow 11, Q1) |
-| A user | Administrator, Institutional admin: Users |
-| A trainee's profile, an assessor's profile | Institutional admin: Trainees, Assessors |
+| A user | Administrator, Institutional admin: Users. Its Users crumb returns to the filtered Users page it was opened from (`?back=`, read only through `PeopleLinks.SafeUsersReturn`, an allow-listed return: the Users path with Users' own parameters, rebuilt; anything else is `/admin/users`; T376, flow 12, S6; `PageHeader.OwnerHref`) |
+| A trainee's profile | Institutional admin: Trainees |
+| `/admin/assessors/edit` (the old assessor form's route, which leads to the person's page, T376 S10) | Administrator, Institutional admin: Users; its trail Home › Users › User |
 | Admit ‹name› (`/admin/trainees/admit`) | Institutional admin: Trainees; its trail Home › Trainees › Admit ‹name›. The Administrator, whose menu has no Trainees, has nothing lit and the trail Home › Trainees › Admit ‹name›, the Trainees crumb given by the page (`PageHeader`'s `Trail`; T373, flow 11, M04b) |
 | An audit entry | Administrator, Institutional admin: Audit log |
 | The job run history | Administrator: Scheduled jobs |
@@ -732,6 +736,14 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
 - The primary page action is `.btn .btn-primary` and lives in the `PageHeader` action slot, except on the committee
   review, where it lives in the sitting bar (T361, flow 07; § Committee agenda, "The sitting bar").
 - Destructive actions open a `ConfirmDialog` first; the red `.btn-danger` only appears inside the dialog's footer.
+- **A destructive action is an outline trigger named for its row; its filled danger button is in the `ConfirmDialog`
+  only** (2026-10-23, T376, flow 12, S22; T264's users half). This supersedes § Detail page's filled Delete in the header.
+  The user page's Remove… on a role ("Remove Committee member from Thandi Zulu"), Remove… on an institutional sign-in
+  ("Remove the ‹provider› sign-in from Thandi Zulu") and Lock out… ("Lock out Thandi Zulu") are `.btn-outline` (the row's
+  `.btn-sm`), each with `aria-haspopup="dialog"`; the dialog's safe button says what is kept ("Keep the role", "Keep the
+  sign-in", "Keep access") and its danger button what is done ("Remove Assessor", "Remove sign-in", "Lock out Thandi
+  Zulu"). An action that is unavailable is never `disabled`: `aria-disabled="true"` and `.is-unavailable`, its reason
+  beside it by `aria-describedby` (the last way in's "The institutional sign-in is the account's only way in.").
 - **Every dialog's buttons stack at 390** (2026-10-20, T373, flow 11, M8; first on the MSF pages, T369, M10): below
   641px `.dialog-card .form-actions` is `flex-direction: column-reverse` and its buttons are 44px and the row's width. One
   general rule in `app.css`, since the top-layer dialog is outside every page wrapper, so a page's own class cannot reach
@@ -1083,6 +1095,21 @@ A table **grouped by one column** puts each group in its own `<tbody>`, and the 
 `<th scope="rowgroup" rowspan="n">` naming it; `app.css` aligns that label to the top of its group. No new class. The
 committee review's evidence snapshot is one table per EPA, grouped by instrument (T167). A card that holds such a table
 is an `article.detail-card--compact` whose `<h4>` it names with `aria-labelledby`.
+
+**Users' table** (2026-10-23, T376, flow 12, lane U; S1, S2, S20): one scope per person, in its own column (Users) or the
+user page's who line, never a scope per role (Q4); exempt are Home's People card and flow 11's forms, which name a role's
+invitation scope. The scope's words are `PersonScopeWords` (the institution's name for an Institutional admin, the
+College's for a College admin, "—" with no institution, else "Paediatrics / Paediatrics" or "Any speciality"). Roles are
+one a line (`ul.role-cell`), labels never keys, in the roles' one order (`WombatRoleLabels.InOrder`). A person with no role
+reads "No role" (`.no-role-cell`) and, for an ended trainee profile only, "A completed or withdrawn registrar keeps an
+account and its records." as its `.field-help`. Locked out is the administrative lock only, the badge with the lock icon
+(`.badge.badge-declined.status-locked`). The row header is the name over the address (`.person-cell`), the address
+breaking after its @ (`<wbr>`) with no `.col-wrap` on the header, and `overflow-wrap: break-word` on the address, so the
+column never shrinks to split a word between 901 and 1100px. Institution and Scope are `.col-wrap` on their headers too,
+with a 7rem floor (`.people-page .clinic-table th.col-wrap`, T376 build review P2), so "Paediatrics / Paediatrics" and a
+hospital's name break between words, never inside one. A group's id on SSO mappings breaks anywhere (`.group-id`, P3): it
+has no word to keep. A stacked table carries `role=table`, `rowgroup`, `row`,
+`columnheader`, `rowheader` and `cell`, as `DataTable`'s `StackWide` emits.
 
 ## Form system
 
@@ -1466,6 +1493,33 @@ reordered). Log an activity is `NewActivity.razor`. Drawn in `design/flows/03-tr
   fields it named (`ActivityNotice.Refusal`, `RefusedFieldKeys`), from which that page builds its summary (§ Alerts). A
   refused create stays: the `RefusalSummary` ("Nothing was saved." · "Everything you typed is kept below."), each line
   a link to its input.
+
+### A form in a note panel (T376, flow 12, F11, M8, M9, M10, S22)
+
+- **A form opened in place on a detail page** (Add a role…, Record training) is a `.detail-card.note-panel` under its
+  trigger, `.note-panel--form` spacing its own parts 24px apart. Its trigger has `aria-expanded`, and `aria-controls` only
+  while the panel exists; the panel is not a group, its fieldset is. A form in a note panel leaves with Cancel (a quiet
+  button, `.btn-quiet`), which closes it and gives the focus back to the trigger; a note with Keep. Opened, its first
+  control takes the focus (P03: the first radio).
+- **Radios with help**: a `fieldset.form-group.choice-group.choice-help-stack` of `.form-check` (a field-level fieldset is
+  a form group, T188), each help a `p.page-subtitle.choice-help` after the label, outside it, named by its input's
+  `aria-describedby`. `.choice-stack` stays the MSF Kind radios' (M9).
+- **A read-out** (M8): a value shown in a field's place is `dl.form-group`, its label the `dt`, its value
+  `dd.readonly-value`, its help `dd.field-help` (Add a role…'s Speciality "Already held by Thandi Zulu.", or "The only
+  speciality ‹institution› has adopted."). A choice with one option is a read-out, not a one-option select (S13).
+- **A refusal of one field** shows beside its field, the field marked (`aria-invalid` on each input; a radio group's
+  `fieldset` takes `.choice-group.is-invalid`), and the field takes the focus, with no `RefusalSummary`: the stated
+  exception (S22). A refusal of who may act shows in the section's result instead.
+
+**The assessor training form** (T376, flow 12, lane T; T03–T07) is the user page's note panel (§ Page-level patterns,
+Detail page): Training status * as a `fieldset.form-group.choice-row.choice-group` of four `.form-check` radios (Not
+started, In training, Provisional (awaiting sign-off), Trained), each named by its label and described by the group's
+help (a `p.page-subtitle` after the radios, outside their labels); Training completed, a date, only once a finished status
+(Provisional or Trained) is chosen, with its built help; Qualifications *; then a quiet Cancel and Save training. A refusal
+is said under its field, "Choose the training status." and "Type the qualifications, as they should read.", the field
+marked on its inputs (`aria-invalid` on each radio and on the textarea, never on the fieldset, which does not support
+it) and the group by `.choice-group.is-invalid`; the focus goes to the first refused field (the first radio), with no
+summary. The page's check and the validator say the same words (`AssessorTrainingWords`).
 
 ## Card system
 
@@ -3433,13 +3487,39 @@ what was asked, and Clear filters; an empty list draws no form.
 - The select that picks a kind of row is named for what it filters ("Waiting": All, Overdue only), never "Show", which
   is the button's (review 31).
 
+**Assessors** (`/admin/assessors`, T376, flow 12, lane T; T01–T14) lists every holder of the Assessor role in the
+reader's scope, by last name, joined to their training record if one is kept (Q2), in `.people-page`: "Assessors at
+‹institution›" with its count, the caption "At ‹institution›, by last name: each holder of the Assessor role, and the
+training recorded on their page.", and a `StackWide` table of Name (the row header, the name over the address, no
+`.col-wrap`), Scope (`PersonScopeWords`), Training status ("Not recorded" for no record: Not started is a record), Training
+completed (`.inv-when`; "—" with no record, "Not recorded" for a record with no date) and one action, "Record training" or
+"Edit training" named "… for ‹name›", to the person's page at `?section=training`. The list records nothing itself and has
+no create action. The Administrator's adds an Institution column (T14). Nobody holding the role is the card "Nobody holds
+the Assessor role yet"; the pager shows only when the holders fill more than a page (`TotalCount > PageSize`, F9), its
+turn focusing the heading. A removed Assessor is not listed (Q18), with no note saying so (S11).
+
+**Users' filter** (2026-10-23, T376, flow 12, lane U; S6, S21, F9, Q22): the same pattern as a card,
+`form.detail-card.people-filter` with `role="search"` and the name "Filter ‹list›" ("Filter people"), its fields on
+`.search-grid` (Name or email with the hint "A name in either order, part of one, or an address."; Role: Any role, the
+roles in the institution's order with Pending trainee before Trainee, then No role, and Administrator and College admin
+first for the Administrator alone; Status: Any status, Active, Locked out), then `.filter-actions`: Show (primary) and
+Clear (outline), always shown. Nothing filters per keystroke. Every value is in the address (`?q=`, `role=`, `status=`
+`active` or `locked`, `page=`, `size=`; `PeopleLinks`), so Home's role links and a person's way back (`back=`, rebuilt
+from its parsed values by `PeopleLinks.SafeUsersReturn`) open the same filtered page; a role not offered to the reader
+reads as Any role. The heading ("People") carries the count beside it as `.inv-count`: the number with no filter ("10"),
+else "1 of 10 match “zulu”", "2 of 14 hold no role"; a visually hidden status says it as a sentence ("1 of 10 people match
+“zulu”.", "No one matches “zzz”."), and the heading takes the focus after Show, Clear and a page turn. No match is the
+empty card "No one matches “zzz”" over "Nobody at ‹institution› has “zzz” in their name or address. Press Clear to see all
+10 people." **The pager is drawn only when the matches run past one page** (`MatchCount > PageSize`; round-3-check Left
+2), so a list of ten or fifteen at 20 a page has none; `PagerControls` itself is unchanged.
+
 ### Detail page
 
 ```
 <PageHeader Title="@item.Title">
   <Actions>
     <a class="btn btn-outline btn-sm" href="…">Edit</a>
-    <button class="btn btn-danger btn-sm" @onclick="…">Delete</button>
+    <button class="btn btn-outline btn-sm" @onclick="…">Delete…</button>   <!-- an outline trigger; the filled danger button is the ConfirmDialog's (§ Button system) -->
   </Actions>
 </PageHeader>
 
@@ -3456,6 +3536,22 @@ cards (`.msf-page`), no page asked any more, and the modifier was deleted (build
 every grid: on a grid of like cards one card should look like each of several (My authorisations' STARs, a `.star-grid`
 since T366). (The rule that a lone trajectory chart scales with its card is withdrawn: since T355 the chart
 is drawn at two fixed sizes and never scaled, § Entrustment standing, and the trajectory.)
+
+**The user page has no details-grid** (T376, flow 12, Q1; `UserDetail.razor`): one column (`.user-page`, 60rem) of
+sections. The who line first, a `dl.detail-list` named "Account" (Email with a break after its @, Institution or "Global
+(no institution)", Status Active or the Locked out badge, Scope in `PersonScopeWords`' words), then `section.detail-card.user-section`s,
+each an h2: Roles and scope (`.role-rows`: each role's label in `WombatRoleLabels.InOrder`'s order, then after a gap its
+Remove… or why none, `.role-row-note`; Add a role… opening its note panel), Assessor training (shown whenever the person
+holds Assessor; `?section=training` opens it), and Sign-in and access, whose parts are h3 `.section-part`s: Password,
+Institutional sign-in and Lockout. Every action's result shows in the part that acted, through `ActionResult`, focused,
+one on the page at a time; its first sentence bold. **A person with no role** (S2): an ended programme says how and when
+it ended and what is still open ("Pieter du Plessis holds no role: they left the programme on 2026-10-18. They can still
+sign in to read their training record (My progress) and their data rights."); no profile says "‹name› holds no role. They
+can sign in to My account and My data rights." (`.no-role`). The Lockout part lists only the effects that apply to the
+person (the panel line for a Committee member, the trainee line for a Trainee, the assessor line for an Assessor, the
+reminders line always, Q17). On the caller's own account the page offers no role, password or lockout change, and its
+own institutional sign-in is flow 02's My account. Not found, the h1 is "User" with "User unavailable" and "Go to Users"
+(the header's "Back to users" is gone). No pronoun is stored, so the page says "they".
 
 **The committee review has no details-grid** (T361, flow 07): one column (`.review-page`, a flex column), the sitting bar
 under the header, then "Before the committee decides" (when it has something to say), the agenda, the decision (above
@@ -3509,6 +3605,21 @@ theirs alone.
   speciality cannot change once it is created.", About this panel (Panel name, Scope, Institution or Speciality, Decides
   for for an institutional administrator), Who sits on it, then Cancel and Create panel. The Coordinator is refused both
   pages (Access denied, unchanged).
+
+**Assessor training** (T376, flow 12, lane T; T03–T07, Q2, Q18, S10) is the user page's section for a holder of
+Assessor (`AssessorTrainingSection`, `section.detail-card.user-section`, h2 "Assessor training"), between Roles and scope
+and Sign-in and access. With no record it offers "Record training"; with one, the record read out (a `.detail-list` of
+Training status, Training completed, Qualifications, each `dd.readonly-value`) and "Edit training", each named "… for
+‹name›". Either opens the note panel holding the training form (§ Form system); it asks no institution or speciality,
+since an assessor's discipline is the person's one scope (M1). Saved, the result is said in the section and focused: "**Training
+saved for Fatma Khumalo:** Provisional (awaiting sign-off), completed 2026-09-20." ("… Trained, no date." for a finished
+status with none). `?section=training` (`PeopleLinks.UserTraining`) opens the panel with its first radio focused; for a
+person who does not hold Assessor it says once, in the section's place and focused, "‹name› does not hold the Assessor
+role, so has no assessor training here." A removed Assessor's record is kept and the section hidden, shown again with the
+role. On the caller's own page the record is read out with "You cannot record your own assessor training. Another
+administrator can." and no trigger. The old `/admin/assessors/edit?id=‹profile id›` follows the profile to its person's
+page at `?section=training`, replacing itself in the history; an unknown, out-of-scope, missing or malformed id is the
+user page's "User unavailable" with Go to Users, under Users (Home › Users › User).
 
 ### Record page under a personal link
 
@@ -3821,6 +3932,55 @@ asked before any read), the page is "Admit a registrar": no name before the read
   `.col-wrap.col-wrap--curriculum`, floored at 7.5rem by the onboarding column's `.inv-page .clinic-table th.col-wrap`, which outranks `col-wrap--curriculum`'s 7rem, so its words never split from 901 to 1100px), Programme start
   (`.inv-when`: the date over "Training year ‹n›"), Expected completion and Edit.
 
+#### Her institution's record (`/admin/institutions/{Id}`, T376, flow 12, I01–I08)
+
+The Institutional admin's own institution, in `.record-page` (52rem): h1 and tab the institution's name, "Institution" before
+the read and on a failed one (S9); trail Home › ‹name› (no owner row for her); subtitle "Your institution's name, short code
+and contact email."; no header action. The form (`form.form-container`, `novalidate`, named by the institution's name):
+"* marks a field you must fill in."; Name *, Short code *, Contact email (`type="email"`); then Status read out
+(`dl.form-group`, `dd.readonly-value`, M8) over "Set by a Wombat administrator."; `FormActions` Cancel (to Home) and "Save
+changes". **There is no `ValidationSummary`** (S22): the page's own checks and the command's typed refusals
+(`InstitutionUpdateRefusedException`, by `Field`, never by its text) sit under their field, which is marked
+(`aria-invalid`, `.input-validation-error`), described by the refusal and focused, the first one when several fail:
+"Type a short code. The record was not saved." (I03), "Enter a valid email address, for example name@example.org." (I04,
+what was typed kept), and the built "An institution with the same name or short code already exists." under Short code or
+Name (I08). Saved, the result above the form takes the focus: "**‹name› saved.** Its contact email is now ‹address›."
+(`<wbr>` after the @) or "… It has no contact email now." (I07). A failed read is `StatePanel`'s Alert, "Could not load the
+institution. Nothing has changed. …", with Try again; an id outside her scope is Page not found (1.23). The Administrator's
+view of the same route (Edit institution, Back to institutions, the Active box and Deactivate, T302) is flow 18's, kept as
+built. **`/admin/institutions/new` is the Administrator's alone** (S12): `InstitutionCreate`, a page of its own under the
+`Administrator` policy, so hers is Access denied; the create form is as built, its refusals in Wombat's words.
+
+#### SSO mappings (`/admin/sso/group-mappings`, T376, flow 12, O01–O10)
+
+In `.people-page`; h1 and tab "SSO mappings"; her subtitle "Which of your institution's sign-in groups give which Wombat
+role. A change applies at each person's next sign-in." (the Administrator's as built, O02). Someone who holds Trainee
+beside an admin role is shown T288's note and nothing is read.
+- **No provider for her institution** (Q11, T326, O01): `section.detail-card.not-set-up` with its h2 "Institutional sign-in
+  is not set up" (the key icon) and "Institutional sign-in is not set up for ‹institution›. A Wombat administrator sets it
+  up; …", standing content with no live region (S23); no form and no list. The Administrator's no-provider card names the
+  `Sso:Providers` setting, as built.
+- **The form** (`form.form-container`, h2 "Add a mapping"): one provider is read out (`dl.form-group`, "The one provider set
+  up for ‹institution›."), more are a select; External group ID *, Group display name *; Wombat role * (a select starting
+  "Choose a role", the staff roles by label, Institutional admin offered to the Administrator only, Q19; its help "Staff
+  roles only. Trainee and Pending trainee are never mapped: …"); Institution read out, the provider's (T288). Speciality and
+  Sub-speciality appear only once the role uses them (S4): read out when the institution has adopted one ("The only ones
+  ‹institution› has adopted."), a select otherwise, Coordinator and Committee member with "Any speciality". "Add mapping".
+  A refusal of a posted role is the command's (`SsoMappingRefusedException`, `Field` Role), beside Wombat role, focused
+  (O06: "Only a Wombat administrator can map a group to Institutional admin."). Added: "**Mapping added.** People in
+  ‹group› get Assessor in Paediatrics / Paediatrics at their next sign-in.", focused, the form empty.
+- **Current mappings** (h2 with its count): `DataTable` `StackWide`, the row header the group's display name over its id
+  (`.person-cell`), Provider, Wombat role and scope (`.person-cell`), the Institution for the Administrator, and each row's
+  Delete… an outline trigger named "Delete the mapping of ‹group› to ‹role›" (S22). Its `ConfirmDialog` (F8): "Delete this
+  mapping?", "Delete the mapping of **‹group›** to **‹role›** (‹scope›)?", "From each person's next sign-in, belonging to
+  ‹group› no longer gives ‹role›.", "The scope it gave stays.", "Keep the mapping" / "Delete the ‹group› mapping". Deleted:
+  "**Mapping deleted.** From each person's next sign-in, ‹group› no longer gives ‹role›.", focused. None: "No group gives
+  a role yet. Use Add a mapping to give one."
+- **Mappings left from a removed provider** (S5; `SsoGroupMappingDto.ProviderGone`: no provider of that key serves the
+  mapping's institution any longer): listed apart, read only for her ("Read only: its provider is no longer set up." in the
+  Actions cell), the caption saying roles they gave remain and only a Wombat administrator can delete them; the delete
+  command refuses her too. The Administrator deletes them.
+
 ### Dashboard page
 
 > **Amended 2026-09-27, T335, flow 01** (R2-Landing-Assessor, -CM, -Loading, -Error, R2-Shell-Admin, -Assessor,
@@ -4048,6 +4208,20 @@ Every dashboard uses `.dashboard-grid` + `DashboardCard` + the `.dashboard-metri
 
 A dashboard that reads nothing (the CollegeAdmin's, a card of links to the national catalogue it authors) has no query,
 no `DashboardFrame` and no `@rendermode`: the grid and its cards are the whole file.
+
+**Her Home** (2026-10-23, T376, flow 12, lane U; Q7, Q8, S19, M7, K24; T291 items 4 and 8): People, Curriculum and Your
+institution, every count her institution's, and no Quick links (each card's footer is its way on). **A waiting line above
+the cards, only while something waits** (flow 06's oversight line is the precedent): an info `Alert` with no role, not a
+live region (S23), "5 registrars are waiting to be admitted. Nothing can be filed about them until then." with its first
+sentence bold and "Open Trainees". People: each role held, a count and its label as **one link** (`a.dashboard-metric` in
+`.dashboard-metric-row`, the label underlined in the link colour, the count inside the link's name) to Users filtered by
+that role; the footer's note on the left ("15 accounts.", "1 account: yours.": distinct accounts, those with no role
+included; `.dashboard-card-footer .field-help`) and Open Users. Curriculum: the adopted specialities and sub-specialities
+(not the College's catalogue) and each adoption's line ("Paediatrics / Paediatrics, from the CPSA's Paediatric EPA
+Curriculum (11.1).", or "Nothing is adopted yet. …"). Your institution: a `.detail-list` of Name, Short code, Contact email
+and Status over "Set by a Wombat administrator.", which wraps inside the card (M7: her card's `.dashboard-grid .home-institution-list`, not the Trainee's lists, is
+`minmax(0, max-content) minmax(0, 1fr)`, its `dd` breaking anywhere), and Open ‹institution›. Below 641px the metric links
+and the footer links are 44px.
 
 ### Acting role
 
@@ -4687,6 +4861,13 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
 "Flow 11: the onboarding pages, shared (T373)": .inv-page, .inv-page--form, .inv-count, .inv-when (span), .action-result .alert / .validation-message / .alert overflow-wrap (M7), .loading-line, .skel-title, .skel-line, .skel-short (+ ≤900px: .clinic-table--stack-wide .btn 44px, S16; ≤640px, on every page: .dialog-card .form-actions stacked column-reverse with 44px full-width buttons, M8; .header-container .actions-cell full width with 44px buttons, M9; .inv-page .btn 44px)
 "Flow 11: invitations (T373)": .inv-page .action-result:empty, .delivery, .delivery--sending, .delivery--sent, .delivery--warn (+ .icon), .inv-page .clinic-table th.col-wrap (Delivery's floor, 901 to 1100px), .clinic-table .history-note--warning, .otl, .otl-row, .otl-help, .otl-said:empty (+ ≤640px, inside .inv-page: the link's field over Copy link, both full width and 44px; the form's actions and each role's row 44px; .inv-page .form-actions stacked column-reverse, the primary on top, T373 step 8)
 "Flow 11: admission (T373)": .wait-card (+ .dashboard-card-body, h3), .wait-links, .ty-output, .clinic-table .col-actions--single, .clinic-table th.col-wrap--curriculum (+ ≤640px: .wait-card .wait-links a 44px)
+
+/* ── People admin ───────────────────────────────── */
+"Flow 12: the people pages, shared (T376)": .people-page (+ > *, .list-section-title, .action-result .alert), .user-page (+ > *, .detail-list dd, .action-result .alert), .user-section (+ > *, h2, h3, .actions-cell), .section-part (+ :first-of-type, > *, ul), .note-panel--form (+ > *, .form-actions), .badge.status-locked (+ ≤640px, inside .people-page and .user-page: 44px controls; .user-page and .note-panel--form .form-actions stacked column-reverse, the primary on top; .user-page .form-actions .btn and .section-part > .btn full width, never a bare .btn, M6; .user-page .choice-group .form-check label 44px, S17)
+"Flow 12: assessors and training (T376)": .user-section .action-result:empty
+"Flow 12: the record and SSO (T376)": .record-page (+ > *, .action-result .alert, .form-grid + dl.form-group), .record-page and .people-page .action-result:empty, .people-page .form-container > h2 (+ > .form-grid + .form-grid), .not-set-up (+ h2, h2 .icon, p, p + p), .people-page th[scope="row"] .person-cell .group-id (a group's id breaks anywhere) (+ ≤640px: .record-page controls 44px, its .form-actions stacked column-reverse, the primary on top, its buttons and the SSO form's full width)
+"Flow 12: users and Home (T376)": .people-filter (+ .form-group, .field-help, .search-grid, .filter-actions), .people-page th[scope="row"] .person-cell span (break-word, check Left 3), .people-page .clinic-table th.col-wrap (Users' Institution and Scope floor, 901 to 1100px), .role-cell, .no-role-cell (+ .field-help), a.dashboard-metric (+ .dashboard-metric-label, :hover), .dashboard-card-footer .field-help, .dashboard-grid .home-institution-list (+ dd, dd p; M7; her card only) (+ ≤640px: .dashboard-grid a.dashboard-metric 44px, .dashboard-grid .dashboard-card-footer wrapping, .people-filter .filter-actions full width)
+"Flow 12: the user page (T376)": .role-rows, .role-row (+ :first-child), .role-row-label, .role-row-note, .no-role (+ > *), .choice-help-stack (+ legend, .form-check), .choice-help (+ ≤640px: .user-page .role-row stacked)
 ```
 
 The Progress section replaced the Trajectory chart section that held T123's chart (2026-10-04, T355): every flow 05
@@ -4696,7 +4877,8 @@ every flow 08 rule, none elsewhere: the shared one first, then one per page grou
 STARs and appeals sections hold every flow 09 rule, none elsewhere: her review, the committee's appeal, the STARs
 (2026-10-14, T366). The three Onboarding sections hold every flow 11 rule, none elsewhere: the shared one first,
 with the general phone rules flows 08 and 10 had each written for their own pages, then the invitations and the admission
-(2026-10-20, T373). Register is on the auth card and needs no rule of its own.
+(2026-10-20, T373). Register is on the auth card and needs no rule of its own. The People admin sections hold every
+flow 12 rule, none elsewhere: the shared one first, then one per build lane (T376).
 
 When a new section is needed (say `/* ── Badges ── */`), add its heading in alphabetical-ish order inside the existing block and keep the rest of the file untouched.
 

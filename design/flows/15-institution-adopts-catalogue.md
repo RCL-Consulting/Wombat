@@ -391,7 +391,8 @@ Expect: Each page now shows the adopted catalogue:
     KGK's own items apply only to KGK's trainees. Its 15 rows match Step 1.18, and each reads "Set by the College".
   - The form below the items is headed "Add your institution's own item". It says every EPA KGK could add is already on
     the curriculum: to add an item of its own, KGK must first create a local EPA of Paediatrics.
-  - Home's Specialities & sub-specialities card reads 1 and 1 (T291 item 4).
+  - Home's Curriculum card reads "1" over "speciality adopted" and "1" over "sub-speciality adopted", with "Paediatrics
+    / Paediatrics, from the CPSA's Paediatric EPA Curriculum (11.1)." (T291 item 4, T376).
 
 Step 1.22 — The ladder, read-only to KGK (act-1-setup.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha

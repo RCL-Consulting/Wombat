@@ -1,12 +1,7 @@
 using System.Security.Claims;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
-using Wombat.Application.Features.Invitations;
-using Wombat.Domain.Curricula;
-using Wombat.Domain.Institutions;
-using Wombat.Domain.Invitations;
 
 namespace Wombat.Application.Features.Users.Queries.GetUserById;
 
@@ -16,23 +11,24 @@ public sealed class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, 
 {
     private readonly IUserAdministrationService _userAdministrationService;
     private readonly IApplicationDbContext _dbContext;
-    private readonly TimeProvider _clock;
 
-    /// <param name="clock">What "today" is read from, on the South African calendar (T373 fix pass, B3); the system clock unless a test pins it.</param>
-    public GetUserByIdQueryHandler(
-        IUserAdministrationService userAdministrationService,
-        IApplicationDbContext dbContext,
-        TimeProvider? clock = null)
+    public GetUserByIdQueryHandler(IUserAdministrationService userAdministrationService, IApplicationDbContext dbContext)
     {
         _userAdministrationService = userAdministrationService;
         _dbContext = dbContext;
-        _clock = clock ?? TimeProvider.System;
     }
 
     /// <remarks>
+    /// <para>
     /// Someone who holds Trainee opens nobody, themselves included, whatever other role they hold, and is refused before
     /// the id is looked up (T278, <see cref="UserAdministrationRules.DemandUserAdministration" />), so the refusal says
     /// nothing about the id. The user page asks the same rule first and sends nothing.
+    /// </para>
+    /// <para>
+    /// What the page of sections reads (T376, flow 12, "DATA the build must add"): the scope's names, once, through
+    /// <see cref="PersonScopeNames" /> (S1); for a person who holds no role, their latest ended programme (S2); and how the
+    /// account signs in (F3, Q10), which the directory reads. Q9: no invitations are read.
+    /// </para>
     /// </remarks>
     public async Task<UserDetailDto?> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
     {
@@ -53,84 +49,18 @@ public sealed class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, 
             return null;
         }
 
-        string? institutionName = null;
-        if (user.InstitutionId.HasValue)
+        var names = await PersonScopeNames.LoadAsync(_dbContext, [user], cancellationToken);
+
+        EndedProgrammeDto? ended = null;
+        if (user.Roles.Count == 0)
         {
-            institutionName = await _dbContext.Set<Institution>()
-                .AsNoTracking()
-                .Where(entity => entity.Id == user.InstitutionId.Value)
-                .Select(entity => (string?)entity.Name)
-                .SingleOrDefaultAsync(cancellationToken);
+            ended = (await EndedProgrammes.LatestForAsync(_dbContext, [user.UserId], cancellationToken))
+                .GetValueOrDefault(user.UserId);
         }
 
-        // The account's address whatever the invitation's spelling (S4), and a link that works through its last South
-        // African day (F7), as Register, the list and the resend judge them (T373 fix pass, B3). Until the fix this read
-        // compared the stored text byte for byte and took the UTC date.
-        var today = ProgrammeCalendar.DateOf(_clock.GetUtcNow().UtcDateTime);
-        var invitations = await _dbContext.Set<Invitation>()
-            .AsNoTracking()
-            .ToAddress(user.Email)
-            .Where(entity =>
-                !entity.UsedOn.HasValue &&
-                !entity.RevokedOn.HasValue &&
-                entity.ExpiresOn >= today)
-            .OrderByDescending(entity => entity.IssuedOn)
-            .ToListAsync(cancellationToken);
-
-        var pendingInvitationDtos = new List<UserPendingInvitationDto>(invitations.Count);
-        if (invitations.Count > 0)
-        {
-            var inviteInstitutionIds = invitations
-                .Where(entity => entity.InstitutionId.HasValue)
-                .Select(entity => entity.InstitutionId!.Value)
-                .Distinct()
-                .ToArray();
-            var inviteCollegeIds = invitations
-                .Where(entity => entity.CollegeId.HasValue)
-                .Select(entity => entity.CollegeId!.Value)
-                .Distinct()
-                .ToArray();
-            var inviteSpecialityIds = invitations
-                .Where(entity => entity.SpecialityId.HasValue)
-                .Select(entity => entity.SpecialityId!.Value)
-                .Distinct()
-                .ToArray();
-
-            var institutionLookup = await _dbContext.Set<Institution>()
-                .AsNoTracking()
-                .Where(entity => inviteInstitutionIds.Contains(entity.Id))
-                .ToDictionaryAsync(entity => entity.Id, entity => entity.Name, cancellationToken);
-
-            var collegeLookup = await _dbContext.Set<College>()
-                .AsNoTracking()
-                .Where(entity => inviteCollegeIds.Contains(entity.Id))
-                .ToDictionaryAsync(entity => entity.Id, entity => entity.Name, cancellationToken);
-
-            var specialityLookup = await _dbContext.Set<Speciality>()
-                .AsNoTracking()
-                .Where(entity => inviteSpecialityIds.Contains(entity.Id))
-                .ToDictionaryAsync(entity => entity.Id, entity => entity.Name, cancellationToken);
-
-            foreach (var invitation in invitations)
-            {
-                // A CollegeAdmin invitation has no institution; show its College name in the scope column. (T093)
-                var scopeName = invitation.InstitutionId.HasValue
-                    ? (institutionLookup.TryGetValue(invitation.InstitutionId.Value, out var instName) ? instName : "Unknown")
-                    : invitation.CollegeId.HasValue
-                        ? (collegeLookup.TryGetValue(invitation.CollegeId.Value, out var collName) ? collName : "Unknown")
-                        : "Unknown";
-
-                pendingInvitationDtos.Add(new UserPendingInvitationDto(
-                    invitation.Id,
-                    invitation.TargetRole,
-                    invitation.InstitutionId,
-                    scopeName,
-                    invitation.SpecialityId,
-                    invitation.SpecialityId.HasValue && specialityLookup.TryGetValue(invitation.SpecialityId.Value, out var specName) ? specName : null,
-                    invitation.IssuedOn,
-                    invitation.ExpiresOn));
-            }
-        }
+        // An account deleted between the two reads signs in by nothing: the page then says so as for a password-only one.
+        var signIn = await _userAdministrationService.GetSignInMethodsAsync(user.UserId, cancellationToken)
+                     ?? new AccountSignInMethods(false, [], true);
 
         return new UserDetailDto(
             user.UserId,
@@ -138,11 +68,22 @@ public sealed class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, 
             user.FirstName,
             user.LastName,
             user.InstitutionId,
-            institutionName,
+            names.InstitutionName(user),
             user.SpecialityIds.ToArray(),
             user.SubSpecialityIds.ToArray(),
             user.Roles.ToArray(),
-            user.IsLockedOut,
-            pendingInvitationDtos);
+            // The administrative lock, never a brute-force lockout (build-contracts § 1).
+            user.IsDeactivated)
+        {
+            Scope = names.Scope(user),
+            SpecialityNames = names.SpecialityNames(user),
+            SubSpecialityNames = names.SubSpecialityNames(user),
+            CollegeId = user.CollegeId,
+            CollegeName = names.CollegeName(user),
+            EndedProgramme = ended,
+            AllowsLocalPassword = signIn.AllowsLocalPassword,
+            HasLocalPassword = signIn.HasLocalPassword,
+            InstitutionalSignIns = signIn.InstitutionalSignIns
+        };
     }
 }

@@ -279,6 +279,9 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/trainees → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Look for Dr Ndlovu among KGK's users, its trainees and its committee reviews. Open the check-in from A.1.10.
 Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
+  - Users reads "People 14", with no pseudonym among them. Dr du Plessis's and Dr Molefe's Roles cells read "No role"
+    over "A completed or withdrawn registrar keeps an account and its records.", each with Scope Paediatrics /
+    Paediatrics and Status Active (T376, S2, U07).
   - Committee reviews lists his reviews under a pseudonym, `deleted_user_…`, that names nobody: Act 4's ratified
     review as it was; the closed check-in, Type "Formative check-in", State Closed and Decision "—" (read as "None");
     and A.1.10's check-in, Type "Formative check-in", State Withdrawn and Decision "None: the review was withdrawn".
@@ -490,11 +493,19 @@ Gap: F-A.2.10a, T324 (still: "Triggered by" prints devadmin's user id, not his n
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/sso/group-mappings
 Do: Open SSO mappings from the menu.
-Expect: A card says that no SSO providers are configured, and to add them to the `Sso:Providers` section of the
-  application settings and restart. No form for adding a mapping is offered. Current mappings is empty ("No group
-  mappings"), although its empty state still says to add a mapping above. Nothing on the page can be changed.
-Note: T288 (open, P2): once a provider exists, an InstitutionalAdmin can map another institution's provider groups, and
-  the mapper grants those roles. It is checked when a provider is configured.
+Expect: "SSO mappings", subtitled "Which of your institution's sign-in groups give which Wombat role. A change applies at
+  each person's next sign-in." One card, headed "Institutional sign-in is not set up", reads "Institutional sign-in is
+  not set up for Kgosi Kgari Teaching Hospital. A Wombat administrator sets it up; ask them if your hospital signs
+  staff in through its own system." and "Until then, your people sign in with an email and a password, and there is
+  nothing to change on this page." It names no setting and no restart (T326, Q11). There is no form, no Wombat role
+  select, no list of mappings and no Delete…: nothing on the page can be changed, and nothing on it offers Trainee or
+  Pending trainee (T333). At 390 px nothing scrolls sideways.
+Note: The form is drawn only once a provider is set up for KGK, which the replay never has. T333's browser check, that
+  the Wombat role select offers neither Trainee nor Pending trainee (nor, to her, Institutional admin, Q19), is played
+  on a scratch instance with a provider (`states.md`, `group-mappings--provider-form`): its options are Speciality
+  admin, Sub-speciality admin, Coordinator, Committee member and Assessor, under "Staff roles only. Trainee and Pending
+  trainee are never mapped: a registrar becomes a trainee only when admitted.". T288 (a mapping only for the
+  provider's own institution) is the handlers' and unit-tested.
 Actual (2026-10-20, T373 replay, wombat_scenario_t373): SSO mappings from the "Access and audit" group, lit: "No SSO
   providers are configured. Add providers to the Sso:Providers section in application settings and restart." No input
   and no button on the page. Current mappings: "No group mappings / Add a mapping above to link external groups to
@@ -636,13 +647,21 @@ Gap: none
 ### Step A.4.5 — Prof Mbatha resets his password
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/users/{UserId}
-Do: Open Dr du Plessis's account. Set a new password of 10 characters, then one that meets every rule. Record the
-  second in `pwd_DO_NOT_COMMIT.txt`, as the password to give him out of band.
-Expect: The Reset password card says it sets a password directly and that the user is not emailed. Its field has the
-  Show toggle ("Show new password") and the six rules under it, and Reset password is enabled once anything is typed.
-  The 10-character password is refused with "The password was not reset. The new password needs:" and the rules it
-  breaks, in the six rules' order. The second is accepted, and the field is cleared. The audit log records the reset
-  with the password redacted (T101).
+Do: Open Dr du Plessis's account. Under Sign-in and access, in Password, set a new password of 10 characters, then one
+  that meets every rule. Record the second in `pwd_DO_NOT_COMMIT.txt`, as the password to give him out of band.
+Expect: Roles and scope reads "**Pieter du Plessis holds no role: they left the programme on `D−2`.** They can still sign
+  in to read their training record (My progress) and their data rights." (T376, S2, Q13; D54), in place of "This user
+  has no roles.". His Lockout lists only "They are sent no activity reminders or weekly digests.".
+  - **Password** says "Sets a new password directly. The user is not emailed; share the password securely
+    out-of-band." Its field has the Show toggle ("Show new password") and the six rules under it. Reset password is
+    always offered, never disabled.
+  - **The 10-character password** is refused in Password, under its heading, not at the page's top: "The password was
+    not reset. The new password needs:" and the rules it breaks, in the six rules' order. The field is marked "The new
+    password does not meet the rules below." and cleared.
+  - **The second** is accepted. In Password, focused: "**Password reset for Pieter du Plessis.** Share the new password
+    with Pieter du Plessis out-of-band." The field is cleared.
+  - The audit log records the reset with the password redacted (T101).
+Note: Resetting a password is 1 press and 1 field (the password, Reset password), at 1280 and at 390.
 Actual (2026-10-20, T373 replay, wombat_scenario_t373): Users -> "Manage Pieter du Plessis" (Status Active; Roles
   "This user has no roles.", D54). The Reset password card: "Sets a new password directly. The user is not emailed;
   share the password securely out-of-band.", its field with "Show new password" and the six rules under it; Reset
@@ -758,8 +777,8 @@ Route: /admin/institutions/{Id:int} → /not-found → /admin/users/{UserId}
 Do: Open the Demo Institution's page by its id. Then open the page of the dev trainee `trainee@wombat.local` by that
   account's id.
 Expect: The institution shows Page not found, not "You cannot open this page". The user shows "User unavailable" ("The
-  user could not be found or is outside your scope."). Neither page confirms that the record exists (CLAUDE.md: 404, not
-  403).
+  user could not be found or is outside your scope."), headed and tabbed "User", under Home › Users › User, with Go to
+  Users and no Back to users (T376, P23). Neither page confirms that the record exists (CLAUDE.md: 404, not 403).
 Note: The Demo Institution stands in for another institution only here. Its ids come from
   `SELECT "Id" FROM "Institutions" WHERE "Name" = 'Demo Institution'` and from `"AspNetUsers"`. On a host without the
   dev accounts, play the institution half only.
@@ -915,8 +934,8 @@ Gap: none
 Role: Coordinator and Administrator — Mr Pieter Smit and devadmin
 Route: /programme/waiting → /admin/users/{UserId} → /programme/waiting → /admin/users/{UserId} → /programme/waiting
 Do: On a scratch database (the Note), Mr Smit opens Waiting for assessors and leaves it open. devadmin locks Dr Khumalo
-  out on Dr Khumalo's account page (Lock out user). Mr Smit, on the list as read before the lock, chooses Send a
-  reminder on Dr du Plessis's CBD, then Send the reminder.
+  out on Dr Khumalo's account page (Lock out…, then Lock out Fatima Khumalo in its dialog). Mr Smit, on the list as
+  read before the lock, chooses Send a reminder on Dr du Plessis's CBD, then Send the reminder.
   devadmin then reactivates Dr Khumalo (Reactivate user), and Dr Patel's email address is cleared (the Note). Mr Smit,
   on the list as read before, chooses Send a reminder on the portfolio review, then Send the reminder.
 Expect: The first answer stands above the table and takes the focus: "Not sent. Fatima Khumalo's account is deactivated,
@@ -1007,14 +1026,18 @@ Gap: F-A.6.2a, T327 (still: two stub lines, as the Expect records). F-A.6.2b, T3
 
 ### Step A.6.3 — Prof Mbatha edits her own institution
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/institutions/{Id:int} → /
-Do: Open KGK's page by its address (no nav link leads there). Set its contact email to
-  `hod.paediatrics@kgk.wombat.local` and save. Read Status, then look at Back to home and Cancel.
-Expect: "Institution saved." takes the focus. Status reads "Active" as text, with "Set by a global administrator."
-  beneath: there is no Active box and no Deactivate, because an institution's state is the Administrator's alone
-  (T302). "Back to home" and Cancel both lead to `/`. SQL:
+Route: / → /admin/institutions/{Id:int} → /
+Do: From Home, press Open Kgosi Kgari Teaching Hospital. Set its contact email to `hod.paediatrics@kgk.wombat.local`
+  and press Save changes. Read Status, then press Cancel.
+Expect: The contact email starts at `paediatrics@kgk.wombat.local`, A.6.1's save. Above the form, focused: "**Kgosi Kgari
+  Teaching Hospital saved.** Its contact email is now hod.paediatrics@kgk.wombat.local." (T376, I02). Status reads
+  "Active", read out, over "Set by a Wombat administrator.": there is no Active box and no Deactivate, because an
+  institution's state is the Administrator's alone (T302). There is no Back link; Cancel leads to `/`, whose Your
+  institution card reads Contact email hod.paediatrics@kgk.wombat.local. SQL:
   `SELECT "Id","ContactEmail","IsActive" FROM "Institutions" WHERE "ShortCode"='KGK'` gives
   `2|hod.paediatrics@kgk.wombat.local|t`.
+Note: Correcting the contact email is 2 presses and 1 field from Home (Open Kgosi Kgari Teaching Hospital, the email,
+  Save changes), at 1280 and at 390.
 Actual (2026-10-20, T373 replay, wombat_scenario_t373): KGK's page by its address: "Edit institution", trail Home >
   Edit institution, nothing lit, headed by "Back to home". It offers Name, Short code, Contact email, Status as text
   ("Active", then "Set by a global administrator."), Cancel and Save: no box, no Deactivate. Contact email set to
@@ -1025,14 +1048,26 @@ Gap: none
 ### Step A.6.4 — Prof Mbatha locks Dr Patel out
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/users/{UserId}
-Do: With Dr Patel signed in on another browser, open his account, read the Lockout card, and lock him out.
-Expect: Once locked, his status reads "Locked out" and the card offers Reactivate user. The focus moves to the result.
-  No confirmation is asked first (T264). Before the lock, the card lists what it does until he is reactivated, and says
-  his records stay as they are (T284):
-  - he sits on no committee panel;
-  - he is not a current trainee;
-  - he is sent no reminders or digests;
-  - he cannot be named as an activity's assessor.
+Do: With Dr Patel signed in on another browser, open his account and read Lockout, under Sign-in and access. Press
+  Lock out…, read the dialog and press Keep access. Then press Lock out… again and Lock out Mohammed Patel.
+Expect: Before the lock, Lockout reads "Locking out the user prevents sign-in immediately. Until they are reactivated:",
+  then only what applies to him, an Assessor (T376, Q17):
+  - "They are sent no activity reminders or weekly digests.";
+  - "They cannot be named as an activity's assessor.";
+  then "Their records stay as they are, and a review or feedback campaign already under way can still be finished.
+  Reactivating clears the lockout." (T284), and an outline Lock out…, named "Lock out Mohammed Patel". There is no
+  Pending invitations card.
+  - **The dialog** (T264, Q5), "Lock out Mohammed Patel?": "Mohammed Patel can no longer sign in, and any open session
+    ends within a minute. Until they are reactivated:", the same two lines, then a warning: "**1 request is waiting for
+    Mohammed Patel**, since `D−8` hh:mm SAST. It stays with them; it does not move to anyone else, and no reminder is
+    sent about it.", over its row "Pieter du Plessis · Portfolio and Logbook Review (Paediatrics) · PAED-015 · waiting
+    since `D−8` hh:mm SAST · overdue" (F6); then the records sentence. Keep access, which has the focus, and Lock out
+    Mohammed Patel.
+  - **Keep access** closes it and locks nothing; the focus returns to Lock out….
+  - **Once locked**, in Lockout, focused: "**Mohammed Patel is locked out.** Any open session ends within a minute." His
+    Status reads the Locked out badge, with its lock icon; Lockout reads "This user is currently locked out and cannot
+    sign in." and offers Reactivate user. On Users his Status reads Locked out.
+Note: Locking out and reactivating is 3 presses (Lock out…, Lock out Mohammed Patel, Reactivate user), at 1280 and at 390.
 Actual (2026-10-20, T373 replay, wombat_scenario_t373): Dr Patel was first signed in on a second browser, on his
   Activity inbox. Users -> "Manage Mohammed Patel": Status Active. The Lockout card reads "Locking out the user
   prevents sign-in immediately. Until they are reactivated:", then: no committee panel; not a current trainee (with
@@ -1071,8 +1106,9 @@ Gap: none
 ### Step A.6.7 — Prof Mbatha reactivates Dr Patel
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users/{UserId}
-Do: Reactivate Dr Patel.
-Expect: His status reads Active, the card offers Lock out user again, and the focus moves to the result.
+Do: Press Reactivate user.
+Expect: One press, no dialog (Q5). In Lockout, focused: "Mohammed Patel is reactivated and can sign in again." His Status
+  reads Active, and Lockout lists his two lines again with Lock out…. Roles and scope lists Assessor with Remove….
 Actual (2026-10-20, T373 replay, wombat_scenario_t373): His page reloaded with Status "Locked out". Reactivate user,
   no dialog: "User reactivated." took the focus, Status reads Active, and the card offers Lock out user again. Roles:
   Assessor with Remove.
@@ -1096,10 +1132,13 @@ Gap: none
 ### Step A.6.9 — devadmin opens his own account
 Role: Administrator — devadmin
 Route: /admin/users → /admin/users/{UserId}
-Do: Find his own account in Users and open it.
-Expect: A note says it is his own account, so he cannot change its roles, lockout or password here, and another
-  administrator can change his roles or lockout. It links to Change password on his own account. No Remove, Add role,
-  Reset password or Lockout is offered (T278).
+Do: Find his own account in Users (type "devadmin" in Name or email and press Show) and open it.
+Expect: The page's subtitle reads "Your own account: your roles and how you sign in." A note says it is his own
+  account, so he cannot change its roles, lockout or password here, and another administrator can change his roles or
+  lockout. It links to Change password on his own account. No Remove…, Add a role…, Password or Lockout is offered
+  (T278), and no Pending invitations card (T376, Q9). Sign-in and access holds only Institutional sign-in: "No
+  institutional sign-in is linked. Demo Administrator signs in with an email and a password." On Users his row reads Institution "Global (no institution)",
+  Roles Administrator and Scope "—" (U14).
 Actual (2026-10-20, T373 replay, wombat_scenario_t373): Users, searched for "devadmin": "Demo Administrator |
   devadmin@wombat.local | Global | Administrator | Active | Manage". Manage opens "Demo Administrator", "Your own
   account's summary, roles and pending invitations.", with the note "This is your own account, so you cannot change
@@ -1407,12 +1446,22 @@ Gap: none
 ### Step A.7.9 — Prof Mbatha on her phone
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/users → /admin/users/{UserId} → /admin/trainees → /admin/trainees/edit → /admin/activity-types/{ActivityTypeId:int}
-Do: At 390 px, open Users and Dr Dlamini's account, Trainees and Dr Dlamini's profile, then the KGK Teaching Session
-  Log in the builder.
-Expect: The user page's cards stack, and its buttons wrap rather than overflow. On Trainees, Current trainees is
-  stacked, a block per row with its Edit 44 px, and does not scroll sideways (T373, S16); Completed and closed is flow
-  13's list as built. The trainee profile form stacks its fields. The builder's editor and live preview stack in one column (DESIGN.md § Builder layout, T266), and its tab bar
-  stays usable.
+Do: At 390 px, read Home, then open Users and Dr Dlamini's account, Trainees and Dr Dlamini's profile, then the KGK
+  Teaching Session Log in the builder.
+Expect: Nothing scrolls sideways on any of them (T323).
+  - **Home's** three cards stack; People's counts and each card's footer link are 44 px tall, and a long contact address
+    wraps (M7).
+  - **Users** stacks: the filter's fields one under another, Show and Clear full width; People a block per person, the
+    name over the address, then Roles, Scope, Status and Manage, 44 px (T376; until T376 the table scrolled 807 px
+    in its box).
+  - **Dr Dlamini's account** stacks its account line and sections: Roles and scope reads "Trainee" and "System-managed"
+    apart (F-2.28b), with Add a role…; Sign-in and access's Password, Institutional sign-in and Lockout one under another,
+    the password field's Show toggle 44 px tall, its buttons wrapping rather than overflowing. Her Lockout lists two
+    lines: the trainee line and the reminders line. There is no Back to users.
+  - **Trainees:** Current trainees is stacked, a block per row with its Edit 44 px, and does not scroll sideways (T373,
+    S16); Completed and closed is flow 13's list as built.
+  - **The trainee profile form** stacks its fields. The builder's editor and live preview stack in one column (DESIGN.md
+    § Builder layout, T266), and its tab bar stays usable.
 Actual (2026-10-20, T373 replay, wombat_scenario_t373): At 390 px, flow 11's Trainees: no sideways scroll on Users,
   the user page, Trainees, the profile or the builder (390 in 390 on each). The bar reads "Acting as Institutional
   admin"; the menu's rows are 44 px (Home, People: Invitations, Trainees, Assessors, Users, then Curriculum, Reviews,
@@ -1520,8 +1569,9 @@ Do: With a contrast checker (axe, or the browser's accessibility audit), check e
   - a success alert (save My account's name, from the name in the top bar, unchanged: "Name saved.") and a danger
     alert (Change password with a confirmation that differs, which checks no password and changes nothing);
   - a password field's Show toggle, pressed (white on the action blue, 4.86:1);
-  - white on the primary, danger (Lock out user on Dr Patel's page, not pressed) and success (Publish in the builder,
-    not pressed; with no draft it is disabled, and a disabled control is exempt) buttons;
+  - white on the primary, danger (the dialog's Lock out Mohammed Patel: open Lock out… on Dr Patel's page, read it,
+    then Keep access; T376, S22) and success (Publish in the builder, not pressed; with no draft it is disabled, and a
+    disabled control is exempt) buttons;
   - the focus ring on white and on the page background;
   - an input's border.
 Expect: Every pair meets WCAG 2.1 AA: text 4.5:1, large text 3:1, and 3:1 for a control's boundary and the focus

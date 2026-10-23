@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
+using Wombat.Application.Features.Institutions.Queries.GetMyInstitutionName;
 using Wombat.Application.Features.Users.Queries.GetUserById;
 using Wombat.Application.Features.Users.Queries.ListUsers;
 using Wombat.Domain.Identity;
@@ -43,11 +44,10 @@ public sealed class UsersPagesSelfAndTraineeTests : TestContext
         "change your roles or lockout.";
 
     // The subtitles say what each page offers, so they change with what it withholds (review of T278).
-    private const string ListSubtitle =
-        "Manage roles, passwords, and access for all users across the institutions you administer.";
-
-    private const string UserSubtitle = "Roles, password reset, lockout, and pending-invitation cleanup for a single user.";
-    private const string OwnAccountSubtitle = "Your own account's summary, roles and pending invitations.";
+    // T376 (flow 12, P01, P02): the person's institution where the caller is scoped to one; the Administrator's has none.
+    private const string UserSubtitleAtA = "Roles, sign-in and lockout for one person at A, with assessor training for an Assessor.";
+    private const string UserSubtitle = "Roles, sign-in and lockout for one person, with assessor training for an Assessor.";
+    private const string OwnAccountSubtitle = "Your own account: your roles and how you sign in.";
 
     private readonly string _databaseName = Guid.NewGuid().ToString();
     private readonly TestAuthorizationContext _auth;
@@ -99,7 +99,9 @@ public sealed class UsersPagesSelfAndTraineeTests : TestContext
 
         cut.FindAll("#users-trainee-note").Should().BeEmpty(role);
         cut.FindAll("a.btn").Where(link => link.TextContent.Trim() == "Manage").Should().HaveCount(2, role);
-        cut.Find(".page-subtitle").TextContent.Trim().Should().Be(ListSubtitle, role);
+        // T376 (lane U): the Administrator's wording, or hers with her institution's name once the list has loaded (U01, U14).
+        cut.Find(".page-subtitle").TextContent.Trim().Should().Be(
+            role == WombatRoles.Administrator ? UsersListWords.AdministratorSubtitle : UsersListWords.Subtitle("A"), role);
     }
 
     // ─── The user page ───────────────────────────────────────────────────────
@@ -135,13 +137,14 @@ public sealed class UsersPagesSelfAndTraineeTests : TestContext
 
         SetRendererInfo(new RendererInfo("Server", isInteractive: true)); // PasswordField reads it (T339, flow 02)
         var cut = RenderComponent<UserDetail>(parameters => parameters.Add(page => page.UserId, Other));
-        cut.WaitForState(() => Buttons(cut).Contains("Lock out user"));
+        cut.WaitForState(() => Buttons(cut).Contains("Lock out…"));
 
         cut.FindAll("#user-trainee-note, #user-own-account-note").Should().BeEmpty(role);
-        Buttons(cut).Should().Contain(["Remove", "Add role", "Reset password", "Lock out user"], role);
-        cut.FindAll("#add-role-select").Should().ContainSingle();
+        Buttons(cut).Should().Contain(["Remove…", "Add a role…", "Reset password", "Lock out…"], role);
+        cut.FindAll("#add-role-toggle").Should().ContainSingle();
         cut.FindAll("#reset-password-input").Should().ContainSingle();
-        cut.Find(".page-subtitle").TextContent.Trim().Should().Be(UserSubtitle, role);
+        cut.Find(".page-subtitle").TextContent.Trim().Should().Be(
+            role == WombatRoles.Administrator ? UserSubtitle : UserSubtitleAtA, role);
     }
 
     [Theory]
@@ -159,18 +162,19 @@ public sealed class UsersPagesSelfAndTraineeTests : TestContext
         note.GetAttribute("role").Should().BeNull("standing page content is not announced on every load");
         note.QuerySelector("a")!.GetAttribute("href").Should().Be("/account/change-password", "a password is changed there");
 
-        // Their roles are still shown, each without a Remove, and without the "System-managed" that means something else.
-        cut.FindAll(".stack-list li span:first-child").Select(span => span.TextContent.Trim())
-            .Should().Equal(WombatRoles.Coordinator, role);
+        // Their roles are still shown, by their labels in one order (Q14), each without a Remove…, and without the
+        // "System-managed" that means something else.
+        cut.FindAll(".role-row .role-row-label").Select(span => span.TextContent.Trim())
+            .Should().Equal([WombatRoleLabels.For(role), "Coordinator"], role);
         cut.Markup.Should().NotContain("System-managed");
-        Buttons(cut).Should().NotContain(["Remove", "Add role", "Reset password", "Lock out user", "Reactivate user"], role);
-        cut.FindAll("#add-role-select").Should().BeEmpty(role);
+        Buttons(cut).Should().NotContain(["Remove…", "Add a role…", "Reset password", "Lock out…", "Reactivate user"], role);
+        cut.FindAll("#add-role-toggle").Should().BeEmpty(role);
         cut.FindAll("#reset-password-input").Should().BeEmpty(role);
         cut.Markup.Should().NotContain("Global administrators cannot be locked out",
             "until T278 their own account's lockout card said so, whatever their role");
 
-        // Revoking the invitations addressed to them changes nothing about the account, so it is still offered.
-        Buttons(cut).Should().Contain("Revoke all pending invitations");
+        // Q9 (T376): the Pending invitations card and its revoke are gone; Invitations lists every invitation.
+        Buttons(cut).Should().NotContain("Revoke all pending invitations");
 
         // The subtitle names what is there, not the role, password and lockout changes it withholds.
         cut.Find(".page-subtitle").TextContent.Trim().Should().Be(OwnAccountSubtitle, role);
@@ -247,6 +251,8 @@ public sealed class UsersPagesSelfAndTraineeTests : TestContext
             object? answer = request switch
             {
                 ListUsersQuery query => await new ListUsersQueryHandler(Users, db).Handle(query, cancellationToken),
+                // T376 (lane U): Users reads her institution's name first (S9).
+                GetMyInstitutionNameQuery query => await new GetMyInstitutionNameQueryHandler(db).Handle(query, cancellationToken),
                 GetUserByIdQuery query => await new GetUserByIdQueryHandler(Users, db).Handle(query, cancellationToken),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };
@@ -273,6 +279,10 @@ public sealed class UsersPagesSelfAndTraineeTests : TestContext
 
         public Task<IReadOnlyList<UserIdentityDetails>> ListAllUsersAsync(CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyList<UserIdentityDetails>>(_users.Values.ToArray());
+
+        // T376 (F3, Q10): the user page reads how the account signs in; here, a password and no institutional sign-in.
+        public Task<AccountSignInMethods?> GetSignInMethodsAsync(string userId, CancellationToken cancellationToken = default)
+            => Task.FromResult<AccountSignInMethods?>(_users.ContainsKey(userId) ? new AccountSignInMethods(true, []) : null);
 
         public Task UpdateNamesAsync(string userId, string firstName, string lastName, CancellationToken cancellationToken = default)
             => throw new NotSupportedException();

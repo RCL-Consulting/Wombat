@@ -1,118 +1,400 @@
 @page "/admin/users"
 @attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@using Wombat.Application.Features.Institutions.Queries.GetMyInstitutionName
+@using Wombat.Web.Components.Pages.Admin.Invitations
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject ILogger<UsersList> Logger
 
 <PageTitle>Users · Wombat</PageTitle>
 
-<PageHeader Title="Users" Subtitle="@Subtitle" />
+@*
+  Users (T376, flow 12, boards R3-U01–U14). Everyone with an account in the caller's scope, one page of 20 at a time, by
+  last name (S7), each with their roles one a line in the roles' one order (Q14), their one scope (S1), and whether they
+  can sign in (K25: Locked out is the administrative lock).
 
-@* T278. Someone who holds Trainee beside a role that administers users lists nobody and opens nobody, their own account
-   included: every Users read and command refuses them first. So nothing is read for them, and the page says why in the
-   words the handlers refuse with. Standing page content, there on every visit: an info Alert, which carries no role. *@
-@if (_traineeNote is not null)
-{
-  <Alert Kind="info" Id="users-trainee-note">@_traineeNote</Alert>
-}
-else
-{
-  <StatePanel IsLoading="_loading" IsEmpty="@(FilteredUsers.Count == 0 && string.IsNullOrWhiteSpace(_filter))" EmptyTitle="No users" EmptyBody="No user accounts exist within your scope." LoadError="@_loadError">
-    <div class="detail-card">
-      <div class="form-grid form-grid--wide">
-        <FormField Label="Filter" InputId="users-filter">
-          <input id="users-filter" type="search" class="form-control" placeholder="Search by name or email" @bind="_filter" @bind:event="oninput" />
-        </FormField>
+  - The filter (S6, S21; DESIGN.md § List page): Name or email, Role and Status in a search form named "Filter people".
+    Nothing filters per keystroke: Show navigates to the page's own address with the values as its query, Clear to the
+    bare one, so Home's role links, a person's way back and a shared link all open the same list. The page reads the
+    address whenever it changes, and the heading, whose count says what matched, takes the focus after Show, Clear and a
+    page turn; a hidden status says the count (S21).
+  - The pager only when the matches run past one page (F9, round-3-check Left 2: TotalCount > PageSize).
+  - The name over the address in the row header, the address breaking after its @ (<wbr>), with no .col-wrap (check
+    Left 3). Each row's Manage is named by its person and carries this page's address as the way back (S6).
+  - Loading (U11) and a failed read (U12): the subtitle without the institution's name, which is read first (S9); fixed
+    words with Try again, the failure the log's (T329). Someone who holds Trainee gets the T278/T290 note and nothing else,
+    asked before any read, with no subtitle (S8, U13).
+*@
+<PageHeader Title="Users" Subtitle="@Subtitle" Actions="@HeaderAction" />
+
+<div class="people-page" aria-busy="@(_loading ? "true" : null)">
+  @if (_traineeNote is not null)
+  {
+    @* Standing page content, there on every visit: an info Alert, which carries no role (S23). *@
+    <Alert Kind="info" Id="users-trainee-note">@_traineeNote</Alert>
+  }
+  else
+  {
+    <StatePanel @ref="_panel" IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusListHeadingAsync">
+      <LoadingContent>
+        <p class="loading-line" role="status">@UsersListWords.Loading</p>
+        <div class="detail-card" aria-hidden="true">
+          <div class="skeleton skel-title"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line skel-short"></div>
+        </div>
+        <div class="detail-card" aria-hidden="true">
+          <div class="skeleton skel-title"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line skel-short"></div>
+        </div>
+      </LoadingContent>
+      <ChildContent>
+        @if (_list is { } list)
+        {
+          @FilterForm()
+          @People(list)
+        }
+      </ChildContent>
+    </StatePanel>
+  }
+</div>
+
+@code {
+  private RenderFragment FilterForm() => __builder =>
+  {
+    <form class="detail-card people-filter" role="search" aria-label="@UsersListWords.FilterName" novalidate @onsubmit="ShowAsync">
+      <div class="search-grid">
+        <div class="form-group">
+          <label for="pf-q">@UsersListWords.SearchLabel</label>
+          <input id="pf-q" class="form-control" type="search" autocomplete="off" spellcheck="false"
+                 aria-describedby="pf-q-h" @bind="_formSearch" />
+          <p id="pf-q-h" class="field-help">@UsersListWords.SearchHelp</p>
+        </div>
+        <div class="form-group">
+          <label for="pf-r">@UsersListWords.RoleLabel</label>
+          <select id="pf-r" class="form-select" aria-describedby="@(ChoseNoRole ? "pf-r-h" : null)" @bind="_formRole">
+            <option value="">@UsersListWords.AnyRole</option>
+            @foreach (var option in UsersListWords.RoleOptions(_isAdministrator))
+            {
+              <option value="@option.Value">@option.Label</option>
+            }
+          </select>
+          @if (ChoseNoRole)
+          {
+            <p id="pf-r-h" class="field-help">@UsersListWords.EndedProgrammeNote</p>
+          }
+        </div>
+        <div class="form-group">
+          <label for="pf-s">@UsersListWords.StatusLabel</label>
+          <select id="pf-s" class="form-select" @bind="_formStatus">
+            <option value="">@UsersListWords.AnyStatus</option>
+            @foreach (var option in UsersListWords.StatusOptions)
+            {
+              <option value="@option.Value">@option.Label</option>
+            }
+          </select>
+        </div>
       </div>
+      <div class="filter-actions">
+        <button type="submit" class="btn btn-primary"><Icon Name="search" />@UsersListWords.Show</button>
+        <button type="button" class="btn btn-outline" @onclick="ClearAsync">@UsersListWords.Clear</button>
+      </div>
+    </form>
+  };
 
-      @if (FilteredUsers.Count == 0)
+  private RenderFragment People(UserListDto list) => __builder =>
+  {
+    <section class="list-section" aria-labelledby="people-heading">
+      <h2 id="people-heading" class="list-section-title" tabindex="-1" @ref="_listHeading">
+        @UsersListWords.ListTitle <span class="inv-count">@UsersListWords.HeadingCount(_applied, list.MatchCount, list.TotalCount)</span>
+      </h2>
+      @* Always present, its words set by a filter: a live region added with its words in it is often not read. *@
+      <p class="visually-hidden" role="status">@UsersListWords.LiveCount(_applied, list.MatchCount, list.TotalCount)</p>
+      @if (list.Rows.Count == 0)
       {
-        <div class="detail-card detail-card--empty-compact">No users match the current filter.</div>
+        <div class="detail-card detail-card--empty">
+          @if (_applied.IsFiltered)
+          {
+            <p class="state-panel-title">@UsersListWords.NoMatchTitle(_applied)</p>
+            <p class="state-panel-copy">@UsersListWords.NoMatchBody(_applied, _isAdministrator, _institutionName, list.TotalCount)</p>
+          }
+          else
+          {
+            <p class="state-panel-title">@UsersListWords.EmptyTitle</p>
+            <p class="state-panel-copy">@UsersListWords.EmptyBody</p>
+          }
+        </div>
       }
       else
       {
         var rowNames = RowNames.Distinct(
-          FilteredUsers, row => row.UserId, row => $"{row.FirstName} {row.LastName}", row => $" ({row.Email})");
-        <DataTable TItem="UserSummaryDto" Items="FilteredUsers" Caption="Users">
+          list.Rows, row => row.UserId, row => $"{row.FirstName} {row.LastName}".Trim(), row => $" ({row.Email})");
+        var back = ThisPage(list);
+        <DataTable TItem="UserSummaryDto" Items="list.Rows" StackWide="true" Caption="@UsersListWords.Caption(_isAdministrator, _institutionName)">
           <HeaderRow>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Institution</th>
-              <th>Roles</th>
-              <th>Status</th>
-              <th><span class="visually-hidden">Actions</span></th>
+            <tr role="row">
+              <th scope="col" role="columnheader">Name</th>
+              @if (_isAdministrator)
+              {
+                <th scope="col" role="columnheader" class="col-wrap">Institution</th>
+              }
+              <th scope="col" role="columnheader">Roles</th>
+              <th scope="col" role="columnheader" class="col-wrap">Scope</th>
+              <th scope="col" role="columnheader">Status</th>
+              <th scope="col" role="columnheader" class="col-actions"><span class="visually-hidden">Actions</span></th>
             </tr>
           </HeaderRow>
           <Row Context="user">
-            <tr>
-              <td>@($"{user.FirstName} {user.LastName}")</td>
-              <td>@user.Email</td>
-              <td>@(user.InstitutionName ?? "Global")</td>
-              <td>@string.Join(", ", user.Roles)</td>
-              <td>@(user.IsLockedOut ? "Locked out" : "Active")</td>
-              @* T239: named by the user, and their email where two share a name. *@
-              <td><a class="btn btn-outline btn-sm" href="@($"/admin/users/{user.UserId}")" aria-label="@($"Manage {rowNames[user.UserId]}")">Manage</a></td>
+            <tr role="row" @key="user.UserId">
+              @* The name over the address (check Left 3: no .col-wrap on the row header; the address breaks after its @). *@
+              <th scope="row" role="rowheader"><span class="person-cell">@($"{user.FirstName} {user.LastName}".Trim())<span>@InvitationText.Address(user.Email)</span></span></th>
+              @if (_isAdministrator)
+              {
+                <td role="cell" data-label="Institution" class="col-wrap">@(user.InstitutionName ?? PersonScopeWords.NoInstitution)</td>
+              }
+              <td role="cell" data-label="Roles">
+                @if (user.Roles.Count == 0)
+                {
+                  @* S2: No role, and for an ended programme only what such a person is. *@
+                  <span class="no-role-cell">@UsersListWords.NoRole@if (user.HasEndedProgramme){<span class="field-help">@UsersListWords.EndedProgrammeNote</span>}</span>
+                }
+                else
+                {
+                  <ul class="role-cell">
+                    @foreach (var role in user.Roles)
+                    {
+                      <li>@WombatRoleLabels.For(role)</li>
+                    }
+                  </ul>
+                }
+              </td>
+              <td role="cell" data-label="Scope" class="col-wrap">@user.Scope</td>
+              <td role="cell" data-label="Status">
+                @if (user.IsDeactivated)
+                {
+                  <span class="badge @BadgeFor.State(BadgeState.Declined) status-locked"><Icon Name="lock" Size="14" />@UsersListWords.LockedOut</span>
+                }
+                else
+                {
+                  @UsersListWords.Active
+                }
+              </td>
+              <td role="cell" class="col-actions">
+                <div class="actions-cell">
+                  <a class="btn btn-outline btn-sm" href="@PeopleLinks.User(user.UserId, back: back)" aria-label="@($"Manage {rowNames[user.UserId]}")">Manage</a>
+                </div>
+              </td>
             </tr>
           </Row>
         </DataTable>
+        @* F9: only when the matches run past one page (round-3-check Left 2), so ten or fifteen draw none. *@
+        @if (list.MatchCount > list.PageSize)
+        {
+          <PagerControls Page="list.Page" PageSize="list.PageSize" TotalCount="list.MatchCount" Label="@UsersListWords.PagerName"
+                         PageSizeLabel="@UsersListWords.PageSizeLabel" OnPageChanged="GoToPageAsync" OnPageSizeChanged="ChangePageSizeAsync" />
+        }
       }
-    </div>
-  </StatePanel>
-}
+    </section>
+  };
 
-@code {
-  private IReadOnlyList<UserSummaryDto> _users = [];
+  [SupplyParameterFromQuery(Name = PeopleLinks.QueryParameter)] public string? Q { get; set; }
+
+  [SupplyParameterFromQuery(Name = PeopleLinks.RoleParameter)] public string? Role { get; set; }
+
+  [SupplyParameterFromQuery(Name = PeopleLinks.StatusParameter)] public string? Status { get; set; }
+
+  [SupplyParameterFromQuery(Name = PeopleLinks.PageParameter)] public int? PageNumber { get; set; }
+
+  [SupplyParameterFromQuery(Name = PeopleLinks.SizeParameter)] public int? Size { get; set; }
+
+  private string? _traineeNote;
+  private bool _isAdministrator;
+  private bool _authorityRead;
+  private string? _institutionName;
+  private UserListDto? _list;
   private bool _loading = true;
   private string? _loadError;
-  private string _filter = string.Empty;
-  private string? _traineeNote;
+  private StatePanel? _panel;
+  private ElementReference _listHeading;
+  private bool _focusList;
+  private bool _loadedOnce;
+  private UsersFilter _applied = new(null, null, false, null, 1, UsersFilterValues.DefaultPageSize);
+
+  // The form's fields: what is being chosen, which changes nothing until Show.
+  private string? _formSearch;
+  private string _formRole = string.Empty;
+  private string _formStatus = string.Empty;
+
+  /// <summary>The list's heading, which takes the focus after Show, Clear and a page turn. A test matches a focus call to it.</summary>
+  public ElementReference ListHeadingElement => _listHeading;
+
+  private bool ChoseNoRole => string.Equals(_formRole, UsersFilterValues.NoRole, StringComparison.Ordinal);
 
   /// <summary>
-  /// What the page offers. None to someone who holds Trainee beside a role that administers users (T278): it offers them
-  /// nothing, and the note says why, so a subtitle promising roles, passwords and access would say what it withholds.
+  /// What the page offers (S8, S9): nothing with the Trainee note; the name of her institution only once the list has
+  /// loaded; the Administrator's own wording (U14).
   /// </summary>
   private string? Subtitle => _traineeNote is not null
     ? null
-    : "Manage roles, passwords, and access for all users across the institutions you administer.";
+    : _isAdministrator
+      ? UsersListWords.AdministratorSubtitle
+      : _list is not null && _loadError is null && !_loading
+        ? UsersListWords.Subtitle(_institutionName)
+        : UsersListWords.SubtitleWithoutName;
 
-  private IReadOnlyList<UserSummaryDto> FilteredUsers
+  private RenderFragment InviteAction => __builder =>
   {
-    get
+    <a class="btn btn-primary" href="@OnboardingLinks.InviteAPerson"><Icon Name="user-plus" />Invite a person</a>
+  };
+
+  /// <summary>The header's action once the list has loaded (U01), never with the note (U13), while loading or after a failure.</summary>
+  private RenderFragment? HeaderAction => _traineeNote is null && !_loading && _loadError is null && _list is not null ? InviteAction : null;
+
+  protected override async Task OnParametersSetAsync()
+  {
+    var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+    if (!_authorityRead)
     {
-      if (string.IsNullOrWhiteSpace(_filter))
-      {
-        return _users;
-      }
-      var needle = _filter.Trim();
-      return _users
-        .Where(user =>
-          user.Email.Contains(needle, StringComparison.OrdinalIgnoreCase) ||
-          user.FirstName.Contains(needle, StringComparison.OrdinalIgnoreCase) ||
-          user.LastName.Contains(needle, StringComparison.OrdinalIgnoreCase))
-        .ToArray();
+      // Asked before anything is read (S8), so the note says nothing about what there is.
+      _traineeNote = UserAdministrationRules.TraineeNoteOnUserPages(user);
+      _isAdministrator = user.IsAdministrator();
+      _authorityRead = true;
     }
+
+    if (_traineeNote is not null)
+    {
+      _loading = false;
+      return;
+    }
+
+    // The address is what was asked: the form shows it, and the list answers it (S6).
+    _applied = UsersFilter.From(Q, Role, Status, PageNumber, Size, _isAdministrator);
+    _formSearch = _applied.Search;
+    _formRole = _applied.RoleValue ?? string.Empty;
+    _formStatus = _applied.Status ?? string.Empty;
+
+    // The heading takes the focus after the page's own Show, Clear or page turn, and on arrival with a filter set (Home's
+    // role links), never on a plain first visit.
+    _focusList = _loadedOnce ? _focusOnArrival : _applied.IsFiltered;
+    _focusOnArrival = true;
+    await LoadAsync(showLoading: !_loadedOnce);
+    _loadedOnce = true;
   }
 
-  protected override async Task OnInitializedAsync()
+  /// <summary>
+  /// Reads her institution's name first (S9), then the page asked for. The first read, and Try again's, show the loading
+  /// state; Show and a page turn answer in place. A failure is logged and said in fixed words (T329).
+  /// </summary>
+  private async Task LoadAsync(bool showLoading)
   {
+    if (showLoading)
+    {
+      _loading = true;
+    }
+
+    _loadError = null;
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _traineeNote = UserAdministrationRules.TraineeNoteOnUserPages(authState.User);
-      if (_traineeNote is not null)
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      if (!_isAdministrator && _institutionName is null)
       {
-        return;
+        _institutionName = await Sender.Send(new GetMyInstitutionNameQuery(user));
       }
 
-      _users = await Sender.Send(new ListUsersQuery(authState.User));
+      _list = await Sender.Send(new ListUsersQuery(
+        user, _applied.Search, _applied.RoleValue, _applied.Status, _applied.Page, _applied.PageSize));
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _loadError = RefusalText.Of(exception);
+      Logger.LogError(exception, "The users could not be read.");
+      _loadError = UsersListWords.LoadFailed;
+      _focusList = false;
     }
     finally
     {
       _loading = false;
     }
   }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusList && !_loading && _list is not null && _loadError is null)
+    {
+      _focusList = false;
+      await PageFocus.FocusByIdAsync(JS, "people-heading");
+    }
+  }
+
+  /// <summary>This page's own address, with what it answers: each person's way back (S6).</summary>
+  private string ThisPage(UserListDto list)
+    => PeopleLinks.UsersFiltered(
+      _applied.Search,
+      _applied.RoleValue,
+      _applied.Status,
+      list.Page > 1 ? list.Page : null,
+      list.PageSize != UsersFilterValues.DefaultPageSize ? list.PageSize : null);
+
+  /// <summary>
+  /// Show: the page's own address with the values chosen, from the first page. An address that is the one shown already
+  /// reads again in place, since navigating to it would change no parameter.
+  /// </summary>
+  private Task ShowAsync()
+  {
+    var role = string.IsNullOrWhiteSpace(_formRole) ? null : _formRole;
+    var status = string.IsNullOrWhiteSpace(_formStatus) ? null : _formStatus;
+    return GoAsync(PeopleLinks.UsersFiltered(_formSearch, role, status, null, SizeKept));
+  }
+
+  /// <summary>Clear: every filter reset, the list from its first page (the rows per page kept).</summary>
+  private Task ClearAsync() => GoAsync(PeopleLinks.UsersFiltered(size: SizeKept));
+
+  private int? SizeKept => _applied.PageSize != UsersFilterValues.DefaultPageSize ? _applied.PageSize : null;
+
+  private Task GoToPageAsync(int page)
+    => GoAsync(PeopleLinks.UsersFiltered(_applied.Search, _applied.RoleValue, _applied.Status, page > 1 ? page : null, SizeKept));
+
+  // A change of rows per page reads the first page at that size; the focus stays on the select (T350 build review, A1).
+  private Task ChangePageSizeAsync(int size)
+  {
+    var target = PeopleLinks.UsersFiltered(
+      _applied.Search, _applied.RoleValue, _applied.Status, null, size != UsersFilterValues.DefaultPageSize ? size : null);
+    return GoAsync(target, focusList: false);
+  }
+
+  private async Task GoAsync(string target, bool focusList = true)
+  {
+    var here = Navigation.ToBaseRelativePath(Navigation.Uri);
+    if (string.Equals("/" + here, target, StringComparison.Ordinal))
+    {
+      _focusList = focusList;
+      await LoadAsync(showLoading: false);
+      if (_loadError is not null)
+      {
+        _panel?.FocusFailureAfterRender();
+      }
+
+      return;
+    }
+
+    _focusOnArrival = focusList;
+    Navigation.NavigateTo(target);
+  }
+
+  // Whether the read the page's own navigation starts moves the focus to the heading: a size change leaves it be.
+  private bool _focusOnArrival = true;
+
+  private async Task RetryAsync()
+  {
+    _loading = true;
+    StateHasChanged();
+    await LoadAsync(showLoading: true);
+  }
+
+  // After Try again read: the list's heading, the answer (U12). StatePanel calls it.
+  private ValueTask FocusListHeadingAsync() => PageFocus.FocusByIdAsync(JS, "people-heading");
 }

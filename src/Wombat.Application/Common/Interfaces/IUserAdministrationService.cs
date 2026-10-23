@@ -140,6 +140,36 @@ public interface IUserAdministrationService
     Task RemoveRoleAsync(string userId, string role, CancellationToken cancellationToken = default);
     Task ResetPasswordAsync(string userId, string newPassword, CancellationToken cancellationToken = default);
     Task SetLockoutAsync(string userId, bool locked, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// One page of Users (T376, flow 12, S6, S7, K26; build-contracts § 1): the accounts in <paramref name="filter" />'s
+    /// institution (every account, those with none included, when it names none), matched, ordered and paged by the
+    /// filter, each with its roles; the count in that scope and the count that matched. The real service answers it in SQL,
+    /// the roles of the page's rows in one query, so no row's roles are read on their own (K26: until T376 Users read every
+    /// account, then each one's roles in turn). The default implementation reads every user and applies the same rules in
+    /// memory, so a test directory need not override it.
+    /// </summary>
+    async Task<UserDirectoryPage> ListUsersPageAsync(UserDirectoryFilter filter, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(filter);
+
+        var scoped = (await ListAllUsersAsync(cancellationToken))
+            .Where(user => filter.InstitutionId is not int institutionId || user.InstitutionId == institutionId)
+            .ToArray();
+        var matched = scoped
+            .Where(filter.Matches)
+            .OrderBy(user => user.LastName.ToLowerInvariant(), StringComparer.Ordinal)
+            .ThenBy(user => user.FirstName.ToLowerInvariant(), StringComparer.Ordinal)
+            .ThenBy(user => user.UserId, StringComparer.Ordinal)
+            .ToArray();
+
+        var page = filter.PageWithin(matched.Length);
+        return new UserDirectoryPage(
+            matched.Skip((page - 1) * filter.PageSize).Take(filter.PageSize).ToArray(),
+            scoped.Length,
+            matched.Length,
+            page);
+    }
 }
 
 /// <param name="IsLockedOut">Locked out right now, for any reason: an administrator's lock, an erasure, or a brute-force
@@ -148,6 +178,11 @@ public interface IUserAdministrationService
 /// Locked indefinitely, as an administrator's lock and an erasure leave an account, and not merely locked out for a few
 /// minutes by failed passwords (<c>UserDeactivation</c>, T102). A deactivated account can sit on no committee panel
 /// (T165).
+/// </param>
+/// <param name="CollegeId">
+/// The College a College admin administers (T093), which a College admin's scope reads as (T376, flow 12, S1,
+/// <c>PersonScopeWords</c>); null for everyone else. Last and defaulted, so the directories tests build by hand need not
+/// name it.
 /// </param>
 public sealed record UserIdentityDetails(
     string UserId,
@@ -159,7 +194,8 @@ public sealed record UserIdentityDetails(
     IReadOnlyCollection<int> SubSpecialityIds,
     IReadOnlyCollection<string> Roles,
     bool IsLockedOut = false,
-    bool IsDeactivated = false);
+    bool IsDeactivated = false,
+    int? CollegeId = null);
 
 /// <summary>What a picker labels a person by: their name and email, and nothing about their roles or scope. (T248)</summary>
 public sealed record UserContact(string UserId, string FirstName, string LastName, string Email);
@@ -170,7 +206,16 @@ public sealed record UserContact(string UserId, string FirstName, string LastNam
 /// endpoints hold it to) and it has one. An account provisioned by its institution's sign-in has neither.
 /// </param>
 /// <param name="InstitutionalSignIns">Its institutional sign-ins, each once, by the provider's key.</param>
-public sealed record AccountSignInMethods(bool HasLocalPassword, IReadOnlyList<InstitutionalSignIn> InstitutionalSignIns);
+/// <param name="AllowsLocalPassword">
+/// The account may use a Wombat password at all (<c>AllowLocalPassword</c>), whether or not it has one. False for an account
+/// its institution's sign-in provisioned: a reset would set a password no sign-in accepts, so the user page offers none and
+/// says the person signs in only through the provider (T376, flow 12, F3). Last and defaulted, so flow 02's readers and the
+/// tests that build one by hand are unchanged.
+/// </param>
+public sealed record AccountSignInMethods(
+    bool HasLocalPassword,
+    IReadOnlyList<InstitutionalSignIn> InstitutionalSignIns,
+    bool AllowsLocalPassword = true);
 
 /// <summary>
 /// One institutional sign-in linked to an account: the provider's key, which a removal names, and the name a person reads.
@@ -193,3 +238,80 @@ public enum InstitutionalSignInRemoval
     /// <summary>The account changed after it was read (a second tab removed another sign-in); nothing was removed.</summary>
     Conflict
 }
+
+/// <summary>Users' Status filter (T376, flow 12, Q6): the administrative lock only (K25), never a brute-force lockout.</summary>
+public enum UserDirectoryStatus
+{
+    /// <summary>Not deactivated: the account can sign in, a brute-force lockout that lifts itself aside.</summary>
+    Active,
+
+    /// <summary>Deactivated (<see cref="UserIdentityDetails.IsDeactivated" />): an administrator's lock, or an erasure.</summary>
+    LockedOut
+}
+
+/// <summary>
+/// What one page of Users asks the directory for (T376, flow 12, S6; <see cref="IUserAdministrationService.ListUsersPageAsync" />).
+/// </summary>
+/// <param name="InstitutionId">
+/// The institution whose accounts are listed; null lists every account, those with no institution included: the
+/// Administrator's list alone (an Institutional admin's names her own institution, so an unscoped account never reaches it).
+/// </param>
+/// <param name="Words">
+/// The words typed, each already trimmed and lower-cased: an account matches when every word is part of its first name,
+/// its last name or its email (S6: "thandi zulu", "zulu thandi", "zul" and the address all find Thandi Zulu). None matches
+/// every account.
+/// </param>
+/// <param name="Role">A role's key: only the accounts that hold it. Null for any role.</param>
+/// <param name="NoRole">Only the accounts that hold no role at all (Q6, S2). <paramref name="Role" /> is then null.</param>
+/// <param name="Status">Active or locked out (K25); null for either.</param>
+/// <param name="Page">The page asked for, from 1; past the last page the last is answered.</param>
+/// <param name="PageSize">The rows on a page.</param>
+public sealed record UserDirectoryFilter(
+    int? InstitutionId,
+    IReadOnlyList<string> Words,
+    string? Role,
+    bool NoRole,
+    UserDirectoryStatus? Status,
+    int Page,
+    int PageSize)
+{
+    /// <summary>Whether <paramref name="user" /> answers the filter's words, role and status (its institution aside).</summary>
+    public bool Matches(UserIdentityDetails user)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+
+        var wordsMatch = Words.All(word =>
+            user.FirstName.Contains(word, StringComparison.OrdinalIgnoreCase) ||
+            user.LastName.Contains(word, StringComparison.OrdinalIgnoreCase) ||
+            user.Email.Contains(word, StringComparison.OrdinalIgnoreCase));
+        var roleMatches = NoRole
+            ? user.Roles.Count == 0
+            : Role is null || user.Roles.Contains(Role, StringComparer.Ordinal);
+        var statusMatches = Status switch
+        {
+            UserDirectoryStatus.Active => !user.IsDeactivated,
+            UserDirectoryStatus.LockedOut => user.IsDeactivated,
+            _ => true
+        };
+        return wordsMatch && roleMatches && statusMatches;
+    }
+
+    /// <summary>The page answered for <paramref name="matchCount" /> matching accounts: <see cref="Page" />, or the last.</summary>
+    public int PageWithin(int matchCount)
+    {
+        var size = Math.Max(1, PageSize);
+        var lastPage = Math.Max(1, (int)Math.Ceiling(matchCount / (double)size));
+        return Math.Clamp(Page, 1, lastPage);
+    }
+}
+
+/// <summary>One page of Users, as the directory answers it (T376, flow 12, S6).</summary>
+/// <param name="Rows">The page's accounts, in S7's order (last name, first name, id, each ignoring case), with their roles.</param>
+/// <param name="TotalCount">Every account in the filter's institution (all of them for the Administrator), unfiltered.</param>
+/// <param name="MatchCount">The accounts that matched, across every page.</param>
+/// <param name="Page">The page answered (the last when one past it was asked for).</param>
+public sealed record UserDirectoryPage(
+    IReadOnlyList<UserIdentityDetails> Rows,
+    int TotalCount,
+    int MatchCount,
+    int Page);

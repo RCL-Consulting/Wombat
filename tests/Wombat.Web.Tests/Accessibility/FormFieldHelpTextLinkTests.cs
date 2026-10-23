@@ -83,7 +83,8 @@ public sealed partial class FormFieldHelpTextLinkTests : TestContext
         var fields = FormFieldsWithHelpText();
 
         // T369: the MSF create and campaign pages draw their fields by hand (the required mark, M7), so 39 in 12 files.
-        fields.Should().HaveCountGreaterThanOrEqualTo(36, "guard: the scan finds the callers (39 in 12 files), or it proves nothing");
+        // 35 since T376: flow 12's user page, record and SSO forms write their fields' marks and read-outs themselves (M8).
+        fields.Should().HaveCountGreaterThanOrEqualTo(32, "guard: the scan finds the callers (35 since T376), or it proves nothing");
         fields.Select(field => field.File).Distinct().Should().HaveCountGreaterThanOrEqualTo(11);
 
         var unlinked = fields
@@ -109,7 +110,8 @@ public sealed partial class FormFieldHelpTextLinkTests : TestContext
         // register's old revoke section), leaving the scan 149; the floor guards the scan, not the count.
         // 125 since T373: the invitations page's six FormFields went with its issue form; Invite a person writes its fields'
         // required marks itself (M11).
-        fields.Should().HaveCountGreaterThanOrEqualTo(120, "guard: the scan finds every FormField (125 since T373), or it proves nothing");
+        // 112 since T376: flow 12's Add a role…, training, record and SSO forms draw read-outs and described radios by hand.
+        fields.Should().HaveCountGreaterThanOrEqualTo(105, "guard: the scan finds every FormField (112 since T376), or it proves nothing");
 
         var unnamed = fields
             .SelectMany(field => UnnamedSlotText(field.Markup, field.InputId)

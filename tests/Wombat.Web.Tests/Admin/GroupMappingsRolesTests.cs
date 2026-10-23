@@ -48,6 +48,7 @@ public sealed class GroupMappingsRolesTests : TestContext
         var roles = cut.FindAll("#mapping-role option").Select(option => option.GetAttribute("value")).ToList();
         roles.Should().Contain(WombatRoles.Assessor);
         roles.Should().NotContain([WombatRoles.Trainee, WombatRoles.PendingTrainee, WombatRoles.Administrator]);
+        roles.Should().NotContain(WombatRoles.InstitutionalAdmin, "T376, Q19: only a Wombat administrator maps it");
     }
 
     [Fact]
@@ -57,7 +58,10 @@ public sealed class GroupMappingsRolesTests : TestContext
 
         var cut = Render(new EmptySender());
 
-        cut.FindAll("#mapping-provider option").Select(option => option.TextContent).Should().Equal("KGK sign-in");
+        // T376 (M8): her one provider is read out, not a select of one.
+        cut.FindAll("#mapping-provider").Should().BeEmpty();
+        cut.Find("dl.form-group dd.readonly-value").TextContent.Should().Be("KGK sign-in");
+        cut.Markup.Should().NotContain("Wits sign-in");
     }
 
     [Fact]

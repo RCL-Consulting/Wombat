@@ -65,8 +65,8 @@ public sealed class TraineeRoleSystemManagedTests
     {
         var users = Store();
 
-        var act = () => new AddRoleToUserCommandHandler(users).Handle(
-            new AddRoleToUserCommand(account, WombatRoles.Trainee, Caller(role)), CancellationToken.None);
+        var act = () => new AddRoleToUserCommandHandler(users, UsersTestDb.Empty()).Handle(
+            new AddRoleToUserCommand(account, WombatRoles.Trainee, null, null, Caller(role)), CancellationToken.None);
 
         (await act.Should().ThrowAsync<InvalidOperationException>(role)).Which.Message.Should().Be(TraineeRoleByAdmissionOnly);
         users.Changes.Should().Be(0, "the audit trap: nothing is asked of the store before the refusal");
@@ -94,12 +94,12 @@ public sealed class TraineeRoleSystemManagedTests
         var users = Store();
         var caller = Caller(role);
 
-        await new AddRoleToUserCommandHandler(users).Handle(
-            new AddRoleToUserCommand(PendingRegistrar, WombatRoles.Assessor, caller), CancellationToken.None);
+        await new AddRoleToUserCommandHandler(users, UsersTestDb.Empty()).Handle(
+            new AddRoleToUserCommand(PendingRegistrar, WombatRoles.CommitteeMember, null, null, caller), CancellationToken.None);
         await new RemoveRoleFromUserCommandHandler(users).Handle(
             new RemoveRoleFromUserCommand(Trainee, WombatRoles.Coordinator, caller), CancellationToken.None);
 
-        users.AddRoleCalls.Should().Equal((PendingRegistrar, WombatRoles.Assessor));
+        users.AddRoleCalls.Should().Equal((PendingRegistrar, WombatRoles.CommitteeMember));
         users.RemoveRoleCalls.Should().Equal((Trainee, WombatRoles.Coordinator));
     }
 

@@ -77,6 +77,24 @@ public sealed class InstitutionalSignInMethodsTests : IDisposable
         methods!.HasLocalPassword.Should().BeFalse(because);
     }
 
+    // T376 (flow 12, F3; build-contracts § 0): whether the account may use a Wombat password at all, apart from whether it
+    // has one: the user page offers no reset to an account provisioned by its institution's sign-in.
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(false, false)]
+    public async Task WhetherTheAccountMayUseAPassword_IsReadApart_FromWhetherItHasOne(bool allowLocalPassword, bool storePassword)
+    {
+        var id = await CreateAsync(password: storePassword ? Password : null, allowLocalPassword: allowLocalPassword,
+            logins: [("kgk", "subject-1", null)]);
+
+        var methods = await InScope(service => service.GetSignInMethodsAsync(id));
+
+        methods!.AllowsLocalPassword.Should().Be(allowLocalPassword);
+        methods.HasLocalPassword.Should().Be(allowLocalPassword && storePassword);
+    }
+
     [Fact]
     public async Task AnAccountThatDoesNotExist_HasNoMethods()
         => (await InScope(service => service.GetSignInMethodsAsync("nobody"))).Should().BeNull();

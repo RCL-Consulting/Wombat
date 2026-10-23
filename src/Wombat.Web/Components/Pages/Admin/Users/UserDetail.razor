@@ -1,291 +1,232 @@
 @page "/admin/users/{UserId}"
 @attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@using System.Security.Claims
+@using Wombat.Application.Common.Interfaces
+@using Wombat.Application.Features.Accounts
+@using Wombat.Application.Features.Institutions.Queries.GetAdoptedDisciplinesForInstitution
+@using Wombat.Application.Features.Users.Commands.RemoveUserInstitutionalSignIn
+@using Wombat.Application.Features.Users.Queries.GetRequestsWaitingForUser
 @using Wombat.Web.Security
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject ILogger<UserDetail> Logger
 
 <PageTitle>@Title · Wombat</PageTitle>
 
-<PageHeader Title="@Title" Subtitle="@Subtitle">
-  <Actions>
-    <a class="btn btn-outline btn-sm" href="/admin/users">Back to users</a>
-  </Actions>
-</PageHeader>
+@*
+  One person's page (T376, flow 12; boards P01–P36; Q1): a column of sections. The who line (S19: a dl.detail-list named
+  Account), Roles and scope (each role, then after a gap its Remove… or why none; Add a role… opening a note panel in place,
+  F11, M9, M10), Assessor training (lane T's section, mounted here, Q2), and Sign-in and access with its three parts:
+  Password, Institutional sign-in (Q10, F7) and Lockout (Q5, Q17). Every action's result shows in the section that acted,
+  and takes the focus (A5); one result on the page at a time. Every removal and the lock confirm in a ConfirmDialog whose
+  trigger is an outline button named for its row (S22, T264). The trail's Users crumb returns to the Users page this was
+  opened from, through PeopleLinks' allow-listed return (S6). Q9: the Pending invitations card is gone.
+*@
+<PageHeader Title="@Title" Subtitle="@Subtitle" OwnerHref="@UsersReturn" />
 
-@* T278. Someone who holds Trainee beside a role that administers users opens nobody, their own account included: every
-   Users read and command refuses them first. So nothing is read for them, and the page says why in the words the
-   handlers refuse with. Standing page content: an info Alert, which carries no role. *@
 @if (_traineeNote is not null)
 {
-  <Alert Kind="info" Id="user-trainee-note">@_traineeNote</Alert>
+  @* T278, T290, S8: the header and the note, asked before any read, with no subtitle. Standing: no role (S23). *@
+  <div class="user-page">
+    <Alert Kind="info" Role="" Id="user-trainee-note">@_traineeNote</Alert>
+  </div>
 }
 else
 {
-  @* What an action did. It takes the focus once the action is done (T234; DESIGN.md § Button system): a removed role's
-     Remove is gone, Lock out and Reactivate replace each other, Revoke goes with the invitations, and Add role and Reset
-     password are disabled once their input is cleared. A refusal leaves the focus where it was, except a refused reset:
-     the password is cleared either way, which disables Reset password. *@
-  <ActionResult @ref="_result">
-    @if (!string.IsNullOrWhiteSpace(_actionError))
-    {
-      <Alert Kind="danger" Id="@ActionErrorId">@_actionError</Alert>
-    }
-
-    @if (!string.IsNullOrWhiteSpace(_statusMessage))
-    {
-      <Alert Kind="success">@_statusMessage</Alert>
-    }
-  </ActionResult>
-
-  <StatePanel IsLoading="_loading" IsEmpty="@(_user is null)" EmptyTitle="User unavailable" EmptyBody="The user could not be found or is outside your scope." LoadError="@_loadError">
-    @if (_user is not null)
-    {
-      @* T278. Nobody changes their own roles, lockout or password here, the Administrator included: the handlers refuse
-         it, so on the caller's own account none of them is offered, and this says why. Standing page content: an info
-         Alert, which carries no role. Revoking the invitations addressed to their email is still offered: an invitation
-         to an account that exists cannot be accepted, so revoking it changes nothing about the account. *@
-      @if (IsOwnAccount)
-      {
-        <Alert Kind="info" Id="user-own-account-note">@UserAdministrationRules.OwnAccountNote <a href="/account/change-password">Change your password</a> from your account.</Alert>
-      }
-
-      <div class="details-grid">
-        <section class="detail-card">
-          <h3>Account summary</h3>
-          <dl class="detail-list">
-            <dt>Name</dt><dd>@($"{_user.FirstName} {_user.LastName}")</dd>
-            <dt>Email</dt><dd>@_user.Email</dd>
-            <dt>Institution</dt><dd>@(_user.InstitutionName ?? "Global (no institution)")</dd>
-            <dt>Status</dt><dd>@(_user.IsLockedOut ? "Locked out" : "Active")</dd>
-          </dl>
-        </section>
-
-        <section class="detail-card">
-          <h3>Roles</h3>
-          @if (_user.Roles.Count == 0)
-          {
-            <p class="muted">This user has no roles.</p>
-          }
-          else
-          {
-            <ul class="stack-list">
-              @foreach (var role in _user.Roles)
-              {
-                <li>
-                  <span>@role</span>
-                  @* T278: on the caller's own account no role has a Remove, and the note above says why. *@
-                  @if (!IsOwnAccount)
-                  {
-                    if (CanModifyRole(role))
-                    {
-                      @* T239: named by the role it removes; every role's button read "Remove". *@
-                      <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Remove the {role} role")" disabled="@OtherInFlight(RemoveAction(role))" aria-disabled="@InFlight.AriaDisabled(Running(RemoveAction(role)))" @onclick="() => RemoveRoleAsync(role)">Remove</button>
-                    }
-                    else
-                    {
-                      <span class="muted">System-managed</span>
-                    }
-                  }
-                </li>
-              }
-            </ul>
-          }
-
-          @if (!IsOwnAccount)
-          {
-            <h4 style="margin-top: 1.5rem;">Add role</h4>
-            @* T303. Trainee is system-managed, as PendingTrainee is: admission grants it and Mark complete takes it away, so
-               it is neither offered here nor removable above. The help says where a registrar is made a trainee. *@
-            <div class="form-grid form-grid--wide">
-              <FormField Label="Role" InputId="add-role-select" HelpText="@UserAdministrationRules.TraineeRoleNotOffered">
-                <select id="add-role-select" class="form-select" aria-describedby="@FieldHelp.Id("add-role-select")" @bind="_addRoleSelection">
-                  <option value="">Select role</option>
-                  @foreach (var role in AddableRoles)
-                  {
-                    <option value="@role">@role</option>
-                  }
-                </select>
-              </FormField>
-            </div>
-            <FormActions>
-              <button type="button" class="btn btn-primary" disabled="@(OtherInFlight(AddRoleAction) || string.IsNullOrWhiteSpace(_addRoleSelection))" aria-disabled="@InFlight.AriaDisabled(Running(AddRoleAction))" @onclick="AddRoleAsync">Add role</button>
-            </FormActions>
-          }
-        </section>
-
-        @if (!IsOwnAccount)
+  <div class="user-page" aria-busy="@(_loading ? "true" : null)">
+    <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusRolesAsync"
+                IsEmpty="@(_user is null)" EmptyTitle="@UserPageWords.UnavailableTitle" EmptyBody="@UserPageWords.UnavailableBody">
+      <LoadingContent>
+        <p class="loading-line" role="status">@UserPageText.Loading</p>
+        @for (var card = 0; card < 3; card++)
         {
-          <section class="detail-card">
-            <h3>Reset password</h3>
-            <p class="muted">Sets a new password directly. The user is not emailed; share the password securely out-of-band.</p>
-            @* The field, its Show toggle and the six rules under it (T339, flow 02, E11; R3-CP-AdminReset). The page is
-               interactive, so the toggle is PasswordField's @onclick one. No minlength and no "disabled until 8
-               characters": the rule is 12, the rules are listed, and a refusal names every rule broken. *@
-            <div class="form-grid form-grid--wide">
-              @* A refusal that broke a rule marks the field (A15): it names its own message and the refusal, which lists
-                 the rules broken, no longer the list, which still says them all under it. *@
-              <PasswordField Label="New password" Id="reset-password-input" Autocomplete="new-password"
-                             @bind-Value="_newPassword" Invalid="@_resetRulesRefused"
-                             DescribedBy="@(_resetRulesRefused ? $"{ResetMessageId} {ActionErrorId}" : ResetRulesId)">
-                @if (_resetRulesRefused)
-                {
-                  <div class="validation-message" id="@ResetMessageId">@PasswordRuleMessages.FieldMessage</div>
-                }
-                <PasswordRules Id="@ResetRulesId" />
-              </PasswordField>
-            </div>
-            <FormActions>
-              <button type="button" class="btn btn-primary" disabled="@(OtherInFlight(ResetPasswordAction) || string.IsNullOrWhiteSpace(_newPassword))" aria-disabled="@InFlight.AriaDisabled(Running(ResetPasswordAction))" @onclick="ResetPasswordAsync">Reset password</button>
-            </FormActions>
-          </section>
-
-          <section class="detail-card">
-            <h3>Lockout</h3>
-            @if (_user.IsLockedOut)
-            {
-              <p>This user is currently locked out and cannot sign in.</p>
-              <FormActions>
-                <button type="button" class="btn btn-primary" disabled="@OtherInFlight(LockoutAction)" aria-disabled="@InFlight.AriaDisabled(Running(LockoutAction))" @onclick="() => SetLockoutAsync(false)">Reactivate user</button>
-              </FormActions>
-            }
-            else if (CanLockoutUser)
-            {
-              @* T284: what a lock does beyond sign-in, since T102, T165, T240, T268 and T284 made it mean "not working here
-                 now" (PanelSeat, NomineeDirectory, ReminderRecipientPolicy, TraineeScopeResolver's current trainee).
-                 UserDetailLockCardTests checks the card names each. The dashboards are named, not "the dashboards": the
-                 institution dashboard's Users card counts accounts by role, locked or not (T284 review). *@
-              <p>Locking out the user prevents sign-in immediately. Until they are reactivated:</p>
-              <ul id="lockout-effects">
-                <li>They sit on no committee panel.</li>
-                <li>They are not a current trainee. No committee review or feedback campaign can be started about them, a draft feedback campaign about them cannot be opened, and the programme's lists of its trainees leave them out: the speciality, sub-speciality and committee dashboards' trainee targets and counts, feedback coverage, decisions due, and the weekly digest's inactive trainees.</li>
-                <li>They are sent no activity reminders or weekly digests.</li>
-                <li>They cannot be named as an activity's assessor.</li>
-              </ul>
-              <p>Their records stay as they are, and a review or feedback campaign already under way can still be finished. Reactivating clears the lockout.</p>
-              <FormActions>
-                <button type="button" class="btn btn-danger" disabled="@OtherInFlight(LockoutAction)" aria-disabled="@InFlight.AriaDisabled(Running(LockoutAction))" @onclick="() => SetLockoutAsync(true)">Lock out user</button>
-              </FormActions>
-            }
-            else
-            {
-              <p class="muted">Global administrators cannot be locked out from this surface.</p>
-            }
-          </section>
+          <div class="detail-card" aria-hidden="true">
+            <div class="skeleton skel-title"></div>
+            <div class="skeleton skel-line"></div>
+            <div class="skeleton skel-line"></div>
+            <div class="skeleton skel-line skel-short"></div>
+          </div>
         }
+      </LoadingContent>
+      <EmptyActions>
+        <a class="btn btn-outline btn-sm" href="@PeopleLinks.Users">@UserPageWords.GoToUsers <Icon Name="arrow-right" /></a>
+      </EmptyActions>
+      <ChildContent>
+        @if (_user is { } user)
+        {
+          @WhoLine(user)
 
-        <section class="detail-card">
-          <h3>Pending invitations</h3>
-          @if (_user.PendingInvitations.Count == 0)
+          @if (IsOwnAccount)
           {
-            <p class="muted">No active invitations are outstanding for this email.</p>
+            @* T278: nobody changes their own roles, lockout or password here. Standing page content: no role (S23). *@
+            <Alert Kind="info" Role="" Id="user-own-account-note">@UserAdministrationRules.OwnAccountNote <a href="/account/change-password">Change your password</a> from your account.</Alert>
           }
-          else
-          {
-            <DataTable TItem="UserPendingInvitationDto" Items="_user.PendingInvitations" Caption="Pending invitations for this email">
-              <HeaderRow>
-                <tr>
-                  <th>Role</th>
-                  <th>Institution / College</th>
-                  <th>Speciality</th>
-                  <th>Issued</th>
-                  <th>Expires</th>
-                </tr>
-              </HeaderRow>
-              <Row Context="invitation">
-                <tr>
-                  <td>@invitation.TargetRole</td>
-                  <td>@invitation.ScopeName</td>
-                  <td>@(invitation.SpecialityName ?? "—")</td>
-                  <td>@invitation.IssuedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
-                  <td>@invitation.ExpiresOn.ToString("yyyy-MM-dd")</td>
-                </tr>
-              </Row>
-            </DataTable>
-            <FormActions>
-              <button type="button" class="btn btn-danger" disabled="@OtherInFlight(RevokeAction)" aria-disabled="@InFlight.AriaDisabled(Running(RevokeAction))" @onclick="RevokeInvitationsAsync">Revoke all pending invitations</button>
-            </FormActions>
-          }
-        </section>
-      </div>
-    }
-  </StatePanel>
+
+          @RolesSection(user)
+
+          @* Lane T's section (build-contracts § 2): shown whenever the person holds Assessor (Q18: hidden, never deleted, when
+             it is removed; check Left 4: P22's SSO-only Assessor too), opened by ?section=training. *@
+          <AssessorTrainingSection UserId="@user.UserId" PersonName="@user.Name" HoldsAssessor="@HoldsAssessor"
+                                   Open="@OpenTraining" OnActed="ClearOwnResult"
+                                   PageResultVersion="@_pageResultVersion" />
+
+          @SignInSection(user)
+        }
+      </ChildContent>
+    </StatePanel>
+  </div>
+
+  @* S3, P06, P36: one dialog, its words the role's. *@
+  <ConfirmDialog @ref="_removeDialog"
+                 Title="@(_removeRole is null || _user is null ? "Remove" : UserPageText.RemoveTitle(_removeRole, _user.Name))"
+                 BodyContent="@RemoveBody"
+                 CancelLabel="@UserPageText.KeepTheRole"
+                 ConfirmLabel="@(_removeRole is null ? "Remove" : UserPageText.RemoveConfirm(_removeRole))"
+                 DangerAction="true"
+                 ReturnFocusId="@(_removeRole is null ? null : RemoveTriggerId(_removeRole))"
+                 OnConfirm="RemoveRoleAsync" />
+
+  @* Q5, F6, P15: the lock, "Keep access" first, which the native dialog focuses. *@
+  <ConfirmDialog @ref="_lockDialog"
+                 Title="@(_user is null ? "Lock out" : UserPageText.LockTitle(_user.Name))"
+                 BodyContent="@LockBody"
+                 CancelLabel="@UserPageText.KeepAccess"
+                 ConfirmLabel="@(_user is null ? "Lock out" : UserPageText.LockTriggerName(_user.Name))"
+                 DangerAction="true"
+                 ReturnFocusId="@LockTriggerId"
+                 OnConfirm="LockAsync" />
+
+  @* F7, P21: another person's institutional sign-in. *@
+  <ConfirmDialog @ref="_signInDialog"
+                 Title="@(_signInTarget is null || _user is null ? "Remove sign-in" : UserPageText.SignInRemoveTitle(_signInTarget.DisplayName, _user.Name))"
+                 Body="@(_signInTarget is null || _user is null ? string.Empty : UserPageText.SignInRemoveBody(_signInTarget.DisplayName, _user.Name, _user.HasLocalPassword, _user.InstitutionalSignIns.Count - 1))"
+                 CancelLabel="@UserPageText.KeepTheSignIn"
+                 ConfirmLabel="@UserPageText.RemoveSignIn"
+                 DangerAction="true"
+                 ReturnFocusId="@(_signInTarget is null ? null : SignInTriggerId(_signInTarget.Provider))"
+                 OnConfirm="RemoveSignInAsync" />
 }
 
 @code {
   [Parameter] public string UserId { get; set; } = string.Empty;
 
-  private UserDetailDto? _user;
-  private bool _loading = true;
-  private ActionResult? _result;
+  /// <summary>The section to open: <c>training</c> opens Assessor training (S10); any other value opens nothing.</summary>
+  [SupplyParameterFromQuery(Name = "section")] public string? Section { get; set; }
 
-  /// <summary>
-  /// The action that has been sent and has not yet answered, or null. While one is in flight nothing else may be sent,
-  /// and every other button is disabled; the one pressed is not (T234): it has the focus, and a browser drops the focus
-  /// of a button it disables, to the page. A second press of it sends nothing (<see cref="RunActionAsync" />).
-  /// </summary>
-  private string? _inFlight;
+  /// <summary>The Users page this was opened from (S6), read only through <see cref="PeopleLinks.SafeUsersReturn" />.</summary>
+  [SupplyParameterFromQuery(Name = PeopleLinks.BackParameter)] public string? Back { get; set; }
 
-  private const string AddRoleAction = "add-role";
-  private const string ResetPasswordAction = "reset-password";
+  private const string RolesHeadingId = "s-roles";
+  private const string SignInHeadingId = "s-sign";
+  private const string AddToggleId = "add-role-toggle";
+  private const string AddPanelId = "add-role-panel";
+  private const string RoleErrorId = "add-role-error";
+  private const string SpecialitySelectId = "add-role-speciality";
+  private const string SpecialityErrorId = "add-role-speciality-error";
+  private const string SubSpecialitySelectId = "add-role-sub-speciality";
+  private const string SubSpecialityErrorId = "add-role-sub-speciality-error";
+  private const string PanelErrorId = "add-role-panel-error";
+  private const string ResetInputId = "reset-password-input";
   private const string ResetRulesId = "reset-password-rules";
   private const string ResetMessageId = "reset-password-error";
   private const string ActionErrorId = "user-action-error";
-  private const string LockoutAction = "lockout";
-  private const string RevokeAction = "revoke";
+  private const string LockTriggerId = "lock-out-trigger";
 
-  private static string RemoveAction(string role) => $"remove:{role}";
-
-  private bool OtherInFlight(string action) => _inFlight is not null && _inFlight != action;
-
-  private bool Running(string action) => _inFlight == action;
+  private UserDetailDto? _user;
+  private bool _loading = true;
   private string? _loadError;
-  private string? _actionError;
-  private string? _statusMessage;
-  private string _addRoleSelection = string.Empty;
-  private string _newPassword = string.Empty;
-
-  // The last reset was refused for a password rule (T339, flow 02, E11, A15): New password is marked until the next action.
-  private bool _resetRulesRefused;
-  private bool _callerIsAdministrator;
-  private System.Security.Claims.ClaimsPrincipal? _caller;
-
-  /// <summary>Why nothing is shown: the caller holds Trainee beside a role that administers users (T278); else null.</summary>
+  private ClaimsPrincipal? _caller;
   private string? _traineeNote;
 
-  private string Title => _user is null ? "User" : $"{_user.FirstName} {_user.LastName}";
+  // One result on the page at a time (A5): where it shows, and what it says.
+  private enum Place { None, Roles, Password, SignIn, Lockout }
+  private Place _resultPlace;
+  private string? _resultLead;
+  private string? _resultRest;
+  private bool _resultRefused;
+
+  // A new region for every result, so each takes the focus as it is drawn (ActionResult's FocusOnLoad, on its first
+  // render): the part that acted draws the one region on the page, and the others draw none.
+  private int _resultKey;
+
+  /// <summary>The action sent and not yet answered: a second press sends nothing (T234, T202).</summary>
+  private string? _inFlight;
+
+  // Add a role… (F11, M2, M8, M9, M10, S13).
+  private bool _addOpen;
+  private string? _addRole;
+  private int? _addSpeciality;
+  private int? _addSubSpeciality;
+  private AdoptedDisciplinesDto _adopted = AdoptedDisciplinesDto.None;
+  private string? _roleError;
+  private string? _specialityError;
+  private string? _subSpecialityError;
+  private string? _panelError;
+  private bool _focusFirstRadio;
+  private string? _focusAfterRender;
+
+  // Reset password.
+  private string _newPassword = string.Empty;
+  private bool _resetRulesRefused;
+  private string? _resetFieldMessage;
+
+  // The dialogs.
+  private ConfirmDialog? _removeDialog;
+  private ConfirmDialog? _lockDialog;
+  private ConfirmDialog? _signInDialog;
+  private string? _removeRole;
+  private InstitutionalSignIn? _signInTarget;
+  private WaitingRequestsDto? _waiting;
+  private bool _waitingUnread;
+
+  private string Title => _traineeNote is null && _user is not null ? _user.Name : UserPageWords.Heading;
+
+  private string UsersReturn => PeopleLinks.SafeUsersReturn(Back);
+
+  private bool OpenTraining => string.Equals(Section, PeopleLinks.TrainingSection, StringComparison.Ordinal);
+
+  private bool CallerIsAdministrator => _caller?.IsAdministrator() == true;
 
   /// <summary>
-  /// What the page offers (T278): none to someone who holds Trainee beside a role that administers users, whom it offers
-  /// nothing; on the caller's own account, what is there, which is no role, lockout or password change; else all of it.
+  /// P01, P02, P24, P27: the caller's own account says so; another person's names their institution where the caller is
+  /// scoped to one (the Administrator's has none); before the read, and for the not-found panel and the Trainee note, none
+  /// or the version without the name (S8, S9).
   /// </summary>
-  private string? Subtitle => _traineeNote is not null
+  private string? Subtitle => _traineeNote is not null || (!_loading && _loadError is null && _user is null)
     ? null
     : IsOwnAccount
-      ? "Your own account's summary, roles and pending invitations."
-      : "Roles, password reset, lockout, and pending-invitation cleanup for a single user.";
+      ? UserPageText.OwnSubtitle
+      : UserPageText.Subtitle(CallerIsAdministrator ? null : _user?.InstitutionName);
 
-  /// <summary>
-  /// Whether the user shown is the caller. Their roles, lockout and password are not offered: the handlers refuse a
-  /// change to any of them by the same rule (<see cref="UserAdministrationRules.IsCaller" />, T278).
-  /// </summary>
   private bool IsOwnAccount => _user is not null && _caller is not null && UserAdministrationRules.IsCaller(_caller, _user.UserId);
 
-  private IEnumerable<string> AddableRoles
-    => UserAdministrationRules.AssignableRoles.Where(role => _user is null || !_user.Roles.Contains(role, StringComparer.Ordinal));
+  private bool HoldsAssessor => _user?.Roles.Contains(WombatRoles.Assessor, StringComparer.Ordinal) == true;
 
-  /// <remarks>The caller's own account shows no lockout card at all (<see cref="IsOwnAccount" />).</remarks>
-  private bool CanLockoutUser
-    => _user is not null
-       && !_user.Roles.Contains(WombatRoles.Administrator, StringComparer.Ordinal);
+  private bool HoldsAdministrator => _user?.Roles.Contains(WombatRoles.Administrator, StringComparer.Ordinal) == true;
 
-  private bool CanModifyRole(string role)
-    => UserAdministrationRules.IsAssignableRole(role)
-       && !(role == WombatRoles.Administrator && !_callerIsAdministrator);
+  private static string Slug(string value)
+    => string.Concat(value.Select(character => char.IsAsciiLetterOrDigit(character) ? char.ToLowerInvariant(character) : '-'));
 
-  protected override async Task OnParametersSetAsync()
-  {
-    await LoadAsync();
-  }
+  private static string RemoveTriggerId(string role) => $"remove-role-{Slug(role)}";
+
+  private static string SignInTriggerId(string provider) => $"remove-signin-{Slug(provider)}";
+
+  private static string RadioId(string role) => $"add-role-{Slug(role)}";
+
+  /// <summary>The roles Add a role… offers (T303: never Trainee or Pending trainee; never Administrator), less those held.</summary>
+  private IReadOnlyList<string> AddableRoles
+    => _user is null
+      ? []
+      : UserAdministrationRules.AssignableRoles.Where(role => !_user.Roles.Contains(role, StringComparer.Ordinal)).ToList();
+
+  /// <summary>Add a role… is offered on another person's page with an institution, and some role left to give.</summary>
+  private bool MayAddRole => _user is not null && !IsOwnAccount && _user.InstitutionId.HasValue && AddableRoles.Count > 0
+                             && !(HoldsAdministrator && !CallerIsAdministrator);
+
+  private static bool CanRemove(string role) => UserAdministrationRules.IsAssignableRole(role);
+
+  protected override async Task OnParametersSetAsync() => await LoadAsync();
 
   private async Task LoadAsync()
   {
@@ -296,7 +237,6 @@ else
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       _caller = authState.User;
-      _callerIsAdministrator = authState.User.IsAdministrator();
 
       // Asked before anything is read, as the handlers refuse before they look anything up (T278).
       _traineeNote = UserAdministrationRules.TraineeNoteOnUserPages(authState.User);
@@ -310,7 +250,10 @@ else
     }
     catch (Exception exception)
     {
-      _loadError = RefusalText.Of(exception);
+      // T329: the failure to the log, fixed words on the page.
+      Logger.LogError(exception, "The user {UserId} could not be read.", UserId);
+      _user = null;
+      _loadError = UserPageText.LoadFailed;
     }
     finally
     {
@@ -318,113 +261,1019 @@ else
     }
   }
 
-  /// <summary>
-  /// Sends one action, unless one is already in flight. Returns whether it was done. A done action's result takes the
-  /// focus (T234): the button that sent it is gone, replaced or disabled by what it changed.
-  /// </summary>
-  private async Task<bool> RunActionAsync(string name, Func<System.Security.Claims.ClaimsPrincipal, Task> action, string successMessage)
+  private Task RetryAsync() => LoadAsync();
+
+  private ValueTask FocusRolesAsync() => PageFocus.FocusByIdAsync(JS, RolesHeadingId);
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
   {
-    if (_inFlight is not null)
+    if (_focusFirstRadio)
     {
-      return false;
+      _focusFirstRadio = false;
+      if (AddableRoles.Count > 0)
+      {
+        await PageFocus.FocusByIdAsync(JS, RadioId(_addRole ?? AddableRoles[0]));
+      }
     }
 
-    _inFlight = name;
-    _actionError = null;
-    _statusMessage = null;
-    _resetRulesRefused = false;
-    var done = false;
+    if (_focusAfterRender is { } id)
+    {
+      _focusAfterRender = null;
+      await PageFocus.FocusByIdAsync(JS, id);
+    }
+  }
+
+  // ─── Results ───────────────────────────────────────────────────────────
+
+  /// <summary>The training section started an action: the page's own result goes (one at a time).</summary>
+  /// <summary>
+  /// The page's own action starts: its result goes, and the training section's too (T376 build review, P9: one result on
+  /// the page at a time; the section clears its own when <see cref="_pageResultVersion" /> moves).
+  /// </summary>
+  private void ClearResult()
+  {
+    ClearOwnResult();
+    _pageResultVersion++;
+  }
+
+  /// <summary>The training section acted: only the page's result goes, the section keeps the one it is about to say.</summary>
+  private void ClearOwnResult()
+  {
+    _resultPlace = Place.None;
+    _resultLead = null;
+    _resultRest = null;
+    _resultRefused = false;
+  }
+
+  private int _pageResultVersion;
+
+  private void ShowResult(Place place, string lead, string? rest = null, bool refused = false)
+  {
+    _resultPlace = place;
+    _resultLead = lead;
+    _resultRest = rest;
+    _resultRefused = refused;
+    _resultKey++;
+    _pageResultVersion++;
+  }
+
+  /// <summary>A handler's refusal in its own words; anything else in fixed words, logged (T329).</summary>
+  private string RefusalOrLogged(Exception exception, string what)
+  {
+    if (exception is FluentValidation.ValidationException or UnauthorizedAccessException or InvalidOperationException)
+    {
+      return RefusalText.Of(exception);
+    }
+
+    Logger.LogError(exception, "The user page's {Action} for {UserId} failed.", what, UserId);
+    return UserPageText.ActionFailed;
+  }
+
+  private RenderFragment Result(Place place) => __builder =>
+  {
+    if (_resultPlace == place && _resultLead is not null)
+    {
+      <ActionResult @key="_resultKey" FocusOnLoad="true">
+        @if (_resultRefused)
+        {
+          <Alert Kind="danger" Id="@ActionErrorId">@_resultLead</Alert>
+        }
+        else
+        {
+          @* A result bolds only its first sentence (BRIEF § 11, flow 11). *@
+          <Alert Kind="success"><strong>@_resultLead</strong>@(_resultRest is null ? null : " " + _resultRest)</Alert>
+        }
+      </ActionResult>
+    }
+  };
+
+  private async Task RereadAsync()
+    => _user = await Sender.Send(new GetUserByIdQuery(UserId, _caller!));
+
+  // ─── The who line ──────────────────────────────────────────────────────
+
+  private RenderFragment WhoLine(UserDetailDto user) => __builder =>
+  {
+    <dl class="detail-list" aria-label="Account">
+      <dt>Email</dt>
+      <dd>@Address(user.Email)</dd>
+      <dt>Institution</dt>
+      <dd>@(user.InstitutionName ?? PersonScopeWords.NoInstitution)</dd>
+      <dt>Status</dt>
+      <dd>
+        @if (user.IsLockedOut)
+        {
+          <span class="badge @BadgeFor.State(BadgeState.Declined) status-locked"><Icon Name="lock" />Locked out</span>
+        }
+        else
+        {
+          @("Active")
+        }
+      </dd>
+      <dt>Scope</dt>
+      <dd>@user.Scope</dd>
+    </dl>
+  };
+
+  /// <summary>An address with a break after its @ (flow 11's M7), in markup, never in a stored string.</summary>
+  private static RenderFragment Address(string email) => __builder =>
+  {
+    var at = email.IndexOf('@', StringComparison.Ordinal);
+    if (at < 0)
+    {
+      @email
+    }
+    else
+    {
+      @(email[..(at + 1)])<wbr />@(email[(at + 1)..])
+    }
+  };
+
+  // ─── Roles and scope ───────────────────────────────────────────────────
+
+  private RenderFragment RolesSection(UserDetailDto user) => __builder =>
+  {
+    var roles = WombatRoleLabels.InOrder(user.Roles);
+    <section class="detail-card user-section" aria-labelledby="@RolesHeadingId">
+      <h2 id="@RolesHeadingId" tabindex="-1">Roles and scope</h2>
+      @Result(Place.Roles)
+
+      @if (roles.Count == 0)
+      {
+        @* S2, Q13: how and when an ended programme ended, or nothing at all. *@
+        <div class="no-role">
+          <p><strong>@UserPageText.NoRoleLead(user.Name, user.EndedProgramme)</strong> @UserPageText.NoRoleRest(user.EndedProgramme)</p>
+        </div>
+      }
+      else
+      {
+        <ul class="role-rows">
+          @foreach (var role in roles)
+          {
+            <li class="role-row">
+              <span class="role-row-label">@WombatRoleLabels.For(role)</span>
+              @if (IsOwnAccount)
+              {
+                @* T278: nothing on the caller's own roles; the note above says why. *@
+              }
+              else if (CanRemove(role) && !(HoldsAdministrator && !CallerIsAdministrator))
+              {
+                <button type="button" id="@RemoveTriggerId(role)" class="btn btn-outline btn-sm"
+                        aria-label="@UserPageText.RemoveTriggerName(role, user.Name)" aria-haspopup="dialog"
+                        aria-disabled="@InFlight.AriaDisabled(_inFlight == $"remove:{role}")"
+                        @onclick="() => OpenRemoveAsync(role)">Remove…</button>
+              }
+              else if (role == WombatRoles.PendingTrainee)
+              {
+                <span class="role-row-note">@UserPageText.RoleRowNote(role) <a href="@OnboardingLinks.Trainees">Open Trainees</a></span>
+              }
+              else
+              {
+                <span class="role-row-note">@UserPageText.RoleRowNote(role)</span>
+              }
+            </li>
+          }
+        </ul>
+      }
+
+      @if (!IsOwnAccount && !user.InstitutionId.HasValue)
+      {
+        <p class="field-help">@UserPageText.NoInstitutionForRoles(user.Name)</p>
+      }
+      else if (MayAddRole)
+      {
+        <div class="actions-cell">
+          @* M10: aria-controls only while the panel exists. *@
+          <button type="button" id="@AddToggleId" class="btn btn-outline" aria-expanded="@(_addOpen ? "true" : "false")"
+                  aria-controls="@(_addOpen ? AddPanelId : null)" @onclick="ToggleAddAsync">
+            <Icon Name="plus" />
+            Add a role…
+          </button>
+        </div>
+
+        @if (_addOpen)
+        {
+          @AddPanel(user)
+        }
+        else
+        {
+          <p class="field-help">@UserAdministrationRules.TraineeRoleNotOffered</p>
+        }
+      }
+    </section>
+  };
+
+  private RenderFragment AddPanel(UserDetailDto user) => __builder =>
+  {
+    var specialityPart = SpecialityPart();
+    var subPart = SubSpecialityPart();
+    <div id="@AddPanelId" class="detail-card note-panel note-panel--form">
+      @if (_panelError is not null)
+      {
+        <p class="validation-message" id="@PanelErrorId" tabindex="-1">@_panelError</p>
+      }
+
+      @* M9: radios with help, each help outside its label and in its input's aria-describedby (.choice-help-stack). A
+         field-level fieldset is a form group, its help the size of a field's (T188: FieldGroupTests). *@
+      <fieldset class="form-group choice-group choice-help-stack @(_roleError is null ? null : "is-invalid")">
+        <legend>Role<span class="required-mark" aria-hidden="true"> *</span></legend>
+        @foreach (var role in AddableRoles)
+        {
+          var id = RadioId(role);
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="add-role" id="@id" value="@role"
+                   checked="@(_addRole == role)" aria-invalid="@(_roleError is null ? null : "true")"
+                   aria-describedby="@(_roleError is null ? $"{id}-h" : $"{id}-h {RoleErrorId}")"
+                   @onchange="() => ChooseRole(role)" />
+            <label for="@id">@WombatRoleLabels.For(role)</label>
+            <p id="@($"{id}-h")" class="page-subtitle choice-help">@UserAdministrationRules.RoleHelp(role, user.Name, user.Scope, user.SpecialityIds.Count > 0)</p>
+          </div>
+        }
+        @if (_roleError is not null)
+        {
+          <p class="validation-message" id="@RoleErrorId">@_roleError</p>
+        }
+      </fieldset>
+
+      @if (specialityPart != Part.None || subPart != Part.None)
+      {
+        <div class="form-grid">
+          @ScopeField("Speciality", specialityPart, SpecialitySelectId, SpecialityErrorId, _specialityError,
+            user.SpecialityNames, SpecialityOnlyHelp(user), _adopted.Specialities.Select(entry => (entry.Id, entry.Name)).ToList(),
+            _addSpeciality, value => { _addSpeciality = value; _addSubSpeciality = null; _specialityError = null; _subSpecialityError = null; })
+          @ScopeField("Sub-speciality", subPart, SubSpecialitySelectId, SubSpecialityErrorId, _subSpecialityError,
+            user.SubSpecialityNames, SubSpecialityOnlyHelp(user), SubSpecialityCandidates().Select(entry => (entry.Id, entry.Name)).ToList(),
+            _addSubSpeciality, value => { _addSubSpeciality = value; _subSpecialityError = null; })
+        </div>
+      }
+
+      @if (NarrowingTo() is { } narrowed)
+      {
+        @* F2: said before the save. Info: no role. *@
+        <Alert Kind="info">@UserPageText.Narrowing(user.Name, narrowed)</Alert>
+      }
+
+      <p class="field-help">@UserAdministrationRules.TraineeRoleNotOffered</p>
+
+      <FormActions>
+        <button type="button" class="btn btn-quiet" @onclick="CancelAddAsync">Cancel</button>
+        <button type="button" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_inFlight == "add")"
+                @onclick="AddRoleAsync">
+          <Icon Name="user-plus" />
+          Add role
+        </button>
+      </FormActions>
+    </div>
+  };
+
+  private enum Part { None, Held, Only, Choose, Optional, Nothing }
+
+  /// <summary>
+  /// What Add a role… asks of Speciality for the role chosen (S13, M8, F1): nothing when the role needs none or the person
+  /// holds one (read out, "Already held"); a read-out of the institution's only one; a select of several; an optional
+  /// select for a role that may keep to one; or that nothing is adopted.
+  /// </summary>
+  private Part SpecialityPart()
+  {
+    if (_user is null || _addRole is null || _addRole == WombatRoles.InstitutionalAdmin)
+    {
+      return Part.None;
+    }
+
+    var needs = UserAdministrationRules.RoleNeedsSpeciality(_addRole);
+    if (_user.SpecialityIds.Count > 0)
+    {
+      return needs ? Part.Held : Part.None;
+    }
+
+    if (needs)
+    {
+      return _adopted.Specialities.Count switch { 0 => Part.Nothing, 1 => Part.Only, _ => Part.Choose };
+    }
+
+    return UserAdministrationRules.RoleMayKeepToSpeciality(_addRole) && _adopted.Specialities.Count > 0 ? Part.Optional : Part.None;
+  }
+
+  /// <summary>The speciality the command adds: the only one, or the one chosen; null when the person's own suffices.</summary>
+  private int? PostedSpeciality() => SpecialityPart() switch
+  {
+    Part.Only => _adopted.Specialities[0].Id,
+    Part.Choose or Part.Optional => _addSpeciality,
+    _ => null
+  };
+
+  private IReadOnlyCollection<int> ResultingSpecialities()
+    => _user is null ? [] : _user.SpecialityIds.Concat(PostedSpeciality() is int id ? [id] : []).Distinct().ToArray();
+
+  private IReadOnlyList<AdoptedSubSpecialityDto> SubSpecialityCandidates()
+  {
+    var specialities = ResultingSpecialities();
+    return _adopted.SubSpecialities.Where(entry => specialities.Contains(entry.SpecialityId)).ToList();
+  }
+
+  private Part SubSpecialityPart()
+  {
+    if (_user is null || _addRole is null || !UserAdministrationRules.RoleTakesSubSpeciality(_addRole))
+    {
+      return Part.None;
+    }
+
+    if (_user.SubSpecialityIds.Count > 0)
+    {
+      return Part.Held;
+    }
+
+    if (ResultingSpecialities().Count == 0)
+    {
+      // Asked once a speciality is chosen (or there is none to choose: Speciality says so).
+      return Part.None;
+    }
+
+    return SubSpecialityCandidates().Count switch { 0 => Part.Nothing, 1 => Part.Only, _ => Part.Choose };
+  }
+
+  private int? PostedSubSpeciality() => SubSpecialityPart() switch
+  {
+    Part.Only => SubSpecialityCandidates()[0].Id,
+    Part.Choose => _addSubSpeciality,
+    _ => null
+  };
+
+  private string SpecialityOnlyHelp(UserDetailDto user) => UserPageText.OnlySpeciality(user.InstitutionName ?? string.Empty);
+
+  private string SubSpecialityOnlyHelp(UserDetailDto user)
+  {
+    var institution = user.InstitutionName ?? string.Empty;
+    var candidates = SubSpecialityCandidates();
+    if (_adopted.SubSpecialities.Count <= 1 || candidates.Count != 1)
+    {
+      return UserPageText.OnlySubSpeciality(institution);
+    }
+
+    var speciality = _adopted.Specialities.FirstOrDefault(entry => entry.Id == candidates[0].SpecialityId)?.Name;
+    return speciality is null ? UserPageText.OnlySubSpeciality(institution) : UserPageText.OnlySubSpecialityOf(speciality, institution);
+  }
+
+  /// <summary>F2: a person at Any speciality given a speciality is narrowed to it, for every role; the scope it becomes.</summary>
+  private string? NarrowingTo()
+  {
+    if (_user is null || _user.SpecialityIds.Count > 0 || PostedSpeciality() is not int specialityId)
+    {
+      return null;
+    }
+
+    var speciality = _adopted.Specialities.FirstOrDefault(entry => entry.Id == specialityId)?.Name;
+    if (speciality is null)
+    {
+      return null;
+    }
+
+    var subs = _user.SubSpecialityNames
+      .Concat(PostedSubSpeciality() is int subId && _adopted.SubSpecialities.FirstOrDefault(entry => entry.Id == subId) is { } sub ? [sub.Name] : [])
+      .ToList();
+    return PersonScopeWords.Disciplines([speciality], subs);
+  }
+
+  private RenderFragment ScopeField(
+    string label, Part part, string selectId, string errorId, string? error, IReadOnlyList<string> held, string onlyHelp,
+    IReadOnlyList<(int Id, string Name)> options, int? value, Action<int?> changed) => __builder =>
+  {
+    if (part == Part.Held)
+    {
+      @* M8: a value shown in a field's place is a read-out. *@
+      <dl class="form-group">
+        <dt>@label</dt>
+        <dd class="readonly-value">@string.Join(", ", held)</dd>
+        <dd class="field-help">@UserPageText.AlreadyHeld(_user!.Name)</dd>
+      </dl>
+    }
+    else if (part == Part.Only)
+    {
+      <dl class="form-group">
+        <dt>@label</dt>
+        <dd class="readonly-value">@options[0].Name</dd>
+        <dd class="field-help">@onlyHelp</dd>
+      </dl>
+    }
+    else if (part == Part.Nothing)
+    {
+      <dl class="form-group">
+        <dt>@label</dt>
+        <dd class="field-help">@UserPageText.NothingAdopted(_user!.InstitutionName ?? string.Empty)</dd>
+      </dl>
+    }
+    else if (part is Part.Choose or Part.Optional)
+    {
+      var required = part == Part.Choose;
+      <div class="form-group">
+        <label for="@selectId">
+          @label
+          @if (required)
+          {
+            <span class="required-mark" aria-hidden="true"> *</span>
+          }
+        </label>
+        <select id="@selectId" class="form-select @(error is null ? null : "input-validation-error")"
+                aria-required="@(required ? "true" : null)" aria-invalid="@(error is null ? null : "true")"
+                aria-describedby="@(error is null ? null : errorId)"
+                @onchange="args => changed(int.TryParse(args.Value?.ToString(), out var id) ? id : null)">
+          <option value="" selected="@(value is null)">@(required ? $"Choose a {label.ToLowerInvariant()}" : UserPageText.AnySpecialityOption)</option>
+          @foreach (var option in options)
+          {
+            <option value="@option.Id" selected="@(value == option.Id)">@option.Name</option>
+          }
+        </select>
+        @if (error is not null)
+        {
+          <p id="@errorId" class="validation-message">@error</p>
+        }
+      </div>
+    }
+  };
+
+  private async Task ToggleAddAsync()
+  {
+    if (_addOpen)
+    {
+      await CancelAddAsync();
+      return;
+    }
+
+    ClearResult();
+    ResetAdd();
+    _addOpen = true;
+    _focusFirstRadio = true;
+
+    // S13: what the PERSON's institution has adopted, read when the panel opens.
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      await action(authState.User);
-      _statusMessage = successMessage;
-      _user = await Sender.Send(new GetUserByIdQuery(UserId, authState.User));
-      done = true;
+      _adopted = _user?.InstitutionId is int institutionId
+        ? await Sender.Send(new GetAdoptedDisciplinesForInstitutionQuery(institutionId, _caller!)) ?? AdoptedDisciplinesDto.None
+        : AdoptedDisciplinesDto.None;
     }
     catch (Exception exception)
     {
-      _actionError = RefusalText.Of(exception);
+      Logger.LogError(exception, "The adopted disciplines for {UserId} could not be read.", UserId);
+      _adopted = AdoptedDisciplinesDto.None;
+      _panelError = UserPageText.ActionFailed;
+    }
+  }
+
+  /// <summary>F11: Cancel closes the panel quietly, and the focus goes back to Add a role….</summary>
+  private Task CancelAddAsync()
+  {
+    _addOpen = false;
+    ResetAdd();
+    _focusAfterRender = AddToggleId;
+    return Task.CompletedTask;
+  }
+
+  private void ResetAdd()
+  {
+    _addRole = null;
+    _addSpeciality = null;
+    _addSubSpeciality = null;
+    _roleError = null;
+    _specialityError = null;
+    _subSpecialityError = null;
+    _panelError = null;
+  }
+
+  private void ChooseRole(string role)
+  {
+    _addRole = role;
+    _addSpeciality = null;
+    _addSubSpeciality = null;
+    _roleError = null;
+    _specialityError = null;
+    _subSpecialityError = null;
+    _panelError = null;
+  }
+
+  /// <remarks>
+  /// The page's own checks first, each beside its field with the focus on it and no summary (S22): a role, then a required
+  /// speciality, then a required sub-speciality. Then the command (M2), whose typed refusal goes beside its field too
+  /// (<see cref="RoleAddRefusedException.Field" />, never the message's text); a refusal of who may act goes in the section.
+  /// </remarks>
+  private async Task AddRoleAsync()
+  {
+    if (_inFlight is not null || _user is null)
+    {
+      return;
+    }
+
+    _roleError = _specialityError = _subSpecialityError = _panelError = null;
+    var role = _addRole;
+    if (role is null)
+    {
+      _roleError = UserPageText.ChooseARole;
+      _focusFirstRadio = true;
+      return;
+    }
+
+    var specialityPart = SpecialityPart();
+    var subPart = SubSpecialityPart();
+    var both = UserAdministrationRules.RoleTakesSubSpeciality(role);
+    if (specialityPart == Part.Choose && _addSpeciality is null)
+    {
+      _specialityError = both ? UserPageText.ChooseBoth : UserPageText.ChooseSpeciality;
+      _focusAfterRender = SpecialitySelectId;
+      return;
+    }
+
+    if (specialityPart == Part.Nothing || subPart == Part.Nothing)
+    {
+      _panelError = UserPageText.NothingAdopted(_user.InstitutionName ?? string.Empty);
+      _focusAfterRender = PanelErrorId;
+      return;
+    }
+
+    if (both && subPart == Part.None && _user.SubSpecialityIds.Count == 0)
+    {
+      // A speciality is still to be chosen before the sub-speciality is asked.
+      _specialityError = UserPageText.ChooseBoth;
+      _focusAfterRender = SpecialitySelectId;
+      return;
+    }
+
+    if (subPart == Part.Choose && _addSubSpeciality is null)
+    {
+      _subSpecialityError = UserPageText.ChooseBoth;
+      _focusAfterRender = SubSpecialitySelectId;
+      return;
+    }
+
+    _inFlight = "add";
+    var before = _user.Scope;
+    var name = _user.Name;
+    try
+    {
+      await Sender.Send(new AddRoleToUserCommand(_user.UserId, role, PostedSpeciality(), PostedSubSpeciality(), _caller!));
+      await RereadAsync();
+      _addOpen = false;
+      ResetAdd();
+      ShowResult(Place.Roles, UserPageText.RoleAddedLead(role, name),
+        UserPageText.RoleAddedScope(name, before, _user?.Scope ?? before));
+    }
+    catch (RoleAddRefusedException refusal)
+    {
+      switch (refusal.Field)
+      {
+        case RoleAddField.Speciality when SpecialityPart() is Part.Choose or Part.Optional:
+          _specialityError = refusal.Message;
+          _focusAfterRender = SpecialitySelectId;
+          break;
+        case RoleAddField.SubSpeciality when SubSpecialityPart() is Part.Choose:
+          _subSpecialityError = refusal.Message;
+          _focusAfterRender = SubSpecialitySelectId;
+          break;
+        case RoleAddField.Role:
+          _roleError = refusal.Message;
+          _focusFirstRadio = true;
+          break;
+        default:
+          _panelError = refusal.Message;
+          _focusAfterRender = PanelErrorId;
+          break;
+      }
+    }
+    catch (Exception exception)
+    {
+      ShowResult(Place.Roles, RefusalOrLogged(exception, "role add"), refused: true);
     }
     finally
     {
       _inFlight = null;
     }
-
-    if (done)
-    {
-      _result?.FocusAfterRender();
-    }
-
-    return done;
   }
 
-  private async Task AddRoleAsync()
+  // ─── Remove… (S3, F6) ──────────────────────────────────────────────────
+
+  private async Task OpenRemoveAsync(string role)
   {
-    if (string.IsNullOrWhiteSpace(_addRoleSelection))
+    if (_inFlight is not null || _removeDialog is null)
     {
       return;
     }
-    var role = _addRoleSelection;
-    var done = await RunActionAsync(
-      AddRoleAction,
-      principal => Sender.Send(new AddRoleToUserCommand(UserId, role, principal)),
-      $"Role '{role}' added.");
 
-    // Kept after a refusal, so Add role stays enabled, with the focus on it, for the retry (T234).
-    if (done)
+    ClearResult();
+    _removeRole = role;
+    _waiting = null;
+    _waitingUnread = false;
+    if (role == WombatRoles.Assessor)
     {
-      _addRoleSelection = string.Empty;
+      await ReadWaitingAsync();
+    }
+
+    await _removeDialog.ShowAsync();
+  }
+
+  /// <summary>F6: the requests waiting for the person, read as the dialog opens, never on a page view.</summary>
+  private async Task ReadWaitingAsync()
+  {
+    try
+    {
+      _waiting = await Sender.Send(new GetRequestsWaitingForUserQuery(UserId, _caller!)) ?? WaitingRequestsDto.None;
+    }
+    catch (Exception exception)
+    {
+      Logger.LogError(exception, "The requests waiting for {UserId} could not be read.", UserId);
+      _waiting = null;
+      _waitingUnread = true;
     }
   }
 
-  private Task RemoveRoleAsync(string role)
-    => RunActionAsync(
-      RemoveAction(role),
-      principal => Sender.Send(new RemoveRoleFromUserCommand(UserId, role, principal)),
-      $"Role '{role}' removed.");
+  private RenderFragment RemoveBody => __builder =>
+  {
+    if (_user is null || _removeRole is null)
+    {
+      return;
+    }
+
+    var left = WombatRoleLabels.InOrder(_user.Roles.Where(role => role != _removeRole));
+    <p>@UserPageText.RemoveEffect(_removeRole, _user)</p>
+    @if (_removeRole == WombatRoles.Assessor)
+    {
+      @Waiting(locked: false)
+      <p>@UserPageText.TrainingKept(_user.Name)</p>
+    }
+    @if (left.Count == 0)
+    {
+      <p>@UserPageText.WillHoldNoRole(_user.Name)</p>
+    }
+    else
+    {
+      <p>@UserPageText.ScopeStaysFor(_user.Name, _user.Scope, left)</p>
+    }
+  };
+
+  private RenderFragment Waiting(bool locked) => __builder =>
+  {
+    if (_user is null)
+    {
+      return;
+    }
+
+    if (_waitingUnread)
+    {
+      <Alert Kind="warning" Role="">@UserPageText.WaitingUnread(_user.Name)</Alert>
+    }
+    else if (_waiting is { Count: > 0 } waiting)
+    {
+      @* S19: the waiting request is an Alert; it arrives with the dialog, so it is no live region (S23). *@
+      <Alert Kind="warning" Role="">
+        <p><strong>@UserPageText.WaitingLead(waiting.Count, _user.Name)</strong>@UserPageText.WaitingSince(waiting) @(locked ? UserPageText.WaitingStayLocked(waiting.Count) : UserPageText.WaitingStayRemoved(waiting.Count))</p>
+        <ul class="dialog-list">
+          @foreach (var row in waiting.FirstFive)
+          {
+            <li>@UserPageText.WaitingRowText(row)</li>
+          }
+          @if (waiting.Count > waiting.FirstFive.Count)
+          {
+            <li>@UserPageText.AndMore(waiting.Count - waiting.FirstFive.Count)</li>
+          }
+        </ul>
+      </Alert>
+    }
+  };
+
+  private async Task RemoveRoleAsync()
+  {
+    if (_inFlight is not null || _user is null || _removeRole is not { } role)
+    {
+      return;
+    }
+
+    _inFlight = $"remove:{role}";
+    var name = _user.Name;
+    try
+    {
+      await Sender.Send(new RemoveRoleFromUserCommand(_user.UserId, role, _caller!));
+      await RereadAsync();
+      ShowResult(Place.Roles, UserPageText.RoleRemovedLead(role, name), UserPageText.SessionsEnd);
+    }
+    catch (Exception exception)
+    {
+      ShowResult(Place.Roles, RefusalOrLogged(exception, "role removal"), refused: true);
+    }
+    finally
+    {
+      _inFlight = null;
+    }
+  }
+
+  // ─── Sign-in and access ────────────────────────────────────────────────
+
+  private RenderFragment SignInSection(UserDetailDto user) => __builder =>
+  {
+    var lastWayIn = !user.HasLocalPassword && user.InstitutionalSignIns.Count == 1;
+    <section class="detail-card user-section" aria-labelledby="@SignInHeadingId">
+      <h2 id="@SignInHeadingId">Sign-in and access</h2>
+
+      @if (!IsOwnAccount)
+      {
+        <div class="section-part">
+          <h3>Password</h3>
+          @Result(Place.Password)
+          @if (!user.AllowsLocalPassword)
+          {
+            @* F3, M3: no field, and the reset command refuses such an account too. *@
+            <p>@UserPageText.SignsInOnlyThrough(user.Name, user.InstitutionalSignIns.Select(signIn => signIn.DisplayName).ToList())</p>
+          }
+          else
+          {
+            <p class="field-help">Sets a new password directly. The user is not emailed; share the password securely out-of-band.</p>
+            @* The field, its Show toggle and the six rules under it (T339, flow 02, E11). A refusal that broke a rule marks
+               the field, which names its own message and the refusal (A15). *@
+            <PasswordField Label="New password" Id="@ResetInputId" Autocomplete="new-password"
+                           @bind-Value="_newPassword" Invalid="@(_resetRulesRefused || _resetFieldMessage is not null)"
+                           DescribedBy="@ResetDescribedBy">
+              @if (_resetRulesRefused)
+              {
+                <div class="validation-message" id="@ResetMessageId">@PasswordRuleMessages.FieldMessage</div>
+              }
+              else if (_resetFieldMessage is not null)
+              {
+                <div class="validation-message" id="@ResetMessageId">@_resetFieldMessage</div>
+              }
+              <PasswordRules Id="@ResetRulesId" />
+            </PasswordField>
+            <FormActions>
+              <button type="button" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_inFlight == "reset")"
+                      @onclick="ResetPasswordAsync">Reset password</button>
+            </FormActions>
+          }
+        </div>
+      }
+
+      <div class="section-part">
+        <h3>Institutional sign-in</h3>
+        @Result(Place.SignIn)
+        @if (user.InstitutionalSignIns.Count == 0)
+        {
+          <p>@UserPageText.NoSignInLinked(user.Name, user.HasLocalPassword)</p>
+        }
+        else
+        {
+          <ul class="signin-methods">
+            @foreach (var signIn in user.InstitutionalSignIns)
+            {
+              var reasonId = $"{SignInTriggerId(signIn.Provider)}-why";
+              <li class="signin-method">
+                <Icon Name="building-2" Size="20" Class="signin-method-icon" />
+                <div class="signin-method-text">
+                  <strong>@signIn.DisplayName</strong>
+                  <span class="signin-method-detail">Institutional sign-in.</span>
+                </div>
+                @if (IsOwnAccount)
+                {
+                  @* Her own: flow 02's My account, which asks for her password. *@
+                }
+                else if (lastWayIn)
+                {
+                  @* F3, P22: the last way in, refused in the built words, with no hint. *@
+                  <div class="signin-method-action">
+                    <button type="button" id="@SignInTriggerId(signIn.Provider)" class="btn btn-outline btn-sm is-unavailable"
+                            aria-label="@UserPageText.SignInRemoveTriggerName(signIn.DisplayName, user.Name)"
+                            aria-disabled="true" aria-describedby="@reasonId">Remove…</button>
+                    <p id="@reasonId" class="field-help">@UserPageText.LastWayIn</p>
+                  </div>
+                }
+                else
+                {
+                  <div class="signin-method-action">
+                    <button type="button" id="@SignInTriggerId(signIn.Provider)" class="btn btn-outline btn-sm"
+                            aria-label="@UserPageText.SignInRemoveTriggerName(signIn.DisplayName, user.Name)" aria-haspopup="dialog"
+                            aria-disabled="@InFlight.AriaDisabled(_inFlight == $"signin:{signIn.Provider}")"
+                            @onclick="() => OpenSignInRemoveAsync(signIn)">Remove…</button>
+                  </div>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
+      @if (!IsOwnAccount)
+      {
+        <div class="section-part">
+          <h3>Lockout</h3>
+          @Result(Place.Lockout)
+          @if (user.IsLockedOut)
+          {
+            <p>@UserPageText.LockedNow</p>
+            <FormActions>
+              @* Q5: reactivated in one press. *@
+              <button type="button" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_inFlight == "unlock")"
+                      @onclick="ReactivateAsync">Reactivate user</button>
+            </FormActions>
+          }
+          else if (HoldsAdministrator)
+          {
+            <p class="muted">@UserPageText.AdministratorNotLockable</p>
+          }
+          else
+          {
+            @* Q17, the nit: the effects that apply to this person. UserDetailLockCardTests names each. *@
+            <p>@UserPageText.LockoutIntro</p>
+            <ul id="lockout-effects">
+              @foreach (var effect in UserPageText.LockoutEffects(user.Roles))
+              {
+                <li>@effect</li>
+              }
+            </ul>
+            <p>@UserPageText.LockoutRecords</p>
+            <FormActions>
+              <button type="button" id="@LockTriggerId" class="btn btn-outline" aria-label="@UserPageText.LockTriggerName(user.Name)"
+                      aria-haspopup="dialog" aria-disabled="@InFlight.AriaDisabled(_inFlight == "lock")" @onclick="OpenLockAsync">
+                <Icon Name="lock" />
+                Lock out…
+              </button>
+            </FormActions>
+          }
+        </div>
+      }
+    </section>
+  };
+
+  private string ResetDescribedBy
+    => _resetRulesRefused
+      ? $"{ResetMessageId} {ActionErrorId}"
+      : _resetFieldMessage is not null ? $"{ResetMessageId} {ResetRulesId}" : ResetRulesId;
 
   /// <remarks>
-  /// The password is cleared once the reset has answered, done or refused, so it is not left on the page. It is not
-  /// cleared before, as it was until T234: that disabled Reset password while it had the focus. A refusal then leaves
-  /// Reset password disabled, so its result takes the focus too.
+  /// The password is cleared once the reset has answered, done or refused, so it is not left on the page. An empty field is
+  /// the page's own refusal, beside the field, which takes the focus (S22). The refusal and the result show in Password.
   /// </remarks>
   private async Task ResetPasswordAsync()
   {
-    if (_inFlight is not null)
+    if (_inFlight is not null || _user is null)
     {
       return;
     }
 
-    var newPassword = _newPassword;
-    var done = await RunActionAsync(
-      ResetPasswordAction,
-      principal => Sender.Send(new ResetUserPasswordCommand(UserId, newPassword, principal)),
-      "Password reset. Share the new password with the user out-of-band.");
-    _newPassword = string.Empty;
-
-    if (!done)
+    ClearResult();
+    _resetRulesRefused = false;
+    _resetFieldMessage = null;
+    if (string.IsNullOrWhiteSpace(_newPassword))
     {
+      _resetFieldMessage = "Type the new password.";
+      _focusAfterRender = ResetInputId;
+      return;
+    }
+
+    _inFlight = "reset";
+    var password = _newPassword;
+    var name = _user.Name;
+    try
+    {
+      await Sender.Send(new ResetUserPasswordCommand(_user.UserId, password, _caller!));
+      ShowResult(Place.Password, UserPageText.PasswordResetLead(name), UserPageText.PasswordResetRest(name));
+    }
+    catch (Exception exception)
+    {
+      var refusal = RefusalOrLogged(exception, "password reset");
       // The refusal lists the rules broken under their heading (UserAdministrationService.ResetRefusal); only then is the
       // field itself at fault.
-      _resetRulesRefused = _actionError?.Contains(PasswordRuleMessages.Heading, StringComparison.Ordinal) == true;
-      _result?.FocusAfterRender();
+      _resetRulesRefused = refusal.Contains(PasswordRuleMessages.Heading, StringComparison.Ordinal);
+      ShowResult(Place.Password, refusal, refused: true);
+    }
+    finally
+    {
+      _newPassword = string.Empty;
+      _inFlight = null;
     }
   }
 
-  private Task SetLockoutAsync(bool locked)
-    => RunActionAsync(
-      LockoutAction,
-      principal => Sender.Send(new SetUserLockoutCommand(UserId, locked, principal)),
-      locked ? "User locked out." : "User reactivated.");
+  private async Task OpenSignInRemoveAsync(InstitutionalSignIn signIn)
+  {
+    if (_inFlight is not null || _signInDialog is null)
+    {
+      return;
+    }
 
-  private Task RevokeInvitationsAsync()
-    => RunActionAsync(
-      RevokeAction,
-      async principal =>
+    ClearResult();
+    _signInTarget = signIn;
+    await _signInDialog.ShowAsync();
+  }
+
+  private async Task RemoveSignInAsync()
+  {
+    if (_inFlight is not null || _user is null || _signInTarget is not { } target)
+    {
+      return;
+    }
+
+    _inFlight = $"signin:{target.Provider}";
+    var name = _user.Name;
+    try
+    {
+      await Sender.Send(new RemoveUserInstitutionalSignInCommand(_user.UserId, target.Provider, _caller!));
+      await RereadAsync();
+      ShowResult(Place.SignIn, UserPageText.SignInRemovedLead(target.DisplayName, name),
+        UserPageText.SignInRemovedRest(name, _user?.HasLocalPassword ?? true, _user?.InstitutionalSignIns.Count ?? 0));
+    }
+    catch (InstitutionalSignInRemovalRefusedException refusal)
+    {
+      // F7: each reason a word, never the message's text.
+      ShowResult(Place.SignIn, refusal.Reason switch
       {
-        var revoked = await Sender.Send(new RevokePendingInvitationsForEmailCommand(_user!.Email, principal));
-        _ = revoked;
-      },
-      "Pending invitations revoked.");
+        InstitutionalSignInRemoval.LastWayIn => UserPageText.LastWayIn,
+        InstitutionalSignInRemoval.NotLinked => UserAdministrationRules.SignInNotLinked,
+        _ => UserAdministrationRules.SignInChanged
+      }, refused: true);
+      await RereadAsync();
+    }
+    catch (Exception exception)
+    {
+      ShowResult(Place.SignIn, RefusalOrLogged(exception, "sign-in removal"), refused: true);
+    }
+    finally
+    {
+      _inFlight = null;
+    }
+  }
+
+  private async Task OpenLockAsync()
+  {
+    if (_inFlight is not null || _lockDialog is null)
+    {
+      return;
+    }
+
+    ClearResult();
+    _waiting = null;
+    _waitingUnread = false;
+    await ReadWaitingAsync();
+    await _lockDialog.ShowAsync();
+  }
+
+  private RenderFragment LockBody => __builder =>
+  {
+    if (_user is null)
+    {
+      return;
+    }
+
+    <p>@UserPageText.LockBody(_user.Name)</p>
+    <ul class="dialog-list">
+      @foreach (var effect in UserPageText.LockoutEffects(_user.Roles))
+      {
+        <li>@effect</li>
+      }
+    </ul>
+    @Waiting(locked: true)
+    <p>@UserPageText.LockoutRecords</p>
+  };
+
+  private async Task LockAsync()
+  {
+    if (_inFlight is not null || _user is null)
+    {
+      return;
+    }
+
+    _inFlight = "lock";
+    var name = _user.Name;
+    try
+    {
+      await Sender.Send(new SetUserLockoutCommand(_user.UserId, true, _caller!));
+      await RereadAsync();
+      ShowResult(Place.Lockout, UserPageText.LockedLead(name), UserPageText.SessionsEnd);
+    }
+    catch (Exception exception)
+    {
+      ShowResult(Place.Lockout, RefusalOrLogged(exception, "lock"), refused: true);
+    }
+    finally
+    {
+      _inFlight = null;
+    }
+  }
+
+  private async Task ReactivateAsync()
+  {
+    if (_inFlight is not null || _user is null)
+    {
+      return;
+    }
+
+    ClearResult();
+    _inFlight = "unlock";
+    var name = _user.Name;
+    try
+    {
+      await Sender.Send(new SetUserLockoutCommand(_user.UserId, false, _caller!));
+      await RereadAsync();
+      ShowResult(Place.Lockout, UserPageText.Reactivated(name));
+    }
+    catch (Exception exception)
+    {
+      ShowResult(Place.Lockout, RefusalOrLogged(exception, "reactivation"), refused: true);
+    }
+    finally
+    {
+      _inFlight = null;
+    }
+  }
 }

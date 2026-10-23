@@ -46,6 +46,9 @@ public sealed class ResetUserPasswordCommandHandler : IRequestHandler<ResetUserP
     /// Every refusal comes before the password is written (T278): who the caller is before anything is looked up, then the
     /// user. The caller's own password is refused: a reset here asks for no current password, so an administrator's
     /// session left open was enough to take the account. They change it on the Change password page, which asks for it.
+    /// An account that may not use a Wombat password (<see cref="AccountSignInMethods.AllowsLocalPassword" /> false: its
+    /// institution's sign-in provisioned it) is refused too (T376, flow 12, F3): the sign-in endpoint would refuse the
+    /// password, so a reset would set one nobody can use, and the page offers no field for it.
     /// </remarks>
     public async Task Handle(ResetUserPasswordCommand request, CancellationToken cancellationToken)
     {
@@ -61,6 +64,11 @@ public sealed class ResetUserPasswordCommandHandler : IRequestHandler<ResetUserP
             && !request.Principal.IsAdministrator())
         {
             throw new UnauthorizedAccessException("You do not have permission to reset a global administrator's password.");
+        }
+
+        if (await _userAdministrationService.GetSignInMethodsAsync(user.UserId, cancellationToken) is { AllowsLocalPassword: false })
+        {
+            throw new InvalidOperationException(UserAdministrationRules.PasswordNotSettable);
         }
 
         await _userAdministrationService.ResetPasswordAsync(request.UserId, request.NewPassword, cancellationToken);

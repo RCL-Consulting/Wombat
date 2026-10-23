@@ -1,50 +1,32 @@
-using System.Security.Claims;
-using System.Text.RegularExpressions;
-using AngleSharp.Dom;
 using Bunit;
-using Microsoft.AspNetCore.Components;
-using Bunit.TestDoubles;
 using FluentAssertions;
-using MediatR;
-using Microsoft.Extensions.DependencyInjection;
-using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Users;
-using Wombat.Application.Features.Users.Queries.GetUserById;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.Admin.Users;
-using Wombat.Web.Services;
 
 namespace Wombat.Web.Tests.Admin;
 
 /// <summary>
-/// T303: a user's page offers the Trainee role under neither Add role nor Remove. Admission grants it and Mark complete
-/// takes it away, so a held Trainee reads "System-managed", as a held PendingTrainee does, and the Add role field says
-/// where a registrar is made a trainee.
+/// T303: a user's page offers the Trainee role under neither Add a role… nor Remove…. Admission grants it and Mark complete
+/// takes it away, so a held Trainee reads "System-managed", a held Pending trainee "System-managed: waiting to be admitted.",
+/// and Add a role… says where a registrar is made a trainee. Since T376 (flow 12) the roles are radios in a note panel, by
+/// their labels (Q14).
 /// </summary>
 /// <remarks>
 /// Until T303 Dr Molefe's page (runbook Step 2.28), a pending registrar's, offered Trainee under Add role beside
 /// InstitutionalAdmin to Assessor, and after Mark complete (Step 5.17) it offered Trainee again. A held Trainee had a
 /// Remove, which took the role from a running programme.
 /// </remarks>
-public sealed class UserDetailTraineeRoleTests : TestContext
+public sealed class UserDetailTraineeRoleTests : UserDetailPageTestBase
 {
-    private const int InstitutionA = 1;
-
     private const string TraineeRoleNotOffered =
         "Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit…'.";
 
-    /// <summary>Every role Add role may offer, in its order: InstitutionalAdmin to Assessor.</summary>
+    /// <summary>Every role Add a role… may offer, in its order: Institutional admin to Assessor.</summary>
     private static readonly string[] ManagedHere =
     [
-        WombatRoles.InstitutionalAdmin,
-        WombatRoles.SpecialityAdmin,
-        WombatRoles.SubSpecialityAdmin,
-        WombatRoles.Coordinator,
-        WombatRoles.CommitteeMember,
-        WombatRoles.Assessor
+        "Institutional admin", "Speciality admin", "Sub-speciality admin", "Coordinator", "Committee member", "Assessor"
     ];
-
-    private TestAuthorizationContext? _auth;
 
     public static TheoryData<string> UserAdministrationRoles => new()
     {
@@ -56,103 +38,72 @@ public sealed class UserDetailTraineeRoleTests : TestContext
     [MemberData(nameof(UserAdministrationRoles))]
     public void APendingRegistrarsPage_OffersInstitutionalAdminToAssessor_NotTrainee_AndMarksPendingTraineeSystemManaged(string role)
     {
-        // Step 2.28: Dr Molefe, invited and awaiting admission.
-        var cut = Render(role, User([WombatRoles.PendingTrainee]));
+        SignIn(role);
+        var cut = OpenPanel(Molefe([WombatRoles.PendingTrainee]));
 
-        AddRoleOptions(cut).Should().Equal(ManagedHere, role);
-        RoleRows(cut).Should().Equal([(WombatRoles.PendingTrainee, "System-managed")], role);
+        Offered(cut).Should().Equal(ManagedHere, role);
+        RoleRows(cut).Should().Equal([("Pending trainee", "System-managed: waiting to be admitted. Open Trainees")], role);
     }
 
     [Theory]
     [MemberData(nameof(UserAdministrationRoles))]
     public void AGraduatesPage_WhichHoldsNoRole_OffersNoTrainee(string role)
     {
-        // Step 5.17: Mark complete took the Trainee role away, and the page read "This user has no roles.".
-        var cut = Render(role, User([]));
+        // Step 5.17: Mark complete took the Trainee role away; since T376 the page says so (S2), not "This user has no roles.".
+        SignIn(role);
+        var cut = OpenPanel(Molefe([]));
 
-        cut.Markup.Should().Contain("This user has no roles.");
-        AddRoleOptions(cut).Should().Equal(ManagedHere, role);
+        cut.Markup.Should().NotContain("This user has no roles.");
+        cut.FindAll(".no-role").Should().ContainSingle();
+        Offered(cut).Should().Equal(ManagedHere, role);
     }
 
     [Theory]
     [MemberData(nameof(UserAdministrationRoles))]
     public void ATraineesPage_MarksTheTraineeRoleSystemManaged_WithNoRemove_AndKeepsRemoveForARoleManagedHere(string role)
     {
-        var cut = Render(role, User([WombatRoles.Trainee, WombatRoles.Coordinator]));
+        SignIn(role);
+        var cut = OpenPanel(Molefe([WombatRoles.Trainee, WombatRoles.Coordinator]));
 
-        RoleRows(cut).Should().Equal(
-            [(WombatRoles.Trainee, "System-managed"), (WombatRoles.Coordinator, "Remove")], role);
+        RoleRows(cut).Should().Equal([("Coordinator", "Remove…"), ("Trainee", "System-managed")], role);
         cut.FindAll("button").Select(button => button.GetAttribute("aria-label"))
-            .Should().NotContain("Remove the Trainee role", role)
-            .And.Contain("Remove the Coordinator role", "the control: a role the surface manages keeps its Remove");
-        AddRoleOptions(cut).Should().NotContain(WombatRoles.Trainee, role)
-            .And.NotContain(WombatRoles.Coordinator, "a held role is not offered again");
+            .Should().NotContain("Remove Trainee from Lerato Molefe", role)
+            .And.Contain("Remove Coordinator from Lerato Molefe", "the control: a role the surface manages keeps its Remove…");
+        Offered(cut).Should().NotContain("Trainee", role).And.NotContain("Coordinator", "a held role is not offered again");
     }
 
     [Theory]
     [MemberData(nameof(UserAdministrationRoles))]
-    public void TheAddRoleField_SaysWhereARegistrarIsMadeATrainee_AndTheSelectNamesIt(string role)
+    public void AddARole_SaysWhereARegistrarIsMadeATrainee_ClosedAndOpen(string role)
     {
-        var cut = Render(role, User([WombatRoles.PendingTrainee]));
+        SignIn(role);
+        var cut = Open(Molefe([WombatRoles.PendingTrainee]), userId: "molefe");
 
-        var help = cut.Find("#add-role-select-help");
-        Text(help).Should().Be(TraineeRoleNotOffered);
-        cut.Find("#add-role-select").GetAttribute("aria-describedby").Should().Be("add-role-select-help");
+        Text(Section(cut, "Roles and scope").QuerySelector("p.field-help")!).Should().Be(TraineeRoleNotOffered);
+
+        cut.Find("#add-role-toggle").Click();
+        Text(cut.Find("#add-role-panel p.field-help")).Should().Be(TraineeRoleNotOffered);
     }
 
     // ─── Fixture ─────────────────────────────────────────────────────────────
 
-    private IRenderedComponent<UserDetail> Render(string callerRole, UserDetailDto user)
+    private IRenderedComponent<UserDetail> OpenPanel(UserDetailDto user)
     {
-        _auth ??= this.AddTestAuthorization();
-        _auth.SetAuthorized("admin@test");
-        _auth.SetRoles(callerRole);
-
-        var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, "admin-1") };
-        if (callerRole != WombatRoles.Administrator)
-        {
-            claims.Add(new Claim(WombatClaimTypes.InstitutionId, InstitutionA.ToString()));
-        }
-
-        _auth.SetClaims(claims.ToArray());
-
-        // The reset-password field's show/hide toggle calls into the browser; it is not what these tests are about.
-        JSInterop.Mode = JSRuntimeMode.Loose;
-
-        Services.AddSingleton<IScopedSender>(new FakeSender(user));
-        // PasswordField reads it (T339, flow 02): this page is interactive, so its toggles are the circuit's.
-        SetRendererInfo(new RendererInfo("Server", isInteractive: true));
-        var cut = RenderComponent<UserDetail>(parameters => parameters.Add(page => page.UserId, user.UserId));
-        cut.WaitForState(() => cut.FindAll("#add-role-select").Count == 1);
+        var cut = Open(user, userId: user.UserId);
+        cut.Find("#add-role-toggle").Click();
         return cut;
     }
 
-    /// <summary>The roles Add role offers, by value, leaving out the empty "Select role".</summary>
-    private static IReadOnlyList<string> AddRoleOptions(IRenderedComponent<UserDetail> cut)
-        => cut.FindAll("#add-role-select option")
-            .Select(option => option.GetAttribute("value") ?? string.Empty)
-            .Where(value => value.Length > 0)
-            .ToArray();
+    /// <summary>The roles Add a role… offers, by their labels.</summary>
+    private static IReadOnlyList<string> Offered(IRenderedComponent<UserDetail> cut)
+        => cut.FindAll("#add-role-panel fieldset .form-check label").Select(Text).ToArray();
 
-    /// <summary>Each held role, and what its row offers: "Remove", or the muted note that stands in its place.</summary>
+    /// <summary>Each held role, and what its row offers: Remove…, or the note that stands in its place.</summary>
     private static IReadOnlyList<(string Role, string Offer)> RoleRows(IRenderedComponent<UserDetail> cut)
-        => cut.FindAll(".stack-list li")
-            .Select(row => (Text(row.QuerySelector("span")!), Text(row.Children[^1])))
+        => cut.FindAll(".role-row")
+            .Select(row => (Text(row.QuerySelector(".role-row-label")!), Text(row.Children[^1])))
             .ToArray();
 
-    private static UserDetailDto User(IReadOnlyCollection<string> roles) => new(
-        "molefe", "molefe@a.test", "Lerato", "Molefe", InstitutionA, "Institution A", [], [], roles, false, []);
-
-    private static string Text(IElement element) => Regex.Replace(element.TextContent, @"\s+", " ").Trim();
-
-    private sealed class FakeSender(UserDetailDto user) : IScopedSender
-    {
-        public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
-            => request is GetUserByIdQuery
-                ? Task.FromResult((TResponse)(object)user)
-                : throw new NotSupportedException($"Unhandled request: {request.GetType().Name}");
-
-        public Task Send(IRequest request, CancellationToken cancellationToken = default)
-            => throw new NotSupportedException($"No command is sent in these tests: {request.GetType().Name}");
-    }
+    private static UserDetailDto Molefe(IReadOnlyCollection<string> roles) => new(
+        "molefe", "molefe@kgk.wombat.local", "Lerato", "Molefe", Kgk, KgkName, [], [], roles, false);
 }

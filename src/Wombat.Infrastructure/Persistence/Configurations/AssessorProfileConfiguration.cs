@@ -18,15 +18,5 @@ public sealed class AssessorProfileConfiguration : IEntityTypeConfiguration<Asse
             .WithMany()
             .HasForeignKey(profile => profile.InstitutionId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(profile => profile.Speciality)
-            .WithMany()
-            .HasForeignKey(profile => profile.SpecialityId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(profile => profile.SubSpeciality)
-            .WithMany()
-            .HasForeignKey(profile => profile.SubSpecialityId)
-            .OnDelete(DeleteBehavior.Restrict);
     }
 }

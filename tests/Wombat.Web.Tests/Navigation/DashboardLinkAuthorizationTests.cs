@@ -389,7 +389,16 @@ public sealed class DashboardLinkAuthorizationTests
         {
             GetAdministratorDashboardSummaryQuery => new AdministratorDashboardSummaryDto(DatabaseHealthy: true, TotalUserCount: 12),
             GetInstitutionalAdminDashboardSummaryQuery => new InstitutionalAdminDashboardSummaryDto(
-                [new RoleCountItem(WombatRoles.Trainee, 3)], SpecialityCount: 1, SubSpecialityCount: 1),
+                // T376, flow 12: every role a link to Users filtered by it, the waiting line's Open Trainees, and Your
+                // institution's Open ‹institution›.
+                WombatRoles.All.Select(role => new RoleCountItem(role, 3)).ToArray(),
+                AccountCount: 12,
+                OnlyAccountIsYours: false,
+                WaitingCount: 3,
+                AdoptedSpecialityCount: 1,
+                AdoptedSubSpecialityCount: 1,
+                Adoptions: [new AdoptedCurriculumItem("Paediatrics", "Paediatrics", "CPSA", "Paediatric EPA Curriculum", "11.1")],
+                Institution: new InstitutionCardItem(1, "Kgosi Kgari Teaching Hospital", "KGK", "paeds-admin@kgk.wombat.local", IsActive: true)),
             // T358, flow 06: every card's list filled, a registrar exempt among them, an EPA every registrar has met (text)
             // beside one that links, more than five of each, and the Coordinator's Nothing filed and invitations.
             GetSpecialityAdminDashboardSummaryQuery => OversightHomeFixtures.SpecialityAdmin(Waiting(), Registrars(), Coverage()),

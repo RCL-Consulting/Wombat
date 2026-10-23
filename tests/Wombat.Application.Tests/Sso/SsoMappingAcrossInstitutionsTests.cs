@@ -93,9 +93,9 @@ public sealed class SsoMappingAcrossInstitutionsTests
         var mappingId = (await db.SsoGroupRoleMappings.SingleAsync()).Id;
         var principal = TestPrincipals.InRoles([role, WombatRoles.Trainee], "registrar-admin", Kgk);
 
-        var list = () => new ListSsoGroupMappingsQueryHandler(db).Handle(new ListSsoGroupMappingsQuery(principal), CancellationToken.None);
+        var list = () => new ListSsoGroupMappingsQueryHandler(db, Providers()).Handle(new ListSsoGroupMappingsQuery(principal), CancellationToken.None);
         var create = () => new CreateSsoGroupMappingCommandHandler(db, Providers()).Handle(Command("kgk", Kgk, principal), CancellationToken.None);
-        var delete = () => new DeleteSsoGroupMappingCommandHandler(db).Handle(new DeleteSsoGroupMappingCommand(mappingId, principal), CancellationToken.None);
+        var delete = () => new DeleteSsoGroupMappingCommandHandler(db, Providers()).Handle(new DeleteSsoGroupMappingCommand(mappingId, principal), CancellationToken.None);
 
         (await list.Should().ThrowAsync<UnauthorizedAccessException>()).Which.Message.Should().Be(UserAdministrationRules.TraineeAdministersNoUser);
         (await create.Should().ThrowAsync<UnauthorizedAccessException>()).Which.Message.Should().Be(UserAdministrationRules.TraineeAdministersNoUser);
@@ -119,8 +119,10 @@ public sealed class SsoMappingAcrossInstitutionsTests
         db.UserRoleAssignments.Should().BeEmpty();
     }
 
+    // Committee member at Any speciality: these tests are about the institution, and a role that needs no scope keeps the
+    // mapping's scope checks (T376 build review, B3) out of them.
     private static CreateSsoGroupMappingCommand Command(string providerKey, int institutionId, System.Security.Claims.ClaimsPrincipal principal)
-        => new(providerKey, "consultants", "Consultants", WombatRoles.Assessor, institutionId, null, null, principal);
+        => new(providerKey, "consultants", "Consultants", WombatRoles.CommitteeMember, institutionId, null, null, principal);
 
     private static SsoGroupRoleMapping Mapping(string providerKey, int institutionId) => new()
     {

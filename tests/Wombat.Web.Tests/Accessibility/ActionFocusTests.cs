@@ -57,7 +57,6 @@ using Wombat.Application.Features.Users;
 using Wombat.Application.Features.Users.Commands.AddRoleToUser;
 using Wombat.Application.Features.Users.Commands.RemoveRoleFromUser;
 using Wombat.Application.Features.Users.Commands.ResetUserPassword;
-using Wombat.Application.Features.Users.Commands.RevokePendingInvitationsForEmail;
 using Wombat.Application.Features.Users.Commands.SetUserLockout;
 using Wombat.Application.Features.Users.Queries.GetUserById;
 using Wombat.Domain.Activities;
@@ -378,9 +377,10 @@ public sealed class ActionFocusTests : TestContext
     {
         var cut = UserDetailPage(new Hold(), _ => false, User() with { Roles = [WombatRoles.Coordinator, WombatRoles.Assessor] });
 
-        cut.FindAll("button").Where(button => button.TextContent.Trim() == "Remove")
+        // T376 (flow 12, P02): "Remove ‹role› from ‹name›", the role by its label (Q14), each Remove… opening its dialog.
+        cut.FindAll("button").Where(button => button.TextContent.Trim() == "Remove…" && button.Closest("dialog") is null)
             .Select(button => AccessibleNames.NameOf(cut, button))
-            .Should().Equal("Remove the Coordinator role", "Remove the Assessor role");
+            .Should().Equal("Remove Coordinator from Rene Registrar", "Remove Assessor from Rene Registrar");
     }
 
     /// <summary>T239. A review stages one decision an EPA, and each staged decision's Remove is named by it.</summary>
@@ -509,7 +509,11 @@ public sealed class ActionFocusTests : TestContext
                 }),
                 parameters => parameters.Add(page => page.Id, 4)),
             SubmitButton,
-            Submit),
+            Submit,
+            // T376 (flow 12, S22): a refusal is the command's typed one, under its field and focused (I08), and any other
+            // exception, as this test's refusal is, is an unexpected failure in fixed words (T329):
+            // InstitutionEditRecordTests holds both.
+            CanBeRefused: false),
 
         // T302, T264: Deactivate is offered to those the Administrator policy admits, and asks first. The dialog's confirm
         // button has the focus while the deactivation runs, so it is the button held to the rule; the page's Deactivate,
@@ -610,16 +614,28 @@ public sealed class ActionFocusTests : TestContext
             cut => Named(cut, "Save", "Saving..."),
             cut => Named(cut, "Save", "Saving...").Click()),
 
-        ["AssessorProfileEdit Save"] = new(
-            (test, hold) => test.Page<AssessorProfileEdit>(
+        // T376 (flow 12, lane T): the old assessor form became a redirect (S10); training is saved in the user page's
+        // Assessor training section, opened at ?section=training (T03), whose result takes the focus (T04, T07).
+        ["AssessorTrainingSection Save training"] = new(
+            (test, hold) => test.Page<AssessorTrainingSection>(
                 new Sender(hold, request => request is CreateOrUpdateAssessorProfileCommand, request => request switch
                 {
-                    GetAssessorProfileByIdQuery or CreateOrUpdateAssessorProfileCommand => AssessorProfile(),
+                    CreateOrUpdateAssessorProfileCommand => AssessorProfile(),
                     _ => null
                 }),
-                query: ("id", 6)),
-            SubmitButton,
-            Submit),
+                parameters => parameters
+                    .Add(section => section.UserId, "assessor-1")
+                    .Add(section => section.PersonName, "Asa Assessor")
+                    .Add(section => section.HoldsAssessor, true)
+                    .Add(section => section.Open, true)),
+            cut => Named(cut, "Save training"),
+            cut =>
+            {
+                cut.Find("#training-status-3").Change(AssessorTrainingStatus.Trained.ToString());
+                cut.Find("#training-qualifications").Change("FCPaed");
+                Named(cut, "Save training").Click();
+            },
+            CanBeRefused: false),
 
         // Change password (/account/change-password), Save name and Remove on My account (/account/profile) and Verify on the
         // export check (/portfolio/verify) are not here: since T265 (My account since the review of the t335 branch) each is
@@ -701,29 +717,50 @@ public sealed class ActionFocusTests : TestContext
             SubmitButton,
             cut =>
             {
+                // T376 (flow 12, M8): the institution is the provider's, read out; Coordinator asks no speciality.
                 cut.Find("#mapping-group-id").Change("group-1");
                 cut.Find("#mapping-group-name").Change("Registrars");
-                cut.Find("#mapping-institution").Change("4");
+                cut.Find("#mapping-role").Change(WombatRoles.Coordinator);
                 Submit(cut);
-            }),
+            },
+            // T376 (S22, O06): the command's refusals are typed, under Wombat role or in the result; any other exception,
+            // as this test's refusal is, is an unexpected failure in fixed words (T329): GroupMappingsPageTests holds both.
+            CanBeRefused: false),
 
-        ["UserDetail Lock out user"] = new(
+        // T376 (flow 12, Q5, T264): Lock out… confirms; the dialog's "Lock out ‹name›" is the action, and its result or
+        // refusal shows in Lockout, focused, once the dialog has closed.
+        ["UserDetail Lock out"] = new(
             (test, hold) => test.UserDetailPage(hold, request => request is SetUserLockoutCommand),
-            cut => Named(cut, "Lock out user"),
-            cut => Named(cut, "Lock out user").Click()),
+            cut => InDialog(cut, "Lock out Rene Registrar"),
+            cut => Confirm(cut, "Lock out…", "Lock out Rene Registrar"),
+            RefusalTakesFocus: true),
 
+        // T376 (M2, F11): Add a role… opens its note panel; a role that needs no scope, then Add role. A refusal that is no
+        // field's shows in Roles and scope, focused.
         ["UserDetail Add role"] = new(
-            (test, hold) => test.UserDetailPage(hold, request => request is AddRoleToUserCommand),
+            (test, hold) =>
+            {
+                // The panel open before the scenario acts: its Add role is the button pressed.
+                var page = test.UserDetailPage(hold, request => request is AddRoleToUserCommand);
+                page.Find("#add-role-toggle").Click();
+                return page;
+            },
             cut => Named(cut, "Add role"),
             cut =>
             {
-                if (cut.Find("#add-role-select").GetAttribute("value") != WombatRoles.Assessor)
+                if (cut.FindAll("#add-role-panel").Count == 0)
                 {
-                    cut.Find("#add-role-select").Change(WombatRoles.Assessor);
+                    cut.Find("#add-role-toggle").Click();
+                }
+
+                if (cut.Find("#add-role-coordinator").HasAttribute("checked") == false)
+                {
+                    cut.Find("#add-role-coordinator").Change(WombatRoles.Coordinator);
                 }
 
                 Named(cut, "Add role").Click();
-            }),
+            },
+            RefusalTakesFocus: true),
 
         ["UserDetail Reset password"] = new(
             (test, hold) => test.UserDetailPage(hold, request => request is ResetUserPasswordCommand),
@@ -733,7 +770,7 @@ public sealed class ActionFocusTests : TestContext
                 cut.Find("#reset-password-input").Input("A-long-password-1");
                 Named(cut, "Reset password").Click();
             },
-            // The password is cleared once the reset has answered, which disables Reset password.
+            // The refusal shows in Password and takes the focus (T376): the password is cleared once the reset has answered.
             RefusalTakesFocus: true),
 
         ["DataRights Save preferences"] = new(
@@ -931,14 +968,17 @@ public sealed class ActionFocusTests : TestContext
                         GetInstitutionsListQuery => new[] { Institution() },
                         ListSsoGroupMappingsQuery => new[]
                         {
-                            new SsoGroupMappingDto(12, "hospital", "group-1", "Registrars", WombatRoles.Trainee, 4,
-                                "Groote Schuur Hospital", null, null, null, null)
+                            new SsoGroupMappingDto(12, "hospital", "group-1", "Registrars", WombatRoles.Coordinator, 4,
+                                "Groote Schuur Hospital", null, null, null, null, "Hospital sign-in")
                         },
                         _ => null
                     }));
             },
-            cut => Named(cut, "Delete"),
-            cut => Named(cut, "Delete").Click()),
+            // T264 (T376, F8): Delete… confirms; the dialog's danger button, named for the mapping once one is chosen, is the
+            // action.
+            cut => cut.Find("dialog button.btn-danger"),
+            cut => Confirm(cut, "Delete…", "Delete the Registrars mapping"),
+            CanBeRefused: false),
 
         ["DataRights Withdraw"] = new(
             (test, hold) => test.Page<DataRights>(
@@ -971,30 +1011,25 @@ public sealed class ActionFocusTests : TestContext
                 Named(cut, "Reject", "Processing...").Click();
             }),
 
+        // T376 (S3, T264): Remove… confirms per role; the dialog's "Remove Committee member" is the action.
         ["UserDetail Remove"] = new(
-            (test, hold) => test.UserDetailPage(hold, request => request is RemoveRoleFromUserCommand),
-            cut => Named(cut, "Remove"),
-            cut => Named(cut, "Remove").Click()),
+            (test, hold) =>
+            {
+                // The dialog opened for Committee member before the scenario acts: its words are the role's.
+                var page = test.UserDetailPage(hold, request => request is RemoveRoleFromUserCommand);
+                Named(page, "Remove…").Click();
+                return page;
+            },
+            cut => InDialog(cut, "Remove Committee member"),
+            cut => Confirm(cut, "Remove…", "Remove Committee member"),
+            RefusalTakesFocus: true),
 
+        // Q5: one press; its result or refusal shows in Lockout, focused (A5).
         ["UserDetail Reactivate user"] = new(
             (test, hold) => test.UserDetailPage(hold, request => request is SetUserLockoutCommand, User() with { IsLockedOut = true }),
             cut => Named(cut, "Reactivate user"),
-            cut => Named(cut, "Reactivate user").Click()),
-
-        ["UserDetail Revoke all pending invitations"] = new(
-            (test, hold) => test.UserDetailPage(
-                hold,
-                request => request is RevokePendingInvitationsForEmailCommand,
-                User() with
-                {
-                    PendingInvitations =
-                    [
-                        new UserPendingInvitationDto(11, WombatRoles.Trainee, 4, "Groote Schuur Hospital", 5, "Paediatrics",
-                            Created, new DateOnly(2026, 12, 31))
-                    ]
-                }),
-            cut => Named(cut, "Revoke all pending invitations"),
-            cut => Named(cut, "Revoke all pending invitations").Click()),
+            cut => Named(cut, "Reactivate user").Click(),
+            RefusalTakesFocus: true),
 
         ["ScheduledJobsList Run now"] = new(
             (test, hold) => test.Page<ScheduledJobsList>(
@@ -1236,7 +1271,7 @@ public sealed class ActionFocusTests : TestContext
     /// </remarks>
     private static UserDetailDto User() => new(
         "user-9", "registrar@hospital.test", "Rene", "Registrar", 4, "Groote Schuur Hospital", [], [],
-        [WombatRoles.CommitteeMember], false, []);
+        [WombatRoles.CommitteeMember], false);
 
     /// <summary>
     /// The committee review page, read by the panel's chair, who is also its appeal body. Each command answers with the
@@ -1346,8 +1381,8 @@ public sealed class ActionFocusTests : TestContext
     ]);
 
     private static AssessorProfileDto AssessorProfile() => new(
-        6, "assessor-1", "assessor@hospital.test", "Asa", "Assessor", "FCPaed", 4, "Groote Schuur Hospital", null, null,
-        null, null, AssessorTrainingStatus.Trained, null);
+        6, "assessor-1", "assessor@hospital.test", "Asa", "Assessor", "FCPaed", 4, "Groote Schuur Hospital",
+        AssessorTrainingStatus.Trained, null);
 
     private const string TypeSchemaJson = """
         { "version": 1, "sections": [ { "key": "s", "title": "Details", "fields": [ { "key": "notes", "type": "text", "label": "Notes" } ] } ] }
