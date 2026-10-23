@@ -71,6 +71,17 @@ public sealed class SsoGroupMapper
                     continue;
                 }
 
+                // Admission's roles (T333): only admission gives Trainee, and only the end of a programme takes it away.
+                // A mapping to either, made before T333 refused it at create, grants nothing.
+                if (WombatRoles.AdmissionManaged.Contains(mapping.WombatRole, StringComparer.Ordinal))
+                {
+                    _logger.LogWarning(
+                        "SSO group mapping {MappingId} for provider '{ProviderKey}' maps group '{GroupId}' to {Role}, which only " +
+                        "admission gives — skipping.",
+                        mapping.Id, providerKey, mapping.ExternalGroupId, mapping.WombatRole);
+                    continue;
+                }
+
                 desiredRoles.Add(mapping.WombatRole);
             }
         }
@@ -80,8 +91,11 @@ public sealed class SsoGroupMapper
             .Where(a => a.UserId == user.Id && a.Source == RoleAssignmentSource.Sso && a.ProviderKey == providerKey)
             .ToListAsync(cancellationToken);
 
+        // Admission's roles are never removed here either (T333): a tracking row left by a mapping made before T333 does
+        // not let a group change take Trainee from a running trainee.
         var currentSsoRoles = existingSsoAssignments
             .Select(a => a.Role)
+            .Where(role => !WombatRoles.AdmissionManaged.Contains(role, StringComparer.Ordinal))
             .ToHashSet(StringComparer.Ordinal);
 
         // Roles to add: desired but not currently SSO-assigned

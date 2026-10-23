@@ -121,8 +121,9 @@ The current Wombat has a `RegistrationInvitation` entity. Keep the flow but simp
 5. On successful registration, the new user is assigned the invitation's target role, scope claims are written, the invitation is marked used, and they are redirected to their role-appropriate landing page.
 6. Trainees land as `PendingTrainee` until an InstitutionalAdmin (or an Administrator) admits them to a curriculum version the institution has adopted (`AdmitTraineeCommand`, T091), at which point they are promoted to `Trainee`.
    Admission grants the `Trainee` role and marking the programme complete takes it away, so the role travels with a
-   profile: the Users page neither adds nor removes it (T303). An SSO group mapping to `Trainee` is the one path left
-   round admission: it grants and removes the role with the group (`SsoGroupMapper`), with no profile.
+   profile: neither the Users page (T303) nor an SSO group mapping (T333) adds or removes it, or `PendingTrainee`
+   (`WombatRoles.AdmissionManaged`). SSO provisioning's own default, `PendingTrainee` when no group matched, is not a
+   mapping.
 
 Invitations can be revoked (set `RevokedOn`) and re-issued (a new row with a new token; old row stays for audit).
 

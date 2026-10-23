@@ -27,6 +27,11 @@ public sealed record CreateSsoGroupMappingCommand(
 
 public sealed class CreateSsoGroupMappingCommandHandler : IRequestHandler<CreateSsoGroupMappingCommand, int>
 {
+    /// <summary>The refusal of a mapping to Trainee or PendingTrainee, which only admission gives. (T333)</summary>
+    public const string AdmissionRoleNotMappable =
+        "Trainee and Pending trainee cannot be given by an SSO group mapping. A registrar becomes a trainee when admitted " +
+        "to a curriculum, from Trainees.";
+
     /// <summary>The refusal of a mapping whose provider is not configured, or serves another institution. (T288)</summary>
     public const string ProviderNotTheInstitutions =
         "That sign-in provider does not serve the institution chosen. A mapping is made for its provider's own institution.";
@@ -67,6 +72,13 @@ public sealed class CreateSsoGroupMappingCommandHandler : IRequestHandler<Create
         if (string.Equals(request.WombatRole, WombatRoles.Administrator, StringComparison.Ordinal))
         {
             throw new InvalidOperationException("The Administrator role cannot be assigned via SSO group mapping.");
+        }
+
+        // Admission's roles (T333): a mapping would grant Trainee with no profile, give a graduate it back, and take it
+        // from a running trainee whenever their group changed.
+        if (WombatRoles.AdmissionManaged.Contains(request.WombatRole, StringComparer.Ordinal))
+        {
+            throw new InvalidOperationException(AdmissionRoleNotMappable);
         }
 
         var mapping = new SsoGroupRoleMapping

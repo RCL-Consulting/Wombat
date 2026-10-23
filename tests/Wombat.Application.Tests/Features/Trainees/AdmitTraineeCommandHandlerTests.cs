@@ -137,9 +137,8 @@ public sealed class AdmitTraineeCommandHandlerTests
                 CancellationToken.None);
 
             await act.Should().ThrowAsync<InvalidOperationException>().WithMessage(
-                "This registrar already holds the Trainee role, which only admission should grant, so they cannot be " +
-                "admitted until it is taken away. An SSO group mapping to Trainee is the one way the role is given outside " +
-                "admission.");
+                "This registrar already holds the Trainee role, which only admission grants, so they cannot be admitted " +
+                "until it is taken away.");
         }
 
         // The strict mock refuses any call but the lookup: no scope written, no role changed.

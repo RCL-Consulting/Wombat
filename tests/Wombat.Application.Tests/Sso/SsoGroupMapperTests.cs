@@ -64,7 +64,7 @@ public sealed class SsoGroupMapperTests
             ProviderKey = "uct",
             ExternalGroupId = "group-1",
             ExternalGroupDisplayName = "Surgery",
-            WombatRole = WombatRoles.Trainee,
+            WombatRole = WombatRoles.Coordinator,
             InstitutionId = 1
         });
         await db.SaveChangesAsync();
@@ -75,10 +75,10 @@ public sealed class SsoGroupMapperTests
 
         var roles = await mapper.ApplyAsync(user, "uct", 1, ["group-1"]);
 
-        roles.Should().Contain(WombatRoles.Trainee);
-        userManager.Verify(m => m.AddToRoleAsync(user, WombatRoles.Trainee), Times.Once);
+        roles.Should().Contain(WombatRoles.Coordinator);
+        userManager.Verify(m => m.AddToRoleAsync(user, WombatRoles.Coordinator), Times.Once);
         db.UserRoleAssignments.Should().ContainSingle(a =>
-            a.UserId == "user-1" && a.Role == WombatRoles.Trainee && a.Source == RoleAssignmentSource.Sso);
+            a.UserId == "user-1" && a.Role == WombatRoles.Coordinator && a.Source == RoleAssignmentSource.Sso);
         userManager.Verify(m => m.UpdateSecurityStampAsync(user), Times.Once,
             "a role added ends the account's other sessions at their next check (the T279 review)");
     }
@@ -93,7 +93,7 @@ public sealed class SsoGroupMapperTests
                 ProviderKey = "uct",
                 ExternalGroupId = "group-1",
                 ExternalGroupDisplayName = "Surgery",
-                WombatRole = WombatRoles.Trainee,
+                WombatRole = WombatRoles.Coordinator,
                 InstitutionId = 1
             },
             new SsoGroupRoleMapping
@@ -112,7 +112,7 @@ public sealed class SsoGroupMapperTests
 
         var roles = await mapper.ApplyAsync(user, "uct", 1, ["group-1", "group-2"]);
 
-        userManager.Verify(m => m.AddToRoleAsync(user, WombatRoles.Trainee), Times.Once);
+        userManager.Verify(m => m.AddToRoleAsync(user, WombatRoles.Coordinator), Times.Once);
         userManager.Verify(m => m.AddToRoleAsync(user, WombatRoles.Assessor), Times.Once);
     }
 
@@ -125,7 +125,7 @@ public sealed class SsoGroupMapperTests
             ProviderKey = "uct",
             ExternalGroupId = "group-1",
             ExternalGroupDisplayName = "Surgery",
-            WombatRole = WombatRoles.Trainee,
+            WombatRole = WombatRoles.Coordinator,
             InstitutionId = 1
         });
         await db.SaveChangesAsync();
@@ -173,14 +173,14 @@ public sealed class SsoGroupMapperTests
             ProviderKey = "uct",
             ExternalGroupId = "group-1",
             ExternalGroupDisplayName = "Surgery",
-            WombatRole = WombatRoles.Trainee,
+            WombatRole = WombatRoles.Coordinator,
             InstitutionId = 1
         });
         // User previously had the role via SSO
         db.UserRoleAssignments.Add(new UserRoleAssignment
         {
             UserId = "user-5",
-            Role = WombatRoles.Trainee,
+            Role = WombatRoles.Coordinator,
             Source = RoleAssignmentSource.Sso,
             ProviderKey = "uct",
             AssignedOn = DateTime.UtcNow.AddDays(-1)
@@ -194,9 +194,9 @@ public sealed class SsoGroupMapperTests
         // User is no longer in group-1
         await mapper.ApplyAsync(user, "uct", 1, []);
 
-        userManager.Verify(m => m.RemoveFromRoleAsync(user, WombatRoles.Trainee), Times.Once);
+        userManager.Verify(m => m.RemoveFromRoleAsync(user, WombatRoles.Coordinator), Times.Once);
         db.UserRoleAssignments.Should().NotContain(a =>
-            a.UserId == "user-5" && a.Role == WombatRoles.Trainee && a.Source == RoleAssignmentSource.Sso);
+            a.UserId == "user-5" && a.Role == WombatRoles.Coordinator && a.Source == RoleAssignmentSource.Sso);
         userManager.Verify(m => m.UpdateSecurityStampAsync(user), Times.Once,
             "a role the provider took away is taken from the account's open sessions too (the T279 review)");
     }
@@ -262,14 +262,14 @@ public sealed class SsoGroupMapperTests
             ProviderKey = "uct",
             ExternalGroupId = "group-1",
             ExternalGroupDisplayName = "Paediatrics",
-            WombatRole = WombatRoles.Trainee,
+            WombatRole = WombatRoles.Coordinator,
             InstitutionId = 1,
             SpecialityId = 42
         });
         db.UserRoleAssignments.Add(new UserRoleAssignment
         {
             UserId = "user-8",
-            Role = WombatRoles.Trainee,
+            Role = WombatRoles.Coordinator,
             Source = RoleAssignmentSource.Sso,
             ProviderKey = "uct",
             AssignedOn = DateTime.UtcNow.AddDays(-1)
@@ -302,7 +302,7 @@ public sealed class SsoGroupMapperTests
                 ProviderKey = "uct",
                 ExternalGroupId = "group-1",
                 ExternalGroupDisplayName = "UCT Group",
-                WombatRole = WombatRoles.Trainee,
+                WombatRole = WombatRoles.Coordinator,
                 InstitutionId = 1
             },
             new SsoGroupRoleMapping
@@ -322,7 +322,88 @@ public sealed class SsoGroupMapperTests
         var roles = await mapper.ApplyAsync(user, "uct", 1, ["group-1"]);
 
         // Only UCT mapping should apply, not Wits
-        userManager.Verify(m => m.AddToRoleAsync(user, WombatRoles.Trainee), Times.Once);
+        userManager.Verify(m => m.AddToRoleAsync(user, WombatRoles.Coordinator), Times.Once);
         userManager.Verify(m => m.AddToRoleAsync(user, WombatRoles.Assessor), Times.Never);
+    }
+
+    /// <summary>
+    /// A mapping to Trainee or PendingTrainee, which only admission gives, grants nothing at sign-in and is logged (T333).
+    /// </summary>
+    [Theory]
+    [InlineData(WombatRoles.Trainee)]
+    [InlineData(WombatRoles.PendingTrainee)]
+    public async Task Apply_AMappingToAnAdmissionRole_GrantsNothing_AndIsLogged(string role)
+    {
+        await using var db = CreateDb();
+        db.SsoGroupRoleMappings.Add(new SsoGroupRoleMapping
+        {
+            ProviderKey = "uct",
+            ExternalGroupId = "registrars",
+            ExternalGroupDisplayName = "Registrars",
+            WombatRole = role,
+            InstitutionId = 1
+        });
+        await db.SaveChangesAsync();
+
+        var userManager = CreateUserManagerMock();
+        var logger = new CapturingLogger();
+        var mapper = new SsoGroupMapper(userManager.Object, db, logger);
+        var user = new WombatIdentityUser { Id = "user-8", InstitutionId = 1 };
+
+        var roles = await mapper.ApplyAsync(user, "uct", 1, ["registrars"]);
+
+        roles.Should().NotContain(role);
+        userManager.Verify(m => m.AddToRoleAsync(user, role), Times.Never);
+        db.UserRoleAssignments.Should().BeEmpty();
+        logger.Warnings.Should().ContainSingle(message => message.Contains(role, StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// A running trainee whose group no longer matches keeps Trainee: a tracking row left by a mapping made before T333
+    /// does not let SSO take it away (T333).
+    /// </summary>
+    [Fact]
+    public async Task Apply_AGroupChange_DoesNotRemoveTrainee_EvenWithAnOldSsoTrackingRow()
+    {
+        await using var db = CreateDb();
+        db.UserRoleAssignments.Add(new UserRoleAssignment
+        {
+            UserId = "user-9",
+            Role = WombatRoles.Trainee,
+            Source = RoleAssignmentSource.Sso,
+            ProviderKey = "uct",
+            AssignedOn = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync();
+
+        var userManager = CreateUserManagerMock();
+        var mapper = new SsoGroupMapper(userManager.Object, db, NullLogger<SsoGroupMapper>.Instance);
+        var user = new WombatIdentityUser { Id = "user-9", InstitutionId = 1 };
+
+        await mapper.ApplyAsync(user, "uct", 1, []);
+
+        userManager.Verify(m => m.RemoveFromRoleAsync(user, WombatRoles.Trainee), Times.Never);
+    }
+
+    private sealed class CapturingLogger : Microsoft.Extensions.Logging.ILogger<SsoGroupMapper>
+    {
+        public List<string> Warnings { get; } = [];
+
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+        public bool IsEnabled(Microsoft.Extensions.Logging.LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            Microsoft.Extensions.Logging.LogLevel logLevel,
+            Microsoft.Extensions.Logging.EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            if (logLevel == Microsoft.Extensions.Logging.LogLevel.Warning)
+            {
+                Warnings.Add(formatter(state, exception));
+            }
+        }
     }
 }

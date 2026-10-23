@@ -28,6 +28,18 @@ public static class WombatRoles
     ];
 
     /// <summary>
+    /// The roles only the admission pipeline gives and takes away (T303, T333): PendingTrainee when a registrar registers
+    /// from an invitation or is provisioned by SSO with no group matched, Trainee when they are admitted to a curriculum,
+    /// taken away when the programme ends. Neither the Users page nor an SSO group mapping grants or removes them, so the
+    /// Trainee role always travels with a trainee profile.
+    /// </summary>
+    public static readonly IReadOnlyList<string> AdmissionManaged =
+    [
+        Trainee,
+        PendingTrainee
+    ];
+
+    /// <summary>
     /// The roles a <c>user</c> field may require its nominee to hold (T102): the roles whose authority is not bounded by a
     /// speciality. The nominee directory matches the activity's institution only and reads no one's speciality rows.
     /// InstitutionalAdmin, Coordinator and CommitteeMember oversee the whole institution; Assessor and Trainee oversee

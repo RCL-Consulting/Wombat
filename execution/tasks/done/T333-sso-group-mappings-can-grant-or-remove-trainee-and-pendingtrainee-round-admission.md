@@ -1,11 +1,13 @@
 ---
 id: T333
 title: SSO group mappings can grant or remove Trainee and PendingTrainee, round admission
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-26
+started: 2026-10-23
+completed: 2026-10-23
 ---
 
 # T333 — SSO group mappings can grant or remove Trainee and PendingTrainee, round admission
@@ -46,12 +48,20 @@ An InstitutionalAdmin's SSO group-to-role mappings page offers Trainee and Pendi
 
 ## Verification
 
-- [ ] Handler test: `CreateSsoGroupMapping` refuses Trainee and PendingTrainee for an Administrator and an
-  InstitutionalAdmin, and stores nothing.
-- [ ] Mapper test: a sign-in whose groups map to Trainee neither adds nor removes Trainee; the warning is logged.
-- [ ] bUnit: the mappings page offers neither role.
-- [ ] Browser: runbook Step A.3.1, the mappings page, offers neither role.
+- [x] Handler test: `CreateSsoGroupMapping` refuses Trainee and PendingTrainee for an Administrator and an
+  InstitutionalAdmin, and stores nothing. (`SsoGroupMappingCommandTests.Create_AdmissionsRoles_AreRefused_AndNothingIsStored`, 4 cases)
+- [x] Mapper test: a sign-in whose groups map to Trainee neither adds nor removes Trainee; the warning is logged.
+  (`SsoGroupMapperTests.Apply_AMappingToAnAdmissionRole_GrantsNothing_AndIsLogged`, `..._DoesNotRemoveTrainee_EvenWithAnOldSsoTrackingRow`)
+- [x] bUnit: the mappings page offers neither role. (`GroupMappingsRolesTests`, 3)
+- [ ] Browser: runbook Step A.3.1, the mappings page, offers neither role. **Carried to T376 step 7**: at A.3.1 no provider
+  is configured, so the page draws no form and no role at all; the replay of flow 12's rebuilt page checks it.
 
 ## Related
 
 T303 (Trainee is system-managed), T288 (SSO mappings across institutions), T149, T155.
+- **2026-10-23, done (T376's prerequisite, Q16/F5).** `WombatRoles.AdmissionManaged` (Trainee, PendingTrainee) is the
+  one list: `CreateSsoGroupMapping` refuses both to every caller (`AdmissionRoleNotMappable`); `SsoGroupMapper` skips a
+  mapping to either with a warning, and never removes either through an old SSO tracking row; the page no longer offers
+  them. SSO provisioning's own PendingTrainee default is untouched. Admission's refusal (`AlreadyHoldsTrainee`) lost its
+  SSO sentence, and DOMAIN.md § onboarding step 6 says neither path gives the role. Suites: Domain 829, Application
+  4001, Web 3983, Infrastructure 1029, Architecture 52, Integration (SSO and TraineeRoleSystemManaged) 25, green.

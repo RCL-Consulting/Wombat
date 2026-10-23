@@ -35,11 +35,12 @@ public sealed class AdmitTraineeCommandHandler : IRequestHandler<AdmitTraineeCom
     /// <remarks>
     /// Admission is what grants Trainee, and <c>PromotePendingTraineeAsync</c> fails on a role already held. It runs last,
     /// after the profile and the scope are saved, so until the T303 review such an admission was committed part-way under
-    /// a refusal. The Users page no longer adds Trainee (T303); an SSO group mapping to Trainee still can.
+    /// a refusal. Neither the Users page (T303) nor an SSO group mapping (T333) gives Trainee, so only a row left from before
+    /// them can hold it here.
     /// </remarks>
     public const string AlreadyHoldsTrainee =
-        "This registrar already holds the Trainee role, which only admission should grant, so they cannot be admitted " +
-        "until it is taken away. An SSO group mapping to Trainee is the one way the role is given outside admission.";
+        "This registrar already holds the Trainee role, which only admission grants, so they cannot be admitted until it " +
+        "is taken away.";
 
     private readonly IApplicationDbContext _dbContext;
     private readonly IUserAdministrationService _userAdministrationService;

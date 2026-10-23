@@ -30,13 +30,13 @@ public sealed class SsoGroupMappingCommandTests
         var handler = new CreateSsoGroupMappingCommandHandler(db, Providers());
 
         var id = await handler.Handle(new CreateSsoGroupMappingCommand(
-            "uct", "group-1", "Surgery", WombatRoles.Trainee, 1, null, null, TestPrincipals.Administrator()), CancellationToken.None);
+            "uct", "group-1", "Surgery", WombatRoles.Assessor, 1, null, null, TestPrincipals.Administrator()), CancellationToken.None);
 
         id.Should().BeGreaterThan(0);
         var mapping = await db.SsoGroupRoleMappings.FindAsync(id);
         mapping.Should().NotBeNull();
         mapping!.ProviderKey.Should().Be("uct");
-        mapping.WombatRole.Should().Be(WombatRoles.Trainee);
+        mapping.WombatRole.Should().Be(WombatRoles.Assessor);
     }
 
     [Fact]
@@ -91,9 +91,34 @@ public sealed class SsoGroupMappingCommandTests
         var handler = new CreateSsoGroupMappingCommandHandler(db, Providers());
 
         var act = () => handler.Handle(new CreateSsoGroupMappingCommand(
-            "uct", "group-x", "Other", WombatRoles.Trainee, InstitutionId: 99, null, null, TestPrincipals.InstitutionalAdmin(institutionId: 1)),
+            "uct", "group-x", "Other", WombatRoles.Assessor, InstitutionId: 99, null, null, TestPrincipals.InstitutionalAdmin(institutionId: 1)),
             CancellationToken.None);
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    /// <summary>
+    /// Admission's roles are never mapped (T333): a mapping to Trainee would grant it with no profile, give a graduate it
+    /// back, and take it from a running trainee whenever their group changed. Refused to the Administrator too.
+    /// </summary>
+    [Theory]
+    [InlineData(WombatRoles.Trainee, WombatRoles.Administrator)]
+    [InlineData(WombatRoles.PendingTrainee, WombatRoles.Administrator)]
+    [InlineData(WombatRoles.Trainee, WombatRoles.InstitutionalAdmin)]
+    [InlineData(WombatRoles.PendingTrainee, WombatRoles.InstitutionalAdmin)]
+    public async Task Create_AdmissionsRoles_AreRefused_AndNothingIsStored(string role, string caller)
+    {
+        await using var db = CreateDb();
+        var handler = new CreateSsoGroupMappingCommandHandler(db, Providers());
+        var principal = caller == WombatRoles.Administrator
+            ? TestPrincipals.Administrator()
+            : TestPrincipals.InstitutionalAdmin(institutionId: 1);
+
+        var act = () => handler.Handle(new CreateSsoGroupMappingCommand(
+            "uct", "registrars", "Registrars", role, 1, null, null, principal), CancellationToken.None);
+
+        (await act.Should().ThrowAsync<InvalidOperationException>())
+            .Which.Message.Should().Be(CreateSsoGroupMappingCommandHandler.AdmissionRoleNotMappable);
+        db.SsoGroupRoleMappings.Should().BeEmpty();
     }
 }

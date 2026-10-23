@@ -167,7 +167,7 @@ else
 }
 
 @code {
-  // Administrator cannot be SSO-assigned — exclude from the dropdown
+  // Administrator cannot be SSO-assigned, and Trainee and PendingTrainee are admission's alone (T333): none is offered.
   private static readonly string[] _assignableRoles =
   [
     WombatRoles.InstitutionalAdmin,
@@ -175,9 +175,7 @@ else
     WombatRoles.SubSpecialityAdmin,
     WombatRoles.Coordinator,
     WombatRoles.CommitteeMember,
-    WombatRoles.Assessor,
-    WombatRoles.Trainee,
-    WombatRoles.PendingTrainee
+    WombatRoles.Assessor
   ];
 
   private MappingFormModel _model = new();
