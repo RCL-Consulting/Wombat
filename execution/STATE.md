@@ -16,9 +16,9 @@ system (version 29). Left: flows 12–20, the deploy, the College's, the P2s, P3
 
 - **The runbook** (`knowledge/scenario-paediatrics/`): last replayed whole against flow 11 (T373,
   `wombat_scenario_t373`, 2026-10-20: no open regression); `coverage.md`, `states.md`, `design/baseline/`.
-- **Open: 76 queued; none in progress; 1 blocked; 8 proposed (T362, T363, T365, T368, T370, T372, T374, T375).**
+- **Open: 73 queued; T376 in progress (flow 12); 1 blocked; 9 proposed (T362, T363, T365, T368, T370, T372, T374, T375, T377).**
   - **P1:** T157, the deploy, which waits for the operator.
-  - **P2, before real users:** T288, T289, T311–T313, T315, T316, T319, T320, T329, T333, T334, T341.
+  - **P2, before real users:** T311–T313, T315, T316, T319, T320, T329, T334, T341.
   - **P3:** the presentation debt the redesign absorbs (BRIEF § 6–7), and polish.
 - **Gated on the College or the operator:** T139, T170, T146, T152, T153, T171 (`knowledge/college-message-2026-09.md`).
 
@@ -33,7 +33,7 @@ system (version 29). Left: flows 12–20, the deploy, the College's, the P2s, P3
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The redesign:** flow 12 (`design/flows/12-people-admin.md`), when the operator says. Eight wait in proposed.
+- **The redesign:** flow 12 (T376): designed (round 3 final), its prerequisites T288, T289, T333 landed; next the build.
 
 ## Open questions
 
@@ -54,6 +54,8 @@ system (version 29). Left: flows 12–20, the deploy, the College's, the P2s, P3
 - `deploy/verify/drift-check.sh`: run before trusting any claim about the server.
 
 ## Recent
+
+- **2026-10-23:** T376 (flow 12) steps 1–5: brief, canvas "Wombat 12", three rounds, final; T289, T288, T333 done; T377 proposed.
 
 - **2026-10-20:** T373, flow 11, done (`69a17c70`, fix `27ff8779`; replay 331 steps, 280 clean, no regression; states 85; design system v29); T375 proposed.
 - **2026-10-19:** T369, flow 10, done (`68327c9d`; replay 331 steps, 281 clean, no regression; states 62; fixes `e4b480e2`; design system v25); T370–T372 proposed.
