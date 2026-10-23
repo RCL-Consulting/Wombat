@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Users;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 
@@ -47,15 +48,45 @@ public sealed class CreateOrUpdateAssessorProfileCommandHandler : IRequestHandle
         _userAdministrationService = userAdministrationService;
     }
 
+    /// <summary>
+    /// The refusal to record a profile at an institution the assessor does not belong to. (T289)
+    /// </summary>
+    public const string AssessorAtAnotherInstitution =
+        "An assessor's profile is recorded at the assessor's own institution. Move the user to another institution from " +
+        "Users first.";
+
+    /// <remarks>
+    /// <para>
+    /// <b>A trainee first</b> (<see cref="UserAdministrationRules.DemandUserAdministration" />, T278), asked before
+    /// anything is looked up: the save writes the user's scope, and until T289 a registrar who also administered could
+    /// move their own panel's chair to another discipline and stall their own review.
+    /// </para>
+    /// <para>
+    /// <b>The assessor's own institution</b>, for every caller, the Administrator included (T289). The scope write sets
+    /// the user's institution, and a move between institutions drops their external logins, so a form value naming
+    /// another institution must not move anyone: an id outside the caller's institution is refused as one that names
+    /// nobody (<see cref="UserAdministrationRules.DemandInScope" />), and an in-scope user is refused a profile anywhere
+    /// but where they are. A move is Users' to make.
+    /// </para>
+    /// </remarks>
     public async Task<AssessorProfileDto> Handle(CreateOrUpdateAssessorProfileCommand request, CancellationToken cancellationToken)
     {
+        UserAdministrationRules.DemandUserAdministration(request.Principal);
+
         if (!request.Principal.CanAccessInstitution(request.InstitutionId))
         {
             throw new UnauthorizedAccessException("You do not have permission to manage assessors in that institution.");
         }
 
-        var user = await _userAdministrationService.GetByIdAsync(request.UserId, cancellationToken)
-            ?? throw new InvalidOperationException("The assessor user could not be found.");
+        var user = UserAdministrationRules.DemandInScope(
+            request.Principal,
+            await _userAdministrationService.GetByIdAsync(request.UserId, cancellationToken),
+            "You do not have permission to manage this assessor.");
+
+        if (user.InstitutionId != request.InstitutionId)
+        {
+            throw new InvalidOperationException(AssessorAtAnotherInstitution);
+        }
 
         if (!user.Roles.Contains(WombatRoles.Assessor, StringComparer.Ordinal))
         {

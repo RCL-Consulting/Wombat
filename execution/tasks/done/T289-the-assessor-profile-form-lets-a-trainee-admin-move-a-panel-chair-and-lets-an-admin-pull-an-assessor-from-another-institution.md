@@ -1,11 +1,13 @@
 ---
 id: T289
 title: The assessor-profile form lets a trainee-admin move a panel chair, and lets an admin pull an Assessor from another institution
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-25
+started: 2026-10-23
+completed: 2026-10-23
 ---
 
 # T289 — The assessor-profile form lets a trainee-admin move a panel chair, and lets an admin pull an Assessor from another institution
@@ -33,7 +35,7 @@ explicitly. Handler tests and the audit trap.
 
 ## Verification
 
-- [ ] Both paths are refused. Tests.
+- [x] Both paths are refused. Tests. (`AssessorProfileRefusalTests`, 6 tests; Application 3987, Web 3980, Architecture 52 green)
 
 ## Related
 
@@ -62,3 +64,11 @@ This does not widen the task beyond the T159 note.
 - **The dependency the other way.** The CommitteeMember dashboard counts trainees by the member's sub-speciality claims, which only an assessor-profile save writes (Zulu, Naidoo and Botha at Steps 2.37 and 3.52). Its fix and this one have to land together.
 
 This widens the task. Decide which record owns an assessor's discipline: the profile, read from the profile, or the claims. Then have the profile save add or remove only the scope it contributed, or stop writing claims at all, and never remove a scope another role carries. Handler test: saving the profile of a SpecialityAdmin who is also an Assessor, with Speciality 'All', leaves the SpecialityAdmin scope.
+- **2026-10-23, done (T376's prerequisite, Q16/F5).** `CreateOrUpdateAssessorProfile` now asks
+  `UserAdministrationRules.DemandUserAdministration` first (a trainee first, before any lookup), refuses an id outside
+  the caller's institution as one naming nobody (`DemandInScope`), and refuses everyone, the Administrator included, a
+  profile at an institution the assessor is not at (`AssessorAtAnotherInstitution`), so the save moves nobody between
+  institutions. Tests: `AssessorProfileRefusalTests` (store and profile table untouched on every refusal; a control).
+  **Handed to T376's build, as flow 12 decided:** the scope ownership (Q12, M1: the training save writes no scope; F4:
+  the profile's speciality columns dropped), and the T159/T295 picker notes (the form goes; Record training opens the
+  person's page, and `/admin/assessors/edit?id=` redirects there, S10), so no 'new' form can overwrite a profile.
