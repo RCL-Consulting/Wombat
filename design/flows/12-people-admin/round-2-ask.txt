@@ -1,0 +1,335 @@
+ROUND 1 PICKED: the user page S1, "one page of sections" (the who line, Roles and scope, Assessor training for an
+Assessor, Sign-in and access), with /admin/users/{UserId}?section=training opening the training section (PROPOSED
+route); her Home H1, "cards with the waiting line", with H3's Status in the institution card; Users UA, "one table with
+filters"; her institution's record (I) and SSO mappings (O) confirmed, corrected as below. S2, S3, H2, H3, UB and UC are
+dropped: draw none of them again. Round 2: S1, H1, UA, I and O at full fidelity on the design system installed on this
+canvas (Wombat v29, namespace wombat; its tokens.css, bundle.css and components in ds/wombat/): its tokens and
+components, real words, no grey bars or greys-as-wireframe. Every screen and state at 1280 and 390; Users, Assessors
+and the user page also at 768 (C26). Draw round 2 on a new page of the canvas, "Round 2", and name every board R2-…;
+keep round 1's 44 boards on their page, "Round 1", untouched. The brand mark is at
+/_blob/b8532f490e278114d4c3b43f9a0533f6: use it, never a drawn disc. Every person, address, role, scope, date, time and
+count comes from this message (FIXTURES), the brief's § 1 and the runbook steps of § 8 as round 1 received them; invent
+none (flow 09's round 1 invented people). Where a value is not given, write a bracket ‹…›. Label a state the replay
+never reaches "Illustration", in its title and as a chip on the board's face (flow 11's F6), and never draw on one
+board two states that cannot hold at once.
+
+WHY S1: it answers Q1 and Q2 as the brief does. It removes the "new profile" picker and its T289 defects by
+  construction, puts the lock's state and its effects on one page, and keeps a reset or a lock one press from the
+  page. S2's tabs hide the state a lock or a role changes and are a NEW component (PageTabs); S3 keeps two pages,
+  8 + 2 to record training, and the profile's own scope (T289's conflict).
+WHY H1: its waiting line shows only when someone waits, and its role links need UA's Role filter. H2's two counts are
+  invented (C4) and "Needs you" is a new card pattern; H3 keeps Quick links, which the menu repeats, and pushes the
+  work below the institution.
+WHY UA: it is the built table mended. Its Role filter is what H1's role links open, and it holds the heavy volume with
+  one pager. UB drops DataTable and "Manage ‹name›" (T239); UC is three tables, a pager per group, no Role filter and a
+  filtered result split across sections.
+BORROW: from S2, a link that opens one section (a query, not a fragment: the server render never sees a fragment), so
+  Assessors' "Edit training" lands on the open form. From S3, the mended refusals ("Choose the training status.", NEW;
+  never "UserId") and the empty Assessors body that says what a record holds (T326). From H3, Status in the institution
+  card. From UC, its sentence for an account with no role ("a completed or withdrawn registrar keeps an account and its
+  records"), as the Role filter's help on "No role" and in that row's cell. From Z2's own note: with one speciality and
+  one sub-speciality adopted, Add a role draws them as text, as flow 11 draws the only institution.
+
+ATTACHED, AGAIN: round 1's Spec board (Z1, Assumptions) says "No capture was attached to this session". The ten key
+  screenshots are attached to THIS message, staged from C:\dev\Wombat\design\upload (copies of design/baseline/):
+  baseline\act-A\A.6.4-2-patel-locked.png, crop-first\baseline\act-A\A.4.5-1-reset-refused.png,
+  baseline\act-A\A.7.9-3-user-390.png, baseline\act-2\2.12-2-users-list.png, baseline\act-A\A.7.9-2-users-390.png,
+  baseline\act-2\2.44-1-mbatha-home.png, baseline\act-2\2.14-2-empty-save.png, baseline\act-2\2.15-1-assessors-five.png,
+  baseline\act-A\A.3.1-1-sso-no-provider.png and baseline\act-A\A.6.3-1-contact-saved.png. The same folder holds the
+  brief's other 37 (§ 4). Read them before drawing: the words in them are the data for today's pages. A capture under
+  states\ dated 2026-09-26 is the old frame: read its body only. No capture shows a password: the reset field is empty
+  in A.4.5-1, Show not pressed. SAY ON THE SPEC BOARD, FIRST, WHETHER THE CAPTURES ARRIVED (as attachments, or read from
+  the folder), and which; if any did not, draw nothing from memory in its place.
+
+DECISIONS (the operator's, 2026-10-23; every recommendation in round 1's assessment taken; one sentence each):
+  Q1: S1, sections under h2 in this order: the who line (address, institution, status, the person's one scope); Roles
+    and scope, with Add a role… opening in place; Assessor training, only for a person holding Assessor; Sign-in and
+    access (Password, Institutional sign-in, Lockout); each result in its own section, naming the person, focused; Back
+    to users goes (the trail Home › Users › ‹name› carries it); ?section=training opens the training section.
+  Q2: training on the person's page; Assessors (/admin/assessors) lists every Assessor holder at her institution, joined
+    to a training record if any (PROPOSED, DATA), each row's "Record training" or "Edit training" (named for its
+    person) opening that person's section; "Create assessor profile" goes; /admin/assessors/edit redirects to the
+    person's section, and an unknown or out-of-scope id reads "User unavailable" (PROPOSED).
+  Q3: H1's "Your institution" card (name, short code, contact email, Status "Active" over "Set by a Wombat
+    administrator.", NEW words for "Set by a global administrator.") links to the record, titled by its name: h1, tab
+    "Kgosi Kgari Teaching Hospital · Wombat" and trail Home › Kgosi Kgari Teaching Hospital (PROPOSED), nothing lit; no
+    menu item drawn as settled.
+  Q4: one scope per person (no migration), drawn once, in the who line and on Users ("Paediatrics / Paediatrics"); Add a
+    role asks a scope only when the chosen role needs more than the person holds, by Invite a person's rules, and adds
+    to the person's scope (PROPOSED: AddRoleToUserCommand gains the scope); Remove takes no scope away. Never draw a
+    scope per role.
+  Q5: "Lock out Mohammed Patel?" in a ConfirmDialog listing the effects that apply to him (Q17) and C13's line, opening
+    on "Keep access"; the result "Mohammed Patel is locked out. Any open session ends within a minute." in Sign-in and
+    access, focused; Status "Locked out"; Reactivate in one press, its result naming him; "Reactivate user" kept, or
+    marked NEW if reworded.
+  Q6: UA: Name or email (with help), Role (every label, Pending trainee, Trainee and No role) and Status, applied with
+    Show, then Clear; "People 1 of 10 match "zulu"" with the focus on the list's heading (flow 08); a pager at 20 (Q22);
+    no Institution column for her, one for the Administrator; StackWide; UC's No role sentence.
+  Q7: H1: People (each role by label with its count, each a link to Users filtered by that role, PROPOSED), Curriculum
+    (what KGK has adopted: 1 and 1; T291 item 4), Your institution (Q3); Quick links dropped; the account count a DATA
+    read.
+  Q8: the waiting line above the cards only when a registrar waits: "5 registrars are waiting to be admitted. Nothing
+    can be filed about them until then." with Open Trainees (PROPOSED); none at zero; no mail.
+  Q9: Pending invitations is dropped from the user page, with "Revoke all pending invitations"; draw it nowhere.
+  Q10: Sign-in and access lists each institutional sign-in with Remove…, confirmed (T286); a reset does not drop them;
+    draw one with a provider ("Illustration": ‹provider›).
+  Q11: T288 and T333 have landed (draw them as built): for her the page is read-only until a provider exists, with O1's
+    words; once one exists her institution is fixed and only staff roles are offered; mappings left from a removed
+    provider are listed read-only (C11); the Administrator keeps the setting's name.
+  Q12: an assessor's discipline is the person's scope (Q4); the training section records status, date and
+    qualifications only, and asks no institution, speciality or sub-speciality; T289's refusals have landed.
+  Q13: a person with no role: "Pieter du Plessis holds no role: they left the programme on 2026-10-18. They can still
+    sign in to read their training record (My progress) and their data rights." and for Molefe "… they completed the
+    programme on 2026-10-20. …" (PROPOSED words, DATA: the end and its reason from the trainee profile); Add a role
+    offers staff roles, never Trainee; how an account re-enters a programme is not drawn (T374).
+  Q14: role labels everywhere on these pages: Users, the user page, Add a role, the results, Assessors, Home's counts,
+    the SSO picker and its rows.
+  Q15: no name or address correction on the user page; draw none.
+  Q16: T288, T333 and T289 land first; the build folds in T264's users and SSO half, T326's assessors and SSO items, T291
+    items 4 and 8, T286's external-logins half, the T323, T324, T280, T325 and T329 halves of these pages, every DATA
+    read below and Q4's scope on Add role: draw each as fixed. T374, T377 and Q19's rule beyond T333 stay their own.
+  Q17: the lockout list says only what is true of the person: "They are not a current trainee. …" only for a person
+    holding Trainee (Dlamini, not Patel).
+  Q18: when Assessor is removed the training record is kept, hidden (Assessors lists role holders only), and shown again
+    if the role is given back; nothing is deleted.
+  Q19: a mapping an Institutional admin creates may not grant Institutional admin (PROPOSED refusal, NEW words, beside
+    Wombat role); only the Administrator may map it.
+  Q20: not this flow's (T377): draw nothing of it.
+  Q21: Add a role… opens in place, a disclosure (NEW pattern; C25); so does Record training.
+  Q22: the pager starts at 20 rows (PagerControls: 10, 20, 50, 100), its select named.
+
+CORRECTIONS (round 1's assessment § 7; round 2's review checks each by number; the boards each fixes):
+  C1 (must; every Users and user-page board): scope is one per person (UserSpecialityScopes; UserDetailDto carries the
+    person's SpecialityIds and SubSpecialityIds). Before 2.13 Zulu, Naidoo and Botha hold Paediatrics alone; Assessor
+    needs a speciality and a sub-speciality (InvitationRules), so their Add a role asks Sub-speciality, drawn as text
+    "Paediatrics" (the only one adopted), and after it each reads "Paediatrics / Paediatrics". Never "Committee member ·
+    Paediatrics" beside "Assessor · Paediatrics / Paediatrics".
+  C2 (must; Add a role): each role's description is flow 11's built one (InvitationText.RoleHelp), word for word:
+    Institutional admin "Runs an institution in Wombat: invites and admits people, adopts curricula."; Speciality admin
+    "Runs one speciality's committee work: panels, reviews and decisions due."; Sub-speciality admin "Runs one
+    sub-speciality's committee work. Choose the speciality, then the sub-speciality."; Coordinator "Works across the
+    institution. Choose a speciality only to keep them to it."; Committee member "Sits committee reviews. Choose a
+    speciality only to keep them to it."; Assessor "Assesses the registrars who ask them, at this institution.".
+  C3 (must; du Plessis's and Molefe's pages): a former trainee is offered My progress and My data rights, and Home's card
+    "Your training record" (T252), never "nothing but My account and My data rights" (Q13's words).
+  C4 (must; Home): no "Locked out: 1" and no "Assessors with no training recorded" at 2.44: nobody is locked before A.6.4,
+    and all five records are saved at 2.14 (Botha's and Patel's with no date, which is not "no training recorded").
+  C5 (should; the training boards, Spec, Steps): D is 2026-10-20: Zulu 2018-10-20, Naidoo 2020-10-20, Khumalo 2026-09-20.
+  C6 (should; every board at 2.12–2.15): Khumalo is "Fatma Khumalo" until 2.41, "Fatima Khumalo" from 2.44 on.
+  C7 (should; Dlamini at 390): her lockout list keeps "They are not a current trainee. …" and its lead sentence (Q17).
+  C8 (should; Spec): each built word changed is marked NEW on the Spec's message list with its old words beside it: the
+    own-account note, the reset help, the reset result, "Reactivate user", "Lock out user" → "Lock out…", "Save" →
+    "Save changes", and each result that now names the person; each with its Expect on the Steps board.
+  C9 (should; Assessors after a Remove): "the list no longer shows Thandi Zulu" holds only under Q2's list of role
+    holders: mark it PROPOSED, DATA.
+  C10 (should; the record and Home's card): § 5 below.
+  C11 (should; SSO): mappings left after a provider is removed are listed, read-only (§ 6 below).
+  C12 (should; the Delete dialog): the dialog answers what becomes of a role the mapping gave (§ 6 below).
+  C13 (should; the lock and Remove dialogs): nothing reassigns a request; a locked person is left out of new nominations
+    and of reminders. The lock dialog says "1 request waiting for Mohammed Patel stays with them; they are sent no
+    reminder about it." (the count DATA); Remove Assessor says the same of that person's waiting requests.
+  C14 (nit; Users heavy): the pager starts at 20, not "over 25" or 50.
+  C15 (nit; every load error): the house form: "Could not load the users. Nothing has changed. Try again, or come back in
+    a few minutes." with Try again; likewise "Could not load this person.", "Could not load the assessors.", "Could not
+    load the institution.", "Could not load the SSO mappings." (each NEW, the same two sentences after it); Home keeps
+    flow 01's "Could not load your Home. Nothing has changed. Try again, or come back in a few minutes.".
+  C16 (nit; Assessors and the training section): one label for Provisional on both (the list reads "Provisional", the
+    form "Provisional (awaiting sign-off)"); say which on the Spec, NEW where it changes.
+  C17 (nit; a Speciality admin added with no speciality): reuse "Speciality administrators must be scoped to a
+    speciality." (InvitationRules), or mark new words NEW.
+  C18 (nit; Home): no "Locked out: none" line; locked accounts are named only when there are any.
+  C19 (nit; moot with S3 dropped): no assessor picker remains.
+  C20 (nit): the four-role person and the 60-character address are drawn, on the heavy boards.
+  C21 (confirm; unavailable): "User unavailable" / "The user could not be found or is outside your scope." for an
+    unknown id, an out-of-scope id and an Administrator's account by id alike, with "Go to Users"; no "no access"
+    variant.
+  C22 (confirm; SSO): the Provider select lists only her institution's providers; with none of hers the page reads "not
+    set up", never naming another institution's.
+  C23 (should; SSO with a provider): Q19's refusal drawn.
+  C24 (should): the Administrator's views drawn once each: Users with Institution; a user page at another institution;
+    Assessors, which he reaches by address (no menu item; Nav/NavItems.cs:144–149); SSO's no-provider card with the
+    setting's name. No "her institution" words show to him.
+  C25 (should; Add a role… and Record training): the disclosure: the trigger's aria-expanded; the focus to the first
+    radio on open and back to the trigger on Cancel; the result replacing the form; its text for DESIGN.md § Form
+    system on the Spec.
+  C26 (should): Users at 1280 with a person of four roles and a 60-character address, nothing cut (T323); Users,
+    Assessors and the user page at 768.
+  C27 (nit; every 390 board): the who line keeps the institution at 390, wrapped.
+
+HER INSTITUTION'S RECORD (§ 5) AND SSO MAPPINGS (§ 6), AS CONFIRMED AND CORRECTED:
+  The record: Name, Short code and Contact email with the required mark on the first two; Status as text; Save changes
+    (NEW for "Save") and Cancel to Home; no "Back to home" (the trail carries it); the subtitle says what the record is:
+    "Your institution's name, short code and contact email." (NEW; never "as your people see it": no page but the
+    admin pages shows the contact email). The contact email reads paeds-admin@kgk.wombat.local from 1.1 until A.6.3,
+    then hod.paediatrics@kgk.wombat.local (it is stored and read today: no DATA mark). The result "Kgosi Kgari Teaching
+    Hospital saved. Its contact email is now hod.paediatrics@kgk.wombat.local." focused (NEW for "Institution saved.").
+    Refusals under their field, what was typed kept: Short code emptied "Type a short code. The record was not saved."
+    (NEW, for DataAnnotations' "The Short code field is required."); a malformed contact email "Enter a valid email
+    address, for example name@example.org." (PROPOSED: the record checks no address today; flow 10's and 11's words). A
+    failed read draws no form (T329). The Demo Institution's id: flow 01's Page not found (a note, unchanged).
+    /admin/institutions/new for her: flow 01's access denied (T291 item 8; PROPOSED, since no record is implied).
+  SSO mappings, for her with no provider: "Institutional sign-in is not set up for Kgosi Kgari Teaching Hospital. A
+    Wombat administrator sets it up; ask them if your hospital signs staff in through its own system." (NEW, T326), and
+    that her people sign in with an email and a password; no form, no "Add a mapping above". With a provider
+    ("Illustration": ‹provider›, ‹group ID›, ‹group display name›): her institution as text (T288); Wombat role by label,
+    staff roles only, never Trainee or Pending trainee (T333) nor Institutional admin (Q19); Provider her institution's
+    alone; "Wombat role and scope" one column; the result "People in ‹group› get Assessor in Paediatrics / Paediatrics at
+    their next sign-in." (the mapper runs at every institutional sign-in). Delete… an outline button named for its row
+    ("Delete the mapping of ‹group› to Assessor"), confirmed, opening on "Keep the mapping"; the dialog says: "From each
+    person's next sign-in, belonging to ‹group› no longer gives Assessor; anyone who had Assessor only from this group
+    loses it then." (C12). Mappings left from a provider no longer configured: listed read-only under their own caption,
+    with no Delete for her (PROPOSED; C11).
+
+FIXTURES (the T373 replay, D = 2026-10-20, J = 2026-01-15; use these words):
+  People: the Administrator "Demo Administrator" (devadmin@wombat.local). Dr Anton Kruger, College admin,
+    kruger@cmsa.wombat.local, College of Paediatricians of South Africa. Prof Nolwazi Mbatha, Institutional admin,
+    mbatha@kgk.wombat.local, Kgosi Kgari Teaching Hospital (KGK, id 2). Staff, as invited (2.2–2.7) and registered
+    (2.8–2.10): Pieter Smit, Coordinator, smit@kgk.wombat.local, Any speciality; Thandi Zulu, David Naidoo and Sarah
+    Botha, Committee member, Paediatrics (zulu@, naidoo@, botha@kgk.wombat.local), each also Assessor from 2.13 and then
+    Paediatrics / Paediatrics (C1); Mohammed Patel and Fatma (from 2.41 Fatima) Khumalo, Assessor, Paediatrics /
+    Paediatrics (patel@, khumalo@kgk.wombat.local); John van Rensburg, Committee member, Any speciality,
+    vanrensburg@sun.wombat.local, never an Assessor; Refilwe Mokoena, Speciality admin, Paediatrics,
+    mokoena@kgk.wombat.local; Kabelo Sithole, Sub-speciality admin, Paediatrics / Paediatrics, sithole@kgk.wombat.local.
+    Mbatha's own scope cell is the institution, as round 1 drew it. Registrars, Paediatrics / Paediatrics, Pending
+    trainee from registration (2.18) until admitted (2.29–2.30), then Trainee: Lerato Molefe molefe@ (start 2023-01-15;
+    completed 2026-10-20 at 5.17, then no role), Anele Dlamini dlamini@ (2024-01-15), Pieter du Plessis duplessis@
+    (2025-01-15; left the programme 2026-10-18 at 5.27, then no role), Nomsa Mahlangu mahlangu@ (2026-01-15), Sipho
+    Ndlovu ndlovu@ (2026-01-15; erased, gone from every list by A.1.14). Another institution: the Demo Institution
+    (DEMO, id ‹…›) and the dev trainee trainee@wombat.local (A.5.5). Names as stored, no titles, on every page. The
+    product stores no pronoun: the page's own sentences name the person or say "they", as the built lockout list does.
+  Places: Kgosi Kgari Teaching Hospital; speciality Paediatrics, sub-speciality Paediatrics; the College's (CPSA)
+    "Paediatric EPA Curriculum (11.1)", KGK's only adopted version (from 1.21). Home's role line "Institutional admin ·
+    Semester 2, 2026".
+  Counts: Users at 1.10, one account (hers); at 2.12 and 2.13, ten (Mbatha and the nine staff), by last name: Botha,
+    Khumalo, Mbatha, Mokoena, Naidoo, Patel, Sithole, Smit, van Rensburg, Zulu; at 2.28, fifteen, five of them Pending
+    trainee; at 2.44, fifteen; at A.1.14, A.6.4 and A.7.9, fourteen (Dlamini and Mahlangu Trainee; du Plessis and Molefe
+    no role). Home at 2.44: Institutional admin 1, Speciality admin 1, Sub-speciality admin 1, Coordinator 1, Committee
+    member 4, Assessor 5, Trainee 5; at 2.28 Pending trainee 5 in place of Trainee 5 (the summary counts every role held
+    by one or more); at 1.10 Institutional admin 1 and 0 adopted; at 1.21 and after, 1 and 1 adopted.
+  Assessor training (2.14, qualifications "MBChB, MMed (Paed), FC Paed (SA)" for each): Zulu Trained 2018-10-20; Naidoo
+    Trained 2020-10-20; Botha Trained, no date ("Not recorded"); Patel In training ("Not recorded"); Khumalo Provisional,
+    2026-09-20. Assessors lists them by last name: Botha, Khumalo, Naidoo, Patel, Zulu (2.15's Actual).
+  Patel at A.6.4: one request waiting for him, Pieter du Plessis's Portfolio and Logbook Review (Paediatrics) · PAED-015,
+    waiting since 2026-10-12 12:35 SAST, overdue (A.6.8).
+  Words that stay (built): the own-account note "This is your own account, so you cannot change its roles, lockout or
+    password here. Another administrator can change your roles or lockout." with Change your password (unless reworded,
+    NEW); the Trainee's note "You hold the Trainee role, so you cannot view or change user accounts, including your
+    own."; Add a role's help "Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees
+    with 'Admit…'."; the reset help "Sets a new password directly. The user is not emailed; share the password securely
+    out-of-band."; PasswordField, Show ("Show new password") and the six rules; the refusal "The password was not reset.
+    The new password needs: At least 12 characters. An upper-case letter. A symbol, such as ! or #." with the field
+    marked "The new password does not meet the rules below.", the field cleared either way; the result "Password reset.
+    Share the new password with the user out-of-band." (or NEW, C8); the lockout list "Locking out the user prevents
+    sign-in immediately. Until they are reactivated:" "They sit on no committee panel." "They are not a current
+    trainee. No committee review or feedback campaign can be started about them, a draft feedback campaign about them
+    cannot be opened, and the programme's lists of its trainees leave them out: the speciality, sub-speciality and
+    committee dashboards' trainee targets and counts, feedback coverage, decisions due, and the weekly digest's inactive
+    trainees." (Trainee holders only, Q17) "They are sent no activity reminders or weekly digests." "They cannot be named
+    as an activity's assessor." and "Their records stay as they are, and a review or feedback campaign already under way
+    can still be finished. Reactivating clears the lockout."; "Global administrators cannot be locked out from this
+    surface." on an Administrator's page; "User unavailable" / "The user could not be found or is outside your scope.";
+    "The institutional sign-in is the account's only way in." (flow 02's, for Remove… on a last way in); "Speciality
+    administrators must be scoped to a speciality." and "The selected role requires speciality and sub-speciality
+    scope." (InvitationRules); the SSO Administrator's "No SSO providers are configured. Add providers to the
+    Sso:Providers section in application settings and restart.".
+
+STATES TO DRAW (each at 1280 and 390, with the role's menu and the shell; 768 where marked):
+  Home (Mbatha): onboarded (2.44); her first sign-in (1.10: one account, 0 and 0 adopted); KGK adopted, before onboarding
+    (1.21: 1 and 1); five waiting (2.28, the waiting line); loading; the load error.
+  Users (Mbatha unless named): ten (2.12); filtered "zulu" (2.12) with its count and focus; no match ("zzz"); two roles a
+    row (2.13, after the three Add roles); fifteen with five Pending trainee (2.28); fifteen onboarded (2.44); fourteen
+    (A.1.14); Patel locked (A.6.4, the Locked out badge); the Role filter at "No role" (du Plessis and Molefe, UC's
+    sentence); the heavy set ("Illustration": about 200 accounts, page 1 of 20 rows with the pager, a person holding four
+    roles, a 60-character address, a dozen locked; ‹further people› in brackets); loading; the load error; the Trainee's
+    note ("Illustration": no cast member holds Trainee beside a staff role); the Administrator's view, with Institution;
+    768 for ten, the heavy set and the Administrator's view.
+  The user page (Mbatha unless named): her own (2.12); Zulu before (2.13); Add a role open, Assessor chosen, Sub-speciality
+    as text (2.13); Assessor added, focused, the who line now "Paediatrics / Paediatrics" (2.13); Remove… confirmed and
+    its result ("Illustration": no step removes a role; Zulu's Assessor, C13's line, the record kept, Q18); a Speciality
+    admin added with no speciality, refused ("Illustration": two adopted specialities); du Plessis with no role (A.4.5,
+    Q13); his reset refused, then done (A.4.5); Molefe with no role (5.17, "completed"); Molefe as a pending registrar
+    (2.28); Patel before the lock (A.6.4: three effects, no trainee line), the lock's dialog, locked, reactivated (A.6.7);
+    Dlamini (A.7.9, four effects); a person holding four roles with a 60-character address ("Illustration"); an
+    institutional sign-in listed with Remove…, its dialog, and the last way in ("Illustration": ‹provider›); unavailable
+    (A.5.5, the dev trainee by id; the same page for an Administrator's account by id); loading; the load error; the
+    Trainee's note; the Administrator's view of a user at another institution ("Illustration": the dev trainee); 768
+    for Zulu after Add role, du Plessis and Patel locked.
+  Assessor training and Assessors (Mbatha): Assessors with no Assessor holder ("Illustration": before 2.10; T326's body);
+    the five holders before any record (2.14), each with Record training; Zulu's section open from it
+    (?section=training), saved; Khumalo's empty save refused ("Choose the training status.", NEW), then Provisional with
+    2026-09-20, saved, focused; the five recorded (2.15); the names corrected (2.44, Fatima Khumalo); after Zulu's
+    Assessor is removed ("Illustration", Q18); thirty holders ("Illustration", the heavy set); /admin/assessors/edit
+    redirected (a note: the old route, and an unknown id reading "User unavailable"); loading; the load error; the
+    Administrator's view by address; 768 for the five and the thirty.
+  Her institution's record (Mbatha): KGK's (1.23, paeds-admin@); saved (A.6.3, hod.paediatrics@), focused; Short code
+    emptied, refused; a malformed contact email, refused; Cancel to Home (A.6.3); /admin/institutions/new as access
+    denied (1.23; flow 01's page, a note); the Demo id as Page not found (a note); loading; the load error, with no form.
+  SSO mappings: her no provider (A.3.1); the Administrator's no provider, with the setting's name; mappings left from a
+    removed provider ("Illustration"); a provider with the add form ("Illustration"); a mapping added, focused; refused
+    for Institutional admin (Q19); the Delete dialog and its result; loading; the load error.
+
+ALSO, as flow 11's round 2 did:
+  - Users' table (UA): columns Name over address (the row header, the address breaking after its @ with <wbr>), Roles
+    (each label a line), Scope (the person's one scope), Status ("Active", or a Locked out badge), Manage named for its
+    row ("Manage Thandi Zulu", the address only when names repeat, T239); Institution only for the Administrator. The
+    caption says what is listed and its order ("At Kgosi Kgari Teaching Hospital, by last name …"), not the h1 again
+    (T280). Stacked from 900 px down (StackWide), every field shown, Manage a 44 px block at 390.
+  - Every page: one h1, then h2 per section, h3 below (T280); every table captioned with scope on its headers; every row
+    action named for its row, no two alike; loading (the header at once and a skeleton, no action until the read is
+    in); a load error in fixed words with Try again, never an exception's text (T329); no message names a property
+    (T324); ISO dates, times "12:35 SAST" (T325); no sideways scroll at 1280, 768 or 390. In a stacked row or a stacked
+    form's actions the primary is on top (DESIGN.md; flow 11's round 3 had Cancel on top, and the build copied it).
+  - Focus after every action: each result in its own section, naming the person; a refusal's field; a dialog opening on
+    its safe button (round 1's "Keep access" and "Keep the mapping"; the Remove dialogs' safe words yours, NEW), Cancel
+    and Escape returning to its trigger; a disclosure's first field on open (C25); the filter's count on Show.
+  - Nothing of flows 01–11 drawn as changed: the shell, the menus' items, access denied, not found, PasswordField and its
+    rules, My account and Change password, the session-ended notice (A.4.6, A.6.5), Invitations, Invite a person (Users'
+    "Invite a person" header action opens flow 11's page unchanged), Trainees and Admit ‹name›, the profile page's
+    Deactivate and Mark complete (flow 13), the Administrator's institution pages (flow 18).
+  - Name every design-system component you use (PageHeader, DataTable with StackWide and PagerControls, FormField,
+    FormActions, FieldHelp, choice-group, Alert, ActionResult, ConfirmDialog, StatePanel with Try again, Skeleton,
+    DashboardCard, DashboardFrame, Icon, PasswordField, PasswordRules, flow 02's sign-in method rows), and mark anything
+    else NEW (the who line, the role row, the Add a role disclosure, the training section, the waiting line, the
+    institution card, the filter card if it differs from flow 06's FilterBar, the No role cell, the not-set-up card).
+  - Mark PROPOSED anything not decided above; mark DATA every value a page does not read today.
+  - A Spec board, "R2-0-spec" (more boards "R2-0-spec-2", … if it runs long): FIRST, whether the captures arrived and
+    which; every NEW and changed component with its classes; the DESIGN.md text each changes (§ Table system: labels,
+    the one scope, StackWide here; § Form system: a form in a detail page's section, the disclosure (C25, Q21); § Button
+    system: Remove…, Lock out… and Delete… outline triggers, the filled danger only in the dialog; § Page-level patterns:
+    Detail page as sections, the record titled by its name, Assessors listing role holders, the owner table's rows; §
+    Dashboard page: labels, the adopted count, the waiting line; § Alerts: results naming the person); the tokens; the
+    routes (/, /admin/users, /admin/users/{UserId} and ?section=training, /admin/assessors, /admin/assessors/edit
+    redirected, /admin/institutions/{Id:int}, /admin/institutions/new for her, /admin/sso/group-mappings), each with its
+    owner, trail, lit item and tab title; the DATA reads grouped by query (ListUsers: the scope names, the Role filter
+    with No role, a page of 20 with the total; GetUserById: the scope names, the institutional sign-ins, the waiting
+    requests' count for the lock and Remove dialogs, the training record joined, for a person with no role the
+    programme's end and how; ListAssessors: every Assessor holder at her institution joined to a record; the Home
+    summary: the account count, the waiting count, locked accounts, the adopted specialities and sub-specialities, the
+    institution's name, short code, contact email and status; SSO: the providers configured for her institution, the
+    mappings whose provider is gone); every message by kind (result, refusal, hint, notice, empty) with its words,
+    built or NEW, NEW ones beside the words they replace (C8); C1–C27 each with the board where it is drawn; which boards
+    are Illustrations. Note on it, PROPOSED for the operator: (a) the product stores no pronoun, so Q13's and C13's
+    sentences say "they" and "their", as the built lockout list does; (b) Q10's "linked on ‹date›" is not stored
+    (IdentityUserLogin holds no date; flow 02's My account lists the provider's name and "Institutional sign-in."), so
+    each link reads its provider's name with no date, and a date would be a migration; (c) Add a role's Assessor writes
+    the sub-speciality at 2.13, so Zulu's, Naidoo's and Botha's scope is Paediatrics / Paediatrics from 2.13, not from
+    2.14's save, while a Committee member may not be invited with a sub-speciality: holding both roles, the one scope
+    serves both, as today after 2.14; (d) an account with no institution reads "Global" on Users and "Global (no
+    institution)" on the user page today: one wording, NEW; (e) the training section's refusals and its result are NEW
+    words.
+  - A Steps board, "R2-0-steps": each of the 15 runbook steps (1.23, 2.12, 2.13, 2.14, 2.15, 2.44, A.1.14, A.3.1, A.4.5,
+    A.5.5, A.6.3, A.6.4, A.6.7, A.7.9, A.7.14), its board, and what its Expect will say once built, quoting today's
+    words and giving the new ones ("unchanged" where so): the labels (Q14: 2.12, 2.13, 2.44, A.6.4, A.6.7); 1.23 and
+    A.6.3 the record titled by its name, reached from Home's card, its subtitle and result, /new access denied; 2.13 the
+    scope shown and asked, Sub-speciality as text, the result naming Zulu; 2.14 and 2.15 training on the person's page,
+    Assessors as role holders, "Choose the training status."; 2.44 Home's cards, 1 and 1, no waiting line; A.3.1 her
+    words; A.4.5 the result in its section, the no-role sentence; A.6.4 the dialog, three effects, C13's line; A.6.7 the
+    one press; A.7.9 Users stacked; A.1.14, A.5.5 and A.7.14 unchanged or as changed, saying so (A.7.14's danger pair
+    moves into the dialog). Name the crossing steps whose words change (1.10, 1.21, 2.28, 5.17, 5.28, A.5.15, A.6.9).
+    With each journey's count, presses + fields typed, at 1280 and 390: finding a person; adding a role with its scope
+    (round 1's Z2: 3 + 0 with the discipline as text); recording one assessor's training (4 + 2 from Home, 3 + 2 from
+    Add role's result); resetting a password (1 + 1); locking out and reactivating (3 + 0); correcting the institution's
+    contact email.
+  - Every colour an existing token from tokens.json or a NEW token with its value; contrast checked (text 4.5:1, borders
+    and the focus ring 3:1); targets 24 px, 44 at 390. A password is never drawn: the reset field is empty or masked
+    (••••••••••••) on every board.

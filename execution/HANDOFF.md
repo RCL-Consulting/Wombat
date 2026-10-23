@@ -12,9 +12,11 @@ The operator said "push, then start flow 12". Pushed `9d979834..98584921`. T376 
   filled in, completeness/verbatim/baseline checks all exit 0, staged (`design/upload/`, 123 files; the four
   crop-first captures opened, nothing to crop). T376's notes have the Mode, the drops and § 6's Q1–Q16.
 - **Round 1 drawn and assessed:** 44 boards in `round-1/` (`62f6ec41`); `round-1-assessment.md` (picks S1, H1, UA;
-  4 must-fixes; Q1–Q22 for the operator). **T377 proposed** (SSO can strip a hand-given role). **Next:** the operator's
-  decisions on Q1–Q22, recorded in the assessment's last section; then round 2's ask (re-attach the captures: the
-  Spec board says none arrived).
+  4 must-fixes; Q1–Q22 for the operator). **T377 proposed** (SSO can strip a hand-given role). **The operator took Q1–Q22 as recommended**
+  (2026-10-23). Recorded in the assessment's § 10; **round 2's
+  ask written** (`round-2-ask.txt`, 335 lines, ~160 boards). **Next:** the operator sends it to "Wombat 12" with the
+  captures from `design/upload/` re-attached; then save round 2, review it (code, cast, design system), the operator's
+  decisions, one correction round.
 
 ## Session 2026-10-20 (Opus): T373, flow 11, done
 

@@ -85,3 +85,4 @@ T373 (flow 11), T369 (flow 10), T264, T286, T288, T289, T291, T317, T323, T324, 
   C2 role words not flow 11's; C3 du Plessis has My progress; C4 H2's invented counts), 13 should, 8 nits. New operator
   questions Q17–Q22. Q20 checked and proposed as **T377** (no code writes a Manual role assignment, so SSO can strip a
   hand-given role). The Spec board says no capture arrived: re-attach for round 2.
+- **2026-10-23, round 2's ask.** The operator took Q1–Q22 as recommended (assessment § 10). `round-2-ask.txt` written (335 lines, ~160 boards: Home, Users, the user page, training, the record, SSO, Spec and Steps).

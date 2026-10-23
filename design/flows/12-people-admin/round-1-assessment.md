@@ -559,6 +559,71 @@ are new.
 - **R7. The attachments.** Re-attach the ten key screenshots (brief § 4) and name the folder (`design/baseline/`). Ask
   round 2 to say whether they arrived: round 1 says none did (Z1).
 
-## 10. The operator's decisions
+## 10. The operator's decisions (2026-10-23)
 
-(pending)
+The operator took every recommendation in § 8 as recommended, and the picks in the Summary (S1, H1 with H3's Status,
+UA, I and O confirmed with § 5's and § 6's corrections). Each in one line, with what it means for round 2 and the build:
+
+- **Q1:** S1, one page of sections (the who line, Roles and scope, Assessor training for an Assessor, Sign-in and
+  access), with `?section=training` opening the training section (PROPOSED route) and the only adopted discipline drawn
+  as text in Add a role. S2 and S3 are dropped.
+- **Q2:** training on the person's page; Assessors lists every Assessor holder joined to a profile if any (PROPOSED,
+  DATA); "Record training" or "Edit training" opens the section; `/admin/assessors/edit` and "Create assessor profile"
+  go, the route redirecting to the person's section, an unknown or out-of-scope id reading "User unavailable".
+- **Q3:** H1's "Your institution" card with Status (from H3) links to the record, titled by its name; § 5's corrections
+  apply (the subtitle, the stored contact email, the NEW marks, the address check).
+- **Q4:** one scope per person, no migration: shown once (the who line, Users); Add a role asks a scope only when the
+  role needs more than the person holds, by Invite a person's rules, and adds to it (`AddRoleToUserCommand` gains the
+  scope, PROPOSED); Remove takes no scope away. A per-role scope is not this flow's.
+- **Q5:** the lock as drawn ("Lock out Mohammed Patel?", the effects that apply to him, "Keep access" focused, the
+  result naming him), with C13's line about his waiting request; Reactivate in one press; "Reactivate user" kept or
+  marked NEW.
+- **Q6:** UA. Name or email, Role (with No role) and Status applied with Show, then Clear; a pager at 20; no Institution
+  column for her and one for the Administrator; StackWide; UC's No role sentence as the filter's help and the row's cell.
+- **Q7:** H1. People by label, each role linking to Users filtered by it; Curriculum 1 and 1 (T291 item 4); Your
+  institution; Quick links dropped; "15 accounts" a DATA read.
+- **Q8:** the waiting line above Home's cards only when someone waits, linking to Trainees; no mail.
+- **Q9:** Pending invitations goes: the card, "Revoke all pending invitations", `RevokePendingInvitationsForEmailCommand`
+  and the state `user-detail--pending-invitations`.
+- **Q10:** institutional sign-in links listed in Sign-in and access with Remove…, confirmed; a reset does not drop them;
+  one drawn with a provider in round 2; T286's external-logins half folded in.
+- **Q11:** T288 and T333 land first as their own tasks; the page is read-only for her until a provider exists, with
+  O1's words; mappings left from a removed provider listed read-only (C11); the Administrator keeps the setting's name.
+- **Q12:** an assessor's discipline is the person's scope (Q4); the profile records training only and its save writes no
+  scope; T289's refusals land first.
+- **Q13:** a person with no role reads that they hold none, the programme's end and how (completed or left), and that
+  they can still read their training record (My progress) and their data rights; Add a role offers staff roles, never
+  Trainee; the end is a DATA read from the trainee profile; re-entry stays T374's.
+- **Q14:** role labels on every page here; the Expects of 2.12, 2.13, 2.44, A.6.4 and A.6.7 change, and the result words
+  (C8).
+- **Q15:** no name or address correction on the user page; the person corrects a name on My account (2.41).
+- **Q16:** T288, T333 and T289 land first; the build folds in T264's users and SSO half, T326's assessors and SSO items,
+  T291 items 4 and 8, T286's external-logins half, the T323, T324, T280, T325 and T329 halves of these pages, § 7's DATA
+  reads and Q4's scope on Add role; T374, Q20's defect and Q19's rule stay their own.
+- **Q17:** the lockout list per person: "is not a current trainee" only for a person holding Trainee (C7); A.6.4's
+  Expect drops it for Patel.
+- **Q18:** the profile is kept when Assessor is removed, hidden from Assessors, and shown again if the role is given
+  back; nothing is deleted.
+- **Q19:** a mapping an Institutional admin creates may not grant Institutional admin; only the Administrator may map
+  it (PROPOSED, folded into T333's refusals).
+- **Q20:** proposed as T377 (no code writes a Manual `UserRoleAssignment`, so SSO can take a hand-given role); not part
+  of this flow's design or build.
+- **Q21:** Add a role opens in place, a disclosure; round 2 defines it (C25) and writes it into DESIGN.md § Form system.
+- **Q22:** Users' pager starts at 20, flow 08's (C14).
+
+Round 2's ask is `round-2-ask.txt`: the picks with every state, the decisions as requirements, C1–C27 each with the
+board it fixes, § 9's R1–R7, and the Spec and Steps boards. Settled in writing it, PROPOSED there for the operator to
+overrule:
+- The product stores no pronoun (no such field in `src`), so Q13's and C13's sentences say "they", as the built lockout
+  list does (`U/UserDetail.razor:157-161`).
+- Q10's "linked on ‹date›" is not stored: `IdentityUserLogin` holds no date, and flow 02's My account lists a sign-in by
+  its provider's name only (`W/Account/Profile.razor:166-174`). Each link reads its provider with no date; a date would
+  be a migration.
+- Assessor needs a speciality and a sub-speciality (`A/Invitations/InvitationRules.cs:81-84`), so under Q4 Add role
+  writes Zulu's, Naidoo's and Botha's sub-speciality at 2.13, and their scope reads Paediatrics / Paediatrics from 2.13,
+  not from 2.14's save. A Committee member may not be invited with a sub-speciality, but holding both roles, the one
+  scope serves both, as today after 2.14.
+- An account with no institution reads "Global" on Users (`U/UsersList.razor:50`) and "Global (no institution)" on the
+  user page (`U/UserDetail.razor:58`): round 2 gives one wording, NEW.
+- Home at 2.28 counts Pending trainee 5: the summary counts every role held by one or more
+  (`GetInstitutionalAdminDashboardSummaryQuery.cs:33-42`).
