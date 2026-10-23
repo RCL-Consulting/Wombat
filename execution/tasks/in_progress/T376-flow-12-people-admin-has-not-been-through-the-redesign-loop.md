@@ -92,3 +92,4 @@ T373 (flow 11), T369 (flow 10), T264, T286, T288, T289, T291, T317, T323, T324, 
   `TotalCount > PageSize`; Users' Name cell may split mid-word (`.col-wrap`), check at 901/1000/1100 in the replay;
   P22 lacks the training section; T05's `fieldset aria-invalid` goes on the inputs; Botha's no-date result undrawn.
   **Steps 3–5 done. Next: step 6, the build, after T288, T333 and T289 (Q16, F5).**
+- **2026-10-23, prerequisites landed:** T289 (`b8ed8fd6`), T288 (`964a2c4e`), T333 (this session). T333's browser check at A.3.1 is carried to step 7. **Next: step 6, the build.**

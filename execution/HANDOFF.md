@@ -19,8 +19,17 @@ The operator said "push, then start flow 12". Pushed `9d979834..98584921`. T376 
   here. Merged in `round-2-review.md` (`9a51ee7a`: 10 must, 24 should, 16 nits). **The operator took F1–F11 as
   recommended.** Recorded; `round-3-ask.txt` written.
 - **Round 3 drawn and checked final** (175 boards, `a83bf182`; `round-3-check.md`: 78/80 done, the rest build notes in
-  T376's notes). Steps 1–5 done. **Next: step 6, the build**, after T288, T333 and T289 land as their own tasks (Q16,
-  F5), on the operator's word.
+  T376's notes). Steps 1–5 done. Pushed through `bc8218c7`.
+- **The prerequisites landed** (Q16, F5), each its own commit, unpushed: **T289** `b8ed8fd6` (the assessor-profile save
+  refuses a trainee-admin first and any cross-institution move, the Administrator's too); **T288** `964a2c4e` (a mapping
+  only for its provider's own institution; the mapper applies only those; trainee-first on list, create, delete; the
+  page shows the T278 note and only her providers); **T333** (`WombatRoles.AdmissionManaged`: no mapping gives or takes
+  Trainee or PendingTrainee; admission's refusal and DOMAIN.md reworded). Suites green: Domain 829, Application 4001,
+  Web 3983, Infrastructure 1029, Architecture 52, Integration SSO 25.
+- **Traps:** T333's browser item (A.3.1) is unticked, carried to T376 step 7: with no provider the page draws no role at
+  all. T289 handed scope ownership and the picker to T376's build (M1, F4, S10): the profile save still writes scope
+  until then.
+- **Next: T376 step 6, the build** (flow 11's build lanes as template), on the operator's word.
 
 ## Session 2026-10-20 (Opus): T373, flow 11, done
 
