@@ -17,8 +17,10 @@ The operator said "push, then start flow 12". Pushed `9d979834..98584921`. T376 
 - **Round 2 drawn:** 178 files in `round-2/` (`a944726e`); the captures were read from `design/upload/` (not attached).
   Reviewed by three Sonnet agents (`round-2-review-{code,cast,ds}.md`, committed); K1, K3, D3, D4 and C9 checked
   here. Merged in `round-2-review.md` (`9a51ee7a`: 10 must, 24 should, 16 nits). **The operator took F1–F11 as
-  recommended.** Recorded; `round-3-ask.txt` written. **Next:** the operator sends round 3; save it and check it
-  item by item (`round-3-check.md`, flow 11's shape), then step 6, the build.
+  recommended.** Recorded; `round-3-ask.txt` written.
+- **Round 3 drawn and checked final** (175 boards, `a83bf182`; `round-3-check.md`: 78/80 done, the rest build notes in
+  T376's notes). Steps 1–5 done. **Next: step 6, the build**, after T288, T333 and T289 land as their own tasks (Q16,
+  F5), on the operator's word.
 
 ## Session 2026-10-20 (Opus): T373, flow 11, done
 

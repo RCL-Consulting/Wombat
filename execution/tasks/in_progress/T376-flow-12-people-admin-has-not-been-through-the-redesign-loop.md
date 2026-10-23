@@ -51,9 +51,9 @@ Run the loop as flow 11 ran it (`design/flows/11-onboarding/`, BRIEF § 11 "Flow
 
 ## Verification
 
-- [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit.
-- [ ] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link.
-- [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/12-people-admin/`.
+- [x] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit. (`9db255f5`, exit 0)
+- [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link. (https://claude.ai/artifact/EUfPe9d3zgnGxvQ9LeSzz8)
+- [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/12-people-admin/`. (round 3 final, `round-3-check.md`; decisions in `round-1-assessment.md` § 10 and `round-2-review.md`)
 - [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 12) — the squash commit and counts.
 - [ ] The whole runbook replays on a fresh database with no regression from flow 12, the baseline is re-captured, and
   flow 12's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
@@ -87,3 +87,8 @@ T373 (flow 11), T369 (flow 10), T264, T286, T288, T289, T291, T317, T323, T324, 
   hand-given role). The Spec board says no capture arrived: re-attach for round 2.
 - **2026-10-23, round 2's ask.** The operator took Q1–Q22 as recommended (assessment § 10). `round-2-ask.txt` written (335 lines, ~160 boards: Home, Users, the user page, training, the record, SSO, Spec and Steps).
 - **2026-10-23, round 2** (178 files in `round-2/`, `a944726e`): reviewed from the code, the cast and the design system (`6b4d39dc`), merged (`round-2-review.md`: 10 must, 24 should, 16 nits; K1, K3, D3, D4, C9 checked in the main session). The operator took F1–F11 as recommended. `round-3-ask.txt` written (249 lines, ~180 boards).
+- **2026-10-23, round 3** (175 boards in `round-3/`, `a83bf182`): checked item by item (`round-3-check.md`, one Sonnet
+  agent): 80 rows, 78 done, 1 partly, 1 not done, 0 regressed. **Final.** Build notes: F9's guard is
+  `TotalCount > PageSize`; Users' Name cell may split mid-word (`.col-wrap`), check at 901/1000/1100 in the replay;
+  P22 lacks the training section; T05's `fieldset aria-invalid` goes on the inputs; Botha's no-date result undrawn.
+  **Steps 3–5 done. Next: step 6, the build, after T288, T333 and T289 (Q16, F5).**
