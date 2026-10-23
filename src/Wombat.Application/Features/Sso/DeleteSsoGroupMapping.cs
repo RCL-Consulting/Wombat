@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Users;
 using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.Sso;
@@ -21,8 +22,14 @@ public sealed class DeleteSsoGroupMappingCommandHandler : IRequestHandler<Delete
         _dbContext = dbContext;
     }
 
+    /// <remarks>
+    /// <b>A trainee first</b> (<see cref="UserAdministrationRules.DemandUserAdministration" />, T288), before the id is
+    /// looked up: a registrar who also administers could otherwise delete the mapping that gave them Trainee.
+    /// </remarks>
     public async Task Handle(DeleteSsoGroupMappingCommand request, CancellationToken cancellationToken)
     {
+        UserAdministrationRules.DemandUserAdministration(request.Principal);
+
         var mapping = await _dbContext.Set<SsoGroupRoleMapping>()
             .FirstOrDefaultAsync(m => m.Id == request.Id, cancellationToken);
 

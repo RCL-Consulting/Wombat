@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Users;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 
@@ -21,6 +22,9 @@ public sealed class ListSsoGroupMappingsQueryHandler : IRequestHandler<ListSsoGr
 
     public async Task<IReadOnlyList<SsoGroupMappingDto>> Handle(ListSsoGroupMappingsQuery request, CancellationToken cancellationToken)
     {
+        // A trainee first (T288), as the commands: the page says why in place of the list.
+        UserAdministrationRules.DemandUserAdministration(request.Principal);
+
         var mappings = _dbContext.Set<SsoGroupRoleMapping>().AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(request.ProviderKey))

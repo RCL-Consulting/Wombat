@@ -1,5 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Wombat.Application.Common.Options;
 using Wombat.Application.Features.Sso;
 using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Identity;
@@ -17,11 +19,15 @@ public sealed class SsoGroupMappingCommandTests
         return new ApplicationDbContext(options);
     }
 
+    /// <summary>One provider, "uct", serving institution 1.</summary>
+    internal static IOptions<SsoOptions> Providers()
+        => Options.Create(new SsoOptions { Providers = [new SsoProviderOptions { Key = "uct", InstitutionId = 1 }] });
+
     [Fact]
     public async Task Create_ValidMapping_Succeeds()
     {
         await using var db = CreateDb();
-        var handler = new CreateSsoGroupMappingCommandHandler(db);
+        var handler = new CreateSsoGroupMappingCommandHandler(db, Providers());
 
         var id = await handler.Handle(new CreateSsoGroupMappingCommand(
             "uct", "group-1", "Surgery", WombatRoles.Trainee, 1, null, null, TestPrincipals.Administrator()), CancellationToken.None);
@@ -37,7 +43,7 @@ public sealed class SsoGroupMappingCommandTests
     public async Task Create_AdministratorRole_Throws()
     {
         await using var db = CreateDb();
-        var handler = new CreateSsoGroupMappingCommandHandler(db);
+        var handler = new CreateSsoGroupMappingCommandHandler(db, Providers());
 
         var act = () => handler.Handle(new CreateSsoGroupMappingCommand(
             "uct", "group-1", "Admins", WombatRoles.Administrator, 1, null, null, TestPrincipals.Administrator()), CancellationToken.None);
@@ -82,7 +88,7 @@ public sealed class SsoGroupMappingCommandTests
     public async Task Create_InstitutionalAdmin_RejectsOtherInstitution()
     {
         await using var db = CreateDb();
-        var handler = new CreateSsoGroupMappingCommandHandler(db);
+        var handler = new CreateSsoGroupMappingCommandHandler(db, Providers());
 
         var act = () => handler.Handle(new CreateSsoGroupMappingCommand(
             "uct", "group-x", "Other", WombatRoles.Trainee, InstitutionId: 99, null, null, TestPrincipals.InstitutionalAdmin(institutionId: 1)),

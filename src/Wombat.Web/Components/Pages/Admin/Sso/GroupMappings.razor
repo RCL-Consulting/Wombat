@@ -4,6 +4,7 @@
 @using Microsoft.Extensions.Options
 @using Wombat.Application.Common.Options
 @using Wombat.Application.Features.Sso
+@using Wombat.Application.Features.Users
 @inject IScopedSender Sender
 @inject IOptions<SsoOptions> SsoOptions
 
@@ -14,6 +15,13 @@
 @* What an add or a delete did. It takes the focus once either is done (T234; DESIGN.md § Button system): an add
    rebuilds its form, and the button with it, and a deleted mapping's row is gone. A refusal leaves the focus where it
    was: it is an alert, read at once. *@
+@if (_traineeNote is not null)
+{
+  @* T288: someone who holds Trainee beside an admin role manages no mapping (a trainee first), as on Users (T278). *@
+  <Alert Kind="info" Id="sso-mappings-trainee-note">@_traineeNote</Alert>
+}
+else
+{
 <ActionResult @ref="_result">
   @if (!string.IsNullOrWhiteSpace(_statusMessage))
   {
@@ -27,7 +35,7 @@
 </ActionResult>
 
 <div class="details-grid">
-  @if (SsoOptions.Value.Providers.Count > 0)
+  @if (_providers.Count > 0)
   {
     <section class="detail-card">
       <h3>Add mapping</h3>
@@ -38,7 +46,7 @@
         <div class="form-grid form-grid--wide">
           <FormField Label="Provider" InputId="mapping-provider" Required="true">
             <InputSelect id="mapping-provider" class="form-select" @bind-Value="_model.ProviderKey">
-              @foreach (var provider in SsoOptions.Value.Providers)
+              @foreach (var provider in _providers)
               {
                 <option value="@provider.Key">@provider.DisplayName</option>
               }
@@ -156,6 +164,7 @@
     </StatePanel>
   </section>
 </div>
+}
 
 @code {
   // Administrator cannot be SSO-assigned — exclude from the dropdown
@@ -172,6 +181,13 @@
   ];
 
   private MappingFormModel _model = new();
+  private string? _traineeNote;
+
+  /// <summary>
+  /// The providers a mapping may be made for: the caller's own institution's, or every one for the Administrator. A
+  /// mapping applies only at its provider's institution, and the command refuses any other (T288).
+  /// </summary>
+  private IReadOnlyList<SsoProviderOptions> _providers = [];
   private IReadOnlyList<InstitutionDto> _institutions = [];
   private IReadOnlyList<SpecialityDto> _specialities = [];
   private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
@@ -194,6 +210,20 @@
 
   protected override async Task OnInitializedAsync()
   {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    // Asked before anything is read, so the note says nothing about what there is (T288, as T278's Users pages).
+    _traineeNote = UserAdministrationRules.TraineeNoteOnUserPages(authState.User);
+    if (_traineeNote is not null)
+    {
+      _loading = false;
+      return;
+    }
+
+    var institutionId = authState.User.GetInstitutionId();
+    _providers = authState.User.IsAdministrator()
+      ? SsoOptions.Value.Providers
+      : SsoOptions.Value.Providers.Where(provider => provider.InstitutionId == institutionId).ToList();
+
     await LoadAsync();
   }
 
@@ -210,9 +240,9 @@
       _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery(authState.User));
       _mappings = await Sender.Send(new ListSsoGroupMappingsQuery(authState.User));
 
-      if (SsoOptions.Value.Providers.Count > 0)
+      if (_providers.Count > 0)
       {
-        _model.ProviderKey = SsoOptions.Value.Providers[0].Key;
+        _model.ProviderKey = _providers[0].Key;
       }
     }
     catch (Exception exception)
@@ -252,7 +282,7 @@
       _statusMessage = $"Mapping added for group '{_model.ExternalGroupDisplayName}'.";
       _model = new MappingFormModel
       {
-        ProviderKey = SsoOptions.Value.Providers.Count > 0 ? SsoOptions.Value.Providers[0].Key : string.Empty
+        ProviderKey = _providers.Count > 0 ? _providers[0].Key : string.Empty
       };
       _mappings = await Sender.Send(new ListSsoGroupMappingsQuery(authState.User));
       _result?.FocusAfterRender();

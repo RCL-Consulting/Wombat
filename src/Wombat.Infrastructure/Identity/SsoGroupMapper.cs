@@ -38,16 +38,21 @@ public sealed class SsoGroupMapper
     /// Apply group-to-role mappings for a user after SSO login.
     /// Returns the list of Wombat roles the user currently holds after sync.
     /// </summary>
+    /// <param name="providerInstitutionId">
+    /// The provider's own institution. Only its mappings apply (T288): every user who signs in through a provider is at
+    /// its institution, and a mapping made at another institution for the same provider key grants nothing.
+    /// </param>
     public async Task<IReadOnlyList<string>> ApplyAsync(
         WombatIdentityUser user,
         string providerKey,
+        int providerInstitutionId,
         IReadOnlyList<string> externalGroupIds,
         CancellationToken cancellationToken = default)
     {
-        // Load the mapping rules for this provider
+        // Load the mapping rules for this provider, at its own institution
         var mappings = await _dbContext.SsoGroupRoleMappings
             .AsNoTracking()
-            .Where(m => m.ProviderKey == providerKey)
+            .Where(m => m.ProviderKey == providerKey && m.InstitutionId == providerInstitutionId)
             .ToListAsync(cancellationToken);
 
         // Determine which roles should be active based on current group membership

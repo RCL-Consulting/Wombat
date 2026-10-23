@@ -73,7 +73,7 @@ public sealed class SsoGroupMapperTests
         var mapper = new SsoGroupMapper(userManager.Object, db, NullLogger<SsoGroupMapper>.Instance);
         var user = new WombatIdentityUser { Id = "user-1", InstitutionId = 1 };
 
-        var roles = await mapper.ApplyAsync(user, "uct", ["group-1"]);
+        var roles = await mapper.ApplyAsync(user, "uct", 1, ["group-1"]);
 
         roles.Should().Contain(WombatRoles.Trainee);
         userManager.Verify(m => m.AddToRoleAsync(user, WombatRoles.Trainee), Times.Once);
@@ -110,7 +110,7 @@ public sealed class SsoGroupMapperTests
         var mapper = new SsoGroupMapper(userManager.Object, db, NullLogger<SsoGroupMapper>.Instance);
         var user = new WombatIdentityUser { Id = "user-2", InstitutionId = 1 };
 
-        var roles = await mapper.ApplyAsync(user, "uct", ["group-1", "group-2"]);
+        var roles = await mapper.ApplyAsync(user, "uct", 1, ["group-1", "group-2"]);
 
         userManager.Verify(m => m.AddToRoleAsync(user, WombatRoles.Trainee), Times.Once);
         userManager.Verify(m => m.AddToRoleAsync(user, WombatRoles.Assessor), Times.Once);
@@ -134,7 +134,7 @@ public sealed class SsoGroupMapperTests
         var mapper = new SsoGroupMapper(userManager.Object, db, NullLogger<SsoGroupMapper>.Instance);
         var user = new WombatIdentityUser { Id = "user-3", InstitutionId = 1 };
 
-        var roles = await mapper.ApplyAsync(user, "uct", ["unrelated-group"]);
+        var roles = await mapper.ApplyAsync(user, "uct", 1, ["unrelated-group"]);
 
         userManager.Verify(m => m.AddToRoleAsync(It.IsAny<WombatIdentityUser>(), It.IsAny<string>()), Times.Never);
         userManager.Verify(m => m.UpdateSecurityStampAsync(It.IsAny<WombatIdentityUser>()), Times.Never,
@@ -159,7 +159,7 @@ public sealed class SsoGroupMapperTests
         var mapper = new SsoGroupMapper(userManager.Object, db, NullLogger<SsoGroupMapper>.Instance);
         var user = new WombatIdentityUser { Id = "user-4", InstitutionId = 1 };
 
-        var roles = await mapper.ApplyAsync(user, "uct", ["admin-group"]);
+        var roles = await mapper.ApplyAsync(user, "uct", 1, ["admin-group"]);
 
         userManager.Verify(m => m.AddToRoleAsync(It.IsAny<WombatIdentityUser>(), WombatRoles.Administrator), Times.Never);
     }
@@ -192,7 +192,7 @@ public sealed class SsoGroupMapperTests
         var user = new WombatIdentityUser { Id = "user-5", InstitutionId = 1 };
 
         // User is no longer in group-1
-        await mapper.ApplyAsync(user, "uct", []);
+        await mapper.ApplyAsync(user, "uct", 1, []);
 
         userManager.Verify(m => m.RemoveFromRoleAsync(user, WombatRoles.Trainee), Times.Once);
         db.UserRoleAssignments.Should().NotContain(a =>
@@ -237,7 +237,7 @@ public sealed class SsoGroupMapperTests
         var user = new WombatIdentityUser { Id = "user-6", InstitutionId = 1 };
 
         // User is no longer in group-1, but has a manual assignment
-        await mapper.ApplyAsync(user, "uct", []);
+        await mapper.ApplyAsync(user, "uct", 1, []);
 
         // Should NOT remove from Identity role because manual assignment exists
         userManager.Verify(m => m.RemoveFromRoleAsync(user, WombatRoles.Coordinator), Times.Never);
@@ -280,14 +280,14 @@ public sealed class SsoGroupMapperTests
         var mapper = new SsoGroupMapper(userManager.Object, db, NullLogger<SsoGroupMapper>.Instance);
         var user = new WombatIdentityUser { Id = "user-8", InstitutionId = 1 };
 
-        await mapper.ApplyAsync(user, "uct", ["group-1"]);
+        await mapper.ApplyAsync(user, "uct", 1, ["group-1"]);
 
         userManager.Verify(m => m.AddToRoleAsync(It.IsAny<WombatIdentityUser>(), It.IsAny<string>()), Times.Never,
             "guard: the role was already the account's, so only the scope is new");
         db.UserSpecialityScopes.Should().ContainSingle(scope => scope.UserId == "user-8" && scope.SpecialityId == 42);
         userManager.Verify(m => m.UpdateSecurityStampAsync(user), Times.Once);
 
-        await mapper.ApplyAsync(user, "uct", ["group-1"]);
+        await mapper.ApplyAsync(user, "uct", 1, ["group-1"]);
 
         userManager.Verify(m => m.UpdateSecurityStampAsync(user), Times.Once, "the second sign-in changed nothing");
     }
@@ -319,7 +319,7 @@ public sealed class SsoGroupMapperTests
         var mapper = new SsoGroupMapper(userManager.Object, db, NullLogger<SsoGroupMapper>.Instance);
         var user = new WombatIdentityUser { Id = "user-7", InstitutionId = 1 };
 
-        var roles = await mapper.ApplyAsync(user, "uct", ["group-1"]);
+        var roles = await mapper.ApplyAsync(user, "uct", 1, ["group-1"]);
 
         // Only UCT mapping should apply, not Wits
         userManager.Verify(m => m.AddToRoleAsync(user, WombatRoles.Trainee), Times.Once);

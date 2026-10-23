@@ -1,11 +1,13 @@
 ---
 id: T288
 title: An InstitutionalAdmin can create an SSO group mapping that grants roles to another institution's users
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-25
+started: 2026-10-23
+completed: 2026-10-23
 ---
 
 # T288 — An InstitutionalAdmin can create an SSO group mapping that grants roles to another institution's users
@@ -39,9 +41,17 @@ Handler tests cover each case and the audit trap. A mapper test shows another in
 
 ## Verification
 
-- [ ] A cross-institution mapping is refused, and the mapper ignores one that already exists. A Trainee cannot manage
-      mappings. Tests.
+- [x] A cross-institution mapping is refused, and the mapper ignores one that already exists. A Trainee cannot manage
+      mappings. Tests. (`SsoMappingAcrossInstitutionsTests`, 9; Application 3994, Web 3980, Infrastructure 1029,
+      Architecture 52, Integration SSO 22 green)
 
 ## Related
 
 T278, T149, T155, T027.
+- **2026-10-23, done (T376's prerequisite, Q16/F5).** `CreateSsoGroupMapping` asks the trainee-first rule
+  (`UserAdministrationRules.DemandUserAdministration`), then the caller's institution, then that the provider is
+  configured and serves that institution (`ProviderNotTheInstitutions`), the Administrator included. `Delete` and
+  `List` ask the trainee-first rule before anything. `SsoGroupMapper.ApplyAsync` takes the provider's institution and
+  applies only its mappings; both `ExternalLoginHandler` call sites pass it. The page shows T278's Trainee note in place
+  of everything and offers only the caller's institution's providers (the Administrator sees all). The page's redesign
+  is T376's (flow 12, O boards); T333 (Trainee and PendingTrainee) follows.

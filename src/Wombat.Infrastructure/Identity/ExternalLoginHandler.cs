@@ -557,7 +557,7 @@ public sealed class ExternalLoginHandler
         }
 
         // Sync roles from groups
-        await _groupMapper.ApplyAsync(user, providerKey, groupIds, cancellationToken);
+        await _groupMapper.ApplyAsync(user, providerKey, providerConfig.InstitutionId, groupIds, cancellationToken);
 
         await _signInManager.SignInAsync(user, isPersistent: false);
 
@@ -773,7 +773,7 @@ public sealed class ExternalLoginHandler
         }
 
         // Apply group-to-role mappings
-        var roles = await _groupMapper.ApplyAsync(user, providerKey, groupIds, cancellationToken);
+        var roles = await _groupMapper.ApplyAsync(user, providerKey, providerConfig.InstitutionId, groupIds, cancellationToken);
 
         // If no roles were assigned, default to PendingTrainee
         if (roles.Count == 0)
