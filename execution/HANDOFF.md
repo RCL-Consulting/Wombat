@@ -2,6 +2,18 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
+## Session 2026-10-23 (Opus): T376, flow 12 (people admin), started
+
+The operator said "push, then start flow 12". Pushed `9d979834..98584921`. T376 created and started (from T373's shape).
+
+- **Steps 3–4 done:** canvas "Wombat 12" https://claude.ai/artifact/EUfPe9d3zgnGxvQ9LeSzz8, design system v29
+  (1792508645-23ab) installed, `tokens.css` by hand (scratchpad `c12/`), mark `/_blob/b8532f490e278114d4c3b43f9a0533f6`.
+- **Steps 1–2 done** (one Opus agent, then checked here): brief restated, `round-1-ask.txt` written, canvas and mark
+  filled in, completeness/verbatim/baseline checks all exit 0, staged (`design/upload/`, 123 files; the four
+  crop-first captures opened, nothing to crop). T376's notes have the Mode, the drops and § 6's Q1–Q16.
+- **Next:** the operator sends `design/flows/12-people-admin/round-1-ask.txt` to "Wombat 12" with § 4's key
+  screenshots, and answers § 6 (Q11, Q12, Q16 recommend T288, T333 and T289 land before the build).
+
 ## Session 2026-10-20 (Opus): T373, flow 11, done
 
 The operator said "proceed" (push and start the replay). Pushed through `9d979834`. **Not pushed:** `c0e5d0cc` to HEAD

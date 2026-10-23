@@ -463,7 +463,7 @@ describes the product as it is today. `D` is the replay day and `J` the programm
 § The clock in this act).
 
 ```text
-Step 2.42 — The instruments a KGK registrar is offered (act-2-onboarding.md:932)
+Step 2.42 — The instruments a KGK registrar is offered (act-2-onboarding.md:983)
 Role: Trainee — Dr Lerato Molefe
 Route: /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Open Log an activity and read its instrument picker. Open each type in turn to see what it rates, going back by
@@ -482,7 +482,7 @@ Expect: The page is headed "Log an activity", with "Choose what you are filing. 
   Multi-Source Feedback and Learner Feedback (Paediatrics) are not offered, because only the system writes them (T162,
   T164). Nor are the Demo types, which belong to another discipline.
 
-Step 2.43 — The Mini-CEX link and whom it may name (act-2-onboarding.md:959)
+Step 2.43 — The Mini-CEX link and whom it may name (act-2-onboarding.md:1009)
 Role: Trainee — Dr Lerato Molefe
 Route: /activities/new?type=mini_cex_cpsa
 Do: Open `/activities/new?type=mini_cex_cpsa`. Read the EPA and Assessor pickers, then leave without saving.
@@ -772,7 +772,7 @@ Do: File a Mini-CEX (Paediatrics): PAED-004, Dr Zulu, `D−3`, Neonatal unit, "T
 Expect: Submit to Thandi Zulu reads "Submitted. It is now Requested. It is in Thandi Zulu's Activity inbox." The
   Mini-CEX ends Requested.
 
-Step 5.24 — Dr du Plessis asks for a Mini-CEX on a shift after his post ended (act-5-graduation.md:638)
+Step 5.24 — Dr du Plessis asks for a Mini-CEX on a shift after his post ended (act-5-graduation.md:641)
 Role: Trainee — Dr Pieter du Plessis
 Route: /activities/new → /activities/new?type=mini_cex_cpsa → /activities/{ActivityId:int}
 Do: File a Mini-CEX (Paediatrics) on PAED-002 with:
@@ -784,7 +784,7 @@ Expect: The EPA list offers PAED-002, because its tool list includes the Mini-CE
   Submit to David Naidoo reads "Submitted. It is now Requested. It is in David Naidoo's Activity inbox.", and the
   activity is in his inbox. No email is sent: Wombat mails nobody when an activity moves (Step 3.3).
 
-Step 6.16 — Dr Dlamini files a Mini-CEX on PAED-012 (act-6-catalogue.md:380)
+Step 6.16 — Dr Dlamini files a Mini-CEX on PAED-012 (act-6-catalogue.md:381)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/new → /activities/new?type=mini_cex_cpsa → /activities/{ActivityId:int}
 Do: File a Mini-CEX (Paediatrics) and submit it:
@@ -798,13 +798,13 @@ Do: File a Mini-CEX (Paediatrics) and submit it:
 Expect: The EPA picker offers nine EPAs for the Mini-CEX, PAED-012 among them. Submit to Mohammed Patel reads
   "Submitted. It is now Requested. It is in Mohammed Patel's Activity inbox."
 
-Step 6.20 — Dr Mahlangu's picker leaves PAED-012 out too (act-6-catalogue.md:489)
+Step 6.20 — Dr Mahlangu's picker leaves PAED-012 out too (act-6-catalogue.md:490)
 Role: Trainee — Dr Nomsa Mahlangu
 Route: /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without saving.
 Expect: Eight EPAs: PAED-001 to PAED-004, PAED-006 to PAED-008, and PAED-013. PAED-012 is not offered.
 
-Step 6.27 — Dr Dlamini is measured against KGK-001 (act-6-catalogue.md:643)
+Step 6.27 — Dr Dlamini is measured against KGK-001 (act-6-catalogue.md:645)
 Role: Trainee — Dr Anele Dlamini
 Route: /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/new →
   /activities/new?type=direct_observation_cpsa
@@ -818,7 +818,7 @@ Expect: A KGK-001 row appears first in "Once a year · 6 EPAs": "KGK-001 — Run
   warned. Its level reads "Minimum 3a", and Entrustment "No STAR yet." and "Not in the College's exit rule." The Direct
   Observation picker offers ten EPAs, KGK-001 among them.
 
-Step 6.37 — Dr Ndlovu on 11.2, before progress is rebuilt (act-6-catalogue.md:843)
+Step 6.37 — Dr Ndlovu on 11.2, before progress is rebuilt (act-6-catalogue.md:849)
 Role: Trainee — Dr Sipho Ndlovu
 Route: /portfolio/progress → /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Read the page. Then start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without saving.
@@ -830,7 +830,7 @@ Expect:
     PAED-016 and KGK-001 read "0 of 1 in 2026".
   - **The picker.** The Mini-CEX picker offers ten EPAs, PAED-016 among them.
 
-Step A.2.7 — Dr Mahlangu leaves a draft and a request waiting (appendix-cross-cutting.md:394)
+Step A.2.7 — Dr Mahlangu leaves a draft and a request waiting (appendix-cross-cutting.md:398)
 Role: Trainee — Dr Nomsa Mahlangu
 Route: /activities/new → /activities/new?type=mini_cex_cpsa → /activities/{ActivityId:int} → /activities/new →
   /activities/new?type=mini_cex_cpsa → /activities/{ActivityId:int} → /activities/mine
@@ -842,14 +842,14 @@ Expect: The first reads "Draft saved. It has not been submitted. It is in nobody
   second reads "Submitted. It is now Requested. It is in Fatima Khumalo's Activity inbox." My activities' Needs you
   lists the first and not the second. No email is sent: Wombat mails nobody when an activity moves (Step 3.3).
 
-Step A.6.6 — Dr Patel cannot be named as an assessor while locked (appendix-cross-cutting.md:1053)
+Step A.6.6 — Dr Patel cannot be named as an assessor while locked (appendix-cross-cutting.md:1060)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Start a Mini-CEX (Paediatrics) and open its assessor list. Then leave without saving.
 Expect: KGK's other assessors are listed (Dr Zulu, Dr Naidoo, Dr Botha and Dr Khumalo), but not Dr Patel, and never
   herself (T102). Nothing is saved.
 
-Step A.7.1 — Dr Dlamini files a Mini-CEX with the keyboard alone (appendix-cross-cutting.md:1127)
+Step A.7.1 — Dr Dlamini files a Mini-CEX with the keyboard alone (appendix-cross-cutting.md:1135)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/new → /activities/new?type=mini_cex_cpsa → /activities/{ActivityId:int}
 Do: At desktop width, using only Tab, Shift+Tab, the arrow keys, Space and Enter, file a Mini-CEX (Paediatrics):

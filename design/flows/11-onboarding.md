@@ -1032,7 +1032,7 @@ Expect:
     follows the date when you change it." Expected completion's help is "Leave this empty to derive it from the
     curriculum window."; once a start is typed, while the field is empty, the help says what it would be. Where that
     date has passed the help is replaced by "Left empty, it would be ‹`J−2y`›, which has passed. Enter the expected
-    completion." (Molefe's start; Dlamini's too); otherwise it adds "Left empty, it will be ‹date›." to the first
+    completion." (Molefe's start; Dlamini's and du Plessis's too); otherwise it adds "Left empty, it will be ‹date›." to the first
     sentence.
   - **"When you admit:"** "Lerato Molefe becomes a Trainee on the Paediatric EPA Curriculum (11.1), in training year
     4.", "Any session Lerato Molefe has open ends once, and Lerato Molefe signs in again as a Trainee." and "An email
@@ -1054,8 +1054,8 @@ Do: Admit Ndlovu with start `J` and the completion date left empty. Then open hi
   set completion to `J+4y−1d` and save the profile.
 Expect: With start `J` and the completion empty, its help reads "Leave this empty to derive it from the curriculum
   window. Left empty, it will be `J+1y`.": `J` + 12 months, the longest item window on v11.1. The result reads
-  "**Sipho Ndlovu admitted to the Paediatric EPA Curriculum (11.1), training year 1, from `J`. Expected completion
-  `J+1y`, derived from the curriculum window: change it under Edit.**", and Waiting to be admitted reads "Nobody is
+  "**Sipho Ndlovu admitted to the Paediatric EPA Curriculum (11.1), training year 1, from `J`.** Expected completion
+  `J+1y`, derived from the curriculum window: change it under Edit." (only the first sentence bold), and Waiting to be admitted reads "Nobody is
   waiting to be admitted." / "A registrar appears here after registering from a Trainee invitation." On his profile
   the save reads "Trainee profile saved.", and Current trainees shows `J+4y−1d`.
 
