@@ -54,7 +54,7 @@ Run the loop as flow 11 ran it (`design/flows/11-onboarding/`, BRIEF § 11 "Flow
 - [x] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit. (`9db255f5`, exit 0)
 - [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link. (https://claude.ai/artifact/EUfPe9d3zgnGxvQ9LeSzz8)
 - [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/12-people-admin/`. (round 3 final, `round-3-check.md`; decisions in `round-1-assessment.md` § 10 and `round-2-review.md`)
-- [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 12) — the squash commit and counts.
+- [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 12) — the squash commit and counts. (`e53d4ae7`: Domain 830, Application 4124, Infrastructure 1033, Architecture 52, Web 4135, Integration 510)
 - [ ] The whole runbook replays on a fresh database with no regression from flow 12, the baseline is re-captured, and
   flow 12's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
 - [ ] The design system is re-synced and republished — its version number.
@@ -93,3 +93,14 @@ T373 (flow 11), T369 (flow 10), T264, T286, T288, T289, T291, T317, T323, T324, 
   P22 lacks the training section; T05's `fieldset aria-invalid` goes on the inputs; Botha's no-date result undrawn.
   **Steps 3–5 done. Next: step 6, the build, after T288, T333 and T289 (Q16, F5).**
 - **2026-10-23, prerequisites landed:** T289 (`b8ed8fd6`), T288 (`964a2c4e`), T333 (this session). T333's browser check at A.3.1 is carried to step 7. **Next: step 6, the build.**
+- **2026-10-23, step 6, built** (`e53d4ae7`, squashed from `t376`). The operator's word: "push and proceed". One planner
+  (Opus: `build-lanes.md`, `build-contracts.md`, `round-3/boards-text.md`, and § 0 `de324a6e` with F4's migration
+  `20261023132146_T376_AssessorProfileTrainingOnly`, read), lanes U, P, T and I in one wave (Opus; suites one at a time,
+  no memory trouble), merged by the integrator (appended app.css/DESIGN.md sections kept; P's app.css section appended
+  whole; the FormField scan floors lowered with reasons, `c4592070`), the runbook lane (Opus: 32 steps, checks 0,
+  ScenarioRunbookTests 49/49), three Sonnet reviews (`build-review-{code,pages,runbook}.md`, merged in `build-review.md`:
+  1 must, 14 should; B1 checked here), one fix pass (Opus, `acecd43e`: every finding held and was fixed; nits B5, B6, B8,
+  B9, P11–P13, P16 left with reasons in `build-review.md`). Branches `t376*` and their worktrees kept. For step 7:
+  measure Users' Name/Institution/Scope and Assessors' Name cells at 901, 1000 and 1100 px; T333's A.3.1 check and the
+  SSO states need a scratch instance with a provider configured (states.md); "People 1 of 14 are locked out" is the
+  reviewer's count, unreplayed. **Next:** step 7, the whole-runbook replay on a fresh database, on the operator's word.

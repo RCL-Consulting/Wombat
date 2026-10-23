@@ -29,7 +29,11 @@ The operator said "push, then start flow 12". Pushed `9d979834..98584921`. T376 
 - **Traps:** T333's browser item (A.3.1) is unticked, carried to T376 step 7: with no provider the page draws no role at
   all. T289 handed scope ownership and the picker to T376's build (M1, F4, S10): the profile save still writes scope
   until then.
-- **Next: T376 step 6, the build** (flow 11's build lanes as template), on the operator's word.
+- **Step 6, built:** squashed onto master as `e53d4ae7` (`feat(people): flow 12 …`), tree identical to `t376`
+  (`acecd43e`). Planner § 0, four lanes, runbook lane, three Sonnet reviews (1 must, 14 should), one fix pass (all
+  fixed). Suites: Domain 830, Application 4124, Infrastructure 1033, Architecture 52, Web 4135, Integration 510. T376's
+  notes carry step 7's cautions. Branches `t376*` and worktrees kept. **Not pushed** since `a95e1daa`.
+- **Next: step 7, the replay** on a fresh database (flow 10's `replay-brief.md`), on the operator's word.
 
 ## Session 2026-10-20 (Opus): T373, flow 11, done
 
