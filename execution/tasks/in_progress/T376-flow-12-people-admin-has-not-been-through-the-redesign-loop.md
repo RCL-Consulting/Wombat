@@ -79,3 +79,9 @@ T373 (flow 11), T369 (flow 10), T264, T286, T288, T289, T291, T317, T323, T324, 
   the four in `crop-first/` (A.4.5-0/1/2, `user-detail--pending-invitations`) opened: no link, password masked, they go
   as they are. Inferred, unreplayed: the user page's Pending invitations card can no longer show anything since flow 11;
   Add role grants no scope. **Next:** the operator sends `round-1-ask.txt` to the canvas with § 4's key screenshots.
+- **2026-10-23, round 1** (canvas 1792747971-2e98, 44 boards in `round-1/`, `62f6ec41`; assessed in
+  `round-1-assessment.md`): picks S1 (sections), H1 (cards, waiting line), UA (one table, filters); I and O confirmed
+  with corrections. 4 must-fixes (C1 scope is per person not per role, checked: `WombatIdentityUser` SpecialityScopes;
+  C2 role words not flow 11's; C3 du Plessis has My progress; C4 H2's invented counts), 13 should, 8 nits. New operator
+  questions Q17–Q22. Q20 checked and proposed as **T377** (no code writes a Manual role assignment, so SSO can strip a
+  hand-given role). The Spec board says no capture arrived: re-attach for round 2.
