@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>H0 · Wombat</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="f12.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--link-color)}a:hover{color:var(--link-hover)}
+</style>
+</helmet>
+<div class="strip"><section class="strip-panel"><p class="strip-label">Loading (every page): the header, a skeleton, no action</p><p class="wf-crumb">Home › Users</p><h2>Users</h2><p class="wf-help">header and subtitle drawn; Invite a person not offered until the read is in</p><div class="wf-box wf-box--muted"><p>▭▭▭▭▭▭▭▭</p><p>▭▭▭▭▭</p><p>▭▭▭▭▭▭▭</p></div></section><section class="strip-panel"><p class="strip-label">A failed read (every page)</p><h2>Users</h2><div class="wf-box"><p><b>Could not load Users.</b> Nothing has changed. Try again, or come back in a few minutes.</p><span class="wf-btn ">Try again</span></div><p class="wf-help">The same sentence shape for Home, the user page (“Could not load this person’s account.”), Assessors, SSO mappings and the institution (“Could not load your institution’s record.”): never a form it could not read, never an exception’s text.</p></section></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":520}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
