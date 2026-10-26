@@ -104,3 +104,18 @@ T373 (flow 11), T369 (flow 10), T264, T286, T288, T289, T291, T317, T323, T324, 
   measure Users' Name/Institution/Scope and Assessors' Name cells at 901, 1000 and 1100 px; T333's A.3.1 check and the
   SSO states need a scratch instance with a provider configured (states.md); "People 1 of 14 are locked out" is the
   reviewer's count, unreplayed. **Next:** step 7, the whole-runbook replay on a fresh database, on the operator's word.
+- **2026-10-26/27, step 7, the acts** (fresh `wombat_scenario_t376`, D = 2026-10-26; `replay-brief.md` `c583ae44`; one
+  Sonnet agent an act): 328 steps, 283 with no gap, **no flow 12 regression, no new defect**. Act 1 31/20 (`085fa299`),
+  Act 2 44/44 (`68373790`), Act 3 57/55 (`d4acd49f`), Act 4 50/44 (`6e4ff201`; T370's Present order at 4.25/4.29/4.41/
+  4.42, runbook-wrong), Act 5 29/23 (`4c7cd1db`), Act 6 42/33 (`01d58381`), the appendix 75/64 (`4688c4d6`); every gap a
+  known task. Closed as seen: T264's users and SSO half, T286's external-logins half, T289, T291 items 4 and 8, T324's
+  UserId, ShortCode-on-institution and no-roles words, T326's assessors and SSO items, T323's email cut and
+  "TraineeSystem-managed", the Users table's 807 px scroll at 390. Measured: Users and Assessors at 901/1000/1100 no
+  sideways scroll, no mid-word split (Roles breaks "Sub-" after the hyphen only); 390 buttons 44 px; dialogs' safe button
+  focused first, primary on top; results and refusals take the focus; one result at a time both ways. Not played:
+  rows-per-page focus (no pager at this size); Record training at 390 (every assessor already recorded). Escape in the
+  Add a role… panel does nothing, as DESIGN.md says (Cancel only): the brief over-asked. Home has no locked-out line:
+  "People 1 of 14 are locked out" does not exist in the build. Appendix SetUserLockout 4, not 2 (the one-result check
+  played on Patel). `check_baseline_paths.py` missing 0. Dumps `recovery/scenario-t376-post-act{1..6,A}`,
+  `-pre-a515-A`; scratch DB `wombat_scenario_t376_s515` kept. **Next:** the states pass (flow 12's rows in
+  `states.md`, T333's A.3.1 and the SSO states on a scratch instance with a provider), then step 8.

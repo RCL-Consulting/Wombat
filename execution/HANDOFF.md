@@ -2,6 +2,32 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
+## Session 2026-10-26/27 (Opus): T376, flow 12, step 7's acts
+
+The operator said "yes" (push and start the replay), then "carry on through the remaining acts". Pushed
+`a95e1daa..c5a38bf2`.
+
+- **The replay brief** `design/flows/12-people-admin/replay-brief.md` (`c583ae44`), generated from flow 11's by scratch
+  `g376/make_replay_brief.py`, which also writes the per-act prompts `g376/prompt-act-*.txt`.
+- **The acts played** (fresh `wombat_scenario_t376`, D = 2026-10-26; one Sonnet agent an act, each committed): 328 steps,
+  283 with no gap, **no flow 12 regression, no new defect**; every gap a known task (T370's Present order is
+  runbook-wrong at 4.25/4.29/4.41/4.42/5.8). Commits `085fa299`, `68373790`, `d4acd49f`, `6e4ff201`, `4c7cd1db`,
+  `01d58381`, `4688c4d6`. T376's notes carry the counts, the closed gaps and what was measured.
+- **For review:** Escape does nothing in the Add a role… panel; DESIGN.md says Cancel only, so the brief over-asked (no
+  finding). Home has no locked-out line ("People 1 of 14 are locked out" was a reviewer's guess). Not played: the
+  rows-per-page focus (no pager at this size) and Record training at 390 (every assessor already recorded).
+- **Next:** step 7's states pass: flow 12's rows in `states.md` on scratch copies (g373's `make_states_prompts.py` is the
+  template), T333's A.3.1 check and the SSO states on a scratch instance with a provider configured; then step 8
+  (re-sync the design system, v29 now) and step 9.
+
+### Environment left
+
+- **The replay app on `:5180`** runs `wombat_scenario_t376` (the appendix's end state). Dumps
+  `recovery/scenario-t376-post-act{1..6,A}`, `-pre-a515-A`. Scratch DB `wombat_scenario_t376_s515`: drop on the
+  operator's word. Old: `wombat_scenario_t373` and its `_s*` scratch DBs, `wombat_scenario_t369`.
+- Scratch `g376` (this session's scratchpad): act scripts, prompts, `replay-pw.env` (never print it).
+- Branches `t376*` and their worktrees kept. Commits after `c5a38bf2` unpushed (push on the operator's word).
+
 ## Session 2026-10-23 (Opus): T376, flow 12 (people admin), started
 
 The operator said "push, then start flow 12". Pushed `9d979834..98584921`. T376 created and started (from T373's shape).
@@ -34,30 +60,3 @@ The operator said "push, then start flow 12". Pushed `9d979834..98584921`. T376 
   fixed). Suites: Domain 830, Application 4124, Infrastructure 1033, Architecture 52, Web 4135, Integration 510. T376's
   notes carry step 7's cautions. Branches `t376*` and worktrees kept. **Not pushed** since `a95e1daa`.
 - **Next: step 7, the replay** on a fresh database (flow 10's `replay-brief.md`), on the operator's word.
-
-## Session 2026-10-20 (Opus): T373, flow 11, done
-
-The operator said "proceed" (push and start the replay). Pushed through `9d979834`. **Not pushed:** `c0e5d0cc` to HEAD
-(push on the operator's word).
-
-- **Step 7, the replay** (fresh `wombat_scenario_t373`, D = 2026-10-20; one Sonnet agent an act): 331 steps, 280 with no
-  gap, **no flow 11 regression**; every gap a known task (T370 at 4.25/4.29/4.41/4.42/5.8). Results `42f171b5`,
-  `40525efc`, `c1f03dd1`, `783af7b5`, `d771aa91`, `f67ade0c`; runbook fixes `a70f030b`. Act 3's 3.1-3.42 and 3.50-3.54c
-  Actuals were re-based from T369's text, not played fresh. **States:** two agents in turn, 85 rows, 12 corrected
-  (`15bee480`); **T375 proposed** (`11fd5203`: a described radio's hit area).
-- **Step 8:** the live system matched HEAD; re-synced (`79e2312f`); two page faults it found fixed (`27ff8779`: the primary
-  on top at 390 on Invite a person and Admit; only the admitted result's first sentence bold; Web 3980; browser-checked,
-  two narrow states re-taken); one Sonnet review (`0b800f29`); icons uploaded; **design system version 29**
-  (1792508645-23ab, `4829f210`).
-- **Step 9:** BRIEF § 11 "Flow 11" (`18f872ee`). **T373 done.**
-- **Next:** flow 12 (`design/flows/12-people-admin.md`) on the operator's word; T375 and seven others wait in proposed.
-
-### Environment left
-
-- **The replay app on `:5180`** runs `wombat_scenario_t373` (the appendix's end state), republished from the working tree
-  at `27ff8779`'s code. Dumps `recovery/scenario-t373-post-act{1..6,A}`, `-pre-a515-A`.
-- **Scratch DBs** `wombat_scenario_t373_s10`, `_s11`, `_s12`, `_s20` (Wim Gone admitted there by step 8's check; Wanda
-  Waiting's scope rows restored), `_s21`, `_s515`: drop on the operator's word. Old: `wombat_scenario_t369`.
-- Scratch: this session's `g373` (`replay-pw.env` must never be printed; act, states and step 8 scripts).
-- **Session finalised.** Tree clean, lint ok. 18 commits after `9d979834` unpushed (push on the operator's word). The scratch
-  app on :5182 is stopped; :5180 left running.
