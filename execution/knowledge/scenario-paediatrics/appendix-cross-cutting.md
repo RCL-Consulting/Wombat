@@ -59,7 +59,7 @@ Expect: The page has three parts: processing preferences, a request form, and "Y
   draft reminder and the 5-day assessment reminder), and says that email about one particular thing is still sent
   (T240). Saving says "Processing preferences saved." and the focus moves to that message (T234).
 Note: Nothing in the product reads the optional-processing flag (reported).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): D = 2026-10-20. The menu reads "Acting as Trainee": Home, Log
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): D = 2026-10-26. The menu reads "Acting as Trainee": Home, Log
   an activity, My activities, MSF reports, My committee reviews, Export portfolio, My progress, then My data rights.
   Opened, it is lit, tab "My data rights · Wombat". Three parts: Processing preferences, Submit a request, and Your
   requests reading "No requests / You have not submitted any data rights requests yet." The digest help names the
@@ -78,13 +78,13 @@ Expect: The form offers four types: Access, Export, Rectification and Erasure. W
   and that she will be notified when it is reviewed. "Your requests" lists it: today, Export, Submitted, with a
   Withdraw button named for it and no Download.
 Note: The confirmation promises a notification that nothing sends (reported).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Four types offered (Access, Export, Rectification, Erasure,
-  each with its gloss). Export with no reason: "Please provide a reason for your request.", no row written, the focus
-  left on Submit request. With the reason: "Request submitted. You will be notified when it is reviewed." took the
-  focus; Your requests lists "2026-10-20 12:58 | Export | Submitted" (made at 14:58 SAST) with "Withdraw the Export
-  request made 2026-10-20 12:58" and no Download. No mail.
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Four types offered (Access, Export, Rectification, Erasure,
+  each with its gloss: "Export — machine-readable data export"). Export with no reason: "Please provide a reason for
+  your request.", no row written, the focus left on Submit request. With the reason: "Request submitted. You will be
+  notified when it is reviewed." took the focus; Your requests lists "2026-10-26 21:24 | Export | Submitted" (made at
+  23:24 SAST) with "Withdraw the Export request made 2026-10-26 21:24" and no Download. No mail.
 Gap: F-A.1.2a, T319 (still: the promised notification is never sent). F-A.1.2c, T325 (still: the time prints in UTC,
-  12:58 at 14:58 SAST).
+  21:24 at 23:24 SAST).
 
 ### Step A.1.3 — Mr Smit approves the export from KGK's queue
 Role: Coordinator — Mr Pieter Smit
@@ -102,16 +102,16 @@ Expect: The queue holds only KGK's requests (T112), and the filters change it on
     card appears (decided by, as a user id; decided on; the note; completed on), and Approve and Reject are gone.
 Note: A Coordinator decides only their own institution's requests (T112). Which role should hold this power is still
   open (T112 § Still open).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Data rights requests from the menu, lit. The queue held only
-  Dlamini's KGK request. Choosing Erasure changed nothing until Apply filters, then "No requests / No data rights
-  requests match the current filters." Export + Submitted listed her row: her address, Export, Submitted and "Review
-  the Export request from dlamini@kgk.wombat.local, 2026-10-20 12:58". On request 01a15963-... the menu item stays lit
-  (nav-link active) and the trail reads Home > Data rights requests > its id. It shows requester, user id, submitted,
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Data rights requests from the menu, lit (nav-link active). The
+  queue held only Dlamini's KGK request. Choosing Erasure changed nothing until Apply filters, then "No requests / No
+  data rights requests match the current filters." Export + Submitted listed her row: her address, Export, Submitted
+  and "Review the Export request from dlamini@kgk.wombat.local, 2026-10-26 21:24". On request 01a17a1a-... the menu
+  item stays lit and the trail reads Home > Data rights requests > its id. It shows requester, user id, submitted,
   type, status and reason. Approve with no note: "A decision note is required." With the note: "Request approved."
-  took the focus; Status Completed; a Decision card (Decided by 39faa6e3-..., Smit's id; decided on; the note;
-  completed on 12:58:20 UTC); no Approve or Reject. No mail. The filters still offer "UnderReview" and "Objection". At
-  1280 px the Request card still clips "dlamini@kgk.wombat.loc" and the user id at the card's edge (its DDs run past
-  the card by up to 25 px).
+  took the focus; Status Completed; a Decision card (Decided by 12b77b24-..., Smit's id; decided on; the note;
+  completed on 21:25:49 UTC); no Approve or Reject. No mail. The filters still offer "UnderReview" and "Objection". At
+  1280 px the Request card (right edge 599 px) is still run past by its DDs (the address, the user id, the date,
+  Export, Completed, the reason): the card clips them.
 Gap: F-A.1.3b, T324 (still: raw "UnderReview" and the unsubmittable "Objection" in the filters). F-A.1.3c, T323
   (still: the Request card clips the address and the user id).
 
@@ -121,7 +121,7 @@ Route: /account/data-rights/download/{id:guid}
 Do: Open the download address of the request he has just approved. Its id is in the detail page's address.
 Expect: Page not found, with status 404. Nothing on the page says that the request exists. The reviewer approves; only
   the data subject, or a global Administrator, collects the bundle (T112).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): The download address of request 01a15963-... answered 404 at
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): The download address of request 01a17a1a-... answered 404 at
   the typed address, tab "Page not found · Wombat": "Page not found", "There is no page at this address.", "Check the
   address, or start again from Home." and Go to Home. Nothing on the page names the request or an export.
 Gap: none
@@ -138,11 +138,11 @@ Expect: The row reads Completed and offers a Download named for the request.
   - It also holds `portfolio-summary.pdf`.
   - No email is sent.
 Note: The audit section stops at 500 entries without saying so (T277).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): My data rights from the menu: "2026-10-20 12:58 | Export |
-  Completed" with "Download the export of the Export request made 2026-10-20 12:58". Fetched with her session through
-  Playwright's request context (README, Downloads): 200 application/zip, attachment data-export-20261020-125851.zip
-  (138,177 bytes). It holds data-export.json (schemaVersion 2: profile, 5 activities, 1 committee review, 0 MSF
-  campaigns, 3 progress rows, 43 audit entries, 0 portfolio exports) and portfolio-summary.pdf (142,944 bytes). No
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): My data rights from the menu: "2026-10-26 21:24 | Export |
+  Completed" with "Download the export of the Export request made 2026-10-26 21:24". Fetched with her session through
+  Playwright's request context (README, Downloads): 200 application/zip, attachment data-export-20261026-212601.zip
+  (138,352 bytes). It holds data-export.json (schemaVersion 2: profile, 5 activities, 1 committee review, 0 MSF
+  campaigns, 3 progress rows, 42 audit entries, 0 portfolio exports) and portfolio-summary.pdf (143,233 bytes). No
   mail.
 Gap: none
 
@@ -152,11 +152,11 @@ Route: /account/data-rights
 Do: Submit an Access request with the reason "Everything held about me." Then withdraw it from "Your requests".
 Expect: The request lists as Submitted, with a Withdraw named for its type and time. Once withdrawn, the page says
   "Request withdrawn.", the focus moves to that message, and the row reads Withdrawn and offers nothing.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): He signs in to Home with no role: the menu reads Home, My
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): He signs in to Home with no role: the menu reads Home, My
   progress, My data rights, and Home shows one card, "Your training record" ("You hold no role at the moment. ..."
   with "Open My progress →", 44 px at 390 px, nothing scrolls sideways). Access with the reason: "Request submitted.
-  You will be notified when it is reviewed." took the focus; the row "2026-10-20 12:59 | Access | Submitted" with
-  "Withdraw the Access request made 2026-10-20 12:59". Withdraw acted at once (no dialog): "Request withdrawn." took
+  You will be notified when it is reviewed." took the focus; the row "2026-10-26 21:26 | Access | Submitted" with
+  "Withdraw the Access request made 2026-10-26 21:26". Withdraw acted at once (no dialog): "Request withdrawn." took
   the focus; the row reads Withdrawn and its actions cell is empty. D54 holds: he holds no role.
 Gap: none
 
@@ -166,9 +166,9 @@ Route: /account/data-rights
 Do: Submit a Rectification request with the reason "My programme start is recorded as 15 January 2026; I started work
   on 19 January."
 Expect: The request lists as Submitted, with a Withdraw.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Rectification with the reason: "Request submitted. You will be
-  notified when it is reviewed." took the focus; the row "2026-10-20 12:59 | Rectification | Submitted" with "Withdraw
-  the Rectification request made 2026-10-20 12:59".
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Rectification with the reason: "Request submitted. You will be
+  notified when it is reviewed." took the focus; the row "2026-10-26 21:26 | Rectification | Submitted" with "Withdraw
+  the Rectification request made 2026-10-26 21:26".
 Gap: none
 
 ### Step A.1.8 — Mr Smit reads the queue and rejects the correction
@@ -181,11 +181,11 @@ Expect: The queue lists all three KGK requests, newest first, each with its stat
   - Dr Mahlangu's reads Rejected once rejected, with its Decision card, and the focus moves to "Request rejected."
 Note: Had he approved it, it would stay Approved for good: no page applies or completes a rectification (T112 § Still
   open; reported).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Both filters set to All and applied: three KGK rows, newest
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Both filters set to All and applied: three KGK rows, newest
   first: Mahlangu, Rectification, badge-submitted (Rejected once decided below); du Plessis, Access, Withdrawn
-  (badge-draft); Dlamini, Export, Completed (badge-completed). The withdrawn request's page (01a15964-cbec-...) shows
-  its Request card (Status Withdrawn) and no Action card, no button. Mahlangu's (01a15964-dd3e-...), rejected with the
-  note: "Request rejected." took the focus; Status Rejected, a Decision card (Smit's id, 12:59:15 UTC, the note), no
+  (badge-draft); Dlamini, Export, Completed (badge-completed). The withdrawn request's page (01a17a1b-6d63-...) shows
+  its Request card (Status Withdrawn) and no Action card, no button. Mahlangu's (01a17a1b-7e83-...), rejected with the
+  note: "Request rejected." took the focus; Status Rejected, a Decision card (Smit's id, 21:26:39 UTC, the note), no
   buttons left. No mail.
 Gap: none (the Note's stranded Approved rectification is from code and not played, since the step rejects)
 
@@ -196,7 +196,7 @@ Do: Reload My data rights and read her request.
 Expect: The request reads Rejected and offers nothing: no Withdraw, no Download. The page shows neither the decision
   note nor who decided, and no email told her of the decision.
 Note: The confirmation at A.1.7 promised a notification (reported at A.1.2).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Reloaded, Your requests lists "2026-10-20 12:59 |
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Reloaded, Your requests lists "2026-10-26 21:26 |
   Rectification | Rejected" with nothing in Actions (no Withdraw, no Download). The page shows neither the decision
   note nor who decided, and the log holds no mail about any data-rights request.
 Gap: F-A.1.9a, T319 (still: a rejected requester is never told why, though A.1.7's confirmation promised a
@@ -212,15 +212,15 @@ Expect: The review opens as at Step 4.49: the subtitle "Formative check-in · Pa
   1", and the sitting bar Scheduled with "Formative: an interim check-in, no binding decision · evidence …" (T361). It
   is open, so the erasure at A.1.12 has a review to end. Decisions due's line reads "Formative check-in #N is open: it
   takes no seat." with Open check-in #N, as at Step 4.49.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Committee reviews -> Schedule a review
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Committee reviews -> Schedule a review
   (/committee/reviews/new): Panel, Trainee (disabled until a panel is chosen, then Anele Dlamini · Training year 3,
   Nomsa Mahlangu · Training year 1 and Sipho Ndlovu · Training year 1), Period ("2026 S2 · 1 Jul to 31 Dec 2026"
-  chosen, which filled the window 2026-01-01 to 2026-12-31), Scheduled on 2026-10-20 (the default), Review type as
+  chosen, which filled the window 2026-01-01 to 2026-12-31), Scheduled on 2026-10-26 (the default), Review type as
   three radios. With Annual: "16 EPAs will be on the agenda for 2026 S2." Formative check-in ticked: "A formative
   review carries no agenda: it decides no EPA." Create review opened review #8, h1 "Sipho Ndlovu · 2026 S2", subtitle
   "Formative check-in · Paed Annual Review Panel · Training year 1" with "Sipho Ndlovu's progress"; the sitting bar
   reads Scheduled, "Formative: an interim check-in, no binding decision · evidence 2026-01-01 to 2026-12-31", "As of
-  14:59 SAST", Refresh and Start review... Decisions due (Period 2026 S2, Trainee Sipho Ndlovu, Show; the focus on the
+  23:26 SAST", Refresh and Start review... Decisions due (Period 2026 S2, Trainee Sipho Ndlovu, Show; the focus on the
   list heading "Decisions"): "16 of 46 decisions due in 2026 S2 shown: Sipho Ndlovu, outstanding.", "No open review
   holds 2026 S2." with Schedule a review, then "Formative check-in #8 is open: it takes no seat." with "Open check-in
   #8"; the rows each carry one Schedule action.
@@ -233,9 +233,9 @@ Do: Submit an Erasure request with the reason "I am leaving the programme and wa
   signed in in this browser.
 Expect: The request is accepted although a review of him is scheduled: no review's state refuses an erasure request
   (T258). It lists as Submitted, with a Withdraw.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Erasure with the reason, accepted although review #8 of him is
-  Scheduled: "Request submitted. You will be notified when it is reviewed." took the focus; the row "2026-10-20 13:00
-  | Erasure | Submitted" with "Withdraw the Erasure request made 2026-10-20 13:00". His browser was left on My data
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Erasure with the reason, accepted although review #8 of him is
+  Scheduled: "Request submitted. You will be notified when it is reviewed." took the focus; the row "2026-10-26 21:27
+  | Erasure | Submitted" with "Withdraw the Erasure request made 2026-10-26 21:27". His browser was left on My data
   rights.
 Gap: none
 
@@ -252,12 +252,13 @@ Expect: The Administrator's queue holds every institution's requests.
     as it was submitted (`ErasureExecutor`).
 Note: Without `Wombat__PseudonymSalt` the approval is refused ("PseudonymSalt is not configured. Cannot execute erasure
   without it.") and the request stays Submitted, ready to approve again (T084).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Played in a second browser, so his stayed open. The
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Played in a second browser, so his stayed open. The
   Administrator's queue listed all four requests (KGK's are the only ones); Erasure applied, it held his alone.
   Approve with the note, no dialog in between: "Request approved." took the focus; Status Completed and a Decision
-  card (devadmin's id cb507c27-..., 13:00:50 UTC, the note, completed 13:00:50). The account became
-  deleted_user_2b885452 (SQL: no email, no names, no password, no institution, lockout infinity); review #8 is
-  Withdrawn (state 7, with its reason). The queue and the request still read ndlovu@kgk.wombat.local.
+  card (devadmin's id 1ea58030-..., 21:27:23 UTC, the note, completed 21:27:23). The account became
+  deleted_user_d5fe50c8 (SQL: pseudonym equal to the user name, no email, no names, no password, no institution,
+  lockout infinity; 0 roles, 0 logins, 0 activities on the original id); review #8 is Withdrawn (state 7, with its
+  reason). The queue and the request still read ndlovu@kgk.wombat.local.
 Gap: F-A.1.12a, T276 (still: the kept request names the erased person by his address, as the Expect records; approving
   the irreversible erasure asks nothing first, noted on T264)
 
@@ -268,7 +269,7 @@ Do: Wait on any page for up to a minute. Then sign in with his old address and p
 Expect: The tab leaves for the sign-in page by itself, which says "Your session has ended. Sign in again." (T279), an
   information notice. Signing in is refused in the words an unknown address gets, "Invalid email or password.", with
   no mention of an erasure (T156). No email is sent to him.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): His tab, left on My data rights, went by itself 51 s after the
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): His tab, left on My data rights, went by itself 51 s after the
   approval to /account/login?error=SessionEnded&returnUrl=%2Faccount%2Fdata-rights: an information notice
   (alert-info), "Your session has ended. Sign in again." His old address and password: ?error=Refused, tab "Error:
   Sign in · Wombat", "Invalid email or password.", nothing of an erasure. No mail.
@@ -291,17 +292,21 @@ Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
   - His activities and progress stay under the same pseudonym; the account itself is checked in the outcome's SQL.
 Note: T276 (open) lists what an erasure does not yet end: an activity about him still in its workflow can be completed
   and credit the pseudonym, and user ids inside activity data are not rewritten.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Users lists 14 KGK accounts, with no Ndlovu and no pseudonym.
-  Trainees (flow 11's page: "Waiting to be admitted: Nobody is waiting to be admitted."; "Current trainees, 2
-  current": Dlamini 2024-01-15 Training year 3, expected 2028-07-14, and Mahlangu 2026-01-15 Training year 1;
-  "Completed and closed": du Plessis Withdrawn 2026-10-18 and Molefe Completed 2026-10-20); no Ndlovu. Committee
-  reviews lists three deleted_user_2b885452 rows: Act 4's ratified review (Annual progression, Outcome Deferred), the
-  closed formative check-in (#6; Decision "— None"), and A.1.10's check-in as Formative check-in, Withdrawn, "None:
-  the review was withdrawn" (#8). Review #8's sitting bar reads Withdrawn and "Withdrawn on 2026-10-20. Withdrawn
-  because the trainee's personal data was erased at their request. Nothing more is decided at this review."; Evidence
-  snapshot "No evidence was frozen: the review was withdrawn before it started."; no visible control (no Start, no
-  Refresh). In SQL his profile (6) is inactive, deactivated 2026-10-20, under the pseudonym, and no activity refers to
-  his original id.
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Users (her page, lit) reads "People 14" with no Ndlovu and no
+  pseudonym; Name, Roles, Scope, Status, Actions. Dr du Plessis's and Dr Molefe's Roles cells read "No role" over "A
+  completed or withdrawn registrar keeps an account and its records.", each with Scope "Paediatrics / Paediatrics" and
+  Status Active. Measured at 901, 1000 and 1100 px wide: nothing scrolls sideways (hscroll 0; the table 593, 692 and
+  792 px, equal to its container), and no word in Name or Scope splits mid-word, and no address splits (the only break
+  found is "Sub-" / "speciality admin" after the hyphen, in Roles, at 901 and 1000). Trainees (flow 11's page:
+  "Waiting to be admitted: Nobody is waiting to be admitted."; "Current trainees, 2 current": Dlamini 2024-01-15
+  Training year 3, expected 2028-07-14, and Mahlangu 2026-01-15 Training year 1; "Completed and closed": du Plessis
+  Withdrawn 2026-10-24 and Molefe Completed 2026-10-26); no Ndlovu. Committee reviews lists three
+  deleted_user_d5fe50c8 rows: Act 4's ratified review (Annual progression, Outcome Deferred), the closed formative
+  check-in (#6; Decision "— None"), and A.1.10's check-in as Formative check-in, Withdrawn, "None: the review was
+  withdrawn" (#8). Review #8's sitting bar reads Withdrawn and "Withdrawn on 2026-10-26. Withdrawn because the
+  trainee's personal data was erased at their request. Nothing more is decided at this review."; Evidence snapshot "No
+  evidence was frozen: the review was withdrawn before it started."; no visible control (no Start, no Refresh). In SQL
+  his profile (6) is inactive, deactivated 2026-10-26, under the pseudonym, and no activity refers to his original id.
 Gap: none (the withdrawn review still draws the live Annexure A card, of 17 EPAs on 11.2, and a sampling warning,
   noted as before)
 
@@ -323,12 +328,12 @@ Expect: Each row shows the job's description and its cron schedule (UTC), with i
   - portfolio-export-cleanup
   - scheduled-job-run-retention
   - weekly-coordinator-digest
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Scheduled jobs from the Platform group, lit, tab "Scheduled
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Scheduled jobs from the Platform group, lit, tab "Scheduled
   jobs · Wombat". Columns Job, Schedule, Last run, Status, Next run, Enabled, Actions: the nine jobs by key in the
-  runbook's order, each with its description, cron (activity-draft-nudge 0 7 * * *, last run 2026-10-20 11:02, next
-  2026-10-21 09:00 local), "Disable <key>" and "Run now: <key>". Eight read a Succeeded badge.
-  weekly-coordinator-digest, whose schedule is Mondays and D is a Tuesday, had never run: its Last run and Status read
-  "—", next 2026-10-26 10:00. Run history is a header action.
+  runbook's order, each with its description, cron (activity-draft-nudge 0 7 * * *, last run 2026-10-26 19:14, next
+  2026-10-27 09:00 local), "Disable <key>" and "Run now: <key>". All nine had run (the scheduler's catch-up at 19:14
+  on D, and msf-campaign-auto-close hourly to 23:00) and each reads a Succeeded badge, so no row reads "—". Run
+  history is a header action.
 Gap: none
 
 ### Step A.2.2 — devadmin disables a job and enables it again
@@ -338,10 +343,10 @@ Do: Disable msf-campaign-auto-close, try to run it now, then enable it again.
 Expect: Disabling says "Job 'msf-campaign-auto-close' disabled." The row then reads "—" for its next run, its toggle
   says Enable, and its Run now is unavailable. Once enabled again, its next run is the next hour. The scheduler does not
   run a disabled job. The audit log records both changes.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Disable: "Job 'msf-campaign-auto-close' disabled." took the
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Disable: "Job 'msf-campaign-auto-close' disabled." took the
   focus; the row reads Next run "—", its toggle "Enable msf-campaign-auto-close", and its Run now is disabled (a
   forced press did nothing; the alert stayed the disable's). Enable: "Job 'msf-campaign-auto-close' enabled.", next
-  run 2026-10-20 16:00 (the next hour), Run now available again.
+  run 2026-10-27 00:00 (the next hour), Run now available again.
 Gap: none
 
 ### Step A.2.3 — Mr Smit opts out of digest emails
@@ -349,7 +354,7 @@ Role: Coordinator — Mr Pieter Smit
 Route: /account/data-rights
 Do: Tick "Opt out of digest emails" and save his preferences.
 Expect: "Processing preferences saved."
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): My data rights from the menu; "Opt out of digest emails" was
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): My data rights from the menu; "Opt out of digest emails" was
   clear, ticked and saved: "Processing preferences saved." took the focus, and the box stays ticked.
 Gap: none
 
@@ -362,8 +367,8 @@ Expect: "Job 'weekly-coordinator-digest' dispatched."; the row's last run is now
   digest emails". No "Your weekly Wombat digest" mail greets Pieter.
 Note: Each mail is logged as "Stub email <reference> … not sent", with its subject and text and no address (T282). The
   Demo Institution's dev coordinator may be sent a digest; ignore it.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): "Job 'weekly-coordinator-digest' dispatched." took the focus;
-  the row's last run is 15:03, Succeeded. The log reads "WeeklyCoordinatorDigestJob: digests sent 1; coordinators
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): "Job 'weekly-coordinator-digest' dispatched." took the focus;
+  the row's last run is 23:30, Succeeded. The log reads "WeeklyCoordinatorDigestJob: digests sent 1; coordinators
   skipped: deactivated 0, opted out of digest emails 1, no email address 0, holds Trainee 0, no institution 0." Its
   one stub mail "Your weekly Wombat digest" greets "Hi Demo," (the dev coordinator); none greets Pieter.
 Gap: none
@@ -373,7 +378,7 @@ Role: Coordinator — Mr Pieter Smit
 Route: /account/data-rights
 Do: Untick "Opt out of digest emails" and save.
 Expect: "Processing preferences saved."
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): The digest opt-out opened ticked; unticked and saved:
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): The digest opt-out opened ticked; unticked and saved:
   "Processing preferences saved.", the box now clear.
 Gap: none
 
@@ -390,8 +395,8 @@ Expect: A stub mail "Your weekly Wombat digest" begins "Hi Pieter,". It covers K
   - any committee review scheduled in the coming week.
 Note: A second log line accounts for the earlier run's mail. On dev, where no mail worker reports, it counts that mail
   as "not reported before the job ran again" (T283).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): "Job 'weekly-coordinator-digest' dispatched.", Succeeded
-  (15:03). The log reads "WeeklyCoordinatorDigestJob mail of the run started 2026-10-20 13:03:16Z: sent 0, not
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): "Job 'weekly-coordinator-digest' dispatched.", Succeeded
+  (23:30). The log reads "WeeklyCoordinatorDigestJob mail of the run started 2026-10-26 21:30:24Z: sent 0, not
   delivered 0, not reported before the job ran again 1." and "digests sent 2; coordinators skipped: ... opted out of
   digest emails 0 ...". The stub "Your weekly Wombat digest" reads "Hi Pieter, Here is your weekly summary: No items
   requiring attention this week.": KGK only, no trainee listed under "Trainees at risk", no campaign waits, no review
@@ -409,15 +414,15 @@ Do: File two Mini-CEX (Paediatrics) activities, each with every request field fi
 Expect: The first reads "Draft saved. It has not been submitted. It is in nobody's inbox until you submit it." The
   second reads "Submitted. It is now Requested. It is in Fatima Khumalo's Activity inbox." My activities' Needs you
   lists the first and not the second. No email is sent: Wombat mails nobody when an activity moves (Step 3.3).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Log an activity opened the picker ("Rated by an assessor", 7
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Log an activity opened the picker ("Rated by an assessor", 7
   types); Mini-CEX (Paediatrics) opened /activities/new?type=mini_cex_cpsa, its EPA list offering 9. Both with
   PAED-002, Khumalo as assessor, Ward, a presenting problem and complexity Moderate; the button read "Submit to Fatima
-  Khumalo". Activity 26 (encounter 2026-10-17, D-3), Save draft: "Draft saved. It has not been submitted. It is in
+  Khumalo". Activity 26 (encounter 2026-10-23, D-3), Save draft: "Draft saved. It has not been submitted. It is in
   nobody's inbox until you submit it." took the focus; Who has it now "Draft / With you. Not submitted yet." Activity
-  27 (encounter 2026-10-18, D-2), Submit to Fatima Khumalo: "Submitted. It is now Requested. It is in Fatima Khumalo's
+  27 (encounter 2026-10-24, D-2), Submit to Fatima Khumalo: "Submitted. It is now Requested. It is in Fatima Khumalo's
   Activity inbox." took the focus. My activities' Needs you (1) lists 26 alone, as Draft; All activities (4) lists 27
-  as with Fatima Khumalo, Requested. Khumalo's inbox, Waiting for you "2 waiting", lists du Plessis's CBD (since 12:35
-  SAST) then "Mini-CEX (Paediatrics) · PAED-002 · 2026-10-18 ... from Nomsa Mahlangu ... Requested". No mail.
+  as with Fatima Khumalo, Requested. Khumalo's inbox, Waiting for you "2 waiting", lists du Plessis's CBD (since 21:06
+  SAST) then "Mini-CEX (Paediatrics) · PAED-002 · 2026-10-24 ... from Nomsa Mahlangu ... Requested". No mail.
 Gap: none
 
 ### Step A.2.8 — devadmin runs the two reminders against aged work
@@ -432,8 +437,8 @@ Expect: The log holds a stub mail "You have draft activities waiting" beginning 
 Note: This is a stand-in for elapsed time, since both jobs read the real clock. Run
   `UPDATE "Activities" SET "UpdatedOn" = "UpdatedOn" - interval '15 days' WHERE "Id" = <the draft>;` and the same with
   `interval '6 days'` for the request. Both ids are in the activities' addresses.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Stand-in as the Note prescribes: UpdatedOn -15 days on
-  activity 26 (now 2026-10-05) and -6 days on 27 (now 2026-10-14). Both jobs dispatched and Succeeded (15:04). Stub
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Stand-in as the Note prescribes: UpdatedOn -15 days on
+  activity 26 (now 2026-10-11) and -6 days on 27 (now 2026-10-20). Both jobs dispatched and Succeeded (23:31). Stub
   mails: "You have draft activities waiting", "Hi Nomsa, ... Mini-CEX (Paediatrics) - draft for 15 days"; and
   "Activities awaiting your assessment", "Hi Fatima, ... Mini-CEX (Paediatrics) from Nomsa Mahlangu - waiting 6 days"
   (the log prints the dash as "-"; Dr Patel was also nudged for du Plessis's portfolio review, "waiting 8 days").
@@ -456,8 +461,8 @@ Expect: Each run reads Succeeded, and each job logs one line:
   - scheduled-job-run-retention: "no old runs to delete."
 Note: portfolio-export-cleanup deletes the export records that `/portfolio/verify` checks, so after 90 days a
   graduate's PDF no longer verifies (reported).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Each of the six, run now one at a time, reads Succeeded (15:04
-  to 15:05), with one log line each: "EntrustmentDecisionExpiryJob: expired 0 decisions (sent 0), reminded 0 expiring
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Each of the six, run now one at a time, reads Succeeded (23:31
+  to 23:32), with one log line each: "EntrustmentDecisionExpiryJob: expired 0 decisions (sent 0), reminded 0 expiring
   soon (sent 0)."; "MsfCampaignAutoCloseJob: no expired campaigns found."; "MsfInvitationExpiryReminderJob: no
   respondent is due a reminder."; "AuditLogRetentionJob: complete. Total archived: 0."; "PortfolioExportCleanupJob: no
   expired exports found."; "ScheduledJobRunRetentionJob: no old runs to delete." No mail.
@@ -478,12 +483,12 @@ Expect: The runs are listed newest first, each with its key, start, finish, dura
   - "digest" alone matches nothing: the filter wants the whole key.
   - Failed shows "No runs found".
   - From today shows today's runs, those of this appendix among them. The date is read as a UTC day.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Run history, from the jobs header (trail Home > Scheduled jobs
-  > Job run history), lists 23 runs newest first: Key, Started, Finished, Duration, Status, Triggered by, Error. The
-  scheduler's read "scheduler"; the ones by hand read cb507c27-4dc7-495a-b2a1-02bb5586094d, devadmin's user id. Typing
-  a key changed nothing until Filter. "weekly-coordinator-digest": its two runs by hand, no other job. "digest": "No
-  runs found". Status Failed: "No runs found". From 2026-10-20: 23, today's runs, the appendix's among them. The key's
-  placeholder reads "Filter by key...".
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Run history, from the jobs header (trail Home > Scheduled jobs
+  > Job run history), lists 24 runs newest first: Key, Started, Finished, Duration, Status, Triggered by, Error. The
+  scheduler's read "scheduler"; the ones by hand read 1ea58030-859a-4a38-a2fb-432a736ef985, devadmin's user id. Typing
+  a key changed nothing until Filter. "weekly-coordinator-digest": its two runs by hand and the scheduler's of 19:14,
+  no other job. "digest": "No runs found". Status Failed: "No runs found". From 2026-10-26: 24, today's runs, the
+  appendix's among them. The key's placeholder reads "Filter by key...".
 Gap: F-A.2.10a, T324 (still: "Triggered by" prints devadmin's user id, not his name as the Expect says). F-A.2.10b,
   T327 (still: the placeholder invites a part, and only the whole key matches).
 
@@ -506,11 +511,16 @@ Note: The form is drawn only once a provider is set up for KGK, which the replay
   admin, Sub-speciality admin, Coordinator, Committee member and Assessor, under "Staff roles only. Trainee and Pending
   trainee are never mapped: a registrar becomes a trainee only when admitted.". T288 (a mapping only for the
   provider's own institution) is the handlers' and unit-tested.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): SSO mappings from the "Access and audit" group, lit: "No SSO
-  providers are configured. Add providers to the Sso:Providers section in application settings and restart." No input
-  and no button on the page. Current mappings: "No group mappings / Add a mapping above to link external groups to
-  Wombat roles." At 390 px nothing scrolls sideways (390 in 390).
-Gap: F-A.3.1a, T326 (still: the empty state says "Add a mapping above" where no form is shown, as the Expect records)
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): SSO mappings from the "Access and audit" group, lit; tab "SSO
+  mappings · Wombat". The page reads "SSO mappings", "Which of your institution's sign-in groups give which Wombat
+  role. A change applies at each person's next sign-in.", and one card, headed "Institutional sign-in is not set up":
+  "Institutional sign-in is not set up for Kgosi Kgari Teaching Hospital. A Wombat administrator sets it up; ask them
+  if your hospital signs staff in through its own system." and "Until then, your people sign in with an email and a
+  password, and there is nothing to change on this page." It names no setting and no restart. There is no form, no
+  Wombat role select, no list of mappings and no visible Delete: the only control in the DOM is a closed, invisible
+  "Delete this mapping?" dialog (Keep the mapping, Delete) that nothing can open, and nothing on the page offers
+  Trainee or Pending trainee. At 390 px nothing scrolls sideways (390 in 390).
+Gap: none (T326's empty body and "Add a mapping above" no longer occur; the closed dialog is not visible)
 
 ### Step A.3.2 — The sign-in page offers no institutional sign-in
 Role: Anonymous — a KGK consultant
@@ -523,7 +533,7 @@ Expect: Under the line "Work-based assessment for specialist training." and the 
   focus, and points to no institutional button (T156); the tab's title starts "Error:". The challenge for a provider
   that is not configured returns to the sign-in page, which says "That institution's sign-in is not set up in Wombat.
   Sign in with your email and password."
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Signed out, the sign-in page reads "Work-based assessment for
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Signed out, the sign-in page reads "Work-based assessment for
   specialist training." and "Sign in", then Email, Password with Show ("Show password"), Remember me, Sign in and
   "Forgotten your password?", with no "or" divider and no "Sign in with ..." button. A wrong password for
   zulu@kgk.wombat.local: ?error=Refused, tab "Error: Sign in · Wombat", "Invalid email or password." (#login-error,
@@ -540,7 +550,7 @@ Expect: The callback returns to the sign-in page, which says "Your institution's
   your email and password." (the words of a page with no institution's button: none is configured). The link page is
   headed "Institutional sign-in expired" and says "Your institutional sign-in has expired. Start again from the
   sign-in page." It offers Back to sign in and no password field (T149).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): /account/sso-callback returned to
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): /account/sso-callback returned to
   /account/login?error=ExternalLoginUnavailable: "Your institution's sign-in did not complete. Sign in with your email
   and password." /account/link-external: tab and heading "Institutional sign-in expired", "Your institutional sign-in
   has expired. Start again from the sign-in page." and only Back to sign in, with no password field. At 390 px nothing
@@ -562,7 +572,7 @@ Expect: On My account her name in the top bar is the current page (underlined), 
   name is marked, empty, and names its own message, "Enter your last name."; First name reads "Sarah"; the tab reads
   "Error: My account · Wombat"; nothing is saved. Restored, Save name reloads the page with "Name saved.", which takes
   the focus (T234), and the top bar's account row names her as saved, "Sarah Botha".
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): My account from "Sarah Botha" in the top bar: the name carries
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): My account from "Sarah Botha" in the top bar: the name carries
   aria-current, underlined, and nothing in the menu is lit; tab "My account · Wombat". Account card:
   botha@kgk.wombat.local as text, Kgosi Kgari Teaching Hospital, and Roles "Committee member" and "Assessor" one per
   line; How you sign in shows Password, "Your Wombat password.", Change password. Last name cleared: the browser's own
@@ -597,7 +607,7 @@ Note: Before this step, sign Dr Khumalo in on a second browser and leave it on h
   passwords in a row would lock the account for 15 minutes and sign her out: the sign-in page would say "Your current
   password was entered incorrectly too many times, so your account is locked for 15 minutes and you have been signed
   out. Wait 15 minutes, then sign in again." (states.md, Account and sign-in).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): A second browser was signed in as Khumalo on her Activity
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): A second browser was signed in as Khumalo on her Activity
   inbox first. From My account's Change password (tab "Change password · Wombat", trail Home > My account > Change
   password): "Choose a new password for signing in to Wombat.", the six rules under New password before anything is
   typed, and toggles "Show current password", "Show new password", "Show confirm new password". Each refusal came back
@@ -609,7 +619,7 @@ Actual (2026-10-20, T373 replay, wombat_scenario_t373): A second browser was sig
   #."; nothing on lower case; New password names "The new password does not meet the rules below." (d)
   ?status=password-updated, "Password updated." took the focus; she stays signed in. Recorded in the replay's password
   file (WB_PW_KHUMALO is the new one; the old one kept as WB_PW_KHUMALO_A). The audit holds no row for the change or
-  the wrong current password (SQL: only Login, LoginFailed and the name save).
+  the wrong current password (SQL: no ResetUserPasswordCommand or change row for her).
 Gap: F-A.4.2a, T286 (still: a password change and a wrong current password write no audit row; the Expect does not
   ask)
 
@@ -620,7 +630,7 @@ Do: Go back to the second browser and wait up to a minute. Sign in with the old 
 Expect: The tab leaves for the sign-in page by a full page load, which says "Your session has ended. Sign in again."
   (T279), an information notice. The old password is refused, and "Invalid email or password." takes the notice's
   place. The new one brings her back to her Activity inbox: the return address survives the refusal.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): The second browser's inbox left 54 s after the change, by a
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): The second browser's inbox left 54 s after the change, by a
   full load, for /account/login?error=SessionEnded&returnUrl=%2Factivities%2Finbox: the information notice "Your
   session has ended. Sign in again." The old password: ?error=Refused, "Invalid email or password." in its place. The
   new one brought her back to /activities/inbox (Mahlangu's Mini-CEX, 6 days, and du Plessis's CBD, less than a day,
@@ -638,7 +648,7 @@ Expect: A "Forgotten password" page: "A Wombat administrator can set a new passw
   no email is sent.
 Note: Wombat sends no reset email: an administrator sets the password (A.4.5), and nothing uses the
   `PasswordResetEmail` template (not played).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): "Forgotten your password?" led to /account/forgot-password,
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): "Forgotten your password?" led to /account/forgot-password,
   tab "Forgotten password · Wombat": "Forgotten password", "A Wombat administrator can set a new password for you.",
   then the three steps word for word as the Expect quotes them, and Back to sign in, which returned to /account/login.
   No field; no mail.
@@ -662,15 +672,22 @@ Expect: Roles and scope reads "**Pieter du Plessis holds no role: they left the 
     with Pieter du Plessis out-of-band." The field is cleared.
   - The audit log records the reset with the password redacted (T101).
 Note: Resetting a password is 1 press and 1 field (the password, Reset password), at 1280 and at 390.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Users -> "Manage Pieter du Plessis" (Status Active; Roles
-  "This user has no roles.", D54). The Reset password card: "Sets a new password directly. The user is not emailed;
-  share the password securely out-of-band.", its field with "Show new password" and the six rules under it; Reset
-  password is disabled while empty and enabled after one character. "shortpass1": "The password was not reset. The new
-  password needs: At least 12 characters. An upper-case letter. A symbol, such as ! or #." took the focus, the field
-  emptied, aria-invalid and naming "The new password does not meet the rules below." A password meeting every rule:
-  "Password reset. Share the new password with the user out-of-band." took the focus, the field cleared. The audit
-  holds ResetUserPasswordCommand once false and once true, both with the password [REDACTED]. Recorded as
-  WB_PW_DUPLESSIS_ADMINSET (and as WB_PW_DUPLESSIS, the original kept as WB_PW_DUPLESSIS_A).
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Users -> "Manage Pieter du Plessis" (tab "Pieter du Plessis ·
+  Wombat", trail Home > Users > Pieter du Plessis, Users lit; Status Active). Roles and scope reads "Pieter du Plessis
+  holds no role: they left the programme on 2026-10-24. They can still sign in to read their training record (My
+  progress) and their data rights.", with Add a role… and "Trainee is not offered: a registrar becomes a trainee only
+  when admitted, from Trainees with 'Admit…'." His Lockout lists only "They are sent no activity reminders or weekly
+  digests." and the records sentence. No Pending invitations card. Password: "Sets a new password directly. The user
+  is not emailed; share the password securely out-of-band.", its field with "Show new password" and the six rules
+  under it; Reset password is enabled while the field is empty. "shortpass1": under the Password heading, not at the
+  page's top, "The password was not reset. The new password needs: At least 12 characters. An upper-case letter. A
+  symbol, such as ! or #." took the focus; the field emptied, aria-invalid and naming "The new password does not meet
+  the rules below." A password meeting every rule: "Password reset for Pieter du Plessis. Share the new password with
+  Pieter du Plessis out-of-band." (the first sentence bold) took the focus, in Password under its heading; the field
+  cleared. The audit holds ResetUserPasswordCommand once false and once true, both with the password [REDACTED].
+  Recorded as WB_PW_DUPLESSIS_ADMINSET (and as WB_PW_DUPLESSIS, the original kept as WB_PW_DUPLESSIS_A). At 390 px
+  nothing scrolls sideways (390 in 390) and Reset password, Add a role…, Lock out… and the Show toggle are each 44 px
+  tall.
 Gap: none
 
 ### Step A.4.6 — Dr du Plessis signs in with it and chooses his own
@@ -680,7 +697,7 @@ Do: Sign in with the password Prof Mbatha set. Then change it, from My account (
   his own. Record it in `pwd_DO_NOT_COMMIT.txt`.
 Expect: He lands on Home, with the former trainee's card "Your training record" pointing to My progress, as at Step 5.28
   (T290: he holds no role). The change lands on My account with "Password updated."
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): With the password Prof Mbatha set he lands on /, holding no
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): With the password Prof Mbatha set he lands on /, holding no
   role: the menu reads Home, My progress, My data rights; Home's one card, "Your training record": "You hold no role
   at the moment. Your training record is kept, read-only: your progress in each period, and your portfolio to export."
   with "Open My progress →" (/portfolio/progress; 44 px at 390 px and nothing scrolls sideways, 390 in 390). My
@@ -702,14 +719,14 @@ Expect: A "Sign out" page, with no nav: "You are signed in as Pieter Smit (smit@
 Note: Only the error page links to the confirmation page: its account row's Sign out is a link there, since a form
   drawn on the error page could carry a refused token. Everywhere else the account row's Sign out, in the top bar or
   the phone menu's foot, is a form that signs out at once.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): /account/logout-confirm, tab "Sign out · Wombat", with no nav:
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): /account/logout-confirm, tab "Sign out · Wombat", with no nav:
   "Sign out", "You are signed in as Pieter Smit (smit@kgk.wombat.local). Signing out ends your session in this
   browser.", Cancel and Sign out; at 390 px nothing scrolls sideways. Cancel (a link to /) returned him to Home, still
   signed in. A typed GET /account/logout drew the same page at that address (200), and its Cancel returned him to /
   signed in. Sign out landed on /account/login?error=SignedOut: "You have signed out." (information notice).
   /msf/campaigns then went to /account/login?ReturnUrl=%2Fmsf%2Fcampaigns, and signing in brought him back to MSF
-  campaigns (lit), "Campaigns (2)": Pieter du Plessis, Default MSF, Withdrawn, 0 invitations, "—", closes 2026-11-03,
-  View campaign; then Lerato Molefe, Released, 9 invited, 8 responded, closes 2026-11-03, View campaign and View
+  campaigns (lit), "Campaigns (2)": Pieter du Plessis, Default MSF, Withdrawn, 0 invitations, "—", closes 2026-11-09,
+  View campaign; then Lerato Molefe, Released, 9 invited, 8 responded, closes 2026-11-09, View campaign and View
   report, each action named for the campaign. The audit holds one Logout.
 Gap: none
 
@@ -722,7 +739,7 @@ Do: Type the address of the Users page, then that of Scheduled jobs.
 Expect: Each time, "You cannot open this page": "Your role (Trainee) does not open this page." and "If you need it for
   your work, ask your institution's Wombat administrator.", with Go to Home, which takes her home. Nothing of the page
   she asked for is shown or named, and no switch of role is offered (T335, D6).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): /admin/users went to
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): /admin/users went to
   /access-denied?ReturnUrl=%2Fadmin%2Fusers, tab "You cannot open this page · Wombat": "You cannot open this page",
   "Your role (Trainee) does not open this page.", "If you need it for your work, ask your institution's Wombat
   administrator." and Go to Home, which took her to /. /admin/jobs gave the same. Nothing of either page is named; no
@@ -736,7 +753,7 @@ Do: Type the address of the Institutions list, then that of Scheduled jobs.
 Expect: For both, "You cannot open this page": "Your role (Institutional admin) does not open this page." and "If you
   need it for your work, ask the platform administrator.", with Go to Home. They are the Administrator's alone, her menu
   offers neither, and nothing in it is lit on the refusal.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Her menu (People, Curriculum, Reviews, Access and audit)
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Her menu (People, Curriculum, Reviews, Access and audit)
   offers neither page. /admin/institutions and /admin/jobs each went to /access-denied (ReturnUrl kept): "Your role
   (Institutional admin) does not open this page.", "If you need it for your work, ask the platform administrator." and
   Go to Home; nothing in the menu is lit.
@@ -748,7 +765,7 @@ Route: /dashboard/switch/{role} → /
 Do: Open `/dashboard/switch/Administrator`.
 Expect: She is back on her own dashboard, still acting as a Trainee. A switch to a role she does not hold changes
   nothing and says nothing (no "You are now acting as" alert), and the sidebar offers her no switch: she holds one role.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): /dashboard/switch/Administrator redirected to /, "Trainee ·
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): /dashboard/switch/Administrator redirected to /, "Trainee ·
   Semester 2, 2026", Home lit; no alert, and the menu ("Acting as Trainee": Home to My data rights) offers no switch.
 Gap: none
 
@@ -764,7 +781,7 @@ Expect: For each, the "Page not found" page: "There is no page at this address."
   status is 404 (the browser's network panel) (T233).
   - `/placeholder/recent-activities` is Page not found too: the placeholder page went with the stubs (T335, flow 01).
   - Signed out, the unknown address first asks her to sign in, then shows Page not found.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Signed in, /portfolio/cv and /placeholder/recent-activities
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Signed in, /portfolio/cv and /placeholder/recent-activities
   each answered 404 at the typed address, tab "Page not found · Wombat": "There is no page at this address.", "Check
   the address, or start again from Home." and Go to Home, with no address repeated, nothing lit. At 390 px nothing
   scrolls sideways. Signed out, /portfolio/cv went to /account/login?ReturnUrl=%2Fportfolio%2Fcv; signing in there
@@ -782,11 +799,11 @@ Expect: The institution shows Page not found, not "You cannot open this page". T
 Note: The Demo Institution stands in for another institution only here. Its ids come from
   `SELECT "Id" FROM "Institutions" WHERE "Name" = 'Demo Institution'` and from `"AspNetUsers"`. On a host without the
   dev accounts, play the institution half only.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): /admin/institutions/1 (the Demo Institution) moved to
-  /not-found, "Page not found", as /admin/institutions/999 does. The dev trainee's /admin/users/5b7cf44c-... stays at
-  its address, tab "User · Wombat", trail Home > Users > User: "User unavailable / The user could not be found or is
-  outside your scope." and Back to users, the same as an unknown id (00000000-...-0001). Neither reveals that the
-  record exists.
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): /admin/institutions/1 (the Demo Institution) moved to
+  /not-found, "Page not found", as /admin/institutions/999 does. The dev trainee's /admin/users/277030d9-... stays at
+  its address, tab "User · Wombat", trail Home > Users > User, Users lit: the heading "User", "User unavailable / The
+  user could not be found or is outside your scope." and Go to Users, with no Back to users; the same as an unknown id
+  (00000000-...-0001). Neither reveals that the record exists.
 Gap: none
 
 ### Step A.5.6 — Another registrar's activity, by id
@@ -796,7 +813,7 @@ Do: Open the address of Dr Mahlangu's submitted Mini-CEX from A.2.7.
 Expect: The page is headed "Activity unavailable" and reads "This activity does not exist, or you cannot open it.", with
   Go to My activities: the same page an id that does not exist shows, so nothing of the activity is shown and nothing
   tells her it exists (T101, C7).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): /activities/27 (Dr Mahlangu's requested Mini-CEX) stays at its
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): /activities/27 (Dr Mahlangu's requested Mini-CEX) stays at its
   address, tab "Activity unavailable · Wombat", trail Home > My activities > Activity unavailable (My activities lit):
   the heading "Activity unavailable", "This activity does not exist, or you cannot open it." and Go to My activities.
   /activities/99999 reads word for word the same; nothing of the activity is shown.
@@ -808,11 +825,11 @@ Route: /admin/data-rights/{Id:guid}
 Do: Open the address of Dr Mahlangu's request with its last digit changed.
 Expect: The refusal "You are not authorized to access this data-rights request." and the empty state "Not found". An
   unknown id and another institution's request read the same, so the page does not tell them apart (T112).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): /admin/data-rights/01a15964-dd3e-7efa-bd7e-44f73833641b
-  (Mahlangu's id, last digit a changed to b), tab "Data rights request · Wombat", trail Home > Data rights requests >
-  Data rights request: the alert "You are not authorized to access this data-rights request." above "Not found / The
-  data rights request was not found.", and Back to list. Her real id opens her Rejected request. No other institution
-  holds a request.
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): /admin/data-rights/01a17a1b-7e83-7c1c-a929-680711228287
+  (Mahlangu's id) with its last digit changed to 6, tab "Data rights request · Wombat", trail Home > Data rights
+  requests > Data rights request: the alert "You are not authorized to access this data-rights request." above "Not
+  found / The data rights request was not found.", and Back to list. Her real id opens her Rejected request. No other
+  institution holds a request.
 Gap: none (F-A.5.7a is not a defect: T112 makes an unknown and a foreign id read alike)
 
 ### Step A.5.8 — The error page
@@ -829,7 +846,7 @@ Note: Outside Development a failed page load is answered here with status 500 (T
   address) and Go to Home. On dev the developer exception page shows instead, and a failure inside a page shows the
   error bar ("This page no longer responds; …"); `Hosting/ErrorPageFlowTests` plays the failure (states.md § System
   pages).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Signed in, /Error: status 200, tab "Nothing went wrong ·
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Signed in, /Error: status 200, tab "Nothing went wrong ·
   Wombat", "Nothing went wrong", "This is Wombat's error page, opened directly. No request failed, so there is nothing
   to report." and Go to Home; no reference and no Try again. Signed out (a fresh browser) it reads the same at /Error
   under the signed-out bar (Sign in), with no sign-in first. At 390 px nothing scrolls sideways.
@@ -841,7 +858,7 @@ Route: /
 Do: Read the menu.
 Expect: Home and Activity inbox, then My data rights. There is no Recent activities: the flow 01 pick dropped it, and
   the nav links to no page that is not built (DESIGN.md § The NavMenu).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): "Acting as Assessor"; the menu reads Home and Activity inbox,
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): "Acting as Assessor"; the menu reads Home and Activity inbox,
   then My data rights. No Recent activities, and no link to an unbuilt page.
 Gap: none
 
@@ -860,17 +877,17 @@ Expect: The card, in the warning stripe, is badged "3 waiting, 1 overdue", and l
   is sent here). Nothing offers Reassign (C5).
 Note: Dr Mahlangu's request from A.2.7 has waited 6 days, under the 7 that make a request overdue, so it is listed
   without Overdue.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Home's "Waiting for assessors" card (detail-card--warning,
-  left border #9A5400, the warning stripe, on each of 3 sign-ins, read at once and after 1.5 s) is badged "3 waiting,
-  1 overdue", "Oldest first. Overdue once it has waited 7 days. Its assessor is emailed after 5.", and lists, each row
-  a link to its activity: "Portfolio and Logbook Review (Paediatrics) · PAED-015 · 2026-10-19, from Pieter du Plessis"
-  (/activities/10), Awaiting review and Overdue, "With Mohammed Patel", "Waiting 8 days"; "Mini-CEX (Paediatrics) ·
-  PAED-002 · 2026-10-18, from Nomsa Mahlangu" (/activities/27; encounter D-2), Requested, no Overdue, "With Fatima
-  Khumalo", "Waiting 6 days"; "Case-Based Discussion (Paediatrics) · PAED-002 · 2026-10-15, from Pieter du Plessis"
-  (/activities/9), Requested, "With Fatima Khumalo", "Waiting less than a day". Open Waiting for assessors at its foot
-  opened /programme/waiting (lit, tab "Waiting for assessors · Wombat"): "3 waiting, 1 overdue" over the same three in
-  that order (8 days since 2026-10-12 12:35 SAST; 6 days since 2026-10-14 15:04; less than a day since 2026-10-20
-  12:35), each with Send a reminder; none was sent. No Reassign anywhere. No mail.
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Home's "Waiting for assessors" card (detail-card--emphasis,
+  left border #9A5400, the warning stripe) is badged "3 waiting, 1 overdue", "Oldest first. Overdue once it has waited
+  7 days. Its assessor is emailed after 5.", and lists, each row a link to its activity: "Portfolio and Logbook Review
+  (Paediatrics) · PAED-015 · 2026-10-25, from Pieter du Plessis" (/activities/10), Awaiting review and Overdue, "With
+  Mohammed Patel", "Waiting 8 days"; "Mini-CEX (Paediatrics) · PAED-002 · 2026-10-24, from Nomsa Mahlangu"
+  (/activities/27; encounter D-2), Requested, no Overdue, "With Fatima Khumalo", "Waiting 6 days"; "Case-Based
+  Discussion (Paediatrics) · PAED-002 · 2026-10-21, from Pieter du Plessis" (/activities/9), Requested, "With Fatima
+  Khumalo", "Waiting less than a day". Open Waiting for assessors at its foot opened /programme/waiting (lit, tab
+  "Waiting for assessors · Wombat"): "3 waiting, 1 overdue" over the same three in that order (8 days since 2026-10-18
+  21:06 SAST; 6 days since 2026-10-20 23:31; less than a day since 2026-10-26 21:06), each with Send a reminder; none
+  was sent. No Reassign anywhere. No mail.
 Gap: none
 
 ### Step A.5.11 — Dr Botha's menu offers Programme trainees
@@ -880,7 +897,7 @@ Do: Read the menu.
 Expect: "Acting as Committee member", with "Switch to Assessor" under it, over Home, Programme trainees, Committee
   reviews and Decision panels, then My data rights. There is no Waiting for assessors: chasing work is not a Committee
   member's (T358, Q7).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): "Acting as Committee member", with "Switch to Assessor" under
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): "Acting as Committee member", with "Switch to Assessor" under
   it, over Home, Programme trainees, Committee reviews and Decision panels, then My data rights. No Waiting for
   assessors.
 Gap: none
@@ -892,7 +909,7 @@ Do: Read the menu.
 Expect: Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels and
   Entrustment decisions, then My data rights (T358, R2-Menus). The STAR review queue is not restored: Entrustment
   decisions, the programme's register of STARs, takes its place (DESIGN.md § The NavMenu).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): "Acting as Speciality admin", no switch, over Home, Programme
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): "Acting as Speciality admin", no switch, over Home, Programme
   trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels and Entrustment decisions, then
   My data rights. No STAR review queue.
 Gap: none
@@ -902,7 +919,7 @@ Role: Administrator — devadmin
 Route: /
 Do: Read the menu.
 Expect: The grouped menu of Step 1.1, with no System item: the flow 01 pick dropped it, with its placeholder.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): "Acting as Administrator", no switch, over Home; Platform:
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): "Acting as Administrator", no switch, over Home; Platform:
   Scheduled jobs, Audit log, SSO mappings, Data rights requests; Organisations: Institutions, Colleges; People: Users,
   Invitations; Catalogue: EPAs, Curricula, Activity types, Entrustment scales; Reviews: Decisions due, Committee
   reviews, Decision panels; then My data rights. No System item.
@@ -922,7 +939,7 @@ Note: The ids: `SELECT p."Id" FROM "TraineeProfiles" p JOIN "AspNetUsers" u ON u
   "TraineeProfiles" p LEFT JOIN "AspNetUsers" u ON u."Id" = p."UserId" WHERE u."Id" IS NULL;`. On a host without the dev
   accounts, play the erased half only. The corpus holds no earlier profile of a current registrar, so a profile that is
   not the registrar's current one is covered by `GetProgrammeTraineeQueryTests` instead (round-3-check 3).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Ids by the Note's SQL: the dev trainee's profile 1, the erased
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Ids by the Note's SQL: the dev trainee's profile 1, the erased
   account's profile 6. /programme/trainees/1 and /programme/trainees/6 each stay at the typed address and show flow
   01's page word for word: tab "Page not found · Wombat", the h1 "Page not found", "There is no page at this
   address.", "Check the address, or start again from Home." and Go to Home; no trail, nothing in the menu lit, and
@@ -951,19 +968,22 @@ Note: Scratch only: a lock and a cleared address are changes the story does not 
   Patel's after Mr Smit's list has been read: `UPDATE "AspNetUsers" SET "Email" = NULL, "NormalizedEmail" = NULL WHERE
   "Email" = 'patel@kgk.wombat.local';`. The flow 06 boards play the second refusal on Dr Zulu's Mini-CEX, which Step
   3.33 completed; the portfolio review is the request still with a named assessor whose address can be cleared.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Played on a scratch copy: the state dumped as
-  scenario-t373-pre-a515-A, restored into wombat_scenario_t373_s515 and started on :5181; wombat_scenario_t373
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Played on a scratch copy: the state dumped as
+  scenario-t376-pre-a515-A, restored into wombat_scenario_t376_s515 and started on :5181; wombat_scenario_t376
   untouched; 5181 stopped after. Mr Smit's Waiting for assessors was read first (three rows, each with Send a
-  reminder). devadmin locked Dr Khumalo out ("User locked out."). On the stale list, Send a reminder on du Plessis's
-  CBD opened "Send Fatima Khumalo a reminder?" (one email, "Activities awaiting your assessment", "It moves nothing
-  ..."); Send the reminder: "Not sent. Fatima Khumalo's account is deactivated, so Wombat sends Fatima Khumalo no
-  email. The request still waits." above the table, with the focus; the list read again, both Khumalo rows read "No
-  reminder: Fatima Khumalo's account is deactivated." where the button was. devadmin reactivated her ("User
-  reactivated."); Patel's address cleared by the Note's UPDATE. Send a reminder on the portfolio review, Send the
-  reminder: "Not sent. Mohammed Patel has no email address in Wombat. Ask your institutional admin to add one." in the
-  same place, with the focus; that row then reads "No reminder: Mohammed Patel has no email address in Wombat.", and
-  Khumalo's rows offer Send a reminder again. SQL on the scratch: ActivityReminders still 1 row; activities 9, 10, 27
-  keep their states and UpdatedOn. The scratch log gained no mail.
+  reminder). devadmin locked Dr Khumalo out on her page (Lock out…, whose dialog "Lock out Fatima Khumalo?" named her
+  2 waiting requests; Lock out Fatima Khumalo): "Fatima Khumalo is locked out. Any open session ends within a minute."
+  took the focus. On the stale list, Send a reminder on du Plessis's CBD opened "Send Fatima Khumalo a reminder?" (one
+  email, "Activities awaiting your assessment", "It moves nothing ..."); Send the reminder: "Not sent. Fatima
+  Khumalo's account is deactivated, so Wombat sends Fatima Khumalo no email. The request still waits." above the
+  table, with the focus; the list read again, both Khumalo rows read "No reminder: Fatima Khumalo's account is
+  deactivated." where the button was. devadmin reactivated her (Reactivate user, no dialog: "Fatima Khumalo is
+  reactivated and can sign in again." took the focus); Patel's address cleared by the Note's UPDATE. Send a reminder
+  on the portfolio review, Send the reminder: "Not sent. Mohammed Patel has no email address in Wombat. Ask your
+  institutional admin to add one." in the same place, with the focus; that row then reads "No reminder: Mohammed Patel
+  has no email address in Wombat.", and Khumalo's rows offer Send a reminder again. SQL: ActivityReminders still 1
+  row, on both the scratch and the replay database; activities 9, 10 and 27 keep their UpdatedOn. The scratch log
+  gained no Stub email.
 Gap: none (E1, the opt-out, is not exercised: nobody here opted out)
 
 ### Step A.5.16 — Mr Smit looks for registrars with nothing filed
@@ -981,7 +1001,7 @@ Expect: Home's "Nothing filed in 30 days" reads "Every current registrar has fil
 Note: Dr Molefe has completed, Dr du Plessis has withdrawn and Dr Ndlovu has been erased, so two registrars are current.
   A replay played over more than 30 days lists those with nothing filed since `D−30`, and its heading reads the count's
   form above.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Home's "Nothing filed in 30 days" reads "Every current
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Home's "Nothing filed in 30 days" reads "Every current
   registrar has filed something in the last 30 days." under "Current registrars with nothing filed (a draft is not
   filed) in the last 30 days. A registrar admitted less than 30 days ago is not listed." Open in Programme trainees
   opened /programme/trainees?filed=true, Programme trainees lit, "Nothing filed in 30 days" ticked; the heading reads
@@ -999,10 +1019,10 @@ Do: Open Institutions from the nav. Read the list, open KGK, set its contact ema
 Expect: The list holds the Demo Institution and Kgosi Kgari Teaching Hospital. Each row shows its short code, contact
   email, status (Active) and creation time, with an Edit named for it; Create institution heads the page. Saving says
   "Institution saved." The Administrator is offered the Status box and Deactivate.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Institutions from the Organisations group, lit, subtitled
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Institutions from the Organisations group, lit, subtitled
   "Maintain institution records and drill into their speciality structure.", with Create institution in the header.
-  Rows: Demo Institution (DEMO, admin@demo.local, Active, 2026-10-20 11:02) and Kgosi Kgari Teaching Hospital (KGK,
-  paeds-admin@kgk.wombat.local, Active, 11:05), each with "Edit <name>". KGK's page, "Edit institution" (trail Home >
+  Rows: Demo Institution (DEMO, admin@demo.local, Active, 2026-10-26 19:14) and Kgosi Kgari Teaching Hospital (KGK,
+  paeds-admin@kgk.wombat.local, Active, 19:29), each with "Edit <name>". KGK's page, "Edit institution" (trail Home >
   Institutions > Edit institution), offers Name, Short code, Contact email, Status with the Active box and its help
   ("An inactive institution cannot be named on a new invitation. Its people, their records and the invitations already
   sent are kept."), then Cancel, Deactivate and Save. Contact email set to paediatrics@kgk.wombat.local and saved:
@@ -1016,7 +1036,7 @@ Do: Read the dashboard's System health and Users across institutions cards.
 Expect: Database connection is green. The card's other two lines, Email queue and Last nightly job, are amber whatever
   their state, and each carries a task id: they are stubs, tied neither to the mail queue nor to Scheduled jobs
   (reported). The users card counts registered accounts.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Home, "Administrator · Semester 2, 2026". System health:
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Home, "Administrator · Semester 2, 2026". System health:
   Database connection with status-dot ok, and "Email queue (T012)" and "Last nightly job (T024)" each with status-dot
   warn, although every job last Succeeded. Users across institutions reads "22 registered users"; AspNetUsers holds 25
   rows, 22 of them with a role. Each dot is an empty span with no text or label.
@@ -1038,11 +1058,18 @@ Expect: The contact email starts at `paediatrics@kgk.wombat.local`, A.6.1's save
   `2|hod.paediatrics@kgk.wombat.local|t`.
 Note: Correcting the contact email is 2 presses and 1 field from Home (Open Kgosi Kgari Teaching Hospital, the email,
   Save changes), at 1280 and at 390.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): KGK's page by its address: "Edit institution", trail Home >
-  Edit institution, nothing lit, headed by "Back to home". It offers Name, Short code, Contact email, Status as text
-  ("Active", then "Set by a global administrator."), Cancel and Save: no box, no Deactivate. Contact email set to
-  hod.paediatrics@kgk.wombat.local and saved: "Institution saved." took the focus. Back to home and Cancel each lead
-  to / (Cancel followed: "Institutional admin · Semester 2, 2026"). SQL gives 2|hod.paediatrics@kgk.wombat.local|t.
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Home's "Your institution" card (Name, Short code, Contact
+  email paediatrics@kgk.wombat.local, Status "Active" over "Set by a Wombat administrator.") ends with "Open Kgosi
+  Kgari Teaching Hospital", the only way on (Home has no Quick links, so none for Entrustment decisions, which is in
+  her menu). It opened /admin/institutions/2: tab and heading "Kgosi Kgari Teaching Hospital", trail Home > Kgosi
+  Kgari Teaching Hospital, nothing in the menu lit, "Your institution's name, short code and contact email." with Name,
+  Short code, Contact email (starting at paediatrics@kgk.wombat.local), Status as text ("Active", then "Set by a
+  Wombat administrator."), Cancel and Save changes: no box, no Deactivate, no Back link (the trail's Home and Cancel
+  lead to /). Contact email set to hod.paediatrics@kgk.wombat.local and Save changes pressed: "Kgosi Kgari Teaching
+  Hospital saved. Its contact email is now hod.paediatrics@kgk.wombat.local." (the first sentence bold) took the
+  focus, in #institution-result. Cancel led to /, whose Your institution card reads Contact email
+  hod.paediatrics@kgk.wombat.local. SQL gives 2|hod.paediatrics@kgk.wombat.local|t. At 390 px nothing scrolls sideways
+  and Save changes is 44 px tall.
 Gap: none
 
 ### Step A.6.4 — Prof Mbatha locks Dr Patel out
@@ -1068,14 +1095,26 @@ Expect: Before the lock, Lockout reads "Locking out the user prevents sign-in im
     Status reads the Locked out badge, with its lock icon; Lockout reads "This user is currently locked out and cannot
     sign in." and offers Reactivate user. On Users his Status reads Locked out.
 Note: Locking out and reactivating is 3 presses (Lock out…, Lock out Mohammed Patel, Reactivate user), at 1280 and at 390.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Dr Patel was first signed in on a second browser, on his
-  Activity inbox. Users -> "Manage Mohammed Patel": Status Active. The Lockout card reads "Locking out the user
-  prevents sign-in immediately. Until they are reactivated:", then: no committee panel; not a current trainee (with
-  what that leaves out); no activity reminders or weekly digests; cannot be named as an activity's assessor; then
-  "Their records stay as they are, and a review or feedback campaign already under way can still be finished.
-  Reactivating clears the lockout." Below it, "Pending invitations: No active invitations are outstanding for this
-  email." Lock out user, no dialog: "User locked out." took the focus, Status reads "Locked out", and the card offers
-  Reactivate user.
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Dr Patel was first signed in on a second browser, on his
+  Activity inbox. Users -> "Manage Mohammed Patel": Status Active. Lockout reads "Locking out the user prevents
+  sign-in immediately. Until they are reactivated:", then only "They are sent no activity reminders or weekly
+  digests." and "They cannot be named as an activity's assessor.", then "Their records stay as they are, and a review
+  or feedback campaign already under way can still be finished. Reactivating clears the lockout." and an outline Lock
+  out…, named "Lock out Mohammed Patel"; no Pending invitations card. The dialog "Lock out Mohammed Patel?": "Mohammed
+  Patel can no longer sign in, and any open session ends within a minute. Until they are reactivated:", the same two
+  lines, a warning "1 request is waiting for Mohammed Patel, since 2026-10-18 21:06 SAST. It stays with them; it does
+  not move to anyone else, and no reminder is sent about it." over its row "Pieter du Plessis · Portfolio and Logbook
+  Review (Paediatrics) · PAED-015 · waiting since 2026-10-18 21:06 SAST · overdue", then the records sentence, Keep
+  access (the focus) and Lock out Mohammed Patel (btn-danger). Tab goes Keep access, Lock out Mohammed Patel. Escape
+  closed it and Keep access closed it, locking nothing (Status still Active), each returning the focus to Lock out….
+  At 390 px nothing scrolls sideways; the dialog's two buttons are 44 px (36 px at 1280), Lock out Mohammed Patel on
+  top (y761) over Keep access (y817); the Remove dialog ("Remove Assessor from Mohammed Patel?", naming the same
+  waiting request) has Keep the role first in the tab order and focused, Remove Assessor on top, 44 px each, and
+  Escape returned the focus to Remove…. Lock out Mohammed Patel: "Mohammed Patel is locked out. Any open session ends
+  within a minute." took the focus, in Lockout; Status reads the "Locked out" badge (badge-declined, with its lock
+  icon); Lockout reads "This user is currently locked out and cannot sign in." and offers Reactivate user. Users reads
+  his Status "Locked out". Home (Prof Mbatha's), read after the lock, has no waiting line (it shows only while someone
+  waits to be admitted): People reads "14 accounts." with Open Users and no locked-out count.
 Gap: none
 
 ### Step A.6.5 — Dr Patel's session ends, and he cannot sign in
@@ -1086,7 +1125,7 @@ Expect: The tab leaves for the sign-in page, which says "Your session has ended.
   notice. Signing in is refused: "Invalid email or password." (T287).
 Note: A locked account, locked by an administrator or by wrong passwords, is refused in a wrong password's words, so the
   page says nothing about which accounts are locked (T287, in T339).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): The second browser's inbox left 55 s after the lock for
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): The second browser's inbox left 46 s after the lock for
   /account/login?error=SessionEnded&returnUrl=%2Factivities%2Finbox: the information notice "Your session has ended.
   Sign in again." His own password: ?error=Refused, tab "Error: Sign in · Wombat", "Invalid email or password.",
   nothing about a lock.
@@ -1098,7 +1137,7 @@ Route: /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Start a Mini-CEX (Paediatrics) and open its assessor list. Then leave without saving.
 Expect: KGK's other assessors are listed (Dr Zulu, Dr Naidoo, Dr Botha and Dr Khumalo), but not Dr Patel, and never
   herself (T102). Nothing is saved.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Log an activity, Mini-CEX (Paediatrics)
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Log an activity, Mini-CEX (Paediatrics)
   (/activities/new?type=mini_cex_cpsa): the Assessor list offers Sarah Botha, Fatima Khumalo, David Naidoo and Thandi
   Zulu (each with the address), not Dr Patel and not herself. Left by Home without saving; nothing was written.
 Gap: none
@@ -1109,9 +1148,16 @@ Route: /admin/users/{UserId}
 Do: Press Reactivate user.
 Expect: One press, no dialog (Q5). In Lockout, focused: "Mohammed Patel is reactivated and can sign in again." His Status
   reads Active, and Lockout lists his two lines again with Lock out…. Roles and scope lists Assessor with Remove….
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): His page reloaded with Status "Locked out". Reactivate user,
-  no dialog: "User reactivated." took the focus, Status reads Active, and the card offers Lock out user again. Roles:
-  Assessor with Remove.
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): His page reloaded with Status "Locked out". Its Assessor
+  training section (button "Edit training": he holds a record, In training) opens a form of four radios (Not started,
+  In training, Provisional, Trained) and Qualifications; Save training, values unchanged: "Training saved for
+  Mohammed Patel: In training." took the focus. Reactivate user, no dialog: "Mohammed Patel is reactivated and can
+  sign in again." took the focus, in Lockout, and replaced the training result (one result at a time); Status reads
+  Active, Lockout lists his two lines again with Lock out…, and Roles and scope lists Assessor with Remove…. Then, to
+  play one result at a time both ways: Lock out Mohammed Patel again ("Mohammed Patel is locked out. ..." took the
+  focus), and Save training over it: the lock result was replaced by "Training saved for Mohammed Patel: In training."
+  (focused), one result on the page; Reactivate user once more left him Active. These extra presses add two
+  SetUserLockout rows to the audit (four in all).
 Gap: none
 
 ### Step A.6.8 — Dr Patel signs in again
@@ -1122,11 +1168,12 @@ Expect: He lands on his Assessor dashboard. "Waiting for you", in the warning st
   and lists Dr du Plessis's Portfolio and Logbook Review, from Pieter du Plessis, Awaiting review with Overdue beside
   it, "Waiting 8 days", as his inbox lists it, "8 days" over "since `D−8` … SAST" (T297, T335, T350). Recent decisions
   lists the three he decided on `D`. Dr Dlamini's assessor list names him again (checked at A.7.1).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Signed in afresh he lands on /, "Assessor · Semester 2, 2026".
-  "Waiting for you", badged "1 waiting, 1 overdue", lists "Portfolio and Logbook Review (Paediatrics) · PAED-015 ·
-  2026-10-19", from Pieter du Plessis, Awaiting review and Overdue, "Waiting 8 days", with Open Activity inbox; the
-  inbox lists it "8 days" over "since 2026-10-12 12:35 SAST". Recent decisions lists Dr Dlamini's Mini-CEX (PAED-012),
-  Dr Molefe's DOPS (PAED-001) and Dr Mahlangu's DOPS (PAED-002), each Completed 2026-10-20, with All your decisions.
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Signed in afresh he lands on /, "Assessor · Semester 2, 2026".
+  "Waiting for you" (detail-card--warning, left border #9A5400), badged "1 waiting, 1 overdue", lists "Portfolio and
+  Logbook Review (Paediatrics) · PAED-015 · 2026-10-25", from Pieter du Plessis, Awaiting review and Overdue, "Waiting
+  8 days", with Open Activity inbox; the inbox lists it "8 days" over "since 2026-10-18 21:06 SAST". Recent decisions
+  lists Dr Dlamini's Mini-CEX (PAED-012), Dr Molefe's DOPS (PAED-001) and Dr Mahlangu's DOPS (PAED-002), each
+  Completed 2026-10-26, with All your decisions.
 Gap: none
 
 ### Step A.6.9 — devadmin opens his own account
@@ -1139,13 +1186,15 @@ Expect: The page's subtitle reads "Your own account: your roles and how you sign
   (T278), and no Pending invitations card (T376, Q9). Sign-in and access holds only Institutional sign-in: "No
   institutional sign-in is linked. Demo Administrator signs in with an email and a password." On Users his row reads Institution "Global (no institution)",
   Roles Administrator and Scope "—" (U14).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): Users, searched for "devadmin": "Demo Administrator |
-  devadmin@wombat.local | Global | Administrator | Active | Manage". Manage opens "Demo Administrator", "Your own
-  account's summary, roles and pending invitations.", with the note "This is your own account, so you cannot change
-  its roles, lockout or password here. Another administrator can change your roles or lockout. Change your password
-  from your account.", its link to /account/change-password. Cards: Account summary (Global (no institution), Active),
-  Roles (Administrator, no Remove, no Add role) and Pending invitations ("No active invitations are outstanding for
-  this email."). No Reset password or Lockout card, and no button.
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): Users, searched for "devadmin" (Name or email, Show): "Demo
+  Administrator devadmin@wombat.local | Global (no institution) | Administrator | — | Active | Manage" (columns Name,
+  Institution, Roles, Scope, Status, Actions). Manage opens "Demo Administrator", subtitle "Your own account: your
+  roles and how you sign in.", with the note "This is your own account, so you cannot change its roles, lockout or
+  password here. Another administrator can change your roles or lockout. Change your password from your account." and
+  its link "Change your password" (/account/change-password). Roles and scope lists Administrator with no Remove… and
+  no Add a role…; Sign-in and access holds only Institutional sign-in: "No institutional sign-in is linked. Demo
+  Administrator signs in with an email and a password." No Password, Lockout or Pending invitations card, and no
+  visible button.
 Gap: none
 
 ### Step A.6.10 — The health endpoint
@@ -1154,7 +1203,7 @@ Route: /health
 Do: Request `/health` without signing in.
 Expect: Status 200 with the body "Healthy". The check includes the database (T097), and the body stays terse because
   the endpoint is public.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): A request without cookies: HTTP 200, text/plain, body
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): A request without cookies: HTTP 200, text/plain, body
   "Healthy", Cache-Control "no-store, no-cache", with the CSP and nosniff headers.
 Gap: none
 
@@ -1194,7 +1243,7 @@ Expect: Focus follows the page's order. On the picker, Tab reaches Mini-CEX (Pae
     encounter: it will be recorded as late."
   - Submitted, it reads "Submitted. It is now Requested. It is in Mohammed Patel's Activity inbox.", and its history
     records the filing as 20 days after the encounter.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): At 1280 px, keyboard only. Tab to Log an activity in the menu,
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): At 1280 px, keyboard only. Tab to Log an activity in the menu,
   Enter: the picker, the focus on the h1 "Log an activity" with no ring. Tab walks the "Rated by an assessor" links
   (Case-Based Discussion ... DOPS, then Mini-CEX (Paediatrics)), each with the 2px rgb(45,108,223) ring; Enter opened
   /activities/new?type=mini_cex_cpsa, the focus again on the h1, no ring. Tab: "Choose another type", then EPA,
@@ -1204,7 +1253,7 @@ Actual (2026-10-20, T373 replay, wombat_scenario_t373): At 1280 px, keyboard onl
   empty Submit opened activity 28 as a Draft: "Saved as a draft, but not submitted. Fix the 6 fields below and submit
   again." took the focus, each of its six lines a link to its field (#epa_id-in ...); the six fields are aria-invalid
   and name it. On the draft, by keyboard: PAED-002; the button read Submit until Dr Patel was named, then "Submit to
-  Mohammed Patel"; 2026-09-30 typed put "This encounter was 20 days ago. It can still be filed, but a filing more than
+  Mohammed Patel"; 2026-10-06 typed put "This encounter was 20 days ago. It can still be filed, but a filing more than
   14 days after the encounter is recorded as late." in its status region (also on a fresh form); Ward, a presenting
   problem, Moderate; the line above the actions ends "Filed today, 20 days after the encounter: it will be recorded as
   late." Submit to Mohammed Patel: "Submitted. It is now Requested. It is in Mohammed Patel's Activity inbox." took
@@ -1225,24 +1274,24 @@ Expect: Home's "Waiting for you" is badged "2 waiting, 1 overdue". The inbox's r
   same moves as stacked blocks (A7). Once completed, the result reads "Completed. 1 more waits for you.", with the
   review's row, Open the next and Back to Activity inbox; the completed page folds nothing, and it is read-only to both
   of them. Nobody is emailed (Step 3.3).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): At 390 px. The bar: Wombat, "Acting as Assessor", Menu. Menu
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): At 390 px. The bar: Wombat, "Acting as Assessor", Menu. Menu
   opens Home, Activity inbox and My data rights (44 px rows), and at its foot "Mohammed Patel" and Sign out; Close
   folds it, and following Activity inbox folds it too. Home: "Waiting for you" badged "2 waiting, 1 overdue" (du
   Plessis's review, Overdue, 8 days; Dr Dlamini's Mini-CEX, less than a day). The inbox: nothing scrolls sideways (390
   in 390); its rows stack as grid blocks (17 to 373), the review first, then "Mini-CEX (Paediatrics) · PAED-002 ·
-  2026-09-30, from Anele Dlamini", each row one link named for it, no Open button; the pager's Previous and Next are
+  2026-10-06, from Anele Dlamini", each row one link named for it, no Open button; the pager's Previous and Next are
   44 px. On activity 28 the trail is one 44 px "Activity inbox" link; Who has it now reads "Your move. Anele Dlamini
-  asked you on 2026-10-20 15:16 SAST." Her request is read-only and folded: "Request", "Filled in by Anele Dlamini,
-  2026-10-20" and Show, reading Hide while open (the fields inside fit, 49 to 341). Entrustment comes next: six rung
+  asked you on 2026-10-26 23:47 SAST." Her request is read-only and folded: "Request", "Filled in by Anele Dlamini,
+  2026-10-26" and Show, reading Hide while open (the fields inside fit, 49 to 341). Entrustment comes next: six rung
   radios abreast (1, 2, 3a, 3b, 4, 5, 33 to 357), "What each rung means" folded; then the three feedback fields (33 to
   357). Complete, Discard changes and Decline stack full width (16 to 374), each 44 px; About sits under them. History
   folds into "All 2 moves", opened as stacked blocks. Rated 3b, wrote the three feedback fields, Complete: "Completed.
-  1 more waits for you." took the focus (read from the capture, A.7.2-5: the script's later console lines were lost to
-  a truncated pipe, the page and its capture were not), then the review's row (Overdue, "Waiting 8 days, since
-  2026-10-12 12:35 SAST."), Open the next and Back to Activity inbox, each full width; the completed page reads "Done.
-  You completed it on 2026-10-20 15:16 SAST. Rated 3b. Credited 1 item to PAED-002.", folds nothing but the history
-  (open, "All 3 moves"), with no field or move left. Nothing scrolls sideways. No mail.
-Gap: none (the completed page's button heights are read from the capture, not measured)
+  1 more waits for you." took the focus, then the review's row (Overdue, "Waiting 8 days, since 2026-10-18 21:06
+  SAST."), Open the next and Back to Activity inbox (16 to 374, 44 px each); the completed page reads "Done. You
+  completed it on 2026-10-26 23:48 SAST. Rated 3b. Credited 1 item to PAED-002.", folds nothing but the history (open,
+  "All 3 moves"), with no field or move left (0 enabled controls; Dr Dlamini's view of it is read-only too). Nothing
+  scrolls sideways. No mail.
+Gap: none
 
 ### Step A.7.3 — Dr Dlamini on her phone
 Role: Trainee — Dr Anele Dlamini
@@ -1255,14 +1304,14 @@ Expect: The dashboard's cards stack, each Furthest short row's figure under its 
   its chart at 322 px, never scaled, with its table stacked under it (T355, T323). My activities' rows stack, each cell
   but the link and the state labelled by its column (T342), its Credit link 44 px tall, and the table of "Your requests"
   scrolls inside its container; each row's link or action stays reachable.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): At 390 px. The bar reads "Acting as Trainee"; the menu's rows
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): At 390 px. The bar reads "Acting as Trainee"; the menu's rows
   are 44 px, with Anele Dlamini and Sign out at its foot, and following a link folds it. Home's cards stack at 16 to
   374 (Your targets, Needs you, Recent decisions, My authorisations); each Furthest short row's figure sits under its
   name ("PAED-003 ..." y434, "0 of 3 this semester · 3 more by 2026-11-30" y498), each name a 48 px link. My progress:
   This period, the two index tables ("Each semester · 10 EPAs", "Once a year · 6 EPAs") and the Entrustment panel
   stack as grid rows, 356 px in 358, each EPA link a 48 px block (72 px where the name wraps), every other cell
   labelled by its column ("Semester 2, 2026: ", "Committee decides: "; the panel's "Year 3 target: ", "STAR decision:
-  " ...); each Latest rating link ("3b · Encounter 2026-09-30 — open this PAED-002 rating") is 48 px tall; no chart on
+  " ...); each Latest rating link ("4 · Encounter 2026-10-20 — open this PAED-001 rating") is 48 px tall; no chart on
   the page; nothing sideways. PAED-001's page from the index (trail one 44 px "My progress" link): Observations,
   Entrustment, Rating trajectory and Activities on this EPA stack; the chart is drawn at 322 px (viewBox 322, labels
   12 px), never scaled, in the region "Rating chart for PAED-001" (324 px wide, scrollWidth 324 = clientWidth), with
@@ -1282,15 +1331,15 @@ Expect: Home says that she completed her programme and points her to My progress
   her charts are on each EPA's page, not on My progress (T355).
 Note: The code shows one card, "Your training record", pointing to My progress (T335), but does not say that or when she
   completed her programme (T311).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): At 390 px. The bar shows Wombat and Menu, with no "Acting as"
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): At 390 px. The bar shows Wombat and Menu, with no "Acting as"
   (56 px). The menu holds Home, My progress and My data rights, with Lerato Molefe and Sign out at its foot (44 px).
   Home shows one card, "Your training record": "You hold no role at the moment. Your training record is kept,
   read-only: your progress in each period, and your portfolio to export." and "Open My progress →" (44 px). My
-  progress has no controls: "You completed your programme on 2026-10-20. This page is your record of it and is
-  read-only: no target applies to you any more. ..."; her programme card (Started 2023-01-15, Completed 2026-10-20,
+  progress has no controls: "You completed your programme on 2026-10-26. This page is your record of it and is
+  read-only: no target applies to you any more. ..."; her programme card (Started 2023-01-15, Completed 2026-10-26,
   Training year 4 when your programme ended) and each EPA's periods listed; cards at 16 to 374, the Annexure A panel
-  stacked (356 in 358, rating links 48 px); no chart on the page. PAED-001's page draws her chart at 322 px, never
-  scaled, in its 324 px region, with its table stacked under it. Nothing scrolls sideways.
+  stacked (356 in 358, rating links 48 px, EPA links 44 px); no chart on the page. PAED-001's page draws her chart at
+  322 px, never scaled, in its 324 px region, with its table stacked under it. Nothing scrolls sideways.
 Gap: F-A.7.4a, T311 (still: Home points her to My progress but does not say that she completed her programme)
 
 ### Step A.7.5 — Mr Smit on his phone
@@ -1305,14 +1354,14 @@ Expect: Home's header action, Start an MSF campaign, is a row of its own below t
   respondent group: the page never lists an address) fits its card. Decisions due's filters stack, with Show and Clear
   filters each 44px tall; By EPA's fold summary is 44px, and opened it reads one block per EPA; each decision is a block, its
   one action a 44px button the block's width; the pager's buttons are 44px (T364). The queue's filters stack above its table.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): At 390 px. The bar reads "Acting as Coordinator" (50 px).
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): At 390 px. The bar reads "Acting as Coordinator" (50 px).
   Home's header action, Start an MSF campaign (/msf/campaigns/new), is a row of its own under the header's rule (y155;
   the header ends with its 2px rule), the page's width (16 to 374) and 44 px (the first read, taken before the card
-  loaded, missed it; a second read, after 2.5 s, found it); the cards stack in one track (16 to 374): Waiting for
+  loaded, missed it; a second read, after 0.8 s, found it); the cards stack in one track (16 to 374): Waiting for
   assessors (badged "3 waiting, 1 overdue"), Nothing filed in 30 days and Invitations nearing expiry. MSF campaigns:
   the table (356 in 358) stacks a grid block per row: Pieter du Plessis first (Withdrawn, 0 invitations, "—"), then
   Lerato Molefe (Released, 9, 8), each action named for its campaign ("View campaign: the campaign for Lerato Molefe
-  (Default MSF, closing 2026-11-03)"; her View report too); nothing scrolls sideways. Campaign 1 keeps its gutter
+  (Default MSF, closing 2026-11-09)"; her View report too); nothing scrolls sideways. Campaign 1 keeps its gutter
   (cards 16 to 374); its invitee table counts by respondent group ("Counted by respondent group. This page never lists
   who was invited or which of them responded."; Peer doctor 2/1, Consultant 3/3, Nurse 3/3, Allied health professional
   1/1, All groups 9/8) and fits its card (319 in 321); no "@" on the page. Decisions due (Status set to "Every
@@ -1347,22 +1396,22 @@ Expect: Home's Registrars and Targets by EPA cards are one column: each registra
 Note: The board R2-Steps also draws 44 px row actions and dialogs at the foot of the screen at 390: those belong to a
   review in progress, which review #7 no longer is. states.md's "Narrow, in progress" row checks them at Steps
   4.16–4.19 and 4.24–4.25, with the chart links.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): At 390 px. The bar's "Acting as Committee member" wraps and
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): At 390 px. The bar's "Acting as Committee member" wraps and
   the bar grows to 59 px; the menu's head adds "Switch to Assessor" (44 px rows). Home: Registrars ("2 registrars")
   and Targets by EPA are one column (16 to 374), each registrar's name a 44 px block with the training year ("Training
   year 1") and figures under it, each EPA's name a 48 px block with its cadence and "0 of 2" under it. Committee
   reviews: the table (356 px in 358) stacks a grid block per review. Review #7 (Dr Molefe's pre-graduation review),
-  trail one link: under the h1, "Lerato Molefe's progress" is a 44 px target (16 to 166); the sitting bar under it is
-  static (position static at 390 and 768), "Ratified / Graduate (programme complete) · 13 STARs issued"; the Decision
-  card (y900) above the Agenda (y1146). The agenda is stacked lines (display block, 306 px in 308) that keep their
-  roles (table, row, rowheader, cell), each cell but the EPA labelled ("Window: ", "State: ", "Evidence: "). The cards
-  stack at 16 to 374; the snapshot's evidence tables stack as grid rows (306 in 308), the curriculum-by-semester table
-  (784 px) scrolls in its container. Rating trajectory: each chart drawn at 322 px (viewBox 322, 12 px text), never
-  scaled, in its region "Rating chart for PAED-001" (and 010, 012), 324 px with scrollWidth 324 = clientWidth. Nothing
-  scrolls sideways. At 768 px the agenda still stacks (display block, roles kept), the sitting bar is static under the
-  title (282 to 744), nothing scrolls sideways (768). "Lerato Molefe's progress" leads, after graduation, to
-  /programme/trainees/2: "Lerato Molefe", "Training year 4 · Programme completed 2026-10-20 · ...", "Lerato Molefe
-  completed the programme on 2026-10-20, part-way through Semester 2, 2026. No target applies after that; what follows
+  trail one 44 px link: under the h1, "Lerato Molefe's progress" is a 44 px target (16 to 166); the sitting bar under
+  it is static (position static at 390 and 768), "Ratified / Graduate (programme complete) · 13 STARs issued"; the
+  Decision card (y900) above the Agenda (y1146). The agenda is stacked lines (display block, 306 px in 308) that keep
+  their roles (table, row, rowheader, cell), each cell but the EPA labelled ("Window: ", "State: ", "Evidence: "). The
+  cards stack at 16 to 374; the snapshot's evidence tables stack as grid rows (306 in 308), the curriculum-by-semester
+  table (784 px) scrolls in its container. Rating trajectory: each chart drawn at 322 px (viewBox 322, 12 px text),
+  never scaled, in its region "Rating chart for PAED-001" (and 010, 012), 324 px with scrollWidth 324 = clientWidth.
+  Nothing scrolls sideways. At 768 px the agenda still stacks (display block, roles kept), the sitting bar is static
+  under the title (282 to 744), nothing scrolls sideways (768). "Lerato Molefe's progress" leads, after graduation, to
+  /programme/trainees/2: "Lerato Molefe", "Training year 4 · Programme completed 2026-10-26 · ...", "Lerato Molefe
+  completed the programme on 2026-10-26, part-way through Semester 2, 2026. No target applies after that; what follows
   is the record as it stood then, read-only." No link on the review page is under 24 px at 390 or 768.
 Gap: none
 
@@ -1379,19 +1428,19 @@ Expect: Home stacks Waiting for assessors, badged "3 waiting, 1 overdue", Regist
   revoked and superseded rows' lines wrap under them, never cut (C22). Nothing scrolls sideways.
 Note: Until T358 no menu item led to Entrustment decisions for a speciality admin, and the page lit nothing, under the
   trail Home › Entrustment decisions.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): At 390 px. The bar reads "Acting as" over "Speciality admin"
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): At 390 px. The bar reads "Acting as" over "Speciality admin"
   (50 px). Home stacks, in one track at 16 to 374, Waiting for assessors (the warning stripe, "3 waiting, 1 overdue":
   du Plessis's review Overdue 8 days, Mahlangu's Mini-CEX 6 days, du Plessis's CBD), Registrars ("2 registrars",
   Mahlangu then Dlamini, each name a 44 px block) and Targets by EPA (KGK-001 first, then PAED-002, PAED-003,
   PAED-004, by code, each "0 of 2"). The menu: Home, Programme trainees, Waiting for assessors, Decisions due,
   Committee reviews, Decision panels, Entrustment decisions, My data rights, then her name and Sign out (44 px rows).
   Decision panels: the list and "Who decides each EPA" (three tables) stack as grid blocks, 356 px in 358. Decisions
-  due reads as at A.7.5 (filters stacked at 44 px, the By EPA fold 44 px). Entrustment decisions from the menu: lit on
-  its page, no trail (the typed-trail wait timed out, as the Expect says); the caption reads "Issued STARs
-  (entrustment decisions) · 18 shown"; the table (356 px in 358) stacks 18 blocks, each action (Download, Revoke; 52
-  in all) 44 px; the revoked row's line ("Revoked 2026-10-20 at 14:11 SAST by Refilwe Mokoena: Staged on evidence
-  about PAED-001, not PAED-002; to be decided again.") wraps under its row (89 px) and the superseded one ("Superseded
-  by STAR #18, issued 2026-10-20.") sits on one line, neither cut. Nothing scrolls sideways (390 in 390).
+  due reads as at A.7.5 (filters stacked at 44 px, the By EPA fold 44 px, the pager 44 px, Next to "Decisions, page 2
+  of 2"). Entrustment decisions from the menu: lit on its page, no trail; the caption reads "Issued STARs (entrustment
+  decisions) · 18 shown"; the table (356 px in 358) stacks 18 blocks, each action (Download, Revoke; 52 in all) 44 px;
+  the revoked row's line ("Revoked 2026-10-26 at 22:37 SAST by Refilwe Mokoena: Staged on evidence about PAED-001, not
+  PAED-002; to be decided again.") wraps under its row (89 px) and the superseded one ("Superseded by STAR #18, issued
+  2026-10-26.") sits on one line, neither cut. Nothing scrolls sideways (390 in 390).
 Gap: none
 
 ### Step A.7.8 — Dr Sithole on his phone
@@ -1403,13 +1452,13 @@ Expect: As for Dr Mokoena, scoped to Dr Sithole's sub-speciality: Home stacks th
   reads as Dr Mokoena's (A.5.12), each row 44px. Committee reviews: Schedule a review is a 44px row of its own under the
   header, and each review a block (the trainee, then Panel, Period over its window, Type, State, Decision, and Open
   44px). Decisions due reads as at Step A.7.5.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): At 390 px. The folded bar reads "Acting as" over
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): At 390 px. The folded bar reads "Acting as" over
   "Sub-speciality admin" on two lines, and the bar grows to 59 px; nothing is cut. Home stacks the same three cards as
   Dr Mokoena's (Waiting for assessors "3 waiting, 1 overdue", Registrars "2 registrars", Targets by EPA from KGK-001),
   each 16 to 374. His menu reads as hers, each row 44 px. Committee reviews: Schedule a review is a row of its own
   under the header (16 to 374, y144, 44 px); each review a grid block (356 px in 358): the trainee (the first,
-  deleted_user_2b885452), then "Panel:", "Period:" over its window, "Type:", State (badge), "Decision:", and Open (44
-  px, named for the row). Decisions due reads as at A.7.5. Nothing scrolls sideways.
+  deleted_user_d5fe50c8), then "Panel:", "Period:" over its window, "Type:", State (badge), "Decision:", and Open (33
+  to 357, 44 px, named for the row). Decisions due reads as at A.7.5. Nothing scrolls sideways.
 Gap: none
 
 ### Step A.7.8a — Programme trainees, a registrar's page and Waiting for assessors on a phone and a tablet
@@ -1428,12 +1477,12 @@ Expect: At 390 px both lists' tables stack, a block per row: each registrar's na
   sideways at either width.
 Note: The flow 06 boards number this step A.7.9; Prof Mbatha's phone step already holds that number, so it is A.7.8a,
   after the speciality admins' (as Step 6.14a was placed).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): At 390 px. Dr Zulu's Programme trainees (from the menu): the
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): At 390 px. Dr Zulu's Programme trainees (from the menu): the
   filter fields stack (41 to 349), Show is 44 px and the row's width, and with a filter set (training year 1) Clear
   filters is too (41 to 349, 44 px); the table stacks a grid block per row (17 to 373), each name a 44 px link, every
   other cell under its column's name ("Training year:", "This semester:", "In 2026:", "Furthest short:", "Last
   filed:"). Dr Mahlangu's page (/programme/trainees/5): the trail is one 44 px "Programme trainees" link; the sections
-  stack at 16 to 374; Waiting for assessors lists her Mini-CEX (PAED-002, 2026-10-18, "With Fatima Khumalo", "Waiting
+  stack at 16 to 374; Waiting for assessors lists her Mini-CEX (PAED-002, 2026-10-24, "With Fatima Khumalo", "Waiting
   6 days") with no Send a reminder (0 on the page); her two charts are drawn at 322 px, never scaled, in the regions
   "Rating chart for PAED-002" and "... PAED-004" (324 px, no scroll). Mr Smit's Waiting for assessors: the two filters
   stack, Show 44 px at 41 to 349; each row a grid block ("With:", "State:", "Waiting:"), the activity link a block 33
@@ -1462,23 +1511,37 @@ Expect: Nothing scrolls sideways on any of them (T323).
     S16); Completed and closed is flow 13's list as built.
   - **The trainee profile form** stacks its fields. The builder's editor and live preview stack in one column (DESIGN.md
     § Builder layout, T266), and its tab bar stays usable.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): At 390 px, flow 11's Trainees: no sideways scroll on Users,
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): At 390 px, flow 12's pages: no sideways scroll on Home, Users,
   the user page, Trainees, the profile or the builder (390 in 390 on each). The bar reads "Acting as Institutional
-  admin"; the menu's rows are 44 px (Home, People: Invitations, Trainees, Assessors, Users, then Curriculum, Reviews,
-  Access and audit). Users: the table (807 px) scrolls in its container. Dr Dlamini's account: the cards stack at 16
-  to 374; Back to users is 44 px and full width, Show 44 px; Add role (36 px), Reset password (36 px) and Lock out
-  user (36 px) sit inside 213 to 349. Roles reads "TraineeSystem-managed", and under Add role a flow 11 line: "Trainee
-  is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit…'." Trainees ("Admit
-  registrars who are waiting, and keep current trainees' programmes."): "Waiting to be admitted" holds "Nobody is
-  waiting to be admitted." ("A registrar appears here after registering from a Trainee invitation."); "Current
-  trainees, 2 current" is stacked, a grid block per row (17 to 373, 356 in 358) with each cell under its column's name
-  ("Programme start:", "Expected completion:"), and "Edit Anele Dlamini's profile" 44 px; "Completed and closed" (flow
-  13's list, 475 px) scrolls in its own container, each Edit 44 px. Her profile (/admin/trainees/edit?id=3) stacks its
-  four fields, 41 to 349. The builder (/admin/activity-types/23, "Edit KGK Teaching Session Log"): the editor and Live
-  preview stack (the preview at 49 to 341, y 4331); the tab bar wraps Credit to a second row, each tab 42 px, plain
-  buttons with no role="tab", aria-selected or aria-pressed.
-Gap: F-2.28b, T323 (still: "TraineeSystem-managed"). F-A.7.9a, T280 (still: the builder's tabs expose no selected
-  state).
+  admin"; the menu's rows are 44 px (Home, Invitations, Trainees, Assessors, Users, Curriculum adoptions, Curricula,
+  EPAs, Activity types, Entrustment scales, Decisions due, Committee reviews, Decision panels, Entrustment decisions,
+  SSO mappings, Audit log, My data rights, then her name and Sign out). Home: the three cards stack at 16 to 374;
+  Invite a person, each People count (58 px tall, two to a row, Trainee on a row of its own) and each card's footer
+  link (Open Users, Open Curriculum adoptions, Open Kgosi Kgari Teaching Hospital) are 44 px or more; the contact
+  address breaks after its @ ("hod.paediatrics@" over "kgk.wombat.local"). Users: the filter's Name or email, Role and
+  Status stack (41 to 349, 44 px), Show and Clear full width, 44 px; People stacks a grid block per person (17 to 373,
+  356 in 358): the name over the address, then "Roles:", "Scope:", "Status:" and Manage (44 px, named for the person);
+  no table scrolls (807 px until flow 12). Dr Dlamini's account (trail one 44 px "Users" link; no Back to users): the
+  account line and sections stack at 16 to 374; Roles and scope reads "Trainee" and "System-managed" on lines of their
+  own (y555, y587), with Add a role… (41 to 179, 44 px) and "Trainee is not offered: ..."; Sign-in and access has
+  Password (the field, the Show toggle 44 px at 263 to 349, the six rules, Reset password 44 px and the field's
+  width), Institutional sign-in and Lockout one under another; her Lockout lists two lines (the trainee line, "They
+  are not a current trainee. ...", and the reminders line), with Lock out… 44 px. Add a role… opens the note panel in
+  place: radios, then Cancel and Add role (69 to 324, 44 px); Cancel gave the focus back to Add a role… (Escape in the
+  panel does nothing: DESIGN § A form in a note panel gives it Cancel only, as Act 2 records). Dr Zulu's page (an
+  assessor): Remove Committee member, Remove Assessor, Add a role…, Edit training for Thandi Zulu (41 to 156), Reset
+  password and Lock out are each 44 px; Edit training opens the form in place (four status radios, Training completed,
+  Qualifications, Cancel and Save training 44 px) and Cancel returns the focus to its button; Record training is drawn
+  only for an assessor with no record, and all of KGK's assessors have one. Trainees ("Admit registrars who are
+  waiting, and keep current trainees' programmes."): "Waiting to be admitted" holds "Nobody is waiting to be
+  admitted."; "Current trainees, 2 current" is stacked, a grid block per row (17 to 373, 356 in 358) with each cell
+  under its column's name ("Programme start:", "Expected completion:"), and "Edit Anele Dlamini's profile" 44 px;
+  "Completed and closed" (flow 13's list, 475 px) scrolls in its own container, each Edit 44 px. Her profile
+  (/admin/trainees/edit?id=3) stacks its four fields, 41 to 349. The builder (/admin/activity-types/23, "Edit KGK
+  Teaching Session Log"): the editor and Live preview stack (the preview at 49 to 341, y 4331); the tab bar wraps
+  Credit to a second row, each tab 42 px, plain buttons with no role="tab", aria-selected or aria-pressed.
+Gap: F-A.7.9a, T280 (still: the builder's tabs expose no selected state). F-2.28b, T323 (no longer occurs: "Trainee"
+  and "System-managed" are apart)
 
 ### Step A.7.10 — Dr Kruger on his phone
 Role: CollegeAdmin — Dr Anton Kruger
@@ -1486,13 +1549,14 @@ Route: / → /admin/epas → /admin/curricula → /admin/curricula/{Id:int}/item
 Do: At 390 px, open EPAs, then Curricula and the items of Paediatric EPA Curriculum 11.2.
 Expect: The EPA list and the items table scroll inside their containers (DESIGN.md § Table system). Each item's row
   actions stay reachable, and the item editor's inputs keep usable widths (T198, T226).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): At 390 px. The bar reads "Acting as College admin"; Home shows
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): At 390 px. The bar reads "Acting as College admin"; Home shows
   the National catalogue card; the menu reads Home, Specialities, EPAs, Curricula, Activity types, My data rights (44
-  px rows). EPAs: 16 rows, the table (736 px) scrolling in its container. Curricula: 3 rows (885 px, in its
-  container). The items of 11.2 (/admin/curricula/4/items): 16 rows, the table (772 px) in a 308 px container; the row
-  actions are named "Edit PAED-001" and "Remove PAED-001". Edit PAED-001 opens the editor inside the table as a
-  colspan=9 row 772 px wide: its inputs are 358 px (the EPA 740), so each half is reached by scrolling the table
-  sideways. Cancel closed it; nothing was saved. The page never scrolls sideways.
+  px rows). EPAs: 16 rows, the table (736 px) scrolling in its container. Curricula: 3 rows (Neonatology EPA
+  Curriculum 1.0, Paediatric EPA Curriculum 11.2 and 11.1; 885 px, in its container). The items of 11.2
+  (/admin/curricula/4/items): 16 rows, the table (772 px) in a 308 px container; the row actions are named "Edit
+  PAED-001" and "Remove PAED-001". Edit PAED-001 opens the editor inside the table as a colspan=9 row 772 px wide: its
+  inputs are 358 px (the EPA 740), so each half is reached by scrolling the table sideways. Cancel closed it; nothing
+  was saved. The page never scrolls sideways.
 Gap: F-A.7.10a, T323 (still: the item editor sits in the table's scroll container and must be scrolled sideways)
 
 ### Step A.7.11 — devadmin on his phone
@@ -1501,10 +1565,10 @@ Route: / → /admin/jobs → /admin/jobs/runs → /admin/institutions
 Do: At 390 px, open Scheduled jobs, Run history and Institutions.
 Expect: The jobs table scrolls inside its container, with each Run now and toggle reachable. The run-history filters
   stack.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): At 390 px. The bar reads "Acting as Administrator"; the menu's
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): At 390 px. The bar reads "Acting as Administrator"; the menu's
   rows are 44 px. Scheduled jobs: the table (655 px) scrolls in its container; each row's "Disable <key>" (28 px) and
   "Run now: <key>" (47 px) are in reach. Run history: the trail is one 44 px "Scheduled jobs" link; Key, Status, From
-  and To stack (41 to 349), Filter under them, the table (697 px) under that, scrolling in its container.
+  and To stack (41 to 349), Filter under them (y713), the table (691 px) under that, scrolling in its container.
   Institutions: 2 rows (KGK with hod.paediatrics@kgk.wombat.local, Active); the table (681 px) scrolls in its
   container, each Edit in reach. Nothing scrolls sideways.
 Gap: none
@@ -1516,12 +1580,12 @@ Do: At 390 px, open the sign-in page and the forgot-password page. Then verify D
   its hash.
 Expect: The sign-in card fits the width. Every field, toggle, button and link on the sign-in and forgot pages is
   44 px tall; Sign in is full width; the h1 is 1.5rem. The verify page's result fits the width.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): At 390 px, signed out. Sign-in: the card spans 41 to 349;
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): At 390 px, signed out. Sign-in: the card spans 41 to 349;
   Email, Password, its Show toggle, Sign in and "Forgotten your password?" are each 44 px tall; Remember me's box is
   20 px in its row; Sign in is full width (41 to 349); the h1 is 24 px (1.5rem). Forgotten password: the h1 24 px,
   Back to sign in 44 px. Verify: Dr Molefe's newest export hash, Verify: ?hash=...&check=1, "Export verified / This
-  PDF was generated by Wombat on 2026-10-20 12:29 UTC. / Trainee ID ... / Exported by ...", fitting the width. Nothing
-  scrolls sideways.
+  PDF was generated by Wombat on 2026-10-26 20:56 UTC. / Trainee ID ... / Exported by ... / Filter: 2023-01-15 to
+  2026-10-26", fitting the width. Nothing scrolls sideways.
 Gap: none
 
 ### Step A.7.13 — Dr Zulu hears a populated review with a screen reader
@@ -1543,7 +1607,7 @@ Expect: The h1, "Lerato Molefe · `<P>`", is announced on arrival. The sections 
   - Nothing announces itself on arrival: on this page only a result, the decision form's quorum line and Refresh's
     status are live (round 3 item 21), and a ratified review shows none of them. Nothing is dismissible, and no
     control is unnamed (no "×", T280).
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): No screen reader can be driven here, so the accessibility tree
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): No screen reader can be driven here, so the accessibility tree
   and DOM of review 7 were read in its place, at 1280 px, opened from Committee reviews. The focus arrives on the h1
   "Lerato Molefe · 2026 S2". The h2s, in order: "The sitting" (visually hidden), "Before the committee decides",
   "Decision", "Agenda", "Entrustment against Annexure A", "Multi-source feedback by EPA", "Evidence snapshot", "Rating
@@ -1581,37 +1645,41 @@ Note: Since 2026-09-27 (T335, flow 01; T322), `Design/ContrastTests` computes ev
   the state's colour on the edge. White (`--on-fill`) is 5.95:1 on the danger button and 5.88:1 on the success one. The
   focus ring is 4.61:1 on the page background, and an input's border 3.60:1 there. The nav's controls take
   `--nav-focus-ring`, 14.07:1 on the gradient's start.
-Actual (2026-10-20, T373 replay, wombat_scenario_t373): At 1280 px, WCAG ratios computed from the rendered colours (no
+Actual (2026-10-26, T376 replay, wombat_scenario_t376): At 1280 px, WCAG ratios computed from the rendered colours (no
   axe in this browser). Sign-in card: #333 on white 12.63; the tagline #686F77 5.09; link #0B5CAB 6.70; Sign in, white
   on #2D6CDF, 4.86; input border #7B848D 3.80; the Show toggle pressed (aria-pressed true), white on #2D6CDF, 4.86.
   The nav gradient (#052767 to #3A0647): items #D7D7D7 9.78 and 11.25, group labels 8.00 and 9.21, the current item
   (white on the .32 fill) 5.27 and 6.08. Muted on the page (#F8F9FA) 4.83. Committee reviews' state badges (each state
-  a badge): "Withdrawn" #333 on #FFF5F5 11.81 (edge #B8322A 5.95); "Ratified" and "Closed" #333 on #E8F5E9 11.23 (edge
-  5.88). No review is Scheduled now (review #8 is withdrawn), so Scheduled's grey (badge-draft) was measured where it
-  shows: Decisions due's "As opportunity allows" and review 7's "No decision", #333 on #F1F3F5 11.36 (edge 3.80);
-  Decisions due's "Decided" 11.23, "Revoked: re-decide" 11.81 (edge 5.95), "Not decided" #333 on #FFF8E1 11.89 (edge
-  #9A5400 5.77). Review 7's badges: "Ratified", "Decided" and "At or above" 11.23 (edge 5.88), "No decision" 11.36.
-  "Name saved." #333 on #E8F5E9 11.23 (edge 5.88); "Your password was not changed. The password confirmation does not
-  match." #333 on #FFF5F5 11.81 (edge 5.95), nothing changed. Lock out user, white on #B8322A, 5.95 (not pressed);
-  Publish, white on #1A7340, 5.88 (disabled with no draft); primary 4.86. The focus ring #2D6CDF: 4.86 on white, 4.61
-  on the page. An invalid input's border 5.95.
+  a badge; 8 rows): "Withdrawn" #333 on #FFF5F5 11.81 (edge #B8322A 5.95); "Ratified" and "Closed" #333 on #E8F5E9
+  11.23 (edge 5.88). No review is Scheduled now (review #8 is withdrawn), so Scheduled's grey (badge-draft) was
+  measured where it shows: Decisions due's "As opportunity allows" and review 7's "No decision", #333 on #F1F3F5 11.36
+  (edge 3.80); Decisions due's "Decided" 11.23, "Revoked: re-decide" 11.81 (edge 5.95), "Not decided" #333 on #FFF8E1
+  11.89 (edge #9A5400 5.77). Review 7's badges: "Ratified", "Decided" and "At or above" 11.23 (edge 5.88), "No
+  decision" 11.36. "Name saved." #333 on #E8F5E9 11.23 (edge 5.88); "Your password was not changed. The password
+  confirmation does not match." #333 on #FFF5F5 11.81 (edge 5.95), nothing changed. The dialog's Lock out Mohammed
+  Patel (btn-danger, opened on Dr Patel's page, then Keep access), white on #B8322A, 5.95; its Keep access #2D6CDF on
+  white 4.86 (border 4.86); Publish, white on #1A7340, 5.88 (disabled with no draft); primary 4.86. The focus ring
+  #2D6CDF: 4.86 on white, 4.61 on the page. An invalid input's border 5.95.
 Gap: none (a Scheduled review's own badge was not on screen: it takes badge-draft, measured above)
 
 ## Outcome state
 
-Replay check (2026-10-20, T373 replay, wombat_scenario_t373): match. With <appendix start> = 2026-10-20 14:57:00+02
-  (A.1.1 began 14:57): the four KGK requests (0,5,1) (1,3,1) (2,4,1) (4,4,1); one erasure (pseudonym, no email, name
-  or password, no institution, lockout infinity) with 0 roles, 0 logins and 0 activities on the original id; the
-  profile inactive since 2026-10-20; reviews (false,4) (true,6) (true,7,true); nine jobs enabled, each run once by
-  devadmin and the digest twice, 0 failed today; 0 SSO mappings; Dlamini opted out of optional processing only, Patel
-  not locked, Smit not opted out; KGK hod.paediatrics@kgk.wombat.local and active; audit Submit 4, Withdraw 1, Approve
-  2, Reject 1, RunScheduledJobNow 10, SetUserLockout 2, ResetUserPassword one false and one true (the password
-  [REDACTED]); 0 unredacted submits. Also as stated: Mahlangu has draft 26 and requested 27 (encounters D-3 and D-2);
-  Dlamini's 28 is completed with DaysAfterEncounter 20; ActivityReminders still 1 row (A.5.15 played on the scratch
-  copy wombat_scenario_t373_s515 only, now stopped). Dr Khumalo's password was changed once (A.4.2) and Dr du
-  Plessis's twice (A.4.5 by Prof Mbatha, A.4.6 by himself). The log: 6 Stub emails since the app's restart in Act 6
-  (the digests three, the two nudges three), 39 before it. Snapshot recovery/scenario-t373-post-actA.dump; the
-  pre-A.5.15 state is recovery/scenario-t373-pre-a515-A.dump.
+Replay check (2026-10-26, T376 replay, wombat_scenario_t376): match, but for the audit's lockout count. With <appendix
+  start> = 2026-10-26 23:23:00+02 (A.1.1 began 23:24): the four KGK requests (0,5,1) (1,3,1) (2,4,1) (4,4,1); one
+  erasure (pseudonym equal to the user name, no email, name or password, no institution, lockout infinity) with 0
+  roles, 0 logins and 0 activities on the original id; the profile inactive since 2026-10-26; reviews (false,4)
+  (true,6) (true,7,true); nine jobs enabled, each run once by devadmin and the digest twice, 0 failed today; 0 SSO
+  mappings; Dlamini opted out of optional processing only, Patel not locked, Smit not opted out; KGK
+  hod.paediatrics@kgk.wombat.local and active; audit Submit 4, Withdraw 1, Approve 2, Reject 1, RunScheduledJobNow 10,
+  SetUserLockout 4 (the Expect's 2 and the two of A.6.7's one-result-at-a-time pair, which locked Dr Patel again and
+  reactivated him), ResetUserPassword one false and one true (the password [REDACTED]); 0 unredacted submits. Also as
+  stated: Mahlangu has draft 26 and requested 27 (encounters D-3 and D-2); Dlamini's 28 is completed with
+  DaysAfterEncounter 20; ActivityReminders still 1 row (A.5.15 played on the scratch copy wombat_scenario_t376_s515
+  only, now stopped). Dr Khumalo's password was changed once (A.4.2) and Dr du Plessis's twice (A.4.5 by Prof Mbatha,
+  A.4.6 by himself). Dr Patel's training was saved twice with its values unchanged (A.6.7), and Prof Mbatha saved her
+  name unchanged twice (A.7.14). The log: 6 Stub emails since the app's restart in Act 6 (the digests three, the two
+  nudges three), 0 before the restart in this log. Snapshot recovery/scenario-t376-post-actA.dump; the pre-A.5.15
+  state is recovery/scenario-t376-pre-a515-A.dump.
 
 The appendix changed shared state as follows:
 - Dr Ndlovu's account is erased, and the formative check-in scheduled for him at A.1.10 is withdrawn.
