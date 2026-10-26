@@ -16,7 +16,7 @@ system (version 29). Left: flows 12–20, the deploy, the College's, the P2s, P3
 
 - **The runbook** (`knowledge/scenario-paediatrics/`): last replayed whole against flow 11 (T373,
   `wombat_scenario_t373`, 2026-10-20: no open regression); `coverage.md`, `states.md`, `design/baseline/`.
-- **Open: 73 queued; T376 in progress (flow 12); 1 blocked; 9 proposed (T362, T363, T365, T368, T370, T372, T374, T375, T377).**
+- **Open: 73 queued; T376 in progress (flow 12, step 7); 1 blocked; 9 proposed (T362, T363, T365, T368, T370, T372, T374, T375, T377).**
   - **P1:** T157, the deploy, which waits for the operator.
   - **P2, before real users:** T311–T313, T315, T316, T319, T320, T329, T334, T341.
   - **P3:** the presentation debt the redesign absorbs (BRIEF § 6–7), and polish.
@@ -33,7 +33,7 @@ system (version 29). Left: flows 12–20, the deploy, the College's, the P2s, P3
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The redesign:** flow 12 (T376): designed (round 3 final), its prerequisites T288, T289, T333 landed; next the build.
+- **The redesign:** flow 12 (T376): built (`e53d4ae7`), the acts replayed clean; next the states pass, step 8, step 9.
 
 ## Open questions
 
@@ -55,8 +55,7 @@ system (version 29). Left: flows 12–20, the deploy, the College's, the P2s, P3
 
 ## Recent
 
-- **2026-10-23:** T376 (flow 12) steps 1–5: brief, canvas "Wombat 12", three rounds, final; T289, T288, T333 done; T377 proposed.
-
+- **2026-10-23 to 10-27:** T376 (flow 12): steps 1–6 (three rounds, built `e53d4ae7`; T289, T288, T333 done; T377
+  proposed); step 7's acts replayed (`wombat_scenario_t376`: 328 steps, 283 clean, no flow 12 regression).
 - **2026-10-20:** T373, flow 11, done (`69a17c70`, fix `27ff8779`; replay 331 steps, 280 clean, no regression; states 85; design system v29); T375 proposed.
-- **2026-10-19:** T369, flow 10, done (`68327c9d`; replay 331 steps, 281 clean, no regression; states 62; fixes `e4b480e2`; design system v25); T370–T372 proposed.
-- **10-15 and before:** T290 (D54, D55); T366 (flow 09), T364 (flow 08), T361 (flow 07), T358, T355, T350, T342, T339, T335 (flows 06 to 01); the repo moved to GitHub. Earlier: `git log`.
+- **10-19 and before:** T369 (flow 10); T290 (D54, D55); T366 (flow 09), T364 (flow 08), T361 (flow 07), T358, T355, T350, T342, T339, T335 (flows 06 to 01); the repo moved to GitHub. Earlier: `git log`.

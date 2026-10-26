@@ -7,8 +7,8 @@ Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest
 The operator said "yes" (push and start the replay), then "carry on through the remaining acts". Pushed
 `a95e1daa..c5a38bf2`.
 
-- **The replay brief** `design/flows/12-people-admin/replay-brief.md` (`c583ae44`), generated from flow 11's by scratch
-  `g376/make_replay_brief.py`, which also writes the per-act prompts `g376/prompt-act-*.txt`.
+- **The replay brief** `design/flows/12-people-admin/replay-brief.md` (`c583ae44`), generated from flow 11's by
+  `C:\Users\Renier\AppData\Local\Temp\claude\c--dev-Wombat\67ce8168-e9a2-4dd0-acb1-eab0ccee0868\scratchpad\g376\make_replay_brief.py`, which also writes the per-act prompts there.
 - **The acts played** (fresh `wombat_scenario_t376`, D = 2026-10-26; one Sonnet agent an act, each committed): 328 steps,
   283 with no gap, **no flow 12 regression, no new defect**; every gap a known task (T370's Present order is
   runbook-wrong at 4.25/4.29/4.41/4.42/5.8). Commits `085fa299`, `68373790`, `d4acd49f`, `6e4ff201`, `4c7cd1db`,
@@ -16,8 +16,7 @@ The operator said "yes" (push and start the replay), then "carry on through the 
 - **For review:** Escape does nothing in the Add a role… panel; DESIGN.md says Cancel only, so the brief over-asked (no
   finding). Home has no locked-out line ("People 1 of 14 are locked out" was a reviewer's guess). Not played: the
   rows-per-page focus (no pager at this size) and Record training at 390 (every assessor already recorded).
-- **Next:** step 7's states pass: flow 12's rows in `states.md` on scratch copies (g373's `make_states_prompts.py` is the
-  template), T333's A.3.1 check and the SSO states on a scratch instance with a provider configured; then step 8
+- **Next:** step 7's states pass: flow 12's rows in `states.md` on scratch copies (flow 11's states prompts are the template), T333's A.3.1 check and the SSO states on a scratch instance with a provider configured; then step 8
   (re-sync the design system, v29 now) and step 9.
 
 ### Environment left
@@ -25,7 +24,7 @@ The operator said "yes" (push and start the replay), then "carry on through the 
 - **The replay app on `:5180`** runs `wombat_scenario_t376` (the appendix's end state). Dumps
   `recovery/scenario-t376-post-act{1..6,A}`, `-pre-a515-A`. Scratch DB `wombat_scenario_t376_s515`: drop on the
   operator's word. Old: `wombat_scenario_t373` and its `_s*` scratch DBs, `wombat_scenario_t369`.
-- Scratch `g376` (this session's scratchpad): act scripts, prompts, `replay-pw.env` (never print it).
+- Scratch `C:\Users\Renier\AppData\Local\Temp\claude\c--dev-Wombat\67ce8168-e9a2-4dd0-acb1-eab0ccee0868\scratchpad\g376`: act scripts, prompts, `replay-pw.env` (never print it).
 - Branches `t376*` and their worktrees kept. Commits after `c5a38bf2` unpushed (push on the operator's word).
 
 ## Session 2026-10-23 (Opus): T376, flow 12 (people admin), started
