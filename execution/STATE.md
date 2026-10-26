@@ -14,8 +14,7 @@ system (version 29). Left: flows 12–20, the deploy, the College's, the P2s, P3
 
 ## Now
 
-- **The runbook** (`knowledge/scenario-paediatrics/`): last replayed whole against flow 11 (T373,
-  `wombat_scenario_t373`, 2026-10-20: no open regression); `coverage.md`, `states.md`, `design/baseline/`.
+- **The runbook** (`knowledge/scenario-paediatrics/`): acts replayed against flow 12 (T376, `wombat_scenario_t376`).
 - **Open: 73 queued; T376 in progress (flow 12, step 7); 1 blocked; 9 proposed (T362, T363, T365, T368, T370, T372, T374, T375, T377).**
   - **P1:** T157, the deploy, which waits for the operator.
   - **P2, before real users:** T311–T313, T315, T316, T319, T320, T329, T334, T341.
