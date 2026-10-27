@@ -55,7 +55,7 @@ Run the loop as flow 12 ran it (`design/flows/12-people-admin/`, BRIEF § 11 "Fl
 
 - [x] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit. (this session's steps 1–2 commit; exit 0)
 - [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link. (https://claude.ai/artifact/SujH2iB2snNe7VANE4SxdK)
-- [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/13-graduation-and-exit/`.
+- [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/13-graduation-and-exit/`. (round 3 final, `round-3-check.md`; decisions in the brief's § 6, `round-1-assessment.md` § 10 and `round-2-review.md`)
 - [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 13) — the squash commit and counts.
 - [ ] The whole runbook replays on a fresh database with no regression from flow 13, the baseline is re-captured, and
   flow 13's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
@@ -110,3 +110,10 @@ T376 (flow 12), T373 (flow 11), T311, T312, T313, T314, T287, T305, T310, T290, 
   last day." (S3), the Assessor sentence (S5), no STAR in force (S8), "will stop counting" (M2). F9 drops Q6's h2 on
   Verify's answer (the result region). Captures 5.26-2 and 5.8-3 copied into `design/upload/baseline/act-5/`.
   **Next:** the operator sends it with the captures.
+- **2026-10-27, round 3** (192 boards and `f13r3.css` in `round-3/`, `10f32323`; the captures did not reach the canvas
+  in any round, so brackets stay only where a capture alone holds the value): checked item by item (`round-3-check.md`,
+  one Sonnet agent): 73 rows, 70 done, 3 partly (S17 eleven seeded EPA titles left bracketed on R08; T10 A.1.6 and
+  A.4.6 share one Steps clause; A4 17 px at 901 on R03/R06 from flow 05's `.details-list`, **T380 proposed**), 0 not
+  done, 0 regressed. **Final.** Build notes in the check: the capture-bound brackets (the build reads the real values),
+  GetExportSubjectQuery's null ProfileId case, the coverage.md rows, which f13r3.css rules move to app.css. **Steps 3–5
+  done. Next: step 6, the build, after T312 (grown by F3).**
