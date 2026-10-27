@@ -326,8 +326,8 @@ Actual (2026-10-28, T379 replay, wombat_scenario_t379): Users (her page, lit) re
   inactive, deactivated 2026-10-28, under the pseudonym. Its header still offers "Export deleted_user_0ae1d64b's
   portfolio" (/portfolio/export/deleted_user_0ae1d64b), which opens "Portfolio unavailable / This portfolio does not
   exist, or you cannot export it." with Go to Home.
-Gap: new: the erased person's review page offers an Export action in its header that leads only to "Portfolio
-  unavailable" (the page and the refusal are right by T379; the offer is a dead end). The withdrawn review still draws
+Gap: new, fixed: the erased person's review page offered an Export action that led only to "Portfolio unavailable";
+  fixed in `920f778c` (T379: no export for a trainee with no account), after this replay's publish. The withdrawn review still draws
   the live Annexure A card, of 17 EPAs on 11.2, and a sampling warning, noted as before.
 
 ## A.2 — Scheduled jobs
@@ -514,7 +514,7 @@ Actual (2026-10-28, T379 replay, wombat_scenario_t379): Run history, from the jo
   runs, the appendix's among them. The key's placeholder reads "Filter by key...".
 Gap: F-A.2.10a, T324 (still: "Triggered by" prints devadmin's user id, not his name as the Expect says). F-A.2.10b,
   T327 (still: the placeholder invites a part, and only the whole key matches). F-A.2.10c, new (kin to
-  T325: the From date is read as a UTC day, so until 02:00 SAST "from today" on the SAST date finds nothing).
+  T325, T384: the From date is read as a UTC day, so until 02:00 SAST "from today" on the SAST date finds nothing).
 
 ## A.3 — Institutional sign-in (SSO)
 
@@ -1382,8 +1382,8 @@ Actual (2026-10-28, T379 replay, wombat_scenario_t379): At 390 px, signed in as 
   "Your last day in the programme."). At 901, 1000 and 1100 px My activities does not scroll sideways (page =
   viewport; table 593, 692 and 792 px in an equal container), and no word breaks mid-word, but a date in the Activity
   link breaks after its hyphen (2026-10-18 at 901 px, 2026-10-23 at 1000 px). Nothing scrolls sideways at 390 px.
-Gap: new (minor): at 901 and 1000 px a date inside My activities' link breaks after its hyphen (2026-10-18 at 901
-  px, 2026-10-23 at 1000 px). T311 no longer occurs: Home's card names her completion and its day, and the menu offers
+Gap: new (minor): T385 (at 901 and 1000 px a date inside My activities' link breaks after its hyphen, 2026-10-18 at
+  901 px, 2026-10-23 at 1000 px). T311 no longer occurs: Home's card names her completion and its day, and the menu offers
   Export portfolio.
 
 ### Step A.7.5 — Mr Smit on his phone
