@@ -507,7 +507,7 @@ else
     catch (Exception exception) when (exception is not OperationCanceledException)
     {
       Logger.LogError(exception, "The trainee profile {ProfileId} could not be saved.", _profile.Id);
-      ShowResult(Place.Details, TraineeProfileWords.SaveFailed, refused: true);
+      ShowResult(Place.Details, TraineeProfileWords.SaveFailedLead, TraineeProfileWords.SaveFailedRest, refused: true);
     }
     finally
     {

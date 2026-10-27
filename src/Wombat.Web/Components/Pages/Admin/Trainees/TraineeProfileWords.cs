@@ -52,7 +52,10 @@ public static class TraineeProfileWords
     /// A save that failed for a reason that is not a refusal (T329): logged, and said in these fixed words. NEW: no board
     /// draws a failed save.
     /// </summary>
-    public const string SaveFailed = "The profile could not be saved just now. Nothing has changed. Try again, or come back in a few minutes.";
+    public const string SaveFailedLead = "The profile could not be saved just now.";
+
+    /// <summary>The failed save's rest, after its bold first sentence, as the end's failure reads (T379 step 8).</summary>
+    public const string SaveFailedRest = "Nothing has changed. Try again, or come back in a few minutes.";
 
     // ── Status (N6, F10) ───────────────────────────────────────────────────────
 

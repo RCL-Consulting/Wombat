@@ -256,6 +256,7 @@ public sealed class MyActivitiesTests : TestContext
         cut.Find(".state-panel-title").TextContent.Should().Be("No activities yet");
         cut.Find(".state-panel-copy").TextContent.Should().Be("Nothing has been filed about you.");
         cut.FindAll("a[href='/activities/new']").Should().BeEmpty();
+        cut.FindAll(".actions-cell").Should().BeEmpty("T379 step 8: with nothing to offer, the header draws no empty actions cell");
     }
 
     [Fact]

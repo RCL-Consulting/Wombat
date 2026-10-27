@@ -13,14 +13,20 @@
 
 @* T342, flow 03 (R3-C-Mine): Needs you first when there is any, then every activity a page at a time. The subtitle is the
    list's order: ListActivitiesBySubjectQuery orders by the encounter date, newest first. *@
-<PageHeader Title="My activities" Subtitle="@Subtitle">
-  <Actions>
-    @* D55: offered only to whom the new-activity page admits. *@
-    <AuthorizeView Roles="@ActivityFilingRules.FilingRole">
-      <a class="btn btn-primary home-action" href="/activities/new">Log an activity</a>
-    </AuthorizeView>
-  </Actions>
-</PageHeader>
+@* D55: Log an activity is offered only to whom the new-activity page admits. Anyone else (a former trainee reading
+   her record) gets a header with no Actions at all, so it draws no empty actions cell (T379 step 8). *@
+<AuthorizeView Roles="@ActivityFilingRules.FilingRole">
+  <Authorized>
+    <PageHeader Title="My activities" Subtitle="@Subtitle">
+      <Actions>
+        <a class="btn btn-primary home-action" href="/activities/new">Log an activity</a>
+      </Actions>
+    </PageHeader>
+  </Authorized>
+  <NotAuthorized>
+    <PageHeader Title="My activities" Subtitle="@Subtitle" />
+  </NotAuthorized>
+</AuthorizeView>
 
 <StatePanel IsLoading="_loading"
             LoadError="@_error"
