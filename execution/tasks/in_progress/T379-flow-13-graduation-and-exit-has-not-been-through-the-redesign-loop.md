@@ -56,7 +56,7 @@ Run the loop as flow 12 ran it (`design/flows/12-people-admin/`, BRIEF § 11 "Fl
 - [x] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit. (this session's steps 1–2 commit; exit 0)
 - [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link. (https://claude.ai/artifact/SujH2iB2snNe7VANE4SxdK)
 - [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/13-graduation-and-exit/`. (round 3 final, `round-3-check.md`; decisions in the brief's § 6, `round-1-assessment.md` § 10 and `round-2-review.md`)
-- [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 13) — the squash commit and counts.
+- [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 13) — the squash commit and counts. (`5cc10c66`: Domain 836, Application 4201, Infrastructure 1035, Architecture 52, Web 4259, Integration 512)
 - [ ] The whole runbook replays on a fresh database with no regression from flow 13, the baseline is re-captured, and
   flow 13's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
 - [ ] The design system is re-synced and republished — its version number.
@@ -125,3 +125,13 @@ T376 (flow 12), T373 (flow 11), T311, T312, T313, T314, T287, T305, T310, T290, 
   not build in Release (T312's named tuple literals, CS8123): fixed on master, `232e7701`. **The operator approved the
   PROPOSED words as drawn and the wave** ("yes"): lanes R (record), E (export), V (verify), P (end) in parallel, then
   the runbook lane, three Sonnet reviews, one fix pass.
+- **2026-10-27, step 6, built** (`5cc10c66`, squashed from `t379`, tree identical). Lanes R `544d5f97`, E `51fd84de`,
+  V `4d378576`, P (four commits to `4b1c48bb`); merged with one fix (a duplicate test constant); § 6's NEW words filled
+  from the lanes' reports; the runbook lane (`6ca1b6cd`, `95d3f765`: 5.8–5.28, 2.30, 6.34, 6.36, A.1.6, A.1.14, A.2.1,
+  A.2.9, A.4.6, A.7.4, A.7.9, A.7.12; eight gaps closed; coverage and ~50 states rows); three Sonnet reviews
+  (`build-review-{code,pages,runbook}.md`, merged in `build-review.md`: 0 must, 10 should, 21 nits); one fix pass
+  (`a3337d26`, `cedbb8ea`, `a1ce056e`: every S fixed; P1 "Your record:" under the notice via `EndedRecord.AfterNotice`,
+  P2 Spec 3's empty words kept, P4 the profile form refuses under each field). Left with reasons in `build-review.md`.
+  For step 7: the browser checks of P1's position and P4's refusals; 5.13's "Exported 3 times" and SAST times; T312's
+  6.21, 6.40, 6.41; the derived values on R02/R04/R07; Users' and the closed list at 901–1100 px. Branches `t379*`,
+  `t312` and their worktrees kept. **Next:** step 7, the replay, on the operator's word.

@@ -32,7 +32,7 @@ in the design system (version 33). Left: flows 13–20, the deploy, the College'
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The redesign:** flow 13 (T379): designed (round 3 final), T312 landed; the build under way.
+- **The redesign:** flow 13 (T379): built (`5cc10c66`); next the replay.
 
 ## Open questions
 

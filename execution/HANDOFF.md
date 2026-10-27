@@ -19,7 +19,10 @@ The operator said "push and lets start flow 13". Pushed `06913eca..82b108a6`. T3
 - **T312 landed** (`c9d6fe13`, squashed from `t312`: the ended record keeps its list; two Sonnet reviews, one fix
   pass; the operator chose B5 option 1; six suites green). **T381 proposed.** Its browser item (6.21, 6.40, 6.41) is
   carried to T379's replay. Branch `t312` and its worktree kept.
-- **Step 6, the build, started:** one Opus planner on `t379` (lanes, contracts, § 0). Unpushed since `bc3ade97`.
+- **Step 6, built:** `5cc10c66` (planner and § 0, four lanes, a runbook lane, three Sonnet reviews: 0 must, 10 should,
+  all fixed; six suites green). Master's Release build was broken by T312's tests; fixed `232e7701`.
+- **Next:** step 7, the replay on a fresh database (flow 12's `replay-brief.md`), on the operator's word. Its
+  carried checks are in T379's notes (T312's 6.21/6.40/6.41 among them).
 
 ## Session 2026-10-26/27 (Opus): T376, flow 12, steps 7–9, done
 
