@@ -16,7 +16,10 @@ The operator said "push and lets start flow 13". Pushed `06913eca..82b108a6`. T3
   by F3), round 3 (192 boards + `f13r3.css`, `10f32323`; `round-3-check.md`: 70/73 done, 3 partly, **final**,
   `aaa3634b`). The canvas never received the captures (no attachment arrived, the upload folder could not be
   connected): capture-only values stay bracketed for the build to read. **T380 proposed** (a 901 px overflow).
-- **Next:** step 6, the build, after **T312** lands (Q10, grown by F3). Unpushed since `e519595b`.
+- **T312 landed** (`c9d6fe13`, squashed from `t312`: the ended record keeps its list; two Sonnet reviews, one fix
+  pass; the operator chose B5 option 1; six suites green). **T381 proposed.** Its browser item (6.21, 6.40, 6.41) is
+  carried to T379's replay. Branch `t312` and its worktree kept.
+- **Step 6, the build, started:** one Opus planner on `t379` (lanes, contracts, § 0). Unpushed since `bc3ade97`.
 
 ## Session 2026-10-26/27 (Opus): T376, flow 12, steps 7–9, done
 
