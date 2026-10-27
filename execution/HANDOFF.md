@@ -2,6 +2,18 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
+## Session 2026-10-27 (Opus): T379, flow 13 (graduation and exit), started
+
+The operator said "push and lets start flow 13". Pushed `06913eca..82b108a6`. T379 created and started (T376's shape).
+
+- **Steps 3–4:** canvas "Wombat 13" https://claude.ai/artifact/SujH2iB2snNe7VANE4SxdK, design system v33
+  (1793082623-7a3a) installed, `tokens.css` by hand (scratchpad `c13/`), mark `/_blob/f4e05985da677926678d5d52de67cf4f`.
+- **Steps 1–2** (one Opus agent, checked here): brief restated, `round-1-ask.txt` written with the mark, checks exit 0,
+  staged (`design/upload/`, 122 files, none to crop) — `02120936`. **The operator took Q1–Q16 as recommended**
+  (the brief's § 6): T312 lands before the build (Q10); T310 to flow 20; T374 out.
+- **Next:** the operator sends `design/flows/13-graduation-and-exit/round-1-ask.txt` to the canvas with § 4's key
+  screenshots; then round 1's assessment here.
+
 ## Session 2026-10-26/27 (Opus): T376, flow 12, steps 7–9, done
 
 The operator said "yes" (push, replay), "carry on through the remaining acts", "yes" (push, states, steps 8 and 9) and

@@ -15,7 +15,7 @@ in the design system (version 33). Left: flows 13–20, the deploy, the College'
 ## Now
 
 - **The runbook** (`knowledge/scenario-paediatrics/`): replayed whole against flow 12 (T376, `wombat_scenario_t376`, 2026-10-26: no regression).
-- **Open: 73 queued; none in progress; 1 blocked; 10 proposed (T362, T363, T365, T368, T370, T372, T374, T375, T377, T378).**
+- **Open: 72 queued; T379 in progress (flow 13); 1 blocked; 10 proposed (T362, T363, T365, T368, T370, T372, T374, T375, T377, T378).**
   - **P1:** T157, the deploy, which waits for the operator.
   - **P2, before real users:** T311–T313, T315, T316, T319, T320, T329, T334, T341.
   - **P3:** the presentation debt the redesign absorbs (BRIEF § 6–7), and polish.
@@ -32,7 +32,7 @@ in the design system (version 33). Left: flows 13–20, the deploy, the College'
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The redesign:** flow 13 (`design/flows/13-graduation-and-exit.md`), on the operator's word.
+- **The redesign:** flow 13 (T379): brief restated, Q1–Q16 decided; next round 1 on the canvas, T312 before the build.
 
 ## Open questions
 

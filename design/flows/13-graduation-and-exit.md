@@ -619,6 +619,9 @@ neither.
 
 Each with a recommendation. The canvas answers 1, 2 and 4–9 in its variations; 3 and 10–16 are the operator's.
 
+**Decided 2026-10-27: the operator took Q1–Q16 as recommended.** The canvas still draws its variations for 1, 2 and
+4–9; the round-1 assessment checks them against these recommendations.
+
 1. **Q1. The former trainee's Home** (5.21, 5.28, A.7.4). *Recommendation:* one emphasised card headed by the end
    ("You completed your programme on 2026-10-26." / "Your programme ended on 2026-10-24."), with "Your record is kept,
    read-only.", then four links named for what they hold: My progress, Your STAR certificates (15; only when she holds

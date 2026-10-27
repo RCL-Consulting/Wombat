@@ -81,3 +81,8 @@ T376 (flow 12), T373 (flow 11), T311, T312, T313, T314, T287, T305, T310, T290, 
   export's entry points). § 6: Q1–Q16 with recommendations. Completeness exit 0; verbatim 424/0 (128 stale pointers in
   flows 01–07 re-synced); baseline missing 0. Staged: `design/upload/`, 122 files, none to crop. Inferred, unreplayed:
   `TraineeDashboard`'s ended branch is unreachable since D54. **Next:** the operator's answers to Q1–Q16, then round 1.
+- **2026-10-27, the operator took Q1–Q16 as recommended** (recorded in the brief's § 6). So T312 lands before the build
+  (Q10), as T288/T289/T333 did for flow 12; the build folds in T311, T314, T313 with T287's verify item (the cleanup
+  job removed, A.2.1 and A.2.9 changed), the graduation mail's wording (Q12) and these pages' halves of T325, T329,
+  T280 and T323; T310 goes to flow 20; T374 stays out. **Next:** the operator sends `round-1-ask.txt` to the canvas
+  with § 4's key screenshots.
