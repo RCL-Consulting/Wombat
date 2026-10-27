@@ -35,7 +35,7 @@ The header: "Users", "Everyone with an account at ‹institution›: the roles e
 
 ## Narrow widths
 
-The table stacks at 900px and below (`StackWide`): each person a block, the name over the address heading the labelled cells; Manage 44px from 900px. Below 641px every control on the page is 44px (`.people-page .btn`, `.form-control`, `.form-select`), the filter's Show and Clear one under the other at the card's width (`.filter-actions .btn`, `.people-page .people-filter .filter-actions`). Institution and Scope keep their words whole between 901 and 1100px: `.people-page .clinic-table th.col-wrap` floors them at 7rem (build review P2). Measured on the replay at 1280, 1000 and 390 (T376 step 8): no sideways scroll.
+The table stacks at 900px and below (`StackWide`): each person a block, the name over the address heading the labelled cells; Manage 44px at 900px and below. Below 641px every control on the page is 44px (`.people-page .btn`, `.form-control`, `.form-select`), the filter's Show and Clear one under the other at the card's width (`.filter-actions .btn`, `.people-page .people-filter .filter-actions`). Institution and Scope keep their words whole between 901 and 1100px: `.people-page .clinic-table th.col-wrap` floors them at 7rem (build review P2). Measured on the replay at 1280, 1000 and 390 (T376 step 8): no sideways scroll.
 
 ## Accessibility
 

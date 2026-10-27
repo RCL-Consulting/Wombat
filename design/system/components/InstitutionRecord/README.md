@@ -24,4 +24,5 @@ No new colour token.
 
 ## Known gaps
 
-- **Found re-syncing, not fixed:** for her, the page header draws an empty `div.actions-cell` (the page passes an `<Actions>` fragment that renders nothing unless the caller is an Administrator), so the header carries an empty flex item; nothing shows, and at 390 it adds no visible gap.
+- **The race rule:** Deactivate is natively `disabled` while a save runs, and Save while a deactivation runs (`InstitutionEdit.razor`; DESIGN.md § Button system); the pressed one keeps the focus with `aria-disabled`.
+- **The Administrator's New institution** (`/admin/institutions/new`, `InstitutionCreate.razor`) is not under `.record-page`: its actions do not stack primary-first at 390, its controls are not 44px, and its refusals are plain `ValidationMessage`s with no `aria-describedby` and no focus (T378).

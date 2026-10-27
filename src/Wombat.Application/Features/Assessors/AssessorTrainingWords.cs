@@ -51,7 +51,7 @@ public static class AssessorTrainingWords
     public static string CompletedOn(DateOnly? completedOn)
         => completedOn?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? NotRecorded;
 
-    /// <summary>The save's result, its first sentence: "Training saved for Fatma Khumalo:" (bold on the page).</summary>
+    /// <summary>The save's result, its first sentence: "Training saved for Fatima Khumalo:" (bold on the page).</summary>
     public static string SavedLead(string personName) => $"Training saved for {personName}:";
 
     /// <summary>

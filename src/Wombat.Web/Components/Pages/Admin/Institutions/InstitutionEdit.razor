@@ -18,16 +18,11 @@
   above the form names the contact email as saved. The create route is InstitutionCreate's, the Administrator's alone
   (S12). The Administrator's own view (Edit institution, Active, Deactivate) is flow 18's, kept as built.
 *@
-<PageHeader Title="@PageHeading" Subtitle="@Subtitle">
-  <Actions>
-    @* T291 item 7. The institutions list admits only an Administrator (InstitutionsList.razor), so Back is his alone;
-       hers is the trail's Home (T376). Rendered once that is known, so no one is shown a link that then changes. *@
-    @if (_accessKnown && _isAdministrator)
-    {
-      <a class="btn btn-outline btn-sm" href="/admin/institutions">Back to institutions</a>
-    }
-  </Actions>
-</PageHeader>
+@* T291 item 7. The institutions list admits only an Administrator (InstitutionsList.razor), so Back is his alone;
+   hers is the trail's Home (T376). Rendered once that is known, so no one is shown a link that then changes. With no
+   Back the header gets no Actions at all, so it draws no empty actions cell (T376 step 8). *@
+<PageHeader Title="@PageHeading" Subtitle="@Subtitle"
+            Actions="@(_accessKnown && _isAdministrator ? BackToInstitutions : null)" />
 
 <div class="record-page">
   @* What a Save or a Deactivate did. It takes the focus once either is done (T234; DESIGN.md § Button system), after the
@@ -188,6 +183,9 @@
   private bool _saving;
   private bool _deactivating;
   private ActionResult? _result;
+
+  private static readonly RenderFragment BackToInstitutions =
+    @<a class="btn btn-outline btn-sm" href="/admin/institutions">Back to institutions</a>;
 
   private readonly Dictionary<string, string> _fieldErrors = new(StringComparer.Ordinal);
   private string? _focusFieldId;

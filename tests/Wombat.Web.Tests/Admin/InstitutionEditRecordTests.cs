@@ -62,6 +62,7 @@ public sealed class InstitutionEditRecordTests : TestContext
         cut.Find("#institution-email").GetAttribute("type").Should().Be("email");
         cut.FindAll(".validation-summary-errors").Should().BeEmpty("S22: no summary");
         cut.FindAll("[style]").Should().BeEmpty("S18: no inline style");
+        cut.FindAll(".actions-cell").Should().BeEmpty("T376 step 8: with no Back, the header draws no empty actions cell");
     }
 
     [Fact]

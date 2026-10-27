@@ -28,6 +28,10 @@ The header: "SSO mappings", "Which of your institution's sign-in groups give whi
 
 - **Loading**: "Loading the SSO mappings." over a skeleton card. **Failed**: "Could not load the SSO mappings. Nothing has changed. Try again, or come back in a few minutes." with Try again. A failed change: "Could not change the SSO mappings. Nothing has changed. …".
 
+## Known gaps
+
+- **The race rule:** while a delete runs, every other row's Delete… and Add mapping are natively `disabled` (`GroupMappings.razor`; DESIGN.md § Button system); the pressed one keeps the focus with `aria-disabled`.
+
 ## Narrow widths
 
 The tables stack at 900px and below, Delete… 44px from there; below 641px every control 44px and Add mapping the form's width. The replay's institution has no provider, so the replay reached only the not-set-up card (measured at 1280 and 390, T376 step 8); the form and the lists were checked by the states pass on a scratch instance with a provider configured.
