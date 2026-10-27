@@ -117,3 +117,11 @@ T376 (flow 12), T373 (flow 11), T311, T312, T313, T314, T287, T305, T310, T290, 
   done, 0 regressed. **Final.** Build notes in the check: the capture-bound brackets (the build reads the real values),
   GetExportSubjectQuery's null ProfileId case, the coverage.md rows, which f13r3.css rules move to app.css. **Steps 3–5
   done. Next: step 6, the build, after T312 (grown by F3).**
+- **2026-10-27, step 6, the plan and § 0** (one Opus planner, `t379` from `3443d894`, § 0 `08a024dd`: `build-lanes.md`,
+  `build-contracts.md`, `round-3/boards-text.md`; the end commands return `ProgrammeEndResult(TakenBack)`; shared
+  readers, `MayExport` on three DTOs, `NavItems.PersonalFor`, `BadgeFor.ProgrammeOutcome`, the `.details-list` fix that
+  closes T380's cause; migration `T379_PortfolioExportCleanupRetired`, data only). Six suites green in Release (Domain
+  835, Application 4144, Infrastructure 1034, Architecture 52, Web 4158, Integration 511). The planner found master did
+  not build in Release (T312's named tuple literals, CS8123): fixed on master, `232e7701`. **The operator approved the
+  PROPOSED words as drawn and the wave** ("yes"): lanes R (record), E (export), V (verify), P (end) in parallel, then
+  the runbook lane, three Sonnet reviews, one fix pass.
