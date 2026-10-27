@@ -135,3 +135,17 @@ T376 (flow 12), T373 (flow 11), T311, T312, T313, T314, T287, T305, T310, T290, 
   For step 7: the browser checks of P1's position and P4's refusals; 5.13's "Exported 3 times" and SAST times; T312's
   6.21, 6.40, 6.41; the derived values on R02/R04/R07; Users' and the closed list at 901–1100 px. Branches `t379*`,
   `t312` and their worktrees kept. **Next:** step 7, the replay, on the operator's word.
+- **2026-10-27/28, step 7, the acts** (fresh `wombat_scenario_t379`; D = 2026-10-27, the appendix 2026-10-28; brief
+  `acf78faa`; one Sonnet agent an act): 331 steps, 286 with no gap, **no flow 13 regression**. Act 1 31/21 (`95fa4119`),
+  Act 2 44/43 (`19095d1b`; 2.28's Expect corrected: the empty Completed and closed list), Act 3 60/56 (`03955e00`;
+  3.22–3.24 played out of order by the agent, 3.24 not-played, seen right at 3.25–3.26), Act 4 50/44 (`c6ad1e41`),
+  Act 5 29/27 (`35c2420e`), Act 6 42/33 (`2badf653`; **T312's 6.21, 6.40, 6.41 confirmed in the browser**), the
+  appendix 75/62 (`8ef4b774`). Every flow 13 browser check held: "Your record:" under the notice; the last day refused
+  on the press under the field with the focus; dialogs' safe button first, primary on top at 390; Verify in any case and
+  spacing, "Exported 3 times, the last on … SAST", "Once"; 44 px at 390; nothing sideways at 390, 901, 1000, 1100;
+  results take the focus; eight scheduled jobs. Closed as seen: T311, T313, T314, T287's verify item, T312. New:
+  **T382** (an undated activity "observed after your last day"), **T385** (a date wraps at its hyphen on My activities at
+  901/1000 px), **T384** (run history's From as a UTC day), **T383** (an MSF test fails between SAST and UTC midnight);
+  and one flow 13 fault **fixed**: an erased trainee's review offered a dead-end export (`920f778c`, with a test).
+  Dumps `recovery/scenario-t379-post-act{1..6,A}`, `-pre-a515-A`; scratch DB `wombat_scenario_t379_s515` kept.
+  **Next:** the states pass (flow 13's rows in `states.md`), then step 8.
