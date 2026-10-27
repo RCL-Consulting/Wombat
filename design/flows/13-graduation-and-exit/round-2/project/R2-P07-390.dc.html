@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>R2-P07-390</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:var(--header-bg)}
+.sheet{display:flex;flex-direction:column;background:var(--header-bg);font-family:var(--font-body);color:var(--text-color)}
+.w1280{width:1280px}.w768{width:768px}.w390{width:390px}.w1440{width:1440px}
+.board-head{padding:16px 24px;background:var(--surface-color);border-bottom:2px solid var(--secondary-color);display:flex;flex-direction:column;gap:6px}
+.board-title{margin:0;font-size:1.15rem;font-weight:600;line-height:1.3;color:var(--primary-color);overflow-wrap:anywhere}
+.board-sub{margin:0;font-size:.9rem;line-height:1.4;color:var(--muted-text);overflow-wrap:anywhere}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;border-radius:var(--radius-pill);padding:1px 10px;font-size:.75rem;font-weight:700;line-height:1.5;border:1px solid var(--input-border);background:var(--header-bg);color:var(--text-color)}
+.chip--ill{background:var(--warning-bg);border-color:var(--warning-color)}
+.chip--proposed{background:var(--info-bg);border-color:var(--secondary-color)}
+.chip--t312{background:var(--success-bg);border-color:var(--success-color)}
+.chip--focus{background:var(--surface-color);border-color:var(--focus-ring)}
+.frame{position:relative;transform:translateZ(0);display:flex;flex-direction:column;background:var(--background-color)}
+.frame > .page{flex:1 1 auto;min-height:0}
+.fh-800{min-height:800px}.fh-844{min-height:844px}.fh-1024{min-height:1024px}
+@media (min-width:641px){.frame .sidebar{height:auto;position:relative;align-self:stretch}}
+@media (max-width:640.98px){.frame .nav-toggle:checked ~ .sidebar{height:auto;min-height:780px}}
+.anno-focus{outline:2px solid var(--focus-ring);outline-offset:2px}
+.anno{margin:0;padding:8px 12px;border:1px dashed var(--input-border);border-radius:var(--radius-md);background:var(--surface-color);color:var(--muted-text);font-size:.85rem;line-height:1.4;overflow-wrap:anywhere}
+.anno-scrim{position:absolute;inset:0;background:var(--scrim);display:flex;align-items:flex-start;justify-content:center;padding:96px 16px 0;z-index:30}
+.anno-scrim dialog{position:static;margin:0}
+.doc{padding:32px;display:flex;flex-direction:column;gap:24px;background:var(--surface-color)}
+.doc h2{margin:0;font-size:1.25rem}
+.doc h3{margin:0 0 6px;font-size:1.05rem}
+.doc p,.doc li{font-size:.9rem;line-height:1.45;margin:0 0 4px}
+.doc ul{margin:0;padding-left:1.2rem}
+.doc table{border-collapse:collapse;width:100%;font-size:.82rem;table-layout:auto}
+.doc th,.doc td{border:1px solid var(--border-color);padding:6px 8px;text-align:left;vertical-align:top;line-height:1.4;overflow-wrap:anywhere}
+.doc thead th{background:var(--header-bg);font-weight:600}
+.doc tbody th{font-weight:600}
+.doc code{font-family:var(--font-mono);font-size:.8rem;overflow-wrap:anywhere}
+.doc .cols2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.doc .box{border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:16px}
+.doc .lead{font-size:1rem;font-weight:600;color:var(--danger-color)}
+
+/* NEW system classes (R2-0-spec, the NEW table) */
+.record-links{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.record-links li{display:flex;flex-direction:column;gap:2px;padding:12px 0;border-top:1px solid var(--border-color)}
+.record-links li:last-child{padding-bottom:0}
+.record-links a{display:inline-flex;align-items:center;gap:var(--space-sm);font-weight:600;min-height:24px;align-self:flex-start}
+.record-link-why,.record-link-none{margin:0;color:var(--muted-text);font-size:.9rem}
+.record-link-plain{display:inline-flex;align-items:center;gap:var(--space-sm);font-weight:600}
+.ended-line{margin:0;font-size:1.1rem;font-weight:600;line-height:1.35}
+.record-card-body{display:flex;flex-direction:column;gap:var(--space-md)}
+.record-line{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-sm) var(--space-md);margin:var(--space-md) 0 var(--space-lg)}
+.record-line-label{font-weight:600;margin:0}
+.record-line ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:var(--space-sm) var(--space-lg)}
+.record-line a{display:inline-flex;align-items:center;gap:var(--space-sm);min-height:24px}
+.export-page{display:flex;flex-direction:column;gap:var(--space-lg);max-width:52rem}
+.export-note{margin:0;color:var(--muted-text);font-size:.9rem}
+.verify-page{display:flex;flex-direction:column;gap:var(--space-lg);max-width:44rem}
+.verify-answer{border-left:4px solid var(--success-color)}
+.verify-answer-title{display:flex;align-items:center;gap:var(--space-sm)}
+.verify-details{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--space-xs) var(--space-md);margin:0}
+.verify-details dt{color:var(--muted-text);font-weight:500}
+.verify-details dd{margin:0;overflow-wrap:anywhere}
+.verify-ids-note{margin:var(--space-md) 0 0;color:var(--muted-text);font-size:.85rem}
+.hash-value{font-family:var(--font-mono);font-size:.875rem;overflow-wrap:anywhere;word-break:break-all}
+.cmd-list{list-style:none;margin:var(--space-xs) 0 0;padding:0;display:flex;flex-direction:column;gap:var(--space-xs);color:var(--muted-text);font-size:.9rem}
+.cmd-list code{font-family:var(--font-mono);font-size:.85rem;color:var(--text-color);background:var(--header-bg);border-radius:var(--radius-sm);padding:1px 6px;overflow-wrap:anywhere}
+.end-decision{margin:0}
+.end-help{margin:0}
+.closed-when{display:flex;flex-direction:column}
+.closed-when span{color:var(--muted-text);font-size:.9rem}
+.outcome-cell{display:flex;flex-wrap:wrap;gap:var(--space-xs) var(--space-sm);align-items:center}
+@media (max-width:640.98px){
+  .record-links a,.record-line a{min-height:2.75rem}
+  .export-page .form-actions .btn,.verify-page .form-actions .btn{min-height:2.75rem;width:100%}
+  .export-page .form-control,.verify-page .form-control{min-height:2.75rem}
+  .verify-details{grid-template-columns:minmax(0,1fr)}
+  .verify-details dd{margin-bottom:var(--space-sm)}
+}
+</style>
+</helmet>
+<div class="sheet w390"><div class="board-head"><p class="board-title">R2-P07 · The command's own refusal at confirm · Illustration · 390</p><p class="board-sub">The command keeps its own check behind the press-time one; when it refuses at confirm, the dialog closes and the same words show in the same place, under the field, focused.</p><div class="chips"><span class="chip chip--ill">Illustration</span><span class="chip chip--focus">Focus: the last day</span></div></div><div class="frame fh-844"><div class="page"><input type="checkbox" id="nt-R2-P07-390" class="nav-toggle"><header class="sidebar"><a class="brand" href="#"><img class="brand-mark" src="/_blob/f4e05985da677926678d5d52de67cf4f" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a><p class="phone-role"><span class="phone-role-label">Acting as</span> <span>Institutional admin</span></p><label class="nav-toggle-label" for="nt-R2-P07-390"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16"/></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>Close</span></label><nav class="nav-panel" aria-label="Main"><div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">Institutional admin</span></p></div><div class="nav-list"><ul class="nav-items"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5"/></svg><span class="nav-label">Home</span></a></li></ul><p class="nav-group-heading" id="g-R2-P07-390-1">People</p><ul class="nav-items" aria-labelledby="g-R2-P07-390-1"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg><span class="nav-label">Invitations</span></a></li><li><a class="nav-link active" href="#" aria-current="true"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg><span class="nav-label">Trainees</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg><span class="nav-label">Assessors</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9"/><circle cx="12" cy="9" r="3"/></svg><span class="nav-label">Users</span></a></li></ul><p class="nav-group-heading" id="g-R2-P07-390-2">Curriculum</p><ul class="nav-items" aria-labelledby="g-R2-P07-390-2"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/><path d="m9 9.5 2 2 4-4"/></svg><span class="nav-label">Curriculum adoptions</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg><span class="nav-label">Curricula</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 2 2 4-4M3 7l2 2 4-4M13 6h8M13 12h8M13 18h8"/></svg><span class="nav-label">EPAs</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M12 11h4M12 16h4M8 11h.01M8 16h.01"/></svg><span class="nav-label">Activity types</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 14 4-4M3.34 19a10 10 0 1 1 17.32 0"/></svg><span class="nav-label">Entrustment scales</span></a></li></ul><p class="nav-group-heading" id="g-R2-P07-390-3">Reviews</p><ul class="nav-items" aria-labelledby="g-R2-P07-390-3"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18M9 16l2 2 4-4"/></svg><span class="nav-label">Decisions due</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6"/></svg><span class="nav-label">Committee reviews</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg><span class="nav-label">Decision panels</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg><span class="nav-label">Entrustment decisions</span></a></li></ul><p class="nav-group-heading" id="g-R2-P07-390-4">Access and audit</p><ul class="nav-items" aria-labelledby="g-R2-P07-390-4"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg><span class="nav-label">SSO mappings</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M3 3v5h5M12 7v5l4 2"/></svg><span class="nav-label">Audit log</span></a></li></ul><ul class="nav-items nav-personal"><li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span class="nav-label">My data rights</span></a></li></ul></div></nav><div class="account-row"><a class="account-link" href="#" title="Nolwazi Mbatha"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M6 20a6 6 0 0 1 12 0"/></svg><span class="account-name">Nolwazi Mbatha</span></a><form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign out</button></form></div></header><main><article><nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Home</a> <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></li><li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Trainees</a> <svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></li><li class="breadcrumb-current"><span aria-current="page">Lerato Molefe's programme</span></li></ol></nav><div class="header-container"><div><h1 tabindex="-1">Lerato Molefe's programme</h1></div><div class="actions-cell"><a class="btn btn-outline" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Export Lerato Molefe's portfolio</a></div></div><div class="user-page"><dl class="detail-list" aria-label="Trainee summary"><dt>Status</dt><dd>Active</dd><dt>Email</dt><dd>molefe@<wbr>kgk.wombat.local</dd></dl><section class="detail-card user-section" aria-labelledby="pd-h"><h2 id="pd-h">Profile details</h2><form method="post" action="#"><div class="form-grid"><div class="form-group"><label for="cur">Curriculum<span aria-hidden="true"> *</span><span class="visually-hidden">required</span></label><select id="cur" class="form-select"><option>Paediatric EPA Curriculum (11.1)</option></select></div><div class="form-group"><label for="ps">Programme start date<span aria-hidden="true"> *</span><span class="visually-hidden">required</span></label><input id="ps" type="date" class="form-control" value="2023-01-15" required></div><div class="form-group"><label for="ec">Expected completion date</label><input id="ec" type="date" class="form-control" value="2027-01-14" aria-describedby="ec-h"><p class="field-help" id="ec-h">Leave this empty to derive it from the curriculum window.</p></div></div><div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary">Save profile</button></div></form></section><section class="detail-card user-section" aria-labelledby="end-h"><h2 id="end-h" tabindex="-1">End this programme</h2><p class="end-decision">The last committee decision: Graduate (programme complete), Pre-graduation review, ratified 2026-10-26.</p><div class="form-group"><label for="ld">Last day in the programme<span aria-hidden="true"> *</span><span class="visually-hidden">required</span></label><input id="ld" type="date" class="form-control input-validation-error anno-focus" value="2027-01-14" required aria-describedby="ld-h ld-e" aria-invalid="true"><div class="validation-message" id="ld-e">The last day cannot be after today (2026-10-26).</div><p class="field-help" id="ld-h">The graduation day, or the last day of a registrar who leaves without completing. It cannot be after today, and it cannot be changed afterwards. The period it falls in holds no target unless the day is in that period's last month, and encounters observed after it count towards nothing in this programme, even those already counted.</p></div><ul class="role-rows"><li class="role-row"><span class="role-row-note">A graduation: archives the profile, removes the Trainee role and sends Lerato Molefe a graduation email.</span><button type="button" class="btn btn-outline btn-sm" aria-haspopup="dialog">Mark complete…</button></li><li class="role-row"><span class="role-row-note">A withdrawal: archives the profile and removes the Trainee role. No email is sent.</span><button type="button" class="btn btn-outline btn-sm" aria-haspopup="dialog">Deactivate…</button></li></ul></section></div></article></main></div></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 390, "height": 1960}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

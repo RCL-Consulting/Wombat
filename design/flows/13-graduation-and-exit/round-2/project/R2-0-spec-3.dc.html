@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>R2-0-spec-3</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:var(--header-bg)}
+.sheet{display:flex;flex-direction:column;background:var(--header-bg);font-family:var(--font-body);color:var(--text-color)}
+.w1280{width:1280px}.w768{width:768px}.w390{width:390px}.w1440{width:1440px}
+.board-head{padding:16px 24px;background:var(--surface-color);border-bottom:2px solid var(--secondary-color);display:flex;flex-direction:column;gap:6px}
+.board-title{margin:0;font-size:1.15rem;font-weight:600;line-height:1.3;color:var(--primary-color);overflow-wrap:anywhere}
+.board-sub{margin:0;font-size:.9rem;line-height:1.4;color:var(--muted-text);overflow-wrap:anywhere}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;border-radius:var(--radius-pill);padding:1px 10px;font-size:.75rem;font-weight:700;line-height:1.5;border:1px solid var(--input-border);background:var(--header-bg);color:var(--text-color)}
+.chip--ill{background:var(--warning-bg);border-color:var(--warning-color)}
+.chip--proposed{background:var(--info-bg);border-color:var(--secondary-color)}
+.chip--t312{background:var(--success-bg);border-color:var(--success-color)}
+.chip--focus{background:var(--surface-color);border-color:var(--focus-ring)}
+.frame{position:relative;transform:translateZ(0);display:flex;flex-direction:column;background:var(--background-color)}
+.frame > .page{flex:1 1 auto;min-height:0}
+.fh-800{min-height:800px}.fh-844{min-height:844px}.fh-1024{min-height:1024px}
+@media (min-width:641px){.frame .sidebar{height:auto;position:relative;align-self:stretch}}
+@media (max-width:640.98px){.frame .nav-toggle:checked ~ .sidebar{height:auto;min-height:780px}}
+.anno-focus{outline:2px solid var(--focus-ring);outline-offset:2px}
+.anno{margin:0;padding:8px 12px;border:1px dashed var(--input-border);border-radius:var(--radius-md);background:var(--surface-color);color:var(--muted-text);font-size:.85rem;line-height:1.4;overflow-wrap:anywhere}
+.anno-scrim{position:absolute;inset:0;background:var(--scrim);display:flex;align-items:flex-start;justify-content:center;padding:96px 16px 0;z-index:30}
+.anno-scrim dialog{position:static;margin:0}
+.doc{padding:32px;display:flex;flex-direction:column;gap:24px;background:var(--surface-color)}
+.doc h2{margin:0;font-size:1.25rem}
+.doc h3{margin:0 0 6px;font-size:1.05rem}
+.doc p,.doc li{font-size:.9rem;line-height:1.45;margin:0 0 4px}
+.doc ul{margin:0;padding-left:1.2rem}
+.doc table{border-collapse:collapse;width:100%;font-size:.82rem;table-layout:auto}
+.doc th,.doc td{border:1px solid var(--border-color);padding:6px 8px;text-align:left;vertical-align:top;line-height:1.4;overflow-wrap:anywhere}
+.doc thead th{background:var(--header-bg);font-weight:600}
+.doc tbody th{font-weight:600}
+.doc code{font-family:var(--font-mono);font-size:.8rem;overflow-wrap:anywhere}
+.doc .cols2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.doc .box{border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:16px}
+.doc .lead{font-size:1rem;font-weight:600;color:var(--danger-color)}
+
+/* NEW system classes (R2-0-spec, the NEW table) */
+.record-links{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.record-links li{display:flex;flex-direction:column;gap:2px;padding:12px 0;border-top:1px solid var(--border-color)}
+.record-links li:last-child{padding-bottom:0}
+.record-links a{display:inline-flex;align-items:center;gap:var(--space-sm);font-weight:600;min-height:24px;align-self:flex-start}
+.record-link-why,.record-link-none{margin:0;color:var(--muted-text);font-size:.9rem}
+.record-link-plain{display:inline-flex;align-items:center;gap:var(--space-sm);font-weight:600}
+.ended-line{margin:0;font-size:1.1rem;font-weight:600;line-height:1.35}
+.record-card-body{display:flex;flex-direction:column;gap:var(--space-md)}
+.record-line{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-sm) var(--space-md);margin:var(--space-md) 0 var(--space-lg)}
+.record-line-label{font-weight:600;margin:0}
+.record-line ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:var(--space-sm) var(--space-lg)}
+.record-line a{display:inline-flex;align-items:center;gap:var(--space-sm);min-height:24px}
+.export-page{display:flex;flex-direction:column;gap:var(--space-lg);max-width:52rem}
+.export-note{margin:0;color:var(--muted-text);font-size:.9rem}
+.verify-page{display:flex;flex-direction:column;gap:var(--space-lg);max-width:44rem}
+.verify-answer{border-left:4px solid var(--success-color)}
+.verify-answer-title{display:flex;align-items:center;gap:var(--space-sm)}
+.verify-details{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--space-xs) var(--space-md);margin:0}
+.verify-details dt{color:var(--muted-text);font-weight:500}
+.verify-details dd{margin:0;overflow-wrap:anywhere}
+.verify-ids-note{margin:var(--space-md) 0 0;color:var(--muted-text);font-size:.85rem}
+.hash-value{font-family:var(--font-mono);font-size:.875rem;overflow-wrap:anywhere;word-break:break-all}
+.cmd-list{list-style:none;margin:var(--space-xs) 0 0;padding:0;display:flex;flex-direction:column;gap:var(--space-xs);color:var(--muted-text);font-size:.9rem}
+.cmd-list code{font-family:var(--font-mono);font-size:.85rem;color:var(--text-color);background:var(--header-bg);border-radius:var(--radius-sm);padding:1px 6px;overflow-wrap:anywhere}
+.end-decision{margin:0}
+.end-help{margin:0}
+.closed-when{display:flex;flex-direction:column}
+.closed-when span{color:var(--muted-text);font-size:.9rem}
+.outcome-cell{display:flex;flex-wrap:wrap;gap:var(--space-xs) var(--space-sm);align-items:center}
+@media (max-width:640.98px){
+  .record-links a,.record-line a{min-height:2.75rem}
+  .export-page .form-actions .btn,.verify-page .form-actions .btn{min-height:2.75rem;width:100%}
+  .export-page .form-control,.verify-page .form-control{min-height:2.75rem}
+  .verify-details{grid-template-columns:minmax(0,1fr)}
+  .verify-details dd{margin-bottom:var(--space-sm)}
+}
+</style>
+</helmet>
+<div class="sheet w1440"><div class="board-head"><p class="board-title">R2-0-spec-3 · Spec (3 of 3)</p><p class="board-sub">The corrections and where each is drawn; Illustrations; edge cases; accessibility; the measurement.</p></div><div class="doc"><section><h2>Corrections M1–M7, S1–S15, A3, A4, N1–N9</h2><table><thead><tr><th scope="col">Item</th><th scope="col">Where it is drawn</th></tr></thead><tbody><tr><th scope="row">M1 Q2's menu; Export portfolio lit; 5.23's trail Home › Export portfolio</th><td>R2-H01–H08, R2-E07, R2-E08, R2-R*</td></tr><tr><th scope="row">M2 no export link on the user page; the user page not drawn</th><td>nowhere (R2-P05's “Open Lerato Molefe's user page” is a link to it, not the page)</td></tr><tr><th scope="row">M3 “Lerato Molefe's programme” h1, tab, crumb</th><td>R2-P01–P19, R2-E04, E05</td></tr><tr><th scope="row">M4 the record line under the notice</th><td>R2-R01, R2-R02, R2-R05</td></tr><tr><th scope="row">M5 5.18, A.2.1, A.2.9, 5.8, A.1.6, A.4.6</th><td>R2-0-steps-2</td></tr><tr><th scope="row">M6 PAED-010 and PAED-012 three a semester, minimum 5</th><td>R2-R01, R2-R05</td></tr><tr><th scope="row">M7 du Plessis's decision line</th><td>R2-P08–P10</td></tr><tr><th scope="row">S1 staff personal links My data rights alone</th><td>every staff board</td></tr><tr><th scope="row">S2 current at 5.10 and 5.12; the subtitles</th><td>R2-E04–E06, R2-X01–X07</td></tr><tr><th scope="row">S3 22:52 SAST and the fixtures</th><td>R2-V02, R2-V03, R2-V09, R2-V10</td></tr><tr><th scope="row">S4 the same-file note</th><td>R2-E01–E18</td></tr><tr><th scope="row">S5 the verify failure</th><td>R2-V08</td></tr><tr><th scope="row">S6 every changed word marked NEW</th><td>R2-0-spec-2 Messages</td></tr><tr><th scope="row">S7 the Save row as the system draws it</th><td>R2-P01 (.form-actions, no override)</td></tr><tr><th scope="row">S8 flow 12's classes borrowed</th><td>NEW table, R2-P*</td></tr><tr><th scope="row">S9 no inline style</th><td>every board (dialogs at .dialog-card's own width; the header actions wrap)</td></tr><tr><th scope="row">S10 the outcome first; no repeated last-day row</th><td>R2-P05, P11, P18</td></tr><tr><th scope="row">S11 an empty date refused</th><td>R2-E12</td></tr><tr><th scope="row">S12 Profile unavailable</th><td>R2-P12, P13</td></tr><tr><th scope="row">S13 My activities as flow 03 built it; the EPA page's headings; .epa-auth-link</th><td>R2-R07, R2-R03, R2-R04, R2-R06</td></tr><tr><th scope="row">S14 44 px at 390 by scoped rules</th><td>Spec 1, every 390 board</td></tr><tr><th scope="row">S15 board utilities named or gone</th><td>NEW table; canvas-only list</td></tr><tr><th scope="row">A3 a caller the export refuses: no action</th><td>R2-X08 (Illustration: no cast member opens one of the three pages and is refused; an Administrator opens the review page, holds no institution, so is refused the export)</td></tr><tr><th scope="row">A4 after the end, Mr Smit from the review page, or the programme page by address</th><td>R2-X03, R2-X04, Steps</td></tr><tr><th scope="row">N1 “End this programme”; N2 View's name; N3 S2-C gone; N4 PAED-012 linked with T312; N5 counts as drawn; N6 no-STAR plain text; N7 required, name=check value=1, no hidden input; N8 one verify column; N9 Active</th><td>R2-P*, R2-C*, —, R2-R05, Steps, R2-H02, R2-V*, R2-V*, R2-P01. N9: Active is drawn as a plain word, as Badge's README and the user page's who line have it; v33 ships no “Active” badge tint from flow 11, so none is used</td></tr></tbody></table></section><section><h2>Illustrations</h2><ul><li>Illustrations (a state the replay never reaches; chip and title say so): R2-H03, R2-H04, R2-H07, R2-X08, R2-E16, R2-E17, R2-E18, R2-P07, R2-P16, R2-P17, R2-P18, R2-P19, R2-C04, R2-C05, R2-R10.</li></ul></section><section><h2>Edge cases</h2><ul><li>No STAR (du Plessis): Home's row plain text (R2-H02); no My authorisations on the record line (R2-R02); its page, reached by address, the empty card (R2-R09).</li><li>A staff role later: her staff Home, no record line; personal links keep My progress and Export portfolio (R2-H03).</li><li>Neither role nor record: “No role assigned”, menu Home and My data rights (R2-H04).</li><li>The pasted hash: spaces and the line break stripped by the query (R2-V09).</li><li>The 12-digit prefix: its own refusal (R2-V06).</li><li>Another institution: the export's header and scope from the registrar's institution (R2-E17); another institution's profile is Profile unavailable (R2-P13).</li><li>A moved profile: the ended record reads the curriculum it ended on (R2-P18, after T312).</li><li>A period's last month: the dialog says that semester keeps its target (R2-P17).</li><li>The first day: allowed, the dialog names it (R2-P16).</li><li>From after To: refused under From (R2-E11).</li><li>Two people with one name: the address under each name and in View's name (R2-C05).</li><li>A 60-character name: the top bar cuts at 28, the menu's foot wraps (R2-H07); the h1, trail and actions wrap (R2-E18, R2-P19).</li></ul></section><section><h2>Accessibility (WCAG 2.1 AA)</h2><ul><li>One h1 a page frame, h2 a section, h3 below; Verify's answer and the profile's sections are h2.</li><li>Every table captioned, scope on its headers, DataTable's roles kept when stacked; every row action named for its row.</li><li>Focus: drawn with .anno-focus and named on each board's chip: the result after Export and after a confirm; the answer after Verify, not from a link; a refusal's field; each dialog opens on Cancel, Cancel and Escape return to the trigger; Try again to the reloaded page's h1.</li><li>Help outside the label, named by aria-describedby; an invalid field marked twice (border and stripe) and named by its message; a standing notice an Alert with no role; status only for what arrives with a result.</li><li>Verify is a GET form: it works with no script.</li></ul></section><section><h2>Sideways scroll, measured</h2><p>Rendered each board's markup with bundle.css v33 in Chromium (the canvas's fonts fall back to Segoe UI, Georgia or the system's, so heights are near, not exact): every 1280 board at 1280 and again at 1100 with its width freed, every 768 board at 768, every 390 board at 390. <b>No page scrolls sideways at any of the four widths</b>: the document's scroll width equals the viewport on all 240 renders. The only boxes past the right edge are the visually hidden column headers of tables stacked by StackWide or Stack (clipped, never painted). The 64-digit hashes and the user ids wrap inside their cells (.hash-value, .verify-details' minmax(0, 1fr)); a 60-character name wraps in the h1 and the dialog title.</p></section></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 1440, "height": 1858}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

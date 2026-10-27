@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>R2-0-steps</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:var(--header-bg)}
+.sheet{display:flex;flex-direction:column;background:var(--header-bg);font-family:var(--font-body);color:var(--text-color)}
+.w1280{width:1280px}.w768{width:768px}.w390{width:390px}.w1440{width:1440px}
+.board-head{padding:16px 24px;background:var(--surface-color);border-bottom:2px solid var(--secondary-color);display:flex;flex-direction:column;gap:6px}
+.board-title{margin:0;font-size:1.15rem;font-weight:600;line-height:1.3;color:var(--primary-color);overflow-wrap:anywhere}
+.board-sub{margin:0;font-size:.9rem;line-height:1.4;color:var(--muted-text);overflow-wrap:anywhere}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;border-radius:var(--radius-pill);padding:1px 10px;font-size:.75rem;font-weight:700;line-height:1.5;border:1px solid var(--input-border);background:var(--header-bg);color:var(--text-color)}
+.chip--ill{background:var(--warning-bg);border-color:var(--warning-color)}
+.chip--proposed{background:var(--info-bg);border-color:var(--secondary-color)}
+.chip--t312{background:var(--success-bg);border-color:var(--success-color)}
+.chip--focus{background:var(--surface-color);border-color:var(--focus-ring)}
+.frame{position:relative;transform:translateZ(0);display:flex;flex-direction:column;background:var(--background-color)}
+.frame > .page{flex:1 1 auto;min-height:0}
+.fh-800{min-height:800px}.fh-844{min-height:844px}.fh-1024{min-height:1024px}
+@media (min-width:641px){.frame .sidebar{height:auto;position:relative;align-self:stretch}}
+@media (max-width:640.98px){.frame .nav-toggle:checked ~ .sidebar{height:auto;min-height:780px}}
+.anno-focus{outline:2px solid var(--focus-ring);outline-offset:2px}
+.anno{margin:0;padding:8px 12px;border:1px dashed var(--input-border);border-radius:var(--radius-md);background:var(--surface-color);color:var(--muted-text);font-size:.85rem;line-height:1.4;overflow-wrap:anywhere}
+.anno-scrim{position:absolute;inset:0;background:var(--scrim);display:flex;align-items:flex-start;justify-content:center;padding:96px 16px 0;z-index:30}
+.anno-scrim dialog{position:static;margin:0}
+.doc{padding:32px;display:flex;flex-direction:column;gap:24px;background:var(--surface-color)}
+.doc h2{margin:0;font-size:1.25rem}
+.doc h3{margin:0 0 6px;font-size:1.05rem}
+.doc p,.doc li{font-size:.9rem;line-height:1.45;margin:0 0 4px}
+.doc ul{margin:0;padding-left:1.2rem}
+.doc table{border-collapse:collapse;width:100%;font-size:.82rem;table-layout:auto}
+.doc th,.doc td{border:1px solid var(--border-color);padding:6px 8px;text-align:left;vertical-align:top;line-height:1.4;overflow-wrap:anywhere}
+.doc thead th{background:var(--header-bg);font-weight:600}
+.doc tbody th{font-weight:600}
+.doc code{font-family:var(--font-mono);font-size:.8rem;overflow-wrap:anywhere}
+.doc .cols2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.doc .box{border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:16px}
+.doc .lead{font-size:1rem;font-weight:600;color:var(--danger-color)}
+
+/* NEW system classes (R2-0-spec, the NEW table) */
+.record-links{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.record-links li{display:flex;flex-direction:column;gap:2px;padding:12px 0;border-top:1px solid var(--border-color)}
+.record-links li:last-child{padding-bottom:0}
+.record-links a{display:inline-flex;align-items:center;gap:var(--space-sm);font-weight:600;min-height:24px;align-self:flex-start}
+.record-link-why,.record-link-none{margin:0;color:var(--muted-text);font-size:.9rem}
+.record-link-plain{display:inline-flex;align-items:center;gap:var(--space-sm);font-weight:600}
+.ended-line{margin:0;font-size:1.1rem;font-weight:600;line-height:1.35}
+.record-card-body{display:flex;flex-direction:column;gap:var(--space-md)}
+.record-line{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-sm) var(--space-md);margin:var(--space-md) 0 var(--space-lg)}
+.record-line-label{font-weight:600;margin:0}
+.record-line ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:var(--space-sm) var(--space-lg)}
+.record-line a{display:inline-flex;align-items:center;gap:var(--space-sm);min-height:24px}
+.export-page{display:flex;flex-direction:column;gap:var(--space-lg);max-width:52rem}
+.export-note{margin:0;color:var(--muted-text);font-size:.9rem}
+.verify-page{display:flex;flex-direction:column;gap:var(--space-lg);max-width:44rem}
+.verify-answer{border-left:4px solid var(--success-color)}
+.verify-answer-title{display:flex;align-items:center;gap:var(--space-sm)}
+.verify-details{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--space-xs) var(--space-md);margin:0}
+.verify-details dt{color:var(--muted-text);font-weight:500}
+.verify-details dd{margin:0;overflow-wrap:anywhere}
+.verify-ids-note{margin:var(--space-md) 0 0;color:var(--muted-text);font-size:.85rem}
+.hash-value{font-family:var(--font-mono);font-size:.875rem;overflow-wrap:anywhere;word-break:break-all}
+.cmd-list{list-style:none;margin:var(--space-xs) 0 0;padding:0;display:flex;flex-direction:column;gap:var(--space-xs);color:var(--muted-text);font-size:.9rem}
+.cmd-list code{font-family:var(--font-mono);font-size:.85rem;color:var(--text-color);background:var(--header-bg);border-radius:var(--radius-sm);padding:1px 6px;overflow-wrap:anywhere}
+.end-decision{margin:0}
+.end-help{margin:0}
+.closed-when{display:flex;flex-direction:column}
+.closed-when span{color:var(--muted-text);font-size:.9rem}
+.outcome-cell{display:flex;flex-wrap:wrap;gap:var(--space-xs) var(--space-sm);align-items:center}
+@media (max-width:640.98px){
+  .record-links a,.record-line a{min-height:2.75rem}
+  .export-page .form-actions .btn,.verify-page .form-actions .btn{min-height:2.75rem;width:100%}
+  .export-page .form-control,.verify-page .form-control{min-height:2.75rem}
+  .verify-details{grid-template-columns:minmax(0,1fr)}
+  .verify-details dd{margin-bottom:var(--space-sm)}
+}
+</style>
+</helmet>
+<div class="sheet w1440"><div class="board-head"><p class="board-title">R2-0-steps · Steps (1 of 2)</p><p class="board-sub">Each of the 26 steps: its board, today's Expect (quoted from the steps), and what it will say once built. Values person by person from FIXTURES.</p></div><div class="doc"><section><h2>The 26 steps</h2><table><thead><tr><th scope="col">Step</th><th scope="col">Board</th><th scope="col">Today's Expect</th><th scope="col">Once built</th></tr></thead><tbody><tr><th scope="row">5.9</th><td>R2-E01–E03</td><td>“The page opens with the last twelve months filled in. … ‘Portfolio exported successfully. The download should start automatically.’”</td><td>Opens with From 2023-01-15 and To 2026-10-26. Export PDF reads “<b>Your portfolio exported: portfolio-aba6ce7943c2.pdf.</b> The download should start automatically. Anyone holding the file can check it on Verify portfolio export.”, focused; the file is named portfolio-aba6ce7943c2.pdf.</td></tr><tr><th scope="row">5.10</th><td>R2-P01, R2-E04, R2-E05</td><td>Users › Lerato Molefe, the id copied from the address, the export address typed</td><td>Trainees › Edit Lerato Molefe's profile › “Export Lerato Molefe's portfolio”; the page reads “Export Lerato Molefe's portfolio”, “Kgosi Kgari Teaching Hospital · Paediatric EPA Curriculum (11.1) · Training year 4”, dates already 2023-01-15 to 2026-10-26; the same file name, byte for byte.</td></tr><tr><th scope="row">5.11</th><td>—</td><td>the PDF</td><td>unchanged (flow 20)</td></tr><tr><th scope="row">5.12</th><td>R2-X01, R2-E06</td><td>the export address typed with the id sent to him</td><td>Committee reviews › Lerato Molefe · 2026 S2 › “Export Lerato Molefe's portfolio”; Programme trainees lit; the same file.</td></tr><tr><th scope="row">5.13</th><td>R2-V02, R2-V03</td><td>“Verifying loads the page's own address with the hash in it … when Wombat generated the file, in UTC”</td><td>The answer is an h2 “Export verified”: First generated 2026-10-26 22:51 SAST; Exported 3 times, the last on 2026-10-26 22:52 SAST; Trainee and First exported by 2b5abc2f-9e37-4714-bb7a-8e48fa11f699; Filter 2023-01-15 to 2026-10-26; File portfolio-aba6ce7943c2.pdf. Mr Smit's copy, and the hash in upper case, the same.</td></tr><tr><th scope="row">5.14</th><td>R2-V04, R2-V05</td><td>“No matching export found. This hash does not correspond to any PDF generated by this system.” · “Enter the content hash to check.”</td><td>The first keeps both sentences and adds “One changed byte changes the whole hash: check that it was computed from the file you were sent.”; spaces only unchanged, now under the field.</td></tr><tr><th scope="row">5.15</th><td>—</td><td>My progress, running</td><td>unchanged</td></tr><tr><th scope="row">5.16</th><td>R2-P01, R2-P02</td><td>“The confirmation names 2027-01-14 … Once confirmed, the request is refused with ‘The completion date cannot be after today (2026-10-26).’”</td><td>No dialog: Mark complete… is refused at once, under the field, “The last day cannot be after today (2026-10-26).”, 2027-01-14 kept and focused; still Active. The help's points stay.</td></tr><tr><th scope="row">5.17</th><td>R2-P03, R2-P05, R2-C01</td><td>“Trainee marked complete. …”; the summary Status Completed; Back to trainees stays; “Completed and closed” with “Completed 2026-10-26”</td><td>The dialog “Mark Lerato Molefe's programme complete?” opens on Cancel; the result unchanged, focused; the page titled “Lerato Molefe's programme”, Status Completed, Completed: 2026-10-26 first, no Back to trainees; Trainees lists her under Completed and closed: “2023-01-15 to 2026-10-26”, “Training year 4 when it ended”, Completed 2026-10-26, View named “View Lerato Molefe's record”. Her user page unchanged.</td></tr><tr><th scope="row">5.18</th><td>— (Q12)</td><td>“… says that her committee has ratified her final entrustment decisions and that her portfolio is available in Wombat.”</td><td>Drops “her committee has ratified her final entrustment decisions”; links My progress.</td></tr><tr><th scope="row">5.19</th><td>—</td><td>session ended</td><td>unchanged</td></tr><tr><th scope="row">5.20</th><td>R2-R01, R2-R03</td><td>the notice, Your programme, the cards, the standing</td><td>As today, plus “Your record:” My authorisations, My activities under the notice; PAED-001's page shows Open My authorisations.</td></tr><tr><th scope="row">5.21</th><td>R2-H01</td><td>“the menu offers Home, then My progress and My data rights … Home says ‘You completed your programme on 2026-10-26, so no target applies to you any more.’”</td><td>Menu: Home; My progress, Export portfolio, My data rights. Home's one card “Your training record”: “You completed your programme on 2026-10-26.”, “Your record is kept, read-only: no target applies to you any more.”, then My progress, My authorisations, My activities and Export portfolio, each with its line.</td></tr><tr><th scope="row">5.22</th><td>R2-R08</td><td>each of the first three reads “You cannot open this page”</td><td>My authorisations opens (15 cards); My committee reviews and MSF reports still refuse, and New activity, with flow 01's words.</td></tr><tr><th scope="row">5.23</th><td>R2-E07, R2-E08, R2-V07</td><td>“The export page is not in her menu, but it admits her … Type the export address”</td><td>Export portfolio is in her menu (lit, trail Home › Export portfolio); To on 2026-10-26, “Your last day in the programme.”; the file portfolio-344dd52bdded.pdf; it verifies once, 22:56 SAST; the earlier file still verifies.</td></tr><tr><th scope="row">5.24–5.26</th><td>—</td><td>flows 03, 04, 05</td><td>unchanged</td></tr><tr><th scope="row">5.27</th><td>R2-P08–P11, R2-C02</td><td>“Trainee profile deactivated. Their last day … ‘Withdrawn 2026-10-24’”</td><td>The section reads “The last committee decision: Satisfactory with Observations, Annual progression review, ratified 2026-10-26.”; the dialog “Deactivate Pieter du Plessis's profile?” says “1 activity, observed 2026-10-25, stops counting.”; the result “… The last day in the programme is recorded as 2026-10-24, … 1 activity observed after that day no longer counts.”; Inactive, Left the programme: 2026-10-24 first; Withdrawn 2026-10-24 under Completed and closed, View.</td></tr><tr><th scope="row">5.28</th><td>R2-H02, R2-R02, R2-R07</td><td>“Home shows the former trainee's card … (that it names no end day is T311)”</td><td>Home: “Your programme ended on 2026-10-24.”, the STARs row plain text; menu with Export portfolio; My progress unchanged plus “Your record:” My activities; My activities' Mini-CEX · PAED-002 · 2026-10-25, Who has it now Done, Completed, Credit None, with the note row.</td></tr><tr><th scope="row">5.29</th><td>—</td><td>Schedule a review</td><td>unchanged</td></tr><tr><th scope="row">6.21</th><td>R2-R05, R2-R06</td><td>“It lists no PAED-012 card while PAED-012 is paused … no PAED-012 row”</td><td>After T312: PAED-012's card stays, “(no longer in use)”, a link (N4); its row stays in the standing; its page as today.</td></tr><tr><th scope="row">6.40</th><td>as R2-R01</td><td>“A KGK-001 card has appeared …”</td><td>After T312: no KGK-001 card; every period as Act 5 recorded.</td></tr><tr><th scope="row">6.41</th><td>as R2-R02</td><td>“A KGK-001 card has appeared on his record too”</td><td>After T312: no KGK-001 card; PAED-002 still 0 recorded.</td></tr><tr><th scope="row">A.7.4</th><td>R2-H01 at 390, R2-H08</td><td>“the menu holds Home, My progress and My data rights”</td><td>Home as at 5.21; the menu Home, My progress, Export portfolio, My data rights.</td></tr><tr><th scope="row">A.7.12</th><td>R2-V02 at 390</td><td>“The verify page's result fits the width.”</td><td>The answer fits 390: its details one column, the ids and the hash wrapping in their cells.</td></tr></tbody></table></section></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 1440, "height": 1716}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

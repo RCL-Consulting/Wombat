@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>R2-0-spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:var(--header-bg)}
+.sheet{display:flex;flex-direction:column;background:var(--header-bg);font-family:var(--font-body);color:var(--text-color)}
+.w1280{width:1280px}.w768{width:768px}.w390{width:390px}.w1440{width:1440px}
+.board-head{padding:16px 24px;background:var(--surface-color);border-bottom:2px solid var(--secondary-color);display:flex;flex-direction:column;gap:6px}
+.board-title{margin:0;font-size:1.15rem;font-weight:600;line-height:1.3;color:var(--primary-color);overflow-wrap:anywhere}
+.board-sub{margin:0;font-size:.9rem;line-height:1.4;color:var(--muted-text);overflow-wrap:anywhere}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;border-radius:var(--radius-pill);padding:1px 10px;font-size:.75rem;font-weight:700;line-height:1.5;border:1px solid var(--input-border);background:var(--header-bg);color:var(--text-color)}
+.chip--ill{background:var(--warning-bg);border-color:var(--warning-color)}
+.chip--proposed{background:var(--info-bg);border-color:var(--secondary-color)}
+.chip--t312{background:var(--success-bg);border-color:var(--success-color)}
+.chip--focus{background:var(--surface-color);border-color:var(--focus-ring)}
+.frame{position:relative;transform:translateZ(0);display:flex;flex-direction:column;background:var(--background-color)}
+.frame > .page{flex:1 1 auto;min-height:0}
+.fh-800{min-height:800px}.fh-844{min-height:844px}.fh-1024{min-height:1024px}
+@media (min-width:641px){.frame .sidebar{height:auto;position:relative;align-self:stretch}}
+@media (max-width:640.98px){.frame .nav-toggle:checked ~ .sidebar{height:auto;min-height:780px}}
+.anno-focus{outline:2px solid var(--focus-ring);outline-offset:2px}
+.anno{margin:0;padding:8px 12px;border:1px dashed var(--input-border);border-radius:var(--radius-md);background:var(--surface-color);color:var(--muted-text);font-size:.85rem;line-height:1.4;overflow-wrap:anywhere}
+.anno-scrim{position:absolute;inset:0;background:var(--scrim);display:flex;align-items:flex-start;justify-content:center;padding:96px 16px 0;z-index:30}
+.anno-scrim dialog{position:static;margin:0}
+.doc{padding:32px;display:flex;flex-direction:column;gap:24px;background:var(--surface-color)}
+.doc h2{margin:0;font-size:1.25rem}
+.doc h3{margin:0 0 6px;font-size:1.05rem}
+.doc p,.doc li{font-size:.9rem;line-height:1.45;margin:0 0 4px}
+.doc ul{margin:0;padding-left:1.2rem}
+.doc table{border-collapse:collapse;width:100%;font-size:.82rem;table-layout:auto}
+.doc th,.doc td{border:1px solid var(--border-color);padding:6px 8px;text-align:left;vertical-align:top;line-height:1.4;overflow-wrap:anywhere}
+.doc thead th{background:var(--header-bg);font-weight:600}
+.doc tbody th{font-weight:600}
+.doc code{font-family:var(--font-mono);font-size:.8rem;overflow-wrap:anywhere}
+.doc .cols2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.doc .box{border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:16px}
+.doc .lead{font-size:1rem;font-weight:600;color:var(--danger-color)}
+
+/* NEW system classes (R2-0-spec, the NEW table) */
+.record-links{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.record-links li{display:flex;flex-direction:column;gap:2px;padding:12px 0;border-top:1px solid var(--border-color)}
+.record-links li:last-child{padding-bottom:0}
+.record-links a{display:inline-flex;align-items:center;gap:var(--space-sm);font-weight:600;min-height:24px;align-self:flex-start}
+.record-link-why,.record-link-none{margin:0;color:var(--muted-text);font-size:.9rem}
+.record-link-plain{display:inline-flex;align-items:center;gap:var(--space-sm);font-weight:600}
+.ended-line{margin:0;font-size:1.1rem;font-weight:600;line-height:1.35}
+.record-card-body{display:flex;flex-direction:column;gap:var(--space-md)}
+.record-line{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-sm) var(--space-md);margin:var(--space-md) 0 var(--space-lg)}
+.record-line-label{font-weight:600;margin:0}
+.record-line ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:var(--space-sm) var(--space-lg)}
+.record-line a{display:inline-flex;align-items:center;gap:var(--space-sm);min-height:24px}
+.export-page{display:flex;flex-direction:column;gap:var(--space-lg);max-width:52rem}
+.export-note{margin:0;color:var(--muted-text);font-size:.9rem}
+.verify-page{display:flex;flex-direction:column;gap:var(--space-lg);max-width:44rem}
+.verify-answer{border-left:4px solid var(--success-color)}
+.verify-answer-title{display:flex;align-items:center;gap:var(--space-sm)}
+.verify-details{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--space-xs) var(--space-md);margin:0}
+.verify-details dt{color:var(--muted-text);font-weight:500}
+.verify-details dd{margin:0;overflow-wrap:anywhere}
+.verify-ids-note{margin:var(--space-md) 0 0;color:var(--muted-text);font-size:.85rem}
+.hash-value{font-family:var(--font-mono);font-size:.875rem;overflow-wrap:anywhere;word-break:break-all}
+.cmd-list{list-style:none;margin:var(--space-xs) 0 0;padding:0;display:flex;flex-direction:column;gap:var(--space-xs);color:var(--muted-text);font-size:.9rem}
+.cmd-list code{font-family:var(--font-mono);font-size:.85rem;color:var(--text-color);background:var(--header-bg);border-radius:var(--radius-sm);padding:1px 6px;overflow-wrap:anywhere}
+.end-decision{margin:0}
+.end-help{margin:0}
+.closed-when{display:flex;flex-direction:column}
+.closed-when span{color:var(--muted-text);font-size:.9rem}
+.outcome-cell{display:flex;flex-wrap:wrap;gap:var(--space-xs) var(--space-sm);align-items:center}
+@media (max-width:640.98px){
+  .record-links a,.record-line a{min-height:2.75rem}
+  .export-page .form-actions .btn,.verify-page .form-actions .btn{min-height:2.75rem;width:100%}
+  .export-page .form-control,.verify-page .form-control{min-height:2.75rem}
+  .verify-details{grid-template-columns:minmax(0,1fr)}
+  .verify-details dd{margin-bottom:var(--space-sm)}
+}
+</style>
+</helmet>
+<div class="sheet w1440"><div class="board-head"><p class="board-title">R2-0-spec · Spec (1 of 3)</p><p class="board-sub">Whether the captures arrived; prerequisites; the code changes the boards need; the NEW table; the 390 and 768 rules.</p></div><div class="doc"><section><h2>First: the captures</h2><p class="lead">The captures did not arrive. None was opened.</p><p>Nothing was attached to this message in the session (its uploads folder is empty, as in round 1, so round 1 saw none either). I tried to read them from C:\dev\Wombat\design\upload on the linked computer: that folder is not connected to this session, and the request to connect it could not be shown, because the Claude desktop window was not available on that computer.</p><p>Not opened: the twelve named below, and the folder's other 34 (5.23-2, 5.28-3 and 5.20-2 among them).</p><ul><li>act-5 › 5.21-1-molefe-home-graduate.png</li><li>act-5 › 5.22-2-molefe-authorisations-denied.png</li><li>act-5 › 5.10-1-mbatha-staff-export.png</li><li>act-5 › 5.13-1-verifier-genuine-verified.png</li><li>act-5 › 5.13-2-verifier-uppercase-hash.png</li><li>act-5 › 5.16-1-mbatha-complete-dialog-future-day.png</li><li>act-5 › 5.16-2-mbatha-future-day-refused.png</li><li>act-5 › 5.17-1-mbatha-marked-complete.png</li><li>act-5 › 5.27-1-mbatha-deactivate-dialog.png</li><li>act-5 › 5.27-3-mbatha-trainees-closed.png</li><li>act-5 › 5.20-1-molefe-progress-completed.png</li><li>act-A › A.7.4-1-home-390.png</li></ul><p>So nothing is drawn from memory in their place. Every value comes from FIXTURES, the brief and the runbook steps. Where today's words exist only in a capture, a bracket ‹…› or a dashed canvas note stands in their place: My activities' current subtitle, the EPA page's ended Observations lines and its no-STAR Entrustment words, the trajectory, each STAR's rationale and level, and every EPA title the fixtures do not give. Connect the folder (or attach the files) and those gaps can be filled from the captures.</p></section><section><h2>Prerequisites</h2><ul><li><b>T312 lands first</b>, as its own task: an ended record keeps the EPA list and targets it ended with; a paused EPA stays, headed “(no longer in use)”; an item added later does not appear. Boards R2-R05, R2-R06 and R2-P18 carry the chip “after T312”; 6.40 and 6.41 read as R2-R01 and R2-R02.</li><li>Everything else is this build's (Q16): T311, T314, T313 with T287's verify item (the cleanup job removed), the T325, T329, T280 and T323 halves of these pages, the closed list's View and the end section. T310, T287's sign-in items and T166 stay their own.</li></ul></section><section><h2>The changes the boards need, as code (each PROPOSED)</h2><table><thead><tr><th scope="col">Change (each PROPOSED)</th><th scope="col">Where</th><th scope="col">What it does</th><th scope="col">Boards</th></tr></thead><tbody><tr><th scope="row">NavItems.PersonalFor</th><td>Navigation/NavItems.cs</td><td>A trainee record without the Trainee role: My progress, Export portfolio, My data rights. A holder of Trainee: My progress, My data rights (Export portfolio is in her role menu). Staff: My data rights.</td><td>R2-H01–H08, R2-E07, R2-R*</td></tr><tr><th scope="row">NavOwners rows</th><td>Navigation/NavOwners.cs</td><td>My authorisations and My activities under My progress for the record (trail Home › My progress › the page); /portfolio/export/{id} under Trainees (Institutional admin) and Programme trainees (Coordinator, Committee member, Speciality admin, Sub-speciality admin), a fixed owner, no return parameter (Q27).</td><td>R2-E04–E06, R2-R07–R09</td></tr><tr><th scope="row">MyAuthorisations policy</th><td>Pages/Portfolio/MyAuthorisations.razor; the certificate download handler</td><td>TraineeOrFormerTrainee, reading her own STARs; Download works for the record.</td><td>R2-R08, R2-R09</td></tr><tr><th scope="row">EpaPage link condition</th><td>EpaPage</td><td>“Open My authorisations” shows to the record too (today: Trainee only).</td><td>R2-R03, R2-R06</td></tr><tr><th scope="row">GetExportSubjectQuery (NEW)</th><td>Features/Portfolio</td><td>The trainee's name, institution, curriculum, training year, programme start and last day, read before the form; one null for every refused cause (unknown id, another institution, a role that does not oversee her), reusing the command's MayReadAsync; null draws Portfolio unavailable.</td><td>R2-E04–E10, E14, E15, E17</td></tr><tr><th scope="row">ExportPortfolioCommand</th><td>Features/Portfolio</td><td>From and To required (S11); its refusals unchanged; returns the file name for the result.</td><td>R2-E03, E05, E06, E08, E12</td></tr><tr><th scope="row">VerifyExportQuery</th><td>Features/Portfolio</td><td>Strip all whitespace, lower-case; refuse what is not 64 hex digits; answer the first generation, the count and the last export, ORDER BY ExportedOn, Id, with the first exporter's id.</td><td>R2-V02–V10</td></tr><tr><th scope="row">PortfolioExportCleanupJob</th><td>Jobs</td><td>Removed: the export rows are kept for the life of the trainee record (A.2.1 eight jobs, A.2.9 five runs).</td><td>Steps</td></tr><tr><th scope="row">The end section</th><td>Admin/Trainees/Edit.razor</td><td>Mark complete… and Deactivate… check the day against the South African today on the press, before any dialog (Q21); the commands keep their own check, same words, same place.</td><td>R2-P02, P07</td></tr><tr><th scope="row">GetLastRatifiedDecisionQuery (NEW)</th><td>Features/Committee</td><td>The last ratified decision for the profile: its outcome, review type and day (Q13); gates nothing.</td><td>R2-P01, P08</td></tr><tr><th scope="row">GetTakeBackPreviewQuery (NEW)</th><td>Features/Progress</td><td>The activities a withdrawal or completion on the typed day takes back, read when the dialog opens for that day and again after the save (the result's count).</td><td>R2-P09, P11, P16</td></tr><tr><th scope="row">ListEndedProfilesQuery</th><td>Features/Trainees</td><td>The end day, its kind, the training year at the end, the start; latest end first; 20 a page.</td><td>R2-C01–C05</td></tr><tr><th scope="row">GetFormerTraineeHomeQuery (NEW)</th><td>Features/Dashboard</td><td>The end, its kind and day, the training year at the end, the STAR count (today Home reads only the trainee_record claim).</td><td>R2-H01–H07</td></tr><tr><th scope="row">My activities' note row</th><td>Pages/Activities/MyActivities.razor</td><td>A row's reason when Credit is None because it was observed after the last day (ProgrammeEndCredit).</td><td>R2-R07</td></tr><tr><th scope="row">The graduation email (Q12)</th><td>flow 19's output</td><td>Drops “your committee has ratified your final entrustment decisions”; links My progress. Not drawn.</td><td>Steps 5.18</td></tr></tbody></table></section><section><h2>Classes the boards use that bundle.css v33 does not ship</h2><table><thead><tr><th scope="col">Class</th><th scope="col">NEW, or reuses</th><th scope="col">Why</th></tr></thead><tbody><tr><th scope="row"><code>.record-links</code>, <code>.record-link-why</code>, <code>.record-link-none</code>, <code>.record-link-plain</code></th><td>NEW</td><td>Home's list of the record's pages: a link named by the page's h1, its line in aria-describedby; the no-STAR row plain text (N6). 44 px at 390.</td></tr><tr><th scope="row"><code>.ended-line</code>, <code>.record-card-body</code></th><td>NEW</td><td>The card's lead sentence (the end and its day) at the h3 size; the card body's 16 px column.</td></tr><tr><th scope="row"><code>.record-line</code>, <code>.record-line-label</code></th><td>NEW</td><td>My progress's “Your record:” line under the notice (M4), a ul of links, 44 px at 390.</td></tr><tr><th scope="row"><code>.export-page</code>, <code>.export-note</code></th><td>NEW</td><td>Export's 52rem column (the result above the form) and its 390 scope; the same-file note (S4).</td></tr><tr><th scope="row"><code>.verify-page</code>, <code>.verify-answer</code>, <code>.verify-answer-title</code>, <code>.verify-details</code>, <code>.verify-ids-note</code></th><td>NEW</td><td>Verify's column and 390 scope; the answer's success stripe, h2 with its icon, a two-column dl that wraps its values (minmax(0, 1fr)), one column at 390.</td></tr><tr><th scope="row"><code>.hash-value</code></th><td>NEW</td><td>A 64-digit hash or a user id: mono, overflow-wrap: anywhere, in its own cell.</td></tr><tr><th scope="row"><code>.cmd-list</code></th><td>NEW</td><td>The field's command list (round 1's help), named by the input's aria-describedby.</td></tr><tr><th scope="row"><code>.end-decision</code>, <code>.end-help</code></th><td>NEW</td><td>The end section's decision line and help.</td></tr><tr><th scope="row"><code>.closed-when</code>, <code>.outcome-cell</code></th><td>NEW</td><td>The closed list's Programme cell (dates over the training year) and Outcome cell (the badge and the day).</td></tr><tr><th scope="row">.user-page, .user-section, .role-rows, .role-row, .role-row-note</th><td>reuses flow 12's (S8)</td><td>The profile is a one-column page of h2 sections like the user page: its 24 px column, the stacked Save row at 390 (column-reverse, Save on top) and the 44 px rows come from them. Not redeclared.</td></tr><tr><th scope="row">.detail-card--empty, .state-panel-copy, .form-actions</th><td>reuses</td><td>The Unavailable page (Q19, S12) needs no class of its own.</td></tr><tr><th scope="row">.review-progress-link</th><td>reuses flow 07's</td><td>The review page's export link, beside “Lerato Molefe's progress”, each on its own line, 44 px at 390.</td></tr><tr><th scope="row">.history-note, .has-note</th><td>reuses</td><td>My activities' note row (DataTable's note row).</td></tr><tr><th scope="row">.epa-auth-link, .star-grid, .star-card, .my-authorisations</th><td>reuses</td><td>As flows 05 and 09 built them.</td></tr></tbody></table></section><section><h2>Canvas-only classes</h2><ul><li>Canvas only, never on a component: <code>.sheet</code>, <code>.w1280/.w768/.w390/.w1440</code>, <code>.board-head</code>, <code>.board-title</code>, <code>.board-sub</code>, <code>.chips</code>, <code>.chip</code> and its kinds, <code>.frame</code>, <code>.fh-800/844/1024</code>, <code>.anno</code> (a dashed note for what a board does not redraw, wrapping), <code>.anno-focus</code> (where the focus is), <code>.anno-scrim</code> (a dialog shown open), <code>.doc</code>.</li></ul></section><section><h2>44 px at 390, and 768</h2><ul><li>Scoped 44 px at 390 (NEW): <code>.record-links a</code>, <code>.record-line a</code>, <code>.export-page .form-actions .btn</code> and <code>.export-page .form-control</code>, <code>.verify-page .form-actions .btn</code> and <code>.verify-page .form-control</code>. Never a bare .btn.</li><li>Shipped and relied on: the header's actions (.header-container .actions-cell .btn), the stack-wide rows' View (.clinic-table--stack-wide .btn, from 900 px), the dialogs' buttons (.dialog-card .form-actions, the action on top), .user-page's form actions and role rows, the pager's buttons, .review-progress-link, .epa-auth-link, the empty card's action.</li><li>At 768 the shell is the desktop one (a 518 px column): Completed and closed and My authorisations' table stack (StackWide, from 900 px); My activities' table stacks (Stack); the profile's form grid goes to one column; the verify details stay two columns.</li><li>Sideways scroll: measured by rendering each board's markup with bundle.css v33 at 1280, 1100, 768 and 390 (the board's own width freed): see R2-0-spec-3.</li></ul></section></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 1440, "height": 2693}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
