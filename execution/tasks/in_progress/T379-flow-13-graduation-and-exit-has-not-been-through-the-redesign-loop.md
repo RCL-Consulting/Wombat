@@ -104,3 +104,9 @@ T376 (flow 12), T373 (flow 11), T311, T312, T313, T314, T287, T305, T310, T290, 
   both end commands are `IRequest`, `GetExportSubjectQuery` does not exist, DESIGN.md 827–832 is the built refusal
   that Q7 changes). **The operator took F1–F11 as recommended**; T312 grows to cover R05, R06 and P18 (F3).
   **Next:** `round-3-ask.txt`.
+- **2026-10-27, round 3's ask** (`round-3-ask.txt`, 347 lines, ~192 boards, a 73-item checklist; one Opus agent): every
+  round-2 board redrawn as R3- with f13r3.css, 12 new states (X09, X10, E19, E20, P20–P25, C06, C07), brackets filled
+  from the cast review. NEW words for the operator to see on the boards: the not-a-hash refusals (S10), "Choose the
+  last day." (S3), the Assessor sentence (S5), no STAR in force (S8), "will stop counting" (M2). F9 drops Q6's h2 on
+  Verify's answer (the result region). Captures 5.26-2 and 5.8-3 copied into `design/upload/baseline/act-5/`.
+  **Next:** the operator sends it with the captures.

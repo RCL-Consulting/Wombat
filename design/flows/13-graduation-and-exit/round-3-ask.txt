@@ -1,0 +1,348 @@
+ROUND 3: the one correction round on round 2 as drawn (Home H, the staff export's entry points X, Export E, Verify V,
+the trainee profile and the end P, Completed and closed C, the ended record pages R). Put it on a new page of the canvas,
+"Round 3", and name every board R3-… (R3-H01-1280 for R2-H01-1280); round 1's and round 2's pages stay untouched.
+Redraw EVERY round 2 board on the new page (163 screens: 77 at 1280, 78 at 390, 8 at 768), each with its states,
+carrying a board no item below changes exactly as round 2 drew it (every board changes its head: N11), then the new
+boards the items ask for, then the Spec and Steps boards whole. Change what the items say; draw nothing they do not ask
+for. The design system is Wombat v33 as installed on this canvas (namespace wombat; ds/wombat/tokens.css and
+ds/wombat/components/bundle.css): keep both files in the project so the saved round renders. The brand mark is at
+/_blob/f4e05985da677926678d5d52de67cf4f: use it, never a drawn disc. Every person, address, id, role, date, time, hash,
+file name, count and order stays as round 2 drew it unless an item below changes it: the reviews found them true. Use
+FIXTURES only and invent nothing; where a value is not given, write a bracket ‹…›. Label a state the replay never
+reaches "Illustration", in its title and as a chip on its face; a build state no step plays (a loading, a failure, a
+refusal) carries no chip, as in round 2. Never draw on one board two states that cannot hold at once. Then say on the
+Spec, item by item (by the ids below), what changed and where.
+
+THE SCREENSHOTS: the twelve key captures of the brief's § 4 are attached to THIS message, staged from
+C:\dev\Wombat\design\upload (copies of design/baseline/): act-5\5.21-1-molefe-home-graduate.png,
+act-5\5.22-2-molefe-authorisations-denied.png, act-5\5.10-1-mbatha-staff-export.png,
+act-5\5.13-1-verifier-genuine-verified.png, act-5\5.13-2-verifier-uppercase-hash.png,
+act-5\5.16-1-mbatha-complete-dialog-future-day.png, act-5\5.16-2-mbatha-future-day-refused.png,
+act-5\5.17-1-mbatha-marked-complete.png, act-5\5.27-1-mbatha-deactivate-dialog.png,
+act-5\5.27-3-mbatha-trainees-closed.png, act-5\5.20-1-molefe-progress-completed.png and act-A\A.7.4-1-home-390.png.
+The same folder (baseline\act-5, act-6, act-A) holds the rest; read these too, since round 3 fills brackets from them:
+5.20-2-molefe-epa-page-completed, 5.23-2-graduate-file-verified, 5.28-2-duplessis-progress-withdrawn,
+5.28-3-duplessis-my-activities-none, 6.21-1-molefe-progress and 6.21-2-molefe-paed012-page-paused, A.7.12-3-verify-390.
+5.26-2 (du Plessis's PAED-002 page) and 5.8-3 (her My authorisations) are not in the folder: their values are written
+in FIXTURES below. SAY ON THE SPEC BOARD, FIRST, WHETHER THE CAPTURES ARRIVED (as attachments, or read from the
+folder) and which you opened. If they did not arrive, keep the brackets for what only a capture holds (R02's and R04's
+2025 semesters, R07's six other rows, R03's and R06's activity tables and trajectories) and draw nothing from memory;
+every value FIXTURES gives is drawn either way.
+
+THE OPERATOR'S DECISIONS. Q1–Q27 (2026-10-27) stand as round 2 drew them, except where an F below changes one:
+  Q1 Home: one emphasised card "Your training record", led by the end and its day, the record kept read-only, then the
+    record's pages, each a link with a line (Q23); My authorisations only for a holder of a STAR (F6's rule), plain
+    text otherwise; no header action, no subtitle; a former trainee holding a staff role keeps that Home (Q25).
+  Q2 a record holder's personal links: My progress, Export portfolio, My data rights; My authorisations and My
+    activities owned by My progress (trail Home › My progress › the page); Export portfolio lights itself and, by F4,
+    draws NO trail (Q2's parenthesis "trail Home › Export portfolio" is dropped).
+  Q3 My authorisations admits the record (TraineeOrFormerTrainee), Download works; MSF reports and My committee
+    reviews stay role-only. Q4 "Export Lerato Molefe's portfolio" on the profile, the review page and the programme
+    page, shown only where MayExport is true (F1), as a header action, never on the user page.
+  Q5, Q17–Q19, Q27: her h1 "Export portfolio"; staff h1 "Export ‹name›'s portfolio"; dates on the programme start and
+    today or the last day; the result above the form, focused, naming the file; a refused id gets "Portfolio
+    unavailable"; the staff trail by a fixed owner (Trainees for the Institutional admin, Programme trainees for the
+    Coordinator, the Committee member and both speciality admins), with the middle crumb from M4.
+  Q6, Q20: "Content hash (SHA-256)", required, any case and whitespace; the answer per F9; times in SAST.
+  Q7, Q21, Q24: h1 "‹name›'s programme"; Profile details then "End this programme"; the day checked on the press,
+    refused under the field, no dialog (S19); Mark complete's confirm primary, Deactivate's filled danger.
+  Q8, Q22: the closed list as round 2 drew it, plus F7. Q9 the "Your record:" line on My progress (in MyProgress, S8).
+  Q10 T312 lands first, grown by F3. Q11–Q16 as drawn. Q26 "The account" section, worded by F5.
+  Added 2026-10-27, every recommendation taken:
+  F1. The export's gate: a MayExport bool (MayReadAsync on the trainee's user id) on CommitteeReviewDetailDto,
+      ProgrammeTraineeDto and TraineeProfileDto; the action is absent where it would be refused and sits in the page
+      header's actions, not beside "‹name›'s progress". The Administrator is not refused (drop that case).
+  F2. Both end commands return the count they took back; the result is built from it; the dialog's count is a
+      forecast read; Mark complete's dialog and result carry the take-back as Deactivate's do.
+  F3. T312 grows to cover R05, R06 and P18 (the ended EPA page of a paused EPA, the ended card's EpaLabel, the
+      standing's count). Recorded in T312 on 2026-10-27.
+  F4. No trail on the personal Export page (E01, E07, E08), as My progress.
+  F5. "The account" sentence only when the account holds no role and is neither locked nor erased; its STAR clause
+      only when a STAR exists; a variant for a person who holds Assessor now.
+  F6. "Holds a STAR" means any ratified STAR decision, in force or not (the My authorisations link shows whenever the
+      page has something to list); Home's count says "in force". A caller with no profile at /portfolio/export gets
+      the Unavailable page.
+  F7. The Administrator's closed list puts the institution under each name, as the Current list; the count word added
+      to AdmissionText; an erased person listed as Withdrawn under the pseudonym, with one Spec line.
+  F8. Mark complete's dialog keeps "sent to molefe@kgk.wombat.local", marked NEW, read from the DTO's Email.
+  F9. Verify's answer goes in ActionResult (FocusOnLoad) as one container: the success Alert, its first sentence
+      bold, the details list beneath. It replaces Q6's h2 section.
+  F10. DESIGN.md § Badges: Completed green (badge-completed, shipped), Withdrawn and Inactive grey by a named alias
+      (.badge-withdrawn, NEW), never badge-draft; Active a plain word everywhere in the summary.
+  F11. Both Domain nouns become "last day" (EnsureCanEnd and its tests); the before-start refusal is a NEW row with
+      its own board (P22).
+
+PREREQUISITES (a block on the Spec): T312 lands first, as its own task, with F3's growth (R05, R06, P18; Steps 6.21,
+6.40, 6.41). Everything else is this build's (Q16): T311, T314, T313 with T287's verify item (the cleanup job, its
+registration and its ScheduledJobDefinition row removed), the T325, T329, T280 and T323 halves of these pages, the
+closed list's View and the end section. T310, T287's sign-in items, T166 and T374 stay their own.
+
+ROUND 2's CORRECTIONS stand as drawn (M1–M7, S1–S15, A4, N1–N9 of round-2-ask.txt), except: round 2's M1 "5.23's trail
+is Home › Export portfolio" (now none, F4); round 2's A3 (now M1 below); N9 (now F10). Restated in one line each:
+Q2's menu on every former-trainee board; no export link on the user page; "‹name›'s programme" h1, tab and crumb; the
+record line under the notice; PAED-010 and PAED-012 three a semester, minimum 5 in year 4; du Plessis's decision line;
+staff personal links My data rights alone; she is current at 5.10 and 5.12 (RegistrarWords.Subtitle as built); the last
+export 22:52 SAST; the same-file note; Verify's failure without "Please"; every changed word NEW on the Spec beside its
+old words; the Save row as .form-actions draws it; flow 12's .user-page, .user-section, .role-rows reused; no inline
+style; the outcome first on an ended record; From and To required; "Profile unavailable"; My activities as flow 03
+built it; 44 px at 390 by scoped rules, never a bare .btn; board utilities named or gone; Smit after the end reaches
+the export from the review page or the programme page by address (A4).
+
+FIXTURES (the T376 replay, wombat_scenario_t376, D = 2026-10-26, J = 2026-01-15; round 2's, restated; use these words):
+  Lerato Molefe, molefe@kgk.wombat.local, user id 2b5abc2f-9e37-4714-bb7a-8e48fa11f699, profile id 2
+    (/admin/trainees/edit?id=2, /programme/trainees/2); Kgosi Kgari Teaching Hospital (KGK), Paediatrics /
+    Paediatrics, Paediatric EPA Curriculum (11.1); start 2023-01-15, expected completion 2027-01-14; training year 4;
+    15 STARs (PAED-001 to PAED-015; level 5 on 001–007, 010, 012; level 4 on 008, 009, 011, 013, 014, 015), each
+    issued 2026-10-26, no expiry; completed 2026-10-26; no role since. Review /committee/reviews/7, h1 "Lerato Molefe ·
+    2026 S2", subtitle "Pre-graduation review · Paed Annual Review Panel · Training year 4"; last decision "Graduate
+    (programme complete), Pre-graduation review, ratified 2026-10-26."
+  Pieter du Plessis, duplessis@kgk.wombat.local, profile id 4; start 2025-01-15, expected 2029-01-14; training year 2;
+    no STAR; last decision "Satisfactory with Observations, Annual progression review, ratified 2026-10-26"; last day
+    2026-10-24; Mini-CEX (Paediatrics) · PAED-002 · 2026-10-25 (activity 24), to David Naidoo, rated 3b, Credit None.
+  Staff, menus as round 2 drew them: Nolwazi Mbatha (Institutional admin; Entrustment decisions under Reviews), Pieter
+    Smit (Coordinator), David Naidoo (Committee member and Assessor; an Assessor's menu is Home and Activity inbox),
+    Refilwe Mokoena (Speciality admin), Kabelo Sithole (Sub-speciality admin), Anele Dlamini (Trainee, year 3). The
+    Administrator: devadmin, top bar "Demo Administrator", menu as R2-X08 drew it (no Trainees item: /admin/trainees
+    by its address, header "Name and institution").
+  Trainees after 5.17: 4 current, 1 ended; after 5.27: 3 current (Dlamini, Mahlangu, Ndlovu), 2 ended, latest end
+    first: Molefe Completed 2026-10-26, du Plessis Withdrawn 2026-10-24.
+  Exports: portfolio-aba6ce7943c2.pdf, aba6ce7943c20681a22f7bbfd89a51b9e19ff005892e318806c28dd215a6c995, first 22:51
+    SAST, 3 exports, the last 22:52 SAST; portfolio-344dd52bdded.pdf,
+    344dd52bddedd1f9e93cd1ef9217ca19542952ce6e8bac8739b84987ec5911fd, 22:56 SAST, once; tampered 5c171ec5‹…›; the
+    prefix aba6ce7943c2. Filter 2023-01-15 to 2026-10-26.
+  The record, filling round 2's brackets (the cast review's table; captures 5.20-1, 5.20-2, 5.26-2, 5.28-3, 5.8-3):
+    - R01, R05: PAED-010 Semester 2, 2026 "no target (your programme ended part-way through) · 1 recorded"; PAED-012
+      the same with "2 recorded"; Semester 1, 2026 and every semester back to Semester 1, 2023 "0 of 3, 3 short".
+    - R01, R05, R10: the standing sentence after "in training year 4": ", so the targets shown are that year's. STAR
+      decisions and ratings are shown as they stand today. Each target is the level the curriculum sets for training
+      year 4: Annexure A's, for the College's EPAs. The exit level is the level each EPA must reach to finish the
+      programme. A level is compared only on the ladder the curriculum sets for that EPA."; the row above the exit
+      rule "15 at or above · 0 below · 0 with no decision, of 15 EPAs".
+    - R03: "PAED-001 — Providing paediatric emergency care to children"; "3 a semester · Decided each semester · Exit
+      level 5"; Observations: Semester 2, 2026 "no target (your programme ended part-way through) · 3 recorded", then
+      Semesters 1, 2026 back to 1, 2023 "0 of 3, 3 short"; "Training year 4: level 5, the minimum each encounter is
+      judged against and your STAR's target."; the two MSF lines as 5.20-2 shows them (bracketed if not read);
+      trajectory "3 ratings in the 2026 academic year, from Thandi Zulu, David Naidoo and Mohammed Patel. 2 at the
+      minimum, 1 below."; Entrustment "5" with "At or above", Issued 2026-10-26, Exit level "5 · reached".
+    - R06 (PAED-012): "3 a semester · Decided each semester · Exit level 5"; Entrustment 5, At or above, Issued
+      2026-10-26, Exit level "5 · reached"; Semester 2, 2026 "· 2 recorded" (ratings 2026-10-19 and 2026-10-21).
+    - R04: "Exit level 5"; Entrustment "No STAR yet."; R02 and R04: Semester 1, 2026 "0 of 3, 3 short"; the 2025
+      semesters from capture 5.28-2, else ‹as 5.28-2 records them›.
+    - R05: PAED-006's card heading "PAED-006 — Managing long-term health conditions (LTHCs) in children" (6.14).
+    - R07: "All activities (7)": DOPS Cancelled, Mini-CEX Completed, Portfolio and Logbook Review Awaiting review,
+      Case-Based Discussion Requested, three Teaching Session Logs (capture 5.28-3 for each row's words).
+    - R08: titles from the seed (PAED-001 to PAED-015); levels as above; rationale PAED-001 "Leads resuscitation and
+      emergency care without prompting; ready for unsupervised practice.", PAED-012 "Breaks difficult news clearly and
+      kindly; consistent across settings.", the other thirteen "PAED-0nn entrusted at its exit level; the panel
+      recommends completion." (with nn the EPA's number).
+    - My activities' built subtitle: "Everything you have filed or logged, newest encounter first."
+  Brackets nobody can fill (keep them, and list them on the Spec): H03's and H04's ‹name as stored› and H03's recent
+    decisions; H07's, E18's and P19's 60-character name; E17's ‹institution› and ‹registrar›; P16–P18's ‹registrar›,
+    ‹curriculum›, ‹day›; C04's ‹further people›; C05's second person; R10's ‹PAED-016›, ‹PAED-017› and the standing's
+    counts (S15); V04's 5c171ec5‹…›; and the new Illustrations' ‹registrar›, ‹institution›, ‹day›, ‹n›.
+
+THE CHECKLIST. Each item names its boards (every board at every width drawn unless it says otherwise); round 3's check
+takes each by its id and says done or not done from the board's text and markup.
+
+MUST FIX:
+  M1. The export's gate (F1). X08 redrawn, Illustration: Pieter Smit on the committee review of ‹registrar› whose
+      review has TraineeElsewhere set: no "‹registrar›'s progress" link and no export action; its annotation says
+      MayExport is false. No board says an Administrator is refused. New X09, Illustration: devadmin ("Demo
+      Administrator") on Lerato Molefe · 2026 S2: no progress link (RosterRoles), the export action in the header.
+      New X10, Illustration: Nolwazi Mbatha on the same review: the same. X01, X03, X05 redrawn with the action in the
+      header's actions, not in the subtitle beside the progress link. The Spec writes MayExport on the three DTOs and
+      says what the Administrator and the Institutional admin see on the review page (X09, X10).
+  M2. The take-back (F2). The Spec writes both commands as IRequest<int> (or a result type) returning the count
+      ProgrammeEndCredit.SaveAsync took back, and builds the result from it; the dialog's count is a forecast read.
+      P09's clause reads "…: 1 activity, observed 2026-10-25, will stop counting." (NEW, a forecast). P03 and P05: the
+      count is 0, so no count clause and no count sentence (the caption says so). New P20 (dialog) and P21 (result),
+      Illustration: Mark complete recorded after the fact for ‹registrar›, last day ‹day›: the dialog's clause "‹n›
+      activities, observed after ‹day›, will stop counting." and the result's added sentence "‹n› activities observed
+      after that day no longer count." (NEW), as P09 and P11 word them.
+  M3. T312's ended EPA page (F3). R06 drawn as T312 delivers it: no "credited if it is restored" alert (PausedRow) on
+      an ended record; flow 05's ended lines (FIXTURES' R06 values); Entrustment from the standing (5, At or above,
+      Issued 2026-10-26, Exit level 5 · reached) with Open My authorisations; headed "(no longer in use)". R05: the
+      ended card for PAED-012 headed by EpaLabel "(no longer in use)", the standing "15 of 15". Both carry the pill
+      "after T312". Steps 6.21's "its page as today" goes (T5).
+  M4. The staff export's trail. GetExportSubjectQuery carries ProfileId (the preferred profile, from PreferredProfiles;
+      null when none); the middle crumb goes through PageHeader.Trail (the AdmitRegistrar pattern). Boards E04, E05,
+      E13, E17, E18: "Home › Trainees › Lerato Molefe's programme › Export portfolio" with the
+      crumb's href /admin/trainees/edit?id=2; E06 and E20: "Home › Programme trainees › Lerato Molefe › Export
+      portfolio" with href /programme/trainees/2 (E17, E18 with the bracketed name). The Spec's query row lists
+      ProfileId.
+  M5. A.7.12's board. V02's title reads "5.13 verified, lower case, three exports" with no twin claim, on every width;
+      V07 at 390 is titled "5.23 the second file (at 390, A.7.12)"; the Steps row A.7.12 names R3-V07 at 390.
+
+SHOULD FIX:
+  S1. One trail rule (F4): E01, E07, E08 draw no breadcrumb nav and one aria-current="page" (the menu's).
+  S2. The lit item by route: /portfolio/export/{id} lights the staff owner even for a staff member who is also a
+      former trainee; the Unavailable page passes Page= so nothing is lit (E09, E10, E19 draw nothing lit). A Spec line
+      and an edge-list line.
+  S3. The refusals (F11): "The last day cannot be after today (2026-10-26)." for both ends (P02, P07); new P22: a day
+      before the start typed (‹a day before 2023-01-15›), Mark complete… pressed, "The last day cannot be before the
+      programme start date (2023-01-15)." under the field, no dialog; new P23: the field emptied, "Choose the last
+      day." (NEW, PROPOSED) under it, no dialog. The Spec says EndDate becomes nullable on the page so an empty field
+      reaches the press check.
+  S4. The profile's read: the Spec says GetTraineeProfileByIdQuery returns null for unknown and out-of-scope (P12, P13
+      one body), the catch shows fixed words (P15), the DTO carries the end's kind and day, the training year at the
+      end, the last ratified decision and MayExport, and the StatePanel gets LoadError and OnRetry (Try again focuses
+      the h1). The file is TraineeProfileEdit.razor.
+  S5. The account sentence (F5): a DATA row (roles now, locked, erased, STAR count). P05 keeps the STAR clause; P11
+      none; new P24, Illustration: ‹registrar›'s ended record while they hold Assessor: "‹registrar› now holds Assessor.
+      They can still read the record and export the portfolio." (NEW, PROPOSED); new P25, Illustration: a locked
+      account: The account shows no sentence, only "Open ‹registrar›'s user page". Erased: a Spec line (no sentence;
+      the name is the pseudonym).
+  S6. The Export page's changes, on the Spec: ValidationException mapped to its field (E11, E12), every other exception
+      to E13's fixed words; strike "returns the file name" (PortfolioExportResult.FileName exists). New E19,
+      Illustration: David Naidoo acting as Assessor types /portfolio/export: "Portfolio unavailable", nothing lit
+      (F6). New E20, Illustration: Pieter Smit's export after the end (from X03): To 2026-10-26 with the hint "Lerato
+      Molefe's last day in the programme." (NEW), From "Lerato Molefe's programme started on 2023-01-15."
+  S7. Built subtitles: R01, R02, R05, R10 "Your record of the programme you ended: what your curriculum held you to in
+      each period."; P01–P04, P06–P10, P16, P17, P19, P20, P22, P23 "Update curriculum and completion details for
+      this trainee."; R07 "Everything you have filed or logged, newest encounter first. Read-only: your programme
+      ended on 2026-10-24, so nothing new can be filed." (the second sentence NEW, the first built). The Spec's
+      messages list each.
+  S8. The record line and Home's STAR rule (F6): the Spec says the "Your record:" line is MyProgress.razor's, around
+      EndedRecord (whose golden-markup test does not change), never on the staff page; if the standing read fails, the
+      line shows My activities only. H01 reads "Your 15 STARs in force, each with its certificate to download." (NEW).
+      The Spec gives GetFormerTraineeHomeQuery's rule: the preferred profile, the end's kind (CompletedOn or
+      DeactivatedOn), the training year at the end, the STAR count under F6, and null for a current Trainee (the
+      trainee_record claim is issued for any profile); and the words when no STAR is in force but some exist: "None of
+      your STARs is in force now; My authorisations lists them." (NEW, PROPOSED, no board).
+  S9. The Spec's Where column: Features/Reporting, Features/CommitteeDecisions, Features/Trainees/ProgrammeEndCredit
+      (internal), Features/Dashboards, Infrastructure/Scheduling/Jobs (plus DependencyInjection.cs and the
+      ScheduledJobDefinition row), TraineeProfileEdit.razor, EpaProgress.razor; the certificate download handler needs
+      no change. Home's former-trainee branch becomes a component under DashboardFrame (name it;
+      DashboardLinkAuthorizationTests renders it) for H01–H07.
+  S10. The not-a-hash family, on the Spec (NEW, PROPOSED): a wrong length "This is not a SHA-256 hash: it has ‹n›
+      characters, and a SHA-256 hash has 64 hexadecimal digits (0 to 9, a to f)."; a non-hex character "This is not a
+      SHA-256 hash: “‹c›” is not a hexadecimal digit (0 to 9, a to f)."; the 12-digit prefix, round 2's sentence with
+      "The 12 in a file's name are only its start." V06 draws the third only.
+  S11. The closed list (F7): the Spec says ListEndedProfilesQuery is paged in SQL (20 a page, the latest end first) and
+      PagerControls is new on this page; the count word "‹n› ended" is AdmissionText's (NEW). New C06, Illustration:
+      the Administrator at /admin/trainees after 5.27: header "Name and institution", "Kgosi Kgari Teaching Hospital"
+      under each name. New C07: A.1.14's closed list after the erasure: Molefe, du Plessis and "‹deleted_user_…›"
+      Withdrawn ‹the erasure day›, latest end first, in the order the days give (bracketed where unknown).
+  S12. Mark complete's address (F8): P03 keeps "sent to molefe@kgk.wombat.local"; P19 and P20 "sent to ‹address›";
+      marked NEW on the Spec, read from TraineeProfileDto.Email.
+  S13. The result's Verify link is a plain <a href="/portfolio/verify"> (full navigation; Verify is static): E03, E05,
+      E06, E08, E20; one Spec line.
+  S14. P18 (with F3): the Curriculum read-out is built today (an ended profile's CurriculumId is final); the DATA row
+      "Ended record (T312): the curriculum the programme ended on" goes; the "after T312" pill stays only on an
+      annotation saying what T312 changes there (the record's EPA list and targets come from the curriculum it ended on).
+  S15. R10: the standing's counts bracketed ("‹m› of 17 EPAs …", "level 5: ‹…› · level 4: ‹…›"), so 17 cards and the
+      standing can hold at once.
+  S16. The Steps board, T1–T12 below.
+  S17. The brackets: every FIXTURES value under "The record" drawn on R01–R08; the "capture 5.20-2 did not arrive, so
+      not drawn" notes on R03, R04, R06 go; X08's ‹name as stored› goes with M1 (X09 reads "Demo Administrator").
+  S18. R07: the trail "Home › My progress › My activities" at 1280, 768 and 390; a <caption> that does not repeat the
+      h2: "Every activity filed by you or about you, with who has it now and its credit."; the Spec says the shipped
+      table has none and the build adds it.
+  S19. P02 (and P22, P23): the refusal is div.validation-message with role="alert", the focus in the field; P02's
+      annotation and the Spec's DESIGN.md text: "a refusal found before any dialog stays beside its field with the
+      focus in it, role="alert" so it is read at once", amending § Button system's form-page bullet.
+  S20. Verify's answer (F9): V02, V03, V07, V09, V10 draw div.action-result (tabindex="-1") holding the success Alert
+      (role="status"), first sentence "Export verified." bold, the sentences, then the details list; no section, no
+      .verify-answer, no hand-built stripe. V10: the same answer, not focused (FocusOnLoad only when check=1).
+  S21. dl.detail-list for Verify's details (V02–V10), with ".verify-page .detail-list dd{min-width:0}" and minmax(0,1fr)
+      in f13r3.css; .verify-details goes.
+  S22. The Programme cell is .person-cell (C01–C07); .closed-when goes.
+  S23. The badges (F10): "Withdrawn" (C02, C04, C05, C06, C07) and "Inactive" (P11) carry
+      .badge-withdrawn; "Completed" .badge-completed; "Active" a plain word (P01, P08, P02–P04, P09, P10, P22, P23).
+      badge-draft on 0 boards.
+  S24. C04: every Outcome a real word ("Withdrawn", the longer, on the 18 bracketed rows, with ‹day›); the Programme
+      column th and td .col-wrap and the cell overflow-wrap:anywhere; re-measured at 901 with real words (A4).
+
+NITS (fix as you pass; each is an item):
+  N1. E17's annotation: the header reads from the subject query (M4), not "never the caller's other one".
+  N2. Steps: an activity opened from My activities by a former trainee has the trail "Home › the activity".
+  N3. Spec edge list: a holder of Trainee acting as another role is offered My progress and My data rights only.
+  N4. V05, V06: the input carries autofocus (static SSR); a Spec line.
+  N5. The Spec names the header slot each X board uses: PageHeader's Actions on the review page (moved out of
+      SubtitleContent, M1) and a new Actions slot on the programme page.
+  N6. P05, P11: one Status row reading "Completed: 2026-10-26" beside the badge, not "Completed Completed:"; say which.
+  N7. R07's Mini-CEX row carries "to David Naidoo" under its title.
+  N8. Steps lists the build states that need a states.md row: E09–E15, E19, H05, H06, P06, P12–P15, P22, P23, V08–V10,
+      X03–X07.
+  N9. Illustrations bracket what belongs to a bracketed person: E17's start date, E18's and P19's address and training
+      year, E16's activity count ("‹about 200›"), C04's curricula.
+  N10. No pronoun in any canvas note (E01, E03, E04, E07, E08, H03, P01, P03, R01–R06, R09): "Lerato Molefe's", or
+      "their".
+  N11. One stylesheet: every board's head links ds/wombat/tokens.css, ds/wombat/components/bundle.css, then f13r3.css,
+      in that order (flow 12's round 3 linked f12r3.css so). f13r3.css holds the canvas-only rules in one section and
+      each NEW rule in another, each NEW rule with a comment naming its class-table row. A board's <style> holds at
+      most body{margin:0} and the link colour; no NEW rule on any board.
+  N12. E14, E15: the trail "Home › Trainees › Export portfolio" (no name known yet), as P14 keeps its own.
+  N13. The end's triggers: aria-describedby from "Mark complete…" and "Deactivate…" to their notes (ids on the notes):
+      P01–P04, P06–P10, P16, P17, P19, P22, P23.
+  N14. h2#end-h loses tabindex; .end-help and .end-decision go (the decision line a plain p).
+  N15. V05, V06: aria-describedby puts the refusal first ("hash-e hash-h hash-cmds"); the Spec's DESIGN.md text says so.
+  N16. The pager's size select at 390 (C04): the Spec states the exception (shared PagerControls, every flow's pager)
+      and proposes ".pager .form-select{min-height:2.75rem}" at 390 as a system task, not in f13r3.css.
+
+STEPS BOARD (R3-0-steps, -steps-2, more if long; every Expect clause round 2's board carries stays unless an item here
+changes it; values person by person from FIXTURES):
+  T1. 5.8: "Expect unchanged; Note rewritten" (the "last point … to download" Note is false after Q3; F-5.22a closes).
+  T2. The profile-opening steps are 2.30 (Ndlovu, edit?id=6), 6.34 (Dlamini, id 3), 6.36 (Ndlovu) and A.7.9: each
+      gains the h1 "‹name›'s programme", no Back to trainees, End this programme and the header action; their quoted
+      words stay. 2.39 and 2.40 leave that row: unchanged.
+  T3. A.7.9's two Expect lines: the closed list stacked, View 44 px (not "scrolls in its own container, each Edit");
+      "three fields plus the last day and two triggers" (not "stacks its four fields").
+  T4. A.2.1 and A.2.9: the nine-job list, "All nine had run", A.2.9's title "the other six jobs", its cleanup bullet, the
+      90-day Note and Gap F-A.2.9a (closes with T313): each rewritten (eight jobs, five runs).
+  T5. 6.21 after T312: the Do and bullets invert (a PAED-012 card and standing row), "15 of 15 · level 5: 9 of 9",
+      F-6.21a closes, PAED-012's page reads as R3-R06 (not "as today"); PAED-006's corrected title named. 6.40: 15
+      EPAs, no KGK-001; 6.41: "15 with no decision, of 15"; F-6.40a closes.
+  T6. 5.17, 5.27, A.1.14: the summary loses "Name:" and the "Trainee summary" heading; the closed list's order is the
+      latest end first at A.1.14, 5.27 and 6.34; A.1.14's Expect gains the closed list's line, with the erased row (C07).
+  T7. 5.12 and 5.10: the action is in the page header (F1); 5.23: no trail (F4), Export portfolio lit.
+  T8. A.7.12: R3-V07 at 390 (M5).
+  T9. 5.17, 5.27: the results built from the commands' counts (M2); 5.27's dialog clause "will stop counting".
+  T10. The rest of the cast review's list, a row each with what changes (Expect, Do, Note or Gap) and the Gap that
+      closes: 5.9, 5.10 (its Note "No page links to the staff export", F-5.10a), 5.12, 5.13 (F-5.13a, F-5.13b), 5.14,
+      5.16, 5.18, 5.20, 5.21 (F-5.21a), 5.22 (F-5.22a), 5.23 (F-5.23a), 5.28, A.1.6, A.4.6, A.7.4 (F-A.7.4a); unchanged:
+      5.1–5.7, 5.11, 5.15, 5.19, 5.24–5.26, 5.29; and coverage.md's rows at lines 143, 223, 323, 385 and 494.
+  T11. N2's and N8's lines; A4's line as round 2 had it.
+  T12. Each journey's count, presses + fields, at 1280 and 390, recomputed after F1, F4 and M4 (say for each whether
+      it changed), with today's beside it: a STAR certificate from Home; her export (5.23); Prof Mbatha's (5.10);
+      Mr Smit's (5.12); verifying (5.13); marking complete (5.17); a withdrawal (5.27).
+
+ALSO (flows 10–12, BRIEF § 11):
+  A1. In every stacked row and stacked form's actions the primary is on top; in a dialog at 390 the action on top.
+      Round 3's check reads each 390 board against DESIGN.md as well as this ask.
+  A2. A form inside a gap-spaced column gets none of its gap: the Spec names the element that holds each form's parts
+      (Export, Verify, Profile details, End this programme).
+  A3. Every 390 control 44 px, measured; the Spec says how many boards were measured
+      and how many controls fell short (0, or each named as an exception).
+  A4. Re-measure every table and page at 1280, 1100, 1000, 901, 900, 768 and 390 (each 1280 board at the six desktop
+      widths with its width freed): a table on the Spec, 0 px sideways at each, the hashes, ids and 60-character names
+      included.
+  A5. No password and no secret drawn; never two states on one board that cannot hold at once.
+
+BOARDS ROUND 3 DRAWS (about 192):
+  - R3-0-spec, -spec-2, -spec-3 and R3-0-steps, -steps-2 (more if they run long), redrawn WHOLE, so each item can be
+    checked.
+  - Every round 2 screen as R3-, at every width round 2 drew (77 at 1280, 78 at 390, the 768s of C02, C04, E05, P01,
+    P05, P11, R07 and V02), with the items above applied.
+  - New, each at 1280 and 390: X09, X10 (M1); E19, E20 (S6); P20, P21 (M2); P22, P23 (S3); P24, P25 (S5); C06, C07 (S11).
+    Illustrations: X09, X10, E19, E20, P20, P21, P24, P25, C06; build states (no chip): P22, P23; C07 is A.1.14's.
+  - Illustrations in all: H03, H04, H07, X08, X09, X10, E16, E17, E18, E19, E20, P07, P16–P21, P24, P25, C04, C05, C06,
+    R10; the Spec lists them and each carries the chip and the word in its title.
+
+SPEC BOARD: FIRST, the screenshots: whether they arrived and how, which were opened, which brackets they filled. Then:
+F1–F11, M1–M5, S1–S24, N1–N16, T1–T12 and A1–A5, each with where it is drawn or why it is Spec only; the Prerequisites
+block; the Illustration list; the brackets kept and why (FIXTURES' list); A3's and A4's measurements; the commands and
+queries as written: MayExport on the three DTOs (F1), both end commands' result type (M2), GetExportSubjectQuery with
+ProfileId (M4), GetTraineeProfileByIdQuery's null and fields (S4), GetFormerTraineeHomeQuery's rule (S8),
+ListEndedProfilesQuery paged (S11), VerifyExportQuery's three refusals (S10); the build rules (S2, S6, S13, S19, N4,
+N5); the "Where" column corrected (S9); the DESIGN.md text (S19, F9, F10's § Badges, N15, and round 2's rows with Q2's
+trail and Q6's h2 replaced by F4 and F9); the class table, a row for every class not in bundle.css v33 (NEW and why,
+or reuses .x): .badge-withdrawn added; .verify-answer, .verify-answer-title, .verify-details, .closed-when, .end-help,
+.end-decision out; the canvas-only classes listed apart and kept in f13r3.css's canvas section; every message by kind
+with its words, built or NEW, NEW ones beside the words they replace (S3's, S5's, S6's, S7's, S8's, S10's, S11's and
+M2's among them). "DATA the build must add", restated: MayExport (F1); the take-back count returned (M2); ProfileId
+(M4); the profile's end kind and day, training year at the end, last ratified decision (S4); roles now, locked, erased,
+STAR count for the account sentence (S5); Home's preferred profile, kind, year, STAR count (S8); the export subject's
+name, institution, curriculum, year, start and last day; the verify first/count/last and first exporter; the closed
+list paged with the institution for the Administrator (S11); My activities' note row's reason; nothing for P18's label
+(S14).
