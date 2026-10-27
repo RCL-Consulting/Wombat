@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 13 · Steps</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:var(--header-bg)}
+.sheet{display:flex;flex-direction:column;background:var(--header-bg);font-family:var(--font-body);color:var(--text-color)}
+.board-head{padding:24px 32px 20px;background:var(--surface-color);border-bottom:2px solid var(--secondary-color);display:flex;flex-direction:column;gap:6px}
+.board-title{margin:0;font-size:1.6rem;font-weight:600;line-height:1.2;color:var(--primary-color)}
+.board-sub{margin:0;font-size:.95rem;color:var(--muted-text);max-width:72rem}
+.board-tags{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 0}
+.cap{margin:0;padding:10px 24px;font-size:.85rem;line-height:1.45;color:var(--text-color);background:var(--surface-color);border-top:1px solid var(--border-color);border-bottom:1px solid var(--border-color);display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline}
+.cap b{font-weight:700}
+.frame{position:relative;transform:translateZ(0);overflow:hidden;background:var(--background-color)}
+.frame > .page{height:100%;min-height:0}
+@media (min-width:641px){.frame .sidebar{height:auto;position:relative;align-self:stretch}}
+@media (max-width:640.98px){.frame .nav-toggle:checked ~ .sidebar{height:100%}}
+.wf{filter:grayscale(1)}
+.wf-block{border:2px dashed var(--input-border);border-radius:var(--radius-lg);background:var(--header-bg);color:var(--muted-text);padding:16px;font-size:.9rem;line-height:1.4}
+.pv-focus{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:var(--radius-md)}
+.pv-focus-field{outline:2px solid var(--focus-ring);outline-offset:2px}
+.pv-skel{display:flex;flex-direction:column;gap:12px}
+.pv-scrim{position:absolute;inset:0;background:var(--scrim);display:flex;align-items:flex-start;justify-content:center;padding-top:120px;z-index:30}
+.pv-scrim dialog{position:static;margin:0}
+.tag{display:inline-flex;align-items:center;border-radius:var(--radius-pill);padding:1px 8px;font-size:.72rem;font-weight:700;letter-spacing:.02em;line-height:1.5;border:1px solid}
+.tag-proposed{background:var(--warning-bg);border-color:var(--warning-color);color:var(--text-color)}
+.tag-data{background:var(--info-bg);border-color:var(--secondary-color);color:var(--text-color)}
+.tag-new{background:var(--success-bg);border-color:var(--success-color);color:var(--text-color)}
+.tag-changed{background:var(--header-bg);border-color:var(--input-border);color:var(--text-color)}
+.tag-today{background:var(--danger-bg);border-color:var(--danger-color);color:var(--text-color)}
+.nav-label--new{text-decoration:underline dotted 2px;text-underline-offset:4px}
+/* NEW: the parts flow 13 adds (named on the Spec board) */
+.record-links{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0;border-top:1px solid var(--border-color)}
+.record-links li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-color)}
+.record-links a.record-link{font-weight:600;display:inline-flex;gap:8px;align-items:center;min-height:24px}
+.record-links .record-link-why{grid-column:1;margin:0;color:var(--muted-text);font-size:.9rem}
+.record-links .record-link-none{grid-column:1;margin:0;color:var(--muted-text);font-size:.9rem}
+.ended-line{margin:0 0 4px;font-size:1.1rem;font-weight:600;line-height:1.35}
+.hash-value{font-family:var(--font-mono);font-size:.875rem;overflow-wrap:anywhere;word-break:break-all}
+.verify-answer .detail-list dd{overflow-wrap:anywhere}
+.cmd-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;font-size:.9rem;color:var(--muted-text)}
+.cmd-list code{font-family:var(--font-mono);font-size:.85rem;color:var(--text-color);background:var(--header-bg);border-radius:var(--radius-sm);padding:1px 6px;overflow-wrap:anywhere}
+.end-section .form-actions{justify-content:flex-start}
+.end-decision{margin:0;font-size:.95rem}
+.export-period{margin:0;font-size:.95rem}
+.verify-card{max-width:44rem}
+.steps3{margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:8px}
+.receipt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 16px;margin:0}
+.receipt dt{color:var(--muted-text);font-weight:500}
+.receipt dd{margin:0;overflow-wrap:anywhere}
+@media (max-width:640.98px){.receipt{grid-template-columns:minmax(0,1fr)}.receipt dd{margin-bottom:6px}}
+.col2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:900px){.col2{grid-template-columns:minmax(0,1fr)}}
+.stack24{display:flex;flex-direction:column;gap:24px}
+.stack16{display:flex;flex-direction:column;gap:16px}
+.stack8{display:flex;flex-direction:column;gap:8px}
+.row8{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+@media (max-width:640.98px){.row8 > .btn{min-height:2.75rem;width:100%;justify-content:center}}
+/* the spec and steps boards */
+.doc{padding:32px;display:flex;flex-direction:column;gap:28px;background:var(--surface-color)}
+.doc h2{margin:0;font-size:1.25rem}
+.doc h3{margin:0 0 6px;font-size:1.05rem}
+.doc p, .doc li{font-size:.92rem;line-height:1.45}
+.doc ul{margin:0;padding-left:1.2rem}
+.doc table{border-collapse:collapse;width:100%;font-size:.85rem}
+.doc th,.doc td{border:1px solid var(--border-color);padding:6px 8px;text-align:left;vertical-align:top;line-height:1.4}
+.doc th{background:var(--header-bg);font-weight:600}
+.doc .cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.doc .cols2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.doc .box{border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:16px;background:var(--surface-color)}
+</style>
+</helmet>
+<div class="sheet" style="width:1440px"><div class="doc"><div><p class="board-title">Steps · round 1</p><p class="board-sub">Each journey counted as presses + fields typed, at 1280 and 390 (Menu counts one press at 390), and which of the 26 Expects each variation would change.</p></div><div class="cols2"><section><h2>Screen 1 and the former trainee</h2><table><thead><tr><th scope="col">Journey (presses + fields typed)</th><th scope="col">Today</th><th scope="col">S1 A</th><th scope="col">S1 B</th><th scope="col">S1 C</th></tr></thead><tbody><tr><th scope="row">A former trainee downloads a STAR certificate from Home · 1280</th><td>refused</td><td>2 + 0</td><td>2 + 0</td><td>2 + 0</td></tr><tr><th scope="row">… at 390</th><td>refused</td><td>2 + 0</td><td>3 + 0 (Menu)</td><td>2 + 0</td></tr><tr><th scope="row">She exports her portfolio (5.23) · 1280, with Screen 3's V1, V2 or V3</th><td>1 + 2 (address, From)</td><td>2 + 0</td><td>2 + 0</td><td>2 + 0</td></tr><tr><th scope="row">… at 390</th><td>1 + 2</td><td>2 + 0</td><td>3 + 0</td><td>2 + 0</td></tr></tbody></table></section><section><h2>Screen 2: staff</h2><table><thead><tr><th scope="col">Journey (presses + fields typed)</th><th scope="col">Today</th><th scope="col">S2 A</th><th scope="col">S2 B</th><th scope="col">S2 C</th></tr></thead><tbody><tr><th scope="row">Prof Mbatha exports Dr Molefe's (5.10) · 1280</th><td>4 + 3 (name, address, From)</td><td>4 + 0</td><td>4 + 0</td><td>3 + 0</td></tr><tr><th scope="row">… at 390</th><td>5 + 3</td><td>5 + 0</td><td>5 + 0</td><td>4 + 0</td></tr><tr><th scope="row">Mr Smit reproduces it (5.12) · 1280</th><td>1 + 2 (address sent to him, From)</td><td>4 + 0, from the review or the registrar page</td><td>4 + 0</td><td>3 + 0</td></tr><tr><th scope="row">… at 390</th><td>1 + 2</td><td>5 + 0</td><td>5 + 0</td><td>4 + 0</td></tr></tbody></table></section></div><section><h2>Screens 4 and 5</h2><table><thead><tr><th scope="col">Journey (presses + fields typed)</th><th scope="col">Today</th><th scope="col">V1</th><th scope="col">V2</th><th scope="col">V3</th></tr></thead><tbody><tr><th scope="row">A verifier checks a file (5.13) · 1280 and 390</th><td>1 + 2, and upper case refused</td><td>1 + 2</td><td>1 + 2</td><td>1 + 2</td></tr><tr><th scope="row">Marking a programme complete (5.17) · 1280</th><td>4 + 0</td><td>4 + 0</td><td>5 + 0 (the radio)</td><td>6 + 0 (End…, radio, Continue…)</td></tr><tr><th scope="row">… at 390</th><td>5 + 0</td><td>5 + 0</td><td>6 + 0</td><td>7 + 0</td></tr><tr><th scope="row">Recording a withdrawal (5.27) · 1280</th><td>4 + 1 (the day)</td><td>4 + 1</td><td>5 + 1</td><td>6 + 1</td></tr><tr><th scope="row">… at 390</th><td>5 + 1</td><td>5 + 1</td><td>6 + 1</td><td>7 + 1</td></tr></tbody></table></section><section><h2>The 26 Expects</h2><table><thead><tr><th scope="col">Step</th><th scope="col">Changed by</th><th scope="col">What its Expect would say</th></tr></thead><tbody><tr><th scope="row">5.9</th><td>S3 V1, V2, V3</td><td>Opens on 2023-01-15 to 2026-10-26, not the last twelve months; V2 one press; the result names portfolio-<12 hex>.pdf and Verify; V3 a receipt</td></tr><tr><th scope="row">5.10</th><td>S2 A, B, C; S3</td><td>Trainees › her profile › “Export Lerato Molefe's portfolio” (C: Portfolio exports › Export…); no address typed; the header names her; the same file</td></tr><tr><th scope="row">5.11</th><td>none</td><td>unchanged (flow 20)</td></tr><tr><th scope="row">5.12</th><td>S2 A, B, C</td><td>From the review or the registrar page; the same file</td></tr><tr><th scope="row">5.13</th><td>S4 V1, V2, V3</td><td>Help names the commands; upper case verifies; the answer an h2: first generated in SAST, 3 exports and the last, ids, the filter, the file</td></tr><tr><th scope="row">5.14</th><td>S4</td><td>No match keeps today's two sentences, a third added; spaces only unchanged</td></tr><tr><th scope="row">5.15</th><td>none</td><td>unchanged</td></tr><tr><th scope="row">5.16</th><td>S5 V1, V2, V3</td><td>V1 refused on Mark complete…, before any dialog, under the field; V2 the dialog, then under the field; V3 on its own page. Words “The last day cannot be after today (D).”</td></tr><tr><th scope="row">5.17</th><td>S5; S6</td><td>The page is “Lerato Molefe”, no Back to trainees; the result unchanged; Completed and closed's row has View, not Edit</td></tr><tr><th scope="row">5.18, 5.19</th><td>none</td><td>unchanged (flows 19, 02)</td></tr><tr><th scope="row">5.20</th><td>S7</td><td>Your programme names the curriculum as it ended and links the rest of the record</td></tr><tr><th scope="row">5.21</th><td>S1 A, B, C</td><td>Home says “You completed your programme on D.” and links the record (A, C), or the menu holds it (B)</td></tr><tr><th scope="row">5.22</th><td>Q3</td><td>My authorisations opens for her; the other three still refuse</td></tr><tr><th scope="row">5.23</th><td>S1, S3</td><td>Reached from Home or the menu, the dates already set; no address typed</td></tr><tr><th scope="row">5.24 to 5.26</th><td>none</td><td>unchanged</td></tr><tr><th scope="row">5.27</th><td>S5, S6</td><td>The dialog names the day and the activity it takes back; the result says it; Withdrawn 2026-10-24 with View</td></tr><tr><th scope="row">5.28</th><td>S1, S7</td><td>Home names the end day; My activities' line says why Credit is None</td></tr><tr><th scope="row">5.29</th><td>none</td><td>unchanged</td></tr><tr><th scope="row">6.21</th><td>S7 (T312)</td><td>PAED-012's card stays, marked “(no longer in use)”; its row stays in the standing</td></tr><tr><th scope="row">6.40, 6.41</th><td>S7 (T312)</td><td>No KGK-001 card on either record; every period as Act 5 left it</td></tr><tr><th scope="row">A.7.4</th><td>S1</td><td>Home at 390 as at 5.21; B's menu holds four more links</td></tr><tr><th scope="row">A.7.12</th><td>S4</td><td>The answer fits 390; the ids and the hash wrap inside it</td></tr></tbody></table></section></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 1440, "height": 2300}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

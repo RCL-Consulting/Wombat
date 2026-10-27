@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 13 · Screen 1 B</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:var(--header-bg)}
+.sheet{display:flex;flex-direction:column;background:var(--header-bg);font-family:var(--font-body);color:var(--text-color)}
+.board-head{padding:24px 32px 20px;background:var(--surface-color);border-bottom:2px solid var(--secondary-color);display:flex;flex-direction:column;gap:6px}
+.board-title{margin:0;font-size:1.6rem;font-weight:600;line-height:1.2;color:var(--primary-color)}
+.board-sub{margin:0;font-size:.95rem;color:var(--muted-text);max-width:72rem}
+.board-tags{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 0}
+.cap{margin:0;padding:10px 24px;font-size:.85rem;line-height:1.45;color:var(--text-color);background:var(--surface-color);border-top:1px solid var(--border-color);border-bottom:1px solid var(--border-color);display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline}
+.cap b{font-weight:700}
+.frame{position:relative;transform:translateZ(0);overflow:hidden;background:var(--background-color)}
+.frame > .page{height:100%;min-height:0}
+@media (min-width:641px){.frame .sidebar{height:auto;position:relative;align-self:stretch}}
+@media (max-width:640.98px){.frame .nav-toggle:checked ~ .sidebar{height:100%}}
+.wf{filter:grayscale(1)}
+.wf-block{border:2px dashed var(--input-border);border-radius:var(--radius-lg);background:var(--header-bg);color:var(--muted-text);padding:16px;font-size:.9rem;line-height:1.4}
+.pv-focus{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:var(--radius-md)}
+.pv-focus-field{outline:2px solid var(--focus-ring);outline-offset:2px}
+.pv-skel{display:flex;flex-direction:column;gap:12px}
+.pv-scrim{position:absolute;inset:0;background:var(--scrim);display:flex;align-items:flex-start;justify-content:center;padding-top:120px;z-index:30}
+.pv-scrim dialog{position:static;margin:0}
+.tag{display:inline-flex;align-items:center;border-radius:var(--radius-pill);padding:1px 8px;font-size:.72rem;font-weight:700;letter-spacing:.02em;line-height:1.5;border:1px solid}
+.tag-proposed{background:var(--warning-bg);border-color:var(--warning-color);color:var(--text-color)}
+.tag-data{background:var(--info-bg);border-color:var(--secondary-color);color:var(--text-color)}
+.tag-new{background:var(--success-bg);border-color:var(--success-color);color:var(--text-color)}
+.tag-changed{background:var(--header-bg);border-color:var(--input-border);color:var(--text-color)}
+.tag-today{background:var(--danger-bg);border-color:var(--danger-color);color:var(--text-color)}
+.nav-label--new{text-decoration:underline dotted 2px;text-underline-offset:4px}
+/* NEW: the parts flow 13 adds (named on the Spec board) */
+.record-links{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0;border-top:1px solid var(--border-color)}
+.record-links li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-color)}
+.record-links a.record-link{font-weight:600;display:inline-flex;gap:8px;align-items:center;min-height:24px}
+.record-links .record-link-why{grid-column:1;margin:0;color:var(--muted-text);font-size:.9rem}
+.record-links .record-link-none{grid-column:1;margin:0;color:var(--muted-text);font-size:.9rem}
+.ended-line{margin:0 0 4px;font-size:1.1rem;font-weight:600;line-height:1.35}
+.hash-value{font-family:var(--font-mono);font-size:.875rem;overflow-wrap:anywhere;word-break:break-all}
+.verify-answer .detail-list dd{overflow-wrap:anywhere}
+.cmd-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;font-size:.9rem;color:var(--muted-text)}
+.cmd-list code{font-family:var(--font-mono);font-size:.85rem;color:var(--text-color);background:var(--header-bg);border-radius:var(--radius-sm);padding:1px 6px;overflow-wrap:anywhere}
+.end-section .form-actions{justify-content:flex-start}
+.end-decision{margin:0;font-size:.95rem}
+.export-period{margin:0;font-size:.95rem}
+.verify-card{max-width:44rem}
+.steps3{margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:8px}
+.receipt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 16px;margin:0}
+.receipt dt{color:var(--muted-text);font-weight:500}
+.receipt dd{margin:0;overflow-wrap:anywhere}
+@media (max-width:640.98px){.receipt{grid-template-columns:minmax(0,1fr)}.receipt dd{margin-bottom:6px}}
+.col2{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:900px){.col2{grid-template-columns:minmax(0,1fr)}}
+.stack24{display:flex;flex-direction:column;gap:24px}
+.stack16{display:flex;flex-direction:column;gap:16px}
+.stack8{display:flex;flex-direction:column;gap:8px}
+.row8{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+@media (max-width:640.98px){.row8 > .btn{min-height:2.75rem;width:100%;justify-content:center}}
+/* the spec and steps boards */
+.doc{padding:32px;display:flex;flex-direction:column;gap:28px;background:var(--surface-color)}
+.doc h2{margin:0;font-size:1.25rem}
+.doc h3{margin:0 0 6px;font-size:1.05rem}
+.doc p, .doc li{font-size:.92rem;line-height:1.45}
+.doc ul{margin:0;padding-left:1.2rem}
+.doc table{border-collapse:collapse;width:100%;font-size:.85rem}
+.doc th,.doc td{border:1px solid var(--border-color);padding:6px 8px;text-align:left;vertical-align:top;line-height:1.4}
+.doc th{background:var(--header-bg);font-weight:600}
+.doc .cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.doc .cols2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.doc .box{border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:16px;background:var(--surface-color)}
+</style>
+</helmet>
+<div class="sheet" style="width:1280px"><div class="board-head"><p class="board-title">Screen 1 · Structure B — the record in the menu</p><p class="board-sub">The record's four pages become personal links under the rule for anyone with a trainee record and no Trainee role; Home says how and when it ended and sums up the programme. Changes § The NavMenu's personal links (PROPOSED).</p><div class="board-tags"><span class="tag tag-proposed">PROPOSED</span></div></div><p class="cap"><b>5.21</b> Lerato Molefe after graduating · Home · 1280 × 800 <span class="tag tag-proposed">PROPOSED</span></p><div class="frame wf" style="height:800px"><div class="page"><input type="checkbox" id="nav-toggle-B1" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/f4e05985da677926678d5d52de67cf4f" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<label class="nav-toggle-label" for="nav-toggle-B1"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16"/></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main">
+<div class="nav-list">
+<ul class="nav-items">
+<li><a class="nav-link active" href="#" aria-current="page"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5"/></svg><span class="nav-label">Home</span></a></li>
+</ul>
+<ul class="nav-items nav-personal">
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 7 13.5 15.5 8.5 10.5 2 17M16 7h6v6"/></svg><span class="nav-label">My progress</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg><span class="nav-label nav-label--new">My authorisations</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h.01M3 18h.01M3 6h.01M8 12h13M8 18h13M8 6h13"/></svg><span class="nav-label nav-label--new">My activities</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="nav-label nav-label--new">Export portfolio</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span class="nav-label">My data rights</span></a></li>
+</ul></div></nav>
+<div class="account-row"><a class="account-link" href="#" title="Lerato Molefe"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M6 20a6 6 0 0 1 12 0"/></svg><span class="account-name">Lerato Molefe</span></a><form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign out</button></form></div>
+</header><main><article><div class="header-container"><div><h1 tabindex="-1">Home</h1></div></div><div class="alert alert-info "><strong>You completed your programme on 2026-10-26.</strong> Your record is kept, read-only. Its pages are in the menu: My progress, My authorisations, My activities and Export portfolio.</div><div class="dashboard-grid" style="margin-top:24px"><section class="detail-card dashboard-span-2" aria-labelledby="prog-h"><h2 class="dashboard-card-title" id="prog-h"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0zM22 10v6M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg><span>Your programme</span></h2><div class="dashboard-card-body"><dl class="details-list"><div><dt>Curriculum</dt><dd>Paediatric EPA Curriculum (11.1)</dd></div><div><dt>Started</dt><dd>2023-01-15</dd></div><div><dt>Completed</dt><dd>2026-10-26</dd></div><div><dt>Training year</dt><dd>4 when your programme ended</dd></div><div><dt>STARs</dt><dd>15 on record</dd></div></dl><div class="dashboard-card-footer"><a class="btn btn-outline btn-sm" href="#">Open My progress</a></div></div></section></div></article></main></div></div><p class="cap"><b>5.28</b> Pieter du Plessis after withdrawing (no STAR) · Home · 1280 × 800 </p><div class="frame wf" style="height:800px"><div class="page"><input type="checkbox" id="nav-toggle-B2" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/f4e05985da677926678d5d52de67cf4f" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<label class="nav-toggle-label" for="nav-toggle-B2"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16"/></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main">
+<div class="nav-list">
+<ul class="nav-items">
+<li><a class="nav-link active" href="#" aria-current="page"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5"/></svg><span class="nav-label">Home</span></a></li>
+</ul>
+<ul class="nav-items nav-personal">
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 7 13.5 15.5 8.5 10.5 2 17M16 7h6v6"/></svg><span class="nav-label">My progress</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg><span class="nav-label nav-label--new">My authorisations</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h.01M3 18h.01M3 6h.01M8 12h13M8 18h13M8 6h13"/></svg><span class="nav-label nav-label--new">My activities</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="nav-label nav-label--new">Export portfolio</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span class="nav-label">My data rights</span></a></li>
+</ul></div></nav>
+<div class="account-row"><a class="account-link" href="#" title="Pieter du Plessis"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M6 20a6 6 0 0 1 12 0"/></svg><span class="account-name">Pieter du Plessis</span></a><form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign out</button></form></div>
+</header><main><article><div class="header-container"><div><h1 tabindex="-1">Home</h1></div></div><div class="alert alert-info "><strong>Your programme ended on 2026-10-24.</strong> Your record is kept, read-only. Its pages are in the menu: My progress, My authorisations, My activities and Export portfolio.</div><div class="dashboard-grid" style="margin-top:24px"><section class="detail-card dashboard-span-2" aria-labelledby="prog-h"><h2 class="dashboard-card-title" id="prog-h"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0zM22 10v6M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg><span>Your programme</span></h2><div class="dashboard-card-body"><dl class="details-list"><div><dt>Curriculum</dt><dd>Paediatric EPA Curriculum (11.1)</dd></div><div><dt>Started</dt><dd>2025-01-15</dd></div><div><dt>Ended</dt><dd>2026-10-24</dd></div><div><dt>Training year</dt><dd>2 when your programme ended</dd></div><div><dt>STARs</dt><dd>None issued</dd></div></dl><div class="dashboard-card-footer"><a class="btn btn-outline btn-sm" href="#">Open My progress</a></div></div></section></div></article></main></div></div><p class="cap">A former trainee who later holds Assessor: her Assessor Home, the record kept · 1280 × 800 </p><div class="frame wf" style="height:800px"><div class="page"><input type="checkbox" id="nav-toggle-B3" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/f4e05985da677926678d5d52de67cf4f" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span> <span>Assessor</span></p>
+<label class="nav-toggle-label" for="nav-toggle-B3"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16"/></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main">
+<div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span> <span class="role-now-name">Assessor</span></p></div>
+<div class="nav-list">
+<ul class="nav-items">
+<li><a class="nav-link active" href="#" aria-current="page"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5"/></svg><span class="nav-label">Home</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h4l2 3h4l2-3h4M5 5h14l2 8v6H3v-6z"/></svg><span class="nav-label">Activity inbox</span></a></li>
+</ul>
+<ul class="nav-items nav-personal">
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 7 13.5 15.5 8.5 10.5 2 17M16 7h6v6"/></svg><span class="nav-label">My progress</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg><span class="nav-label nav-label--new">My authorisations</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h.01M3 18h.01M3 6h.01M8 12h13M8 18h13M8 6h13"/></svg><span class="nav-label nav-label--new">My activities</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="nav-label nav-label--new">Export portfolio</span></a></li>
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span class="nav-label">My data rights</span></a></li>
+</ul></div></nav>
+<div class="account-row"><a class="account-link" href="#" title="Lerato Molefe"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M6 20a6 6 0 0 1 12 0"/></svg><span class="account-name">Lerato Molefe</span></a><form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign out</button></form></div>
+</header><main><article><div class="header-container"><div><h1 tabindex="-1">Home</h1><p class="page-subtitle">Assessor · Semester 2, 2026</p></div></div><div class="wf-block" style="height:260px">The Assessor's Home as flow 04 built it: Waiting for you, Recent decisions (unchanged)</div></article></main></div></div><p class="cap">An account with neither a role nor a trainee record: flow 01's “No role assigned”, unchanged · 1280 × 560 </p><div class="frame wf" style="height:560px"><div class="page"><input type="checkbox" id="nav-toggle-B4" class="nav-toggle">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/f4e05985da677926678d5d52de67cf4f" alt="" width="32" height="32"><span class="brand-word">Wombat</span></a>
+<label class="nav-toggle-label" for="nav-toggle-B4"><span class="nav-toggle-closed"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16M4 6h16M4 18h16"/></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>Close</span></label>
+<nav class="nav-panel" aria-label="Main">
+<div class="nav-list">
+<ul class="nav-items">
+<li><a class="nav-link active" href="#" aria-current="page"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5 10.5V20h14v-9.5"/></svg><span class="nav-label">Home</span></a></li>
+</ul>
+<ul class="nav-items nav-personal">
+<li><a class="nav-link" href="#"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span class="nav-label">My data rights</span></a></li>
+</ul></div></nav>
+<div class="account-row"><a class="account-link" href="#" title="[Name as stored]"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M6 20a6 6 0 0 1 12 0"/></svg><span class="account-name">[Name as stored]</span></a><form class="sign-out" action="#" method="post"><button type="submit" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign out</button></form></div>
+</header><main><article><div class="header-container"><div><h1 tabindex="-1">Home</h1></div></div><div class="dashboard-grid"><section class="detail-card detail-card--emphasis dashboard-span-3" aria-labelledby="nr-h"><h2 class="dashboard-card-title" id="nr-h"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span>No role assigned</span></h2><div class="dashboard-card-body"><p>Your account holds no role at the moment, so there is nothing to show you here. An administrator can give you one.</p></div></section></div></article></main></div></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 1280, "height": 3304}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
