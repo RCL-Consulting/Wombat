@@ -93,3 +93,8 @@ T376 (flow 12), T373 (flow 11), T311, T312, T313, T314, T287, T305, T310, T290, 
   under My progress's notice; M5 the Steps board misses 5.18, A.2.1, A.2.9, 5.8, A.1.6, A.4.6; M6 PAED-010/012 are three
   a semester, checked in the seed; M7 du Plessis's last decision is Satisfactory with Observations, checked in Act 4).
   Q17–Q27 for the operator. No board says whether the attachments arrived: re-attach § 4's twelve for round 2.
+- **2026-10-27, round 2's ask** (`round-2-ask.txt`, 393 lines, ~165 boards; one Opus agent): the picks at fidelity on
+  v33, every state at 1280 and 390 (768 for the tables), every § 7 item keyed to its boards, Q1–Q27 as decided, T312
+  first, flow 12's round-2 faults listed. Both full hashes and the last export's time (22:52 SAST) checked against the
+  replay's `PortfolioExports` rows. NEW words of the ask's own (E12, E15, P06, P15, Mbatha's export trail) are marked
+  for the round-2 review. **Next:** the operator sends it with § 4's twelve key screenshots.
