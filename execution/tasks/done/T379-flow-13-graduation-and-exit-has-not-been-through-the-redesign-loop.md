@@ -1,12 +1,13 @@
 ---
 id: T379
 title: Flow 13, graduation and exit, has not been through the redesign loop
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-10-27
 started: 2026-10-27
+completed: 2026-10-28
 ---
 
 # T379 — Flow 13, graduation and exit, has not been through the redesign loop
