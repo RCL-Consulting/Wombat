@@ -1,12 +1,13 @@
 ---
 id: T312
 title: A completed programme's record, and the portfolio PDF built from it, change when the catalogue changes after the programme ended
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-26
 started: 2026-10-27
+completed: 2026-10-27
 ---
 
 # T312 — A completed programme's record, and the portfolio PDF built from it, change when the catalogue changes after the programme ended
@@ -55,10 +56,10 @@ Decide, then build. **Recommendation:** freeze an ended programme's EPA list and
 
 ## Verification
 
-- [ ] Application test: complete a profile, then deactivate one of its EPAs. TraineeQuotaProgressReader.ReadAsync still lists that EPA's card and periods, and GetEntrustmentStandingForTrainee still counts it in the exit rule (n of n unchanged). An active trainee on the same curriculum does not see it, and T158's tests still pass.
-- [ ] Application test: after the end, add a local item at the trainee's institution and change a frozen item's RequiredCount. The ended record lists neither the new item nor the new count.
-- [ ] Application test: Complete and Deactivate write the frozen list in the same save as the end, and a refused end writes none.
-- [ ] Infrastructure test: a graduation portfolio export made after a post-end pause prints the paused EPA's periods and the same standing as an export made before the pause.
+- [x] Application test: complete a profile, then deactivate one of its EPAs. TraineeQuotaProgressReader.ReadAsync still lists that EPA's card and periods, and GetEntrustmentStandingForTrainee still counts it in the exit rule (n of n unchanged). An active trainee on the same curriculum does not see it, and T158's tests still pass.
+- [x] Application test: after the end, add a local item at the trainee's institution and change a frozen item's RequiredCount. The ended record lists neither the new item nor the new count.
+- [x] Application test: Complete and Deactivate write the frozen list in the same save as the end, and a refused end writes none.
+- [x] Infrastructure test: a graduation portfolio export made after a post-end pause prints the paused EPA's periods and the same standing as an export made before the pause.
 - [ ] Browser, replay Act 6 Steps 6.21, 6.40 and 6.41 against Step 5.20. Molefe's record keeps the PAED-012 card and '15 of 15' during the pause and gains no KGK-001 card, and du Plessis's gains none. Give the runbook owner the new Expects.
 
 ## Related
@@ -82,3 +83,15 @@ T252 (the ended view; DESIGN 'as on its last day'), T158 (in force on every prog
   8 should, 7 nits. **The operator's decision on B5** (2026-10-27, option 1): a STAR counts on an ended record when the
   committee issued it for this programme (a review of this profile whose period began by the last day), even if
   ratified after the last day; a revocation or expiry after the last day does not change the record.
+- **2026-10-27, fixed and merged** (`74478940` on `t312`, squashed onto master as `c9d6fe13`): every B and R finding
+  held and was fixed (B1 refuse removing an item an ended list names; B2 a frozen ScaleId pins its scale; B3 the
+  trajectory and the PDF's; B4 the completed card's lines; B5 as the operator decided, "a review of this programme" read
+  as a review whose period overlaps it, since reviews carry no profile id; R1 seven places narrowed to running
+  programmes; R2 runbook 6.17, 6.21, 6.40, 6.41 and Act 6's outcome rewritten, verbatim copies re-synced, 424/0; R3 six
+  new tests). The panel's sentence is now "STAR decisions are shown as the programme left them, and ratings as they
+  stand today." (replacing the board's). The erasure is a third way a list is recorded. Suites: Domain 835, Application
+  4143, Infrastructure 1034, Architecture 52, Web 4141, Integration 511. Reviews kept in
+  `design/flows/13-graduation-and-exit/t312-review-*.md`. Left: `design/system/README.md:194` quotes the old dialog
+  (T379's re-sync); two concurrent programmes' overlapping reviews would both count (rare); B1/B2 read every ended list
+  in memory (fine at this size). **T381 proposed** (changing an item's EPA after the end). **The browser item (6.21,
+  6.40, 6.41) is carried to T379's replay**, as T333's was to T376's.
