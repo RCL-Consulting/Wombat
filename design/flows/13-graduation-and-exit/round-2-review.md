@@ -219,3 +219,9 @@ The operator's Q1-Q27 (`round-1-assessment.md` § 10) stand as given; nothing be
 | S15-S17 | | C3, C4-C7 and C13, C8 | |
 | S18-S24 | | | D1-D7 (S19 = D2 narrowed to wording) |
 | Nits | K N1-N7 | C9-C12 | D8, D9, D11-D15 |
+
+## The operator's decisions (2026-10-27)
+
+The operator took F1–F11 as recommended ("yes, all as recommended"), with every must-fix, should-fix and nit above as
+round 3's ask requires them. T312's scope grows to cover R05, R06 and P18 (F3) before the build. Round 3's ask is
+`round-3-ask.txt`; the captures go with it (attached, or the upload folder connected).

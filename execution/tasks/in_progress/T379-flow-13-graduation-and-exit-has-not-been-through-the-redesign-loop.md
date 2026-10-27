@@ -98,3 +98,9 @@ T376 (flow 12), T373 (flow 11), T311, T312, T313, T314, T287, T305, T310, T290, 
   first, flow 12's round-2 faults listed. Both full hashes and the last export's time (22:52 SAST) checked against the
   replay's `PortfolioExports` rows. NEW words of the ask's own (E12, E15, P06, P15, Mbatha's export trail) are marked
   for the round-2 review. **Next:** the operator sends it with § 4's twelve key screenshots.
+- **2026-10-27, round 2** (168 boards in `round-2/`, `14f88413`; the canvas could not open the captures, so it
+  bracketed what only they hold): reviewed from the code, the cast and the design system, merged (`round-2-review.md`,
+  `c8a61ccb`: 5 must, 24 should, 16 nits; K1/C2, K2, K4 and D2 checked here: `MayReadAsync` admits an Administrator,
+  both end commands are `IRequest`, `GetExportSubjectQuery` does not exist, DESIGN.md 827–832 is the built refusal
+  that Q7 changes). **The operator took F1–F11 as recommended**; T312 grows to cover R05, R06 and P18 (F3).
+  **Next:** `round-3-ask.txt`.
