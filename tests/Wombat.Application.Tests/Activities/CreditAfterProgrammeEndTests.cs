@@ -288,7 +288,7 @@ public sealed class CreditAfterProgrammeEndTests
         }
 
         saves.Saves.Should().ContainSingle(save => save.EndRecorded, "the end is saved once").Which
-            .Should().Be((EndRecorded: true, ListRecorded: true, TallyChanged: true), "the end, its list and the credit are one save");
+            .Should().Be((true, true, true), "the end, its list and the credit are one save (EndRecorded, ListRecorded, TallyChanged)");
         await using var verify = new ApplicationDbContext(options);
         (await verify.Set<TraineeProfile>().SingleAsync()).ReadEndedCurriculum()!
             .Select(item => item.CurriculumItemId).Should().Equal(ItemId);

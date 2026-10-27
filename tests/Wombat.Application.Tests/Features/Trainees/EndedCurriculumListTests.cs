@@ -404,7 +404,7 @@ public sealed class EndedCurriculumListTests
         await CompleteAsync(db);
 
         saves.Should().ContainSingle("the end and its list are one save").Which
-            .Should().Be((EndRecorded: true, ListRecorded: true));
+            .Should().Be((true, true), "the end and its list are one save (EndRecorded, ListRecorded)");
         var profile = await db.TraineeProfiles.AsNoTracking().SingleAsync(entity => entity.Id == 1);
         profile.ReadEndedCurriculum()!.Should().BeEquivalentTo(
         [
@@ -434,7 +434,7 @@ public sealed class EndedCurriculumListTests
         await WithdrawalHandler(db)
             .Handle(new DeactivateTraineeProfileCommand(1, LastDay, TestPrincipals.Administrator()), CancellationToken.None);
 
-        saves.Should().ContainSingle().Which.Should().Be((EndRecorded: true, ListRecorded: true));
+        saves.Should().ContainSingle().Which.Should().Be((true, true), "the end and its list are one save (EndRecorded, ListRecorded)");
         var profile = await db.TraineeProfiles.AsNoTracking().SingleAsync(entity => entity.Id == 1);
         profile.ReadEndedCurriculum()!.Select(item => item.CurriculumItemId).Should().Equal(101, 102);
     }
