@@ -25,7 +25,7 @@ The header: "Trainees", "Admit registrars who are waiting, and keep current trai
 
 | Column | What |
 |---|---|
-| Name | **the row's header**; the Administrator's "Name and institution", the institution under the name (`.person-cell`, check rule 6) |
+| Name | **the row's header**; the Administrator's "Name and institution": the name, then the address, then the institution last (`.person-cell`, check rule 6) |
 | Curriculum and sub-speciality | `.person-cell`: "Paediatric EPA Curriculum (11.1)" over "Paediatrics"; its header `.col-wrap.col-wrap--curriculum`, floored at 7.5rem by the onboarding column's `th.col-wrap` rule (its own 7rem rule loses to it; Known gaps), so "Curriculum" and "Paediatric" never split from 901 to 1100px |
 | Programme start | `.inv-when`: "2023-01-15" over "Training year 4" (T306's list half) |
 | Expected completion | "2027-01-14" |

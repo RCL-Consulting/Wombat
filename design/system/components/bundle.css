@@ -3660,6 +3660,16 @@ fieldset.form-group fieldset.form-group > legend {
   }
 }
 
+/* The narrow column's list stacks each label over its value while that column is too narrow for the 8rem label beside a
+   value (T379 step 8: on a graduate's EPA page the Entrustment card's "5 · reached" overflowed and the page scrolled up
+   to 9px sideways between 901 and about 920px). */
+@media (min-width: 900.02px) and (max-width: 1099.98px) {
+  .details-grid--reverse > :last-child .details-list > div {
+    gap: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* TrajectoryChart's new form (Q5, E1; R4). Both drawings are in the markup, each at its own fixed size and never scaled;
    the card's width, not the viewport, chooses one: .trajectory-figure is a container, and the 900 drawing shows where it
    holds 900px, the 322 below. It is also a named, focusable scroll region (role="region", tabindex="0", as
@@ -7091,7 +7101,6 @@ a.dashboard-metric:hover .dashboard-metric-label {
   }
 }
 /* end Flow 13: the programme's end */
-
 
 /* ══ MainLayout.razor.css ═══════════════════════════════════════════════════════════════════════════════════════════
    Scoped to MainLayout.razor in the app; written unscoped here (see the header). */

@@ -4,7 +4,7 @@ Verify portfolio export (`/portfolio/verify`, `Pages/Portfolio/VerifyExport.razo
 
 ## Who reads it
 
-Everyone: `[AllowAnonymous]`, **static HTML for every visitor** (`[ExcludeFromInteractiveRouting]`), in the shell for a signed-in person and under the signed-out bar for anyone else. The form is a plain GET (`/portfolio/verify?hash=…&check=1`), so it needs no circuit; the check is made as the page renders. It is linked from the export's result (ExportPortfolio) and the former trainee's Home card (FormerTraineeHome), each a plain `<a href>`, a full navigation.
+Everyone: `[AllowAnonymous]`, **static HTML for every visitor** (`[ExcludeFromInteractiveRouting]`), in the shell for a signed-in person and under the signed-out bar for anyone else. The form is a plain GET (`/portfolio/verify?hash=…&check=1`), so it needs no circuit; the check is made as the page renders. It is linked from the export's result (ExportPortfolio); the former trainee's Home card names it in plain text, with no link (FormerTraineeHome), each a plain `<a href>`, a full navigation.
 
 ## The page
 

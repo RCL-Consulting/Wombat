@@ -42,6 +42,6 @@ No new colour token. The notes and help `muted-text`, 5.09:1 on the surface; Ina
 
 ## Known gaps
 
-- **Found re-syncing, not filed:** Save profile's failure is passed as one lead with no rest, so it prints with no bold sentence, where the page's other fixed failures bold their first ("The programme could not be ended just now."; `TraineeProfileEdit.razor:510`). Not drawn on the boards.
+- **Found re-syncing and fixed** (`73baa556`): Save profile's failure now bolds its first sentence, "**The profile could not be saved just now.** Nothing has changed. Try again, or come back in a few minutes.", as the end's failure does (`TraineeProfileWords.SaveFailedLead`, `SaveFailedRest`). Not drawn on the boards.
 - One row of the states pass is uncaptured, `trainee-profile-edit--end-failed` (it needs a forced failure).
 - Both dialogs are in the DOM, closed, on an ended record too; nothing opens them there.
