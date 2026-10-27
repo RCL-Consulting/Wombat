@@ -15,7 +15,7 @@ in the design system (version 33). Left: flows 13–20, the deploy, the College'
 ## Now
 
 - **The runbook** (`knowledge/scenario-paediatrics/`): replayed whole against flow 12 (T376, `wombat_scenario_t376`, 2026-10-26: no regression).
-- **Open: 73 queued; T379 in progress (flow 13); 1 blocked; 11 proposed (T362–T378 open proposals, T380).**
+- **Open: 73 queued; T379 in progress (flow 13); 1 blocked; 11 proposed (T362, T363, T365, T368, T370, T372, T374, T375, T377, T378, T380).**
   - **P1:** T157, the deploy, which waits for the operator.
   - **P2, before real users:** T311–T313, T315, T316, T319, T320, T329, T334, T341.
   - **P3:** the presentation debt the redesign absorbs (BRIEF § 6–7), and polish.
