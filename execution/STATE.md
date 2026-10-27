@@ -6,16 +6,16 @@ This is a reset point, not a diary.
 ## Focus
 
 Wombat is **deployed but not in service**: scenario data only. **The EPA v11.1 stream is built**, the runbook is a
-replayed journey catalogue with a screenshot baseline, and **eleven redesign flows are done**: 01 the shell (T335),
+replayed journey catalogue with a screenshot baseline, and **twelve redesign flows are done**: 01 the shell (T335),
 02 sign-in (T339), 03 filing an activity (T342), 04 an assessor's inbox (T350), 05 a registrar's progress (T355), 06
 programme oversight (T358), 07 the review sitting (T361, D53), 08 the committee calendar (T364), 09 outcomes, STARs
-and appeals (T366, with T367), 10 the MSF campaign (T369, `68327c9d`) and 11 onboarding (T373, `69a17c70`), each designed, replayed and in the design
-system (version 29). Left: flows 12–20, the deploy, the College's, the P2s, P3 polish. On GitHub (RCL-Consulting/Wombat, public).
+and appeals (T366, with T367), 10 the MSF campaign (T369), 11 onboarding (T373) and 12 people admin (T376, `e53d4ae7`), each designed, replayed and
+in the design system (version 33). Left: flows 13–20, the deploy, the College's, the P2s, P3 polish. On GitHub (RCL-Consulting/Wombat, public).
 
 ## Now
 
-- **The runbook** (`knowledge/scenario-paediatrics/`): acts replayed against flow 12 (T376, `wombat_scenario_t376`).
-- **Open: 73 queued; T376 in progress (flow 12, step 7); 1 blocked; 9 proposed (T362, T363, T365, T368, T370, T372, T374, T375, T377).**
+- **The runbook** (`knowledge/scenario-paediatrics/`): replayed whole against flow 12 (T376, `wombat_scenario_t376`, 2026-10-26: no regression).
+- **Open: 73 queued; none in progress; 1 blocked; 10 proposed (T362, T363, T365, T368, T370, T372, T374, T375, T377, T378).**
   - **P1:** T157, the deploy, which waits for the operator.
   - **P2, before real users:** T311–T313, T315, T316, T319, T320, T329, T334, T341.
   - **P3:** the presentation debt the redesign absorbs (BRIEF § 6–7), and polish.
@@ -32,7 +32,7 @@ system (version 29). Left: flows 12–20, the deploy, the College's, the P2s, P3
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The redesign:** flow 12 (T376): built (`e53d4ae7`), the acts replayed clean; next the states pass, step 8, step 9.
+- **The redesign:** flow 13 (`design/flows/13-graduation-and-exit.md`), on the operator's word.
 
 ## Open questions
 
@@ -54,7 +54,7 @@ system (version 29). Left: flows 12–20, the deploy, the College's, the P2s, P3
 
 ## Recent
 
-- **2026-10-23 to 10-27:** T376 (flow 12): steps 1–6 (three rounds, built `e53d4ae7`; T289, T288, T333 done; T377
-  proposed); step 7's acts replayed (`wombat_scenario_t376`: 328 steps, 283 clean, no flow 12 regression).
+- **2026-10-23 to 10-27:** T376, flow 12, done (`e53d4ae7`, fix `6bc5a0c2`; replay 328 steps, 283 clean, no regression;
+  states 89; design system v33); T377, T378 proposed.
 - **2026-10-20:** T373, flow 11, done (`69a17c70`, fix `27ff8779`; replay 331 steps, 280 clean, no regression; states 85; design system v29); T375 proposed.
 - **10-19 and before:** T369 (flow 10); T290 (D54, D55); T366 (flow 09), T364 (flow 08), T361 (flow 07), T358, T355, T350, T342, T339, T335 (flows 06 to 01); the repo moved to GitHub. Earlier: `git log`.

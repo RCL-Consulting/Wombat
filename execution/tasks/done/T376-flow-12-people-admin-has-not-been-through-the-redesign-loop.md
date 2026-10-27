@@ -1,12 +1,13 @@
 ---
 id: T376
 title: Flow 12, people admin, has not been through the redesign loop
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-10-23
 started: 2026-10-23
+completed: 2026-10-27
 ---
 
 # T376 — Flow 12, people admin, has not been through the redesign loop
