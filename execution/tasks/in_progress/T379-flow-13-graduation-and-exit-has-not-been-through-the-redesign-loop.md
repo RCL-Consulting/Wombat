@@ -30,7 +30,7 @@ record, My authorisations and the other pages a graduate keeps) have not been de
 `design/flows/13-graduation-and-exit.md`, written 2026-09-26, before flows 01–12 and before D54/D55 (T290: a withdrawn
 registrar holds no role either). Known faults it takes up include T311 (a graduate's Home, menu and STAR certificates),
 T312 (a completed record rewritten by a later catalogue change), T313 (Verify's case-sensitive hash and 90-day window),
-T314 (the staff export names no trainee), T287 (the footer prints no hash) and T305 (no correction path for an archived
+T314 (the staff export names no trainee), T287's verify item (the placeholder names a hash the footer does not print) and T305 (no correction path for an archived
 record); the audits in step 1 list the rest, including what flows 05, 06, 11, 12, D54 and D55 already changed.
 
 ## What to build
@@ -53,7 +53,7 @@ Run the loop as flow 12 ran it (`design/flows/12-people-admin/`, BRIEF § 11 "Fl
 
 ## Verification
 
-- [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit.
+- [x] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit. (this session's steps 1–2 commit; exit 0)
 - [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link. (https://claude.ai/artifact/SujH2iB2snNe7VANE4SxdK)
 - [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/13-graduation-and-exit/`.
 - [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 13) — the squash commit and counts.
@@ -71,3 +71,13 @@ T376 (flow 12), T373 (flow 11), T311, T312, T313, T314, T287, T305, T310, T290, 
   (1793082623-7a3a) installed: `tokens.json`, `components/bundle.css`, the three fonts copied from the system, and
   `tokens.css` by hand (flow 12's, header updated; its 54 properties match app.css's `:root`, `--shadow-raised` resolved).
   The mark copied in as `/_blob/f4e05985da677926678d5d52de67cf4f`. Steps 1–2 run in one Opus agent.
+- **2026-10-27, steps 1–2** (one Opus agent, then checked here: MyAuthorisations is `Roles = "Trainee"`, the graduation
+  mail claims a ratification): restated in flow 12's layout at `82b108a6`; Mode W/F (wireframes first for her Home and
+  menu and for the staff export's entry points; fidelity in 2–3 variations for Export, Verify and the end of a
+  programme; one proposal each for the closed list and the ended record pages). Dropped as done: T305 (its correction
+  path is Q14), D54/T290 (the old "du Plessis keeps Trainee"), D55, T281, T252, T297, T303, T238; T310 moves to flow
+  20. § 5: T311, T314, T313 with T287's verify item, T312, T325, T329, T280, T323, T166's gate, and four new defects
+  (the closed rows' Edit, the profile's end inside Save's form, the unlinked My activities and Export, the staff
+  export's entry points). § 6: Q1–Q16 with recommendations. Completeness exit 0; verbatim 424/0 (128 stale pointers in
+  flows 01–07 re-synced); baseline missing 0. Staged: `design/upload/`, 122 files, none to crop. Inferred, unreplayed:
+  `TraineeDashboard`'s ended branch is unreachable since D54. **Next:** the operator's answers to Q1–Q16, then round 1.
