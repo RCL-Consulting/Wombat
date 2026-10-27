@@ -24,6 +24,8 @@ The element and its content: usually an `h2` or `h3`, then a `.details-list` (`<
 
 - A detail page is `.details-grid`: a summary card beside the main card, 1fr 2fr, one column at 900px and below. (`.details-grid--lone-spans`, T266's opt-in for a lone card, went with flow 10: its one user, the campaign page, is now a column of cards, `.msf-page`.)
 - `.stack-list` stacks cards with a `space-md` gap.
+- **A page of sections** (flow 12, T376, Q1; UserPage): the user page has no details grid but `.user-page`, a flex column 24px apart at 60rem, of `section.detail-card.user-section`s, each an h2 (1.25rem) and its parts 16px apart; a section's parts under h3s are `.section-part`s (1.1rem), a `border-color` rule above every part but the first. Her institution's record is `.record-page` (52rem), the list pages `.people-page`.
+- **A note panel holding a form** (flow 12, F11): `.detail-card.note-panel.note-panel--form`, the system's note panel with its parts 24px apart (FormField).
 
 ## Rules
 

@@ -1,0 +1,201 @@
+<!-- @dsCard group="People admin" height=7700 width=974 subtitle="The user page: one column of sections under the who line; Roles and scope (each role, then its Remove… or why none; Add a role… opening a note panel), Assessor training, Sign-in and access (Password, Institutional sign-in, Lockout); every removal and the lock confirmed, the dialog naming what waits; a result in the part that acted; no role; her own page; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>UserPage</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* At 900px and below app.css stacks .clinic-table--stack-wide, and below 641px the people pages' controls are 44px; the
+     390 rendition repeats those media rules under .pv-narrow (a 358px column: 390 less the phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-narrow .btn, .pv-narrow .form-control, .pv-narrow .form-select { min-height: 2.75rem; }
+  .pv-narrow .user-page .role-row { align-items: stretch; flex-direction: column; }
+  .pv-narrow .user-page .form-actions, .pv-narrow .note-panel--form .form-actions, .pv-narrow .record-page .form-actions, .pv-narrow .dialog-card .form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .pv-narrow .user-page .form-actions .btn, .pv-narrow .user-page .section-part > .btn, .pv-narrow .record-page .form-actions .btn, .pv-narrow .dialog-card .form-actions .btn { width: 100%; }
+  .pv-narrow .user-page .choice-group .form-check label { align-items: center; display: flex; min-height: 2.75rem; }
+  .pv-narrow .people-filter .filter-actions { align-self: stretch; }
+  .pv-narrow .filter-actions .btn { width: 100%; }
+  .pv-stage { position: relative; min-height: 0; }
+  .pv-stage dialog { position: static; margin: 0; max-width: 34rem; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Thandi Zulu, opened from Users by Nolwazi Mbatha at the end of the replay: the who line (a dl named Account), Roles and scope with each role's outline Remove… named for its row, Assessor training read out, Sign-in and access</p>
+<div class="header-container">
+  <div>
+    <h1>Thandi Zulu</h1>
+    <p class="page-subtitle">Roles, sign-in and lockout for one person at Kgosi Kgari Teaching Hospital, with assessor training for an Assessor.</p>
+  </div>
+</div>
+<div class="user-page"><dl class="detail-list" aria-label="Account"><dt>Email</dt>
+      <dd>zulu@<wbr>kgk.wombat.local</dd>
+      <dt>Institution</dt>
+      <dd>Kgosi Kgari Teaching Hospital</dd>
+      <dt>Status</dt>
+      <dd>Active</dd>
+      <dt>Scope</dt>
+      <dd>Paediatrics / Paediatrics</dd></dl><section class="detail-card user-section" aria-labelledby="s-roles"><h2 id="s-roles" tabindex="-1">Roles and scope</h2>
+      <ul class="role-rows"><li class="role-row"><span class="role-row-label">Committee member</span><button type="button" id="remove-role-committeemember" class="btn btn-outline btn-sm" aria-label="Remove Committee member from Thandi Zulu" aria-haspopup="dialog">Remove…</button></li><li class="role-row"><span class="role-row-label">Assessor</span><button type="button" id="remove-role-assessor" class="btn btn-outline btn-sm" aria-label="Remove Assessor from Thandi Zulu" aria-haspopup="dialog">Remove…</button></li></ul><div class="actions-cell"><button type="button" id="add-role-toggle" class="btn btn-outline" aria-expanded="false"><svg class="icon" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+            Add a role…
+          </button></div><p class="field-help">Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit…'.</p></section><section class="detail-card user-section" aria-labelledby="training-heading"><h2 id="training-heading" tabindex="-1">Assessor training</h2>
+    <div id="training-result" class="action-result" tabindex="-1"></div>
+    <dl class="detail-list"><dt>Training status</dt>
+        <dd class="readonly-value">Trained</dd>
+        <dt>Training completed</dt>
+        <dd class="readonly-value">2018-10-26</dd>
+        <dt>Qualifications</dt>
+        <dd class="readonly-value">MBChB, MMed (Paed), FC Paed (SA)</dd></dl><div class="actions-cell"><button type="button" id="training-trigger" class="btn btn-outline" aria-label="Edit training for Thandi Zulu" aria-expanded="false">Edit training</button></div></section><section class="detail-card user-section" aria-labelledby="s-sign"><h2 id="s-sign">Sign-in and access</h2><div class="section-part"><h3>Password</h3>
+          <p class="field-help">Sets a new password directly. The user is not emailed; share the password securely out-of-band.</p><div class="form-group"><label for="reset-password-input">New password</label>
+  <div class="password-field"><input id="reset-password-input" class="form-control" type="password" autocomplete="new-password" aria-describedby="reset-password-rules"><button type="button" class="btn btn-outline password-toggle" aria-controls="reset-password-input" aria-pressed="false" aria-label="Show new password"><svg class="icon password-toggle-eye" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path> <circle cx="12" cy="12" r="3"></circle></svg>
+        <svg class="icon password-toggle-eye-off" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"></path> <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"></path> <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"></path> <path d="m2 2 20 20"></path></svg>
+        Show
+      </button></div>
+  <div id="reset-password-rules" class="password-rules"><p>The new password needs:</p>
+  <ul><li>At least 12 characters.</li><li>At least 4 different characters.</li><li>A digit (0 to 9).</li><li>An upper-case letter.</li><li>A lower-case letter.</li><li>A symbol, such as ! or #.</li></ul></div></div>
+            <div class="form-actions"><button type="button" class="btn btn-primary">Reset password</button></div></div><div class="section-part"><h3>Institutional sign-in</h3>
+        <p>No institutional sign-in is linked. Thandi Zulu signs in with an email and a password.</p></div><div class="section-part"><h3>Lockout</h3>
+          <p>Locking out the user prevents sign-in immediately. Until they are reactivated:</p>
+            <ul id="lockout-effects"><li>They sit on no committee panel.</li><li>They are sent no activity reminders or weekly digests.</li><li>They cannot be named as an activity's assessor.</li></ul>
+            <p>Their records stay as they are, and a review or feedback campaign already under way can still be finished. Reactivating clears the lockout.</p>
+            <div class="form-actions"><button type="button" id="lock-out-trigger" class="btn btn-outline" aria-label="Lock out Thandi Zulu" aria-haspopup="dialog"><svg class="icon" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2"></rect> <path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                Lock out…
+              </button></div></div></section></div>
+
+<p class="pv-cap">Add a role… opened (aria-expanded, aria-controls only while the panel is there): the note panel holding the form, the roles she does not hold as radios with their help under each, the first radio focused; Cancel quiet, Add role primary</p>
+<div class="user-page"><section class="detail-card user-section" aria-labelledby="s-roles"><h2 id="s-roles" tabindex="-1">Roles and scope</h2>
+      <ul class="role-rows"><li class="role-row"><span class="role-row-label">Committee member</span><button type="button" id="remove-role-committeemember" class="btn btn-outline btn-sm" aria-label="Remove Committee member from Thandi Zulu" aria-haspopup="dialog">Remove…</button></li><li class="role-row"><span class="role-row-label">Assessor</span><button type="button" id="remove-role-assessor" class="btn btn-outline btn-sm" aria-label="Remove Assessor from Thandi Zulu" aria-haspopup="dialog">Remove…</button></li></ul><div class="actions-cell"><button type="button" id="add-role-toggle" class="btn btn-outline" aria-expanded="true" aria-controls="add-role-panel"><svg class="icon" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+            Add a role…
+          </button></div><div id="add-role-panel" class="detail-card note-panel note-panel--form"><fieldset class="form-group choice-group choice-help-stack"><legend>Role<span class="required-mark" aria-hidden="true"> *</span></legend><div class="form-check"><input class="form-check-input" type="radio" name="add-role" id="add-role-institutionaladmin" value="InstitutionalAdmin" aria-describedby="add-role-institutionaladmin-h">
+            <label for="add-role-institutionaladmin">Institutional admin</label>
+            <p id="add-role-institutionaladmin-h" class="page-subtitle choice-help">Runs an institution in Wombat: invites and admits people, adopts curricula.</p></div><div class="form-check"><input class="form-check-input" type="radio" name="add-role" id="add-role-specialityadmin" value="SpecialityAdmin" aria-describedby="add-role-specialityadmin-h">
+            <label for="add-role-specialityadmin">Speciality admin</label>
+            <p id="add-role-specialityadmin-h" class="page-subtitle choice-help">Runs one speciality's committee work: panels, reviews and decisions due.</p></div><div class="form-check"><input class="form-check-input" type="radio" name="add-role" id="add-role-subspecialityadmin" value="SubSpecialityAdmin" aria-describedby="add-role-subspecialityadmin-h">
+            <label for="add-role-subspecialityadmin">Sub-speciality admin</label>
+            <p id="add-role-subspecialityadmin-h" class="page-subtitle choice-help">Runs one sub-speciality's committee work.</p></div><div class="form-check"><input class="form-check-input" type="radio" name="add-role" id="add-role-coordinator" value="Coordinator" aria-describedby="add-role-coordinator-h">
+            <label for="add-role-coordinator">Coordinator</label>
+            <p id="add-role-coordinator-h" class="page-subtitle choice-help">Works across the institution, kept to Thandi Zulu's scope: Paediatrics / Paediatrics.</p></div></fieldset><p class="field-help">Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit…'.</p>
+      <div class="form-actions"><button type="button" class="btn btn-quiet">Cancel</button>
+        <button type="button" class="btn btn-primary"><svg class="icon" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path> <circle cx="9" cy="7" r="4"></circle> <path d="M19 8v6"></path> <path d="M22 11h-6"></path></svg>
+          Add role
+        </button></div></div></section></div>
+
+<p class="pv-cap">Remove… on Assessor: the dialog says what the removal does, that the training record is kept, and the scope that stays for the role left; "Keep the role" first, "Remove Assessor" danger</p>
+<div class="pv-stage"><dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-x"><div class="form-container"><h2 id="confirm-0deac1978a6d42d0a4cd0482165aba82-title">Remove Assessor from Thandi Zulu?</h2><div id="confirm-0deac1978a6d42d0a4cd0482165aba82-body" class="dialog-body"><p>Thandi Zulu can no longer be named as an activity's assessor, and leaves the Assessors list. Any open session ends within a minute.</p><p>Any assessor training recorded for Thandi Zulu is kept, and shows again if Assessor is given back.</p><p>Thandi Zulu's scope stays Paediatrics / Paediatrics, for Committee member, the role still held.</p></div><div class="form-actions"><button type="button" class="btn btn-outline">Keep the role</button>
+        <button type="button" class="btn btn-danger">Remove Assessor</button></div></div></dialog></div>
+
+<p class="pv-cap">Removed (the result in Roles and scope, focused, its first sentence bold; one result on the page at a time)</p>
+<div class="user-page"><section class="detail-card user-section" aria-labelledby="pv-roles-done">
+  <h2 id="pv-roles-done" tabindex="-1">Roles and scope</h2>
+  <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status"><strong>Committee member removed from Thandi Zulu.</strong> Any open session ends within a minute.</div></div>
+  <ul class="role-rows"><li class="role-row"><span class="role-row-label">Assessor</span><button type="button" class="btn btn-outline btn-sm" aria-label="Remove Assessor from Thandi Zulu" aria-haspopup="dialog">Remove…</button></li></ul>
+  <div class="actions-cell"><button type="button" class="btn btn-outline" aria-expanded="false"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Add a role…</button></div>
+  <p class="field-help">Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit…'.</p>
+</section></div>
+
+<p class="pv-cap">Lock out… on Thandi Zulu: only the effects that apply to her (a Committee member and an Assessor), then what is kept; "Keep access" first, the danger button names the person</p>
+<div class="pv-stage"><dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-y"><div class="form-container"><h2 id="confirm-6189ed1df7d34ad5ba22c01c55137423-title">Lock out Thandi Zulu?</h2><div id="confirm-6189ed1df7d34ad5ba22c01c55137423-body" class="dialog-body"><p>Thandi Zulu can no longer sign in, and any open session ends within a minute. Until they are reactivated:</p>
+    <ul class="dialog-list"><li>They sit on no committee panel.</li><li>They are sent no activity reminders or weekly digests.</li><li>They cannot be named as an activity's assessor.</li></ul><p>Their records stay as they are, and a review or feedback campaign already under way can still be finished. Reactivating clears the lockout.</p></div><div class="form-actions"><button type="button" class="btn btn-outline">Keep access</button>
+        <button type="button" class="btn btn-danger">Lock out Thandi Zulu</button></div></div></dialog></div>
+
+<p class="pv-cap">Lock out… on an assessor with requests waiting (drawn from UserDetail.razor and UserPageText; the replay's cast had none waiting): a warning in the dialog, the first five and "and 2 more."</p>
+<div class="pv-stage"><dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-lockw-title"><div class="form-container">
+  <h2 id="pv-lockw-title">Lock out Fatima Khumalo?</h2>
+  <div class="dialog-body">
+    <p>Fatima Khumalo can no longer sign in, and any open session ends within a minute. Until they are reactivated:</p>
+    <ul class="dialog-list"><li>They are sent no activity reminders or weekly digests.</li><li>They cannot be named as an activity's assessor.</li></ul>
+    <div class="alert alert-warning"><p><strong>7 requests are waiting for Fatima Khumalo</strong>, the oldest since 2026-10-02 09:14 SAST. They stay with them; they do not move to anyone else, and no reminder is sent about them.</p>
+      <ul class="dialog-list"><li>Lerato Molefe · Mini-CEX (Paediatrics) · waiting since 2026-10-02 09:14 SAST · overdue</li><li>Anele Dlamini · Case-based discussion (Paediatrics) · waiting since 2026-10-09 11:02 SAST</li><li>Anele Dlamini · DOPS (Paediatrics) · waiting since 2026-10-12 08:40 SAST</li><li>Nomsa Mahlangu · Mini-CEX (Paediatrics) · waiting since 2026-10-20 14:31 SAST</li><li>Nomsa Mahlangu · Case-based discussion (Paediatrics) · waiting since 2026-10-22 10:05 SAST</li><li>and 2 more.</li></ul>
+    </div>
+    <p>Their records stay as they are, and a review or feedback campaign already under way can still be finished. Reactivating clears the lockout.</p>
+  </div>
+  <div class="form-actions"><button type="button" class="btn btn-outline">Keep access</button><button type="button" class="btn btn-danger">Lock out Fatima Khumalo</button></div>
+</div></dialog></div>
+
+<p class="pv-cap">Locked out, and an account that signs in only through its institution (drawn from the Razor: the replay links no provider): the badge in the who line, no password field, the last way in's Remove… unavailable with its reason beside it, the lock's result and Reactivate user</p>
+<div class="user-page"><dl class="detail-list" aria-label="Account"><dt>Email</dt><dd>zulu@<wbr>kgk.wombat.local</dd><dt>Institution</dt><dd>Kgosi Kgari Teaching Hospital</dd><dt>Status</dt><dd><span class="badge badge-declined status-locked"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>Locked out</span></dd><dt>Scope</dt><dd>Paediatrics / Paediatrics</dd></dl><section class="detail-card user-section" aria-labelledby="pv-sign">
+  <h2 id="pv-sign">Sign-in and access</h2>
+  <div class="section-part">
+    <h3>Password</h3>
+    <p>Thandi Zulu signs in only through KGK staff sign-in. A password cannot be set for them.</p>
+  </div>
+  <div class="section-part">
+    <h3>Institutional sign-in</h3>
+    <ul class="signin-methods">
+      <li class="signin-method">
+        <svg class="icon signin-method-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" /> <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" /> <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" /> <path d="M10 6h4" /> <path d="M10 10h4" /> <path d="M10 14h4" /> <path d="M10 18h4" /></svg>
+        <div class="signin-method-text"><strong>KGK staff sign-in</strong><span class="signin-method-detail">Institutional sign-in.</span></div>
+        <div class="signin-method-action">
+          <button type="button" class="btn btn-outline btn-sm is-unavailable" aria-label="Remove the KGK staff sign-in from Thandi Zulu" aria-disabled="true" aria-describedby="pv-why">Remove…</button>
+          <p id="pv-why" class="field-help">The institutional sign-in is the account's only way in.</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+  <div class="section-part">
+    <h3>Lockout</h3>
+    <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status"><strong>Thandi Zulu is locked out.</strong> Any open session ends within a minute.</div></div>
+    <p>This user is currently locked out and cannot sign in.</p>
+    <div class="form-actions"><button type="button" class="btn btn-primary">Reactivate user</button></div>
+  </div>
+</section></div>
+
+<p class="pv-cap">No role (Pieter du Plessis, who left the programme in Act 5): how and when it ended, and what he can still open; Add a role… stays</p>
+<div class="user-page"><section class="detail-card user-section" aria-labelledby="s-roles"><h2 id="s-roles" tabindex="-1">Roles and scope</h2>
+      <div class="no-role"><p><strong>Pieter du Plessis holds no role: they left the programme on 2026-10-24.</strong> They can still sign in to read their training record (My progress) and their data rights.</p></div><div class="actions-cell"><button type="button" id="add-role-toggle" class="btn btn-outline" aria-expanded="false"><svg class="icon" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+            Add a role…
+          </button></div><p class="field-help">Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit…'.</p></section></div>
+
+<p class="pv-cap">Her own page (Nolwazi Mbatha): the standing note, no Remove…, no password or lockout part, no Add a role…</p>
+<div class="header-container">
+  <div>
+    <h1>Nolwazi Mbatha</h1>
+    <p class="page-subtitle">Your own account: your roles and how you sign in.</p>
+  </div>
+</div>
+<div class="user-page"><dl class="detail-list" aria-label="Account"><dt>Email</dt>
+      <dd>mbatha@<wbr>kgk.wombat.local</dd>
+      <dt>Institution</dt>
+      <dd>Kgosi Kgari Teaching Hospital</dd>
+      <dt>Status</dt>
+      <dd>Active</dd>
+      <dt>Scope</dt>
+      <dd>Kgosi Kgari Teaching Hospital</dd></dl><div id="user-own-account-note" class="alert alert-info">This is your own account, so you cannot change its roles, lockout or password here. Another administrator can change your roles or lockout. <a href="#">Change your password</a> from your account.</div><section class="detail-card user-section" aria-labelledby="s-roles"><h2 id="s-roles" tabindex="-1">Roles and scope</h2>
+      <ul class="role-rows"><li class="role-row"><span class="role-row-label">Institutional admin</span></li></ul></section><section class="detail-card user-section" aria-labelledby="s-sign"><h2 id="s-sign">Sign-in and access</h2><div class="section-part"><h3>Institutional sign-in</h3>
+        <p>No institutional sign-in is linked. Nolwazi Mbatha signs in with an email and a password.</p></div></section></div>
+
+<p class="pv-cap">Not found or out of scope: the h1 "User", the empty card and Go to Users</p>
+<div class="header-container">
+  <div>
+    <h1>User</h1>
+  </div>
+</div>
+<div class="user-page"><div class="detail-card detail-card--empty" tabindex="-1"><div class="state-panel-title">User unavailable</div><div class="state-panel-copy">The user could not be found or is outside your scope.</div><div class="form-actions"><a class="btn btn-outline btn-sm" href="#">Go to Users <svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg></a></div></div></div>
+
+<p class="pv-cap">At 390: each role's Remove… under it at the row's width, Add role on top of Cancel, every control 44px</p>
+<div class="pv-narrow"><div class="user-page"><section class="detail-card user-section" aria-labelledby="s-roles"><h2 id="s-roles" tabindex="-1">Roles and scope</h2>
+      <ul class="role-rows"><li class="role-row"><span class="role-row-label">Committee member</span><button type="button" id="remove-role-committeemember" class="btn btn-outline btn-sm" aria-label="Remove Committee member from Thandi Zulu" aria-haspopup="dialog">Remove…</button></li><li class="role-row"><span class="role-row-label">Assessor</span><button type="button" id="remove-role-assessor" class="btn btn-outline btn-sm" aria-label="Remove Assessor from Thandi Zulu" aria-haspopup="dialog">Remove…</button></li></ul><div class="actions-cell"><button type="button" id="add-role-toggle" class="btn btn-outline" aria-expanded="true" aria-controls="add-role-panel"><svg class="icon" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+            Add a role…
+          </button></div><div id="add-role-panel" class="detail-card note-panel note-panel--form"><fieldset class="form-group choice-group choice-help-stack"><legend>Role<span class="required-mark" aria-hidden="true"> *</span></legend><div class="form-check"><input class="form-check-input" type="radio" name="add-role" id="add-role-institutionaladmin" value="InstitutionalAdmin" aria-describedby="add-role-institutionaladmin-h">
+            <label for="add-role-institutionaladmin">Institutional admin</label>
+            <p id="add-role-institutionaladmin-h" class="page-subtitle choice-help">Runs an institution in Wombat: invites and admits people, adopts curricula.</p></div><div class="form-check"><input class="form-check-input" type="radio" name="add-role" id="add-role-specialityadmin" value="SpecialityAdmin" aria-describedby="add-role-specialityadmin-h">
+            <label for="add-role-specialityadmin">Speciality admin</label>
+            <p id="add-role-specialityadmin-h" class="page-subtitle choice-help">Runs one speciality's committee work: panels, reviews and decisions due.</p></div><div class="form-check"><input class="form-check-input" type="radio" name="add-role" id="add-role-subspecialityadmin" value="SubSpecialityAdmin" aria-describedby="add-role-subspecialityadmin-h">
+            <label for="add-role-subspecialityadmin">Sub-speciality admin</label>
+            <p id="add-role-subspecialityadmin-h" class="page-subtitle choice-help">Runs one sub-speciality's committee work.</p></div><div class="form-check"><input class="form-check-input" type="radio" name="add-role" id="add-role-coordinator" value="Coordinator" aria-describedby="add-role-coordinator-h">
+            <label for="add-role-coordinator">Coordinator</label>
+            <p id="add-role-coordinator-h" class="page-subtitle choice-help">Works across the institution, kept to Thandi Zulu's scope: Paediatrics / Paediatrics.</p></div></fieldset><p class="field-help">Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit…'.</p>
+      <div class="form-actions"><button type="button" class="btn btn-quiet">Cancel</button>
+        <button type="button" class="btn btn-primary"><svg class="icon" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path> <circle cx="9" cy="7" r="4"></circle> <path d="M19 8v6"></path> <path d="M22 11h-6"></path></svg>
+          Add role
+        </button></div></div></section></div></div>
+</body>
+</html>

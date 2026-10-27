@@ -3612,7 +3612,7 @@ and Sign-in and access. With no record it offers "Record training"; with one, th
 Training status, Training completed, Qualifications, each `dd.readonly-value`) and "Edit training", each named "… for
 ‹name›". Either opens the note panel holding the training form (§ Form system); it asks no institution or speciality,
 since an assessor's discipline is the person's one scope (M1). Saved, the result is said in the section and focused: "**Training
-saved for Fatma Khumalo:** Provisional (awaiting sign-off), completed 2026-09-20." ("… Trained, no date." for a finished
+saved for Fatima Khumalo:** Provisional (awaiting sign-off), completed 2026-09-20." ("… Trained, no date." for a finished
 status with none). `?section=training` (`PeopleLinks.UserTraining`) opens the panel with its first radio focused; for a
 person who does not hold Assessor it says once, in the section's place and focused, "‹name› does not hold the Assessor
 role, so has no assessor training here." A removed Assessor's record is kept and the section hidden, shown again with the

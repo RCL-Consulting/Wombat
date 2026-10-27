@@ -1,0 +1,99 @@
+<!-- @dsCard group="People admin" height=2690 width=974 subtitle="Her institution's record: h1 and tab the institution's name, trail Home › name; Name, Short code, Contact email, Status read out; Cancel and Save changes; a refusal under its field with no summary; the saved result above the form naming the contact email; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>InstitutionRecord</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* At 900px and below app.css stacks .clinic-table--stack-wide, and below 641px the people pages' controls are 44px; the
+     390 rendition repeats those media rules under .pv-narrow (a 358px column: 390 less the phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-narrow .btn, .pv-narrow .form-control, .pv-narrow .form-select { min-height: 2.75rem; }
+  .pv-narrow .user-page .role-row { align-items: stretch; flex-direction: column; }
+  .pv-narrow .user-page .form-actions, .pv-narrow .note-panel--form .form-actions, .pv-narrow .record-page .form-actions, .pv-narrow .dialog-card .form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .pv-narrow .user-page .form-actions .btn, .pv-narrow .user-page .section-part > .btn, .pv-narrow .record-page .form-actions .btn, .pv-narrow .dialog-card .form-actions .btn { width: 100%; }
+  .pv-narrow .user-page .choice-group .form-check label { align-items: center; display: flex; min-height: 2.75rem; }
+  .pv-narrow .people-filter .filter-actions { align-self: stretch; }
+  .pv-narrow .filter-actions .btn { width: 100%; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Nolwazi Mbatha opens Open Kgosi Kgari Teaching Hospital on her Home: the record, no header action, Status read out over who sets it</p>
+<div class="header-container">
+  <div>
+    <h1>Kgosi Kgari Teaching Hospital</h1>
+    <p class="page-subtitle">Your institution's name, short code and contact email.</p>
+  </div>
+</div>
+<div class="record-page"><form class="form-container" novalidate aria-label="Kgosi Kgari Teaching Hospital">
+  <p class="field-help">* marks a field you must fill in.</p>
+  <div class="form-grid">
+    <div class="form-group"><label for="pv-n">Name<span class="required-mark" aria-hidden="true"> *</span></label><input id="pv-n" class="form-control" aria-required="true" autocomplete="off" value="Kgosi Kgari Teaching Hospital"></div>
+    <div class="form-group"><label for="pv-s">Short code<span class="required-mark" aria-hidden="true"> *</span></label><input id="pv-s" class="form-control" aria-required="true" autocomplete="off" value="KGK"></div>
+    <div class="form-group"><label for="pv-e">Contact email</label><input id="pv-e" type="email" class="form-control" autocomplete="off" spellcheck="false" value="hod.paediatrics@kgk.wombat.local"></div>
+  </div>
+  <dl class="form-group"><dt>Status</dt><dd class="readonly-value">Active</dd><dd class="field-help">Set by a Wombat administrator.</dd></dl>
+  <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary">Save changes</button></div>
+</form></div>
+
+<p class="pv-cap">Saved (I07): the result above the form takes the focus, its first sentence bold, the address breaking after its @</p>
+<div class="header-container">
+  <div>
+    <h1>Kgosi Kgari Teaching Hospital</h1>
+    <p class="page-subtitle">Your institution's name, short code and contact email.</p>
+  </div>
+</div>
+<div class="record-page"><div class="action-result" tabindex="-1"><div class="alert alert-success" role="status"><strong>Kgosi Kgari Teaching Hospital saved.</strong> Its contact email is now hod.paediatrics@<wbr>kgk.wombat.local.</div></div><form class="form-container" novalidate aria-label="Kgosi Kgari Teaching Hospital">
+  <p class="field-help">* marks a field you must fill in.</p>
+  <div class="form-grid">
+    <div class="form-group"><label for="pv-nb">Name<span class="required-mark" aria-hidden="true"> *</span></label><input id="pv-nb" class="form-control" aria-required="true" autocomplete="off" value="Kgosi Kgari Teaching Hospital"></div>
+    <div class="form-group"><label for="pv-sb">Short code<span class="required-mark" aria-hidden="true"> *</span></label><input id="pv-sb" class="form-control" aria-required="true" autocomplete="off" value="KGK"></div>
+    <div class="form-group"><label for="pv-eb">Contact email</label><input id="pv-eb" type="email" class="form-control" autocomplete="off" spellcheck="false" value="hod.paediatrics@kgk.wombat.local"></div>
+  </div>
+  <dl class="form-group"><dt>Status</dt><dd class="readonly-value">Active</dd><dd class="field-help">Set by a Wombat administrator.</dd></dl>
+  <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary">Save changes</button></div>
+</form></div>
+
+<p class="pv-cap">Short code emptied (I03): the refusal under its field, the field marked, described by it and focused; no summary, nothing saved</p>
+<div class="record-page"><form class="form-container" novalidate aria-label="Kgosi Kgari Teaching Hospital">
+  <p class="field-help">* marks a field you must fill in.</p>
+  <div class="form-grid">
+    <div class="form-group"><label for="pv-nc">Name<span class="required-mark" aria-hidden="true"> *</span></label><input id="pv-nc" class="form-control" aria-required="true" autocomplete="off" value="Kgosi Kgari Teaching Hospital"></div>
+    <div class="form-group"><label for="pv-sc">Short code<span class="required-mark" aria-hidden="true"> *</span></label><input id="pv-sc" class="form-control input-validation-error" aria-required="true" aria-invalid="true" aria-describedby="pv-sc-m" autocomplete="off" value=""><p id="pv-sc-m" class="validation-message">Type a short code. The record was not saved.</p></div>
+    <div class="form-group"><label for="pv-ec">Contact email</label><input id="pv-ec" type="email" class="form-control" autocomplete="off" spellcheck="false" value="hod.paediatrics@kgk.wombat.local"></div>
+  </div>
+  <dl class="form-group"><dt>Status</dt><dd class="readonly-value">Active</dd><dd class="field-help">Set by a Wombat administrator.</dd></dl>
+  <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary">Save changes</button></div>
+</form></div>
+
+<p class="pv-cap">The load failure (S9): "Institution" in the h1 and the fixed words with Try again</p>
+<div class="header-container">
+  <div>
+    <h1>Institution</h1>
+    <p class="page-subtitle">Your institution's name, short code and contact email.</p>
+  </div>
+</div>
+<div class="record-page"><div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text">Could not load the institution. Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /> <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path d="M8 16H3v5" /></svg>Try again</button></div></div></div></div>
+
+<p class="pv-cap">At 390: every control 44px, Save changes on top of Cancel, both the form's width</p>
+<div class="pv-narrow"><div class="record-page"><form class="form-container" novalidate aria-label="Kgosi Kgari Teaching Hospital">
+  <p class="field-help">* marks a field you must fill in.</p>
+  <div class="form-grid">
+    <div class="form-group"><label for="pv-nd">Name<span class="required-mark" aria-hidden="true"> *</span></label><input id="pv-nd" class="form-control" aria-required="true" autocomplete="off" value="Kgosi Kgari Teaching Hospital"></div>
+    <div class="form-group"><label for="pv-sd">Short code<span class="required-mark" aria-hidden="true"> *</span></label><input id="pv-sd" class="form-control" aria-required="true" autocomplete="off" value="KGK"></div>
+    <div class="form-group"><label for="pv-ed">Contact email</label><input id="pv-ed" type="email" class="form-control" autocomplete="off" spellcheck="false" value="hod.paediatrics@kgk.wombat.local"></div>
+  </div>
+  <dl class="form-group"><dt>Status</dt><dd class="readonly-value">Active</dd><dd class="field-help">Set by a Wombat administrator.</dd></dl>
+  <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary">Save changes</button></div>
+</form></div></div>
+</body>
+</html>

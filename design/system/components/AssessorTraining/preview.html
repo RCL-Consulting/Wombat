@@ -1,0 +1,133 @@
+<!-- @dsCard group="People admin" height=4300 width=974 subtitle="Assessor training, the user page's section for a holder of Assessor: the record read out and Edit training, or Record training; the note panel holding the form (four status radios, a date only for a finished status, Qualifications); refusals under their fields; the saved result; her own; not an Assessor" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AssessorTraining</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* At 900px and below app.css stacks .clinic-table--stack-wide, and below 641px the people pages' controls are 44px; the
+     390 rendition repeats those media rules under .pv-narrow (a 358px column: 390 less the phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-narrow .btn, .pv-narrow .form-control, .pv-narrow .form-select { min-height: 2.75rem; }
+  .pv-narrow .user-page .role-row { align-items: stretch; flex-direction: column; }
+  .pv-narrow .user-page .form-actions, .pv-narrow .note-panel--form .form-actions, .pv-narrow .record-page .form-actions, .pv-narrow .dialog-card .form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .pv-narrow .user-page .form-actions .btn, .pv-narrow .user-page .section-part > .btn, .pv-narrow .record-page .form-actions .btn, .pv-narrow .dialog-card .form-actions .btn { width: 100%; }
+  .pv-narrow .user-page .choice-group .form-check label { align-items: center; display: flex; min-height: 2.75rem; }
+  .pv-narrow .people-filter .filter-actions { align-self: stretch; }
+  .pv-narrow .filter-actions .btn { width: 100%; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Opened at ?section=training (Assessors' Edit training for Thandi Zulu): the record read out, the panel open under its trigger, the first radio focused, the form filled from the record</p>
+<div class="user-page"><section class="detail-card user-section" aria-labelledby="training-heading"><h2 id="training-heading" tabindex="-1">Assessor training</h2>
+    <div id="training-result" class="action-result" tabindex="-1"></div>
+    <dl class="detail-list"><dt>Training status</dt>
+        <dd class="readonly-value">Trained</dd>
+        <dt>Training completed</dt>
+        <dd class="readonly-value">2018-10-26</dd>
+        <dt>Qualifications</dt>
+        <dd class="readonly-value">MBChB, MMed (Paed), FC Paed (SA)</dd></dl><div class="actions-cell"><button type="button" id="training-trigger" class="btn btn-outline" aria-label="Edit training for Thandi Zulu" aria-expanded="true" aria-controls="training-panel">Edit training</button></div><div id="training-panel" class="detail-card note-panel note-panel--form"><fieldset id="training-status" class="form-group choice-row choice-group"><legend>Training status<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></legend><div class="form-check"><input class="form-check-input" type="radio" name="training-status" id="training-status-0" value="NotStarted" aria-describedby="training-status-help">
+              <label for="training-status-0">Not started</label></div><div class="form-check"><input class="form-check-input" type="radio" name="training-status" id="training-status-1" value="InTraining" aria-describedby="training-status-help">
+              <label for="training-status-1">In training</label></div><div class="form-check"><input class="form-check-input" type="radio" name="training-status" id="training-status-2" value="Provisional" aria-describedby="training-status-help">
+              <label for="training-status-2">Provisional (awaiting sign-off)</label></div><div class="form-check"><input class="form-check-input" type="radio" name="training-status" id="training-status-3" value="Trained" checked="" aria-describedby="training-status-help">
+              <label for="training-status-3">Trained</label></div><p id="training-status-help" class="page-subtitle">Faculty-development lifecycle. In-training assessors may assess under supervision.</p></fieldset><div class="form-group"><label for="training-completed">Training completed</label>
+            <input id="training-completed" type="date" class="form-control" value="2018-10-26" aria-describedby="training-completed-help">
+            <p id="training-completed-help" class="field-help">Date the assessor completed assessor training. Leave blank if unrecorded.</p></div><div class="form-group"><label for="training-qualifications">Qualifications<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label>
+          <textarea id="training-qualifications" class="form-control" rows="2" aria-required="true">MBChB, MMed (Paed), FC Paed (SA)</textarea></div>
+        <div class="form-actions"><button type="button" class="btn btn-quiet">Cancel</button>
+          <button type="button" class="btn btn-primary">Save training</button></div></div></section></div>
+
+<p class="pv-cap">Saved empty (drawn from AssessorTrainingSection.razor): each refusal under its field, the radios and the textarea aria-invalid, the group .choice-group.is-invalid, the first radio focused, no summary</p>
+<div class="user-page"><section class="detail-card user-section" aria-labelledby="pv-t-h"><h2 id="pv-t-h" tabindex="-1">Assessor training</h2>
+  <div class="actions-cell"><button type="button" class="btn btn-outline" aria-label="Record training for Mohammed Patel" aria-expanded="true" aria-controls="pv-t-panel">Record training</button></div>
+  <div id="pv-t-panel" class="detail-card note-panel note-panel--form">
+    <fieldset class="form-group choice-row choice-group is-invalid">
+      <legend>Training status<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></legend>
+      <div class="form-check"><input class="form-check-input" type="radio" name="pv-ts" id="pv-ts-0" aria-invalid="true" aria-describedby="pv-ts-e pv-ts-h"><label for="pv-ts-0">Not started</label></div>
+      <div class="form-check"><input class="form-check-input" type="radio" name="pv-ts" id="pv-ts-1" aria-invalid="true" aria-describedby="pv-ts-e pv-ts-h"><label for="pv-ts-1">In training</label></div>
+      <div class="form-check"><input class="form-check-input" type="radio" name="pv-ts" id="pv-ts-2" aria-invalid="true" aria-describedby="pv-ts-e pv-ts-h"><label for="pv-ts-2">Provisional (awaiting sign-off)</label></div>
+      <div class="form-check"><input class="form-check-input" type="radio" name="pv-ts" id="pv-ts-3" aria-invalid="true" aria-describedby="pv-ts-e pv-ts-h"><label for="pv-ts-3">Trained</label></div>
+      <p id="pv-ts-e" class="validation-message">Choose the training status.</p>
+      <p id="pv-ts-h" class="page-subtitle">Faculty-development lifecycle. In-training assessors may assess under supervision.</p>
+    </fieldset>
+    <div class="form-group">
+      <label for="pv-q">Qualifications<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label>
+      <textarea id="pv-q" class="form-control input-validation-error" rows="2" aria-required="true" aria-invalid="true" aria-describedby="pv-q-e"></textarea>
+      <p id="pv-q-e" class="validation-message">Type the qualifications, as they should read.</p>
+    </div>
+    <div class="form-actions"><button type="button" class="btn btn-quiet">Cancel</button><button type="button" class="btn btn-primary">Save training</button></div>
+  </div>
+</section></div>
+
+<p class="pv-cap">A finished status chosen: Training completed appears, with its help</p>
+<div class="user-page"><section class="detail-card user-section" aria-labelledby="pv-t2-h"><h2 id="pv-t2-h" tabindex="-1">Assessor training</h2>
+  <div class="actions-cell"><button type="button" class="btn btn-outline" aria-label="Edit training for Fatima Khumalo" aria-expanded="true" aria-controls="pv-t2-panel">Edit training</button></div>
+  <div id="pv-t2-panel" class="detail-card note-panel note-panel--form">
+    <fieldset class="form-group choice-row choice-group">
+      <legend>Training status<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></legend>
+      <div class="form-check"><input class="form-check-input" type="radio" name="pv-t2" id="pv-t2-0" aria-describedby="pv-t2-h2"><label for="pv-t2-0">Not started</label></div>
+      <div class="form-check"><input class="form-check-input" type="radio" name="pv-t2" id="pv-t2-1" aria-describedby="pv-t2-h2"><label for="pv-t2-1">In training</label></div>
+      <div class="form-check"><input class="form-check-input" type="radio" name="pv-t2" id="pv-t2-2" checked aria-describedby="pv-t2-h2"><label for="pv-t2-2">Provisional (awaiting sign-off)</label></div>
+      <div class="form-check"><input class="form-check-input" type="radio" name="pv-t2" id="pv-t2-3" aria-describedby="pv-t2-h2"><label for="pv-t2-3">Trained</label></div>
+      <p id="pv-t2-h2" class="page-subtitle">Faculty-development lifecycle. In-training assessors may assess under supervision.</p>
+    </fieldset>
+    <div class="form-group">
+      <label for="pv-t2-d">Training completed</label>
+      <input id="pv-t2-d" type="date" class="form-control" value="2026-09-26" aria-describedby="pv-t2-dh">
+      <p id="pv-t2-dh" class="field-help">Date the assessor completed assessor training. Leave blank if unrecorded.</p>
+    </div>
+    <div class="form-group">
+      <label for="pv-t2-q">Qualifications<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label>
+      <textarea id="pv-t2-q" class="form-control" rows="2" aria-required="true">MBChB, DCH (SA)</textarea>
+    </div>
+    <div class="form-actions"><button type="button" class="btn btn-quiet">Cancel</button><button type="button" class="btn btn-primary">Save training</button></div>
+  </div>
+</section></div>
+
+<p class="pv-cap">Saved: the result in the section, focused, "Training saved for Fatima Khumalo:" bold, and the record read out again</p>
+<div class="user-page"><section class="detail-card user-section" aria-labelledby="pv-t3-h"><h2 id="pv-t3-h" tabindex="-1">Assessor training</h2>
+  <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status"><strong>Training saved for Fatima Khumalo:</strong> Provisional (awaiting sign-off), completed 2026-09-26.</div></div>
+  <dl class="detail-list"><dt>Training status</dt><dd class="readonly-value">Provisional (awaiting sign-off)</dd><dt>Training completed</dt><dd class="readonly-value">2026-09-26</dd><dt>Qualifications</dt><dd class="readonly-value">MBChB, DCH (SA)</dd></dl>
+  <div class="actions-cell"><button type="button" class="btn btn-outline" aria-label="Edit training for Fatima Khumalo" aria-expanded="false">Edit training</button></div>
+</section></div>
+
+<p class="pv-cap">On her own page: the record read out, the standing note, no trigger</p>
+<div class="user-page"><section class="detail-card user-section" aria-labelledby="pv-t4-h"><h2 id="pv-t4-h" tabindex="-1">Assessor training</h2>
+  <dl class="detail-list"><dt>Training status</dt><dd class="readonly-value">Trained</dd><dt>Training completed</dt><dd class="readonly-value">2018-10-26</dd><dt>Qualifications</dt><dd class="readonly-value">MBChB, MMed (Paed), FC Paed (SA)</dd></dl>
+  <div class="alert alert-info">You cannot record your own assessor training. Another administrator can.</div>
+</section></div>
+
+<p class="pv-cap">?section=training for someone who does not hold Assessor: said once, in the section's place, and focused</p>
+<div class="user-page"><section class="detail-card user-section" aria-labelledby="pv-t5-h"><h2 id="pv-t5-h" tabindex="-1">Assessor training</h2>
+  <p tabindex="-1">Refilwe Mokoena does not hold the Assessor role, so has no assessor training here.</p>
+</section></div>
+
+<p class="pv-cap">At 390: each radio's label its 44px target, Save training on top of Cancel</p>
+<div class="pv-narrow"><div class="user-page"><section class="detail-card user-section" aria-labelledby="training-heading"><h2 id="training-heading" tabindex="-1">Assessor training</h2>
+    <div id="training-result" class="action-result" tabindex="-1"></div>
+    <dl class="detail-list"><dt>Training status</dt>
+        <dd class="readonly-value">Trained</dd>
+        <dt>Training completed</dt>
+        <dd class="readonly-value">2018-10-26</dd>
+        <dt>Qualifications</dt>
+        <dd class="readonly-value">MBChB, MMed (Paed), FC Paed (SA)</dd></dl><div class="actions-cell"><button type="button" id="training-trigger" class="btn btn-outline" aria-label="Edit training for Thandi Zulu" aria-expanded="true" aria-controls="training-panel">Edit training</button></div><div id="training-panel" class="detail-card note-panel note-panel--form"><fieldset id="training-status" class="form-group choice-row choice-group"><legend>Training status<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></legend><div class="form-check"><input class="form-check-input" type="radio" name="training-status" id="training-status-0" value="NotStarted" aria-describedby="training-status-help">
+              <label for="training-status-0">Not started</label></div><div class="form-check"><input class="form-check-input" type="radio" name="training-status" id="training-status-1" value="InTraining" aria-describedby="training-status-help">
+              <label for="training-status-1">In training</label></div><div class="form-check"><input class="form-check-input" type="radio" name="training-status" id="training-status-2" value="Provisional" aria-describedby="training-status-help">
+              <label for="training-status-2">Provisional (awaiting sign-off)</label></div><div class="form-check"><input class="form-check-input" type="radio" name="training-status" id="training-status-3" value="Trained" checked="" aria-describedby="training-status-help">
+              <label for="training-status-3">Trained</label></div><p id="training-status-help" class="page-subtitle">Faculty-development lifecycle. In-training assessors may assess under supervision.</p></fieldset><div class="form-group"><label for="training-completed">Training completed</label>
+            <input id="training-completed" type="date" class="form-control" value="2018-10-26" aria-describedby="training-completed-help">
+            <p id="training-completed-help" class="field-help">Date the assessor completed assessor training. Leave blank if unrecorded.</p></div><div class="form-group"><label for="training-qualifications">Qualifications<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label>
+          <textarea id="training-qualifications" class="form-control" rows="2" aria-required="true">MBChB, MMed (Paed), FC Paed (SA)</textarea></div>
+        <div class="form-actions"><button type="button" class="btn btn-quiet">Cancel</button>
+          <button type="button" class="btn btn-primary">Save training</button></div></div></section></div></div>
+</body>
+</html>

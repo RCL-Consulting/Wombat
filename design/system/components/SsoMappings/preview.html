@@ -1,0 +1,117 @@
+<!-- @dsCard group="People admin" height=2800 width=974 subtitle="SSO mappings for her institution: not set up, a standing card; with a provider, Add a mapping (the provider and institution read out, the scope fields only once the role needs them), Current mappings with an outline Delete… each, its dialog; mappings left from a removed provider, read only; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SsoMappings</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* At 900px and below app.css stacks .clinic-table--stack-wide, and below 641px the people pages' controls are 44px; the
+     390 rendition repeats those media rules under .pv-narrow (a 358px column: 390 less the phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-narrow .btn, .pv-narrow .form-control, .pv-narrow .form-select { min-height: 2.75rem; }
+  .pv-narrow .user-page .role-row { align-items: stretch; flex-direction: column; }
+  .pv-narrow .user-page .form-actions, .pv-narrow .note-panel--form .form-actions, .pv-narrow .record-page .form-actions, .pv-narrow .dialog-card .form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .pv-narrow .user-page .form-actions .btn, .pv-narrow .user-page .section-part > .btn, .pv-narrow .record-page .form-actions .btn, .pv-narrow .dialog-card .form-actions .btn { width: 100%; }
+  .pv-narrow .user-page .choice-group .form-check label { align-items: center; display: flex; min-height: 2.75rem; }
+  .pv-narrow .people-filter .filter-actions { align-self: stretch; }
+  .pv-narrow .filter-actions .btn { width: 100%; }
+  .pv-stage { position: relative; min-height: 0; }
+  .pv-stage dialog { position: static; margin: 0; max-width: 34rem; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Nolwazi Mbatha at the end of the replay: no provider serves her institution, so the standing card (key-round, no live region) and no form</p>
+<div class="header-container">
+  <div>
+    <h1>SSO mappings</h1>
+    <p class="page-subtitle">Which of your institution's sign-in groups give which Wombat role. A change applies at each person's next sign-in.</p>
+  </div>
+</div>
+<div class="people-page"><div id="sso-mappings-result" class="action-result" tabindex="-1"></div><section class="detail-card not-set-up" aria-labelledby="sso-not-set-up-heading"><h2 id="sso-not-set-up-heading" tabindex="-1"><svg class="icon" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path> <circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle></svg>Institutional sign-in is not set up</h2>
+        <p>Institutional sign-in is not set up for Kgosi Kgari Teaching Hospital. A Wombat administrator sets it up; ask them if your hospital signs staff in through its own system.</p>
+        <p>Until then, your people sign in with an email and a password, and there is nothing to change on this page.</p></section></div>
+
+<p class="pv-cap">With a provider (drawn from GroupMappings.razor; the states pass reached it on a scratch instance): the form, the one provider read out, Assessor chosen so Speciality and Sub-speciality show, read out as the only ones adopted; then the result of the add, focused, the form empty again in the app</p>
+<div class="people-page"><div class="action-result" tabindex="-1"><div class="alert alert-success" role="status"><strong>Mapping added.</strong> People in Paediatrics consultants get Assessor in Paediatrics / Paediatrics at their next sign-in.</div></div><form class="form-container" novalidate aria-labelledby="pv-add">
+  <h2 id="pv-add" tabindex="-1">Add a mapping</h2>
+  <p class="field-help">* marks a field you must fill in. Speciality and Sub-speciality appear once a role that needs them is chosen.</p>
+  <div class="form-grid">
+    <dl class="form-group"><dt>Provider</dt><dd class="readonly-value">KGK staff sign-in</dd><dd class="field-help">The one provider set up for Kgosi Kgari Teaching Hospital.</dd></dl>
+    <div class="form-group"><label for="pv-g">External group ID<span class="required-mark" aria-hidden="true"> *</span></label><input id="pv-g" class="form-control" aria-required="true" autocomplete="off" spellcheck="false" value="5f0c1e2a-7d44-4b6e-9a31-2c8d0e7f4b19"></div>
+    <div class="form-group"><label for="pv-gn">Group display name<span class="required-mark" aria-hidden="true"> *</span></label><input id="pv-gn" class="form-control" aria-required="true" autocomplete="off" value="Paediatrics consultants"></div>
+  </div>
+  <div class="form-grid">
+    <div class="form-group"><label for="pv-r">Wombat role<span class="required-mark" aria-hidden="true"> *</span></label>
+      <select id="pv-r" class="form-select" aria-required="true" aria-describedby="pv-r-h"><option value="">Choose a role</option><option>Speciality admin</option><option>Sub-speciality admin</option><option>Coordinator</option><option>Committee member</option><option selected>Assessor</option></select>
+      <p id="pv-r-h" class="field-help">Staff roles only. Trainee and Pending trainee are never mapped: a registrar becomes a trainee only when admitted.</p></div>
+    <dl class="form-group"><dt>Institution</dt><dd class="readonly-value">Kgosi Kgari Teaching Hospital</dd></dl>
+  </div>
+  <div class="form-grid">
+    <dl class="form-group"><dt>Speciality</dt><dd class="readonly-value">Paediatrics</dd></dl>
+    <dl class="form-group"><dt>Sub-speciality</dt><dd class="readonly-value">Paediatrics</dd><dd class="field-help">The only ones Kgosi Kgari Teaching Hospital has adopted.</dd></dl>
+  </div>
+  <div class="form-actions"><button type="submit" class="btn btn-primary"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Add mapping</button></div>
+</form><section class="list-section" aria-labelledby="pv-live"><h2 id="pv-live" class="list-section-title">Current mappings <span class="inv-count">2</span></h2>
+<div class="table-container shadow">
+  <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+    <caption>At Kgosi Kgari Teaching Hospital. Each applies at a person's next sign-in.</caption>
+    <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">External group</th><th scope="col" role="columnheader">Provider</th><th scope="col" role="columnheader">Wombat role and scope</th><th scope="col" role="columnheader" class="col-actions"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody role="rowgroup">
+      <tr role="row"><th scope="row" role="rowheader"><span class="person-cell">Paediatrics consultants <span class="group-id">5f0c1e2a-7d44-4b6e-9a31-2c8d0e7f4b19</span></span></th><td role="cell" data-label="Provider">KGK staff sign-in</td><td role="cell" data-label="Wombat role and scope"><span class="person-cell">Assessor <span>Paediatrics / Paediatrics</span></span></td><td role="cell" class="col-actions"><div class="actions-cell"><button type="button" class="btn btn-outline btn-sm" aria-label="Delete the mapping of Paediatrics consultants to Assessor" aria-haspopup="dialog"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M7 6l1 14h8l1-14" /></svg>Delete…</button></div></td></tr>
+      <tr role="row"><th scope="row" role="rowheader"><span class="person-cell">Programme office <span class="group-id">kgk-programme-office</span></span></th><td role="cell" data-label="Provider">KGK staff sign-in</td><td role="cell" data-label="Wombat role and scope"><span class="person-cell">Coordinator <span>Any speciality</span></span></td><td role="cell" class="col-actions"><div class="actions-cell"><button type="button" class="btn btn-outline btn-sm" aria-label="Delete the mapping of Programme office to Coordinator" aria-haspopup="dialog"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M7 6l1 14h8l1-14" /></svg>Delete…</button></div></td></tr>
+    </tbody>
+  </table>
+</div>
+</section><section class="list-section" aria-labelledby="pv-gone"><h2 id="pv-gone" class="list-section-title">Mappings left from a removed provider <span class="inv-count">1</span></h2>
+<div class="table-container shadow">
+  <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+    <caption>Read only. These name a provider no longer set up for Kgosi Kgari Teaching Hospital, so they give no new role; roles they already gave remain. Only a Wombat administrator can delete them.</caption>
+    <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">External group</th><th scope="col" role="columnheader">Provider</th><th scope="col" role="columnheader">Wombat role and scope</th><th scope="col" role="columnheader" class="col-actions"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody role="rowgroup">
+      <tr role="row"><th scope="row" role="rowheader"><span class="person-cell">Committee <span class="group-id">kgk-committee</span></span></th><td role="cell" data-label="Provider">old-adfs</td><td role="cell" data-label="Wombat role and scope"><span class="person-cell">Committee member <span>Paediatrics</span></span></td><td role="cell" class="col-actions"><div class="actions-cell"><span class="field-help">Read only: its provider is no longer set up.</span></div></td></tr>
+    </tbody>
+  </table>
+</div>
+</section></div>
+
+<p class="pv-cap">Delete… on Programme office: the dialog names the group, the role and the scope, says what stops and that the scope stays</p>
+<div class="pv-stage">
+  <dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-del-title" aria-describedby="pv-del-body">
+    <div class="form-container">
+      <h2 id="pv-del-title">Delete this mapping?</h2>
+      <div id="pv-del-body" class="dialog-body"><p>Delete the mapping of <strong>Programme office</strong> to <strong>Coordinator</strong> (Any speciality)?</p><p>From each person's next sign-in, belonging to Programme office no longer gives Coordinator.</p><p>The scope it gave stays.</p></div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline">Keep the mapping</button>
+        <button type="button" class="btn btn-danger">Delete the Programme office mapping</button>
+      </div>
+    </div>
+  </dialog>
+</div>
+
+<p class="pv-cap">No mapping yet</p>
+<div class="people-page"><section class="list-section" aria-labelledby="pv-none"><h2 id="pv-none" class="list-section-title">Current mappings <span class="inv-count">0</span></h2><div class="detail-card detail-card--empty detail-card--empty-compact"><p class="state-panel-copy">No group gives a role yet. Use Add a mapping to give one.</p></div></section></div>
+
+<p class="pv-cap">At 390: the rows stacked, the group's id breaking anywhere, Delete… 44px</p>
+<div class="pv-narrow"><div class="people-page"><section class="list-section" aria-labelledby="pv-live"><h2 id="pv-live" class="list-section-title">Current mappings <span class="inv-count">2</span></h2>
+<div class="table-container shadow">
+  <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+    <caption>At Kgosi Kgari Teaching Hospital. Each applies at a person's next sign-in.</caption>
+    <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">External group</th><th scope="col" role="columnheader">Provider</th><th scope="col" role="columnheader">Wombat role and scope</th><th scope="col" role="columnheader" class="col-actions"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody role="rowgroup">
+      <tr role="row"><th scope="row" role="rowheader"><span class="person-cell">Paediatrics consultants <span class="group-id">5f0c1e2a-7d44-4b6e-9a31-2c8d0e7f4b19</span></span></th><td role="cell" data-label="Provider">KGK staff sign-in</td><td role="cell" data-label="Wombat role and scope"><span class="person-cell">Assessor <span>Paediatrics / Paediatrics</span></span></td><td role="cell" class="col-actions"><div class="actions-cell"><button type="button" class="btn btn-outline btn-sm" aria-label="Delete the mapping of Paediatrics consultants to Assessor" aria-haspopup="dialog"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M7 6l1 14h8l1-14" /></svg>Delete…</button></div></td></tr>
+      <tr role="row"><th scope="row" role="rowheader"><span class="person-cell">Programme office <span class="group-id">kgk-programme-office</span></span></th><td role="cell" data-label="Provider">KGK staff sign-in</td><td role="cell" data-label="Wombat role and scope"><span class="person-cell">Coordinator <span>Any speciality</span></span></td><td role="cell" class="col-actions"><div class="actions-cell"><button type="button" class="btn btn-outline btn-sm" aria-label="Delete the mapping of Programme office to Coordinator" aria-haspopup="dialog"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M7 6l1 14h8l1-14" /></svg>Delete…</button></div></td></tr>
+    </tbody>
+  </table>
+</div>
+</section></div></div>
+</body>
+</html>

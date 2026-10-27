@@ -1,0 +1,88 @@
+<!-- @dsCard group="People admin" height=2210 width=974 subtitle="Assessors: every holder of the Assessor role, by last name, with the training recorded on their page; Not recorded for no record; each row's Record training or Edit training opens the person's page at its training section; nobody, the empty card; stacked at 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Assessors</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* At 900px and below app.css stacks .clinic-table--stack-wide, and below 641px the people pages' controls are 44px; the
+     390 rendition repeats those media rules under .pv-narrow (a 358px column: 390 less the phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-narrow .btn, .pv-narrow .form-control, .pv-narrow .form-select { min-height: 2.75rem; }
+  .pv-narrow .user-page .role-row { align-items: stretch; flex-direction: column; }
+  .pv-narrow .user-page .form-actions, .pv-narrow .note-panel--form .form-actions, .pv-narrow .record-page .form-actions, .pv-narrow .dialog-card .form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .pv-narrow .user-page .form-actions .btn, .pv-narrow .user-page .section-part > .btn, .pv-narrow .record-page .form-actions .btn, .pv-narrow .dialog-card .form-actions .btn { width: 100%; }
+  .pv-narrow .user-page .choice-group .form-check label { align-items: center; display: flex; min-height: 2.75rem; }
+  .pv-narrow .people-filter .filter-actions { align-self: stretch; }
+  .pv-narrow .filter-actions .btn { width: 100%; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Nolwazi Mbatha at the end of the replay: five holders, each with a record; Sarah Botha Trained with no date ("Not recorded"); no pager (one page); no create action</p>
+<div class="header-container">
+  <div>
+    <h1>Assessors</h1>
+    <p class="page-subtitle">Everyone at Kgosi Kgari Teaching Hospital who holds the Assessor role, with the assessor training recorded for each.</p>
+  </div>
+</div>
+<div class="people-page"><section class="list-section" aria-labelledby="assessors-heading"><h2 id="assessors-heading" class="list-section-title" tabindex="-1">Assessors at Kgosi Kgari Teaching Hospital <span class="inv-count">5</span></h2>
+      <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table"><caption>At Kgosi Kgari Teaching Hospital, by last name: each holder of the Assessor role, and the training recorded on their page.</caption><thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Name</th><th scope="col" role="columnheader">Scope</th>
+            <th scope="col" role="columnheader">Training status</th>
+            <th scope="col" role="columnheader">Training completed</th>
+            <th scope="col" role="columnheader" class="col-actions col-actions--single"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody role="rowgroup"><tr role="row"><th scope="row" role="rowheader"><span class="person-cell">Sarah Botha<span>botha@<wbr>kgk.wombat.local</span></span></th><td role="cell" data-label="Scope">Paediatrics / Paediatrics</td>
+            <td role="cell" data-label="Training status">Trained</td>
+            <td role="cell" data-label="Training completed" class="inv-when">Not recorded</td>
+            <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit training for Sarah Botha">Edit training</a></td></tr><tr role="row"><th scope="row" role="rowheader"><span class="person-cell">Fatima Khumalo<span>khumalo@<wbr>kgk.wombat.local</span></span></th><td role="cell" data-label="Scope">Paediatrics / Paediatrics</td>
+            <td role="cell" data-label="Training status">Provisional (awaiting sign-off)</td>
+            <td role="cell" data-label="Training completed" class="inv-when">2026-09-26</td>
+            <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit training for Fatima Khumalo">Edit training</a></td></tr><tr role="row"><th scope="row" role="rowheader"><span class="person-cell">David Naidoo<span>naidoo@<wbr>kgk.wombat.local</span></span></th><td role="cell" data-label="Scope">Paediatrics / Paediatrics</td>
+            <td role="cell" data-label="Training status">Trained</td>
+            <td role="cell" data-label="Training completed" class="inv-when">2020-10-26</td>
+            <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit training for David Naidoo">Edit training</a></td></tr><tr role="row"><th scope="row" role="rowheader"><span class="person-cell">Mohammed Patel<span>patel@<wbr>kgk.wombat.local</span></span></th><td role="cell" data-label="Scope">Paediatrics / Paediatrics</td>
+            <td role="cell" data-label="Training status">In training</td>
+            <td role="cell" data-label="Training completed" class="inv-when">Not recorded</td>
+            <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit training for Mohammed Patel">Edit training</a></td></tr><tr role="row"><th scope="row" role="rowheader"><span class="person-cell">Thandi Zulu<span>zulu@<wbr>kgk.wombat.local</span></span></th><td role="cell" data-label="Scope">Paediatrics / Paediatrics</td>
+            <td role="cell" data-label="Training status">Trained</td>
+            <td role="cell" data-label="Training completed" class="inv-when">2018-10-26</td>
+            <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit training for Thandi Zulu">Edit training</a></td></tr></tbody></table></div></section></div>
+
+<p class="pv-cap">Nobody holds the role (T01): the card says what a record is and where the role is given</p>
+<div class="people-page"><div class="detail-card detail-card--empty" id="assessors-empty" tabindex="-1">
+  <p class="state-panel-title">Nobody holds the Assessor role yet</p>
+  <p class="state-panel-copy">An assessor's training record holds their training status, the date they completed it and their qualifications. Give someone the Assessor role from their page in Users; they are listed here, and their training is recorded on their page.</p>
+</div></div>
+
+<p class="pv-cap">At 390: each holder a block, the name over the address, Edit training 44px</p>
+<div class="people-page pv-narrow"><section class="list-section" aria-labelledby="assessors-heading"><h2 id="assessors-heading" class="list-section-title" tabindex="-1">Assessors at Kgosi Kgari Teaching Hospital <span class="inv-count">5</span></h2>
+      <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table"><caption>At Kgosi Kgari Teaching Hospital, by last name: each holder of the Assessor role, and the training recorded on their page.</caption><thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Name</th><th scope="col" role="columnheader">Scope</th>
+            <th scope="col" role="columnheader">Training status</th>
+            <th scope="col" role="columnheader">Training completed</th>
+            <th scope="col" role="columnheader" class="col-actions col-actions--single"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody role="rowgroup"><tr role="row"><th scope="row" role="rowheader"><span class="person-cell">Sarah Botha<span>botha@<wbr>kgk.wombat.local</span></span></th><td role="cell" data-label="Scope">Paediatrics / Paediatrics</td>
+            <td role="cell" data-label="Training status">Trained</td>
+            <td role="cell" data-label="Training completed" class="inv-when">Not recorded</td>
+            <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit training for Sarah Botha">Edit training</a></td></tr><tr role="row"><th scope="row" role="rowheader"><span class="person-cell">Fatima Khumalo<span>khumalo@<wbr>kgk.wombat.local</span></span></th><td role="cell" data-label="Scope">Paediatrics / Paediatrics</td>
+            <td role="cell" data-label="Training status">Provisional (awaiting sign-off)</td>
+            <td role="cell" data-label="Training completed" class="inv-when">2026-09-26</td>
+            <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit training for Fatima Khumalo">Edit training</a></td></tr><tr role="row"><th scope="row" role="rowheader"><span class="person-cell">David Naidoo<span>naidoo@<wbr>kgk.wombat.local</span></span></th><td role="cell" data-label="Scope">Paediatrics / Paediatrics</td>
+            <td role="cell" data-label="Training status">Trained</td>
+            <td role="cell" data-label="Training completed" class="inv-when">2020-10-26</td>
+            <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit training for David Naidoo">Edit training</a></td></tr><tr role="row"><th scope="row" role="rowheader"><span class="person-cell">Mohammed Patel<span>patel@<wbr>kgk.wombat.local</span></span></th><td role="cell" data-label="Scope">Paediatrics / Paediatrics</td>
+            <td role="cell" data-label="Training status">In training</td>
+            <td role="cell" data-label="Training completed" class="inv-when">Not recorded</td>
+            <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit training for Mohammed Patel">Edit training</a></td></tr><tr role="row"><th scope="row" role="rowheader"><span class="person-cell">Thandi Zulu<span>zulu@<wbr>kgk.wombat.local</span></span></th><td role="cell" data-label="Scope">Paediatrics / Paediatrics</td>
+            <td role="cell" data-label="Training status">Trained</td>
+            <td role="cell" data-label="Training completed" class="inv-when">2018-10-26</td>
+            <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit training for Thandi Zulu">Edit training</a></td></tr></tbody></table></div></section></div>
+</body>
+</html>

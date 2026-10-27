@@ -18,7 +18,7 @@ Nothing: MainLayout renders it in its header. What it offers is `NavItems.For(ac
   - Every switch is `/dashboard/switch/{role}` with no return address, so it lands on the new role's Home, and carries `data-enhance-nav="false"`: a full page load.
   - **No role** (a former trainee): no head and no switch; the list starts under the brand cell.
 - **The list** `div.nav-list` (scrolls; no tabindex): `ul.nav-items` of `li > NavItemLink`, rows 4px apart.
-  - Up to eight of the acting role's links, Home counted, one flat list; **the personal links are not counted** (flow 06, T358, E2: until then they were, and the Coordinator's eight would have been grouped). More (the Administrator's 16, the Institutional admin's 15), Home, then groups: `p.nav-group-heading` (0.8125rem/600, `nav-group-label`, sentence case), a `<p>` and not a heading element, naming its `ul.nav-items` through `aria-labelledby`.
+  - Up to eight of the acting role's links, Home counted, one flat list; **the personal links are not counted** (flow 06, T358, E2: until then they were, and the Coordinator's eight would have been grouped). More (the Administrator's 16, the Institutional admin's 16 since flow 12), Home, then groups: `p.nav-group-heading` (0.8125rem/600, `nav-group-label`, sentence case), a `<p>` and not a heading element, naming its `ul.nav-items` through `aria-labelledby`.
   - **The personal links** last, in `ul.nav-items.nav-personal` under a `nav-divider` rule: My progress (to anyone holding the Trainee role or a trainee record, whatever the acting role) and My data rights (everyone).
 - **NavItemLink** `a.nav-link`: a 20px icon and `span.nav-label`, 0.9375rem, 28px tall (44px and 1rem below 641px), `radius-sm`, `nav-text`. Hover: `nav-hover-bg`, `nav-text-strong`. Lit: the class `active`, `nav-active-bg`, `nav-text-strong`, weight 600 and a 3px `nav-text-strong` bar inset on its left.
 
@@ -27,7 +27,7 @@ Nothing: MainLayout renders it in its header. What it offers is `NavItems.For(ac
 | Acting role | Links |
 |---|---|
 | Administrator | Home; Platform: Scheduled jobs, Audit log, SSO mappings, Data rights requests; Organisations: Institutions, Colleges; People: Users, Invitations; Catalogue: EPAs, Curricula, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision panels |
-| Institutional admin | Home; People: Invitations, Trainees, Assessors, Users; Curriculum: Curriculum adoptions, Curricula, EPAs, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision panels; Access and audit: SSO mappings, Audit log |
+| Institutional admin | Home; People: Invitations, Trainees, Assessors, Users; Curriculum: Curriculum adoptions, Curricula, EPAs, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision panels, Entrustment decisions (since flow 12, T376, F10: Home's Quick links, its only way in, went, Q7); Access and audit: SSO mappings, Audit log |
 | College admin | Home, Specialities, EPAs, Curricula, Activity types |
 | Speciality admin, Sub-speciality admin | Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels, Entrustment decisions |
 | Committee member | Home, Programme trainees, Committee reviews, Decision panels |
@@ -66,14 +66,15 @@ Every page that is not an item's own, and the list it sits under for each acting
 | A data-rights request | Coordinator, Administrator: Data rights requests (its own crumb is the request's id) |
 | A College's specialities and sub-specialities, and their edit pages | College admin: Specialities · Administrator: Colleges. On a College's specialities the College is in the trail: Home › Specialities › {College name} for the College admin (the College is the page's own crumb), Home › Colleges › {College name} › Specialities for the Administrator |
 | A College | Administrator: Colleges |
-| An institution | Administrator: Institutions |
+| An institution; New institution (`/admin/institutions/new`, flow 12) | Administrator: Institutions. Creating one is the Administrator's alone (`InstitutionCreate`, T376, S12). Her own institution's record has no owner: its trail is Home › ‹name› (InstitutionRecord) |
 | An EPA; an activity type; a curriculum's items | Administrator, College admin, Institutional admin: EPAs; Activity types; Curricula |
 | A curriculum | Administrator, College admin: Curricula |
 | Curriculum progress (`/admin/curriculum-progress`) | Administrator: Curricula (linked from Curricula) |
 | An entrustment scale | Administrator: Entrustment scales |
 | Invite a person (`/admin/invitations/new`, flow 11) | Administrator, Institutional admin: Invitations; its trail Home › Invitations › Invite a person (T373, Q1) |
-| A user | Administrator, Institutional admin: Users |
-| A trainee's profile; an assessor's profile | Institutional admin: Trainees; Assessors |
+| A user | Administrator, Institutional admin: Users. Its Users crumb returns to the filtered Users page it was opened from (`?back=`, `PeopleLinks.SafeUsersReturn`; `PageHeader.OwnerHref`; T376, S6; UserPage) |
+| A trainee's profile | Institutional admin: Trainees |
+| `/admin/assessors/edit` (the old assessor form's route, flow 12) | Administrator, Institutional admin: Users; its trail Home › Users › User: it leads to the person's page at `?section=training`, or says "User unavailable" (T376, S10) |
 | Admit ‹name› (`/admin/trainees/admit`, flow 11) | Institutional admin: Trainees; its trail Home › Trainees › Admit Lerato Molefe. The Administrator, whose menu has no Trainees, has nothing lit and the same trail, its Trainees crumb given by the page (`PageHeader`'s `Trail`; T373, M04b) |
 | An audit entry | Administrator, Institutional admin: Audit log |
 | A scheduled job's run history | Administrator: Scheduled jobs |
@@ -82,7 +83,7 @@ Every page that is not an item's own, and the list it sits under for each acting
 
 **A page under a personal link** (flow 05, T355, E3; `NavOwners.UnderAPersonalLink`, `IsPersonal`): an entry that names no role, under My progress or My data rights, is owned whatever the acting role, and for a graduate who holds none, since the menu offers the link whatever the role. It is lit only where the person is offered the link. An entry that names roles keeps them, whatever item it is under: My authorisations is under My progress for the Trainee alone.
 
-**Entrustment decisions** is not in the table: for both speciality admins it is a list the menu offers, which lights itself (flow 06, R2-Menus m5); for every other role it admits, the Institutional admin's Home link included, it is under no list: flow 09 (T366) rebuilt the page and left it so, under the trail Home › Entrustment decisions (StarRegister).
+**Entrustment decisions** is not in the table: for both speciality admins and, since flow 12 (T376, F10), the Institutional admin it is a list the menu offers, which lights itself (flow 06, R2-Menus m5; her Home's Quick links, which linked it, are gone); for every other role it admits it is under no list: flow 09 (T366) rebuilt the page and left it so, under the trail Home › Entrustment decisions (StarRegister).
 
 A list that is an item of the acting role's menu lights itself and draws no trail. A list the acting role's menu does not offer (opened through another role held) lights nothing, with the trail Home › the list.
 

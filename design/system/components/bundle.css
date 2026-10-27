@@ -1,8 +1,9 @@
 /* Wombat — components/bundle.css
-   Wombat's component CSS as flows 01 to 11 built it (T335, b347e11c; T339, f50dffb2 and 6735fa98; T342, 725237ee,
+   Wombat's component CSS as flows 01 to 12 built it (T335, b347e11c; T339, f50dffb2 and 6735fa98; T342, 725237ee,
    daaf6386, 5fd5abcd and a341b44e; T350, 06aa51d7; T355, b020c942, db4c2d0a, 5f8e6639 and b389f7d2; T358, 85d5a508 and
    94edf2b7; T361, 44de180b, 59bb72fd, 6ad6c57a, 6b149fff and 14378856; T364, 622c5ad1 and
-   1ec7a352; T366, 49e7cf5e and 9ba80586; T369, 68327c9d and e4b480e2; T373, 69a17c70 and 27ff8779; master@27ff8779),
+   1ec7a352; T366, 49e7cf5e and 9ba80586; T369, 68327c9d and e4b480e2; T373, 69a17c70 and 27ff8779; T376, e53d4ae7;
+   master@4566f133),
    extracted with every class name and declaration unchanged, so a design maps back to the classes Razor writes.
    - From src/Wombat.Web/wwwroot/app.css: everything after :root. tokens.css, which the page compiles from tokens.json,
      supplies the :root custom properties (colours, --space-*, --radius-*, --shadow-*, --sidebar-width, --motion-fast,
@@ -6374,6 +6375,424 @@ fieldset.form-group fieldset.form-group > legend {
   }
 }
 /* end Flow 11: admission */
+
+/* ── People admin ───────────────────────────────────── */
+
+/* Flow 12: the people pages, shared (T376). What two or more of the flow's lanes use, written before them (build-contracts
+   § 0): the list pages' column (Users, Assessors, SSO mappings), the user page's column of sections and their h3 parts,
+   which the training section (lane T) sits inside as the roles and sign-in sections (lane P) do, the note panel holding a
+   form (F11: the system's .note-panel, its gap the form's own), the lock badge's gap, and the phone rules these pages
+   share. Each lane's own classes are under its own heading after this one. */
+
+/* A list page's column: its parts 24px apart, each with no margin of its own (as flow 11's .inv-page). */
+.people-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.people-page > *,
+.people-page .list-section-title,
+.people-page .action-result .alert {
+  margin: 0;
+}
+
+/* The user page (Q1): a column of sections at a 60rem measure. The who line is a .detail-list whose values break inside a
+   long address rather than widen the page. */
+.user-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 60rem;
+}
+
+.user-page > *,
+.user-page .action-result .alert {
+  margin: 0;
+}
+
+.user-page .detail-list dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* A section (Roles and scope, Assessor training, Sign-in and access): its h2, then its parts 16px apart. A section's
+   trigger (Add a role…, Record training) sits at the start of its row (S18: no inline justify-content). */
+.user-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.user-section > * {
+  margin: 0;
+}
+
+.user-section h2 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.user-section h3 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.user-section .actions-cell {
+  justify-content: flex-start;
+}
+
+/* A section's part under an h3 (Password, Institutional sign-in, Lockout): a rule above every part but the first. */
+.section-part {
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding-top: var(--space-md);
+}
+
+.section-part:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.section-part > *,
+.section-part ul {
+  margin: 0;
+}
+
+/* F11: a form opened in place on a detail page (Add a role…, Record training) is the note panel, its parts 24px apart. */
+.note-panel--form {
+  gap: var(--space-lg);
+}
+
+.note-panel--form > *,
+.note-panel--form .form-actions {
+  margin: 0;
+}
+
+/* "Locked out" (the administrative lock): the lock icon and its word inside the badge, on Users and the who line. */
+.badge.status-locked {
+  gap: var(--space-xs);
+}
+
+/* Below 641px, on the people pages: every control 44px (M6: the full width goes only to what stacks, so the password
+   field's Show toggle keeps its own width); a form's actions stacked with the primary on top (the DOM has Cancel first,
+   so it stays first in the tab order: flow 11's lesson); a radio's label is its 44px target (S17). */
+@media (max-width: 640.98px) {
+  .people-page .btn,
+  .user-page .btn,
+  .people-page .form-control,
+  .people-page .form-select,
+  .user-page .form-control,
+  .user-page .form-select {
+    min-height: 2.75rem;
+  }
+
+  .user-page .form-actions,
+  .note-panel--form .form-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .user-page .form-actions .btn,
+  .user-page .section-part > .btn {
+    width: 100%;
+  }
+
+  .user-page .choice-group .form-check label {
+    align-items: center;
+    display: flex;
+    min-height: 2.75rem;
+  }
+}
+/* end Flow 12: the people pages, shared */
+
+/* Flow 12: assessors and training (T376). Lane T: the Assessors list (.people-page, § 0's) and the user page's Assessor
+   training section (.user-section, § 0's; its form the note panel, .note-panel--form). Only what those lack: the
+   section's result region takes no gap while it holds nothing, so the section's parts stay 16px apart before a save. */
+.user-section .action-result:empty {
+  display: none;
+}
+/* end Flow 12: assessors and training */
+
+/* Flow 12: the record and SSO (T376). Her institution's record (.record-page: a 52rem column, the result above the form,
+   Status read out under the fields) and the SSO mappings page (in .people-page: the not-set-up card, the form's heading),
+   with their phone rules, scoped to the two pages. */
+
+/* Her record: a column at a 52rem measure, its parts 24px apart, each with no margin of its own. */
+.record-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 52rem;
+}
+
+.record-page > *,
+.record-page .action-result .alert {
+  margin: 0;
+}
+
+/* An empty result region takes no row of the column (its 24px gap included), as flow 11's .inv-page's. */
+.record-page .action-result:empty,
+.people-page .action-result:empty {
+  display: none;
+}
+
+/* Status, read out under the fields (M8): the form grid's gap above it. */
+.record-page .form-grid + dl.form-group {
+  margin-top: var(--space-md);
+}
+
+/* The SSO form's heading inside its card, as a section's h2. */
+.people-page .form-container > h2 {
+  font-size: 1.25rem;
+  margin: 0 0 var(--space-sm);
+}
+
+.people-page .form-container > .form-grid + .form-grid {
+  margin-top: var(--space-md);
+}
+
+/* O01: institutional sign-in not set up for her institution. A standing card, no live region (S23): its heading with the
+   key icon, then two sentences. */
+.not-set-up h2 {
+  align-items: center;
+  display: flex;
+  font-size: 1.25rem;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-sm);
+}
+
+.not-set-up h2 .icon {
+  color: var(--muted-text);
+  flex: none;
+}
+
+.not-set-up p {
+  margin: 0;
+}
+
+.not-set-up p + p {
+  margin-top: var(--space-sm);
+}
+
+/* A group's id under its name breaks anywhere (T376 build review, P3): an identity provider's id (an Entra object id is
+   36 characters) has no break of its own, and Users' break-word rule for an address would hold the column at its length,
+   pushing the table wider than its card between 901 and 1100px. */
+.people-page th[scope="row"] .person-cell .group-id {
+  overflow-wrap: anywhere;
+}
+
+/* Below 641px: the record's controls 44px and its actions stacked with the primary on top (the DOM has Cancel first, so
+   it stays first in the tab order: flow 11's lesson), both full width; the SSO form's one action full width. */
+@media (max-width: 640.98px) {
+  .record-page .btn,
+  .record-page .form-control {
+    min-height: 2.75rem;
+  }
+
+  .record-page .form-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .record-page .form-actions .btn,
+  .people-page .form-container .form-actions .btn {
+    width: 100%;
+  }
+}
+/* end Flow 12: the record and SSO */
+/* Flow 12: users and Home (T376). Users' filter card and its cells (lane U), and her Home's three cards. */
+
+/* Users' filter (S21): a search form card, its fields on .search-grid, Show and Clear under them. */
+.people-filter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.people-filter .form-group,
+.people-filter .field-help {
+  margin: 0;
+}
+
+.people-filter .search-grid {
+  align-items: start;
+}
+
+.people-filter .filter-actions {
+  align-self: flex-start;
+}
+
+/* The row header's address breaks after its @ (<wbr>), and inside a word only when a word alone overflows: unlike
+   .person-cell's anywhere, break-word does not shrink the column, so 901-1100px never splits "kgk.wombat.local" (check
+   Left 3). */
+.people-page th[scope="row"] .person-cell span {
+  overflow-wrap: break-word;
+}
+
+/* Users' Institution and Scope (.col-wrap) keep their words whole between 901 and 1100px (T376 build review, P2): the
+   floor holds "Paediatrics / Paediatrics", "Neonatology" and "Hospital" on a line of their own, as Delivery's does on
+   Invitations (flow 11). Only Users writes .col-wrap among the people pages. */
+.people-page .clinic-table th.col-wrap {
+  min-width: 7rem;
+}
+
+/* One role a line (Q14), and No role over what such a person is (S2). */
+.role-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.no-role-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.no-role-cell .field-help {
+  margin: 0;
+}
+
+/* Her Home (S19): a count and its role's label as one link to Users filtered by it. */
+a.dashboard-metric {
+  color: inherit;
+  flex: 1 1 6.5rem;
+  min-width: 0;
+  text-decoration: none;
+}
+
+a.dashboard-metric .dashboard-metric-label {
+  color: var(--link-color);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+a.dashboard-metric:hover .dashboard-metric-label {
+  color: var(--link-hover);
+}
+
+/* A footer's note on the left of its link (S18: "15 accounts."). */
+.dashboard-card-footer .field-help {
+  align-self: center;
+  margin: 0 auto 0 0;
+}
+
+/* M7: Your institution's list wraps inside the card; a long address never pushes the page sideways. Her card's list only
+   (T376 build review, P8): the Trainee's Home keeps .detail-list's own columns. */
+.dashboard-grid .home-institution-list {
+  grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+}
+
+.dashboard-grid .home-institution-list dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-grid .home-institution-list dd p {
+  margin: 0;
+}
+
+@media (max-width: 640.98px) {
+  /* 44px targets on a phone: the metric links and the footer's links (the filter's buttons are full width and 44px by
+     .filter-actions' own phone rule). */
+  .dashboard-grid a.dashboard-metric {
+    justify-content: center;
+    min-height: 2.75rem;
+  }
+
+  .dashboard-grid .dashboard-card-footer {
+    flex-wrap: wrap;
+  }
+
+  .people-page .people-filter .filter-actions {
+    align-self: stretch;
+  }
+}
+/* end Flow 12: users and Home */
+
+/* Flow 12: the user page (T376). Lane P: Roles and scope's rows (a role, then after a gap its Remove… or why none; T323),
+   the no-role block (S2), and Add a role…'s radios with help under each (M9: .choice-help-stack; .choice-stack stays the
+   MSF Kind radios'). A part's result region takes no gap while it is empty. */
+.role-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.role-row {
+  align-items: center;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-lg);
+  justify-content: space-between;
+  padding: var(--space-sm) 0;
+}
+
+.role-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.role-row-label {
+  font-weight: 600;
+}
+
+.role-row-note {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+}
+
+.no-role {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.no-role > * {
+  margin: 0;
+}
+
+.choice-help-stack {
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+}
+
+.choice-help-stack legend {
+  margin-bottom: var(--space-xs);
+  padding: 0;
+}
+
+.choice-help-stack .form-check {
+  flex-wrap: wrap;
+}
+
+/* The help under its radio, aligned with the label: the radio's 1rem and the row's gap. */
+.choice-help {
+  color: var(--muted-text);
+  flex-basis: 100%;
+  font-size: 0.9rem;
+  margin: 0 0 0 1.5rem;
+}
+
+/* Below 641px: a role's row stacks, its Remove… under the role (the shared rules make it 44px). */
+@media (max-width: 640.98px) {
+  .user-page .role-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+/* end Flow 12: the user page */
+
 
 /* ══ MainLayout.razor.css ═══════════════════════════════════════════════════════════════════════════════════════════
    Scoped to MainLayout.razor in the app; written unscoped here (see the header). */

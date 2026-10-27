@@ -1,0 +1,99 @@
+<!-- @dsCard group="People admin" height=2190 width=974 subtitle="Her Home: a waiting line above the cards only while registrars wait; People (each role a count and its label as one link to Users filtered by it, the accounts note, Open Users), Curriculum (what she has adopted), Your institution (its record, wrapping in the card); no Quick links; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>InstitutionalAdminHome</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* At 900px and below app.css stacks .clinic-table--stack-wide, and below 641px the people pages' controls are 44px; the
+     390 rendition repeats those media rules under .pv-narrow (a 358px column: 390 less the phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-narrow .btn, .pv-narrow .form-control, .pv-narrow .form-select { min-height: 2.75rem; }
+  .pv-narrow .user-page .role-row { align-items: stretch; flex-direction: column; }
+  .pv-narrow .user-page .form-actions, .pv-narrow .note-panel--form .form-actions, .pv-narrow .record-page .form-actions, .pv-narrow .dialog-card .form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .pv-narrow .user-page .form-actions .btn, .pv-narrow .user-page .section-part > .btn, .pv-narrow .record-page .form-actions .btn, .pv-narrow .dialog-card .form-actions .btn { width: 100%; }
+  .pv-narrow .user-page .choice-group .form-check label { align-items: center; display: flex; min-height: 2.75rem; }
+  .pv-narrow .people-filter .filter-actions { align-self: stretch; }
+  .pv-narrow .filter-actions .btn { width: 100%; }
+  .pv-narrow .dashboard-grid { grid-template-columns: 1fr; }
+  .pv-narrow .dashboard-grid a.dashboard-metric { justify-content: center; min-height: 2.75rem; }
+  .pv-narrow .dashboard-grid .dashboard-card-footer { flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Nolwazi Mbatha at the end of the replay: nobody waiting, so no line; three cards, each with its way on in its footer</p>
+<div class="header-container">
+  <div>
+    <h1>Home</h1>
+    <p class="page-subtitle">Institutional admin · Semester 2, 2026</p>
+  </div>
+  <div class="actions-cell"><a class="btn btn-primary home-action" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /> <circle cx="9" cy="7" r="4" /> <path d="M19 8v6" /> <path d="M22 11h-6" /></svg>Invite a person</a></div>
+</div>
+<div class="dashboard-grid"><section class="detail-card" aria-labelledby="home-card-people"><h2 class="dashboard-card-title" id="home-card-people"><svg class="icon" width="18" height="18" aria-hidden="true" viewBox="0 0 24 24"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9"></path> <circle cx="12" cy="9" r="3"></circle></svg><span>People</span></h2>
+    <div class="dashboard-card-body"><div class="dashboard-metric-row"><a class="dashboard-metric" href="#"><span class="dashboard-metric-value">1</span>
+              <span class="dashboard-metric-label">Institutional admin</span></a><a class="dashboard-metric" href="#"><span class="dashboard-metric-value">1</span>
+              <span class="dashboard-metric-label">Speciality admin</span></a><a class="dashboard-metric" href="#"><span class="dashboard-metric-value">1</span>
+              <span class="dashboard-metric-label">Sub-speciality admin</span></a><a class="dashboard-metric" href="#"><span class="dashboard-metric-value">1</span>
+              <span class="dashboard-metric-label">Coordinator</span></a><a class="dashboard-metric" href="#"><span class="dashboard-metric-value">4</span>
+              <span class="dashboard-metric-label">Committee member</span></a><a class="dashboard-metric" href="#"><span class="dashboard-metric-value">5</span>
+              <span class="dashboard-metric-label">Assessor</span></a><a class="dashboard-metric" href="#"><span class="dashboard-metric-value">2</span>
+              <span class="dashboard-metric-label">Trainee</span></a></div><div class="dashboard-card-footer"><span class="field-help">14 accounts.</span>
+        <a class="btn btn-outline btn-sm" href="#">Open Users<svg class="icon" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></a></div></div></section>
+  <section class="detail-card" aria-labelledby="home-card-curriculum"><h2 class="dashboard-card-title" id="home-card-curriculum"><svg class="icon" width="18" height="18" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 19a2 2 0 0 1 2-2h14M6 3h14v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path></svg><span>Curriculum</span></h2>
+    <div class="dashboard-card-body"><div class="dashboard-metric-row"><div class="dashboard-metric"><span class="dashboard-metric-value">1</span>
+          <span class="dashboard-metric-label">speciality adopted</span></div>
+        <div class="dashboard-metric"><span class="dashboard-metric-value">1</span>
+          <span class="dashboard-metric-label">sub-speciality adopted</span></div></div><p class="field-help">Paediatrics / Paediatrics, from the CPSA's Paediatric EPA Curriculum (11.2).</p><div class="dashboard-card-footer"><a class="btn btn-outline btn-sm" href="#">Open Curriculum adoptions<svg class="icon" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></a></div></div></section>
+  <section class="detail-card" aria-labelledby="home-card-institution"><h2 class="dashboard-card-title" id="home-card-institution"><svg class="icon" width="18" height="18" aria-hidden="true" viewBox="0 0 24 24"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path> <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path> <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path> <path d="M10 6h4"></path> <path d="M10 10h4"></path> <path d="M10 14h4"></path> <path d="M10 18h4"></path></svg><span>Your institution</span></h2>
+    <div class="dashboard-card-body"><dl class="detail-list home-institution-list"><dt>Name</dt>
+        <dd>Kgosi Kgari Teaching Hospital</dd>
+        <dt>Short code</dt>
+        <dd>KGK</dd>
+        <dt>Contact email</dt>
+        <dd>hod.paediatrics@<wbr>kgk.wombat.local</dd>
+        <dt>Status</dt>
+        <dd><p>Active</p>
+          <p class="field-help">Set by a Wombat administrator.</p></dd></dl>
+      <div class="dashboard-card-footer"><a class="btn btn-outline btn-sm" href="#">Open Kgosi Kgari Teaching Hospital<svg class="icon" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></a></div></div></section></div>
+
+<p class="pv-cap">While registrars wait (Act 2, before the admissions): the info line above the cards, its first sentence bold, Open Trainees; standing, no role</p>
+<div class="alert alert-info" id="home-waiting-line"><div class="alert-row"><p class="alert-row-text"><strong>5 registrars are waiting to be admitted.</strong> Nothing can be filed about them until then.</p><a class="btn btn-outline btn-sm" href="#">Open Trainees<svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg></a></div></div>
+
+<p class="pv-cap">At 390: one column, the metric links and the footers' links 44px, the institution's list wrapping inside its card</p>
+<div class="pv-narrow"><div class="dashboard-grid"><section class="detail-card" aria-labelledby="home-card-people"><h2 class="dashboard-card-title" id="home-card-people"><svg class="icon" width="18" height="18" aria-hidden="true" viewBox="0 0 24 24"><path d="M16 20a4 4 0 0 0-8 0M19 20a4 4 0 0 0-3-3.9M5 20a4 4 0 0 1 3-3.9"></path> <circle cx="12" cy="9" r="3"></circle></svg><span>People</span></h2>
+    <div class="dashboard-card-body"><div class="dashboard-metric-row"><a class="dashboard-metric" href="#"><span class="dashboard-metric-value">1</span>
+              <span class="dashboard-metric-label">Institutional admin</span></a><a class="dashboard-metric" href="#"><span class="dashboard-metric-value">1</span>
+              <span class="dashboard-metric-label">Speciality admin</span></a><a class="dashboard-metric" href="#"><span class="dashboard-metric-value">1</span>
+              <span class="dashboard-metric-label">Sub-speciality admin</span></a><a class="dashboard-metric" href="#"><span class="dashboard-metric-value">1</span>
+              <span class="dashboard-metric-label">Coordinator</span></a><a class="dashboard-metric" href="#"><span class="dashboard-metric-value">4</span>
+              <span class="dashboard-metric-label">Committee member</span></a><a class="dashboard-metric" href="#"><span class="dashboard-metric-value">5</span>
+              <span class="dashboard-metric-label">Assessor</span></a><a class="dashboard-metric" href="#"><span class="dashboard-metric-value">2</span>
+              <span class="dashboard-metric-label">Trainee</span></a></div><div class="dashboard-card-footer"><span class="field-help">14 accounts.</span>
+        <a class="btn btn-outline btn-sm" href="#">Open Users<svg class="icon" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></a></div></div></section>
+  <section class="detail-card" aria-labelledby="home-card-curriculum"><h2 class="dashboard-card-title" id="home-card-curriculum"><svg class="icon" width="18" height="18" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 19a2 2 0 0 1 2-2h14M6 3h14v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path></svg><span>Curriculum</span></h2>
+    <div class="dashboard-card-body"><div class="dashboard-metric-row"><div class="dashboard-metric"><span class="dashboard-metric-value">1</span>
+          <span class="dashboard-metric-label">speciality adopted</span></div>
+        <div class="dashboard-metric"><span class="dashboard-metric-value">1</span>
+          <span class="dashboard-metric-label">sub-speciality adopted</span></div></div><p class="field-help">Paediatrics / Paediatrics, from the CPSA's Paediatric EPA Curriculum (11.2).</p><div class="dashboard-card-footer"><a class="btn btn-outline btn-sm" href="#">Open Curriculum adoptions<svg class="icon" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></a></div></div></section>
+  <section class="detail-card" aria-labelledby="home-card-institution"><h2 class="dashboard-card-title" id="home-card-institution"><svg class="icon" width="18" height="18" aria-hidden="true" viewBox="0 0 24 24"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path> <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path> <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path> <path d="M10 6h4"></path> <path d="M10 10h4"></path> <path d="M10 14h4"></path> <path d="M10 18h4"></path></svg><span>Your institution</span></h2>
+    <div class="dashboard-card-body"><dl class="detail-list home-institution-list"><dt>Name</dt>
+        <dd>Kgosi Kgari Teaching Hospital</dd>
+        <dt>Short code</dt>
+        <dd>KGK</dd>
+        <dt>Contact email</dt>
+        <dd>hod.paediatrics@<wbr>kgk.wombat.local</dd>
+        <dt>Status</dt>
+        <dd><p>Active</p>
+          <p class="field-help">Set by a Wombat administrator.</p></dd></dl>
+      <div class="dashboard-card-footer"><a class="btn btn-outline btn-sm" href="#">Open Kgosi Kgari Teaching Hospital<svg class="icon" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"></path></svg></a></div></div></section></div></div>
+</body>
+</html>

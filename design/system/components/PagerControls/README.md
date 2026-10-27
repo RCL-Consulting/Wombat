@@ -21,6 +21,8 @@ The one pager: a "Showing 1–20 of 137" summary, Previous and Next, and a page-
 
 Use it on every list that can grow; never hand-roll paging.
 
+**Drawn only when the list runs past one page** (flow 12, T376, F9, round-3-check Left 2): Users draws it only while `MatchCount > PageSize`, Assessors while `TotalCount > PageSize`, so a list of fourteen at 20 a page has none; `PagerControls` itself is unchanged. A page turn focuses the list's heading; a change of rows per page keeps the focus on its select ("Rows per page"), unless the answer fails or no longer draws the pager (build review P6). On Users the page and the size are in the address (`page=`, `size=`), so a person's way back returns to the same page.
+
 ## Contrast
 
 The summary and the label (`muted-text`) 5.09:1 on the surface, 4.83:1 on the page; Previous and Next (`secondary-color`) 4.86:1; the select's `input-border` edge 3.80:1.
