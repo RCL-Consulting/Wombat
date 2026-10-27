@@ -32,7 +32,7 @@
 <PageTitle>@Heading · Wombat</PageTitle>
 
 <PageHeader Title="@Heading" SubtitleContent="@Subtitle" CurrentCrumb="@(_notFound ? "Not found" : null)"
-            Icon="@(_notFound ? "search" : null)" />
+            Icon="@(_notFound ? "search" : null)" Actions="@HeaderActions" />
 
 @* Always present, filled while the review is read: a live region added with its words in it is often not read. *@
 <p class="visually-hidden" role="status">@(_loading ? ReviewWords.Loading : null)</p>
@@ -220,6 +220,16 @@
         <a class="review-progress-link" href="@href">@ReviewWords.ProgressLink(review.TraineeName ?? string.Empty)</a>
       }
     };
+
+  /// <summary>
+  /// "Export ‹name›'s portfolio" in the header's actions (T379, flow 13, F1, N5; R3-X01, X03, X05, X09, X10), apart from the
+  /// subtitle's progress link: only where the export command would not refuse (MayExport, as the query read it), so a
+  /// review whose trainee the caller no longer oversees offers none (R3-X08). The Administrator is never refused.
+  /// </summary>
+  private RenderFragment? HeaderActions => _loading || _loadError is not null || _notFound
+                                           || _review is not { MayExport: true, TraineeName: not null } review
+    ? null
+    : @<ExportPortfolioAction TraineeUserId="@review.TraineeUserId" TraineeName="@review.TraineeName" MayExport="@review.MayExport" />;
 
   private string? ProgressHref
     => _review is { TraineeProfileId: int profileId, TraineeName: not null, TraineeElsewhere: null } &&
@@ -427,7 +437,9 @@
         _review = answer.WithNamesFrom(before) with
         {
           TraineeProfileId = before?.TraineeProfileId,
-          TrainingYear = before?.TrainingYear
+          TrainingYear = before?.TrainingYear,
+          // The command answers false; the page keeps what the query read (T379, F1).
+          MayExport = before?.MayExport ?? false
         };
       }
 

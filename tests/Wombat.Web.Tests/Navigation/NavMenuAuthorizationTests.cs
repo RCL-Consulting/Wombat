@@ -110,7 +110,8 @@ public sealed partial class NavMenuAuthorizationTests : TestContext
         menu.Groups.Should().ContainSingle().Which.Items.Select(item => item.Label).Should().Equal(
             "Home", "Programme trainees", "Waiting for assessors", "Decisions due", "MSF campaigns", "Committee reviews",
             "Decision panels", "Data rights requests");
-        menu.Personal.Select(item => item.Label).Should().Equal("My progress", "My data rights");
+        // T379, flow 13, Q2: a record holder who does not hold Trainee exports from the personal links.
+        menu.Personal.Select(item => item.Label).Should().Equal("My progress", "Export portfolio", "My data rights");
         menu.Groups.Single().Items.Should().HaveCount(NavItems.FlatLimit);
     }
 
@@ -181,13 +182,14 @@ public sealed partial class NavMenuAuthorizationTests : TestContext
     // ---- the personal links (D8, T252) ----
 
     [Fact]
-    public async Task AGraduateHoldingNoRole_IsOfferedHomeMyProgressAndMyDataRights_ByPagesThatAdmitThem()
+    public async Task AGraduateHoldingNoRole_IsOfferedHomeMyProgressExportPortfolioAndMyDataRights_ByPagesThatAdmitThem()
     {
         var graduate = Holder([], TraineeRecord());
         var menu = NavItems.For(ActingRole.None, graduate);
 
-        Labels(menu).Should().Equal("Home", "My progress", "My data rights");
-        menu.Personal.Should().Equal(NavItems.MyProgress, NavItems.MyDataRights);
+        // T379, flow 13, Q2 (A.7.4): Export portfolio between My progress and My data rights.
+        Labels(menu).Should().Equal("Home", "My progress", "Export portfolio", "My data rights");
+        menu.Personal.Should().Equal(NavItems.MyProgress, NavItems.ExportPortfolio, NavItems.MyDataRights);
         foreach (var item in menu.Items)
         {
             (await RefusalOf(PageFor(item.Href)!, graduate)).Should().BeNull($"a graduate is offered {item.Href}");
@@ -195,12 +197,28 @@ public sealed partial class NavMenuAuthorizationTests : TestContext
     }
 
     [Fact]
-    public void AGraduateActingAsAssessor_SeesTheInbox_ThenMyProgressAndMyDataRights_UnderTheRule()
+    public void AGraduateActingAsAssessor_SeesTheInbox_ThenTheRecordsLinks_UnderTheRule()
     {
         var cut = Render(Holder([WombatRoles.Assessor], TraineeRecord()), WombatRoles.Assessor);
 
         cut.FindAll(".nav-items:not(.nav-personal) a").Select(a => a.TextContent.Trim()).Should().Equal("Home", "Activity inbox");
-        cut.FindAll(".nav-personal a").Select(a => a.TextContent.Trim()).Should().Equal("My progress", "My data rights");
+        // T379, flow 13, Q2 and Q25 (R3-H03): a staff role later keeps that role's Home, the record's links under the rule.
+        cut.FindAll(".nav-personal a").Select(a => a.TextContent.Trim()).Should().Equal("My progress", "Export portfolio", "My data rights");
+    }
+
+    /// <summary>
+    /// T379, flow 13, N3: a holder of Trainee is offered Export portfolio among the Trainee's own links, so acting as another
+    /// role they are offered My progress and My data rights only, never the export twice.
+    /// </summary>
+    [Fact]
+    public void ATraineeActingAsAnotherRole_IsNotOfferedExportPortfolio_AsAPersonalLink()
+    {
+        var user = Holder([WombatRoles.Trainee, WombatRoles.Assessor], TraineeRecord());
+
+        NavItems.For(ActingAs(WombatRoles.Assessor, [WombatRoles.Trainee, WombatRoles.Assessor]), user).Personal
+            .Should().Equal(NavItems.MyProgress, NavItems.MyDataRights);
+        NavItems.For(ActingAs(WombatRoles.Trainee, [WombatRoles.Trainee, WombatRoles.Assessor]), user).Items
+            .Count(item => item == NavItems.ExportPortfolio).Should().Be(1);
     }
 
     [Theory]

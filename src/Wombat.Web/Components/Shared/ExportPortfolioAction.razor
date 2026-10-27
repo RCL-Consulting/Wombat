@@ -1,0 +1,21 @@
+@*
+  The staff export's header action (T379, flow 13, Q4, F1, M1; build-contracts § 0): "Export ‹name›'s portfolio", an
+  outline link in a page header's Actions (PageHeader puts it in .actions-cell), on the trainee profile (lane P), the
+  committee review page and the registrar's programme page (lane E). Drawn only where the page's DTO says MayExport, the
+  export command's own check, so no page offers an export that would be refused; nothing at all otherwise.
+*@
+@if (MayExport && !string.IsNullOrWhiteSpace(TraineeUserId) && !string.IsNullOrWhiteSpace(TraineeName))
+{
+  <a class="btn btn-outline" href="@PortfolioLinks.ExportFor(TraineeUserId)"><Icon Name="download" />@PortfolioWords.ExportAction(TraineeName)</a>
+}
+
+@code {
+  /// <summary>The registrar's user id, which the staff route carries.</summary>
+  [Parameter, EditorRequired] public string TraineeUserId { get; set; } = default!;
+
+  /// <summary>The registrar's name as stored, which the action names.</summary>
+  [Parameter, EditorRequired] public string TraineeName { get; set; } = default!;
+
+  /// <summary>The page DTO's <c>MayExport</c>.</summary>
+  [Parameter, EditorRequired] public bool MayExport { get; set; }
+}

@@ -34,6 +34,17 @@ public sealed class BadgeForStatusTableTests
             (BadgeState.Declined, Red));
     }
 
+    /// <summary>
+    /// T379 (flow 13, F10): a completion is green; a withdrawal grey under its own name, never the draft badge, whose class
+    /// says draft.
+    /// </summary>
+    [Fact]
+    public void AProgrammesEnd_IsGreenWhenCompleted_AndGreyUnderItsOwnNameWhenWithdrawn()
+    {
+        BadgeFor.ProgrammeOutcome(completed: true).Should().Be(Green);
+        BadgeFor.ProgrammeOutcome(completed: false).Should().Be("badge-withdrawn").And.NotBe(Grey);
+    }
+
     [Fact]
     public void ADataRightsRequest_IsTintedAsDesignMdGivesIt()
     {

@@ -41,6 +41,12 @@
   /// </summary>
   [Parameter] public string? SubjectName { get; set; }
 
+  /// <summary>
+  /// What stands under the notice and before Curriculum targets: My progress's "Your record:" line for a former trainee
+  /// (T379, flow 13, S8; R3-R01, R3-R02, R3-R10). Null draws nothing, so a caller that passes none renders the same bytes.
+  /// </summary>
+  [Parameter] public RenderFragment? AfterNotice { get; set; }
+
   private bool Staff => SubjectName is not null;
 
   private bool HasSemesterItems => Summary.HasSemesterItems;
@@ -95,7 +101,7 @@
   private RenderFragment View(TraineeCurriculumProgressSummaryDto summary, ProgrammeEndDto ended) => __builder =>
   {
     @* T252: standing page content, there on every visit, so an info alert with no role (DESIGN.md § Alerts). *@
-    <Alert Kind="info">@EndedNotice(ended)</Alert>
+    <Alert Kind="info">@EndedNotice(ended)</Alert>@AfterNotice
 
     <section aria-labelledby="@(Staff ? "ended-h" : null)" class="@(Staff ? "index-section" : null)">
       <h2 tabindex="-1" @ref="_endedHeading" id="@(Staff ? "ended-h" : null)" class="@(Staff ? "epa-section-title" : null)">Curriculum targets</h2>

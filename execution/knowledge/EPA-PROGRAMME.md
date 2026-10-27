@@ -309,7 +309,7 @@ moves if it is wrong. It is § 3F question 1; D40 fixed the reading in code.
 fourteen days, and no hard refusal.** Fourteen, not the ninety proposed. **Consequence: this is new
 work, not a change.** Verified 2026-09-20 that no observation-date staleness warning exists today —
 the only 90-day constants in the repository are the portfolio-export and scheduled-job-run retention
-jobs. Fourteen days is tight enough that it will fire routinely, so the "no hard refusal" half is
+jobs (T379 retired the portfolio-export one on 2026-10-27: an export's row is kept as long as its record). Fourteen days is tight enough that it will fire routinely, so the "no hard refusal" half is
 load-bearing: a registrar blocked by a date validator types today's date instead, which destroys the
 encounter date that [T119] exists to protect. **Filed as [T160]** (P2, 2026-09-24), with [T119]'s two
 policy-free bounds (not in the future, not before `ProgrammeStartDate`), which were verified unenforced on

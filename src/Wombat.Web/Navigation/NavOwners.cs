@@ -176,8 +176,15 @@ public static class NavOwners
         // admits a Coordinator and an Administrator too (T269), as the list does, but reads them nothing not their own.
         [typeof(MyMsfReport)] = [new([WombatRoles.Trainee], NavItems.MsfReports)],
 
-        // A trainee's STARs are part of their record, reached from Home.
-        [typeof(MyAuthorisations)] = [new([WombatRoles.Trainee], NavItems.MyProgress)],
+        // A trainee's STARs are part of their record, reached from Home: under My progress, a personal link, so for a
+        // graduate who holds no role as for a Trainee (T379, flow 13, Q3; R3-R08: Home › My progress › My authorisations).
+        // Its policy is My progress's, TraineeOrFormerTrainee, since T379; until then the Trainee alone was let in.
+        [typeof(MyAuthorisations)] = [new(UnderAPersonalLink, NavItems.MyProgress)],
+
+        // My activities (T379, flow 13, S18; R3-R07): a Trainee's menu offers it, so it lights itself for her (Lit reads the
+        // menu first); a former trainee's does not, and it is under My progress for them, Home › My progress › My
+        // activities. Anyone else it admits (its bare [Authorize]) is offered neither, and nothing is lit.
+        [typeof(MyActivities)] = [new(UnderAPersonalLink, NavItems.MyProgress)],
 
         // One EPA of the registrar's record (T355, R2), under My progress: a personal link, so it is the owner whatever
         // the acting role, and for a graduate who holds none (E3). The roles are its policy's, TraineeOrFormerTrainee's.
@@ -187,6 +194,17 @@ public static class NavOwners
         // Home › Programme trainees › the registrar. Programme trainees, Waiting for assessors and Entrustment decisions
         // are items now, each lighting itself (R2-Menus m5), so none is here.
         [typeof(ProgrammeTraineeDetail)] = [new([.. ProgrammeScope.RosterRoles], NavItems.ProgrammeTrainees)],
+
+        // The staff export of one registrar's portfolio (T379, flow 13, S2, M4, Q27): its own component, so it lights its
+        // fixed owner by route, never the caller's own personal Export portfolio, even for a member of staff who also holds a
+        // trainee record. Trainees for the Institutional admin (Home › Trainees › ‹name›'s programme › Export portfolio),
+        // Programme trainees for the four programme roles (Home › Programme trainees › ‹name› › Export portfolio). The
+        // Administrator, offered neither, has none: Home › Export portfolio.
+        [typeof(ExportTraineePortfolio)] =
+        [
+            new([WombatRoles.InstitutionalAdmin], NavItems.Trainees),
+            new([.. ProgrammeScope.RosterRoles], NavItems.ProgrammeTrainees),
+        ],
     };
 
     /// <summary>The pages outside the rule, each with why: nothing is lit on them, and they draw no trail but their own.</summary>

@@ -60,7 +60,13 @@
 >   section order (three Onboarding sections)); flow 12, people admin (2026-10-23, T376: § Button system (a destructive
 >   action is an outline trigger), § Form system (a form in a note panel, the assessor training form), § Table system
 >   (Users' table), § Page-level patterns (Users, Assessors, the user page, her institution's record, SSO mappings, her
->   Home), the owner table's rows, and § app.css section order (five People admin sections)).
+>   Home), the owner table's rows, and § app.css section order (five People admin sections)); flow 13, graduation and
+>   exit (2026-10-27, T379: § The NavMenu (Export portfolio for a record holder, My authorisations and My activities
+>   under My progress, the staff export's row), § Button system (the programme's two ends as outline triggers), § Table
+>   system (Trainees' Completed and closed), § Badges (Completed, Withdrawn), § Page-level patterns (the profile is
+>   "‹name›'s programme", the Unavailable pages, Export portfolio own and staff, the record's pages under a personal
+>   link, the former trainee's Home card), § Account / auth page (Verify portfolio export), and § app.css section order
+>   (four Graduation and exit sections)).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 
@@ -597,6 +603,7 @@ acting role (D8):
 | Personal link | Offered to |
 |---|---|
 | My progress | a holder of the Trainee role or of a trainee record (the `trainee_record` claim, current or ended, T252): exactly whom its page's policy, `TraineeOrFormerTrainee`, admits. A graduate acting as Assessor sees it. |
+| Export portfolio | a holder of a trainee record who does not hold the Trainee role (T379, flow 13, Q2): a former trainee, whatever role they act as now (R3-H01, R3-H03). A holder of Trainee has it among the Trainee's own links, so acting as another role they are offered My progress and My data rights only (N3). It lights itself and draws no trail (F4). My authorisations and My activities are pages under My progress, reached from Home and from My progress's "Your record:" line. |
 | My data rights | everyone signed in |
 
 **What the nav never holds.**
@@ -659,11 +666,13 @@ there, and its trail is Home › the page (§ Page-level patterns).
 | Invite a person (`/admin/invitations/new`) | Administrator, Institutional admin: Invitations; its trail Home › Invitations › Invite a person (T373, flow 11, Q1) |
 | A user | Administrator, Institutional admin: Users. Its Users crumb returns to the filtered Users page it was opened from (`?back=`, read only through `PeopleLinks.SafeUsersReturn`, an allow-listed return: the Users path with Users' own parameters, rebuilt; anything else is `/admin/users`; T376, flow 12, S6; `PageHeader.OwnerHref`) |
 | A trainee's profile | Institutional admin: Trainees |
+| The staff export, Export ‹name›'s portfolio (`/portfolio/export/{userId}`, `ExportTraineePortfolio`) | Institutional admin: Trainees; its trail Home › Trainees › ‹name›'s programme › Export portfolio, the middle crumb to the profile · Committee member, Speciality and Sub-speciality admin, Coordinator: Programme trainees; its trail Home › Programme trainees › ‹name› › Export portfolio, the middle crumb to the registrar's page. The middle crumb is the page's (`PageHeader`'s `Trail`, M4), linked to the preferred profile; none while it reads, when it failed, or for a person with no profile. The Administrator, offered neither, has nothing lit: Home › Export portfolio. Its own component, apart from the own export, so it lights its owner by route, never the caller's own Export portfolio, even for a member of staff who holds a trainee record (T379, flow 13, S2, Q27) |
 | `/admin/assessors/edit` (the old assessor form's route, which leads to the person's page, T376 S10) | Administrator, Institutional admin: Users; its trail Home › Users › User |
 | Admit ‹name› (`/admin/trainees/admit`) | Institutional admin: Trainees; its trail Home › Trainees › Admit ‹name›. The Administrator, whose menu has no Trainees, has nothing lit and the trail Home › Trainees › Admit ‹name›, the Trainees crumb given by the page (`PageHeader`'s `Trail`; T373, flow 11, M04b) |
 | An audit entry | Administrator, Institutional admin: Audit log |
 | The job run history | Administrator: Scheduled jobs |
-| My authorisations | Trainee: My progress |
+| My authorisations | every acting role, and none: My progress, a personal link (`UnderAPersonalLink`), lit where the menu offers it, so for a Trainee and a former trainee; its trail Home › My progress › My authorisations (T379, flow 13, Q3; R3-R08). Until T379 the Trainee's alone, as its policy was |
+| My activities (`/activities/mine`) | every acting role, and none: My progress (`UnderAPersonalLink`), for a former trainee, whose menu has no My activities; its trail Home › My progress › My activities (T379, flow 13, S18; R3-R07). A Trainee's menu offers it, so for her it lights itself |
 | A trainee's review (`/committee/my-reviews/{id}`) | Trainee: My committee reviews; its trail Home › My committee reviews › the review ("2026 S2 annual progression review"). The page admits an Administrator too, as the list does, but reads them nothing that is not their own (T366, flow 09, F8) |
 | Her MSF report (`/msf/my-reports/{id}`) | Trainee: MSF reports; its trail Home › MSF reports › the report ("Default MSF, released 2026-10-14"). The page admits a Coordinator and an Administrator too, as the list does (T269), but reads them nothing that is not their own (T369, flow 10, S6) |
 
@@ -744,6 +753,18 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
   sign-in", "Keep access") and its danger button what is done ("Remove Assessor", "Remove sign-in", "Lock out Thandi
   Zulu"). An action that is unavailable is never `disabled`: `aria-disabled="true"` and `.is-unavailable`, its reason
   beside it by `aria-describedby` (the last way in's "The institutional sign-in is the account's only way in.").
+- **The programme's two ends are outline triggers in a section of their own** (2026-10-27, T379, flow 13, Q24, N13, S19):
+  the trainee profile's End this programme, apart from Save profile, is the section itself (no form element). Mark
+  complete… and Deactivate… are flow 12's role rows (`.role-rows`: the note, then the `.btn-outline .btn-sm` trigger,
+  `aria-haspopup="dialog"`, `aria-describedby` its note, `#end-mc-note` and `#end-dc-note`). Mark complete's dialog
+  confirms with the primary (a graduation is not a loss), Deactivate's with the filled danger button. Each dialog names
+  the day, Mark complete's the address the email goes to, and what the end would take back for that day (a forecast, read
+  when the dialog opens); the result is built from the count the command returns.
+- **A refusal found before any dialog stays beside its field** (T379, S19, Q21): the last day is checked when a trigger
+  is pressed, by the rule the commands hold it to (`TraineeProfile.EndDayRefusal`); refused, no dialog opens, the
+  refusal is a `div.validation-message role="alert"` under the field, named first by its `aria-describedby`, the input
+  `aria-invalid`, the focus in it, the typed day kept. The command's own refusal at confirm shows in the same place (P07);
+  a failure that is not a refusal is fixed words at the section's top, focused. No `RefusalSummary` for one field.
 - **Every dialog's buttons stack at 390** (2026-10-20, T373, flow 11, M8; first on the MSF pages, T369, M10): below
   641px `.dialog-card .form-actions` is `flex-direction: column-reverse` and its buttons are 44px and the row's width. One
   general rule in `app.css`, since the top-layer dialog is outside every page wrapper, so a page's own class cannot reach
@@ -794,7 +815,7 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
   same rule while its `OnConfirm` runs, and its Cancel is disabled then.
 - **An action that is done moves the focus to its result** (T234), an `Alert` in an `.action-result` region
   (`tabindex="-1"`) where the page reports the result (at the top of a form page; under the button on the rebuild page,
-  under the form on the export check, under the table on the jobs list), once the page has rendered it. A status that
+  above the form on the export check, under the table on the jobs list), once the page has rendered it. A status that
   arrives on its own is often not read, and what the action changed may have taken its button away (a cleared choice, a
   closed row, a form rebuilt with what was stored, a swapped button). The shared `ActionResult` component
   (Components/Shared) is the region: the page puts its result alerts inside and calls `FocusAfterRender()` when the
@@ -1110,6 +1131,18 @@ with a 7rem floor (`.people-page .clinic-table th.col-wrap`, T376 build review P
 hospital's name break between words, never inside one. A group's id on SSO mappings breaks anywhere (`.group-id`, P3): it
 has no word to keep. A stacked table carries `role=table`, `rowgroup`, `row`,
 `columnheader`, `rowheader` and `cell`, as `DataTable`'s `StackWide` emits.
+
+**Completed and closed** (Trainees' third section, 2026-10-27, T379, flow 13, S11, S22, S24, F7; boards C01–C07): every
+ended programme in the caller's scope, read on its own (`ListEndedProfilesQuery`, paged in SQL), the latest end first,
+its count beside the h2 ("2 ended"). `StackWide`, inside `.closed-list`, captioned "Programmes that have ended, the latest
+end first. An ended record is read-only." (never its heading again). Name is the row's header, with no `.col-wrap` ("Name
+and institution" for the Administrator, the institution under the name in `.person-cell`; the address under it where two
+share a name, C05). Curriculum and sub-speciality and Programme are `.person-cell`s (the curriculum over the
+sub-speciality; "2023-01-15 to 2026-10-26" over "Training year 4 when it ended"), Programme `.col-wrap` on the
+onboarding column's 7.5rem floor. Outcome (`.outcome-cell`) is the badge, Completed green or Withdrawn grey, then the day,
+which never breaks. One View a row, "View Lerato Molefe's record", to the profile. `PagerControls` only past 20 ("Ended
+programmes per page"), the focus on the section's h2 after a turn. None ended: "No programme has ended yet." An erased
+person is listed under the pseudonym.
 
 ## Form system
 
@@ -1824,7 +1857,11 @@ T019 introduces a small builder-specific extension to the shared system:
     a line linked to `#note-in`), with the field's message under the note and the note kept as typed (A6).
 - **"Unavailable" is one page for a record that does not exist and one the reader may not open** (T101, C7): h1
   "Activity unavailable", `.detail-card--empty` "This activity does not exist, or you cannot open it." and a way on ("Go
-  to My activities"). It never says which.
+  to My activities"). It never says which. Export portfolio's is "Portfolio unavailable", "This portfolio does not exist,
+  or you cannot export it." and Go to Home, drawn as Page not found so nothing is lit (T379, flow 13, Q19, S2; § Form page's
+  Export portfolio). The trainee profile's is "Profile unavailable", "This trainee profile does not exist, or you cannot
+  open it." and Go to Trainees (T379, flow 13, S4): its read answers null for an unknown id and for another institution's
+  profile alike.
 - **A record page's load error** follows Home's: h1 "Activity", a `StatePanel` with `OnRetry`, "Could not load this
   activity. Nothing has changed. Try again, or come back in a few minutes." The exception goes to the log.
 
@@ -1858,6 +1895,11 @@ skeleton does not pulse; it is a still `--header-bg` block, the same size (§ Ac
 
 > **Amended 2026-09-27, T335, flow 01:** five tints, body text on each and the tint's colour on the edge (T322); a pill
 > keeps its shape in a flex row (T328).
+>
+> **Amended 2026-10-27, T379, flow 13 (F10):** a programme's end. Completed is green (`.badge-completed`); Withdrawn
+> (the closed list) and Inactive (the ended profile's Status) are grey under their own name (`.badge-withdrawn`, the
+> neutral tint), never `.badge-draft`, whose class says draft; Active is a plain word everywhere in the summary.
+> `BadgeFor.ProgrammeOutcome(completed)` names both.
 
 ```css
 .badge           /* inline-flex pill: 0.75rem / 600, line height 1.5, padding 1px 10px, --radius-pill, 1px edge,
@@ -1868,6 +1910,7 @@ skeleton does not pulse; it is a still `--header-bg` block, the same size (§ Ac
 .badge-completed /* success: --success-bg ground, --success-color edge */
 .badge-declined  /* danger: --danger-bg ground, --danger-color edge */
 .badge-overdue   /* warning: --warning-bg ground, --warning-color edge; "Overdue" beside a state's badge (T350) */
+.badge-withdrawn /* neutral: as .badge-draft, under its own name; a programme ended without completing it (T379) */
 ```
 
 - **A badge's words are body text on its tint**, 11.2:1 or more (T322). Until 2026-09-27 a state badge was its state's
@@ -3303,6 +3346,15 @@ flow 01). Its nav label, its heading, its breadcrumb and its tab are the same wo
   create page "New MSF campaign" (T369). Its subtitle carries the rest ("Annual progression review · Paed Annual Review Panel · Training year
   4"), and on the committee review, for the four roles flow 06's registrar page admits, "Lerato Molefe's progress" under
   it, a link alone on its line (`.review-progress-link`, `PageHeader`'s `SubtitleContent`).
+- **A trainee's profile is "‹name›'s programme"** (2026-10-27, T379, flow 13, T2): h1, tab and crumb
+  (`PortfolioWords.ProgrammeOf`), "Trainee profile" while it loads and when its read failed, "Profile unavailable" for an
+  id it cannot open. No Back to trainees: the trail returns. Its header's one action is "Export ‹name›'s portfolio" where
+  the export would not be refused (`ExportPortfolioAction`, `MayExport`). The summary is a `dl.detail-list` named "Trainee
+  summary" (no visible heading, no "Name:" row): Status in one row, Active a plain word, Completed the green badge and the
+  day, Inactive the grey badge and "Left the programme: ‹day›" (§ Badges). An ended record shows the outcome first: the
+  result at its top when it has just ended, the details read-only under "This programme has ended, …", then The account
+  (the person's roles now, or what holding none still allows; only the user page's link when the account is locked;
+  nothing for an erased person, whose record is read under the pseudonym).
 - **After a refused post the title starts "Error: "** (WCAG technique G88): the change password page, the MSF respondent
   page.
 
@@ -3650,6 +3702,29 @@ user page's "User unavailable" with Go to Users, under Users (Home › Users ›
   acting role, none included: one rule in `NavOwners.OwnerFor` (`NavOwners.IsPersonal`; E3), not one entry per role,
   which would still miss the graduate. It lights My progress with `aria-current="true"`; the trail is Home › My progress ›
   the code. `ActiveNavItemTests` holds the page's policy, `TraineeOrFormerTrainee`, to the link's offer.
+- **My authorisations and My activities are under My progress too** (T379, flow 13, Q3, S18; R3-R07, R3-R08), declared
+  `UnderAPersonalLink`, for a former trainee: Home › My progress › My authorisations, Home › My progress › My activities,
+  My progress lit. My authorisations' policy is `TraineeOrFormerTrainee` (the one role check flow 13 adds); a Trainee
+  reads it under My progress as before. My activities is the Trainee's own menu item, so for her it lights itself
+  (`Lit` reads the menu first) and draws no trail; it admits any signed-in user (its bare `[Authorize]`), and lights
+  nothing for one offered neither link. An activity opened from it by a former trainee is under no item of hers: its trail
+  is Home › the activity (N2).
+- **What the record's pages say to a former trainee** (flow 13, lane R). My progress: the built subtitle (S7), then, for a
+  reader who holds no Trainee role, the "Your record:" line (`div.record-line`: `p.record-line-label`, then a `ul` labelled
+  by it of My authorisations, only where a STAR was ever issued, F6, and My activities), drawn by `MyProgress.razor`
+  through `EndedRecord`'s `AfterNotice` fragment, so it stands under the ended notice and before Curriculum targets, as
+  R3-R01, R3-R02 and R3-R10 draw it; the registrar page passes none, so it never has the line and its markup is unchanged;
+  if the STAR read fails, My activities alone (S8). My authorisations: for a reader with no Trainee role and no STAR, the empty
+  card's title is "No STAR was issued to you, so there is no certificate to download." in place of "No active
+  authorisations yet", which promises one; that is Spec 3's Empty row (R3-R09 draws the built words, Pieter du Plessis's
+  card as a Trainee would read it). The title says it all, so the card has no copy line (`StatePanel` draws no
+  `.state-panel-copy` for an empty body). A Trainee keeps the built card. My activities: the built subtitle and,
+  where the caller's own programme has ended and they may not file, "Read-only: your programme ended on 2026-10-24, so
+  nothing new can be filed."; the table's caption "Every activity filed by you or about you, with who has it now and its
+  credit." (for everyone, S18); and under a row observed after the last day, flow 03's note row (`tr.has-note`, then
+  `td.history-note` across the row) "Observed after your last day in the programme, 2026-10-24, so it counts towards
+  nothing." (`ActivitySummaryDto.ObservedAfterEnd`, `ActivityListPageDto.SubjectEndedOn`, read on the caller's own list
+  only).
 - **Addressed by the EPA's id, never its code** (a code is unique only in its namespace). An id that is no item of the
   caller's own curriculum, another institution's or an unknown one, is flow 01's "Page not found", word for word, drawn in
   place with `Page="typeof(NotFound)"`, so it has no trail.
@@ -3668,8 +3743,10 @@ user page's "User unavailable" with Go to Users, under Users (Home › Users ›
   trajectory (h2 "Rating trajectory") and Activities on this EPA (`#acts-h`, a stacked table of 44px
   `.activity-block-link`s, or "No activity on this EPA yet." with Log an activity). A paused EPA has N6's info Alert under
   the h1, no count and no MSF line, and its Entrustment says it is not in the standing.
-- **"Open My authorisations"** (`.epa-auth-link`, a 44px block below 641px) shows only to a holder of the Trainee role:
-  My authorisations is `Roles = "Trainee"`, and a graduate reads the STAR here (E4).
+- **"Open My authorisations"** (`.epa-auth-link`, a 44px block below 641px) shows where the page has a STAR to show, to
+  whomever the page admits: since T379 (flow 13, Q2, Q3; R3-R03, R3-R06) My authorisations is `TraineeOrFormerTrainee`
+  as this page is, so a graduate is offered it as a Trainee is. Until then it was `Roles = "Trainee"` and a graduate read
+  the STAR here alone (E4). With no STAR, "No STAR yet." and no link (R3-R04).
 - **Every read is the caller's own**, and any that fails is the page's load error in fixed words ("Could not load this
   EPA. …"), the h1 and crumb "EPA", the failure logged, never its text (T329, T272).
 - **Once the programme has ended (R5)**, the page shows that EPA's periods the same way My progress does, every one
@@ -4000,6 +4077,45 @@ beside an admin role is shown T288's note and nothing is read.
   Actions cell), the caption saying roles they gave remain and only a Wombat administrator can delete them; the delete
   command refuses her too. The Administrator deletes them.
 
+#### Export portfolio (`/portfolio/export`, `/portfolio/export/{userId}`, T379, flow 13, E01–E20)
+
+Two pages, one form (`ExportPortfolioForm`): the person's own export (`ExportPortfolio`) and a member of staff's export of
+one registrar (`ExportTraineePortfolio`, its own component so it lights its owner by route, S2; the owner table).
+`GetExportSubjectQuery` reads first and the page draws no form until it answers: while it reads, one card of still
+`.skel-*` lines and "Loading this export." in the page's status region; a failed read "Could not load this export. Nothing
+has changed. Try again, or come back in a few minutes." with Try again (`StatePanel`).
+
+- **The titles** (the title rule): the own export is "Export portfolio" (h1, tab, menu item; Q17), subtitle "A PDF of your
+  portfolio for the dates you choose: your progress, your STARs, your committee's decisions and your activities.", and,
+  a page the menu offers, no trail (F4). The staff export is "Export ‹name›'s portfolio" (`PortfolioWords.ExportAction`,
+  the header action's words, Q5), its crumb "Export portfolio", its subtitle "‹institution› · ‹curriculum› (‹version›) ·
+  Training year ‹n›" (the year the programme ended in, for an ended one); "Export portfolio" while it reads and when it
+  failed (N12).
+- **The form** (`.export-page`, a 52rem column spacing the result and `form.form-container`, A2): From date * and To date *,
+  both required, opening on the programme start and today on the South African calendar, or the last day of an ended
+  programme (Q18); each hint names whose ("Your programme started on 2023-01-15." / "Lerato Molefe's programme started on
+  2023-01-15."; "Today, on the South African calendar." / "Your last day in the programme." / "Lerato Molefe's last day in
+  the programme."); `.export-note` "Exporting the same dates again gives the same file, until the record changes."; Export
+  PDF, "Generating..." and `aria-disabled` while the PDF is made, "Generating the PDF." in the status region. An emptied
+  date is the page's own refusal ("Choose the from date." / "Choose the to date."); From after To the command's ("The start
+  date must be before or equal to the end date.", its `ValidationException` mapped by its property to From, S6). Either
+  stays under its field, `div.validation-message role="alert"`, the input `aria-invalid` and focused, the dates kept.
+- **The result** sits above the form in `ActionResult`, focused, its first sentence bold and naming the file: "**Your
+  portfolio exported: portfolio-….pdf.** The download should start automatically. Anyone holding the file can check it on
+  Verify portfolio export." ("Lerato Molefe's portfolio exported: …" on the staff export), Verify a plain `<a href>`, a full
+  navigation to the static page (S13). Any other failure is fixed words, "**The portfolio could not be exported just
+  now.** Nothing was downloaded. Try again, or come back in a few minutes.", the exception to the log (T329).
+- **Portfolio unavailable** (Q19): one page for every cause (refused, an id no account holds, an erased person, and at
+  `/portfolio/export` a caller with no trainee profile, F6): h1 and tab "Portfolio unavailable", `.detail-card--empty`
+  "This portfolio does not exist, or you cannot export it." and Go to Home; no form; drawn as Page not found is to the
+  shell (`Page=`), so nothing is lit and no trail is drawn (S2). The command's "You are not authorized to export this
+  portfolio." stays behind it: a refusal at Export PDF draws this page too.
+- **The entry points** (F1, N5): "Export ‹name›'s portfolio" (`ExportPortfolioAction`) in the page header's actions of the
+  trainee profile, the committee review (apart from the subtitle's progress link) and the registrar's programme page, only
+  where the page's DTO says `MayExport`, the command's own check (`TraineeScopeResolver.MayReadAsync`): never offered where
+  the export would be refused, never refused to an Administrator.
+- At ≤640px, inside `.export-page`: the date controls 44px, Export PDF full width and 44px.
+
 ### Dashboard page
 
 > **Amended 2026-09-27, T335, flow 01** (R2-Landing-Assessor, -CM, -Loading, -Error, R2-Shell-Admin, -Assessor,
@@ -4175,10 +4291,21 @@ Dashboards are a composition, not a standalone page pattern.
 - **Every role has its own case in Home's switch**, and the dashboard it picks admits the role (T261). Until then a
   CollegeAdmin fell through to the trainee's dashboard: "No curriculum assigned yet", beside links to pages that refuse
   a CollegeAdmin. PendingTrainee shares the trainee's dashboard, which branches on it. A signed-in user who holds **no
-  role** is not given a role's dashboard either, and Home shows no subtitle. A graduate (the `trainee_record` claim, T252)
-  gets one card, "Your training record", pointing to My progress, which `TraineeOrFormerTrainee` admits (A-Spec § e:
-  "her record, not No role assigned"). Anyone else with no role (an administrator removed the last one) gets one "No role
-  assigned" card with no link, since no page is theirs to open.
+  role** is not given a role's dashboard either, and Home shows no subtitle. A record holder's Home (the
+  `trainee_record` claim, T252; a graduate or a registrar who withdrew, D54) is one emphasised card, "Your training
+  record" (T379, flow 13, Q1, S9; R3-H01, R3-H02), `Dashboards/FormerTraineeRecordCard` under `DashboardFrame` (so its
+  loading and its load error with Try again are every Home's), read by `GetFormerTraineeHomeQuery`: led by the end and its
+  day (`p.ended-line`, "You completed your programme on 2026-10-26." / "Your programme ended on 2026-10-24."), the record
+  kept read-only ("Your record is kept, read-only: no target applies to you any more."), then the record's pages
+  (`ul.record-links`), each its page's title as the link with a line under it that describes it (`.record-link-why`,
+  Q23): My progress, My authorisations, My activities, Export portfolio. My authorisations only where a ratified STAR
+  decision exists (F6), its count "in force" ("Your 15 STARs in force, each with its certificate to download.", "None of
+  your STARs is in force now; My authorisations lists them."); with none, the row is plain text (`.record-link-plain`
+  "STARs", `.record-link-none` "No STAR was issued to you, so there is no certificate to download."). No subtitle, no
+  header action, no arrow. A former trainee with a staff role keeps that role's Home and its dashboard, with no record
+  line (Q25; R3-H03): the personal links carry the record. Anyone else with no role (an administrator removed the last
+  one), and a record holder with no ended programme to show, gets one "No role assigned" card with no link, since no page
+  is theirs to open (R3-H04).
 - **Each dashboard names the roles it is for in `[Authorize(Roles = …)]`.** Blazor enforces `[Authorize]` on a routed
   page only, so on a dashboard it is a statement the test reads, not a gate. A dashboard with none, or a bare
   `[Authorize]`, would be judged as admitting every signed-in user; the test refuses both.
@@ -4412,6 +4539,28 @@ lane B: the auth card", with `.change-password`.
   where My account says "Password updated."; this page has no success state. The fifth wrong current password locks
   the account and signs the session out, to the sign-in page's `LockedSignedOut` notice (E2).
 - **My account** (`/account/profile`, interactive in the shell): § My account below.
+- **Verify portfolio export** (`/portfolio/verify`, static for every visitor, `[ExcludeFromInteractiveRouting]` and
+  `[AllowAnonymous]`, in the shell, under the signed-out bar for a visitor who has not signed in; T379, flow 13,
+  `R3-V01`–`V10`). The header "Verify portfolio export", "Check whether a PDF was produced by Wombat, without signing in.",
+  no trail; then `.verify-page`, a 44rem column 24px apart, holding the answer when there is one and then
+  `form.form-container`, a GET form: one `.form-group` (the label with its `*`, the input `.form-control.hash-value`,
+  the refusal when there is one, the help `p.field-help#hash-h` and the command list `ul.cmd-list#hash-cmds`, one `code`
+  a tool: certutil and Get-FileHash, shasum, sha256sum; Q6), and Verify (`shield-check`) in `.form-actions`. **The
+  answer** (F9, S20) is an `ActionResult` above the form holding one `Alert`, its first sentence bold: verified, a
+  success Alert, "**Export verified.** Wombat generated this PDF: its content is byte for byte an export Wombat
+  recorded.", then `dl.detail-list` (First generated, Exported "Once" or "3 times, the last on …", Trainee and First
+  exported by as ids in `.hash-value`, Filter, File; times "yyyy-MM-dd HH:mm SAST", never UTC) and `.verify-ids-note`
+  ("People are shown by their Wombat user ids, never by name. …"); not found, a danger Alert, "**No matching export
+  found.** This hash does not correspond to any PDF generated by this system. One changed byte changes the whole hash:
+  …"; a check that failed, a danger Alert with fixed words, the cause logged. It takes the focus after a press of Verify
+  (`check=1`, `FocusOnLoad`) and leaves it alone from a link (`?hash=` alone, V10). **What is not a hash** is refused
+  under the field (`.validation-message#hash-e`), from `VerifyExportQuery`'s typed reason (`VerifyExportRefusal`, S10):
+  only spaces ("Enter the content hash to check."), a character that is no hexadecimal digit (named), the 12 digits a
+  file's name carries, or another length. The field is then `aria-invalid`, keeps what was typed, names the refusal first
+  (`aria-describedby="hash-e hash-h hash-cmds"`, N15) and carries `autofocus` after a press (N4), so a static page puts
+  the focus in it with no script. The query drops every whitespace character and the case before it looks, so
+  Get-FileHash's upper case and certutil's spaced form verify (T313). Below 641px the details list is one column, the
+  field and Verify are 44px and Verify is the row's width (A.7.12).
 
 **Every field on these forms is required, and none is marked `*`** (R3-Spec; § Accessibility): a mark on each tells
 nothing, `required` exposes it to assistive technology, and the browser's own check names a blank field. The fields are
@@ -4887,6 +5036,12 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
 "Flow 12: the record and SSO (T376)": .record-page (+ > *, .action-result .alert, .form-grid + dl.form-group), .record-page and .people-page .action-result:empty, .people-page .form-container > h2 (+ > .form-grid + .form-grid), .not-set-up (+ h2, h2 .icon, p, p + p), .people-page th[scope="row"] .person-cell .group-id (a group's id breaks anywhere) (+ ≤640px: .record-page controls 44px, its .form-actions stacked column-reverse, the primary on top, its buttons and the SSO form's full width)
 "Flow 12: users and Home (T376)": .people-filter (+ .form-group, .field-help, .search-grid, .filter-actions), .people-page th[scope="row"] .person-cell span (break-word, check Left 3), .people-page .clinic-table th.col-wrap (Users' Institution and Scope floor, 901 to 1100px), .role-cell, .no-role-cell (+ .field-help), a.dashboard-metric (+ .dashboard-metric-label, :hover), .dashboard-card-footer .field-help, .dashboard-grid .home-institution-list (+ dd, dd p; M7; her card only) (+ ≤640px: .dashboard-grid a.dashboard-metric 44px, .dashboard-grid .dashboard-card-footer wrapping, .people-filter .filter-actions full width)
 "Flow 12: the user page (T376)": .role-rows, .role-row (+ :first-child), .role-row-label, .role-row-note, .no-role (+ > *), .choice-help-stack (+ legend, .form-check), .choice-help (+ ≤640px: .user-page .role-row stacked)
+
+/* ── Graduation and exit ────────────────────────── */
+"Flow 13: the record (T379)": .record-card-body (+ > p), .ended-line, .record-links (+ li, li:last-child, a), .record-link-plain, .record-link-why, .record-link-none, .record-line (+ ul, a), .record-line-label (+ ≤640px: .record-links a and .record-line a 44px; .my-activities .clinic-table--stack tbody tr.has-note joins its note row, My activities' R3-R07, scoped to its page)
+"Flow 13: the export (T379)": .export-page (+ > *, .action-result .alert, .action-result:empty), .export-note (+ ≤640px, inside .export-page: the date controls 44px, Export PDF full width and 44px)
+"Flow 13: verify (T379)": .verify-page (+ > *, .action-result .alert and its p, .detail-list and its dd: minmax(0, 1fr), S21), .verify-ids-note, .hash-value, .cmd-list (+ code) (+ ≤640px, inside .verify-page: the details list one column; .form-control and the form's button 44px, the button full width; the hash field 1rem, so iOS does not zoom)
+"Flow 13: the programme's end (T379)": .account-open (+ a), .closed-list (+ th[scope="row"]), .outcome-cell > span:not(.badge) (+ ≤640px: .user-page .account-open a 44px; the profile's controls, stacked role rows and stacked form actions, and the closed list's 44px View, are flow 12's and flow 11's shared rules)
 ```
 
 The Progress section replaced the Trajectory chart section that held T123's chart (2026-10-04, T355): every flow 05
@@ -4897,7 +5052,9 @@ STARs and appeals sections hold every flow 09 rule, none elsewhere: her review, 
 (2026-10-14, T366). The three Onboarding sections hold every flow 11 rule, none elsewhere: the shared one first,
 with the general phone rules flows 08 and 10 had each written for their own pages, then the invitations and the admission
 (2026-10-20, T373). Register is on the auth card and needs no rule of its own. The People admin sections hold every
-flow 12 rule, none elsewhere: the shared one first, then one per build lane (T376).
+flow 12 rule, none elsewhere: the shared one first, then one per build lane (T376). The four Graduation and exit
+sections hold every flow 13 rule but two, one per build lane: what two lanes share is the system's, `.badge-withdrawn`
+under Badges and the `.details-list` value column's `minmax(0, 1fr)` under Detail / stack lists (T379).
 
 When a new section is needed (say `/* ── Badges ── */`), add its heading in alphabetical-ish order inside the existing block and keep the rest of the file untouched.
 

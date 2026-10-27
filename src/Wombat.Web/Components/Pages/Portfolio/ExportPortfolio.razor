@@ -1,114 +1,91 @@
 @page "/portfolio/export"
-@page "/portfolio/export/{TraineeUserId}"
 @attribute [Authorize]
+@using Wombat.Application.Features.Reporting
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<ExportPortfolio> Logger
 @inject IJSRuntime JS
 
-<PageTitle>Export portfolio · Wombat</PageTitle>
+@*
+  The person's own export (T379, flow 13, lane E; R3-E01–E03, E07, E08, E11–E13, E16, E19). A Trainee's menu item, and a
+  record holder's personal link (Q2, build-contracts § 0), so it lights itself and draws no trail (F4, S1: one
+  aria-current, the menu's). h1 and tab "Export portfolio" (Q17), "your" in the subtitle and the result.
 
-<PageHeader Title="Export portfolio" Subtitle="Generate a PDF export of the trainee's portfolio." />
+  GetExportSubjectQuery reads first; the page draws no form until it answers (loading, its failure with Try again). Null
+  is the Unavailable page (Q19, F6: a caller with no trainee profile has nothing to export), drawn as Page not found is to
+  the shell, so nothing is lit (S2). The staff route, /portfolio/export/{TraineeUserId}, is ExportTraineePortfolio (S2).
+*@
 
-@* What Export PDF did. It takes the focus once the export is done (T234; DESIGN.md § Button system): a status arriving
-   on its own is often not read. A refusal leaves the focus on the button: it is an alert, read at once. *@
-<ActionResult @ref="_result">
-  @if (!string.IsNullOrWhiteSpace(_error))
-  {
-    <Alert Kind="danger">@_error</Alert>
-  }
+@* Literal, so the menu item's label is held to its tab (NavMenuAuthorizationTests); the h1 says the same words: "Export portfolio" (Q17), or "Portfolio unavailable" (Q19). *@
+@if (!Unavailable)
+{
+  <PageTitle>Export portfolio · Wombat</PageTitle>
+}
+else
+{
+  <PageTitle>Portfolio unavailable · Wombat</PageTitle>
+}
 
-  @if (_success)
-  {
-    <Alert Kind="success">Portfolio exported successfully. The download should start automatically.</Alert>
-  }
-</ActionResult>
+<PageHeader Title="@(Unavailable ? "Portfolio unavailable" : "Export portfolio")" Subtitle="@Subtitle" Page="@(Unavailable ? typeof(NotFound) : null)" />
 
-<div class="form-container">
-  <div class="form-grid">
-    <FormField Label="From date" InputId="fromDate">
-      <input type="date" id="fromDate" class="form-control" @bind="_fromDate" />
-    </FormField>
-    <FormField Label="To date" InputId="toDate">
-      <input type="date" id="toDate" class="form-control" @bind="_toDate" />
-    </FormField>
-  </div>
+@* Always present, filled while the subject is read: a live region added with its words in it is often not read. *@
+<p class="visually-hidden" role="status">@(_loading ? ExportWords.Loading : null)</p>
 
-  <div class="form-actions">
-    @* Not disabled while the export runs (T234): it has the focus, and a browser drops the focus of a button it disables,
-       to the page. A second press sends nothing. *@
-    <button type="button" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_exporting)" @onclick="ExportAsync">
-      @if (_exporting)
-      {
-        <span>Generating...</span>
-      }
-      else
-      {
-        <span>Export PDF</span>
-      }
-    </button>
-  </div>
-</div>
+<StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusHeadingAsync">
+  <LoadingContent>
+    <ExportSkeleton />
+  </LoadingContent>
+  <ChildContent>
+    @if (_subject is null)
+    {
+      <ExportUnavailable />
+    }
+    else
+    {
+      <ExportPortfolioForm Subject="_subject" Own="true" OnRefused="RefusedAsync" />
+    }
+  </ChildContent>
+</StatePanel>
 
 @code {
-  [Parameter] public string? TraineeUserId { get; set; }
+  private bool _loading = true;
+  private string? _loadError;
+  private ExportSubjectDto? _subject;
 
-  private DateOnly? _fromDate = DateOnly.FromDateTime(DateTime.Today.AddMonths(-12));
-  private DateOnly? _toDate = DateOnly.FromDateTime(DateTime.Today);
-  private bool _exporting;
-  private ActionResult? _result;
-  private bool _success;
-  private string? _error;
+  private bool Unavailable => !_loading && _loadError is null && _subject is null;
 
-  protected override async Task OnInitializedAsync()
+  private string? Subtitle => Unavailable ? null : ExportWords.OwnSubtitle;
+
+  protected override async Task OnInitializedAsync() => await LoadAsync();
+
+  private async Task LoadAsync()
   {
-    if (string.IsNullOrWhiteSpace(TraineeUserId))
-    {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      TraineeUserId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-    }
-  }
-
-  private async Task ExportAsync()
-  {
-    if (_exporting)
-    {
-      return;
-    }
-
-    if (string.IsNullOrWhiteSpace(TraineeUserId))
-    {
-      _error = "No trainee specified.";
-      return;
-    }
-
-    _exporting = true;
-    _error = null;
-    _success = false;
-
+    _loading = true;
+    _loadError = null;
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var result = await Sender.Send(new Wombat.Application.Features.Reporting.ExportPortfolioCommand(
-        TraineeUserId,
-        _fromDate,
-        _toDate,
-        authState.User));
-
-      await JS.InvokeVoidAsync("wombatFileDownload", result.FileName, result.PdfBytes);
-      _success = true;
-      _result?.FocusAfterRender();
+      _subject = await Sender.Send(new GetExportSubjectQuery(null, authState.User));
     }
-    catch (UnauthorizedAccessException)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _error = "You are not authorized to export this portfolio.";
-    }
-    catch (Exception exception)
-    {
-      _error = exception.Message;
+      // Never the exception's text on the page: it goes to the log (T329, R3-E15).
+      Logger.LogError(exception, "The own portfolio export's subject could not be read.");
+      _loadError = ExportWords.LoadError;
     }
     finally
     {
-      _exporting = false;
+      _loading = false;
     }
+  }
+
+  private Task RetryAsync() => LoadAsync();
+
+  private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  private async Task RefusedAsync()
+  {
+    _subject = null;
+    await PageFocus.FocusHeadingAsync(JS);
   }
 }

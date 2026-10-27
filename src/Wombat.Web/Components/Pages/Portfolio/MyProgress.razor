@@ -5,6 +5,8 @@
 @rendermode InteractiveServer
 @using Wombat.Application.Features.Curricula.Quota
 @using Wombat.Web.Components.Shared.Progress
+@using Wombat.Web.Components.Pages.Dashboards
+@using Wombat.Application.Features.Dashboards.FormerTrainee
 @using Microsoft.Extensions.DependencyInjection
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -35,7 +37,8 @@
   }
   else if (_summary.Ended is { } programmeEnd)
   {
-    <EndedRecord @ref="_endedRecord" Summary="_summary" Ended="programmeEnd" MsfCoverage="_msfCoverage" MsfFailed="_msfFailed" />
+    <EndedRecord @ref="_endedRecord" Summary="_summary" Ended="programmeEnd" MsfCoverage="_msfCoverage" MsfFailed="_msfFailed"
+                 AfterNotice="@(_recordLine ? RecordLine : null)" />
     @StandingSection(_summary)
   }
   else if (_summary.Items.Count == 0)
@@ -82,6 +85,11 @@
   private bool _msfFailed;
   private bool _loading = true;
   private string? _error;
+
+  // T379 (flow 13, S8): the "Your record:" line, for an ended programme read by someone who holds no Trainee role, and
+  // whether a STAR was ever issued, so My authorisations is offered (F6).
+  private bool _recordLine;
+  private bool _starsIssued;
 
   private ElementReference _periodHeading;
   private ElementReference _standingHeading;
@@ -144,6 +152,7 @@
     }
 
     await ReadStandingAsync(user, userId);
+    await ReadRecordLineAsync(user);
 
     // T168: this semester's coverage for This period, and each period's for an ended programme's cards. An ended
     // programme's cards show the semester it ended in and the one before, as a running one's show this semester (T252).
@@ -176,6 +185,31 @@
       Logger.LogError(exception, "My progress could not read the entrustment standing.");
       _standing = null;
       _standingFailed = true;
+    }
+  }
+
+  /// <summary>
+  /// The "Your record:" line (T379, flow 13, S8): only on an ended programme, and only for a person who holds no Trainee
+  /// role, the former trainee whose record this is. Its My authorisations link reads the Home card's answer
+  /// (<see cref="GetFormerTraineeHomeQuery" />), so the two agree on whether a STAR was ever issued; a failure leaves My
+  /// activities alone, logged, and never stops the page.
+  /// </summary>
+  private async Task ReadRecordLineAsync(System.Security.Claims.ClaimsPrincipal user)
+  {
+    _recordLine = _summary?.Ended is not null && !user.IsInRole(WombatRoles.Trainee);
+    _starsIssued = false;
+    if (!_recordLine)
+    {
+      return;
+    }
+
+    try
+    {
+      _starsIssued = (await Sender.Send(new GetFormerTraineeHomeQuery(user)))?.Stars.AnyIssued == true;
+    }
+    catch (Exception exception)
+    {
+      Logger.LogError(exception, "My progress could not read whether a STAR was issued.");
     }
   }
 
@@ -294,6 +328,26 @@
   /// panel the committee review page shows, in the trainee's own words, with its own error and Try again under its
   /// heading (C8), its EPA names linking to each EPA's page (R4).
   /// </summary>
+  /// <summary>
+  /// T379 (flow 13, S8; R3-R01, R3-R02, R3-R10): the record's other pages, for a person whose programme has ended and who
+  /// holds no Trainee role, under the ended notice as the boards draw it, through EndedRecord's AfterNotice (P1): the
+  /// registrar page passes none, so its markup and the golden markup hold. My authorisations only where a STAR was ever
+  /// issued (F6); if that read failed, My activities alone.
+  /// </summary>
+  private RenderFragment RecordLine => __builder =>
+  {
+    <div class="record-line">
+      <p class="record-line-label" id="record-line-label">@FormerTraineeRecordWords.RecordLineLabel</p>
+      <ul aria-labelledby="record-line-label">
+        @if (_starsIssued)
+        {
+          <li><a href="@PortfolioLinks.MyAuthorisations"><Icon Name="award" />My authorisations</a></li>
+        }
+        <li><a href="@PortfolioLinks.MyActivities"><Icon Name="list" />My activities</a></li>
+      </ul>
+    </div>
+  };
+
   private RenderFragment StandingSection(TraineeCurriculumProgressSummaryDto summary) => __builder =>
   {
     @if (_standing is not null || _standingFailed || _standingLoading)

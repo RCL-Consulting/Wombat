@@ -65,7 +65,7 @@ public sealed class TraineeProfileEndTests
 
         var exception = Assert.Throws<InvalidOperationException>(() => profile.Deactivate(new DateOnly(2022, 12, 31), Today));
 
-        Assert.Contains("before the programme start", exception.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("The last day cannot be before the programme start date (2023-01-15).", exception.Message);
         Assert.True(profile.IsActive);
         Assert.Null(profile.DeactivatedOn);
     }
@@ -89,7 +89,7 @@ public sealed class TraineeProfileEndTests
 
         var exception = Assert.Throws<InvalidOperationException>(() => profile.Deactivate(Today.AddDays(1), Today));
 
-        Assert.Equal("The deactivation date cannot be after today (2026-12-31).", exception.Message);
+        Assert.Equal("The last day cannot be after today (2026-12-31).", exception.Message);
         Assert.True(profile.IsActive);
         Assert.Null(profile.DeactivatedOn);
         Assert.Null(profile.EndedOn);
@@ -152,5 +152,20 @@ public sealed class TraineeProfileEndTests
         Assert.False(running.IsAfterEnd(new DateOnly(2030, 1, 1)));
         Assert.False(unrecorded.IsAfterEnd(new DateOnly(2030, 1, 1)));
         Assert.False(TraineeProfile.IsAfterEnd(null, new DateOnly(2030, 1, 1)));
+    }
+
+    [Fact]
+    public void TheLastDaysRule_SaysLastDay_ForEitherEnd_AndNamesTheDayThatBoundsIt()
+    {
+        // T379 (flow 13, F11, S3): the profile page checks the day typed by the same rule before any dialog opens, and
+        // shows these words under its field.
+        var start = new DateOnly(2023, 1, 15);
+
+        Assert.Equal("The last day cannot be before the programme start date (2023-01-15).",
+            TraineeProfile.EndDayRefusal(new DateOnly(2023, 1, 14), start, Today));
+        Assert.Equal("The last day cannot be after today (2026-12-31).",
+            TraineeProfile.EndDayRefusal(Today.AddDays(1), start, Today));
+        Assert.Null(TraineeProfile.EndDayRefusal(start, start, Today));
+        Assert.Null(TraineeProfile.EndDayRefusal(Today, start, Today));
     }
 }

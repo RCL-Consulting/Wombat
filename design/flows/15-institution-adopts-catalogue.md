@@ -487,6 +487,10 @@ Route: /admin/trainees → /admin/trainees/edit
 Do: Open Dr Dlamini's profile from Current trainees (Edit), which is on Paediatric EPA Curriculum (11.1). Move the expected completion date six
   months later than it reads, leave the curriculum as it is, and save the profile. Then reopen the profile.
 Expect:
+  - The profile is "Anele Dlamini's programme", with "Export Anele Dlamini's portfolio" in its header, End this
+    programme below Profile details, and no Back to trainees (T379).
+  - Trainees' "Completed and closed", "2 ended", lists the latest end first: Lerato Molefe, Completed (Act 5's `D`),
+    then Pieter du Plessis, Withdrawn (Act 5's `D−2`), each with View.
   - The curriculum picker offers 11.1 and 11.2, with 11.1 chosen.
   - The save reads "Trainee profile saved."
   - Reopened, the profile shows the new date on 11.1. By SQL, profile 3 stays on curriculum 2 and adoption 1: she stays
@@ -504,9 +508,11 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/trainees → /admin/trainees/edit
 Do: Open Dr Ndlovu's profile from Current trainees (Edit). Choose Paediatric EPA Curriculum (11.2), keep his programme start (`J`, from Act 2) and
   his expected completion as they read, and save the profile.
-Expect: The save reads "Trainee profile saved. N completion(s) was/were checked against 11.2, and M count(s) towards
-  it." The profile reads 11.2. By SQL his PAED-002 tally is on 11.2 and none is left on 11.1. Reopened, the picker
-  offers 11.2 alone. From now on, his completions credit 11.2's items.
+Expect: The profile is "Sipho Ndlovu's programme", with "Export Sipho Ndlovu's portfolio" in its header, End this
+  programme below Profile details, and no Back to trainees (T379). The save reads "Trainee profile saved. N
+  completion(s) was/were checked against 11.2, and M count(s) towards it." The profile reads 11.2. By SQL his PAED-002
+  tally is on 11.2 and none is left on 11.1. Reopened, the picker offers 11.2 alone. From now on, his completions
+  credit 11.2's items.
 
 Step 6.37 — Dr Ndlovu on 11.2, before progress is rebuilt (act-6-catalogue.md)
 Role: Trainee — Dr Sipho Ndlovu

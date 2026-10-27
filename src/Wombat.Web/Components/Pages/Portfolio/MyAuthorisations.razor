@@ -1,5 +1,7 @@
 @page "/portfolio/authorisations"
-@attribute [Authorize(Roles = "Trainee")]
+@* T379 (flow 13, Q3): the Trainee role, or a trainee record (TraineeOrFormerTrainee), as My progress: a graduate keeps her
+   STARs and downloads their certificates here (R3-R08). The one role check flow 13 adds. *@
+@attribute [Authorize(Policy = "TraineeOrFormerTrainee")]
 @rendermode InteractiveServer
 @using Wombat.Application.Features.Curricula.Quota
 @inject IScopedSender Sender
@@ -33,8 +35,8 @@
               LoadError="@_loadError"
               OnRetry="LoadAsync"
               IsEmpty="@(_decisions is { Count: 0 })"
-              EmptyTitle="No active authorisations yet"
-              EmptyBody="When a committee review ratifies a decision authorising you to perform an EPA, it will appear here. You can then download a STAR certificate for your records.">
+              EmptyTitle="@EmptyTitle"
+              EmptyBody="@EmptyBody">
     <LoadingContent>
       @* No Download until the read is in (C25). *@
       <div aria-hidden="true">
@@ -142,7 +144,24 @@
   public const string NoneInForce =
     "No STAR is in force now. When a committee review ratifies a decision authorising you to perform an EPA, it will appear here.";
 
+  /// <summary>The empty card's title for a Trainee, who may still be issued one (flow 09, as built).</summary>
+  public const string EmptyTitleTrainee = "No active authorisations yet";
+
+  /// <summary>Its sentence (flow 09, as built).</summary>
+  public const string EmptyBodyTrainee =
+    "When a committee review ratifies a decision authorising you to perform an EPA, it will appear here. You can then download a STAR certificate for your records.";
+
   private IReadOnlyList<EntrustmentDecisionDto>? _decisions;
+
+  // T379 (flow 13, Q3): the reader holds no Trainee role, so their programme has ended and no STAR will be issued to
+  // them: the empty card says none was (Spec 3's Empty row; R3-R09 draws the built words) in place of "No active
+  // authorisations yet", which promises one. A Trainee keeps the built card.
+  private bool _recordHolder;
+
+  private string EmptyTitle => _recordHolder ? Wombat.Web.Components.Pages.Dashboards.FormerTraineeRecordWords.NoStarIssued : EmptyTitleTrainee;
+
+  // Empty: the title says it all, and StatePanel draws no copy block for it (P2).
+  private string EmptyBody => _recordHolder ? string.Empty : EmptyBodyTrainee;
   private bool _loading = true;
   private string? _loadError;
 
@@ -230,6 +249,7 @@
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
         ?? throw new InvalidOperationException("Current user identifier missing.");
+      _recordHolder = !authState.User.IsInRole(WombatRoles.Trainee);
       _decisions = await Sender.Send(new GetDecisionsForTraineeQuery(userId, authState.User));
     }
     catch (Exception exception) when (exception is not OperationCanceledException)

@@ -24,9 +24,10 @@ namespace Wombat.Application.Features.Trainees;
 /// role away, as a completion does (T290): a withdrawn registrar files nothing more, since nothing after their last day
 /// could credit, and reads their own record through the profile they ended on (T252's <c>trainee_record</c> claim). The
 /// same save keeps the list the programme ended with (T312, <see cref="ProgrammeItems.ReadEndedWithAsync" />), which that
-/// record reads from then on.
+/// record reads from then on. It answers with how many activities' credit it took back (T379, flow 13, F2:
+/// <see cref="ProgrammeEndResult" />).
 /// </summary>
-public sealed record DeactivateTraineeProfileCommand(int Id, DateOnly DeactivatedOn, ClaimsPrincipal Principal) : IRequest;
+public sealed record DeactivateTraineeProfileCommand(int Id, DateOnly DeactivatedOn, ClaimsPrincipal Principal) : IRequest<ProgrammeEndResult>;
 
 public sealed class DeactivateTraineeProfileCommandValidator : AbstractValidator<DeactivateTraineeProfileCommand>
 {
@@ -37,7 +38,7 @@ public sealed class DeactivateTraineeProfileCommandValidator : AbstractValidator
     }
 }
 
-public sealed class DeactivateTraineeProfileCommandHandler : IRequestHandler<DeactivateTraineeProfileCommand>
+public sealed class DeactivateTraineeProfileCommandHandler : IRequestHandler<DeactivateTraineeProfileCommand, ProgrammeEndResult>
 {
     private readonly IApplicationDbContext _dbContext;
     private readonly IUserAdministrationService _userAdministrationService;
@@ -59,7 +60,7 @@ public sealed class DeactivateTraineeProfileCommandHandler : IRequestHandler<Dea
         _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
-    public async Task Handle(DeactivateTraineeProfileCommand request, CancellationToken cancellationToken)
+    public async Task<ProgrammeEndResult> Handle(DeactivateTraineeProfileCommand request, CancellationToken cancellationToken)
     {
         TraineeAdministrationRules.DemandTraineeAdministration(request.Principal);
 
@@ -82,9 +83,9 @@ public sealed class DeactivateTraineeProfileCommandHandler : IRequestHandler<Dea
             throw new UnauthorizedAccessException("You do not have permission to deactivate this trainee profile.");
         }
 
-        // T281: whether the last day takes back credit already given for encounters after it. Read before the end is
-        // recorded, like every other read that can fail.
-        var takesCreditBack = await ProgrammeEndCredit.TakesCreditBackAsync(
+        // T281: how many activities the last day takes back credit from, given for encounters after it. Read before the end
+        // is recorded, like every other read that can fail; the answer is what the command returns (T379, F2).
+        var takenBack = await ProgrammeEndCredit.CountTakenBackAsync(
             _dbContext.Set<Activity>(), profile.UserId, request.DeactivatedOn, cancellationToken);
 
         // T312: the list the programme ends with, each item in force for the trainee on the last day with its target then,
@@ -100,10 +101,12 @@ public sealed class DeactivateTraineeProfileCommandHandler : IRequestHandler<Dea
 
         // Saved with a replay of the trainee's credit when the end takes some back, and put back if that replay fails.
         await ProgrammeEndCredit.SaveAsync(
-            _dbContext, _creditApplier, _dbContext.Set<Activity>(), profile, takesCreditBack, cancellationToken);
+            _dbContext, _creditApplier, _dbContext.Set<Activity>(), profile, takenBack, cancellationToken);
         await hold.CommitAsync(cancellationToken);
 
         // As a completion (T290): the role goes with the programme, after the save, which writes nothing the hold is for.
         await _userAdministrationService.RemoveRoleAsync(profile.UserId, WombatRoles.Trainee, cancellationToken);
+
+        return new ProgrammeEndResult(takenBack);
     }
 }

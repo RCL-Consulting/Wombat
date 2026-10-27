@@ -185,6 +185,54 @@ public sealed class ActivityListProjectionTests
             "the back-dated encounter (12), filed last, belongs at 1 March, not at the top");
     }
 
+    /// <summary>
+    /// T379 (flow 13, R3-R07; DATA "My activities' note row's reason"): on the caller's own list, the last day of their
+    /// ended programme, and each row observed after it (T281: it counts towards nothing). The last day itself is inside
+    /// the programme.
+    /// </summary>
+    [Fact]
+    public async Task SubjectList_AfterTheProgrammeEnded_SaysItsLastDay_AndWhichRowsWereObservedAfterIt()
+    {
+        await using var db = await SeededAsync();
+        db.TraineeProfiles.Add(Profile(1, active: false, deactivatedOn: new DateOnly(2026, 3, 13)));
+        await db.SaveChangesAsync();
+
+        var page = await SubjectPageAsync(db, Principal(TraineeId));
+
+        page.SubjectEndedOn.Should().Be(new DateOnly(2026, 3, 13));
+        page.Items.Where(row => row.ObservedAfterEnd).Select(row => row.Id).Should().BeEquivalentTo([6, 7, 8]);
+        Row(page.Items, 4).ObservedAfterEnd.Should().BeFalse("observed on the last day, inside the programme");
+    }
+
+    [Fact]
+    public async Task SubjectList_WhileTheProgrammeRuns_HasNoLastDay_AndNoRowAfterIt()
+    {
+        // A re-admission: the active profile is the preferred one, so the ended one before it ends nothing.
+        await using var db = await SeededAsync();
+        db.TraineeProfiles.Add(Profile(1, active: false, deactivatedOn: new DateOnly(2026, 3, 1)));
+        db.TraineeProfiles.Add(Profile(2, active: true, deactivatedOn: null));
+        await db.SaveChangesAsync();
+
+        var page = await SubjectPageAsync(db, Principal(TraineeId));
+
+        page.SubjectEndedOn.Should().BeNull();
+        page.Items.Should().NotContain(row => row.ObservedAfterEnd);
+    }
+
+    [Fact]
+    public async Task SubjectList_OfSomeoneElse_NeverSaysWhenTheirProgrammeEnded()
+    {
+        await using var db = await SeededAsync();
+        db.TraineeProfiles.Add(Profile(1, active: false, deactivatedOn: new DateOnly(2026, 3, 13)));
+        await db.SaveChangesAsync();
+
+        var page = await SubjectPageAsync(db, Wombat.Application.Tests.TestHelpers.TestPrincipals.Administrator());
+
+        page.Items.Should().NotBeEmpty("guard: an Administrator reads the list");
+        page.SubjectEndedOn.Should().BeNull();
+        page.Items.Should().NotContain(row => row.ObservedAfterEnd);
+    }
+
     [Fact]
     public async Task Inbox_CarriesTheEpaAndTheEncounterDate()
     {
@@ -276,6 +324,26 @@ public sealed class ActivityListProjectionTests
             .Handle(new ListActivitiesBySubjectQuery(TraineeId, Principal(TraineeId)), CancellationToken.None)).Items;
 
     private static ActivitySummaryDto Row(IReadOnlyList<ActivitySummaryDto> rows, int id) => rows.Single(row => row.Id == id);
+
+    private static Task<ActivityListPageDto> SubjectPageAsync(ApplicationDbContext db, ClaimsPrincipal caller)
+        => new ListActivitiesBySubjectQueryHandler(db, FakeUserDirectory.Empty)
+            .Handle(new ListActivitiesBySubjectQuery(TraineeId, caller), CancellationToken.None);
+
+    /// <summary>The trainee's profile: running, or withdrawn with this last day.</summary>
+    private static Wombat.Domain.Identity.TraineeProfile Profile(int id, bool active, DateOnly? deactivatedOn)
+    {
+        var profile = new Wombat.Domain.Identity.TraineeProfile
+        {
+            Id = id, UserId = TraineeId, InstitutionId = 1, ProgrammeStartDate = new DateOnly(2025, 1, 15),
+            ExpectedCompletionDate = new DateOnly(2029, 1, 15), IsActive = true
+        };
+        if (!active && deactivatedOn is { } lastDay)
+        {
+            profile.Deactivate(lastDay, lastDay);
+        }
+
+        return profile;
+    }
 
     private static async Task DeactivateAsync(ApplicationDbContext db, int epaId)
     {

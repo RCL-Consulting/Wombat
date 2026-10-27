@@ -1,6 +1,7 @@
 @page "/portfolio/verify"
 @attribute [AllowAnonymous]
 @attribute [ExcludeFromInteractiveRouting]
+@using Wombat.Application.Features.Reporting
 @inject IScopedSender Sender
 @inject ILogger<VerifyExport> Logger
 
@@ -10,98 +11,126 @@
   check is made as the page renders, so it needs no circuit, which a visitor who has not signed in never has (T181).
   Until T265 Verify was a circuit button, and signed out it did nothing; only a link that carried the hash checked it.
 
-  Verify sends check=1 beside the hash, so the page can tell a press from a link. After a press the result takes the
-  focus as the page loads (ActionResult's FocusOnLoad; DESIGN.md § Button system); a check made on arrival from a link
-  leaves the focus alone. A check that fails is said on the page, not left to the error page (T265).
+  Verify sends check=1 beside the hash, so the page can tell a press from a link. After a press the answer takes the
+  focus as the page loads (ActionResult's FocusOnLoad; DESIGN.md § Button system), or, for what is not a hash, the field
+  does (autofocus, N4); a check made on arrival from a link leaves the focus alone (V10). A check that fails is said on
+  the page, not left to the error page (T265), and its cause goes to the log.
+
+  T379 (flow 13, R3-V01–V10): the answer sits above the form in .verify-page, one Alert with its first sentence bold and,
+  for a verified file, the details list in it (F9, S20, S21); what cannot be a hash is refused under the field, named
+  first by it (N15), from the query's typed reason (S10). Times are SAST (T325); no h3 and no inline style (T280).
 *@
 
 <PageTitle>Verify portfolio export · Wombat</PageTitle>
 
-<PageHeader Title="Verify portfolio export" Subtitle="Check whether a PDF was produced by this system." />
+<PageHeader Title="Verify portfolio export" Subtitle="@VerifyExportWords.Subtitle" />
 
-<div class="form-container">
-  <form method="get" action="/portfolio/verify">
-    <div class="form-grid">
-      <FormField Label="Content hash (SHA-256)" InputId="contentHash" FullWidth="true">
-        <input type="text" id="contentHash" name="hash" class="form-control" value="@Hash" required autocomplete="off"
-               spellcheck="false" placeholder="Enter the hash from the PDF footer" />
-      </FormField>
+<div class="verify-page">
+  @if (_fault || (_answer is not null && _answer.Refusal is null))
+  {
+    <ActionResult FocusOnLoad="@Pressed">
+      @if (_fault)
+      {
+        <Alert Kind="danger"><strong>@VerifyExportWords.Failed</strong> @VerifyExportWords.FailedRest</Alert>
+      }
+      else if (_answer!.Export is { } export)
+      {
+        <Alert Kind="success">
+          <p><strong>@VerifyExportWords.Verified</strong> @VerifyExportWords.VerifiedRest</p>
+          <dl class="detail-list">
+            <dt>First generated</dt>
+            <dd>@VerifyExportWords.When(export.FirstExportedOn)</dd>
+            <dt>Exported</dt>
+            <dd>@VerifyExportWords.Exported(export)</dd>
+            <dt>Trainee</dt>
+            <dd class="hash-value">@export.TraineeUserId</dd>
+            <dt>First exported by</dt>
+            <dd class="hash-value">@export.FirstExportedByUserId</dd>
+            @if (export.FilterFromDate.HasValue || export.FilterToDate.HasValue)
+            {
+              <dt>Filter</dt>
+              <dd>@VerifyExportWords.Filter(export.FilterFromDate, export.FilterToDate)</dd>
+            }
+            <dt>File</dt>
+            <dd>@export.FileName</dd>
+          </dl>
+          <p class="verify-ids-note">@VerifyExportWords.IdsNote</p>
+        </Alert>
+      }
+      else
+      {
+        <Alert Kind="danger"><strong>@VerifyExportWords.NotFound</strong> @VerifyExportWords.NotFoundRest</Alert>
+      }
+    </ActionResult>
+  }
+
+  <form class="form-container" method="get" action="/portfolio/verify">
+    <div class="form-group">
+      <label for="@InputId">
+        @VerifyExportWords.FieldLabel
+        <span aria-hidden="true">*</span>
+        <span class="visually-hidden">required</span>
+      </label>
+      <input type="text" id="@InputId" name="hash" class="@InputClass" value="@Hash" required autocomplete="off"
+             spellcheck="false" aria-describedby="@DescribedBy" aria-invalid="@(_refusal is null ? null : "true")"
+             autofocus="@(_refusal is not null && Pressed)" />
+      @if (_refusal is not null)
+      {
+        <div class="validation-message" id="@RefusalId">@_refusal</div>
+      }
+      <p class="field-help" id="@HelpId">@VerifyExportWords.FieldHelp</p>
+      <ul class="cmd-list" id="@CommandsId">
+        <li>Windows: <code>certutil -hashfile &lt;file&gt; SHA256</code>, or in PowerShell <code>Get-FileHash &lt;file&gt;</code></li>
+        <li>macOS: <code>shasum -a 256 &lt;file&gt;</code></li>
+        <li>Linux: <code>sha256sum &lt;file&gt;</code></li>
+      </ul>
     </div>
 
-    <div class="form-actions">
-      <button type="submit" class="btn btn-primary" name="@PressedParameter" value="1">Verify</button>
-    </div>
+    <FormActions>
+      <button type="submit" class="btn btn-primary" name="@PressedParameter" value="1"><Icon Name="shield-check" />Verify</button>
+    </FormActions>
   </form>
 </div>
-
-@* What Verify found, under the form. *@
-<ActionResult FocusOnLoad="@Pressed">
-  @if (_fault)
-  {
-    <div style="margin-top: var(--space-lg);">
-      <Alert Kind="danger">The export could not be checked just now. Please try again in a few minutes.</Alert>
-    </div>
-  }
-  else if (_blank)
-  {
-    <div style="margin-top: var(--space-lg);">
-      <Alert Kind="danger">Enter the content hash to check.</Alert>
-    </div>
-  }
-  else if (_searched)
-  {
-    @if (_result is not null)
-    {
-      <section class="detail-card" style="margin-top: var(--space-lg);">
-        <h3>Export verified</h3>
-        <p>This PDF was generated by Wombat on <strong>@_result.ExportedOn.ToString("yyyy-MM-dd HH:mm") UTC</strong>.</p>
-        <p>Trainee ID: <strong>@_result.TraineeUserId</strong></p>
-        <p>Exported by: <strong>@_result.ExportedByUserId</strong></p>
-        @if (_result.FilterFromDate.HasValue || _result.FilterToDate.HasValue)
-        {
-          <p>Filter: @FormatDateRange(_result.FilterFromDate, _result.FilterToDate)</p>
-        }
-        <p>File: <strong>@_result.FileName</strong></p>
-      </section>
-    }
-    else
-    {
-      <div style="margin-top: var(--space-lg);">
-        <Alert Kind="warning">No matching export found. This hash does not correspond to any PDF generated by this system.</Alert>
-      </div>
-    }
-  }
-</ActionResult>
 
 @code {
   /// <summary>The query parameter Verify sends, and only Verify: its presence says the page is the answer to a press.</summary>
   public const string PressedParameter = "check";
 
+  /// <summary>The field, and what names it (N15): the refusal first, then the help, then the command list.</summary>
+  public const string InputId = "hash";
+  public const string RefusalId = "hash-e";
+  public const string HelpId = "hash-h";
+  public const string CommandsId = "hash-cmds";
+
   [SupplyParameterFromQuery(Name = "hash")] public string? Hash { get; set; }
 
   [SupplyParameterFromQuery(Name = PressedParameter)] public string? Check { get; set; }
 
-  private Wombat.Application.Features.Reporting.PortfolioExportRecordDto? _result;
-  private bool _searched;
-  private bool _blank;
+  private VerifyExportAnswer? _answer;
+  private string? _refusal;
   private bool _fault;
 
   private bool Pressed => !string.IsNullOrEmpty(Check);
+
+  private string DescribedBy => _refusal is null ? $"{HelpId} {CommandsId}" : $"{RefusalId} {HelpId} {CommandsId}";
+
+  private string InputClass => _refusal is null ? "form-control hash-value" : "form-control hash-value input-validation-error";
 
   protected override async Task OnInitializedAsync()
   {
     if (string.IsNullOrWhiteSpace(Hash))
     {
       // The field is required, so a browser sends no empty hash, but spaces pass that check: a press with nothing to
-      // check is refused. A visit with no hash, pressed for by nobody, is the form alone.
-      _blank = Pressed;
+      // check is refused under the field (V05). A visit with no hash, pressed for by nobody, is the form alone.
+      _refusal = Pressed ? VerifyExportWords.Blank : null;
       return;
     }
 
     try
     {
-      _result = await Sender.Send(new Wombat.Application.Features.Reporting.VerifyExportQuery(Hash.Trim()));
-      _searched = true;
+      // The query reads the hash as typed: it drops the whitespace and the case itself (S10, V03, V09).
+      _answer = await Sender.Send(new VerifyExportQuery(Hash));
+      _refusal = _answer.Refusal is null ? null : VerifyExportWords.Refusal(_answer);
     }
     catch (Exception exception)
     {
@@ -109,13 +138,5 @@
       Logger.LogError(exception, "The portfolio export check failed.");
       _fault = true;
     }
-  }
-
-  private static string FormatDateRange(DateOnly? from, DateOnly? to)
-  {
-    if (from.HasValue && to.HasValue) return $"{from.Value:yyyy-MM-dd} to {to.Value:yyyy-MM-dd}";
-    if (from.HasValue) return $"From {from.Value:yyyy-MM-dd}";
-    if (to.HasValue) return $"Up to {to.Value:yyyy-MM-dd}";
-    return string.Empty;
   }
 }

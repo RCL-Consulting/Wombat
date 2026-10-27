@@ -75,8 +75,14 @@ public sealed class ActiveNavItemTests : TestContext
 
         NavOwners.Table.Keys.Concat(NavOwners.Outside.Keys).Should().OnlyContain(page => routable.Contains(page));
         NavOwners.Table.Keys.Intersect(NavOwners.Outside.Keys).Should().BeEmpty();
-        NavOwners.Table.Keys.Intersect(AllItems().Select(item => item.Page)).Should().BeEmpty(
-            "a nav item's own page lights that item; the table is for the pages under one");
+        // T379 (flow 13, S18): but for a page under a personal link, which is one menu's item and a page under My progress
+        // in another's: My activities is the Trainee's item and, for a former trainee, under My progress (Lit reads the
+        // menu first, so the Trainee's own item still lights).
+        NavOwners.Table
+            .Where(entry => !entry.Value.All(owner => owner.Roles.Count == 0 && NavOwners.IsPersonal(owner.Item)))
+            .Select(entry => entry.Key)
+            .Intersect(AllItems().Select(item => item.Page)).Should().BeEmpty(
+                "a nav item's own page lights that item; the table is for the pages under one");
     }
 
     [Fact]
@@ -253,15 +259,56 @@ public sealed class ActiveNavItemTests : TestContext
     }
 
     [Fact]
-    public void AnEntryNamingRoles_UnderAPersonalLink_KeepsItsRoles()
+    public void ThePagesUnderMyProgress_AreOwnedWhateverTheActingRole_AndWithNone()
     {
-        // T355, build review R7, G5: the any-role rule is for an entry declared UnderAPersonalLink, not for every entry
-        // whose item is personal. My authorisations is under My progress for the Trainee alone, as its policy admits.
-        NavOwners.OwnerFor(typeof(MyAuthorisations), WombatRoles.Trainee).Should().Be(NavItems.MyProgress);
-        NavOwners.OwnerFor(typeof(MyAuthorisations), WombatRoles.Assessor).Should().BeNull();
-        NavOwners.OwnerFor(typeof(MyAuthorisations), null).Should().BeNull();
-        NavOwners.OwnerFor(typeof(EpaProgress), WombatRoles.Assessor).Should().Be(NavItems.MyProgress);
-        NavOwners.OwnerFor(typeof(EpaProgress), null).Should().Be(NavItems.MyProgress);
+        // T355, build review R7, G5, kept an entry naming roles to those roles. My authorisations named the Trainee alone,
+        // as its policy admitted; since T379 (flow 13, Q3) its policy is TraineeOrFormerTrainee, so it is declared under the
+        // personal link like the EPA page, and My activities with it (S18).
+        foreach (var page in new[] { typeof(EpaProgress), typeof(MyAuthorisations), typeof(MyActivities) })
+        {
+            NavOwners.OwnerFor(page, WombatRoles.Trainee).Should().Be(NavItems.MyProgress, page.Name);
+            NavOwners.OwnerFor(page, WombatRoles.Assessor).Should().Be(NavItems.MyProgress, page.Name);
+            NavOwners.OwnerFor(page, null).Should().Be(NavItems.MyProgress, page.Name);
+        }
+    }
+
+    // T379 (flow 13; R3-R07, R3-R08): for a former trainee, My authorisations and My activities light My progress, and their
+    // trail is Home › My progress › the page, whether she holds no role or acts as Assessor (H03).
+    [Theory]
+    [InlineData(null)]
+    [InlineData(WombatRoles.Assessor)]
+    public void ForAFormerTrainee_MyAuthorisationsAndMyActivities_AreUnderMyProgress(string? role)
+    {
+        var menu = MenuFor(role, TraineeRecord());
+
+        foreach (var page in new[] { typeof(MyAuthorisations), typeof(MyActivities) })
+        {
+            NavOwners.Lit(page, role, menu).Should().Be((NavItems.MyProgress, NavCurrent.Owner), page.Name);
+            NavOwners.TrailTo(page, role, menu).Should().Equal(
+                [new Crumb("Home", "/"), new Crumb("My progress", "/portfolio/progress")], page.Name);
+        }
+    }
+
+    // A Trainee keeps My activities lit as her own item (Lit reads the menu first), and My authorisations under My progress.
+    [Fact]
+    public void ForATrainee_MyActivitiesLightsItself_AndMyAuthorisationsMyProgress()
+    {
+        var menu = MenuFor(WombatRoles.Trainee);
+
+        NavOwners.Lit(typeof(MyActivities), WombatRoles.Trainee, menu).Should().Be((NavItems.MyActivities, NavCurrent.Page));
+        NavOwners.TrailTo(typeof(MyActivities), WombatRoles.Trainee, menu).Should().BeNull();
+        NavOwners.Lit(typeof(MyAuthorisations), WombatRoles.Trainee, menu).Should().Be((NavItems.MyProgress, NavCurrent.Owner));
+    }
+
+    // N2 (T379, flow 13): an activity opened from My activities by a former trainee is under no item of hers, so its trail is
+    // Home › the activity, and nothing is lit.
+    [Fact]
+    public void AnActivityOpenedByAFormerTrainee_IsUnderNoItem_ItsTrailHome()
+    {
+        var menu = MenuFor(null, TraineeRecord());
+
+        NavOwners.Lit(typeof(ActivityView), null, menu).Current.Should().Be(NavCurrent.None);
+        NavOwners.TrailTo(typeof(ActivityView), null, menu).Should().Equal([new Crumb("Home", "/")]);
     }
 
     [Fact]
@@ -276,8 +323,16 @@ public sealed class ActiveNavItemTests : TestContext
                 (await RefusalOf(page, Holder([WombatRoles.Trainee]))).Should().BeNull($"{page.Name} admits a Trainee");
                 (await RefusalOf(page, Holder([WombatRoles.Assessor], TraineeRecord()))).Should().BeNull($"{page.Name} admits a record holder");
                 (await RefusalOf(page, Holder([], TraineeRecord()))).Should().BeNull($"{page.Name} admits a graduate with no role");
-                (await RefusalOf(page, Holder([WombatRoles.Assessor]))).Should().NotBeNull($"{page.Name} refuses an Assessor with no record");
+                // My activities (T379) admits any signed-in user (its bare [Authorize]): an Assessor with no record may open
+                // it, and is offered no link to My progress, so it lights nothing for him. Every other such page refuses him.
+                if (page != typeof(MyActivities))
+                {
+                    (await RefusalOf(page, Holder([WombatRoles.Assessor]))).Should().NotBeNull($"{page.Name} refuses an Assessor with no record");
+                }
+
                 MenuFor(WombatRoles.Assessor).Offers(owner.Item).Should().BeFalse("nor is its link offered to them");
+                NavOwners.Lit(page, WombatRoles.Assessor, MenuFor(WombatRoles.Assessor)).Current.Should().Be(NavCurrent.None,
+                    $"{page.Name} lights nothing for an Assessor with no record");
             }
         }
     }
@@ -343,6 +398,84 @@ public sealed class ActiveNavItemTests : TestContext
 
         Crumbs(RenderHeader(role, typeof(ProgrammeTraineeDetail), "Nomsa Mahlangu"))
             .Should().Equal(("Home", "/"), ("Programme trainees", "/programme/trainees"), ("Nomsa Mahlangu", null));
+    }
+
+    // T379, flow 13 (S2, M4, Q27): the staff export lights its fixed owner by route, never the caller's own personal Export
+    // portfolio, even for a member of staff who also holds a trainee record. Its trail is Home › the owner › (the page's
+    // middle crumb) › Export portfolio; the Administrator, offered neither owner, has nothing lit and Home › Export portfolio.
+    [Theory]
+    [InlineData(WombatRoles.InstitutionalAdmin, "Trainees", "/admin/trainees")]
+    [InlineData(WombatRoles.CommitteeMember, "Programme trainees", "/programme/trainees")]
+    [InlineData(WombatRoles.SpecialityAdmin, "Programme trainees", "/programme/trainees")]
+    [InlineData(WombatRoles.SubSpecialityAdmin, "Programme trainees", "/programme/trainees")]
+    [InlineData(WombatRoles.Coordinator, "Programme trainees", "/programme/trainees")]
+    public void TheStaffExport_LightsItsOwnerByRoute_EvenForAFormerTrainee(string role, string owner, string ownerHref)
+    {
+        foreach (var menu in new[] { MenuFor(role), MenuFor(role, TraineeRecord()) })
+        {
+            NavOwners.Lit(typeof(ExportTraineePortfolio), role, menu).Should().Be(
+                (menu.Items.Single(item => item.Label == owner), NavCurrent.Owner));
+        }
+
+        MenuFor(role, TraineeRecord()).Items.Should().Contain(NavItems.ExportPortfolio, "guard: her own export is offered too");
+        var lit = RenderComponent<NavMenu>(parameters => parameters
+                .AddCascadingValue(ActingAs(role))
+                .AddCascadingValue(MenuFor(role, TraineeRecord()))
+                .AddCascadingValue(new RouteData(typeof(ExportTraineePortfolio), new Dictionary<string, object?>())))
+            .FindAll("a[aria-current]").Should().ContainSingle().Which;
+        lit.TextContent.Trim().Should().Be(owner);
+        lit.GetAttribute("aria-current").Should().Be("true");
+
+        var trail = RenderComponent<PageHeader>(parameters => parameters
+            .Add(header => header.Title, "Export Lerato Molefe's portfolio")
+            .Add(header => header.CurrentCrumb, "Export portfolio")
+            .AddCascadingValue(ActingAs(role))
+            .AddCascadingValue(MenuFor(role, TraineeRecord()))
+            .AddCascadingValue(new RouteData(typeof(ExportTraineePortfolio), new Dictionary<string, object?>())));
+        Crumbs(trail).Should().Equal(("Home", "/"), (owner, ownerHref), ("Export portfolio", null));
+    }
+
+    [Fact]
+    public void TheStaffExport_LightsNothingForTheAdministrator_UnderHome()
+    {
+        LitLabel(WombatRoles.Administrator, typeof(ExportTraineePortfolio)).Should().BeNull();
+        Crumbs(RenderHeader(WombatRoles.Administrator, typeof(ExportTraineePortfolio), "Export portfolio"))
+            .Should().Equal(("Home", "/"), ("Export portfolio", null));
+    }
+
+    // T379, flow 13 (Q19, S2): Portfolio unavailable is drawn as Page not found is to the shell, so nothing is lit: the own
+    // export's item (a caller with no profile, R3-E19) or the staff export's owner (refused or unknown, R3-E09, E10).
+    public static TheoryData<Type, string, string, string?> ExportsThatDrawUnavailable() => new()
+    {
+        { typeof(ExportPortfolio), "", WombatRoles.Trainee, "Export portfolio" },
+        { typeof(ExportTraineePortfolio), "TraineeUserId", WombatRoles.InstitutionalAdmin, "Trainees" },
+        { typeof(ExportTraineePortfolio), "TraineeUserId", WombatRoles.Coordinator, "Programme trainees" },
+    };
+
+    [Theory]
+    [MemberData(nameof(ExportsThatDrawUnavailable))]
+    public void PortfolioUnavailable_LightsNothingInTheMenu(Type page, string idParameter, string role, string? litWhenFound)
+    {
+        Services.AddSingleton<IScopedSender>(new NothingSender());
+        Services.AddSingleton(TimeProvider.System);
+        var auth = this.AddTestAuthorization();
+        auth.SetAuthorized("dlamini@kgk.wombat.local");
+        auth.SetRoles(role);
+        auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "dlamini"));
+        var values = idParameter.Length == 0 ? new Dictionary<string, object?>() : new Dictionary<string, object?> { [idParameter] = "molefe" };
+        var menu = MenuFor(role);
+
+        NavOwners.Lit(page, role, menu).Item?.Label.Should().Be(litWhenFound, "guard: found, the page lights this item");
+
+        var cut = RenderComponent<ShellHost>(parameters => parameters
+            .Add(host => host.Acting, ActingAs(role))
+            .Add(host => host.Menu, menu)
+            .Add(host => host.Route, new RouteData(page, values)));
+
+        cut.WaitForAssertion(() => cut.Find("main h1").TextContent.Trim().Should().Be("Portfolio unavailable"),
+            Wombat.Web.Tests.TestSupport.WombatTestContext.AsyncWorkTimeout);
+        cut.FindAll("nav[aria-label='Main'] a.active, nav[aria-label='Main'] a[aria-current]").Should().BeEmpty();
+        cut.FindAll("nav[aria-label='Breadcrumb']").Should().BeEmpty();
     }
 
     // T358, flow 06 (R2-Menus m5): Entrustment decisions is a list both speciality admins' menus offer, so it lights itself

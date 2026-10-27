@@ -157,7 +157,6 @@ public static class DependencyInjection
         services.AddScheduledJob<MsfCampaignAutoCloseJob>();
         services.AddScheduledJob<MsfInvitationExpiryReminderJob>();
         services.AddScheduledJob<WeeklyCoordinatorDigestJob>();
-        services.AddScheduledJob<PortfolioExportCleanupJob>();
         services.AddScheduledJob<AuditLogRetentionJob>();
         services.AddScheduledJob<ScheduledJobRunRetentionJob>();
         services.AddScheduledJob<EntrustmentDecisionExpiryJob>();

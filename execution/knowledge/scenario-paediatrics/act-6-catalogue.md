@@ -500,7 +500,8 @@ Gap: none
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: /portfolio/progress → /portfolio/progress/{EpaId:int}
 Do: Read her record. Then open PAED-012's page from its card.
-Expect: The record opens with its notice that she completed her programme and that the page is read-only.
+Expect: The record opens with its notice that she completed her programme and that the page is read-only, under the
+  line "Your record:" with My authorisations and My activities (T379, as in Step 5.20).
   - Her record reads the list her programme ended with (T312), so the pause changes nothing on it but a mark: PAED-012
     keeps its card, headed "PAED-012 (no longer in use)" (the code a link, the mark muted beside it, T255), with every
     period as Act 5 left it.
@@ -509,8 +510,8 @@ Expect: The record opens with its notice that she completed her programme and th
     "STAR decisions are shown as the programme left them, and ratings as they stand today." (T312's wording).
   - No chart is on My progress (T355). PAED-012's page is headed "PAED-012 — … (no longer in use)", with no alert that
     it would be credited if restored: it lists its periods as her record does, and its Entrustment panel shows her
-    STAR as Act 5 issued it. Its rating trajectory, headed "Rating trajectory (no longer in use)", still charts her
-    ratings on it (T255).
+    STAR as Act 5 issued it, with Open My authorisations (T379). Its rating trajectory, headed "Rating trajectory (no
+    longer in use)", still charts her ratings on it (T255).
   - PAED-006's card carries the title corrected in Step 6.14. Her other cards and periods are as Act 5 left them.
 Note: The TraineeOrFormerTrainee policy admits her without the Trainee role (T252).
 Actual (2026-10-26, T376 replay, wombat_scenario_t376): "You completed your programme on 2026-10-26. This page is your
@@ -800,6 +801,10 @@ Route: /admin/trainees → /admin/trainees/edit
 Do: Open Dr Dlamini's profile from Current trainees (Edit), which is on Paediatric EPA Curriculum (11.1). Move the expected completion date six
   months later than it reads, leave the curriculum as it is, and save the profile. Then reopen the profile.
 Expect:
+  - The profile is "Anele Dlamini's programme", with "Export Anele Dlamini's portfolio" in its header, End this
+    programme below Profile details, and no Back to trainees (T379).
+  - Trainees' "Completed and closed", "2 ended", lists the latest end first: Lerato Molefe, Completed (Act 5's `D`),
+    then Pieter du Plessis, Withdrawn (Act 5's `D−2`), each with View.
   - The curriculum picker offers 11.1 and 11.2, with 11.1 chosen.
   - The save reads "Trainee profile saved."
   - Reopened, the profile shows the new date on 11.1. By SQL, profile 3 stays on curriculum 2 and adoption 1: she stays
@@ -835,9 +840,11 @@ Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/trainees → /admin/trainees/edit
 Do: Open Dr Ndlovu's profile from Current trainees (Edit). Choose Paediatric EPA Curriculum (11.2), keep his programme start (`J`, from Act 2) and
   his expected completion as they read, and save the profile.
-Expect: The save reads "Trainee profile saved. N completion(s) was/were checked against 11.2, and M count(s) towards
-  it." The profile reads 11.2. By SQL his PAED-002 tally is on 11.2 and none is left on 11.1. Reopened, the picker
-  offers 11.2 alone. From now on, his completions credit 11.2's items.
+Expect: The profile is "Sipho Ndlovu's programme", with "Export Sipho Ndlovu's portfolio" in its header, End this
+  programme below Profile details, and no Back to trainees (T379). The save reads "Trainee profile saved. N
+  completion(s) was/were checked against 11.2, and M count(s) towards it." The profile reads 11.2. By SQL his PAED-002
+  tally is on 11.2 and none is left on 11.1. Reopened, the picker offers 11.2 alone. From now on, his completions
+  credit 11.2's items.
 Note: An InstitutionalAdmin, or an Administrator, and only into the version KGK has adopted (`TraineeAdoptionResolver`).
   The move runs under the trainee credit lock, and replays his credit against 11.2 in the same save (T304).
 Actual (2026-10-26, T376 replay, wombat_scenario_t376): From Current trainees, Edit on Sipho Ndlovu opened
@@ -945,7 +952,9 @@ Expect:
     Act 5 Step 5.28 read: the Mini-CEX observed after his last day still counts towards nothing (T281).
   - No KGK-001 card has appeared on his record either, as on Dr Molefe's: his standing still counts the 15 EPAs his
     programme ended with, "… 15 with no decision, of 15 EPAs" (T312).
-  - My activities lists that Mini-CEX as Completed, its Credit None.
+  - My activities lists that Mini-CEX as Completed, its Credit None. A note row "Observed after your last day in the
+    programme, <that day>, so it counts towards nothing." stands under it, under the cancelled DOPS and under the open
+    Portfolio and Logbook Review, each observed after his last day, and under no other row (T379, as in Step 5.28).
 Note: Withdrawal took his Trainee role away (Act 5, T290); he reads his own record through the trainee record, as Dr
   Molefe does.
 Actual (2026-10-26, T376 replay, wombat_scenario_t376): By SQL du Plessis (and Molefe) hold no role (D54). My progress

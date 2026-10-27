@@ -19,8 +19,10 @@ public sealed class ExportPortfolioCommandValidator : AbstractValidator<ExportPo
     {
         RuleFor(command => command.TraineeUserId).NotEmpty();
         RuleFor(command => command.Principal).NotNull();
-        RuleFor(command => command)
-            .Must(command => command.FromDate is null || command.ToDate is null || command.FromDate <= command.ToDate)
+        // On FromDate, so the refusal names its field (T379, S6, R3-E11): the export page shows it under From. Both dates
+        // stay optional here; the page asks for each itself ("Choose the from date.", R3-E12).
+        RuleFor(command => command.FromDate)
+            .Must((command, fromDate) => fromDate is null || command.ToDate is null || fromDate <= command.ToDate)
             .WithMessage("The start date must be before or equal to the end date.");
     }
 }

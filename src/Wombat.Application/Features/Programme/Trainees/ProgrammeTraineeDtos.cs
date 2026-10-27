@@ -143,4 +143,12 @@ public sealed record ProgrammeTraineeDto(
     string SubSpecialityName,
     string CurrentSemesterName,
     ProgrammeEndDto? Ended,
-    ProgrammeScopeDto Scope);
+    ProgrammeScopeDto Scope)
+{
+    /// <summary>
+    /// Whether the caller may export the registrar's portfolio (T379, flow 13, F1): the export command's own check,
+    /// <c>TraineeScopeResolver.MayReadAsync</c> on <see cref="TraineeUserId" />, so the page's header offers "Export
+    /// ‹name›'s portfolio" only where the export would not be refused. Filled by <c>GetProgrammeTraineeQuery</c>.
+    /// </summary>
+    public bool MayExport { get; init; }
+}

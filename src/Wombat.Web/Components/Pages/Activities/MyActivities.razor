@@ -4,6 +4,7 @@
 @using Wombat.Application.Features.Activities.Queries.ListNeedsYou
 @using Wombat.Web.Components.Shared.Progress
 @using Wombat.Application.Features.Activities
+@using Wombat.Web.Components.Pages.Dashboards
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ILogger<MyActivities> Logger
@@ -12,7 +13,7 @@
 
 @* T342, flow 03 (R3-C-Mine): Needs you first when there is any, then every activity a page at a time. The subtitle is the
    list's order: ListActivitiesBySubjectQuery orders by the encounter date, newest first. *@
-<PageHeader Title="My activities" Subtitle="Everything you have filed or logged, newest encounter first.">
+<PageHeader Title="My activities" Subtitle="@Subtitle">
   <Actions>
     @* D55: offered only to whom the new-activity page admits. *@
     <AuthorizeView Roles="@ActivityFilingRules.FilingRole">
@@ -47,11 +48,12 @@
     }
     @if (_page is { TotalCount: > 0 } list)
     {
-      <section class="list-section" aria-labelledby="all-activities-heading">
+      <section class="list-section my-activities" aria-labelledby="all-activities-heading">
         <h2 id="all-activities-heading" class="list-section-title" tabindex="-1" @ref="_allHeading">All activities (@list.TotalCount)</h2>
         @* A8: stacked below 641px. The Activity cell's link and the State cell's badge say what they are; the other two
            cells are labelled by their column there (data-label), a label the screen reader, which has the header, skips. *@
-        <DataTable Items="list.Items" Stack="true">
+        @* S18 (T379, flow 13): the caption the shipped table lacked, saying what the heading does not. *@
+        <DataTable Items="list.Items" Stack="true" Caption="@FormerTraineeRecordWords.MyActivitiesCaption">
           <HeaderRow>
             <tr role="row">
               <th scope="col" role="columnheader">Activity</th>
@@ -61,7 +63,8 @@
             </tr>
           </HeaderRow>
           <Row Context="item">
-            <tr role="row">
+            @{ var afterEnd = item.ObservedAfterEnd && list.SubjectEndedOn is not null; }
+            <tr role="row" class="@(afterEnd ? "has-note" : null)">
               <td role="cell">
                 <ActivityLink Item="item" Name="@NameOf(item)" />
                 @* T231: an EPA not in force now is marked, in the picker's own words. The name carries only its code. *@
@@ -88,9 +91,21 @@
                 }
               </td>
             </tr>
+            @if (afterEnd)
+            {
+              @* T379 (flow 13, R3-R07; T281): an encounter after the last day counts towards nothing, and the row says why,
+                 flow 03's note row under it. *@
+              <tr role="row">
+                <td role="cell" colspan="4" class="history-note">@FormerTraineeRecordWords.ObservedAfterEnd(list.SubjectEndedOn!.Value)</td>
+              </tr>
+            }
           </Row>
         </DataTable>
-        <PagerControls Page="list.Page" PageSize="list.PageSize" TotalCount="list.TotalCount" OnPageChanged="GoToPageAsync" OnPageSizeChanged="ChangePageSizeAsync" />
+        @* Only past one page, as every flow 12 and 13 list (P3; R3-R07 draws none for seven rows). *@
+        @if (list.TotalCount > list.PageSize)
+        {
+          <PagerControls Page="list.Page" PageSize="list.PageSize" TotalCount="list.TotalCount" OnPageChanged="GoToPageAsync" OnPageSizeChanged="ChangePageSizeAsync" />
+        }
       </section>
     }
   </ChildContent>
@@ -114,6 +129,17 @@
   private ElementReference _allHeading;
 
   protected override Task OnInitializedAsync() => LoadAsync();
+
+  /// <summary>The built subtitle, the list's order (T342).</summary>
+  public const string SubtitleWords = "Everything you have filed or logged, newest encounter first.";
+
+  /// <summary>
+  /// The built subtitle, then, for a person whose programme has ended and who may not file, why nothing new can be filed
+  /// (T379, flow 13, S7; R3-R07): "… Read-only: your programme ended on 2026-10-24, so nothing new can be filed."
+  /// </summary>
+  private string Subtitle => _page?.SubjectEndedOn is { } endedOn && !_mayFile
+    ? $"{SubtitleWords} {FormerTraineeRecordWords.ReadOnlyNote(endedOn)}"
+    : SubtitleWords;
 
   /// <summary>Whether the caller may file (D55): the empty state tells only them to log an activity.</summary>
   private bool _mayFile;

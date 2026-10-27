@@ -45,7 +45,7 @@ public sealed class TraineeProfileCompletionTests
         var profile = ActiveProfile();
 
         var exception = Assert.Throws<InvalidOperationException>(() => profile.Complete(new DateOnly(2022, 1, 1), Today));
-        Assert.Contains("before the programme start", exception.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("The last day cannot be before the programme start date (2023-01-15).", exception.Message);
         Assert.True(profile.IsActive);
         Assert.Null(profile.CompletedOn);
     }
@@ -69,7 +69,7 @@ public sealed class TraineeProfileCompletionTests
 
         var exception = Assert.Throws<InvalidOperationException>(() => profile.Complete(Today.AddDays(1), Today));
 
-        Assert.Equal("The completion date cannot be after today (2030-01-10).", exception.Message);
+        Assert.Equal("The last day cannot be after today (2030-01-10).", exception.Message);
         Assert.True(profile.IsActive);
         Assert.Null(profile.CompletedOn);
     }

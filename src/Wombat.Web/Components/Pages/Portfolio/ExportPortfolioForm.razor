@@ -1,0 +1,222 @@
+@using Microsoft.Extensions.DependencyInjection
+@using Wombat.Application.Features.Curricula.Quota
+@using Wombat.Application.Features.Reporting
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject ILogger<ExportPortfolioForm> Logger
+@inject IServiceProvider ServiceProvider
+
+@*
+  Export portfolio's form and its result (T379, flow 13, lane E; R3-E01–E08, E11–E13, E16–E18, E20), shared by the own
+  export (ExportPortfolio) and the staff export (ExportTraineePortfolio), which each read the subject first and draw this
+  only once it has answered. A2: .export-page spaces the result and the form, form.form-container holds the dates, the
+  note and the button.
+
+  - The dates open on the programme start and on today on the South African calendar (T325), or on the last day of an
+    ended programme (Q18, R3-E07, E20); both required, each with its hint. The page asks for an emptied date itself
+    ("Choose the from date.", R3-E12); From after To is the command's own refusal, its ValidationException mapped to From
+    by its property (S6, R3-E11). Each refusal stays under its field, the field aria-invalid and focused, the dates kept.
+  - The result above the form in ActionResult, focused, its first sentence bold and naming the file (Q18): "Your portfolio
+    exported: portfolio-….pdf." with Verify a plain href, a full navigation to the static page (S13). Every other failure
+    is fixed words (R3-E13; T329), the exception to the log. One result at a time.
+  - A refusal by the command itself (the caller's reach changed after the subject was read) is the page's: OnRefused, and
+    the page draws its Unavailable page in front of the command's words (Q19).
+*@
+
+@* Always present, filled while the PDF is made: a live region added with its words in it is often not read. *@
+<p class="visually-hidden" role="status">@(_exporting ? ExportWords.Generating : null)</p>
+
+<div class="export-page">
+  @* What Export PDF did. It takes the focus once the export has answered (T234; DESIGN.md § Button system). *@
+  <ActionResult @ref="_result">
+    @if (_exportedFile is { } file)
+    {
+      <Alert Kind="success"><strong>@ExportWords.Exported(Own, Subject.Name, file)</strong> @ExportWords.ResultRest <a href="@PortfolioLinks.Verify">@ExportWords.VerifyLink</a>.</Alert>
+    }
+    else if (_failed)
+    {
+      <Alert Kind="danger"><strong>@ExportWords.FailedFirst</strong> @ExportWords.FailedRest</Alert>
+    }
+  </ActionResult>
+
+  <form class="form-container" novalidate @onsubmit="ExportAsync">
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="@FromId">@ExportWords.FromLabel<span aria-hidden="true"> *</span><span class="visually-hidden">required</span></label>
+        <input id="@FromId" type="date" class="@InputClass(_fromError)" @bind="_from" required
+               aria-describedby="@RefusalFirst(FromId, FromHint, _fromError)"
+               aria-invalid="@(_fromError is null ? null : "true")" />
+        @if (_fromError is { } fromError)
+        {
+          <div class="validation-message" id="@ErrorId(FromId)" role="alert">@fromError</div>
+        }
+        @if (FromHint is { } fromHint)
+        {
+          <p class="field-help" id="@FieldHelp.Id(FromId)">@fromHint</p>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="@ToId">@ExportWords.ToLabel<span aria-hidden="true"> *</span><span class="visually-hidden">required</span></label>
+        <input id="@ToId" type="date" class="@InputClass(_toError)" @bind="_to" required
+               aria-describedby="@RefusalFirst(ToId, ToHint, _toError)"
+               aria-invalid="@(_toError is null ? null : "true")" />
+        @if (_toError is { } toError)
+        {
+          <div class="validation-message" id="@ErrorId(ToId)" role="alert">@toError</div>
+        }
+        <p class="field-help" id="@FieldHelp.Id(ToId)">@ToHint</p>
+      </div>
+    </div>
+
+    <p class="export-note">@ExportWords.SameFileNote</p>
+
+    <div class="form-actions">
+      @* Not disabled while the export runs (T234): it has the focus, and a browser drops the focus of a button it disables,
+         to the page. A second press sends nothing. *@
+      <button type="submit" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_exporting)">
+        <Icon Name="download" />@(_exporting ? ExportWords.GeneratingButton : ExportWords.ExportButton)
+      </button>
+    </div>
+  </form>
+</div>
+
+@code {
+  /// <summary>The From date's input id.</summary>
+  public const string FromId = "export-from";
+
+  /// <summary>The To date's input id.</summary>
+  public const string ToId = "export-to";
+
+  /// <summary>Whose portfolio, as <c>GetExportSubjectQuery</c> read it.</summary>
+  [Parameter, EditorRequired] public ExportSubjectDto Subject { get; set; } = default!;
+
+  /// <summary>The caller's own export ("you", "your"), or a member of staff's (the registrar's name).</summary>
+  [Parameter] public bool Own { get; set; }
+
+  /// <summary>The export command refused the caller after the subject was read: the page draws its Unavailable page.</summary>
+  [Parameter] public EventCallback OnRefused { get; set; }
+
+  private ExportSubjectDto? _openedFor;
+  private DateOnly? _from;
+  private DateOnly? _to;
+  private bool _exporting;
+  private ActionResult? _result;
+  private string? _exportedFile;
+  private bool _failed;
+  private string? _fromError;
+  private string? _toError;
+  private string? _focusFieldId;
+
+  // The clock the host registers, else the system's: "today" on the South African calendar (T325).
+  private TimeProvider Clock => ServiceProvider.GetService<TimeProvider>() ?? TimeProvider.System;
+
+  private string? FromHint => ExportWords.FromHint(Own, Subject.Name, Subject.ProgrammeStartDate);
+
+  private string ToHint => ExportWords.ToHint(Own, Subject.Name, Subject.LastDay);
+
+  private static string ErrorId(string inputId) => $"{inputId}-error";
+
+  /// <summary>
+  /// The date field's <c>aria-describedby</c>: its refusal first, then its help (P5), as the last day's and Verify's, so the
+  /// focused field reads the refusal before the hint.
+  /// </summary>
+  private static string? RefusalFirst(string inputId, string? hint, string? error)
+  {
+    var ids = new[] { error is null ? null : ErrorId(inputId), string.IsNullOrWhiteSpace(hint) ? null : FieldHelp.Id(inputId) }
+      .Where(id => id is not null);
+    var joined = string.Join(' ', ids);
+    return joined.Length == 0 ? null : joined;
+  }
+
+  private static string InputClass(string? error) => error is null ? "form-control" : "form-control input-validation-error";
+
+  protected override void OnParametersSet()
+  {
+    // The dates open once for each subject, so a render of the page does not undo what the person typed.
+    if (ReferenceEquals(_openedFor, Subject))
+    {
+      return;
+    }
+
+    _openedFor = Subject;
+    var today = QuotaCalendar.Today(Clock);
+    _to = Subject.LastDay ?? today;
+    // With no programme (only an Administrator's staff export reaches one; build note 6) the last twelve months, as before.
+    _from = Subject.ProgrammeStartDate ?? _to.Value.AddYears(-1);
+  }
+
+  private async Task ExportAsync()
+  {
+    if (_exporting)
+    {
+      return;
+    }
+
+    _exportedFile = null;
+    _failed = false;
+    _fromError = _from is null ? ExportWords.ChooseFrom : null;
+    _toError = _to is null ? ExportWords.ChooseTo : null;
+    if (_fromError is not null || _toError is not null)
+    {
+      // R3-E12: under its field, the field focused, nothing sent.
+      _focusFieldId = _fromError is not null ? FromId : ToId;
+      return;
+    }
+
+    _exporting = true;
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var exported = await Sender.Send(new ExportPortfolioCommand(Subject.TraineeUserId, _from, _to, authState.User));
+
+      await JS.InvokeVoidAsync("wombatFileDownload", exported.FileName, exported.PdfBytes);
+      _exportedFile = exported.FileName;
+      _result?.FocusAfterRender();
+    }
+    catch (FluentValidation.ValidationException validation)
+      when (validation.Errors.Any(failure => failure.PropertyName is nameof(ExportPortfolioCommand.FromDate) or nameof(ExportPortfolioCommand.ToDate)))
+    {
+      // S6, R3-E11: the command's refusal under the field it names, by its property, never by its words.
+      foreach (var failure in validation.Errors)
+      {
+        if (failure.PropertyName == nameof(ExportPortfolioCommand.ToDate))
+        {
+          _toError ??= failure.ErrorMessage;
+        }
+        else if (failure.PropertyName == nameof(ExportPortfolioCommand.FromDate))
+        {
+          _fromError ??= failure.ErrorMessage;
+        }
+      }
+
+      _focusFieldId = _fromError is not null ? FromId : ToId;
+    }
+    catch (UnauthorizedAccessException)
+    {
+      // The command's "You are not authorized to export this portfolio." stays behind the Unavailable page (Q19).
+      await OnRefused.InvokeAsync();
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // Never the exception's text on the page: it goes to the log (T329, R3-E13).
+      Logger.LogError(exception, "The portfolio of {TraineeUserId} could not be exported.", Subject.TraineeUserId);
+      _failed = true;
+      _result?.FocusAfterRender();
+    }
+    finally
+    {
+      _exporting = false;
+    }
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusFieldId is { } id)
+    {
+      _focusFieldId = null;
+      await PageFocus.FocusByIdAsync(JS, id);
+    }
+  }
+}

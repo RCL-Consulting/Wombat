@@ -467,19 +467,35 @@ Expect: The pre-graduation review is listed above the Act 4 annual review (T366,
 Step 5.9 — Dr Molefe exports her portfolio
 Role: Trainee — Dr Lerato Molefe
 Route: /portfolio/export
-Do: Open Export portfolio from the menu. Set the from date to her programme start, `J−3y`, and the to date to `D`, and
-  export the PDF.
-Expect: The page opens with the last twelve months filled in. After the export it says "Portfolio exported
-  successfully. The download should start automatically.", and a file named `portfolio-<12 hex digits>.pdf` downloads.
-  Record the file name: Steps 5.10 and 5.12 must produce the same one.
+Do: Open Export portfolio from the menu. Check that the dates read her programme start, `J−3y`, and `D`, and export
+  the PDF.
+Expect: Export portfolio is lit in her menu and the page draws no trail (F4). It is headed "Export portfolio", under
+  "A PDF of your portfolio for the dates you choose: your progress, your STARs, your committee's decisions and your
+  activities.", and opens with the dates already set:
+  - From date `J−3y`, with "Your programme started on `J−3y`.";
+  - To date `D`, with "Today, on the South African calendar." (T325: never the server's date);
+  - under them, "Exporting the same dates again gives the same file, until the record changes."
+  After Export PDF the result stands above the form and takes the focus: "**Your portfolio exported:
+  portfolio-<12 hex digits>.pdf.** The download should start automatically. Anyone holding the file can check it on
+  Verify portfolio export.", where Verify portfolio export is a plain link to `/portfolio/verify`. The file downloads
+  under that name. Record it: Steps 5.10 and 5.12 must produce the same one.
 
-Step 5.10 — Prof Mbatha exports Dr Molefe's portfolio by its address
+Step 5.10 — Prof Mbatha exports Dr Molefe's portfolio from her programme
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/users → /admin/users/{UserId} → /portfolio/export/{TraineeUserId}
-Do: Find Dr Molefe in Users (type "Molefe" in Name or email and press Show) and open her. Take her user id from the
-  path of the page's address (before any `?`: Manage adds `?back=`), then type the export address with that id. Set the dates to `J−3y` and `D`, and export.
-Expect: The export succeeds as in Step 5.9. The downloaded file has the same name as Dr Molefe's and is identical to it
-  byte for byte. Compare the two with `fc /b`, or by their SHA-256.
+Route: /admin/trainees → /admin/trainees/edit → /portfolio/export/{TraineeUserId}
+Do: Open Trainees and Dr Molefe's profile from Current trainees (its Edit, named "Edit Lerato Molefe's profile"). Press
+  "Export Lerato Molefe's portfolio" in the page's header, and export with the dates the page opens on (`J−3y` and `D`).
+Expect: The profile, "Lerato Molefe's programme", offers "Export Lerato Molefe's portfolio" in its header (F1). It
+  opens the staff export, `/portfolio/export/<her user id>` (ExportTraineePortfolio), with Trainees lit:
+  - the trail "Home › Trainees › Lerato Molefe's programme › Export portfolio", its third crumb a link back to her
+    profile (M4);
+  - the h1 and tab "Export Lerato Molefe's portfolio", under "Kgosi Kgari Teaching Hospital · Paediatric EPA
+    Curriculum (11.1) · Training year 4";
+  - From date `J−3y`, with "Lerato Molefe's programme started on `J−3y`.", and To date `D`, with "Today, on the South
+    African calendar.".
+  After Export PDF: "**Lerato Molefe's portfolio exported: portfolio-<12 hex digits>.pdf.** The download should start
+  automatically. Anyone holding the file can check it on Verify portfolio export.", focused. The file has the same name
+  as Dr Molefe's and is identical to it byte for byte. Compare the two with `fc /b`, or by their SHA-256.
 
 Step 5.11 — Prof Mbatha reads the portfolio
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -502,34 +518,51 @@ Expect: Every page carries the same header and footer:
 
 Step 5.12 — Mr Smit reproduces the export
 Role: Coordinator — Mr Pieter Smit
-Route: /portfolio/export/{TraineeUserId}
-Do: Type the export address with Dr Molefe's user id, which Prof Mbatha sends him. Set the same two dates, and export.
-Expect: The export is allowed, because a coordinator of her institution oversees her (T079, T101). The file has the
-  same name as those from Steps 5.9 and 5.10, and is identical to both byte for byte.
+Route: /committee/reviews → /committee/reviews/{ReviewId:int} → /portfolio/export/{TraineeUserId}
+Do: Open Committee reviews and Dr Molefe's pre-graduation review ("Lerato Molefe · 2026 S2", Pre-graduation). Press
+  "Export Lerato Molefe's portfolio" in the review's header, and export with the dates the page opens on.
+Expect: The review page offers "Export Lerato Molefe's portfolio" in its header, apart from "Lerato Molefe's progress"
+  in its subtitle (F1), because a coordinator of her institution oversees her (T079, T101; the export command's own
+  check, `MayExport`). The staff export opens with Programme trainees lit, the trail "Home › Programme trainees › Lerato
+  Molefe › Export portfolio" (its third crumb her programme page, `/programme/trainees/<her profile id>`; M4, Q27), the
+  h1 "Export Lerato Molefe's portfolio", the subtitle and dates as in Step 5.10. The result names the file as there: the
+  same name as those from Steps 5.9 and 5.10, identical to both byte for byte.
 
 Step 5.13 — A verifier checks the genuine PDF
 Role: Anonymous — a credentialing officer at Dr Molefe's new hospital
 Route: /portfolio/verify
 Do: In a private window, without signing in, open the verification page. Compute the SHA-256 of the PDF that Dr Molefe
   sent (`certutil -hashfile <file> SHA256`, or `sha256sum`, both of which print it in lower case), enter it and press
-  Verify. Do the same for Mr Smit's copy.
-Expect: The page works signed out, as a static page, under the signed-out bar: the brand and Sign in, and no menu.
-  Verifying loads the page's own address with the hash in it. The
-  page reads "Export verified" and shows:
-  - when Wombat generated the file, in UTC;
-  - the trainee and the exporter as user ids, never as names (DESIGN: the anonymous page must not disclose a name);
-  - "Filter: `J−3y` to `D`";
-  - the file name that all three downloads carry.
-  Mr Smit's copy has the same SHA-256 and gets the same answer.
+  Verify. Do the same for Mr Smit's copy. Then verify the same hash in upper case, as PowerShell's `Get-FileHash`
+  prints it.
+Expect: The page works signed out, as a static page, under the signed-out bar: the brand and Sign in, and no menu. It
+  reads "Check whether a PDF was produced by Wombat, without signing in."; its field, "Content hash (SHA-256)", has no
+  placeholder and the help "The file's SHA-256: 64 hexadecimal digits, computed on your computer from the PDF you were
+  sent. Upper or lower case, and spaces or line breaks in it, are accepted.", over the commands for Windows, macOS and
+  Linux. Verifying loads the page's own address with the hash in it (`?hash=…&check=1`). The answer stands above the
+  form and takes the focus: "**Export verified.** Wombat generated this PDF: its content is byte for byte an export
+  Wombat recorded.", then:
+  - First generated `D` hh:mm SAST, the time of Step 5.9's export on the South African clock, never UTC (T325);
+  - Exported "3 times, the last on `D` hh:mm SAST" (Steps 5.9, 5.10 and 5.12 made the same file);
+  - Trainee and First exported by, both Dr Molefe's user id, never a name (DESIGN: the anonymous page must not disclose
+    a name), under "People are shown by their Wombat user ids, never by name. The institution that issued the
+    portfolio can say whose they are.";
+  - Filter `J−3y` to `D`;
+  - File, the name that all three downloads carry.
+  Mr Smit's copy has the same SHA-256 and gets the same answer. So does the hash in upper case, kept in the field as
+  typed (T313).
 
 Step 5.23 — Dr Molefe exports her portfolio as a graduate
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
-Route: /portfolio/export → /portfolio/verify
-Do: Type the export address, set the dates to `J−3y` and `D`, and export. Then verify the new file's SHA-256
-  on the verification page.
-Expect: The export page is not in her menu, but it admits her, because the portfolio is her own (`MayReadAsync`). The
-  file has a new name. Its "Progress per EPA" now says "The trainee completed the programme on <`D`>", so the content
-  differs from Steps 5.9 to 5.12. The new file verifies, with the same trainee, the same filter and its own
+Route: / → /portfolio/export → /portfolio/verify
+Do: Open Export portfolio from her menu (or Home's card), check that the dates read `J−3y` and `D`, and export. Then
+  press the result's Verify portfolio export and verify the new file's SHA-256.
+Expect: Export portfolio is in her menu and lit on the page, which draws no trail (Q2, F4). It admits her, because the
+  portfolio is her own (`MayReadAsync`). From reads `J−3y` with "Your programme started on `J−3y`.", and To her last
+  day, `D`, with "Your last day in the programme.". The result reads "**Your portfolio exported:
+  portfolio-<12 hex digits>.pdf.** …" with a new name. Its "Progress per EPA" now says "The trainee completed the
+  programme on <`D`>", so the content differs from Steps 5.9 to 5.12. The new file verifies: First generated `D`
+  hh:mm SAST, Exported "Once", the same Trainee and First exported by (her user id), Filter `J−3y` to `D`, and its own
   file name. The earlier file still verifies too.
 
 Step A.1.5 — Dr Dlamini downloads her export

@@ -39,7 +39,16 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
         review = await CommitteeDecisionAuthorization.DemandReviewAccessAsync(
             _dbContext, _users, request.Principal, review, cancellationToken);
 
-        return await DescribeAsync(_dbContext, _users, review, request.Principal, request.Today, forItsTrainee: false, cancellationToken);
+        var detail = await DescribeAsync(_dbContext, _users, review, request.Principal, request.Today, forItsTrainee: false, cancellationToken);
+
+        // The export command's own check on the review's trainee (T379, F1, M1), so the header offers "Export ‹name›'s
+        // portfolio" only where the export would not be refused: an Administrator always, a member of staff while they
+        // oversee the trainee, never a trainee reviewed elsewhere whom the caller no longer oversees (R3-X08). Here only, not
+        // in DescribeAsync: the trainee's own review page offers no export, and the commands answer with false.
+        return detail with
+        {
+            MayExport = await TraineeScopeResolver.MayReadAsync(_dbContext, request.Principal, review.TraineeUserId, cancellationToken)
+        };
     }
 
     /// <summary>

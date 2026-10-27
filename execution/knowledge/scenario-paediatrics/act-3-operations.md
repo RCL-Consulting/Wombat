@@ -1506,8 +1506,8 @@ Expect: The registrar page's h1 reads "Nomsa Mahlangu", its tab "Nomsa Mahlangu 
     both 3a), each headed by its own h3, with no Today rule (D8);
   - Waiting for assessors: "Nothing of Nomsa Mahlangu's waits for an assessor.";
   - Committee reviews: "No review is scheduled for Nomsa Mahlangu."
-  Dr Zulu, a Committee member, is offered no Send a reminder. No word on the page names Nomsa Mahlangu by a pronoun
-  (round-3-check 1).
+  Dr Zulu, a Committee member, is offered no Send a reminder; the header offers "Export Nomsa Mahlangu's portfolio"
+  (T379). No word on the page names Nomsa Mahlangu by a pronoun (round-3-check 1).
 Actual (2026-10-26, T376 replay, wombat_scenario_t376): /programme/trainees/5: h1 "Nomsa Mahlangu" (focused), tab
   "Nomsa Mahlangu · Wombat", "Training year 1 · Semester 2, 2026 · Kgosi Kgari Teaching Hospital, Paediatrics"; trail
   Home › Programme trainees › Nomsa Mahlangu, Programme trainees lit. Sections: This period ("0 of 10", "0 of 5",

@@ -458,6 +458,50 @@ public sealed class ProgrammeTraineeDetailTests : WombatTestContext
         _sender.Received.Should().ContainSingle().Which.Should().BeOfType<GetProgrammeTraineeQuery>();
     }
 
+    // ─── T379, flow 13: the staff export in the header's actions (F1, N5; R3-X02, X04, X06, X07) ─────────────
+
+    [Theory]
+    [InlineData(WombatRoles.CommitteeMember)]
+    [InlineData(WombatRoles.Coordinator)]
+    [InlineData(WombatRoles.SpecialityAdmin)]
+    [InlineData(WombatRoles.SubSpecialityAdmin)]
+    public void TheHeader_OffersTheExport_WhereTheCommandWouldNotRefuse(string role)
+    {
+        SignInAs(role);
+        Answer(registrar: Mahlangu() with { MayExport = true });
+
+        var cut = Render(acting: role);
+
+        var action = cut.Find(".header-container .actions-cell").Children.Should().ContainSingle().Which;
+        action.TagName.Should().Be("A");
+        action.ClassList.Should().BeEquivalentTo("btn", "btn-outline");
+        Text(action).Should().Be("Export Nomsa Mahlangu's portfolio");
+        action.GetAttribute("href").Should().Be("/portfolio/export/mahlangu");
+    }
+
+    [Fact]
+    public void TheHeader_OffersNoExport_WhereItWouldBeRefused_NorBeforeTheRegistrarIsRead()
+    {
+        Answer(registrar: Mahlangu() with { MayExport = false });
+        Render().FindAll(".header-container .actions-cell").Should().BeEmpty();
+
+        _sender.OnAsync<GetProgrammeTraineeQuery>(_ => new TaskCompletionSource<object?>().Task);
+        Render(wait: false).FindAll(".header-container .actions-cell").Should().BeEmpty("nothing is offered while the page reads");
+    }
+
+    [Fact]
+    public void AnEndedRegistrar_KeepsTheExport_ByItsAddress()
+    {
+        // A4, R3-X04: Programme trainees lists current trainees only, so Pieter Smit reaches the page by its address.
+        var ended = new ProgrammeEndDto(Completed: true, EndedOn: new DateOnly(2026, 10, 2), Today: Today);
+        SignInAs(WombatRoles.Coordinator);
+        Answer(registrar: DuPlessis(ended) with { MayExport = true }, summary: MahlanguSummary() with { Ended = ended });
+
+        var cut = Render(acting: WombatRoles.Coordinator);
+
+        Text(cut.Find(".header-container .actions-cell a")).Should().Be("Export Pieter du Plessis's portfolio");
+    }
+
     // ─── Words ───────────────────────────────────────────────────────────────
 
     [Fact]

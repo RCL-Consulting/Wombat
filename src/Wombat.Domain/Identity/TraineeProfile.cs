@@ -153,7 +153,7 @@ public sealed class TraineeProfile
     /// </param>
     public void Complete(DateOnly completedOn, DateOnly today)
     {
-        EnsureCanEnd(completedOn, today, "marked complete", "completion");
+        EnsureCanEnd(completedOn, today, "marked complete");
 
         CompletedOn = completedOn;
         IsActive = false;
@@ -171,7 +171,7 @@ public sealed class TraineeProfile
     /// </param>
     public void Deactivate(DateOnly deactivatedOn, DateOnly today)
     {
-        EnsureCanEnd(deactivatedOn, today, "deactivated", "deactivation");
+        EnsureCanEnd(deactivatedOn, today, "deactivated");
 
         DeactivatedOn = deactivatedOn;
         IsActive = false;
@@ -204,25 +204,40 @@ public sealed class TraineeProfile
 
     /// <summary>
     /// The checks both ways out of the programme share, run before either changes anything: the profile is still active,
-    /// and the day it ends on lies between the programme start and today.
+    /// and the day it ends on lies between the programme start and today (<see cref="EndDayRefusal" />).
     /// </summary>
-    private void EnsureCanEnd(DateOnly endedOn, DateOnly today, string verb, string noun)
+    private void EnsureCanEnd(DateOnly endedOn, DateOnly today, string verb)
     {
         if (!IsActive)
         {
             throw new InvalidOperationException($"Only an active trainee profile can be {verb}.");
         }
 
-        if (endedOn < ProgrammeStartDate)
+        if (EndDayRefusal(endedOn, ProgrammeStartDate, today) is { } refusal)
         {
-            throw new InvalidOperationException($"The {noun} date cannot be before the programme start date.");
-        }
-
-        if (endedOn > today)
-        {
-            throw new InvalidOperationException($"The {noun} date cannot be after today ({today:yyyy-MM-dd}).");
+            throw new InvalidOperationException(refusal);
         }
     }
+
+    /// <summary>
+    /// Why <paramref name="endedOn" /> cannot be recorded as a programme's last day, or null when it can: it must lie
+    /// between the programme start and today on the South African calendar. One rule for both ends, in the words the profile
+    /// page shows under its last-day field (T379, flow 13, F11 and S3): the page checks the day typed by it when Mark
+    /// complete… or Deactivate… is pressed, before any dialog opens (Q21), and <see cref="Complete" /> and
+    /// <see cref="Deactivate" /> check it again. Both refusals say "last day", for either end, and name the day that bounds
+    /// it (until T379: "The completion date …", "The deactivation date …", and a before-start refusal that named no day).
+    /// </summary>
+    public static string? EndDayRefusal(DateOnly endedOn, DateOnly programmeStart, DateOnly today)
+    {
+        if (endedOn < programmeStart)
+        {
+            return $"The last day cannot be before the programme start date ({Iso(programmeStart)}).";
+        }
+
+        return endedOn > today ? $"The last day cannot be after today ({Iso(today)})." : null;
+    }
+
+    private static string Iso(DateOnly date) => date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
 
     /// <summary>
     /// The trainee's 1-based programme stage (year) on a given date, or null before the programme

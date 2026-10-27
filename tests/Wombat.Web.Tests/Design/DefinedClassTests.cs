@@ -180,6 +180,8 @@ public sealed partial class DefinedClassTests
             .Concat(Enum.GetValues<DataRightsRequestStatus>().Select(BadgeFor.DataRightsRequest))
             .Concat(Enum.GetNames<ScheduledJobRunStatus>().Append("Skipped").Append(null).Select(BadgeFor.JobRun))
             .Concat([BadgeFor.AuditResult(true), BadgeFor.AuditResult(false)])
+            // T379 (flow 13, F10): a programme completed, or withdrawn.
+            .Concat([BadgeFor.ProgrammeOutcome(true), BadgeFor.ProgrammeOutcome(false)])
             .Concat(Enum.GetValues<EntrustmentStandingStatus>().Select(BadgeFor.Standing))
             // T350 (note 14): Overdue, worded beside a waiting activity's state badge.
             .Append(BadgeFor.Overdue)

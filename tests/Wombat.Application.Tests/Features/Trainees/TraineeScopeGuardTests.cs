@@ -82,13 +82,15 @@ public sealed class TraineeScopeGuardTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task GetTraineeProfileById_InstitutionalAdmin_OtherInstitution_Throws()
+    public async Task GetTraineeProfileById_InstitutionalAdmin_OtherInstitution_ReadsAsNotFound()
     {
+        // T379 (flow 13, S4): null, as an unknown id reads, so the page says "Profile unavailable" for both and never
+        // confirms the id exists elsewhere. Until T379 it threw, and the page printed the exception's text.
         var handler = new GetTraineeProfileByIdQueryHandler(_db, _users.Object);
-        var act = () => handler.Handle(
+        var profile = await handler.Handle(
             new GetTraineeProfileByIdQuery(_institutionBProfileId, TestPrincipals.InstitutionalAdmin(_institutionAId)),
             CancellationToken.None);
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        profile.Should().BeNull();
     }
 
     [Fact]

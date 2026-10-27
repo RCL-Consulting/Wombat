@@ -90,7 +90,7 @@ public sealed class TraineeProfileRecordedEndTests
         var listed = (await new ListTraineesForSpecialityQueryHandler(db, Users().Object).Handle(
             new ListTraineesForSpecialityQuery(TestPrincipals.Administrator()), CancellationToken.None)).Single();
 
-        foreach (var dto in new[] { page, listed })
+        foreach (var dto in new[] { page!, listed })
         {
             dto.IsActive.Should().BeFalse();
             dto.DeactivatedOn.Should().Be(left);
@@ -112,7 +112,7 @@ public sealed class TraineeProfileRecordedEndTests
         var listed = (await new ListTraineesForSpecialityQueryHandler(db, Users().Object).Handle(
             new ListTraineesForSpecialityQuery(TestPrincipals.Administrator()), CancellationToken.None)).Single();
 
-        foreach (var dto in new[] { page, listed })
+        foreach (var dto in new[] { page!, listed })
         {
             dto.CompletedOn.Should().Be(graduated);
             dto.DeactivatedOn.Should().BeNull();

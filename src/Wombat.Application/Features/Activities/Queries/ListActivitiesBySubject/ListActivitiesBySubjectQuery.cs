@@ -2,11 +2,13 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Epas;
+using Wombat.Domain.Identity;
 
 namespace Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject;
 
@@ -192,6 +194,18 @@ public sealed class ListActivitiesBySubjectQueryHandler : IRequestHandler<ListAc
             ? await TraineeQuotaProgressReader.EpasWithAPageAsync(_dbContext, request.SubjectUserId, cancellationToken)
             : new HashSet<int>();
 
+        // T379 (flow 13, R3-R07; S18): on the caller's own list, the last day of their programme once it has ended, and
+        // which rows were observed after it and so count towards nothing (T281). The programme is the preferred profile
+        // (TraineeScopeResolver.PreferredProfiles), the one credit and the record read: a running one, a re-admission
+        // included, ends nothing. Never read for someone else's list, whose subject's end is not the caller's to learn.
+        var endedOn = string.Equals(callerId, request.SubjectUserId, StringComparison.Ordinal)
+            ? await TraineeScopeResolver.PreferredProfiles(_dbContext)
+                .AsNoTracking()
+                .Where(profile => profile.UserId == request.SubjectUserId && !profile.IsActive)
+                .Select(profile => profile.CompletedOn ?? profile.DeactivatedOn)
+                .FirstOrDefaultAsync(cancellationToken)
+            : null;
+
         var byId = rows.ToDictionary(row => row.Id);
         var items = pageFacts
             .Select(fact =>
@@ -222,11 +236,12 @@ public sealed class ListActivitiesBySubjectQueryHandler : IRequestHandler<ListAc
                     DisplayName = detail.DisplayName,
                     DisplayNameHasNominee = detail.DisplayNameHasNominee,
                     Shape = detail.Shape,
-                    EpaPageOpens = row.EpaId is int rowEpaId && epaPages.Contains(rowEpaId)
+                    EpaPageOpens = row.EpaId is int rowEpaId && epaPages.Contains(rowEpaId),
+                    ObservedAfterEnd = TraineeProfile.IsAfterEnd(endedOn, row.ObservedOn)
                 };
             })
             .ToList();
 
-        return new ActivityListPageDto(items, page, pageSize, facts.Count);
+        return new ActivityListPageDto(items, page, pageSize, facts.Count) { SubjectEndedOn = endedOn };
     }
 }

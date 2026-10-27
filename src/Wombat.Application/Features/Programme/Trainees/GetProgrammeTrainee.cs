@@ -107,6 +107,11 @@ public sealed class GetProgrammeTraineeQueryHandler : IRequestHandler<GetProgram
             subSpecialityName,
             QuotaText.SemesterName(AcademicPeriod.Containing(day)),
             profile.IsActive ? null : new ProgrammeEndDto(profile.CompletedOn is not null, profile.EndedOn, today),
-            scope);
+            scope)
+        {
+            // The export command's own check, so the header offers "Export ‹name›'s portfolio" only where the export would
+            // not be refused (T379, F1, M1).
+            MayExport = await TraineeScopeResolver.MayReadAsync(_dbContext, request.Principal, profile.UserId, cancellationToken),
+        };
     }
 }

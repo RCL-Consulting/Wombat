@@ -33,7 +33,7 @@ namespace Wombat.Application.Features.Trainees;
 /// <para>
 /// <b>Concurrency.</b> Both callers hold the profile (<see cref="ITraineeCreditLock.HoldForEndAsync" />) from before they
 /// read it until their save commits, and every completion holds its trainee's profiles shared while it plans and saves
-/// its credit, as an EPA's reactivation does for the trainees it credits. So <see cref="TakesCreditBackAsync" /> reads
+/// its credit, as an EPA's reactivation does for the trainees it credits. So <see cref="CountTakenBackAsync" /> reads
 /// every credit that committed before the end, and nothing credits against the profile as it stood before the end once
 /// that read has run. The Administrator's rebuild takes no hold: one that overlaps an end's replay is refused by the
 /// progress rows' xmin tokens, and otherwise judges the ends as stored.
@@ -52,11 +52,27 @@ namespace Wombat.Application.Features.Trainees;
 internal static class ProgrammeEndCredit
 {
     /// <summary>
-    /// Whether recording <paramref name="endedOn" /> as the last day of <paramref name="traineeUserId" />'s programme
-    /// takes credit back: some activity about them, observed after that day, records that it credited.
+    /// How many activities about <paramref name="traineeUserId" /> recording <paramref name="endedOn" /> as the last day of
+    /// their programme takes credit back from: each one observed after that day that records it credited. Zero when the
+    /// end takes nothing back. Both end commands answer with it (T379, flow 13, F2: <see cref="ProgrammeEndResult" />), so
+    /// a page words its result from what was taken back, never from a read after the save, by when the replay has already
+    /// run; the end's dialog reads it beforehand for the day typed, as a forecast.
     /// </summary>
     /// <param name="activities">The caller's <c>Set&lt;Activity&gt;()</c>.</param>
-    public static async Task<bool> TakesCreditBackAsync(
+    public static async Task<int> CountTakenBackAsync(
+        IQueryable<Activity> activities,
+        string traineeUserId,
+        DateOnly endedOn,
+        CancellationToken cancellationToken)
+        => (await ObservedTakenBackAsync(activities, traineeUserId, endedOn, cancellationToken)).Count;
+
+    /// <summary>
+    /// The day each activity <see cref="CountTakenBackAsync" /> counts was observed, earliest first: the end's dialog says
+    /// "1 activity, observed 2026-10-25, will stop counting." when there is one (T379, flow 13, M2,
+    /// <see cref="GetTakeBackForecastQuery" />). One rule for the forecast and the count the command answers with.
+    /// </summary>
+    /// <param name="activities">The caller's <c>Set&lt;Activity&gt;()</c>.</param>
+    public static async Task<IReadOnlyList<DateOnly>> ObservedTakenBackAsync(
         IQueryable<Activity> activities,
         string traineeUserId,
         DateOnly endedOn,
@@ -73,27 +89,27 @@ internal static class ProgrammeEndCredit
             .Select(activity => activity.ObservedOn)
             .ToListAsync(cancellationToken);
 
-        return creditedOn.Any(observedOn => TraineeProfile.IsAfterEnd(endedOn, observedOn));
+        return creditedOn.Where(observedOn => TraineeProfile.IsAfterEnd(endedOn, observedOn)).Order().ToList();
     }
 
     /// <summary>
     /// Saves the end the caller has just recorded on <paramref name="profile" />: with a replay of the trainee's credit when
-    /// <paramref name="takesCreditBack" />, in the replay's one save, and alone otherwise.
+    /// the end takes some back (<paramref name="takenBack" /> above zero), in the replay's one save, and alone otherwise.
     /// </summary>
     /// <param name="activities">The caller's <c>Set&lt;Activity&gt;()</c>.</param>
-    /// <param name="takesCreditBack"><see cref="TakesCreditBackAsync" />'s answer, read before the end was recorded.</param>
+    /// <param name="takenBack"><see cref="CountTakenBackAsync" />'s answer, read before the end was recorded.</param>
     public static async Task SaveAsync(
         IApplicationDbContext dbContext,
         ICreditApplier creditApplier,
         IQueryable<Activity> activities,
         TraineeProfile profile,
-        bool takesCreditBack,
+        int takenBack,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(dbContext);
         ArgumentNullException.ThrowIfNull(profile);
 
-        if (!takesCreditBack)
+        if (takenBack == 0)
         {
             await dbContext.SaveChangesAsync(cancellationToken);
             return;

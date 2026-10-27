@@ -854,8 +854,10 @@ Expect: With start `J` and the completion empty, its help reads "Leave this empt
   window. Left empty, it will be `J+1y`.": `J` + 12 months, the longest item window on v11.1. The result reads
   "**Sipho Ndlovu admitted to the Paediatric EPA Curriculum (11.1), training year 1, from `J`.** Expected completion
   `J+1y`, derived from the curriculum window: change it under Edit." (only the first sentence bold), and Waiting to be admitted reads "Nobody is
-  waiting to be admitted." / "A registrar appears here after registering from a Trainee invitation." On his profile
-  the save reads "Trainee profile saved.", and Current trainees shows `J+4y−1d`.
+  waiting to be admitted." / "A registrar appears here after registering from a Trainee invitation." His profile is
+  "Sipho Ndlovu's programme" (h1, tab and crumb under Trainees), with "Export Sipho Ndlovu's portfolio" in its header,
+  End this programme below Profile details, and no Back to trainees (T379). The save reads "Trainee profile saved.",
+  and Current trainees shows `J+4y−1d`.
 Note: A 12-month window for a four-year programme is T139's open College question. Admitting with the completion empty
   is 2 presses and 1 field.
 Actual (2026-10-26, T376 replay, wombat_scenario_t376): Start 2026-01-15, completion empty: "Leave this empty to

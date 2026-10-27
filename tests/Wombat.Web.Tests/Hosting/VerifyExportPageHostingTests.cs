@@ -45,7 +45,7 @@ public sealed partial class VerifyExportPageHostingTests
         check.StatusCode.Should().Be(HttpStatusCode.OK);
         sender.Checked.Should().Equal([Hash]);
         var answer = new HtmlParser().ParseDocument(html);
-        answer.QuerySelector(".action-result h3")!.TextContent.Should().Be("Export verified");
+        answer.QuerySelector(".action-result .alert-success strong")!.TextContent.Should().Be("Export verified.");
         answer.QuerySelector(".action-result")!.HasAttribute("autofocus").Should().BeTrue("the answer to a press takes the focus");
         ServerComponentMarker.IsIn(html).Should().BeFalse("the page has no interactive root");
     }
@@ -59,7 +59,7 @@ public sealed partial class VerifyExportPageHostingTests
         var (_, html, document) = await host.LoadAsync($"/portfolio/verify?hash={Hash}&check=1");
 
         ServerComponentMarker.IsIn(html).Should().BeFalse("[ExcludeFromInteractiveRouting]: one page for every visitor");
-        document.QuerySelector(".action-result h3")!.TextContent.Should().Be("Export verified");
+        document.QuerySelector(".action-result .alert-success strong")!.TextContent.Should().Be("Export verified.");
         var (_, otherHtml, _) = await host.LoadAsync(AppTestHost.AnonymousPage);
         ServerComponentMarker.IsIn(otherHtml).Should().BeTrue("guard: other pages are still interactive for them");
     }
@@ -74,7 +74,7 @@ public sealed partial class VerifyExportPageHostingTests
 
         check.StatusCode.Should().Be(HttpStatusCode.OK);
         document.QuerySelector(".action-result .alert-danger")!.TextContent.Trim()
-            .Should().Be("The export could not be checked just now. Please try again in a few minutes.");
+            .Should().Be("The export could not be checked just now. Try again in a few minutes.");
         document.QuerySelector("form").Should().NotBeNull();
     }
 
@@ -103,9 +103,12 @@ public sealed partial class VerifyExportPageHostingTests
                 return Task.FromException<TResponse>(Failure);
             }
 
-            var export = new PortfolioExportRecordDto(
-                7, "trainee-1", "admin-1", new DateTime(2026, 9, 1, 8, 30, 0, DateTimeKind.Utc), null, null, Hash, "portfolio.pdf");
-            return Task.FromResult((TResponse)(object)export);
+            var moment = new DateTime(2026, 9, 1, 8, 30, 0, DateTimeKind.Utc);
+            var answer = new VerifyExportAnswer
+            {
+                Export = new PortfolioExportRecordDto("trainee-1", "admin-1", moment, moment, 1, null, null, Hash, "portfolio.pdf")
+            };
+            return Task.FromResult((TResponse)(object)answer);
         }
 
         public Task Send(IRequest request, CancellationToken cancellationToken = default)

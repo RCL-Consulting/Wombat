@@ -25,11 +25,13 @@ public sealed class MyAuthorisationsPageTests : TestContext
     private static readonly DateTimeOffset Now = new(2026, 10, 12, 22, 30, 0, TimeSpan.Zero);
 
     private readonly StarsSender _sender = new();
+    private readonly TestAuthorizationContext _auth;
 
     public MyAuthorisationsPageTests()
     {
         JSInterop.Mode = JSRuntimeMode.Loose;
         var auth = this.AddTestAuthorization();
+        _auth = auth;
         auth.SetAuthorized("lerato@test");
         auth.SetRoles(WombatRoles.Trainee);
         auth.SetClaims(new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "lerato"));
@@ -177,6 +179,50 @@ public sealed class MyAuthorisationsPageTests : TestContext
         JSInterop.Invocations.Should().Contain(call => call.Identifier == "wombat.focusById" && Equals(call.Arguments[0], "download-1"));
     }
 
+    // ---- a former trainee (T379, flow 13, Q3; R3-R08, R3-R09) ----
+
+    [Fact]
+    public async Task AFormerTrainee_IsLetIn_AsATraineeIs_AndAnAssessorWithNoRecordIsNot()
+    {
+        var page = typeof(MyAuthorisations);
+
+        (await Navigation.PageAccess.RefusalOf(page, Graduate())).Should().BeNull("Q3: TraineeOrFormerTrainee admits her record");
+        (await Navigation.PageAccess.RefusalOf(page, WombatRoles.Trainee)).Should().BeNull();
+        (await Navigation.PageAccess.RefusalOf(page, WombatRoles.Assessor)).Should().NotBeNull("an Assessor with no record");
+        (await Navigation.PageAccess.RefusalOf(page, WombatRoles.CollegeAdmin)).Should().NotBeNull();
+    }
+
+    [Fact]
+    public void AFormerTrainee_ReadsHerStars_AndDownloadsACertificate_AsHerself()
+    {
+        // R3-R08: her STARs as cards, each with Download; the command is sent with her own principal, which the handler
+        // judges by TraineeScopeResolver.MayReadAsync, self (DownloadEntrustmentCertificateTests' former trainee).
+        SignInAsAFormerTrainee();
+        var cut = Render([Star(1, "PAED-001"), Star(2, "PAED-002")]);
+
+        cut.FindAll(".star-grid > article.star-card").Should().HaveCount(2);
+        cut.FindAll(".star-card .form-actions button").ToArray()[0].Click();
+
+        cut.WaitForAssertion(() => JSInterop.Invocations.Should().Contain(call => call.Identifier == "wombatFileDownload"));
+        var sent = _sender.LastDownload!;
+        sent.DecisionId.Should().Be(1);
+        sent.Principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value.Should().Be("lerato");
+        sent.Principal.IsInRole(WombatRoles.Trainee).Should().BeFalse("she holds no role now");
+    }
+
+    [Fact]
+    public void AFormerTraineeWithNoStar_IsToldNoneWasIssued_NotThatOneMayYetBe()
+    {
+        // Spec 3's Empty row (R3-R09 draws the built words): in place of "No active authorisations yet", which promises one.
+        SignInAsAFormerTrainee();
+
+        var cut = Render([]);
+
+        cut.Find(".state-panel-title").TextContent.Should().Be("No STAR was issued to you, so there is no certificate to download.");
+        cut.FindAll(".state-panel-copy").Should().BeEmpty("P2: the title says it all, so no empty copy block under it");
+        cut.Markup.Should().NotContain("No active authorisations yet").And.NotContain("it will appear here");
+    }
+
     [Fact]
     public void WhileTheStarsAreRead_TheStatusSaysSo_AndNoDownloadIsOffered()
     {
@@ -200,6 +246,23 @@ public sealed class MyAuthorisationsPageTests : TestContext
         cut.FindAll("button").Should().Contain(button => button.TextContent.Trim() == "Try again");
         cut.Markup.Should().NotContain("30 seconds");
     }
+
+    /// <summary>Lerato Molefe after graduating: signed in, no role, the trainee_record claim (D54, T252).</summary>
+    private void SignInAsAFormerTrainee()
+    {
+        _auth.SetRoles();
+        _auth.SetClaims(
+            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "lerato"),
+            new System.Security.Claims.Claim(Wombat.Application.Common.Security.WombatClaimTypes.TraineeRecord, "true"));
+    }
+
+    private static System.Security.Claims.ClaimsPrincipal Graduate()
+        => new(new System.Security.Claims.ClaimsIdentity(
+            [
+                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "lerato"),
+                new System.Security.Claims.Claim(Wombat.Application.Common.Security.WombatClaimTypes.TraineeRecord, "true")
+            ],
+            "Test"));
 
     private IRenderedComponent<MyAuthorisations> Render(IReadOnlyList<EntrustmentDecisionDto> stars)
     {
@@ -242,6 +305,9 @@ public sealed class MyAuthorisationsPageTests : TestContext
 
         public EntrustmentCertificateResult? Certificate { get; set; } = new([1, 2, 3], "star.pdf", "hash");
 
+        /// <summary>The last download the page sent, as it sent it.</summary>
+        public DownloadEntrustmentCertificateCommand? LastDownload { get; private set; }
+
         public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
         {
             switch (request)
@@ -253,7 +319,8 @@ public sealed class MyAuthorisationsPageTests : TestContext
                     }
 
                     return (TResponse)(object)(Pending is null ? List : await Pending.Task);
-                case DownloadEntrustmentCertificateCommand:
+                case DownloadEntrustmentCertificateCommand download:
+                    LastDownload = download;
                     if (DownloadFailure is not null)
                     {
                         throw DownloadFailure;

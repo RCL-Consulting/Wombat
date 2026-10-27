@@ -582,18 +582,18 @@ neither.
 
 | Task | What it means for the design | Evidence |
 |---|---|---|
-| **T311** (P2, queued; its Home, menu, My authorisations and email items) | **Home:** the no-role branch draws "Your training record" for a holder of the claim (`W/Home.razor:57–79`), naming no end and linking only My progress (observed 5.21, 5.28, A.7.4, A.1.6, A.4.6); T311's root cause about a withdrawn registrar keeping Trainee is void since D54. `TraineeHomeWords.Ended` already words the ended line. **Menu:** the personal links are My progress and My data rights (`Nav/NavItems.cs:212–214`); Export portfolio is a Trainee item only (`:180`), though the page admits her (`P/ExportPortfolio.razor:3`, observed 5.23). **My authorisations** is `Roles = "Trainee"` (`P/MyAuthorisations.razor:2`; observed 5.22), though its queries admit her as herself; the EPA page hides "Open My authorisations" from her (`P/EpaProgress.razor:146`, `:298`; DESIGN.md:3652). **The email** (`src/Wombat.Application/Common/Email/Templates/GraduationEmail.cs:15`, `:24`) claims a ratification Mark complete never checks (observed 5.18; flow 19's output). | `act-5/5.21-1…`, `act-5/5.22-2…`, `act-A/A.7.4-1…` |
-| **T314** (P3, queued) | A fixed header (`P/ExportPortfolio.razor:10`); the staff route resolves no name (`:62–69`); a refusal only after the press, under a drawn form (`:101–104`; observed old frame, `export-portfolio--refused`); no page links `/portfolio/export/{id}` (observed 5.10, 5.12); nothing lit, trail Home › Export portfolio (observed 5.10). The command's one refusal (`A/Reporting/ExportPortfolio.cs:35`) stays. | `act-5/5.10-1…`, `states/export-portfolio--refused.png` |
-| **T313** (P2, queued) and **T287**'s verify item (P3, queued) | An exact, case-sensitive match with no order (`A/Reporting/VerifyExport.cs:26–30`; observed 5.13: upper case "No matching export found"); the page sends `Hash.Trim()` as typed (`P/VerifyExport.razor:103`); no format check, so a 12-digit prefix reads "No matching export found"; the 90-day cleanup deletes the records (`src/Wombat.Infrastructure/Scheduling/Jobs/PortfolioExportCleanupJob.cs:27–39`; code, A.2.9's job list); the placeholder "Enter the hash from the PDF footer" (`P/VerifyExport.razor:27`; observed 5.13) for a PDF that prints none (it cannot: the hash is of the whole file). Removing the job changes A.1/A.2's job lists (flow 18's steps A.2.1, A.2.9). | `act-5/5.13-1…`, `-2…` |
-| **T312** (P2, queued; lands first, Q10) | An ended record reads the live catalogue: a pause drops PAED-012 from her completed record and her standing (observed 6.21: 14 of 14); KGK-001 added after she graduated appears with a shortfall in each closed year and "1 with no decision" (observed 6.40, 6.41); the PDF reads the same. A data rule across the progress readers, the standing and the PDF, not a screen: the design draws its outcome. | `act-6/6.21-1…`, `act-6/6.40-1…` |
-| **T325** (A9; the export and verify half) | Export's defaults use the server's `DateTime.Today` (`P/ExportPortfolio.razor:55–56`; observed 5.9's From 2025-10-26, correct only because the server's date agreed); Verify prints "… on 2026-10-26 20:51 UTC" (`P/VerifyExport.razor:57`; observed 5.13). The profile's last day already defaults to the South African today (`Tr/TraineeProfileEdit.razor:459`). | `act-5/5.13-1…` |
-| **T329 / T272's family** (code) | Export prints `exception.Message` for any failure but a refusal (`P/ExportPortfolio.razor:105–108`) and has no load state. The profile prints the exception's text for a failed load, save or end (`Tr/TraineeProfileEdit.razor:268`, `:322`, `:400`), and its `StatePanel` passes `LoadError="@(null)"` (`:36`), so a failed load reads the text over "Profile unavailable" with no Try again. | `states/trainee-profile-edit--not-found.png` |
-| **T280** (headings, captions; code) | Verify's result is an `<h3>` "Export verified" under the `<h1>` (`P/VerifyExport.razor:56`); the profile's cards are `<h3>` (`Tr/TraineeProfileEdit.razor:41`, `:56`); the closed list's caption "Completed and closed trainee profiles" repeats its `<h2>` (`Tr/PendingTraineesList.razor:220–221`). Verify carries four inline `style`s (`P/VerifyExport.razor:41`, `:47`, `:55`, `:69`), against DESIGN.md's no-inline-style rule. | `act-5/5.13-1…` |
-| **T323** (A3; the closed list) | Completed and closed has no `StackWide` (`Tr/PendingTraineesList.razor:221`), so at 390 it does not stack as Current trainees does (inferred; A.7.9 checked Current only). | `act-5/5.27-3…` |
-| **New: the closed row's Edit** (observed; code) | Each ended profile offers "Edit", named "Edit ‹name›" (`Tr/PendingTraineesList.razor:237`), opening a record that cannot be edited (T305); its columns (Curriculum, Sub-speciality, Outcome) differ from Current trainees' (Curriculum and sub-speciality, Programme start, Expected completion); no pager (inferred: a closed list only grows). A11. Q8. | `act-5/5.27-3…` |
-| **New: the profile's end controls** (observed; code) | The last day sits in the profile's form, and Deactivate and Mark complete in Save profile's row (Cancel, Deactivate, Mark complete, Save profile, `Tr/TraineeProfileEdit.razor:105–129`; observed 5.16): two irreversible ends beside an ordinary save. A future day's refusal is an alert at the page's top, the field named by `aria-describedby` but not marked invalid (`:25–28`, `:110–112`; observed `5.16-2`). The page is titled "Trainee profile" (`:13`), never the person; "Back to trainees" repeats the trail (`:15`), which flow 12 dropped on the user page; Email and Name are bold run-in labels (observed `5.17-1`). Q7. | `act-5/5.16-2…`, `act-5/5.17-1…` |
-| **New: the former trainee's pages reached only by address** (observed) | My activities admits her (`W/Activities/MyActivities.razor:2`, bare `[Authorize]`) and lists her own (observed 5.28, 6.41), but neither her menu nor Home links it; nor Export portfolio (5.23). Q2. | `act-5/5.28-3…` |
-| **New: the staff export's candidates** (code) | A Coordinator cannot open the trainee profile (`AdministratorOrInstitutionalAdmin`), so T314's two links leave Mr Smit only the committee review page (`W/CommitteeDecisions/ReviewDetail.razor:2`), and a review exists only once scheduled. The registrar's programme page (`W/Programme/ProgrammeTraineeDetail.razor:2`, flow 06's) admits the Coordinator, the committee and the speciality admins and reads an ended profile (`A/Programme/Trainees/GetProgrammeTrainee.cs:98–109`), but not the Institutional admin. Q4. | — |
+| **T311** (P2, queued; its Home, menu, My authorisations and email items) | **Closed in the build (T379), its Home, menu, My authorisations and email items:** Home's no-role branch draws FormerTraineeRecordCard under DashboardFrame, "Your training record" naming the end and its day, then My progress, My authorisations ("Your 15 STARs in force, …", plain text with none issued, F6), My activities and Export portfolio (5.21, 5.28, A.1.6, A.4.6, A.7.4); a former trainee's personal links are My progress, Export portfolio and My data rights (Q2); My authorisations is `TraineeOrFormerTrainee` (Q3, 5.22) and the EPA page offers Open My authorisations to a record holder; the email drops the ratification sentence and links My progress (Q12, 5.18). **Home:** the no-role branch draws "Your training record" for a holder of the claim (`W/Home.razor:57–79`), naming no end and linking only My progress (observed 5.21, 5.28, A.7.4, A.1.6, A.4.6); T311's root cause about a withdrawn registrar keeping Trainee is void since D54. `TraineeHomeWords.Ended` already words the ended line. **Menu:** the personal links are My progress and My data rights (`Nav/NavItems.cs:212–214`); Export portfolio is a Trainee item only (`:180`), though the page admits her (`P/ExportPortfolio.razor:3`, observed 5.23). **My authorisations** is `Roles = "Trainee"` (`P/MyAuthorisations.razor:2`; observed 5.22), though its queries admit her as herself; the EPA page hides "Open My authorisations" from her (`P/EpaProgress.razor:146`, `:298`; DESIGN.md:3652). **The email** (`src/Wombat.Application/Common/Email/Templates/GraduationEmail.cs:15`, `:24`) claims a ratification Mark complete never checks (observed 5.18; flow 19's output). | `act-5/5.21-1…`, `act-5/5.22-2…`, `act-A/A.7.4-1…` |
+| **T314** (P3, queued) | **Closed in the build (T379):** the staff export is its own page, ExportTraineePortfolio, reached from "Export ‹name›'s portfolio" in the header of the trainee profile, the committee review and the registrar's programme page where `MayExport` (F1, 5.10, 5.12); its h1, subtitle, trail (M4), hints and result name the registrar; every refusal, an unknown id and an erased person read "Portfolio unavailable" before any form (Q19). A fixed header (`P/ExportPortfolio.razor:10`); the staff route resolves no name (`:62–69`); a refusal only after the press, under a drawn form (`:101–104`; observed old frame, `export-portfolio--refused`); no page links `/portfolio/export/{id}` (observed 5.10, 5.12); nothing lit, trail Home › Export portfolio (observed 5.10). The command's one refusal (`A/Reporting/ExportPortfolio.cs:35`) stays. | `act-5/5.10-1…`, `states/export-portfolio--refused.png` |
+| **T313** (P2, queued) and **T287**'s verify item (P3, queued) | **Closed in the build (T379):** the query drops whitespace and case (5.13's upper case verifies) and refuses what cannot be a hash under the field from a typed reason (S10, R3-V06); `portfolio-export-cleanup` and its rows are retired by migration (A.2.1, A.2.9: eight jobs); the field's help replaces the footer placeholder (T287's verify item). An exact, case-sensitive match with no order (`A/Reporting/VerifyExport.cs:26–30`; observed 5.13: upper case "No matching export found"); the page sends `Hash.Trim()` as typed (`P/VerifyExport.razor:103`); no format check, so a 12-digit prefix reads "No matching export found"; the 90-day cleanup deletes the records (`src/Wombat.Infrastructure/Scheduling/Jobs/PortfolioExportCleanupJob.cs:27–39`; code, A.2.9's job list); the placeholder "Enter the hash from the PDF footer" (`P/VerifyExport.razor:27`; observed 5.13) for a PDF that prints none (it cannot: the hash is of the whole file). Removing the job changes A.1/A.2's job lists (flow 18's steps A.2.1, A.2.9). | `act-5/5.13-1…`, `-2…` |
+| **T312** (P2, queued; lands first, Q10) | **Closed before the build (T312, 2026-10-27):** an ended record reads the list its programme ended with; 6.21, 6.40 and 6.41 are rewritten for it, and the build left them unchanged but for the record line (5.20). An ended record reads the live catalogue: a pause drops PAED-012 from her completed record and her standing (observed 6.21: 14 of 14); KGK-001 added after she graduated appears with a shortfall in each closed year and "1 with no decision" (observed 6.40, 6.41); the PDF reads the same. A data rule across the progress readers, the standing and the PDF, not a screen: the design draws its outcome. | `act-6/6.21-1…`, `act-6/6.40-1…` |
+| **T325** (A9; the export and verify half) | **Closed in the build (T379), the export and verify half:** Export's dates open on the programme start and on today on the South African calendar, or the last day (5.9, 5.23); Verify prints "yyyy-MM-dd HH:mm SAST" (5.13). Export's defaults use the server's `DateTime.Today` (`P/ExportPortfolio.razor:55–56`; observed 5.9's From 2025-10-26, correct only because the server's date agreed); Verify prints "… on 2026-10-26 20:51 UTC" (`P/VerifyExport.razor:57`; observed 5.13). The profile's last day already defaults to the South African today (`Tr/TraineeProfileEdit.razor:459`). | `act-5/5.13-1…` |
+| **T329 / T272's family** (code) | **Closed in the build (T379), the flow 13 half:** Export, the profile and Home's card each have a loading state and fixed words for a failed read, export or end, the exception to the log (R3-E13–E15, P06, P14, P15, H05, H06). Export prints `exception.Message` for any failure but a refusal (`P/ExportPortfolio.razor:105–108`) and has no load state. The profile prints the exception's text for a failed load, save or end (`Tr/TraineeProfileEdit.razor:268`, `:322`, `:400`), and its `StatePanel` passes `LoadError="@(null)"` (`:36`), so a failed load reads the text over "Profile unavailable" with no Try again. | `states/trainee-profile-edit--not-found.png` |
+| **T280** (headings, captions; code) | **Closed in the build (T379), the flow 13 half:** Verify's answer is one Alert with its first sentence bold and a details list, no `<h3>` and no inline style; the profile's sections are `<h2>`; the closed list's caption says what its heading does not. Verify's result is an `<h3>` "Export verified" under the `<h1>` (`P/VerifyExport.razor:56`); the profile's cards are `<h3>` (`Tr/TraineeProfileEdit.razor:41`, `:56`); the closed list's caption "Completed and closed trainee profiles" repeats its `<h2>` (`Tr/PendingTraineesList.razor:220–221`). Verify carries four inline `style`s (`P/VerifyExport.razor:41`, `:47`, `:55`, `:69`), against DESIGN.md's no-inline-style rule. | `act-5/5.13-1…` |
+| **T323** (A3; the closed list) | **Closed in the build (T379), the closed list:** Completed and closed is a `StackWide` table, stacked at 390 with View 44 px (A.7.9). Completed and closed has no `StackWide` (`Tr/PendingTraineesList.razor:221`), so at 390 it does not stack as Current trainees does (inferred; A.7.9 checked Current only). | `act-5/5.27-3…` |
+| **New: the closed row's Edit** (observed; code) | **Closed in the build (T379):** Completed and closed is its own paged read (20 a page, Q22), the latest end first, Name, Curriculum and sub-speciality, Programme (dates over the training year it ended in), Outcome, and one View named "View ‹name›'s record" (A11); the erased person listed under the pseudonym (F7, A.1.14). Each ended profile offers "Edit", named "Edit ‹name›" (`Tr/PendingTraineesList.razor:237`), opening a record that cannot be edited (T305); its columns (Curriculum, Sub-speciality, Outcome) differ from Current trainees' (Curriculum and sub-speciality, Programme start, Expected completion); no pager (inferred: a closed list only grows). A11. Q8. | `act-5/5.27-3…` |
+| **New: the profile's end controls** (observed; code) | **Closed in the build (T379):** the page is "‹name›'s programme" with no Back to trainees (Q7); End this programme is a section of its own with the last committee decision (Q13), the last day checked on the press before any dialog, its refusal under the field (Q21, 5.16), and two named triggers, each dialog naming the day, the address and the forecast (M2, 5.17, 5.27). The last day sits in the profile's form, and Deactivate and Mark complete in Save profile's row (Cancel, Deactivate, Mark complete, Save profile, `Tr/TraineeProfileEdit.razor:105–129`; observed 5.16): two irreversible ends beside an ordinary save. A future day's refusal is an alert at the page's top, the field named by `aria-describedby` but not marked invalid (`:25–28`, `:110–112`; observed `5.16-2`). The page is titled "Trainee profile" (`:13`), never the person; "Back to trainees" repeats the trail (`:15`), which flow 12 dropped on the user page; Email and Name are bold run-in labels (observed `5.17-1`). Q7. | `act-5/5.16-2…`, `act-5/5.17-1…` |
+| **New: the former trainee's pages reached only by address** (observed) | **Closed in the build (T379):** Home's card and the menu link Export portfolio, My authorisations and My activities; My progress's "Your record:" line links the last two; My activities lights My progress for her (5.20, 5.21, 5.28). My activities admits her (`W/Activities/MyActivities.razor:2`, bare `[Authorize]`) and lists her own (observed 5.28, 6.41), but neither her menu nor Home links it; nor Export portfolio (5.23). Q2. | `act-5/5.28-3…` |
+| **New: the staff export's candidates** (code) | **Closed in the build (T379):** the action is on all three pages, the Institutional admin's from the profile, the Coordinator's and the committee's from the review and the programme page (F1, Q4). A Coordinator cannot open the trainee profile (`AdministratorOrInstitutionalAdmin`), so T314's two links leave Mr Smit only the committee review page (`W/CommitteeDecisions/ReviewDetail.razor:2`), and a review exists only once scheduled. The registrar's programme page (`W/Programme/ProgrammeTraineeDetail.razor:2`, flow 06's) admits the Coordinator, the committee and the speciality admins and reads an ended profile (`A/Programme/Trainees/GetProgrammeTrainee.cs:98–109`), but not the Institutional admin. Q4. | — |
 | **T166's gating** (operator decision, EPA-PROGRAMME § 4) | Mark complete checks no ratified Graduate decision; the end section shows none either. Q13. | `act-5/5.16-1…` |
 
 **Dropped from the old brief (done since, or decided):**
@@ -715,28 +715,47 @@ A flow is done when BRIEF.md § 9's four checks hold. For this flow:
 
 ## 8. The runbook steps, verbatim (sent with § 1, in the same message)
 
-These are pasted from `execution/knowledge/scenario-paediatrics/` (Role, Route, Do and Expect only), as flow 12's replay
-left them (T376, 2026-10-26; the Gaps it recorded are 5.10's and 5.12's T314, 5.13's T313 and T287, 5.21's, 5.22's,
-5.23's and A.7.4's T311, and 6.21's and 6.40's T312). `D` is the replay day and `J` the latest 15 January on or before
-it (README § How to play).
+These are pasted from `execution/knowledge/scenario-paediatrics/` (Role, Route, Do and Expect only). Round 3 was drawn
+against each Expect as flow 12's replay left it (T376, 2026-10-26; the Gaps it recorded are 5.10's and 5.12's T314,
+5.13's T313 and T287, 5.21's, 5.22's, 5.23's and A.7.4's T311, and 6.21's and 6.40's T312). Since the build (T379,
+2026-10-27) each Expect describes the product as flow 13 built it, from `R3-0-steps` and the code: 5.10 and 5.12 reach
+the staff export from a page header (5.10 retitled "from her programme"), 5.16 is refused on the press with no dialog,
+5.22 opens My authorisations, and each journey's count is in its step's Note (5.9, 5.10, 5.12, 5.13, 5.17, 5.23, 5.27).
+`D` is the replay day and `J` the latest 15 January on or before it (README § How to play).
 
 ```text
 Step 5.9 — Dr Molefe exports her portfolio
 Role: Trainee — Dr Lerato Molefe
 Route: /portfolio/export
-Do: Open Export portfolio from the menu. Set the from date to her programme start, `J−3y`, and the to date to `D`, and
-  export the PDF.
-Expect: The page opens with the last twelve months filled in. After the export it says "Portfolio exported
-  successfully. The download should start automatically.", and a file named `portfolio-<12 hex digits>.pdf` downloads.
-  Record the file name: Steps 5.10 and 5.12 must produce the same one.
+Do: Open Export portfolio from the menu. Check that the dates read her programme start, `J−3y`, and `D`, and export
+  the PDF.
+Expect: Export portfolio is lit in her menu and the page draws no trail (F4). It is headed "Export portfolio", under
+  "A PDF of your portfolio for the dates you choose: your progress, your STARs, your committee's decisions and your
+  activities.", and opens with the dates already set:
+  - From date `J−3y`, with "Your programme started on `J−3y`.";
+  - To date `D`, with "Today, on the South African calendar." (T325: never the server's date);
+  - under them, "Exporting the same dates again gives the same file, until the record changes."
+  After Export PDF the result stands above the form and takes the focus: "**Your portfolio exported:
+  portfolio-<12 hex digits>.pdf.** The download should start automatically. Anyone holding the file can check it on
+  Verify portfolio export.", where Verify portfolio export is a plain link to `/portfolio/verify`. The file downloads
+  under that name. Record it: Steps 5.10 and 5.12 must produce the same one.
 
-Step 5.10 — Prof Mbatha exports Dr Molefe's portfolio by its address
+Step 5.10 — Prof Mbatha exports Dr Molefe's portfolio from her programme
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/users → /admin/users/{UserId} → /portfolio/export/{TraineeUserId}
-Do: Find Dr Molefe in Users (type "Molefe" in Name or email and press Show) and open her. Take her user id from the
-  path of the page's address (before any `?`: Manage adds `?back=`), then type the export address with that id. Set the dates to `J−3y` and `D`, and export.
-Expect: The export succeeds as in Step 5.9. The downloaded file has the same name as Dr Molefe's and is identical to it
-  byte for byte. Compare the two with `fc /b`, or by their SHA-256.
+Route: /admin/trainees → /admin/trainees/edit → /portfolio/export/{TraineeUserId}
+Do: Open Trainees and Dr Molefe's profile from Current trainees (its Edit, named "Edit Lerato Molefe's profile"). Press
+  "Export Lerato Molefe's portfolio" in the page's header, and export with the dates the page opens on (`J−3y` and `D`).
+Expect: The profile, "Lerato Molefe's programme", offers "Export Lerato Molefe's portfolio" in its header (F1). It
+  opens the staff export, `/portfolio/export/<her user id>` (ExportTraineePortfolio), with Trainees lit:
+  - the trail "Home › Trainees › Lerato Molefe's programme › Export portfolio", its third crumb a link back to her
+    profile (M4);
+  - the h1 and tab "Export Lerato Molefe's portfolio", under "Kgosi Kgari Teaching Hospital · Paediatric EPA
+    Curriculum (11.1) · Training year 4";
+  - From date `J−3y`, with "Lerato Molefe's programme started on `J−3y`.", and To date `D`, with "Today, on the South
+    African calendar.".
+  After Export PDF: "**Lerato Molefe's portfolio exported: portfolio-<12 hex digits>.pdf.** The download should start
+  automatically. Anyone holding the file can check it on Verify portfolio export.", focused. The file has the same name
+  as Dr Molefe's and is identical to it byte for byte. Compare the two with `fc /b`, or by their SHA-256.
 
 Step 5.11 — Prof Mbatha reads the portfolio
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -759,33 +778,50 @@ Expect: Every page carries the same header and footer:
 
 Step 5.12 — Mr Smit reproduces the export
 Role: Coordinator — Mr Pieter Smit
-Route: /portfolio/export/{TraineeUserId}
-Do: Type the export address with Dr Molefe's user id, which Prof Mbatha sends him. Set the same two dates, and export.
-Expect: The export is allowed, because a coordinator of her institution oversees her (T079, T101). The file has the
-  same name as those from Steps 5.9 and 5.10, and is identical to both byte for byte.
+Route: /committee/reviews → /committee/reviews/{ReviewId:int} → /portfolio/export/{TraineeUserId}
+Do: Open Committee reviews and Dr Molefe's pre-graduation review ("Lerato Molefe · 2026 S2", Pre-graduation). Press
+  "Export Lerato Molefe's portfolio" in the review's header, and export with the dates the page opens on.
+Expect: The review page offers "Export Lerato Molefe's portfolio" in its header, apart from "Lerato Molefe's progress"
+  in its subtitle (F1), because a coordinator of her institution oversees her (T079, T101; the export command's own
+  check, `MayExport`). The staff export opens with Programme trainees lit, the trail "Home › Programme trainees › Lerato
+  Molefe › Export portfolio" (its third crumb her programme page, `/programme/trainees/<her profile id>`; M4, Q27), the
+  h1 "Export Lerato Molefe's portfolio", the subtitle and dates as in Step 5.10. The result names the file as there: the
+  same name as those from Steps 5.9 and 5.10, identical to both byte for byte.
 
 Step 5.13 — A verifier checks the genuine PDF
 Role: Anonymous — a credentialing officer at Dr Molefe's new hospital
 Route: /portfolio/verify
 Do: In a private window, without signing in, open the verification page. Compute the SHA-256 of the PDF that Dr Molefe
   sent (`certutil -hashfile <file> SHA256`, or `sha256sum`, both of which print it in lower case), enter it and press
-  Verify. Do the same for Mr Smit's copy.
-Expect: The page works signed out, as a static page, under the signed-out bar: the brand and Sign in, and no menu.
-  Verifying loads the page's own address with the hash in it. The
-  page reads "Export verified" and shows:
-  - when Wombat generated the file, in UTC;
-  - the trainee and the exporter as user ids, never as names (DESIGN: the anonymous page must not disclose a name);
-  - "Filter: `J−3y` to `D`";
-  - the file name that all three downloads carry.
-  Mr Smit's copy has the same SHA-256 and gets the same answer.
+  Verify. Do the same for Mr Smit's copy. Then verify the same hash in upper case, as PowerShell's `Get-FileHash`
+  prints it.
+Expect: The page works signed out, as a static page, under the signed-out bar: the brand and Sign in, and no menu. It
+  reads "Check whether a PDF was produced by Wombat, without signing in."; its field, "Content hash (SHA-256)", has no
+  placeholder and the help "The file's SHA-256: 64 hexadecimal digits, computed on your computer from the PDF you were
+  sent. Upper or lower case, and spaces or line breaks in it, are accepted.", over the commands for Windows, macOS and
+  Linux. Verifying loads the page's own address with the hash in it (`?hash=…&check=1`). The answer stands above the
+  form and takes the focus: "**Export verified.** Wombat generated this PDF: its content is byte for byte an export
+  Wombat recorded.", then:
+  - First generated `D` hh:mm SAST, the time of Step 5.9's export on the South African clock, never UTC (T325);
+  - Exported "3 times, the last on `D` hh:mm SAST" (Steps 5.9, 5.10 and 5.12 made the same file);
+  - Trainee and First exported by, both Dr Molefe's user id, never a name (DESIGN: the anonymous page must not disclose
+    a name), under "People are shown by their Wombat user ids, never by name. The institution that issued the
+    portfolio can say whose they are.";
+  - Filter `J−3y` to `D`;
+  - File, the name that all three downloads carry.
+  Mr Smit's copy has the same SHA-256 and gets the same answer. So does the hash in upper case, kept in the field as
+  typed (T313).
 
 Step 5.14 — The verifier checks a tampered copy
 Role: Anonymous — a credentialing officer at Dr Molefe's new hospital
 Route: /portfolio/verify
 Do: Change one byte in a copy of the PDF, compute the copy's SHA-256 and verify it. Then press Verify with only spaces
   in the field.
-Expect: The tampered copy gets "No matching export found. This hash does not correspond to any PDF generated by this
-  system." The press with only spaces gets "Enter the content hash to check." Neither leads to an error page.
+Expect: The tampered copy gets, above the form and focused, "**No matching export found.** This hash does not
+  correspond to any PDF generated by this system. One changed byte changes the whole hash: check that it was computed
+  from the file you were sent." The press with only spaces gets no answer: "Enter the content hash to check." stands
+  under the field, which is marked invalid, names the refusal first and takes the focus (`autofocus`, N4, N15).
+  Neither leads to an error page.
 
 Step 5.15 — Dr Molefe leaves My progress open
 Role: Trainee — Dr Lerato Molefe
@@ -803,31 +839,50 @@ Expect: The page shows her programme as still running:
 Step 5.16 — Prof Mbatha tries to record the story's graduation day
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/trainees → /admin/trainees/edit
-Do: Open Dr Molefe's profile from Current trainees (Edit). Set the last day in the programme to the story's graduation day,
-  `J+1y−1d`. Press Mark complete and confirm.
-Expect: The last-day field opens on `D`. Among the rest, its help says that:
-  - Mark complete records the graduation day, archives the profile and removes the Trainee role;
-  - the day cannot be after today;
-  - the day cannot be changed afterwards.
-  The confirmation names `J+1y−1d` (as yyyy-MM-dd) as her graduation day. It says that the Trainee role will be
-  removed, a graduation email will be sent, encounters after that day will count towards nothing, and none of this can
-  be undone. Once
-  confirmed, the request is refused with "The completion date cannot be after today (`D`)." (`D` shown as yyyy-MM-dd),
-  which is read with the field. The profile is still Active.
+Do: Open Dr Molefe's profile from Current trainees (Edit Lerato Molefe's profile). Set the last day in the programme to
+  the story's graduation day, `J+1y−1d`, and press Mark complete….
+Expect: The page is "Lerato Molefe's programme" (h1, tab and last crumb, under Trainees), with "Update curriculum and
+  completion details for this trainee." under it and "Export Lerato Molefe's portfolio" in its header; there is no
+  Back to trainees (Q7). Its summary reads Status Active and Email molefe@kgk.wombat.local, with no "Name:" row; then
+  Profile details with Save profile; then the section "End this programme":
+  - "The last committee decision: Graduate (programme complete), Pre-graduation review, ratified `D`." (Q13; it gates
+    nothing);
+  - "Last day in the programme", required, opening on `D`, with the help "The graduation day, or the last day of a
+    registrar who leaves without completing. It cannot be after today, and it cannot be changed afterwards. The period
+    it falls in holds no target unless the day is in that period's last month, and encounters observed after it count
+    towards nothing in this programme, even those already counted.";
+  - "A graduation: archives the profile, removes the Trainee role and sends Lerato Molefe a graduation email." beside
+    Mark complete…, and "A withdrawal: archives the profile and removes the Trainee role. No email is sent." beside
+    Deactivate….
+  Mark complete… with `J+1y−1d` opens no dialog (Q21): "The last day cannot be after today (`D`)." (`D` as yyyy-MM-dd)
+  stands under the field, read at once (`role="alert"`), the field marked invalid with the focus in it and
+  `J+1y−1d` kept. Nothing is sent; the profile is still Active.
 
 Step 5.17 — Prof Mbatha marks Dr Molefe's programme complete on `D`
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/trainees/edit → /admin/trainees → /admin/users → /admin/users/{UserId}
-Do: Set the last day to `D`, press Mark complete and confirm. Then go back to Trainees, and open Dr Molefe in Users.
-  On her page, press Add a role…, read it and press Cancel.
-Expect: The page says "Trainee marked complete. The Trainee role has been removed and a graduation email sent."
-  - The summary reads Status Completed, Completed `D`.
-  - The last-day field, Deactivate and Mark complete are gone. The page's subtitle reads "The record of a programme
-    that has ended.", and the profile's details read as a list under "This programme has ended, so its record is
+Do: Set the last day to `D`, press Mark complete… and, in its dialog, Mark complete. Then open Trainees from the menu,
+  and open Dr Molefe in Users. On her page, press Add a role…, read it and press Cancel.
+Expect: The dialog, "Mark Lerato Molefe's programme complete?", opens on Cancel and reads "Record `D` as Lerato
+  Molefe's graduation day? The profile is archived, the Trainee role is removed and a graduation email is sent to
+  molefe@kgk.wombat.local.", "Encounters observed after that day will count towards nothing in this programme,
+  including any already counted. Lerato Molefe keeps the record, read-only, and can still export the portfolio." (no
+  count: nothing of hers is observed after `D`) and "The day cannot be changed afterwards, and this cannot be
+  undone.", with Mark complete as its primary. Confirmed:
+  - "**Trainee marked complete.** The Trainee role has been removed and a graduation email sent." stands at the top
+    and takes the focus, with no count sentence, since nothing was taken back (M2).
+  - The page keeps its h1, "Lerato Molefe's programme", and its header action; its subtitle reads "The record of a
+    programme that has ended.". The summary has one Status row, the badge Completed and `D`, then Email; no "Name:"
+    row and no "Trainee summary" heading (T6).
+  - End this programme is gone. Profile details read as a list under "This programme has ended, so its record is
     archived and cannot be changed.": Curriculum Paediatric EPA Curriculum (11.1), Programme start date `J−3y`,
-    Expected completion date `J+1y−1d`. There are no inputs and no Save profile; Back to trainees stays (T305).
-  - On Trainees she is no longer under Current trainees. She is listed under "Completed and closed" with the outcome
-    "Completed `D`".
+    Expected completion date `J+1y−1d`. There are no inputs, no Save profile and no Back to trainees (T305).
+  - "The account" reads "Lerato Molefe holds no role now, and can still sign in to read the record, export the
+    portfolio and download the STAR certificates.", with "Open Lerato Molefe's user page".
+  - On Trainees she is no longer under Current trainees ("4 current"). "Completed and closed", "1 ended", under
+    "Programmes that have ended, the latest end first. An ended record is read-only.", lists her row: Lerato Molefe;
+    Paediatric EPA Curriculum (11.1) over Paediatrics; `J−3y` to `D` over "Training year 4 when it ended"; Completed
+    `D`; and View, named "View Lerato Molefe's record", which opens her ended record (no Edit).
   - Her user page's Roles and scope says "**Lerato Molefe holds no role: they completed the programme on `D`.** They can
     still sign in to read their training record (My progress) and their data rights." (T376, S2, Q13; D54), and its Add
     a role… offers the six staff roles and no Trainee (T303). On Users her Roles cell reads "No role" over "A completed
@@ -839,8 +894,11 @@ Role: System — the graduation email sent by Mark complete
 Route: n/a
 Do: Read the application log for the mail sent in Step 5.17.
 Expect: There is one email to `molefe@kgk.wombat.local` with the subject "Congratulations on completing Paediatric EPA
-  Curriculum". It congratulates her on completing the programme as of `D`, and says that her committee has ratified
-  her final entrustment decisions and that her portfolio is available in Wombat.
+  Curriculum". It congratulates her on completing her training programme, Paediatric EPA Curriculum, as of `D`, then
+  reads "Your record of the programme stays in Wombat, read-only. Sign in to read it on My progress, to export your
+  portfolio, and to download the certificate of any STAR issued to you.", with "Open My progress" linking
+  `/portfolio/progress` under the configured base URL (in the text part, "Open My progress: <url>"). It no longer says
+  that her committee has ratified her final entrustment decisions, which Mark complete never checks (Q12, Q13).
 
 Step 5.19 — Dr Molefe's open session ends
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
@@ -855,6 +913,9 @@ Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: /account/login → /account/login/submit → /portfolio/progress
 Do: Sign in from the page that Step 5.19 left her on. She is returned to My progress. Read it.
 Expect: Her trainee record admits her to the page (T252, `TraineeOrFormerTrainee`).
+  - Its subtitle reads "Your record of the programme you ended: what your curriculum held you to in each period.".
+    Above the notice, the line "Your record:" links My authorisations and My activities, her record's other pages
+    (T379, S8; My authorisations because a STAR was issued to her).
   - An information notice reads "You completed your programme on `D`. This page is your record of it and is read-only:
     no target applies to you any more.", followed by D49's rule. Every date on the page is ISO, `YYYY-MM-DD` (T355, D1).
   - A "Your programme" card gives her start date, Completed `D`, and training year 4 as the year the programme ended.
@@ -864,38 +925,48 @@ Expect: Her trainee record admits her to the page (T252, `TraineeOrFormerTrainee
   - The standing reads the year her programme ended in, "You completed your programme on `D`, in training year 4 …",
     with the exit rule met.
   - Her trajectories are on each EPA's page, which reads as her record does: every period listed, and no "n more by"
-    (T355).
+    (T355). PAED-001's Entrustment now offers Open My authorisations to her too (Q2, R3-R03).
 
 Step 5.21 — What her home page and menu offer a graduate
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: /
 Do: Open Home and read the menu.
-Expect: The sidebar has no "Acting as" head, since she holds no role, and the menu offers Home, then My progress and My
-  data rights under the rule, and nothing else (DESIGN § The NavMenu, D8, T252). The top bar names her, "Lerato Molefe",
-  with Sign out. Home says "You completed your programme on `D`, so no target applies to you any more." and points her
-  to My progress, read-only, as the trainee dashboard's Your targets card does for an ended programme (T252 As built:
-  "Home says the same"; dates ISO, T355).
+Expect: The sidebar has no "Acting as" head, since she holds no role, and the menu offers Home, then My progress,
+  Export portfolio and My data rights under the rule, and nothing else (DESIGN § The NavMenu, D8, T252; Q2). The top
+  bar names her, "Lerato Molefe", with Sign out. Home has no subtitle and one emphasised card, "Your training record"
+  (dates ISO, T355):
+  - "You completed your programme on `D`." and "Your record is kept, read-only: no target applies to you any more.";
+  - then the record's four pages, each its title as the link with a line under it: My progress, "Every period of your
+    programme, to training year 4, and your standing against Annexure A."; My authorisations, "Your 15 STARs in force,
+    each with its certificate to download."; My activities, "Every activity you filed or that was filed about you,
+    read-only."; Export portfolio, "A PDF of your record. Anyone holding it can check it on Verify portfolio export.".
 
 Step 5.22 — What a graduate can no longer open
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
-Route: /committee/my-reviews → /access-denied → /portfolio/authorisations → /access-denied → /msf/my-reports → /access-denied → /activities/new → /access-denied
+Route: /committee/my-reviews → /access-denied → /portfolio/authorisations → /msf/my-reports → /access-denied → /activities/new → /access-denied
 Do: Type the addresses of My committee reviews, My authorisations and MSF reports in turn. Then type the address of the
   new-activity page.
-Expect: Each of the first three reads "You cannot open this page", "Your account holds no role that opens this page."
-  and "If you need it for your work, ask your institution's Wombat administrator.", with Go to Home: those pages still
-  require the Trainee role (DESIGN § The NavMenu).
+Expect: My committee reviews and MSF reports each read "You cannot open this page", "Your account holds no role that
+  opens this page." and "If you need it for your work, ask your institution's Wombat administrator.", with Go to Home:
+  those pages still require the Trainee role (DESIGN § The NavMenu).
+  My authorisations opens (T379, Q3: its policy is `TraineeOrFormerTrainee`, as My progress's), under "Home › My
+  progress › My authorisations" with My progress lit: In force holds her 15 cards as in Step 5.8, each with "Download
+  certificate" named for its EPA, and PAED-001's certificate downloads as it did there.
   Nothing offers her an activity to file: there is no menu link and no dashboard action, and the new-activity page
   reads the same "You cannot open this page" when she types its address. Only a registrar whose programme is running
   files (D55); the create refuses anyone else too.
 
 Step 5.23 — Dr Molefe exports her portfolio as a graduate
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
-Route: /portfolio/export → /portfolio/verify
-Do: Type the export address, set the dates to `J−3y` and `D`, and export. Then verify the new file's SHA-256
-  on the verification page.
-Expect: The export page is not in her menu, but it admits her, because the portfolio is her own (`MayReadAsync`). The
-  file has a new name. Its "Progress per EPA" now says "The trainee completed the programme on <`D`>", so the content
-  differs from Steps 5.9 to 5.12. The new file verifies, with the same trainee, the same filter and its own
+Route: / → /portfolio/export → /portfolio/verify
+Do: Open Export portfolio from her menu (or Home's card), check that the dates read `J−3y` and `D`, and export. Then
+  press the result's Verify portfolio export and verify the new file's SHA-256.
+Expect: Export portfolio is in her menu and lit on the page, which draws no trail (Q2, F4). It admits her, because the
+  portfolio is her own (`MayReadAsync`). From reads `J−3y` with "Your programme started on `J−3y`.", and To her last
+  day, `D`, with "Your last day in the programme.". The result reads "**Your portfolio exported:
+  portfolio-<12 hex digits>.pdf.** …" with a new name. Its "Progress per EPA" now says "The trainee completed the
+  programme on <`D`>", so the content differs from Steps 5.9 to 5.12. The new file verifies: First generated `D`
+  hh:mm SAST, Exported "Once", the same Trainee and First exported by (her user id), Filter `J−3y` to `D`, and its own
   file name. The earlier file still verifies too.
 
 Step 5.24 — Dr du Plessis asks for a Mini-CEX on a shift after his post ended
@@ -935,15 +1006,26 @@ Expect: This period's count for PAED-002 includes the `D−1` Mini-CEX: its row 
 Step 5.27 — Prof Mbatha records his withdrawal
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/trainees → /admin/trainees/edit → /admin/trainees
-Do: Open Dr du Plessis's profile from Current trainees (Edit) and set the last day in the programme to `D−2`. Press Deactivate and confirm.
-Expect: The confirmation names `D−2` as his last day. It says that the Trainee role is removed and he keeps his own
-  record, that encounters after that day will count towards nothing, including any already counted, and that neither
-  the day nor the profile can be changed back. After confirming:
-  - the page says "Trainee profile deactivated. Their last day in the programme is recorded as `D−2`, and the Trainee
-    role has been removed.";
-  - the summary reads Status Inactive, "Left the programme: `D−2`", and the profile's details read-only, as on Step
-    5.17, with no Save profile (T305);
-  - on Trainees he is listed under "Completed and closed", with the outcome "Withdrawn `D−2`";
+Do: Open Dr du Plessis's profile from Current trainees (Edit Pieter du Plessis's profile) and set the last day in the
+  programme to `D−2`. Press Deactivate… and, in its dialog, Deactivate. Then open Trainees from the menu.
+Expect: The page, "Pieter du Plessis's programme", reads in End this programme "The last committee decision:
+  Satisfactory with Observations, Annual progression review, ratified `D`." The dialog, "Deactivate Pieter
+  du Plessis's profile?", opens on Cancel and reads "Deactivate Pieter du Plessis's profile, with `D−2` as their last
+  day in the programme? The Trainee role is removed; they keep their own record, read-only.", "Encounters observed
+  after that day will count towards nothing in this programme, including any already counted: 1 activity, observed
+  `D−1`, will stop counting." (the forecast, M2) and "The day cannot be changed afterwards, and a deactivated profile
+  cannot be made active again. This cannot be undone.", with Deactivate a filled danger button. After confirming:
+  - "**Trainee profile deactivated.** The last day in the programme is recorded as `D−2`, and the Trainee role has
+    been removed. 1 activity observed after that day no longer counts." stands at the top, focused (built from the
+    command's count, T9);
+  - the summary's Status reads the grey badge Inactive and "Left the programme: `D−2`", then his Email; the profile's
+    details read-only, as on Step 5.17, with no Save profile and no End this programme (T305);
+  - "The account" reads "Pieter du Plessis holds no role now, and can still sign in to read the record and export the
+    portfolio." (no STAR clause: none was issued to him), with "Open Pieter du Plessis's user page";
+  - on Trainees, "Current trainees" reads "3 current", and "Completed and closed", "2 ended", lists the latest end
+    first: Lerato Molefe, Completed `D`; then Pieter du Plessis, Paediatric EPA Curriculum (11.1) over Paediatrics,
+    `J−1y` to `D−2` over "Training year 2 when it ended", Withdrawn `D−2` (grey), and View named "View Pieter du
+    Plessis's record";
   - in the same save, the credit from the `D−1` Mini-CEX is taken back (T281);
   - the Trainee role is taken away, as a completion takes it (T290), and he is not emailed.
 
@@ -953,13 +1035,23 @@ Route: /account/login → /account/login/submit → / → /portfolio/progress �
 Do: Sign in, then read Home, My progress and My activities.
 Expect: Each page records that his programme ended on `D−2`, every date ISO (T355, D1):
   - He holds no role (T290: withdrawal takes Trainee away, as completion does), so the phone bar shows no "Acting as"
-    and the menu holds Home, My progress and My data rights. Home shows the former trainee's card, "Your training
-    record", pointing to My progress, as Dr Molefe's does at Step 5.21 (T252; that it names no end day is T311).
-  - My progress opens with "Your programme ended on `D−2`. This page is your record of it and is read-only…". Its "Your
-    programme" card reads Ended `D−2`. PAED-002's period holding `D−2` reads "no target (your programme ended part-way
-    through) · n−1 recorded".
-  - My activities still lists the `D−1` Mini-CEX as Completed, its Credit now "None": the take-back's replay re-stamped
-    its completion (`ProgrammeEndCredit`). The filing is kept, but it counts towards nothing.
+    and the menu holds Home, My progress, Export portfolio and My data rights. Home's card, "Your training record",
+    reads "Your programme ended on `D−2`." and "Your record is kept, read-only: no target applies to you any more.";
+    then My progress, "Every period of your programme, to training year 2, and your standing against Annexure A.";
+    "STARs" as plain text, no link, with "No STAR was issued to you, so there is no certificate to download." (F6);
+    My activities and Export portfolio, each with its line as on Dr Molefe's at Step 5.21.
+  - My progress opens with "Your record:" linking My activities alone (no STAR), then "Your programme ended on `D−2`.
+    This page is your record of it and is read-only…". Its "Your programme" card reads Ended `D−2`. PAED-002's period
+    holding `D−2` reads "no target (your programme ended part-way through) · n−1 recorded".
+  - My activities, from Home's card or that line, sits under "Home › My progress › My activities" with My progress
+    lit, and offers no Log an activity. Its subtitle adds "Read-only: your programme ended on `D−2`, so nothing new
+    can be filed.", and its table carries the caption "Every activity filed by you or about you, with who has it now
+    and its credit.". It still lists the `D−1` Mini-CEX as Completed, its Credit now "None": the take-back's replay
+    re-stamped its completion (`ProgrammeEndCredit`). The filing is kept, but it counts towards nothing. A note row
+    stands under every activity observed after his last day, whatever its state: the Mini-CEX (`D−1`), the cancelled
+    DOPS (dated `D`, the day it was created) and the submitted Portfolio and Logbook Review (`D−1`), each reading
+    "Observed after your last day in the programme, `D−2`, so it counts towards nothing." The Case-Based Discussion
+    (`D−5`) and the Teaching Session Logs carry none.
 
 Step 5.29 — Neither ended programme can be put before the panel
 Role: Coordinator — Mr Pieter Smit
@@ -973,7 +1065,8 @@ Step 6.21 — Dr Molefe's record during the pause
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: /portfolio/progress → /portfolio/progress/{EpaId:int}
 Do: Read her record. Then open PAED-012's page from its card.
-Expect: The record opens with its notice that she completed her programme and that the page is read-only.
+Expect: The record opens with its notice that she completed her programme and that the page is read-only, under the
+  line "Your record:" with My authorisations and My activities (T379, as in Step 5.20).
   - Her record reads the list her programme ended with (T312), so the pause changes nothing on it but a mark: PAED-012
     keeps its card, headed "PAED-012 (no longer in use)" (the code a link, the mark muted beside it, T255), with every
     period as Act 5 left it.
@@ -982,8 +1075,8 @@ Expect: The record opens with its notice that she completed her programme and th
     "STAR decisions are shown as the programme left them, and ratings as they stand today." (T312's wording).
   - No chart is on My progress (T355). PAED-012's page is headed "PAED-012 — … (no longer in use)", with no alert that
     it would be credited if restored: it lists its periods as her record does, and its Entrustment panel shows her
-    STAR as Act 5 issued it. Its rating trajectory, headed "Rating trajectory (no longer in use)", still charts her
-    ratings on it (T255).
+    STAR as Act 5 issued it, with Open My authorisations (T379). Its rating trajectory, headed "Rating trajectory (no
+    longer in use)", still charts her ratings on it (T255).
   - PAED-006's card carries the title corrected in Step 6.14. Her other cards and periods are as Act 5 left them.
 
 Step 6.40 — Dr Molefe's record after the rebuild
@@ -1009,22 +1102,28 @@ Expect:
     Act 5 Step 5.28 read: the Mini-CEX observed after his last day still counts towards nothing (T281).
   - No KGK-001 card has appeared on his record either, as on Dr Molefe's: his standing still counts the 15 EPAs his
     programme ended with, "… 15 with no decision, of 15 EPAs" (T312).
-  - My activities lists that Mini-CEX as Completed, its Credit None.
+  - My activities lists that Mini-CEX as Completed, its Credit None. A note row "Observed after your last day in the
+    programme, <that day>, so it counts towards nothing." stands under it, under the cancelled DOPS and under the open
+    Portfolio and Logbook Review, each observed after his last day, and under no other row (T379, as in Step 5.28).
 
 Step A.7.4 — Dr Molefe's record on her phone
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: / → /portfolio/progress
 Do: At 390 px, sign in, read Home, and open My progress from the menu.
-Expect: Home says that she completed her programme and points her to My progress, as at Step 5.21 (T252). The phone bar
-  shows no "Acting as", since she holds no role, and the menu holds Home, My progress and My data rights, then her name
-  and Sign out at its foot. My progress shows her read-only record of past periods (T252), its cards fitting the width;
-  her charts are on each EPA's page, not on My progress (T355).
+Expect: Home's card says that she completed her programme on `D` and links the record's four pages, as at Step 5.21
+  (T252, T379), fitting the width. The phone bar shows no "Acting as", since she holds no role, and the menu holds
+  Home, My progress, Export portfolio and My data rights, then her name and Sign out at its foot (R3-H08). My progress
+  shows her read-only record of past periods (T252), its cards fitting the width; her charts are on each EPA's page,
+  not on My progress (T355).
 
 Step A.7.12 — The anonymous pages on a phone
 Role: Anonymous — a verifier
 Route: /account/login → /account/forgot-password → /portfolio/verify
-Do: At 390 px, open the sign-in page and the forgot-password page. Then verify Dr Molefe's portfolio PDF from Act 5 by
-  its hash.
+Do: At 390 px, open the sign-in page and the forgot-password page. Then verify Dr Molefe's second portfolio PDF, the
+  file from Step 5.23, by its hash.
 Expect: The sign-in card fits the width. Every field, toggle, button and link on the sign-in and forgot pages is
-  44 px tall; Sign in is full width; the h1 is 1.5rem. The verify page's result fits the width.
+  44 px tall; Sign in is full width; the h1 is 1.5rem. The verify page's answer for Dr Molefe's newest export (Step
+  5.23) fits the width (T379, R3-V07 at 390): "Export verified." over its details in one column, First generated
+  `D` hh:mm SAST, the Trainee and First exported by ids wrapping in the answer, the hash kept on one line in its field
+  (a text field scrolls; it does not wrap).
 ```

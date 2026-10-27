@@ -1960,11 +1960,14 @@ textarea[aria-invalid="true"] {
   margin: 0;
 }
 
+/* The value column may shrink below its longest word (T379, flow 13, round-3-check build note 2): a bare 1fr is
+   minmax(auto, 1fr), so the Entrustment card's list on the EPA page, in .details-grid--reverse's narrow column, pushed the
+   page 17px sideways between 901 and about 940px. */
 .details-list > div {
   align-items: baseline;
   display: grid;
   gap: var(--space-md);
-  grid-template-columns: minmax(8rem, max-content) 1fr;
+  grid-template-columns: minmax(8rem, max-content) minmax(0, 1fr);
 }
 
 .details-list dt {
@@ -2057,6 +2060,14 @@ textarea[aria-invalid="true"] {
 .badge-declined {
   background: var(--danger-bg);
   border-color: var(--danger-color);
+}
+
+/* A programme ended without completing it (T379, flow 13, F10): "Withdrawn" on the closed list, "Inactive" in the ended
+   profile's Status. The neutral tint under its own name, so a withdrawal never wears the draft badge's class; a
+   completion is .badge-completed. BadgeFor.ProgrammeOutcome names both. */
+.badge-withdrawn {
+  background: var(--header-bg);
+  border-color: var(--input-border);
 }
 
 /* Entrustment standing (T166): a STAR decision against a target level, painted as the state badge of its tint. The
@@ -6877,3 +6888,291 @@ a.dashboard-metric:hover .dashboard-metric-label {
   }
 }
 /* end Flow 12: the user page */
+
+/* ── Graduation and exit ───────────────────────────── */
+
+/* Flow 13 (T379): the programme's end, the record a former trainee keeps, the export and Verify. What two lanes share is
+   elsewhere already (.badge-withdrawn under Badges, the .details-list column under Detail / stack lists), so each lane
+   writes its own rules under its own heading below, scoped to its page's own class, phone rules included; nothing is
+   written between the headings but by the lane that owns the heading. Rebuilt from round 3's f13r3.css section 2 on the
+   spacing scale, never copied. */
+
+/* Flow 13: the record (T379). Lane R: the former trainee's Home card (.record-card-body, .ended-line, .record-links and its
+   lines), My progress's "Your record:" line (.record-line), and what My authorisations and My activities add. */
+
+/* Home's card (R3-H01, R3-H02): the end in a lead line, the record kept read-only, then the record's pages, one a row, each
+   its page's title over its line, the rows ruled apart. The no-STAR row is text in the link's place (.record-link-plain). */
+.record-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.record-card-body > p {
+  margin: 0;
+}
+
+.ended-line {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.record-links {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.record-links li {
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-sm) 0;
+}
+
+.record-links li:last-child {
+  padding-bottom: 0;
+}
+
+.record-links a,
+.record-link-plain {
+  align-items: center;
+  align-self: flex-start;
+  display: inline-flex;
+  font-weight: 600;
+  gap: var(--space-sm);
+}
+
+/* A 24px target from 641px (WCAG 2.5.8); 44px below. */
+.record-links a {
+  min-height: 24px;
+}
+
+.record-link-why,
+.record-link-none {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* My progress's "Your record:" line (R3-R01, S8): its label, then the record's pages in a row that wraps. */
+.record-line {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  margin: 0 0 var(--space-lg);
+}
+
+.record-line-label {
+  font-weight: 600;
+  margin: 0;
+}
+
+.record-line ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-lg);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.record-line a {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--space-sm);
+  min-height: 24px;
+}
+
+@media (max-width: 640.98px) {
+  .record-links a,
+  .record-line a {
+    min-height: 2.75rem;
+  }
+
+  /* My activities' note row (R3-R07): stacked, the activity's block and its line are one, not ruled apart. Its own page's
+     (P7): no other stacked table is touched. */
+  .my-activities .clinic-table--stack tbody tr.has-note {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+}
+/* end Flow 13: the record */
+
+/* Flow 13: the export (T379). Lane E: Export portfolio, own and staff (.export-page, .export-note), and the entry points'
+   header action, which needs no rule of its own (.actions-cell). */
+
+/* Export's column (A2): the result and the form 24px apart at a 52rem measure; the form's own parts are the form's. */
+.export-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 52rem;
+}
+
+.export-page > *,
+.export-page .action-result .alert {
+  margin: 0;
+}
+
+/* An empty result region takes no row of the column (its 24px gap included). */
+.export-page .action-result:empty {
+  display: none;
+}
+
+/* The same-file note under the dates (Spec 3's Hint row), muted, 16px under the dates; the actions' own margin follows. */
+.export-note {
+  margin: var(--space-md) 0 0;
+  color: var(--muted-text);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 640.98px) {
+  /* 44px at 390 (A3), scoped to the page, never a bare .btn: the one button full width, the date controls 44px. */
+  .export-page .form-actions .btn {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
+  .export-page .form-control {
+    min-height: 2.75rem;
+  }
+}
+/* end Flow 13: the export */
+
+/* Flow 13: verify (T379). Lane V: Verify portfolio export (.verify-page, its .detail-list, .verify-ids-note, .hash-value,
+   .cmd-list). */
+
+/* Verify's column (A2): the answer, when there is one, then form.form-container, 24px apart; the page spaces them, so
+   neither carries a margin of its own. */
+.verify-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 44rem;
+}
+
+.verify-page > *,
+.verify-page .action-result .alert {
+  margin: 0;
+}
+
+/* The answer (F9, S20): one Alert holding its sentences, the details list and the ids note. */
+.verify-page .action-result .alert > p {
+  margin: 0;
+}
+
+/* S21: the details list's values wrap inside their column, a 36-character id or a long file name included. */
+.verify-page .detail-list {
+  grid-template-columns: minmax(8rem, max-content) minmax(0, 1fr);
+  margin-top: var(--space-sm);
+}
+
+.verify-page .detail-list dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.verify-page .action-result .alert > .verify-ids-note {
+  color: var(--muted-text);
+  font-size: 0.875rem;
+  margin-top: var(--space-sm);
+}
+
+/* A hash or a user id: monospaced, breaking anywhere, in a cell or in the field. */
+.hash-value {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+/* The field's command list (Q6), under its help. */
+.cmd-list {
+  color: var(--muted-text);
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+  gap: var(--space-xs);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cmd-list code {
+  background: var(--header-bg);
+  border-radius: var(--radius-sm);
+  color: var(--text-color);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+  padding: 0 var(--space-xs);
+}
+
+@media (max-width: 640.98px) {
+  /* One column at 390 (A.7.12, V07): each term over its value. The button is the row's width and 44px, the field 44px. */
+  .verify-page .detail-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .verify-page .form-control,
+  .verify-page .form-actions .btn {
+    min-height: 2.75rem;
+  }
+
+  .verify-page .form-actions .btn {
+    width: 100%;
+  }
+
+  /* The field at 16px, so iOS Safari does not zoom the page in on focus (P8); the answer's ids keep .hash-value's size. */
+  .verify-page .form-control.hash-value {
+    font-size: 1rem;
+  }
+}
+/* end Flow 13: verify */
+
+/* Flow 13: the programme's end (T379). Lane P: the trainee profile's end section and ended record (.account-open), and the
+   Completed and closed list (.closed-list, .outcome-cell). The profile is flow 12's column (.user-page, .user-section) and
+   its two end triggers are flow 12's role rows (.role-rows: a note, then after a gap its button; stacked below 641px), so
+   only what those lack is here. The last day's refusal is the form system's .validation-message. */
+
+/* The account's link to the user page, a line of its own under the account sentence (F5). */
+.account-open {
+  margin: 0;
+}
+
+.account-open a {
+  align-items: center;
+  display: inline-flex;
+  min-height: 1.5rem;
+}
+
+/* Completed and closed (S24): the Programme column (.col-wrap) wraps between its words down to the onboarding column's
+   floor (.inv-page's th.col-wrap, 7.5rem), which holds "2023-01-15" whole between 901 and 1100px; a long name in the row
+   header breaks inside itself only when it must. */
+.closed-list {
+  min-width: 0;
+}
+
+.closed-list th[scope="row"] {
+  overflow-wrap: break-word;
+}
+
+/* The Outcome: the badge, then the day, which never breaks inside itself. */
+.outcome-cell > span:not(.badge) {
+  white-space: nowrap;
+}
+
+/* Below 641px: the account's link is a 44px target. The profile's controls, its stacked role rows and the closed list's
+   44px View are flow 12's and flow 11's shared rules. */
+@media (max-width: 640.98px) {
+  .user-page .account-open a {
+    min-height: 2.75rem;
+  }
+}
+/* end Flow 13: the programme's end */

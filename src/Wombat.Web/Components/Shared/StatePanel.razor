@@ -37,7 +37,12 @@ else if (IsEmpty)
   @* Focusable by script only: a Try again whose answer is this state focuses it (T350 build review, D4). *@
   <div class="detail-card detail-card--empty" tabindex="-1" @ref="_empty">
     <div class="state-panel-title">@EmptyTitle</div>
-    <div class="state-panel-copy">@EmptyBody</div>
+    @if (!string.IsNullOrEmpty(EmptyBody))
+    {
+      @* An empty card whose title says it all draws no empty copy block under it (T379, P2). The space keeps the text
+         between title and copy that the markup had when the copy was unconditional, so the card reads as before. *@
+      @(" ")<div class="state-panel-copy">@EmptyBody</div>
+    }
     @if (EmptyActions is not null)
     {
       <div class="form-actions">

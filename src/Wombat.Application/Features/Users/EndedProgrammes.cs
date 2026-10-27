@@ -11,7 +11,16 @@ namespace Wombat.Application.Features.Users;
 /// </summary>
 /// <param name="EndedOn">The programme's last day (<see cref="TraineeProfile.EndedOn" />).</param>
 /// <param name="Completed">True when it was completed (<see cref="TraineeProfile.CompletedOn" />), false when the registrar left it.</param>
-public sealed record EndedProgrammeDto(DateOnly EndedOn, bool Completed);
+public sealed record EndedProgrammeDto(DateOnly EndedOn, bool Completed)
+{
+    /// <summary>
+    /// The training year the programme ended in (T379, flow 13, S4 and S8): <see cref="TraineeProfile.StageOn" /> on the last
+    /// day, as the former trainee's Home, the profile's ended record and the staff export say it ("Training year 4"). Null
+    /// for a last day before the programme start (an erasure before it began), and from <see cref="EndedProgrammes.LatestForAsync" />,
+    /// which flow 12's pages read and which needs none; <see cref="EndedProgrammes.Of" /> fills it.
+    /// </summary>
+    public int? TrainingYearAtEnd { get; init; }
+}
 
 /// <summary>
 /// The latest ended trainee profile of each person asked about, in one query (T376, flow 12, S2; build-contracts § 0): Users'
@@ -25,6 +34,25 @@ public sealed record EndedProgrammeDto(DateOnly EndedOn, bool Completed);
 /// </remarks>
 public static class EndedProgrammes
 {
+    /// <summary>
+    /// How <paramref name="profile" /> ended, with the training year it ended in, or null while it runs or for a profile that
+    /// ended before Wombat recorded the day (T379, flow 13, build-contracts § 0). One reading for every page of flow 13 that
+    /// names the end: the former trainee's Home ("You completed your programme on 2026-10-26." / "Your programme ended on
+    /// 2026-10-24."), the profile's ended record and the closed list, and the staff export's last day. An erased person's
+    /// profile reads as a withdrawal on the erasure day (<see cref="TraineeProfile.Erase" />).
+    /// </summary>
+    public static EndedProgrammeDto? Of(TraineeProfile profile)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+
+        return profile.IsActive || profile.EndedOn is not { } endedOn
+            ? null
+            : new EndedProgrammeDto(endedOn, profile.CompletedOn is not null)
+            {
+                TrainingYearAtEnd = TraineeProfile.StageOn(profile.ProgrammeStartDate, endedOn),
+            };
+    }
+
     public static async Task<IReadOnlyDictionary<string, EndedProgrammeDto>> LatestForAsync(
         IApplicationDbContext dbContext,
         IReadOnlyCollection<string> userIds,

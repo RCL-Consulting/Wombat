@@ -23,8 +23,8 @@ pages, and whether all of it works on a phone, from a keyboard and through a scr
 - Dr Dlamini, Dr Mahlangu and Dr Ndlovu are current trainees, Dr Ndlovu on curriculum 11.2 since Act 6, each with the
   activities of Act 3 and the reviews Act 4 ratified.
 - Dr Molefe's MSF campaign was released in Act 3, and her portfolio PDF exported and verified in Act 5.
-- No data-rights request, no SSO provider and no SSO group mapping exists yet. All nine scheduled jobs are enabled. Only
-  the scheduler has run them, but for Act 3's one run of `assessor-pending-nudge` by hand (Step 3.32).
+- No data-rights request, no SSO provider and no SSO group mapping exists yet. All eight scheduled jobs are enabled.
+  Only the scheduler has run them, but for Act 3's one run of `assessor-pending-nudge` by hand (Step 3.32).
 
 The replay host needs:
 - `Wombat__PseudonymSalt` set, for A.1's erasure;
@@ -150,8 +150,11 @@ Gap: none
 Role: Former trainee (no role; a trainee record) — Dr Pieter du Plessis
 Route: /account/data-rights
 Do: Submit an Access request with the reason "Everything held about me." Then withdraw it from "Your requests".
-Expect: The request lists as Submitted, with a Withdraw named for its type and time. Once withdrawn, the page says
-  "Request withdrawn.", the focus moves to that message, and the row reads Withdrawn and offers nothing.
+Expect: He signs in to Home with no role: the menu reads Home, My progress, Export portfolio and My data rights, and
+  Home is the former trainee's card as at Step 5.28, "Your programme ended on `D−2`." with the record's four rows, STARs
+  plain text (T379, R3-H02). The request lists as Submitted, with a Withdraw named for its type and time. Once
+  withdrawn, the page says "Request withdrawn.", the focus moves to that message, and the row reads Withdrawn and offers
+  nothing.
 Actual (2026-10-26, T376 replay, wombat_scenario_t376): He signs in to Home with no role: the menu reads Home, My
   progress, My data rights, and Home shows one card, "Your training record" ("You hold no role at the moment. ..."
   with "Open My progress →", 44 px at 390 px, nothing scrolls sideways). Access with the reason: "Request submitted.
@@ -279,7 +282,7 @@ Gap: none
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/trainees → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Look for Dr Ndlovu among KGK's users, its trainees and its committee reviews. Open the check-in from A.1.10.
-Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
+Expect: No Dr Ndlovu remains among KGK's users or current trainees, and no row names him (T026, T258).
   - Users reads "People 14", with no pseudonym among them. Dr du Plessis's and Dr Molefe's Roles cells read "No role"
     over "A completed or withdrawn registrar keeps an account and its records.", each with Scope Paediatrics /
     Paediatrics and Status Active (T376, S2, U07).
@@ -289,6 +292,11 @@ Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
   - The check-in's sitting bar reads Withdrawn and "Withdrawn on `D`. Withdrawn because the trainee's personal data
     was erased at their request. Nothing more is decided at this review." (T258, T361), and the page offers no action:
     no Start, no Refresh.
+  - Trainees' "Completed and closed" reads "3 ended" and lists his ended programme under the pseudonym, as Withdrawn
+    on the erasure day (T379, F7, R3-C07): the latest end first, so his row (`deleted_user_…`, Paediatric EPA
+    Curriculum (11.2) over Paediatrics, `J` to `D` over "Training year 1 when it ended", Withdrawn `D`, View named
+    "View deleted_user_…'s record") stands first, before Lerato Molefe's (Completed `D`, the earlier profile) and
+    Pieter du Plessis's (Withdrawn on Act 5's `D−2`). It shows no address, and no row names him.
   - His activities and progress stay under the same pseudonym; the account itself is checked in the outcome's SQL.
 Note: T276 (open) lists what an erasure does not yet end: an activity about him still in its workflow can be completed
   and credit the pseudonym, and user ids inside activity data are not rewritten.
@@ -318,14 +326,14 @@ Route: / → /admin/jobs
 Do: Open Scheduled jobs from the menu and read every row.
 Expect: Each row shows the job's description and its cron schedule (UTC), with its last run, that run's status badge
   and its next run in the server's local time. Each has Disable and Run now, both named for the job (T239). A job that
-  has never run reads "—" for its last run and status. Run history is linked from the header. The nine jobs, by key:
+  has never run reads "—" for its last run and status. Run history is linked from the header. The eight jobs, by key
+  (T379 retired `portfolio-export-cleanup` with its definition and runs, so a genuine PDF keeps verifying):
   - activity-draft-nudge
   - assessor-pending-nudge
   - audit-log-retention
   - entrustment-decision-expiry
   - msf-campaign-auto-close
   - msf-invitation-expiry-reminder
-  - portfolio-export-cleanup
   - scheduled-job-run-retention
   - weekly-coordinator-digest
 Actual (2026-10-26, T376 replay, wombat_scenario_t376): Scheduled jobs from the Platform group, lit, tab "Scheduled
@@ -447,7 +455,7 @@ Actual (2026-10-26, T376 replay, wombat_scenario_t376): Stand-in as the Note pre
   nominees skipped: ... 0 ...".
 Gap: none
 
-### Step A.2.9 — devadmin runs the other six jobs
+### Step A.2.9 — devadmin runs the other five jobs
 Role: Administrator — devadmin
 Route: /admin/jobs
 Do: Run each of the remaining jobs now, one at a time, and read each one's log line.
@@ -457,16 +465,14 @@ Expect: Each run reads Succeeded, and each job logs one line:
   - msf-campaign-auto-close: "no expired campaigns found.", since Act 3's campaign was closed and released.
   - msf-invitation-expiry-reminder: "no respondent is due a reminder."
   - audit-log-retention: "complete. Total archived: 0.", since nothing is two years old.
-  - portfolio-export-cleanup: "no expired exports found.", since Act 5's exports are days old.
   - scheduled-job-run-retention: "no old runs to delete."
-Note: portfolio-export-cleanup deletes the export records that `/portfolio/verify` checks, so after 90 days a
-  graduate's PDF no longer verifies (reported).
 Actual (2026-10-26, T376 replay, wombat_scenario_t376): Each of the six, run now one at a time, reads Succeeded (23:31
   to 23:32), with one log line each: "EntrustmentDecisionExpiryJob: expired 0 decisions (sent 0), reminded 0 expiring
   soon (sent 0)."; "MsfCampaignAutoCloseJob: no expired campaigns found."; "MsfInvitationExpiryReminderJob: no
   respondent is due a reminder."; "AuditLogRetentionJob: complete. Total archived: 0."; "PortfolioExportCleanupJob: no
   expired exports found."; "ScheduledJobRunRetentionJob: no old runs to delete." No mail.
-Gap: none (the Note's 90-day verify loss is F-A.2.9a, T313, not replayed)
+Gap: [F-A.2.9a, T313] closed by T379 (2026-10-27): portfolio-export-cleanup is retired, so an export record is kept
+  and a genuine PDF keeps verifying; the Actual above predates it, and the next replay re-reads the step.
 
 ### Step A.2.10 — devadmin reads the run history
 Role: Administrator — devadmin
@@ -695,8 +701,10 @@ Role: Former trainee (no role; a trainee record) — Dr Pieter du Plessis
 Route: /account/login → / → /account/profile → /account/change-password → /account/profile
 Do: Sign in with the password Prof Mbatha set. Then change it, from My account (the name in the top bar), to one of
   his own. Record it in `pwd_DO_NOT_COMMIT.txt`.
-Expect: He lands on Home, with the former trainee's card "Your training record" pointing to My progress, as at Step 5.28
-  (T290: he holds no role). The change lands on My account with "Password updated."
+Expect: He lands on Home, with the former trainee's card "Your training record" as at Step 5.28 (T290: he holds no
+  role; T379, R3-H02): "Your programme ended on `D−2`.", My progress, STARs as plain text with "No STAR was issued to
+  you, so there is no certificate to download.", My activities and Export portfolio; his menu reads Home, My progress,
+  Export portfolio and My data rights. The change lands on My account with "Password updated."
 Actual (2026-10-26, T376 replay, wombat_scenario_t376): With the password Prof Mbatha set he lands on /, holding no
   role: the menu reads Home, My progress, My data rights; Home's one card, "Your training record": "You hold no role
   at the moment. Your training record is kept, read-only: your progress in each period, and your portfolio to export."
@@ -1325,12 +1333,11 @@ Gap: none
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: / → /portfolio/progress
 Do: At 390 px, sign in, read Home, and open My progress from the menu.
-Expect: Home says that she completed her programme and points her to My progress, as at Step 5.21 (T252). The phone bar
-  shows no "Acting as", since she holds no role, and the menu holds Home, My progress and My data rights, then her name
-  and Sign out at its foot. My progress shows her read-only record of past periods (T252), its cards fitting the width;
-  her charts are on each EPA's page, not on My progress (T355).
-Note: The code shows one card, "Your training record", pointing to My progress (T335), but does not say that or when she
-  completed her programme (T311).
+Expect: Home's card says that she completed her programme on `D` and links the record's four pages, as at Step 5.21
+  (T252, T379), fitting the width. The phone bar shows no "Acting as", since she holds no role, and the menu holds
+  Home, My progress, Export portfolio and My data rights, then her name and Sign out at its foot (R3-H08). My progress
+  shows her read-only record of past periods (T252), its cards fitting the width; her charts are on each EPA's page,
+  not on My progress (T355).
 Actual (2026-10-26, T376 replay, wombat_scenario_t376): At 390 px. The bar shows Wombat and Menu, with no "Acting as"
   (56 px). The menu holds Home, My progress and My data rights, with Lerato Molefe and Sign out at its foot (44 px).
   Home shows one card, "Your training record": "You hold no role at the moment. Your training record is kept,
@@ -1340,7 +1347,8 @@ Actual (2026-10-26, T376 replay, wombat_scenario_t376): At 390 px. The bar shows
   Training year 4 when your programme ended) and each EPA's periods listed; cards at 16 to 374, the Annexure A panel
   stacked (356 in 358, rating links 48 px, EPA links 44 px); no chart on the page. PAED-001's page draws her chart at
   322 px, never scaled, in its 324 px region, with its table stacked under it. Nothing scrolls sideways.
-Gap: F-A.7.4a, T311 (still: Home points her to My progress but does not say that she completed her programme)
+Gap: [F-A.7.4a, T311] closed by T379 (2026-10-27): Home's card names her completion and its day, and the menu offers
+  Export portfolio; the Actual above predates it, and the next replay re-reads the step.
 
 ### Step A.7.5 — Mr Smit on his phone
 Role: Coordinator — Mr Pieter Smit
@@ -1469,7 +1477,8 @@ Do: At 390 px, Dr Zulu opens Programme trainees from the menu, then Dr Mahlangu'
 Expect: At 390 px both lists' tables stack, a block per row: each registrar's name and each activity's link a 44px
   block, every other cell under its column's name. The filter bar's fields stack, and Show and Clear filters are each
   44px tall and the row's width; so is each Send a reminder (round 3 items 22, 25). On Dr Mahlangu's page the sections
-  stack, the trail is one 44px link back to Programme trainees, Dr Mahlangu's Mini-CEX of Step A.2.7 is listed under
+  stack, the trail is one 44px link back to Programme trainees, the header's "Export Nomsa Mahlangu's portfolio" is a
+  44px row (T379), Dr Mahlangu's Mini-CEX of Step A.2.7 is listed under
   Waiting for assessors with no Send a reminder for Dr Zulu, and each trajectory chart is drawn at 322 px, never scaled,
   in its own named region.
   At 768 px Home's Registrars and Targets by EPA rows are one column for Dr Zulu, each figure under its name, and Mr
@@ -1508,9 +1517,13 @@ Expect: Nothing scrolls sideways on any of them (T323).
     the password field's Show toggle 44 px tall, its buttons wrapping rather than overflowing. Her Lockout lists two
     lines: the trainee line and the reminders line. There is no Back to users.
   - **Trainees:** Current trainees is stacked, a block per row with its Edit 44 px, and does not scroll sideways (T373,
-    S16); Completed and closed is flow 13's list as built.
-  - **The trainee profile form** stacks its fields. The builder's editor and live preview stack in one column (DESIGN.md
-    § Builder layout, T266), and its tab bar stays usable.
+    S16); Completed and closed is stacked too, a block per ended programme, the latest end first, with its View 44 px
+    (T379, T323).
+  - **Dr Dlamini's profile**, "Anele Dlamini's programme", has no Back to trainees and offers "Export Anele Dlamini's
+    portfolio" in its header (T379). It stacks three fields plus the last day and two triggers: Curriculum, Programme
+    start date and Expected completion date, then End this programme's last day with Mark complete… and Deactivate….
+  - **The builder's** editor and live preview stack in one column (DESIGN.md § Builder layout, T266), and its tab bar
+    stays usable.
 Actual (2026-10-26, T376 replay, wombat_scenario_t376): At 390 px, flow 12's pages: no sideways scroll on Home, Users,
   the user page, Trainees, the profile or the builder (390 in 390 on each). The bar reads "Acting as Institutional
   admin"; the menu's rows are 44 px (Home, Invitations, Trainees, Assessors, Users, Curriculum adoptions, Curricula,
@@ -1576,10 +1589,13 @@ Gap: none
 ### Step A.7.12 — The anonymous pages on a phone
 Role: Anonymous — a verifier
 Route: /account/login → /account/forgot-password → /portfolio/verify
-Do: At 390 px, open the sign-in page and the forgot-password page. Then verify Dr Molefe's portfolio PDF from Act 5 by
-  its hash.
+Do: At 390 px, open the sign-in page and the forgot-password page. Then verify Dr Molefe's second portfolio PDF, the
+  file from Step 5.23, by its hash.
 Expect: The sign-in card fits the width. Every field, toggle, button and link on the sign-in and forgot pages is
-  44 px tall; Sign in is full width; the h1 is 1.5rem. The verify page's result fits the width.
+  44 px tall; Sign in is full width; the h1 is 1.5rem. The verify page's answer for Dr Molefe's newest export (Step
+  5.23) fits the width (T379, R3-V07 at 390): "Export verified." over its details in one column, First generated
+  `D` hh:mm SAST, the Trainee and First exported by ids wrapping in the answer, the hash kept on one line in its field
+  (a text field scrolls; it does not wrap).
 Actual (2026-10-26, T376 replay, wombat_scenario_t376): At 390 px, signed out. Sign-in: the card spans 41 to 349;
   Email, Password, its Show toggle, Sign in and "Forgotten your password?" are each 44 px tall; Remember me's box is
   20 px in its row; Sign in is full width (41 to 349); the h1 is 24 px (1.5rem). Forgotten password: the h1 24 px,
@@ -1723,10 +1739,10 @@ ORDER BY r."Id";
 -- Act 4's annual review (false, 4) and check-in (true, 6), then A.1.10's check-in (true, 7, true).
 
 -- Every job enabled, each run by hand in the appendix, and none failed today.
-SELECT "Key", "IsEnabled" FROM "ScheduledJobDefinitions" ORDER BY "Key";                              -- nine, all true
+SELECT "Key", "IsEnabled" FROM "ScheduledJobDefinitions" ORDER BY "Key";                             -- eight, all true
 SELECT r."Key", count(*) FROM "ScheduledJobRuns" r JOIN "AspNetUsers" u ON u."Id" = r."TriggeredBy"
 WHERE u."Email" = 'devadmin@wombat.local' AND r."StartedAt" >= '<appendix start>'
-GROUP BY r."Key" ORDER BY 1;                                                    -- nine keys; the digest twice
+GROUP BY r."Key" ORDER BY 1;                                                   -- eight keys; the digest twice
 SELECT count(*) FROM "ScheduledJobRuns" WHERE "Status" = 2 AND "StartedAt" >= current_date;            -- 0
 
 SELECT count(*) FROM "SsoGroupRoleMappings";                                                           -- 0

@@ -1071,8 +1071,10 @@ Expect: With start `J` and the completion empty, its help reads "Leave this empt
   window. Left empty, it will be `J+1y`.": `J` + 12 months, the longest item window on v11.1. The result reads
   "**Sipho Ndlovu admitted to the Paediatric EPA Curriculum (11.1), training year 1, from `J`.** Expected completion
   `J+1y`, derived from the curriculum window: change it under Edit." (only the first sentence bold), and Waiting to be admitted reads "Nobody is
-  waiting to be admitted." / "A registrar appears here after registering from a Trainee invitation." On his profile
-  the save reads "Trainee profile saved.", and Current trainees shows `J+4y−1d`.
+  waiting to be admitted." / "A registrar appears here after registering from a Trainee invitation." His profile is
+  "Sipho Ndlovu's programme" (h1, tab and crumb under Trainees), with "Export Sipho Ndlovu's portfolio" in its header,
+  End this programme below Profile details, and no Back to trainees (T379). The save reads "Trainee profile saved.",
+  and Current trainees shows `J+4y−1d`.
 
 Step 2.31 — Dr Mahlangu's open session ends, and she signs back in as a Trainee
 Role: Trainee — Dr Nomsa Mahlangu

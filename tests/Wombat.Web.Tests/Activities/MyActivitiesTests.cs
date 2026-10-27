@@ -220,6 +220,16 @@ public sealed class MyActivitiesTests : TestContext
     }
 
     [Fact]
+    public void OnePageOfActivities_DrawsNoPager()
+    {
+        // P3: R3-R07's seven rows draw none; the pager comes only past one page, as every flow 12 and 13 list.
+        var cut = Render(new Sender([], Enumerable.Range(1, 7).Select(id => ActivityRows.Row(id)).ToList(), totalCount: 7));
+
+        Text(cut.Find("#all-activities-heading")).Should().Be("All activities (7)");
+        cut.FindAll(".pager, .pager-info").Should().BeEmpty();
+    }
+
+    [Fact]
     public void Empty_SaysNoActivitiesYet_AndOffersLogAnActivity()
     {
         var cut = RenderMine([], []);
@@ -258,6 +268,67 @@ public sealed class MyActivitiesTests : TestContext
         cut.Find(".alert button").TextContent.Trim().Should().Be("Try again");
     }
 
+    // ---- a former trainee (T379, flow 13, S7, S18, N7; R3-R07) ----
+
+    [Fact]
+    public void TheTable_IsCaptioned_WithWhatItsHeadingDoesNotSay()
+    {
+        var cut = RenderMine([], [ActivityRows.Row(1)]);
+
+        cut.Find("table caption").TextContent.Should().Be("Every activity filed by you or about you, with who has it now and its credit.");
+    }
+
+    [Fact]
+    public void AFormerTrainee_IsToldTheListIsReadOnly_AndWhy_AfterTheBuiltSubtitle()
+    {
+        SignInAsAFormerTrainee();
+
+        var cut = Render(new Sender([], [ActivityRows.Row(1, "completed", "Completed")], endedOn: new DateOnly(2026, 10, 24)));
+
+        cut.Find(".page-subtitle").TextContent.Trim().Should().Be(
+            "Everything you have filed or logged, newest encounter first. Read-only: your programme ended on 2026-10-24, so nothing new can be filed.");
+        cut.FindAll("a[href='/activities/new']").Should().BeEmpty("D55: no Log an activity");
+    }
+
+    [Fact]
+    public void AnActivityObservedAfterTheLastDay_CarriesItsNoteRow_UnderIt()
+    {
+        // R3-R07: Pieter du Plessis's Mini-CEX, observed 2026-10-25, the day after his last; "to David Naidoo" under its title
+        // as built for any row (N7), then flow 03's note row, the line sharing the row's edge.
+        SignInAsAFormerTrainee();
+        var after = ActivityRows.Row(2, "completed", "Completed", epaCode: "PAED-002", observedOn: new DateOnly(2026, 10, 25), creditedItemCount: 0)
+            with { ObservedAfterEnd = true };
+        var before = ActivityRows.Row(1, "completed", "Completed", observedOn: new DateOnly(2026, 10, 20));
+
+        var cut = Render(new Sender([], [after, before], endedOn: new DateOnly(2026, 10, 24)));
+
+        var rows = cut.FindAll("tbody tr").ToList();
+        rows.Should().HaveCount(3);
+        rows[0].ClassList.Should().Contain("has-note");
+        rows[0].QuerySelector(".activity-link-to")!.TextContent.Should().Be("to David Naidoo");
+        var note = rows[1].QuerySelector("td.history-note")!;
+        note.GetAttribute("colspan").Should().Be("4");
+        note.TextContent.Should().Be("Observed after your last day in the programme, 2026-10-24, so it counts towards nothing.");
+        rows[2].ClassList.Should().NotContain("has-note");
+    }
+
+    [Fact]
+    public void ATrainee_IsToldNothingNew_WhenNoProgrammeHasEnded()
+    {
+        var cut = RenderMine([], [ActivityRows.Row(1)]);
+
+        cut.Find(".page-subtitle").TextContent.Should().NotContain("Read-only");
+        cut.FindAll("td.history-note").Should().BeEmpty();
+    }
+
+    private void SignInAsAFormerTrainee()
+    {
+        _auth.SetRoles();
+        _auth.SetClaims(
+            new Claim(ClaimTypes.NameIdentifier, "trainee-1"),
+            new Claim(Wombat.Application.Common.Security.WombatClaimTypes.TraineeRecord, "true"));
+    }
+
     // The Activity inbox's tests, the registrar's empty state among them, moved to ActivityInboxTests when T350 (flow 04)
     // redrew the page in two sections.
 
@@ -284,7 +355,8 @@ public sealed class MyActivitiesTests : TestContext
         IReadOnlyList<ActivitySummaryDto> needsYou,
         IReadOnlyList<ActivitySummaryDto> rows,
         int? totalCount = null,
-        Exception? fail = null) : IScopedSender
+        Exception? fail = null,
+        DateOnly? endedOn = null) : IScopedSender
     {
         public List<int> Pages { get; } = [];
 
@@ -309,7 +381,7 @@ public sealed class MyActivitiesTests : TestContext
             Pages.Add(query.Page);
             query.PageSize.Should().Be(20, "the page opens at 20 rows");
             query.SubjectUserId.Should().Be("trainee-1");
-            return new ActivityListPageDto(rows, query.Page, query.PageSize, totalCount ?? rows.Count);
+            return new ActivityListPageDto(rows, query.Page, query.PageSize, totalCount ?? rows.Count) { SubjectEndedOn = endedOn };
         }
 
         public Task Send(IRequest request, CancellationToken cancellationToken = default)

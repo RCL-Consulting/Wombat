@@ -246,8 +246,11 @@ public sealed class CreditAfterProgrammeEndTests
 
         await using (var db = new ApplicationDbContext(options))
         {
-            await DeactivateHandler(db).Handle(
+            var result = await DeactivateHandler(db).Handle(
                 new DeactivateTraineeProfileCommand(ProfileId, LastDay, TestPrincipals.Administrator()), CancellationToken.None);
+
+            // T379 (flow 13, F2): the command says how many activities it took credit back from, for the page's result.
+            result.TakenBack.Should().Be(1, "one encounter, observed after the last day, had credited");
         }
 
         await using (var verify = new ApplicationDbContext(options))
@@ -269,6 +272,41 @@ public sealed class CreditAfterProgrammeEndTests
         current.EndedPartWay.Should().BeTrue();
         current.Count.Should().Be(1);
         current.LastObservedOn.Should().Be(Inside);
+    }
+
+    [Fact]
+    public async Task TheDialogsForecast_CountsByTheCommandsRule_OneWithItsDay_AndNoneForALaterDay()
+    {
+        // T379 (flow 13, M2): the profile's dialog reads what the end would take back for the day typed, before anything is
+        // done; the command then answers with the same count for the same data.
+        var options = await SeededAsync();
+        await CreditBothAsync(options);
+
+        await using (var read = new ApplicationDbContext(options))
+        {
+            var handler = new GetTakeBackForecastQueryHandler(read);
+            (await handler.Handle(new GetTakeBackForecastQuery(ProfileId, LastDay, TestPrincipals.Administrator()), CancellationToken.None))
+                .Should().Be(new TakeBackForecastDto(1, After));
+            (await handler.Handle(new GetTakeBackForecastQuery(ProfileId, Today, TestPrincipals.Administrator()), CancellationToken.None))
+                .Should().Be(new TakeBackForecastDto(0, null));
+        }
+
+        await using var db = new ApplicationDbContext(options);
+        var result = await DeactivateHandler(db).Handle(
+            new DeactivateTraineeProfileCommand(ProfileId, LastDay, TestPrincipals.Administrator()), CancellationToken.None);
+        result.TakenBack.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task TheForecast_OfAnotherInstitutionsProfile_IsNotFound()
+    {
+        var options = await SeededAsync();
+        await using var db = new ApplicationDbContext(options);
+
+        var act = () => new GetTakeBackForecastQueryHandler(db).Handle(
+            new GetTakeBackForecastQuery(ProfileId, LastDay, TestPrincipals.InstitutionalAdmin(InstitutionId + 100)), CancellationToken.None);
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("The trainee profile could not be found.");
     }
 
     [Fact]
@@ -308,8 +346,11 @@ public sealed class CreditAfterProgrammeEndTests
 
         await using (var db = new ApplicationDbContext(options))
         {
-            await new CompleteTraineeProfileCommandHandler(db, users.Object, email.Object, new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(Now))
+            var result = await new CompleteTraineeProfileCommandHandler(db, users.Object, email.Object, new CreditApplier(db), new TraineeCreditLock(db), new FixedClock(Now))
                 .Handle(new CompleteTraineeProfileCommand(ProfileId, LastDay, TestPrincipals.Administrator()), CancellationToken.None);
+
+            // T379 (flow 13, F2, M2): a completion recorded late takes credit back too, and says so as a withdrawal does.
+            result.TakenBack.Should().Be(1);
         }
 
         await using (var verify = new ApplicationDbContext(options))
@@ -332,9 +373,12 @@ public sealed class CreditAfterProgrammeEndTests
 
         await using (var db = new ApplicationDbContext(options))
         {
-            await new DeactivateTraineeProfileCommandHandler(db, Mock.Of<IUserAdministrationService>(), new ThrowingCreditApplier(), new TraineeCreditLock(db), new FixedClock(Now)).Handle(
+            var result = await new DeactivateTraineeProfileCommandHandler(db, Mock.Of<IUserAdministrationService>(), new ThrowingCreditApplier(), new TraineeCreditLock(db), new FixedClock(Now)).Handle(
                 new DeactivateTraineeProfileCommand(ProfileId, new DateOnly(2026, 9, 20), TestPrincipals.Administrator()),
                 CancellationToken.None);
+
+            // T379 (flow 13, F2): nothing taken back, so the page's result says nothing about it.
+            result.TakenBack.Should().Be(0);
         }
 
         await using var verify = new ApplicationDbContext(options);

@@ -1,0 +1,97 @@
+@using System.Security.Claims
+@using Wombat.Application.Features.Dashboards.FormerTrainee
+@attribute [Authorize(Policy = "TraineeOrFormerTrainee")]
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<FormerTraineeRecordCard> Logger
+
+@*
+  A former trainee's Home (T379, flow 13, lane R; R3-H01–H08; Q1, Q23, Q25; F6, S8, S9): Home's no-role branch for a
+  holder of the trainee_record claim, under DashboardFrame, so its loading (H05) and its load error with Try again (H06)
+  are every Home's. One emphasised card, "Your training record": the end and its day, the record kept read-only, then the
+  record's pages, each its page's title as the link with a line under it (Q23). My authorisations is a link only where a
+  STAR was ever issued (F6), its count "in force"; with none, the row is plain text (H02). No subtitle and no header
+  action (flow 01's no-role frame, Home's). Until T379 the card was one sentence and "Open My progress →".
+
+  The read answers nothing for a person with no ended programme to show (GetFormerTraineeHomeQuery: a running profile, no
+  profile, an end with no recorded day): then the card is flow 01's "No role assigned", as for anyone with no role (H04).
+  [Authorize] is the statement DashboardLinkAuthorizationTests reads: the policy of the pages it links to.
+*@
+<DashboardFrame IsLoading="_loading" Failed="_failed" OnRetry="LoadAsync">
+  @if (_loading || _record is not null)
+  {
+    <DashboardCard Title="@FormerTraineeRecordWords.CardTitle" Icon="book" HeadingId="card-record" Emphasis="true" Span="3" IsLoading="_loading">
+      @if (_record is { } record)
+      {
+        <div class="record-card-body">
+          <p class="ended-line">@FormerTraineeRecordWords.Ended(record)</p>
+          <p>@FormerTraineeRecordWords.KeptReadOnly</p>
+          <ul class="record-links">
+            <li>
+              <a href="@PortfolioLinks.MyProgress" aria-describedby="record-why-progress"><Icon Name="trending-up" />My progress</a>
+              <p class="record-link-why" id="record-why-progress">@FormerTraineeRecordWords.MyProgressLine(record)</p>
+            </li>
+            <li>
+              @if (record.Stars.AnyIssued)
+              {
+                <a href="@PortfolioLinks.MyAuthorisations" aria-describedby="record-why-stars"><Icon Name="award" />My authorisations</a>
+                <p class="record-link-why" id="record-why-stars">@FormerTraineeRecordWords.MyAuthorisationsLine(record.Stars)</p>
+              }
+              else
+              {
+                @* H02, F6: nothing for My authorisations to list, so no link to it: the row is text, its line why. *@
+                <span class="record-link-plain"><Icon Name="award" />@FormerTraineeRecordWords.StarsPlain</span>
+                <p class="record-link-none">@FormerTraineeRecordWords.NoStarIssued</p>
+              }
+            </li>
+            <li>
+              <a href="@PortfolioLinks.MyActivities" aria-describedby="record-why-activities"><Icon Name="list" />My activities</a>
+              <p class="record-link-why" id="record-why-activities">@FormerTraineeRecordWords.MyActivitiesLine</p>
+            </li>
+            <li>
+              <a href="@PortfolioLinks.Export" aria-describedby="record-why-export"><Icon Name="download" />Export portfolio</a>
+              <p class="record-link-why" id="record-why-export">@FormerTraineeRecordWords.ExportLine</p>
+            </li>
+          </ul>
+        </div>
+      }
+    </DashboardCard>
+  }
+  else
+  {
+    <DashboardCard Title="@FormerTraineeRecordWords.NoRoleTitle" Icon="info" Emphasis="true" Span="3">
+      <p>@FormerTraineeRecordWords.NoRoleBody</p>
+    </DashboardCard>
+  }
+</DashboardFrame>
+
+@code {
+  private FormerTraineeHomeDto? _record;
+  private bool _loading = true;
+  private bool _failed;
+
+  protected override Task OnInitializedAsync() => LoadAsync();
+
+  /// <summary>Reads the record, or reads it again after a failure (Try again): the frame shows the card's skeleton meanwhile.</summary>
+  private async Task LoadAsync()
+  {
+    _loading = true;
+    _failed = false;
+    _record = null;
+    try
+    {
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      _record = await Sender.Send(new GetFormerTraineeHomeQuery(user));
+    }
+    catch (Exception exception)
+    {
+      // Logged, never shown: the frame's fixed words say it (T329).
+      Logger.LogError(exception, "Home's training record could not be read.");
+      _failed = true;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+}

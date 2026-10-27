@@ -7,146 +7,90 @@
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject TimeProvider Clock
+@inject IJSRuntime JS
+@inject ILogger<TraineeProfileEdit> Logger
 
-<PageTitle>Trainee profile · Wombat</PageTitle>
+<PageTitle>@Title · Wombat</PageTitle>
 
-<PageHeader Title="Trainee profile" Subtitle="@Subtitle">
-  <Actions>
-    <a class="btn btn-outline btn-sm" href="/admin/trainees">Back to trainees</a>
-  </Actions>
-</PageHeader>
+@*
+  A trainee's programme (T379, flow 13; boards P01–P25): "‹name›'s programme", in flow 12's column of sections (.user-page).
+  A running programme: the summary (Status, Email), Profile details with Save profile, and End this programme, where the
+  last day is checked when Mark complete… or Deactivate… is pressed, before any dialog (Q21, S19), and each dialog names the
+  day, the address and what the end would take back (M2, F8). An ended one: the outcome first, the details read-only (T305)
+  and the account it belongs to now (F5). Every action's result shows where its focus goes (A5), one at a time. Until T379
+  the page was "Trainee profile", printed its read's exception (T329), and offered Back to trainees.
+*@
+<PageHeader Title="@Title" Subtitle="@Subtitle" Actions="@HeaderActions" />
 
-@* Every action's result lands here. After Deactivate or Mark complete answers, the region takes the focus (DESIGN.md
-   § Button system): on success both buttons are gone, and the dialog that sent it has closed. A refusal of either keeps
-   its id, which the last-day field names, so the refusal is read with the field it is usually about (T209 review).
-   After Save profile, it takes the focus once the save is done (T234): "Trainee profile saved." arriving on its own is
-   often not read. A refused save leaves the focus where it was: the refusal is an alert, read at once. *@
-<div @ref="_result" class="action-result" tabindex="-1">
-  @if (!string.IsNullOrWhiteSpace(_errorMessage))
-  {
-    <Alert Id="@(_endRefused ? EndRefusalId : null)" Kind="danger">@_errorMessage</Alert>
-  }
-
-  @if (!string.IsNullOrWhiteSpace(_statusMessage))
-  {
-    <Alert Kind="success">@_statusMessage</Alert>
-  }
-</div>
-
-<StatePanel IsLoading="_loading" IsEmpty="@(_model is null)" EmptyTitle="Profile unavailable" EmptyBody="The trainee profile could not be loaded." LoadError="@(null)">
-  @if (_model is not null)
-  {
-    <div class="details-grid">
-      <aside class="detail-card">
-        <h3>Trainee summary</h3>
-        <p><strong>Email:</strong> @_model.Email</p>
-        <p><strong>Name:</strong> @_model.FullName</p>
-        <p><strong>Status:</strong> @(_model.IsActive ? "Active" : (_model.CompletedOn.HasValue ? "Completed" : "Inactive"))</p>
-        @if (_model.CompletedOn.HasValue)
+@if (_traineeNote is not null)
+{
+  @* T278, T290: the note, asked before any read; standing content, no role. *@
+  <div class="user-page">
+    <Alert Kind="info" Role="" Id="trainee-profile-trainee-note">@_traineeNote</Alert>
+  </div>
+}
+else
+{
+  <div class="user-page" aria-busy="@(_loading ? "true" : null)">
+    <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusHeadingAsync">
+      <LoadingContent>
+        <p class="loading-line" role="status">@TraineeProfileWords.Loading</p>
+        @for (var card = 0; card < 3; card++)
         {
-          <p><strong>Completed:</strong> @_model.CompletedOn.Value.ToString("yyyy-MM-dd")</p>
+          <div class="detail-card" aria-hidden="true">
+            <div class="skeleton skel-title"></div>
+            <div class="skeleton skel-line"></div>
+            <div class="skeleton skel-line skel-short"></div>
+          </div>
         }
-        @if (_model.DeactivatedOn.HasValue)
+      </LoadingContent>
+      <ChildContent>
+        @if (_profile is not { } profile)
         {
-          <p><strong>Left the programme:</strong> @_model.DeactivatedOn.Value.ToString("yyyy-MM-dd")</p>
-        }
-      </aside>
-
-      <section class="detail-card">
-        <h3>Profile details</h3>
-        @if (_model.IsEnded)
-        {
-          @* T305: Mark complete archives the profile, and a withdrawal ends it as surely, so an ended profile is read, not
-             edited: no inputs and no Save profile, which the command would refuse. The header keeps Back to trainees. *@
-          <p class="muted">This programme has ended, so its record is archived and cannot be changed.</p>
-          <dl class="details-list">
-            @* The stored values, not the form's: an edit left unsaved before Mark complete or Deactivate was never saved. *@
-            <div><dt>Curriculum</dt><dd>@_model.CurriculumLabel</dd></div>
-            <div><dt>Programme start date</dt><dd>@_model.StoredProgrammeStartDate.ToString("yyyy-MM-dd")</dd></div>
-            <div><dt>Expected completion date</dt><dd>@(_model.StoredExpectedCompletionDate?.ToString("yyyy-MM-dd") ?? "Not set")</dd></div>
-          </dl>
+          @* S4, P12, P13: one page for an unknown id and another institution's, so the id space discloses nothing. *@
+          <div class="detail-card detail-card--empty">
+            <div class="state-panel-copy">@TraineeProfileWords.UnavailableBody</div>
+            <div class="form-actions">
+              <a class="btn btn-primary" href="@PortfolioLinks.Trainees"><Icon Name="arrow-right" />@TraineeProfileWords.GoToTrainees</a>
+            </div>
+          </div>
         }
         else
         {
-          <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="trainee-profile">
-            <DataAnnotationsValidator />
-            <ValidationSummary class="validation-summary-errors" />
-
-            <div class="form-grid form-grid--wide">
-              @if (_curricula.Count == 0)
-              {
-                @* An admission into nothing: the institution has no active adoption, or an Administrator is admitting a
-                   registrar with no institution. An empty select would only fail validation (fix pass). *@
-                <p id="curriculum-id-none" class="muted">@NothingAdopted</p>
-              }
-              else
-              {
-                <FormField Label="Curriculum" InputId="curriculum-id" Required="true">
-                  <InputSelect id="curriculum-id" class="form-select" @bind-Value="_model.CurriculumId">
-                    @foreach (var curriculum in _curricula)
-                    {
-                      <option value="@curriculum.Id">@($"{curriculum.Name} ({curriculum.Version})")</option>
-                    }
-                  </InputSelect>
-                </FormField>
-              }
-
-              <FormField Label="Programme start date" InputId="programme-start-date" Required="true">
-                <InputDate id="programme-start-date" class="form-control" @bind-Value="_model.ProgrammeStartDate" />
-              </FormField>
-
-              <FormField Label="Expected completion date" InputId="expected-completion-date" HelpText="Leave this empty to derive it from the curriculum window.">
-                <InputDate id="expected-completion-date" class="form-control" aria-describedby="@FieldHelp.Id("expected-completion-date")" @bind-Value="_model.ExpectedCompletionDate" />
-              </FormField>
-            </div>
-
-            @if (_model.IsActive)
-            {
-              @* T209, D49: both ways out of the programme record its last day, and the quota reads it: the period it falls in
-                 holds no target unless it is in that period's last month. The buttons name the help, because each one acts
-                 on the date above it. *@
-              <div class="form-grid form-grid--wide">
-                <FormField Label="Last day in the programme" InputId="programme-end-date" HelpText="@EndDateHelp">
-                  <InputDate id="programme-end-date" class="form-control"
-                             aria-describedby="@FieldHelp.DescribedBy("programme-end-date", EndDateHelp, _endRefused ? EndRefusalId : null)"
-                             @bind-Value="_model.EndDate" />
-                </FormField>
-              </div>
-            }
-
-            <FormActions>
-              <a class="btn btn-outline" href="/admin/trainees">Cancel</a>
-              @if (_model.IsActive)
-              {
-                @* Each asks first, naming the day (DESIGN.md § Button system): neither can be undone, and the day each records
-                   cannot be changed afterwards. The red button is only in the dialog's footer. *@
-                <button type="button" class="btn btn-outline" disabled="@Busy" aria-describedby="@FieldHelp.Id("programme-end-date")" @onclick="() => AskAsync(_confirmDeactivate)">Deactivate</button>
-                <button type="button" class="btn btn-outline" disabled="@Busy" aria-describedby="@FieldHelp.Id("programme-end-date")" @onclick="() => AskAsync(_confirmComplete)">Mark complete</button>
-              }
-              @* Not disabled while its own save runs (T234): it has the focus, and a browser drops the focus of a button it
-                 disables, to the page. A second press sends nothing (SaveAsync). *@
-              <button type="submit" class="btn btn-primary" disabled="@(_ending || _curricula.Count == 0)" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : "Save profile")</button>
-            </FormActions>
-          </EditForm>
+          @Result(Place.Top)
+          @Summary(profile)
+          @Details(profile)
+          @if (profile.IsActive)
+          {
+            @EndSection(profile)
+          }
+          else
+          {
+            @AccountSection(profile)
+          }
         }
-      </section>
-    </div>
-  }
-</StatePanel>
+      </ChildContent>
+    </StatePanel>
+  </div>
+}
 
-<ConfirmDialog @ref="_confirmDeactivate"
-               Title="Deactivate this trainee profile?"
-               Body="@DeactivateBody"
-               ConfirmLabel="Deactivate"
-               DangerAction="true"
-               OnConfirm="DeactivateAsync" />
-
+@* P03, P17, P19, P20: Mark complete's confirm is the primary (Q24); the dialog opens on Cancel. *@
 <ConfirmDialog @ref="_confirmComplete"
-               Title="Mark this programme complete?"
-               Body="@CompleteBody"
-               ConfirmLabel="Mark complete"
+               Title="@(_profile is null ? TraineeProfileWords.CompleteConfirm : TraineeProfileWords.CompleteTitle(_profile.FullName))"
+               BodyContent="@CompleteBody"
+               ConfirmLabel="@TraineeProfileWords.CompleteConfirm"
                DangerAction="false"
+               ReturnFocusId="@CompleteTriggerId"
                OnConfirm="CompleteAsync" />
+
+@* P09, P16: Deactivate's confirm is the filled danger button, only here (Q24). *@
+<ConfirmDialog @ref="_confirmDeactivate"
+               Title="@(_profile is null ? TraineeProfileWords.DeactivateConfirm : TraineeProfileWords.DeactivateTitle(_profile.FullName))"
+               BodyContent="@DeactivateBody"
+               ConfirmLabel="@TraineeProfileWords.DeactivateConfirm"
+               DangerAction="true"
+               ReturnFocusId="@DeactivateTriggerId"
+               OnConfirm="DeactivateAsync" />
 
 @code {
   [SupplyParameterFromQuery(Name = "id")]
@@ -155,64 +99,102 @@
   [SupplyParameterFromQuery(Name = "userId")]
   public string? UserId { get; set; }
 
-  private const string EndDateHelp =
-    "Mark complete records it as the graduation day, archives the profile and removes the Trainee role. Deactivate " +
-    "records it as the day the trainee left without completing, and also removes the Trainee role (D54). It cannot be after today, and it cannot be changed " +
-    "afterwards. Either way, the period it falls in holds no target unless it is in that period's last month, and " +
-    "encounters observed after it count towards nothing in this programme, even those already counted.";
+  /// <summary>The last-day field's id; its refusal is <see cref="EndRefusalId" />, its help <c>FieldHelp.Id</c>'s.</summary>
+  internal const string EndDateId = "programme-end-date";
 
-  /// <summary>The id of the refusal alert, which the last-day field names after Deactivate or Mark complete is refused.</summary>
-  private const string EndRefusalId = "programme-end-refusal";
+  /// <summary>The refusal under the last day, found on the press (Q21) or the command's own at confirm (P07).</summary>
+  internal const string EndRefusalId = "programme-end-refusal";
+
+  internal const string CompleteTriggerId = "end-mark-complete";
+  internal const string DeactivateTriggerId = "end-deactivate";
+  internal const string CompleteNoteId = "end-mc-note";
+  internal const string DeactivateNoteId = "end-dc-note";
+
+  private TraineeProfileDto? _profile;
+  private TraineeProfileFormModel? _model;
+  private string? _traineeNote;
+  private bool _loading = true;
+  private string? _loadError;
 
   /// <summary>
   /// The curricula the picker offers: exactly what the command accepts (T304): a profile's pinned version and the
   /// institution's active adoption for the discipline. Admission is Admit ‹name›'s (T373).
   /// </summary>
   private IReadOnlyList<CurriculumChoiceDto> _curricula = [];
-  private ConfirmDialog? _confirmDeactivate;
-  private ConfirmDialog? _confirmComplete;
-  private ElementReference _result;
-
-  /// <summary>The region holding an action's result, which takes the focus once an end action has answered. For its tests.</summary>
-  internal ElementReference ResultRegion => _result;
 
   /// <summary>
-  /// Today on the South African calendar: the field's default, and the latest last day either action accepts. The server
-  /// refuses a later one; the field carries no <c>max</c>, because it sits in the profile form and the browser would then
-  /// refuse Save profile over a date Save does not send.
+  /// Today on the South African calendar when the page was read: the last day's default only. The press reads its own
+  /// today (B2). Never the server's date (T325).
   /// </summary>
   private DateOnly _today;
 
-  /// <summary>Deactivate or Mark complete was refused, so the last-day field names the refusal.</summary>
-  private bool _endRefused;
+  /// <summary>
+  /// The last day as typed, kept as typed through a refusal (S19). Nullable, so an emptied field reaches the press check
+  /// (S3, P23) rather than the browser's own refusal.
+  /// </summary>
+  private DateOnly? _endDate;
 
-  /// <summary>An end action has answered, or a save is done, and its result takes the focus after the next render.</summary>
-  private bool _focusResult;
-  private TraineeProfileFormModel? _model;
-  private bool _loading = true;
+  /// <summary>The refusal under the last day, or null.</summary>
+  private string? _endRefusal;
+  private bool _focusEndDate;
 
-  /// <summary>A save (or an admission) has been sent and has not yet answered.</summary>
+  /// <summary>What the dialog that is open says the end would take back (M2), for the day it names.</summary>
+  private TakeBackForecastDto? _forecast;
+
+  /// <summary>The day the open dialog names: what was typed when its trigger was pressed.</summary>
+  private DateOnly _askedDay;
+
+  private ConfirmDialog? _confirmDeactivate;
+  private ConfirmDialog? _confirmComplete;
+
+  // One result on the page at a time (A5): where it shows, and what it says.
+  private enum Place { None, Top, Details, End }
+  private Place _resultPlace;
+  private string? _resultLead;
+  private string? _resultRest;
+  private bool _resultRefused;
+
+  // A new region for every result, so each takes the focus as it is drawn (ActionResult's FocusOnLoad).
+  private int _resultKey;
+
+  /// <summary>A save has been sent and has not yet answered (T234).</summary>
   private bool _saving;
 
-  /// <summary>Deactivate or Mark complete has been sent and has not yet answered.</summary>
+  /// <summary>An end, or the forecast its dialog reads, has been sent and has not yet answered.</summary>
   private bool _ending;
-
-  /// <summary>Something has been sent and has not answered, so nothing else may be sent. (T234)</summary>
-  private bool Busy => _saving || _ending;
-  private string? _errorMessage;
-  private string? _statusMessage;
 
   /// <summary>The old admission address has been sent on to Admit (T373).</summary>
   private bool _redirected;
 
+  private bool Busy => _saving || _ending;
+
+  private string Title => _traineeNote is not null || _loading || _loadError is not null
+    ? TraineeProfileWords.Heading
+    : _profile is null ? TraineeProfileWords.UnavailableTitle : PortfolioWords.ProgrammeOf(_profile.FullName);
+
+  private string? Subtitle => _profile is null || _loading || _loadError is not null || _traineeNote is not null
+    ? null
+    : _profile.IsActive ? TraineeProfileWords.ActiveSubtitle : TraineeProfileWords.EndedSubtitle;
+
+  /// <summary>F1: "Export ‹name›'s portfolio" in the header's actions, only where the export would not be refused.</summary>
+  private RenderFragment? HeaderActions => _profile is { MayExport: true, IsErased: false } && !_loading && _loadError is null
+    ? ExportAction
+    : null;
+
+  private RenderFragment ExportAction => __builder =>
+  {
+    if (_profile is { } profile)
+    {
+      <ExportPortfolioAction TraineeUserId="@profile.UserId" TraineeName="@profile.FullName" MayExport="profile.MayExport" />
+    }
+  };
+
   protected override async Task OnParametersSetAsync()
   {
     // T373 (flow 11): admission is Admit ‹name›'s, a page of its own. The old address lands there, outside the read's
-    // catch (a redirect while prerendering is an exception the framework answers), so a link or a bookmark to
-    // /admin/trainees/edit?userId= still opens the admission, in the caller's scope as Admit reads it.
+    // catch (a redirect while prerendering is an exception the framework answers).
     if (!Id.HasValue && !string.IsNullOrWhiteSpace(UserId))
     {
-      // Once: Admit's address carries ?userId= too, and until the router swaps the page this one sees it again.
       if (!_redirected)
       {
         _redirected = true;
@@ -222,50 +204,47 @@
       return;
     }
 
-    _loading = true;
-    _errorMessage = null;
-    _statusMessage = null;
-    _endRefused = false;
     _today = QuotaCalendar.Today(Clock);
+    ClearResult();
+    _fieldErrors.Clear();
+    _endRefusal = null;
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    _loading = true;
+    _loadError = null;
 
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
 
-      if (Id.HasValue)
+      // Asked before anything is read, as the handlers refuse before they look anything up (T278, T290).
+      _traineeNote = TraineeAdministrationRules.TraineeNoteOnTraineePages(authState.User);
+      if (_traineeNote is not null)
       {
-        var profile = await Sender.Send(new GetTraineeProfileByIdQuery(Id.Value, authState.User));
+        _profile = null;
+        return;
+      }
 
-        // An ended profile is read, not edited (T305), so it needs no picker.
-        _curricula = profile.IsEnded ? [] : await Sender.Send(new GetTraineeCurriculumChoicesQuery(profile.Id, authState.User));
-        _model = new TraineeProfileFormModel
-        {
-          Id = profile.Id,
-          UserId = profile.UserId,
-          Email = profile.Email,
-          FullName = $"{profile.FirstName} {profile.LastName}",
-          CurriculumId = profile.CurriculumId,
-          CurriculumLabel = $"{profile.CurriculumName} ({profile.CurriculumVersion})",
-          StoredProgrammeStartDate = profile.ProgrammeStartDate,
-          StoredExpectedCompletionDate = profile.ExpectedCompletionDate,
-          ProgrammeStartDate = profile.ProgrammeStartDate,
-          ExpectedCompletionDate = profile.ExpectedCompletionDate,
-          IsActive = profile.IsActive,
-          CompletedOn = profile.CompletedOn,
-          DeactivatedOn = profile.DeactivatedOn,
-          EndDate = _today
-        };
-      }
-      else
-      {
-        // No id: the page's own not-found state (T373; until then "A trainee profile id or user id is required." was
-        // printed as a refusal, T329).
-        _model = null;
-      }
+      // No id at all reads as an unknown one: the page's own not-found state (T373).
+      var profile = Id is { } id ? await Sender.Send(new GetTraineeProfileByIdQuery(id, authState.User)) : null;
+
+      // An ended profile is read, not edited (T305), so it needs no picker.
+      _curricula = profile is { IsActive: true }
+        ? await Sender.Send(new GetTraineeCurriculumChoicesQuery(profile.Id, authState.User))
+        : [];
+      Show(profile);
+      _endDate = _today;
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = exception.Message;
+      // T329, S4: the failure to the log, fixed words on the page.
+      Logger.LogError(exception, "The trainee profile {ProfileId} could not be read.", Id);
+      _profile = null;
+      _model = null;
+      _loadError = TraineeProfileWords.LoadFailed;
     }
     finally
     {
@@ -273,53 +252,262 @@
     }
   }
 
+  private void Show(TraineeProfileDto? profile)
+  {
+    _profile = profile;
+    _model = profile is null
+      ? null
+      : new TraineeProfileFormModel
+      {
+        CurriculumId = profile.CurriculumId,
+        ProgrammeStartDate = profile.ProgrammeStartDate,
+        ExpectedCompletionDate = profile.ExpectedCompletionDate
+      };
+  }
+
+  private Task RetryAsync() => LoadAsync();
+
+  private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  // ─── Results ───────────────────────────────────────────────────────────
+
+  private void ClearResult()
+  {
+    _resultPlace = Place.None;
+    _resultLead = null;
+    _resultRest = null;
+    _resultRefused = false;
+  }
+
+  private void ShowResult(Place place, string lead, string? rest = null, bool refused = false)
+  {
+    _resultPlace = place;
+    _resultLead = lead;
+    _resultRest = rest;
+    _resultRefused = refused;
+    _resultKey++;
+  }
+
+  private RenderFragment Result(Place place) => __builder =>
+  {
+    if (_resultPlace == place && _resultLead is not null)
+    {
+      <ActionResult @key="_resultKey" FocusOnLoad="true">
+        @if (_resultRefused)
+        {
+          @* A refusal in the handler's words is one sentence or more, none bold; a failure's fixed words bold the first (P06). *@
+          <Alert Kind="danger">
+            @if (_resultRest is null)
+            {
+              @_resultLead
+            }
+            else
+            {
+              <strong>@_resultLead</strong>@(" " + _resultRest)
+            }
+          </Alert>
+        }
+        else
+        {
+          @* A result bolds only its first sentence (BRIEF § 11, flow 11). *@
+          <Alert Kind="success"><strong>@_resultLead</strong>@(_resultRest is null ? null : " " + _resultRest)</Alert>
+        }
+      </ActionResult>
+    }
+  };
+
+  // ─── The summary (N6, F10) ─────────────────────────────────────────────
+
+  private RenderFragment Summary(TraineeProfileDto profile) => __builder =>
+  {
+    @* T6: no "Name:" row, no visible heading: the h1 names the trainee. *@
+    <dl class="detail-list" aria-label="@TraineeProfileWords.SummaryName">
+      <dt>Status</dt>
+      <dd>
+        @if (profile.IsActive)
+        {
+          @TraineeProfileWords.Active
+        }
+        else if (profile.CompletedOn is { } completed)
+        {
+          <span class="badge @BadgeFor.ProgrammeOutcome(true)">@TraineeProfileWords.Completed</span>@(" " + TraineeProfileWords.Iso(completed))
+        }
+        else
+        {
+          <span class="badge @BadgeFor.ProgrammeOutcome(false)">@TraineeProfileWords.Inactive</span>
+          @if (profile.DeactivatedOn is { } left)
+          {
+            @(" " + TraineeProfileWords.LeftTheProgramme(left))
+          }
+        }
+      </dd>
+      @if (!profile.IsErased)
+      {
+        <dt>Email</dt>
+        <dd>@Address(profile.Email)</dd>
+      }
+    </dl>
+  };
+
+  /// <summary>An address with a break after its @ (flow 11's M7), in markup, never in a stored string.</summary>
+  private static RenderFragment Address(string email) => __builder =>
+  {
+    var at = email.IndexOf('@', StringComparison.Ordinal);
+    if (at < 0)
+    {
+      @email
+    }
+    else
+    {
+      @(email[..(at + 1)])<wbr />@(email[(at + 1)..])
+    }
+  };
+
+  // ─── Profile details ───────────────────────────────────────────────────
+
+  private RenderFragment Details(TraineeProfileDto profile) => __builder =>
+  {
+    <section class="detail-card user-section" aria-labelledby="profile-details-heading">
+      <h2 id="profile-details-heading">@TraineeProfileWords.DetailsHeading</h2>
+      @if (profile.IsEnded || _model is null)
+      {
+        @* T305: an ended profile is read, not edited. The stored values, never an unsaved edit. *@
+        <p>@TraineeProfileWords.EndedLine</p>
+        <dl class="detail-list">
+          <dt>Curriculum</dt>
+          <dd class="readonly-value">@($"{profile.CurriculumName} ({profile.CurriculumVersion})")</dd>
+          <dt>Programme start date</dt>
+          <dd class="readonly-value">@TraineeProfileWords.Iso(profile.ProgrammeStartDate)</dd>
+          <dt>Expected completion date</dt>
+          <dd class="readonly-value">@TraineeProfileWords.Iso(profile.ExpectedCompletionDate)</dd>
+        </dl>
+      }
+      else
+      {
+        @Result(Place.Details)
+        @* novalidate, no summary (P4): the page's own checks, each refusal under its field, marked, described by it and the
+           first one focused, as End this programme's last day and every flow 13 form. *@
+        <EditForm Model="_model" OnSubmit="SaveAsync" FormName="trainee-profile" novalidate>
+
+          <div class="form-grid">
+            @if (_curricula.Count == 0)
+            {
+              @* The institution has no active adoption: an empty select would only fail validation. *@
+              <p id="curriculum-id-none" class="muted">@NothingAdopted</p>
+            }
+            else
+            {
+              <FormField Label="Curriculum" InputId="@CurriculumId" Required="true">
+                <ChildContent>
+                  <select id="@CurriculumId" class="@InputClass(CurriculumId, "form-select")" aria-required="true"
+                          aria-invalid="@Invalid(CurriculumId)" aria-describedby="@RefusalIdIf(CurriculumId)"
+                          @bind="_model.CurriculumId" @bind:after="() => ClearField(CurriculumId)">
+                    @foreach (var curriculum in _curricula)
+                    {
+                      <option value="@curriculum.Id">@($"{curriculum.Name} ({curriculum.Version})")</option>
+                    }
+                  </select>
+                </ChildContent>
+                <ValidationContent>@FieldRefusal(CurriculumId)</ValidationContent>
+              </FormField>
+            }
+
+            <FormField Label="Programme start date" InputId="@StartId" Required="true">
+              <ChildContent>
+                <input id="@StartId" type="date" class="@InputClass(StartId, "form-control")" aria-required="true"
+                       aria-invalid="@Invalid(StartId)" aria-describedby="@RefusalIdIf(StartId)"
+                       @bind="_model.ProgrammeStartDate" @bind:format="yyyy-MM-dd" @bind:after="() => ClearField(StartId)" />
+              </ChildContent>
+              <ValidationContent>@FieldRefusal(StartId)</ValidationContent>
+            </FormField>
+
+            <FormField Label="Expected completion date" InputId="expected-completion-date" HelpText="@TraineeProfileWords.CompletionHelp">
+              <input id="expected-completion-date" type="date" class="form-control" aria-describedby="@FieldHelp.Id("expected-completion-date")"
+                     @bind="_model.ExpectedCompletionDate" @bind:format="yyyy-MM-dd" />
+            </FormField>
+          </div>
+
+          <FormActions>
+            <a class="btn btn-outline" href="@PortfolioLinks.Trainees">Cancel</a>
+            @* Never natively disabled (T234): it has the focus while its save runs, and a second press sends nothing. *@
+            <button type="submit" class="btn btn-primary"
+                    aria-disabled="@InFlight.AriaDisabled(_saving || _ending || _curricula.Count == 0)">@(_saving ? "Saving..." : "Save profile")</button>
+          </FormActions>
+        </EditForm>
+      }
+    </section>
+  };
+
   private const string NothingAdopted =
     "This institution has adopted no curriculum yet, so no trainee can be admitted. Adopt one under Curriculum adoptions, " +
     "then admit the trainee.";
 
-  private string Subtitle => _model?.IsEnded == true
-      ? "The record of a programme that has ended."
-      : "Update curriculum and completion details for this trainee.";
-
   private async Task SaveAsync()
   {
-    if (_model is null || Busy)
+    if (_profile is null || _model is null || Busy || _curricula.Count == 0)
     {
       return;
     }
 
+    ClearResult();
+    _endRefusal = null;
+    _fieldErrors.Clear();
+    if (_model.CurriculumId is not > 0)
+    {
+      _fieldErrors[CurriculumId] = AdmissionText.ChooseCurriculumRefusal;
+    }
+
+    if (_model.ProgrammeStartDate is null)
+    {
+      _fieldErrors[StartId] = AdmissionText.StartRequired;
+    }
+
+    if (_fieldErrors.Count > 0)
+    {
+      _focusField = _fieldErrors.ContainsKey(CurriculumId) ? CurriculumId : StartId;
+      return;
+    }
+
     _saving = true;
-    _errorMessage = null;
-    _statusMessage = null;
-    _endRefused = false;
 
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       var saved = await Sender.Send(new UpdateTraineeProfileCommand(
-        _model.Id,
-        _model.CurriculumId,
-        _model.ProgrammeStartDate,
+        _profile.Id,
+        _model.CurriculumId!.Value,
+        _model.ProgrammeStartDate!.Value,
         _model.ExpectedCompletionDate,
         authState.User));
 
-      // A move, or a change of programme start, says what its replay checked (T304).
-      _statusMessage = saved.Message;
+      // A move, or a change of programme start, says what its replay checked (T304). Its first sentence bold.
+      var (lead, rest) = FirstSentence(saved.Message);
+      ShowResult(Place.Details, lead, rest);
 
       // The form reads the profile as saved: an expected completion left empty is the one the server derived. After a
       // move the pinned version has changed, and with it what the picker may offer, so it is asked again.
+      _profile = _profile with
+      {
+        CurriculumId = saved.Profile.CurriculumId,
+        CurriculumName = saved.Profile.CurriculumName,
+        CurriculumVersion = saved.Profile.CurriculumVersion,
+        ProgrammeStartDate = saved.Profile.ProgrammeStartDate,
+        ExpectedCompletionDate = saved.Profile.ExpectedCompletionDate
+      };
       _model.CurriculumId = saved.Profile.CurriculumId;
-      _model.CurriculumLabel = $"{saved.Profile.CurriculumName} ({saved.Profile.CurriculumVersion})";
       _model.ProgrammeStartDate = saved.Profile.ProgrammeStartDate;
       _model.ExpectedCompletionDate = saved.Profile.ExpectedCompletionDate;
-      _model.StoredProgrammeStartDate = saved.Profile.ProgrammeStartDate;
-      _model.StoredExpectedCompletionDate = saved.Profile.ExpectedCompletionDate;
-      _curricula = await Sender.Send(new GetTraineeCurriculumChoicesQuery(_model.Id, authState.User));
-      _focusResult = true;
+      _curricula = await Sender.Send(new GetTraineeCurriculumChoicesQuery(_profile.Id, authState.User));
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is FluentValidation.ValidationException or UnauthorizedAccessException or InvalidOperationException)
     {
-      _errorMessage = exception.Message;
+      // The handler's own refusal, in its words.
+      ShowResult(Place.Details, RefusalText.Of(exception), refused: true);
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "The trainee profile {ProfileId} could not be saved.", _profile.Id);
+      ShowResult(Place.Details, TraineeProfileWords.SaveFailed, refused: true);
     }
     finally
     {
@@ -327,138 +515,274 @@
     }
   }
 
-  // Each names what the day does that cannot be undone (T281 review, DESIGN.md § Button system): encounters observed after
-  // it stop counting, including any already counted, and neither the day nor the profile can be changed back.
-  private const string AfterTheDay =
-    " Encounters observed after that day will count towards nothing in this programme, including any already counted.";
+  private const string CurriculumId = "curriculum-id";
+  private const string StartId = "programme-start-date";
 
-  private string DeactivateBody => _model is null
-    ? string.Empty
-    : $"Deactivate {_model.FullName}'s profile, with {_model.EndDate:yyyy-MM-dd} as their last day in the programme?" +
-      " The Trainee role is removed; they keep their own record, read-only." + AfterTheDay +
-      " The day cannot be changed afterwards, and a deactivated profile cannot be made active again.";
+  /// <summary>The details form's refusals by field id (P4); the first one takes the focus.</summary>
+  private readonly Dictionary<string, string> _fieldErrors = new(StringComparer.Ordinal);
+  private string? _focusField;
 
-  private string CompleteBody => _model is null
-    ? string.Empty
-    : $"Record {_model.EndDate:yyyy-MM-dd} as {_model.FullName}'s graduation day? The profile is archived, the Trainee " +
-      "role is removed and a graduation email is sent." + AfterTheDay +
-      " The day cannot be changed afterwards, and this cannot be undone.";
+  private RenderFragment FieldRefusal(string fieldId) => __builder =>
+  {
+    if (_fieldErrors.TryGetValue(fieldId, out var message))
+    {
+      <p id="@RefusalId(fieldId)" class="validation-message">@message</p>
+    }
+  };
 
+  private static string RefusalId(string fieldId) => $"{fieldId}-error";
+
+  private string? RefusalIdIf(string fieldId) => _fieldErrors.ContainsKey(fieldId) ? RefusalId(fieldId) : null;
+
+  private string? Invalid(string fieldId) => _fieldErrors.ContainsKey(fieldId) ? "true" : null;
+
+  private string InputClass(string fieldId, string baseClass)
+    => _fieldErrors.ContainsKey(fieldId) ? $"{baseClass} input-validation-error" : baseClass;
+
+  private void ClearField(string fieldId) => _fieldErrors.Remove(fieldId);
+
+  private static (string Lead, string? Tail) FirstSentence(string message)
+  {
+    var stop = message.IndexOf(". ", StringComparison.Ordinal);
+    return stop < 0 ? (message, null) : (message[..(stop + 1)], message[(stop + 2)..]);
+  }
+
+  // ─── End this programme ────────────────────────────────────────────────
+
+  private RenderFragment EndSection(TraineeProfileDto profile) => __builder =>
+  {
+    var describedBy = _endRefusal is null
+      ? FieldHelp.Id(EndDateId)
+      : $"{EndRefusalId} {FieldHelp.Id(EndDateId)}";
+    @* A2: the section itself, no form element: the triggers are buttons that ask first. N14: the h2 takes no tabindex. *@
+    <section class="detail-card user-section" aria-labelledby="end-heading">
+      <h2 id="end-heading">@TraineeProfileWords.EndHeading</h2>
+      @Result(Place.End)
+      @if (profile.LastRatifiedDecision is { } decision)
+      {
+        @* Q13: read, gating nothing. *@
+        <p>@TraineeProfileWords.LastDecision(decision)</p>
+      }
+      <div class="form-group">
+        <label for="@EndDateId">
+          @TraineeProfileWords.LastDayLabel
+          <span aria-hidden="true">*</span>
+          <span class="visually-hidden">required</span>
+        </label>
+        <input id="@EndDateId" type="date" class="form-control @(_endRefusal is null ? null : "input-validation-error")"
+               aria-required="true" aria-describedby="@describedBy" aria-invalid="@(_endRefusal is null ? null : "true")"
+               @bind="_endDate" @bind:format="yyyy-MM-dd" />
+        @if (_endRefusal is not null)
+        {
+          @* S19: beside its field, read at once, the typed day kept. *@
+          <div class="validation-message" id="@EndRefusalId" role="alert">@_endRefusal</div>
+        }
+        <p class="field-help" id="@FieldHelp.Id(EndDateId)">@TraineeProfileWords.LastDayHelp</p>
+      </div>
+      <ul class="role-rows">
+        <li class="role-row">
+          <span class="role-row-note" id="@CompleteNoteId">@TraineeProfileWords.GraduationNote(profile.FullName)</span>
+          <button type="button" id="@CompleteTriggerId" class="btn btn-outline btn-sm" aria-haspopup="dialog"
+                  aria-describedby="@CompleteNoteId" aria-disabled="@InFlight.AriaDisabled(Busy)"
+                  @onclick="() => AskAsync(_confirmComplete)">@TraineeProfileWords.MarkCompleteTrigger</button>
+        </li>
+        <li class="role-row">
+          <span class="role-row-note" id="@DeactivateNoteId">@TraineeProfileWords.WithdrawalNote</span>
+          <button type="button" id="@DeactivateTriggerId" class="btn btn-outline btn-sm" aria-haspopup="dialog"
+                  aria-describedby="@DeactivateNoteId" aria-disabled="@InFlight.AriaDisabled(Busy)"
+                  @onclick="() => AskAsync(_confirmDeactivate)">@TraineeProfileWords.DeactivateTrigger</button>
+        </li>
+      </ul>
+    </section>
+  };
+
+  /// <summary>
+  /// Q21, S3, S19: the day is checked first, by the rule both ends are held to (<c>TraineeProfile.EndDayRefusal</c>); a
+  /// refusal stays under the field with the focus in it, and no dialog opens. Otherwise the dialog opens with what the end
+  /// would take back for that day (M2), read now.
+  /// </summary>
   private async Task AskAsync(ConfirmDialog? dialog)
   {
-    if (Busy || dialog is null)
+    if (Busy || dialog is null || _profile is null)
     {
       return;
+    }
+
+    ClearResult();
+    // The South African today at the press, as the command reads it (B2): a page left open past midnight is not held to
+    // the day it was opened on.
+    _endRefusal = TraineeProfileWords.LastDayRefusal(_endDate, _profile.ProgrammeStartDate, QuotaCalendar.Today(Clock));
+    if (_endRefusal is not null)
+    {
+      _focusEndDate = true;
+      return;
+    }
+
+    _askedDay = _endDate!.Value;
+    _ending = true;
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _forecast = await Sender.Send(new GetTakeBackForecastQuery(_profile.Id, _askedDay, authState.User));
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // A forecast only: the dialog still says that encounters after the day stop counting, without the count.
+      Logger.LogWarning(exception, "The take-back forecast for trainee profile {ProfileId} could not be read.", _profile.Id);
+      _forecast = null;
+    }
+    finally
+    {
+      _ending = false;
     }
 
     await dialog.ShowAsync();
   }
 
-  private Task DeactivateAsync() => EndAsync(
-    (id, day, principal) => new DeactivateTraineeProfileCommand(id, day, principal),
-    day =>
+  private RenderFragment CompleteBody => __builder =>
+  {
+    if (_profile is { } profile)
     {
-      _model!.DeactivatedOn = day;
-      return $"Trainee profile deactivated. Their last day in the programme is recorded as {day:yyyy-MM-dd}, and the " +
-        "Trainee role has been removed.";
-    });
+      <p>
+        @if (string.IsNullOrWhiteSpace(profile.Email))
+        {
+          @TraineeProfileWords.CompleteRecordNoAddress(profile.FullName, _askedDay)
+        }
+        else
+        {
+          @* F8, S12: the address the email goes to. *@
+          @TraineeProfileWords.CompleteRecord(profile.FullName, _askedDay)@Address(profile.Email)@(".")
+        }
+      </p>
+      <p>@TraineeProfileWords.CompleteAfter(profile.FullName, _askedDay, _forecast)</p>
+      <p>@TraineeProfileWords.CompleteCannotUndo</p>
+    }
+  };
+
+  private RenderFragment DeactivateBody => __builder =>
+  {
+    if (_profile is { } profile)
+    {
+      <p>@TraineeProfileWords.DeactivateRecord(profile.FullName, _askedDay)</p>
+      <p>@TraineeProfileWords.DeactivateAfter(_askedDay, _forecast)</p>
+      <p>@TraineeProfileWords.DeactivateCannotUndo</p>
+    }
+  };
 
   private Task CompleteAsync() => EndAsync(
     (id, day, principal) => new CompleteTraineeProfileCommand(id, day, principal),
-    day =>
-    {
-      _model!.CompletedOn = day;
-      return "Trainee marked complete. The Trainee role has been removed and a graduation email sent.";
-    });
+    (_, taken) => (TraineeProfileWords.CompletedLead, Join(TraineeProfileWords.CompletedRest, TraineeProfileWords.TakenBack(taken))));
+
+  private Task DeactivateAsync() => EndAsync(
+    (id, day, principal) => new DeactivateTraineeProfileCommand(id, day, principal),
+    (day, taken) => (TraineeProfileWords.DeactivatedLead, Join(TraineeProfileWords.DeactivatedRest(day), TraineeProfileWords.TakenBack(taken))));
+
+  private static string Join(string first, string? second) => second is null ? first : $"{first} {second}";
 
   /// <remarks>
-  /// Sent at most once at a time: the flag is set before the first await, so a second confirm that reaches the circuit
-  /// before the re-render does nothing. The result takes the focus in <see cref="OnAfterRenderAsync" />, done or refused.
+  /// Sent at most once at a time: the flag is set before the first await. Done, the result shows at the ended record's top
+  /// (P05, P11), built from what the command took back (F2), and the record is read again for its account; refused by the
+  /// command (P07), its words under the field with the focus in it; failed otherwise (P06), fixed words at the section's
+  /// top, logged. The focus moves after the render that follows, once the dialog has closed (T206).
   /// </remarks>
-  private async Task EndAsync(Func<int, DateOnly, ClaimsPrincipal, IRequest> command, Func<DateOnly, string> ended)
+  private async Task EndAsync(
+    Func<int, DateOnly, ClaimsPrincipal, IRequest<ProgrammeEndResult>> command,
+    Func<DateOnly, int, (string Lead, string Tail)> ended)
   {
-    if (_model is null || _model.Id <= 0 || Busy)
+    if (_profile is null || Busy)
     {
       return;
     }
 
     _ending = true;
-    _errorMessage = null;
-    _statusMessage = null;
-    _endRefused = false;
-    var day = _model.EndDate;
+    ClearResult();
+    _endRefusal = null;
+    var day = _askedDay;
+    var profileId = _profile.Id;
 
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      await Sender.Send(command(_model.Id, day, authState.User));
-      _model.IsActive = false;
-      _statusMessage = ended(day);
+      var result = await Sender.Send(command(profileId, day, authState.User));
+      var (lead, rest) = ended(day, result.TakenBack);
+
+      try
+      {
+        // The record as it now stands: its end, and the account it belongs to (F5).
+        var reread = await Sender.Send(new GetTraineeProfileByIdQuery(profileId, authState.User));
+        Show(reread ?? _profile with { IsActive = false });
+      }
+      catch (Exception exception) when (exception is not OperationCanceledException)
+      {
+        Logger.LogError(exception, "The trainee profile {ProfileId} could not be read after its end.", profileId);
+        Show(_profile with { IsActive = false });
+      }
+
+      ShowResult(Place.Top, lead, rest);
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is UnauthorizedAccessException or InvalidOperationException or FluentValidation.ValidationException)
     {
-      _errorMessage = exception.Message;
-      _endRefused = true;
+      // P07: the command's own check, behind the press-time one, in the same place.
+      _endRefusal = RefusalText.Of(exception);
+      _focusEndDate = true;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "The programme of trainee profile {ProfileId} could not be ended.", profileId);
+      ShowResult(Place.End, TraineeProfileWords.EndFailedLead, TraineeProfileWords.EndFailedRest, refused: true);
     }
     finally
     {
       _ending = false;
-      _focusResult = true;
     }
   }
 
+  // ─── The account (F5, S5) ──────────────────────────────────────────────
+
+  private RenderFragment AccountSection(TraineeProfileDto profile) => __builder =>
+  {
+    @* Nothing for an erased person, who has no account. *@
+    if (profile.IsErased || profile.Account is not { } account)
+    {
+      return;
+    }
+
+    <section class="detail-card user-section" aria-labelledby="account-heading">
+      <h2 id="account-heading">@TraineeProfileWords.AccountHeading</h2>
+      @if (TraineeProfileWords.AccountSentence(profile.FullName, account) is { } sentence)
+      {
+        <p>@sentence</p>
+      }
+      <p class="account-open"><a href="@PeopleLinks.User(profile.UserId)">@TraineeProfileWords.OpenUserPage(profile.FullName)</a></p>
+    </section>
+  };
+
   /// <remarks>
-  /// The result takes the focus here, once the browser has acknowledged the render that follows the action. By then the
-  /// dialog is closed: ConfirmDialog asks the browser to close it as soon as the action returns, and while a modal dialog
-  /// is open nothing outside it can take the focus (DESIGN.md § Button system, T206).
+  /// The refusal under the last day takes the focus into the field once it is drawn (S19); after a confirm, once the dialog
+  /// has closed, as every result does (T206). Results take their own focus (ActionResult's FocusOnLoad).
   /// </remarks>
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
-    if (_focusResult)
+    if (_focusEndDate)
     {
-      _focusResult = false;
-      await _result.FocusAsync();
+      _focusEndDate = false;
+      await PageFocus.FocusByIdAsync(JS, EndDateId);
+    }
+
+    if (_focusField is { } field)
+    {
+      _focusField = null;
+      await PageFocus.FocusByIdAsync(JS, field);
     }
   }
 
   private sealed class TraineeProfileFormModel
   {
-    public int Id { get; set; }
-    public string UserId { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string FullName { get; set; } = string.Empty;
+    // Nullable, so a cleared field reaches the page's own check (P4) rather than a parse error in a summary.
+    public int? CurriculumId { get; set; }
 
-    [Required]
-    [Range(1, int.MaxValue)]
-    public int CurriculumId { get; set; }
-
-    /// <summary>The curriculum as the read-only details list names it: its name and version, as stored.</summary>
-    public string CurriculumLabel { get; set; } = string.Empty;
-
-    /// <summary>The programme start as stored, which the read-only details list shows: the field may hold an unsaved edit.</summary>
-    public DateOnly StoredProgrammeStartDate { get; set; }
-
-    /// <summary>The expected completion as stored.</summary>
-    public DateOnly? StoredExpectedCompletionDate { get; set; }
-
-    [Required]
-    public DateOnly ProgrammeStartDate { get; set; }
+    public DateOnly? ProgrammeStartDate { get; set; }
 
     public DateOnly? ExpectedCompletionDate { get; set; }
-    public bool IsActive { get; set; } = true;
-    public DateOnly? CompletedOn { get; set; }
-    public DateOnly? DeactivatedOn { get; set; }
-
-    /// <summary>
-    /// Ended and archived, so read-only (T305): <c>TraineeProfile.IsEnded</c>, an inactive profile. Read from
-    /// <see cref="IsActive" />, which loads from the profile and which the end actions clear when they answer.
-    /// </summary>
-    public bool IsEnded => !IsActive;
-
-    /// <summary>
-    /// The last day in the programme, which Mark complete and Deactivate each record (T209). Set to today on the South
-    /// African calendar when the page loads, not the server's local date.
-    /// </summary>
-    public DateOnly EndDate { get; set; }
   }
 }

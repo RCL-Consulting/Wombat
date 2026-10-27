@@ -43,7 +43,7 @@
 <PageTitle>@Heading · Wombat</PageTitle>
 
 <PageHeader Title="@Heading" Subtitle="@Subtitle" Icon="@(_notFound ? "search" : null)"
-            Page="@(_notFound ? typeof(NotFound) : null)" />
+            Page="@(_notFound ? typeof(NotFound) : null)" Actions="@HeaderActions" />
 
 @* Always present, filled while the page reads: a live region added with its words in it is often not read (C8). *@
 <p class="visually-hidden" role="status">@(_loading ? RegistrarWords.Loading : null)</p>
@@ -158,6 +158,14 @@
   private string Heading => _loading || _loadError is not null
     ? RegistrarWords.ErrorHeading
     : _notFound || _registrar is null ? "Page not found" : _registrar.Name;
+
+  /// <summary>
+  /// "Export ‹name›'s portfolio" in the header's actions (T379, flow 13, F1, N5; R3-X02, X04, X06, X07): only once the
+  /// registrar is read, and only where the export command would not refuse (MayExport). An ended programme's too (A4).
+  /// </summary>
+  private RenderFragment? HeaderActions => _loading || _loadError is not null || _notFound || _registrar is not { MayExport: true } registrar
+    ? null
+    : @<ExportPortfolioAction TraineeUserId="@registrar.TraineeUserId" TraineeName="@registrar.Name" MayExport="@registrar.MayExport" />;
 
   private string? Subtitle => _loading || _loadError is not null || _notFound || _registrar is null
     ? null

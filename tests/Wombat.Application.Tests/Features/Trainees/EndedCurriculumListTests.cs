@@ -197,6 +197,36 @@ public sealed class EndedCurriculumListTests
             ("PAED-001", "5"), ("PAED-002", "5"), ("PAED-003", "4"), ("PAED-004", null));
         standing.Exit.AtExitLevel.Should().Be(3);
         standing.Exit.NotYetEpaCodes.Should().Equal("PAED-004");
+
+        // T379 (flow 13, F6 and S8; build-contracts § 0): the record's STARs as Home and My progress count them. Issued: any
+        // ratified decision, the one revoked before the end included; in force: the standing's own count, as the
+        // programme left them.
+        (await RecordStars.ReadAsync(db, TestPrincipals.Administrator(), Graduate, Later, CancellationToken.None))
+            .Should().Be(new RecordStarsDto(AnyIssued: true, InForce: 3));
+        (await RecordStars.ReadAsync(db, TestPrincipals.Administrator(), Registrar, Later, CancellationToken.None))
+            .Should().Be(new RecordStarsDto(AnyIssued: false, InForce: 0), "no STAR was issued to the registrar");
+    }
+
+    /// <summary>
+    /// T379 (flow 13, build-contracts § 0): how a programme ended, with the training year it ended in, read one way for the
+    /// former trainee's Home, the ended profile and the staff export.
+    /// </summary>
+    [Fact]
+    public async Task AnEndedProgramme_ReadsItsEndAndTheTrainingYearItEndedIn_AndARunningOneNone()
+    {
+        await using var db = CreateDb();
+        await SeedAsync(db);
+
+        var running = await db.TraineeProfiles.AsNoTracking().SingleAsync(profile => profile.Id == 1);
+        Wombat.Application.Features.Users.EndedProgrammes.Of(running).Should().BeNull("the programme runs");
+
+        await CompleteAsync(db);
+        var ended = await db.TraineeProfiles.AsNoTracking().SingleAsync(profile => profile.Id == 1);
+        var end = Wombat.Application.Features.Users.EndedProgrammes.Of(ended)!;
+
+        end.EndedOn.Should().Be(LastDay);
+        end.Completed.Should().BeTrue();
+        end.TrainingYearAtEnd.Should().Be(TraineeProfile.StageOn(ended.ProgrammeStartDate, LastDay));
     }
 
     [Fact]

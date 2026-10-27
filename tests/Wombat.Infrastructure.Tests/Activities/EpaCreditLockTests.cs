@@ -48,9 +48,9 @@ public sealed class EpaCreditLockTests
 
         // T281: the trainee's lock, and the two handlers that record a programme's end with it.
         scope.ServiceProvider.GetRequiredService<ITraineeCreditLock>().Should().BeOfType<TraineeCreditLock>();
-        scope.ServiceProvider.GetRequiredService<IRequestHandler<CompleteTraineeProfileCommand>>()
+        scope.ServiceProvider.GetRequiredService<IRequestHandler<CompleteTraineeProfileCommand, ProgrammeEndResult>>()
             .Should().BeOfType<CompleteTraineeProfileCommandHandler>();
-        scope.ServiceProvider.GetRequiredService<IRequestHandler<DeactivateTraineeProfileCommand>>()
+        scope.ServiceProvider.GetRequiredService<IRequestHandler<DeactivateTraineeProfileCommand, ProgrammeEndResult>>()
             .Should().BeOfType<DeactivateTraineeProfileCommandHandler>();
     }
 

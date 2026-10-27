@@ -135,17 +135,17 @@ on a `wombat.local` domain so that no email can reach a real person.
 | Administrator (global) | Platform operator | — | `devadmin@wombat.local` on dev (T292); the bootstrap admin elsewhere | 1, 6, appendix |
 | CollegeAdmin (CPSA) | CMSA College registrar | Dr Anton Kruger | `kruger@cmsa.wombat.local` | 1, 6 |
 | InstitutionalAdmin (KGK) | Head of Department | Prof Nolwazi Mbatha | `mbatha@kgk.wombat.local` | 1, 2, 4, 5, 6 |
-| SpecialityAdmin (KGK, Paediatrics) | Programme director | Dr Refilwe Mokoena | `mokoena@kgk.wombat.local` | 2, 3, 4 |
-| SubSpecialityAdmin (KGK, Paediatrics) | Sub-speciality training lead | Dr Kabelo Sithole | `sithole@kgk.wombat.local` | 2, 3, 4 |
+| SpecialityAdmin (KGK, Paediatrics) | Programme director | Dr Refilwe Mokoena | `mokoena@kgk.wombat.local` | 2, 3, 4, appendix |
+| SubSpecialityAdmin (KGK, Paediatrics) | Sub-speciality training lead | Dr Kabelo Sithole | `sithole@kgk.wombat.local` | 2, 3, 4, appendix |
 | Coordinator | Programme coordinator | Mr Pieter Smit | `smit@kgk.wombat.local` | 2, 3, 4, 5, appendix |
 | CommitteeMember + Assessor | Senior consultant, panel chair | Dr Thandi Zulu | `zulu@kgk.wombat.local` | 2, 3, 4, 5 |
 | CommitteeMember + Assessor | Senior consultants | Dr David Naidoo, Dr Sarah Botha | `naidoo@…`, `botha@kgk.wombat.local` | 2, 3, 4, 5 |
 | Assessor | Consultants | Dr Mohammed Patel, Dr Fatima Khumalo | `patel@…`, `khumalo@kgk.wombat.local` | 2, 3 |
 | CommitteeMember (external) | External examiner, Stellenbosch | Dr John van Rensburg | `vanrensburg@sun.wombat.local` | 2, 4 |
-| Trainee, year 4 (Jan 2023 cohort) | Final-year registrar | Dr Lerato Molefe | `molefe@kgk.wombat.local` | 2–5; a former trainee after Act 5 |
-| Trainee, year 3 (Jan 2024) | Registrar | Dr Anele Dlamini | `dlamini@kgk.wombat.local` | 2–4 |
-| Trainee, year 2 (Jan 2025) | Registrar | Dr Pieter du Plessis | `duplessis@kgk.wombat.local` | 2–4 |
-| Trainee, year 1 (Jan 2026) | Registrars | Dr Nomsa Mahlangu, Dr Sipho Ndlovu | `mahlangu@…`, `ndlovu@kgk.wombat.local` | 2–4 |
+| Trainee, year 4 (Jan 2023 cohort) | Final-year registrar | Dr Lerato Molefe | `molefe@kgk.wombat.local` | 2–6, appendix; a former trainee after Act 5 |
+| Trainee, year 3 (Jan 2024) | Registrar | Dr Anele Dlamini | `dlamini@kgk.wombat.local` | 2–4, 6, appendix |
+| Trainee, year 2 (Jan 2025) | Registrar | Dr Pieter du Plessis | `duplessis@kgk.wombat.local` | 2–6, appendix; a former trainee after Act 5 |
+| Trainee, year 1 (Jan 2026) | Registrars | Dr Nomsa Mahlangu, Dr Sipho Ndlovu | `mahlangu@…`, `ndlovu@kgk.wombat.local` | 2–4, 6, appendix |
 | PendingTrainee | Each registrar between registration and admission | — | — | 2 |
 | Anonymous — MSF respondents | Colleagues rating a registrar | named in Act 3 | a link in an email, no account | 3 |
 | Anonymous — a verifier | Someone checking a portfolio PDF | — | no account | 5 |

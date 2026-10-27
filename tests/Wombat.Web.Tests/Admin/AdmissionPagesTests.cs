@@ -635,6 +635,7 @@ public sealed class AdmissionPagesTests : TestContext
     {
         public IReadOnlyList<PendingTraineeDto> Pending { get; init; } = [];
         public IReadOnlyList<TraineeProfileDto> Profiles { get; init; } = [];
+        public EndedProfilesPageDto Ended { get; init; } = new([], 0, 1, ListEndedProfilesQuery.DefaultPageSize);
         public AdmissionResultDto? Result { get; init; }
         public AdmissionCandidateDto? Candidate { get; init; } = Molefe();
         public Exception? Refusal { get; init; }
@@ -668,6 +669,7 @@ public sealed class AdmissionPagesTests : TestContext
             {
                 ListPendingTraineesQuery => Pending,
                 ListTraineesForSpecialityQuery => Profiles,
+                ListEndedProfilesQuery => Ended,
                 GetAdmissionResultQuery => Result,
                 GetAdmissionCandidateQuery => Candidate,
                 GetAdmissionDatesQuery dates => Dates(dates.ProgrammeStart),

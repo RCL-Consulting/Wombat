@@ -841,7 +841,7 @@ Step A.1.14 — What the erasure left, as KGK sees it
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/trainees → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Look for Dr Ndlovu among KGK's users, its trainees and its committee reviews. Open the check-in from A.1.10.
-Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
+Expect: No Dr Ndlovu remains among KGK's users or current trainees, and no row names him (T026, T258).
   - Users reads "People 14", with no pseudonym among them. Dr du Plessis's and Dr Molefe's Roles cells read "No role"
     over "A completed or withdrawn registrar keeps an account and its records.", each with Scope Paediatrics /
     Paediatrics and Status Active (T376, S2, U07).
@@ -851,6 +851,11 @@ Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
   - The check-in's sitting bar reads Withdrawn and "Withdrawn on `D`. Withdrawn because the trainee's personal data
     was erased at their request. Nothing more is decided at this review." (T258, T361), and the page offers no action:
     no Start, no Refresh.
+  - Trainees' "Completed and closed" reads "3 ended" and lists his ended programme under the pseudonym, as Withdrawn
+    on the erasure day (T379, F7, R3-C07): the latest end first, so his row (`deleted_user_…`, Paediatric EPA
+    Curriculum (11.2) over Paediatrics, `J` to `D` over "Training year 1 when it ended", Withdrawn `D`, View named
+    "View deleted_user_…'s record") stands first, before Lerato Molefe's (Completed `D`, the earlier profile) and
+    Pieter du Plessis's (Withdrawn on Act 5's `D−2`). It shows no address, and no row names him.
   - His activities and progress stay under the same pseudonym; the account itself is checked in the outcome's SQL.
 
 Step A.3.1 — Prof Mbatha opens SSO Mappings with no provider configured
@@ -951,9 +956,13 @@ Expect: Nothing scrolls sideways on any of them (T323).
     the password field's Show toggle 44 px tall, its buttons wrapping rather than overflowing. Her Lockout lists two
     lines: the trainee line and the reminders line. There is no Back to users.
   - **Trainees:** Current trainees is stacked, a block per row with its Edit 44 px, and does not scroll sideways (T373,
-    S16); Completed and closed is flow 13's list as built.
-  - **The trainee profile form** stacks its fields. The builder's editor and live preview stack in one column (DESIGN.md
-    § Builder layout, T266), and its tab bar stays usable.
+    S16); Completed and closed is stacked too, a block per ended programme, the latest end first, with its View 44 px
+    (T379, T323).
+  - **Dr Dlamini's profile**, "Anele Dlamini's programme", has no Back to trainees and offers "Export Anele Dlamini's
+    portfolio" in its header (T379). It stacks three fields plus the last day and two triggers: Curriculum, Programme
+    start date and Expected completion date, then End this programme's last day with Mark complete… and Deactivate….
+  - **The builder's** editor and live preview stack in one column (DESIGN.md § Builder layout, T266), and its tab bar
+    stays usable.
 
 Step A.7.14 — Prof Mbatha's pages, checked for contrast
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha

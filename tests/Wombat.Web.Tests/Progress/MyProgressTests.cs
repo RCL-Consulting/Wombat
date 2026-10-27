@@ -39,9 +39,12 @@ public sealed class MyProgressTests : WombatTestContext
     private const string FocusIdentifier = "Blazor._internal.domWrapper.focus";
     private const string Secret = "Npgsql: the connection string was rejected.";
 
+    private readonly TestAuthorizationContext _auth;
+
     public MyProgressTests()
     {
         var auth = this.AddTestAuthorization();
+        _auth = auth;
         auth.SetAuthorized("trainee@test");
         auth.SetRoles(WombatRoles.Trainee);
         auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "trainee-1"));
@@ -671,6 +674,75 @@ public sealed class MyProgressTests : WombatTestContext
         var coverage = sender.Received.OfType<GetMsfCoverageForTraineeQuery>().Should().ContainSingle().Which;
         (coverage.From, coverage.To, coverage.AsOf).Should().Be(((DateOnly?)null, (DateOnly?)new DateOnly(2026, 8, 20), (DateOnly?)null));
     }
+
+    // ─── The record's line, for a former trainee (T379, flow 13, S8; R3-R01, R3-R02) ─
+
+    [Fact]
+    public void AFormerTrainee_ReadsYourRecordLine_MyAuthorisationsThenMyActivities_WhereAStarWasIssued()
+    {
+        SignInAsAFormerTrainee();
+        var sender = Sender(Graduate(), Standing(Epa(1, "PAED-001", "5", EntrustmentStandingStatus.AtOrAbove)))
+            .On<Wombat.Application.Features.Dashboards.FormerTrainee.GetFormerTraineeHomeQuery>(_ => Record(starsIssued: true));
+
+        var cut = RenderWith(sender, waitFor: "Curriculum targets");
+
+        var line = cut.Find(".record-line");
+        Text(line.QuerySelector("p.record-line-label")!).Should().Be("Your record:");
+        line.QuerySelector("ul")!.GetAttribute("aria-labelledby").Should().Be(line.QuerySelector("p")!.Id);
+        line.QuerySelectorAll("a").Select(a => (Text(a), a.GetAttribute("href"))).Should().Equal(
+            ("My authorisations", "/portfolio/authorisations"), ("My activities", "/activities/mine"));
+        IsBefore(cut, "This page is your record of it", "record-line").Should().BeTrue("P1: under the ended notice, as R3-R01 draws it");
+        IsBefore(cut, "record-line", "Curriculum targets").Should().BeTrue("and before the record's targets");
+        Text(cut.Find(".page-subtitle")).Should().Be("Your record of the programme you ended: what your curriculum held you to in each period.");
+    }
+
+    [Fact]
+    public void AFormerTraineeWithNoStar_IsOfferedMyActivitiesAlone()
+    {
+        // R3-R02 (F6): no STAR decision of any kind, so nothing for My authorisations to list.
+        SignInAsAFormerTrainee();
+        var sender = Sender(Withdrawn())
+            .On<Wombat.Application.Features.Dashboards.FormerTrainee.GetFormerTraineeHomeQuery>(_ => Record(starsIssued: false));
+
+        var cut = RenderWith(sender, waitFor: "Curriculum targets");
+
+        cut.Find(".record-line").QuerySelectorAll("a").Select(a => a.GetAttribute("href")).Should().Equal("/activities/mine");
+    }
+
+    [Fact]
+    public void WhenTheStarReadFails_TheLineOffersMyActivitiesAlone_AndThePageStands()
+    {
+        // S8: if the read fails, My activities alone; the failure is logged, never shown.
+        SignInAsAFormerTrainee();
+        var sender = Sender(Graduate())
+            .On<Wombat.Application.Features.Dashboards.FormerTrainee.GetFormerTraineeHomeQuery>(_ => throw new InvalidOperationException(Secret));
+
+        var cut = RenderWith(sender, waitFor: "Curriculum targets");
+
+        cut.Find(".record-line").QuerySelectorAll("a").Select(a => a.GetAttribute("href")).Should().Equal("/activities/mine");
+        cut.Markup.Should().NotContain(Secret);
+    }
+
+    [Fact]
+    public void ARunningProgramme_HasNoRecordLine()
+    {
+        // The line is the record's: a running programme has none, whoever reads it. A holder of the Trainee role is never
+        // shown it, and the golden markup below holds the ended page byte for byte for her.
+        SignInAsAFormerTrainee();
+
+        Render(Molefe()).FindAll(".record-line").Should().BeEmpty();
+    }
+
+    private void SignInAsAFormerTrainee()
+    {
+        _auth.SetRoles();
+        _auth.SetClaims(
+            new Claim(ClaimTypes.NameIdentifier, "trainee-1"),
+            new Claim(Wombat.Application.Common.Security.WombatClaimTypes.TraineeRecord, "true"));
+    }
+
+    private static Wombat.Application.Features.Dashboards.FormerTrainee.FormerTraineeHomeDto Record(bool starsIssued)
+        => new(new DateOnly(2026, 6, 30), Completed: true, TrainingYearAtEnd: 2, new RecordStarsDto(starsIssued, starsIssued ? 1 : 0));
 
     // ─── The ended record, extracted (T358, flow 06; review 8; round-3-check 2) ─
 

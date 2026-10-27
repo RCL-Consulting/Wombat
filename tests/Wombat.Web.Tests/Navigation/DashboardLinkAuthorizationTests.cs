@@ -91,8 +91,10 @@ public sealed class DashboardLinkAuthorizationTests
     [Fact]
     public void TheRenders_DrawEveryLinkEachDashboardCanDraw()
     {
+        // T379 (flow 13, S9): a former trainee holds no role, so her Home is rendered beside the roles' for its card.
         var drawn = WombatRoles.All
             .Select(RenderHomeFor)
+            .Append(RenderRecordHoldersHome(starsIssued: true))
             .GroupBy(home => home.Dashboard.Name, StringComparer.Ordinal)
             .ToDictionary(group => group.Key, group => group.SelectMany(home => home.Hrefs).ToList(), StringComparer.Ordinal);
         var sources = Directory.GetFiles(DashboardsFolder(), "*.razor");
@@ -187,6 +189,32 @@ public sealed class DashboardLinkAuthorizationTests
         home.Markup.Should().Contain("No role assigned").And.NotContain("page-subtitle");
     }
 
+    // T379 (flow 13, S9, Q23; R3-H01): a former trainee holds no role, and her Home is the record's card. Each of its links
+    // opens a page that admits her, judged as the nav's are, for the holder of the trainee_record claim and no role: My
+    // progress, My authorisations (Q3), My activities and Export portfolio.
+    [Fact]
+    public async Task ARecordHoldersHome_IsTheRecordsCard_AndEachLinkOpensAPageThatAdmitsHer()
+    {
+        var (dashboard, hrefs) = RenderRecordHoldersHome(starsIssued: true);
+
+        dashboard.Should().Be<FormerTraineeRecordCard>();
+        hrefs.Should().Equal("/portfolio/progress", "/portfolio/authorisations", "/activities/mine", "/portfolio/export");
+        foreach (var href in hrefs)
+        {
+            var page = PageFor(href);
+            page.Should().NotBeNull($"her Home links to {href}, which should route to a page");
+            (await RefusalOf(page!, RecordHolder())).Should().BeNull($"her Home offers {href}");
+        }
+
+        (await RefusalOf(dashboard, RecordHolder())).Should().BeNull("the card states the policy of the pages it links to");
+    }
+
+    // F6 (R3-H02): with no STAR ever issued, My authorisations has nothing to list, and the card does not link to it.
+    [Fact]
+    public void ARecordHolderWithNoStar_IsNotSentToMyAuthorisations()
+        => RenderRecordHoldersHome(starsIssued: false).Hrefs
+            .Should().Equal("/portfolio/progress", "/activities/mine", "/portfolio/export");
+
     // T335, flow 01: Home shows the acting role's dashboard, as Routes cascades it (resolved by App from the cookie's
     // claims), and names that role under its heading. It offers no switch: the shell's sidebar does (R2-Landing-Assessor).
     [Fact]
@@ -235,6 +263,23 @@ public sealed class DashboardLinkAuthorizationTests
     }
 
     /// <summary>
+    /// Home for a former trainee (T379, flow 13): signed in with no role and the trainee_record claim, her record answered
+    /// with or without a STAR ever issued.
+    /// </summary>
+    private static (Type Dashboard, List<string> Hrefs) RenderRecordHoldersHome(bool starsIssued)
+    {
+        var home = RenderHome(null, stored: null, [new Claim(WombatClaimTypes.TraineeRecord, "true")], new DashboardSender(starsIssued));
+        home.Dashboards.Should().ContainSingle("Home shows a former trainee one dashboard, her record's card");
+
+        return (home.Dashboards[0], home.Hrefs);
+    }
+
+    /// <summary>A former trainee as the pages judge her: signed in, no role, the trainee_record claim.</summary>
+    private static ClaimsPrincipal RecordHolder()
+        => new(new ClaimsIdentity(
+            [new Claim(ClaimTypes.NameIdentifier, "graduate-1"), new Claim(WombatClaimTypes.TraineeRecord, "true")], "Test"));
+
+    /// <summary>
     /// Home, rendered for a signed-in holder of the one role: which dashboard it shows, and every link on the page in
     /// document order.
     /// </summary>
@@ -267,6 +312,14 @@ public sealed class DashboardLinkAuthorizationTests
         ActingRole? cascade,
         string? stored,
         params string[] roles)
+        => RenderHome(cascade, stored, [], new DashboardSender(starsIssued: true), roles);
+
+    private static (List<Type> Dashboards, List<string> Hrefs, string Markup, string? Subtitle) RenderHome(
+        ActingRole? cascade,
+        string? stored,
+        Claim[] extraClaims,
+        DashboardSender sender,
+        params string[] roles)
     {
         using var context = new TestContext();
         context.Services.AddSingleton(TimeProvider.System);
@@ -279,8 +332,9 @@ public sealed class DashboardLinkAuthorizationTests
             claims.Add(new Claim(WombatClaimTypes.ActingRole, stored));
         }
 
+        claims.AddRange(extraClaims);
         auth.SetClaims(claims.ToArray());
-        context.Services.AddSingleton<IScopedSender>(new DashboardSender());
+        context.Services.AddSingleton<IScopedSender>(sender);
 
         var cut = cascade is null
             ? context.RenderComponent<Home>()
@@ -377,7 +431,7 @@ public sealed class DashboardLinkAuthorizationTests
     /// branch that shows a row is drawn and a link added to one is judged. The trainee's is pending as its handler decides
     /// (PendingTrainee without Trainee), and a pending trainee has no targets, as from the handler.
     /// </summary>
-    private sealed class DashboardSender : IScopedSender
+    private sealed class DashboardSender(bool starsIssued) : IScopedSender
     {
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
             => Task.FromResult((TResponse)Answer(request));
@@ -385,8 +439,13 @@ public sealed class DashboardLinkAuthorizationTests
         public Task Send(IRequest request, CancellationToken cancellationToken = default)
             => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}");
 
-        private static object Answer(object request) => request switch
+        private object Answer(object request) => request switch
         {
+            // T379 (flow 13, S9): a former trainee's record, a STAR issued (her card's My authorisations) or none (H02).
+            Wombat.Application.Features.Dashboards.FormerTrainee.GetFormerTraineeHomeQuery =>
+                new Wombat.Application.Features.Dashboards.FormerTrainee.FormerTraineeHomeDto(
+                    new DateOnly(2026, 10, 26), Completed: true, TrainingYearAtEnd: 4,
+                    new Wombat.Application.Features.EntrustmentDecisions.RecordStarsDto(starsIssued, starsIssued ? 15 : 0)),
             GetAdministratorDashboardSummaryQuery => new AdministratorDashboardSummaryDto(DatabaseHealthy: true, TotalUserCount: 12),
             GetInstitutionalAdminDashboardSummaryQuery => new InstitutionalAdminDashboardSummaryDto(
                 // T376, flow 12: every role a link to Users filtered by it, the waiting line's Open Trainees, and Your

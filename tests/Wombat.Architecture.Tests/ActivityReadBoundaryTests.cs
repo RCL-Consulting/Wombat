@@ -74,6 +74,9 @@ public class ActivityReadBoundaryTests
         ["Wombat.Application.Features.Trainees.CompleteTraineeProfileCommandHandler"] =
             "Recording the completion day takes back credit earned by encounters after it (T281): reads one trainee's credited activities' encounter dates, then replays that trainee's credit as the rebuild does (ProgrammeEndCredit), after the institution scope check (CanAccessInstitution on the profile). The replay is the rebuild's for one trainee: it re-scores their whole history against today's curriculum and re-stamps their completions wherever they were filed, other institutions included, and runs only when the end takes credit back. Returns nothing; no activity row reaches a caller.",
 
+        ["Wombat.Application.Features.Trainees.GetTakeBackForecastQueryHandler"] =
+            "The end's dialog says what recording the day typed would take back (T379, flow 13, M2): reads one trainee's credited activities' encounter dates by the end commands' own rule (ProgrammeEndCredit.ObservedTakenBackAsync), after the same checks they make (DemandTraineeAdministration, CanAccessInstitution on the profile). Returns a count, and the one encounter date when there is one; no activity row reaches a caller.",
+
         ["Wombat.Application.Features.Trainees.DeactivateTraineeProfileCommandHandler"] =
             "Recording the last day takes back credit earned by encounters after it (T281): reads one trainee's credited activities' encounter dates, then replays that trainee's credit as the rebuild does (ProgrammeEndCredit), after the institution scope check (CanAccessInstitution on the profile). The replay is the rebuild's for one trainee: it re-scores their whole history against today's curriculum and re-stamps their completions wherever they were filed, other institutions included, and runs only when the end takes credit back. Returns nothing; no activity row reaches a caller.",
 

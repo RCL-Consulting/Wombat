@@ -209,8 +209,21 @@ public static class NavItems
     /// a trainee record, current or ended, and My data rights for everyone. My progress is offered to exactly whom its
     /// page's policy, <c>TraineeOrFormerTrainee</c>, admits: the Trainee role held, or the record's claim (T252).
     /// </summary>
+    /// <remarks>
+    /// Export portfolio between them for a holder of the record who does not hold Trainee (T379, flow 13, Q2): a former
+    /// trainee, whatever role they act as now, exports the portfolio from the menu, never by typing its address. A holder of
+    /// Trainee has it among the Trainee's own links, so it is not offered twice; acting as another role, they are offered My
+    /// progress and My data rights only, as before (N3). It lights itself and draws no trail (F4).
+    /// </remarks>
     private static IReadOnlyList<NavItem> PersonalFor(ClaimsPrincipal user)
-        => user.IsInRole(WombatRoles.Trainee) || user.HasClaim(claim => claim.Type == WombatClaimTypes.TraineeRecord)
-            ? [MyProgress, MyDataRights]
+    {
+        if (user.IsInRole(WombatRoles.Trainee))
+        {
+            return [MyProgress, MyDataRights];
+        }
+
+        return user.HasClaim(claim => claim.Type == WombatClaimTypes.TraineeRecord)
+            ? [MyProgress, ExportPortfolio, MyDataRights]
             : [MyDataRights];
+    }
 }

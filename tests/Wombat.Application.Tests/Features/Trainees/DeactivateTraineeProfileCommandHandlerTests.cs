@@ -68,7 +68,7 @@ public sealed class DeactivateTraineeProfileCommandHandlerTests
             CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("The deactivation date cannot be after today (2027-04-01).");
+            .WithMessage("The last day cannot be after today (2027-04-01).");
         await AssertStillActiveAfterTheAuditSave(db);
     }
 

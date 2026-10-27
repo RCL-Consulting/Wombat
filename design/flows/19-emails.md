@@ -639,16 +639,28 @@ Expect:
 Step 5.17 — Prof Mbatha marks Dr Molefe's programme complete on `D`
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/trainees/edit → /admin/trainees → /admin/users → /admin/users/{UserId}
-Do: Set the last day to `D`, press Mark complete and confirm. Then go back to Trainees, and open Dr Molefe in Users.
-  On her page, press Add a role…, read it and press Cancel.
-Expect: The page says "Trainee marked complete. The Trainee role has been removed and a graduation email sent."
-  - The summary reads Status Completed, Completed `D`.
-  - The last-day field, Deactivate and Mark complete are gone. The page's subtitle reads "The record of a programme
-    that has ended.", and the profile's details read as a list under "This programme has ended, so its record is
+Do: Set the last day to `D`, press Mark complete… and, in its dialog, Mark complete. Then open Trainees from the menu,
+  and open Dr Molefe in Users. On her page, press Add a role…, read it and press Cancel.
+Expect: The dialog, "Mark Lerato Molefe's programme complete?", opens on Cancel and reads "Record `D` as Lerato
+  Molefe's graduation day? The profile is archived, the Trainee role is removed and a graduation email is sent to
+  molefe@kgk.wombat.local.", "Encounters observed after that day will count towards nothing in this programme,
+  including any already counted. Lerato Molefe keeps the record, read-only, and can still export the portfolio." (no
+  count: nothing of hers is observed after `D`) and "The day cannot be changed afterwards, and this cannot be
+  undone.", with Mark complete as its primary. Confirmed:
+  - "**Trainee marked complete.** The Trainee role has been removed and a graduation email sent." stands at the top
+    and takes the focus, with no count sentence, since nothing was taken back (M2).
+  - The page keeps its h1, "Lerato Molefe's programme", and its header action; its subtitle reads "The record of a
+    programme that has ended.". The summary has one Status row, the badge Completed and `D`, then Email; no "Name:"
+    row and no "Trainee summary" heading (T6).
+  - End this programme is gone. Profile details read as a list under "This programme has ended, so its record is
     archived and cannot be changed.": Curriculum Paediatric EPA Curriculum (11.1), Programme start date `J−3y`,
-    Expected completion date `J+1y−1d`. There are no inputs and no Save profile; Back to trainees stays (T305).
-  - On Trainees she is no longer under Current trainees. She is listed under "Completed and closed" with the outcome
-    "Completed `D`".
+    Expected completion date `J+1y−1d`. There are no inputs, no Save profile and no Back to trainees (T305).
+  - "The account" reads "Lerato Molefe holds no role now, and can still sign in to read the record, export the
+    portfolio and download the STAR certificates.", with "Open Lerato Molefe's user page".
+  - On Trainees she is no longer under Current trainees ("4 current"). "Completed and closed", "1 ended", under
+    "Programmes that have ended, the latest end first. An ended record is read-only.", lists her row: Lerato Molefe;
+    Paediatric EPA Curriculum (11.1) over Paediatrics; `J−3y` to `D` over "Training year 4 when it ended"; Completed
+    `D`; and View, named "View Lerato Molefe's record", which opens her ended record (no Edit).
   - Her user page's Roles and scope says "**Lerato Molefe holds no role: they completed the programme on `D`.** They can
     still sign in to read their training record (My progress) and their data rights." (T376, S2, Q13; D54), and its Add
     a role… offers the six staff roles and no Trainee (T303). On Users her Roles cell reads "No role" over "A completed
@@ -660,8 +672,11 @@ Role: System — the graduation email sent by Mark complete
 Route: n/a
 Do: Read the application log for the mail sent in Step 5.17.
 Expect: There is one email to `molefe@kgk.wombat.local` with the subject "Congratulations on completing Paediatric EPA
-  Curriculum". It congratulates her on completing the programme as of `D`, and says that her committee has ratified
-  her final entrustment decisions and that her portfolio is available in Wombat.
+  Curriculum". It congratulates her on completing her training programme, Paediatric EPA Curriculum, as of `D`, then
+  reads "Your record of the programme stays in Wombat, read-only. Sign in to read it on My progress, to export your
+  portfolio, and to download the certificate of any STAR issued to you.", with "Open My progress" linking
+  `/portfolio/progress` under the configured base URL (in the text part, "Open My progress: <url>"). It no longer says
+  that her committee has ratified her final entrustment decisions, which Mark complete never checks (Q12, Q13).
 
 Step A.1.3 — Mr Smit approves the export from KGK's queue
 Role: Coordinator — Mr Pieter Smit

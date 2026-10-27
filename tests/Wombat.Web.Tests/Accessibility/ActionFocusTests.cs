@@ -827,16 +827,23 @@ public sealed class ActionFocusTests : TestContext
             cut => Named(cut, "Disable"),
             cut => Named(cut, "Disable").Click()),
 
-        ["ExportPortfolio Export PDF"] = new(
-            (test, hold) => test.Page<ExportPortfolio>(
+        // T379, flow 13: the staff route is its own component, read through the export subject before its form (S2, M4).
+        ["ExportTraineePortfolio Export PDF"] = new(
+            (test, hold) => test.Page<ExportTraineePortfolio>(
                 new Sender(hold, request => request is ExportPortfolioCommand, request => request switch
                 {
+                    GetExportSubjectQuery => new ExportSubjectDto(
+                        "trainee-1", "Lerato Molefe", "Kgosi Kgari Teaching Hospital", "Paediatric EPA Curriculum", "11.1", 4,
+                        new DateOnly(2023, 1, 15), null, 2),
                     ExportPortfolioCommand => new PortfolioExportResult([1, 2, 3], "portfolio.pdf", "hash-1"),
                     _ => null
                 }),
                 parameters => parameters.Add(page => page.TraineeUserId, "trainee-1")),
             cut => Named(cut, "Export PDF", "Generating..."),
-            cut => Named(cut, "Export PDF", "Generating...").Click()),
+            cut => Named(cut, "Export PDF", "Generating...").Click(),
+            // Every failure but a date's is fixed words (R3-E13, T329), never a refusal's own text, and it takes the focus:
+            // ExportPortfolioPageTests holds it.
+            CanBeRefused: false),
 
         ["ActivityTypeEdit Save draft"] = new(
             (test, hold) => test.ActivityTypePage(hold, request => request is SaveActivityTypeDraftCommand, hasDraft: false),

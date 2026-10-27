@@ -421,9 +421,13 @@ Expect: Nothing scrolls sideways on any of them (T323).
     the password field's Show toggle 44 px tall, its buttons wrapping rather than overflowing. Her Lockout lists two
     lines: the trainee line and the reminders line. There is no Back to users.
   - **Trainees:** Current trainees is stacked, a block per row with its Edit 44 px, and does not scroll sideways (T373,
-    S16); Completed and closed is flow 13's list as built.
-  - **The trainee profile form** stacks its fields. The builder's editor and live preview stack in one column (DESIGN.md
-    § Builder layout, T266), and its tab bar stays usable.
+    S16); Completed and closed is stacked too, a block per ended programme, the latest end first, with its View 44 px
+    (T379, T323).
+  - **Dr Dlamini's profile**, "Anele Dlamini's programme", has no Back to trainees and offers "Export Anele Dlamini's
+    portfolio" in its header (T379). It stacks three fields plus the last day and two triggers: Curriculum, Programme
+    start date and Expected completion date, then End this programme's last day with Mark complete… and Deactivate….
+  - **The builder's** editor and live preview stack in one column (DESIGN.md § Builder layout, T266), and its tab bar
+    stays usable.
 
 [appendix-cross-cutting.md]
 ### Step A.7.14 — Prof Mbatha's pages, checked for contrast

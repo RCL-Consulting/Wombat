@@ -1,0 +1,144 @@
+@page "/portfolio/export/{TraineeUserId}"
+@attribute [Authorize]
+@using Wombat.Application.Features.Reporting
+@inject IScopedSender Sender
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<ExportTraineePortfolio> Logger
+@inject IJSRuntime JS
+
+@*
+  A member of staff's export of one registrar's portfolio (T379, flow 13, lane E; S2, M4, Q4, Q5, Q27; R3-E04–E06, E09,
+  E10, E13–E15, E17, E18, E20), reached from "Export ‹name›'s portfolio" in the header of the trainee profile, the
+  committee review and the registrar's programme page (F1). Its own component, apart from the own export, so the menu
+  lights its owner by route, never the caller's own personal Export portfolio (S2): Trainees for the Institutional admin,
+  Programme trainees for the four programme roles (NavOwners); the Administrator, offered neither, Home › Export portfolio.
+
+  - h1 and tab "Export Lerato Molefe's portfolio" (PortfolioWords.ExportAction, Q5); its crumb "Export portfolio". The
+    trail's middle crumb by the lit owner, through PageHeader.Trail (M4): "Lerato Molefe's programme" to the profile under
+    Trainees, "Lerato Molefe" to the programme page under Programme trainees; none with no profile (build note 6) and none
+    while the subject is read or failed (N12: "Home › Trainees › Export portfolio").
+  - Null from GetExportSubjectQuery is the Unavailable page (Q19): refused, an unknown id, an erased person alike, naming
+    nobody, nothing lit (Page=, S2). The command's "You are not authorized to export this portfolio." stays behind it.
+*@
+
+<PageTitle>@Heading · Wombat</PageTitle>
+
+<PageHeader Title="@Heading" Subtitle="@Subtitle" CurrentCrumb="@ExportWords.Crumb" Trail="@Trail"
+            Page="@(Unavailable ? typeof(NotFound) : null)" />
+
+@* Always present, filled while the subject is read: a live region added with its words in it is often not read. *@
+<p class="visually-hidden" role="status">@(_loading ? ExportWords.Loading : null)</p>
+
+<StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusHeadingAsync">
+  <LoadingContent>
+    <ExportSkeleton />
+  </LoadingContent>
+  <ChildContent>
+    @if (_subject is null)
+    {
+      <ExportUnavailable />
+    }
+    else
+    {
+      <ExportPortfolioForm Subject="_subject" Own="false" OnRefused="RefusedAsync" />
+    }
+  </ChildContent>
+</StatePanel>
+
+@code {
+  /// <summary>The registrar's user id, as the address gives it (<c>PortfolioLinks.ExportFor</c>).</summary>
+  [Parameter] public string TraineeUserId { get; set; } = string.Empty;
+
+  /// <summary>The acting role, as App resolved it and Routes cascades it: whose owner the trail's middle crumb follows.</summary>
+  [CascadingParameter] public ActingRole? Acting { get; set; }
+
+  /// <summary>The person's navigation, as MainLayout cascades it.</summary>
+  [CascadingParameter] public NavMenuModel? Menu { get; set; }
+
+  private bool _loading = true;
+  private string? _loadError;
+  private ExportSubjectDto? _subject;
+  private string? _readFor;
+
+  private bool Unavailable => !_loading && _loadError is null && _subject is null;
+
+  /// <summary>
+  /// The h1, which the tab shares: "Export portfolio" while the subject is read and when it failed (N12), "Portfolio
+  /// unavailable" (Q19), else "Export Lerato Molefe's portfolio" (Q5).
+  /// </summary>
+  private string Heading => _loading || _loadError is not null
+    ? ExportWords.Title
+    : _subject is null ? ExportWords.UnavailableTitle : ExportWords.StaffTitle(_subject.Name);
+
+  private string? Subtitle => _loading || _loadError is not null || _subject is null ? null : ExportWords.StaffSubtitle(_subject);
+
+  /// <summary>
+  /// The crumb between the owner and the page (M4): the registrar's programme under the owner the menu lights, linked to
+  /// its preferred profile. None where nothing is lit (the Administrator), with no profile, or before the subject is read.
+  /// </summary>
+  private IReadOnlyList<Crumb>? Trail
+  {
+    get
+    {
+      if (_subject is not { ProfileId: int profileId } subject)
+      {
+        return null;
+      }
+
+      var (item, _) = NavOwners.Lit(typeof(ExportTraineePortfolio), Acting?.Role, Menu);
+      if (item == NavItems.Trainees)
+      {
+        return [new Crumb(PortfolioWords.ProgrammeOf(subject.Name), PortfolioLinks.TraineeProfile(profileId))];
+      }
+
+      return item == NavItems.ProgrammeTrainees
+        ? [new Crumb(subject.Name, PortfolioLinks.ProgrammeTrainee(profileId))]
+        : null;
+    }
+  }
+
+  protected override async Task OnParametersSetAsync()
+  {
+    if (string.Equals(_readFor, TraineeUserId, StringComparison.Ordinal))
+    {
+      return;
+    }
+
+    _readFor = TraineeUserId;
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    _subject = null;
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _subject = string.IsNullOrWhiteSpace(TraineeUserId)
+        ? null
+        : await Sender.Send(new GetExportSubjectQuery(TraineeUserId, authState.User));
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // Never the exception's text on the page: it goes to the log (T329, R3-E15).
+      Logger.LogError(exception, "The export subject {TraineeUserId} could not be read.", TraineeUserId);
+      _loadError = ExportWords.LoadError;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private Task RetryAsync() => LoadAsync();
+
+  private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  private async Task RefusedAsync()
+  {
+    _subject = null;
+    await PageFocus.FocusHeadingAsync(JS);
+  }
+}

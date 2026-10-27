@@ -382,14 +382,14 @@ Route: / → /admin/jobs
 Do: Open Scheduled jobs from the menu and read every row.
 Expect: Each row shows the job's description and its cron schedule (UTC), with its last run, that run's status badge
   and its next run in the server's local time. Each has Disable and Run now, both named for the job (T239). A job that
-  has never run reads "—" for its last run and status. Run history is linked from the header. The nine jobs, by key:
+  has never run reads "—" for its last run and status. Run history is linked from the header. The eight jobs, by key
+  (T379 retired `portfolio-export-cleanup` with its definition and runs, so a genuine PDF keeps verifying):
   - activity-draft-nudge
   - assessor-pending-nudge
   - audit-log-retention
   - entrustment-decision-expiry
   - msf-campaign-auto-close
   - msf-invitation-expiry-reminder
-  - portfolio-export-cleanup
   - scheduled-job-run-retention
   - weekly-coordinator-digest
 
@@ -436,7 +436,7 @@ Expect: The log holds a stub mail "You have draft activities waiting" beginning 
   reminded and whom it skipped, and why (T151, T240).
 
 [appendix-cross-cutting.md]
-### Step A.2.9 — devadmin runs the other six jobs
+### Step A.2.9 — devadmin runs the other five jobs
 Role: Administrator — devadmin
 Route: /admin/jobs
 Do: Run each of the remaining jobs now, one at a time, and read each one's log line.
@@ -446,7 +446,6 @@ Expect: Each run reads Succeeded, and each job logs one line:
   - msf-campaign-auto-close: "no expired campaigns found.", since Act 3's campaign was closed and released.
   - msf-invitation-expiry-reminder: "no respondent is due a reminder."
   - audit-log-retention: "complete. Total archived: 0.", since nothing is two years old.
-  - portfolio-export-cleanup: "no expired exports found.", since Act 5's exports are days old.
   - scheduled-job-run-retention: "no old runs to delete."
 
 [appendix-cross-cutting.md]

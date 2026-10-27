@@ -61,6 +61,14 @@ F-1.21b and F-2.44a (T291 item 4: Home counts what KGK adopted), F-1.23c (T291 i
 T324: training on the person's page, no picker), F-2.28b (T323: a role's label and its note apart), F-A.3.1a (T326: the
 not-set-up card in her words) and A.7.9's 807 px (T323: Users stacks); and the people pages' halves of T264 (the lock and
 a role's Remove confirmed), T280, T286 (another person's sign-in, F7), T324, T325 and T329.
+T379 (flow 13, 2026-10-27) gave the staff export a page of its own, `/portfolio/export/{TraineeUserId}`
+(ExportTraineePortfolio.razor), reached from "Export ‹name›'s portfolio" in the header of the trainee profile (5.10)
+and the committee review (5.12), and drew a former trainee's Home as a card of its own (FormerTraineeRecordCard, under
+Home.razor): 331 steps, 79 page files and 88 templates. Its build closes, for its replay to confirm, the gaps the
+steps record: F-5.10a (T314: the staff export linked and naming the registrar, 5.10, 5.12), F-5.13a and F-5.13b
+(T313, T287: Verify reads either case and says what to enter, 5.13), F-5.21a, F-5.22a, F-5.23a and F-A.7.4a (T311:
+Home's card names the end, My authorisations admits a graduate, Export portfolio is in her menu) and F-A.2.9a (T313:
+portfolio-export-cleanup retired, A.2.1, A.2.9); and the flow's halves of T280, T323, T325 and T329.
 
 ## Pages
 
@@ -69,7 +77,7 @@ institution, speciality or the record's own people; where that decides what a pe
 
 | Templates | Page | Who may open it | Steps |
 |---|---|---|---|
-| `/` | Home.razor | Any signed-in user | 1.1, 1.8, 1.10, 1.11, 1.21, 1.23, 2.1, 2.8, 2.9, 2.10, 2.18, 2.19, 2.23, 2.25, 2.27, 2.28, 2.31, 2.32, 2.33, 2.34, 2.35, 2.36, 2.37, 2.38, 2.39, 2.40, 2.44, 3.1, 3.5, 3.12, 3.13, 3.15, 3.16, 3.17, 3.24, 3.26, 3.28, 3.30, 3.31, 3.33, 3.34, 3.50, 3.51, 3.52, 3.53, 3.54, 3.54a, 3.54c, 4.1, 4.2, 4.3, 4.4, 4.5, 4.35, 4.39, 4.42, 5.7, 5.8, 5.15, 5.21, 5.25, 5.28, 6.10, A.1.1, A.2.1, A.4.1, A.4.6, A.4.7, A.5.3, A.5.9, A.5.10, A.5.11, A.5.12, A.5.13, A.5.16, A.6.1, A.6.2, A.6.3, A.6.8, A.7.3, A.7.4, A.7.5, A.7.6, A.7.7, A.7.8, A.7.8a, A.7.9, A.7.10, A.7.11, A.7.14 |
+| `/` | Home.razor | Any signed-in user | 1.1, 1.8, 1.10, 1.11, 1.21, 1.23, 2.1, 2.8, 2.9, 2.10, 2.18, 2.19, 2.23, 2.25, 2.27, 2.28, 2.31, 2.32, 2.33, 2.34, 2.35, 2.36, 2.37, 2.38, 2.39, 2.40, 2.44, 3.1, 3.5, 3.12, 3.13, 3.15, 3.16, 3.17, 3.24, 3.26, 3.28, 3.30, 3.31, 3.33, 3.34, 3.50, 3.51, 3.52, 3.53, 3.54, 3.54a, 3.54c, 4.1, 4.2, 4.3, 4.4, 4.5, 4.35, 4.39, 4.42, 5.7, 5.8, 5.15, 5.21, 5.23, 5.25, 5.28, 6.10, A.1.1, A.2.1, A.4.1, A.4.6, A.4.7, A.5.3, A.5.9, A.5.10, A.5.11, A.5.12, A.5.13, A.5.16, A.6.1, A.6.2, A.6.3, A.6.8, A.7.3, A.7.4, A.7.5, A.7.6, A.7.7, A.7.8, A.7.8a, A.7.9, A.7.10, A.7.11, A.7.14 |
 | `/access-denied` | AccessDenied.razor | Anyone, signed in or not | 1.15, 1.23, 2.19, 2.32, 4.5, 4.41, 5.22, 6.10, A.5.1, A.5.2 |
 | `/account/change-password` | Account/ChangePassword.razor | Any signed-in user | A.4.2, A.4.6, A.7.14 |
 | `/account/data-rights` | Profile/DataRights.razor | Any signed-in user | A.1.1, A.1.2, A.1.5, A.1.6, A.1.7, A.1.9, A.1.11, A.2.3, A.2.5, A.7.3 |
@@ -116,19 +124,19 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/admin/specialities/{SpecialityId:int}/sub-specialities` | Admin/Institutions/SubSpecialitiesList.razor | Administrator, CollegeAdmin | 1.13, 6.4, 6.12 |
 | `/admin/specialities/{SpecialityId:int}/sub-specialities/new`, `/admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}` | Admin/Institutions/SubSpecialityEdit.razor | Administrator, CollegeAdmin | 1.14, 6.4, 6.7, 6.12 |
 | `/admin/sso/group-mappings` | Admin/Sso/GroupMappings.razor | Administrator, InstitutionalAdmin | A.3.1 |
-| `/admin/trainees` | Admin/Trainees/PendingTraineesList.razor | Administrator, InstitutionalAdmin | 2.28, 2.29, 2.30, 5.16, 5.17, 5.27, 6.34, 6.36, A.1.14, A.7.9 |
+| `/admin/trainees` | Admin/Trainees/PendingTraineesList.razor | Administrator, InstitutionalAdmin | 2.28, 2.29, 2.30, 5.10, 5.16, 5.17, 5.27, 6.34, 6.36, A.1.14, A.7.9 |
 | `/admin/trainees/admit` | Admin/Trainees/AdmitRegistrar.razor | Administrator, InstitutionalAdmin; a registrar waiting in the caller's scope, any other id reads as not found | 2.29, 2.30 |
-| `/admin/trainees/edit` | Admin/Trainees/TraineeProfileEdit.razor | Administrator, InstitutionalAdmin | 2.30, 5.16, 5.17, 5.27, 6.34, 6.36, A.7.9 |
-| `/admin/users` | Admin/Users/UsersList.razor | Administrator, InstitutionalAdmin | 2.12, 2.13, 2.28, 2.44, 5.10, 5.17, A.1.14, A.4.5, A.5.1, A.6.4, A.6.9, A.7.9 |
-| `/admin/users/{UserId}` | Admin/Users/UserDetail.razor | Administrator, InstitutionalAdmin; since T376 it holds an Assessor's training (`?section=training` opens it) | 2.12, 2.13, 2.14, 2.15, 2.28, 5.10, 5.17, A.4.5, A.5.5, A.5.15, A.6.4, A.6.7, A.6.9, A.7.9, A.7.14 |
+| `/admin/trainees/edit` | Admin/Trainees/TraineeProfileEdit.razor | Administrator, InstitutionalAdmin | 2.30, 5.10, 5.16, 5.17, 5.27, 6.34, 6.36, A.7.9 |
+| `/admin/users` | Admin/Users/UsersList.razor | Administrator, InstitutionalAdmin | 2.12, 2.13, 2.28, 2.44, 5.17, A.1.14, A.4.5, A.5.1, A.6.4, A.6.9, A.7.9 |
+| `/admin/users/{UserId}` | Admin/Users/UserDetail.razor | Administrator, InstitutionalAdmin; since T376 it holds an Assessor's training (`?section=training` opens it) | 2.12, 2.13, 2.14, 2.15, 2.28, 5.17, A.4.5, A.5.5, A.5.15, A.6.4, A.6.7, A.6.9, A.7.9, A.7.14 |
 | `/committee/decisions-due` | CommitteeDecisions/DecisionsDue.razor | Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 4.1, 4.2, 4.3, 4.4, 4.5, 4.9, 4.10, 4.12, 4.34, 4.37, 4.49, 5.1, 5.2, A.1.10, A.7.5, A.7.7, A.7.8 |
 | `/committee/my-reviews` | CommitteeDecisions/MyReviews.razor | Trainee, Administrator; the list only, each row's View opening her review's page (T366) | 4.41, 4.42, 4.43, 4.48, 4.51, 5.8, 5.22 |
 | `/committee/my-reviews/{ReviewId:int}` | CommitteeDecisions/MyReview.razor | Trainee, Administrator; only the review's own trainee, once it is ratified or later, whatever role they act in; any other id flow 01's "Page not found" (T366, F8) | 4.41, 4.42, 4.43, 4.48, 4.51, 5.8 |
 | `/committee/panels` | CommitteeDecisions/PanelsList.razor | CommitteeMember, Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 2.20, 2.23, 2.24, 2.25, 2.32, 2.35, 2.37, 4.13, 4.14, A.7.7 |
 | `/committee/panels/new`, `/committee/panels/{PanelId:int}` | CommitteeDecisions/PanelEdit.razor | Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 2.21, 2.22, 2.23, 2.25, 2.32, 4.13 |
-| `/committee/reviews` | CommitteeDecisions/ReviewsSchedule.razor | Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, CommitteeMember | 4.6, 4.7, 4.8, 4.11, 4.12, 4.15, 4.22, 4.26, 4.28, 4.30, 4.31, 4.32, 4.33, 4.44, 4.45, 4.49, 5.3, 5.29, A.1.10, A.1.14, A.7.6, A.7.8, A.7.14 |
+| `/committee/reviews` | CommitteeDecisions/ReviewsSchedule.razor | Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin, CommitteeMember | 4.6, 4.7, 4.8, 4.11, 4.12, 4.15, 4.22, 4.26, 4.28, 4.30, 4.31, 4.32, 4.33, 4.44, 4.45, 4.49, 5.3, 5.12, 5.29, A.1.10, A.1.14, A.7.6, A.7.8, A.7.14 |
 | `/committee/reviews/new` | CommitteeDecisions/ScheduleReview.razor | Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 4.2, 4.6, 4.7, 4.8, 4.9, 4.10, 4.49, 5.2, 5.29, A.1.10 |
-| `/committee/reviews/{ReviewId:int}` | CommitteeDecisions/ReviewDetail.razor | CommitteeMember, Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 4.6, 4.7, 4.9, 4.10, 4.11, 4.15, 4.16, 4.17, 4.18, 4.19, 4.20, 4.22, 4.23, 4.24, 4.25, 4.26, 4.27, 4.28, 4.29, 4.30, 4.31, 4.32, 4.33, 4.41, 4.44, 4.45, 4.46, 4.47, 4.49, 4.50, 5.2, 5.3, 5.4, 5.5, 5.6, A.1.10, A.1.14, A.7.6, A.7.13, A.7.14 |
+| `/committee/reviews/{ReviewId:int}` | CommitteeDecisions/ReviewDetail.razor | CommitteeMember, Coordinator, Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 4.6, 4.7, 4.9, 4.10, 4.11, 4.15, 4.16, 4.17, 4.18, 4.19, 4.20, 4.22, 4.23, 4.24, 4.25, 4.26, 4.27, 4.28, 4.29, 4.30, 4.31, 4.32, 4.33, 4.41, 4.44, 4.45, 4.46, 4.47, 4.49, 4.50, 5.2, 5.3, 5.4, 5.5, 5.6, 5.12, A.1.10, A.1.14, A.7.6, A.7.13, A.7.14 |
 | `/Error` | Error.razor | Anyone, signed in or not (static; T321) | A.5.8 |
 | `/msf/campaigns` | MultiSourceFeedback/CampaignsList.razor | Coordinator, Administrator | 3.34, 3.38, 3.41, 3.46, 3.49, A.4.7, A.7.5 |
 | `/msf/campaigns/new` | MultiSourceFeedback/NewCampaign.razor | Coordinator, Administrator | 3.34, 3.35, 3.38 |
@@ -139,8 +147,9 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/msf/reports/{CampaignId:int}` | MultiSourceFeedback/CampaignReport.razor | Coordinator, Administrator | 3.41, 3.44, 3.46 |
 | `/msf/respond` | MultiSourceFeedback/MsfRespond.razor | Anyone, signed in or not (a static page) | 3.39, 3.40, 3.42, 3.45 |
 | `/not-found` | NotFound.razor | Anyone, signed in or not | 1.23, 3.31, A.5.4, A.5.5 |
-| `/portfolio/authorisations` | Portfolio/MyAuthorisations.razor | Trainee | 4.39, 4.42, 5.8, 5.22 |
-| `/portfolio/export`, `/portfolio/export/{TraineeUserId}` | Portfolio/ExportPortfolio.razor | Any signed-in user; the export admits a trainee to her own portfolio, and staff to a trainee they oversee | 5.9, 5.10, 5.12, 5.23 |
+| `/portfolio/authorisations` | Portfolio/MyAuthorisations.razor | Trainee, or a former trainee (trainee record; T379, Q3) | 4.39, 4.42, 5.8, 5.22 |
+| `/portfolio/export` | Portfolio/ExportPortfolio.razor | Any signed-in user; the person's own portfolio, a Trainee's menu item and a former trainee's personal link (T379, Q2); with no trainee profile, "Portfolio unavailable" (Q19) | 5.9, 5.23 |
+| `/portfolio/export/{TraineeUserId}` | Portfolio/ExportTraineePortfolio.razor | Any signed-in user; staff who oversee the registrar (the export command's own check, `MayExport`), reached from "Export ‹name›'s portfolio" in the header of the trainee profile, the committee review and the registrar's programme page (T379, F1); anyone else, an unknown id or an erased person "Portfolio unavailable" (Q19) | 5.10, 5.12 |
 | `/portfolio/progress/{EpaId:int}` | Portfolio/EpaProgress.razor | Trainee, or a former trainee (trainee record); the caller's own curriculum's EPAs only, any other id "Page not found". Reached from My progress's index, Home's Furthest short and My authorisations rows, My activities' Credit links, a completed activity's Open My progress, and an ended record's EPA codes (T355) | 3.6, 3.7, 3.48, 5.26, 6.15, 6.19, 6.21, 6.24, 6.27, A.7.3 |
 | `/portfolio/progress` | Portfolio/MyProgress.razor | Trainee, or a former trainee (trainee record) | 2.19, 2.39, 2.40, 3.7, 3.48, 4.40, 5.15, 5.19, 5.20, 5.26, 5.28, 6.15, 6.19, 6.21, 6.24, 6.27, 6.35, 6.37, 6.39, 6.40, 6.41, A.7.3, A.7.4 |
 | `/portfolio/verify` | Portfolio/VerifyExport.razor | Anyone, signed in or not (a static page) | 5.13, 5.14, 5.23, A.7.12 |
@@ -216,14 +225,16 @@ state, `states.md` is where it belongs.
 
 Pages a role is admitted to, played in the story, that its menu and dashboard do not link to. The redesign should decide
 whether each deserves a link. Since T376 (flow 12) her institution's record is linked from her Home's Your institution
-card, and Entrustment decisions is in her menu under Reviews (F10), so neither is listed here.
+card, and Entrustment decisions is in her menu under Reviews (F10), so neither is listed here. Since T379 (flow 13) the
+staff export is linked from the header of the trainee profile, the committee review and the registrar's programme
+page, and a former trainee's Export portfolio, My authorisations and My activities from her Home's card and menu, so
+none of them is listed here.
 
 | Page | Who is admitted but has no link | Steps |
 |---|---|---|
-| `/portfolio/export/{TraineeUserId}` | Every member of staff who may export a trainee's portfolio: no page links to it | 5.10, 5.12 |
 | `/account/logout-confirm`, `/account/logout` | Everyone: only the error page's Sign out links to the confirmation address (on the replay no failure leads there, A.5.8), and nothing links to `/account/logout`; everywhere else the account row's Sign out posts to `/account/logout/submit` and signs out at once | A.4.7 |
 | `/Error` | Everyone: on the replay (Development) no failure leads to it | A.5.8 |
-| `/portfolio/authorisations` | Trainee: reached from Home's My authorisations card (its Open My authorisations; its STAR rows open the EPA page) and from an EPA page's Entrustment, not from the menu, which lights My progress on it (T355) | 4.39, 4.42, 5.8 |
+| `/portfolio/authorisations` | Trainee: reached from Home's My authorisations card (its Open My authorisations; its STAR rows open the EPA page) and from an EPA page's Entrustment, not from the menu, which lights My progress on it (T355); a former trainee reaches it from Home's Your training record card (T379) | 4.39, 4.42, 5.8 |
 
 ## Endpoints
 
@@ -320,7 +331,7 @@ and Assessor) appears under each role for the jobs done in it.
 | See what the committee must decide this period, and what is scheduled | 4.2, 4.12, 4.34 | `/committee/decisions-due`, `/committee/reviews/new`, `/committee/reviews` |
 | Read a decided review before the chair ratifies it | 4.26 | `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
 | Read the STARs the committee issued, and download a certificate | 4.35, 5.7 | `/`, `/admin/entrustment-decisions` |
-| Export a registrar's portfolio | 5.10, 5.11 | `/admin/users`, `/admin/users/{UserId}`, `/portfolio/export/{TraineeUserId}` |
+| Export a registrar's portfolio | 5.10, 5.11 | `/admin/trainees`, `/admin/trainees/edit`, `/portfolio/export/{TraineeUserId}` |
 | Record a registrar's graduation | 5.16, 5.17 | `/admin/trainees`, `/admin/trainees/edit`, `/admin/users`, `/admin/users/{UserId}` |
 | Record a registrar leaving the programme | 5.27 | `/admin/trainees`, `/admin/trainees/edit` |
 | See an EPA the College has paused, and a graduate's STARs on it | 6.22 | `/admin/epas`, `/admin/curricula`, `/admin/curricula/{Id:int}/items`, `/admin/entrustment-decisions` |
@@ -382,7 +393,7 @@ and Assessor) appears under each role for the jobs done in it.
 | Read the ratified schedule and a review's outcome | 4.33 | `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
 | Schedule a formative check-in | 4.49, A.1.10 | `/committee/reviews`, `/committee/reviews/new`, `/committee/reviews/{ReviewId:int}`, `/committee/decisions-due` |
 | Schedule a registrar's pre-graduation review | 5.2 | `/committee/decisions-due`, `/committee/reviews/new`, `/committee/reviews/{ReviewId:int}` |
-| Reproduce a registrar's portfolio export | 5.12 | `/portfolio/export/{TraineeUserId}` |
+| Reproduce a registrar's portfolio export | 5.12 | `/committee/reviews`, `/committee/reviews/{ReviewId:int}`, `/portfolio/export/{TraineeUserId}` |
 | Check that an ended programme cannot be put before the panel | 5.29 | `/committee/reviews`, `/committee/reviews/new` |
 | Decide a registrar's data-rights request: approve an export, reject a correction | A.1.3, A.1.8, A.5.7 | `/admin/data-rights`, `/admin/data-rights/{Id:guid}` |
 | Find that I cannot download a registrar's data export | A.1.4 | `/account/data-rights/download/{id:guid}` |
@@ -489,9 +500,9 @@ and Assessor) appears under each role for the jobs done in it.
 | Be emailed that my programme is complete | 5.18 | None: the email is read in the application log |
 | Be signed out when my programme is marked complete, and told why | 5.19 | `/portfolio/progress`, `/account/session-ended`, `/account/login` |
 | Read my read-only record of the programme | 5.20, 6.21, 6.40 | `/account/login`, `/account/login/submit`, `/portfolio/progress`, `/portfolio/progress/{EpaId:int}` |
-| See what Home and the menu offer me now | 5.21 | `/` |
-| Find the pages that still need the Trainee role | 5.22 | `/committee/my-reviews`, `/portfolio/authorisations`, `/msf/my-reports`, `/access-denied`, `/activities/new` |
-| Export my portfolio as a graduate, and check it verifies | 5.23 | `/portfolio/export`, `/portfolio/verify` |
+| See what Home and the menu offer me now: the end and its day, and the record's four pages (Home's FormerTraineeRecordCard) | 5.21, 5.28, A.1.6, A.4.6 | `/` |
+| Find the pages that still need the Trainee role, and keep my STAR certificates | 5.22 | `/committee/my-reviews`, `/portfolio/authorisations`, `/msf/my-reports`, `/access-denied`, `/activities/new` |
+| Export my portfolio as a graduate, from my menu or Home's card, and check it verifies | 5.23 | `/`, `/portfolio/export`, `/portfolio/verify` |
 | Read my record on a phone | A.7.4 | `/`, `/portfolio/progress` |
 
 ### Anonymous visitor

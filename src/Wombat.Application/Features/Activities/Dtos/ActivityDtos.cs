@@ -404,6 +404,14 @@ public sealed record ActivityListPageDto(
 {
     /// <summary>How many pages the list has; 1 for an empty list, so "page 1 of 1" is always true.</summary>
     public int PageCount => Math.Max(1, (TotalCount + PageSize - 1) / PageSize);
+
+    /// <summary>
+    /// The last day of the subject's programme, when the subject's preferred profile has ended (<c>TraineeProfile.EndedOn</c>):
+    /// My activities' "Read-only: your programme ended on 2026-10-24, so nothing new can be filed." and its note rows'
+    /// day (T379, flow 13, R3-R07; S18). Set by <c>ListActivitiesBySubjectQuery</c> on the caller's own list only; null
+    /// while the programme runs, for a list of someone else, and elsewhere.
+    /// </summary>
+    public DateOnly? SubjectEndedOn { get; init; }
 }
 
 /// <summary>
@@ -544,6 +552,15 @@ public sealed record ActivitySummaryDto(
     /// elsewhere.
     /// </summary>
     public bool EpaPageOpens { get; init; }
+
+    /// <summary>
+    /// Whether it was observed after the last day of its subject's ended programme (<c>TraineeProfile.IsAfterEnd</c>), so it
+    /// counts towards nothing (T281): My activities' note row under it, "Observed after your last day in the programme,
+    /// 2026-10-24, so it counts towards nothing." (T379, flow 13, R3-R07; DATA "My activities' note row's reason"). Set by
+    /// <c>ListActivitiesBySubjectQuery</c> on the caller's own list, against <see cref="ActivityListPageDto.SubjectEndedOn" />;
+    /// false elsewhere.
+    /// </summary>
+    public bool ObservedAfterEnd { get; init; }
 
     /// <summary>
     /// Whether the decision was a decline, by its pinned workflow (<c>ActivityDecline</c>, the rule File it again reads;

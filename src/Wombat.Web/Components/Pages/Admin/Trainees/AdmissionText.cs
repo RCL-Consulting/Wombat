@@ -1,4 +1,5 @@
 using Wombat.Application.Features.Trainees;
+using Wombat.Web.Components.Shared;
 
 namespace Wombat.Web.Components.Pages.Admin.Trainees;
 
@@ -39,6 +40,36 @@ public static class AdmissionText
     public const string NoCurrentBody = "A registrar appears here once admitted.";
 
     public const string ClosedHeading = "Completed and closed";
+
+    // ── Completed and closed (T379, flow 13, S11, F7; boards C01–C07) ──────────
+
+    /// <summary>"1 ended", "40 ended" beside the heading (NEW): the count in the caller's scope, not the page's.</summary>
+    public static string Ended(int count) => $"{count} ended";
+
+    public const string ClosedCaption = "Programmes that have ended, the latest end first. An ended record is read-only.";
+
+    /// <summary>C03 (NEW, PROPOSED): the section with nothing in it.</summary>
+    public const string NoneEnded = "No programme has ended yet.";
+
+    public const string NoneEndedBody =
+        "A trainee is listed here once their programme is marked complete or a withdrawal is recorded, on their programme's page.";
+
+    public const string ClosedPagerLabel = "Completed and closed, pages";
+
+    public const string ClosedPageSizeLabel = "Ended programmes per page";
+
+    /// <summary>The Programme cell's first line: "2023-01-15 to 2026-10-26", or the start alone for an end with no day recorded.</summary>
+    public static string ProgrammeSpan(DateOnly start, DateOnly? end)
+        => end is { } last ? $"{Iso(start)} to {Iso(last)}" : Iso(start);
+
+    /// <summary>The Programme cell's second line: "Training year 4 when it ended".</summary>
+    public static string TrainingYearWhenEnded(int year) => $"Training year {year} when it ended";
+
+    /// <summary>The Outcome's badge word (F10): "Completed", or "Withdrawn" for a withdrawal and an erasure.</summary>
+    public static string Outcome(bool completed) => completed ? "Completed" : "Withdrawn";
+
+    /// <summary>What a row's View names (A11): "Lerato Molefe's record", so the action reads "View Lerato Molefe's record".</summary>
+    public static string Record(string name) => $"{PortfolioWords.Possessive(name)} record";
 
     public const string TraineesLoading = "Loading the trainees.";
 

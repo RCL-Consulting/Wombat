@@ -425,8 +425,11 @@ Step A.1.6 — Dr du Plessis asks for access, then withdraws the request (append
 Role: Former trainee (no role; a trainee record) — Dr Pieter du Plessis
 Route: /account/data-rights
 Do: Submit an Access request with the reason "Everything held about me." Then withdraw it from "Your requests".
-Expect: The request lists as Submitted, with a Withdraw named for its type and time. Once withdrawn, the page says
-  "Request withdrawn.", the focus moves to that message, and the row reads Withdrawn and offers nothing.
+Expect: He signs in to Home with no role: the menu reads Home, My progress, Export portfolio and My data rights, and
+  Home is the former trainee's card as at Step 5.28, "Your programme ended on `D−2`." with the record's four rows, STARs
+  plain text (T379, R3-H02). The request lists as Submitted, with a Withdraw named for its type and time. Once
+  withdrawn, the page says "Request withdrawn.", the focus moves to that message, and the row reads Withdrawn and offers
+  nothing.
 
 Step A.1.7 — Dr Mahlangu asks for a correction (appendix-cross-cutting.md)
 Role: Trainee — Dr Nomsa Mahlangu
@@ -494,7 +497,7 @@ Step A.1.14 — What the erasure left, as KGK sees it (appendix-cross-cutting.md
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/users → /admin/trainees → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: Look for Dr Ndlovu among KGK's users, its trainees and its committee reviews. Open the check-in from A.1.10.
-Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
+Expect: No Dr Ndlovu remains among KGK's users or current trainees, and no row names him (T026, T258).
   - Users reads "People 14", with no pseudonym among them. Dr du Plessis's and Dr Molefe's Roles cells read "No role"
     over "A completed or withdrawn registrar keeps an account and its records.", each with Scope Paediatrics /
     Paediatrics and Status Active (T376, S2, U07).
@@ -504,6 +507,11 @@ Expect: No Dr Ndlovu remains among KGK's users or trainees (T026, T258).
   - The check-in's sitting bar reads Withdrawn and "Withdrawn on `D`. Withdrawn because the trainee's personal data
     was erased at their request. Nothing more is decided at this review." (T258, T361), and the page offers no action:
     no Start, no Refresh.
+  - Trainees' "Completed and closed" reads "3 ended" and lists his ended programme under the pseudonym, as Withdrawn
+    on the erasure day (T379, F7, R3-C07): the latest end first, so his row (`deleted_user_…`, Paediatric EPA
+    Curriculum (11.2) over Paediatrics, `J` to `D` over "Training year 1 when it ended", Withdrawn `D`, View named
+    "View deleted_user_…'s record") stands first, before Lerato Molefe's (Completed `D`, the earlier profile) and
+    Pieter du Plessis's (Withdrawn on Act 5's `D−2`). It shows no address, and no row names him.
   - His activities and progress stay under the same pseudonym; the account itself is checked in the outcome's SQL.
 
 Step A.2.3 — Mr Smit opts out of digest emails (appendix-cross-cutting.md)

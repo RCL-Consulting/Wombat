@@ -337,6 +337,15 @@ public sealed record CommitteeReviewDetailDto(
     public string? TraineeName { get; init; }
 
     /// <summary>
+    /// Whether the caller may export the trainee's portfolio (T379, flow 13, F1 and M1): the export command's own check,
+    /// <c>TraineeScopeResolver.MayReadAsync</c> on <see cref="TraineeUserId" />, so the page offers "Export ‹name›'s
+    /// portfolio" in its header only where the export would not be refused (a review whose trainee is elsewhere, say).
+    /// Filled by <c>GetCommitteeReviewByIdQuery</c>; false from the commands that answer with the review, as
+    /// <see cref="TraineeName" /> is, so the page keeps the value it read.
+    /// </summary>
+    public bool MayExport { get; init; }
+
+    /// <summary>
     /// The day the review was withdrawn, or null (<c>CommitteeReview.Withdraw</c>, T258): the South African calendar day of
     /// the moment it records (<c>ProgrammeCalendar.DateOf</c>), the day an erasure ends the trainee's profile on.
     /// </summary>

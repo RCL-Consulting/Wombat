@@ -34,6 +34,32 @@ public sealed class DownloadEntrustmentCertificateTests
         pdf.Calls.Should().Be(1);
     }
 
+    /// <summary>
+    /// T379 (flow 13, Q3; R3-R08): My authorisations admits a former trainee, who holds no role (D54), and the handler needs
+    /// no change for her: it judges the caller by TraineeScopeResolver.MayReadAsync, which lets anyone read their own.
+    /// </summary>
+    [Fact]
+    public async Task AFormerTraineeWithNoRole_CanDownloadHerOwnCertificate_ButNoOneElses()
+    {
+        await using var dbContext = CreateDbContext();
+        var decisionId = await SeedIssuedDecisionAsync(dbContext);
+        var pdf = new FakePdfService();
+        var handler = new DownloadEntrustmentCertificateCommandHandler(dbContext, pdf);
+
+        var own = await handler.Handle(
+            new DownloadEntrustmentCertificateCommand(decisionId, FormerTrainee("trainee-1")), CancellationToken.None);
+        var another = await handler.Handle(
+            new DownloadEntrustmentCertificateCommand(decisionId, FormerTrainee("other-graduate")), CancellationToken.None);
+
+        own!.FileName.Should().NotBeNullOrWhiteSpace();
+        another.Should().BeNull();
+        pdf.Calls.Should().Be(1);
+    }
+
+    private static ClaimsPrincipal FormerTrainee(string userId)
+        => new(new ClaimsIdentity(
+            [new Claim(ClaimTypes.NameIdentifier, userId), new Claim(WombatClaimTypes.TraineeRecord, "true")], "test"));
+
     [Fact]
     public async Task DifferentTraineeCannotDownload()
     {

@@ -934,7 +934,7 @@ Expect: All five read Ratified, Type Annual progression; there is no Mode column
   - Inadequate Progress — Additional Training for Mahlangu;
   - Outcome Deferred for Ndlovu.
   No state or category prints an enum name (T250). Molefe's review shows its decision, agenda and STAR numbers, and
-  offers Smit no action.
+  offers Smit no Ratify or Start, only the header's "Export Lerato Molefe's portfolio" (T379, Step 5.12).
 Actual (2026-10-26, T376 replay, wombat_scenario_t376): Committee reviews: columns Trainee, Panel, Period, Type,
   State, Decision, Actions (no Mode); all five Ratified, Annual progression; Decision Satisfactory Progress (Molefe,
   Dlamini), Satisfactory with Observations (du Plessis), Inadequate Progress — Additional Training (Mahlangu), Outcome

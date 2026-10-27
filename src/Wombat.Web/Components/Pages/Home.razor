@@ -55,27 +55,23 @@
         <Wombat.Web.Components.Pages.Dashboards.TraineeDashboard />
         break;
       default:
-        @* A signed-in user who holds no role. A graduate keeps their training record, read-only, and holds no role for the
-           programme they finished (T252): their Home points to it (A-Spec § e: "her record, not No role assigned"). Anyone
-           else with no role (an administrator removed the last one, which RemoveRoleFromUser allows) is offered nothing,
-           since no page is theirs to open (the T261 review). *@
-        <div class="dashboard-grid">
-          @if (HoldsTrainingRecord(state.User))
-          {
-            <DashboardCard Title="Your training record" Icon="book" Emphasis="true" Span="3">
-              <p>You hold no role at the moment. Your training record is kept, read-only: your progress in each period, and your portfolio to export.</p>
-              <div class="dashboard-card-footer">
-                <a href="/portfolio/progress" class="btn btn-sm btn-outline">Open My progress &rarr;</a>
-              </div>
+        @* A signed-in user who holds no role. A graduate, or a registrar who withdrew, keeps their training record,
+           read-only, and holds no role for the programme they ended (T252, D54): their Home is the record's card,
+           FormerTraineeRecordCard, under DashboardFrame (T379, flow 13, S9; R3-H01, R3-H02), which reads the record and
+           draws its own loading and load error. Anyone else with no role (an administrator removed the last one, which
+           RemoveRoleFromUser allows) is offered nothing, since no page is theirs to open (the T261 review; R3-H04). *@
+        @if (HoldsTrainingRecord(state.User))
+        {
+          <Wombat.Web.Components.Pages.Dashboards.FormerTraineeRecordCard />
+        }
+        else
+        {
+          <div class="dashboard-grid">
+            <DashboardCard Title="@Wombat.Web.Components.Pages.Dashboards.FormerTraineeRecordWords.NoRoleTitle" Icon="info" Emphasis="true" Span="3">
+              <p>@Wombat.Web.Components.Pages.Dashboards.FormerTraineeRecordWords.NoRoleBody</p>
             </DashboardCard>
-          }
-          else
-          {
-            <DashboardCard Title="No role assigned" Icon="info" Emphasis="true" Span="3">
-              <p>Your account holds no role at the moment, so there is nothing to show you here. An administrator can give you one.</p>
-            </DashboardCard>
-          }
-        </div>
+          </div>
+        }
         break;
     }
   </Authorized>

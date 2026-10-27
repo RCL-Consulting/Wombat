@@ -22,11 +22,17 @@ public sealed record PortfolioExportResult(
     string FileName,
     string ContentHash);
 
+/// <summary>
+/// What Verify says of a hash (T379, flow 13, S10): its first generation and who made it, how many times the same file was
+/// exported and the last time, and the first export's trainee, filter and file. People are ids, never names: Verify is
+/// open to anyone holding the file.
+/// </summary>
 public sealed record PortfolioExportRecordDto(
-    int Id,
     string TraineeUserId,
-    string ExportedByUserId,
-    DateTime ExportedOn,
+    string FirstExportedByUserId,
+    DateTime FirstExportedOn,
+    DateTime LastExportedOn,
+    int Count,
     DateOnly? FilterFromDate,
     DateOnly? FilterToDate,
     string ContentHash,

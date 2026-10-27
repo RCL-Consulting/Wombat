@@ -141,10 +141,12 @@
               {
                 <p>@EpaPageWords.NotInExitRule</p>
               }
-              @if (_holdsTraineeRole)
+              @if (_mayOpenAuthorisations)
               {
-                @* E4: My authorisations admits the Trainee role alone; a graduate reads the STAR here. *@
-                <p><a class="epa-auth-link" href="/portfolio/authorisations">Open My authorisations</a></p>
+                @* E4, then T379 (flow 13, Q2, Q3; R3-R03, R3-R06): My authorisations admits whom this page admits, the Trainee
+                   role or a trainee record (TraineeOrFormerTrainee), so a graduate is offered it too, where the page has a
+                   STAR to show. *@
+                <p><a class="epa-auth-link" href="@PortfolioLinks.MyAuthorisations">Open My authorisations</a></p>
               }
             }
             else
@@ -232,7 +234,7 @@
   private IReadOnlyList<ActivitySummaryDto> _activities = [];
   private int _activitiesTotal;
   private IReadOnlyDictionary<int, string> _names = new Dictionary<int, string>();
-  private bool _holdsTraineeRole;
+  private bool _mayOpenAuthorisations;
 
   /// <summary>
   /// The h1's words, which the tab and the crumb share (C5, C8): "Loading this EPA" while it loads, "EPA" when it failed,
@@ -296,7 +298,8 @@
     _activities = [];
     _activitiesTotal = 0;
     _names = new Dictionary<int, string>();
-    _holdsTraineeRole = user.IsInRole(WombatRoles.Trainee);
+    _mayOpenAuthorisations = user.IsInRole(WombatRoles.Trainee) ||
+                             user.HasClaim(claim => claim.Type == Wombat.Application.Common.Security.WombatClaimTypes.TraineeRecord);
 
     var model = await Sender.Send(new GetEpaProgressForTraineeQuery(user, EpaId));
     if (model is null)

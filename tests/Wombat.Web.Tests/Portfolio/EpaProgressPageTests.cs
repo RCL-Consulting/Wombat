@@ -5,6 +5,7 @@ using Bunit.TestDoubles;
 using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.Activities.Queries.GetEpaTrajectoryForTrainee;
 using Wombat.Application.Features.Activities.Queries.ListActivitiesBySubject;
@@ -312,12 +313,33 @@ public sealed class EpaProgressPageTests : TestContext
     // ---- who reads it ----
 
     [Fact]
-    public void AGraduate_ReadsTheStar_ButIsNotOfferedMyAuthorisations()
+    public async Task AGraduate_ReadsTheStar_AndIsOfferedMyAuthorisations_WhichAdmitsHer()
     {
+        // Until T379 a graduate was not offered it: My authorisations admitted the Trainee role alone (E4). Flow 13 (Q2, Q3;
+        // R3-R03, R3-R06) admits her record there, so the link shows to her as to a Trainee, where the page has a STAR.
         var cut = RenderTypical(role: null);
 
         Section(cut, "ent-h").QuerySelector(".star-level")!.Should().NotBeNull();
-        cut.FindAll("a.epa-auth-link").Should().BeEmpty("My authorisations admits the Trainee role alone (E4)");
+        var link = cut.Find("a.epa-auth-link");
+        link.TextContent.Should().Be("Open My authorisations");
+        var href = link.GetAttribute("href")!;
+        href.Should().Be("/portfolio/authorisations");
+        var graduate = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(ClaimTypes.NameIdentifier, UserId), new Claim(WombatClaimTypes.TraineeRecord, "true")], "Test"));
+        (await Navigation.PageAccess.RefusalOf(Navigation.PageAccess.PageFor(href)!, graduate)).Should().BeNull();
+    }
+
+    [Fact]
+    public void AGraduateWithNoStar_IsOfferedNoLink()
+    {
+        // R3-R04: "No STAR yet.", no link.
+        Answer(Typical(), standing: null);
+        SignIn(role: null);
+
+        var cut = RenderComponent<EpaProgress>(parameters => parameters.Add(page => page.EpaId, EpaId));
+
+        cut.WaitForAssertion(() => Section(cut, "ent-h").QuerySelector("p")!.TextContent.Should().Be("No STAR yet."));
+        cut.FindAll("a.epa-auth-link").Should().BeEmpty();
     }
 
     [Fact]
@@ -476,9 +498,13 @@ public sealed class EpaProgressPageTests : TestContext
         if (role is not null)
         {
             auth.SetRoles(role);
+            auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, UserId));
         }
-
-        auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, UserId));
+        else
+        {
+            // No role: a graduate, who holds the trainee_record claim the page's policy admits (T252, D54).
+            auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, UserId), new Claim(WombatClaimTypes.TraineeRecord, "true"));
+        }
     }
 
     private static EpaProgressDto Typical() => Molefe(Item("PAED-001", QuotaPeriod.Semester, 3,

@@ -79,7 +79,7 @@ public sealed class CompleteTraineeProfileCommandHandlerTests
             CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("The completion date cannot be after today (2030-01-10).");
+            .WithMessage("The last day cannot be after today (2030-01-10).");
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
         var profile = await db.Set<TraineeProfile>().SingleAsync(p => p.Id == 1);

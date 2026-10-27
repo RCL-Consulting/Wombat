@@ -244,7 +244,8 @@ public sealed class HomeFrameTests : WombatTestContext
         cut.FindAll("article a, .dashboard-grid a").Should().BeEmpty();
     }
 
-    // A-Spec § e: a graduate holds no role for the programme they finished (T252), and Home points to the record they keep.
+    // A-Spec § e: a graduate holds no role for the programme they finished (T252), and Home points to the record they keep:
+    // since T379 (flow 13, S9) its card's first link is My progress, read behind DashboardFrame (FormerTraineeHomeTests).
     [Fact]
     public async Task WithNoRole_AndATrainingRecord_HomePointsToMyProgress_WhichAdmitsThem()
     {
@@ -332,6 +333,11 @@ public sealed class HomeFrameTests : WombatTestContext
             GetTraineeDashboardSummaryQuery query => new TraineeDashboardSummaryDto(
                 null, [], [], null,
                 IsPendingTrainee: query.Principal.IsInRole(WombatRoles.PendingTrainee) && !query.Principal.IsInRole(WombatRoles.Trainee)),
+            // T379 (flow 13, S9): the former trainee's card reads her record (FormerTraineeHomeTests holds the card).
+            Wombat.Application.Features.Dashboards.FormerTrainee.GetFormerTraineeHomeQuery =>
+                new Wombat.Application.Features.Dashboards.FormerTrainee.FormerTraineeHomeDto(
+                    new DateOnly(2026, 6, 30), Completed: true, TrainingYearAtEnd: 2,
+                    new Wombat.Application.Features.EntrustmentDecisions.RecordStarsDto(true, 1)),
             _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
         };
 

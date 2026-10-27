@@ -173,6 +173,14 @@ public static class BadgeFor
         }
         : BadgeState.Draft);
 
+    /// <summary>
+    /// How a programme ended (T379, flow 13, F10; DESIGN.md § Badges): completed is green (<c>badge-completed</c>); a
+    /// withdrawal, "Withdrawn" on the closed list and "Inactive" in the ended profile's Status, is grey under its own name
+    /// (<c>badge-withdrawn</c>, the neutral tint), never <c>badge-draft</c>, which means a draft. A running programme's
+    /// "Active" is a plain word, no badge.
+    /// </summary>
+    public static string ProgrammeOutcome(bool completed) => completed ? State(BadgeState.Completed) : "badge-withdrawn";
+
     /// <summary>An audited action's result: done is green, failed red.</summary>
     public static string AuditResult(bool success) => State(success ? BadgeState.Completed : BadgeState.Declined);
 

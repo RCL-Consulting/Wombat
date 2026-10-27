@@ -75,7 +75,13 @@ else
   private IReadOnlyList<TraineeProfileDto> _trainees = [];
 
   private IReadOnlyList<TraineeProfileDto> _activeTrainees => _trainees.Where(trainee => trainee.IsActive).ToList();
-  private IReadOnlyList<TraineeProfileDto> _closedTrainees => _trainees.Where(trainee => !trainee.IsActive).ToList();
+
+  // Completed and closed's own read and page (T379, S11).
+  private EndedProfilesPageDto? _ended;
+  private int _endedPage = 1;
+  private int _endedPageSize = ListEndedProfilesQuery.DefaultPageSize;
+  private ElementReference _closedHeading;
+  private bool _focusClosed;
 
   private RenderFragment Waiting() => __builder =>
   {
@@ -207,37 +213,111 @@ else
     </section>
   };
 
-  @* Flow 13's list as built (T04's chip): only its heading becomes an h2 (T280). *@
+  @* Flow 13's list (T379, S11, F7; boards C01–C07): every ended programme in scope, the latest end first, read on its own
+     and paged at 20 (Q22). Name is the row's header, with the institution under it for the Administrator and the address
+     where two share a name (C05); the programme's dates over the training year it ended in; the outcome's badge and day;
+     and one View a row, named for its record (A11). Until T379 it was Current's read filtered, unpaged, with an Edit. *@
   private RenderFragment Closed() => __builder =>
   {
-    if (_closedTrainees.Count == 0)
-    {
-      return;
-    }
-
-    var closedNames = ProfileNames(_closedTrainees);
+    var ended = _ended;
     <section class="list-section" aria-labelledby="trainees-closed-heading">
-      <h2 id="trainees-closed-heading" class="list-section-title">@AdmissionText.ClosedHeading</h2>
-      <DataTable TItem="TraineeProfileDto" Items="_closedTrainees" Caption="Completed and closed trainee profiles">
-        <HeaderRow>
-          <tr>
-            <th>Name</th>
-            <th>Curriculum</th>
-            <th>Sub-speciality</th>
-            <th>Outcome</th>
-            <th><span class="visually-hidden">Actions</span></th>
-          </tr>
-        </HeaderRow>
-        <Row Context="trainee">
-          <tr>
-            <td>@($"{trainee.FirstName} {trainee.LastName}")</td>
-            <td>@($"{trainee.CurriculumName} ({trainee.CurriculumVersion})")</td>
-            <td>@trainee.SubSpecialityName</td>
-            <td>@(trainee.CompletedOn.HasValue ? $"Completed {AdmissionText.Iso(trainee.CompletedOn.Value)}" : trainee.DeactivatedOn.HasValue ? $"Withdrawn {AdmissionText.Iso(trainee.DeactivatedOn.Value)}" : "Withdrawn")</td>
-            <td><a class="btn btn-outline btn-sm" href="@($"/admin/trainees/edit?id={trainee.Id}")" aria-label="@($"Edit {closedNames[trainee.Id]}")">Edit</a></td>
-          </tr>
-        </Row>
-      </DataTable>
+      <h2 id="trainees-closed-heading" class="list-section-title" tabindex="-1" @ref="_closedHeading">
+        @AdmissionText.ClosedHeading
+        @if (ended is { TotalCount: > 0 })
+        {
+          @(" ")<span class="inv-count">@AdmissionText.Ended(ended.TotalCount)</span>
+        }
+      </h2>
+      @if (ended is null || ended.TotalCount == 0)
+      {
+        <div class="detail-card detail-card--empty">
+          <div class="state-panel-title">@AdmissionText.NoneEnded</div>
+          <div class="state-panel-copy">@AdmissionText.NoneEndedBody</div>
+        </div>
+      }
+      else
+      {
+        var sharedNames = ended.Rows.GroupBy(row => row.Name, StringComparer.Ordinal).Where(group => group.Count() > 1)
+          .Select(group => group.Key).ToHashSet(StringComparer.Ordinal);
+        var views = RowNames.Distinct(
+          ended.Rows,
+          row => row.ProfileId,
+          row => AdmissionText.Record(row.Name),
+          row => string.IsNullOrEmpty(row.Email) ? string.Empty : $", {row.Email}",
+          row => $", {row.CurriculumName} ({row.CurriculumVersion})");
+        <div class="closed-list">
+          <DataTable TItem="EndedProfileRowDto" Items="ended.Rows" StackWide="true" Caption="@AdmissionText.ClosedCaption">
+            <HeaderRow>
+              <tr role="row">
+                <th scope="col" role="columnheader">@(_isAdministrator ? "Name and institution" : "Name")</th>
+                <th scope="col" role="columnheader" class="col-wrap col-wrap--curriculum">Curriculum and sub-speciality</th>
+                <th scope="col" role="columnheader" class="col-wrap">Programme</th>
+                <th scope="col" role="columnheader">Outcome</th>
+                <th scope="col" role="columnheader" class="col-actions col-actions--single"><span class="visually-hidden">Actions</span></th>
+              </tr>
+            </HeaderRow>
+            <Row Context="row">
+              <tr role="row">
+                @{
+                  var showAddress = sharedNames.Contains(row.Name) && !string.IsNullOrEmpty(row.Email);
+                  var showInstitution = _isAdministrator && !string.IsNullOrEmpty(row.InstitutionName);
+                }
+                <th scope="row" role="rowheader">
+                  @if (showAddress || showInstitution)
+                  {
+                    <span class="person-cell">
+                      @row.Name
+                      @if (showAddress)
+                      {
+                        @(" ")<span>@Address(row.Email)</span>
+                      }
+                      @if (showInstitution)
+                      {
+                        @(" ")<span>@row.InstitutionName</span>
+                      }
+                    </span>
+                  }
+                  else
+                  {
+                    @row.Name
+                  }
+                </th>
+                <td role="cell" data-label="Curriculum and sub-speciality" class="col-wrap">
+                  <span class="person-cell">@($"{row.CurriculumName} ({row.CurriculumVersion})")@(" ")<span>@row.SubSpecialityName</span></span>
+                </td>
+                <td role="cell" data-label="Programme" class="col-wrap">
+                  <span class="person-cell">
+                    @AdmissionText.ProgrammeSpan(row.ProgrammeStartDate, row.Ended?.EndedOn)
+                    @if (row.Ended?.TrainingYearAtEnd is { } year)
+                    {
+                      @(" ")<span>@AdmissionText.TrainingYearWhenEnded(year)</span>
+                    }
+                  </span>
+                </td>
+                <td role="cell" data-label="Outcome" class="outcome-cell">
+                  @{ var completed = row.Ended?.Completed == true; }
+                  <span class="badge @BadgeFor.ProgrammeOutcome(completed)">@AdmissionText.Outcome(completed)</span>
+                  @if (row.Ended is { } end)
+                  {
+                    @(" ")<span>@AdmissionText.Iso(end.EndedOn)</span>
+                  }
+                </td>
+                <td role="cell" class="col-actions col-actions--single">
+                  <a class="btn btn-outline btn-sm" href="@PortfolioLinks.TraineeProfile(row.ProfileId)"
+                     aria-label="@($"View {views[row.ProfileId]}")">View</a>
+                </td>
+              </tr>
+            </Row>
+          </DataTable>
+        </div>
+        @* Q22: the pager only past one page; a turn's focus is the section's heading. *@
+        @if (ended.TotalCount > ended.PageSize)
+        {
+          <PagerControls Label="@AdmissionText.ClosedPagerLabel" PageSizeLabel="@AdmissionText.ClosedPageSizeLabel"
+                         Page="ended.Page" PageSize="ended.PageSize" TotalCount="ended.TotalCount"
+                         OnPageChanged="ChangeEndedPageAsync" OnPageSizeChanged="ChangeEndedPageSizeAsync" />
+        }
+      }
     </section>
   };
 
@@ -310,6 +390,8 @@ else
     {
       _pendingTrainees = await Sender.Send(new ListPendingTraineesQuery(user));
       _trainees = await Sender.Send(new ListTraineesForSpecialityQuery(user));
+      _ended = await Sender.Send(new ListEndedProfilesQuery(_endedPage, _endedPageSize, user));
+      _endedPage = _ended.Page;
 
       // S8: an id not the caller's, or unknown, says nothing.
       _result = Admitted is { } profileId ? await Sender.Send(new GetAdmissionResultQuery(profileId, user)) : null;
@@ -336,8 +418,48 @@ else
 
   private ValueTask FocusWaitingAsync() => _waitingHeading.FocusAsync();
 
+  private async Task ChangeEndedPageAsync(int page)
+  {
+    _endedPage = page;
+    await LoadEndedAsync();
+  }
+
+  private async Task ChangeEndedPageSizeAsync(int pageSize)
+  {
+    _endedPageSize = pageSize;
+    _endedPage = 1;
+    await LoadEndedAsync();
+  }
+
+  /// <summary>
+  /// A turn of Completed and closed reads only that list, in place; its answer takes the focus at the section's heading
+  /// (Q22), or, failed, the page's own load error with Try again (T329: the failure to the log).
+  /// </summary>
+  private async Task LoadEndedAsync()
+  {
+    try
+    {
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      _ended = await Sender.Send(new ListEndedProfilesQuery(_endedPage, _endedPageSize, user));
+      _endedPage = _ended.Page;
+      _endedPageSize = _ended.PageSize;
+      _focusClosed = true;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "The ended programmes could not be loaded.");
+      _loadError = AdmissionText.TraineesLoadFailed;
+    }
+  }
+
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
+    if (_focusClosed && !_loading && _loadError is null)
+    {
+      _focusClosed = false;
+      await _closedHeading.FocusAsync();
+    }
+
     if (_focusBack && !_loading && Back is { } back)
     {
       // T10: Cancel on Admit comes back to the registrar's own Admit….
