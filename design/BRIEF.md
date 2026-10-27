@@ -1207,6 +1207,34 @@ teach is here.
   `README.md` at the artifact's root, not `project/README.md`. *Changed:* the publish stages the changed files under a
   folder holding `project/` and passes that folder as `root`; the stray file was removed in the index's call.
 
+**Flow 12 (T376, 2026-10-23 to 10-27): what the twelfth flow added**
+
+Flow 12 ran the loop in three sittings: three rounds (S1, H1 and UA picked, Q1–Q22 and F1–F11 the operator's), three
+prerequisites landed first (T289, T288, T333), the build (`e53d4ae7`) in one wave of lanes (U, P, T, I) and a runbook
+lane, three Sonnet reviews and one fix pass, the replay on a fresh database (328 steps, 283 with no gap, no flow 12
+fault), the states (89 rows, 7 corrected; T378 proposed) and the re-sync (design system version 33). Its record is
+`design/flows/12-people-admin/`. Only what flows 01–11 did not already teach is here.
+
+- **A replay brief's check can ask for more than DESIGN.md says.** Observed: the brief asked that Escape close the Add
+  a role… note panel; two act agents found it does nothing, and DESIGN.md gives a note-panel form Cancel only. The
+  brief's "People 1 of 14 are locked out" was a reviewer's guess the build never drew. *Changed:* nothing; an
+  integrator's added check is read against DESIGN.md and the code before it goes into a prompt, and a reviewer's
+  count stays "unreplayed" until a replay quotes it.
+- **A route can render a component the flow's pages table does not name.** Observed: `/admin/institutions/new` is
+  `InstitutionCreate.razor`, not the record page the brief listed it on; it kept the old `ValidationMessage` refusals
+  and sits outside the flow's 390 scopes. The builds, the reviews and the acts passed it; the states pass found it
+  (T378). *Changed:* nothing; step 1's pages table names the file each route renders (`@page`), not the page it
+  resembles.
+- **A restart inside an act leaves the act agent with a live shell.** Observed: Act 6 restarted the app (6.14a); its
+  agent reported done while still holding the start command, which the operator saw as an open shell. Stopping the
+  agent left the app running. *Changed:* nothing; the integrator stops an act agent that reports done with background
+  work still running.
+- **The Design System type takes a publish only from a session that read the files itself.** Observed: the re-sync's
+  agent read and compared all 202 files, but the integrator's publish was refused twice until it read the artifact and
+  each existing file it would change; then the files and the index (read again right before) went in two calls.
+  *Changed:* nothing; the integrator reads the index and each changed existing file just before publishing, and the
+  agent's compare still tells an edit from a version bump.
+
 **What the brief keeps as it was**
 - The flows' order (§ 8), the invariants (§ 4.4) and the acceptance check (§ 9) held. The digest (§ 5.1) is restated
   for what flow 01 fixed: the shell, its components and the states it already designed. The brief template (§ 2.4)

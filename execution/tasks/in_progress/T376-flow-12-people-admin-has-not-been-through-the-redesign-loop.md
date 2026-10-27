@@ -57,7 +57,7 @@ Run the loop as flow 11 ran it (`design/flows/11-onboarding/`, BRIEF § 11 "Flow
 - [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 12) — the squash commit and counts. (`e53d4ae7`: Domain 830, Application 4124, Infrastructure 1033, Architecture 52, Web 4135, Integration 510)
 - [x] The whole runbook replays on a fresh database with no regression from flow 12, the baseline is re-captured, and
   flow 12's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines. (acts `085fa299`–`4688c4d6`: 328 steps, 283 clean, no regression; states 89 rows `e402ca33`, `f12b376a`; missing 0)
-- [ ] The design system is re-synced and republished — its version number.
+- [x] The design system is re-synced and republished — its version number. (version 33, 1793082623-7a3a; re-sync `a5596c52`, review and fixes `6bc5a0c2`, index `1fa34320`)
 
 ## Related
 
@@ -128,3 +128,11 @@ T373 (flow 11), T369 (flow 10), T264, T286, T288, T289, T291, T317, T323, T324, 
   describedby, no focus). For the operator: at 390 the user page shows "< Users" above the heading where the narrow row
   says "no Back to users" (left as is). Home's long address breaks inside words (`overflow-wrap:anywhere`, as M7 drew).
   **Step 7 done. Next:** step 8, the design system's re-sync.
+- **2026-10-27, step 8** (one Opus agent, one Sonnet review): the live system (1793080005-e903, past v29 by version
+  bumps) matched HEAD file for file; re-synced (`a5596c52`: 7 new components in a People admin group, 15 shared READMEs,
+  bundle byte-for-byte from app.css's blob, no token changed, no icon added); reviewed (`resync-review.md`: 0 must, 2
+  should, 4 nits); fixed (`6bc5a0c2`: the race rule and T378 recorded as known gaps, the index's 390 claim scoped, a
+  preview's dialog ids, "Fatima" in AssessorTrainingWords, and one page fix the re-sync found: her record's header drew
+  an empty actions cell; Web 4135, Application 4124). Left: duplicate ids in the previews' narrow copies (preview-only,
+  as earlier previews). Published as **version 32** (files) and **33** (index, `1fa34320`). The page fix is not in the
+  :5180 app (published before it; bUnit covers it). **Step 9:** BRIEF § 11 "Flow 12". **T376 done.**
