@@ -55,8 +55,8 @@ Run the loop as flow 11 ran it (`design/flows/11-onboarding/`, BRIEF § 11 "Flow
 - [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link. (https://claude.ai/artifact/EUfPe9d3zgnGxvQ9LeSzz8)
 - [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/12-people-admin/`. (round 3 final, `round-3-check.md`; decisions in `round-1-assessment.md` § 10 and `round-2-review.md`)
 - [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 12) — the squash commit and counts. (`e53d4ae7`: Domain 830, Application 4124, Infrastructure 1033, Architecture 52, Web 4135, Integration 510)
-- [ ] The whole runbook replays on a fresh database with no regression from flow 12, the baseline is re-captured, and
-  flow 12's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
+- [x] The whole runbook replays on a fresh database with no regression from flow 12, the baseline is re-captured, and
+  flow 12's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines. (acts `085fa299`–`4688c4d6`: 328 steps, 283 clean, no regression; states 89 rows `e402ca33`, `f12b376a`; missing 0)
 - [ ] The design system is re-synced and republished — its version number.
 
 ## Related
@@ -119,3 +119,12 @@ T373 (flow 11), T369 (flow 10), T264, T286, T288, T289, T291, T317, T323, T324, 
   played on Patel). `check_baseline_paths.py` missing 0. Dumps `recovery/scenario-t376-post-act{1..6,A}`,
   `-pre-a515-A`; scratch DB `wombat_scenario_t376_s515` kept. **Next:** the states pass (flow 12's rows in
   `states.md`, T333's A.3.1 and the SSO states on a scratch instance with a provider), then step 8.
+- **2026-10-27, step 7, the states** (two Sonnet agents in turn): the user page's 34 rows (`e402ca33`: 3 corrected,
+  no defect; scratch `_s10`-`_s12`), then Users, Assessors, her Home, the record, SSO mappings and access denied, 55
+  rows (`f12b376a`: 4 corrected; scratch `_s20`, `_s21`). **T333's A.3.1 check passed** on a scratch app with the KGK
+  provider: the role picker offers Speciality admin, Sub-speciality admin, Coordinator, Committee member and Assessor
+  only, with "Staff roles only. Trainee and Pending trainee are never mapped…"; no provider, no form. One new defect:
+  **T378 proposed** (the Administrator's Create institution form, flow 18's, refuses with plain ValidationMessages: no
+  describedby, no focus). For the operator: at 390 the user page shows "< Users" above the heading where the narrow row
+  says "no Back to users" (left as is). Home's long address breaks inside words (`overflow-wrap:anywhere`, as M7 drew).
+  **Step 7 done. Next:** step 8, the design system's re-sync.
