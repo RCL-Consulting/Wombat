@@ -86,3 +86,10 @@ T376 (flow 12), T373 (flow 11), T311, T312, T313, T314, T287, T305, T310, T290, 
   job removed, A.2.1 and A.2.9 changed), the graduation mail's wording (Q12) and these pages' halves of T325, T329,
   T280 and T323; T310 goes to flow 20; T374 stays out. **Next:** the operator sends `round-1-ask.txt` to the canvas
   with § 4's key screenshots.
+- **2026-10-27, round 1** (canvas 1793087531-266b, 27 boards in `round-1/`; assessed in `round-1-assessment.md`, one
+  Opus agent, `5e13f015`): picks S1-A (one record card; `Main.dc.html` is its 1280 board), S2-A without the user-page
+  link, Export V1, Verify V1, the end of a programme V1; S6 and S7 confirmed with corrections. 7 must-fixes (M1 Q2's
+  menu undrawn; M2 S2-A's user-page link against Q4; M3 the profile's h1 "‹name›'s programme"; M4 S7's links belong
+  under My progress's notice; M5 the Steps board misses 5.18, A.2.1, A.2.9, 5.8, A.1.6, A.4.6; M6 PAED-010/012 are three
+  a semester, checked in the seed; M7 du Plessis's last decision is Satisfactory with Observations, checked in Act 4).
+  Q17–Q27 for the operator. No board says whether the attachments arrived: re-attach § 4's twelve for round 2.
