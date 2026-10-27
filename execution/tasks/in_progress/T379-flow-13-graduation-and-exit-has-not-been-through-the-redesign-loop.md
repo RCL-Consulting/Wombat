@@ -59,7 +59,7 @@ Run the loop as flow 12 ran it (`design/flows/12-people-admin/`, BRIEF § 11 "Fl
 - [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 13) — the squash commit and counts. (`5cc10c66`: Domain 836, Application 4201, Infrastructure 1035, Architecture 52, Web 4259, Integration 512)
 - [x] The whole runbook replays on a fresh database with no regression from flow 13, the baseline is re-captured, and
   flow 13's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines. (acts `95fa4119`–`8ef4b774`: 331 steps, 286 clean, no regression; states 64 rows `1f64aa17`, `0881302a`; missing 0)
-- [ ] The design system is re-synced and republished — its version number.
+- [x] The design system is re-synced and republished — its version number. (version 37, 1793144981-e3ba; re-sync `e8eeb12f`, review fixes `2745418a`, page fixes `73baa556`)
 
 ## Related
 
@@ -158,3 +158,10 @@ T376 (flow 12), T373 (flow 11), T311, T312, T313, T314, T287, T305, T310, T290, 
   row left uncaptured: `trainee-profile-edit--end-failed` (needs a forced failure). The 42 other "Not yet captured
   (T379)" marks stripped. Some scratch captures show 2026-10-28 where the replay shows 2026-10-27. **Step 7 done.
   Next:** step 8.
+- **2026-10-28, step 8** (one Opus agent, one Sonnet review): the live system (1793142851-0444) matched HEAD; re-synced
+  (`e8eeb12f`: 4 new components in a Graduation and exit group, 20 shared READMEs and previews, the stale EPA-deactivation
+  text T312 left fixed, no icon added). The re-sync found three page faults, fixed here (`73baa556`, browser-checked:
+  the graduate's EPA pages 0px sideways at 901–1100 on all 15; no empty header actions on her My activities; Save
+  profile's failure bolds its first sentence). The review (`resync-review.md`: 1 must, the gaps those fixes made false,
+  and 2 should) fixed in `2745418a`. Published as **version 36** (files) and **37** (index). **Step 9:** BRIEF § 11
+  "Flow 13". **T379 done.**

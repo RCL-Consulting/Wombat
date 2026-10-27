@@ -543,8 +543,8 @@
   },
   "lastChange": {
     "by": "Renier Cloete",
-    "at": "2026-10-27T12:00:00Z",
-    "via": "Claude Code · Wombat@6bc5a0c2",
-    "note": "Re-synced to flow 12 as built (T376, e53d4ae7, with 6bc5a0c2): no token added or changed; 7 records added in a new People admin group: Users, UserPage, AssessorTraining, Assessors, InstitutionRecord, SsoMappings, InstitutionalAdminHome; revised Button (the outline trigger named for its row, aria-disabled with .is-unavailable, the race rule), ConfirmDialog (flow 12's four dialogs), FormField (a form in a note panel, .choice-help-stack, a read-out, a one-field refusal), DataTable (Users' table, the 7rem .col-wrap floor, .group-id), FilterBar, PagerControls (drawn only past one page), PageHeader (OwnerHref), DashboardCard (her Home's cards), DetailCard (.user-page sections, .note-panel--form), Badge (status-locked), StatePanel, NavMenu (Entrustment decisions in her menu), Icon and the Icons group (no icon added: 64, 59 named by a page); the README, tokens' ref and source map, and the bundle (app.css's five People admin sections). Then the review's findings and one page fix the re-sync found (6bc5a0c2: no empty header actions on her record)."
+    "at": "2026-10-28T09:00:00Z",
+    "via": "Claude Code · Wombat@2745418a",
+    "note": "Re-synced to flow 13 as built (T379, 5cc10c66, with 920f778c and 73baa556): no token added or changed; 4 records added in a new Graduation and exit group: FormerTraineeHome, ExportPortfolio, VerifyExport, TraineeProfile; revised Trainees (Completed and closed), MyProgress (the Your record line, the 901px fix), EndedRecord (AfterNotice, T312's frozen list), MyAuthorisations (a graduate admitted), Badge (ProgrammeOutcome, badge-withdrawn), ConfirmDialog (the programme's two ends; the EPA-deactivation text narrowed by T312), StatePanel, NavMenu (Export portfolio as a personal link), PageHeader, ProgrammeTraineeDetail and ReviewSitting (the Export header action), Button, DataTable, DashboardCard, DetailCard, Icon and the Icons group (no icon added: 64, 59 named by a page); the README, tokens' ref, source map and usages, and the bundle (app.css's four Graduation and exit sections). Then the review's findings and three page fixes the re-sync found (73baa556: the ended EPA page at 901px, My activities' empty header actions, Save profile's bold failure)."
   }
 }

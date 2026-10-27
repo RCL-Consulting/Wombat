@@ -1235,6 +1235,35 @@ fault), the states (89 rows, 7 corrected; T378 proposed) and the re-sync (design
   *Changed:* nothing; the integrator reads the index and each changed existing file just before publishing, and the
   agent's compare still tells an edit from a version bump.
 
+
+**Flow 13 (T379, 2026-10-27 to 10-28): what the thirteenth flow added**
+
+Flow 13 ran the loop in one long sitting: three rounds (S1-A, S2-A and the V1s picked; Q1–Q27 and F1–F11 the
+operator's), T312 landed first (an ended programme keeps the list it ended with), the build (`5cc10c66`) from a planner
+and § 0, four lanes (R, E, V, P) and a runbook lane, three Sonnet reviews (0 must) and one fix pass, the replay on a
+fresh database (331 steps, 286 with no gap, no flow 13 fault; one dead-end export fixed, `920f778c`), the states (64
+rows, 3 corrected) and the re-sync (design system version 37, with three page fixes it found, `73baa556`). Its record
+is `design/flows/13-graduation-and-exit/`. Only what flows 01–12 did not already teach is here.
+
+- **The canvas may never see the captures.** Observed: in all three rounds the Spec said nothing arrived; the uploads
+  folder was empty and the upload folder could not be connected ("the Claude desktop window was not available"). The
+  canvas drew nothing from memory: what only a capture holds stayed a bracket, and the build read the real values.
+  *Changed:* nothing in the loop; before round 1, check on the canvas that the attachments arrive, and say on the ask
+  which values only a capture holds, so the brackets are known in advance.
+- **A prerequisite can break the Release build while every suite is green.** Observed: T312's tests named the elements
+  of a tuple literal (CS8123, an error under Release's warnings-as-errors); its suites ran in Debug and passed, and
+  flow 13's planner found master would not build in Release (`232e7701`). *Changed:* nothing; a prerequisite's suites
+  run in Release, as the lanes' do.
+- **The integrator merges lanes, but only the lanes' reports name their NEW words.** Observed: the merge agent had no
+  reports, so build-contracts § 6 held three rows of the ten. *Changed:* nothing; the integrator fills § 6 from the
+  reports before the review reads it (done here, `862ab550`).
+- **An act agent's slip can renumber what later acts read.** Observed: Act 3 played 3.22–3.24 out of order, so the
+  activity ids changed; later acts were told to find activities by subject and type. *Changed:* nothing; every act's
+  notes say never to rely on a remembered id.
+- **A replay that crosses SAST midnight changes D mid-run.** Observed: the appendix ran after 00:00 SAST (D = 2026-10-28,
+  the acts 2026-10-27); a date filter read as a UTC day (T384) and a test that reads the real clock (T383) showed up
+  only then. *Changed:* nothing; the appendix's prompt says which D it uses, and a scratch capture's date is noted.
+
 **What the brief keeps as it was**
 - The flows' order (§ 8), the invariants (§ 4.4) and the acceptance check (§ 9) held. The digest (§ 5.1) is restated
   for what flow 01 fixed: the shell, its components and the states it already designed. The brief template (§ 2.4)
