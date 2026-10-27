@@ -623,3 +623,9 @@ where a board argues against one on a system rule (Q17, Q18, Q20, Q22, Q23). Eac
   activities' table (S13), the user page, and Trainees' Waiting and Current lists.
 - **R7. The attachments.** Re-attach § 4's twelve key screenshots and name the folder (`design/baseline/`). Ask round 2
   to say whether they arrived: round 1 does not say.
+
+## 10. The operator's decisions (2026-10-27)
+
+The operator took Q17–Q27 as recommended ("yes"), with the picks (S1-A, S2-A without the user-page link, Export V1,
+Verify V1, the end of a programme V1; S6 and S7 confirmed with corrections) and every M, S and N item in § 7 as § 9
+requires them. Round 2's ask is `round-2-ask.txt`; § 4's twelve key screenshots are re-attached with it.
