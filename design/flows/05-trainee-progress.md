@@ -540,7 +540,7 @@ Expect: Each dashboard has Molefe's shape and figures, with its own training yea
   reads "Training year N · Semester 2, 2026". N is 3 for Dlamini, 2 for du Plessis and 1 for Mahlangu and Ndlovu. Their
   semester and yearly targets apply now: a start on 15 January is on time for both (D42).
 
-Step 3.6 — Dr Dlamini sees the completed Mini-CEX in My activities (act-3-operations.md:207)
+Step 3.6 — Dr Dlamini sees the completed Mini-CEX in My activities (act-3-operations.md:205)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/mine → /activities/{ActivityId:int} → /portfolio/progress/{EpaId:int}
 Do: Open My activities, then the Mini-CEX. Then follow its status card's Open My progress.
@@ -572,7 +572,7 @@ Expect: My progress's subtitle reads "Training year 3 · Semester 2, 2026". The 
   At the minimum.", its chart marking Today, and its table one row: `D−10`, 4, "At or above (4, training year 3)", the
   Mini-CEX, David Naidoo. Activities on this EPA lists the Mini-CEX, Completed, Credit "1 item".
 
-Step 3.48 — Dr Molefe's record and progress show her evidence and the feedback (act-3-operations.md:1279)
+Step 3.48 — Dr Molefe's record and progress show her evidence and the feedback (act-3-operations.md:1287)
 Role: Trainee — Dr Lerato Molefe
 Route: /activities/mine → /portfolio/progress → /portfolio/progress/{EpaId:int}
 Do: Open My activities, then My progress, then PAED-001, PAED-010 and PAED-012 from its index.
@@ -590,7 +590,7 @@ Expect: My activities holds her six Completed WBAs and two Multi-Source Feedback
   "MSF in Semester 2, 2026: covered by a released campaign that closed on `D`." first among their MSF lines, chart their
   ratings, and say under the chart "Multi-source feedback is not plotted.": no chart plots an MSF point (D36).
 
-Step 3.50 — Dr Dlamini's dashboard (act-3-operations.md:1333)
+Step 3.50 — Dr Dlamini's dashboard (act-3-operations.md:1341)
 Role: Trainee — Dr Anele Dlamini
 Route: /
 Do: Open the dashboard and read each card.
@@ -607,7 +607,7 @@ Expect:
     with Open My authorisations. The header offers "Log an activity" (T335: the Actions card is gone), and there is no
     Upcoming deadlines card (T355).
 
-Step 4.40 — Dr Molefe reads her progress against Annexure A (act-4-annual-review.md:1134)
+Step 4.40 — Dr Molefe reads her progress against Annexure A (act-4-annual-review.md:1141)
 Role: Trainee — Dr Lerato Molefe
 Route: /portfolio/progress
 Do: Open My progress and read its index's STAR column and "Entrustment against Annexure A".
@@ -621,7 +621,7 @@ Expect: The index's STAR column, headed "STAR against training year 4", reads "A
   Each EPA's name links to its page, and each Latest rating, "4 · Encounter <date>" and the like, is a link to its
   activity (T355). The exit rule says it gates nothing. The page reads the same table as the committee's (T166).
 
-Step 5.15 — Dr Molefe leaves My progress open (act-5-graduation.md:487)
+Step 5.15 — Dr Molefe leaves My progress open (act-5-graduation.md:499)
 Role: Trainee — Dr Lerato Molefe
 Route: /account/login → /account/login/submit → / → /portfolio/progress
 Do: In her own browser, sign in and open My progress. Leave the tab open through Step 5.19.
@@ -634,7 +634,7 @@ Expect: The page shows her programme as still running:
   - the period before each window, and her rating trajectories, on each EPA's page (T355), not on My progress.
   Nothing says that her programme has ended.
 
-Step 5.26 — Dr du Plessis sees it counted (act-5-graduation.md:768)
+Step 5.26 — Dr du Plessis sees it counted (act-5-graduation.md:802)
 Role: Trainee — Dr Pieter du Plessis
 Route: /portfolio/progress → /portfolio/progress/{EpaId:int}
 Do: Open My progress, then PAED-002 from its index, and read its count for this period.

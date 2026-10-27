@@ -1049,7 +1049,8 @@ Expect: Each page records that his programme ended on `D−2`, every date ISO (T
     and its credit.". It still lists the `D−1` Mini-CEX as Completed, its Credit now "None": the take-back's replay
     re-stamped its completion (`ProgrammeEndCredit`). The filing is kept, but it counts towards nothing. A note row
     stands under every activity observed after his last day, whatever its state: the Mini-CEX (`D−1`), the cancelled
-    DOPS (dated `D`, the day it was created) and the submitted Portfolio and Logbook Review (`D−1`), each reading
+    DOPS (listed "no date": it has no encounter date, and its stored day is the day it was created, `D`) and the
+    submitted Portfolio and Logbook Review (`D−1`), each reading
     "Observed after your last day in the programme, `D−2`, so it counts towards nothing." The Case-Based Discussion
     (`D−5`) and the Teaching Session Logs carry none.
 

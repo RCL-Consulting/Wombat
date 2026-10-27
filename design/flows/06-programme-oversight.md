@@ -572,7 +572,7 @@ Expect: Each sees "Speciality admin · Semester N, YYYY" or "Sub-speciality admi
   Sub-speciality admin", over Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews,
   Decision panels and Entrustment decisions, then My data rights.
 
-Step 3.30 — Mr Smit's dashboard shows the stalled requests (act-3-operations.md:729)
+Step 3.30 — Mr Smit's dashboard shows the stalled requests (act-3-operations.md:735)
 Role: Coordinator — Mr Pieter Smit
 Route: /
 Do: Once Dr Mahlangu's Mini-CEX and Dr du Plessis's portfolio review have waited more than seven days, open the
@@ -592,7 +592,7 @@ Expect: Home's "Waiting for assessors" is in the warning stripe, badged "3 waiti
   in the last 30 days." and "Invitations nearing expiry" "No invitations expiring soon.". "Start an MSF campaign" is
   Home's header action; there is no Quick action card.
 
-Step 3.31 — Mr Smit looks for a page of stalled requests (act-3-operations.md:780)
+Step 3.31 — Mr Smit looks for a page of stalled requests (act-3-operations.md:786)
 Role: Coordinator — Mr Pieter Smit
 Route: / → /programme/waiting → /not-found
 Do: Open Waiting for assessors from the menu. On the Mini-CEX's row choose Send a reminder, read the dialog, then choose
@@ -618,7 +618,7 @@ Expect: The menu reads Home, Programme trainees, Waiting for assessors, Decision
   Reassign (C5). The old address is "Page not found" with status 404: the placeholder page went with the stubs (T335,
   flow 01).
 
-Step 3.32 — The daily nudge reminds the assessors (act-3-operations.md:821)
+Step 3.32 — The daily nudge reminds the assessors (act-3-operations.md:827)
 Role: Administrator — devadmin@wombat.local
 Route: /admin/jobs
 Do: Run `assessor-pending-nudge` now.
@@ -631,7 +631,7 @@ Expect: The job's last run updates. The application log then holds three stub em
   "assessors nudged 2 (activities 2)" and skips nobody. Nothing else has waited five days, so nobody else is nudged: Dr
   du Plessis's CBD has waited less than a day.
 
-Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:845)
+Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:853)
 Role: Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int}
 Do: Her sessions open acting as a Committee member; choose Switch to Assessor in the sidebar. From "Waiting for you",
@@ -651,7 +651,7 @@ Expect: The sidebar first reads "Acting as Committee member", with "Switch to As
   Nothing of Dr Mahlangu's waits for an assessor any more: the Mini-CEX has left Waiting for assessors and Mr Smit's
   Home card.
 
-Step 3.52 — Dr Zulu's committee dashboard (act-3-operations.md:1394)
+Step 3.52 — Dr Zulu's committee dashboard (act-3-operations.md:1402)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → /
 Do: Choose Switch to Committee member in the sidebar and read the dashboard and the menu.
@@ -668,7 +668,7 @@ Expect:
     Short on it, its figure in words hidden after it. No card is one link around its rows (T280).
   - The menu is Home, Programme trainees, Committee reviews and Decision panels, then My data rights.
 
-Step 3.53 — Dr Mokoena's dashboard (act-3-operations.md:1423)
+Step 3.53 — Dr Mokoena's dashboard (act-3-operations.md:1431)
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /
 Do: Read the dashboard and the menu.
@@ -683,7 +683,7 @@ Expect:
     Entrustment decisions, then My data rights. The STAR review queue is not restored: Entrustment decisions takes its
     place.
 
-Step 3.54 — Dr Sithole's dashboard (act-3-operations.md:1449)
+Step 3.54 — Dr Sithole's dashboard (act-3-operations.md:1457)
 Role: SubSpecialityAdmin — Dr Kabelo Sithole
 Route: /
 Do: Read the dashboard.
@@ -691,7 +691,7 @@ Expect: The same three cards and figures as Dr Mokoena's, read for Paediatrics: 
   badged "5 registrars", and PAED-001 "2 of 5" last on Targets by EPA. Dr Sithole's menu reads as Dr Mokoena's, under
   "Acting as Sub-speciality admin".
 
-Step 3.54a — Dr Zulu reads who is short on PAED-002 (act-3-operations.md:1461)
+Step 3.54a — Dr Zulu reads who is short on PAED-002 (act-3-operations.md:1469)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /programme/trainees
 Do: On Home, choose PAED-002 on Targets by EPA. Then choose Clear filters.
@@ -708,7 +708,7 @@ Expect: Programme trainees opens with Short on set to PAED-002 and Programme tra
   for Nomsa Mahlangu, each over "0 of 3 each this semester" (D11). Nothing on the page reads "n / m", a percentage or
   the bare word "year" (Q10).
 
-Step 3.54b — Dr Zulu opens Dr Mahlangu's page (act-3-operations.md:1492)
+Step 3.54b — Dr Zulu opens Dr Mahlangu's page (act-3-operations.md:1500)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: /programme/trainees → /programme/trainees/{ProfileId:int}
 Do: On Programme trainees, choose Nomsa Mahlangu, and read the page to its foot.
@@ -728,7 +728,7 @@ Expect: The registrar page's h1 reads "Nomsa Mahlangu", its tab "Nomsa Mahlangu 
   Dr Zulu, a Committee member, is offered no Send a reminder; the header offers "Export Nomsa Mahlangu's portfolio"
   (T379). No word on the page names Nomsa Mahlangu by a pronoun (round-3-check 1).
 
-Step 3.54c — Dr Mokoena filters Waiting for assessors (act-3-operations.md:1521)
+Step 3.54c — Dr Mokoena filters Waiting for assessors (act-3-operations.md:1530)
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: / → /programme/waiting
 Do: Open Waiting for assessors from the menu. Choose With: Mohammed Patel and, before Show, look at the list; then Show.

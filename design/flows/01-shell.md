@@ -531,7 +531,7 @@ Expect: Under the header an info alert reads "You are now acting as Assessor." a
   member · Semester N, YYYY" under Home's heading, and the alert "You are now acting as Committee member.", the
   role Step 3.33 starts from.
 
-Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:845)
+Step 3.33 — Dr Zulu switches to her assessor view and completes the stalled Mini-CEX (act-3-operations.md:853)
 Role: Assessor — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → / → /activities/inbox → /activities/{ActivityId:int}
 Do: Her sessions open acting as a Committee member; choose Switch to Assessor in the sidebar. From "Waiting for you",
@@ -551,7 +551,7 @@ Expect: The sidebar first reads "Acting as Committee member", with "Switch to As
   Nothing of Dr Mahlangu's waits for an assessor any more: the Mini-CEX has left Waiting for assessors and Mr Smit's
   Home card.
 
-Step 3.52 — Dr Zulu's committee dashboard, and Programme Trainees (act-3-operations.md:1394)
+Step 3.52 — Dr Zulu's committee dashboard, and Programme Trainees (act-3-operations.md:1402)
 Role: CommitteeMember — Dr Thandi Zulu
 Route: / → /dashboard/switch/{role} → /
 Do: Choose Switch to Committee member in the sidebar and read the dashboard and the menu.
@@ -568,7 +568,7 @@ Expect:
     Short on it, its figure in words hidden after it. No card is one link around its rows (T280).
   - The menu is Home, Programme trainees, Committee reviews and Decision panels, then My data rights.
 
-Step 3.31 — Mr Smit opens Stalled Activities (act-3-operations.md:780)
+Step 3.31 — Mr Smit opens Stalled Activities (act-3-operations.md:786)
 Role: Coordinator — Mr Pieter Smit
 Route: / → /programme/waiting → /not-found
 Do: Open Waiting for assessors from the menu. On the Mini-CEX's row choose Send a reminder, read the dialog, then choose
