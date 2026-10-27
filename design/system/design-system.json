@@ -543,8 +543,8 @@
   },
   "lastChange": {
     "by": "Renier Cloete",
-    "at": "2026-10-20T15:30:00Z",
-    "via": "Claude Code · Wombat@0b800f29",
-    "note": "Re-synced to flow 11 as built (T373, 69a17c70, with 27ff8779): no token added or changed; 7 records added in a new Onboarding group: Invitations, InviteAPerson, OneTimeLink, Register, Trainees, AdmitRegistrar, AwaitingAdmission; revised DataTable, ConfirmDialog, PageHeader, Alert, FormField, StatePanel, DashboardCard, SubmitCheck, PasswordRules, AuthLayout, SignInCard, NavMenu, Breadcrumbs and MsfCampaigns; Icon and the Icons group (arrow-right and hourglass added: 64 icons, 58 named by a page; both uploaded to the group); the README, tokens' ref, source map and three usages, and the bundle (app.css's three Flow 11 sections). Then the review's findings (0b800f29) and two page fixes the re-sync found (27ff8779: the primary on top at 390, only the admitted result's first sentence bold)."
+    "at": "2026-10-27T12:00:00Z",
+    "via": "Claude Code · Wombat@6bc5a0c2",
+    "note": "Re-synced to flow 12 as built (T376, e53d4ae7, with 6bc5a0c2): no token added or changed; 7 records added in a new People admin group: Users, UserPage, AssessorTraining, Assessors, InstitutionRecord, SsoMappings, InstitutionalAdminHome; revised Button (the outline trigger named for its row, aria-disabled with .is-unavailable, the race rule), ConfirmDialog (flow 12's four dialogs), FormField (a form in a note panel, .choice-help-stack, a read-out, a one-field refusal), DataTable (Users' table, the 7rem .col-wrap floor, .group-id), FilterBar, PagerControls (drawn only past one page), PageHeader (OwnerHref), DashboardCard (her Home's cards), DetailCard (.user-page sections, .note-panel--form), Badge (status-locked), StatePanel, NavMenu (Entrustment decisions in her menu), Icon and the Icons group (no icon added: 64, 59 named by a page); the README, tokens' ref and source map, and the bundle (app.css's five People admin sections). Then the review's findings and one page fix the re-sync found (6bc5a0c2: no empty header actions on her record)."
   }
 }
