@@ -11,8 +11,12 @@ The operator said "push and lets start flow 13". Pushed `06913eca..82b108a6`. T3
 - **Steps 1–2** (one Opus agent, checked here): brief restated, `round-1-ask.txt` written with the mark, checks exit 0,
   staged (`design/upload/`, 122 files, none to crop) — `02120936`. **The operator took Q1–Q16 as recommended**
   (the brief's § 6): T312 lands before the build (Q10); T310 to flow 20; T374 out.
-- **Next:** the operator sends `design/flows/13-graduation-and-exit/round-1-ask.txt` to the canvas with § 4's key
-  screenshots; then round 1's assessment here.
+- **Rounds 1–3:** round 1 (27 boards, `5e13f015`; picks S1-A, S2-A, V1s; the operator took Q17–Q27), round 2 (168
+  boards, `14f88413`; three Sonnet reviews merged in `round-2-review.md`, 5 must; the operator took F1–F11; T312 grown
+  by F3), round 3 (192 boards + `f13r3.css`, `10f32323`; `round-3-check.md`: 70/73 done, 3 partly, **final**,
+  `aaa3634b`). The canvas never received the captures (no attachment arrived, the upload folder could not be
+  connected): capture-only values stay bracketed for the build to read. **T380 proposed** (a 901 px overflow).
+- **Next:** step 6, the build, after **T312** lands (Q10, grown by F3). Unpushed since `e519595b`.
 
 ## Session 2026-10-26/27 (Opus): T376, flow 12, steps 7–9, done
 
