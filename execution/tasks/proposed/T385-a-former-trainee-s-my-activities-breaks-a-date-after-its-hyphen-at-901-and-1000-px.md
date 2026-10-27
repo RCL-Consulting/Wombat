@@ -43,3 +43,7 @@ Keep the date whole (a nowrap span) in My activities' activity cell, as other li
 T379, T325.
 
 ## Notes
+- **2026-10-28, the states pass:** the same split at 390 px on Export portfolio's From help ("…started on 2023-01-" /
+  "15.", `states/export-portfolio--staff-narrow.png`). In that capture the word "until" in "Exporting the same dates again
+  gives the same file, until the record changes." is blue, as a link; at 1280 it is grey, and the markup
+  (`ExportPortfolioForm.razor:73`, `.export-note`) has no link or colour: needs confirmation in a real phone browser.
