@@ -57,8 +57,8 @@ Run the loop as flow 12 ran it (`design/flows/12-people-admin/`, BRIEF § 11 "Fl
 - [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link. (https://claude.ai/artifact/SujH2iB2snNe7VANE4SxdK)
 - [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/13-graduation-and-exit/`. (round 3 final, `round-3-check.md`; decisions in the brief's § 6, `round-1-assessment.md` § 10 and `round-2-review.md`)
 - [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 13) — the squash commit and counts. (`5cc10c66`: Domain 836, Application 4201, Infrastructure 1035, Architecture 52, Web 4259, Integration 512)
-- [ ] The whole runbook replays on a fresh database with no regression from flow 13, the baseline is re-captured, and
-  flow 13's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
+- [x] The whole runbook replays on a fresh database with no regression from flow 13, the baseline is re-captured, and
+  flow 13's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines. (acts `95fa4119`–`8ef4b774`: 331 steps, 286 clean, no regression; states 64 rows `1f64aa17`, `0881302a`; missing 0)
 - [ ] The design system is re-synced and republished — its version number.
 
 ## Related
@@ -149,3 +149,12 @@ T376 (flow 12), T373 (flow 11), T311, T312, T313, T314, T287, T305, T310, T290, 
   and one flow 13 fault **fixed**: an erased trainee's review offered a dead-end export (`920f778c`, with a test).
   Dumps `recovery/scenario-t379-post-act{1..6,A}`, `-pre-a515-A`; scratch DB `wombat_scenario_t379_s515` kept.
   **Next:** the states pass (flow 13's rows in `states.md`), then step 8.
+- **2026-10-28, step 7, the states** (two Sonnet agents in turn, the app republished with `920f778c` first): the
+  profile, closed list and header actions, 24 rows (`1f64aa17`: 1 corrected, no defect; scratch `_s10`–`_s12`); Export,
+  Verify, Home, My progress, My authorisations, My activities, the EPA page, 41 rows (`0881302a`: 2 corrected; scratch
+  `_s20`, `_s21`). Every refusal under its field with the focus, every result focused, nothing sideways at 390 with
+  44 px controls. Found: T382 again (the undated DOPS); **T386 proposed** (Home's retry focus lands on the card);
+  T385 extended (Export's help splits a date at 390; a blue "until" in the 390 capture only, needs confirmation). One
+  row left uncaptured: `trainee-profile-edit--end-failed` (needs a forced failure). The 42 other "Not yet captured
+  (T379)" marks stripped. Some scratch captures show 2026-10-28 where the replay shows 2026-10-27. **Step 7 done.
+  Next:** step 8.
