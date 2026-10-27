@@ -1,0 +1,84 @@
+<!-- @dsCard group="Graduation and exit" height=2970 width=974 subtitle="Verify portfolio export: one field (the hash, its help and the three tools' commands), Verify; the answer above the form, verified with its details in SAST and ids, or not found; what is not a hash refused under the field; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VerifyExport</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* Below 641px app.css puts Verify's details list in one column, makes the field and Verify 44px, Verify the row's width
+     and the field 1rem; the 390 rendition repeats those rules under .pv-narrow (a 358px column). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .verify-page .detail-list { grid-template-columns: minmax(0, 1fr); }
+  .pv-narrow .verify-page .form-control, .pv-narrow .verify-page .form-actions .btn { min-height: 2.75rem; }
+  .pv-narrow .verify-page .form-actions .btn { width: 100%; }
+  .pv-narrow .verify-page .form-control.hash-value { font-size: 1rem; }
+</style>
+</head>
+<body>
+<p class="pv-cap">A visitor who has not signed in, from a link with no hash: the form alone</p>
+<div class="header-container"><div><h1>Verify portfolio export</h1><p class="page-subtitle">Check whether a PDF was produced by Wombat, without signing in.</p></div></div>
+<div class="verify-page">
+  <form class="form-container" method="get" action="#">
+    <div class="form-group">
+      <label for="pv-h1">Content hash (SHA-256) <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+      <input type="text" id="pv-h1" name="hash" class="form-control hash-value" required autocomplete="off" spellcheck="false" aria-describedby="pv-h1-h pv-h1-c">
+      <p class="field-help" id="pv-h1-h">The file's SHA-256: 64 hexadecimal digits, computed on your computer from the PDF you were sent. Upper or lower case, and spaces or line breaks in it, are accepted.</p>
+      <ul class="cmd-list" id="pv-h1-c"><li>Windows: <code>certutil -hashfile &lt;file&gt; SHA256</code>, or in PowerShell <code>Get-FileHash &lt;file&gt;</code></li><li>macOS: <code>shasum -a 256 &lt;file&gt;</code></li><li>Linux: <code>sha256sum &lt;file&gt;</code></li></ul>
+    </div>
+    <div class="form-actions"><button type="submit" class="btn btn-primary" name="check" value="1"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1zM9 12l2 2 4-4" /></svg>Verify</button></div>
+  </form>
+</div>
+
+<p class="pv-cap">Verified, after a press (Get-FileHash's upper case): the answer above the form takes the focus; its first sentence bold, then the details, times in SAST, people as ids</p>
+<div class="verify-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status"><p><strong>Export verified.</strong> Wombat generated this PDF: its content is byte for byte an export Wombat recorded.</p>
+    <dl class="detail-list"><dt>First generated</dt><dd>2026-10-27 23:20 SAST</dd><dt>Exported</dt><dd>3 times, the last on 2026-10-27 23:22 SAST</dd><dt>Trainee</dt><dd class="hash-value">44c162ca-2784-45f7-a390-0343719c297d</dd><dt>First exported by</dt><dd class="hash-value">44c162ca-2784-45f7-a390-0343719c297d</dd><dt>Filter</dt><dd>2023-01-15 to 2026-10-27</dd><dt>File</dt><dd>portfolio-9ac3aea9a795.pdf</dd></dl>
+    <p class="verify-ids-note">People are shown by their Wombat user ids, never by name. The institution that issued the portfolio can say whose they are.</p></div></div>
+  <form class="form-container" method="get" action="#">
+    <div class="form-group">
+      <label for="pv-h2">Content hash (SHA-256) <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+      <input type="text" id="pv-h2" name="hash" class="form-control hash-value" value="9AC3AEA9A795F48217BC219A9B91B387F2484DACED209A283F7854EDC0160783" required autocomplete="off" spellcheck="false" aria-describedby="pv-h2-h pv-h2-c">
+      <p class="field-help" id="pv-h2-h">The file's SHA-256: 64 hexadecimal digits, computed on your computer from the PDF you were sent. Upper or lower case, and spaces or line breaks in it, are accepted.</p>
+      <ul class="cmd-list" id="pv-h2-c"><li>Windows: <code>certutil -hashfile &lt;file&gt; SHA256</code>, or in PowerShell <code>Get-FileHash &lt;file&gt;</code></li><li>macOS: <code>shasum -a 256 &lt;file&gt;</code></li><li>Linux: <code>sha256sum &lt;file&gt;</code></li></ul>
+    </div>
+    <div class="form-actions"><button type="submit" class="btn btn-primary" name="check" value="1"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1zM9 12l2 2 4-4" /></svg>Verify</button></div>
+  </form>
+</div>
+
+<p class="pv-cap">Not found (a tampered file's hash): a danger Alert, its first sentence bold</p>
+<div class="verify-page"><div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><strong>No matching export found.</strong> This hash does not correspond to any PDF generated by this system. One changed byte changes the whole hash: check that it was computed from the file you were sent.</div></div></div>
+
+<p class="pv-cap">Not a hash (V04): refused under the field, named first by it, the field marked and focused (autofocus after a press), what was typed kept; no answer</p>
+<div class="verify-page">
+  <form class="form-container" method="get" action="#">
+    <div class="form-group">
+      <label for="pv-h3">Content hash (SHA-256) <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+      <input type="text" id="pv-h3" name="hash" class="form-control hash-value input-validation-error" value="zzz" required autocomplete="off" spellcheck="false" aria-invalid="true" aria-describedby="pv-h3-e pv-h3-h pv-h3-c">
+      <div class="validation-message" id="pv-h3-e">This is not a SHA-256 hash: “z” is not a hexadecimal digit (0 to 9, a to f).</div>
+      <p class="field-help" id="pv-h3-h">The file's SHA-256: 64 hexadecimal digits, computed on your computer from the PDF you were sent. Upper or lower case, and spaces or line breaks in it, are accepted.</p>
+      <ul class="cmd-list" id="pv-h3-c"><li>Windows: <code>certutil -hashfile &lt;file&gt; SHA256</code>, or in PowerShell <code>Get-FileHash &lt;file&gt;</code></li><li>macOS: <code>shasum -a 256 &lt;file&gt;</code></li><li>Linux: <code>sha256sum &lt;file&gt;</code></li></ul>
+    </div>
+    <div class="form-actions"><button type="submit" class="btn btn-primary" name="check" value="1"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1zM9 12l2 2 4-4" /></svg>Verify</button></div>
+  </form>
+</div>
+
+<p class="pv-cap">At 390: the details one column, each term over its value, the ids wrapping; the field 1rem and 44px, Verify the row's width and 44px</p>
+<div class="pv-narrow"><div class="verify-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status"><p><strong>Export verified.</strong> Wombat generated this PDF: its content is byte for byte an export Wombat recorded.</p>
+    <dl class="detail-list"><dt>First generated</dt><dd>2026-10-27 23:20 SAST</dd><dt>Exported</dt><dd>3 times, the last on 2026-10-27 23:22 SAST</dd><dt>Trainee</dt><dd class="hash-value">44c162ca-2784-45f7-a390-0343719c297d</dd><dt>First exported by</dt><dd class="hash-value">44c162ca-2784-45f7-a390-0343719c297d</dd><dt>Filter</dt><dd>2023-01-15 to 2026-10-27</dd><dt>File</dt><dd>portfolio-9ac3aea9a795.pdf</dd></dl>
+    <p class="verify-ids-note">People are shown by their Wombat user ids, never by name. The institution that issued the portfolio can say whose they are.</p></div></div>
+  <form class="form-container" method="get" action="#">
+    <div class="form-group">
+      <label for="pv-h4">Content hash (SHA-256) <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label>
+      <input type="text" id="pv-h4" name="hash" class="form-control hash-value" value="9ac3aea9a795f48217bc219a9b91b387f2484daced209a283f7854edc0160783" required autocomplete="off" spellcheck="false" aria-describedby="pv-h4-h pv-h4-c">
+      <p class="field-help" id="pv-h4-h">The file's SHA-256: 64 hexadecimal digits, computed on your computer from the PDF you were sent. Upper or lower case, and spaces or line breaks in it, are accepted.</p>
+      <ul class="cmd-list" id="pv-h4-c"><li>Windows: <code>certutil -hashfile &lt;file&gt; SHA256</code>, or in PowerShell <code>Get-FileHash &lt;file&gt;</code></li><li>macOS: <code>shasum -a 256 &lt;file&gt;</code></li><li>Linux: <code>sha256sum &lt;file&gt;</code></li></ul>
+    </div>
+    <div class="form-actions"><button type="submit" class="btn btn-primary" name="check" value="1"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1zM9 12l2 2 4-4" /></svg>Verify</button></div>
+  </form>
+</div></div>
+</body>
+</html>

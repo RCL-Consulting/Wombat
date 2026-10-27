@@ -12,6 +12,7 @@ The record of an ended programme (`Components/Shared/Progress/EndedRecord.razor`
 - `Ended` (required): how the programme ended (`ProgrammeEndDto`: the day, if recorded, and whether it was completed).
 - `MsfCoverage`, `MsfFailed`: each period's MSF coverage, a line on each card; failed, one line says so and the periods stand.
 - `SubjectName`: the registrar, on the registrar page: the staff words, and no EPA-page links. Null on My progress.
+- `AfterNotice` (flow 13, T379, P1; optional): what stands straight after the notice and before Curriculum targets, drawn with no whitespace of its own, so a caller that passes none renders the same bytes (the golden files hold). My progress passes its "Your record:" line for a reader with no Trainee role (MyProgress); the registrar page passes none.
 - `FocusHeadingAsync()`: the record's heading, which a section's Try again focuses.
 
 The standing as on the last day is the page's own section, after it (EntrustmentStandingPanel).
@@ -24,7 +25,7 @@ The standing as on the last day is the page's own section, after it (Entrustment
 - **"Curriculum targets"**, an `h2` (`tabindex="-1"`; on the registrar page `h2#ended-h.epa-section-title` in `section.index-section`), then:
   - **The programme**, a `section.detail-card` headed `h3` "Your programme" ("The programme" for staff): a details list of Started ("2025-01-15"), Completed or Ended ("2026-10-03", or "The day was not recorded") and Training year ("2 when your programme ended"; "2 when the programme ended").
   - The MSF failure, when it failed: `p.section-error` "**Multi-source feedback:** Could not load MSF coverage. Your counts above are not affected." ("… The periods below are not affected." for staff).
-  - **"Each semester"** and **"Once a year"** (`h3.progress-group-title`), each a `.dashboard-grid` of one `section.detail-card` per EPA: the code (`h3`; a link to the EPA's page on My progress, text on the registrar page), the title (muted), "Target: 3 per semester (6 a year). Minimum when your programme ended: 3a." (`p.progress-row-meta`; "when the programme ended" for staff), then a details list of every period, newest first: "Semester 2, 2026" · "no target (the programme ended part-way through) · 1 recorded"; "Semester 1, 2026" · "3 of 3, met; 2 at the minimum level when observed"; and its MSF line where there is one.
+  - **"Each semester"** and **"Once a year"** (`h3.progress-group-title`), each a `.dashboard-grid` of one `section.detail-card` per EPA: the code (`h3`; a link to the EPA's page on My progress, text on the registrar page; for an EPA paused since the end, a space and `span.paused-mark` "(no longer in use)" after it, muted and outside the link, T312, flow 13's R05), the title (muted), "Target: 3 per semester (6 a year). Minimum when your programme ended: 3a." (`p.progress-row-meta`; "when the programme ended" for staff), then a details list of every period, newest first: "Semester 2, 2026" · "no target (the programme ended part-way through) · 1 recorded"; "Semester 1, 2026" · "3 of 3, met; 2 at the minimum level when observed"; and its MSF line where there is one.
 - With no EPA in use any more: `p.muted` "No EPA on your curriculum is in use any more, so there are no targets to show." ("… on Pieter du Plessis's curriculum …").
 
 ## Rules (DESIGN.md § Dashboard layout grid, "The progress figures")
@@ -39,4 +40,4 @@ The notice's words 11.84:1 on `info-bg`; the title and meta lines `muted-text` 5
 
 ## Known gaps
 
-- **Still the pre-restructure card grid**, under a heading, "Curriculum targets", that Home no longer uses; flow 13 redesigns it (T311, T312). On the registrar page its h2 is the section title while its EPA cards' codes are `h3`s beside the programme card's `h3`, one level for two kinds of heading.
+- **Still the pre-restructure card grid**, under a heading, "Curriculum targets", that Home no longer uses: flow 13 (T379) kept it as built, adding only `AfterNotice` and the paused mark. Since T312 (c9d6fe13) its items are the list the programme ended with (`EndedCurriculumItem`), so a catalogue change after the end no longer rewrites it; changing a curriculum item's EPA after the end still does (T381, proposed, inferred from the code). On the registrar page its h2 is the section title while its EPA cards' codes are `h3`s beside the programme card's `h3`, one level for two kinds of heading.

@@ -1,4 +1,4 @@
-<!-- @dsCard group="Onboarding" height=2300 width=974 subtitle="Trainees: Waiting to be admitted and Current trainees, each an h2 with its count over a list that stacks at 900px; a row's one Admit…; the admission's result focused directly above the waiting list; the programme start over its training year; stacked at 390" -->
+<!-- @dsCard group="Onboarding" height=4030 width=974 subtitle="Trainees: Waiting to be admitted, Current trainees and (flow 13) Completed and closed, each an h2 with its count over a list that stacks at 900px; a row's one Admit…; the admission's result focused directly above the waiting list; the programme start over its training year; stacked at 390" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -104,6 +104,40 @@
       </table>
     </div>
   </section>
+  <section class="list-section" aria-labelledby="pv-closed">
+    <h2 id="pv-closed" class="list-section-title">Completed and closed <span class="inv-count">3 ended</span></h2>
+    <div class="closed-list"><div class="table-container shadow">
+      <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>Programmes that have ended, the latest end first. An ended record is read-only.</caption>
+        <thead role="rowgroup">
+          <tr role="row"><th scope="col" role="columnheader">Name</th><th scope="col" role="columnheader" class="col-wrap col-wrap--curriculum">Curriculum and sub-speciality</th><th scope="col" role="columnheader" class="col-wrap">Programme</th><th scope="col" role="columnheader">Outcome</th><th scope="col" role="columnheader" class="col-actions col-actions--single"><span class="visually-hidden">Actions</span></th></tr>
+        </thead>
+        <tbody role="rowgroup">
+          <tr role="row">
+            <th scope="row" role="rowheader">deleted_user_0ae1d64b</th>
+            <td role="cell" data-label="Curriculum and sub-speciality" class="col-wrap"><span class="person-cell">Paediatric EPA Curriculum (11.2) <span>Paediatrics</span></span></td>
+            <td role="cell" data-label="Programme" class="col-wrap"><span class="person-cell">2026-01-15 to 2026-10-28 <span>Training year 1 when it ended</span></span></td>
+            <td role="cell" data-label="Outcome" class="outcome-cell"><span class="badge badge-withdrawn">Withdrawn</span> <span>2026-10-28</span></td>
+            <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="View deleted_user_0ae1d64b's record">View</a></td>
+          </tr>
+          <tr role="row">
+            <th scope="row" role="rowheader">Lerato Molefe</th>
+            <td role="cell" data-label="Curriculum and sub-speciality" class="col-wrap"><span class="person-cell">Paediatric EPA Curriculum (11.1) <span>Paediatrics</span></span></td>
+            <td role="cell" data-label="Programme" class="col-wrap"><span class="person-cell">2023-01-15 to 2026-10-27 <span>Training year 4 when it ended</span></span></td>
+            <td role="cell" data-label="Outcome" class="outcome-cell"><span class="badge badge-completed">Completed</span> <span>2026-10-27</span></td>
+            <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="View Lerato Molefe's record">View</a></td>
+          </tr>
+          <tr role="row">
+            <th scope="row" role="rowheader">Pieter du Plessis</th>
+            <td role="cell" data-label="Curriculum and sub-speciality" class="col-wrap"><span class="person-cell">Paediatric EPA Curriculum (11.1) <span>Paediatrics</span></span></td>
+            <td role="cell" data-label="Programme" class="col-wrap"><span class="person-cell">2025-01-15 to 2026-10-25 <span>Training year 2 when it ended</span></span></td>
+            <td role="cell" data-label="Outcome" class="outcome-cell"><span class="badge badge-withdrawn">Withdrawn</span> <span>2026-10-25</span></td>
+            <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="View Pieter du Plessis's record">View</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div></div>
+  </section>
 </div>
 
 <p class="pv-cap">At Step 2.30, the last admission with its completion left empty: the derived date said, and where to change it; nobody waiting</p>
@@ -120,6 +154,9 @@
   </section>
 </div>
 
+<p class="pv-cap">Completed and closed with nothing ended (C03): the heading with no count, over the empty card</p>
+<div class="inv-page"><section class="list-section" aria-labelledby="pv-closed-e"><h2 id="pv-closed-e" class="list-section-title">Completed and closed</h2><div class="detail-card detail-card--empty"><div class="state-panel-title">No programme has ended yet.</div><div class="state-panel-copy">A trainee is listed here once their programme is marked complete or a withdrawal is recorded, on their programme's page.</div></div></section></div>
+
 <p class="pv-cap">The loading state (T08): a status line and a skeleton card</p>
 <div class="inv-page">
   <p class="loading-line" role="status">Loading the trainees.</p>
@@ -131,7 +168,7 @@
   </div>
 </div>
 
-<p class="pv-cap">At 390: each row a block under its name, its cells labelled, Admit… and Edit 44px</p>
+<p class="pv-cap">At 390: each row a block under its name, its cells labelled, Admit…, Edit and View 44px; Completed and closed stacked too, the badge then the day</p>
 <div class="pv-narrow">
   <div class="inv-page">
     <section class="list-section" aria-labelledby="pv-waiting-n">
@@ -173,6 +210,40 @@
           </tbody>
         </table>
       </div>
+    </section>
+    <section class="list-section" aria-labelledby="pv-closed-n">
+      <h2 id="pv-closed-n" class="list-section-title">Completed and closed <span class="inv-count">3 ended</span></h2>
+      <div class="closed-list"><div class="table-container shadow">
+        <table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+          <caption>Programmes that have ended, the latest end first. An ended record is read-only.</caption>
+          <thead role="rowgroup">
+            <tr role="row"><th scope="col" role="columnheader">Name</th><th scope="col" role="columnheader" class="col-wrap col-wrap--curriculum">Curriculum and sub-speciality</th><th scope="col" role="columnheader" class="col-wrap">Programme</th><th scope="col" role="columnheader">Outcome</th><th scope="col" role="columnheader" class="col-actions col-actions--single"><span class="visually-hidden">Actions</span></th></tr>
+          </thead>
+          <tbody role="rowgroup">
+            <tr role="row">
+              <th scope="row" role="rowheader">deleted_user_0ae1d64b</th>
+              <td role="cell" data-label="Curriculum and sub-speciality" class="col-wrap"><span class="person-cell">Paediatric EPA Curriculum (11.2) <span>Paediatrics</span></span></td>
+              <td role="cell" data-label="Programme" class="col-wrap"><span class="person-cell">2026-01-15 to 2026-10-28 <span>Training year 1 when it ended</span></span></td>
+              <td role="cell" data-label="Outcome" class="outcome-cell"><span class="badge badge-withdrawn">Withdrawn</span> <span>2026-10-28</span></td>
+              <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="View deleted_user_0ae1d64b's record">View</a></td>
+            </tr>
+            <tr role="row">
+              <th scope="row" role="rowheader">Lerato Molefe</th>
+              <td role="cell" data-label="Curriculum and sub-speciality" class="col-wrap"><span class="person-cell">Paediatric EPA Curriculum (11.1) <span>Paediatrics</span></span></td>
+              <td role="cell" data-label="Programme" class="col-wrap"><span class="person-cell">2023-01-15 to 2026-10-27 <span>Training year 4 when it ended</span></span></td>
+              <td role="cell" data-label="Outcome" class="outcome-cell"><span class="badge badge-completed">Completed</span> <span>2026-10-27</span></td>
+              <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="View Lerato Molefe's record">View</a></td>
+            </tr>
+            <tr role="row">
+              <th scope="row" role="rowheader">Pieter du Plessis</th>
+              <td role="cell" data-label="Curriculum and sub-speciality" class="col-wrap"><span class="person-cell">Paediatric EPA Curriculum (11.1) <span>Paediatrics</span></span></td>
+              <td role="cell" data-label="Programme" class="col-wrap"><span class="person-cell">2025-01-15 to 2026-10-25 <span>Training year 2 when it ended</span></span></td>
+              <td role="cell" data-label="Outcome" class="outcome-cell"><span class="badge badge-withdrawn">Withdrawn</span> <span>2026-10-25</span></td>
+              <td role="cell" class="col-actions col-actions--single"><a class="btn btn-outline btn-sm" href="#" aria-label="View Pieter du Plessis's record">View</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div></div>
     </section>
   </div>
 </div>

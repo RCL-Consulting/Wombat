@@ -4,7 +4,7 @@ My authorisations (`/portfolio/authorisations`, `Pages/Portfolio/MyAuthorisation
 
 ## Who reads it
 
-The Trainee (`[Authorize(Roles = "Trainee")]`), her own STARs (`GetDecisionsForTraineeQuery`: Active, Revoked and Expired, never Superseded). A graduate reads her STARs here too (EpaPage's "Open My authorisations"). Its owner is My progress: the trail is Home › My progress › My authorisations (NavMenu, Breadcrumbs). Home's My authorisations card (DashboardCard) links here.
+The Trainee and, since flow 13 (T379, Q3; R3-R08), a former trainee: the policy is My progress's, `TraineeOrFormerTrainee` (until then `[Authorize(Roles = "Trainee")]`, which refused a graduate her own certificates, T311). Each reads her own STARs (`GetDecisionsForTraineeQuery`: Active, Revoked and Expired, never Superseded). A graduate reaches it from her Home's record card (FormerTraineeHome), My progress's "Your record:" line (MyProgress) and the EPA page's "Open My authorisations". Its owner is My progress, a personal link (`UnderAPersonalLink`), so for a former trainee who holds no role too: the trail is Home › My progress › My authorisations (NavMenu, Breadcrumbs). Home's My authorisations card (DashboardCard) links here.
 
 ## The page
 
@@ -38,6 +38,7 @@ The Trainee (`[Authorize(Roles = "Trainee")]`), her own STARs (`GetDecisionsForT
 - **Loading**: the header at once, an always-present visually hidden status "Loading your authorisations.", two card skeletons (14rem), no Download.
 - **Load failed**: "Could not load your authorisations. Nothing has changed. Try again, or come back in a few minutes." with Try again, the failure logged.
 - **No STAR at all**: the empty card, "No active authorisations yet", "When a committee review ratifies a decision authorising you to perform an EPA, it will appear here. You can then download a STAR certificate for your records."
+- **No STAR at all, for a reader who holds no Trainee role** (flow 13, T379, P2; Spec 3's Empty row): the empty card's title is "No STAR was issued to you, so there is no certificate to download." (`FormerTraineeRecordWords.NoStarIssued`, the words of her Home's plain STARs row) and nothing under it: the title says it all, so StatePanel draws no copy block. R3-R09 drew the built words; the build follows the Spec. Measured on the replay (Pieter du Plessis, 1280 and 390).
 
 ## Narrow widths
 

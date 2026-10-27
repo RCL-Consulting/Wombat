@@ -19,7 +19,7 @@ Nothing: MainLayout renders it in its header. What it offers is `NavItems.For(ac
   - **No role** (a former trainee): no head and no switch; the list starts under the brand cell.
 - **The list** `div.nav-list` (scrolls; no tabindex): `ul.nav-items` of `li > NavItemLink`, rows 4px apart.
   - Up to eight of the acting role's links, Home counted, one flat list; **the personal links are not counted** (flow 06, T358, E2: until then they were, and the Coordinator's eight would have been grouped). More (the Administrator's 16, the Institutional admin's 16 since flow 12), Home, then groups: `p.nav-group-heading` (0.8125rem/600, `nav-group-label`, sentence case), a `<p>` and not a heading element, naming its `ul.nav-items` through `aria-labelledby`.
-  - **The personal links** last, in `ul.nav-items.nav-personal` under a `nav-divider` rule: My progress (to anyone holding the Trainee role or a trainee record, whatever the acting role) and My data rights (everyone).
+  - **The personal links** last, in `ul.nav-items.nav-personal` under a `nav-divider` rule: My progress (to anyone holding the Trainee role or a trainee record, whatever the acting role), **Export portfolio** (`download`; since flow 13, T379, Q2, to a holder of a trainee record who does not hold the Trainee role: a former trainee, whatever role they act as now; a Trainee has it among her own links, so it is never offered twice, and it lights itself and draws no trail, F4) and My data rights (everyone). A former trainee who holds no role sees Home, then My progress, Export portfolio and My data rights (`NavItems.PersonalFor`; measured on the replay, Lerato Molefe).
 - **NavItemLink** `a.nav-link`: a 20px icon and `span.nav-label`, 0.9375rem, 28px tall (44px and 1rem below 641px), `radius-sm`, `nav-text`. Hover: `nav-hover-bg`, `nav-text-strong`. Lit: the class `active`, `nav-active-bg`, `nav-text-strong`, weight 600 and a 3px `nav-text-strong` bar inset on its left.
 
 ## Who is offered what (NavItems.cs; DESIGN.md's table, which NavMenuAuthorizationTests holds)
@@ -55,7 +55,7 @@ Every page that is not an item's own, and the list it sits under for each acting
 
 | Page | Lit item, by acting role |
 |---|---|
-| An activity (`/activities/{id}`) | Assessor: Activity inbox · Trainee: My activities · Speciality admin, Sub-speciality admin, Coordinator: Waiting for assessors, however the activity was reached (flow 06) |
+| An activity (`/activities/{id}`) | Assessor: Activity inbox · Trainee: My activities · Speciality admin, Sub-speciality admin, Coordinator: Waiting for assessors, however the activity was reached (flow 06). A former trainee's is under no item of hers: Home › the activity (flow 13, N2) |
 | A registrar's page (`/programme/trainees/{id}`, flow 06) | Committee member, Speciality admin, Sub-speciality admin, Coordinator: Programme trainees; its trail Home › Programme trainees › the registrar's name |
 | A committee review | Committee member, Coordinator, Speciality admin, Sub-speciality admin, Institutional admin, Administrator: Committee reviews (a trainee reads theirs at `/committee/my-reviews/{id}`; this page does not admit them) |
 | A trainee's own review (`/committee/my-reviews/{id}`, flow 09) | Trainee: My committee reviews; its trail Home › My committee reviews › the review, "2026 S2 annual progression review" (T366, F8). Only the Trainee: the page admits an Administrator too, as the list does, but reads them nothing that is not their own |
@@ -73,12 +73,14 @@ Every page that is not an item's own, and the list it sits under for each acting
 | An entrustment scale | Administrator: Entrustment scales |
 | Invite a person (`/admin/invitations/new`, flow 11) | Administrator, Institutional admin: Invitations; its trail Home › Invitations › Invite a person (T373, Q1) |
 | A user | Administrator, Institutional admin: Users. Its Users crumb returns to the filtered Users page it was opened from (`?back=`, `PeopleLinks.SafeUsersReturn`; `PageHeader.OwnerHref`; T376, S6; UserPage) |
-| A trainee's profile | Institutional admin: Trainees |
+| A trainee's profile | Institutional admin: Trainees; its trail Home › Trainees › ‹name›'s programme (flow 13, T379, T2) |
+| The staff export, Export ‹name›'s portfolio (`/portfolio/export/{userId}`, `ExportTraineePortfolio`, flow 13) | Institutional admin: Trainees; its trail Home › Trainees › ‹name›'s programme › Export portfolio · Committee member, Speciality admin, Sub-speciality admin, Coordinator: Programme trainees; its trail Home › Programme trainees › ‹name› › Export portfolio. The middle crumb is the page's (`PageHeader`'s `Trail`, M4), none while it reads, when it failed or with no profile. The Administrator, offered neither, has nothing lit: Home › Export portfolio. Its own component, so it lights its owner by route, never the caller's own Export portfolio (T379, S2, Q27) |
 | `/admin/assessors/edit` (the old assessor form's route, flow 12) | Administrator, Institutional admin: Users; its trail Home › Users › User: it leads to the person's page at `?section=training`, or says "User unavailable" (T376, S10) |
 | Admit ‹name› (`/admin/trainees/admit`, flow 11) | Institutional admin: Trainees; its trail Home › Trainees › Admit Lerato Molefe. The Administrator, whose menu has no Trainees, has nothing lit and the same trail, its Trainees crumb given by the page (`PageHeader`'s `Trail`; T373, M04b) |
 | An audit entry | Administrator, Institutional admin: Audit log |
 | A scheduled job's run history | Administrator: Scheduled jobs |
-| My authorisations | Trainee: My progress |
+| My authorisations | Every acting role, and none: My progress (`UnderAPersonalLink`, since flow 13, T379, Q3), so for a Trainee and a former trainee; its trail Home › My progress › My authorisations |
+| My activities (`/activities/mine`, flow 13) | Every acting role, and none: My progress (`UnderAPersonalLink`, T379, S18), for a former trainee, whose menu has no My activities: Home › My progress › My activities. A Trainee's menu offers it, so for her it lights itself and draws no trail |
 | An EPA's page (`/portfolio/progress/{id}`, flow 05) | Every acting role, and none: My progress (a page under a personal link; below) |
 
 **A page under a personal link** (flow 05, T355, E3; `NavOwners.UnderAPersonalLink`, `IsPersonal`): an entry that names no role, under My progress or My data rights, is owned whatever the acting role, and for a graduate who holds none, since the menu offers the link whatever the role. It is lit only where the person is offered the link. An entry that names roles keeps them, whatever item it is under: My authorisations is under My progress for the Trainee alone.

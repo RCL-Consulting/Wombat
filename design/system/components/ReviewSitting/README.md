@@ -14,6 +14,8 @@ Committee member, Coordinator, Administrator, Institutional admin and both speci
 - **The subtitle**: "Annual progression review · Paed Annual Review Panel · Training year 4": the type ("Formative check-in" for a formative review, whatever its stored type; T309 item 2), the panel, and the training year at the end of the review's period.
 - **"Lerato Molefe's progress"** under it (`a.review-progress-link`, a link alone on its line, 24px; 44px below 641px), through PageHeader's `SubtitleContent`, to flow 06's registrar page (`/programme/trainees/{ProfileId}`): only for the four roles that page admits (`ProgrammeReadAs`), and only while the trainee trains at the panel's institution.
 
+- **The header's action** (flow 13, T379, F1, N5; R3-X01, X03, X05, X08–X10): "Export Lerato Molefe's portfolio" (`ExportPortfolioAction`, `download`, outline), apart from the subtitle's progress link, only where `MayExport` (a review whose trainee the caller no longer oversees offers none) and never for an erased trainee (920f778c); none while it loads, on a failed read or on Page not found. The commands answering with the review keep what the query read.
+
 ## The sections, in order (DESIGN.md § Detail page, "The committee review has no details-grid")
 
 `div.review-page`, a flex column 24px apart; each section a `detail-card` (`section`, `aria-labelledby`) with its `h2.review-section-title` (1.15rem/600, the card title's size, one level under the h1, A.7.13):

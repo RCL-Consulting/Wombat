@@ -6,7 +6,7 @@ There is no DetailCard component: a page writes `div.detail-card` (or `aside`, `
 
 ## What the consumer provides
 
-The element and its content: usually an `h2` or `h3`, then a `.details-list` (`<dl>` of `<div><dt>…</dt><dd>…</dd></div>` rows, labels in `muted-text`), a table, or text.
+The element and its content: usually an `h2` or `h3`, then a `.details-list` (`<dl>` of `<div><dt>…</dt><dd>…</dd></div>` rows, labels in `muted-text`; each row a grid of `minmax(8rem, max-content) minmax(0, 1fr)`, the value column free to shrink below its longest word since flow 13, T379, round-3-check build note 2, where a bare `1fr` pushed the EPA page sideways; a value that cannot wrap still overflows a column that narrow, T380), a table, or text.
 
 ## Variants (DESIGN.md § Card system)
 

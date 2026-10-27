@@ -1,6 +1,6 @@
 # Trainees
 
-Trainees (`/admin/trainees`, `Pages/Admin/Trainees/PendingTraineesList.razor`; its words in `AdmissionText.cs`, its addresses in `Shared/OnboardingLinks.cs`): **the registrars waiting to be admitted, then the current trainees**, then flow 13's Completed and closed. Each waiting row opens Admit ‹name› (AdmitRegistrar), and an admission lands back here saying what was done. Flow 11 (T373, 2026-10-20, 69a17c70; boards R3-T01 to T10; round 3 S8, S16, M6, M7, check rules 6 and 7; T280, T306, T329; build review P2, P4, P9) rebuilt it. Until then its two tables sat in cards headed by `h3`s ("Pending admission", "Active profiles") whose captions repeated them, a waiting row's button was a primary "Admit to curriculum" that opened the trainee profile page, an admission landed on that profile saying nothing, Current trainees showed no training year (T306), and a failed read printed the exception's text (T329).
+Trainees (`/admin/trainees`, `Pages/Admin/Trainees/PendingTraineesList.razor`; its words in `AdmissionText.cs`, its addresses in `Shared/OnboardingLinks.cs`): **the registrars waiting to be admitted, then the current trainees, then the programmes that have ended** (Completed and closed, flow 13). Each waiting row opens Admit ‹name› (AdmitRegistrar), and an admission lands back here saying what was done. Flow 11 (T373, 2026-10-20, 69a17c70; boards R3-T01 to T10; round 3 S8, S16, M6, M7, check rules 6 and 7; T280, T306, T329; build review P2, P4, P9) rebuilt it. Until then its two tables sat in cards headed by `h3`s ("Pending admission", "Active profiles") whose captions repeated them, a waiting row's button was a primary "Admit to curriculum" that opened the trainee profile page, an admission landed on that profile saying nothing, Current trainees showed no training year (T306), and a failed read printed the exception's text (T329).
 
 ## Who reads it
 
@@ -31,7 +31,17 @@ The header: "Trainees", "Admit registrars who are waiting, and keep current trai
 | Expected completion | "2027-01-14" |
 | (Actions) | `.col-actions--single`: Edit, named "Edit Lerato Molefe's profile", to the trainee profile page |
 
-- **Completed and closed** (flow 13's, as built; only when it has rows): `h2` "Completed and closed" over a plain `DataTable`, its columns Name, Curriculum, Sub-speciality, Outcome ("Completed 2026-…", "Withdrawn 2026-…") and Edit. Flow 13 redraws it.
+- **Completed and closed** (flow 13, T379, 2026-10-27, 5cc10c66; S11, S22, S24, F7, Q22; boards R3-C01 to C07): every ended programme in the caller's scope, read on its own (`ListEndedProfilesQuery`, paged in SQL, 20 a page), the latest end first. Always drawn: `h2#trainees-closed-heading.list-section-title` (focusable by script) with `span.inv-count` "3 ended" (the count in scope, not the page's). Then, in `.closed-list`, a `StackWide` table captioned "Programmes that have ended, the latest end first. An ended record is read-only.":
+
+| Column | What |
+|---|---|
+| Name | **the row's header**, no `.col-wrap` (`overflow-wrap: break-word`, so a long name breaks inside itself only when it must); the Administrator's "Name and institution", the institution under the name (`.person-cell`); the address under it where two share a name (C05). An erased person is listed under the pseudonym ("deleted_user_0ae1d64b") |
+| Curriculum and sub-speciality | `.col-wrap.col-wrap--curriculum`: `.person-cell`, "Paediatric EPA Curriculum (11.1)" over "Paediatrics" |
+| Programme | `.col-wrap`: `.person-cell`, "2023-01-15 to 2026-10-27" over "Training year 4 when it ended" (the start alone for an end with no day recorded); on the onboarding column's 7.5rem floor, so "2023-01-15" stays whole from 901 to 1100px |
+| Outcome | `.outcome-cell`: the badge, **Completed** green or **Withdrawn** grey (`BadgeFor.ProgrammeOutcome`, `badge-withdrawn`; Badge), then the day, which never breaks |
+| (Actions) | `.col-actions--single`: **View**, `.btn-outline .btn-sm`, named "View Lerato Molefe's record" (the address, then the curriculum, added where names collide), to the profile (TraineeProfile) |
+
+  The pager (`PagerControls`, "Completed and closed, pages", "Ended programmes per page") only past one page; a turn focuses the section's h2. None ended: the empty card "No programme has ended yet." · "A trainee is listed here once their programme is marked complete or a withdrawal is recorded, on their programme's page." Until flow 13 it was Current's read filtered, unpaged, with an Edit.
 
 ## The result of an admission (S8; T02–T04)
 
@@ -45,7 +55,7 @@ Admit ‹name› goes to `/admin/trainees?admitted=‹profileId›`: the address
 
 ## Narrow widths
 
-Both tables stack at 900px and below (`StackWide`): each row a block, the name heading its labelled cells; Admit… and Edit are 44px from 900px (`.clinic-table--stack-wide .btn`). Measured on the replay at 1100, 1000, 901 and 390: no sideways scroll and no word split mid-word (Step 2.29).
+All three tables stack at 900px and below (`StackWide`): each row a block, the name heading its labelled cells; Admit…, Edit and View are 44px from 900px (`.clinic-table--stack-wide .btn`). Measured on the replay at 1100, 1000, 901 and 390: no sideways scroll and no word split mid-word (Step 2.29; flow 13's closed list in T379's replay and again at 1280 and 390 in its step 8).
 
 ## Known gaps
 

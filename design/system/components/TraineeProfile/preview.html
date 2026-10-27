@@ -1,0 +1,118 @@
+<!-- @dsCard group="Graduation and exit" height=5720 width=974 subtitle="A trainee's programme: h1 ‹name›'s programme, Export ‹name›'s portfolio in the header; the summary, Profile details, End this programme (the last day, Mark complete… and Deactivate… as role rows); the day refused under its field before any dialog; the two dialogs with their forecast; the ended record with its result, read-only details and the account; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TraineeProfile</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The app opens a dialog with showModal(); a static preview cannot, so its stage paints the scrim itself. */
+  .pv-stage { position: relative; background: var(--scrim); padding: var(--space-xl) 0; }
+  .pv-stage dialog { position: static; margin: 0 auto; }
+  /* Below 641px app.css makes every control on .user-page 44px, stacks a role row and Profile details' actions (the
+     primary on top), stacks a dialog's buttons, makes the account's link 44px and the header's action the row's width;
+     the 390 rendition repeats those rules under .pv-narrow (a 358px column: 390 less the phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .btn, .pv-narrow .form-control, .pv-narrow .form-select { min-height: 2.75rem; }
+  .pv-narrow .user-page .role-row { align-items: stretch; flex-direction: column; }
+  .pv-narrow .user-page .form-actions, .pv-narrow .dialog-card .form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .pv-narrow .user-page .form-actions .btn, .pv-narrow .dialog-card .form-actions .btn { width: 100%; }
+  .pv-narrow .user-page .account-open a { min-height: 2.75rem; }
+  .pv-narrow .header-container .actions-cell { width: 100%; }
+  .pv-narrow .header-container .actions-cell .btn { flex: 1 1 auto; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Nolwazi Mbatha opens Anele Dlamini's Edit on Trainees: a running programme; Export in the header, the summary, Profile details, End this programme</p>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+  <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Trainees</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-current"><span aria-current="page">Anele Dlamini's programme</span></li>
+</ol></nav>
+<div class="header-container"><div><h1>Anele Dlamini's programme</h1><p class="page-subtitle">Update curriculum and completion details for this trainee.</p></div><div class="actions-cell"><a class="btn btn-outline" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>Export Anele Dlamini's portfolio</a></div></div>
+<div class="user-page">
+  <dl class="detail-list" aria-label="Trainee summary"><dt>Status</dt><dd>Active</dd><dt>Email</dt><dd>dlamini@<wbr>kgk.wombat.local</dd></dl>
+  <section class="detail-card user-section" aria-labelledby="pv-pd"><h2 id="pv-pd">Profile details</h2>
+    <form novalidate>
+      <div class="form-grid">
+        <div class="form-group"><label for="pv-cur">Curriculum<span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><select id="pv-cur" class="form-select" aria-required="true"><option>Paediatric EPA Curriculum (11.1)</option><option>Paediatric EPA Curriculum (11.2)</option></select></div>
+        <div class="form-group"><label for="pv-st">Programme start date<span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv-st" type="date" class="form-control" aria-required="true" value="2024-01-15"></div>
+        <div class="form-group"><label for="pv-ex">Expected completion date</label><input id="pv-ex" type="date" class="form-control" aria-describedby="pv-ex-h" value="2028-01-14"><small class="page-subtitle" id="pv-ex-h">Leave this empty to derive it from the curriculum window.</small></div>
+      </div>
+      <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary">Save profile</button></div>
+    </form>
+  </section>
+  <section class="detail-card user-section" aria-labelledby="pv-end"><h2 id="pv-end">End this programme</h2>
+    <p>The last committee decision: Satisfactory Progress, Annual progression review, ratified 2026-10-27.</p>
+    <div class="form-group"><label for="pv-day">Last day in the programme <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label><input id="pv-day" type="date" class="form-control" aria-required="true" aria-describedby="pv-day-h"><p class="field-help" id="pv-day-h">The graduation day, or the last day of a registrar who leaves without completing. It cannot be after today, and it cannot be changed afterwards. The period it falls in holds no target unless the day is in that period's last month, and encounters observed after it count towards nothing in this programme, even those already counted.</p></div>
+    <ul class="role-rows">
+      <li class="role-row"><span class="role-row-note" id="pv-mc-n">A graduation: archives the profile, removes the Trainee role and sends Anele Dlamini a graduation email.</span><button type="button" class="btn btn-outline btn-sm" aria-haspopup="dialog" aria-describedby="pv-mc-n">Mark complete…</button></li>
+      <li class="role-row"><span class="role-row-note" id="pv-dc-n">A withdrawal: archives the profile and removes the Trainee role. No email is sent.</span><button type="button" class="btn btn-outline btn-sm" aria-haspopup="dialog" aria-describedby="pv-dc-n">Deactivate…</button></li>
+    </ul>
+  </section>
+</div>
+
+<p class="pv-cap">A day after today, pressed with Mark complete… (S19): no dialog opens; the refusal under the field, named first by it, the field marked and focused, the day kept</p>
+<div class="user-page"><section class="detail-card user-section" aria-labelledby="pv-end2"><h2 id="pv-end2">End this programme</h2>
+  <div class="form-group"><label for="pv-day2">Last day in the programme <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label><input id="pv-day2" type="date" class="form-control input-validation-error" aria-required="true" aria-invalid="true" aria-describedby="pv-day2-e pv-day2-h" value="2026-10-30"><div class="validation-message" id="pv-day2-e" role="alert">The last day cannot be after today (2026-10-27).</div><p class="field-help" id="pv-day2-h">The graduation day, or the last day of a registrar who leaves without completing. It cannot be after today, and it cannot be changed afterwards. The period it falls in holds no target unless the day is in that period's last month, and encounters observed after it count towards nothing in this programme, even those already counted.</p></div>
+  <ul class="role-rows">
+    <li class="role-row"><span class="role-row-note" id="pv-mc-n2">A graduation: archives the profile, removes the Trainee role and sends Anele Dlamini a graduation email.</span><button type="button" class="btn btn-outline btn-sm" aria-haspopup="dialog" aria-describedby="pv-mc-n2">Mark complete…</button></li>
+    <li class="role-row"><span class="role-row-note" id="pv-dc-n2">A withdrawal: archives the profile and removes the Trainee role. No email is sent.</span><button type="button" class="btn btn-outline btn-sm" aria-haspopup="dialog" aria-describedby="pv-dc-n2">Deactivate…</button></li>
+  </ul>
+</section></div>
+
+<p class="pv-cap">Mark complete's dialog (Q24, M2): named for the registrar, the day and the address; what the day takes back, read as it opens; Cancel first, Mark complete the primary</p>
+<div class="pv-stage"><dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-d1-t" aria-describedby="pv-d1-b"><div class="form-container"><h2 id="pv-d1-t">Mark Lerato Molefe's programme complete?</h2><div id="pv-d1-b" class="dialog-body"><p>Record 2026-10-27 as Lerato Molefe's graduation day? The profile is archived, the Trainee role is removed and a graduation email is sent to molefe@<wbr>kgk.wombat.local.</p><p>Encounters observed after that day will count towards nothing in this programme, including any already counted. Lerato Molefe keeps the record, read-only, and can still export the portfolio.</p><p>The day cannot be changed afterwards, and this cannot be undone.</p></div><div class="form-actions"><button type="button" class="btn btn-outline">Cancel</button><button type="button" class="btn btn-primary">Mark complete</button></div></div></dialog></div>
+
+<p class="pv-cap">Deactivate's dialog: the forecast names the one activity that will stop counting; the filled danger button, only here</p>
+<div class="pv-stage"><dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-d2-t" aria-describedby="pv-d2-b"><div class="form-container"><h2 id="pv-d2-t">Deactivate Pieter du Plessis's profile?</h2><div id="pv-d2-b" class="dialog-body"><p>Deactivate Pieter du Plessis's profile, with 2026-10-25 as their last day in the programme? The Trainee role is removed; they keep their own record, read-only.</p><p>Encounters observed after that day will count towards nothing in this programme, including any already counted: 1 activity, observed 2026-10-26, will stop counting.</p><p>The day cannot be changed afterwards, and a deactivated profile cannot be made active again. This cannot be undone.</p></div><div class="form-actions"><button type="button" class="btn btn-outline">Cancel</button><button type="button" class="btn btn-danger">Deactivate</button></div></div></dialog></div>
+
+<p class="pv-cap">Marked complete (A5): the result at the column's top takes the focus, its first sentence bold; the page is now the ended record, the details read-only, then the account</p>
+<div class="header-container"><div><h1>Lerato Molefe's programme</h1><p class="page-subtitle">The record of a programme that has ended.</p></div><div class="actions-cell"><a class="btn btn-outline" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>Export Lerato Molefe's portfolio</a></div></div>
+<div class="user-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status"><strong>Trainee marked complete.</strong> The Trainee role has been removed and a graduation email sent.</div></div>
+  <dl class="detail-list" aria-label="Trainee summary"><dt>Status</dt><dd><span class="badge badge-completed">Completed</span> 2026-10-27</dd><dt>Email</dt><dd>molefe@<wbr>kgk.wombat.local</dd></dl>
+  <section class="detail-card user-section" aria-labelledby="pv-pd3"><h2 id="pv-pd3">Profile details</h2><p>This programme has ended, so its record is archived and cannot be changed.</p>
+    <dl class="detail-list"><dt>Curriculum</dt><dd class="readonly-value">Paediatric EPA Curriculum (11.1)</dd><dt>Programme start date</dt><dd class="readonly-value">2023-01-15</dd><dt>Expected completion date</dt><dd class="readonly-value">2027-01-14</dd></dl>
+  </section>
+  <section class="detail-card user-section" aria-labelledby="pv-ac3"><h2 id="pv-ac3">The account</h2><p>Lerato Molefe holds no role now, and can still sign in to read the record, export the portfolio and download the STAR certificates.</p><p class="account-open"><a href="#">Open Lerato Molefe's user page</a></p></section>
+</div>
+
+<p class="pv-cap">A withdrawal, opened later from Completed and closed's View: Inactive, the grey badge, and the day it was left</p>
+<div class="user-page">
+  <dl class="detail-list" aria-label="Trainee summary"><dt>Status</dt><dd><span class="badge badge-withdrawn">Inactive</span> Left the programme: 2026-10-25</dd><dt>Email</dt><dd>duplessis@<wbr>kgk.wombat.local</dd></dl>
+  <section class="detail-card user-section" aria-labelledby="pv-ac4"><h2 id="pv-ac4">The account</h2><p>Pieter du Plessis holds no role now, and can still sign in to read the record and export the portfolio.</p><p class="account-open"><a href="#">Open Pieter du Plessis's user page</a></p></section>
+</div>
+
+<p class="pv-cap">Profile unavailable (S4): one page for an unknown id and another institution's</p>
+<div class="header-container"><div><h1>Profile unavailable</h1></div></div>
+<div class="user-page"><div class="detail-card detail-card--empty"><div class="state-panel-copy">This trainee profile does not exist, or you cannot open it.</div><div class="form-actions"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>Go to Trainees</a></div></div></div>
+
+<p class="pv-cap">At 390: every control 44px; the header's action the row's width; Save profile on top of Cancel; each role row's note over its trigger, the row's width; a dialog's action on top</p>
+<div class="pv-narrow">
+  <div class="header-container"><div><h1>Anele Dlamini's programme</h1><p class="page-subtitle">Update curriculum and completion details for this trainee.</p></div><div class="actions-cell"><a class="btn btn-outline" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>Export Anele Dlamini's portfolio</a></div></div>
+  <div class="user-page">
+    <dl class="detail-list" aria-label="Trainee summary"><dt>Status</dt><dd>Active</dd><dt>Email</dt><dd>dlamini@<wbr>kgk.wombat.local</dd></dl>
+    <section class="detail-card user-section" aria-labelledby="pv-pd5"><h2 id="pv-pd5">Profile details</h2>
+      <form novalidate>
+        <div class="form-grid">
+          <div class="form-group"><label for="pv-cur5">Curriculum<span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><select id="pv-cur5" class="form-select" aria-required="true"><option>Paediatric EPA Curriculum (11.1)</option></select></div>
+          <div class="form-group"><label for="pv-st5">Programme start date<span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv-st5" type="date" class="form-control" aria-required="true" value="2024-01-15"></div>
+        </div>
+        <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary">Save profile</button></div>
+      </form>
+    </section>
+    <section class="detail-card user-section" aria-labelledby="pv-end5"><h2 id="pv-end5">End this programme</h2>
+      <div class="form-group"><label for="pv-day5">Last day in the programme <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label><input id="pv-day5" type="date" class="form-control" aria-required="true"></div>
+      <ul class="role-rows">
+        <li class="role-row"><span class="role-row-note" id="pv-mc-n5">A graduation: archives the profile, removes the Trainee role and sends Anele Dlamini a graduation email.</span><button type="button" class="btn btn-outline btn-sm" aria-haspopup="dialog" aria-describedby="pv-mc-n5">Mark complete…</button></li>
+        <li class="role-row"><span class="role-row-note" id="pv-dc-n5">A withdrawal: archives the profile and removes the Trainee role. No email is sent.</span><button type="button" class="btn btn-outline btn-sm" aria-haspopup="dialog" aria-describedby="pv-dc-n5">Deactivate…</button></li>
+      </ul>
+    </section>
+  </div>
+  <div class="pv-stage"><dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-d5-t" aria-describedby="pv-d5-b"><div class="form-container"><h2 id="pv-d5-t">Mark Anele Dlamini's programme complete?</h2><div id="pv-d5-b" class="dialog-body"><p>Record 2026-10-27 as Anele Dlamini's graduation day? The profile is archived, the Trainee role is removed and a graduation email is sent to dlamini@<wbr>kgk.wombat.local.</p><p>Encounters observed after that day will count towards nothing in this programme, including any already counted. Anele Dlamini keeps the record, read-only, and can still export the portfolio.</p><p>The day cannot be changed afterwards, and this cannot be undone.</p></div><div class="form-actions"><button type="button" class="btn btn-outline">Cancel</button><button type="button" class="btn btn-primary">Mark complete</button></div></div></dialog></div>
+</div>
+</body>
+</html>
