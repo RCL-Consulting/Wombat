@@ -159,14 +159,16 @@
   /// <summary>
   /// An item of an ended programme (T252): its target, and every period from the one the programme ended in back to its
   /// start, newest first, in the words the portfolio PDF prints them (<see cref="ProgressWords.EndedPeriodLine" />; for
-  /// staff <see cref="RegistrarWords.EndedPeriodLine" />). No bar and no "more by": nothing is still to do.
+  /// staff <see cref="RegistrarWords.EndedPeriodLine" />). No bar and no "more by": nothing is still to do. The items are
+  /// the list the programme ended with (T312), so an EPA paused since the end keeps its card, its heading marked "(no
+  /// longer in use)" after the code as EpaLabel marks it (T255; flow 13's R05), muted beside the link, never inside it.
   /// </summary>
   private RenderFragment EndedItemCard(TraineeCurriculumProgressDto item, ProgrammeEndDto ended) => __builder =>
   {
     IReadOnlyList<QuotaWindowDto> periods = item.Periods ?? (item.Previous is { } previous ? [item.Current, previous] : [item.Current]);
     <section class="detail-card">
       <div class="progress-row-head">
-        <h3>@if (Staff){@item.EpaCode}else{<a class="epa-link" href="@ProgressLinks.Epa(item.EpaId)" aria-label="@EpaPageWords.Title(item.EpaCode, item.EpaTitle)">@item.EpaCode</a>}</h3>
+        <h3>@if (Staff){@item.EpaCode}else{<a class="epa-link" href="@ProgressLinks.Epa(item.EpaId)" aria-label="@EpaPageWords.Title(item.EpaCode, item.EpaTitle)">@item.EpaCode</a>}@if (!item.EpaInForce){@(" ")<span class="paused-mark">@EpaOptionLabel.NoLongerInUse</span>}</h3>
       </div>
       <p class="muted">@item.EpaTitle</p>
       <p class="progress-row-meta">

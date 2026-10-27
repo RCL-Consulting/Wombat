@@ -95,6 +95,51 @@ public sealed class TraineeProfile
     /// <param name="day">The day judged: an encounter date, or the day a campaign closed.</param>
     public static bool IsAfterEnd(DateOnly? endedOn, DateOnly day) => endedOn is { } ended && day > ended;
 
+    /// <summary>
+    /// The list the programme ended with (T312), as stored (<see cref="EndedCurriculumItem.Serialize" />): every curriculum
+    /// item in force for the trainee on their last day, national or their own institution's, with its target then. Null
+    /// while the programme runs. Read it through <see cref="ReadEndedCurriculum" />.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Written once, when the end is recorded (<see cref="RecordEndedCurriculum" />), in the same save, and never again: the
+    /// record of a closed programme does not move when the catalogue does. Before T312 the record read the live catalogue,
+    /// so an EPA paused after a graduation left her record, and an item added after it gave closed years shortfalls she
+    /// could never have met (F-6.21a, F-6.40a).
+    /// </para>
+    /// <para>
+    /// Null also on an ended profile that no command ended (a test fixture that calls <see cref="Complete" /> alone). Its
+    /// readers read the live catalogue then, as before T312. Every profile that had ended when T312 shipped was given its
+    /// list by the T312 migration, from the catalogue as it stood.
+    /// </para>
+    /// </remarks>
+    public string? EndedCurriculumJson { get; private set; }
+
+    /// <summary>The list the programme ended with (<see cref="EndedCurriculumJson" />), or null when none is recorded.</summary>
+    public IReadOnlyList<EndedCurriculumItem>? ReadEndedCurriculum() => EndedCurriculumItem.Parse(EndedCurriculumJson);
+
+    /// <summary>
+    /// Records the list the programme ended with (T312), once, after <see cref="Complete" />, <see cref="Deactivate" /> or
+    /// <see cref="Erase" /> has ended it, and in the same save as the end.
+    /// </summary>
+    /// <param name="items">Every item in force for the trainee on the last day; empty when none was.</param>
+    public void RecordEndedCurriculum(IEnumerable<EndedCurriculumItem> items)
+    {
+        ArgumentNullException.ThrowIfNull(items);
+
+        if (IsActive)
+        {
+            throw new InvalidOperationException("The list a programme ended with is recorded only once it has ended.");
+        }
+
+        if (EndedCurriculumJson is not null)
+        {
+            throw new InvalidOperationException("The list this programme ended with is already recorded.");
+        }
+
+        EndedCurriculumJson = EndedCurriculumItem.Serialize(items);
+    }
+
     public Curriculum Curriculum { get; set; } = null!;
 
     /// <summary>

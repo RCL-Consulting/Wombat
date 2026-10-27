@@ -7,6 +7,7 @@ using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities;
+using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.EntrustmentDecisions;
 using Wombat.Domain.Epas;
@@ -58,36 +59,25 @@ public static class EntrustmentStandingReader
         var stage = profile.GetStage(asOf);
         var targetYear = stage ?? 1;
 
-        var items = await dbContext.Set<CurriculumItem>()
-            .AsNoTracking()
-            .InForce()
-            .Where(item => item.CurriculumId == profile.CurriculumId &&
-                           (item.OwningInstitutionId == null || item.OwningInstitutionId == profile.InstitutionId))
-            .Select(item => new
-            {
-                item.Id,
-                item.EpaId,
-                EpaCode = item.Epa.Code,
-                EpaTitle = item.Epa.Title,
-                item.MinimumLevelOrder,
-                item.MinimumLevelByStageJson,
-                item.ScaleId,
-                IsLocal = item.OwningInstitutionId != null
-            })
-            .ToListAsync(cancellationToken);
-
-        items = items.OrderBy(item => item.EpaCode, StringComparer.Ordinal).ToList();
+        // T312: a running programme's items in force, or the list an ended one ended with (ProgrammeItems), so a pause or
+        // a new item after a graduation does not change her standing.
+        var items = (await ProgrammeItems.ReadAsync(dbContext, profile, cancellationToken))
+            .OrderBy(item => item.EpaCode, StringComparer.Ordinal)
+            .ToList();
         var epaIds = items.Select(item => item.EpaId).Distinct().ToArray();
 
         // Active is the status the expiry job maintains, as on the trainee's own authorisations page. Two active
         // decisions on one EPA should not exist (issuing supersedes); if they do, the latest issued is the one in force.
+        // An ended programme's STARs are read as the programme left them (T312): one that expired, was revoked or was
+        // superseded after the end still counts, and so does one the committee issued for this programme after it.
         var decisions = epaIds.Length == 0
             ? []
-            : await dbContext.Set<EntrustmentDecision>()
-                .AsNoTracking()
-                .Where(decision => decision.TraineeUserId == traineeUserId &&
-                                   decision.Status == EntrustmentDecisionStatus.Active &&
-                                   epaIds.Contains(decision.EpaId))
+            : await DecisionsInForce(
+                    dbContext,
+                    traineeUserId,
+                    epaIds,
+                    profile.IsActive ? null : profile.EndedOn,
+                    profile.ProgrammeStartDate)
                 .Select(decision => new
                 {
                     decision.Id,
@@ -194,7 +184,7 @@ public static class EntrustmentStandingReader
             }
 
             epas.Add(new EpaStandingDto(
-                item.Id,
+                item.CurriculumItemId,
                 item.EpaId,
                 item.EpaCode,
                 item.EpaTitle,
@@ -208,7 +198,10 @@ public static class EntrustmentStandingReader
                 decisionDto,
                 EntrustmentStanding.Judge(decisionOrder, decisionScaleId, yearTarget, item.ScaleId),
                 EntrustmentStanding.Judge(decisionOrder, decisionScaleId, item.MinimumLevelOrder, item.ScaleId),
-                ratingDto));
+                ratingDto)
+            {
+                EpaInForce = item.EpaInForce
+            });
         }
 
         return new EntrustmentStandingDto(
@@ -217,7 +210,60 @@ public static class EntrustmentStandingReader
             targetYear,
             stage is null,
             epas,
-            ExitReadiness(epas, items.ToDictionary(item => item.Id, item => item.ScaleId)));
+            ExitReadiness(epas, items.ToDictionary(item => item.CurriculumItemId, item => item.ScaleId)))
+        {
+            StarsAsEndedOn = profile.IsActive ? null : profile.EndedOn
+        };
+    }
+
+    /// <summary>
+    /// The trainee's STARs on <paramref name="epaIds" /> that are in force: those <see cref="EntrustmentDecisionStatus.Active" />
+    /// now while the programme runs (or ended on a day Wombat did not record); those the programme ended with when it has
+    /// ended (T312).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A STAR is on an ended programme's record when it stood on the last day (issued by then), or when the committee
+    /// issued it for this programme after the last day: at a review of this trainee whose period began by the last day and
+    /// had not ended before the programme started (the operator's decision on T312's B5, 2026-10-27). A sitting can ratify
+    /// after the end what it was convened for before it; a review of another programme of the same trainee, one that began
+    /// after this one ended or ended before it began, is not this record's.
+    /// </para>
+    /// <para>
+    /// Nothing after the last day takes a STAR off the record: it is kept unless it had expired before the last day (it
+    /// expires after its <c>ExpiresOn</c>, as the expiry job judges), had been revoked by the end of it, or had been
+    /// superseded by then by a STAR issued by then. A revocation, an expiry or a successor after the end changes nothing;
+    /// where a successor is itself on the record, the reader takes the latest issued.
+    /// </para>
+    /// </remarks>
+    private static IQueryable<EntrustmentDecision> DecisionsInForce(
+        IApplicationDbContext dbContext,
+        string traineeUserId,
+        int[] epaIds,
+        DateOnly? endedOn,
+        DateOnly programmeStart)
+    {
+        var decisions = dbContext.Set<EntrustmentDecision>()
+            .AsNoTracking()
+            .Where(decision => decision.TraineeUserId == traineeUserId && epaIds.Contains(decision.EpaId));
+
+        if (endedOn is not { } lastDay)
+        {
+            return decisions.Where(decision => decision.Status == EntrustmentDecisionStatus.Active);
+        }
+
+        var endOfLastDay = ProgrammeCalendar.EndOf(lastDay);
+        var all = dbContext.Set<EntrustmentDecision>().AsNoTracking();
+        var reviewsOfThisProgramme = dbContext.Set<CommitteeReview>()
+            .AsNoTracking()
+            .Where(review => review.ReviewPeriodFrom <= lastDay && review.ReviewPeriodTo >= programmeStart);
+        return decisions.Where(decision =>
+            (decision.IssuedOn <= lastDay ||
+             reviewsOfThisProgramme.Any(review => review.Id == decision.IssuedByCommitteeReviewId)) &&
+            (decision.ExpiresOn == null || decision.ExpiresOn >= lastDay) &&
+            (decision.Status != EntrustmentDecisionStatus.Revoked || decision.RevokedOn >= endOfLastDay) &&
+            (decision.Status != EntrustmentDecisionStatus.Superseded ||
+             !all.Any(successor => successor.Id == decision.SupersededByDecisionId && successor.IssuedOn <= lastDay)));
     }
 
     /// <summary>

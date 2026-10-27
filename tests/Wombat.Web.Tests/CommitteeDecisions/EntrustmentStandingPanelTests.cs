@@ -186,8 +186,49 @@ public sealed partial class EntrustmentStandingPanelTests : TestContext
 
         PageText(cut).Should().Contain(
             "Your programme ended on 2026-08-20, in training year 3, so the targets shown are that year's. " +
-            "STAR decisions and ratings are shown as they stand today.");
+            "STAR decisions are shown as the programme left them, and ratings as they stand today.",
+            "T312: an ended programme's STARs are read as the programme left them");
         PageText(cut).Should().NotContain("You are in training year");
+    }
+
+    [Theory]
+    [InlineData(true, "STAR decisions are shown as the programme left them, and ratings as they stand today.")]
+    [InlineData(false, "STAR decisions and ratings are shown as they stand today.")]
+    public void AtAReviewOfItsLastPeriod_TheStarsAreSaidToBeAsTheProgrammeLeftThem_OnlyWhenItHasEnded(bool ended, string stars)
+    {
+        // T312 review (R6): the committee page reads the standing on its review period's last day, and the reader reads an
+        // ended programme's STARs as the programme left them whoever asks, so the committee's opening must not say "today".
+        var standing = Standing(Epa("PAED-001", decision: "3b", year: EntrustmentStandingStatus.AtOrAbove,
+            exit: EntrustmentStandingStatus.Below)) with
+        {
+            AsOf = new DateOnly(2026, 8, 20),
+            TargetYear = 3,
+            StarsAsEndedOn = ended ? new DateOnly(2026, 8, 20) : null
+        };
+
+        var cut = RenderComponent<EntrustmentStandingPanel>(parameters => parameters
+            .Add(panel => panel.Standing, standing)
+            .Add(panel => panel.ReviewPeriodTo, new DateOnly(2026, 8, 20)));
+
+        PageText(cut).Should().Contain(
+            "The review period's last day, 2026-08-20, falls in training year 3, so the targets shown are that year's. " + stars);
+    }
+
+    [Fact]
+    public void AnEpaPausedAfterTheProgrammeEnded_IsStillARow_MarkedNoLongerInUse()
+    {
+        // T312: an ended record's standing reads the list the programme ended with, so an EPA paused since is still counted,
+        // and its name is marked as every EPA surface marks a paused one (T255).
+        var standing = Standing(
+            Epa("PAED-001", decision: "5", year: EntrustmentStandingStatus.AtOrAbove, exit: EntrustmentStandingStatus.AtOrAbove)
+                with { EpaInForce = false });
+
+        var cut = RenderComponent<EntrustmentStandingPanel>(parameters => parameters
+            .Add(panel => panel.Standing, standing)
+            .Add(panel => panel.Self, true));
+
+        cut.Find("span.paused-mark").TextContent.Should().Be("(no longer in use)");
+        PageText(cut).Should().Contain("1 of 1 EPAs at their exit level");
     }
 
     [Fact]

@@ -166,7 +166,7 @@ internal static class CreditTargetResolver
         // onto another institution's local items that happen to share an EPA. (T091 phase 4.)
         //
         // And, for credit, to items in force at the moment of credit (T158, T196). A deactivated EPA is not offered by
-        // the picker and is no target on any progress page, so a completion while it is inactive matches nothing and
+        // the picker and is no target on a running programme's progress page, so a completion while it is inactive matches nothing and
         // the transition is stamped zero; a replay of a completion from before the deactivation still matches it.
         IQueryable<CurriculumItem> items = dbContext.Set<CurriculumItem>();
         if (inForceAt is { } moment)

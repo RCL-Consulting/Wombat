@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Services;
+using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Identity;
@@ -21,7 +22,9 @@ namespace Wombat.Application.Features.Trainees;
 /// encounter already earned, in the same save (T281, <see cref="ProgrammeEndCredit" />), under a hold on the profile that
 /// keeps every completion of the trainee's out until it commits (<see cref="ITraineeCreditLock" />). It takes the Trainee
 /// role away, as a completion does (T290): a withdrawn registrar files nothing more, since nothing after their last day
-/// could credit, and reads their own record through the profile they ended on (T252's <c>trainee_record</c> claim).
+/// could credit, and reads their own record through the profile they ended on (T252's <c>trainee_record</c> claim). The
+/// same save keeps the list the programme ended with (T312, <see cref="ProgrammeItems.ReadEndedWithAsync" />), which that
+/// record reads from then on.
 /// </summary>
 public sealed record DeactivateTraineeProfileCommand(int Id, DateOnly DeactivatedOn, ClaimsPrincipal Principal) : IRequest;
 
@@ -84,9 +87,16 @@ public sealed class DeactivateTraineeProfileCommandHandler : IRequestHandler<Dea
         var takesCreditBack = await ProgrammeEndCredit.TakesCreditBackAsync(
             _dbContext.Set<Activity>(), profile.UserId, request.DeactivatedOn, cancellationToken);
 
+        // T312: the list the programme ends with, each item in force for the trainee on the last day with its target then,
+        // which the record reads from now on whatever the catalogue does. Read here, before the end is recorded, like
+        // every other read that can fail; kept with the end below, and so saved with it and put back with it.
+        var endedWith = await ProgrammeItems.ReadEndedWithAsync(
+            _dbContext, profile, request.DeactivatedOn, _timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
+
         // Deactivate checks that the profile is active and that the day lies between the programme start and today before
         // it changes anything, so a refusal leaves nothing for the audit pipeline to commit.
         profile.Deactivate(request.DeactivatedOn, QuotaCalendar.Today(_timeProvider));
+        profile.RecordEndedCurriculum(endedWith);
 
         // Saved with a replay of the trainee's credit when the end takes some back, and put back if that replay fails.
         await ProgrammeEndCredit.SaveAsync(

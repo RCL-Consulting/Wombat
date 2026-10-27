@@ -104,11 +104,12 @@
 </StatePanel>
 
 @* A destructive action opens a ConfirmDialog first (DESIGN.md § Button system). Since T158 deactivating an EPA takes
-   its items off every progress page and pauses their credit, in every institution that has adopted the curriculum.
+   its items off a running programme's progress pages and pauses their credit, in every institution that has adopted the
+   curriculum; a closed record keeps it, marked no longer in use (T312).
    Two actions deactivate, the Deactivate button and saving with Active unticked (T196), and both open this dialog. *@
 <ConfirmDialog @ref="_confirmDeactivate"
                Title="Deactivate this EPA?"
-               Body="It can no longer be chosen for a new activity, and it stops being a target on every progress page and dashboard, for every institution that uses it. The progress it has earned is kept. An activity completed against it while it is inactive counts towards nothing until it is reactivated. You can reactivate it on this page."
+               Body="It can no longer be chosen for a new activity, and it stops being a target on running programmes' progress pages and dashboards, for every institution that uses it. A programme that has ended keeps it on its record, marked no longer in use. The progress it has earned is kept. An activity completed against it while it is inactive counts towards nothing until it is reactivated. You can reactivate it on this page."
                ConfirmLabel="Deactivate"
                DangerAction="true"
                OnConfirm="ConfirmDeactivationAsync"
@@ -152,7 +153,8 @@
   private bool IsNew => !Id.HasValue;
 
   private const string ActiveHelpText =
-    "An inactive EPA cannot be chosen for a new activity and is not a target on any progress page or dashboard. " +
+    "An inactive EPA cannot be chosen for a new activity and is not a target on any running programme's progress page " +
+    "or dashboard; a programme that has ended keeps it on its record. " +
     "Evidence already recorded against it is kept, and so is the progress it earned while it was active. An activity " +
     "completed against it while it is inactive counts towards nothing until the EPA is reactivated, and reactivating " +
     "it credits those activities.";

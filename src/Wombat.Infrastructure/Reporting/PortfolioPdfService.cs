@@ -468,6 +468,10 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
 
         // Of the EPAs with rated evidence and no target, the ones this programme holds the trainee's item for whose EPA
         // is deactivated (T158). The reader's owner predicate: another institution's local item is not this trainee's.
+        // An ended programme's targets are the list it ended with (T312), which holds every item in force on the last day,
+        // an EPA paused since included: so an untargeted item of its curriculum was paused when the programme ended. One
+        // paused then and reactivated since is not NotInForce now, so it prints as an EPA with evidence and no target, not
+        // with the paused note (review B7): the catalogue keeps only an EPA's current pause, and neither says anything false.
         var targeted = targets?.Items.Select(item => item.EpaId).ToHashSet() ?? [];
         var untargeted = trajectories
             .Select(trajectory => trajectory.EpaId)
@@ -475,12 +479,9 @@ internal sealed class PortfolioPdfService : IPortfolioPdfService
             .ToArray();
         var deactivated = profile is null || untargeted.Length == 0
             ? []
-            : await _dbContext.Set<CurriculumItem>()
-                .AsNoTracking()
+            : await ProgrammeItems.OfCurriculum(_dbContext, profile)
                 .NotInForce()
-                .Where(item => item.CurriculumId == profile.CurriculumId
-                    && (item.OwningInstitutionId == null || item.OwningInstitutionId == profile.InstitutionId)
-                    && untargeted.Contains(item.EpaId))
+                .Where(item => untargeted.Contains(item.EpaId))
                 .Select(item => item.EpaId)
                 .ToListAsync(cancellationToken);
 

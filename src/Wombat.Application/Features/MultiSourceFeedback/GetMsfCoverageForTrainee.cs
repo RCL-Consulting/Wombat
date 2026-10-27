@@ -140,14 +140,6 @@ public sealed class GetMsfCoverageForTraineeQueryHandler
         var profile = await TraineeScopeResolver.PreferredProfiles(_dbContext)
             .AsNoTracking()
             .Where(entity => entity.UserId == traineeUserId)
-            .Select(entity => new
-            {
-                entity.CurriculumId,
-                entity.InstitutionId,
-                entity.ProgrammeStartDate,
-                // TraineeProfile.EndedOn, which is not mapped: completion, else withdrawal.
-                EndedOn = entity.CompletedOn ?? entity.DeactivatedOn
-            })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (profile is null)
@@ -161,18 +153,11 @@ public sealed class GetMsfCoverageForTraineeQueryHandler
             ? SemestersBetween(from, to)
             : CurrentAndPrevious(to, profile.ProgrammeStartDate);
 
-        var items = await _dbContext.Set<CurriculumItem>()
-            .AsNoTracking()
-            .OnListOf(profile.CurriculumId, profile.InstitutionId)
-            .Select(item => new
-            {
-                item.Id,
-                item.EpaId,
-                EpaCode = item.Epa.Code,
-                EpaTitle = item.Epa.Title,
-                IsLocal = item.OwningInstitutionId != null
-            })
-            .ToListAsync(cancellationToken);
+        // The trainee's list (MsfSemesterCoverage.OnListOf's rule for a running programme), or the list an ended one ended
+        // with (T312), so the ended record's cards and its MSF lines are the same EPAs.
+        var items = (await ProgrammeItems.ReadAsync(_dbContext, profile, cancellationToken))
+            .Select(item => new { Id = item.CurriculumItemId, item.EpaId, item.EpaCode, item.EpaTitle, item.IsLocal })
+            .ToList();
 
         items = items.OrderBy(item => item.EpaCode, StringComparer.Ordinal).ThenBy(item => item.Id).ToList();
         var epaIds = items.Select(item => item.EpaId).Distinct().ToArray();

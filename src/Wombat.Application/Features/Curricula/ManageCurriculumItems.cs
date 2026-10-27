@@ -317,6 +317,14 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
 
 public sealed class RemoveCurriculumItemCommandHandler : IRequestHandler<RemoveCurriculumItemCommand, CurriculumDto>
 {
+    /// <summary>The refusal for an item on the list a programme ended with (T312, review B1).</summary>
+    public static string EndedRecordsHoldTheItem(int records)
+        => (records == 1
+               ? "This item is on the record of a programme that has ended, "
+               : $"This item is on the records of {records} programmes that have ended, ") +
+           "which keeps the targets it ended with and the progress counted against them, so it cannot be removed. " +
+           "Change its targets, or pause its EPA, instead: neither changes a closed record.";
+
     private readonly IApplicationDbContext _dbContext;
 
     public RemoveCurriculumItemCommandHandler(IApplicationDbContext dbContext)
@@ -348,6 +356,15 @@ public sealed class RemoveCurriculumItemCommandHandler : IRequestHandler<RemoveC
         if (!CurriculumItemEpas.MayWrite(request.Principal, curriculum.SubSpeciality.Speciality.CollegeId, item.OwningInstitutionId))
         {
             throw new UnauthorizedAccessException("You do not have permission to modify this curriculum.");
+        }
+
+        // T312 (review B1): an ended programme's record reads the list it ended with, and its progress rows go with the
+        // item (cascade), so removing an item on such a list would leave a closed record a card it could only read as
+        // "0 of N, short". Refused, before anything is changed, as a catalogue edit that would rewrite a closed record.
+        var held = await ProgrammeItems.EndedRecordsNamingAsync(_dbContext, item.CurriculumId, item.Id, cancellationToken);
+        if (held > 0)
+        {
+            throw new InvalidOperationException(EndedRecordsHoldTheItem(held));
         }
 
         // Unlike Add and Update, no adoption is asked for (T223): an institution takes its own item off a curriculum wherever

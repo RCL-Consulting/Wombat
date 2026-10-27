@@ -100,6 +100,19 @@ public sealed class ErasureEndsOpenRecordsPostgresTests : IAsyncLifetime
             profiles[1].DeactivatedOn.Should().Be(ErasureDay, "the current profile ends on the erasure day, on the South African calendar");
             profiles[1].CompletedOn.Should().BeNull();
 
+            // T312 review (R3): the profile the erasure ends keeps the list it ended with, its curriculum's items in force
+            // for it; the one that had already ended keeps the list its own end recorded.
+            var inForce = await db.CurriculumItems
+                .Where(item => item.CurriculumId == profiles[1].CurriculumId &&
+                               (item.OwningInstitutionId == null || item.OwningInstitutionId == profiles[1].InstitutionId) &&
+                               item.Epa.IsActive)
+                .Select(item => item.Id)
+                .OrderBy(id => id)
+                .ToListAsync();
+            inForce.Should().NotBeEmpty("the seeded curriculum has an item in force");
+            profiles[1].ReadEndedCurriculum()!.Select(item => item.CurriculumItemId).Should().Equal(inForce);
+            profiles[0].ReadEndedCurriculum().Should().BeEmpty("an erasure does not rewrite the list an earlier end recorded");
+
             (await db.AssessorProfiles.CountAsync(profile => profile.UserId == pseudonym)).Should().Be(1);
 
             // No open review is left, under either id: each was withdrawn with its reason.
@@ -479,6 +492,8 @@ public sealed class ErasureEndsOpenRecordsPostgresTests : IAsyncLifetime
 
         var earlier = Profile(ErasedUserId, hostId, curriculumId, new DateOnly(2020, 1, 15));
         earlier.Complete(new DateOnly(2024, 1, 10), ErasureDay);
+        // T312: the list its completion recorded, empty here so an erasure that rewrote it would show.
+        earlier.RecordEndedCurriculum([]);
         db.TraineeProfiles.AddRange(
             earlier,
             Profile(ErasedUserId, hostId, curriculumId, new DateOnly(2025, 1, 15)),

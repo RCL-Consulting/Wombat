@@ -202,12 +202,15 @@ Runtime services in Infrastructure:
   `subject|creator`, which reproduces pre-T070 behaviour, so a type declaring nothing is unchanged.
 - `CreditApplier` — matches completed activities to curriculum items and applies credit. Which items an activity
   would credit is `CreditTargetResolver`, the one implementation shared with the tool gate below. It reads only items
-  in force (`CurriculumItemsInForce`, T158): an item whose EPA is deactivated is not offered and is on no progress page,
-  and its credit is paused, not cancelled (D48, T196). Credit and the rebuild judge each completion at its own moment
-  against `Epa.DeactivatedOn`; reactivating an EPA credits what was completed during the pause. Change the flag only
-  through `Epa.Deactivate`/`Reactivate`, under `IEpaCreditLock.HoldForChangeAsync` taken before the EPA is read and
-  committed with the save, reading the deactivation's moment only once it is held (T230; `EpaPauseWritePathTests`
-  enforces the hold). Every picker, credit and progress reader applies it; the tool gate, the
+  in force (`CurriculumItemsInForce`, T158): an item whose EPA is deactivated is not offered and is on no running
+  programme's progress page, and its credit is paused, not cancelled (D48, T196). An ended programme's record reads the
+  list it ended with instead (`ProgrammeItems`, `TraineeProfile.EndedCurriculumJson`, kept with the end, T312), so a
+  pause, a new item or a changed target after the end does not rewrite it, and its STARs read as the programme left
+  them; an item on such a list cannot be removed, nor its scale deleted. Credit and the rebuild judge each completion
+  at its own moment against `Epa.DeactivatedOn`; reactivating an EPA credits what was completed during the pause.
+  Change the flag only through `Epa.Deactivate`/`Reactivate`, under `IEpaCreditLock.HoldForChangeAsync` taken before
+  the EPA is read and committed with the save, reading the deactivation's moment only once it is held (T230;
+  `EpaPauseWritePathTests` enforces the hold). Every picker, credit and progress reader applies it; the tool gate, the
   curriculum editor and scale-reference checks do not. An encounter observed after the trainee's last day
   (`TraineeProfile.EndedOn`, `IsAfterEnd`) credits nothing on that profile, live and in every replay (T281); it is
   kept, not refused at filing. Recording an end takes back credit already given after it, in the same save, by

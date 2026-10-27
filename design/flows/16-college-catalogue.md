@@ -736,7 +736,8 @@ Do: Open PAED-012 and press Deactivate. Read the question and confirm. Then open
 Expect:
   - **The question.** Deactivate asks first, "Deactivate this EPA?". The dialog says that the EPA:
     - can no longer be chosen for a new activity;
-    - stops being a target on every progress page and dashboard, for every institution that uses it;
+    - stops being a target on running programmes' progress pages and dashboards, for every institution that uses it,
+      while a programme that has ended keeps it on its record, marked no longer in use (T312);
     - keeps the progress it has earned;
     - credits nothing for an activity completed against it while it is inactive, until it is reactivated.
   - **After confirming.** The page says the EPA is deactivated. Active is unticked, and Deactivate is gone. The EPA list

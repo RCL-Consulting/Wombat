@@ -21,6 +21,13 @@ public sealed record EntrustmentStandingDto(
     IReadOnlyList<EpaStandingDto> Epas,
     ExitRuleReadinessDto Exit)
 {
+    /// <summary>
+    /// The last day of the programme whose STARs the standing reads as that programme left them (T312), or null when it
+    /// reads the STARs in force today (a running programme, or one that ended on a day Wombat did not record). Set, a
+    /// page says so rather than "as they stand today", whoever is reading: the trainee, or a committee looking at her.
+    /// </summary>
+    public DateOnly? StarsAsEndedOn { get; init; }
+
     /// <summary>How many EPAs have a STAR decision at or above this year's target.</summary>
     public int AtYearTarget => Count(EntrustmentStandingStatus.AtOrAbove);
 
@@ -60,7 +67,9 @@ public sealed record EntrustmentStandingDto(
 /// </param>
 /// <param name="ExitLevelOrder">The level required to finish: <c>CurriculumItem.MinimumLevelOrder</c>.</param>
 /// <param name="ExitLevelLabel">That level as a rung.</param>
-/// <param name="Decision">The active STAR decision on this EPA, or null.</param>
+/// <param name="Decision">
+/// The active STAR decision on this EPA, or null; on an ended programme, the one in force on its last day (T312).
+/// </param>
 /// <param name="YearStatus">The decision against the year target.</param>
 /// <param name="ExitStatus">The decision against the exit level.</param>
 /// <param name="LatestRating">The latest rating a named assessor gave on this EPA that the caller may read, or null.</param>
@@ -79,7 +88,15 @@ public sealed record EpaStandingDto(
     StandingDecisionDto? Decision,
     EntrustmentStandingStatus YearStatus,
     EntrustmentStandingStatus ExitStatus,
-    StandingRatingDto? LatestRating);
+    StandingRatingDto? LatestRating)
+{
+    /// <summary>
+    /// Whether the EPA is in force now. Always on a running programme, whose standing lists only EPAs in force (T158). On
+    /// an ended one, false for an EPA paused after the end: still on the list the programme ended with (T312), and counted
+    /// as it stood then, so a page heads it "(no longer in use)" (T255).
+    /// </summary>
+    public bool EpaInForce { get; init; } = true;
+}
 
 /// <summary>An active entrustment decision (STAR), as the standing shows it. (T166)</summary>
 /// <param name="LevelLabel">The authorised level's own label, on its own ladder.</param>

@@ -616,7 +616,7 @@ Expect: Before the switch, his Committee member's Home carries, under the header
   is read-only to both of them. It credits PAED-002 in the semester that holds `D−1` (checked in Step 5.26), and My
   activities reads it credited "1 item". Nobody is emailed.
 
-Step 6.18 — Dr Patel completes the Mini-CEX during the pause (act-6-catalogue.md:426)
+Step 6.18 — Dr Patel completes the Mini-CEX during the pause (act-6-catalogue.md:427)
 Role: Assessor — Dr Mohammed Patel
 Route: /activities/inbox → /activities/{ActivityId:int}
 Do: Open Dr Dlamini's Mini-CEX from the inbox. Rate it at the rung that Dr Dlamini's PAED-012 card named as the minimum

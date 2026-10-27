@@ -40,7 +40,8 @@ public sealed class Epa
     public EpaCategory Category { get; set; } = EpaCategory.Core;
 
     /// <summary>
-    /// Whether the EPA is in force now: offered by the pickers, a target on progress pages, and a place credit can land.
+    /// Whether the EPA is in force now: offered by the pickers, a target on a running programme's progress pages (a closed
+    /// record keeps the list it ended with, T312), and a place credit can land.
     /// Change it through <see cref="Deactivate" /> and <see cref="Reactivate" />, which keep <see cref="DeactivatedOn" />
     /// in step; the database refuses the two disagreeing (<c>CK_Epas_DeactivatedOn</c>).
     /// </summary>

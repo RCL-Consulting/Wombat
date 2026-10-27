@@ -2034,6 +2034,25 @@ line; a coverage read that fails says so above the cards, as on the running view
 your programme on …") is `QuotaText.ProgrammeEnded`, which the standing panel and the trainee dashboard's Curriculum
 targets card also use; that card says the programme ended and points here.
 
+A closed record reads **the list the programme ended with** (T312), kept on the profile when Mark complete, Deactivate
+or an erasure recorded the end (`TraineeProfile.EndedCurriculumJson`, `ProgrammeItems`): each item in force for the
+trainee at the close of the last day (an EPA paused during it is left off), the College's and their institution's, with
+its target then. The cards, the EPA pages and their trajectory charts, the standing, the MSF lines, the completed card's
+count line and the portfolio's per-EPA section all read it, never the catalogue as it stands, so nothing
+the catalogue does after the end rewrites the record: an item added since (an institution's own KGK-001) gets no card
+and no shortfall, a changed target is not read, and an EPA paused since keeps its card and its periods, headed "PAED-012
+(no longer in use)" (the code a link, the mark a muted `span.paused-mark` after it, as `EpaLabel` marks it, T255) and
+counted in the standing and the exit rule as it stood. Codes and titles are read live, so a correction still shows.
+T158's rule, that a paused EPA leaves the progress pages, is a running programme's. On the EPA page of an ended record,
+such an EPA has no "credited if it is restored" alert (`ProgressWords.PausedRow` is a running programme's: nothing
+after the last day credits), lists its periods in the ended lines, and its Entrustment panel is the standing's, as for
+any EPA. The standing reads an ended programme's STARs as the programme left them: those in force on the last day, and
+any the committee issued for it after (at a review of this trainee whose period began by the last day and not before
+the programme; the operator's decision, 2026-10-27). A STAR that expired, was revoked or was superseded since still
+counts. The panel's opening says so, on her page and on a committee's review page alike ("STAR decisions are shown as
+the programme left them, and ratings as they stand today"). A curriculum item on such a list cannot be removed, nor its
+pinned scale deleted or the rung its minima name taken off the scale.
+
 **The programme's MSF coverage** (T210, `/msf/coverage`, Coordinator and Administrator, as the campaign pages;
 rewritten 2026-10-15, T369, flow 10, boards R3-V1 to V5). Its header is "MSF coverage" with the subtitle "How many of
 each programme's trainees a released multi-source feedback campaign covered, per EPA and semester. Coverage is not a

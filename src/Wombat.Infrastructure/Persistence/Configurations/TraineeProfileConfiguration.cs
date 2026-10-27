@@ -25,6 +25,11 @@ public sealed class TraineeProfileConfiguration : IEntityTypeConfiguration<Train
             .HasForeignKey(profile => profile.InstitutionId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // The list the programme ended with (T312): jsonb, like every other stored document here, and read only through
+        // EndedCurriculumItem.Parse, since Postgres re-renders what it stores. A snapshot the profile owns whole, written
+        // once with the end in the profile's own row, so the end and its list commit, and are put back, together.
+        builder.Property(profile => profile.EndedCurriculumJson).HasColumnType("jsonb");
+
         // Pins the trainee to the national curriculum version their institution adopted (T091 phase 4).
         builder.HasOne<InstitutionCurriculumAdoption>()
             .WithMany()

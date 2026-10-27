@@ -655,7 +655,7 @@ Expect: PAED-012 is a row of "Each semester · 10 EPAs". PAED-006's row carries 
   count at the minimum level when observed (no such line while `n` is 0), and "Training year 3: level …, the minimum
   each encounter is judged against and your STAR's target."
 
-Step 6.19 — Dr Dlamini during the pause (act-6-catalogue.md:451)
+Step 6.19 — Dr Dlamini during the pause (act-6-catalogue.md:452)
 Role: Trainee — Dr Anele Dlamini
 Route: /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/mine → /activities/{ActivityId:int} →
   /activities/new → /activities/new?type=mini_cex_cpsa
@@ -677,7 +677,7 @@ Expect:
     Open My progress lands on PAED-012's page, named "Open My progress at PAED-012" (T355, build review D1).
   - **The picker.** It offers eight EPAs, without PAED-012.
 
-Step 6.24 — Dr Dlamini's credit is counted (act-6-catalogue.md:562)
+Step 6.24 — Dr Dlamini's credit is counted (act-6-catalogue.md:567)
 Role: Trainee — Dr Anele Dlamini
 Route: /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/mine → /activities/{ActivityId:int}
 Do: Read her progress and PAED-012's page, then her activities and the Mini-CEX.
@@ -692,7 +692,7 @@ Expect:
     0 in Step 6.15), so this is checked on Dr Molefe's PAED-012 progress from Act 3: its row is unchanged through the
     pause (by SQL, or on her record in Step 6.40).
 
-Step 6.27 — Dr Dlamini is measured against KGK-001 (act-6-catalogue.md:644)
+Step 6.27 — Dr Dlamini is measured against KGK-001 (act-6-catalogue.md:649)
 Role: Trainee — Dr Anele Dlamini
 Route: /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/new →
   /activities/new?type=direct_observation_cpsa
@@ -706,14 +706,14 @@ Expect: A KGK-001 row appears first in "Once a year · 6 EPAs": "KGK-001 — Run
   warned. Its level reads "Minimum 3a", and Entrustment "No STAR yet." and "Not in the College's exit rule." The Direct
   Observation picker offers ten EPAs, KGK-001 among them.
 
-Step 6.35 — Dr Ndlovu notes his figures before he moves (act-6-catalogue.md:814)
+Step 6.35 — Dr Ndlovu notes his figures before he moves (act-6-catalogue.md:819)
 Role: Trainee — Dr Sipho Ndlovu
 Route: /portfolio/progress
 Do: Read the page, and note each row's count for its current period.
 Expect: Sixteen rows in Your EPAs, "Each semester · 10 EPAs" and "Once a year · 6 EPAs": the 15 national EPAs of 11.1,
   and KGK-001 among the six. PAED-016 is not among them.
 
-Step 6.37 — Dr Ndlovu on 11.2, before progress is rebuilt (act-6-catalogue.md:847)
+Step 6.37 — Dr Ndlovu on 11.2, before progress is rebuilt (act-6-catalogue.md:852)
 Role: Trainee — Dr Sipho Ndlovu
 Route: /portfolio/progress → /activities/new → /activities/new?type=mini_cex_cpsa
 Do: Read the page. Then start a Mini-CEX (Paediatrics) and open its EPA picker. Leave without saving.
@@ -725,7 +725,7 @@ Expect:
     PAED-016 and KGK-001 read "0 of 1 in 2026".
   - **The picker.** The Mini-CEX picker offers ten EPAs, PAED-016 among them.
 
-Step 6.39 — Dr Ndlovu's evidence counts on 11.2 (act-6-catalogue.md:894)
+Step 6.39 — Dr Ndlovu's evidence counts on 11.2 (act-6-catalogue.md:899)
 Role: Trainee — Dr Sipho Ndlovu
 Route: /portfolio/progress
 Do: Read the page.

@@ -272,6 +272,30 @@ public sealed class CreditAfterProgrammeEndTests
     }
 
     [Fact]
+    public async Task AnEndThatTakesCreditBack_KeepsTheListItEndedWith_InTheReplaysOneSave_WithTheEndAndTheCredit()
+    {
+        // T312 review (R3): the take-back path saves the end through the replay, not alone, so the list it ended with must
+        // go in that same save, with the end and the rewritten tally.
+        var saves = new ProfileAndTallySaves();
+        var options = await SeededAsync(saves);
+        await CreditBothAsync(options);
+        saves.Clear();
+
+        await using (var db = new ApplicationDbContext(options))
+        {
+            await DeactivateHandler(db).Handle(
+                new DeactivateTraineeProfileCommand(ProfileId, LastDay, TestPrincipals.Administrator()), CancellationToken.None);
+        }
+
+        saves.Saves.Should().ContainSingle(save => save.EndRecorded, "the end is saved once").Which
+            .Should().Be((EndRecorded: true, ListRecorded: true, TallyChanged: true), "the end, its list and the credit are one save");
+        await using var verify = new ApplicationDbContext(options);
+        (await verify.Set<TraineeProfile>().SingleAsync()).ReadEndedCurriculum()!
+            .Select(item => item.CurriculumItemId).Should().Equal(ItemId);
+        await AssertOnlyTheEncounterInsideCountsAsync(options);
+    }
+
+    [Fact]
     public async Task ACompletionDay_BeforeACreditedEncounter_TakesItsCreditBack_AndStillRemovesTheRoleAndEmails()
     {
         var options = await SeededAsync();
@@ -493,6 +517,7 @@ public sealed class CreditAfterProgrammeEndTests
         profile.IsActive.Should().BeTrue();
         profile.DeactivatedOn.Should().BeNull();
         profile.EndedOn.Should().BeNull();
+        profile.EndedCurriculumJson.Should().BeNull("the list goes with the end it was recorded with (T312)");
     }
 
     private static async Task AssertBothCountAsync(DbContextOptions<ApplicationDbContext> options)
@@ -782,6 +807,36 @@ public sealed class CreditAfterProgrammeEndTests
     }
 
     /// <summary>Makes the next SaveChanges fail once armed, as a deadlock or a dropped connection would.</summary>
+    /// <summary>
+    /// Each save that changes the trainee's profile or a progress tally: whether it records the end, the list it ended with
+    /// (T312), and a tally.
+    /// </summary>
+    private sealed class ProfileAndTallySaves : SaveChangesInterceptor
+    {
+        public List<(bool EndRecorded, bool ListRecorded, bool TallyChanged)> Saves { get; } = [];
+
+        public void Clear() => Saves.Clear();
+
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+        {
+            var tracker = eventData.Context!.ChangeTracker;
+            tracker.DetectChanges();
+            var profiles = tracker.Entries<TraineeProfile>().Where(entry => entry.State == EntityState.Modified).ToArray();
+            var tallies = tracker.Entries<CurriculumItemProgress>()
+                .Any(entry => entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted);
+            if (profiles.Length > 0 || tallies)
+            {
+                Saves.Add((
+                    profiles.Any(entry => entry.Property(profile => profile.IsActive).IsModified),
+                    profiles.Any(entry => entry.Property(profile => profile.EndedCurriculumJson).IsModified),
+                    tallies));
+            }
+
+            return base.SavingChangesAsync(eventData, result, cancellationToken);
+        }
+    }
+
     private sealed class FailArmedSave : SaveChangesInterceptor
     {
         private bool _armed;

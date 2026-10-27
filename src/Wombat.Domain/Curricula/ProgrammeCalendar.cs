@@ -21,4 +21,11 @@ public static class ProgrammeCalendar
 
     /// <summary>The South African calendar date of a UTC instant.</summary>
     public static DateOnly DateOf(DateTime utc) => DateOnly.FromDateTime(utc + SouthAfricanOffset);
+
+    /// <summary>
+    /// The UTC instant a South African day ends: the first instant of the next day there, so every instant whose
+    /// <see cref="DateOf" /> is <paramref name="day" /> is before it (T312).
+    /// </summary>
+    public static DateTime EndOf(DateOnly day)
+        => DateTime.SpecifyKind(day.AddDays(1).ToDateTime(TimeOnly.MinValue) - SouthAfricanOffset, DateTimeKind.Utc);
 }

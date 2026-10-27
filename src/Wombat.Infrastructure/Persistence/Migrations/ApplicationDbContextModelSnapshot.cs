@@ -1880,6 +1880,9 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.Property<DateOnly?>("DeactivatedOn")
                         .HasColumnType("date");
 
+                    b.Property<string>("EndedCurriculumJson")
+                        .HasColumnType("jsonb");
+
                     b.Property<DateOnly>("ExpectedCompletionDate")
                         .HasColumnType("date");
 

@@ -376,6 +376,49 @@ public sealed class PortfolioEpaProgressTests
     }
 
     [Fact]
+    public async Task AGraduationExport_MadeAfterAPostEndPause_PrintsThePausedEpasPeriods_AsAnExportMadeBeforeIt()
+    {
+        // T312 (F-6.21a): the graduation export read the live catalogue, so a pause after the graduation dropped the EPA's
+        // periods and printed it as "deactivated, no longer a target". The record reads the list the programme ended with,
+        // kept by Mark complete, so the export prints what it printed before the pause, the EPA marked as no longer in use.
+        await using var db = SeededDb();
+        await new CompleteTraineeProfileCommandHandler(
+                db, new Wombat.Tests.Shared.FakeUserDirectory().AllowingRoleRemoval(), new NoEmail(), new CreditApplier(db),
+                new TraineeCreditLock(db), new FixedClock(Now))
+            .Handle(new CompleteTraineeProfileCommand(1, new DateOnly(2026, 8, 20), Administrator()), CancellationToken.None);
+        db.ChangeTracker.Clear();
+
+        var before = (await LoadAsync(db)).EpaProgress;
+
+        db.Epas.Single(epa => epa.Id == 1).Deactivate(new DateTime(2026, 9, 1, 8, 0, 0, DateTimeKind.Utc));
+        Save(db);
+
+        var after = (await LoadAsync(db)).EpaProgress;
+
+        after.Rows.Select(row => (row.EpaCode, row.NoTarget)).Should().Equal(
+            ("PAED-001", (PortfolioNoTargetReason?)null),
+            ("PAED-002", null),
+            ("PAED-009", PortfolioNoTargetReason.NotInCurriculum));
+        after.Rows.Select(row => EpaProgressSectionComponent.DetailLines(row, after)).Should().BeEquivalentTo(
+            before.Rows.Select(row => EpaProgressSectionComponent.DetailLines(row, before)),
+            options => options.WithStrictOrdering(),
+            "the paused EPA's target, its every period and its rated observations print as they did before the pause");
+        EpaProgressSectionComponent.Introduction(after).Should().Be(EpaProgressSectionComponent.Introduction(before));
+        after.Rows[0].Periods.Select(period => period.Name).Should().Equal(
+            "Semester 2, 2026", "Semester 1, 2026", "Semester 2, 2025", "Semester 1, 2025");
+
+        EpaProgressSectionComponent.Heading(before.Rows[0]).Should().Be("PAED-001");
+        EpaProgressSectionComponent.Heading(after.Rows[0]).Should().Be("PAED-001 (no longer in use)");
+        RenderedText(await LoadAsync(db)).Should().Contain("PAED-001 (no longer in use)");
+    }
+
+    private sealed class NoEmail : Wombat.Application.Common.Interfaces.IEmailSender
+    {
+        public Task SendAsync(Wombat.Application.Common.Email.EmailMessage message, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+    }
+
+    [Fact]
     public async Task TheEpaSection_ReadsTheProgrammeTheCoverNames()
     {
         // Two active profiles (T169 review). The cover takes TraineeScopeResolver's preferred profile, the highest id; the

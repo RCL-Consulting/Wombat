@@ -9,10 +9,17 @@ namespace Wombat.Application.Features.Curricula;
 /// <remarks>
 /// <para>
 /// An item whose EPA is inactive is not offered by the EPA picker (<c>ActivityReferenceDataService</c>), and no tool
-/// is offered for its ladder alone (<c>ListActivityTypesQuery</c>). No progress surface lists it as a target
-/// (<c>TraineeQuotaProgressReader</c>, <c>CurriculumCoverageReader</c>). Before T158 only the picker filtered: a
-/// deactivated EPA left the picker but stayed on every progress page, still owed, and an activity already filed
+/// is offered for its ladder alone (<c>ListActivityTypesQuery</c>). No progress surface of a running programme lists it
+/// as a target (<c>TraineeQuotaProgressReader</c>, <c>CurriculumCoverageReader</c>). Before T158 only the picker filtered:
+/// a deactivated EPA left the picker but stayed on every progress page, still owed, and an activity already filed
 /// against it still credited it.
+/// </para>
+/// <para>
+/// <b>A closed record does not read it (T312).</b> A programme that has ended is read from the list it ended with
+/// (<see cref="ProgrammeItems" />, kept on the profile when the end is recorded): the items in force on its last day, with
+/// their targets then. So a pause after the end leaves the EPA on the record, headed "(no longer in use)", and counted as
+/// it stood; an item added, or a target changed, after the end is not read. The rule here is for a running programme, and
+/// for judging which items were in force when the list is kept (<see cref="InForceAt" />).
 /// </para>
 /// <para>
 /// <b>Deactivating pauses credit; it does not cancel it (D48).</b> Credit is judged at the moment of credit, which is
@@ -44,12 +51,12 @@ namespace Wombat.Application.Features.Curricula;
 /// <para>
 /// Not applied where an item is read as a record rather than as a target: the curriculum editor, the checks that
 /// stop an entrustment scale in use from being deleted, and the trajectory chart's ladder for evidence already
-/// recorded. Those still see every item.
+/// recorded. Those still see every item. A closed programme's record reads the frozen list above, not this.
 /// </para>
 /// </remarks>
 public static class CurriculumItemsInForce
 {
-    /// <summary>The items whose EPA is active now: what the pickers offer and the progress pages list.</summary>
+    /// <summary>The items whose EPA is active now: what the pickers offer and a running programme's progress pages list.</summary>
     public static IQueryable<CurriculumItem> InForce(this IQueryable<CurriculumItem> items)
         => items.Where(item => item.Epa.IsActive);
 

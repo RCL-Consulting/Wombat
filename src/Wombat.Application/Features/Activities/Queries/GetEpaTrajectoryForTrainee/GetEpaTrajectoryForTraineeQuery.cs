@@ -8,6 +8,7 @@ using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Common.Users;
 using Wombat.Application.Features.Activities.Services;
+using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Credit;
@@ -683,6 +684,16 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
         return (details.ToDictionary(entry => entry.Key, entry => entry.Value.DisplayName), people);
     }
 
+    /// <summary>One item's ladder and minima, with its EPA's state (T312: which items an ended chart may fall back on).</summary>
+    private sealed record Pin(
+        int Id,
+        int EpaId,
+        int? ScaleId,
+        int MinimumLevelOrder,
+        string? MinimumLevelByStageJson,
+        bool EpaIsActive,
+        DateTime? EpaDeactivatedOn);
+
     private sealed record PinnedLadders(
         Dictionary<int, CurriculumItem> ItemByEpa,
         DateOnly? ProgrammeStart,
@@ -732,7 +743,6 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
         var profile = await TraineeScopeResolver.PreferredProfiles(_dbContext)
             .AsNoTracking()
             .Where(entity => entity.UserId == traineeUserId)
-            .Select(entity => new { entity.CurriculumId, entity.InstitutionId, entity.ProgrammeStartDate })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (profile is null)
@@ -750,14 +760,41 @@ public sealed class GetEpaTrajectoryForTraineeQueryHandler
         // T355 (E2): with the item's minima, so each rating is judged against the minimum of its own training year, and
         // the chart steps where that minimum did. Not filtered on the EPA being in force: a paused EPA still charts what
         // was recorded against it (T255), against the minimum that applied.
-        var pins = await _dbContext.Set<CurriculumItem>()
+        var live = await _dbContext.Set<CurriculumItem>()
             .AsNoTracking()
             .Where(item => item.CurriculumId == profile.CurriculumId
                 && (item.OwningInstitutionId == null || item.OwningInstitutionId == profile.InstitutionId)
                 && epaIds.Contains(item.EpaId))
             .OrderBy(item => item.Id)
-            .Select(item => new { item.Id, item.EpaId, item.ScaleId, item.MinimumLevelOrder, item.MinimumLevelByStageJson })
+            .Select(item => new Pin(
+                item.Id, item.EpaId, item.ScaleId, item.MinimumLevelOrder, item.MinimumLevelByStageJson,
+                item.Epa.IsActive, item.Epa.DeactivatedOn))
             .ToListAsync(cancellationToken);
+
+        // T312 (review B3): an ended programme's chart reads the minima it ended with, as its card beside the chart does
+        // (ProgrammeItems), so a minimum, a pin or a local item changed or added after the end does not redraw a closed
+        // chart. An EPA not on that list was paused when the programme ended (it is on no card), and still charts what was
+        // recorded against it, against its item's minimum as it stands: the catalogue keeps no other. An item of the
+        // curriculum whose EPA was in force at the end and is not on the list was added after it, and is not read.
+        var pins = live;
+        if (ProgrammeItems.ReadsEndedList(profile))
+        {
+            var endedMoment = profile.EndedOn is { } lastDay ? ProgrammeCalendar.EndOf(lastDay) : (DateTime?)null;
+            var ended = profile.ReadEndedCurriculum()!
+                .Where(item => epaIds.Contains(item.EpaId))
+                .Select(item => new Pin(
+                    item.CurriculumItemId, item.EpaId, item.ScaleId, item.MinimumLevelOrder, item.MinimumLevelByStageJson,
+                    EpaIsActive: true, EpaDeactivatedOn: null))
+                .ToList();
+            var onTheList = ended.Select(item => item.EpaId).ToHashSet();
+            pins = ended
+                .Concat(live.Where(item => !onTheList.Contains(item.EpaId) &&
+                                           !item.EpaIsActive &&
+                                           item.EpaDeactivatedOn is { } pausedAt &&
+                                           endedMoment is { } moment &&
+                                           pausedAt <= moment))
+                .ToList();
+        }
 
         if (pins.Count == 0)
         {

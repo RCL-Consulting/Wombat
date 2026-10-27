@@ -2,6 +2,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using Wombat.Application.Features.Curricula.Quota;
+using Wombat.Application.Features.Epas;
 using Wombat.Domain.Curricula;
 
 namespace Wombat.Infrastructure.Reporting;
@@ -54,7 +55,7 @@ internal static class EpaProgressSectionComponent
                 {
                     table.Cell().BorderBottom(0.25f).BorderColor(Colors.Grey.Lighten3).Padding(3).Column(epa =>
                     {
-                        epa.Item().Text(row.EpaCode).FontSize(8).Bold();
+                        epa.Item().Text(Heading(row)).FontSize(8).Bold();
                         epa.Item().Text(row.EpaTitle).FontSize(7).FontColor(Colors.Grey.Darken1);
                     });
 
@@ -64,6 +65,13 @@ internal static class EpaProgressSectionComponent
             });
         });
     }
+
+    /// <summary>
+    /// The row's EPA code, and "(no longer in use)" after it for an item whose EPA is paused now: one an ended programme's
+    /// record still holds, since it was in force on the last day (T312, T255), as the progress page heads it.
+    /// </summary>
+    internal static string Heading(PortfolioEpaProgressRow row)
+        => row.Item is { EpaInForce: false } ? $"{row.EpaCode} {EpaOptionLabel.NoLongerInUse}" : row.EpaCode;
 
     /// <summary>What the section reads, for which programme and on which day, before any figure.</summary>
     internal static string Introduction(PortfolioEpaProgress progress)

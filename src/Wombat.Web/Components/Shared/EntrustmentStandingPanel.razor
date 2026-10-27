@@ -76,15 +76,15 @@
                      the site's root and Blazor would navigate to Home, losing the page's unsaved decision. Pressed, it
                      moves the focus to the chart instead and navigates nowhere; the href is for a page with no circuit
                      (T355, build review A1; as RefusalSummary, T342 A1). *@
-                  <a class="epa-link" href="@href" @onclick="() => FocusInPageAsync(href)" @onclick:preventDefault><EpaLabel Code="@epa.EpaCode" Title="@epa.EpaTitle" InForce="true" /></a>
+                  <a class="epa-link" href="@href" @onclick="() => FocusInPageAsync(href)" @onclick:preventDefault><EpaLabel Code="@epa.EpaCode" Title="@epa.EpaTitle" InForce="@epa.EpaInForce" /></a>
                 }
                 else if (href is not null)
                 {
-                  <a class="epa-link" href="@href"><EpaLabel Code="@epa.EpaCode" Title="@epa.EpaTitle" InForce="true" /></a>
+                  <a class="epa-link" href="@href"><EpaLabel Code="@epa.EpaCode" Title="@epa.EpaTitle" InForce="@epa.EpaInForce" /></a>
                 }
                 else
                 {
-                  <EpaLabel Code="@epa.EpaCode" Title="@epa.EpaTitle" InForce="true" />
+                  <EpaLabel Code="@epa.EpaCode" Title="@epa.EpaTitle" InForce="@epa.EpaInForce" />
                 }
                 @if (epa.IsLocal)
                 {
@@ -212,6 +212,13 @@
   };
 
   /// <summary>
+  /// What the opening says of an ended programme's STARs (T312): read as the programme left them
+  /// (<c>EntrustmentStandingReader</c>: those in force on its last day, and any its committee issued for it after), while
+  /// the latest ratings are read as they stand.
+  /// </summary>
+  public const string AsTheProgrammeLeftThem = "STAR decisions are shown as the programme left them, and ratings as they stand today.";
+
+  /// <summary>
   /// The opening paragraph, whole (C1), as one string: which training year's targets are shown, and why, then where each
   /// target comes from and what the exit level is. Dates ISO (T355, D1).
   /// </summary>
@@ -227,7 +234,8 @@
     }
     else if (Self && ProgrammeEnd is { EndedOn: { } endedOn } ended && endedOn == standing.AsOf)
     {
-      when = $"{QuotaText.ProgrammeEnded(ended)}, in training year {year}, so the targets shown are that year's. {asToday}";
+      // T312: an ended programme's STARs are read as the programme left them, so a STAR that expired since still counts.
+      when = $"{QuotaText.ProgrammeEnded(ended)}, in training year {year}, so the targets shown are that year's. {AsTheProgrammeLeftThem}";
     }
     else if (Self && ProgrammeEnd is { EndedOn: null } unrecorded)
     {
@@ -237,7 +245,9 @@
     }
     else if (ReviewPeriodTo is { } periodEnd && periodEnd == standing.AsOf)
     {
-      when = $"The review period's last day, {QuotaText.Iso(periodEnd)}, falls in training year {year}, so the targets shown are that year's. {asToday}";
+      // T312 review (R6): a committee looking at an ended programme reads its STARs as the programme left them too.
+      var stars = standing.StarsAsEndedOn is null ? asToday : AsTheProgrammeLeftThem;
+      when = $"The review period's last day, {QuotaText.Iso(periodEnd)}, falls in training year {year}, so the targets shown are that year's. {stars}";
     }
     else
     {

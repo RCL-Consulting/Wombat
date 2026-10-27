@@ -68,9 +68,10 @@
       var model = _model;
       var item = model.Item;
 
-      @if (!item.EpaInForce)
+      @if (!item.EpaInForce && model.Ended is null)
       {
-        @* N6, under the h1: why a paused EPA has no count here (D48). Standing page content, so no role. *@
+        @* N6, under the h1: why a paused EPA has no count here (D48). Standing page content, so no role. Never on an
+           ended record (T312, flow 13's R06): its EPA was in force on the last day, and nothing after it credits. *@
         <div class="epa-page-alert">
           <Alert Kind="info">@ProgressWords.PausedRow</Alert>
         </div>
@@ -106,7 +107,7 @@
                 <p>@line</p>
               }
               <p class="epa-level-line">@EpaPageWords.LevelLine(item, model.TraineeStage)</p>
-              @if (item.EpaInForce && _msfCoverage is not null && MsfCoverageText.CardLine(_msfCoverage, item.EpaId) is { } msfLine)
+              @if (ReadsAsInForce(model) && _msfCoverage is not null && MsfCoverageText.CardLine(_msfCoverage, item.EpaId) is { } msfLine)
               {
                 <p>@msfLine</p>
               }
@@ -115,7 +116,7 @@
 
           <section class="detail-card" aria-labelledby="ent-h">
             <h2 class="epa-section-title" id="ent-h">Entrustment</h2>
-            @if (!item.EpaInForce)
+            @if (!ReadsAsInForce(model))
             {
               <p>@EpaPageWords.PausedEntrustment(item.EpaCode)</p>
             }
@@ -361,11 +362,9 @@
   private static IEnumerable<string> Lines(EpaProgressDto model)
   {
     var item = model.Item;
-    if (!item.EpaInForce)
-    {
-      yield break;
-    }
 
+    // T312: an ended record's EPA is on the list the programme ended with, so it was in force on the last day: its periods
+    // are listed whether or not it is paused now (flow 13's R06).
     if (model.Ended is { } ended)
     {
       IReadOnlyList<QuotaWindowDto> periods = item.Periods ?? (item.Previous is { } previous ? [item.Current, previous] : [item.Current]);
@@ -374,6 +373,11 @@
         yield return $"{period.Name}: {ProgressWords.EndedPeriodLine(period, ended.Today)}";
       }
 
+      yield break;
+    }
+
+    if (!item.EpaInForce)
+    {
       yield break;
     }
 
@@ -392,6 +396,13 @@
       yield return ProgressWords.PreviousLine(before);
     }
   }
+
+  /// <summary>
+  /// Whether the page reads the EPA as a target: in force now, or on an ended record, whose every EPA is on the list the
+  /// programme ended with and so was in force on the last day (T312). Read so, a paused EPA of an ended record shows its
+  /// periods, its MSF line and its STAR as they stood (flow 13's R06), with no "credited if it is restored" alert.
+  /// </summary>
+  private static bool ReadsAsInForce(EpaProgressDto model) => model.Item.EpaInForce || model.Ended is not null;
 
   /// <summary>Today, for the chart's rule: the day an ended programme's page is read, else the day the figures are for.</summary>
   private static DateOnly TodayOf(EpaProgressDto model) => model.Ended?.Today ?? model.AsOf;

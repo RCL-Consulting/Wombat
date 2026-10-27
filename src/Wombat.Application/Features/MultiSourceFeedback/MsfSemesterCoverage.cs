@@ -28,7 +28,8 @@ namespace Wombat.Application.Features.MultiSourceFeedback;
 /// </para>
 /// <para>
 /// <b>Which EPAs.</b> The trainee's list (<see cref="OnListOf" />): the items of their curriculum in force (T158), the
-/// College's and their own institution's, never another adopting institution's.
+/// College's and their own institution's, never another adopting institution's. That is a running programme's list; the
+/// trainee's own card on an ended record reads the list the programme ended with (T312, <see cref="ProgrammeItems" />).
 /// </para>
 /// </remarks>
 internal static class MsfSemesterCoverage
@@ -43,18 +44,17 @@ internal static class MsfSemesterCoverage
     public static bool CountsIn(DateOnly programmeStart, AcademicPeriod period) => programmeStart <= period.End;
 
     /// <summary>
-    /// The items of a trainee's EPA list: in force (<see cref="CurriculumItemsInForce" />), on their curriculum, and
-    /// either the College's or their own institution's. A curriculum row is shared by every institution that adopts it,
-    /// so another institution's own items on it are not theirs.
+    /// The items of a running programme's EPA list: in force (<see cref="CurriculumItemsInForce" />), on the curriculum,
+    /// and either the College's or the trainee's own institution's. A curriculum row is shared by every institution that
+    /// adopts it, so another institution's own items on it are not theirs. The programme's counts read it for current
+    /// trainees only; the rule for one trainee's card, ended or not, is <see cref="ProgrammeItems.ReadAsync" />, which reads
+    /// this list for a running programme (T312).
     /// </summary>
     public static IQueryable<CurriculumItem> OnListOf(this IQueryable<CurriculumItem> items, int curriculumId, int institutionId)
     {
         ArgumentNullException.ThrowIfNull(items);
 
-        return items
-            .InForce()
-            .Where(item => item.CurriculumId == curriculumId &&
-                           (item.OwningInstitutionId == null || item.OwningInstitutionId == institutionId));
+        return items.InForce().OfCurriculum(curriculumId, institutionId);
     }
 
     /// <summary>

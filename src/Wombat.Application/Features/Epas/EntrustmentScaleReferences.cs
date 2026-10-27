@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Features.Curricula;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.Curricula;
@@ -211,10 +212,7 @@ internal static class EntrustmentScaleReferences
 
         foreach (var item in pinnedItems)
         {
-            var required = new List<int> { item.MinimumLevelOrder };
-            required.AddRange(CurriculumItem.ParseStageOverrides(item.MinimumLevelByStageJson).Values);
-
-            var unreachable = required.Where(order => !incomingOrders.Contains(order)).Distinct().Order().ToList();
+            var unreachable = Unreachable(item.MinimumLevelOrder, item.MinimumLevelByStageJson, incomingOrders);
             if (unreachable.Count > 0)
             {
                 throw new InvalidOperationException(
@@ -223,7 +221,38 @@ internal static class EntrustmentScaleReferences
                     "Change that curriculum item's minimum first.");
             }
         }
+
+        // T312 (review B2): the list an ended programme ended with keeps each item's minima and pin as they were, and a
+        // closed record names its minima as rungs of that ladder. Its minima cannot be changed, so the rung stays.
+        var ended = (await ProgrammeItems.AllEndedItemsAsync(dbContext, cancellationToken))
+            .Where(item => item.ScaleId == scaleId)
+            .Select(item => (item.CurriculumItemId, Unreachable: Unreachable(item.MinimumLevelOrder, item.MinimumLevelByStageJson, incomingOrders)))
+            .FirstOrDefault(item => item.Unreachable.Count > 0);
+        if (ended.Unreachable is { Count: > 0 } missing)
+        {
+            throw new InvalidOperationException(
+                $"Curriculum item {ended.CurriculumItemId} was pinned to this entrustment scale when a programme ended, and " +
+                $"that programme's record requires level {string.Join(", ", missing)}, which the new level set does not " +
+                "have. A closed record keeps the targets it ended with, so the level cannot be removed.");
+        }
     }
+
+    private static List<int> Unreachable(int minimumLevelOrder, string? minimumLevelByStageJson, IReadOnlyCollection<int> incomingOrders)
+    {
+        var required = new List<int> { minimumLevelOrder };
+        required.AddRange(CurriculumItem.ParseStageOverrides(minimumLevelByStageJson).Values);
+        return required.Where(order => !incomingOrders.Contains(order)).Distinct().Order().ToList();
+    }
+
+    /// <summary>
+    /// Whether a list an ended programme ended with (T312) holds an item pinned to this scale (review B2): the record
+    /// labels its minima on that ladder, so the scale is the record's whatever its item is pinned to now.
+    /// </summary>
+    public static async Task<bool> IsPinnedOnAnEndedRecordAsync(
+        IApplicationDbContext dbContext,
+        int scaleId,
+        CancellationToken cancellationToken)
+        => (await ProgrammeItems.AllEndedItemsAsync(dbContext, cancellationToken)).Any(item => item.ScaleId == scaleId);
 
     /// <summary>
     /// Why the scale may not be deleted when it is a sub-speciality's default entrustment scale, naming every such

@@ -31,7 +31,9 @@ namespace Wombat.Application.Features.EntrustmentDecisions;
 /// <b>Which EPAs:</b> the curriculum on the trainee's preferred profile (<see cref="TraineeScopeResolver.PreferredProfiles" />:
 /// the active one, else the most recent, so a graduate's standing still reads), national core items plus the trainee's
 /// own institution's local items only (a curriculum row is shared by every adopting institution), and only items in
-/// force (<see cref="CurriculumItemsInForce" />, T158).
+/// force (<see cref="CurriculumItemsInForce" />, T158). For a programme that has ended, the list it ended with instead
+/// (<see cref="ProgrammeItems" />, T312): the items in force on its last day, with their levels then, so a pause or a new
+/// item after a graduation leaves her standing as it was. Its STARs are those in force on the last day.
 /// </para>
 /// <para>
 /// <b>The year target</b> is the item's per-stage map (<c>MinimumLevelByStageJson</c>, Annexure A's <c>y1</c> to
@@ -53,7 +55,8 @@ namespace Wombat.Application.Features.EntrustmentDecisions;
 /// The day the training year is read for; nothing else is read as of it. Defaults to today in South Africa. The committee
 /// review page passes the last day of the review period once that has passed, so a panel judging a year sees that year's
 /// targets; decisions and ratings are still read as they stand, because the decisions a review issues postdate its
-/// period.
+/// period. A programme that has ended is the exception for decisions (T312): its STARs are read as they stood on its last
+/// day, whatever is passed here.
 /// </param>
 public sealed record GetEntrustmentStandingForTraineeQuery(
     string TraineeUserId,

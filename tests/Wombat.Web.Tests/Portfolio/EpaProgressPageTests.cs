@@ -338,6 +338,34 @@ public sealed class EpaProgressPageTests : TestContext
     }
 
     [Fact]
+    public void AnEpaPausedAfterTheProgrammeEnded_IsReadAsItStoodOnTheLastDay_WithNoRestoredCreditAlert()
+    {
+        // T312, flow 13's R06 (review M3, K3): an ended record's EPA is on the list the programme ended with, so one paused
+        // since keeps its periods and its STAR. "What is completed on it meanwhile is credited if it is restored" is false
+        // of an ended record, where nothing after the last day credits.
+        var item = Item("PAED-012", QuotaPeriod.Semester, 3, Counting(Semester2Of2026, 2, 3), Counting(Semester1Of2026, 0, 3),
+            title: "Communicating with and counselling patients, caregivers and healthcare teams", minimum: "5",
+            periods: [Counting(Semester2Of2026, 2, 3), Counting(Semester1Of2026, 0, 3)]) with { EpaInForce = false };
+        var ended = new ProgrammeEndDto(Completed: true, EndedOn: new DateOnly(2026, 10, 26), Today: D);
+
+        var cut = RenderPage(
+            Molefe(item) with { AsOf = new DateOnly(2026, 10, 26), Ended = ended },
+            standing: Standing(Star("5") with { EpaCode = "PAED-012", EpaInForce = false }));
+
+        Text(cut.Find("h1")).Should().EndWith("(no longer in use)");
+        cut.FindAll(".epa-page-alert").Should().BeEmpty("no \"credited if it is restored\" on an ended record");
+        var observations = Section(cut, "obs-h");
+        observations.QuerySelectorAll(".epa-lines p").Select(Text).Take(2).Should().Equal(
+            "Semester 2, 2026: 2 of 3 so far; 0 at the minimum level when observed",
+            "Semester 1, 2026: 0 of 3, 3 short");
+        var entrustment = Section(cut, "ent-h");
+        Text(entrustment.QuerySelector(".star-level")!).Should().StartWith("5");
+        Details(entrustment).Should().Contain(("Exit level", "5 · reached"));
+        entrustment.TextContent.Should().NotContain("is paused");
+        cut.Find("a.epa-auth-link").TextContent.Should().Be("Open My authorisations", "for a holder of the Trainee role (E4)");
+    }
+
+    [Fact]
     public void AnIdThatIsNotTheCallers_IsFlow01sPageNotFound_WordForWord()
     {
         _sender.On<GetEpaProgressForTraineeQuery>(_ => null);

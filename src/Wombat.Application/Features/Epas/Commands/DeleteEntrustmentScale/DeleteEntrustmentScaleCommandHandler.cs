@@ -149,6 +149,14 @@ public sealed class DeleteEntrustmentScaleCommandHandler : IRequestHandler<Delet
             return "This entrustment scale is pinned to one or more curriculum items and cannot be deleted.";
         }
 
+        // T312 (review B2): the list an ended programme ended with keeps each item's pin as it was, so the scale an item
+        // was pinned to then is the closed record's, whatever the item is pinned to now. No foreign key knows of it.
+        if (await EntrustmentScaleReferences.IsPinnedOnAnEndedRecordAsync(_dbContext, scaleId, cancellationToken))
+        {
+            return "This entrustment scale is pinned to a curriculum item on the record of a programme that has ended, " +
+                   "which keeps the targets it ended with, so it cannot be deleted.";
+        }
+
         if (await _dbContext.Set<CurriculumItemProgress>()
                 .AnyAsync(progress => progress.MinimumLevelScaleId == scaleId, cancellationToken))
         {

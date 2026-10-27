@@ -558,6 +558,42 @@ public sealed class MyProgressTests : WombatTestContext
     }
 
     [Fact]
+    public void AnEpaPausedAfterTheProgrammeEnded_KeepsItsCard_HeadedNoLongerInUse_AfterItsLinkedCode()
+    {
+        // T312, flow 13's R05: the record reads the list the programme ended with, so an EPA paused since keeps its card and
+        // its periods, marked as EpaLabel marks it, muted and outside the link (N4).
+        var graduate = Graduate();
+        var cut = Render(graduate with { Items = [graduate.Items[0] with { EpaInForce = false }] });
+
+        var heading = EndedCard(cut, "PAED-001 (no longer in use)").QuerySelector(".progress-row-head h3")!;
+        Text(heading.QuerySelector("a.epa-link")!).Should().Be("PAED-001");
+        heading.QuerySelector("span.paused-mark")!.TextContent.Should().Be("(no longer in use)");
+        heading.QuerySelector("a.epa-link span.paused-mark").Should().BeNull();
+        Details(EndedCard(cut, "PAED-001 (no longer in use)").QuerySelector("dl.details-list")!).Keys
+            .Should().Equal("Semester 1, 2026", "Semester 2, 2025");
+    }
+
+    [Fact]
+    public void OnTheRegistrarPage_AnEpaPausedAfterTheProgrammeEnded_IsHeadedNoLongerInUse_AfterItsPlainCode()
+    {
+        // T312 review (R3): the staff record draws the code unlinked (the EPA pages are the registrar's own), and the mark
+        // after it as on her own record.
+        var graduate = Graduate();
+        var summary = graduate with { Items = [graduate.Items[0] with { EpaInForce = false }] };
+
+        var cut = RenderComponent<EndedRecord>(parameters => parameters
+            .Add(record => record.Summary, summary)
+            .Add(record => record.Ended, summary.Ended!)
+            .Add(record => record.SubjectName, "Lerato Molefe"));
+
+        var heading = EndedCard(cut, "PAED-001 (no longer in use)").QuerySelector(".progress-row-head h3")!;
+        heading.QuerySelector("a").Should().BeNull("the staff record links no EPA page");
+        heading.QuerySelector("span.paused-mark")!.TextContent.Should().Be("(no longer in use)");
+        Details(EndedCard(cut, "PAED-001 (no longer in use)").QuerySelector("dl.details-list")!).Keys
+            .Should().Equal("Semester 1, 2026", "Semester 2, 2025");
+    }
+
+    [Fact]
     public void AWithdrawnTrainee_IsToldTheirProgrammeEnded_AndThePeriodItEndedInHoldsNoTarget()
     {
         var cut = Render(Withdrawn());

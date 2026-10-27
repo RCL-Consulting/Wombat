@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.DataRights;
 using Wombat.Domain.Activities;
 using Wombat.Domain.CommitteeDecisions;
@@ -323,7 +324,20 @@ public sealed class ErasureExecutor : IErasureExecutor
             .Where(p => p.UserId == userId)
             .ToListAsync(cancellationToken);
         foreach (var traineeProfile in traineeProfiles)
+        {
+            // T312: a profile this erasure ends keeps the list it ended with, as an end by Mark complete or Deactivate
+            // does; read before the end is recorded. One that had already ended keeps the list its end recorded. The erasure
+            // takes no end hold (ITraineeCreditLock), as before T312, so the list is read outside it: benign, because an EPA
+            // paused concurrently has a DeactivatedOn at or after the moment read, which keeps it on either order (review B8).
+            var endedWith = traineeProfile.IsActive
+                ? await ProgrammeItems.ReadEndedWithAsync(_dbContext, traineeProfile, erasedOn, utcNow, cancellationToken)
+                : null;
             traineeProfile.Erase(pseudonym, erasedOn);
+            if (endedWith is not null)
+            {
+                traineeProfile.RecordEndedCurriculum(endedWith);
+            }
+        }
 
         // --- Assessor profiles: every one (T258) ---
         // The table holds one per user, but nothing is left under the id whatever it holds. An assessor profile has no

@@ -972,13 +972,18 @@ Expect: The list offers only Dr Dlamini, Dr Mahlangu and Dr Ndlovu, each with th
 Step 6.21 — Dr Molefe's record during the pause
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: /portfolio/progress → /portfolio/progress/{EpaId:int}
-Do: Read her record. Then open PAED-012's page by its address (`/portfolio/progress/{EpaId}`, PAED-012's id from Step
-  6.15): her record does not link it while it is paused.
+Do: Read her record. Then open PAED-012's page from its card.
 Expect: The record opens with its notice that she completed her programme and that the page is read-only.
-  - It lists no PAED-012 card while PAED-012 is paused, as every progress page leaves out an EPA not in force (T158).
-  - Her "Entrustment against Annexure A" panel has no PAED-012 row either: the standing reads only items in force.
-  - No chart is on My progress (T355). PAED-012's page is headed "PAED-012 — … (no longer in use)", and its rating
-    trajectory, headed "Rating trajectory (no longer in use)", still charts her ratings on it (T255).
+  - Her record reads the list her programme ended with (T312), so the pause changes nothing on it but a mark: PAED-012
+    keeps its card, headed "PAED-012 (no longer in use)" (the code a link, the mark muted beside it, T255), with every
+    period as Act 5 left it.
+  - Her "Entrustment against Annexure A" panel keeps the PAED-012 row, marked "(no longer in use)", and reads as in Step
+    5.20: "15 at or above · 0 below · 0 with no decision, of 15 EPAs", the exit rule 15 of 15. Its opening says
+    "STAR decisions are shown as the programme left them, and ratings as they stand today." (T312's wording).
+  - No chart is on My progress (T355). PAED-012's page is headed "PAED-012 — … (no longer in use)", with no alert that
+    it would be credited if restored: it lists its periods as her record does, and its Entrustment panel shows her
+    STAR as Act 5 issued it. Its rating trajectory, headed "Rating trajectory (no longer in use)", still charts her
+    ratings on it (T255).
   - PAED-006's card carries the title corrected in Step 6.14. Her other cards and periods are as Act 5 left them.
 
 Step 6.40 — Dr Molefe's record after the rebuild
@@ -986,11 +991,12 @@ Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: /portfolio/progress
 Do: Read her record, card by card, against what she read in Act 5 (Step 5.20).
 Expect:
-  - Her fifteen national cards are back, PAED-012 among them, and each period reads what Act 5 recorded: the rebuild
-    replays a completed profile's evidence as it was (Act 5's handoff).
+  - Her fifteen national cards are unchanged, PAED-012 among them, now without its "(no longer in use)" mark, and each
+    period reads what Act 5 recorded: the rebuild replays a completed profile's evidence as it was (Act 5's handoff).
   - PAED-006's card carries the corrected title. There is no PAED-016 card: her profile is on 11.1.
-  - A KGK-001 card has appeared under "Once a year", counting none of her encounters: each closed year of her
-    programme reads "0 of 1, 1 short". KGK's own item on 11.1 is read live, into a record that has ended.
+  - There is no KGK-001 card: KGK added its item after she graduated, and her record reads the list her programme
+    ended with (T312). Her standing reads "15 at or above · 0 below · 0 with no decision, of 15 EPAs", as in Step
+    5.20.
 
 Step 6.41 — Dr du Plessis's record after the rebuild
 Role: Former trainee (no role; a trainee record) — Dr Pieter du Plessis
@@ -1001,7 +1007,8 @@ Expect:
     <that day, as `YYYY-MM-DD`>. This page is your record of it and is read-only: …" (T355, D1).
   - PAED-002's period holding that day still reads "no target (your programme ended part-way through)", with the count
     Act 5 Step 5.28 read: the Mini-CEX observed after his last day still counts towards nothing (T281).
-  - A KGK-001 card has appeared on his record too, as on Dr Molefe's.
+  - No KGK-001 card has appeared on his record either, as on Dr Molefe's: his standing still counts the 15 EPAs his
+    programme ended with, "… 15 with no decision, of 15 EPAs" (T312).
   - My activities lists that Mini-CEX as Completed, its Credit None.
 
 Step A.7.4 — Dr Molefe's record on her phone

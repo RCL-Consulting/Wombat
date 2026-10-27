@@ -32,10 +32,11 @@ public sealed record EpaCountLineDto(
 /// </summary>
 /// <remarks>
 /// <para>
-/// The item is the one My progress lists for the EPA: on the curriculum of the trainee's preferred profile
-/// (<see cref="TraineeScopeResolver.PreferredProfiles" />), national or the trainee's own institution's, and in force
-/// (<see cref="CurriculumItemsInForce" />, T158). A paused EPA has no entry: it is no target while paused (D48), so a count
-/// of it would be a figure My progress does not show (note 2: the paused sentence is the words' to say).
+/// The item is the one My progress lists for the EPA (<see cref="ProgrammeItems" />): on the curriculum of the trainee's
+/// preferred profile (<see cref="TraineeScopeResolver.PreferredProfiles" />), national or the trainee's own institution's,
+/// and in force (<see cref="CurriculumItemsInForce" />, T158). A paused EPA has no entry while the programme runs: it is no
+/// target while paused (D48), so a count of it would be a figure My progress does not show (note 2: the paused sentence is
+/// the words' to say). An ended programme reads the list it ended with, with its targets then (T312).
 /// </para>
 /// <para>
 /// Each window is judged with both ends of the programme (D14, D42, D49), as every reader judges it, so a window the start
@@ -68,13 +69,6 @@ public static class EpaCountLines
         var profile = await TraineeScopeResolver.PreferredProfiles(dbContext)
             .AsNoTracking()
             .Where(entity => entity.UserId == traineeUserId)
-            .Select(entity => new
-            {
-                entity.CurriculumId,
-                entity.InstitutionId,
-                entity.ProgrammeStartDate,
-                entity.EndedOn
-            })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (profile is null)
@@ -82,22 +76,20 @@ public static class EpaCountLines
             return lines;
         }
 
-        var epaIds = keys.Select(key => key.EpaId).Distinct().ToArray();
-        var items = await dbContext.Set<CurriculumItem>()
-            .AsNoTracking()
-            .InForce()
-            .Where(item => item.CurriculumId == profile.CurriculumId &&
-                           (item.OwningInstitutionId == null || item.OwningInstitutionId == profile.InstitutionId) &&
-                           epaIds.Contains(item.EpaId))
+        // The list My progress reads (ProgrammeItems, T312): a running programme's items in force, or the list an ended one
+        // ended with, so a graduate's count line keeps an EPA paused since her end and its target as it was then.
+        var epaIds = keys.Select(key => key.EpaId).ToHashSet();
+        var items = (await ProgrammeItems.ReadAsync(dbContext, profile, cancellationToken))
+            .Where(item => epaIds.Contains(item.EpaId))
             .Select(item => new
             {
-                item.Id,
+                Id = item.CurriculumItemId,
                 item.EpaId,
-                EpaCode = item.Epa.Code,
+                item.EpaCode,
                 item.RequiredCount,
                 item.QuotaPeriod
             })
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         if (items.Count == 0)
         {

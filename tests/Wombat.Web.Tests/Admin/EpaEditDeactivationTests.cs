@@ -23,8 +23,8 @@ namespace Wombat.Web.Tests.Admin;
 /// T158, T196: what the EPA page says about deactivating, and that both ways of deactivating ask first.
 /// </summary>
 /// <remarks>
-/// Since T158 deactivating an EPA takes its items off every progress page and pauses their credit, in every institution
-/// that uses the curriculum. The Status field must say what that means, where a screen reader on the checkbox hears it,
+/// Since T158 deactivating an EPA takes its items off a running programme's progress pages and pauses their credit, in
+/// every institution that uses the curriculum (a closed record keeps them, T312). The Status field must say what that means, where a screen reader on the checkbox hears it,
 /// and deactivating must go through a ConfirmDialog, as DESIGN.md asks of every destructive action. Until T196 only the
 /// Deactivate button did: unticking Active and pressing Save deactivated without a word, and Deactivate was still offered
 /// on an EPA that was already inactive.
@@ -53,7 +53,7 @@ public sealed class EpaEditDeactivationTests : TestContext
         describedBy.Should().Be("epa-active-help");
 
         var help = Text(cut.Find($"#{describedBy}"));
-        help.Should().Contain("cannot be chosen for a new activity and is not a target on any progress page or dashboard")
+        help.Should().Contain("cannot be chosen for a new activity and is not a target on any running programme's progress page or dashboard; a programme that has ended keeps it on its record.")
             .And.Contain("and so is the progress it earned while it was active")
             .And.Contain("counts towards nothing until the EPA is reactivated, and reactivating it credits those activities");
         help.Should().NotContain("rebuild", "since T196 reactivating credits the paused activities; no rebuild is needed");
@@ -74,7 +74,8 @@ public sealed class EpaEditDeactivationTests : TestContext
 
         JSInterop.VerifyInvoke("wombatDialog.showModal");
         sender.Commands.Should().BeEmpty("opening the dialog must not deactivate the EPA");
-        Text(cut.Find("dialog")).Should().Contain("stops being a target on every progress page and dashboard")
+        Text(cut.Find("dialog")).Should().Contain("stops being a target on running programmes' progress pages and dashboards")
+            .And.Contain("A programme that has ended keeps it on its record, marked no longer in use.")
             .And.Contain("The progress it has earned is kept.")
             .And.Contain("counts towards nothing until it is reactivated");
     }

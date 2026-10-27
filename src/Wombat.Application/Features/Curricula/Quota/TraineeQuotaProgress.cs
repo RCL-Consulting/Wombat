@@ -160,9 +160,11 @@ public sealed record TraineeCurriculumProgressDto(
     public bool MinimumByTrainingYear { get; init; }
 
     /// <summary>
-    /// Whether the EPA is in force now (<see cref="CurriculumItemsInForce" />, D48). Every item of
+    /// Whether the EPA is in force now (<see cref="CurriculumItemsInForce" />, D48). Every item of a running programme's
     /// <see cref="TraineeCurriculumProgressSummaryDto.Items" /> is; one EPA's page reads its item whether or not it is
-    /// (T355, round 1 correction 2), and a paused one is read but counted nowhere.
+    /// (T355, round 1 correction 2), and a paused one is read but counted nowhere. An ended programme's items are the list
+    /// it ended with (T312, <see cref="ProgrammeItems" />), each of which was in force on the last day: one false here was
+    /// paused after the end, and is read and counted as it stood then, headed "(no longer in use)".
     /// </summary>
     public bool EpaInForce { get; init; } = true;
 }
@@ -192,7 +194,8 @@ public sealed record PausedItemDto(int CurriculumItemId, int EpaId, string EpaCo
 /// (T252). Null while the programme runs, and on a read of a profile the caller resolved
 /// (<see cref="TraineeQuotaProgressReader.ReadForProfileAsync" />), which says nothing about how it chose it. When set,
 /// every figure above is read as on the last day (<see cref="AsOf" />), and each item carries every period of the
-/// programme (<see cref="TraineeCurriculumProgressDto.Periods" />).
+/// programme (<see cref="TraineeCurriculumProgressDto.Periods" />). The items are the list the programme ended with,
+/// with the targets it held then (T312, <see cref="ProgrammeItems" />), whatever the catalogue has done since.
 /// </param>
 public sealed record TraineeCurriculumProgressSummaryDto(
     DateOnly AsOf,
@@ -217,7 +220,8 @@ public sealed record TraineeCurriculumProgressSummaryDto(
     /// <summary>
     /// The profile's items whose EPA is not in force now (national, or the trainee's own institution's), by code: the
     /// complement of <see cref="Items" /> (<see cref="CurriculumItemsInForce.NotInForce" />). Listed so a page can say why
-    /// they are not targets, and counted in no figure above (D48; T355, Spec § 6).
+    /// they are not targets, and counted in no figure above (D48; T355, Spec § 6). Always empty for an ended programme read
+    /// from the list it ended with (T312): an EPA paused since is one of its <see cref="Items" />.
     /// </summary>
     public IReadOnlyList<PausedItemDto> Paused { get; init; } = [];
 }
@@ -273,7 +277,9 @@ public static class TraineeQuotaProgressReader
     /// extras. A curriculum row is shared by every adopting institution, and another institution's local item is
     /// a target this trainee could never meet. An item whose EPA is deactivated is no target either
     /// (<see cref="CurriculumItemsInForce" />, T158): it cannot be filed against or credited, so listing it would
-    /// show a shortfall nobody can close.
+    /// show a shortfall nobody can close. That is a running programme's list. An ended programme reads the list it ended
+    /// with instead (T312, <see cref="ProgrammeItems" />): each item in force on the last day, with the target it held then,
+    /// so a pause, a new item or a changed target after the end does not rewrite the record.
     /// </para>
     /// <para>
     /// Rows are loaded for every semester and read through <see cref="QuotaProgressCalculator" /> in memory. No
@@ -335,7 +341,8 @@ public static class TraineeQuotaProgressReader
 
         var stage = profile.GetStage(asOf);
 
-        var items = await FactsAsync(ItemsOf(dbContext, profile).InForce(), cancellationToken);
+        // T312: a running programme's items in force, or the list an ended one ended with (ProgrammeItems).
+        var items = await ProgrammeItems.ReadAsync(dbContext, profile, cancellationToken);
         var rows = await RowsAsync(dbContext, traineeUserId, items, cancellationToken);
         var rungs = await EntrustmentRungLabels.LoadAsync(dbContext, items.Select(item => item.ScaleId), cancellationToken);
         var owner = await OwnerNameAsync(dbContext, profile, items, cancellationToken);
@@ -345,11 +352,15 @@ public static class TraineeQuotaProgressReader
             .ToList();
 
         // T355, Spec § 6: what is not in force is listed apart, so My progress can say why it is no target. Never counted.
-        var paused = await ItemsOf(dbContext, profile)
-            .NotInForce()
-            .OrderBy(item => item.Epa.Code)
-            .Select(item => new PausedItemDto(item.Id, item.EpaId, item.Epa.Code, item.Epa.Title, item.QuotaPeriod))
-            .ToListAsync(cancellationToken);
+        // Not for the list an ended programme ended with (T312): an EPA paused since the end is on it, and is read with
+        // its periods like the rest; one paused before the end was no target on the last day, and is no part of the record.
+        var paused = ProgrammeItems.ReadsEndedList(profile)
+            ? []
+            : await ProgrammeItems.OfCurriculum(dbContext, profile)
+                .NotInForce()
+                .OrderBy(item => item.Epa.Code)
+                .Select(item => new PausedItemDto(item.Id, item.EpaId, item.Epa.Code, item.Epa.Title, item.QuotaPeriod))
+                .ToListAsync(cancellationToken);
 
         var semester = AcademicPeriod.Containing(asOf);
         var semesterWindow = QuotaWindow.For(QuotaPeriod.Semester, asOf, profile.ProgrammeStartDate, programmeEnd);
@@ -398,7 +409,11 @@ public static class TraineeQuotaProgressReader
     {
         ArgumentNullException.ThrowIfNull(profile);
 
-        var items = await FactsAsync(ItemsOf(dbContext, profile).Where(item => item.EpaId == epaId), cancellationToken);
+        // A running programme's item whatever its EPA's state, so a paused EPA's page says what it is; an ended one's from
+        // the list it ended with (T312), so the page and the record's card read the same target.
+        IReadOnlyList<ProgrammeItem> items = ProgrammeItems.ReadsEndedList(profile)
+            ? await ProgrammeItems.ReadAsync(dbContext, profile, cancellationToken, epaId)
+            : await FactsAsync(ProgrammeItems.OfCurriculum(dbContext, profile).Where(item => item.EpaId == epaId), cancellationToken);
         if (items.Count == 0)
         {
             return null;
@@ -406,29 +421,13 @@ public static class TraineeQuotaProgressReader
 
         // One item per EPA per curriculum, and a national item never shares an EPA with a local one (T223); the lowest
         // id if that ever failed, so the answer is total.
-        items = [items.OrderBy(item => item.Id).First()];
+        items = [items.OrderBy(item => item.CurriculumItemId).First()];
         var rows = await RowsAsync(dbContext, profile.UserId, items, cancellationToken);
         var rungs = await EntrustmentRungLabels.LoadAsync(dbContext, items.Select(item => item.ScaleId), cancellationToken);
         var owner = await OwnerNameAsync(dbContext, profile, items, cancellationToken);
 
         return Build(items[0], rows, rungs, owner, profile, profile.GetStage(asOf), asOf, periodsFrom);
     }
-
-    /// <summary>What a row reads of one item.</summary>
-    private sealed record ItemFacts(
-        int Id,
-        int EpaId,
-        string EpaCode,
-        string EpaTitle,
-        bool EpaInForce,
-        int RequiredCount,
-        QuotaPeriod QuotaPeriod,
-        int MinimumLevelOrder,
-        string? MinimumLevelByStageJson,
-        int? ScaleId,
-        QuotaPeriod? DecisionCadence,
-        bool DecisionIsOpportunistic,
-        bool IsLocal);
 
     /// <summary>
     /// The EPAs whose page under My progress opens for <paramref name="traineeUserId" />: every item of their preferred
@@ -451,47 +450,26 @@ public static class TraineeQuotaProgressReader
             return new HashSet<int>();
         }
 
-        return (await ItemsOf(dbContext, profile).Select(item => item.EpaId).Distinct().ToListAsync(cancellationToken))
+        // An ended programme's pages are the EPAs of the list it ended with (T312), as its record's cards are.
+        if (ProgrammeItems.ReadsEndedList(profile))
+        {
+            return profile.ReadEndedCurriculum()!.Select(item => item.EpaId).ToHashSet();
+        }
+
+        return (await ProgrammeItems.OfCurriculum(dbContext, profile).Select(item => item.EpaId).Distinct().ToListAsync(cancellationToken))
             .ToHashSet();
     }
 
-    /// <summary>
-    /// The profile's items: the national core plus the trainee's own institution's local extras. A curriculum row is
-    /// shared by every adopting institution, and another institution's local item is a target this trainee could never
-    /// meet.
-    /// </summary>
-    private static IQueryable<CurriculumItem> ItemsOf(IApplicationDbContext dbContext, TraineeProfile profile)
-        => dbContext.Set<CurriculumItem>()
-            .AsNoTracking()
-            .Where(item => item.CurriculumId == profile.CurriculumId &&
-                           (item.OwningInstitutionId == null || item.OwningInstitutionId == profile.InstitutionId));
-
-    private static Task<List<ItemFacts>> FactsAsync(IQueryable<CurriculumItem> items, CancellationToken cancellationToken)
-        => items
-            .OrderBy(item => item.Epa.Code)
-            .Select(item => new ItemFacts(
-                item.Id,
-                item.EpaId,
-                item.Epa.Code,
-                item.Epa.Title,
-                item.Epa.IsActive,
-                item.RequiredCount,
-                item.QuotaPeriod,
-                item.MinimumLevelOrder,
-                item.MinimumLevelByStageJson,
-                item.ScaleId,
-                item.DecisionCadence,
-                item.DecisionIsOpportunistic,
-                item.OwningInstitutionId != null))
-            .ToListAsync(cancellationToken);
+    private static async Task<IReadOnlyList<ProgrammeItem>> FactsAsync(IQueryable<CurriculumItem> items, CancellationToken cancellationToken)
+        => await ProgrammeItems.Project(items).ToListAsync(cancellationToken);
 
     private static async Task<List<QuotaProgressRow>> RowsAsync(
         IApplicationDbContext dbContext,
         string traineeUserId,
-        IReadOnlyCollection<ItemFacts> items,
+        IReadOnlyCollection<ProgrammeItem> items,
         CancellationToken cancellationToken)
     {
-        var itemIds = items.Select(item => item.Id).ToList();
+        var itemIds = items.Select(item => item.CurriculumItemId).ToList();
         return itemIds.Count == 0
             ? []
             : await dbContext.Set<CurriculumItemProgress>()
@@ -510,12 +488,12 @@ public static class TraineeQuotaProgressReader
 
     /// <summary>
     /// The name a local item's badge carries ("Kgosi Kgari Teaching Hospital's own", T355 C10): always the profile's own
-    /// institution, the only one whose local items <see cref="ItemsOf" /> reads. Null when no item is local.
+    /// institution, the only one whose local items <see cref="ProgrammeItems" /> reads. Null when no item is local.
     /// </summary>
     private static async Task<string?> OwnerNameAsync(
         IApplicationDbContext dbContext,
         TraineeProfile profile,
-        IReadOnlyCollection<ItemFacts> items,
+        IReadOnlyCollection<ProgrammeItem> items,
         CancellationToken cancellationToken)
         => items.Any(item => item.IsLocal)
             ? await dbContext.Set<Institution>()
@@ -526,7 +504,7 @@ public static class TraineeQuotaProgressReader
             : null;
 
     private static TraineeCurriculumProgressDto Build(
-        ItemFacts item,
+        ProgrammeItem item,
         IReadOnlyList<QuotaProgressRow> rows,
         EntrustmentRungLookup rungs,
         string? ownerName,
@@ -537,7 +515,7 @@ public static class TraineeQuotaProgressReader
     {
         var programmeEnd = profile.EndedOn;
         var progress = QuotaProgressCalculator.For(
-            item.Id, item.QuotaPeriod, item.RequiredCount, rows, profile.ProgrammeStartDate, programmeEnd, asOf);
+            item.CurriculumItemId, item.QuotaPeriod, item.RequiredCount, rows, profile.ProgrammeStartDate, programmeEnd, asOf);
 
         var effectiveMinimum = new CurriculumItem
         {
@@ -547,13 +525,13 @@ public static class TraineeQuotaProgressReader
 
         var periods = periodsFrom is { } since
             ? QuotaProgressCalculator
-                .Since(item.Id, item.QuotaPeriod, item.RequiredCount, rows, profile.ProgrammeStartDate, programmeEnd, since, asOf)
+                .Since(item.CurriculumItemId, item.QuotaPeriod, item.RequiredCount, rows, profile.ProgrammeStartDate, programmeEnd, since, asOf)
                 .Select(QuotaWindowDto.From)
                 .ToArray()
             : null;
 
         return new TraineeCurriculumProgressDto(
-            item.Id,
+            item.CurriculumItemId,
             item.EpaId,
             item.EpaCode,
             item.EpaTitle,

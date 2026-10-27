@@ -66,8 +66,8 @@
     {
       <Alert Kind="info">
         @(inactive.Count == 1
-          ? $"{inactive[0]} is inactive, so its item is not in force: no trainee can choose it for a new activity, its credit is paused, and no progress page or dashboard shows it."
-          : $"{string.Join(", ", inactive)} are inactive, so their items are not in force: no trainee can choose them for a new activity, their credit is paused, and no progress page or dashboard shows them.")
+          ? $"{inactive[0]} is inactive, so its item is not in force: no trainee can choose it for a new activity, its credit is paused, and no running programme's progress page or dashboard shows it (a programme that has ended keeps it on its record)."
+          : $"{string.Join(", ", inactive)} are inactive, so their items are not in force: no trainee can choose them for a new activity, their credit is paused, and no running programme's progress page or dashboard shows them (a programme that has ended keeps them on its record).")
         Reactivating an EPA on its own page brings its item back, and credits what was completed against it meanwhile.
       </Alert>
     }

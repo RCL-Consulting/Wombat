@@ -274,7 +274,8 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
         // caller applies, is what makes the fallback guard mean what it says.
         //
         // It is the predicate credit applies (CreditTargetResolver, T158), so the picker offers exactly what can
-        // credit: a deactivated EPA is neither offered nor credited, and no progress page lists it.
+        // credit: a deactivated EPA is neither offered nor credited, and no running programme's progress page lists it
+        // (a closed record keeps it, T312).
         return await _dbContext.Set<CurriculumItem>()
             .AsNoTracking()
             .InForce()

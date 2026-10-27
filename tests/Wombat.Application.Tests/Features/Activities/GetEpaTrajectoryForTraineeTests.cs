@@ -943,6 +943,72 @@ public sealed class GetEpaTrajectoryForTraineeTests
     }
 
     /// <summary>
+    /// T312 (review B3): an ended programme's chart reads the minima it ended with, as its card does, so a minimum the
+    /// College lowers after the graduation does not redraw the closed chart's dashed edge or its verdicts.
+    /// </summary>
+    [Fact]
+    public async Task AnEndedProgrammesChart_ReadsTheMinimaItEndedWith_NotOnesChangedSince()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        await SeedSteppedCurriculumAsync(dbContext, SteppedStart);
+        var cpsa = await SeedCpsaRatedTypeAsync(dbContext);
+        AddRatedActivity(dbContext, cpsa, "trainee-1", "assessor-a", 7, 5, new DateTime(2026, 9, 21, 9, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+        await EndWithTheListAsync(dbContext);
+
+        var item = await dbContext.Set<CurriculumItem>().SingleAsync(entity => entity.Id == 555);
+        item.MinimumLevelOrder = 4;
+        item.MinimumLevelByStageJson = """{ "1": 3, "2": 3, "3": 4, "4": 4 }""";
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+
+        var trajectory = (await ReadYear2026Async(dbContext)).Single();
+
+        trajectory.MinimumSteps.Should().Equal(
+            new TrajectoryMinimumStepDto(Year2026From, 3, 5, "4"),
+            new TrajectoryMinimumStepDto(new DateOnly(2026, 1, 14), 4, 6, "5"));
+        trajectory.ExitLevelOrder.Should().Be(6);
+        trajectory.Points.Single().AgainstMinimum.Should().Be(TrajectoryAgainstMinimum.Below,
+            "rung 4 was below year 4's rung 5 when the programme ended");
+    }
+
+    /// <summary>
+    /// T312 (review B3): an EPA paused before the programme ended is on no card of the record, and still charts what was
+    /// recorded against it (T255), against its item's minimum, the only one the catalogue keeps.
+    /// </summary>
+    [Fact]
+    public async Task AnEndedProgrammesChart_OfAnEpaPausedBeforeTheEnd_StillReadsItsItemsMinimum()
+    {
+        await using var dbContext = CreateDbContext();
+        await SeedCoreAsync(dbContext);
+        await SeedSteppedCurriculumAsync(dbContext, SteppedStart);
+        var cpsa = await SeedCpsaRatedTypeAsync(dbContext);
+        AddRatedActivity(dbContext, cpsa, "trainee-1", "assessor-a", 7, 6, new DateTime(2026, 9, 21, 9, 0, 0, DateTimeKind.Utc));
+        (await dbContext.Epas.SingleAsync(epa => epa.Id == 7)).Deactivate(new DateTime(2026, 9, 22, 8, 0, 0, DateTimeKind.Utc));
+        await dbContext.SaveChangesAsync();
+        await EndWithTheListAsync(dbContext, list: []);
+
+        var trajectory = (await ReadYear2026Async(dbContext)).Single();
+
+        trajectory.ScaleId.Should().Be(42);
+        trajectory.ExitLevelOrder.Should().Be(6);
+    }
+
+    /// <summary>
+    /// Ends trainee-1's programme on 2026-09-26, recording the list it ended with: by default, its item as it stands.
+    /// </summary>
+    private static async Task EndWithTheListAsync(ApplicationDbContext dbContext, IReadOnlyList<EndedCurriculumItem>? list = null)
+    {
+        var profile = await dbContext.Set<TraineeProfile>().SingleAsync(entity => entity.Id == 5555);
+        var item = await dbContext.Set<CurriculumItem>().AsNoTracking().SingleAsync(entity => entity.Id == 555);
+        profile.Complete(new DateOnly(2026, 9, 26), new DateOnly(2026, 9, 26));
+        profile.RecordEndedCurriculum(list ?? [EndedCurriculumItem.Of(item)]);
+        await dbContext.SaveChangesAsync();
+        dbContext.ChangeTracker.Clear();
+    }
+
+    /// <summary>
     /// E2: "against the minimum then" is computed live, at the training year of each encounter, and says what credit said
     /// of the same rating: each point is planned through <see cref="CreditApplier.PlanAsync" />, the credit path itself,
     /// and the plan's comparison for the item is the point's verdict (T355, build review R3): above, at and below.

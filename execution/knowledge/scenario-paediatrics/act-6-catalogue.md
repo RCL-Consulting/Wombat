@@ -404,7 +404,8 @@ Do: Open PAED-012 and press Deactivate. Read the question and confirm. Then open
 Expect:
   - **The question.** Deactivate asks first, "Deactivate this EPA?". The dialog says that the EPA:
     - can no longer be chosen for a new activity;
-    - stops being a target on every progress page and dashboard, for every institution that uses it;
+    - stops being a target on running programmes' progress pages and dashboards, for every institution that uses it,
+      while a programme that has ended keeps it on its record, marked no longer in use (T312);
     - keeps the progress it has earned;
     - credits nothing for an activity completed against it while it is inactive, until it is reactivated.
   - **After confirming.** The page says the EPA is deactivated. Active is unticked, and Deactivate is gone. The EPA list
@@ -498,13 +499,18 @@ Gap: none
 ### Step 6.21 — Dr Molefe's record during the pause
 Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: /portfolio/progress → /portfolio/progress/{EpaId:int}
-Do: Read her record. Then open PAED-012's page by its address (`/portfolio/progress/{EpaId}`, PAED-012's id from Step
-  6.15): her record does not link it while it is paused.
+Do: Read her record. Then open PAED-012's page from its card.
 Expect: The record opens with its notice that she completed her programme and that the page is read-only.
-  - It lists no PAED-012 card while PAED-012 is paused, as every progress page leaves out an EPA not in force (T158).
-  - Her "Entrustment against Annexure A" panel has no PAED-012 row either: the standing reads only items in force.
-  - No chart is on My progress (T355). PAED-012's page is headed "PAED-012 — … (no longer in use)", and its rating
-    trajectory, headed "Rating trajectory (no longer in use)", still charts her ratings on it (T255).
+  - Her record reads the list her programme ended with (T312), so the pause changes nothing on it but a mark: PAED-012
+    keeps its card, headed "PAED-012 (no longer in use)" (the code a link, the mark muted beside it, T255), with every
+    period as Act 5 left it.
+  - Her "Entrustment against Annexure A" panel keeps the PAED-012 row, marked "(no longer in use)", and reads as in Step
+    5.20: "15 at or above · 0 below · 0 with no decision, of 15 EPAs", the exit rule 15 of 15. Its opening says
+    "STAR decisions are shown as the programme left them, and ratings as they stand today." (T312's wording).
+  - No chart is on My progress (T355). PAED-012's page is headed "PAED-012 — … (no longer in use)", with no alert that
+    it would be credited if restored: it lists its periods as her record does, and its Entrustment panel shows her
+    STAR as Act 5 issued it. Its rating trajectory, headed "Rating trajectory (no longer in use)", still charts her
+    ratings on it (T255).
   - PAED-006's card carries the title corrected in Step 6.14. Her other cards and periods are as Act 5 left them.
 Note: The TraineeOrFormerTrainee policy admits her without the Trainee role (T252).
 Actual (2026-10-26, T376 replay, wombat_scenario_t376): "You completed your programme on 2026-10-26. This page is your
@@ -514,9 +520,8 @@ Actual (2026-10-26, T376 replay, wombat_scenario_t376): "You completed your prog
   in use)" (muted mark), the paused alert, "Rating trajectory (no longer in use)" charting 2026-10-19 and 10-21, both
   5 ("2 ratings in the 2026 academic year, from Sarah Botha and Fatima Khumalo."), "Multi-source feedback is not
   plotted." PAED-006 reads the corrected title.
-Gap: F-6.21a, T312 (still: the page matches the Expect, but a completed programme's record is rewritten by a catalogue
-  change made after it ended: 15 of 15 becomes 14 of 14 and PAED-012's periods vanish; a product question).
-  known-task.
+Gap: F-6.21a closed by T312 (2026-10-27): the Expect is rewritten for the list a programme ends with, and the Actual
+  above predates it; the next replay re-reads the step against it.
 
 ### Step 6.22 — Prof Mbatha sees the pause, and cannot lift it
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -911,11 +916,12 @@ Role: Former trainee (no role; a trainee record) — Dr Lerato Molefe
 Route: /portfolio/progress
 Do: Read her record, card by card, against what she read in Act 5 (Step 5.20).
 Expect:
-  - Her fifteen national cards are back, PAED-012 among them, and each period reads what Act 5 recorded: the rebuild
-    replays a completed profile's evidence as it was (Act 5's handoff).
+  - Her fifteen national cards are unchanged, PAED-012 among them, now without its "(no longer in use)" mark, and each
+    period reads what Act 5 recorded: the rebuild replays a completed profile's evidence as it was (Act 5's handoff).
   - PAED-006's card carries the corrected title. There is no PAED-016 card: her profile is on 11.1.
-  - A KGK-001 card has appeared under "Once a year", counting none of her encounters: each closed year of her
-    programme reads "0 of 1, 1 short". KGK's own item on 11.1 is read live, into a record that has ended.
+  - There is no KGK-001 card: KGK added its item after she graduated, and her record reads the list her programme
+    ended with (T312). Her standing reads "15 at or above · 0 below · 0 with no decision, of 15 EPAs", as in Step
+    5.20.
 Note: The TraineeOrFormerTrainee policy admits her without the Trainee role (T252).
 Actual (2026-10-26, T376 replay, wombat_scenario_t376): "You completed your programme on 2026-10-26. …", read-only.
   Against Act 5's Step 5.20 text (this replay's, diffed) the differences are PAED-006's corrected title, KGK-001, and
@@ -925,9 +931,8 @@ Actual (2026-10-26, T376 replay, wombat_scenario_t376): "You completed your prog
   "Once a year": 2026 "no target (your programme ended part-way through) · 0 recorded"; 2025, 2024 and 2023 "0 of 1, 1
   short". Standing "15 at or above · 0 below · 1 with no decision, of 16 EPAs"; exit rule "15 of 15 EPAs at their exit
   level … (level 5: 9 of 9 · level 4: 6 of 6). Every EPA the rule counts is at its exit level."
-Gap: F-6.40a, T312 (still: the page matches the Expect, but a completed record gains an item KGK added after she
-  graduated, with a shortfall in each closed year and "1 with no decision"; the same read feeds the PDF; a product
-  question). known-task.
+Gap: F-6.40a closed by T312 (2026-10-27): the Expect is rewritten for the list a programme ends with, and the Actual
+  above predates it; the next replay re-reads the step against it.
 
 ### Step 6.41 — Dr du Plessis's record after the rebuild
 Role: Former trainee (no role; a trainee record) — Dr Pieter du Plessis
@@ -938,7 +943,8 @@ Expect:
     <that day, as `YYYY-MM-DD`>. This page is your record of it and is read-only: …" (T355, D1).
   - PAED-002's period holding that day still reads "no target (your programme ended part-way through)", with the count
     Act 5 Step 5.28 read: the Mini-CEX observed after his last day still counts towards nothing (T281).
-  - A KGK-001 card has appeared on his record too, as on Dr Molefe's.
+  - No KGK-001 card has appeared on his record either, as on Dr Molefe's: his standing still counts the 15 EPAs his
+    programme ended with, "… 15 with no decision, of 15 EPAs" (T312).
   - My activities lists that Mini-CEX as Completed, its Credit None.
 Note: Withdrawal took his Trainee role away (Act 5, T290); he reads his own record through the trainee record, as Dr
   Molefe does.
@@ -949,7 +955,7 @@ Actual (2026-10-26, T376 replay, wombat_scenario_t376): By SQL du Plessis (and M
   Mini-CEX ("Mini-CEX (Paediatrics) · PAED-002 · 2026-10-25", to David Naidoo) Done, Completed, Credit None (activity
   24, observed 2026-10-25 after his last day 2026-10-24, CreditedItemCount 0), beside the cancelled DOPS, an open
   Portfolio review, a Case-Based Discussion and the KGK Teaching Session Logs Act 5 left.
-Gap: none (the KGK-001 card on an ended record is F-6.40a)
+Gap: none (the Actual above predates T312, which takes the KGK-001 card off his record; the next replay re-reads it)
 
 ## Outcome state
 
@@ -992,8 +998,8 @@ Replay check (2026-10-26, T376 replay, wombat_scenario_t376): match. All 15 quer
   - Dr Ndlovu is on 11.2, and his progress is rebuilt there.
   - Dr Dlamini and Dr Mahlangu stay on 11.1. Neither profile can be saved while KGK's active adoption is 11.2 (Step
     6.34).
-  - Dr Molefe's completed record and Dr du Plessis's withdrawn one keep what Act 5 recorded, and each now also shows
-    KGK-001 (Steps 6.40 and 6.41).
+  - Dr Molefe's completed record and Dr du Plessis's withdrawn one keep what Act 5 recorded, and neither shows KGK-001:
+    each reads the list its programme ended with (T312; Steps 6.40 and 6.41).
 - **The Mini-CEX from Step 6.16:** completed, and credited once PAED-012 was restored.
 
 **SQL checks** (identifiers as EF creates them):
