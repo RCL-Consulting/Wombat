@@ -207,6 +207,24 @@ public sealed class ExportSubjectQueryTests
             .MayExport.Should().BeTrue();
     }
 
+    [Fact]
+    public async Task TheReviewOfAnErasedTrainee_OffersNoExport_SinceTheExportWouldReadNoSubject()
+    {
+        // The T379 replay's A.1.14: the erased registrar's review offered "Export deleted_user_…'s portfolio", which led only
+        // to Portfolio unavailable. Her profile stays; her account does not.
+        var (db, users) = Build();
+        await using var _ = db;
+        AddRegistrar(db, new Wombat.Tests.Shared.FakeUserDirectory(), 99, "deleted_user_d5fe50c8", "", "", trainingYear: 1);
+        AddPanel(db, 1, Kgk, "zulu");
+        AddReview(db, 1, 1, "deleted_user_d5fe50c8", D.AddDays(7));
+        db.SaveChanges();
+        var handler = new GetCommitteeReviewByIdQueryHandler(db, users);
+
+        (await handler.Handle(new GetCommitteeReviewByIdQuery(1, Coordinator()), default)).MayExport.Should().BeFalse();
+        (await handler.Handle(new GetCommitteeReviewByIdQuery(1, TestPrincipals.Administrator()), default))
+            .MayExport.Should().BeFalse("no account, so no subject to export, for anyone");
+    }
+
     private static ClaimsPrincipal Staff(string who) => who switch
     {
         "coordinator" => Coordinator(),

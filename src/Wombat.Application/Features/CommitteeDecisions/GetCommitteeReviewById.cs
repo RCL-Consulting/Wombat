@@ -45,10 +45,11 @@ public sealed class GetCommitteeReviewByIdQueryHandler : IRequestHandler<GetComm
         // portfolio" only where the export would not be refused: an Administrator always, a member of staff while they
         // oversee the trainee, never a trainee reviewed elsewhere whom the caller no longer oversees (R3-X08). Here only, not
         // in DescribeAsync: the trainee's own review page offers no export, and the commands answer with false.
-        return detail with
-        {
-            MayExport = await TraineeScopeResolver.MayReadAsync(_dbContext, request.Principal, review.TraineeUserId, cancellationToken)
-        };
+        // An erased trainee has no account, so the export reads no subject and answers Portfolio unavailable
+        // (GetExportSubjectQuery): the header offers nothing that would only lead there (T379 replay, A.1.14).
+        var mayExport = await TraineeScopeResolver.MayReadAsync(_dbContext, request.Principal, review.TraineeUserId, cancellationToken)
+            && (await _users.GetContactsAsync([review.TraineeUserId], cancellationToken)).ContainsKey(review.TraineeUserId);
+        return detail with { MayExport = mayExport };
     }
 
     /// <summary>
