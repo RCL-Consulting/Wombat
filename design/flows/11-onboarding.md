@@ -1025,8 +1025,9 @@ Expect: Home reads, above its cards, "**5 registrars are waiting to be admitted.
     account is not listed. Nothing can be filed about them until they are admitted.": Dlamini, du Plessis, Mahlangu,
     Molefe and Ndlovu, each with Email, Invited as "Paediatrics / Paediatrics", Registered `D` and an outline Admit…
     named "Admit ‹name›". There is no Institution column: her list is KGK's.
-  - "Current trainees": "No current trainees" / "A registrar appears here once admitted." There is no Completed and
-    closed section.
+  - "Current trainees": "No current trainees" / "A registrar appears here once admitted."
+  - "Completed and closed", empty: "No programme has ended yet." over "A trainee is listed here once their programme is
+    marked complete or a withdrawal is recorded, on their programme's page."
 
 Step 2.29 — Mbatha admits four registrars
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha

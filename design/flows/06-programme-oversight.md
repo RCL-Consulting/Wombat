@@ -500,7 +500,7 @@ A.5.14–A.5.16 and A.7.9, but the runbook's own 3.55–3.57 (the audit trail) a
 those numbers, so the new ones take a letter after the step they follow, as Step 6.14a did. `D` is the replay day.
 
 ```text
-Step 2.32 — Mr Smit, Coordinator (act-2-onboarding.md:890)
+Step 2.32 — Mr Smit, Coordinator (act-2-onboarding.md:899)
 Role: Coordinator — Mr Pieter Smit
 Route: /account/login → / → /admin/invitations → /access-denied → /committee/panels → /committee/panels/new → /access-denied
 Do: Sign in and read the dashboard and nav. Type the invitations address. Open Decision panels from the menu, then type
@@ -521,7 +521,7 @@ Expect: Home reads "Coordinator · Semester N, YYYY", with the header action "St
   panel and no Edit column, and Decision panels is lit there (T358, C10). The panel form reads "You cannot open this
   page" in the same words: the Coordinator reads panels, and edits none (D4).
 
-Step 2.33 — Dr Zulu's first view: committee member (act-2-onboarding.md:922)
+Step 2.33 — Dr Zulu's first view: committee member (act-2-onboarding.md:931)
 Role: CommitteeMember + Assessor — Dr Thandi Zulu
 Route: /account/login → /
 Do: Sign in and read the dashboard and nav.
@@ -540,7 +540,7 @@ Expect: Home reads "Committee member · Semester N, YYYY" under its heading. The
   The menu is the Committee member's alone, never the union of Dr Zulu's roles: Home, Programme trainees, Committee
   reviews and Decision panels, then My data rights.
 
-Step 2.35 — Dr Naidoo and Dr Botha (act-2-onboarding.md:978)
+Step 2.35 — Dr Naidoo and Dr Botha (act-2-onboarding.md:987)
 Role: CommitteeMember + Assessor — Dr David Naidoo and Dr Sarah Botha
 Route: /account/login → / → /committee/panels
 Do: Each signs in, reads the dashboard and opens Decision panels.
@@ -548,7 +548,7 @@ Expect: Dr Naidoo and Dr Botha each see what Dr Zulu saw in Step 2.33: the same 
   in its order, and "0 of 5" for every EPA on Targets by EPA. Decision panels lists the panel both sit on, Scope
   "Speciality · Paediatrics" and its four members by name, with no New panel and no Edit.
 
-Step 2.37 — Dr van Rensburg, external committee member (act-2-onboarding.md:1006)
+Step 2.37 — Dr van Rensburg, external committee member (act-2-onboarding.md:1015)
 Role: CommitteeMember — Dr John van Rensburg
 Route: /account/login → / → /committee/panels
 Do: Sign in, read the dashboard and open Decision panels.
@@ -560,7 +560,7 @@ Expect: Dr van Rensburg sees "Committee member · Semester N, YYYY" on Home, and
   rights. Decision panels lists the panel Dr van Rensburg sits on as external member, its Members marking him
   "(external)", with no New panel and no Edit.
 
-Step 2.38 — Dr Mokoena's and Dr Sithole's dashboards (act-2-onboarding.md:1029)
+Step 2.38 — Dr Mokoena's and Dr Sithole's dashboards (act-2-onboarding.md:1038)
 Role: SpecialityAdmin and SubSpecialityAdmin — Dr Refilwe Mokoena and Dr Kabelo Sithole
 Route: /
 Do: Each opens Home, now that the registrars are admitted.

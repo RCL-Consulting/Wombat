@@ -57,7 +57,7 @@ Expect: Active invitations is empty: "No active invitations". Kruger's College a
   member, Assessor and Trainee, each with its description; not College admin, which only an Administrator issues
   (T093). Institution is read out, not offered: "Kgosi Kgari Teaching Hospital" (S18). No speciality field is drawn
   until a role that takes one is chosen.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Signed in to Home; Invitations from the nav: "No active
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Signed in to Home; Invitations from the nav: "No active
   invitations" / "Issue an invitation to create the first onboarding link.". Invite a person opened
   /admin/invitations/new: "* marks a field you must fill in.", Email *, Role * with seven radios, none chosen:
   Institutional admin, Speciality admin, Sub-speciality admin, Coordinator, Committee member, Assessor and Trainee,
@@ -80,14 +80,14 @@ Expect: Coordinator draws Speciality with no star, at "Any speciality" (offering
   day `D+14`, Delivery "Being sent".
 Note: One invitation from Home's Invite a person is 4 presses and 1 field: Invite a person, Coordinator, Issue
   invitation and Copy link; the address.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Coordinator drew Speciality, no star, at "Any speciality"
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Coordinator drew Speciality, no star, at "Any speciality"
   (offering Paediatrics) with "Leave it at Any speciality for the whole institution."; no Sub-speciality. The result,
   focused: "Invitation issued for smit@kgk.wombat.local. Its email is being sent. Copy the link below — it is shown
-  only once.", the link with Copy link, "It works until 2026-11-09. It is shown here until your next action, then
+  only once.", the link with Copy link, "It works until 2026-11-10. It is shown here until your next action, then
   never again. …" and Open Invitations. Copy link: "Link copied." (the clipboard held the link). The form came back
   empty, no role chosen, under "Invite the next person". Stub "Your Wombat invitation" (tags: invitation): "You are
   invited to Wombat as Coordinator at Kgosi Kgari Teaching Hospital." Row (2.7): Coordinator / Any speciality,
-  2026-10-26 19:37 SAST, 2026-11-09, "Being sent".
+  2026-10-27 20:06 SAST, 2026-11-10, "Being sent".
 Gap: none
 
 ### Step 2.3 — Mbatha invites Dr Zulu, Dr Naidoo and Dr Botha as committee members
@@ -100,7 +100,7 @@ Expect: Committee member draws Speciality with no star, offering Paediatrics alo
   2.2's, and each stub reads "You are invited to Wombat as Committee member in Paediatrics at Kgosi Kgari Teaching
   Hospital." Their rows (Step 2.7) read "Committee member" over "Paediatrics".
 Note: An invitation carries one role. Assessor is added on each user's page in Step 2.13 (T061).
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Committee member drew Speciality, no star, at Any speciality
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Committee member drew Speciality, no star, at Any speciality
   offering Paediatrics alone; no Sub-speciality field. Each issue read as 2.2's for its address, focused, Copy link
   "Link copied." each time; three stubs "You are invited to Wombat as Committee member in Paediatrics at Kgosi Kgari
   Teaching Hospital."; rows "Committee member" over "Paediatrics".
@@ -115,7 +115,7 @@ Expect: For an Assessor, Speciality is starred, with "Then choose its sub-specia
   sub-speciality is chosen. Once Paediatrics is chosen, Sub-speciality is drawn, starred, offering that speciality's
   sub-speciality, Paediatrics, and the hint stays; it goes once Paediatrics is chosen as the sub-speciality. Each stub reads "You are invited to Wombat as Assessor in Paediatrics / Paediatrics at Kgosi Kgari
   Teaching Hospital." Their rows (Step 2.7) read "Assessor" over "Paediatrics / Paediatrics".
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Assessor drew Speciality * at "Choose a speciality" with
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Assessor drew Speciality * at "Choose a speciality" with
   "Then choose its sub-speciality."; with Paediatrics chosen, Sub-speciality * appeared ("Choose a sub-speciality",
   Paediatrics) and the hint stayed; it went once the sub-speciality was chosen. Two stubs "You are invited to Wombat
   as Assessor in Paediatrics / Paediatrics at Kgosi Kgari Teaching Hospital."; rows "Assessor" over "Paediatrics /
@@ -131,9 +131,9 @@ Expect: It is issued with no speciality (T060). Its stub reads "You are invited 
   Kgari Teaching Hospital.", and its row (Step 2.7) reads "Committee member" over "Any speciality". The address's
   domain does not matter: the invitation scopes him to KGK.
 Note: A panel seats only committee members at its own institution (T165), so the Stellenbosch examiner is invited at KGK.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Issued with Speciality left at Any speciality: "Invitation
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Issued with Speciality left at Any speciality: "Invitation
   issued for vanrensburg@sun.wombat.local. …"; stub "You are invited to Wombat as Committee member at Kgosi Kgari
-  Teaching Hospital."; row "Committee member" over "Any speciality", last day 2026-11-09.
+  Teaching Hospital."; row "Committee member" over "Any speciality", last day 2026-11-10.
 Gap: none
 
 ### Step 2.6 — Mbatha invites Dr Mokoena as the programme's SpecialityAdmin
@@ -146,7 +146,7 @@ Expect: Speciality admin draws Speciality, starred, at "Choose a speciality", an
   focused. Nothing is issued, and no registration link is on the page: van Rensburg's, from Step 2.5, went when the
   press began (T264, M5). The second is issued; its stub reads "… as Speciality admin in Paediatrics at Kgosi Kgari
   Teaching Hospital.", and its row (Step 2.7) reads "Speciality admin" over "Paediatrics".
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Speciality admin drew Speciality * at "Choose a speciality",
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Speciality admin drew Speciality * at "Choose a speciality",
   no Sub-speciality. The first press: "Speciality administrators must be scoped to a speciality." under Speciality,
   the select aria-invalid, described by it and focused; no result box, no row, and no registration link on the page
   (van Rensburg's went). With Paediatrics chosen the second issued (focused result); stub "… as Speciality admin in
@@ -171,16 +171,16 @@ Expect: The first is refused under Sub-speciality: "The selected role requires s
   log holds 11 invitation stubs (Act 1's two and these nine), each tagged `invitation`.
 Note: The nine in a row, from Home's Invite a person with both refusals, are 40 presses and 9 fields (counting a Copy
   link for each, and not Open Invitations), the same at 1280 and 390. "Invite the next person" is the reset form's heading, not a press.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): The first press: "The selected role requires speciality and
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): The first press: "The selected role requires speciality and
   sub-speciality scope." under Sub-speciality, marked (aria-invalid, described by it) and focused; no link on the
   page. The second issued; Copy link "Link copied."; Open Invitations: no link on the list. "9 active", captioned as
   quoted; nine rows newest first, Sithole (Sub-speciality admin / Paediatrics / Paediatrics), Mokoena (Speciality
   admin / Paediatrics), van Rensburg (Committee member / Any speciality), Khumalo, Patel (Assessor / Paediatrics /
   Paediatrics), Botha, Naidoo, Zulu (Committee member / Paediatrics), Smit (Coordinator / Any speciality), each
-  Issued 2026-10-26 over 19:37 or 19:38 SAST, Last day 2026-11-09, "Being sent", Revoke… named per row ("Revoke the
-  Committee member invitation to zulu@kgk.wombat.local"); no Expired, not used section. 11 invitation stubs (12 stubs
-  with the weekly digest), each tagged invitation. At 901, 1000 and 1100 px, and 390 px, no sideways scroll
-  (scrollWidth = width) and no word in any cell broke mid-word; at 390 Invite a person is 44 px tall.
+  Issued 2026-10-27 over 20:06 or 20:07 SAST, Last day 2026-11-10, "Being sent", Revoke… named per row ("Revoke the
+  Committee member invitation to zulu@kgk.wombat.local"); no Expired, not used section. 11 invitation stubs, each
+  tagged invitation. At 901, 1000 and 1100 px, and 390 px, no sideways scroll (scrollWidth = width) and no word in
+  any cell broke mid-word; at 390 Invite a person is 44 px tall.
 Gap: none (T264 no longer occurs: no link under the refusal)
 
 ## Phase 2.B — The staff register
@@ -198,11 +198,11 @@ Expect: The link's redirect leaves `/account/register` in the address bar, with 
   have signed out."
 Note: Record every password chosen in this act in `pwd_DO_NOT_COMMIT.txt` only (README § Passwords). Registering is 1
   press and 4 fields.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): The link answered 303 to /account/register (200); the address
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): The link answered 303 to /account/register (200); the address
   bar read /account/register with no query (3 s later too) and the page source held no token. "Complete
   registration": "This invitation is for smit@kgk.wombat.local, as Coordinator at Kgosi Kgari Teaching Hospital.",
   Email read-only with "The address this invitation is for. It cannot be changed here.", Register in the actions and
-  "Not expecting this invitation? Ignore it: its link works until 2026-11-09." under the form. Registering landed on
+  "Not expecting this invitation? Ignore it: its link works until 2026-11-10." under the form. Registering landed on
   Home, "Home" / "Coordinator · Semester 2, 2026", the top bar "Pieter Smit". The top bar's Sign out (one press):
   /account/login?error=SignedOut, "You have signed out.". Capture 2.8-1 shows the register form (no token in it).
 Gap: none (T315 no longer occurs: no token in the address bar or the page source)
@@ -223,7 +223,7 @@ Expect: Before anything is typed, the six rules stand under Password: "The new p
   Semester N, YYYY". Signing out lands on the sign-in page with "You have signed out."
 Note: The Do's two refusals and then the success are 3 presses and 8 fields: the names are kept, so only the two
   passwords are typed again after each refusal (one refusal and then the success would be 2 presses and 6 fields).
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Before typing, "The new password needs:" and the six rules
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Before typing, "The new password needs:" and the six rules
   word for word under Password; toggles "Show password" and "Show confirm password". 10 characters: back on
   /account/register with "The new password needs: At least 12 characters." under Password (aria-invalid, focused),
   First name "Mohammed" and Last name "Patel" kept. Mismatch: "The password confirmation does not match. Type the
@@ -246,12 +246,12 @@ Expect: Each page names the address, the role's label and its scope, and the lin
   viewing as that role. Zulu, Naidoo, Botha and van Rensburg view as CommitteeMember, Khumalo as Assessor, Mokoena as
   SpecialityAdmin and Sithole as SubSpecialityAdmin. Each sign-out lands on the sign-in page with "You have signed
   out."
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Each link went through /account/register/start to
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Each link went through /account/register/start to
   /account/register (no token in the address or source). Pages: "This invitation is for zulu@kgk.wombat.local, as
   Committee member in Paediatrics at Kgosi Kgari Teaching Hospital." (Naidoo, Botha alike), "…
   khumalo@kgk.wombat.local, as Assessor in Paediatrics / Paediatrics at …", "… vanrensburg@sun.wombat.local, as
   Committee member at …", "… mokoena@…, as Speciality admin in Paediatrics at …", "… sithole@…, as Sub-speciality
-  admin in Paediatrics / Paediatrics at …", each with "… its link works until 2026-11-09." and the six rules. Each
+  admin in Paediatrics / Paediatrics at …", each with "… its link works until 2026-11-10." and the six rules. Each
   landed on Home: Zulu, Naidoo, Botha, van Rensburg "Committee member · Semester 2, 2026", Khumalo (typed "Fatma")
   "Assessor · …", Mokoena "Speciality admin · …", Sithole "Sub-speciality admin · …", the sidebar acting as that role
   (Mokoena's and Sithole's menus end with Entrustment decisions). Each sign-out: "You have signed out.".
@@ -263,7 +263,7 @@ Route: /account/register/start → /account/register
 Do: Open his invitation link a second time.
 Expect: As Step 1.9: "Invitation already used", "This invitation has already been used: an account was registered from
   it." and "If it was yours, sign in with that account.", with Sign in; no form.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): The link went through the start link to /account/register:
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): The link went through the start link to /account/register:
   "Invitation already used" (its tab too), "This invitation has already been used: an account was registered from
   it." and "If it was yours, sign in with that account.", with Sign in (and Forgotten your password?); no input.
 Gap: none
@@ -301,7 +301,7 @@ Expect: Active invitations reads "No active invitations": all nine staff invitat
   - Her menu lists Entrustment decisions under Reviews (T376, F10).
 Note: Finding a person ("thandi zulu") from Home is 3 presses and 1 field (Users, the name, Show, Manage), 4 and 1 at
   390; by role from Home's People card, 2 presses (the count, Manage). Users draws a pager only past 20 matches (F9).
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Invitations: "No active invitations". Users (from the menu;
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Invitations: "No active invitations". Users (from the menu;
   Entrustment decisions is in her menu under Reviews): "Everyone with an account at Kgosi Kgari Teaching Hospital:
   the roles each holds, their scope, and whether they can sign in.", Invite a person in the header; the search form
   offered Name or email ("A name in either order, part of one, or an address."), Role (Any role, each role by label,
@@ -351,7 +351,7 @@ Expect: Before the change, the page is titled by the person's name, "Roles, sign
 Note: A role change ends any session the account still has open within a minute (T279). Step 2.10 signed everyone out.
   Adding a role with its scope is 3 presses (Add a role…, Assessor, Add role), at 1280 and at 390; abandoning it is 2
   (Add a role…, Cancel), at 1280.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Before (Zulu): titled "Thandi Zulu", "Roles, sign-in and
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Before (Zulu): titled "Thandi Zulu", "Roles, sign-in and
   lockout for one person at Kgosi Kgari Teaching Hospital, with assessor training for an Assessor.", Scope
   Paediatrics. Roles and scope: Committee member with an outline Remove… named "Remove Committee member from Thandi
   Zulu", then Add a role… and "Trainee is not offered: a registrar becomes a trainee only when admitted, from
@@ -409,7 +409,7 @@ Expect: Training is recorded on the person's page, for anyone who holds Assessor
     training, named "Edit training for ‹name›".
 Note: Recording one assessor's training is 4 presses and 2 fields from Home (Assessors, Record training, the status,
   Save training; the date and the qualifications), 5 and 2 at 390; from the person's page, 3 and 2.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Assessors read "Everyone at Kgosi Kgari Teaching Hospital who
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Assessors read "Everyone at Kgosi Kgari Teaching Hospital who
   holds the Assessor role, with the assessor training recorded for each.", no Create assessor profile; "Assessors at
   Kgosi Kgari Teaching Hospital 5", captioned "At Kgosi Kgari Teaching Hospital, by last name: each holder of the
   Assessor role, and the training recorded on their page.": Botha, Khumalo, Naidoo, Patel, Zulu, each Scope
@@ -422,18 +422,15 @@ Actual (2026-10-26, T376 replay, wombat_scenario_t376): Assessors read "Everyone
   Cancel and Save training. Zulu's empty save: "Choose the training status." under the status and "Type the
   qualifications, as they should read." under Qualifications, every radio and the textarea aria-invalid, the focus on
   the first radio, nothing saved; Cancel closed the panel and gave the focus to Record training. Each save, focused,
-  in the section: "Training saved for Thandi Zulu: Trained, completed 2018-10-26." (Naidoo "… Trained, completed
-  2020-10-26.", Botha "… Trained, no date.", Patel "… In training.", Khumalo "Training saved for Fatma Khumalo:
-  Provisional (awaiting sign-off), completed 2026-09-26."). The page stays the person's: the section reads the record
+  in the section: "Training saved for Thandi Zulu: Trained, completed 2018-10-27." (Naidoo "… Trained, completed
+  2020-10-27.", Botha "… Trained, no date.", Patel "… In training.", Khumalo "Training saved for Fatma Khumalo:
+  Provisional (awaiting sign-off), completed 2026-09-27."). The page stays the person's: the section reads the record
   out (Training status, Training completed, Qualifications) with Edit training, named "Edit training for ‹name›"; the
   Assessors row reads Edit training. After Zulu's save, a page action (Reset password with nothing typed: "Type the
-  new password.") cleared the training result. The empty-list words and the "Create assessor profile" form no longer
-  exist. Edit training on Zulu's page: Trained checked, 2018-10-26 and the qualifications filled, focus still on Not
-  started. At 390 on Patel's panel: no sideways scroll; Edit training, Cancel, Save training and Reset password 44
-  px, Save training above Cancel. (A Record training button before a first recording was not measured at 390: all
-  five were recorded at 1280.)
-Gap: none (F-2.14a to F-2.14d no longer occur: T289's move and picker, T326's empty body and T324's "The UserId field
-  is required." are gone with /admin/assessors/edit's form)
+  new password.") cleared the training result. At 390 on Patel's panel (see 2.15): no sideways scroll; Edit training,
+  Cancel, Save training and Reset password 44 px, Save training above Cancel.
+Gap: none (F-2.14a to F-2.14d no longer occur: T289's move and picker, T326's empty body and T324's UserId message
+  are gone with /admin/assessors/edit's form)
 
 ### Step 2.15 — The assessor list and who is not on it
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -451,14 +448,16 @@ Expect: Five rows, each with Scope Paediatrics / Paediatrics and no Institution,
   Each row has an Edit training named for its assessor ("Edit training for Thandi Zulu"). Van Rensburg is not listed,
   because he does not hold the Assessor role. The old address replaces itself, leaving no history entry, with Dr Zulu's
   page at `?section=training`, the panel open (T376, S10).
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Five rows, each Scope Paediatrics / Paediatrics, no
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Five rows, each Scope Paediatrics / Paediatrics, no
   Institution, Speciality or Sub-speciality column, no pager: Botha Trained "Not recorded"; Khumalo (Fatma)
-  Provisional (awaiting sign-off) 2026-09-26; Naidoo Trained 2020-10-26; Patel In training "Not recorded"; Zulu
-  Trained 2018-10-26. Each Edit training is named "Edit training for ‹name›". Van Rensburg is not listed. Typing
+  Provisional (awaiting sign-off) 2026-09-27; Naidoo Trained 2020-10-27; Patel In training "Not recorded"; Zulu
+  Trained 2018-10-27. Each Edit training is named "Edit training for ‹name›". Van Rensburg is not listed. Typing
   /admin/assessors/edit?id=1 (Zulu's profile id) landed on /admin/users/{Zulu}?section=training with the panel open
   (tab "Thandi Zulu · Wombat"); Back from there went to /admin/assessors, so the old address left no history entry.
   Narrow desktops: at 901, 1000 and 1100 px scrollWidth equalled the width and no word in Name split mid-word. At
-  390: no sideways scroll, no split, each Edit training 44 px.
+  390: no sideways scroll, no split, each Edit training 44 px; Patel's Edit training panel (Trained checked shows
+  "Date the assessor completed assessor training. Leave blank if unrecorded."): no sideways scroll, Save training
+  above Cancel, 44 px.
 Gap: none (T264/T289 and the old edit form no longer occur: /admin/assessors/edit is a redirect)
 
 ## Phase 2.D — Registrar invitations
@@ -474,12 +473,12 @@ Expect: A Trainee invitation needs both speciality and sub-speciality: Specialit
   Paediatrics at Kgosi Kgari Teaching Hospital." Active invitations reads "5 active": five rows "Trainee" over
   "Paediatrics / Paediatrics", newest first (`ndlvou@` first), each Issued `D` over its time in SAST, Last day `D+14`
   and Delivery "Being sent".
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): From Invitations, Invite a person. For Trainee, Speciality *
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): From Invitations, Invite a person. For Trainee, Speciality *
   at "Choose a speciality"; with Paediatrics chosen, Sub-speciality * was drawn. Each issue read as 2.2's for its
   address (focused result, "Link copied."). Five stubs "You are invited to Wombat as Trainee in Paediatrics /
   Paediatrics at Kgosi Kgari Teaching Hospital." Open Invitations (no link on it): "5 active", five rows "Trainee"
-  over "Paediatrics / Paediatrics", ndlvou@ first, each 2026-10-26 over 19:49 or 19:50 SAST, Last day 2026-11-09,
-  "Being sent".
+  over "Paediatrics / Paediatrics", ndlvou@ first, each 2026-10-27 over 20:12 SAST, Last day 2026-11-10, "Being
+  sent".
 Gap: none
 
 ### Step 2.17 — Mbatha revokes the mistyped invitation and issues the right one
@@ -505,7 +504,7 @@ Expect:
     who invited you for a new invitation."; no form.
 Note: The revoke and the new issue are 5 presses and 1 field: Revoke…, Revoke invitation, Invite another address,
   Issue invitation and Copy link; the address.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Revoke… is an outline button named "Revoke the Trainee
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Revoke… is an outline button named "Revoke the Trainee
   invitation to ndlvou@kgk.wombat.local". It opened "Revoke this invitation?" with the three paragraphs word for word
   and Keep the invitation and Revoke invitation. At 390 px the two are stacked, 44 px each, Keep the invitation below
   (last on screen), focused on open and first in tab order; no sideways scroll; Escape closed it and returned the
@@ -540,15 +539,15 @@ Expect: Each page reads "This invitation is for ‹address›, as Trainee in Pae
   - "Meanwhile": "You can check your account and your data rights.", with Review your account and Open My data
     rights, each with its arrow.
   The header offers no action. Each sign-out lands on the sign-in page with "You have signed out."
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Each link went through the start link to /account/register
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Each link went through the start link to /account/register
   (no token in the address or source); each page read "This invitation is for <address>, as Trainee in Paediatrics /
   Paediatrics at Kgosi Kgari Teaching Hospital.". Each landed on Home, "Pending trainee · Semester 2, 2026", with one
   card, "Awaiting admission" (hourglass icon, a 1 px grey edge all round, no stripe): the sentence as quoted;
   Institution, Programme "Paediatrics / Paediatrics, on the Paediatric EPA Curriculum (11.1)", Invited by "Nolwazi
-  Mbatha, Institutional admin, on 2026-10-26", Who admits you as quoted; "When you are admitted" with the four steps
+  Mbatha, Institutional admin, on 2026-10-27", Who admits you as quoted; "When you are admitted" with the four steps
   in a numbered list, the last naming the registrar's own address; "Meanwhile" with Review your account and Open My
   data rights, each with its arrow. No header action. Molefe, Dlamini and Ndlovu signed out to "You have signed
-  out."; Mahlangu stayed signed in on Home, her tab held open by a background browser from 19:51 SAST. Du Plessis did
+  out."; Mahlangu stayed signed in on Home, her tab held open by a background browser from 20:13 SAST. Du Plessis did
   not register.
 Gap: none
 
@@ -562,7 +561,7 @@ Expect: The sidebar reads "Acting as Pending trainee" over Home, then My data ri
   institution, Kgosi Kgari Teaching Hospital. My activities reads "No activities yet", with no Log an activity. Log
   an activity and My progress each show "You cannot open this page" ("Your role (Pending trainee) does not open this
   page.") with Go to Home (T335).
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Played in a second browser; her held tab stayed on Home. The
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Played in a second browser; her held tab stayed on Home. The
   sidebar reads "Acting as Pending trainee" over Home, then My data rights, nothing else; Home's card is 2.18's, its
   last step naming mahlangu@kgk.wombat.local. Review your account: My account, Institution Kgosi Kgari Teaching
   Hospital, Roles "Pending trainee". My activities: "No activities yet" / "Nothing has been filed about you.", no Log
@@ -582,7 +581,7 @@ Expect: While the page reads, the header shows at once over skeletons: no New pa
   skeletons, never a sentence saying there is no routing (T329). Then the page reads "No decision panels" / "Create a
   panel before scheduling reviews." and offers New panel in the header. "Who decides each EPA" names `Paediatric EPA
   Curriculum 11.1` in one row, "PAED-001 to PAED-015", against "No panel at this institution covers this programme."
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Navigated from Home (client-side), watching the DOM: while it
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Navigated from Home (client-side), watching the DOM: while it
   read, the header was there at once ("Decision panels" / "The panels that take entrustment and progression
   decisions.") over "Loading Decision panels." and five skeletons, with no New panel and no sentence about routing
   under "Who decides each EPA". Then: "No decision panels" / "Create a panel before scheduling reviews.", New panel
@@ -610,7 +609,7 @@ Expect: The page reads "New panel": "A panel takes entrustment and progression d
   - Create panel is refused and nothing is created: "The panel was not created. Everything you chose is kept below.",
     with "Seats: A panel needs at least two members: the chair and at least one other, so that no decision is one
     person's." (D46). The summary takes the focus, and the seats are marked with the same sentence.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): "New panel" with the quoted sentence. Scope offered
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): "New panel" with the quoted sentence. Scope offered
   Institution and Speciality, on Speciality; Speciality offered Paediatrics with "The panel runs at your institution.
   Only the specialities it has adopted a curriculum in are listed."; Decides for offered General panel and the
   Neonatal team Clinical Competency Committee. Chair and the seat picker (Not seated / Member / External member) each
@@ -638,7 +637,7 @@ Expect: The panel's own page opens, and names the panel: its h1 and tab read "Pa
     appeal body, and that cross-institution externals are not yet supported.
   - **Decides for:** General panel, with Save committee and the rule under it.
   There is no "Back to panels".
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Naidoo Member, van Rensburg External member, Create panel:
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Naidoo Member, van Rensburg External member, Create panel:
   /committee/panels/1?created=1, h1 and tab "Paed Annual Review Panel", subtitle "Speciality panel · Paediatrics ·
   Kgosi Kgari Teaching Hospital"; "Paed Annual Review Panel was created. Its reviews can now be scheduled on
   Committee reviews." focused. About this panel: Scope "Speciality: Paediatrics", Institution KGK, Open reviews
@@ -658,7 +657,7 @@ Expect: The list offers her New panel and an Edit on this panel, a Speciality-sc
   Zulu chairs, with 2 members and 1 external member.", with the focus on it. Back on the list, Members names the four,
   "4: Thandi Zulu (chair), …, John van Rensburg (external)", with Sarah Botha, then David Naidoo, between (the members
   in the picker's surname order).
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): The list offered her New panel and "Edit Paed Annual Review
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): The list offered her New panel and "Edit Paed Annual Review
   Panel" (Members "3: Thandi Zulu (chair), David Naidoo, John van Rensburg (external)"). On the panel's page Decides
   for was read-only, "General panel", with "Only an institutional administrator can change which College committee a
   panel sits as.", no select and no Save committee. Botha as Member, Save panel: "Panel members updated. Thandi Zulu
@@ -676,7 +675,7 @@ Expect: One row: Paed Annual Review Panel, Scope "Speciality · Paediatrics", De
   Review Panel. No panel covering this programme sits as the Neonatal team Clinical Competency Committee, so the
   general panel decides." (T131).
 Note: KGK has no neonatal CCC, so "Decides for" stays General panel. Act 4 schedules every review on this panel.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): One row: Paed Annual Review Panel, "Speciality ·
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): One row: Paed Annual Review Panel, "Speciality ·
   Paediatrics", General panel, "4: Thandi Zulu (chair), Sarah Botha, David Naidoo, John van Rensburg (external)",
   with Edit. Who decides each EPA: "PAED-001 to PAED-003, PAED-006 to PAED-015" to Paed Annual Review Panel, and
   "PAED-004, PAED-005" to "Paed Annual Review Panel. No panel covering this programme sits as the Neonatal team
@@ -691,7 +690,7 @@ Expect: The list offers him New panel and an Edit on the panel. The form's Scope
   sub-speciality administrator creates Speciality-scoped panels for the speciality of the sub-speciality.": a
   sub-speciality administrator manages the Speciality-scoped panels of his sub-speciality's speciality (T194, T245).
   Speciality offers Paediatrics. There is no Decides for field. Cancel returns to Decision panels; nothing is created.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): The list offered him New panel and "Edit Paed Annual Review
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): The list offered him New panel and "Edit Paed Annual Review
   Panel". The form's Scope read "Speciality" as text with "A sub-speciality administrator creates Speciality-scoped
   panels for the speciality of the sub-speciality." (no radios); Speciality offered Paediatrics; no Decides for
   field. Cancel returned to Decision panels; still one panel.
@@ -714,16 +713,16 @@ Expect: His is the only row left. Its Delivery reads "Not delivered", with the w
   Kgosi Kgari Teaching Hospital."
 Note: This needs the log sender (see Mail). Against a mail server that accepted the first email, the row reads "Sent"
   and offers no Resend. The resend is 2 presses: Resend and Copy link.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Played over an hour after Step 2.16 (du Plessis's invitation
-  issued 19:49 SAST; Resend pressed 20:51); the hour was waited in short background waits, Step 2.36 played
-  meanwhile. His row alone: Delivery "Not delivered" with the warning icon, a note row under it "Resend emails a new
-  link in place of the current one, which then stops working."; Resend (named "Resend the Trainee invitation to
-  duplessis@kgk.wombat.local", described by the note) before Revoke…. Afterwards the result, focused: "A new
-  invitation link is being emailed to duplessis@kgk.wombat.local. The link it replaces no longer works. Copy the new
-  link below — it is shown only once.", the link with Copy link ("Link copied.") and "It works until 2026-11-09. It
-  is shown here until your next action, then never again.". The row: Issued 2026-10-26 over 20:51 SAST, no Resent
-  mark, Last day 2026-11-09, "Being sent", no note row, only Revoke…. One more stub (19 in all, 18 invitations), "…
-  as Trainee in Paediatrics / Paediatrics at Kgosi Kgari Teaching Hospital.".
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Played over an hour after Step 2.16 (du Plessis's invitation
+  issued 20:12 SAST; Resend pressed 21:15); the hour was waited in short background waits of about five minutes, Step
+  2.36 played meanwhile. His row alone: Delivery "Not delivered" with the warning icon, a note row under it "Resend
+  emails a new link in place of the current one, which then stops working."; Resend (named "Resend the Trainee
+  invitation to duplessis@kgk.wombat.local", described by the note) before Revoke…. Afterwards the result, focused:
+  "A new invitation link is being emailed to duplessis@kgk.wombat.local. The link it replaces no longer works. Copy
+  the new link below — it is shown only once.", the link with Copy link ("Link copied.") and "It works until
+  2026-11-10. It is shown here until your next action, then never again.". The row: Issued 2026-10-27 over 21:15
+  SAST, no Resent mark, Last day 2026-11-10, "Being sent", no note row, only Revoke…. One more stub (18 invitation
+  stubs in all), "… as Trainee in Paediatrics / Paediatrics at Kgosi Kgari Teaching Hospital.".
 Gap: none
 
 ### Step 2.27 — Dr du Plessis registers from the new link
@@ -737,7 +736,7 @@ Expect: The first link reads "Invitation link not recognised" (its tab too): "Th
   Trainee in Paediatrics / Paediatrics at Kgosi Kgari Teaching Hospital.", registers him and lands on Home, "Pending
   trainee · Semester N, YYYY", with Step 2.18's Awaiting admission card. Signing out lands on the sign-in page with
   "You have signed out."
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): The first link (through the start link, no token in the
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): The first link (through the start link, no token in the
   address): "Invitation link not recognised" (its tab too), "This invitation is invalid." and the sentence as quoted;
   no form. The resent link read "This invitation is for duplessis@kgk.wombat.local, as Trainee in Paediatrics /
   Paediatrics at Kgosi Kgari Teaching Hospital.", registered him and landed on Home, "Pending trainee · Semester 2,
@@ -767,27 +766,31 @@ Expect: Home reads, above its cards, "**5 registrars are waiting to be admitted.
     account is not listed. Nothing can be filed about them until they are admitted.": Dlamini, du Plessis, Mahlangu,
     Molefe and Ndlovu, each with Email, Invited as "Paediatrics / Paediatrics", Registered `D` and an outline Admit…
     named "Admit ‹name›". There is no Institution column: her list is KGK's.
-  - "Current trainees": "No current trainees" / "A registrar appears here once admitted." There is no Completed and
-    closed section.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Home: above its cards, "5 registrars are waiting to be
+  - "Current trainees": "No current trainees" / "A registrar appears here once admitted."
+  - "Completed and closed", empty: "No programme has ended yet." over "A trainee is listed here once their programme is
+    marked complete or a withdrawal is recorded, on their programme's page."
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Home: above its cards, "5 registrars are waiting to be
   admitted. Nothing can be filed about them until then." (first sentence bold) with Open Trainees: an alert-info
   block with no role or live region, so a standing line, not announced. People: Institutional admin 1, Speciality
   admin 1, Sub-speciality admin 1, Coordinator 1, Committee member 4, Assessor 5 and Pending trainee 5, each count a
   link to /admin/users?role=…, "15 accounts." and Open Users. Active invitations: "No active invitations". Users:
   "People 15", the five registrars' Roles "Pending trainee" and Scope Paediatrics / Paediatrics. Molefe's page: Roles
   and scope lists Pending trainee, then "System-managed: waiting to be admitted." with Open Trainees, and no Remove…;
-  the label and the note are two block elements (innerText has them on separate lines; textContent has no space
-  between them, but they display apart). Add a role… (Institutional admin's radio focused) offers Institutional
-  admin, Speciality admin, Sub-speciality admin, Coordinator, Committee member and Assessor, each with its
-  description, and "Trainee is not offered: a registrar becomes a trainee only when admitted, from Trainees with
-  'Admit…'."; Cancel closed it, gave the focus back to Add a role… and added nothing. Home's Open Trainees: Trainees
-  reads "Admit registrars who are waiting, and keep current trainees' programmes."; "Waiting to be admitted" "5
-  waiting", captioned "Registered from a Trainee invitation, by surname. A deactivated account is not listed. Nothing
-  can be filed about them until they are admitted.": Dlamini, du Plessis, Mahlangu, Molefe and Ndlovu, each Email,
-  Invited as "Paediatrics / Paediatrics", Registered 2026-10-26 and an outline Admit… named "Admit ‹name›"; no
-  Institution column. "Current trainees": "No current trainees" / "A registrar appears here once admitted."; no
-  Completed and closed section.
-Gap: none (T323 no longer occurs: the label and the note are apart; F-2.28b is closed)
+  the label and the note are two spans in one list item (innerText has them on separate lines; textContent has no
+  space between them). Add a role… (Institutional admin's radio focused) offers Institutional admin, Speciality
+  admin, Sub-speciality admin, Coordinator, Committee member and Assessor, each with its description, and "Trainee is
+  not offered: a registrar becomes a trainee only when admitted, from Trainees with 'Admit…'."; Cancel closed it,
+  gave the focus back to Add a role… and added nothing. Home's Open Trainees: Trainees reads "Admit registrars who
+  are waiting, and keep current trainees' programmes."; "Waiting to be admitted" "5 waiting", captioned "Registered
+  from a Trainee invitation, by surname. A deactivated account is not listed. Nothing can be filed about them until
+  they are admitted.": Dlamini, du Plessis, Mahlangu, Molefe and Ndlovu, each Email, Invited as "Paediatrics /
+  Paediatrics", Registered 2026-10-27 and an outline Admit… named "Admit ‹name›"; no Institution column. "Current
+  trainees": "No current trainees" / "A registrar appears here once admitted.". There IS a "Completed and closed"
+  section, empty: "No programme has ended yet." over "A trainee is listed here once their programme is marked
+  complete or a withdrawal is recorded, on their programme's page." (flow 13, AdmissionText.NoneEnded; states.md
+  already says so).
+Gap: none (the Expect's stale "no Completed and closed section" corrected by the integrator during the T379 replay;
+  T323 no longer occurs: the label and the note are apart)
 
 ### Step 2.29 — Mbatha admits four registrars
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -824,25 +827,25 @@ Expect:
     have been signed out once: sign in again to log activities and follow your progress.", with the sign-in link.
 Note: Admission into a version KGK has not adopted is refused (T091); the page offers none. One admission from
   Trainees is 2 presses and 2 fields: Admit… and Admit ‹name›; the start and the completion.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): "Admit Lerato Molefe" (its tab too), Home › Trainees › Admit
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): "Admit Lerato Molefe" (its tab too), Home › Trainees › Admit
   Lerato Molefe, Trainees lit, "Admit a registrar who is waiting into the institution's curriculum."; Who is being
-  admitted: Email, Institution KGK, Invited as "Paediatrics / Paediatrics", Registered 2026-10-26. Programme: "*
+  admitted: Email, Institution KGK, Invited as "Paediatrics / Paediatrics", Registered 2026-10-27. Programme: "*
   marks a field you must fill in."; Curriculum read out, "Paediatric EPA Curriculum (11.1)" with "Adopted at Kgosi
   Kgari Teaching Hospital for Paediatrics / Paediatrics, the invited sub-speciality."; Programme start * pre-filled
-  2026-10-26 with the output "Training year 1", "Training year 4" once 2023-01-15 was entered, and the 365-day
-  sentence counted to 2026-10-26. Completion help at today's start: "… Left empty, it will be 2027-10-26."; at
+  2026-10-27 with the output "Training year 1", "Training year 4" once 2023-01-15 was entered, and the 365-day
+  sentence counted to 2026-10-27. Completion help at today's start: "… Left empty, it will be 2027-10-27."; at
   Molefe's start "Left empty, it would be 2024-01-15, which has passed. Enter the expected completion." (Dlamini
   2025-01-15 and du Plessis 2026-01-15 also "has passed"; Mahlangu "Left empty, it will be 2027-01-15."). "When you
   admit:" the three sentences as quoted (year 4), Cancel and "Admit Lerato Molefe"; at 390 px both 44 px tall, no
-  sideways scroll. Each admission landed on /admin/trainees?admitted=<id> with, focused, under the Waiting heading,
-  "Lerato Molefe admitted to the Paediatric EPA Curriculum (11.1), training year 4, from 2023-01-15." (Dlamini year 3
-  from 2024-01-15, du Plessis 2 from 2025-01-15, Mahlangu 1 from 2026-01-15); "4 waiting" with Dlamini first. After
-  four: "1 waiting", "4 current" with the caption as quoted, each "Paediatric EPA Curriculum (11.1)" over
-  "Paediatrics", start over "Training year N" (Dlamini 3, du Plessis 2, Mahlangu 1, Molefe 4), completions
-  2028-01-14, 2029-01-14, 2030-01-14, 2027-01-14, Edit "Edit <name>'s profile". At 901, 1000, 1100 and 390 px no
-  sideways scroll and no word split mid-word. Four stubs "You are admitted in Wombat" (tags: trainee, admitted), "You
-  have been admitted to the Paediatric EPA Curriculum (11.1), in training year 4." (3, 2, 1) and the signed-out
-  sentence, with the sign-in link.
+  sideways scroll. Each admission (21:16 SAST) landed on /admin/trainees?admitted=<id> with, focused, under the
+  Waiting heading, "Lerato Molefe admitted to the Paediatric EPA Curriculum (11.1), training year 4, from
+  2023-01-15." (Dlamini year 3 from 2024-01-15, du Plessis 2 from 2025-01-15, Mahlangu 1 from 2026-01-15); "4
+  waiting" with Dlamini first. After four: "1 waiting", "4 current" with the caption as quoted, each "Paediatric EPA
+  Curriculum (11.1)" over "Paediatrics", start over "Training year N" (Dlamini 3, du Plessis 2, Mahlangu 1, Molefe
+  4), completions 2028-01-14, 2029-01-14, 2030-01-14, 2027-01-14, Edit "Edit <name>'s profile"; Completed and closed
+  below, empty. At 901, 1000, 1100 and 390 px no sideways scroll and no word split mid-word. Four stubs "You are
+  admitted in Wombat" (tags: trainee, admitted), "You have been admitted to the Paediatric EPA Curriculum (11.1), in
+  training year 4." (3, 2, 1) and the signed-out sentence, with the sign-in link.
 Gap: none
 
 ### Step 2.30 — Dr Ndlovu's completion date is derived, then corrected
@@ -860,13 +863,19 @@ Expect: With start `J` and the completion empty, its help reads "Leave this empt
   and Current trainees shows `J+4y−1d`.
 Note: A 12-month window for a four-year programme is T139's open College question. Admitting with the completion empty
   is 2 presses and 1 field.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Start 2026-01-15, completion empty: "Leave this empty to
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Start 2026-01-15, completion empty: "Leave this empty to
   derive it from the curriculum window. Left empty, it will be 2027-01-15." Admitted: "Sipho Ndlovu admitted to the
   Paediatric EPA Curriculum (11.1), training year 1, from 2026-01-15. Expected completion 2027-01-15, derived from
   the curriculum window: change it under Edit." (focused), and Waiting "Nobody is waiting to be admitted." / "A
   registrar appears here after registering from a Trainee invitation.". Edit Sipho Ndlovu's profile
-  (/admin/trainees/edit?id=6): completion 2027-01-15 set to 2030-01-14, Save profile: "Trainee profile saved."
-  (focused); Current trainees shows 2030-01-14. The fifth admission stub came (24 stubs in all).
+  (/admin/trainees/edit?id=6): the tab, h1 and crumb (Home › Trainees ›) read "Sipho Ndlovu's programme" (the focus
+  on the h1), subtitle "Update curriculum and completion details for this trainee.", "Export Sipho Ndlovu's
+  portfolio" (a link to /portfolio/export/{his user id}, 36 px, 44 at 390) in the header's actions; Status "Active",
+  Email; Profile details (Curriculum, Programme start date, Expected completion date with its help, Cancel and Save
+  profile); End this programme below it (Last day in the programme *, Mark complete…, Deactivate…); no Back to
+  trainees. Completion 2027-01-15 set to 2030-01-14, Save profile: "Trainee profile saved." (focused); Current
+  trainees shows 2030-01-14. The fifth admission stub came (23 stubs in all). At 390: no sideways scroll, Export,
+  Cancel, Save profile, Mark complete… and Deactivate… 44 px.
 Gap: none
 
 ### Step 2.31 — Dr Mahlangu's open session ends, and she signs back in as a Trainee
@@ -877,8 +886,8 @@ Expect: Within a minute of her admission the tab moves to the sign-in page, whic
   again.", an information notice; the focus is on Email (no institution buttons on dev). Admission changes her role,
   and a role change ends open sessions (T279). Signed in again, she sees
   "Trainee · Semester N, YYYY" under Home's heading and the trainee dashboard of Step 2.39.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Her real 2.18 tab, held open by a background browser from
-  19:51 SAST. Admitted at 20:53:09 (her admission), it moved at 20:53:58 to
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Her real 2.18 tab, held open by a background browser from
+  20:13 SAST. Admitted at 21:16:36 (her admission), it moved at 21:17:25 to
   /account/login?error=SessionEnded&returnUrl=%2F: "Your session has ended. Sign in again." as an information notice
   (alert-info), the focus on Email. Signed in again: Home, "Trainee · Semester 2, 2026" with the trainee dashboard
   (Your targets "Training year 1 — …"); the sidebar adds Log an activity, My activities, MSF reports, My committee
@@ -907,7 +916,7 @@ Expect: Home reads "Coordinator · Semester N, YYYY", with the header action "St
   T335). Decision panels lists the panel (Scope "Speciality · Paediatrics", its four members by name) with no New
   panel and no Edit column, and Decision panels is lit there (T358, C10). The panel form reads "You cannot open this
   page" in the same words: the Coordinator reads panels, and edits none (D4).
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Home, "Coordinator · Semester 2, 2026", header action "Start
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Home, "Coordinator · Semester 2, 2026", header action "Start
   an MSF campaign" (/msf/campaigns/new), no Quick action card. Cards in order: "Waiting for assessors", no badge,
   "Nothing is waiting for an assessor.", Open Waiting for assessors; "Nothing filed in 30 days", the rule line as
   quoted, "Every current registrar has filed something in the last 30 days.", Open in Programme trainees;
@@ -937,7 +946,7 @@ Expect: Home reads "Committee member · Semester N, YYYY" under its heading. The
     met in YYYY" (T130's count, never a percentage). It has no foot.
   The menu is the Committee member's alone, never the union of Dr Zulu's roles: Home, Programme trainees, Committee
   reviews and Decision panels, then My data rights.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Home, "Committee member · Semester 2, 2026"; the sidebar
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Home, "Committee member · Semester 2, 2026"; the sidebar
   "Acting as Committee member" with "Switch to Assessor", over Home, Programme trainees, Committee reviews and
   Decision panels, then My data rights. "Registrars", badged "5 registrars", "Fewest met first, then by surname.":
   Anele Dlamini, Pieter du Plessis, Nomsa Mahlangu, Lerato Molefe, Sipho Ndlovu, each a link to
@@ -965,7 +974,7 @@ Expect: Under the header an info alert reads "You are now acting as Assessor." a
   is never shown or stored. Switch to Committee member brings back the Committee member's sidebar and menu, "Committee
   member · Semester N, YYYY" under Home's heading, and the alert "You are now acting as Committee member.", the
   role Step 3.33 starts from.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Switch to Assessor: Home, "Assessor · Semester 2, 2026", "You
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Switch to Assessor: Home, "Assessor · Semester 2, 2026", "You
   are now acting as Assessor." with the focus, no Switch back; the sidebar "Acting as Assessor" / "Switch to
   Committee member" over Home and Activity inbox, then My data rights; "Waiting for you" with no badge, "Nothing is
   waiting for you.", "Open Activity inbox", and Recent decisions "No decisions yet." with no "All your decisions".
@@ -982,7 +991,7 @@ Do: Each signs in, reads the dashboard and opens Decision panels.
 Expect: Dr Naidoo and Dr Botha each see what Dr Zulu saw in Step 2.33: the same menu, the five registrars on Registrars
   in its order, and "0 of 5" for every EPA on Targets by EPA. Decision panels lists the panel both sit on, Scope
   "Speciality · Paediatrics" and its four members by name, with no New panel and no Edit.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Each: Home, "Committee member · Semester 2, 2026", "Acting as
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Each: Home, "Committee member · Semester 2, 2026", "Acting as
   Committee member" with "Switch to Assessor", Zulu's menu, Registrars badged "5 registrars" in Zulu's order at "0 of
   10" / "0 of 5", and Targets by EPA PAED-001 to 015 each "0 of 5". Decision panels (lit) lists Paed Annual Review
   Panel (Speciality · Paediatrics, General panel, "4: Thandi Zulu (chair), Sarah Botha, David Naidoo, John van
@@ -997,7 +1006,7 @@ Expect: Each sees "Assessor · Semester N, YYYY" on Home, and the empty Assessor
   you" with no badge and no "0", "Nothing is waiting for you.", "Open Activity inbox"; Recent decisions, "No decisions
   yet." (T350). The sidebar reads "Acting as Assessor" with no switch, over Home and Activity inbox, then My data
   rights.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Played during the wait for Step 2.26. Each: Home, "Assessor ·
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Played during the wait for Step 2.26. Each: Home, "Assessor ·
   Semester 2, 2026"; the sidebar "Acting as Assessor" with no switch, over Home and Activity inbox, then My data
   rights; "Waiting for you" with no badge and no "0", "Nothing is waiting for you.", "Open Activity inbox"; Recent
   decisions "No decisions yet.".
@@ -1019,7 +1028,7 @@ Note: Zulu, Naidoo and Botha hold the Paediatrics sub-speciality only because St
   may carry none (Step 2.3). So a committee member with no sub-speciality saw no trainee here, although he sits on the
   panel and may read every KGK trainee's record (T113). Fixed by T290 (2026-10-05): the card no longer reads
   sub-speciality claims.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Home, "Committee member · Semester 2, 2026", "Acting as
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Home, "Committee member · Semester 2, 2026", "Acting as
   Committee member" with no switch, over Home, Programme trainees, Committee reviews and Decision panels, then My
   data rights. "Registrars", badged "5 registrars", lists the five in Step 2.33's order, each "0 of 10" / "0 of 5";
   Targets by EPA PAED-001 to 015 each "0 of 5". Decision panels (lit) lists the panel with "John van Rensburg
@@ -1037,7 +1046,7 @@ Expect: Each sees "Speciality admin · Semester N, YYYY" or "Sub-speciality admi
   Trainees in programme and no "inactive" anywhere (Q10). The sidebar reads "Acting as Speciality admin" or "Acting as
   Sub-speciality admin", over Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews,
   Decision panels and Entrustment decisions, then My data rights.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Mokoena "Speciality admin · Semester 2, 2026", Sithole
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Mokoena "Speciality admin · Semester 2, 2026", Sithole
   "Sub-speciality admin · Semester 2, 2026". Each: "Waiting for assessors", no badge, "Nothing is waiting for an
   assessor.", Open Waiting for assessors; "Registrars", badged "5 registrars", the five in Step 2.33's order, Open
   Programme trainees; "Targets by EPA" PAED-001 to 015 each "0 of 5". No Pending reviews, no Trainees in programme,
@@ -1065,7 +1074,7 @@ Expect: Home's first card, Your targets, reads "Training year 4 — it sets the 
   "Multi-source feedback: 0 of 15 EPAs covered by a released campaign that closed this semester. …". Your EPAs lists
   "Each semester · 10 EPAs" and "Once a year · 5 EPAs", every count 0 and every STAR "No decision"; Entrustment against
   Annexure A reads "0 at or above · 0 below · 15 with no decision, of 15 EPAs".
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Home, "Trainee · Semester 2, 2026", header action "Log an
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Home, "Trainee · Semester 2, 2026", header action "Log an
   activity". Your targets: "Training year 4 — it sets the minimum level each encounter is judged against.", "0 of 10"
   over "EPAs met this semester", "0 of 5" over "EPAs met in 2026"; Furthest short PAED-001 to 005, each a link to
   /portfolio/progress/{EpaId} (2 to 6) with "0 of 3 this semester · 3 more by 2026-11-30", no part-way line; Open My
@@ -1089,7 +1098,7 @@ Expect: Each dashboard has Molefe's shape and figures, with its own training yea
   STAR yet. When the committee issues one, it shows here against training year N's level.", and My progress's subtitle
   reads "Training year N · Semester 2, 2026". N is 3 for Dlamini, 2 for du Plessis and 1 for Mahlangu and Ndlovu. Their
   semester and yearly targets apply now: a start on 15 January is on time for both (D42).
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Each dashboard has Molefe's shape and figures ("0 of 10", "0
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Each dashboard has Molefe's shape and figures ("0 of 10", "0
   of 5", no part-way line, the same Needs you card), with its own year: Your targets "Training year N — it sets the
   minimum level each encounter is judged against.", My authorisations "… against training year N's level.", and My
   progress "Training year N · Semester 2, 2026": N = 3 (Dlamini), 2 (du Plessis), 1 (Mahlangu), 1 (Ndlovu). Each
@@ -1106,7 +1115,7 @@ Expect: The page reads "My account" and "Your name, your roles, and how you sign
   "Assessor" for Zulu, Naidoo and Botha; "Trainee" for the registrars). How you sign in shows Password with Change
   password. Khumalo's Save name reloads the page with "Name saved." in the Your name card, which takes the focus, and
   the top bar's account row now reads "Fatima Khumalo" (the lists are checked on Mbatha's in Step 2.44).
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): All 14 opened My account from the top bar's name
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): All 14 opened My account from the top bar's name
   (aria-current page): "My account" and "Your name, your roles, and how you sign in."; the Account card shows the
   email as text (no input), Kgosi Kgari Teaching Hospital and the roles by label, one per line: "Committee member"
   and "Assessor" for Zulu, Naidoo and Botha, "Trainee" for the five registrars, and each other's one label; How you
@@ -1132,7 +1141,7 @@ Expect: The page is headed "Log an activity", with "Choose what you are filing. 
     Session Log`.
   Multi-Source Feedback and Learner Feedback (Paediatrics) are not offered, because only the system writes them (T162,
   T164). Nor are the Demo types, which belong to another discipline.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Headed "Log an activity" with "Choose what you are filing.
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Headed "Log an activity" with "Choose what you are filing.
   Each opens its own form."; eleven links, no name twice, in three groups: "Rated by an assessor" "7 types" with the
   quoted sentence and the seven, each "(Paediatrics)"; "Discussed or reviewed, not rated" "3 types" with its sentence
   and the three; "Logged by you" "1 type" with its sentence and KGK Teaching Session Log. Each link opened
@@ -1152,7 +1161,7 @@ Expect: The Mini-CEX (Paediatrics) form opens at once, its name under the headin
   Annexure A list names the Mini-CEX: PAED-001, 002, 003, 004, 006, 007, 008, 012 and 013 (T122). The Assessor picker
   offers exactly Botha, Khumalo, Naidoo, Patel and Zulu, each with their email. It does not offer van Rensburg, Molefe
   herself or any Demo account (T102). Nothing is saved.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): The Mini-CEX form opened at once, subtitled "Mini-CEX
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): The Mini-CEX form opened at once, subtitled "Mini-CEX
   (Paediatrics) · Choose another type". Request open ("You fill this in"); Entrustment (the ladder) and Feedback each
   read "The assessor you name fills this in" and "Not filled in yet.". Above the actions, "When you submit: it goes
   to the Activity inbox of the assessor you name, and stays Requested until that assessor acts on it."; Submit, then
@@ -1181,7 +1190,7 @@ Expect: Home reads "Institutional admin · Semester N, YYYY" and offers "Invite 
   Assessor". The users and assessors lists both name Fatima Khumalo (Step 2.41).
 Note: Until T376 (flow 12) the card was Specialities & sub-specialities, which counted the whole national catalogue
   (2 and 2 with the Demo world, T291 item 4, F-2.44a), beside Users by role key and four Quick links.
-Actual (2026-10-26, T376 replay, wombat_scenario_t376): Home, "Institutional admin · Semester 2, 2026", header action
+Actual (2026-10-27, T379 replay, wombat_scenario_t379): Home, "Institutional admin · Semester 2, 2026", header action
   "Invite a person", which opened /admin/invitations/new (Invite a person · Wombat), not the list. No waiting line
   (nobody waits). Three cards and no Quick links: People (Institutional admin 1, Speciality admin 1, Sub-speciality
   admin 1, Coordinator 1, Committee member 4, Assessor 5 and Trainee 5, each count a link to /admin/users?role=…, no
@@ -1192,16 +1201,16 @@ Actual (2026-10-26, T376 replay, wombat_scenario_t376): Home, "Institutional adm
   /admin/users?role=Assessor: "People 5 of 15 hold Assessor", the Role filter reading Assessor. Users (15) and
   Assessors (5) both name Fatima Khumalo. Her menu lists Entrustment decisions under Reviews and Home has no Quick
   link for it. At 390 Home does not scroll sideways.
-Gap: none (F-2.44a, T291 item 4 no longer occurs: the Curriculum card reads KGK's adopted 1 and 1; Users by role key
+Gap: none (F-2.44a, T291 item 4 no longer occur: the Curriculum card reads KGK's adopted 1 and 1; Users by role key
   and the Quick links are gone)
 
 ## Act 2 outcome state
 
-Replay check (2026-10-26, T376 replay, wombat_scenario_t376): all 7 queries as expected: 15 users with the roles
+Replay check (2026-10-27, T379 replay, wombat_scenario_t379): all 7 queries as expected: 15 users with the roles
 listed; scopes mbatha, smit, vanrensburg 0 | 0, mokoena 1 | 0, the other eleven 1 | 1; five profiles active and pinned,
-J-3y to J with the completion dates of Steps 2.29-2.30; assessor dates D-8y, D-6y and D-1 month from 2026-10-26; the
+J-3y to J with the completion dates of Steps 2.29-2.30; assessor dates D-8y, D-6y and D-1 month from 2026-10-27; the
 panel 1 zulu, 2 botha, 2 naidoo, 3 vanrensburg, Scope 2, no DecisionBodyKey; invitations 15 | 1 | 0; activities and
-reviews 0 | 0. The log holds 24 stubs: 18 invitations (Act 1's two among them), 5 admissions and Act 1's weekly digest.
+reviews 0 | 0. The log holds 23 stubs: 18 invitations (Act 1's two among them) and 5 admissions.
 
 - **15 KGK users:** Mbatha (InstitutionalAdmin); Smit (Coordinator); Zulu, Naidoo and Botha (CommitteeMember and
   Assessor); Patel and Khumalo (Assessor); van Rensburg (CommitteeMember); Mokoena (SpecialityAdmin); Sithole
