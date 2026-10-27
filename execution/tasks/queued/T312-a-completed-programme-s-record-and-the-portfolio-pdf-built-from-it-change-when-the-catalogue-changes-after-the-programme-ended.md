@@ -63,3 +63,11 @@ Decide, then build. **Recommendation:** freeze an ended programme's EPA list and
 ## Related
 
 T252 (the ended view; DESIGN 'as on its last day'), T158 (in force on every progress page), T196 and D48 (a pause pauses credit, it does not cancel it), T255 ('(no longer in use)'), T169 (the PDF's per-EPA section), T209/D49 (the end marker), T281 (no credit after the last day), T242 (national and local item overlap). Runbook Steps 5.20, 6.14, 6.21, 6.40 and 6.41. Findings F-6.21a and F-6.40a.
+
+## Notes
+
+- **2026-10-27, scope grown by flow 13 (T379, F3; the operator's decision).** T312 lands before flow 13's build (Q10)
+  and also covers the ended EPA page and the ended record card as round 2 draws them (boards R2-R05, R2-R06, R2-P18 in
+  `design/flows/13-graduation-and-exit/round-2/`; `round-2-review.md` M3, code review K3): no "credited if restored"
+  alert on an ended record, its ended lines, and the STAR and Open My authorisations shown for a paused EPA as it stood
+  at the end.
