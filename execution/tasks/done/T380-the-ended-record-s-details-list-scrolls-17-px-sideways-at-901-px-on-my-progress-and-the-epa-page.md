@@ -1,11 +1,14 @@
 ---
 id: T380
 title: The ended record's details list scrolls 17 px sideways at 901 px on My progress and the EPA page
-status: proposed
-priority:
+status: done
+priority: P2
 owner: agent
 depends_on: []
 created: 2026-10-27
+promoted: 2026-10-28
+started: 2026-10-28
+completed: 2026-10-28
 ---
 
 # T380 — The ended record's details list scrolls 17 px sideways at 901 px
@@ -41,10 +44,14 @@ or shrink so nothing scrolls sideways.
 
 ## Verification
 
-- [ ] Nothing scrolls sideways at 901, 1000 and 1100 px on My progress and an EPA page — a browser measurement.
+- [x] Nothing scrolls sideways at 901, 1000 and 1100 px on My progress and an EPA page — a browser measurement.
 
 ## Related
 
 T379 (flow 13), flow 05 (T355), `design/flows/13-graduation-and-exit/round-3/project/R3-0-spec-3.dc.html`.
 
 ## Notes
+- **2026-10-28, closed on the operator's word** ("close T380, T311 and T313"). Fixed in T379: § 0's `.details-list`
+  value column `minmax(0, 1fr)` (cut it from 17 to 9px), then step 8's stacking rule in the narrow column from 901 to
+  1099px (`73baa556`). Browser-checked on the replay: 0px sideways on all 15 of Lerato Molefe's EPA pages at 901, 905,
+  915, 940, 1000 and 1100; the appendix's and states' My progress at 901–1100 also 0px.

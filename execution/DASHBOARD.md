@@ -8,8 +8,6 @@ Queued tasks that wait on another are listed after the ready ones.
 |---|---|---|---|---|---|
 | blocked | [T128](tasks/blocked/T128-off-host-backup-destination.md) | P1 | The nightly backup is encrypted-capable but has nowhere to go, so it s |  |  |
 | queued | [T157](tasks/queued/T157-production-runs-the-16-september-build-none-of-t098-t149-is-deployed-so-the-epa-catalogue-does-not-exist-there.md) | P1 | Production runs the 16 September build: none of T098–T149 is deployed, |  |  |
-| queued | [T311](tasks/queued/T311-a-graduate-is-told-she-has-no-role-and-loses-her-star-certificates-and-her-export-link-and-the-graduation-email-claims-a-committee-ratification-that-mark-complete-never-checked.md) | P2 | A graduate is told she has no role and loses her STAR certificates and |  |  |
-| queued | [T313](tasks/queued/T313-portfolio-verify-tells-a-verifier-that-a-genuine-wombat-pdf-was-not-produced-by-wombat-once-its-export-is-90-days-old-or-when-its-hash-is-typed-in-upper-case.md) | P2 | /portfolio/verify tells a verifier that a genuine Wombat PDF was not p |  |  |
 | queued | [T315](tasks/queued/T315-the-invitation-token-stays-in-account-register-s-address-bar-the-call-that-clears-it-runs-in-onafterrenderasync-which-a-signed-out-visitor-s-static-page-never-runs.md) | P2 | The invitation token stays in /account/register's address bar: the cal |  |  |
 | queued | [T316](tasks/queued/T316-an-approved-rectification-request-can-never-be-applied-or-completed-no-page-calls-applyrectification-or-completerectificationrequest-and-the-role-they-admit-cannot-open-the-queue.md) | P2 | An approved rectification request can never be applied or completed: n |  |  |
 | queued | [T319](tasks/queued/T319-revoking-a-star-and-deciding-a-data-rights-request-notify-nobody-though-both-pages-say-they-do-and-a-refused-requester-never-learns-why.md) | P2 | Revoking a STAR and deciding a data-rights request notify nobody, thou |  |  |
@@ -80,7 +78,7 @@ Queued tasks that wait on another are listed after the ready ones.
 | queued | [T359](tasks/queued/T359-staff-cannot-reassign-a-waiting-request-to-another-assessor.md) | P3 | Staff cannot reassign a waiting request to another assessor |  |  |
 | queued | [T360](tasks/queued/T360-programme-pages-last-filed-breaks-iso-dates-at-the-hyphen-and-the-ended-registrar-page-wraps-its-period-line-into-a-tall-block.md) | P3 | Programme pages: Last filed breaks ISO dates at the hyphen, and the en |  |  |
 
-Done: 132 task(s).
+Done: 135 task(s).
 
 ## Proposals
 
@@ -98,7 +96,6 @@ Not started until the user promotes one (`task promote`) or drops it.
 | [T375](tasks/proposed/T375-a-described-radio-s-row-is-44-px-tall-but-only-its-label-selects-it.md) | A described radio's row is 44 px tall but only its label selects it | 2026-10-20 |
 | [T377](tasks/proposed/T377-a-role-given-by-hand-is-not-recorded-as-manual-so-the-next-sso-sign-in-can-take-it-away.md) | A role given by hand is not recorded as manual, so the next SSO sign-i | 2026-10-23 |
 | [T378](tasks/proposed/T378-the-administrator-s-create-institution-form-refuses-with-plain-validationmessages-no-aria-describedby-no-focus.md) | The Administrator's Create institution form refuses with plain Validat | 2026-10-27 |
-| [T380](tasks/proposed/T380-the-ended-record-s-details-list-scrolls-17-px-sideways-at-901-px-on-my-progress-and-the-epa-page.md) | The ended record's details list scrolls 17 px sideways at 901 px on My | 2026-10-27 |
 | [T381](tasks/proposed/T381-changing-a-curriculum-item-s-epa-after-a-programme-ended-rewrites-the-closed-record.md) | Changing a curriculum item's EPA after a programme ended rewrites the  | 2026-10-27 |
 | [T382](tasks/proposed/T382-my-activities-says-an-undated-activity-was-observed-after-the-last-day.md) | My activities says an undated activity was observed after the last day | 2026-10-27 |
 | [T383](tasks/proposed/T383-msfpreviouslinktests-fails-between-sast-midnight-and-utc-midnight-it-reads-the-real-clock.md) | MsfPreviousLinkTests fails between SAST midnight and UTC midnight (it  | 2026-10-28 |
@@ -120,11 +117,11 @@ programme oversight (T358), 07 the review sitting (T361, D53), 08 the committee 
 ## Recent commits
 
 ```
+49f9347a chore(execution): HANDOFF, the scratch databases dropped (T379)
+d4277dc8 chore(execution): STATE within its cap (T379)
+bffe1816 chore(execution): T379 done, STATE and HANDOFF (T379)
 a1abba91 docs(design): the design system published with flow 13, version 37; flow 13's lessons in BRIEF § 11 (T379 steps 8, 9)
 2745418a docs(design): the re-sync's review findings, flow 13; the bundle carries the step 8 fix (T379 step 8)
-73baa556 fix(graduation): three page faults the re-sync found (T379 step 8)
-e8eeb12f docs(design): the design system re-synced to flow 13 as built (T379 step 8)
-c0801106 chore(execution): T379 step 7 done (T379)
 ```
 
 ## For the reviewer
@@ -136,7 +133,9 @@ No review closed yet; showing everything since 2026-10-14, the last 14 days. Old
 - T288 An InstitutionalAdmin can create an SSO group mapping that grants roles to another institution's users
 - T289 The assessor-profile form lets a trainee-admin move a panel chair, and lets an admin pull an Assessor from another institution
 - T290 Trainee-first and existence leftovers: completing your own profile, invitations, the Users commands' refusals, and two committee queries that read claims
+- T311 A graduate is told she has no role and loses her STAR certificates and her export link, and the graduation email claims a committee ratification that Mark complete never checked
 - T312 A completed programme's record, and the portfolio PDF built from it, change when the catalogue changes after the programme ended
+- T313 /portfolio/verify tells a verifier that a genuine Wombat PDF was not produced by Wombat once its export is 90 days old, or when its hash is typed in upper case
 - T333 SSO group mappings can grant or remove Trainee and PendingTrainee, round admission
 - T366 Flow 09, outcomes, STARs and appeals, has not been through the redesign loop
 - T367 A revoked STAR reaches its trainee: the revocation mail, and My authorisations reads revoked and expired STARs (T319's revocation half)
@@ -144,6 +143,7 @@ No review closed yet; showing everything since 2026-10-14, the last 14 days. Old
 - T373 Flow 11, onboarding, has not been through the redesign loop
 - T376 Flow 12, people admin, has not been through the redesign loop
 - T379 Flow 13, graduation and exit, has not been through the redesign loop
+- T380 The ended record's details list scrolls 17 px sideways at 901 px on My progress and the EPA page
 
 #### Decisions awaiting you (Proposed)
 
@@ -165,7 +165,6 @@ _None._
 - T375 A described radio's row is 44 px tall but only its label selects it (2026-10-20)
 - T377 A role given by hand is not recorded as manual, so the next SSO sign-in can take it away (2026-10-23)
 - T378 The Administrator's Create institution form refuses with plain ValidationMessages: no aria-describedby, no focus (2026-10-27)
-- T380 The ended record's details list scrolls 17 px sideways at 901 px on My progress and the EPA page (2026-10-27)
 - T381 Changing a curriculum item's EPA after a programme ended rewrites the closed record (2026-10-27)
 - T382 My activities says an undated activity was observed after the last day (2026-10-27)
 - T383 MsfPreviousLinkTests fails between SAST midnight and UTC midnight (it reads the real clock) (2026-10-28)
@@ -180,6 +179,9 @@ _Nothing flagged._
 #### Commits
 
 ```
+49f9347a chore(execution): HANDOFF, the scratch databases dropped (T379)
+d4277dc8 chore(execution): STATE within its cap (T379)
+bffe1816 chore(execution): T379 done, STATE and HANDOFF (T379)
 a1abba91 docs(design): the design system published with flow 13, version 37; flow 13's lessons in BRIEF § 11 (T379 steps 8, 9)
 2745418a docs(design): the re-sync's review findings, flow 13; the bundle carries the step 8 fix (T379 step 8)
 73baa556 fix(graduation): three page faults the re-sync found (T379 step 8)
@@ -207,8 +209,5 @@ c748a2a0 chore(execution): HANDOFF trimmed (T379)
 3443d894 chore(execution): HANDOFF and STATE, T312 landed, flow 13's build started (T379)
 c78baf5d chore(execution): T312 done; T381 proposed (T312, T379)
 c9d6fe13 feat(progress): an ended programme keeps the list it ended with (T312)
-ce806a38 chore(execution): T312 in progress, reviewed; the operator's B5 decision (T312)
-578710d8 chore(execution): T312 started before flow 13's build (T312, T379)
-bc3ade97 chore(execution): STATE lists the proposals (T379)
 ```
-_158 more; see `git log`._
+_161 more; see `git log`._

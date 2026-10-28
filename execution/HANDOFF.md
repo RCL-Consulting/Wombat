@@ -16,8 +16,7 @@ F1–F11, B5 option 1), "proceed" (T312), "yes" (the wave), "yes" (the replay). 
   trainee's review offered a dead-end export). States 64 rows; one left (`trainee-profile-edit--end-failed`).
 - **Re-sync:** design system **version 37**; three page faults found and fixed (`73baa556`, browser-checked).
 - **Lessons:** BRIEF § 11 "Flow 13". **T379 done.**
-- **For review:** T380 (the 901 px overflow) is fixed by `73baa556`; T311 and T313 describe what flow 13 closed (close
-  on the operator's word); the blue "until" at 390 (T385's note) needs a real phone. New proposals T381–T386.
+- **Closed on the operator's word:** T380, T311, T313 (flow 13 did their work). **For review:** the blue "until" at 390 (T385's note) needs a real phone. New proposals T381–T386.
 - **Next:** flow 14 (`design/flows/14-data-rights.md`) on the operator's word.
 
 ### Environment left

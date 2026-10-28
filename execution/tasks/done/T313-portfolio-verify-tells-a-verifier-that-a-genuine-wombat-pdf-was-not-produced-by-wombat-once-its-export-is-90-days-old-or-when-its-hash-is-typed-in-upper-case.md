@@ -1,11 +1,13 @@
 ---
 id: T313
 title: /portfolio/verify tells a verifier that a genuine Wombat PDF was not produced by Wombat once its export is 90 days old, or when its hash is typed in upper case
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-26
+started: 2026-10-28
+completed: 2026-10-28
 ---
 
 # T313 — /portfolio/verify tells a verifier that a genuine Wombat PDF was not produced by Wombat once its export is 90 days old, or when its hash is typed in upper case
@@ -41,12 +43,19 @@ created: 2026-09-26
 
 ## Verification
 
-- [ ] Application test: VerifyExportQuery returns a stored export for its hash in upper case, and with surrounding spaces.
-- [ ] Application test: with three exports of one hash inserted out of chronological order, the query returns the earliest, with the count 3 and the latest export time.
-- [ ] bUnit or application test: a 12-digit hex value and a non-hex value each get the format message, not 'No matching export found'.
-- [ ] Test: no registered IScheduledJob deletes PortfolioExport rows, and portfolio-export-cleanup is not in the registry. An export row dated 100 days ago still verifies.
-- [ ] Browser, replay Step 5.13 signed out. The upper-case hash reads 'Export verified', naming the first export (Step 5.9's) and 'exported 3 times'. Mr Smit's copy gets the same answer. Step A.2.9's /admin/jobs lists no portfolio-export-cleanup; give the runbook owner the new job list.
+- [x] Application test: VerifyExportQuery returns a stored export for its hash in upper case, and with surrounding spaces.
+- [x] Application test: with three exports of one hash inserted out of chronological order, the query returns the earliest, with the count 3 and the latest export time.
+- [x] bUnit or application test: a 12-digit hex value and a non-hex value each get the format message, not 'No matching export found'.
+- [x] Test: no registered IScheduledJob deletes PortfolioExport rows, and portfolio-export-cleanup is not in the registry. An export row dated 100 days ago still verifies.
+- [x] Browser, replay Step 5.13 signed out. The upper-case hash reads 'Export verified', naming the first export (Step 5.9's) and 'exported 3 times'. Mr Smit's copy gets the same answer. Step A.2.9's /admin/jobs lists no portfolio-export-cleanup; give the runbook owner the new job list.
 
 ## Related
 
 T023 (the verify page's purpose), T024 (what the cleanup job was meant to delete), T078 (identical exports), T181/T265 (the page's static shape), T287 (the placeholder), T026 (erasure). Runbook Steps 5.9-5.14, 5.23 and A.2.9. Findings F-5.13a and F-A.2.9a.
+
+## Notes
+- **2026-10-28, closed on the operator's word** ("close T380, T311 and T313"). Done by T379 (flow 13, lane V,
+  `5cc10c66`): Verify reads a hash in any case and with spaces (and drops zero-width characters), refuses what is not a
+  hash under the field, and the 90-day `PortfolioExportCleanupJob` is retired (migration
+  `T379_PortfolioExportCleanupRetired`), so a genuine PDF verifies whatever its age. Replayed: 5.13, 5.14, 5.23, A.7.12
+  (upper-case and spaced hashes verified; "Exported 3 times, the last on … SAST"); A.2.1 and A.2.9 list eight jobs.

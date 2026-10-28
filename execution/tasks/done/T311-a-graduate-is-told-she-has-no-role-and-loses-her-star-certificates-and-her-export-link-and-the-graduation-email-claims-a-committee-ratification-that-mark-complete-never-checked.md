@@ -1,11 +1,13 @@
 ---
 id: T311
 title: A graduate is told she has no role and loses her STAR certificates and her export link, and the graduation email claims a committee ratification that Mark complete never checked
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-26
+started: 2026-10-28
+completed: 2026-10-28
 ---
 
 # T311 — A graduate is told she has no role and loses her STAR certificates and her export link, and the graduation email claims a committee ratification that Mark complete never checked
@@ -56,13 +58,21 @@ Not in scope:
 
 ## Verification
 
-- [ ] bUnit: Home rendered for a principal with no role and the trainee_record claim shows the ended line and links to /portfolio/progress, /portfolio/authorisations and /portfolio/export, and no 'No role assigned'. With neither a role nor the claim, it still shows 'No role assigned'.
-- [ ] DashboardLinkAuthorizationTests: every link on the former-trainee card opens a page whose policy admits a claim-only holder.
-- [ ] NavMenuAuthorizationTests: a claim-only holder is offered My Progress and Export Portfolio and is admitted by /portfolio/progress, /portfolio/export and /portfolio/authorisations. A PendingTrainee without the claim is offered and admitted to none of them.
-- [ ] Application test: for a completed trainee holding no role, GetActiveDecisionsForTraineeQuery returns her decisions and DownloadEntrustmentCertificateCommand returns a certificate.
-- [ ] Unit test on GraduationEmail.Build: no 'ratified' sentence in either body, and both link to My progress.
-- [ ] Browser, replay Steps 5.17-5.23 and A.7.4 on a fresh scenario database. Home shows 'You completed your programme on …' with the three links. /portfolio/authorisations lists her 15 STARs and downloads one. Export Portfolio is in her menu. The Step 5.18 email reads the new text. Refresh the 5.21 and 5.22 screenshots and give the runbook owner the new Expects.
+- [x] bUnit: Home rendered for a principal with no role and the trainee_record claim shows the ended line and links to /portfolio/progress, /portfolio/authorisations and /portfolio/export, and no 'No role assigned'. With neither a role nor the claim, it still shows 'No role assigned'.
+- [x] DashboardLinkAuthorizationTests: every link on the former-trainee card opens a page whose policy admits a claim-only holder.
+- [x] NavMenuAuthorizationTests: a claim-only holder is offered My Progress and Export Portfolio and is admitted by /portfolio/progress, /portfolio/export and /portfolio/authorisations. A PendingTrainee without the claim is offered and admitted to none of them.
+- [x] Application test: for a completed trainee holding no role, GetActiveDecisionsForTraineeQuery returns her decisions and DownloadEntrustmentCertificateCommand returns a certificate.
+- [x] Unit test on GraduationEmail.Build: no 'ratified' sentence in either body, and both link to My progress.
+- [x] Browser, replay Steps 5.17-5.23 and A.7.4 on a fresh scenario database. Home shows 'You completed your programme on …' with the three links. /portfolio/authorisations lists her 15 STARs and downloads one. Export Portfolio is in her menu. The Step 5.18 email reads the new text. Refresh the 5.21 and 5.22 screenshots and give the runbook owner the new Expects.
 
 ## Related
 
 T252 (the claim, the TraineeOrFormerTrainee policy, 'Home says the same'), T080/T081 (graduation lifecycle), T166 (gating deferred; graduation behaviour is an operator decision), T082 (review types), T141 (the Trainee-only nav section), T261 (Home's per-role switch), DESIGN § The NavMenu and § Dashboard page. Runbook Steps 5.8, 5.17-5.23 and A.7.4. Findings F-5.21a, F-A.7.4a, F-5.22a and F-5.23a. F-5.22b (/activities/new) is not this task.
+
+## Notes
+- **2026-10-28, closed on the operator's word** ("close T380, T311 and T313"). Done by T379 (flow 13, `5cc10c66`):
+  a graduate's (and a withdrawn registrar's) Home is her record card, not "No role assigned"; her menu has My progress,
+  Export portfolio and My data rights; My authorisations admits a former trainee, so her STAR certificates download; the
+  graduation email no longer claims a ratification and links My progress. Replayed: 5.21, 5.22, 5.23, A.1.6, A.4.6,
+  A.7.4 (gaps closed "by T379"). Mark complete still checks no Graduate decision: the operator's Q13 (show the last
+  ratified decision on the end section, no gate), so that half is decided, not built.
