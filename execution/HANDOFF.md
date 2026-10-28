@@ -23,8 +23,8 @@ F1–F11, B5 option 1), "proceed" (T312), "yes" (the wave), "yes" (the replay). 
 ### Environment left
 
 - **The replay app on `:5180`** runs `wombat_scenario_t379` (the appendix's end state, with `73baa556`). Dumps
-  `recovery/scenario-t379-post-act{1..6,A}`, `-pre-a515-A`. Scratch DBs `wombat_scenario_t379_s515`, `_s10`, `_s11`,
-  `_s12`, `_s20`, `_s21`: drop on the operator's word. Old: `wombat_scenario_t376`, `_t373`, `_t369`.
+  `recovery/scenario-t379-post-act{1..6,A}`, `-pre-a515-A`. The six `_s*` scratch DBs were dropped on the operator's
+  word (2026-10-28). Old: `wombat_scenario_t376`, `_t373`, `_t369`.
 - Scratch `C:\Users\Renier\AppData\Local\Temp\claude\c--dev-Wombat\67ce8168-e9a2-4dd0-acb1-eab0ccee0868\scratchpad\g379`
   (act, states and step 8 scripts; `replay-pw.env`: never print it).
 - Branches `t312`, `t379*` and their worktrees kept.
