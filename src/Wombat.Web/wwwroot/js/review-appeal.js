@@ -14,8 +14,16 @@ export function count(textarea, counter, limit) {
     }
 
     textarea.dataset.counted = "true";
+    // Writes into Blazor's own text node: replacing it (textContent) leaves Blazor patching a detached node, so a box
+    // Blazor empties, after a submit, kept the old count (T387).
     const update = () => {
-        counter.textContent = `${limitFormat.format(textarea.value.length)} of ${limitFormat.format(limit)} characters`;
+        const words = `${limitFormat.format(textarea.value.length)} of ${limitFormat.format(limit)} characters`;
+        const node = counter.firstChild;
+        if (node && node.nodeType === Node.TEXT_NODE && !node.nextSibling) {
+            node.nodeValue = words;
+        } else {
+            counter.textContent = words;
+        }
     };
     textarea.addEventListener("input", update);
     update();
