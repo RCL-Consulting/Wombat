@@ -120,3 +120,11 @@ BRIEF § 6, § 8, § 11; CUSTOMIZATION.md § 5.
   controls at 390 none under 44 px and no sideways scroll at any width (not re-measured here). Unlisted: `h2#yr-h` lost
   its tabindex on the M boards; the build keeps it if the pager or a result focuses that heading. **Final. Steps 3–5
   done. Next: step 6, the build, on the operator's word.**
+- **2026-10-30, step 6, the plan and § 0** (one Opus planner, `t387` from `c47bc6e0`, worktree
+  `.claude/worktrees/agent-a0cbe10cd07555864`): `a9f28c08` boards-text, `eb4bded8` § 0, `7a155e37` build-lanes and
+  contracts. Six suites green in Release (Domain 836, Application 4214, Infrastructure 1035, Architecture 52, Web
+  4262, Integration 512). § 0: Q1/Q21 in `DataRightsAuthorization`, UnderReview removed, migration
+  `T387_DataRightsFlow14` (read here: drops TargetId and OptOutOfOptionalProcessing, AppliedOn required,
+  AppliedByUserId added, Status 1→0; `xmin` mapped with no DDL, as T121), the page DTOs, mails, F3's rewrite. Lanes D
+  (decide and erase), K (corrections and reads), M (My data rights), P (the staff pages), then W (runbook), two
+  Sonnet reviews, one fix pass. Ten PROPOSED items for the operator.

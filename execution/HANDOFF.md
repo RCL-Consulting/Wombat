@@ -19,9 +19,9 @@ The operator said "start flow 14". T387 created and started (P2), written from T
   should, 18 nits).
 - **F1–F10 taken as recommended**; T388, T389 proposed. `round-3-ask.txt` written (`0c6f3882`, ~148 boards).
 - **Round 3 final** (149 boards `d47ab4ea`; check `10d92875`: 59/61 done, 2 partly, 0 regressed).
-- **Pushed** master through `c47bc6e0` (the operator's "yes"). **Step 6 started:** one Opus planner in a worktree on
-  branch `t387` writes `build-lanes.md`, `build-contracts.md`, `round-3/boards-text.md` and § 0, six suites in Release.
-- **Next:** the plan and its PROPOSED words to the operator, then the wave on their word.
+- **Pushed** master through `c47bc6e0` (the operator's "yes"). **Step 6 started:** § 0 and the plan on `t387` (`7a155e37`;
+  worktree `.claude/worktrees/agent-a0cbe10cd07555864`), six suites green in Release.
+- **Next:** the operator approves the ten PROPOSED items and the wave (lanes D, K, M, P, then W).
 
 ## Session 2026-10-27/28 (Opus): T379, flow 13 (graduation and exit), done; T312 before it
 
