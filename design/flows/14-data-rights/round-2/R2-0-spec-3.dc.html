@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Spec, round 2, part 3</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:var(--font-body);color:var(--text-color);background:var(--surface-color)}
+.sb{box-sizing:border-box;padding:48px;display:flex;flex-direction:column;gap:28px;font-size:15px;line-height:1.45}
+.sb h1{margin:0;font-family:var(--font-display);font-size:38px;color:var(--primary-color)}
+.sb h2{margin:0 0 10px;font-size:21px;color:var(--primary-color);border-bottom:2px solid var(--secondary-color);padding-bottom:4px}
+.sb p{margin:0 0 8px}.sb ul{margin:0;padding-left:20px}.sb li{margin-bottom:4px}
+.sb table{width:100%;border-collapse:collapse;font-size:13.5px;table-layout:fixed}
+.sb th,.sb td{border:1px solid var(--border-color);padding:5px 7px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+.sb thead th{background:var(--header-bg)}
+.sb code{font-family:var(--font-mono);font-size:12.5px}
+.k{display:inline-block;padding:0 5px;border-radius:4px;font-size:11px;font-weight:700;color:var(--on-fill);background:var(--primary-color)}
+.k.n{background:var(--secondary-color)}.k.d{background:var(--warning-color)}
+.first{border:2px solid var(--secondary-color);background:var(--info-bg);padding:14px 16px;border-radius:8px}
+.sb{width:1700px}
+</style>
+</helmet>
+<div class="sb">
+<h1>R2-0-spec-3 · corrections checked, PROPOSED, edge cases</h1>
+<h2>Round 1's corrections, each with its board</h2>
+<table><thead><tr><th>#</th><th>Done</th><th>Boards</th></tr></thead><tbody><tr><td>M1</td><td>Not found is the request's own Unavailable page; the download's 404 unchanged</td><td>R2-U01, R2-U02</td></tr><tr><td>M2</td><td>The digest help in Q27's words; nothing names a request to assess</td><td>every R2-M board</td></tr><tr><td>M3</td><td>"Request submitted. You will be notified when it is reviewed." kept; each decided result says the requester is emailed</td><td>R2-M03, M05, M07, M10; R2-D03, D05, C01, C06</td></tr><tr><td>M4</td><td>No gendered pronoun on any board (checked by a word search over the rendered text: none found)</td><td>all</td></tr><tr><td>M5</td><td>The record a radio from Q26's list, with its line; TargetType per record; the recorder column</td><td>R2-C02–C10</td></tr><tr><td>M6</td><td>A.1.8a, A.2.4, A.2.6, the outcome check, the moved Expects</td><td>R2-0-steps, -2</td></tr><tr><td>S1</td><td>devadmin under the Administrator's grouped menu, Data rights requests lit under Platform</td><td>R2-Q05–Q07, Q09, Q10, R2-D06–D14, R2-C07</td></tr><tr><td>S2</td><td>No inline style; stacking from .dialog-card, .user-page, .data-rights-page, StackWide, .pager</td><td>every 390 board</td></tr><tr><td>S3</td><td>Withdrawn already grey: a rename; Approved green → amber</td><td>R2-0-spec</td></tr><tr><td>S4</td><td>Requester th scope="row"</td><td>R2-Q boards</td></tr><tr><td>S5</td><td>FIXTURES: Mahlangu's rejection 00:03 SAST; du Plessis's id 01a17f63-7af4-7ac5-a6d1-d01726b57bc0; the cast's addresses</td><td>R2-D04, D05, Q04</td></tr><tr><td>S6</td><td>Complete's refusal in the Correction section's ActionResult; the focus on Complete request</td><td>R2-C03</td></tr><tr><td>S7</td><td>"You cannot download it yourself." to the Coordinator only; withdrawn-meanwhile without a time</td><td>R2-D01, D12</td></tr><tr><td>S8</td><td>DATA: institution name, the result's counts, the recorder, the decider; T276 dropped</td><td>R2-0-spec, -2</td></tr><tr><td>S9</td><td>PROPOSED marks: counter, Withdraw narrowed, kept notice, Decide's per-type help, Approved amber, Request id column</td><td>here</td></tr><tr><td>S10</td><td>The kept request's trail and 390 parent link; the notice above the sections</td><td>R2-K01, R2-D09</td></tr><tr><td>S11</td><td>A staff role's roles in It ends</td><td>R2-D13</td></tr><tr><td>S12</td><td>Each requester's real menu</td><td>R2-M boards (Trainee, former trainee, Coordinator, no role)</td></tr><tr><td>N1–N7</td><td>Counter PROPOSED; one counting rule; Clear filters and the page-size select at 390; .request-id NEW, .muted/.person-cell for .pv-muted; breadcrumb-parent at 390; queue variations called V1/V2; Download named for the export</td><td>R2-Q, R2-M</td></tr><tr><td>Others</td><td>badge-withdrawn's comment widens; radio rows 44 px by .data-rights-page; the dialog scrolls in itself; the muted line's hover contrast (above); PagerControls 10, 20, 50, 100</td><td>R2-0-spec</td></tr></tbody></table>
+
+<h2>PROPOSED (not decided above)</h2>
+<ul>
+<li>The reason's live counter (N1, S9). Withdraw offered only while Submitted, and the domain narrowed (Q14). The kept request's notice. Decide's per-type help. Approved amber. The Request id column.</li>
+<li>R2-C01's result words (mine). Complete request sending Q5's notice. The two-in-a-minute row names. Unavailable's crumb.</li>
+<li>Every code change on R2-0-spec.</li>
+</ul>
+
+<h2>Illustrations (the replay never reaches them)</h2>
+<p>R2-M13, M16, M17, M18; R2-Q09, Q10; R2-D10, D11, D12, D13, D14, D15, D16, D19; R2-C04, C07, C08, C09, C10; R2-U02. Each says so in its title and in the chip on its face. A.1.8a's states (R2-M08, M09, C01–C03, C05, C06) are not Illustrations but a NEW step not yet played: every value it would print is a bracket.</p>
+
+<h2>Edge cases</h2>
+<table><thead><tr><th>Case</th><th>Board</th></tr></thead><tbody><tr><td>A requester with no institution: Make a request's other sentence; only the Administrator decides; the Administrator's queue reads Institution "None"</td><td>R2-M18, R2-Q09</td></tr><tr><td>A reviewer's own request: no Decide, the line (Q21); the Administrator's own needs another Administrator</td><td>R2-D15</td></tr><tr><td>An erasure of a person with a review under appeal: kept, answerable, in the Kept sentence</td><td>R2-D14</td></tr><tr><td>An erasure of someone holding a staff role: the roles in It ends; a pseudonymised panel seat is a leftover like T276's, noted, not drawn</td><td>R2-D13</td></tr><tr><td>The two erasure refusals: nothing erased, still Submitted, the note kept, the focus on the alert</td><td>R2-D10, D11</td></tr><tr><td>A request withdrawn while its page is open: the next press refused, the page as Withdrawn</td><td>R2-D12</td></tr><tr><td>An export whose PDF fails: the zip holds the JSON alone and the page cannot know. Flow 20's; no board</td><td></td></tr><tr><td>A correction to an ended programme: the archived line, no link; T305 stays open, no path drawn</td><td>R2-C08</td></tr><tr><td>Two requests of one type in one minute: the row names say which</td><td>R2-M17</td></tr><tr><td>A 60-character address</td><td>R2-Q09, R2-D19</td></tr><tr><td>A reason of 4,000 characters (its counter) and a long note</td><td>R2-D19, R2-M17</td></tr><tr><td>An approved erasure is never read by its requester: the open session ends within a minute (flow 02's session ended); no My data rights board</td><td></td></tr></tbody></table>
+
+<h2>Accessibility (WCAG 2.1 AA)</h2>
+<ul>
+<li>One h1 a board (checked over every R2 board); h2 sections in order; tables captioned, th scope on headers and on each row's first identifying cell.</li>
+<li>Every row action named for its row (Withdraw, Download, Review), none alike (R2-M17's two).</li>
+<li>Focus after each action, drawn with the ring and written in each board's chip: results; refusal fields; Complete's refusal on Complete request; the dialog on Cancel; Cancel and Escape back to "Approve and erase…"; an erasure refusal on its alert; the pager on "Requests (n)"; Try again to the reloaded h1.</li>
+<li>Refusals tied by aria-describedby, invalid fields by stripe and words; radio sets fieldsets with legends; help outside labels; the kept notice Role=""; status only on results.</li>
+<li>44 px at 390: .data-rights-page scope, .user-page, StackWide's .btn, .pager .btn, .filter-actions .btn, .dialog-card .form-actions .btn.</li>
+</ul>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1700,"height":4200}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

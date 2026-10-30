@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Steps, round 2, part 2</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:var(--font-body);color:var(--text-color);background:var(--surface-color)}
+.sb{box-sizing:border-box;padding:48px;display:flex;flex-direction:column;gap:28px;font-size:15px;line-height:1.45}
+.sb h1{margin:0;font-family:var(--font-display);font-size:38px;color:var(--primary-color)}
+.sb h2{margin:0 0 10px;font-size:21px;color:var(--primary-color);border-bottom:2px solid var(--secondary-color);padding-bottom:4px}
+.sb p{margin:0 0 8px}.sb ul{margin:0;padding-left:20px}.sb li{margin-bottom:4px}
+.sb table{width:100%;border-collapse:collapse;font-size:13.5px;table-layout:fixed}
+.sb th,.sb td{border:1px solid var(--border-color);padding:5px 7px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+.sb thead th{background:var(--header-bg)}
+.sb code{font-family:var(--font-mono);font-size:12.5px}
+.k{display:inline-block;padding:0 5px;border-radius:4px;font-size:11px;font-weight:700;color:var(--on-fill);background:var(--primary-color)}
+.k.n{background:var(--secondary-color)}.k.d{background:var(--warning-color)}
+.first{border:2px solid var(--secondary-color);background:var(--info-bg);padding:14px 16px;border-radius:8px}
+.sb{width:1700px}
+</style>
+</helmet>
+<div class="sb">
+<h1>R2-0-steps-2 · A.1.8a, words to search, journeys</h1>
+<h2>Step A.1.8a — Dr Mahlangu's name is corrected (NEW, after A.1.8, before A.1.9)</h2>
+<p><b>Role</b>: Trainee — Dr Nomsa Mahlangu; Coordinator — Mr Pieter Smit.<br>
+<b>Route</b>: /account/data-rights → /admin/data-rights/{Id:guid} → /account/profile → /admin/data-rights/{Id:guid} → /account/data-rights<br>
+<b>Before</b>: the account's last name reads "Mahlngu" (‹how the runbook sets it›).<br>
+<b>Do</b>: Dr Mahlangu submits a Rectification with ‹reason›. Mr Smit approves it with ‹note› and reads the empty Correction section and the line that a name is changed by Nomsa Mahlangu on My account; presses Complete request with none recorded. Dr Mahlangu opens My account from the name in the top bar and saves Last name "Mahlangu". Mr Smit records Account › Last name, "Mahlngu" to "Mahlangu", then completes the request. Dr Mahlangu reads the row.<br>
+<b>Expect</b>: the request lists as Submitted with a Withdraw (as R2-M07). Approved: "Request approved. Nomsa Mahlangu is emailed. Record each correction below, then complete the request." (R2-C01); the Correction section reads "No correction is recorded yet." with four records: Account › First name and Account › Last name, "Changed by Nomsa Mahlangu on My account. No staff page changes a name."; Trainee profile › Programme start, "Changed on Nomsa Mahlangu's programme page, which an Institutional admin at Kgosi Kgari Teaching Hospital opens; you cannot."; Other (R2-C02). Complete request is refused: "Record at least one correction before completing the request.", the focus staying on Complete request (R2-C03). My account says "Name saved." (flow 02's page, unchanged). "Correction recorded: Account › Last name." with the row Account › Last name · Mahlngu · Mahlangu · Pieter Smit · ‹time› SAST (R2-C05). "Request completed. Nomsa Mahlangu is emailed, and reads it as Completed on My data rights.", Completed on ‹time› SAST, no form (R2-C06). Before completion Nomsa Mahlangu's row reads Approved, "Being corrected", no Withdraw (R2-M08); after, Completed, "Completed on ‹date›. Corrected: Account › Last name." (R2-M09).</p>
+
+<h2>Expects A.1.8a moves</h2>
+<ul>
+<li>A.1.9: two Rectifications on the list (R2-M09).</li>
+<li>A.1.12: five requests in the Administrator's queue (four in the T379 replay).</li>
+<li>A.7.5: five KGK rows.</li>
+<li>The appendix's Goal "four data-rights requests" → five; its outcome check gains the completed Rectification and its correction row. <b>Not read</b>: the appendix is not in the folder; the hit is from the brief.</li>
+<li>With T318 and Q28: "Dlamini opted out of optional processing only" — the outcome line, its SQL and the closing list's entry — goes.</li>
+<li>A.2.4 and A.2.6 (they follow A.2.3/A.2.5, which set them up): likely unchanged — they observe the digest being skipped and sent, not the page's words. Not read: say so.</li>
+</ul>
+
+<h2>Words that change, searched (§ 8's copy of the steps)</h2>
+<table><thead><tr><th>Words</th><th>Hits</th></tr></thead><tbody><tr><td>"Processing preferences saved."</td><td>A.1.1, A.2.3, A.2.5</td></tr><tr><td>"Opt out of digest emails"</td><td>A.2.3, A.2.5 (Do)</td></tr><tr><td>"Opt out of optional processing"</td><td>A.1.1 (Do)</td></tr><tr><td>"Apply filters"</td><td>none in the steps (the brief's table and § 5 only)</td></tr><tr><td>"UnderReview"</td><td>none in the steps</td></tr><tr><td>"Back to list"</td><td>none in the steps</td></tr><tr><td>"Not found" / "not authorized"</td><td>A.5.7</td></tr><tr><td>UTC times (22:0…)</td><td>none in the steps (the brief's FIXTURES and § 1)</td></tr><tr><td>"No email" / "no email"</td><td>A.1.5, A.1.9 (change, M3); A.1.13 (unchanged: the erased person is sent none)</td></tr><tr><td>"notified when it is reviewed"</td><td>A.1.2 (kept)</td></tr></tbody></table>
+
+<h2>Journeys: presses + fields typed, from the menu link (390: Menu one more press)</h2>
+<table><thead><tr><th>Journey</th><th>Today</th><th>Built, 1280</th><th>Built, 390</th><th>Presses</th></tr></thead><tbody><tr><td>An export requested and downloaded (Anele Dlamini)</td><td>4 + 1</td><td>4 + 1</td><td>5 + 1</td><td>My data rights; Export; reason typed; Submit request; (later) Download</td></tr><tr><td>A rejected answer read (Nomsa Mahlangu)</td><td>not possible</td><td>1 + 0</td><td>2 + 0</td><td>My data rights: the answer is on the row</td></tr><tr><td>A request decided (Pieter Smit, A.1.3)</td><td>6 + 1</td><td>6 + 1</td><td>7 + 1</td><td>Data rights requests; Type Export; Status Submitted; Show; Review; note typed; Approve</td></tr><tr><td>A correction carried through (Pieter Smit, A.1.8a, one correction)</td><td>not possible</td><td>5 + 2</td><td>6 + 2</td><td>Data rights requests; Review; Account › Last name; before and after typed; Record correction; Complete request. The approval apart: 1 + 1 (note, Approve).</td></tr><tr><td>An erasure approved (devadmin)</td><td>5 + 1</td><td>6 + 1</td><td>7 + 1</td><td>Data rights requests; Type Erasure; Show; Review; note typed; Approve and erase…; Erase and approve</td></tr><tr><td>The reminders stopped (Pieter Smit)</td><td>3 + 0</td><td>3 + 0</td><td>4 + 0</td><td>My data rights; Stop the regular reminder emails; Save</td></tr></tbody></table>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1700,"height":3400}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

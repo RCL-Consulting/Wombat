@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Spec, round 2, part 2</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:var(--font-body);color:var(--text-color);background:var(--surface-color)}
+.sb{box-sizing:border-box;padding:48px;display:flex;flex-direction:column;gap:28px;font-size:15px;line-height:1.45}
+.sb h1{margin:0;font-family:var(--font-display);font-size:38px;color:var(--primary-color)}
+.sb h2{margin:0 0 10px;font-size:21px;color:var(--primary-color);border-bottom:2px solid var(--secondary-color);padding-bottom:4px}
+.sb p{margin:0 0 8px}.sb ul{margin:0;padding-left:20px}.sb li{margin-bottom:4px}
+.sb table{width:100%;border-collapse:collapse;font-size:13.5px;table-layout:fixed}
+.sb th,.sb td{border:1px solid var(--border-color);padding:5px 7px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+.sb thead th{background:var(--header-bg)}
+.sb code{font-family:var(--font-mono);font-size:12.5px}
+.k{display:inline-block;padding:0 5px;border-radius:4px;font-size:11px;font-weight:700;color:var(--on-fill);background:var(--primary-color)}
+.k.n{background:var(--secondary-color)}.k.d{background:var(--warning-color)}
+.first{border:2px solid var(--secondary-color);background:var(--info-bg);padding:14px 16px;border-radius:8px}
+.sb{width:1700px}
+</style>
+</helmet>
+<div class="sb">
+<h1>R2-0-spec-2 · DESIGN.md, routes, tokens, DATA, messages</h1>
+<h2>DESIGN.md text each change touches</h2>
+<ul>
+<li><b>§ The NavMenu's owner table</b>: unchanged. "A data-rights request | Coordinator, Administrator: Data rights requests (its own crumb is the request's id)" holds, Unavailable included.</li>
+<li><b>§ Form page</b>: My data rights' type as four described radios in a fieldset with its required mark (flow 11's), each line in aria-describedby; Reminder emails a section with its own Save and its own result (one result on the page at a time, T318).</li>
+<li><b>§ Detail page and the title rule</b>: a request titled by type and person ("Export request from Anele Dlamini"; "… from deleted_user_0ae1d64b" once erased), tab the same with " · Wombat"; one column of h2 sections Request, Decision, Correction, Decide; Decided by the name over the id; Back to list gone.</li>
+<li><b>§ Table system</b>: the Answer column (the requester's only); the Request id column; the Requester th scope="row" (S4); the Administrator's Institution column (no filter, Q23); captions not repeating their heading ("Your data rights requests, newest first" in place of today's "Your data rights requests" under "Your requests", T280).</li>
+<li><b>§ Button system's destructive action</b>: "Approve and erase…", an outline trigger beside Reject; its ConfirmDialog's danger "Erase and approve", Cancel the safe button first and focused.</li>
+<li><b>§ Alerts</b>: the kept request's notice, info, standing (Role=""), under the header above the sections (S10).</li>
+<li><b>§ Badges' DataRightsRequest row</b>: Submitted blue, Approved amber, Completed green, Rejected red, Withdrawn badge-withdrawn (grey; its comment widens to "a request withdrawn by its requester"). Never "Withdrawn moves from red" (S3).</li>
+<li><b>§ Page-level patterns' Unavailable</b>: the request's: h1 "Request unavailable", the empty card "This data rights request does not exist, or you cannot open it.", Go to Data rights requests; Data rights requests lit; trail Home › Data rights requests › Request unavailable (<span class="k">PROPOSED</span>: the crumb, as flows 12 and 13 name theirs).</li>
+<li><b>§ Content's ids rule</b>: ids on the queue (a column) and the request (Request id and User id rows, the crumb); never on My data rights.</li>
+</ul>
+
+<h2>Routes</h2>
+<table><thead><tr><th>Route</th><th>Owner (lit)</th><th>Trail</th><th>Tab</th></tr></thead><tbody><tr><td>/account/data-rights</td><td>My data rights (aria-current page)</td><td>none</td><td>My data rights · Wombat</td></tr><tr><td>/admin/data-rights</td><td>Data rights requests (page)</td><td>none</td><td>Data rights requests · Wombat</td></tr><tr><td>/admin/data-rights/{Id:guid}</td><td>Data rights requests (true)</td><td>Home › Data rights requests › the id</td><td>‹Type› request from ‹name› · Wombat; loading and the load error "Data rights request · Wombat"; Unavailable "Request unavailable · Wombat"</td></tr><tr><td>/account/data-rights/download/{id:guid}</td><td>unchanged</td><td>—</td><td>unchanged (flow 01's Page not found for anyone else, A.1.4)</td></tr></tbody></table>
+<p>R2-D17/D18's h1 is "Data rights request": until the read is in, neither the type nor the name is known.</p>
+
+<h2>Tokens and contrast</h2>
+<p>No new colour token. Used: text-color, muted-text, link-color, primary-color, secondary-color, on-fill, border-color, header-bg, surface-color, background-color, success-color/bg, danger-color/bg, warning-color/bg, info-bg, focus-ring, scrim, the --nav-* tokens. badge-accepted's text: warning-color rgb(154 84 0) on warning-bg rgb(255 248 225) ≈ 5.3:1 (AA). The muted second line (.person-cell span, muted-text rgb(104 111 119)) ≈ 5.0:1 on white and ≈ 4.8:1 on hover-bg rgb(248 249 250): passes 4.5:1. Focus ring secondary blue on white ≈ 5.2:1.</p>
+
+<h2>DATA, grouped by query</h2>
+<table><thead><tr><th>Query</th><th>Values a page reads that it does not read today</th></tr></thead><tbody><tr><td>GetMyDataRightsRequestsQuery</td><td>DecidedOn, DecisionNote, CompletedOn, a completed Rectification's record labels; the requester's institution's name ("None" sentence)</td></tr><tr><td>ListDataRightsRequestsQuery</td><td>the requester's name (with the address); the institution's name (Administrator); the pseudonym and ErasedOn after an erasure</td></tr><tr><td>GetDataRightsRequestByIdQuery</td><td>the decider's name; the requester's name and institution; the corrections with their recorder (a migration); may-download; may-decide; the pseudonym and ErasedOn</td></tr><tr><td>The erasure forecast</td><td>open reviews (type, #, panel, state) at any institution; unreleased campaigns; the active profile's curriculum; a staff role's roles; a review under appeal</td></tr><tr><td>ErasureExecutor's result</td><td>the counts the result names ("1 committee review was withdrawn and the programme ended today")</td></tr><tr><td>All</td><td>every time in SAST to the minute with the zone (the export's JSON keeps UTC, Q9)</td></tr></tbody></table>
+
+<h2>Messages by kind</h2>
+<table><thead><tr><th>Kind</th><th>Words</th><th>Source</th></tr></thead><tbody><tr><td>Result</td><td>"Request submitted. You will be notified when it is reviewed." · "Request withdrawn." · "Reminder emails stopped." / "Reminder emails will be sent again." (replacing "Processing preferences saved.")</td><td>built; round 1's</td></tr><tr><td>Result</td><td>"Request approved." + "Anele Dlamini is emailed, and can download the export from My data rights." · "Request rejected." + "Nomsa Mahlangu is emailed, and reads your note on My data rights." · "Request completed. Nomsa Mahlangu is emailed, and reads it as Completed on My data rights."</td><td><span class="k n">NEW</span> (this message), replacing round 1's "…reads it as Completed…"</td></tr><tr><td>Result</td><td>"Request approved. Nomsa Mahlangu is emailed. Record each correction below, then complete the request." (R2-C01)</td><td><span class="k n">NEW</span> <span class="k">PROPOSED</span> (mine: the brief gave no words)</td></tr><tr><td>Result</td><td>"Correction recorded: Account › Last name." · "The personal data is erased. The request is approved and completed. 1 committee review was withdrawn and the programme ended today. The account is now deleted_user_0ae1d64b; its open session ends within a minute."</td><td>round 1's</td></tr><tr><td>Refusal</td><td>"Please provide a reason for your request." · "A decision note is required." · the concurrent-change refusal</td><td>built (placed under their field)</td></tr><tr><td>Refusal</td><td>"Record at least one correction before completing the request." · PseudonymSalt's "Nothing has been erased. Erasure is not set up…"</td><td>round 1's</td></tr><tr><td>Refusal</td><td>"Choose the record." / "Enter the value before." / "Enter the value after." · "Sipho Ndlovu withdrew this request. Nothing was decided or erased."</td><td><span class="k n">NEW</span>; S7</td></tr><tr><td>Refusal</td><td>"You cannot decide your own request: another Coordinator at Kgosi Kgari Teaching Hospital, or the Wombat administrator, decides it."</td><td><span class="k n">NEW</span> (Q21)</td></tr><tr><td>Hint</td><td>the four type lines; the digest help (Q27); the Export Decide help + "You cannot download it yourself." (Coordinator only); the note's help per type; the erasure line; the record lines (M5)</td><td>round 1's; <span class="k n">NEW</span></td></tr><tr><td>Hint</td><td>"What happens next: staff at Kgosi Kgari Teaching Hospital read it and approve or reject it with a note, and you are emailed when it is decided. While it waits you can withdraw it under Your requests."</td><td>round 1's B, adapted (<span class="k n">NEW</span>: "and you are emailed", "under Your requests")</td></tr><tr><td>Hint</td><td>the reason's counter "0 of 4,000 characters"</td><td><span class="k">PROPOSED</span> (N1, S9: T366's pattern, per keystroke over SignalR; or counted on submit)</td></tr><tr><td>Notice</td><td>the kept request's notice (standing, info, Role="")</td><td>round 1's, <span class="k">PROPOSED</span> (S9)</td></tr><tr><td>Empty</td><td>"No requests yet. You have not asked for your data, a correction or erasure. Make a request below." · "No requests match" + "No Erasure request at Kgosi Kgari Teaching Hospital. Clear filters to see every request." · "No correction is recorded yet."</td><td>round 1's; <span class="k n">NEW</span> (Q02)</td></tr><tr><td>Failure</td><td>"The request could not be sent just now. Nothing was sent. …" · "…could not be withdrawn…" · "Your reminder emails could not be saved just now…" · "The decision could not be saved just now…" · "The correction could not be recorded just now…" · Complete's same pattern</td><td><span class="k n">NEW</span> (T329)</td></tr><tr><td>Load error</td><td>"Could not load your data rights." / "…the data rights requests." / "…this request." + "Nothing has changed. Try again, or come back in a few minutes."</td><td>round 1's</td></tr><tr><td>Name</td><td>Withdraw and Download named with the time in SAST; two in one minute: "…, the later of two that minute" / "…, the earlier of two that minute"</td><td>built; <span class="k n">NEW</span> <span class="k">PROPOSED</span> (R2-M17)</td></tr></tbody></table>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1700,"height":4400}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
