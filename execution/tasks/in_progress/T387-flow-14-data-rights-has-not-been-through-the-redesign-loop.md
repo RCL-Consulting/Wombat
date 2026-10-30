@@ -85,4 +85,10 @@ BRIEF § 6, § 8, § 11; CUSTOMIZATION.md § 5.
 - **2026-10-30, round 1** (18 boards in `round-1/`, `42366e44`; the operator sent the ask and said "done"; the boards
   follow Q1–Q16's recommendations, taken as recommended, to confirm): three structures for My data rights (A one page,
   B a form page, C cards), three for a request and its correction (A in its section, B a form page, C a status card),
-  Queue V1/V2 and Decide V1/V2 at fidelity, NotFound-Kept, Spec, Steps. Assessment running (one Opus agent).
+  Queue V1/V2 and Decide V1/V2 at fidelity, NotFound-Kept, Spec, Steps. Assessed in `round-1-assessment.md` (one Opus agent, `2881b938`; checked here: `CanAct` never refuses the requester
+  deciding their own request; `ApplyRectificationCommand` takes TargetType, a Guid and JSON values): picks My data
+  rights A, Request A (with B's fixed list of records), Queue V1, Decide V1; the kept request confirmed; not found
+  redrawn. 6 must-fixes (M1 not found as the request's own Unavailable page; M2 the digest help names mail nobody sends;
+  M3 Q5's notice undrawn and AccountNotices' "by whom"; M4 gendered words; M5 the correction's record as free text, no
+  recorder stored, no page changes an email; M6 the Steps board misses A.1.8a, A.2.4/A.2.6, the outcome). Q17–Q28 for
+  the operator. No sign the captures arrived: re-attach § 4's twelve for round 2.
