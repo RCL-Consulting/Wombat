@@ -1468,7 +1468,7 @@ reordered). Log an activity is `NewActivity.razor`. Drawn in `design/flows/03-tr
   way, and so do the data-rights pages' reason and decision note (4,000; "Give your reason in 4,000 characters or
   fewer.", "Give your note in 4,000 characters or fewer.", T387, S24, review P4).
 - **The refusal first in `aria-describedby`** (2026-10-30, T387, flow 14, N17): on the data-rights pages a refused field
-  names its refusal, then its help, then its counter (`dr-reason-err dr-reason-count`; `decision-note-err
+  names its refusal, then its help, then its counter (`dr-reason-msg dr-reason-count`; `decision-note-err
   decision-note-help decision-note-count`), so the refusal is read before what the field is for. The earlier flows' order
   (help, counter, then the refusal) stands where it is built; a new form takes N17's. A refusal goes once its field
   changes, and a refused radio group's radios are `aria-invalid` as well as its fieldset `.is-invalid` (review P6).

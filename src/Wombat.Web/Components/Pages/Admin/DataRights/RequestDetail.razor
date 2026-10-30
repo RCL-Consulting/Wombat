@@ -154,7 +154,9 @@
   private string? _afterError;
 
   /// <summary>The h1 and the tab (Q12): by type and person once read; the page's own name while read and on a failure.</summary>
-  private string Heading => _unavailable ? "Request unavailable" : _request is null ? "Data rights request" : DataRightsWords.Title(_request.Type, _request.RequesterName);
+  private string Heading => _unavailable ? DataRightsRequestWords.UnavailableHeading
+    : _request is null ? DataRightsRequestWords.RequestHeading
+    : DataRightsWords.Title(_request.Type, _request.RequesterName);
 
   /// <summary>The trail's last crumb: the id from the first render (N14, D17), the h1's words for a null read (U01).</summary>
   private string Crumb => _unavailable ? DataRightsRequestWords.UnavailableHeading : Id.ToString();

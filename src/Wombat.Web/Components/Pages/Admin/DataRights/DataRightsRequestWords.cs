@@ -29,9 +29,6 @@ public static class DataRightsRequestWords
 {
     // ---- the queue (R3-Q01–Q13, K02) ----
 
-    /// <summary>The queue's h1 and tab.</summary>
-    public const string QueueHeading = "Data rights requests";
-
     /// <summary>The subtitle while the scope is not yet known (the first read, Q11) and for a Coordinator set to no institution (S4).</summary>
     public const string SubtitleNoInstitution =
         "Requests about personal data: decide each, and carry an approved correction through.";

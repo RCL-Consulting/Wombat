@@ -3,7 +3,7 @@
    daaf6386, 5fd5abcd and a341b44e; T350, 06aa51d7; T355, b020c942, db4c2d0a, 5f8e6639 and b389f7d2; T358, 85d5a508 and
    94edf2b7; T361, 44de180b, 59bb72fd, 6ad6c57a, 6b149fff and 14378856; T364, 622c5ad1 and
    1ec7a352; T366, 49e7cf5e and 9ba80586; T369, 68327c9d and e4b480e2; T373, 69a17c70 and 27ff8779; T376, e53d4ae7; T379,
-   5cc10c66, 920f778c and 73baa556, after T312, c9d6fe13; T387, e8eea1d2 and 5b5aab80; master@36e931a3),
+   5cc10c66, 920f778c and 73baa556, after T312, c9d6fe13; T387, e8eea1d2, 5b5aab80 and step 8's fixes; master after 36e931a3),
    extracted with every class name and declaration unchanged, so a design maps back to the classes Razor writes.
    - From src/Wombat.Web/wwwroot/app.css: everything after :root. tokens.css, which the page compiles from tokens.json,
      supplies the :root custom properties (colours, --space-*, --radius-*, --shadow-*, --sidebar-width, --motion-fast,
@@ -7128,8 +7128,9 @@ a.dashboard-metric:hover .dashboard-metric-label {
   overflow-wrap: anywhere;
 }
 
-/* The three data-rights tables (Your requests, the queue, Corrections recorded) put th scope="row" first in each row;
-   .clinic-table paints a th as a header, so the row header reads as a cell here, in the cell's weight of a name (M5). */
+/* The three data-rights tables (Your requests, the queue, Corrections recorded) each name their row with a th
+   scope="row" (the queue's is its second cell, after Submitted); .clinic-table paints a th as a header, so the row
+   header reads as a cell here, in the cell's weight of a name (M5). */
 .data-rights-table tbody th[scope="row"] {
   background: transparent;
   border-bottom: 1px solid var(--border-color);

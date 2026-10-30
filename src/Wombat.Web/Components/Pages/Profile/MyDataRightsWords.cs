@@ -228,22 +228,12 @@ public static class MyDataRightsWords
     public static string RowName(DataRightsRequestType type, string made)
         => $"the {DataRightsWords.Type(type)} request made {made}";
 
-    /// <summary>Withdraw's name: "Withdraw the Export request made 2026-10-28 00:01 SAST" (T239).</summary>
-    public static string WithdrawName(DataRightsRequestType type, string made) => $"Withdraw {RowName(type, made)}";
-
     /// <summary>
     /// What Download downloads, between the verb and the row (N12): the built Export words, "the export of", and the
     /// Access words the operator approved on 2026-10-30, "the copy of your data for".
     /// </summary>
     public static string DownloadObject(DataRightsRequestType type)
         => type == DataRightsRequestType.Access ? "the copy of your data for" : "the export of";
-
-    /// <summary>
-    /// Download's name, each starting with the visible word (N12): "Download the export of the Export request made …",
-    /// "Download the copy of your data for the Access request made …".
-    /// </summary>
-    public static string DownloadName(DataRightsRequestType type, string made)
-        => $"Download {DownloadObject(type)} {RowName(type, made)}";
 
     /// <summary>A Completed Access or Export offers Download (Program.cs's download route admits only those).</summary>
     public static bool OffersDownload(MyDataRightsRequestDto request)

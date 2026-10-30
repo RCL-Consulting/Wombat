@@ -7213,8 +7213,9 @@ a.dashboard-metric:hover .dashboard-metric-label {
   overflow-wrap: anywhere;
 }
 
-/* The three data-rights tables (Your requests, the queue, Corrections recorded) put th scope="row" first in each row;
-   .clinic-table paints a th as a header, so the row header reads as a cell here, in the cell's weight of a name (M5). */
+/* The three data-rights tables (Your requests, the queue, Corrections recorded) each name their row with a th
+   scope="row" (the queue's is its second cell, after Submitted); .clinic-table paints a th as a header, so the row
+   header reads as a cell here, in the cell's weight of a name (M5). */
 .data-rights-table tbody th[scope="row"] {
   background: transparent;
   border-bottom: 1px solid var(--border-color);

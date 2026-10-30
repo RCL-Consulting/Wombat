@@ -58,5 +58,4 @@ No new colour token. The help, counter and choice help in `muted-text`, 5.09:1 o
 
 - The loading column has no `aria-busy` (the queue's and a request's have one); noted by the states pass, not filed.
 - A failed submit or save takes about a minute (two 30-second timeouts) with nothing said meanwhile; noted by the states pass, not filed.
-- `MyDataRightsWords.WithdrawName` and `DownloadName` are not used: the page builds the same names inline (`DataRights.razor` lines 77 and 85). Found re-syncing.
 - The opt-out does not reach every scheduled mail (T389, proposed); a name changed on My account reverts at the next institutional sign-in (T388, proposed).
