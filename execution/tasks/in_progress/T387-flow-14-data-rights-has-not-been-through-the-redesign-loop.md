@@ -128,3 +128,7 @@ BRIEF § 6, § 8, § 11; CUSTOMIZATION.md § 5.
   AppliedByUserId added, Status 1→0; `xmin` mapped with no DDL, as T121), the page DTOs, mails, F3's rewrite. Lanes D
   (decide and erase), K (corrections and reads), M (My data rights), P (the staff pages), then W (runbook), two
   Sonnet reviews, one fix pass. Ten PROPOSED items for the operator.
+- **2026-10-30, step 6, the wave.** The operator approved the ten PROPOSED items and the wave ("yes"); recorded at the
+  top of `build-lanes.md` (`5f18d3f4` on `t387`). Lanes D (`t387-decide`), K (`t387-reads`), M (`t387-mine`) and P
+  (`t387-staff`), each in `.claude/worktrees/<branch>` from `5f18d3f4`, one Opus agent each, in parallel. Then the merge,
+  lane W (runbook), two Sonnet reviews, one fix pass.

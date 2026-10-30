@@ -21,7 +21,9 @@ The operator said "start flow 14". T387 created and started (P2), written from T
 - **Round 3 final** (149 boards `d47ab4ea`; check `10d92875`: 59/61 done, 2 partly, 0 regressed).
 - **Pushed** master through `c47bc6e0` (the operator's "yes"). **Step 6 started:** § 0 and the plan on `t387` (`7a155e37`;
   worktree `.claude/worktrees/agent-a0cbe10cd07555864`), six suites green in Release.
-- **Next:** the operator approves the ten PROPOSED items and the wave (lanes D, K, M, P, then W).
+- **The wave runs** (approved "yes"): lanes D, K, M, P in `.claude/worktrees/t387-{decide,reads,mine,staff}` from
+  `5f18d3f4`. If the session ended mid-wave, check each branch's log against `build-lanes.md` before re-running a lane.
+- **Next:** merge the four into `t387`, lane W, two Sonnet reviews, one fix pass, squash.
 
 ## Session 2026-10-27/28 (Opus): T379, flow 13 (graduation and exit), done; T312 before it
 
