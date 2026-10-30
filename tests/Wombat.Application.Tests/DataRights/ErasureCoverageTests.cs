@@ -32,9 +32,10 @@ public sealed class ErasureCoverageTests
         "AuditEntry.ActorUserId",
         "AuditEntryArchive.ActorUserId",
 
-        // DataRights entities reference the requester/decider — retained for accountability.
+        // The requester's id is kept on each request, and the erasure record pairs it with the request and the pseudonym:
+        // retained for accountability. DecidedByUserId and AppliedByUserId are rewritten where the person decided or
+        // recorded (T387, F3).
         "DataRightsRequest.RequesterUserId",
-        "DataRightsRequest.DecidedByUserId",
         "DataRightsErasureRecord.UserId",
     };
 
@@ -88,6 +89,25 @@ public sealed class ErasureCoverageTests
             "Every entity with a UserId-like property must be handled in ErasureExecutor. " +
             "Unhandled: {0}. Add handling or exclude with a documented reason.",
             string.Join(", ", unhandled));
+    }
+
+    /// <summary>
+    /// The person's own words on their data-rights requests (T387, review S1): the reason they gave and each correction's
+    /// value before and after are scrubbed by an erasure, as the operator decided on 2026-10-30. No UserId names them, so
+    /// the test above cannot see them; this keeps the executor writing each.
+    /// </summary>
+    [Theory]
+    [InlineData("request.Reason = erasedText")]
+    [InlineData("other.Reason = erasedText")]
+    [InlineData("correction.FromValueJson = erasedValueJson")]
+    [InlineData("correction.ToValueJson = erasedValueJson")]
+    public void ErasureExecutor_ScrubsThePersonsOwnWordsOnTheirRequests(string write)
+    {
+        var executorSource = File.ReadAllText(
+            Path.Combine(FindSolutionRoot(), "src", "Wombat.Infrastructure", "DataRights", "ErasureExecutor.cs"));
+
+        executorSource.Should().Contain(write);
+        executorSource.Should().NotContain("DecisionNote =", "the staff's decision note is kept");
     }
 
     private static string FindSolutionRoot()

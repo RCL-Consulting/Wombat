@@ -28,17 +28,22 @@ public sealed class SubmitDataRightsRequestCommandValidator : AbstractValidator<
     {
         RuleFor(command => command.Reason).NotEmpty().MaximumLength(4000);
         RuleFor(command => command.Principal).NotNull();
-        RuleFor(command => command.Type).IsInEnum();
+        // Objection is not a request a person makes (T387, Q8): My data rights offers four types, and so does the command.
+        RuleFor(command => command.Type)
+            .Must(type => DataRightsLabels.OfferedTypes.Contains(type))
+            .WithMessage("Choose the type of request.");
     }
 }
 
 public sealed class SubmitDataRightsRequestCommandHandler : IRequestHandler<SubmitDataRightsRequestCommand, DataRightsRequestDto>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public SubmitDataRightsRequestCommandHandler(IApplicationDbContext dbContext)
+    public SubmitDataRightsRequestCommandHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<DataRightsRequestDto> Handle(SubmitDataRightsRequestCommand request, CancellationToken cancellationToken)
@@ -46,9 +51,19 @@ public sealed class SubmitDataRightsRequestCommandHandler : IRequestHandler<Subm
         var userId = request.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value
             ?? throw new UnauthorizedAccessException("User identity is required.");
 
-        var displayName = request.Principal.FindFirst(ClaimTypes.Name)?.Value
-            ?? request.Principal.FindFirst(ClaimTypes.Email)?.Value
-            ?? userId;
+        // The account's "First Last" (T387, F1): until T387 the sign-in's name claim, which is the address, so the stored
+        // name was an address. The pages name a living requester live; this stored name is what the record keeps, and the
+        // erasure writes the pseudonym over it (F3). The address only for an account with no name; the claims only for an
+        // account the directory does not hold.
+        var account = await _users.GetByIdAsync(userId, cancellationToken);
+        var accountName = account is null ? string.Empty : $"{account.FirstName} {account.LastName}".Trim();
+        var displayName = accountName.Length > 0
+            ? accountName
+            : account is { Email: { Length: > 0 } email }
+                ? email
+                : request.Principal.FindFirst(ClaimTypes.Name)?.Value
+                  ?? request.Principal.FindFirst(ClaimTypes.Email)?.Value
+                  ?? userId;
 
         // No committee review refuses an erasure request (T258 review). T026 refused one while a review of the requester
         // was scheduled, in progress, decided or under appeal, because an erasure then left the review running under the

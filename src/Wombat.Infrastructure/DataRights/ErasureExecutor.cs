@@ -42,9 +42,10 @@ namespace Wombat.Infrastructure.DataRights;
 /// </para>
 /// <para>
 /// A row about the person that changed between being read here and the save (a review ratified, a campaign closed by
-/// the auto-close job, the account updated) fails the save on its concurrency token. That is refused as
-/// <see cref="PersonChanged" />, carrying EF's exception inside, rather than as EF's own message about row counts. The
-/// account's conflict arrives differently: Identity's user store catches EF's exception and returns a failed result.
+/// the auto-close job, the account updated, the request itself withdrawn) fails the save on its concurrency token. That
+/// is refused as <see cref="PersonChanged" /> (a <see cref="DataRightsRefusedException" />, T387), carrying EF's
+/// exception inside, rather than as EF's own message about row counts. The account's conflict arrives differently:
+/// Identity's user store catches EF's exception and returns a failed result.
 /// Every Identity write's result is checked (T156): a conflict is refused as <see cref="PersonChanged" /> too, and any
 /// other refusal fails the erasure naming the step, so no erased account keeps a role or an institutional sign-in.
 /// </para>
@@ -65,7 +66,7 @@ public sealed class ErasureExecutor : IErasureExecutor
         _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
-    public async Task<DataRightsErasureRecord> ExecuteAsync(
+    public async Task<ErasureOutcome> ExecuteAsync(
         DataRightsRequest request,
         string pseudonymSalt,
         CancellationToken cancellationToken)
@@ -89,9 +90,10 @@ public sealed class ErasureExecutor : IErasureExecutor
         catch (DbUpdateConcurrencyException exception)
         {
             // As below, and said in words: EF's message names row counts. Carried inside, so the audit pipeline still sees
-            // a refused save (T201).
+            // a refused save (T201). Typed (T387), so the page maps the reason, and the approving handler reads the request
+            // again to tell its own withdrawal or decision from a change to something else about the person.
             _dbContext.ChangeTracker.Clear();
-            throw new InvalidOperationException(PersonChanged, exception);
+            throw new DataRightsRefusedException(DataRightsRefusal.PersonChanged, PersonChanged, exception);
         }
         catch
         {
@@ -106,12 +108,9 @@ public sealed class ErasureExecutor : IErasureExecutor
     /// The refusal when something about the person changed while they were being erased: nothing is erased, and the
     /// request stays as it was, to be approved again (T258 review).
     /// </summary>
-    public const string PersonChanged =
-        "Something about this person changed while they were being erased: a review, a feedback campaign or their account " +
-        "was changed elsewhere at the same moment. Nothing has been erased, and the request has not been approved. " +
-        "Approve it again.";
+    public const string PersonChanged = DataRightsRefusalSentences.PersonChanged;
 
-    private async Task<DataRightsErasureRecord> EraseAsync(
+    private async Task<ErasureOutcome> EraseAsync(
         DataRightsRequest request,
         string pseudonymSalt,
         CancellationToken cancellationToken)
@@ -195,6 +194,7 @@ public sealed class ErasureExecutor : IErasureExecutor
         var reviewsAsTrainee = await _dbContext.Set<CommitteeReview>()
             .Where(r => r.TraineeUserId == userId)
             .ToListAsync(cancellationToken);
+        var reviewsWithdrawn = 0;
         foreach (var review in reviewsAsTrainee)
         {
             review.TraineeUserId = pseudonym;
@@ -203,7 +203,10 @@ public sealed class ErasureExecutor : IErasureExecutor
             // left. Only open reviews are asked, and those Withdraw accepts, so it refuses nothing here. A ratified review,
             // and one under appeal, is settled and kept as it is.
             if (CommitteeReview.OpenStates.Contains(review.State))
+            {
                 review.Withdraw(CommitteeReview.WithdrawnTraineeErased, utcNow);
+                reviewsWithdrawn++;
+            }
         }
 
         if (reviewsAsTrainee.Count > 0)
@@ -280,6 +283,7 @@ public sealed class ErasureExecutor : IErasureExecutor
             .Where(c => c.SubjectUserId == userId || c.CreatedByUserId == userId || c.ReviewedByUserId == userId ||
                         c.ClosedByUserId == userId)
             .ToListAsync(cancellationToken);
+        var campaignsWithdrawn = 0;
         foreach (var campaign in campaigns)
         {
             // T258: a campaign about the person that is not yet released is withdrawn, which ends it for good: no invitee
@@ -291,6 +295,7 @@ public sealed class ErasureExecutor : IErasureExecutor
                     (MsfCampaignState.Released or MsfCampaignState.Withdrawn))
             {
                 campaign.Withdraw(utcNow);
+                campaignsWithdrawn++;
             }
 
             if (campaign.SubjectUserId == userId) campaign.SubjectUserId = pseudonym;
@@ -323,6 +328,7 @@ public sealed class ErasureExecutor : IErasureExecutor
         var traineeProfiles = await _dbContext.Set<TraineeProfile>()
             .Where(p => p.UserId == userId)
             .ToListAsync(cancellationToken);
+        var profilesEnded = traineeProfiles.Count(profile => profile.IsActive);
         foreach (var traineeProfile in traineeProfiles)
         {
             // T312: a profile this erasure ends keeps the list it ended with, as an end by Mark complete or Deactivate
@@ -354,6 +360,63 @@ public sealed class ErasureExecutor : IErasureExecutor
             .ToListAsync(cancellationToken);
         foreach (var invitation in invitations)
             invitation.IssuedByUserId = pseudonym;
+
+        // --- Data-rights requests and their corrections (T387, F3, Q11) ---
+        // Every request is kept as the record of what the person asked and what was decided, RequesterUserId with it (the
+        // erasure record below pairs that id with the request and the pseudonym). Until T387 the requester's name stayed
+        // on each, an address most often, so the queue went on naming an erased person. Now every request of the person
+        // carries the pseudonym, the approving one included (tracked: it is the request saved here); where the person
+        // decided a request or recorded a correction, so does that column; and their other open requests are withdrawn,
+        // since nobody may decide, or carry through, a request of someone who is gone. Each is tracked, never a raw
+        // UPDATE: a request carries an xmin concurrency token, and a raw write under the tracker would refuse the save.
+        // Here, before the save that precedes the account's update, so a request changed elsewhere meanwhile is EF's
+        // concurrency exception, refused as PersonChanged, not an Identity result.
+        //
+        // What the person typed goes too (T387, review S1, the operator's decision of 2026-10-30): the reason on every one
+        // of their requests, and each correction's value before and after on them, read "Erased with the person's data on
+        // ‹day›." (DataRightsLabels.ErasedText), so a pseudonymous request does not name the person in their own words or in
+        // a corrected name. The staff's decision note, and the record a correction names, are the staff's, and are kept.
+        var erasedText = DataRightsLabels.ErasedText(erasedOn);
+        var erasedValueJson = JsonSerializer.Serialize(erasedText);
+        request.RequesterDisplayName = pseudonym;
+        request.Reason = erasedText;
+        var requestsOfPerson = await _dbContext.Set<DataRightsRequest>()
+            .Where(r => r.RequesterUserId == userId || r.DecidedByUserId == userId)
+            .ToListAsync(cancellationToken);
+        var requestsWithdrawn = 0;
+        foreach (var other in requestsOfPerson)
+        {
+            if (other.RequesterUserId == userId)
+            {
+                other.RequesterDisplayName = pseudonym;
+                other.Reason = erasedText;
+                if (other.Id != request.Id && other.IsOpen)
+                {
+                    other.WithdrawOnErasure();
+                    requestsWithdrawn++;
+                }
+            }
+
+            if (other.DecidedByUserId == userId)
+                other.DecidedByUserId = pseudonym;
+        }
+
+        var correctionsRecorded = await _dbContext.Set<DataRightsRectification>()
+            .Where(c => c.AppliedByUserId == userId)
+            .ToListAsync(cancellationToken);
+        foreach (var correction in correctionsRecorded)
+            correction.AppliedByUserId = pseudonym;
+
+        // The values corrected on the person's own requests (S1): a name before and after is the person's, whoever recorded it.
+        var ownRequestIds = requestsOfPerson.Where(r => r.RequesterUserId == userId).Select(r => r.Id).ToArray();
+        var correctionsOfPerson = await _dbContext.Set<DataRightsRectification>()
+            .Where(c => ownRequestIds.Contains(c.RequestId))
+            .ToListAsync(cancellationToken);
+        foreach (var correction in correctionsOfPerson)
+        {
+            correction.FromValueJson = erasedValueJson;
+            correction.ToValueJson = erasedValueJson;
+        }
 
         // --- UserRoleAssignment: remove SSO/manual role tracking records ---
         var roleAssignments = await _dbContext.Set<UserRoleAssignment>()
@@ -387,7 +450,6 @@ public sealed class ErasureExecutor : IErasureExecutor
             identityUser.TwoFactorEnabled = false;
             identityUser.FirstName = string.Empty;
             identityUser.LastName = string.Empty;
-            identityUser.OptOutOfOptionalProcessing = true;
             identityUser.OptOutOfDigestEmails = true;
             identityUser.InstitutionId = null;
 
@@ -422,10 +484,6 @@ public sealed class ErasureExecutor : IErasureExecutor
             _dbContext.Set<WombatIdentityUserSubSpecialityScope>().RemoveRange(subSpecialityScopes);
         }
 
-        // --- DataRightsRequest: the request itself references the requester ---
-        // We keep the request record for accountability; the requester display name
-        // was denormalized at submission time and stays for auditability.
-
         // --- Create erasure record ---
         var retentionJson = JsonSerializer.Serialize(retentionReasons.Distinct().Order().ToArray());
         var erasureRecord = DataRightsErasureRecord.Create(
@@ -438,7 +496,8 @@ public sealed class ErasureExecutor : IErasureExecutor
         _dbContext.Set<DataRightsErasureRecord>().Add(erasureRecord);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return erasureRecord;
+        // What it ended, for the approval's result (T387, S6): counted here, where each was ended, never re-read.
+        return new ErasureOutcome(pseudonym, reviewsWithdrawn, campaignsWithdrawn, requestsWithdrawn, profilesEnded);
     }
 
     /// <summary>
@@ -461,7 +520,7 @@ public sealed class ErasureExecutor : IErasureExecutor
         var codes = result.Errors.Select(error => error.Code).ToArray();
         if (codes.Contains(ConcurrencyFailureCode))
         {
-            throw new InvalidOperationException(PersonChanged);
+            throw new DataRightsRefusedException(DataRightsRefusal.PersonChanged, PersonChanged);
         }
 
         throw new InvalidOperationException(

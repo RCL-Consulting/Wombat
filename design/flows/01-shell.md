@@ -594,14 +594,14 @@ Expect: The menu reads Home, Programme trainees, Waiting for assessors, Decision
   Reassign (C5). The old address is "Page not found" with status 404: the placeholder page went with the stubs (T335,
   flow 01).
 
-Step A.5.3 — A forged dashboard switch (appendix-cross-cutting.md:790)
+Step A.5.3 — A forged dashboard switch (appendix-cross-cutting.md:940)
 Role: Trainee — Dr Anele Dlamini
 Route: /dashboard/switch/{role} → /
 Do: Open `/dashboard/switch/Administrator`.
 Expect: She is back on her own dashboard, still acting as a Trainee. A switch to a role she does not hold changes
   nothing and says nothing (no "You are now acting as" alert), and the sidebar offers her no switch: she holds one role.
 
-Step A.5.1 — A registrar opens an administrator's pages (appendix-cross-cutting.md:763)
+Step A.5.1 — A registrar opens an administrator's pages (appendix-cross-cutting.md:913)
 Role: Trainee — Dr Anele Dlamini
 Route: /admin/users → /access-denied → /admin/jobs → /access-denied
 Do: Type the address of the Users page, then that of Scheduled jobs.
@@ -609,7 +609,7 @@ Expect: Each time, "You cannot open this page": "Your role (Trainee) does not op
   your work, ask your institution's Wombat administrator.", with Go to Home, which takes her home. Nothing of the page
   she asked for is shown or named, and no switch of role is offered (T335, D6).
 
-Step A.5.2 — Prof Mbatha opens the Administrator's own pages (appendix-cross-cutting.md:777)
+Step A.5.2 — Prof Mbatha opens the Administrator's own pages (appendix-cross-cutting.md:927)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/institutions → /access-denied → /admin/jobs → /access-denied
 Do: Type the address of the Institutions list, then that of Scheduled jobs.
@@ -617,7 +617,7 @@ Expect: For both, "You cannot open this page": "Your role (Institutional admin) 
   need it for your work, ask the platform administrator.", with Go to Home. They are the Administrator's alone, her menu
   offers neither, and nothing in it is lit on the refusal.
 
-Step A.6.3 — Prof Mbatha edits her own institution (appendix-cross-cutting.md:1076)
+Step A.6.3 — Prof Mbatha edits her own institution (appendix-cross-cutting.md:1231)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/institutions/{Id:int} → /
 Do: From Home, press Open Kgosi Kgari Teaching Hospital. Set its contact email to `hod.paediatrics@kgk.wombat.local`
@@ -630,7 +630,7 @@ Expect: The contact email starts at `paediatrics@kgk.wombat.local`, A.6.1's save
   `SELECT "Id","ContactEmail","IsActive" FROM "Institutions" WHERE "ShortCode"='KGK'` gives
   `2|hod.paediatrics@kgk.wombat.local|t`.
 
-Step A.5.4 — Addresses that do not exist (appendix-cross-cutting.md:800)
+Step A.5.4 — Addresses that do not exist (appendix-cross-cutting.md:950)
 Role: Trainee — Dr Anele Dlamini
 Route: /not-found → /not-found → /account/login → /not-found
 Do: Type the following addresses:
@@ -643,7 +643,7 @@ Expect: For each, the "Page not found" page: "There is no page at this address."
   - `/placeholder/recent-activities` is Page not found too: the placeholder page went with the stubs (T335, flow 01).
   - Signed out, the unknown address first asks her to sign in, then shows Page not found.
 
-Step A.5.5 — Another institution's records, by id (appendix-cross-cutting.md:819)
+Step A.5.5 — Another institution's records, by id (appendix-cross-cutting.md:969)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/institutions/{Id:int} → /not-found → /admin/users/{UserId}
 Do: Open the Demo Institution's page by its id. Then open the page of the dev trainee `trainee@wombat.local` by that
@@ -652,7 +652,7 @@ Expect: The institution shows Page not found, not "You cannot open this page". T
   user could not be found or is outside your scope."), headed and tabbed "User", under Home › Users › User, with Go to
   Users and no Back to users (T376, P23). Neither page confirms that the record exists (CLAUDE.md: 404, not 403).
 
-Step A.5.6 — Another registrar's activity, by id (appendix-cross-cutting.md:837)
+Step A.5.6 — Another registrar's activity, by id (appendix-cross-cutting.md:987)
 Role: Trainee — Dr Anele Dlamini
 Route: /activities/{ActivityId:int}
 Do: Open the address of Dr Mahlangu's submitted Mini-CEX from A.2.7.
@@ -660,14 +660,17 @@ Expect: The page is headed "Activity unavailable" and reads "This activity does 
   Go to My activities: the same page an id that does not exist shows, so nothing of the activity is shown and nothing
   tells her it exists (T101, C7).
 
-Step A.5.7 — A data-rights request that is not his, by id (appendix-cross-cutting.md:850)
+Step A.5.7 — A data-rights request that is not his, by id (appendix-cross-cutting.md:1000)
 Role: Coordinator — Mr Pieter Smit
 Route: /admin/data-rights/{Id:guid}
-Do: Open the address of Dr Mahlangu's request with its last digit changed.
-Expect: The refusal "You are not authorized to access this data-rights request." and the empty state "Not found". An
-  unknown id and another institution's request read the same, so the page does not tell them apart (T112).
+Do: Open the address of Dr Mahlangu's rejected request (A.1.8) with its last digit changed.
+Expect: The page "Request unavailable": the tab "Request unavailable · Wombat", the trail Home › Data rights requests ›
+  Request unavailable, and "This data rights request does not exist, or you cannot open it." with Go to Data rights
+  requests. No alert, no "Not found", no Back to list; Data rights requests stays lit (T387, Q13, Q17; R3-U01). An
+  unknown id and another institution's request read the same, word for word, so the page does not tell them apart
+  (T112, S14; R3-U02).
 
-Step A.5.8 — The error page (appendix-cross-cutting.md:863)
+Step A.5.8 — The error page (appendix-cross-cutting.md:1018)
 Role: Trainee — Dr Anele Dlamini
 Route: /Error
 Do: Type `/Error`.
@@ -675,14 +678,14 @@ Expect: Typed, no request failed: "Nothing went wrong" and "This is Wombat's err
   failed, so there is nothing to report.", with Go to Home, no reference and no Try again. Signed out it reads the same,
   with no sign-in first: the page is open to everyone, and static (T321, T335).
 
-Step A.5.9 — Dr Patel's Recent Activities (appendix-cross-cutting.md:883)
+Step A.5.9 — Dr Patel's Recent Activities (appendix-cross-cutting.md:1038)
 Role: Assessor — Dr Mohammed Patel
 Route: /
 Do: Read the menu.
 Expect: Home and Activity inbox, then My data rights. There is no Recent activities: the flow 01 pick dropped it, and
   the nav links to no page that is not built (DESIGN.md § The NavMenu).
 
-Step A.5.10 — Mr Smit's Stalled Activities (appendix-cross-cutting.md:893)
+Step A.5.10 — Mr Smit's Stalled Activities (appendix-cross-cutting.md:1048)
 Role: Coordinator — Mr Pieter Smit
 Route: / → /programme/waiting
 Do: Read the dashboard's "Waiting for assessors" card, then open Waiting for assessors from its foot.
@@ -696,7 +699,7 @@ Expect: The card, in the warning stripe, is badged "3 waiting, 1 overdue", and l
   Waiting for assessors lists the same three in that order under "3 waiting, 1 overdue", each with Send a reminder (none
   is sent here). Nothing offers Reassign (C5).
 
-Step A.5.11 — Dr Botha's Programme Trainees (appendix-cross-cutting.md:921)
+Step A.5.11 — Dr Botha's Programme Trainees (appendix-cross-cutting.md:1076)
 Role: CommitteeMember — Dr Sarah Botha
 Route: /
 Do: Read the menu.
@@ -704,7 +707,7 @@ Expect: "Acting as Committee member", with "Switch to Assessor" under it, over H
   reviews and Decision panels, then My data rights. There is no Waiting for assessors: chasing work is not a Committee
   member's (T358, Q7).
 
-Step A.5.12 — Dr Mokoena's Programme Trainees and STAR Review Queue (appendix-cross-cutting.md:933)
+Step A.5.12 — Dr Mokoena's Programme Trainees and STAR Review Queue (appendix-cross-cutting.md:1088)
 Role: SpecialityAdmin — Dr Refilwe Mokoena
 Route: /
 Do: Read the menu.
@@ -712,13 +715,13 @@ Expect: Home, Programme trainees, Waiting for assessors, Decisions due, Committe
   Entrustment decisions, then My data rights (T358, R2-Menus). The STAR review queue is not restored: Entrustment
   decisions, the programme's register of STARs, takes its place (DESIGN.md § The NavMenu).
 
-Step A.5.13 — devadmin's System page (appendix-cross-cutting.md:945)
+Step A.5.13 — devadmin's System page (appendix-cross-cutting.md:1100)
 Role: Administrator — devadmin
 Route: /
 Do: Read the menu.
 Expect: The grouped menu of Step 1.1, with no System item: the flow 01 pick dropped it, with its placeholder.
 
-Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1325)
+Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1480)
 Role: Trainee — Dr Anele Dlamini
 Route: / → /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/mine → /account/data-rights
 Do: At 390 px, sign in and open her dashboard, My progress and one EPA's page from its index, My activities and My data
@@ -727,10 +730,12 @@ Expect: The dashboard's cards stack, each Furthest short row's figure under its 
   index and the Entrustment panel stack: each EPA's link is a 44 px block, every cell but the link labelled by its
   column, and each Latest rating link in the panel is 44 px tall (T328); nothing scrolls sideways. The EPA's page draws
   its chart at 322 px, never scaled, with its table stacked under it (T355, T323). My activities' rows stack, each cell
-  but the link and the state labelled by its column (T342), its Credit link 44 px tall, and the table of "Your requests"
-  scrolls inside its container; each row's link or action stays reachable.
+  but the link and the state labelled by its column (T342), its Credit link 44 px tall. On My data rights Your requests
+  stacks, each row a block with every text cell but Submitted labelled by its column (the Actions cell has none: its button is named for its row) and nothing scrolling inside it, and
+  the row's Download is 44 px tall and the row's width (T387, R3-M04 at 390); each row's link or action stays
+  reachable.
 
-Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1698)
+Step A.7.14 — Prof Mbatha's pages, checked for contrast (appendix-cross-cutting.md:1859)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /account/login → / → /account/profile → /account/profile/submit → /account/profile → /account/change-password → /admin/users/{UserId} → /admin/activity-types/{ActivityTypeId:int} → /committee/reviews → /committee/reviews/{ReviewId:int}
 Do: With a contrast checker (axe, or the browser's accessibility audit), check each pair below:

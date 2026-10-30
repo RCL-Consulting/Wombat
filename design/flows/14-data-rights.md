@@ -687,46 +687,83 @@ A flow is done when BRIEF.md § 9's four checks hold. For this flow:
 ## 8. The runbook steps, verbatim (sent with § 1, in the same message)
 
 These are pasted from `execution/knowledge/scenario-paediatrics/appendix-cross-cutting.md` (Role, Route, Do and Expect
-only), as flow 13's replay left them (T379, 2026-10-28; the Gaps it recorded are A.1.1's T318, A.1.2's T319 and T325,
-A.1.3's T324 and T323, A.1.9's T319 and A.1.12's T276 and T264). Since flow 13, A.1.6 reads the former trainee's menu
-with Export portfolio and A.1.14 reads Trainees' Completed and closed listing the erased programme under the pseudonym.
-`D` is the replay day (README § How to play).
+only). They were sent to the design as flow 13's replay left them (T379, 2026-10-28; the Gaps it recorded are A.1.1's
+T318, A.1.2's T319 and T325, A.1.3's T324 and T323, A.1.9's T319 and A.1.12's T276 and T264). Since the build (T387,
+2026-10-30) they are the pages as built, with the new Step A.1.8a, which carries an approved rectification through
+(round 3's T1); the build closes those Gaps for the next replay to confirm. `D` is the replay day (README § How to
+play).
 
 ```text
-Step A.1.1 — Dr Dlamini reads her data rights and sets a preference (appendix-cross-cutting.md)
+Step A.1.1 — Dr Dlamini reads My data rights (appendix-cross-cutting.md)
 Role: Trainee — Dr Anele Dlamini
 Route: / → /account/data-rights
-Do: Open My data rights, under the rule at the foot of her menu. Read the page, tick "Opt out of optional processing",
-  and save her preferences.
-Expect: The page has three parts: processing preferences, a request form, and "Your requests", which is empty ("No
-  requests"). The digest opt-out's help names the three reminders it stops (the weekly coordinator digest, the 14-day
-  draft reminder and the 5-day assessment reminder), and says that email about one particular thing is still sent
-  (T240). Saving says "Processing preferences saved." and the focus moves to that message (T234).
+Do: Open My data rights, under the rule at the foot of the menu, and read the page. Save nothing (T387, Q28).
+Expect: The menu item is lit and the tab reads "My data rights · Wombat"; under the h1 the subtitle "Ask for a copy of
+  your data, a correction or erasure, and read the answers. Stop the regular reminder emails." The page is one column
+  of three sections, in this order (T387, Q4, R3-M01):
+  - Your requests: "No requests yet." over "You have not asked for your data, a correction or erasure. Make a request
+    below."
+  - Make a request: "Under data protection law you may ask for a copy of your personal data, its correction, or its
+    erasure. Staff at Kgosi Kgari Teaching Hospital decide it; the answer shows under Your requests." Then Request type
+    (marked required) as four described radios, none chosen: Access, Export, Rectification and Erasure, each with its
+    sentence (Q20); Reason (required) with "0 of 4,000 characters" under it; "What happens next: staff at Kgosi Kgari
+    Teaching Hospital read it and approve or reject it with a note, and you are emailed when it is decided. While it
+    waits you can withdraw it under Your requests."; Submit request.
+  - Reminder emails: its intro ("… You can stop its regular reminders."), one checkbox, "Stop the regular reminder
+    emails", clear, and Save. Its help names the three reminders it stops (the weekly coordinator digest, the reminder
+    of drafts left untouched for 14 days, and the reminder of activities that have waited more than 5 days) and says
+    that email about one particular thing is still sent, "such as an invitation to give feedback, a coordinator's
+    reminder about one activity, or a notice that an entrustment decision is about to expire or has expired" (T240;
+    Q27, F7).
+  There is no optional-processing box (T318, Q6).
 
 Step A.1.2 — Dr Dlamini requests an export of her data (appendix-cross-cutting.md)
 Role: Trainee — Dr Anele Dlamini
 Route: /account/data-rights
-Do: Choose the request type Export and submit it with no reason. Then submit it again with the reason "A copy of my
-  training record for my own files."
-Expect: The form offers four types: Access, Export, Rectification and Erasure. With no reason the request is refused
-  ("Please provide a reason for your request.") and nothing is sent. The second submit says the request was submitted
-  and that she will be notified when it is reviewed. "Your requests" lists it: today, Export, Submitted, with a
-  Withdraw button named for it and no Download.
+Do: Choose the request type Export and press Submit request with no reason. Then type the reason "A copy of my
+  training record for my own files." and press Submit request again.
+Expect: With no reason the request is refused before anything is sent: "Please provide a reason for your request."
+  under Reason, which is marked invalid and takes the focus, with Export still chosen (T387, R3-M02). No row is written.
+  The second press: "Request submitted. You will be notified when it is reviewed." heads Your requests and takes the
+  focus, and the form is cleared (R3-M03). Your requests lists it, its caption "Your data rights requests, newest
+  first": Submitted at the minute it was sent, in SAST (2026-10-28 00:01 SAST on the T379 replay, never UTC: T325),
+  Export, the badge Submitted, the answer "Waiting for a decision.", and Withdraw named "Withdraw the Export request
+  made ‹that time›" (T239). No Download. The submission sends no mail; the decision will (A.1.3).
 
 Step A.1.3 — Mr Smit approves the export from KGK's queue (appendix-cross-cutting.md)
 Role: Coordinator — Mr Pieter Smit
 Route: /admin/data-rights → /admin/data-rights/{Id:guid}
-Do: Open Data rights requests from the menu. Narrow it to type Export and status Submitted, apply the filters, and
-  review Dr Dlamini's request. Press Approve with no decision note. Then approve it with the note "Identity confirmed;
-  export released to the data subject."
-Expect: The queue holds only KGK's requests (T112), and the filters change it only when they are applied. On the
-  request's page Data rights requests stays lit, and the trail reads Home › Data rights requests › the request's id
-  once it has loaded (R2-Rules § 3; DESIGN.md's owner table).
-  - The row names the requester by the address she signs in with, and its Review action is named for the row (T239).
-  - The detail page shows the requester, her user id, when it was submitted, its type, its status and her reason.
-  - Approving with no note is refused: "A decision note is required."
-  - Once approved, the request reads Completed at once, because an export is built when it is downloaded. A Decision
-    card appears (decided by, as a user id; decided on; the note; completed on), and Approve and Reject are gone.
+Do: Open Data rights requests from the menu. Choose type Erasure and press Show. Then choose type Export and status
+  Submitted, press Show, and review Dr Dlamini's request. Press Approve with no decision note. Then approve it with the
+  note "Identity confirmed; export released to the data subject."
+Expect: The queue holds only KGK's requests (T112): the subtitle "Requests from people at Kgosi Kgari Teaching Hospital
+  about their personal data: decide each, and carry an approved correction through." (T387, R3-Q01).
+  - The filter bar offers Type (All types, Access, Export, Rectification, Erasure) and Status (All statuses, Submitted,
+    Approved, Completed, Rejected, Withdrawn) by their labels, never "UnderReview" or "Objection" (T324, Q8), and Show.
+    A choice changes nothing until Show; Clear filters appears only once a filter is applied; there is no Apply filters
+    in the header (T328).
+  - Arriving: "Requests (1)", one row: Submitted in SAST, the Requester "Anele Dlamini" over dlamini@kgk.wombat.local
+    (F1), Export, the badge Submitted, the request's id, and Review named "Review the Export request from Anele Dlamini,
+    ‹its time›" (T239). No pager (one page).
+  - Erasure, Show: "Requests (0)" takes the focus, then "No requests match" and "No Erasure request at Kgosi Kgari
+    Teaching Hospital. Clear filters to see every request." (R3-Q02). Export and Submitted, Show: "Requests (1)" takes
+    the focus, the caption ending ": Export, Submitted" (R3-Q03).
+  - On the request's page Data rights requests stays lit, the trail reads Home › Data rights requests › the request's
+    id, and the h1 and tab read "Export request from Anele Dlamini" under "Submitted ‹its time› · Kgosi Kgari Teaching
+    Hospital" (Q12, R3-D01). One column of sections: Request (Requester, Email, User id, Request id, Type, Status
+    Submitted, Reason), then Decide: "Approving makes the export ready at once: Anele Dlamini downloads it from My data
+    rights, and it is built at that moment. You cannot download it yourself.", Decision note (required) with "Anele
+    Dlamini reads this note with the decision on My data rights, and is emailed that it was decided. Who decided is not
+    shown.", Reject and Approve.
+  - Approve with no note is refused before anything is sent: "A decision note is required." under the note, which
+    takes the focus (R3-D02).
+  - With the note: "Request approved. Anele Dlamini is emailed, and can download the export from My data rights." heads
+    a new Decision section and takes the focus, its first sentence bold (R3-D03). The request reads Completed at once,
+    because an export is built when it is downloaded. Decision reads Approved; Decided by "Pieter Smit" over the
+    decider's id (43ad0cb7-5ce6-46d7-8595-7117d130c7dc); Decided on and Completed on in SAST; the note. Decide is gone.
+  - A stub mail is logged after the approval (T319, Q5): subject "Your data rights request has been decided", "Your
+    Export request was approved on `D`." and "Read the answer, and download your data, on My data rights.", with the
+    link to My data rights. It names neither the note nor the decider.
 
 Step A.1.4 — Mr Smit cannot download what he approved (appendix-cross-cutting.md)
 Role: Coordinator — Mr Pieter Smit
@@ -739,46 +776,115 @@ Step A.1.5 — Dr Dlamini downloads her export (appendix-cross-cutting.md)
 Role: Trainee — Dr Anele Dlamini
 Route: /account/data-rights → /account/data-rights/download/{id:guid}
 Do: Reload My data rights and download the completed request.
-Expect: The row reads Completed and offers a Download named for the request.
+Expect: The row reads Completed (the badge green) with its answer, "Approved on `D`: “Identity confirmed; export
+  released to the data subject.”", and nothing names who decided (Q5, T319; R3-M04). It offers Download, named
+  "Download the export of the Export request made ‹its time›" (N12); Withdraw is gone.
   - The browser saves `data-export-<date>-<time>.zip`.
   - It holds `data-export.json`: schema version 2, with her profile, every activity she is the subject or author of,
     her committee reviews, the MSF campaigns about her, her progress by semester, her newest 500 audit entries and her
     portfolio exports.
   - It also holds `portfolio-summary.pdf`.
-  - No email is sent.
+  - An email told Anele Dlamini of the decision at A.1.3; none is sent on download.
 
 Step A.1.6 — Dr du Plessis asks for access, then withdraws the request (appendix-cross-cutting.md)
 Role: Former trainee (no role; a trainee record) — Dr Pieter du Plessis
 Route: /account/data-rights
 Do: Submit an Access request with the reason "Everything held about me." Then withdraw it from "Your requests".
-Expect: He signs in to Home with no role: the menu reads Home, My progress, Export portfolio and My data rights, and
-  Home is the former trainee's card as at Step 5.28, "Your programme ended on `D−2`." with the record's four rows, STARs
-  plain text (T379, R3-H02). The request lists as Submitted, with a Withdraw named for its type and time. Once
-  withdrawn, the page says "Request withdrawn.", the focus moves to that message, and the row reads Withdrawn and offers
-  nothing.
+Expect: Dr du Plessis signs in to Home with no role: the menu reads Home, My progress, Export portfolio and My data
+  rights, and Home is the former trainee's card as at Step 5.28, "Your programme ended on `D−2`." with the record's four
+  rows, STARs plain text (T379, R3-H02). Submitted: "Request submitted. You will be notified when it is reviewed." heads
+  Your requests and takes the focus; the row reads its time in SAST, Access, Submitted, "Waiting for a decision.", with
+  Withdraw named "Withdraw the Access request made ‹its time›" (T387, R3-M05). Withdraw acts at once, with no dialog
+  (Q14): "Request withdrawn." heads Your requests and takes the focus, and the row reads Withdrawn (the grey
+  badge-withdrawn), "You withdrew it before a decision.", and offers nothing (R3-M06).
 
 Step A.1.7 — Dr Mahlangu asks for a correction (appendix-cross-cutting.md)
 Role: Trainee — Dr Nomsa Mahlangu
 Route: /account/data-rights
 Do: Submit a Rectification request with the reason "My programme start is recorded as 15 January 2026; I started work
   on 19 January."
-Expect: The request lists as Submitted, with a Withdraw.
+Expect: "Request submitted. You will be notified when it is reviewed." takes the focus, and the request lists as
+  Submitted, its time in SAST, "Waiting for a decision.", with Withdraw named "Withdraw the Rectification request made
+  ‹its time›" (T387, R3-M07).
 
 Step A.1.8 — Mr Smit reads the queue and rejects the correction (appendix-cross-cutting.md)
 Role: Coordinator — Mr Pieter Smit
 Route: /admin/data-rights → /admin/data-rights/{Id:guid} → /admin/data-rights/{Id:guid}
-Do: Clear both filters and apply them. Open Dr du Plessis's withdrawn request, then Dr Mahlangu's. Reject hers with the
-  note "The whole January 2026 intake is admitted on 15 January, the semester boundary (D42). Nothing to correct."
-Expect: The queue lists all three KGK requests, newest first, each with its status badge.
-  - The withdrawn request's page shows the request and offers no decision.
-  - Dr Mahlangu's reads Rejected once rejected, with its Decision card, and the focus moves to "Request rejected."
+Do: Open Data rights requests from the menu, set both filters to All and press Show. Open Dr du Plessis's withdrawn
+  request, then Dr Mahlangu's. Reject Dr Mahlangu's with the note "The whole January 2026 intake is admitted on 15
+  January, the semester boundary (D42). Nothing to correct."
+Expect: "Requests (3)" takes the focus, with no Clear filters (no filter is applied), and lists all three KGK requests,
+  newest first, each name over its address and each with its status badge (T387, Q22; R3-Q04): Nomsa Mahlangu,
+  Rectification, Submitted (blue); Pieter du Plessis, Access, Withdrawn (grey, badge-withdrawn); Anele Dlamini, Export,
+  Completed (green).
+  - The withdrawn request's page, "Access request from Pieter du Plessis", shows its Request section and in it "Pieter
+    du Plessis withdrew this request before it was decided. There is nothing to decide."; no Decision, no Decide
+    (R3-D04).
+  - Dr Mahlangu's Decide reads "Approving opens the Correction section: record each correction as it is made, then
+    complete the request. Nomsa Mahlangu is emailed at each step." Rejected: "Request rejected. Nomsa Mahlangu is
+    emailed, and reads your note on My data rights." heads a new Decision section and takes the focus (R3-D05); the
+    badge Rejected (red); Decision reads Rejected, Decided by Pieter Smit over the decider's id, Decided on in SAST, and
+    the note. No Correction section and no Decide.
+  - A stub mail is logged after the rejection: "Your data rights request has been decided", "Your Rectification request
+    was rejected on `D`." and "Read the answer on My data rights.", with the link; no note.
+
+Step A.1.8a — Dr Mahlangu has a misspelt last name corrected through a Rectification (appendix-cross-cutting.md)
+Role: Trainee and Coordinator — Dr Nomsa Mahlangu and Mr Pieter Smit
+Route: /account/profile → /account/profile/submit → /account/data-rights → /admin/data-rights → /admin/data-rights/{Id:guid} → /account/data-rights → /account/profile → /account/profile/submit → /admin/data-rights/{Id:guid} → /account/data-rights
+Do: Dr Mahlangu opens My account from the name in the top bar, sets Last name to "Mahlngu" and presses Save name.
+  Then, on My data rights, Dr Mahlangu submits a Rectification with the reason "My last name is recorded as Mahlngu. It
+  is Mahlangu."
+  - Mr Smit opens Data rights requests from the menu, reviews the new request and approves it with the note "Confirmed
+    against the HPCSA register: the last name is Mahlangu.", reads the Correction section, and presses Complete request
+    with nothing recorded.
+  - Dr Mahlangu reloads My data rights and reads the row; then, on My account, sets Last name to "Mahlangu" and presses
+    Save name.
+  - Mr Smit reloads the request, chooses the record Account › Last name, types Value before "Mahlngu" and Value after
+    "Mahlangu", and presses Record correction; then presses Complete request.
+  - Dr Mahlangu reloads My data rights and reads both requests (A.1.9 reads them again).
+Expect: The misspelling is saved: "Name saved." takes the focus and the top bar names "Nomsa Mahlngu" (as at A.4.1).
+  The Rectification lists as Submitted, "Waiting for a decision.", above A.1.7's Rejected one. No mail.
+  - The queue reads "Requests (4)". Both Rectification rows read "Nomsa Mahlngu" over mahlangu@kgk.wombat.local: a
+    request names the person as the account reads now (T387, F1). Two of one type in one minute carry the second in
+    their Review names (N4).
+  - The request's h1 and tab read "Rectification request from Nomsa Mahlngu". Approved: "Request approved. Nomsa
+    Mahlngu is emailed. Record each correction below, then complete the request." heads Decision and takes the focus;
+    the badge Approved (amber); Decision names Pieter Smit (R3-C01). A stub mail: "Your data rights request has been
+    decided", "Your Rectification request was approved on `D`." and "It is being corrected. You will be emailed again
+    when it is complete; read the answer on My data rights."
+  - The Correction section (R3-C02): "Record each change as it is made on the page that holds the data." and "No
+    correction is recorded yet." Record (required) offers four described radios: Account › First name and Account ›
+    Last name, each "Changed by Nomsa Mahlngu on My account. No staff page changes a name."; Trainee profile ›
+    Programme start, "Changed on Nomsa Mahlngu's programme page, which an Institutional admin at Kgosi Kgari Teaching
+    Hospital opens; you cannot."; and Other, "Name the record in the field under it." Then Value before and Value
+    after (each required), Record correction, "Once every correction is made and recorded, complete the request. It
+    then reads Completed here and on Nomsa Mahlngu's My data rights." and Complete request.
+  - Complete request with nothing recorded is refused before anything is sent: "Record at least one correction before
+    completing the request." above Complete request, which keeps the focus (T316, R3-C03). The request stays Approved.
+  - Dr Mahlangu's row reads Approved (amber), "Approved on `D`: “Confirmed against the HPCSA register: the last name is
+    Mahlangu.” Being corrected; it reads Completed once done.", with no Withdraw and no Download; the top bar still
+    names "Nomsa Mahlngu" (R3-M08). The corrective save: "Name saved.", and the top bar names "Nomsa Mahlangu".
+  - Reloaded, the request reads "Rectification request from Nomsa Mahlangu", and each line of Record names Nomsa
+    Mahlangu. Recorded: "Correction recorded: Account › Last name." heads Correction and takes the focus; the table
+    "Corrections recorded on this request" reads Account › Last name, Mahlngu, Mahlangu, "Pieter Smit · ‹its time›"; the
+    form is cleared (R3-C05).
+  - Completed: "Request completed. Nomsa Mahlangu is emailed, and reads it as Completed on My data rights." heads
+    Correction and takes the focus; the badge Completed (green); Decision adds Completed on in SAST; the form and
+    Complete request are gone, the table stays (R3-C06). A stub mail: "Your data rights request is complete", "Your
+    Rectification request was completed on `D`." and "Read what was corrected on My data rights."
+  - Dr Mahlangu's row reads Completed (green), "Completed on `D`. Corrected: Account › Last name." (R3-M09).
 
 Step A.1.9 — Dr Mahlangu reads the decision (appendix-cross-cutting.md)
 Role: Trainee — Dr Nomsa Mahlangu
 Route: /account/data-rights
-Do: Reload My data rights and read her request.
-Expect: The request reads Rejected and offers nothing: no Withdraw, no Download. The page shows neither the decision
-  note nor who decided, and no email told her of the decision.
+Do: Reload My data rights and read both requests.
+Expect: Your requests lists both Rectifications, newest first, and neither offers anything: no Withdraw, no Download
+  (T387, R3-M09).
+  - A.1.8a's reads Completed, "Completed on `D`. Corrected: Account › Last name."
+  - A.1.7's reads Rejected, "Rejected on `D`: “The whole January 2026 intake is admitted on 15 January, the semester
+    boundary (D42). Nothing to correct.”"
+  - Each answer gives the decision, its day and its note, and never who decided (Q5). An email told Nomsa Mahlangu of
+    each decision: the rejection at A.1.8, the approval and the completion at A.1.8a.
 
 Step A.1.10 — Mr Smit schedules a formative check-in for Dr Ndlovu (appendix-cross-cutting.md)
 Role: Coordinator — Mr Pieter Smit
@@ -796,20 +902,49 @@ Role: Trainee — Dr Sipho Ndlovu
 Route: /account/data-rights
 Do: Submit an Erasure request with the reason "I am leaving the programme and want my personal data removed." Stay
   signed in in this browser.
-Expect: The request is accepted although a review of him is scheduled: no review's state refuses an erasure request
-  (T258). It lists as Submitted, with a Withdraw.
+Expect: The request is accepted although a review of Dr Ndlovu is scheduled: no review's state refuses an erasure
+  request (T258). "Request submitted. You will be notified when it is reviewed." takes the focus, and it lists as
+  Submitted, its time in SAST, "Waiting for a decision.", with Withdraw named "Withdraw the Erasure request made ‹its
+  time›" (T387, R3-M10).
 
 Step A.1.12 — devadmin approves the erasure (appendix-cross-cutting.md)
 Role: Administrator — devadmin
-Route: /admin/data-rights → /admin/data-rights/{Id:guid}
-Do: Narrow the queue to Erasure and apply the filter, review Dr Ndlovu's request, and approve it with the note "Identity
-  confirmed. Programme records are kept under a pseudonym."
-Expect: The Administrator's queue holds every institution's requests.
-  - Once approved, the request reads Completed at once, with its Decision card. The approval and the erasure are one
-    transaction (T258).
-  - No confirmation is asked before this irreversible action (noted on T264).
-  - The queue and the request still name the requester by the address he signed in with: the erasure keeps the request
-    as it was submitted (`ErasureExecutor`).
+Route: /admin/data-rights → /admin/data-rights/{Id:guid} → /admin/data-rights
+Do: Open Data rights requests, choose type Erasure and press Show, and review Dr Ndlovu's request. Type the note
+  "Identity confirmed. Programme records are kept under a pseudonym." and press Approve and erase…; read the dialog
+  and press Cancel. Press Approve and erase… again and confirm with Erase and approve. Then open Data rights requests
+  from the trail.
+Expect: The Administrator's queue holds every institution's requests: the subtitle "Requests from people at every
+  institution about their personal data: …", an Institution column, and "Requests (5)" (KGK's are the only ones),
+  newest first (T387, Q23; R3-Q05). Erasure, Show: "Requests (1)", Dr Ndlovu's row (R3-Q06).
+  - The request reads "Erasure request from Sipho Ndlovu". Decide: "Approving erases Sipho Ndlovu's personal data at
+    once and cannot be undone. You are asked to confirm, with what it ends and keeps."; the note's help "Kept with the
+    request. Sipho Ndlovu will not read it: approving ends the account."; Reject, and Approve and erase…, an outline
+    button (Q19; R3-D06).
+  - Approve and erase… opens "Erase Sipho Ndlovu's personal data?" with the focus on Cancel (R3-D07): "This cannot be
+    undone.", "Approving erases it now, in one step, and completes the request.", then "It ends:" the account and its
+    sign-in ("Sipho Ndlovu can no longer sign in, and an open session ends within a minute."); "1 open committee
+    review: Formative check-in #N, Paed Annual Review Panel, Scheduled. It is withdrawn, and nothing more is decided at
+    it." (A.1.10's #N); "No MSF campaign: none about Sipho Ndlovu is open."; "The programme, Paediatric EPA Curriculum
+    (11.2), which ends today as Withdrawn." Then "It keeps, under a pseudonym that names nobody: the ratified review
+    #5, closed check-in #6, the activities, progress and audit entries, and this request." (Q3, F5). Cancel closes it,
+    the focus back on Approve and erase…, and nothing has changed (R3-D08).
+  - Erase and approve: "The personal data is erased. The request is approved and completed. 1 committee review was
+    withdrawn and the programme ended today. The account is now deleted_user_0ae1d64b; its open session ends within a
+    minute." heads Decision and takes the focus, its first sentence bold (S6; R3-D09). The approval and the erasure are
+    one transaction (T258).
+  - The page now reads "Erasure request from deleted_user_0ae1d64b", with the standing notice "This person's personal
+    data was erased on `D`, at this request. The request is kept as the record of it, under the pseudonym."; Requester
+    deleted_user_0ae1d64b over "Erased `D`", no Email; the badge Completed; the Reason "Erased with the person's data on
+    `D`." in place of the one he typed (review S1, the operator's decision of 2026-10-30), the decision note kept; Decided
+    by Demo Administrator over the decider's id; Decided on and Completed on in SAST (F3, Q11).
+  - One stub mail is logged after the approval, the erasure's confirmation with no link: "Your personal data has been
+    erased from Wombat", "Your Erasure request was approved on `D`, and your personal data has been erased from
+    Wombat." and "Your account is closed, and you can no longer sign in. Your training records are kept under a name
+    that identifies nobody." (F4).
+  - The queue's row reads deleted_user_0ae1d64b over "Erased `D`", Completed, with Review named "Review the Erasure
+    request from deleted_user_0ae1d64b, ‹its time›" (N5, R3-Q07). The filter is not kept across pages, so all five rows
+    show.
 
 Step A.1.13 — Dr Ndlovu's open session ends, and he cannot sign in again (appendix-cross-cutting.md)
 Role: Trainee — Dr Sipho Ndlovu (the browser left signed in at A.1.11)
@@ -817,7 +952,7 @@ Route: /account/session-ended → /account/login
 Do: Wait on any page for up to a minute. Then sign in with his old address and password.
 Expect: The tab leaves for the sign-in page by itself, which says "Your session has ended. Sign in again." (T279), an
   information notice. Signing in is refused in the words an unknown address gets, "Invalid email or password.", with
-  no mention of an erasure (T156). No email is sent to him.
+  no mention of an erasure (T156). The erasure's confirmation was sent at A.1.12; nothing more is sent.
 
 Step A.1.14 — What the erasure left, as KGK sees it (appendix-cross-cutting.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -843,21 +978,27 @@ Expect: No Dr Ndlovu remains among KGK's users or current trainees, and no row n
 Step A.2.3 — Mr Smit opts out of digest emails (appendix-cross-cutting.md)
 Role: Coordinator — Mr Pieter Smit
 Route: /account/data-rights
-Do: Tick "Opt out of digest emails" and save his preferences.
-Expect: "Processing preferences saved."
+Do: Open My data rights from the menu. Under Reminder emails, tick "Stop the regular reminder emails" and press Save.
+Expect: The box is clear as the page opens. Saved: "Reminder emails stopped." heads Reminder emails and takes the focus,
+  and the box stays ticked (T387, Q24; R3-M11). Saving it again unchanged would say "Nothing changed: reminder emails
+  are still stopped." (N3).
 
 Step A.2.5 — Mr Smit opts back in (appendix-cross-cutting.md)
 Role: Coordinator — Mr Pieter Smit
 Route: /account/data-rights
-Do: Untick "Opt out of digest emails" and save.
-Expect: "Processing preferences saved."
+Do: Open My data rights. Under Reminder emails, untick "Stop the regular reminder emails" and press Save.
+Expect: The box is ticked as the page opens. Saved: "Reminder emails will be sent again." heads Reminder emails and
+  takes the focus, and the box stays clear (T387, Q24; R3-M12).
 
 Step A.5.7 — A data-rights request that is not his, by id (appendix-cross-cutting.md)
 Role: Coordinator — Mr Pieter Smit
 Route: /admin/data-rights/{Id:guid}
-Do: Open the address of Dr Mahlangu's request with its last digit changed.
-Expect: The refusal "You are not authorized to access this data-rights request." and the empty state "Not found". An
-  unknown id and another institution's request read the same, so the page does not tell them apart (T112).
+Do: Open the address of Dr Mahlangu's rejected request (A.1.8) with its last digit changed.
+Expect: The page "Request unavailable": the tab "Request unavailable · Wombat", the trail Home › Data rights requests ›
+  Request unavailable, and "This data rights request does not exist, or you cannot open it." with Go to Data rights
+  requests. No alert, no "Not found", no Back to list; Data rights requests stays lit (T387, Q13, Q17; R3-U01). An
+  unknown id and another institution's request read the same, word for word, so the page does not tell them apart
+  (T112, S14; R3-U02).
 
 Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md)
 Role: Trainee — Dr Anele Dlamini
@@ -868,8 +1009,10 @@ Expect: The dashboard's cards stack, each Furthest short row's figure under its 
   index and the Entrustment panel stack: each EPA's link is a 44 px block, every cell but the link labelled by its
   column, and each Latest rating link in the panel is 44 px tall (T328); nothing scrolls sideways. The EPA's page draws
   its chart at 322 px, never scaled, with its table stacked under it (T355, T323). My activities' rows stack, each cell
-  but the link and the state labelled by its column (T342), its Credit link 44 px tall, and the table of "Your requests"
-  scrolls inside its container; each row's link or action stays reachable.
+  but the link and the state labelled by its column (T342), its Credit link 44 px tall. On My data rights Your requests
+  stacks, each row a block with every text cell but Submitted labelled by its column (the Actions cell has none: its button is named for its row) and nothing scrolling inside it, and
+  the row's Download is 44 px tall and the row's width (T387, R3-M04 at 390); each row's link or action stays
+  reachable.
 
 Step A.7.5 — Mr Smit on his phone (appendix-cross-cutting.md)
 Role: Coordinator — Mr Pieter Smit
@@ -882,5 +1025,8 @@ Expect: Home's header action, Start an MSF campaign, is a row of its own below t
   action a 44px block; nothing scrolls sideways. The campaign page keeps its gutter (T226), and its invitee table (counts by
   respondent group: the page never lists an address) fits its card. Decisions due's filters stack, with Show and Clear
   filters each 44px tall; By EPA's fold summary is 44px, and opened it reads one block per EPA; each decision is a block, its
-  one action a 44px button the block's width; the pager's buttons are 44px (T364). The queue's filters stack above its table.
+  one action a 44px button the block's width; the pager's buttons are 44px (T364). The data-rights queue (T387, R3-Q13):
+  Type and Status stack, each select 44px tall, with Show 44px under them; no Clear filters at the defaults and no
+  Apply filters in the header (T328); "Requests (5)" over the five KGK rows, stacked (the queue stacks from 1100px),
+  each a block with every field under its column's name and its Review 44px; no pager; nothing scrolls sideways.
 ```

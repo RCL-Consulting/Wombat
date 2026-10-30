@@ -1,283 +1,379 @@
 @page "/account/data-rights"
 @attribute [Authorize]
+@implements IAsyncDisposable
+@using Wombat.Application.Features.DataRights.Commands
+@using Wombat.Application.Features.DataRights.Queries
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject Microsoft.Extensions.Options.IOptions<Wombat.Application.Common.Options.DashboardThresholds> Thresholds
+@inject IJSRuntime JS
+@inject ILogger<DataRights> Logger
+
+@*
+  My data rights (T387, flow 14, lane M; boards R3-M01 to M18): one page, three h2 sections in this order (Q4): Your
+  requests, each with its answer and never its decider (Q5, T319); Make a request, the type as described radios (flow 11's,
+  Q20's two download types) and the reason with its counter (S24); Reminder emails, the one preference left once the
+  optional-processing box went (Q6, T318; Q24). Each section says what its own action did, one result on the page at a
+  time (M13), and the result takes the focus (BRIEF § 6 A5); a refusal the page finds before sending stays under its
+  field, which takes the focus (M02). No exception's text reaches the page (T329).
+*@
 
 <PageTitle>My data rights · Wombat</PageTitle>
 
-<PageHeader Title="My data rights" Subtitle="Request access to your data, correct it, export it, manage processing preferences, or request erasure." />
+<PageHeader Title="My data rights" Subtitle="@MyDataRightsWords.Subtitle" />
 
-@* What an action did. It takes the focus once the action is done (T234; DESIGN.md § Button system): a status arriving
-   on its own is often not read, and a withdrawn request's Withdraw is gone. A refusal leaves the focus where it was: it
-   is an alert, read at once. *@
-<ActionResult @ref="_result">
-  @if (!string.IsNullOrWhiteSpace(_errorMessage))
-  {
-    <Alert Kind="danger">@_errorMessage</Alert>
-  }
+<div class="user-page data-rights-page">
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="LoadAsync" FocusAfterRetry="FocusHeadingAsync">
+    <LoadingContent>
+      <p class="loading-line" role="status">@MyDataRightsWords.Loading</p>
+      @for (var card = 0; card < 3; card++)
+      {
+        <div class="detail-card" aria-hidden="true">
+          <div class="skeleton skel-title"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line skel-short"></div>
+        </div>
+      }
+    </LoadingContent>
+    <ChildContent>
+      <section class="detail-card user-section" aria-labelledby="dr-requests-heading">
+        @* No h2 here takes the focus: each result focuses its own region (round 3's build note 9, N18). *@
+        <h2 id="dr-requests-heading">@MyDataRightsWords.YourRequests</h2>
+        @Result(Place.Requests)
 
-  @if (!string.IsNullOrWhiteSpace(_statusMessage))
-  {
-    <Alert Kind="success">@_statusMessage</Alert>
-  }
-</ActionResult>
-
-<div class="details-grid">
-  <section class="detail-card">
-    <h3>Processing preferences</h3>
-    <p class="text-muted text-sm">
-      You may opt out of processing that is not required for your training programme.
-      You cannot object to processing required for programme operation, assessment records, or regulatory compliance.
-    </p>
-
-    <StatePanel IsLoading="_loadingFlags" IsEmpty="false">
-      <div class="form-grid">
-        <FormField Label="Optional processing" InputId="data-rights-optional-processing">
-          <div class="form-check">
-            <input id="data-rights-optional-processing" type="checkbox" class="form-check-input" @bind="_optOutOfOptionalProcessing" />
-            <label for="data-rights-optional-processing">Opt out of optional processing (e.g. analytics)</label>
+        @if (_requests.Count == 0)
+        {
+          <div class="detail-card detail-card--empty">
+            <div class="state-panel-title">@MyDataRightsWords.NoRequestsTitle</div>
+            <div class="state-panel-copy">@MyDataRightsWords.NoRequestsBody</div>
           </div>
-        </FormField>
-        @* T240. The opt-out stops three periodic reminders, not only the one called a digest, so the box says which. *@
-        <FormField Label="Digest emails" InputId="data-rights-digest-emails" HelpText="@DigestEmailsHelp">
+        }
+        else
+        {
+          <DataTable TItem="MyDataRightsRequestDto" Items="_requests" StackWide="true" Class="data-rights-table"
+                     Caption="@MyDataRightsWords.Caption">
+            <HeaderRow>
+              <tr role="row">
+                <th scope="col" role="columnheader">Submitted</th>
+                <th scope="col" role="columnheader">Type</th>
+                <th scope="col" role="columnheader">Status</th>
+                <th scope="col" role="columnheader">Answer</th>
+                <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+              </tr>
+            </HeaderRow>
+            <Row Context="request">
+              <tr role="row" @key="request.Id">
+                <th scope="row" role="rowheader">@DataRightsWords.When(request.RequestedOn)</th>
+                <td role="cell" data-label="Type">@DataRightsWords.Type(request.Type)</td>
+                <td role="cell" data-label="Status"><span class="badge @BadgeFor.DataRightsRequest(request.Status)">@DataRightsWords.Status(request.Status)</span></td>
+                <td role="cell" data-label="Answer" class="answer-cell">@MyDataRightsWords.Answer(request)</td>
+                <td role="cell">
+                  <div class="actions-cell">
+                    @if (MyDataRightsWords.OffersWithdraw(request))
+                    {
+                      @* The one pressed stays enabled while it runs, and a second press sends nothing (T234); each is named
+                         by its request, its type and when it was made, to the second when two share the minute (T239, N4). *@
+                      <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Withdraw {_rowNames[request.Id]}")"
+                              disabled="@(_saving || _submitting || (_withdrawingId is not null && _withdrawingId != request.Id))"
+                              aria-disabled="@InFlight.AriaDisabled(_withdrawingId == request.Id)"
+                              @onclick="() => WithdrawAsync(request.Id)">Withdraw</button>
+                    }
+                    @if (MyDataRightsWords.OffersDownload(request))
+                    {
+                      <a class="btn btn-primary btn-sm" href="@DataRightsWords.DownloadLink(request.Id)"
+                         aria-label="@($"Download {MyDataRightsWords.DownloadObject(request.Type)} {_rowNames[request.Id]}")"><Icon Name="download" />Download</a>
+                    }
+                  </div>
+                </td>
+              </tr>
+            </Row>
+          </DataTable>
+        }
+      </section>
+
+      <section class="detail-card user-section" aria-labelledby="dr-make-heading">
+        <h2 id="dr-make-heading">@MyDataRightsWords.MakeARequest</h2>
+        @Result(Place.Make)
+        <p>@MyDataRightsWords.Intro(_institutionName)</p>
+
+        @* Described radios (flow 11; Q4), none chosen as the page opens (M01): the form asks for one rather than send a
+           type the person did not choose. A refused group says so under its legend and its first radio takes the focus. *@
+        <fieldset class="form-group choice-group choice-help-stack @(_typeError is null ? null : "is-invalid")"
+                  aria-describedby="@(_typeError is null ? null : TypeMessageId)">
+          <legend>@MyDataRightsWords.TypeLegend<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></legend>
+          @if (_typeError is not null)
+          {
+            <div id="@TypeMessageId" class="validation-message" role="alert">@_typeError</div>
+          }
+          @foreach (var type in DataRightsLabels.OfferedTypes)
+          {
+            var inputId = TypeInputId(type);
+            <div class="form-check" @key="type">
+              <input class="form-check-input" type="radio" name="dr-type" id="@inputId" value="@type"
+                     aria-describedby="@($"{inputId}-help")" aria-invalid="@(_typeError is null ? null : "true")"
+                     checked="@(_type == type)" @onchange="() => ChooseType(type)" />
+              <label for="@inputId">@DataRightsWords.Type(type)</label>
+              <p id="@($"{inputId}-help")" class="page-subtitle choice-help">@MyDataRightsWords.TypeHelp(type)</p>
+            </div>
+          }
+        </fieldset>
+
+        @* The reason: refusal first in its description, then the counter (N17). No maxlength, which would cut a paste
+           silently: the counter shows the excess and Submit refuses it (DESIGN.md § Form system's counter). *@
+        <div class="form-group">
+          <label for="@ReasonId">@MyDataRightsWords.ReasonLabel<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label>
+          <textarea id="@ReasonId" class="form-control @(_reasonError is null ? null : "input-validation-error")" rows="4"
+                    aria-required="true" aria-invalid="@(_reasonError is null ? null : "true")"
+                    aria-describedby="@ReasonDescribedBy" @bind="_reason" @bind:after="ReasonChanged" @ref="_reasonBox"></textarea>
+          @if (_reasonError is not null)
+          {
+            <div id="@ReasonMessageId" class="validation-message" role="alert">@_reasonError</div>
+          }
+          <p id="@ReasonCountId" class="field-help" @ref="_reasonCount">@MyDataRightsWords.Counter(_reason.Length)</p>
+        </div>
+
+        <p class="field-help">@MyDataRightsWords.NextStep(_institutionName)</p>
+
+        <FormActions>
+          @* Neither this nor Save is disabled while its own action runs (T234): the one pressed has the focus, and a browser
+             drops the focus of a button it disables, to the page. A second press sends nothing, and aria-disabled says
+             so. Each is disabled while another action runs. *@
+          <button type="button" class="btn btn-primary" disabled="@(_saving || _withdrawingId is not null)"
+                  aria-disabled="@InFlight.AriaDisabled(_submitting)" @onclick="SubmitAsync">@MyDataRightsWords.SubmitLabel</button>
+        </FormActions>
+      </section>
+
+      <section class="detail-card user-section" aria-labelledby="dr-reminders-heading">
+        <h2 id="dr-reminders-heading">@MyDataRightsWords.ReminderEmails</h2>
+        @Result(Place.Reminders)
+        <p>@MyDataRightsWords.RemindersIntro</p>
+        <div class="form-group">
           <div class="form-check">
-            <input id="data-rights-digest-emails" type="checkbox" class="form-check-input" @bind="_optOutOfDigestEmails"
-                   aria-describedby="@FieldHelp.Id("data-rights-digest-emails")" />
-            <label for="data-rights-digest-emails">Opt out of digest emails</label>
+            <input id="@RemindersId" type="checkbox" class="form-check-input" @bind="_optOut"
+                   aria-describedby="@RemindersHelpId" />
+            <label for="@RemindersId">@MyDataRightsWords.StopRemindersLabel</label>
           </div>
-        </FormField>
-      </div>
-      <FormActions>
-        @* Neither this nor Submit request is disabled while its own action runs (T234): the one pressed has the focus,
-           and a browser drops the focus of a button it disables, to the page. A second press sends nothing, and
-           aria-disabled says so. Each is disabled while the other, or a withdrawal, runs. *@
-        <button type="button" class="btn btn-primary" disabled="@(_submitting || _withdrawingId is not null)"
-                aria-disabled="@InFlight.AriaDisabled(_savingFlags)" @onclick="SaveFlagsAsync">
-          @(_savingFlags ? "Saving..." : "Save preferences")
-        </button>
-      </FormActions>
-    </StatePanel>
-  </section>
-
-  <section class="detail-card">
-    <h3>Submit a request</h3>
-    <p class="text-muted text-sm">
-      Under data protection law, you have the right to access, export, correct, or request erasure of your personal data.
-    </p>
-
-    <div class="form-grid">
-      <FormField Label="Request type" InputId="dr-type" Required="true">
-        <select id="dr-type" class="form-control" @bind="_newRequestType">
-          <option value="@DataRightsRequestType.Access">Access — download everything we hold about you</option>
-          <option value="@DataRightsRequestType.Export">Export — machine-readable data export</option>
-          <option value="@DataRightsRequestType.Rectification">Rectification — correct inaccurate data</option>
-          <option value="@DataRightsRequestType.Erasure">Erasure — request deletion of your data</option>
-        </select>
-      </FormField>
-
-      <FormField Label="Reason" InputId="dr-reason" Required="true">
-        <textarea id="dr-reason" class="form-control" rows="3" @bind="_newRequestReason" placeholder="Describe what you need and why..."></textarea>
-      </FormField>
-    </div>
-
-    <FormActions>
-      <button type="button" class="btn btn-primary" disabled="@(_savingFlags || _withdrawingId is not null)"
-              aria-disabled="@InFlight.AriaDisabled(_submitting)" @onclick="SubmitRequestAsync">
-        @(_submitting ? "Submitting..." : "Submit request")
-      </button>
-    </FormActions>
-  </section>
+          <p id="@RemindersHelpId" class="field-help">@MyDataRightsWords.RemindersHelp(Thresholds.Value.AssessorNudgeDays)</p>
+        </div>
+        <FormActions>
+          <button type="button" class="btn btn-primary" disabled="@(_submitting || _withdrawingId is not null)"
+                  aria-disabled="@InFlight.AriaDisabled(_saving)" @onclick="SaveAsync">@MyDataRightsWords.SaveLabel</button>
+        </FormActions>
+      </section>
+    </ChildContent>
+  </StatePanel>
 </div>
 
-<h3>Your requests</h3>
-
-<StatePanel IsLoading="_loadingRequests" IsEmpty="@(_requests is not null && _requests.Count == 0)" EmptyTitle="No requests" EmptyBody="You have not submitted any data rights requests yet.">
-  @if (_requests is not null && _requests.Count > 0)
-  {
-    <DataTable TItem="DataRightsRequestSummaryDto" Items="_requests" Caption="Your data rights requests">
-      <HeaderRow>
-        <tr>
-          <th>Date</th>
-          <th>Type</th>
-          <th>Status</th>
-          <th><span class="visually-hidden">Actions</span></th>
-        </tr>
-      </HeaderRow>
-      <Row Context="req">
-        <tr>
-          <td><code>@req.RequestedOn.ToString("yyyy-MM-dd HH:mm")</code></td>
-          <td>@req.Type</td>
-          <td><span class="badge @BadgeFor.DataRightsRequest(req.Status)">@req.Status</span></td>
-          <td>
-            @if (req.Status is DataRightsRequestStatus.Submitted or DataRightsRequestStatus.UnderReview)
-            {
-              @* The one pressed stays enabled while it runs, and a second press sends nothing (T234 review). *@
-              @* T239: each action is named by its request, its type and when it was made. *@
-              <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Withdraw the {req.Type} request made {Made(req)}")"
-                      disabled="@(_savingFlags || _submitting || (_withdrawingId is not null && _withdrawingId != req.Id))"
-                      aria-disabled="@InFlight.AriaDisabled(_withdrawingId == req.Id)"
-                      @onclick="() => WithdrawAsync(req.Id)">Withdraw</button>
-            }
-            @if (req.Status == DataRightsRequestStatus.Completed &&
-                 req.Type is DataRightsRequestType.Access or DataRightsRequestType.Export)
-            {
-              <a class="btn btn-outline btn-sm" href="/account/data-rights/download/@req.Id"
-                 aria-label="@($"Download the export of the {req.Type} request made {Made(req)}")">Download</a>
-            }
-          </td>
-        </tr>
-      </Row>
-    </DataTable>
-  }
-</StatePanel>
-
 @code {
-  /// <summary>When a request was made, as its Date column says it (T239).</summary>
-  private static string Made(DataRightsRequestSummaryDto request)
-    => request.RequestedOn.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture);
+  public const string ReasonId = "dr-reason";
+  public const string ReasonMessageId = "dr-reason-msg";
+  public const string ReasonCountId = "dr-reason-count";
+  public const string TypeMessageId = "dr-type-msg";
+  public const string RemindersId = "dr-reminders";
+  public const string RemindersHelpId = "dr-reminders-help";
 
-  private IReadOnlyList<DataRightsRequestSummaryDto>? _requests;
-  private bool _loadingRequests = true;
-  private bool _loadingFlags = true;
-  private bool _savingFlags;
+  /// <summary>A type's radio: "dr-type-Export"; its description is "dr-type-Export-help".</summary>
+  public static string TypeInputId(DataRightsRequestType type) => $"dr-type-{type}";
+
+  /// <summary>Where a result is said: the section whose action it answers (M11).</summary>
+  private enum Place
+  {
+    Requests,
+    Make,
+    Reminders
+  }
+
+  private bool _loading = true;
+  private string? _loadError;
+  private string? _institutionName;
+  private IReadOnlyList<MyDataRightsRequestDto> _requests = [];
+
+  /// <summary>Each row as its actions name it: "the Export request made 2026-10-28 00:01 SAST" (T239, N4).</summary>
+  private IReadOnlyDictionary<Guid, string> _rowNames = new Dictionary<Guid, string>();
+
+  private DataRightsRequestType? _type;
+  private string _reason = string.Empty;
+  private string? _typeError;
+  private string? _reasonError;
+  private bool _optOut;
+
   private bool _submitting;
+  private bool _saving;
 
   /// <summary>The request whose withdrawal has been sent and has not answered, or null. (T234 review)</summary>
   private Guid? _withdrawingId;
 
-  private ActionResult? _result;
-
   /// <summary>A save, a submit or a withdrawal has been sent and has not answered, so nothing else may be sent. (T234)</summary>
-  private bool Busy => _savingFlags || _submitting || _withdrawingId is not null;
-  private string? _errorMessage;
-  private string? _statusMessage;
+  private bool Busy => _saving || _submitting || _withdrawingId is not null;
 
-  private bool _optOutOfOptionalProcessing;
-  private bool _optOutOfDigestEmails;
+  // The one result on the page (M13): its section, its words, whether it is a refusal; the key renews its region, which
+  // takes the focus as it is drawn (FocusOnLoad), so a second result in the same section is read too.
+  private Place? _resultPlace;
+  private string? _resultText;
+  private bool _resultRefused;
+  private int _resultKey;
 
-  /// <summary>
-  /// What the opt-out stops: the three jobs that ask <c>ReminderRecipientPolicy</c> (T151, T240), and what it does not.
-  /// The nudge's days are its own setting, <c>DashboardThresholds.AssessorNudgeDays</c>, where this wrote 5 by hand (T358,
-  /// review 11); the words are unchanged (E1: a staff member's reminder about one request is the second kind, still sent).
-  /// </summary>
-  private string DigestEmailsHelp =>
-    "Stops three regular reminders: the weekly coordinator digest, the reminder of drafts left untouched for 14 days, " +
-    $"and the reminder of activities that have waited more than {Thresholds.Value.AssessorNudgeDays.ToString(System.Globalization.CultureInfo.InvariantCulture)} days for you to assess. Email about one particular " +
-    "thing is still sent, such as a request to assess, an invitation to give feedback, or a committee or entrustment " +
-    "decision.";
+  private ElementReference _reasonBox;
+  private ElementReference _reasonCount;
+  private bool _focusReason;
+  private bool _focusType;
+  private bool _counting;
+  private IJSObjectReference? _module;
 
-  private DataRightsRequestType _newRequestType = DataRightsRequestType.Access;
-  private string _newRequestReason = string.Empty;
+  private string ReasonDescribedBy => _reasonError is null ? ReasonCountId : $"{ReasonMessageId} {ReasonCountId}";
 
-  protected override async Task OnInitializedAsync()
+  protected override Task OnInitializedAsync() => LoadAsync();
+
+  /// <summary>Reads the requests and the reminder preference; a failure is the fixed words with Try again (M15, T329).</summary>
+  private async Task LoadAsync()
   {
-    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    var principal = authState.User;
-
+    _loading = true;
+    _loadError = null;
+    _counting = false;
     try
     {
-      var flags = await Sender.Send(
-        new Wombat.Application.Features.DataRights.Queries.GetObjectionFlagsQuery(principal));
-      _optOutOfOptionalProcessing = flags.OptOutOfOptionalProcessing;
-      _optOutOfDigestEmails = flags.OptOutOfDigestEmails;
+      var principal = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      var mine = await Sender.Send(new GetMyDataRightsRequestsQuery(principal))
+                 ?? throw new InvalidOperationException("My data rights read nothing.");
+      var flags = await Sender.Send(new GetObjectionFlagsQuery(principal))
+                  ?? throw new InvalidOperationException("The reminder preference read nothing.");
+      Show(mine);
+      _optOut = flags.OptOutOfDigestEmails;
     }
-    catch (Exception ex)
+    catch (Exception exception)
     {
-      _errorMessage = ex.Message;
+      Logger.LogError(exception, "My data rights could not be read.");
+      _loadError = MyDataRightsWords.LoadFailed;
     }
     finally
     {
-      _loadingFlags = false;
-    }
-
-    try
-    {
-      _requests = await Sender.Send(
-        new Wombat.Application.Features.DataRights.Queries.GetMyDataRightsRequestsQuery(principal));
-    }
-    catch (Exception ex)
-    {
-      _errorMessage = ex.Message;
-    }
-    finally
-    {
-      _loadingRequests = false;
+      _loading = false;
     }
   }
 
-  private async Task SaveFlagsAsync()
+  private void Show(MyDataRightsDto mine)
+  {
+    _institutionName = mine.InstitutionName;
+    _requests = mine.Requests;
+    var made = MyDataRightsWords.Made(_requests);
+    // Rows the minute and the second still leave alike are numbered in list order (RowNames, T239).
+    _rowNames = RowNames.Distinct(_requests, request => request.Id,
+      request => MyDataRightsWords.RowName(request.Type, made[request.Id]));
+  }
+
+  /// <summary>Reads the requests again after an action; a failure keeps the rows shown and is logged.</summary>
+  private async Task RereadAsync(System.Security.Claims.ClaimsPrincipal principal)
+  {
+    try
+    {
+      if (await Sender.Send(new GetMyDataRightsRequestsQuery(principal)) is { } mine)
+      {
+        Show(mine);
+      }
+    }
+    catch (Exception exception)
+    {
+      Logger.LogError(exception, "My data rights could not be read again after an action.");
+    }
+  }
+
+  private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  private void ChooseType(DataRightsRequestType type)
+  {
+    _type = type;
+    _typeError = null;
+  }
+
+  /// <summary>A changed reason drops its refusal (DESIGN.md § Form system).</summary>
+  private void ReasonChanged() => _reasonError = null;
+
+  private void Say(Place place, string text, bool refused)
+  {
+    _resultPlace = place;
+    _resultText = text;
+    _resultRefused = refused;
+    _resultKey++;
+  }
+
+  private void ClearResult()
+  {
+    _resultPlace = null;
+    _resultText = null;
+  }
+
+  private async Task SubmitAsync()
   {
     if (Busy)
     {
       return;
     }
 
-    _savingFlags = true;
-    _errorMessage = null;
-    _statusMessage = null;
-
-    try
+    // One result at a time (M13): a refusal found here replaces whatever an earlier action said.
+    ClearResult();
+    _typeError = _type is null ? MyDataRightsWords.TypeRequired : null;
+    _reasonError = string.IsNullOrWhiteSpace(_reason) ? MyDataRightsWords.ReasonRequired
+      : _reason.Length > MyDataRightsWords.ReasonMaxLength ? MyDataRightsWords.ReasonTooLong
+      : null;
+    if (_typeError is not null || _reasonError is not null)
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      await Sender.Send(new Wombat.Application.Features.DataRights.Commands.UpdateObjectionFlagsCommand(
-        _optOutOfOptionalProcessing,
-        _optOutOfDigestEmails,
-        authState.User));
-      _statusMessage = "Processing preferences saved.";
-      _result?.FocusAfterRender();
-    }
-    catch (Exception ex)
-    {
-      _errorMessage = ex.Message;
-    }
-    finally
-    {
-      _savingFlags = false;
-    }
-  }
-
-  private async Task SubmitRequestAsync()
-  {
-    if (Busy)
-    {
-      return;
-    }
-
-    if (string.IsNullOrWhiteSpace(_newRequestReason))
-    {
-      _errorMessage = "Please provide a reason for your request.";
+      // The first refused field takes the focus (M02), its value kept.
+      _focusType = _typeError is not null;
+      _focusReason = !_focusType;
       return;
     }
 
     _submitting = true;
-    _errorMessage = null;
-    _statusMessage = null;
-
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      await Sender.Send(new Wombat.Application.Features.DataRights.Commands.SubmitDataRightsRequestCommand(
-        _newRequestType,
-        _newRequestReason,
-        authState.User));
-
-      _statusMessage = "Request submitted. You will be notified when it is reviewed.";
-      _newRequestReason = string.Empty;
-
-      // Reload requests
-      _requests = await Sender.Send(
-        new Wombat.Application.Features.DataRights.Queries.GetMyDataRightsRequestsQuery(authState.User));
-      _result?.FocusAfterRender();
+      var principal = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      await Sender.Send(new SubmitDataRightsRequestCommand(_type!.Value, _reason, principal));
+      _type = null;
+      _reason = string.Empty;
+      await RereadAsync(principal);
+      Say(Place.Requests, MyDataRightsWords.Submitted, refused: false);
     }
-    catch (Exception ex)
+    catch (FluentValidation.ValidationException validation) when (RefusedField(validation))
     {
-      _errorMessage = ex.Message;
+      // The validator agrees with the page's own checks; what it refused is said under its field (M02).
+    }
+    catch (Exception exception)
+    {
+      // The type and the reason are kept (M16).
+      Logger.LogError(exception, "A data rights request could not be submitted.");
+      Say(Place.Make, MyDataRightsWords.SubmitFailed, refused: true);
     }
     finally
     {
       _submitting = false;
     }
+  }
+
+  /// <summary>Puts the validator's refusal of Type or Reason under its field; false for anything else.</summary>
+  private bool RefusedField(FluentValidation.ValidationException validation)
+  {
+    var properties = validation.Errors.Select(error => error.PropertyName).ToHashSet(StringComparer.Ordinal);
+    if (properties.Contains(nameof(SubmitDataRightsRequestCommand.Type)))
+    {
+      _typeError = MyDataRightsWords.TypeRequired;
+    }
+
+    if (properties.Contains(nameof(SubmitDataRightsRequestCommand.Reason)))
+    {
+      _reasonError = _reason.Length > MyDataRightsWords.ReasonMaxLength
+        ? MyDataRightsWords.ReasonTooLong
+        : MyDataRightsWords.ReasonRequired;
+    }
+
+    if (_typeError is null && _reasonError is null)
+    {
+      return false;
+    }
+
+    _focusType = _typeError is not null;
+    _focusReason = !_focusType;
+    return true;
   }
 
   private async Task WithdrawAsync(Guid requestId)
@@ -287,28 +383,124 @@
       return;
     }
 
+    ClearResult();
     _withdrawingId = requestId;
-    _errorMessage = null;
-    _statusMessage = null;
-
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      await Sender.Send(new Wombat.Application.Features.DataRights.Commands.WithdrawDataRightsRequestCommand(
-        requestId, authState.User));
-
-      _statusMessage = "Request withdrawn.";
-      _requests = await Sender.Send(
-        new Wombat.Application.Features.DataRights.Queries.GetMyDataRightsRequestsQuery(authState.User));
-      _result?.FocusAfterRender();
+      var principal = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      try
+      {
+        await Sender.Send(new WithdrawDataRightsRequestCommand(requestId, principal));
+        await RereadAsync(principal);
+        Say(Place.Requests, MyDataRightsWords.Withdrawn, refused: false);
+      }
+      catch (DataRightsRefusedException refused) when (refused.Reason == DataRightsRefusal.DecidedMeanwhile)
+      {
+        // Decided first (Q14): the row is read again, so it shows the decision.
+        await RereadAsync(principal);
+        Say(Place.Requests, MyDataRightsWords.DecidedBeforeWithdrawn, refused: true);
+      }
     }
-    catch (Exception ex)
+    catch (Exception exception)
     {
-      _errorMessage = ex.Message;
+      Logger.LogError(exception, "Data rights request {RequestId} could not be withdrawn.", requestId);
+      Say(Place.Requests, MyDataRightsWords.WithdrawFailed, refused: true);
     }
     finally
     {
       _withdrawingId = null;
+    }
+  }
+
+  private async Task SaveAsync()
+  {
+    if (Busy)
+    {
+      return;
+    }
+
+    ClearResult();
+    _saving = true;
+    try
+    {
+      var principal = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      var saved = await Sender.Send(new UpdateObjectionFlagsCommand(_optOut, principal));
+      _optOut = saved.OptOutOfDigestEmails;
+      Say(Place.Reminders, MyDataRightsWords.Saved(saved.OptOutOfDigestEmails, saved.Changed), refused: false);
+    }
+    catch (Exception exception)
+    {
+      Logger.LogError(exception, "The reminder preference could not be saved.");
+      Say(Place.Reminders, MyDataRightsWords.SaveFailed, refused: true);
+    }
+    finally
+    {
+      _saving = false;
+    }
+  }
+
+  private RenderFragment Result(Place place) => __builder =>
+  {
+    if (_resultPlace == place && _resultText is not null)
+    {
+      <ActionResult @key="_resultKey" FocusOnLoad="true">
+        <Alert Kind="@(_resultRefused ? "danger" : "success")">@_resultText</Alert>
+      </ActionResult>
+    }
+  };
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusType)
+    {
+      _focusType = false;
+      await PageFocus.FocusByIdAsync(JS, TypeInputId(DataRightsLabels.OfferedTypes[0]));
+    }
+    else if (_focusReason)
+    {
+      _focusReason = false;
+      await PageFocus.FocusByIdAsync(JS, ReasonId);
+    }
+
+    if (!_loading && _loadError is null && !_counting)
+    {
+      _counting = true;
+      await CountAsync();
+    }
+  }
+
+  /// <summary>
+  /// The counter, counted in the browser as the reason is typed (T366's module, S24), so no keystroke costs a round trip.
+  /// A script that cannot run leaves Blazor's count, which follows each change.
+  /// </summary>
+  private async Task CountAsync()
+  {
+    try
+    {
+      _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/review-appeal.js");
+      if (_module is not null)
+      {
+        await _module.InvokeVoidAsync("count", _reasonBox, _reasonCount, MyDataRightsWords.ReasonMaxLength);
+      }
+    }
+    catch (Exception exception) when (exception is JSException or JSDisconnectedException or InvalidOperationException or TaskCanceledException)
+    {
+      // The counter is a convenience: Blazor's own count is on the page whenever the reason changes.
+    }
+  }
+
+  public async ValueTask DisposeAsync()
+  {
+    if (_module is not null)
+    {
+      try
+      {
+        await _module.DisposeAsync();
+      }
+      catch (JSDisconnectedException)
+      {
+        // The circuit has gone; so has the module.
+      }
     }
   }
 }

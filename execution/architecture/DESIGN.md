@@ -66,7 +66,12 @@
 >   system (Trainees' Completed and closed), § Badges (Completed, Withdrawn), § Page-level patterns (the profile is
 >   "‹name›'s programme", the Unavailable pages, Export portfolio own and staff, the record's pages under a personal
 >   link, the former trainee's Home card), § Account / auth page (Verify portfolio export), and § app.css section order
->   (four Graduation and exit sections)).
+>   (four Graduation and exit sections)); flow 14, data rights (2026-10-30, T387: § Button system (an erasure is approved
+>   through its dialog, which opens on Cancel), § Table system (`DataTable`'s `Class`, the three data-rights tables, the
+>   queue stacks from 1100px), § Form system (the refusal first in `aria-describedby`; the decision note's counter),
+>   § Alerts (the erased request's standing notice, the live requester name in every result), § Badges
+>   (DataRightsRequest), § Page-level patterns (Unavailable for a null read, the request's crumb, My data rights, Data
+>   rights requests and a data rights request), and § app.css section order (three Data rights sections)).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 
@@ -760,6 +765,14 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
   confirms with the primary (a graduation is not a loss), Deactivate's with the filled danger button. Each dialog names
   the day, Mark complete's the address the email goes to, and what the end would take back for that day (a forecast, read
   when the dialog opens); the result is built from the count the command returns.
+- **An erasure is approved through its dialog** (2026-10-30, T387, flow 14, Q3, Q19, F5): on a submitted Erasure, Decide's
+  Approve is "Approve and erase…", an outline trigger (`aria-haspopup="dialog"`) after Reject. Pressed, the note is
+  checked first (refused, no dialog), then the forecast is read (`GetErasureForecastQuery`) and the `ConfirmDialog`
+  "Erase ‹name›'s personal data?" opens on Cancel (`ConfirmDialog`'s action mode puts `autofocus` on Cancel unless the
+  caller names a field's first focus, so a body that scrolls never takes it: review P5): "This cannot be undone." bold, what it ends (the account, any staff
+  roles, the open reviews named at the caller's institution and counted elsewhere, the MSF campaigns, the person's other
+  open requests, the programme) and what it keeps, its body scrolling inside the dialog (`.dialog-body--scroll`). The
+  filled danger "Erase and approve" confirms; the result heads Decision once the dialog has closed.
 - **A refusal found before any dialog stays beside its field** (T379, S19, Q21): the last day is checked when a trigger
   is pressed, by the rule the commands hold it to (`TraineeProfile.EndDayRefusal`); refused, no dialog opens, the
   refusal is a `div.validation-message role="alert"` under the field, named first by its `aria-describedby`, the input
@@ -1071,6 +1084,20 @@ stack-wide table's row buttons are 44px from 900px down, on every page (`.clinic
 her MSF reports list (T369, flow 10, M2) and the MSF campaign list (seven columns and up to three buttons a row; build
 review D2). MSF coverage's two grids never stack: each scrolls inside its own named,
 focusable region, the one exception to "nothing scrolls sideways" at 390px (T369, S13).
+`DataTable`'s `Class` adds the caller's class after the system's (2026-10-30, T387, flow 14: `data-rights-table` on the
+queue, Your requests and Corrections recorded). The data rights queue stacks from 1100px, not 900px (Q23): beside the
+sidebar its six columns, seven for the Administrator, have no room from 901 to 1100px, so the stack-wide rules are
+repeated for `.data-rights-requests` under a 1100px query, its row buttons 44px.
+The three data-rights tables (T387, M5, M6, F10): each a `DataTable` with `StackWide` and the explicit roles, its row
+header a `th scope="row" role="rowheader"` drawn in the cell's weight (`.data-rights-table tbody th[scope="row"]`), with
+no rule under it once stacked (review P7): Your requests' Submitted, the queue's Requester (`.person-cell`: the live name
+over the address, or the pseudonym over "Erased ‹day›"), Corrections recorded's Record. Every text cell carries
+`data-label`, the badge's cell included; the actions cell none, its button named for its row. Your requests' Answer
+(`.answer-cell`) wraps a long note inside its cell. The queue's Request id is a `.request-id` cell (monospace, broken only
+where it must be); the Administrator's queue adds Institution ("None" for a request with none). Captions do not repeat the
+heading and carry the filter's tail ("Kgosi Kgari Teaching Hospital's data rights requests, newest first: Erasure, Submitted"; "Every institution's" for
+the Administrator). The pager
+is drawn only past one page (`TotalCount > PageSize`), "Requests per page".
 
 **A row's line** (flow 03's note row, generalised, T366, S4, S9). A row that needs a sentence under it (the activity
 page's history note, the register's revoked and superseded STARs) is `tr.has-note`, followed by a row whose one cell
@@ -1438,7 +1465,13 @@ reordered). Log an activity is `NewActivity.razor`. Drawn in `design/flows/03-tr
   counter shows the excess, and the action refuses it under the field. The lodge block's reason (4,000), the
   register's revocation reason (1,000, "Give the reason in 1,000 characters or fewer.", D2) and the MSF report's
   narrative (4,000, "106 of 4,000 characters"; "Write the narrative in 4,000 characters or fewer.", T369) all count this
-  way.
+  way, and so do the data-rights pages' reason and decision note (4,000; "Give your reason in 4,000 characters or
+  fewer.", "Give your note in 4,000 characters or fewer.", T387, S24, review P4).
+- **The refusal first in `aria-describedby`** (2026-10-30, T387, flow 14, N17): on the data-rights pages a refused field
+  names its refusal, then its help, then its counter (`dr-reason-err dr-reason-count`; `decision-note-err
+  decision-note-help decision-note-count`), so the refusal is read before what the field is for. The earlier flows' order
+  (help, counter, then the refusal) stands where it is built; a new form takes N17's. A refusal goes once its field
+  changes, and a refused radio group's radios are `aria-invalid` as well as its fieldset `.is-invalid` (review P6).
 - **Help under the control**, `p.field-help` with id `<key>-help`, named first in the control's `aria-describedby`. An EPA
   or person select prints its chosen option in full under it (`.field-readback`, `aria-hidden`: the select already says
   it), so nothing is cut off at 390px (T323). The EPA picker stays a native `<select>` with each option's full text.
@@ -1862,6 +1895,15 @@ T019 introduces a small builder-specific extension to the shared system:
   Export portfolio). The trainee profile's is "Profile unavailable", "This trainee profile does not exist, or you cannot
   open it." and Go to Trainees (T379, flow 13, S4): its read answers null for an unknown id and for another institution's
   profile alike.
+  A data rights request's is "Request unavailable", "This data rights request does not exist, or you cannot open it." and
+  Go to Data rights requests (2026-10-30, T387, flow 14, Q13, Q17, S14), for a null read only (an unknown id and another
+  institution's alike); a read that throws is the load error. It draws in the request page's own place, so the menu
+  lights Data rights requests and the trail ends "Request unavailable".
+- **A data rights request's standing notices and results** (2026-10-30, T387, flow 14, K01, D09, D15, D20): the erased
+  requester's "This person's personal data was erased on ‹day›…" line is an `Alert Kind="info" Role=""` at the page's
+  top, standing content and no live region; the own-request line ("You cannot decide your own request: …") and the
+  withdrawn line are plain `p`s in Request. Every result names the requester by the live name (the pseudonym once
+  erased), never the stored name: "Request approved. Nomsa Mahlangu is emailed. …" (F1).
 - **A record page's load error** follows Home's: h1 "Activity", a `StatePanel` with `OnRetry`, "Could not load this
   activity. Nothing has changed. Try again, or come back in a few minutes." The exception goes to the log.
 
@@ -1949,7 +1991,9 @@ fifteen keys the seeded workflows use.
 - `Appeal` (T366, flow 09): an appeal against a committee review. Open is amber (`badge-accepted`), the tint of a
   review under appeal, waiting on the appeal body; Dismissed and Remitted are both green (`badge-completed`), an appeal
   heard and closed. Neither outcome is a failure (D51); the badge's word says which it was.
-- `DataRightsRequest`: submitted blue, under review amber, approved and completed green, rejected red, withdrawn grey.
+- `DataRightsRequest` (2026-10-30, T387, flow 14, Q22): submitted blue; approved amber (`badge-accepted`), since only a
+  Rectification stays Approved, in hand until it is completed; completed green; rejected red; withdrawn grey under its own
+  name (`badge-withdrawn`, flow 13's F10), never `badge-draft`. Under review is gone (Q8: nothing set it).
   `JobRun`: running amber, succeeded green, failed red. `AuditResult`: done green, failed red.
 - `Standing` is the comparison badges below.
 - A category or a type (the audit log's category, a data rights request's type) is not a state, so it is not a badge: its
@@ -3407,7 +3451,8 @@ the owner table (`NavOwners.TrailTo`), so a page gets it by having a header; `Br
 - **Change password:** Home › My account › Change password.
 - **The page's own crumb** is its title, a `<span aria-current="page">` in body text at weight 600; the others are links,
   separated by a 14px chevron. A header whose crumb is not its title passes `CurrentCrumb`: a data-rights request's is
-  its id, once it has loaded (the review of the t335 branch; `ActiveNavItemTests`).
+  its id, from the first render, since the address holds it (2026-10-30, T387, flow 14, N14; until T387 "once it has
+  loaded", the review of the t335 branch; `ActiveNavItemTests`), and "Request unavailable" for a null read.
 - **A crumb between the owner and the page**, where the owner table names one, is passed by the page as `Trail`: the
   College on a College's specialities, for the Administrator (Home › Colleges › the College › Specialities). For the
   College admin the College is the page's own crumb (Home › Specialities › the College).
@@ -4115,6 +4160,81 @@ has changed. Try again, or come back in a few minutes." with Try again (`StatePa
   where the page's DTO says `MayExport`, the command's own check (`TraineeScopeResolver.MayReadAsync`): never offered where
   the export would be refused, never refused to an Administrator.
 - At ≤640px, inside `.export-page`: the date controls 44px, Export PDF full width and 44px.
+
+#### My data rights (`/account/data-rights`, T387, flow 14, R3-M01–M18)
+
+One page for everyone signed in, `<div class="user-page data-rights-page">` under the header ("My data rights", "Ask for a
+copy of your data, a correction or erasure, and read the answers. Stop the regular reminder emails."), three
+`section.detail-card.user-section` with h2s in this order (Q4): Your requests, Make a request, Reminder emails (Q24). The
+words are `MyDataRightsWords`'.
+
+- **Your requests**: "No requests yet." over "You have not asked for your data, a correction or erasure. Make a request
+  below." (`.detail-card--empty`), or a `DataTable` (`StackWide`, `.data-rights-table`) captioned "Your data rights
+  requests, newest first": Submitted, the row header, in SAST to the minute; Type and Status by label, the Status a badge;
+  Answer (`.answer-cell`): the decision, its South African day and its note in curly quotes, never who decided (Q5, T319):
+  "Waiting for a decision.", "Approved on ‹day›: “‹note›”." (a Rectification adds "Being corrected; it reads Completed
+  once done."), "Rejected on ‹day›: “‹note›”.", "Completed on ‹day›. Corrected: Account › Last name.", "You withdrew it
+  before a decision."; a note that ends its own sentence takes no second full stop. Withdraw only while Submitted (Q14, no
+  dialog), Download on a Completed Access or Export, each named for its row ("Withdraw the Export request made 2026-10-28
+  00:01 SAST"; to the second where two of one type share the minute, N4; Download per type, N12).
+- **Make a request**: the intro naming who decides ("Staff at ‹institution› decide it", or "The Wombat administrator
+  decides it" for a person with no institution, M18); Request type * as a `fieldset.form-group.choice-group.choice-help-stack`
+  of the four offered types (Q8: never Objection), none chosen as the page opens, each radio described by its
+  `p.page-subtitle.choice-help`; Reason * (`aria-required`) with its counter "0 of 4,000 characters", counted in the
+  browser, no `maxlength`; the next-step `.field-help`; Submit request. A refusal the page finds ("Choose the request
+  type.", "Please provide a reason for your request.", "Give your reason in 4,000 characters or fewer.") stays under its
+  field, `div.validation-message role="alert"`, the group `.is-invalid` and its radios `aria-invalid`, or the reason
+  `aria-invalid` and `.input-validation-error`, described by the refusal first, then the counter (N17); the first refused
+  field takes the focus and the values are kept.
+- **Reminder emails**: the intro, the one checkbox "Stop the regular reminder emails" with its help (the three reminders,
+  and the mail about one particular thing still sent, Q27, F7), Save. Its result says what the save did, "Reminder emails
+  stopped." / "Reminder emails will be sent again.", or that it changed nothing, "Nothing changed: reminder emails are
+  still stopped." / "… still sent." (N3, `ReminderEmailsSaved.Changed`).
+- **Results** (M11, M13): one on the page at a time, in the section whose action it answers (Submit's and Withdraw's under
+  Your requests' h2, Save's under Reminder emails', a failed submit's under Make a request's), each a fresh `ActionResult`
+  that takes the focus as it is drawn; no h2 takes the focus. A failure is fixed words, the exception to the log (T329).
+- **Loading** "Loading your data rights." over three still cards; a failed read "Could not load your data rights. Nothing
+  has changed. Try again, or come back in a few minutes." with Try again, which focuses the h1 once the read succeeds.
+- At ≤640px, inside `.data-rights-page`: the reminder checkbox's label a 44px row, and a stacked row's Withdraw or
+  Download the row's width (`.user-page`'s rules give the rest).
+
+#### Data rights requests (`/admin/data-rights`, T387, flow 14, R3-Q01–Q13, K02)
+
+The staff queue, `<div class="people-page data-rights-requests">` under the header "Data rights requests" with the
+subtitle saying whose requests (the caller's institution by name, "every institution" for the Administrator, or the
+sentence without a place for a Coordinator set to no institution, S4). The words are `DataRightsRequestWords`'.
+
+- **The filter** (flow 06's `.search-container`): Type and Status by label (no Objection, no UnderReview, Q8), applied
+  with Show; Clear filters only once a filter is applied. Show, Clear filters, a page turn and a change of size answer in
+  place, as Users does (review P2): the form, the table and the pager stay, and only the first read and Try again draw
+  the loading state. Show, Clear and a page turn focus "Requests (‹n›)"; a change of size leaves the focus on its select.
+- **The table** (§ Table system's data-rights tables): newest first, twenty a page, "Review" a row, named for its row (to
+  the second where two of one type from one person share the minute, N4). No match is not empty: "No requests match"
+  with what was asked; an empty queue "No requests" with whose.
+- Stacks from 1100px (Q23). Loading "Loading the data rights requests."; a failed read is the fixed words with Try again,
+  which focuses the h1 once it reads (N15).
+
+#### A data rights request (`/admin/data-rights/{Id}`, T387, flow 14, R3-D01–D22, C01–C11, U01, U02)
+
+A record page, one column of `section.detail-card.user-section` with h2s on `.user-page` (S21), not a details grid. The
+h1 and tab are "‹Type› request from ‹name›" (Q12, F1: the live name, the pseudonym once erased); "Data rights request"
+while it reads and on a failed read; "Request unavailable" for a null read (§ Alerts). The subtitle is "Submitted ‹time›
+SAST · ‹institution›"; the crumb is the id (§ Breadcrumbs).
+
+- **Request**: Requester (the pseudonym over "Erased ‹day›" as a `.person-cell` once erased), Email (not once erased),
+  User id and Request id (`.request-id`), Type, Status (a badge), Reason. An erasure scrubs the reason the person gave,
+  and each correction's value before and after, to "Erased with the person's data on ‹day›." (review S1); the page
+  shows it as it shows any reason.
+- **Decision** once decided: Decided by is the decider's name over the id (`.request-id`), Decided on, Note, Completed on.
+- **Correction** on an approved or completed Rectification: the records table, and while it is approved "Record a
+  correction" (the four records as described radios; the two names disabled for a name from an institution's sign-in,
+  C11; Other's name field only once Other is chosen; Value before and Value after side by side, `.correction-values`),
+  then Complete request. The inline "Open ‹name›'s programme" link in the programme start's help is 20px at 390, the
+  inline-link exemption of WCAG 2.5.8 (review P10), as flow 13's Verify link is.
+- **Decide** while the caller may decide: the help by type, Decision note * with its help and counter (§ Form system),
+  then Reject and Approve, or Reject and "Approve and erase…" (§ Button system); primary on top at 390.
+- One result at a time, in the section that acted, focused; no h2 takes the focus (M13, N18). A refusal found before a
+  send stays under its field; a command's refusal shows in its section's result with the note or values kept.
 
 ### Dashboard page
 
@@ -5042,6 +5162,11 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
 "Flow 13: the export (T379)": .export-page (+ > *, .action-result .alert, .action-result:empty), .export-note (+ ≤640px, inside .export-page: the date controls 44px, Export PDF full width and 44px)
 "Flow 13: verify (T379)": .verify-page (+ > *, .action-result .alert and its p, .detail-list and its dd: minmax(0, 1fr), S21), .verify-ids-note, .hash-value, .cmd-list (+ code) (+ ≤640px, inside .verify-page: the details list one column; .form-control and the form's button 44px, the button full width; the hash field 1rem, so iOS does not zoom)
 "Flow 13: the programme's end (T379)": .account-open (+ a), .closed-list (+ th[scope="row"]), .outcome-cell > span:not(.badge) (+ ≤640px: .user-page .account-open a 44px; the profile's controls, stacked role rows and stacked form actions, and the closed list's 44px View, are flow 12's and flow 11's shared rules)
+
+/* ── Data rights ────────────────────────────────── */
+"Flow 14: data rights, shared (T387)": .request-id, .data-rights-table tbody th[scope="row"] (+ ≤900px: no rule under it once stacked, review P7) (the list selects' 44px below 641px, .search-container .form-select and .pager .form-select, is the system's, written beside .filter-actions' phone rule under Programme)
+"Flow 14: my data rights (T387)": .answer-cell (+ ≤640px, inside .data-rights-page: the reminder checkbox's label a 44px row outside a .choice-group, and a stack-wide row's .btn full width)
+"Flow 14: the requests (T387)": .correction-values (+ > .form-group), .dialog-body--scroll (+ ≤1100px: .data-rights-requests' stack-wide table stacked, its row buttons 44px, Q23) (+ ≤640px: .correction-values one column; the queue is .people-page, a request .user-page, whose phone rules serve them)
 ```
 
 The Progress section replaced the Trajectory chart section that held T123's chart (2026-10-04, T355): every flow 05
@@ -5054,7 +5179,9 @@ with the general phone rules flows 08 and 10 had each written for their own page
 (2026-10-20, T373). Register is on the auth card and needs no rule of its own. The People admin sections hold every
 flow 12 rule, none elsewhere: the shared one first, then one per build lane (T376). The four Graduation and exit
 sections hold every flow 13 rule but two, one per build lane: what two lanes share is the system's, `.badge-withdrawn`
-under Badges and the `.details-list` value column's `minmax(0, 1fr)` under Detail / stack lists (T379).
+under Badges and the `.details-list` value column's `minmax(0, 1fr)` under Detail / stack lists (T379). The three Data
+rights sections hold every flow 14 rule but one: the shared one first, then one per page lane; the list selects' 44px on
+a phone is a system rule for every list, written beside `.filter-actions`' phone rule (T387).
 
 When a new section is needed (say `/* ── Badges ── */`), add its heading in alphabetical-ish order inside the existing block and keep the rest of the file untouched.
 

@@ -84,8 +84,9 @@ public sealed partial class FormFieldHelpTextLinkTests : TestContext
 
         // T369: the MSF create and campaign pages draw their fields by hand (the required mark, M7), so 39 in 12 files.
         // 35 since T376: flow 12's user page, record and SSO forms write their fields' marks and read-outs themselves (M8).
-        fields.Should().HaveCountGreaterThanOrEqualTo(32, "guard: the scan finds the callers (35 since T376), or it proves nothing");
-        fields.Select(field => field.File).Distinct().Should().HaveCountGreaterThanOrEqualTo(11);
+        // 34 in 10 files since T387: My data rights draws its described radios, reason and reminder box by hand (flow 14).
+        fields.Should().HaveCountGreaterThanOrEqualTo(32, "guard: the scan finds the callers (34 since T387), or it proves nothing");
+        fields.Select(field => field.File).Distinct().Should().HaveCountGreaterThanOrEqualTo(10);
 
         var unlinked = fields
             .Where(field => !InputNamesItsHelp(field.Markup, field.InputId))
@@ -111,7 +112,8 @@ public sealed partial class FormFieldHelpTextLinkTests : TestContext
         // 125 since T373: the invitations page's six FormFields went with its issue form; Invite a person writes its fields'
         // required marks itself (M11).
         // 112 since T376: flow 12's Add a role…, training, record and SSO forms draw read-outs and described radios by hand.
-        fields.Should().HaveCountGreaterThanOrEqualTo(105, "guard: the scan finds every FormField (112 since T376), or it proves nothing");
+        // 109 since T387: My data rights' three went with its select and its two preference boxes (flow 14, Q4, Q6).
+        fields.Should().HaveCountGreaterThanOrEqualTo(102, "guard: the scan finds every FormField (109 since T387), or it proves nothing");
 
         var unnamed = fields
             .SelectMany(field => UnnamedSlotText(field.Markup, field.InputId)

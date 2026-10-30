@@ -73,18 +73,15 @@ public sealed class DataRightsRequest
         };
     }
 
-    public void Review()
-    {
-        if (Status != DataRightsRequestStatus.Submitted)
-            throw new InvalidOperationException("Only submitted requests can be placed under review.");
-
-        Status = DataRightsRequestStatus.UnderReview;
-    }
-
+    /// <summary>
+    /// Decides the request for its requester. Only a submitted request is decided: nothing is placed under review first
+    /// (T387, Q8: <c>Review()</c> had no caller and is gone). The handlers refuse a withdrawn request in their own words
+    /// first (T387, F8); this is the last guard.
+    /// </summary>
     public void Approve(string decidedByUserId, string decisionNote, DateTime utcNow)
     {
-        if (Status is not (DataRightsRequestStatus.Submitted or DataRightsRequestStatus.UnderReview))
-            throw new InvalidOperationException("Only submitted or under-review requests can be approved.");
+        if (Status != DataRightsRequestStatus.Submitted)
+            throw new InvalidOperationException("Only a submitted request can be approved.");
 
         DecidedByUserId = decidedByUserId.Trim();
         DecisionNote = decisionNote.Trim();
@@ -94,8 +91,8 @@ public sealed class DataRightsRequest
 
     public void Reject(string decidedByUserId, string decisionNote, DateTime utcNow)
     {
-        if (Status is not (DataRightsRequestStatus.Submitted or DataRightsRequestStatus.UnderReview))
-            throw new InvalidOperationException("Only submitted or under-review requests can be rejected.");
+        if (Status != DataRightsRequestStatus.Submitted)
+            throw new InvalidOperationException("Only a submitted request can be rejected.");
 
         DecidedByUserId = decidedByUserId.Trim();
         DecisionNote = decisionNote.Trim();
@@ -112,10 +109,34 @@ public sealed class DataRightsRequest
         Status = DataRightsRequestStatus.Completed;
     }
 
+    /// <summary>
+    /// The requester takes the request back, only while it waits for a decision (T387, Q14). Until T387 it refused only a
+    /// completed or withdrawn request, so an approved Rectification, or a rejected request, could be withdrawn by the
+    /// command, though the page never offered it.
+    /// </summary>
     public void Withdraw()
     {
-        if (Status is DataRightsRequestStatus.Completed or DataRightsRequestStatus.Withdrawn)
-            throw new InvalidOperationException("Completed or already-withdrawn requests cannot be withdrawn.");
+        if (Status != DataRightsRequestStatus.Submitted)
+            throw new InvalidOperationException("Only a submitted request can be withdrawn.");
+
+        Status = DataRightsRequestStatus.Withdrawn;
+    }
+
+    /// <summary>
+    /// Whether the request is still open: waiting for a decision, or an approved Rectification not yet completed. What an
+    /// erasure of its requester withdraws (T387, F3).
+    /// </summary>
+    public bool IsOpen => Status is DataRightsRequestStatus.Submitted or DataRightsRequestStatus.Approved;
+
+    /// <summary>
+    /// Withdrawn because its requester was erased by another of their requests (T387, F3): a submitted request, which
+    /// nobody may now decide, or an approved Rectification, which nobody may now carry through. The requester's own
+    /// <see cref="Withdraw" /> stays the submitted request's alone.
+    /// </summary>
+    public void WithdrawOnErasure()
+    {
+        if (!IsOpen)
+            throw new InvalidOperationException("Only an open request is withdrawn by an erasure.");
 
         Status = DataRightsRequestStatus.Withdrawn;
     }

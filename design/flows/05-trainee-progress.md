@@ -734,7 +734,7 @@ Expect: Each of the 15 EPAs carried over from 11.1 reads the count he noted in S
   target of 2 per academic year. The rows are "Each semester · 10 EPAs" and "Once a year · 7 EPAs", and This period's
   yearly figure is "… of 7" over "EPAs met in 2026".
 
-Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1325)
+Step A.7.3 — Dr Dlamini on her phone (appendix-cross-cutting.md:1480)
 Role: Trainee — Dr Anele Dlamini
 Route: / → /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/mine → /account/data-rights
 Do: At 390 px, sign in and open her dashboard, My progress and one EPA's page from its index, My activities and My data
@@ -743,6 +743,8 @@ Expect: The dashboard's cards stack, each Furthest short row's figure under its 
   index and the Entrustment panel stack: each EPA's link is a 44 px block, every cell but the link labelled by its
   column, and each Latest rating link in the panel is 44 px tall (T328); nothing scrolls sideways. The EPA's page draws
   its chart at 322 px, never scaled, with its table stacked under it (T355, T323). My activities' rows stack, each cell
-  but the link and the state labelled by its column (T342), its Credit link 44 px tall, and the table of "Your requests"
-  scrolls inside its container; each row's link or action stays reachable.
+  but the link and the state labelled by its column (T342), its Credit link 44 px tall. On My data rights Your requests
+  stacks, each row a block with every text cell but Submitted labelled by its column (the Actions cell has none: its button is named for its row) and nothing scrolling inside it, and
+  the row's Download is 44 px tall and the row's width (T387, R3-M04 at 390); each row's link or action stays
+  reachable.
 ```

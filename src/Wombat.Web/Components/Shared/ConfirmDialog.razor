@@ -14,7 +14,7 @@
   Either way the native <dialog> is opened modal, so Escape closes it. The browser returns the focus to the control that
   opened it, except where a clicked button never took it (Safari, Firefox on macOS): so the dialog's script records the
   opener (document.activeElement, else ReturnFocusId) and focuses it when Cancel or Escape closes the dialog (T366, D6). In the form mode the first element the caller marks autofocus takes the focus on open (the refusal, else the
-  password), else Cancel, which carries autofocus itself; OnClosed tells the caller the dialog has closed, however it was
+  password), else Cancel, which carries autofocus itself (and does in the action mode too, unless InitialFocusId names a field: T387 review P5); OnClosed tells the caller the dialog has closed, however it was
   closed, so a caller that opened it without a press (a refusal reopening it as the page loads) can put the focus back.
 
   The action mode may carry a field (T366, flow 09, M5): FieldContent, drawn after the body and outside the id that
@@ -70,7 +70,11 @@
         @* While the confirmed action runs, the dialog stays open and the confirm button keeps the focus: it is not disabled,
            a second press sends nothing, and aria-disabled says so (DESIGN.md § Button system, T234 review). Cancel would
            race it, so Cancel is disabled. *@
-        <button type="button" class="btn btn-outline" disabled="@_confirming" @onclick="CancelAsync">@CancelLabel</button>
+        @* autofocus (T387 review P5): the dialog opens on Cancel whatever its body holds. Without it the native first focus
+           is the first focusable area in tree order, and a body that scrolls (.dialog-body--scroll, the erasure's forecast)
+           is itself one in Chromium. Not where the caller names its field's first focus (InitialFocusId). *@
+        <button type="button" class="btn btn-outline" disabled="@_confirming" autofocus="@string.IsNullOrEmpty(InitialFocusId)"
+                @onclick="CancelAsync">@CancelLabel</button>
         <button type="button" class="btn @(DangerAction ? "btn-danger" : "btn-primary")"
                 aria-disabled="@InFlight.AriaDisabled(_confirming)" @onclick="ConfirmAsync">@ConfirmLabel</button>
       </FormActions>

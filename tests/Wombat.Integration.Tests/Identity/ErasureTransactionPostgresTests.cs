@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Wombat.Application.Features.DataRights;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.DataRights;
 using Wombat.Domain.Institutions;
@@ -58,11 +59,16 @@ public sealed class ErasureTransactionPostgresTests : IAsyncLifetime
     {
         // An administrator's edit lands between the erasure reading the account and writing it. The user store reports the
         // conflict as a failed result, not an exception, and until T156 the erasure went on past it. It is refused as a
-        // conflict on any other row about the person is (T258), in the same words (T156 review).
+        // conflict on any other row about the person is (T258), in the same words (T156 review), typed (T387) so the page
+        // maps the reason.
         await RunAsync(
             fault => fault.ConcurrentEditBeforeUpdate = true,
-            (thrown, _) => thrown.Should().BeOfType<InvalidOperationException>()
-                .Which.Message.Should().Be(ErasureExecutor.PersonChanged, "it stops at the refusal, not at a later step"),
+            (thrown, _) =>
+            {
+                var refusal = thrown.Should().BeOfType<DataRightsRefusedException>().Which;
+                refusal.Reason.Should().Be(DataRightsRefusal.PersonChanged);
+                refusal.Message.Should().Be(ErasureExecutor.PersonChanged, "it stops at the refusal, not at a later step");
+            },
             concurrentEditStands: true);
     }
 

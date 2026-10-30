@@ -69,6 +69,14 @@ steps record: F-5.10a (T314: the staff export linked and naming the registrar, 5
 (T313, T287: Verify reads either case and says what to enter, 5.13), F-5.21a, F-5.22a, F-5.23a and F-A.7.4a (T311:
 Home's card names the end, My authorisations admits a graduate, Export portfolio is in her menu) and F-A.2.9a (T313:
 portfolio-export-cleanup retired, A.2.1, A.2.9); and the flow's halves of T280, T323, T325 and T329.
+T387 (flow 14, 2026-10-30) rebuilt the three data-rights pages and added Step A.1.8a, which carries an approved
+rectification through on the request's page (record a correction, complete the request; F2): 332 steps, 79 page files
+and 88 templates, so the Not built row for applying a rectification goes. Its build closes, for its replay to confirm,
+the gaps the steps record: F-A.1.1a (T318: the optional-processing box gone, A.1.1 saves nothing), F-A.1.2a and
+F-A.1.9a (T319: each decision mailed, the answer on My data rights), F-A.1.2c (T325: SAST), F-A.1.3b (T324: the
+filters by label), F-A.1.3c (T323: the request's sections), F-A.1.12a (T276, T264: the pseudonym on the kept request,
+the erasure confirmed in a dialog), F-A.5.7a (Request unavailable) and F-A.7.5b (T328: Show with the filters); and the
+flow's halves of T280, T316, T329 and T264.
 
 ## Pages
 
@@ -80,12 +88,12 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/` | Home.razor | Any signed-in user | 1.1, 1.8, 1.10, 1.11, 1.21, 1.23, 2.1, 2.8, 2.9, 2.10, 2.18, 2.19, 2.23, 2.25, 2.27, 2.28, 2.31, 2.32, 2.33, 2.34, 2.35, 2.36, 2.37, 2.38, 2.39, 2.40, 2.44, 3.1, 3.5, 3.12, 3.13, 3.15, 3.16, 3.17, 3.24, 3.26, 3.28, 3.30, 3.31, 3.33, 3.34, 3.50, 3.51, 3.52, 3.53, 3.54, 3.54a, 3.54c, 4.1, 4.2, 4.3, 4.4, 4.5, 4.35, 4.39, 4.42, 5.7, 5.8, 5.15, 5.21, 5.23, 5.25, 5.28, 6.10, A.1.1, A.2.1, A.4.1, A.4.6, A.4.7, A.5.3, A.5.9, A.5.10, A.5.11, A.5.12, A.5.13, A.5.16, A.6.1, A.6.2, A.6.3, A.6.8, A.7.3, A.7.4, A.7.5, A.7.6, A.7.7, A.7.8, A.7.8a, A.7.9, A.7.10, A.7.11, A.7.14 |
 | `/access-denied` | AccessDenied.razor | Anyone, signed in or not | 1.15, 1.23, 2.19, 2.32, 4.5, 4.41, 5.22, 6.10, A.5.1, A.5.2 |
 | `/account/change-password` | Account/ChangePassword.razor | Any signed-in user | A.4.2, A.4.6, A.7.14 |
-| `/account/data-rights` | Profile/DataRights.razor | Any signed-in user | A.1.1, A.1.2, A.1.5, A.1.6, A.1.7, A.1.9, A.1.11, A.2.3, A.2.5, A.7.3 |
+| `/account/data-rights` | Profile/DataRights.razor | Any signed-in user | A.1.1, A.1.2, A.1.5, A.1.6, A.1.7, A.1.8a, A.1.9, A.1.11, A.2.3, A.2.5, A.7.3 |
 | `/account/forgot-password` | Account/ForgotPassword.razor | Anyone, signed in or not | A.4.4, A.7.12 |
 | `/account/link-external` | Account/LinkExternalLogin.razor | Anyone, signed in or not | A.3.3 |
 | `/account/login` | Account/Login.razor | Anyone not signed in; a signed-in visitor is sent Home | 1.1, 2.1, 2.8, 2.9, 2.10, 2.18, 2.23, 2.25, 2.27, 2.31, 2.32, 2.33, 2.34, 2.35, 2.36, 2.37, 2.39, 2.40, 4.3, 4.4, 5.15, 5.19, 5.20, 5.28, 6.10, A.1.13, A.3.2, A.3.3, A.4.3, A.4.4, A.4.6, A.4.7, A.5.4, A.6.5, A.6.8, A.7.12, A.7.14 |
 | `/account/logout`, `/account/logout-confirm` | Account/Logout.razor | Any signed-in user; anyone else is sent to the sign-in page. A GET to either address draws the Sign out page and signs nobody out; its form posts to `/account/logout/submit` | A.4.7 |
-| `/account/profile` | Account/Profile.razor | Any signed-in user | 2.19, 2.41, A.4.1, A.4.2, A.4.6, A.7.14 |
+| `/account/profile` | Account/Profile.razor | Any signed-in user | 2.19, 2.41, A.1.8a, A.4.1, A.4.2, A.4.6, A.7.14 |
 | `/account/register` | Account/Register.razor | Anyone, signed in or not | 1.8, 1.9, 1.10, 2.8, 2.9, 2.10, 2.11, 2.17, 2.18, 2.27 |
 | `/activities/inbox` | Activities/ActivityInbox.razor | Any signed-in user | 3.4, 3.5, 3.11, 3.13, 3.15, 3.16, 3.17, 3.24, 3.26, 3.28, 3.33, 3.51, 5.25, 6.18, A.4.3, A.7.2 |
 | `/activities/mine` | Activities/MyActivities.razor | Any signed-in user | 2.19, 3.2, 3.6, 3.20, 3.25, 3.48, 5.28, 6.19, 6.24, 6.41, A.2.7, A.7.3 |
@@ -106,8 +114,8 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/admin/curricula/new`, `/admin/curricula/{Id:int}` | Admin/Curricula/CurriculumEdit.razor | Administrator, CollegeAdmin | 6.13, 6.29, 6.31 |
 | `/admin/curricula/{Id:int}/items` | Admin/Curricula/CurriculumItemsEdit.razor | Administrator, CollegeAdmin, InstitutionalAdmin | 1.18, 1.21, 6.13, 6.17, 6.22, 6.26, 6.29, 6.30, 6.33, A.7.10 |
 | `/admin/curriculum-progress` | Admin/CurriculumProgress/CurriculumProgressRebuild.razor | Administrator | 6.38 |
-| `/admin/data-rights` | Admin/DataRights/RequestsList.razor | Administrator, Coordinator; a Coordinator sees his own institution's requests | A.1.3, A.1.8, A.1.12, A.7.5 |
-| `/admin/data-rights/{Id:guid}` | Admin/DataRights/RequestDetail.razor | Administrator, Coordinator; a Coordinator decides his own institution's requests | A.1.3, A.1.8, A.1.12, A.5.7 |
+| `/admin/data-rights` | Admin/DataRights/RequestsList.razor | Administrator, Coordinator; a Coordinator sees their own institution's requests | A.1.3, A.1.8, A.1.8a, A.1.12, A.7.5 |
+| `/admin/data-rights/{Id:guid}` | Admin/DataRights/RequestDetail.razor | Administrator, Coordinator; a Coordinator decides their own institution's requests, never their own (T387, F9) | A.1.3, A.1.8, A.1.8a, A.1.12, A.5.7 |
 | `/admin/entrustment-decisions` | Admin/EntrustmentDecisions/Index.razor | Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 4.35, 4.36, 4.37, 5.7, 6.22, A.7.7 |
 | `/admin/entrustment-scales` | Admin/EntrustmentScales/EntrustmentScalesList.razor | Administrator, InstitutionalAdmin | 1.4, 1.15, 1.22, 6.5, 6.6, 6.8, 6.9 |
 | `/admin/entrustment-scales/new`, `/admin/entrustment-scales/{Id:int}` | Admin/EntrustmentScales/EntrustmentScaleEdit.razor | Administrator | 1.4, 6.5, 6.6, 6.10 |
@@ -184,7 +192,6 @@ state, `states.md` is where it belongs.
 | `/Error` reached through an unhandled exception | Outside Development only (`ErrorPages`, T321); the replay runs in Development, whose developer exception page answers instead. `Hosting/ErrorPageFlowTests` plays it; A.5.8 plays the page by its address. | Reported at A.5.8 |
 | Three of the five features the nav once linked as "Coming soon": Recent activities (Assessor), STAR review queue (SpecialityAdmin, SubSpecialityAdmin) and System (Administrator) | Not built, and not offered: the nav links to no unbuilt page, and the placeholder page is gone (T335, flow 01). Recent activities and System were dropped; the STAR review queue is not restored, Entrustment decisions taking its place in the speciality admins' menu (T358). The other two are built: Stalled activities as Waiting for assessors and Programme trainees (T358, flow 06). The menus are read at 3.31, 3.51–3.53 and A.5.9–A.5.13. | Dropped, or flow 09 |
 | Reassigning a waiting request to another assessor | No page offers it (T358, Q4, C5): Waiting for assessors sends a reminder (3.31, A.5.15), and nothing reassigns. | Not built |
-| Applying and completing an approved data-rights rectification | No page calls `ApplyRectificationCommand` or `CompleteRectificationRequestCommand` (T112, Still open). A.1.8 rejects the request instead. | Not built |
 | An email when an activity is requested, completed, declined or returned | Nothing sends the `AssessmentRequested`, `AssessmentAccepted`, `AssessmentCompleted` or `AssessmentDeclined` templates. Steps 3.3, 5.24, A.2.7 and A.7.2 expect that nothing is sent. | Undecided |
 | An assessor's training status (`AssessorProfile.TrainingStatus`) changing an assessment | Nothing on the activity path reads it (2.14 records it). | Undecided |
 | An invitation's Delivery reading "Sent", or "check the address" after a second failure | The replay logs mail (`Email__SmtpHost` unset), so nothing reports a delivery or a refusal. Rows read "Being sent", then "Not delivered" with its note row. | `states.md`, with an SMTP sink |
@@ -253,7 +260,7 @@ Routes Wombat.Web maps outside the router. A step names one in its `Route:` line
 | `/account/register/start` | The invitation mail's link: keeps the token in the register cookie (30 minutes) and answers 303 to `/account/register` with no query and `Cache-Control: no-store`, so no address the page shows holds the token (T373, S1, S2; T315). A link with no token clears the cookie | 1.8, 1.9, 1.10, 2.8, 2.9, 2.10, 2.11, 2.17, 2.18, 2.27 |
 | `/account/register/submit` | The registration form's post: reads the token from the register cookie, and writes a refusal's codes and the two names back into it (T373, S1); a signed-in caller is refused first (M4) | Not named; every registration in 1.8, 1.10, 2.8–2.10, 2.18 and 2.27 posts it |
 | `/account/change-password/submit` | The change-password form's post: a change lands on My account with "Password updated."; a refusal returns to the page; the fifth wrong current password locks the account and signs it out to the sign-in page (T339, E2); an account already locked by someone else is refused on the page with the wait, and stays signed in | Not named; A.4.2 and A.4.6 post it |
-| `/account/profile/submit` | My account's name form's post: saves the name, issues the sign-in cookie again so the top bar names the person as saved, and returns to My account with "Name saved." or the refusal | 2.41, A.4.1, A.7.14 |
+| `/account/profile/submit` | My account's name form's post: saves the name, issues the sign-in cookie again so the top bar names the person as saved, and returns to My account with "Name saved." or the refusal | 2.41, A.1.8a, A.4.1, A.7.14 |
 | `/account/external-logins/remove` | My account's Remove dialog's post: removes one institutional sign-in, asking for the password when the account has one, and never the last way in; a GET returns to My account (T339) | Not played: needs a linked institutional sign-in (see above) |
 | `/account/link-external/submit` | Links an institutional identity to an account by its password | Not played: needs an identity provider (see above) |
 
@@ -396,8 +403,9 @@ and Assessor) appears under each role for the jobs done in it.
 | Reproduce a registrar's portfolio export | 5.12 | `/committee/reviews`, `/committee/reviews/{ReviewId:int}`, `/portfolio/export/{TraineeUserId}` |
 | Check that an ended programme cannot be put before the panel | 5.29 | `/committee/reviews`, `/committee/reviews/new` |
 | Decide a registrar's data-rights request: approve an export, reject a correction | A.1.3, A.1.8, A.5.7 | `/admin/data-rights`, `/admin/data-rights/{Id:guid}` |
+| Carry an approved correction through: record what was corrected, then complete the request | A.1.8a | `/admin/data-rights`, `/admin/data-rights/{Id:guid}` |
 | Find that I cannot download a registrar's data export | A.1.4 | `/account/data-rights/download/{id:guid}` |
-| Stop, then restart, my weekly digest email | A.2.3, A.2.5 | `/account/data-rights` |
+| Stop, then restart, my reminder emails | A.2.3, A.2.5 | `/account/data-rights` |
 | Sign out, and come back to the page I asked for | A.4.7 | `/account/logout-confirm`, `/`, `/account/logout`, `/account/logout/submit`, `/account/login`, `/msf/campaigns` |
 | Review my account | 2.41 | `/account/profile` |
 | Do my work on a phone | A.7.5, A.7.8a | `/`, `/msf/campaigns`, `/msf/campaigns/{CampaignId:int}`, `/committee/decisions-due`, `/admin/data-rights`, `/programme/waiting` |
@@ -477,8 +485,9 @@ and Assessor) appears under each role for the jobs done in it.
 | See an EPA paused and restored in my progress and pickers | 6.15, 6.16, 6.19, 6.20, 6.24 | `/portfolio/progress`, `/portfolio/progress/{EpaId:int}`, `/activities/new`, `/activities/{ActivityId:int}`, `/activities/mine` |
 | See my institution's own EPA among my targets | 6.27 | `/portfolio/progress`, `/portfolio/progress/{EpaId:int}`, `/activities/new` |
 | Read my progress after moving to a new curriculum version | 6.35, 6.37, 6.39 | `/portfolio/progress`, `/activities/new` |
-| Set my processing preferences, and ask for and download a copy of my data | A.1.1, A.1.2, A.1.5 | `/`, `/account/data-rights`, `/account/data-rights/download/{id:guid}` |
+| Read my data rights, and ask for and download a copy of my data | A.1.1, A.1.2, A.1.5 | `/`, `/account/data-rights`, `/account/data-rights/download/{id:guid}` |
 | Ask for access and withdraw it; ask for a correction and read the decision | A.1.6, A.1.7, A.1.9 | `/account/data-rights` |
+| Correct my name on My account, and have a correction request carried through and read it Completed | A.1.8a, A.1.9 | `/account/profile`, `/account/profile/submit`, `/account/data-rights` |
 | Ask for my personal data to be erased | A.1.11, A.1.13 | `/account/data-rights`, `/account/session-ended`, `/account/login` |
 | Leave a draft and a request waiting, and be reminded | A.2.7 | `/activities/new`, `/activities/{ActivityId:int}`, `/activities/mine` |
 | Sign in with a password an administrator set, and choose my own | A.4.6 | `/account/login`, `/`, `/account/profile`, `/account/change-password` |

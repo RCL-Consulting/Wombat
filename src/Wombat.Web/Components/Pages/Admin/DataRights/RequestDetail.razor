@@ -1,194 +1,995 @@
 @page "/admin/data-rights/{Id:guid}"
 @attribute [Authorize(Roles = "Administrator,Coordinator")]
+@using Wombat.Application.Features.DataRights.Commands
+@using Wombat.Application.Features.DataRights.Queries
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject ILogger<RequestDetail> Logger
+@implements IAsyncDisposable
 
-<PageTitle>Data rights request · Wombat</PageTitle>
+<PageTitle>@Heading · Wombat</PageTitle>
 
-@* The trail's last crumb is the request's id once it has loaded, the record's own name (R2-Rules § 3: "Home › Data rights
-   requests › the request (its id is shown here)"); until then the page's title. *@
-<PageHeader Title="Data rights request" Subtitle="Review and act on this request." CurrentCrumb="@_request?.Id.ToString()">
-  <Actions>
-    <a class="btn btn-outline" href="/admin/data-rights">
-      <Icon Name="arrow-left" />
-      Back to list
-    </a>
-  </Actions>
-</PageHeader>
+@*
+  A data rights request (T387, flow 14, lane P; boards R3-D01–D22, C01–C11, K01, U01, U02). A column of sections on
+  .user-page (S21): Request, then Decision once decided, Correction on an approved or completed Rectification, and Decide
+  while the caller may decide it (§ 0's MayDecide). The h1 and tab name it by type and person (Q12, F1: the live name, the
+  pseudonym once erased); the crumb is its id from the first render (N14), "Request unavailable" for a null read.
 
-@* What Approve or Reject did. It takes the focus once either is done (T234; DESIGN.md § Button system): a decided
-   request offers no action, so both buttons are gone. A refusal leaves the focus where it was: it is an alert, read at
-   once. *@
-<ActionResult @ref="_result">
-  @if (!string.IsNullOrWhiteSpace(_errorMessage))
-  {
-    <Alert Kind="danger">@_errorMessage</Alert>
-  }
+  - Results and focus (BRIEF § 6 A5, M13): one result on the page at a time, in the section that acted, focused (no h2
+    carries a tabindex, N18): the decision's heads Decision, a correction's and Complete's head Correction, a refusal
+    after a send heads Decide (D10, D11, D16, D21) with the note kept, Withdrawn meanwhile ends Request once the page is
+    read again (D12, S13). A refusal found before a send stays under its field, the focus in it (D02, C04).
+  - Every refusal is mapped from DataRightsRefusedException.Reason or a ValidationException's property, never a message
+    (T329); anything else is fixed words and the log.
+  - An Erasure's Approve is Approve and erase…, an outline trigger (Q19): pressed, it reads the forecast and opens the
+    dialog on Cancel (D07), whose danger button confirms. Cancel and Escape give the focus back to the trigger (D08).
+  - Request unavailable for an unknown id and another institution's alike (U01 = U02, S14): the page draws in its own
+    place, so the menu lights Data rights requests (Q17: the planner's inference).
+*@
+<PageHeader Title="@Heading" Subtitle="@Subtitle" CurrentCrumb="@Crumb" />
 
-  @if (!string.IsNullOrWhiteSpace(_statusMessage))
-  {
-    <Alert Kind="success">@_statusMessage</Alert>
-  }
-</ActionResult>
-
-<StatePanel IsLoading="@(_request is null && string.IsNullOrWhiteSpace(_errorMessage))" IsEmpty="@(_request is null)" EmptyTitle="Not found" EmptyBody="The data rights request was not found.">
-  @if (_request is not null)
-  {
-    <div class="details-grid">
-      <div class="detail-card">
-        <h3>Request</h3>
-        <dl class="detail-list">
-          <dt>Requester</dt><dd>@_request.RequesterDisplayName</dd>
-          <dt>User ID</dt><dd><code class="text-sm">@_request.RequesterUserId</code></dd>
-          <dt>Submitted</dt><dd><code>@_request.RequestedOn.ToString("yyyy-MM-dd HH:mm:ss")</code></dd>
-          <dt>Type</dt><dd>@_request.Type</dd>
-          <dt>Status</dt><dd><span class="badge @BadgeFor.DataRightsRequest(_request.Status)">@_request.Status</span></dd>
-          <dt>Reason</dt><dd>@_request.Reason</dd>
-        </dl>
-      </div>
-
-      @if (_request.DecisionNote is not null)
+<div class="user-page" aria-busy="@(_loading ? "true" : null)">
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusPageHeadingAsync">
+    <LoadingContent>
+      <p class="loading-line" role="status">@DataRightsRequestWords.LoadingRequest</p>
+      @for (var card = 0; card < 2; card++)
       {
-        <div class="detail-card">
-          <h3>Decision</h3>
-          <dl class="detail-list">
-            <dt>Decided by</dt><dd><code class="text-sm">@_request.DecidedByUserId</code></dd>
-            <dt>Decided on</dt><dd><code>@_request.DecidedOn?.ToString("yyyy-MM-dd HH:mm:ss")</code></dd>
-            <dt>Note</dt><dd>@_request.DecisionNote</dd>
-            @if (_request.CompletedOn is not null)
-            {
-              <dt>Completed on</dt><dd><code>@_request.CompletedOn?.ToString("yyyy-MM-dd HH:mm:ss")</code></dd>
-            }
-          </dl>
+        <div class="detail-card" aria-hidden="true">
+          <div class="skeleton skel-title"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line skel-short"></div>
         </div>
       }
-    </div>
+    </LoadingContent>
+    <ChildContent>
+      @if (_request is { } request)
+      {
+        @if (request.ErasedOn is { } erasedOn)
+        {
+          @* K01, D09: standing page content, no live region. *@
+          <Alert Kind="info" Role="">@DataRightsRequestWords.ErasedNotice(request, erasedOn)</Alert>
+        }
 
-    @if (_request.Status is DataRightsRequestStatus.Submitted or DataRightsRequestStatus.UnderReview)
-    {
-      <div class="detail-card mt-4">
-        <h3>Action</h3>
+        @RequestSection(request)
 
-        <FormField Label="Decision note" InputId="decision-note" Required="true">
-          <textarea id="decision-note" class="form-control" rows="3" @bind="_decisionNote"
-            placeholder="Document your decision and any relevant context..."></textarea>
-        </FormField>
+        @if (request.DecidedOn is not null && request.Status is DataRightsRequestStatus.Approved or DataRightsRequestStatus.Rejected or DataRightsRequestStatus.Completed)
+        {
+          @DecisionSection(request)
+        }
 
-        <FormActions>
-          @* Neither is disabled while its own decision runs (T234): the one pressed has the focus, and a browser drops the
-             focus of a button it disables, to the page. A second press sends nothing. *@
-          <button type="button" class="btn btn-primary" disabled="@_rejecting" aria-disabled="@InFlight.AriaDisabled(_approving)" @onclick="ApproveAsync">
-            @(_approving ? "Processing..." : "Approve")
-          </button>
-          <button type="button" class="btn btn-outline" disabled="@_approving" aria-disabled="@InFlight.AriaDisabled(_rejecting)" @onclick="RejectAsync">
-            @(_rejecting ? "Processing..." : "Reject")
-          </button>
-        </FormActions>
-      </div>
-    }
-  }
-</StatePanel>
+        @if (request.Type == DataRightsRequestType.Rectification && request.Status is DataRightsRequestStatus.Approved or DataRightsRequestStatus.Completed)
+        {
+          @CorrectionSection(request)
+        }
+
+        @if (request.MayDecide)
+        {
+          @DecideSection(request)
+        }
+      }
+      else if (_unavailable)
+      {
+        <div class="detail-card detail-card--empty">
+          <div class="state-panel-copy">@DataRightsRequestWords.UnavailableBody</div>
+          <div class="form-actions">
+            <a class="btn btn-primary" href="@DataRightsWords.QueueLink">@DataRightsRequestWords.GoToQueue</a>
+          </div>
+        </div>
+      }
+    </ChildContent>
+  </StatePanel>
+</div>
+
+@* D07, D13, D14: one dialog, its body the forecast read when Approve and erase… was pressed. *@
+<ConfirmDialog @ref="_eraseDialog"
+               Title="@(_forecast is null ? DataRightsRequestWords.DialogConfirm : DataRightsRequestWords.DialogTitle(_forecast.PersonName))"
+               BodyContent="@EraseBody"
+               CancelLabel="@DataRightsRequestWords.DialogCancel"
+               ConfirmLabel="@DataRightsRequestWords.DialogConfirm"
+               DangerAction="true"
+               ReturnFocusId="@EraseTriggerId"
+               OnConfirm="EraseAsync" />
 
 @code {
-  [Parameter]
-  public Guid Id { get; set; }
+  [Parameter] public Guid Id { get; set; }
 
-  private DataRightsRequestDto? _request;
-  private string? _errorMessage;
-  private string? _statusMessage;
-  private string _decisionNote = string.Empty;
-  private bool _approving;
-  private bool _rejecting;
-  private ActionResult? _result;
+  private const string NoteId = "decision-note";
+  private const string NoteHelpId = "decision-note-help";
+  private const string NoteErrorId = "decision-note-err";
+  private const string NoteCountId = "decision-note-count";
+  private const string EraseTriggerId = "approve-and-erase";
+  private const string RecordErrorId = "rec-err";
+  private const string OtherNameId = "rec-name";
+  private const string OtherNameErrorId = "rec-name-err";
+  private const string BeforeId = "before";
+  private const string BeforeErrorId = "before-err";
+  private const string AfterId = "after";
+  private const string AfterErrorId = "after-err";
+  private const string OtherChoice = "Other";
 
-  /// <summary>A decision has been sent and has not answered, so nothing else may be sent. (T234)</summary>
-  private bool Busy => _approving || _rejecting;
+  /// <summary>Where the page's one result shows (M13): the section that acted.</summary>
+  private enum Place
+  {
+    None,
+    Request,
+    Decision,
+    Correction,
+    Complete,
+    Decide
+  }
 
-  protected override async Task OnInitializedAsync()
+  private DataRightsRequestDetailDto? _request;
+  private bool _loading = true;
+  private string? _loadError;
+  private bool _unavailable;
+
+  // The page's one result: where, what, whether it is a refusal, and whether it takes the focus once drawn.
+  private Place _place;
+  private DataRightsMessage? _message;
+  private bool _refused;
+  private bool _focusResult;
+  private ActionResult? _region;
+
+  // Decide.
+  private string _note = string.Empty;
+  private string? _noteError;
+  private string? _running;
+  private ErasureForecastDto? _forecast;
+  private ConfirmDialog? _eraseDialog;
+  private ElementReference _noteBox;
+  private ElementReference _noteCount;
+  private IJSObjectReference? _module;
+  private bool _counting;
+
+  // Record a correction.
+  private string _choice = string.Empty;
+  private string _otherName = string.Empty;
+  private string _before = string.Empty;
+  private string _after = string.Empty;
+  private string? _choiceError;
+  private string? _otherNameError;
+  private string? _beforeError;
+  private string? _afterError;
+
+  /// <summary>The h1 and the tab (Q12): by type and person once read; the page's own name while read and on a failure.</summary>
+  private string Heading => _unavailable ? "Request unavailable" : _request is null ? "Data rights request" : DataRightsWords.Title(_request.Type, _request.RequesterName);
+
+  /// <summary>The trail's last crumb: the id from the first render (N14, D17), the h1's words for a null read (U01).</summary>
+  private string Crumb => _unavailable ? DataRightsRequestWords.UnavailableHeading : Id.ToString();
+
+  private string? Subtitle => _request is null ? null : DataRightsRequestWords.RequestSubtitle(_request);
+
+  /// <summary>A decision, a correction or a completion has been sent and has not answered: nothing else is sent.</summary>
+  private bool Busy => _running is not null;
+
+  private Guid _readId;
+
+  // Read again when the id changes (T387 review P11), so a link from one request to another reads the new one.
+  protected override Task OnParametersSetAsync()
+  {
+    if (_readId == Id)
+    {
+      return Task.CompletedTask;
+    }
+
+    _readId = Id;
+    return LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    _counting = false;
+    try
+    {
+      _request = await ReadAsync();
+      _unavailable = _request is null;
+    }
+    catch (Exception exception)
+    {
+      // S14, T329: a read that throws is a load error in fixed words, never the exception's text; a null read is not.
+      Logger.LogError(exception, "The data rights request {RequestId} could not be read.", Id);
+      _request = null;
+      _unavailable = false;
+      _loadError = DataRightsRequestWords.RequestLoadFailed;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private async Task<DataRightsRequestDetailDto?> ReadAsync()
+  {
+    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+    return await Sender.Send(new GetDataRightsRequestByIdQuery(Id, authState.User));
+  }
+
+  /// <summary>The request read again after an action or a refusal; a read that fails keeps what the page shows.</summary>
+  private async Task RereadAsync()
   {
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _request = await Sender.Send(
-        new Wombat.Application.Features.DataRights.Queries.GetDataRightsRequestByIdQuery(Id, authState.User));
+      if (await ReadAsync() is { } request)
+      {
+        _request = request;
+      }
     }
-    catch (Exception ex)
+    catch (Exception exception)
     {
-      _errorMessage = ex.Message;
+      Logger.LogError(exception, "The data rights request {RequestId} could not be read again.", Id);
     }
+  }
+
+  private Task RetryAsync() => LoadAsync();
+
+  // N15: once a Try again has read, the h1 takes the focus.
+  private ValueTask FocusPageHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  private void Show(Place place, DataRightsMessage message, bool refused, bool focus = true)
+  {
+    _place = place;
+    _message = message;
+    _refused = refused;
+    _focusResult = focus;
+  }
+
+  private void ClearResult()
+  {
+    _place = Place.None;
+    _message = null;
+    _refused = false;
+    _focusResult = false;
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusResult && _region is not null)
+    {
+      _focusResult = false;
+      await _region.Element.FocusAsync();
+    }
+
+    if (!_loading && _request is { MayDecide: true } && !_counting)
+    {
+      _counting = true;
+      await CountAsync();
+    }
+  }
+
+  /// <summary>
+  /// The note's counter, counted in the browser as it is typed (T366's module, as My data rights' reason), so no keystroke
+  /// costs a round trip. A script that cannot run leaves Blazor's count, which follows each change.
+  /// </summary>
+  private async Task CountAsync()
+  {
+    try
+    {
+      _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/review-appeal.js");
+      if (_module is not null)
+      {
+        await _module.InvokeVoidAsync("count", _noteBox, _noteCount, DataRightsRequestWords.NoteMaxLength);
+      }
+    }
+    catch (Exception exception) when (exception is JSException or JSDisconnectedException or InvalidOperationException or TaskCanceledException)
+    {
+      // The counter is a convenience: Blazor's own count is on the page whenever the note changes.
+    }
+  }
+
+  public async ValueTask DisposeAsync()
+  {
+    if (_module is not null)
+    {
+      try
+      {
+        await _module.DisposeAsync();
+      }
+      catch (JSDisconnectedException)
+      {
+        // The circuit has gone; so has the module.
+      }
+    }
+  }
+
+  // ---- the sections ----
+
+  /// <summary>The result, if it is <paramref name="place" />'s: an alert in an ActionResult, its first sentence bold where the board bolds one.</summary>
+  private RenderFragment ResultAt(Place place) => __builder =>
+  {
+    if (_place == place && _message is { } message)
+    {
+      <ActionResult @ref="_region">
+        <Alert Kind="@(_refused ? "danger" : "success")">@if (message.Rest is null)
+          {@message.Lead}
+          else
+          {<strong>@message.Lead</strong>@(" " + message.Rest)}</Alert>
+      </ActionResult>
+    }
+  };
+
+  private RenderFragment RequestSection(DataRightsRequestDetailDto request) => __builder =>
+  {
+    <section class="detail-card user-section" aria-labelledby="s-req">
+      <h2 id="s-req">Request</h2>
+      <dl class="detail-list">
+        <dt>Requester</dt>
+        <dd>
+          @if (request.ErasedOn is { } erased)
+          {
+            <span class="person-cell">@request.RequesterName<span>@DataRightsRequestWords.ErasedLine(erased)</span></span>
+          }
+          else
+          {
+            @request.RequesterName
+          }
+        </dd>
+        @if (request.ErasedOn is null && request.RequesterEmail is { } email)
+        {
+          <dt>Email</dt>
+          <dd>@Wombat.Web.Components.Pages.Admin.Invitations.InvitationText.Address(email)</dd>
+        }
+        <dt>User id</dt>
+        <dd><span class="request-id">@request.RequesterUserId</span></dd>
+        <dt>Request id</dt>
+        <dd><span class="request-id">@request.Id</span></dd>
+        <dt>Type</dt>
+        <dd>@DataRightsWords.Type(request.Type)</dd>
+        <dt>Status</dt>
+        <dd><span class="badge @BadgeFor.DataRightsRequest(request.Status)">@DataRightsWords.Status(request.Status)</span></dd>
+        <dt>Reason</dt>
+        <dd>@request.Reason</dd>
+      </dl>
+      @if (_place == Place.Request)
+      {
+        @ResultAt(Place.Request)
+      }
+      else if (request.Status == DataRightsRequestStatus.Withdrawn)
+      {
+        <p>@DataRightsRequestWords.WithdrawnLine(request)</p>
+      }
+      else if (request.Status == DataRightsRequestStatus.Submitted && DataRightsRequestWords.OwnRequestLine(request) is { } own)
+      {
+        @* F9, D15, D20: the caller's own request, which another decides. *@
+        <p>@own</p>
+      }
+    </section>
+  };
+
+  private RenderFragment DecisionSection(DataRightsRequestDetailDto request) => __builder =>
+  {
+    <section class="detail-card user-section" aria-labelledby="s-dec">
+      <h2 id="s-dec">Decision</h2>
+      @ResultAt(Place.Decision)
+      <dl class="detail-list">
+        <dt>Decision</dt>
+        <dd>@(request.Status == DataRightsRequestStatus.Rejected ? DataRightsRequestWords.DecisionRejected : DataRightsRequestWords.DecisionApproved)</dd>
+        @if (request.DecidedByUserId is { } decider)
+        {
+          <dt>Decided by</dt>
+          <dd>
+            @if (!string.IsNullOrWhiteSpace(request.DecidedByName) && !string.Equals(request.DecidedByName, decider, StringComparison.Ordinal))
+            {
+              @request.DecidedByName<br />
+            }
+            <span class="request-id">@decider</span>
+          </dd>
+        }
+        @if (request.DecidedOn is { } decidedOn)
+        {
+          <dt>Decided on</dt>
+          <dd>@DataRightsWords.When(decidedOn)</dd>
+        }
+        @if (request.DecisionNote is { } note)
+        {
+          <dt>Note</dt>
+          <dd>@note</dd>
+        }
+        @if (request.CompletedOn is { } completedOn)
+        {
+          <dt>Completed on</dt>
+          <dd>@DataRightsWords.When(completedOn)</dd>
+        }
+      </dl>
+    </section>
+  };
+
+  private RenderFragment CorrectionSection(DataRightsRequestDetailDto request) => __builder =>
+  {
+    var open = request.Status == DataRightsRequestStatus.Approved;
+    <section class="detail-card user-section" aria-labelledby="s-cor">
+      <h2 id="s-cor">Correction</h2>
+      @ResultAt(Place.Correction)
+      @if (open)
+      {
+        <p>@DataRightsRequestWords.CorrectionIntro</p>
+      }
+      @if (request.Corrections.Count == 0)
+      {
+        <p class="muted">@DataRightsRequestWords.NoCorrection</p>
+      }
+      else
+      {
+        <DataTable TItem="DataRightsCorrectionDto" Items="request.Corrections" StackWide="true" Class="data-rights-table"
+                   Caption="@DataRightsRequestWords.CorrectionsCaption">
+          <HeaderRow>
+            <tr role="row">
+              <th scope="col" role="columnheader">Record</th>
+              <th scope="col" role="columnheader">@DataRightsRequestWords.BeforeLabel</th>
+              <th scope="col" role="columnheader">@DataRightsRequestWords.AfterLabel</th>
+              <th scope="col" role="columnheader">Recorded</th>
+            </tr>
+          </HeaderRow>
+          <Row Context="correction">
+            <tr role="row">
+              <th scope="row" role="rowheader">@DataRightsWords.Record(correction.TargetType)</th>
+              <td role="cell" data-label="@DataRightsRequestWords.BeforeLabel">@correction.FromValue</td>
+              <td role="cell" data-label="@DataRightsRequestWords.AfterLabel">@correction.ToValue</td>
+              <td role="cell" data-label="Recorded">@DataRightsRequestWords.Recorded(correction)</td>
+            </tr>
+          </Row>
+        </DataTable>
+      }
+      @if (open && request.MayRecord)
+      {
+        @RecordForm(request)
+        @ResultAt(Place.Complete)
+        <p>@DataRightsRequestWords.CompleteHelp(request.RequesterName)</p>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" disabled="@(Busy && _running != "complete")"
+                  aria-disabled="@InFlight.AriaDisabled(_running == "complete")" @onclick="CompleteAsync">@DataRightsRequestWords.CompleteRequest</button>
+        </div>
+      }
+    </section>
+  };
+
+  private RenderFragment RecordForm(DataRightsRequestDetailDto request) => __builder =>
+  {
+    var nameHelp = DataRightsRequestWords.NameHelp(request);
+    var fromSignIn = request.NameFromSignIn is not null;
+    <fieldset class="form-group choice-group choice-help-stack @(_choiceError is null ? null : "is-invalid")"
+              aria-describedby="@(_choiceError is null ? null : RecordErrorId)">
+      <legend>@DataRightsRequestWords.RecordLegend<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></legend>
+      @Radio("rec-first", DataRightsRecords.AccountFirstName, DataRightsWords.Record(DataRightsRecords.AccountFirstName), nameHelp, fromSignIn)
+      @Radio("rec-last", DataRightsRecords.AccountLastName, DataRightsWords.Record(DataRightsRecords.AccountLastName), nameHelp, fromSignIn)
+      @if (request.ProgrammeStart is { } start)
+      {
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="rec" id="rec-start" checked="@(_choice == DataRightsRecords.ProgrammeStart)"
+                 aria-invalid="@ChoiceInvalid" aria-describedby="rec-start-h" @onchange="() => Choose(DataRightsRecords.ProgrammeStart)" />
+          <label for="rec-start">@DataRightsWords.Record(DataRightsRecords.ProgrammeStart)</label>
+          <p id="rec-start-h" class="page-subtitle choice-help">@DataRightsRequestWords.ProgrammeStartHelp(request, start)@if (!start.Ended && start.MayOpen)
+            {@(" ")<a href="@PortfolioLinks.TraineeProfile(start.ProfileId)">@DataRightsRequestWords.OpenProgramme(request.RequesterName)</a>}</p>
+        </div>
+      }
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="rec" id="rec-other" checked="@(_choice == OtherChoice)"
+               aria-invalid="@ChoiceInvalid" aria-describedby="rec-other-h" @onchange="() => Choose(OtherChoice)" />
+        <label for="rec-other">@DataRightsRequestWords.OtherLabel</label>
+        <p id="rec-other-h" class="page-subtitle choice-help">@DataRightsRequestWords.OtherHelp</p>
+        @if (_choice == OtherChoice)
+        {
+          <div class="form-group">
+            <label for="@OtherNameId">@DataRightsRequestWords.OtherNameLabel<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label>
+            <input id="@OtherNameId" class="form-control @(_otherNameError is null ? null : "input-validation-error")" aria-required="true"
+                   aria-invalid="@(_otherNameError is null ? null : "true")" aria-describedby="@(_otherNameError is null ? null : OtherNameErrorId)"
+                   @bind="_otherName" @bind:after="OtherNameChanged" />
+            @if (_otherNameError is not null)
+            {
+              <div id="@OtherNameErrorId" class="validation-message" role="alert">@_otherNameError</div>
+            }
+          </div>
+        }
+      </div>
+      @if (_choiceError is not null)
+      {
+        <div id="@RecordErrorId" class="validation-message" role="alert">@_choiceError</div>
+      }
+    </fieldset>
+    <div class="correction-values">
+      @ValueField(BeforeId, DataRightsRequestWords.BeforeLabel, BeforeErrorId, _beforeError, () => _before, value => { _before = value; _beforeError = null; })
+      @ValueField(AfterId, DataRightsRequestWords.AfterLabel, AfterErrorId, _afterError, () => _after, value => { _after = value; _afterError = null; })
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline" disabled="@(Busy && _running != "record")"
+              aria-disabled="@InFlight.AriaDisabled(_running == "record")" @onclick="RecordAsync">@DataRightsRequestWords.RecordCorrection</button>
+    </div>
+  };
+
+  /// <summary>
+  /// A name's radio (C01): drawn disabled when the name comes from an institution's sign-in (C11, F6; the operator's
+  /// approval of the round's inference). A choice, not an action, so the native attribute.
+  /// </summary>
+  private RenderFragment Radio(string id, string key, string label, string help, bool disabled) => __builder =>
+  {
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="rec" id="@id" checked="@(_choice == key)" disabled="@disabled"
+             aria-invalid="@ChoiceInvalid" aria-describedby="@($"{id}-h")" @onchange="() => Choose(key)" />
+      <label for="@id">@label</label>
+      <p id="@($"{id}-h")" class="page-subtitle choice-help">@help</p>
+    </div>
+  };
+
+  private RenderFragment ValueField(string id, string label, string errorId, string? error, Func<string> get, Action<string> set) => __builder =>
+  {
+    <div class="form-group">
+      <label for="@id">@label<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label>
+      <input id="@id" class="form-control @(error is null ? null : "input-validation-error")" aria-required="true"
+             aria-invalid="@(error is null ? null : "true")" aria-describedby="@(error is null ? null : errorId)"
+             value="@get()" @onchange="args => set(args.Value?.ToString() ?? string.Empty)" />
+      @if (error is not null)
+      {
+        <div id="@errorId" class="validation-message" role="alert">@error</div>
+      }
+    </div>
+  };
+
+  private RenderFragment DecideSection(DataRightsRequestDetailDto request) => __builder =>
+  {
+    var erasure = request.Type == DataRightsRequestType.Erasure;
+    <section class="detail-card user-section" aria-labelledby="s-decide">
+      <h2 id="s-decide">@DataRightsRequestWords.DecideHeading</h2>
+      @ResultAt(Place.Decide)
+      <p>@DataRightsRequestWords.DecideHelp(request)</p>
+      <div class="form-group">
+        <label for="@NoteId">@DataRightsRequestWords.NoteLabel<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label>
+        @* N17: the refusal first, then the help, then the counter (P4). No maxlength, which would cut a paste silently: the
+           counter shows the excess and the decision refuses it (DESIGN.md § Form system's counter). *@
+        <textarea id="@NoteId" class="form-control @(_noteError is null ? null : "input-validation-error")" rows="3" aria-required="true"
+                  aria-invalid="@(_noteError is null ? null : "true")"
+                  aria-describedby="@(_noteError is null ? $"{NoteHelpId} {NoteCountId}" : $"{NoteErrorId} {NoteHelpId} {NoteCountId}")"
+                  @bind="_note" @bind:after="NoteChanged" @ref="_noteBox"></textarea>
+        @if (_noteError is not null)
+        {
+          <div id="@NoteErrorId" class="validation-message" role="alert">@_noteError</div>
+        }
+        <p id="@NoteHelpId" class="field-help">@DataRightsRequestWords.NoteHelp(request)</p>
+        <p id="@NoteCountId" class="field-help" @ref="_noteCount">@DataRightsRequestWords.NoteCounter(_note.Length)</p>
+      </div>
+      @* The secondary first in the DOM (Reject), so .user-page's phone rule puts the primary on top (A1). Neither is disabled
+         while its own decision runs (T234). *@
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" disabled="@(Busy && _running != "reject")"
+                aria-disabled="@InFlight.AriaDisabled(_running == "reject")" @onclick="RejectAsync">@DataRightsRequestWords.Reject</button>
+        @if (erasure)
+        {
+          <button type="button" id="@EraseTriggerId" class="btn btn-outline" aria-haspopup="dialog" disabled="@(Busy && _running != "forecast")"
+                  aria-disabled="@InFlight.AriaDisabled(_running == "forecast")" @onclick="OpenEraseAsync">@DataRightsRequestWords.ApproveAndErase</button>
+        }
+        else
+        {
+          <button type="button" class="btn btn-primary" disabled="@(Busy && _running != "approve")"
+                  aria-disabled="@InFlight.AriaDisabled(_running == "approve")" @onclick="ApproveAsync">@DataRightsRequestWords.Approve</button>
+        }
+      </div>
+    </section>
+  };
+
+  private RenderFragment EraseBody => __builder =>
+  {
+    if (_forecast is { } forecast)
+    {
+      @* D07: the counts scroll inside the dialog, never the page (.dialog-body--scroll). *@
+      <div class="dialog-body--scroll">
+        <p><strong>@DataRightsRequestWords.DialogCannotBeUndone</strong></p>
+        <p>@DataRightsRequestWords.DialogInOneStep</p>
+        <p>@DataRightsRequestWords.DialogEnds</p>
+        <ul class="dialog-list">
+          @foreach (var line in DataRightsRequestWords.DialogEndsLines(forecast))
+          {
+            <li>@line</li>
+          }
+        </ul>
+        <p>@DataRightsRequestWords.DialogKeeps(forecast)</p>
+      </div>
+    }
+  };
+
+  // ---- Decide ----
+
+  /// <summary>
+  /// The note is checked before any send (D02, P4): blank, or past 4,000 characters as the validators count it, it is
+  /// refused under the note, the focus in it, nothing sent.
+  /// </summary>
+  private async Task<bool> NoteGivenAsync()
+  {
+    var refusal = NoteRefusal();
+    if (refusal is null)
+    {
+      _noteError = null;
+      return true;
+    }
+
+    ClearResult();
+    _noteError = refusal;
+    StateHasChanged();
+    await PageFocus.FocusByIdAsync(JS, NoteId);
+    return false;
   }
 
   private async Task ApproveAsync()
   {
-    if (Busy)
+    if (Busy || !await NoteGivenAsync())
     {
       return;
     }
 
-    if (string.IsNullOrWhiteSpace(_decisionNote))
-    {
-      _errorMessage = "A decision note is required.";
-      return;
-    }
-
-    _approving = true;
-    _errorMessage = null;
-    _statusMessage = null;
-
+    _running = "approve";
+    ClearResult();
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _request = await Sender.Send(
-        new Wombat.Application.Features.DataRights.Commands.ApproveDataRightsRequestCommand(
-          Id, _decisionNote, authState.User));
-      _statusMessage = "Request approved.";
-      _decisionNote = string.Empty;
-      _result?.FocusAfterRender();
+      var result = await Sender.Send(new ApproveDataRightsRequestCommand(Id, _note, authState.User));
+      await DecidedAsync(result.Erasure);
     }
-    catch (Exception ex)
+    catch (Exception exception)
     {
-      _errorMessage = ex.Message;
+      await DecisionRefusedAsync(exception);
     }
     finally
     {
-      _approving = false;
+      _running = null;
     }
   }
 
   private async Task RejectAsync()
   {
+    if (Busy || !await NoteGivenAsync())
+    {
+      return;
+    }
+
+    _running = "reject";
+    ClearResult();
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new RejectDataRightsRequestCommand(Id, _note, authState.User));
+      await RereadAsync();
+      _note = string.Empty;
+      Show(Place.Decision, DataRightsRequestWords.Rejected(_request!), refused: false);
+    }
+    catch (Exception exception)
+    {
+      await DecisionRefusedAsync(exception);
+    }
+    finally
+    {
+      _running = null;
+    }
+  }
+
+  /// <summary>
+  /// Approve and erase… (Q3, Q19): the note first, then the forecast read, gated as the command (lane D), and the dialog
+  /// opened on it. A forecast that cannot be read opens nothing.
+  /// </summary>
+  private async Task OpenEraseAsync()
+  {
+    if (Busy || !await NoteGivenAsync())
+    {
+      return;
+    }
+
+    _running = "forecast";
+    ClearResult();
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _forecast = await Sender.Send(new GetErasureForecastQuery(Id, authState.User));
+    }
+    catch (Exception exception)
+    {
+      Logger.LogError(exception, "The erasure forecast for data rights request {RequestId} could not be read.", Id);
+      _forecast = null;
+    }
+    finally
+    {
+      _running = null;
+    }
+
+    if (_forecast is null)
+    {
+      // Null: the request is no longer a submitted Erasure the caller may decide; the page says what it is now.
+      await RereadAsync();
+      if (_request is { MayDecide: true })
+      {
+        Show(Place.Decide, DataRightsRequestWords.ForecastFailed, refused: true);
+      }
+      else
+      {
+        ShowStateChanged();
+      }
+
+      return;
+    }
+
+    StateHasChanged();
+    if (_eraseDialog is not null)
+    {
+      await _eraseDialog.ShowAsync();
+    }
+  }
+
+  /// <summary>Erase and approve (D09): the approval, the dialog closed before the result takes the focus.</summary>
+  private async Task EraseAsync()
+  {
     if (Busy)
     {
       return;
     }
 
-    if (string.IsNullOrWhiteSpace(_decisionNote))
-    {
-      _errorMessage = "A decision note is required.";
-      return;
-    }
-
-    _rejecting = true;
-    _errorMessage = null;
-    _statusMessage = null;
-
+    _running = "erase";
+    ClearResult();
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _request = await Sender.Send(
-        new Wombat.Application.Features.DataRights.Commands.RejectDataRightsRequestCommand(
-          Id, _decisionNote, authState.User));
-      _statusMessage = "Request rejected.";
-      _decisionNote = string.Empty;
-      _result?.FocusAfterRender();
+      var result = await Sender.Send(new ApproveDataRightsRequestCommand(Id, _note, authState.User));
+      await CloseEraseDialogAsync();
+      await DecidedAsync(result.Erasure);
     }
-    catch (Exception ex)
+    catch (Exception exception)
     {
-      _errorMessage = ex.Message;
+      await CloseEraseDialogAsync();
+      await DecisionRefusedAsync(exception);
     }
     finally
     {
-      _rejecting = false;
+      _running = null;
+    }
+  }
+
+  // While a modal dialog is open nothing outside it can take the focus (T206 review): closed first.
+  private async Task CloseEraseDialogAsync()
+  {
+    if (_eraseDialog is not null)
+    {
+      await _eraseDialog.CloseAsync();
+    }
+  }
+
+  private async Task DecidedAsync(ErasureOutcome? erasure)
+  {
+    await RereadAsync();
+    _note = string.Empty;
+    Show(Place.Decision, erasure is { } outcome ? DataRightsRequestWords.Erased(outcome) : DataRightsRequestWords.Approved(_request!), refused: false);
+  }
+
+  /// <summary>
+  /// A decision refused or failed (S13, F8, F9, N1): by its reason, never its message. Withdrawn and decided meanwhile read
+  /// the request again, which no longer offers Decide; every other keeps the note (D16, D21).
+  /// </summary>
+  private async Task DecisionRefusedAsync(Exception exception)
+  {
+    switch (exception)
+    {
+      case FluentValidation.ValidationException validation when validation.Errors.Any(error => error.PropertyName == nameof(ApproveDataRightsRequestCommand.DecisionNote)):
+        _noteError = NoteRefusal() ?? DataRightsRequestWords.NoteRequired;
+        StateHasChanged();
+        await PageFocus.FocusByIdAsync(JS, NoteId);
+        return;
+
+      case DataRightsRefusedException { Reason: DataRightsRefusal.Withdrawn } refusal:
+        await RereadAsync();
+        Show(Place.Request, DataRightsRequestWords.DecisionRefused(refusal.Reason, _request!.RequesterName), refused: true);
+        return;
+
+      case DataRightsRefusedException { Reason: DataRightsRefusal.DecidedMeanwhile } refusal:
+        await RereadAsync();
+        var decided = _request!.DecidedOn is not null && _request.Status != DataRightsRequestStatus.Withdrawn;
+        Show(decided ? Place.Decision : Place.Request, DataRightsRequestWords.DecisionRefused(refusal.Reason, _request.RequesterName), refused: true);
+        return;
+
+      case DataRightsRefusedException refusal:
+        Show(Place.Decide, DataRightsRequestWords.DecisionRefused(refusal.Reason, _request!.RequesterName), refused: true);
+        return;
+
+      default:
+        Logger.LogError(exception, "A decision on data rights request {RequestId} failed.", Id);
+        Show(Place.Decide, DataRightsRequestWords.DecisionFailed, refused: true);
+        return;
+    }
+  }
+
+  /// <summary>The forecast found the request changed: the page as it now is, with no result of its own.</summary>
+  private void ShowStateChanged()
+  {
+    if (_request is { Status: DataRightsRequestStatus.Withdrawn })
+    {
+      Show(Place.Request, DataRightsRequestWords.DecisionRefused(DataRightsRefusal.Withdrawn, _request.RequesterName), refused: true);
+    }
+    else if (_request is not null)
+    {
+      Show(_request.DecidedOn is null ? Place.Request : Place.Decision,
+        DataRightsRequestWords.DecisionRefused(DataRightsRefusal.DecidedMeanwhile, _request.RequesterName), refused: true);
+    }
+  }
+
+  /// <summary>What is wrong with the note, in the page's words; null when it may be sent.</summary>
+  private string? NoteRefusal()
+    => string.IsNullOrWhiteSpace(_note) ? DataRightsRequestWords.NoteRequired
+      : _note.Length > DataRightsRequestWords.NoteMaxLength ? DataRightsRequestWords.NoteTooLong
+      : null;
+
+  // P6: a refusal goes once its field changes, as My data rights' reason does (DESIGN.md § Form system).
+  private void NoteChanged() => _noteError = null;
+
+  private void OtherNameChanged() => _otherNameError = null;
+
+  // ---- Record a correction, Complete request ----
+
+  private void Choose(string key)
+  {
+    _choice = key;
+    _choiceError = null;
+  }
+
+  /// <summary>A refused record: its radios say so too (P6, the My data rights section's rule).</summary>
+  private string? ChoiceInvalid => _choiceError is null ? null : "true";
+
+  /// <summary>The record the form names, as its key; null when none, or Other with no name.</summary>
+  private string? ChosenKey => _choice switch
+  {
+    OtherChoice => string.IsNullOrWhiteSpace(_otherName) ? null : DataRightsRecords.Other(_otherName),
+    "" => null,
+    var key => key
+  };
+
+  /// <summary>C04, S11: every field checked before a send, each refusal under its field, the focus in the first.</summary>
+  private async Task<bool> RecordValidAsync()
+  {
+    _choiceError = string.IsNullOrEmpty(_choice) ? DataRightsRequestWords.ChooseTheRecord : null;
+    _otherNameError = _choice != OtherChoice
+      ? null
+      : string.IsNullOrWhiteSpace(_otherName)
+        ? DataRightsRequestWords.NameTheRecord
+        : _otherName.Trim().Length > DataRightsRecords.OtherNameMaxLength ? DataRightsRequestWords.NameTooLong : null;
+    _beforeError = string.IsNullOrWhiteSpace(_before) ? DataRightsRequestWords.EnterBefore : null;
+    _afterError = string.IsNullOrWhiteSpace(_after) ? DataRightsRequestWords.EnterAfter : null;
+
+    var first = _choiceError is not null ? FirstRadioId()
+      : _otherNameError is not null ? OtherNameId
+      : _beforeError is not null ? BeforeId
+      : _afterError is not null ? AfterId
+      : null;
+    if (first is null)
+    {
+      return true;
+    }
+
+    ClearResult();
+    StateHasChanged();
+    await PageFocus.FocusByIdAsync(JS, first);
+    return false;
+  }
+
+  private string FirstRadioId() => _request?.NameFromSignIn is not null
+    ? _request.ProgrammeStart is not null ? "rec-start" : "rec-other"
+    : "rec-first";
+
+  private async Task RecordAsync()
+  {
+    if (Busy || !await RecordValidAsync())
+    {
+      return;
+    }
+
+    var key = ChosenKey!;
+    _running = "record";
+    ClearResult();
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      var recorded = await Sender.Send(new ApplyRectificationCommand(Id, key, _before.Trim(), _after.Trim(), authState.User));
+      await RereadAsync();
+      if (_request is { } request && request.Corrections.All(correction => correction.Id != recorded.Id))
+      {
+        _request = request with { Corrections = [.. request.Corrections, recorded] };
+      }
+
+      _choice = string.Empty;
+      _otherName = string.Empty;
+      _before = string.Empty;
+      _after = string.Empty;
+      Show(Place.Correction, DataRightsRequestWords.CorrectionRecorded(recorded.TargetType), refused: false);
+    }
+    catch (FluentValidation.ValidationException validation)
+    {
+      // The validator's refusals, by property, under their fields (S11); the values kept.
+      foreach (var error in validation.Errors)
+      {
+        switch (error.PropertyName)
+        {
+          case nameof(ApplyRectificationCommand.TargetType):
+            if (_choice == OtherChoice)
+            {
+              _otherNameError = DataRightsRequestWords.NameTooLong;
+            }
+            else
+            {
+              _choiceError = DataRightsRequestWords.ChooseTheRecord;
+            }
+
+            break;
+          case nameof(ApplyRectificationCommand.FromValue):
+            _beforeError = DataRightsRequestWords.EnterBefore;
+            break;
+          case nameof(ApplyRectificationCommand.ToValue):
+            _afterError = DataRightsRequestWords.EnterAfter;
+            break;
+        }
+      }
+
+      if (_choiceError is null && _otherNameError is null && _beforeError is null && _afterError is null)
+      {
+        Logger.LogError(validation, "A correction on data rights request {RequestId} was refused.", Id);
+        Show(Place.Correction, DataRightsRequestWords.CorrectionFailed, refused: true);
+      }
+      else
+      {
+        StateHasChanged();
+        await PageFocus.FocusByIdAsync(JS, _choiceError is not null ? FirstRadioId() : _otherNameError is not null ? OtherNameId : _beforeError is not null ? BeforeId : AfterId);
+      }
+    }
+    catch (DataRightsRefusedException refusal) when (refusal.Reason == DataRightsRefusal.NotAnApprovedRectification)
+    {
+      await RereadAsync();
+      Show(Place.Correction, new DataRightsMessage(DataRightsRequestWords.NoLongerApproved), refused: true);
+    }
+    catch (Exception exception)
+    {
+      // C10: fixed words at the section's top, focused; the values kept.
+      Logger.LogError(exception, "A correction on data rights request {RequestId} failed.", Id);
+      Show(Place.Correction, DataRightsRequestWords.CorrectionFailed, refused: true);
+    }
+    finally
+    {
+      _running = null;
+    }
+  }
+
+  private async Task CompleteAsync()
+  {
+    if (Busy || _request is not { } request)
+    {
+      return;
+    }
+
+    if (request.Corrections.Count == 0)
+    {
+      // C03, T316: refused before a send, beside Complete request, which keeps the focus; the alert is read at once.
+      Show(Place.Complete, new DataRightsMessage(DataRightsRequestWords.RecordOneFirst), refused: true, focus: false);
+      return;
+    }
+
+    _running = "complete";
+    ClearResult();
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      await Sender.Send(new CompleteRectificationRequestCommand(Id, authState.User));
+      await RereadAsync();
+      Show(Place.Correction, DataRightsRequestWords.Completed(_request!), refused: false);
+    }
+    catch (DataRightsRefusedException refusal) when (refusal.Reason == DataRightsRefusal.NoCorrectionRecorded)
+    {
+      Show(Place.Complete, new DataRightsMessage(DataRightsRequestWords.RecordOneFirst), refused: true, focus: false);
+    }
+    catch (DataRightsRefusedException refusal) when (refusal.Reason == DataRightsRefusal.NotAnApprovedRectification)
+    {
+      await RereadAsync();
+      Show(Place.Correction, new DataRightsMessage(DataRightsRequestWords.NoLongerApproved), refused: true);
+    }
+    catch (Exception exception)
+    {
+      Logger.LogError(exception, "Completing data rights request {RequestId} failed.", Id);
+      Show(Place.Correction, DataRightsRequestWords.CompleteFailed, refused: true);
+    }
+    finally
+    {
+      _running = null;
     }
   }
 }

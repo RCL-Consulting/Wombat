@@ -48,13 +48,13 @@ public sealed class BadgeForStatusTableTests
     [Fact]
     public void ADataRightsRequest_IsTintedAsDesignMdGivesIt()
     {
+        // T387 (Q22): Approved is amber, in hand until completed; Withdrawn grey under its own name; UnderReview is gone.
         Rows<DataRightsRequestStatus>(BadgeFor.DataRightsRequest,
             (DataRightsRequestStatus.Submitted, Blue),
-            (DataRightsRequestStatus.UnderReview, Amber),
-            (DataRightsRequestStatus.Approved, Green),
+            (DataRightsRequestStatus.Approved, Amber),
             (DataRightsRequestStatus.Completed, Green),
             (DataRightsRequestStatus.Rejected, Red),
-            (DataRightsRequestStatus.Withdrawn, Grey));
+            (DataRightsRequestStatus.Withdrawn, "badge-withdrawn"));
     }
 
     [Fact]

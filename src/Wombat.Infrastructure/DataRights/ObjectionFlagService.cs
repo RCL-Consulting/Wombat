@@ -14,19 +14,28 @@ internal sealed class ObjectionFlagService : IObjectionFlagUpdater, IObjectionFl
         _userManager = userManager;
     }
 
-    public async Task UpdateAsync(
+    public async Task<ReminderEmailsSaved> UpdateAsync(
         string userId,
-        bool optOutOfOptionalProcessing,
         bool optOutOfDigestEmails,
         CancellationToken cancellationToken)
     {
         var user = await _userManager.FindByIdAsync(userId)
             ?? throw new InvalidOperationException("User not found.");
 
-        user.OptOutOfOptionalProcessing = optOutOfOptionalProcessing;
-        user.OptOutOfDigestEmails = optOutOfDigestEmails;
+        // T387 (N3): the result says whether this save changed anything, against the stored state, not the page's.
+        var changed = user.OptOutOfDigestEmails != optOutOfDigestEmails;
+        if (changed)
+        {
+            user.OptOutOfDigestEmails = optOutOfDigestEmails;
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                throw new InvalidOperationException(
+                    $"The reminder preference could not be saved ({string.Join(", ", result.Errors.Select(error => error.Code))}).");
+            }
+        }
 
-        await _userManager.UpdateAsync(user);
+        return new ReminderEmailsSaved(optOutOfDigestEmails, changed);
     }
 
     public async Task<ObjectionFlagsDto> GetAsync(string userId, CancellationToken cancellationToken)
@@ -34,8 +43,6 @@ internal sealed class ObjectionFlagService : IObjectionFlagUpdater, IObjectionFl
         var user = await _userManager.FindByIdAsync(userId)
             ?? throw new InvalidOperationException("User not found.");
 
-        return new ObjectionFlagsDto(
-            user.OptOutOfOptionalProcessing,
-            user.OptOutOfDigestEmails);
+        return new ObjectionFlagsDto(user.OptOutOfDigestEmails);
     }
 }

@@ -61,6 +61,12 @@ public sealed class DataRightsRequestConfiguration : IEntityTypeConfiguration<Da
             .HasForeignKey(r => r.RequestId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // Optimistic concurrency on the request, on Postgres's own xmin (no column, no write path), as CommitteeReview does
+        // (T387, F8). An approval, and above all an erasure, is decided on a status read moments earlier: without a token a
+        // withdrawal saved in between would be overwritten by the approval, and the person erased on a request they had
+        // taken back. Whichever of two saves comes second is refused, and the handler reads the row again.
+        builder.Property<uint>("xmin").HasColumnName("xmin").HasColumnType("xid").ValueGeneratedOnAddOrUpdate().IsConcurrencyToken();
+
         builder.HasIndex(e => e.RequesterUserId);
         builder.HasIndex(e => new { e.Status, e.RequestedOn });
     }

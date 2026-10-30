@@ -569,11 +569,13 @@ Step A.1.5 — Dr Dlamini downloads her export
 Role: Trainee — Dr Anele Dlamini
 Route: /account/data-rights → /account/data-rights/download/{id:guid}
 Do: Reload My data rights and download the completed request.
-Expect: The row reads Completed and offers a Download named for the request.
+Expect: The row reads Completed (the badge green) with its answer, "Approved on `D`: “Identity confirmed; export
+  released to the data subject.”", and nothing names who decided (Q5, T319; R3-M04). It offers Download, named
+  "Download the export of the Export request made ‹its time›" (N12); Withdraw is gone.
   - The browser saves `data-export-<date>-<time>.zip`.
   - It holds `data-export.json`: schema version 2, with her profile, every activity she is the subject or author of,
     her committee reviews, the MSF campaigns about her, her progress by semester, her newest 500 audit entries and her
     portfolio exports.
   - It also holds `portfolio-summary.pdf`.
-  - No email is sent.
+  - An email told Anele Dlamini of the decision at A.1.3; none is sent on download.
 ```

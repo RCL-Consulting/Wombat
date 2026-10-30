@@ -6,6 +6,7 @@ using Wombat.Domain.DataRights;
 using Wombat.Infrastructure.Persistence;
 using Wombat.Application.Common.Security;
 using Wombat.Domain.Identity;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.DataRights;
 
@@ -44,8 +45,8 @@ public sealed class DataRightsQueryHandlerTests
             new GetMyDataRightsRequestsQuery(UserPrincipal("user-1")),
             CancellationToken.None);
 
-        result.Should().ContainSingle();
-        result[0].RequesterDisplayName.Should().Be("User One");
+        result.Requests.Should().ContainSingle();
+        result.Requests[0].Type.Should().Be(DataRightsRequestType.Access);
     }
 
     [Fact]
@@ -57,7 +58,7 @@ public sealed class DataRightsQueryHandlerTests
         db.Set<DataRightsRequest>().Add(DataRightsRequest.Create("user-2", "User Two", DataRightsRequestType.Erasure, "Erase", DateTime.UtcNow));
         await db.SaveChangesAsync();
 
-        var handler = new ListDataRightsRequestsQueryHandler(db);
+        var handler = new ListDataRightsRequestsQueryHandler(db, FakeUserDirectory.Empty);
         var result = await handler.Handle(
             new ListDataRightsRequestsQuery(
                 Type: DataRightsRequestType.Erasure,
@@ -83,7 +84,7 @@ public sealed class DataRightsQueryHandlerTests
         }
         await db.SaveChangesAsync();
 
-        var handler = new ListDataRightsRequestsQueryHandler(db);
+        var handler = new ListDataRightsRequestsQueryHandler(db, FakeUserDirectory.Empty);
         var result = await handler.Handle(
             new ListDataRightsRequestsQuery(
                 Type: null,
@@ -108,17 +109,23 @@ public sealed class DataRightsQueryHandlerTests
         db.Set<DataRightsRequest>().Add(entity);
         await db.SaveChangesAsync();
 
-        var handler = new GetDataRightsRequestByIdQueryHandler(db);
+        var handler = new GetDataRightsRequestByIdQueryHandler(db, FakeUserDirectory.Empty);
         var result = await handler.Handle(
             new GetDataRightsRequestByIdQuery(entity.Id, UserPrincipal("user-1")),
             CancellationToken.None);
 
-        result.RequesterUserId.Should().Be("user-1");
+        result!.RequesterUserId.Should().Be("user-1");
         result.Type.Should().Be(DataRightsRequestType.Access);
+        result.MayDecide.Should().BeFalse("the requester never decides their own request (T387, Q21)");
+        result.MayDownload.Should().BeTrue();
     }
 
+    /// <summary>
+    /// T387 (S14, Q13, Q17): another person's request reads as null, as an unknown id does, so the page draws one Request
+    /// unavailable for both. Until T387 it threw the refusal, which the page printed over its empty state.
+    /// </summary>
     [Fact]
-    public async Task GetById_AsOtherNonAdmin_ThrowsUnauthorized()
+    public async Task GetById_AsOtherNonAdmin_ReadsAsNull_AsAnUnknownIdDoes()
     {
         await using var db = CreateDb();
 
@@ -126,12 +133,16 @@ public sealed class DataRightsQueryHandlerTests
         db.Set<DataRightsRequest>().Add(entity);
         await db.SaveChangesAsync();
 
-        var handler = new GetDataRightsRequestByIdQueryHandler(db);
-        var act = () => handler.Handle(
+        var handler = new GetDataRightsRequestByIdQueryHandler(db, FakeUserDirectory.Empty);
+        var foreign = await handler.Handle(
             new GetDataRightsRequestByIdQuery(entity.Id, UserPrincipal("user-2", "Other User")),
             CancellationToken.None);
+        var unknown = await handler.Handle(
+            new GetDataRightsRequestByIdQuery(Guid.NewGuid(), UserPrincipal("user-2", "Other User")),
+            CancellationToken.None);
 
-        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        foreign.Should().BeNull();
+        unknown.Should().BeNull();
     }
 
     [Fact]
@@ -143,12 +154,15 @@ public sealed class DataRightsQueryHandlerTests
         db.Set<DataRightsRequest>().Add(entity);
         await db.SaveChangesAsync();
 
-        var handler = new GetDataRightsRequestByIdQueryHandler(db);
+        var handler = new GetDataRightsRequestByIdQueryHandler(db, FakeUserDirectory.Empty);
         var result = await handler.Handle(
             new GetDataRightsRequestByIdQuery(entity.Id, UserPrincipal("admin-1", "Admin", "Administrator")),
             CancellationToken.None);
 
-        result.RequesterUserId.Should().Be("user-1");
+        result!.RequesterUserId.Should().Be("user-1");
+        result.MayDecide.Should().BeTrue("a submitted request, and the Administrator is not its requester");
+        result.MayRecord.Should().BeFalse("an Access request records no correction");
+        result.OwnRequest.Should().Be(Wombat.Application.Features.DataRights.DataRightsOwnRequest.No);
     }
 
     // ─── T112: institution scoping ───────────────────────────────────────────
@@ -170,13 +184,13 @@ public sealed class DataRightsQueryHandlerTests
             "user-there", "There", DataRightsRequestType.Access, "Theirs", DateTime.UtcNow, institutionId: 2));
         await db.SaveChangesAsync();
 
-        var handler = new ListDataRightsRequestsQueryHandler(db);
+        var handler = new ListDataRightsRequestsQueryHandler(db, FakeUserDirectory.Empty);
         var result = await handler.Handle(
             new ListDataRightsRequestsQuery(null, null, null, CoordinatorPrincipal(institutionId: 1)),
             CancellationToken.None);
 
         result.Items.Should().ContainSingle();
-        result.Items[0].RequesterDisplayName.Should().Be("Here");
+        result.Items[0].RequesterName.Should().Be("Here");
         result.TotalCount.Should().Be(1, "the count must be scoped too, or it leaks the other institution's volume");
     }
 
@@ -191,7 +205,7 @@ public sealed class DataRightsQueryHandlerTests
             "user-there", "There", DataRightsRequestType.Access, "Theirs", DateTime.UtcNow, institutionId: 2));
         await db.SaveChangesAsync();
 
-        var handler = new ListDataRightsRequestsQueryHandler(db);
+        var handler = new ListDataRightsRequestsQueryHandler(db, FakeUserDirectory.Empty);
         var result = await handler.Handle(
             new ListDataRightsRequestsQuery(null, null, null, AdministratorPrincipal()),
             CancellationToken.None);
@@ -213,7 +227,7 @@ public sealed class DataRightsQueryHandlerTests
             "user-nowhere", "Nowhere", DataRightsRequestType.Erasure, "No institution", DateTime.UtcNow));
         await db.SaveChangesAsync();
 
-        var handler = new ListDataRightsRequestsQueryHandler(db);
+        var handler = new ListDataRightsRequestsQueryHandler(db, FakeUserDirectory.Empty);
         var result = await handler.Handle(
             new ListDataRightsRequestsQuery(null, null, null, CoordinatorPrincipal(institutionId: 1)),
             CancellationToken.None);
@@ -234,7 +248,7 @@ public sealed class DataRightsQueryHandlerTests
             "user-here", "Here", DataRightsRequestType.Access, "Mine", DateTime.UtcNow, institutionId: 1));
         await db.SaveChangesAsync();
 
-        var handler = new ListDataRightsRequestsQueryHandler(db);
+        var handler = new ListDataRightsRequestsQueryHandler(db, FakeUserDirectory.Empty);
         var result = await handler.Handle(
             new ListDataRightsRequestsQuery(null, null, null, CoordinatorPrincipal(institutionId: null)),
             CancellationToken.None);
@@ -246,7 +260,7 @@ public sealed class DataRightsQueryHandlerTests
     public async Task ListRequests_ACallerWithNoReviewRoleIsRefused()
     {
         await using var db = CreateDb();
-        var handler = new ListDataRightsRequestsQueryHandler(db);
+        var handler = new ListDataRightsRequestsQueryHandler(db, FakeUserDirectory.Empty);
 
         var act = () => handler.Handle(
             new ListDataRightsRequestsQuery(null, null, null, TraineePrincipal()),

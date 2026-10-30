@@ -1,146 +1,309 @@
 @page "/admin/data-rights"
 @attribute [Authorize(Roles = "Administrator,Coordinator")]
+@using Wombat.Application.Features.DataRights.Queries
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject ILogger<RequestsList> Logger
 
 <PageTitle>Data rights requests · Wombat</PageTitle>
 
-<PageHeader Title="Data rights requests" Subtitle="Review and act on data subject rights requests.">
-  <Actions>
-    <button class="btn btn-outline" @onclick="ApplyFilters">
-      <Icon Name="search" />
-      Apply filters
-    </button>
-  </Actions>
-</PageHeader>
+@*
+  Data rights requests (T387, flow 14, lane P; boards R3-Q01–Q13, K02). The requests of the reviewer's scope, newest
+  first, twenty a page: a Coordinator's institution's, every institution's for the Administrator (Q1, Q23).
 
-@* The list page's filter (DESIGN.md § Table system): a search-container of labelled search fields. Until T266 it was a
-   filter-bar, -row and -field, none of which app.css defines. *@
-<div class="search-container shadow">
-  <div class="search-grid">
-    <div class="search-field">
-      <label for="data-rights-type">Type</label>
-      <select id="data-rights-type" class="form-select" @bind="_filterType">
-        <option value="">All</option>
-        @foreach (var type in Enum.GetValues<DataRightsRequestType>())
-        {
-          <option value="@type">@type</option>
-        }
-      </select>
-    </div>
-    <div class="search-field">
-      <label for="data-rights-status">Status</label>
-      <select id="data-rights-status" class="form-select" @bind="_filterStatus">
-        <option value="">All</option>
-        @foreach (var status in Enum.GetValues<DataRightsRequestStatus>())
-        {
-          <option value="@status">@status</option>
-        }
-      </select>
-    </div>
-  </div>
+  - The subtitle says whose (S4): the institution's name the read gives, "every institution", or, for a Coordinator set
+    to no institution and while the first read runs, the sentence without a place.
+  - The filter (S12, S18; DESIGN.md § List page, flow 06's search-container): Type and Status by label, never an enum's
+    name (T324; no Objection, no UnderReview, Q8), applied with Show; Clear filters only once a filter is applied. Apply
+    filters in the header is gone (T328). Show, Clear filters and a page turn read again and focus "Requests (n)".
+  - The table (M5, M6, Q10, Q23): DataTable StackWide, the Requester the row header (.person-cell: the live name over the
+    address, F1, S1, or the pseudonym over "Erased ‹day›", N5, N13), the Institution column for the Administrator only
+    ("None" for a request with none), the Request id (.request-id), and one Review named for its row (N4, T239).
+  - PagerControls only past one page (F10), "Requests per page". No hand-built pager, no arrows.
+  - Loading (Q11) and a failed read (Q12): fixed words with Try again, the failure the log's (T329); the h1 takes the
+    focus once a Try again has read (N15).
+*@
+<PageHeader Title="Data rights requests" Subtitle="@DataRightsRequestWords.Subtitle(_result)" />
+
+<div class="people-page data-rights-requests" aria-busy="@(_loading ? "true" : null)">
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusPageHeadingAsync">
+    <LoadingContent>
+      <p class="loading-line" role="status">@DataRightsRequestWords.Loading</p>
+      @for (var card = 0; card < 2; card++)
+      {
+        <div class="detail-card" aria-hidden="true">
+          <div class="skeleton skel-title"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line skel-short"></div>
+        </div>
+      }
+    </LoadingContent>
+    <ChildContent>
+      @if (_result is { } result)
+      {
+        @FilterForm()
+        @Requests(result)
+      }
+    </ChildContent>
+  </StatePanel>
 </div>
 
-<StatePanel IsLoading="@(_result is null && string.IsNullOrWhiteSpace(_errorMessage))" LoadError="@_errorMessage" IsEmpty="@(_result?.Items.Count == 0)" EmptyTitle="No requests" EmptyBody="No data rights requests match the current filters.">
-  @if (_result is not null)
-  {
-    <DataTable TItem="DataRightsRequestSummaryDto" Items="_result.Items" Caption="Data rights requests">
-      <HeaderRow>
-        <tr>
-          <th>Date</th>
-          <th>Requester</th>
-          <th>Type</th>
-          <th>Status</th>
-          <th><span class="visually-hidden">Actions</span></th>
-        </tr>
-      </HeaderRow>
-      <Row Context="req">
-        <tr>
-          <td><code>@req.RequestedOn.ToString("yyyy-MM-dd HH:mm")</code></td>
-          <td>@req.RequesterDisplayName</td>
-          @* A request's type is not a state, so it is not a badge (DESIGN.md § Badges): the words say it, as on the
-             requester's own page. *@
-          <td>@req.Type</td>
-          <td><span class="badge @BadgeFor.DataRightsRequest(req.Status)">@req.Status</span></td>
-          <td>
-            @* T239: named by its row: the request's type, who made it, and when. *@
-            <a class="btn btn-outline btn-sm" href="/admin/data-rights/@req.Id"
-               aria-label="@($"Review the {req.Type} request from {req.RequesterDisplayName}, {req.RequestedOn.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture)}")">Review</a>
-          </td>
-        </tr>
-      </Row>
-    </DataTable>
-
-    @* The pager's own classes (DESIGN.md § Pager). The page size is fixed here, so it is not PagerControls, which offers
-       one. *@
-    <div class="pager">
-      <span class="pager-info">
-        Showing @((_page - 1) * _pageSize + 1)–@(Math.Min(_page * _pageSize, _result.TotalCount)) of @_result.TotalCount
-      </span>
-      <div class="pager-actions">
-        <button class="btn btn-outline btn-sm" @onclick="PreviousPage" disabled="@(_page <= 1)">← Previous</button>
-        <span class="text-sm">Page @_page</span>
-        <button class="btn btn-outline btn-sm" @onclick="NextPage" disabled="@(_page * _pageSize >= _result.TotalCount)">Next →</button>
-      </div>
-    </div>
-  }
-</StatePanel>
-
 @code {
+  private const string HeadingId = "rq-h";
+
+  private RenderFragment FilterForm() => __builder =>
+  {
+    <form class="search-container" aria-label="@DataRightsRequestWords.FilterLabel" novalidate
+          @onsubmit="ShowAsync" @onsubmit:preventDefault="true">
+      <div class="search-grid">
+        <div class="search-field">
+          <label for="f-type">@DataRightsRequestWords.TypeLabel</label>
+          <select id="f-type" class="form-select" @bind="_typeField">
+            <option value="">@DataRightsRequestWords.AllTypes</option>
+            @foreach (var type in DataRightsLabels.OfferedTypes)
+            {
+              <option value="@type">@DataRightsWords.Type(type)</option>
+            }
+          </select>
+        </div>
+        <div class="search-field">
+          <label for="f-status">@DataRightsRequestWords.StatusLabel</label>
+          <select id="f-status" class="form-select" @bind="_statusField">
+            <option value="">@DataRightsRequestWords.AllStatuses</option>
+            @foreach (var status in DataRightsLabels.Statuses)
+            {
+              <option value="@status">@DataRightsWords.Status(status)</option>
+            }
+          </select>
+        </div>
+        <div class="search-field filter-actions">
+          <button type="submit" class="btn btn-primary">@DataRightsRequestWords.Show</button>
+          @if (IsFiltered)
+          {
+            <button type="button" class="btn btn-outline" @onclick="ClearAsync">@DataRightsRequestWords.ClearFilters</button>
+          }
+        </div>
+      </div>
+    </form>
+  };
+
+  private RenderFragment Requests(PagedDataRightsResult result) => __builder =>
+  {
+    var names = DataRightsRequestWords.ReviewNames(result.Items);
+    <section class="list-section" aria-labelledby="@HeadingId">
+      <h2 id="@HeadingId" class="list-section-title" tabindex="-1" @ref="_heading">@DataRightsRequestWords.ListHeading(result.TotalCount)</h2>
+      @if (result.Items.Count == 0)
+      {
+        @* No match is not empty (DESIGN.md § List page): what was asked, and the way back (S12, Q02). *@
+        <div class="detail-card detail-card--empty">
+          <div class="state-panel-title">@(IsFiltered ? DataRightsRequestWords.NoMatchTitle : DataRightsRequestWords.NoneTitle)</div>
+          <div class="state-panel-copy">@(IsFiltered ? DataRightsRequestWords.NoMatchBody(result, _type, _status) : DataRightsRequestWords.NoneBody(result))</div>
+        </div>
+      }
+      else
+      {
+        <DataTable TItem="DataRightsRequestSummaryDto" Items="result.Items" StackWide="true" Class="data-rights-table"
+                   Caption="@DataRightsRequestWords.Caption(result, _type, _status)">
+          <HeaderRow>
+            <tr role="row">
+              <th scope="col" role="columnheader">Submitted</th>
+              <th scope="col" role="columnheader">Requester</th>
+              @if (result.EveryInstitution)
+              {
+                <th scope="col" role="columnheader">Institution</th>
+              }
+              <th scope="col" role="columnheader">Type</th>
+              <th scope="col" role="columnheader">Status</th>
+              <th scope="col" role="columnheader">Request id</th>
+              <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </HeaderRow>
+          <Row Context="request">
+            <tr role="row">
+              <td role="cell" data-label="Submitted">@DataRightsWords.When(request.RequestedOn)</td>
+              <th scope="row" role="rowheader">
+                <span class="person-cell">@request.RequesterName<span>@SecondLine(request.ErasedOn, request.RequesterEmail)</span></span>
+              </th>
+              @if (result.EveryInstitution)
+              {
+                <td role="cell" data-label="Institution">@(request.InstitutionName ?? DataRightsRequestWords.NoInstitution)</td>
+              }
+              <td role="cell" data-label="Type">@DataRightsWords.Type(request.Type)</td>
+              <td role="cell" data-label="Status"><span class="badge @BadgeFor.DataRightsRequest(request.Status)">@DataRightsWords.Status(request.Status)</span></td>
+              <td role="cell" data-label="Request id"><span class="request-id">@request.Id</span></td>
+              <td role="cell">
+                <div class="actions-cell">
+                  <a class="btn btn-outline btn-sm" href="@DataRightsWords.RequestLink(request.Id)"
+                     aria-label="@($"{DataRightsRequestWords.Review} {names[request.Id]}")">@DataRightsRequestWords.Review</a>
+                </div>
+              </td>
+            </tr>
+          </Row>
+        </DataTable>
+        @if (result.TotalCount > result.PageSize)
+        {
+          <PagerControls Page="result.Page" PageSize="result.PageSize" TotalCount="result.TotalCount"
+                         Label="@DataRightsRequestWords.PagerLabel" PageSizeLabel="@DataRightsRequestWords.PageSizeLabel"
+                         OnPageChanged="TurnPageAsync" OnPageSizeChanged="ChangePageSizeAsync" />
+        }
+      }
+    </section>
+  };
+
+  /// <summary>
+  /// The Requester cell's second line: "Erased ‹day›" once erased (N5), else the live address broken after its @ (the
+  /// board's <c>&lt;wbr&gt;</c>, never in the stored string), else nothing.
+  /// </summary>
+  private static RenderFragment SecondLine(DateOnly? erasedOn, string? email) => __builder =>
+  {
+    if (erasedOn is { } erased)
+    {
+      @DataRightsRequestWords.ErasedLine(erased)
+    }
+    else if (email is not null)
+    {
+      @Wombat.Web.Components.Pages.Admin.Invitations.InvitationText.Address(email)
+    }
+  };
+
   private PagedDataRightsResult? _result;
-  private string? _errorMessage;
+  private bool _loading = true;
+  private string? _loadError;
+
+  // The filter as applied (Show), and the form's fields, which change nothing until Show.
+  private DataRightsRequestType? _type;
+  private DataRightsRequestStatus? _status;
+  private string _typeField = string.Empty;
+  private string _statusField = string.Empty;
+
   private int _page = 1;
-  private const int _pageSize = 25;
+  private int _pageSize = 20;
 
-  private string _filterType = "";
-  private string _filterStatus = "";
+  private ElementReference _heading;
+  private bool _focusHeading;
+  private int _read;
 
-  protected override async Task OnInitializedAsync()
+  /// <summary>The list's heading, which Show, Clear filters and a page turn focus. A test matches a focus call to it.</summary>
+  public ElementReference ListHeading => _heading;
+
+  /// <summary>A filter is applied: Clear filters is offered, and an empty answer says what was asked (S18, S12).</summary>
+  private bool IsFiltered => _type is not null || _status is not null;
+
+  protected override Task OnInitializedAsync() => LoadAsync(showLoading: true);
+
+  /// <summary>
+  /// Reads the page asked for. The first read, and Try again's, show the loading state; Show, Clear filters, a page turn and
+  /// a change of size answer in place, as Users does (T387 review P2): the form, the table and the pager stay, so a
+  /// keyboard user's focus stays on the page-size select, and a field typed but not yet shown is kept.
+  /// </summary>
+  private async Task LoadAsync(bool showLoading)
   {
-    await LoadAsync();
-  }
+    var read = ++_read;
+    if (showLoading)
+    {
+      _loading = true;
+    }
 
-  private async Task ApplyFilters()
-  {
-    _page = 1;
-    await LoadAsync();
-  }
-
-  private async Task LoadAsync()
-  {
-    _result = null;
-    _errorMessage = null;
+    _loadError = null;
 
     try
     {
-      DataRightsRequestType? type = Enum.TryParse<DataRightsRequestType>(_filterType, out var t) ? t : null;
-      DataRightsRequestStatus? status = Enum.TryParse<DataRightsRequestStatus>(_filterStatus, out var s) ? s : null;
-
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-
-      _result = await Sender.Send(new Wombat.Application.Features.DataRights.Queries.ListDataRightsRequestsQuery(
-        Type: type,
-        Status: status,
+      var result = await Sender.Send(new ListDataRightsRequestsQuery(
+        Type: _type,
+        Status: _status,
         RequesterUserId: null,
         Principal: authState.User,
         Page: _page,
         PageSize: _pageSize));
+      if (read != _read)
+      {
+        return;
+      }
+
+      _result = result;
     }
-    catch (Exception ex)
+    catch (Exception exception)
     {
-      _errorMessage = ex.Message;
+      if (read != _read)
+      {
+        return;
+      }
+
+      // T329: never the exception's text on the page; the cause goes to the log.
+      Logger.LogError(exception, "The data rights requests could not be read.");
+      _result = null;
+      _loadError = DataRightsRequestWords.LoadFailed;
+      _focusHeading = false;
+    }
+    finally
+    {
+      if (read == _read)
+      {
+        _loading = false;
+        if (showLoading)
+        {
+          SetFields();
+        }
+      }
     }
   }
 
-  private async Task PreviousPage()
+  /// <summary>The form's fields say what is applied.</summary>
+  private void SetFields()
   {
-    if (_page > 1) { _page--; await LoadAsync(); }
+    _typeField = _type?.ToString() ?? string.Empty;
+    _statusField = _status?.ToString() ?? string.Empty;
   }
 
-  private async Task NextPage()
+  private async Task ShowAsync()
   {
-    _page++;
-    await LoadAsync();
+    _type = Enum.TryParse<DataRightsRequestType>(_typeField, out var type) && DataRightsLabels.OfferedTypes.Contains(type) ? type : null;
+    _status = Enum.TryParse<DataRightsRequestStatus>(_statusField, out var status) && DataRightsLabels.Statuses.Contains(status) ? status : null;
+    _page = 1;
+    _focusHeading = true;
+    await LoadAsync(showLoading: false);
   }
 
+  private async Task ClearAsync()
+  {
+    _type = null;
+    _status = null;
+    SetFields();
+    _page = 1;
+    _focusHeading = true;
+    await LoadAsync(showLoading: false);
+  }
+
+  // Flow 04's C10 f: after a page turn the list's heading takes the focus.
+  private async Task TurnPageAsync(int page)
+  {
+    _page = page;
+    _focusHeading = true;
+    await LoadAsync(showLoading: false);
+  }
+
+  // Flow 04's build review A1: a change of size leaves the focus on the select, which answering in place keeps (P2).
+  private async Task ChangePageSizeAsync(int pageSize)
+  {
+    _pageSize = pageSize;
+    _page = 1;
+    await LoadAsync(showLoading: false);
+  }
+
+  private async Task RetryAsync() => await LoadAsync(showLoading: true);
+
+  // N15: once a Try again has read, the h1 (FocusOnNavigate's target) takes the focus.
+  private ValueTask FocusPageHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusHeading && !_loading && _loadError is null && _result is not null)
+    {
+      _focusHeading = false;
+      await _heading.FocusAsync();
+    }
+  }
 }

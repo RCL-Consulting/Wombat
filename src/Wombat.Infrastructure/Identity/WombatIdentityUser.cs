@@ -16,7 +16,10 @@ public class WombatIdentityUser : IdentityUser
     /// </summary>
     public int? CollegeId { get; set; }
 
-    public bool OptOutOfOptionalProcessing { get; set; }
+    /// <summary>
+    /// The person stopped the regular reminder emails (My data rights' Reminder emails; ReminderRecipientPolicy). Until
+    /// T387 an OptOutOfOptionalProcessing flag stood beside it, which nothing but the erasure read (T318, Q6): it is gone.
+    /// </summary>
     public bool OptOutOfDigestEmails { get; set; }
 
     /// <summary>

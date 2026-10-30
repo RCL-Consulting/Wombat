@@ -1041,7 +1041,10 @@ Expect: Home's header action, Start an MSF campaign, is a row of its own below t
   action a 44px block; nothing scrolls sideways. The campaign page keeps its gutter (T226), and its invitee table (counts by
   respondent group: the page never lists an address) fits its card. Decisions due's filters stack, with Show and Clear
   filters each 44px tall; By EPA's fold summary is 44px, and opened it reads one block per EPA; each decision is a block, its
-  one action a 44px button the block's width; the pager's buttons are 44px (T364). The queue's filters stack above its table.
+  one action a 44px button the block's width; the pager's buttons are 44px (T364). The data-rights queue (T387, R3-Q13):
+  Type and Status stack, each select 44px tall, with Show 44px under them; no Clear filters at the defaults and no
+  Apply filters in the header (T328); "Requests (5)" over the five KGK rows, stacked (the queue stacks from 1100px),
+  each a block with every field under its column's name and its Review 44px; no pager; nothing scrolls sideways.
 
 Step A.7.8 — Dr Sithole on his phone
 Role: SubSpecialityAdmin — Dr Kabelo Sithole

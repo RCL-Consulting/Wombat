@@ -17,25 +17,59 @@ namespace Wombat.Application.Features.DataRights;
 /// approve their <b>erasure</b>, which is destructive rather than merely disclosing.
 /// </para>
 /// <para>
-/// The two role sets are preserved exactly as they were. Which roles ought to hold this power is a
-/// product question — a statutory data-rights officer is usually a named institutional role, not
-/// "any Coordinator" — and answering it here would be a silent change to who can do what. T112
-/// scopes the existing holders; choosing the holders is left open in the task file.
+/// T112 kept the two role sets as they were. T387 settled who holds them (Q1, Q21; the statutory data-rights officer
+/// stays open, T112, Q15): one set, <see cref="ReviewRoles" />, the Coordinator at the request's institution and the
+/// global Administrator. Whoever may approve a Rectification records each correction and completes it; the Speciality
+/// admin, who could record one but could open neither page, is dropped. And nobody decides or carries through their own
+/// request, the Administrator included: it needs another reviewer.
 /// </para>
 /// </remarks>
 public static class DataRightsAuthorization
 {
-    /// <summary>Roles that may triage, approve, reject and download a request.</summary>
+    /// <summary>
+    /// Roles that may decide a request in their institution, record its corrections and complete it (with the global
+    /// Administrator, everywhere). T387 (Q1) folded the old RectificationRoles (SpecialityAdmin) into this one.
+    /// </summary>
     private static readonly string[] ReviewRoles = [WombatRoles.Coordinator];
 
-    /// <summary>Roles that may apply and complete a rectification.</summary>
-    private static readonly string[] RectificationRoles = [WombatRoles.SpecialityAdmin];
-
+    /// <summary>
+    /// The caller may approve or reject the request: in scope (<see cref="InScope" />) and not its requester (T387, Q21,
+    /// F9). Whether it is still Submitted is the request's own rule, not this one.
+    /// </summary>
     public static bool CanReview(ClaimsPrincipal principal, DataRightsRequest request)
-        => CanAct(principal, request, ReviewRoles);
+        => InScope(principal, request) && !IsRequester(principal, request);
 
+    /// <summary>
+    /// The caller may record a correction on the request and complete it: the same people as <see cref="CanReview" />
+    /// (T387, Q1), so one person approves, records and completes.
+    /// </summary>
     public static bool CanRectify(ClaimsPrincipal principal, DataRightsRequest request)
-        => CanAct(principal, request, RectificationRoles);
+        => CanReview(principal, request);
+
+    /// <summary>
+    /// The caller is the requester and would otherwise decide it (T387, Q21, F9): the page says who decides instead of
+    /// offering Decide.
+    /// </summary>
+    public static DataRightsOwnRequest OwnRequest(ClaimsPrincipal principal, DataRightsRequest request)
+    {
+        if (!IsRequester(principal, request) || !InScope(principal, request))
+        {
+            return DataRightsOwnRequest.No;
+        }
+
+        return principal.IsAdministrator()
+            ? DataRightsOwnRequest.AnotherAdministratorDecides
+            : DataRightsOwnRequest.AnotherCoordinatorDecides;
+    }
+
+    /// <summary>The exported bundle: the data subject, or a global Administrator (<see cref="DemandExportAccess" />).</summary>
+    public static bool CanDownload(ClaimsPrincipal principal, DataRightsRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(request);
+
+        return principal.IsAdministrator() || IsRequester(principal, request);
+    }
 
     /// <summary>The requester reading their own request, which is the point of the feature.</summary>
     public static bool IsRequester(ClaimsPrincipal principal, DataRightsRequest request)
@@ -67,11 +101,18 @@ public static class DataRightsAuthorization
     /// </summary>
     public static void DemandReadAccess(ClaimsPrincipal principal, DataRightsRequest request)
     {
-        if (!CanReview(principal, request) && !IsRequester(principal, request))
+        if (!CanRead(principal, request))
         {
             throw new UnauthorizedAccessException(RefusalMessage);
         }
     }
+
+    /// <summary>
+    /// The requester, or a reviewer in scope, the reviewer's own request included: a Coordinator opens their own from the
+    /// queue and reads who decides it (T387, Q21).
+    /// </summary>
+    public static bool CanRead(ClaimsPrincipal principal, DataRightsRequest request)
+        => InScope(principal, request) || IsRequester(principal, request);
 
     /// <summary>
     /// The exported bundle itself: the data subject, or a global Administrator. Reviewers are
@@ -96,10 +137,7 @@ public static class DataRightsAuthorization
     /// </remarks>
     public static void DemandExportAccess(ClaimsPrincipal principal, DataRightsRequest request)
     {
-        ArgumentNullException.ThrowIfNull(principal);
-        ArgumentNullException.ThrowIfNull(request);
-
-        if (!principal.IsAdministrator() && !IsRequester(principal, request))
+        if (!CanDownload(principal, request))
         {
             throw new UnauthorizedAccessException(RefusalMessage);
         }
@@ -120,7 +158,11 @@ public static class DataRightsAuthorization
     /// </summary>
     public const string RefusalMessage = "You are not authorized to access this data-rights request.";
 
-    private static bool CanAct(ClaimsPrincipal principal, DataRightsRequest request, string[] roles)
+    /// <summary>
+    /// A reviewer whose scope reaches the request: a global Administrator, or a holder of <see cref="ReviewRoles" /> at the
+    /// request's institution. Says nothing of who asked: <see cref="CanReview" /> adds that.
+    /// </summary>
+    private static bool InScope(ClaimsPrincipal principal, DataRightsRequest request)
     {
         ArgumentNullException.ThrowIfNull(principal);
         ArgumentNullException.ThrowIfNull(request);
@@ -130,7 +172,7 @@ public static class DataRightsAuthorization
             return true;
         }
 
-        if (!HasAnyRole(principal, roles))
+        if (!HasAnyRole(principal, ReviewRoles))
         {
             return false;
         }

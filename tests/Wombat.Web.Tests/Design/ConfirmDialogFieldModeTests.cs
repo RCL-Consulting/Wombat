@@ -156,4 +156,32 @@ public sealed class ConfirmDialogFieldModeTests : TestContext
 
     private static AngleSharp.Dom.IElement Cancel(IRenderedComponent<ConfirmDialog> cut)
         => cut.FindAll(".form-actions button").First();
+
+    [Fact]
+    public void TheActionMode_OpensOnCancel_WhateverItsBodyHolds()
+    {
+        // T387 review P5: a body that scrolls is a focusable area in Chromium, so the native first focus could land on it;
+        // Cancel carries autofocus, which the dialog's focusing steps honour first.
+        var cut = RenderComponent<ConfirmDialog>(parameters => parameters
+            .Add(dialog => dialog.Title, "Erase Sipho Ndlovu's personal data?")
+            .Add(dialog => dialog.BodyContent, (RenderFragment)(builder => builder.AddMarkupContent(0, "<div class=\"dialog-body--scroll\"><p>It ends:</p></div>")))
+            .Add(dialog => dialog.CancelLabel, "Cancel")
+            .Add(dialog => dialog.ConfirmLabel, "Erase and approve")
+            .Add(dialog => dialog.DangerAction, true));
+
+        var cancel = cut.FindAll("button").First();
+        cancel.TextContent.Should().Be("Cancel");
+        cancel.HasAttribute("autofocus").Should().BeTrue();
+        cut.FindAll("[autofocus]").Should().ContainSingle();
+    }
+
+    [Fact]
+    public void WithAnInitialFocus_CancelCarriesNoAutofocus()
+    {
+        var cut = RenderComponent<ConfirmDialog>(parameters => parameters
+            .Add(dialog => dialog.BodyContent, (RenderFragment)(builder => builder.AddMarkupContent(0, "<textarea id=\"revoke-reason\"></textarea>")))
+            .Add(dialog => dialog.InitialFocusId, "revoke-reason"));
+
+        cut.FindAll("[autofocus]").Should().BeEmpty();
+    }
 }

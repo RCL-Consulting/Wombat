@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Domain.Curricula;
 using Wombat.Domain.DataRights;
+using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.DataRights.Queries;
 
@@ -13,6 +15,9 @@ namespace Wombat.Application.Features.DataRights.Queries;
 /// and a security parameter must not be optional. Until T112 it was last AND defaulted to null, and
 /// the handler skipped its check when it was — so a caller who passed nothing was authorized by
 /// omission.
+/// The page size is PagerControls' 20, of 10/20/50/100 (T387, Q18; was a fixed 25). Each row carries the requester's live
+/// name and address, or the pseudonym and the erasure's day (F1, S1, N5, N13), and for the Administrator the request's
+/// institution (Q23); the result says whose requests they are (S4, S12).
 /// </remarks>
 public sealed record ListDataRightsRequestsQuery(
     DataRightsRequestType? Type,
@@ -20,7 +25,7 @@ public sealed record ListDataRightsRequestsQuery(
     string? RequesterUserId,
     ClaimsPrincipal Principal,
     int Page = 1,
-    int PageSize = 25) : IRequest<PagedDataRightsResult>;
+    int PageSize = 20) : IRequest<PagedDataRightsResult>;
 
 public sealed class ListDataRightsRequestsQueryValidator : AbstractValidator<ListDataRightsRequestsQuery>
 {
@@ -34,10 +39,12 @@ public sealed class ListDataRightsRequestsQueryValidator : AbstractValidator<Lis
 public sealed class ListDataRightsRequestsQueryHandler : IRequestHandler<ListDataRightsRequestsQuery, PagedDataRightsResult>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public ListDataRightsRequestsQueryHandler(IApplicationDbContext dbContext)
+    public ListDataRightsRequestsQueryHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<PagedDataRightsResult> Handle(ListDataRightsRequestsQuery request, CancellationToken cancellationToken)
@@ -74,19 +81,66 @@ public sealed class ListDataRightsRequestsQueryHandler : IRequestHandler<ListDat
 
         var totalCount = await query.CountAsync(cancellationToken);
 
-        var items = await query
+        var rows = await query
             .OrderByDescending(r => r.RequestedOn)
+            .ThenByDescending(r => r.Id) // T387 review N6: a tie never swaps rows across a page boundary
             .Skip((request.Page - 1) * request.PageSize)
             .Take(request.PageSize)
-            .Select(r => new DataRightsRequestSummaryDto(
-                r.Id,
-                r.RequesterDisplayName,
-                r.RequestedOn,
-                r.Type,
-                r.Status))
             .ToListAsync(cancellationToken);
 
-        return new PagedDataRightsResult(items, totalCount, request.Page, request.PageSize);
+        // The page's people and institutions, each read once for the whole page, never per row (T387, F1, Q23).
+        var requesterIds = rows.Select(r => r.RequesterUserId).Distinct(StringComparer.Ordinal).ToArray();
+        var erasures = await DataRightsPeople.ErasuresOfAsync(_dbContext, requesterIds, cancellationToken);
+        var living = requesterIds.Where(id => erasures.Of(id) is null).ToArray();
+        var contacts = living.Length == 0
+            ? new Dictionary<string, UserContact>(StringComparer.Ordinal)
+            : await _users.GetContactsAsync(living, cancellationToken);
+
+        var everyInstitution = request.Principal.IsAdministrator();
+        var institutionIds = rows.Select(r => r.InstitutionId).OfType<int>().ToHashSet();
+        if (!everyInstitution && request.Principal.GetInstitutionId() is { } ownInstitutionId)
+        {
+            institutionIds.Add(ownInstitutionId);
+        }
+
+        var institutionNames = institutionIds.Count == 0
+            ? new Dictionary<int, string>()
+            : await _dbContext.Set<Institution>()
+                .AsNoTracking()
+                .Where(institution => institutionIds.Contains(institution.Id))
+                .ToDictionaryAsync(institution => institution.Id, institution => institution.Name, cancellationToken);
+
+        var items = rows
+            .Select(r =>
+            {
+                var erasure = erasures.Of(r.RequesterUserId);
+                var contact = erasure is null ? contacts.GetValueOrDefault(r.RequesterUserId) : null;
+                return new DataRightsRequestSummaryDto(
+                    r.Id,
+                    DataRightsPeople.RequesterName(r, erasure, contact),
+                    r.RequestedOn,
+                    r.Type,
+                    r.Status)
+                {
+                    RequesterEmail = DataRightsPeople.EmailOf(contact),
+                    ErasedOn = erasure is null ? null : ProgrammeCalendar.DateOf(erasure.ErasedOn),
+                    // The Institution column is the Administrator's alone (Q23): a scoped reviewer sees one institution's.
+                    InstitutionName = everyInstitution && r.InstitutionId is { } institutionId
+                        ? institutionNames.GetValueOrDefault(institutionId)
+                        : null,
+                };
+            })
+            .ToList();
+
+        return new PagedDataRightsResult(items, totalCount, request.Page, request.PageSize)
+        {
+            EveryInstitution = everyInstitution,
+            // The scoped reviewer's own institution, for the subtitle, the caption and the empty sentence (S4, S12); null
+            // for a Coordinator set to no institution, who sees nothing.
+            InstitutionName = !everyInstitution && request.Principal.GetInstitutionId() is { } scopedId
+                ? institutionNames.GetValueOrDefault(scopedId)
+                : null,
+        };
     }
 
 }

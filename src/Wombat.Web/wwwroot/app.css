@@ -4038,6 +4038,13 @@ fieldset.form-group fieldset.form-group > legend {
     min-height: 2.75rem;
     width: 100%;
   }
+
+  /* Every list's filter selects, and PagerControls' page-size select, 44px on a phone, as the pager's Previous and Next
+     already are (T387, flow 14, M4: a system rule, not the data-rights queue's alone). */
+  .search-container .form-select,
+  .pager .form-select {
+    min-height: 2.75rem;
+  }
 }
 
 /* 2. The registrar page (R2-Registrar) */
@@ -7186,3 +7193,144 @@ a.dashboard-metric:hover .dashboard-metric-label {
   }
 }
 /* end Flow 13: the programme's end */
+
+/* ── Data rights ───────────────────────────────────── */
+
+/* Flow 14 (T387): My data rights, the queue and a request's page. What both page lanes share is here, written by § 0;
+   each lane writes its own rules under its own heading below, scoped to its page's own class (.data-rights-page on My
+   data rights; .user-page with the queue's own classes on the staff pages), phone rules included; nothing is written
+   between the headings but by the lane that owns the heading. The list selects' 44px is the system's, beside
+   .filter-actions' phone rule. Rebuilt from round 3's f14r3.css section 2 on the spacing scale, never copied; section 1
+   (.anno, .pv-focus, .pv-overlay) is the canvas's and never ships. */
+
+/* An id in its own cell or dd (a request id, a user id: the queue's Request id column, the request's User id and Request
+   id; R3-0-spec-2's "request-id" row): monospace, and broken anywhere it must be, so a 36-character id never widens a
+   stacked row, but kept whole where it fits (T387 review P10: overflow-wrap alone, no word-break).
+   Never on My data rights (§ Content: ids on the queue and the request only). */
+.request-id {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+/* The three data-rights tables (Your requests, the queue, Corrections recorded) put th scope="row" first in each row;
+   .clinic-table paints a th as a header, so the row header reads as a cell here, in the cell's weight of a name (M5). */
+.data-rights-table tbody th[scope="row"] {
+  background: transparent;
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+  text-align: left;
+  vertical-align: top;
+}
+
+/* Stacked (§ Table system's 900px), a row's header is the card's first line, not a cell: no rule under it, as on every
+   other stack-wide table (T387 review P7). The queue's 1100px block below says the same for its wider stack. */
+@media (max-width: 900px) {
+  .data-rights-table.clinic-table--stack-wide tbody th[scope="row"] {
+    border-bottom: 0;
+  }
+}
+
+/* Flow 14: my data rights (T387). Lane M: My data rights, <div class="user-page data-rights-page"> (S21): .user-page's
+   column, sections and phone rules serve it; only what they lack is here. The requester's Answer wraps a long decision
+   note inside its cell, never widening the table (R3-M17). */
+.answer-cell {
+  overflow-wrap: anywhere;
+}
+
+/* Below 641px, on My data rights only: the reminder checkbox, outside a .choice-group, gets the 44px label row .user-page
+   gives a radio (S17's rule); a stacked row's Withdraw or Download takes the row's width (the stack-wide rule makes it
+   44px tall, not wide). */
+@media (max-width: 640.98px) {
+  .data-rights-page .form-check:not(.choice-group .form-check) label {
+    align-items: center;
+    display: flex;
+    min-height: 2.75rem;
+  }
+
+  .data-rights-page .clinic-table--stack-wide .btn {
+    width: 100%;
+  }
+}
+/* end Flow 14: my data rights */
+
+/* Flow 14: the requests (T387). Lane P: the queue and a request's page (.correction-values, .dialog-body--scroll, and
+   what the staff pages add to .user-page). The queue is <div class="people-page data-rights-requests"> (flow 12's list
+   column and its 44px phone rules), a request <div class="user-page"> (S21: .user-page's column, 44px controls and
+   stacked actions, primary on top, serve it: the page needs no class of its own). Rebuilt from round 3's f14r3.css on the spacing scale. */
+
+/* Record a correction (C01, A2): Value before and Value after side by side, each a form group with no margin of its own;
+   one column on a phone. */
+.correction-values {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.correction-values > .form-group {
+  margin: 0;
+}
+
+/* The erasure dialog's count list (D07, D13) scrolls inside the dialog, never the page. A wrapper inside ConfirmDialog's
+   .dialog-body, so its paragraphs keep .dialog-body p's spacing. */
+.dialog-body--scroll {
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
+/* Narrow desktops (Q23): beside the 250px sidebar, from 901 to 1100px the queue's six columns (seven for the
+   Administrator) leave its names, types and badges no room, so the table would scroll sideways or break a word. The queue
+   stacks from 1100px, as every stack-wide table does from 900px (§ Table system), its row actions 44px. */
+@media (max-width: 1100px) {
+  .data-rights-requests .clinic-table--stack-wide thead {
+    border: 0;
+    clip: rect(0, 0, 0, 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+
+  .data-rights-requests .clinic-table--stack-wide tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    display: grid;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .data-rights-requests .clinic-table--stack-wide tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .data-rights-requests .clinic-table--stack-wide td,
+  .data-rights-requests .clinic-table--stack-wide tbody th {
+    border: 0;
+    padding: 0;
+    width: auto;
+  }
+
+  .data-rights-requests .clinic-table--stack-wide th[scope="row"] {
+    display: block;
+  }
+
+  .data-rights-requests .clinic-table--stack-wide td[data-label]::before {
+    color: var(--muted-text);
+    content: attr(data-label) ": ";
+    content: attr(data-label) ": " / "";
+    font-weight: 600;
+  }
+
+  .data-rights-requests .clinic-table--stack-wide .btn {
+    min-height: 2.75rem;
+  }
+}
+
+@media (max-width: 640.98px) {
+  .correction-values {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* end Flow 14: the requests */

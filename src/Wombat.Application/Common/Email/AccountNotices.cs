@@ -6,8 +6,8 @@ using Wombat.Application.Common.Options;
 namespace Wombat.Application.Common.Email;
 
 /// <summary>
-/// The one way a command sends a one-off notice to one account: a STAR revoked (T367), and the data-rights decisions that
-/// T319 still owes. A notice is not a digest. (T319)
+/// The one way a command sends a one-off notice to one account: a STAR revoked (T367), an admission (T373), an MSF report
+/// released (T369), and a data-rights request decided or completed (T319, built in T387). A notice is not a digest.
 /// </summary>
 /// <remarks>
 /// <list type="bullet">
@@ -19,7 +19,10 @@ namespace Wombat.Application.Common.Email;
 /// <item>A failed send is logged and never fails the command, which has already committed. It is sent with no
 /// cancellation, as an invitation's is, so a closed circuit does not lose it.</item>
 /// <item>A notice carries no free text written about the person (no revocation reason, no decision note): mail is
-/// outside Wombat's access control. It says what happened, when and by whom, and links to where it can be read.</item>
+/// outside Wombat's access control. It says what happened, when and by whom, and links to where it can be read. One
+/// exception to "by whom": the data-rights decision notice names no decider (T387, Q5, M3), as My data rights does not.</item>
+/// <item>An erasure's confirmation cannot go through <see cref="SendAsync" />: the erased account is deactivated and has
+/// no address. It goes through <see cref="SendToAddressAsync" />, to the address read before the erasure ran (T387, F4).</item>
 /// </list>
 /// </remarks>
 public sealed class AccountNotices
@@ -69,6 +72,40 @@ public sealed class AccountNotices
             }
 
             await _emailSender.SendAsync(await build(account), CancellationToken.None);
+            return true;
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "The {NoticeKind} notice to user {UserId} could not be sent.", kind, userId);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Sends the notice <paramref name="build" /> writes to <paramref name="address" />, read by the caller before the
+    /// command changed the account: the one notice whose account is gone by the time it is sent, an erasure's
+    /// confirmation (T387, F4). True when it was handed to the mail sender; false for no address, or a failed send. The
+    /// address is never logged (<c>NoAddressInLogsTests</c>): the log names <paramref name="kind" /> and
+    /// <paramref name="userId" /> alone.
+    /// </summary>
+    public async Task<bool> SendToAddressAsync(
+        string? address,
+        string userId,
+        string kind,
+        Func<string, EmailMessage> build)
+    {
+        ArgumentNullException.ThrowIfNull(build);
+
+        if (string.IsNullOrWhiteSpace(address))
+        {
+            _logger.LogInformation(
+                "The {NoticeKind} notice to user {UserId} was not sent: no address was read before the change.", kind, userId);
+            return false;
+        }
+
+        try
+        {
+            await _emailSender.SendAsync(build(address), CancellationToken.None);
             return true;
         }
         catch (Exception exception)

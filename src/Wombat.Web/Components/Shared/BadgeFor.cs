@@ -147,17 +147,19 @@ public static class BadgeFor
     });
 
     /// <summary>
-    /// A data rights request's status: waiting on an administrator is blue, under review amber, approved or completed
-    /// green, rejected red, and withdrawn by its requester grey.
+    /// A data rights request's status (T387, Q22): waiting for a decision is blue; approved amber, since only a
+    /// Rectification stays Approved, taken on and in hand until it is completed; completed green; rejected red; and
+    /// withdrawn by its requester grey under its own name (<c>badge-withdrawn</c>, flow 13's F10), never
+    /// <c>badge-draft</c>. Under review is gone (Q8).
     /// </summary>
-    public static string DataRightsRequest(DataRightsRequestStatus status) => State(status switch
+    public static string DataRightsRequest(DataRightsRequestStatus status) => status switch
     {
-        DataRightsRequestStatus.Submitted => BadgeState.Submitted,
-        DataRightsRequestStatus.UnderReview => BadgeState.Accepted,
-        DataRightsRequestStatus.Approved or DataRightsRequestStatus.Completed => BadgeState.Completed,
-        DataRightsRequestStatus.Rejected => BadgeState.Declined,
-        _ => BadgeState.Draft
-    });
+        DataRightsRequestStatus.Submitted => State(BadgeState.Submitted),
+        DataRightsRequestStatus.Approved => State(BadgeState.Accepted),
+        DataRightsRequestStatus.Completed => State(BadgeState.Completed),
+        DataRightsRequestStatus.Rejected => State(BadgeState.Declined),
+        _ => "badge-withdrawn"
+    };
 
     /// <summary>
     /// A scheduled job's run, by the status its DTO carries as text (<see cref="ScheduledJobRunStatus" />'s names): running

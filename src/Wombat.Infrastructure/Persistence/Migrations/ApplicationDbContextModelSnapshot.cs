@@ -1348,7 +1348,12 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("AppliedOn")
+                    b.Property<string>("AppliedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<DateTime>("AppliedOn")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("FromValueJson")
@@ -1356,9 +1361,6 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                         .HasColumnType("jsonb");
 
                     b.Property<Guid>("RequestId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("TargetId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("TargetType")
@@ -1422,6 +1424,12 @@ namespace Wombat.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -2790,9 +2798,6 @@ namespace Wombat.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(256)");
 
                     b.Property<bool>("OptOutOfDigestEmails")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("OptOutOfOptionalProcessing")
                         .HasColumnType("boolean");
 
                     b.Property<string>("PasswordHash")

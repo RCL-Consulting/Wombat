@@ -1,7 +1,10 @@
 using FluentAssertions;
 using Wombat.Application.Features.Activities.Dtos;
 using Wombat.Application.Features.CommitteeDecisions;
+using Wombat.Application.Features.DataRights;
 using Wombat.Domain.CommitteeDecisions;
+using Wombat.Domain.DataRights;
+using Wombat.Web.Components.Pages.Admin.DataRights;
 using Wombat.Web.Components.Pages.CommitteeDecisions;
 using Wombat.Web.Components.Shared;
 using Wombat.Web.Components.Shared.Activities;
@@ -260,6 +263,33 @@ public sealed class RowNamesTests
         bySince[33].Should().Be("Mini-CEX (Paediatrics) · PAED-003 · 2026-09-24, from Nomsa Mahlangu, waiting since 2026-09-25 14:10 SAST");
         byNumber[31].Should().Be("Mini-CEX (Paediatrics) · PAED-003 · 2026-09-24, from Nomsa Mahlangu (1 of 2)");
         byNumber[34].Should().Be("Mini-CEX (Paediatrics) · PAED-003 · 2026-09-24, from Nomsa Mahlangu (2 of 2)");
+    }
+
+    // T387 (flow 14, N4, T6): the queue's Review names its row by type, person and minute; two of one type from one person
+    // in one minute carry the seconds, and two the seconds leave alike are numbered.
+    [Fact]
+    public void TheDataRightsQueue_NamesEachReview_ByTypePersonAndMinute_TheSecondsOnlyWhereTwoShareAMinute()
+    {
+        var at = new DateTime(2026, 10, 27, 22, 3, 0, DateTimeKind.Utc);
+        DataRightsRequestSummaryDto Request(int n, DataRightsRequestType type, string name, int seconds)
+            => new(new Guid($"00000000-0000-0000-0000-{n:D12}"), name, at.AddSeconds(seconds), type, DataRightsRequestStatus.Submitted);
+        var rows = new[]
+        {
+            Request(1, DataRightsRequestType.Rectification, "Nomsa Mahlangu", 17),
+            Request(2, DataRightsRequestType.Rectification, "Nomsa Mahlangu", 41),
+            Request(3, DataRightsRequestType.Access, "Pieter du Plessis", 17),
+            Request(4, DataRightsRequestType.Export, "Anele Dlamini", 5),
+            Request(5, DataRightsRequestType.Export, "Anele Dlamini", 5)
+        };
+
+        var names = DataRightsRequestWords.ReviewNames(rows);
+
+        rows.Select(row => $"Review {names[row.Id]}").Should().Equal(
+            "Review the Rectification request from Nomsa Mahlangu, 2026-10-28 00:03:17 SAST",
+            "Review the Rectification request from Nomsa Mahlangu, 2026-10-28 00:03:41 SAST",
+            "Review the Access request from Pieter du Plessis, 2026-10-28 00:03 SAST",
+            "Review the Export request from Anele Dlamini, 2026-10-28 00:03:05 SAST (1 of 2)",
+            "Review the Export request from Anele Dlamini, 2026-10-28 00:03:05 SAST (2 of 2)");
     }
 
     private sealed record Row(int Id, string Name, string Detail);

@@ -681,35 +681,84 @@ Expect: There is one email to `molefe@kgk.wombat.local` with the subject "Congra
 Step A.1.3 — Mr Smit approves the export from KGK's queue
 Role: Coordinator — Mr Pieter Smit
 Route: /admin/data-rights → /admin/data-rights/{Id:guid}
-Do: Open Data rights requests from the menu. Narrow it to type Export and status Submitted, apply the filters, and
-  review Dr Dlamini's request. Press Approve with no decision note. Then approve it with the note "Identity confirmed;
-  export released to the data subject."
-Expect: The queue holds only KGK's requests (T112), and the filters change it only when they are applied. On the
-  request's page Data rights requests stays lit, and the trail reads Home › Data rights requests › the request's id
-  once it has loaded (R2-Rules § 3; DESIGN.md's owner table).
-  - The row names the requester by the address she signs in with, and its Review action is named for the row (T239).
-  - The detail page shows the requester, her user id, when it was submitted, its type, its status and her reason.
-  - Approving with no note is refused: "A decision note is required."
-  - Once approved, the request reads Completed at once, because an export is built when it is downloaded. A Decision
-    card appears (decided by, as a user id; decided on; the note; completed on), and Approve and Reject are gone.
+Do: Open Data rights requests from the menu. Choose type Erasure and press Show. Then choose type Export and status
+  Submitted, press Show, and review Dr Dlamini's request. Press Approve with no decision note. Then approve it with the
+  note "Identity confirmed; export released to the data subject."
+Expect: The queue holds only KGK's requests (T112): the subtitle "Requests from people at Kgosi Kgari Teaching Hospital
+  about their personal data: decide each, and carry an approved correction through." (T387, R3-Q01).
+  - The filter bar offers Type (All types, Access, Export, Rectification, Erasure) and Status (All statuses, Submitted,
+    Approved, Completed, Rejected, Withdrawn) by their labels, never "UnderReview" or "Objection" (T324, Q8), and Show.
+    A choice changes nothing until Show; Clear filters appears only once a filter is applied; there is no Apply filters
+    in the header (T328).
+  - Arriving: "Requests (1)", one row: Submitted in SAST, the Requester "Anele Dlamini" over dlamini@kgk.wombat.local
+    (F1), Export, the badge Submitted, the request's id, and Review named "Review the Export request from Anele Dlamini,
+    ‹its time›" (T239). No pager (one page).
+  - Erasure, Show: "Requests (0)" takes the focus, then "No requests match" and "No Erasure request at Kgosi Kgari
+    Teaching Hospital. Clear filters to see every request." (R3-Q02). Export and Submitted, Show: "Requests (1)" takes
+    the focus, the caption ending ": Export, Submitted" (R3-Q03).
+  - On the request's page Data rights requests stays lit, the trail reads Home › Data rights requests › the request's
+    id, and the h1 and tab read "Export request from Anele Dlamini" under "Submitted ‹its time› · Kgosi Kgari Teaching
+    Hospital" (Q12, R3-D01). One column of sections: Request (Requester, Email, User id, Request id, Type, Status
+    Submitted, Reason), then Decide: "Approving makes the export ready at once: Anele Dlamini downloads it from My data
+    rights, and it is built at that moment. You cannot download it yourself.", Decision note (required) with "Anele
+    Dlamini reads this note with the decision on My data rights, and is emailed that it was decided. Who decided is not
+    shown.", Reject and Approve.
+  - Approve with no note is refused before anything is sent: "A decision note is required." under the note, which
+    takes the focus (R3-D02).
+  - With the note: "Request approved. Anele Dlamini is emailed, and can download the export from My data rights." heads
+    a new Decision section and takes the focus, its first sentence bold (R3-D03). The request reads Completed at once,
+    because an export is built when it is downloaded. Decision reads Approved; Decided by "Pieter Smit" over the
+    decider's id (43ad0cb7-5ce6-46d7-8595-7117d130c7dc); Decided on and Completed on in SAST; the note. Decide is gone.
+  - A stub mail is logged after the approval (T319, Q5): subject "Your data rights request has been decided", "Your
+    Export request was approved on `D`." and "Read the answer, and download your data, on My data rights.", with the
+    link to My data rights. It names neither the note nor the decider.
 
 Step A.1.12 — devadmin approves the erasure
 Role: Administrator — devadmin
-Route: /admin/data-rights → /admin/data-rights/{Id:guid}
-Do: Narrow the queue to Erasure and apply the filter, review Dr Ndlovu's request, and approve it with the note "Identity
-  confirmed. Programme records are kept under a pseudonym."
-Expect: The Administrator's queue holds every institution's requests.
-  - Once approved, the request reads Completed at once, with its Decision card. The approval and the erasure are one
-    transaction (T258).
-  - No confirmation is asked before this irreversible action (noted on T264).
-  - The queue and the request still name the requester by the address he signed in with: the erasure keeps the request
-    as it was submitted (`ErasureExecutor`).
+Route: /admin/data-rights → /admin/data-rights/{Id:guid} → /admin/data-rights
+Do: Open Data rights requests, choose type Erasure and press Show, and review Dr Ndlovu's request. Type the note
+  "Identity confirmed. Programme records are kept under a pseudonym." and press Approve and erase…; read the dialog
+  and press Cancel. Press Approve and erase… again and confirm with Erase and approve. Then open Data rights requests
+  from the trail.
+Expect: The Administrator's queue holds every institution's requests: the subtitle "Requests from people at every
+  institution about their personal data: …", an Institution column, and "Requests (5)" (KGK's are the only ones),
+  newest first (T387, Q23; R3-Q05). Erasure, Show: "Requests (1)", Dr Ndlovu's row (R3-Q06).
+  - The request reads "Erasure request from Sipho Ndlovu". Decide: "Approving erases Sipho Ndlovu's personal data at
+    once and cannot be undone. You are asked to confirm, with what it ends and keeps."; the note's help "Kept with the
+    request. Sipho Ndlovu will not read it: approving ends the account."; Reject, and Approve and erase…, an outline
+    button (Q19; R3-D06).
+  - Approve and erase… opens "Erase Sipho Ndlovu's personal data?" with the focus on Cancel (R3-D07): "This cannot be
+    undone.", "Approving erases it now, in one step, and completes the request.", then "It ends:" the account and its
+    sign-in ("Sipho Ndlovu can no longer sign in, and an open session ends within a minute."); "1 open committee
+    review: Formative check-in #N, Paed Annual Review Panel, Scheduled. It is withdrawn, and nothing more is decided at
+    it." (A.1.10's #N); "No MSF campaign: none about Sipho Ndlovu is open."; "The programme, Paediatric EPA Curriculum
+    (11.2), which ends today as Withdrawn." Then "It keeps, under a pseudonym that names nobody: the ratified review
+    #5, closed check-in #6, the activities, progress and audit entries, and this request." (Q3, F5). Cancel closes it,
+    the focus back on Approve and erase…, and nothing has changed (R3-D08).
+  - Erase and approve: "The personal data is erased. The request is approved and completed. 1 committee review was
+    withdrawn and the programme ended today. The account is now deleted_user_0ae1d64b; its open session ends within a
+    minute." heads Decision and takes the focus, its first sentence bold (S6; R3-D09). The approval and the erasure are
+    one transaction (T258).
+  - The page now reads "Erasure request from deleted_user_0ae1d64b", with the standing notice "This person's personal
+    data was erased on `D`, at this request. The request is kept as the record of it, under the pseudonym."; Requester
+    deleted_user_0ae1d64b over "Erased `D`", no Email; the badge Completed; the Reason "Erased with the person's data on
+    `D`." in place of the one he typed (review S1, the operator's decision of 2026-10-30), the decision note kept; Decided
+    by Demo Administrator over the decider's id; Decided on and Completed on in SAST (F3, Q11).
+  - One stub mail is logged after the approval, the erasure's confirmation with no link: "Your personal data has been
+    erased from Wombat", "Your Erasure request was approved on `D`, and your personal data has been erased from
+    Wombat." and "Your account is closed, and you can no longer sign in. Your training records are kept under a name
+    that identifies nobody." (F4).
+  - The queue's row reads deleted_user_0ae1d64b over "Erased `D`", Completed, with Review named "Review the Erasure
+    request from deleted_user_0ae1d64b, ‹its time›" (N5, R3-Q07). The filter is not kept across pages, so all five rows
+    show.
 
 Step A.2.3 — Mr Smit opts out of digest emails
 Role: Coordinator — Mr Pieter Smit
 Route: /account/data-rights
-Do: Tick "Opt out of digest emails" and save his preferences.
-Expect: "Processing preferences saved."
+Do: Open My data rights from the menu. Under Reminder emails, tick "Stop the regular reminder emails" and press Save.
+Expect: The box is clear as the page opens. Saved: "Reminder emails stopped." heads Reminder emails and takes the focus,
+  and the box stays ticked (T387, Q24; R3-M11). Saving it again unchanged would say "Nothing changed: reminder emails
+  are still stopped." (N3).
 
 Step A.2.4 — devadmin runs the weekly digest, and Mr Smit is skipped
 Role: Administrator — devadmin

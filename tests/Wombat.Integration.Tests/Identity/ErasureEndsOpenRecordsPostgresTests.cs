@@ -4,7 +4,9 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Wombat.Application.Common.Email.Templates;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.CommitteeDecisions;
@@ -71,9 +73,12 @@ public sealed class ErasureEndsOpenRecordsPostgresTests : IAsyncLifetime
             await using var root = await MigratedAndSeededServicesAsync();
             var seeded = await ArrangeAsync(root);
 
+            ApproveDataRightsResult result;
+            TestNotices notices;
             await using (var act = root.CreateAsyncScope())
             {
-                await Approver(act.ServiceProvider).Handle(
+                notices = new TestNotices(Users(act.ServiceProvider));
+                result = await Approver(act.ServiceProvider, notices).Handle(
                     new ApproveDataRightsRequestCommand(seeded.RequestId, "Erased at the trainee's request.", Coordinator(seeded.HostId)),
                     CancellationToken.None);
             }
@@ -82,6 +87,52 @@ public sealed class ErasureEndsOpenRecordsPostgresTests : IAsyncLifetime
             var db = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var pseudonym = (await db.DataRightsErasureRecords.SingleAsync(record => record.UserId == ErasedUserId)).Pseudonym;
             pseudonym.Should().StartWith("deleted_user_");
+
+            // T387, S6: what it ended, counted where each was ended. Three open reviews, four campaigns not released, the
+            // two other open requests, the one active profile.
+            result.Erasure.Should().Be(new ErasureOutcome(pseudonym, 3, 4, 2, 1));
+
+            // T387, F3, Q11: every request of the person carries the pseudonym, the approving one included; the other open
+            // ones (a submitted Access and an approved Rectification) are withdrawn; a settled one stays as it was. Where
+            // the person decided a request or recorded a correction, that column carries the pseudonym too.
+            var requests = await db.DataRightsRequests.Where(request => request.RequesterUserId == ErasedUserId)
+                .ToDictionaryAsync(request => request.Id);
+            requests.Should().HaveCount(4);
+            requests.Values.Should().OnlyContain(request => request.RequesterDisplayName == pseudonym);
+            requests[seeded.OpenAccessRequestId].Status.Should().Be(DataRightsRequestStatus.Withdrawn);
+            requests[seeded.ApprovedRectificationRequestId].Status.Should().Be(DataRightsRequestStatus.Withdrawn);
+            requests[seeded.CompletedExportRequestId].Status.Should().Be(DataRightsRequestStatus.Completed);
+            var decidedByErased = await db.DataRightsRequests.SingleAsync(request => request.Id == seeded.DecidedByErasedRequestId);
+            decidedByErased.DecidedByUserId.Should().Be(pseudonym);
+            decidedByErased.RequesterDisplayName.Should().Be("Control Trainee", "another person's request keeps their name");
+            (await db.DataRightsRectifications.SingleAsync(correction => correction.RequestId == seeded.DecidedByErasedRequestId))
+                .AppliedByUserId.Should().Be(pseudonym);
+            (await db.DataRightsRequests.AnyAsync(request => request.DecidedByUserId == ErasedUserId)).Should().BeFalse();
+
+            // T387, review S1 (the operator's decision, 2026-10-30): the person's own words go from every request of theirs,
+            // the reason and each correction's before and after, on the erasure's South African day; the staff's decision
+            // note is kept. Another person's request keeps its reason and its values. The values are jsonb, so they are read
+            // back as strings, never compared as raw text.
+            var erasedText = "Erased with the person's data on 2026-09-25.";
+            DataRightsLabels.ErasedText(ErasureDay).Should().Be(erasedText);
+            requests.Values.Should().OnlyContain(request => request.Reason == erasedText);
+            requests[seeded.ApprovedRectificationRequestId].DecisionNote.Should().Be("Will correct.");
+            var ownCorrection = await db.DataRightsRectifications.SingleAsync(
+                correction => correction.RequestId == seeded.ApprovedRectificationRequestId);
+            System.Text.Json.JsonSerializer.Deserialize<string>(ownCorrection.FromValueJson).Should().Be(erasedText);
+            System.Text.Json.JsonSerializer.Deserialize<string>(ownCorrection.ToValueJson).Should().Be(erasedText);
+            ownCorrection.TargetType.Should().Be("Account.FirstName", "the record a correction names is the staff's");
+            decidedByErased.Reason.Should().Be("My name is misspelt.");
+            var othersCorrection = await db.DataRightsRectifications.SingleAsync(
+                correction => correction.RequestId == seeded.DecidedByErasedRequestId);
+            System.Text.Json.JsonSerializer.Deserialize<string>(othersCorrection.FromValueJson).Should().Be("Smit");
+            System.Text.Json.JsonSerializer.Deserialize<string>(othersCorrection.ToValueJson).Should().Be("Smith");
+
+            // T387, F4: the confirmation went to the address the account held before it was erased, with no link.
+            var mail = notices.Sender.Sent.Should().ContainSingle().Which;
+            mail.To.Should().Be($"{ErasedUserId}@test.local");
+            mail.Subject.Should().Be(DataRightsDecisionEmail.ErasedSubject);
+            (await db.Users.SingleAsync(user => user.Id == ErasedUserId)).Email.Should().BeNull();
 
             (await db.DataRightsRequests.SingleAsync(request => request.Id == seeded.RequestId)).Status
                 .Should().Be(DataRightsRequestStatus.Completed);
@@ -415,6 +466,9 @@ public sealed class ErasureEndsOpenRecordsPostgresTests : IAsyncLifetime
         (await db.DataRightsRequests.SingleAsync(request => request.Id == seeded.RequestId)).Status
             .Should().Be(DataRightsRequestStatus.Submitted, "a refused erasure leaves the request to be approved again");
         (await db.DataRightsErasureRecords.AnyAsync()).Should().BeFalse();
+        (await db.DataRightsRequests.SingleAsync(request => request.Id == seeded.OpenAccessRequestId)).Status
+            .Should().Be(DataRightsRequestStatus.Submitted, "the other open request is withdrawn only with the erasure (T387)");
+        (await db.DataRightsRequests.CountAsync(request => request.DecidedByUserId == ErasedUserId)).Should().Be(1);
         (await db.TraineeProfiles.CountAsync(profile => profile.UserId == ErasedUserId && profile.IsActive)).Should().Be(1);
         (await db.Users.SingleAsync(user => user.Id == ErasedUserId)).Email.Should().Be($"{ErasedUserId}@test.local");
         (await db.EntrustmentDecisions.SingleAsync(decision => decision.Id == seeded.StarId)).TraineeUserId
@@ -466,7 +520,11 @@ public sealed class ErasureEndsOpenRecordsPostgresTests : IAsyncLifetime
         int UnderReviewCampaignId,
         int ReleasedCampaignId,
         int ControlCampaignId,
-        int ClosedByErasedCampaignId);
+        int ClosedByErasedCampaignId,
+        Guid OpenAccessRequestId,
+        Guid ApprovedRectificationRequestId,
+        Guid CompletedExportRequestId,
+        Guid DecidedByErasedRequestId);
 
     /// <summary>
     /// The erased trainee (also an assessor) with an earlier profile completed and a current one; their reviews scheduled,
@@ -584,10 +642,33 @@ public sealed class ErasureEndsOpenRecordsPostgresTests : IAsyncLifetime
         // The trainee asks through the real form's command, with their reviews open and one under appeal: no review
         // refuses the request (T258 review). Before, T026's guard refused it, and approval withdrew the same reviews for
         // a trainee who had asked before they were scheduled.
-        var request = await new SubmitDataRightsRequestCommandHandler(db).Handle(
+        var request = await new SubmitDataRightsRequestCommandHandler(db, FakeUserDirectory.Empty).Handle(
             new SubmitDataRightsRequestCommand(DataRightsRequestType.Erasure, "Leaving the programme.", Trainee(hostId)),
             CancellationToken.None);
         request.Status.Should().Be(DataRightsRequestStatus.Submitted);
+
+        // T387 (F3, Q11): the person's other requests, two open and one settled, and the control trainee's Rectification
+        // that the erased person decided and recorded a correction on.
+        var openAccess = DataRightsRequest.Create(
+            ErasedUserId, "Erased Trainee", DataRightsRequestType.Access, "A copy, please.", now, hostId);
+        var approvedRectification = DataRightsRequest.Create(
+            ErasedUserId, "Erased Trainee", DataRightsRequestType.Rectification, "My start date is wrong.", now, hostId);
+        approvedRectification.Approve(CoordinatorUserId, "Will correct.", now);
+        var completedExport = DataRightsRequest.Create(
+            ErasedUserId, "Erased Trainee", DataRightsRequestType.Export, "An export.", now.AddDays(-30), hostId);
+        completedExport.Approve(CoordinatorUserId, "Here it is.", now.AddDays(-29));
+        completedExport.Complete(now.AddDays(-29));
+        var decidedByErased = DataRightsRequest.Create(
+            ControlUserId, "Control Trainee", DataRightsRequestType.Rectification, "My name is misspelt.", now, hostId);
+        decidedByErased.Approve(ErasedUserId, "Approved.", now);
+        db.DataRightsRequests.AddRange(openAccess, approvedRectification, completedExport, decidedByErased);
+        await db.SaveChangesAsync();
+        db.DataRightsRectifications.Add(DataRightsRectification.Create(
+            decidedByErased.Id, "Account.LastName", "\"Smit\"", "\"Smith\"", ErasedUserId, now));
+        // Review S1: a correction on the erased person's own Rectification, their name before and after.
+        db.DataRightsRectifications.Add(DataRightsRectification.Create(
+            approvedRectification.Id, "Account.FirstName", "\"Sipho\"", "\"Siphiwe\"", CoordinatorUserId, now));
+        await db.SaveChangesAsync();
 
         return new Seeded(
             hostId,
@@ -605,7 +686,11 @@ public sealed class ErasureEndsOpenRecordsPostgresTests : IAsyncLifetime
             underReview.Id,
             released.Id,
             controlCampaign.Id,
-            closedByErased.Id);
+            closedByErased.Id,
+            openAccess.Id,
+            approvedRectification.Id,
+            completedExport.Id,
+            decidedByErased.Id);
     }
 
     /// <summary>The erased trainee, signed in, as the data-rights form sends their request.</summary>
@@ -691,12 +776,21 @@ public sealed class ErasureEndsOpenRecordsPostgresTests : IAsyncLifetime
         };
     }
 
-    private static ApproveDataRightsRequestCommandHandler Approver(IServiceProvider services)
-        => new(
+    private static ApproveDataRightsRequestCommandHandler Approver(IServiceProvider services, TestNotices? notices = null)
+    {
+        var users = Users(services);
+        return new(
             services.GetRequiredService<ApplicationDbContext>(),
             services.GetRequiredService<ErasureExecutor>(),
-            new NoAccessReports(),
-            Options.Create(new WombatOptions { PseudonymSalt = Salt }));
+            users,
+            (notices ?? new TestNotices(users)).Notices,
+            Options.Create(new WombatOptions { PseudonymSalt = Salt }),
+            NullLogger<ApproveDataRightsRequestCommandHandler>.Instance);
+    }
+
+    /// <summary>The real user directory on the scope's context and user store.</summary>
+    private static UserAdministrationService Users(IServiceProvider services)
+        => new(services.GetRequiredService<UserManager<WombatIdentityUser>>(), services.GetRequiredService<ApplicationDbContext>());
 
     /// <summary>A coordinator of the request's institution: the role that approves a data-rights request (T112).</summary>
     private static ClaimsPrincipal Coordinator(int institutionId)
@@ -709,13 +803,6 @@ public sealed class ErasureEndsOpenRecordsPostgresTests : IAsyncLifetime
             "IntegrationTest",
             ClaimTypes.Name,
             ClaimTypes.Role));
-
-    /// <summary>An erasure builds no access report.</summary>
-    private sealed class NoAccessReports : IAccessReportBuilder
-    {
-        public Task<AccessExportResult> BuildAsync(string userId, CancellationToken cancellationToken)
-            => throw new NotSupportedException("An erasure builds no access report.");
-    }
 
     private sealed class FixedClock(DateTime utcNow) : TimeProvider
     {

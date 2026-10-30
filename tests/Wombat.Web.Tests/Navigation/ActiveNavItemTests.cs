@@ -654,12 +654,13 @@ public sealed class ActiveNavItemTests : TestContext
     }
 
     // R2-Rules § 3: "Home › Data rights requests › the request (its id is shown here)". The review of the t335 branch: the
-    // page passed no crumb, so its trail ended "Data rights request" whichever request it showed.
+    // page passed no crumb, so its trail ended "Data rights request" whichever request it showed. T387 (flow 14, N14, D17):
+    // the id is the route's, so the trail names it from the first render; the h1 names the request once it is read (Q12).
     [Fact]
-    public void ADataRightsRequest_IsNamedInItsTrailByItsId_OnceItHasLoaded()
+    public void ADataRightsRequest_IsNamedInItsTrailByItsId_FromTheFirstRender()
     {
         var id = Guid.Parse("3f2a9c01-b7d8-4e6f-9a0b-1c2d3e4f5061");
-        var load = new TaskCompletionSource<DataRightsRequestDto>();
+        var load = new TaskCompletionSource<DataRightsRequestDetailDto?>();
         Services.AddSingleton<IScopedSender>(new LoadingSender(load.Task));
         var auth = this.AddTestAuthorization();
         auth.SetAuthorized("coordinator@kgk.wombat.local");
@@ -672,17 +673,47 @@ public sealed class ActiveNavItemTests : TestContext
             .AddCascadingValue(MenuFor(WombatRoles.Coordinator))
             .AddCascadingValue(new RouteData(typeof(RequestDetail), new Dictionary<string, object?>())));
 
-        TrailOf(cut).Should().Equal([("Home", "/"), ("Data rights requests", "/admin/data-rights"), ("Data rights request", null)],
-            "while it loads, the page's title");
+        TrailOf(cut).Should().Equal(
+            [("Home", "/"), ("Data rights requests", "/admin/data-rights"), ("3f2a9c01-b7d8-4e6f-9a0b-1c2d3e4f5061", null)],
+            "while it loads, the id the address gives (D17)");
+        cut.Find("h1").TextContent.Trim().Should().Be("Data rights request", "while it loads, the page's name");
 
-        load.SetResult(new DataRightsRequestDto(id, "requester-1", "Nomsa Mahlangu", new DateTime(2026, 9, 20, 8, 0, 0, DateTimeKind.Utc),
+        load.SetResult(new DataRightsRequestDetailDto(id, "requester-1", "Nomsa Mahlangu", new DateTime(2026, 9, 20, 8, 0, 0, DateTimeKind.Utc),
             DataRightsRequestType.Access, DataRightsRequestStatus.Submitted, "My record, please.", null, null, null, null));
 
         cut.WaitForAssertion(() => TrailOf(cut).Should().Equal(
             [("Home", "/"), ("Data rights requests", "/admin/data-rights"), ("3f2a9c01-b7d8-4e6f-9a0b-1c2d3e4f5061", null)]),
             Wombat.Web.Tests.TestSupport.WombatTestContext.AsyncWorkTimeout);
         cut.Find("nav[aria-label='Breadcrumb'] [aria-current='page']").TextContent.Trim().Should().Be(id.ToString());
-        cut.Find("h1").TextContent.Trim().Should().Be("Data rights request", "the heading stays the page's");
+        cut.Find("h1").TextContent.Trim().Should().Be("Access request from Nomsa Mahlangu", "the request by type and person (Q12)");
+    }
+
+    // T387 (flow 14, Q13, Q17, U01, U02): a null read is Request unavailable, drawn in the request page's own place, so the
+    // menu lights Data rights requests (the planner's inference) and the trail ends with the h1's words.
+    [Fact]
+    public void AnUnavailableDataRightsRequest_LightsDataRightsRequests_AndEndsItsTrailWithRequestUnavailable()
+    {
+        Services.AddSingleton<IScopedSender>(new LoadingSender(Task.FromResult<DataRightsRequestDetailDto?>(null)));
+        var auth = this.AddTestAuthorization();
+        auth.SetAuthorized("smit@kgk.wombat.local");
+        auth.SetRoles(WombatRoles.Coordinator);
+        auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "smit"));
+        var route = new RouteData(typeof(RequestDetail), new Dictionary<string, object?>());
+        var drawn = new PageDrawn();
+        var menu = MenuFor(WombatRoles.Coordinator);
+
+        var cut = RenderComponent<RequestDetail>(parameters => parameters
+            .Add(page => page.Id, Guid.Parse("01a17f61-f16f-77c1-860c-661586d5b734"))
+            .AddCascadingValue(ActingAs(WombatRoles.Coordinator))
+            .AddCascadingValue(menu)
+            .AddCascadingValue(drawn)
+            .AddCascadingValue(route));
+
+        cut.WaitForAssertion(() => cut.Find("h1").TextContent.Trim().Should().Be("Request unavailable"));
+        TrailOf(cut).Should().Equal([("Home", "/"), ("Data rights requests", "/admin/data-rights"), ("Request unavailable", null)]);
+        drawn.On(route).Should().Be(typeof(RequestDetail), "the page draws itself, never Page not found in its place");
+        var (item, current) = NavOwners.Lit(drawn.On(route), WombatRoles.Coordinator, menu);
+        (item?.Label, current).Should().Be(("Data rights requests", NavCurrent.Owner));
     }
 
     [Fact]
@@ -773,11 +804,11 @@ public sealed class ActiveNavItemTests : TestContext
             .ToList();
 
     /// <summary>Answers a data-rights request's read with <paramref name="load" />, when the test lets it.</summary>
-    private sealed class LoadingSender(Task<DataRightsRequestDto> load) : IScopedSender
+    private sealed class LoadingSender(Task<DataRightsRequestDetailDto?> load) : IScopedSender
     {
         public async Task<TResponse> Send<TResponse>(MediatR.IRequest<TResponse> request, CancellationToken cancellationToken = default)
             => request is Wombat.Application.Features.DataRights.Queries.GetDataRightsRequestByIdQuery
-                ? (TResponse)(object)await load
+                ? (TResponse)(object)(await load)!
                 : throw new InvalidOperationException($"The page sent {request.GetType().Name}.");
 
         public Task Send(MediatR.IRequest request, CancellationToken cancellationToken = default)

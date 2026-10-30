@@ -23,8 +23,10 @@ public sealed class DataRightsRectificationConfiguration : IEntityTypeConfigurat
             .HasMaxLength(200)
             .IsRequired();
 
-        builder.Property(e => e.TargetId)
-            .HasColumnType("uuid")
+        // T387 (Q26): the record is always the requester's, so the request says whose; TargetId (a Guid, which could not hold
+        // a trainee profile's int id) is gone. Who recorded it is kept (S11), as the request keeps who decided it.
+        builder.Property(e => e.AppliedByUserId)
+            .HasMaxLength(450)
             .IsRequired();
 
         builder.Property(e => e.FromValueJson)
@@ -36,6 +38,7 @@ public sealed class DataRightsRectificationConfiguration : IEntityTypeConfigurat
             .IsRequired();
 
         builder.Property(e => e.AppliedOn)
-            .HasColumnType("timestamp with time zone");
+            .HasColumnType("timestamp with time zone")
+            .IsRequired();
     }
 }

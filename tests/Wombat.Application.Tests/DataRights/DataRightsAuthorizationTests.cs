@@ -82,31 +82,57 @@ public sealed class DataRightsAuthorizationTests
             .CanReview(Administrator(), Request(institutionId: null))
             .Should().BeTrue();
 
-    // ─── Role sets stay distinct ─────────────────────────────────────────────
+    // ─── One role set (T387, Q1) ─────────────────────────────────────────────
+
+    /// <summary>
+    /// T387 (Q1): whoever may approve a Rectification records its corrections and completes it, so one person carries it
+    /// through. Until T387 a Coordinator approved and only a Speciality admin, who could open neither page, could record.
+    /// </summary>
+    [Fact]
+    public void ACoordinatorMayRectifyTheirOwnInstitutionsRequest_AndNoOtherInstitutions()
+    {
+        DataRightsAuthorization.CanRectify(Coordinator(HomeInstitution), Request(HomeInstitution)).Should().BeTrue();
+        DataRightsAuthorization.CanRectify(Coordinator(OtherInstitution), Request(HomeInstitution)).Should().BeFalse();
+        DataRightsAuthorization.CanRectify(Administrator(), Request(institutionId: null)).Should().BeTrue();
+    }
 
     [Fact]
-    public void ACoordinatorMayNotRectify()
-        => DataRightsAuthorization
-            .CanRectify(Coordinator(HomeInstitution), Request(HomeInstitution))
-            .Should().BeFalse();
+    public void ASpecialityAdminMayNeitherReviewNorRectify()
+    {
+        DataRightsAuthorization.CanRectify(SpecialityAdmin(HomeInstitution), Request(HomeInstitution)).Should().BeFalse();
+        DataRightsAuthorization.CanReview(SpecialityAdmin(HomeInstitution), Request(HomeInstitution)).Should().BeFalse();
+    }
+
+    // ─── Nobody decides their own request (T387, Q21, F9) ─────────────────────
 
     [Fact]
-    public void ASpecialityAdminMayRectifyInTheirOwnInstitution()
-        => DataRightsAuthorization
-            .CanRectify(SpecialityAdmin(HomeInstitution), Request(HomeInstitution))
-            .Should().BeTrue();
+    public void ACoordinatorMayNotDecideOrCarryThroughTheirOwnRequest_ButMayReadIt()
+    {
+        var own = Request(HomeInstitution, requesterUserId: "coord-1");
+        var coordinator = Coordinator(HomeInstitution);
+
+        DataRightsAuthorization.CanReview(coordinator, own).Should().BeFalse();
+        DataRightsAuthorization.CanRectify(coordinator, own).Should().BeFalse();
+        DataRightsAuthorization.CanRead(coordinator, own).Should().BeTrue();
+        DataRightsAuthorization.OwnRequest(coordinator, own).Should().Be(DataRightsOwnRequest.AnotherCoordinatorDecides);
+    }
+
+    /// <summary>F9: the Administrator's own request needs another Administrator; the bypass does not reach it.</summary>
+    [Fact]
+    public void AnAdministratorMayNotDecideTheirOwnRequest()
+    {
+        var own = Request(institutionId: null, requesterUserId: "admin-1");
+
+        DataRightsAuthorization.CanReview(Administrator(), own).Should().BeFalse();
+        DataRightsAuthorization.CanRectify(Administrator(), own).Should().BeFalse();
+        DataRightsAuthorization.OwnRequest(Administrator(), own).Should().Be(DataRightsOwnRequest.AnotherAdministratorDecides);
+    }
 
     [Fact]
-    public void ASpecialityAdminMayNotRectifyAnotherInstitutionsRequest()
+    public void ATraineesOwnRequest_IsNotAReviewersOwn()
         => DataRightsAuthorization
-            .CanRectify(SpecialityAdmin(OtherInstitution), Request(HomeInstitution))
-            .Should().BeFalse();
-
-    [Fact]
-    public void ASpecialityAdminMayNotReview()
-        => DataRightsAuthorization
-            .CanReview(SpecialityAdmin(HomeInstitution), Request(HomeInstitution))
-            .Should().BeFalse();
+            .OwnRequest(Build("subject-1", HomeInstitution, WombatRoles.Trainee), Request(HomeInstitution))
+            .Should().Be(DataRightsOwnRequest.No);
 
     [Fact]
     public void ATraineeMayNeitherReviewNorRectify()

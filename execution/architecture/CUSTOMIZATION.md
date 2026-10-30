@@ -606,6 +606,16 @@ Not everything survives the pivot to schema-driven. These stay hardcoded because
        and Withdrawn (Draft, Open, UnderReview, and Closed, which nothing produces today). So no invitee is added, and no
        release writes activities about someone who has left. Under review is included: its report could only be released
        to the person. A campaign withdrawn by an erasure records no reason, as no campaign withdrawal does.
+     - **Data-rights requests (T387, F3, Q11; review S1).** Every request of the person is kept as the record of what was
+       asked and decided, under the pseudonym (`RequesterDisplayName`), the approving one included; where the person
+       decided a request or recorded a correction, `DecidedByUserId` and `AppliedByUserId` carry it too. Their other open
+       requests (Submitted, and an approved Rectification) are withdrawn (`DataRightsRequest.WithdrawOnErasure`), since
+       nobody may decide or carry through a request of someone who is gone. What the person typed goes as well (the
+       operator's decision, 2026-10-30): on every one of their requests the reason, and each correction's value before and
+       after, read "Erased with the person's data on ‹day›." (`DataRightsLabels.ErasedText`, the erasure's South African
+       day), so a pseudonymous request does not name the person in their own words or in a corrected name. The staff's
+       decision note, and the record a correction names, are the staff's, and are kept. All of it tracked, in the
+       erasure's save, so a request changed elsewhere meanwhile is refused on its `xmin` as `PersonChanged`.
      - **Kept, under the pseudonym.** Ratified reviews, and a review under appeal (its decision is ratified; the appeal
        body can still answer the appeal, which reads no evidence and issues no STAR). Issued STARs, released feedback
        reports, activities, progress and audit entries.
@@ -620,7 +630,8 @@ Not everything survives the pivot to schema-driven. These stay hardcoded because
      inside the transaction (the approving handler marks both before the erasure runs), so no erasure stands under a
      request left merely Approved. A refused erasure leaves the request as it was, ready to approve again. A row about the
      person that changed while the erasure ran (a campaign closed by the auto-close job, a review ratified) fails the save
-     on its concurrency token, and the approver is told so in words (`ErasureExecutor.PersonChanged`), not EF's. Those
+     on its concurrency token, and the approver is told so in words (`ErasureExecutor.PersonChanged`, whose sentence is
+     `DataRightsRefusalSentences.PersonChanged`, T387), not EF's. Those
      rows are saved before the account is touched, so their conflict is never read as the account's. The account's own
      writes go through Identity, whose user store reports a refusal as a failed result, not an exception: each result is
      checked (T156), a conflict is refused as `PersonChanged` too, and any other refusal fails the erasure naming the step
@@ -629,8 +640,12 @@ Not everything survives the pivot to schema-driven. These stay hardcoded because
      can still be completed and credited; a user id held in an activity's `DataJson` (a nominee field) is not rewritten;
      the person's address as a respondent on someone else's open campaign stays until that campaign closes; and a review,
      campaign or profile created about the person while the erasure runs (it reads under READ COMMITTED and locks
-     nothing) lands under the original id. Approving an erasure asks for no confirmation and does not list what it will
-     withdraw.
+     nothing) lands under the original id.
+   - **Approving an erasure is confirmed (T387, Q3, Q19, F5).** Until T387 it asked for no confirmation and listed
+     nothing. The request page reads what it would end (`GetErasureForecastQuery`, gated as the command: the open reviews
+     named at the caller's institution and counted elsewhere, the campaigns, the person's other open requests, the
+     programme) into a dialog that opens on Cancel; the result names what the erasure did end (`ErasureOutcome`, counted
+     where each was ended). The erasure of Wombat's only active Administrator is refused (F9).
    - T238 keeps a pseudonym out of every new scope. T258 ends what was already open when the erasure ran.
 6. **Institutional SSO.** Protocol-level code.
 7. **Notification primitives.** The queue, worker, templates live in code. *Which* events trigger notifications can be data (part of the workflow definition).

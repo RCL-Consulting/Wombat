@@ -406,18 +406,18 @@ public sealed class ActionFocusTests : TestContext
 
     /// <summary>
     /// T239. A trainee's own requests: Withdraw names the request, and Download names what it downloads, the request's
-    /// export, not the request (T239 review).
+    /// export, not the request (T239 review); in SAST since T387 (Q9).
     /// </summary>
     [Fact]
     public void EachOwnRequestsActions_NameTheRequest_AndDownloadNamesItsExport()
     {
-        var withdrawable = new DataRightsRequestSummaryDto(
-            RequestId, "Tia Trainee", Created, DataRightsRequestType.Access, DataRightsRequestStatus.Submitted);
+        var withdrawable = new MyDataRightsRequestDto(
+            RequestId, Created, DataRightsRequestType.Access, DataRightsRequestStatus.Submitted, null, null, null, []);
         var cut = Page<DataRights>(new Sender(new Hold(), _ => false, request => request switch
         {
-            GetObjectionFlagsQuery => new ObjectionFlagsDto(false, false),
-            GetMyDataRightsRequestsQuery => new[]
-            {
+            GetObjectionFlagsQuery => new ObjectionFlagsDto(false),
+            GetMyDataRightsRequestsQuery => new MyDataRightsDto(null,
+            [
                 withdrawable,
                 withdrawable with
                 {
@@ -426,14 +426,14 @@ public sealed class ActionFocusTests : TestContext
                     Type = DataRightsRequestType.Export,
                     Status = DataRightsRequestStatus.Completed
                 }
-            },
+            ]),
             _ => null
         }));
         cut.WaitForState(() => cut.FindAll("tbody a.btn").Count == 1);
 
         cut.FindAll("tbody button.btn, tbody a.btn").Select(control => AccessibleNames.NameOf(cut, control)).Should().Equal(
-            "Withdraw the Access request made 2026-01-01 00:00",
-            "Download the export of the Export request made 2026-01-01 03:00");
+            "Withdraw the Access request made 2026-01-01 02:00 SAST",
+            "Download the export of the Export request made 2026-01-01 05:00 SAST");
     }
 
     /// <summary>
@@ -773,46 +773,113 @@ public sealed class ActionFocusTests : TestContext
             // The refusal shows in Password and takes the focus (T376): the password is cleared once the reset has answered.
             RefusalTakesFocus: true),
 
-        ["DataRights Save preferences"] = new(
+        // My data rights (T387, flow 14, lane M): a refusal is said in fixed words, never the exception's (T329), and takes
+        // the focus in its section's result; MyDataRightsPageTests holds each, so these three are not refused here.
+        ["DataRights Save"] = new(
             (test, hold) => test.Page<DataRights>(
                 new Sender(hold, request => request is UpdateObjectionFlagsCommand, request => request switch
                 {
-                    GetObjectionFlagsQuery => new ObjectionFlagsDto(false, false),
+                    GetObjectionFlagsQuery => new ObjectionFlagsDto(false),
+                    GetMyDataRightsRequestsQuery => new MyDataRightsDto(null, []),
+                    UpdateObjectionFlagsCommand command => new ReminderEmailsSaved(command.OptOutOfDigestEmails, true),
                     _ => null
                 })),
-            cut => Named(cut, "Save preferences", "Saving..."),
-            cut => Named(cut, "Save preferences", "Saving...").Click()),
+            cut => Named(cut, "Save"),
+            cut => Named(cut, "Save").Click(),
+            CanBeRefused: false),
 
         ["DataRights Submit request"] = new(
             (test, hold) => test.Page<DataRights>(
                 new Sender(hold, request => request is SubmitDataRightsRequestCommand, request => request switch
                 {
-                    GetObjectionFlagsQuery => new ObjectionFlagsDto(false, false),
+                    GetObjectionFlagsQuery => new ObjectionFlagsDto(false),
+                    GetMyDataRightsRequestsQuery => new MyDataRightsDto(null, []),
                     SubmitDataRightsRequestCommand => DataRightsRequest(DataRightsRequestStatus.Submitted),
                     _ => null
                 })),
-            cut => Named(cut, "Submit request", "Submitting..."),
+            cut => Named(cut, "Submit request"),
             cut =>
             {
+                cut.Find("#dr-type-Access").Change(true);
                 cut.Find("#dr-reason").Change("I would like a copy of my data.");
-                Named(cut, "Submit request", "Submitting...").Click();
-            }),
+                Named(cut, "Submit request").Click();
+            },
+            CanBeRefused: false),
 
+        // T387 (flow 14, lane P): a decision's result heads Decision once the request is read again (D03, D05, D09). A
+        // refusal is the command's typed one, mapped to the board's words, and any other exception, as this test's refusal
+        // is, is fixed words (T329): DataRightsRequestPageTests holds both.
         ["RequestDetail Approve"] = new(
             (test, hold) => test.Page<RequestDetail>(
-                new Sender(hold, request => request is ApproveDataRightsRequestCommand, request => request switch
-                {
-                    GetDataRightsRequestByIdQuery => DataRightsRequest(DataRightsRequestStatus.Submitted),
-                    ApproveDataRightsRequestCommand => DataRightsRequest(DataRightsRequestStatus.Approved),
-                    _ => null
-                }),
+                new Sender(hold, request => request is ApproveDataRightsRequestCommand, RequestPageAnswers(
+                    DataRightsRequestPage(DataRightsRequestStatus.Submitted),
+                    DataRightsRequestPage(DataRightsRequestStatus.Completed),
+                    request => request is ApproveDataRightsRequestCommand
+                        ? new ApproveDataRightsResult(DataRightsRequest(DataRightsRequestStatus.Completed), null)
+                        : null)),
                 parameters => parameters.Add(page => page.Id, RequestId)),
-            cut => Named(cut, "Approve", "Processing..."),
+            cut => Named(cut, "Approve"),
             cut =>
             {
                 cut.Find("#decision-note").Change("Identity confirmed.");
-                Named(cut, "Approve", "Processing...").Click();
-            }),
+                Named(cut, "Approve").Click();
+            },
+            CanBeRefused: false),
+
+        // Q3, Q19: Approve and erase... reads the forecast and opens the dialog; its Erase and approve is the button held to
+        // the rule while the erasure runs, and the result heads Decision once the dialog has closed (D09).
+        ["RequestDetail Erase and approve"] = new(
+            (test, hold) => test.Page<RequestDetail>(
+                new Sender(hold, request => request is ApproveDataRightsRequestCommand, RequestPageAnswers(
+                    DataRightsRequestPage(DataRightsRequestStatus.Submitted, DataRightsRequestType.Erasure),
+                    DataRightsRequestPage(DataRightsRequestStatus.Completed, DataRightsRequestType.Erasure),
+                    request => request is ApproveDataRightsRequestCommand
+                        ? new ApproveDataRightsResult(DataRightsRequest(DataRightsRequestStatus.Completed), new ErasureOutcome("deleted_user_0ae1d64b", 1, 0, 0, 1))
+                        : null,
+                    new ErasureForecastDto("Tia Trainee", [], [], 0, [], [], null, []))),
+                parameters => parameters.Add(page => page.Id, RequestId)),
+            cut => cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Erase and approve"),
+            cut =>
+            {
+                if (cut.FindAll("#approve-and-erase").SingleOrDefault() is { } opener && !opener.HasAttribute("disabled"))
+                {
+                    cut.Find("#decision-note").Change("Identity confirmed.");
+                    opener.Click();
+                }
+
+                cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Erase and approve").Click();
+            },
+            CanBeRefused: false),
+
+        // C05: a correction's result heads Correction; the form is cleared.
+        ["RequestDetail Record correction"] = new(
+            (test, hold) => test.Page<RequestDetail>(
+                new Sender(hold, request => request is ApplyRectificationCommand, RequestPageAnswers(
+                    RectificationPage([]),
+                    RectificationPage([Correction()]),
+                    request => request is ApplyRectificationCommand ? Correction() : null)),
+                parameters => parameters.Add(page => page.Id, RequestId)),
+            cut => Named(cut, "Record correction"),
+            cut =>
+            {
+                cut.Find("#rec-last").Change(true);
+                cut.Find("#before").Change("Mahlngu");
+                cut.Find("#after").Change("Mahlangu");
+                Named(cut, "Record correction").Click();
+            },
+            CanBeRefused: false),
+
+        // C06: Complete's result heads Correction.
+        ["RequestDetail Complete request"] = new(
+            (test, hold) => test.Page<RequestDetail>(
+                new Sender(hold, request => request is CompleteRectificationRequestCommand, RequestPageAnswers(
+                    RectificationPage([Correction()]),
+                    RectificationPage([Correction()]) with { Status = DataRightsRequestStatus.Completed, CompletedOn = Created, MayRecord = false },
+                    request => request is CompleteRectificationRequestCommand ? DataRightsRequest(DataRightsRequestStatus.Completed) : null)),
+                parameters => parameters.Add(page => page.Id, RequestId)),
+            cut => Named(cut, "Complete request"),
+            cut => Named(cut, "Complete request").Click(),
+            CanBeRefused: false),
 
         ["ScheduledJobsList Disable"] = new(
             (test, hold) => test.Page<ScheduledJobsList>(
@@ -991,32 +1058,33 @@ public sealed class ActionFocusTests : TestContext
             (test, hold) => test.Page<DataRights>(
                 new Sender(hold, request => request is WithdrawDataRightsRequestCommand, request => request switch
                 {
-                    GetObjectionFlagsQuery => new ObjectionFlagsDto(false, false),
-                    GetMyDataRightsRequestsQuery => new[]
-                    {
-                        new DataRightsRequestSummaryDto(
-                            RequestId, "Tia Trainee", Created, DataRightsRequestType.Access, DataRightsRequestStatus.Submitted)
-                    },
+                    GetObjectionFlagsQuery => new ObjectionFlagsDto(false),
+                    GetMyDataRightsRequestsQuery => new MyDataRightsDto(null,
+                    [
+                        new MyDataRightsRequestDto(
+                            RequestId, Created, DataRightsRequestType.Access, DataRightsRequestStatus.Submitted,
+                            null, null, null, [])
+                    ]),
                     _ => null
                 })),
             cut => Named(cut, "Withdraw"),
-            cut => Named(cut, "Withdraw").Click()),
+            cut => Named(cut, "Withdraw").Click(),
+            CanBeRefused: false),
 
         ["RequestDetail Reject"] = new(
             (test, hold) => test.Page<RequestDetail>(
-                new Sender(hold, request => request is RejectDataRightsRequestCommand, request => request switch
-                {
-                    GetDataRightsRequestByIdQuery => DataRightsRequest(DataRightsRequestStatus.Submitted),
-                    RejectDataRightsRequestCommand => DataRightsRequest(DataRightsRequestStatus.Rejected),
-                    _ => null
-                }),
+                new Sender(hold, request => request is RejectDataRightsRequestCommand, RequestPageAnswers(
+                    DataRightsRequestPage(DataRightsRequestStatus.Submitted),
+                    DataRightsRequestPage(DataRightsRequestStatus.Rejected),
+                    request => request is RejectDataRightsRequestCommand ? DataRightsRequest(DataRightsRequestStatus.Rejected) : null)),
                 parameters => parameters.Add(page => page.Id, RequestId)),
-            cut => Named(cut, "Reject", "Processing..."),
+            cut => Named(cut, "Reject"),
             cut =>
             {
                 cut.Find("#decision-note").Change("Identity not confirmed.");
-                Named(cut, "Reject", "Processing...").Click();
-            }),
+                Named(cut, "Reject").Click();
+            },
+            CanBeRefused: false),
 
         // T376 (S3, T264): Remove… confirms per role; the dialog's "Remove Committee member" is the action.
         ["UserDetail Remove"] = new(
@@ -1474,6 +1542,60 @@ public sealed class ActionFocusTests : TestContext
     private static DataRightsRequestDto DataRightsRequest(DataRightsRequestStatus status) => new(
         RequestId, "trainee-1", "Tia Trainee", Created, DataRightsRequestType.Access, status, "A copy, please.",
         status == DataRightsRequestStatus.Submitted ? null : "Identity confirmed.", null, null, null);
+
+    /// <summary>
+    /// A request's page as the reviewer reads it (T387 § 0): Decide is drawn while it is Submitted; once decided, the
+    /// Decision section, which a decision's result heads (lane P).
+    /// </summary>
+    private static DataRightsRequestDetailDto DataRightsRequestPage(
+        DataRightsRequestStatus status, DataRightsRequestType type = DataRightsRequestType.Access) => new(
+        RequestId, "trainee-1", "Tia Trainee", Created, type, status, "A copy, please.",
+        status == DataRightsRequestStatus.Submitted ? null : "Identity confirmed.",
+        status == DataRightsRequestStatus.Submitted ? null : "admin-1",
+        status == DataRightsRequestStatus.Submitted ? null : Created,
+        status == DataRightsRequestStatus.Completed ? Created : null)
+    {
+        MayDecide = status == DataRightsRequestStatus.Submitted
+    };
+
+    /// <summary>An approved Rectification the caller carries through (C02, C05), with <paramref name="corrections" />.</summary>
+    private static DataRightsRequestDetailDto RectificationPage(IReadOnlyList<DataRightsCorrectionDto> corrections)
+        => DataRightsRequestPage(DataRightsRequestStatus.Approved, DataRightsRequestType.Rectification) with
+        {
+            MayRecord = true,
+            Corrections = corrections
+        };
+
+    private static DataRightsCorrectionDto Correction()
+        => new(new Guid("6a1f0000-0000-0000-0000-0000000000c1"), DataRightsRecords.AccountLastName, "Mahlngu", "Mahlangu",
+            "admin-1", "Pieter Smit", Created);
+
+    /// <summary>
+    /// A request page's reads and one command: the page reads <paramref name="before" /> until the command has answered,
+    /// then <paramref name="after" />, as the server would after the decision, correction or completion.
+    /// </summary>
+    private static Func<object, object?> RequestPageAnswers(
+        DataRightsRequestDetailDto before,
+        DataRightsRequestDetailDto after,
+        Func<object, object?> command,
+        ErasureForecastDto? forecast = null)
+    {
+        var done = false;
+        return request =>
+        {
+            switch (request)
+            {
+                case GetDataRightsRequestByIdQuery:
+                    return done ? after : before;
+                case GetErasureForecastQuery:
+                    return forecast;
+                default:
+                    var answer = command(request);
+                    done |= answer is not null;
+                    return answer;
+            }
+        };
+    }
 
     // ---- the server ----
 

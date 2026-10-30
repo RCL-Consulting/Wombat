@@ -16,14 +16,16 @@ using Wombat.Web.Tests.Accessibility;
 namespace Wombat.Web.Tests.Privacy;
 
 /// <summary>
-/// T240: the Data rights page says what "Opt out of digest emails" stops.
+/// T240, rewritten for T387 (flow 14; Q6, Q24, Q27, F7, N3): My data rights' Reminder emails says what "Stop the regular
+/// reminder emails" stops, and what it does not.
 /// </summary>
 /// <remarks>
 /// Since T151 and T240 the flag stops three periodic reminders, of which only the coordinator's is called a digest: the
-/// draft reminder and the reminder of activities waiting on an assessor stop too. A trainee who ticked the box, or an
-/// assessor who did, would not otherwise know it, so the checkbox is described by help text naming all three, and what
-/// still arrives. Until T240 the two preference checkboxes were wrapped in classes app.css does not define, with no id
-/// and no <c>&lt;label for&gt;</c>; they now follow DESIGN.md's checkbox rule.
+/// draft reminder and the reminder of activities waiting on an assessor stop too. The box is described by help naming all
+/// three, and what still arrives: since T387 (Q27, F7) only mail Wombat sends today, checked against <c>IEmailSender</c>'s
+/// and <c>AccountNotices</c>' callers, with the entrustment expiry notice among the examples; "a request to assess" and "a
+/// committee or entrustment decision", which no code mails, are gone (T320). The optional-processing box went with its
+/// flag (T318, Q6): the reminder box is the one preference, and its save says what it did, or that it changed nothing.
 /// </remarks>
 public sealed class DataRightsDigestOptOutTests : TestContext
 {
@@ -41,18 +43,30 @@ public sealed class DataRightsDigestOptOutTests : TestContext
     }
 
     [Fact]
-    public void TheDigestOptOut_IsDescribedByWhatItStops_AndWhatItDoesNot()
+    public void TheBox_IsDescribedByWhatItStops_AndTheMailStillSent()
     {
         var cut = RenderComponent<DataRights>();
 
-        var checkbox = cut.Find("#data-rights-digest-emails");
-        checkbox.GetAttribute("aria-describedby").Should().Be("data-rights-digest-emails-help");
+        var checkbox = cut.Find($"#{DataRights.RemindersId}");
+        checkbox.GetAttribute("aria-describedby").Should().Be(DataRights.RemindersHelpId);
 
-        var help = Text(cut.Find("#data-rights-digest-emails-help"));
-        help.Should().Contain("the weekly coordinator digest")
-            .And.Contain("the reminder of drafts left untouched for 14 days")
-            .And.Contain("the reminder of activities that have waited more than 5 days for you to assess")
-            .And.Contain("Email about one particular thing is still sent");
+        Text(cut.Find($"#{DataRights.RemindersHelpId}")).Should().Be(
+            "Stops three regular reminders: the weekly coordinator digest, the reminder of drafts left untouched for 14 " +
+            "days, and the reminder of activities that have waited more than 5 days for you to assess. Email about one " +
+            "particular thing is still sent, such as an invitation to give feedback, a coordinator's reminder about one " +
+            "activity, or a notice that an entrustment decision is about to expire or has expired.");
+    }
+
+    /// <summary>Q27: only mail Wombat sends today is named (T320's mails change it again when they land).</summary>
+    [Fact]
+    public void TheHelp_NamesNoMailWombatDoesNotSend()
+    {
+        var cut = RenderComponent<DataRights>();
+
+        var help = Text(cut.Find($"#{DataRights.RemindersHelpId}"));
+        help.Should().NotContain("a request to assess")
+            .And.NotContain("a committee or entrustment decision")
+            .And.NotContain("password reset");
     }
 
     /// <summary>
@@ -66,39 +80,75 @@ public sealed class DataRightsDigestOptOutTests : TestContext
 
         var cut = RenderComponent<DataRights>();
 
-        Text(cut.Find("#data-rights-digest-emails-help"))
+        Text(cut.Find($"#{DataRights.RemindersHelpId}"))
             .Should().Contain("the reminder of activities that have waited more than 3 days for you to assess");
     }
 
+    /// <summary>T318, Q6: the reminder box is the one checkbox on the page, labelled, in Reminder emails.</summary>
     [Fact]
-    public void BothPreferences_AreLabelledCheckboxes_AndEveryReferenceResolves()
+    public void TheReminderBox_IsThePagesOneCheckbox_LabelledAndEveryReferenceResolves()
     {
         var cut = RenderComponent<DataRights>();
 
-        foreach (var id in new[] { "data-rights-optional-processing", "data-rights-digest-emails" })
-        {
-            var checkbox = cut.Find($"#{id}");
-            checkbox.GetAttribute("type").Should().Be("checkbox");
-            checkbox.ParentElement!.ClassList.Should().Contain("form-check");
-            cut.FindAll($"label[for='{id}']").Should().NotBeEmpty();
-        }
-
-        AccessibleNames.NameOf(cut, cut.Find("#data-rights-digest-emails")).Should().Contain("Opt out of digest emails");
+        cut.FindAll("input[type='checkbox']").Should().ContainSingle()
+            .Which.Id.Should().Be(DataRights.RemindersId);
+        var checkbox = cut.Find($"#{DataRights.RemindersId}");
+        checkbox.ParentElement!.ClassList.Should().Contain("form-check");
+        cut.FindAll($"label[for='{DataRights.RemindersId}']").Should().ContainSingle();
+        AccessibleNames.NameOf(cut, checkbox).Should().Be("Stop the regular reminder emails");
+        cut.Markup.Should().NotContain("optional processing").And.NotContain("Opt out of digest emails");
         IdReferences.Broken(cut).Should().BeEmpty();
     }
 
     [Fact]
-    public void TickingTheDigestOptOut_AndSaving_SendsIt()
+    public void TickingTheBox_AndSaving_SendsIt_AndSaysTheRemindersStopped()
     {
         var cut = RenderComponent<DataRights>();
 
-        cut.Find("#data-rights-digest-emails").Change(true);
-        cut.FindAll("button").Single(button => Text(button) == "Save preferences").Click();
+        cut.Find($"#{DataRights.RemindersId}").Change(true);
+        Save(cut).Click();
 
-        var command = _sender.Received.OfType<UpdateObjectionFlagsCommand>().Should().ContainSingle().Which;
-        command.OptOutOfDigestEmails.Should().BeTrue();
-        command.OptOutOfOptionalProcessing.Should().BeFalse();
+        _sender.Received.OfType<UpdateObjectionFlagsCommand>().Should().ContainSingle()
+            .Which.OptOutOfDigestEmails.Should().BeTrue();
+        cut.WaitForAssertion(() => Text(ReminderSection(cut).QuerySelector(".action-result")!)
+            .Should().Be("Reminder emails stopped."));
     }
+
+    [Fact]
+    public void UntickingTheBox_AndSaving_SaysTheyWillBeSentAgain()
+    {
+        _sender.OptedOut = true;
+        var cut = RenderComponent<DataRights>();
+        cut.Find($"#{DataRights.RemindersId}").HasAttribute("checked").Should().BeTrue("the stored state is shown");
+
+        cut.Find($"#{DataRights.RemindersId}").Change(false);
+        Save(cut).Click();
+
+        cut.WaitForAssertion(() => Text(ReminderSection(cut).QuerySelector(".action-result")!)
+            .Should().Be("Reminder emails will be sent again."));
+    }
+
+    /// <summary>N3: a save that changes nothing says so, from the state before (ReminderEmailsSaved.Changed).</summary>
+    [Theory]
+    [InlineData(true, "Nothing changed: reminder emails are still stopped.")]
+    [InlineData(false, "Nothing changed: reminder emails are still sent.")]
+    public void ASaveThatChangesNothing_SaysSo(bool optedOut, string expected)
+    {
+        _sender.OptedOut = optedOut;
+        _sender.Changed = false;
+        var cut = RenderComponent<DataRights>();
+
+        Save(cut).Click();
+
+        cut.WaitForAssertion(() => Text(ReminderSection(cut).QuerySelector(".action-result")!).Should().Be(expected));
+        cut.Markup.Should().NotContain("Processing preferences saved.");
+    }
+
+    private static IElement Save(IRenderedFragment cut)
+        => cut.FindAll("button").Single(button => Text(button) == "Save");
+
+    private static IElement ReminderSection(IRenderedFragment cut)
+        => cut.Find("section[aria-labelledby='dr-reminders-heading']");
 
     private static string Text(IElement element)
         => string.Join(' ', element.TextContent.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
@@ -107,13 +157,18 @@ public sealed class DataRightsDigestOptOutTests : TestContext
     {
         public List<object> Received { get; } = [];
 
+        public bool OptedOut { get; set; }
+
+        public bool Changed { get; set; } = true;
+
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
         {
             Received.Add(request);
             object answer = request switch
             {
-                GetObjectionFlagsQuery => new ObjectionFlagsDto(OptOutOfOptionalProcessing: false, OptOutOfDigestEmails: false),
-                GetMyDataRightsRequestsQuery => Array.Empty<DataRightsRequestSummaryDto>(),
+                GetObjectionFlagsQuery => new ObjectionFlagsDto(OptOutOfDigestEmails: OptedOut),
+                GetMyDataRightsRequestsQuery => new MyDataRightsDto("Kgosi Kgari Teaching Hospital", []),
+                UpdateObjectionFlagsCommand command => new ReminderEmailsSaved(command.OptOutOfDigestEmails, Changed),
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };
             return Task.FromResult((TResponse)answer);
@@ -122,9 +177,7 @@ public sealed class DataRightsDigestOptOutTests : TestContext
         public Task Send(IRequest request, CancellationToken cancellationToken = default)
         {
             Received.Add(request);
-            return request is UpdateObjectionFlagsCommand
-                ? Task.CompletedTask
-                : throw new NotSupportedException($"Unhandled request: {request.GetType().Name}");
+            throw new NotSupportedException($"Unhandled request: {request.GetType().Name}");
         }
     }
 }

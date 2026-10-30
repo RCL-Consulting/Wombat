@@ -5,6 +5,7 @@ using Wombat.Application.Features.DataRights.Commands;
 using Wombat.Domain.CommitteeDecisions;
 using Wombat.Domain.DataRights;
 using Wombat.Infrastructure.Persistence;
+using Wombat.Tests.Shared;
 
 namespace Wombat.Application.Tests.DataRights;
 
@@ -33,7 +34,7 @@ public sealed class DataRightsCommandHandlerTests
     public async Task Submit_AccessRequest_CreatesSubmittedRequest()
     {
         await using var db = CreateDb();
-        var handler = new SubmitDataRightsRequestCommandHandler(db);
+        var handler = new SubmitDataRightsRequestCommandHandler(db, FakeUserDirectory.Empty);
         var principal = UserPrincipal();
 
         var result = await handler.Handle(
@@ -83,7 +84,7 @@ public sealed class DataRightsCommandHandlerTests
         db.Entry(review).Property(entity => entity.State).CurrentValue = state;
         await db.SaveChangesAsync();
 
-        var result = await new SubmitDataRightsRequestCommandHandler(db).Handle(
+        var result = await new SubmitDataRightsRequestCommandHandler(db, FakeUserDirectory.Empty).Handle(
             new SubmitDataRightsRequestCommand(DataRightsRequestType.Erasure, "Please erase my data.", UserPrincipal()),
             CancellationToken.None);
 
@@ -99,7 +100,7 @@ public sealed class DataRightsCommandHandlerTests
         var principal = UserPrincipal();
 
         // Submit a request first
-        var submitHandler = new SubmitDataRightsRequestCommandHandler(db);
+        var submitHandler = new SubmitDataRightsRequestCommandHandler(db, FakeUserDirectory.Empty);
         var submitted = await submitHandler.Handle(
             new SubmitDataRightsRequestCommand(DataRightsRequestType.Access, "I want my data.", principal),
             CancellationToken.None);
@@ -121,7 +122,7 @@ public sealed class DataRightsCommandHandlerTests
         var ownerPrincipal = UserPrincipal("user-1");
         var otherPrincipal = UserPrincipal("user-2");
 
-        var submitHandler = new SubmitDataRightsRequestCommandHandler(db);
+        var submitHandler = new SubmitDataRightsRequestCommandHandler(db, FakeUserDirectory.Empty);
         var submitted = await submitHandler.Handle(
             new SubmitDataRightsRequestCommand(DataRightsRequestType.Access, "My data.", ownerPrincipal),
             CancellationToken.None);
@@ -141,12 +142,12 @@ public sealed class DataRightsCommandHandlerTests
         var userPrincipal = UserPrincipal("user-1");
         var adminPrincipal = UserPrincipal("admin-1", "Admin User", "Administrator");
 
-        var submitHandler = new SubmitDataRightsRequestCommandHandler(db);
+        var submitHandler = new SubmitDataRightsRequestCommandHandler(db, FakeUserDirectory.Empty);
         var submitted = await submitHandler.Handle(
             new SubmitDataRightsRequestCommand(DataRightsRequestType.Access, "My data.", userPrincipal),
             CancellationToken.None);
 
-        var rejectHandler = new RejectDataRightsRequestCommandHandler(db);
+        var rejectHandler = new RejectDataRightsRequestCommandHandler(db, Wombat.Tests.Shared.TestNotices.None(Wombat.Tests.Shared.FakeUserDirectory.Empty));
         var result = await rejectHandler.Handle(
             new RejectDataRightsRequestCommand(submitted.Id, "Insufficient justification.", adminPrincipal),
             CancellationToken.None);
@@ -162,12 +163,12 @@ public sealed class DataRightsCommandHandlerTests
         await using var db = CreateDb();
         var userPrincipal = UserPrincipal("user-1");
 
-        var submitHandler = new SubmitDataRightsRequestCommandHandler(db);
+        var submitHandler = new SubmitDataRightsRequestCommandHandler(db, FakeUserDirectory.Empty);
         var submitted = await submitHandler.Handle(
             new SubmitDataRightsRequestCommand(DataRightsRequestType.Access, "My data.", userPrincipal),
             CancellationToken.None);
 
-        var rejectHandler = new RejectDataRightsRequestCommandHandler(db);
+        var rejectHandler = new RejectDataRightsRequestCommandHandler(db, Wombat.Tests.Shared.TestNotices.None(Wombat.Tests.Shared.FakeUserDirectory.Empty));
         var act = () => rejectHandler.Handle(
             new RejectDataRightsRequestCommand(submitted.Id, "No.", UserPrincipal("user-2", "Regular User")),
             CancellationToken.None);

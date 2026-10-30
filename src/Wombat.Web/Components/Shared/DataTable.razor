@@ -13,7 +13,7 @@ else
     @* Stack (T342, flow 03, A8): below 641px each row is a block, its header row visually hidden but still read. The
        roles are explicit, as display: grid on a row drops a table's semantics in some browsers; the caller's rows
        carry role="row", role="columnheader" and role="cell". *@
-    <table class="clinic-table @StackClass" role="@(Stacks ? "table" : null)">
+    <table class="clinic-table @ExtraClasses" role="@(Stacks ? "table" : null)">
       @if (!string.IsNullOrWhiteSpace(Caption))
       {
         <caption>@Caption</caption>
@@ -38,6 +38,12 @@ else
   [Parameter] public RenderFragment? Empty { get; set; }
   [Parameter] public string? Caption { get; set; }
 
+  /// <summary>
+  /// A class of the page's own on the table, after the system's: the data-rights tables' <c>data-rights-table</c>, whose
+  /// row header reads as a cell (T387, flow 14, M5).
+  /// </summary>
+  [Parameter] public string? Class { get; set; }
+
   /// <summary>The stacked table below 641px (<c>.clinic-table--stack</c>, DESIGN.md § Table system; T342).</summary>
   [Parameter] public bool Stack { get; set; }
 
@@ -50,6 +56,11 @@ else
   [Parameter] public bool StackWide { get; set; }
 
   private bool Stacks => Stack || StackWide;
+
+  // After clinic-table, which stays literal in the markup so the stylesheet scans read it (NarrowLayoutTests).
+  private string? ExtraClasses => string.Join(" ", new[] { StackClass, Class }.Where(part => !string.IsNullOrWhiteSpace(part))) is { Length: > 0 } extra
+    ? extra
+    : null;
 
   private string? StackClass => StackWide
     ? "clinic-table--stack clinic-table--stack-wide"

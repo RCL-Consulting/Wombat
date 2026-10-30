@@ -3,8 +3,8 @@ using MediatR;
 
 namespace Wombat.Application.Features.DataRights.Queries;
 
+/// <summary>The person's reminder-email preference (T387: the optional-processing flag is gone, T318).</summary>
 public sealed record ObjectionFlagsDto(
-    bool OptOutOfOptionalProcessing,
     bool OptOutOfDigestEmails);
 
 public sealed record GetObjectionFlagsQuery(
