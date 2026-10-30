@@ -1,0 +1,92 @@
+/* Flow 14, round 2: the classes the boards use that components/bundle.css v37 does not ship. PROPOSED for app.css;
+   each is listed NEW on R2-0-spec. Tokens only, no raw colour. */
+
+/* An id (a request id, a user id) in its own cell or dd: monospace, breaks anywhere, never widens its column. */
+.request-id {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+/* My data rights' and the request page's tables put a th scope="row" first: the row header reads as a cell. */
+.data-rights-table tbody th[scope="row"] {
+  background: transparent;
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+  text-align: left;
+  vertical-align: top;
+}
+
+/* The answer on the requester's own row: the decision, its date, the note whole; wraps, never widens the table. */
+.answer-cell {
+  overflow-wrap: anywhere;
+}
+
+/* A request page: flow 12's .user-page column, its detail lists given a floor of 0 so an id or a 60-character address
+   wraps inside its dd. */
+.request-page .detail-list {
+  grid-template-columns: minmax(8rem, max-content) minmax(0, 1fr);
+}
+
+/* The Correction section's two values side by side, one under the other on a phone. */
+.correction-values {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* My data rights: a column of three sections at the user page's measure. */
+.data-rights-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 60rem;
+}
+
+.data-rights-page > *,
+.data-rights-page .action-result .alert {
+  margin: 0;
+}
+
+/* A dialog with a long count list scrolls inside itself, never the page behind it. */
+.dialog-body--scroll {
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 640.98px) {
+  .correction-values {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* My data rights' own 390 scope: every control 44px; a radio's or checkbox's label its 44px target; stacked
+     actions, the primary on top (the DOM keeps the 1280 order); a row's action the row's width. */
+  .data-rights-page .btn,
+  .data-rights-page .form-control {
+    min-height: 2.75rem;
+  }
+
+  .data-rights-page .choice-group .form-check label,
+  .data-rights-page .form-check label {
+    align-items: center;
+    display: flex;
+    min-height: 2.75rem;
+  }
+
+  .data-rights-page .form-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .data-rights-page .form-actions .btn,
+  .data-rights-page .clinic-table--stack-wide .btn {
+    width: 100%;
+  }
+
+  .request-page .correction-records .form-check label {
+    align-items: center;
+    display: flex;
+    min-height: 2.75rem;
+  }
+}

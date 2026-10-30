@@ -1,0 +1,49 @@
+/* Canvas only, never app.css: the board's annotation chip, the frozen focus, the painted modal stage. */
+.anno {
+  background: var(--primary-color);
+  border-radius: var(--radius-md);
+  bottom: var(--space-sm);
+  box-shadow: var(--shadow-dialog);
+  color: var(--on-fill);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  line-height: 1.35;
+  max-width: min(22rem, calc(100vw - 2rem));
+  overflow-wrap: anywhere;
+  padding: var(--space-xs) var(--space-sm);
+  position: fixed;
+  right: var(--space-sm);
+  z-index: 30;
+}
+
+.anno b {
+  display: inline-block;
+  background: var(--warning-bg);
+  border-radius: var(--radius-sm);
+  color: var(--warning-color);
+  margin-right: var(--space-xs);
+  padding: 0 var(--space-xs);
+}
+
+.pv-focus {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.pv-overlay {
+  align-items: flex-start;
+  background: var(--scrim);
+  box-sizing: border-box;
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: var(--space-2xl) var(--space-md);
+  position: fixed;
+  z-index: 20;
+}
+
+.pv-overlay dialog {
+  display: block;
+  margin: 0;
+  position: static;
+}
