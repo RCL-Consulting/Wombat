@@ -579,6 +579,13 @@ neither.
 Each with a recommendation. The canvas answers 3, 4, 9, 10, 12 and 13 in its variations; 1, 2, 5–8, 11 and 14–16 are
 the operator's, and 1 and 2 decide screen 3's structure, so they are answered before round 1.
 
+**Decided 2026-10-30: the operator took Q1–Q16 as recommended**, and with them Q17–Q28 of the round-1 assessment
+(`14-data-rights/round-1-assessment.md` § 8) as it recommends, which reword Q3's dialog (Q19), Q4's heading (Q24), Q7's
+list (Q27), Q10's page size (Q18) and Q13's words (Q17). The round-1 picks are accepted: My data rights A (with what the
+assessment takes from B and C), a request A with B's fixed list of records (Q26), the queue V1, deciding V1, the kept
+request confirmed with its corrections, not found redrawn per Q17; the assessment's M1–M6 and its shoulds apply. Round 2's
+ask is `14-data-rights/round-2-ask.txt`.
+
 1. **Q1. (The operator's) Who carries an approved correction through** (T316). *Recommendation:* whoever may approve
    the request: the Coordinator at the request's institution and the Administrator. `RectificationRoles` folds into
    `ReviewRoles`, so one person approves, records each correction and completes the request; the Speciality admin, who

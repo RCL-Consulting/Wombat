@@ -8,9 +8,9 @@ copied at version 1793144981-e3ba (`canvas.json`, `designSystems`). Boards: `des
 **Obs** = observed in the code, the runbook or the boards. **Inf** = inferred. Brief sections are
 `design/flows/14-data-rights.md`'s.
 
-**Q1–Q16 are assumed taken as recommended; confirm.** The operator overruled none of them before round 1 was sent, and
-the boards follow them. They have not said "yes" to them in words. As in flow 13, a board that contradicts one is a
-must-fix unless it argues to reopen it. Where it argues, the point is a question in § 8.
+**Q1–Q16 were assumed taken as recommended when this was written; the operator confirmed them on 2026-10-30** (brief
+§ 6), with Q17–Q28 below (§ 10). As in flow 13, a board that contradicts one is a must-fix unless it argues to reopen
+it. Where it argues, the point is a question in § 8.
 
 ## Summary
 
@@ -542,7 +542,7 @@ The CSS contract (Obs):
 
 ## 8. The operator's decisions still needed
 
-Q1–Q16 are assumed taken as recommended (confirm). The picks above follow them. Nothing in them is reopened except where
+Q1–Q16 were assumed taken as recommended, and were confirmed on 2026-10-30 (§ 10). The picks above follow them. Nothing in them is reopened except where
 a board argues against one on a system rule or the code (Q17, Q18, Q19, Q24, Q27). Each question below has a
 recommendation.
 
@@ -643,3 +643,11 @@ recommendation.
 - **R7. The attachments.** Re-attach § 4's twelve key screenshots and name the folder (`design/baseline/`). Ask round 2
   to say on the Spec board whether they arrived: round 1 says nothing (§ 11, flow 13). Name in the ask the values only a
   capture holds, so their brackets are expected.
+
+## 10. The operator's decisions (2026-10-30)
+
+The operator took Q1–Q16 (the brief's § 6) and Q17–Q28 (§ 8) as recommended, with the picks: My data rights A (with
+what § 2 takes from B and C), a request A with B's fixed list of records (Q26), the queue V1, deciding V1, the kept
+request confirmed with S10's corrections, and not found redrawn per Q17. Every M and S item in § 7 applies, and the nits
+in one pass, as § 9 requires them. Round 2's ask is `round-2-ask.txt`; § 4's twelve key screenshots are re-attached with
+it.
