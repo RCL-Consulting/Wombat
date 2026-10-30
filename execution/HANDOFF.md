@@ -2,6 +2,17 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
+## Session 2026-10-30 (Opus): T387, flow 14 (data rights), started
+
+The operator said "start flow 14". T387 created and started (P2), written from T379's shape.
+
+- **Steps 3–4 done:** canvas "Wombat 14" https://claude.ai/artifact/FrvjJMZLwRd2Y3AMDEJeGs; design system v37
+  (1793144981-e3ba) installed, `tokens.css` by hand (54 properties match app.css), the mark at
+  `/_blob/616538c681cf4475edf7c466864e408d`. Canvas files in scratchpad `e81867ab-…/scratchpad/c14`.
+- **Steps 1–2 done** (`2bc97e30`): brief restated, Q1–Q16 in its § 6 with recommendations, `round-1-ask.txt`
+  written (mark filled in); completeness 0, verbatim 424/0, baseline missing 0; 113 files staged.
+- **Next:** the operator's answers to Q1–Q16 (§ 6), then the operator sends `round-1-ask.txt` with § 4's key screenshots.
+
 ## Session 2026-10-27/28 (Opus): T379, flow 13 (graduation and exit), done; T312 before it
 
 The operator said "push and lets start flow 13", then took every set of questions as recommended (Q1–Q16, Q17–Q27,
