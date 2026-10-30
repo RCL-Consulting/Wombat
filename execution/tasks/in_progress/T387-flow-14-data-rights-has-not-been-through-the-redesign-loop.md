@@ -55,8 +55,8 @@ Run the loop as flow 13 ran it (`design/flows/13-graduation-and-exit/`, BRIEF §
 - [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link. (https://claude.ai/artifact/FrvjJMZLwRd2Y3AMDEJeGs)
 - [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/14-data-rights/`. (round 3 final, `round-3-check.md`; decisions in the brief's § 6, `round-1-assessment.md` § 10 and `round-2-review.md`)
 - [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 14) — the squash commit and counts. (`e8eea1d2`: Domain 836, Application 4279, Infrastructure 1035, Architecture 52, Web 4369, Integration 516)
-- [ ] The whole runbook replays on a fresh database with no regression from flow 14, the baseline is re-captured, and
-  flow 14's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
+- [x] The whole runbook replays on a fresh database with no regression from flow 14, the baseline is re-captured, and
+  flow 14's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines. (acts `31b1a85a`–`3db79b0f`: 332 steps, 295 clean, no regression; states 65 rows `13e6325e`, `698beeff`; fix `5b5aab80`; missing 0)
 - [ ] The design system is re-synced and republished — its version number.
 
 ## Related
@@ -173,3 +173,12 @@ BRIEF § 6, § 8, § 11; CUSTOMIZATION.md § 5.
   them): the queue's page-size select (5 rows, no pager), the rule under a stacked row header, the queue at 1101 px; the
   erased person's mail recipient (the log prints none, T282). Dumps `recovery/scenario-t387-post-act{1..6,A}`,
   `-pre-a515-A`; scratch DB `wombat_scenario_t387_s515` kept. **Next:** the states pass (42 rows), then step 8.
+- **2026-10-30, step 7, the states** (two Sonnet agents in turn): My data rights and the queue, 31 rows (`13e6325e`: 2
+  corrected), a request's page, 34 rows (`698beeff`: 6 corrected, no defect; every refusal under its field with the
+  focus, every result focused, the erasure dialog on Cancel with each forecast, nothing sideways at 390/768/900, 44 px).
+  Found and **fixed**: the reason counter kept the old count once Blazor emptied the box after a submit (`5b5aab80`,
+  the shared counter script; browser-checked: "0 of 4,000 characters"). Not reproduced: the page-size select loses the
+  focus (it keeps it, by keyboard). Filed **T390** (a pager hidden by a size holding every row, five lists). Noted, not
+  filed: a failed submit or decision takes about a minute (two 30 s timeouts) with nothing said meanwhile; My data
+  rights' skeleton has no aria-busy. 0 "Not yet captured (T387)" left. Scratch `_s10`, `_s20`–`_s22` kept. **Step 7
+  done. Next:** step 8.
