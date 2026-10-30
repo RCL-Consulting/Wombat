@@ -28,8 +28,8 @@ and correction values, keep the note), "yes" (push, the wave), "proceed" (push a
 
 - **The replay app on `:5180`** runs `wombat_scenario_t387` (the appendix's end state, published with `5b5aab80`; not
   republished with `1c11d1f6`, a words and comment change). Dumps `recovery/scenario-t387-post-act{1..6,A}`,
-  `-pre-a515-A`. Scratch DBs `wombat_scenario_t387_s515`, `_s10`, `_s20`–`_s22` kept (drop on the operator's word); the
-  `_s10` app on `:5181` may still run. Old: `wombat_scenario_t379`, `_t376`, `_t373`, `_t369`.
+  `-pre-a515-A`. Scratch DBs `wombat_scenario_t387_s515`, `_s10`, `_s20`–`_s22` kept (drop on the operator's word); nothing
+  runs on `:5181`. Old: `wombat_scenario_t379`, `_t376`, `_t373`, `_t369`.
 - Scratch `C:\Users\Renier\AppData\Local\Temp\claude\c--dev-Wombat\e81867ab-c351-40bf-9d41-d1d61fe30f43\scratchpad`:
   `pw/` (Playwright 1.56.1 and `lib.mjs`, for the next replay), `g387/` (act, states and step 8 scripts;
   `replay-pw.env`: never print it). Branches `t387*` and their worktrees kept.
