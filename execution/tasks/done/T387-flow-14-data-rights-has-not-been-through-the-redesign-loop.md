@@ -1,12 +1,13 @@
 ---
 id: T387
 title: Flow 14, data rights, has not been through the redesign loop
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-10-30
 started: 2026-10-30
+completed: 2026-10-30
 ---
 
 # T387 — Flow 14, data rights, has not been through the redesign loop
@@ -57,7 +58,7 @@ Run the loop as flow 13 ran it (`design/flows/13-graduation-and-exit/`, BRIEF §
 - [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 14) — the squash commit and counts. (`e8eea1d2`: Domain 836, Application 4279, Infrastructure 1035, Architecture 52, Web 4369, Integration 516)
 - [x] The whole runbook replays on a fresh database with no regression from flow 14, the baseline is re-captured, and
   flow 14's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines. (acts `31b1a85a`–`3db79b0f`: 332 steps, 295 clean, no regression; states 65 rows `13e6325e`, `698beeff`; fix `5b5aab80`; missing 0)
-- [ ] The design system is re-synced and republished — its version number.
+- [x] The design system is re-synced and republished — its version number. (version 41, 1793385917-2f3c; `a6b8750e`, `1c11d1f6`, `a33c2631`)
 
 ## Related
 
@@ -182,3 +183,11 @@ BRIEF § 6, § 8, § 11; CUSTOMIZATION.md § 5.
   filed: a failed submit or decision takes about a minute (two 30 s timeouts) with nothing said meanwhile; My data
   rights' skeleton has no aria-busy. 0 "Not yet captured (T387)" left. Scratch `_s10`, `_s20`–`_s22` kept. **Step 7
   done. Next:** step 8.
+- **2026-10-30, step 8** (one Opus agent, one Sonnet review): the live system (1793383925-c509) matched HEAD in all 219
+  files; re-synced (`a6b8750e`: a Data rights group of three components, MyDataRights, DataRightsRequests,
+  DataRightsRequest; ConfirmDialog, DataTable, Badge, PagerControls, FilterBar, Breadcrumbs, PageHeader, NavMenu, Alert,
+  Icon; the bundle byte for byte from app.css). Review `resync-review.md`: 0 must, 1 should, 3 nits. The re-sync's
+  faults fixed (`1c11d1f6`: DESIGN.md's `dr-reason-msg`; the unused words constants removed, since the scan tests read
+  the literal markup; a request's h1 from its words; app.css's row-header comment); Web 4369 green. Published as
+  **version 40** (files) and **41** (index, `a33c2631`). **Step 9:** BRIEF § 11 "Flow 14". T391 proposed (the replay
+  tool's stop misses a live listener). **T387 done.**

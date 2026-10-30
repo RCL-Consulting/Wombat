@@ -2,36 +2,37 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-10-30 (Opus): T387, flow 14 (data rights), started
+## Session 2026-10-30 (Opus): T387, flow 14 (data rights), done
 
-The operator said "start flow 14". T387 created and started (P2), written from T379's shape.
+The operator said "start flow 14", took Q1–Q28 and F1–F10 as recommended, chose S1 (scrub the erased person's reason
+and correction values, keep the note), "yes" (push, the wave), "proceed" (push and the replay). Pushed through `75eefc6c`.
 
-- **Steps 3–4 done:** canvas "Wombat 14" https://claude.ai/artifact/FrvjJMZLwRd2Y3AMDEJeGs; design system v37
-  (1793144981-e3ba) installed, `tokens.css` by hand (54 properties match app.css), the mark at
-  `/_blob/616538c681cf4475edf7c466864e408d`. Canvas files in scratchpad `e81867ab-…/scratchpad/c14`.
-- **Steps 1–2 done** (`2bc97e30`): brief restated, Q1–Q16 in its § 6 with recommendations, `round-1-ask.txt`
-  written (mark filled in); completeness 0, verbatim 424/0, baseline missing 0; 113 files staged.
-- **Round 1 back** (18 boards, `42366e44`); Q1–Q16 taken as recommended by the boards (confirm). Assessed (`2881b938`):
-  picks My data rights A, Request A, Queue V1, Decide V1; M1–M6; Q17–Q28 put to the operator.
-- **Q1–Q28 taken as recommended** (2026-10-30). `round-2-ask.txt` written (`61a92b31`, 509 lines, ~137 boards).
-  Trap for the build: a correction's `TargetId` is a Guid but a trainee profile's id is an int.
-- **Round 2 back** (138 boards, `a9904964`). Reviewed and merged (`e1227d44`, `round-2-review.md`: 6 must, 24
-  should, 18 nits).
-- **F1–F10 taken as recommended**; T388, T389 proposed. `round-3-ask.txt` written (`0c6f3882`, ~148 boards).
-- **Round 3 final** (149 boards `d47ab4ea`; check `10d92875`: 59/61 done, 2 partly, 0 regressed).
-- **Pushed** master through `c47bc6e0` (the operator's "yes"). **Step 6 started:** § 0 and the plan on `t387` (`7a155e37`;
-  worktree `.claude/worktrees/agent-a0cbe10cd07555864`), six suites green in Release.
-- **The wave is merged** into `t387` (`54ce6df2`; t387's worktree is `.claude/worktrees/agent-a0cbe10cd07555864`); six
-  suites green. Lane W merged (`4f9f94b6`); code review 0/3/8
-  (`71190f07`); the operator decided its S1 (scrub the person's reason and correction values on erasure, keep the note).
-- Reviews and one fix pass done; **built: `e8eea1d2`** on master (squash of `t387`), six suites green. The operator
-  decided the code review's S1 (scrub the erased person's reason and correction values; keep the note).
-- **Step 7 done:** acts `31b1a85a`–`3db79b0f` (332 steps, 295 clean, no flow 14 regression), states 65 rows
-  (`13e6325e`, `698beeff`); one fault fixed (`5b5aab80`, the counter after a submit); T390 proposed. **Step 8 running**
-  (one Opus agent; the live system is 1793336769-0065, newer than v37's 1793144981-e3ba: compared first).
-- **Pushed** through `75eefc6c`. **Step 7 running** (the operator's "proceed"): fresh `wombat_scenario_t387` on `:5180`,
-  brief `6901931f`, one Sonnet agent an act; Playwright reinstalled in scratchpad `e81867ab-…/scratchpad/pw` (flow 02's
-  copy was lost), scripts and `replay-pw.env` (never print it) in `…/g387`. Branches `t387*` and worktrees kept.
+- **Design:** canvas "Wombat 14" https://claude.ai/artifact/FrvjJMZLwRd2Y3AMDEJeGs; rounds 1–3 (18, 138, 149 boards;
+  final, `10d92875`: 59/61 done, 2 partly).
+- **Built:** `e8eea1d2` (planner and § 0, lanes D/K/M/P, runbook lane W, three Sonnet reviews, one fix pass; P5 made
+  ConfirmDialog's action mode open on Cancel app-wide); six suites green.
+- **Replay** (fresh `wombat_scenario_t387`, D = 2026-10-30): 332 steps, 295 clean, no flow 14 regression
+  (`31b1a85a`–`3db79b0f`); 5.20's Expect and the appendix's outcome counts corrected. States 65 rows (`13e6325e`,
+  `698beeff`); one fault fixed (`5b5aab80`: a reason counter after Blazor empties its box).
+- **Re-sync:** design system **version 41** (`a6b8750e`, review `resync-review.md` 0 must; the faults it found fixed,
+  `1c11d1f6`). **Lessons:** BRIEF § 11 "Flow 14". **T387 done.**
+- **For review:** T316 and T319 no longer occur on the data-rights pages (A.1.8a's correction completes; every decision
+  mails the requester): close them? T264's other half (the entrustment scale's Delete has no dialog, 6.8) stays open.
+  Not filed, the operator's call: a failed submit or decision takes about a minute with nothing said meanwhile; My data
+  rights' skeleton has no `aria-busy`. New proposals T388–T391 (T390 the pager hidden by a size holding every row, five
+  lists; T391 the replay tool's stop missing a live listener).
+- **Next:** flow 15 (an institution adopting the catalogue) on the operator's word; master is ahead of origin (ask
+  before pushing).
+
+### Environment left
+
+- **The replay app on `:5180`** runs `wombat_scenario_t387` (the appendix's end state, published with `5b5aab80`; not
+  republished with `1c11d1f6`, a words and comment change). Dumps `recovery/scenario-t387-post-act{1..6,A}`,
+  `-pre-a515-A`. Scratch DBs `wombat_scenario_t387_s515`, `_s10`, `_s20`–`_s22` kept (drop on the operator's word); the
+  `_s10` app on `:5181` may still run. Old: `wombat_scenario_t379`, `_t376`, `_t373`, `_t369`.
+- Scratch `C:\Users\Renier\AppData\Local\Temp\claude\c--dev-Wombat\e81867ab-c351-40bf-9d41-d1d61fe30f43\scratchpad`:
+  `pw/` (Playwright 1.56.1 and `lib.mjs`, for the next replay), `g387/` (act, states and step 8 scripts;
+  `replay-pw.env`: never print it). Branches `t387*` and their worktrees kept.
 
 ## Session 2026-10-27/28 (Opus): T379, flow 13 (graduation and exit), done; T312 before it
 

@@ -1264,6 +1264,41 @@ is `design/flows/13-graduation-and-exit/`. Only what flows 01–12 did not alrea
   the acts 2026-10-27); a date filter read as a UTC day (T384) and a test that reads the real clock (T383) showed up
   only then. *Changed:* nothing; the appendix's prompt says which D it uses, and a scratch capture's date is noted.
 
+**Flow 14 (T387, 2026-10-30): what the fourteenth flow added**
+
+Flow 14 ran the loop in one sitting: three rounds (My data rights A, Request A, Queue V1 and Decide V1 picked; Q1–Q28
+and F1–F10 the operator's, and the code review's S1: an erasure scrubs the person's own reason and correction values),
+the build (`e8eea1d2`) from a planner and § 0, four lanes (D, K, M, P) and a runbook lane, three Sonnet reviews (one
+must) and one fix pass, the replay on a fresh database (332 steps, 295 with no gap, no flow 14 fault), the states (65
+rows, 8 corrected; one fault fixed, `5b5aab80`) and the re-sync (design system version 41, with four small faults it
+found, `1c11d1f6`). Its record is `design/flows/14-data-rights/`. Only what flows 01–13 did not already teach is here.
+
+- **A canvas's stylesheet can arrive as an upload, not a file.** Observed: round 2's boards linked their stylesheets as
+  `/_blob/` assets, so they were not in the project's files; they were fetched by asset id. *Changed:* round 3's ask
+  told the canvas to save its stylesheet as a project file; say so in round 1's ask.
+- **The design can reach a model the code cannot hold.** Observed: Q26's fixed list of records needed a correction to
+  name a trainee profile, whose id is an int, through a Guid `TargetId`; found while writing round 2's ask, so the
+  build's § 0 changed the target's shape first. *Changed:* nothing; the ask's "checked here" line keeps catching it.
+- **A helper in another session's scratchpad can vanish.** Observed: the Playwright helpers every replay since flow 02
+  imported were gone with their temp folder; they were reinstalled and `lib.mjs` rewritten with the same exports.
+  *Changed:* nothing; a replay brief names this session's copy, and the first act proves it.
+- **A script that writes into a Blazor-owned node detaches it.** Observed: the shared counter set `textContent`, so
+  after a submit Blazor emptied the box but patched a detached text node and the counter kept the old count; bUnit runs
+  no script and no replay step read the counter after a submit, so only the states pass saw it. *Changed:* the script
+  writes the node's `nodeValue` (`5b5aab80`); a states row that ends in a reset says what the counter reads.
+- **A focus finding from a scripted change may not survive a keyboard.** Observed: a states agent reported that the
+  page-size select lost the focus after a change; focused and changed by the keyboard it kept it. *Changed:* the second
+  states prompt said to check focus by keyboard; the integrator reproduces a focus finding before acting on it.
+- **The scan tests read the markup's literal words.** Observed: the re-sync found words constants no page used; routing
+  the markup through them failed four scan tests (`PageTitleTests`, `RowActionMarkupTests`, the menu's stems), which
+  read titles and row names from the Razor source. *Changed:* the unused constants were removed instead (`1c11d1f6`).
+- **`scenario-replay.ps1 stop` can miss a live listener.** Observed: it printed "Nothing listens on 5180" (and 5181)
+  while the app answered, and the publish then failed on locked files; the processes were stopped by id after their
+  command lines were checked. *Changed:* nothing; the act prompts say so.
+- **A typed artifact publishes from a served path, the index alone and last.** Observed: the Design System refused a
+  `files`-only publish and one from a session that had not read it; it took a `root` holding `project/…`, one changed
+  file as `file_path`, then `design-system.json` alone, read again just before. *Changed:* nothing; this is the order.
+
 **What the brief keeps as it was**
 - The flows' order (§ 8), the invariants (§ 4.4) and the acceptance check (§ 9) held. The digest (§ 5.1) is restated
   for what flow 01 fixed: the shell, its components and the states it already designed. The brief template (§ 2.4)
