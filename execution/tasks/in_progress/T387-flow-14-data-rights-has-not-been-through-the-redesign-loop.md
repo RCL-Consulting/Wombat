@@ -92,3 +92,5 @@ BRIEF § 6, § 8, § 11; CUSTOMIZATION.md § 5.
   M3 Q5's notice undrawn and AccountNotices' "by whom"; M4 gendered words; M5 the correction's record as free text, no
   recorder stored, no page changes an email; M6 the Steps board misses A.1.8a, A.2.4/A.2.6, the outcome). Q17–Q28 for
   the operator. No sign the captures arrived: re-attach § 4's twelve for round 2.
+- **2026-10-30, the operator took Q1–Q28 as recommended** ("as recommended") and the round-1 picks. Round 2's ask
+  (`round-2-ask.txt`) and the decisions written into the brief's § 6: one Opus agent.

@@ -13,7 +13,9 @@ The operator said "start flow 14". T387 created and started (P2), written from T
   written (mark filled in); completeness 0, verbatim 424/0, baseline missing 0; 113 files staged.
 - **Round 1 back** (18 boards, `42366e44`); Q1–Q16 taken as recommended by the boards (confirm). Assessed (`2881b938`):
   picks My data rights A, Request A, Queue V1, Decide V1; M1–M6; Q17–Q28 put to the operator.
-- **Next:** the operator's answers to Q17–Q28, then `round-2-ask.txt` (re-attach § 4's twelve).
+- **Q1–Q28 taken as recommended** (2026-10-30). `round-2-ask.txt` being written by one Opus agent; if absent from
+  `git log`, re-run it.
+- **Next:** the operator sends `round-2-ask.txt` to the canvas with § 4's twelve screenshots.
 
 ## Session 2026-10-27/28 (Opus): T379, flow 13 (graduation and exit), done; T312 before it
 
