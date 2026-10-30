@@ -105,3 +105,7 @@ BRIEF § 6, § 8, § 11; CUSTOMIZATION.md § 5.
   `round-2/f14r2.css` and `f14r2-canvas.css`, merged by one Opus agent (`round-2-review.md`, `e1227d44`: 6 must,
   24 should, 18 nits). Checked here: `ErasureExecutor.cs:425-427` rewrites no data-rights request. F1–F10 for the
   operator.
+- **2026-10-30, the operator took F1–F10 as recommended.** F6 and F7's follow-ups proposed: **T388** (a name set on
+  My account reverts at the next institutional sign-in) and **T389** (a locked trainee is still emailed by the
+  entrustment expiry job; narrower than the review's wording: the opt-out is rightly not honoured there). Round 3's
+  ask: one Opus agent.
