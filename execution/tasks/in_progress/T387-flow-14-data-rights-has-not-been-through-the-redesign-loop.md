@@ -160,3 +160,16 @@ BRIEF § 6, § 8, § 11; CUSTOMIZATION.md § 5.
   `wombat_scenario_t387`, published from `75eefc6c`, on `:5180`; brief `6901931f` (flow 13's, adapted); D = 2026-10-30;
   one Sonnet agent an act, in order. Flow 02's Playwright helpers were lost with their temp folder: reinstalled
   (1.56.1) with a rewritten `lib.mjs` in scratchpad `pw/`; scripts and `replay-pw.env` in scratchpad `g387/`.
+- **2026-10-30, step 7, the acts** (D = 2026-10-30 throughout; one Sonnet agent an act): 332 steps, 295 with no gap,
+  **no flow 14 regression**. Act 1 31/21 (`31b1a85a`), Act 2 44/43 (`ffa9bada`; 2.14's pre-save list not read), Act 3
+  60/58 (`7d49a16e`; 3.24 played in order), Act 4 50/44 (`98a340af`; T370's Present order at four steps), Act 5 29/27
+  (`a3a0608b`; 5.20's Expect corrected: the record line sits under the notice), Act 6 42/33 (`03a14e23`; T312's 6.21,
+  6.40, 6.41 hold again; 6.35 not played, the replayer ran 6.36 first), the appendix 76/69 (`3db79b0f`; its outcome
+  SQL's counts corrected). Every flow 14 step matched: the erasure dialog opens on Cancel with its forecast, the counter
+  counts, refusals under their field, five data-rights mails (decided, rejected, being corrected, complete, erased; the
+  erasure's alone has no link), nothing sideways at 390, 768, 1280, 44 px at 390. The shared dialog's Cancel-first
+  focus held in every act. No longer occur: T316, T318, T319, T264 (the erasure's; the scale delete still has none),
+  T325, T328, and the data-rights halves of T323, T324, T276, T112. Not checked in the acts (the states pass takes
+  them): the queue's page-size select (5 rows, no pager), the rule under a stacked row header, the queue at 1101 px; the
+  erased person's mail recipient (the log prints none, T282). Dumps `recovery/scenario-t387-post-act{1..6,A}`,
+  `-pre-a515-A`; scratch DB `wombat_scenario_t387_s515` kept. **Next:** the states pass (42 rows), then step 8.
