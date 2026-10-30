@@ -156,3 +156,7 @@ BRIEF § 6, § 8, § 11; CUSTOMIZATION.md § 5.
   `t387` outside the task files). For step 7's browser checks: the dialog's focus on Cancel with a long forecast; the
   page-size select keeping focus; the note's counter; no rule under a stacked row header at ≤900 px; the new states'
   SQL recipes (unrun). Branches `t387*` and their worktrees kept. **Next:** step 7, the replay, on the operator's word.
+- **2026-10-30, step 7 started** (the operator's "proceed"; master pushed through `75eefc6c`): fresh
+  `wombat_scenario_t387`, published from `75eefc6c`, on `:5180`; brief `6901931f` (flow 13's, adapted); D = 2026-10-30;
+  one Sonnet agent an act, in order. Flow 02's Playwright helpers were lost with their temp folder: reinstalled
+  (1.56.1) with a rewritten `lib.mjs` in scratchpad `pw/`; scripts and `replay-pw.env` in scratchpad `g387/`.

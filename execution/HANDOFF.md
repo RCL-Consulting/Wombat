@@ -26,7 +26,9 @@ The operator said "start flow 14". T387 created and started (P2), written from T
   (`71190f07`); the operator decided its S1 (scrub the person's reason and correction values on erasure, keep the note).
 - Reviews and one fix pass done; **built: `e8eea1d2`** on master (squash of `t387`), six suites green. The operator
   decided the code review's S1 (scrub the erased person's reason and correction values; keep the note).
-- **Next:** step 7, the replay on a fresh database, on the operator's word. Branches `t387*` and worktrees kept.
+- **Pushed** through `75eefc6c`. **Step 7 running** (the operator's "proceed"): fresh `wombat_scenario_t387` on `:5180`,
+  brief `6901931f`, one Sonnet agent an act; Playwright reinstalled in scratchpad `e81867ab-…/scratchpad/pw` (flow 02's
+  copy was lost), scripts and `replay-pw.env` (never print it) in `…/g387`. Branches `t387*` and worktrees kept.
 
 ## Session 2026-10-27/28 (Opus): T379, flow 13 (graduation and exit), done; T312 before it
 
