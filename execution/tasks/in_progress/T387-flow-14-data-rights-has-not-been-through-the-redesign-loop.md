@@ -145,5 +145,6 @@ BRIEF § 6, § 8, § 11; CUSTOMIZATION.md § 5.
   merged `4f9f94b6`. Code review (`build-review-code.md`, `71190f07`, Sonnet): 0 must, 3 should, 8 nits; checked here,
   S1: `ErasureExecutor.cs:377-402` leaves the request's Reason, DecisionNote and the corrections' values. **The operator
   decided S1** (2026-10-30): the erasure scrubs the person's own text (the reason, every correction's before/after
-  values) to "Erased with the person's data on ‹day›."; the staff's decision note is kept. Pages-and-runbook review
-  (Sonnet) running.
+  values) to "Erased with the person's data on ‹day›."; the staff's decision note is kept. Pages and runbook reviews
+  (Sonnet, `4cf8c56f`): pages 1 must (P1 DESIGN.md's banner), 4 should, 6 nits; runbook 0 must, 4 should, 5 nits
+  (A.1.8a plays in order; the outcome's counts hold). One Opus fix pass running on `t387`.
