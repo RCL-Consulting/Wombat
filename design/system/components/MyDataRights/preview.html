@@ -1,0 +1,140 @@
+<!-- @dsCard group="Data rights" height=4300 width=974 subtitle="My data rights: Your requests (the answer, never the decider; Withdraw while Submitted, Download once a copy is ready), Make a request (four described radios, none chosen; the reason and its counter), Reminder emails; refusals under their field; one result at a time, in its section; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MyDataRights</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  .pv-gap { margin-top: var(--space-md); }
+  /* At 900px and below app.css stacks .clinic-table--stack-wide, and below 641px .user-page and .data-rights-page make
+     every control 44px, a stacked row's button the row's width, the reminder checkbox's label a 44px row and the form
+     actions the row's width; the 390 rendition repeats those media rules under .pv-narrow (a 358px column). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-narrow .data-rights-table.clinic-table--stack-wide tbody th[scope="row"] { border-bottom: 0; }
+  .pv-narrow .user-page .btn, .pv-narrow .user-page .form-control { min-height: 2.75rem; }
+  .pv-narrow .user-page .form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .pv-narrow .user-page .form-actions .btn, .pv-narrow .data-rights-page .clinic-table--stack-wide .btn { width: 100%; }
+  .pv-narrow .user-page .choice-group .form-check label, .pv-narrow .data-rights-page .form-check:not(.choice-group .form-check) label { align-items: center; display: flex; min-height: 2.75rem; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Anele Dlamini, Trainee, has just pressed Submit request on an Export: the result under Your requests' h2, focused; the type and the reason cleared, the counter back to 0</p>
+<div class="header-container"><div><h1>My data rights</h1><p class="page-subtitle">Ask for a copy of your data, a correction or erasure, and read the answers. Stop the regular reminder emails.</p></div></div>
+<div class="user-page data-rights-page">
+  <section class="detail-card user-section" aria-labelledby="pv1-req"><h2 id="pv1-req">Your requests</h2>
+    <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status">Request submitted. You will be notified when it is reviewed.</div></div>
+    <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide data-rights-table" role="table">
+      <caption>Your data rights requests, newest first</caption>
+      <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Submitted</th><th scope="col" role="columnheader">Type</th><th scope="col" role="columnheader">Status</th><th scope="col" role="columnheader">Answer</th><th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody role="rowgroup">
+        <tr role="row"><th scope="row" role="rowheader">2026-10-30 20:10 SAST</th><td role="cell" data-label="Type">Export</td><td role="cell" data-label="Status"><span class="badge badge-submitted">Submitted</span></td><td role="cell" data-label="Answer" class="answer-cell">Waiting for a decision.</td><td role="cell"><div class="actions-cell"><button type="button" class="btn btn-outline btn-sm" aria-label="Withdraw the Export request made 2026-10-30 20:10 SAST">Withdraw</button></div></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+  <section class="detail-card user-section" aria-labelledby="pv1-make"><h2 id="pv1-make">Make a request</h2>
+    <p>Under data protection law you may ask for a copy of your personal data, its correction, or its erasure. Staff at Kgosi Kgari Teaching Hospital decide it; the answer shows under Your requests.</p>
+    <fieldset class="form-group choice-group choice-help-stack">
+      <legend>Request type<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></legend>
+      <div class="form-check"><input class="form-check-input" type="radio" name="pv1-type" id="pv1-type-Access" aria-describedby="pv1-type-Access-help"><label for="pv1-type-Access">Access</label><p id="pv1-type-Access-help" class="page-subtitle choice-help">Everything Wombat holds about you, as a download, once the request is approved.</p></div>
+      <div class="form-check"><input class="form-check-input" type="radio" name="pv1-type" id="pv1-type-Export" aria-describedby="pv1-type-Export-help"><label for="pv1-type-Export">Export</label><p id="pv1-type-Export-help" class="page-subtitle choice-help">The same download, to take your data elsewhere: machine-readable data with a PDF summary.</p></div>
+      <div class="form-check"><input class="form-check-input" type="radio" name="pv1-type" id="pv1-type-Rectification" aria-describedby="pv1-type-Rectification-help"><label for="pv1-type-Rectification">Rectification</label><p id="pv1-type-Rectification-help" class="page-subtitle choice-help">Something about you is recorded wrongly. Say what it is and what it should be.</p></div>
+      <div class="form-check"><input class="form-check-input" type="radio" name="pv1-type" id="pv1-type-Erasure" aria-describedby="pv1-type-Erasure-help"><label for="pv1-type-Erasure">Erasure</label><p id="pv1-type-Erasure-help" class="page-subtitle choice-help">Your account and personal data are removed; your training records are kept under a name that identifies nobody. Once approved it cannot be undone, and you can no longer sign in.</p></div>
+    </fieldset>
+    <div class="form-group"><label for="pv1-reason">Reason<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label><textarea id="pv1-reason" class="form-control" rows="4" aria-required="true" aria-describedby="pv1-reason-count"></textarea><p id="pv1-reason-count" class="field-help">0 of 4,000 characters</p></div>
+    <p class="field-help">What happens next: staff at Kgosi Kgari Teaching Hospital read it and approve or reject it with a note, and you are emailed when it is decided. While it waits you can withdraw it under Your requests.</p>
+    <div class="form-actions"><button type="button" class="btn btn-primary">Submit request</button></div>
+  </section>
+  <section class="detail-card user-section" aria-labelledby="pv1-rem"><h2 id="pv1-rem">Reminder emails</h2>
+    <p>Wombat processes what your training programme needs (your record, assessments and what regulation requires), and that cannot be objected to. You can stop its regular reminders.</p>
+    <div class="form-group"><div class="form-check"><input id="pv1-reminders" type="checkbox" class="form-check-input" aria-describedby="pv1-reminders-help"><label for="pv1-reminders">Stop the regular reminder emails</label></div><p id="pv1-reminders-help" class="field-help">Stops three regular reminders: the weekly coordinator digest, the reminder of drafts left untouched for 14 days, and the reminder of activities that have waited more than 5 days for you to assess. Email about one particular thing is still sent, such as an invitation to give feedback, a coordinator's reminder about one activity, or a notice that an entrustment decision is about to expire or has expired.</p></div>
+    <div class="form-actions"><button type="button" class="btn btn-primary">Save</button></div>
+  </section>
+</div>
+
+<p class="pv-cap">Every answer, newest first (Q5, T319): the decision, its South African day and its note, never who decided; Download on a Completed Export or Access, named for its row</p>
+<div class="user-page data-rights-page">
+  <section class="detail-card user-section" aria-labelledby="pv2-req"><h2 id="pv2-req">Your requests</h2>
+    <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide data-rights-table" role="table">
+      <caption>Your data rights requests, newest first</caption>
+      <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Submitted</th><th scope="col" role="columnheader">Type</th><th scope="col" role="columnheader">Status</th><th scope="col" role="columnheader">Answer</th><th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody role="rowgroup">
+        <tr role="row"><th scope="row" role="rowheader">2026-10-30 19:48 SAST</th><td role="cell" data-label="Type">Rectification</td><td role="cell" data-label="Status"><span class="badge badge-accepted">Approved</span></td><td role="cell" data-label="Answer" class="answer-cell">Approved on 2026-10-30: “Confirmed against the HPCSA register: the last name is Mahlangu.” Being corrected; it reads Completed once done.</td><td role="cell"><div class="actions-cell"></div></td></tr>
+        <tr role="row"><th scope="row" role="rowheader">2026-10-30 19:21 SAST</th><td role="cell" data-label="Type">Rectification</td><td role="cell" data-label="Status"><span class="badge badge-completed">Completed</span></td><td role="cell" data-label="Answer" class="answer-cell">Completed on 2026-10-30. Corrected: Account › Last name.</td><td role="cell"><div class="actions-cell"></div></td></tr>
+        <tr role="row"><th scope="row" role="rowheader">2026-10-30 19:20 SAST</th><td role="cell" data-label="Type">Access</td><td role="cell" data-label="Status"><span class="badge badge-withdrawn">Withdrawn</span></td><td role="cell" data-label="Answer" class="answer-cell">You withdrew it before a decision.</td><td role="cell"><div class="actions-cell"></div></td></tr>
+        <tr role="row"><th scope="row" role="rowheader">2026-10-30 18:34 SAST</th><td role="cell" data-label="Type">Export</td><td role="cell" data-label="Status"><span class="badge badge-completed">Completed</span></td><td role="cell" data-label="Answer" class="answer-cell">Approved on 2026-10-30: “Identity confirmed; export released to the data subject.”</td><td role="cell"><div class="actions-cell"><a class="btn btn-primary btn-sm" href="#" aria-label="Download the export of the Export request made 2026-10-30 18:34 SAST"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>Download</a></div></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+</div>
+
+<p class="pv-cap">No requests yet; Submit pressed with no type and no reason (M02, N17): each refusal under its field, the group .is-invalid and its radios aria-invalid, the reason described by its refusal first, then the counter; the first radio takes the focus</p>
+<div class="user-page data-rights-page">
+  <section class="detail-card user-section" aria-labelledby="pv3-req"><h2 id="pv3-req">Your requests</h2>
+    <div class="detail-card detail-card--empty"><div class="state-panel-title">No requests yet.</div><div class="state-panel-copy">You have not asked for your data, a correction or erasure. Make a request below.</div></div>
+  </section>
+  <section class="detail-card user-section" aria-labelledby="pv3-make"><h2 id="pv3-make">Make a request</h2>
+    <p>Under data protection law you may ask for a copy of your personal data, its correction, or its erasure. Staff at Kgosi Kgari Teaching Hospital decide it; the answer shows under Your requests.</p>
+    <fieldset class="form-group choice-group choice-help-stack is-invalid" aria-describedby="pv3-type-msg">
+      <legend>Request type<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></legend>
+      <div id="pv3-type-msg" class="validation-message" role="alert">Choose the request type.</div>
+      <div class="form-check"><input class="form-check-input" type="radio" name="pv3-type" id="pv3-type-Access" aria-describedby="pv3-type-Access-help" aria-invalid="true"><label for="pv3-type-Access">Access</label><p id="pv3-type-Access-help" class="page-subtitle choice-help">Everything Wombat holds about you, as a download, once the request is approved.</p></div>
+      <div class="form-check"><input class="form-check-input" type="radio" name="pv3-type" id="pv3-type-Export" aria-describedby="pv3-type-Export-help" aria-invalid="true"><label for="pv3-type-Export">Export</label><p id="pv3-type-Export-help" class="page-subtitle choice-help">The same download, to take your data elsewhere: machine-readable data with a PDF summary.</p></div>
+      <div class="form-check"><input class="form-check-input" type="radio" name="pv3-type" id="pv3-type-Rectification" aria-describedby="pv3-type-Rectification-help" aria-invalid="true"><label for="pv3-type-Rectification">Rectification</label><p id="pv3-type-Rectification-help" class="page-subtitle choice-help">Something about you is recorded wrongly. Say what it is and what it should be.</p></div>
+      <div class="form-check"><input class="form-check-input" type="radio" name="pv3-type" id="pv3-type-Erasure" aria-describedby="pv3-type-Erasure-help" aria-invalid="true"><label for="pv3-type-Erasure">Erasure</label><p id="pv3-type-Erasure-help" class="page-subtitle choice-help">Your account and personal data are removed; your training records are kept under a name that identifies nobody. Once approved it cannot be undone, and you can no longer sign in.</p></div>
+    </fieldset>
+    <div class="form-group"><label for="pv3-reason">Reason<span class="required-mark" aria-hidden="true"> *</span><span class="visually-hidden"> required</span></label><textarea id="pv3-reason" class="form-control input-validation-error" rows="4" aria-required="true" aria-invalid="true" aria-describedby="pv3-reason-msg pv3-reason-count"></textarea><div id="pv3-reason-msg" class="validation-message" role="alert">Please provide a reason for your request.</div><p id="pv3-reason-count" class="field-help">0 of 4,000 characters</p></div>
+    <p class="field-help">What happens next: staff at Kgosi Kgari Teaching Hospital read it and approve or reject it with a note, and you are emailed when it is decided. While it waits you can withdraw it under Your requests.</p>
+    <div class="form-actions"><button type="button" class="btn btn-primary">Submit request</button></div>
+  </section>
+</div>
+
+<p class="pv-cap">Save pressed with the box ticked: the result under Reminder emails' h2, focused (N3: a save that changed nothing says so, "Nothing changed: reminder emails are still stopped.")</p>
+<div class="user-page data-rights-page">
+  <section class="detail-card user-section" aria-labelledby="pv4-rem"><h2 id="pv4-rem">Reminder emails</h2>
+    <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status">Reminder emails stopped.</div></div>
+    <p>Wombat processes what your training programme needs (your record, assessments and what regulation requires), and that cannot be objected to. You can stop its regular reminders.</p>
+    <div class="form-group"><div class="form-check"><input id="pv4-reminders" type="checkbox" class="form-check-input" checked aria-describedby="pv4-reminders-help"><label for="pv4-reminders">Stop the regular reminder emails</label></div><p id="pv4-reminders-help" class="field-help">Stops three regular reminders: the weekly coordinator digest, the reminder of drafts left untouched for 14 days, and the reminder of activities that have waited more than 5 days for you to assess. Email about one particular thing is still sent, such as an invitation to give feedback, a coordinator's reminder about one activity, or a notice that an entrustment decision is about to expire or has expired.</p></div>
+    <div class="form-actions"><button type="button" class="btn btn-primary">Save</button></div>
+  </section>
+</div>
+
+<p class="pv-cap">Loading, then a failed read (T329: fixed words, Try again; the h1 takes the focus once it reads)</p>
+<div class="user-page data-rights-page">
+  <p class="loading-line" role="status">Loading your data rights.</p>
+  <div class="detail-card" aria-hidden="true"><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line skel-short"></div></div>
+</div>
+<div class="user-page data-rights-page pv-gap">
+  <div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text">Could not load your data rights. Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /> <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path d="M8 16H3v5" /></svg>Try again</button></div></div></div>
+</div>
+
+<p class="pv-cap">390: the request a block, its moment the first line with no rule under it, Download the row's width and 44px; the radios' and the checkbox's labels 44px rows; Save the row's width</p>
+<div class="pv-narrow">
+  <div class="header-container"><div><h1>My data rights</h1><p class="page-subtitle">Ask for a copy of your data, a correction or erasure, and read the answers. Stop the regular reminder emails.</p></div></div>
+  <div class="user-page data-rights-page">
+    <section class="detail-card user-section" aria-labelledby="pv5-req"><h2 id="pv5-req">Your requests</h2>
+      <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide data-rights-table" role="table">
+        <caption>Your data rights requests, newest first</caption>
+        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Submitted</th><th scope="col" role="columnheader">Type</th><th scope="col" role="columnheader">Status</th><th scope="col" role="columnheader">Answer</th><th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th></tr></thead>
+        <tbody role="rowgroup">
+          <tr role="row"><th scope="row" role="rowheader">2026-10-30 18:34 SAST</th><td role="cell" data-label="Type">Export</td><td role="cell" data-label="Status"><span class="badge badge-completed">Completed</span></td><td role="cell" data-label="Answer" class="answer-cell">Approved on 2026-10-30: “Identity confirmed; export released to the data subject.”</td><td role="cell"><div class="actions-cell"><a class="btn btn-primary btn-sm" href="#" aria-label="Download the export of the Export request made 2026-10-30 18:34 SAST"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>Download</a></div></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+    <section class="detail-card user-section" aria-labelledby="pv5-rem"><h2 id="pv5-rem">Reminder emails</h2>
+      <p>Wombat processes what your training programme needs (your record, assessments and what regulation requires), and that cannot be objected to. You can stop its regular reminders.</p>
+      <div class="form-group"><div class="form-check"><input id="pv5-reminders" type="checkbox" class="form-check-input" aria-describedby="pv5-reminders-help"><label for="pv5-reminders">Stop the regular reminder emails</label></div><p id="pv5-reminders-help" class="field-help">Stops three regular reminders: the weekly coordinator digest, the reminder of drafts left untouched for 14 days, and the reminder of activities that have waited more than 5 days for you to assess. Email about one particular thing is still sent, such as an invitation to give feedback, a coordinator's reminder about one activity, or a notice that an entrustment decision is about to expire or has expired.</p></div>
+      <div class="form-actions"><button type="button" class="btn btn-primary">Save</button></div>
+    </section>
+  </div>
+</div>
+</body>
+</html>

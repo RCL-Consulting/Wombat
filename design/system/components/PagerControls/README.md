@@ -15,7 +15,7 @@ The one pager: a "Showing 1–20 of 137" summary, Previous and Next, and a page-
 
 **At either end** Previous or Next is `aria-disabled="true"`, never `disabled` (flow 04, C10 f): it keeps its place and its focus, looks unavailable (`.pager .btn[aria-disabled="true"]`: the not-allowed cursor, and the dim every `aria-disabled` button has), and a press there sends nothing. A natively disabled Next pressed onto the last page dropped the focus to the page body. The page that holds the pager moves the focus to its list's heading once the new page is drawn; since flow 08 that heading says which page it is on where there is more than one, "Decisions, page 2 of 4" (`span.list-section-page`; DecisionsDue, C9, T264). A change of page size leaves the focus on the select.
 
-**Below 641px** Previous and Next are 44px.
+**Below 641px** Previous and Next are 44px, and so, since flow 14 (T387, M4), is the page-size select (`.pager .form-select`, a system rule beside `.filter-actions`' phone rule, written for every list, not the data-rights queue's alone).
 
 ## Rules (DESIGN.md § Pager)
 
@@ -27,6 +27,10 @@ Use it on every list that can grow; never hand-roll paging.
 
 The summary and the label (`muted-text`) 5.09:1 on the surface, 4.83:1 on the page; Previous and Next (`secondary-color`) 4.86:1; the select's `input-border` edge 3.80:1.
 
+Flow 14's queue (DataRightsRequests) passes `Label` "Requests, pages" and `PageSizeLabel` "Requests per page", drawn only past twenty, and answers a page turn and a change of size in place, as Users does (review P2).
+
 ## Known gaps
 
-None. T280's pager half closed with flow 08 (T364): the select is named by its label on every list.
+T280's pager half closed with flow 08 (T364): the select is named by its label on every list.
+
+- **T390** (proposed, found by flow 14's states pass): where a page draws the pager only while `TotalCount > PageSize` (My activities, Assessors, Trainees, Users, Data rights requests), choosing a size that holds every row hides the pager and its select, so the size cannot be brought back down without a reload.

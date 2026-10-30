@@ -23,7 +23,7 @@ A list's filters, applied with Show: a real form above the list, its labelled fi
 ```
 
 - **The form** is a `<form class="search-container">` named for its list ("Filter Programme trainees", "Filter Waiting for assessors"), so Enter is Show. Its fields are `.search-field`s in a `.search-grid` (220px tracks, `minmax(min(220px, 100%), 1fr)`), each a labelled control; a checkbox carries its label once, beside it.
-- **`.filter-actions`** is the last `.search-field`: Show (`btn-primary`) and Clear filters (`btn-outline`), side by side on the fields' bottom line (a wrapping row, `align-self: end`, `space-sm` apart). Below 641px each button is 44px and the row's width, one under the other.
+- **`.filter-actions`** is the last `.search-field`: Show (`btn-primary`) and Clear filters (`btn-outline`), side by side on the fields' bottom line (a wrapping row, `align-self: end`, `space-sm` apart). Below 641px each button is 44px and the row's width, one under the other; since flow 14 (T387, M4) every `.search-container`'s selects are 44px too (`.search-container .form-select`, a system rule beside `.filter-actions`'), as is PagerControls' page-size select. Flow 14's data rights queue is one (DataRightsRequests): Type and Status by label, Show, and Clear filters only once a filter is applied; the filter is not in its address.
 - **No field acts on change.** No live filtering, and nothing on the page moves while a field is set.
 
 ## Show, Clear filters and the address (D3)

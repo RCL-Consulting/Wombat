@@ -1,0 +1,127 @@
+<!-- @dsCard group="Data rights" height=3500 width=1180 subtitle="Data rights requests: the subtitle says whose; Type and Status applied with Show; Requests (n), the requester the row header (name over address, or the pseudonym over Erased), the Administrator's Institution column, the request id, one Review named for its row; no match is not empty; the pager only past twenty; stacked from 1100px; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DataRightsRequests</title>
+<style>
+  /* The card is 1180px wide so that app.css's 1100px query (the queue stacks from 1100px, Q23) does not fire on the wide
+     renditions; each is drawn in a 974px column, the content column beside the sidebar at 1280. */
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-col { max-width: 974px; }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The stacked queue (at 1100px and below in the app) and the phone's rules (below 641px), repeated under .pv-narrow
+     (a 358px column: 390 less the phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-narrow .data-rights-table.clinic-table--stack-wide tbody th[scope="row"] { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide .btn, .pv-narrow .people-page .btn, .pv-narrow .people-page .form-select { min-height: 2.75rem; }
+  .pv-narrow .filter-actions .btn { min-height: 2.75rem; width: 100%; }
+</style>
+</head>
+<body>
+<div class="pv-col">
+<p class="pv-cap">The Administrator after the appendix: every institution's requests, newest first; the Institution column hers alone; five rows, so no pager</p>
+<div class="header-container"><div><h1>Data rights requests</h1><p class="page-subtitle">Requests from people at every institution about their personal data: decide each, and carry an approved correction through.</p></div></div>
+<div class="people-page data-rights-requests">
+  <form class="search-container" aria-label="Filter Data rights requests" novalidate>
+    <div class="search-grid">
+      <div class="search-field"><label for="pv1-type">Type</label><select id="pv1-type" class="form-select"><option value="">All types</option><option>Access</option><option>Export</option><option>Rectification</option><option>Erasure</option></select></div>
+      <div class="search-field"><label for="pv1-status">Status</label><select id="pv1-status" class="form-select"><option value="">All statuses</option><option>Submitted</option><option>Approved</option><option>Completed</option><option>Rejected</option><option>Withdrawn</option></select></div>
+      <div class="search-field filter-actions"><button type="submit" class="btn btn-primary">Show</button></div>
+    </div>
+  </form>
+  <section class="list-section" aria-labelledby="pv1-h"><h2 id="pv1-h" class="list-section-title" tabindex="-1">Requests (5)</h2>
+    <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide data-rights-table" role="table">
+      <caption>Every institution's data rights requests, newest first</caption>
+      <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Submitted</th><th scope="col" role="columnheader">Requester</th><th scope="col" role="columnheader">Institution</th><th scope="col" role="columnheader">Type</th><th scope="col" role="columnheader">Status</th><th scope="col" role="columnheader">Request id</th><th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody role="rowgroup">
+        <tr role="row"><td role="cell" data-label="Submitted">2026-10-30 19:22 SAST</td><th scope="row" role="rowheader"><span class="person-cell">Sipho Ndlovu<span>ndlovu@<wbr>kgk.wombat.local</span></span></th><td role="cell" data-label="Institution">Kgosi Kgari Teaching Hospital</td><td role="cell" data-label="Type">Erasure</td><td role="cell" data-label="Status"><span class="badge badge-submitted">Submitted</span></td><td role="cell" data-label="Request id"><span class="request-id">01a18dd5-4f07-737f-b20d-7254bf15c87f</span></td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Review the Erasure request from Sipho Ndlovu, 2026-10-30 19:22 SAST">Review</a></div></td></tr>
+        <tr role="row"><td role="cell" data-label="Submitted">2026-10-30 19:21 SAST</td><th scope="row" role="rowheader"><span class="person-cell">Nomsa Mahlangu<span>mahlangu@<wbr>kgk.wombat.local</span></span></th><td role="cell" data-label="Institution">Kgosi Kgari Teaching Hospital</td><td role="cell" data-label="Type">Rectification</td><td role="cell" data-label="Status"><span class="badge badge-completed">Completed</span></td><td role="cell" data-label="Request id"><span class="request-id">01a18dd4-9c6a-7d02-8161-3e1454faa1bc</span></td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Review the Rectification request from Nomsa Mahlangu, 2026-10-30 19:21 SAST">Review</a></div></td></tr>
+        <tr role="row"><td role="cell" data-label="Submitted">2026-10-30 19:20 SAST</td><th scope="row" role="rowheader"><span class="person-cell">Nomsa Mahlangu<span>mahlangu@<wbr>kgk.wombat.local</span></span></th><td role="cell" data-label="Institution">Kgosi Kgari Teaching Hospital</td><td role="cell" data-label="Type">Rectification</td><td role="cell" data-label="Status"><span class="badge badge-declined">Rejected</span></td><td role="cell" data-label="Request id"><span class="request-id">01a18dd4-0597-7846-9f5d-ccbf64c53c03</span></td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Review the Rectification request from Nomsa Mahlangu, 2026-10-30 19:20 SAST">Review</a></div></td></tr>
+        <tr role="row"><td role="cell" data-label="Submitted">2026-10-30 19:20 SAST</td><th scope="row" role="rowheader"><span class="person-cell">Pieter du Plessis<span>duplessis@<wbr>kgk.wombat.local</span></span></th><td role="cell" data-label="Institution">Kgosi Kgari Teaching Hospital</td><td role="cell" data-label="Type">Access</td><td role="cell" data-label="Status"><span class="badge badge-withdrawn">Withdrawn</span></td><td role="cell" data-label="Request id"><span class="request-id">01a18dd3-e856-7239-9127-d1e5ddd06ad5</span></td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Review the Access request from Pieter du Plessis, 2026-10-30 19:20 SAST">Review</a></div></td></tr>
+        <tr role="row"><td role="cell" data-label="Submitted">2026-10-30 19:19 SAST</td><th scope="row" role="rowheader"><span class="person-cell">Anele Dlamini<span>dlamini@<wbr>kgk.wombat.local</span></span></th><td role="cell" data-label="Institution">Kgosi Kgari Teaching Hospital</td><td role="cell" data-label="Type">Export</td><td role="cell" data-label="Status"><span class="badge badge-completed">Completed</span></td><td role="cell" data-label="Request id"><span class="request-id">01a18dd2-9749-7cef-b066-bd43b9289f2d</span></td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Review the Export request from Anele Dlamini, 2026-10-30 19:19 SAST">Review</a></div></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+</div>
+
+<p class="pv-cap">Pieter Smit, Coordinator, filtered to Erasure and shown: Clear filters offered; the erased person's row reads the pseudonym over "Erased ‹day›"; the caption says what was asked</p>
+<div class="header-container"><div><h1>Data rights requests</h1><p class="page-subtitle">Requests from people at Kgosi Kgari Teaching Hospital about their personal data: decide each, and carry an approved correction through.</p></div></div>
+<div class="people-page data-rights-requests">
+  <form class="search-container" aria-label="Filter Data rights requests" novalidate>
+    <div class="search-grid">
+      <div class="search-field"><label for="pv2-type">Type</label><select id="pv2-type" class="form-select"><option value="">All types</option><option>Access</option><option>Export</option><option>Rectification</option><option selected>Erasure</option></select></div>
+      <div class="search-field"><label for="pv2-status">Status</label><select id="pv2-status" class="form-select"><option value="">All statuses</option><option>Submitted</option><option>Approved</option><option>Completed</option><option>Rejected</option><option>Withdrawn</option></select></div>
+      <div class="search-field filter-actions"><button type="submit" class="btn btn-primary">Show</button><button type="button" class="btn btn-outline">Clear filters</button></div>
+    </div>
+  </form>
+  <section class="list-section" aria-labelledby="pv2-h"><h2 id="pv2-h" class="list-section-title" tabindex="-1">Requests (1)</h2>
+    <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide data-rights-table" role="table">
+      <caption>Kgosi Kgari Teaching Hospital's data rights requests, newest first: Erasure</caption>
+      <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Submitted</th><th scope="col" role="columnheader">Requester</th><th scope="col" role="columnheader">Type</th><th scope="col" role="columnheader">Status</th><th scope="col" role="columnheader">Request id</th><th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody role="rowgroup">
+        <tr role="row"><td role="cell" data-label="Submitted">2026-10-30 18:41 SAST</td><th scope="row" role="rowheader"><span class="person-cell">deleted_user_a3f99c49<span>Erased 2026-10-30</span></span></th><td role="cell" data-label="Type">Erasure</td><td role="cell" data-label="Status"><span class="badge badge-completed">Completed</span></td><td role="cell" data-label="Request id"><span class="request-id">01a18db0-69b5-70e3-b77f-1c7dde10ad52</span></td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Review the Erasure request from deleted_user_a3f99c49, 2026-10-30 18:41 SAST">Review</a></div></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+</div>
+
+<p class="pv-cap">Filtered to Erasure and Submitted with nothing left: no match is not empty, it says what was asked and the way back</p>
+<div class="people-page data-rights-requests">
+  <section class="list-section" aria-labelledby="pv3-h"><h2 id="pv3-h" class="list-section-title" tabindex="-1">Requests (0)</h2>
+    <div class="detail-card detail-card--empty"><div class="state-panel-title">No requests match</div><div class="state-panel-copy">No Erasure request is Submitted at Kgosi Kgari Teaching Hospital. Clear filters to see every request.</div></div>
+  </section>
+</div>
+
+<p class="pv-cap">Past twenty: PagerControls under the table, "Requests, pages" and "Requests per page" (page 2 of 3 of 45; the rows elided)</p>
+<div class="people-page data-rights-requests">
+  <nav class="pager" aria-label="Requests, pages">
+    <div class="pager-info">Showing 21–40 of 45</div>
+    <div class="pager-actions"><button type="button" class="btn btn-outline btn-sm">Previous</button><button type="button" class="btn btn-outline btn-sm">Next</button></div>
+    <div class="pager-page-size"><label class="pager-page-size-label" for="pv4-size">Requests per page</label><select id="pv4-size" class="form-select form-select-sm pager-page-size-select"><option>10</option><option selected>20</option><option>50</option><option>100</option></select></div>
+  </nav>
+</div>
+
+<p class="pv-cap">Loading, then a failed read (fixed words, Try again; the h1 takes the focus once it reads)</p>
+<div class="header-container"><div><h1>Data rights requests</h1><p class="page-subtitle">Requests about personal data: decide each, and carry an approved correction through.</p></div></div>
+<div class="people-page data-rights-requests" aria-busy="true">
+  <p class="loading-line" role="status">Loading the data rights requests.</p>
+  <div class="detail-card" aria-hidden="true"><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line skel-short"></div></div>
+</div>
+<div class="people-page data-rights-requests">
+  <div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text">Could not load the data rights requests. Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /> <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path d="M8 16H3v5" /></svg>Try again</button></div></div></div>
+</div>
+</div>
+
+<p class="pv-cap">390 (and from 1100px down in the app): each request a block, "Submitted:" first, the requester with no rule under it; the selects, Show and Review 44px, Show the row's width</p>
+<div class="pv-narrow">
+  <div class="header-container"><div><h1>Data rights requests</h1><p class="page-subtitle">Requests from people at Kgosi Kgari Teaching Hospital about their personal data: decide each, and carry an approved correction through.</p></div></div>
+  <div class="people-page data-rights-requests">
+    <form class="search-container" aria-label="Filter Data rights requests" novalidate>
+      <div class="search-grid">
+        <div class="search-field"><label for="pv5-type">Type</label><select id="pv5-type" class="form-select"><option value="">All types</option></select></div>
+        <div class="search-field"><label for="pv5-status">Status</label><select id="pv5-status" class="form-select"><option value="">All statuses</option></select></div>
+        <div class="search-field filter-actions"><button type="submit" class="btn btn-primary">Show</button></div>
+      </div>
+    </form>
+    <section class="list-section" aria-labelledby="pv5-h"><h2 id="pv5-h" class="list-section-title" tabindex="-1">Requests (2)</h2>
+      <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide data-rights-table" role="table">
+        <caption>Kgosi Kgari Teaching Hospital's data rights requests, newest first</caption>
+        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Submitted</th><th scope="col" role="columnheader">Requester</th><th scope="col" role="columnheader">Type</th><th scope="col" role="columnheader">Status</th><th scope="col" role="columnheader">Request id</th><th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th></tr></thead>
+        <tbody role="rowgroup">
+          <tr role="row"><td role="cell" data-label="Submitted">2026-10-30 18:41 SAST</td><th scope="row" role="rowheader"><span class="person-cell">deleted_user_a3f99c49<span>Erased 2026-10-30</span></span></th><td role="cell" data-label="Type">Erasure</td><td role="cell" data-label="Status"><span class="badge badge-completed">Completed</span></td><td role="cell" data-label="Request id"><span class="request-id">01a18db0-69b5-70e3-b77f-1c7dde10ad52</span></td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Review the Erasure request from deleted_user_a3f99c49, 2026-10-30 18:41 SAST">Review</a></div></td></tr>
+          <tr role="row"><td role="cell" data-label="Submitted">2026-10-30 18:36 SAST</td><th scope="row" role="rowheader"><span class="person-cell">Pieter du Plessis<span>duplessis@<wbr>kgk.wombat.local</span></span></th><td role="cell" data-label="Type">Access</td><td role="cell" data-label="Status"><span class="badge badge-withdrawn">Withdrawn</span></td><td role="cell" data-label="Request id"><span class="request-id">01a18dab-60ac-7834-b311-ac08528e1218</span></td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Review the Access request from Pieter du Plessis, 2026-10-30 18:36 SAST">Review</a></div></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+  </div>
+</div>
+</body>
+</html>
