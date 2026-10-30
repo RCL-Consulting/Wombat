@@ -100,3 +100,5 @@ BRIEF § 6, § 8, § 11; CUSTOMIZATION.md § 5.
   int, so the fixed list of records (Q26) needs the build to change the target's shape. NEW words are listed in the
   ask's NEW block for the round-2 review. A.1.8a's reason, note and times are brackets. **Next:** the operator sends it
   with the twelve act-A captures.
+- **2026-10-30, round 2** (138 boards in `round-2/`, `a9904964`): three Sonnet reviews running
+  (`round-2-review-{code,cast,ds}.md`), to be merged into `round-2-review.md`.
