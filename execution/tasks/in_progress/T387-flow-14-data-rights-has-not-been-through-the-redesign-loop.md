@@ -94,3 +94,9 @@ BRIEF § 6, § 8, § 11; CUSTOMIZATION.md § 5.
   the operator. No sign the captures arrived: re-attach § 4's twelve for round 2.
 - **2026-10-30, the operator took Q1–Q28 as recommended** ("as recommended") and the round-1 picks. Round 2's ask
   (`round-2-ask.txt`) and the decisions written into the brief's § 6: one Opus agent.
+- **2026-10-30, round 2's ask** (`round-2-ask.txt`, 509 lines, ~137 boards, 9 checks + 25 corrections M1–M6,
+  S1–S12, N1–N7; decisions in the brief's § 6 and the assessment's § 10; one Opus agent, `61a92b31`). Checked here:
+  `TargetType` is a free string (≤200) with no list in the code, and `TargetId` is a Guid while `TraineeProfile.Id` is an
+  int, so the fixed list of records (Q26) needs the build to change the target's shape. NEW words are listed in the
+  ask's NEW block for the round-2 review. A.1.8a's reason, note and times are brackets. **Next:** the operator sends it
+  with the twelve act-A captures.
