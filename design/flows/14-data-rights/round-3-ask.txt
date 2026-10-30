@@ -1,0 +1,459 @@
+ROUND 3: the one correction round on round 2 as drawn (My data rights M, the queue Q, a request and its decision D, the
+correction C, the kept request K, Request unavailable U). Put it on a new page of the canvas, "Round 3", and name every
+board R3-… (R3-C01-1280 for R2-C01-1280); round 1's and round 2's pages stay untouched. Redraw EVERY round 2 board on
+the new page (133 screens: 62 at 1280, 63 at 390 with Q13 at 390 only, 8 at 768), each with its states, carrying a
+board no item below changes exactly as round 2 drew it (every board changes its head: S22), then the new boards the
+items ask for, then the Spec and Steps boards whole. Change what the items say; draw nothing they do not ask for. The
+design system is Wombat v37 as installed on this canvas (namespace wombat; ds/wombat/tokens.css and
+ds/wombat/components/bundle.css): keep both files in the project so the saved round renders. The brand mark is at
+/_blob/616538c681cf4475edf7c466864e408d: use it, never a drawn disc. Every person, address, id, role, date, time, note,
+reason, count and order stays as round 2 drew it unless an item below changes it: the reviews found them true. Use
+FIXTURES only and invent nothing; where a value is not given, write a bracket ‹…›. Label a state the replay never
+reaches "Illustration", in its title and as a chip on its face; a build state no step plays (a loading, a failure, a
+refusal) carries no chip, as in round 2. Never draw on one board two states that cannot hold at once. No gendered
+pronoun anywhere, the canvas notes included: the name, "the", "they" or "their". Words marked NEW are this message's
+own: draw them as given and list them on the Spec beside the words they replace. Then say on the Spec, item by item (by
+the ids below), what changed and where.
+
+THE STYLESHEET. Round 2's boards linked two stylesheets as /_blob/ assets, which a saved round cannot carry: they had to
+be recovered by hand. Round 3 has ONE stylesheet, f14r3.css, a PROJECT FILE at project/f14r3.css (upload or write it as
+a file of the project, NOT as an asset, so the saved round holds it), with exactly the text between the two rules
+below. Every board's head links ds/wombat/tokens.css, ds/wombat/components/bundle.css, then f14r3.css, in that order,
+and no /_blob/ stylesheet; a board's <style> holds body{margin:0} at most; no NEW rule on any board. Section 1 is the
+canvas's own (never app.css's); section 2 holds each NEW rule, each naming its row of the Spec's class table. If the
+canvas has to change a rule to make a board render, change the file, say so on the Spec, and quote the changed rule.
+------------------------------------------------------------------------------------------------------------------------
+/* f14r3.css: flow 14, round 3. Linked by every R3 board after ds/wombat/tokens.css and ds/wombat/components/bundle.css.
+   Section 1 is the canvas's own, never a component's and never app.css's. Section 2 holds each NEW rule, PROPOSED for
+   app.css, each naming its row of the class table on R3-0-spec. Tokens only, no raw colour. */
+
+/* ===================================================================== 1. Canvas only */
+/* The board's annotation chip (state, width, focus; "Illustration" in its bold lead). */
+.anno { background: var(--primary-color); border-radius: var(--radius-md); bottom: var(--space-sm);
+  box-shadow: var(--shadow-dialog); color: var(--on-fill); font-family: var(--font-body); font-size: 0.8rem;
+  line-height: 1.35; max-width: min(22rem, calc(100vw - 2rem)); overflow-wrap: anywhere;
+  padding: var(--space-xs) var(--space-sm); position: fixed; right: var(--space-sm); z-index: 30; }
+.anno b { display: inline-block; background: var(--warning-bg); border-radius: var(--radius-sm);
+  color: var(--warning-color); margin-right: var(--space-xs); padding: 0 var(--space-xs); }
+/* The frozen focus ring. */
+.pv-focus { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+/* The painted modal stage for a dialog drawn open. */
+.pv-overlay { align-items: flex-start; background: var(--scrim); box-sizing: border-box; display: flex; inset: 0;
+  justify-content: center; padding: var(--space-2xl) var(--space-md); position: fixed; z-index: 20; }
+.pv-overlay dialog { display: block; margin: 0; position: static; }
+
+/* ===================================================================== 2. NEW rules (the class table on R3-0-spec) */
+/* Row "request-id": an id (a request id, a user id) in its own cell or dd: monospace, breaks anywhere. */
+.request-id { font-family: var(--font-mono); font-size: 0.875rem; overflow-wrap: anywhere; word-break: break-all; }
+/* Row "data-rights-table": the three tables put th scope="row" in each row (the queue's Requester, Your requests' and
+   the corrections' first cell); .clinic-table paints a th as a header, so the row header reads as a cell here. */
+.data-rights-table tbody th[scope="row"] { background: transparent; border-bottom: 1px solid var(--border-color);
+  font-weight: 600; text-align: left; vertical-align: top; }
+/* Row "answer-cell": the requester's Answer cell; a 4,000-character note wraps, never widens the table. */
+.answer-cell { overflow-wrap: anywhere; }
+/* Row "correction-values": Value before and Value after side by side, one column below 641px. */
+.correction-values { display: grid; gap: var(--space-md); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* Row "dialog-body--scroll": the erasure dialog's long count list scrolls inside the dialog, never the page. */
+.dialog-body--scroll { max-height: 55vh; overflow-y: auto; }
+@media (max-width: 640.98px) {
+  .correction-values { grid-template-columns: minmax(0, 1fr); }
+  /* Row "data-rights-page": what .user-page lacks on My data rights (S21): the reminder checkbox, outside a
+     .choice-group, gets the 44px label row .user-page gives a radio; a stacked row's Download or Withdraw takes the
+     row's width (StackWide makes it 44px tall, bundle.css's S16 rule, not wide). */
+  .data-rights-page .form-check:not(.choice-group .form-check) label { align-items: center; display: flex;
+    min-height: 2.75rem; }
+  .data-rights-page .clinic-table--stack-wide .btn { width: 100%; }
+  /* Row "list selects at 390" (M4), a SYSTEM rule for every list, PROPOSED for app.css beside .filter-actions' phone
+     rule: a filter bar's selects and PagerControls' page-size select are 44px, as its Previous and Next already are. */
+  .search-container .form-select,
+  .pager .form-select { min-height: 2.75rem; }
+}
+------------------------------------------------------------------------------------------------------------------------
+Then RENDER-CHECK, and put the result on R3-0-spec (S22): open every 390 board and measure each control's box (every
+.btn, .form-control, .form-select, radio and checkbox label row, the breadcrumb parent link, the pager's three); open
+each 1280 board at 1280, 1100 and 768 (its width freed) and each 390 board at 390, and read the page's scrollWidth
+against its clientWidth and every .table-container's. Say on the Spec how many boards were measured, how many controls
+fell short of 44px at 390 (0, or each one named), and that nothing scrolls sideways at any width, the ids, the pseudonym,
+the 60-character address and the 4,000-character reason included; if a render shows otherwise, say where.
+
+THE SCREENSHOTS: round 2 opened 10 of the 18 staged captures. Open the rest now, from C:\dev\Wombat\design\upload\
+baseline\act-A (copies of design/baseline/): A.1.2-1-export-no-reason-refused, A.1.3-3-request-detail-1280,
+A.1.5-1-dlamini-completed-download, A.1.6-2-duplessis-withdrawn, A.1.8-2-mahlangu-rectification-rejected,
+A.1.12-3-queue-after-erasure, A.1.13-1-ndlovu-session-ended, A.1.14-4-checkin-withdrawn. They are today's pages, and
+the runbook's Actual lines (in FIXTURES) say what each shows; read them to check M02, M04, M06, D01-D03, D05 and Q07
+against the pages they replace, never to draw from. SAY ON THE SPEC BOARD, FIRST, whether they arrived (attached, or
+read from the folder), which you opened, and any word a capture shows that a board contradicts; draw nothing from
+memory in place of one that did not arrive.
+
+THE OPERATOR'S DECISIONS. Q1-Q28 (2026-10-30; the brief's § 6 and round-1-assessment.md § 8) stand as round 2 drew
+them. Added 2026-10-30, every recommendation of round-2-review.md taken:
+  F1. The requester's name is the account's current first and last name, read live (IUserAdministrationService.
+      GetContactsAsync) on the queue and on the request page, the record lines and the results included; the stored
+      RequesterDisplayName is only a fallback, and holds the pseudonym once erased (F3). Submission stores the full
+      name, not the user name (today ClaimTypes.Name, the address: SubmitDataRightsRequest.cs:49-51).
+  F2. A.1.8a's "Mahlngu" is played, not seeded: the step's first Do line has Dr Mahlangu save Last name "Mahlngu" on
+      My account (the only route, Q25), then submit the Rectification. So every board read before the corrective save
+      prints "Nomsa Mahlngu"; every board after it, "Nomsa Mahlangu". The next replay re-pins every value (S19).
+  F3. The erasure rewrites every request of the person: RequesterDisplayName to the pseudonym on every row whose
+      RequesterUserId is theirs; DecidedByUserId and the new AppliedByUserId to the pseudonym where the person decided or
+      recorded; the person's other open requests withdrawn in the same save, counted in the forecast and in the result.
+      RequesterUserId stays: DataRightsErasureRecord (UserId, RequestId, Pseudonym) already pairs the id and the name.
+  F4. Q5 kept for the erasure: AccountNotices gains an overload taking the address, read in the handler before
+      ErasureExecutor.ExecuteAsync and sent, with no link, after the commit (SendAsync(userId) skips a deactivated or
+      address-less account, AccountNotices.cs:60-66, which an erased one is both); the class comment names the
+      data-rights exception (it requires "what happened, when and by whom" today); DataRightsDecisionEmail is a NEW
+      template file. The Steps' "No mail" lines change (Steps T2).
+  F5. The erasure forecast for a Coordinator: what is at the caller's institution in full, what is elsewhere counted
+      ("and 1 open review at another institution"); the Administrator sees every name. The dialog still counts all
+      that the erasure ends (ErasureExecutor withdraws every open review by TraineeUserId at any institution).
+  F6. A requester with an institutional sign-in (GetSignInMethodsAsync): the First name and Last name radios carry
+      "This name comes from ‹institution›'s sign-in; the institution corrects it." and the correction records as Other.
+      ExternalLoginHandler rewrites both names from the provider at every sign-in (:540-547). My account's name form for
+      such a person is proposed as T388.
+  F7. Q24's and Q27's words stay: the entrustment expiry notice is mail about one decision, which Q27's sentence covers;
+      the build names it among that sentence's examples when it checks the list against the senders. The expiry job's
+      lock gap (ReminderRecipientPolicy, "A known gap") is proposed as T389. No board changes.
+  F8. DataRightsRequest gains a concurrency token (xmin, as CommitteeReviewConfiguration.cs:41 maps it; nothing is live)
+      before an irreversible approval relies on a status read; Approve and Reject check Withdrawn first and say D12's
+      words; a lost race reads the row again and draws its state.
+  F9. The Administrator's own request: "Another Administrator decides it." (Q21); with one Administrator it waits,
+      accepted. An erasure of the last Administrator is refused, in its own words. The page's may-decide and
+      may-record flags come from CanReview and CanRectify as changed, never from roles.
+  F10. The queue's pager shows only past one page (MatchCount > PageSize), as the People list and flow 13's closed list;
+      drawn on Q09 and Q10 only.
+
+FIXTURES (the T379 replay, wombat_scenario_t379, and its appendix; D = 2026-10-28, the clock having passed midnight
+SAST; every stored time is UTC, two hours behind; round 2's, restated, with the two user ids round 2 bracketed now read
+from the database; use these words):
+  People (names as stored, no titles; Wombat stores no pronoun):
+    Anele Dlamini, Trainee, dlamini@kgk.wombat.local, user id 67083efa-bbaa-48d5-a753-b01fdf38530d, Kgosi Kgari Teaching
+      Hospital (KGK), training year 3. Menu: Home, Log an activity, My activities, MSF reports, My committee reviews,
+      Export portfolio; under the rule My progress, My data rights.
+    Nomsa Mahlangu, Trainee, mahlangu@kgk.wombat.local, user id d04f4dfb-f855-4345-9efa-edd168d5a2b6, trainee profile
+      id 5 (/admin/trainees/edit?id=5), training year 1, start 2026-01-15, a Wombat password and no institutional
+      sign-in. The Trainee's menu. The stored last name reads "Mahlangu" until A.1.8a's first save (F2).
+    Sipho Ndlovu, Trainee, ndlovu@kgk.wombat.local, user id 4e5ce9ca-438b-4d98-8635-a7259638d7c9, training year 1,
+      Paediatric EPA Curriculum (11.2), start 2026-01-15; one data-rights request. Becomes deleted_user_0ae1d64b.
+    Pieter du Plessis, former trainee (no role, a trainee record), duplessis@kgk.wombat.local, user id
+      6b844c8a-2a79-4f85-a118-28a321709844. Menu: Home, My progress, Export portfolio, My data rights (no "Acting as").
+    Pieter Smit, Coordinator, KGK, smit@kgk.wombat.local, user id 43ad0cb7-5ce6-46d7-8595-7117d130c7dc. Menu: Home,
+      Programme trainees, Waiting for assessors, Decisions due, MSF campaigns, Committee reviews, Decision panels, Data
+      rights requests; then My data rights.
+    devadmin, display name "Demo Administrator", Administrator, user id abd4ed66-e9ad-4187-b87f-c3c481d05c30, no
+      institution; one of two Administrators (admin@wombat.local, seeded, is the other; observed in the database), so
+      the cast never meets F9's last Administrator. Menu: Home; Platform (Scheduled jobs, Audit log, SSO mappings,
+      Data rights requests); Organisations (Institutions, Colleges); People (Users, Invitations); Catalogue (EPAs,
+      Curricula, Activity types, Entrustment scales); Reviews (Decisions due, Committee reviews, Decision panels); then
+      My data rights.
+    Nobody in the cast holds a staff role and is erased, has two requests when erased, signs in through an institution,
+    has no institution, or sits at a second institution: those are Illustrations (‹name›, ‹institution›, ‹roles›).
+  Requests (ids as the replay printed them; times SAST to the minute, the stored UTC beside):
+    Anele Dlamini, Export, "A copy of my training record for my own files.", 2026-10-28 00:01 SAST (22:01:27 UTC), id
+      01a17f61-f16f-77c1-860c-661586d5b733; approved by Pieter Smit 00:01 SAST (22:01:54 UTC) with "Identity
+      confirmed; export released to the data subject."; Completed at once (00:01 SAST).
+    Pieter du Plessis, Access, "Everything held about me.", 00:03 SAST (22:03:08 UTC), id
+      01a17f63-7af4-7ac5-a6d1-d01726b57bc0; withdrawn at once.
+    Nomsa Mahlangu, Rectification, "My programme start is recorded as 15 January 2026; I started work on 19 January.",
+      00:03 SAST (22:03:12 UTC), id 01a17f63-8c25-7c6e-8724-8593f3d7a145; rejected by Pieter Smit 00:03 SAST (22:03:39
+      UTC) with "The whole January 2026 intake is admitted on 15 January, the semester boundary (D42). Nothing to
+      correct."
+    Nomsa Mahlangu, Rectification (A.1.8a, NEW, not yet played): Last name saved "Mahlngu" first (F2); reason ‹reason›,
+      submitted ‹time› SAST, id ‹request id›; approved by Pieter Smit with ‹note› at ‹time› SAST; Last name saved
+      "Mahlangu"; the correction Account › Last name, before "Mahlngu", after "Mahlangu", recorded ‹time› SAST;
+      completed ‹time› SAST. Every bracket stays a bracket until the step is played.
+    Sipho Ndlovu, Erasure, "I am leaving the programme and want my personal data removed.", 00:04 SAST (22:04:45 UTC),
+      id 01a17f64-f566-75f0-91ba-5d71863b77d0; approved by devadmin 00:04 SAST (22:04:50 UTC) with "Identity confirmed.
+      Programme records are kept under a pseudonym."; completed 00:04 SAST.
+    Newest first: Ndlovu's, A.1.8a's (‹time›, after 00:03), Mahlangu's, du Plessis's, Dlamini's. KGK's queue lists them
+      all; no other institution holds a request. The Administrator's queue at A.1.12: five. A changed last digit:
+      01a17f63-8c25-7c6e-8724-8593f3d7a146 (A.5.7).
+  What the erasure ends at A.1.12 (ErasureExecutor and the replay): the account and its sign-in (an open session ends
+    within a minute: 51 s at A.1.13); 1 open committee review, Formative check-in #8 before the Paed Annual Review
+    Panel, Scheduled on 2026-10-28; no MSF campaign; no other open data-rights request; the active programme, Paediatric
+    EPA Curriculum (11.2), ended 2026-10-28 as Withdrawn. What it keeps, under deleted_user_0ae1d64b: Act 4's ratified
+    review #5, closed check-in #6, the activities, progress and audit entries, and the request. "Erased 2026-10-28" is
+    the SAST date of DataRightsErasureRecord.ErasedOn (ProgrammeCalendar.DateOf).
+  Mail (the T379 log; Email:SmtpHost empty, each mail logged as a stub with no address): 6 stub mails since the app's
+    restart in Act 6 (the digests three, the two nudges three), none about a data-rights request.
+  Words that stay, built, and round 1's and round 2's words the reviews kept: as round 2 drew them, but where an item
+    below changes them.
+
+THE CHECKLIST. Each item names its boards (every board at every width drawn unless it says otherwise); round 3's check
+takes each by its id and says done or not done from the board's text and markup.
+
+MUST FIX:
+  M1. The requester's name (F1, F2). R3-C01, C02, C03, C04 and C07, and R3-M08: "Nomsa Mahlngu" wherever the name
+      stands (the tab "Rectification request from Nomsa Mahlngu · Wombat", the h1, Requester, the three record lines
+      "Changed by Nomsa Mahlngu on My account. No staff page changes a name." and "Changed on Nomsa Mahlngu's programme
+      page, which an Institutional admin at Kgosi Kgari Teaching Hospital opens; you cannot.", C07's "Changed on Nomsa
+      Mahlngu's programme page." and its link "Open Nomsa Mahlngu's programme", the closing "… on Nomsa Mahlngu's My
+      data rights.", C01's result "Request approved. Nomsa Mahlngu is emailed. Record each correction below, then
+      complete the request.", the Decide and note help; M08's top bar). From R3-C05 on (C05, C06, C10, M09 and the
+      queue's two Mahlangu rows on Q05, Q08, Q13): "Nomsa Mahlangu". C04 and C07 are Illustrations of the same request
+      before the corrective save; M08 is read between the approval and that save (Steps T1). The Spec writes the name
+      rule: the queue's Requester, the request's h1, tab, Requester and every sentence that names the requester read
+      GetContactsAsync's FirstName and LastName at load; the column only when the account is erased (then the
+      pseudonym); submission stores "First Last". Each C board's annotation says whether it is before or after the
+      corrective save.
+  M2. The erasure's reach (F3). The Spec: ErasureExecutor rewrites RequesterDisplayName on every request with the
+      person's RequesterUserId, DecidedByUserId and AppliedByUserId to the pseudonym, and withdraws the person's other
+      open requests in the same save; the erasure completeness test covers the three columns. R3-D13 adds to It ends
+      "‹n› other open data rights requests: ‹requests›. Each is withdrawn." (NEW); with none, no line (D07: Sipho
+      Ndlovu has none). New R3-K02, Illustration: Pieter Smit's queue after the erasure of ‹name›, who had an earlier
+      ‹type› request Completed and an Access request Submitted: both rows "deleted_user_‹…›" over "Erased ‹date›", one
+      Completed, the other Withdrawn, with the Erasure row Completed above them, newest first, no address on any.
+  M3. The erasure's mail (F4). The Spec's code rows: AccountNotices.SendToAddressAsync(address, kind, build) (NEW,
+      PROPOSED: name it), the handler reading the address with GetByIdAsync before ExecuteAsync, the class comment's
+      exception, DataRightsDecisionEmail a NEW file under Common/Email/Templates. Steps T2.
+  M4. The 390 selects. f14r3.css's "list selects at 390" rule (above): the queue's Type and Status and the pager's
+      "Requests per page" at 44px on every R3-Q board at 390 that draws them; the NEW table lists it as a system rule
+      for every list; the Spec's accessibility line names it; the render-check measures them.
+  M5. DataTable's roles. Your requests (R3-M03 to M10, M17), the queue (R3-Q01, Q03 to Q10, Q13, K02) and Corrections
+      recorded (R3-C05, C06, C09) write class="clinic-table clinic-table--stack clinic-table--stack-wide
+      data-rights-table" role="table", role="rowgroup" on thead and tbody, role="row" on each tr, role="columnheader"
+      on each th scope="col", role="rowheader" on each th scope="row", role="cell" on each td, at every width. The Spec
+      says the roles are DataTable's (a row laid out as a grid loses a table's semantics).
+  M6. Every stacked cell labelled. data-label="Status" on the badge cell of Your requests and the queue; every td that
+      holds text carries its column's data-label (Submitted, Type, Status, Answer, Institution, Request id, Value
+      before, Value after, Recorded); the row header and the actions cell carry none, by design.
+
+SHOULD FIX:
+  S1. The requester's email (K3). The Spec's DATA rows: the request page's Email and the queue's second line read
+      GetContactsAsync's Email with the name (M1); none once erased (R3-K01, K02 draw no address, as K01 does).
+  S2. Programme start's reads (K4). The Spec's DATA row: the requester's preferred profile id (an int, from
+      TraineeScopeResolver.PreferredProfiles), whether it has ended, whether the caller may open it (the Administrator,
+      or an Institutional admin of its institution), and whether a profile exists (no profile: the radio is not offered);
+      TargetId stays the user id (a Guid), so a recorded Programme start does not link back to the profile: say so.
+      R3-C07's link href="/admin/trainees/edit?id=5". R3-C08's line reads flow 13's built words "This programme has
+      ended, so its record is archived and cannot be changed." (TraineeProfileWords.EndedLine), no task id, no link.
+  S3. My data rights' institution (K5). The Spec: GetMyDataRightsRequestsQuery returns a wrapper, MyDataRightsDto
+      (InstitutionName, null for none; Requests), so the name stands on a page with no request (M01, M11, M18).
+  S4. The queue's institution (K6). The Spec: ListDataRightsRequestsQuery's result carries the caller's institution
+      name (the subtitle, the caption, the empty sentence). A Coordinator with no institution (an empty queue today,
+      ListDataRightsRequests.cs:51-55): the subtitle "Requests about personal data: decide each, and carry an approved
+      correction through." and the empty card "No requests" over "Your account is not set to an institution, so no
+      request is yours to decide." (NEW, PROPOSED; a Spec line, no board).
+  S5. The forecast's scope (F5). R3-D13 redrawn, Illustration: Pieter Smit (the Coordinator's menu, top bar "Pieter
+      Smit") deciding the erasure of ‹name› at Kgosi Kgari Teaching Hospital, who holds ‹roles›; It ends: the account
+      line; "The roles ‹roles› and their scopes."; "‹n› open committee reviews: ‹reviews at Kgosi Kgari Teaching
+      Hospital›, and 1 open review at another institution. Each is withdrawn, and nothing more is decided at it." (NEW,
+      F5's words); "‹n› MSF campaigns not yet released: ‹campaigns›."; M2's other-requests line; the programme line. The
+      Spec: the forecast query is gated as the command; at the caller's institution it names, elsewhere it counts; the
+      Administrator's names everything (D07, D14 stay devadmin's).
+  S6. The erasure's result (K8). The Spec: ExecuteAsync returns an ErasureOutcome (Pseudonym, ReviewsWithdrawn,
+      CampaignsWithdrawn, RequestsWithdrawn, ProfilesEnded; NEW, PROPOSED), and ApproveDataRightsRequestCommand returns
+      the request with it. The result is "The personal data is erased." (bold), then "The request is approved and
+      completed.", then the clauses present joined ("‹n› committee review(s) was/were withdrawn", "‹n› MSF campaign(s)
+      …", "‹n› other request(s) …", "the programme ended today"), then "The account is now ‹pseudonym›; its open session
+      ends within a minute." R3-D09 keeps its sentence (one review, the programme). New R3-D22, Illustration: ‹name›
+      with nothing open: "The request is approved and completed. Nothing else was open to end." (NEW, PROPOSED).
+  S7. An institutional sign-in (F6). New R3-C11, Illustration: Pieter Smit on ‹name›'s approved Rectification, ‹name›
+      signing in through ‹institution›: the First name and Last name radios disabled, each with the line "This name
+      comes from ‹institution›'s sign-in; the institution corrects it." (NEW, F6) as its help in place of "Changed by
+      ‹name› on My account…"; Programme start and Other as R3-C02's. The Spec: ‹institution› is the provider's
+      DisplayName (AccountSignInMethods.InstitutionalSignIns); the correction records as Other (F6; reading the radios
+      as disabled is this message's, inferred: the operator may correct it); an edge row; T388 named.
+  S8. The Administrator's own request (F9). New R3-D20, Illustration: devadmin on ‹an Export request› of devadmin's own
+      ("Export request from Demo Administrator"), Submitted, no Decide, the line "You cannot decide your own request:
+      another Administrator decides it." (NEW, F9); the subtitle "Submitted ‹date› ‹time› SAST" (no institution: the
+      part after the dot is omitted, a build rule). New R3-D21, Illustration: Pieter Smit approving the erasure of
+      ‹name›, in a Wombat where ‹name› is the only Administrator and has an institution claim at Kgosi Kgari Teaching
+      Hospital (the one way a Coordinator reaches it, Q15): after Erase and approve, refused in Decide's ActionResult,
+      the focus on the alert, the note kept, still Submitted: "Nothing has been erased." (bold) "‹name› is Wombat's only
+      Administrator, and erasing the account would leave nobody to run it. Add another Administrator first, then approve
+      again." (NEW, PROPOSED). The Spec: may-decide and may-record from CanReview and CanRectify (Q21's requester check
+      in CanAct), never from roles; the refusal in ApproveDataRightsRequest before ExecuteAsync.
+  S9. The expiry notice (F7). No board. The Spec: Q27's sentence stays on every M board; the build adds the expiry
+      notice to its examples when it checks the list against EntrustmentDecisionExpiredEmail and
+      EntrustmentDecisionExpiringReminderEmail; T389 named.
+  S10. The requester's own DTO (K13). The Spec: MyDataRightsRequestDto (Id, RequestedOn, Type, Status, DecidedOn,
+      DecisionNote, CompletedOn, CorrectedRecords) for My data rights only; DataRightsRequestSummaryDto (the queue's)
+      unchanged in what it carries of a decision; the corrections' labels by one grouped read of
+      DataRightsRectifications.
+  S11. The record's label and values (K14). The Spec: values written JsonSerializer.Serialize(string) and read back with
+      Deserialize<string>, compared canonical-to-canonical (CLAUDE.md's jsonb rule); TargetType Account.FirstName,
+      Account.LastName, TraineeProfile.ProgrammeStart, or Other:‹name› (at most 200); "Enter the value before." and
+      "Enter the value after." are the page's rules (the validator's NotEmpty() passes the JSON of an empty string).
+      Other's name moves out of Value before: Other's line reads "Name the record in the field under it." (NEW) and,
+      Other chosen, a field "Record's name" (NEW) appears under it, refused "Name the record." or "Name the record in
+      194 characters or fewer." (NEW, PROPOSED). R3-C09 draws Other chosen with ‹the record's name› typed, and its
+      recorded rows' Record cell "Other › ‹record›" over Value before "‹before›" (no "‹record›: " prefix). M09's answer
+      names an Other record the same way (a Spec line).
+  S12. The queue's handlers (K15, N8). The Spec: PagerControls at 20 of 10/20/50/100 with PageSizeLabel "Requests per
+      page" (RequestsList.razor's constant 25 and hand-built pager go); Show and Clear filters new handlers; the filter
+      bar is the search-container / search-field filter-actions pattern (DecisionsDue.razor:44), not a component (no
+      FilterBar); StatePanel's LoadError and OnRetry new on the request page. The NEW words the filters build: the
+      caption's tail (": Export, Submitted", ": Erasure", ": Completed"); the empty sentence "No ‹Type› request at
+      ‹institution›.", "No ‹Type› request is ‹Status› at ‹institution›.", "No request is ‹Status› at ‹institution›.", the
+      Administrator's "… at any institution." (NEW), each followed by "Clear filters to see every request.".
+  S13. The Withdrawn check and the token (F8). R3-D12 as drawn, its annotation saying: Approve and Reject check Withdrawn
+      first and say "Sipho Ndlovu withdrew this request. Nothing was decided or erased." (the name live, F1), never the
+      domain's "Only submitted or under-review requests can be approved."; the page reads the row again and draws it
+      Withdrawn. The Spec: the xmin token on DataRightsRequestConfiguration; a request decided meanwhile reloads as it
+      stands, under "This request was decided while this page was open. Nothing more was done." (NEW, PROPOSED; a
+      Spec line, no board).
+  S14. The three load outcomes (K17). The Spec: GetDataRightsRequestByIdQuery returns null for an unknown and a foreign
+      id (no throw); the page's catch maps every exception to "Could not load this request." with Try again
+      (FocusAfterRetry to the h1), never ex.Message; Request unavailable only when the read is null (R3-D17, D18, U01,
+      U02's annotations say which).
+  S15-S17, S19. The Steps (Steps T1-T6).
+  S18. Clear filters only once set (C6, D7). R3-Q13 at 390 draws no Clear filters (both filters at their defaults) and
+      no pager (F10); R3-Q02, Q03, Q06 and Q07 at 390 draw Clear filters as a 44px block under Show (.filter-actions).
+  S20. Required groups say so (D4). Both legends, "Request type" (every M board with the form) and "Record" (every C
+      board with the form, C11 included), read the aria-hidden star then <span class="visually-hidden"> required</span>.
+  S21. The NEW table cut to what .user-page lacks (D5). My data rights is <div class="user-page data-rights-page">, the
+      request and correction pages <div class="user-page"> (no .request-page); .request-page, .correction-records and
+      the old .data-rights-page column rules leave the NEW table, which keeps .request-id, .data-rights-table,
+      .answer-cell, .correction-values, .dialog-body--scroll, .data-rights-page (its two phone rules) and the list
+      selects; each row says what it adds.
+  S22. The stylesheet (D6). Every board links f14r3.css as above; the Spec names it, says it is a project file, and
+      carries the render-check.
+  S23. The pager only past one page (F10). R3-Q01, Q03 to Q08, Q13 and K02 draw no pager; R3-Q09 and Q10 keep it.
+  S24. The long reason (D9). R3-M17's Reason holds "‹a reason of 4,000 characters, wrapping in the box›" and the
+      counter reads "4,000 of 4,000 characters"; at 390 the textarea stays in its column.
+
+NITS (fix as you pass; each is an item):
+  N1. PseudonymSalt (K N1). R3-D10's alert: "Nothing has been erased." (bold) "Erasure is not set up on this server.
+      The request is still Submitted. Ask whoever runs the server to set it up, then approve again." (NEW: the key's
+      name goes to the log, not the page); the Spec's code row: the exception in ApproveDataRightsRequest.cs:76 names
+      Wombat__PseudonymSalt for the operator, and the page maps it to these words.
+  N2. The may-download flag (K N2). Its consumer is Decide's "You cannot download it yourself." (shown when false); the
+      Administrator gets no Download on the request page (the endpoint stays the requester's, and an Administrator's
+      by address): a Spec line, no board.
+  N3. The reminder save (K N3). The Spec: the result says the state saved, from the state before: "Reminder emails
+      stopped.", "Reminder emails will be sent again.", and with the box unchanged "Nothing changed: reminder emails
+      are still stopped." or "Nothing changed: reminder emails are still sent." (NEW, PROPOSED); T318's row names
+      UpdateObjectionFlagsCommand, IObjectionFlagUpdater, GetObjectionFlagsQuery, ObjectionFlagsDto, ObjectionFlagService
+      and the executor's write.
+  N4. Two or more in one minute (K N6). A row's name carries the time to the second when another of the same person's
+      requests shares its minute ("Withdraw the Export request made 2026-10-28 ‹hh:mm:ss› SAST"; NEW, PROPOSED, in
+      place of "the later / the earlier of two that minute"): R3-M17's two Withdraws, and the queue's Review names
+      (S19).
+  N5. "Erased 2026-10-28" is the SAST date of ErasedOn (K N7): the Spec's DATA row says "(SAST date)".
+  N6. The user ids (C8): R3-D04 "6b844c8a-2a79-4f85-a118-28a321709844" under Pieter du Plessis; R3-D05 and R3-C01 to
+      C07 and C10 "d04f4dfb-f855-4345-9efa-edd168d5a2b6" under Nomsa Mahlangu (C08, C09 keep ‹user id›).
+  N7. Illustrations that are not the cast's state (C9): R3-M17 and R3-C09 bracket the person (‹name›, top bar and every
+      sentence); R3-Q09 and Q10 bracket the domain under a bracketed institution (‹name›@‹domain›); R3-M16, C04, C10 and
+      D19 keep their people, their chips saying which step's state they fail or refuse (M16 A.1.2's submit; C04 and C10
+      A.1.8a's record, before and after the corrective save; D19 Pieter Smit as the decider of ‹name›'s request).
+  N8. The ratified review's number (C10): R3-D07's keeps "the ratified review #5, closed check-in #6, the activities,
+      progress and audit entries, and this request." (#5 is Sipho Ndlovu's annual review, Act 4).
+  N9. The Steps' "Dr Mahlangu" and "Mr Smit" are the runbook's titles, not page copy (C11): kept.
+  N10. The captures (cast N1): opened as THE SCREENSHOTS says; the Spec names them.
+  N11. Contrast (D10): the Spec's lines read: badge-accepted's text is --text-color on --warning-bg, its border
+      --warning-color (5.4:1 on the tint); the focus ring rgb(45 108 223) is 4.86:1 on white, 4.61:1 on the page
+      background. Both pass.
+  N12. Download per type (D11): the Spec's names table: Export "Download the export of the Export request made ‹date›
+      ‹time› SAST" (built); Access "Download the copy of your data for the Access request made ‹date› ‹time› SAST" (NEW,
+      PROPOSED). Each starts with the visible word.
+  N13. The pseudonym's second line (D12): R3-K01's and R3-D09's Requester dd is the .person-cell "deleted_user_0ae1d64b"
+      over "Erased 2026-10-28", as the queue's.
+  N14. The id crumb while loading (D13): R3-D17 and D18 draw Home › Data rights requests ›
+      01a17f61-f16f-77c1-860c-661586d5b733 (the id is in the address), the 390 parent link as K01's.
+  N15. The h1 Try again focuses (D14): R3-M15, Q12 and D18 draw tabindex="-1" on the h1 (StatePanel's FocusAfterRetry
+      focuses it; FocusOnNavigate covers only a navigation).
+  N16. Validated on press (D15): no field carries required; the Spec says the pages validate on press, as built.
+  N17. aria-describedby's order (D16): a shown refusal is named first, then the help, then the counter ("reason-err
+      reason-help reason-count", "note-err note-h"), as flow 13's; the Spec's DESIGN.md text amends § Form system's
+      counter line (DESIGN.md:1435, "then the refusal's id when refused") and § Form page's (:1277) to say so, PROPOSED.
+  N18. Headings that nothing focuses (D17): h2#s-dec and h2#s-cor lose tabindex on every board; the results focus their
+      ActionResult.
+
+STEPS BOARD (R3-0-steps, -steps-2, more if long; every row round 2's board carries stays unless an item here changes
+it; values person by person from FIXTURES):
+  T1. A.1.8a rewritten (F2, S17). Route: /account/profile → /account/data-rights → /admin/data-rights/{Id:guid} →
+      /account/data-rights → /account/profile → /admin/data-rights/{Id:guid} → /account/data-rights. Before: none (no
+      seeded name). Do: Dr Mahlangu opens My account from the name in the top bar and saves Last name "Mahlngu" ("Name
+      saved."); submits a Rectification with ‹reason›. Mr Smit approves it with ‹note› (R3-C01) and reads the empty
+      Correction section with its four records (R3-C02), then presses Complete request with none recorded (refused,
+      R3-C03). Dr Mahlangu reads the row: Approved, "Being corrected", no Withdraw, top bar "Nomsa Mahlngu" (R3-M08).
+      Dr Mahlangu saves Last name "Mahlangu" on My account ("Name saved."). Mr Smit opens the request again (the h1 now
+      "Rectification request from Nomsa Mahlangu"), records Account › Last name, "Mahlngu" to "Mahlangu" (R3-C05), and
+      completes the request (R3-C06). Dr Mahlangu reads the row Completed, "Completed on ‹date›. Corrected: Account ›
+      Last name." (R3-M09). Expect each word from those boards; the mails of T2.
+  T2. The mail (M3, F4, C2). Expect changes: A.1.3 a stub decision mail is logged for the Export's approval (Actual's
+      "No mail" goes); A.1.5 "No email is sent" becomes "An email told Anele Dlamini of the decision at A.1.3; none is
+      sent on download"; A.1.8 a stub mail for the rejection; A.1.8a two (the approval, the completion); A.1.9's "no
+      email told …" becomes "an email told Nomsa Mahlangu of each decision"; A.1.12 one stub mail, the erasure's
+      confirmation, with no link, logged after the commit; A.1.13's "No email is sent to …" becomes "The erasure's
+      confirmation was sent at A.1.12; nothing more is sent." The Outcome state's "6 Stub emails" becomes 11
+      (10 if Complete request sends none: round 2's PROPOSED, still open).
+  T3. The word search, from the appendix itself (S15; appendix-cross-cutting.md line numbers): "Processing preferences
+      saved." A.1.1 (Expect, Actual), A.2.3 (379, 381), A.2.5 (403, 405); "Opt out of digest emails" A.2.3 (378, 380),
+      A.2.5 (402); "optional processing" A.1.1 (Do, Note, Gap F-A.1.1a), the Outcome (1746, 1761, 1810); "Apply filters"
+      A.1.3 (107), A.7.5 (1419, Gap F-A.7.5b 1421); "UnderReview" A.1.3 (113, Gap F-A.1.3b 116); "Back to list" A.5.7
+      (859); "Not found" A.5.7 (854, 859); "badge-draft" A.1.8 (195); "by the address" A.1.3 (99), A.1.12 (260); "No
+      confirmation is asked" A.1.12 (259); "No mail"/"No email" A.1.3 (113), A.1.5 (140), A.1.8 (198), A.1.9 (206, 210),
+      A.1.13 (280, 284), and A.1.2's (86), which stays (a submission sends none); the UTC times A.1.2 (85-87), A.1.3
+      (109, 113), A.1.5, A.1.6, A.1.7, A.1.8 (197), A.1.11, A.1.12 (267) and the Outcome. Each row names the Gap it
+      closes: F-A.1.1a (T318), F-A.1.2a and F-A.1.9a (T319), F-A.1.2c (T325), F-A.1.3b (T324), F-A.1.3c (T323),
+      F-A.1.12a (T276, T264), F-A.5.7a, F-A.7.5b (T328).
+  T4. The Outcome state (S16): the Goal's "four data-rights requests" five; the request tuples (0,5,1) (1,3,1) (1,4,1)
+      (2,4,1) (4,4,1); the audit Submit 5, Withdraw 1, Approve 3, Reject 1, with ApplyRectificationCommand 1 and
+      CompleteRectificationRequestCommand 1 added to the IN (…) list; the Shared state's "KGK has five data-rights
+      requests" and "Dr Dlamini has opted out of optional processing" dropped (Q28, T318); the SELECT loses
+      "OptOutOfOptionalProcessing" (a hard SQL error after T318, not a changed value) and reads "dlamini: not opted
+      out"; "Dr Mahlangu's last name was saved twice (A.1.8a)" beside Prof Mbatha's name save; the Handoff's
+      "applying and completing a rectification, which no page offers" goes; states.md's data-rights rows and
+      coverage.md's change with them (the build's).
+  T5. The rest of the cast review's list, a row each with what changes (Expect, Do, Note, Actual or Gap): A.1.1 (no
+      optional box; saves nothing, Q28; the 23:59 note goes), A.1.2, A.1.3 (Show after the filters; the requester by
+      name over the address; Decided by the name), A.1.5, A.1.8 (Q22's badges), A.1.9 (two Rectifications), A.1.12
+      (the dialog with #5; five requests; the pseudonym over "Erased 2026-10-28"), A.1.13 (T2), A.2.3 and A.2.5 (Do and
+      Expect), A.5.7 (Request unavailable), A.7.3 (Your requests stacks, no inner scroll), A.7.5 (the selects 44px, no
+      Clear filters at the defaults, five KGK rows stacked, no pager); A.2.4 and A.2.6 unchanged (they read the log; the
+      cast review checked them); A.1.4, A.1.10 and A.1.14 unchanged.
+  T6. Re-pinning (S19): one line: every hard value is T379's; A.1.8a adds five actions before A.1.11, so the replay
+      that first plays it mints new ids, minutes, a new pseudonym and a new "51 s", and the build re-pins from it; if
+      A.1.8a's request lands in the minute of the rejected one, the queue's two Review names carry the second (N4).
+  T7. Each journey's count, presses + fields typed, at 1280 and 390 (Menu one more press at 390), recomputed after F2
+      and F10 (say for each whether it changed), today's beside it: an export requested and downloaded (Dr Dlamini); a
+      rejected answer read (Dr Mahlangu); a request decided (Mr Smit, A.1.3); a correction carried through (Mr Smit,
+      A.1.8a, inferred unchanged at 5 + 2, the approval apart); a name corrected on My account (Dr Mahlangu, NEW,
+      inferred 2 + 1 at 1280: the name in the top bar, Last name typed, Save); an erasure approved (devadmin); the
+      reminders stopped (Mr Smit).
+  T8. The build states that need a states.md row: M13-M18, Q02, Q09-Q12, D10-D22, C04, C07-C11, K02, U02.
+
+ALSO (flows 10-13, BRIEF § 11):
+  A1. In every stacked row and stacked form's actions the primary is on top; in a dialog at 390 the action on top.
+      Round 3's check reads each 390 board against DESIGN.md as well as this ask.
+  A2. A form inside a gap-spaced column gets none of its gap: the Spec names the element that holds each form's parts
+      (Make a request, Reminder emails, Decide, Record a correction).
+  A3. Every 390 control 44px, measured (the render-check).
+  A4. Nothing scrolls sideways at 1280, 1100, 768 or 390 (the render-check), a table on the Spec.
+  A5. No password and no secret drawn; never two states on one board that cannot hold at once.
+
+BOARDS ROUND 3 DRAWS (about 150):
+  - R3-0-spec, -spec-2, -spec-3 and R3-0-steps, -steps-2 (more if they run long), redrawn WHOLE, so each item can be
+    checked.
+  - Every round 2 screen as R3-, at every width round 2 drew (62 at 1280; 63 at 390, Q13 at 390 only; the 768s of M01,
+    M04, Q04, Q09, D01, C02, C05, C09), with the items above applied.
+  - New, each at 1280 and 390: C11 (S7), D20 and D21 (S8), D22 (S6), K02 (M2); all five Illustrations.
+  - Illustrations in all: M13, M16, M17, M18, Q09, Q10, D10-D16, D19, D20, D21, D22, C04, C07-C11, K02, U02; the Spec
+    lists them and each carries the chip and the word in its title.
+
+SPEC BOARD: FIRST, the screenshots: whether they arrived and how, which were opened, any word a capture contradicts.
+Then: F1-F10, M1-M6, S1-S24, N1-N18, T1-T8 and A1-A5, each with where it is drawn or why it is Spec only; the
+Illustration list; the brackets kept and why (A.1.8a's ‹reason›, ‹note›, ‹request id›, ‹time›, ‹date›; the
+Illustrations' ‹name›, ‹institution›, ‹roles›, ‹n›); the render-check's numbers. The changes the boards need, written as
+code changes, each PROPOSED, and restated whole (round 2's rows, with these):
+  - The name rule (F1, M1), the email (S1), the institution reads (S3, S4), MyDataRightsDto and MyDataRightsRequestDto
+    (S3, S10), the Programme start reads (S2).
+  - ErasureExecutor: the rewrites and withdrawn requests (F3, M2), ErasureOutcome (S6), the forecast's scope (F5, S5),
+    the last Administrator's refusal (F9, S8), the address read before it runs and the AccountNotices overload with
+    DataRightsDecisionEmail (F4, M3).
+  - DataRightsAuthorization: Q1's roles, Q21's requester check in CanAct, the flags from CanReview and CanRectify (F9).
+  - ApplyRectificationCommand: the encoding and Other:‹name› (S11); the recorder column AppliedByUserId (a migration).
+  - The Withdrawn check and the xmin token (F8, S13); the load outcomes (S14); the queue's handlers and pattern (S12);
+    T318's names (N3); PseudonymSalt's words (N1).
+  The class table, a row for every class not in bundle.css v37 (NEW and why, or "reuses .x"): S21's cut, M4's system
+rule; .request-page, .correction-records and the old .data-rights-page column rules out; the canvas-only classes
+listed apart, in f14r3.css's section 1. The DESIGN.md text each change touches: round 2's rows, with § Table system's
+"the pager only past one page" (F10), § Form system's refusal-first order (N17), § Alerts and § Detail page's live
+requester name (F1), § Button system's destructive action with F5's counted line. Every message by kind with its words,
+built, round 1's, round 2's or NEW, each NEW beside the words it replaces (M1's spelling; M2's, S5's, S6's, S7's, S8's,
+S11's, S12's, S13's and S4's words; N1, N3, N4, N12). "DATA the build must add", restated: the live name and email (F1,
+S1); the institution names (S3, S4); the profile reads (S2); the forecast by scope with other requests (F5, F3); the
+erasure's outcome (S6); the recorder; may-decide, may-record and may-download from the authorisation (F9, N2); the
+pseudonym and ErasedOn's SAST date (N5); MyDataRightsRequestDto's fields (S10).
+

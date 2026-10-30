@@ -203,3 +203,12 @@ The operator's Q1-Q28 (`14-data-rights.md` § 6, `round-1-assessment.md` § 8) s
 Merged from 7 must, 26 should and 21 nits across the three reviews (54) into **6 must, 24 should and 18 nits** (C1 into M1,
 K N5 into M2, K10 into M3, D7 into S18, K N4 into S8, K N8 into S12). Where the reviews meet, none contradicts another:
 K1 and C1 are one fault seen from the code and from the runbook; K10 gives C2's mechanism; D7 and C6 are the same board.
+
+## The operator's decisions (2026-10-30)
+
+The operator took F1–F10 as recommended, with every must-fix, should-fix and nit above as round 3's ask requires them.
+Two follow-ups were proposed as tasks rather than folded in: T388 (F6: a name changed on My account reverts at the next
+institutional sign-in) and T389 (F7: the digest opt-out does not reach every scheduled reminder; a locked account's mail
+and the entrustment expiry notice ignore it). F3 is taken with `RequesterUserId` kept, as recommended. Q1–Q28 stand.
+Round 3's ask is `round-3-ask.txt`; the captures round 2 did not open go with it (attached, or read from the upload
+folder).

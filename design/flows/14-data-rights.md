@@ -586,6 +586,16 @@ assessment takes from B and C), a request A with B's fixed list of records (Q26)
 request confirmed with its corrections, not found redrawn per Q17; the assessment's M1–M6 and its shoulds apply. Round 2's
 ask is `14-data-rights/round-2-ask.txt`.
 
+**Decided 2026-10-30, after round 2's review: the operator took F1–F10 as recommended**
+(`14-data-rights/round-2-review.md`, § Decisions for the operator). F1: the requester's name is the account's, read
+live; the stored name only a fallback holding the pseudonym. F2: A.1.8a plays "Mahlngu" (Dr Mahlangu saves it on My
+account first). F3: the erasure rewrites every request of the person and withdraws their other open ones. F4: the
+erasure's mail goes to the address read before it runs. F5: a Coordinator's forecast names what is at their
+institution and counts the rest. F6: a name from an institutional sign-in is said to be the institution's, recorded as
+Other. F7: Q24's and Q27's words stay. F8: a concurrency token on the request. F9: the Administrator's own request
+needs another Administrator; the last Administrator cannot be erased. F10: the queue's pager only past one page. Two
+follow-ups are proposed as tasks: T388 (F6) and T389 (F7). Round 3's ask is `14-data-rights/round-3-ask.txt`.
+
 1. **Q1. (The operator's) Who carries an approved correction through** (T316). *Recommendation:* whoever may approve
    the request: the Coordinator at the request's institution and the Administrator. `RectificationRoles` folds into
    `ReviewRoles`, so one person approves, records each correction and completes the request; the Speciality admin, who
