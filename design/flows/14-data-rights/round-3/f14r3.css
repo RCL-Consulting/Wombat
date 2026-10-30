@@ -1,0 +1,45 @@
+/* f14r3.css: flow 14, round 3. Linked by every R3 board after ds/wombat/tokens.css and ds/wombat/components/bundle.css.
+   Section 1 is the canvas's own, never a component's and never app.css's. Section 2 holds each NEW rule, PROPOSED for
+   app.css, each naming its row of the class table on R3-0-spec. Tokens only, no raw colour. */
+
+/* ===================================================================== 1. Canvas only */
+/* The board's annotation chip (state, width, focus; "Illustration" in its bold lead). */
+.anno { background: var(--primary-color); border-radius: var(--radius-md); bottom: var(--space-sm);
+  box-shadow: var(--shadow-dialog); color: var(--on-fill); font-family: var(--font-body); font-size: 0.8rem;
+  line-height: 1.35; max-width: min(22rem, calc(100vw - 2rem)); overflow-wrap: anywhere;
+  padding: var(--space-xs) var(--space-sm); position: fixed; right: var(--space-sm); z-index: 30; }
+.anno b { display: inline-block; background: var(--warning-bg); border-radius: var(--radius-sm);
+  color: var(--warning-color); margin-right: var(--space-xs); padding: 0 var(--space-xs); }
+/* The frozen focus ring. */
+.pv-focus { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+/* The painted modal stage for a dialog drawn open. */
+.pv-overlay { align-items: flex-start; background: var(--scrim); box-sizing: border-box; display: flex; inset: 0;
+  justify-content: center; padding: var(--space-2xl) var(--space-md); position: fixed; z-index: 20; }
+.pv-overlay dialog { display: block; margin: 0; position: static; }
+
+/* ===================================================================== 2. NEW rules (the class table on R3-0-spec) */
+/* Row "request-id": an id (a request id, a user id) in its own cell or dd: monospace, breaks anywhere. */
+.request-id { font-family: var(--font-mono); font-size: 0.875rem; overflow-wrap: anywhere; word-break: break-all; }
+/* Row "data-rights-table": the three tables put th scope="row" in each row (the queue's Requester, Your requests' and
+   the corrections' first cell); .clinic-table paints a th as a header, so the row header reads as a cell here. */
+.data-rights-table tbody th[scope="row"] { background: transparent; border-bottom: 1px solid var(--border-color);
+  font-weight: 600; text-align: left; vertical-align: top; }
+/* Row "answer-cell": the requester's Answer cell; a 4,000-character note wraps, never widens the table. */
+.answer-cell { overflow-wrap: anywhere; }
+/* Row "correction-values": Value before and Value after side by side, one column below 641px. */
+.correction-values { display: grid; gap: var(--space-md); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* Row "dialog-body--scroll": the erasure dialog's long count list scrolls inside the dialog, never the page. */
+.dialog-body--scroll { max-height: 55vh; overflow-y: auto; }
+@media (max-width: 640.98px) {
+  .correction-values { grid-template-columns: minmax(0, 1fr); }
+  /* Row "data-rights-page": what .user-page lacks on My data rights (S21): the reminder checkbox, outside a
+     .choice-group, gets the 44px label row .user-page gives a radio; a stacked row's Download or Withdraw takes the
+     row's width (StackWide makes it 44px tall, bundle.css's S16 rule, not wide). */
+  .data-rights-page .form-check:not(.choice-group .form-check) label { align-items: center; display: flex;
+    min-height: 2.75rem; }
+  .data-rights-page .clinic-table--stack-wide .btn { width: 100%; }
+  /* Row "list selects at 390" (M4), a SYSTEM rule for every list, PROPOSED for app.css beside .filter-actions' phone
+     rule: a filter bar's selects and PagerControls' page-size select are 44px, as its Previous and Next already are. */
+  .search-container .form-select,
+  .pager .form-select { min-height: 2.75rem; }
+}
