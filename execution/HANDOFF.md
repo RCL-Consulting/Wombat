@@ -24,8 +24,9 @@ The operator said "start flow 14". T387 created and started (P2), written from T
 - **The wave is merged** into `t387` (`54ce6df2`; t387's worktree is `.claude/worktrees/agent-a0cbe10cd07555864`); six
   suites green. Lane W merged (`4f9f94b6`); code review 0/3/8
   (`71190f07`); the operator decided its S1 (scrub the person's reason and correction values on erasure, keep the note).
-- Pages and runbook reviewed (`4cf8c56f`). **The fix pass runs** on `t387` (one Opus agent).
-- **Next:** squash `t387` onto master, then step 7, the replay, on the operator's word.
+- Reviews and one fix pass done; **built: `e8eea1d2`** on master (squash of `t387`), six suites green. The operator
+  decided the code review's S1 (scrub the erased person's reason and correction values; keep the note).
+- **Next:** step 7, the replay on a fresh database, on the operator's word. Branches `t387*` and worktrees kept.
 
 ## Session 2026-10-27/28 (Opus): T379, flow 13 (graduation and exit), done; T312 before it
 

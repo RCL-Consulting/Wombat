@@ -51,10 +51,10 @@ Run the loop as flow 13 ran it (`design/flows/13-graduation-and-exit/`, BRIEF §
 
 ## Verification
 
-- [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit.
-- [ ] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link.
-- [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/14-data-rights/`.
-- [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 14) — the squash commit and counts.
+- [x] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit. (`2bc97e30`; exit 0)
+- [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link. (https://claude.ai/artifact/FrvjJMZLwRd2Y3AMDEJeGs)
+- [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/14-data-rights/`. (round 3 final, `round-3-check.md`; decisions in the brief's § 6, `round-1-assessment.md` § 10 and `round-2-review.md`)
+- [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 14) — the squash commit and counts. (`e8eea1d2`: Domain 836, Application 4279, Infrastructure 1035, Architecture 52, Web 4369, Integration 516)
 - [ ] The whole runbook replays on a fresh database with no regression from flow 14, the baseline is re-captured, and
   flow 14's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
 - [ ] The design system is re-synced and republished — its version number.
@@ -147,4 +147,12 @@ BRIEF § 6, § 8, § 11; CUSTOMIZATION.md § 5.
   decided S1** (2026-10-30): the erasure scrubs the person's own text (the reason, every correction's before/after
   values) to "Erased with the person's data on ‹day›."; the staff's decision note is kept. Pages and runbook reviews
   (Sonnet, `4cf8c56f`): pages 1 must (P1 DESIGN.md's banner), 4 should, 6 nits; runbook 0 must, 4 should, 5 nits
-  (A.1.8a plays in order; the outcome's counts hold). One Opus fix pass running on `t387`.
+  (A.1.8a plays in order; the outcome's counts hold). One Opus fix pass (`3b9b1644`, `61b8304c`, `250c647f`,
+  `c3693cc5`; `build-review.md` merges the three): every must and should fixed (S1 as decided; S2 Apply carries xmin;
+  S3 eleven page tests; P1/P3 DESIGN.md's banner and amendments; P2 the queue reloads in place; P4 the note's counter
+  and length refusal; P5 ConfirmDialog's action mode opens on Cancel, app-wide; R1–R4 the recipes); nits left with
+  reasons in `build-review.md`. Six suites green (Domain 836, Application 4279, Infrastructure 1035, Architecture 52,
+  Web 4369, Integration 516); verbatim 425/0; completeness ok. **Squashed onto master `e8eea1d2`** (tree identical to
+  `t387` outside the task files). For step 7's browser checks: the dialog's focus on Cancel with a long forecast; the
+  page-size select keeping focus; the note's counter; no rule under a stacked row header at ≤900 px; the new states'
+  SQL recipes (unrun). Branches `t387*` and their worktrees kept. **Next:** step 7, the replay, on the operator's word.
