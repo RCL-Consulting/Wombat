@@ -82,3 +82,7 @@ BRIEF § 6, § 8, § 11; CUSTOMIZATION.md § 5.
   erased account in the Administrator's users list with an empty name. Completeness exit 0; verbatim 424/0; baseline
   missing 0. Staged 113 files, none to crop. `round-1-ask.txt` carries the mark's URL. **Next:** the operator's
   answers to Q1–Q16, then round 1.
+- **2026-10-30, round 1** (18 boards in `round-1/`, `42366e44`; the operator sent the ask and said "done"; the boards
+  follow Q1–Q16's recommendations, taken as recommended, to confirm): three structures for My data rights (A one page,
+  B a form page, C cards), three for a request and its correction (A in its section, B a form page, C a status card),
+  Queue V1/V2 and Decide V1/V2 at fidelity, NotFound-Kept, Spec, Steps. Assessment running (one Opus agent).

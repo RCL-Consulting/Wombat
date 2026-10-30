@@ -11,7 +11,9 @@ The operator said "start flow 14". T387 created and started (P2), written from T
   `/_blob/616538c681cf4475edf7c466864e408d`. Canvas files in scratchpad `e81867ab-…/scratchpad/c14`.
 - **Steps 1–2 done** (`2bc97e30`): brief restated, Q1–Q16 in its § 6 with recommendations, `round-1-ask.txt`
   written (mark filled in); completeness 0, verbatim 424/0, baseline missing 0; 113 files staged.
-- **Next:** the operator's answers to Q1–Q16 (§ 6), then the operator sends `round-1-ask.txt` with § 4's key screenshots.
+- **Round 1 back** (18 boards, `42366e44`); Q1–Q16 taken as recommended by the boards (confirm). The assessment
+  (`round-1-assessment.md`) runs in one Opus agent; if absent from `git log`, re-run it.
+- **Next:** the picks, must-fixes and Q17… to the operator, then `round-2-ask.txt`.
 
 ## Session 2026-10-27/28 (Opus): T379, flow 13 (graduation and exit), done; T312 before it
 
