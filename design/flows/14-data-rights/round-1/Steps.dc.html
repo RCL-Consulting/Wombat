@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 14 steps board, round 1</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:var(--font-body);color:var(--text-color);background:var(--surface-color)}
+.sb{width:1700px;box-sizing:border-box;padding:48px;display:flex;flex-direction:column;gap:32px;font-size:15px;line-height:1.45}
+.sb h1{margin:0;font-family:var(--font-display);font-size:40px;color:var(--primary-color)}
+.sb h2{margin:0 0 12px;font-size:22px;color:var(--primary-color);border-bottom:2px solid var(--secondary-color);padding-bottom:4px}
+.sb p{margin:0 0 8px}
+.sb table{width:100%;border-collapse:collapse;font-size:14px}
+.sb th,.sb td{border:1px solid var(--border-color);padding:6px 8px;text-align:left;vertical-align:top}
+.sb th{background:var(--header-bg)}
+.sb td.n{text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ch{color:var(--warning-color);font-weight:700}.un{color:var(--muted-text)}
+</style>
+</helmet>
+<div class="sb">
+  <h1>Steps board · flow 14 · round 1</h1>
+  <p>Counts are presses + fields typed, from the menu link (390 adds Menu: +1 press). A select changed or a radio chosen is one press; a reload is not counted. "Today" is the shell as built (2026-10-28).</p>
+
+  <section><h2>The requester's journeys (My data rights)</h2>
+  <table>
+    <tr><th>Journey</th><th>Today</th><th>A · one page</th><th>B · form page</th><th>C · cards</th></tr>
+    <tr><td>Make an export request and download it (A.1.2, A.1.5)</td><td class="n">4 + 1</td><td class="n">4 + 1 · 390: 5 + 1</td><td class="n">5 + 1 · 390: 6 + 1</td><td class="n">5 + 1 · 390: 6 + 1</td></tr>
+    <tr><td>Read a rejected request's answer (A.1.9)</td><td>not possible: no date, no note</td><td class="n">1 + 0 · 390: 2 + 0</td><td class="n">1 + 0 · 390: 2 + 0</td><td class="n">1 + 0 · 390: 2 + 0</td></tr>
+    <tr><td>Opt out of the digest (A.2.3)</td><td class="n">3 + 0</td><td class="n">3 + 0 · 390: 4 + 0</td><td class="n">3 + 0 · 390: 4 + 0</td><td class="n">3 + 0 · 390: 4 + 0</td></tr>
+    <tr><td>Withdraw a waiting request (A.1.6)</td><td class="n">2 + 0</td><td class="n">2 + 0</td><td class="n">2 + 0</td><td class="n">2 + 0</td></tr>
+  </table>
+  </section>
+
+  <section><h2>The staff journeys (queue × decide)</h2>
+  <table>
+    <tr><th>Journey</th><th>Today</th><th>Queue V1 + Decide V1</th><th>Queue V1 + Decide V2</th><th>Queue V2 + Decide V1</th><th>Queue V2 + Decide V2</th></tr>
+    <tr><td>Decide a request: Pieter Smit approves the export (A.1.3: narrow, open, approve with a note)</td><td class="n">6 + 1</td><td class="n">6 + 1 · 390: 7 + 1</td><td class="n">7 + 1 · 390: 8 + 1</td><td class="n">5 + 1 · 390: 6 + 1</td><td class="n">6 + 1 · 390: 7 + 1</td></tr>
+    <tr><td>Approve an erasure: devadmin (A.1.12)</td><td class="n">5 + 1 (no confirmation)</td><td class="n">6 + 1 · 390: 7 + 1</td><td class="n">7 + 1 · 390: 8 + 1</td><td class="n">6 + 1 · 390: 7 + 1</td><td class="n">7 + 1 · 390: 8 + 1</td></tr>
+  </table>
+  <p style="margin-top:8px">Queue V2 saves the Status filter (waiting requests are their own list); Decide V2 costs the radio; every erasure costs the dialog's confirm (T264, by design).</p>
+  <table>
+    <tr><th>Carry a correction through (T316): open it, record one, complete</th><th>Today</th><th>Request A · in its section</th><th>Request B · form page</th><th>Request C · status card + panel</th></tr>
+    <tr><td>Pieter Smit, one correction</td><td>not possible</td><td class="n">4 + 3 · 390: 5 + 3</td><td class="n">6 + 2 · 390: 7 + 2</td><td class="n">6 + 2 · 390: 7 + 2</td></tr>
+    <tr><td>Each further correction (five in all, heavy)</td><td>—</td><td class="n">1 + 3 each</td><td class="n">3 + 2 each, a page load each way</td><td class="n">3 + 2 each</td></tr>
+  </table>
+  <p style="margin-top:8px">A types the record's name; B and C choose it from a list of places (DATA), which also says where it is changed.</p>
+  </section>
+
+  <section><h2>The 19 runbook steps: which Expects each variation changes</h2>
+  <table>
+    <tr><th style="width:9%">Step</th><th style="width:38%">Today's Expect (in short)</th><th>What changes, by variation</th></tr>
+    <tr><td>A.1.1</td><td>Three parts; "No requests"; the digest help; "Processing preferences saved." focused</td><td class="ch">All: no optional-processing box; "Reminder emails" part; result "Reminder emails stopped." (the Do changes: she ticks the digest opt-out, the only box). A and C: Your requests first. B: the form is on its own page.</td></tr>
+    <tr><td>A.1.2</td><td>Four types; no reason refused; "…You will be notified when it is reviewed."; row: today, Export, Submitted, Withdraw</td><td class="ch">All: four types as described radios (labels unchanged); the refusal under Reason (words unchanged); result "Export request submitted. Its answer shows here once it is decided." (the email half only with Q5); the row 2026-10-28 00:01 SAST with "Waiting for a decision". B: the refusal on Make a request.</td></tr>
+    <tr><td>A.1.3</td><td>KGK only; filters on Apply; row by address; Review named; detail fields; refusal; Completed; Decision card with a user id</td><td class="ch">Q1: Show, not Apply filters; row by name over address. Q2: no Status filter; the row is a link in Waiting for you. Both: page h1 "Export request from Anele Dlamini"; refusal under the note; Decision with "Pieter Smit · 43ad0cb7-…"; SAST. D2: Approve chosen as a radio, then Record decision.</td></tr>
+    <tr><td>A.1.4</td><td>Page not found, 404</td><td class="un">Unchanged.</td></tr>
+    <tr><td>A.1.5</td><td>Completed with Download; the zip; no email</td><td class="ch">All: the row shows "Approved on 2026-10-28" and the note. C: "Download your export". Zip unchanged.</td></tr>
+    <tr><td>A.1.6</td><td>Former trainee's Home; Submitted with Withdraw; "Request withdrawn." focused; row Withdrawn, offers nothing</td><td class="ch">All: times SAST; the row's answer "You withdrew it before a decision."; Withdrawn grey. Home part unchanged.</td></tr>
+    <tr><td>A.1.7</td><td>Submitted, with a Withdraw</td><td class="un">Unchanged but SAST.</td></tr>
+    <tr><td>A.1.8</td><td>Three KGK requests newest first with badges; withdrawn page offers no decision; Rejected with Decision card; "Request rejected." focused</td><td class="ch">Q1: as today, badges by label. Q2: one in Waiting for you, two in Decided. Both: the withdrawn page says who withdrew it and that nothing is to decide; the result "Request rejected. Nomsa Mahlangu reads your note on My data rights."</td></tr>
+    <tr><td>A.1.9</td><td>Rejected, offers nothing; neither the note nor who decided; no email</td><td class="ch">All: shows "Rejected on 2026-10-28" and the note (T319); still never who decided; email only with Q5.</td></tr>
+    <tr><td>A.1.10</td><td>Flow 08's</td><td class="un">Unchanged.</td></tr>
+    <tr><td>A.1.11</td><td>Accepted though a review is scheduled; Submitted with Withdraw</td><td class="un">Unchanged but SAST and the type's help.</td></tr>
+    <tr><td>A.1.12</td><td>Admin's queue holds every institution's; Completed at once; no confirmation; still the address</td><td class="ch">All: an Institution filter and column; "Approve and erase…" (V1) or "Record decision…" (V2) opens the dialog naming Sipho Ndlovu, 1 open review, no campaign, the programme; Erase confirms; the result focused; afterwards the request names deleted_user_0ae1d64b (Q11). V2: "What erasure ends" read on the page first.</td></tr>
+    <tr><td>A.1.13</td><td>Session ended; "Invalid email or password."</td><td class="un">Unchanged (flow 02).</td></tr>
+    <tr><td>A.1.14</td><td>Users, Trainees, Committee reviews, the check-in</td><td class="un">Unchanged (flows 12, 13, 08, 07).</td></tr>
+    <tr><td>A.2.3</td><td>"Processing preferences saved."</td><td class="ch">All: "Reminder emails stopped." C: the box reads "Stop the regular reminder emails".</td></tr>
+    <tr><td>A.2.5</td><td>"Processing preferences saved."</td><td class="ch">All: "Reminder emails will be sent again."</td></tr>
+    <tr><td>A.5.7</td><td>"You are not authorized…" over "Not found"</td><td class="ch">All: flow 01's Page not found, nothing lit, no alert; unknown and foreign alike.</td></tr>
+    <tr><td>A.7.3</td><td>…the table of "Your requests" scrolls inside its container</td><td class="ch">A and B: Your requests stacks, a block a row, nothing scrolls. C: cards. Other pages unchanged.</td></tr>
+    <tr><td>A.7.5</td><td>…the queue's filters stack above its table</td><td class="ch">Q1: filters then Show (44px), rows stacked, Review a 44px block. Q2: Type then Show, two stacked lists, each link a 44px block. Other pages unchanged.</td></tr>
+  </table>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1700,"height":4200}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

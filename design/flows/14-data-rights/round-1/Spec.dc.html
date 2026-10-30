@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Flow 14 spec board, round 1</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:var(--font-body);color:var(--text-color);background:var(--surface-color)}
+.sb{width:1700px;box-sizing:border-box;padding:48px;display:flex;flex-direction:column;gap:32px;font-size:15px;line-height:1.45}
+.sb h1{margin:0;font-family:var(--font-display);font-size:40px;color:var(--primary-color)}
+.sb h2{margin:0 0 12px;font-size:22px;color:var(--primary-color);border-bottom:2px solid var(--secondary-color);padding-bottom:4px}
+.sb p{margin:0 0 8px}
+.sb table{width:100%;border-collapse:collapse;font-size:14px}
+.sb th,.sb td{border:1px solid var(--border-color);padding:6px 8px;text-align:left;vertical-align:top}
+.sb th{background:var(--header-bg)}
+.sb ul{margin:0;padding-left:20px}
+.sb li{margin-bottom:4px}
+.sb .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px}
+.k{display:inline-block;padding:0 6px;border-radius:4px;font-size:12px;font-weight:700;color:var(--on-fill);background:var(--primary-color)}
+.k.n{background:var(--secondary-color)}.k.d{background:var(--warning-color)}
+</style>
+</helmet>
+<div class="sb">
+  <h1>Spec board · flow 14 · round 1</h1>
+  <p><span class="k n">NEW</span> a component or class not in the system · <span class="k">PROPOSED</span> a rule change that is yours to accept · <span class="k d">DATA</span> what a page would read that it does not read today.</p>
+
+  <section><h2>Components each variation uses</h2>
+  <table>
+    <tr><th style="width:18%">Variation</th><th>From the system</th><th>New</th></tr>
+    <tr><td>My data rights · A (one page, requests first)</td><td>PageHeader; DataTable with Stack (flow 03) for Your requests; choice-group with help (flow 08, flow 11's described radios) for the type; FormField, FormActions, required mark; Alert, ActionResult; StatePanel, Skeleton; badges</td><td>An Answer column (words); nothing else</td></tr>
+    <tr><td>My data rights · B (list + form page)</td><td>As A, plus PageHeader's header action (flow 10/11), a form page of its own (flow 08/11), Breadcrumbs (Home › My data rights › Make a request)</td><td>The page Make a request <span class="k">PROPOSED</span></td></tr>
+    <tr><td>My data rights · C (a card per request)</td><td>DashboardCard frame (detail-card), note panel opened in place (flow 12's Add a role…), choice-group, Alert</td><td><span class="k n">NEW</span> RequestCard: detail-card, h3 "Export · badge", dl of submitted / reason, a quoted answer block, one action</td></tr>
+    <tr><td>A request · A</td><td>The detail page in one column of h2 sections (flow 12's user page: .user-page, .user-section, dl.detail-list); DataTable for corrections; FormField in a form-grid</td><td>The Correction section (words)</td></tr>
+    <tr><td>A request · B</td><td>As A, plus a form page of its own; choice-group for the record; an end section (flow 13)</td><td>The page Record a correction <span class="k">PROPOSED</span></td></tr>
+    <tr><td>A request · C</td><td>As A, plus a note panel in place</td><td><span class="k n">NEW</span> RequestStatusCard (activity page's status card pattern): the state, its next step and its one action</td></tr>
+    <tr><td>Queue · V1 (one table)</td><td>FilterBar with Show (flow 06), DataTable StackWide (flow 11) with a caption, row actions named per row (T239), PagerControls with the list heading's focus (flow 08), StatePanel empty, Skeleton, Alert with Try again</td><td><span class="k n">NEW</span> .request-id: an id that breaks anywhere (font-mono, overflow-wrap:anywhere); the requester's address as a muted second line (.muted)</td></tr>
+    <tr><td>Queue · V2 (Waiting / Decided)</td><td>As V1, plus two list sections with count badges (the inbox's, flow 04), one link a row (activity-link, flow 08's one action a row)</td><td>As V1</td></tr>
+    <tr><td>Decide · V1</td><td>Detail page sections, FormField, FormActions, ConfirmDialog action mode with CancelLabel, the outline trigger and danger confirm (flow 12), ActionResult</td><td>None</td></tr>
+    <tr><td>Decide · V2</td><td>As V1, plus choice-group (two described radios), RefusalSummary (flow 03), a standing warning Alert (Role="")</td><td>The section "What erasure ends" (words)</td></tr>
+    <tr><td>Not found</td><td>Flow 01's NotFound, drawn in the page's place through PageHeader's Page=typeof(NotFound): nothing lit, no trail</td><td>None</td></tr>
+    <tr><td>Kept request</td><td>The detail page; an info Alert</td><td>None</td></tr>
+  </table>
+  <p style="margin-top:8px">Canvas only, not app.css: the state captions, the painted dialog stage and the focus ring drawn on a frozen state. The 1280 boards light Data rights requests with aria-current="true" for the request page; the queue's own board has "page".</p>
+  </section>
+
+  <div class="grid2">
+  <section><h2>DESIGN.md rules each changes</h2>
+  <ul>
+    <li><b>§ The NavMenu's owner table</b>: Make a request under My data rights (My data rights B); Record a correction under Data rights requests for Coordinator and Administrator (Request B). The request's own crumb stays its id.</li>
+    <li><b>§ Form page</b>: those two pages (B, B).</li>
+    <li><b>§ Detail page and the title rule</b>: h1 "‹Type› request from ‹requester›" (the pseudonym once erased); crumb the id; one column of h2 sections Request, Decision, Correction / What erasure ends, Decide; Back to list gone.</li>
+    <li><b>§ Table system</b>: the queue's caption; StackWide below 900px; ids wrapping in their cell; the requester's Answer column (My data rights A); Waiting / Decided (Queue V2).</li>
+    <li><b>§ Button system's destructive action</b>: "Approve and erase…" (V1) and "Record decision…" (V2) outline triggers; "Erase Sipho Ndlovu" danger; "Keep his data" the safe CancelLabel.</li>
+    <li><b>§ Alerts</b>: "What erasure ends" as a standing warning (V2); a refusal under its field, never at the page's top; one result at a time.</li>
+    <li><b>§ Badges' DataRightsRequest tints</b>: Submitted blue, Approved amber (in hand: being corrected), Completed green, Rejected red, Withdrawn neutral badge-withdrawn <span class="k">PROPOSED</span> (a requester's own end, not a failure: flow 13's grey-under-its-name rule).</li>
+    <li><b>§ Content's ids rule</b>: ids on the queue and the request, wrapping; never on My data rights; after an erasure the pseudonym, never the address.</li>
+  </ul>
+  </section>
+
+  <section><h2>Everything PROPOSED</h2>
+  <ul>
+    <li>Q1: the Coordinator at the request's institution and the Administrator record corrections and complete (today Speciality admin and Administrator).</li>
+    <li>Routes: /account/data-rights/new (My data rights B); /admin/data-rights/{Id}/corrections/new (Request B).</li>
+    <li>Refusals: "Record at least one correction before completing the request."; "Choose Approve or Reject." (V2); "‹name› withdrew this request on ‹time›. Nothing was decided or erased."; PseudonymSalt's reworded: "Nothing has been erased. Erasure is not set up on this server: its pseudonym key (PseudonymSalt) is not configured. The request is still Submitted…"</li>
+    <li>The erasure's ConfirmDialog (T264), and V2's standing section.</li>
+    <li>Q5: a decision notice email (no note; a link to My data rights). Until it is built the submitted result says only "Its answer shows here once it is decided."</li>
+    <li>Q6: the optional-processing flag and its column removed. Q8: Objection refused at submission; UnderReview dropped.</li>
+    <li>Q11: the kept request names the pseudonym, with "Erased ‹date›" under it.</li>
+    <li>Queue V2: the Status filter gone; an approved Rectification stays in Waiting until completed.</li>
+    <li>Administrator's queue: an Institution filter and column.</li>
+    <li>Words: "Reminder emails" for Processing preferences; "Reminder emails stopped." / "Reminder emails will be sent again."; C's checkbox "Stop the regular reminder emails".</li>
+    <li>Q14: Withdraw stays immediate, no dialog (all three). Q15: the deciders unchanged.</li>
+  </ul>
+  </section>
+  </div>
+
+  <section><h2>DATA: what a page would read that it does not today</h2>
+  <table>
+    <tr><th style="width:22%">Page</th><th>Data</th></tr>
+    <tr><td>My data rights</td><td>Per request: DecidedAt (to the day) and DecisionNote (T319: the summary carries neither). For a completed Rectification, the records corrected. Never DecidedBy.</td></tr>
+    <tr><td>Data rights requests</td><td>The requester's name as stored (today the address only); for the Administrator the requester's institution's name ("None" without one); whether the requester was erased, and the pseudonym (Q11).</td></tr>
+    <tr><td>A request</td><td>The decider's name beside the id; the requester's name and institution; the corrections recorded (record, before, after, by whom, when); for B and C a fixed list of correctable places and, for each, the page that owns it and whether the caller may open it.</td></tr>
+    <tr><td>The erasure (dialog, V2 section)</td><td>Counted at read time and again inside the transaction: open committee reviews of the person at any institution or panel (type, #, panel, state); MSF campaigns about the person not yet released; a still-active trainee profile and its curriculum; T276's residue (activities about the person still in their workflow; the person's address as a respondent on another trainee's open campaign).</td></tr>
+    <tr><td>All three pages</td><td>Every stored UTC time shown in SAST with its zone; a day in SAST (2026-10-27 22:01 UTC is 2026-10-28 00:01 SAST).</td></tr>
+  </table>
+  </section>
+
+  <section><h2>Messages by kind (round 1; the full list in round 2)</h2>
+  <table>
+    <tr><th style="width:12%">Kind</th><th>Words</th></tr>
+    <tr><td>Result</td><td>"Export request submitted. Its answer shows here once it is decided." · "Request withdrawn." · "Reminder emails stopped." / "Reminder emails will be sent again." · "Request approved. Anele Dlamini can download her export from My data rights." · "Request rejected. Nomsa Mahlangu reads your note on My data rights." · "Correction recorded: Account › Last name." · "Request completed." · "The personal data is erased. The request is approved and completed. 1 committee review was withdrawn and the programme ended today. The account is now deleted_user_0ae1d64b; its open session ends within a minute."</td></tr>
+    <tr><td>Refusal</td><td>"Please provide a reason for your request." (unchanged, under Reason) · "A decision note is required." (unchanged words, under the note) · "Record at least one correction before completing the request." · "Choose Approve or Reject." (V2) · the two erasure refusals · the withdrawn-meanwhile refusal</td></tr>
+    <tr><td>Hint</td><td>Each type's help on the form; "Anele Dlamini reads this note with the decision. Who decided is not shown to her."; the digest help (T320's half: "…such as a request to assess or an invitation to give feedback.", the committee or entrustment decision gone)</td></tr>
+    <tr><td>Notice</td><td>"This person's personal data was erased on 2026-10-28, at this request. The request is kept as the record of it, under the pseudonym." · "What erasure ends" (V2)</td></tr>
+    <tr><td>Empty</td><td>"No requests yet. You have not asked for your data, a correction or erasure." · "No requests match: No Access request is Completed at Kgosi Kgari Teaching Hospital. Clear filters to see every request."</td></tr>
+    <tr><td>Load error</td><td>"Could not load your data rights. / the data rights requests. / this request. Nothing has changed. Try again, or come back in a few minutes." [Try again]</td></tr>
+  </table>
+  </section>
+
+  <section><h2>Edge cases flagged</h2>
+  <ul>
+    <li><b>A requester with no institution</b>: in no Coordinator's queue; the Administrator's reads Institution "None". Her form says "The Wombat administrator decides it" in place of the institution.</li>
+    <li><b>A staff member's own request in the queue he reviews</b> (Pieter Smit asks for his own export): he may not decide it. <span class="k">PROPOSED</span>: the row shows, Decide is replaced by "You cannot decide your own request; another Coordinator or the Administrator does." (a new refusal).</li>
+    <li><b>An erasure of a person with a review under appeal</b>: kept and answerable; the dialog lists it under Kept ("1 review under appeal, still answerable").</li>
+    <li><b>PseudonymSalt missing, or a concurrent change</b>: drawn on Decide V1; nothing erased, the request still Submitted, the note kept.</li>
+    <li><b>Withdrawn while its page is open elsewhere</b>: the next press is refused in words (drawn), and the page reloads as Withdrawn.</li>
+    <li><b>An export whose PDF fails</b>: the zip holds the JSON only, saying nothing. Not this flow's (flow 20's export); flag: the download should say so.</li>
+    <li><b>A correction to an ended, read-only programme</b>: the owning page refuses the change; the Correction section says "Her programme has ended: its record cannot be changed. Reject, or record what was changed elsewhere."</li>
+    <li><b>Two requests of one type on one day</b>: each named by its time to the minute; two in the same minute differ only by id on the queue; on My data rights they read alike (both rows shown, newest first).</li>
+    <li><b>A 60-character address</b>: drawn on both queues; wraps at the @ and anywhere after.</li>
+    <li><b>A reason of 4,000 characters</b>: the row on My data rights shows the first 200 and "Show the whole reason" (round 2), the request page the whole of it with pre-line.</li>
+    <li><b>Access and Export</b> build the same zip today; the form's help must not promise a difference. Yours to say whether they stay two types.</li>
+    <li><b>Account › Last name</b>: no staff page changes a name today (only My account). A correction to a name therefore waits on the person, or needs a staff edit (out of this flow).</li>
+  </ul>
+  </section>
+
+  <section><h2>Accessibility review (WCAG 2.1 AA), round 1</h2>
+  <ul>
+    <li>One h1 a page, h2 sections in order; RequestCard's h3 under Your requests (C). T280 met by all.</li>
+    <li>Every table captioned: Your requests, the queue (per filter), Waiting / Decided, Corrections.</li>
+    <li>Every row action named for its row: "Review the Export request from Anele Dlamini, 2026-10-28 00:01 SAST"; "Withdraw the Export request made 2026-10-28 00:01 SAST"; "Download the export of the Export request made 2026-10-28 00:01 SAST". In V2 the link is the name.</li>
+    <li>Focus after each action: the result (ActionResult); after a refusal the field (one) or RefusalSummary (two); on dialog open the safe button; on cancel the trigger; after the pager the list's heading.</li>
+    <li>Refusals tied by aria-describedby; invalid fields marked by stripe and words, not colour.</li>
+    <li>Targets: 24px at 1280; 44px at 390 (Show, Review, the pager, Download, the radios' rows, the dialog's buttons).</li>
+    <li>Status in words beside every badge; the danger button's words name what it does.</li>
+    <li>Not yet checked: contrast of the muted second line on a hovered row; the dialog's scroll at 390 with a long count list.</li>
+  </ul>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1700,"height":4200}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

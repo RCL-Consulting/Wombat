@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>My data rights, structure A</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:"Source Sans 3",system-ui,sans-serif;color:#2b2b2b;background:#fff;font-size:15px;line-height:1.4}
+.wf-root{width:1850px;box-sizing:border-box;padding:48px;display:flex;flex-direction:column;gap:32px}
+.wf-intro{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.wf-intro section{border:1px solid #bbb;border-radius:6px;padding:16px;background:#fafafa}
+.wf-intro h2{margin:0 0 8px;font-size:17px}
+.wf-intro p,.wf-intro li{margin:0 0 6px;font-size:14px}
+.wf-intro ul{margin:0;padding-left:18px}
+.wf-row{display:flex;gap:80px;align-items:flex-start}
+.wf-col{display:flex;flex-direction:column;gap:28px}
+.wf-cap{margin:0 0 6px;font-size:13px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.04em}
+.wf-frame{border:2px solid #888;background:#fff;display:flex;overflow:hidden}
+.w1280{width:1280px}.w390{width:390px;flex-direction:column}
+.wf-side{width:180px;flex:none;background:#d9d9d9;padding:12px;display:flex;flex-direction:column;gap:6px;font-size:13px}
+.wf-side span{display:block;padding:4px 6px;background:#c6c6c6;border-radius:3px}
+.wf-side .on{background:#8a8a8a;color:#fff;font-weight:700}
+.wf-side hr{border:0;border-top:1px solid #999;margin:4px 0;width:100%}
+.wf-phonebar{height:44px;background:#d9d9d9;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:13px}
+.wf-main{flex:1;min-width:0;padding:20px 28px 28px;display:flex;flex-direction:column;gap:14px}
+.w390 .wf-main{padding:14px 16px 20px}
+.wf-top{height:22px;border-bottom:1px solid #ccc;font-size:12px;color:#666;text-align:right}
+.wf-h1{font-size:22px;font-weight:700;margin:0;border-bottom:2px solid #777;padding-bottom:6px}
+.wf-sub{font-size:13px;color:#666;margin:-8px 0 0}
+.wf-sec{border:1px solid #aaa;border-radius:4px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;background:#fff}
+.wf-h2{font-size:17px;font-weight:700;margin:0}
+.wf-p{margin:0;font-size:13px;color:#444}
+.wf-box{border:1px dashed #999;background:#f2f2f2;padding:8px 10px;font-size:13px}
+.wf-table{width:100%;border-collapse:collapse;font-size:13px}
+.wf-table caption{text-align:left;font-size:12px;color:#666;padding-bottom:4px}
+.wf-table th,.wf-table td{border-bottom:1px solid #ccc;padding:6px 6px;text-align:left;vertical-align:top}
+.wf-table th{background:#eee}
+.wf-btn{display:inline-block;border:1.5px solid #555;border-radius:4px;padding:4px 10px;font-size:13px;background:#fff;font-weight:600}
+.wf-btn.pri{background:#555;color:#fff}
+.wf-btn.blk{display:block;text-align:center;min-height:32px;line-height:32px;padding:0}
+.wf-field{display:flex;flex-direction:column;gap:3px;font-size:13px}
+.wf-input{border:1.5px solid #777;border-radius:3px;height:28px;background:#fff}
+.wf-input.tall{height:60px}
+.wf-input.bad{border-color:#222;border-left:5px solid #222}
+.wf-radio{display:flex;gap:8px;font-size:13px;align-items:flex-start}
+.wf-radio i{flex:none;width:12px;height:12px;border:1.5px solid #555;border-radius:50%;margin-top:3px}
+.wf-radio i.on{background:#555}
+.wf-radio small{display:block;color:#666}
+.wf-check{display:flex;gap:8px;font-size:13px;align-items:flex-start}
+.wf-check i{flex:none;width:12px;height:12px;border:1.5px solid #555;margin-top:3px}
+.wf-check i.on{background:#555}
+.wf-ok{border:1.5px solid #555;background:#ececec;padding:6px 10px;font-size:13px;outline:3px solid #9a9a9a;outline-offset:2px}
+.wf-err{font-size:13px;font-weight:700}
+.wf-badge{display:inline-block;border:1px solid #666;border-radius:10px;padding:0 8px;font-size:12px}
+.wf-note{font-size:12px;color:#555;font-style:italic}
+.wf-tag{font-size:11px;font-weight:700;background:#222;color:#fff;padding:1px 5px;border-radius:3px;margin-left:4px}
+.wf-stack{display:flex;flex-direction:column;gap:4px;border-bottom:1px solid #ccc;padding:8px 0;font-size:13px}
+.wf-stack b{font-weight:700}
+</style>
+</helmet>
+<div class="wf-root">
+  <div class="wf-intro">
+    <section>
+      <h2>Structure A — one page, her requests first</h2>
+      <p>One page, three &lt;h2&gt; sections in this order: <b>Your requests</b> (each with its answer), <b>Make a request</b>, <b>Reminder emails</b>. A returning requester came to read an answer, so the answer comes first; a first-timer sees an empty list that points down to the form.</p>
+      <p>The type is a choice of four described radios (flow 08's choice-group), so no gloss is cut off. The answer is a column of the table: the decision, its date, the institution's note. Never who decided.</p>
+    </section>
+    <section>
+      <h2>Changes and why</h2>
+      <ul>
+        <li>Order and words of the requester's page (T280: one h1, then h2s; T318: the optional-processing flag gone).</li>
+        <li>A decided row shows its answer (T319). <b>DATA</b>: the row reads DecidedAt and DecisionNote, which the summary does not carry today.</li>
+        <li>Times in SAST with the zone (T325).</li>
+        <li>Submitted result: "Its answer shows here once it is decided." The email line stays only if Q5's notice is built (<b>PROPOSED</b>).</li>
+        <li>Preferences part renamed "Reminder emails"; its two results differ (stopped / sent again). Changes A.1.1, A.2.3, A.2.5's Expects.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Steps (presses + fields typed)</h2>
+      <ul>
+        <li>Export and download: 4 + 1 at 1280 (menu link, Export, reason, Submit; later Download); 5 + 1 at 390 (Menu first).</li>
+        <li>Read a rejected answer: 1 + 0 (the menu link; the answer is on the row). Today it cannot be read at all.</li>
+        <li>Opt out of the digest: 3 + 0 (link, tick, Save); 4 + 0 at 390.</li>
+        <li>Withdraw: 1 + 0 from the page, no dialog (Q14).</li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="wf-row">
+    <div class="wf-col">
+      <div>
+        <p class="wf-cap">A.1.1 · Anele Dlamini, Trainee · nothing requested yet · 1280</p>
+        <div class="wf-frame w1280">
+          <div class="wf-side"><b>Wombat</b><span>Home</span><span>Log an activity</span><span>My activities</span><span>…</span><hr><span>My progress</span><span class="on">My data rights</span></div>
+          <div class="wf-main">
+            <div class="wf-top">Anele Dlamini · Sign out</div>
+            <p class="wf-h1">My data rights</p>
+            <p class="wf-sub">Ask for a copy of your data, a correction or erasure, and read the answers. Stop the regular reminder emails.</p>
+            <div class="wf-sec"><p class="wf-h2">Your requests</p><div class="wf-box">No requests yet. You have not asked for your data, a correction or erasure. Make a request below.</div></div>
+            <div class="wf-sec"><p class="wf-h2">Make a request</p>
+              <p class="wf-p">Under data protection law you may ask for a copy of your personal data, its correction, or its erasure. Staff at Kgosi Kgari Teaching Hospital decide it; the answer shows under Your requests.</p>
+              <div class="wf-field"><b>Request type *</b>
+                <div class="wf-radio"><i></i><span>Access<small>Everything Wombat holds about you, as a download, once the request is approved.</small></span></div>
+                <div class="wf-radio"><i></i><span>Export<small>The same download, to take your data elsewhere: machine-readable data with a PDF summary.</small></span></div>
+                <div class="wf-radio"><i></i><span>Rectification<small>Something about you is recorded wrongly. Say what it is and what it should be.</small></span></div>
+                <div class="wf-radio"><i></i><span>Erasure<small>Your account and personal data are removed; your training records are kept under a name that identifies nobody. Once approved it cannot be undone, and you can no longer sign in.</small></span></div>
+              </div>
+              <div class="wf-field"><b>Reason *</b><div class="wf-input tall"></div><span class="wf-note">0 of 4,000 characters</span></div>
+              <div><span class="wf-btn pri">Submit request</span></div>
+            </div>
+            <div class="wf-sec"><p class="wf-h2">Reminder emails</p>
+              <p class="wf-p">Wombat processes what your training programme needs (your record, assessments and what regulation requires), and that cannot be objected to. You can stop its regular reminders.</p>
+              <div class="wf-check"><i class="on"></i><span>Opt out of digest emails<small style="display:block;color:#666">Stops three regular reminders: the weekly coordinator digest, the reminder of drafts left untouched for 14 days, and the reminder of activities that have waited more than 5 days for you to assess. Email about one particular thing is still sent, such as a request to assess or an invitation to give feedback.</small></span></div>
+              <div><span class="wf-btn">Save</span></div>
+              <div class="wf-ok">Reminder emails stopped. (focused; replaces "Processing preferences saved.")</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <p class="wf-cap">A.1.2 · Export with no reason, then submitted · the two parts that change · 1280</p>
+        <div class="wf-frame w1280">
+          <div class="wf-side"><b>Wombat</b><span>…</span><hr><span class="on">My data rights</span></div>
+          <div class="wf-main">
+            <div class="wf-sec"><p class="wf-h2">Make a request · pressed with no reason</p>
+              <div class="wf-radio"><i class="on"></i><span>Export (kept)</span></div>
+              <div class="wf-field"><b>Reason *</b><div class="wf-input tall bad"></div><span class="wf-err">Please provide a reason for your request. (under the field, focused there; nothing sent)</span></div>
+            </div>
+            <div class="wf-sec"><p class="wf-h2">Your requests · after the second Submit</p>
+              <div class="wf-ok">Export request submitted. Its answer shows here once it is decided. (focused)</div>
+              <table class="wf-table"><caption>Your requests, newest first</caption><tr><th>Submitted</th><th>Type</th><th>Status</th><th>Answer</th><th></th></tr>
+                <tr><td>2026-10-28 00:01 SAST</td><td>Export</td><td><span class="wf-badge">Submitted</span></td><td>Waiting for a decision.</td><td><span class="wf-btn">Withdraw</span><br><span class="wf-note">"Withdraw the Export request made 2026-10-28 00:01 SAST"</span></td></tr></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <p class="wf-cap">A.1.5 completed · A.1.6 withdrawn · A.1.9 rejected · a correction completed · Your requests only · 1280</p>
+        <div class="wf-frame w1280">
+          <div class="wf-side"><b>Wombat</b><span>…</span><hr><span class="on">My data rights</span></div>
+          <div class="wf-main">
+            <div class="wf-sec"><p class="wf-h2">Your requests (Anele Dlamini, A.1.5)</p>
+              <table class="wf-table"><tr><th>Submitted</th><th>Type</th><th>Status</th><th>Answer</th><th></th></tr>
+                <tr><td>2026-10-28 00:01 SAST</td><td>Export</td><td><span class="wf-badge">Completed</span></td><td>Approved on 2026-10-28: "Identity confirmed; export released to the data subject."</td><td><span class="wf-btn pri">Download</span></td></tr></table></div>
+            <div class="wf-sec"><p class="wf-h2">Your requests (Pieter du Plessis, former trainee, A.1.6)</p>
+              <div class="wf-ok">Request withdrawn. (focused)</div>
+              <table class="wf-table"><tr><th>Submitted</th><th>Type</th><th>Status</th><th>Answer</th><th></th></tr>
+                <tr><td>2026-10-28 00:03 SAST</td><td>Access</td><td><span class="wf-badge">Withdrawn</span></td><td>You withdrew it before a decision.</td><td></td></tr></table></div>
+            <div class="wf-sec"><p class="wf-h2">Your requests (Nomsa Mahlangu, A.1.9; then the illustrative correction)</p>
+              <table class="wf-table"><tr><th>Submitted</th><th>Type</th><th>Status</th><th>Answer</th><th></th></tr>
+                <tr><td>2026-10-28 00:03 SAST</td><td>Rectification</td><td><span class="wf-badge">Rejected</span></td><td>Rejected on 2026-10-28: "The whole January 2026 intake is admitted on 15 January, the semester boundary (D42). Nothing to correct."</td><td></td></tr>
+                <tr><td>[submitted] SAST</td><td>Rectification</td><td><span class="wf-badge">Approved</span></td><td>Approved on [date]: "[note]". Being corrected; it reads Completed once done.</td><td></td></tr>
+                <tr><td>[submitted] SAST</td><td>Rectification</td><td><span class="wf-badge">Completed</span></td><td>Completed on [date]. Corrected: Account › Last name. <span class="wf-tag">DATA</span></td><td></td></tr></table>
+              <p class="wf-note">An approved erasure never shows here: its requester's session ends within a minute (flow 02's session ended).</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <p class="wf-cap">A.2.3 / A.2.5 · Pieter Smit, Coordinator · Reminder emails only · loading · load error · 1280</p>
+        <div class="wf-frame w1280">
+          <div class="wf-side"><b>Wombat</b><span>…</span><hr><span class="on">My data rights</span></div>
+          <div class="wf-main">
+            <div class="wf-sec"><p class="wf-h2">Reminder emails (A.2.3: ticked, Save)</p><div class="wf-ok">Reminder emails stopped. Email about one particular thing is still sent.</div></div>
+            <div class="wf-sec"><p class="wf-h2">Reminder emails (A.2.5: unticked, Save)</p><div class="wf-ok">Reminder emails will be sent again.</div></div>
+            <div class="wf-sec"><p class="wf-h2">Loading</p><div class="wf-box">Header, then three skeleton blocks; no Submit, Withdraw, Download or Save until the read is in.</div></div>
+            <div class="wf-sec"><p class="wf-h2">Load error</p><div class="wf-box">"Could not load your data rights. Nothing has changed. Try again, or come back in a few minutes." [Try again] — no empty state under it, no form.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wf-col">
+      <div>
+        <p class="wf-cap">A.7.3 · Anele Dlamini at 390</p>
+        <div class="wf-frame w390">
+          <div class="wf-phonebar"><b>Wombat</b><span>Acting as Trainee</span><span>Menu</span></div>
+          <div class="wf-main">
+            <p class="wf-h1">My data rights</p>
+            <p class="wf-sub">Ask for a copy of your data, a correction or erasure, and read the answers.</p>
+            <div class="wf-sec"><p class="wf-h2">Your requests</p>
+              <div class="wf-stack"><b>Export</b><span><span class="wf-badge">Completed</span></span><span>Submitted: 2026-10-28 00:01 SAST</span><span>Answer: Approved on 2026-10-28: "Identity confirmed; export released to the data subject."</span><span class="wf-btn pri blk">Download (44px)</span></div>
+              <p class="wf-note">The table stacks: a block a row, each cell labelled (no sideways scroll; changes A.7.3's "scrolls inside its container").</p>
+            </div>
+            <div class="wf-sec"><p class="wf-h2">Make a request</p>
+              <div class="wf-radio"><i></i><span>Access<small>Everything Wombat holds about you…</small></span></div>
+              <div class="wf-radio"><i class="on"></i><span>Export<small>The same download, to take…</small></span></div>
+              <div class="wf-radio"><i></i><span>Rectification<small>…</small></span></div>
+              <div class="wf-radio"><i></i><span>Erasure<small>…cannot be undone…</small></span></div>
+              <div class="wf-field"><b>Reason *</b><div class="wf-input tall"></div></div>
+              <span class="wf-btn pri blk">Submit request (44px, full width)</span>
+            </div>
+            <div class="wf-sec"><p class="wf-h2">Reminder emails</p>
+              <div class="wf-check"><i></i><span>Opt out of digest emails</span></div>
+              <span class="wf-btn blk">Save (44px)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1850,"height":3000}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

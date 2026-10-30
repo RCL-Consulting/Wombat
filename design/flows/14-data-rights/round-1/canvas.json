@@ -1,0 +1,30 @@
+{"v":3,"createdOnFiles":{"v":1,"at":"2026-10-30T09:00:00Z"},"title":"Wombat 14","launch":{"view":"canvas"},"pages":[],
+"boards":{
+"Main.dc.html":{"x":0,"y":0,"w":1850,"h":3000,"title":"My data rights · structure A — one page, requests first"},
+"WF-Requester-B.dc.html":{"x":1930,"y":0,"w":1850,"h":3000,"title":"My data rights · structure B — list page + a form page of its own"},
+"WF-Requester-C.dc.html":{"x":3860,"y":0,"w":1850,"h":3000,"title":"My data rights · structure C — a card per request, form opened in place"},
+"WF-Request-A.dc.html":{"x":0,"y":3420,"w":1850,"h":2900,"title":"A request · structure A — one column, correction recorded in its section"},
+"WF-Request-B.dc.html":{"x":1930,"y":3420,"w":1850,"h":2900,"title":"A request · structure B — a correction recorded on a form page of its own"},
+"WF-Request-C.dc.html":{"x":3860,"y":3420,"w":1850,"h":2900,"title":"A request · structure C — a next-step card leads, panels open in place"},
+"Queue-V1-1280.dc.html":{"x":0,"y":6740,"w":1280,"h":4300,"title":"Queue V1 · one table, filters then Show · 1280"},
+"Queue-V1-390.dc.html":{"x":1360,"y":6740,"w":390,"h":3000,"title":"Queue V1 · 390"},
+"Queue-V2-1280.dc.html":{"x":1830,"y":6740,"w":1280,"h":4300,"title":"Queue V2 · Waiting / Decided sections · 1280"},
+"Queue-V2-390.dc.html":{"x":3190,"y":6740,"w":390,"h":3000,"title":"Queue V2 · 390"},
+"Decide-V1-1280.dc.html":{"x":0,"y":11460,"w":1280,"h":6400,"title":"Decide V1 · note then Reject / Approve; erasure told in the dialog · 1280"},
+"Decide-V1-390.dc.html":{"x":1360,"y":11460,"w":390,"h":4200,"title":"Decide V1 · 390"},
+"Decide-V2-1280.dc.html":{"x":1830,"y":11460,"w":1280,"h":6400,"title":"Decide V2 · decision as radios; erasure told on the page and in the dialog · 1280"},
+"Decide-V2-390.dc.html":{"x":3190,"y":11460,"w":390,"h":4200,"title":"Decide V2 · 390"},
+"NotFound-Kept-1280.dc.html":{"x":0,"y":18280,"w":1280,"h":2400,"title":"Not found, and the request kept after an erasure · 1280"},
+"NotFound-Kept-390.dc.html":{"x":1360,"y":18280,"w":390,"h":2400,"title":"Not found, and the kept request · 390"},
+"Spec.dc.html":{"x":1830,"y":18280,"w":1700,"h":4200,"title":"Spec board"},
+"Steps.dc.html":{"x":3610,"y":18280,"w":1700,"h":4200,"title":"Steps board"}
+},
+"order":["Main.dc.html","WF-Requester-B.dc.html","WF-Requester-C.dc.html","WF-Request-A.dc.html","WF-Request-B.dc.html","WF-Request-C.dc.html","Queue-V1-1280.dc.html","Queue-V1-390.dc.html","Queue-V2-1280.dc.html","Queue-V2-390.dc.html","Decide-V1-1280.dc.html","Decide-V1-390.dc.html","Decide-V2-1280.dc.html","Decide-V2-390.dc.html","NotFound-Kept-1280.dc.html","NotFound-Kept-390.dc.html","Spec.dc.html","Steps.dc.html"],
+"notes":{
+"t1":{"x":0,"y":-300,"text":"Flow 14 · round 1 · My data rights — three structures (wireframes)","kind":"title1","maxW":5710},
+"t2":{"x":0,"y":3120,"text":"A request and its correction — three structures (wireframes)","kind":"title1","maxW":5710},
+"t3":{"x":0,"y":6440,"text":"Data rights requests (the queue) — two variations at fidelity","kind":"title1","maxW":3580},
+"t4":{"x":0,"y":11160,"text":"Deciding a request, with the erasure's dialog — two variations at fidelity","kind":"title1","maxW":3580},
+"t5":{"x":0,"y":17980,"text":"One proposal each: not found, the kept request · Spec and Steps boards","kind":"title1","maxW":5310}
+},
+"designSystems":[{"title":"Wombat","namespace":"wombat","artifact":"https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18","version":"1793144981-e3ba","copiedAt":"2026-10-30T09:00:00Z"}]}

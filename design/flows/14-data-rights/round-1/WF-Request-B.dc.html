@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A request, structure B</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="/_blob/e0479157b025e5ba3b2c43573912ae34">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>body{margin:0}.wf-dl{display:grid;grid-template-columns:160px minmax(0,1fr);gap:4px 12px;font-size:13px;margin:0}.wf-dl dt{color:#666}.wf-dl dd{margin:0;overflow-wrap:anywhere}.w390 .wf-dl{grid-template-columns:minmax(0,1fr)}</style>
+</helmet>
+<div class="wf-root">
+  <div class="wf-intro">
+    <section>
+      <h2>Structure B — the correction is a form page of its own</h2>
+      <p>The request page lists the corrections recorded, with <b>Record a correction</b> (a link) opening <b>/admin/data-rights/{Id}/corrections/new</b> (<b>PROPOSED</b> route; trail Home › Data rights requests › [id] › Record a correction). Save returns to the request with the result focused over the list. <b>Complete request</b> stands in an end section of its own, apart from the list (flow 13's end section).</p>
+      <p>The form page chooses the record from a list of places, each saying where it is changed and linking there when the caller may open it (Q2).</p>
+    </section>
+    <section>
+      <h2>Changes and why</h2>
+      <ul>
+        <li><b>PROPOSED</b>: a route, a page, the Coordinator allowed (Q1), the refusal words.</li>
+        <li><b>DATA</b>: a fixed list of correctable places and their owning page (Account › First name, Last name, Email; Trainee profile › Programme start, Curriculum; Other), and whether the caller may open each.</li>
+        <li>"Other" keeps ApplyRectification's free text, so nothing is lost.</li>
+        <li>Room on the form page for the before value read back where the page knows it (<b>DATA</b>, round 2).</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Steps (presses + fields typed), from the queue's row</h2>
+      <ul>
+        <li>Carry a correction through: 5 + 2 at 1280 (Review; Record a correction; choose the record; before, after typed; Save; Complete request). 5 + 2 at 390.</li>
+        <li>Five corrections: 4 presses + 2 fields each, one page load each way.</li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="wf-row">
+    <div class="wf-col">
+      <div>
+        <p class="wf-cap">Pieter Smit · the request page, approved, one correction recorded · 1280</p>
+        <div class="wf-frame w1280">
+          <div class="wf-side"><b>Wombat</b><span class="on">Data rights requests</span><span>…</span><hr><span>My data rights</span></div>
+          <div class="wf-main">
+            <div class="wf-top">Pieter Smit · Sign out</div>
+            <p class="wf-p">Home › Data rights requests › [request id]</p>
+            <p class="wf-h1">Rectification request from Nomsa Mahlangu</p>
+            <div class="wf-sec"><p class="wf-h2">Request</p><dl class="wf-dl"><dt>Requester</dt><dd>Nomsa Mahlangu · [address]</dd><dt>User id</dt><dd>[user id]</dd><dt>Status</dt><dd><span class="wf-badge">Approved</span></dd><dt>Reason</dt><dd>"[reason]"</dd></dl></div>
+            <div class="wf-sec"><p class="wf-h2">Decision</p><dl class="wf-dl"><dt>Decided by</dt><dd>Pieter Smit · 43ad0cb7-5ce6-46d7-8595-7117d130c7dc</dd><dt>Decided on</dt><dd>[date time] SAST</dd><dt>Note</dt><dd>"[note]"</dd></dl></div>
+            <div class="wf-sec"><p class="wf-h2">Corrections</p>
+              <div class="wf-ok">Correction recorded: Account › Last name. (focused)</div>
+              <table class="wf-table"><caption>Corrections recorded on this request</caption><tr><th>Record</th><th>Value before</th><th>Value after</th><th>Recorded</th></tr><tr><td>Account › Last name</td><td>Mahlngu</td><td>Mahlangu</td><td>Pieter Smit · [date time] SAST</td></tr></table>
+              <div><span class="wf-btn">+ Record a correction</span></div></div>
+            <div class="wf-sec"><p class="wf-h2">Complete the request</p><p class="wf-p">Once every correction is made and recorded. It then reads Completed, here and on Nomsa Mahlangu's My data rights.</p><div><span class="wf-btn pri">Complete request</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <p class="wf-cap">Record a correction (PROPOSED page) · 1280</p>
+        <div class="wf-frame w1280">
+          <div class="wf-side"><b>Wombat</b><span class="on">Data rights requests</span></div>
+          <div class="wf-main">
+            <p class="wf-p">Home › Data rights requests › [request id] › Record a correction</p>
+            <p class="wf-h1">Record a correction</p>
+            <p class="wf-sub">For Nomsa Mahlangu's Rectification request. Change the data on the page that holds it, then record the change here.</p>
+            <div class="wf-sec">
+              <div class="wf-field"><b>Record *</b>
+                <div class="wf-radio"><i></i><span>Account › First name<small>Changed by Nomsa Mahlangu on My account. No staff page changes a name.</small></span></div>
+                <div class="wf-radio"><i class="on"></i><span>Account › Last name<small>Changed by Nomsa Mahlangu on My account. No staff page changes a name.</small></span></div>
+                <div class="wf-radio"><i></i><span>Trainee profile › Programme start<small>Changed on her trainee profile, which an Institutional admin at KGK opens (you cannot).</small></span></div>
+                <div class="wf-radio"><i></i><span>Other<small>Name the record in Value before.</small></span></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="wf-field"><b>Value before *</b><div class="wf-input"></div></div><div class="wf-field"><b>Value after *</b><div class="wf-input"></div></div></div>
+              <div><span class="wf-btn">Cancel</span> <span class="wf-btn pri">Save correction</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <p class="wf-cap">Complete refused with none · completed · 1280</p>
+        <div class="wf-frame w1280">
+          <div class="wf-side"><b>Wombat</b><span class="on">Data rights requests</span></div>
+          <div class="wf-main">
+            <div class="wf-sec"><p class="wf-h2">Complete the request</p><div><span class="wf-btn pri">Complete request</span></div><span class="wf-err">Record at least one correction before completing the request. (PROPOSED; focused)</span></div>
+            <div class="wf-sec"><p class="wf-h2">Complete the request (done)</p><div class="wf-ok">Request completed. (focused) · Completed on [date time] SAST.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wf-col">
+      <div>
+        <p class="wf-cap">390 · Record a correction</p>
+        <div class="wf-frame w390">
+          <div class="wf-phonebar"><b>Wombat</b><span>Acting as Coordinator</span><span>Menu</span></div>
+          <div class="wf-main">
+            <p class="wf-p"><b>‹ [request id]</b></p>
+            <p class="wf-h1">Record a correction</p>
+            <div class="wf-radio"><i class="on"></i><span>Account › Last name<small>Changed by Nomsa Mahlangu on My account.</small></span></div>
+            <div class="wf-radio"><i></i><span>Trainee profile › Programme start<small>An Institutional admin opens it.</small></span></div>
+            <div class="wf-field"><b>Value before *</b><div class="wf-input"></div></div>
+            <div class="wf-field"><b>Value after *</b><div class="wf-input"></div></div>
+            <span class="wf-btn pri blk">Save correction</span><span class="wf-btn blk">Cancel</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1850,"height":2900}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

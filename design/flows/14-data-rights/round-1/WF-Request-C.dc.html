@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A request, structure C</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="/_blob/e0479157b025e5ba3b2c43573912ae34">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>body{margin:0}.wf-dl{display:grid;grid-template-columns:160px minmax(0,1fr);gap:4px 12px;font-size:13px;margin:0}.wf-dl dt{color:#666}.wf-dl dd{margin:0;overflow-wrap:anywhere}.w390 .wf-dl{grid-template-columns:minmax(0,1fr)}.wf-next{border:2px solid #555;border-radius:5px;padding:12px 14px;background:#efefef;display:flex;flex-direction:column;gap:6px;font-size:13px}.wf-next b.big{font-size:16px}.wf-steps{margin:0;padding-left:18px}</style>
+</helmet>
+<div class="wf-root">
+  <div class="wf-intro">
+    <section>
+      <h2>Structure C — a next-step card leads; the rest is the record</h2>
+      <p>Under the header, one status card says where the request stands and what is next, with that one action (the activity page's status card, flow 03): "Approved: make each correction, record it, then complete." Its steps tick as they are done. Then the record in one column: Request, Decision, Corrections. <b>Record a correction…</b> opens a note panel in place under the list.</p>
+      <p>Every state of a request reads the same way: Submitted ("Decide: approve or reject with a note"), Approved, Completed, Rejected, Withdrawn ("Withdrawn by Pieter du Plessis before a decision. Nothing to do.").</p>
+    </section>
+    <section>
+      <h2>Changes and why</h2>
+      <ul>
+        <li><b>NEW</b> component: RequestStatusCard (DashboardCard frame, emphasis tint), in place of a Decision card that only appears once decided.</li>
+        <li>The record chosen from a select of places (<b>DATA</b> as B); its owning page linked from the panel when the caller may open it (Account rows: none for staff).</li>
+        <li><b>PROPOSED</b>: Q1's role; the refusal; Complete held in the status card, so it is reached first.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Steps (presses + fields typed), from the queue's row</h2>
+      <ul>
+        <li>Carry a correction through: 5 + 2 at 1280 (Review; Record a correction…; choose the record; before, after typed; Record; Complete request). 5 + 2 at 390.</li>
+        <li>Decide (A.1.3): 2 + 1 after the row, the note in the card.</li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="wf-row">
+    <div class="wf-col">
+      <div>
+        <p class="wf-cap">Pieter Smit · Nomsa Mahlangu's Rectification, approved, the panel open · 1280</p>
+        <div class="wf-frame w1280">
+          <div class="wf-side"><b>Wombat</b><span class="on">Data rights requests</span><span>…</span><hr><span>My data rights</span></div>
+          <div class="wf-main">
+            <div class="wf-top">Pieter Smit · Sign out</div>
+            <p class="wf-p">Home › Data rights requests › [request id]</p>
+            <p class="wf-h1">Rectification request from Nomsa Mahlangu</p>
+            <div class="wf-next"><b class="big">Approved · next: correct the data, record each correction, then complete</b>
+              <ol class="wf-steps"><li>Approved on [date] by Pieter Smit — done</li><li>Corrections recorded: 1 (Account › Last name)</li><li>Complete the request — once every correction is made</li></ol>
+              <div><span class="wf-btn pri">Complete request</span></div></div>
+            <div class="wf-sec"><p class="wf-h2">Request</p><dl class="wf-dl"><dt>Requester</dt><dd>Nomsa Mahlangu · [address]</dd><dt>User id</dt><dd>[user id]</dd><dt>Submitted</dt><dd>[date time] SAST</dd><dt>Reason</dt><dd>"[reason]"</dd></dl></div>
+            <div class="wf-sec"><p class="wf-h2">Decision</p><dl class="wf-dl"><dt>Decided by</dt><dd>Pieter Smit · 43ad0cb7-5ce6-46d7-8595-7117d130c7dc</dd><dt>Note</dt><dd>"[note]"</dd></dl></div>
+            <div class="wf-sec"><p class="wf-h2">Corrections</p>
+              <table class="wf-table"><tr><th>Record</th><th>Value before</th><th>Value after</th><th>Recorded</th></tr><tr><td>Account › Last name</td><td>Mahlngu</td><td>Mahlangu</td><td>Pieter Smit · [date time] SAST</td></tr></table>
+              <div><span class="wf-btn">Record a correction…</span> <span class="wf-note">aria-expanded="true"</span></div>
+              <div class="wf-sec" style="background:#f6f6f6">
+                <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px">
+                  <div class="wf-field"><b>Record *</b><div class="wf-input"></div><span class="wf-note">select: Account › First name / Last name / Email · Trainee profile › Programme start / Curriculum · Other</span></div>
+                  <div class="wf-field"><b>Value before *</b><div class="wf-input"></div></div>
+                  <div class="wf-field"><b>Value after *</b><div class="wf-input"></div></div></div>
+                <p class="wf-p">Trainee profile › Programme start is changed on her trainee profile, which an Institutional admin at Kgosi Kgari Teaching Hospital opens; you cannot open it. [For the Administrator: a link, "Open Nomsa Mahlangu's trainee profile".]</p>
+                <div><span class="wf-btn">Cancel</span> <span class="wf-btn pri">Record correction</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <p class="wf-cap">The status card in each other state · 1280</p>
+        <div class="wf-frame w1280">
+          <div class="wf-side"><b>Wombat</b><span class="on">Data rights requests</span></div>
+          <div class="wf-main">
+            <div class="wf-next"><b class="big">Submitted · decide: approve or reject, with a note (A.1.3)</b><div class="wf-field"><b>Decision note *</b><div class="wf-input tall bad"></div><span class="wf-err">A decision note is required.</span></div><div><span class="wf-btn">Reject</span> <span class="wf-btn pri">Approve</span></div></div>
+            <div class="wf-next"><b class="big">Completed on 2026-10-28 00:01 SAST · nothing more to do</b><span>Anele Dlamini can download her export from My data rights. Its zip is built when she downloads it.</span></div>
+            <div class="wf-next"><b class="big">Withdrawn · nothing to decide (A.1.8)</b><span>Pieter du Plessis withdrew it before a decision.</span></div>
+            <div class="wf-next"><b class="big">Rejected on 2026-10-28 · nothing more to do (A.1.8)</b><span>Nomsa Mahlangu reads the note on My data rights.</span></div>
+            <div class="wf-next"><b class="big">Approved · Complete refused</b><div><span class="wf-btn pri">Complete request</span></div><span class="wf-err">Record at least one correction before completing the request. (PROPOSED)</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wf-col">
+      <div>
+        <p class="wf-cap">390 · the card first</p>
+        <div class="wf-frame w390">
+          <div class="wf-phonebar"><b>Wombat</b><span>Acting as Coordinator</span><span>Menu</span></div>
+          <div class="wf-main">
+            <p class="wf-p"><b>‹ Data rights requests</b></p>
+            <p class="wf-h1">Rectification request from Nomsa Mahlangu</p>
+            <div class="wf-next"><b>Approved · next: record each correction, then complete</b><span>Corrections recorded: 1</span><span class="wf-btn pri blk">Complete request</span></div>
+            <div class="wf-sec"><p class="wf-h2">Corrections</p><div class="wf-stack"><b>Account › Last name</b><span>Before: Mahlngu · After: Mahlangu</span></div><span class="wf-btn blk">Record a correction…</span></div>
+            <div class="wf-sec"><p class="wf-h2">Request</p><dl class="wf-dl"><dt>Request id</dt><dd>[request id, wraps]</dd></dl></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1850,"height":2900}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
