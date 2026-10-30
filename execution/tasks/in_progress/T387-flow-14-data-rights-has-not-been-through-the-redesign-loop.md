@@ -114,3 +114,9 @@ BRIEF § 6, § 8, § 11; CUSTOMIZATION.md § 5.
   § 6; one Opus agent, `0c6f3882`). New states C11, D20, D21, D22, K02. Checked against the T379 database: two
   Administrators (admin@wombat.local, devadmin), so the last-Administrator refusal is an illustration; Mahlangu's
   profile id 5; the annual review #5. Inferred, to confirm: F6's radios disabled; whether Complete request sends a mail.
+- **2026-10-30, round 3** (149 boards and `f14r3.css` in `round-3/`, `d47ab4ea`): checked item by item
+  (`round-3-check.md`, one Sonnet agent, `10d92875`): 61 rows, 59 done, 2 partly (M1 C08/C09/C11 carry no
+  before/after-save chip; A4 the render report as bullets, not a table), 0 not done, 0 regressed. The Spec reports 408
+  controls at 390 none under 44 px and no sideways scroll at any width (not re-measured here). Unlisted: `h2#yr-h` lost
+  its tabindex on the M boards; the build keeps it if the pager or a result focuses that heading. **Final. Steps 3–5
+  done. Next: step 6, the build, on the operator's word.**

@@ -18,7 +18,8 @@ The operator said "start flow 14". T387 created and started (P2), written from T
 - **Round 2 back** (138 boards, `a9904964`). Reviewed and merged (`e1227d44`, `round-2-review.md`: 6 must, 24
   should, 18 nits).
 - **F1–F10 taken as recommended**; T388, T389 proposed. `round-3-ask.txt` written (`0c6f3882`, ~148 boards).
-- **Next:** the operator sends round 3's ask to the canvas.
+- **Round 3 final** (149 boards `d47ab4ea`; check `10d92875`: 59/61 done, 2 partly, 0 regressed).
+- **Next:** step 6, the build (planner and § 0, then lanes), on the operator's word. Nothing pushed this session.
 
 ## Session 2026-10-27/28 (Opus): T379, flow 13 (graduation and exit), done; T312 before it
 
