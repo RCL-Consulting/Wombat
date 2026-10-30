@@ -543,8 +543,8 @@
   },
   "lastChange": {
     "by": "Renier Cloete",
-    "at": "2026-10-28T09:00:00Z",
-    "via": "Claude Code · Wombat@2745418a",
-    "note": "Re-synced to flow 13 as built (T379, 5cc10c66, with 920f778c and 73baa556): no token added or changed; 4 records added in a new Graduation and exit group: FormerTraineeHome, ExportPortfolio, VerifyExport, TraineeProfile; revised Trainees (Completed and closed), MyProgress (the Your record line, the 901px fix), EndedRecord (AfterNotice, T312's frozen list), MyAuthorisations (a graduate admitted), Badge (ProgrammeOutcome, badge-withdrawn), ConfirmDialog (the programme's two ends; the EPA-deactivation text narrowed by T312), StatePanel, NavMenu (Export portfolio as a personal link), PageHeader, ProgrammeTraineeDetail and ReviewSitting (the Export header action), Button, DataTable, DashboardCard, DetailCard, Icon and the Icons group (no icon added: 64, 59 named by a page); the README, tokens' ref, source map and usages, and the bundle (app.css's four Graduation and exit sections). Then the review's findings and three page fixes the re-sync found (73baa556: the ended EPA page at 901px, My activities' empty header actions, Save profile's bold failure)."
+    "at": "2026-10-30T19:00:00Z",
+    "via": "Claude Code · Wombat@1c11d1f6",
+    "note": "Re-synced to flow 14 as built (T387, e8eea1d2, with 5b5aab80 and 1c11d1f6): no token added or changed; 3 records added in a new Data rights group: MyDataRights, DataRightsRequests, DataRightsRequest (with the erasure dialog and the correction); revised ConfirmDialog (the action mode's first focus on Cancel, app-wide), DataTable (Class), Badge (a request's statuses), PagerControls and FilterBar (44px selects on a phone; T390), Breadcrumbs, PageHeader, NavMenu, Alert, Icon and the Icons group (no icon added: 64, 59 named by a page); the README, tokens' ref, source map and usages, and the bundle (app.css's three Data rights sections). Then the review's finding and four small faults the re-sync found (1c11d1f6)."
   }
 }
