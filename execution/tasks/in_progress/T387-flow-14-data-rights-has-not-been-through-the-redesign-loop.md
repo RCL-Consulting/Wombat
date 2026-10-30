@@ -132,3 +132,12 @@ BRIEF § 6, § 8, § 11; CUSTOMIZATION.md § 5.
   top of `build-lanes.md` (`5f18d3f4` on `t387`). Lanes D (`t387-decide`), K (`t387-reads`), M (`t387-mine`) and P
   (`t387-staff`), each in `.claude/worktrees/<branch>` from `5f18d3f4`, one Opus agent each, in parallel. Then the merge,
   lane W (runbook), two Sonnet reviews, one fix pass.
+- **2026-10-30, step 6, the lanes** (all six suites green in each): D `71edf520`, `5cc523fb` (Application +28,
+  Integration +3; the caller's scope checked before Withdrawn, kept: Withdrawn first would tell an out-of-scope
+  Coordinator a foreign request's state, T056); K `fe3ca854` (Application +33; Apply does not itself refuse the name
+  records for an institutional sign-in, only the page disables them; a correction recorded while Complete runs in
+  another tab is not caught by xmin); M `5f616806` (Web +32; no browser check); P `d6324690` (Web +57; the queue stacks
+  from 1100 px; no browser check). Merged into `t387` (`54ce6df2`): two conflicts resolved (DataTable's `Class` kept
+  once with P's `ExtraClasses`; DESIGN.md's section-order lines, one per lane). Release build 0 errors; six suites green
+  on the merge (Domain 836, Application 4275, Infrastructure 1035, Architecture 52, Web 4351, Integration 515). Lane W
+  (`t387-runbook` from `54ce6df2`) and the Sonnet code review (`build-review-code.md`, on `t387`) running.
