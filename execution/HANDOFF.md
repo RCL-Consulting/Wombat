@@ -17,7 +17,7 @@ The operator said "start flow 14". T387 created and started (P2), written from T
   Trap for the build: a correction's `TargetId` is a Guid but a trainee profile's id is an int.
 - **Round 2 back** (138 boards, `a9904964`). Reviewed and merged (`e1227d44`, `round-2-review.md`: 6 must, 24
   should, 18 nits).
-- **F1–F10 taken as recommended**; T388, T389 proposed. `round-3-ask.txt` being written by one Opus agent.
+- **F1–F10 taken as recommended**; T388, T389 proposed. `round-3-ask.txt` written (`0c6f3882`, ~148 boards).
 - **Next:** the operator sends round 3's ask to the canvas.
 
 ## Session 2026-10-27/28 (Opus): T379, flow 13 (graduation and exit), done; T312 before it

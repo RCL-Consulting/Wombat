@@ -109,3 +109,8 @@ BRIEF § 6, § 8, § 11; CUSTOMIZATION.md § 5.
   My account reverts at the next institutional sign-in) and **T389** (a locked trainee is still emailed by the
   entrustment expiry job; narrower than the review's wording: the opt-out is rightly not honoured there). Round 3's
   ask: one Opus agent.
+- **2026-10-30, round 3's ask** (`round-3-ask.txt`, 459 lines, ~148 boards, a 61-item checklist; `f14r3.css` written
+  out in the ask for the canvas to save as `project/f14r3.css`; F1–F10 recorded in `round-2-review.md` and the brief's
+  § 6; one Opus agent, `0c6f3882`). New states C11, D20, D21, D22, K02. Checked against the T379 database: two
+  Administrators (admin@wombat.local, devadmin), so the last-Administrator refusal is an illustration; Mahlangu's
+  profile id 5; the annual review #5. Inferred, to confirm: F6's radios disabled; whether Complete request sends a mail.
