@@ -22,8 +22,9 @@ The operator said "start flow 14". T387 created and started (P2), written from T
 - **Pushed** master through `c47bc6e0` (the operator's "yes"). **Step 6 started:** § 0 and the plan on `t387` (`7a155e37`;
   worktree `.claude/worktrees/agent-a0cbe10cd07555864`), six suites green in Release.
 - **The wave is merged** into `t387` (`54ce6df2`; t387's worktree is `.claude/worktrees/agent-a0cbe10cd07555864`); six
-  suites green. Lane W (runbook, `.claude/worktrees/t387-runbook`) and the code review run.
-- **Next:** merge W, the pages-and-runbook review, one fix pass, squash onto master, then step 7, the replay.
+  suites green. Lane W merged (`4f9f94b6`); code review 0/3/8
+  (`71190f07`); the operator decided its S1 (scrub the person's reason and correction values on erasure, keep the note).
+- **Next:** the pages-and-runbook review (running), one fix pass, squash onto master, then step 7, the replay.
 
 ## Session 2026-10-27/28 (Opus): T379, flow 13 (graduation and exit), done; T312 before it
 

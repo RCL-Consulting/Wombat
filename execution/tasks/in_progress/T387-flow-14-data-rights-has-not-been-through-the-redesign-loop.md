@@ -140,4 +140,10 @@ BRIEF § 6, § 8, § 11; CUSTOMIZATION.md § 5.
   from 1100 px; no browser check). Merged into `t387` (`54ce6df2`): two conflicts resolved (DataTable's `Class` kept
   once with P's `ExtraClasses`; DESIGN.md's section-order lines, one per lane). Release build 0 errors; six suites green
   on the merge (Domain 836, Application 4275, Infrastructure 1035, Architecture 52, Web 4351, Integration 515). Lane W
-  (`t387-runbook` from `54ce6df2`) and the Sonnet code review (`build-review-code.md`, on `t387`) running.
+  done (`17972410`, `4822d46f`, `374b55c9`: every changed step, new A.1.8a, the outcome at 5 requests and 11 stub mails,
+  coverage, 42 states rows "Not yet captured (T387)"; verbatim 425/0, completeness ok, baseline missing 0, Web 4351),
+  merged `4f9f94b6`. Code review (`build-review-code.md`, `71190f07`, Sonnet): 0 must, 3 should, 8 nits; checked here,
+  S1: `ErasureExecutor.cs:377-402` leaves the request's Reason, DecisionNote and the corrections' values. **The operator
+  decided S1** (2026-10-30): the erasure scrubs the person's own text (the reason, every correction's before/after
+  values) to "Erased with the person's data on ‹day›."; the staff's decision note is kept. Pages-and-runbook review
+  (Sonnet) running.
