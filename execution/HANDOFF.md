@@ -2,6 +2,19 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
+## Session 2026-11-02 (Opus): T392, flow 15 (an institution adopts the catalogue), in progress
+
+The operator said "lets do flow 15", then "Done" (round 1), "yes" (picks, Q18–Q21), "done" (round 2), "yes" (F1–F9 as
+recommended). T392's Notes hold every step; not pushed (master ahead of origin since `a87041ac`: ask before pushing).
+- **Design:** canvas "Wombat 15" https://claude.ai/artifact/QvQL26tCCJh6S9zoLBywdZ; brief restated (`1b0676a2`);
+  round 1 (17 boards, `ff17241b`), round 2 (168 boards, `9c37e0ea`; review `2780557d`: 6 must, 25 should, 18 nit).
+- **Round 3's ask** written (`5fe15328`, `round-3-ask.txt`: 93 redrawn, 12 new screens, 11 captures to reopen,
+  the canvas saves its stylesheet as f15r3.css); wording the agent assumed is marked NEW in it.
+- **Next:** the operator sends round 3 and says so; pull the boards into `round-3/` (they land under `project/`:
+  flatten), a Sonnet item-by-item check (`round-3-check.md`), then the build (step 6) on the operator's word.
+- **Traps:** the harness is at `C:\dev\rcl_execution\bin\harness.py`, not `bin/`. Canvas scratch:
+  `C:\Users\Renier\AppData\Local\Temp\claude\c--dev-Wombat\ecc5a9d5-2a6e-43d8-a55a-e55b7e48f8ab\scratchpad\c15`.
+
 ## Session 2026-11-02 (Opus): housekeeping
 
 The operator said "push and close the tasks". Pushed master (`75eefc6c..f0348410`). Closed **T316** and **T319** as done:
@@ -41,30 +54,3 @@ and correction values, keep the note), "yes" (push, the wave), "proceed" (push a
 - Scratch `C:\Users\Renier\AppData\Local\Temp\claude\c--dev-Wombat\e81867ab-c351-40bf-9d41-d1d61fe30f43\scratchpad`:
   `pw/` (Playwright 1.56.1 and `lib.mjs`, for the next replay), `g387/` (act, states and step 8 scripts;
   `replay-pw.env`: never print it). Branches `t387*` and their worktrees kept.
-
-## Session 2026-10-27/28 (Opus): T379, flow 13 (graduation and exit), done; T312 before it
-
-The operator said "push and lets start flow 13", then took every set of questions as recommended (Q1–Q16, Q17–Q27,
-F1–F11, B5 option 1), "proceed" (T312), "yes" (the wave), "yes" (the replay). Pushed through `c0801106`.
-
-- **Design:** canvas "Wombat 13" https://claude.ai/artifact/SujH2iB2snNe7VANE4SxdK; rounds 1–3 (27, 168, 192 boards;
-  final, `aaa3634b`). The canvas never received the captures in any round (BRIEF § 11 "Flow 13").
-- **T312 landed** (`c9d6fe13`; the ended record keeps its list; B5: a STAR counts when a review of the programme issued
-  it); confirmed in the browser at 6.21, 6.40, 6.41. Master's Release build had broken on its tests: `232e7701`.
-- **Built:** `5cc10c66` (planner and § 0, lanes R/E/V/P, runbook lane, three Sonnet reviews 0 must, one fix pass).
-- **Replay:** 331 steps, 286 clean, no regression; 2.28 and 5.28 corrected; one fault fixed (`920f778c`: an erased
-  trainee's review offered a dead-end export). States 64 rows; one left (`trainee-profile-edit--end-failed`).
-- **Re-sync:** design system **version 37**; three page faults found and fixed (`73baa556`, browser-checked).
-- **Lessons:** BRIEF § 11 "Flow 13". **T379 done.**
-- **Closed on the operator's word:** T380, T311, T313 (flow 13 did their work). **For review:** the blue "until" at 390 (T385's note) needs a real phone. New proposals T381–T386.
-- **Next:** flow 14 (`design/flows/14-data-rights.md`) on the operator's word.
-
-### Environment left
-
-- **The replay app on `:5180`** runs `wombat_scenario_t379` (the appendix's end state, with `73baa556`). Dumps
-  `recovery/scenario-t379-post-act{1..6,A}`, `-pre-a515-A`. The six `_s*` scratch DBs were dropped on the operator's
-  word (2026-10-28). Old: `wombat_scenario_t376`, `_t373`, `_t369`.
-- Scratch `C:\Users\Renier\AppData\Local\Temp\claude\c--dev-Wombat\67ce8168-e9a2-4dd0-acb1-eab0ccee0868\scratchpad\g379`
-  (act, states and step 8 scripts; `replay-pw.env`: never print it).
-- Branches `t312`, `t379*` and their worktrees kept.
-
