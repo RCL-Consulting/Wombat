@@ -1,11 +1,12 @@
 ---
 id: T319
 title: Revoking a STAR and deciding a data-rights request notify nobody, though both pages say they do, and a refused requester never learns why
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-26
+completed: 2026-11-02
 ---
 
 # T319 — Revoking a STAR and deciding a data-rights request notify nobody, though both pages say they do, and a refused requester never learns why
@@ -75,3 +76,5 @@ The sibling task holds activity-move and committee-outcome mail (C59) and shares
 
 - **2026-10-14:** its revocation half split out as **T367**, to land before flow 09's build (T366, the operator's Q11).
   The data-rights half stays here and reuses T367's one-off notice path.
+
+- **2026-11-02:** closed on the operator's word: flow 14 (T387, `e8eea1d2`) built this; its replay (332 steps, `wombat_scenario_t387`) records it as no longer occurring (T387 Outcome). Evidence: `tests/Wombat.Application.Tests/DataRights/DataRightsCorrectionTests.cs`; the Approve, Reject and CompleteRectification handlers send the requester's mail.

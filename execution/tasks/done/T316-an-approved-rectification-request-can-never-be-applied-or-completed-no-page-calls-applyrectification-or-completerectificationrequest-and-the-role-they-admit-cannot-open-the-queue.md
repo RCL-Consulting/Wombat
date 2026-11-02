@@ -1,11 +1,12 @@
 ---
 id: T316
 title: An approved rectification request can never be applied or completed: no page calls ApplyRectification or CompleteRectificationRequest, and the role they admit cannot open the queue
-status: queued
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-09-26
+completed: 2026-11-02
 ---
 
 # T316 — An approved rectification request can never be applied or completed: no page calls ApplyRectification or CompleteRectificationRequest, and the role they admit cannot open the queue
@@ -49,3 +50,5 @@ A trainee submits a Rectification on /account/data-rights (runbook Step A.1.7). 
 ## Related
 
 T112 (Still open), T084, T258; D42 (the reason A.1.8 rejects); runbook Steps A.1.7, A.1.8, A.1.9; F-A.1.2a (the notification promised at submission, triaged separately).
+
+- **2026-11-02:** closed on the operator's word: flow 14 (T387, `e8eea1d2`) built this; its replay (332 steps, `wombat_scenario_t387`) records it as no longer occurring (T387 Outcome). Evidence: `tests/Wombat.Application.Tests/DataRights/DataRightsCorrectionTests.cs`; the Approve, Reject and CompleteRectification handlers send the requester's mail.

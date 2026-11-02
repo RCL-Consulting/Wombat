@@ -2,6 +2,14 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
+## Session 2026-11-02 (Opus): housekeeping
+
+The operator said "push and close the tasks". Pushed master (`75eefc6c..f0348410`). Closed **T316** and **T319** as done:
+flow 14 (T387) built them, and its replay records them as no longer occurring (a closing note in each). No code changed.
+- **Next:** flow 15 (an institution adopting the catalogue) on the operator's word, or a P2 (T320 the largest).
+- Still the operator's: T157 the deploy, T128's backup destination, the College's § 3F questions, dropping the
+  `wombat_scenario_t387_s*` scratch DBs; the unfiled waiting-feedback and `aria-busy` gaps from flow 14.
+
 ## Session 2026-10-30 (Opus): T387, flow 14 (data rights), done
 
 The operator said "start flow 14", took Q1–Q28 and F1–F10 as recommended, chose S1 (scrub the erased person's reason
