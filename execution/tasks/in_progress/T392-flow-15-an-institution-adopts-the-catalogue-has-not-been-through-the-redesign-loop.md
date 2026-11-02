@@ -129,3 +129,6 @@ T387 (flow 14), T379 (flow 13), T304, T301, T291, T326; BRIEF § 6, § 8, § 11;
   OnboardingLinks.Curricula, DESIGN.md's NavMenu table; no migration; suites 836/4283/1035/52/4397/516 green); plan and
   contracts on master (`c4ea2794`). Lanes A curricula, B items, C EPAs, D move/rebuild/scales, W runbook. PROPOSED
   P1–P6 for the operator. **Next:** the operator's word on P1–P6, then the wave.
+- **2026-11-02, the wave runs** (the operator: "yes" to P1, P3–P6 as proposed and P2 changed: a national item's row
+  offers View, the item page read-only; `4b0a31fc`). Lanes A `t392-curricula`, B `t392-items`, C `t392-epas`, D
+  `t392-move`, each an Opus agent in `.claude/worktrees/<branch>` cut from `t392` at `3aa6e6e8`.
