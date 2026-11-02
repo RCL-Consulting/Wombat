@@ -889,10 +889,10 @@ Gap: [F-1.31b, T326] still: a search that matches nothing shows the empty-catalo
 
 ## Act 1 outcome state
 
-Replay check (2026-11-02, T392 replay, wombat_scenario_t392): every query matches but one, with 3 successful Save
-drafts and 2 refusals (Step 1.27's duplicate key and Step 1.28's field: rule were each played once). The audit holds
-no failed AdoptCurriculumCommand: since T392 an adopted version is not offered again (Step 1.20, Q7), so the second
-Adopt the query expects can no longer be pressed (runbook: that comment line predates T392).
+Replay check (2026-11-02, T392 replay, wombat_scenario_t392): every query matches, with 3 successful Save drafts and 2
+refusals (Step 1.27's duplicate key and Step 1.28's field: rule were each played once). The audit holds no failed
+AdoptCurriculumCommand: since T392 an adopted version is not offered again (Step 1.20, Q7), so there is no second Adopt
+to refuse; the expected line was dropped from the query's comment after the replay.
 
 Beside the ignored Demo College, Demo Institution and their catalogue, the database now holds:
 - **The CPSA's seeded catalogue, unchanged:**
@@ -978,7 +978,6 @@ SELECT "Action", "Success", count(*) FROM "AuditEntries"
                      'AdoptCurriculumCommand', 'SaveActivityTypeDraftCommand', 'PublishActivityTypeDraftCommand')
   GROUP BY 1, 2 ORDER BY 1, 2;
   -- AcceptInvitationCommand | t | 2
-  -- AdoptCurriculumCommand | f | 1          (Step 1.20's second Adopt)
   -- AdoptCurriculumCommand | t | 1
   -- CreateInstitutionCommand | t | 1
   -- IssueInvitationCommand | f | 1          (Step 1.5's first press)
