@@ -132,3 +132,8 @@ T387 (flow 14), T379 (flow 13), T304, T301, T291, T326; BRIEF § 6, § 8, § 11;
 - **2026-11-02, the wave runs** (the operator: "yes" to P1, P3–P6 as proposed and P2 changed: a national item's row
   offers View, the item page read-only; `4b0a31fc`). Lanes A `t392-curricula`, B `t392-items`, C `t392-epas`, D
   `t392-move`, each an Opus agent in `.claude/worktrees/<branch>` cut from `t392` at `3aa6e6e8`.
+- **2026-11-02, the lanes merged into `t392`** (`6210c82d`): A `559a6638`, B `fdbfb2d3`, C `6a0277ec`, D `e7331b1f`;
+  DESIGN.md's section-order lines and FormFieldHelpTextLinkTests' guard (85) merged by hand. Suites on t392: Domain 836,
+  Application 4327, Infrastructure 1035, Architecture 52, Integration 517, Web 4485/4487 (the two ScenarioRunbookTests
+  that need the item routes in coverage.md: lane W's). Lane W runs (`t392-runbook`, Opus). New words on no board, from
+  the lanes' reports, to list for the operator after the reviews.
