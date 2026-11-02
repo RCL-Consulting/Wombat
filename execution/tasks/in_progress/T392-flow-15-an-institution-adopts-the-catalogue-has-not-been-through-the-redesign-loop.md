@@ -103,3 +103,10 @@ T387 (flow 14), T379 (flow 13), T304, T301, T291, T326; BRIEF § 6, § 8, § 11;
   Checked here: the item form's minimum is `RungPicker` (a select), not radios. PROPOSED in the ask, T1–T12; T4 (the
   item form pages serve the College and the Administrator too, changing 1.18, 6.30, A.7.10) most needs the operator's
   look. **Next:** the operator sends it with the twelve captures from `design/upload/baseline/`.
+- **2026-11-02, round 2** (168 boards and `f15r2.css` in `round-2/`, `9c37e0ea`; the captures arrived this time,
+  read from the connected upload folder, 7 viewed as images): reviewed by three Sonnet agents (code `50f85562` 2/14/8,
+  cast `29fe0a08` 3/8/5, checklist 72/74, corrections 20/22; ds `245a8791` 1/8/7), merged by one Opus agent
+  (`round-2-review.md`, `2780557d`: 6 must, 25 should, 18 nits). Checked here: `EpaEdit.razor:257` a create navigates
+  with forceLoad and carries no result (M5). Musts: M1 `td.actions-cell` (242 cells); M2 A11's 11.2 count; M3 the
+  College admin's and Administrator's item pages undrawn (T4, 6.30); M4 step 1.17 missing; M5/M6 a result and focus
+  across a page change. F1–F9 for the operator.
