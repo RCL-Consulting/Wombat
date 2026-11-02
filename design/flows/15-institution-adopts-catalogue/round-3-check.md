@@ -104,3 +104,31 @@ fit to build from once the operator decisions below are taken.
 8. **D03's trigger** ("Save profile and move…"): Recommendation: **give it `aria-haspopup="dialog"`** (it opens ConfirmDialog, DESIGN.md:757's pattern) and say so on the Spec. One attribute.
 9. **Illustration title and `canvas.json`**: `round-3/` has no `canvas.json` and each `<title>` is the id, so the "Illustration in its title" half of the labelling rule cannot be checked from the repo (chips and label strips are right on A07, A08, A11, A13, B20, C15 and twins, and on no other board). Recommendation: **accept**; ask the canvas to save `canvas.json` next time, as flow 14 had.
 10. **S17's section name**: fix in the Spec before the DESIGN.md edit is written (picker rule = § Table system, `DESIGN.md:966`).
+
+## Decisions (2026-11-02)
+
+The operator took the "For the operator" list as recommended, and four more besides; recorded for the build (step 6,
+`build-lanes.md` and `build-contracts.md` beside this file). No fourth round.
+
+1. **The items table's Window and weight column leaves the table** for the item's page (item 1): the table is six
+   columns (EPA, Target and decision, Minimum level, Minimum by training year, Tools, Actions), which ends the 10 px scroll
+   at 901 px on the nine boards with Edit and Remove…. The window and weight are read and changed on the item's page of its
+   own, which already holds both. The boards' "Window and weight" cell is not built.
+2. **One page-scoped 44 px rule each below 641 px** (item 2): the items page's `.form-section-head` action ("Add your
+   institution's own item", and the College's "Add item" link, drawn on no board) and EpaEdit's Active `.form-check` row,
+   each scoped to its page's own class, as flow 12 did. The other 316 controls keep the system's rules.
+3. **KGK-001's own row sorts last** in the items table, after the national items (item 4): the table is in EPA order,
+   national first, then the institution's own; the caption "‹curriculum›'s items, in EPA order" stands.
+4. **The plus icon stays** on Create EPA and Create curriculum, as built (`EpasList.razor:10–12`, `CurriculaList.razor:20–22`;
+   item 6). A canvas omission, not a decision.
+5. **The filled Minimum-by-training-year selects render as `StageMinimaEditor.razor` does** (item 7): R3-B22/B24's four
+   labelled selects are the boards' picture of it; the build keeps the component's own markup.
+6. **D03's "Save profile and move…" carries `aria-haspopup="dialog"`** (item 8, N6): it opens the move's ConfirmDialog.
+7. **The breadcrumbs are built from the `Breadcrumbs` component** (`src/Wombat.Web/Components/Shared/Breadcrumbs.razor`;
+   item 3, N7), never from the boards' trail markup (their `li.breadcrumb-separator` and `aria-current` on the `li` are the
+   canvas's). It renders the same.
+8. **S17's section name** (item 10): the picker rule is DESIGN.md § Table system's paragraph (`DESIGN.md:966`, under
+   `## Table system`, `:872`), not "§ Form system's picker paragraph" as R3-0-spec-2 § 7 says. The build's DESIGN.md edit
+   ("adoption is by rows: an adopted version is a row with its state, never an option") is written there.
+
+Items 5 and 9 need nothing of the build: the K3 grid fix is the canvas's (`.cv-*`), and `canvas.json` is asked for next time.
