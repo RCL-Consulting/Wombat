@@ -11,8 +11,13 @@ recommended). T392's Notes hold every step; not pushed (master ahead of origin s
 - **Round 3's ask** written (`5fe15328`, `round-3-ask.txt`: 93 redrawn, 12 new screens, 11 captures to reopen,
   the canvas saves its stylesheet as f15r3.css); wording the agent assumed is marked NEW in it.
 - **Round 3** drawn (111 boards, `7ee1206a`) and checked (`round-3-check.md`, `e91f5c7f`: 45/48 done, 2 partly, 1 not).
-- **Step 6:** § 0 on `t392` (`3aa6e6e8`, worktree `.claude/worktrees/t392`), plan `c4ea2794` (lanes A, B, C, D, W).
-- **Next:** the operator's word on the planner's P1–P6 (`build-lanes.md`), then the wave.
+- **Step 6, built:** `c931d56f` (lanes A–D, W; two Sonnet reviews, one fix pass, all but P5 left to T390; six suites
+  green). T393 proposed (two edit pages print exception text).
+- **Step 7, replay** (fresh `wombat_scenario_t392` on `:5180`, D = 2026-11-02): act 1 31/24 clean (`42e93d01`; its
+  outcome SQL comment still expects a refused second adoption: fix at the end), act 2 44/44 (`0ef2236e`); act 3 running.
+  Then acts 4–6, A, the two states passes (`design\flows\15-institution-adopts-catalogue.md:719` names
+  the compact clinic-table states capture: baseline missing 1 until they run), then steps 8–9.
+- **Replay scratch:** `...\ecc5a9d5-...\scratchpad\g392` (prompts, act dirs, `replay-pw.env`: never print it).
 - **Traps:** the harness is at `C:\dev\rcl_execution\bin\harness.py`, not `bin/`. Canvas scratch:
   `C:\Users\Renier\AppData\Local\Temp\claude\c--dev-Wombat\ecc5a9d5-2a6e-43d8-a55a-e55b7e48f8ab\scratchpad\c15`.
 
