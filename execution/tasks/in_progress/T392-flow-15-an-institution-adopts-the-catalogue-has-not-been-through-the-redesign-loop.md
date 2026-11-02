@@ -110,3 +110,9 @@ T387 (flow 14), T379 (flow 13), T304, T301, T291, T326; BRIEF § 6, § 8, § 11;
   with forceLoad and carries no result (M5). Musts: M1 `td.actions-cell` (242 cells); M2 A11's 11.2 count; M3 the
   College admin's and Administrator's item pages undrawn (T4, 6.30); M4 step 1.17 missing; M5/M6 a result and focus
   across a page change. F1–F9 for the operator.
+- **2026-11-02, F1–F9 taken as recommended** ("yes"). Round 3's ask (`round-3-ask.txt`, 328 lines, one Opus agent,
+  `5fe15328`): 41 boards redrawn at 1280 with their 390 and 768 twins (93 screens), 12 new (B21 superseded 11.1 items,
+  B22–B24 Kruger's add, the list after, PAED-011's edit; B08/B17 at 1100 and 901); Spec and Steps redrawn whole; 11
+  captures to reopen; `project/f15r3.css`. M1–M6 hold (242 exact); S11 partly wrong (only 6.17's Do names Deactivate).
+  Assumed, marked NEW: A08's one-registrar line, B21's no-Add line, `CatalogueLinks`, `FieldRefusalException`, PAED-011's
+  title, loading lines, "EPAs per page", the Administrator's A10/A11 wording. **Next:** the operator sends round 3.
