@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>F · Curriculum progress</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="f15r1.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="cv-board" style="width: 1280px">
+<div class="cv-head">
+<h1>F · Curriculum progress: the rebuild, its question, its result and its failure</h1>
+<p>One proposal (Q16). The page's three paragraphs as built (the brief elides their ends: bracketed). Rebuild progress… becomes an outline trigger, since its dialog is the decision. The result is an Alert, its first sentence bold, over the five figures (N6), focused. A failure says nothing changed and offers Try again, with no exception's text. Steps 6.38: 4 + 0, unchanged; its Expect gains "an outline Rebuild progress…" and the failure.</p>
+</div>
+
+<div class="cv-band"><strong>1 · 6.38, the page</strong> <span>· devadmin · Home › Curricula › Curriculum progress · Curricula lit</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="admin" lit="Curricula" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Demo Administrator</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#">Home</a></li><li class="breadcrumb-separator" aria-hidden="true">›</li><li class="breadcrumb-parent"><a href="#">Curricula</a></li><li class="breadcrumb-separator" aria-hidden="true">›</li><li class="breadcrumb-current" aria-current="page"><span>Curriculum progress</span></li></ol></nav>
+<div class="header-container"><div><h1>Curriculum progress</h1><p class="page-subtitle">Rebuild every trainee's curriculum progress from their completed activities.</p></div></div>
+<div class="prose-block">
+<p>Each completed activity is credited to the curriculum items it matches, in the semester that contains its encounter date. ‹… as built›</p>
+<p>‹… as built› It is safe to run more than once. It runs as one transaction, so if it fails, nothing changes. ‹… as built›</p>
+<p>A rebuild credits each activity against the curriculum as it is today: its items, targets and minimum levels. Only whether an EPA was active is judged as of when the activity was completed. ‹… as built›</p>
+<div class="page-actions-stack"><button type="button" class="btn btn-outline">Rebuild progress…</button></div>
+</div>
+<p class="cv-note">The subtitle is new (the brief gives none for today's page): drop it if the page has one. Rebuilding one trainee is not offered (P12).</p>
+</article></main></div>
+
+<div class="cv-band"><strong>2 · The question</strong> <span>· opens on Cancel · Cancel returns the focus to Rebuild progress…</span></div>
+<div class="cv-scrim">
+<dialog open class="dialog-card" aria-labelledby="f2-t"><form class="dialog-form" method="dialog"><h2 id="f2-t">Rebuild curriculum progress?</h2><p>Every trainee's curriculum progress is recalculated from their completed activities, each filed into the semester of its encounter date. An inactive EPA keeps the progress it earned while it was active. It is safe to run more than once, and if it fails nothing changes.</p><div class="dialog-actions"><button type="button" class="btn btn-outline" autofocus>Cancel</button><button type="button" class="btn btn-primary">Rebuild progress</button></div></form></dialog>
+</div>
+
+<div class="cv-band"><strong>3 · Running, then the result</strong> <span>· the trigger keeps the focus while it runs (aria-disabled, "Rebuilding…"); then the result takes it</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="admin" lit="Curricula" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Demo Administrator</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<div class="header-container"><div><h1>Curriculum progress</h1></div></div>
+<div class="prose-block">
+<div class="page-actions-stack" style="margin-bottom: 24px"><button type="button" class="btn btn-outline" aria-disabled="true">Rebuilding…</button></div>
+<div class="alert alert-success action-result" role="status" tabindex="-1"><strong>Curriculum progress was rebuilt.</strong>
+<dl class="result-figures"><dt>Activities re-read</dt><dd>15</dd><dt>Curriculum items credited</dt><dd>14</dd><dt>Semester tallies written</dt><dd>9</dd><dt>Stale tallies removed</dt><dd>0</dd><dt>Completions re-stamped</dt><dd>15</dd></dl></div>
+</div>
+</article></main></div>
+
+<div class="cv-band"><strong>4 · A failure, nothing changed</strong> <span>· the danger alert, focused · never the exception's text</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="admin" lit="Curricula" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Demo Administrator</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<div class="header-container"><div><h1>Curriculum progress</h1></div></div>
+<div class="prose-block">
+<div class="alert alert-danger action-result" role="alert" tabindex="-1"><div class="alert-row"><span><strong>The rebuild could not be finished, so nothing changed.</strong> Every trainee's progress reads as it did before. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm">Try again</button></div></div>
+</div>
+<p class="cv-note">Replaces "The rebuild failed and nothing was changed: An exception has been raised that is likely due to a transient failure…". Try again opens the same question (frame 2). If the code keeps a failure's reference (the error page's), it goes under the sentence in <code>code</code>; the brief names none, so none is drawn.</p>
+</article></main></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3000}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

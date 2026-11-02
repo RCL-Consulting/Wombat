@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>E · Entrustment scales, read-only</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="f15r1.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="cv-board" style="width: 1280px">
+<div class="cv-head">
+<h1>E · Entrustment scales, read only to an Institutional admin</h1>
+<p>One proposal (T326's scales half, Q13). The subtitle is for a reader: "Define and maintain the rating ladders…" goes. Every scale is listed, as every admin reads every scale; a column says which of KGK's curricula pin each (DATA 6, optional). No Create scale and no actions column (T057, T239), unchanged. Steps 1.22 and 6.9: 1 + 0, unchanged; their Expects gain the subtitle.</p>
+</div>
+
+<div class="cv-band"><strong>6.9 · three scales</strong> <span>· Prof Mbatha · /admin/entrustment-scales</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="ia" lit="Entrustment scales" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Nolwazi Mbatha</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<div class="header-container"><div><h1>Entrustment scales</h1><p class="page-subtitle">The ladders an assessor rates against on your curricula's forms. An Administrator keeps them; you can read each one here.</p></div></div>
+<div class="table-container"><table class="clinic-table clinic-table--stack clinic-table--stack-wide">
+<caption>Entrustment scales · 3</caption>
+<thead><tr><th scope="col">Name</th><th scope="col">Description</th><th scope="col">Levels</th><th scope="col">On your curricula</th></tr></thead>
+<tbody>
+<tr><th scope="row">CNSA Neurology Entrustment Scale</th><td data-label="Description">‹description, as stored›</td><td data-label="Levels">6</td><td data-label="On your curricula" class="text-muted">None</td></tr>
+<tr><th scope="row">CPSA Paediatric Entrustment Scale v11.1</th><td data-label="Description">‹description, as stored›</td><td data-label="Levels">6 (1, 2, 3a, 3b, 4, 5)</td><td data-label="On your curricula">Paediatric EPA Curriculum (11.1), Paediatric EPA Curriculum (11.2)</td></tr>
+<tr><th scope="row">O-R Scale</th><td data-label="Description">‹description, as stored›</td><td data-label="Levels">5</td><td data-label="On your curricula" class="text-muted">None</td></tr>
+</tbody></table></div>
+<p class="cv-note">At 1.22 the CNSA scale (added at 6.5) is not yet there: two rows. Without DATA 6 the last column is not drawn and the page is today's three columns. Levels list their rungs where the scale's labels are short; the rungs of the CNSA and O-R scales are not given, so only their counts show.</p>
+</article></main></div>
+
+<div class="cv-band"><strong>Loading, and a load error</strong></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="ia" lit="Entrustment scales" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Nolwazi Mbatha</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<div class="header-container"><div><h1>Entrustment scales</h1><p class="page-subtitle">The ladders an assessor rates against on your curricula's forms. An Administrator keeps them; you can read each one here.</p></div></div>
+<div class="skeleton" style="width: 30%; height: 1.5rem"></div><div class="skeleton"></div><div class="skeleton" style="width: 60%"></div>
+<div class="alert alert-danger" role="alert" style="margin-top: 24px"><div class="alert-row"><span><strong>Could not load the entrustment scales.</strong> Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm">Try again</button></div></div>
+</article></main></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1800}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

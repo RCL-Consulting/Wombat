@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>D1 and D2 at 390</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="f15r1.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="cv-board" style="width: 390px">
+<div class="cv-head"><h1>D1 and D2 at 390</h1><p>One column; the actions stack, primary on top, 44px; the dialog's buttons stack.</p></div>
+
+<div class="cv-band"><strong>D1 · 6.36, 11.2 chosen, before Save</strong></div>
+<div class="cv-shell"><dc-import name="Sidebar" role="ia" lit="Trainees" hint-size="390px,56px"></dc-import>
+<article class="cv-article">
+<div class="header-container"><div><h1>Sipho Ndlovu's programme</h1></div><a class="btn btn-outline" style="min-height: 2.75rem; width: 100%" href="#">Export Sipho Ndlovu's portfolio</a></div>
+<form class="form-container">
+<h2 class="form-section-title">Profile details</h2>
+<div class="form-group"><label for="p1-cur">Curriculum *</label><select id="p1-cur" class="form-select" aria-describedby="p1-help"><option selected>Paediatric EPA Curriculum (11.2)</option></select>
+<div class="move-check" id="p1-help"><p><strong>When you save, Sipho Ndlovu moves to Paediatric EPA Curriculum (11.2).</strong></p><p>This cannot be undone: he cannot be moved back to 11.1. His ‹N› completions are counted again against 11.2 in the same save.</p></div></div>
+<div class="form-group"><label for="p1-start">Programme start *</label><input id="p1-start" class="form-control" value="2026-01-15"></div>
+<div class="form-group"><label for="p1-end">Expected completion *</label><input id="p1-end" class="form-control" value="2030-01-14"></div>
+<div class="page-actions-stack"><a class="btn btn-outline" href="#">Cancel</a><button type="button" class="btn btn-primary">Save and move…</button></div>
+</form>
+</article></div>
+
+<div class="cv-band"><strong>D1 · the confirmation</strong></div>
+<div class="cv-scrim">
+<dialog open class="dialog-card" aria-labelledby="p2-t"><form class="dialog-form" method="dialog"><h2 id="p2-t">Move Sipho Ndlovu to Paediatric EPA Curriculum (11.2)?</h2><p>He leaves Paediatric EPA Curriculum (11.1) for good: a move cannot be undone. His ‹N› completions are counted again against 11.2 as the profile saves.</p><div class="dialog-actions page-actions-stack"><button type="button" class="btn btn-outline" autofocus>Cancel</button><button type="button" class="btn btn-primary">Move and save</button></div></form></dialog>
+</div>
+
+<div class="cv-band"><strong>D1 · the result</strong></div>
+<div class="cv-article"><div class="alert alert-success action-result" role="status" tabindex="-1"><strong>Trainee profile saved.</strong> 1 completion was checked against 11.2, and 1 counts towards it.</div></div>
+
+<div class="cv-band"><strong>D2 · 6.34, Anele Dlamini's move card</strong></div>
+<div class="cv-shell"><dc-import name="Sidebar" role="ia" lit="Trainees" hint-size="390px,56px"></dc-import>
+<article class="cv-article">
+<div class="header-container"><div><h1>Anele Dlamini's programme</h1></div></div>
+<dl class="details-list details-list--stacked"><div><dt>Curriculum</dt><dd>Paediatric EPA Curriculum (11.1)<br><span class="text-muted">Superseded by your institution on 2026-10-30</span></dd></div></dl>
+<div class="move-check"><p><strong>Your institution now follows Paediatric EPA Curriculum (11.2) for Paediatrics / Paediatrics.</strong></p><p>Anele Dlamini stays on 11.1 until you move her. A move cannot be undone, and her completions are counted again against 11.2.</p><p style="margin-top: 12px"><button type="button" class="btn btn-outline" style="min-height: 2.75rem; width: 100%">Move to 11.2…</button></p></div>
+</article></div>
+
+<div class="cv-band"><strong>D2 · moved</strong></div>
+<div class="cv-article">
+<dl class="details-list details-list--stacked"><div><dt>Curriculum</dt><dd>Paediatric EPA Curriculum (11.2)<br><span class="text-muted">The version your institution follows</span></dd></div></dl>
+<div class="alert alert-success action-result" role="status" tabindex="-1"><strong>Sipho Ndlovu moved to Paediatric EPA Curriculum (11.2).</strong> 1 completion was checked against 11.2, and 1 counts towards it.</div>
+</div>
+
+<div class="cv-band"><strong>D1 and D2 · refused</strong></div>
+<div class="cv-article"><div class="form-group"><label for="p6-cur">Curriculum *</label><select id="p6-cur" class="form-select invalid" aria-invalid="true" aria-describedby="p6-msg"><option>‹a version no longer adopted›</option></select><div class="validation-message" id="p6-msg">A trainee can be moved only into the curriculum version this institution has adopted for their discipline, so nothing was saved.</div></div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":6400}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>B2 · one items table, owner per row</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="f15r1.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="cv-board wf-board" style="width: 1820px">
+<div class="cv-head">
+<h1>B2 · One items table, each row's owner under its EPA; add and edit on a form page of their own</h1>
+<p>Structure B2 (wireframe), paired with C2. The curriculum reads in one list, in EPA order; a College row's actions cell says "Set by the College."; KGK's row carries the owner badge "Your institution's own item" (N1) and Edit, Remove…. Add and Edit open /admin/curricula/{Id}/items/new and /items/{ItemId} (P9), never a form in a cell. Steps: add 3 + 8 (Add your institution's own item, Add item, back on the list); edit 2 + changed fields; remove 2. At 390 the table stacks from 900 (StackWide). Reasoning: one list to read; the form has a page's width, so its eleven fields never fight the table.</p>
+</div>
+
+<div class="wf-row">
+<div class="wf-col"><p class="wf-label">1 · 1.21 and 6.22 <span>· 11.1, nothing of KGK's yet; PAED-012 paused</span></p>
+<div class="wf-screen wf-1280">
+<div class="wf-side"><b>Wombat</b><span class="wf-muted">Acting as Institutional admin</span><span>Home</span><span class="wf-muted">‹group, as built›</span><span class="is-lit">Curricula</span><span>EPAs</span><span>Entrustment scales</span><span class="wf-muted">‹the other links›</span></div>
+<div class="wf-main">
+<span class="wf-crumb">Home › Curricula › Items of Paediatric EPA Curriculum (11.1)</span>
+<div class="wf-h1"><b>Items of Paediatric EPA Curriculum (11.1)</b><span class="wf-muted">no "Add your institution's own item": no EPA it could take</span><small>College of Paediatricians of South Africa · Paediatrics / Paediatrics · effective 2026-01-01 · adopted by your institution on 2026-10-30</small></div>
+<div class="wf-box wf-box--info">The College sets this curriculum's national items, so they are read only here. Your institution's own items apply only to its trainees … (the standing notice, whole)</div>
+<div class="wf-box">Every EPA your institution could add is already on this curriculum … first <u>create a local EPA of Paediatrics</u>.</div>
+<table class="wf-table"><caption>Items of Paediatric EPA Curriculum (11.1) · 15</caption>
+<thead><tr><th>EPA</th><th>Target and decision</th><th>Scale</th><th>Minimum level</th><th>Minimum by training year</th><th>Completion window (months)</th><th>Weight</th><th>Tools</th><th>Actions</th></tr></thead>
+<tbody>
+<tr><td>PAED-002 — ‹title›</td><td>3 per semester · decided each semester</td><td>CPSA Paediatric Entrustment Scale v11.1</td><td>‹rung›</td><td>‹…›</td><td>‹n›</td><td>‹n›</td><td>‹tools›</td><td class="wf-muted">Set by the College.</td></tr>
+<tr><td>PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams <span class="wf-muted">(inactive: not in force)</span></td><td>‹…›</td><td>CPSA Paediatric Entrustment Scale v11.1</td><td>‹rung›</td><td>‹…›</td><td>‹n›</td><td>‹n›</td><td>‹tools›</td><td class="wf-muted">Set by the College.</td></tr>
+<tr><td colspan="9" class="wf-muted"><i>‹the other 13, each "Set by the College."›</i></td></tr>
+</tbody></table>
+<div class="cv-note">Nine columns as today: from 900 down it stacks (StackWide), so no column scrolls sideways at 390 or beside the sidebar (T323).</div>
+</div></div></div>
+<div class="wf-col"><p class="wf-label">1 · 390</p>
+<div class="wf-screen wf-390"><div class="wf-phonebar"><b>Wombat</b><span>Institutional admin · Menu</span></div>
+<div class="wf-main">
+<div class="wf-h1"><b>Items of Paediatric EPA Curriculum (11.1)</b></div>
+<div class="wf-box wf-box--info">The College sets this curriculum's national items, so they are read only here …</div>
+<div class="wf-stackrow"><b>PAED-002 — ‹title›</b><span>3 per semester · decided each semester</span><span class="wf-muted">CPSA Paediatric Entrustment Scale v11.1 · minimum ‹rung›</span><span class="wf-muted">Set by the College.</span></div>
+<div class="wf-stackrow"><b>PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams</b><span class="wf-muted">(inactive: not in force)</span><span class="wf-muted">Set by the College.</span></div>
+</div></div></div>
+</div>
+
+<div class="wf-row">
+<div class="wf-col"><p class="wf-label">2 · 6.26, the add page before a rung is chosen <span>· Home › Curricula › Items of Paediatric EPA Curriculum (11.1) › Add your institution's own item</span></p>
+<div class="wf-screen wf-1030"><div class="wf-main">
+<div class="wf-h1"><b>Add your institution's own item</b><small>On Paediatric EPA Curriculum (11.1). It applies only to Kgosi Kgari Teaching Hospital's trainees.</small></div>
+<div class="wf-box">
+<div class="wf-actions"><span>EPA *</span><span class="wf-field">KGK-001 — Running a paediatric outreach clinic at a district hospital</span></div>
+<div class="wf-actions"><span>Target</span><span class="wf-field">1</span><span>Per</span><span class="wf-field">Academic year ▾</span></div>
+<div class="wf-actions"><span>Decision cadence</span><span class="wf-field">No published cadence ▾</span><span>Decided by</span><span class="wf-field">The trainee's general panel ▾</span><span>☐ Opportunistic</span></div>
+<div class="wf-actions"><span>Entrustment scale</span><span class="wf-field">CPSA Paediatric Entrustment Scale v11.1 ▾</span><span class="wf-muted">Suggested because every item on this curriculum is pinned to it.</span></div>
+<div class="wf-actions"><span>Minimum level *</span><span class="wf-field">○1 ○2 ○3a ○3b ○4 ○5</span><span>Minimum by training year</span><span class="wf-field">‹as built›</span></div>
+<div class="wf-actions"><span>Completion window (months)</span><span class="wf-field">12</span><span>Weight</span><span class="wf-field">‹n›</span><span>Tools</span><span class="wf-field">☑ Direct observation</span></div>
+</div>
+<div class="wf-actions"><span class="wf-btn">Cancel</span><span class="wf-btn wf-btn--primary wf-btn--off">Add item</span><span class="wf-muted">Adding is off until every minimum is a rung on CPSA Paediatric Entrustment Scale v11.1.</span></div>
+</div></div></div>
+<div class="wf-col"><p class="wf-label">2 · 390</p>
+<div class="wf-screen wf-390"><div class="wf-main"><span class="wf-crumb">‹ Items of Paediatric EPA Curriculum (11.1)</span><div class="wf-h1"><b>Add your institution's own item</b></div>EPA *<div class="wf-field">KGK-001 — Running a paediatric outreach clinic at a district hospital</div><span class="wf-muted">‹the fields, one per row›</span><span class="wf-btn wf-btn--primary wf-btn--off" style="text-align:center">Add item</span><span class="wf-btn" style="text-align:center">Cancel</span></div></div></div>
+</div>
+
+<div class="wf-row">
+<div class="wf-col"><p class="wf-label">3 · 6.26 and 6.33, added: back on the list <span>· focus on the result; KGK's row marked under its EPA</span></p>
+<div class="wf-screen wf-1030"><div class="wf-main">
+<div class="wf-box wf-box--ok"><b>Curriculum item added.</b> KGK-001 — Running a paediatric outreach clinic at a district hospital now applies to your institution's trainees on Paediatric EPA Curriculum (11.2). ← focus</div>
+<table class="wf-table"><caption>Items of Paediatric EPA Curriculum (11.2) · 17</caption><tbody>
+<tr><td>PAED-016 — ‹title›</td><td>1 per academic year · ‹decision›</td><td class="wf-muted">‹…›</td><td class="wf-muted">Set by the College.</td></tr>
+<tr><td>KGK-001 — Running a paediatric outreach clinic at a district hospital<br><span class="wf-mark wf-mark--own">Your institution's own item</span></td><td>1 per academic year · No decision cadence · the trainee's general panel</td><td>3a · window 12 · Direct observation</td><td><span class="wf-btn">Edit</span> <span class="wf-btn">Remove…</span></td></tr>
+<tr><td colspan="4" class="wf-muted"><i>‹the College's other 15›</i></td></tr></tbody></table>
+<div class="cv-note">KGK's row sits in EPA order (after the PAED codes). The same badge, worded for the reader, marks KGK-001 on the EPA list (C2) and on My progress (G).</div>
+</div></div></div>
+<div class="wf-col"><p class="wf-label">3 · 390</p>
+<div class="wf-screen wf-390"><div class="wf-main"><div class="wf-stackrow"><b>KGK-001 — Running a paediatric outreach clinic at a district hospital</b><span><span class="wf-mark wf-mark--own">Your institution's own item</span></span><span>1 per academic year · No decision cadence</span><span class="wf-btn" style="text-align:center">Edit</span><span class="wf-btn" style="text-align:center">Remove…</span></div></div></div></div>
+</div>
+
+<div class="wf-row">
+<div class="wf-col"><p class="wf-label">4 · Editing, Remove…, not found, loading, load error <span>· as B1's frames 6 to 9, on a page of its own</span></p>
+<div class="wf-screen wf-1030"><div class="wf-main">
+<div class="wf-h1"><b>Edit KGK-001 — Running a paediatric outreach clinic at a district hospital</b><small>Your institution's own item on Paediatric EPA Curriculum (11.2)</small></div>
+<span class="wf-muted">The add page's fields with their values; EPA as text. Save item → back on the list, "Curriculum item saved." focused; Cancel → back on the list, focus on the row's Edit.</span>
+<div class="wf-box wf-box--emph" style="max-width:480px"><b>Remove this item?</b> (B1's words, em dash) <div class="wf-actions" style="justify-content:flex-end"><span class="wf-btn">Cancel ← focus</span><span class="wf-btn" style="background: var(--danger-color); color: var(--on-fill); border-color: var(--danger-color)">Remove item</span></div></div>
+<div class="cv-note">The edit page of an item that is the College's, typed by id, opens the Unavailable state "Item not found": not a read-only form.</div>
+</div></div></div>
+<div class="wf-col"><p class="wf-label">4 · 390, the edit page</p>
+<div class="wf-screen wf-390"><div class="wf-main"><div class="wf-h1"><b>Edit KGK-001 — Running a paediatric outreach clinic at a district hospital</b></div>Target<div class="wf-field">1</div>Per<div class="wf-field">Academic year ▾</div>Minimum level *<div class="wf-field">○1 ○2 ●3a ○3b ○4 ○5</div><span class="wf-muted">‹the other fields›</span><span class="wf-btn wf-btn--primary" style="text-align:center">Save item</span><span class="wf-btn" style="text-align:center">Cancel</span></div></div></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1820,"height":5200}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

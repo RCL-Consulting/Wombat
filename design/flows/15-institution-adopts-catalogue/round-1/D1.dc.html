@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>D1 · the move asked on Save</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="f15r1.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="cv-board" style="width: 1280px">
+<div class="cv-head">
+<h1>D1 · The curriculum picker says what a move does; Save asks first when it would move</h1>
+<p>Full fidelity, on flow 13's profile (its layout, end section and title unchanged; the fields the brief does not name are bracketed). Words under the picker (N5) change as the choice changes (one round trip on the select's change, flagged); Save becomes "Save and move…" and opens a ConfirmDialog (P10). Saving with the curriculum untouched asks nothing and keeps the pin. Steps: move 4 + 1; keep 3 + the fields changed. Changes: the move's confirmation, the words under the picker.</p>
+</div>
+
+<div class="cv-band"><strong>1 · 6.34, Anele Dlamini saved on 11.1, the curriculum untouched</strong> <span>· /admin/trainees/edit · focus on the result</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="ia" lit="Trainees" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Nolwazi Mbatha</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#">Home</a></li><li class="breadcrumb-separator" aria-hidden="true">›</li><li class="breadcrumb-parent"><a href="#">Trainees</a></li><li class="breadcrumb-separator" aria-hidden="true">›</li><li class="breadcrumb-current" aria-current="page"><span>‹crumb, as built›</span></li></ol></nav>
+<div class="header-container"><div><h1>Anele Dlamini's programme</h1><p class="page-subtitle">‹subtitle, as built›</p></div><a class="btn btn-outline" href="#">Export Anele Dlamini's portfolio</a></div>
+<div class="alert alert-success action-result" role="status" tabindex="-1"><strong>Trainee profile saved.</strong></div>
+<form class="form-container">
+<h2 class="form-section-title">Profile details</h2>
+<p class="cv-note">‹the profile's other fields, as flows 11 and 13 built them›</p>
+<div class="form-group"><label for="d1-cur">Curriculum *</label><select id="d1-cur" class="form-select" aria-describedby="d1-cur-help"><option selected>Paediatric EPA Curriculum (11.1)</option><option>Paediatric EPA Curriculum (11.2)</option></select>
+<div class="move-check" id="d1-cur-help"><p>Anele Dlamini is on Paediatric EPA Curriculum (11.1), which your institution superseded on 2026-10-30. Keeping it keeps her on 11.1.</p><p>Choosing 11.2 moves her to the version your institution follows. A move cannot be undone, and her completions are counted again against 11.2.</p></div></div>
+<div class="form-grid">
+<div class="form-group"><label for="d1-start">Programme start *</label><input id="d1-start" class="form-control" value="2024-01-15"></div>
+<div class="form-group"><label for="d1-end">Expected completion *</label><input id="d1-end" class="form-control" value="2028-07-14"></div>
+</div>
+<div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="button" class="btn btn-primary">Save</button></div>
+</form>
+<p class="cv-note">End this programme, below Profile details, as flow 13 built it. With 11.1 kept, Save asks nothing; reopened, the picker still offers 11.1 and 11.2 with 11.1 chosen (the kept pin, T304).</p>
+</article></main></div>
+
+<div class="cv-band"><strong>2 · 6.36, Sipho Ndlovu: 11.2 chosen, before Save</strong> <span>· the words turn to what the save will do · Save says it will ask</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="ia" lit="Trainees" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Nolwazi Mbatha</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<div class="header-container"><div><h1>Sipho Ndlovu's programme</h1></div><a class="btn btn-outline" href="#">Export Sipho Ndlovu's portfolio</a></div>
+<form class="form-container">
+<h2 class="form-section-title">Profile details</h2>
+<p class="cv-note">‹the profile's other fields›</p>
+<div class="form-group"><label for="d2-cur">Curriculum *</label><select id="d2-cur" class="form-select" aria-describedby="d2-cur-help"><option>Paediatric EPA Curriculum (11.1)</option><option selected>Paediatric EPA Curriculum (11.2)</option></select>
+<div class="move-check" id="d2-cur-help"><p><strong>When you save, Sipho Ndlovu moves to Paediatric EPA Curriculum (11.2).</strong></p><p>This cannot be undone: he cannot be moved back to 11.1. His ‹N› completions are counted again against 11.2 in the same save, so his progress page reads 11.2's targets at once.</p></div></div>
+<div class="form-grid">
+<div class="form-group"><label for="d2-start">Programme start *</label><input id="d2-start" class="form-control" value="2026-01-15"></div>
+<div class="form-group"><label for="d2-end">Expected completion *</label><input id="d2-end" class="form-control" value="2030-01-14"></div>
+</div>
+<div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="button" class="btn btn-primary">Save and move…</button></div>
+</form>
+<p class="cv-note">‹N› is DATA 5: the count of his completed activities, read with the profile. Choosing 11.1 again restores frame 1's words and "Save".</p>
+</article></main></div>
+
+<div class="cv-band"><strong>3 · The confirmation</strong> <span>· opens on Cancel · Cancel returns to "Save and move…" with every field as typed</span></div>
+<div class="cv-scrim">
+<dialog open class="dialog-card" aria-labelledby="d3-t"><form class="dialog-form" method="dialog"><h2 id="d3-t">Move Sipho Ndlovu to Paediatric EPA Curriculum (11.2)?</h2><p>He leaves Paediatric EPA Curriculum (11.1) for good: a move cannot be undone. His ‹N› completions are counted again against 11.2 as the profile saves, and from now on his completions credit 11.2's items.</p><div class="dialog-actions"><button type="button" class="btn btn-outline" autofocus>Cancel</button><button type="button" class="btn btn-primary">Move and save</button></div></form></dialog>
+</div>
+
+<div class="cv-band"><strong>4 · The result, and the picker reopened offering 11.2 alone</strong> <span>· focus on the result</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="ia" lit="Trainees" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Nolwazi Mbatha</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<div class="header-container"><div><h1>Sipho Ndlovu's programme</h1></div><a class="btn btn-outline" href="#">Export Sipho Ndlovu's portfolio</a></div>
+<div class="alert alert-success action-result" role="status" tabindex="-1"><strong>Trainee profile saved.</strong> 1 completion was checked against 11.2, and 1 counts towards it.</div>
+<form class="form-container">
+<h2 class="form-section-title">Profile details</h2>
+<div class="form-group"><label for="d4-cur">Curriculum *</label><select id="d4-cur" class="form-select" aria-describedby="d4-cur-help"><option selected>Paediatric EPA Curriculum (11.2)</option></select><p class="field-help" id="d4-cur-help">The version your institution follows for Paediatrics / Paediatrics.</p></div>
+<div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="button" class="btn btn-primary">Save</button></div>
+</form>
+<p class="cv-note">The other results keep their built words: "Trainee profile saved. Sipho Ndlovu has no completions to count against 11.2." and "Trainee profile saved. N completions checked again from the new programme start date."</p>
+</article></main></div>
+
+<div class="cv-band"><strong>5 · A move refused</strong> <span>· a stale page offered a version that is no longer the active adoption · the refusal under the picker, focused, every field kept</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="ia" lit="Trainees" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Nolwazi Mbatha</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<div class="header-container"><div><h1>Sipho Ndlovu's programme</h1></div><a class="btn btn-outline" href="#">Export Sipho Ndlovu's portfolio</a></div>
+<form class="form-container">
+<h2 class="form-section-title">Profile details</h2>
+<div class="form-group"><label for="d5-cur">Curriculum *</label><select id="d5-cur" class="form-select invalid" aria-invalid="true" aria-describedby="d5-cur-msg"><option>‹the pin›</option><option selected>‹a version no longer adopted›</option></select><div class="validation-message" id="d5-cur-msg">A trainee can be moved only into the curriculum version this institution has adopted for their discipline, so nothing was saved.</div></div>
+<div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="button" class="btn btn-primary">Save and move…</button></div>
+</form>
+<p class="cv-note">After the refusal the picker is read again, so it offers the pin and the active adoption only; what she typed in the other fields stays.</p>
+</article></main></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4200}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

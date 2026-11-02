@@ -1,0 +1,475 @@
+/* Wombat flow 15, round 1: the round's shared stylesheet (project/f15r1.css).
+   Loaded after ds/wombat/tokens.css and ds/wombat/components/bundle.css. Every colour is a token; spacing is the
+   --space-* scale, with the shell's 6/10/12px literals inside a row or control only.
+   Each rule names its row on the Spec board's class table:
+     B-rows  board scaffolding: never shipped, they only lay the canvas out;
+     W-rows  wireframe drawing (structures A and B): never shipped;
+     N-rows  NEW app classes a variation proposes: would go into app.css if chosen. */
+
+/* B1 — a board's root */
+.cv-board {
+  background: var(--background-color);
+  box-sizing: border-box;
+  color: var(--text-color);
+  font-family: var(--font-body);
+  line-height: 1.5;
+}
+
+/* B2 — a board's own title band (not part of any screen) */
+.cv-head {
+  background: var(--surface-color);
+  border-bottom: 1px solid var(--border-color);
+  padding: var(--space-lg) var(--space-xl);
+}
+.cv-head h1 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+.cv-head p {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  margin: var(--space-xs) 0 0;
+  max-width: 72rem;
+}
+
+/* B3 — a state's label band above its frame */
+.cv-band {
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border-color);
+  border-top: 8px solid var(--border-color);
+  font-size: 0.9rem;
+  padding: var(--space-sm) var(--space-lg);
+}
+.cv-band strong {
+  font-weight: 600;
+}
+.cv-band span {
+  color: var(--muted-text);
+}
+
+/* B4 — the static shell a frame sits in (the built shell, positioned for a canvas: no fixed bar, no sticky sidebar) */
+.cv-shell {
+  background: var(--background-color);
+}
+@media (min-width: 641px) {
+  .cv-shell {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  }
+  .cv-shell .sidebar {
+    height: 100%;
+    min-height: 100%;
+    position: relative;
+  }
+  .cv-shell .account-row.cv-topbar {
+    left: auto;
+    position: static;
+  }
+}
+.cv-side {
+  display: flex;
+}
+.cv-side > * {
+  flex: 1 1 auto;
+}
+
+/* B5 — a frame's page column (the shell's article gutters) */
+.cv-article {
+  padding: var(--space-md) var(--space-md) var(--space-xl);
+}
+@media (min-width: 641px) {
+  .cv-article {
+    padding: var(--space-lg) var(--space-lg) var(--space-2xl) var(--space-xl);
+  }
+}
+
+/* B6 — a dialog drawn open on the canvas: its scrim and the native dialog placed statically */
+.cv-scrim {
+  background: var(--scrim);
+  display: flex;
+  justify-content: center;
+  padding: var(--space-2xl) var(--space-md);
+}
+.cv-scrim dialog {
+  display: block;
+  margin: 0;
+  position: static;
+}
+
+/* B7 — a board annotation: says what a frame leaves out or proposes; never on a screen */
+.cv-note {
+  background: var(--warning-bg);
+  border-left: 4px solid var(--warning-color);
+  font-size: 0.85rem;
+  margin: var(--space-sm) 0;
+  padding: var(--space-sm) 12px;
+}
+.cv-elide td {
+  background: var(--warning-bg);
+  color: var(--text-color);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* B8 — the Spec and Steps boards' prose and tables */
+.cv-doc {
+  padding: var(--space-xl);
+}
+.cv-doc h2 {
+  font-size: 1.25rem;
+  margin: var(--space-xl) 0 var(--space-sm);
+}
+.cv-doc h2:first-child {
+  margin-top: 0;
+}
+.cv-doc p,
+.cv-doc li {
+  max-width: 76rem;
+}
+.cv-doc .clinic-table {
+  font-size: 0.9rem;
+}
+.cv-doc .clinic-table th,
+.cv-doc .clinic-table td {
+  padding: var(--space-sm) 12px;
+}
+.cv-tag {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0 var(--space-sm);
+  white-space: nowrap;
+}
+.cv-tag--new {
+  background: var(--info-bg);
+  border-color: var(--secondary-color);
+}
+.cv-tag--proposed {
+  background: var(--warning-bg);
+  border-color: var(--warning-color);
+}
+.cv-tag--data {
+  background: var(--success-bg);
+  border-color: var(--success-color);
+}
+
+/* W1 — wireframe layout: screens side by side (1280 | 390) and states down */
+.wf-board {
+  padding: var(--space-xl) var(--space-2xl) var(--space-2xl);
+}
+.wf-row {
+  align-items: flex-start;
+  display: flex;
+  gap: var(--space-2xl);
+  margin-top: var(--space-xl);
+}
+.wf-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+.wf-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.wf-label span {
+  color: var(--muted-text);
+  font-weight: 400;
+}
+
+/* W2 — a wireframe screen: 1280 with a grey shell, 390 with a grey phone bar, or a page column alone (1030) */
+.wf-screen {
+  background: var(--surface-color);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-lg);
+  box-sizing: border-box;
+  font-size: 0.9rem;
+  overflow: hidden;
+}
+.wf-1280 {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  width: 1280px;
+}
+.wf-1030 {
+  width: 1030px;
+}
+.wf-390 {
+  width: 390px;
+}
+.wf-side {
+  background: var(--header-bg);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-md);
+}
+.wf-side span {
+  border-radius: var(--radius-sm);
+  padding: 2px var(--space-sm);
+}
+.wf-side .is-lit {
+  background: var(--surface-color);
+  box-shadow: inset 3px 0 0 var(--text-color);
+  font-weight: 600;
+}
+.wf-side .is-gone {
+  color: var(--muted-text);
+  text-decoration: line-through;
+}
+.wf-phonebar {
+  align-items: center;
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: 0 var(--space-md);
+}
+.wf-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-lg) var(--space-xl) var(--space-xl);
+}
+.wf-390 .wf-main {
+  padding: var(--space-md);
+}
+.wf-crumb {
+  color: var(--link-color);
+  font-size: 0.85rem;
+}
+
+/* W3 — wireframe header, headings and text */
+.wf-h1 {
+  align-items: baseline;
+  border-bottom: 2px solid var(--secondary-color);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  justify-content: space-between;
+  padding-bottom: var(--space-sm);
+}
+.wf-h1 b {
+  font-size: 1.25rem;
+}
+.wf-h1 small {
+  color: var(--muted-text);
+  flex-basis: 100%;
+  font-size: 0.85rem;
+}
+.wf-h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: var(--space-sm) 0 0;
+}
+.wf-muted {
+  color: var(--muted-text);
+}
+
+/* W4 — wireframe boxes, buttons, marks and fields */
+.wf-box {
+  border: 1px dashed var(--input-border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+.wf-box--emph {
+  border-left: 4px solid var(--secondary-color);
+  border-style: solid;
+}
+.wf-box--info {
+  background: var(--info-bg);
+  border: 1px solid var(--secondary-color);
+}
+.wf-box--ok {
+  background: var(--success-bg);
+  border: 1px solid var(--success-color);
+}
+.wf-box--bad {
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-color);
+}
+.wf-btn {
+  border: 1px solid var(--secondary-color);
+  border-radius: var(--radius-md);
+  color: var(--secondary-color);
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+.wf-btn--primary {
+  background: var(--secondary-color);
+  color: var(--on-fill);
+}
+.wf-btn--off {
+  opacity: 0.65;
+}
+.wf-mark {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-pill);
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0 var(--space-sm);
+}
+.wf-mark--own {
+  background: var(--header-bg);
+}
+.wf-field {
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  color: var(--muted-text);
+  padding: 4px 10px;
+}
+.wf-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+.wf-skel {
+  background: var(--header-bg);
+  border-radius: var(--radius-sm);
+  height: 14px;
+}
+
+/* W5 — wireframe tables and the 390 stacked rows */
+.wf-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.wf-table caption {
+  color: var(--muted-text);
+  padding-bottom: var(--space-xs);
+  text-align: left;
+}
+.wf-table th,
+.wf-table td {
+  border-bottom: 1px solid var(--border-color);
+  padding: 6px var(--space-sm);
+  text-align: left;
+  vertical-align: top;
+}
+.wf-table th {
+  background: var(--header-bg);
+  font-weight: 600;
+}
+.wf-stackrow {
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-sm) 0;
+}
+
+/* N1 — Owner mark under a title (variation C2 and B2; My progress keeps its badge, T357): the neutral badge's look,
+   on a line of its own under the EPA, so the words, not a colour, say whose it is */
+.owner-line {
+  display: block;
+  margin-top: var(--space-xs);
+}
+
+/* N2 — A list split by owner (variation C1 and B1): the read-only section's one line saying why it has no actions */
+.owner-section-note {
+  color: var(--muted-text);
+  font-size: 0.9rem;
+  margin: 0 0 var(--space-md);
+}
+
+/* N3 — A section heading with its action beside it (C1: Create EPA on "Your institution's own EPAs") */
+.section-head {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  justify-content: space-between;
+  margin: var(--space-xl) 0 var(--space-sm);
+}
+.section-head h2 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+.section-head:first-child {
+  margin-top: 0;
+}
+
+/* N4 — An EPA's read-only page (C1 and C2): its record in one column of h2 sections (flow 12's user page) */
+.epa-record {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 52rem;
+}
+.epa-record h2 {
+  font-size: 1.25rem;
+  margin: 0 0 var(--space-sm);
+}
+
+/* N5 — The move's words under the curriculum picker (D1), and the move card (D2): the check line's stripe on info-bg */
+.move-check {
+  background: var(--info-bg);
+  border-left: 4px solid var(--secondary-color);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-sm);
+  padding: 12px;
+}
+.move-check p {
+  margin: 0;
+}
+.move-check p + p {
+  margin-top: var(--space-xs);
+}
+
+/* N6 — A results list under a result's bold first sentence (the rebuild's five figures; the move's count) */
+.result-figures {
+  display: grid;
+  gap: var(--space-xs) var(--space-lg);
+  grid-template-columns: max-content max-content;
+  margin: var(--space-sm) 0 0;
+}
+.result-figures dt {
+  color: var(--text-color);
+  font-weight: 400;
+}
+.result-figures dd {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  margin: 0;
+  text-align: right;
+}
+
+/* N7 — Prose of a maintenance page (the rebuild): 52rem, paragraphs 12px apart */
+.prose-block {
+  max-width: 52rem;
+}
+.prose-block p {
+  margin: 0 0 12px;
+}
+
+@media (max-width: 640.98px) {
+  /* N3, N6 — at 390 a section's action takes the row; figures keep two columns */
+  .section-head .btn {
+    min-height: 2.75rem;
+    width: 100%;
+  }
+  .page-actions-stack .btn {
+    min-height: 2.75rem;
+    width: 100%;
+  }
+}
+
+/* N8 — A row of page actions that stacks with the primary on top at 390 (D1/D2 form actions; the rebuild's trigger) */
+.page-actions-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+@media (max-width: 640.98px) {
+  .page-actions-stack {
+    flex-direction: column-reverse;
+  }
+}

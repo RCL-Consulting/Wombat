@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>C1 · EPAs split by owner</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="f15r1.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="cv-board" style="width: 1280px">
+<div class="cv-head">
+<h1>C1 · The EPA list in two sections, and an EPA's page titled by the EPA</h1>
+<p>Full fidelity, paired with B1. "Your institution's own EPAs" (Create EPA beside its heading, Edit per row) over "The College's EPAs" (no actions column; one line says why; each title opens a read-only page, Q2). Create EPA only once a discipline is adopted (P7). Changes: § Table system's read-only row (N2), § Page-level patterns (the EPA's h1), the deactivate words (Q11). Steps: create KGK-001 2 + 5 from EPAs (Create EPA, then Create EPA on the form).</p>
+</div>
+
+<div class="cv-band"><strong>1 · 1.19, nothing adopted</strong> <span>· Prof Mbatha · /admin/epas · no Create EPA she could not complete (T291's 1.19 widening)</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="ia" lit="EPAs" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Nolwazi Mbatha</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<div class="header-container"><div><h1>EPAs</h1><p class="page-subtitle">The EPAs of the curricula Kgosi Kgari Teaching Hospital follows: the College's, read only, and your institution's own.</p></div></div>
+<div class="detail-card detail-card--empty"><p class="panel-title">No EPAs yet</p><p>Your institution reads the EPAs of the curricula it adopts, and can add its own in a discipline it follows. Adopt a curriculum on Curricula first.</p><a class="btn btn-outline" href="#">Go to Curricula</a></div>
+</article></main></div>
+
+<div class="cv-band"><strong>2 · 1.21, the adopted fifteen</strong> <span>· nothing of KGK's yet · each College title is a link to its read-only page</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="ia" lit="EPAs" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Nolwazi Mbatha</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<div class="header-container"><div><h1>EPAs</h1><p class="page-subtitle">The EPAs of the curricula Kgosi Kgari Teaching Hospital follows: the College's, read only, and your institution's own.</p></div></div>
+<div class="section-head"><h2>Your institution's own EPAs</h2><a class="btn btn-primary" href="#">Create EPA</a></div>
+<p class="owner-section-note">None yet. An EPA of your own applies only to your institution's trainees, in a discipline it follows: Paediatrics / Paediatrics.</p>
+<div class="section-head"><h2>The College's EPAs</h2></div>
+<p class="owner-section-note">The College of Paediatricians of South Africa sets these, so they are read only here. Open one to read it.</p>
+<div class="table-container"><table class="clinic-table clinic-table--stack clinic-table--stack-wide">
+<caption>The College of Paediatricians of South Africa's EPAs · 15</caption>
+<thead><tr><th scope="col">EPA</th><th scope="col">Sub-speciality</th><th scope="col">Category</th><th scope="col">Status</th></tr></thead>
+<tbody>
+<sc-for list="{{paed15}}" as="e" hint-placeholder-count="15">
+<tr><th scope="row"><a href="#">{{e.label}}</a></th><td data-label="Sub-speciality">Paediatrics / Paediatrics</td><td data-label="Category">‹category›</td><td data-label="Status"><span class="badge badge-completed">Active</span></td></tr>
+</sc-for>
+</tbody></table></div>
+<p class="cv-note">No row offers Edit, and no actions column is drawn: the section's line says why once (T239's rule, applied to a section). The College, Speciality columns of today fold into the section heading and caption.</p>
+</article></main></div>
+
+<div class="cv-band"><strong>3 · 6.22, PAED-012 Inactive</strong> <span>· paused by the College; still no Edit · rows around it</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="ia" lit="EPAs" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Nolwazi Mbatha</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<div class="section-head"><h2>The College's EPAs</h2></div>
+<p class="owner-section-note">The College of Paediatricians of South Africa sets these, so they are read only here. Open one to read it.</p>
+<div class="table-container"><table class="clinic-table clinic-table--stack clinic-table--stack-wide">
+<caption>The College of Paediatricians of South Africa's EPAs · 15</caption>
+<thead><tr><th scope="col">EPA</th><th scope="col">Sub-speciality</th><th scope="col">Category</th><th scope="col">Status</th></tr></thead>
+<tbody>
+<tr class="cv-elide"><td colspan="4">‹PAED-001 to PAED-011, as frame 2›</td></tr>
+<tr><th scope="row"><a href="#">PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams</a></th><td data-label="Sub-speciality">Paediatrics / Paediatrics</td><td data-label="Category">‹category›</td><td data-label="Status"><span class="badge badge-withdrawn">Inactive</span></td></tr>
+<tr class="cv-elide"><td colspan="4">‹PAED-013 to PAED-015›</td></tr>
+</tbody></table></div>
+</article></main></div>
+
+<div class="cv-band"><strong>4 · 6.25, Create EPA</strong> <span>· /admin/epas/new · Home › EPAs › Create EPA · the sub-speciality list offers only the adopted discipline, chosen for her</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="ia" lit="EPAs" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Nolwazi Mbatha</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#">Home</a></li><li class="breadcrumb-separator" aria-hidden="true">›</li><li class="breadcrumb-parent"><a href="#"><span class="breadcrumb-back" aria-hidden="true">‹</span>EPAs</a></li><li class="breadcrumb-separator" aria-hidden="true">›</li><li class="breadcrumb-current" aria-current="page"><span>Create EPA</span></li></ol></nav>
+<div class="header-container"><div><h1>Create EPA</h1><p class="page-subtitle">An EPA of your institution's own. It applies only to Kgosi Kgari Teaching Hospital's trainees.</p></div></div>
+<form class="form-container">
+<div class="form-grid">
+<div class="form-group"><label for="c4-sub">Sub-speciality *</label><select id="c4-sub" class="form-select"><option>Paediatrics / Paediatrics</option></select><p class="field-help">The disciplines your institution follows.</p></div>
+<div class="form-group"><label for="c4-code">Code *</label><input id="c4-code" class="form-control" value="KGK-001"></div>
+</div>
+<div class="form-group"><label for="c4-title">Title *</label><input id="c4-title" class="form-control" value="Running a paediatric outreach clinic at a district hospital"></div>
+<div class="form-group"><label for="c4-desc">Description</label><textarea id="c4-desc" class="form-control" rows="3">Plans and runs a monthly outreach clinic at a North West district hospital, with its referral follow-up.</textarea></div>
+<div class="form-group"><label for="c4-ks">Required knowledge and skills</label><textarea id="c4-ks" class="form-control" rows="3"></textarea></div>
+<fieldset class="form-group"><legend>Category *</legend><div class="form-check"><input class="form-check-input" type="radio" id="c4-core" name="c4-cat"><label for="c4-core">Core</label></div><div class="form-check"><input class="form-check-input" type="radio" id="c4-el" name="c4-cat" checked><label for="c4-el">Elective</label></div></fieldset>
+<div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="button" class="btn btn-primary">Create EPA</button></div>
+</form>
+</article></main></div>
+
+<div class="cv-band"><strong>5 · 6.25, saved: KGK-001's page</strong> <span>· /admin/epas/17 · Home › EPAs › KGK-001 · focus on the result</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="ia" lit="EPAs" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Nolwazi Mbatha</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#">Home</a></li><li class="breadcrumb-separator" aria-hidden="true">›</li><li class="breadcrumb-parent"><a href="#">EPAs</a></li><li class="breadcrumb-separator" aria-hidden="true">›</li><li class="breadcrumb-current" aria-current="page"><span>KGK-001</span></li></ol></nav>
+<div class="header-container"><div><h1>KGK-001 — Running a paediatric outreach clinic at a district hospital</h1><p class="page-subtitle">Your institution's own EPA · Paediatrics / Paediatrics · Elective</p></div></div>
+<div class="alert alert-success action-result" role="status" tabindex="-1"><strong>EPA saved.</strong> KGK-001 is Active. Add it to a curriculum on that curriculum's items page.</div>
+<form class="form-container">
+<div class="form-grid">
+<div class="form-group"><label for="c5-sub">Sub-speciality *</label><select id="c5-sub" class="form-select"><option>Paediatrics / Paediatrics</option></select></div>
+<div class="form-group"><label for="c5-code">Code *</label><input id="c5-code" class="form-control" value="KGK-001"></div>
+</div>
+<div class="form-group"><label for="c5-title">Title *</label><input id="c5-title" class="form-control" value="Running a paediatric outreach clinic at a district hospital"></div>
+<div class="form-group"><label for="c5-desc">Description</label><textarea id="c5-desc" class="form-control" rows="2">Plans and runs a monthly outreach clinic at a North West district hospital, with its referral follow-up.</textarea></div>
+<fieldset class="form-group"><legend>Category *</legend><div class="form-check"><input class="form-check-input" type="radio" id="c5-core" name="c5-cat"><label for="c5-core">Core</label></div><div class="form-check"><input class="form-check-input" type="radio" id="c5-el" name="c5-cat" checked><label for="c5-el">Elective</label></div></fieldset>
+<div class="form-group"><div class="form-check"><input class="form-check-input" type="checkbox" id="c5-act" checked aria-describedby="c5-act-help"><label for="c5-act">Active</label></div><p class="field-help" id="c5-act-help">An inactive EPA cannot be chosen for a new activity and is not a target on any running programme's progress page or dashboard; a programme that has ended keeps it on its record. ‹… as built›</p></div>
+<div class="form-actions"><button type="button" class="btn btn-outline">Deactivate…</button><a class="btn btn-outline" href="#">Cancel</a><button type="button" class="btn btn-primary">Save</button></div>
+</form>
+<p class="cv-note">"Edit EPA" is gone: the h1 is the EPA (EpaOptionLabel), the crumb its code. No "Back to EPAs" beside the trail: the trail is the way back.</p>
+</article></main></div>
+
+<div class="cv-band"><strong>6 · 6.25, the list marking KGK-001</strong> <span>· Edit on KGK-001 alone, named for its row</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="ia" lit="EPAs" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Nolwazi Mbatha</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<div class="header-container"><div><h1>EPAs</h1><p class="page-subtitle">The EPAs of the curricula Kgosi Kgari Teaching Hospital follows: the College's, read only, and your institution's own.</p></div></div>
+<div class="section-head"><h2>Your institution's own EPAs</h2><a class="btn btn-primary" href="#">Create EPA</a></div>
+<p class="owner-section-note">They apply only to Kgosi Kgari Teaching Hospital's trainees.</p>
+<div class="table-container"><table class="clinic-table clinic-table--stack clinic-table--stack-wide">
+<caption>Kgosi Kgari Teaching Hospital's own EPAs · 1</caption>
+<thead><tr><th scope="col">EPA</th><th scope="col">Sub-speciality</th><th scope="col">Category</th><th scope="col">Status</th><th scope="col" class="col-actions">Actions</th></tr></thead>
+<tbody><tr><th scope="row">KGK-001 — Running a paediatric outreach clinic at a district hospital</th><td data-label="Sub-speciality">Paediatrics / Paediatrics</td><td data-label="Category">Elective</td><td data-label="Status"><span class="badge badge-completed">Active</span></td><td class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit KGK-001 — Running a paediatric outreach clinic at a district hospital">Edit</a></td></tr></tbody></table></div>
+<div class="section-head"><h2>The College's EPAs</h2></div>
+<p class="owner-section-note">The College of Paediatricians of South Africa sets these, so they are read only here. Open one to read it.</p>
+<div class="table-container"><table class="clinic-table clinic-table--stack clinic-table--stack-wide"><caption>The College of Paediatricians of South Africa's EPAs · 15</caption>
+<thead><tr><th scope="col">EPA</th><th scope="col">Sub-speciality</th><th scope="col">Category</th><th scope="col">Status</th></tr></thead>
+<tbody><tr><th scope="row"><a href="#">PAED-001 — ‹title›</a></th><td data-label="Sub-speciality">Paediatrics / Paediatrics</td><td data-label="Category">‹category›</td><td data-label="Status"><span class="badge badge-completed">Active</span></td></tr><tr class="cv-elide"><td colspan="4">‹PAED-002 to PAED-015›</td></tr></tbody></table></div>
+</article></main></div>
+
+<div class="cv-band"><strong>7 · Q2, a national EPA opened from the list</strong> <span>· /admin/epas/{Id} · Home › EPAs › PAED-012 · read only, no form, no Save</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="ia" lit="EPAs" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Nolwazi Mbatha</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#">Home</a></li><li class="breadcrumb-separator" aria-hidden="true">›</li><li class="breadcrumb-parent"><a href="#">EPAs</a></li><li class="breadcrumb-separator" aria-hidden="true">›</li><li class="breadcrumb-current" aria-current="page"><span>PAED-012</span></li></ol></nav>
+<div class="header-container"><div><h1>PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams</h1><p class="page-subtitle">The College's EPA · Paediatrics / Paediatrics</p></div></div>
+<div class="epa-record">
+<div class="alert alert-info" role="note">The College of Paediatricians of South Africa sets this EPA, so it is read only here.</div>
+<section><h2>About this EPA</h2><dl class="details-list"><div><dt>College</dt><dd>College of Paediatricians of South Africa</dd></div><div><dt>Sub-speciality</dt><dd>Paediatrics / Paediatrics</dd></div><div><dt>Category</dt><dd>‹category›</dd></div><div><dt>Status</dt><dd><span class="badge badge-completed">Active</span></dd></div></dl></section>
+<section><h2>Description</h2><p>‹description, as stored›</p></section>
+<section><h2>Required knowledge and skills</h2><p>‹as stored›</p></section>
+<section><h2>On your institution's curricula</h2><ul><li><a href="#">Items of Paediatric EPA Curriculum (11.1)</a></li><li><a href="#">Items of Paediatric EPA Curriculum (11.2)</a></li></ul><p class="cv-note">DATA 7. Optional: drop it and the page is the record alone.</p></section>
+</div>
+</article></main></div>
+
+<div class="cv-band"><strong>8 · Q2, an out-of-scope EPA typed by id</strong> <span>· /admin/epas/1 (the Demo College's EPA-001) · flow 14's Unavailable: not found, no form</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="ia" lit="EPAs" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Nolwazi Mbatha</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#">Home</a></li><li class="breadcrumb-separator" aria-hidden="true">›</li><li class="breadcrumb-parent"><a href="#">EPAs</a></li><li class="breadcrumb-separator" aria-hidden="true">›</li><li class="breadcrumb-current" aria-current="page"><span>EPA not found</span></li></ol></nav>
+<div class="header-container"><div><h1>EPA not found</h1></div></div>
+<div class="detail-card"><p>There is no EPA 1 among the EPAs your institution reads.</p><a class="btn btn-outline" href="#">Go to EPAs</a></div>
+<p class="cv-note">It names neither the College nor the EPA's code: out of scope reads as not existing.</p>
+</article></main></div>
+
+<div class="cv-band"><strong>9 · Deactivate… KGK-001: the dialog</strong> <span>· opens on Cancel · Cancel returns the focus to Deactivate… · unticking Active and pressing Save asks the same</span></div>
+<div class="cv-scrim">
+<dialog open class="dialog-card dialog-scrim" aria-labelledby="c9-t"><form class="dialog-form" method="dialog"><h2 id="c9-t">Deactivate KGK-001?</h2><p>KGK-001 — Running a paediatric outreach clinic at a district hospital can no longer be chosen for a new activity by Kgosi Kgari Teaching Hospital's trainees, and it stops being a target on their running programmes' progress pages and dashboards. A programme that has ended keeps it on its record, marked no longer in use. You can reactivate it.</p><div class="dialog-actions"><button type="button" class="btn btn-outline" autofocus>Cancel</button><button type="button" class="btn btn-danger">Deactivate</button></div></form></dialog>
+</div>
+
+<div class="cv-band"><strong>10 · Deactivated, then reactivated</strong> <span>· the page after each; the result takes the focus</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="ia" lit="EPAs" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Nolwazi Mbatha</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<div class="header-container"><div><h1>KGK-001 — Running a paediatric outreach clinic at a district hospital <span class="paused-mark">(no longer in use)</span></h1><p class="page-subtitle">Your institution's own EPA · Paediatrics / Paediatrics · Elective · <span class="badge badge-withdrawn">Inactive</span></p></div></div>
+<div class="alert alert-success action-result" role="status" tabindex="-1"><strong>EPA deactivated.</strong> Your institution's trainees can no longer choose it for a new activity.</div>
+<div class="form-group"><div class="form-check"><input class="form-check-input" type="checkbox" id="c10-act"><label for="c10-act">Active</label></div></div>
+<div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="button" class="btn btn-primary">Save</button></div>
+<p class="cv-note">Ticked again and saved:</p>
+<div class="alert alert-success action-result" role="status" tabindex="-1"><strong>EPA reactivated.</strong> No activity was completed against it while it was inactive, so no progress changed.</div>
+</article></main></div>
+
+<div class="cv-band"><strong>11 · A duplicate code refused, and another failure</strong> <span>· the refusal under its field, focused, everything typed kept · only a real duplicate says "already exists" (T272)</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="ia" lit="EPAs" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Nolwazi Mbatha</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<div class="header-container"><div><h1>Create EPA</h1></div></div>
+<form class="form-container">
+<div class="form-grid">
+<div class="form-group"><label for="c11-sub">Sub-speciality *</label><select id="c11-sub" class="form-select"><option>Paediatrics / Paediatrics</option></select></div>
+<div class="form-group"><label for="c11-code">Code *</label><input id="c11-code" class="form-control invalid" value="KGK-001" aria-invalid="true" aria-describedby="c11-code-msg"><div class="validation-message" id="c11-code-msg">An EPA with the same code already exists for this sub-speciality.</div></div>
+</div>
+<div class="form-group"><label for="c11-title">Title *</label><input id="c11-title" class="form-control" value="‹what she typed›"></div>
+<div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="button" class="btn btn-primary">Create EPA</button></div>
+</form>
+<p class="cv-note">Any other failed create (not a duplicate): above the form, "The EPA could not be saved. Nothing has changed. Try again, or come back in a few minutes." (danger alert, focused). An unadopted discipline (P7, from a stale page): under Sub-speciality, "Your institution does not follow ‹discipline›, so an EPA cannot be added to it."</p>
+</article></main></div>
+
+<div class="cv-band"><strong>12 · Loading, then a load error</strong> <span>· the header and a skeleton, no Create EPA until the read is in · then the alert, with no empty state under it</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="ia" lit="EPAs" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Nolwazi Mbatha</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<div class="header-container"><div><h1>EPAs</h1><p class="page-subtitle">The EPAs of the curricula Kgosi Kgari Teaching Hospital follows: the College's, read only, and your institution's own.</p></div></div>
+<div class="skeleton" style="width: 30%; height: 1.5rem"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton" style="width: 60%"></div>
+<div class="alert alert-danger" role="alert" style="margin-top: 24px"><div class="alert-row"><span><strong>Could not load the EPAs.</strong> Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm">Try again</button></div></div>
+</article></main></div>
+
+<div class="cv-band"><strong>13 · The Administrator's list of 40, owners named</strong> <span>· devadmin · two Colleges' EPAs and two institutions' own · Edit on every row (the command admits her)</span></div>
+<div class="cv-shell"><div class="cv-side"><dc-import name="Sidebar" role="admin" lit="EPAs" hint-size="250px,100%"></dc-import></div>
+<main><div class="account-row cv-topbar"><a class="account-link" href="#"><span class="account-name">Demo Administrator</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button">Sign out</button></form></div>
+<article class="cv-article">
+<div class="header-container"><div><h1>EPAs</h1><p class="page-subtitle">Every College's EPAs, and every institution's own.</p></div><a class="btn btn-primary" href="#">Create EPA</a></div>
+<div class="section-head"><h2>College of Paediatricians of South Africa</h2></div>
+<div class="table-container"><table class="clinic-table clinic-table--stack clinic-table--stack-wide"><caption>College of Paediatricians of South Africa's EPAs · ‹n›</caption>
+<thead><tr><th scope="col">EPA</th><th scope="col">Sub-speciality</th><th scope="col">Status</th><th scope="col" class="col-actions">Actions</th></tr></thead>
+<tbody><tr><th scope="row">PAED-001 — ‹an EPA title of 150 characters, wrapping inside its cell over two or three lines at 1280 and over four or five at 390, never cut and never pushing the row sideways›</th><td data-label="Sub-speciality">Paediatrics / Paediatrics</td><td data-label="Status"><span class="badge badge-completed">Active</span></td><td class="actions-cell"><a class="btn btn-outline btn-sm" href="#">Edit</a></td></tr><tr class="cv-elide"><td colspan="4">‹the College's other rows›</td></tr></tbody></table></div>
+<div class="section-head"><h2>Demo College</h2></div>
+<div class="table-container"><table class="clinic-table clinic-table--stack clinic-table--stack-wide"><caption>Demo College's EPAs · ‹n›</caption><tbody><tr><th scope="row">EPA-001 — ‹title›</th><td data-label="Sub-speciality">General Medicine / General Internal Medicine</td><td data-label="Status"><span class="badge badge-completed">Active</span></td><td class="actions-cell"><a class="btn btn-outline btn-sm" href="#">Edit</a></td></tr><tr class="cv-elide"><td colspan="4">‹the Demo College's other rows›</td></tr></tbody></table></div>
+<div class="section-head"><h2>Kgosi Kgari Teaching Hospital's own EPAs</h2></div>
+<div class="table-container"><table class="clinic-table clinic-table--stack clinic-table--stack-wide"><caption>Kgosi Kgari Teaching Hospital's own EPAs · 1</caption><tbody><tr><th scope="row">KGK-001 — Running a paediatric outreach clinic at a district hospital</th><td data-label="Sub-speciality">Paediatrics / Paediatrics</td><td data-label="Status"><span class="badge badge-completed">Active</span></td><td class="actions-cell"><a class="btn btn-outline btn-sm" href="#">Edit</a></td></tr></tbody></table></div>
+<div class="section-head"><h2>‹second institution›'s own EPAs</h2></div>
+<div class="table-container"><table class="clinic-table clinic-table--stack clinic-table--stack-wide"><caption>‹second institution›'s own EPAs · ‹n›</caption><tbody><tr><th scope="row">‹code, possibly KGK-001 again› — ‹title›</th><td data-label="Sub-speciality">‹discipline›</td><td data-label="Status"><span class="badge badge-completed">Active</span></td><td class="actions-cell"><a class="btn btn-outline btn-sm" href="#">Edit</a></td></tr></tbody></table></div>
+<p class="cv-note">The brief gives the volume (40 EPAs, two Colleges, two institutions' own) but not the second institution, the counts per owner or the 150-character title: bracketed. A code shared by two institutions reads apart by its section.</p>
+</article></main></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":9000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const paed15 = [];
+    for (let i = 1; i <= 15; i++) {
+      const code = 'PAED-' + String(i).padStart(3, '0');
+      paed15.push({ label: i === 12 ? code + ' — Communicating with and counselling patients, caregivers and healthcare teams' : code + ' — ‹title›' });
+    }
+    return { paed15 };
+  }
+}
+</script>
+</body>
+</html>

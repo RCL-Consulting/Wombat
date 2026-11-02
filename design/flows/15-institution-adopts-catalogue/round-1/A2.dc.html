@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A2 · Curricula and an adopt page of its own</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="f15r1.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="cv-board wf-board" style="width: 1820px">
+<div class="cv-head">
+<h1>A2 · Curricula reads; "Adopt a curriculum version" is a form page of its own</h1>
+<p>Structure A2 (wireframe). Curricula lists what KGK trains against and its adoption history; its header action opens /admin/curricula/adopt (P2, flow 11's create page), described radios of the open versions KGK does not follow, each saying what adopting it does before it is chosen. Steps: first adoption 3 + 1, newer version 4 + 1 (390: 4 + 1, 5 + 1). Reasoning: a rare, consequential act gets a page that explains first; Curricula stays a read page. Cost: one press and one choice more than A1.</p>
+</div>
+
+<div class="wf-row">
+<div class="wf-col"><p class="wf-label">1 · 1.19, nothing adopted <span>· Prof Mbatha · 1280</span></p>
+<div class="wf-screen wf-1280">
+<div class="wf-side"><b>Wombat</b><span class="wf-muted">Acting as Institutional admin</span><span>Home</span><span class="wf-muted">‹group, as built›</span><span class="is-lit">Curricula</span><span class="is-gone">Curriculum adoptions (P2: replaced)</span><span>EPAs</span><span>Entrustment scales</span><span>Trainees</span><span class="wf-muted">‹the other links›</span></div>
+<div class="wf-main">
+<div class="wf-h1"><b>Curricula</b><span class="wf-btn wf-btn--primary">Adopt a curriculum version</span><small>The College curricula Kgosi Kgari Teaching Hospital trains against.</small></div>
+<div class="wf-box"><b>No curricula yet</b><br>Your institution has not adopted a curriculum yet. Adopt one before admitting trainees.<br><span class="wf-btn" style="margin-top:8px">Adopt a curriculum version</span></div>
+<div class="cv-note">The empty state's action repeats the header's, as flow 05's empty states do; no Create curriculum (T211).</div>
+</div></div></div>
+<div class="wf-col"><p class="wf-label">1 · 390</p>
+<div class="wf-screen wf-390"><div class="wf-phonebar"><b>Wombat</b><span>Institutional admin · Menu</span></div>
+<div class="wf-main">
+<div class="wf-h1"><b>Curricula</b><small>The College curricula Kgosi Kgari Teaching Hospital trains against.</small></div>
+<span class="wf-btn wf-btn--primary" style="text-align:center">Adopt a curriculum version</span>
+<div class="wf-box"><b>No curricula yet</b><br>Your institution has not adopted a curriculum yet. Adopt one before admitting trainees.</div>
+</div></div></div>
+</div>
+
+<div class="wf-row">
+<div class="wf-col"><p class="wf-label">2 · 1.20, the adopt page before a choice <span>· Home › Curricula › Adopt a curriculum version · Curricula lit</span></p>
+<div class="wf-screen wf-1030"><div class="wf-main">
+<span class="wf-crumb">Home › Curricula › Adopt a curriculum version</span>
+<div class="wf-h1"><b>Adopt a curriculum version</b><small>The version you adopt is the one new admissions to its discipline join.</small></div>
+<p class="wf-h2">Curriculum version *</p>
+<div class="wf-box"><b>○ Paediatric EPA Curriculum (11.1)</b><br><span class="wf-muted">College of Paediatricians of South Africa · Paediatrics / Paediatrics · effective 2026-01-01 · 15 items. Your institution follows no Paediatrics version yet.</span></div>
+<div class="wf-box"><b>○ IM Core Curriculum (2026.1)</b><br><span class="wf-muted">Demo College · General Medicine / General Internal Medicine · ‹effective› · ‹n› items. Your institution follows no General Internal Medicine version yet.</span></div>
+<div class="wf-actions"><span class="wf-btn">Cancel</span><span class="wf-btn wf-btn--primary wf-btn--off">Adopt</span><span class="wf-muted">Adopt: choose a version first.</span></div>
+<div class="cv-note">Only Open versions KGK does not follow (P4, P5): no 11.1 after 1.20, no held-back Neonatology, no older version. Adopt is aria-disabled with its reason in words. A first adoption of a discipline asks nothing; the result lands on Curricula (frame 3).</div>
+</div></div></div>
+<div class="wf-col"><p class="wf-label">2 · 390</p>
+<div class="wf-screen wf-390"><div class="wf-main">
+<span class="wf-crumb">‹ Curricula</span>
+<div class="wf-h1"><b>Adopt a curriculum version</b><small>The version you adopt is the one new admissions to its discipline join.</small></div>
+<div class="wf-box"><b>○ Paediatric EPA Curriculum (11.1)</b><br><span class="wf-muted">College of Paediatricians of South Africa · Paediatrics / Paediatrics · 15 items. Your institution follows no Paediatrics version yet.</span></div>
+<div class="wf-box"><b>○ IM Core Curriculum (2026.1)</b><br><span class="wf-muted">Demo College · General Medicine / General Internal Medicine</span></div>
+<span class="wf-btn wf-btn--primary wf-btn--off" style="text-align:center">Adopt</span><span class="wf-muted">Adopt: choose a version first.</span><span class="wf-btn" style="text-align:center">Cancel</span>
+</div></div></div>
+</div>
+
+<div class="wf-row">
+<div class="wf-col"><p class="wf-label">3 · 1.20, adopted: back on Curricula <span>· focus on the result</span></p>
+<div class="wf-screen wf-1030"><div class="wf-main">
+<div class="wf-h1"><b>Curricula</b><span class="wf-btn wf-btn--primary">Adopt a curriculum version</span></div>
+<div class="wf-box wf-box--ok"><b>Paediatric EPA Curriculum (11.1) adopted.</b> New admissions to Paediatrics / Paediatrics join it. ← focus</div>
+<table class="wf-table"><caption>Curricula you train against</caption><thead><tr><th>Curriculum</th><th>College</th><th>Discipline</th><th>Effective</th><th>Items</th><th>For your institution</th><th>Action</th></tr></thead>
+<tbody><tr><td>Paediatric EPA Curriculum (11.1)</td><td>College of Paediatricians of South Africa</td><td>Paediatrics / Paediatrics</td><td>2026-01-01</td><td>15 national · 0 your own</td><td><span class="wf-mark">Adopted</span> on 2026-10-30</td><td><span class="wf-btn">Items</span></td></tr></tbody></table>
+<p class="wf-h2">Adoption history</p>
+<table class="wf-table"><tbody><tr><td>Paediatric EPA Curriculum (11.1)</td><td>Paediatrics / Paediatrics</td><td>2026-10-30</td><td>Active</td></tr></tbody></table>
+<div class="cv-note">1.20's second press: on the adopt page 11.1 is no longer a radio, so the refusal is never reached.</div>
+</div></div></div>
+<div class="wf-col"><p class="wf-label">3 · 390</p>
+<div class="wf-screen wf-390"><div class="wf-main">
+<div class="wf-box wf-box--ok"><b>Paediatric EPA Curriculum (11.1) adopted.</b> New admissions to Paediatrics / Paediatrics join it.</div>
+<div class="wf-stackrow"><b>Paediatric EPA Curriculum (11.1)</b><span><span class="wf-mark">Adopted</span> on 2026-10-30</span><span class="wf-btn" style="text-align:center">Items</span></div>
+</div></div></div>
+</div>
+
+<div class="wf-row">
+<div class="wf-col"><p class="wf-label">4 · 6.32, 11.2 chosen: the check line, then Adopt… asks <span>· dialog opens on Cancel</span></p>
+<div class="wf-screen wf-1030"><div class="wf-main">
+<div class="wf-h1"><b>Adopt a curriculum version</b></div>
+<div class="wf-box wf-box--emph"><b>● Paediatric EPA Curriculum (11.2)</b><br><span class="wf-muted">College of Paediatricians of South Africa · Paediatrics / Paediatrics · effective 2026-10-30 · 16 items. Newer than the version you follow, 11.1.</span></div>
+<div class="wf-box"><b>○ IM Core Curriculum (2026.1)</b></div>
+<div class="wf-box wf-box--info"><b>When you adopt 11.2:</b> it supersedes 11.1 for every new admission; the ‹N› registrars on 11.1 stay on it until each is moved; your institution's own item on 11.1 is not carried over.</div>
+<div class="wf-actions"><span class="wf-btn">Cancel</span><span class="wf-btn wf-btn--primary">Adopt…</span></div>
+<div class="wf-box wf-box--emph" style="max-width: 460px; align-self:center"><b>Adopt Paediatric EPA Curriculum (11.2)?</b><p>It supersedes Paediatric EPA Curriculum (11.1) for every new admission to Paediatrics / Paediatrics at Kgosi Kgari Teaching Hospital. The ‹N› registrars on 11.1 stay on it until each is moved on their profile. KGK-001's item is not carried over.</p><div class="wf-actions" style="justify-content:flex-end"><span class="wf-btn">Cancel ← focus</span><span class="wf-btn wf-btn--primary">Adopt 11.2</span></div></div>
+</div></div></div>
+<div class="wf-col"><p class="wf-label">4 · 390</p>
+<div class="wf-screen wf-390"><div class="wf-main">
+<div class="wf-box wf-box--emph"><b>● Paediatric EPA Curriculum (11.2)</b><br><span class="wf-muted">Newer than the version you follow, 11.1.</span></div>
+<div class="wf-box wf-box--info"><b>When you adopt 11.2:</b> it supersedes 11.1 for every new admission; the ‹N› registrars on 11.1 stay on it; your own item is not carried over.</div>
+<span class="wf-btn wf-btn--primary" style="text-align:center">Adopt…</span><span class="wf-btn" style="text-align:center">Cancel</span>
+</div></div></div>
+</div>
+
+<div class="wf-row">
+<div class="wf-col"><p class="wf-label">5 · 6.32 and 6.33, back on Curricula: 11.2 adopted, 11.1 superseded</p>
+<div class="wf-screen wf-1030"><div class="wf-main">
+<div class="wf-box wf-box--ok"><b>Paediatric EPA Curriculum (11.2) adopted.</b> New admissions to Paediatrics / Paediatrics join it. 11.1 is superseded; its ‹N› registrars stay on it until each is moved. ← focus</div>
+<table class="wf-table"><caption>Curricula you train against</caption><thead><tr><th>Curriculum</th><th>Discipline</th><th>Items</th><th>For your institution</th><th>Action</th></tr></thead><tbody>
+<tr><td>Paediatric EPA Curriculum (11.2)</td><td>Paediatrics / Paediatrics</td><td>16 national · 1 your own</td><td><span class="wf-mark">Adopted</span> on 2026-10-30</td><td><span class="wf-btn">Items</span></td></tr>
+<tr><td>Paediatric EPA Curriculum (11.1)</td><td>Paediatrics / Paediatrics</td><td>15 national · 1 your own</td><td><span class="wf-mark">Superseded</span> on 2026-10-30 · ‹N› registrars still on it</td><td><span class="wf-btn">Items</span></td></tr></tbody></table>
+<p class="wf-h2">Adoption history</p>
+<table class="wf-table"><tbody><tr><td>Paediatric EPA Curriculum (11.2)</td><td>2026-10-30</td><td>Active</td></tr><tr><td>Paediatric EPA Curriculum (11.1)</td><td>2026-10-30</td><td>Superseded</td></tr></tbody></table>
+</div></div></div>
+<div class="wf-col"><p class="wf-label">5 · 390</p>
+<div class="wf-screen wf-390"><div class="wf-main">
+<div class="wf-stackrow"><b>Paediatric EPA Curriculum (11.2)</b><span><span class="wf-mark">Adopted</span> on 2026-10-30</span><span class="wf-btn" style="text-align:center">Items</span></div>
+<div class="wf-stackrow"><b>Paediatric EPA Curriculum (11.1)</b><span><span class="wf-mark">Superseded</span> on 2026-10-30 · ‹N› registrars still on it</span><span class="wf-btn" style="text-align:center">Items</span></div>
+</div></div></div>
+</div>
+
+<div class="wf-row">
+<div class="wf-col"><p class="wf-label">6 · T301 refused on the adopt page <span>· the choice is kept, the refusal under the radios, focused</span></p>
+<div class="wf-screen wf-1030"><div class="wf-main">
+<div class="wf-box wf-box--emph"><b>● ‹the version chosen›</b></div>
+<div class="wf-box wf-box--bad"><b>This curriculum version is not open for adoption.</b> Its College has held it back, so nothing was adopted. Choose another version. ← focus</div>
+</div></div></div>
+<div class="wf-col"><p class="wf-label">7 · The Administrator on the adopt page <span>· Institution first, then the versions open to it</span></p>
+<div class="wf-screen wf-390" style="width: 520px"><div class="wf-main">
+<div class="wf-h1"><b>Adopt a curriculum version</b><small>For one institution.</small></div>
+<span>Institution *</span><span class="wf-field">— Select an institution —</span><span class="wf-btn" style="align-self:flex-start">Show</span>
+<p class="wf-muted">Choose an institution, then Show, to see the versions open to it.</p>
+<div class="cv-note">Reached from the Administrator's Curricula header ("Adopt a curriculum version", beside Curriculum progress and Create curriculum), so her menu needs no new link.</div>
+</div></div></div>
+</div>
+
+<div class="wf-row">
+<div class="wf-col"><p class="wf-label">8 · Loading and a load error <span>· both pages; the adopt page's says "Could not load the versions open to your institution."</span></p>
+<div class="wf-screen wf-1030"><div class="wf-main">
+<div class="wf-h1"><b>Curricula</b></div><div class="wf-skel" style="width:40%"></div><div class="wf-skel"></div><div class="wf-skel" style="width:70%"></div>
+<div class="wf-box wf-box--bad"><b>Could not load Curricula.</b> Nothing has changed. Try again, or come back in a few minutes. <span class="wf-btn">Try again</span></div>
+</div></div></div>
+<div class="wf-col"><p class="wf-label">8 · 390</p>
+<div class="wf-screen wf-390"><div class="wf-main"><div class="wf-box wf-box--bad"><b>Could not load the versions open to your institution.</b> Nothing has changed. Try again, or come back in a few minutes.<br><span class="wf-btn" style="display:block;text-align:center;margin-top:8px">Try again</span></div></div></div></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1820,"height":5200}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

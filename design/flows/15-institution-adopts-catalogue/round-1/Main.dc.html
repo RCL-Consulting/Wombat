@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Spec · flow 15 round 1</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="f15r1.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="cv-board" style="width: 1280px">
+<div class="cv-head">
+<h1>Spec · flow 15, round 1</h1>
+<p>An institution adopts the College's curriculum, keeps its own EPA and item, and moves a registrar to a newer version. Round 1 offers structures A1/A2 and B1/B2 (wireframes), variations C1/C2 and D1/D2 (full fidelity), and one proposal each for E, F and G. Pick before round 2.</p>
+</div>
+<div class="cv-doc">
+
+<h2>1 · The screenshots: they did not arrive</h2>
+<div class="alert alert-warning" role="note"><strong>No screenshot reached this round.</strong> The message carried no image, the session's uploads folder is empty, and no folder of the computer is connected, so design/upload/ and design/baseline/ were not read. Opened: none of the twelve (act-1/1.19-2, 1.19-3, 1.20-1, 1.21-1, 1.21-3, 1.22-1; act-6/6.25-1, 6.26-3, 6.32-1, 6.33-1, 6.36-1, 6.38-4). Not opened: all twelve.</div>
+<p>So nothing on these boards is drawn from a capture or from memory of one. Today's pages are described only in the brief's own words. Where the brief gives no value (an EPA title other than PAED-012 and KGK-001, a scale's description, the profile's other fields, the nav's group headings), the boards write a bracket ‹…›. The shell's sidebar is flow 01's classes as built, with its group headings and unnamed links bracketed.</p>
+
+<h2>2 · The variations, and what each changes of what earlier flows built</h2>
+<div class="table-container"><table class="clinic-table">
+<caption>Every variation stays inside the flow 01 shell. "May" refers to the brief's list of what flow 15 may change.</caption>
+<thead><tr><th scope="col">Variation</th><th scope="col">In one line</th><th scope="col">What it changes (all on the brief's May list)</th><th scope="col">Why</th></tr></thead>
+<tbody>
+<tr><th scope="row">A1</th><td>One page: Curricula lists what KGK trains against, what it may adopt (each with Adopt…) and its adoption history. Curriculum adoptions leaves the menu.</td><td>Where adoption happens; how a curriculum row reads for KGK; the adoption's confirmation; the picker gone (open versions are rows). <span class="cv-tag cv-tag--proposed">PROPOSED</span> /admin/adoptions redirects to /admin/curricula; nav item removed.</td><td>One job, one page (Q1). Each open version is a row, so the version already adopted is never offered (the picker rule) and a second Adopt cannot be pressed.</td></tr>
+<tr><th scope="row">A2</th><td>Curricula lists what KGK trains against, with its history; header action "Adopt a curriculum version" opens a form page of its own (flow 11's create page) of described radios.</td><td>The same, with a <span class="cv-tag cv-tag--proposed">PROPOSED</span> route /admin/curricula/adopt (replacing /admin/adoptions) and its confirmation.</td><td>Keeps the read page quiet; adoption is rare (about once per version), so a page of its own can explain what it does before anything is chosen.</td></tr>
+<tr><th scope="row">B1</th><td>The items page split by owner: "The College's items" (read-only, no actions column) and "Your institution's own items" (Edit, Remove, Add… in a note panel in place).</td><td>The items page's structure, its own-item add and edit (flow 12's note panel), its marks and 390 layout.</td><td>The owner is said once per section instead of on 16 rows; the editor lives in a narrow table of KGK's rows, so at 390 nothing scrolls (T323).</td></tr>
+<tr><th scope="row">B2</th><td>One table, every row's owner said under its EPA; Add and Edit are a form page of their own.</td><td>The same, with <span class="cv-tag cv-tag--proposed">PROPOSED</span> routes …/items/new and …/items/{ItemId}.</td><td>Keeps the curriculum's order (EPA order) in one list; the form gets a whole page, never a table cell.</td></tr>
+<tr><th scope="row">C1</th><td>EPAs split by owner, like B1: "Your institution's own EPAs" (Create EPA beside its heading) over "The College's EPAs" (titles link to a read-only page).</td><td>The EPA list's marks, row actions and Create; an EPA's page title, read-only and not-found states, its deactivate words.</td><td>Matches B1, so Q3 is answered the same way on both pages.</td></tr>
+<tr><th scope="row">C2</th><td>One EPA list; KGK's row carries the neutral badge "Your institution's own EPA" under its title and Edit; a national row reads "Set by the College." and its title links to a read-only page.</td><td>The same set.</td><td>Matches B2 and My progress's existing badge (T357), so the mark is one shape on three pages.</td></tr>
+<tr><th scope="row">D1</th><td>The profile's Save asks first when the curriculum changed: a ConfirmDialog naming the move and the recount.</td><td>A move's confirmation on the profile; the words under the picker. <span class="cv-tag cv-tag--proposed">PROPOSED</span> new confirmation.</td><td>The smallest change to flow 13's layout: one dialog, only when the picker moved.</td></tr>
+<tr><th scope="row">D2</th><td>The curriculum is read-only in Profile details; a move is its own action "Move to 11.2…" in a card, confirmed, saving only the curriculum.</td><td>A move's confirmation; the words under the picker (now a card). <span class="cv-tag cv-tag--proposed">PROPOSED</span> new action, apart from Save (flow 13's "end section of its own apart from Save" precedent).</td><td>A move cannot be undone; an irreversible act gets its own button, as End this programme has.</td></tr>
+<tr><th scope="row">E · F · G</th><td>Scales read-only; the rebuild's page, dialog, result and failure; My progress on 11.2.</td><td>The scales page's words; the rebuild page's failure and its button; nothing on My progress (G confirms).</td><td>One proposal each, to confirm or correct.</td></tr>
+</tbody></table></div>
+
+<h2>3 · Components each variation uses (NEW marked)</h2>
+<div class="table-container"><table class="clinic-table">
+<thead><tr><th scope="col">Component</th><th scope="col">A1</th><th scope="col">A2</th><th scope="col">B1</th><th scope="col">B2</th><th scope="col">C1</th><th scope="col">C2</th><th scope="col">D1</th><th scope="col">D2</th><th scope="col">E</th><th scope="col">F</th><th scope="col">G</th></tr></thead>
+<tbody>
+<tr><th scope="row">PageHeader (h1, subtitle, trail, header action)</th><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td></tr>
+<tr><th scope="row">DataTable, StackWide (stacked from 900)</th><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>—</td><td>—</td><td>yes</td><td>—</td><td>Stack (flow 05)</td></tr>
+<tr><th scope="row">ConfirmDialog, action mode, opens on Cancel</th><td>Adopt</td><td>Adopt</td><td>Remove</td><td>Remove</td><td>Deactivate</td><td>Deactivate</td><td>Move</td><td>Move</td><td>—</td><td>Rebuild</td><td>—</td></tr>
+<tr><th scope="row">Alert (success/info/warning/danger), first sentence bold</th><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>—</td><td>yes</td><td>—</td></tr>
+<tr><th scope="row">StatePanel (loading / empty / error) + Skeleton</th><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>—</td><td>—</td><td>yes</td><td>yes</td><td>—</td></tr>
+<tr><th scope="row">Unavailable state (flow 14: not found)</th><td>—</td><td>—</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><th scope="row">FormField / FormActions, refusal under its field (flow 11)</th><td>Admin's institution</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>yes</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><th scope="row">choice-group, described radios (flows 08, 11)</th><td>—</td><td>yes</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><th scope="row">Note panel opened in place (flow 12)</th><td>—</td><td>—</td><td>yes</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><th scope="row">Form page of its own (flows 08, 11)</th><td>—</td><td>yes</td><td>—</td><td>yes</td><td>yes (EPA)</td><td>yes (EPA)</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><th scope="row">Badge, neutral (badge-draft)</th><td>state</td><td>state</td><td>—</td><td>owner</td><td>status</td><td>owner, status</td><td>—</td><td>—</td><td>—</td><td>—</td><td>owner (T357)</td></tr>
+<tr><th scope="row">Details list (dl.details-list)</th><td>—</td><td>—</td><td>—</td><td>—</td><td>EPA page</td><td>EPA page</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><th scope="row"><span class="cv-tag cv-tag--new">NEW</span> Owner sections (N2, N3)</th><td>—</td><td>—</td><td>yes</td><td>—</td><td>yes</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><th scope="row"><span class="cv-tag cv-tag--new">NEW</span> Owner mark under a title (N1)</th><td>—</td><td>—</td><td>—</td><td>yes</td><td>—</td><td>yes</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><th scope="row"><span class="cv-tag cv-tag--new">NEW</span> EPA record page, read-only (N4)</th><td>—</td><td>—</td><td>—</td><td>—</td><td>yes</td><td>yes</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><th scope="row"><span class="cv-tag cv-tag--new">NEW</span> Move check (N5)</th><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>yes</td><td>card</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><th scope="row"><span class="cv-tag cv-tag--new">NEW</span> Result figures (N6)</th><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>yes</td><td>—</td></tr>
+<tr><th scope="row"><span class="cv-tag cv-tag--new">NEW</span> Prose block (N7), stacking actions (N8)</th><td>—</td><td>N8</td><td>N8</td><td>N8</td><td>N8</td><td>N8</td><td>N8</td><td>N8</td><td>—</td><td>N7, N8</td><td>—</td></tr>
+</tbody></table></div>
+
+<h2>4 · The DESIGN.md rules each changes</h2>
+<div class="table-container"><table class="clinic-table">
+<thead><tr><th scope="col">Rule</th><th scope="col">Changed by</th><th scope="col">How</th></tr></thead>
+<tbody>
+<tr><th scope="row">§ Table system, "A row the caller cannot change" and its owner mark</th><td>B1, C1</td><td>A read-only section has no actions column at all; its note says why once ("The College sets these, so they are read only here."), in place of "Set by the College." on every row. The column rule (T239: a column no row offers is not rendered) extends to a section.</td></tr>
+<tr><th scope="row">same</th><td>B2, C2</td><td>Keeps "Set by the College." per row; adds the owner mark: the neutral badge "Your institution's own EPA" / "Your institution's own item" on a line under the EPA ("Kgosi Kgari Teaching Hospital's own EPA" to the Administrator).</td></tr>
+<tr><th scope="row">The picker rule</th><td>A1</td><td>No picker: each open version is a row with its own Adopt…; one KGK has actively adopted reads its state and has none.</td></tr>
+<tr><th scope="row">same</th><td>A2</td><td>The radios offer only open versions KGK has not actively adopted; an older version of an adopted discipline is left out too (Q7).</td></tr>
+<tr><th scope="row">§ Button system, destructive action</th><td>A1, A2, D1, D2, F</td><td>Adopting a newer version, a move and a rebuild are confirmed, their triggers outline buttons ending "…". F's Rebuild progress becomes an outline trigger (it was primary).</td></tr>
+<tr><th scope="row">§ Form system, refusals</th><td>all forms</td><td>A failed save says what failed; only a real duplicate reads "already exists" (T272). A refusal sits under its field, focused, keeping what was typed.</td></tr>
+<tr><th scope="row">§ Page-level patterns</th><td>C1, C2</td><td>An EPA's page is titled by the EPA ("KGK-001 — Running…"), not "Edit EPA"; a national EPA reads as a record page (N4) with no form; an out-of-scope id is flow 14's Unavailable state.</td></tr>
+<tr><th scope="row">NavMenu's owner table</th><td>A1</td><td>Curriculum adoptions is removed from the Institutional admin's menu; the adopt dialog belongs to Curricula. The Administrator's Curricula owns it too.</td></tr>
+<tr><th scope="row">same</th><td>A2</td><td>/admin/curricula/adopt is owned by Curricula (Curricula lights; Home › Curricula › Adopt a curriculum version).</td></tr>
+<tr><th scope="row">same</th><td>C1, C2</td><td>/admin/epas/{Id} and /new owned by EPAs (unchanged), the crumb the EPA's code.</td></tr>
+</tbody></table></div>
+
+<h2>5 · Everything PROPOSED (a rule change, route, action, refusal or confirmation: yours to decide)</h2>
+<ul>
+<li><span class="cv-tag cv-tag--proposed">P1</span> A1: /admin/adoptions redirects to /admin/curricula; "Curriculum adoptions" leaves both menus.</li>
+<li><span class="cv-tag cv-tag--proposed">P2</span> A2: new route /admin/curricula/adopt (create page), replacing /admin/adoptions.</li>
+<li><span class="cv-tag cv-tag--proposed">P3</span> A1, A2: a confirmation before adopting a version that supersedes one ("Adopt Paediatric EPA Curriculum (11.2)?"). A first adoption of a discipline asks nothing.</li>
+<li><span class="cv-tag cv-tag--proposed">P4</span> T301: AdoptCurriculum refuses a held-back version before writing: "This curriculum version is not open for adoption." Words "Open" / "Held back"; a new or cloned version starts Held back (Q5).</li>
+<li><span class="cv-tag cv-tag--proposed">P5</span> Q7: the adoption list offers no older version of a discipline KGK follows (no going back). Recorded as a refusal too: "Paediatric EPA Curriculum (11.1) is older than the version your institution follows, so it cannot be adopted."</li>
+<li><span class="cv-tag cv-tag--proposed">P6</span> Q9: a superseded version stays on Curricula (and its items readable) while any registrar of KGK is on it, not only while it holds KGK's own item.</li>
+<li><span class="cv-tag cv-tag--proposed">P7</span> T291/Q12: CreateEpa and UpdateEpa refuse a discipline KGK has not actively adopted: "Your institution does not follow Paediatrics / Paediatrics, so an EPA cannot be added to it." Create EPA shown only when an adopted discipline exists.</li>
+<li><span class="cv-tag cv-tag--proposed">P8</span> Q2: a national EPA in an adopted discipline opens read-only (N4) at /admin/epas/{Id}; an EPA outside her scope is not found (flow 14's Unavailable).</li>
+<li><span class="cv-tag cv-tag--proposed">P9</span> B2: routes /admin/curricula/{Id}/items/new and /admin/curricula/{Id}/items/{ItemId}.</li>
+<li><span class="cv-tag cv-tag--proposed">P10</span> D1, D2: a confirmation before a move (Q8). D2 also a separate action "Move to …" that saves only the curriculum.</li>
+<li><span class="cv-tag cv-tag--proposed">P11</span> Q15 (T242): the College's add of an EPA KGK holds as its own item stays refused, naming KGK: "Kgosi Kgari Teaching Hospital holds KGK-001 as its own item on this version …" (flow 16 draws it).</li>
+<li><span class="cv-tag cv-tag--proposed">P12</span> Q4: no per-trainee rebuild on the profile; T304's replay at a move or a start change is enough (nothing new).</li>
+<li><span class="cv-tag cv-tag--proposed">P13</span> T325: an adoption is dated by the South African day.</li>
+</ul>
+
+<h2>6 · Data a page would need that it does not read today</h2>
+<ul>
+<li><span class="cv-tag cv-tag--data">DATA 1</span> EPA list query: per row, the owner (College or institution, by name) and the caller's own "may change" flag (T291), never from roles.</li>
+<li><span class="cv-tag cv-tag--data">DATA 2</span> Curricula (A1, A2): per version, KGK's state (Adopted on, Superseded on), the count of KGK's registrars pinned to it, and whether it holds an item of KGK's own; per open version, Open/Held back and whether it would supersede (and what).</li>
+<li><span class="cv-tag cv-tag--data">DATA 3</span> Curricula's empty state and EPAs' Create: "does this institution actively adopt any discipline".</li>
+<li><span class="cv-tag cv-tag--data">DATA 4</span> The adopt confirmation: the version superseded and its registrar count.</li>
+<li><span class="cv-tag cv-tag--data">DATA 5</span> The move's words (D1, D2): the registrar's completed-activity count, read before the save, for "‹N› completions will be counted again".</li>
+<li><span class="cv-tag cv-tag--data">DATA 6</span> E (optional column): which of KGK's curricula pin each scale.</li>
+<li><span class="cv-tag cv-tag--data">DATA 7</span> EPA read-only page: the curricula versions KGK follows that hold the EPA as an item.</li>
+</ul>
+
+<h2>7 · Class table (every rule in f15r1.css)</h2>
+<div class="table-container"><table class="clinic-table">
+<thead><tr><th scope="col">Row</th><th scope="col">Classes</th><th scope="col">Kind</th><th scope="col">What it is</th></tr></thead>
+<tbody>
+<tr><th scope="row">B1–B8</th><td>.cv-board, .cv-head, .cv-band, .cv-shell, .cv-side, .cv-topbar, .cv-article, .cv-scrim, .cv-note, .cv-elide, .cv-doc, .cv-tag</td><td>Board only</td><td>Lays the canvas out: the shell made static (no fixed top bar or sticky sidebar), state bands, a dialog drawn open, annotations. Never shipped.</td></tr>
+<tr><th scope="row">W1–W5</th><td>.wf-*</td><td>Board only</td><td>The A and B wireframes' grey drawing. Never shipped.</td></tr>
+<tr><th scope="row">N1</th><td>.owner-line</td><td><span class="cv-tag cv-tag--new">NEW</span></td><td>The owner badge's line under an EPA (B2, C2).</td></tr>
+<tr><th scope="row">N2</th><td>.owner-section-note</td><td><span class="cv-tag cv-tag--new">NEW</span></td><td>A read-only section's one line saying why it has no actions (B1, C1).</td></tr>
+<tr><th scope="row">N3</th><td>.section-head</td><td><span class="cv-tag cv-tag--new">NEW</span></td><td>An h2 with its action on its baseline; the action takes the row at 390.</td></tr>
+<tr><th scope="row">N4</th><td>.epa-record</td><td><span class="cv-tag cv-tag--new">NEW</span></td><td>An EPA's read-only page: one column of h2 sections, 52rem.</td></tr>
+<tr><th scope="row">N5</th><td>.move-check</td><td><span class="cv-tag cv-tag--new">NEW</span></td><td>The check line's stripe on info-bg, for a move's words (flow 03's submit check, generalised).</td></tr>
+<tr><th scope="row">N6</th><td>.result-figures</td><td><span class="cv-tag cv-tag--new">NEW</span></td><td>Figures under a result's bold sentence, two columns, tabular.</td></tr>
+<tr><th scope="row">N7</th><td>.prose-block</td><td><span class="cv-tag cv-tag--new">NEW</span></td><td>A maintenance page's paragraphs at 52rem.</td></tr>
+<tr><th scope="row">N8</th><td>.page-actions-stack</td><td><span class="cv-tag cv-tag--new">NEW</span></td><td>An action row that stacks, primary on top, 44px, at 390.</td></tr>
+</tbody></table></div>
+<p>No new token. No new icon: the boards draw none beyond the shell's mark; round 2 would name Lucide's <code>building-2</code> (owner), <code>lock</code> (read only) and <code>refresh-cw</code> (Try again), all in the set.</p>
+
+<h2>8 · The questions, and what round 1 proposes</h2>
+<div class="table-container"><table class="clinic-table">
+<thead><tr><th scope="col">Q</th><th scope="col">Proposal</th></tr></thead>
+<tbody>
+<tr><th scope="row">1</th><td>A1 merges; A2 keeps a create page under Curricula. Either way the Administrator chooses an institution on Curricula (an Institution select + Show, flow 06's filter), then adopts in the same place.</td></tr>
+<tr><th scope="row">2</th><td>Out of scope by id: not found. A national EPA in her discipline: a read-only record page, reached by its title link (no Edit, no form).</td></tr>
+<tr><th scope="row">3</th><td>C1 + B1: by section. C2 + B2: by the neutral owner badge under the EPA, the shape My progress already uses. One answer on all three pages, chosen with the pair.</td></tr>
+<tr><th scope="row">4</th><td>T304's replay is enough (P12).</td></tr>
+<tr><th scope="row">5</th><td>"Open" / "Held back"; a new version starts Held back (P4).</td></tr>
+<tr><th scope="row">6</th><td>Yes: names what it supersedes, that ‹N› registrars stay on it, and that KGK's own item is not carried over (P3).</td></tr>
+<tr><th scope="row">7</th><td>Leave out the version adopted, and leave out older versions (P5).</td></tr>
+<tr><th scope="row">8</th><td>Yes (P10): "It cannot be undone" and "‹N› completions are counted again against 11.2".</td></tr>
+<tr><th scope="row">9</th><td>Yes (P6), shown with "‹N› registrars still on it".</td></tr>
+<tr><th scope="row">10</th><td>Its state for KGK in words ("Adopted on 2026-10-30" / "Superseded on 2026-10-30 · ‹N› registrars still on it"); Open/Held back is the College's, shown only on what she may adopt, and only Open ones are listed.</td></tr>
+<tr><th scope="row">11</th><td>"Deactivate KGK-001?": "Kgosi Kgari Teaching Hospital's trainees can no longer choose it for a new activity, and it stops being a target on their running programmes' progress pages and dashboards. A programme that has ended keeps it on its record."</td></tr>
+<tr><th scope="row">12</th><td>Yes (P7).</td></tr>
+<tr><th scope="row">13</th><td>Every scale (each admin reads every one), subtitle for a reader; DATA 6's column optional.</td></tr>
+<tr><th scope="row">14</th><td>B1: a note panel in place, under KGK's own table. B2: a form page of its own.</td></tr>
+<tr><th scope="row">15</th><td>Yes, naming KGK (P11).</td></tr>
+<tr><th scope="row">16</th><td>Outline trigger "Rebuild progress…"; failure "The rebuild could not be finished, so nothing changed." with Try again, never the exception.</td></tr>
+<tr><th scope="row">17</th><td>Fold in T291's sweep, T301, T326 (scales half), T323 (items half), T329/A6, T272, T325 (AdoptedOn half). Leave T357 to its own task.</td></tr>
+</tbody></table></div>
+
+<h2>9 · Edge cases flagged</h2>
+<ul>
+<li>A second discipline (Demo IM Core) beside Paediatrics: A1 and A2 list it as a separate row; it supersedes nothing, so it adopts with no question; its College's EPAs appear in C under the Demo College's name.</li>
+<li>A College version closed (held back) after KGK adopted it: KGK keeps it; its row reads "Adopted on …" with no change; only new adoptions are refused.</li>
+<li>A superseded version with no registrar left and no own item: it leaves Curricula's first table and stays in Adoption history only.</li>
+<li>A move while the registrar's completion is being credited elsewhere: the save waits (T304); D's result still reads its counts; no new state drawn.</li>
+<li>KGK's own EPA in a discipline KGK no longer adopts: it stays listed, Edit offered (it is KGK's), Create refused for that discipline (P7); its own items stay on the versions that hold them.</li>
+<li>Two institutions' own EPAs with the same code on the Administrator's list: each row's owner names its institution (C1 by section heading, C2 by the badge), so "KGK-001" twice reads apart.</li>
+<li>An EPA title of 150 characters wraps in its cell and in the h1; never cut (drawn on C1).</li>
+<li>A registrar on 11.1 when KGK supersedes 11.2 with 11.3: the registrar stays on 11.1; his profile's picker offers 11.1 and 11.3 (the pin and the active adoption), never 11.2.</li>
+</ul>
+
+<h2>10 · Accessibility review (WCAG 2.1 AA), as drawn</h2>
+<ul>
+<li>One h1 per screen (PageHeader), h2 sections in order; a dialog's title is its h2.</li>
+<li>Every table has a caption naming it ("EPAs your institution reads", "Items of Paediatric EPA Curriculum (11.2)").</li>
+<li>Row actions are named for the row: "Edit KGK-001 — Running a paediatric outreach clinic at a district hospital", "Adopt Paediatric EPA Curriculum (11.2)…", "Remove KGK-001 — … from Paediatric EPA Curriculum (11.2)…".</li>
+<li>Owner told in words (a section heading or the badge's words), never colour alone.</li>
+<li>Focus: a dialog opens on Cancel; after confirm, the result alert (tabindex -1) takes the focus; after Cancel, the trigger gets it back; after a failed save, the refusal under its field (first in aria-describedby).</li>
+<li>Targets: buttons 36px (row actions 28px) at 1280; 44px at 390, each section's action the row's width.</li>
+<li>Contrast: only token pairs from DESIGN.md § Contrast; the badges' words are text-color on header-bg (11.36:1).</li>
+</ul>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3600}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

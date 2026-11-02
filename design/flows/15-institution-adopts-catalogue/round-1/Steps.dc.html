@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Steps · flow 15 round 1</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="f15r1.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="cv-board" style="width: 1280px">
+<div class="cv-head">
+<h1>Steps · flow 15, round 1</h1>
+<p>Each journey counted from Home, as presses + fields typed or chosen. At 390 every journey adds one press per menu opened (the CSS menu). A dialog's confirm counts as a press; a field that arrives chosen (the suggested scale) counts as none.</p>
+</div>
+<div class="cv-doc">
+
+<h2>1 · The journeys, per variation</h2>
+<div class="table-container"><table class="clinic-table">
+<caption>Presses + fields. "Today" is the shell as built on 2026-10-30, from the brief's description.</caption>
+<thead><tr><th scope="col">Journey</th><th scope="col">Width</th><th scope="col">Today</th><th scope="col">A1</th><th scope="col">A2</th><th scope="col">B1 + C1</th><th scope="col">B2 + C2</th><th scope="col">D1</th><th scope="col">D2</th><th scope="col">F</th></tr></thead>
+<tbody>
+<tr><th scope="row" rowspan="2">Adopt the first version (1.20): Curricula / Curriculum adoptions → choose 11.1 → Adopt</th><td>1280</td><td>2 + 1</td><td>2 + 0</td><td>3 + 1</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>390</td><td>3 + 1</td><td>3 + 0</td><td>4 + 1</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><th scope="row" rowspan="2">Adopt a newer version (6.32): … → 11.2 → Adopt → confirm</th><td>1280</td><td>2 + 1 (no question)</td><td>3 + 0</td><td>4 + 1</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>390</td><td>3 + 1</td><td>4 + 0</td><td>5 + 1</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><th scope="row" rowspan="2">Add KGK's own EPA and item (6.25 + 6.26): EPAs → Create EPA → 5 fields → Save; Curricula → Items → (open the add) → 8 fields → Add item</th><td>1280</td><td>6 + 13</td><td>—</td><td>—</td><td>7 + 13 (opens the note panel)</td><td>7 + 13 (opens the form page)</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>390</td><td>8 + 13</td><td>—</td><td>—</td><td>9 + 13</td><td>9 + 13</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><th scope="row" rowspan="2">Move a registrar (6.36): Trainees → Edit → 11.2 → Save (→ confirm)</th><td>1280</td><td>3 + 1 (no question)</td><td>—</td><td>—</td><td>—</td><td>—</td><td>4 + 1</td><td>4 + 0</td><td>—</td></tr>
+<tr><td>390</td><td>4 + 1</td><td>—</td><td>—</td><td>—</td><td>—</td><td>5 + 1</td><td>5 + 0</td><td>—</td></tr>
+<tr><th scope="row" rowspan="2">Rebuild progress (6.38): Curricula → Curriculum progress → Rebuild progress… → confirm</th><td>1280</td><td>4 + 0</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>4 + 0 (unchanged)</td></tr>
+<tr><td>390</td><td>5 + 0</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>5 + 0</td></tr>
+<tr><th scope="row" rowspan="2">Read 11.1's items (1.21): Curricula → Items</th><td>1280</td><td>2 + 0 (Curricula), 0 from Adoptions</td><td>2 + 0</td><td>2 + 0</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>390</td><td>3 + 0</td><td>3 + 0</td><td>3 + 0</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+</tbody></table></div>
+<p>What the counts say: A1 is the shortest adoption and the only one with no field; A2 costs one press and one choice more for a page that explains first. D2 types nothing for a move; D1 keeps flow 13's layout. B and C differ by one press, not by fields.</p>
+
+<h2>2 · The 16 steps: which Expects each variation would change</h2>
+<div class="table-container"><table class="clinic-table">
+<caption>"same" = the Expect holds as written. Changed wording is the proposal's; round 2 writes the full Expect.</caption>
+<thead><tr><th scope="col">Step</th><th scope="col">A1</th><th scope="col">A2</th><th scope="col">B1 / B2</th><th scope="col">C1 / C2</th><th scope="col">D1 / D2</th><th scope="col">E · F · G</th></tr></thead>
+<tbody>
+<tr><th scope="row">1.19 Before the adoption</th><td>Curricula's empty state: "Your institution has not adopted a curriculum yet. Adopt one below before admitting trainees." over the open versions</td><td>"… Adopt one before admitting trainees." with Adopt a curriculum version</td><td>same</td><td>EPAs: "No EPAs yet": "Your institution reads the EPAs of the curricula it adopts. Adopt a curriculum on Curricula first." linked; no Create EPA</td><td>same</td><td>same</td></tr>
+<tr><th scope="row">1.20 Adopt 11.1</th><td>No Curriculum adoptions page: Curricula's "Open for adoption" row Adopt; "Paediatric EPA Curriculum (11.1) adopted."; second press impossible: the row moves up, reading "Adopted on 2026-10-30"</td><td>The adopt page's radios; afterwards 11.1 is not offered</td><td>same</td><td>same</td><td>same</td><td>same</td></tr>
+<tr><th scope="row">1.21 What the adoption opens</th><td>Curricula's row reads its state, Items</td><td>same as A1</td><td>B1: two sections; national without an actions column. B2: each national row "Set by the College."</td><td>C1: "The College's EPAs" section, no Edit; C2: "Set by the College." per row</td><td>same</td><td>same</td></tr>
+<tr><th scope="row">1.22 The ladder read-only</th><td>same</td><td>same</td><td>same</td><td>same</td><td>same</td><td>E: new subtitle</td></tr>
+<tr><th scope="row">6.9 Scales, read</th><td>same</td><td>same</td><td>same</td><td>same</td><td>same</td><td>E: new subtitle</td></tr>
+<tr><th scope="row">6.22 The pause</th><td>same</td><td>same</td><td>"(inactive: not in force)" kept; B1 in the College's section</td><td>PAED-012 Inactive (badge); no Edit</td><td>same</td><td>same</td></tr>
+<tr><th scope="row">6.25 KGK-001 created</th><td>same</td><td>same</td><td>same</td><td>Page titled "KGK-001 — Running a paediatric outreach clinic at a district hospital"; C1: listed under "Your institution's own EPAs"; C2: badge "Your institution's own EPA"</td><td>same</td><td>same</td></tr>
+<tr><th scope="row">6.26 KGK's item on 11.1</th><td>same</td><td>same</td><td>B1: Add… opens a note panel; B2: a form page; the result names the item</td><td>same</td><td>same</td><td>same</td></tr>
+<tr><th scope="row">6.32 Adopt 11.2</th><td>Adopt… asks "Adopt Paediatric EPA Curriculum (11.2)?"; result names what was superseded</td><td>same question from the adopt page</td><td>same</td><td>same</td><td>same</td><td>same</td></tr>
+<tr><th scope="row">6.33 KGK's item on 11.2</th><td>11.1 reads "Superseded on 2026-10-30 · ‹N› registrars still on it" (P6)</td><td>same</td><td>as 6.26</td><td>same</td><td>same</td><td>same</td></tr>
+<tr><th scope="row">6.34 Dlamini stays on 11.1</th><td>same</td><td>same</td><td>same</td><td>same</td><td>D1: words under the picker; save asks nothing. D2: no picker; the move card offers "Move to 11.2…"</td><td>same</td></tr>
+<tr><th scope="row">6.35 Ndlovu notes his figures</th><td>same</td><td>same</td><td>same</td><td>same</td><td>same</td><td>same (flow 05's)</td></tr>
+<tr><th scope="row">6.36 Ndlovu moved</th><td>same</td><td>same</td><td>same</td><td>same</td><td>A dialog asks first; the result's count unchanged; reopened, D1's picker offers 11.2 alone, D2 shows no move</td><td>same</td></tr>
+<tr><th scope="row">6.37 Ndlovu on 11.2</th><td>same</td><td>same</td><td>same</td><td>same</td><td>same</td><td>G: same; KGK-001's badge "Kgosi Kgari Teaching Hospital's own"</td></tr>
+<tr><th scope="row">6.38 The rebuild</th><td>same</td><td>same</td><td>same</td><td>same</td><td>same</td><td>F: the trigger is an outline "Rebuild progress…"</td></tr>
+<tr><th scope="row">6.39 Ndlovu's evidence</th><td>same</td><td>same</td><td>same</td><td>same</td><td>same</td><td>same</td></tr>
+</tbody></table></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2800}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

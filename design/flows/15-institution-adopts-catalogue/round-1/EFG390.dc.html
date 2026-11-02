@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>E, F and G at 390</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="f15r1.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="cv-board" style="width: 390px">
+<div class="cv-head"><h1>E, F and G at 390</h1><p>Stacked tables; the rebuild's trigger the row's width, 44px; figures in two columns.</p></div>
+
+<div class="cv-band"><strong>E · Entrustment scales</strong></div>
+<div class="cv-shell"><dc-import name="Sidebar" role="ia" lit="Entrustment scales" hint-size="390px,56px"></dc-import>
+<article class="cv-article">
+<div class="header-container"><div><h1>Entrustment scales</h1><p class="page-subtitle">The ladders an assessor rates against on your curricula's forms. An Administrator keeps them; you can read each one here.</p></div></div>
+<div class="table-container"><table class="clinic-table clinic-table--stack clinic-table--stack-wide"><caption>Entrustment scales · 3</caption>
+<thead><tr><th scope="col">Name</th><th scope="col">Description</th><th scope="col">Levels</th><th scope="col">On your curricula</th></tr></thead>
+<tbody>
+<tr><th scope="row">CNSA Neurology Entrustment Scale</th><td data-label="Description">‹description, as stored›</td><td data-label="Levels">6</td><td data-label="On your curricula">None</td></tr>
+<tr><th scope="row">CPSA Paediatric Entrustment Scale v11.1</th><td data-label="Description">‹description, as stored›</td><td data-label="Levels">6 (1, 2, 3a, 3b, 4, 5)</td><td data-label="On your curricula">Paediatric EPA Curriculum (11.1), Paediatric EPA Curriculum (11.2)</td></tr>
+<tr><th scope="row">O-R Scale</th><td data-label="Description">‹description, as stored›</td><td data-label="Levels">5</td><td data-label="On your curricula">None</td></tr>
+</tbody></table></div>
+</article></div>
+
+<div class="cv-band"><strong>F · the page</strong></div>
+<div class="cv-shell"><dc-import name="Sidebar" role="admin" lit="Curricula" hint-size="390px,56px"></dc-import>
+<article class="cv-article">
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#">Home</a></li><li class="breadcrumb-separator" aria-hidden="true">›</li><li class="breadcrumb-parent"><a href="#"><span class="breadcrumb-back" aria-hidden="true">‹</span>Curricula</a></li><li class="breadcrumb-separator" aria-hidden="true">›</li><li class="breadcrumb-current" aria-current="page"><span>Curriculum progress</span></li></ol></nav>
+<div class="header-container"><div><h1>Curriculum progress</h1></div></div>
+<div class="prose-block">
+<p>Each completed activity is credited to the curriculum items it matches, in the semester that contains its encounter date. ‹… as built›</p>
+<p>‹… as built› It is safe to run more than once. It runs as one transaction, so if it fails, nothing changes.</p>
+<p>A rebuild credits each activity against the curriculum as it is today … ‹… as built›</p>
+<div class="page-actions-stack"><button type="button" class="btn btn-outline">Rebuild progress…</button></div>
+</div>
+</article></div>
+
+<div class="cv-band"><strong>F · the question</strong></div>
+<div class="cv-scrim">
+<dialog open class="dialog-card" aria-labelledby="g2-t"><form class="dialog-form" method="dialog"><h2 id="g2-t">Rebuild curriculum progress?</h2><p>Every trainee's curriculum progress is recalculated from their completed activities, each filed into the semester of its encounter date. An inactive EPA keeps the progress it earned while it was active. It is safe to run more than once, and if it fails nothing changes.</p><div class="dialog-actions page-actions-stack"><button type="button" class="btn btn-outline" autofocus>Cancel</button><button type="button" class="btn btn-primary">Rebuild progress</button></div></form></dialog>
+</div>
+
+<div class="cv-band"><strong>F · the result, and a failure</strong></div>
+<div class="cv-article">
+<div class="alert alert-success action-result" role="status" tabindex="-1"><strong>Curriculum progress was rebuilt.</strong>
+<dl class="result-figures"><dt>Activities re-read</dt><dd>15</dd><dt>Curriculum items credited</dt><dd>14</dd><dt>Semester tallies written</dt><dd>9</dd><dt>Stale tallies removed</dt><dd>0</dd><dt>Completions re-stamped</dt><dd>15</dd></dl></div>
+<div class="alert alert-danger" role="alert" tabindex="-1" style="margin-top: 16px"><strong>The rebuild could not be finished, so nothing changed.</strong> Every trainee's progress reads as it did before. Try again, or come back in a few minutes.<div style="margin-top: 12px"><button type="button" class="btn btn-outline" style="min-height: 2.75rem; width: 100%">Try again</button></div></div>
+</div>
+
+<div class="cv-band"><strong>G · My progress on 11.2</strong></div>
+<div class="cv-shell"><dc-import name="Sidebar" role="trainee" lit="My progress" hint-size="390px,56px"></dc-import>
+<article class="cv-article">
+<div class="header-container"><div><h1>My progress</h1></div></div>
+<div class="table-container"><table class="clinic-table clinic-table--stack"><caption>Once a year · 7 EPAs</caption>
+<thead><tr><th scope="col">EPA</th><th scope="col">This year</th></tr></thead>
+<tbody>
+<tr><th scope="row"><a href="#">PAED-011 — ‹title›</a></th><td>0 of 2 in 2026</td></tr>
+<tr><th scope="row"><a href="#">PAED-016 — ‹title›</a></th><td>0 of 1 in 2026</td></tr>
+<tr><th scope="row"><a href="#">KGK-001 — Running a paediatric outreach clinic at a district hospital</a><span class="owner-line"><span class="badge badge-draft">Kgosi Kgari Teaching Hospital's own</span></span></th><td>0 of 1 in 2026</td></tr>
+<tr class="cv-elide"><td colspan="2">‹the other 4›</td></tr>
+</tbody></table></div>
+</article></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":7000}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

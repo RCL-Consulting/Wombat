@@ -1,0 +1,30 @@
+{"v":3,"createdOnFiles":{"v":1,"at":"2026-11-02T08:00:00Z"},"title":"Wombat 15","launch":{"view":"canvas"},"pages":[],
+"boards":{
+"Main.dc.html":{"x":0,"y":0,"w":1280,"h":3600,"title":"Spec · flow 15 round 1"},
+"Steps.dc.html":{"x":1360,"y":0,"w":1280,"h":2800,"title":"Steps · flow 15 round 1"},
+"Sidebar.dc.html":{"x":2720,"y":0,"w":250,"h":800,"title":"Shell sidebar (component, as built)"},
+"A1.dc.html":{"x":0,"y":4000,"w":1820,"h":5200,"title":"A1 · one Curricula page (wireframe)"},
+"A2.dc.html":{"x":1900,"y":4000,"w":1820,"h":5200,"title":"A2 · Curricula + an adopt page of its own (wireframe)"},
+"B1.dc.html":{"x":0,"y":9600,"w":1820,"h":5200,"title":"B1 · items split by owner, note panel (wireframe)"},
+"B2.dc.html":{"x":1900,"y":9600,"w":1820,"h":5200,"title":"B2 · one table, owner mark, form page (wireframe)"},
+"C1.dc.html":{"x":0,"y":15200,"w":1280,"h":9000,"title":"C1 · EPAs split by owner"},
+"C2.dc.html":{"x":1360,"y":15200,"w":1280,"h":9000,"title":"C2 · EPAs in one list, owner mark per row"},
+"C390.dc.html":{"x":2720,"y":15200,"w":390,"h":9000,"title":"C1 and C2 at 390"},
+"D1.dc.html":{"x":0,"y":24600,"w":1280,"h":4200,"title":"D1 · the move asked on Save"},
+"D2.dc.html":{"x":1360,"y":24600,"w":1280,"h":4200,"title":"D2 · a move of its own"},
+"D390.dc.html":{"x":2720,"y":24600,"w":390,"h":6400,"title":"D1 and D2 at 390"},
+"E.dc.html":{"x":0,"y":31400,"w":1280,"h":1800,"title":"E · Entrustment scales, read-only"},
+"F.dc.html":{"x":1360,"y":31400,"w":1280,"h":3000,"title":"F · Curriculum progress (the rebuild)"},
+"G.dc.html":{"x":2720,"y":31400,"w":1280,"h":1900,"title":"G · My progress on 11.2"},
+"EFG390.dc.html":{"x":4080,"y":31400,"w":390,"h":7000,"title":"E, F and G at 390"}
+},
+"order":["Main.dc.html","Steps.dc.html","Sidebar.dc.html","A1.dc.html","A2.dc.html","B1.dc.html","B2.dc.html","C1.dc.html","C2.dc.html","C390.dc.html","D1.dc.html","D2.dc.html","D390.dc.html","E.dc.html","F.dc.html","G.dc.html","EFG390.dc.html"],
+"notes":{
+"t0":{"x":0,"y":-320,"text":"Flow 15 · round 1 · Spec and Steps first","kind":"title1","maxW":2970},
+"t1":{"x":0,"y":3680,"text":"Screen 1 · where KGK adopts and keeps its curricula (structures A, wireframes)","kind":"title1","maxW":3720},
+"t2":{"x":0,"y":9280,"text":"Screen 2 · a curriculum's items as KGK reads them (structures B, wireframes)","kind":"title1","maxW":3720},
+"t3":{"x":0,"y":14880,"text":"Screen 3 · the EPA list and an EPA's page (variations C, full fidelity)","kind":"title1","maxW":3110},
+"t4":{"x":0,"y":24280,"text":"Screen 4 · moving a registrar on his profile (variations D, full fidelity)","kind":"title1","maxW":3110},
+"t5":{"x":0,"y":31080,"text":"Screen 5 · one proposal each: scales, the rebuild, My progress","kind":"title1","maxW":4470}
+},
+"designSystems":[{"title":"Wombat","namespace":"wombat","artifact":"https://claude.ai/artifact/RsbreZ2d94q2NUNQMLch18","version":"1793385917-2f3c","copiedAt":"2026-11-02T08:00:00Z"}]}
