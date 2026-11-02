@@ -14,9 +14,12 @@ recommended). T392's Notes hold every step; not pushed (master ahead of origin s
 - **Step 6, built:** `c931d56f` (lanes A–D, W; two Sonnet reviews, one fix pass, all but P5 left to T390; six suites
   green). T393 proposed (two edit pages print exception text).
 - **Step 7, replay** (fresh `wombat_scenario_t392` on `:5180`, D = 2026-11-02): act 1 31/24 clean (`42e93d01`; its
-  outcome SQL comment still expects a refused second adoption: fix at the end), act 2 44/44 (`0ef2236e`); act 3 running.
-  Then acts 4–6, A, the two states passes (`design\flows\15-institution-adopts-catalogue.md:719` names
-  the compact clinic-table states capture: baseline missing 1 until they run), then steps 8–9.
+  outcome SQL comment still expects a refused second adoption: fix at the end), 2 44/44 (`0ef2236e`), 3 60/58
+  (`0975befe`), 4 50/44 (`27d01fc7`; resumed after an interruption at 4.49), 5 29/27 (`c2059fbc`), 6 42/37 (`f3acde33`),
+  A 76/69 (`5e93ffe2`). One flow 15 regression found and fixed: the items table overflowed from 901 to ~990 px; it now
+  stacks to 1024 px (`e10a5f22`; app republished, swept again). Dumps `recovery/scenario-t392-post-act{1..6,A}`.
+  States pass 1 (EPAs, scales, rebuild, profile) running, then pass 2 (curricula, items; the compact clinic-table states capture
+  is the one baseline capture missing), then steps 8–9.
 - **Replay scratch:** `...\ecc5a9d5-...\scratchpad\g392` (prompts, act dirs, `replay-pw.env`: never print it).
 - **Traps:** the harness is at `C:\dev\rcl_execution\bin\harness.py`, not `bin/`. Canvas scratch:
   `C:\Users\Renier\AppData\Local\Temp\claude\c--dev-Wombat\ecc5a9d5-2a6e-43d8-a55a-e55b7e48f8ab\scratchpad\c15`.
