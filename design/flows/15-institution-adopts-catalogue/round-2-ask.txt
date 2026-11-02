@@ -1,0 +1,767 @@
+ROUND 1 PICKED: Curricula A1, "one page" (what Kgosi Kgari Teaching Hospital trains against, then the versions open to
+it, each with its own Adopt; Curriculum adoptions leaves the menu), taking from A2 only its line under a first
+adoption's row; a curriculum's items B2, "one table, a form page of its own" (KGK's item marked in words under its EPA;
+add and edit on pages of their own), taking from B1 its 11.2 empty line, its folded cells and its subtitle's "adopted
+by your institution on ‹date›"; the EPA list C2's (one list, "Set by the College." in a national row's actions cell,
+Edit on KGK-001 alone) WITHOUT its Owner column or its badge, with C1's page for KGK's own EPA (today's form, titled by
+the EPA, Deactivate… and the Active box as built) and the national EPA's read-only record, which both drew; the move D1 (words
+under the picker; Save asks only when the curriculum changed); E (scales), F (the rebuild) and G (My progress)
+confirmed, corrected as below. A2's adopt page, B1's two tables and note panel, C1's two sections, C2's record page for
+KGK's own EPA (its /edit route and its Reactivate action) and D2's move card are dropped: draw none of them again.
+Round 2: the picks at full fidelity on the design system installed on this canvas (Wombat v41, namespace wombat;
+ds/wombat/tokens.css and ds/wombat/components/bundle.css): its tokens and components, real words, no grey bars and no
+.wf-* wireframe classes (round 2 has no wireframe). Every screen and state at 1280 and 390; the tables (Curricula's
+two, the items, the EPAs, the Administrator's lists, the scales) also at 768 where marked. Draw round 2 on a new page of
+the canvas, "Round 2", and name every board R2-…; keep round 1's 17 boards on their page, "Round 1", untouched. The brand
+mark is at /_blob/7d85109844af8d55420d07753d246843: use it, never a drawn disc. Every person, institution, code, title,
+version, date, id and count comes from this message (FIXTURES), the brief's § 1 and the runbook steps round 1 received;
+invent none. Where a value is not given, write a bracket ‹…›. Label a state the replay never reaches "Illustration", in
+its title and as a chip on the board's face, and never draw on one board two states that cannot hold at once. Words
+marked NEW below are this message's own (in neither the brief, round 1's assessment nor the code): draw them as given,
+and list them on the Spec as NEW so the review can weigh them. Words marked PROPOSED (THIS ASK) are a choice this
+message makes that the operator has not yet seen: draw them, and list them on the Spec under that heading.
+
+THE STYLESHEET: write the round's shared stylesheet as a PROJECT FILE, project/f15r2.css (write it as a file of the
+  project, NOT as an asset, so the saved round holds it; round 1 did, f15r1.css). Every board's head links
+  ds/wombat/tokens.css, ds/wombat/components/bundle.css, then f15r2.css, in that order, and no /_blob/ stylesheet; a
+  board's <style> holds body{margin:0} at most. f15r2.css holds the canvas-only rules (round 1's .cv-* layout, renamed
+  nothing, listed apart on the Spec and kept off the components) and at most ONE shipped rule, the 390 scope named
+  under § CLASSES. It holds none of round 1's N1–N8 (S14): each is an app.css class already, named below.
+
+WHY A1: it is Q1 as decided and the cheapest (first adoption 2 + 0, a newer one 3 + 0); an adopted version is a row with
+  its state, never an option, so DESIGN.md's picker rule holds by the page's shape and 1.20's second press cannot happen.
+WHY B2: it is Q14 as decided, and the only structure that keeps DESIGN.md § Table system's T211 rule (one list, the own
+  item marked under its title, a standing notice above); it ends T323's form in a table cell for good.
+WHY C2's LIST WITH C1's PAGE: one list matching B2 and T211 (Q3); KGK-001's page stays today's form, titled by the EPA,
+  so no new route, press or action for a page edited a few times a year. The national EPA's record is the same in both.
+WHY D1: it is Q8 as decided; it keeps flow 13's profile layout and asks only when the picker moved.
+BORROW: from A2, the line under a first adoption's row (in N2's word, below); from B1, "A new version carries no
+  institution's own items. Your item on 11.1 stays there." on 11.2's items, its folded cells (S16), its subtitle; from
+  C1, the create page's subtitle and the Sub-speciality help (N2's word); from round 1's Spec, its edge cases (§ SPEC).
+
+ATTACHED, AGAIN: round 1's Spec said, first, that no screenshot arrived (no image in the message, the uploads folder
+  empty, no folder connected); it drew nothing from memory, rightly. The twelve key screenshots of the brief's § 4 are
+  attached to THIS message again, staged by design/tools/stage_upload.ps1 -Flow 15 into
+  C:\dev\Wombat\design\upload\baseline\ (copies of design/baseline/; checked present on 2026-11-02):
+  act-1\1.19-2-epas-empty.png, act-1\1.19-3-epa-create-no-subspeciality.png, act-1\1.20-1-adopted.png,
+  act-1\1.21-1-institution-epas.png, act-1\1.21-3-institution-items.png, act-1\1.22-1-scales-read-only.png,
+  act-6\6.25-1-kgk001-saved.png, act-6\6.26-3-own-item-added.png, act-6\6.32-1-adopted-11.2.png,
+  act-6\6.33-1-mbatha-curricula-list.png, act-6\6.36-1-ndlovu-moved-to-11.2.png and act-6\6.38-4-rebuilt.png. The same
+  folder holds the brief's other 34 (§ 4), among them act-1\1.19-1 (Curricula empty), act-1\1.20-0 and 1.20-2 (the
+  adoptions page before, and the second Adopt refused), act-6\6.22-2 (PAED-012 paused), act-6\6.26-2 (the add form
+  before a rung), act-6\6.34-3 (Dlamini saved), act-6\6.38-2 and 6.38-3 (the rebuild page and its dialog), and
+  states\epa-edit--not-found.png (the defect: a full form for an EPA out of scope). Read them before drawing: the words
+  in them are today's pages, defects included, not the target. A capture under states\ dated 2026-09-26 is the old
+  frame (a Title Case sidebar with Logout, an email in the top bar): read its body only. No capture shows a password;
+  the addresses and codes in them are the pages' own record. SAY ON THE SPEC BOARD, FIRST, WHETHER THE CAPTURES
+  ARRIVED (as attachments, or read from the folder), which you opened, and which you did not; if any did not arrive,
+  draw nothing from memory in its place (flows 06, 12, 13 and 15 round 1's lesson). This message pastes every value
+  round 1 bracketed that the code or the runbook holds (FIXTURES), so a missing capture leaves only the values marked
+  CAPTURE-ONLY below as brackets.
+
+DECISIONS (the operator's, 2026-11-02; Q1–Q17 as the brief recommends, Q18–Q21 as round 1's assessment recommends):
+  Q1, with Q18: one page, "Curricula", for the Institutional admin: the versions KGK trains against (each with its state
+    for KGK and Items), then the College versions open to KGK that it has not actively adopted (each with Adopt); the
+    adoption history folds into the rows (Adopted on, Superseded on). "Curriculum adoptions" leaves her menu (the
+    Administrator's never held it) and /admin/adoptions sends to /admin/curricula (PROPOSED, decided). The Administrator
+    keeps her College-wide Curricula and adopts for an institution from a section on it, "An institution's curricula"
+    (Institution + Show, flow 06's filter), which opens the same rows and dialog as Prof Mbatha's, named for the
+    institution (Q18). No new route, no menu item. Flow 18 may move it to the institution's page.
+  Q2, with Q19: an EPA outside her scope, typed by id, is DESIGN.md's Unavailable page: h1 "EPA unavailable", "This EPA
+    does not exist, or you cannot open it.", Go to EPAs, EPAs lit; no id shown, nothing said of which (Q19). GetEpaById
+    narrows to the list's rule (PROPOSED, decided). A national EPA in her adopted discipline opens READ-ONLY: its code,
+    title, description, required knowledge and skills, category, status and "Set by the College of Paediatricians of
+    South Africa", no form, no Save, no Deactivate (DATA: the EPA's "may change" flag).
+  Q3: one rule on both tables, DESIGN.md's T211 paragraph: KGK's own EPA or item marked under its title in .muted
+    .text-sm words, "Your institution's own EPA" / "Your institution's own item" (to the Administrator "Kgosi Kgari
+    Teaching Hospital's own EPA" / "… own item"); a national row's actions cell "Set by the College."; the standing
+    notice above the items. Words, never colour or a badge (M4). My progress's badge is T357's to change: not here.
+  Q4: no single-trainee rebuild; nothing on the profile offers one.
+  Q5: T301: a version is "Open" or "Held back" for adoption; a new or cloned version starts held back; adopting a
+    held-back one is refused before anything is written: "This curriculum version is not open for adoption." An
+    adoption already made is unaffected. The College's box is flow 16's (not drawn).
+  Q6: adopting a version that supersedes one asks first, a ConfirmDialog (below, § NEW); a first adoption of a
+    discipline asks nothing. Its trigger is the row's "Adopt…" (outline, as every row action); its confirm "Adopt 11.2".
+  Q7, with Q21: "Open for adoption" lists only open versions KGK has not ACTIVELY adopted, so the active one is never
+    offered; "This institution has already adopted this curriculum version." stays in the command for a stale page. An
+    older version than the active one stays adoptable (going back), under Q6's dialog saying it supersedes the newer.
+    P5 (round 1's "no going back" and its refusal) is DROPPED.
+  Q8, with Q20 and Q21: Save profile asks first only when the curriculum changed: "Move Sipho Ndlovu to Paediatric EPA
+    Curriculum (11.2)?", confirm "Move and save", Cancel keeping the form as typed. NO completions count before the save
+    (Q20): the result gives it, as built. NOT "cannot be undone" (Q21, M2): a move back is possible once KGK adopts 11.1
+    again, so the words are conditional (§ NEW). A save that keeps the curriculum asks nothing (6.34).
+  Q9: a superseded version stays on KGK's Curricula, its items readable, while any KGK profile, ACTIVE OR ENDED, is
+    pinned to it, or it holds an item of KGK's own (PROPOSED rule, decided). With neither, it leaves the list.
+  Q10: a row says KGK's state in words: "Adopted on 2026-10-30" for the active one; "Superseded on 2026-10-30" over "‹N›
+    registrars still on it" for an old one (‹N› counts ACTIVE profiles only, S2). The College's "Open" / "Held back" only
+    on the College's and the Administrator's lists.
+  Q11: a local EPA's Deactivate dialog and Active help name whose trainees it stops measuring ("Kgosi Kgari Teaching
+    Hospital's trainees"); a national one's, "every institution that has adopted it". The title names the EPA:
+    "Deactivate KGK-001?". Every other built sentence stays (S8).
+  Q12: Create EPA, and the empty state's invitation, only when the caller has an adopted discipline (the Institutional
+    admin) or a College (the College admin). Otherwise "No EPAs yet" / "Your institution has not adopted a curriculum
+    yet, so there is no discipline to add an EPA to. Adopt one under Curricula." with Go to Curricula. CreateEpa and
+    UpdateEpa refuse an institution's own EPA in a discipline it has not actively adopted (PROPOSED refusal, decided).
+  Q13: every scale (platform-wide), under the subtitle "The rating ladders that assessment forms and committee reviews
+    use. A Wombat administrator sets them; they are shown here for reference." No column for which KGK's curricula use.
+  Q14: the items list is the page (captioned, stacked at 390, the standing notice above); KGK's item is added and edited
+    on form pages of their own, /admin/curricula/{Id:int}/items/new and /admin/curricula/{Id:int}/items/{ItemId:int}
+    (PROPOSED routes, decided).
+  Q15: T242 (c): the College's add of an EPA KGK holds as its own item stays refused, naming KGK (flow 16 draws it).
+  Q16: the rebuild's trigger stays PRIMARY (a rebuild loses nothing and is safe to repeat; not a destructive action;
+    M3); the dialog opens on Cancel as built; a failure reads "The rebuild failed, and nothing was changed. Try again, or
+    come back in a few minutes." with no exception's text; "Semester tallies written" keeps its name.
+  Q17: the build folds in T291 items 1 and 4's page half, C17, the 1.19 widening, the sweep (Q2) and its command rule
+    (Q12); T301 (Q5); T326's scales subtitle and the same kind of words on Curricula and EPAs; these pages' halves of
+    T323, T329 (A6), T272 and T325 (AdoptedOn); Q6–Q11; the brief's § 5 new faults. T242, T357, T381, T171, T139 and
+    T291 items 2, 3, 6 and 8 stay their own.
+  Q19 (the words): "EPA unavailable" / "This EPA does not exist, or you cannot open it." / Go to EPAs; "Curriculum
+    unavailable" / "This curriculum does not exist, or you cannot open it." / Go to Curricula; "Item unavailable" /
+    "This curriculum item does not exist, or you cannot change it." / "Go to Items of ‹curriculum›". Each in its page's
+    own place (the shell, its menu item lit: EPAs, Curricula, Curricula), its tab "‹h1› · Wombat"; never an id.
+
+CORRECTIONS (round 1's assessment § 7; round 2's review checks each by number; the boards each fixes):
+  M1 (R2-D01 to R2-D05; Spec): no gendered pronoun for a person anywhere. Wombat stores none. "keeps her on 11.1" →
+    "keeps Anele Dlamini on 11.1"; "his completions" → "Sipho Ndlovu's completed activities"; "his progress page" →
+    "Sipho Ndlovu's progress page"; "He leaves…" goes. This message's own words are written so; check every sentence a
+    board adds, the annotations too.
+  M2 (R2-A05, R2-A08, R2-D02, R2-D03; Spec): Q7 drawn: an older version is a row of "Open for adoption" with "Adopt…",
+    its dialog saying it supersedes the newer one; P5 and its refusal are gone. The move's words are conditional (§ NEW):
+    never "cannot be undone", "leaves 11.1 for good" or "cannot be moved back" without the condition.
+  M3 (R2-F01 to R2-F05; Spec Button system row): "Rebuild progress" is a PRIMARY button, as built, with no "…" (it is not
+    a destructive trigger); drop "a rebuild" from the Spec's Button system row.
+  M4 (R2-B*, R2-C*; Spec; f15r2.css): the owner mark is words, .muted .text-sm, on a line under the EPA's title, never a
+    badge and never badge-draft (which means a draft); N1 goes.
+  M5 (Steps): every step whose Expect changes is a row with its new Expect, not only the brief's 16: 1.10, 1.18, 2.44,
+    6.13, 6.17, 6.29, 6.30, 6.31, A.5.2, A.7.9 and A.7.10 too, and "unchanged" said where so (§ STEPS).
+  M6 (R2-B09, R2-B12): KGK's item's edit page draws EPA as a SELECT (required), offering the item's own EPA and the
+    caller's own EPAs not on the curriculum (the picker rule; on 11.2 that is KGK-001 alone), as UpdateCurriculumItem
+    accepts today; never "EPA as text". T381 (a changed item EPA after an end) stays its own.
+  S1 (R2-A*): no "Adoption history" section; its rows repeat the rows above.
+  S2 (R2-A05, R2-A06; Spec): Q9's rule (an active OR ended profile, or an own item) keeps 11.1 listed; the row's count
+    is ACTIVE profiles: 3 at 6.32 and 6.33 (Anele Dlamini, Nomsa Mahlangu, Sipho Ndlovu), 2 after 6.36. Lerato Molefe's
+    ended profile keeps 11.1 readable and is not counted.
+  S3 (Spec DATA): add an open version's Effective and item count; a curriculum's Adopted on (Curricula, the items
+    subtitle); Superseded on, which nothing stores (derived from the next adoption's AdoptedOn for the same institution
+    and discipline); "Newer than…"/"Older than…" ordered by EffectiveFrom (Inf: the College never back-dates); the
+    owner's name on EpaDto; KGK's own items on the superseded version, for the dialog.
+  S4 (Spec; no board): the links the merge re-points, each with its words (§ NEW, "Re-pointed").
+  S5 (R2-A12; Spec): the adoption parts ("Open for adoption", Adopt, "An institution's curricula") go by the policy
+    AdministratorOrInstitutionalAdmin, not Curricula's NationalCatalogueAccess; the College admin's Curricula draws none
+    of them (R2-A12).
+  S6 (R2-C*): no Owner column; the Administrator's list keeps today's College column, and the mark names the
+    institution.
+  S7 (R2-C*): EPA Status in plain words, "Active" / "Inactive", as built; no badge.
+  S8 (R2-C12, R2-C13): the Deactivate dialog keeps every built sentence (below); only its title and whose trainees
+    change (Q11).
+  S9 (R2-C10): the national record has no "On your institution's curricula" section.
+  S10 (R2-E*): Q13's subtitle; no "On your curricula" column; Levels as the count alone ("6"), as built.
+  S11 (R2-D*): the profile's built labels: "Programme start date" (required), "Expected completion date" (not required,
+    help "Leave this empty to derive it from the curriculum window."), "Save profile"; when the picker moved, "Save
+    profile and move…" (PROPOSED, THIS ASK: S11's first option).
+  S12 (every board): no bracket where this message gives the value: the rebuild's subtitle as built; the menus
+    (FIXTURES); ‹N› registrars = 3 (then 2); the completion count only in the result (Q20); the PAED titles,
+    categories and item cells (FIXTURES).
+  S13 (every 390 board): no inline style at all (no min-height, width, margin or flex-direction). The 44 px and the
+    stacking come from the system: .clinic-table--stack-wide .btn below 641 px; .user-page .form-actions and
+    .dialog-card .form-actions stack (column-reverse: the primary or the confirm on top, the safe button first in the
+    DOM); .user-page .form-actions .btn is full width. Keep the 1280 DOM order.
+  S14 (f15r2.css; Spec § CLASSES): no NEW class in place of N1–N8 (each named in § CLASSES).
+  S15 (boards below): draw what round 1 left out: 768 (marked); the Administrator on the items page (R2-B17); an EPA
+    page's own load error (R2-C18); a refused own-item add and save (R2-B05, R2-B12); the College admin's Curricula
+    (R2-A12); the Administrator adopting for KGK past Show (R2-A10, R2-A11).
+  S16 (R2-B01, R2-B08): the items table fits 1280 beside the sidebar with no sideways scroll: seven columns, Scale folded
+    into Minimum level and window and weight into one cell (§ ITEMS TABLE).
+  N1 one counting rule on the Steps board and every board's intro (§ STEPS). N2 one word: "adopted", never "follows"
+    (the empty states, the refusal, the lines; this message is written so). N3 1.19's EPA empty state is Q12's words.
+    N4 the EPA page's results are the built ones ("EPA saved.", "EPA deactivated.", …); round 1's longer results are
+    not drawn. N5 a StatePanel's empty title is .state-panel-title, never .panel-title. N6 no id on any page (Q19).
+    N7 the Administrator's Curricula subtitle is NEW (§ NEW).
+
+THE OTHER POINTS OF THE ASSESSMENT (each on its board): the dialogs scroll inside themselves at 390 when their body
+  runs long (the adoption's three paragraphs); the item form page's checkbox rows (Tools, Opportunistic) are 44 px at
+  390 by the page's own scope (§ CLASSES; note: Minimum level is RungPicker, a SELECT, not radios); Curricula, the items
+  page and the profile at 768; § Page-level patterns' Unavailable list gains three pages; the NavMenu table loses
+  Curriculum adoptions; the EPA record and the item form page reuse flow 12's .user-page and .user-section (say so on
+  the Spec: their 44 px and stacked actions come from them, as flows 13 and 14 did).
+
+LESSONS FROM FLOWS 12–14's ROUND 2 (their reviews' must-fixes; do not repeat them):
+  - Behaviour the boards assume is written on the Spec as the change it needs (a command's parameters, a query, a
+    policy), never implied. See § SPEC BOARD's changes.
+  - Steps rows quote values person by person, each checked against FIXTURES.
+  - A full-width rule at 390 targets what stacks (.form-actions .btn, a row's action), never a bare .btn.
+  - A long value (a 150-character EPA title, "Neonatal team Clinical Competency Committee", a curriculum's name with its
+    version) wraps by a class in its own cell (overflow-wrap: anywhere; minmax(0, 1fr) in a detail-list); measure every
+    board at 1280, 1100, 768 and 390 and say on the Spec that nothing scrolls sideways. A canvas-only chip wraps too.
+  - A read-out is dl with dt and dd (dl.detail-list); .field-label exists nowhere. Reuse a shipped class as shipped;
+    never redeclare one (.detail-list, .user-section, .dialog-card, .submit-check, .form-section-head).
+  - ARIA: aria-controls only to an element that exists; a field's help outside its <label>, named by aria-describedby;
+    a refusal first in aria-describedby; a standing notice is Alert with Role=""; status only for what arrives with a
+    result; a stacked table keeps DataTable's roles.
+  - In stacked form actions the primary is on top; in a dialog at 390 the confirm on top.
+
+FIXTURES (the T387 replay, wombat_scenario_t387; D = 2026-10-30, the day Acts 1–6 were played, so every adoption below
+  is dated D; use these words):
+  People (names as stored, no titles; the product stores no pronoun):
+    Nolwazi Mbatha, Institutional admin, Kgosi Kgari Teaching Hospital (KGK, institution 2), mbatha@kgk.wombat.local.
+      Top bar "Nolwazi Mbatha"; "Acting as Institutional admin". Menu after the build: Home; People (Invitations,
+      Trainees, Assessors, Users); Curriculum (Curricula, EPAs, Activity types, Entrustment scales); Reviews (Decisions
+      due, Committee reviews, Decision panels, Entrustment decisions); Access and audit (SSO mappings, Audit log); then
+      My data rights. (Today Curriculum adoptions heads the Curriculum group: draw it nowhere.)
+    devadmin, display name "Demo Administrator", Administrator; "Acting as Administrator". Menu: Home; Platform
+      (Scheduled jobs, Audit log, SSO mappings, Data rights requests); Organisations (Institutions, Colleges); People
+      (Users, Invitations); Catalogue (EPAs, Curricula, Activity types, Entrustment scales); Reviews (Decisions due,
+      Committee reviews, Decision panels); then My data rights.
+    Anton Kruger, College admin, College of Paediatricians of South Africa (CPSA); "Acting as College admin". Menu, flat:
+      Home, Specialities, EPAs, Curricula, Activity types; then My data rights. Only R2-A12 draws him.
+    Sipho Ndlovu, Trainee, ndlovu@kgk.wombat.local, profile 6 (/admin/trainees/edit?id=6), programme start 2026-01-15,
+      expected completion 2030-01-14; on 11.1, moved to 11.2 at 6.36. Menu: Home, Log an activity, My activities, MSF
+      reports, My committee reviews, Export portfolio; under the rule My progress, My data rights.
+    Anele Dlamini, Trainee, profile 3, start 2024-01-15, expected completion 2028-01-14, saved as 2028-07-14 at 6.34;
+      stays on 11.1.
+    Nomsa Mahlangu, Trainee, on 11.1 (counted, not drawn). Lerato Molefe, graduated in Act 5, her ended profile on 11.1
+      (S2; not drawn). Their STARs (6.22) are flow 09's.
+    A second institution, its own EPAs, a 150-character EPA title: no cast member ("Illustration", ‹institution›,
+      ‹code›, ‹title›).
+  The catalogue:
+    Colleges: College of Paediatricians of South Africa (CPSA); Demo College.
+    Disciplines (speciality / sub-speciality): Paediatrics / Paediatrics; Paediatrics / Neonatology; General Medicine /
+      General Internal Medicine (Demo College's).
+    Curricula (ids as the replay printed them): IM Core Curriculum (2026.1), Demo College, General Medicine / General
+      Internal Medicine, effective 2026-01-01, 1 item, Open, curriculum 1 (out of KGK's scope as an items page until
+      adopted: R2-B16); Paediatric EPA Curriculum (11.1), CPSA, Paediatrics / Paediatrics, effective 2026-01-01, 15
+      national items, curriculum 2; Neonatology EPA Curriculum (1.0), CPSA, Paediatrics / Neonatology, effective
+      2026-10-30, 0 items, Held back from 6.13 on, curriculum 3; Paediatric EPA Curriculum (11.2), CPSA, Paediatrics /
+      Paediatrics, effective 2026-10-30, 16 national items, curriculum 4, Held back at 6.29, Open from 6.31.
+    KGK's adoptions: 11.1 adopted D at 1.20, Superseded D at 6.32; 11.2 adopted D at 6.32, active. Active profiles on
+      11.1: 3 at 6.32 and 6.33, 2 after 6.36; on 11.2: 0 at 6.32, 1 after 6.36.
+    EPAs: PAED-001 to PAED-015, CPSA, Paediatrics / Paediatrics, category Core (the seed sets none; the entity's default
+      is Core), Active (PAED-012 Inactive from 6.17 to 6.23; PAED-012 is EPA 13):
+      PAED-001 — Providing paediatric emergency care to children
+      PAED-002 — Managing common paediatric presentations
+      PAED-003 — Providing intensive care to children
+      PAED-004 — Managing common neonatal conditions
+      PAED-005 — Providing neonatal care in intensive and high-care settings
+      PAED-006 — Managing long-term health conditions (LTHCs) (from 6.14: "… (LTHCs) in children")
+      PAED-007 — Maintaining and promoting the health and well-being of children
+      PAED-008 — Evaluating and managing neurodevelopmental and behavioural presentations in children
+      PAED-009 — Providing care for an adolescent patient
+      PAED-010 — Leading and operating within a clinical team
+      PAED-011 — Managing population health challenges
+      PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams
+      PAED-013 — Managing child protection, legal and ethical aspects of children at risk
+      PAED-014 — Providing palliative and end-of-life care
+      PAED-015 — Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and
+        research
+      PAED-016 — Transitioning adolescents with long-term conditions to adult care (added at 6.28, Core, EPA 18)
+      PAED-012's description: "This EPA focuses on sharing clear health information with patients and their families,
+        and with colleagues across the healthcare team. The registrar must convey medical information in an
+        easy-to-understand way, listen well, and work effectively as a team member." Its required knowledge and skills,
+        one per line: "12.1 Communicate effectively with patients and families in emergency settings", "12.2 Communicate
+        effectively with patients and families in the neonatal ICU, neonatal high care and PICU", "12.3 Counsel
+        caregivers about immunisation, growth charts and dysmorphism", "12.4 Demonstrate counselling for common
+        presentations", "12.5 Lead a counselling session with the family of a child with an LTHC", "12.6 Demonstrate
+        counselling in palliative care scenarios", "12.7 Communicate effectively with healthcare colleagues".
+      KGK-001 — Running a paediatric outreach clinic at a district hospital: KGK's own, EPA 17, Paediatrics /
+        Paediatrics, Elective, Active; description "Plans and runs a monthly outreach clinic at a North West district
+        hospital, with its referral follow-up."; required knowledge and skills empty.
+      EPA-001 — Clerk, assess, and present a general medical admission: Demo College, General Medicine / General
+        Internal Medicine, EPA 1 (R2-C11's id; out of KGK's scope).
+    The items of 11.1 (Step 1.18; every row scale CPSA Paediatric Entrustment Scale v11.1, completion window 12, weight
+      "—"; target over decision; minimum; minimum by training year 1 / 2 / 3 / 4; tools):
+      PAED-001 3 per semester, Decided each semester; 5; 3a / 3b / 4 / 5; CBD, CCA, Clinical audit, DOPS, Mini-CEX, MSF,
+        RCA, Reflective exercise
+      PAED-002 3 per semester, Decided each semester; 5; 3a / 3b / 4 / 5; CBD, CCA, Chart-stimulated recall, Clinical
+        audit, Direct observation, DOPS, Mini-CEX, MSF, RCA
+      PAED-003 3 per semester, Decided each academic year; 5; 3a / 3b / 4 / 5; CBD, CCA, Clinical audit, DOPS, Mini-CEX,
+        MSF, RCA, Reflective exercise
+      PAED-004 3 per semester, Decided each semester, by the Neonatal team Clinical Competency Committee; 5; 3a / 3b / 4
+        / 5; CBD, CCA, Direct observation, DOPS, Mini-CEX, MSF
+      PAED-005 3 per semester, Decided each semester, by the Neonatal team Clinical Competency Committee; 5; 3a / 3b / 4
+        / 5; CBD, DOPS, MSF
+      PAED-006 2 per semester, Decided each academic year; 5; 3a / 3b / 4 / 5; CCA, Direct observation, DOPS, Mini-CEX,
+        MSF
+      PAED-007 1 per semester, Decided each academic year; 5; 3a / 3b / 4 / 5; Direct observation, DOPS, Mini-CEX, MSF
+      PAED-008 1 per academic year, Decided each academic year, as opportunity allows; 4; 2 / 3a / 3b / 4; CBD, DOPS,
+        Mini-CEX, MSF, Reflective exercise
+      PAED-009 1 per academic year, Decided each academic year, as opportunity allows; 4; 2 / 3a / 3b / 4; CBD, Direct
+        observation, MSF
+      PAED-010 3 per semester, Decided each semester; 5; 3a / 3b / 4 / 5; Direct observation, MSF
+      PAED-011 1 per academic year, Decided each academic year; 4; 2 / 3a / 3b / 4; CBD, Direct observation, MSF
+      PAED-012 3 per semester, Decided each semester; 5; 3a / 3b / 4 / 5; CBD, Chart-stimulated recall, Mini-CEX, MSF
+      PAED-013 1 per academic year, Decided each academic year, as opportunity allows; 4; 2 / 3a / 3b / 4; CBD, Direct
+        observation, Mini-CEX, MSF
+      PAED-014 1 per academic year, Decided each academic year; 4; 2 / 3a / 3b / 4; CBD, MSF, Reflective exercise
+      PAED-015 1 per semester, Decided each academic year; 4; 2 / 3a / 3b / 4; CBD, Direct observation, Learner
+        feedback, MSF, Portfolio and logbook review
+    The items of 11.2: the same fifteen, but PAED-011 "2 per academic year"; plus PAED-016 1 per academic year, Decided
+      each academic year; 4; 2 / 3a / 3b / 4; CBD, Mini-CEX, MSF (16 national).
+    KGK's own item, on 11.1 (6.26) and on 11.2 (6.33): KGK-001, 1 per academic year, No decision cadence ("No decision
+      cadence" in the table; "No published cadence" is the select's option), decided by the trainee's general panel, not
+      opportunistic, CPSA Paediatric Entrustment Scale v11.1, minimum 3a, no minimum by training year, window 12, weight
+      "—", tools Direct observation. Its item ids: ‹item id›.
+    Scales (the list orders by name): CNSA Neurology Entrustment Scale, "Supervision ladder for CNSA EPAs.", 6 levels
+      (from 6.6; 5 at 6.5; absent at 1.22): Observe only, Direct supervision, Indirect supervision, Distant supervision,
+      Unsupervised practice, Supervises others; CPSA Paediatric Entrustment Scale v11.1, "Six rungs in four bands. Only
+      level 3 is split: the gap between "check everything with me" and "call me if you are worried" is the whole of a
+      registrar's third year.", 6 levels (1, 2, 3a, 3b, 4, 5); O-R Scale, "Standard 1-5 observation-to-entrustment
+      scale.", 5 levels (Observe only, Direct supervision, Indirect supervision, Independent, Supervises others).
+    The rebuild's result (6.38): Activities re-read 15, Curriculum items credited 14, Semester tallies written 9, Stale
+      tallies removed 0, Completions re-stamped 15.
+    The move's result (6.36, built, its first sentence bold): "Trainee profile saved. 1 completion was checked against
+      11.2, and 1 counts towards it." Other built results: "Trainee profile saved." (no move); "Trainee profile saved.
+      Sipho Ndlovu has no completions to count against 11.2."; "Trainee profile saved. N completions checked again from
+      the new programme start date."
+  CAPTURE-ONLY (brackets unless a capture arrives): My progress's subtitle, period lines and the figures 6.35 noted
+    (G); the profile's "The account" section and End this programme's contents (flow 13's, not redrawn: say "as flow
+    13 built it"); the Trainees list (not drawn).
+  Words that stay (built): every page's title as its h1 with " · Wombat"; the items page's standing notice, verbatim:
+    "The College sets this curriculum's national items, so they are read only here. Your institution's own items apply
+    only to its trainees, and you can add, edit and remove them. A target and its period are read live: changing one
+    changes what every trainee of your institution on this curriculum is measured against, including periods that have
+    already closed. A tool list is checked when an activity is filed and submitted, and never takes back credit already
+    earned." (Alert warning, Role=""); the paused EPA's info notice: "PAED-012 is inactive, so its item is not in force:
+    no trainee can choose it for a new activity, its credit is paused, and no running programme's progress page or
+    dashboard shows it (a programme that has ended keeps it on its record). Reactivating an EPA on its own page brings
+    its item back, and credits what was completed against it meanwhile." and the row's "(inactive: not in force)";
+    "Every EPA your institution could add is already on this curriculum: each national EPA of Paediatrics, and each of
+    your institution's own EPAs of Paediatrics. To add an item of your own, first create a local EPA of Paediatrics.";
+    the item form's labels, options and helps (Target, Per, Decision cadence, Decided by, Opportunistic "Decided as
+    rotation or opportunity allows", Entrustment scale with "Suggested because every item on this curriculum is pinned
+    to it.", Minimum level*, Minimum by training year, Completion window (months), Weight, Tools with its help);
+    "Adding is off until every minimum is a rung on CPSA Paediatric Entrustment Scale v11.1."; "Add item"; "Curriculum
+    item added."; "Curriculum item saved."; "KGK-001 removed from this curriculum."; the Remove dialog's body with an
+    em dash: "Remove KGK-001 — Running a paediatric outreach clinic at a district hospital from Paediatric EPA
+    Curriculum (11.2)? Its target, minima, decision and tool list are deleted, and so is each trainee's tally toward it.
+    Your institution's trainees on this curriculum are no longer measured against this EPA. This cannot be undone.",
+    confirm "Remove item" (danger); the EPA form's labels (Sub-speciality*, Code*, Title*, Description, Required
+    knowledge and skills, Category* Core/Elective, Status with Active); "EPA saved.", "EPA deactivated.", "EPA saved and
+    deactivated.", "EPA reactivated. No activity was completed against it while it was inactive, so no progress
+    changed." / "EPA reactivated. 1 activity completed against it while it was inactive now counts towards progress.";
+    "An EPA with the same code already exists for this sub-speciality." (a real duplicate only, T272); the rebuild's
+    subtitle "Recalculate every trainee's curriculum targets from their completed activities.", its three paragraphs
+    whole (the brief's § 1 quotes their starts; draw them as built: "Each completed activity is credited to the
+    curriculum items it matches, in the semester that contains its encounter date. A rebuild throws the stored tallies
+    away and credits every completed activity again, in the order the activities were completed." / "Run it after
+    changing where the semester boundary falls, after correcting a trainee's encounter dates, or when a trainee's
+    figures look wrong. It is safe to run more than once. It runs as one transaction, so if it fails, nothing changes.
+    It also runs by itself at startup whenever the stored tallies are empty but completions have credited." / "A
+    rebuild credits each activity against the curriculum as it is today: its items, targets and minimum levels. Only
+    whether an EPA was active is judged as of when the activity was completed. An inactive EPA keeps the progress it
+    earned while it was active. An activity completed against it since it was deactivated counts once the EPA is
+    reactivated, and reactivating it credits those activities without a rebuild."), its dialog "Rebuild curriculum
+    progress?" with its built body, confirm "Rebuild progress", "Rebuilding…", "Curriculum progress was rebuilt." over
+    the five figures in dl.details-list; the profile's move refusal "A trainee can be moved only into the curriculum
+    version this institution has adopted for their discipline, so nothing was saved."; the command's stale guards
+    "This institution has already adopted this curriculum version." and "The selected curriculum could not be found.".
+  Words from round 1's boards, kept (PROPOSED there, accepted by the assessment):
+    Curricula (Institutional admin): subtitle "The College curricula Kgosi Kgari Teaching Hospital trains against, and
+      the versions open to it."; h2 "Curricula you train against" and "Open for adoption"; the empty "No curricula yet"
+      / "Your institution has not adopted a curriculum yet. Adopt one below before admitting trainees."; the row cells
+      "15 national · 1 your own", "Adopted on 2026-10-30", "Superseded on 2026-10-30" over "3 registrars still on it";
+      the first adoption's result "Paediatric EPA Curriculum (11.1) adopted." (bold) "New admissions to Paediatrics /
+      Paediatrics join it."; the superseding result "Paediatric EPA Curriculum (11.2) adopted." (bold) "New admissions to
+      Paediatrics / Paediatrics join it. Paediatric EPA Curriculum (11.1) is superseded; its 3 registrars stay on it
+      until each is moved."; T301's refusal "This curriculum version is not open for adoption." (bold, Q5's) "Its
+      College has held it back, so nothing was adopted." with the list read again; the load error "Could not load the
+      curricula." then "Nothing has changed. Try again, or come back in a few minutes." and Try again.
+    The Administrator: h2 "All curricula" and "An institution's curricula"; Institution "— Select an institution —" and
+      Show; "Choose an institution, then Show, to see what it trains against and adopt for it."; under it, for KGK, h3
+      "Curricula Kgosi Kgari Teaching Hospital trains against" and "Open to Kgosi Kgari Teaching Hospital".
+    The items page: h1 "Items of Paediatric EPA Curriculum (11.1)"; subtitle "College of Paediatricians of South Africa ·
+      Paediatrics / Paediatrics · effective 2026-01-01 · adopted by your institution on 2026-10-30" (DATA); 11.2's line
+      "A new version carries no institution's own items. Your item on 11.1 stays there." (DATA: KGK's own items on
+      another version); the add page h1 "Add your institution's own item", subtitle "On Paediatric EPA Curriculum
+      (11.1). It applies only to Kgosi Kgari Teaching Hospital's trainees."; the edit page h1 "Edit KGK-001 — Running a
+      paediatric outreach clinic at a district hospital", subtitle "Your institution's own item on Paediatric EPA
+      Curriculum (11.2)"; Save item; the load error "Could not load this curriculum's items." with the fixed line.
+    EPAs: the create page's subtitle "An EPA of your institution's own. It applies only to Kgosi Kgari Teaching Hospital's
+      trainees."; the national record's subtitle "College of Paediatricians of South Africa · Paediatrics / Paediatrics
+      · Set by the College, so read only here" and its h2 "About this EPA"; "The EPA could not be saved. Nothing has
+      changed. Try again, or come back in a few minutes." (a failure that is not a duplicate, T272); the load errors
+      "Could not load the EPAs." and "Could not load this EPA." with the fixed line.
+    The scales: "Could not load the entrustment scales." with the fixed line.
+    The move: "Move Sipho Ndlovu to Paediatric EPA Curriculum (11.2)?" (Q8), confirm "Move and save"; after the move,
+      under the picker, "The version your institution has adopted for Paediatrics / Paediatrics." (N2's word).
+  NEW words of this message (rewrites without pronouns, M1; conditional words, M2; N2's word; the Administrator; the
+    links re-pointed):
+    The EPA list's subtitle (Institutional admin): "The EPAs of the curricula Kgosi Kgari Teaching Hospital has adopted.
+      The College's are read only; your institution's own are yours to change." (C2's, N2's word). The Administrator's:
+      "Every College's EPAs, and every institution's own." (C2's).
+    The Administrator's Curricula subtitle (N7): "Every College's curricula; and, for one institution, what it trains
+      against and may adopt."
+    The line under an "Open for adoption" row's name, .muted .text-sm: a first adoption "Your institution has adopted no
+      Paediatrics / Paediatrics version yet." (A2's, N2's word); a newer one "Newer than the version your institution
+      has adopted (11.1)."; an older one "Older than the version your institution has adopted (11.2)."
+    "Open for adoption"'s intro: "Adopting a version makes it the one that new admissions to its discipline join.
+      Adopting another version of a discipline your institution has adopted supersedes the current one: registrars
+      already admitted stay on theirs until each is moved, and your institution's own items are not carried over."
+    The adoption's dialog (Q6, S2), title "Adopt Paediatric EPA Curriculum (11.2) for Kgosi Kgari Teaching Hospital?";
+      "It supersedes Paediatric EPA Curriculum (11.1) for every new admission to Paediatrics / Paediatrics at Kgosi Kgari
+      Teaching Hospital." / "The 3 registrars on 11.1 stay on it until each is moved on their profile." / "Your
+      institution's own item on 11.1, KGK-001, is not carried over: add it again on 11.2."; Cancel; Adopt 11.2. Going
+      back ("Illustration", M2): "Adopt Paediatric EPA Curriculum (11.1) for Kgosi Kgari Teaching Hospital?" / "It
+      supersedes Paediatric EPA Curriculum (11.2) for every new admission to Paediatrics / Paediatrics at Kgosi Kgari
+      Teaching Hospital." / "The ‹N› registrars on 11.2 stay on it until each is moved on their profile." / ‹the own-
+      items line, DATA›; Cancel; Adopt 11.1. With no registrar or no own item on the superseded version, its sentence is
+      left out, never "0 registrars".
+    The EPA page's Active help on KGK's own EPA (Q11): "An inactive EPA cannot be chosen by Kgosi Kgari Teaching
+      Hospital's trainees for a new activity and is not a target on their running programmes' progress pages or
+      dashboards; a programme that has ended keeps it on its record. Evidence already recorded against it is kept, and so
+      is the progress it earned while it was active. An activity completed against it while it is inactive counts
+      towards nothing until the EPA is reactivated, and reactivating it credits those activities."
+    The Deactivate dialog (Q11, S8), title "Deactivate KGK-001?"; body "It can no longer be chosen for a new activity,
+      and it stops being a target on running programmes' progress pages and dashboards, for Kgosi Kgari Teaching
+      Hospital's trainees. A programme that has ended keeps it on its record, marked no longer in use. The progress it
+      has earned is kept. An activity completed against it while it is inactive counts towards nothing until it is
+      reactivated. You can reactivate it on this page."; Cancel; Deactivate (danger). A national EPA's (6.17, the
+      College's page, no board): "Deactivate PAED-012?" and "… for every institution that has adopted it."
+    The Sub-speciality help on Create EPA: "The disciplines your institution has adopted." P7's refusal under
+      Sub-speciality ("Illustration", a stale page): "Your institution has not adopted Paediatrics / Neonatology, so an
+      EPA cannot be added to it."
+    The move's words under the picker (.submit-check), Anele Dlamini with 11.1 kept (6.34): "Anele Dlamini is on
+      Paediatric EPA Curriculum (11.1), which your institution superseded on 2026-10-30. Keeping it keeps Anele Dlamini
+      on 11.1." Sipho Ndlovu with 11.2 chosen (6.36): "When you save, Sipho Ndlovu moves to Paediatric EPA Curriculum
+      (11.2)." (bold) "Sipho Ndlovu's completed activities are counted again against 11.2 in the same save, so Sipho
+      Ndlovu's progress page reads 11.2's targets at once. Sipho Ndlovu cannot be moved back to 11.1 while 11.2 is the
+      version your institution has adopted." (M2, N2's word).
+    The move's dialog body (Q8, Q20, M2): "Sipho Ndlovu's completed activities are counted again against 11.2 as the
+      profile saves, and from then on they credit 11.2's items." / "Sipho Ndlovu cannot be moved back to 11.1 while 11.2
+      is the version your institution has adopted."
+    The scales' empty state to a reader ("Illustration"; the seed makes it unreachable): "No scales yet" / "A Wombat
+      administrator has not set up an entrustment scale yet." (today's "Create the first entrustment scale…" stays the
+      Administrator's).
+    The rebuild's failure (Q16's words; an Alert danger, focused): "The rebuild failed, and nothing was changed. Try
+      again, or come back in a few minutes."
+    Re-pointed (S4; no board, the Spec lists each): OnboardingLinks.CurriculumAdoptions → /admin/curricula (renamed for
+      Curricula); Invite a person "Nothing is adopted at Kgosi Kgari Teaching Hospital yet, so roles that need a
+      speciality cannot be invited. Adopt a curriculum under Curricula." (the link "Curricula"); Admit and the profile
+      "This institution has adopted no curriculum yet, so no trainee can be admitted. Adopt one under Curricula, then
+      admit the trainee." (the link "Curricula"); Home's Curriculum card footer "Open Curricula" (flow 12's card, its
+      link only); Curricula's own empty body (above).
+  PROPOSED (THIS ASK: choices this message makes, for the review to weigh; list them on the Spec):
+    T1 Q7's going back is drawn by listing a superseded, still-open version in "Open for adoption" too, with "Adopt…"
+      and the "Older than…" line (the picker rule: the command accepts it); its row in "Curricula you train against"
+      keeps Items alone (one action a row). The alternative, "Adopt again…" on the superseded row, is not drawn.
+    T2 "Save profile and move…" as the profile's submit when the picker moved (S11's first option).
+    T3 The Remove dialog's title names its item: "Remove KGK-001 from Paediatric EPA Curriculum (11.2)?" (the brief's
+      "every dialog names its target"), its body as built with the em dash; the trigger "Remove…" (outline).
+    T4 The items page and its two form pages serve EVERY caller who may add or edit an item, the College admin and the
+      Administrator included: one editor, so the edit row in a cell goes for all (Inf from Q14's "the College's page
+      would follow"; flow 16 restyles the College's words). 1.18, 6.30 and A.7.10's Expects change (§ STEPS).
+    T5 No "Back to curricula" or "Back to curriculum" on the items page for anyone: the trail is the way back, and the
+      College reaches its curriculum's own page by Curricula's Edit (flow 16 may add a header link).
+    T6 Create EPA's submit stays "Save" (built; 6.25's Do unchanged); round 1's "Create EPA" button is not drawn.
+    T7 A page that cannot load its record titles itself by what it knows: an EPA's page "EPA", the items page "Curriculum
+      items", each with its trail's ancestors and the load error (never "unavailable" for a read that threw).
+    T8 The rebuild's failure offers no Try again button: Rebuild progress stays on the page, the focus on the alert.
+    T9 The College's and the Administrator's Curricula Status reads "Open" / "Held back" (Q5, Q10's words in the
+      College's list), so 6.13, 6.29 and 6.31's Expects read "Held back" where they read "Inactive"; the College's box
+      itself is flow 16's.
+    T10 The items table at 1280 in seven columns (§ ITEMS TABLE), its caption "Paediatric EPA Curriculum (11.1)'s items,
+      in EPA order" and its h2 "Items (15)".
+    T11 The Remove result keeps the built "KGK-001 removed from this curriculum." focused at the list's top.
+    T12 On KGK-001's page the Active box and Deactivate… stay as built (C1); the result is the built one (N4).
+
+CLASSES (round 1's N1–N8, each replaced by what app.css already ships; S14; name the class on the Spec's class table):
+  N1 .owner-line → .muted .text-sm on a line under the EPA (app.css .muted, .text-sm), M4's words.
+  N2 .owner-section-note → dropped (B1 and C1 not picked); a one-line note is .muted.
+  N3 .section-head → .form-section-head (an h2 with its action on its baseline; wraps; app.css :1481).
+  N4 .epa-record → .user-page with .user-section per h2 section, dl.detail-list inside (flow 12's; app.css :6515, :6534).
+  N5 .move-check → .submit-check under the picker (info tint, the action-blue stripe; app.css :1629).
+  N6 .result-figures → the built dl.details-list under the rebuild's result.
+  N7 .prose-block → the built .form-container paragraphs (the rebuild page as built).
+  N8 .page-actions-stack → .form-actions, stacking under .user-page and .dialog-card at 390 (app.css :6605).
+  The one shipped rule round 2 may add (NEW, say so): the item form pages' 390 scope, .curriculum-item-page, giving
+  .check-grid .form-check and its label a 44 px row below 641 px, as .activity-form and .review-page do for theirs.
+  Name it on the Spec and keep it in f15r2.css apart from the canvas rules. Nothing else NEW; no new token, no new
+  badge, no new icon (Icon by its Lucide name where one is drawn: book-open, list-checks, gauge, refresh-cw if any).
+
+ITEMS TABLE (B2 at fidelity; S16, T10): DataTable with StackWide (stacked from 900 px down, each cell labelled), seven
+  columns: EPA ("PAED-002 — Managing common paediatric presentations", the row's th scope="row"; under it, .muted
+  .text-sm, "Your institution's own item" or "(inactive: not in force)"); Target and decision ("3 per semester" over
+  "Decided each semester"; KGK's "1 per academic year" over "No decision cadence"); Minimum level ("5" over "CPSA
+  Paediatric Entrustment Scale v11.1"); Minimum by training year ("3a / 3b / 4 / 5", or "—" for none); Window and weight
+  ("12 months" over "Weight —"); Tools (wrapping); Actions (a national row "Set by the College." in a .muted span; KGK's
+  row Edit (a link to its page, named "Edit KGK-001") and Remove… (named "Remove KGK-001"), each .btn .btn-sm
+  .btn-outline in div.actions-cell). The Administrator's view names the owner ("Kgosi Kgari Teaching Hospital's own item";
+  "Edit KGK-001 (Kgosi Kgari Teaching Hospital's own item)"; DESIGN.md's T222 rule). Rows in EPA order, KGK-001 after
+  the PAED codes. Above the table, under the notices: the h2 "Items (15)" with, on its baseline (.form-section-head), the
+  primary link "Add your institution's own item" only when KGK has an EPA it could add; otherwise the built empty line
+  in .muted where the action would be (no Add offered: the picker rule).
+
+STATES TO DRAW (each at 1280 and 390, with the role's menu and the shell; 768 where marked). About 73 states: some 165
+  boards with their 390 and 768 twins, the Spec and the Steps (round 1 drew 17):
+  Curricula (A1; R2-A):
+    R2-A01 Mbatha, nothing adopted (1.19): the empty "Curricula you train against", "Open for adoption" with 11.1 and IM
+    Core, each with the first-adoption line and Adopt (no "…"); no Create curriculum (768 too). R2-A02 11.1 adopted
+    (1.20): the result focused at the page's top (ActionResult), 11.1 a row of "Curricula you train against" ("15
+    national · 0 your own", "Adopted on 2026-10-30", Items), "Open for adoption" with IM Core alone: 11.1 is not offered
+    again (768 too). R2-A03 the adoption's dialog on 11.2 (6.32), opening on Cancel; "Open for adoption" behind it with
+    11.2 ("Newer than…", Adopt…) and IM Core. R2-A04 Cancel: closed, nothing adopted, the focus back on "Adopt Paediatric
+    EPA Curriculum (11.2)…". R2-A05 adopted (6.32): the superseding result focused; 11.2 "Adopted on 2026-10-30" (16
+    national · 0 your own); 11.1 "Superseded on 2026-10-30" over "3 registrars still on it" (15 national · 1 your own);
+    "Open for adoption": 11.1 ("Older than…", Adopt…) and IM Core (768 too). R2-A06a 6.33 after the add on 11.2: 11.2 "16
+    national · 1 your own", 11.1 still "3 registrars still on it". R2-A06b the same page after 6.36: 11.1 "2 registrars
+    still on it" (two boards, never two states on one). R2-A07 T301's refusal (a stale page offered Neonatology EPA Curriculum (1.0), now
+    held back): the alert above "Open for adoption", focused, the list read again ("Illustration"). R2-A08 going back
+    (M2, T1, "Illustration"): the dialog for 11.1. R2-A09 devadmin, Curricula: her header (Curriculum progress outline,
+    Create curriculum primary), "All curricula" (the four, Status Open / Held back, Edit and Items named for each row;
+    768 too), "An institution's curricula" with no institution chosen (Show; the line). R2-A10 devadmin with Kgosi Kgari
+    Teaching Hospital chosen and Show pressed (as at 6.38: 11.2 adopted, 11.1 superseded, 2 registrars; open: 11.1 and IM
+    Core); her own adopted-nothing case is not drawn. R2-A11 devadmin's dialog for an adoption at KGK ("Illustration":
+    unplayed, coverage.md:198), naming the institution. R2-A12 Anton Kruger's Curricula: his rows (Neonatology 1.0, 11.2,
+    11.1), Status Open / Held back (T9), Edit and Items, Create curriculum; NO "Open for adoption" and no institution
+    section (S5). R2-A13 a second discipline adopted beside Paediatrics ("Illustration": IM Core Curriculum (2026.1)
+    adopted, Adopt with no question, its row "Adopted on ‹date›" beside 11.2's; 768 too). R2-A14 loading (the header, a skeleton
+    per section; no Adopt and no Show until the read is in). R2-A15 the load error (no empty state under it, no "Open for
+    adoption"). R2-A16 an adoption dated by the South African day: words only, on the Spec (T325, P13).
+  A curriculum's items (B2; R2-B):
+    R2-B01 1.21: 11.1 read-only, the standing notice, 15 rows "Set by the College.", no Add, the empty line (768 too).
+    R2-B02 6.22: PAED-012 paused (the info notice under the standing one; its row "(inactive: not in force)").
+    R2-B03 after 6.25: "Add your institution's own item" offered by "Items (15)". R2-B04 the add page before a rung
+    (6.26): EPA KGK-001 (the one option, chosen), Target 1, Per Academic year, the suggested scale and its line, Minimum
+    level a select with no rung, Add item off with its built line; Cancel; the trail Home › Curricula › Items of
+    Paediatric EPA Curriculum (11.1) › Add your institution's own item; at 390 the parent link "Items of Paediatric EPA
+    Curriculum (11.1)" (breadcrumb-parent, 44 px) and the fields one a row, the checkboxes 44 px. R2-B05 the add refused
+    ("Illustration": a stale page; the refusal under EPA, focused, every value kept; words ‹the command's refusal›).
+    R2-B06 added (6.26): back on the list, "Curriculum item added." focused, KGK-001's row last with its mark, Edit and
+    Remove…; the empty line back in place of the action (768 too). R2-B07 11.2 before the add (6.33): 16 rows, PAED-016
+    and PAED-011's "2 per academic year" among them, B1's line, the action offered. R2-B08 11.2 with KGK's item (17
+    rows; 768 too). R2-B09 KGK's item's edit page (6.33's item): the EPA select (M6), the values filled, Cancel, Save
+    item. R2-B10 Save item pressed: back on the list, "Curriculum item saved." focused. R2-B11 Cancel: back on the list,
+    the focus on the row's Edit. R2-B12 a save refused ("Illustration"; the refusal under its field, the values kept).
+    R2-B13 Remove…: the dialog (T3), opening on Cancel. R2-B14 removed: "KGK-001 removed from this curriculum." focused,
+    the row gone, the action offered again. R2-B15 "Item unavailable" (a College item's edit page typed by id; Go to
+    Items of Paediatric EPA Curriculum (11.2)). R2-B16 "Curriculum unavailable" (/admin/curricula/1/items, the Demo IM
+    Core curriculum, before KGK adopts it). R2-B17 devadmin on 11.2's items: KGK's row "Kgosi Kgari Teaching Hospital's
+    own item", every row Edit and Remove… (S15). R2-B18 loading (the header and the trail, a skeleton; no action).
+    R2-B19 the load error. R2-B20 seventeen rows with three of KGK's own ("Illustration": ‹codes›, ‹titles›; 768 too).
+  The EPA list and an EPA's page (C2's list, C1's own page; R2-C):
+    R2-C01 1.19: "No EPAs yet" with Q12's words and Go to Curricula; no Create EPA. R2-C02 1.21: fifteen rows, each title
+    a link to its record, "Set by the College." in each actions cell, Create EPA in the header (768 too). R2-C03 6.22:
+    PAED-012 "Inactive". R2-C04 Create EPA (6.25): Sub-speciality preset to Paediatrics / Paediatrics with its help,
+    the fields typed. R2-C05 a duplicate code: under Code, focused, everything kept. R2-C06 another failure: the alert
+    above the form, focused ("Illustration"). R2-C07 P7's refusal under Sub-speciality ("Illustration"). R2-C08 saved:
+    /admin/epas/17, h1 "KGK-001 — Running a paediatric outreach clinic at a district hospital", crumb "KGK-001", no Back
+    to EPAs, "EPA saved." focused, Status Active with the NEW help, Cancel, Deactivate…, Save. R2-C09 the list after
+    6.25: KGK-001 first with "Your institution's own EPA" under its title and Edit (named "Edit KGK-001 — Running a
+    paediatric outreach clinic at a district hospital"), the fifteen "Set by the College." (768 too). R2-C10 PAED-012's
+    record (Q2): h1 "PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams", the
+    subtitle, "About this EPA" (dl.detail-list: College, Sub-speciality, Category Core, Status Active), Description,
+    Required knowledge and skills (one per line); no form, no action. R2-C11 "EPA unavailable" (/admin/epas/1). R2-C12
+    Deactivate…: the dialog (Q11, S8), opening on Cancel. R2-C13 deactivated: "EPA deactivated." focused, Active
+    unticked, Deactivate… gone, h1 unchanged. R2-C14 reactivated: Active ticked and Save, nothing asked, "EPA reactivated.
+    No activity was completed against it while it was inactive, so no progress changed." focused (the other count as a
+    note). R2-C15 devadmin's list ("Illustration" for the volume: 40 rows across CPSA, Demo College, KGK's own and
+    ‹institution›'s own; the College column; "Kgosi Kgari Teaching Hospital's own EPA" and "‹institution›'s own EPA"
+    under titles; two own EPAs sharing a code read apart; Edit on every row; PagerControls only past one page; 768 too).
+    R2-C16 the list loading (no Create EPA until the read is in). R2-C17 the list's load error. R2-C18 an EPA page loading,
+    then its own load error (T7; S15). R2-C19 a 150-character EPA title ("Illustration": wrapping in its cell and in the
+    h1, never cut).
+  The move (D1 on flow 13's profile; R2-D):
+    R2-D01 6.34: Anele Dlamini's programme, the picker 11.1 and 11.2 with 11.1 chosen, the line under it, Save profile;
+    saved: "Trainee profile saved." focused (768 too). R2-D02 6.36 before Save: 11.2 chosen, the words, "Save profile and
+    move…". R2-D03 the dialog, opening on Cancel. R2-D04 Cancel: closed, nothing saved, every field as typed, the focus
+    back on "Save profile and move…". R2-D05 Move and save: the result focused (its first sentence bold), the picker read
+    again offering 11.2 alone, its line, the submit "Save profile" (768 too). R2-D06 a move refused (a stale page offering
+    a version no longer adopted; "Illustration"): the refusal under Curriculum, focused, the picker read again, every
+    field kept. R2-D07 the other built results ("Illustration": no completions to count; a changed start date), one
+    board. End this programme and the account section as flow 13 built them: not redrawn, a line on each board.
+  E, F, G (one proposal each, corrected):
+    R2-E01 1.22 two scales (CPSA, O-R); R2-E02 6.9 three (CNSA 6, CPSA 6, O-R 5): Q13's subtitle, no Create scale, no
+    actions column, stacked at 390 (768 too); R2-E03 loading; R2-E04 the load error; R2-E05 the reader's empty state
+    ("Illustration").
+    R2-F01 6.38 the page (devadmin, Home › Curricula › Curriculum progress, Curricula lit), the built subtitle and three
+    paragraphs, Rebuild progress PRIMARY (M3); R2-F02 the dialog, opening on Cancel; R2-F03 running ("Rebuilding…",
+    aria-disabled, the focus kept); R2-F04 the result focused over the five figures; R2-F05 the failure (Q16's words,
+    focused, Rebuild progress still offered, T8; "Illustration").
+    R2-G01 6.37 and 6.39: Sipho Ndlovu's My progress on 11.2, seventeen rows ("Each semester · 10 EPAs", "Once a year · 7
+    EPAs"), PAED-002 "1 of 3 this semester", PAED-016 and KGK-001 "0 of 1 in 2026", PAED-011 "0 of 2 in 2026"; KGK-001's
+    mark as built (T357's); flow 05's page unchanged (CAPTURE-ONLY values bracketed).
+
+ALSO, as flows 12–14's round 2 did:
+  - Every page: one h1 (PageHeader), then h2 per section in order (no <h3> without an <h2>); every table captioned (not
+    repeating its heading) with scope on its headers and the row's th scope="row"; every row action named for its row,
+    no two alike; loading (the header at once and a skeleton, no action until the read is in); a load error in fixed
+    words with Try again, never an exception's text and no empty state under it (T329); ISO dates; no sideways scroll at
+    1280, 768 or 390 (a 150-character title and "Neonatal team Clinical Competency Committee" included).
+  - Focus after every action: each result (adopted, added, saved, removed, deactivated, reactivated, the move, the
+    rebuild) on its ActionResult or Alert; each refusal on its field (Code, Sub-speciality, EPA, Curriculum) or, with no
+    field, on its alert (T301's, a failure); every dialog opening on Cancel, Cancel and Escape returning to its trigger;
+    Show's results on the section's first h3; Try again to the reloaded page's h1.
+  - The routes, each with its owner, trail, lit item and tab title: /admin/curricula (Curricula, no trail); /admin/
+    adoptions (redirects to /admin/curricula, PROPOSED, decided); /admin/curricula/{Id:int}/items (Curricula; Home ›
+    Curricula › Items of ‹name (version)›; tab "Items of ‹name (version)› · Wombat"); …/items/new and …/items/{ItemId:int}
+    (Curricula; the trail adds "Add your institution's own item" or "KGK-001"); /admin/epas (EPAs); /admin/epas/new
+    (EPAs; Home › EPAs › Create EPA); /admin/epas/{Id:int} (EPAs; Home › EPAs › ‹code›; tab "‹code› — ‹title› · Wombat";
+    Unavailable's "EPA unavailable · Wombat"); /admin/entrustment-scales; /admin/curriculum-progress (Curricula; Home ›
+    Curricula › Curriculum progress); /admin/trainees/edit (Trainees; Home › Trainees › ‹name›'s programme; unchanged).
+  - Name every design-system component you use (PageHeader with its trail and actions, StatePanel with Try again,
+    Skeleton, DataTable with StackWide and PagerControls, FormField, FormActions, FieldHelp, ActionResult, Alert with
+    Role="" for a standing notice, ConfirmDialog in action mode, the Unavailable page, Icon by its Lucide name), and mark
+    anything else NEW (only .curriculum-item-page's 390 rule should be).
+  - Nothing of flows 01–14 drawn as changed: the shell and its menus (but for Curriculum adoptions gone); Home's cards
+    (but for the footer link's words); the Trainees list; the profile's layout, title, end and account sections; My
+    progress and its badge; the STAR register; the College's own pages (flow 16).
+
+SPEC BOARD, "R2-0-spec" (more boards "R2-0-spec-2", … if it runs long):
+  - FIRST: whether the captures arrived, how, which you opened and which not.
+  - The changes the boards need, written as code changes, each PROPOSED (flow 12's lesson; decided ones say their Q):
+    NavItems: CurriculumAdoptions leaves the Institutional admin's Curriculum group (Q1); /admin/adoptions redirects to
+      /admin/curricula; OnboardingLinks.CurriculumAdoptions re-pointed and renamed; the four sentences re-pointed (S4).
+      DESIGN.md's NavMenu table loses the row (NavMenuAuthorizationTests parses it).
+    GetCurriculaListQuery, for an institution: per version AdoptedOn, SupersededOn (derived from the next adoption of
+      the same institution and discipline), the active-profile count on its adoption, and the own-item count
+      (CurriculumDto.Items' IsLocal); CurriculumAdminScope's second arm widened to "an active or ended profile pinned to
+      it, or an own item" (Q9). For the Administrator, the same per institution behind Show (Q18).
+    GetAdoptableCurriculaQuery: open versions the institution has not ACTIVELY adopted (Q7: today it lists every active
+      version, the adopted one included, GetAdoptableCurricula.cs:45), with EffectiveFrom, an item count and its
+      relation to the active adoption of its discipline (none, newer, older; by EffectiveFrom); for the dialog, the
+      version it would supersede, that adoption's active-profile count and the institution's own items on it (DATA 4).
+      The page's parts by AdministratorOrInstitutionalAdmin (S5).
+    AdoptCurriculumCommand: refuses a held-back version before writing (T301, Q5; today AdoptCurriculum.cs:47–52 loads
+      it with no check); AdoptedOn by the South African day (T325; today DateOnly.FromDateTime(DateTime.UtcNow), :77).
+      Going back stays accepted (Q7: :54–66 refuses only the active one today).
+    EpaDto / ListEpasForSubSpecialityQuery: the owning institution's name and a "may change" flag from UpdateEpa's own
+      rule (UpdateEpa.cs:98–104), never from roles (T291 item 1, C17; DATA 1); the list reads each row's discipline from
+      the DTO, not by Single over the caller's adopted disciplines (EpasList.razor:39–40, the brief's § 5 fault); a
+      flag for "the caller has an adopted discipline or a College" (Q12; DATA 3).
+    GetEpaByIdQuery: null for an EPA outside the list's rule (today GetEpas.cs:178–186 admits any Institutional admin to
+      every national EPA), the page drawing Unavailable (Q2, Q19); the "may change" flag choosing form or record.
+    CreateEpaCommand and UpdateEpaCommand: refuse an institution's own EPA in a discipline it has not actively adopted
+      (Q12; today CreateEpa.cs:68–80 and UpdateEpa.cs:116–121 check the institution only); a duplicate only on the
+      unique index's violation, any other DbUpdateException the T272 failure (CreateEpa.cs:100–103).
+    EpaEdit: titled by the EPA (EpaOptionLabel), crumb its code, no Back to EPAs; Q11's help and dialog by the EPA's
+      owner; a LoadError of its own (T329; today an alert above an empty body, EpaEdit.razor:33, :204–207).
+    GetCurriculumByIdQuery: AdoptedOn for the caller's institution (the subtitle); null for an id out of scope, drawn as
+      Unavailable. The item routes …/items/new and …/items/{ItemId:int}, NavOwners rows lighting Curricula; the edit
+      row and its colspan form go (T323); the EPA picker on edit as built (M6).
+    GetTraineeCurriculumChoicesQuery: each option's state for the line under the picker (the active adoption, or
+      superseded on ‹date›). TraineeProfileEdit: the line (.submit-check), the submit's label, the ConfirmDialog; no new
+      read for a count (Q20).
+    CurriculumProgressRebuild: the failure's fixed words (Q16; today :13, :116 print the exception).
+    EntrustmentScalesList: the subtitle by role (Q13 to a reader; the Administrator keeps today's) and the reader's
+      empty state.
+    The headings: every <h3> section becomes an <h2> (AdoptionsList.razor:44, :63; CurriculumItemsEdit.razor:76, :329
+      go with their pages).
+  - The class table: every class a board uses, "reuses .x" (with § CLASSES' replacements for N1–N8) or NEW and why
+    (only .curriculum-item-page's rule); canvas-only classes (.cv-*, any chip) listed apart and kept off the components.
+  - The 390 scope that gives each page 44 px: StackWide's (.clinic-table--stack-wide .btn) on every list; .user-page on
+    the EPA pages and the item form pages; .curriculum-item-page for the item form's checkboxes; .dialog-card for every
+    dialog; and the 768 behaviour of each table (StackWide stacks from 900 px down, so 768 is stacked: say so).
+  - The DESIGN.md text each changes: § Table system's T211 paragraph (the own EPA marked as the own item is, on the EPA
+    list too; a national row's "Set by the College."); the picker rule (adoption by rows); § Button system (the
+    adoption's and the move's confirmations; the rebuild stays primary); § Form system (refusals under their field on
+    the EPA and item pages, no ValidationSummary at the top); § Page-level patterns (an EPA's page titled by the EPA; a
+    national EPA's record; Unavailable gains EPA, Curriculum and Item; the list is the page and the item's form a page
+    of its own); § The NavMenu's table (Curriculum adoptions gone).
+  - The tokens: every colour an existing token; contrast checked (text 4.5:1, borders and the focus ring 3:1), the
+    .muted mark on a hovered row and on the info tint included.
+  - The DATA reads grouped by query (as above), and every message by kind (result, refusal, hint, notice, empty,
+    failure) with its words: built, round 1's, NEW or PROPOSED (THIS ASK), each NEW beside the words it replaces.
+  - M1–M6, S1–S16, N1–N7, T1–T12 and the other points each with the board where it is drawn; which boards are
+    Illustrations.
+  - Edge cases, one line each with its board: a second discipline (R2-A13); a College version held back after KGK
+    adopted it (KGK keeps it; its row unchanged; words only); a superseded version with no registrar and no own item
+    (it leaves the list; words only); a move while the registrar's completion is credited elsewhere (the save waits,
+    T304; no board); KGK's own EPA in a discipline KGK no longer adopts (listed, Edit offered, Create refused for that
+    discipline; the list reads the DTO's discipline); two institutions' own EPAs with one code on the Administrator's
+    list (R2-C15); a 150-character title (R2-C19); a registrar on 11.1 when KGK supersedes 11.2 with 11.3 (the picker
+    offers 11.1 and 11.3, never 11.2; words only); an adoption between 00:00 and 02:00 SAST (dated the South African
+    day; words only); going back (R2-A08).
+
+STEPS BOARD, "R2-0-steps" (more boards "R2-0-steps-2", … if it runs long):
+  - One counting rule, said once at the top and used on every board (N1): a journey counts from Home, presses + fields
+    typed or chosen; a menu link is a press, and at 390 opening the menu is one more; a dialog's confirm is a press; a
+    field that arrives chosen (KGK-001 as the only EPA, the suggested scale, the preset sub-speciality) counts as none;
+    a page the app returns to by itself (back on the list after Add item) is no press.
+  - Each step below, its board, and what its Expect will say once built, quoting today's words and giving the new ones
+    ("unchanged" where so), values person by person from FIXTURES:
+    1.10 (Mbatha registers): the Curriculum card's footer reads "Open Curricula" (to /admin/curricula) where it read
+      "Open Curriculum adoptions"; the menu's Curriculum group reads Curricula, EPAs, Activity types, Entrustment scales.
+      The rest unchanged.
+    1.18 (Kruger, 11.1's items): the page is "Items of Paediatric EPA Curriculum (11.1)" (tab the same with " ·
+      Wombat"), the trail Home › Curricula › Items of Paediatric EPA Curriculum (11.1), with neither Back to curricula
+      nor Back to curriculum (T5); the College's warning unchanged; 15 rows matching the table, each with Edit and
+      Remove…; no "Add item" action, the built "Every national EPA of Paediatrics is already on this curriculum, …" in
+      its place (T4).
+    1.19: Curricula as R2-A01 (the empty first section, "Open for adoption" with 11.1 and IM Core, no Create curriculum);
+      EPAs as R2-C01 ("No EPAs yet" with Q12's words and Go to Curricula, no Create EPA).
+    1.20: Route /admin/curricula. Do: "Open Curricula. Under Open for adoption, press Adopt on Paediatric EPA Curriculum
+      (11.1)." Expect: no institution picker; Adopt asks nothing (a first adoption supersedes nothing); the result
+      "Paediatric EPA Curriculum (11.1) adopted. New admissions to Paediatrics / Paediatrics join it." takes the focus;
+      11.1 moves to Curricula you train against (College of Paediatricians of South Africa, Paediatrics / Paediatrics,
+      effective 2026-01-01, 15 national · 0 your own, Adopted on D, Items); Open for adoption lists IM Core Curriculum
+      (2026.1) alone, so 11.1 cannot be adopted twice (Q7); typing /admin/adoptions lands on Curricula; the menu has no
+      Curriculum adoptions. (The second press and "This institution has already adopted this curriculum version." go
+      from the Expect: say so.)
+    1.21: EPAs (R2-C02): the 15 PAED rows, each title a link, each actions cell "Set by the College.", no Edit, Create
+      EPA in the header. Curricula: the one row, Adopted on D, Items only. The items page (R2-B01): its title,
+      subtitle, the standing notice, 15 rows matching Step 1.18 each "Set by the College.", no Add action and the
+      built empty line. Home's card: unchanged but "Open Curricula".
+    1.22 and 6.9: Q13's subtitle; two scales, then three (CNSA 6, CPSA 6, O-R 5); no Create scale, no actions column;
+      at 390 stacked, nothing sideways.
+    2.44: the Curriculum card's footer "Open Curricula"; the rest unchanged.
+    6.13, 6.29, 6.31 (Kruger; flow 16's steps): Curricula's Status reads "Held back" / "Open" where it read "Inactive" /
+      "Active" (T9); the College's box is flow 16's; the rest unchanged.
+    6.14, 6.23, 6.28: unchanged (the page is now titled by the EPA; no Expect quotes "Edit EPA": say so).
+    6.17: "Deactivate PAED-012?", its body as built with "for every institution that has adopted it" in place of "for
+      every institution that uses it" (Q11).
+    6.22: PAED-012 "Inactive" in plain words, "Set by the College." on every row, no Edit, Create EPA offered; its item
+      "(inactive: not in force)" under the notice; the STARs unchanged (flow 09's).
+    6.25: Create EPA from the header; the page "Create EPA" with the preset Paediatrics / Paediatrics and its help; Save
+      opens /admin/epas/17, "KGK-001 — Running a paediatric outreach clinic at a district hospital", crumb KGK-001, no
+      Back to EPAs, "EPA saved." focused, Active; the list puts KGK-001 first with "Your institution's own EPA" under its
+      title and "Edit KGK-001 — Running a paediatric outreach clinic at a district hospital" its only Edit.
+    6.26: Curricula → Items (11.1) → "Add your institution's own item" → the add page (EPA KGK-001 alone, the suggested
+      scale, Add item off until a rung) → Add item → back on the items page, "Curriculum item added." focused, KGK-001's
+      row last, "Your institution's own item" under its EPA, "1 per academic year" over "No decision cadence", 3a,
+      Direct observation, Edit and Remove…; the built empty line again. Curricula's 11.1 row then reads "15 national · 1
+      your own".
+    6.30 (Kruger): "PAED-011's edit row opens beneath its row" becomes "Edit PAED-011 opens its page"; Save item returns
+      to the list with "Curriculum item saved." (T4); the rest unchanged.
+    6.32: Route /admin/curricula. Do: "Under Open for adoption, press Adopt… on Paediatric EPA Curriculum (11.2), read
+      the question and confirm Adopt 11.2." Expect: Open for adoption lists 11.2 (Newer than the version your
+      institution has adopted (11.1).) and IM Core, not Neonatology (held back); the dialog's words, its first focus on
+      Cancel, "The 3 registrars on 11.1 stay on it…"; the superseding result focused; 11.2 Adopted on D, 11.1
+      Superseded on D over "3 registrars still on it"; 11.1 offered again under Open for adoption with "Older than…".
+    6.33: Curricula's two rows with their states; 11.2's items: 16 rows "Set by the College.", PAED-016 and PAED-011's
+      "2 per academic year" among them, B1's line, the action; the add as 6.26 on 11.2; KGK-001's row marked.
+    6.34: the line under the picker (NEW words); Save profile asks nothing; "Trainee profile saved."; the rest
+      unchanged.
+    6.35, 6.37, 6.39: unchanged (flow 05's; KGK-001's badge is T357's).
+    6.36: Do: "Choose Paediatric EPA Curriculum (11.2), keep the dates, press Save profile and move…, read the question
+      and confirm Move and save." Expect: on choosing 11.2 the words under the picker change and the submit reads "Save
+      profile and move…"; the dialog "Move Sipho Ndlovu to Paediatric EPA Curriculum (11.2)?", first focus Cancel; the
+      result as built, focused; reopened, 11.2 alone with "The version your institution has adopted for Paediatrics /
+      Paediatrics."; SQL unchanged.
+    6.38: unchanged but Curricula's Status words (T9) and its two h2 sections; the trigger stays primary.
+    A.5.2, A.7.9: Expects unchanged; their Actuals' menu lists lose Curriculum adoptions (say so).
+    A.7.10 (Kruger at 390): "The EPA list and the items table scroll inside their containers" becomes "The EPA list,
+      Curricula and the items table stack, a block per row, each action 44 px; Edit PAED-001 opens the item's own page,
+      its fields one a row; nothing scrolls sideways (T323)".
+  - Search the runbook for the words that change (BRIEF.md § 9 item 7): found by this message, list each hit's step:
+    "Curriculum adoptions" (1.10, 1.19, 1.20, A.5.2, A.7.9; act-1-setup.md:286, :291 (1.10), :500 (1.19), :513–514 (1.20); act-2-onboarding.md
+    :1182, :1195 (2.44); act-6-catalogue.md:778 (6.32); appendix-cross-cutting.md:997, :1798); "Back to curricula" and
+    "Back to curriculum" (1.18, act-1-setup.md:441, :452); "Curriculum items" (1.18's Actual, act-1-setup.md:451);
+    "Define and maintain" (1.22's Gap, act-1-setup.md:566–567); "Curriculum adopted." and "already adopted" (1.20,
+    6.32; act-1-setup.md:521–528, act-6-catalogue.md:788); "Deactivate this EPA" and "every institution that uses it"
+    (6.17, act-6-catalogue.md:407–421); "Create the first EPA" (1.19's Gap, act-1-setup.md:504–508); "Adopt a
+    curriculum" and "Current adoptions" (1.20, 6.32). "Edit EPA", "Back to EPAs", "Manage curriculum versions",
+    "Maintain the entrustable", "Remove this item" and "The rebuild failed" have no hit.
+  - Each journey's count at 1280 and 390, each press named, today's beside it (inferred counts to check): the first
+    adoption (Mbatha, 1.20: Curricula, Adopt; 2 + 0, 390 3 + 0; today 2 + 1); a newer adoption (6.32: Curricula,
+    Adopt…, Adopt 11.2; 3 + 0, 390 4 + 0; today 2 + 1 with no question); KGK's own EPA and item (6.25 + 6.26: EPAs,
+    Create EPA, 4 fields, Save; Curricula, Items, Add your institution's own item, 5 fields, Add item; 7 + 9, 390 9 + 9;
+    today 6 + 13 by round 1's count: recount it by the rule); a move (6.36: Trainees, Edit, choose 11.2, Save profile
+    and move…, Move and save; 4 + 1, 390 5 + 1; today 3 + 1); the rebuild (6.38: Curricula, Curriculum progress,
+    Rebuild progress, confirm; 4 + 0, unchanged); the Administrator adopting for KGK (Curricula, the institution, Show,
+    Adopt…, Adopt 11.2; 4 + 1).
+
+CHECK BEFORE YOU STOP: one h1 a board; no inline style; no undefined class; no raw colour; no badge for an owner and no
+  badge on an EPA's status; every 390 control 44 px; nothing scrolls sideways at 1280, 768 or 390 (the 150-character
+  title, the long decision body and the seven-column items table beside the sidebar included); no gendered pronoun for a
+  person on any board, annotations included (M1); no "cannot be undone" on the move; "Rebuild progress" primary; every
+  bracket ‹…› still a bracket, never filled from memory; every board's 390 and 768 twin carries the same words as its
+  1280 board; f15r2.css saved as a project file; the Spec says first whether the captures arrived.

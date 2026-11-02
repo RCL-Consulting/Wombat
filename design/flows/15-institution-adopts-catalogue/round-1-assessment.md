@@ -445,3 +445,29 @@ has a recommendation.
   existing classes (S14).
 - **Checked here,** so the ask need not re-derive it: `AdoptCurriculum` accepts older versions; `UpdateCurriculumItem`
   changes an item's EPA; nothing stores Superseded on; `EpaDto` has no owner; the Administrator may edit every EPA.
+
+## 10. The operator's decisions (2026-11-02)
+
+The operator took Q1–Q17 (the brief's § 6) and Q18–Q21 (§ 8) as recommended, with the picks of § Summary:
+
+- **A1**, one Curricula page, with A2's per-version line for a first adoption ("Your institution has adopted no
+  Paediatrics / Paediatrics version yet.", in N2's word); Adoption history dropped (S1).
+- **B2**, one items table and a form page of its own for KGK's item, with B1's borrowings: the 11.2 empty line, the
+  folded cells (S16), the subtitle's "adopted by your institution on ‹date›" (DATA).
+- **C2's list** (without its Owner column and badge, S6, M4) **with C1's page for KGK's own EPA** (today's form, titled
+  by the EPA, Deactivate… and the Active box as built) and the shared national record (without "On your institution's
+  curricula", S9).
+- **D1**, the move asked on Save, with M1, M2, S11 and Q20 applied.
+- **E, F and G confirmed** with their corrections (S10, Q13's words; M3 and S12; G unchanged).
+- **Q18:** the Administrator adopts from an "An institution's curricula" section on her Curricula (Institution + Show,
+  then the same rows and dialog as Prof Mbatha's, named for the institution).
+- **Q19:** each page of its own for an id the caller cannot open is DESIGN.md's Unavailable pattern and shows no id:
+  "EPA unavailable", "Curriculum unavailable", "Item unavailable", with § 8's sentences and ways on.
+- **Q20:** no completions count before the move; the result gives it.
+- **Q21:** an older version stays adoptable (Q7 kept, P5 dropped), so the move's words are M2's conditional ones.
+
+Every M and S item in § 7 applies, and the nits in one pass. One correction to § 7's accessibility list, found while
+writing the ask (Obs): the item form's Minimum level is `RungPicker`, a select on a pinned scale (a number input when
+unpinned), not radios (`W/Admin/Curricula/RungPicker.razor:9`, `:26`); the 390 px rows that need 44 px
+there are the Tools checkboxes (`.check-grid`) and Opportunistic. Round 2's ask is `round-2-ask.txt`; § 4's twelve key
+screenshots are re-attached with it, from `design/upload/baseline/`.

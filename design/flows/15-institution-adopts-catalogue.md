@@ -605,9 +605,18 @@ neither.
 Each with a recommendation. The canvas answers 3, 4, 11, 13 and 14 in its variations; 1, 2, 5–10, 12 and 15–17 are
 the operator's, and 1 and 14 decide the two structures, so they are answered before round 1.
 
+**Decided 2026-11-02: the operator took Q1–Q17 as recommended**, and with them Q18–Q21 of the round-1 assessment
+(`15-institution-adopts-catalogue/round-1-assessment.md` § 8) as it recommends, which refine Q1 (Q18: the
+Administrator adopts from an "An institution's curricula" section on her Curricula), Q2's words (Q19: DESIGN.md's
+Unavailable pattern, no id shown), Q8's words (Q20: no completions count before the move, the result gives it) and Q7
+(Q21: an older version stays adoptable, the boards' P5 dropped, so the move's words are M2's conditional ones). The
+round-1 picks are accepted: A1 (with A2's per-version line), B2 (with B1's borrowings), C2's list with C1's page for
+KGK's own EPA and the shared national record, and D1; E, F and G confirmed with their corrections. The assessment's
+M1–M6 and S1–S16 apply, and the nits in one pass. Round 2's ask is `15-institution-adopts-catalogue/round-2-ask.txt`.
+
 1. **Q1. (The operator's; the old brief's question 1) Does Curriculum adoptions merge into Curricula?** Today an
    institution's Curricula lists only what it has adopted (Items only), and Curriculum adoptions holds the picker and
-   the history; the Administrator's menu has neither link to adoptions. *Recommendation:* merge, for the
+   the history; the Administrator's menu has neither link to adoptions. **Decided 2026-11-02: as recommended, the Administrator adopting from her Curricula's "An institution's curricula" section (Q18).** *Recommendation:* merge, for the
    InstitutionalAdmin: one page, "Curricula", in two parts: the versions KGK trains against (each with its state for
    KGK, Q10, and Items), and the College versions open to KGK that it has not adopted (each with Adopt, Q6), the
    adoption history folded into the rows (adopted on, superseded on). The "Curriculum adoptions" menu item goes and
@@ -615,72 +624,72 @@ the operator's, and 1 and 14 decide the two structures, so they are answered bef
    an institution from that institution's page (flow 18's; until then from Curricula's header, as "Curriculum
    progress" is reached) (PROPOSED). Round 1 draws the merge and today's two pages so the pick is made on the boards.
 2. **Q2. (The operator's; T291's sweep) An EPA outside her scope, typed by id: not found, or read-only with its College
-   named?** *Recommendation:* not found, as flow 14's Unavailable state (a page's own "EPA not found" / "There is no
+   named?** **Decided 2026-11-02: as recommended, with Q19's words: DESIGN.md's Unavailable pattern, showing no id.** *Recommendation:* not found, as flow 14's Unavailable state (a page's own "EPA not found" / "There is no
    EPA with this id that you can open.", PROPOSED words): `GetEpaById` narrows to the list's rule (the national EPAs of
    the disciplines KGK has actively adopted, plus KGK's own), so the list and the page agree (T211, T056), and
    `states.md:775` stands. A national EPA inside her scope opens **read-only**, reached by a View on its row: its code,
    title, description, required knowledge and skills, category, status and "Set by the College of Paediatricians of
    South Africa", no Save and no Deactivate (PROPOSED: the page reads the EPA's "may change" flag, DATA). The
    description and the knowledge are on no other page she can open.
-3. **Q3. How "the College's" is told from "KGK's own".** *Recommendation:* one rule on both tables, DESIGN.md's T211
+3. **Q3. How "the College's" is told from "KGK's own".** **Decided 2026-11-02: as recommended.** *Recommendation:* one rule on both tables, DESIGN.md's T211
    paragraph: KGK's own EPA or item marked under its title in `.muted .text-sm` words ("Your institution's own EPA",
    "Your institution's own item"; to the Administrator "Kgosi Kgari Teaching Hospital's own EPA"), the national row's
    actions cell saying why it has no Edit ("Set by the College") or offering View (Q2), and the standing notice above
    the table. Words, never colour or a badge alone; T357 adopts the same words for My progress.
-4. **Q4. (The old brief's question 3) A single trainee's rebuild.** *Recommendation:* not built: T304 replays a moved
+4. **Q4. (The old brief's question 3) A single trainee's rebuild.** **Decided 2026-11-02: as recommended.** *Recommendation:* not built: T304 replays a moved
    registrar or a changed start in the same save, which covers 6.37, and the Administrator's rebuild stays for the
    rest. BRIEF § 7 B10 keeps it as future; nothing on the profile offers it.
-5. **Q5. (The operator's) T301.** *Recommendation:* as T301: the version's flag is its release for adoption, "Open" /
+5. **Q5. (The operator's) T301.** **Decided 2026-11-02: as recommended.** *Recommendation:* as T301: the version's flag is its release for adoption, "Open" /
    "Held back"; a new or cloned version starts held back; Adopt refuses a held-back one before anything is written
    ("This curriculum version is not open for adoption."); an adoption already made is unaffected. Fold it into this
    build (the refusal and the words are here; the College's box is drawn in flow 16 with T301's words). 6.13, 6.29
    and 6.31's Expects (flow 16's) change with it.
-6. **Q6. (The operator's) Adopting a newer version asks first.** *Recommendation:* yes, a ConfirmDialog only when an
+6. **Q6. (The operator's) Adopting a newer version asks first.** **Decided 2026-11-02: as recommended.** *Recommendation:* yes, a ConfirmDialog only when an
    adoption supersedes one: "Adopt Paediatric EPA Curriculum (11.2) for Kgosi Kgari Teaching Hospital?"; it supersedes
    11.1 for every new admission; ‹N› registrars stay on 11.1 until each is moved on their profile (DATA: a count of
    the active profiles pinned to the adoption); KGK's own items are not carried over and are added again on 11.2; its
    confirm "Adopt 11.2", its trigger the row's Adopt. A first adoption of a discipline asks nothing. 6.32's Expect
    changes (PROPOSED).
-7. **Q7. (The operator's) The adoption picker.** *Recommendation:* it offers only open versions KGK has not actively
+7. **Q7. (The operator's) The adoption picker.** **Decided 2026-11-02: as recommended: an older version stays adoptable under Q6's dialog (Q21; the boards' P5 dropped).** *Recommendation:* it offers only open versions KGK has not actively
    adopted, so "This institution has already adopted this curriculum version." stays in the command for a stale page
    only; 1.20's second press becomes a check that 11.1 is no longer offered. An older version than the active one
    (going back) stays adoptable, under Q6's dialog, which says it supersedes the newer version.
-8. **Q8. (The operator's) A move asks first.** *Recommendation:* yes: when Save profile would change the curriculum, a
+8. **Q8. (The operator's) A move asks first.** **Decided 2026-11-02: as recommended, with no completions count before the save (Q20) and M2's conditional words in place of "cannot be moved back" (Q21).** *Recommendation:* yes: when Save profile would change the curriculum, a
    ConfirmDialog "Move Sipho Ndlovu to Paediatric EPA Curriculum (11.2)?": his ‹N› completions are counted again
    against 11.2 and his figures change at once; he cannot be moved back to 11.1, which KGK has superseded; its confirm
    "Move and save", Cancel keeping the form as typed. A sentence under the picker says the same before Save (PROPOSED).
    A save that keeps the curriculum asks nothing (6.34). 6.36's Expect changes.
-9. **Q9. (The operator's) A superseded version stays readable while registrars are on it.** *Recommendation:* yes:
+9. **Q9. (The operator's) A superseded version stays readable while registrars are on it.** **Decided 2026-11-02: as recommended.** *Recommendation:* yes:
    `CurriculumAdminScope`'s second arm opens a superseded version to KGK while any KGK profile (active or ended) is
    pinned to it or it holds a KGK item (PROPOSED rule); with neither, it leaves her list.
-10. **Q10. (The operator's) What a curriculum row says to KGK.** *Recommendation:* its state for KGK in words:
+10. **Q10. (The operator's) What a curriculum row says to KGK.** **Decided 2026-11-02: as recommended.** *Recommendation:* its state for KGK in words:
     "Adopted ‹date›" for the active one; "Superseded ‹date› · ‹N› registrars still on it" for an old one (DATA); the
     College's Open/Held back only on the College's and the Administrator's lists (T301).
-11. **Q11. A local EPA's deactivate words.** *Recommendation:* the dialog and the Active help name whose trainees it
+11. **Q11. A local EPA's deactivate words.** **Decided 2026-11-02: as recommended.** *Recommendation:* the dialog and the Active help name whose trainees it
     stops measuring: "…for Kgosi Kgari Teaching Hospital's trainees" on KGK's own EPA, "…for every institution that
     has adopted it" on a national one, as the item's Remove dialog already does (`CurriculumItemsEdit.razor:771–776`).
     The dialog's title names the EPA ("Deactivate KGK-001?").
-12. **Q12. (The operator's; T291's 1.19 widening and its command half) Create EPA.** *Recommendation:* Create EPA and
+12. **Q12. (The operator's; T291's 1.19 widening and its command half) Create EPA.** **Decided 2026-11-02: as recommended.** *Recommendation:* Create EPA and
     the empty state's invitation only when the caller has an adopted discipline (for her) or a College (for the
     College); otherwise the empty state reads "Your institution has not adopted a curriculum yet, so there is no
     discipline to add an EPA to. Adopt one under Curricula." with the link (PROPOSED words). `CreateEpa` and
     `UpdateEpa` refuse an institution's own EPA in a discipline it has not actively adopted (PROPOSED refusal).
-13. **Q13. The scales page for a reader.** *Recommendation:* every scale (they are platform-wide; 6.9's three stand),
+13. **Q13. The scales page for a reader.** **Decided 2026-11-02: as recommended.** *Recommendation:* every scale (they are platform-wide; 6.9's three stand),
     under "The rating ladders that assessment forms and committee reviews use. A Wombat administrator sets them; they
     are shown here for reference." (T326; PROPOSED words). No mark for which ones KGK's curricula use.
-14. **Q14. The items page's own-item add and edit.** *Recommendation:* the list is the page (a captioned, stacked table
+14. **Q14. The items page's own-item add and edit.** **Decided 2026-11-02: as recommended.** *Recommendation:* the list is the page (a captioned, stacked table
     with the standing notice), and adding or editing KGK's item opens a form page of its own
     (`/admin/curricula/{Id}/items/new` and `/admin/curricula/{Id}/items/{ItemId}`, PROPOSED routes; flow 11's "the
     list is the page and its create form a page of its own"), which ends T323's edit row in a cell at 390. The College's
     items page (flow 16) would follow the same shape; flow 16 confirms it. Round 1 draws it beside an in-place note
     panel (flow 12's) and today's edit row.
-15. **Q15. (The operator's) T242.** *Recommendation:* (c): the College's national add stays refused while an
+15. **Q15. (The operator's) T242.** **Decided 2026-11-02: as recommended.** *Recommendation:* (c): the College's national add stays refused while an
     institution holds that EPA as its own item, and the refusal names the institution; nothing on KGK's pages changes.
-16. **Q16. (The operator's) The rebuild.** *Recommendation:* the trigger stays a primary button (a rebuild loses
+16. **Q16. (The operator's) The rebuild.** **Decided 2026-11-02: as recommended.** *Recommendation:* the trigger stays a primary button (a rebuild loses
     nothing and is safe to repeat; it is not a destructive action), the dialog opens on Cancel as built; a failure
     reads "The rebuild failed, and nothing was changed. Try again, or come back in a few minutes." with no exception's
     text (PROPOSED words; T272); "Semester tallies written" keeps its name.
-17. **Q17. (The operator's) What the build folds in.** *Recommendation:* fold T291 items 1 and 4's page half (done),
+17. **Q17. (The operator's) What the build folds in.** **Decided 2026-11-02: as recommended.** *Recommendation:* fold T291 items 1 and 4's page half (done),
     C17, the 1.19 widening, the sweep (with Q2) and its command rule (Q12); T301 (Q5); T326's scales subtitle and the
     same words on Curricula and EPAs; these pages' halves of T323 (the item editor), T329 (A6), T272 (CreateEpa, the
     rebuild) and T325 (AdoptedOn); Q6–Q11; the new faults above. Leave T242 (a decision only), T357 (flow 05's, to take
