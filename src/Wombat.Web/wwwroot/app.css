@@ -7387,6 +7387,56 @@ a.dashboard-metric:hover .dashboard-metric-label {
   flex-wrap: wrap;
 }
 
+/* Narrow desktops (T392 replay, A.7.10): from 901 to about 990px the six columns need 691px in a 593px column, so Edit and
+   Remove… sat past the edge, reached only by scrolling the table. The items stack to 1024px, as the data-rights queue
+   stacks to 1100px, their row actions 44px. */
+@media (max-width: 1024px) {
+  .curriculum-items-page .clinic-table--stack-wide thead {
+    border: 0;
+    clip: rect(0, 0, 0, 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+
+  .curriculum-items-page .clinic-table--stack-wide tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    display: grid;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .curriculum-items-page .clinic-table--stack-wide tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .curriculum-items-page .clinic-table--stack-wide td,
+  .curriculum-items-page .clinic-table--stack-wide tbody th {
+    border: 0;
+    padding: 0;
+    width: auto;
+  }
+
+  .curriculum-items-page .clinic-table--stack-wide th[scope="row"] {
+    display: block;
+  }
+
+  .curriculum-items-page .clinic-table--stack-wide td[data-label]::before {
+    color: var(--muted-text);
+    content: attr(data-label) ": ";
+    content: attr(data-label) ": " / "";
+    font-weight: 600;
+  }
+
+  .curriculum-items-page .clinic-table--stack-wide .btn {
+    min-height: 2.75rem;
+  }
+}
+
 /* The item's page: its form one card, its record's year list unmarked. */
 .curriculum-item-page .detail-list .list-unstyled {
   margin: 0;

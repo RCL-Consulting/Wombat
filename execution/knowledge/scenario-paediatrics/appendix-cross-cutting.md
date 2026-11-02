@@ -1766,9 +1766,11 @@ Actual (2026-11-02, T392 replay, wombat_scenario_t392): At 390 px. The bar "Acti
   768. At 901 to about 990 px the page does not scroll sideways, but the table, now a table, is 691 px in a 593 px
   container (642 at 950) and scrolls inside it: each row's Edit and Remove… (884-929) sit past the container's right
   edge (877), for Dr Kruger and for Prof Mbatha alike; from 1000 px it fits (692 in 692), and at 1280 it fits (972 in
-  972, actions 28 px).
-Gap: new: between 901 and about 990 px the items table overflows its container by up to 98 px, so the row actions
-  (Edit, Remove…) are reached only by scrolling the table sideways (the list stacks only up to 900 px). T323's
+  972, actions 28 px). Fixed in the replay (the items stack to 1024 px, app.css) and swept again on a republished app,
+  for both: stacked from 900 to 1024 px (593 in 593 at 901, 716 in 716 at 1024, Edit at 299-344), a table from 1025 px
+  (717 in 717, Edit 910-955 inside 1001), 972 in 972 at 1280; the 901 capture re-taken.
+Gap: none (found in this replay: from 901 to about 990 px the items table overflowed its container by up to 98 px, its
+  Edit and Remove… reached only by scrolling the table; fixed in T392 by stacking the items to 1024 px). T323's
   item-editor half no longer occurs (the item has its own page, one field a row, nothing scrolls at 390)
 
 ### Step A.7.11 — devadmin on his phone
