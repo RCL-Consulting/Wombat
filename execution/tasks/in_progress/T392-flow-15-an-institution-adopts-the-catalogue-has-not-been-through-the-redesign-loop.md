@@ -61,7 +61,7 @@ Run the loop as flow 14 ran it (`design/flows/14-data-rights/`, BRIEF § 11 "Flo
 - [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link. (https://claude.ai/artifact/QvQL26tCCJh6S9zoLBywdZ)
 - [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/15-institution-adopts-catalogue/`.
 - [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 15) — the squash commit and counts.
-- [ ] The whole runbook replays on a fresh database with no regression from flow 15, the baseline is re-captured, and
+- [x] The whole runbook replays on a fresh database with no regression from flow 15, the baseline is re-captured, and
   flow 15's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
 - [ ] The design system is re-synced and republished — its version number.
 
@@ -147,3 +147,17 @@ T387 (flow 14), T379 (flow 13), T304, T301, T291, T326; BRIEF § 6, § 8, § 11;
   warnings). T393 proposed (CurriculumEdit and EntrustmentScaleEdit print exception text). **Step 7:** the operator said
   "run the replay after"; fresh `wombat_scenario_t392` on :5180 published from `c931d56f`; the replay brief is written by
   one Opus agent, then one agent per act in order, then the states.
+- **2026-11-02, step 7 done** (`wombat_scenario_t392`, D = 2026-11-02; act 4 resumed at 4.49 after an interruption).
+  Acts: 1 31/24 (`42e93d01`), 2 44/44 (`0ef2236e`), 3 60/58 (`0975befe`), 4 50/44 (`27d01fc7`), 5 29/27 (`c2059fbc`),
+  6 42/37 (`f3acde33`), A 76/69 (`5e93ffe2`); every other gap a known task (T264, T280, T286, T291 items 2-3, T320,
+  T324, T326, T327, T334, T365, T370, T382, T385). Two flow 15 faults found and fixed: the items table overflowed its
+  column from 901 to ~990 px (A.7.10; it stacks to 1024 px, `e10a5f22`), and the EPA list squeezed its titles to 20%
+  beside empty columns (states pass 1; 45% from 1025 px, stacked to 1024 px, `50ca6470`); both re-measured on a
+  republished app. States re-taken: pass 1, 47 rows (`dff8b957`), pass 2, 51 rows (`649eb643`);
+  `check_baseline_paths.py` missing 0. Act 1's outcome comment fixed (`ccb5f9a8`). The replay records as no longer
+  occurring: T291 items 1 and 4, T301, T304's remainder, T323's item-editor half, T326's scales half, T308 (4.43).
+  Not re-taken after the EPA column fix: `epas-list--college`, `--institution`, `--inactive` (states before the
+  appendix's end; the layout only). Flow 16's CurriculumEdit (pass 2): default validator messages twice and unlinked
+  (T324), 36-40 px controls at 390, no result after a create or clone: not filed. Pass 1, cosmetic: Prof Mbatha's
+  Create EPA sits under the long subtitle. Scratch DBs `wombat_scenario_t392_s10`, `_s11`, `_s20`-`_s25`, `_s515` kept.
+  **Next:** step 8 (re-sync the design system) and step 9 (lessons), on the operator's word.
