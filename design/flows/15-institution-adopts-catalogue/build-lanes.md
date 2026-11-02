@@ -6,14 +6,17 @@ screens and five Spec/Steps boards, `round-3-check.md`: 45 of 48 done, 2 partly,
 operator's decisions of 2026-11-02 (`round-3-check.md` § Decisions). The lane plan is at the end of this file. The names two
 or more lanes share are in `build-contracts.md`, beside it; § 0 of it is already on `t392`.
 
-**PROPOSED, for the operator's word before the wave** (the planner's, where the boards leave a thing undecided; build each
-as written here unless the operator says otherwise, and say so in your report):
+**Approved 2026-11-02** (the operator's "yes"): P1 and P3–P6 as written below; **P2 changed**: a national item's row
+offers "View" (where Edit would be) to a caller who may not edit it, opening `CurriculumItemPage` read-only, as a record
+(`dl.detail-list`: EPA, target and decision, minimum level, minimum by training year, completion window, weight, tools),
+titled by its EPA, with no form and no Save; Back to the list carries `?back=`. Lane B builds it. Build these as decided,
+no longer PROPOSED:
 - **P1. The Administrator's institution-section Items link** ("Items of Paediatric EPA Curriculum (11.2) for Kgosi Kgari
   Teaching Hospital", S15) opens the items page as built for her, `CatalogueLinks.Items(id)`: every institution's own items,
   each named with its institution (T222). No per-institution view of the items page; the boards draw none.
 - **P2. A national item's window and weight** (a consequence of decision 1): once the column leaves the table, an
   Institutional admin reads a national item's completion window and weight on no page, since she has no page for a national
-  item (they are the College's, on its item page). Recommend accept; the alternative is a second line in Minimum level.
+  item (they are the College's, on its item page). Decided: the read-only item page above.
 - **P3. Several institutions' own items** (decision 3 extended, built by § 0): after the national items, by institution
   (its id) and then EPA code. Only the Administrator sees more than one institution's.
 - **P4. The Administrator's chosen institution on Curricula** is the page's state, as flow 06's filters are: Show reads it,
