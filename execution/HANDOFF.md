@@ -10,8 +10,8 @@ recommended). T392's Notes hold every step; not pushed (master ahead of origin s
   round 1 (17 boards, `ff17241b`), round 2 (168 boards, `9c37e0ea`; review `2780557d`: 6 must, 25 should, 18 nit).
 - **Round 3's ask** written (`5fe15328`, `round-3-ask.txt`: 93 redrawn, 12 new screens, 11 captures to reopen,
   the canvas saves its stylesheet as f15r3.css); wording the agent assumed is marked NEW in it.
-- **Next:** the operator sends round 3 and says so; pull the boards into `round-3/` (they land under `project/`:
-  flatten), a Sonnet item-by-item check (`round-3-check.md`), then the build (step 6) on the operator's word.
+- **Round 3** drawn (111 boards, `7ee1206a`) and checked (`round-3-check.md`, `e91f5c7f`: 45/48 done, 2 partly, 1 not).
+- **Next:** the operator's word on the check's decisions (901 px column, 390 targets, row order, icons), then the build.
 - **Traps:** the harness is at `C:\dev\rcl_execution\bin\harness.py`, not `bin/`. Canvas scratch:
   `C:\Users\Renier\AppData\Local\Temp\claude\c--dev-Wombat\ecc5a9d5-2a6e-43d8-a55a-e55b7e48f8ab\scratchpad\c15`.
 
