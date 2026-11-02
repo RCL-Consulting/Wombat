@@ -7389,9 +7389,11 @@ a.dashboard-metric:hover .dashboard-metric-label {
 
 /* Narrow desktops (T392 replay, A.7.10): from 901 to about 990px the six columns need 691px in a 593px column, so Edit and
    Remove… sat past the edge, reached only by scrolling the table. The items stack to 1024px, as the data-rights queue
-   stacks to 1100px, their row actions 44px. */
+   stacks to 1100px, their row actions 44px. The EPA list does too (the states pass): at 901px its five columns left the
+   EPA 144px, a row about 200px tall. */
 @media (max-width: 1024px) {
-  .curriculum-items-page .clinic-table--stack-wide thead {
+  .curriculum-items-page .clinic-table--stack-wide thead,
+  .epas-page .clinic-table--stack-wide thead {
     border: 0;
     clip: rect(0, 0, 0, 0);
     height: 1px;
@@ -7403,36 +7405,43 @@ a.dashboard-metric:hover .dashboard-metric-label {
     width: 1px;
   }
 
-  .curriculum-items-page .clinic-table--stack-wide tbody tr {
+  .curriculum-items-page .clinic-table--stack-wide tbody tr,
+  .epas-page .clinic-table--stack-wide tbody tr {
     border-bottom: 1px solid var(--border-color);
     display: grid;
     gap: var(--space-xs);
     padding: var(--space-sm) var(--space-md);
   }
 
-  .curriculum-items-page .clinic-table--stack-wide tbody tr:last-child {
+  .curriculum-items-page .clinic-table--stack-wide tbody tr:last-child,
+  .epas-page .clinic-table--stack-wide tbody tr:last-child {
     border-bottom: 0;
   }
 
   .curriculum-items-page .clinic-table--stack-wide td,
-  .curriculum-items-page .clinic-table--stack-wide tbody th {
+  .epas-page .clinic-table--stack-wide td,
+  .curriculum-items-page .clinic-table--stack-wide tbody th,
+  .epas-page .clinic-table--stack-wide tbody th {
     border: 0;
     padding: 0;
     width: auto;
   }
 
-  .curriculum-items-page .clinic-table--stack-wide th[scope="row"] {
+  .curriculum-items-page .clinic-table--stack-wide th[scope="row"],
+  .epas-page .clinic-table--stack-wide th[scope="row"] {
     display: block;
   }
 
-  .curriculum-items-page .clinic-table--stack-wide td[data-label]::before {
+  .curriculum-items-page .clinic-table--stack-wide td[data-label]::before,
+  .epas-page .clinic-table--stack-wide td[data-label]::before {
     color: var(--muted-text);
     content: attr(data-label) ": ";
     content: attr(data-label) ": " / "";
     font-weight: 600;
   }
 
-  .curriculum-items-page .clinic-table--stack-wide .btn {
+  .curriculum-items-page .clinic-table--stack-wide .btn,
+  .epas-page .clinic-table--stack-wide .btn {
     min-height: 2.75rem;
   }
 }
@@ -7476,6 +7485,15 @@ a.dashboard-metric:hover .dashboard-metric-label {
    the table: a title runs to 200 characters (R2-C19), and the cell's floor is its header's (.col-wrap--wide). */
 .epas-page th[scope="row"] {
   overflow-wrap: anywhere;
+}
+
+/* The EPA column takes the room (T392 states pass): at .col-wrap--wide's 20% a title wrapped over three to six lines at
+   1280px while Status and the actions, both auto, left an empty band before "Set by the College.". Only where the list is
+   a table: it stacks from 1024px down (above). */
+@media (min-width: 1025px) {
+  .epas-page .clinic-table th.col-wrap--wide {
+    width: 45%;
+  }
 }
 
 /* An empty result region takes no row of the page's column (its 24px gap included), as the people pages' do. */
