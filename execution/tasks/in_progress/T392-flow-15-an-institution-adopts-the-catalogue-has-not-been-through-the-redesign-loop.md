@@ -123,3 +123,9 @@ T387 (flow 14), T379 (flow 13), T304, T301, T291, T326; BRIEF § 6, § 8, § 11;
   901 px items table scrolls 10 px (move Window and weight to the item page); five 390 controls under 44 px (a
   page-scoped rule each, plus the College's "Add item"); KGK-001 last in the items table; the plus icon kept on Create
   EPA and Create curriculum; B22/B24's year selects from StageMinimaEditor. **Next:** the operator's word, then step 6.
+- **2026-11-02, step 6 started** (the operator took round 3's decisions 1–5 as recommended, "yes"). The planner (one
+  Opus agent): § 0 on `t392` (`3aa6e6e8`, worktree `.claude/worktrees/t392`; FieldRefusalException/FieldRefusal,
+  CatalogueLinks, CurriculumDto.Institution and MayAddItem, items order, held-back create and clone, the menu and
+  OnboardingLinks.Curricula, DESIGN.md's NavMenu table; no migration; suites 836/4283/1035/52/4397/516 green); plan and
+  contracts on master (`c4ea2794`). Lanes A curricula, B items, C EPAs, D move/rebuild/scales, W runbook. PROPOSED
+  P1–P6 for the operator. **Next:** the operator's word on P1–P6, then the wave.
