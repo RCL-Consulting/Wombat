@@ -11,7 +11,8 @@ recommended). T392's Notes hold every step; not pushed (master ahead of origin s
 - **Round 3's ask** written (`5fe15328`, `round-3-ask.txt`: 93 redrawn, 12 new screens, 11 captures to reopen,
   the canvas saves its stylesheet as f15r3.css); wording the agent assumed is marked NEW in it.
 - **Round 3** drawn (111 boards, `7ee1206a`) and checked (`round-3-check.md`, `e91f5c7f`: 45/48 done, 2 partly, 1 not).
-- **Next:** the operator's word on the check's decisions (901 px column, 390 targets, row order, icons), then the build.
+- **Step 6:** § 0 on `t392` (`3aa6e6e8`, worktree `.claude/worktrees/t392`), plan `c4ea2794` (lanes A, B, C, D, W).
+- **Next:** the operator's word on the planner's P1–P6 (`build-lanes.md`), then the wave.
 - **Traps:** the harness is at `C:\dev\rcl_execution\bin\harness.py`, not `bin/`. Canvas scratch:
   `C:\Users\Renier\AppData\Local\Temp\claude\c--dev-Wombat\ecc5a9d5-2a6e-43d8-a55a-e55b7e48f8ab\scratchpad\c15`.
 
