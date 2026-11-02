@@ -97,3 +97,9 @@ T387 (flow 14), T379 (flow 13), T304, T301, T291, T326; BRIEF § 6, § 8, § 11;
   trigger against Q16; M4 the owner mark as badge-draft, not muted words; M5 the Steps board misses 1.10, 2.44, A.5.2,
   A.7.9, A.7.10, 6.13/6.29/6.31; M6 an item's EPA fixed on edit), 16 should (N1–N8 all duplicate existing classes),
   7 nits. Q18–Q21 for the operator. **Next:** the operator's answers, then round 2's ask.
+- **2026-11-02, the operator took the picks and Q18–Q21 as recommended** ("yes"). Round 2's ask (`round-2-ask.txt`,
+  768 lines, ~165 boards, a 74-state checklist R2-A01–R2-G01, M1–M6 and S1–S16 numbered, N1–N8 replaced by existing
+  classes, `project/f15r2.css`; decisions in the brief's § 6 and the assessment's § 10; one Opus agent, `0ffb5eda`).
+  Checked here: the item form's minimum is `RungPicker` (a select), not radios. PROPOSED in the ask, T1–T12; T4 (the
+  item form pages serve the College and the Administrator too, changing 1.18, 6.30, A.7.10) most needs the operator's
+  look. **Next:** the operator sends it with the twelve captures from `design/upload/baseline/`.
