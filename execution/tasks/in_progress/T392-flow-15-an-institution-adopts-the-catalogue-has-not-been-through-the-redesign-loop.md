@@ -141,3 +141,9 @@ T387 (flow 14), T379 (flow 13), T304, T301, T291, T326; BRIEF § 6, § 8, § 11;
   (`75e50cc6`, 0 must) and pages and runbook (`0274936f`, 1 must; the runbook's quoted words match the build); merged
   `build-review.md` (`bb03e773`): 1 must (the item form's default validator sentence, checked here), 13 should, 19 nit.
   **Next:** the operator's word on the fix pass's scope, then one Opus fix pass.
+- **2026-11-02, the fix pass** (one Opus agent; `f49a909f`..`d8f4e40e` on t392, `e74f5ecc` on master): M1, C1–C4,
+  P1–P4, P6 (profile, scales), P7–P9 and the nits fixed; P5 left to T390; the operator accepted the lanes' new words.
+  Suites 836/4334/1035/52/4499/520. **Squashed onto master `c931d56f`** (DESIGN.md's banner lists flow 15; build 0
+  warnings). T393 proposed (CurriculumEdit and EntrustmentScaleEdit print exception text). **Step 7:** the operator said
+  "run the replay after"; fresh `wombat_scenario_t392` on :5180 published from `c931d56f`; the replay brief is written by
+  one Opus agent, then one agent per act in order, then the states.
