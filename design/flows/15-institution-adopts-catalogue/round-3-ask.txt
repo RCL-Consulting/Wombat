@@ -1,0 +1,328 @@
+ROUND 3: the one correction round on round 2 as drawn (Curricula A, a curriculum's items B, the EPA list and an EPA's
+page C, the move D, the scales E, the rebuild F, My progress G). Put it on a new page of the canvas, "Round 3", and name
+every board R3-… (R3-A05-390 for R2-A05-390); round 1's and round 2's pages stay untouched. Redraw ONLY the boards
+listed under BOARDS ROUND 3 DRAWS, each at every width round 2 drew it, carrying everything no item below changes exactly
+as round 2 drew it; then draw the new boards listed there; then the Spec and Steps boards WHOLE. R2 boards not listed
+stand: the reviews found them right, and the Spec says which they are. Change what the items say; draw nothing they do
+not ask for. The design system is Wombat v41 as installed on this canvas (namespace wombat; ds/wombat/tokens.css and
+ds/wombat/components/bundle.css): keep both files in the project so the saved round renders. The brand mark is at
+/_blob/7d85109844af8d55420d07753d246843: use it, never a drawn disc. Every person, institution, code, title, version,
+date, id, count and order stays as round 2 drew it unless an item below changes it: the reviews checked them against
+the seed and the T387 replay and found them true (but for A11, M2). Use FIXTURES only and invent nothing; where a value
+is not given, write a bracket ‹…›. Label a state the replay never reaches "Illustration", in its title and as a chip on
+its face; a build state no step plays (a loading, a failure, a refusal) carries no chip, as in round 2. Never draw on one
+board two states that cannot hold at once. No gendered pronoun anywhere, the canvas notes included: the name, "the",
+"they" or "their". Words marked NEW are this message's own: draw them as given and list them on the Spec beside the words
+they replace. Then say on the Spec, item by item (by the ids below), what changed and on which boards.
+
+THE STYLESHEET. Round 2 saved f15r2.css as a project file, rightly. Round 3 has ONE stylesheet, f15r3.css, a PROJECT
+  FILE at project/f15r3.css (write it as a file of the project, NOT as an asset, so the saved round holds it): f15r2.css
+  copied whole, its PART 1 (the .cv-* canvas rules) and its PART 2 (the one shipped rule, .curriculum-item-page) kept,
+  changed only where an item below says so (the nit on .curriculum-item-page's selector, if taken). Every R3 board's head
+  links ds/wombat/tokens.css, ds/wombat/components/bundle.css, then f15r3.css, in that order, and no /_blob/ stylesheet;
+  a board's <style> holds body{margin:0} at most; no inline style=; no NEW rule on any board. If the canvas has to change
+  a rule to make a board render, change the file, say so on the Spec, and quote the changed rule.
+
+RENDER-CHECK (S16, F7), and put the result on R3-0-spec: open each items board (R3-B01, B02, B03, B06, B07, B08, B10,
+  B11, B13, B14, B17, B20, B21, B23) at 1280, 1100 and 901 with its width freed, the shell's sidebar as it renders at that
+  width, and each 390 board at 390; read the page's scrollWidth against its clientWidth and every .table-container's.
+  Measure each 390 control's box (every .btn, .form-control, .form-select, checkbox label row, the breadcrumb parent
+  link, the pager's three). Say on the Spec how many boards were measured, how many controls fell short of 44 px at 390
+  (0, or each named), the items table's spare width at 1280, 1100 and 901 in px, and that nothing scrolls sideways at any
+  width (the seven-column items table, "Neonatal team Clinical Competency Committee" and the long tool lists included);
+  if a render shows otherwise, say where and what would fix it (F7's alternatives, below), and draw nothing to hide it.
+
+THE SCREENSHOTS: round 2 read the twelve key captures from the folder but viewed four. Open the rest now, from
+  C:\dev\Wombat\design\upload\baseline\ (copies of design/baseline/, staged by design/tools/stage_upload.ps1 -Flow 15;
+  checked present 2026-11-02): act-1\1.19-2-epas-empty.png, act-1\1.19-3-epa-create-no-subspeciality.png,
+  act-1\1.20-1-adopted.png, act-1\1.21-1-institution-epas.png, act-1\1.21-3-institution-items.png,
+  act-1\1.22-1-scales-read-only.png, act-6\6.26-3-own-item-added.png and act-6\6.36-1-ndlovu-moved-to-11.2.png; and, for
+  boards this round redraws, act-6\6.22-2-mbatha-items-paused.png (B02), act-6\6.33-2-own-item-on-11.2.png (B08) and
+  act-6\6.38-3-rebuild-dialog.png (F02). They are attached to THIS message again as well. They are today's pages,
+  defects included, and the runbook's Actual lines say what each shows: read them to check the boards against the pages
+  they replace (the built words quoted on A02, B01, B02, B06, B08, D03, E03, E04, F02), never to draw from. SAY ON THE
+  SPEC BOARD, FIRST, whether they arrived (attached, or read from the folder), which you opened and viewed, and any word
+  a capture shows that a board contradicts; draw nothing from memory in place of one that did not arrive. Then the
+  captures paragraph as S25 says.
+
+THE OPERATOR'S DECISIONS. Q1–Q21 (2026-11-02; the brief's § 6 and round-1-assessment.md §§ 8 and 10) and round 2's
+  T1–T12 stand as round 2 drew them, but where F3 settles T4 and F5 T301's default. Added 2026-11-02, every
+  recommendation of round-2-review.md taken:
+  F1. A result and its focus cross a page change by a ONE-SHOT QUERY TOKEN per outcome, as T373's
+      OnboardingLinks.Admitted and BackFromAdmit (OnboardingLinks.cs:43-61) do. A links class (NEW, PROPOSED name:
+      CatalogueLinks) builds /admin/epas/{id}?created, /admin/curricula/{Id}/items?added={itemId}, ?saved={itemId} and
+      ?back={itemId}. The arriving page re-reads its record, writes the result sentence itself from the token ("EPA
+      saved.", "Curriculum item added.", "Curriculum item saved."), focuses it (the ActionResult; for back, the row's
+      Edit), then replaces the address without the token, so a reload says nothing. It survives EpaEdit's forceLoad
+      (EpaEdit.razor:257), holds no state, and a bUnit test reads it. Settles M5 and M6.
+  F2. Newer and Older are ordered by (EffectiveFrom, Id): a later clone is newer. The query and the dialog share the rule.
+  F3. T4 as proposed: ONE item editor for every caller (the Institutional admin, the College admin, the Administrator);
+      the edit row in a cell goes for all. The add and edit pages take their words from CanEditCurriculum: for the College
+      and the Administrator, h1 "Add item" (built, CurriculumItemsEdit.razor:329), subtitle "On Paediatric EPA
+      Curriculum (11.2). It applies to every institution that has adopted it." (NEW), the built national empty line
+      (:1139-1140); a national item's edit page titled by its EPA with the same subtitle. Drawn for Dr Kruger at 6.30
+      (R3-B22 to R3-B24). Flow 16 restyles the College's words. Settles M3.
+  F4. A refusal reaches its field by a typed Application exception carrying the field's key and the sentence (NEW,
+      PROPOSED name: FieldRefusalException(field, message)), thrown where the commands throw today, so the audit pipeline
+      still discards the refused save (T201); the pages map the key to the field and its aria-describedby; anything
+      without a key stays in the alert. The refusal boards (B05, B12, C05, C07, D06) stand as drawn.
+  F5. T301's second half folded in: CreateCurriculumCommand and Curriculum.CloneAsNewVersion create a version HELD BACK
+      (today Curriculum.IsActive defaults to true and the clone sets it, Curriculum.cs:19, :35); the seeders set their
+      curricula open explicitly, so no seeded value changes. Steps 6.13 and 6.29 drop "untick Active"; 6.31's tick is
+      the only opening. The boards' states (A07, A09, A12) stand.
+  F6. A superseded version's items page: subtitle "… · superseded on 2026-10-30 by Paediatric EPA Curriculum (11.2); 2
+      registrars still on it" (S1's reads); KGK's own items keep Edit and Remove… (the registrars still on it are
+      measured by them); NO Add (no new admission joins it). One board, 11.1 after 6.36 (R3-B21).
+  F7. The items table is clinic-table--compact (DESIGN.md:1040-1042 measured it so) on every items board, rendered at
+      1280, 1100 and 901 (the RENDER-CHECK; R3-B08 and R3-B17 drawn at all three). If it still does not fit, say so: the
+      alternatives were window and weight moved to the item's page, or a named, focusable scroll container.
+  F8. § 5's amendment reads "words, never a badge, on the admin lists and pages"; the trainee's EPA page h1
+      (DESIGN.md:3776-3777) and My progress (G01) keep the badge until T357 adopts Q3's words. No board changes.
+  F9. CreateEpa refuses an own EPA in a discipline the institution has not actively adopted; UpdateEpa refuses it only
+      when the save changes the sub-speciality. An own EPA left in a discipline no longer adopted keeps Edit (a title
+      fix, a deactivation); Spec § 12's edge case stands as drawn.
+
+FIXTURES: round 2's, unchanged (the T387 replay, wombat_scenario_t387; D = 2026-10-30). Restated only where a new or
+  corrected board needs them:
+  Anton Kruger, College admin, College of Paediatricians of South Africa; "Acting as College admin"; menu, flat: Home,
+    Specialities, EPAs, Curricula, Activity types; then My data rights. Curricula lit on every items page.
+  Paediatric EPA Curriculum (11.2) is curriculum 4: at 6.30 Held back (F5: from its clone at 6.29), 15 national items
+    before the add, 16 after; Open from 6.31; 16 national items until KGK-001 is added at 6.33 (then 17 in "All
+    curricula", which counts every institution's items: A09, A10).
+  Step 6.30's values: PAED-016 — Transitioning adolescents with long-term conditions to adult care, 1 per academic year,
+    Decided each academic year, decided by the trainee's general panel, not opportunistic, CPSA Paediatric Entrustment
+    Scale v11.1 (suggested), minimum level 4, minimum by training year Year 1: 2, Year 2: 3a, Year 3: 3b, Year 4: 4,
+    window 12, weight empty, tools CBD, Mini-CEX, MSF. PAED-011 — Managing population health challenges on 11.2 before
+    its edit: 1 per academic year, Decided each academic year, the general panel, not opportunistic, the CPSA scale,
+    minimum 4, 2 / 3a / 3b / 4, window 12, weight empty, tools CBD, Direct observation, MSF; the edit sets Target 2 and
+    changes nothing else. Item ids: ‹item id›.
+  After 6.36: active profiles on 11.1 two (Anele Dlamini, Nomsa Mahlangu), on 11.2 one (Sipho Ndlovu); Lerato Molefe's
+    ended profile on 11.1, not counted. PAED-006 reads "… (LTHCs) in children" from 6.14 on every version; PAED-012
+    Active again from 6.23.
+  The College's standing notice on its items page (built, CurriculumItemsEdit.razor:44-49, Alert warning, no role): "A
+    target and its period are read live. Changing one changes what every trainee on this curriculum is measured
+    against, in every institution that has adopted it, including periods that have already closed. A tool list is
+    checked when an activity is filed and submitted, and never takes back credit already earned."
+  The national empty line (built, :1139-1140): "Every national EPA of Paediatrics is already on this curriculum, as a
+    national item or as an institution's own item, so there is none left to add. To add an item, first add a national
+    EPA of Paediatrics, or remove a national item to free its EPA. An EPA an institution has as its own item is freed
+    only when that institution removes it."
+
+THE CHECKLIST. Each item names its boards (every width the board is drawn at unless it says otherwise); round 3's check
+takes each by its id and says done or not done from the board's text and markup.
+
+MUST FIX:
+  M1. The actions cell. Round 2 drew 242 cells as <td class="actions-cell"> (on A01-A13, B06, B08, B10, B11, B13, B17,
+      B20, C09, C15 and their twins). A cell's buttons sit in a div.actions-cell INSIDE the <td>, never td.actions-cell
+      (DESIGN.md:927-928, T266): app.css makes .actions-cell a flex box, and a flex td stops being a table cell.
+      RowActionMarkupTests.NoTableCell_IsItselfTheActionsCluster fails any page built otherwise. Every row-action cell on
+      every R3 board, at every width: <td><div class="actions-cell">…</div></td>. A national row's "Set by the College."
+      span sits in the same div. A09-A12 and C02 drew both on some rows: one div, in a plain td.
+  M2. A11's count. R3-A11 (and its 390 twin) is 6.31's state: "All curricula" reads Paediatric EPA Curriculum (11.2) 16
+      items, not 17 (KGK-001 joins 11.2 only at 6.33); 11.1 stays 16 (15 national and KGK-001). Everything else on A11
+      as round 2 drew it, but for S13, S15 and the nits.
+  M3. The item form pages for the College (F3). New, each at 1280 and 390, Dr Kruger at 6.30 (his menu, Curricula lit):
+      R3-B22 the add page: trail Home › Curricula › Items of Paediatric EPA Curriculum (11.2) › Add item (at 390 the
+        parent link "Items of Paediatric EPA Curriculum (11.2)", 44 px); h1 "Add item"; subtitle "On Paediatric EPA
+        Curriculum (11.2). It applies to every institution that has adopted it." (NEW); EPA a select offering PAED-016
+        alone, chosen; the 6.30 values typed (FIXTURES), the minimum level 4 chosen, so Add item is on; Cancel; the
+        built labels, options and helps exactly as R2-B04's; the checkbox rows 44 px at 390 (.curriculum-item-page).
+      R3-B23 added: back on Items of Paediatric EPA Curriculum (11.2) by ?added (F1), "Curriculum item added." focused
+        in the ActionResult at the top; the College's notice (FIXTURES); h2 "Items (16)"; where the action was, the
+        national empty line in .muted (FIXTURES); 16 rows, PAED-016 last ("1 per academic year" over "Decided each
+        academic year"; "4" over "CPSA Paediatric Entrustment Scale v11.1"; "2 / 3a / 3b / 4"; "12 months" over "Weight
+        —"; "CBD, Mini-CEX, MSF"), PAED-011 still "1 per academic year"; every row Edit and Remove… named for its EPA
+        ("Edit PAED-016", "Remove PAED-016"); no owner mark (the College reads no institution's items); subtitle
+        "College of Paediatricians of South Africa · Paediatrics / Paediatrics · effective 2026-10-30" (as R2-B17's).
+      R3-B24 PAED-011's edit page: trail … › Items of Paediatric EPA Curriculum (11.2) › PAED-011; h1 "Edit PAED-011 —
+        Managing population health challenges" (as R2-B09 titles KGK-001's); the same subtitle as R3-B22 (NEW); EPA a
+        select offering PAED-011 alone (its own EPA; no national EPA is left off the curriculum after PAED-016's add),
+        chosen; PAED-011's values (FIXTURES) with Target typed 2; Cancel, Save item.
+      The Spec writes the add and edit pages' h1, subtitle and empty line by CanEditCurriculum (both callers' words side
+      by side). Steps: 6.30 and A.7.10 (below).
+  M4. The Steps. R3-0-steps adds 1.17 and the Act 6 Outcome (Steps T1); the rows of M3 and S8 change with it.
+  M5. "EPA saved." after a create (F1). R3-C08: /admin/epas/17 reached by /admin/epas/17?created, the token gone from
+      the address once read; "EPA saved." focused in the ActionResult; its annotation says so. The Spec's EpaEdit row
+      lists the token and CatalogueLinks; Steps 6.25 keeps "EPA saved." focused.
+  M6. The item pages' return (F1). R3-B06 (?added, "Curriculum item added." focused), R3-B10 (?saved, "Curriculum item
+      saved." focused) and R3-B11 (?back, the focus on the row's "Edit KGK-001", no result) each say in the annotation
+      which token brought the page and that it was stripped; R3-B23 likewise. The Spec's item-routes row lists the four
+      tokens, CatalogueLinks and the rule that a stale or foreign item id in a token writes nothing and focuses nothing.
+
+SHOULD FIX (redraw where it says; the rest are Spec or Steps lines):
+  S1. The supersession rules (Spec + R3-A08). Spec: "Adopted on" is the active adoption's AdoptedOn; "Superseded on" is
+      the AdoptedOn of the adoption that followed the version's latest inactive adoption, found by order (AdoptedOn,
+      then Id), since both adoptions are dated D and going back (T1) adds a second row for a version; a version's
+      registrars are the ACTIVE TraineeProfiles with its InstitutionId and CurriculumId (TraineeProfile.cs:13-26, :41),
+      never the nullable AdoptionId, and the same arm keeps a version listed (Q9). R3-A08 (Illustration, 6.38's state,
+      going back to 11.1) draws the count and the decided lines: "Adopt Paediatric EPA Curriculum (11.1) for Kgosi Kgari
+      Teaching Hospital?" / "It supersedes Paediatric EPA Curriculum (11.2) for every new admission to Paediatrics /
+      Paediatrics at Kgosi Kgari Teaching Hospital." / "The registrar on 11.2 stays on it until moved on their
+      profile." (NEW: the count of one, Sipho Ndlovu; "The ‹N› registrars on … stay on it until each is moved on their
+      profile." stays for two or more) / NO own-items line (KGK-001 already sits on 11.1: the line is left out when the
+      other version already holds every own item); Cancel; Adopt 11.1. No bracket left on A08.
+  S2. Spec: F2's tie rule on GetAdoptableCurriculaQuery's relation and the dialog's.
+  S3. Spec: GetCurriculaListQuery, GetAdoptableCurriculaQuery and the adoption read take an InstitutionId (null for an
+      Institutional admin, who reads their own; required for the Administrator, from Show); national items counted only on
+      the open rows (GetCurricula.cs:12, :28-41; GetAdoptableCurricula.cs:26, :39).
+  S4. Spec: the Create EPA flag is true for the Administrator and a College admin, and for an Institutional admin only
+      with an actively adopted discipline (CreateEpa.cs:66-80).
+  S5. Spec: F9's rule; DeactivateEpaCommand unchanged.
+  S6. Spec: F4's exception, where each command throws it (CreateEpa, UpdateEpa, Add/UpdateCurriculumItem, the profile's
+      move) and how each page maps its key (EpaEdit.razor:275, CurriculumItemsEdit.razor:625, :734,
+      TraineeProfileEdit.razor:496-506).
+  S7. The load errors (R3-A15, B19, C17, C18b, E04). Draw each as StatePanel renders a LoadError with OnRetry
+      (StatePanel.razor:15-31): <div class="action-result" tabindex="-1"> holding the Alert danger, inside it <div
+      class="alert-row"><span class="alert-row-text">‹the fixed words›</span><button type="button" class="btn btn-outline
+      btn-sm">‹Icon refresh-cw› Try again</button></div>; the words as round 2 drew them ("Could not load the curricula.
+      Nothing has changed. Try again, or come back in a few minutes." and the four others); no empty state under it; the
+      h1 tabindex="-1" (FocusAfterRetry focuses it). Spec: CurriculaList.razor:104, EpasList.razor:77,
+      EntrustmentScalesList.razor:94 and CurriculumItemsEdit.razor:590 stop printing exception.Message and pass OnRetry.
+  S8. Steps (F5): 6.13, 6.29, 6.31 (Steps T3). Spec: F5's code change.
+  S9. Spec: the rebuild's failure focus, the Alert inside the ActionResult, focused (CurriculumProgressRebuild.razor:
+      11-14, :46-48 leave it on the button today). R2-F05 stands.
+  S10. Spec: the EPA label's em dash as a build change (CurriculumItemsEdit.razor:111, the Remove body at :769, the
+      legend; EpaOptionLabel.cs:20 has it). The boards' em dash stands.
+  S11. Spec: "Deactivate…" is a rename of the built "Deactivate" (EpaEdit.razor:96), listed with T3's Remove…. Steps:
+      6.17's Do, and 6.17's and 6.23's Expects (Steps T4).
+  S12. The superseded version's items page (F6). New R3-B21, at 1280 and 390: Nolwazi Mbatha on Items of Paediatric EPA
+      Curriculum (11.1) after 6.36. Subtitle "College of Paediatricians of South Africa · Paediatrics / Paediatrics ·
+      effective 2026-01-01 · superseded on 2026-10-30 by Paediatric EPA Curriculum (11.2); 2 registrars still on it"
+      (NEW, F6); the standing notice as built; h2 "Items (16)"; NO Add: where the action would be, in .muted, "Your
+      institution has superseded this version, so no item is added to it. Its own items stay for the registrars still
+      on it." (NEW, PROPOSED); 16 rows (15 "Set by the College.", PAED-006's new title, PAED-012 with no inactive mark;
+      KGK-001 last with "Your institution's own item", Edit and Remove…). The Spec: GetCurriculumByIdQuery returns the
+      version's state for the caller's institution (adopted on, or superseded on, by, and the count) and a may-add flag.
+  S13. The dialogs are ConfirmDialog's action mode (R3-A03, A08, A11, B13, C12, D03, F02, and R3-B22 has none). Each:
+      <dialog class="dialog-scrim dialog-card" aria-labelledby="‹title id›" aria-describedby="‹body id›">, inside it
+      <div class="form-container">, then <h2 id="‹title id›">, then the body: one paragraph as <p id="‹body id›"> (B13,
+      C12), several as <div id="‹body id›" class="dialog-body"> holding the paragraphs (A03, A08, A11, D03; F02 as
+      built), then the form actions with Cancel (.btn-outline, autofocus) first in the DOM and the confirm after (at 390
+      stacked, the confirm on top). No .dialog-form (that is the form mode). Each body read on open.
+  S14. R3-C15's pager is PagerControls: <nav class="pager" aria-label="‹…›"> with .pager-info ("‹first›–‹last› of 40"
+      as built), .pager-actions (Previous, Next, .btn-outline .btn-sm, aria-disabled at an end), and .pager-page-size
+      (the label "EPAs per page" for its select, NEW, PROPOSED) for round 2's 40 EPAs; no hand-drawn "Page 1 of ‹n›".
+  S15. One name a link (R3-A10, A11). The institution section's Items links are named for the institution: "Items of
+      Paediatric EPA Curriculum (11.2) for Kgosi Kgari Teaching Hospital" (NEW), and so for 11.1; "All curricula" keeps
+      "Items of Paediatric EPA Curriculum (11.2)".
+  S16. The items table measured (F7; the RENDER-CHECK; R3-B08 and R3-B17 also at 1100 and 901).
+  S17. Spec: DESIGN.md § 5's further lines T323 makes false: "Editing a row in place" (DESIGN.md:896 ff), the edit row
+      in the row-actions and picker paragraphs, "Curriculum adoptions" at :587 (the NavMenu table), :3985 and :4441;
+      name the section "the picker rule" lives in; the Form page template's ValidationSummary (:3959) amended for the EPA,
+      item and profile pages only.
+  S18. Spec: F8's scope.
+  S19. The loading boards (R3-A14, B18, C16, C18a, E03): <p class="loading-line" role="status"> (as built,
+      AssessorsList.razor:34), ONE per page, with the page's words as the built pages word theirs ("Loading the
+      assessors."): "Loading the curricula.", "Loading this curriculum's items.", "Loading the EPAs.", "Loading this
+      EPA.", "Loading the entrustment scales." (NEW); A14 says it once, not under each h2; the skeletons as drawn.
+  S20, S21, S22, S23, S24. Steps (Steps T5-T8).
+  S25. Spec: the captures paragraph reads present 12, viewed (4 in round 2 and those this round views), staged and not
+      viewed; and names the boards that stand on FIXTURES alone (A01, A02, B01, B06, C01, C02, E01, D05).
+
+WHILE YOU'RE THERE (nits, on boards this round redraws anyway; each is an item):
+  N1. R3-B17: its two brackets written from FIXTURES (the College's notice; the national empty line), as the
+      Administrator's CanEditCurriculum gives them.
+  N2. R3-A09, A10, A11: "All curricula"'s caption says Items counts every institution's own items too: "Every College's
+      curriculum versions, with the College's status. Items counts each institution's own items too." (NEW).
+  N3. R3-A10, A11: the institution section's column "For this institution" (not "For your institution"), and its intro
+      for the Administrator: "Adopting a version makes it the one that new admissions to its discipline join. Adopting
+      another version of a discipline the institution has adopted supersedes the current one: registrars already
+      admitted stay on theirs until each is moved, and the institution's own items are not carried over." (NEW).
+  N4. Every redrawn standing alert (the items notices) prints no role attribute (Alert with Role="" renders none).
+  N5. R3-A01's empty state is StatePanel's: <div class="detail-card detail-card--empty" tabindex="-1"> with <div
+      class="state-panel-title"> and <div class="state-panel-copy">, never a <p>.
+  N6. aria-haspopup="dialog" on every dialog trigger drawn (Adopt…, Remove…, Deactivate…; DESIGN.md:757).
+  N7. The trail is Breadcrumbs.razor's markup on every redrawn board with one (the separator and aria-current as built).
+  N8. R3-B10, B11, B14 (and B09's row on the Steps table) say "scratch" in their label (S24).
+  N9. .curriculum-item-page: one .user-page-scoped .form-check rule in place of the repeated .check-grid .form-check
+      selector, if it renders the same (f15r3.css PART 2; quote it on the Spec).
+  Spec lines only (no board): EpasList drops Speciality and merges Code and Title (EpasList.razor:28-38); D06's
+  "Curricula" link is a markup change to TraineeProfileEdit.razor:441-443; the move's dialog gates in SaveAsync
+  (OnSubmit="SaveAsync", TraineeProfileEdit.razor:390), so Enter in a date field asks too; /admin/adoptions' redirect
+  needs a page type for NavItems/NavOwners and a policy that sends a visitor to sign-in (NavItems.cs:113); A09's and
+  A12's captions and C02's and C15's headings join § 8's NEW table; AdoptedOn by the handler's TimeProvider on the
+  South African day, a test pinning 22:30 UTC; D07a's "no completions to count" brackets the person (‹name›: Sipho
+  Ndlovu's 6.36 move counts 1); C19's "150-character title" written out at that length when the build tests it; the
+  routes read {Id:int} and {ItemId:int}; D02's .submit-check gets role="status" if the build finds it silent.
+
+STEPS BOARD (R3-0-steps, -steps-2, more if long; every row round 2's board carries stays unless an item here changes
+it; values person by person from FIXTURES; round 2's counting rule unchanged):
+  T1. M4: 1.17 (Kruger, Curricula; act-1-setup.md:424-433): "15 items, Active" becomes "15 items, Open" (T9); the rest
+      unchanged. The Act 6 Outcome (act-6-catalogue.md:1019-1023): the curricula table's Status column "Open" / "Open"
+      / "Held back" for 11.1, 11.2 and Neonatology 1.0; KGK's "Adoptions: 11.2 Active and 11.1 Superseded" (:1032) reads
+      as KGK's Curricula says it: 11.2 "Adopted on 2026-10-30"; 11.1 "Superseded on 2026-10-30" over "2 registrars still
+      on it".
+  T2. M3: 6.30 (Kruger): Do unchanged. Expect: "Add item" beside "Items (15)" opens /admin/curricula/4/
+      items/new (R3-B22): h1 "Add item", the NEW subtitle, the picker PAED-016 alone; Add item returns to the list with
+      "Curriculum item added." focused, 16 rows and the national empty line (R3-B23). "PAED-011's edit row opens beneath
+      its row" becomes "Edit PAED-011 opens its page" (R3-B24); Save item returns to the list with "Curriculum item
+      saved." focused, the row "2 per academic year"; 11.1's PAED-011 still 1 (outcome SQL, unchanged). A.7.10 (Kruger at
+      390): the Do adds "press Edit PAED-001 and read its page"; the Expect as round 2's row (each action 44 px, its
+      page's fields one a row, nothing sideways). The College's add link is "Add item", the primary beside the h2
+      "Items (15)" on its baseline (.form-section-head), where Prof Mbatha's reads "Add your institution's own item".
+  T3. S8, F5: 6.13: Do "Create Neonatology EPA Curriculum, version 1.0, in Paediatrics / Neonatology, effective from D,
+      with no end. Then open its items." (the "Untick Active and save" sentence goes); Expect: the create opens its edit
+      page with Active unticked; the list shows it Held back, 0 items; its items page as before. 6.29: the Do's last
+      sentence ("On the new version's page, untick Active and save.") goes; Expect: "Once cloned, the page is 11.2's,
+      with Active unticked: a clone starts held back"; the list shows 11.2 Held back, 15 items. 6.31: Do unchanged
+      ("tick Active and save", now the only opening); Expect: 11.1 and 11.2 Open, 11.2 at 16 items, Neonatology still
+      Held back.
+  T4. S11: 6.17's Do "press Deactivate…" for "press Deactivate", its Expect "Deactivate… is gone"; 6.23's Expect
+      "Deactivate… is offered again". 6.14 is unchanged: its Do edits a title and names neither (the review's "6.14's Do"
+      was wrong: say so).
+  T5. S20: 6.33 in its Do's order: the list read first is R3-A05's ("16 national · 0 your own" on 11.2; 11.1 "3
+      registrars still on it"); after the add, R3-A06a's ("16 national · 1 your own"). S21: 1.20's Do ends "Type
+      /admin/adoptions and read where it lands." for the Expect's check. S23: 6.25 quotes the Actual (act-6-catalogue.md:
+      627-630: "/admin/epas/17, Active, Deactivate and Save offered", "Edit on all 16") as today's beside the new
+      ("EPA saved." focused by ?created, R3-C08; Edit on KGK-001 alone, R3-C09).
+  T6. S22: the missed hits, a row each with its new words: states.md:143, :765-776, :797-798, :800, :840-847, :901, :981;
+      coverage.md:104, :198, :323-324; act-6-catalogue.md:1019-1023, :1032 (T1); act-1-setup.md:285, :302-303; and the
+      Gaps that close: F-1.19a, F-1.21a, F-1.22a, F-6.22a, F-6.25a and b, F-A.7.10a.
+  T7. S24: a table of every board no step plays as drawn (B09-B16, B21-B24, C05-C07, C10-C14, C16-C18b, D06, F05,
+      A10-A11): its step, or the new states.md row it needs, and whether the replay or a scratch database reaches it.
+  T8. Each journey's count at 1280 and 390 as round 2's, plus the College's add and edit (6.30: Curricula, Items, Add
+      item, the fields, Add item; Edit PAED-011, Target, Save item), today's beside it; say which counts F1 and F5
+      change (6.13 and 6.29 lose a tick and a Save).
+
+BOARDS ROUND 3 DRAWS (each R3 board for the R2 board of the same id; widths as round 2 drew it):
+  Redrawn, 41 at 1280 with their 41 twins at 390 and 11 at 768 (93 screens):
+    R3-A01 (M1, N5; 768), A02 (M1; 768), A03 (M1, S13), A04 (M1), A05 (M1; 768), A06a, A06b, A07 (M1), A08 (M1, S1,
+    S13), A09 (M1, N2; 768), A10 (M1, S15, N2, N3), A11 (M1, M2, S13, S15, N2, N3), A12 (M1), A13 (M1; 768), A14 (S19),
+    A15 (S7);
+    R3-B01 (F7; 768), B02, B03, B07, B14 (F7), B06 (M1, M6, F7; 768), B08 (M1, F7; 768), B10, B11 (M1, M6, F7, N8), B13
+    (M1, S13, F7), B17 (M1, F7, N1), B20 (M1, F7; 768), B18 (S19), B19 (S7);
+    R3-C08 (M5), C09 (M1; 768), C12 (S13), C15 (M1, S14; 768), C16 (S19), C17 (S7), C18a (S19), C18b (S7);
+    R3-D03 (S13); R3-E03 (S19), E04 (S7); R3-F02 (S13).
+  New, 12 screens: R3-B21 (S12, F6), R3-B22, B23, B24 (M3, F3), each at 1280 and 390; R3-B08-1100, B08-901,
+    B17-1100, B17-901 (F7).
+  Illustrations among them, as round 2 labelled them (A07, A08, A11, A13, B20, C15), and none new: B21-B24 are played
+  states (6.38's read and 6.30). The Spec lists them.
+  Stand as drawn (not redrawn): R2-B04, B05, B09, B12, B15, B16, C01-C07, C10, C11, C13, C14, C19, D01, D02, D04-D07b,
+  E01, E02, E05, F01, F03-F05, G01, with their twins.
+  The Spec (R3-0-spec, -spec-2, more if long) and the Steps (R3-0-steps, …), redrawn WHOLE.
+
+SPEC BOARD: FIRST, the screenshots: whether they arrived and how, which were opened and viewed, any word a capture
+contradicts. Then: F1-F9, M1-M6, S1-S25, N1-N9 and T1-T8, each with where it is drawn or why it is Spec only; the list
+of R2 boards that stand; the Illustration list; the brackets kept and why (‹item id›; C15's ‹institution›, ‹code›,
+‹title›); the render-check's numbers. Round 2's change list restated whole, with these:
+  - CatalogueLinks and the four tokens (F1, M5, M6); EpaEdit's create branch navigating to ?created; the items page
+    reading ?added, ?saved and ?back.
+  - The item pages' words by CanEditCurriculum (F3, M3); the College's and the Administrator's in-place edit row gone.
+  - The supersession and count rules (S1), the tie rule (F2), the InstitutionId parameter (S3), the Create EPA flag
+    (S4), F9's refusal, F4's exception (S6), the load errors' OnRetry (S7), F5's held-back default, the rebuild's focus
+    (S9), the em dash (S10), the Deactivate… rename (S11), GetCurriculumByIdQuery's superseded state and may-add flag
+    (S12, F6), clinic-table--compact on the items table (F7).
+  - The DESIGN.md text: round 2's rows, with S17's lines and F8's scope.
+  - Every message by kind with its words, built, round 1's, round 2's or NEW, each NEW beside the words it replaces
+    (F3's subtitle, F6's subtitle, S12's no-Add line, S1's singular, S14's page-size label, S15's link names, S19's
+    loading lines, N2's caption, N3's column and intro).
+  - The class table: every class a board uses, "reuses .x" or NEW (still only .curriculum-item-page); the canvas-only
+    .cv-* rules listed apart, in f15r3.css PART 1.
+
+CHECK BEFORE YOU STOP: no td.actions-cell on any R3 board; A11 reads 16 for 11.2; every dialog in action mode with its
+  aria-describedby; every loading line role="status"; every load error with Try again inside an .action-result; one h1 a
+  board; no inline style; no undefined class; no raw colour; no badge for an owner and no badge on an EPA's status;
+  every 390 control 44 px; nothing scrolls sideways at 1280, 1100, 901, 768 or 390; no gendered pronoun on any board,
+  annotations included; every bracket ‹…› still a bracket, never filled from memory; every board's 390 and 768 twin
+  carries the same words as its 1280 board; f15r3.css saved as a project file; the Spec says first whether the
+  captures arrived.

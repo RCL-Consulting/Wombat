@@ -201,3 +201,20 @@ DESIGN.md lines (927-928, not 919-922); the cast review's and T3's "em dash" as 
 `CurriculumItemsEdit.razor:769`); K N4's `OnValidSubmit` (the form uses `OnSubmit`, `TraineeProfileEdit.razor:390`); K13's
 table-cell line (`:111`). Where the reviews meet, none contradicts another: K15 and C1 are one count, K11 gives C2's
 mechanism, K9 and ds S3 are one load error seen from the page and from the board.
+
+## Decisions
+
+**Taken 2026-11-02: F1–F9 as recommended** (the operator's word; recorded in the brief's § 6). F1 the one-shot query
+token per outcome (`?created`, `?added=`, `?saved=`, `?back=`), as `OnboardingLinks.Admitted`; F2 Newer / Older by
+(`EffectiveFrom`, `Id`); F3 T4 as proposed, one item editor for every caller, its words from `CanEditCurriculum`, Dr
+Kruger's add page and PAED-011's edit page drawn at 6.30; F4 a typed refusal carrying the field's key and the sentence,
+the refused save still discarded; F5 T301's second half folded in (a new or cloned version starts held back, the
+seeders set theirs open; 6.13 and 6.29 drop "untick Active"); F6 a superseded version's items page, "superseded on
+‹date› by Paediatric EPA Curriculum (11.2); ‹N› registrars still on it", own items' Edit and Remove… kept, no Add, one
+board; F7 `clinic-table--compact`, rendered at 1280, 1100 and 901; F8 "words, never a badge" on the admin pages only,
+the trainee's EPA h1 and My progress keeping the badge until T357; F9 the unadopted-discipline refusal on Create and on
+an Update that changes the sub-speciality. Round 3's ask (`round-3-ask.txt`) applies them with M1–M6.
+
+Checked while writing the ask: M1–M6 hold against the boards and the code. One claim is narrower than written: S11's
+"6.14, 6.17 and 6.23's Do say 'press Deactivate'": only 6.17's Do does (act-6-catalogue.md 6.17); 6.17's and 6.23's
+Expects name the button ("Deactivate is gone", "Deactivate is offered again"); 6.14 edits a title and names neither.

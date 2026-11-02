@@ -696,6 +696,32 @@ M1–M6 and S1–S16 apply, and the nits in one pass. Round 2's ask is `15-insti
     Q3's words), T381 (a changed item EPA after an end), T171, T139 and T291 items 2, 3, 6 and 8 (flows 16, 17 and 18)
     as their own.
 
+**Round 2's questions, F1–F9: decided 2026-11-02, taken as recommended** (`15-institution-adopts-catalogue/round-2-review.md`
+§ Decisions for the operator; they settle the ask's T4 and T301's default, and reopen no Q). Round 3's ask is
+`15-institution-adopts-catalogue/round-3-ask.txt`.
+
+- **F1. A result and its focus across a page change** (M5, M6): a one-shot query token per outcome, as T373's
+  `OnboardingLinks.Admitted`: `/admin/epas/{id}?created`, `…/items?added={itemId}`, `?saved={itemId}`, `?back={itemId}`,
+  built by one links class. The arriving page re-reads its record, writes the result sentence itself, focuses it (the
+  row's Edit for `back`), then replaces the address without the token, so a reload says nothing.
+- **F2. Newer and Older** (S2): ordered by (`EffectiveFrom`, `Id`); the query and the dialog share the rule.
+- **F3. The item form pages for every caller** (M3, T4): one editor for the Institutional admin, the College admin and the
+  Administrator; the edit row goes for all. The words come from `CanEditCurriculum`: "Add item"; "On Paediatric EPA
+  Curriculum (11.2). It applies to every institution that has adopted it."; the built national empty line. Round 3 draws
+  Dr Kruger's add page and PAED-011's edit page at step 6.30.
+- **F4. A refusal under its field** (S6): an Application exception carrying the field's key and the sentence, thrown
+  where the commands throw today, so a refused save is still discarded; anything without a key stays in the alert.
+- **F5. A new or cloned version starts held back** (S8; T301's second half): `CreateCurriculumCommand` and
+  `CloneAsNewVersion` create it held back; the seeders set theirs open. Steps 6.13 and 6.29 drop "untick Active"; 6.31's
+  tick is the only opening.
+- **F6. A superseded version's items page** (S12): subtitle "superseded on ‹date› by Paediatric EPA Curriculum (11.2);
+  ‹N› registrars still on it"; KGK's own items keep Edit and Remove…; no Add; one board (11.1 after 6.36).
+- **F7. The items table's width** (S16): `clinic-table--compact`, rendered in round 3 at 1280, 1100 and 901.
+- **F8. Badge or words** (S18): § 5's "words, never a badge" applies to the admin lists and pages; the trainee's EPA
+  page h1 and My progress keep the badge until T357.
+- **F9. UpdateEpa's unadopted-discipline refusal** (S5): on Create, and on an Update that changes the sub-speciality; an
+  own EPA left in a discipline no longer adopted keeps Edit.
+
 ## 7. Acceptance
 
 A flow is done when BRIEF.md § 9's four checks hold. For this flow:
