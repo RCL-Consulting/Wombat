@@ -116,3 +116,10 @@ T387 (flow 14), T379 (flow 13), T304, T301, T291, T326; BRIEF § 6, § 8, § 11;
   captures to reopen; `project/f15r3.css`. M1–M6 hold (242 exact); S11 partly wrong (only 6.17's Do names Deactivate).
   Assumed, marked NEW: A08's one-registrar line, B21's no-Add line, `CatalogueLinks`, `FieldRefusalException`, PAED-011's
   title, loading lines, "EPAs per page", the Administrator's A10/A11 wording. **Next:** the operator sends round 3.
+- **2026-11-02, round 3** (111 boards and `f15r3.css` in `round-3/`, `7ee1206a`; the captures came from the connected
+  folder). Checked item by item (`round-3-check.md`, one Sonnet agent, `e91f5c7f`, rendered in Chromium): 48 items, 45
+  done, 2 partly (N6: D03's "Save profile and move…" lacks aria-haspopup, checked here; S17: a section misnamed in the
+  Spec), 1 not done (N7: the trail differs from Breadcrumbs.razor; build from the component). For the operator: the
+  901 px items table scrolls 10 px (move Window and weight to the item page); five 390 controls under 44 px (a
+  page-scoped rule each, plus the College's "Add item"); KGK-001 last in the items table; the plus icon kept on Create
+  EPA and Create curriculum; B22/B24's year selects from StageMinimaEditor. **Next:** the operator's word, then step 6.
