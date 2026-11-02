@@ -69,7 +69,10 @@ public sealed class CreateCurriculumCommandHandler : IRequestHandler<CreateCurri
             Name = request.Name.Trim(),
             Version = request.Version.Trim(),
             EffectiveFrom = request.EffectiveFrom,
-            EffectiveTo = request.EffectiveTo
+            EffectiveTo = request.EffectiveTo,
+            // T392, flow 15, F5 (T301's second half): a new version starts held back, so no institution adopts it before its
+            // College opens it (UpdateCurriculumCommand's IsActive, the College's box). The seeders open theirs explicitly.
+            IsActive = false
         };
 
         _dbContext.Set<Curriculum>().Add(curriculum);
@@ -84,7 +87,7 @@ public sealed class CreateCurriculumCommandHandler : IRequestHandler<CreateCurri
         }
 
         return CurriculumAdminScope.ForCaller(
-            new CurriculumDto(curriculum.Id, subSpeciality.SpecialityId, curriculum.SubSpecialityId, subSpeciality.SpecialityName, subSpeciality.Name, subSpeciality.CollegeName, curriculum.Name, curriculum.Version, curriculum.EffectiveFrom, curriculum.EffectiveTo, curriculum.IsActive, true, [], subSpeciality.DefaultEntrustmentScaleId),
+            new CurriculumDto(curriculum.Id, subSpeciality.SpecialityId, curriculum.SubSpecialityId, subSpeciality.SpecialityName, subSpeciality.Name, subSpeciality.CollegeName, curriculum.Name, curriculum.Version, curriculum.EffectiveFrom, curriculum.EffectiveTo, curriculum.IsActive, [], subSpeciality.DefaultEntrustmentScaleId),
             subSpeciality.CollegeId,
             request.Principal);
     }

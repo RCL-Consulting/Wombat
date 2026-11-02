@@ -102,13 +102,12 @@ public sealed class CurriculumItemAdoptionTests
     // An active adoption.
     [InlineData(InstitutionA, CurriculumId, LocA01)]
     [InlineData(InstitutionA, CurriculumId, Paed009)]
-    // An adoption since superseded (T211's moved-off case): B's trainees admitted to 3000 are still measured there.
-    [InlineData(InstitutionB, CurriculumId, LocB02)]
-    [InlineData(InstitutionB, CurriculumId, Paed009)]
+    // B, on the version it moved to.
+    [InlineData(InstitutionB, NextVersionId, LocB02)]
     // D, on the version it did adopt: its refusal on 3000 is about 3000.
     [InlineData(InstitutionD, NextVersionId, LocD02)]
     [InlineData(InstitutionD, NextVersionId, Paed009)]
-    public async Task AddCurriculumItem_ByAnInstitutionThatAdoptedTheCurriculum_ActiveOrSuperseded_IsStored(int institutionId, int curriculumId, int epaId)
+    public async Task AddCurriculumItem_ByAnInstitutionThatAdoptedTheCurriculum_IsStored_OnItsActiveAdoption(int institutionId, int curriculumId, int epaId)
     {
         var databaseName = Guid.NewGuid().ToString();
         await using (var dbContext = CreateDbContext(databaseName))
@@ -121,6 +120,33 @@ public sealed class CurriculumItemAdoptionTests
         await using var readContext = CreateDbContext(databaseName);
         (await readContext.Set<CurriculumItem>().SingleAsync(item => item.CurriculumId == curriculumId && item.EpaId == epaId))
             .OwningInstitutionId.Should().Be(institutionId);
+    }
+
+    [Theory]
+    // An adoption since superseded (T211's moved-off case): B's own item there stays, and nothing new is added (F6, C2).
+    [InlineData(LocB02)]
+    [InlineData(Paed009)]
+    public async Task AddCurriculumItem_OnAVersionTheInstitutionHasSuperseded_IsRefused_BeforeAnyWrite(int epaId)
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        await using (var dbContext = CreateDbContext(databaseName))
+        {
+            await SeedAsync(dbContext);
+        }
+
+        await using (var dbContext = CreateDbContext(databaseName))
+        {
+            var act = () => new AddCurriculumItemCommandHandler(dbContext).Handle(
+                AddCommand(CurriculumId, epaId, TestPrincipals.InstitutionalAdmin(InstitutionB)), CancellationToken.None);
+
+            (await act.Should().ThrowAsync<CurriculumVersionSupersededException>()).Which.Message.Should().Be(
+                "Your institution has superseded this version, so no item is added to it. Nothing has changed.");
+            await AssertNothingForTheAuditSaveToCommitAsync(dbContext);
+        }
+
+        await using var readContext = CreateDbContext(databaseName);
+        (await readContext.Set<CurriculumItem>().Where(item => item.CurriculumId == CurriculumId).Select(item => item.Id).ToListAsync())
+            .Should().BeEquivalentTo([NationalItemId, BItemId, CItemId, DItemId]);
     }
 
     [Fact]

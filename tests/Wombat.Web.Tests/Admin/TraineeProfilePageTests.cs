@@ -7,12 +7,14 @@ using FluentAssertions;
 using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using Wombat.Application.Common;
 using Wombat.Application.Features.CommitteeDecisions;
 using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Trainees;
 using Wombat.Application.Features.Users;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.Admin.Trainees;
+using Wombat.Web.Components.Shared;
 using Wombat.Web.Services;
 
 namespace Wombat.Web.Tests.Admin;
@@ -280,7 +282,7 @@ public sealed class TraineeProfilePageTests : TestContext
     public void TheCommandsOwnRefusal_ShowsUnderTheField_InTheSamePlace()
     {
         // P07: the command keeps its check behind the press-time one.
-        var sender = new FakeSender { Refusal = new InvalidOperationException("The last day cannot be after today (2026-10-26).") };
+        var sender = new FakeSender { Refusal = new Wombat.Domain.Identity.TraineeProfileRefusedException("The last day cannot be after today (2026-10-26).") };
         var cut = Render(sender);
 
         cut.Find("#end-mark-complete").Click();
@@ -469,7 +471,7 @@ public sealed class TraineeProfilePageTests : TestContext
 
         cut.Find("section[aria-labelledby='profile-details-heading'] form").Submit();
         var save = cut.FindAll("button[type=submit]").Single();
-        Text(save).Should().Be("Saving...");
+        Text(save).Should().Be("Saving…");
         save.HasAttribute("disabled").Should().BeFalse();
         save.GetAttribute("aria-disabled").Should().Be("true");
         cut.Find("#end-mark-complete").GetAttribute("aria-disabled").Should().Be("true");
@@ -485,12 +487,39 @@ public sealed class TraineeProfilePageTests : TestContext
     [Fact]
     public void ARefusedSave_SaysTheHandlersWords_InProfileDetails()
     {
-        var cut = Render(new FakeSender { SaveRefusal = new InvalidOperationException("The curriculum is not adopted.") });
+        var cut = Render(new FakeSender { SaveRefusal = new Wombat.Domain.Identity.TraineeProfileRefusedException("This programme has ended; its record is archived and cannot be changed.") });
 
         cut.Find("section[aria-labelledby='profile-details-heading'] form").Submit();
 
         cut.WaitForAssertion(() => Text(Section(cut, "Profile details").QuerySelector(".action-result .alert-danger")!)
-            .Should().Be("The curriculum is not adopted."));
+            .Should().Be("This programme has ended; its record is archived and cannot be changed."));
+    }
+
+    [Fact]
+    public void ASaveFailingWithAnyOtherInvalidOperation_IsFixedWords_NeverTheExceptionsText()
+    {
+        // P6 (T392 build review), T329: a bug's InvalidOperationException is no refusal.
+        var cut = Render(new FakeSender { SaveRefusal = new InvalidOperationException("Sequence contains no elements") });
+
+        cut.Find("section[aria-labelledby='profile-details-heading'] form").Submit();
+
+        cut.WaitForAssertion(() => Text(Section(cut, "Profile details").QuerySelector(".action-result .alert-danger")!)
+            .Should().Be("The profile could not be saved just now. Nothing has changed. Try again, or come back in a few minutes."));
+        cut.Markup.Should().NotContain("Sequence contains");
+    }
+
+    [Fact]
+    public void AnEndFailingWithAnyOtherInvalidOperation_IsFixedWords_NeverTheExceptionsText()
+    {
+        // P6 (T392 build review), T329.
+        var cut = Render(new FakeSender { Refusal = new InvalidOperationException("Sequence contains no elements") });
+
+        cut.Find("#end-mark-complete").Click();
+        DialogButton(cut, "Mark Lerato Molefe's programme complete?", "Mark complete").Click();
+
+        cut.WaitForAssertion(() => Text(EndSection(cut).QuerySelector(".action-result .alert-danger")!).Should().Be(
+            "The programme could not be ended just now. Nothing has changed. Try again, or come back in a few minutes."));
+        cut.Markup.Should().NotContain("Sequence contains");
     }
 
     [Fact]
@@ -527,6 +556,176 @@ public sealed class TraineeProfilePageTests : TestContext
         var actions = Section(cut, "Profile details").QuerySelector(".form-actions")!.Children.Select(Text).ToList();
         actions.Should().Equal("Cancel", "Save profile");
         Section(cut, "Profile details").Closest(".user-page").Should().NotBeNull();
+    }
+
+    // ── The move (T392, flow 15: R2-D01–D07b, R3-D03) ──────────────────────────
+
+    [Fact]
+    public void KeptOnASupersededVersion_TheLineSaysSo_AndSaveProfileAsksNothing()
+    {
+        // R2-D01 (6.34): the picker on the pin, which the institution has superseded; a save keeps the registrar on it.
+        var sender = new FakeSender();
+        var cut = Render(sender);
+
+        Text(cut.Find("#curriculum-id-line")).Should().Be(
+            "Lerato Molefe is on Paediatric EPA Curriculum (11.1), which your institution superseded on 2026-10-30. " +
+            "Keeping it keeps Lerato Molefe on 11.1.");
+        cut.Find("#curriculum-id-line").ClassList.Should().Contain("submit-check");
+        cut.Find("#curriculum-id-line").HasAttribute("role").Should().BeFalse("a standing line is not a live region");
+        cut.Find("#curriculum-id").GetAttribute("aria-describedby").Should().Be("curriculum-id-line");
+        var save = cut.Find("#profile-save");
+        Text(save).Should().Be("Save profile");
+        save.HasAttribute("aria-haspopup").Should().BeFalse();
+
+        cut.Find("section[aria-labelledby='profile-details-heading'] form").Submit();
+
+        cut.WaitForAssertion(() => sender.Saves.Should().Be(1));
+        JSInterop.Invocations.Should().NotContain(call => call.Identifier == "wombatDialog.showModal");
+    }
+
+    [Fact]
+    public void ChoosingTheAdoptedVersion_ChangesTheLine_AndTheSubmitOpensADialog()
+    {
+        // R2-D02 (T2), decision 6: the words under the picker change, and the submit is "Save profile and move…".
+        var cut = Render(new FakeSender());
+
+        cut.Find("#curriculum-id").Change("2");
+
+        Text(cut.Find("#curriculum-id-line")).Should().Be(
+            "When you save, Lerato Molefe moves to Paediatric EPA Curriculum (11.2). Lerato Molefe's completed activities " +
+            "are counted again against 11.2 in the same save, so Lerato Molefe's progress page reads 11.2's targets at " +
+            "once. Lerato Molefe cannot be moved back to 11.1 while 11.2 is the version your institution has adopted.");
+        var save = cut.Find("#profile-save");
+        Text(save).Should().Be("Save profile and move…");
+        save.GetAttribute("aria-haspopup").Should().Be("dialog");
+    }
+
+    [Fact]
+    public void SaveProfileAndMove_AsksFirst_AndSendsNothing()
+    {
+        // R3-D03 (Q8, Q20): the dialog gates inside the form's submit (OnSubmit), which Enter in a date field reaches as
+        // the button does; no count is read first.
+        var sender = new FakeSender();
+        var cut = Render(sender);
+
+        cut.Find("#curriculum-id").Change("2");
+        cut.Find("section[aria-labelledby='profile-details-heading'] form").Submit();
+
+        JSInterop.Invocations.Should().Contain(call => call.Identifier == "wombatDialog.showModal"
+            && Equals(call.Arguments[1], "profile-save"));
+        sender.Saves.Should().Be(0);
+        var dialog = Dialog(cut, "Move Lerato Molefe to Paediatric EPA Curriculum (11.2)?");
+        dialog.QuerySelectorAll(".dialog-body p").Select(Text).Should().Equal(
+            "Lerato Molefe's completed activities are counted again against 11.2 as the profile saves, and from then on " +
+            "they credit 11.2's items.",
+            "Lerato Molefe cannot be moved back to 11.1 while 11.2 is the version your institution has adopted.");
+        dialog.QuerySelectorAll(".form-actions button").Select(Text).Should().Equal("Cancel", "Move and save");
+        DialogButton(cut, "Move Lerato Molefe to Paediatric EPA Curriculum (11.2)?", "Move and save")
+            .ClassList.Should().Contain("btn-primary");
+    }
+
+    [Fact]
+    public void Cancel_SavesNothing_AndKeepsEveryFieldAsTyped()
+    {
+        // R2-D04: closed, nothing saved, every field as typed; the focus back on the trigger (ConfirmDialog's return).
+        var sender = new FakeSender();
+        var cut = Render(sender);
+
+        cut.Find("#programme-start-date").Change("2023-02-01");
+        cut.Find("#curriculum-id").Change("2");
+        cut.Find("section[aria-labelledby='profile-details-heading'] form").Submit();
+        DialogButton(cut, "Move Lerato Molefe to Paediatric EPA Curriculum (11.2)?", "Cancel").Click();
+
+        sender.Saves.Should().Be(0);
+        JSInterop.Invocations.Should().Contain(call => call.Identifier == "wombatDialog.close" && Equals(call.Arguments[1], true));
+        cut.Find("#curriculum-id").GetAttribute("value").Should().Be("2");
+        cut.Find("#programme-start-date").GetAttribute("value").Should().Be("2023-02-01");
+        Text(cut.Find("#profile-save")).Should().Be("Save profile and move…");
+    }
+
+    [Fact]
+    public void MoveAndSave_SavesOnce_ShowsTheBuiltResult_AndThePickerReadsTheActiveAdoption()
+    {
+        // R2-D05: the built result, its first sentence bold; the picker read again, the line D05's.
+        var sender = new FakeSender { Recount = new TraineeCreditRecount(CurriculumMoved: true, CompletionsChecked: 1, CompletionsCounting: 1) };
+        var cut = Render(sender);
+
+        cut.Find("#curriculum-id").Change("2");
+        cut.Find("section[aria-labelledby='profile-details-heading'] form").Submit();
+        DialogButton(cut, "Move Lerato Molefe to Paediatric EPA Curriculum (11.2)?", "Move and save").Click();
+
+        cut.WaitForAssertion(() => sender.Saves.Should().Be(1));
+        sender.LastSave!.CurriculumId.Should().Be(2);
+        var result = Section(cut, "Profile details").QuerySelector(".action-result .alert-success")!;
+        Text(result).Should().Be("Trainee profile saved. 1 completion was checked against 11.2, and 1 counts towards it.");
+        Text(result.QuerySelector("strong")!).Should().Be("Trainee profile saved.");
+        Text(cut.Find("#curriculum-id-line")).Should().Be("The version your institution has adopted for Paediatrics / Paediatrics.");
+        Text(cut.Find("#profile-save")).Should().Be("Save profile");
+        cut.Find("#profile-save").HasAttribute("aria-haspopup").Should().BeFalse();
+    }
+
+    [Fact]
+    public void AMoveRefused_ForAVersionNoLongerAdopted_IsShownUnderCurriculum_Focused_WithNoAlert()
+    {
+        // R2-D06: the refusal under the picker, first in its aria-describedby, focused; the picker read again; no result.
+        var sender = new FakeSender
+        {
+            SaveRefusal = new FieldRefusalException(
+                nameof(UpdateTraineeProfileCommand.CurriculumId), UpdateTraineeProfileCommandHandler.MoveNotAdopted)
+        };
+        var cut = Render(sender);
+
+        cut.Find("#curriculum-id").Change("2");
+        cut.Find("section[aria-labelledby='profile-details-heading'] form").Submit();
+        DialogButton(cut, "Move Lerato Molefe to Paediatric EPA Curriculum (11.2)?", "Move and save").Click();
+
+        cut.WaitForAssertion(() => cut.FindAll("#curriculum-id-refusal").Should().ContainSingle());
+        var refusal = cut.Find("#curriculum-id-refusal");
+        Text(refusal).Should().Be(UpdateTraineeProfileCommandHandler.MoveNotAdopted);
+        refusal.GetAttribute("role").Should().Be("alert");
+        refusal.ClassList.Should().Contain("validation-message");
+        var picker = cut.Find("#curriculum-id");
+        picker.GetAttribute("aria-invalid").Should().Be("true");
+        picker.GetAttribute("aria-describedby").Should().Be("curriculum-id-refusal curriculum-id-line");
+        JSInterop.Invocations.Should().Contain(call => call.Identifier == "wombat.focusById"
+            && Equals(call.Arguments[0], "curriculum-id"));
+        sender.Sent.OfType<GetTraineeCurriculumChoicesQuery>().Should().HaveCount(2, "the picker is read again");
+        Section(cut, "Profile details").QuerySelectorAll(".action-result .alert").Should().BeEmpty();
+    }
+
+    [Fact]
+    public void AMoveRefused_SetsThePickerBackToThePin_WhenTheChosenVersionIsNoLongerOffered()
+    {
+        var sender = new FakeSender
+        {
+            SaveRefusal = new FieldRefusalException(
+                nameof(UpdateTraineeProfileCommand.CurriculumId), UpdateTraineeProfileCommandHandler.MoveNotAdopted)
+        };
+        var cut = Render(sender);
+
+        cut.Find("#curriculum-id").Change("2");
+        cut.Find("section[aria-labelledby='profile-details-heading'] form").Submit();
+        sender.Choices = [new(1, "Paediatric EPA Curriculum", "11.1", 1, 1) { IsActiveAdoption = true }];
+        DialogButton(cut, "Move Lerato Molefe to Paediatric EPA Curriculum (11.2)?", "Move and save").Click();
+
+        cut.WaitForAssertion(() => cut.FindAll("#curriculum-id-refusal").Should().ContainSingle());
+        cut.Find("#curriculum-id").GetAttribute("value").Should().Be("1");
+        Text(cut.Find("#curriculum-id-line")).Should().Be("The version your institution has adopted for Paediatrics / Paediatrics.");
+        Text(cut.Find("#profile-save")).Should().Be("Save profile");
+    }
+
+    [Fact]
+    public void WithNothingAdopted_TheSentencePointsToCurricula()
+    {
+        // R2-0-spec-2 § 9: as Admit's, "… Adopt one under Curricula, then admit the trainee.", Curricula a link.
+        var cut = Render(new FakeSender { Choices = [] });
+
+        var none = cut.Find("#curriculum-id-none");
+        Text(none).Should().Be(
+            "This institution has adopted no curriculum yet, so no trainee can be admitted. Adopt one under Curricula, then admit the trainee.");
+        var link = none.QuerySelector("a")!;
+        Text(link).Should().Be("Curricula");
+        link.GetAttribute("href").Should().Be(OnboardingLinks.Curricula);
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────
@@ -581,6 +780,16 @@ public sealed class TraineeProfilePageTests : TestContext
         public List<object> Sent { get; } = [];
         public List<object> Commands { get; } = [];
         public int Saves { get; private set; }
+        public UpdateTraineeProfileCommand? LastSave { get; private set; }
+
+        /// <summary>
+        /// What the choices query answers (T392): 11.1 the pin, superseded on 2026-10-30, and 11.2 the active adoption.
+        /// </summary>
+        public List<CurriculumChoiceDto> Choices { get; set; } =
+        [
+            new(1, "Paediatric EPA Curriculum", "11.1", 1, 1) { SupersededOn = new DateOnly(2026, 10, 30) },
+            new(2, "Paediatric EPA Curriculum", "11.2", 1, 1) { IsActiveAdoption = true }
+        ];
         public bool HoldSave { get; init; }
         private readonly TaskCompletionSource _held = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -599,8 +808,9 @@ public sealed class TraineeProfilePageTests : TestContext
         {
             switch (request)
             {
-                case UpdateTraineeProfileCommand:
+                case UpdateTraineeProfileCommand save:
                     Saves++;
+                    LastSave = save;
                     if (HoldSave)
                     {
                         return HeldSaveAsync<TResponse>();
@@ -644,11 +854,7 @@ public sealed class TraineeProfilePageTests : TestContext
             {
                 GetTraineeProfileByIdQuery query when query.Id == ProfileId && !Missing => Profile(),
                 GetTraineeProfileByIdQuery => null,
-                GetTraineeCurriculumChoicesQuery => new List<CurriculumChoiceDto>
-                {
-                    new(1, "Paediatric EPA Curriculum", "11.1", 1, 1),
-                    new(2, "Paediatric EPA Curriculum", "11.2", 1, 1)
-                },
+                GetTraineeCurriculumChoicesQuery => Choices.ToList(),
                 GetTakeBackForecastQuery => Forecast,
                 _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
             };

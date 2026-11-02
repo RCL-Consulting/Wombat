@@ -1,43 +1,27 @@
-using System.Security.Claims;
-using AngleSharp.Dom;
 using Bunit;
-using Bunit.TestDoubles;
 using FluentAssertions;
-using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Epas;
-using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
-using Wombat.Web.Components.Pages.Admin.Curricula;
-using Wombat.Web.Services;
 using FakeSender = Wombat.Web.Tests.Admin.CurriculumItemsFakeSender;
 
 namespace Wombat.Web.Tests.Admin;
 
 /// <summary>
-/// T122: the curriculum item editor's tool list — the only surface that writes an EPA's allow-list.
+/// T122, on the items list and an item's page of its own since T392 (flow 15, Q14): the tool list, the only surface that
+/// writes an EPA's allow-list.
 /// </summary>
 /// <remarks>
-/// <para>
-/// Every failure worth testing here is permissive and therefore silent. An item saved with an empty list lets
-/// every instrument credit its EPA (D21), so an editor that dropped the stored list on an unchanged save, or
-/// could not show a stored key to untick it, would widen the College's mapping and nothing anywhere would say
-/// so. The commands take the list positionally for that reason; these tests pin the page that fills it.
-/// </para>
-/// <para>
-/// The inline edit row and the Add form used to bind ONE model instance, so opening a row filled the Add form
-/// with that row's values. With a checkbox group in each, the two groups would also have toggled each other.
-/// </para>
+/// Every failure worth testing here is permissive and therefore silent. An item saved with an empty list lets every
+/// instrument credit its EPA (D21), so a page that dropped the stored list on an unchanged save, or could not show a stored
+/// key to untick it, would widen the College's mapping and nothing anywhere would say so.
 /// </remarks>
-public sealed class CurriculumItemsToolListTests : TestContext
+public sealed class CurriculumItemsToolListTests : CurriculumItemsTestBase
 {
     private static readonly IReadOnlyList<WbaToolDto> Vocabulary = FakeSender.Vocabulary;
 
     public CurriculumItemsToolListTests()
     {
-        var auth = this.AddTestAuthorization();
-        auth.SetAuthorized("admin@test");
-        auth.SetRoles(WombatRoles.Administrator);
-        auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "admin-1"));
+        SignIn(WombatRoles.Administrator);
     }
 
     // ---- The Tools column ----
@@ -45,343 +29,137 @@ public sealed class CurriculumItemsToolListTests : TestContext
     [Fact]
     public void TheToolsColumn_NamesEachItemsInstruments_OrSaysAnyInstrument()
     {
-        var cut = RenderPage(new FakeSender());
+        var cut = RenderList(new FakeSender());
 
-        HeaderTexts(cut).Should().Contain("Tools");
-
-        ToolsCell(cut, "PAED-001").Should().Be("Case-based discussion, Mini-CEX",
-            "the list shows the College's names, not the stored keys");
-
-        // Null is "any instrument" (D21) and must SAY so. A blank cell reads as "not filled in", which is the
-        // one reading the admin must not come away with.
-        ToolsCell(cut, "PAED-002").Should().Be("Any instrument");
+        Text(Cell(cut, "PAED-001", "Tools")).Should().Be("Case-based discussion, Mini-CEX", "the College's names, not the keys");
+        // Null is "any instrument" (D21) and must SAY so: a blank cell reads as "not filled in".
+        Text(Cell(cut, "PAED-002", "Tools")).Should().Be("Any instrument");
     }
 
     [Fact]
     public void TheToolsColumn_ShowsAKeyTheVocabularyNoLongerHolds_ByItsRawKey()
-    {
-        // Showing nothing for an orphan would make an item that restricts to an unknown instrument — and so
-        // refuses every tool the platform knows — look like one that restricts to fewer tools than it does.
-        var cut = RenderPage(new FakeSender());
+        => Text(Cell(RenderList(new FakeSender()), "PAED-003", "Tools")).Should().Be("legacy_tool, Mini-CEX");
 
-        ToolsCell(cut, "PAED-003").Should().Be("legacy_tool, Mini-CEX");
-    }
-
-    // ---- The edit fieldset ----
+    // ---- The item's page ----
 
     [Fact]
-    public void OpeningAnItem_RendersAToolsFieldset_WithOneCheckboxPerTool_TickedForTheItemsKeys()
+    public void AnItemsPage_HasOneToolsFieldset_OneCheckboxPerTool_TickedForTheItemsKeys()
     {
-        var cut = RenderPage(new FakeSender());
+        var cut = RenderItem(new FakeSender(), 11);
 
-        BeginEdit(cut, "PAED-001");
-
-        // Two fieldsets share the sub-row since T125 (the minimum by training year is the other); one is Tools.
-        cut.FindAll("tbody fieldset legend").Select(legend => legend.TextContent.Trim())
-            .Should().ContainSingle(legend => legend == "Tools");
-
-        EditCheckboxIds(cut).Should().Equal(Vocabulary.Select(tool => $"edit-tool-{tool.Key}"),
-            "one checkbox per instrument, in the vocabulary's order, and nothing else");
-
-        IsChecked(cut, "edit-tool-cbd").Should().BeTrue();
-        IsChecked(cut, "edit-tool-mini_cex").Should().BeTrue();
-        IsChecked(cut, "edit-tool-dops").Should().BeFalse();
-        IsChecked(cut, "edit-tool-msf").Should().BeFalse();
-
-        LabelFor(cut, "edit-tool-cbd").Should().Be("Case-based discussion");
-        LabelFor(cut, "edit-tool-mini_cex").Should().Be("Mini-CEX");
-    }
-
-    [Fact]
-    public void TheEditSubRow_SpansEveryColumn()
-    {
-        // The fieldset sits in its own row under the edited item. A colspan short of the header count leaves
-        // the tool list squeezed into the first columns and the table visibly broken.
-        var cut = RenderPage(new FakeSender());
-
-        BeginEdit(cut, "PAED-001");
-
-        var cell = cut.FindAll("tbody td[colspan]").Should().ContainSingle().Subject;
-        cell.GetAttribute("colspan").Should().Be(HeaderTexts(cut).Count.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        cut.FindAll("fieldset legend").Select(Text).Should().Contain("Tools");
+        cut.Find("fieldset[aria-describedby=item-tools-help]").ClassList.Should().Contain("form-group", "a field-level group (T188)");
+        CheckboxIds(cut).Should().Equal(Vocabulary.Select(tool => $"item-tool-{tool.Key}"));
+        IsChecked(cut, "item-tool-cbd").Should().BeTrue();
+        IsChecked(cut, "item-tool-mini_cex").Should().BeTrue();
+        IsChecked(cut, "item-tool-dops").Should().BeFalse();
+        Text(cut.Find("label[for=item-tool-cbd]")).Should().Be("Case-based discussion");
     }
 
     [Fact]
     public void AnItemWithNoList_OpensWithNothingTicked()
     {
-        var cut = RenderPage(new FakeSender());
+        var cut = RenderItem(new FakeSender(), 12);
 
-        BeginEdit(cut, "PAED-002");
-
-        EditCheckboxIds(cut).Should().OnlyContain(id => !IsChecked(cut, id));
+        CheckboxIds(cut).Should().OnlyContain(id => !IsChecked(cut, id));
     }
 
     [Fact]
-    public void AnOrphanStoredKey_RendersAsItsOwnTickedCheckbox_LabelledWithTheRawKey()
+    public void AnOrphanStoredKey_IsItsOwnTickedCheckbox_LabelledWithTheRawKey()
     {
-        // The server refuses a key the vocabulary does not hold. If the editor could not show the orphan, the
-        // admin could neither see why the save is refused nor untick it — the item would be unsaveable.
-        var cut = RenderPage(new FakeSender());
+        // The server refuses a key the vocabulary does not hold; unseen, the admin could not untick it.
+        var cut = RenderItem(new FakeSender(), 13);
 
-        BeginEdit(cut, "PAED-003");
-
-        EditCheckboxIds(cut).Should().Equal(
-            Vocabulary.Select(tool => $"edit-tool-{tool.Key}").Append("edit-tool-legacy_tool"));
-
-        IsChecked(cut, "edit-tool-legacy_tool").Should().BeTrue();
-        LabelFor(cut, "edit-tool-legacy_tool").Should().Be("legacy_tool");
-        IsChecked(cut, "edit-tool-mini_cex").Should().BeTrue();
-    }
-
-    // ---- The Add form ----
-
-    [Fact]
-    public void TheAddForm_HasItsOwnToolsFieldset_WithAddPrefixedIds_NothingTicked()
-    {
-        var cut = RenderPage(new FakeSender());
-
-        cut.FindAll("form fieldset legend").Select(legend => legend.TextContent.Trim())
-            .Should().ContainSingle(legend => legend == "Tools");
-
-        AddCheckboxIds(cut).Should().Equal(Vocabulary.Select(tool => $"add-tool-{tool.Key}"));
-        AddCheckboxIds(cut).Should().OnlyContain(id => !IsChecked(cut, id));
-        LabelFor(cut, "add-tool-dops").Should().Be("DOPS");
+        CheckboxIds(cut).Should().Equal(Vocabulary.Select(tool => $"item-tool-{tool.Key}").Append("item-tool-legacy_tool"));
+        IsChecked(cut, "item-tool-legacy_tool").Should().BeTrue();
+        Text(cut.Find("label[for=item-tool-legacy_tool]")).Should().Be("legacy_tool");
     }
 
     [Fact]
-    public void EveryIdOnThePage_IsUnique_WithAnItemOpenForEdit()
+    public void TheAddPage_StartsWithNothingTicked()
     {
-        // Two checkbox groups for the same vocabulary on one page. Shared ids would make every label in the
-        // second group toggle the first group's box, and a screen reader would announce the wrong control.
-        var cut = RenderPage(new FakeSender());
+        var cut = RenderItem(new FakeSender { EpaList = FakeSender.MoreEpas });
 
-        BeginEdit(cut, "PAED-003");
-
-        var ids = cut.FindAll("[id]").Select(element => element.Id!).ToList();
-        ids.Should().OnlyHaveUniqueItems();
-
-        // And every label in either group points at a control that exists.
-        foreach (var label in cut.FindAll("fieldset label[for]").ToList())
-        {
-            ids.Should().Contain(label.GetAttribute("for")!);
-        }
+        CheckboxIds(cut).Should().Equal(Vocabulary.Select(tool => $"item-tool-{tool.Key}"));
+        CheckboxIds(cut).Should().OnlyContain(id => !IsChecked(cut, id));
     }
 
-    // ---- The two models are independent ----
-
-    [Fact]
-    public void OpeningAnItem_DoesNotTouchTheAddForm()
+    [Theory]
+    [InlineData(11, new[] { "cbd", "mini_cex" })]
+    [InlineData(12, new string[0])]
+    [InlineData(13, new[] { "legacy_tool", "mini_cex" })]
+    public void SavingAnUnchangedItem_SendsTheSameToolKeys(int itemId, string[] keys)
     {
-        var cut = RenderPage(new FakeSender());
-
-        BeginEdit(cut, "PAED-001");
-
-        IsChecked(cut, "add-tool-cbd").Should().BeFalse("the Add form is not the row being edited");
-        IsChecked(cut, "add-tool-mini_cex").Should().BeFalse();
-
-        // The other fields too: the defect was the whole model, not just the new list.
-        cut.Find("#curriculum-item-count").GetAttribute("value").Should().Be("1");
-    }
-
-    [Fact]
-    public void TickingInOneGroup_DoesNotTickTheOther()
-    {
-        var cut = RenderPage(new FakeSender());
-
-        cut.Find("#add-tool-msf").Change(true);
-        BeginEdit(cut, "PAED-001");
-        cut.Find("#edit-tool-dops").Change(true);
-
-        IsChecked(cut, "add-tool-msf").Should().BeTrue("opening an item must not reset the Add form");
-        IsChecked(cut, "edit-tool-msf").Should().BeFalse("the Add form's tick must not leak into the item");
-        IsChecked(cut, "edit-tool-dops").Should().BeTrue();
-        IsChecked(cut, "add-tool-dops").Should().BeFalse("the item's tick must not leak into the Add form");
-    }
-
-    // ---- What reaches the server ----
-
-    [Fact]
-    public void SavingAnUnchangedItem_SendsTheSameToolKeys()
-    {
-        // The regression that matters most: an operator fixes a target and saves, and the tool list goes with it.
+        // An orphan is sent too, so the server's refusal is what the admin sees, not a silent drop.
         var sender = new FakeSender();
-        var cut = RenderPage(sender);
+        var cut = RenderItem(sender, itemId);
 
-        BeginEdit(cut, "PAED-001");
-        ClickButton(cut, "Save");
+        cut.Find("form").Submit();
 
-        var command = sender.Updates.Should().ContainSingle().Subject;
-        command.ItemId.Should().Be(11);
-        command.PermittedToolKeys.Should().BeEquivalentTo(["cbd", "mini_cex"]);
-
-        // And the rest of the item rode along unchanged, so the unchanged save really is unchanged.
-        command.EpaId.Should().Be(1);
-        command.RequiredCount.Should().Be(3);
-        command.QuotaPeriod.Should().Be(QuotaPeriod.Semester);
-    }
-
-    [Fact]
-    public void SavingAnUnchangedItemWithNoList_SendsAnEmptyList()
-    {
-        // Empty is "any instrument", and it must stay empty — not become null-because-forgotten on one save
-        // and something else on the next.
-        var sender = new FakeSender();
-        var cut = RenderPage(sender);
-
-        BeginEdit(cut, "PAED-002");
-        ClickButton(cut, "Save");
-
-        sender.Updates.Should().ContainSingle()
-            .Which.PermittedToolKeys.Should().BeEmpty();
-    }
-
-    [Fact]
-    public void SavingAnUnchangedItemWithAnOrphan_SendsTheOrphanToo()
-    {
-        // The page does not quietly drop a key it cannot name. Whether the server accepts it is the server's
-        // decision, made visibly; an editor that dropped it would change the item without being asked.
-        var sender = new FakeSender();
-        var cut = RenderPage(sender);
-
-        BeginEdit(cut, "PAED-003");
-        ClickButton(cut, "Save");
-
-        sender.Updates.Should().ContainSingle()
-            .Which.PermittedToolKeys.Should().BeEquivalentTo(["legacy_tool", "mini_cex"]);
+        sender.Updates.Should().ContainSingle().Which.PermittedToolKeys.Should().BeEquivalentTo(keys);
     }
 
     [Fact]
     public void TickingAndUnticking_ChangesExactlyWhatIsSent()
     {
         var sender = new FakeSender();
-        var cut = RenderPage(sender);
+        var cut = RenderItem(sender, 11);
 
-        BeginEdit(cut, "PAED-003");
-        cut.Find("#edit-tool-legacy_tool").Change(false);
-        cut.Find("#edit-tool-dops").Change(true);
-        ClickButton(cut, "Save");
-
-        sender.Updates.Should().ContainSingle()
-            .Which.PermittedToolKeys.Should().BeEquivalentTo(["dops", "mini_cex"]);
-
-        // The saved list is what the row now shows.
-        ToolsCell(cut, "PAED-003").Should().Be("DOPS, Mini-CEX");
-    }
-
-    [Fact]
-    public void ARejectedSave_KeepsTheRowOpen_WithTheOperatorsTicks()
-    {
-        // RunAsync returns the refusal instead of null, so the row stays open. A tool list is the new common
-        // refusal (an unknown key), and closing the row would throw away the ticks the error is about.
-        var sender = new FakeSender { UpdateFailure = new InvalidOperationException("Unknown tool key 'legacy_tool'.") };
-        var cut = RenderPage(sender);
-
-        BeginEdit(cut, "PAED-003");
-        cut.Find("#edit-tool-dops").Change(true);
-        ClickButton(cut, "Save");
-
-        cut.Markup.Should().Contain("Unknown tool key");
-        IsChecked(cut, "edit-tool-dops").Should().BeTrue();
-        IsChecked(cut, "edit-tool-legacy_tool").Should().BeTrue();
-    }
-
-    [Fact]
-    public void CancellingAnEdit_DiscardsTheTicks()
-    {
-        // BeginEdit copies the item's list. Reopening after Cancel must show what is stored, not what was
-        // ticked and abandoned.
-        var cut = RenderPage(new FakeSender());
-
-        BeginEdit(cut, "PAED-001");
-        cut.Find("#edit-tool-cbd").Change(false);
-        ClickButton(cut, "Cancel");
-        BeginEdit(cut, "PAED-001");
-
-        IsChecked(cut, "edit-tool-cbd").Should().BeTrue();
-    }
-
-    [Fact]
-    public void AddingAnItem_SendsTheTickedTools_AndThenClearsThem()
-    {
-        var sender = new FakeSender();
-        var cut = RenderPage(sender);
-
-        cut.Find("#add-tool-dops").Change(true);
-        cut.Find("#add-tool-mini_cex").Change(true);
-        // T125: the minimum starts empty and is required. These items are unpinned, so it is a typed level.
-        cut.Find("#curriculum-item-level").Change("3");
+        cut.Find("#item-tool-dops").Change(true);
+        cut.Find("#item-tool-cbd").Change(false);
         cut.Find("form").Submit();
 
-        sender.Adds.Should().ContainSingle()
-            .Which.PermittedToolKeys.Should().BeEquivalentTo(["dops", "mini_cex"]);
+        sender.Updates.Should().ContainSingle().Which.PermittedToolKeys.Should().BeEquivalentTo(["dops", "mini_cex"]);
+    }
 
-        // A successful add resets the form, so the next item does not inherit this one's instruments.
-        IsChecked(cut, "add-tool-dops").Should().BeFalse();
-        IsChecked(cut, "add-tool-mini_cex").Should().BeFalse();
+    [Fact]
+    public void ARefusedSave_KeepsTheOperatorsTicks()
+    {
+        var sender = new FakeSender { UpdateFailure = new InvalidOperationException("Unknown tool key.") };
+        var cut = RenderItem(sender, 11);
+
+        cut.Find("#item-tool-msf").Change(true);
+        cut.Find("form").Submit();
+
+        IsChecked(cut, "item-tool-msf").Should().BeTrue();
+        cut.FindAll("form").Should().ContainSingle("the form stays as the operator left it");
+    }
+
+    [Fact]
+    public void AddingAnItem_SendsTheTickedTools()
+    {
+        var sender = new FakeSender { EpaList = FakeSender.MoreEpas };
+        var cut = RenderItem(sender);
+
+        cut.Find("#item-minimum").Change("3");
+        cut.Find("#item-tool-msf").Change(true);
+        cut.Find("form").Submit();
+
+        sender.Adds.Should().ContainSingle().Which.PermittedToolKeys.Should().BeEquivalentTo(["msf"]);
     }
 
     [Fact]
     public void AddingAnItemWithNothingTicked_SendsAnEmptyList()
     {
-        var sender = new FakeSender();
-        var cut = RenderPage(sender);
+        var sender = new FakeSender { EpaList = FakeSender.MoreEpas };
+        var cut = RenderItem(sender);
 
-        cut.Find("#curriculum-item-level").Change("3");
+        cut.Find("#item-minimum").Change("3");
         cut.Find("form").Submit();
 
-        sender.Adds.Should().ContainSingle()
-            .Which.PermittedToolKeys.Should().NotBeNull().And.BeEmpty();
+        sender.Adds.Should().ContainSingle().Which.PermittedToolKeys.Should().BeEmpty();
     }
 
-    // ---- helpers ----
-
-    private IRenderedComponent<CurriculumItemsEdit> RenderPage(FakeSender sender)
+    [Fact]
+    public void EveryIdOnTheItemsPage_IsUnique()
     {
-        Services.AddSingleton<IScopedSender>(sender);
+        var cut = RenderItem(new FakeSender(), 13);
 
-        var cut = RenderComponent<CurriculumItemsEdit>(parameters => parameters.Add(page => page.Id, FakeSender.CurriculumId));
-        cut.WaitForState(() => cut.FindAll("tbody tr").Count > 0);
-
-        return cut;
+        cut.FindAll("[id]").Select(element => element.Id).Should().OnlyHaveUniqueItems();
     }
 
-    private static IReadOnlyList<string> HeaderTexts(IRenderedComponent<CurriculumItemsEdit> cut)
-        => cut.FindAll("thead th").Select(header => header.TextContent.Trim()).ToList();
+    private static IReadOnlyList<string> CheckboxIds(Bunit.IRenderedFragment cut)
+        => cut.FindAll(".check-grid input[type=checkbox]").Select(input => input.Id!).ToList();
 
-    // A row in display mode: the edit row's first cell is a select listing every EPA, so it is excluded by shape.
-    private static IElement DisplayRow(IRenderedComponent<CurriculumItemsEdit> cut, string epaCode)
-        => cut.FindAll("tbody tr")
-            .Where(row => row.QuerySelector("select") is null)
-            .First(row => row.QuerySelectorAll("td").FirstOrDefault()?.TextContent.Trim().StartsWith(epaCode, StringComparison.Ordinal) == true);
-
-    private static string ToolsCell(IRenderedComponent<CurriculumItemsEdit> cut, string epaCode)
-    {
-        var toolsIndex = HeaderTexts(cut).ToList().IndexOf("Tools");
-        return DisplayRow(cut, epaCode).QuerySelectorAll("td")
-            .Select(cell => cell.TextContent.Trim())
-            .ElementAt(toolsIndex);
-    }
-
-    private static void BeginEdit(IRenderedComponent<CurriculumItemsEdit> cut, string epaCode)
-        => DisplayRow(cut, epaCode).QuerySelectorAll("button")
-            .First(button => button.TextContent.Trim() == "Edit")
-            .Click();
-
-    private static void ClickButton(IRenderedComponent<CurriculumItemsEdit> cut, string label)
-        => cut.FindAll("button")
-            .First(button => string.Equals(button.TextContent.Trim(), label, StringComparison.Ordinal))
-            .Click();
-
-    // The Tools group is the fieldset nested in the edit row's own fieldset. The edit fieldset itself also holds the
-    // "decided as opportunity allows" checkbox (T131), which is not an instrument.
-    private static IReadOnlyList<string> EditCheckboxIds(IRenderedComponent<CurriculumItemsEdit> cut)
-        => cut.FindAll("tbody fieldset fieldset input[type=checkbox]").Select(input => input.Id!).ToList();
-
-    private static IReadOnlyList<string> AddCheckboxIds(IRenderedComponent<CurriculumItemsEdit> cut)
-        => cut.FindAll("form fieldset input[type=checkbox]").Select(input => input.Id!).ToList();
-
-    private static bool IsChecked(IRenderedComponent<CurriculumItemsEdit> cut, string id)
-        => cut.Find($"#{id}").HasAttribute("checked");
-
-    private static string LabelFor(IRenderedComponent<CurriculumItemsEdit> cut, string id)
-        => cut.Find($"label[for='{id}']").TextContent.Trim();
+    private static bool IsChecked(Bunit.IRenderedFragment cut, string id) => cut.Find($"#{id}").HasAttribute("checked");
 }

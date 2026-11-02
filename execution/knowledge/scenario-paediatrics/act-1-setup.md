@@ -283,14 +283,14 @@ Expect: The page reads "This invitation is for mbatha@kgk.wombat.local, as Insti
     admin"); then "1 account: yours." and Open Users;
   - **Curriculum:** "0" over "specialities adopted" and "0" over "sub-specialities adopted", because KGK has adopted
     nothing yet (T291 item 4); "Nothing is adopted yet. Adopt the College's curriculum to set up a programme."; Open
-    Curriculum adoptions;
+    Curricula, where she adopts (T392, S4);
   - **Your institution:** Name Kgosi Kgari Teaching Hospital, Short code KGK, Contact email
     paeds-admin@kgk.wombat.local, Status "Active" over "Set by a Wombat administrator.", and Open Kgosi Kgari Teaching
     Hospital.
   The sidebar reads "Acting as Institutional admin" over her menu, grouped: Home; People: Invitations, Trainees,
-  Assessors, Users; Curriculum: Curriculum adoptions, Curricula, EPAs, Activity types, Entrustment scales; Reviews:
-  Decisions due, Committee reviews, Decision panels, Entrustment decisions (T376, F10); Access and audit: SSO mappings,
-  Audit log; then My data rights.
+  Assessors, Users; Curriculum: Curricula, EPAs, Activity types, Entrustment scales (no Curriculum adoptions: T392,
+  Q1); Reviews: Decisions due, Committee reviews, Decision panels, Entrustment decisions (T376, F10); Access and
+  audit: SSO mappings, Audit log; then My data rights.
 Note: Until T376 (flow 12) the specialities card counted the whole national catalogue, 2 and 2 (T291 item 4, F-1.10a),
   and Entrustment decisions was reached only from Home's Quick links. The build counts KGK's adoptions, for the replay
   to confirm.
@@ -306,7 +306,8 @@ Actual (2026-10-30, T387 replay, wombat_scenario_t387): As expected: the link re
   grouped as the Expect says (Entrustment decisions under Reviews; SSO mappings and Audit log under Access and audit),
   then My data rights; Home lit; top bar "Nolwazi Mbatha". The password is in this replay's own untracked file
   (WB_PW_MBATHA).
-Gap: none (T291 item 4 / F-1.10a no longer occurs: the card reads 0 and 0, KGK's adoptions)
+Gap: none (T291 item 4 / F-1.10a no longer occurs: the card reads 0 and 0, KGK's adoptions). The T387 Actual above
+  predates T392 (the card's Open Curricula; no Curriculum adoptions in the menu); the next replay re-reads the step.
 
 ### Step 1.11 — Both invitations are spent
 Role: Administrator — the platform operator
@@ -425,35 +426,43 @@ domain, which is given here for reference):
 Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/curricula
 Do: Open Curricula and read the list. Record the curriculum's id as `{CurriculumId}`.
-Expect: The list has one row: `Paediatric EPA Curriculum`, version `11.1`, College `College of Paediatricians of South
-  Africa`, Speciality and Sub-speciality `Paediatrics`, effective `2026-01-01`, 15 items, Active, offering Edit and
-  Items. The header offers Create curriculum. The Demo `IM Core Curriculum` is not listed.
+Expect: The list is captioned "College of Paediatricians of South Africa's curriculum versions", with no section
+  heading and no College column (T392, R3-A12). It has one row: `Paediatric EPA Curriculum (11.1)`, Discipline
+  `Paediatrics / Paediatrics`, effective `2026-01-01`, Items 15, Status Open (the College has released it for
+  adoption, T9), offering Edit and Items. The header offers Create curriculum. The Demo `IM Core Curriculum` is not
+  listed.
 Actual (2026-10-30, T387 replay, wombat_scenario_t387): As expected: one row, Paediatric EPA Curriculum, 11.1, CPSA,
   Paediatrics / Paediatrics, 2026-01-01, 15 items, Active, Edit and Items; Create curriculum; no IM Core Curriculum.
   {CurriculumId} = 2.
-Gap: none
+Gap: none. The T387 Actual above predates T392 (Status reads Open, not Active; one Discipline column); the next
+  replay re-reads the step.
 
 ### Step 1.18 — The 15 items and their targets
 Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/curricula/{Id:int}/items
-Do: Open Items on the curriculum's row. Read the Existing items table against the table below. Add, edit and remove
-  nothing.
-Expect: The page is subtitled "Paediatric EPA Curriculum (11.1)" and offers Back to curricula and Back to curriculum.
+Do: Open Items on the curriculum's row. Read the items table against the table below. Add, edit and remove nothing.
+Expect: The page is "Items of Paediatric EPA Curriculum (11.1)" (its h1 and tab), under the trail Home › Curricula ›
+  Items of Paediatric EPA Curriculum (11.1), with no Back links (T392, T5). Its subtitle reads "College of
+  Paediatricians of South Africa · Paediatrics / Paediatrics · effective 2026-01-01".
   - A warning says that a target and its period are read live, in every institution that has adopted the curriculum,
     including periods that have already closed. It also says that a tool list is checked when an activity is filed and
     submitted, and never takes back credit already earned.
-  - The table has 15 rows, which match the table below. Every row reads Scale `CPSA Paediatric Entrustment Scale v11.1`,
-    Completion window (months) `12` and Weight `—`, and every row offers Edit and Remove.
+  - Under "Items (15)", the table, captioned "Paediatric EPA Curriculum (11.1)'s items, in EPA order", has 15 rows,
+    which match the table below. Its columns are EPA, Target and decision, Minimum level, Minimum by training year and
+    Tools: an item's completion window and weight are on its own page (T392, decision 1). Every row's Minimum level
+    reads its rung over `CPSA Paediatric Entrustment Scale v11.1`, and every row offers Edit and Remove…, each named
+    for its EPA ("Edit PAED-001").
   - Target and decision holds the target above the decision, for example "3 per semester" above "Decided each
     semester".
-  - The Add item form offers no EPA. It says "Every national EPA of Paediatrics is already on this curriculum, …", and
-    explains how an EPA would be freed.
+  - There is no Add item: in its place, "Every national EPA of Paediatrics is already on this curriculum, …", which
+    explains how an EPA would be freed (T392, F3).
 Actual (2026-10-30, T387 replay, wombat_scenario_t387): As expected: /admin/curricula/2/items, tab "Curriculum items ·
   Wombat", subtitled "Paediatric EPA Curriculum (11.1)", Back to curricula and Back to curriculum; the live-target and
   tool-list warning; 15 rows matching the table cell by cell (compared by script: target, decision, minimum, years,
   tools; 0 differences), each on the CPSA ladder, window 12, weight "—", Edit and Remove. Add item offers no EPA and
   reads "Every national EPA of Paediatrics is already on this curriculum, ..." with how to free one.
-Gap: none
+Gap: none. The T387 Actual above predates T392 (the h1 and trail, no Back links, six columns, Remove…, no Add form);
+  the next replay re-reads the step.
 
 **The 15 curriculum items.** The targets are from Annexure B (T130, D39), the minima and tools from Annexure A (T122),
 and the decisions from T131:
@@ -496,53 +505,76 @@ offers no speciality, and nobody can be admitted (T092).
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/curricula → /admin/epas
 Do: Open Curricula, then EPAs, before adopting anything.
-Expect: Curricula shows the empty state "No curricula yet": "Your institution has not adopted a curriculum yet. Adopt
-  one on the Curriculum adoptions page before admitting trainees." It offers no Create curriculum (T211).
-  EPAs shows "No EPAs yet". An InstitutionalAdmin reads the national EPAs of the disciplines her institution has
-  adopted, plus its own EPAs, and there are none of either.
+Expect: Curricula is subtitled "The College curricula Kgosi Kgari Teaching Hospital trains against, and the versions
+  open to it." and offers no Create curriculum (T211). It has two sections (T392, Q1, R3-A01):
+  - **Curricula you train against:** the empty state "No curricula yet": "Your institution has not adopted a curriculum
+    yet. Adopt one below before admitting trainees."
+  - **Open for adoption:** the notice "Adopting a version makes it the one that new admissions to its discipline join.
+    …", then two rows, each with Adopt: `Paediatric EPA Curriculum (11.1)` (College of Paediatricians of South Africa,
+    Paediatrics / Paediatrics, 2026-01-01, 15 items) over "Your institution has adopted no Paediatrics / Paediatrics
+    version yet.", and the Demo `IM Core Curriculum (2026.1)` over "Your institution has adopted no General Medicine /
+    General Internal Medicine version yet."
+  EPAs shows "No EPAs yet": "Your institution has not adopted a curriculum yet, so there is no discipline to add an EPA
+  to. Adopt one under Curricula.", with Go to Curricula, and offers no Create EPA (T392, Q12). An InstitutionalAdmin
+  reads the national EPAs of the disciplines her institution has adopted, plus its own EPAs, and there are none of
+  either.
 Actual (2026-10-30, T387 replay, wombat_scenario_t387): Curricula as expected: "No curricula yet" with the quoted
   text, no Create curriculum. EPAs reads "No EPAs yet" with "Create the first EPA to start building curricula and
   assessment forms.", and the header offers Create EPA, whose form (/admin/epas/new, left unsaved) has an empty
   Sub-speciality picker.
-Gap: [F-1.19a, T291] still: before any adoption the EPAs page offers an InstitutionalAdmin Create EPA, and its empty
-  state invites her to "Create the first EPA", but the form's Sub-speciality picker offers nothing, so the page links
-  to a form she cannot complete (T211's rule). (known-task)
+Gap: [F-1.19a, T291] closed by T392 (2026-11-02): before any adoption EPAs offers no Create EPA, and its empty state
+  sends her to Curricula (Q12). The Actual above predates it, and Curricula's two sections; the next replay re-reads
+  the step.
 
 ### Step 1.20 — Adopt curriculum 11.1 for KGK
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/adoptions
-Do: Open Curriculum adoptions. Under Adopt a curriculum, choose `College of Paediatricians of South Africa —
-  Paediatrics / Paediatrics: Paediatric EPA Curriculum (11.1)` and press Adopt. Then choose the same curriculum again
-  and press Adopt a second time.
-Expect: The page has no institution picker, because hers is KGK. Current adoptions first reads "No curriculum adoptions
-  yet for this institution."
-  - The picker also offers the Demo `IM Core Curriculum (2026.1)`, which she leaves alone.
-  - Adopt stays disabled until a curriculum is chosen.
-  - The first Adopt reads "Curriculum adopted." It adds a row: `College of Paediatricians of South Africa`,
-    Paediatrics, Paediatrics, `Paediatric EPA Curriculum`, `11.1`, adopted on `D`, Active.
-  - The second Adopt is refused: "This institution has already adopted this curriculum version."
-  The page notes that re-adopting a newer version would supersede this adoption.
+Route: /admin/curricula → /admin/adoptions → /admin/curricula
+Do: Open Curricula. Under Open for adoption, press Adopt on Paediatric EPA Curriculum (11.1). Type /admin/adoptions
+  and read where it lands.
+Expect: Adopt asks nothing: a first adoption of a discipline supersedes nothing (T392, Q6). "Paediatric EPA Curriculum
+  (11.1) adopted. New admissions to Paediatrics / Paediatrics join it." heads the page, its first sentence bold, and
+  takes the focus (R3-A02). The page has no institution picker, because hers is KGK.
+  - **Curricula you train against** holds 11.1: College of Paediatricians of South Africa, Paediatrics / Paediatrics,
+    2026-01-01, Items "15 national · 0 your own", For your institution "Adopted on `D`", with Items.
+  - **Open for adoption** now lists only the Demo `IM Core Curriculum (2026.1)`, which she does not adopt: a version
+    her institution has adopted is not offered again (Q7), so it cannot be adopted twice.
+  - **The old address.** `/admin/adoptions` lands on Curricula (`/admin/curricula`), and her menu has no Curriculum
+    adoptions (T392, Q1, S21).
 Actual (2026-10-30, T387 replay, wombat_scenario_t387): As expected: no institution picker; "No curriculum adoptions
   yet for this institution."; the picker offers the CPSA curriculum and the Demo IM Core Curriculum (2026.1); Adopt
   disabled until chosen. First Adopt: "Curriculum adopted.", row CPSA / Paediatrics / Paediatrics / Paediatric EPA
   Curriculum / 11.1 / 2026-10-30 / Active. Second Adopt refused: "This institution has already adopted this curriculum
   version." The supersede note is shown.
-Gap: none
+Gap: none. The T387 Actual above played Curriculum adoptions, which T392 folded into Curricula's Open for adoption;
+  the next replay re-reads the step.
 
 ### Step 1.21 — What the adoption opens to KGK
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/epas → /admin/curricula → /admin/curricula/{Id:int}/items → /
-Do: Read each page again, then go Home. Change nothing.
+Route: /admin/epas → /admin/curricula → /admin/curricula/{Id:int}/items → /admin/curricula/{Id:int}/items/{ItemId:int} → /admin/curricula/{Id:int}/items → /
+Do: Read each page again. On the items page press View on PAED-001, read its record, and leave it by Back to Items of
+  Paediatric EPA Curriculum (11.1). Then go Home. Change nothing.
 Expect: Each page now shows the adopted catalogue:
-  - EPAs lists the 15 PAED EPAs and nothing else. No row offers Edit, because a national EPA is the College's to
-    change: `UpdateEpa` refuses her (T291 item 1).
-  - Curricula has the one row, which offers Items but no Edit. The header offers no Create curriculum.
-  - The items page warns that the College sets the curriculum's national items, so they are read only here, and that
-    KGK's own items apply only to KGK's trainees. Its 15 rows match Step 1.18, and each reads "Set by the College".
-  - The form below the items is headed "Add your institution's own item". It says every EPA KGK could add is already on
-    the curriculum: to add an item of its own, KGK must first create a local EPA of Paediatrics.
+  - **EPAs** is subtitled "The EPAs of the curricula Kgosi Kgari Teaching Hospital has adopted. The College's are read
+    only; your institution's own are yours to change." It lists the 15 PAED EPAs and nothing else, each a link to its
+    page, under the caption "EPAs your institution reads". Every row reads "Set by the College." where Edit would be,
+    because a national EPA is the College's to change: `UpdateEpa` refuses her (T291 item 1, T392). The header offers
+    Create EPA, for an EPA of KGK's own.
+  - **Curricula** has the one row, "Adopted on `D`", which offers Items but no Edit. The header offers no Create
+    curriculum.
+  - **The items page**, "Items of Paediatric EPA Curriculum (11.1)", is subtitled "College of Paediatricians of South
+    Africa · Paediatrics / Paediatrics · effective 2026-01-01 · adopted by your institution on `D`". Its notice says
+    that the College sets the curriculum's national items, so they are read only here, and that KGK's own items apply
+    only to KGK's trainees. Its 15 rows match Step 1.18, and each offers View beside "Set by the College.": View opens
+    the item's record, read only (T392, P2).
+  - **PAED-001's record** is titled "PAED-001 — Providing paediatric emergency care to children" and subtitled "A
+    national item on Paediatric EPA Curriculum (11.1). The College sets it, so it is read only here." It lists EPA,
+    Target and decision, Minimum level, Minimum by training year, Completion window, Weight and Tools, with no form and
+    no Save. "Back to Items of Paediatric EPA Curriculum (11.1)" returns to the list with PAED-001's View focused
+    (T392, P2; build review N12).
+  - "Items (15)" offers no add. In its place: every EPA KGK could add is already on the curriculum, so to add an item of
+    its own, KGK must first create a local EPA of Paediatrics.
   - Home's Curriculum card reads "1" over "speciality adopted" and "1" over "sub-speciality adopted", with "Paediatrics
-    / Paediatrics, from the CPSA's Paediatric EPA Curriculum (11.1)." (T291 item 4, T376).
+    / Paediatrics, from the CPSA's Paediatric EPA Curriculum (11.1)." (T291 item 4, T376), and Open Curricula.
 Actual (2026-10-30, T387 replay, wombat_scenario_t387): EPAs lists the 15 PAED EPAs only, but every row still offers
   Edit (and the header Create EPA). Curricula: one row with Items only, no Edit, no Create curriculum. Items: the
   College-sets-national-items warning, 15 rows matching Step 1.18 (compared by script, 0 differences), each "Set by
@@ -550,22 +582,24 @@ Actual (2026-10-30, T387 replay, wombat_scenario_t387): EPAs lists the 15 PAED E
   curriculum, so first create a local EPA of Paediatrics. Home's Curriculum card reads "1" over "speciality adopted"
   and "1" over "sub-speciality adopted", with "Paediatrics / Paediatrics, from the CPSA's Paediatric EPA Curriculum
   (11.1)."
-Gap: [F-1.21a, T291] still (T291 item 1): /admin/epas offers Edit on all 15 national EPAs to an InstitutionalAdmin,
-  whose save UpdateEpa refuses. (known-task) [F-1.21b, T291 item 4] no longer occurs: the card reads 1 and 1, as the
-  Expect says.
+Gap: [F-1.21a, T291] closed by T392 (2026-11-02): no national EPA offers her Edit. [F-1.21b, T291 item 4] no longer
+  occurs: the card reads 1 and 1, as the Expect says. The Actual above predates T392 (the items page's form, View,
+  Open Curricula); the next replay re-reads the step.
 
 ### Step 1.22 — The ladder, read-only to KGK
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/entrustment-scales
 Do: Open Entrustment scales and read the list.
-Expect: The list shows `CPSA Paediatric Entrustment Scale v11.1` at 6 levels and `O-R Scale` at 5, each with its
+Expect: The page is subtitled "The rating ladders that assessment forms and committee reviews use. A Wombat
+  administrator sets them; they are shown here for reference." (T392, Q13, T326). The list, captioned "Entrustment
+  scales, by name", shows `CPSA Paediatric Entrustment Scale v11.1` at 6 levels and `O-R Scale` at 5, each with its
   description. It offers no Create scale and has no actions column, because only an Administrator changes a scale
   (T057, T239).
 Actual (2026-10-30, T387 replay, wombat_scenario_t387): As expected: two rows (CPSA ladder 6, O-R Scale 5) with
   descriptions; no Create scale and no Actions column (columns Name, Description, Levels). The subtitle still reads
   "Define and maintain the rating ladders used by assessment forms and committee reviews."
-Gap: [F-1.22a, T326] still: the read-only scales list tells an InstitutionalAdmin to "Define and maintain" ladders she
-  cannot change. (known-task)
+Gap: [F-1.22a, T326] closed by T392 (2026-11-02): the subtitle tells a reader who sets the ladders; the Actual above
+  predates it, and the next replay re-reads the step.
 
 ### Step 1.23 — KGK's own record
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha

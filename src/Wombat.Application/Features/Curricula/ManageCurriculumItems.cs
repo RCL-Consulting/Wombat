@@ -65,16 +65,28 @@ public sealed record UpdateCurriculumItemCommand(
 
 public sealed record RemoveCurriculumItemCommand(int CurriculumId, int ItemId, ClaimsPrincipal Principal) : IRequest<CurriculumDto>;
 
+/// <summary>
+/// The sentences an item's fields are refused with (T392 build review M1): the validators' and the item page's own checks
+/// say the same, under the field (F4), never a property's name (T324), as <c>EpaFieldMessages</c> does for an EPA.
+/// </summary>
+public static class CurriculumItemFieldMessages
+{
+    public const string EpaRequired = "Choose an EPA.";
+    public const string TargetTooLow = "Enter a target of 1 or more.";
+    public const string MinimumLevelOutOfRange = "Choose a minimum level on the scale.";
+    public const string WindowTooShort = "Enter a completion window of 1 month or more.";
+}
+
 public sealed class AddCurriculumItemCommandValidator : AbstractValidator<AddCurriculumItemCommand>
 {
     public AddCurriculumItemCommandValidator()
     {
         RuleFor(command => command.CurriculumId).GreaterThan(0);
-        RuleFor(command => command.EpaId).GreaterThan(0);
-        RuleFor(command => command.RequiredCount).GreaterThan(0);
+        RuleFor(command => command.EpaId).GreaterThan(0).WithMessage(CurriculumItemFieldMessages.EpaRequired);
+        RuleFor(command => command.RequiredCount).GreaterThan(0).WithMessage(CurriculumItemFieldMessages.TargetTooLow);
         RuleFor(command => command.QuotaPeriod).IsInEnum();
-        RuleFor(command => command.MinimumLevelOrder).InclusiveBetween(1, 20);
-        RuleFor(command => command.WindowMonths).GreaterThan(0);
+        RuleFor(command => command.MinimumLevelOrder).InclusiveBetween(1, 20).WithMessage(CurriculumItemFieldMessages.MinimumLevelOutOfRange);
+        RuleFor(command => command.WindowMonths).GreaterThan(0).WithMessage(CurriculumItemFieldMessages.WindowTooShort);
         RuleFor(command => command.MinimumLevelByStageJson)
             .Must(StageOverridesValidation.BeValidStageOverridesJson)
             .WithMessage("Stage overrides must be a JSON object keyed by training year, with integer levels 1-20.");
@@ -94,11 +106,11 @@ public sealed class UpdateCurriculumItemCommandValidator : AbstractValidator<Upd
     {
         RuleFor(command => command.CurriculumId).GreaterThan(0);
         RuleFor(command => command.ItemId).GreaterThan(0);
-        RuleFor(command => command.EpaId).GreaterThan(0);
-        RuleFor(command => command.RequiredCount).GreaterThan(0);
+        RuleFor(command => command.EpaId).GreaterThan(0).WithMessage(CurriculumItemFieldMessages.EpaRequired);
+        RuleFor(command => command.RequiredCount).GreaterThan(0).WithMessage(CurriculumItemFieldMessages.TargetTooLow);
         RuleFor(command => command.QuotaPeriod).IsInEnum();
-        RuleFor(command => command.MinimumLevelOrder).InclusiveBetween(1, 20);
-        RuleFor(command => command.WindowMonths).GreaterThan(0);
+        RuleFor(command => command.MinimumLevelOrder).InclusiveBetween(1, 20).WithMessage(CurriculumItemFieldMessages.MinimumLevelOutOfRange);
+        RuleFor(command => command.WindowMonths).GreaterThan(0).WithMessage(CurriculumItemFieldMessages.WindowTooShort);
         RuleFor(command => command.MinimumLevelByStageJson)
             .Must(StageOverridesValidation.BeValidStageOverridesJson)
             .WithMessage("Stage overrides must be a JSON object keyed by training year, with integer levels 1-20.");
@@ -175,7 +187,6 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
     public async Task<CurriculumDto> Handle(AddCurriculumItemCommand request, CancellationToken cancellationToken)
     {
         var curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
-        CurriculumMappings.EnsureCurriculumCanBeEditedInPlace();
 
         // The curriculum's CollegeAdmin or an Administrator edits the national core; an InstitutionalAdmin adds an
         // institution-local item to the (adopted) national curriculum (T091 phase 3). Decided for this curriculum's
@@ -189,6 +200,9 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
 
         // T223: an institution adds items of its own only to a curriculum it has adopted, now or before.
         await CurriculumAdminScope.EnsureOwnerAdoptedAsync(_dbContext, curriculum.Id, owningInstitutionId, request.Principal, cancellationToken);
+
+        // F6 (T392 build review C2): and adds one only while that adoption is the active one; Update and Remove stay allowed.
+        await CurriculumAdminScope.EnsureOwnerAddsOnActiveAdoptionAsync(_dbContext, curriculum.Id, owningInstitutionId, cancellationToken);
 
         // T195: a national item names a national EPA of the curriculum's sub-speciality; a local one may also name its
         // institution's own local EPAs. The Add picker lists exactly these.
@@ -230,7 +244,7 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
         }
 
         curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
-        return await CurriculumMappings.ToDtoAsync(_dbContext, curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, true, request.Principal, cancellationToken);
+        return await CurriculumMappings.ToDtoAsync(_dbContext, curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, request.Principal, cancellationToken);
     }
 }
 
@@ -246,7 +260,6 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
     public async Task<CurriculumDto> Handle(UpdateCurriculumItemCommand request, CancellationToken cancellationToken)
     {
         var curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
-        CurriculumMappings.EnsureCurriculumCanBeEditedInPlace();
 
         // Coarse gate (don't leak item existence): only the curriculum's CollegeAdmin or some InstitutionalAdmin
         // (who may own a local item) may touch it. The fine-grained per-item owner check follows. (T091 phase 3.)
@@ -311,8 +324,32 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
         }
 
         curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
-        return await CurriculumMappings.ToDtoAsync(_dbContext, curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, true, request.Principal, cancellationToken);
+        return await CurriculumMappings.ToDtoAsync(_dbContext, curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, request.Principal, cancellationToken);
     }
+}
+
+/// <summary>
+/// The Add command's refusal of an institution's own item on a version the institution has superseded (T392 build review
+/// C2, F6), typed so the item page says it in the command's own words without printing an exception's text (T329). Still an
+/// <see cref="InvalidOperationException" />, so the audit pipeline reads it as every refusal; thrown before anything is staged.
+/// </summary>
+public sealed class CurriculumVersionSupersededException() : InvalidOperationException(Refusal)
+{
+    /// <summary>The sentence the page shows: R3-B21's line, with the failure's "Nothing has changed."</summary>
+    public const string Refusal = "Your institution has superseded this version, so no item is added to it. Nothing has changed.";
+}
+
+/// <summary>
+/// The Remove command's refusal of an item on the list a programme ended with (T312, review B1), typed so the items page
+/// says it in the command's own words without printing an exception's text (T392, flow 15, T329). Its message is
+/// <see cref="RemoveCurriculumItemCommandHandler.EndedRecordsHoldTheItem" />, as before; it is still an
+/// <see cref="InvalidOperationException" />, so the audit pipeline and every caller that caught one read it as before.
+/// </summary>
+public sealed class CurriculumItemOnEndedRecordsException(int records)
+    : InvalidOperationException(RemoveCurriculumItemCommandHandler.EndedRecordsHoldTheItem(records))
+{
+    /// <summary>How many ended programmes' records name the item.</summary>
+    public int Records { get; } = records;
 }
 
 public sealed class RemoveCurriculumItemCommandHandler : IRequestHandler<RemoveCurriculumItemCommand, CurriculumDto>
@@ -335,7 +372,6 @@ public sealed class RemoveCurriculumItemCommandHandler : IRequestHandler<RemoveC
     public async Task<CurriculumDto> Handle(RemoveCurriculumItemCommand request, CancellationToken cancellationToken)
     {
         var curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
-        CurriculumMappings.EnsureCurriculumCanBeEditedInPlace();
 
         // Coarse gate (don't leak item existence): only the curriculum's CollegeAdmin or some InstitutionalAdmin
         // (who may own a local item) may touch it. The fine-grained per-item owner check follows. (T091 phase 3.)
@@ -364,7 +400,7 @@ public sealed class RemoveCurriculumItemCommandHandler : IRequestHandler<RemoveC
         var held = await ProgrammeItems.EndedRecordsNamingAsync(_dbContext, item.CurriculumId, item.Id, cancellationToken);
         if (held > 0)
         {
-            throw new InvalidOperationException(EndedRecordsHoldTheItem(held));
+            throw new CurriculumItemOnEndedRecordsException(held);
         }
 
         // Unlike Add and Update, no adoption is asked for (T223): an institution takes its own item off a curriculum wherever
@@ -373,6 +409,6 @@ public sealed class RemoveCurriculumItemCommandHandler : IRequestHandler<RemoveC
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.CurriculumId, cancellationToken);
-        return await CurriculumMappings.ToDtoAsync(_dbContext, curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, true, request.Principal, cancellationToken);
+        return await CurriculumMappings.ToDtoAsync(_dbContext, curriculum, curriculum.SubSpeciality.SpecialityId, curriculum.SubSpeciality.Speciality.Name, curriculum.SubSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, request.Principal, cancellationToken);
     }
 }

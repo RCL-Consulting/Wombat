@@ -47,14 +47,14 @@ public sealed partial class FieldGroupTests
         }
 
         fields.Distinct().Should().Contain(
-            ["ActivityForm.razor", "NewCampaign.razor", "CurriculumItemsEdit.razor", "MsfRespond.razor", "ReviewDetail.razor",
+            ["ActivityForm.razor", "NewCampaign.razor", "CurriculumItemPage.razor", "MsfRespond.razor", "ReviewDetail.razor",
              "StageMinimaEditor.razor"],
             "guard: the scan finds the field-level groups, or it proves nothing");
         // An activity form's section is a <section> named by its heading since T342 (flow 03): a card one deep, not a
-        // fieldset, so the cluster left is the curriculum item's edit row. The review's deferral form went with D53 (T361).
-        clusters.Distinct().Should().Contain(
-            ["CurriculumItemsEdit.razor"],
-            "guard: the scan tells a fieldset of fields (a section, the edit row) from a field");
+        // fieldset. The review's deferral form went with D53 (T361), and the curriculum item's edit row, the last cluster,
+        // with T392 (flow 15, Q14: the item's form is a page of its own). The cluster rule is held by the scan's own test
+        // below (FieldsetsIn), so no page need keep one for this guard.
+        clusters.Distinct().Should().NotContain("CurriculumItemsEdit.razor", "no list edits a row in place (T392)");
         string.Join(Environment.NewLine, offenders).Should().BeEmpty(
             "a fieldset that is one field is a form group, so its legend reads as that field's label (DESIGN.md § Form " +
             "system, T188); every one is listed");

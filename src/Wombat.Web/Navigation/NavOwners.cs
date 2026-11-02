@@ -3,6 +3,7 @@ using Wombat.Web.Components.Pages;
 using Wombat.Web.Components.Pages.Account;
 using Wombat.Web.Components.Pages.Activities;
 using Wombat.Web.Components.Pages.Admin.ActivityTypes;
+using Wombat.Web.Components.Pages.Admin.Adoptions;
 using Wombat.Web.Components.Pages.Admin.Assessors;
 using Wombat.Web.Components.Pages.Admin.Audit;
 using Wombat.Web.Components.Pages.Admin.Colleges;
@@ -150,6 +151,10 @@ public static class NavOwners
         [typeof(EpaEdit)] = [new(CatalogueAuthors, NavItems.Epas)],
         [typeof(ActivityTypeEdit)] = [new(CatalogueAuthors, NavItems.ActivityTypes)],
         [typeof(CurriculumItemsEdit)] = [new(CatalogueAuthors, NavItems.Curricula)],
+        // T392 (flow 15, Q14, F3): an item's page of its own, under its curriculum's items, for every catalogue author.
+        [typeof(CurriculumItemPage)] = [new(CatalogueAuthors, NavItems.Curricula)],
+        // T392 (flow 15, Q1): Curriculum adoptions is no menu item; its address sends to Curricula, where both roles adopt.
+        [typeof(AdoptionsList)] = [new([WombatRoles.Administrator, WombatRoles.InstitutionalAdmin], NavItems.Curricula)],
         [typeof(CurriculumEdit)] = [new([WombatRoles.Administrator, WombatRoles.CollegeAdmin], NavItems.Curricula)],
 
         // Linked from Curricula, now that the Administrator's Maintenance card is dropped (R2-Shell-Admin).

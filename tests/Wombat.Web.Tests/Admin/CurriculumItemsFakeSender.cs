@@ -1,4 +1,5 @@
 using MediatR;
+using Wombat.Application.Common;
 using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Curricula;
@@ -8,8 +9,10 @@ using Wombat.Web.Services;
 namespace Wombat.Web.Tests.Admin;
 
 /// <summary>
-/// The curriculum item editor's server, as the page sees it: the queries it loads and the commands it sends, which are
-/// recorded rather than run. Shared by the tool-list tests (T122) and the minima tests (T125).
+/// The server of a curriculum's items page and an item's page of its own (T392, flow 15, Q14), as the pages see it: the
+/// queries they load and the commands they send, which are recorded rather than run. Shared by every items test since the
+/// tool-list tests (T122) and the minima tests (T125). The curriculum's state for an institution and the may-add flag are
+/// lane A's to fill (build-contracts § 0); here they are what a test says they are.
 /// </summary>
 internal sealed class CurriculumItemsFakeSender : IScopedSender
 {
@@ -75,6 +78,21 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
     /// the College or an Administrator, false for an institution reading a curriculum it adopted (T211).
     /// </summary>
     public bool CanEditCurriculum { get; init; } = true;
+
+    /// <summary>What <c>GetCurriculumByIdQuery</c> answers for <see cref="CurriculumDto.MayAddItem" /> (lane A's); true when not set.</summary>
+    public bool MayAddItem { get; init; } = true;
+
+    /// <summary>What <c>GetCurriculumByIdQuery</c> answers for <see cref="CurriculumDto.Institution" /> (lane A's); none when not set.</summary>
+    public CurriculumInstitutionStateDto? Institution { get; init; }
+
+    /// <summary>Whether the curriculum is out of the caller's scope, so the read answers null (Q19).</summary>
+    public bool Unavailable { get; init; }
+
+    /// <summary>A failure every read of the curriculum answers with, until cleared (a load error, S7).</summary>
+    public Exception? ReadFailure { get; set; }
+
+    /// <summary>How many reads of the curriculum are left to fail with <see cref="ReadFailure" />; all of them when null.</summary>
+    public int? ReadFailures { get; set; }
 
     public List<RemoveCurriculumItemCommand> Removes { get; } = [];
 
@@ -208,7 +226,7 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
             return _held.Task.ContinueWith(_ => (TResponse)(object)EpaOptions(heldOptions), TaskScheduler.Default);
         }
 
-        object response = request switch
+        object? response = request switch
         {
             GetCurriculumByIdQuery => ReadCurriculum(),
             ListCurriculumItemEpaOptionsQuery options => EpaOptions(options),
@@ -221,7 +239,7 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
             _ => throw new NotSupportedException($"Unhandled request: {request.GetType().Name}")
         };
 
-        return Task.FromResult((TResponse)response);
+        return Task.FromResult((TResponse)response!);
     }
 
     public Task Send(IRequest request, CancellationToken cancellationToken = default)
@@ -238,10 +256,17 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
         return EpaOptionsFor(query.ItemId) ?? EpaList;
     }
 
-    private CurriculumDto ReadCurriculum()
+    private CurriculumDto? ReadCurriculum()
     {
         CurriculumReads++;
-        return Curriculum();
+        if (ReadFailure is { } failure && ReadFailures is not 0)
+        {
+            ReadFailures--;
+            throw failure;
+        }
+
+        // The read fills the state for the institution and the may-add flag; a command's curriculum carries neither (§ 0).
+        return Unavailable ? null : Curriculum() with { Institution = Institution, MayAddItem = MayAddItem };
     }
 
     // The handlers' refusals, in their words, where the fake stores what the commands send.
@@ -257,13 +282,13 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
     {
         if (StoresItems && _items.Any(item => item.Id != exceptItemId && item.EpaId == epaId))
         {
-            throw new InvalidOperationException("This curriculum already contains the selected EPA.");
+            throw new FieldRefusalException(nameof(AddCurriculumItemCommand.EpaId), "This curriculum already contains the selected EPA.");
         }
     }
 
     private CurriculumDto Curriculum()
         => new(CurriculumId, 2, SubSpecialityId, "Paediatrics", "General Paediatrics", "CMSA", "Paediatrics v11.1", "11.1",
-            new DateOnly(2026, 1, 1), null, true, true, _items, SubSpecialityDefaultScaleId)
+            new DateOnly(2026, 1, 1), null, true, _items, SubSpecialityDefaultScaleId)
         {
             CanEditCurriculum = CanEditCurriculum
         };

@@ -50,6 +50,65 @@ public sealed class TraineeCurriculumChoicesTests
         choices.Select(choice => choice.Id).Should().Equal(V112);
     }
 
+    /// <summary>
+    /// T392 (flow 15, D01, D05): each choice says its state for the institution, for the line under the picker: the active
+    /// adoption, or the day the institution superseded it, which is the AdoptedOn of the adoption that followed the version's
+    /// latest one.
+    /// </summary>
+    [Fact]
+    public async Task EachChoice_SaysWhetherItIsTheActiveAdoption_OrTheDayItWasSuperseded()
+    {
+        await using var db = Seeded(profileOn: V111);
+
+        var choices = await new GetTraineeCurriculumChoicesQueryHandler(db).Handle(
+            new GetTraineeCurriculumChoicesQuery(1, TestPrincipals.InstitutionalAdmin(Kgk)), CancellationToken.None);
+
+        choices.Select(choice => (choice.Id, choice.IsActiveAdoption, choice.SupersededOn)).Should().Equal(
+            (V111, false, (DateOnly?)new DateOnly(2026, 9, 1)),
+            (V112, true, (DateOnly?)null));
+    }
+
+    /// <summary>
+    /// T392 (S1, Q21): going back adds a second adoption on the same day; the order is (AdoptedOn, Id), so 11.2, adopted and
+    /// then superseded by 11.1 again that day, reads superseded on that day, and 11.1 is the active adoption.
+    /// </summary>
+    [Fact]
+    public async Task AVersionSupersededByGoingBackTheSameDay_ReadsSupersededOnThatDay()
+    {
+        await using var db = Seeded(profileOn: V112);
+        var day = new DateOnly(2026, 9, 1);
+        var v112 = await db.Set<InstitutionCurriculumAdoption>().SingleAsync(adoption => adoption.Id == 2);
+        v112.IsActive = false;
+        db.Set<InstitutionCurriculumAdoption>().Add(new InstitutionCurriculumAdoption
+        {
+            Id = 5, InstitutionId = Kgk, CurriculumId = V111, SubSpecialityId = 1, AdoptedOn = day, IsActive = true
+        });
+        await db.SaveChangesAsync();
+
+        var choices = await new GetTraineeCurriculumChoicesQueryHandler(db).Handle(
+            new GetTraineeCurriculumChoicesQuery(1, TestPrincipals.InstitutionalAdmin(Kgk)), CancellationToken.None);
+
+        choices.Select(choice => (choice.Id, choice.IsActiveAdoption, choice.SupersededOn)).Should().Equal(
+            (V111, true, (DateOnly?)null),
+            (V112, false, (DateOnly?)day));
+    }
+
+    /// <summary>
+    /// T392: a pinned version the institution never adopted (or whose adoption nothing followed) has no day to name: neither
+    /// active nor superseded on a day.
+    /// </summary>
+    [Fact]
+    public async Task APinnedVersionWithNoLaterAdoption_HasNoSupersededDay()
+    {
+        await using var db = Seeded(profileOn: NeverAdopted);
+
+        var choices = await new GetTraineeCurriculumChoicesQueryHandler(db).Handle(
+            new GetTraineeCurriculumChoicesQuery(1, TestPrincipals.InstitutionalAdmin(Kgk)), CancellationToken.None);
+
+        choices.Single(choice => choice.Id == NeverAdopted).Should().Match<CurriculumChoiceDto>(
+            choice => !choice.IsActiveAdoption && choice.SupersededOn == null);
+    }
+
     [Fact]
     public async Task AnotherInstitutionsProfile_IsNotFound()
     {

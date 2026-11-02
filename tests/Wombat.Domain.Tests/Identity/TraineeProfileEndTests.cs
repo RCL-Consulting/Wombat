@@ -51,7 +51,7 @@ public sealed class TraineeProfileEndTests
         var profile = ActiveProfile();
         profile.Complete(new DateOnly(2026, 6, 15), Today);
 
-        var exception = Assert.Throws<InvalidOperationException>(() => profile.Deactivate(new DateOnly(2026, 7, 1), Today));
+        var exception = Assert.Throws<TraineeProfileRefusedException>(() => profile.Deactivate(new DateOnly(2026, 7, 1), Today));
 
         Assert.Contains("active", exception.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Null(profile.DeactivatedOn);
@@ -63,7 +63,7 @@ public sealed class TraineeProfileEndTests
     {
         var profile = ActiveProfile();
 
-        var exception = Assert.Throws<InvalidOperationException>(() => profile.Deactivate(new DateOnly(2022, 12, 31), Today));
+        var exception = Assert.Throws<TraineeProfileRefusedException>(() => profile.Deactivate(new DateOnly(2022, 12, 31), Today));
 
         Assert.Equal("The last day cannot be before the programme start date (2023-01-15).", exception.Message);
         Assert.True(profile.IsActive);
@@ -87,7 +87,7 @@ public sealed class TraineeProfileEndTests
         // would be months away, and D49 would hold the trainee to every period up to it. Refused before anything changes.
         var profile = ActiveProfile();
 
-        var exception = Assert.Throws<InvalidOperationException>(() => profile.Deactivate(Today.AddDays(1), Today));
+        var exception = Assert.Throws<TraineeProfileRefusedException>(() => profile.Deactivate(Today.AddDays(1), Today));
 
         Assert.Equal("The last day cannot be after today (2026-12-31).", exception.Message);
         Assert.True(profile.IsActive);

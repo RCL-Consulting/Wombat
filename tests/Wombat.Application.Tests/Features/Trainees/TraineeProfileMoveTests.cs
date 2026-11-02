@@ -3,6 +3,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Moq;
+using Wombat.Application.Common;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgress;
 using Wombat.Application.Features.Activities.Services;
@@ -91,8 +92,10 @@ public sealed class TraineeProfileMoveTests
                 new UpdateTraineeProfileCommand(ProfileId, V111, Start, Expected, TestPrincipals.Administrator()),
                 CancellationToken.None);
 
-            await act.Should().ThrowAsync<InvalidOperationException>()
-                .WithMessage(UpdateTraineeProfileCommandHandler.MoveNotAdopted);
+            // T392 (D06): a refusal about the Curriculum field, which the page shows under its picker.
+            (await act.Should().ThrowAsync<FieldRefusalException>()
+                .WithMessage(UpdateTraineeProfileCommandHandler.MoveNotAdopted))
+                .Which.Field.Should().Be(nameof(UpdateTraineeProfileCommand.CurriculumId));
             await AssertNothingToCommitAsync(db);
         }
 
@@ -114,8 +117,10 @@ public sealed class TraineeProfileMoveTests
                 new UpdateTraineeProfileCommand(ProfileId, OtherDiscipline, Start, Expected, TestPrincipals.Administrator()),
                 CancellationToken.None);
 
-            await act.Should().ThrowAsync<InvalidOperationException>()
-                .WithMessage(UpdateTraineeProfileCommandHandler.MoveNotAdopted);
+            // T392 (D06): a refusal about the Curriculum field, which the page shows under its picker.
+            (await act.Should().ThrowAsync<FieldRefusalException>()
+                .WithMessage(UpdateTraineeProfileCommandHandler.MoveNotAdopted))
+                .Which.Field.Should().Be(nameof(UpdateTraineeProfileCommand.CurriculumId));
             await AssertNothingToCommitAsync(db);
         }
 

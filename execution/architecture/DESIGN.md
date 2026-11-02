@@ -71,7 +71,13 @@
 >   queue stacks from 1100px), § Form system (the refusal first in `aria-describedby`; the decision note's counter),
 >   § Alerts (the erased request's standing notice, the live requester name in every result), § Badges
 >   (DataRightsRequest), § Page-level patterns (Unavailable for a null read, the request's crumb, My data rights, Data
->   rights requests and a data rights request), and § app.css section order (three Data rights sections)).
+>   rights requests and a data rights request), and § app.css section order (three Data rights sections)); flow 15, an institution adopts the catalogue
+>   (2026-11-02, T392: § Table system (the own EPA and item marked in words, never a badge, on the admin pages; no list
+>   edits a row in place; the items table compact, Window and weight on the item's page), § Form system (adoption by rows,
+>   never a picker option; refusals under their field on the EPA, item and profile pages), § Button system (superseding
+>   adoption and the move confirmed; Deactivate… and Remove… open dialogs), § Page-level patterns (an EPA titled by the
+>   EPA, a national EPA and item a record, Unavailable for an EPA, a curriculum and an item, the Administrator's Show,
+>   the EPA pager), the NavMenu table (Curriculum adoptions gone), and § app.css section order (four catalogue sections)).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 
@@ -575,7 +581,7 @@ counted, the list is flat; more than 8, it is grouped under headings that are no
 progress, My data rights) sit under their own rule and are not counted (2026-10-05, T358, flow 06, E2: until then they
 were, and the Coordinator's eight would have been grouped). A heading is a `<p>`, not a heading element (the page's
 `<h1>` is its first heading), and names its `<ul>` through `aria-labelledby`. Only the Administrator's (16) and the
-Institutional admin's (15) are grouped.
+Institutional admin's (14; 15 until T392 merged Curriculum adoptions into Curricula, flow 15, Q1) are grouped.
 
 Each row is what that acting role is offered, in menu order: "Heading: links" for a group, `;` between groups.
 `NavMenuAuthorizationTests` builds the menu for every row and fails when the two differ, so a change to the nav is a
@@ -584,7 +590,7 @@ change to this table.
 | Acting role | Links |
 |---|---|
 | Administrator | Home; Platform: Scheduled jobs, Audit log, SSO mappings, Data rights requests; Organisations: Institutions, Colleges; People: Users, Invitations; Catalogue: EPAs, Curricula, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision panels |
-| InstitutionalAdmin | Home; People: Invitations, Trainees, Assessors, Users; Curriculum: Curriculum adoptions, Curricula, EPAs, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision panels, Entrustment decisions; Access and audit: SSO mappings, Audit log |
+| InstitutionalAdmin | Home; People: Invitations, Trainees, Assessors, Users; Curriculum: Curricula, EPAs, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision panels, Entrustment decisions; Access and audit: SSO mappings, Audit log |
 | CollegeAdmin | Home, Specialities, EPAs, Curricula, Activity types |
 | SpecialityAdmin | Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels, Entrustment decisions |
 | SubSpecialityAdmin | Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels, Entrustment decisions |
@@ -667,6 +673,7 @@ there, and its trail is Home › the page (§ Page-level patterns).
 | An EPA, an activity type, a curriculum's items | Administrator, College admin, Institutional admin: EPAs, Activity types, Curricula |
 | A curriculum | Administrator, College admin: Curricula |
 | `/admin/curriculum-progress` | Administrator: Curricula (a link on Curricula, now that Home's Maintenance card is dropped) |
+| `/admin/adoptions` | Administrator, Institutional admin: Curricula. No menu item since T392 (flow 15, Q1): adoption is on Curricula, and the address sends there |
 | An entrustment scale | Administrator: Entrustment scales |
 | Invite a person (`/admin/invitations/new`) | Administrator, Institutional admin: Invitations; its trail Home › Invitations › Invite a person (T373, flow 11, Q1) |
 | A user | Administrator, Institutional admin: Users. Its Users crumb returns to the filtered Users page it was opened from (`?back=`, read only through `PeopleLinks.SafeUsersReturn`, an allow-listed return: the Users path with Users' own parameters, rebuilt; anything else is `/admin/users`; T376, flow 12, S6; `PageHeader.OwnerHref`) |
@@ -765,6 +772,14 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
   confirms with the primary (a graduation is not a loss), Deactivate's with the filled danger button. Each dialog names
   the day, Mark complete's the address the email goes to, and what the end would take back for that day (a forecast, read
   when the dialog opens); the result is built from the count the command returns.
+- **A registrar's move to another curriculum version is asked first** (2026-11-02, T392, flow 15, Q8, Q20, decision 6):
+  on the trainee profile, while the Curriculum picker differs from the pinned version, the submit reads "Save profile and
+  move…" (`aria-haspopup="dialog"`) and the form's submit (the button, or Enter in any field) opens "Move ‹name› to
+  ‹curriculum›?" on Cancel, its confirm the primary "Move and save"; no count is read before it, and the built result
+  says what the replay checked. The line under the picker (`.submit-check`) says what a save does with the version chosen.
+  The rebuild's Rebuild progress stays a primary that opens its dialog (Q16), its words with no "…" as R3-F02 draws them,
+  and carries `aria-haspopup="dialog"` like every trigger that opens one (build review N7); its failure is fixed words in
+  its result region, focused (S9).
 - **An erasure is approved through its dialog** (2026-10-30, T387, flow 14, Q3, Q19, F5): on a submitted Erasure, Decide's
   Approve is "Approve and erase…", an outline trigger (`aria-haspopup="dialog"`) after Reject. Pressed, the note is
   checked first (refused, no dialog), then the forecast is read (`GetErasureForecastQuery`) and the `ConfirmDialog`
@@ -893,20 +908,13 @@ PagerControls
 
 `DataTable.razor` wraps this and takes column definitions via a `RenderFragment<TItem>`-per-column pattern. T010 builds the shell; T011 and T019 consume it.
 
-**Editing a row in place** (T176, the curriculum items page). An item of a list, opened for editing, does not put its
-controls in its own row's cells. A select squeezed into a column shows only a fragment of its label ("CPSA", "Cho…").
-Instead:
-
-- The item's row stays read-only, so what is stored stays in view. Its actions cell says "Editing below".
-- Every control goes in a second row whose one cell spans every column (`colspan` = the header count). The cell holds
-  a `<fieldset>` whose `<legend>` names the item ("Edit PAED-001"). Inside it: a `.form-grid` of `<FormField>`s, the
-  same fields in the same order as the page's Add form, each with its `<label for>` and the same help text. Then a
-  refusal `Alert` with `role="alert"`, and a `.form-actions` row holding the status that explains a disabled Save,
-  Cancel, and Save. On the curriculum items page, `CurriculumItemsEditLayoutTests` holds the two forms to each other.
-- Both rows carry `.is-editing`: a `--secondary-color` stripe down the left ties them together. They take no hover
-  tint: neither is a list row while the edit is open, and tinting a whole form as the pointer crosses it is noise.
-- The form row is as wide as the table, so Save sits at the table's right edge. **The read-only table must fit its
-  container**, or Save is off-screen however the form is laid out.
+**No list edits a row in place** (T392, flow 15, Q14, F3; it ends T323's edit row at 390px). T176's edit row, a
+second row spanning the table with the item's form in it, went with the curriculum items page's last use of it: an item
+is added and edited on a page of its own (`/admin/curricula/{Id}/items/new`, `…/items/{ItemId}`), for every caller, the
+College's and the Administrator's too, and the list is the page. The item's page returns to the list with a one-shot
+token (`CatalogueLinks`: `?added`, `?saved`, `?back`), which the list reads in the caller's scope, writes its own result
+from, focuses (for `?back`, the row's Edit or View), and strips from the address. A list that must open a form for a row
+opens the row's own page, or flow 12's note panel; never controls in the table.
 
 **A row the caller cannot change** (T211). A list offers a row action only where the command behind it would accept it,
 and a link only to a page that admits the caller and lets them act there. The page reads that from the query, never
@@ -919,7 +927,11 @@ item on a shared national list is marked under its title, `.muted .text-sm`, as 
 institution's own EPA. It names the owner to a caller whose reads span institutions ("Groote Schuur Hospital's own
 item": an Administrator, T222), and says "Your institution's own item" to anyone else, every local item they read being
 their own. The query decides which (`CurriculumItemDto.OwningInstitutionName`, cut by
-`CurriculumAdminScope.NamesItemOwners`), never the page from the caller's roles.
+`CurriculumAdminScope.NamesItemOwners`), never the page from the caller's roles. The EPA list marks an institution's own EPA the same way, "Your
+institution's own EPA" or "Kgosi Kgari Teaching Hospital's own EPA" (`EpaDto.NamesOwner`, the same rule), offers Edit
+only where `EpaDto.MayChange` (`UpdateEpa`'s rule) and says "Set by the College." in a national row's actions cell
+(2026-11-02, T392, flow 15, Q3, F8: words, never a badge, on the admin lists and pages; the trainee's EPA page and My
+progress keep theirs until T357).
 
 **A column of actions that no row offers is not rendered** (T226), and a row with no action beside one that has says
 why in a `.muted` span rather than leaving its cell blank. The committee agenda's chair-only Action column was the
@@ -929,16 +941,19 @@ and its border no longer meets its row's. Every list page's buttons are in one s
 every actions column's header is the `.visually-hidden` "Actions" below (26 headers on 24 pages were an empty `<th>`).
 `Design/TableColumnClassTests` fails on either.
 
-**Row actions on the curriculum items page** (T222) follow § Button system: Edit and Remove are `.btn .btn-sm
-.btn-outline`, named by the item's EPA (`aria-label="Edit PAED-001"`, `"Remove PAED-001"`), and, where the row names its
-owner, by whose item it is (`"Edit PAED-099 (Groote Schuur Hospital's own item)"`). Since T223 two institutions may each
-hold an item of their own on one EPA, and an Administrator reads both rows, so the EPA alone no longer names one button;
-the edit row's legend and the Remove result name the item the same way. Remove opens the page's one
-`ConfirmDialog`, whose result takes the focus in an `.action-result` region once the dialog has closed. The dialog says
-whose trainees the item stops measuring: a national item's in every institution that has adopted the curriculum, an
-institution's own item only that institution's, named as the row names its owner (T222 review). **An actions
-column's header is a `.visually-hidden` "Actions", never an empty `<th>`**: a header names the cells under it. A column of
-buttons that fits in its content's width needs no `.col-actions`; the curriculum items table has no room for its 12rem.
+**Row actions on the curriculum items page** (T222, T392) follow § Button system: Edit (a link to the item's page) and
+Remove… (a `ConfirmDialog` trigger, `aria-haspopup="dialog"`) are `.btn .btn-sm .btn-outline`, named by the item's EPA
+(`aria-label="Edit PAED-001"`, `"Remove PAED-001"`), and, where the row names its owner, by whose item it is (`"Edit
+PAED-099 (Groote Schuur Hospital's own item)"`, `RowNames.Distinct`). Since T223 two institutions may each hold an item of
+their own on one EPA, and an Administrator reads both rows, so the EPA alone no longer names one button. A national row
+that the caller may not change offers View, the item's page drawn as its record (a `dl.detail-list`, no form, its Back
+carrying `?back=`; P2), beside "Set by the College." in the same `div.actions-cell`. Remove opens the page's one
+`ConfirmDialog`, titled by its item ("Remove KGK-001 from Paediatric EPA Curriculum (11.2)?"), whose result takes the
+focus in an `.action-result` region at the list's top once the dialog has closed. The dialog says whose trainees the item
+stops measuring: a national item's in every institution that has adopted the curriculum, an institution's own item only
+that institution's, named as the row names its owner (T222 review). **An actions column's header is a `.visually-hidden`
+"Actions", never an empty `<th>`**: a header names the cells under it. A column of buttons that fits in its content's
+width needs no `.col-actions`; the curriculum items table has no room for its 12rem.
 
 **Every list's row actions name their rows** (T239). Until T239, 24 pages headed their actions column with an empty
 `<th>`, and most offered a column of identical "Edit", "View" or "Open" buttons. Each row's button, and each link styled
@@ -956,12 +971,18 @@ review: two drafts saved in one minute, or two panels of one name, read the same
 `ActivityRowNames` are the committee's and the activity lists' wordings. The same holds outside tables: a user's roles
 ("Remove the Assessor role"), a review's staged decisions ("Remove the staged decision on PAED-003"), the builder's
 sections and fields ("Move field Notes up", "Add field to section Request"), and each STAR's "Download certificate for
-PAED-003". The edit row's Cancel and Save on the curriculum items page name the item too. `Design/RowActionMarkupTests`
+PAED-003". `Design/RowActionMarkupTests`
 scans every page: no empty `<th>`, no `td.actions-cell`, and no button or `.btn` link in a `Row` fragment or a `tbody`
 without a name of its own, which is an `aria-label` computed from the row (a fixed "Detail" names every row alike) that
 contains the visible label. A column no row offers an action in is not rendered: the entrustment scales list shows its
 Edit and Delete column to an Administrator only, and the decision panels list its Edit column only to a caller who may
 manage one of its panels.
+
+**Adoption is by rows** (T392, flow 15, Q1, Q7; round-3-check decision 8): an adopted curriculum version is a row with its
+state for the institution ("Adopted on ‹date›", or "Superseded on ‹date›" over "‹N› registrars still on it"), never an
+option; Curricula's "Open for adoption" lists, each with its own Adopt, only the open versions the institution has not
+actively adopted, so Adopt is never offered for what it would refuse. An older version stays there (going back, Q21).
+Adopt asks nothing when it supersedes nothing; any other is "Adopt…" and confirms first in a dialog (Q6).
 
 **A picker offers exactly what the command it feeds accepts, and is asked again after every command that changes that**
 (T195, T222). The curriculum item editor's EPA pickers leave out every EPA the curriculum already holds for the same
@@ -970,13 +991,11 @@ its EPA for every institution, and an institution's own item holds it for that i
 picker still offers an EPA that institution A has as its own item, and the College's does not. The EPA field's help says
 so, and so does the College's empty state: an EPA can be missing from its picker because an institution has it as its own
 item, which the College does not read, and only that institution frees it. It names no institution and no EPA. After
-each Add, Save and Remove the page asks for both pickers again (the edit row's while one is open). A choice the new
-answer no longer offers moves to one it does: the Add form's to the first EPA on offer, the edit row's back to the item's
-stored EPA. **A refusal reads the page again too**
-(T222 review): the likeliest one comes from a page that is out of date (an EPA added, or an item removed, in another tab),
-so the page reads the curriculum and both pickers again and keeps the refusal. An edit row whose item has gone closes, and
-its refusal moves to the `.action-result` region, which takes the focus; a refused Add that leaves nothing to add puts its
-refusal at the head of the empty state (§ Card system).
+each Remove the items page asks again whether an EPA is left to add (its add link, or the built empty line). **A refusal
+of the EPA reads the picker again** (T222 review; T392): the likeliest one comes from a page that is out of date (an EPA
+added in another tab), so the item's page asks its picker again and keeps the refusal under EPA (F4). A choice the new
+answer no longer offers moves to one it does: the add's to the first EPA on offer, an edit's back to the item's stored EPA;
+a refused add that leaves nothing to add puts its refusal at the head of the empty state (§ Card system).
 
 **An EPA that is not in force** is marked beside its title, on the same line: "(inactive: not in force)" in a
 `.muted` span on the curriculum editor, which admins read, and "(no longer in use)", the words the activity's own EPA
@@ -1315,8 +1334,8 @@ dl.form-group     /* no margin on it or its <dd>s: a field shown as text to a ca
 - Checkbox: `<div class="form-check">` wrapping a `.form-check-input` + `<label>`.
 - A group of checkboxes is a `<fieldset>` with a `<legend>`, the checkboxes inside a `.check-grid` (columns of
   `.form-check`), every checkbox with its own unique id. **Not** a `<FormField>`: its `<label for>` would point at
-  no single input. When two groups share a page (an inline edit row and an Add form), prefix their ids differently
-  (`edit-tool-{key}` / `add-tool-{key}`, T122's curriculum tool list).
+  no single input. When two groups share a page, prefix their ids differently (`edit-tool-{key}` / `add-tool-{key}`,
+  as T122's curriculum tool list did while the edit row and the Add form shared the items page, before T392).
 - **A fieldset that is one field is a `fieldset.form-group`, wherever it is** (T177 in `ActivityForm`, every page since
   T188): a group of checkboxes or radios, and a field with no control to name (the activity form's file placeholder,
   an unsupported type). `.form-group` makes its legend read as that field's label, like the labels beside it, not as a
@@ -1333,7 +1352,7 @@ dl.form-group     /* no margin on it or its <dd>s: a field shown as text to a ca
   group too, and is set in by a 2px rule down its left, because its legend is the same size as the field's. Its legend
   is floated, so it is laid out inside the group and the rule runs its full height (a rendered legend straddles the
   top border, and the rule began halfway down it); a floated legend still names its fieldset. A fieldset that
-  **holds** fields (a `.form-grid` or `<FormField>`s: the curriculum item's edit row) is a cluster, and
+  **holds** fields (a `.form-grid` or `<FormField>`s; the curriculum item's edit row was one until T392) is a cluster, and
   keeps the section-size legend; an activity form's section is a `<section>` since T342 (below). `Design/FieldGroupTests`
   reads every `<fieldset` in every `.razor` file, the render fragments in `@code` included, and fails on a field whose
   class does not write `form-group` out (one an expression adds is sometimes not there), and on a paragraph in a field
@@ -1899,6 +1918,24 @@ T019 introduces a small builder-specific extension to the shared system:
   Go to Data rights requests (2026-10-30, T387, flow 14, Q13, Q17, S14), for a null read only (an unknown id and another
   institution's alike); a read that throws is the load error. It draws in the request page's own place, so the menu
   lights Data rights requests and the trail ends "Request unavailable".
+  An EPA's is "EPA unavailable", "This EPA does not exist, or you cannot open it." and Go to EPAs (2026-11-02, T392, flow
+  15, Q2, Q19): `GetEpaByIdQuery` and `GetEpaPageQuery` read by the EPA list's rule (the national EPAs of the disciplines
+  the institution has actively adopted, and its own; the College's for a College admin; every one for the Administrator),
+  so the Demo College's EPA-001 typed by Kgosi Kgari's admin is Unavailable, never a form. A read that throws is the load
+  error ("Could not load this EPA. …", titled "EPA", T7). A national EPA she reads opens as its record (`.user-page`,
+  "About this EPA" as a `dl.detail-list`, Description, Required knowledge and skills; subtitle "‹College› · ‹discipline› ·
+  Set by the College, so read only here"), with no form, no Save and no Deactivate…; an EPA the caller may change
+  (`EpaDto.MayChange`, `UpdateEpa`'s rule) opens as its form, titled by `EpaOptionLabel` with its code as the crumb.
+  A curriculum's is "Curriculum unavailable", "This curriculum does not exist, or you cannot open it." and Go to Curricula;
+  an item's is "Item unavailable", "This curriculum item does not exist, or you cannot change it." and "Go to Items of
+  ‹curriculum (version)›" (2026-11-02, T392, flow 15, Q19, R2-B15, B16; `CurriculumItemsWords`). Both draw in the route's
+  own place, the items list's or the item page's, straight under Curricula in the trail, for a null read (an unknown id and
+  one out of the caller's scope alike); a read that throws is the load error ("Could not load this curriculum item. …",
+  titled "Curriculum item"). The add address (`/items/new`) on a version the caller's institution has superseded is not
+  Unavailable: it is "Cannot add an item" over F6's line, "Your institution has superseded this version, so no item is
+  added to it. Its own items stay for the registrars still on it.", with the same Go to Items of …, its trail through the
+  items list (build review P3). An add the command refuses because the version was superseded meanwhile says
+  `CurriculumVersionSupersededException`'s sentence at the form's top, focused (C2).
 - **A data rights request's standing notices and results** (2026-10-30, T387, flow 14, K01, D09, D15, D20): the erased
   requester's "This person's personal data was erased on ‹day›…" line is an `Alert Kind="info" Role=""` at the page's
   top, standing content and no live region; the own-request line ("You cannot decide your own request: …") and the
@@ -3629,6 +3666,25 @@ empty card "No one matches “zzz”" over "Nobody at ‹institution› has “z
 10 people." **The pager is drawn only when the matches run past one page** (`MatchCount > PageSize`; round-3-check Left
 2), so a list of ten or fifteen at 20 a page has none; `PagerControls` itself is unchanged.
 
+**Curricula's "An institution's curricula"** (2026-11-02, T392, flow 15, Q18, P4; build review P8, P9): the
+Administrator's section under All curricula. Institution (a real `label`, its first option "— Select an institution —") and
+Show (outline) sit on `form.search-container`'s `.search-grid`; the choice is the page's state, not the address, and is kept
+across an adoption. Show with no institution chosen reads nothing and leaves what is shown: "Choose an institution." under
+the select (`div.validation-message role="alert"`, the select `aria-invalid` and described by it), focused. Until Show has
+read, the hint "Choose an institution, then Show, to see what it trains against and adopt for it." stands in the section.
+Show's answer is the institution's two sections as `h3`s named for it ("Curricula ‹institution› trains against", "Open to
+‹institution›"), the first taking the focus. A failed Show is the S7 form in the section: `alert-row` with "Could not load
+the curricula. Nothing has changed. Try again, or come back in a few minutes." and Try again, which reads the chosen
+institution again; the failure takes the focus. An adoption made whose list cannot be read again keeps its result and adds
+"The list could not be read again: reload the page to see it." (P1); the adopt carries the version the dialog named as
+superseded, and a stale one is refused in the open section, "Another adoption was made since this page was read, so nothing
+was adopted. The list below has been read again." (C4).
+
+**The EPA list's pager** (2026-11-02, T392, flow 15, P5): `PagerControls` under the table, named "Pages of EPAs", its size
+select "EPAs per page", drawn while the list runs past the chosen size (`list.Epas.Count > _pageSize`; T390 holds the
+case where a size that holds every row hides the pager). A page turn focuses the h1. The rows are read once and paged on
+the page, so a turn reads nothing.
+
 ### Detail page
 
 ```
@@ -3644,6 +3700,15 @@ empty card "No one matches “zzz”" over "Nobody at ‹institution› has “z
   <section class="detail-card"> main body </section>
 </div>
 ```
+
+**A curriculum item's record** (2026-11-02, T392, flow 15, P2): an item the caller reads and may not change (a national
+item read by an Institutional admin) opens at its own address as its record, not a form: one `section.detail-card` holding
+a `dl.detail-list` with EPA (its label, "(inactive: not in force)" muted when its EPA is paused), Target and decision, Minimum level (the
+rung, the scale's name muted under it), Minimum by training year ("Year ‹n›: ‹rung›" a line, or "No year has its own
+minimum."), Completion window ("‹n› months"), Weight ("—" when none) and Tools; the subtitle "A national item on ‹version›.
+The College sets it, so it is read only here."; no Save. Its one action is "Back to Items of ‹curriculum (version)›", an
+outline link carrying `?back=‹item›`, so the list focuses that row's View. The list's View is the row action that reaches
+it (§ Button system's row actions).
 
 A details grid's lone card keeps the grid's first column. Until T369 a page could opt into giving it the whole row,
 `.details-grid--lone-spans` (T266), for the MSF campaign page, whose Quick template card was only on the create page and
@@ -3982,7 +4047,7 @@ outside the label in its `aria-describedby`, none chosen (College admin offered 
 chosen role's fields: College; Institution read out for an Institutional admin, a select for the Administrator; Speciality
 (starred where the role needs one; "Any speciality" and its help for a Coordinator or Committee member), then
 Sub-speciality once a speciality is chosen ("Then choose its sub-speciality." until then). With nothing adopted, Speciality
-says so with a link to Curriculum adoptions, and Issue stays for the roles that need none (N26). `FormActions`: Cancel (to
+says so with a link to Curricula (Curriculum adoptions until T392, flow 15, S4), and Issue stays for the roles that need none (N26). `FormActions`: Cancel (to
 the list) and "Issue invitation". Opened with `?from=‹id›` (`OnboardingLinks.InviteFrom`) it is filled from a revoked
 invitation (role and scope, the address empty and focused) or an expired one (all), re-read in scope; an id not the
 caller's fills nothing and says nothing. Issued: the OneTimeLink with "Open Invitations", focused, then the form again,
@@ -4438,7 +4503,7 @@ Dashboards are a composition, not a standalone page pattern.
   dashboard shows. An `href` that only passes on the component's own parameter (`DashboardCard`'s `href="@Href"`) is
   judged where the caller sets `Href`, and an SVG `<use href>` is no link. A
   link to a page the role cannot open is removed or pointed at one it can: the Coordinator starts an MSF campaign rather
-  than issuing an invitation, and the InstitutionalAdmin's quick links are Users, Invitations, Curriculum adoptions and
+  than issuing an invitation, and the InstitutionalAdmin's quick links are Users, Invitations, Curricula (Curriculum adoptions until T392) and
   Entrustment decisions, not the Administrator's Institutions or the College's Specialities.
 - **`/dashboard/switch/{role}`** (`ActingRoleSwitch`, mapped in `Program.cs`) stores the acting role with the account and 302s to its return address or `/` (§ Acting role). It never renders UI directly. Every way a user reaches a dashboard goes through Home.
 
@@ -5167,6 +5232,12 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
 "Flow 14: data rights, shared (T387)": .request-id, .data-rights-table tbody th[scope="row"] (+ ≤900px: no rule under it once stacked, review P7) (the list selects' 44px below 641px, .search-container .form-select and .pager .form-select, is the system's, written beside .filter-actions' phone rule under Programme)
 "Flow 14: my data rights (T387)": .answer-cell (+ ≤640px, inside .data-rights-page: the reminder checkbox's label a 44px row outside a .choice-group, and a stack-wide row's .btn full width)
 "Flow 14: the requests (T387)": .correction-values (+ > .form-group), .dialog-body--scroll (+ ≤1100px: .data-rights-requests' stack-wide table stacked, its row buttons 44px, Q23) (+ ≤640px: .correction-values one column; the queue is .people-page, a request .user-page, whose phone rules serve them)
+
+/* ── The catalogue ─────────────────────────────── */
+"Flow 15: curricula (T392)": .curricula-page .curricula-section (+ > *, .action-result .alert, .action-result:empty, > .curricula-section) (the tables StackWide; the phone's 44px controls are .people-page's)
+"Flow 15: a curriculum's items (T392)": .curriculum-items-page (+ .form-section-head, the table's .actions-cell wrapping) (+ ≤640px: .form-section-head .btn 44px, decision 2), .curriculum-item-page (+ .detail-list .list-unstyled) (+ ≤640px: .user-page.curriculum-item-page .form-check, its input and label, 44px rows, N9)
+"Flow 15: EPAs (T392)": .epas-page th[scope="row"] (the EPA's label and owner mark wrap inside the cell), .epa-page .action-result:empty, .epa-page .epa-text (the record's text keeps its line breaks) (+ ≤640px, inside .user-page.epa-page: Status's Active .form-check row 44px, round-3-check decision 2)
+"Flow 15: the move, the rebuild and the scales (T392)": .rebuild-page .action-result:not(:empty) (its step under the bar), .scales-page .clinic-table td[data-label="Levels"] (tabular figures) (the profile's move line is the system's .submit-check inside .user-page; the rebuild is .user-page, the scales .people-page with StackWide, whose phone rules serve them)
 ```
 
 The Progress section replaced the Trajectory chart section that held T123's chart (2026-10-04, T355): every flow 05
@@ -5181,7 +5252,8 @@ flow 12 rule, none elsewhere: the shared one first, then one per build lane (T37
 sections hold every flow 13 rule but two, one per build lane: what two lanes share is the system's, `.badge-withdrawn`
 under Badges and the `.details-list` value column's `minmax(0, 1fr)` under Detail / stack lists (T379). The three Data
 rights sections hold every flow 14 rule but one: the shared one first, then one per page lane; the list selects' 44px on
-a phone is a system rule for every list, written beside `.filter-actions`' phone rule (T387).
+a phone is a system rule for every list, written beside `.filter-actions`' phone rule (T387). The four catalogue sections hold every flow 15
+rule, one per build lane, each scoped to its page's own class; flow 15 shares no rule between lanes (T392).
 
 When a new section is needed (say `/* ── Badges ── */`), add its heading in alphabetical-ish order inside the existing block and keep the rest of the file untouched.
 

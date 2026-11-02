@@ -2,9 +2,11 @@ using System.Data.Common;
 using System.Linq.Expressions;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Curricula;
+using Wombat.Domain.Identity;
 using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.Curricula;
@@ -52,35 +54,58 @@ public static class CurriculumAdminScope
 {
     /// <summary>
     /// The curricula the caller may open. The query form of <c>CanAccessCollege</c> (a CollegeAdmin's College) joined with
-    /// an InstitutionalAdmin's adoptions: an active one, or a superseded one of a curriculum that holds their institution's
-    /// own items (T223), so the list and the one-curriculum read are the same rule. The institution arm is one correlated
-    /// EXISTS over the adoptions, with the own-item test a correlated EXISTS inside it, evaluated by the server.
+    /// an InstitutionalAdmin's adoptions (<see cref="OpenToInstitution" />'s rule), so the list and the one-curriculum read
+    /// are the same rule. The institution arm is one correlated EXISTS over the adoptions, with the own-item and the
+    /// profile tests correlated EXISTS inside it, evaluated by the server.
     /// </summary>
     public static IQueryable<Curriculum> Openable(IApplicationDbContext dbContext, ClaimsPrincipal principal)
     {
-        var curricula = dbContext.Set<Curriculum>().AsQueryable();
         if (principal.IsAdministrator())
         {
-            return curricula;
+            return dbContext.Set<Curriculum>();
         }
 
         // Each role only with its own claim, as CanAccessCollege and CanAccessInstitution read them: every signed-in user
         // carries an institution claim (T113), and it makes nobody an InstitutionalAdmin.
         var collegeId = principal.IsCollegeAdmin() ? principal.GetCollegeId() : null;
         var institutionId = principal.IsInstitutionalAdmin() ? principal.GetInstitutionId() : null;
+        return OpenTo(dbContext, collegeId, institutionId);
+    }
+
+    /// <summary>
+    /// The curricula one institution trains against, as its InstitutionalAdmin opens them (T392, flow 15, Q9, Q18): a
+    /// version it has actively adopted; or one it adopted before and has since superseded, while any of its trainee
+    /// profiles, active or ended, is pinned to it, or it holds an item of the institution's own. With neither, a superseded
+    /// version leaves the institution's list. The Administrator's "An institution's curricula" reads the same rule for the
+    /// institution she chose, so she sees what its admin sees.
+    /// </summary>
+    /// <remarks>
+    /// The profile test is new with T392 (Q9): before it a superseded version opened only while it held an item of the
+    /// institution's own, so an institution that had added none could no longer read the items its registrars still on the
+    /// version are measured against. An ended profile keeps it open too: the registrar's record is read against it.
+    /// </remarks>
+    public static IQueryable<Curriculum> OpenToInstitution(IApplicationDbContext dbContext, int institutionId)
+        => OpenTo(dbContext, collegeId: null, institutionId);
+
+    private static IQueryable<Curriculum> OpenTo(IApplicationDbContext dbContext, int? collegeId, int? institutionId)
+    {
+        var curricula = dbContext.Set<Curriculum>().AsQueryable();
         if (collegeId is null && institutionId is null)
         {
             return curricula.Where(_ => false);
         }
 
         var adoptions = dbContext.Set<InstitutionCurriculumAdoption>();
+        var profiles = dbContext.Set<TraineeProfile>();
         return curricula.Where(curriculum =>
             (collegeId != null && curriculum.SubSpeciality.Speciality.CollegeId == collegeId)
             || (institutionId != null
                 && adoptions.Any(adoption =>
                     adoption.InstitutionId == institutionId
                     && adoption.CurriculumId == curriculum.Id
-                    && (adoption.IsActive || curriculum.Items.Any(item => item.OwningInstitutionId == institutionId)))));
+                    && (adoption.IsActive
+                        || curriculum.Items.Any(item => item.OwningInstitutionId == institutionId)
+                        || profiles.Any(profile => profile.InstitutionId == institutionId && profile.CurriculumId == curriculum.Id)))));
     }
 
     /// <summary>Whether the caller reads an item with this owner: a national item, or a local one they can act for.</summary>
@@ -187,7 +212,8 @@ public static class CurriculumAdminScope
             return;
         }
 
-        throw new InvalidOperationException(EpaHeldRefusal(itemOwningInstitutionId, holder.OwningInstitutionId));
+        // T392 (flow 15, F4): the EPA field's refusal, shown under EPA on the item's page (R2-B05, B12).
+        throw new FieldRefusalException(nameof(AddCurriculumItemCommand.EpaId), EpaHeldRefusal(itemOwningInstitutionId, holder.OwningInstitutionId));
     }
 
     /// <summary>
@@ -231,7 +257,7 @@ public static class CurriculumAdminScope
     /// </remarks>
     /// <param name="exceptItemId">The item being edited; null for an Add.</param>
     /// <param name="itemOwningInstitutionId">The owner of the item being added or edited; null for a national item.</param>
-    internal static async Task<InvalidOperationException> EpaHeldRefusalAsync(
+    internal static async Task<FieldRefusalException> EpaHeldRefusalAsync(
         IApplicationDbContext dbContext,
         int curriculumId,
         int epaId,
@@ -249,7 +275,9 @@ public static class CurriculumAdminScope
 
         // No holder: the racing item has gone again since. Nothing was saved either way, and the page reads the
         // curriculum again after a refusal (T222 review), so the kind-neutral words are enough.
-        return new InvalidOperationException(
+        // T392 (flow 15, F4): the EPA field's refusal, as the check's is, the database's underneath.
+        return new FieldRefusalException(
+            nameof(AddCurriculumItemCommand.EpaId),
             holder is null ? AlreadyContains : EpaHeldRefusal(itemOwningInstitutionId, holder.OwningInstitutionId),
             refused);
     }
@@ -302,5 +330,31 @@ public static class CurriculumAdminScope
         throw new UnauthorizedAccessException(principal.IsInstitutionalAdmin() && principal.GetInstitutionId() == owner
             ? "Your institution has not adopted this curriculum. An institution adds items of its own only to a curriculum it has adopted."
             : "This item's institution has not adopted this curriculum. An institution keeps items of its own only on a curriculum it has adopted.");
+    }
+    /// <summary>
+    /// Refuses a new item of an institution's own on a version that institution has adopted and since superseded (T392 build
+    /// review C2, F6): no new admission joins such a version, and an item added there would change the measure of the
+    /// registrars still on it mid-programme. A national item (<paramref name="itemOwningInstitutionId" /> null) is not asked,
+    /// nor are Update and Remove of an own item already there: those stay allowed (T211). Asked after
+    /// <see cref="EnsureOwnerAdoptedAsync" />, which refuses a version never adopted, and before anything is staged.
+    /// </summary>
+    internal static async Task EnsureOwnerAddsOnActiveAdoptionAsync(
+        IApplicationDbContext dbContext,
+        int curriculumId,
+        int? itemOwningInstitutionId,
+        CancellationToken cancellationToken)
+    {
+        if (itemOwningInstitutionId is not int owner)
+        {
+            return;
+        }
+
+        var active = await dbContext.Set<InstitutionCurriculumAdoption>()
+            .AsNoTracking()
+            .AnyAsync(adoption => adoption.InstitutionId == owner && adoption.CurriculumId == curriculumId && adoption.IsActive, cancellationToken);
+        if (!active)
+        {
+            throw new CurriculumVersionSupersededException();
+        }
     }
 }

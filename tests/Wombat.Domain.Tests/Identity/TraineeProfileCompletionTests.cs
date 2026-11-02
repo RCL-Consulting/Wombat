@@ -34,7 +34,7 @@ public sealed class TraineeProfileCompletionTests
         var profile = ActiveProfile();
         profile.IsActive = false;
 
-        var exception = Assert.Throws<InvalidOperationException>(() => profile.Complete(new DateOnly(2029, 12, 15), Today));
+        var exception = Assert.Throws<TraineeProfileRefusedException>(() => profile.Complete(new DateOnly(2029, 12, 15), Today));
         Assert.Contains("active", exception.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Null(profile.CompletedOn);
     }
@@ -44,7 +44,7 @@ public sealed class TraineeProfileCompletionTests
     {
         var profile = ActiveProfile();
 
-        var exception = Assert.Throws<InvalidOperationException>(() => profile.Complete(new DateOnly(2022, 1, 1), Today));
+        var exception = Assert.Throws<TraineeProfileRefusedException>(() => profile.Complete(new DateOnly(2022, 1, 1), Today));
         Assert.Equal("The last day cannot be before the programme start date (2023-01-15).", exception.Message);
         Assert.True(profile.IsActive);
         Assert.Null(profile.CompletedOn);
@@ -67,7 +67,7 @@ public sealed class TraineeProfileCompletionTests
         // to it as still in the programme.
         var profile = ActiveProfile();
 
-        var exception = Assert.Throws<InvalidOperationException>(() => profile.Complete(Today.AddDays(1), Today));
+        var exception = Assert.Throws<TraineeProfileRefusedException>(() => profile.Complete(Today.AddDays(1), Today));
 
         Assert.Equal("The last day cannot be after today (2030-01-10).", exception.Message);
         Assert.True(profile.IsActive);

@@ -7,6 +7,8 @@ using FluentAssertions;
 using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
+using Wombat.Application.Features.Trainees;
+using Wombat.Web.Components.Pages.Admin.Trainees;
 using Microsoft.Extensions.Options;
 using Wombat.Application.Common.Options;
 using Wombat.Application.Features.Activities.Commands.DiscardActivityTypeDraft;
@@ -67,13 +69,13 @@ using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.Account;
 using Wombat.Web.Components.Pages.Activities;
 using Wombat.Web.Components.Pages.Admin.ActivityTypes;
-using Wombat.Web.Components.Pages.Admin.Adoptions;
 using Wombat.Web.Components.Pages.Admin.Assessors;
 using Wombat.Web.Components.Pages.Admin.Colleges;
 using Wombat.Web.Components.Pages.Admin.CurriculumProgress;
 using Wombat.Web.Components.Pages.Admin.Curricula;
 using Wombat.Web.Components.Pages.Admin.DataRights;
 using Wombat.Web.Components.Pages.Admin.EntrustmentScales;
+using Wombat.Web.Components.Pages.Admin.Epas;
 using Wombat.Web.Components.Pages.Admin.Institutions;
 using Wombat.Web.Components.Pages.Admin.Invitations;
 using Wombat.Web.Components.Pages.Admin.Jobs;
@@ -601,6 +603,50 @@ public sealed class ActionFocusTests : TestContext
             cut => cut.FindAll("form").First().QuerySelector("button[type=submit]")!,
             cut => cut.FindAll("form").First().Submit()),
 
+        // T392 (flow 15, lane C): an EPA's Save, Deactivate…'s confirm and a reactivating Save. A refusal is a field's,
+        // under it and focused, and any other failure the fixed sentence (T329): EpaPageTests and EpaEditDeactivationTests.
+        ["EpaEdit Save"] = new(
+            (test, hold) => test.Page<EpaEdit>(
+                new Sender(hold, request => request is UpdateEpaCommand, request => request switch
+                {
+                    GetEpaPageQuery => EpaPage(isActive: true),
+                    UpdateEpaCommand => new UpdateEpaResult(EpaPage(isActive: true).Epa!, 0),
+                    _ => null
+                }),
+                parameters => parameters.Add(page => page.Id, 17)),
+            SubmitButton,
+            Submit,
+            CanBeRefused: false),
+
+        ["EpaEdit Deactivate"] = new(
+            (test, hold) => test.Page<EpaEdit>(
+                new Sender(hold, request => request is DeactivateEpaCommand, request => request switch
+                {
+                    GetEpaPageQuery => EpaPage(isActive: true),
+                    _ => null
+                }),
+                parameters => parameters.Add(page => page.Id, 17)),
+            cut => InDialog(cut, "Deactivate"),
+            cut => Confirm(cut, "Deactivate…", "Deactivate"),
+            CanBeRefused: false),
+
+        ["EpaEdit Reactivate"] = new(
+            (test, hold) => test.Page<EpaEdit>(
+                new Sender(hold, request => request is UpdateEpaCommand, request => request switch
+                {
+                    GetEpaPageQuery => EpaPage(isActive: false),
+                    UpdateEpaCommand => new UpdateEpaResult(EpaPage(isActive: true).Epa!, 1),
+                    _ => null
+                }),
+                parameters => parameters.Add(page => page.Id, 17)),
+            SubmitButton,
+            cut =>
+            {
+                cut.Find("#epa-active").Change(true);
+                Submit(cut);
+            },
+            CanBeRefused: false),
+
         ["EntrustmentScaleEdit Save"] = new(
             (test, hold) => test.Page<EntrustmentScaleEdit>(
                 new Sender(hold, request => request is UpdateEntrustmentScaleCommand, request => request switch
@@ -643,27 +689,22 @@ public sealed class ActionFocusTests : TestContext
         // focuses it once the circuit has drawn the page, T339).
         // Account/ChangePasswordPageTests, Account/ProfilePageTests and Portfolio/VerifyExportPageTests hold them to the rule.
 
-        ["AdoptionsList Adopt"] = new(
-            (test, hold) =>
-            {
-                // An InstitutionalAdmin's own institution is chosen for them.
-                test.SignIn(WombatRoles.InstitutionalAdmin, new Claim(WombatClaimTypes.InstitutionId, "4"));
-                return test.Page<AdoptionsList>(
-                    new Sender(hold, request => request is AdoptCurriculumCommand, request => request switch
-                    {
-                        GetAdoptableCurriculaQuery => new[]
-                        {
-                            new AdoptableCurriculumDto(3, 9, "CMSA", "Paediatrics", "Neonatology", "Neonatal curriculum", "v11.1")
-                        },
-                        _ => null
-                    }));
-            },
-            cut => Named(cut, "Adopt", "Adopting..."),
-            cut =>
-            {
-                cut.Find("#adoption-curriculum").Change("3");
-                Named(cut, "Adopt", "Adopting...").Click();
-            }),
+        // T392 (flow 15, Q1, Q6): adoption is on Curricula, by rows. A first adoption of a discipline asks nothing; one that
+        // supersedes asks first, and the dialog's confirm has the focus while it runs. The result takes the focus at the
+        // page's top. A refusal is typed and goes to the open section's own result, focused, and any other failure is the
+        // fixed sentence there (T329): CurriculaAdoptionPageTests holds both, so neither is this table's "stays where it was".
+        ["CurriculaList Adopt"] = new(
+            (test, hold) => test.CurriculaPage(hold, AdoptionRelation.None),
+            cut => Named(cut, "Adopt"),
+            cut => Named(cut, "Adopt").Click(),
+            CanBeRefused: false),
+
+        ["CurriculaList Adopt… confirm"] = new(
+            (test, hold) => test.CurriculaPage(hold, AdoptionRelation.Newer),
+            // The dialog's confirm is named for the row only once Adopt… has opened it, so it is found by its place.
+            cut => cut.Find("dialog .form-actions .btn-primary"),
+            cut => Confirm(cut, "Adopt…", "Adopt 11.2"),
+            CanBeRefused: false),
 
         // T373 (flow 11, Q1): the issue is Invite a person's. A refusal sits under its field, which takes the focus
         // (InviteAPersonTests), so it is not this table's "stays where it was".
@@ -939,7 +980,44 @@ public sealed class ActionFocusTests : TestContext
             {
                 cut.FindAll(".form-container button").Single(button => button.Closest("dialog") is null).Click();
                 cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Rebuild progress").Click();
-            }),
+            },
+            // T392 (Q16, S9): any failure is said in fixed words, never the exception's, and takes the focus in the result's
+            // region; CurriculumProgressRebuildPageTests holds it, so it is not refused here.
+            CanBeRefused: false),
+
+        // T392 (flow 15, R3-D03): Save profile and move… asks first; Move and save sends, the dialog's confirm held while
+        // it runs, and the result in Profile details takes the focus (R2-D05). A refusal in the handler's words does too.
+        ["TraineeProfileEdit Move and save"] = new(
+            (test, hold) =>
+            {
+                test.Services.AddSingleton<TimeProvider>(TimeProvider.System);
+                return test.Page<TraineeProfileEdit>(
+                    new Sender(hold, request => request is UpdateTraineeProfileCommand, request => request switch
+                    {
+                        GetTraineeProfileByIdQuery => TraineeProfileOn111(),
+                        GetTraineeCurriculumChoicesQuery => new List<CurriculumChoiceDto>
+                        {
+                            new(1, "Paediatric EPA Curriculum", "11.1", 1, 1) { SupersededOn = new DateOnly(2026, 10, 30) },
+                            new(2, "Paediatric EPA Curriculum", "11.2", 1, 1) { IsActiveAdoption = true }
+                        },
+                        UpdateTraineeProfileCommand => new UpdateTraineeProfileResult(
+                            TraineeProfileOn111() with { CurriculumId = 2, CurriculumVersion = "11.2" },
+                            new TraineeCreditRecount(CurriculumMoved: true, CompletionsChecked: 1, CompletionsCounting: 1)),
+                        _ => null
+                    }),
+                    query: ("id", 2));
+            },
+            cut => InDialog(cut, "Move and save"),
+            cut =>
+            {
+                cut.Find("#curriculum-id").Change("2");
+                Submit(cut);
+                InDialog(cut, "Move and save").Click();
+            },
+            // T392 build review P6: a refusal is the profile's typed one (an archived record) or D06's under Curriculum;
+            // any other exception, as this test's refusal is, is fixed words (T329): TraineeProfilePageTests holds both.
+            RefusalTakesFocus: true,
+            CanBeRefused: false),
 
         // ---- T234 review: the actions reported fixed that no scenario held to the rule ----
 
@@ -983,6 +1061,63 @@ public sealed class ActionFocusTests : TestContext
                 cut.Find("#clone-version").Closest("form")!.Submit();
             },
             LeavesFor: "/admin/curricula/7"),
+
+        // T392 (flow 15, Q14, F1): an item's page of its own sends its add or save and leaves for the items list, which writes
+        // the result from the token and focuses it (CurriculumItemPageTests). A refusal is the field's, under it, or fixed
+        // words (T329), never the test's refusal text, so neither is this table's "stays where it was".
+        ["CurriculumItemPage Add item"] = new(
+            (test, hold) =>
+            {
+                var cut = test.Page<CurriculumItemPage>(
+                    new Sender(hold, request => request is AddCurriculumItemCommand, request => request switch
+                    {
+                        GetCurriculumByIdQuery => ItemsCurriculum(),
+                        ListCurriculumItemEpaOptionsQuery => new[] { ItemEpa(5, "PAED-005") },
+                        AddCurriculumItemCommand => ItemsCurriculum() with { Items = [.. ItemsCurriculum().Items, Item(31, 5, "PAED-005")] },
+                        _ => null
+                    }),
+                    parameters => parameters.Add(page => page.Id, 2));
+                // Unpinned, so the minimum is a typed level; typed, Add item is on (R2-B04).
+                cut.Find("#item-minimum").Change("3");
+                return cut;
+            },
+            SubmitButton,
+            Submit,
+            CanBeRefused: false,
+            LeavesFor: "/admin/curricula/2/items?added=31"),
+
+        ["CurriculumItemPage Save item"] = new(
+            (test, hold) => test.Page<CurriculumItemPage>(
+                new Sender(hold, request => request is UpdateCurriculumItemCommand, request => request switch
+                {
+                    GetCurriculumByIdQuery or UpdateCurriculumItemCommand => ItemsCurriculum(),
+                    ListCurriculumItemEpaOptionsQuery => new[] { ItemEpa(1, "PAED-001") },
+                    _ => null
+                }),
+                parameters => parameters.Add(page => page.Id, 2).Add(page => page.ItemId, 21)),
+            SubmitButton,
+            Submit,
+            CanBeRefused: false,
+            LeavesFor: "/admin/curricula/2/items?saved=21"),
+
+        // T3, T11: Remove… asks first; the dialog's "Remove item" is the action, its result at the list's top, focused.
+        ["CurriculumItemsEdit Remove item"] = new(
+            (test, hold) =>
+            {
+                var page = test.Page<CurriculumItemsEdit>(
+                    new Sender(hold, request => request is RemoveCurriculumItemCommand, request => request switch
+                    {
+                        GetCurriculumByIdQuery => ItemsCurriculum(),
+                        RemoveCurriculumItemCommand => ItemsCurriculum() with { Items = [] },
+                        _ => null
+                    }),
+                    parameters => parameters.Add(page => page.Id, 2));
+                Named(page, "Remove…").Click();
+                return page;
+            },
+            cut => InDialog(cut, "Remove item"),
+            cut => Confirm(cut, "Remove…", "Remove item"),
+            CanBeRefused: false),
 
         ["InvitationsList Revoke"] = new(
             (test, hold) =>
@@ -1331,6 +1466,34 @@ public sealed class ActionFocusTests : TestContext
         return cut;
     }
 
+    /// <summary>
+    /// Curricula as an Institutional admin (T392, flow 15): one open version, which supersedes nothing
+    /// (<see cref="AdoptionRelation.None" />, Adopt) or the adopted 11.1 (<see cref="AdoptionRelation.Newer" />, Adopt…).
+    /// </summary>
+    private IRenderedFragment CurriculaPage(Hold hold, AdoptionRelation relation)
+    {
+        SignIn(WombatRoles.InstitutionalAdmin, new Claim(WombatClaimTypes.InstitutionId, "4"));
+        var open = new AdoptableCurriculumDto(3, 9, "CPSA", "Paediatrics", "Paediatrics", "Paediatric EPA Curriculum", "11.2")
+        {
+            EffectiveFrom = new DateOnly(2026, 10, 30),
+            NationalItemCount = 16,
+            Relation = relation,
+            AdoptedCurriculumId = relation == AdoptionRelation.None ? null : 2,
+            AdoptedName = relation == AdoptionRelation.None ? null : "Paediatric EPA Curriculum",
+            AdoptedVersion = relation == AdoptionRelation.None ? null : "11.1",
+            AdoptedRegistrarCount = relation == AdoptionRelation.None ? 0 : 3
+        };
+        return Page<CurriculaList>(
+            new Sender(hold, request => request is AdoptCurriculumCommand, request => request switch
+            {
+                Wombat.Application.Features.Institutions.Queries.GetMyInstitutionName.GetMyInstitutionNameQuery => "Groote Schuur Hospital",
+                GetAdoptableCurriculaQuery => new[] { open },
+                AdoptCurriculumCommand => new AdoptionDto(
+                    7, 4, 3, "Paediatric EPA Curriculum", "11.2", 9, "Paediatrics", "Paediatrics", "CPSA", new DateOnly(2026, 10, 30), true),
+                _ => null
+            }));
+    }
+
     private IRenderedFragment UserDetailPage(Hold hold, Func<object, bool> held, UserDetailDto? user = null)
         => Page<UserDetail>(
             new Sender(hold, held, request => request switch
@@ -1434,9 +1597,28 @@ public sealed class ActionFocusTests : TestContext
 
     private static readonly Guid RequestId = new("6a1f0000-0000-0000-0000-000000000001");
 
+    private static EpaPageDto EpaPage(bool isActive) => new(
+        new EpaDto(17, 9, "Paediatrics", "CPSA", "KGK-001", "Outreach", null, null, Wombat.Domain.Epas.EpaCategory.Elective, isActive, Created)
+        {
+            OwningInstitutionId = 4,
+            OwningInstitutionName = "Groote Schuur Hospital",
+            MayChange = true,
+            DisciplineName = "Paediatrics / Paediatrics"
+        },
+        [new EpaDisciplineDto(9, "Paediatrics / Paediatrics")],
+        false,
+        null,
+        true);
+
     private static InstitutionDto Institution() => new(4, "Groote Schuur Hospital", "GSH", null, true, Created);
 
     private static CollegeDto College() => new(1, "College of Paediatricians", "CPSA", null, true, Created);
+
+    /// <summary>A running profile pinned to 11.1, which its institution has superseded (T392, the move).</summary>
+    private static TraineeProfileDto TraineeProfileOn111() => new(
+        2, "ndlovu", "ndlovu@kgk.wombat.local", "Sipho", "Ndlovu",
+        1, "Paediatric EPA Curriculum", "11.1", 1, "Paediatrics", 1, "Paediatrics",
+        new DateOnly(2026, 1, 15), new DateOnly(2030, 1, 14), IsActive: true);
 
     private static SpecialityDto Speciality() => new(5, 1, "Paediatrics", null, true);
 
@@ -1444,10 +1626,23 @@ public sealed class ActionFocusTests : TestContext
 
     private static CurriculumDto Curriculum() => new(
         2, 5, 9, "Paediatrics", "Neonatology", "CMSA", "Neonatal curriculum", "v11.1", new DateOnly(2026, 1, 1), null,
-        true, true, [], null)
+        true, [], null)
     {
         CanEditCurriculum = true
     };
+
+    /// <summary>A curriculum's items as the College reads them (T392): one national item it may change, an add offered.</summary>
+    private static CurriculumDto ItemsCurriculum() => Curriculum() with { Items = [Item(21, 1, "PAED-001")], MayAddItem = true };
+
+    private static CurriculumItemDto Item(int id, int epaId, string code) => new(
+        id, epaId, code, $"{code} title", 1, Wombat.Domain.Curricula.QuotaPeriod.AcademicYear, 3, 12, null, null, null, true,
+        null, null, null, null, null, false)
+    {
+        CanEdit = true
+    };
+
+    private static EpaDto ItemEpa(int id, string code) => new(
+        id, 9, "Neonatology", "CMSA", code, $"{code} title", null, null, Wombat.Domain.Epas.EpaCategory.Core, true, Created);
 
     private static EntrustmentScaleDto Scale() => new(3, "CPSA ladder", null,
     [

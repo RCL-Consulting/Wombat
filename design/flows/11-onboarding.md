@@ -765,14 +765,14 @@ Expect: The page reads "This invitation is for mbatha@kgk.wombat.local, as Insti
     admin"); then "1 account: yours." and Open Users;
   - **Curriculum:** "0" over "specialities adopted" and "0" over "sub-specialities adopted", because KGK has adopted
     nothing yet (T291 item 4); "Nothing is adopted yet. Adopt the College's curriculum to set up a programme."; Open
-    Curriculum adoptions;
+    Curricula, where she adopts (T392, S4);
   - **Your institution:** Name Kgosi Kgari Teaching Hospital, Short code KGK, Contact email
     paeds-admin@kgk.wombat.local, Status "Active" over "Set by a Wombat administrator.", and Open Kgosi Kgari Teaching
     Hospital.
   The sidebar reads "Acting as Institutional admin" over her menu, grouped: Home; People: Invitations, Trainees,
-  Assessors, Users; Curriculum: Curriculum adoptions, Curricula, EPAs, Activity types, Entrustment scales; Reviews:
-  Decisions due, Committee reviews, Decision panels, Entrustment decisions (T376, F10); Access and audit: SSO mappings,
-  Audit log; then My data rights.
+  Assessors, Users; Curriculum: Curricula, EPAs, Activity types, Entrustment scales (no Curriculum adoptions: T392,
+  Q1); Reviews: Decisions due, Committee reviews, Decision panels, Entrustment decisions (T376, F10); Access and
+  audit: SSO mappings, Audit log; then My data rights.
 
 Step 1.11 — Both invitations are spent
 Role: Administrator — the platform operator
@@ -1119,7 +1119,7 @@ Expect: Home reads "Institutional admin · Semester N, YYYY" and offers "Invite 
     Assessor 5 and Trainee 5, each count a link named by it ("5 Assessor"), with no Pending trainee; "15 accounts." and
     Open Users;
   - **Curriculum:** "1" over "speciality adopted" and "1" over "sub-speciality adopted", what KGK has adopted, with
-    "Paediatrics / Paediatrics, from the CPSA's Paediatric EPA Curriculum (11.1)." and Open Curriculum adoptions;
+    "Paediatrics / Paediatrics, from the CPSA's Paediatric EPA Curriculum (11.1)." and Open Curricula (T392, S4);
   - **Your institution:** Name Kgosi Kgari Teaching Hospital, Short code KGK, Contact email
     paeds-admin@kgk.wombat.local, Status "Active" over "Set by a Wombat administrator.", and Open Kgosi Kgari Teaching
     Hospital.

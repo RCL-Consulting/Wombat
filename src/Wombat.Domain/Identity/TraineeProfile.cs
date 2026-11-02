@@ -210,12 +210,12 @@ public sealed class TraineeProfile
     {
         if (!IsActive)
         {
-            throw new InvalidOperationException($"Only an active trainee profile can be {verb}.");
+            throw new TraineeProfileRefusedException($"Only an active trainee profile can be {verb}.");
         }
 
         if (EndDayRefusal(endedOn, ProgrammeStartDate, today) is { } refusal)
         {
-            throw new InvalidOperationException(refusal);
+            throw new TraineeProfileRefusedException(refusal);
         }
     }
 

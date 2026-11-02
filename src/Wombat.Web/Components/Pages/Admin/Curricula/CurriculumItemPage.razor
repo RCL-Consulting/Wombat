@@ -1,0 +1,870 @@
+@page "/admin/curricula/{Id:int}/items/new"
+@page "/admin/curricula/{Id:int}/items/{ItemId:int}"
+@attribute [Authorize(Policy = "NationalCatalogueAccess")]
+@inject IScopedSender Sender
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject IServiceProvider ServiceProvider
+@inject ILogger<CurriculumItemPage> Logger
+@using Wombat.Domain.Curricula
+@using Wombat.Application.Features.Curricula.Quota
+@using Words = CurriculumItemsWords
+
+<PageTitle>@Heading · Wombat</PageTitle>
+
+@*
+  An item's page of its own (T392, flow 15, lane B; Q14, F3, T323, P2; boards R3-B22, B24 and R2-B04, B05, B09, B12, B15).
+  One editor for every caller: the add (/items/new) and the edit (/items/{ItemId}), their words by CanEditCurriculum. The
+  form is the items page's old one, field for field, with its rules (the picker that offers what the command accepts, T195,
+  T222; the minima picked as rungs, T125; the tools, T122; the decision, T131). Add item and Save item return to the list
+  with a one-shot token (F1), which writes the result there; Cancel returns with none from the add (P6) and with ?back= from
+  an item (R3-B11). A refusal of the EPA, or of a field the command's validator names, stays under its field, focused, what
+  was typed kept (F4); anything else is fixed words at the page's top, logged (T329). An item the caller may read and not
+  change, a national item read by an institution, is its record (P2): no form, no Save, its Back carrying ?back=. An item
+  the curriculum does not hold for the caller is Item unavailable, a curriculum the caller cannot open Curriculum
+  unavailable (Q19).
+*@
+<PageHeader Title="@Heading" Subtitle="@Subtitle" Trail="@Trail" CurrentCrumb="@Crumb" />
+
+<div class="user-page curriculum-item-page" aria-busy="@(_loading ? "true" : null)">
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="LoadAsync" FocusAfterRetry="FocusHeadingAsync">
+    <LoadingContent>
+      <p class="loading-line" role="status">@Words.ItemLoading</p>
+      <div class="detail-card" aria-hidden="true">
+        <div class="skeleton skel-title"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line skel-short"></div>
+      </div>
+    </LoadingContent>
+    <ChildContent>
+      @switch (_state)
+      {
+        case PageState.CurriculumUnavailable:
+          <div class="detail-card detail-card--empty">
+            <div class="state-panel-copy">@Words.CurriculumUnavailableBody</div>
+            <div class="form-actions">
+              <a class="btn btn-primary" href="@CatalogueLinks.Curricula">@Words.GoToCurricula</a>
+            </div>
+          </div>
+          break;
+
+        case PageState.Superseded when _curriculum is { } curriculum:
+          @* P3 (build review): the add address on a version the institution has superseded says why, in F6's words. *@
+          <div class="detail-card detail-card--empty">
+            <div class="state-panel-copy">@Words.Superseded</div>
+            <div class="form-actions">
+              <a class="btn btn-primary" href="@CatalogueLinks.Items(Id)">@Words.GoToItems(curriculum)</a>
+            </div>
+          </div>
+          break;
+
+        case PageState.ItemUnavailable when _curriculum is { } curriculum:
+          <div class="detail-card detail-card--empty">
+            <div class="state-panel-copy">@Words.ItemUnavailableBody</div>
+            <div class="form-actions">
+              <a class="btn btn-primary" href="@CatalogueLinks.Items(Id)">@Words.GoToItems(curriculum)</a>
+            </div>
+          </div>
+          break;
+
+        case PageState.Record when _curriculum is { } curriculum && _item is { } item:
+          @Record(curriculum, item)
+          break;
+
+        case PageState.NothingToAdd when _curriculum is { } curriculum:
+          @* The add page reached with no EPA left to add (by its address, or after a refusal emptied the picker): the
+             built empty line, led by the refusal that emptied it (T222). *@
+          <ActionResult @ref="_result">@if (_failure is { } failure)
+            {<Alert Kind="danger" Role="alert">@failure</Alert>}</ActionResult>
+          <div class="detail-card detail-card--empty">
+            <div class="state-panel-copy">@Words.NothingToAdd(curriculum)</div>
+            <div class="form-actions">
+              <a class="btn btn-primary" href="@CatalogueLinks.Items(Id)">@Words.GoToItems(curriculum)</a>
+            </div>
+          </div>
+          break;
+
+        case PageState.Form when _curriculum is { } curriculum:
+          @Form(curriculum)
+          break;
+      }
+    </ChildContent>
+  </StatePanel>
+</div>
+
+@code {
+  [Parameter] public int Id { get; set; }
+
+  /// <summary>The item edited or read; null on the add page.</summary>
+  [Parameter] public int? ItemId { get; set; }
+
+  private enum PageState
+  {
+    None,
+    Form,
+    Record,
+    NothingToAdd,
+    ItemUnavailable,
+    CurriculumUnavailable,
+
+    /// <summary>The add address on a version the caller's institution has superseded (F6; build review P3).</summary>
+    Superseded
+  }
+
+  private const string EpaInputId = "item-epa";
+  private const string CountInputId = "item-count";
+  private const string PeriodInputId = "item-period";
+  private const string CadenceInputId = "item-decision-cadence";
+  private const string BodyInputId = "item-decision-body";
+  private const string OpportunisticInputId = "item-decision-opportunistic";
+  private const string ScaleInputId = "item-scale";
+  private const string ScaleReasonId = "item-scale-reason";
+  private const string MinimumInputId = "item-minimum";
+  private const string WindowInputId = "item-window";
+  private const string WeightInputId = "item-weight";
+  private const string MinimaStatusId = "item-minima-status";
+  private const string NotOfferedId = "item-epa-not-offered";
+
+  // One help text per field, as the items page's form had them (T176, T193).
+  private const string EpaHelp = "Lists only the EPAs this item can name that no item on this curriculum already holds for the same trainees: the national EPAs of its sub-speciality and, for an item an institution added, that institution's own local EPAs. A national item holds its EPA for every institution; an institution's own item holds it for that institution alone.";
+  private const string TargetHelp = "Credited encounters required in each period below. This is the published frequency, not a total for the whole programme.";
+  private const string PeriodHelp = "A semester target applies to each semester on its own. A surplus in one semester does not carry into the next.";
+  private const string ScaleHelp = "The ladder the minima are picked on. Changing it clears them, because the same number is a different rung on another ladder; changing back brings back what was picked on this one. Leave unpinned if you are not certain: a wrong scale makes assessments on another ladder stop counting toward the minimum.";
+  private const string WindowHelp = "Only used to suggest a trainee's expected completion date. It is not the target period, and credit does not check it.";
+  private const string DecisionCadenceHelp = "How often a committee takes the entrustment decision on this EPA (Annexure B). Separate from the target: an EPA observed each semester may be decided once a year. With no cadence the EPA is never due, but a committee can still decide it.";
+  private const string DecisionBodyHelp = "The committee the College names to decide this EPA instead of the trainee's general panel, such as the neonatal CCC for paediatric EPAs 4 and 5.";
+  private const string DecisionOpportunisticHelp = "For an EPA the College has decided as rotation or opportunity allows, such as paediatric EPAs 8, 9 and 13: its decision is never overdue. Needs a decision cadence.";
+  private const string ToolsHelp = "The instruments that may be used as evidence for this EPA. None ticked means any instrument. Checked when an activity is filed and submitted; it never takes back credit already earned.";
+
+  /// <summary>Where a field refusal's key (the command's property, F4) puts it: the control it is about.</summary>
+  private static readonly IReadOnlyDictionary<string, string> RefusedInput = new Dictionary<string, string>(StringComparer.Ordinal)
+  {
+    [nameof(AddCurriculumItemCommand.EpaId)] = EpaInputId,
+    [nameof(AddCurriculumItemCommand.RequiredCount)] = CountInputId,
+    [nameof(AddCurriculumItemCommand.MinimumLevelOrder)] = MinimumInputId,
+    [nameof(AddCurriculumItemCommand.WindowMonths)] = WindowInputId,
+    [nameof(AddCurriculumItemCommand.DecisionIsOpportunistic)] = OpportunisticInputId,
+    [nameof(AddCurriculumItemCommand.DecisionBodyKey)] = BodyInputId
+  };
+
+  private PageState _state;
+  private bool _loading = true;
+  private string? _loadError;
+  private CurriculumDto? _curriculum;
+  private CurriculumItemDto? _item;
+  private IReadOnlyList<EpaDto> _epas = [];
+  private IReadOnlyList<EntrustmentScaleDto> _scales = [];
+  private IReadOnlyList<WbaToolDto> _tools = [];
+  private IReadOnlyList<DecisionBodyDto> _decisionBodies = [];
+  private readonly CurriculumItemFormModel _model = new();
+  private readonly EditContext _editContext;
+  private readonly ValidationMessageStore _messages;
+
+  public CurriculumItemPage()
+  {
+    _editContext = new EditContext(_model);
+    _messages = new ValidationMessageStore(_editContext);
+  }
+
+  // The page's one failure (fixed words, T329), at its top, focused once drawn; and a field's refusal (F4), under it.
+  private ActionResult? _result;
+  private string? _failure;
+  private bool _focusResult;
+  private FieldRefusal? _refusal;
+  private string? _focusInputId;
+
+  /// <summary>An add or a save has been sent and has not answered: a second press sends nothing (T234).</summary>
+  private bool _sending;
+
+  private (int Id, int? ItemId)? _read;
+
+  private bool IsAdd => ItemId is null;
+
+  /// <summary>
+  /// The h1, the tab and (but for an item) the crumb (T7; F3): Unavailable by what is unavailable; the add by
+  /// CanEditCurriculum; an item by its EPA ("Edit KGK-001 — …", or the record's "PAED-001 — …"); this page's own name
+  /// while it reads or when it could not.
+  /// </summary>
+  private string Heading => _state == PageState.CurriculumUnavailable ? Words.CurriculumUnavailable
+    : _state == PageState.ItemUnavailable ? Words.ItemUnavailable
+    : _state == PageState.Superseded ? Words.CannotAddItem
+    : _curriculum is not { } curriculum ? Words.ItemPageName
+    : IsAdd ? Words.AddAction(curriculum.CanEditCurriculum)
+    : _item is not { } item ? Words.ItemPageName
+    : _state == PageState.Record ? Words.Label(item)
+    : Words.EditTitle(item);
+
+  private string? Subtitle => _state switch
+  {
+    PageState.Form or PageState.NothingToAdd when _curriculum is { } curriculum && IsAdd => Words.AddSubtitle(curriculum),
+    PageState.Form when _curriculum is { } curriculum && _item is { } item => Words.EditSubtitle(item, curriculum),
+    PageState.Record when _curriculum is { } curriculum => Words.RecordSubtitle(curriculum),
+    _ => null
+  };
+
+  /// <summary>Home › Curricula › Items of … › the page; Unavailable sits straight under Curricula (R2-B15, B16).</summary>
+  private IReadOnlyList<Crumb>? Trail
+    => _curriculum is { } curriculum && _state is PageState.Form or PageState.Record or PageState.NothingToAdd or PageState.Superseded
+      ? [new Crumb(Words.ListTitle(curriculum), CatalogueLinks.Items(Id))]
+      : null;
+
+  /// <summary>An item's crumb is its EPA's code (R2-B09, R3-B24); the add page's its h1.</summary>
+  private string Crumb => _item is { } item && _state is PageState.Form or PageState.Record ? item.EpaCode : Heading;
+
+  /// <summary>Where Cancel goes: the list with no token from the add (P6), with ?back= from an item (R3-B11).</summary>
+  private string CancelHref => ItemId is int itemId ? CatalogueLinks.BackFromItem(Id, itemId) : CatalogueLinks.Items(Id);
+
+  protected override async Task OnParametersSetAsync()
+  {
+    if (_read == (Id, ItemId))
+    {
+      return;
+    }
+
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    _read = (Id, ItemId);
+    _loading = true;
+    _loadError = null;
+    _state = PageState.None;
+    _item = null;
+    _failure = null;
+    _refusal = null;
+    try
+    {
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      _curriculum = await Sender.Send(new GetCurriculumByIdQuery(Id, user));
+      if (_curriculum is null)
+      {
+        _state = PageState.CurriculumUnavailable;
+        return;
+      }
+
+      _scales = await Sender.Send(new GetEntrustmentScalesListQuery());
+      _tools = await Sender.Send(new GetWbaToolsQuery());
+
+      if (ItemId is int itemId)
+      {
+        _item = _curriculum.Items.FirstOrDefault(item => item.Id == itemId);
+        if (_item is null)
+        {
+          _state = PageState.ItemUnavailable;
+          return;
+        }
+
+        if (!_item.CanEdit)
+        {
+          // P2: an item the caller reads and may not change is its record.
+          _state = PageState.Record;
+          return;
+        }
+      }
+      else if (!_curriculum.MayAddItem)
+      {
+        // F6: no add on a version the institution has superseded (said so, P3), nor for a caller the command would refuse.
+        _state = _curriculum.Institution is { IsActiveAdoption: false } ? PageState.Superseded : PageState.ItemUnavailable;
+        return;
+      }
+
+      try
+      {
+        _epas = await Sender.Send(new ListCurriculumItemEpaOptionsQuery(Id, ItemId, user));
+      }
+      catch (UnauthorizedAccessException)
+      {
+        // The picker authorizes as the command it feeds (T195, T223): a caller it refuses could not save the item.
+        _state = PageState.ItemUnavailable;
+        return;
+      }
+
+      _decisionBodies = await Sender.Send(new GetDecisionBodiesQuery());
+      StartForm();
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // T329: fixed words, the failure to the log.
+      Logger.LogError(exception, "Curriculum item {ItemId} of curriculum {CurriculumId} could not be loaded.", ItemId, Id);
+      _curriculum = null;
+      _state = PageState.None;
+      _loadError = Words.ItemLoadFailed;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  // S7: once a Try again has read, the h1 takes the focus.
+  private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  /// <summary>The form as the add starts it (built defaults), or as the item stores it (copied, so an unchanged save keeps it).</summary>
+  private void StartForm()
+  {
+    if (_item is { } item)
+    {
+      _model.EpaId = item.EpaId;
+      _model.RequiredCount = item.RequiredCount;
+      _model.QuotaPeriod = item.QuotaPeriod;
+      // Copied as they are, null included, so saving an item unchanged keeps its decision (T131).
+      _model.DecisionCadence = item.DecisionCadence;
+      _model.DecisionBodyKey = item.DecisionBodyKey;
+      _model.DecisionIsOpportunistic = item.DecisionIsOpportunistic;
+      _model.MinimumLevelOrder = item.MinimumLevelOrder;
+      _model.WindowMonths = item.WindowMonths;
+      _model.Weight = item.Weight;
+      // Anything the editor cannot render is kept verbatim, so an unchanged save writes back what is stored (T125).
+      _model.StageMinima = StageMinimaDraft.Parse(item.MinimumLevelByStageJson);
+      _model.StartOn(item.ScaleId);
+      // A key the vocabulary no longer holds is kept, and shown as its own checkbox (T122).
+      _model.PermittedToolKeys = item.PermittedToolKeys.ToHashSet(StringComparer.Ordinal);
+      _state = PageState.Form;
+      return;
+    }
+
+    if (_epas.Count == 0)
+    {
+      _state = PageState.NothingToAdd;
+      return;
+    }
+
+    _model.EpaId = _epas[0].Id;
+    _model.RequiredCount = 1;
+    _model.QuotaPeriod = QuotaPeriod.AcademicYear;
+    // No decision cadence until one is chosen (T131), and no minimum until one is picked (T125).
+    _model.DecisionCadence = null;
+    _model.DecisionBodyKey = null;
+    _model.DecisionIsOpportunistic = false;
+    _model.MinimumLevelOrder = null;
+    _model.WindowMonths = 12;
+    _model.Weight = null;
+    _model.StageMinima = StageMinimaDraft.Parse(null);
+    _model.StartOn(SuggestedScale().ScaleId);
+    _model.PermittedToolKeys = new HashSet<string>(StringComparer.Ordinal);
+    _state = PageState.Form;
+  }
+
+  // ---- the record (P2) ----
+
+  private RenderFragment Record(CurriculumDto curriculum, CurriculumItemDto item) => __builder =>
+  {
+    <section class="detail-card user-section">
+      <dl class="detail-list">
+        <dt>EPA</dt>
+        <dd>@Words.Label(item)@if (!item.EpaIsActive)
+          {@(" ")<span class="muted">@Words.NotInForce</span>}</dd>
+        <dt>Target and decision</dt>
+        <dd>@Words.TargetText(item)<div class="muted text-sm">@Words.DecisionText(item)</div></dd>
+        <dt>Minimum level</dt>
+        <dd>@Words.RungText(_scales, item.ScaleId, item.MinimumLevelOrder)<div class="muted text-sm">@(item.ScaleName ?? Words.NotPinned)</div></dd>
+        <dt>Minimum by training year</dt>
+        <dd>
+          @if (Words.YearLines(_scales, item) is { Count: > 0 } years)
+          {
+            <ul class="list-unstyled">
+              @foreach (var year in years)
+              {
+                <li>@year</li>
+              }
+            </ul>
+          }
+          else
+          {
+            @Words.NoYearMinimum
+          }
+        </dd>
+        <dt>Completion window</dt>
+        <dd>@Words.WindowText(item)</dd>
+        <dt>Weight</dt>
+        <dd>@Words.WeightText(item)</dd>
+        <dt>Tools</dt>
+        <dd>@Words.ToolsText(_tools, item.PermittedToolKeys)</dd>
+      </dl>
+    </section>
+    <div class="form-actions">
+      <a class="btn btn-outline" href="@CatalogueLinks.BackFromItem(Id, item.Id)">@Words.BackToItems(curriculum)</a>
+    </div>
+  };
+
+  // ---- the form ----
+
+  private RenderFragment Form(CurriculumDto curriculum) => __builder =>
+  {
+    var scaleReason = ScaleReason();
+    var epaRefused = Refused(EpaInputId);
+    var countRefused = Refused(CountInputId);
+    var bodyRefused = Refused(BodyInputId);
+    var opportunisticRefused = Refused(OpportunisticInputId);
+    var windowRefused = Refused(WindowInputId);
+    <ActionResult @ref="_result">@if (_failure is { } failure)
+      {<Alert Kind="danger" Role="alert">@failure</Alert>}</ActionResult>
+
+    <EditForm EditContext="_editContext" OnSubmit="SubmitAsync" FormName="curriculum-item" class="form-container">
+      <div class="form-grid form-grid--wide">
+        @* Full width: v11.1's EPA titles run to over a hundred characters. On an edit it offers the item's own EPA and
+           what the item could move to (M6 of round 2). *@
+        <FormField Label="EPA" InputId="@EpaInputId" Required="true" FullWidth="true" HelpText="@EpaHelp">
+          <ChildContent>
+            <InputSelect id="@EpaInputId" class="form-select" TValue="int" @bind-Value="_model.EpaId"
+                         aria-describedby="@FieldRefusal.DescribedBy(EpaInputId, epaRefused, EpaHelp, EpaOffered ? null : NotOfferedId)">
+              @foreach (var epa in _epas)
+              {
+                <option value="@epa.Id">@EpaOptionText(epa)</option>
+              }
+            </InputSelect>
+            @* F4, R2-B05: the refusal under the control, above its help; named first by the control. *@
+            @RefusalUnder(EpaInputId)
+          </ChildContent>
+          <ValidationContent>
+            @* T195: a stored EPA the item cannot name is not among the options, so the select shows none chosen; said
+               before Save is pressed. *@
+            @if (!EpaOffered && _item is { } stored)
+            {
+              <div id="@NotOfferedId" class="validation-message">@stored.EpaCode is not one of the EPAs this item can name, so none is selected. Choose one before saving.</div>
+            }
+          </ValidationContent>
+        </FormField>
+
+        <FormField Label="Target" InputId="@CountInputId" HelpText="@TargetHelp">
+          <ChildContent>
+            <InputNumber id="@CountInputId" class="form-control" @bind-Value="_model.RequiredCount"
+                         aria-describedby="@FieldRefusal.DescribedBy(CountInputId, countRefused, TargetHelp)" />
+            @RefusalUnder(CountInputId)
+          </ChildContent>
+        </FormField>
+
+        <FormField Label="Per" InputId="@PeriodInputId" HelpText="@PeriodHelp">
+          <InputSelect id="@PeriodInputId" aria-describedby="@FieldHelp.Id(PeriodInputId)" class="form-select" TValue="QuotaPeriod" @bind-Value="_model.QuotaPeriod">
+            <option value="@QuotaPeriod.Semester">Semester (@QuotaText.SemesterSplit(Year))</option>
+            <option value="@QuotaPeriod.AcademicYear">Academic year (@QuotaText.AcademicYearMonths(Year))</option>
+          </InputSelect>
+        </FormField>
+
+        <FormField Label="Decision cadence" InputId="@CadenceInputId" HelpText="@DecisionCadenceHelp">
+          <InputSelect id="@CadenceInputId" aria-describedby="@FieldHelp.Id(CadenceInputId)" class="form-select" TValue="QuotaPeriod?"
+                       @bind-Value="_model.DecisionCadence" @bind-Value:after="OnDecisionCadenceChanged">
+            <option value="">No published cadence</option>
+            <option value="@QuotaPeriod.Semester">Each semester</option>
+            <option value="@QuotaPeriod.AcademicYear">Each academic year</option>
+          </InputSelect>
+        </FormField>
+
+        <FormField Label="Decided by" InputId="@BodyInputId" HelpText="@DecisionBodyHelp">
+          <ChildContent>
+            <InputSelect id="@BodyInputId" class="form-select" TValue="string" @bind-Value="_model.DecisionBodyKey"
+                         aria-describedby="@FieldRefusal.DescribedBy(BodyInputId, bodyRefused, DecisionBodyHelp)">
+              <option value="">The trainee's general panel</option>
+              @foreach (var body in _decisionBodies)
+              {
+                <option value="@body.Key">@body.Name</option>
+              }
+            </InputSelect>
+            @RefusalUnder(BodyInputId)
+          </ChildContent>
+        </FormField>
+
+        <FormField Label="Opportunistic" InputId="@OpportunisticInputId" HelpText="@DecisionOpportunisticHelp">
+          <ChildContent>
+            <div class="form-check">
+              <input id="@OpportunisticInputId" class="form-check-input" type="checkbox"
+                     aria-invalid="@(opportunisticRefused ? "true" : null)"
+                     aria-describedby="@FieldRefusal.DescribedBy(OpportunisticInputId, opportunisticRefused, DecisionOpportunisticHelp)"
+                     checked="@_model.DecisionIsOpportunistic" disabled="@(_model.DecisionCadence is null)"
+                     @onchange="args => _model.DecisionIsOpportunistic = args.Value is true" />
+              <label for="@OpportunisticInputId">Decided as rotation or opportunity allows</label>
+            </div>
+            @RefusalUnder(OpportunisticInputId)
+          </ChildContent>
+        </FormField>
+
+        <FormField Label="Entrustment scale" InputId="@ScaleInputId" HelpText="@ScaleHelp">
+          <InputSelect id="@ScaleInputId" class="form-select" TValue="int?"
+                       aria-describedby="@FieldHelp.DescribedBy(ScaleInputId, ScaleHelp, scaleReason is null ? null : ScaleReasonId)"
+                       @bind-Value="_model.ScaleId" @bind-Value:after="OnScaleChanged">
+            <option value="">@Words.NotPinned</option>
+            @foreach (var scale in _scales)
+            {
+              <option value="@scale.Id">@scale.Name</option>
+            }
+          </InputSelect>
+          @if (scaleReason is not null)
+          {
+            <small id="@ScaleReasonId" class="muted">Suggested because @scaleReason.</small>
+          }
+        </FormField>
+
+        <FormField Label="Minimum level" InputId="@MinimumInputId" Required="true">
+          <ChildContent>
+            <RungPicker Id="@MinimumInputId" Scale="ScaleOf(_model.ScaleId)" @bind-Value="_model.MinimumLevelOrder" />
+            @RefusalUnder(MinimumInputId)
+          </ChildContent>
+        </FormField>
+
+        @* Decision 5: the year rows as StageMinimaEditor renders them. *@
+        <StageMinimaEditor Draft="_model.StageMinima" IdPrefix="item" Scale="ScaleOf(_model.ScaleId)" OnChanged="StateHasChanged" />
+
+        <FormField Label="Completion window (months)" InputId="@WindowInputId" HelpText="@WindowHelp">
+          <ChildContent>
+            <InputNumber id="@WindowInputId" class="form-control" @bind-Value="_model.WindowMonths"
+                         aria-describedby="@FieldRefusal.DescribedBy(WindowInputId, windowRefused, WindowHelp)" />
+            @RefusalUnder(WindowInputId)
+          </ChildContent>
+        </FormField>
+
+        <FormField Label="Weight" InputId="@WeightInputId">
+          <InputNumber id="@WeightInputId" class="form-control" @bind-Value="_model.Weight" />
+        </FormField>
+
+        @* T122. A fieldset, not a FormField: a group of checkboxes has no single input for a label to point at. A form
+           group, so Tools reads as a field's label (T188). *@
+        <fieldset class="form-group full-width" aria-describedby="item-tools-help">
+          <legend>Tools</legend>
+          <p id="item-tools-help" class="page-subtitle">@ToolsHelp</p>
+          <div class="check-grid">
+            @foreach (var tool in ToolOptions())
+            {
+              <div class="form-check">
+                <input id="@($"item-tool-{tool.Key}")" class="form-check-input" type="checkbox"
+                       checked="@_model.PermittedToolKeys.Contains(tool.Key)"
+                       @onchange="args => ToggleTool(tool.Key, args)" />
+                <label for="@($"item-tool-{tool.Key}")">@tool.Name</label>
+              </div>
+            }
+          </div>
+        </fieldset>
+      </div>
+
+      @* Cancel first in the DOM, so the phone's column puts the primary on top and Cancel stays first in the tab order
+         (flow 11's lesson). The status is always there and only its words come and go (a live region announces a change
+         to itself, not one that arrives filled); the submit names it. The submit is never natively disabled: off, it says
+         so by aria-disabled with its reason (DESIGN.md § Button system, R2-B04); a press then sends nothing. *@
+      <FormActions>
+        <a class="btn btn-outline" href="@CancelHref">Cancel</a>
+        <span id="@MinimaStatusId" class="muted" role="status">@(MinimaComplete ? null : IncompleteText())</span>
+        <button type="submit" class="btn btn-primary" aria-disabled="@(MinimaComplete && !_sending ? null : "true")"
+                aria-describedby="@MinimaStatusId">@(IsAdd ? Words.AddSubmit : Words.SaveSubmit)</button>
+      </FormActions>
+    </EditForm>
+  };
+
+  private RenderFragment RefusalUnder(string inputId) => __builder =>
+  {
+    if (Refused(inputId) && _refusal is { } refusal)
+    {
+      <div id="@FieldRefusal.Id(inputId)" class="validation-message" role="alert">@refusal.Message</div>
+    }
+  };
+
+  private bool Refused(string inputId)
+    => _refusal is { } refusal && RefusedInput.TryGetValue(refusal.Field, out var refused) && refused == inputId;
+
+  /// <summary>
+  /// The refusal in the form's EditContext too, on the model's field of the same name, so a Blazor input under it takes
+  /// Blazor's own marks, <c>.invalid</c> and <c>aria-invalid</c>, which app.css styles (DESIGN.md § Form system, T236), as
+  /// Schedule a review does. The command's property names are the model's.
+  /// </summary>
+  private void MarkRefused(FieldRefusal? refusal)
+  {
+    _messages.Clear();
+    if (refusal is not null && typeof(CurriculumItemFormModel).GetProperty(refusal.Field) is not null)
+    {
+      _messages.Add(new FieldIdentifier(_model, refusal.Field), refusal.Message);
+    }
+
+    _editContext.NotifyValidationStateChanged();
+  }
+
+  /// <summary>Whether the EPA chosen is among the picker's options; only the stored one can be missing (T195).</summary>
+  private bool EpaOffered => _epas.Any(epa => epa.Id == _model.EpaId);
+
+  // An inactive EPA can be picked (an item may be prepared before its EPA is reactivated), and says so (T158); its dash is
+  // EpaOptionLabel's (S10).
+  private static string EpaOptionText(EpaDto epa)
+    => epa.IsActive ? EpaOptionLabel.For(epa.Code, epa.Title, inForce: true) : $"{EpaOptionLabel.For(epa.Code, epa.Title, inForce: true)} (inactive)";
+
+  /// <summary>The year the Per field's words name, on the South African calendar (T325).</summary>
+  private int Year => ProgrammeCalendar.DateOf((ServiceProvider.GetService<TimeProvider>() ?? TimeProvider.System).GetUtcNow().UtcDateTime).Year;
+
+  // ---- sending ----
+
+  /// <remarks>
+  /// Sent at most once at a time (T234): the flag is set before the first await. Off until every minimum is a rung (the
+  /// built rule), so a press then sends nothing.
+  /// </remarks>
+  private async Task SubmitAsync()
+  {
+    if (_sending || !MinimaComplete || _curriculum is not { } before)
+    {
+      return;
+    }
+
+    _failure = null;
+    _refusal = null;
+    MarkRefused(null);
+
+    // M1 (build review): the command's own rules, checked here first in its words, so the refusal is under its field
+    // before anything is sent.
+    if (PageRefusal() is { } refused)
+    {
+      _refusal = refused;
+      MarkRefused(refused);
+      _focusInputId = RefusedInput[refused.Field];
+      return;
+    }
+
+    _sending = true;
+    try
+    {
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      if (ItemId is int itemId)
+      {
+        await Sender.Send(new UpdateCurriculumItemCommand(Id, itemId, _model.EpaId, _model.RequiredCount, _model.QuotaPeriod,
+          _model.MinimumLevelOrder!.Value, _model.WindowMonths, _model.Weight, _model.StageMinima.ToJson(),
+          _model.PermittedToolKeys.ToList(), _model.DecisionCadence, NullIfBlank(_model.DecisionBodyKey),
+          _model.DecisionIsOpportunistic, user, _model.ScaleId));
+        Navigation.NavigateTo(CatalogueLinks.ItemSaved(Id, itemId));
+        return;
+      }
+
+      var after = await Sender.Send(new AddCurriculumItemCommand(Id, _model.EpaId, _model.RequiredCount, _model.QuotaPeriod,
+        _model.MinimumLevelOrder!.Value, _model.WindowMonths, _model.Weight, _model.StageMinima.ToJson(),
+        _model.PermittedToolKeys.ToList(), _model.DecisionCadence, NullIfBlank(_model.DecisionBodyKey),
+        _model.DecisionIsOpportunistic, user, _model.ScaleId));
+
+      // The returned curriculum names the new item: the one on the EPA sent that the page did not read before. Found,
+      // the list says what was added (F1); not found, the list opens with nothing said.
+      var known = before.Items.Select(item => item.Id).ToHashSet();
+      if (after.Items.FirstOrDefault(item => item.EpaId == _model.EpaId && !known.Contains(item.Id)) is { } added)
+      {
+        Navigation.NavigateTo(CatalogueLinks.ItemAdded(Id, added.Id));
+        return;
+      }
+
+      // N9: the command answered without the new item; the list opens with nothing said, and the log says why.
+      Logger.LogWarning("Curriculum {CurriculumId} answered an add of EPA {EpaId} without a new item.", Id, _model.EpaId);
+      Navigation.NavigateTo(CatalogueLinks.Items(Id));
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      await RefusedAsync(exception);
+    }
+    finally
+    {
+      _sending = false;
+    }
+  }
+
+  /// <summary>The first field the commands' validators would refuse, in their words (M1), or null.</summary>
+  private FieldRefusal? PageRefusal()
+    => _model.RequiredCount < 1 ? new FieldRefusal(nameof(AddCurriculumItemCommand.RequiredCount), CurriculumItemFieldMessages.TargetTooLow)
+      : _model.WindowMonths < 1 ? new FieldRefusal(nameof(AddCurriculumItemCommand.WindowMonths), CurriculumItemFieldMessages.WindowTooShort)
+      : null;
+
+  /// <summary>
+  /// A refusal under its field (F4), focused, the values kept; the EPA's from a page out of date, so the picker is asked
+  /// again (T222 review). Anything else is fixed words at the top, logged (T329).
+  /// </summary>
+  private async Task RefusedAsync(Exception exception)
+  {
+    if (FieldRefusal.Of(exception) is { } refusal && RefusedInput.TryGetValue(refusal.Field, out var inputId))
+    {
+      _refusal = refusal;
+      MarkRefused(refusal);
+      if (refusal.Is(nameof(AddCurriculumItemCommand.EpaId)))
+      {
+        await RefreshPickerAsync();
+      }
+
+      if (_state == PageState.NothingToAdd)
+      {
+        // The refusal emptied the picker: it leads the empty state, which takes the focus.
+        _failure = refusal.Message;
+        _refusal = null;
+        MarkRefused(null);
+        _focusResult = true;
+        return;
+      }
+
+      _focusInputId = inputId;
+      return;
+    }
+
+    if (exception is CurriculumVersionSupersededException superseded)
+    {
+      // C2: the institution superseded the version after this page was read; the command's own words, at the top.
+      _failure = superseded.Message;
+      _focusResult = true;
+      return;
+    }
+
+    Logger.LogError(exception, "Saving curriculum item {ItemId} of curriculum {CurriculumId} failed.", ItemId, Id);
+    _failure = IsAdd ? Words.AddFailed : Words.SaveFailed;
+    _focusResult = true;
+  }
+
+  /// <summary>
+  /// The picker read again after its EPA was refused (T222): a choice no longer offered moves to the first one that is
+  /// (the add) or back to the item's stored EPA (the edit); an add with nothing left becomes the empty state.
+  /// </summary>
+  private async Task RefreshPickerAsync()
+  {
+    try
+    {
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      _epas = await Sender.Send(new ListCurriculumItemEpaOptionsQuery(Id, ItemId, user));
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "The EPA picker of curriculum {CurriculumId} could not be read again.", Id);
+      return;
+    }
+
+    if (EpaOffered)
+    {
+      return;
+    }
+
+    if (_item is { } stored)
+    {
+      _model.EpaId = stored.EpaId;
+    }
+    else if (_epas.Count > 0)
+    {
+      _model.EpaId = _epas[0].Id;
+    }
+    else
+    {
+      _state = PageState.NothingToAdd;
+    }
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusResult && _result is not null)
+    {
+      _focusResult = false;
+      await _result.Element.FocusAsync();
+    }
+
+    if (_focusInputId is { } id)
+    {
+      _focusInputId = null;
+      await PageFocus.FocusByIdAsync(JS, id);
+    }
+  }
+
+  // ---- the form's rules (built: T122, T125, T131) ----
+
+  private void OnDecisionCadenceChanged()
+  {
+    // With no cadence an EPA is never due, so "as opportunity allows" says nothing (T131).
+    if (_model.DecisionCadence is null)
+    {
+      _model.DecisionIsOpportunistic = false;
+    }
+  }
+
+  // A scale change empties the minima picked on the ladder left (T125).
+  private void OnScaleChanged() => _model.MoveToScale();
+
+  private static string? NullIfBlank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
+
+  private EntrustmentScaleDto? ScaleOf(int? scaleId)
+    => scaleId is int id ? _scales.FirstOrDefault(scale => scale.Id == id) : null;
+
+  /// <summary>
+  /// The ladder a new item starts on: the one every existing item shares, else the sub-speciality's default, else none.
+  /// A suggestion the operator sees and can change; the page says where it came from.
+  /// </summary>
+  private (int? ScaleId, string? Reason) SuggestedScale()
+  {
+    var pins = _curriculum?.Items.Select(item => item.ScaleId).Distinct().ToList() ?? [];
+    if (pins is [int shared] && ScaleOf(shared) is not null)
+    {
+      return (shared, "every item on this curriculum is pinned to it");
+    }
+
+    if (_curriculum?.SubSpecialityDefaultScaleId is int fallback && ScaleOf(fallback) is not null)
+    {
+      return (fallback, $"it is the default scale of {_curriculum.SubSpecialityName}");
+    }
+
+    return (null, null);
+  }
+
+  /// <summary>
+  /// Why the form is on the ladder it shows, while that is still the suggestion: on the add, before the operator picks
+  /// another; on an edit, while the item's own ladder is the one every item shares (R3-B24, R2-B09). Null otherwise.
+  /// </summary>
+  private string? ScaleReason()
+  {
+    if (_model.ScaleChanged)
+    {
+      return null;
+    }
+
+    var (scaleId, reason) = SuggestedScale();
+    return scaleId == _model.ScaleId ? reason : null;
+  }
+
+  /// <summary>
+  /// Whether the item may be sent: every minimum, flat and by year, a rung on its ladder (or, unpinned, a level 1–20), and
+  /// nothing stored under the year-by-year minima that the command validator would refuse.
+  /// </summary>
+  private bool MinimaComplete => RungsPicked && !_model.StageMinima.HasUnrenderedEntries;
+
+  private bool RungsPicked
+  {
+    get
+    {
+      var scale = ScaleOf(_model.ScaleId);
+      return RungPicker.Accepts(scale, _model.MinimumLevelOrder)
+             && _model.StageMinima.Rows.All(row => RungPicker.Accepts(scale, row.Level));
+    }
+  }
+
+  /// <summary>Why the submit is off (built words), as the button the operator is looking at says it.</summary>
+  private string IncompleteText()
+  {
+    var action = IsAdd ? "Adding" : "Saving";
+    if (RungsPicked)
+    {
+      return $"{action} is off until each stored entry under Minimum by training year that is not a year and a rung is removed.";
+    }
+
+    var scale = ScaleOf(_model.ScaleId);
+    if (_model.ScaleChanged && _model.ClearedByScaleChange)
+    {
+      return scale is null
+        ? "The item is no longer pinned, so the minima picked on the previous ladder have been cleared. Type each one again as a level from 1 to 20."
+        : $"The scale is now {scale.Name}, so the minima picked on the previous ladder have been cleared: the same number is a different rung on another ladder. Choose each one again on {scale.Name}.";
+    }
+
+    return scale is null
+      ? $"{action} is off until every minimum is a level from 1 to 20."
+      : $"{action} is off until every minimum is a rung on {scale.Name}.";
+  }
+
+  /// <summary>The vocabulary, plus any stored key it no longer holds, shown by its raw key (T122).</summary>
+  private IEnumerable<WbaToolDto> ToolOptions()
+    => _tools.Concat(_model.PermittedToolKeys
+      .Where(key => _tools.All(tool => tool.Key != key))
+      .Order(StringComparer.Ordinal)
+      .Select(key => new WbaToolDto(key, key, null)));
+
+  private void ToggleTool(string toolKey, ChangeEventArgs args)
+  {
+    if (args.Value is true)
+    {
+      _model.PermittedToolKeys.Add(toolKey);
+    }
+    else
+    {
+      _model.PermittedToolKeys.Remove(toolKey);
+    }
+  }
+}

@@ -4,8 +4,8 @@ namespace Wombat.Web.Components.Shared;
 
 /// <summary>
 /// The onboarding pages' addresses (T373, flow 11, build-contracts § 0), so no page writes one by hand: the invitations
-/// list and Invite a person (lane I), Trainees and Admit (lane A), and the two pages both link to (a user's page, Curriculum
-/// adoptions). The menu's items (<c>NavItems.Invitations</c>, <c>NavItems.Trainees</c>) keep their own literals, which a test
+/// list and Invite a person (lane I), Trainees and Admit (lane A), and the two pages both link to (a user's page, Curricula,
+/// where an institution adopts since T392). The menu's items (<c>NavItems.Invitations</c>, <c>NavItems.Trainees</c>) keep their own literals, which a test
 /// holds equal to these. Register's addresses are <c>RegisterOutcome</c>'s.
 /// </summary>
 public static class OnboardingLinks
@@ -19,8 +19,11 @@ public static class OnboardingLinks
     /// <summary>Trainees, the Waiting and Current lists: <c>/admin/trainees</c>.</summary>
     public const string Trainees = "/admin/trainees";
 
-    /// <summary>Curriculum adoptions, where an institution adopts what its registrars are admitted to (N26, M04).</summary>
-    public const string CurriculumAdoptions = "/admin/adoptions";
+    /// <summary>
+    /// Curricula, where an institution adopts what its registrars are admitted to (N26, M04): <c>/admin/curricula</c>. Was
+    /// Curriculum adoptions (<c>/admin/adoptions</c>) until T392 (flow 15, Q1, S4) merged adoption into Curricula.
+    /// </summary>
+    public const string Curricula = CatalogueLinks.Curricula;
 
     /// <summary>
     /// Invite a person, filled from an invitation in the caller's scope (N19: a revoked one's role and scope, the address

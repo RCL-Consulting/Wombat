@@ -13,7 +13,7 @@ using FakeSender = Wombat.Web.Tests.Admin.CurriculumItemsFakeSender;
 namespace Wombat.Web.Tests.Admin;
 
 /// <summary>
-/// T131 slice 2: the curriculum item editor shows and edits each item's entrustment-decision cells, the cadence, the body
+/// T131 slice 2, on the items list and an item's page of its own since T392 (flow 15, Q14): the item editor shows and edits each item's entrustment-decision cells, the cadence, the body
 /// that decides, and whether it is decided as opportunity allows.
 /// </summary>
 /// <remarks>
@@ -21,16 +21,13 @@ namespace Wombat.Web.Tests.Admin;
 /// first option and save it; a form that dropped the body would send EPAs 4 and 5 back to the general panel on an unchanged
 /// save. The command takes all three positionally; these tests pin the page that fills them.
 /// </remarks>
-public sealed class CurriculumItemsDecisionTests : TestContext
+public sealed class CurriculumItemsDecisionTests : CurriculumItemsTestBase
 {
     private const string NeonatalName = "Neonatal team Clinical Competency Committee";
 
     public CurriculumItemsDecisionTests()
     {
-        var auth = this.AddTestAuthorization();
-        auth.SetAuthorized("admin@test");
-        auth.SetRoles(WombatRoles.Administrator);
-        auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "admin-1"));
+        SignIn(WombatRoles.Administrator);
     }
 
     // ---- The table ----
@@ -38,10 +35,10 @@ public sealed class CurriculumItemsDecisionTests : TestContext
     [Fact]
     public void TheTargetCell_SaysHowEachItemIsDecided_AndByWhom()
     {
-        var cut = RenderPage(Catalogue());
+        var cut = RenderList(Catalogue());
 
         cut.FindAll("thead th").Select(header => header.TextContent.Trim()).Should().Contain("Target and decision")
-            .And.HaveCount(9, "the decision shares the target's cell: a tenth column would not fit at 1280px (T176)");
+            .And.HaveCount(6, "the decision shares the target's cell (T131), in six columns (decision 1)");
 
         DecisionLine(cut, "PAED-001").Should().Be($"Decided each semester, by the {NeonatalName}");
         DecisionLine(cut, "PAED-002").Should().Be("Decided each academic year, as opportunity allows");
@@ -55,16 +52,14 @@ public sealed class CurriculumItemsDecisionTests : TestContext
     public void OpeningAnItem_ShowsItsDecision_AndSavingItUnchanged_SendsItBack()
     {
         var sender = Catalogue();
-        var cut = RenderPage(sender);
+        var cut = RenderItem(sender, 11);
 
-        BeginEdit(cut, "PAED-001");
-
-        SelectedValue(cut, "#edit-decision-cadence").Should().Be(nameof(QuotaPeriod.Semester));
-        SelectedValue(cut, "#edit-decision-body").Should().Be("neonatal");
-        cut.Find("#edit-decision-body").QuerySelectorAll("option").Select(option => option.TextContent.Trim())
+        SelectedValue(cut, "#item-decision-cadence").Should().Be(nameof(QuotaPeriod.Semester));
+        SelectedValue(cut, "#item-decision-body").Should().Be("neonatal");
+        cut.Find("#item-decision-body").QuerySelectorAll("option").Select(option => option.TextContent.Trim())
             .Should().Equal("The trainee's general panel", NeonatalName);
 
-        ClickButton(cut, "Save");
+        cut.Find("form").Submit();
 
         var command = sender.Updates.Should().ContainSingle().Subject;
         (command.DecisionCadence, command.DecisionBodyKey, command.DecisionIsOpportunistic)
@@ -75,14 +70,12 @@ public sealed class CurriculumItemsDecisionTests : TestContext
     public void AnItemWithNoCadence_OpensOnNoCadence_AndSavesNull()
     {
         var sender = Catalogue();
-        var cut = RenderPage(sender);
+        var cut = RenderItem(sender, 13);
 
-        BeginEdit(cut, "PAED-003");
+        SelectedValue(cut, "#item-decision-cadence").Should().BeEmpty();
+        cut.Find("#item-decision-opportunistic").HasAttribute("disabled").Should().BeTrue("with no cadence the flag says nothing");
 
-        SelectedValue(cut, "#edit-decision-cadence").Should().BeEmpty();
-        cut.Find("#edit-decision-opportunistic").HasAttribute("disabled").Should().BeTrue("with no cadence the flag says nothing");
-
-        ClickButton(cut, "Save");
+        cut.Find("form").Submit();
 
         var command = sender.Updates.Should().ContainSingle().Subject;
         command.DecisionCadence.Should().BeNull("an unchanged save must not turn 'no cadence' into the zero value");
@@ -93,18 +86,16 @@ public sealed class CurriculumItemsDecisionTests : TestContext
     public void ClearingTheCadence_ClearsAndDisablesTheOpportunisticBox_SoTheSaveIsNotRefused()
     {
         var sender = Catalogue();
-        var cut = RenderPage(sender);
+        var cut = RenderItem(sender, 12);
+        cut.Find("#item-decision-opportunistic").HasAttribute("checked").Should().BeTrue("guard: PAED-002 starts opportunistic");
 
-        BeginEdit(cut, "PAED-002");
-        cut.Find("#edit-decision-opportunistic").HasAttribute("checked").Should().BeTrue("guard: PAED-002 starts opportunistic");
+        cut.Find("#item-decision-cadence").Change(string.Empty);
 
-        cut.Find("#edit-decision-cadence").Change(string.Empty);
-
-        var box = cut.Find("#edit-decision-opportunistic");
+        var box = cut.Find("#item-decision-opportunistic");
         box.HasAttribute("checked").Should().BeFalse();
         box.HasAttribute("disabled").Should().BeTrue();
 
-        ClickButton(cut, "Save");
+        cut.Find("form").Submit();
 
         var command = sender.Updates.Should().ContainSingle().Subject;
         (command.DecisionCadence, command.DecisionIsOpportunistic).Should().Be(((QuotaPeriod?)null, false));
@@ -114,11 +105,9 @@ public sealed class CurriculumItemsDecisionTests : TestContext
     public void ChoosingTheGeneralPanel_SendsNoBody()
     {
         var sender = Catalogue();
-        var cut = RenderPage(sender);
-
-        BeginEdit(cut, "PAED-001");
-        cut.Find("#edit-decision-body").Change(string.Empty);
-        ClickButton(cut, "Save");
+        var cut = RenderItem(sender, 11);
+        cut.Find("#item-decision-body").Change(string.Empty);
+        cut.Find("form").Submit();
 
         sender.Updates.Should().ContainSingle().Which.DecisionBodyKey.Should().BeNull("a blank select value is no body, not an empty key");
     }
@@ -128,11 +117,11 @@ public sealed class CurriculumItemsDecisionTests : TestContext
     [Fact]
     public void TheAddForm_StartsOnNoCadence_TheGeneralPanel_AndAnUntickedDisabledBox()
     {
-        var cut = RenderPage(Catalogue());
+        var cut = RenderItem(Catalogue());
 
-        SelectedValue(cut, "#curriculum-item-decision-cadence").Should().BeEmpty("no default anybody chose");
-        SelectedValue(cut, "#curriculum-item-decision-body").Should().BeEmpty();
-        var box = cut.Find("#curriculum-item-decision-opportunistic");
+        SelectedValue(cut, "#item-decision-cadence").Should().BeEmpty("no default anybody chose");
+        SelectedValue(cut, "#item-decision-body").Should().BeEmpty();
+        var box = cut.Find("#item-decision-opportunistic");
         box.HasAttribute("checked").Should().BeFalse();
         box.HasAttribute("disabled").Should().BeTrue();
     }
@@ -141,13 +130,13 @@ public sealed class CurriculumItemsDecisionTests : TestContext
     public void AddingAnItem_SendsTheChosenDecision()
     {
         var sender = Catalogue();
-        var cut = RenderPage(sender);
+        var cut = RenderItem(sender);
 
-        cut.Find("#curriculum-item-decision-cadence").Change(nameof(QuotaPeriod.AcademicYear));
-        cut.Find("#curriculum-item-decision-opportunistic").HasAttribute("disabled").Should().BeFalse("a cadence enables it");
-        cut.Find("#curriculum-item-decision-opportunistic").Change(true);
-        cut.Find("#curriculum-item-decision-body").Change("neonatal");
-        cut.Find("#curriculum-item-level").Change("3");
+        cut.Find("#item-decision-cadence").Change(nameof(QuotaPeriod.AcademicYear));
+        cut.Find("#item-decision-opportunistic").HasAttribute("disabled").Should().BeFalse("a cadence enables it");
+        cut.Find("#item-decision-opportunistic").Change(true);
+        cut.Find("#item-decision-body").Change("neonatal");
+        cut.Find("#item-minimum").Change("3");
         cut.Find("form").Submit();
 
         var command = sender.Adds.Should().ContainSingle().Subject;
@@ -159,9 +148,9 @@ public sealed class CurriculumItemsDecisionTests : TestContext
     public void AddingAnItemWithNothingChosen_SendsNoCadenceAndNoBody()
     {
         var sender = Catalogue();
-        var cut = RenderPage(sender);
+        var cut = RenderItem(sender);
 
-        cut.Find("#curriculum-item-level").Change("3");
+        cut.Find("#item-minimum").Change("3");
         cut.Find("form").Submit();
 
         var command = sender.Adds.Should().ContainSingle().Subject;
@@ -180,40 +169,11 @@ public sealed class CurriculumItemsDecisionTests : TestContext
             FakeSender.Item(13, 3, 2, QuotaPeriod.Semester, null)
         ]);
 
-    private IRenderedComponent<CurriculumItemsEdit> RenderPage(FakeSender sender)
-    {
-        Services.AddSingleton<IScopedSender>(sender);
-
-        var cut = RenderComponent<CurriculumItemsEdit>(parameters => parameters.Add(page => page.Id, FakeSender.CurriculumId));
-        cut.WaitForState(() => cut.FindAll("tbody tr").Count > 0);
-
-        return cut;
-    }
-
-    private static IElement ItemRow(IRenderedComponent<CurriculumItemsEdit> cut, string epaCode)
-        => cut.FindAll("tbody tr")
-            .Where(row => row.QuerySelector("td[colspan]") is null)
-            .Single(row => row.QuerySelector("td")!.TextContent.Trim().StartsWith(epaCode, StringComparison.Ordinal));
-
-    private static string DecisionLine(IRenderedComponent<CurriculumItemsEdit> cut, string epaCode)
-    {
-        var headers = cut.FindAll("thead th").Select(header => header.TextContent.Trim()).ToList();
-        var cell = ItemRow(cut, epaCode).QuerySelectorAll("td")[headers.IndexOf("Target and decision")];
-        return cell.QuerySelector("div")!.TextContent.Trim();
-    }
-
-    private static void BeginEdit(IRenderedComponent<CurriculumItemsEdit> cut, string epaCode)
-        => ItemRow(cut, epaCode).QuerySelectorAll("button")
-            .First(button => button.TextContent.Trim() == "Edit")
-            .Click();
-
-    private static void ClickButton(IRenderedComponent<CurriculumItemsEdit> cut, string label)
-        => cut.FindAll("button")
-            .First(button => string.Equals(button.TextContent.Trim(), label, StringComparison.Ordinal))
-            .Click();
+    private static string DecisionLine(IRenderedFragment cut, string epaCode)
+        => Text(Cell(cut, epaCode, "Target and decision").QuerySelector("div")!);
 
     // The option a select shows. Blazor renders a select's value as `selected` on the matching option.
-    private static string SelectedValue(IRenderedComponent<CurriculumItemsEdit> cut, string selector)
+    private static string SelectedValue(IRenderedFragment cut, string selector)
         => cut.Find(selector).QuerySelectorAll("option")
             .Where(option => option.HasAttribute("selected"))
             .Select(option => option.GetAttribute("value"))

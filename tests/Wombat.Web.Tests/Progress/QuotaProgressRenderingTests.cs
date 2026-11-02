@@ -277,8 +277,9 @@ public sealed class QuotaProgressRenderingTests : WombatTestContext
         ConfirmButton(cut).Click();
 
         sender.Received.OfType<RebuildCurriculumProgressCommand>().Should().ContainSingle();
+        // T392 (Q16, T329): fixed words, never the exception's text.
         Text(cut.Find(".alert.alert-danger")).Should().Be(
-            "The rebuild failed and nothing was changed: Only a global Administrator may rebuild curriculum progress.");
+            "The rebuild failed, and nothing was changed. Try again, or come back in a few minutes.");
         cut.FindAll(".alert-success").Should().BeEmpty();
         cut.FindAll("dl.details-list").Should().BeEmpty();
 

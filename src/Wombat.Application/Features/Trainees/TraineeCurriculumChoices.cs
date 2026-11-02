@@ -5,11 +5,30 @@ using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Curricula;
 using Wombat.Domain.Identity;
+using Wombat.Domain.Institutions;
 
 namespace Wombat.Application.Features.Trainees;
 
 /// <summary>A curriculum version the trainee profile page's picker offers (T304).</summary>
-public sealed record CurriculumChoiceDto(int Id, string Name, string Version, int SpecialityId, int SubSpecialityId);
+public sealed record CurriculumChoiceDto(int Id, string Name, string Version, int SpecialityId, int SubSpecialityId)
+{
+    /// <summary>
+    /// Whether this version is the institution's active adoption for the trainee's discipline: the one a move goes into
+    /// (T392, flow 15, D05: "The version your institution has adopted for ‹discipline›."). Filled by
+    /// <see cref="GetTraineeCurriculumChoicesQuery" /> only (N-4): a choice from anywhere else carries false whatever its
+    /// adoption, so do not read it there.
+    /// </summary>
+    public bool IsActiveAdoption { get; init; }
+
+    /// <summary>
+    /// The day the institution superseded this version, for a pinned version that is no longer its active adoption (T392,
+    /// D01: "… which your institution superseded on ‹date›."): the <c>AdoptedOn</c> of the adoption that followed the
+    /// version's latest adoption in the discipline, both ordered by (<c>AdoptedOn</c>, <c>Id</c>), since going back adds a
+    /// second adoption on the same day (S1). Null for the active adoption, and for a version the institution has no later
+    /// adoption after. Filled by <see cref="GetTraineeCurriculumChoicesQuery" /> only.
+    /// </summary>
+    public DateOnly? SupersededOn { get; init; }
+}
 
 /// <summary>
 /// The curricula a running trainee profile may be saved with (T304): its pinned version, which an unchanged save keeps
@@ -50,9 +69,35 @@ public sealed class GetTraineeCurriculumChoicesQueryHandler
             .Where(adoption => adoption.SubSpecialityId == profile.SubSpecialityId)
             .Select(adoption => adoption.CurriculumId);
 
-        return await CurriculumChoices.ListAsync(
+        var choices = await CurriculumChoices.ListAsync(
             _dbContext.Set<Curriculum>().Where(curriculum => curriculum.Id == profile.CurriculumId || active.Contains(curriculum.Id)),
             cancellationToken);
+
+        // T392 (flow 15, D01, D05): each choice's state for the institution, read once here, never on the page. The
+        // discipline's adoptions are few (one a version adopted), so they are ordered in memory.
+        var adoptions = (await _dbContext.Set<InstitutionCurriculumAdoption>()
+                .AsNoTracking()
+                .Where(adoption => adoption.InstitutionId == profile.InstitutionId && adoption.SubSpecialityId == profile.SubSpecialityId)
+                .Select(adoption => new { adoption.Id, adoption.CurriculumId, adoption.AdoptedOn, adoption.IsActive })
+                .ToListAsync(cancellationToken))
+            .OrderBy(adoption => adoption.AdoptedOn)
+            .ThenBy(adoption => adoption.Id)
+            .ToList();
+
+        return choices
+            .Select(choice =>
+            {
+                if (adoptions.Any(adoption => adoption.IsActive && adoption.CurriculumId == choice.Id))
+                {
+                    return choice with { IsActiveAdoption = true };
+                }
+
+                var latest = adoptions.FindLastIndex(adoption => adoption.CurriculumId == choice.Id);
+                return latest >= 0 && latest + 1 < adoptions.Count
+                    ? choice with { SupersededOn = adoptions[latest + 1].AdoptedOn }
+                    : choice;
+            })
+            .ToList();
     }
 }
 

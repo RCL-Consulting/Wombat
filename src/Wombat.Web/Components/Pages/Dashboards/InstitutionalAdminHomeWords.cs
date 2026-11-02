@@ -14,7 +14,7 @@ public static class InstitutionalAdminHomeWords
     public const string InstitutionTitle = "Your institution";
     public const string OpenUsers = "Open Users";
     public const string OpenTrainees = "Open Trainees";
-    public const string OpenAdoptions = "Open Curriculum adoptions";
+    public const string OpenAdoptions = "Open Curricula"; // T392 (flow 15, S4): adoption is on Curricula
 
     /// <summary>Under Status: she reads it, a Wombat administrator sets it (Q3; Spec 3's Hint, NEW).</summary>
     public const string StatusSetBy = "Set by a Wombat administrator.";

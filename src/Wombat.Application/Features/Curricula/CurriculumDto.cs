@@ -12,7 +12,6 @@ public sealed record CurriculumDto(
     DateOnly EffectiveFrom,
     DateOnly? EffectiveTo,
     bool IsActive,
-    bool CanEditInPlace,
     IReadOnlyList<CurriculumItemDto> Items,
     /// <summary>
     /// The sub-speciality's default entrustment scale, or null. Read only as the item editor's suggested ladder for
@@ -28,7 +27,64 @@ public sealed record CurriculumDto(
     /// a projection that forgot it offers nothing, which the handlers would refuse anyway.
     /// </summary>
     public bool CanEditCurriculum { get; init; }
+
+    /// <summary>
+    /// The version's state for one institution (T392, flow 15, Q9, Q10, Q18, F6, S1, S3): the caller's own for an
+    /// Institutional admin, the institution she chose with Show for the Administrator on Curricula, null otherwise (the
+    /// College admin; the Administrator's All curricula and her items page). Filled by <c>GetCurriculaListQuery</c> and
+    /// <c>GetCurriculumByIdQuery</c> (lane A, build-contracts § 1); null from every command's returned curriculum.
+    /// </summary>
+    public CurriculumInstitutionStateDto? Institution { get; init; }
+
+    /// <summary>
+    /// Whether the items page offers an add to this caller (T392, F6, S12): <see cref="CanEditCurriculum" /> (a national
+    /// item), or an Institutional admin whose institution's adoption of this version is the active one (her own item). False
+    /// on a version her institution has superseded: its own items keep Edit and Remove for the registrars still on it, and
+    /// nothing is added. Whether an EPA is left to add is the picker's (<c>ListCurriculumItemEpaOptionsQuery</c>), not this.
+    /// Filled by <c>GetCurriculumByIdQuery</c> (lane A); left at false, a projection that forgot it offers no add.
+    /// </summary>
+    public bool MayAddItem { get; init; }
 }
+
+/// <summary>
+/// A curriculum version's state for one institution, in the words the Curricula rows and the items page's subtitle say
+/// (T392, flow 15, Q10, F6, S1): "Adopted on ‹date›", or "Superseded on ‹date›" over "‹N› registrars still on it".
+/// </summary>
+/// <param name="InstitutionId">The institution.</param>
+/// <param name="InstitutionName">Its name, for the Administrator's section ("Kgosi Kgari Teaching Hospital's own").</param>
+/// <param name="IsActiveAdoption">Whether this version is the institution's active adoption for its discipline.</param>
+/// <param name="AdoptedOn">The day of the institution's latest adoption of this version (the South African day, T325).</param>
+/// <param name="SupersededOn">
+/// For a superseded version, the day the adoption that followed its latest adoption was made, ordered by (AdoptedOn, Id)
+/// (S1: both may be dated the same day, and going back adds a second row); null for the active one.
+/// </param>
+/// <param name="SupersededByName">For a superseded version, the name of the version that superseded it; else null.</param>
+/// <param name="SupersededByVersion">Its version ("11.2"); else null.</param>
+/// <param name="RegistrarCount">
+/// The institution's ACTIVE trainee profiles on this version (<c>TraineeProfile.InstitutionId</c> and <c>CurriculumId</c>,
+/// never the nullable <c>AdoptionId</c>; S1).
+/// </param>
+/// <param name="NationalItemCount">The version's national items.</param>
+/// <param name="OwnItemCount">The institution's own items on this version.</param>
+/// <param name="OwnItemsElsewhere">
+/// The institution's own items on the other versions of this curriculum's discipline, by version, for the items page's
+/// "A new version carries no institution's own items. Your item on 11.1 stays there." (R3-B07, B14); empty when none.
+/// </param>
+public sealed record CurriculumInstitutionStateDto(
+    int InstitutionId,
+    string InstitutionName,
+    bool IsActiveAdoption,
+    DateOnly AdoptedOn,
+    DateOnly? SupersededOn,
+    string? SupersededByName,
+    string? SupersededByVersion,
+    int RegistrarCount,
+    int NationalItemCount,
+    int OwnItemCount,
+    IReadOnlyList<OwnItemsOnVersionDto> OwnItemsElsewhere);
+
+/// <summary>An institution's own items on one other version of a curriculum (T392, R3-B07): "Your item on 11.1 stays there."</summary>
+public sealed record OwnItemsOnVersionDto(int CurriculumId, string Version, int Count);
 
 public sealed record CurriculumItemDto(
     int Id,

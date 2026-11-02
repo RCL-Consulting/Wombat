@@ -375,7 +375,7 @@ public sealed class AdmissionPagesTests : TestContext
         var cut = RenderAdmit(new Sender { Candidate = Molefe() with { Curricula = [], Standing = AdmissionStanding.NothingAdopted } });
 
         Text(cut.Find(".alert-warning")).Should().Be(AdmissionText.NothingAdoptedAtAll);
-        cut.Find(".alert-warning a").GetAttribute("href").Should().Be("/admin/adoptions");
+        cut.Find(".alert-warning a").GetAttribute("href").Should().Be("/admin/curricula");
     }
 
     [Fact]

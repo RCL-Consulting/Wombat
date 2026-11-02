@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common;
 using Wombat.Application.Common.Security;
 using Wombat.Application.Features.Curricula;
 using Wombat.Application.Tests.TestHelpers;
@@ -113,6 +114,47 @@ public sealed class CurriculumAdminScopeTests
         }
     }
 
+    // T392 (flow 15, Q9): a superseded version stays open to the institution while any of its trainee profiles, active or
+    // ended, is pinned to it, as well as while it holds an item of the institution's own; with neither it leaves her list.
+    // C adopted 3001 and left it with no item of its own there, so before Q9 its registrars' version closed to it.
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ASupersededVersion_StaysOpen_WhileAProfileOfTheInstitution_ActiveOrEnded_IsPinnedToIt(bool active)
+    {
+        await using var dbContext = await SeededAsync();
+        (await ReadAsync(dbContext, NextVersion, Caller.InstitutionalAdminC)).Should().BeNull("neither a profile nor an own item yet");
+
+        dbContext.TraineeProfiles.Add(new TraineeProfile
+        {
+            Id = 1, UserId = "trainee-c", InstitutionId = InstitutionC, CurriculumId = NextVersion,
+            ProgrammeStartDate = new DateOnly(2026, 1, 15), ExpectedCompletionDate = new DateOnly(2030, 1, 15), IsActive = active
+        });
+        await dbContext.SaveChangesAsync();
+
+        (await ReadAsync(dbContext, NextVersion, Caller.InstitutionalAdminC)).Should().NotBeNull(
+            "the registrar's version stays readable to the institution");
+        (await new GetCurriculaListQueryHandler(dbContext).Handle(
+                new GetCurriculaListQuery(Principal(Caller.InstitutionalAdminC)), CancellationToken.None))
+            .Select(curriculum => curriculum.Id).Should().Equal([NextVersion], "the list and the read are one rule (T211)");
+        (await ReadAsync(dbContext, Adopted, Caller.InstitutionalAdminC)).Should().BeNull(
+            "a profile opens nothing the institution never adopted (T223)");
+    }
+
+    [Fact]
+    public async Task AProfileOfAnotherInstitution_OpensNothingToThisOne()
+    {
+        await using var dbContext = await SeededAsync();
+        dbContext.TraineeProfiles.Add(new TraineeProfile
+        {
+            Id = 1, UserId = "trainee-b", InstitutionId = InstitutionB, CurriculumId = NextVersion,
+            ProgrammeStartDate = new DateOnly(2026, 1, 15), ExpectedCompletionDate = new DateOnly(2030, 1, 15), IsActive = true
+        });
+        await dbContext.SaveChangesAsync();
+
+        (await ReadAsync(dbContext, NextVersion, Caller.InstitutionalAdminC)).Should().BeNull();
+    }
+
     // ---- Which items they read, and which they may change ----
 
     [Fact]
@@ -180,6 +222,22 @@ public sealed class CurriculumAdminScopeTests
             [ANationalEpaItem] = true,
             [BNationalEpaItem] = true
         });
+    }
+
+    /// <summary>
+    /// T392 (flow 15, round-3-check decision 3): the national items in EPA order, then each institution's own, by
+    /// institution and EPA, on the read and on a command's returned curriculum alike; before it KGK-001 headed the table.
+    /// </summary>
+    [Theory]
+    [InlineData(Caller.Administrator, new[] { NationalItem, ALocalItem, ANationalEpaItem, BLocalItem, BNationalEpaItem })]
+    [InlineData(Caller.InstitutionalAdminA, new[] { NationalItem, ALocalItem, ANationalEpaItem })]
+    public async Task TheItems_AreTheNationalOnesInEpaOrder_ThenEachInstitutionsOwn(Caller caller, int[] expected)
+    {
+        await using var dbContext = await SeededAsync();
+
+        var curriculum = (await ReadAsync(dbContext, Adopted, caller))!;
+
+        curriculum.Items.Select(item => item.Id).Should().Equal(expected);
     }
 
     // ---- Whose own item (T222) ----
@@ -445,7 +503,9 @@ public sealed class CurriculumAdminScopeTests
             new AddCurriculumItemCommand(Adopted, Paed002, 1, QuotaPeriod.AcademicYear, 3, 12, null, null, null, null, null, false, Principal(Caller.CollegeAdmin)),
             CancellationToken.None);
 
-        var refusal = (await act.Should().ThrowAsync<InvalidOperationException>()).Which;
+        // T392 (flow 15, F4): the EPA field's refusal, so the item's page shows it under EPA.
+        var refusal = (await act.Should().ThrowAsync<FieldRefusalException>()).Which;
+        refusal.Field.Should().Be(nameof(AddCurriculumItemCommand.EpaId));
         refusal.Message.Should().Be(
             "This curriculum already contains the selected EPA, as an institution's own item. A national item cannot share an EPA with an institution's own item: that institution's trainees would be measured against the EPA twice.");
         refusal.Message.Should().NotContain("Institution A").And.NotContain(ANationalEpaItem.ToString(CultureInfo.InvariantCulture));
@@ -465,7 +525,9 @@ public sealed class CurriculumAdminScopeTests
             new AddCurriculumItemCommand(Adopted, Paed002, 1, QuotaPeriod.AcademicYear, 3, 12, null, null, null, null, null, false, Principal(caller)),
             CancellationToken.None);
 
-        (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be(message);
+        var refusal = (await act.Should().ThrowAsync<FieldRefusalException>()).Which;
+        refusal.Field.Should().Be("EpaId", "the item's page shows it under EPA (T392, F4)");
+        refusal.Message.Should().Be(message);
     }
 
     [Theory]
@@ -481,7 +543,9 @@ public sealed class CurriculumAdminScopeTests
             new UpdateCurriculumItemCommand(Adopted, ANationalEpaItem, epaId, 1, QuotaPeriod.AcademicYear, 3, 12, null, null, null, null, null, false, Principal(Caller.InstitutionalAdminA)),
             CancellationToken.None);
 
-        (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be(refusal);
+        var refused = (await act.Should().ThrowAsync<FieldRefusalException>()).Which;
+        refused.Field.Should().Be("EpaId", "the item's page shows it under EPA (T392, F4)");
+        refused.Message.Should().Be(refusal);
         dbContext.ChangeTracker.Entries<CurriculumItem>().Should().NotContain(entry => entry.State == EntityState.Modified);
     }
 

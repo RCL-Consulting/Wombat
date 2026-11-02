@@ -32,7 +32,9 @@ public sealed class Curriculum
             Version = version.Trim(),
             EffectiveFrom = effectiveFrom,
             EffectiveTo = effectiveTo,
-            IsActive = true,
+            // T392, flow 15, F5 (T301's second half): a clone starts held back, closed to adoption until its College opens
+            // it, so no institution adopts a version still being edited. The version cloned from keeps its own flag.
+            IsActive = false,
             // Clone only the national core (OwningInstitutionId == null). Institution-local extras
             // belong to the institution, not the College's published version, and stay pinned to the
             // version they were added on; institutions re-add their extras after re-adopting (T091).

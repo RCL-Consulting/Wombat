@@ -28,11 +28,11 @@ public sealed class DeleteEntrustmentScaleCommandHandler : IRequestHandler<Delet
         var scale = await _dbContext.Set<EntrustmentScale>()
             .Include(entity => entity.Levels)
             .SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken)
-            ?? throw new InvalidOperationException(NotFound(request.Id));
+            ?? throw new EntrustmentScaleDeleteRefusedException(NotFound(request.Id));
 
         if (await RefusalAsync(scale, cancellationToken) is { } refusal)
         {
-            throw new InvalidOperationException(refusal);
+            throw new EntrustmentScaleDeleteRefusedException(refusal);
         }
 
         foreach (var level in scale.Levels.ToList())
@@ -66,7 +66,7 @@ public sealed class DeleteEntrustmentScaleCommandHandler : IRequestHandler<Delet
                 throw;
             }
 
-            throw new InvalidOperationException(raced, exception);
+            throw new EntrustmentScaleDeleteRefusedException(raced, exception);
         }
     }
 

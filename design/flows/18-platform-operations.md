@@ -366,14 +366,15 @@ Do: From Curricula in the menu, open Curriculum progress from the header and rea
   confirm.
 Expect:
   - **The way in.** Curricula offers the Administrator an outline "Curriculum progress" in its header, where Home's
-    Maintenance card used to link it (T335, flow 01). On the page Curricula stays lit, and the trail reads Home ›
-    Curricula › Curriculum progress.
+    Maintenance card used to link it (T335, flow 01), over its two sections, All curricula (each version's Status Open
+    or Held back) and An institution's curricula (T392, Q18). On the page Curricula stays lit, and the trail reads Home
+    › Curricula › Curriculum progress.
   - **The page.** It says that a rebuild credits every completed activity again against today's curriculum, judges only
     whether an EPA was active as of each completion, and runs as one transaction.
   - **The question.** The button asks first: "Rebuild curriculum progress?".
-  - **The result.** The page says progress was rebuilt, with five figures: activities re-read, curriculum items
-    credited, semester tallies written, stale tallies removed, and completions re-stamped. Stale tallies removed is 0:
-    the move left nothing stale (T304).
+  - **The result.** "Curriculum progress was rebuilt.", in bold, takes the focus, with five figures: activities
+    re-read, curriculum items credited, semester tallies written, stale tallies removed, and completions re-stamped.
+    Stale tallies removed is 0: the move left nothing stale (T304).
 
 [appendix-cross-cutting.md]
 ### Step A.2.1 — devadmin reads the scheduled jobs

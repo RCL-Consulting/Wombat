@@ -2,7 +2,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using FluentAssertions;
 using Microsoft.AspNetCore.Components;
-using Wombat.Web.Components.Pages.Admin.Adoptions;
+using Wombat.Web.Components.Pages.Admin.Curricula;
 using Wombat.Web.Components.Pages.Admin.Invitations;
 using Wombat.Web.Components.Pages.Admin.Trainees;
 using Wombat.Web.Components.Pages.Admin.Users;
@@ -29,7 +29,7 @@ public sealed class OnboardingLinksTests
         OnboardingLinks.Admitted(7).Should().Be("/admin/trainees?admitted=7");
         OnboardingLinks.BackFromAdmit("a b/c").Should().Be("/admin/trainees?back=a%20b%2Fc");
         OnboardingLinks.User("u-1/x").Should().Be("/admin/users/u-1%2Fx");
-        OnboardingLinks.CurriculumAdoptions.Should().Be("/admin/adoptions");
+        OnboardingLinks.Curricula.Should().Be("/admin/curricula"); // T392 (flow 15, Q1, S4): adoption is on Curricula
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public sealed class OnboardingLinksTests
     {
         NavItems.Invitations.Href.Should().Be(OnboardingLinks.Invitations);
         NavItems.Trainees.Href.Should().Be(OnboardingLinks.Trainees);
-        NavItems.CurriculumAdoptions.Href.Should().Be(OnboardingLinks.CurriculumAdoptions);
+        NavItems.Curricula.Href.Should().Be(OnboardingLinks.Curricula);
     }
 
     public static TheoryData<string, Type> EveryLinkToAPageThatExists() => new()
@@ -65,7 +65,7 @@ public sealed class OnboardingLinksTests
         { OnboardingLinks.Trainees, typeof(PendingTraineesList) },
         { OnboardingLinks.Admit("u-1"), typeof(AdmitRegistrar) },
         { OnboardingLinks.User("u-1"), typeof(UserDetail) },
-        { OnboardingLinks.CurriculumAdoptions, typeof(AdoptionsList) },
+        { OnboardingLinks.Curricula, typeof(CurriculaList) },
     };
 
     [Theory]

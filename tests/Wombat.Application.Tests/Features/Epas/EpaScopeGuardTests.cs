@@ -1,3 +1,6 @@
+using Wombat.Domain.Identity;
+using Wombat.Application.Common.Security;
+using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.Epas;
@@ -192,5 +195,211 @@ public sealed class EpaScopeGuardTests : IAsyncLifetime
             new ListEpasForSubSpecialityQuery(_collegeASubSpecialityId, TestPrincipals.InstitutionalAdmin(_institutionAId)),
             CancellationToken.None);
         result.Select(e => e.Id).Should().Contain(new[] { _collegeAEpaId, _localEpaId });
+    }
+
+    // --- T392 (flow 15, lane C): the by-id read is the list's rule (Q2, Q19), and what each EPA says of its owner ---
+
+    [Fact]
+    public async Task GetEpaById_InstitutionalAdmin_NationalEpaOfADisciplineNotAdopted_ReturnsNull()
+    {
+        // The sweep (T291): Kgosi Kgari typing the Demo College's EPA-001 by id read it as a form until T392.
+        var handler = new GetEpaByIdQueryHandler(_db);
+        var result = await handler.Handle(
+            new GetEpaByIdQuery(_collegeBEpaId, TestPrincipals.InstitutionalAdmin(_institutionAId)),
+            CancellationToken.None);
+        result.Should().BeNull("the list does not show it, so the page is Unavailable");
+    }
+
+    [Fact]
+    public async Task GetEpaById_InstitutionalAdmin_NationalEpaOfAnAdoptedDiscipline_IsReadOnly()
+    {
+        var handler = new GetEpaByIdQueryHandler(_db);
+        var result = await handler.Handle(
+            new GetEpaByIdQuery(_collegeAEpaId, TestPrincipals.InstitutionalAdmin(_institutionAId)),
+            CancellationToken.None);
+
+        result.Should().NotBeNull();
+        result!.MayChange.Should().BeFalse("UpdateEpa admits only the College for a national EPA (S4)");
+        result.OwningInstitutionId.Should().BeNull();
+        result.OwningInstitutionName.Should().BeNull();
+        result.DisciplineName.Should().Be("SpecA / SubA");
+    }
+
+    [Fact]
+    public async Task GetEpaById_InstitutionalAdmin_OwnEpa_MayChange_AndIsMarkedAsHerInstitutions()
+    {
+        var handler = new GetEpaByIdQueryHandler(_db);
+        var result = await handler.Handle(
+            new GetEpaByIdQuery(_localEpaId, TestPrincipals.InstitutionalAdmin(_institutionAId)),
+            CancellationToken.None);
+
+        result!.MayChange.Should().BeTrue();
+        result.OwningInstitutionId.Should().Be(_institutionAId);
+        result.OwningInstitutionName.Should().Be("Inst A", "the deactivate words name whose trainees it stops measuring (Q11)");
+        result.NamesOwner.Should().BeFalse("she reads one institution's own EPAs: hers");
+    }
+
+    [Fact]
+    public async Task GetEpaById_InstitutionalAdmin_AnotherInstitutionsOwnEpa_ReturnsNull()
+    {
+        var handler = new GetEpaByIdQueryHandler(_db);
+        var result = await handler.Handle(
+            new GetEpaByIdQuery(_localEpaId, TestPrincipals.InstitutionalAdmin(_institutionAId + 999)),
+            CancellationToken.None);
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetEpaById_CollegeAdmin_AnInstitutionsOwnEpa_ReturnsNull()
+    {
+        var handler = new GetEpaByIdQueryHandler(_db);
+        var result = await handler.Handle(
+            new GetEpaByIdQuery(_localEpaId, TestPrincipals.CollegeAdmin(_collegeAId)),
+            CancellationToken.None);
+        result.Should().BeNull("a College does not read an institution's own EPAs, on the list or by id");
+    }
+
+    [Fact]
+    public async Task ListEpas_Administrator_MayChangeEveryEpa_AndNamesEachOwner()
+    {
+        var handler = new ListEpasForSubSpecialityQueryHandler(_db);
+        var result = await handler.Handle(new ListEpasForSubSpecialityQuery(TestPrincipals.Administrator()), CancellationToken.None);
+
+        result.Should().HaveCount(3).And.OnlyContain(epa => epa.MayChange);
+        result.Single(epa => epa.Id == _localEpaId).Should().Match<EpaDto>(epa => epa.NamesOwner && epa.OwningInstitutionName == "Inst A");
+    }
+
+    [Fact]
+    public async Task EpaList_InstitutionalAdmin_WithAnAdoption_MayCreate_AndReadsHerInstitutionsName()
+    {
+        var handler = new GetEpaListQueryHandler(_db);
+        var result = await handler.Handle(new GetEpaListQuery(TestPrincipals.InstitutionalAdmin(_institutionAId)), CancellationToken.None);
+
+        result.Reader.Should().Be(EpaListReader.Institution);
+        result.MayCreate.Should().BeTrue();
+        result.InstitutionName.Should().Be("Inst A");
+        result.Epas.Select(epa => epa.Id).Should().BeEquivalentTo([_collegeAEpaId, _localEpaId]);
+        result.Epas.Single(epa => epa.Id == _collegeAEpaId).MayChange.Should().BeFalse();
+        result.Epas.Single(epa => epa.Id == _localEpaId).MayChange.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task EpaList_InstitutionalAdmin_WithNoAdoption_MayNotCreate()
+    {
+        // Q12, T291's 1.19 widening: Create EPA only where the create can be completed.
+        var handler = new GetEpaListQueryHandler(_db);
+        var result = await handler.Handle(new GetEpaListQuery(TestPrincipals.InstitutionalAdmin(_institutionAId + 999)), CancellationToken.None);
+
+        result.MayCreate.Should().BeFalse();
+        result.Epas.Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task EpaList_TheCollegeAndTheAdministrator_MayCreate(bool administrator)
+    {
+        var principal = administrator ? TestPrincipals.Administrator() : TestPrincipals.CollegeAdmin(_collegeAId);
+        var result = await new GetEpaListQueryHandler(_db).Handle(new GetEpaListQuery(principal), CancellationToken.None);
+
+        result.MayCreate.Should().BeTrue();
+        result.Reader.Should().Be(administrator ? EpaListReader.Administrator : EpaListReader.College);
+        result.InstitutionName.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task EpaPage_OutOfScope_IsUnavailable_AndReadsNothingElse()
+    {
+        var result = await new GetEpaPageQueryHandler(_db).Handle(
+            new GetEpaPageQuery(_collegeBEpaId, TestPrincipals.InstitutionalAdmin(_institutionAId)), CancellationToken.None);
+
+        result.Epa.Should().BeNull();
+        result.Disciplines.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task EpaPage_Create_InstitutionalAdmin_OffersTheAdoptedDisciplines_AndCreatesHerOwn()
+    {
+        var result = await new GetEpaPageQueryHandler(_db).Handle(
+            new GetEpaPageQuery(null, TestPrincipals.InstitutionalAdmin(_institutionAId)), CancellationToken.None);
+
+        result.Disciplines.Should().ContainSingle().Which.Should().Be(new EpaDisciplineDto(_collegeASubSpecialityId, "SpecA / SubA"));
+        result.CreatesOwn.Should().BeTrue();
+        result.InstitutionName.Should().Be("Inst A");
+        result.MayCreate.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task EpaPage_AnOwnEpaLeftInADisciplineNoLongerAdopted_KeepsItsDisciplineOffered()
+    {
+        // F9: such an EPA keeps its Edit, so its form must still offer the discipline it is in.
+        var local = await _db.Epas.FindAsync(_localEpaId);
+        local!.SubSpecialityId = _collegeBSubSpecialityId;
+        await _db.SaveChangesAsync();
+
+        var result = await new GetEpaPageQueryHandler(_db).Handle(
+            new GetEpaPageQuery(_localEpaId, TestPrincipals.InstitutionalAdmin(_institutionAId)), CancellationToken.None);
+
+        result.Epa!.MayChange.Should().BeTrue();
+        result.Disciplines.Select(discipline => discipline.SubSpecialityId)
+            .Should().BeEquivalentTo([_collegeASubSpecialityId, _collegeBSubSpecialityId]);
+    }
+
+    // ---- C1 (T392 build review): each claim read only with its role ----
+
+    /// <summary>A sign-in whose roles and claims are given apart, as a real one may carry them (T113: every user has an institution claim).</summary>
+    private static ClaimsPrincipal Claims(string[] roles, int? institutionId, int? collegeId)
+    {
+        var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, "c1-user"), new(ClaimTypes.Name, "c1-user") };
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+        if (institutionId is { } institution)
+        {
+            claims.Add(new Claim(WombatClaimTypes.InstitutionId, institution.ToString()));
+        }
+
+        if (collegeId is { } college)
+        {
+            claims.Add(new Claim(WombatClaimTypes.CollegeId, college.ToString()));
+        }
+
+        return new ClaimsPrincipal(new ClaimsIdentity(claims, "test"));
+    }
+
+    [Fact]
+    public async Task ACollegeAdmin_CarryingAnInstitutionClaim_ReadsNoneOfThatInstitutionsOwnEpas()
+    {
+        var principal = Claims([WombatRoles.CollegeAdmin], _institutionAId, _collegeAId);
+
+        var byId = await new GetEpaByIdQueryHandler(_db).Handle(new GetEpaByIdQuery(_localEpaId, principal), CancellationToken.None);
+        var list = await new GetEpaListQueryHandler(_db).Handle(new GetEpaListQuery(principal), CancellationToken.None);
+
+        byId.Should().BeNull();
+        list.Epas.Select(epa => epa.Id).Should().BeEquivalentTo([_collegeAEpaId]);
+    }
+
+    [Fact]
+    public async Task AnAssessor_CarryingAnInstitutionClaim_ReadsNoEpa()
+    {
+        var principal = Claims([WombatRoles.Assessor], _institutionAId, collegeId: null);
+
+        var national = await new GetEpaByIdQueryHandler(_db).Handle(new GetEpaByIdQuery(_collegeAEpaId, principal), CancellationToken.None);
+        var own = await new GetEpaByIdQueryHandler(_db).Handle(new GetEpaByIdQuery(_localEpaId, principal), CancellationToken.None);
+        var list = await new GetEpaListQueryHandler(_db).Handle(new GetEpaListQuery(principal), CancellationToken.None);
+
+        national.Should().BeNull();
+        own.Should().BeNull();
+        list.Epas.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task AnInstitutionalAdmin_CarryingAStaleCollegeClaim_IsOfferedTheAdoptedDisciplinesOnly()
+    {
+        var principal = Claims([WombatRoles.InstitutionalAdmin], _institutionAId, _collegeBId);
+
+        var page = await new GetEpaPageQueryHandler(_db).Handle(new GetEpaPageQuery(null, principal), CancellationToken.None);
+        var list = await new GetEpaListQueryHandler(_db).Handle(new GetEpaListQuery(principal), CancellationToken.None);
+
+        page.Disciplines.Select(discipline => discipline.SubSpecialityId).Should().BeEquivalentTo([_collegeASubSpecialityId]);
+        list.Epas.Select(epa => epa.Id).Should().BeEquivalentTo([_collegeAEpaId, _localEpaId]);
     }
 }

@@ -320,6 +320,7 @@ public sealed class PaediatricCatalogueSeeder
             Name = CurriculumName,
             Version = catalogue.CatalogueVersion,
             EffectiveFrom = new DateOnly(2026, 1, 1),
+            // Open for adoption, said here (T392, F5): a version made by a command or a clone starts held back.
             IsActive = true,
             // The provenance pin (T109) is stamped here, on create, and nowhere else (T174).
             Items = epas.Select(pair => BuildCurriculumItem(pair.Epa, scale, pair.Seed, catalogue.DecisionBodyVocabulary)).ToList()

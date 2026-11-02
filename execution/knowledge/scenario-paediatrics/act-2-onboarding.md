@@ -1179,7 +1179,7 @@ Expect: Home reads "Institutional admin · Semester N, YYYY" and offers "Invite 
     Assessor 5 and Trainee 5, each count a link named by it ("5 Assessor"), with no Pending trainee; "15 accounts." and
     Open Users;
   - **Curriculum:** "1" over "speciality adopted" and "1" over "sub-speciality adopted", what KGK has adopted, with
-    "Paediatrics / Paediatrics, from the CPSA's Paediatric EPA Curriculum (11.1)." and Open Curriculum adoptions;
+    "Paediatrics / Paediatrics, from the CPSA's Paediatric EPA Curriculum (11.1)." and Open Curricula (T392, S4);
   - **Your institution:** Name Kgosi Kgari Teaching Hospital, Short code KGK, Contact email
     paeds-admin@kgk.wombat.local, Status "Active" over "Set by a Wombat administrator.", and Open Kgosi Kgari Teaching
     Hospital.
@@ -1199,7 +1199,8 @@ Actual (2026-10-30, T387 replay, wombat_scenario_t387): Home, "Institutional adm
   Assessors (5) both name Fatima Khumalo. Her menu lists Entrustment decisions under Reviews and Home has no Quick
   link for it. At 390 Home does not scroll sideways.
 Gap: none (F-2.44a, T291 item 4 no longer occur: the Curriculum card reads KGK's adopted 1 and 1; Users by role key
-  and the Quick links are gone)
+  and the Quick links are gone). The T387 Actual above predates T392 (the card's footer is Open Curricula); the next
+  replay re-reads the step.
 
 ## Act 2 outcome state
 

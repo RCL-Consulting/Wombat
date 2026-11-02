@@ -92,6 +92,16 @@ else
                ReturnFocusId="@DeactivateTriggerId"
                OnConfirm="DeactivateAsync" />
 
+@* T392 (flow 15, R3-D03; Q8, Q20): Save profile and move… asks before a move, opening on Cancel; its confirm is the primary
+   "Move and save". Cancel or Escape closes it with nothing saved and every field as typed, the focus back on the trigger. *@
+<ConfirmDialog @ref="_confirmMove"
+               Title="@MoveTitle"
+               BodyContent="@MoveBody"
+               ConfirmLabel="@TraineeMoveWords.MoveConfirm"
+               DangerAction="false"
+               ReturnFocusId="@SaveId"
+               OnConfirm="MoveAndSaveAsync" />
+
 @code {
   [SupplyParameterFromQuery(Name = "id")]
   public int? Id { get; set; }
@@ -392,23 +402,34 @@ else
           <div class="form-grid">
             @if (_curricula.Count == 0)
             {
-              @* The institution has no active adoption: an empty select would only fail validation. *@
-              <p id="curriculum-id-none" class="muted">@NothingAdopted</p>
+              @* The institution has no active adoption: an empty select would only fail validation. Adoption is on Curricula
+                 (T392, flow 15, Q1), linked as Admit's sentence is (R2-0-spec-2 § 9). *@
+              <p id="curriculum-id-none" class="muted">@AdmissionText.NothingAdoptedAtAllBefore<a href="@OnboardingLinks.Curricula">@AdmissionText.NothingAdoptedAtAllLink</a>@AdmissionText.NothingAdoptedAtAllAfter</p>
             }
             else
             {
+              @* T392 (flow 15, R2-D01–D06): the line under the picker says what saving does with the version chosen (D01 kept on
+                 a superseded version, D02 a move, D05 the active adoption); the refusal (D06) comes first, under the select,
+                 and first in its aria-describedby. A standing line, not a live region (Spec § 6). *@
               <FormField Label="Curriculum" InputId="@CurriculumId" Required="true">
                 <ChildContent>
                   <select id="@CurriculumId" class="@InputClass(CurriculumId, "form-select")" aria-required="true"
-                          aria-invalid="@Invalid(CurriculumId)" aria-describedby="@RefusalIdIf(CurriculumId)"
+                          aria-invalid="@Invalid(CurriculumId)" aria-describedby="@CurriculumDescribedBy"
                           @bind="_model.CurriculumId" @bind:after="() => ClearField(CurriculumId)">
                     @foreach (var curriculum in _curricula)
                     {
-                      <option value="@curriculum.Id">@($"{curriculum.Name} ({curriculum.Version})")</option>
+                      <option value="@curriculum.Id">@TraineeMoveWords.Label(curriculum)</option>
                     }
                   </select>
+                  @if (_fieldErrors.TryGetValue(CurriculumId, out var curriculumRefusal))
+                  {
+                    <div class="validation-message" id="@CurriculumRefusalId" role="alert">@curriculumRefusal</div>
+                  }
+                  @if (CurriculumLine is { } line)
+                  {
+                    <p class="submit-check" id="@CurriculumLineId">@line</p>
+                  }
                 </ChildContent>
-                <ValidationContent>@FieldRefusal(CurriculumId)</ValidationContent>
               </FormField>
             }
 
@@ -418,7 +439,7 @@ else
                        aria-invalid="@Invalid(StartId)" aria-describedby="@RefusalIdIf(StartId)"
                        @bind="_model.ProgrammeStartDate" @bind:format="yyyy-MM-dd" @bind:after="() => ClearField(StartId)" />
               </ChildContent>
-              <ValidationContent>@FieldRefusal(StartId)</ValidationContent>
+              <ValidationContent>@FieldError(StartId)</ValidationContent>
             </FormField>
 
             <FormField Label="Expected completion date" InputId="expected-completion-date" HelpText="@TraineeProfileWords.CompletionHelp">
@@ -429,19 +450,101 @@ else
 
           <FormActions>
             <a class="btn btn-outline" href="@PortfolioLinks.Trainees">Cancel</a>
-            @* Never natively disabled (T234): it has the focus while its save runs, and a second press sends nothing. *@
-            <button type="submit" class="btn btn-primary"
-                    aria-disabled="@InFlight.AriaDisabled(_saving || _ending || _curricula.Count == 0)">@(_saving ? "Saving..." : "Save profile")</button>
+            @* Never natively disabled (T234): it has the focus while its save runs, and a second press sends nothing. While
+               the picker differs from the pin it opens the move's dialog (T392, T2, decision 6). *@
+            <button type="submit" id="@SaveId" class="btn btn-primary" aria-haspopup="@(Moving ? "dialog" : null)"
+                    aria-disabled="@InFlight.AriaDisabled(_saving || _ending || _curricula.Count == 0)">@SaveLabel</button>
           </FormActions>
         </EditForm>
       }
     </section>
   };
 
-  private const string NothingAdopted =
-    "This institution has adopted no curriculum yet, so no trainee can be admitted. Adopt one under Curriculum adoptions, " +
-    "then admit the trainee.";
+  // ─── The move (T392, flow 15) ──────────────────────────────────────────
 
+  internal const string SaveId = "profile-save";
+  internal const string CurriculumLineId = "curriculum-id-line";
+
+  private ConfirmDialog? _confirmMove;
+
+  /// <summary>The Curriculum refusal's id (build-contracts § 0): the page's own check and the command's D06 alike.</summary>
+  private static string CurriculumRefusalId => Wombat.Web.Components.Shared.FieldRefusal.Id(CurriculumId);
+
+  private string SaveLabel => _saving ? "Saving…" : Moving ? TraineeMoveWords.SaveAndMove : "Save profile";
+
+  /// <summary>The version the profile is pinned to, as the picker offers it.</summary>
+  private CurriculumChoiceDto? Pinned => _profile is null ? null : _curricula.FirstOrDefault(choice => choice.Id == _profile.CurriculumId);
+
+  /// <summary>The version chosen, when it is not the pinned one: a save moves the registrar into it (Q8).</summary>
+  private CurriculumChoiceDto? MoveTarget => Moving ? _curricula.FirstOrDefault(choice => choice.Id == _model!.CurriculumId) : null;
+
+  private bool Moving => _profile is not null && _model?.CurriculumId is { } chosen && chosen != _profile.CurriculumId;
+
+  private string MoveTitle => _profile is { } profile && MoveTarget is { } to
+    ? TraineeMoveWords.MoveTitle(profile.FullName, to)
+    : TraineeMoveWords.MoveConfirm;
+
+  /// <summary>The line under the picker, by the chosen version's state (R2-D01, D02, D05), or none.</summary>
+  private string? CurriculumLine
+  {
+    get
+    {
+      if (_profile is not { } profile || _model?.CurriculumId is not { } chosenId
+          || _curricula.FirstOrDefault(choice => choice.Id == chosenId) is not { } chosen)
+      {
+        return null;
+      }
+
+      if (chosen.Id != profile.CurriculumId)
+      {
+        return Pinned is { } from ? TraineeMoveWords.MoveLine(profile.FullName, chosen, from) : null;
+      }
+
+      if (chosen.IsActiveAdoption)
+      {
+        return TraineeMoveWords.ActiveLine(profile.SpecialityName, profile.SubSpecialityName);
+      }
+
+      return chosen.SupersededOn is { } day
+        ? TraineeMoveWords.KeptLine(profile.FullName, chosen, day)
+        : TraineeMoveWords.KeptLineNoDay(profile.FullName, chosen);
+    }
+  }
+
+  /// <summary>The refusal first, then the line (D06; flow 14's N17).</summary>
+  private string? CurriculumDescribedBy
+  {
+    get
+    {
+      var ids = new List<string>();
+      if (_fieldErrors.ContainsKey(CurriculumId))
+      {
+        ids.Add(CurriculumRefusalId);
+      }
+
+      if (CurriculumLine is not null)
+      {
+        ids.Add(CurriculumLineId);
+      }
+
+      return ids.Count == 0 ? null : string.Join(' ', ids);
+    }
+  }
+
+  /// <summary>R3-D03's body: what the move counts, and that there is no way back while the new version is adopted (M2).</summary>
+  private RenderFragment MoveBody => __builder =>
+  {
+    if (_profile is { } profile && MoveTarget is { } to && Pinned is { } from)
+    {
+      <p>@TraineeMoveWords.MoveCounted(profile.FullName, to)</p>
+      <p>@TraineeMoveWords.NoWayBack(profile.FullName, to, from)</p>
+    }
+  };
+
+  /// <summary>
+  /// The form's submit, by the button or by Enter in any field (OnSubmit, so a date field asks too): the page's own checks,
+  /// then, for a move, the dialog (Q8; nothing is sent until Move and save), else the save.
+  /// </summary>
   private async Task SaveAsync()
   {
     if (_profile is null || _model is null || Busy || _curricula.Count == 0)
@@ -465,6 +568,33 @@ else
     if (_fieldErrors.Count > 0)
     {
       _focusField = _fieldErrors.ContainsKey(CurriculumId) ? CurriculumId : StartId;
+      return;
+    }
+
+    if (Moving && _confirmMove is not null)
+    {
+      await _confirmMove.ShowAsync();
+      return;
+    }
+
+    await SendSaveAsync();
+  }
+
+  /// <summary>Move and save: the dialog's confirm (R3-D03). The dialog stays open, its confirm held, until the save answers.</summary>
+  private async Task MoveAndSaveAsync()
+  {
+    if (_profile is null || _model is null || Busy || !Moving)
+    {
+      return;
+    }
+
+    await SendSaveAsync();
+  }
+
+  private async Task SendSaveAsync()
+  {
+    if (_profile is null || _model is null || Busy)
+    {
       return;
     }
 
@@ -497,11 +627,23 @@ else
       _model.CurriculumId = saved.Profile.CurriculumId;
       _model.ProgrammeStartDate = saved.Profile.ProgrammeStartDate;
       _model.ExpectedCompletionDate = saved.Profile.ExpectedCompletionDate;
-      _curricula = await Sender.Send(new GetTraineeCurriculumChoicesQuery(_profile.Id, authState.User));
+      // P2: read apart from the save, so a failed read never turns a saved move into "could not be saved"; a failure
+      // keeps the choices the page had and is logged.
+      await RereadChoicesAsync();
     }
-    catch (Exception exception) when (exception is FluentValidation.ValidationException or UnauthorizedAccessException or InvalidOperationException)
+    catch (Exception exception) when (Wombat.Web.Components.Shared.FieldRefusal.Of(exception) is { } refusal
+                                      && refusal.Is(nameof(UpdateTraineeProfileCommand.CurriculumId)))
     {
-      // The handler's own refusal, in its words.
+      // T392 (D06): a move into a version the institution no longer has adopted (a stale page). The refusal under the
+      // picker, focused; the picker read again, and set back to the pin if the chosen version is no longer offered; every
+      // other field as typed.
+      _fieldErrors[CurriculumId] = refusal.Message;
+      _focusField = CurriculumId;
+      await RereadChoicesAsync();
+    }
+    catch (Exception exception) when (exception is FluentValidation.ValidationException or UnauthorizedAccessException or Wombat.Domain.Identity.TraineeProfileRefusedException)
+    {
+      // The handler's own refusal, in its words (an archived record, P6); any other exception's text reaches nobody (T329).
       ShowResult(Place.Details, RefusalText.Of(exception), refused: true);
     }
     catch (Exception exception) when (exception is not OperationCanceledException)
@@ -515,6 +657,30 @@ else
     }
   }
 
+  /// <summary>The picker read again after D06's refusal; a failed read keeps the choices the page had.</summary>
+  private async Task RereadChoicesAsync()
+  {
+    if (_profile is null || _model is null)
+    {
+      return;
+    }
+
+    try
+    {
+      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+      _curricula = await Sender.Send(new GetTraineeCurriculumChoicesQuery(_profile.Id, authState.User));
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogWarning(exception, "The curriculum choices of trainee profile {ProfileId} could not be read again.", _profile.Id);
+    }
+
+    if (_curricula.All(choice => choice.Id != _model.CurriculumId))
+    {
+      _model.CurriculumId = _profile.CurriculumId;
+    }
+  }
+
   private const string CurriculumId = "curriculum-id";
   private const string StartId = "programme-start-date";
 
@@ -522,7 +688,7 @@ else
   private readonly Dictionary<string, string> _fieldErrors = new(StringComparer.Ordinal);
   private string? _focusField;
 
-  private RenderFragment FieldRefusal(string fieldId) => __builder =>
+  private RenderFragment FieldError(string fieldId) => __builder =>
   {
     if (_fieldErrors.TryGetValue(fieldId, out var message))
     {
@@ -720,9 +886,9 @@ else
 
       ShowResult(Place.Top, lead, rest);
     }
-    catch (Exception exception) when (exception is UnauthorizedAccessException or InvalidOperationException or FluentValidation.ValidationException)
+    catch (Exception exception) when (exception is UnauthorizedAccessException or Wombat.Domain.Identity.TraineeProfileRefusedException or FluentValidation.ValidationException)
     {
-      // P07: the command's own check, behind the press-time one, in the same place.
+      // P07: the command's own check, behind the press-time one, in the same place; only its typed refusal (P6).
       _endRefusal = RefusalText.Of(exception);
       _focusEndDate = true;
     }

@@ -7,15 +7,15 @@
 @inherits RoleDashboard<InstitutionalAdminDashboardSummaryDto>
 
 @*
-  Her Home (T376, flow 12, boards R3-H01–H05; Q3, Q7, Q8; K24; T291 items 4 and 8). Inviting a person stays Home's header
+  The Institutional admin's Home (T376, flow 12, boards R3-H01–H05; Q3, Q7, Q8; K24; T291 items 4 and 8). Inviting a person stays Home's header
   action (T335, flow 01).
 
   - The waiting line (Q8, S23): above the cards, only while someone waits to be admitted, with Open Trainees. Standing
     page content, so an Alert with no role; flow 06's oversight line is the precedent (DESIGN.md § Dashboard page).
-  - People: each role held at her institution by its label, its count a link to Users filtered by it (S19: the count
+  - People: each role held at the institution by its label, its count a link to Users filtered by it (S19: the count
     inside the link's name), then the distinct account count and Open Users.
-  - Curriculum: what her institution has adopted, not the College's catalogue (T291 item 4), the disciplines' line, and
-    Open Curriculum adoptions.
+  - Curriculum: what the institution has adopted, not the College's catalogue (T291 item 4), the disciplines' line, and
+    Open Curricula (T392, flow 15, S4: adopting is on Curricula).
   - Your institution: its name, short code, contact email (breaking after its @, M7) and Status, which a Wombat
     administrator sets, with Open ‹institution›. Quick links are gone (Q7): each card's footer is its way on.
 *@
@@ -78,7 +78,7 @@
         }
       }
       <div class="dashboard-card-footer">
-        <a class="btn btn-outline btn-sm" href="@OnboardingLinks.CurriculumAdoptions">@InstitutionalAdminHomeWords.OpenAdoptions<Icon Name="arrow-right" /></a>
+        <a class="btn btn-outline btn-sm" href="@OnboardingLinks.Curricula">@InstitutionalAdminHomeWords.OpenAdoptions<Icon Name="arrow-right" /></a>
       </div>
     }
   </DashboardCard>

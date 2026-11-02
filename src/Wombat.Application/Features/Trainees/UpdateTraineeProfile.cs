@@ -2,6 +2,7 @@ using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgress;
@@ -159,7 +160,7 @@ public sealed class UpdateTraineeProfileCommandHandler : IRequestHandler<UpdateT
         // scope check, so an admin of another institution learns nothing about the profile's end.
         if (profile.IsEnded)
         {
-            throw new InvalidOperationException(Archived(profile.EndedOn));
+            throw new TraineeProfileRefusedException(Archived(profile.EndedOn));
         }
 
         var curriculum = await _dbContext.Set<Curriculum>()
@@ -171,14 +172,14 @@ public sealed class UpdateTraineeProfileCommandHandler : IRequestHandler<UpdateT
 
         // T304: the curriculum is a national catalogue version (T091), and the profile stays pinned to the adoption it was
         // admitted or moved under. Only a move is judged, and only into the institution's active adoption for the trainee's
-        // discipline. Read before anything changes.
+        // discipline. Read before anything changes. The refusal is the Curriculum field's, shown under its picker (T392, D06).
         var moves = curriculum.Id != profile.CurriculumId;
         var adoptionId = profile.AdoptionId;
         if (moves)
         {
             adoptionId = await TraineeAdoptionResolver.ResolveMoveAdoptionIdAsync(
                     _dbContext, profile.InstitutionId, profile.Curriculum.SubSpecialityId, curriculum.Id, cancellationToken)
-                ?? throw new InvalidOperationException(MoveNotAdopted);
+                ?? throw new FieldRefusalException(nameof(UpdateTraineeProfileCommand.CurriculumId), MoveNotAdopted);
         }
 
         var replays = moves || request.ProgrammeStartDate != profile.ProgrammeStartDate;

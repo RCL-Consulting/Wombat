@@ -993,6 +993,8 @@ Do: Type the address of the Institutions list, then that of Scheduled jobs.
 Expect: For both, "You cannot open this page": "Your role (Institutional admin) does not open this page." and "If you
   need it for your work, ask the platform administrator.", with Go to Home. They are the Administrator's alone, her menu
   offers neither, and nothing in it is lit on the refusal.
+Note: Since T392 (flow 15, Q1) her menu's Curriculum group is Curricula, EPAs, Activity types and Entrustment scales:
+  Curriculum adoptions is gone, and its address lands on Curricula. The menu the Actual below lists predates it.
 Actual (2026-10-30, T387 replay, wombat_scenario_t387): Her menu (Home; People: Invitations, Trainees, Assessors,
   Users; Curriculum: Curriculum adoptions, Curricula, EPAs, Activity types, Entrustment scales; Reviews; Access and
   audit: SSO mappings, Audit log; My data rights) offers neither page. /admin/institutions and /admin/jobs each went
@@ -1793,6 +1795,8 @@ Expect: Nothing scrolls sideways on any of them (T323).
     start date and Expected completion date, then End this programme's last day with Mark complete… and Deactivate….
   - **The builder's** editor and live preview stack in one column (DESIGN.md § Builder layout, T266), and its tab bar
     stays usable.
+Note: Since T392 (flow 15, Q1) her menu has no Curriculum adoptions, and Home's Curriculum card ends in Open Curricula;
+  the menu the Actual below lists predates it.
 Actual (2026-10-30, T387 replay, wombat_scenario_t387): At 390 px: no sideways scroll on Home, Users, the user page,
   Trainees, the profile or the builder (390 in 390 on each). The bar reads "Acting as Institutional admin"; the menu's
   rows are 44 px (Home, Invitations, Trainees, Assessors, Users, Curriculum adoptions, Curricula, EPAs, Activity
@@ -1829,10 +1833,20 @@ Gap: F-A.7.9a, T280 (still: the builder's tabs expose no selected state).
 
 ### Step A.7.10 — Dr Kruger on his phone
 Role: CollegeAdmin — Dr Anton Kruger
-Route: / → /admin/epas → /admin/curricula → /admin/curricula/{Id:int}/items
-Do: At 390 px, open EPAs, then Curricula and the items of Paediatric EPA Curriculum 11.2.
-Expect: The EPA list and the items table scroll inside their containers (DESIGN.md § Table system). Each item's row
-  actions stay reachable, and the item editor's inputs keep usable widths (T198, T226).
+Route: / → /admin/epas → /admin/curricula → /admin/curricula/{Id:int}/items → /admin/curricula/{Id:int}/items/{ItemId:int} → /admin/curricula/{Id:int}/items
+Do: At 390 px, open EPAs, then Curricula and the items of Paediatric EPA Curriculum 11.2. Press Edit PAED-001 and read
+  its page, then leave it by Cancel.
+Expect: Nothing scrolls sideways on any of them (T323; T392, S16).
+  - **EPAs, Curricula and the items** stack, a block per row, each text cell labelled, and each row's actions 44 px
+    tall and named for the row ("Edit PAED-001", "Remove PAED-001"). The items carry no window or weight: those are on
+    an item's own page (T392, decision 1).
+  - **PAED-001's page**, "Edit PAED-001 — Providing paediatric emergency care to children", subtitled "On Paediatric
+    EPA Curriculum (11.2). It applies to every institution that has adopted it.", sets one field a row, each control
+    44 px, with Save item on top of Cancel (T392, Q14, R3-B24 at 390). Cancel returns to the list with PAED-001's Edit
+    focused (R3-B11).
+Note: Not this step's to check: Dr Kruger's link reads "Add item". Round 3 measured the Institutional admin's "Add your
+  institution's own item" beside "Items (n)" at 36 px at 390; below 641 px the build sets it at 44 px (T392, decision 2).
+  No step reaches it on her phone yet; a later replay that does checks it there.
 Actual (2026-10-30, T387 replay, wombat_scenario_t387): At 390 px. The bar reads "Acting as College admin"; Home shows
   the National catalogue card; the menu reads Home, Specialities, EPAs, Curricula, Activity types, My data rights (44
   px rows). EPAs: 16 rows, the table (736 px) scrolling in its container. Curricula: 3 rows (Neonatology EPA
@@ -1841,7 +1855,8 @@ Actual (2026-10-30, T387 replay, wombat_scenario_t387): At 390 px. The bar reads
   PAED-001" and "Remove PAED-001". Edit PAED-001 opens the editor inside the table as a colspan=9 row 772 px wide: its
   inputs are 358 px (the EPA 740), so each half is reached by scrolling the table sideways. Cancel closed it; nothing
   was saved. The page never scrolls sideways.
-Gap: F-A.7.10a, T323 (still: the item editor sits in the table's scroll container and must be scrolled sideways)
+Gap: [F-A.7.10a, T323] closed by T392 (2026-11-02): an item is edited on a page of its own, and the lists stack; the
+  Actual above predates it, and the next replay re-reads the step.
 
 ### Step A.7.11 — devadmin on his phone
 Role: Administrator — devadmin

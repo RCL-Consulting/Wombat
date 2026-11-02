@@ -65,7 +65,9 @@ public sealed class CurriculumAdminScopePostgresTests : IAsyncLifetime
                 adopted.Items.Single(item => item.Id == world.AdopterItem).CanEdit.Should().BeTrue();
             }
 
-            var reads = commands.Texts.Where(text => text.Contains("\"Curricula\"", StringComparison.Ordinal)).ToList();
+            // T392 (flow 15): the read also reads the institution's state (its adoptions, active registrars and own items),
+            // three statements of their own that join the curricula; the curriculum itself is still one.
+            var reads = commands.Texts.Where(text => text.Contains("FROM \"Curricula\"", StringComparison.Ordinal)).ToList();
             reads.Should().ContainSingle("the curriculum and its items are read in one statement");
             reads[0].Should().Contain("\"InstitutionCurriculumAdoptions\"", "the adoption is checked in SQL");
             reads[0].Should().Contain("EXISTS", "as a correlated EXISTS, not by reading the adoptions first");
@@ -82,10 +84,11 @@ public sealed class CurriculumAdminScopePostgresTests : IAsyncLifetime
                 kept.Items.Should().HaveCount(16).And.OnlyContain(item => item.CanEdit == item.IsLocal);
             }
 
-            var otherReads = otherCommands.Texts.Where(text => text.Contains("\"Curricula\"", StringComparison.Ordinal)).ToList();
+            var otherReads = otherCommands.Texts.Where(text => text.Contains("FROM \"Curricula\"", StringComparison.Ordinal)).ToList();
             otherReads.Should().ContainSingle("the own-item arm is checked in the same statement");
-            System.Text.RegularExpressions.Regex.Count(otherReads[0], "EXISTS").Should().Be(2,
-                "the institution arm is one correlated EXISTS over the adoptions, with the own-item test an EXISTS inside it (T223)");
+            System.Text.RegularExpressions.Regex.Count(otherReads[0], "EXISTS").Should().Be(3,
+                "the institution arm is one correlated EXISTS over the adoptions, with the own-item test (T223) and the " +
+                "profile test (T392, Q9) each an EXISTS inside it");
 
             await using (var db = NewContext(schema))
             {
@@ -113,6 +116,73 @@ public sealed class CurriculumAdminScopePostgresTests : IAsyncLifetime
                 var administrator = await ReadAsync(db, world.CurriculumId, Administrator());
                 administrator!.Items.Should().HaveCount(18).And.OnlyContain(item => item.CanEdit);
             }
+        }
+        finally
+        {
+            await _schemas.DropAllAsync();
+        }
+    }
+
+    /// <summary>
+    /// T392 (flow 15, Q9) on PostgreSQL: a version an institution has superseded, holding no item of its own, stays open to
+    /// it while a profile of the institution is pinned to it, an ended one too; with neither it leaves the list. The profile
+    /// test is a correlated EXISTS in the curriculum's own statement. The institution's state rides on the list (S1).
+    /// </summary>
+    [Fact]
+    public async Task OnPostgres_ASupersededVersion_StaysOpenWhileAProfileIsPinnedToIt_AnEndedOneToo()
+    {
+        try
+        {
+            var schema = await SeededSchemaAsync();
+            var world = await SeedWorldAsync(schema);
+            int leaver;
+            await using (var db = NewContext(schema))
+            {
+                var institution = new Institution { Name = "Leaving Academic", ShortCode = "T392-L" };
+                db.Institutions.Add(institution);
+                await db.SaveChangesAsync();
+                leaver = institution.Id;
+                var subSpecialityId = await db.Curricula.Where(entity => entity.Id == world.CurriculumId).Select(entity => entity.SubSpecialityId).SingleAsync();
+                db.InstitutionCurriculumAdoptions.Add(Adoption(leaver, world.CurriculumId, subSpecialityId, isActive: false));
+                await db.SaveChangesAsync();
+            }
+
+            await using (var db = NewContext(schema))
+            {
+                (await ReadAsync(db, world.CurriculumId, InstitutionalAdmin(leaver))).Should().BeNull(
+                    "superseded, with no item of its own and no profile on it, it leaves the institution's list");
+            }
+
+            await using (var db = NewContext(schema))
+            {
+                db.TraineeProfiles.Add(new TraineeProfile
+                {
+                    UserId = "t392-leaver", InstitutionId = leaver, CurriculumId = world.CurriculumId,
+                    ProgrammeStartDate = new DateOnly(2023, 1, 15), ExpectedCompletionDate = new DateOnly(2027, 1, 14), IsActive = true
+                });
+                await db.SaveChangesAsync();
+                var profile = await db.TraineeProfiles.SingleAsync(entity => entity.UserId == "t392-leaver");
+                profile.Complete(new DateOnly(2026, 6, 30), new DateOnly(2026, 7, 1));
+                await db.SaveChangesAsync();
+            }
+
+            var commands = new CommandLog();
+            await using (var db = NewContext(schema, commands))
+            {
+                var list = await new GetCurriculaListQueryHandler(db).Handle(
+                    new GetCurriculaListQuery(InstitutionalAdmin(leaver)), CancellationToken.None);
+
+                list.Select(curriculum => curriculum.Id).Should().Equal([world.CurriculumId], "an ended profile keeps it open (Q9)");
+                var state = list.Single().Institution!;
+                state.IsActiveAdoption.Should().BeFalse();
+                state.RegistrarCount.Should().Be(0, "an ended registrar is not still on it");
+                state.NationalItemCount.Should().Be(15);
+                state.OwnItemCount.Should().Be(0);
+            }
+
+            var reads = commands.Texts.Where(text => text.Contains("FROM \"Curricula\"", StringComparison.Ordinal)).ToList();
+            reads.Should().ContainSingle();
+            reads[0].Should().Contain("\"TraineeProfiles\"", "the profile test is in the curriculum's statement");
         }
         finally
         {

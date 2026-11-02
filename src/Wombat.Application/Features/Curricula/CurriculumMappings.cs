@@ -37,7 +37,6 @@ internal static class CurriculumMappings
         string specialityName,
         string subSpecialityName,
         string collegeName,
-        bool canEditInPlace,
         ClaimsPrincipal principal,
         CancellationToken cancellationToken)
     {
@@ -67,9 +66,14 @@ internal static class CurriculumMappings
             curriculum.EffectiveFrom,
             curriculum.EffectiveTo,
             curriculum.IsActive,
-            canEditInPlace,
+            // T392 (flow 15, round-3-check decision 3): the national items in EPA order, then each institution's own,
+            // as CurriculumRow.Projection orders them, so a command's returned curriculum and a read agree.
             curriculum.Items
-                .OrderBy(entity => entity.Epa.Code)
+                .OrderBy(entity => entity.OwningInstitutionId == null ? 0 : 1)
+                .ThenBy(entity => entity.OwningInstitutionId)
+                // N-3: ordinal, so the order does not depend on the server's culture; the read's SQL orders by the
+                // database's collation, which agrees for the catalogue's upper-case codes.
+                .ThenBy(entity => entity.Epa.Code, StringComparer.Ordinal)
                 .Select(entity => new CurriculumItemDto(entity.Id, entity.EpaId, entity.Epa.Code, entity.Epa.Title, entity.RequiredCount, entity.QuotaPeriod, entity.MinimumLevelOrder, entity.WindowMonths, entity.Weight, entity.MinimumLevelByStageJson, entity.PermittedToolsJson, entity.Epa.IsActive, entity.OwningInstitutionId,
                     entity.OwningInstitutionId is int owner ? ownerNames.GetValueOrDefault(owner) : null,
                     entity.DecisionCadence, entity.DecisionBodyKey, entity.DecisionBody == null ? null : entity.DecisionBody.Name, entity.DecisionIsOpportunistic, entity.ScaleId, entity.Scale == null ? null : entity.Scale.Name))
@@ -134,11 +138,6 @@ internal static class CurriculumMappings
             throw new InvalidOperationException(
                 $"{string.Join(", ", unknown.Select(key => $"'{key}'"))} {(unknown.Count == 1 ? "is not a workplace-based assessment instrument" : "are not workplace-based assessment instruments")} Wombat knows.");
         }
-    }
-
-    public static void EnsureCurriculumCanBeEditedInPlace()
-    {
-        // T006 introduces trainee profiles. Until then, no curriculum can have attached trainees.
     }
 
     /// <summary>

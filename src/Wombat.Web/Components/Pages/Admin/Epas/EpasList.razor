@@ -2,79 +2,183 @@
 @attribute [Authorize(Policy = "NationalCatalogueAccess")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject ILogger<EpasList> Logger
 
 <PageTitle>EPAs · Wombat</PageTitle>
 
-<PageHeader Title="EPAs" Subtitle="Maintain the entrustable professional activities available to curricula and forms.">
+@*
+  The EPA list (T392, flow 15, lane C; boards R2-C01–C03, R3-C09, C15–C17). The EPAs the caller reads, by the list's rule
+  (GetEpaListQuery): an Institutional admin's are the national EPAs of the disciplines the institution has adopted and the
+  institution's own; a College admin's, the College's; the Administrator's, every one.
+
+  - Whose is what, in words (Q3, F8): an own EPA is marked under its title in .muted .text-sm; a row the caller may not
+    change says "Set by the College." in its actions cell (M1), and Edit is offered only where its "may change" says so
+    (T291 item 1; the query reads UpdateEpa's rule, S4). Each title is a link to its page: the form, or the national EPA's
+    record (Q2).
+  - Create EPA, with its plus (round-3-check decision 4), only when it can be completed (Q12, S4); else, with nothing to
+    list, Q12's empty state and Go to Curricula (R2-C01).
+  - The Administrator's list pages at 20 (P5), the pager only past one page; a page turn focuses the h1.
+  - Loading and a failed read (S7, S19, T329): fixed words, Try again, the exception logged.
+*@
+<PageHeader Title="EPAs" Subtitle="@(_list is null ? null : EpaWords.ListSubtitle(_list))">
   <Actions>
-    <a class="btn btn-primary" href="/admin/epas/new">
-      <Icon Name="plus" />
-      Create EPA
-    </a>
+    @if (_list is { MayCreate: true })
+    {
+      <a class="btn btn-primary" href="@CatalogueLinks.NewEpa">
+        <Icon Name="plus" />
+        @EpaWords.CreateEpa
+      </a>
+    }
   </Actions>
 </PageHeader>
 
-<StatePanel IsLoading="@(_epas is null || _subSpecialities is null || _specialities is null || _institutions is null)" LoadError="@_errorMessage" IsEmpty="@(_epas?.Count == 0)" EmptyTitle="No EPAs yet" EmptyBody="Create the first EPA to start building curricula and assessment forms.">
-  @if (_epas is not null && _subSpecialities is not null && _specialities is not null && _institutions is not null)
+<div class="people-page epas-page" aria-busy="@(_loading ? "true" : null)">
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusPageHeadingAsync"
+              IsEmpty="@(_list is { Epas.Count: 0 })" EmptyTitle="@EpaWords.EmptyTitle"
+              EmptyBody="@(_list is { MayCreate: false } ? EpaWords.EmptyBodyNothingAdopted : EpaWords.EmptyBodyMayCreate)"
+              EmptyActions="@(_list is { MayCreate: false } ? GoToCurricula : null)">
+    <LoadingContent>
+      <p class="loading-line" role="status">@EpaWords.LoadingList</p>
+      @for (var card = 0; card < 2; card++)
+      {
+        <div class="detail-card" aria-hidden="true">
+          <div class="skeleton skel-title"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line skel-short"></div>
+        </div>
+      }
+    </LoadingContent>
+    <ChildContent>
+      @if (_list is { } list)
+      {
+        @Epas(list)
+      }
+    </ChildContent>
+  </StatePanel>
+</div>
+
+@code {
+  private static readonly RenderFragment GoToCurricula =
+    @<a class="btn btn-primary" href="@CatalogueLinks.Curricula">@EpaWords.GoToCurricula</a>;
+
+  private RenderFragment Epas(EpaListDto list) => __builder =>
   {
-    @* T239: each Edit is named by its EPA as every EPA surface writes it, "PAED-001 — Title", and by its sub-speciality,
-       then its College, where two rows would read the same. An institution's own EPA may share a national one's code in
-       one sub-speciality, so rows alike in all three are numbered (T239 review). *@
+    var rows = list.Epas.Skip((_page - 1) * _pageSize).Take(_pageSize).ToList();
+
+    @* T239: each Edit is named by its EPA as every EPA surface writes it, "PAED-001 — Title"; where two rows would read
+       the same (an institution's own EPA may share another's code), by whose it is, then its discipline, then its
+       College, and numbered as the last resort. *@
     var rowNames = RowNames.Distinct(
-      _epas, row => row.Id, row => $"{row.Code} — {row.Title}", row => $" ({row.SubSpecialityName})", row => $" ({row.CollegeName})");
-    <DataTable TItem="EpaDto" Items="_epas" Caption="Entrustable professional activities">
+      list.Epas, row => row.Id, EpaWords.Label,
+      row => EpaWords.OwnerMark(row) is { } mark ? $" ({mark})" : string.Empty,
+      row => $" ({row.DisciplineName})",
+      row => $" ({row.CollegeName})");
+    <DataTable TItem="EpaDto" Items="rows" StackWide="true" Caption="@EpaWords.Caption(list.Reader)">
       <HeaderRow>
-        <tr>
-          <th>Code</th>
-          <th>Title</th>
-          <th>College</th>
-          <th>Speciality</th>
-          <th>Sub-speciality</th>
-          <th>Status</th>
-          <th><span class="visually-hidden">Actions</span></th>
+        <tr role="row">
+          <th scope="col" role="columnheader" class="col-wrap col-wrap--wide">EPA</th>
+          <th scope="col" role="columnheader" class="col-wrap">College</th>
+          <th scope="col" role="columnheader" class="col-wrap">Sub-speciality</th>
+          <th scope="col" role="columnheader">Status</th>
+          <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
         </tr>
       </HeaderRow>
       <Row Context="epa">
-        @{
-          var subSpeciality = _subSpecialities.Single(entity => entity.Id == epa.SubSpecialityId);
-          var speciality = _specialities.Single(entity => entity.Id == subSpeciality.SpecialityId);
-        }
-        <tr>
-          <td>@epa.Code</td>
-          <td>@epa.Title</td>
-          <td>@epa.CollegeName</td>
-          <td>@speciality.Name</td>
-          <td>@subSpeciality.Name</td>
-          <td>@(epa.IsActive ? "Active" : "Inactive")</td>
-          <td>
-            <a class="btn btn-outline btn-sm" href="@($"/admin/epas/{epa.Id}")" aria-label="@($"Edit {rowNames[epa.Id]}")">Edit</a>
+        <tr role="row">
+          <th scope="row" role="rowheader" class="col-wrap col-wrap--wide">
+            <a href="@CatalogueLinks.Epa(epa.Id)">@EpaWords.Label(epa)</a>
+            @if (EpaWords.OwnerMark(epa) is { } mark)
+            {
+              <div class="muted text-sm">@mark</div>
+            }
+          </th>
+          <td role="cell" class="col-wrap" data-label="College">@epa.CollegeName</td>
+          <td role="cell" class="col-wrap" data-label="Sub-speciality">@epa.DisciplineName</td>
+          <td role="cell" data-label="Status">@EpaWords.Status(epa.IsActive)</td>
+          @* Every row says something here: Edit where it may be changed, else why not (M1, T211). *@
+          <td role="cell">
+            <div class="actions-cell">
+              @if (epa.MayChange)
+              {
+                <a class="btn btn-outline btn-sm" href="@CatalogueLinks.Epa(epa.Id)" aria-label="@($"{EpaWords.Edit} {rowNames[epa.Id]}")">@EpaWords.Edit</a>
+              }
+              else
+              {
+                <span class="muted">@EpaWords.SetByTheCollege</span>
+              }
+            </div>
           </td>
         </tr>
       </Row>
     </DataTable>
-  }
-</StatePanel>
+    @if (list.Epas.Count > _pageSize)
+    {
+      <PagerControls Page="_page" PageSize="_pageSize" TotalCount="list.Epas.Count"
+                     Label="@EpaWords.PagerLabel" PageSizeLabel="@EpaWords.PageSizeLabel"
+                     OnPageChanged="TurnPageAsync" OnPageSizeChanged="ChangePageSizeAsync" />
+    }
+  };
 
-@code {
-  private IReadOnlyList<EpaDto>? _epas;
-  private IReadOnlyList<InstitutionDto>? _institutions;
-  private IReadOnlyList<SpecialityDto>? _specialities;
-  private IReadOnlyList<SubSpecialityDto>? _subSpecialities;
-  private string? _errorMessage;
+  private EpaListDto? _list;
+  private bool _loading = true;
+  private string? _loadError;
+  private int _page = 1;
+  private int _pageSize = 20;
+  private bool _focusHeading;
 
-  protected override async Task OnInitializedAsync()
+  protected override Task OnInitializedAsync() => LoadAsync();
+
+  private async Task LoadAsync()
   {
+    _loading = true;
+    _loadError = null;
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _epas = await Sender.Send(new ListEpasForSubSpecialityQuery(authState.User));
-      _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
-      _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
-      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery(authState.User));
+      _list = await Sender.Send(new GetEpaListQuery(authState.User));
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = exception.Message;
+      // T329: never the exception's text on the page; the cause goes to the log.
+      Logger.LogError(exception, "The EPA list could not be read.");
+      _list = null;
+      _loadError = EpaWords.ListLoadFailed;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private Task RetryAsync() => LoadAsync();
+
+  // P5, as flow 04's C10 f: after a page turn the list's heading, the page's h1 (its only one), takes the focus.
+  private Task TurnPageAsync(int page)
+  {
+    _page = page;
+    _focusHeading = true;
+    return Task.CompletedTask;
+  }
+
+  // A change of size leaves the focus on the select (flow 04's build review A1).
+  private Task ChangePageSizeAsync(int pageSize)
+  {
+    _pageSize = pageSize;
+    _page = 1;
+    return Task.CompletedTask;
+  }
+
+  // S7: once a Try again has read, the h1 takes the focus.
+  private ValueTask FocusPageHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusHeading)
+    {
+      _focusHeading = false;
+      await PageFocus.FocusHeadingAsync(JS);
     }
   }
 }

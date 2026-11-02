@@ -44,7 +44,6 @@ public sealed class UpdateCurriculumCommandHandler : IRequestHandler<UpdateCurri
     public async Task<CurriculumDto> Handle(UpdateCurriculumCommand request, CancellationToken cancellationToken)
     {
         var curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.Id, cancellationToken);
-        CurriculumMappings.EnsureCurriculumCanBeEditedInPlace();
 
         if (!request.Principal.CanAccessCollege(curriculum.SubSpeciality.Speciality.CollegeId))
         {
@@ -89,6 +88,6 @@ public sealed class UpdateCurriculumCommandHandler : IRequestHandler<UpdateCurri
         }
 
         curriculum = await CurriculumMappings.LoadCurriculumAsync(_dbContext, request.Id, cancellationToken);
-        return await CurriculumMappings.ToDtoAsync(_dbContext, curriculum, subSpeciality.SpecialityId, subSpeciality.SpecialityName, subSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, true, request.Principal, cancellationToken);
+        return await CurriculumMappings.ToDtoAsync(_dbContext, curriculum, subSpeciality.SpecialityId, subSpeciality.SpecialityName, subSpeciality.Name, curriculum.SubSpeciality.Speciality.College.Name, request.Principal, cancellationToken);
     }
 }

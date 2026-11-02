@@ -4,7 +4,6 @@ using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages;
 using Wombat.Web.Components.Pages.Activities;
 using Wombat.Web.Components.Pages.Admin.ActivityTypes;
-using Wombat.Web.Components.Pages.Admin.Adoptions;
 using Wombat.Web.Components.Pages.Admin.Assessors;
 using Wombat.Web.Components.Pages.Admin.Audit;
 using Wombat.Web.Components.Pages.Admin.Colleges;
@@ -110,7 +109,6 @@ public static class NavItems
     public static readonly NavItem Specialities = new("/admin/specialities", "Specialities", "stethoscope", typeof(MySpecialitiesRedirect));
     public static readonly NavItem Epas = new("/admin/epas", "EPAs", "list-checks", typeof(EpasList));
     public static readonly NavItem Curricula = new("/admin/curricula", "Curricula", "book-open", typeof(CurriculaList));
-    public static readonly NavItem CurriculumAdoptions = new("/admin/adoptions", "Curriculum adoptions", "book-check", typeof(AdoptionsList));
     public static readonly NavItem ActivityTypes = new("/admin/activity-types", "Activity types", "clipboard-list", typeof(ActivityTypesList));
     public static readonly NavItem EntrustmentScales = new("/admin/entrustment-scales", "Entrustment scales", "gauge", typeof(EntrustmentScalesList));
 
@@ -150,7 +148,9 @@ public static class NavItems
             [WombatRoles.InstitutionalAdmin] =
             [
                 new("People", [Invitations, Trainees, Assessors, Users]),
-                new("Curriculum", [CurriculumAdoptions, Curricula, Epas, ActivityTypes, EntrustmentScales]),
+                // T392 (flow 15, Q1): she adopts on Curricula, so Curriculum adoptions leaves her menu; /admin/adoptions sends
+                // to Curricula (NavOwners' AdoptionsList row).
+                new("Curriculum", [Curricula, Epas, ActivityTypes, EntrustmentScales]),
                 // T376, flow 12, F10: Entrustment decisions admits her, and Home's Quick links were its only way in (Q7).
                 new("Reviews", [DecisionsDue, CommitteeReviews, DecisionPanels, EntrustmentDecisions]),
                 new("Access and audit", [SsoMappings, AuditLog]),

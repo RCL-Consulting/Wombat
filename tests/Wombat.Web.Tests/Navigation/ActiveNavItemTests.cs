@@ -216,6 +216,21 @@ public sealed class ActiveNavItemTests : TestContext
     public void CurriculumProgress_LightsCurricula_ForTheAdministrator()
         => LitLabel(WombatRoles.Administrator, typeof(CurriculumProgressRebuild)).Should().Be("Curricula");
 
+    // T392 (flow 15, Q14): a curriculum's items and an item's page of its own, the add and the edit, light Curricula for
+    // every catalogue author; so does either's Unavailable, which draws in the route's own place (Q19).
+    [Theory]
+    [InlineData(WombatRoles.Administrator)]
+    [InlineData(WombatRoles.CollegeAdmin)]
+    [InlineData(WombatRoles.InstitutionalAdmin)]
+    public void TheItemsAndAnItemsPage_LightCurricula(string role)
+    {
+        LitLabel(role, typeof(Wombat.Web.Components.Pages.Admin.Curricula.CurriculumItemsEdit)).Should().Be("Curricula");
+        LitLabel(role, typeof(Wombat.Web.Components.Pages.Admin.Curricula.CurriculumItemPage)).Should().Be("Curricula");
+        NavOwners.TrailTo(typeof(Wombat.Web.Components.Pages.Admin.Curricula.CurriculumItemPage), role, MenuFor(role))
+            .Should().Equal([new Crumb("Home", "/"), new Crumb("Curricula", "/admin/curricula")],
+                "the page adds the items' crumb itself, then its own (R3-B22, B24)");
+    }
+
     // ---- a page under a personal link (T355, E3) ----
 
     /// <summary>

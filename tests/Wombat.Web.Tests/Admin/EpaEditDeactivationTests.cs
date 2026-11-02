@@ -67,7 +67,7 @@ public sealed class EpaEditDeactivationTests : TestContext
         var sender = new FakeSender();
         var cut = RenderPage(sender);
 
-        var button = PageButton(cut, "Deactivate");
+        var button = PageButton(cut, "Deactivate…");
         button.ClassList.Should().NotContain("btn-danger", "the red button belongs only in the dialog's footer");
 
         button.Click();
@@ -86,13 +86,13 @@ public sealed class EpaEditDeactivationTests : TestContext
         var sender = new FakeSender();
         var cut = RenderPage(sender);
 
-        PageButton(cut, "Deactivate").Click();
+        PageButton(cut, "Deactivate…").Click();
         ConfirmButton(cut).Click();
 
         sender.Commands.Should().ContainSingle().Which.Should().BeOfType<DeactivateEpaCommand>()
             .Which.Id.Should().Be(EpaId);
         Text(cut.Find(".alert.alert-success")).Should().Be("EPA deactivated.");
-        PageButtons(cut, "Deactivate").Should().BeEmpty("the EPA is inactive now");
+        PageButtons(cut, "Deactivate…").Should().BeEmpty("the EPA is inactive now");
     }
 
     /// <summary>
@@ -104,7 +104,7 @@ public sealed class EpaEditDeactivationTests : TestContext
     {
         var cut = RenderPage(new FakeSender());
 
-        PageButton(cut, "Deactivate").Click();
+        PageButton(cut, "Deactivate…").Click();
         ConfirmButton(cut).Click();
 
         cut.Find(".action-result").GetAttribute("tabindex").Should().Be("-1");
@@ -121,17 +121,19 @@ public sealed class EpaEditDeactivationTests : TestContext
     }
 
     [Fact]
-    public void ARefusedDeactivate_LeavesTheButton_AndTheFocusWithIt()
+    public void ARefusedDeactivate_LeavesTheButton_AndTheFailureTakesTheFocus()
     {
         var cut = RenderPage(new FakeSender { Refusal = new UnauthorizedAccessException("You do not have permission to deactivate this EPA.") });
 
-        PageButton(cut, "Deactivate").Click();
+        PageButton(cut, "Deactivate…").Click();
         ConfirmButton(cut).Click();
 
+        // T392 (T329): fixed words, never the exception's text.
         cut.WaitForAssertion(() => Text(cut.Find(".action-result .alert.alert-danger"))
-            .Should().Be("You do not have permission to deactivate this EPA."));
-        PageButtons(cut, "Deactivate").Should().ContainSingle("the EPA is still active, and the dialog hands the focus back to it");
-        JSInterop.Invocations.Should().NotContain(invocation => invocation.Identifier == FocusIdentifier);
+            .Should().Be(EpaWords.DeactivateFailed));
+        PageButtons(cut, "Deactivate…").Should().ContainSingle("the EPA is still active");
+        // P4 (T392 build review): the dialog closes without returning the focus, so the failure takes it, as a save's does.
+        cut.WaitForAssertion(() => FocusedReference().Id.Should().Be(cut.Instance.ResultRegion.Id));
     }
 
     [Fact]
@@ -140,7 +142,7 @@ public sealed class EpaEditDeactivationTests : TestContext
         var cut = RenderPage(new FakeSender(isActive: false));
 
         cut.Find("#epa-active").HasAttribute("checked").Should().BeFalse();
-        PageButtons(cut, "Deactivate").Should().BeEmpty("an inactive EPA has nothing to deactivate");
+        PageButtons(cut, "Deactivate…").Should().BeEmpty("an inactive EPA has nothing to deactivate");
         PageButtons(cut, "Save").Should().ContainSingle("it is reactivated by ticking Active and saving");
     }
 
@@ -161,7 +163,7 @@ public sealed class EpaEditDeactivationTests : TestContext
         sender.Commands.Should().ContainSingle().Which.Should().BeOfType<UpdateEpaCommand>()
             .Which.IsActive.Should().BeFalse("confirming saves the form as it stands, Active unticked");
         Text(cut.Find(".alert.alert-success")).Should().Be("EPA saved and deactivated.");
-        PageButtons(cut, "Deactivate").Should().BeEmpty();
+        PageButtons(cut, "Deactivate…").Should().BeEmpty();
     }
 
     [Fact]
@@ -213,7 +215,7 @@ public sealed class EpaEditDeactivationTests : TestContext
         sender.Commands.Should().ContainSingle().Which.Should().BeOfType<UpdateEpaCommand>()
             .Which.IsActive.Should().BeTrue();
         Text(cut.Find(".alert.alert-success")).Should().Be(expected);
-        PageButtons(cut, "Deactivate").Should().ContainSingle("the EPA is active again");
+        PageButtons(cut, "Deactivate…").Should().ContainSingle("the EPA is active again");
     }
 
     // ---- T234: a save keeps the keyboard focus on its result ----
@@ -272,11 +274,11 @@ public sealed class EpaEditDeactivationTests : TestContext
 
         cut.Find("form").Submit();
 
-        var save = PageButton(cut, "Saving...");
+        var save = PageButton(cut, "Saving…");
         save.HasAttribute("disabled").Should().BeFalse(
             "it has the focus, and a browser drops the focus of a button it disables, to the page (T234)");
         save.GetAttribute("aria-disabled").Should().Be("true", "a second press does nothing, and a screen reader hears so (T234 review)");
-        PageButton(cut, "Deactivate").HasAttribute("disabled").Should().BeTrue("nothing else may be sent while a save runs");
+        PageButton(cut, "Deactivate…").HasAttribute("disabled").Should().BeTrue("nothing else may be sent while a save runs");
 
         cut.Find("form").Submit();
         sender.Commands.Should().ContainSingle("a second Enter while the save runs sends nothing");
@@ -291,16 +293,17 @@ public sealed class EpaEditDeactivationTests : TestContext
     }
 
     [Fact]
-    public void ARefusedSave_LeavesTheFocusWhereItWas()
+    public void AFailedSave_SaysSoInFixedWords_AndKeepsSave()
     {
         // The refusal is an alert, read at once, and Save is still there, enabled, for the correction.
         var cut = RenderPage(new FakeSender { UpdateRefusal = new InvalidOperationException("An EPA with this code already exists.") });
 
         cut.Find("form").Submit();
 
-        cut.WaitForAssertion(() => Text(cut.Find(".action-result .alert.alert-danger")).Should().Be("An EPA with this code already exists."));
+        // T392 (T329, R2-C06): a failure that is no field's is the fixed sentence, focused; a field's refusal is under it
+        // (EpaPageTests).
+        cut.WaitForAssertion(() => Text(cut.Find(".action-result .alert.alert-danger")).Should().Be(EpaWords.SaveFailed));
         cut.Find(".action-result .alert.alert-danger").GetAttribute("role").Should().Be("alert");
-        FocusCalls().Should().BeEmpty();
         PageButton(cut, "Save").HasAttribute("disabled").Should().BeFalse();
     }
 
@@ -335,9 +338,13 @@ public sealed class EpaEditDeactivationTests : TestContext
 
     private sealed class FakeSender(bool isActive = true, int completionsCredited = 0) : IScopedSender
     {
-        private readonly EpaDto _epa = new(
+        private readonly EpaDto _epa = new EpaDto(
             EpaId, 7, "General Paediatrics", "CMSA", "PAED-003", "Resuscitating a child", null, null, EpaCategory.Core,
-            isActive, new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+            isActive, new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc))
+        {
+            MayChange = true,
+            DisciplineName = "Paediatrics / General Paediatrics"
+        };
 
         /// <summary>The EPA as stored.</summary>
         public EpaDto Epa => _epa;
@@ -366,10 +373,8 @@ public sealed class EpaEditDeactivationTests : TestContext
 
             object response = request switch
             {
-                GetInstitutionsListQuery => Array.Empty<InstitutionDto>(),
-                GetSpecialitiesListQuery => Array.Empty<SpecialityDto>(),
-                GetSubSpecialitiesListQuery => Array.Empty<SubSpecialityDto>(),
-                GetEpaByIdQuery query when query.Id == EpaId => _epa,
+                GetEpaPageQuery query when query.Id == EpaId => new EpaPageDto(
+                    _epa, [new EpaDisciplineDto(7, "Paediatrics / General Paediatrics")], false, null, true),
                 UpdateEpaCommand command => Record(command, new UpdateEpaResult(
                     _epa with { IsActive = command.IsActive },
                     !_epa.IsActive && command.IsActive ? completionsCredited : 0)),

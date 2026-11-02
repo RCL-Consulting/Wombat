@@ -51,7 +51,8 @@ public sealed class EntrustmentScalesListActionsTests : TestContext
         var cut = Render(WombatRoles.InstitutionalAdmin);
 
         cut.FindAll("thead th").Select(header => header.TextContent.Trim()).Should().Equal("Name", "Description", "Levels");
-        cut.FindAll("tbody tr").Should().OnlyContain(row => row.QuerySelectorAll("td").Length == 3);
+        // T392 (R2-E01): the scale's name is the row's header, then Description and Levels.
+        cut.FindAll("tbody tr").Should().OnlyContain(row => row.QuerySelectorAll("th, td").Length == 3);
         cut.FindAll("tbody a, tbody button").Should().BeEmpty();
     }
 

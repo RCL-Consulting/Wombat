@@ -77,6 +77,14 @@ F-A.1.9a (T319: each decision mailed, the answer on My data rights), F-A.1.2c (T
 filters by label), F-A.1.3c (T323: the request's sections), F-A.1.12a (T276, T264: the pseudonym on the kept request,
 the erasure confirmed in a dialog), F-A.5.7a (Request unavailable) and F-A.7.5b (T328: Show with the filters); and the
 flow's halves of T280, T316, T329 and T264.
+T392 (flow 15, 2026-11-02) folded adoption into Curricula, so `/admin/adoptions` is a redirect to it (1.20 types it), and
+gave a curriculum item a page of its own, `/admin/curricula/{Id:int}/items/new` and
+`/admin/curricula/{Id:int}/items/{ItemId:int}` (CurriculumItemPage.razor), which the steps that add or edit an item now
+name: 332 steps, 80 page files and 90 templates. Its build closes, for its replay to confirm, the gaps the steps
+record: F-1.19a (T291: no Create EPA before a discipline is adopted, 1.19), F-1.21a, F-6.22a and F-6.25a (T291 item 1:
+no Edit on a national EPA for an institution), F-6.25b (an institution's own EPA marked), F-1.22a (T326: the scales'
+reader subtitle) and F-A.7.10a (T323: an item edited on its own page, not in the table); and the flow's halves of T272,
+T301 (a held-back version refused, and a new version held back), T323, T325 and T329.
 
 ## Pages
 
@@ -101,7 +109,7 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/activities/{ActivityId:int}` | Activities/ActivityView.razor | Any signed-in user; an activity opens only to its subject, its author, the people it names and their overseers, and reads "Activity unavailable" to anyone else | 3.2, 3.3, 3.4, 3.5, 3.6, 3.10, 3.11, 3.12, 3.13, 3.14, 3.15, 3.16, 3.17, 3.18, 3.19, 3.20, 3.21, 3.22, 3.23, 3.24, 3.25, 3.26, 3.27, 3.28, 3.29, 3.33, 4.17, 5.24, 5.25, 6.16, 6.18, 6.19, 6.24, A.2.7, A.5.6, A.7.1, A.7.2 |
 | `/admin/activity-types` | Admin/ActivityTypes/ActivityTypesList.razor | Administrator, CollegeAdmin, InstitutionalAdmin; each row offers Edit where the caller may write the type and View elsewhere, and New activity type only to a caller with a scope to create in (T300) | 1.24, 1.26, 1.31, 6.14a |
 | `/admin/activity-types/new`, `/admin/activity-types/{ActivityTypeId:int}` | Admin/ActivityTypes/ActivityTypeEdit.razor | Administrator, CollegeAdmin, InstitutionalAdmin; a type the caller may not write opens read-only, and Scope offers only the scopes the caller may write: an InstitutionalAdmin her institution, a CollegeAdmin his College's specialities and sub-specialities (T300, D52) | 1.25, 1.26, 1.27, 1.28, 1.29, 1.30, 6.14a, A.7.9, A.7.14 |
-| `/admin/adoptions` | Admin/Adoptions/AdoptionsList.razor | Administrator, InstitutionalAdmin | 1.20, 6.32 |
+| `/admin/adoptions` | Admin/Adoptions/AdoptionsList.razor (a redirect to Curricula since T392) | Administrator, InstitutionalAdmin | 1.20 |
 | `/admin/assessors` | Admin/Assessors/AssessorsList.razor | Administrator, InstitutionalAdmin | 2.14, 2.15, 2.44 |
 | `/admin/assessors/edit` | Admin/Assessors/AssessorProfileEdit.razor | Administrator, InstitutionalAdmin; since T376 (S10) a redirect kept for old links: a profile id in the caller's scope opens its person's page at Assessor training, anything else reads "User unavailable" | 2.15 |
 | `/admin/audit` | Admin/Audit/AuditList.razor | Administrator, InstitutionalAdmin | 3.55, 3.56, 3.57, 4.38 |
@@ -110,9 +118,10 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/admin/colleges/new`, `/admin/colleges/{Id:int}` | Admin/Colleges/CollegeEdit.razor | Administrator | 1.3, 6.1, 6.2, 6.10 |
 | `/admin/colleges/{CollegeId:int}/specialities` | Admin/Institutions/SpecialitiesList.razor | Administrator, CollegeAdmin | 1.12, 6.3, 6.11 |
 | `/admin/colleges/{CollegeId:int}/specialities/new`, `/admin/colleges/{CollegeId:int}/specialities/{Id:int}` | Admin/Institutions/SpecialityEdit.razor | Administrator, CollegeAdmin | 6.3, 6.4, 6.11, 6.12 |
-| `/admin/curricula` | Admin/Curricula/CurriculaList.razor | Administrator, CollegeAdmin, InstitutionalAdmin | 1.17, 1.19, 1.21, 6.13, 6.17, 6.22, 6.26, 6.29, 6.30, 6.31, 6.33, A.7.10 |
+| `/admin/curricula` | Admin/Curricula/CurriculaList.razor | Administrator, CollegeAdmin, InstitutionalAdmin | 1.17, 1.19, 1.20, 1.21, 6.13, 6.17, 6.22, 6.26, 6.29, 6.30, 6.31, 6.32, 6.33, 6.38, A.7.10 |
 | `/admin/curricula/new`, `/admin/curricula/{Id:int}` | Admin/Curricula/CurriculumEdit.razor | Administrator, CollegeAdmin | 6.13, 6.29, 6.31 |
 | `/admin/curricula/{Id:int}/items` | Admin/Curricula/CurriculumItemsEdit.razor | Administrator, CollegeAdmin, InstitutionalAdmin | 1.18, 1.21, 6.13, 6.17, 6.22, 6.26, 6.29, 6.30, 6.33, A.7.10 |
+| `/admin/curricula/{Id:int}/items/new`, `/admin/curricula/{Id:int}/items/{ItemId:int}` | Admin/Curricula/CurriculumItemPage.razor | Administrator, CollegeAdmin, InstitutionalAdmin; an item the caller may not change opens as its record (P2) | 1.21, 6.26, 6.30, 6.33, A.7.10 |
 | `/admin/curriculum-progress` | Admin/CurriculumProgress/CurriculumProgressRebuild.razor | Administrator | 6.38 |
 | `/admin/data-rights` | Admin/DataRights/RequestsList.razor | Administrator, Coordinator; a Coordinator sees their own institution's requests | A.1.3, A.1.8, A.1.8a, A.1.12, A.7.5 |
 | `/admin/data-rights/{Id:guid}` | Admin/DataRights/RequestDetail.razor | Administrator, Coordinator; a Coordinator decides their own institution's requests, never their own (T387, F9) | A.1.3, A.1.8, A.1.8a, A.1.12, A.5.7 |
@@ -195,7 +204,7 @@ state, `states.md` is where it belongs.
 | An email when an activity is requested, completed, declined or returned | Nothing sends the `AssessmentRequested`, `AssessmentAccepted`, `AssessmentCompleted` or `AssessmentDeclined` templates. Steps 3.3, 5.24, A.2.7 and A.7.2 expect that nothing is sent. | Undecided |
 | An assessor's training status (`AssessorProfile.TrainingStatus`) changing an assessment | Nothing on the activity path reads it (2.14 records it). | Undecided |
 | An invitation's Delivery reading "Sent", or "check the address" after a second failure | The replay logs mail (`Email__SmtpHost` unset), so nothing reports a delivery or a refusal. Rows read "Being sent", then "Not delivered" with its note row. | `states.md`, with an SMTP sink |
-| The Administrator adopting for an institution through the institution picker on `/admin/adoptions` | The story's InstitutionalAdmin adopts for her own institution (1.20, 6.32). | `states.md` |
+| The Administrator adopting for an institution under Curricula's "An institution's curricula" (Institution and Show, then Adopt… for it; T392, R3-A10, A11) | The story's InstitutionalAdmin adopts for her own institution (1.20, 6.32). | `states.md` |
 | Discard draft in the activity-type builder | The story publishes KGK's draft (1.30) and keeps the College's unpublished (6.14a), discarding neither. | `states.md` |
 | Deactivating a College, speciality or sub-speciality | Nothing in Application or Infrastructure reads their `IsActive`, no decision says what it should stop, and the button does not ask first (T264). | A decision first |
 | Removing a curriculum item (its ConfirmDialog, T222) | Every item measures registrars still in training. | `states.md`, on a scratch curriculum |
@@ -312,16 +321,16 @@ and Assessor) appears under each role for the jobs done in it.
 | Draft an activity type for a College discipline, and read the College's instruments as their author | 6.14a | `/admin/activity-types`, `/admin/activity-types/new`, `/admin/activity-types/{ActivityTypeId:int}` |
 | Take an EPA out of use while the College revises it, then restore it | 6.17, 6.23 | `/admin/epas`, `/admin/epas/{Id:int}`, `/admin/curricula`, `/admin/curricula/{Id:int}/items` |
 | Add a new national EPA | 6.28 | `/admin/epas`, `/admin/epas/new`, `/admin/epas/{Id:int}` |
-| Publish a new curriculum version: clone the current one, change its items, release it | 6.29, 6.30, 6.31 | `/admin/curricula`, `/admin/curricula/{Id:int}`, `/admin/curricula/{Id:int}/items` |
-| Keep the catalogue on a phone | A.7.10 | `/`, `/admin/epas`, `/admin/curricula`, `/admin/curricula/{Id:int}/items` |
+| Publish a new curriculum version: clone the current one, change its items, release it | 6.29, 6.30, 6.31 | `/admin/curricula`, `/admin/curricula/{Id:int}`, `/admin/curricula/{Id:int}/items`, `/admin/curricula/{Id:int}/items/new`, `/admin/curricula/{Id:int}/items/{ItemId:int}` |
+| Keep the catalogue on a phone | A.7.10 | `/`, `/admin/epas`, `/admin/curricula`, `/admin/curricula/{Id:int}/items`, `/admin/curricula/{Id:int}/items/{ItemId:int}` |
 
 ### InstitutionalAdmin (Prof Nolwazi Mbatha, KGK)
 
 | Job | Steps | Pages |
 |---|---|---|
 | Accept my invitation to run my institution | 1.10 | `/account/register/start`, `/account/register`, `/` |
-| Adopt the College's curriculum so that we can admit registrars | 1.19, 1.20, 1.21 | `/admin/curricula`, `/admin/epas`, `/admin/adoptions`, `/admin/curricula/{Id:int}/items`, `/` |
-| Adopt a newer curriculum version | 6.32 | `/admin/adoptions` |
+| Adopt the College's curriculum so that we can admit registrars, under Curricula's Open for adoption | 1.19, 1.20, 1.21 | `/admin/curricula`, `/admin/epas`, `/admin/adoptions` (typed: it lands on Curricula), `/admin/curricula/{Id:int}/items`, `/` |
+| Adopt a newer curriculum version, under Curricula's Open for adoption | 6.32 | `/admin/curricula` |
 | Read the entrustment ladders | 1.22, 6.9 | `/admin/entrustment-scales` |
 | Keep my institution's own record, and nobody else's | 1.23, A.5.5, A.6.3 | `/`, `/admin/institutions/{Id:int}`, `/admin/institutions/new`, `/access-denied`, `/not-found`, `/admin/users/{UserId}` |
 | Check the College's assessment instruments | 1.24, 1.25 | `/admin/activity-types`, `/admin/activity-types/{ActivityTypeId:int}` |
@@ -342,7 +351,7 @@ and Assessor) appears under each role for the jobs done in it.
 | Record a registrar's graduation | 5.16, 5.17 | `/admin/trainees`, `/admin/trainees/edit`, `/admin/users`, `/admin/users/{UserId}` |
 | Record a registrar leaving the programme | 5.27 | `/admin/trainees`, `/admin/trainees/edit` |
 | See an EPA the College has paused, and a graduate's STARs on it | 6.22 | `/admin/epas`, `/admin/curricula`, `/admin/curricula/{Id:int}/items`, `/admin/entrustment-decisions` |
-| Add an EPA and a curriculum item of our own | 6.25, 6.26, 6.33 | `/admin/epas`, `/admin/epas/new`, `/admin/epas/{Id:int}`, `/admin/curricula`, `/admin/curricula/{Id:int}/items` |
+| Add an EPA and a curriculum item of our own | 6.25, 6.26, 6.33 | `/admin/epas`, `/admin/epas/new`, `/admin/epas/{Id:int}`, `/admin/curricula`, `/admin/curricula/{Id:int}/items`, `/admin/curricula/{Id:int}/items/new` |
 | Move a registrar to a new curriculum version | 6.34, 6.36 | `/admin/trainees`, `/admin/trainees/edit` |
 | See what a registrar's erasure left | A.1.14 | `/admin/users`, `/admin/trainees`, `/committee/reviews`, `/committee/reviews/{ReviewId:int}` |
 | Check our SSO group mappings | A.3.1 | `/admin/sso/group-mappings` |

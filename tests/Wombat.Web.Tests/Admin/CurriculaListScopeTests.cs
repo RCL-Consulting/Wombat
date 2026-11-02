@@ -31,7 +31,7 @@ public sealed class CurriculaListScopeTests : TestContext
     public void AnInstitution_IsOfferedTheItemsOfEachAdoptedCurriculum_AndNothingToCreateOrEdit()
     {
         SignIn(WombatRoles.InstitutionalAdmin);
-        var cut = RenderList([Curriculum(5, canEditCurriculum: false)]);
+        var cut = RenderList([Adopted(Curriculum(5, canEditCurriculum: false))]);
 
         Links(cut).Should().Equal([("Items", "/admin/curricula/5/items")],
             "an institution opens an adopted curriculum's items, and changes nothing else about it");
@@ -87,8 +87,10 @@ public sealed class CurriculaListScopeTests : TestContext
         SignIn(WombatRoles.InstitutionalAdmin);
         var cut = RenderList([]);
 
-        cut.Find(".detail-card--empty").TextContent.Should().Contain("Your institution has not adopted a curriculum yet.")
-            .And.NotContain("Create a curriculum");
+        // T392 (flow 15, Q1): the adoption is on this page, under "Open for adoption", so the empty state points below.
+        cut.Find(".detail-card--empty").TextContent.Should().Contain(
+                "Your institution has not adopted a curriculum yet. Adopt one below before admitting trainees.")
+            .And.NotContain("Create a curriculum").And.NotContain("Curriculum adoptions");
         Links(cut).Should().BeEmpty();
     }
 
@@ -104,14 +106,17 @@ public sealed class CurriculaListScopeTests : TestContext
             .Should().Equal(CreatePagePolicy);
     }
 
+    // T392 (flow 15): the row header is the curriculum with its version, and its discipline is its speciality and
+    // sub-speciality, as the boards write them.
     [Fact]
-    public void TheRowsNameTheirSpecialityAndSubSpeciality_FromTheCurriculum()
+    public void TheRowsNameTheirCurriculumAndDiscipline_FromTheCurriculum()
     {
         SignIn(WombatRoles.InstitutionalAdmin);
-        var cut = RenderList([Curriculum(5, canEditCurriculum: false)]);
+        var cut = RenderList([Adopted(Curriculum(5, canEditCurriculum: false))]);
 
+        cut.Find("tbody th[scope=row]").TextContent.Trim().Should().Be("Paediatric EPA Curriculum (11.1)");
         var cells = cut.FindAll("tbody td").Select(cell => cell.TextContent.Trim()).ToList();
-        cells.Should().ContainInOrder("Paediatric EPA Curriculum", "11.1", "CMSA", "Paediatrics", "General Paediatrics");
+        cells.Should().ContainInOrder("CMSA", "Paediatrics / General Paediatrics", "2026-01-01");
     }
 
     private void SignIn(string role, params string[] policies)
@@ -122,6 +127,13 @@ public sealed class CurriculaListScopeTests : TestContext
         auth.SetPolicies(policies);
         auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, $"{role}-1"));
     }
+
+    private static CurriculumDto Adopted(CurriculumDto curriculum)
+        => curriculum with
+        {
+            Institution = new CurriculumInstitutionStateDto(4, "Kgosi Kgari Teaching Hospital", true, new DateOnly(2026, 10, 30),
+                null, null, null, 0, 0, 0, [])
+        };
 
     private IRenderedComponent<CurriculaList> RenderList(IReadOnlyList<CurriculumDto> curricula)
     {
@@ -137,17 +149,27 @@ public sealed class CurriculaListScopeTests : TestContext
 
     private static CurriculumDto Curriculum(int id, bool canEditCurriculum)
         => new(id, 2, 7, "Paediatrics", "General Paediatrics", "CMSA", "Paediatric EPA Curriculum", "11.1",
-            new DateOnly(2026, 1, 1), null, true, true, [], null)
+            new DateOnly(2026, 1, 1), null, true, [], null)
         {
             CanEditCurriculum = canEditCurriculum
         };
 
     private sealed class ListSender(IReadOnlyList<CurriculumDto> curricula) : IScopedSender
     {
+        // T392: the Institutional admin's page reads her institution's name and the versions open to it; the
+        // Administrator's the institutions to choose from. The links under test are the curricula's.
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
-            => request is GetCurriculaListQuery
-                ? Task.FromResult((TResponse)(object)curricula)
-                : throw new NotSupportedException($"The list asks for nothing else: {request.GetType().Name}");
+            => request switch
+            {
+                GetCurriculaListQuery => Task.FromResult((TResponse)(object)curricula),
+                Wombat.Application.Features.Institutions.Queries.GetMyInstitutionName.GetMyInstitutionNameQuery
+                    => Task.FromResult((TResponse)(object)"Kgosi Kgari Teaching Hospital"),
+                Wombat.Application.Features.Adoptions.GetAdoptableCurriculaQuery
+                    => Task.FromResult((TResponse)(object)Array.Empty<Wombat.Application.Features.Adoptions.AdoptableCurriculumDto>()),
+                Wombat.Application.Features.Institutions.Queries.GetInstitutionsList.GetInstitutionsListQuery
+                    => Task.FromResult((TResponse)(object)Array.Empty<Wombat.Application.Features.Institutions.InstitutionDto>()),
+                _ => throw new NotSupportedException($"The list asks for nothing else: {request.GetType().Name}")
+            };
 
         public Task Send(IRequest request, CancellationToken cancellationToken = default)
             => throw new NotSupportedException();

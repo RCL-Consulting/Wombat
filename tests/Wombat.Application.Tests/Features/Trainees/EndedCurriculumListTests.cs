@@ -368,8 +368,9 @@ public sealed class EndedCurriculumListTests
         var remove = () => new RemoveCurriculumItemCommandHandler(db).Handle(
             new RemoveCurriculumItemCommand(CurriculumId, 102, TestPrincipals.Administrator()), CancellationToken.None);
 
-        await remove.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage(RemoveCurriculumItemCommandHandler.EndedRecordsHoldTheItem(1));
+        // Typed (T392, flow 15), so the items page says it in these words without printing an exception's text (T329).
+        (await remove.Should().ThrowAsync<CurriculumItemOnEndedRecordsException>()
+            .WithMessage(RemoveCurriculumItemCommandHandler.EndedRecordsHoldTheItem(1))).Which.Records.Should().Be(1);
         db.ChangeTracker.Clear();
         (await db.CurriculumItems.AnyAsync(item => item.Id == 102)).Should().BeTrue();
         (await db.CurriculumItemProgresses.AnyAsync(row => row.CurriculumItemId == 102)).Should().BeTrue();

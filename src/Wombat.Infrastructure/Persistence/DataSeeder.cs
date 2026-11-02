@@ -339,6 +339,7 @@ public sealed class DataSeeder
             Name = CurriculumName,
             Version = CurriculumVersion,
             EffectiveFrom = new DateOnly(2026, 1, 1),
+            // Open for adoption, said here (T392, F5): a version made by a command or a clone starts held back.
             IsActive = true,
             Items = [BuildDemoItem(epa, scale)]
         };

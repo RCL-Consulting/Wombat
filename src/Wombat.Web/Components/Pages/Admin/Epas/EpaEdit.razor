@@ -4,114 +4,71 @@
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject ILogger<EpaEdit> Logger
 
-<PageTitle>@(IsNew ? "Create EPA" : "Edit EPA") · Wombat</PageTitle>
+<PageTitle>@Heading · Wombat</PageTitle>
 
-<PageHeader Title="@(IsNew ? "Create EPA" : "Edit EPA")" Subtitle="Define the EPA code, scope, and descriptive guidance." >
-  <Actions>
-    <a class="btn btn-outline btn-sm" href="/admin/epas">Back to EPAs</a>
-  </Actions>
-</PageHeader>
+@*
+  An EPA's page (T392, flow 15, lane C; boards R3-C08, C12, C18a, C18b and R2-C04–C07, C10, C11, C13, C14, C19). One read
+  (GetEpaPageQuery), by the list's rule: an id the caller cannot open, or that does not exist, is Unavailable (Q2, Q19).
 
-@* What a save or a deactivation did. It takes the focus once a Save or a deactivation is done (T234; DESIGN.md § Button
-   system): "EPA saved.", or what reactivating credited, arriving on its own is often not read, and the Deactivate
-   button that deactivated the EPA is gone (T196 review). A refused Save leaves the focus where it was, on Save or the
-   field Enter was pressed in, and a refused deactivation leaves Deactivate, to which the dialog hands the focus back:
-   the refusal is an alert, read at once. *@
-<div @ref="_result" class="action-result" tabindex="-1">
-  @if (!string.IsNullOrWhiteSpace(_statusMessage))
-  {
-    <Alert Kind="success">@_statusMessage</Alert>
-  }
+  - Titled by the EPA, "KGK-001 — Running …" (EpaOptionLabel's em dash), its crumb the code, and no Back to EPAs (the trail
+    is the way back); "Create EPA" new; "EPA" while it is read or when its read failed (T7).
+  - The form for an EPA the caller may change (its "may change", UpdateEpa's rule, S4); a national EPA's record for a
+    reader who may not (Q2, R2-C10): no form, no Save, no Deactivate….
+  - Refusals under their field (F4, flow 11's rule; no ValidationSummary at the top): the page's own required checks, and a
+    command's FieldRefusalException or validator failure (FieldRefusal.Of), the control aria-invalid and focused, what was
+    typed kept. Any other failure is the fixed sentence in the result region (R2-C06, T329), the exception logged.
+  - After a create the page arrives by ?created (F1, M5): it writes "EPA saved." itself, focuses it, then replaces its
+    address without the token, so a reload says nothing.
+  - Deactivate… (S11) and saving with Active unticked both open one dialog, named for the EPA and for whose trainees it
+    stops measuring (Q11). Its results are the built ones, focused (T234).
+*@
+<PageHeader Title="@Heading" Subtitle="@Subtitle" CurrentCrumb="@Crumb" />
 
-  @if (!string.IsNullOrWhiteSpace(_errorMessage))
-  {
-    <Alert Kind="danger">@_errorMessage</Alert>
-  }
+<div class="user-page epa-page" aria-busy="@(_loading ? "true" : null)">
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusPageHeadingAsync">
+    <LoadingContent>
+      <p class="loading-line" role="status">@EpaWords.LoadingEpa</p>
+      <div class="detail-card" aria-hidden="true">
+        <div class="skeleton skel-title"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line skel-short"></div>
+      </div>
+    </LoadingContent>
+    <ChildContent>
+      @if (IsUnavailable)
+      {
+        <div class="detail-card detail-card--empty">
+          <div class="state-panel-copy">@EpaWords.UnavailableBody</div>
+          <div class="form-actions">
+            <a class="btn btn-primary" href="@CatalogueLinks.Epas">@EpaWords.GoToEpas</a>
+          </div>
+        </div>
+      }
+      else if (_page?.Epa is { MayChange: false } record)
+      {
+        @Record(record)
+      }
+      else if (_page is not null)
+      {
+        @Form()
+      }
+    </ChildContent>
+  </StatePanel>
 </div>
 
-<StatePanel IsLoading="_loading" IsEmpty="false" EmptyTitle="" EmptyBody="">
-  <div class="form-container">
-    <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="epa-edit">
-      <DataAnnotationsValidator />
-      <ValidationSummary class="validation-summary-errors" />
-
-      <div class="form-grid form-grid--wide">
-        <FormField Label="Sub-speciality" InputId="epa-sub-speciality" Required="true">
-          <InputSelect id="epa-sub-speciality" class="form-select" TValue="int" @bind-Value="_model.SubSpecialityId">
-            @foreach (var option in SubSpecialityOptions)
-            {
-              <option value="@option.Id">@option.Label</option>
-            }
-          </InputSelect>
-        </FormField>
-
-        <FormField Label="Code" InputId="epa-code" Required="true">
-          <InputText id="epa-code" class="form-control" @bind-Value="_model.Code" />
-          <ValidationMessage For="() => _model.Code" />
-        </FormField>
-
-        <FormField Label="Title" InputId="epa-title" Required="true" FullWidth="true">
-          <InputText id="epa-title" class="form-control" @bind-Value="_model.Title" />
-          <ValidationMessage For="() => _model.Title" />
-        </FormField>
-
-        <FormField Label="Description" InputId="epa-description" FullWidth="true">
-          <InputTextArea id="epa-description" class="form-control" @bind-Value="_model.Description" />
-          <ValidationMessage For="() => _model.Description" />
-        </FormField>
-
-        <FormField Label="Required knowledge and skills" InputId="epa-rks" FullWidth="true">
-          <InputTextArea id="epa-rks" class="form-control" @bind-Value="_model.RequiredKnowledgeSkills" />
-          <ValidationMessage For="() => _model.RequiredKnowledgeSkills" />
-        </FormField>
-
-        <FormField Label="Category" InputId="epa-category" Required="true">
-          <InputSelect id="epa-category" class="form-select" @bind-Value="_model.Category">
-            @foreach (var category in Enum.GetValues<EpaCategory>())
-            {
-              <option value="@category">@category</option>
-            }
-          </InputSelect>
-        </FormField>
-
-        @if (!IsNew)
-        {
-          @* T158. The help text is the checkbox's description, not only text beside it (T193: FormField gives it the id). *@
-          <FormField Label="Status" InputId="epa-active" HelpText="@ActiveHelpText">
-            <div class="form-check">
-              <InputCheckbox id="epa-active" class="form-check-input" @bind-Value="_model.IsActive" aria-describedby="@FieldHelp.Id("epa-active")" />
-              <label for="epa-active">Active</label>
-            </div>
-          </FormField>
-        }
-      </div>
-
-      <FormActions>
-        <a class="btn btn-outline" href="/admin/epas">Cancel</a>
-        @* T196. Deactivate is offered only on an EPA that is active as stored; an inactive one is reactivated by ticking
-           Active and saving. *@
-        @if (!IsNew && _storedIsActive)
-        {
-          <button type="button" class="btn btn-outline" @onclick="AskDeactivateAsync" disabled="@Busy">Deactivate</button>
-        }
-        @* Not disabled while its own save runs (T234): it has the focus then, and a browser drops the focus of a button
-           it disables, to the page. A second press sends nothing (SaveAsync). *@
-        <button type="submit" class="btn btn-primary" disabled="@_deactivating" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : "Save")</button>
-      </FormActions>
-    </EditForm>
-  </div>
-</StatePanel>
-
-@* A destructive action opens a ConfirmDialog first (DESIGN.md § Button system). Since T158 deactivating an EPA takes
-   its items off a running programme's progress pages and pauses their credit, in every institution that has adopted the
-   curriculum; a closed record keeps it, marked no longer in use (T312).
-   Two actions deactivate, the Deactivate button and saving with Active unticked (T196), and both open this dialog. *@
+@* A destructive action opens a ConfirmDialog first (DESIGN.md § Button system). Since T158 deactivating an EPA takes its
+   items off a running programme's progress pages and pauses their credit; a closed record keeps it, marked no longer in
+   use (T312). Two actions deactivate, Deactivate… and saving with Active unticked (T196), and both open this dialog. *@
 <ConfirmDialog @ref="_confirmDeactivate"
-               Title="Deactivate this EPA?"
-               Body="It can no longer be chosen for a new activity, and it stops being a target on running programmes' progress pages and dashboards, for every institution that uses it. A programme that has ended keeps it on its record, marked no longer in use. The progress it has earned is kept. An activity completed against it while it is inactive counts towards nothing until it is reactivated. You can reactivate it on this page."
-               ConfirmLabel="Deactivate"
+               Title="@EpaWords.DeactivateTitle(_page?.Epa)"
+               Body="@EpaWords.DeactivateBody(_page?.Epa)"
+               ConfirmLabel="@EpaWords.DeactivateConfirm"
                DangerAction="true"
+               ReturnFocusId="@DeactivateTriggerId"
                OnConfirm="ConfirmDeactivationAsync"
                OnCancel="CancelDeactivation" />
 
@@ -119,25 +76,70 @@
   [Parameter]
   public int? Id { get; set; }
 
-  private readonly EpaFormModel _model = new();
-  private ConfirmDialog? _confirmDeactivate;
-  private ElementReference _result;
+  private const string SubSpecialityId = "epa-sub-speciality";
+  private const string CodeId = "epa-code";
+  private const string TitleId = "epa-title";
+  private const string DescriptionId = "epa-description";
+  private const string RequiredKnowledgeSkillsId = "epa-rks";
+  private const string CategoryId = "epa-category";
+  private const string ActiveId = "epa-active";
+  private const string DeactivateTriggerId = "epa-deactivate";
 
-  // A save or a deactivation is done: its result takes the focus after the next render.
+  /// <summary>The command's property each control answers for, so a refusal lands under its field.</summary>
+  private static readonly IReadOnlyDictionary<string, string> InputOf = new Dictionary<string, string>(StringComparer.Ordinal)
+  {
+    [nameof(UpdateEpaCommand.SubSpecialityId)] = SubSpecialityId,
+    [nameof(UpdateEpaCommand.Code)] = CodeId,
+    [nameof(UpdateEpaCommand.Title)] = TitleId,
+    [nameof(UpdateEpaCommand.Description)] = DescriptionId,
+    [nameof(UpdateEpaCommand.RequiredKnowledgeSkills)] = RequiredKnowledgeSkillsId,
+    [nameof(UpdateEpaCommand.Category)] = CategoryId,
+  };
+
+  private readonly EpaFormModel _model = new();
+
+  // The form's own context, whose message store carries the refusals, so each control is marked aria-invalid by
+  // InputBase itself (it drops an aria-invalid it did not set). The model's properties are the commands' names.
+  private EditContext _editContext = default!;
+  private ValidationMessageStore _messages = default!;
+
+  protected override void OnInitialized()
+  {
+    _editContext = new EditContext(_model);
+    _messages = new ValidationMessageStore(_editContext);
+  }
+  private ConfirmDialog? _confirmDeactivate;
+  private ActionResult? _result;
+
+  private EpaPageDto? _page;
+  private bool _loading = true;
+  private string? _loadError;
+  private int? _readId;
+  private bool _read;
+
+  // The page's one result: its words, and whether it is a failure.
+  private string? _statusMessage;
+  private string? _errorMessage;
+
+  // Refusals under their fields, by the command's property; the first in the form's order takes the focus.
+  private readonly Dictionary<string, string> _refusals = new(StringComparer.Ordinal);
+
+  // A save or a deactivation is done, or a ?created arrival was read: the result takes the focus after the next render.
   private bool _focusResult;
 
-  internal ElementReference ResultRegion => _result;
-  private IReadOnlyList<InstitutionDto> _institutions = [];
-  private IReadOnlyList<SpecialityDto> _specialities = [];
-  private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
-  private string? _errorMessage;
-  private string? _statusMessage;
-  private bool _loading;
+  // A refusal is under its field: that field takes the focus after the next render.
+  private string? _focusField;
+
+  // The ?created token was read: the address is replaced without it once the result is drawn (F1).
+  private bool _stripToken;
+
+  /// <summary>The result region, which a done save or deactivation focuses. A test matches a focus call to it.</summary>
+  internal ElementReference ResultRegion => _result?.Element ?? default;
 
   /// <summary>A save has been sent and has not yet answered.</summary>
   private bool _saving;
 
-  /// <summary>A deactivation through the Deactivate button has been sent and has not yet answered.</summary>
+  /// <summary>A deactivation through Deactivate… has been sent and has not yet answered.</summary>
   private bool _deactivating;
 
   /// <summary>Something has been sent and has not answered, so nothing else may be sent.</summary>
@@ -146,52 +148,227 @@
   // What the database says, as against the checkbox, which the user can untick without saving.
   private bool _storedIsActive = true;
 
-  // Whether the open dialog was opened by Save (with Active unticked) rather than by the Deactivate button: confirming
-  // it then saves every edit on the form, not only the deactivation.
+  // Whether the open dialog was opened by Save (with Active unticked) rather than by Deactivate…: confirming it then saves
+  // every edit on the form, not only the deactivation.
   private bool _saveOnConfirm;
 
   private bool IsNew => !Id.HasValue;
 
-  private const string ActiveHelpText =
-    "An inactive EPA cannot be chosen for a new activity and is not a target on any running programme's progress page " +
-    "or dashboard; a programme that has ended keeps it on its record. " +
-    "Evidence already recorded against it is kept, and so is the progress it earned while it was active. An activity " +
-    "completed against it while it is inactive counts towards nothing until the EPA is reactivated, and reactivating " +
-    "it credits those activities.";
+  private bool IsUnavailable => _page is not null && !IsNew && _page.Epa is null;
 
-  private IEnumerable<LookupOption> SubSpecialityOptions =>
-    from subSpeciality in _subSpecialities
-    join speciality in _specialities on subSpeciality.SpecialityId equals speciality.Id
-    select new LookupOption(subSpeciality.Id, $"{speciality.Name} / {subSpeciality.Name}");
+  /// <summary>The h1 and the tab (T7): the EPA by its label once read; "Create EPA" new; "EPA" while read or failed.</summary>
+  private string Heading => IsUnavailable ? EpaWords.UnavailableHeading
+    : IsNew ? EpaWords.CreateHeading
+    : _page?.Epa is { } epa ? EpaWords.Label(epa)
+    : EpaWords.PageHeadingWhileUnread;
 
+  /// <summary>The trail's last crumb: the EPA's code once read (R3-C08), else the h1's words.</summary>
+  private string Crumb => _page?.Epa is { } epa ? epa.Code : Heading;
+
+  private string? Subtitle => _page is null || IsUnavailable ? null
+    : IsNew ? (_page.CreatesOwn ? EpaWords.CreateOwnSubtitle(_page.InstitutionName) : EpaWords.FormSubtitle)
+    : _page.Epa is { MayChange: false } record ? EpaWords.RecordSubtitle(record)
+    : EpaWords.FormSubtitle;
+
+  private string? SubSpecialityHelp => _page is { CreatesOwn: true } ? EpaWords.SubSpecialityHelpOwn : null;
+
+  private RenderFragment Record(EpaDto epa) => __builder =>
+  {
+    <section class="user-section" aria-labelledby="epa-about">
+      <h2 id="epa-about">@EpaWords.AboutHeading</h2>
+      <dl class="detail-list">
+        <dt>@EpaWords.CollegeLabel</dt>
+        <dd>@epa.CollegeName</dd>
+        <dt>@EpaWords.SubSpecialityLabel</dt>
+        <dd>@epa.DisciplineName</dd>
+        <dt>@EpaWords.CategoryLabel</dt>
+        <dd>@EpaWords.Category(epa.Category)</dd>
+        <dt>@EpaWords.StatusLabel</dt>
+        <dd>@EpaWords.Status(epa.IsActive)</dd>
+      </dl>
+    </section>
+    @if (!string.IsNullOrWhiteSpace(epa.Description))
+    {
+      <section class="user-section" aria-labelledby="epa-description-heading">
+        <h2 id="epa-description-heading">@EpaWords.DescriptionLabel</h2>
+        <p class="epa-text">@epa.Description</p>
+      </section>
+    }
+    @if (!string.IsNullOrWhiteSpace(epa.RequiredKnowledgeSkills))
+    {
+      <section class="user-section" aria-labelledby="epa-rks-heading">
+        <h2 id="epa-rks-heading">@EpaWords.RequiredKnowledgeSkillsLabel</h2>
+        <p class="epa-text">@epa.RequiredKnowledgeSkills</p>
+      </section>
+    }
+  };
+
+  private RenderFragment Form() => __builder =>
+  {
+    @* What a save or a deactivation did, or a failure that is no field's (R2-C06). It takes the focus once the action is
+       done (T234; DESIGN.md § Button system). A refusal under a field leaves it empty, the focus on the field. *@
+    <ActionResult @ref="_result">
+      @if (!string.IsNullOrWhiteSpace(_statusMessage))
+      {
+        <Alert Kind="success">@_statusMessage</Alert>
+      }
+
+      @if (!string.IsNullOrWhiteSpace(_errorMessage))
+      {
+        <Alert Kind="danger">@_errorMessage</Alert>
+      }
+    </ActionResult>
+
+    <div class="form-container">
+      <EditForm EditContext="_editContext" OnSubmit="SaveAsync" FormName="epa-edit" novalidate>
+        <div class="form-grid form-grid--wide">
+          <FormField Label="@EpaWords.SubSpecialityLabel" InputId="@SubSpecialityId" Required="true" HelpText="@SubSpecialityHelp">
+            <InputSelect id="@SubSpecialityId" class="form-select" TValue="int" @bind-Value="_model.SubSpecialityId"
+                         aria-describedby="@DescribedBy(nameof(UpdateEpaCommand.SubSpecialityId), SubSpecialityHelp)">
+              @if (_model.SubSpecialityId == 0)
+              {
+                <option value="0"></option>
+              }
+              @foreach (var option in _page!.Disciplines)
+              {
+                <option value="@option.SubSpecialityId">@option.Name</option>
+              }
+            </InputSelect>
+            @Refusal(nameof(UpdateEpaCommand.SubSpecialityId))
+          </FormField>
+
+          <FormField Label="@EpaWords.CodeLabel" InputId="@CodeId" Required="true">
+            <InputText id="@CodeId" class="form-control" @bind-Value="_model.Code"
+                       aria-describedby="@DescribedBy(nameof(UpdateEpaCommand.Code), null)" />
+            @Refusal(nameof(UpdateEpaCommand.Code))
+          </FormField>
+
+          <FormField Label="@EpaWords.TitleLabel" InputId="@TitleId" Required="true" FullWidth="true">
+            <InputText id="@TitleId" class="form-control" @bind-Value="_model.Title"
+                       aria-describedby="@DescribedBy(nameof(UpdateEpaCommand.Title), null)" />
+            @Refusal(nameof(UpdateEpaCommand.Title))
+          </FormField>
+
+          <FormField Label="@EpaWords.DescriptionLabel" InputId="@DescriptionId" FullWidth="true">
+            <InputTextArea id="@DescriptionId" class="form-control" @bind-Value="_model.Description"
+                           aria-describedby="@DescribedBy(nameof(UpdateEpaCommand.Description), null)" />
+            @Refusal(nameof(UpdateEpaCommand.Description))
+          </FormField>
+
+          <FormField Label="@EpaWords.RequiredKnowledgeSkillsLabel" InputId="@RequiredKnowledgeSkillsId" FullWidth="true">
+            <InputTextArea id="@RequiredKnowledgeSkillsId" class="form-control" @bind-Value="_model.RequiredKnowledgeSkills"
+                           aria-describedby="@DescribedBy(nameof(UpdateEpaCommand.RequiredKnowledgeSkills), null)" />
+            @Refusal(nameof(UpdateEpaCommand.RequiredKnowledgeSkills))
+          </FormField>
+
+          <FormField Label="@EpaWords.CategoryLabel" InputId="@CategoryId" Required="true">
+            <InputSelect id="@CategoryId" class="form-select" @bind-Value="_model.Category"
+                         aria-describedby="@DescribedBy(nameof(UpdateEpaCommand.Category), null)">
+              @foreach (var category in EpaWords.Categories)
+              {
+                <option value="@category">@EpaWords.Category(category)</option>
+              }
+            </InputSelect>
+            @Refusal(nameof(UpdateEpaCommand.Category))
+          </FormField>
+
+          @if (!IsNew)
+          {
+            @* T158, Q11. The help text is the checkbox's description, not only text beside it (T193: FormField gives it the
+               id); it names whose trainees an own EPA measures. *@
+            <FormField Label="@EpaWords.StatusLabel" InputId="@ActiveId" HelpText="@EpaWords.ActiveHelp(_page!.Epa)">
+              <div class="form-check">
+                <InputCheckbox id="@ActiveId" class="form-check-input" @bind-Value="_model.IsActive" aria-describedby="@FieldHelp.Id(ActiveId)" />
+                <label for="@ActiveId">@EpaWords.ActiveLabel</label>
+              </div>
+            </FormField>
+          }
+        </div>
+
+        <FormActions>
+          <a class="btn btn-outline" href="@CatalogueLinks.Epas">@EpaWords.Cancel</a>
+          @* T196, S11. Deactivate… is offered only on an EPA that is active as stored; an inactive one is reactivated by
+             ticking Active and saving. It opens its dialog, so it says so. *@
+          @if (!IsNew && _storedIsActive)
+          {
+            <button type="button" id="@DeactivateTriggerId" class="btn btn-outline" aria-haspopup="dialog"
+                    @onclick="AskDeactivateAsync" disabled="@Busy">@EpaWords.DeactivateTrigger</button>
+          }
+          @* Not disabled while its own save runs (T234): it has the focus then, and a browser drops the focus of a button
+             it disables, to the page. A second press sends nothing (SaveAsync). *@
+          <button type="submit" class="btn btn-primary" disabled="@_deactivating" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? EpaWords.Saving : EpaWords.Save)</button>
+        </FormActions>
+      </EditForm>
+    </div>
+  };
+
+  /// <summary>A refusal under its field (F4): <c>div.validation-message role="alert"</c>, named first by the control.</summary>
+  private RenderFragment Refusal(string field) => __builder =>
+  {
+    if (_refusals.TryGetValue(field, out var message))
+    {
+      <div class="validation-message" role="alert" id="@FieldRefusal.Id(InputOf[field])">@message</div>
+    }
+  };
+
+
+  private string? DescribedBy(string field, string? helpText)
+    => FieldRefusal.DescribedBy(InputOf[field], _refusals.ContainsKey(field), helpText);
+
+  // Read again when the id changes (a create arrives at its new EPA's page), never when only the query changes: the
+  // ?created token's own replace must not read the page again.
   protected override async Task OnParametersSetAsync()
   {
+    if (_read && _readId == Id)
+    {
+      return;
+    }
+
+    _read = true;
+    _readId = Id;
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
     _loading = true;
-    _errorMessage = null;
+    _loadError = null;
     _statusMessage = null;
+    _errorMessage = null;
+    ClearRefusals();
 
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
-      _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
-      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery(authState.User));
+      _page = await Sender.Send(new GetEpaPageQuery(Id, authState.User));
+      Fill(_page);
 
-      if (IsNew)
+      // F1, M5: a create arrives here by ?created. The page writes the result itself and focuses it; the token goes once
+      // it is drawn. An EPA the caller cannot open writes nothing.
+      if (!IsNew && _page.Epa is not null && CatalogueLinks.HasToken(Navigation.Uri, CatalogueLinks.CreatedToken))
       {
-        _model.SubSpecialityId = _subSpecialities.FirstOrDefault()?.Id ?? 0;
-        _model.IsActive = true;
-        return;
+        _statusMessage = EpaWords.Saved;
+        _focusResult = true;
+        _stripToken = true;
       }
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // T329, R3-C18b: the page's own read failed, which is not Unavailable. Never the exception's text.
+      Logger.LogError(exception, "The EPA {EpaId} could not be read.", Id);
+      _page = null;
+      _loadError = EpaWords.EpaLoadFailed;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
 
-      var epa = await Sender.Send(new GetEpaByIdQuery(Id!.Value, authState.User));
-
-      if (epa is null)
-      {
-        Navigation.NavigateTo("/not-found");
-        return;
-      }
-
+  private void Fill(EpaPageDto page)
+  {
+    if (page.Epa is { } epa)
+    {
       _model.SubSpecialityId = epa.SubSpecialityId;
       _model.Code = epa.Code;
       _model.Title = epa.Title;
@@ -201,19 +378,23 @@
       _model.IsActive = epa.IsActive;
       _storedIsActive = epa.IsActive;
     }
-    catch (Exception exception)
+    else if (IsNew)
     {
-      _errorMessage = exception.Message;
-    }
-    finally
-    {
-      _loading = false;
+      // R2-C04: the one adopted discipline arrives chosen; with several, the first.
+      _model.SubSpecialityId = page.Disciplines.FirstOrDefault()?.SubSpecialityId ?? 0;
+      _model.IsActive = true;
     }
   }
 
+  private Task RetryAsync() => LoadAsync();
+
+  // S7: once a Try again has read, the h1 takes the focus.
+  private ValueTask FocusPageHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
   /// <summary>
-  /// Save, unless it would deactivate the EPA: unticking Active and saving is the same action as the Deactivate button, so
-  /// it asks the same question first (T196), and the dialog's confirm saves.
+  /// Save, unless it would deactivate the EPA: unticking Active and saving is the same action as Deactivate…, so it asks
+  /// the same question first (T196), and the dialog's confirm saves. The required fields are checked here first, each
+  /// refusal under its field (F4).
   /// </summary>
   /// <remarks>
   /// A press while something is in flight sends nothing (T234). Save is not disabled while its own save runs, so a second
@@ -223,6 +404,22 @@
   {
     if (Busy)
     {
+      return;
+    }
+
+    ClearRefusals();
+    _statusMessage = null;
+    _errorMessage = null;
+    Check(_model.SubSpecialityId <= 0, nameof(UpdateEpaCommand.SubSpecialityId), EpaFieldMessages.SubSpecialityRequired);
+    Check(string.IsNullOrWhiteSpace(_model.Code), nameof(UpdateEpaCommand.Code), EpaFieldMessages.CodeRequired);
+    Check(_model.Code.Trim().Length > 64, nameof(UpdateEpaCommand.Code), EpaFieldMessages.CodeTooLong);
+    Check(string.IsNullOrWhiteSpace(_model.Title), nameof(UpdateEpaCommand.Title), EpaFieldMessages.TitleRequired);
+    Check(_model.Title.Trim().Length > 200, nameof(UpdateEpaCommand.Title), EpaFieldMessages.TitleTooLong);
+    Check((_model.Description?.Trim().Length ?? 0) > 4000, nameof(UpdateEpaCommand.Description), EpaFieldMessages.DescriptionTooLong);
+    Check((_model.RequiredKnowledgeSkills?.Trim().Length ?? 0) > 8000, nameof(UpdateEpaCommand.RequiredKnowledgeSkills), EpaFieldMessages.RequiredKnowledgeSkillsTooLong);
+    if (_refusals.Count > 0)
+    {
+      FocusFirstRefusal();
       return;
     }
 
@@ -236,16 +433,48 @@
     await SaveCoreAsync();
   }
 
+  private void Check(bool refused, string field, string message)
+  {
+    if (refused && !_refusals.ContainsKey(field))
+    {
+      Refuse(field, message);
+    }
+  }
+
+  private void Refuse(string field, string message)
+  {
+    _refusals[field] = message;
+    _messages.Add(_editContext.Field(field), message);
+    _editContext.NotifyValidationStateChanged();
+  }
+
+  private void ClearRefusals()
+  {
+    if (_refusals.Count == 0)
+    {
+      return;
+    }
+
+    _refusals.Clear();
+    _messages.Clear();
+    _editContext.NotifyValidationStateChanged();
+  }
+
+  private void FocusFirstRefusal()
+    => _focusField = InputOf.Keys.FirstOrDefault(_refusals.ContainsKey) is { } field ? InputOf[field] : null;
+
   /// <remarks>
   /// A save that is done moves the focus to its result (T234): a plain Save, a reactivating one, and one that deactivates
-  /// through the dialog, whose close comes first. Until T234 Save was disabled while it ran, and the focus fell to the
-  /// page body. A created EPA leaves for its own page, and the focus with it.
+  /// through the dialog, whose close comes first. A created EPA leaves for its own page by ?created (F1), which writes
+  /// "EPA saved." there. A refusal of a field is put under it and focused, what was typed kept (F4); any other failure is
+  /// the fixed sentence (R2-C06, T329), focused, and logged.
   /// </remarks>
   private async Task SaveCoreAsync()
   {
     _saving = true;
     _errorMessage = null;
     _statusMessage = null;
+    ClearRefusals();
 
     try
     {
@@ -254,7 +483,7 @@
       if (IsNew)
       {
         var created = await Sender.Send(new CreateEpaCommand(_model.SubSpecialityId, _model.Code, _model.Title, EmptyToNull(_model.Description), EmptyToNull(_model.RequiredKnowledgeSkills), _model.Category, authState.User));
-        Navigation.NavigateTo($"/admin/epas/{created.Id}", forceLoad: true);
+        Navigation.NavigateTo(CatalogueLinks.EpaCreated(created.Id), forceLoad: true);
         return;
       }
 
@@ -262,31 +491,31 @@
       var result = await Sender.Send(new UpdateEpaCommand(Id!.Value, _model.SubSpecialityId, _model.Code, _model.Title, EmptyToNull(_model.Description), EmptyToNull(_model.RequiredKnowledgeSkills), _model.Category, _model.IsActive, authState.User));
       _model.IsActive = result.Epa.IsActive;
       _storedIsActive = result.Epa.IsActive;
+      _page = _page! with { Epa = result.Epa with { MayChange = true } };
       _statusMessage = (wasActive, result.Epa.IsActive) switch
       {
-        (false, true) => ReactivatedMessage(result.CompletionsCredited),
-        (true, false) => "EPA saved and deactivated.",
-        _ => "EPA saved."
+        (false, true) => EpaWords.Reactivated(result.CompletionsCredited),
+        (true, false) => EpaWords.SavedAndDeactivated,
+        _ => EpaWords.Saved
       };
       _focusResult = true;
     }
-    catch (Exception exception)
+    catch (Exception exception) when (FieldRefusal.Of(exception) is { } refusal && InputOf.ContainsKey(refusal.Field))
     {
-      _errorMessage = exception.Message;
+      Refuse(refusal.Field, refusal.Message);
+      FocusFirstRefusal();
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "The EPA {EpaId} could not be saved.", Id);
+      _errorMessage = EpaWords.SaveFailed;
+      _focusResult = true;
     }
     finally
     {
       _saving = false;
     }
   }
-
-  /// <summary>What reactivating credited: the activities completed against the EPA while it was inactive (T196, D48).</summary>
-  private static string ReactivatedMessage(int completionsCredited) => completionsCredited switch
-  {
-    0 => "EPA reactivated. No activity was completed against it while it was inactive, so no progress changed.",
-    1 => "EPA reactivated. 1 activity completed against it while it was inactive now counts towards progress.",
-    _ => $"EPA reactivated. {completionsCredited} activities completed against it while it was inactive now count towards progress."
-  };
 
   private async Task AskDeactivateAsync()
   {
@@ -327,6 +556,7 @@
     _deactivating = true;
     _errorMessage = null;
     _statusMessage = null;
+    ClearRefusals();
 
     try
     {
@@ -334,12 +564,15 @@
       await Sender.Send(new DeactivateEpaCommand(Id!.Value, authState.User));
       _model.IsActive = false;
       _storedIsActive = false;
-      _statusMessage = "EPA deactivated.";
+      _statusMessage = EpaWords.Deactivated;
       _focusResult = true;
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = exception.Message;
+      // T329: fixed words, the cause logged; the failure takes the focus once the dialog has closed (build review P4).
+      Logger.LogError(exception, "The EPA {EpaId} could not be deactivated.", Id);
+      _errorMessage = EpaWords.DeactivateFailed;
+      _focusResult = true;
     }
     finally
     {
@@ -350,15 +583,27 @@
   /// <remarks>
   /// After a save or a deactivation is done, the focus moves once the browser has acknowledged the render that follows
   /// it. By then any dialog that sent it is closed: ConfirmDialog asks the browser to close it as soon as the action
-  /// returns, and while a modal dialog is open nothing outside it can take the focus (as on the MSF campaign pages, T206
-  /// review). A refused deactivation leaves the button, and the dialog hands the focus back to it.
+  /// returns, and while a modal dialog is open nothing outside it can take the focus (T206 review). A ?created arrival's
+  /// result is focused the same way, and only then is the token taken out of the address (F1).
   /// </remarks>
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
-    if (_focusResult)
+    if (_focusResult && _result is not null)
     {
       _focusResult = false;
-      await _result.FocusAsync();
+      await _result.Element.FocusAsync();
+    }
+
+    if (_focusField is { } field)
+    {
+      _focusField = null;
+      await PageFocus.FocusByIdAsync(JS, field);
+    }
+
+    if (_stripToken)
+    {
+      _stripToken = false;
+      Navigation.NavigateTo(CatalogueLinks.WithoutTokens(Navigation.Uri), replace: true);
     }
   }
 
@@ -366,27 +611,18 @@
 
   private sealed class EpaFormModel
   {
-    [Range(1, int.MaxValue)]
     public int SubSpecialityId { get; set; }
 
-    [Required]
-    [StringLength(64)]
     public string Code { get; set; } = string.Empty;
 
-    [Required]
-    [StringLength(200)]
     public string Title { get; set; } = string.Empty;
 
-    [StringLength(4000)]
     public string? Description { get; set; }
 
-    [StringLength(8000)]
     public string? RequiredKnowledgeSkills { get; set; }
 
     public EpaCategory Category { get; set; } = EpaCategory.Core;
 
     public bool IsActive { get; set; } = true;
   }
-
-  private sealed record LookupOption(int Id, string Label);
 }

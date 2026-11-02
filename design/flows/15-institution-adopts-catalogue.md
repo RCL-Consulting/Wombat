@@ -764,46 +764,70 @@ Step 1.19 — Before the adoption, KGK reads no catalogue (act-1-setup.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/curricula → /admin/epas
 Do: Open Curricula, then EPAs, before adopting anything.
-Expect: Curricula shows the empty state "No curricula yet": "Your institution has not adopted a curriculum yet. Adopt
-  one on the Curriculum adoptions page before admitting trainees." It offers no Create curriculum (T211).
-  EPAs shows "No EPAs yet". An InstitutionalAdmin reads the national EPAs of the disciplines her institution has
-  adopted, plus its own EPAs, and there are none of either.
+Expect: Curricula is subtitled "The College curricula Kgosi Kgari Teaching Hospital trains against, and the versions
+  open to it." and offers no Create curriculum (T211). It has two sections (T392, Q1, R3-A01):
+  - **Curricula you train against:** the empty state "No curricula yet": "Your institution has not adopted a curriculum
+    yet. Adopt one below before admitting trainees."
+  - **Open for adoption:** the notice "Adopting a version makes it the one that new admissions to its discipline join.
+    …", then two rows, each with Adopt: `Paediatric EPA Curriculum (11.1)` (College of Paediatricians of South Africa,
+    Paediatrics / Paediatrics, 2026-01-01, 15 items) over "Your institution has adopted no Paediatrics / Paediatrics
+    version yet.", and the Demo `IM Core Curriculum (2026.1)` over "Your institution has adopted no General Medicine /
+    General Internal Medicine version yet."
+  EPAs shows "No EPAs yet": "Your institution has not adopted a curriculum yet, so there is no discipline to add an EPA
+  to. Adopt one under Curricula.", with Go to Curricula, and offers no Create EPA (T392, Q12). An InstitutionalAdmin
+  reads the national EPAs of the disciplines her institution has adopted, plus its own EPAs, and there are none of
+  either.
 
 Step 1.20 — Adopt curriculum 11.1 for KGK (act-1-setup.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/adoptions
-Do: Open Curriculum adoptions. Under Adopt a curriculum, choose `College of Paediatricians of South Africa —
-  Paediatrics / Paediatrics: Paediatric EPA Curriculum (11.1)` and press Adopt. Then choose the same curriculum again
-  and press Adopt a second time.
-Expect: The page has no institution picker, because hers is KGK. Current adoptions first reads "No curriculum adoptions
-  yet for this institution."
-  - The picker also offers the Demo `IM Core Curriculum (2026.1)`, which she leaves alone.
-  - Adopt stays disabled until a curriculum is chosen.
-  - The first Adopt reads "Curriculum adopted." It adds a row: `College of Paediatricians of South Africa`,
-    Paediatrics, Paediatrics, `Paediatric EPA Curriculum`, `11.1`, adopted on `D`, Active.
-  - The second Adopt is refused: "This institution has already adopted this curriculum version."
-  The page notes that re-adopting a newer version would supersede this adoption.
+Route: /admin/curricula → /admin/adoptions → /admin/curricula
+Do: Open Curricula. Under Open for adoption, press Adopt on Paediatric EPA Curriculum (11.1). Type /admin/adoptions
+  and read where it lands.
+Expect: Adopt asks nothing: a first adoption of a discipline supersedes nothing (T392, Q6). "Paediatric EPA Curriculum
+  (11.1) adopted. New admissions to Paediatrics / Paediatrics join it." heads the page, its first sentence bold, and
+  takes the focus (R3-A02). The page has no institution picker, because hers is KGK.
+  - **Curricula you train against** holds 11.1: College of Paediatricians of South Africa, Paediatrics / Paediatrics,
+    2026-01-01, Items "15 national · 0 your own", For your institution "Adopted on `D`", with Items.
+  - **Open for adoption** now lists only the Demo `IM Core Curriculum (2026.1)`, which she does not adopt: a version
+    her institution has adopted is not offered again (Q7), so it cannot be adopted twice.
+  - **The old address.** `/admin/adoptions` lands on Curricula (`/admin/curricula`), and her menu has no Curriculum
+    adoptions (T392, Q1, S21).
 
 Step 1.21 — What the adoption opens to KGK (act-1-setup.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/epas → /admin/curricula → /admin/curricula/{Id:int}/items → /
-Do: Read each page again, then go Home. Change nothing.
+Route: /admin/epas → /admin/curricula → /admin/curricula/{Id:int}/items → /admin/curricula/{Id:int}/items/{ItemId:int} → /admin/curricula/{Id:int}/items → /
+Do: Read each page again. On the items page press View on PAED-001, read its record, and leave it by Back to Items of
+  Paediatric EPA Curriculum (11.1). Then go Home. Change nothing.
 Expect: Each page now shows the adopted catalogue:
-  - EPAs lists the 15 PAED EPAs and nothing else. No row offers Edit, because a national EPA is the College's to
-    change: `UpdateEpa` refuses her (T291 item 1).
-  - Curricula has the one row, which offers Items but no Edit. The header offers no Create curriculum.
-  - The items page warns that the College sets the curriculum's national items, so they are read only here, and that
-    KGK's own items apply only to KGK's trainees. Its 15 rows match Step 1.18, and each reads "Set by the College".
-  - The form below the items is headed "Add your institution's own item". It says every EPA KGK could add is already on
-    the curriculum: to add an item of its own, KGK must first create a local EPA of Paediatrics.
+  - **EPAs** is subtitled "The EPAs of the curricula Kgosi Kgari Teaching Hospital has adopted. The College's are read
+    only; your institution's own are yours to change." It lists the 15 PAED EPAs and nothing else, each a link to its
+    page, under the caption "EPAs your institution reads". Every row reads "Set by the College." where Edit would be,
+    because a national EPA is the College's to change: `UpdateEpa` refuses her (T291 item 1, T392). The header offers
+    Create EPA, for an EPA of KGK's own.
+  - **Curricula** has the one row, "Adopted on `D`", which offers Items but no Edit. The header offers no Create
+    curriculum.
+  - **The items page**, "Items of Paediatric EPA Curriculum (11.1)", is subtitled "College of Paediatricians of South
+    Africa · Paediatrics / Paediatrics · effective 2026-01-01 · adopted by your institution on `D`". Its notice says
+    that the College sets the curriculum's national items, so they are read only here, and that KGK's own items apply
+    only to KGK's trainees. Its 15 rows match Step 1.18, and each offers View beside "Set by the College.": View opens
+    the item's record, read only (T392, P2).
+  - **PAED-001's record** is titled "PAED-001 — Providing paediatric emergency care to children" and subtitled "A
+    national item on Paediatric EPA Curriculum (11.1). The College sets it, so it is read only here." It lists EPA,
+    Target and decision, Minimum level, Minimum by training year, Completion window, Weight and Tools, with no form and
+    no Save. "Back to Items of Paediatric EPA Curriculum (11.1)" returns to the list with PAED-001's View focused
+    (T392, P2; build review N12).
+  - "Items (15)" offers no add. In its place: every EPA KGK could add is already on the curriculum, so to add an item of
+    its own, KGK must first create a local EPA of Paediatrics.
   - Home's Curriculum card reads "1" over "speciality adopted" and "1" over "sub-speciality adopted", with "Paediatrics
-    / Paediatrics, from the CPSA's Paediatric EPA Curriculum (11.1)." (T291 item 4, T376).
+    / Paediatrics, from the CPSA's Paediatric EPA Curriculum (11.1)." (T291 item 4, T376), and Open Curricula.
 
 Step 1.22 — The ladder, read-only to KGK (act-1-setup.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/entrustment-scales
 Do: Open Entrustment scales and read the list.
-Expect: The list shows `CPSA Paediatric Entrustment Scale v11.1` at 6 levels and `O-R Scale` at 5, each with its
+Expect: The page is subtitled "The rating ladders that assessment forms and committee reviews use. A Wombat
+  administrator sets them; they are shown here for reference." (T392, Q13, T326). The list, captioned "Entrustment
+  scales, by name", shows `CPSA Paediatric Entrustment Scale v11.1` at 6 levels and `O-R Scale` at 5, each with its
   description. It offers no Create scale and has no actions column, because only an Administrator changes a scale
   (T057, T239).
 
@@ -811,8 +835,10 @@ Step 6.9 — Prof Mbatha reads the scales, and changes none (act-6-catalogue.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/entrustment-scales
 Do: Read the list.
-Expect: Three scales, with their level counts: the CPSA ladder at 6, the O-R Scale at 5 and the CNSA scale at 6. There
-  is no Create scale, and no column of Edit and Delete: a column no row offers is not rendered (T239).
+Expect: Under the subtitle "The rating ladders that assessment forms and committee reviews use. A Wombat
+  administrator sets them; they are shown here for reference." (T392, Q13), three scales, with their level counts: the
+  CPSA ladder at 6, the O-R Scale at 5 and the CNSA scale at 6. There is no Create scale, and no column of Edit and
+  Delete: a column no row offers is not rendered (T239).
 
 Step 6.22 — Prof Mbatha sees the pause, and cannot lift it (act-6-catalogue.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -820,10 +846,10 @@ Route: /admin/epas → /admin/curricula → /admin/curricula/{Id:int}/items → 
 Do: Read the EPA list, then 11.1's items. Then open Entrustment decisions, filter by Dr Molefe's name and press Show.
   Revoke nothing.
 Expect:
-  - **The EPA list.** PAED-012 reads Inactive. No national EPA offers her Edit: only its College changes one (T211's
-    rule; `UpdateEpa`).
-  - **11.1's items.** PAED-012's row is marked "(inactive: not in force)", under the same notice. Every row reads "Set
-    by the College".
+  - **The EPA list.** PAED-012 reads Inactive. No national EPA offers her Edit: each reads "Set by the College."
+    instead, because only its College changes one (T211's rule; `UpdateEpa`; T392).
+  - **11.1's items.** PAED-012's row is marked "(inactive: not in force)", under the same notice. Every row offers View
+    beside "Set by the College." (T392, P2).
   - **Dr Molefe's STARs.** Her fifteen from Act 5 still read Active, beside Act 4's PAED-010, Superseded (the status
     filter starts on All): "… · 16 shown". Each row is headed by her name, its EPA in the next column. The PAED-012 row
     names its EPA "PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams (no longer
@@ -841,50 +867,81 @@ Do: Create an EPA:
   - category: Elective.
   Save.
 Expect:
-  - The sub-speciality list offers only Paediatrics / Paediatrics, the discipline KGK has adopted.
-  - Once saved, the page is KGK-001's, Active. KGK's own EPA is hers to change (`UpdateEpa`).
-  - The EPA list shows KGK-001 beside the 15 national EPAs, and offers Edit on KGK-001 alone.
+  - **The form.** "Create EPA", subtitled "An EPA of your institution's own. It applies only to Kgosi Kgari Teaching
+    Hospital's trainees." The sub-speciality list offers only Paediatrics / Paediatrics, the discipline KGK has
+    adopted, already chosen, with the help "The disciplines your institution has adopted." (T392, R2-C04).
+  - **Once saved.** Save opens the EPA's own page by `?created`: "EPA saved." heads it and takes the focus, and the token
+    leaves the address (T392, F1, R3-C08). The page is titled "KGK-001 — Running a paediatric outreach clinic at a
+    district hospital", its crumb KGK-001, with no Back to EPAs. It is Active, and its help names Kgosi Kgari Teaching
+    Hospital's trainees; it offers Cancel, Deactivate… and Save. KGK's own EPA is hers to change (`UpdateEpa`).
+  - **The EPA list.** KGK-001 comes first, "Your institution's own EPA" under its title, beside the 15 national EPAs,
+    and its Edit is the only one: every national row reads "Set by the College." (R3-C09).
 
 Step 6.26 — Prof Mbatha adds KGK's own item to 11.1 (act-6-catalogue.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/curricula → /admin/curricula/{Id:int}/items
-Do: Open 11.1's items, and add KGK's own item:
+Route: /admin/curricula → /admin/curricula/{Id:int}/items → /admin/curricula/{Id:int}/items/new → /admin/curricula/{Id:int}/items → /admin/curricula
+Do: Open 11.1's items, press "Add your institution's own item", and add KGK's own item:
   - EPA: KGK-001;
   - target: 1 per academic year;
   - no decision cadence, decided by the trainee's general panel;
   - the suggested scale, minimum level 3a, and no year-by-year minima;
   - completion window: 12;
   - tools: Direct observation only.
+  Then open Curricula again.
 Expect:
   - **The curricula list.** It offers her Items, and no Edit and no Create curriculum.
-  - **The Add form.** It is headed "Add your institution's own item". Its EPA picker offers KGK-001 alone, because the
-    College's items hold all 15 national EPAs (T222). The scale is the CPSA ladder, suggested because every item on
-    the curriculum is pinned to it. Add item stays off until a minimum rung is chosen.
-  - **After the add.** The page confirms it, and the form gives way to a note that every EPA KGK could add is already
+  - **The items page.** "Add your institution's own item" stands beside "Items (15)": KGK-001 is an EPA KGK could add.
+  - **The add page.** It is a page of its own (T392, Q14), headed "Add your institution's own item" and subtitled "On
+    Paediatric EPA Curriculum (11.1). It applies only to Kgosi Kgari Teaching Hospital's trainees." Its EPA picker
+    offers KGK-001 alone, because the College's items hold all 15 national EPAs (T222). The scale is the CPSA ladder,
+    "Suggested because every item on this curriculum is pinned to it." Add item stays off until a minimum rung is
+    chosen. Cancel stands before Add item.
+  - **After the add.** Back on the list, "Curriculum item added." heads it and takes the focus, and the token leaves the
+    address (F1, R3-B06). "Items (16)", and the add link gives way to the note that every EPA KGK could add is already
     on the curriculum.
-  - **The new row.** It reads "Your institution's own item": 1 per academic year, No decision cadence, 3a, Direct
-    observation, with Edit and Remove. The national rows still read "Set by the College".
+  - **The new row.** Last, after the national rows (decision 3): KGK-001 over "Your institution's own item", "1 per
+    academic year" over "No decision cadence", 3a, "—" by training year, Direct observation, with Edit and Remove…
+    ("Edit KGK-001", "Remove KGK-001"). The national rows still offer View beside "Set by the College.".
+  - **Curricula again.** 11.1's Items read "15 national · 1 your own".
 
 Step 6.32 — Prof Mbatha adopts 11.2 (act-6-catalogue.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/adoptions
-Do: Adopt "College of Paediatricians of South Africa — Paediatrics / Paediatrics: Paediatric EPA Curriculum (11.2)".
+Route: /admin/curricula
+Do: Open Curricula. Under Open for adoption, press Adopt… on Paediatric EPA Curriculum (11.2), read the question, and
+  confirm with Adopt 11.2.
 Expect:
-  - The picker offers the two active Paediatric versions and the Demo IM Core curriculum. It does not offer the
-    inactive Neonatology curriculum.
-  - The adoption is confirmed. Current adoptions reads 11.2 Active and 11.1 Superseded, as the page's note says a newer
-    version supersedes the current adoption.
-  - The registrars already on 11.1 stay on it.
+  - **Open for adoption** offers 11.2, over "Newer than the version your institution has adopted (11.1).", with Adopt…,
+    and the Demo IM Core curriculum, with Adopt. It does not offer the held-back Neonatology curriculum, nor 11.1, which
+    KGK has adopted (T392, Q7).
+  - **The question.** Adopt… asks first (Q6, R3-A03): "Adopt Paediatric EPA Curriculum (11.2) for Kgosi Kgari Teaching
+    Hospital?", with "It supersedes Paediatric EPA Curriculum (11.1) for every new admission to Paediatrics /
+    Paediatrics at Kgosi Kgari Teaching Hospital.", "The 3 registrars on 11.1 stay on it until each is moved on their
+    profile." and "Your institution's own item on 11.1, KGK-001, is not carried over: add it again on 11.2." Cancel
+    takes the focus first; the confirm is Adopt 11.2.
+  - **The result.** "Paediatric EPA Curriculum (11.2) adopted. New admissions to Paediatrics / Paediatrics join it.
+    Paediatric EPA Curriculum (11.1) is superseded; its 3 registrars stay on it until each is moved." heads the page,
+    its first sentence bold, and takes the focus (R3-A05).
+  - **Curricula you train against** reads 11.2 "Adopted on `D`" and 11.1 "Superseded on `D`" over "3 registrars still
+    on it": the registrars already on 11.1 stay on it. Open for adoption offers 11.1 again, over "Older than the version
+    your institution has adopted (11.2).", with Adopt… (Q21).
 
 Step 6.33 — Prof Mbatha adds KGK's own item to 11.2 (act-6-catalogue.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
-Route: /admin/curricula → /admin/curricula/{Id:int}/items
-Do: Read the curricula list. Open 11.2's items, and add KGK's own item on KGK-001 with the values of Step 6.26.
-Expect:
-  - **The list.** It shows 11.2, and still 11.1, because 11.1 holds KGK's own item (T211, T223). Both offer Items only.
-  - **11.2's items.** It holds the College's 16 rows, PAED-016 and PAED-011's new target among them, all "Set by the
-    College". It has no KGK item, because a new version carries no institution's own items.
-  - **The add.** The picker offers KGK-001 alone. Once added, the row reads "Your institution's own item".
+Route: /admin/curricula → /admin/curricula/{Id:int}/items → /admin/curricula/{Id:int}/items/new → /admin/curricula/{Id:int}/items → /admin/curricula
+Do: Read the curricula list. Open 11.2's items, and add KGK's own item on KGK-001 with the values of Step 6.26. Then
+  read the curricula list again.
+Expect: In the Do's order (T392, S20):
+  - **The list.** It shows 11.2, Items "16 national · 0 your own", "Adopted on `D`", and still 11.1, "15 national · 1
+    your own", "Superseded on `D`" over "3 registrars still on it" (T211, T223, R3-A05). Both offer Items only.
+  - **11.2's items.** Subtitled "College of Paediatricians of South Africa · Paediatrics / Paediatrics · effective `D` ·
+    adopted by your institution on `D`", it holds the College's 16 rows, PAED-016 and PAED-011's "2 per academic year"
+    among them, each with View beside "Set by the College.". It has no KGK item, and says why: "A new version carries
+    no institution's own items. Your item on 11.1 stays there." "Add your institution's own item" stands beside "Items
+    (16)" (R3-B07).
+  - **The add.** The picker offers KGK-001 alone. Back on the list, "Curriculum item added." takes the focus; KGK-001's
+    row, last, reads "Your institution's own item", under "Items (17)", and the new-version line is gone.
+  - **The list again.** 11.2's Items read "16 national · 1 your own"; 11.1 still reads "3 registrars still on it"
+    (R3-A06a).
 
 Step 6.34 — Prof Mbatha saves Dr Dlamini's profile while she stays on 11.1 (act-6-catalogue.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -896,8 +953,10 @@ Expect:
     programme below Profile details, and no Back to trainees (T379).
   - Trainees' "Completed and closed", "2 ended", lists the latest end first: Lerato Molefe, Completed (Act 5's `D`),
     then Pieter du Plessis, Withdrawn (Act 5's `D−2`), each with View.
-  - The curriculum picker offers 11.1 and 11.2, with 11.1 chosen.
-  - The save reads "Trainee profile saved."
+  - The curriculum picker offers 11.1 and 11.2, with 11.1 chosen. Under it: "Anele Dlamini is on Paediatric EPA
+    Curriculum (11.1), which your institution superseded on `D`. Keeping it keeps Anele Dlamini on 11.1." (T392,
+    R2-D01).
+  - Save profile asks nothing, and the save reads "Trainee profile saved."
   - Reopened, the profile shows the new date on 11.1. By SQL, profile 3 stays on curriculum 2 and adoption 1: she stays
     on the version she was admitted to (`CurriculumAdminScope`, T211).
 
@@ -912,12 +971,22 @@ Step 6.36 — Prof Mbatha moves Dr Ndlovu to 11.2 (act-6-catalogue.md)
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/trainees → /admin/trainees/edit
 Do: Open Dr Ndlovu's profile from Current trainees (Edit). Choose Paediatric EPA Curriculum (11.2), keep his programme start (`J`, from Act 2) and
-  his expected completion as they read, and save the profile.
+  his expected completion as they read, and press Save profile and move…; read the question, and confirm with Move
+  and save.
 Expect: The profile is "Sipho Ndlovu's programme", with "Export Sipho Ndlovu's portfolio" in its header, End this
-  programme below Profile details, and no Back to trainees (T379). The save reads "Trainee profile saved. N
-  completion(s) was/were checked against 11.2, and M count(s) towards it." The profile reads 11.2. By SQL his PAED-002
-  tally is on 11.2 and none is left on 11.1. Reopened, the picker offers 11.2 alone. From now on, his completions
-  credit 11.2's items.
+  programme below Profile details, and no Back to trainees (T379).
+  - **The line.** With 11.2 chosen, the line under the picker reads "When you save, Sipho Ndlovu moves to Paediatric
+    EPA Curriculum (11.2). Sipho Ndlovu's completed activities are counted again against 11.2 in the same save, so
+    Sipho Ndlovu's progress page reads 11.2's targets at once. Sipho Ndlovu cannot be moved back to 11.1 while 11.2 is
+    the version your institution has adopted.", and the save reads "Save profile and move…" (T392, Q8, R2-D02).
+  - **The question.** It asks first: "Move Sipho Ndlovu to Paediatric EPA Curriculum (11.2)?", with "Sipho Ndlovu's
+    completed activities are counted again against 11.2 as the profile saves, and from then on they credit 11.2's
+    items." and "Sipho Ndlovu cannot be moved back to 11.1 while 11.2 is the version your institution has adopted."
+    Cancel takes the focus first; the confirm is Move and save (R3-D03).
+  - **The save** reads "Trainee profile saved. N completion(s) was/were checked against 11.2, and M count(s) towards
+    it.", its first sentence bold. The profile reads 11.2. By SQL his PAED-002 tally is on 11.2 and none is left on
+    11.1. Reopened, the picker offers 11.2 alone, under "The version your institution has adopted for Paediatrics /
+    Paediatrics." From now on, his completions credit 11.2's items.
 
 Step 6.37 — Dr Ndlovu on 11.2, straight after the move (act-6-catalogue.md)
 Role: Trainee — Dr Sipho Ndlovu
@@ -938,14 +1007,15 @@ Do: From Curricula in the menu, open Curriculum progress from the header and rea
   confirm.
 Expect:
   - **The way in.** Curricula offers the Administrator an outline "Curriculum progress" in its header, where Home's
-    Maintenance card used to link it (T335, flow 01). On the page Curricula stays lit, and the trail reads Home ›
-    Curricula › Curriculum progress.
+    Maintenance card used to link it (T335, flow 01), over its two sections, All curricula (each version's Status Open
+    or Held back) and An institution's curricula (T392, Q18). On the page Curricula stays lit, and the trail reads Home
+    › Curricula › Curriculum progress.
   - **The page.** It says that a rebuild credits every completed activity again against today's curriculum, judges only
     whether an EPA was active as of each completion, and runs as one transaction.
   - **The question.** The button asks first: "Rebuild curriculum progress?".
-  - **The result.** The page says progress was rebuilt, with five figures: activities re-read, curriculum items
-    credited, semester tallies written, stale tallies removed, and completions re-stamped. Stale tallies removed is 0:
-    the move left nothing stale (T304).
+  - **The result.** "Curriculum progress was rebuilt.", in bold, takes the focus, with five figures: activities
+    re-read, curriculum items credited, semester tallies written, stale tallies removed, and completions re-stamped.
+    Stale tallies removed is 0: the move left nothing stale (T304).
 
 Step 6.39 — Dr Ndlovu's evidence counts on 11.2 (act-6-catalogue.md)
 Role: Trainee — Dr Sipho Ndlovu

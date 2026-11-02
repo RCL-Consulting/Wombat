@@ -580,25 +580,31 @@ Step 1.17 — Curriculum 11.1 (act-1-setup.md)
 Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/curricula
 Do: Open Curricula and read the list. Record the curriculum's id as `{CurriculumId}`.
-Expect: The list has one row: `Paediatric EPA Curriculum`, version `11.1`, College `College of Paediatricians of South
-  Africa`, Speciality and Sub-speciality `Paediatrics`, effective `2026-01-01`, 15 items, Active, offering Edit and
-  Items. The header offers Create curriculum. The Demo `IM Core Curriculum` is not listed.
+Expect: The list is captioned "College of Paediatricians of South Africa's curriculum versions", with no section
+  heading and no College column (T392, R3-A12). It has one row: `Paediatric EPA Curriculum (11.1)`, Discipline
+  `Paediatrics / Paediatrics`, effective `2026-01-01`, Items 15, Status Open (the College has released it for
+  adoption, T9), offering Edit and Items. The header offers Create curriculum. The Demo `IM Core Curriculum` is not
+  listed.
 
 Step 1.18 — The 15 items and their targets (act-1-setup.md)
 Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/curricula/{Id:int}/items
-Do: Open Items on the curriculum's row. Read the Existing items table against the table below. Add, edit and remove
-  nothing.
-Expect: The page is subtitled "Paediatric EPA Curriculum (11.1)" and offers Back to curricula and Back to curriculum.
+Do: Open Items on the curriculum's row. Read the items table against the table below. Add, edit and remove nothing.
+Expect: The page is "Items of Paediatric EPA Curriculum (11.1)" (its h1 and tab), under the trail Home › Curricula ›
+  Items of Paediatric EPA Curriculum (11.1), with no Back links (T392, T5). Its subtitle reads "College of
+  Paediatricians of South Africa · Paediatrics / Paediatrics · effective 2026-01-01".
   - A warning says that a target and its period are read live, in every institution that has adopted the curriculum,
     including periods that have already closed. It also says that a tool list is checked when an activity is filed and
     submitted, and never takes back credit already earned.
-  - The table has 15 rows, which match the table below. Every row reads Scale `CPSA Paediatric Entrustment Scale v11.1`,
-    Completion window (months) `12` and Weight `—`, and every row offers Edit and Remove.
+  - Under "Items (15)", the table, captioned "Paediatric EPA Curriculum (11.1)'s items, in EPA order", has 15 rows,
+    which match the table below. Its columns are EPA, Target and decision, Minimum level, Minimum by training year and
+    Tools: an item's completion window and weight are on its own page (T392, decision 1). Every row's Minimum level
+    reads its rung over `CPSA Paediatric Entrustment Scale v11.1`, and every row offers Edit and Remove…, each named
+    for its EPA ("Edit PAED-001").
   - Target and decision holds the target above the decision, for example "3 per semester" above "Decided each
     semester".
-  - The Add item form offers no EPA. It says "Every national EPA of Paediatrics is already on this curriculum, …", and
-    explains how an EPA would be freed.
+  - There is no Add item: in its place, "Every national EPA of Paediatrics is already on this curriculum, …", which
+    explains how an EPA would be freed (T392, F3).
 
 Step 6.1 — devadmin creates a second national College (act-6-catalogue.md)
 Role: Administrator — devadmin
@@ -712,13 +718,13 @@ Step 6.13 — Dr Kruger starts a Neonatology curriculum, and holds it back (act-
 Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/curricula → /admin/curricula/new → /admin/curricula/{Id:int} → /admin/curricula → /admin/curricula/{Id:int}/items
 Do: Create `Neonatology EPA Curriculum`, version `1.0`, in Paediatrics / Neonatology, effective from `D`, with no end.
-  The form selects Neonatology first. Untick Active and save, so that no institution can adopt it yet. Then open its
-  items.
+  The form selects Neonatology first. Then open its items.
 Expect:
-  - The create opens the curriculum's edit page, with Active ticked and a card for cloning it.
-  - After Active is unticked, the save is confirmed. The curricula list shows the curriculum Inactive, with 0 items.
-  - Its items page has no rows. In place of the Add form, it says there is nothing to add, and that a national EPA of
-    Neonatology must be added first.
+  - The create opens the curriculum's edit page, with Active unticked and a card for cloning it: a new version starts
+    held back, so no institution can adopt it yet (T392, F5, T301).
+  - The curricula list shows the curriculum Held back, with 0 items.
+  - Its items page, "Items of Neonatology EPA Curriculum (1.0)", reads "Items (0)" and has no rows. In place of the add
+    link, it says there is nothing to add, and that a national EPA of Neonatology must be added first.
 
 Step 6.14 — Dr Kruger corrects an EPA's wording (act-6-catalogue.md)
 Role: CollegeAdmin — Dr Anton Kruger
@@ -732,16 +738,16 @@ Expect: The save is confirmed, and the EPA stays Active. The EPA list shows the 
 Step 6.17 — Dr Kruger pauses PAED-012 (act-6-catalogue.md)
 Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/epas → /admin/epas/{Id:int} → /admin/epas → /admin/curricula → /admin/curricula/{Id:int}/items
-Do: Open PAED-012 and press Deactivate. Read the question and confirm. Then open 11.1's items.
+Do: Open PAED-012 and press Deactivate…, read the question and confirm. Then open 11.1's items.
 Expect:
-  - **The question.** Deactivate asks first, "Deactivate this EPA?". The dialog says that the EPA:
+  - **The question.** Deactivate… asks first, "Deactivate PAED-012?" (T392, S11, Q11). The dialog says that the EPA:
     - can no longer be chosen for a new activity;
-    - stops being a target on running programmes' progress pages and dashboards, for every institution that uses it,
-      while a programme that has ended keeps it on its record, marked no longer in use (T312);
+    - stops being a target on running programmes' progress pages and dashboards, for every institution that has
+      adopted it, while a programme that has ended keeps it on its record, marked no longer in use (T312);
     - keeps the progress it has earned;
     - credits nothing for an activity completed against it while it is inactive, until it is reactivated.
-  - **After confirming.** The page says the EPA is deactivated. Active is unticked, and Deactivate is gone. The EPA list
-    reads PAED-012 Inactive.
+  - **After confirming.** The page says the EPA is deactivated. Active is unticked, and Deactivate… is gone. The EPA
+    list reads PAED-012 Inactive.
   - **11.1's items.** PAED-012's row is marked "(inactive: not in force)". A notice says its credit is paused and that
     reactivating it credits what was completed meanwhile.
 
@@ -787,7 +793,7 @@ Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/epas → /admin/epas/{Id:int} → /admin/epas
 Do: Open PAED-012, tick Active and save.
 Expect: Nothing asks first. The page reads "EPA reactivated. 1 activity completed against it while it was inactive now
-  counts towards progress." Deactivate is offered again. The EPA list reads PAED-012 Active.
+  counts towards progress." Deactivate… is offered again (T392, S11). The EPA list reads PAED-012 Active.
 
 Step 6.24 — Dr Dlamini's credit is counted (act-6-catalogue.md)
 Role: Trainee — Dr Anele Dlamini
@@ -824,17 +830,18 @@ Expect:
 Step 6.29 — Dr Kruger clones 11.1 as 11.2, and holds it back (act-6-catalogue.md)
 Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/curricula → /admin/curricula/{Id:int}/items → /admin/curricula/{Id:int} → /admin/curricula
-Do: Read 11.1's items. Then, on 11.1's page, clone it: new version `11.2`, effective from `D`, with no end. On the new
-  version's page, untick Active and save.
+Do: Read 11.1's items. Then, on 11.1's page, clone it: new version `11.2`, effective from `D`, with no end. Then open
+  Curricula.
 Expect:
-  - 11.1's items still show him 15 rows: KGK's own item is not shown to the College (T211).
+  - 11.1's items still show him 15 rows: KGK's own item is not shown to the College (T211). "Add item" stands beside
+    "Items (15)", because PAED-016 is on no curriculum.
   - The clone form starts with the version "11.1-copy".
-  - Once cloned, the page is 11.2's, with Active ticked: a clone is adoptable the moment it exists.
-  - After Active is unticked and saved, the list shows 11.2 Inactive, with 15 items.
+  - Once cloned, the page is 11.2's, with Active unticked: a clone starts held back (T392, F5).
+  - The list shows 11.2 Held back, with 15 items.
 
 Step 6.30 — Dr Kruger edits 11.2's items (act-6-catalogue.md)
 Role: CollegeAdmin — Dr Anton Kruger
-Route: /admin/curricula → /admin/curricula/{Id:int}/items
+Route: /admin/curricula → /admin/curricula/{Id:int}/items → /admin/curricula/{Id:int}/items/new → /admin/curricula/{Id:int}/items → /admin/curricula/{Id:int}/items/{ItemId:int} → /admin/curricula/{Id:int}/items
 Do: On 11.2's items:
   1. Add PAED-016:
      - target: 1 per academic year;
@@ -844,24 +851,35 @@ Do: On 11.2's items:
      - tools: Mini-CEX, CBD and MSF.
   2. Edit PAED-011: set its target to 2 per academic year, and change nothing else.
 Expect:
-  - **Before the edits.** The 15 rows match 11.1's, cell for cell.
-  - **The add.** The form is headed "Add item", and its EPA picker offers PAED-016 alone. After the add, the
-    confirmation heads a note that every national EPA of Paediatrics is already on the curriculum. The table has 16
-    rows.
-  - **The edit.** PAED-011's edit row opens beneath its row. Once saved, the row reads "2 per academic year". 11.1's
-    PAED-011 still reads 1 (outcome SQL).
+  - **Before the edits.** The 15 rows match 11.1's, cell for cell, and "Add item" stands beside "Items (15)".
+  - **The add.** "Add item" opens a page of its own (T392, Q14, R3-B22), headed "Add item" and subtitled "On Paediatric
+    EPA Curriculum (11.2). It applies to every institution that has adopted it." Its EPA picker offers PAED-016 alone,
+    chosen. Add item returns to the list with "Curriculum item added." at its top, focused (F1, R3-B23): 16 rows,
+    PAED-016 last, and in place of the add link the note that every national EPA of Paediatrics is already on the
+    curriculum.
+  - **The edit.** Edit PAED-011 opens its own page, "Edit PAED-011 — Managing population health challenges", with the
+    same subtitle, its EPA a select offering PAED-011 alone (R3-B24). Save item returns to the list with "Curriculum
+    item saved." at its top, focused, and the row reads "2 per academic year". 11.1's PAED-011 still reads 1 (outcome
+    SQL).
 
 Step 6.31 — Dr Kruger publishes 11.2 (act-6-catalogue.md)
 Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/curricula → /admin/curricula/{Id:int} → /admin/curricula
 Do: Open 11.2, tick Active and save.
-Expect: The save is confirmed. The curricula list shows 11.1 and 11.2 Active, with 11.2 at 16 items, and the
-  Neonatology curriculum still Inactive.
+Expect: The save is confirmed, and this is the only opening: a version starts held back (T392, F5). The curricula
+  list shows 11.1 and 11.2 Open, with 11.2 at 16 items, and the Neonatology curriculum still Held back (T9).
 
 Step A.7.10 — Dr Kruger on his phone (appendix-cross-cutting.md)
 Role: CollegeAdmin — Dr Anton Kruger
-Route: / → /admin/epas → /admin/curricula → /admin/curricula/{Id:int}/items
-Do: At 390 px, open EPAs, then Curricula and the items of Paediatric EPA Curriculum 11.2.
-Expect: The EPA list and the items table scroll inside their containers (DESIGN.md § Table system). Each item's row
-  actions stay reachable, and the item editor's inputs keep usable widths (T198, T226).
+Route: / → /admin/epas → /admin/curricula → /admin/curricula/{Id:int}/items → /admin/curricula/{Id:int}/items/{ItemId:int} → /admin/curricula/{Id:int}/items
+Do: At 390 px, open EPAs, then Curricula and the items of Paediatric EPA Curriculum 11.2. Press Edit PAED-001 and read
+  its page, then leave it by Cancel.
+Expect: Nothing scrolls sideways on any of them (T323; T392, S16).
+  - **EPAs, Curricula and the items** stack, a block per row, each text cell labelled, and each row's actions 44 px
+    tall and named for the row ("Edit PAED-001", "Remove PAED-001"). The items carry no window or weight: those are on
+    an item's own page (T392, decision 1).
+  - **PAED-001's page**, "Edit PAED-001 — Providing paediatric emergency care to children", subtitled "On Paediatric
+    EPA Curriculum (11.2). It applies to every institution that has adopted it.", sets one field a row, each control
+    44 px, with Save item on top of Cancel (T392, Q14, R3-B24 at 390). Cancel returns to the list with PAED-001's Edit
+    focused (R3-B11).
 ```

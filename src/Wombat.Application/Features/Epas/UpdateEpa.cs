@@ -3,6 +3,7 @@ using System.Security.Claims;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Activities.Services;
@@ -36,12 +37,14 @@ public sealed class UpdateEpaCommandValidator : AbstractValidator<UpdateEpaComma
     public UpdateEpaCommandValidator()
     {
         RuleFor(command => command.Id).GreaterThan(0);
-        RuleFor(command => command.SubSpecialityId).GreaterThan(0);
-        RuleFor(command => command.Code).NotEmpty().MaximumLength(64);
-        RuleFor(command => command.Title).NotEmpty().MaximumLength(200);
-        RuleFor(command => command.Description).MaximumLength(4000);
-        RuleFor(command => command.RequiredKnowledgeSkills).MaximumLength(8000);
-        RuleFor(command => command.Category).IsInEnum();
+        RuleFor(command => command.SubSpecialityId).GreaterThan(0).WithMessage(EpaFieldMessages.SubSpecialityRequired);
+        RuleFor(command => command.Code).NotEmpty().WithMessage(EpaFieldMessages.CodeRequired)
+            .MaximumLength(64).WithMessage(EpaFieldMessages.CodeTooLong);
+        RuleFor(command => command.Title).NotEmpty().WithMessage(EpaFieldMessages.TitleRequired)
+            .MaximumLength(200).WithMessage(EpaFieldMessages.TitleTooLong);
+        RuleFor(command => command.Description).MaximumLength(4000).WithMessage(EpaFieldMessages.DescriptionTooLong);
+        RuleFor(command => command.RequiredKnowledgeSkills).MaximumLength(8000).WithMessage(EpaFieldMessages.RequiredKnowledgeSkillsTooLong);
+        RuleFor(command => command.Category).IsInEnum().WithMessage(EpaFieldMessages.CategoryRequired);
     }
 }
 
@@ -70,8 +73,6 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
     /// <summary>PostgreSQL's unique_violation.</summary>
     private const string UniqueViolation = "23505";
 
-    private const string DuplicateCode = "An EPA with the same code already exists for this sub-speciality.";
-
     private const string ProgressChanged =
         "Curriculum progress changed while this EPA was being reactivated, so nothing was saved. Save again.";
 
@@ -95,9 +96,7 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
         }
 
         // National EPA -> CollegeAdmin; institution-local extra -> the owning InstitutionalAdmin (T091 phase 3).
-        var authorized = epa.OwningInstitutionId is null
-            ? request.Principal.CanAccessCollege(epa.SubSpeciality.Speciality.CollegeId)
-            : request.Principal.CanAccessInstitution(epa.OwningInstitutionId.Value);
+        var authorized = EpaReads.MayChange(request.Principal, epa.SubSpeciality.Speciality.CollegeId, epa.OwningInstitutionId);
         if (!authorized)
         {
             throw new UnauthorizedAccessException("You do not have permission to update this EPA.");
@@ -105,7 +104,13 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
 
         var subSpeciality = await _dbContext.Set<Domain.Institutions.SubSpeciality>()
             .Where(entity => entity.Id == request.SubSpecialityId)
-            .Select(entity => new { entity.Name, entity.Speciality.CollegeId, CollegeName = entity.Speciality.College.Name })
+            .Select(entity => new
+            {
+                entity.Name,
+                SpecialityName = entity.Speciality.Name,
+                entity.Speciality.CollegeId,
+                CollegeName = entity.Speciality.College.Name
+            })
             .SingleOrDefaultAsync(cancellationToken);
 
         if (subSpeciality is null)
@@ -119,6 +124,21 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
         if (!targetAuthorized)
         {
             throw new UnauthorizedAccessException("You do not have permission to move this EPA to that sub-speciality.");
+        }
+
+        // F9 (T392, S5): an institution's own EPA moves only into a discipline its institution has actively adopted, as it is
+        // created only in one. A save that keeps the sub-speciality is not refused, so an own EPA left in a discipline the
+        // institution no longer adopts keeps its Edit and its Save. Read here, before anything below is changed or staged
+        // (T201).
+        var disciplineName = EpaReads.DisciplineName(subSpeciality.SpecialityName, subSpeciality.Name);
+        if (epa.OwningInstitutionId is { } owner
+            && request.SubSpecialityId != epa.SubSpecialityId
+            && !(await EpaReads.AdoptedDisciplinesAsync(_dbContext, owner, cancellationToken)).Contains(request.SubSpecialityId))
+        {
+            var ownerName = EpaReads.NamesOwners(request.Principal)
+                ? await EpaReads.InstitutionNameAsync(_dbContext, owner, cancellationToken)
+                : null;
+            throw new FieldRefusalException(nameof(UpdateEpaCommand.SubSpecialityId), EpaFieldMessages.NotAdopted(disciplineName, ownerName));
         }
 
         // T196, D48: reactivating credits what was filed while the EPA was inactive. Every read that needs happens here,
@@ -185,7 +205,7 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
             // before a save in a transaction of the caller's, so the refusal has not left it unusable.
             if (await CodeTakenAsync(epa, cancellationToken))
             {
-                throw new InvalidOperationException(DuplicateCode, exception);
+                throw new FieldRefusalException(nameof(UpdateEpaCommand.Code), EpaFieldMessages.DuplicateCode, exception);
             }
 
             throw new InvalidOperationException(ProgressChanged, exception);
@@ -195,8 +215,19 @@ public sealed class UpdateEpaCommandHandler : IRequestHandler<UpdateEpaCommand, 
         await hold.CommitAsync(cancellationToken);
         await traineeHold.CommitAsync(cancellationToken);
 
+        var institutionName = epa.OwningInstitutionId is { } owningInstitutionId
+            ? await EpaReads.InstitutionNameAsync(_dbContext, owningInstitutionId, cancellationToken)
+            : null;
+
         return new UpdateEpaResult(
-            new EpaDto(epa.Id, epa.SubSpecialityId, subSpeciality.Name, subSpeciality.CollegeName, epa.Code, epa.Title, epa.Description, epa.RequiredKnowledgeSkills, epa.Category, epa.IsActive, epa.CreatedOn),
+            new EpaDto(epa.Id, epa.SubSpecialityId, subSpeciality.Name, subSpeciality.CollegeName, epa.Code, epa.Title, epa.Description, epa.RequiredKnowledgeSkills, epa.Category, epa.IsActive, epa.CreatedOn)
+            {
+                OwningInstitutionId = epa.OwningInstitutionId,
+                OwningInstitutionName = institutionName,
+                NamesOwner = EpaReads.NamesOwners(request.Principal),
+                MayChange = true,
+                DisciplineName = disciplineName
+            },
             completionsCredited);
     }
 

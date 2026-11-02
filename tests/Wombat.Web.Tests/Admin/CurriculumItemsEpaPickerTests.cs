@@ -1,34 +1,18 @@
-using System.Security.Claims;
 using Bunit;
-using Bunit.TestDoubles;
 using FluentAssertions;
-using Microsoft.Extensions.DependencyInjection;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Identity;
-using Wombat.Web.Components.Pages.Admin.Curricula;
-using Wombat.Web.Services;
 using FakeSender = Wombat.Web.Tests.Admin.CurriculumItemsFakeSender;
 
 namespace Wombat.Web.Tests.Admin;
 
 /// <summary>
-/// T195: each EPA picker on the curriculum item editor offers exactly what the command it feeds accepts.
+/// T195, on an item's page of its own since T392 (flow 15, Q14, M6 of round 2): each EPA picker offers exactly what
+/// <c>ListCurriculumItemEpaOptionsQuery</c> answers for it (the add's for a new item, an edit's for that item), which is
+/// the rule the command it feeds enforces, so the page filters nothing itself. A page that reused one answer for another
+/// item, or asked for the wrong item, fails.
 /// </summary>
-/// <remarks>
-/// <para>
-/// Which EPAs an item may name depends on who owns the item: a national item names a national EPA of the curriculum's
-/// sub-speciality, an institution's local item may also name that institution's local EPAs. The rule is
-/// <c>CurriculumItemEpas.Nameable</c>, and <c>ListCurriculumItemEpaOptionsQuery</c> answers it for one picker. These tests
-/// pin the page's half: the Add form asks for a new item, each edit row asks for its own item, and each shows what it
-/// was answered and nothing else. Before T195 both pickers showed one list, the EPAs in the CALLER's scope filtered by
-/// sub-speciality, so an Administrator was offered every institution's local EPAs for a national item.
-/// </para>
-/// <para>
-/// The answers differ on purpose (the Add form's has no local EPA, the edit rows' have one each), so a picker that
-/// showed the other's list, or asked for the wrong item, fails.
-/// </para>
-/// </remarks>
-public sealed class CurriculumItemsEpaPickerTests : TestContext
+public sealed class CurriculumItemsEpaPickerTests : CurriculumItemsTestBase
 {
     private static readonly EpaDto LocalEpaOfItem11 = FakeSender.Epa(41, "LOC-A01");
     private static readonly EpaDto LocalEpaOfItem12 = FakeSender.Epa(42, "LOC-B01");
@@ -37,113 +21,91 @@ public sealed class CurriculumItemsEpaPickerTests : TestContext
 
     public CurriculumItemsEpaPickerTests()
     {
-        var auth = this.AddTestAuthorization();
-        auth.SetAuthorized("admin@test");
-        auth.SetRoles(WombatRoles.Administrator);
-        auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "admin-1"));
+        SignIn(WombatRoles.Administrator);
     }
 
     [Fact]
-    public void TheAddFormsPicker_OffersExactlyTheAnswerForANewItem()
+    public void TheAddPagesPicker_OffersExactlyTheAnswerForANewItem()
     {
         var sender = Sender();
-        var cut = RenderPage(sender);
+        var cut = RenderItem(sender);
 
-        Options(cut, "curriculum-item-epa").Should().Equal("PAED-001", "PAED-002", "PAED-003");
-
-        var query = sender.EpaOptionQueries.Should().ContainSingle("the page asks once on load, for the Add form").Subject;
+        Options(cut).Should().Equal("PAED-001", "PAED-002", "PAED-003");
+        var query = sender.EpaOptionQueries.Should().ContainSingle().Subject;
         query.CurriculumId.Should().Be(FakeSender.CurriculumId);
         query.ItemId.Should().BeNull("a new item's owner is decided by who adds it, not by any stored item");
     }
 
-    [Fact]
-    public void EachEditRowsPicker_OffersExactlyTheAnswerForThatItem()
+    [Theory]
+    [InlineData(11, "LOC-A01")]
+    [InlineData(12, "LOC-B01")]
+    public void AnEditPagesPicker_OffersExactlyTheAnswerForThatItem(int itemId, string local)
     {
         var sender = Sender();
-        var cut = RenderPage(sender);
+        var cut = RenderItem(sender, itemId);
 
-        BeginEdit(cut, "PAED-001");
-        Options(cut, "edit-epa").Should().Equal("PAED-001", "PAED-002", "PAED-003", "LOC-A01");
-        sender.EpaOptionQueries.Last().ItemId.Should().Be(11);
-
-        ClickButton(cut, "Cancel");
-        BeginEdit(cut, "PAED-002");
-        Options(cut, "edit-epa").Should().Equal(
-            new[] { "PAED-001", "PAED-002", "PAED-003", "LOC-B01" },
-            "another item has another owner, so its picker is asked for again, not reused");
-        sender.EpaOptionQueries.Last().ItemId.Should().Be(12);
-
-        Options(cut, "curriculum-item-epa").Should().Equal(
-            new[] { "PAED-001", "PAED-002", "PAED-003" },
-            "the Add form keeps its own list while a row is open: it would add an item of its own owner");
+        Options(cut).Should().Equal("PAED-001", "PAED-002", "PAED-003", local);
+        sender.EpaOptionQueries.Should().ContainSingle().Which.ItemId.Should().Be(itemId);
     }
 
     [Fact]
-    public void TheEditRow_KeepsTheItemsStoredEpaSelected()
+    public void TheOptions_ReadAsTheEpaPickerDoes_WithTheEmDash_AnInactiveOneSaidSo()
     {
-        // The item's own EPA is one of the options, so an unchanged save sends it back.
-        var cut = RenderPage(Sender());
+        // S10: EpaOptionLabel's em dash; T158: an inactive EPA can be chosen and says so.
+        var cut = RenderItem(new FakeSender { EpaList = FakeSender.EpasWithInactive(2) });
 
-        BeginEdit(cut, "PAED-002");
+        cut.FindAll("#item-epa option").Select(Text).Should().Equal(
+            "PAED-001 — PAED-001 title", "PAED-002 — PAED-002 title (inactive)", "PAED-003 — PAED-003 title");
+    }
 
-        cut.Find("#edit-epa").GetAttribute("value").Should().Be("2");
-        cut.FindAll("#edit-epa-refused").Should().BeEmpty("the stored EPA is one the item can name");
-        cut.Find("#edit-epa").GetAttribute("aria-describedby").Should().Be("edit-epa-help", "its help, and no refusal");
+    [Fact]
+    public void TheEditPage_KeepsTheItemsStoredEpaSelected()
+    {
+        var cut = RenderItem(Sender(), 12);
+
+        cut.Find("#item-epa").GetAttribute("value").Should().Be("2");
+        cut.FindAll("#item-epa-not-offered").Should().BeEmpty("the stored EPA is one the item can name");
+        cut.Find("#item-epa").GetAttribute("aria-describedby").Should().Be("item-epa-help", "its help, and no refusal");
     }
 
     [Fact]
     public void AnItemWhoseStoredEpaItCannotName_SaysSo_UntilAnotherIsChosen()
     {
-        // Its stored EPA is not among the options (it was moved to another sub-speciality, say), so the select shows none
-        // selected, and Save would be refused for an EPA the operator cannot see. The row says so before Save is pressed.
+        // Its stored EPA is not among the options, so the select shows none selected; said before Save is pressed.
         var sender = new FakeSender { EpaOptionsFor = itemId => itemId == 11 ? [FakeSender.Epas[1], FakeSender.Epas[2]] : null };
-        var cut = RenderPage(sender);
+        var cut = RenderItem(sender, 11);
 
-        BeginEdit(cut, "PAED-001");
-
-        cut.Find("#edit-epa-refused").TextContent.Should().Be(
+        Text(cut.Find("#item-epa-not-offered")).Should().Be(
             "PAED-001 is not one of the EPAs this item can name, so none is selected. Choose one before saving.");
-        cut.Find("#edit-epa").GetAttribute("aria-describedby").Should().Be("edit-epa-help edit-epa-refused",
-            "its help first, then the refusal (T193), in the order they are shown");
-        cut.Markup.IndexOf("id=\"edit-epa-help\"", StringComparison.Ordinal).Should().BeLessThan(
-            cut.Markup.IndexOf("id=\"edit-epa-refused\"", StringComparison.Ordinal), "the help is shown first too");
+        cut.Find("#item-epa").GetAttribute("aria-describedby").Should().Be("item-epa-help item-epa-not-offered");
 
-        cut.Find("#edit-epa").Change("2");
+        cut.Find("#item-epa").Change("2");
 
-        cut.FindAll("#edit-epa-refused").Should().BeEmpty("the EPA now chosen is one the item can name");
-        cut.Find("#edit-epa").GetAttribute("aria-describedby").Should().Be("edit-epa-help");
+        cut.FindAll("#item-epa-not-offered").Should().BeEmpty();
+        cut.Find("#item-epa").GetAttribute("aria-describedby").Should().Be("item-epa-help");
     }
 
     [Fact]
-    public void ACallerWhoCannotSaveTheItem_IsToldSoAtTheTop_AndTheRowDoesNotOpen()
+    public void ACallerTheEditPickerRefuses_IsShownItemUnavailable_NotAFormSheCouldNotSave()
     {
         var sender = new FakeSender
         {
             EditOptionsFailure = new UnauthorizedAccessException("You do not have permission to modify this curriculum.")
         };
-        var cut = RenderPage(sender);
+        var cut = RenderItem(sender, 11);
 
-        BeginEdit(cut, "PAED-001");
-
-        cut.FindAll(".alert.alert-danger").Should().ContainSingle()
-            .Which.TextContent.Should().Contain("You do not have permission to modify this curriculum.");
-        cut.FindAll("tbody td[colspan]").Should().BeEmpty("no form opens that its Save would refuse");
-        cut.FindAll("#edit-epa").Should().BeEmpty();
+        Text(cut.Find("h1")).Should().Be("Item unavailable");
+        cut.FindAll("form").Should().BeEmpty();
+        cut.Markup.Should().NotContain("You do not have permission");
     }
 
     [Fact]
-    public void BothPickers_SayWhichEpasTheyList()
+    public void ThePicker_SaysWhichEpasItLists()
     {
-        var cut = RenderPage(Sender());
+        var cut = RenderItem(Sender(), 11);
 
-        BeginEdit(cut, "PAED-001");
-
-        foreach (var id in new[] { "curriculum-item-epa", "edit-epa" })
-        {
-            // The select names its help (T193), so the help is found the way a screen reader finds it.
-            var help = cut.Find($"#{cut.Find($"#{id}").GetAttribute("aria-describedby")!.Split(' ')[0]}");
-            help.TextContent.Should().StartWith("Lists only the EPAs this item can name", $"#{id} carries its help");
-        }
+        var help = cut.Find($"#{cut.Find("#item-epa").GetAttribute("aria-describedby")!.Split(' ')[0]}");
+        help.TextContent.Should().StartWith("Lists only the EPAs this item can name");
     }
 
     private static FakeSender Sender()
@@ -158,32 +120,7 @@ public sealed class CurriculumItemsEpaPickerTests : TestContext
             }
         };
 
-    private IRenderedComponent<CurriculumItemsEdit> RenderPage(FakeSender sender)
-    {
-        Services.AddSingleton<IScopedSender>(sender);
-
-        var cut = RenderComponent<CurriculumItemsEdit>(parameters => parameters.Add(page => page.Id, FakeSender.CurriculumId));
-        cut.WaitForState(() => cut.FindAll("tbody tr").Count > 0);
-
-        return cut;
-    }
-
     // The option labels' codes, in the order the select lists them.
-    private static IReadOnlyList<string> Options(IRenderedComponent<CurriculumItemsEdit> cut, string selectId)
-        => cut.FindAll($"#{selectId} option")
-            .Select(option => option.TextContent.Trim().Split(' ')[0])
-            .ToList();
-
-    private static void BeginEdit(IRenderedComponent<CurriculumItemsEdit> cut, string epaCode)
-        => cut.FindAll("tbody tr")
-            .Where(row => row.QuerySelector("td[colspan]") is null)
-            .Single(row => row.QuerySelector("td")!.TextContent.Trim().StartsWith(epaCode, StringComparison.Ordinal))
-            .QuerySelectorAll("button")
-            .First(button => button.TextContent.Trim() == "Edit")
-            .Click();
-
-    private static void ClickButton(IRenderedComponent<CurriculumItemsEdit> cut, string label)
-        => cut.FindAll("button")
-            .First(button => string.Equals(button.TextContent.Trim(), label, StringComparison.Ordinal))
-            .Click();
+    private static IReadOnlyList<string> Options(IRenderedFragment cut)
+        => cut.FindAll("#item-epa option").Select(option => option.TextContent.Trim().Split(' ')[0]).ToList();
 }

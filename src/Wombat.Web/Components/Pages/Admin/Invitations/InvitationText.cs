@@ -237,7 +237,7 @@ public static class InvitationText
     /// <summary>Speciality's help, until the sub-speciality is chosen, for a role that needs it too (N08a; R4).</summary>
     public const string ThenSubSpecialityHelp = "Then choose its sub-speciality.";
 
-    /// <summary>Nothing adopted (N26, S13), before its link to Curriculum adoptions.</summary>
+    /// <summary>Nothing adopted (N26, S13), before its link to Curricula (T392, S4: adoption is on Curricula).</summary>
     public static string NothingAdopted(string institutionName)
         => $"Nothing is adopted at {institutionName} yet, so roles that need a speciality cannot be invited. Adopt a curriculum under";
 

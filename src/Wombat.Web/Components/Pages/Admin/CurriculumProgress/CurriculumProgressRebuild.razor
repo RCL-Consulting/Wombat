@@ -3,62 +3,66 @@
 @using Wombat.Application.Features.Activities.Commands.RebuildCurriculumProgress
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<CurriculumProgressRebuild> Logger
 
 <PageTitle>Curriculum progress · Wombat</PageTitle>
 
 <PageHeader Title="Curriculum progress" Subtitle="Recalculate every trainee's curriculum targets from their completed activities." />
 
-@if (!string.IsNullOrWhiteSpace(_error))
-{
-  <Alert Kind="danger">The rebuild failed and nothing was changed: @_error</Alert>
-}
+@* T392 (flow 15, R2-F01–F05): as built, in .user-page's column. A failure says so in fixed words in the result's region and
+   takes the focus there (Q16, S9), never the exception's text (T329); no Try again button, Rebuild progress stays (T8). *@
+<div class="user-page rebuild-page">
+  <div class="form-container">
+    <p>
+      Each completed activity is credited to the curriculum items it matches, in the semester that contains its
+      encounter date. A rebuild throws the stored tallies away and credits every completed activity again, in the
+      order the activities were completed.
+    </p>
+    <p class="muted">
+      Run it after changing where the semester boundary falls, after correcting a trainee's encounter dates, or when a
+      trainee's figures look wrong. It is safe to run more than once. It runs as one transaction, so if it fails, nothing
+      changes. It also runs by itself at startup whenever the stored tallies are empty but completions have credited.
+    </p>
+    @* T196, D48. Until T196 a rebuild judged every EPA as active or not on the day it ran, so a rebuild while an EPA was
+       inactive removed the progress it had earned, and this was a warning. The rebuild now judges whether each
+       completion's EPA was active at the completion's own moment, so it loses nothing; what is left to say is when a
+       paused completion counts. Only that is judged as of the completion: the items, targets and minimum levels are
+       today's (T196 review). *@
+    <p class="muted">
+      A rebuild credits each activity against the curriculum as it is today: its items, targets and minimum levels. Only
+      whether an EPA was active is judged as of when the activity was completed. An inactive EPA keeps the progress it
+      earned while it was active. An activity completed against it since it was deactivated counts once the EPA is
+      reactivated, and reactivating it credits those activities without a rebuild.
+    </p>
 
-<div class="form-container">
-  <p>
-    Each completed activity is credited to the curriculum items it matches, in the semester that contains its
-    encounter date. A rebuild throws the stored tallies away and credits every completed activity again, in the
-    order the activities were completed.
-  </p>
-  <p class="muted">
-    Run it after changing where the semester boundary falls, after correcting a trainee's encounter dates, or when a
-    trainee's figures look wrong. It is safe to run more than once. It runs as one transaction, so if it fails, nothing
-    changes. It also runs by itself at startup whenever the stored tallies are empty but completions have credited.
-  </p>
-  @* T196, D48. Until T196 a rebuild judged every EPA as active or not on the day it ran, so a rebuild while an EPA was
-     inactive removed the progress it had earned, and this was a warning. The rebuild now judges whether each
-     completion's EPA was active at the completion's own moment, so it loses nothing; what is left to say is when a
-     paused completion counts. Only that is judged as of the completion: the items, targets and minimum levels are
-     today's (T196 review). *@
-  <p class="muted">
-    A rebuild credits each activity against the curriculum as it is today: its items, targets and minimum levels. Only
-    whether an EPA was active is judged as of when the activity was completed. An inactive EPA keeps the progress it
-    earned while it was active. An activity completed against it since it was deactivated counts once the EPA is
-    reactivated, and reactivating it credits those activities without a rebuild.
-  </p>
+    <FormActions>
+      @* Not disabled while the rebuild runs (T234): the dialog, closed as the rebuild starts, hands the focus back to it,
+         and a browser drops the focus of a button it disables, to the page. A press while it runs asks nothing. *@
+      <button type="button" class="btn btn-primary" aria-haspopup="dialog" aria-disabled="@InFlight.AriaDisabled(_running)" @onclick="AskAsync">
+        @(_running ? "Rebuilding…" : "Rebuild progress")
+      </button>
+    </FormActions>
 
-  <FormActions>
-    @* Not disabled while the rebuild runs (T234): the dialog, closed as the rebuild starts, hands the focus back to it,
-       and a browser drops the focus of a button it disables, to the page. A press while it runs asks nothing. *@
-    <button type="button" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_running)" @onclick="AskAsync">
-      @(_running ? "Rebuilding…" : "Rebuild progress")
-    </button>
-  </FormActions>
-
-  @* What the rebuild did. It takes the focus once the rebuild is done (T234; DESIGN.md § Button system): the figures are
-     not announced on their own. A refusal, at the top, is an alert, read at once, and leaves the focus on the button. *@
-  <ActionResult @ref="_region">
-    @if (_result is not null)
-    {
-      <Alert Kind="success">Curriculum progress was rebuilt.</Alert>
-      <dl class="details-list">
-        <div><dt>Activities re-read</dt><dd>@_result.ActivitiesReplayed</dd></div>
-        <div><dt>Curriculum items credited</dt><dd>@_result.CreditApplications</dd></div>
-        <div><dt>Semester tallies written</dt><dd>@_result.ProgressRowsWritten</dd></div>
-        <div><dt>Stale tallies removed</dt><dd>@_result.ProgressRowsRemoved</dd></div>
-        <div><dt>Completions re-stamped</dt><dd>@_result.TransitionsStamped</dd></div>
-      </dl>
-    }
-  </ActionResult>
+    @* What the rebuild did, or that it failed. It takes the focus once the rebuild has answered (T234; DESIGN.md § Button
+       system; S9): the figures are not announced on their own. *@
+    <ActionResult @ref="_region">
+      @if (_failed)
+      {
+        <Alert Kind="danger"><strong>@FailedLead</strong> @FailedRest</Alert>
+      }
+      else if (_result is not null)
+      {
+        <Alert Kind="success"><strong>Curriculum progress was rebuilt.</strong></Alert>
+        <dl class="details-list">
+          <div><dt>Activities re-read</dt><dd>@_result.ActivitiesReplayed</dd></div>
+          <div><dt>Curriculum items credited</dt><dd>@_result.CreditApplications</dd></div>
+          <div><dt>Semester tallies written</dt><dd>@_result.ProgressRowsWritten</dd></div>
+          <div><dt>Stale tallies removed</dt><dd>@_result.ProgressRowsRemoved</dd></div>
+          <div><dt>Completions re-stamped</dt><dd>@_result.TransitionsStamped</dd></div>
+        </dl>
+      }
+    </ActionResult>
+  </div>
 </div>
 
 <ConfirmDialog @ref="_confirm"
@@ -71,8 +75,13 @@
   private ConfirmDialog? _confirm;
   private ActionResult? _region;
   private RebuildCurriculumProgressResult? _result;
-  private string? _error;
+  private bool _failed;
   private bool _running;
+
+  /// <summary>Q16 (R2-F05): the failure's fixed words, the first sentence bold; the exception is logged, never shown.</summary>
+  internal const string FailedLead = "The rebuild failed, and nothing was changed.";
+
+  internal const string FailedRest = "Try again, or come back in a few minutes.";
 
   private async Task AskAsync()
   {
@@ -102,7 +111,7 @@
       await _confirm.CloseAsync();
     }
 
-    _error = null;
+    _failed = false;
     _result = null;
 
     try
@@ -111,9 +120,11 @@
       _result = await Sender.Send(new RebuildCurriculumProgressCommand(authState.User));
       _region?.FocusAfterRender();
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _error = exception.Message;
+      Logger.LogError(exception, "The curriculum progress rebuild failed.");
+      _failed = true;
+      _region?.FocusAfterRender();
     }
     finally
     {

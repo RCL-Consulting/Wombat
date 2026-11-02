@@ -2,15 +2,23 @@
 @attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject ILogger<EntrustmentScalesList> Logger
 @using Wombat.Application.Common.Extensions
 @using Wombat.Application.Features.Epas
 @using Wombat.Application.Features.Epas.Commands.DeleteEntrustmentScale
 
 <PageTitle>Entrustment scales · Wombat</PageTitle>
 
-<PageHeader Title="Entrustment scales" Subtitle="Define and maintain the rating ladders used by assessment forms and committee reviews.">
+@*
+  T392 (flow 15, boards R2-E01, E02, E05, R3-E03, E04): a reader (the Institutional admin) is told what the ladders are and
+  who sets them (Q13, T326), with no actions column (T239); the Administrator's page as built, with Create scale, Edit and
+  Delete. Loading says so in words (S19); a load failure is fixed words with Try again (S7, T329), never the exception's.
+  No action is offered until the read is in.
+*@
+<PageHeader Title="Entrustment scales" Subtitle="@(_isAdministrator ? EntrustmentScalesWords.AdministratorSubtitle : EntrustmentScalesWords.ReaderSubtitle)">
   <Actions>
-    @if (_isAdministrator)
+    @if (_isAdministrator && _scales is not null)
     {
       <a class="btn btn-primary" href="/admin/entrustment-scales/new">
         <Icon Name="plus" />
@@ -20,53 +28,72 @@
   </Actions>
 </PageHeader>
 
-@if (!string.IsNullOrWhiteSpace(_statusMessage))
-{
-  <Alert Kind="success">@_statusMessage</Alert>
-}
+<div class="people-page scales-page">
+  @* What a delete did, or why it did not (T234, A5): one result, focused once the delete has answered. *@
+  <ActionResult @ref="_result">
+    @if (!string.IsNullOrWhiteSpace(_statusMessage))
+    {
+      <Alert Kind="success">@_statusMessage</Alert>
+    }
+    @if (!string.IsNullOrWhiteSpace(_actionError))
+    {
+      <Alert Kind="danger">@_actionError</Alert>
+    }
+  </ActionResult>
 
-@if (!string.IsNullOrWhiteSpace(_actionError))
-{
-  <Alert Kind="danger">@_actionError</Alert>
-}
-
-<StatePanel IsLoading="@(_scales is null && string.IsNullOrWhiteSpace(_loadError))" LoadError="@_loadError" IsEmpty="@(_scales?.Count == 0)" EmptyTitle="No scales yet" EmptyBody="Create the first entrustment scale to back assessment ratings and entrustment decisions.">
-  @if (_scales is not null)
-  {
-    <DataTable TItem="EntrustmentScaleDto" Items="_scales" Caption="Entrustment scales">
-      <HeaderRow>
-        <tr>
-          <th>Name</th>
-          <th>Description</th>
-          <th>Levels</th>
-          @* Only an Administrator changes a scale, so no one else is shown a column of blank cells (T239; DESIGN.md
-             § Table system, "A column of actions that no row offers is not rendered"). *@
-          @if (_isAdministrator)
-          {
-            <th><span class="visually-hidden">Actions</span></th>
-          }
-        </tr>
-      </HeaderRow>
-      <Row Context="scale">
-        <tr>
-          <td>@scale.Name</td>
-          <td>@scale.Description</td>
-          <td>@scale.Levels.Count</td>
-          @if (_isAdministrator)
-          {
-            <td>
-              @* T239: named by the scale, whose name is unique. *@
-              <div class="actions-cell">
-                <a class="btn btn-outline btn-sm" href="@($"/admin/entrustment-scales/{scale.Id}")" aria-label="@($"Edit {scale.Name}")">Edit</a>
-                <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Delete {scale.Name}")" @onclick="() => DeleteAsync(scale.Id)">Delete</button>
-              </div>
-            </td>
-          }
-        </tr>
-      </Row>
-    </DataTable>
-  }
-</StatePanel>
+  <StatePanel IsLoading="@(_scales is null && string.IsNullOrWhiteSpace(_loadError))" LoadError="@_loadError"
+              OnRetry="LoadAsync" FocusAfterRetry="FocusHeadingAsync"
+              IsEmpty="@(_scales?.Count == 0)" EmptyTitle="@EntrustmentScalesWords.EmptyTitle"
+              EmptyBody="@(_isAdministrator ? EntrustmentScalesWords.AdministratorEmptyBody : EntrustmentScalesWords.ReaderEmptyBody)">
+    <LoadingContent>
+      <p class="loading-line" role="status">@EntrustmentScalesWords.Loading</p>
+      <div class="detail-card" aria-hidden="true">
+        <div class="skeleton skel-title"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line skel-short"></div>
+      </div>
+    </LoadingContent>
+    <ChildContent>
+      @if (_scales is not null)
+      {
+        @* R2-E01, E02: the scale's name is the row's header; Levels the count alone (S10); stacked from 900 px down. *@
+        <DataTable TItem="EntrustmentScaleDto" Items="_scales" StackWide="true" Caption="@EntrustmentScalesWords.Caption">
+          <HeaderRow>
+            <tr role="row">
+              <th scope="col" role="columnheader" class="col-wrap">Name</th>
+              <th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Description</th>
+              <th scope="col" role="columnheader">Levels</th>
+              @* Only an Administrator changes a scale, so no one else is shown a column of blank cells (T239; DESIGN.md
+                 § Table system, "A column of actions that no row offers is not rendered"). *@
+              @if (_isAdministrator)
+              {
+                <th scope="col" role="columnheader" class="col-actions"><span class="visually-hidden">Actions</span></th>
+              }
+            </tr>
+          </HeaderRow>
+          <Row Context="scale">
+            <tr role="row" @key="scale.Id">
+              <th scope="row" role="rowheader" class="col-wrap">@scale.Name</th>
+              <td role="cell" data-label="Description" class="col-wrap">@scale.Description</td>
+              <td role="cell" data-label="Levels">@scale.Levels.Count</td>
+              @if (_isAdministrator)
+              {
+                <td role="cell" class="col-actions">
+                  @* T239: named by the scale, whose name is unique. *@
+                  <div class="actions-cell">
+                    <a class="btn btn-outline btn-sm" href="@($"/admin/entrustment-scales/{scale.Id}")" aria-label="@($"Edit {scale.Name}")">Edit</a>
+                    <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Delete {scale.Name}")" @onclick="() => DeleteAsync(scale.Id)">Delete</button>
+                  </div>
+                </td>
+              }
+            </tr>
+          </Row>
+        </DataTable>
+      }
+    </ChildContent>
+  </StatePanel>
+</div>
 
 @code {
   private IReadOnlyList<EntrustmentScaleDto>? _scales;
@@ -74,6 +101,7 @@
   private string? _actionError;
   private string? _statusMessage;
   private bool _isAdministrator;
+  private ActionResult? _result;
 
   protected override async Task OnInitializedAsync()
   {
@@ -89,11 +117,15 @@
     {
       _scales = await Sender.Send(new GetEntrustmentScalesListQuery());
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _loadError = exception.Message;
+      // T329, S7: the failure to the log, fixed words on the page.
+      Logger.LogError(exception, "The entrustment scales could not be read.");
+      _loadError = EntrustmentScalesWords.LoadFailed;
     }
   }
+
+  private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
 
   private async Task DeleteAsync(int scaleId)
   {
@@ -107,9 +139,18 @@
       _statusMessage = "Entrustment scale deleted.";
       await LoadAsync();
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is EntrustmentScaleDeleteRefusedException or UnauthorizedAccessException)
     {
-      _actionError = exception.Message;
+      // The handler's typed refusal (a scale in use), written for the person who pressed; nothing else's text (P6).
+      _actionError = RefusalText.Of(exception);
     }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // T329: anything else is the page's fixed words, logged; never the exception's text.
+      Logger.LogError(exception, "The entrustment scale {ScaleId} could not be deleted.", scaleId);
+      _actionError = EntrustmentScalesWords.DeleteFailed;
+    }
+
+    _result?.FocusAfterRender();
   }
 }

@@ -183,7 +183,7 @@ public static class AdmissionText
     /// <summary>Today's sentence (<c>TraineeProfileEdit.razor:292–294</c> at <c>69a7df20</c>), with its link's words.</summary>
     public const string NothingAdoptedAtAllBefore = "This institution has adopted no curriculum yet, so no trainee can be admitted. Adopt one under ";
 
-    public const string NothingAdoptedAtAllLink = "Curriculum adoptions";
+    public const string NothingAdoptedAtAllLink = "Curricula";
 
     public const string NothingAdoptedAtAllAfter = ", then admit the trainee.";
 

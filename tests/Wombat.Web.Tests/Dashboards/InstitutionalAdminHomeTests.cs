@@ -61,7 +61,7 @@ public sealed class InstitutionalAdminHomeTests : TestContext
         curriculum.QuerySelectorAll("a.dashboard-metric").Should().BeEmpty("these figures are not links");
         Text(curriculum.QuerySelector("p.field-help")!).Should().Be(
             "Paediatrics / Paediatrics, from the CPSA's Paediatric EPA Curriculum (11.1).");
-        curriculum.QuerySelector(".dashboard-card-footer a")!.GetAttribute("href").Should().Be(OnboardingLinks.CurriculumAdoptions);
+        curriculum.QuerySelector(".dashboard-card-footer a")!.GetAttribute("href").Should().Be(OnboardingLinks.Curricula);
     }
 
     [Fact]

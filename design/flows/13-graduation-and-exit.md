@@ -914,7 +914,7 @@ Route: /account/login → /account/login/submit → /portfolio/progress
 Do: Sign in from the page that Step 5.19 left her on. She is returned to My progress. Read it.
 Expect: Her trainee record admits her to the page (T252, `TraineeOrFormerTrainee`).
   - Its subtitle reads "Your record of the programme you ended: what your curriculum held you to in each period.".
-    Above the notice, the line "Your record:" links My authorisations and My activities, her record's other pages
+    Under the notice, the line "Your record:" links My authorisations and My activities, her record's other pages
     (T379, S8; My authorisations because a STAR was issued to her).
   - An information notice reads "You completed your programme on `D`. This page is your record of it and is read-only:
     no target applies to you any more.", followed by D49's rule. Every date on the page is ISO, `YYYY-MM-DD` (T355, D1).

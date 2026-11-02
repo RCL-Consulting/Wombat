@@ -199,8 +199,8 @@ public sealed class InviteAPersonTests : TestContext
         var warning = cut.Find("p.field-warning");
         Text(warning).Should().Be(
             "Nothing is adopted at Kgosi Kgari Teaching Hospital yet, so roles that need a speciality cannot be invited. Adopt a " +
-            "curriculum under Curriculum adoptions.");
-        warning.QuerySelector("a")!.GetAttribute("href").Should().Be(OnboardingLinks.CurriculumAdoptions);
+            "curriculum under Curricula.");
+        warning.QuerySelector("a")!.GetAttribute("href").Should().Be(OnboardingLinks.Curricula);
         cut.FindAll("#invitation-speciality").Should().BeEmpty();
         cut.Find("button[type=submit]").HasAttribute("disabled").Should().BeFalse();
     }

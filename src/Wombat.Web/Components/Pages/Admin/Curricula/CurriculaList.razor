@@ -1,78 +1,82 @@
 @page "/admin/curricula"
 @attribute [Authorize(Policy = "NationalCatalogueAccess")]
+@using Wombat.Application.Features.Adoptions
+@using Wombat.Application.Features.Institutions.Queries.GetMyInstitutionName
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IAuthorizationService AuthorizationService
+@inject IJSRuntime JS
+@inject ILogger<CurriculaList> Logger
 
 <PageTitle>Curricula · Wombat</PageTitle>
 
-<PageHeader Title="Curricula" Subtitle="Manage curriculum versions and the sub-speciality they apply to.">
-  <Actions>
-    @* T335, flow 01: the Administrator's Home no longer carries a Maintenance card, so the progress rebuild is reached
-       here, from the item it lights (R2-Rules § 3). Offered to those its page admits, as Create is. *@
-    @if (_canRebuild)
-    {
-      <a class="btn btn-outline" href="/admin/curriculum-progress">Curriculum progress</a>
-    }
-    @* T211. Offered to those the create page admits, so no one is sent to a page that turns them away. *@
-    @if (_canCreate)
-    {
-      <a class="btn btn-primary" href="/admin/curricula/new">
-        <Icon Name="plus" />
-        Create curriculum
-      </a>
-    }
-  </Actions>
-</PageHeader>
+@*
+  Curricula (T392, flow 15, lane A; boards R3-A01–A15, R2-A12). One page for adoption (Q1): Curriculum adoptions is gone
+  and /admin/adoptions sends here.
 
-<StatePanel IsLoading="@(_curricula is null)" LoadError="@_errorMessage" IsEmpty="@(_curricula?.Count == 0)" EmptyTitle="No curricula yet" EmptyBody="@EmptyBody">
-  @if (_curricula is not null)
-  {
-    @* T239: each row's actions are named by the curriculum as its items page names it, "IM Core (2026.1)", and by its
-       sub-speciality where two sub-specialities hold a curriculum of that name and version. *@
-    var rowNames = RowNames.Distinct(
-      _curricula, row => row.Id, row => $"{row.Name} ({row.Version})", row => $", {row.SubSpecialityName}");
-    <DataTable TItem="CurriculumDto" Items="_curricula" Caption="Curricula">
-      <HeaderRow>
-        <tr>
-          <th>Name</th>
-          <th>Version</th>
-          <th>College</th>
-          <th>Speciality</th>
-          <th>Sub-speciality</th>
-          <th>Effective</th>
-          <th>Items</th>
-          <th>Status</th>
-          <th><span class="visually-hidden">Actions</span></th>
-        </tr>
-      </HeaderRow>
-      <Row Context="curriculum">
-        <tr>
-          <td>@curriculum.Name</td>
-          <td>@curriculum.Version</td>
-          <td>@curriculum.CollegeName</td>
-          <td>@curriculum.SpecialityName</td>
-          <td>@curriculum.SubSpecialityName</td>
-          <td>@curriculum.EffectiveFrom.ToString("yyyy-MM-dd")</td>
-          @* The items the caller reads: the College's, and their own institution's (T211). *@
-          <td>@curriculum.Items.Count</td>
-          <td>@(curriculum.IsActive ? "Active" : "Inactive")</td>
-          <td>
-            @* T211. Every row is a curriculum the caller can open (the list and the read share one rule), so Items is
-               always offered. Edit changes the curriculum's details and clones it, which only its College can do. *@
-            <div class="actions-cell">
-              @if (curriculum.CanEditCurriculum)
-              {
-                <a class="btn btn-outline btn-sm" href="@($"/admin/curricula/{curriculum.Id}")" aria-label="@($"Edit {rowNames[curriculum.Id]}")">Edit</a>
-              }
-              <a class="btn btn-outline btn-sm" href="@($"/admin/curricula/{curriculum.Id}/items")" aria-label="@($"Items of {rowNames[curriculum.Id]}")">Items</a>
-            </div>
-          </td>
-        </tr>
-      </Row>
-    </DataTable>
-  }
-</StatePanel>
+  - The Institutional admin: "Curricula you train against", each version with its state for the institution in words
+    (Q10: "Adopted on ‹date›", or "Superseded on ‹date›" over "‹N› registrars still on it") and Items; then "Open for
+    adoption", the open versions the institution has not actively adopted (Q7), each with A2's line ("Newer than…",
+    "Older than…", or none adopted yet) and Adopt (a first adoption of the discipline asks nothing) or Adopt… (superseding,
+    or going back, Q21: the dialog first, Q6).
+  - The College admin: the College's versions with Status Open / Held back (T9), Edit and Items (R3-A12, S5).
+  - The Administrator: All curricula (T9, N2), then "An institution's curricula" (Q18): Institution and Show (P4: the choice
+    is the page's state, not the address), then that institution's two sections, named for it (N3, S15).
+  - One result a page, at its top and focused (A02, A05); a refusal or a failure of an adoption in the open section's
+    own result, focused, the list read again (A07). Loading is one line (S19); a failed read is fixed words with Try again,
+    the h1 taking the focus once it has read (S7, A15). Never an exception's text (T329).
+*@
+<PageHeader Title="Curricula" Subtitle="@Subtitle" Actions="@(_canCreate || _canRebuild ? HeaderActions : null)" />
+
+<div class="people-page curricula-page" aria-busy="@(_loading ? "true" : null)">
+  <ActionResult @ref="_result">
+    @if (_adopted is { } adopted)
+    {
+      <Alert Kind="success"><strong>@adopted.Lead</strong> @adopted.Tail@(_readAgainFailed ? $" {CurriculaWords.ReadAgainFailed}" : null)</Alert>
+    }
+  </ActionResult>
+
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="LoadAsync" FocusAfterRetry="FocusPageHeadingAsync">
+    <LoadingContent>
+      <p class="loading-line" role="status">@CurriculaWords.Loading</p>
+      @foreach (var heading in LoadingHeadings)
+      {
+        <section class="curricula-section">
+          <h2>@heading</h2>
+          <div class="detail-card" aria-hidden="true">
+            <div class="skeleton skel-title"></div>
+            <div class="skeleton skel-line"></div>
+            <div class="skeleton skel-line"></div>
+            <div class="skeleton skel-line skel-short"></div>
+          </div>
+        </section>
+      }
+    </LoadingContent>
+    <ChildContent>
+      @switch (_view)
+      {
+        case View.Institution:
+          @TrainAgainst(_curricula, null, _institutionName)
+          @OpenForAdoption(null)
+          break;
+        case View.College:
+          @CollegeList()
+          break;
+        case View.Administrator:
+          @AllCurricula()
+          @InstitutionSection()
+          break;
+      }
+    </ChildContent>
+  </StatePanel>
+</div>
+
+@* Q6: the superseding adoption's dialog, for those who adopt (not the College admin). *@
+@if (_view != View.College)
+{
+  <ConfirmDialog @ref="_dialog" Title="@_dialogTitle" ConfirmLabel="@_dialogConfirm" BodyContent="DialogBody"
+                 OnConfirm="ConfirmAdoptAsync" ReturnFocusId="@_dialogTrigger" />
+}
 
 @code {
   /// <summary>The policy of the curriculum create and edit page, <c>CurriculumEdit</c>.</summary>
@@ -81,28 +85,631 @@
   /// <summary>The policy of the curriculum progress rebuild, <c>CurriculumProgressRebuild</c>.</summary>
   private const string RebuildPagePolicy = "Administrator";
 
-  private IReadOnlyList<CurriculumDto>? _curricula;
+  private const string ChosenHeadingId = "cur-inst-h";
+
+  private enum View { Institution, College, Administrator }
+
+  private View _view;
   private bool _canCreate;
   private bool _canRebuild;
-  private string? _errorMessage;
+  private bool _loading = true;
+  private string? _loadError;
+  private string? _institutionName;
+  private IReadOnlyList<CurriculumDto> _curricula = [];
+  private IReadOnlyList<AdoptableCurriculumDto> _adoptable = [];
+  private ActionResult? _result;
+  private ActionResult? _sectionResult;
+  private (string Lead, string Tail)? _adopted;
+  private (string Lead, string? Tail)? _refused;
 
-  private string EmptyBody => _canCreate
-    ? "Create a curriculum before admitting trainees or building progress rules."
-    : "Your institution has not adopted a curriculum yet. Adopt one on the Curriculum adoptions page before admitting trainees.";
+  /// <summary>An adoption was made and the list it changed could not be read again (build review P1): said after the result.</summary>
+  private bool _readAgainFailed;
+
+  // The Administrator's "An institution's curricula" (Q18, P4): the select's value, the institution Show read, its rows.
+  private IReadOnlyList<InstitutionDto> _institutions = [];
+  private int _institutionField;
+  private InstitutionDto? _chosen;
+  private IReadOnlyList<CurriculumDto> _chosenCurricula = [];
+  private bool _chosenLoading;
+  private string? _chosenError;
+  private bool _focusChosen;
+
+  /// <summary>Show pressed with no institution chosen (build review P8): the refusal under the select, which takes the focus.</summary>
+  private bool _institutionRefused;
+  private bool _focusInstitutionField;
+
+  // The adoption under way: the row whose Adopt or Adopt… was pressed (T202: a second press sends nothing).
+  private ConfirmDialog? _dialog;
+  private AdoptableCurriculumDto? _pending;
+  private string _dialogTitle = string.Empty;
+  private string _dialogConfirm = CurriculaWords.Adopt;
+  private string? _dialogTrigger;
+  private int? _adopting;
+
+  private bool IsAdministrator => _view == View.Administrator;
+
+  /// <summary>The institution the adoption sections are for: the Institutional admin's own, or the one the Administrator chose.</summary>
+  private int? SectionInstitutionId => IsAdministrator ? _chosen?.Id : null;
+
+  /// <summary>Its name, said only to the Administrator (N3, S15): the Institutional admin's words say "your institution".</summary>
+  private string? SectionInstitutionNamed => IsAdministrator ? _chosen?.Name : null;
+
+  private string? Subtitle => _view switch
+  {
+    View.Administrator => CurriculaWords.SubtitleAdministrator,
+    View.College => CurriculaWords.SubtitleCollege,
+    _ => _institutionName is { } name ? CurriculaWords.SubtitleInstitution(name) : CurriculaWords.SubtitleInstitutionWithoutName
+  };
+
+  private IEnumerable<string> LoadingHeadings => _view switch
+  {
+    View.Institution => [CurriculaWords.TrainAgainstHeading, CurriculaWords.OpenHeading],
+    View.Administrator => [CurriculaWords.AllHeading, CurriculaWords.InstitutionHeading],
+    _ => []
+  };
+
+  private RenderFragment HeaderActions => __builder =>
+  {
+    @* T335, flow 01: the Administrator's Home carries no Maintenance card, so the progress rebuild is reached here.
+       Offered to those its page admits, as Create is. *@
+    @if (_canRebuild)
+    {
+      <a class="btn btn-outline" href="/admin/curriculum-progress">Curriculum progress</a>
+    }
+    @* T211. Offered to those the create page admits. The plus stays, as built (round-3-check decision 4). *@
+    @if (_canCreate)
+    {
+      <a class="btn btn-primary" href="/admin/curricula/new">
+        <Icon Name="plus" />
+        Create curriculum
+      </a>
+    }
+  };
+
+  // ---- The Institutional admin's sections, and the Administrator's for the institution chosen ----
+
+  /// <param name="named">The institution's name for the Administrator's section (h3, its words named for it); null for hers.</param>
+  private RenderFragment TrainAgainst(IReadOnlyList<CurriculumDto> curricula, string? named, string? ownName) => __builder =>
+  {
+    var rows = curricula.Where(row => row.Institution is not null).ToList();
+    var names = RowNames.Distinct(rows, row => row.Id, row => CurriculaWords.Name(row.Name, row.Version), row => $", {row.SubSpecialityName}");
+    <section class="curricula-section" aria-labelledby="@(named is null ? "cur-train-h" : ChosenHeadingId)">
+      @if (named is null)
+      {
+        <h2 id="cur-train-h">@CurriculaWords.TrainAgainstHeading</h2>
+      }
+      else
+      {
+        <h3 id="@ChosenHeadingId" tabindex="-1">@CurriculaWords.InstitutionTrainAgainstHeading(named)</h3>
+      }
+      @if (rows.Count == 0)
+      {
+        @* N5: StatePanel's empty card, focusable by script only. *@
+        <div class="detail-card detail-card--empty" tabindex="-1">
+          <div class="state-panel-title">@CurriculaWords.EmptyTitle</div>
+          <div class="state-panel-copy">@(named is null ? CurriculaWords.EmptyBody : CurriculaWords.InstitutionEmptyBody(named))</div>
+        </div>
+      }
+      else
+      {
+        <DataTable TItem="CurriculumDto" Items="rows" StackWide="true"
+                   Caption="@(named is null ? CurriculaWords.TrainAgainstCaption : CurriculaWords.InstitutionTrainAgainstCaption(named))">
+          <HeaderRow>
+            <tr role="row">
+              <th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Curriculum</th>
+              <th scope="col" role="columnheader" class="col-wrap">College</th>
+              <th scope="col" role="columnheader" class="col-wrap">Discipline</th>
+              <th scope="col" role="columnheader">Effective</th>
+              <th scope="col" role="columnheader">Items</th>
+              <th scope="col" role="columnheader">@(named is null ? CurriculaWords.StateColumn : CurriculaWords.InstitutionStateColumn)</th>
+              <th scope="col" role="columnheader" class="col-fit"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </HeaderRow>
+          <Row Context="curriculum">
+            @{ var state = curriculum.Institution!; }
+            <tr role="row">
+              <th scope="row" role="rowheader" class="col-wrap">@CurriculaWords.Name(curriculum.Name, curriculum.Version)</th>
+              <td role="cell" data-label="College" class="col-wrap">@curriculum.CollegeName</td>
+              <td role="cell" data-label="Discipline" class="col-wrap">@CurriculaWords.Discipline(curriculum.SpecialityName, curriculum.SubSpecialityName)</td>
+              <td role="cell" data-label="Effective">@CurriculaWords.Day(curriculum.EffectiveFrom)</td>
+              <td role="cell" data-label="Items">@CurriculaWords.Items(state, named is not null)</td>
+              <td role="cell" data-label="@(named is null ? CurriculaWords.StateColumn : CurriculaWords.InstitutionStateColumn)">
+                @CurriculaWords.State(state)
+                @if (CurriculaWords.StillOnIt(state) is { } still)
+                {
+                  <div class="muted text-sm">@still</div>
+                }
+              </td>
+              <td role="cell">
+                @* P1: the Administrator's link opens the items page as built for the Administrator, every institution's own items. *@
+                <div class="actions-cell">
+                  <a class="btn btn-outline btn-sm" href="@CatalogueLinks.Items(curriculum.Id)"
+                     aria-label="@CurriculaWords.ItemsName(CurriculaWords.ItemsLink, names[curriculum.Id], named)">@CurriculaWords.ItemsLink</a>
+                </div>
+              </td>
+            </tr>
+          </Row>
+        </DataTable>
+      }
+    </section>
+  };
+
+  private RenderFragment OpenForAdoption(string? named) => __builder =>
+  {
+    var names = RowNames.Distinct(_adoptable, row => row.Id, row => CurriculaWords.Name(row.Name, row.Version), row => $", {row.SubSpecialityName}");
+    <section class="curricula-section" aria-labelledby="@(named is null ? "cur-open-h" : "cur-inst-open-h")">
+      @if (named is null)
+      {
+        <h2 id="cur-open-h">@CurriculaWords.OpenHeading</h2>
+      }
+      else
+      {
+        <h3 id="cur-inst-open-h">@CurriculaWords.InstitutionOpenHeading(named)</h3>
+      }
+      @* A07: a refused or failed adoption, here, focused; the list has been read again under it. *@
+      <ActionResult @ref="_sectionResult">
+        @if (_refused is { } refused)
+        {
+          <Alert Kind="danger"><strong>@refused.Lead</strong>@(refused.Tail is null ? null : $" {refused.Tail}")</Alert>
+        }
+      </ActionResult>
+      <p class="muted">@(named is null ? CurriculaWords.OpenNotice : CurriculaWords.InstitutionOpenNotice)</p>
+      @if (_adoptable.Count == 0)
+      {
+        <p class="muted">@CurriculaWords.NothingOpen</p>
+      }
+      else
+      {
+        <DataTable TItem="AdoptableCurriculumDto" Items="_adoptable" StackWide="true" Caption="@CurriculaWords.OpenCaption">
+          <HeaderRow>
+            <tr role="row">
+              <th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Curriculum</th>
+              <th scope="col" role="columnheader" class="col-wrap">College</th>
+              <th scope="col" role="columnheader" class="col-wrap">Discipline</th>
+              <th scope="col" role="columnheader">Effective</th>
+              <th scope="col" role="columnheader">Items</th>
+              <th scope="col" role="columnheader" class="col-fit"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </HeaderRow>
+          <Row Context="row">
+            <tr role="row">
+              <th scope="row" role="rowheader" class="col-wrap">
+                @CurriculaWords.Name(row.Name, row.Version)
+                <div class="muted text-sm">@CurriculaWords.Relation(row, named)</div>
+              </th>
+              <td role="cell" data-label="College" class="col-wrap">@row.CollegeName</td>
+              <td role="cell" data-label="Discipline" class="col-wrap">@CurriculaWords.Discipline(row.SpecialityName, row.SubSpecialityName)</td>
+              <td role="cell" data-label="Effective">@CurriculaWords.Day(row.EffectiveFrom)</td>
+              <td role="cell" data-label="Items">@row.NationalItemCount</td>
+              <td role="cell">
+                <div class="actions-cell">
+                  @{ var asks = row.Relation != AdoptionRelation.None; }
+                  @* Q6: a first adoption of the discipline supersedes nothing and asks nothing; any other opens the dialog.
+                     Not disabled while it runs (T234): the in-flight flag holds a second press (T202). *@
+                  <button type="button" id="@TriggerId(row.Id)" class="btn btn-outline btn-sm"
+                          aria-label="@CurriculaWords.AdoptName(CurriculaWords.AdoptWord(asks), names[row.Id], named)"
+                          aria-haspopup="@(asks ? "dialog" : null)"
+                          aria-disabled="@InFlight.AriaDisabled(_adopting is not null)"
+                          @onclick="() => AdoptPressedAsync(row)">@CurriculaWords.AdoptWord(asks)</button>
+                </div>
+              </td>
+            </tr>
+          </Row>
+        </DataTable>
+      }
+    </section>
+  };
+
+  private RenderFragment DialogBody => __builder =>
+  {
+    @if (_pending is { } row)
+    {
+      <p>@CurriculaWords.DialogSupersedes(row, DialogInstitution)</p>
+      @if (CurriculaWords.DialogRegistrars(row) is { } registrars)
+      {
+        <p>@registrars</p>
+      }
+      @if (CurriculaWords.DialogOwnItems(row, SectionInstitutionNamed) is { } ownItems)
+      {
+        <p>@ownItems</p>
+      }
+    }
+  };
+
+  // ---- The College admin's list (R3-A12) and the Administrator's All curricula (R3-A09) ----
+
+  private RenderFragment CollegeList() => __builder =>
+  {
+    @if (_curricula.Count == 0)
+    {
+      <div class="detail-card detail-card--empty" tabindex="-1">
+        <div class="state-panel-title">@CurriculaWords.EmptyTitle</div>
+        <div class="state-panel-copy">@CurriculaWords.CollegeEmptyBody</div>
+      </div>
+    }
+    else
+    {
+      @CollegeTable(_curricula, CurriculaWords.CollegeCaption(_curricula[0].CollegeName), withCollege: false)
+    }
+  };
+
+  private RenderFragment AllCurricula() => __builder =>
+  {
+    <section class="curricula-section" aria-labelledby="cur-all-h">
+      <h2 id="cur-all-h">@CurriculaWords.AllHeading</h2>
+      @if (_curricula.Count == 0)
+      {
+        <div class="detail-card detail-card--empty" tabindex="-1">
+          <div class="state-panel-title">@CurriculaWords.EmptyTitle</div>
+          <div class="state-panel-copy">@CurriculaWords.CollegeEmptyBody</div>
+        </div>
+      }
+      else
+      {
+        @CollegeTable(_curricula, CurriculaWords.AllCaption, withCollege: true)
+      }
+    </section>
+  };
+
+  private RenderFragment CollegeTable(IReadOnlyList<CurriculumDto> curricula, string caption, bool withCollege) => __builder =>
+  {
+    @* T239: each row's actions are named by the curriculum, and by its sub-speciality where two hold one name and version. *@
+    var names = RowNames.Distinct(curricula, row => row.Id, row => CurriculaWords.Name(row.Name, row.Version), row => $", {row.SubSpecialityName}");
+    <DataTable TItem="CurriculumDto" Items="curricula" StackWide="true" Caption="@caption">
+      <HeaderRow>
+        <tr role="row">
+          <th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Curriculum</th>
+          @if (withCollege)
+          {
+            <th scope="col" role="columnheader" class="col-wrap">College</th>
+          }
+          <th scope="col" role="columnheader" class="col-wrap">Discipline</th>
+          <th scope="col" role="columnheader">Effective</th>
+          <th scope="col" role="columnheader">Items</th>
+          <th scope="col" role="columnheader">Status</th>
+          <th scope="col" role="columnheader" class="col-fit"><span class="visually-hidden">Actions</span></th>
+        </tr>
+      </HeaderRow>
+      <Row Context="curriculum">
+        <tr role="row">
+          <th scope="row" role="rowheader" class="col-wrap">@CurriculaWords.Name(curriculum.Name, curriculum.Version)</th>
+          @if (withCollege)
+          {
+            <td role="cell" data-label="College" class="col-wrap">@curriculum.CollegeName</td>
+          }
+          <td role="cell" data-label="Discipline" class="col-wrap">@CurriculaWords.Discipline(curriculum.SpecialityName, curriculum.SubSpecialityName)</td>
+          <td role="cell" data-label="Effective">@CurriculaWords.Day(curriculum.EffectiveFrom)</td>
+          @* The items the caller reads: the College's, and for the Administrator every institution's own too (N2). *@
+          <td role="cell" data-label="Items">@curriculum.Items.Count</td>
+          <td role="cell" data-label="Status">@CurriculaWords.Status(curriculum.IsActive)</td>
+          <td role="cell">
+            @* T211. Edit changes the curriculum's details and clones it, which only its College can do. *@
+            <div class="actions-cell">
+              @if (curriculum.CanEditCurriculum)
+              {
+                <a class="btn btn-outline btn-sm" href="@($"/admin/curricula/{curriculum.Id}")" aria-label="@($"{CurriculaWords.Edit} {names[curriculum.Id]}")">@CurriculaWords.Edit</a>
+              }
+              <a class="btn btn-outline btn-sm" href="@CatalogueLinks.Items(curriculum.Id)" aria-label="@CurriculaWords.ItemsName(CurriculaWords.ItemsLink, names[curriculum.Id], null)">@CurriculaWords.ItemsLink</a>
+            </div>
+          </td>
+        </tr>
+      </Row>
+    </DataTable>
+  };
+
+  // ---- The Administrator's "An institution's curricula" (Q18, R3-A09–A11) ----
+
+  private RenderFragment InstitutionSection() => __builder =>
+  {
+    <section class="curricula-section" aria-labelledby="cur-inst-section-h">
+      <h2 id="cur-inst-section-h">@CurriculaWords.InstitutionHeading</h2>
+      <form class="search-container" novalidate @onsubmit="ShowAsync" @onsubmit:preventDefault="true">
+        <div class="search-grid">
+          <div class="search-field">
+            <label for="cur-institution">@CurriculaWords.InstitutionLabel</label>
+            <select id="@InstitutionFieldId" class="form-select" @bind="_institutionField"
+                    aria-invalid="@(_institutionRefused ? "true" : null)"
+                    aria-describedby="@(_institutionRefused ? FieldRefusal.Id(InstitutionFieldId) : null)">
+              <option value="0">@CurriculaWords.ChooseInstitution</option>
+              @foreach (var institution in _institutions)
+              {
+                <option value="@institution.Id">@institution.Name</option>
+              }
+            </select>
+            @if (_institutionRefused)
+            {
+              <div id="@FieldRefusal.Id(InstitutionFieldId)" class="validation-message" role="alert">@CurriculaWords.ChooseInstitutionRefusal</div>
+            }
+          </div>
+          <div class="filter-actions">
+            <button type="submit" class="btn btn-outline">@CurriculaWords.Show</button>
+          </div>
+        </div>
+      </form>
+      @if (_chosenLoading)
+      {
+        <p class="loading-line" role="status">@CurriculaWords.Loading</p>
+      }
+      else if (_chosenError is not null)
+      {
+        @* P9: the failure offers Try again beside its words, the S7 form; it reads the chosen institution again. *@
+        <ActionResult Id="@ChosenErrorId">
+          <Alert Kind="danger">
+            <div class="alert-row">
+              <span class="alert-row-text">@_chosenError</span>
+              <button type="button" class="btn btn-outline btn-sm" @onclick="ShowAsync">
+                <Icon Name="refresh-cw" />
+                Try again
+              </button>
+            </div>
+          </Alert>
+        </ActionResult>
+      }
+      else if (_chosen is null)
+      {
+        <p class="muted">@CurriculaWords.ChooseHint</p>
+      }
+      else
+      {
+        @TrainAgainst(_chosenCurricula, _chosen.Name, null)
+        @OpenForAdoption(_chosen.Name)
+      }
+    </section>
+  };
+
+  private const string ChosenErrorId = "cur-inst-error";
+  private const string InstitutionFieldId = "cur-institution";
+  private bool _focusChosenError;
 
   protected override async Task OnInitializedAsync()
   {
+    var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+    _view = user.IsAdministrator()
+      ? View.Administrator
+      : user.IsInstitutionalAdmin() ? View.Institution : View.College;
+    _canCreate = (await AuthorizationService.AuthorizeAsync(user, CreatePagePolicy)).Succeeded;
+    _canRebuild = (await AuthorizationService.AuthorizeAsync(user, RebuildPagePolicy)).Succeeded;
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    _loading = true;
+    _loadError = null;
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _canCreate = (await AuthorizationService.AuthorizeAsync(authState.User, CreatePagePolicy)).Succeeded;
-      _canRebuild = (await AuthorizationService.AuthorizeAsync(authState.User, RebuildPagePolicy)).Succeeded;
-      _curricula = await Sender.Send(new GetCurriculaListQuery(authState.User));
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      switch (_view)
+      {
+        case View.Institution:
+          // The name first, so the subtitle names the institution once the page is drawn.
+          _institutionName = await Sender.Send(new GetMyInstitutionNameQuery(user));
+          _curricula = await Sender.Send(new GetCurriculaListQuery(user));
+          _adoptable = await Sender.Send(new GetAdoptableCurriculaQuery(user));
+          break;
+        case View.Administrator:
+          _curricula = await Sender.Send(new GetCurriculaListQuery(user));
+          _institutions = await Sender.Send(new GetInstitutionsListQuery(user));
+          if (_chosen is not null)
+          {
+            await ReadChosenAsync(user, _chosen.Id);
+          }
+          break;
+        default:
+          _curricula = await Sender.Send(new GetCurriculaListQuery(user));
+          break;
+      }
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = exception.Message;
-      _curricula = [];
+      // T329: a fixed sentence on the page, the failure to the log; never the exception's text.
+      Logger.LogError(exception, "The curricula could not be loaded.");
+      _loadError = CurriculaWords.LoadFailed;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  private ValueTask FocusPageHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  // ---- Show (P4) ----
+
+  private async Task ShowAsync()
+  {
+    var chosen = _institutions.FirstOrDefault(institution => institution.Id == _institutionField);
+    if (chosen is null)
+    {
+      // P8: a refusal under the select, focused; what is shown stays as it is.
+      _institutionRefused = true;
+      _focusInstitutionField = true;
+      return;
+    }
+
+    _institutionRefused = false;
+    _adopted = null;
+    _refused = null;
+    _readAgainFailed = false;
+
+    _chosenLoading = true;
+    _chosenError = null;
+    try
+    {
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      await ReadChosenAsync(user, chosen.Id);
+      _chosen = chosen;
+      _focusChosen = true;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "The curricula of institution {InstitutionId} could not be loaded.", chosen.Id);
+      _chosen = null;
+      _chosenError = CurriculaWords.LoadFailed;
+      _focusChosenError = true;
+    }
+    finally
+    {
+      _chosenLoading = false;
+    }
+  }
+
+  private async Task ReadChosenAsync(System.Security.Claims.ClaimsPrincipal user, int institutionId)
+  {
+    _chosenCurricula = await Sender.Send(new GetCurriculaListQuery(user, institutionId));
+    _adoptable = await Sender.Send(new GetAdoptableCurriculaQuery(user, institutionId));
+  }
+
+  // ---- Adopt (Q6) ----
+
+  private static string TriggerId(int curriculumId) => $"adopt-{curriculumId}";
+
+  /// <summary>The institution the dialog names: the Administrator's chosen one, or hers ("Kgosi Kgari Teaching Hospital").</summary>
+  private string DialogInstitution => SectionInstitutionNamed ?? _institutionName ?? "your institution";
+
+  private async Task AdoptPressedAsync(AdoptableCurriculumDto row)
+  {
+    if (_adopting is not null)
+    {
+      return;
+    }
+
+    if (row.Relation == AdoptionRelation.None)
+    {
+      await AdoptAsync(row);
+      return;
+    }
+
+    _pending = row;
+    _dialogTitle = CurriculaWords.DialogTitle(row, DialogInstitution);
+    _dialogConfirm = CurriculaWords.DialogConfirm(row);
+    _dialogTrigger = TriggerId(row.Id);
+    StateHasChanged();
+    if (_dialog is not null)
+    {
+      await _dialog.ShowAsync();
+    }
+  }
+
+  private Task ConfirmAdoptAsync() => _pending is { } row ? AdoptAsync(row) : Task.CompletedTask;
+
+  private async Task AdoptAsync(AdoptableCurriculumDto row)
+  {
+    if (_adopting is not null)
+    {
+      return;
+    }
+
+    var institutionId = SectionInstitutionId;
+    _adopting = row.Id;
+    _adopted = null;
+    _refused = null;
+    _readAgainFailed = false;
+    try
+    {
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      var target = institutionId ?? user.GetInstitutionId();
+      if (target is not int id)
+      {
+        throw new InvalidOperationException("The caller has no institution to adopt for.");
+      }
+
+      // C4: the version the row named as superseded travels with the command, which refuses if it is no longer so.
+      var adoption = await Sender.Send(new AdoptCurriculumCommand(id, row.Id, row.AdoptedCurriculumId, user));
+      _adopted = CurriculaWords.Adopted(adoption, SectionInstitutionNamed);
+      _result?.FocusAfterRender();
+      await ReadAgainAfterAdoptionAsync(user);
+    }
+    catch (AdoptionRefusedException refusal)
+    {
+      _refused = CurriculaWords.Refused(refusal.Reason);
+      await ReadAgainAfterRefusalAsync();
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // T329: the board's fixed failure sentence, the failure to the log.
+      Logger.LogError(exception, "Curriculum {CurriculumId} could not be adopted.", row.Id);
+      _refused = (CurriculaWords.AdoptFailedLead, CurriculaWords.AdoptFailedRest);
+      await ReadAgainAfterRefusalAsync();
+    }
+    finally
+    {
+      // The dialog's body keeps its row until it has closed; the next press sets another.
+      _adopting = null;
+    }
+  }
+
+  /// <summary>
+  /// P1: the list read again after an adoption, apart from the adoption, so a failed read never turns a made adoption into
+  /// "could not be adopted": the result stands, and says the list could not be read again.
+  /// </summary>
+  private async Task ReadAgainAfterAdoptionAsync(System.Security.Claims.ClaimsPrincipal user)
+  {
+    try
+    {
+      await ReadAgainAsync(user);
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "The curricula could not be read again after an adoption.");
+      _readAgainFailed = true;
+    }
+  }
+
+  /// <summary>An adoption re-reads with the chosen institution kept (P4).</summary>
+  private async Task ReadAgainAsync(System.Security.Claims.ClaimsPrincipal user)
+  {
+    if (IsAdministrator)
+    {
+      _curricula = await Sender.Send(new GetCurriculaListQuery(user));
+      if (_chosen is not null)
+      {
+        await ReadChosenAsync(user, _chosen.Id);
+      }
+    }
+    else
+    {
+      _curricula = await Sender.Send(new GetCurriculaListQuery(user));
+      _adoptable = await Sender.Send(new GetAdoptableCurriculaQuery(user));
+    }
+  }
+
+  // A07: the refusal stands over the list read again (a held-back version is no longer offered); a failed re-read leaves
+  // the rows as they were, and the refusal says nothing was adopted.
+  private async Task ReadAgainAfterRefusalAsync()
+  {
+    try
+    {
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      await ReadAgainAsync(user);
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "The curricula could not be read again after a refused adoption.");
+    }
+
+    _sectionResult?.FocusAfterRender();
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusChosen && _chosen is not null && !_chosenLoading)
+    {
+      // R3-A10: Show's answer takes the focus at its first heading.
+      _focusChosen = false;
+      await PageFocus.FocusByIdAsync(JS, ChosenHeadingId);
+    }
+    else if (_focusInstitutionField && _institutionRefused)
+    {
+      // P8: the refusal is under the select; the select takes the focus.
+      _focusInstitutionField = false;
+      await PageFocus.FocusByIdAsync(JS, InstitutionFieldId);
+    }
+    else if (_focusChosenError && _chosenError is not null)
+    {
+      // Show's read failed: its words take the focus, as a failed Try again's do.
+      _focusChosenError = false;
+      await PageFocus.FocusByIdAsync(JS, ChosenErrorId);
     }
   }
 }

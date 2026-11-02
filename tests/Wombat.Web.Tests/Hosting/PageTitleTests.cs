@@ -50,6 +50,9 @@ public sealed class PageTitleTests
     /// </summary>
     private static readonly Dictionary<string, string> HeadingNotComparable = new(StringComparer.Ordinal)
     {
+        ["Admin.Adoptions.AdoptionsList"] =
+            "it has no heading: Curriculum adoptions' old address sends to Curricula as it opens (T392, flow 15, Q1); " +
+            "CurriculaAdoptionPageTests holds the redirect",
         ["Admin.Institutions.MySpecialitiesRedirect"] =
             "it has no heading: it redirects as it opens, to the College's specialities or the colleges",
         ["MultiSourceFeedback.MsfRespond"] =

@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Epas;
@@ -142,8 +143,9 @@ public static class CurriculumItemEpas
             return;
         }
 
+        // T392 (flow 15, F4): the refusal is the EPA field's, so the item's page shows it under EPA (R2-B05, B12).
         var subSpeciality = curriculum.SubSpeciality.Name;
-        throw new InvalidOperationException(itemOwningInstitutionId is null
+        throw new FieldRefusalException(nameof(AddCurriculumItemCommand.EpaId), itemOwningInstitutionId is null
             ? $"This item cannot name the selected EPA. A national curriculum item names a national EPA of {subSpeciality}."
             : $"This item cannot name the selected EPA. An institution's own curriculum item names a national EPA of {subSpeciality}, or one of that institution's local EPAs of {subSpeciality}.");
     }

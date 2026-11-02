@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common;
 using Wombat.Application.Features.Curricula;
 using Wombat.Application.Tests.TestHelpers;
 using Wombat.Domain.Curricula;
@@ -233,13 +234,16 @@ public sealed class CurriculumItemEpaOwnershipTests
 
         var national = () => new AddCurriculumItemCommandHandler(dbContext).Handle(
             AddCommand(LocalAHere, TestPrincipals.Administrator()), CancellationToken.None);
-        (await national.Should().ThrowAsync<InvalidOperationException>()).WithMessage(
-            "This item cannot name the selected EPA. A national curriculum item names a national EPA of General Paediatrics.");
+        // T392 (flow 15, F4): the EPA field's refusal, keyed by the command's property, so the item's page shows it under EPA.
+        (await national.Should().ThrowAsync<FieldRefusalException>()).WithMessage(
+            "This item cannot name the selected EPA. A national curriculum item names a national EPA of General Paediatrics.")
+            .Which.Field.Should().Be(nameof(AddCurriculumItemCommand.EpaId));
 
         var local = () => new AddCurriculumItemCommandHandler(dbContext).Handle(
             AddCommand(LocalBHere, TestPrincipals.InstitutionalAdmin(InstitutionA)), CancellationToken.None);
-        (await local.Should().ThrowAsync<InvalidOperationException>()).WithMessage(
-            "This item cannot name the selected EPA. An institution's own curriculum item names a national EPA of General Paediatrics, or one of that institution's local EPAs of General Paediatrics.");
+        (await local.Should().ThrowAsync<FieldRefusalException>()).WithMessage(
+            "This item cannot name the selected EPA. An institution's own curriculum item names a national EPA of General Paediatrics, or one of that institution's local EPAs of General Paediatrics.")
+            .Which.Field.Should().Be(nameof(AddCurriculumItemCommand.EpaId));
     }
 
     // ---- The picker ----
