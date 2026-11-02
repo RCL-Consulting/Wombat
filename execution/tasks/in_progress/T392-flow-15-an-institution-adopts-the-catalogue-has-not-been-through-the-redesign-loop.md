@@ -137,3 +137,7 @@ T387 (flow 14), T379 (flow 13), T304, T301, T291, T326; BRIEF § 6, § 8, § 11;
   Application 4327, Infrastructure 1035, Architecture 52, Integration 517, Web 4485/4487 (the two ScenarioRunbookTests
   that need the item routes in coverage.md: lane W's). Lane W runs (`t392-runbook`, Opus). New words on no board, from
   the lanes' reports, to list for the operator after the reviews.
+- **2026-11-02, lane W merged** (`dccafd11`, `26714f92`; `t392` at `ee98ba1c`, Web 4487 green). **Reviewed:** code
+  (`75e50cc6`, 0 must) and pages and runbook (`0274936f`, 1 must; the runbook's quoted words match the build); merged
+  `build-review.md` (`bb03e773`): 1 must (the item form's default validator sentence, checked here), 13 should, 19 nit.
+  **Next:** the operator's word on the fix pass's scope, then one Opus fix pass.
