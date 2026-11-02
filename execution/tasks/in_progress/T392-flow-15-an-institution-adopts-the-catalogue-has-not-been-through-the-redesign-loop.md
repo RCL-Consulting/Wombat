@@ -87,3 +87,13 @@ T387 (flow 14), T379 (flow 13), T304, T301, T291, T326; BRIEF § 6, § 8, § 11;
   refusals at the top; `.Single` in the EPA list (inferred); h3 with no h2. Completeness exit 0; verbatim 0 problems
   in flow 15's 16 steps; baseline missing 0. Staged 122 files, none to crop. `round-1-ask.txt` carries the mark and
   asks the canvas to confirm the captures and save `project/f15r1.css`. **Next:** the operator's answers to Q1–Q17.
+- **2026-11-02, round 1** (17 boards and `f15r1.css` in `round-1/`, `ff17241b`; the operator sent the ask and said
+  "done"; Q1–Q17 taken as recommended, to confirm; the canvas saved its stylesheet as a project file, but again says no
+  capture arrived). Assessed in `round-1-assessment.md` (one Opus agent, `af8296c4`; checked here:
+  `AdoptCurriculum.cs:54-69` supersedes with any other version, older included; `BadgeFor.cs:17` badge-draft is "not
+  started or no longer in force"): picks A1 (with A2's "follows no version yet" line), B2 (with B1's 11.2 empty state
+  and folded cells), C2's list with C1's page for KGK's own EPA, D1; E, F, G confirmed with corrections. 6 must-fixes
+  (M1 gendered words; M2 P5 refuses an older version against Q7, so "cannot be undone" is false; M3 F's outline
+  trigger against Q16; M4 the owner mark as badge-draft, not muted words; M5 the Steps board misses 1.10, 2.44, A.5.2,
+  A.7.9, A.7.10, 6.13/6.29/6.31; M6 an item's EPA fixed on edit), 16 should (N1–N8 all duplicate existing classes),
+  7 nits. Q18–Q21 for the operator. **Next:** the operator's answers, then round 2's ask.
