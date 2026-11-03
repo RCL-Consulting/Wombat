@@ -543,8 +543,8 @@
   },
   "lastChange": {
     "by": "Renier Cloete",
-    "at": "2026-10-30T19:00:00Z",
-    "via": "Claude Code · Wombat@1c11d1f6",
-    "note": "Re-synced to flow 14 as built (T387, e8eea1d2, with 5b5aab80 and 1c11d1f6): no token added or changed; 3 records added in a new Data rights group: MyDataRights, DataRightsRequests, DataRightsRequest (with the erasure dialog and the correction); revised ConfirmDialog (the action mode's first focus on Cancel, app-wide), DataTable (Class), Badge (a request's statuses), PagerControls and FilterBar (44px selects on a phone; T390), Breadcrumbs, PageHeader, NavMenu, Alert, Icon and the Icons group (no icon added: 64, 59 named by a page); the README, tokens' ref, source map and usages, and the bundle (app.css's three Data rights sections). Then the review's finding and four small faults the re-sync found (1c11d1f6)."
+    "at": "2026-11-03T08:00:00Z",
+    "via": "Claude Code · Wombat@9e3a357d",
+    "note": "Re-synced to flow 15 as built (T392, c931d56f, with e10a5f22 and 50ca6470): no token added or changed; 7 records added in a new Catalogue group: Curricula (adoption by rows, Open for adoption, the adopt dialog, the Administrator's institution section), CurriculumItems, CurriculumItem (add, edit, a national item's record), Epas (owner marks in words, the pager), AdminEpaPage (a national EPA's record, Deactivate…, refusals under their fields), ProgressRebuild, EntrustmentScales (the reader's subtitle); revised TraineeProfile (the move line and dialog), ConfirmDialog (five dialogs), FormField (FieldRefusal), DataTable (the 1024px stack; no list edits a row in place), PagerControls, NavMenu (Curriculum adoptions gone), InstitutionalAdminHome, AdmitRegistrar and InviteAPerson (Curricula links), Icon and the Icons group (no icon added: 64, 58 named by a page; book-check no longer named); the README, tokens' ref, source map, and the bundle (app.css's four catalogue sections). With four small faults the re-sync found (DESIGN.md's and app.css's lane-sharing sentence, two comments, the Icon preview's marks)."
   }
 }
