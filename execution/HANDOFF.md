@@ -16,7 +16,7 @@ recommended). T392's Notes hold every step; not pushed (master ahead of origin s
 - **Step 7, replay, done** (T392's Notes have the counts): acts 1-6 and A replayed, no flow 15 regression left; two flow
   15 layout faults found and fixed (`e10a5f22` the items table, `50ca6470` the EPA list); states 98 rows re-taken
   (`dff8b957`, `649eb643`); baseline missing 0. The replay app on `:5180` runs the appendix's end state, published
-  from `50ca6470`. Scratch DBs `wombat_scenario_t392_s10`, `_s11`, `_s20`-`_s25`, `_s515` kept (drop on the word).
+  from `50ca6470`. Its scratch DBs were dropped 2026-11-03.
 - **Next:** step 8 (re-sync the design system, read the live files first) and step 9 (lessons), on the operator's
   word; then close T392 (T291 items 1/4, T301, T304, T326's scales half no longer occur: the operator's call to close).
 - **Replay scratch:** `...\ecc5a9d5-...\scratchpad\g392` (prompts, act dirs, `replay-pw.env`: never print it).
