@@ -6,7 +6,7 @@ Curricula (`/admin/curricula`, `Pages/Admin/Curricula/CurriculaList.razor`; its 
 
 ## Who reads it
 
-`[Authorize(Policy = "NationalCatalogueAccess")]`; NavMenu: Curricula (`book-open`) in the Catalogue group of the Administrator and the College admin and the Curriculum group of the Institutional admin. It is a list, so it lights itself and has no trail. **What it draws depends on the reader**, never on a parameter:
+`[Authorize(Policy = "NationalCatalogueAccess")]`; NavMenu: Curricula (`book-open`) in the Administrator's Catalogue group, the College admin's one ungrouped list, and the Institutional admin's Curriculum group. It is a list, so it lights itself and has no trail. **What it draws depends on the reader**, never on a parameter:
 
 - **An Institutional admin** (Prof Nolwazi Mbatha at Kgosi Kgari Teaching Hospital): Curricula you train against, then Open for adoption.
 - **A College admin** (Dr Anton Kruger, CPSA): the College's versions in one table, no section heading.
