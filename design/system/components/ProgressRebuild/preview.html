@@ -1,0 +1,78 @@
+<!-- @dsCard group="Catalogue" height=2300 width=974 subtitle="Curriculum progress: what a rebuild does and judges; Rebuild progress, a primary that opens its dialog on Cancel; the result under the bar, focused, with its five figures; a failure in fixed words, no Try again; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ProgressRebuild</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The app opens a dialog with showModal(); a static preview cannot, so its stage paints the scrim itself. */
+  .pv-stage { position: relative; background: var(--scrim); padding: var(--space-xl) 0; }
+  .pv-stage dialog { position: static; margin: 0 auto; }
+  /* Below 641px .user-page's rules: every button 44px, the form's actions and a dialog's buttons the row's width with
+     the action on top; repeated under .pv-narrow (a 358px column: 390 less the phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .btn { min-height: 2.75rem; }
+  .pv-narrow .user-page .form-actions, .pv-narrow .dialog-card .form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .pv-narrow .user-page .form-actions .btn, .pv-narrow .dialog-card .form-actions .btn { width: 100%; }
+</style>
+</head>
+<body>
+<p class="pv-cap">devadmin at Step 6.38, from Curricula's header: Curricula lit, the trail Home › Curricula › Curriculum progress; Rebuild progress opens its dialog</p>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+  <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Curricula</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-current"><span aria-current="page">Curriculum progress</span></li>
+</ol></nav>
+<div class="header-container"><div><h1>Curriculum progress</h1><p class="page-subtitle">Recalculate every trainee's curriculum targets from their completed activities.</p></div></div>
+<div class="user-page rebuild-page">
+  <div class="form-container">
+    <p>Each completed activity is credited to the curriculum items it matches, in the semester that contains its encounter date. A rebuild throws the stored tallies away and credits every completed activity again, in the order the activities were completed.</p>
+    <p class="muted">Run it after changing where the semester boundary falls, after correcting a trainee's encounter dates, or when a trainee's figures look wrong. It is safe to run more than once. It runs as one transaction, so if it fails, nothing changes. It also runs by itself at startup whenever the stored tallies are empty but completions have credited.</p>
+    <p class="muted">A rebuild credits each activity against the curriculum as it is today: its items, targets and minimum levels. Only whether an EPA was active is judged as of when the activity was completed. An inactive EPA keeps the progress it earned while it was active. An activity completed against it since it was deactivated counts once the EPA is reactivated, and reactivating it credits those activities without a rebuild.</p>
+    <div class="form-actions"><button type="button" class="btn btn-primary" aria-haspopup="dialog">Rebuild progress</button></div>
+  </div>
+</div>
+
+<p class="pv-cap">The dialog: Cancel focused; Rebuild progress the primary</p>
+<div class="pv-stage"><dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-d-t" aria-describedby="pv-d-b"><div class="form-container"><h2 id="pv-d-t">Rebuild curriculum progress?</h2><p id="pv-d-b">Every trainee's curriculum progress is recalculated from their completed activities, each filed into the semester of its encounter date. An inactive EPA keeps the progress it earned while it was active. It is safe to run more than once, and if it fails nothing changes.</p><div class="form-actions"><button type="button" class="btn btn-outline">Cancel</button><button type="button" class="btn btn-primary">Rebuild progress</button></div></div></dialog></div>
+
+<p class="pv-cap">Rebuilt (S9): the result under the bar, its own 16px step, focused once the rebuild has answered; Step 6.38's five figures</p>
+<div class="user-page rebuild-page">
+  <div class="form-container">
+    <div class="form-actions"><button type="button" class="btn btn-primary" aria-haspopup="dialog">Rebuild progress</button></div>
+    <div class="action-result" tabindex="-1">
+      <div class="alert alert-success" role="status"><strong>Curriculum progress was rebuilt.</strong></div>
+      <dl class="details-list">
+        <div><dt>Activities re-read</dt><dd>15</dd></div>
+        <div><dt>Curriculum items credited</dt><dd>14</dd></div>
+        <div><dt>Semester tallies written</dt><dd>9</dd></div>
+        <div><dt>Stale tallies removed</dt><dd>0</dd></div>
+        <div><dt>Completions re-stamped</dt><dd>15</dd></div>
+      </dl>
+    </div>
+  </div>
+</div>
+
+<p class="pv-cap">Failed (Q16, S9, T8): fixed words, the first sentence bold, focused; never the exception's text; no Try again button, Rebuild progress still offered</p>
+<div class="user-page rebuild-page">
+  <div class="form-container">
+    <div class="form-actions"><button type="button" class="btn btn-primary" aria-haspopup="dialog">Rebuild progress</button></div>
+    <div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><strong>The rebuild failed, and nothing was changed.</strong> Try again, or come back in a few minutes.</div></div>
+  </div>
+</div>
+
+<p class="pv-cap">At 390: Rebuild progress 44px and the row's width</p>
+<div class="pv-narrow">
+  <div class="header-container"><div><h1>Curriculum progress</h1><p class="page-subtitle">Recalculate every trainee's curriculum targets from their completed activities.</p></div></div>
+  <div class="user-page rebuild-page">
+    <div class="form-container">
+      <p>Each completed activity is credited to the curriculum items it matches, in the semester that contains its encounter date. A rebuild throws the stored tallies away and credits every completed activity again, in the order the activities were completed.</p>
+      <div class="form-actions"><button type="button" class="btn btn-primary" aria-haspopup="dialog">Rebuild progress</button></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

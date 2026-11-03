@@ -24,7 +24,7 @@ The header: **"Admit Lerato Molefe"** (h1, tab and crumb, Q17), "Admit a registr
 
 ## Nothing to offer (M04, M04b, check rule 3)
 
-Standing content, so a warning Alert with **no role**, and "Back to trainees" (outline), with no form: "No curriculum is adopted at Kgosi Kgari Teaching Hospital for Paediatrics / Paediatrics, so Lerato Molefe cannot be admitted." where other curricula are adopted; "This institution has adopted no curriculum yet, so no trainee can be admitted. Adopt one under Curriculum adoptions, then admit the trainee." (its link) where none is; "This registrar belongs to no institution, so no curriculum can be offered."
+Standing content, so a warning Alert with **no role**, and "Back to trainees" (outline), with no form: "No curriculum is adopted at Kgosi Kgari Teaching Hospital for Paediatrics / Paediatrics, so Lerato Molefe cannot be admitted." where other curricula are adopted; "This institution has adopted no curriculum yet, so no trainee can be admitted. Adopt one under Curricula, then admit the trainee." (its link; "Curriculum adoptions" until flow 15, T392, S4) where none is; "This registrar belongs to no institution, so no curriculum can be offered."
 
 ## Refusals (S9, M08, M09, M13)
 

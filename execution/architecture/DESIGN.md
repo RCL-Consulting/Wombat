@@ -5253,7 +5253,8 @@ sections hold every flow 13 rule but two, one per build lane: what two lanes sha
 under Badges and the `.details-list` value column's `minmax(0, 1fr)` under Detail / stack lists (T379). The three Data
 rights sections hold every flow 14 rule but one: the shared one first, then one per page lane; the list selects' 44px on
 a phone is a system rule for every list, written beside `.filter-actions`' phone rule (T387). The four catalogue sections hold every flow 15
-rule, one per build lane, each scoped to its page's own class; flow 15 shares no rule between lanes (T392).
+rule, one per build lane, each scoped to its page's own class; the one rule two lanes share is the 1024px stack, written
+in a curriculum's items' section for the items list and the EPA list (`.epas-page`) alike (T392, `e10a5f22`, `50ca6470`).
 
 When a new section is needed (say `/* ── Badges ── */`), add its heading in alphabetical-ish order inside the existing block and keep the rest of the file untouched.
 

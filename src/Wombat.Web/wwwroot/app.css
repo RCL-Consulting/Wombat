@@ -7340,7 +7340,8 @@ a.dashboard-metric:hover .dashboard-metric-label {
 
 /* Flow 15 (T392): an institution adopts the College's curriculum. Curricula (with adoption, Q1), a curriculum's items and
    an item's page of its own (Q14), EPAs and an EPA's page, and the move, the rebuild and the scales. Nothing is shared
-   between the lanes: each writes its own rules under its own heading below, scoped to its page's own class beside
+   between the lanes but the 1024px stack, written under a curriculum's items for the EPA list (.epas-page) too: each
+   writes its own rules under its own heading below, scoped to its page's own class beside
    .people-page or .user-page (BRIEF § 11, flow 12: every page its own class), phone rules included, and nothing is written
    between the headings but by the lane that owns the heading. Rebuilt from round 3's f15r3.css PART 2 on the spacing
    scale, never copied; PART 1 (.cv-*, K1–K9) is the canvas's and never ships. */
@@ -7348,7 +7349,7 @@ a.dashboard-metric:hover .dashboard-metric-label {
 /* Flow 15: curricula (T392). Lane A. */
 /* Curricula (R3-A01–A15, A12): each section a column of its heading, its result, its notice and its table, 16px apart, the
    sections themselves 24px apart in .people-page's column. The Administrator's chosen institution's two h3 sections sit
-   inside her "An institution's curricula", under its Show. The tables are StackWide, the phone's 44px controls
+   inside the Administrator's "An institution's curricula", under its Show. The tables are StackWide, the phone's 44px controls
    .people-page's; nothing else is needed. */
 .curricula-page .curricula-section {
   display: flex;

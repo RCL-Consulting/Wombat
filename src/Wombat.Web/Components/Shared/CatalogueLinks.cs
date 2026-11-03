@@ -13,7 +13,7 @@ namespace Wombat.Web.Components.Shared;
 /// A token carries an id only, never a name or a sentence. The arriving page reads its record again in the caller's scope,
 /// writes the result itself (<c>"EPA saved."</c> for <see cref="EpaCreated" />, <c>"Curriculum item added."</c> for
 /// <see cref="ItemAdded" />, <c>"Curriculum item saved."</c> for <see cref="ItemSaved" />), focuses it (for
-/// <see cref="BackFromItem" />, no result: the row's Edit takes the focus), and then replaces its address with
+/// <see cref="BackFromItem" />, no result: the row's Edit, or View on a row the caller may not change, takes the focus), and then replaces its address with
 /// <see cref="WithoutTokens" />, so a reload says nothing. An item id the curriculum does not hold for the caller (stale, or
 /// another institution's) writes nothing and focuses nothing.
 /// </para>
@@ -68,7 +68,7 @@ public static class CatalogueLinks
     /// <summary>The items after a save (M6): <c>/admin/curricula/4/items?saved=31</c>.</summary>
     public static string ItemSaved(int curriculumId, int itemId) => Invariant($"{Items(curriculumId)}?{SavedToken}={itemId}");
 
-    /// <summary>The items after Cancel on an item's page, the row's Edit focused (M6): <c>/admin/curricula/4/items?back=31</c>.</summary>
+    /// <summary>The items after Cancel on an item's page, the row's Edit (or View) focused (M6): <c>/admin/curricula/4/items?back=31</c>.</summary>
     public static string BackFromItem(int curriculumId, int itemId) => Invariant($"{Items(curriculumId)}?{BackToken}={itemId}");
 
     /// <summary>Whether <paramref name="uri" /> carries the token <paramref name="name" />, with or without a value.</summary>

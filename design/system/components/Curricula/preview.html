@@ -1,0 +1,207 @@
+<!-- @dsCard group="Catalogue" height=4300 width=1180 subtitle="Curricula: an institution's two sections (the versions it trains against, their state in words; the open versions it has not adopted, each with Adopt or Adopt…); the superseding dialog opening on Cancel; a refusal in the open section; the College's Status Open or Held back; the Administrator's All curricula and An institution's curricula with Show; stacked at 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Curricula</title>
+<style>
+  /* The card is 1180px wide so that app.css's 900px and 1024px queries do not fire on the wide renditions; each is drawn
+     in a 974px column, the content column beside the sidebar at 1280. */
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-col { max-width: 974px; }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The app opens the dialog with showModal(); a static preview cannot, so its stage paints the scrim itself. */
+  .pv-stage { position: relative; background: var(--scrim); padding: var(--space-xl) 0; }
+  .pv-stage dialog { position: static; margin: 0 auto; }
+  /* The stacked tables (900px and below in the app) and the phone's rules (below 641px), repeated under .pv-narrow (a
+     358px column: 390 less the phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-narrow .people-page .btn, .pv-narrow .people-page .form-select { min-height: 2.75rem; }
+  .pv-narrow .dialog-card .form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .pv-narrow .dialog-card .form-actions .btn { min-height: 2.75rem; width: 100%; }
+</style>
+</head>
+<body>
+<div class="pv-col">
+<p class="pv-cap">Prof Mbatha after Step 6.32, Adopt 11.2 confirmed: the result at the top, its first sentence bold, focused; 11.2 Adopted, 11.1 Superseded over the registrars still on it; 11.1 offered again, older, with Adopt…</p>
+<div class="header-container"><div><h1>Curricula</h1><p class="page-subtitle">The College curricula Kgosi Kgari Teaching Hospital trains against, and the versions open to it.</p></div></div>
+<div class="people-page curricula-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status"><strong>Paediatric EPA Curriculum (11.2) adopted.</strong> New admissions to Paediatrics / Paediatrics join it. Paediatric EPA Curriculum (11.1) is superseded; its 3 registrars stay on it until each is moved.</div></div>
+  <section class="curricula-section" aria-labelledby="pv1-train-h">
+    <h2 id="pv1-train-h">Curricula you train against</h2>
+    <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+      <caption>The curricula your institution trains against, with the state of each</caption>
+      <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Curriculum</th><th scope="col" role="columnheader" class="col-wrap">College</th><th scope="col" role="columnheader" class="col-wrap">Discipline</th><th scope="col" role="columnheader">Effective</th><th scope="col" role="columnheader">Items</th><th scope="col" role="columnheader">For your institution</th><th scope="col" role="columnheader" class="col-fit"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody role="rowgroup">
+        <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Paediatric EPA Curriculum (11.2)</th><td role="cell" data-label="College" class="col-wrap">College of Paediatricians of South Africa</td><td role="cell" data-label="Discipline" class="col-wrap">Paediatrics / Paediatrics</td><td role="cell" data-label="Effective">2026-11-02</td><td role="cell" data-label="Items">16 national · 0 your own</td><td role="cell" data-label="For your institution">Adopted on 2026-11-02</td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Items of Paediatric EPA Curriculum (11.2)">Items</a></div></td></tr>
+        <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Paediatric EPA Curriculum (11.1)</th><td role="cell" data-label="College" class="col-wrap">College of Paediatricians of South Africa</td><td role="cell" data-label="Discipline" class="col-wrap">Paediatrics / Paediatrics</td><td role="cell" data-label="Effective">2026-01-01</td><td role="cell" data-label="Items">15 national · 1 your own</td><td role="cell" data-label="For your institution">Superseded on 2026-11-02<div class="muted text-sm">3 registrars still on it</div></td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Items of Paediatric EPA Curriculum (11.1)">Items</a></div></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+  <section class="curricula-section" aria-labelledby="pv1-open-h">
+    <h2 id="pv1-open-h">Open for adoption</h2>
+    <p class="muted">Adopting a version makes it the one that new admissions to its discipline join. Adopting another version of a discipline your institution has adopted supersedes the current one: registrars already admitted stay on theirs until each is moved, and your institution's own items are not carried over.</p>
+    <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+      <caption>College curriculum versions open for adoption</caption>
+      <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Curriculum</th><th scope="col" role="columnheader" class="col-wrap">College</th><th scope="col" role="columnheader" class="col-wrap">Discipline</th><th scope="col" role="columnheader">Effective</th><th scope="col" role="columnheader">Items</th><th scope="col" role="columnheader" class="col-fit"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody role="rowgroup">
+        <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Paediatric EPA Curriculum (11.1)<div class="muted text-sm">Older than the version your institution has adopted (11.2).</div></th><td role="cell" data-label="College" class="col-wrap">College of Paediatricians of South Africa</td><td role="cell" data-label="Discipline" class="col-wrap">Paediatrics / Paediatrics</td><td role="cell" data-label="Effective">2026-01-01</td><td role="cell" data-label="Items">15</td><td role="cell"><div class="actions-cell"><button type="button" id="pv1-adopt-2" class="btn btn-outline btn-sm" aria-label="Adopt Paediatric EPA Curriculum (11.1)…" aria-haspopup="dialog">Adopt…</button></div></td></tr>
+        <tr role="row"><th scope="row" role="rowheader" class="col-wrap">IM Core Curriculum (2026.1)<div class="muted text-sm">Your institution has adopted no General Medicine / General Internal Medicine version yet.</div></th><td role="cell" data-label="College" class="col-wrap">Demo College</td><td role="cell" data-label="Discipline" class="col-wrap">General Medicine / General Internal Medicine</td><td role="cell" data-label="Effective">2026-01-01</td><td role="cell" data-label="Items">1</td><td role="cell"><div class="actions-cell"><button type="button" id="pv1-adopt-1" class="btn btn-outline btn-sm" aria-label="Adopt IM Core Curriculum (2026.1)">Adopt</button></div></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+</div>
+
+<p class="pv-cap">Step 6.32, Adopt… pressed on 11.2: the dialog names what it supersedes, who stays and what is not carried over; it opens on Cancel, Adopt 11.2 the primary</p>
+<div class="pv-stage">
+  <dialog open class="dialog-scrim dialog-card" aria-labelledby="pv2-t" aria-describedby="pv2-b">
+    <div class="form-container">
+      <h2 id="pv2-t">Adopt Paediatric EPA Curriculum (11.2) for Kgosi Kgari Teaching Hospital?</h2>
+      <div id="pv2-b" class="dialog-body">
+        <p>It supersedes Paediatric EPA Curriculum (11.1) for every new admission to Paediatrics / Paediatrics at Kgosi Kgari Teaching Hospital.</p>
+        <p>The 3 registrars on 11.1 stay on it until each is moved on their profile.</p>
+        <p>Your institution's own item on 11.1, KGK-001, is not carried over: add it again on 11.2.</p>
+      </div>
+      <div class="form-actions"><button type="button" class="btn btn-outline" autofocus>Cancel</button><button type="button" class="btn btn-primary">Adopt 11.2</button></div>
+    </div>
+  </dialog>
+</div>
+
+<p class="pv-cap">A version held back after the page was read (the states pass, IM Core): the refusal in Open for adoption's own region, focused; the list read again without it</p>
+<div class="people-page curricula-page">
+  <section class="curricula-section" aria-labelledby="pv3-open-h">
+    <h2 id="pv3-open-h">Open for adoption</h2>
+    <div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><strong>This curriculum version is not open for adoption.</strong> Its College has held it back, so nothing was adopted.</div></div>
+    <p class="muted">Adopting a version makes it the one that new admissions to its discipline join. Adopting another version of a discipline your institution has adopted supersedes the current one: registrars already admitted stay on theirs until each is moved, and your institution's own items are not carried over.</p>
+    <p class="muted">No other College curriculum version is open for adoption.</p>
+  </section>
+</div>
+
+<p class="pv-cap">Dr Kruger, College admin, after Step 6.31: no section heading; Status in words, Open or Held back (a new or cloned version starts held back); Edit and Items named for their row</p>
+<div class="header-container"><div><h1>Curricula</h1><p class="page-subtitle">Manage curriculum versions and the sub-speciality they apply to.</p></div><div class="actions-cell"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Create curriculum</a></div></div>
+<div class="people-page curricula-page">
+  <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+    <caption>College of Paediatricians of South Africa's curriculum versions</caption>
+    <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Curriculum</th><th scope="col" role="columnheader" class="col-wrap">Discipline</th><th scope="col" role="columnheader">Effective</th><th scope="col" role="columnheader">Items</th><th scope="col" role="columnheader">Status</th><th scope="col" role="columnheader" class="col-fit"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody role="rowgroup">
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Neonatology EPA Curriculum (1.0)</th><td role="cell" data-label="Discipline" class="col-wrap">Paediatrics / Neonatology</td><td role="cell" data-label="Effective">2026-11-02</td><td role="cell" data-label="Items">0</td><td role="cell" data-label="Status">Held back</td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit Neonatology EPA Curriculum (1.0)">Edit</a><a class="btn btn-outline btn-sm" href="#" aria-label="Items of Neonatology EPA Curriculum (1.0)">Items</a></div></td></tr>
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Paediatric EPA Curriculum (11.2)</th><td role="cell" data-label="Discipline" class="col-wrap">Paediatrics / Paediatrics</td><td role="cell" data-label="Effective">2026-11-02</td><td role="cell" data-label="Items">16</td><td role="cell" data-label="Status">Open</td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit Paediatric EPA Curriculum (11.2)">Edit</a><a class="btn btn-outline btn-sm" href="#" aria-label="Items of Paediatric EPA Curriculum (11.2)">Items</a></div></td></tr>
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Paediatric EPA Curriculum (11.1)</th><td role="cell" data-label="Discipline" class="col-wrap">Paediatrics / Paediatrics</td><td role="cell" data-label="Effective">2026-01-01</td><td role="cell" data-label="Items">15</td><td role="cell" data-label="Status">Open</td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit Paediatric EPA Curriculum (11.1)">Edit</a><a class="btn btn-outline btn-sm" href="#" aria-label="Items of Paediatric EPA Curriculum (11.1)">Items</a></div></td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<p class="pv-cap">The Administrator after Step 6.38, KGK chosen and Show pressed: Curriculum progress and Create curriculum in the header; All curricula (shortened here) with a College column; the institution's two sections as h3s named for it, the first focused</p>
+<div class="header-container"><div><h1>Curricula</h1><p class="page-subtitle">Every College's curricula; and, for one institution, what it trains against and may adopt.</p></div><div class="actions-cell"><a class="btn btn-outline" href="#">Curriculum progress</a><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Create curriculum</a></div></div>
+<div class="people-page curricula-page">
+  <section class="curricula-section" aria-labelledby="pv5-all-h">
+    <h2 id="pv5-all-h">All curricula</h2>
+    <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+      <caption>Every College's curriculum versions, with the College's status. Items counts each institution's own items too.</caption>
+      <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Curriculum</th><th scope="col" role="columnheader" class="col-wrap">College</th><th scope="col" role="columnheader" class="col-wrap">Discipline</th><th scope="col" role="columnheader">Effective</th><th scope="col" role="columnheader">Items</th><th scope="col" role="columnheader">Status</th><th scope="col" role="columnheader" class="col-fit"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody role="rowgroup">
+        <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Paediatric EPA Curriculum (11.2)</th><td role="cell" data-label="College" class="col-wrap">College of Paediatricians of South Africa</td><td role="cell" data-label="Discipline" class="col-wrap">Paediatrics / Paediatrics</td><td role="cell" data-label="Effective">2026-11-02</td><td role="cell" data-label="Items">17</td><td role="cell" data-label="Status">Open</td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit Paediatric EPA Curriculum (11.2)">Edit</a><a class="btn btn-outline btn-sm" href="#" aria-label="Items of Paediatric EPA Curriculum (11.2)">Items</a></div></td></tr>
+        <tr role="row"><th scope="row" role="rowheader" class="col-wrap">IM Core Curriculum (2026.1)</th><td role="cell" data-label="College" class="col-wrap">Demo College</td><td role="cell" data-label="Discipline" class="col-wrap">General Medicine / General Internal Medicine</td><td role="cell" data-label="Effective">2026-01-01</td><td role="cell" data-label="Items">1</td><td role="cell" data-label="Status">Open</td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit IM Core Curriculum (2026.1)">Edit</a><a class="btn btn-outline btn-sm" href="#" aria-label="Items of IM Core Curriculum (2026.1)">Items</a></div></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+  <section class="curricula-section" aria-labelledby="pv5-inst-h">
+    <h2 id="pv5-inst-h">An institution's curricula</h2>
+    <form class="search-container" novalidate>
+      <div class="search-grid">
+        <div class="search-field"><label for="pv5-institution">Institution</label><select id="pv5-institution" class="form-select"><option value="0">— Select an institution —</option><option>Demo Institution</option><option selected>Kgosi Kgari Teaching Hospital</option></select></div>
+        <div class="filter-actions"><button type="submit" class="btn btn-outline">Show</button></div>
+      </div>
+    </form>
+    <section class="curricula-section" aria-labelledby="pv5-chosen-h">
+      <h3 id="pv5-chosen-h" tabindex="-1">Curricula Kgosi Kgari Teaching Hospital trains against</h3>
+      <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>The curricula Kgosi Kgari Teaching Hospital trains against, with the state of each</caption>
+        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Curriculum</th><th scope="col" role="columnheader" class="col-wrap">College</th><th scope="col" role="columnheader" class="col-wrap">Discipline</th><th scope="col" role="columnheader">Effective</th><th scope="col" role="columnheader">Items</th><th scope="col" role="columnheader">For this institution</th><th scope="col" role="columnheader" class="col-fit"><span class="visually-hidden">Actions</span></th></tr></thead>
+        <tbody role="rowgroup">
+          <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Paediatric EPA Curriculum (11.2)</th><td role="cell" data-label="College" class="col-wrap">College of Paediatricians of South Africa</td><td role="cell" data-label="Discipline" class="col-wrap">Paediatrics / Paediatrics</td><td role="cell" data-label="Effective">2026-11-02</td><td role="cell" data-label="Items">16 national · 1 Kgosi Kgari Teaching Hospital's own</td><td role="cell" data-label="For this institution">Adopted on 2026-11-02</td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Items of Paediatric EPA Curriculum (11.2) for Kgosi Kgari Teaching Hospital">Items</a></div></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+    <section class="curricula-section" aria-labelledby="pv5-open-h">
+      <h3 id="pv5-open-h">Open to Kgosi Kgari Teaching Hospital</h3>
+      <p class="muted">Adopting a version makes it the one that new admissions to its discipline join. Adopting another version of a discipline the institution has adopted supersedes the current one: registrars already admitted stay on theirs until each is moved, and the institution's own items are not carried over.</p>
+      <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>College curriculum versions open for adoption</caption>
+        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Curriculum</th><th scope="col" role="columnheader" class="col-wrap">College</th><th scope="col" role="columnheader" class="col-wrap">Discipline</th><th scope="col" role="columnheader">Effective</th><th scope="col" role="columnheader">Items</th><th scope="col" role="columnheader" class="col-fit"><span class="visually-hidden">Actions</span></th></tr></thead>
+        <tbody role="rowgroup">
+          <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Paediatric EPA Curriculum (11.1)<div class="muted text-sm">Older than the version Kgosi Kgari Teaching Hospital has adopted (11.2).</div></th><td role="cell" data-label="College" class="col-wrap">College of Paediatricians of South Africa</td><td role="cell" data-label="Discipline" class="col-wrap">Paediatrics / Paediatrics</td><td role="cell" data-label="Effective">2026-01-01</td><td role="cell" data-label="Items">15</td><td role="cell"><div class="actions-cell"><button type="button" class="btn btn-outline btn-sm" aria-label="Adopt Paediatric EPA Curriculum (11.1) for Kgosi Kgari Teaching Hospital…" aria-haspopup="dialog">Adopt…</button></div></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+  </section>
+</div>
+
+<p class="pv-cap">The Administrator presses Show with no institution chosen: nothing is read, the refusal under the select, the select focused; the hint stays</p>
+<div class="people-page curricula-page">
+  <section class="curricula-section" aria-labelledby="pv6-inst-h">
+    <h2 id="pv6-inst-h">An institution's curricula</h2>
+    <form class="search-container" novalidate>
+      <div class="search-grid">
+        <div class="search-field"><label for="pv6-institution">Institution</label><select id="pv6-institution" class="form-select" aria-invalid="true" aria-describedby="pv6-institution-refusal"><option value="0" selected>— Select an institution —</option><option>Demo Institution</option><option>Kgosi Kgari Teaching Hospital</option></select><div id="pv6-institution-refusal" class="validation-message" role="alert">Choose an institution.</div></div>
+        <div class="filter-actions"><button type="submit" class="btn btn-outline">Show</button></div>
+      </div>
+    </form>
+    <p class="muted">Choose an institution, then Show, to see what it trains against and adopt for it.</p>
+  </section>
+</div>
+
+<p class="pv-cap">Loading (each section's heading over a skeleton), then a failed read (fixed words, Try again; the h1 takes the focus once it reads)</p>
+<div class="people-page curricula-page" aria-busy="true">
+  <p class="loading-line" role="status">Loading the curricula.</p>
+  <section class="curricula-section"><h2>Curricula you train against</h2><div class="detail-card" aria-hidden="true"><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line skel-short"></div></div></section>
+</div>
+<div class="people-page curricula-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text">Could not load the curricula. Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /> <path d="M21 3v5h-5" /> <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /> <path d="M8 16H3v5" /></svg>Try again</button></div></div></div>
+</div>
+</div>
+
+<p class="pv-cap">390: each version a block, the curriculum first, each cell labelled, Items and Adopt… 44px; the dialog's buttons stacked, Adopt 11.2 on top</p>
+<div class="pv-narrow">
+  <div class="header-container"><div><h1>Curricula</h1><p class="page-subtitle">The College curricula Kgosi Kgari Teaching Hospital trains against, and the versions open to it.</p></div></div>
+  <div class="people-page curricula-page">
+    <section class="curricula-section" aria-labelledby="pv8-train-h">
+      <h2 id="pv8-train-h">Curricula you train against</h2>
+      <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>The curricula your institution trains against, with the state of each</caption>
+        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Curriculum</th><th scope="col" role="columnheader">College</th><th scope="col" role="columnheader">Discipline</th><th scope="col" role="columnheader">Effective</th><th scope="col" role="columnheader">Items</th><th scope="col" role="columnheader">For your institution</th><th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th></tr></thead>
+        <tbody role="rowgroup">
+          <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Paediatric EPA Curriculum (11.1)</th><td role="cell" data-label="College" class="col-wrap">College of Paediatricians of South Africa</td><td role="cell" data-label="Discipline" class="col-wrap">Paediatrics / Paediatrics</td><td role="cell" data-label="Effective">2026-01-01</td><td role="cell" data-label="Items">15 national · 1 your own</td><td role="cell" data-label="For your institution">Superseded on 2026-11-02<div class="muted text-sm">3 registrars still on it</div></td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Items of Paediatric EPA Curriculum (11.1)">Items</a></div></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+    <section class="curricula-section" aria-labelledby="pv8-open-h">
+      <h2 id="pv8-open-h">Open for adoption</h2>
+      <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>College curriculum versions open for adoption</caption>
+        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Curriculum</th><th scope="col" role="columnheader">College</th><th scope="col" role="columnheader">Discipline</th><th scope="col" role="columnheader">Effective</th><th scope="col" role="columnheader">Items</th><th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th></tr></thead>
+        <tbody role="rowgroup">
+          <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Paediatric EPA Curriculum (11.2)<div class="muted text-sm">Newer than the version your institution has adopted (11.1).</div></th><td role="cell" data-label="College" class="col-wrap">College of Paediatricians of South Africa</td><td role="cell" data-label="Discipline" class="col-wrap">Paediatrics / Paediatrics</td><td role="cell" data-label="Effective">2026-11-02</td><td role="cell" data-label="Items">16</td><td role="cell"><div class="actions-cell"><button type="button" class="btn btn-outline btn-sm" aria-label="Adopt Paediatric EPA Curriculum (11.2)…" aria-haspopup="dialog">Adopt…</button></div></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+  </div>
+  <div class="pv-stage">
+    <dialog open class="dialog-scrim dialog-card" aria-labelledby="pv8-t">
+      <div class="form-container">
+        <h2 id="pv8-t">Adopt Paediatric EPA Curriculum (11.2) for Kgosi Kgari Teaching Hospital?</h2>
+        <div class="dialog-body"><p>It supersedes Paediatric EPA Curriculum (11.1) for every new admission to Paediatrics / Paediatrics at Kgosi Kgari Teaching Hospital.</p></div>
+        <div class="form-actions"><button type="button" class="btn btn-outline">Cancel</button><button type="button" class="btn btn-primary">Adopt 11.2</button></div>
+      </div>
+    </dialog>
+  </div>
+</div>
+</body>
+</html>

@@ -27,7 +27,7 @@ Nothing: MainLayout renders it in its header. What it offers is `NavItems.For(ac
 | Acting role | Links |
 |---|---|
 | Administrator | Home; Platform: Scheduled jobs, Audit log, SSO mappings, Data rights requests; Organisations: Institutions, Colleges; People: Users, Invitations; Catalogue: EPAs, Curricula, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision panels |
-| Institutional admin | Home; People: Invitations, Trainees, Assessors, Users; Curriculum: Curriculum adoptions, Curricula, EPAs, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision panels, Entrustment decisions (since flow 12, T376, F10: Home's Quick links, its only way in, went, Q7); Access and audit: SSO mappings, Audit log |
+| Institutional admin | Home; People: Invitations, Trainees, Assessors, Users; Curriculum: Curricula, EPAs, Activity types, Entrustment scales (Curriculum adoptions went in flow 15, T392, Q1: she adopts on Curricula); Reviews: Decisions due, Committee reviews, Decision panels, Entrustment decisions (since flow 12, T376, F10: Home's Quick links, its only way in, went, Q7); Access and audit: SSO mappings, Audit log |
 | College admin | Home, Specialities, EPAs, Curricula, Activity types |
 | Speciality admin, Sub-speciality admin | Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels, Entrustment decisions |
 | Committee member | Home, Programme trainees, Committee reviews, Decision panels |
@@ -37,7 +37,7 @@ Nothing: MainLayout renders it in its header. What it offers is `NavItems.For(ac
 | Pending trainee | Home (then My data rights among the personal links; D55: a pending registrar files nothing, so Log an activity and My activities went; the Home is flow 11's wait card, AwaitingAdmission) |
 | No role | Home |
 
-Then the personal links. Icons: home, circle-plus, list, message-square, file-text, download, inbox, calendar-check, scale, stethoscope, list-checks, book-open, book-check, clipboard-list, gauge, building, graduation-cap, users, mail, user-round, user-check, clock, history, key, shield-check, trending-up, lock, award.
+Then the personal links. Icons: home, circle-plus, list, message-square, file-text, download, inbox, calendar-check, scale, stethoscope, list-checks, book-open, clipboard-list, gauge, building, graduation-cap, users, mail, user-round, user-check, clock, history, key, shield-check, trending-up, lock, award.
 
 **Flow 06** (T358, 2026-10-05; R2-Menus; Q7, C10) gave the four roles that watch the programme its pages: Programme trainees (`users`) for all four; Waiting for assessors (`clock`) for the three that chase it, not the Committee member, whose work is not chasing; Entrustment decisions (`award`) for both speciality admins, who reached it until then only by address; and Decision panels for the Coordinator, whom the list admitted with no item (Step 2.32), read-only as before. The Coordinator's eight stay flat.
 
@@ -67,7 +67,8 @@ Every page that is not an item's own, and the list it sits under for each acting
 | A College's specialities and sub-specialities, and their edit pages | College admin: Specialities · Administrator: Colleges. On a College's specialities the College is in the trail: Home › Specialities › {College name} for the College admin (the College is the page's own crumb), Home › Colleges › {College name} › Specialities for the Administrator |
 | A College | Administrator: Colleges |
 | An institution; New institution (`/admin/institutions/new`, flow 12) | Administrator: Institutions. Creating one is the Administrator's alone (`InstitutionCreate`, T376, S12). Her own institution's record has no owner: its trail is Home › ‹name› (InstitutionRecord) |
-| An EPA; an activity type; a curriculum's items | Administrator, College admin, Institutional admin: EPAs; Activity types; Curricula |
+| An EPA; an activity type; a curriculum's items; a curriculum item's page (`/admin/curricula/{Id}/items/new`, `…/items/{ItemId}`, flow 15) | Administrator, College admin, Institutional admin: EPAs; Activity types; Curricula. An item's trail is Home › Curricula › Items of ‹curriculum (version)› › its EPA's code, the add page's Home › Curricula › Items of … › its h1 (T392, Q14, F3, R2-B09); Curriculum unavailable and Item unavailable, drawn in the route's own place, sit straight under Curricula |
+| Curriculum adoptions' old address (`/admin/adoptions`, flow 15) | Administrator, Institutional admin: Curricula. It is no menu item since T392 (Q1): it sends to Curricula, replacing itself in the history, and draws nothing |
 | A curriculum | Administrator, College admin: Curricula |
 | Curriculum progress (`/admin/curriculum-progress`) | Administrator: Curricula (linked from Curricula) |
 | An entrustment scale | Administrator: Entrustment scales |

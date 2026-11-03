@@ -1,0 +1,89 @@
+<!-- @dsCard group="Catalogue" height=2900 width=1180 subtitle="EPAs: the subtitle says whose; an institution's own EPA marked in words under its title; Edit only where it may be changed, else Set by the College.; Create EPA only where it can be completed, else the empty state's Go to Curricula; the pager past twenty; 45% title column from 1025px, stacked to 1024px; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Epas</title>
+<style>
+  /* The card is 1180px wide so that app.css's 1024px query (the list stacks to 1024px, 50ca6470) does not fire on the
+     wide renditions; each is drawn in a 974px column, the content column beside the sidebar at 1280. */
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-col { max-width: 974px; }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The stacked list (at 1024px and below in the app) and the phone's rules (below 641px), repeated under .pv-narrow
+     (a 358px column: 390 less the phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-narrow .clinic-table--stack-wide .btn, .pv-narrow .people-page .btn { min-height: 2.75rem; }
+  .pv-narrow .epas-page .clinic-table th.col-wrap--wide { width: auto; }
+</style>
+</head>
+<body>
+<div class="pv-col">
+<p class="pv-cap">Prof Nolwazi Mbatha after Step 6.25: KGK-001 first, "Your institution's own EPA" under its title, its Edit the only one; every national row "Set by the College."; Create EPA, since KGK has adopted a discipline</p>
+<div class="header-container"><div><h1>EPAs</h1><p class="page-subtitle">The EPAs of the curricula Kgosi Kgari Teaching Hospital has adopted. The College's are read only; your institution's own are yours to change.</p></div><div class="actions-cell"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14" /></svg>Create EPA</a></div></div>
+<div class="people-page epas-page">
+  <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+    <caption>EPAs your institution reads</caption>
+    <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap col-wrap--wide">EPA</th><th scope="col" role="columnheader" class="col-wrap">College</th><th scope="col" role="columnheader" class="col-wrap">Sub-speciality</th><th scope="col" role="columnheader">Status</th><th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody role="rowgroup">
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap col-wrap--wide"><a href="#">KGK-001 — Running a paediatric outreach clinic at a district hospital</a><div class="muted text-sm">Your institution's own EPA</div></th><td role="cell" class="col-wrap" data-label="College">College of Paediatricians of South Africa</td><td role="cell" class="col-wrap" data-label="Sub-speciality">Paediatrics / Paediatrics</td><td role="cell" data-label="Status">Active</td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit KGK-001 — Running a paediatric outreach clinic at a district hospital">Edit</a></div></td></tr>
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap col-wrap--wide"><a href="#">PAED-001 — Providing paediatric emergency care to children</a></th><td role="cell" class="col-wrap" data-label="College">College of Paediatricians of South Africa</td><td role="cell" class="col-wrap" data-label="Sub-speciality">Paediatrics / Paediatrics</td><td role="cell" data-label="Status">Active</td><td role="cell"><div class="actions-cell"><span class="muted">Set by the College.</span></div></td></tr>
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap col-wrap--wide"><a href="#">PAED-002 — Managing common paediatric presentations</a></th><td role="cell" class="col-wrap" data-label="College">College of Paediatricians of South Africa</td><td role="cell" class="col-wrap" data-label="Sub-speciality">Paediatrics / Paediatrics</td><td role="cell" data-label="Status">Active</td><td role="cell"><div class="actions-cell"><span class="muted">Set by the College.</span></div></td></tr>
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap col-wrap--wide"><a href="#">PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams</a></th><td role="cell" class="col-wrap" data-label="College">College of Paediatricians of South Africa</td><td role="cell" class="col-wrap" data-label="Sub-speciality">Paediatrics / Paediatrics</td><td role="cell" data-label="Status">Inactive</td><td role="cell"><div class="actions-cell"><span class="muted">Set by the College.</span></div></td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<p class="pv-cap">The Administrator (devadmin): every College's EPAs and every institution's own; the owner named, since her reads span institutions; Edit on every row. Past twenty rows the pager follows, "Pages of EPAs"</p>
+<div class="header-container"><div><h1>EPAs</h1><p class="page-subtitle">Every College's EPAs, and every institution's own.</p></div><div class="actions-cell"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14" /></svg>Create EPA</a></div></div>
+<div class="people-page epas-page">
+  <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+    <caption>Every EPA</caption>
+    <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap col-wrap--wide">EPA</th><th scope="col" role="columnheader" class="col-wrap">College</th><th scope="col" role="columnheader" class="col-wrap">Sub-speciality</th><th scope="col" role="columnheader">Status</th><th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody role="rowgroup">
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap col-wrap--wide"><a href="#">KGK-001 — Running a paediatric outreach clinic at a district hospital</a><div class="muted text-sm">Kgosi Kgari Teaching Hospital's own EPA</div></th><td role="cell" class="col-wrap" data-label="College">College of Paediatricians of South Africa</td><td role="cell" class="col-wrap" data-label="Sub-speciality">Paediatrics / Paediatrics</td><td role="cell" data-label="Status">Active</td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit KGK-001 — Running a paediatric outreach clinic at a district hospital">Edit</a></div></td></tr>
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap col-wrap--wide"><a href="#">PAED-001 — Providing paediatric emergency care to children</a></th><td role="cell" class="col-wrap" data-label="College">College of Paediatricians of South Africa</td><td role="cell" class="col-wrap" data-label="Sub-speciality">Paediatrics / Paediatrics</td><td role="cell" data-label="Status">Active</td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit PAED-001 — Providing paediatric emergency care to children">Edit</a></div></td></tr>
+    </tbody>
+  </table></div>
+  <nav class="pager" aria-label="Pages of EPAs">
+    <div class="pager-info">Showing 1–20 of 24</div>
+    <div class="pager-actions"><button type="button" class="btn btn-outline btn-sm" aria-disabled="true">Previous</button><button type="button" class="btn btn-outline btn-sm">Next</button></div>
+    <div class="pager-page-size"><label class="pager-page-size-label" for="pv2-size">EPAs per page</label><select id="pv2-size" class="form-select form-select-sm pager-page-size-select"><option>10</option><option selected>20</option><option>50</option><option>100</option></select></div>
+  </nav>
+</div>
+
+<p class="pv-cap">Prof Mbatha at Step 1.19, before KGK adopts anything (Q12, R2-C01): no Create EPA; the empty state says why and offers Go to Curricula</p>
+<div class="header-container"><div><h1>EPAs</h1><p class="page-subtitle">The EPAs of the curricula Kgosi Kgari Teaching Hospital has adopted. The College's are read only; your institution's own are yours to change.</p></div></div>
+<div class="people-page epas-page">
+  <div class="detail-card detail-card--empty" tabindex="-1"><div class="state-panel-title">No EPAs yet</div> <div class="state-panel-copy">Your institution has not adopted a curriculum yet, so there is no discipline to add an EPA to. Adopt one under Curricula.</div><div class="form-actions"><a class="btn btn-primary" href="#">Go to Curricula</a></div></div>
+</div>
+
+<p class="pv-cap">Load failed (S7, R3-C17): fixed words and Try again, never the exception's text</p>
+<div class="people-page epas-page">
+  <div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text">Could not load the EPAs. Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5" /></svg>Try again</button></div></div>
+</div>
+</div>
+
+<p class="pv-cap">At 390 (stacked from 1024px): a block per EPA, the label and its mark first, then College, Sub-speciality, Status and Edit or "Set by the College."; Edit 44px</p>
+<div class="pv-narrow">
+  <div class="header-container"><div><h1>EPAs</h1><p class="page-subtitle">The EPAs of the curricula Kgosi Kgari Teaching Hospital has adopted. The College's are read only; your institution's own are yours to change.</p></div><div class="actions-cell"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14" /></svg>Create EPA</a></div></div>
+  <div class="people-page epas-page">
+    <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+      <caption>EPAs your institution reads</caption>
+      <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap col-wrap--wide">EPA</th><th scope="col" role="columnheader" class="col-wrap">College</th><th scope="col" role="columnheader" class="col-wrap">Sub-speciality</th><th scope="col" role="columnheader">Status</th><th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody role="rowgroup">
+        <tr role="row"><th scope="row" role="rowheader" class="col-wrap col-wrap--wide"><a href="#">KGK-001 — Running a paediatric outreach clinic at a district hospital</a><div class="muted text-sm">Your institution's own EPA</div></th><td role="cell" class="col-wrap" data-label="College">College of Paediatricians of South Africa</td><td role="cell" class="col-wrap" data-label="Sub-speciality">Paediatrics / Paediatrics</td><td role="cell" data-label="Status">Active</td><td role="cell"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit KGK-001 — Running a paediatric outreach clinic at a district hospital">Edit</a></div></td></tr>
+        <tr role="row"><th scope="row" role="rowheader" class="col-wrap col-wrap--wide"><a href="#">PAED-001 — Providing paediatric emergency care to children</a></th><td role="cell" class="col-wrap" data-label="College">College of Paediatricians of South Africa</td><td role="cell" class="col-wrap" data-label="Sub-speciality">Paediatrics / Paediatrics</td><td role="cell" data-label="Status">Active</td><td role="cell"><div class="actions-cell"><span class="muted">Set by the College.</span></div></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!-- @dsCard group="Catalogue" height=5200 width=1180 subtitle="A curriculum item's page of its own: the add and the edit (one editor for every caller, its words by whose item it is; the submit aria-disabled with its reason until every minimum is a rung; Cancel first); a refusal under its field, the picker asked again; a national item's record; Item unavailable; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CurriculumItem</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-col { max-width: 974px; }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* Below 641px .user-page makes every control 44px and stacks its form actions with the primary on top; app.css's
+     items section makes the item page's checkbox rows 44px with a 20px box (N9). The 390 rendition repeats those rules
+     under .pv-narrow (a 358px column), and .form-grid's one column. */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .form-grid { grid-template-columns: minmax(0, 1fr); }
+  .pv-narrow .user-page .btn, .pv-narrow .user-page .form-control, .pv-narrow .user-page .form-select { min-height: 2.75rem; }
+  .pv-narrow .user-page .form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .pv-narrow .user-page .form-actions .btn { width: 100%; }
+  .pv-narrow .curriculum-item-page .form-check { align-items: center; display: flex; min-height: 2.75rem; }
+  .pv-narrow .curriculum-item-page .form-check-input { height: 1.25rem; width: 1.25rem; }
+  .pv-narrow .curriculum-item-page .form-check label { align-items: center; display: inline-flex; flex: 1; min-height: 2.75rem; }
+</style>
+</head>
+<body>
+<div class="pv-col">
+<p class="pv-cap">Prof Mbatha at Step 6.26, before a rung is chosen: "Add your institution's own item"; KGK-001 the one EPA on offer; the CPSA ladder suggested, and why; Add item aria-disabled and described by the status that says why; Cancel first</p>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+  <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Curricula</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Items of Paediatric EPA Curriculum (11.1)</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-current"><span aria-current="page">Add your institution's own item</span></li>
+</ol></nav>
+<div class="header-container"><div><h1>Add your institution's own item</h1><p class="page-subtitle">On Paediatric EPA Curriculum (11.1). It applies only to Kgosi Kgari Teaching Hospital's trainees.</p></div></div>
+<div class="user-page curriculum-item-page">
+  <form class="form-container">
+    <div class="form-grid form-grid--wide">
+      <div class="form-group full-width"><label for="pv1-epa">EPA <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label><select id="pv1-epa" class="form-select" aria-describedby="pv1-epa-help"><option selected>KGK-001 — Running a paediatric outreach clinic at a district hospital</option></select><small class="page-subtitle" id="pv1-epa-help">Lists only the EPAs this item can name that no item on this curriculum already holds for the same trainees: the national EPAs of its sub-speciality and, for an item an institution added, that institution's own local EPAs. A national item holds its EPA for every institution; an institution's own item holds it for that institution alone.</small></div>
+      <div class="form-group"><label for="pv1-count">Target</label><input id="pv1-count" class="form-control" type="number" value="1" aria-describedby="pv1-count-help"><small class="page-subtitle" id="pv1-count-help">Credited encounters required in each period below. This is the published frequency, not a total for the whole programme.</small></div>
+      <div class="form-group"><label for="pv1-period">Per</label><select id="pv1-period" class="form-select" aria-describedby="pv1-period-help"><option>Semester (January to June, July to November)</option><option selected>Academic year (January to November)</option></select><small class="page-subtitle" id="pv1-period-help">A semester target applies to each semester on its own. A surplus in one semester does not carry into the next.</small></div>
+      <div class="form-group"><label for="pv1-cadence">Decision cadence</label><select id="pv1-cadence" class="form-select" aria-describedby="pv1-cadence-help"><option selected>No published cadence</option><option>Each semester</option><option>Each academic year</option></select><small class="page-subtitle" id="pv1-cadence-help">How often a committee takes the entrustment decision on this EPA (Annexure B). Separate from the target: an EPA observed each semester may be decided once a year. With no cadence the EPA is never due, but a committee can still decide it.</small></div>
+      <div class="form-group"><label for="pv1-body">Decided by</label><select id="pv1-body" class="form-select" aria-describedby="pv1-body-help"><option selected>The trainee's general panel</option><option>Neonatal team Clinical Competency Committee</option></select><small class="page-subtitle" id="pv1-body-help">The committee the College names to decide this EPA instead of the trainee's general panel, such as the neonatal CCC for paediatric EPAs 4 and 5.</small></div>
+      <div class="form-group"><label for="pv1-opp">Opportunistic</label><div class="form-check"><input id="pv1-opp" class="form-check-input" type="checkbox" disabled aria-describedby="pv1-opp-help"><label for="pv1-opp">Decided as rotation or opportunity allows</label></div><small class="page-subtitle" id="pv1-opp-help">For an EPA the College has decided as rotation or opportunity allows, such as paediatric EPAs 8, 9 and 13: its decision is never overdue. Needs a decision cadence.</small></div>
+      <div class="form-group"><label for="pv1-scale">Entrustment scale</label><select id="pv1-scale" class="form-select" aria-describedby="pv1-scale-help pv1-scale-reason"><option>Not pinned</option><option selected>CPSA Paediatric Entrustment Scale v11.1</option></select><small class="page-subtitle" id="pv1-scale-help">The ladder the minima are picked on. Changing it clears them, because the same number is a different rung on another ladder; changing back brings back what was picked on this one. Leave unpinned if you are not certain: a wrong scale makes assessments on another ladder stop counting toward the minimum.</small><small id="pv1-scale-reason" class="muted">Suggested because every item on this curriculum is pinned to it.</small></div>
+      <div class="form-group"><label for="pv1-minimum">Minimum level <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label><select id="pv1-minimum" class="form-select" required aria-required="true"><option value="" selected>Choose a rung</option><option>1</option><option>2</option><option>3a</option><option>3b</option><option>4</option><option>5</option></select></div>
+      <fieldset class="form-group full-width" aria-describedby="pv1-years-help"><legend>Minimum by training year</legend><p id="pv1-years-help" class="page-subtitle">A trainee in a year listed here is measured against that year's rung instead of the minimum level. A year not listed uses the minimum level.</p><p class="page-subtitle">No year has its own minimum.</p><button type="button" class="btn btn-sm btn-outline">Add year 1</button></fieldset>
+      <div class="form-group"><label for="pv1-window">Completion window (months)</label><input id="pv1-window" class="form-control" type="number" value="12" aria-describedby="pv1-window-help"><small class="page-subtitle" id="pv1-window-help">Only used to suggest a trainee's expected completion date. It is not the target period, and credit does not check it.</small></div>
+      <div class="form-group"><label for="pv1-weight">Weight</label><input id="pv1-weight" class="form-control" type="number"></div>
+      <fieldset class="form-group full-width" aria-describedby="pv1-tools-help"><legend>Tools</legend><p id="pv1-tools-help" class="page-subtitle">The instruments that may be used as evidence for this EPA. None ticked means any instrument. Checked when an activity is filed and submitted; it never takes back credit already earned.</p>
+        <div class="check-grid">
+          <div class="form-check"><input id="pv1-t1" class="form-check-input" type="checkbox"><label for="pv1-t1">CBD</label></div>
+          <div class="form-check"><input id="pv1-t2" class="form-check-input" type="checkbox"><label for="pv1-t2">CCA</label></div>
+          <div class="form-check"><input id="pv1-t3" class="form-check-input" type="checkbox"><label for="pv1-t3">Chart-stimulated recall</label></div>
+          <div class="form-check"><input id="pv1-t4" class="form-check-input" type="checkbox"><label for="pv1-t4">Clinical audit</label></div>
+          <div class="form-check"><input id="pv1-t5" class="form-check-input" type="checkbox" checked><label for="pv1-t5">Direct observation</label></div>
+          <div class="form-check"><input id="pv1-t6" class="form-check-input" type="checkbox"><label for="pv1-t6">DOPS</label></div>
+          <div class="form-check"><input id="pv1-t7" class="form-check-input" type="checkbox"><label for="pv1-t7">Learner feedback</label></div>
+          <div class="form-check"><input id="pv1-t8" class="form-check-input" type="checkbox"><label for="pv1-t8">Mini-CEX</label></div>
+          <div class="form-check"><input id="pv1-t9" class="form-check-input" type="checkbox"><label for="pv1-t9">MSF</label></div>
+          <div class="form-check"><input id="pv1-t10" class="form-check-input" type="checkbox"><label for="pv1-t10">Portfolio and logbook review</label></div>
+          <div class="form-check"><input id="pv1-t11" class="form-check-input" type="checkbox"><label for="pv1-t11">RCA</label></div>
+          <div class="form-check"><input id="pv1-t12" class="form-check-input" type="checkbox"><label for="pv1-t12">Reflective exercise</label></div>
+        </div>
+      </fieldset>
+    </div>
+    <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><span id="pv1-status" class="muted" role="status">Adding is off until every minimum is a rung on CPSA Paediatric Entrustment Scale v11.1.</span><button type="submit" class="btn btn-primary" aria-disabled="true" aria-describedby="pv1-status">Add item</button></div>
+  </form>
+</div>
+
+<p class="pv-cap">Dr Kruger, a stale edit (the states pass): Save item refused under EPA, the select invalid and described by the refusal first, focused; the picker asked again offers PAED-011 alone; the typed target kept (the other fields not drawn)</p>
+<div class="header-container"><div><h1>Edit PAED-011 — Managing population health challenges</h1><p class="page-subtitle">On Paediatric EPA Curriculum (11.2). It applies to every institution that has adopted it.</p></div></div>
+<div class="user-page curriculum-item-page">
+  <form class="form-container">
+    <div class="form-grid form-grid--wide">
+      <div class="form-group full-width"><label for="pv2-epa">EPA <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label><select id="pv2-epa" class="form-select invalid" aria-invalid="true" aria-describedby="pv2-epa-refusal pv2-epa-help"><option selected>PAED-011 — Managing population health challenges</option></select><div id="pv2-epa-refusal" class="validation-message" role="alert">This curriculum already contains the selected EPA.</div><small class="page-subtitle" id="pv2-epa-help">Lists only the EPAs this item can name that no item on this curriculum already holds for the same trainees: the national EPAs of its sub-speciality and, for an item an institution added, that institution's own local EPAs. A national item holds its EPA for every institution; an institution's own item holds it for that institution alone.</small></div>
+      <div class="form-group"><label for="pv2-count">Target</label><input id="pv2-count" class="form-control" type="number" value="2" aria-describedby="pv2-count-help"><small class="page-subtitle" id="pv2-count-help">Credited encounters required in each period below. This is the published frequency, not a total for the whole programme.</small></div>
+    </div>
+    <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><span id="pv2-status" class="muted" role="status"></span><button type="submit" class="btn btn-primary" aria-describedby="pv2-status">Save item</button></div>
+  </form>
+</div>
+
+<p class="pv-cap">Prof Mbatha after Step 1.21, View on PAED-001: the national item's record, no form and no Save; Back carries ?back=, so the list focuses the row's View</p>
+<div class="header-container"><div><h1>PAED-001 — Providing paediatric emergency care to children</h1><p class="page-subtitle">A national item on Paediatric EPA Curriculum (11.1). The College sets it, so it is read only here.</p></div></div>
+<div class="user-page curriculum-item-page">
+  <section class="detail-card user-section">
+    <dl class="detail-list">
+      <dt>EPA</dt><dd>PAED-001 — Providing paediatric emergency care to children</dd>
+      <dt>Target and decision</dt><dd>3 per semester<div class="muted text-sm">Decided each semester</div></dd>
+      <dt>Minimum level</dt><dd>5<div class="muted text-sm">CPSA Paediatric Entrustment Scale v11.1</div></dd>
+      <dt>Minimum by training year</dt><dd><ul class="list-unstyled"><li>Year 1: 3a</li><li>Year 2: 3b</li><li>Year 3: 4</li><li>Year 4: 5</li></ul></dd>
+      <dt>Completion window</dt><dd>12 months</dd>
+      <dt>Weight</dt><dd>—</dd>
+      <dt>Tools</dt><dd>CBD, CCA, Clinical audit, DOPS, Mini-CEX, MSF, RCA, Reflective exercise</dd>
+    </dl>
+  </section>
+  <div class="form-actions"><a class="btn btn-outline" href="#">Back to Items of Paediatric EPA Curriculum (11.1)</a></div>
+</div>
+
+<p class="pv-cap">Typed with an id 11.2 does not hold: Item unavailable, in the route's own place, straight under Curricula; and the add on a superseded version: Cannot add an item</p>
+<div class="header-container"><div><h1>Item unavailable</h1></div></div>
+<div class="user-page curriculum-item-page">
+  <div class="detail-card detail-card--empty"><div class="state-panel-copy">This curriculum item does not exist, or you cannot change it.</div><div class="form-actions"><a class="btn btn-primary" href="#">Go to Items of Paediatric EPA Curriculum (11.2)</a></div></div>
+</div>
+<div class="header-container"><div><h1>Cannot add an item</h1></div></div>
+<div class="user-page curriculum-item-page">
+  <div class="detail-card detail-card--empty"><div class="state-panel-copy">Your institution has superseded this version, so no item is added to it. Its own items stay for the registrars still on it.</div><div class="form-actions"><a class="btn btn-primary" href="#">Go to Items of Paediatric EPA Curriculum (11.1)</a></div></div>
+</div>
+
+<p class="pv-cap">A failed add (fixed words at the form's top, focused); loading</p>
+<div class="user-page curriculum-item-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert">The item could not be added. Nothing has changed. Try again, or come back in a few minutes.</div></div>
+</div>
+<div class="header-container"><div><h1>Curriculum item</h1></div></div>
+<div class="user-page curriculum-item-page" aria-busy="true">
+  <p class="loading-line" role="status">Loading this curriculum item.</p>
+  <div class="detail-card" aria-hidden="true"><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line skel-short"></div></div>
+</div>
+</div>
+
+<p class="pv-cap">390, Step A.7.10's Edit PAED-001 (the decision fields and the tools, shortened): one field a row, every control 44px, the opportunistic box and each tool a 44px row; Save item on top of Cancel, each the row's width</p>
+<div class="pv-narrow">
+  <div class="header-container"><div><h1>Edit PAED-001 — Providing paediatric emergency care to children</h1><p class="page-subtitle">On Paediatric EPA Curriculum (11.2). It applies to every institution that has adopted it.</p></div></div>
+  <div class="user-page curriculum-item-page">
+    <form class="form-container">
+      <div class="form-grid form-grid--wide">
+        <div class="form-group full-width"><label for="pv6-epa">EPA <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label><select id="pv6-epa" class="form-select"><option selected>PAED-001 — Providing paediatric emergency care to children</option></select></div>
+        <div class="form-group"><label for="pv6-count">Target</label><input id="pv6-count" class="form-control" type="number" value="3"></div>
+        <div class="form-group"><label for="pv6-opp">Opportunistic</label><div class="form-check"><input id="pv6-opp" class="form-check-input" type="checkbox"><label for="pv6-opp">Decided as rotation or opportunity allows</label></div></div>
+        <div class="form-group"><label for="pv6-minimum">Minimum level <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label><select id="pv6-minimum" class="form-select"><option selected>5</option></select></div>
+        <fieldset class="form-group full-width"><legend>Tools</legend>
+          <div class="check-grid">
+            <div class="form-check"><input id="pv6-t1" class="form-check-input" type="checkbox" checked><label for="pv6-t1">CBD</label></div>
+            <div class="form-check"><input id="pv6-t2" class="form-check-input" type="checkbox" checked><label for="pv6-t2">CCA</label></div>
+          </div>
+        </fieldset>
+      </div>
+      <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><span class="muted" role="status"></span><button type="submit" class="btn btn-primary">Save item</button></div>
+    </form>
+  </div>
+</div>
+</body>
+</html>

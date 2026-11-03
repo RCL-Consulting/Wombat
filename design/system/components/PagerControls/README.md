@@ -29,8 +29,10 @@ The summary and the label (`muted-text`) 5.09:1 on the surface, 4.83:1 on the pa
 
 Flow 14's queue (DataRightsRequests) passes `Label` "Requests, pages" and `PageSizeLabel` "Requests per page", drawn only past twenty, and answers a page turn and a change of size in place, as Users does (review P2).
 
+Flow 15's EPA list (Epas; T392, P5) passes `Label` "Pages of EPAs" and `PageSizeLabel` "EPAs per page", drawn while the list runs past the chosen size (`list.Epas.Count > _pageSize`). Its rows are read once and paged on the page, so a turn reads nothing; a page turn focuses the h1.
+
 ## Known gaps
 
 T280's pager half closed with flow 08 (T364): the select is named by its label on every list.
 
-- **T390** (proposed, found by flow 14's states pass): where a page draws the pager only while `TotalCount > PageSize` (My activities, Assessors, Trainees, Users, Data rights requests), choosing a size that holds every row hides the pager and its select, so the size cannot be brought back down without a reload.
+- **T390** (proposed, found by flow 14's states pass): where a page draws the pager only while `TotalCount > PageSize` (My activities, Assessors, Trainees, Users, Data rights requests, and since flow 15 the EPA list), choosing a size that holds every row hides the pager and its select, so the size cannot be brought back down without a reload.

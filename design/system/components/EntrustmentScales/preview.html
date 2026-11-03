@@ -1,0 +1,72 @@
+<!-- @dsCard group="Catalogue" height=2300 width=974 subtitle="Entrustment scales: the reader is told what the ladders are and who sets them, with no actions column; the Administrator's Create scale, Edit and Delete; Levels a count in tabular figures; a delete refused in the handler's words; stacked from 900px; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>EntrustmentScales</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The stacked list (at 900px and below in the app) and the phone's rules (below 641px), repeated under .pv-narrow
+     (a 358px column: 390 less the phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Prof Nolwazi Mbatha at Step 6.9: the reader's subtitle (Q13, T326); Name, Description and Levels only; no Create scale, no actions column</p>
+<div class="header-container"><div><h1>Entrustment scales</h1><p class="page-subtitle">The rating ladders that assessment forms and committee reviews use. A Wombat administrator sets them; they are shown here for reference.</p></div></div>
+<div class="people-page scales-page">
+  <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+    <caption>Entrustment scales, by name</caption>
+    <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap">Name</th><th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Description</th><th scope="col" role="columnheader">Levels</th></tr></thead>
+    <tbody role="rowgroup">
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap">CNSA Neurology Entrustment Scale</th><td role="cell" data-label="Description" class="col-wrap">Supervision ladder for CNSA EPAs.</td><td role="cell" data-label="Levels">6</td></tr>
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap">CPSA Paediatric Entrustment Scale v11.1</th><td role="cell" data-label="Description" class="col-wrap">Six rungs in four bands. Only level 3 is split: the gap between "check everything with me" and "call me if you are worried" is the whole of a registrar’s third year.</td><td role="cell" data-label="Levels">6</td></tr>
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap">O-R Scale</th><td role="cell" data-label="Description" class="col-wrap">Standard 1-5 observation-to-entrustment scale.</td><td role="cell" data-label="Levels">5</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<p class="pv-cap">devadmin at Step 6.8: the Administrator's subtitle, Create scale, Edit and Delete named by the scale; Delete sent at once (T264) and refused in the handler's words, focused</p>
+<div class="header-container"><div><h1>Entrustment scales</h1><p class="page-subtitle">Define and maintain the rating ladders used by assessment forms and committee reviews.</p></div><div class="actions-cell"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14" /></svg>Create scale</a></div></div>
+<div class="people-page scales-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert">This entrustment scale is the default scale of the sub-speciality "Adult Neurology" (Neurology), so it cannot be deleted. Change that sub-speciality's default entrustment scale to another scale, or to no default, first.</div></div>
+  <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+    <caption>Entrustment scales, by name</caption>
+    <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap">Name</th><th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Description</th><th scope="col" role="columnheader">Levels</th><th scope="col" role="columnheader" class="col-actions"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody role="rowgroup">
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap">CNSA Neurology Entrustment Scale</th><td role="cell" data-label="Description" class="col-wrap">Supervision ladder for CNSA EPAs.</td><td role="cell" data-label="Levels">6</td><td role="cell" class="col-actions"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit CNSA Neurology Entrustment Scale">Edit</a><button type="button" class="btn btn-danger btn-sm" aria-label="Delete CNSA Neurology Entrustment Scale">Delete</button></div></td></tr>
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap">CPSA Paediatric Entrustment Scale v11.1</th><td role="cell" data-label="Description" class="col-wrap">Six rungs in four bands. Only level 3 is split: the gap between "check everything with me" and "call me if you are worried" is the whole of a registrar’s third year.</td><td role="cell" data-label="Levels">6</td><td role="cell" class="col-actions"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit CPSA Paediatric Entrustment Scale v11.1">Edit</a><button type="button" class="btn btn-danger btn-sm" aria-label="Delete CPSA Paediatric Entrustment Scale v11.1">Delete</button></div></td></tr>
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap">O-R Scale</th><td role="cell" data-label="Description" class="col-wrap">Standard 1-5 observation-to-entrustment scale.</td><td role="cell" data-label="Levels">5</td><td role="cell" class="col-actions"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit O-R Scale">Edit</a><button type="button" class="btn btn-danger btn-sm" aria-label="Delete O-R Scale">Delete</button></div></td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<p class="pv-cap">Load failed (S7, R3-E04): fixed words and Try again, never the exception's text</p>
+<div class="people-page scales-page">
+  <div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text">Could not load the entrustment scales. Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5" /></svg>Try again</button></div></div>
+</div>
+
+<p class="pv-cap">At 390 (stacked from 900px), the reader's: a block per scale, its name first, then Description and Levels</p>
+<div class="pv-narrow">
+  <div class="header-container"><div><h1>Entrustment scales</h1><p class="page-subtitle">The rating ladders that assessment forms and committee reviews use. A Wombat administrator sets them; they are shown here for reference.</p></div></div>
+  <div class="people-page scales-page">
+    <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+      <caption>Entrustment scales, by name</caption>
+      <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap">Name</th><th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Description</th><th scope="col" role="columnheader">Levels</th></tr></thead>
+      <tbody role="rowgroup">
+        <tr role="row"><th scope="row" role="rowheader" class="col-wrap">CPSA Paediatric Entrustment Scale v11.1</th><td role="cell" data-label="Description" class="col-wrap">Six rungs in four bands. Only level 3 is split: the gap between "check everything with me" and "call me if you are worried" is the whole of a registrar’s third year.</td><td role="cell" data-label="Levels">6</td></tr>
+        <tr role="row"><th scope="row" role="rowheader" class="col-wrap">O-R Scale</th><td role="cell" data-label="Description" class="col-wrap">Standard 1-5 observation-to-entrustment scale.</td><td role="cell" data-label="Levels">5</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</div>
+</body>
+</html>

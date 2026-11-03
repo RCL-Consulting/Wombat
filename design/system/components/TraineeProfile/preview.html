@@ -1,4 +1,4 @@
-<!-- @dsCard group="Graduation and exit" height=5720 width=974 subtitle="A trainee's programme: h1 ‹name›'s programme, Export ‹name›'s portfolio in the header; the summary, Profile details, End this programme (the last day, Mark complete… and Deactivate… as role rows); the day refused under its field before any dialog; the two dialogs with their forecast; the ended record with its result, read-only details and the account; 390" -->
+<!-- @dsCard group="Graduation and exit" height=7300 width=974 subtitle="A trainee's programme: h1 ‹name›'s programme, Export ‹name›'s portfolio in the header; the summary, Profile details, End this programme (the last day, Mark complete… and Deactivate… as role rows); the day refused under its field before any dialog; the two dialogs with their forecast; the ended record with its result, read-only details and the account; flow 15's move: the line under Curriculum, Save profile and move…, its dialog on Cancel, the result, the refusal under the picker; 390" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -51,6 +51,45 @@
       <li class="role-row"><span class="role-row-note" id="pv-mc-n">A graduation: archives the profile, removes the Trainee role and sends Anele Dlamini a graduation email.</span><button type="button" class="btn btn-outline btn-sm" aria-haspopup="dialog" aria-describedby="pv-mc-n">Mark complete…</button></li>
       <li class="role-row"><span class="role-row-note" id="pv-dc-n">A withdrawal: archives the profile and removes the Trainee role. No email is sent.</span><button type="button" class="btn btn-outline btn-sm" aria-haspopup="dialog" aria-describedby="pv-dc-n">Deactivate…</button></li>
     </ul>
+  </section>
+</div>
+
+<p class="pv-cap">Flow 15, Step 6.36: Prof Mbatha chooses 11.2 on Sipho Ndlovu's programme; the line under the picker says what the save does, and the submit reads "Save profile and move…" with aria-haspopup (R2-D02, decision 6)</p>
+<div class="user-page">
+  <section class="detail-card user-section" aria-labelledby="pv-mv"><h2 id="pv-mv">Profile details</h2>
+    <form novalidate>
+      <div class="form-grid">
+        <div class="form-group"><label for="pv-mv-cur">Curriculum<span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><select id="pv-mv-cur" class="form-select" aria-required="true" aria-describedby="pv-mv-line"><option>Paediatric EPA Curriculum (11.1)</option><option selected>Paediatric EPA Curriculum (11.2)</option></select><p class="submit-check" id="pv-mv-line">When you save, Sipho Ndlovu moves to Paediatric EPA Curriculum (11.2). Sipho Ndlovu's completed activities are counted again against 11.2 in the same save, so Sipho Ndlovu's progress page reads 11.2's targets at once. Sipho Ndlovu cannot be moved back to 11.1 while 11.2 is the version your institution has adopted.</p></div>
+        <div class="form-group"><label for="pv-mv-st">Programme start date<span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv-mv-st" type="date" class="form-control" aria-required="true" value="2026-01-15"></div>
+        <div class="form-group"><label for="pv-mv-ex">Expected completion date</label><input id="pv-mv-ex" type="date" class="form-control" aria-describedby="pv-mv-ex-h" value="2030-01-14"><small class="page-subtitle" id="pv-mv-ex-h">Leave this empty to derive it from the curriculum window.</small></div>
+      </div>
+      <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary" aria-haspopup="dialog">Save profile and move…</button></div>
+    </form>
+  </section>
+</div>
+
+<p class="pv-cap">The move's dialog (R3-D03, Q8, Q20): no count read before it; Cancel focused; Move and save the primary</p>
+<div class="pv-stage"><dialog open class="dialog-scrim dialog-card" aria-labelledby="pv-mv-t" aria-describedby="pv-mv-b"><div class="form-container"><h2 id="pv-mv-t">Move Sipho Ndlovu to Paediatric EPA Curriculum (11.2)?</h2><div id="pv-mv-b" class="dialog-body"><p>Sipho Ndlovu's completed activities are counted again against 11.2 as the profile saves, and from then on they credit 11.2's items.</p><p>Sipho Ndlovu cannot be moved back to 11.1 while 11.2 is the version your institution has adopted.</p></div><div class="form-actions"><button type="button" class="btn btn-outline">Cancel</button><button type="button" class="btn btn-primary">Move and save</button></div></div></dialog></div>
+
+<p class="pv-cap">Moved (T304, R2-D05): the result focused, its first sentence bold; the picker read again offers 11.2 alone, under the active adoption's line</p>
+<div class="user-page">
+  <section class="detail-card user-section" aria-labelledby="pv-mv2"><h2 id="pv-mv2">Profile details</h2>
+    <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status"><strong>Trainee profile saved.</strong> 1 completion was checked against 11.2, and 1 counts towards it.</div></div>
+    <div class="form-group"><label for="pv-mv2-cur">Curriculum<span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><select id="pv-mv2-cur" class="form-select" aria-required="true" aria-describedby="pv-mv2-line"><option selected>Paediatric EPA Curriculum (11.2)</option></select><p class="submit-check" id="pv-mv2-line">The version your institution has adopted for Paediatrics / Paediatrics.</p></div>
+  </section>
+</div>
+
+<p class="pv-cap">Kept on a superseded version (Step 6.34, R2-D01): Anele Dlamini's picker unchanged; Save profile asks nothing</p>
+<div class="user-page">
+  <section class="detail-card user-section" aria-labelledby="pv-kp"><h2 id="pv-kp">Profile details</h2>
+    <div class="form-group"><label for="pv-kp-cur">Curriculum<span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><select id="pv-kp-cur" class="form-select" aria-required="true" aria-describedby="pv-kp-line"><option selected>Paediatric EPA Curriculum (11.1)</option><option>Paediatric EPA Curriculum (11.2)</option></select><p class="submit-check" id="pv-kp-line">Anele Dlamini is on Paediatric EPA Curriculum (11.1), which your institution superseded on 2026-11-02. Keeping it keeps Anele Dlamini on 11.1.</p></div>
+  </section>
+</div>
+
+<p class="pv-cap">A move refused (R2-D06, an illustration: the adoption gone under an open page): the refusal under the picker, first in its aria-describedby, the select marked and focused; the picker read again, back on the pin, over the superseded line</p>
+<div class="user-page">
+  <section class="detail-card user-section" aria-labelledby="pv-rf"><h2 id="pv-rf">Profile details</h2>
+    <div class="form-group"><label for="pv-rf-cur">Curriculum<span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><select id="pv-rf-cur" class="form-select input-validation-error" aria-required="true" aria-invalid="true" aria-describedby="pv-rf-err pv-rf-line"><option selected>Paediatric EPA Curriculum (11.1)</option></select><div class="validation-message" id="pv-rf-err" role="alert">A trainee can be moved only into the curriculum version this institution has adopted for their discipline, so nothing was saved.</div><p class="submit-check" id="pv-rf-line">Anele Dlamini is on Paediatric EPA Curriculum (11.1), which your institution superseded on 2026-11-02. Keeping it keeps Anele Dlamini on 11.1.</p></div>
   </section>
 </div>
 

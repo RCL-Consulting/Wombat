@@ -1,0 +1,115 @@
+<!-- @dsCard group="Catalogue" height=4300 width=974 subtitle="An EPA's page in the catalogue: titled by the EPA, its code the crumb; the form where it may be changed (Active's help says whose trainees), Deactivate… and its dialog on Cancel; refusals under their field; the created EPA's result by ?created; a national EPA's record, read only; EPA unavailable; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AdminEpaPage</title>
+<style>
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The app opens a dialog with showModal(); a static preview cannot, so its stage paints the scrim itself. */
+  .pv-stage { position: relative; background: var(--scrim); padding: var(--space-xl) 0; }
+  .pv-stage dialog { position: static; margin: 0 auto; }
+  /* Below 641px app.css makes every control on .user-page 44px, stacks the form's actions and a dialog's buttons with the
+     action on top, and makes Status's Active row a 44px target (.user-page.epa-page .form-check); the 390 rendition
+     repeats those rules under .pv-narrow (a 358px column: 390 less the phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .btn, .pv-narrow .form-control, .pv-narrow .form-select { min-height: 2.75rem; }
+  .pv-narrow .user-page .form-actions, .pv-narrow .dialog-card .form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .pv-narrow .user-page .form-actions .btn, .pv-narrow .dialog-card .form-actions .btn { width: 100%; }
+  .pv-narrow .user-page.epa-page .form-check { min-height: 2.75rem; }
+  .pv-narrow .user-page.epa-page .form-check-input { height: 1.25rem; width: 1.25rem; }
+  .pv-narrow .user-page.epa-page .form-check label { align-items: center; display: inline-flex; flex: 1; min-height: 2.75rem; }
+</style>
+</head>
+<body>
+<p class="pv-cap">Prof Nolwazi Mbatha at Step 6.25, arrived by ?created: "EPA saved." heads the page with the focus, the token gone from the address; titled by the EPA, its code the crumb, no Back to EPAs; Active's help names KGK's trainees; Cancel, Deactivate… and Save</p>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+  <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>EPAs</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-current"><span aria-current="page">KGK-001</span></li>
+</ol></nav>
+<div class="header-container"><div><h1>KGK-001 — Running a paediatric outreach clinic at a district hospital</h1><p class="page-subtitle">Define the EPA code, scope, and descriptive guidance.</p></div></div>
+<div class="user-page epa-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status">EPA saved.</div></div>
+  <div class="form-container">
+    <form novalidate>
+      <div class="form-grid form-grid--wide">
+        <div class="form-group"><label for="pv1-sub">Sub-speciality <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><select id="pv1-sub" class="form-select"><option selected>Paediatrics / Paediatrics</option></select></div>
+        <div class="form-group"><label for="pv1-code">Code <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv1-code" class="form-control" value="KGK-001"></div>
+        <div class="form-group full-width"><label for="pv1-title">Title <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv1-title" class="form-control" value="Running a paediatric outreach clinic at a district hospital"></div>
+        <div class="form-group full-width"><label for="pv1-desc">Description</label><textarea id="pv1-desc" class="form-control">Plans and runs a monthly outreach clinic at a North West district hospital, with its referral follow-up.</textarea></div>
+        <div class="form-group full-width"><label for="pv1-rks">Required knowledge and skills</label><textarea id="pv1-rks" class="form-control"></textarea></div>
+        <div class="form-group"><label for="pv1-cat">Category <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><select id="pv1-cat" class="form-select"><option>Core</option><option selected>Elective</option></select></div>
+        <div class="form-group"><label for="pv1-active">Status</label><div class="form-check"><input id="pv1-active" type="checkbox" class="form-check-input" checked aria-describedby="pv1-active-help"><label for="pv1-active">Active</label></div><small class="page-subtitle" id="pv1-active-help">An inactive EPA cannot be chosen by Kgosi Kgari Teaching Hospital's trainees for a new activity and is not a target on their running programmes' progress pages or dashboards; a programme that has ended keeps it on its record. Evidence already recorded against it is kept, and so is the progress it earned while it was active. An activity completed against it while it is inactive counts towards nothing until the EPA is reactivated, and reactivating it credits those activities.</small></div>
+      </div>
+      <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="button" class="btn btn-outline" aria-haspopup="dialog">Deactivate…</button><button type="submit" class="btn btn-primary">Save</button></div>
+    </form>
+  </div>
+</div>
+
+<p class="pv-cap">Dr Anton Kruger creates an EPA and presses Save with Code and Title empty (Step 6.28): each refusal under its field, named first by it, the field marked; Code takes the focus; nothing at the top</p>
+<div class="header-container"><div><h1>Create EPA</h1><p class="page-subtitle">Define the EPA code, scope, and descriptive guidance.</p></div></div>
+<div class="user-page epa-page">
+  <div class="form-container">
+    <form novalidate>
+      <div class="form-grid form-grid--wide">
+        <div class="form-group"><label for="pv2-sub">Sub-speciality <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><select id="pv2-sub" class="form-select"><option selected>Paediatrics / Neonatology</option><option>Paediatrics / Paediatrics</option></select></div>
+        <div class="form-group"><label for="pv2-code">Code <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv2-code" class="form-control input-validation-error" aria-invalid="true" aria-describedby="pv2-code-refusal"><div class="validation-message" role="alert" id="pv2-code-refusal">Enter a code.</div></div>
+        <div class="form-group full-width"><label for="pv2-title">Title <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv2-title" class="form-control input-validation-error" aria-invalid="true" aria-describedby="pv2-title-refusal"><div class="validation-message" role="alert" id="pv2-title-refusal">Enter a title.</div></div>
+        <div class="form-group full-width"><label for="pv2-desc">Description</label><textarea id="pv2-desc" class="form-control"></textarea></div>
+        <div class="form-group full-width"><label for="pv2-rks">Required knowledge and skills</label><textarea id="pv2-rks" class="form-control"></textarea></div>
+        <div class="form-group"><label for="pv2-cat">Category <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><select id="pv2-cat" class="form-select"><option selected>Core</option><option>Elective</option></select></div>
+      </div>
+      <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary">Save</button></div>
+    </form>
+  </div>
+</div>
+
+<p class="pv-cap">Deactivate… on PAED-012 (Step 6.17, Q11, S11): named for the EPA and for whose trainees it stops measuring; Cancel focused; Deactivate the filled danger button</p>
+<div class="pv-stage"><dialog open class="dialog-scrim dialog-card" aria-labelledby="pv3-t" aria-describedby="pv3-b"><div class="form-container"><h2 id="pv3-t">Deactivate PAED-012?</h2><p id="pv3-b">It can no longer be chosen for a new activity, and it stops being a target on running programmes' progress pages and dashboards, for every institution that has adopted it. A programme that has ended keeps it on its record, marked no longer in use. The progress it has earned is kept. An activity completed against it while it is inactive counts towards nothing until it is reactivated. You can reactivate it on this page.</p><div class="form-actions"><button type="button" class="btn btn-outline">Cancel</button><button type="button" class="btn btn-danger">Deactivate</button></div></div></dialog></div>
+
+<p class="pv-cap">Confirmed: "EPA deactivated." takes the focus once the dialog has closed; Active unticked, Deactivate… gone</p>
+<div class="user-page epa-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status">EPA deactivated.</div></div>
+</div>
+
+<p class="pv-cap">Prof Mbatha opens PAED-012 from her EPA list: a national EPA's record (Q2, R2-C10): no form, no Save, no Deactivate…; the College's text keeps its line breaks</p>
+<div class="header-container"><div><h1>PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams</h1><p class="page-subtitle">College of Paediatricians of South Africa · Paediatrics / Paediatrics · Set by the College, so read only here</p></div></div>
+<div class="user-page epa-page">
+  <section class="user-section" aria-labelledby="pv4-about"><h2 id="pv4-about">About this EPA</h2>
+    <dl class="detail-list"><dt>College</dt><dd>College of Paediatricians of South Africa</dd><dt>Sub-speciality</dt><dd>Paediatrics / Paediatrics</dd><dt>Category</dt><dd>Core</dd><dt>Status</dt><dd>Active</dd></dl>
+  </section>
+  <section class="user-section" aria-labelledby="pv4-desc"><h2 id="pv4-desc">Description</h2><p class="epa-text">This EPA focuses on sharing clear health information with patients and their families, and with colleagues across the healthcare team. The registrar must convey medical information in an easy-to-understand way, listen well, and work effectively as a team member.</p></section>
+  <section class="user-section" aria-labelledby="pv4-rks"><h2 id="pv4-rks">Required knowledge and skills</h2><p class="epa-text">12.1 Communicate effectively with patients and families in emergency settings
+12.2 Communicate effectively with patients and families in the neonatal ICU, neonatal high care and PICU
+12.3 Counsel caregivers about immunisation, growth charts and dysmorphism
+12.4 Demonstrate counselling for common presentations
+12.5 Lead a counselling session with the family of a child with an LTHC
+12.6 Demonstrate counselling in palliative care scenarios
+12.7 Communicate effectively with healthcare colleagues</p></section>
+</div>
+
+<p class="pv-cap">EPA unavailable (Q19, R2-C11): the Demo College's EPA-001 typed by Prof Mbatha, and an unknown id, alike; no id named</p>
+<div class="header-container"><div><h1>EPA unavailable</h1></div></div>
+<div class="user-page epa-page"><div class="detail-card detail-card--empty"><div class="state-panel-copy">This EPA does not exist, or you cannot open it.</div><div class="form-actions"><a class="btn btn-primary" href="#">Go to EPAs</a></div></div></div>
+
+<p class="pv-cap">At 390: every control 44px; Status's Active row a 44px target, its box 20px; Save on top of Deactivate… and Cancel</p>
+<div class="pv-narrow">
+  <div class="header-container"><div><h1>KGK-001 — Running a paediatric outreach clinic at a district hospital</h1><p class="page-subtitle">Define the EPA code, scope, and descriptive guidance.</p></div></div>
+  <div class="user-page epa-page">
+    <div class="form-container">
+      <form novalidate>
+        <div class="form-grid form-grid--wide">
+          <div class="form-group"><label for="pv5-code">Code <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv5-code" class="form-control" value="KGK-001"></div>
+          <div class="form-group"><label for="pv5-cat">Category <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><select id="pv5-cat" class="form-select"><option selected>Elective</option></select></div>
+          <div class="form-group"><label for="pv5-active">Status</label><div class="form-check"><input id="pv5-active" type="checkbox" class="form-check-input" checked><label for="pv5-active">Active</label></div></div>
+        </div>
+        <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="button" class="btn btn-outline" aria-haspopup="dialog">Deactivate…</button><button type="submit" class="btn btn-primary">Save</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+</body>
+</html>
