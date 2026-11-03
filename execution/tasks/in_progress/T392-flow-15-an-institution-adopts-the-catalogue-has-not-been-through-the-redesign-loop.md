@@ -57,13 +57,13 @@ Run the loop as flow 14 ran it (`design/flows/14-data-rights/`, BRIEF § 11 "Flo
 
 ## Verification
 
-- [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit.
+- [x] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit. (`1b0676a2`; exit 0 again 2026-11-03)
 - [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link. (https://claude.ai/artifact/QvQL26tCCJh6S9zoLBywdZ)
-- [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/15-institution-adopts-catalogue/`.
-- [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 15) — the squash commit and counts.
+- [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/15-institution-adopts-catalogue/`. (rounds 1–3, `round-3-check.md`, `e91f5c7f`)
+- [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 15) — the squash commit and counts. (`c931d56f`; 836/4334/1035/52/4499/520)
 - [x] The whole runbook replays on a fresh database with no regression from flow 15, the baseline is re-captured, and
   flow 15's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
-- [ ] The design system is re-synced and republished — its version number.
+- [x] The design system is re-synced and republished — its version number. (version 45, 1793670418-6412; `9e3a357d`, `20bbab12`)
 
 ## Related
 
@@ -161,3 +161,13 @@ T387 (flow 14), T379 (flow 13), T304, T301, T291, T326; BRIEF § 6, § 8, § 11;
   (T324), 36-40 px controls at 390, no result after a create or clone: not filed. Pass 1, cosmetic: Prof Mbatha's
   Create EPA sits under the long subtitle. Scratch DBs `wombat_scenario_t392_s10`, `_s11`, `_s20`-`_s25`, `_s515` kept.
   **Next:** step 8 (re-sync the design system) and step 9 (lessons), on the operator's word.
+- **2026-11-03, steps 8 and 9** (the operator: "do step 8 & 9 and then push"). Step 8 (one Opus agent, one Sonnet
+  review): the live system (1793668846-463e) matched HEAD in all 230 files but for line endings; re-synced (`9e3a357d`,
+  `e17afe7f`: a Catalogue group of seven records, Curricula, CurriculumItems, CurriculumItem, Epas, AdminEpaPage,
+  ProgressRebuild, EntrustmentScales; TraineeProfile, ConfirmDialog, FormField, DataTable, PagerControls, NavMenu and
+  three onboarding records revised; the bundle byte for byte; no token or icon added). Review `resync-review.md`: 0
+  must, 3 should, 4 nits, all fixed (`20bbab12`). Page faults the re-sync found, in the system README's known gaps, not
+  filed: a national EPA's record draws its sections without cards; the EPA list's empty state chosen by MayCreate alone
+  (inferred); the profile's start-date check has no role; the Administrator's institution form has no name. Published:
+  files as version 44, the index alone as **version 45** (1793670418-6412). Step 9: BRIEF § 11 "Flow 15" (`3c44b4b6`).
+  **T392 done.**
