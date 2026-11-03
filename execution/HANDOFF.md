@@ -5,7 +5,7 @@ Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest
 ## Session 2026-11-02/03 (Opus): T392's replay, re-sync and lessons; T392 done
 
 The operator said "the replay was interrupted, can you continue?", "drop the scratch databases", "finalise the session",
-then "do step 8 & 9 and then push". Act 4 resumed at 4.49; acts 4–A and both states passes ran (one Opus agent each);
+then "do step 8 & 9 and then push", "close the replay app", "finalise the session". Act 4 resumed at 4.49; acts 4–A and both states passes ran (one Opus agent each);
 two flow 15 layout faults fixed here (`e10a5f22`, `50ca6470`). Step 8: re-synced (`9e3a357d`), reviewed (0 must, all
 fixed, `20bbab12`), published as design system **version 45**. Step 9: BRIEF § 11 "Flow 15" (`3c44b4b6`). **T392 done.**
 Pushed master to origin.
