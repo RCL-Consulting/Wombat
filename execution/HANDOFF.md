@@ -2,6 +2,18 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
+## Session 2026-11-02/03 (Opus): T392's replay resumed and finished
+
+The operator said "the replay was interrupted, can you continue?", then "drop the scratch databases", "finalise the
+session". Act 4 resumed at 4.49 (review #6 already made, not re-made); acts 4, 5, 6, A and both states passes run by one
+Opus agent each; two flow 15 layout faults fixed here (below). Nothing pushed: master is 50 commits ahead of origin.
+- **Unfiled, the operator's call:** flow 16's CurriculumEdit (`/admin/curricula/{id}`): the default validator messages
+  shown twice and not tied to their fields (T324 has the wording), 36-40 px controls at 390, no result after a create or
+  clone. Flow 15's EPA list: Prof Mbatha's Create EPA wraps under the long subtitle, left-aligned.
+- **Environment left:** the replay app on `:5180` (pid 16600, `wombat_scenario_t392`, published from `50ca6470`);
+  dumps `recovery/scenario-t392-post-act{1..6,A}`, `-pre-a515-A`. Old scratch DBs of earlier replays
+  (`wombat_scenario_t387_s*` and older) still exist.
+
 ## Session 2026-11-02 (Opus): T392, flow 15 (an institution adopts the catalogue), in progress
 
 The operator said "lets do flow 15", then "Done" (round 1), "yes" (picks, Q18–Q21), "done" (round 2), "yes" (F1–F9 as
