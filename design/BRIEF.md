@@ -1299,6 +1299,34 @@ found, `1c11d1f6`). Its record is `design/flows/14-data-rights/`. Only what flow
   `files`-only publish and one from a session that had not read it; it took a `root` holding `project/…`, one changed
   file as `file_path`, then `design-system.json` alone, read again just before. *Changed:* nothing; this is the order.
 
+**Flow 15 (T392, 2026-11-02 to 11-03): what the fifteenth flow added**
+
+Flow 15 ran the loop over two sittings: three rounds (A1 with A2's line, B2, C2's list with C1's page, D1 picked; Q1–Q21
+and F1–F9 the operator's, then round 3's decisions 1–5 and P1–P6), the build (`c931d56f`) from a planner and § 0, four
+lanes (A curricula, B items, C EPAs, D move and rebuild) and a runbook lane, two Sonnet reviews (one must) and one fix
+pass, the replay on a fresh database (332 steps, 303 with no gap; two flow 15 layout faults found and fixed, `e10a5f22`,
+`50ca6470`), the states (98 rows over two passes) and the re-sync (`9e3a357d`). Its record is
+`design/flows/15-institution-adopts-catalogue/`. Only what flows 01–14 did not already teach is here.
+
+- **A table that fits at the breakpoint can overflow just above it.** Observed: the design moved the items' window and
+  weight to the item page "so six columns fit at 901px"; built, they needed 691px in a 593px column from 901 to about
+  990px, Edit and Remove… reached only by scrolling the table. The page itself never scrolled, so a page-width check
+  passed; act A's sweep in 50px steps found it. *Changed:* the items and the EPA list stack to 1024px; a new table is
+  swept from 900 to 1100px measuring the table against its container, not only the page.
+- **A squeezed column passes every check a script makes.** Observed: the EPA list's titles wrapped over three to six
+  lines beside an empty band at 1280px in act 1's own captures, and no act flagged it, since nothing scrolled; only the
+  states pass, reading the image, did. *Changed:* the integrator looks at one 1280px capture of each new list before the
+  states pass; `.col-wrap--wide`'s 20% is a floor for a title column, not a width.
+- **An interrupted replay resumes from the act file.** Observed: the session stopped at step 4.49 with 4.1–4.48's
+  Actual lines written and uncommitted; 4.49 had been played (its review made) and 4.50 had opened its dialog. A new
+  agent wrote 4.49 from the act's output files without replaying it, read the database to find 4.50's review already
+  started, and played on from there; what only the lost run saw (4.50's "Review started." and its focus) was recorded as
+  not seen. *Changed:* nothing; an act's scripts write their outputs to `out/` as they go, which is what made this work.
+- **A fix found mid-replay waits for the pass that uses the published app.** Observed: the EPA list's fix was ready
+  while states pass 2 ran scratch apps from `.scenario-appin`; republishing then would have changed its pages under
+  it. *Changed:* nothing; the integrator republishes between passes, re-measures, and re-takes the captures the fix
+  changes (three earlier-state captures could not be, and are listed).
+
 **What the brief keeps as it was**
 - The flows' order (§ 8), the invariants (§ 4.4) and the acceptance check (§ 9) held. The digest (§ 5.1) is restated
   for what flow 01 fixed: the shell, its components and the states it already designed. The brief template (§ 2.4)
