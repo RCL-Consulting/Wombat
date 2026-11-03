@@ -1,12 +1,13 @@
 ---
 id: T392
 title: Flow 15, an institution adopts the catalogue, has not been through the redesign loop
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-11-02
 started: 2026-11-02
+completed: 2026-11-03
 ---
 
 # T392 — Flow 15, an institution adopts the catalogue, has not been through the redesign loop
