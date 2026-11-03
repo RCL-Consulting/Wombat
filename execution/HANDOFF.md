@@ -16,7 +16,7 @@ Pushed master to origin.
   by MayCreate alone, inferred; the profile's start-date check without a role; the Administrator's institution form
   unnamed). Three EPA list states keep the old column widths (`epas-list--college`, `--institution`, `--inactive`).
 - **Next:** flow 16 on the operator's word, or a P2 (T320 the largest).
-- **Environment left:** the replay app on `:5180` (pid 16600, `wombat_scenario_t392`, published from `50ca6470`);
+- **Environment left:** the replay app stopped (2026-11-03); `wombat_scenario_t392` kept at the appendix's end;
   dumps `recovery/scenario-t392-post-act{1..6,A}`, `-pre-a515-A`; T392's scratch DBs dropped. Old scratch DBs of
   earlier replays (`wombat_scenario_t387_s*` and older) still exist.
 
