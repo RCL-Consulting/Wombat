@@ -14,7 +14,7 @@ This is flow 16 of a RESTRUCTURE with UX in scope (design/BRIEF.md § 4). Flows 
   before you draw part 2 (screens 5–7), which I will ask for in this thread.
   The runbook steps follow below in this same message. The brand mark is at the URL on the next line: use it, never a
   drawn disc.
-  MARK: <blob url to be filled>
+  /_blob/ce366cc30297c5a90255d5d0a88fa6b5
   Every person, College, code, title, version, date and count comes from this message and the steps below; invent
   none. Where a value is not given, write a bracket ‹…›.
 

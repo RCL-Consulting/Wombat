@@ -83,3 +83,12 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   updated; its 54 properties match app.css's `:root`, `--shadow-raised` resolved). The mark copied in as
   `/_blob/ce366cc30297c5a90255d5d0a88fa6b5`. Steps 1–2 run in one Opus agent. Canvas scratch:
   `C:\Users\Renier\AppData\Local\Temp\claude\67560d182d14635f\28969ed0-c979-487c-82e2-606d8331c3a3\scratchpad\c16`.
+- **2026-11-04, steps 1–2** (one Opus agent, `999b7fc9`): brief restated in flow 15's layout (33 steps; pages table
+  names every template's file); `check_flow_completeness.py` exit 0; `check_verbatim_steps.py` 0 problems for flow 16
+  (it always exits 0); `check_baseline_paths.py` missing 0; staged 146 files (70 captures); `round-1-ask.txt` written,
+  the mark's URL filled in here. Gone: T323's item editor, T331, T301's start and adoption refusal, T329's EPA-list
+  skeleton, T272's CreateEpa, the empty "Items (0)" table. Remain: T291 item 2 (+ the Specialities redirect for a
+  College admin with no College), T264, T324, T393, T272 (College handlers, part 1), T326 (Neonatology), T301's
+  "Active" box, CurriculumEdit's doubled messages and missing result. Not measured: the 36–38px controls; Create EPA
+  under the subtitle for the Administrator or at 768. **Waiting:** the operator's Q1 (before round 1), Q3–Q5, Q7–Q10,
+  Q12, Q13 (brief § 6).
