@@ -123,3 +123,8 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
 - **2026-11-04, Q18–Q21** taken as recommended ("yes"): Q6's checks before Q16's on a removal; a curriculum's
   sub-speciality fixed once it has an item or an adoption (the command refuses); header actions fixed in app.css in
   this build; EV2. **Next:** round 3's ask.
+- **2026-11-04, round 3's ask** (one Opus agent, `84f211f4`, `round-3-ask.txt`, 406 lines): 51 corrections (M1–M5,
+  S1–S21, N1–N21, Q18–Q21) and T1–T8 on Steps; 99 boards redrawn at 1280 (+99 at 390, 11 at 768, 5 at 390 only); 10
+  new (R3-C11/C13 on the CNSA scale as read at 6.6, R3-D20 Q19's refusal, four sweep-edge boards); EV1 dropped. Its own
+  calls, for the check: Q19's read-out on every redrawn 11.1/11.2 page; F18's two counts (16 rows, the College's 15);
+  the Illustration chip rule; stacking breakpoints (1024; the items 1100) recommended, not decided.
