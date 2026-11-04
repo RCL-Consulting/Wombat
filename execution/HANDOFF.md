@@ -2,6 +2,20 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
+## Session 2026-11-04 (Opus): scratch DBs dropped; T394, flow 16, started
+
+The operator said "what is next", then "Drop the scratch db's and start the next flow".
+- Dropped `wombat_scenario_t387_s10`, `_s20`, `_s21`, `_s22`, `_s515`. Kept the replays' end-state DBs
+  (`wombat_scenario_t290`…`_t392`, `_pdf`, bare `wombat_scenario`): the operator's call whether they go too.
+- **T394 filed and started** (flow 16, the College keeps the national catalogue; `2bbc0768`). Steps 3–4 done: canvas
+  "Wombat 16" https://claude.ai/artifact/AqaH447KL91WCTbjQFJnWf, design system v45 installed, `tokens.css` by hand,
+  the mark at `/_blob/ce366cc30297c5a90255d5d0a88fa6b5`. Canvas scratch: `...ƽ60d182d14635f8969ed0-...\scratchpad\c16`.
+- **In flight:** one Opus agent runs steps 1–2 (restate `design/flows/16-college-catalogue.md`, the two check scripts,
+  `stage_upload.ps1 -Flow 16`, `round-1-ask.txt` with a `MARK:` placeholder) and commits them itself. If the session
+  ended before it reported: check `git log` for "flow 16 brief restated"; if absent, rerun steps 1–2.
+- **Next:** fill the mark's URL into `round-1-ask.txt`, bring the operator the agent's Q1…, then round 1 (fidelity,
+  part 1). Not pushed.
+
 ## Session 2026-11-02/03 (Opus): T392's replay, re-sync and lessons; T392 done
 
 The operator said "the replay was interrupted, can you continue?", "drop the scratch databases", "finalise the session",
@@ -40,11 +54,3 @@ recommended). T392's Notes hold every step; not pushed (master ahead of origin s
 - **Replay scratch:** `...\ecc5a9d5-...\scratchpad\g392` (prompts, act dirs, `replay-pw.env`: never print it).
 - **Traps:** the harness is at `C:\dev\rcl_execution\bin\harness.py`, not `bin/`. Canvas scratch:
   `C:\Users\Renier\AppData\Local\Temp\claude\c--dev-Wombat\ecc5a9d5-2a6e-43d8-a55a-e55b7e48f8ab\scratchpad\c15`.
-
-## Session 2026-11-02 (Opus): housekeeping
-
-The operator said "push and close the tasks". Pushed master (`75eefc6c..f0348410`). Closed **T316** and **T319** as done:
-flow 14 (T387) built them, and its replay records them as no longer occurring (a closing note in each). No code changed.
-- **Next:** flow 15 (an institution adopting the catalogue) on the operator's word, or a P2 (T320 the largest).
-- Still the operator's: T157 the deploy, T128's backup destination, the College's § 3F questions, dropping the
-  `wombat_scenario_t387_s*` scratch DBs; the unfiled waiting-feedback and `aria-busy` gaps from flow 14.
