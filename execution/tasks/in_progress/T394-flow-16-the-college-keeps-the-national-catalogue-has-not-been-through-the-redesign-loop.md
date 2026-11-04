@@ -143,3 +143,10 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   if (1) confirms it; (3) S15/N1's words and T8's stale references settled in the build plan, no round 4; (4) A22's
   fixture cut to the 2,000 cap; (5) Q19's refusal names its cause (it has items, or the adopting institution by name).
   **Next:** step 6.
+- **2026-11-04, step 6 planned** (one Opus planner): plan and contracts on master `b0717eb2`; § 0 on `t394` `9f25092c`
+  (worktree `.claude/worktrees/t394`, rebased onto the plan): CatalogueReach and its words, CurriculumDto's Reach,
+  NationalItemCount, HasNationalEpas, SubSpecialityFixed, EpaDto.Reach, EntrustmentScaleUses and InUse, CatalogueLinks'
+  flow 16 tokens, D57's policy and menu, Q20's ≥1024 half, the catalogue CSS; no migration; two RegisterInvitationTests
+  that read the clock (red on master since 2026-11-03) given a fixed clock. Suites 836/4347/1035/52/4533/520 green.
+  Lanes A tree, B admin (Colleges, scales, Q18, T395's guard), C curriculum, D EPAs and items, W runbook; the sweep is
+  the integrator's (`sweep.md`). P1–P3 put to the operator.
