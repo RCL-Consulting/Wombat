@@ -24,8 +24,11 @@ The operator said "what is next", then "Drop the scratch db's and start the next
 - **Round 3's ask written** (`84f211f4`, `round-3-ask.txt`: 51 corrections, 214 screens redrawn, 10 new).
 - **Round 3 drawn and saved** on a second canvas, "Wombat 16 · Round 3"
   https://claude.ai/artifact/W1R56z3QGxfK2GPMEcp3c9 (the operator: "it required a new canvas"); 230 boards, `ae5e007b`.
-- **In flight:** one Sonnet agent checks it item by item into `round-3-check.md`; if absent, rerun it.
-- **Next:** the operator's word on what the check leaves, then step 6 (the build, flow 15's lanes as template). Not pushed.
+- **Round 3 checked** (`e2977baa`: 55/59 done, 4 partly); the operator took decisions 1–5 (`c9609325`).
+- **Step 6 started:** one Opus planner writes `build-lanes.md` and `build-contracts.md` (master) and builds § 0 on
+  branch `t394` (worktree `.claude/worktrees/t394`). If its commits are absent, rerun it (flow 15's are the template).
+- **Next:** the operator's word on the planner's P1…, then the lanes (each an Opus agent in its own worktree off
+  `t394`), lane W, two Sonnet reviews, one fix pass, squash onto master. T395 to close with the build. Not pushed.
 
 ## Session 2026-11-02/03 (Opus): T392's replay, re-sync and lessons; T392 done
 
