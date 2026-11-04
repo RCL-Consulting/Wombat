@@ -1,0 +1,85 @@
+/* Wombat flow 16, round 2: the round's one stylesheet (project/f16r2.css).
+   Loaded after ds/wombat/tokens.css and ds/wombat/components/bundle.css. Every colour is a token.
+   PART 1  canvas-only rules (.cv-*): round 1's K1–K9 unchanged but K1 gains the 768 width and K2's chip wraps. Never
+           shipped; they style no component (Spec § Classes, rows K1–K9).
+   PART 2  the shipped rules this round adds (NEW; Spec § Classes, row S1; S2 was measured unnecessary and is not written). */
+
+/* ═══ PART 1: canvas only (flow 15's K1–K9) ══════════════════════════════════════════════════════════════════════ */
+
+/* K1 — a board's root, at its board's width */
+.cv-board { background: var(--background-color); box-sizing: border-box; color: var(--text-color); font-family: var(--font-body); line-height: 1.5; }
+.cv-w1280 { width: 1280px; }
+.cv-w390 { width: 390px; }
+.cv-w768 { width: 768px; }
+
+/* K2 — the board's label strip */
+.cv-label { background: var(--header-bg); border-bottom: 1px solid var(--border-color); font-size: 0.9rem; padding: var(--space-sm) var(--space-md); }
+.cv-label p { margin: 0; overflow-wrap: anywhere; }
+.cv-label-name { font-weight: 600; }
+.cv-label-meta { color: var(--muted-text); }
+.cv-chip { background: var(--warning-bg); border: 1px solid var(--warning-color); border-radius: var(--radius-pill); display: inline-block; font-size: 0.75rem; font-weight: 600; margin-right: var(--space-sm); padding: 0 var(--space-sm); overflow-wrap: anywhere; white-space: normal; }
+
+/* K3 — the built shell made static on a board */
+.cv-stage { position: relative; }
+@media (min-width: 641px) {
+  .cv-shell { display: grid; grid-template-areas: "sidebar main"; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); }
+  .cv-shell .cv-main { grid-area: main; }
+  .cv-shell .sidebar { align-self: stretch; height: auto; position: static; }
+  .cv-shell .account-row.cv-topbar { left: auto; position: static; }
+}
+.cv-main { min-width: 0; }
+
+/* K4 — the page column's gutters */
+.cv-article { padding: var(--space-md) var(--space-md) var(--space-2xl); }
+@media (min-width: 641px) { .cv-article { padding: var(--space-lg) var(--space-lg) var(--space-2xl) var(--space-xl); } }
+
+/* K5 — a dialog drawn open over its page */
+.cv-overlay { align-items: flex-start; background: var(--scrim); display: flex; inset: 0; justify-content: center; padding: 160px var(--space-md) 0; position: absolute; }
+.cv-overlay dialog { margin: 0; position: static; }
+
+/* K6 — a canvas annotation inside a screen */
+.cv-note { background: var(--warning-bg); border-left: 4px solid var(--warning-color); font-size: 0.85rem; margin: var(--space-md) 0 0; overflow-wrap: anywhere; padding: var(--space-sm) 12px; }
+
+/* K7 — the Spec and Steps boards */
+.cv-doc { padding: var(--space-xl); }
+.cv-doc h1 { font-size: 1.5rem; margin: 0 0 var(--space-sm); }
+.cv-doc h2 { border-bottom: 2px solid var(--secondary-color); font-size: 1.25rem; margin: var(--space-xl) 0 var(--space-sm); padding-bottom: var(--space-xs); }
+.cv-doc h3 { font-size: 1.1rem; margin: var(--space-lg) 0 var(--space-xs); }
+.cv-doc p, .cv-doc li { max-width: 80rem; overflow-wrap: anywhere; }
+.cv-doc .clinic-table { font-size: 0.875rem; }
+.cv-doc .clinic-table th, .cv-doc .clinic-table td { overflow-wrap: anywhere; padding: 6px 10px; vertical-align: top; }
+
+/* K8 — a tag on the Spec */
+.cv-tag { border: 1px solid var(--input-border); border-radius: var(--radius-pill); font-size: 0.75rem; font-weight: 600; padding: 0 var(--space-sm); white-space: nowrap; }
+.cv-tag--new { background: var(--info-bg); border-color: var(--secondary-color); }
+.cv-tag--proposed { background: var(--warning-bg); border-color: var(--warning-color); }
+.cv-tag--data { background: var(--success-bg); border-color: var(--success-color); }
+
+/* K9 — a board's legend line */
+.cv-legend { color: var(--muted-text); font-size: 0.85rem; margin: var(--space-xs) 0 0; }
+
+/* ═══ PART 2: shipped (NEW) ═══════════════════════════════════════════════════════════════════════════════════════ */
+
+/* S1 — .catalogue-record, beside .user-page on the College's, a speciality's, a sub-speciality's, a scale's and a
+   curriculum's page: below 641px a lone .form-check row (Active; Open for adoption) is a 44px target with a 20px box,
+   the same declarations as flow 15's .user-page.epa-page .form-check (app.css; the build may write both selectors in one
+   rule). .user-page alone makes buttons, inputs and selects 44px, not a checkbox row. */
+@media (max-width: 640.98px) {
+  .user-page.catalogue-record .form-check {
+    min-height: 2.75rem;
+  }
+
+  .user-page.catalogue-record .form-check-input {
+    height: 1.25rem;
+    width: 1.25rem;
+  }
+
+  .user-page.catalogue-record .form-check label {
+    align-items: center;
+    display: inline-flex;
+    flex: 1;
+    min-height: 2.75rem;
+  }
+}
+/* S2 — not written: measured unnecessary. StackWide on the levels table alone makes each rung a block at 390; the
+   Description textarea measures 258 px in a 290 px block (R2-C02-390 to C20-390), every control 44 px. */
