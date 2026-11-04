@@ -1,0 +1,406 @@
+ROUND 3: the one correction round on round 2 as drawn (A the tree, specialities, sub-specialities and Home; B Colleges;
+C the scales; D a curriculum's own page; E the EPA list and an EPA's page; F Curricula, a curriculum's items and an
+item's page). Put it on a new page of the canvas, "Round 3", and name every board R3-… (R3-A06-390 for R2-A06-390);
+round 1's and round 2's pages stay untouched. Redraw ONLY the boards listed under BOARDS ROUND 3 DRAWS, each at every
+width round 2 drew it, carrying everything no item below changes exactly as round 2 drew it; then draw the new boards
+listed there; then the check, Spec and Steps boards WHOLE. R2 boards not listed stand: the reviews found them right, and
+the Spec says which they are. Change what the items say; draw nothing they do not ask for. The design system is Wombat
+v45 as installed on this canvas (namespace wombat; ds/wombat/tokens.css and ds/wombat/components/bundle.css): keep both
+files in the project so the saved round renders. The brand mark is at /_blob/ce366cc30297c5a90255d5d0a88fa6b5 (this
+canvas's own copy): use it, never a drawn disc. Every person, College, code, title, version, date, id, count and order
+stays as round 2 drew it unless an item below changes it: the reviews checked them against the code, the seed and the
+T392 replay and found them true (but for M2, M3, S9, S10). Use FIXTURES only and invent nothing; where a value is not
+given, write a bracket ‹…›. Never draw on one board two states that cannot hold at once. No gendered pronoun anywhere,
+the canvas notes included: the name, "the", "they" or "their". Words marked NEW are this message's own: draw them as
+given and list them on the Spec beside the words they replace. The Illustration chip follows ONE rule (S21).
+
+THE STYLESHEET. Round 2 saved f16r2.css as a project file, rightly. Round 3 has ONE stylesheet, f16r3.css, a PROJECT
+  FILE at project/f16r3.css (write it as a file of the project, NOT as an asset, so the saved round holds it): f16r2.css
+  copied whole, its PART 1 (the .cv-* canvas rules, K1–K9) kept as it is, its PART 2 changed only as S1, S4 and Q20 say:
+  round 2's S1 (.user-page.catalogue-record .form-check) goes, and PART 2 holds exactly three shipped rules, each NEW,
+  each quoted on the Spec with its row on the class table:
+    R1 (S4) one .user-page .form-check rule below 641px, the declarations round 2's S1 wrote, in place of the per-page
+       copies (.user-page.catalogue-record, .user-page.curriculum-item-page, .user-page.epa-page, .data-rights-page);
+    R2 (S1) the catalogue tables that overflow between 900 and 1100px stack (or fold) where the sweep says;
+    R3 (Q20) the page header: actions beside the title down to 1024px, under it below.
+  Every R3 board's head links ds/wombat/tokens.css, ds/wombat/components/bundle.css, then f16r3.css, in that order, and
+  no /_blob/ stylesheet; a board's <style> holds body{margin:0} at most; no inline style=; no other NEW rule. If the
+  canvas has to change a rule to make a board render, change the file, say so on the Spec, and quote the changed rule.
+
+THE SWEEP (S1, ds S2), and put every number on R3-0-check: render each board below with its width freed and the shell's
+  sidebar as it renders at that width, at 900, 901, 950, 1000, 1025, 1050 and 1100px (900 to 1100 in 50px steps, plus
+  901 and 1025, where round 2's sweep had holes), and measure each table (its scrollWidth and box) against its
+  .table-container and the container against the page column; then the page's scrollWidth against its clientWidth.
+    Colleges: R3-B01, B02, B11b, B16, B17a.  The tree's sections: R3-A02, A04, A07, A12, A13b, A14b, A16b, A22.
+    Curricula: R3-F01, F02, F03, F04.  The items: R3-F05, F07, F08, F09, F11, F13, F15, F18.
+    And, to show they still fit: the scales list (R2-C01, C06, as they stand) and the EPA list (R3-E01, E04).
+  Round 2's arithmetic (not measured; the container is the viewport less 308px): Colleges' 667px table overflows by 74px
+  at 901 and fits from about 975; Curricula's about 630px by about 37px at 901, fitting from about 940; the tree's about
+  596px by about 3px at 901; the items' 744px (stacked to 1024) by up to 27px from 1025 to about 1051. The fix (R2, NEW):
+  a table that overflows at any swept width stacks to the first breakpoint above its last overflowing width, or folds a
+  column if that reads better on the board; recommended: Colleges (.people-page.colleges-page, NEW page class), the tree
+  (.people-page.college-tree-page, NEW page class) and Curricula (.curricula-page, shipped) join the 1024px stack the
+  items and the EPA list already have (app.css, the T392 block at about :7395), with their row actions 44px; the items
+  move from 1024 to 1100px, as the data-rights queue stacks to 1100. On the check board, a table per board: width,
+  table px, container px, spare (or overflow) px, stacked or not; and say that nothing scrolls sideways at any swept
+  width, at 1280, 768 or 390. If a table still overflows after the fix, say where and by how much, propose the fold, and
+  draw nothing to hide it. A stacked table keeps DataTable's roles; a container that can still scroll gets
+  tabindex="0", role="region" and a name (DESIGN.md:2201).
+  THE HEADER CHECK (Q20): render R3-A02, B01, E01, F01 and F05 at 1280, 1100, 1024, 1023 and 390, and say for each
+  where the header actions sit (beside the h1, or under the subtitle) and that no title wraps past two lines beside an
+  empty band.
+  THE 44 PX CHECK: on every R3 board at 390, measure every .btn, .form-control, .form-select, .form-check row, the
+  breadcrumb parent link and every row action; say how many controls were measured and name each under 44px (or 0).
+
+THE SCREENSHOTS: round 2 read all 70 captures from the folder (none arrived as attachments), viewed nine, staged
+  fourteen and opened none of the other 47. They are still in C:\dev\Wombat\design\upload\baseline\ (copies of
+  design/baseline/, staged by design/tools/stage_upload.ps1 -Flow 16; checked present 2026-11-04): READ THEM FROM THE
+  FOLDER. For the boards this round redraws, open and view these (paths under that folder):
+    the tree and its records (M2, M5): act-1\1.12-1-kruger-specialities.png, act-1\1.13-1-sub-specialities.png,
+      act-1\1.14-1-sub-speciality-ladder.png, act-6\6.11-1-cpsa-specialities.png, act-6\6.12-1-neonatology-default-saved.png,
+      act-6\6.12-2-two-sub-specialities.png, act-6\6.7-2-default-reopened.png (the select's three scales);
+    Colleges (S1, S7): act-1\1.2-1-colleges-list.png, act-6\6.1-3-three-colleges.png, act-6\6.1-1-duplicate-refused.png,
+      states\colleges-list--narrow.png, states\college-edit--invalid.png;
+    the scales (M1, S5): act-1\1.4-2-cpsa-ladder.png, act-6\6.5-1-duplicate-labels-refused.png,
+      act-6\6.6-1-sixth-level-saved.png, act-6\6.8-1-delete-refused.png, states\entrustment-scale-edit--rung-refused.png;
+    the curriculum's page (Q19, M5): act-6\6.13-1-neonatology-curriculum-created.png, states\curriculum-edit--clone.png,
+      act-6\6.29-2-cloned-11.2-active.png, act-6\6.31-1-11.2-saved-active.png, states\curriculum-edit--invalid.png;
+    EPAs (S10, N3, Q20, Q21): act-1\1.16-1-college-epas.png (words, not widths), states\epas-list--administrator.png,
+      states\epas-list--local.png (Create EPA under a long subtitle), act-A\A.7.10-2-epas-390.png,
+      act-6\6.14-1-paed-006-saved.png, act-6\6.17-1-deactivate-dialog.png, act-6\6.23-1-reactivated.png,
+      act-6\6.28-1-paed016-saved.png;
+    Curricula and the items (S1, M3, M5): act-1\1.17-1-college-curricula.png, act-6\6.31-2-curricula-list.png,
+      states\curricula-list--administrator.png, act-1\1.18-1-college-items.png, act-6\6.17-4-items-paused.png,
+      act-6\6.29-1-kruger-11.1-items.png, act-6\6.30-1-add-paed016-form.png, act-6\6.30-3-paed011-edit-row.png,
+      act-A\A.7.10-4-items-390.png, act-A\A.7.10-5-item-editor-390.png.
+  They are today's pages, defects included, and the runbook's Actual lines say what each shows: read them to check the
+  boards against the pages they replace, never to draw from. SAY ON THE CHECK BOARD, FIRST, whether they arrived
+  (attached, or read from the folder), which you opened and viewed, which you did not, and any word a capture shows that
+  a board contradicts; draw nothing from memory in place of one that did not arrive. No value rests on a capture alone:
+  CAPTURE-ONLY is still empty.
+
+THE OPERATOR'S DECISIONS. The brief's § 6 Q1–Q14, round-1-assessment.md's picks (A2, B1, C1) and Q15–Q17, D56 and D57
+  (execution/knowledge/EPA-PROGRAMME.md § 3), T395 (Q16) and round 2's T1–T12 stand as round 2 drew them, but where Q19
+  replaces T11. Added 2026-11-04, every recommendation of round-2-review.md taken: M1–M5 fixed, the shoulds carried, and
+  Q18–Q21 (§ Q18–Q21 below). A board that argues against one is a must-fix in the check.
+
+FIXTURES: round 2's, unchanged (the T392 replay, wombat_scenario_t392; D = 2026-11-02). Restated only where a corrected
+  or new board needs them:
+  Anton Kruger, College admin, College of Paediatricians of South Africa; "Acting as College admin"; menu, flat: Home,
+    Specialities, EPAs, Curricula, Activity types, Entrustment scales; then My data rights. Demo Administrator's menu as
+    round 2 drew it.
+  The Default entrustment scale select, by name after "No default — offer every scale": at 1.14 and 6.4 CPSA Paediatric
+    Entrustment Scale v11.1, O-R Scale; FROM 6.5 CNSA Neurology Entrustment Scale, CPSA Paediatric Entrustment Scale
+    v11.1, O-R Scale (three).
+  The CNSA scale at 6.6, by order and label: 1 Observe only, 2 Direct supervision, 3 Indirect supervision, 4 Distant
+    supervision, 5 Unsupervised practice (descriptions ‹description›: not given), 6 Supervises others, "Supervises
+    juniors performing the activity.". Unused at 6.5 and 6.6; Adult Neurology's default from 6.7 (in use from then).
+  11.1 after 6.28, as the Administrator reads it: 16 rows (15 national, then KGK-001 — Running a paediatric outreach
+    clinic at a district hospital, "Kgosi Kgari Teaching Hospital's own item", "1 per academic year" over "No decision
+    cadence", minimum 3a, "—" by training year, Direct observation; act-6-catalogue.md:679-681). PAED-016 exists from
+    6.28 and is on no curriculum until 6.30, so Add item is offered.
+  The Administrator's EPA list after 6.28, in the query's order (College name, speciality, sub-speciality, code;
+    GetEpas.cs:320-324): KGK-001 (College cell College of Paediatricians of South Africa; the mark "Kgosi Kgari Teaching
+    Hospital's own EPA", EpaWords.OwnerMark), PAED-001 to PAED-016, then EPA-001 (Demo College) last: eighteen rows.
+  The EPA page's Sub-speciality for the Administrator, every College's, by College name, speciality, name
+    (GetSubSpecialitiesListQueryHandler.cs:49-51): Neurology / Adult Neurology, Paediatrics / Neonatology, Paediatrics /
+    Paediatrics, General Medicine / General Internal Medicine.
+  "Item unavailable", as built (CurriculumItemsWords.cs:177-185): h1 and tab "Item unavailable"; "This curriculum item
+    does not exist, or you cannot change it."; one primary "Go to Items of Paediatric EPA Curriculum (11.1)".
+  A College's description is at most 1,000 characters (CreateCollege.cs:23, CollegeConfiguration.cs:14); a speciality's
+    and a sub-speciality's 2,000.
+
+THE CHECKLIST. Each item names its boards (every width the board is drawn at unless it says otherwise); the check board
+takes each by its id and says done or not done from the board's text and markup.
+
+MUST FIX:
+  M1. The rung refusals (K1, C3): settled by Q18 (below). R3-C11 and R3-C13 are new screens on a premise that can hold;
+      R3-C12 is the page read again with Q16's words; the Spec states the order.
+  M2. The CNSA scale in the select (C1). R3-A06, A08, A15, A16a (and their twins): the Default entrustment scale select
+      offers "No default — offer every scale", CNSA Neurology Entrustment Scale, CPSA Paediatric Entrustment Scale v11.1,
+      O-R Scale (FIXTURES), the chosen one as round 2 drew it. R2-A05 (1.14) and R2-A13a (6.4) keep two; R3-A14a three.
+      Steps: 6.12's Expect says the select offers three (T1).
+  M3. F18's count and moment (C2, K5). R3-F18 (and -390), Illustration, labelled "Demo Administrator on 11.1's items
+      after 6.28" (not 6.26): h2 "Items (16)" over its 16 rows (the 15 national, then KGK-001 with the values of
+      FIXTURES, no brackets, C14); Add item beside it (PAED-016 is on no curriculum after 6.28); "Edit this version"
+      (M5); the reach (KGK, 3). Its label and the Spec say which count is which, once (S9): the items heading counts
+      every row the caller reads, so the Administrator's reads 16; the curriculum page's "Items (n)" link and the clone
+      intro count the College's national items only (15 on 11.1).
+  M4. Required fields said to a screen reader (ds M1). On EVERY redrawn or new board with a required field (R3-A03,
+      A05, A06, A08, A09, A11, A13a, A14a, A15, A16a, A17; B03–B10, B11a, B12, B17b; C02, C03a, C03b, C04, C05, C11–C16,
+      C20; D01–D14 with D09a/b, D18, D19, D20; E05–E14, E20; F10, F12, F14; F20d-390, F20f-390, and every twin): the
+      line "* marks a field you must fill in." (DESIGN.md:1292-1296, :1473-1477) as a p.muted above the first field of
+      the form, once; aria-required="true" on every starred control (Name, Short code, Label, Code, Title, Version,
+      Sub-speciality, Category, Minimum level and the rest); the .required-mark aria-hidden as now, with FormField's
+      visually hidden "required" in the label (FormField.razor:7). A read-out (Q19) is not a control and takes none.
+  M5. Names that hold their visible words (ds M2, WCAG 2.5.3; DESIGN.md:960-963). Each name starts with the visible
+      words (NEW):
+        "Items (15)" (and "(0)", "(16)") → "Items (15) of Paediatric EPA Curriculum (11.1)": R3-D05–D14 with D09a/b,
+          D18, D19, D20, F20f-390;
+        "Create sub-speciality" → "Create sub-speciality of Paediatrics" (of Neurology on A12, A13b): R3-A02, A04,
+          A07, A12, A13b, A14b, A16b, A22;
+        "Edit this version" → "Edit this version of Paediatric EPA Curriculum (11.1)" (11.2's, Neonatology's (1.0) as
+          the page is): R3-F05–F09, F11, F13, F15, F18, F20c-390, F20e-390;
+        "Open Adult Neurology" → "Open Adult Neurology, the sub-speciality": R3-C08.
+      The Spec lists the four beside round 2's names.
+
+SHOULD FIX (redraw where it says; the rest are Spec or Steps lines):
+  S1. The tables from 900 to 1100px (ds S2; flow 15's lesson): THE SWEEP above; f16r3.css R2; the boards it names.
+      The 1280, 768 and 390 boards draw what the fix gives (no change at 1280 if the table still fits); the new width
+      boards R3-B02-1024, B02-1025 and F11-1025 draw it at its edges.
+  S2. The header actions (ds S3): settled by Q20 (below).
+  S3. One result region (ds S1). Every result, refusal and failure is ONE <div class="action-result" tabindex="-1">
+      holding the Alert, as ActionResult renders it (StatePanel wraps once): R3-A04, A07, A09, A12, A13b, A14b, A16a,
+      B06, B08, B11a, B12, C04, C05, C08, C09, C10, C11, C12, C13, C16, D04, D05, D08, D11, D13, D20, E06, E08, E09,
+      E11, E14, F11, F13, and every twin. The empty-region boards and the load errors stand as drawn.
+  S4. One checkbox-row rule (ds S4): f16r3.css R1, .user-page .form-check (and -input, label) below 641px; no
+      .catalogue-record class on any board (R3-A03, A05, A06, A08, A09, A11, A13a, A14a, A15, A16a, A17, B03–B10, B11a,
+      B12, B17b, C02, C03a, C03b, C04, C05, C11–C16, C20, D01–D14, D18, D19, D20). The Spec: the build writes the one
+      rule and retires app.css's per-page copies (:7462-7477, :7515-7529, the data-rights page's about :7242); every
+      checkbox row still measures 44px at 390 (THE 44 PX CHECK).
+  S5. The levels table's row header (ds S5). R3-C02, C03a, C03b, C04, C05, C11, C12, C13, C14, C15a–c, C16, C20 (and
+      twins): each rung's Order is <th scope="row" data-label="Order">, never a td; its Label and Description inputs keep
+      their names ("Label of the rung in order 3", "Description of 3a").
+  S6. C08's link carries ids (K2). R3-C08: the refusal is round 2's sentence word for word with its link "Open Adult
+      Neurology" (named as M5), to /admin/specialities/3/sub-specialities/3 (the speciality's and the sub-speciality's
+      ids). Spec: the default-of-a-sub-speciality refusal carries (SpecialityId, SubSpecialityId) for each holder, a typed
+      member beside its text (EntrustmentScaleDeleteRefusedException.cs:1-12); when several sub-specialities default to
+      the scale the sentence names each and draws one link per name, up to three, then "and ‹N› more." (NEW, Q6's rule).
+  S7. A College's description at its cap (K3). R3-B17a and R3-B17b, Illustration: "A 1,000-character description" (the
+      maximum), wrapping in its .col-wrap cell and scrolling inside its textarea. The Spec's § 11 cites A22 for 2,000
+      (a speciality's and a sub-speciality's) and B17 for 1,000, and lists the refusal past the cap under N1.
+  S8. Q14's source (K4). Spec only (R2-F19 stands; R3-F06 is redrawn for M5): a HasNationalEpas flag (NEW, PROPOSED
+      name; the count of the sub-speciality's national EPAs, active or not) on GetCurriculumByIdQuery's result, set by
+      the query; Q14's sentence when it is false, the built nothing-to-add sentence otherwise; "Cannot add an item" takes
+      the same flag.
+  S9. Which "Items" count is which (K5). R3-F18 (M3), R3-D18. Spec: the curriculum page's "Items (n)" link and the clone
+      intro ("copies this version's 16 national items") read a national count (NEW: CurriculumDto.NationalItemCount, the
+      College's items only; CurriculumInstitutionStateDto.NationalItemCount is one institution's), the items page's
+      heading the rows the caller reads (the Administrator's every institution's too). Said once.
+  S10. The Administrator's EPA list in the query's order (K6, cast C11). R3-E04 (and -390, -768): eighteen rows in
+      FIXTURES' order, KGK-001 first among CPSA's, its College cell College of Paediatricians of South Africa and its
+      mark "Kgosi Kgari Teaching Hospital's own EPA" under its title, EPA-001 last. The query is unchanged; say so.
+  S11. "Item unavailable" as built (K7). R3-F16 (and -390): FIXTURES' words and link, in StatePanel's markup (N19).
+  S12. The no-College words for the College admin only (K9). Spec only (R2-A21 stands): a College admin whose account
+      names no College reads the words; the Administrator is sent to Colleges as today (MySpecialitiesRedirect.razor:32).
+  S13. The one-shot tokens (K10). Spec row: created on the College and on the scale ("College created.", "Entrustment
+      scale created."); created and saved on the tree with speciality:‹id› or sub:‹id› ("Speciality Neurology created.",
+      "Sub-speciality Neonatology created.", "Speciality saved.", "Sub-speciality saved."); cloned=‹fromId› and created
+      on the curriculum; each registered in CatalogueLinks.Tokens (CatalogueLinks.cs:48, :95), the record read again in
+      the caller's scope, the sentence written by the arriving page, stripped on arrival; a stale or foreign id writes
+      nothing and focuses nothing. Each board that arrives by one (R3-A04, A07, A12, A13b, A14b, B06, C04, D05, D08)
+      says in its label which token brought it.
+  S14. "Put rung … back" (K11). R3-C11 draws it. Spec row under EntrustmentScaleEdit: the page keeps each removed rung
+      (its id, order, label and description) until a save goes through; the button re-inserts it in its place,
+      renumbers, and moves the focus to its Label; it is offered after a Q6 refusal, never after Q16's (the page is
+      read again, C12).
+  S15. NEW words by their words (K12). Spec § 9 gains a row for each, NEW or PROPOSED: the tree's subtitle, the
+      records' subtitles ("Speciality of College of Paediatricians of South Africa", "Sub-speciality of Paediatrics",
+      "CPSA · Active"), the College admin's EPA and Curricula subtitles and captions, Create curriculum's subtitle, the
+      clone intro and its none variant, the Status help of a speciality and a sub-speciality, the scale page's subtitle,
+      this round's NEW words (M5's names, Q18's, Q19's, N10's, N12's), and the hidden "Release" legend's end (N14).
+  S16. The reach as a rule (K13). Spec: a version's registrars are the ACTIVE TraineeProfiles with the adopting
+      institution's InstitutionId and the version's CurriculumId (CurriculumInstitutionStateDto.RegistrarCount's rule),
+      never the nullable AdoptionId; an EPA's count sums that over the adopted versions that hold it as a national item;
+      T8's superseded adoptions with registrars still on them count in the EPA's sentence as in the version's. An own
+      EPA (KGK-001) carries no reach line on its page (EV2's line is a national EPA's); its pause dialog reads its
+      owner's count: "KGK-001 is Kgosi Kgari Teaching Hospital's own item on 1 curriculum; ‹N› registrars in training
+      are measured against it." (NEW; no board).
+  S17. Steps counts (C4): T2 below.
+  S18. Steps gaps (C5, C16): T3 and T5 below.
+  S19. One statement about the header (C6). R3-B01, E01, F01 labels say where the actions sit as THE HEADER CHECK
+      measured them under Q20's rule; Steps 1.16 and the Spec's § 5 say the same (T4).
+  S20. Delete's other refusals worded (C7). Spec § 9 copies round 2's FIXTURES words for each: the MSF questions', the
+      ended record's, scored progress's, a published form's (with its brackets) and the entrustment decisions', beside
+      the pinned scale's (R2-C10) and 6.8's (R3-C08).
+  S21. One Illustration rule (C8): the chip, and "(Illustration)" in the title, on every state no runbook step and no
+      states.md row reaches, EXCEPT a loading, a load error, an Unavailable page and a required-field state, which carry
+      none (every page has them). So R3-C14 (a taken scale name) keeps it, R3-C15a–c lose it, R3-D19 (Effective to
+      before Effective from) gains it, and R3-C11, C13, D20 carry it. The Spec's Illustration list is redone by the rule.
+
+WHILE YOU'RE THERE (nits; on boards this round redraws, or a Spec line):
+  N1. (code N1) Spec row: the refusals the code gives that no board draws, each under its field: "A speciality with the
+      same name already exists for this college." (CreateSpecialityCommandHandler.cs:38-40) and the sub-speciality's
+      duplicate (SubSpecialitySaveRefusal.DuplicateName), the scale's reserved name (ReservedNameRefusal), a label over
+      200 characters, a description over 2,000, a College name over 200, a College description over 1,000 (S7); the
+      built words where they exist, NEW words where not, each marked.
+  N2. (code N2) Spec: the Sub-specialities route with an unknown or another College's speciality id is "Speciality
+      unavailable" (as R2-A18b); the Administrator typing an unknown College's tree is "College unavailable" with Go to
+      Colleges (as R2-B13). No board.
+  N3. (code N3, cast C12) The EPA list's row Edit is named by the full label, as built (RowNames.Distinct over
+      EpaWords.Label): "Edit PAED-001 — Providing paediatric emergency care to children". R3-E01, E02, E03, E04,
+      F20a-390. The items table's "Edit PAED-001" is as built and stays.
+  N4. (code N4) Spec: a tree row's name adds its speciality when two sub-specialities share a name (RowNames.Distinct).
+  N5. (code N5, cast C9) R3-C11: the tail "and ‹N› more." joined to the third sentence, lower case.
+  N6. (code N6) Spec: Effective from defaults to the South African day (TimeProvider through ProgrammeCalendar.DateOf),
+      not DateTime.Today (CurriculumEdit.razor:166, :168).
+  N7. (code N7) Spec: the College name and short-code pre-check compares ordinally, as the unique index does.
+  N8. (code N8) Spec: "the .dashboard-card-footer markup" (the dashboards write the div; DashboardCard has no footer
+      slot); its links sit right (app.css:1941). R2-A01 stands.
+  N9. (code N9) Spec: CurriculumAdminScope's remark gains Q10's exception (the College admin is told a holder's name).
+  N10. (code N10) R3-A17: the speciality's dialog body reads "A new invitation will no longer be able to name it, and an
+      institution can no longer give anyone a role for it or any of its sub-specialities. That is all it changes: its
+      EPAs and curricula, and the registrars already on them, carry on." (NEW: "or any of its sub-specialities").
+  N11. (code N11) Spec: the scales list's Delete… changes from btn-danger to outline (EntrustmentScalesList.razor:86),
+      beside Remove's.
+  N12. (cast C10) One caption for a create page's levels: "Levels of the new scale, lowest first" (NEW) on R3-C03a,
+      C03b, C14, C15a–c, whatever name is typed; a stored scale's "Levels of ‹its name›, lowest first" (C02, C04, C05,
+      C11–C13, C16, C20).
+  N13. (cast C11) = S10.
+  N14. (cast C13) No "Release" legend: the Open for adoption box stands in its h2 section with no fieldset (the h2
+      names it). R3-D05–D14, D18, D19, D20, F20f-390.
+  N15. (cast C14) = M3 (KGK-001's values on R3-F18).
+  N16. (cast C15) R3-E20: the Administrator's Sub-speciality select offers every College's four (FIXTURES' order), its
+      help "Every College's sub-specialities." as drawn.
+  N17. (ds N1) The trail is Breadcrumbs.razor's markup on every redrawn and new board with one: the separator inside the
+      crumb's li, aria-current="page" on the current crumb's span, the back arrow as built.
+  N18. (ds N2) No bracket as a control's value: where FIXTURES give the words, the control holds them; where not (the
+      CNSA rungs 1–5's descriptions, R3-A22's names, B16's codes, the EPAs' descriptions and required knowledge), the
+      control is empty and the bracket goes in the board's label strip. On every redrawn board.
+  N19. (ds N3) StatePanel's markup on R3-F16 (div.state-panel-copy, div.form-actions around Go to); Spec: the build
+      uses StatePanel on every Unavailable page (R2-A18a–c, B13, C17, D15, E15, F17 stand).
+  N20. (ds N4) A Save that will ask carries aria-haspopup="dialog" while Active (or Open for adoption) is unticked on a
+      record stored active (open): R3-B10, D14; Spec says so for every D56 form.
+  N21. (cast C16) Steps A.7.10: T5 below.
+
+Q18–Q21, AS DECIDED (2026-11-04):
+  Q18 (M1). The order of the rung refusals. Spec row under UpdateEntrustmentScaleCommand: on a save that removes a rung,
+      the handler runs Q6's checks FIRST, per removed rung: the pinned items, then the ended records, each named by EPA,
+      curriculum and rung label, up to three, then "and ‹N› more." (and the built decisions check); Q16's refusal covers
+      the rest (a reorder, and a removal no item needs, on a scale in use). A save that both reorders and removes a
+      needed rung gets Q6's words. Up, Down and Remove are offered only while the scale is unused (as R2-C02, C04, C05,
+      C20 draw), so Q6's words show only when another save pinned the scale after the page was read.
+      R3-C11 (NEW screen, Illustration, 1280 and 390): the CNSA Neurology Entrustment Scale's page as read at 6.6 (six
+        rungs, moves offered, as R2-C05 drew them), rung 6 "Supervises others" removed and Save pressed, after another
+        save pinned items to it (no step does; never the CPSA ladder, which is pinned from the seed): in the result
+        region, focused, "‹EPA code› on ‹curriculum (version)› needs the rung “Supervises others” of this scale, which
+        the new levels leave out. Change that item's minimum first." three times, then "and ‹N› more." (N5; a word label
+        in quotation marks, NEW); the five rungs left as the user left them; "Put rung “Supervises others” back"
+        (NEW wording of round 1's "Put rung 5 back", S14). Its label states the premise.
+      R3-C13 (NEW screen, Illustration, 1280 and 390): the same page and premise, the ended record's refusal in label
+        words (round 2's FIXTURES, with the brackets): "Not saved. ‹EPA code› on ‹curriculum (version)› was on the
+        record of a programme that has ended, which keeps the rung “Supervises others” of this scale as its minimum. A
+        closed record keeps the targets it ended with, so the rung “Supervises others” cannot be removed."
+      R3-C12: the page read again with Q16's words, as round 2 drew it (the CNSA scale came into use at 6.7 after the
+        page was read), corrected for M4, S3, S5. The R2 CPSA-ladder C11 and C13 are not redrawn.
+  Q19 (K8, T11). A curriculum's sub-speciality. Spec rows: CurriculumDto gains SubSpecialityFixed (NEW, PROPOSED name:
+      true once the version holds any item, national or an institution's own, or has any adoption row, active or
+      superseded); UpdateCurriculumCommand refuses a changed SubSpecialityId then, so an adoption's SubSpecialityId
+      always equals the curriculum's (InstitutionCurriculumAdoption.cs:24-26; today UpdateCurriculum.cs:74 rewrites it).
+      The read-out: Details' Sub-speciality is a dl.detail-list dt "Sub-speciality" / dd "Paediatrics / Paediatrics",
+        with under it, p.muted, "Fixed once a version holds an item or has been adopted. To use another sub-speciality,
+        create a curriculum there." (NEW). Drawn on every redrawn board of 11.1 or 11.2: R3-D06–D14 with D09a/b, D18,
+        F20f-390. The select stays where the version is empty and unadopted: R3-D01–D05, D19 (Neonatology 1.0, 0 items).
+      The refusal, R3-D20 (NEW screen, Illustration, 1280 and 390): Neonatology EPA Curriculum (1.0)'s page read while
+        it was empty (as R3-D05, the select live), Sub-speciality changed to Paediatrics / Paediatrics and Save pressed
+        after another save gave the version ‹an item or an adoption› (no step does): in the result region, a danger
+        Alert, focused: "Not saved. This version now holds items or has been adopted, so its sub-speciality can no
+        longer change. The page has been read again." (NEW); the page read again, the Sub-speciality now the read-out
+        "Paediatrics / Neonatology" with its help, the header link "Items (‹n›)", everything else as stored.
+  Q20 (ds S3). Header actions: f16r3.css R3 (NEW), as the build will write it in app.css: from 1024px up the title block
+      takes the free width (flex: 1 1 20rem; min-width: 0) and the actions stay on the h1's row at its right, the
+      subtitle wrapping under the h1; below 1024 the actions go under the subtitle, full width at 390 as today
+      (app.css:6283-6290). Every redrawn board with header actions draws it (R3-A02, A04, A07, A12, A13b, A14b, A16b,
+      A22; B01, B02, B11b, B16, B17a; D05–D14, D18, D19, D20; E01–E04; F01–F09, F11, F13, F15, F18), and the new
+      R3-E01-1023 (and R3-B02-1024) show either side of it. THE HEADER CHECK reports it. The Spec: one app.css change for
+      every PageHeader with actions, and DESIGN.md's Page header text.
+  Q21 (EV). EV2. Round 2's EV1 boards (R2-E05-EV1, E06-EV1, E09-EV1, E11-EV1) are not redrawn and leave the set.
+      EV2's are redrawn without the suffix, as the settled design: R3-E05, E06, E09, E11 (each from its -EV2 board).
+      Every other EPA board keeps EV2's line where round 2 drew it, else none. The Spec drops EV1 from its tables and
+      says EV2 is decided.
+
+STEPS BOARD (R3-0-steps, -steps-2, more if long; every row round 2's board carries stays unless an item here changes
+it; values person by person from FIXTURES; round 2's counting rule unchanged, said once at the top):
+  T1. M2: 6.12's Expect adds "the Default entrustment scale select offers three scales by name after No default (the
+      CNSA scale, the CPSA ladder, the O-R Scale)".
+  T2. C4: each journey lists its presses and its fields by name, then the count. 6.2 "Colleges; Edit; Description; Save;
+      Colleges" opens the menu twice: at 390 +1 for each opening (6+2, not 5+1); 6.6's "(+1 to read the list)" is +2 at
+      390; 6.30's add lists its eleven values (Target, Per, Decision cadence, Minimum level, four year minima, three
+      tools; the panel and the suggested scale arrive chosen) and today's add with its own presses (Curricula, Items, Add
+      item, the fields, Add item), rebuilt, not quoted.
+  T3. C5: (a) a row for each changed states.md row, with its new words: :719-756 (Colleges, the tree, the
+      sub-specialities: names, the Unavailable for the not-found and other-College rows, dialogs for the deactivated
+      rows), :801-807 (the curriculum; :807's narrow row reads the read-out, Q19), :834-847 (the scales; :845 now reads:
+      on the CPSA ladder no Remove is offered, Q16's line; Q6's refusal is reached by no step, R3-C11, a handler test);
+      (b) 6.5's row quotes the new sentence, "“Indirect supervision” is already the label of another rung. Give each
+      rung its own label."; (c) the "Level labels must be unique" hit names its lines, act-6-catalogue.md:144 and :149;
+      (d) the Boards column adds R2-C21a on 6.10 (the menu now offers the list) and R3-B03 on 6.1 (the required words).
+  T4. C6: 1.16's Expect says once where Create EPA sits at 1280, from THE HEADER CHECK under Q20 (beside the h1).
+  T5. C16: A.7.10's Do writes T12's step: "Open Edit this version on 11.2's items, read the curriculum's page, leave by
+      Cancel." with its Expect (R3-F20f-390: one field a row, the Sub-speciality a read-out, the Open for adoption row
+      44px, Save on top of Cancel, nothing sideways).
+  T6. Q21: every row that cites an EV1 board cites its R3 board (6.14 R3-E05, E06; 6.23 R3-E09; 6.28 R3-E11).
+  T7. Q19: 6.29's Expect adds "11.2's Sub-speciality reads Paediatrics / Paediatrics, fixed (a read-out)"; 6.31's the
+      same; 6.13's create keeps the select.
+  T8. Every other changed board in a row's Boards column takes its R3 id.
+
+BOARDS ROUND 3 DRAWS (each R3 board for the R2 board of the same id; widths as round 2 drew it):
+  Redrawn, 99 at 1280 with their 99 twins at 390 and 11 at 768, and 5 at 390 alone (214 screens):
+    R3-A02 (M5, S1, Q20; 768), A03 (M4, S4), A04 (M5, S1, S3, S13, Q20), A05 (M4, S4), A06 (M2, M4, S4), A07 (M5, S1,
+      S3, S13, Q20; 768), A08 (M2, M4, S4), A09 (M4, S3, S4), A11 (M4, S4), A12 (M5, S1, S3, S13, Q20), A13a (M4, S4),
+      A13b (M5, S1, S3, S13, Q20), A14a (M4, S4), A14b (M5, S1, S3, S13, Q20), A15 (M2, M4, S4), A16a (M2, M4, S3, S4),
+      A16b (M5, S1, Q20), A17 (M4, S4, N10), A22 (M5, S1, Q20, N18; 768);   [19]
+    R3-B01 (S1, S19, Q20; 768), B02 (S1, Q20; 768), B03 (M4, S4), B04 (M4, S4), B05 (M4, S4), B06 (M4, S3, S4, S13), B07
+      (M4, S4), B08 (M4, S3, S4), B09 (M4, S4), B10 (M4, S4, N20), B11a (M4, S3, S4), B11b (S1, Q20), B12 (M4, S3, S4),
+      B16 (S1, Q20, N18; 768), B17a (S1, S7, Q20), B17b (M4, S4, S7);   [16]
+    R3-C02 (M4, S4, S5), C03a (M4, S4, S5, N12), C03b (M4, S4, S5, N12, N18), C04 (M4, S3, S4, S5, S13), C05 (M4, S3,
+      S4, S5), C08 (M5, S3, S6), C09 (S3), C10 (S3), C12 (M1, M4, S3, S4, S5), C14 (M4, S4, S5, N12), C15a, C15b, C15c
+      (M4, S4, S5, S21, N12), C16 (M4, S3, S4, S5), C20 (M4, S4, S5, N18);   [15]
+    R3-D01, D02, D03 (M4, S4, Q19), D04 (M4, S3, S4), D05 (M4, M5, S3, S4, S13, Q20, N14), D06, D07 (M4, M5, S4, Q19,
+      Q20, N14), D08 (M4, M5, S3, S4, S9, S13, Q19, Q20, N14), D09a, D09b, D10 (M4, M5, S4, Q19, Q20, N14), D11 (+ S3),
+      D12 (M4, M5, S4, Q19, Q20, N14), D13 (+ S3), D14 (+ N20), D18 (M4, M5, S4, S9, Q19, Q20, N14), D19 (M4, M5, S4,
+      S21, Q20, N14);   [17]
+    R3-E01 (N3, S19, Q20; 768), E02, E03 (N3, Q20), E04 (S10, N3, Q20; 768), E05, E06, E09, E11 (from their -EV2 boards:
+      M4, Q21; E06, E09, E11 + S3), E07, E08 (M4; E08 + S3), E10, E12, E13 (M4), E14 (M4, S3), E20 (M4, N16);   [15]
+    R3-F01 (S1, S19, Q20; 768), F02, F03 (S1, Q20), F04 (S1, Q20; 768), F05 (M5, S1, Q20; 768), F06 (M5, Q20), F07, F08,
+      F09 (M5, S1, Q20), F10, F12, F14 (M4), F11, F13 (M5, S1, S3, Q20), F15 (M5, S1, Q20), F16 (S11, N19), F18 (M3, M5,
+      S1, S9, Q20);   [17]
+    390 alone: R3-F20a-390 (N3), F20c-390, F20e-390 (M5), F20d-390 (M4), F20f-390 (M4, M5, Q19, N14, T5).
+  New, 10 screens:
+    R3-C11, R3-C13 (M1, Q18; they replace R2-C11 and C13, whose CPSA premise cannot hold) and R3-D20 (Q19's refusal),
+      each at 1280 and 390, each Illustration;
+    R3-B02-1024 and R3-B02-1025 (Colleges either side of its stack, S1; the header beside the title at both, Q20),
+      R3-F11-1025 (the items where round 2 overflowed by up to 27px, as the fix draws it, S1), R3-E01-1023 (Create EPA
+      under the subtitle below 1024, Q20).
+  Dropped: R2-E05-EV1, E06-EV1, E09-EV1, E11-EV1 (Q21), and R2-C11, C13 as drawn (Q18).
+  Illustrations among them, by S21's rule: as round 2 labelled them (A09, A15, A16a/b, A17, A22, B05, B09, B10, B11a/b,
+    B12, B16, B17a/b, C09, C10, C12, C14, C16, C20, D03, D04, D09a/b, D12–D14, D18, E14, E20, F14, F15, F18), with C15a–c
+    off and D19, C11, C13, D20 on. The Spec lists them.
+  Stand as drawn (not redrawn): R2-A01, A10, A18a–c, A19a/b, A20a/b, A21; B13, B14a/b, B15a/b; C01, C06, C07, C17,
+    C18a/b, C19a/b, C21a/b; D15, D16, D17; E15, E16, E17, E18a/b, E19; F17, F19, F20b-390; with their twins.
+  The check (R3-0-check), the Spec (R3-0-spec, -spec-2, more if long) and the Steps (R3-0-steps, …), drawn WHOLE.
+
+CHECK BOARD, "R3-0-check", FIRST on the page (more boards "R3-0-check-2", … if long): FIRST, the screenshots (whether
+  they arrived and how, which were opened and viewed, any word a capture contradicts). Then, item by item, every id of
+  this message (M1–M5, S1–S21, N1–N21, Q18–Q21, T1–T8): done or not done, the boards it was drawn on (or "Spec" /
+  "Steps"), and for "not done" why. Then THE SWEEP's table, THE HEADER CHECK's table and THE 44 PX CHECK's count; then
+  the counts of boards redrawn, new and standing, against this message's (99 + 5 redrawn, 10 new). Say what was checked
+  by rendering and what by reading the markup.
+
+SPEC BOARD, "R3-0-spec" (-spec-2, …): round 2's Spec restated whole, with these:
+  - § 1 the captures as the check board says them; § 2 the decisions with Q18–Q21 added, T11 replaced by Q19, EV2
+    decided; the Illustration list by S21; the list of R2 boards that stand.
+  - § 4 the class table: every class a board uses, "reuses .x" or NEW (f16r3.css R1–R3 and the two NEW page classes);
+    .catalogue-record gone; the canvas-only .cv-* rules apart, in f16r3.css PART 1.
+  - § 5 the sweep's, the header check's and the 44px numbers (from the check board); the three rules quoted.
+  - § 6 the code changes, round 2's with: Q18's order (M1), Q19's flag and refusal, S6's typed refusal, S8's
+    HasNationalEpas, S9's national count, S12's redirect, S13's tokens, S14's removed rungs, S16's reach rule, N6, N7,
+    N11, N20, the app.css changes (R1–R3) and the per-page checkbox copies retired.
+  - § 8 the DESIGN.md text: round 2's rows, with the header rule (Q20), the required-field pattern drawn (M4), the one
+    .user-page .form-check rule (S4), and the catalogue tables' 1024px stack (S1).
+  - § 9 every message by kind with its words, built, round 1's, round 2's or NEW, each NEW beside the words it
+    replaces: S15's rows, S20's Delete refusals, N1's field refusals, M5's names, Q18's three sentences and the "Put …
+    back" wording, Q19's help and refusal, S6's "and ‹N› more.", S16's own-EPA sentence, N10's, N12's caption.
+  - § 11 the edge cases: B17 at 1,000, A22 at 2,000 (S7); N2's two Unavailable routes; N4's colliding names.
+
+CHECK BEFORE YOU STOP: the check board first, saying whether the captures arrived; one h1 a board; no inline style; no
+  undefined class; no raw colour; no .catalogue-record, .wf-* or .rung-edit*; one .action-result per result; the
+  "* marks a field you must fill in." line and aria-required on every form with a required field; every row and header
+  link's name starting with its visible words; the levels table's Order a th scope="row"; the select offering three
+  scales from 6.5; F18 "Items (16)" after 6.28 with KGK-001's values; E04 in the query's order; no EV1 board; no
+  Remove, Up or Down on a scale in use, and no Q6 refusal on the CPSA ladder; a curriculum's Sub-speciality a read-out
+  once it holds an item or an adoption; no "Release" legend; every 390 control 44px; nothing scrolls sideways at any
+  swept width, 1280, 768 or 390; the header actions beside the title at 1024 and up, under it below; no gendered pronoun
+  on any board, annotations included; every bracket ‹…› still a bracket, never filled from memory, and never a
+  control's value; every board's 390 and 768 twin carries the same words as its 1280 board; f16r3.css saved as a
+  project file.
