@@ -20,8 +20,10 @@ The operator said "what is next", then "Drop the scratch db's and start the next
   `design/upload/baseline/`, listed in its "ATTACHED, AGAIN"). T1–T12 provisional, for round 2's review.
 - **Round 2 drawn** (306 boards saved, `19f3eac5`; captures read from the folder this time).
 - **Round 2 reviewed** (three Sonnet reviews merged into `round-2-review.md`): M1–M5; Q18–Q21 put to the operator.
-- **Next:** the operator's answers, then round 3's ask (the correction round: M1–M5, the shoulds, the nits as one list).
-  Not pushed.
+- Q18–Q21 taken as recommended (`a73f57d4`).
+- **In flight:** one Opus agent writes `round-3-ask.txt` (the correction round) and commits it; if absent, rerun it.
+- **Next:** give the operator the ask; after round 3, save `round-3/` and check it item by item (`round-3-check.md`),
+  then step 6, the build. Not pushed.
 
 ## Session 2026-11-02/03 (Opus): T392's replay, re-sync and lessons; T392 done
 
