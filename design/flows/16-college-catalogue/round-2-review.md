@@ -54,6 +54,8 @@ Unavailable markup, Save's `aria-haspopup`). Carried as one list in round 3's as
 
 ## Questions for the operator
 
+**Decided 2026-11-04:** the operator took Q18–Q21 as recommended ("yes").
+
 - **Q18 (M1). The order of the rung refusals.** *Recommendation:* on a save that removes a rung, the handler runs Q6's
   checks first (pinned items and ended records, named by EPA, curriculum and rung label, up to three then "and ‹N›
   more"); Q16's refusal covers the rest (a reorder, a removal no item needs, on a scale in use). The page offers Up,

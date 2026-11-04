@@ -120,3 +120,6 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   `6e7af73a`, `round-2-review.md`): M1–M5 checked against the boards and the code (Q6/Q16 order; the CNSA scale missing
   from four selects; F18's "Items (15)"; required marks; accessible names); the shoulds and nits carried. Q18–Q21 for the
   operator (the refusals' order, a curriculum's sub-speciality fixed once used, header actions in app.css, EV2).
+- **2026-11-04, Q18–Q21** taken as recommended ("yes"): Q6's checks before Q16's on a removal; a curriculum's
+  sub-speciality fixed once it has an item or an adoption (the command refuses); header actions fixed in app.css in
+  this build; EV2. **Next:** round 3's ask.
