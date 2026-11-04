@@ -97,3 +97,6 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   (EPA-PROGRAMME § 3). The round-1 ask already builds on the recommendations; no change to it. **Next:** the operator
   sends `design/flows/16-college-catalogue/round-1-ask.txt` with its ATTACHED captures (staged in `design/upload/`) to
   the canvas's chat, and says "done"; then assess round 1 (one Opus agent, as T392's `round-1-assessment.md`).
+- **2026-11-04, round 1** (50 boards and `f16r1.css` in `round-1/`, `b486bb38`; the operator sent the ask and said
+  "done"): A1–A3 the tree as wireframes (the canvas recommends A2, one page per College), B1/B2 Colleges, C1/C2 scales,
+  each at 1280 and 390, plus Spec and Steps. Assessment running (one Opus agent → `round-1-assessment.md`).
