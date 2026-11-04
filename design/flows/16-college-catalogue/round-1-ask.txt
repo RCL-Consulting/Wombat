@@ -1,0 +1,737 @@
+FLOW 16 — The College keeps the national catalogue: its specialities, ladders, EPAs and curriculum versions
+
+This is flow 16 of a RESTRUCTURE with UX in scope (design/BRIEF.md § 4). Flows 01 (the shell), 02 (sign-in and
+  account), 03 (a registrar files an activity), 04 (an assessor's inbox), 05 (a registrar reads where she stands),
+  06 (watching the programme), 07 (the review sitting), 08 (panels, what is due, the schedule), 09 (STARs, the
+  register, appeals), 10 (MSF campaigns), 11 (invitation to admission), 12 (the institution's people), 13 (graduation
+  and exit), 14 (data rights) and 15 (an institution adopts the catalogue) are designed and built; every page here sits
+  inside the shell. Flow 15 rebuilt the EPA list, an EPA's page, Curricula, a curriculum's items, an item's own page and
+  the scales list, for every caller, in an institution's words; this flow gives them the College's and the
+  Administrator's words and redesigns the pages no flow has reached.
+  This round is PART 1 of two, and it draws only part 1's screens (1–4 below): 2–3 STRUCTURES as wireframes for (A) the
+  College's tree, Specialities > a speciality > its sub-specialities and their default ladders; 2–3 variations at FULL
+  FIDELITY each for (B) Colleges and a College's record and (C) the entrustment scales list and a scale's page. I pick
+  before you draw part 2 (screens 5–7), which I will ask for in this thread.
+  The runbook steps follow below in this same message. The brand mark is at the URL on the next line: use it, never a
+  drawn disc.
+  MARK: <blob url to be filled>
+  Every person, College, code, title, version, date and count comes from this message and the steps below; invent
+  none. Where a value is not given, write a bracket ‹…›.
+
+THE SCREENSHOTS AND THE STYLESHEET:
+  - The key screenshots listed under ATTACHED are attached to THIS message (copies of design/baseline/, staged in
+    design/upload/). SAY ON YOUR SPEC BOARD, FIRST, whether they arrived (as attachments, or read from a folder), which
+    you opened and which you did not. If any did not arrive, draw nothing from memory in its place: write a bracket
+    (flows 06, 12 and 13's lesson). The words in them are today's pages, defects included; they are not the target.
+  - Write the round's shared stylesheet as a PROJECT FILE, project/f16r1.css (upload or write it as a file of the
+    project, NOT as an asset, so the saved round holds it). Every board's head links ds/wombat/tokens.css,
+    ds/wombat/components/bundle.css, then f16r1.css, in that order, and no /_blob/ stylesheet; a board's <style>
+    holds body{margin:0} at most. Each NEW rule in f16r1.css names its row on the Spec's class table.
+
+GOAL:
+  The College's administrator (Dr Kruger, CPSA) must be able to:
+    - keep the College's specialities and sub-specialities, and each sub-speciality's default ladder, and read the
+      College's tree at a glance (which sub-specialities each speciality has, and the ladder each uses);
+    - correct an EPA's wording, pause an EPA and restore it, and add one, told before he saves how far it reaches:
+      which institutions have adopted a curriculum that holds it, and how many registrars it measures;
+    - start a curriculum version held back, clone one, change its items, and open it for adoption, told in words what
+      "open" and "held back" mean, what a clone copies (the College's items, never an institution's own), and that a
+      target or period he changes is read live, closed periods included, in every institution that adopted it;
+    - be offered nothing he cannot open: no Back to colleges, no link to a page the Administrator alone keeps; and know
+      beforehand that the scales and the College's own record are the Administrator's, and where he reads a ladder by
+      name.
+  The Administrator (devadmin) must be able to keep the Colleges and the entrustment scales: create a College, refused
+  plainly when its name or short code is taken; deactivate one only after a question that names it and says what it
+  does; build a ladder rung by rung, told a rung by its own label ("5", never "level 6") and a refusal by the item's EPA
+  and curriculum, never an id; delete a ladder only after a question, told what still uses it.
+  What is wrong today (the attached screenshots show each; on the shell as built, 2026-11-02, unless dated otherwise):
+  - The College's specialities list offers him "Back to colleges", a page that refuses him (1.12, 6.11). Every part-1
+    page has Back links beside the trail, which flows 12, 13 and 15 dropped.
+  - Deactivate on a College, a speciality and a sub-speciality is a red button that acts at once, with no question, and
+    stays offered on the record it has just deactivated; Delete on a scale acts at once (6.8). What a deactivation does
+    is not said: it stops new invitations naming the record and takes it out of an institution's adopted disciplines,
+    nothing else.
+  - The record forms print every required message twice (a summary and under the field), naming the model property
+    ("The ShortCode field is required.", 6.1); every failed save of a College reads "A college with the same name or
+    short code already exists."; a failed read or save prints the exception's text.
+  - The scale's page refuses a rung a curriculum item needs with "Curriculum item 2 … requires level 6" (2026-09-26):
+    the item by its id and the rung by its rank, where the College prints "5". An unknown scale id silently returns to
+    the list; a specialities or sub-specialities list typed with another College's id reads as an empty list offering
+    Create.
+  - None of Colleges, Specialities or Sub-specialities stacks at 390 px. The scale's page has <h3> sections and no <h2>.
+  - Part 2 (asked later): the curriculum's page is untouched by any flow: its box reads "Active" where every list reads
+    "Open" / "Held back"; it shows no result after a create or a clone; its messages show twice and are not tied to
+    their fields; its controls are 36–38 px at 390. A new Neonatology curriculum's items page says "Every national EPA
+    of Neonatology is already on this curriculum", though Neonatology has none (6.13). Nothing anywhere says how many
+    institutions or registrars a change reaches.
+
+AUDIENCE:
+  - CollegeAdmin: Dr Anton Kruger, College of Paediatricians of South Africa (CPSA). A few times a year; about one
+    curriculum version a year; high stakes.
+  - Administrator: devadmin ("Demo Administrator"). Keeps the Colleges and the scales.
+  - Seen through the pause, on pages other flows built: Dr Mohammed Patel (Assessor), Dr Anele Dlamini (Trainee).
+  - Desktop 1280×800 and phone 390×844.
+
+THE RULES THE PAGES CARRY TODAY (real words; they are the data to draw with, and the rules hold whatever the shape):
+  - Whose is what. Only the Administrator creates a College or changes a College's own record, and only he creates,
+    edits or deletes a scale (scales are platform-wide). A College's CollegeAdmin keeps what the College owns: its
+    specialities, sub-specialities (and each one's default ladder), EPAs and curricula. The College admin opens neither
+    the Colleges pages nor the scales pages: "You cannot open this page", "Your role (College admin) does not open this
+    page.", "If you need it for your work, ask the platform administrator.", Go to Home. He reads a ladder by name
+    where the College uses it: a sub-speciality's default and each item's minimum level. An institution's own EPAs and
+    items are not shown to the College.
+  - Colleges (/admin/colleges): Name, Short code, Description, Status (Active, Inactive), Created; Edit and Specialities
+    on each row ("Edit College of Paediatricians of South Africa"); Create college; empty "No colleges yet" / "Create the
+    first college to start defining national specialities, EPAs and curricula.". A College: Name*, Short code*,
+    Description, Active; Cancel, Deactivate, Save; "College saved.", "College deactivated."; a taken name or short code
+    "A college with the same name or short code already exists.". An unknown id is not found.
+  - Specialities (the College admin's menu item sends him to his College's list): subtitle "College: College of
+    Paediatricians of South Africa (CPSA)"; trail Home › Specialities › College of Paediatricians of South Africa (to the
+    Administrator: Home › Colleges › the College › Specialities); Name, Description, Status; Edit and Sub-specialities;
+    Create speciality; empty "No specialities yet" / "Create the first speciality for this college.". A speciality:
+    Name*, Description, Active; "Manage sub-specialities"; "Speciality saved.", "Speciality deactivated.".
+  - Sub-specialities: subtitle "Speciality: Paediatrics"; Name, Description, Status; Edit; Create sub-speciality; empty
+    "No sub-specialities yet" / "Create the first sub-speciality under this speciality.". A sub-speciality: Name*,
+    Description, Active, and on an existing one Default entrustment scale ("No default — offer every scale", then every
+    scale by name) with "Committee STARs for this programme's trainees are limited to this scale's levels.";
+    "Sub-speciality saved.", "Sub-speciality deactivated.".
+  - What Active does on a College, speciality or sub-speciality: an inactive one cannot be named by a new invitation,
+    and an inactive speciality or sub-speciality is not among an institution's adopted disciplines. Nothing else reads
+    it; deactivating cascades nothing.
+  - Entrustment scales (/admin/entrustment-scales), to the Administrator: subtitle as built for him; caption as built;
+    Name, Description, Levels, and Edit and Delete on each row; Create scale. Delete: refused while anything uses the
+    scale, naming the first use found in this order: an MSF question, a pinned curriculum item, scored progress, a
+    sub-speciality's default, a published form's binding, an entrustment decision ("This entrustment scale is the
+    default scale of the sub-speciality "Adult Neurology" (Neurology), so it cannot be deleted. Change that
+    sub-speciality's default entrustment scale to another scale, or to no default, first."); else "Entrustment scale
+    deleted.". A scale needs at least two levels.
+  - A scale (/admin/entrustment-scales/new, /{Id}): Name*, Description; Levels, each with Order (its rank, shown only
+    here), Label and Description, with Up, Down and Remove, and Add level; Cancel, Save; "Entrustment scale saved.";
+    refusals "Level labels must be unique within a scale." and the rung one above; a rename warns that a form bound by
+    name loses it. A rung's label is not its rank: on the CPSA ladder 3 is split, so "4" is the fifth rung and "5" the
+    sixth; everything that compares levels uses the rank.
+  - Part 2's rules, for reading only now: an EPA is the College's to change; a pause ("Deactivate PAED-012?") stops it
+    being chosen for a new activity and being a target on running programmes, keeps what it earned, and credits nothing
+    completed meanwhile until it is restored, when it credits it ("EPA reactivated. 1 activity completed against it
+    while it was inactive now counts towards progress."). A new or cloned curriculum version starts held back; only
+    an open version can be adopted ("This curriculum version is not open for adoption. Its College has held it back,
+    so nothing was adopted."); closing a version does not affect an institution that has adopted it.
+  - Data volumes: none (CNSA before 6.3: no specialities; Neurology before 6.4: no sub-specialities); typical (CPSA:
+    one speciality, two sub-specialities; three scales of 5–6 rungs); heavy (five Colleges; a speciality with six
+    sub-specialities; a ladder of 8 rungs with long descriptors; a scale used by forty items).
+
+CONTENT (real scenario values from the T392 replay, D = 2026-11-02):
+  - Colleges: College of Paediatricians of South Africa (CPSA), "Constituent College of the Colleges of Medicine of
+    South Africa; owns the national Paediatric EPA catalogue." (from 6.2: "… catalogue and its versions."); College of
+    Neurologists of South Africa (CNSA), "Constituent College of the CMSA; owns the national Neurology catalogue.",
+    created at 6.1; Demo College (DEMO-C). All Active.
+  - CPSA: speciality Paediatrics ("Specialist training in Paediatrics."; from 6.11 "Specialist training in Paediatrics,
+    and certificate training in its sub-specialities."); sub-specialities Paediatrics ("General paediatric specialist
+    training programme.", default CPSA Paediatric Entrustment Scale v11.1) and Neonatology ("Certificate training in
+    Neonatology.", created at 6.12, default the CPSA ladder). CNSA: Neurology ("Specialist training in Neurology.") and
+    Adult Neurology ("Adult neurology specialist training programme."; "No default — offer every scale" until 6.7 sets
+    the CNSA scale).
+  - Scales: CPSA Paediatric Entrustment Scale v11.1 (six rungs labelled 1, 2, 3a, 3b, 4, 5, from "Not entrusted to
+    act…" to "Supervises others…"); O-R Scale (5, the Demo College's); CNSA Neurology Entrustment Scale ("Supervision
+    ladder for CNSA EPAs.": Observe only, Direct supervision, Indirect supervision, Distant supervision, Unsupervised
+    practice, and from 6.6 Supervises others ("Supervises juniors performing the activity.")).
+  - EPAs: PAED-001 to PAED-015, then PAED-016 "Transitioning adolescents with long-term conditions to adult care"
+    (6.28); PAED-006 "Managing long-term health conditions (LTHCs) in children" (corrected at 6.14); PAED-012
+    "Communicating with and counselling patients, caregivers and healthcare teams" (paused at 6.17, restored at 6.23).
+  - Curricula: Paediatric EPA Curriculum 11.1 (effective 2026-01-01, 15 items, Open); 11.2 (cloned at 6.29, effective
+    D, held back, 16 items after 6.30 with PAED-016 and PAED-011 at "2 per academic year", opened at 6.31); Neonatology
+    EPA Curriculum 1.0 (effective D, 0 items, Held back). The clone form starts at "11.1-copy", from 2026-01-02.
+  - The reach of a CPSA change: one institution, Kgosi Kgari Teaching Hospital (KGK), which adopted 11.1 (and 11.2 at
+    6.32); on 11.1 at 6.17, three registrars in training (Dr Dlamini, Dr Mahlangu, Dr Ndlovu) and two whose programmes
+    ended (Dr Molefe completed, Dr du Plessis withdrawn). KGK also keeps KGK-001 as its own item, which the College does
+    not see.
+  - Ids as replayed (they change on every replay: draw them as given): CPSA 2, CNSA 4; Paediatrics speciality 2,
+    Neurology 3; sub-specialities Paediatrics 2, Adult Neurology 3, Neonatology 4; scales CPSA ladder 2, CNSA 3;
+    curricula 11.1 2, Neonatology 1.0 3, 11.2 4; EPAs PAED-006 7, PAED-012 13, PAED-016 18.
+
+WHAT FLOW 16 MAY CHANGE OF WHAT EARLIER FLOWS BUILT, AND WHAT IT MAY NOT:
+  May not: the shell, the menus and Access denied (flow 01); the institution's view of the catalogue pages, their owner
+    marks, "Set by the College.", the adoption on Curricula and its dialog, the item page's form and its record view,
+    the one-shot result tokens (flow 15); My progress, the activity page and the picker (flows 03–05); the rules above
+    (the College keeps its catalogue, the Administrator the Colleges and the scales; a pause keeps earned credit; a new
+    version starts held back; an institution's own items are the institution's; an out-of-scope record is not found).
+  May, for these pages: the College's tree and how its lists and records are reached; every part-1 page's header, Back
+    links, table stacking, forms, refusals and results; Deactivate and Delete and their questions; the scale's page and
+    its rung words; not-found and Unavailable states; the College admin's Home card; and (part 2) the College's and
+    the Administrator's words on the EPA list, an EPA's page, Curricula, the items and an item's page; the curriculum's
+    own page; where the reach of a change is told. Mark PROPOSED any rule change (a role newly allowed, a new route, a
+    new action, a new refusal, a new confirmation, data a page does not read today): those are mine. The runbook's
+    Expects change with the words.
+  Say which of these each variation changes, and why.
+
+SCREENS, in order. Part 1 (this round):
+  1. The College admin's way in: Home's National catalogue card (6.10; it links Specialities, EPAs, Curricula and not
+     Activity types, and says "Institutions adopt an active curriculum"); how his pages tell him beforehand that the
+     scales and the College's own record are the Administrator's (1.15, 6.10 end on Access denied, flow 01's).
+  2. The College's tree (structure A): his Specialities, CPSA's one speciality (1.12); Paediatrics' sub-specialities
+     (1.13); a sub-speciality with its default ladder (1.14); a speciality edited and saved (6.11); Neonatology created
+     with its default (6.12: before, created, the default saved and reopened); devadmin giving the CNSA its first
+     speciality and sub-speciality from an empty list (6.3, 6.4) and Adult Neurology's default (6.7); a deactivation
+     asked and done (Q3), and a deactivated record; another College's id typed (Q7); an unknown id; required fields
+     empty; a failed save; loading; a load error; 390 px.
+  3. Colleges and a College (variations B): the list of two, then three (1.2, 6.1); the CPSA's record (1.3); a create
+     refused for a taken short code, then created (6.1); the description saved (6.2); required fields empty; deactivate
+     asked and done (Q3); not found; loading; a load error; 390 px; five Colleges.
+  4. Scales and a scale (variations C): the Administrator's list (1.4); the CPSA ladder's six rungs with Order beside
+     each label (1.4); a ladder created, first refused for a duplicate label (6.5); a sixth rung added and saved (6.6);
+     Delete asked, then refused naming what uses it (6.8); deleted; a rung a curriculum item needs, refused in the
+     College's label and the item's EPA (Q6); a rename that unbinds a form; unknown id (Q7); loading; a load error; 390
+     px; a ladder of 8.
+  Part 2 (the next round, after my pick; listed so part 1 leaves room for it):
+  5. A curriculum's own page (structures D): create Neonatology 1.0, held back (6.13); 11.1's page and its clone to 11.2
+     (6.29); 11.2 opened for adoption (6.31); the reach told before a save (Q2); required fields empty; not found; 390.
+  6. The EPA list and an EPA's page in the College's words (proposal E): the College's fifteen and sixteen (1.16, 6.28);
+     PAED-006 corrected (6.14); PAED-012 paused with its reach told (6.17), restored (6.23); PAED-016 created (6.28);
+     the Administrator's list.
+  7. Curricula, the items and an item's page as the College keeps them (proposal F): 1.17, 1.18, 6.13's empty
+     Neonatology items (Q14), 6.17's paused item, 6.29–6.31, A.7.10 at 390; T242's refusal naming the institution (Q10).
+
+STEPS: 1.2–1.4, 1.12–1.18, 6.1–6.8, 6.10–6.14, 6.17–6.19, 6.23, 6.24, 6.28–6.31 and A.7.10 (33). Pasted verbatim below
+  (Role / Route / Do / Expect). In them, D is the day the story is replayed. Where an Expect quotes today's wording or
+  layout, that is today's page, not a requirement on the new one. 6.18 is flow 04's activity page and 6.19 and 6.24
+  flows 03 and 05's pages (keep them; draw only what this flow changes); 1.15 and 6.10 end on flow 01's Access denied.
+
+STATES TO SHOW:
+  Every state named in SCREENS; loading for every page (the header and a skeleton, no action offered until the read is
+  in); a load error (a sentence and Try again, never an exception's text, and no empty state under it); each
+  confirmation, its cancel, and the result after it with the focus on it; a refusal beside the field or row that caused
+  it, keeping what was typed; not found or Unavailable for every record page; 390 px for every page, long names
+  wrapping, nothing sideways; the heavy volumes.
+
+REQUIREMENTS FROM KNOWN DEFECTS:
+  - T291 item 2: no page offers the College admin a link to a page that refuses him (Back to colleges; the
+    redirect that sends a College admin with no College to Colleges). A page offers only what its target admits.
+  - T264: Deactivate on a College, speciality and sub-speciality, and Delete on a scale, ask first in a ConfirmDialog
+    naming the target ("Deactivate College of Neurologists of South Africa?"), say only what the deactivation does
+    (above), open on Cancel; the trigger an outline button, offered only on a record stored as active; the result takes
+    the focus.
+  - T324: every required message names the field's label ("Enter a short code."), once, under its field, tied to it and
+    focused; the scale's refusal names a rung by its label and an item by its EPA and curriculum ("PAED-001 on
+    Paediatric EPA Curriculum (11.1) needs rung 5 …", PROPOSED words), never "Curriculum item 2" or "level 6".
+  - T272 and T393: a failed read or save says what failed and offers Try again; "already exists" only for a real
+    duplicate; no exception's text anywhere (the College pages, the specialities pages, the scale's page, the
+    curriculum's page).
+  - T326: (part 2) a curriculum whose discipline has no national EPA says so ("Neonatology has no national EPA yet …"),
+    not that every EPA is already on it; part 1's and part 2's subtitles speak to the reader they have (the College
+    admin's EPA and curriculum subtitles still speak as flow 15 left them).
+  - T301 (its last half): (part 2) the curriculum page's box is "Open for adoption", with "An institution can adopt this
+    version only while it is open. Closing it does not affect an institution that has already adopted it.", the same
+    words as the lists' "Open" / "Held back".
+  - T323 (gone; keep it): at 390 px nothing scrolls sideways and every control is 44 px, the curriculum's page included.
+  - T329 / A6: a skeleton while loading, the alert on a load error with no empty state under it.
+  - T242 (decided (c), flow 15's Q15): (part 2) the College's add of an EPA an institution holds as its own item stays
+    refused, and the refusal names the institution (DATA: today it names none).
+  - Every dialog names its target, its trigger is an outline button, it opens on Cancel, and the result takes the focus;
+    a refusal keeps what was typed. One <h1>, then <h2> in order. Every list stacks at 390 (StackWide). People and
+    Colleges by name; states by label.
+  - Done since the old brief, keep them: T331 (Specialities stays lit on his College's list, flow 01); T323's item
+    editor (its own page, flow 15); T301's held-back start and adoption refusal (flow 15, F5); "Open" / "Held back" on
+    the lists (T9); the EPA's pause dialog and its result (flow 15, Q11); "Deactivate PAED-012?" opening on Cancel.
+
+QUESTIONS THE DESIGN MUST ANSWER:
+  1. (Mine) The College's tree: separate lists as today (Specialities, then a speciality's Sub-specialities), or one
+     page for the College listing each speciality with its sub-specialities and their default ladders?
+  2. (Mine) The reach: how many institutions have adopted a curriculum that holds this EPA or item, and how many
+     registrars in training it measures, told before a save, a pause and an opening? Where (the dialog, the notice,
+     the box), and in what words?
+  3. (Mine) Deactivating a College, speciality or sub-speciality: what the question says it does, given that only
+     invitations and an institution's adopted disciplines read it; or no Deactivate until a decision?
+  4. (Mine; part 2) The curriculum's own page: one form with its release box and its clone, or the release and the
+     clone as sections or pages of their own?
+  5. (Mine; part 2) A result after a create and a clone, as an EPA's page does it (a one-shot token)?
+  6. A rung and an item in a scale's refusal: the words.
+  7. (Mine) An unknown or another College's id on every record and list page: the page's own Unavailable state?
+  8. (Mine) The College admin and the scales: read-only access to the list (as an institution's administrator has), or
+     Access denied as today, with his pages saying beforehand where he reads a ladder?
+  9. (Mine) Back links on the part-1 pages: the trail alone, as flows 12, 13 and 15?
+  10. (Mine; part 2) T242's refusal naming the institution: its words.
+  11. Delete on a scale: the question; and Remove on a rung (unsaved until Save): no question?
+  12. (Mine) The College admin's Home card: its words, and whether it links Activity types too.
+  13. (Mine) What the build folds in.
+  14. (Part 2) A curriculum whose discipline has no national EPA: its words and its link to EPAs.
+
+CONSTRAINTS:
+WOMBAT CONSTRAINTS (from design/BRIEF.md § 5; restated after the flow 01 pilot, 2026-09-27)
+Stack: Blazor Server (.NET 10), Razor components. Signed-in pages are interactive: every click is a server round trip
+  over SignalR, so prefer explicit actions and flag any per-keystroke behaviour (typeahead, drag, live filtering).
+Static pages: sign-in, register, forgot-password, link account, access denied and not found for a signed-out visitor,
+  the error page, /msf/respond and /portfolio/verify are plain server-rendered HTML with form posts. No client-side
+  behaviour beyond a small script module; no live validation; the phone menu is CSS-only.
+Security policy (CSP): fonts, scripts, styles and images from this site only (images may be data: URIs). No Google
+  Fonts, no CDN, no Tailwind CDN, no jQuery, no inline scripts or onclick attributes, no third-party calls or avatars.
+  A new typeface must be a self-hosted woff2 with a GPLv3-compatible licence (Source Sans 3 and Fraunces, OFL, ship).
+No CSS framework: no Bootstrap, Tailwind, MudBlazor or Radzen classes. Every class is defined in app.css. Name every
+  colour as an existing token (the design system's tokens.json) or a NEW token with its value; prefer the spacing scale
+  xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48 px.
+Icons: Lucide line icons only, named by their Lucide name.
+The shell is designed and built (flow 01): design the page body inside it, not a new frame. The sidebar shows the
+  acting role's navigation (one role at a time; access is the union of the roles held), grouped above eight links, with
+  My progress and My data rights under a rule; the top bar holds the person's name and Sign out; below 641 px a phone
+  bar with a CSS-only menu. A new page names its owning list (its nav item lights, its breadcrumb follows it) and its
+  title "<Page> · Wombat", the same words as its h1 and its nav label, in sentence case.
+Components (compose from these; mark anything else NEW): PageHeader (the page's one h1, subtitle, the trail from the
+  owning list, an optional icon, header actions), DataTable (.clinic-table in .table-container, PagerControls),
+  FormField / FormActions (.form-container, .form-grid, .form-actions), DashboardCard (.detail-card in .dashboard-grid,
+  loading and load error), StatePanel (loading / empty / error), Skeleton, Alert (success / info / warning / danger,
+  text on the tint), ActionResult, ConfirmDialog (native <dialog>), badges (five tints), Icon, TrajectoryChart
+  (hand-drawn SVG, no chart library), ReferenceBlock.
+  Since flow 02 also: the auth card, PasswordField with its Show toggle and PasswordRules. Since flow 03:
+  RefusalSummary, DataTable's stacked rows (Stack). Since flow 05: ISO dates, the training year's wording, the ended
+  record (R5). Since flow 06: the role Homes; filters applied with Show. Since flow 07: the container-query stack.
+  Since flow 08: one action a row, a choice of a few kinds as radios (choice-group), a form page of its own, the
+  pager's focus on the list's heading. Since flow 09: a page of its own per list row; a dialog with a field. Since flow
+  10: a create page of its own reached from Home's header action. Since flow 11: the list is the page and its create
+  form a page of its own; DataTable's StackWide (stacked from 900 px down); a role chosen from described radios; the
+  required mark; only the chosen role's fields drawn; refusals under their field, focused. Since flow 12: a detail
+  page in one column of <h2> sections with no details-grid (the user page); a form in a note panel opened in place
+  (Add a role…); a destructive action confirmed, its trigger an outline button. Since flow 13: a record card naming
+  an end and linking the record (FormerTraineeRecordCard); a page's header action named for the person; an Alert with
+  its first sentence bold over a details list (Verify's answer); an end section of its own apart from Save. Since
+  flow 14: a ConfirmDialog in action mode opens with the focus on Cancel; a page's own Unavailable state for a record
+  that does not exist or is not the caller's; a textarea's character counter; the refusal first in aria-describedby.
+  Since flow 15: the owner mark in words under a title (.muted .text-sm); "Set by the College." where a row offers no
+  change; a one-shot result token that survives a page change and leaves the address; a list stacked to 1024 px when
+  its columns need it; an item's page of its own with its record view; "Open" / "Held back".
+Already designed by flow 01, reuse them: the active nav item, the acting-role switch and its result alert, access
+  denied, not found, the error page, the reconnect dialog and the in-app error bar. Designed by flow 02: session ended.
+  Still to design where a flow meets them: field validation (invalid border plus a stripe, not colour alone; message
+  under the field; the summary).
+Content: sentence case everywhere; people by name as stored (no titles); states and types by label; times in South
+  African time with the zone shown; an out-of-scope record is "not found", never "forbidden".
+Accessibility: WCAG 2.1 AA; text 4.5:1, control borders and focus ring 3:1 (the sidebar's white ring included); targets
+  ≥ 24 px, 44 px on a phone; focus moves to an action's result; every page works at 390 px with no sideways scroll;
+  reduced motion honoured.
+Viewports: 1280×800 and 390×844.
+Also: each page has exactly one h1, and its headings are in order. A confirmation is flow 01's native <dialog>
+  ConfirmDialog. A date is ISO (YYYY-MM-DD) on every screen. An EPA is written "PAED-001 — Title" everywhere
+  (EpaOptionLabel). A rung is written by its label as the College prints it ("3a", "5"); its rank (Order) appears only
+  on a scale's own page.
+
+ASK:
+  - Round 1 (part 1): 2–3 structures as wireframes for screen 2 (Dr Kruger at 1.12–1.14, 6.11 and 6.12; devadmin at
+    6.3 and 6.4), each with its reasoning and its step count; 2–3 variations at full fidelity each for screen 3 (1.2,
+    1.3, 6.1, 6.2, the deactivation) and for screen 4 (1.4, 6.5, 6.6, 6.8, the rung refusal); screen 1 drawn in the
+    chosen frame of each structure. At 1280 and 390 px. With them, two boards of their own: a Spec board (FIRST, whether
+    the screenshots arrived; then every component each variation uses, NEW marked; the DESIGN.md rules each changes;
+    everything PROPOSED; the data a page would need that it does not read today, marked DATA) and a Steps board (each
+    variation's journeys counted, presses + fields typed, at 1280 and 390, and which of part 1's 19 Expects (1.2–1.4,
+    1.12–1.15, 6.1–6.8, 6.10–6.12) it would change). Stop and wait for my pick.
+  - After the pick: part 1's chosen designs with every state above, at 1280 and 390 px, every confirmation, and where
+    the focus lands after each action, with a Spec board (every NEW and changed component, its classes, the DESIGN.md
+    text each changes, the tokens, the DATA, and every message by kind with its words) and a Steps board. Then part 2,
+    as I ask.
+  - Name every design-system component you use, and mark anything else NEW. Say which DESIGN.md rule a variation
+    changes (§ Button system's destructive action; § Form system's refusals; § Table system's stacking; § Page-level
+    patterns' Unavailable and Breadcrumbs; the NavMenu's owner table).
+  - Mark PROPOSED anything not built: a route, an action, a confirmation, a refusal, a rule change, a role newly
+    allowed.
+  - Flag edge cases: a College with no CollegeAdmin (CNSA); a College admin whose account names no College; a speciality
+    with no sub-speciality; a sub-speciality whose default ladder is deleted elsewhere (refused while it is the
+    default); a ladder whose rung a pinned item needs; a College, speciality or sub-speciality deactivated while an
+    institution has adopted its curriculum; two Colleges with similar names; a description of 2,000 characters.
+  - Run an accessibility review against WCAG 2.1 AA: one h1, headings in order, every table captioned, every row
+    action named for its row, focus after every action and confirmation, refusals tied to their fields
+    (aria-describedby), targets ≥ 24 px (44 at 390).
+
+ATTACHED: act-1/1.12-1-kruger-specialities.png, act-1/1.13-1-sub-specialities.png,
+  act-1/1.14-1-sub-speciality-ladder.png, act-1/1.2-1-colleges-list.png, act-1/1.3-1-cpsa-record.png,
+  act-1/1.4-2-cpsa-ladder.png, act-6/6.1-1-duplicate-refused.png, act-6/6.3-1-no-specialities.png,
+  act-6/6.5-1-duplicate-labels-refused.png, act-6/6.8-1-delete-refused.png, act-6/6.10-1-kruger-home.png and
+  act-6/6.10-2-college-record-refused.png, all from 2026-11-02 on the shell as built, with
+  states/entrustment-scale-edit--rung-refused.png and states/college-edit--invalid.png from 2026-09-26, an older frame
+  (a Title Case sidebar with Logout, an email in the top bar): read their bodies only. No attached capture shows a
+  password.
+
+Step 1.2 — The CPSA is among the Colleges (act-1-setup.md)
+Role: Administrator — the platform operator
+Route: /admin/colleges
+Do: Open Colleges from the nav and read the list. Create nothing.
+Expect: The list has two rows, each Active and each offering Edit and Specialities:
+  - `Demo College` (`DEMO-C`);
+  - `College of Paediatricians of South Africa` (`CPSA`), described as "Constituent College of the Colleges of Medicine
+    of South Africa; owns the national Paediatric EPA catalogue."
+  The header offers Create college. No College is named "College of Paediatricians" alone.
+
+Step 1.3 — The CPSA's own record (act-1-setup.md)
+Role: Administrator — the platform operator
+Route: /admin/colleges → /admin/colleges/{Id:int}
+Do: Open the CPSA's Edit and read the record. Leave by Back to colleges without saving. Record the CPSA's id as
+  `{CollegeId}`.
+Expect: The page is headed "Edit college", and the browser tab reads "Edit college · Wombat" (T190). Name, Short
+  code and Description hold Step 1.2's values, and Active is ticked. Deactivate and Save are offered. Leaving saves
+  nothing, and the list is unchanged.
+
+Step 1.4 — The CPSA ladder has six rungs (act-1-setup.md)
+Role: Administrator — the platform operator
+Route: /admin/entrustment-scales → /admin/entrustment-scales/{Id:int}
+Do: Open Entrustment scales and read the list. Then open Edit on `CPSA Paediatric Entrustment Scale v11.1` and read its
+  levels. Leave by Cancel without saving. Record the scale's id as `{ScaleId}`.
+Expect: The list has two scales: `CPSA Paediatric Entrustment Scale v11.1` at 6 levels and the Demo `O-R Scale` at 5.
+  The Administrator is offered Create scale, and Edit and Delete on each row.
+  The CPSA ladder's levels, in order 1 to 6, are labelled `1`, `2`, `3a`, `3b`, `4` and `5`, each with its descriptor
+  (from "Not entrusted to act…" to "Supervises others…"). Level 3 is split, so a rung's label is not its rank: `4` is
+  the fifth rung and `5` is the sixth. Everything that compares levels uses the rank. This editor is the only place
+  that shows the rank, in its own Order column (D32).
+
+Step 1.12 — The Paediatrics speciality (act-1-setup.md)
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /admin/specialities → /admin/colleges/{CollegeId:int}/specialities
+Do: Open Specialities from the nav and read the page. Record the Paediatrics speciality's id as `{SpecialityId}`.
+Expect: He is redirected to his own College's specialities, subtitled "College: College of Paediatricians of South
+  Africa (CPSA)". The page has one row: `Paediatrics`, "Specialist training in Paediatrics.", Active, offering Edit and
+  Sub-specialities. The Demo College's speciality is not listed. The header offers Create speciality. It offers no link
+  to the Colleges list, which does not admit him (T291 item 2). His menu's Specialities stays lit on it (T331), and the
+  trail above the header reads Home › Specialities › College of Paediatricians of South Africa.
+
+Step 1.13 — The Paediatrics sub-speciality (act-1-setup.md)
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /admin/specialities/{SpecialityId:int}/sub-specialities
+Do: Open Sub-specialities on the Paediatrics row. Record the sub-speciality's id as `{SubSpecialityId}`.
+Expect: The page is subtitled "Speciality: Paediatrics". It has one row: `Paediatrics`, "General paediatric specialist
+  training programme.", Active, offering Edit. The header offers Back to specialities and Create sub-speciality. The
+  sub-speciality shares its speciality's name, and there is no "General Paediatrics".
+
+Step 1.14 — The sub-speciality defaults to the CPSA ladder (act-1-setup.md)
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}
+Do: Open the sub-speciality's Edit and read it. Leave by Cancel without saving.
+Expect: The page is headed "Edit sub-speciality" and subtitled "Speciality: Paediatrics".
+  - Default entrustment scale is set to `CPSA Paediatric Entrustment Scale v11.1`. The other choices are "No default —
+    offer every scale" and `O-R Scale`.
+  - The field's help reads "Committee STARs for this programme's trainees are limited to this scale's levels."
+  - Active is ticked, and Deactivate and Save are offered.
+  The seeder set this default when it created the sub-speciality, and never resets it (T187). So Act 4's STAR picker
+  offers the six rungs only (T076).
+
+Step 1.15 — The College does not open the scale pages (act-1-setup.md)
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /admin/entrustment-scales → /access-denied
+Do: Type the address of the entrustment scales list.
+Expect: The page reads "You cannot open this page" and "Your role (College admin) does not open this page.", then "If
+  you need it for your work, ask the platform administrator.", with Go to Home (T335).
+  The scales list admits only an Administrator or an InstitutionalAdmin, and Kruger's menu offers no Entrustment scales.
+  He reads the ladder by name where the College uses it: the sub-speciality's default (Step 1.14) and each item's Scale
+  column (Step 1.18).
+
+Step 1.16 — The 15 v11.1 EPAs (act-1-setup.md)
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /admin/epas
+Do: Open EPAs and read the list. Create nothing.
+Expect: The list has exactly 15 rows, PAED-001 to PAED-015, with the titles in the table below. Every row reads:
+  - College `College of Paediatricians of South Africa`;
+  - Speciality `Paediatrics` and Sub-speciality `Paediatrics`;
+  - Active, with Edit.
+  The Demo `EPA-001` is not listed, because a CollegeAdmin reads only his own College's EPAs. The header offers Create
+  EPA.
+
+Step 1.17 — Curriculum 11.1 (act-1-setup.md)
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /admin/curricula
+Do: Open Curricula and read the list. Record the curriculum's id as `{CurriculumId}`.
+Expect: The list is captioned "College of Paediatricians of South Africa's curriculum versions", with no section
+  heading and no College column (T392, R3-A12). It has one row: `Paediatric EPA Curriculum (11.1)`, Discipline
+  `Paediatrics / Paediatrics`, effective `2026-01-01`, Items 15, Status Open (the College has released it for
+  adoption, T9), offering Edit and Items. The header offers Create curriculum. The Demo `IM Core Curriculum` is not
+  listed.
+
+Step 1.18 — The 15 items and their targets (act-1-setup.md)
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /admin/curricula/{Id:int}/items
+Do: Open Items on the curriculum's row. Read the items table against the table below. Add, edit and remove nothing.
+Expect: The page is "Items of Paediatric EPA Curriculum (11.1)" (its h1 and tab), under the trail Home › Curricula ›
+  Items of Paediatric EPA Curriculum (11.1), with no Back links (T392, T5). Its subtitle reads "College of
+  Paediatricians of South Africa · Paediatrics / Paediatrics · effective 2026-01-01".
+  - A warning says that a target and its period are read live, in every institution that has adopted the curriculum,
+    including periods that have already closed. It also says that a tool list is checked when an activity is filed and
+    submitted, and never takes back credit already earned.
+  - Under "Items (15)", the table, captioned "Paediatric EPA Curriculum (11.1)'s items, in EPA order", has 15 rows,
+    which match the table below. Its columns are EPA, Target and decision, Minimum level, Minimum by training year and
+    Tools: an item's completion window and weight are on its own page (T392, decision 1). Every row's Minimum level
+    reads its rung over `CPSA Paediatric Entrustment Scale v11.1`, and every row offers Edit and Remove…, each named
+    for its EPA ("Edit PAED-001").
+  - Target and decision holds the target above the decision, for example "3 per semester" above "Decided each
+    semester".
+  - There is no Add item: in its place, "Every national EPA of Paediatrics is already on this curriculum, …", which
+    explains how an EPA would be freed (T392, F3).
+
+Step 6.1 — devadmin creates a second national College (act-6-catalogue.md)
+Role: Administrator — devadmin
+Route: /admin/colleges → /admin/colleges/new → /admin/colleges/{Id:int} → /admin/colleges
+Do: Create the College of Neurologists of South Africa, with the description "Constituent College of the CMSA; owns
+  the national Neurology catalogue." Save it first with the short code `CPSA` by mistake, then correct the code to
+  `CNSA` and save again.
+Expect: The first save is refused: "A college with the same name or short code already exists." Nothing is created.
+  The second save opens the new College's edit page, Active. The colleges list reads three rows, each Active and each
+  offering Edit and Specialities: the new College, the College of Paediatricians of South Africa and the Demo College.
+
+Step 6.2 — devadmin corrects CPSA's description, and nothing else (act-6-catalogue.md)
+Role: Administrator — devadmin
+Route: /admin/colleges → /admin/colleges/{Id:int} → /admin/colleges
+Do: Open CPSA's record and note its id from the address, for Step 6.10. Change the description to "Constituent
+  College of the Colleges of Medicine of South Africa; owns the national Paediatric EPA catalogue and its versions."
+  Leave the name, the short code and Active as they are, and save.
+Expect: The save is confirmed, and the list shows the new description, with CPSA still Active. The name and short code
+  are unchanged, so every CPSA page still reads "College: College of Paediatricians of South Africa (CPSA)". A restart
+  neither re-seeds nor restores the record: the seeder finds its College by seed key (T221).
+
+Step 6.3 — devadmin adds the Neurology speciality (act-6-catalogue.md)
+Role: Administrator — devadmin
+Route: /admin/colleges → /admin/colleges/{CollegeId:int}/specialities → /admin/colleges/{CollegeId:int}/specialities/new → /admin/colleges/{CollegeId:int}/specialities/{Id:int} → /admin/colleges/{CollegeId:int}/specialities
+Do: From the new College's row, open its specialities, and create `Neurology` with the description "Specialist training
+  in Neurology."
+Expect: Before the create, the list says the College has no specialities yet and invites the first. After it:
+  - the edit page reads "College: College of Neurologists of South Africa (CNSA)", Active, and offers "Manage
+    sub-specialities";
+  - the list has one row, Neurology, Active.
+
+Step 6.4 — devadmin adds the Adult Neurology sub-speciality (act-6-catalogue.md)
+Role: Administrator — devadmin
+Route: /admin/colleges/{CollegeId:int}/specialities/{Id:int} → /admin/specialities/{SpecialityId:int}/sub-specialities → /admin/specialities/{SpecialityId:int}/sub-specialities/new → /admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int} → /admin/specialities/{SpecialityId:int}/sub-specialities
+Do: From Neurology's page, manage its sub-specialities and create `Adult Neurology`, with the description "Adult
+  neurology specialist training programme."
+Expect: The list is empty before the create and has one row after it. The new sub-speciality's edit page offers a
+  default entrustment scale, which reads "No default — offer every scale". Its choices are the two existing scales.
+
+Step 6.5 — devadmin creates the Neurology ladder (act-6-catalogue.md)
+Role: Administrator — devadmin
+Route: /admin/entrustment-scales → /admin/entrustment-scales/new → /admin/entrustment-scales/{Id:int} → /admin/entrustment-scales
+Do: Create `CNSA Neurology Entrustment Scale`, with the description "Supervision ladder for CNSA EPAs." Give it five
+  levels, in this order, each with a one-line description:
+  1. `Observe only`
+  2. `Direct supervision`
+  3. `Indirect supervision`
+  4. `Distant supervision`
+  5. `Unsupervised practice`
+  Save it first with the fourth level also labelled `Indirect supervision`, then correct that label and save again.
+Expect: The first save is refused: "Level labels must be unique within a scale." Nothing is created. The second save
+  opens the new scale's edit page, with the five levels numbered 1 to 5 in the order given. The scales list shows
+  three scales, the new one with 5 levels.
+
+Step 6.6 — devadmin adds a sixth level (act-6-catalogue.md)
+Role: Administrator — devadmin
+Route: /admin/entrustment-scales → /admin/entrustment-scales/{Id:int} → /admin/entrustment-scales
+Do: Open the CNSA scale, add a sixth level, `Supervises others` ("Supervises juniors performing the activity."), and
+  save.
+Expect: The save is confirmed, and the page lists six levels, 1 to 6, with `Supervises others` at 6. The list shows 6
+  levels.
+
+Step 6.7 — devadmin makes it Adult Neurology's default (act-6-catalogue.md)
+Role: Administrator — devadmin
+Route: /admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}
+Do: Open Adult Neurology, set its default entrustment scale to the CNSA Neurology Entrustment Scale, and save.
+Expect: The save is confirmed, and reopening the page shows the scale selected. Its help says that committee STARs for
+  this programme's trainees are limited to that scale's levels.
+
+Step 6.8 — devadmin cannot delete a scale in use (act-6-catalogue.md)
+Role: Administrator — devadmin
+Route: /admin/entrustment-scales
+Do: Delete the CNSA Neurology Entrustment Scale from the list.
+Expect: Delete asks first, naming the scale (DESIGN.md § Button system: a destructive action opens a ConfirmDialog).
+  Once confirmed, it is refused: "This entrustment scale is the default scale of the sub-speciality "Adult Neurology"
+  (Neurology), so it cannot be deleted. Change that sub-speciality's default entrustment scale to another scale, or to
+  no default, first." The scale stays, with 6 levels.
+
+Step 6.10 — Dr Kruger is refused what only an Administrator may do (act-6-catalogue.md)
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /account/login → /account/login/submit → / → /admin/colleges/{Id:int} → /access-denied → /admin/entrustment-scales/new → /access-denied
+Do: Sign in. From the dashboard, type the address of CPSA's own College record (the id from Step 6.2), then the
+  address for creating an entrustment scale.
+Expect: The dashboard has one card, National catalogue, with Specialities, EPAs and Curricula. His menu offers neither
+  of the pages he types. Each address lands on "You cannot open this page" ("Your role (College admin) does not open
+  this page."), with Go to Home, and nothing changes.
+
+Step 6.11 — Dr Kruger edits the Paediatrics speciality (act-6-catalogue.md)
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /admin/specialities → /admin/colleges/{CollegeId:int}/specialities → /admin/colleges/{CollegeId:int}/specialities/{Id:int} → /admin/colleges/{CollegeId:int}/specialities
+Do: From Specialities in his menu, open Paediatrics. Change its description from "Specialist training in Paediatrics."
+  to "Specialist training in Paediatrics, and certificate training in its sub-specialities." Save.
+Expect:
+  - Specialities takes him to CPSA's list, which reads "College: College of Paediatricians of South Africa (CPSA)"
+    and has one row.
+  - The save is confirmed, and the list shows the new description.
+  - Neither page offers him a way to the colleges list, which he may not open (T211's rule: a page offers only what
+    its target admits).
+
+Step 6.12 — Dr Kruger creates the Neonatology sub-speciality (act-6-catalogue.md)
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /admin/colleges/{CollegeId:int}/specialities/{Id:int} → /admin/specialities/{SpecialityId:int}/sub-specialities → /admin/specialities/{SpecialityId:int}/sub-specialities/new → /admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int} → /admin/specialities/{SpecialityId:int}/sub-specialities
+Do: From Paediatrics, manage its sub-specialities and create `Neonatology`, with the description "Certificate training
+  in Neonatology." On its edit page, set the default entrustment scale to the CPSA Paediatric Entrustment Scale v11.1,
+  and save.
+Expect: The list holds Neonatology and Paediatrics, both Active. The default is saved and stays selected when the page
+  is reopened. The Paediatrics sub-speciality keeps its own default, the CPSA ladder. Nothing about KGK's programme
+  changes.
+
+Step 6.13 — Dr Kruger starts a Neonatology curriculum, and holds it back (act-6-catalogue.md)
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /admin/curricula → /admin/curricula/new → /admin/curricula/{Id:int} → /admin/curricula → /admin/curricula/{Id:int}/items
+Do: Create `Neonatology EPA Curriculum`, version `1.0`, in Paediatrics / Neonatology, effective from `D`, with no end.
+  The form selects Neonatology first. Then open its items.
+Expect:
+  - The create opens the curriculum's edit page, with Active unticked and a card for cloning it: a new version starts
+    held back, so no institution can adopt it yet (T392, F5, T301).
+  - The curricula list shows the curriculum Held back, with 0 items.
+  - Its items page, "Items of Neonatology EPA Curriculum (1.0)", reads "Items (0)" and has no rows. In place of the add
+    link, it says there is nothing to add, and that a national EPA of Neonatology must be added first.
+
+Step 6.14 — Dr Kruger corrects an EPA's wording (act-6-catalogue.md)
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /admin/epas → /admin/epas/{Id:int} → /admin/epas
+Do: Open PAED-006. Correct its title from "Managing long-term health conditions (LTHCs)" to "Managing long-term health
+  conditions (LTHCs) in children". Change nothing else, and save.
+Expect: The save is confirmed, and the EPA stays Active. The EPA list shows the new title. The title is read live
+  wherever the EPA is named: 11.1's items, the activity pickers and every registrar's progress card (Step 6.15). An
+  EPA's wording has no versions.
+
+Step 6.17 — Dr Kruger pauses PAED-012 (act-6-catalogue.md)
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /admin/epas → /admin/epas/{Id:int} → /admin/epas → /admin/curricula → /admin/curricula/{Id:int}/items
+Do: Open PAED-012 and press Deactivate…, read the question and confirm. Then open 11.1's items.
+Expect:
+  - **The question.** Deactivate… asks first, "Deactivate PAED-012?" (T392, S11, Q11). The dialog says that the EPA:
+    - can no longer be chosen for a new activity;
+    - stops being a target on running programmes' progress pages and dashboards, for every institution that has
+      adopted it, while a programme that has ended keeps it on its record, marked no longer in use (T312);
+    - keeps the progress it has earned;
+    - credits nothing for an activity completed against it while it is inactive, until it is reactivated.
+  - **After confirming.** The page says the EPA is deactivated. Active is unticked, and Deactivate… is gone. The EPA
+    list reads PAED-012 Inactive.
+  - **11.1's items.** PAED-012's row is marked "(inactive: not in force)". A notice says its credit is paused and that
+    reactivating it credits what was completed meanwhile.
+
+Step 6.18 — Dr Patel completes the Mini-CEX during the pause (act-6-catalogue.md)
+Role: Assessor — Dr Mohammed Patel
+Route: /activities/inbox → /activities/{ActivityId:int}
+Do: Open Dr Dlamini's Mini-CEX from the inbox. Rate it at the rung that Dr Dlamini's PAED-012 card named as the minimum
+  now (Step 6.15). Write the three feedback fields, and complete it.
+Expect:
+  - The inbox's Waiting for you lists Dr du Plessis's portfolio review first, Overdue since Step 3.30's ageing, then
+    "Mini-CEX (Paediatrics) · PAED-012 · `D`", from Anele Dlamini (T350). The row's EPA cell and the request's EPA both
+    read "PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams (no longer in use)".
+  - He rates it on the rung picker. The completion is not refused (D48): "Completed. 1 more waits for you.", with the
+    review's row, Open the next and Back to Activity inbox under it (T350). The activity is read-only.
+  - The status card reads "Done. You completed it on …" and "Rated <the rung>. Its credit to PAED-012 waits while the
+    EPA is paused." About's Credit reads None, with "This activity's EPA is paused: its credit waits." under it. In
+    its history, the completion's Credit reads None.
+
+Step 6.19 — Dr Dlamini during the pause (act-6-catalogue.md)
+Role: Trainee — Dr Anele Dlamini
+Route: /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/mine → /activities/{ActivityId:int} →
+  /activities/new → /activities/new?type=mini_cex_cpsa
+Do: Read her progress and PAED-012's page, then her activities and the Mini-CEX. Then start a Mini-CEX (Paediatrics) and
+  open its EPA picker. Leave without saving.
+Expect:
+  - **Progress.** PAED-012 is no row of "Each semester · 9 EPAs", and This period reads "1 of 9" over "EPAs met this
+    semester" (`m − 1`). Under "No longer in use · 1 EPA", PAED-012's row reads "PAED-012 — Communicating with and
+    counselling patients, caregivers and healthcare teams (no longer in use)", its mark muted (`.paused-mark`, never
+    bold), a link to its page, beside "Paused by the College. It is not a target while it is paused. Its ratings and the
+    credit it had earned are kept, and what is completed on it meanwhile is credited if it is restored." (T355).
+  - **Its page.** The h1 and the tab read "PAED-012 — … (no longer in use)", the mark muted, and the same sentence
+    stands under it as an information alert, with no count. Entrustment reads "While PAED-012 is paused it is not in
+    your standing against Annexure A." The trajectory, headed "Rating trajectory (no longer in use)", still charts every
+    rating on it, the one from Step 6.18 included (T255). Activities on this EPA lists the Mini-CEX, "PAED-012 (no
+    longer in use)" under its name, Credit None.
+  - **My activities.** The Mini-CEX carries "PAED-012 (no longer in use)" under its name, and its Credit reads None, as
+    text. Its status card reads "Rated 4. Its credit to PAED-012 waits while the EPA is paused.", with no count, and its
+    Open My progress lands on PAED-012's page, named "Open My progress at PAED-012" (T355, build review D1).
+  - **The picker.** It offers eight EPAs, without PAED-012.
+
+Step 6.23 — Dr Kruger restores PAED-012 (act-6-catalogue.md)
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /admin/epas → /admin/epas/{Id:int} → /admin/epas
+Do: Open PAED-012, tick Active and save.
+Expect: Nothing asks first. The page reads "EPA reactivated. 1 activity completed against it while it was inactive now
+  counts towards progress." Deactivate… is offered again (T392, S11). The EPA list reads PAED-012 Active.
+
+Step 6.24 — Dr Dlamini's credit is counted (act-6-catalogue.md)
+Role: Trainee — Dr Anele Dlamini
+Route: /portfolio/progress → /portfolio/progress/{EpaId:int} → /activities/mine → /activities/{ActivityId:int}
+Do: Read her progress and PAED-012's page, then her activities and the Mini-CEX.
+Expect:
+  - PAED-012's row is back in "Each semester · 10 EPAs", with `n + 1` this semester, and "No longer in use" is gone.
+    This period reads "… of `m`" over "EPAs met this semester" again. Its page reads one more at the minimum level when
+    observed than in Step 6.15, and "Last encounter `D`".
+  - Its h1, its trajectory's heading and My activities no longer carry "(no longer in use)", and the Mini-CEX's Credit
+    reads "1 item", a link to PAED-012's page. Its status card reads "Rated 4. Credited 1 item to PAED-012. PAED-012:
+    `n + 1` of 3 this semester."
+  - The credit PAED-012 had earned before the pause was kept, not cancelled. Dr Dlamini holds none from Acts 3-4 (`n` is
+    0 in Step 6.15), so this is checked on Dr Molefe's PAED-012 progress from Act 3: its row is unchanged through the
+    pause (by SQL, or on her record in Step 6.40).
+
+Step 6.28 — Dr Kruger adds a national EPA (act-6-catalogue.md)
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /admin/epas → /admin/epas/new → /admin/epas/{Id:int} → /admin/epas
+Do: Create an EPA:
+  - sub-speciality: Paediatrics / Paediatrics (the form selects Paediatrics / Neonatology first, so change it);
+  - code: `PAED-016`;
+  - title: "Transitioning adolescents with long-term conditions to adult care";
+  - description: "Plans and leads the handover of an adolescent with a long-term condition to adult services, with the
+    young person and their caregivers.";
+  - category: Core.
+  Save.
+Expect:
+  - The sub-speciality list offers CPSA's two, Paediatrics / Neonatology and Paediatrics / Paediatrics.
+  - Once saved, PAED-016 is Active.
+  - His EPA list holds PAED-001 to PAED-016, and not KGK-001: a College does not see an institution's own EPAs.
+  - PAED-016 is on no curriculum yet, so no registrar is offered it or measured against it.
+
+Step 6.29 — Dr Kruger clones 11.1 as 11.2, and holds it back (act-6-catalogue.md)
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /admin/curricula → /admin/curricula/{Id:int}/items → /admin/curricula/{Id:int} → /admin/curricula
+Do: Read 11.1's items. Then, on 11.1's page, clone it: new version `11.2`, effective from `D`, with no end. Then open
+  Curricula.
+Expect:
+  - 11.1's items still show him 15 rows: KGK's own item is not shown to the College (T211). "Add item" stands beside
+    "Items (15)", because PAED-016 is on no curriculum.
+  - The clone form starts with the version "11.1-copy".
+  - Once cloned, the page is 11.2's, with Active unticked: a clone starts held back (T392, F5).
+  - The list shows 11.2 Held back, with 15 items.
+
+Step 6.30 — Dr Kruger edits 11.2's items (act-6-catalogue.md)
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /admin/curricula → /admin/curricula/{Id:int}/items → /admin/curricula/{Id:int}/items/new → /admin/curricula/{Id:int}/items → /admin/curricula/{Id:int}/items/{ItemId:int} → /admin/curricula/{Id:int}/items
+Do: On 11.2's items:
+  1. Add PAED-016:
+     - target: 1 per academic year;
+     - decided each academic year, by the trainee's general panel;
+     - the suggested scale, and minimum level 4;
+     - year-by-year minima: 2, 3a, 3b and 4 for years 1 to 4;
+     - tools: Mini-CEX, CBD and MSF.
+  2. Edit PAED-011: set its target to 2 per academic year, and change nothing else.
+Expect:
+  - **Before the edits.** The 15 rows match 11.1's, cell for cell, and "Add item" stands beside "Items (15)".
+  - **The add.** "Add item" opens a page of its own (T392, Q14, R3-B22), headed "Add item" and subtitled "On Paediatric
+    EPA Curriculum (11.2). It applies to every institution that has adopted it." Its EPA picker offers PAED-016 alone,
+    chosen. Add item returns to the list with "Curriculum item added." at its top, focused (F1, R3-B23): 16 rows,
+    PAED-016 last, and in place of the add link the note that every national EPA of Paediatrics is already on the
+    curriculum.
+  - **The edit.** Edit PAED-011 opens its own page, "Edit PAED-011 — Managing population health challenges", with the
+    same subtitle, its EPA a select offering PAED-011 alone (R3-B24). Save item returns to the list with "Curriculum
+    item saved." at its top, focused, and the row reads "2 per academic year". 11.1's PAED-011 still reads 1 (outcome
+    SQL).
+
+Step 6.31 — Dr Kruger publishes 11.2 (act-6-catalogue.md)
+Role: CollegeAdmin — Dr Anton Kruger
+Route: /admin/curricula → /admin/curricula/{Id:int} → /admin/curricula
+Do: Open 11.2, tick Active and save.
+Expect: The save is confirmed, and this is the only opening: a version starts held back (T392, F5). The curricula
+  list shows 11.1 and 11.2 Open, with 11.2 at 16 items, and the Neonatology curriculum still Held back (T9).
+
+Step A.7.10 — Dr Kruger on his phone (appendix-cross-cutting.md)
+Role: CollegeAdmin — Dr Anton Kruger
+Route: / → /admin/epas → /admin/curricula → /admin/curricula/{Id:int}/items → /admin/curricula/{Id:int}/items/{ItemId:int} → /admin/curricula/{Id:int}/items
+Do: At 390 px, open EPAs, then Curricula and the items of Paediatric EPA Curriculum 11.2. Press Edit PAED-001 and read
+  its page, then leave it by Cancel.
+Expect: Nothing scrolls sideways on any of them (T323; T392, S16).
+  - **EPAs, Curricula and the items** stack, a block per row, each text cell labelled, and each row's actions 44 px
+    tall and named for the row ("Edit PAED-001", "Remove PAED-001"). The items carry no window or weight: those are on
+    an item's own page (T392, decision 1).
+  - **PAED-001's page**, "Edit PAED-001 — Providing paediatric emergency care to children", subtitled "On Paediatric
+    EPA Curriculum (11.2). It applies to every institution that has adopted it.", sets one field a row, each control
+    44 px, with Save item on top of Cancel (T392, Q14, R3-B24 at 390). Cancel returns to the list with PAED-001's Edit
+    focused (R3-B11).
