@@ -16,9 +16,10 @@ The operator said "what is next", then "Drop the scratch db's and start the next
 - **Round 1 assessed** (`83a42356`): picks A2, B1, C1; M1–M8; Q15–Q17 put to the operator. T395 proposed (rung reorder
   on a scale in use is unchecked; the assessment's Q16).
 - The operator took A2, B1, C1 and Q15–Q17 as recommended (`b18559b5`).
-- **In flight:** one Opus agent writes `design/flows/16-college-catalogue/round-2-ask.txt` (part 1 corrected + part 2
-  at fidelity, captures re-staged) and commits it. If absent from `git log`, rerun it.
-- **Next:** give the operator the ask and its attachment list to send to the canvas. Not pushed.
+- **Round 2's ask written** (`c969d474`, `design/flows/16-college-catalogue/round-2-ask.txt`; 70 captures staged in
+  `design/upload/baseline/`, listed in its "ATTACHED, AGAIN"). T1–T12 provisional, for round 2's review.
+- **Next:** the operator sends it to the canvas and says "done"; then save `round-2/` and review the boards (code,
+  runbook, design system: flow 15 ran three Sonnet reviewers). Not pushed.
 
 ## Session 2026-11-02/03 (Opus): T392's replay, re-sync and lessons; T392 done
 
