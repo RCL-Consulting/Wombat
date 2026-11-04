@@ -22,8 +22,8 @@ The operator said "what is next", then "Drop the scratch db's and start the next
 - **Round 2 reviewed** (three Sonnet reviews merged into `round-2-review.md`): M1–M5; Q18–Q21 put to the operator.
 - Q18–Q21 taken as recommended (`a73f57d4`).
 - **Round 3's ask written** (`84f211f4`, `round-3-ask.txt`: 51 corrections, 214 screens redrawn, 10 new).
-- **Round 3 drawn on a second canvas**, "Wombat 16 · Round 3" https://claude.ai/artifact/W1R56z3QGxfK2GPMEcp3c9 (the
-  first had run out of room). A Sonnet agent saves it to `round-3/`; if absent from `git log`, rerun it.
+- **Round 3 drawn on a second canvas**, "Wombat 16 · Round 3" https://claude.ai/artifact/W1R56z3QGxfK2GPMEcp3c9
+  (the operator: "it required a new canvas"). A Sonnet agent saves it to `round-3/`; if absent from `git log`, rerun it.
 - **Next:** check round 3 item by item into `round-3-check.md` (one Opus agent, flow 15's as template); then step 6.
   Not pushed.
 
