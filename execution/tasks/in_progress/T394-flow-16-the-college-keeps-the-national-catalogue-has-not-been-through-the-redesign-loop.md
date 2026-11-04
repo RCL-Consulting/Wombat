@@ -92,3 +92,8 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   "Active" box, CurriculumEdit's doubled messages and missing result. Not measured: the 36–38px controls; Create EPA
   under the subtitle for the Administrator or at 768. **Waiting:** the operator's Q1 (before round 1), Q3–Q5, Q7–Q10,
   Q12, Q13 (brief § 6).
+- **2026-11-04, decisions.** The operator took brief § 6's Q1–Q14 as recommended ("yes"): Q1 one Specialities page per
+  College (round 1 draws it beside today's lists and a two-pane variant); Q3 recorded as **D56**, Q8 as **D57**
+  (EPA-PROGRAMME § 3). The round-1 ask already builds on the recommendations; no change to it. **Next:** the operator
+  sends `design/flows/16-college-catalogue/round-1-ask.txt` with its ATTACHED captures (staged in `design/upload/`) to
+  the canvas's chat, and says "done"; then assess round 1 (one Opus agent, as T392's `round-1-assessment.md`).

@@ -628,7 +628,7 @@ neither.
 
 ## 6. Questions for the operator
 
-Each with a recommendation. The canvas answers 2, 6, 11 and 14 in its variations; 1, 3–5, 7–10, 12 and 13 are the
+**Answered 2026-11-04: the operator took every recommendation as written ("yes"); Q3 is D56, Q8 is D57 (EPA-PROGRAMME § 3).** Each with a recommendation. The canvas answers 2, 6, 11 and 14 in its variations; 1, 3–5, 7–10, 12 and 13 are the
 operator's, and 1 decides part 1's structure and 4 and 5 part 2's, so 1 is answered before round 1.
 
 1. **Q1. (The operator's; the old brief's question 1) The College's tree.** Today: Specialities (reached through a

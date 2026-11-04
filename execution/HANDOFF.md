@@ -10,11 +10,11 @@ The operator said "what is next", then "Drop the scratch db's and start the next
 - **T394 filed and started** (flow 16, the College keeps the national catalogue; `2bbc0768`). Steps 3–4 done: canvas
   "Wombat 16" https://claude.ai/artifact/AqaH447KL91WCTbjQFJnWf, design system v45 installed, `tokens.css` by hand,
   the mark at `/_blob/ce366cc30297c5a90255d5d0a88fa6b5`. Canvas scratch: `...\67560d182d14635f\28969ed0-c979-487c-82e2-606d8331c3a3\scratchpad\c16`.
-- **Steps 1–2 done** (`999b7fc9`, the mark filled into `round-1-ask.txt` in `472e7a5c`; T394's Notes have what is
-  gone and what remains). **Waiting on the operator:** brief § 6's Q1 (the College's tree: one page per College, or
-  today's separate lists) before round 1; Q3–Q5, Q7–Q10, Q12, Q13 before part 2 or the build. Each has a recommendation.
-- **Next:** on the operator's answers, round 1 (part 1: A structures as wireframes, B Colleges and C scales at
-  fidelity) on the canvas. Not pushed.
+- **Steps 1–2 done** (`999b7fc9`; the mark filled into `round-1-ask.txt` in `472e7a5c`; T394's Notes have what is
+  gone and what remains). The operator took § 6's Q1–Q14 as recommended ("yes"): Q3 is **D56**, Q8 **D57**.
+- **Next:** the operator sends `round-1-ask.txt` (+ its ATTACHED captures, staged in `design/upload/`) to the canvas's
+  chat and says "done"; then save the boards to `design/flows/16-college-catalogue/round-1/` and assess them (one Opus
+  agent). Not pushed.
 
 ## Session 2026-11-02/03 (Opus): T392's replay, re-sync and lessons; T392 done
 

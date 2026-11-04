@@ -47,7 +47,7 @@ each designed, replayed and in the design system (version 45). Left: flows 16–
 ## Files to open first
 
 - `CLAUDE.md`: conventions, footguns, and the "nothing is live" section.
-- `execution/knowledge/EPA-PROGRAMME.md`: § 2A (what is left), § 3 (decisions D1–D55), and § 3F (College asks).
+- `execution/knowledge/EPA-PROGRAMME.md`: § 2A (what is left), § 3 (decisions D1–D57), and § 3F (College asks).
 - `execution/architecture/DESIGN.md`: mandatory before any Razor work.
 - `design/BRIEF.md` and `execution/knowledge/scenario-paediatrics/coverage.md`: the redesign brief and the journeys.
 - `deploy/verify/drift-check.sh`: run before trusting any claim about the server.
