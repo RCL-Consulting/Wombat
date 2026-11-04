@@ -133,3 +133,8 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
 - **2026-11-04, round 3 saved** (230 boards, `f16r3.css`, `ae5e007b`; design system installed on the second canvas,
   `tokens.css` present, its record's version null). The canvas reports page overflow 0 from 768 to 1280; the check
   (one Sonnet agent → `round-3-check.md`) judges the tables against their containers.
+- **2026-11-04, round 3 checked** (one Sonnet agent, `e2977baa`, `round-3-check.md`): 59 rows, 55 done, 4 partly (S1 the
+  sweep table proves no headroom; S15 and N1 words named not worded; T8 Steps cites two R2 boards), 0 not done; no
+  regression; the check board overclaims M4's hidden "required" on rung labels and counts 40 captures for 39. Widths by
+  arithmetic: the four tables fit above 1024 with 50–120 px spare, the items above 1100 with 50–100 px. Decisions 1–5
+  put to the operator before step 6.
