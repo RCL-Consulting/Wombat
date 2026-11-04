@@ -14,6 +14,8 @@ runbook or the boards. **Inf** = inferred. Brief sections are `design/flows/16-c
 questions, so the canvas answered some of them itself (Spec § 9). A board that contradicts a decision is a must-fix
 below, unless it argues to reopen it; where it argues, the point is a question in § 8.
 
+**Decided 2026-11-04:** the operator took the picks (A2, B1, C1 with C2's textarea) and Q15–Q17 as recommended ("yes").
+
 ## Summary
 
 - **The College's tree: pick A2** (one Specialities page per College: each speciality an `<h2>` section, its

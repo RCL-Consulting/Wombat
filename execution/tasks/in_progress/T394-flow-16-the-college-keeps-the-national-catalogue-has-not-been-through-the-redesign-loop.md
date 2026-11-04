@@ -104,3 +104,7 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   textarea; M1–M8 (D57, Q12, Q7, Q11, Q6 contradicted; B2's Reactivate; the Steps board's 6.7/1.15 and missed Expects;
   two "Edit Paediatrics"); 18 part-1 steps (the ask's 19 a miscount); no capture reached the canvas. Q15–Q17 for the
   operator. Q16 checked here (`UpdateEntrustmentScaleCommandHandler.cs:61-84` guards removals only): proposed as T395.
+- **2026-11-04, picks.** The operator took A2, B1 and C1 (with C2's textarea) and Q15–Q17 as recommended ("yes"):
+  Q15 no count in the deactivation dialog (D56's words); Q16 Up, Down and Remove offered only on a scale nothing uses,
+  the handler refusing the same (T395, still proposed: the design draws it, the build may fold it in if the operator
+  promotes it); Q17 Home's card keeps Q12's four links. **Next:** round 2's ask (part 1 corrected, part 2 at fidelity).
