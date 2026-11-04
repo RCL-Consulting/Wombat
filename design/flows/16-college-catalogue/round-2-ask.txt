@@ -1,0 +1,1119 @@
+ROUND 1 PICKED: the College's tree A2, "one page for the College" (Specialities is the College's whole tree: each
+speciality an <h2> section, its sub-specialities and their default ladders in a table under it; a speciality's and a
+sub-speciality's records stay form pages of their own and return to the tree with their result; the default ladder is
+chosen at create), taking from A1 only its stacked 390 rows; Colleges and a College B1, "the record is its form" (flow
+15's EPA page shape: Deactivate… as an outline trigger offered only on a College stored as active, and the Active box to
+reactivate), taking from B2 only its short inactive line; the scales C1, "the rung table", corrected, taking from C2 its
+description textarea for each rung and "Create scale" as the create page's submit. A1, A3, B2 (its page of sections,
+Reactivate, Save details, College admins section) and C2 (Delete hidden on a scale in use, Used by, a removed rung kept
+until Save, its .rung-edit classes) are dropped: draw none of them again.
+This round draws PART 1 at full fidelity, corrected as below, AND PART 2 (the brief's screens 5 to 7: a curriculum's own
+page; the EPA list and an EPA's page; Curricula, a curriculum's items and an item's page as the College keeps them), at
+full fidelity too, with one choice drawn twice (§ VARIATION EV). Use the design system installed on this canvas (Wombat
+v45, namespace wombat; ds/wombat/tokens.css and ds/wombat/components/bundle.css): its tokens and components, real words,
+no grey bars and no .wf-* wireframe classes (round 2 has no wireframe). Every screen and state at 1280 and 390; the
+tables (Colleges, the tree's sections, the scales, the levels, the EPA list, Curricula, the items) also at 768 where
+marked. Draw round 2 on a new page of the canvas, "Round 2", and name every board R2-…; keep round 1's 50 boards on
+their page, "Round 1", untouched. The brand mark is at /_blob/ce366cc30297c5a90255d5d0a88fa6b5 (this canvas's own copy):
+use it, never a drawn disc. Every person, College, code, title, version, date, id and count comes from this message
+(FIXTURES) and the runbook steps round 1 received in this thread; invent none. Where a value is not given, write a
+bracket ‹…›. Label a state the replay never reaches "Illustration", in its title and as a chip on the board's face, and
+never draw on one board two states that cannot hold at once. Words marked NEW below are this message's own (in neither
+the brief, round 1's boards nor the code): draw them as given, and list them on the Spec as NEW so the review can weigh
+them. Words marked PROPOSED (THIS ASK) are a choice this message makes that the operator has not yet seen: draw them, and
+list them on the Spec under that heading.
+
+THE QUESTIONS ARE DECIDED. Round 1's message listed Q1–Q14 as open, and round 1's Spec answered Q8 and Q12 against what
+  the operator had decided. They were decided before round 1 was drawn, and Q15–Q17 since: every one is a fact below
+  (§ DECISIONS), never a question to reopen. A board that argues against one is a must-fix in the review.
+
+THE STYLESHEET: write the round's shared stylesheet as a PROJECT FILE, project/f16r2.css (write it as a file of the
+  project, NOT as an asset, so the saved round holds it; round 1 did, f16r1.css). Every board's head links
+  ds/wombat/tokens.css, ds/wombat/components/bundle.css, then f16r2.css, in that order, and no /_blob/ stylesheet; a
+  board's <style> holds body{margin:0} at most. f16r2.css holds the canvas-only rules (round 1's K1–K9 .cv-* rules,
+  renamed nothing, listed apart on the Spec and kept off the components; no .wf-* rule, and none of round 1's S1–S3, which
+  went with C2) and at most TWO shipped rules, named under § CLASSES. Each NEW rule names its row on the Spec's class
+  table.
+
+WHY A2: it is Q1 as decided, and it meets the goal's "read the College's tree at a glance": 1.12–1.14 take one press
+  (today three), and choosing the default ladder at create takes 6.12's separate save away (3 + 3 against today's 5 + 3).
+WHY B1: it is D56 as decided (the outline Deactivate… on a College stored as active, the Active box to reactivate, Save
+  with Active unticked asking the same question as the EPA page does); it reads nothing new and keeps 6.2's presses.
+WHY C1: it is Q11 as decided (Delete… asks first, then a refusal at the list's top, which is 6.8's Expect as written) and
+  adds no shipped class. C2's textarea is kept because the CPSA descriptors run to 200–300 characters.
+BORROW: from A1, the stacked 390 row ("Default scale: CPSA Paediatric Entrustment Scale v11.1 · Active"); from B2, the
+  inactive line under an unticked Active box ("Inactive. A new invitation cannot name this College."); from C2, each
+  rung's description as a textarea and "Create scale" on the create page; from round 1's Spec, its edge cases (§ SPEC).
+
+ATTACHED, AGAIN: round 1's Spec said, first, that no screenshot arrived (no image with the message, the uploads folder
+  empty, the folder request timed out); it drew nothing from memory, rightly. ALL SEVENTY screenshots of the brief's § 4
+  are attached to THIS message, staged by design/tools/stage_upload.ps1 -Flow 16 into
+  C:\dev\Wombat\design\upload\baseline\ (copies of design/baseline/; all 70 checked present on 2026-11-04). Paths below
+  are under that folder.
+  Part 1's fourteen key captures (attach first): act-1\1.12-1-kruger-specialities.png, act-1\1.13-1-sub-specialities.png,
+    act-1\1.14-1-sub-speciality-ladder.png, act-1\1.2-1-colleges-list.png, act-1\1.3-1-cpsa-record.png,
+    act-1\1.4-2-cpsa-ladder.png, act-6\6.1-1-duplicate-refused.png, act-6\6.3-1-no-specialities.png,
+    act-6\6.5-1-duplicate-labels-refused.png, act-6\6.8-1-delete-refused.png, act-6\6.10-1-kruger-home.png,
+    act-6\6.10-2-college-record-refused.png, states\entrustment-scale-edit--rung-refused.png,
+    states\college-edit--invalid.png.
+  Part 1's other thirty-one: act-1\1.15-1-kruger-access-denied.png, act-1\1.4-1-scales-list.png,
+    act-6\6.1-2-cnsa-created.png, act-6\6.1-3-three-colleges.png, act-6\6.2-1-cpsa-saved.png,
+    act-6\6.3-2-neurology-created.png, act-6\6.4-1-no-sub-specialities.png, act-6\6.4-2-adult-neurology-created.png,
+    act-6\6.5-2-cnsa-scale-created.png, act-6\6.6-1-sixth-level-saved.png, act-6\6.7-2-default-reopened.png,
+    act-6\6.10-3-scale-create-refused.png, act-6\6.11-1-cpsa-specialities.png, act-6\6.11-2-paediatrics-saved.png,
+    act-6\6.12-1-neonatology-default-saved.png, act-6\6.12-2-two-sub-specialities.png, act-A\A.7.10-1-home-390.png,
+    states\colleges-list--loading.png, states\colleges-list--narrow.png, states\college-edit--deactivated.png,
+    states\college-edit--not-found.png, states\college-edit--narrow.png, states\specialities-list--other-college.png,
+    states\specialities-list--narrow.png, states\speciality-edit--deactivated.png,
+    states\sub-specialities-list--narrow.png, states\sub-speciality-edit--narrow.png,
+    states\entrustment-scale-edit--unknown.png, states\entrustment-scale-edit--narrow.png,
+    states\entrustment-scales-list--deleted.png, states\entrustment-scales-list--narrow.png.
+  Part 2's twenty-five: act-1\1.16-1-college-epas.png, act-1\1.17-1-college-curricula.png,
+    act-1\1.18-1-college-items.png, act-6\6.13-1-neonatology-curriculum-created.png,
+    act-6\6.13-4-items-nothing-to-add.png, act-6\6.14-1-paed-006-saved.png, act-6\6.17-1-deactivate-dialog.png,
+    act-6\6.17-4-items-paused.png, act-6\6.23-1-reactivated.png, act-6\6.28-1-paed016-saved.png,
+    act-6\6.29-1-kruger-11.1-items.png, act-6\6.29-2-cloned-11.2-active.png, act-6\6.30-1-add-paed016-form.png,
+    act-6\6.30-3-paed011-edit-row.png, act-6\6.31-1-11.2-saved-active.png, act-6\6.31-2-curricula-list.png,
+    act-A\A.7.10-2-epas-390.png, act-A\A.7.10-4-items-390.png, act-A\A.7.10-5-item-editor-390.png,
+    states\curriculum-edit--invalid.png, states\curriculum-edit--clone.png, states\curriculum-edit--narrow.png,
+    states\epas-list--administrator.png, states\curricula-list--administrator.png, states\epas-list--local.png.
+  Read them before drawing: the words in them are today's pages, defects included, not the target. A capture under
+  states\ dated 2026-09-26 (Colleges, specialities, sub-specialities and a scale's page) is the old frame (a Title Case
+  sidebar with Logout, an email in the top bar): read its body only. act-1\1.16-1 was taken before the EPA list's title
+  column was widened: read its words, not its widths. states\epas-list--local.png is the institution's list, attached
+  for one fault only (Create EPA wrapped under a long subtitle, § ALSO). No capture shows a password or a one-time link;
+  the addresses, short codes and EPA codes in them are the pages' own record. SAY ON THE SPEC BOARD, FIRST, WHETHER THE
+  CAPTURES ARRIVED (as attachments, or read from the folder), which you opened, and which you did not; if any did not
+  arrive, draw nothing from memory in its place (flows 06, 12, 13, 15 and this flow's round 1). This message pastes every
+  value round 1 bracketed that the code, the seed or the runbook holds (FIXTURES), so a missing capture leaves no value
+  that only a capture holds: § CAPTURE-ONLY is empty.
+
+DECISIONS (the operator's: Q1–Q14 on 2026-11-04 as the brief recommends, Q3 recorded as D56 and Q8 as D57 in
+  execution/knowledge/EPA-PROGRAMME.md § 3; the picks and Q15–Q17 on 2026-11-04 as round 1's assessment recommends):
+  Q1: one page per College for its tree, "Specialities": each speciality an <h2> section with its sub-specialities as
+    rows (Sub-speciality, Description, Default scale, Status, Edit), and Create sub-speciality in each section; a
+    speciality's and a sub-speciality's records stay form pages of their own; the Sub-specialities list route sends to
+    the College's page at that speciality's section (PROPOSED, decided).
+  Q2: the reach, in numbers, where the change is made: the items' standing notice and the item page's subtitle
+    ("Adopted by 1 institution, Kgosi Kgari Teaching Hospital; 3 registrars in training on it"), the pause dialog
+    ("PAED-012 is on ‹n› curricula adopted by 1 institution; 3 registrars in training are measured against it") and the
+    curriculum page's open/close section. It counts who HAS adopted (active adoptions, and active trainee profiles on
+    them), never who could: round 1's "Opening 11.2 lets ‹n› institutions adopt it" is dropped. The College sees counts
+    and institution names, never a registrar's name.
+  Q3 = D56: Deactivate stays on a College, a speciality and a sub-speciality, behind a ConfirmDialog naming the record
+    ("Deactivate College of Neurologists of South Africa?") that says only what it does: no new invitation can name it,
+    and a speciality or sub-speciality leaves every institution's adopted disciplines; registrars already admitted and
+    curricula already adopted are not changed. The trigger is an outline "Deactivate…", offered only on a record stored
+    as active; reactivating is the Active box, as on an EPA. Save with Active unticked asks the same question.
+  Q4: the curriculum's own page is one form page, <h2> sections in one column (flow 12's user page): Details
+    (sub-speciality, name, version, effective from and to), "Open for adoption" with T301's help and Q2's reach, then "A
+    new version" (the clone, its own Clone button, saying what it copies: the College's items, never an institution's
+    own). Opening asks nothing (6.31 is the only opening); holding back an open version asks first, naming who has
+    adopted it (PROPOSED, decided).
+  Q5: a result after a create and a clone, as an EPA's page does it: a one-shot token in CatalogueLinks (?created,
+    ?cloned=‹fromId›), focused, then the address replaced: "Neonatology EPA Curriculum (1.0) created. It is held back: no
+    institution can adopt it until you open it." and "Paediatric EPA Curriculum (11.2) cloned from 11.1, with its 15
+    national items. It is held back."
+  Q6: the rung refusal: one sentence per item, up to three, then "and ‹N› more": "PAED-001 on Paediatric EPA Curriculum
+    (11.1) needs rung 5 of this scale, which the new levels leave out. Change that item's minimum first."; the rung by its
+    label (D32), never "level 6", never "Curriculum item 2".
+  Q7: an unknown or another College's id on every record AND list page is flow 14's Unavailable state, in the page's own
+    place, lighting its owner, never which cause: "College unavailable" / "This College does not exist, or you cannot
+    open it." with Go to Colleges (for the College admin, Go to Specialities); "Speciality unavailable" / "This speciality
+    does not exist, or you cannot open it."; "Sub-speciality unavailable" / "This sub-speciality does not exist, or you
+    cannot open it."; "Entrustment scale unavailable" / "This entrustment scale does not exist, or you cannot open it."
+    with Go to Entrustment scales; "Curriculum unavailable" / "This curriculum does not exist, or you cannot open it."
+    with Go to Curricula (built); "EPA unavailable" and "Item unavailable" as flow 15 built them. Never an empty list
+    offering Create, never a silent return to a list, never Page not found.
+  Q8 = D57: the College admin reads /admin/entrustment-scales read-only, as an Institutional admin does (the reader's
+    subtitle, no Create scale, no actions column), and Entrustment scales joins the College admin's menu; a scale's own
+    page and the College's own record stay the Administrator's (Access denied, flow 01's). Nothing on any page says the
+    scales are kept out of the College admin's sight. 1.15's Expect changes.
+  Q9: no Back link on any part-1 page or on the curriculum's page: the trail is the way back (flows 12, 13, 15). The
+    curriculum's page links its items in its header, and the items page links the curriculum's page for the College and
+    the Administrator (flow 15's T5: "flow 16 may add a header link").
+  Q10: T242's refusal names the institution: "Kgosi Kgari Teaching Hospital has PAED-016 as its own item on this
+    curriculum, so it cannot be added nationally until that institution removes it." (DATA: the holder's name.)
+  Q11: Delete… on a scale asks first: "Delete CNSA Neurology Entrustment Scale?" / "It is removed from every list. This
+    cannot be undone." / Cancel / "Delete scale"; a refusal after it stays at the list's top, naming the use. Remove on a
+    rung asks nothing (nothing is saved until Save) and is an outline button.
+  Q12, with Q17: Home's card reads "Your College's specialities, EPAs, curricula and activity types. An institution can
+    adopt a curriculum version once you open it." with FOUR links: Specialities, EPAs, Curricula, Activity types (not
+    Entrustment scales: the card names what the College keeps; the scales are read-only and one menu item away). The
+    card's code comment becomes "the College's own pages in the nav row" (no board).
+  Q13: the build folds in T291 item 2 and the no-College redirect; T264's College, speciality, sub-speciality and scale
+    halves; T324's College, curriculum and scale halves; T393; T272's College handlers and part-1 pages; T326's no-items
+    branch and the College's subtitles; T301's box; T242's refusal with the institution named; T395 (Q16); the brief's §
+    5 new faults. T264's other pages, T291 items 3, 6 and 8, T324's other pages, T271 and T390 stay their own.
+  Q14: a curriculum whose discipline has no national EPA: "Neonatology has no national EPA yet. Add one under EPAs, then
+    come back to add it here." with Go to EPAs, in place of the add link; the item page's "Cannot add an item" says the
+    same.
+  Q15: no count in a deactivation dialog. Round 1's "Reach (DATA, Q2): ‹n› institutions have adopted a curriculum in this
+    discipline" goes. D56's sentences say plainly what "leaves the disciplines an institution has adopted" means: "an
+    institution can no longer give anyone a role for it" (PROPOSED words, decided).
+  Q16 (T395): Up, Down and Remove are offered only on a scale nothing uses (the delete refusal's uses, in its order). On
+    a scale in use the rungs are shown with Add level alone and the line "Rungs can be reordered or removed only while
+    nothing uses this scale." (PROPOSED words, decided); the handler refuses a reorder or a removal on a scale in use the
+    same way. Moving a rung on a scale in use would silently change what every pinned minimum, STAR and comparison means.
+
+CORRECTIONS (round 1's assessment § 7; round 2's review checks each by number; the boards each fixes):
+  M1 (R2-A01, R2-A05, R2-A06, R2-C21; every board of Anton Kruger; Spec): D57 drawn. Anton Kruger's menu holds
+    Entrustment scales after Activity types on EVERY board (Home, Specialities, EPAs, Curricula, Activity types,
+    Entrustment scales; then My data rights: six links with Home, so the menu stays flat). R2-C21 draws the read-only
+    list. The sub-speciality's Default entrustment scale help is the built sentence ALONE, "Committee STARs for this
+    programme's trainees are limited to this scale's levels."; NOT "Read each ladder's rungs under Entrustment scales.":
+    the reader's list shows a ladder's name, description and level count, not its rungs. Home's card loses round 1's
+    second paragraph ("The Colleges' own records and the entrustment scales are kept by the platform administrator. …").
+    The scales list's Administrator subtitle loses "A College reads a ladder by name where it uses it." (S2). A scale's
+    page stays Access denied to the College admin (6.10's second address): no board.
+  M2 (R2-A01, R2-A01-390): Home's card in Q12's words with four links (§ DECISIONS).
+  M3 (R2-A18a to c, R2-B13, R2-C17, R2-D15, R2-E15, R2-F16, R2-F17; Spec): Q7's Unavailable words on every page, never
+    "It does not exist, or it belongs to another College." or "… or it was deleted."; h1 and tab "‹Record› unavailable",
+    a .detail-card--empty with the sentence and one primary Go to ‹list›, in the page's own place under its owner's trail,
+    its owner lit, no id shown. A list typed with another College's or speciality's id is the same state.
+  M4 (R2-C07, R2-C08; Spec): Q11's dialog. Title "Delete CNSA Neurology Entrustment Scale?"; body "It is removed from
+    every list. This cannot be undone." then C1's second sentence, kept and marked PROPOSED: "A scale that anything uses
+    is not deleted: you will be told what uses it, and nothing changes."; Cancel; "Delete scale" (btn-danger, as
+    DangerAction). Never round 1's "It is deleted for every College and institution, with its rungs, and cannot be
+    undone." or a bare "Delete".
+  M5 (R2-C11; Spec): Q6's refusal, three items then "and 6 more" (§ FIXTURES), never "and so do ‹n› other items".
+  M6: B2's Reactivate is gone with B2 (B1 picked). No board offers a Reactivate button anywhere.
+  M7 (Steps): every step whose Expect changes is a row with its new Expect, inside the 33 and outside them (§ STEPS). 6.7
+    stays a step of its own: the CNSA scale does not exist until 6.5, so 6.4 cannot choose it. 1.15 changes (D57).
+  M8 (R2-A02, R2-A04, R2-A05, R2-A15, R2-A17; every row action and dialog on the tree; Spec): the speciality and its
+    sub-speciality are both "Paediatrics". Name the kind wherever the name alone is ambiguous, and say it the same way
+    everywhere: row and section actions keep the visible label "Edit" but are named "Edit the speciality Paediatrics"
+    and "Edit the sub-speciality Paediatrics" (aria-label); "Create sub-speciality" is named "Create a sub-speciality of
+    Paediatrics"; the dialogs are "Deactivate the speciality Paediatrics?" and "Deactivate the sub-speciality
+    Neonatology?" (the kind named always, for one rule); the records' subtitles say the kind ("Speciality of College of
+    Paediatricians of South Africa", "Sub-speciality of Paediatrics"). PROPOSED words.
+  S1 (R2-C08): 6.8's sentence word for word as built: "This entrustment scale is the default scale of the sub-speciality
+    "Adult Neurology" (Neurology), so it cannot be deleted. Change that sub-speciality's default entrustment scale to
+    another scale, or to no default, first." Round 1's rewrite ("CNSA Neurology Entrustment Scale was not deleted. It is
+    …") is not drawn. Its link "Open Adult Neurology" (named "Open the sub-speciality Adult Neurology") is kept, PROPOSED.
+  S2 (R2-C01, R2-C06): the scales list's built words: the Administrator's subtitle "Define and maintain the rating ladders
+    used by assessment forms and committee reviews.", the caption "Entrustment scales, by name", rows by name (CNSA
+    Neurology Entrustment Scale, CPSA Paediatric Entrustment Scale v11.1, O-R Scale).
+  S3 (R2-C12 to C14; Spec): the scale page's other refusals, drawn or worded (§ FIXTURES "The scale's refusals").
+  S4 (R2-C02 to C05, R2-C20): each rung's Description a textarea, its whole descriptor shown at 1280 and 390.
+  S5: Q15 (no count in the dialog).
+  S6 (R2-C02-390, R2-C05-390): the levels table at 390: each rung a block, every input, textarea and button 44 px,
+    nothing sideways; measure it (§ CLASSES, S2).
+  S7 (every board): no bracket where this message gives the value (§ FIXTURES): the Demo College's description, the CPSA
+    ladder's description and six descriptors, the O-R Scale's, the 9 items that need rung 5 on 11.1, Created dates.
+  S8 (§ STATES): every state round 1 left out: required fields empty, a failed save, loading, a load error and an unknown
+    id on every page; the College admin's scales list; an inactive sub-speciality on the tree; the heavy volumes; a
+    College admin whose account names no College; "Entrustment scale deleted."; the rename warning; 768; the 900–1100
+    sweep.
+  S9 (R2-A02 and every tree board): the tree's subtitle "College of Paediatricians of South Africa (CPSA): its
+    specialities, their sub-specialities and the ladder each uses." (round 1's A2, accepted; 1.12, 6.2 and 6.3's
+    Expects change, § STEPS).
+  S10 (R2-B04, R2-B05; Spec DATA): the refusal names the College that holds a taken name or code (DATA: the holder, read
+    by a check before the save; the database path kept for a race, T272).
+  S11 (R2-B06 to B11, R2-C02 to C05, R2-D05 on): one rule for a record's h1: a record is titled by its name. The College's
+    record "College of Paediatricians of South Africa"; a speciality's and a sub-speciality's by their names; a scale's
+    "CPSA Paediatric Entrustment Scale v11.1" (PROPOSED (THIS ASK), T1); a curriculum's "Paediatric EPA Curriculum
+    (11.1)" (T2); an EPA's by EpaOptionLabel (built). The tab is the h1's words with " · Wombat"; the crumb is the
+    record's name (an EPA's, its code, as built). Create pages keep "Create college", "Create speciality", "Create
+    sub-speciality", "Create entrustment scale", "Create curriculum", "Create EPA". 1.3's Expect changes.
+  N1: no .record-page anywhere (it is not an app.css class); the records are .user-page with .user-section.
+  N2 (R2-B01, R2-B02): Created as the South African day, ISO (today "yyyy-MM-dd HH:mm" in the server's time, marked a
+    change on the Spec).
+  N3: built action labels keep "college" ("Create college"); in running text "College" is a proper noun. One rule, said
+    once on the Spec.
+  N4: one verb: "Create sub-speciality" and "Create speciality", never "Add a sub-speciality".
+  N5: StackWide on Entrustment scales is built; only Colleges and the tree's tables gain it.
+  N6: the tree's caption "Sub-specialities of Paediatrics", never "Paediatrics's sub-specialities".
+  N7: moot with B2.
+  N8 (every board, annotations included, and the Spec's notes): no gendered pronoun for a person anywhere. Wombat stores
+    none. This message is written so; check every sentence a board adds. "his pages", "refuses him", "his College's
+    list" → "Anton Kruger's pages", "the page refuses the College admin", "the College admin's list".
+  N9: "Create scale" on the create page's submit (C2-3's), as "Create college".
+  N10 (Steps): the counts recomputed by one rule (§ STEPS).
+
+THE OTHER POINTS OF THE ASSESSMENT (each on its board): the deactivation help on a speciality and a sub-speciality says
+  what D56 says, plainly, within Q15; the College admin with no College reads words, not a redirect to a page that
+  refuses (R2-A21); the record forms return to the tree with a one-shot token (CatalogueLinks, flow 15's F1), a create
+  focusing its result there; § Page-level patterns' Unavailable list gains College, speciality, sub-speciality and scale;
+  the NavMenu's role table gains Entrustment scales on the College admin's row (NavMenuAuthorizationTests parses it), and
+  its owner table says the sub-specialities route redirects to the tree (Specialities / Colleges lit) and the scales list
+  lights itself for the College admin.
+
+LESSONS FROM FLOWS 12–15 (their reviews' must-fixes and BRIEF § 11; do not repeat them):
+  - Behaviour the boards assume is written on the Spec as the change it needs (a command's parameters, a query, a policy,
+    a route), never implied (§ SPEC BOARD's changes).
+  - Steps rows quote values person by person and count by count, each checked against FIXTURES; every step 1.2–1.4,
+    1.12–1.18, 6.1–6.8, 6.10–6.14, 6.17–6.19, 6.23, 6.24, 6.28–6.31 and A.7.10 is a row, "unchanged" said where so.
+  - No NEW class that duplicates a shipped one. Before naming a class NEW, search app.css for one that already does the
+    job (.form-section-head, .user-section, .detail-list, .detail-card--empty, .submit-check, .loading-line,
+    .clinic-table--inputs, .actions-cell, .muted, .text-sm). Reuse a shipped class as shipped; never redeclare one.
+  - A table that fits at 1280 can overflow just above its stacking breakpoint (flow 15: 691 px of items in a 593 px
+    column from 901 to about 990 px). Sweep every new or changed table from 900 to 1100 px in 50 px steps, measuring the
+    TABLE against its CONTAINER, not only the page; say on the Spec what each measured. A squeezed column passes a
+    sideways-scroll check: look at each list at 1280 and say that no title wraps past two lines beside an empty band.
+  - A long value (a 2,000-character description, "College of Paediatricians of South Africa", a ladder's 300-character
+    descriptor, a curriculum's name with its version) wraps by a class in its own cell (overflow-wrap: anywhere;
+    minmax(0, 1fr) in a detail-list); a canvas-only chip wraps too. Measure every board at 1280, 1100, 768 and 390.
+  - A read-out is dl.detail-list with dt and dd; .field-label exists nowhere.
+  - ARIA: aria-controls only to an element that exists; a field's help outside its <label>, named by aria-describedby;
+    a refusal first in aria-describedby; a standing notice is Alert with Role=""; status only for what arrives with a
+    result; a stacked table keeps DataTable's roles.
+  - At 390 the system does the work, never an inline style: .people-page and .user-page make every button, input and
+    select 44 px; .user-page .form-actions and .dialog-card .form-actions stack (column-reverse: the primary or the
+    confirm on top, the safe button first in the DOM); .user-page .form-actions .btn is full width;
+    .clinic-table--stack-wide .btn is 44 px from 900 px. Keep the 1280 DOM order.
+
+VARIATION EV (part 2's one real choice; draw both, and say on the Spec which you recommend and why):
+  The goal asks that the College admin be "told before saving how far it reaches" when correcting an EPA's wording or
+  adding one, but Q2's decided places are the items' notice, the item page, the pause dialog and the curriculum's
+  open/close section: none is an EPA's own form. Both variations keep Q2's places exactly; they differ only on an EPA's
+  page outside the pause dialog.
+  EV1 "the dialog alone": an EPA's page says nothing of reach outside the pause dialog (Q2 as written). The subtitle
+    names the College and the discipline, as every other EPA page does. Cheapest; 6.14's correction reads no count.
+  EV2 "a standing reach line": a national EPA's page carries, under the result region and above the form, an info Alert
+    with no role (Role=""), its first sentence the count (NEW words): "PAED-006 is on 1 curriculum adopted by 1
+    institution, Kgosi Kgari Teaching Hospital; 3 registrars in training are measured against it. Its code, title and
+    description are read at once wherever it is named." On an EPA no adopted curriculum holds: "PAED-016 is on no
+    curriculum an institution has adopted, so no registrar is measured against it yet." DATA: the same per-EPA read the
+    pause dialog needs, so EV2 costs a line, not a query. Not on the create page (no EPA yet).
+  Boards with both: R2-E05, R2-E06, R2-E09, R2-E11 (each "-EV1" and "-EV2"); every other EPA board draws EV2's line only
+  where the board is about it, else neither (say which on the Spec).
+  Everything else in part 2 is drawn once, at fidelity: Q4 fixes the curriculum page's shape, flow 15 fixed the list,
+  the item page and the items table, and Q2, Q5, Q9, Q10 and Q14 fix their words.
+
+PART 2 REUSES FLOW 15's SHAPES (built in c931d56f, e10a5f22 and 50ca6470; the design system's components Epas,
+  AdminEpaPage, Curricula, CurriculumItems, CurriculumItem and EntrustmentScales, installed on this canvas). Redraw
+  none of their structure; change only the College's and the Administrator's words, Q2's reach, Q9's header links, Q10,
+  Q14 and the College admin's EPA list's columns (T3). Specifically, as built: the EPA list's .people-page.epas-page
+  column, DataTable StackWide stacked to 1024 px, the EPA column 45% from 1025 px, PagerControls only past twenty rows;
+  an EPA's page as .user-page.epa-page with its form, its Status box and Deactivate… (outline, aria-haspopup="dialog"),
+  its refusals under their field (FieldRefusal), its results ("EPA saved.", "EPA deactivated.", "EPA saved and
+  deactivated.", the reactivation's count) and ?created; Curricula's College table (no section heading, Status "Open" /
+  "Held back", Edit and Items named for the row); the items page's .people-page.curriculum-items-page column, its six
+  columns (EPA, Target and decision, Minimum level, Minimum by training year, Tools, Actions) stacked to 1024 px, its
+  standing notice, "Items (n)" with the add link on its baseline (.form-section-head), Remove… and its dialog, ?added,
+  ?saved, ?back; the item page's .user-page.curriculum-item-page form, RungPicker, StageMinimaEditor, its 44 px
+  checkbox rows. The ONE page part 2 designs anew is the curriculum's own page (§ THE CURRICULUM'S PAGE).
+
+FIXTURES (the T392 replay, wombat_scenario_t392; D = 2026-11-02, the day Acts 1–6 were played; use these words):
+  People (names as stored, no titles; the product stores no pronoun):
+    Anton Kruger, College admin, College of Paediatricians of South Africa (CPSA, College 2), kruger@cmsa.wombat.local.
+      Top bar "Anton Kruger"; "Acting as College admin". Menu after the build, flat: Home, Specialities, EPAs, Curricula,
+      Activity types, Entrustment scales; then My data rights under the rule. (Today it has no Entrustment scales.)
+    devadmin, display name "Demo Administrator", Administrator; "Acting as Administrator". Menu: Home; Platform
+      (Scheduled jobs, Audit log, SSO mappings, Data rights requests); Organisations (Institutions, Colleges); People
+      (Users, Invitations); Catalogue (EPAs, Curricula, Activity types, Entrustment scales); Reviews (Decisions due,
+      Committee reviews, Decision panels); then My data rights.
+    Seen through the pause on other flows' pages, never drawn here: Mohammed Patel (Assessor, 6.18), Anele Dlamini
+      (Trainee, 6.19, 6.24). The College reads no registrar's name on any page: KGK's registrars are a count.
+    The reach of a CPSA change: one institution, Kgosi Kgari Teaching Hospital (KGK). It adopted 11.1 at 1.20 (after
+      1.18) and 11.2 at 6.32 (after 6.31). Its trainee profiles on 11.1 through Act 6: three in training (counted, never
+      named) and two whose programmes ended (not counted: a completed and a withdrawn registrar). No registrar is
+      admitted in Act 1, so 11.1 reads "no registrar in training on it yet" from 1.20 to the end of Act 1 (no step of
+      this flow reads it then), and "3 registrars in training" through Act 6 to 6.31. No institution has adopted 11.1
+      at 1.18, nor 11.2 or Neonatology 1.0 before 6.32. At A.7.10 (after Act 6: KGK adopted 11.2 at 6.32 and one
+      registrar moved to it at 6.36) 11.2 reads "Adopted by 1 institution, Kgosi Kgari Teaching Hospital; 1 registrar
+      in training on it." KGK keeps KGK-001 as its own EPA (from 6.25, EPA 17) and its own item on 11.1 (from 6.26),
+      which the College does not see.
+    A second College admin, a second institution, five Colleges, six sub-specialities, an 8-rung ladder, forty items:
+      no cast member ("Illustration", ‹name›, ‹code›, ‹title›).
+  Colleges (/admin/colleges; by name):
+    College of Neurologists of South Africa (CNSA, College 4), "Constituent College of the CMSA; owns the national
+      Neurology catalogue.", created at 6.1, Created 2026-11-02, Active; no College admin.
+    College of Paediatricians of South Africa (CPSA, College 2), "Constituent College of the Colleges of Medicine of
+      South Africa; owns the national Paediatric EPA catalogue." (from 6.2: "… owns the national Paediatric EPA catalogue
+      and its versions."), Created 2026-11-02 (inferred: the day the replay's database was seeded), Active.
+    Demo College (DEMO-C, College ‹id›), "Seeded demo college (national catalogue owner).", Created 2026-11-02
+      (inferred, as CPSA), Active; its one speciality General Medicine ("Seeded demo speciality."), sub-speciality
+      General Internal Medicine ("Seeded demo sub-speciality."), default ‹none›.
+  The tree:
+    CPSA: speciality Paediatrics (speciality 2), "Specialist training in Paediatrics." (from 6.11 "Specialist training in
+      Paediatrics, and certificate training in its sub-specialities."), Active. Its sub-specialities, by name:
+      Neonatology (sub-speciality 4, created at 6.12), "Certificate training in Neonatology.", default CPSA Paediatric
+      Entrustment Scale v11.1, Active; Paediatrics (sub-speciality 2), "General paediatric specialist training
+      programme.", default CPSA Paediatric Entrustment Scale v11.1 (set by the seeder; never reset, T187), Active.
+    CNSA: speciality Neurology (speciality 3, created at 6.3), "Specialist training in Neurology.", Active; its
+      sub-speciality Adult Neurology (sub-speciality 3, created at 6.4), "Adult neurology specialist training
+      programme.", "No default — offer every scale" until 6.7, then CNSA Neurology Entrustment Scale, Active.
+    The Default entrustment scale select: "No default — offer every scale", then every scale by name (at 1.14 and 6.4:
+      CPSA Paediatric Entrustment Scale v11.1, O-R Scale; from 6.5 CNSA Neurology Entrustment Scale too). Its help, as
+      built and alone: "Committee STARs for this programme's trainees are limited to this scale's levels."
+  Scales (the list orders by name; Levels is the count alone):
+    CNSA Neurology Entrustment Scale (scale 3, from 6.5), "Supervision ladder for CNSA EPAs.", 5 levels at 6.5, 6 from
+      6.6: 1 Observe only, 2 Direct supervision, 3 Indirect supervision, 4 Distant supervision, 5 Unsupervised practice
+      (each with "a one-line description": ‹description›), 6 Supervises others, "Supervises juniors performing the
+      activity.". Unused at 6.5 and 6.6 (moves offered); a sub-speciality's default from 6.7 (in use).
+    CPSA Paediatric Entrustment Scale v11.1 (scale 2), in use (every 11.1 item is pinned to it; both CPSA
+      sub-specialities default to it), "Six rungs in four bands. Only level 3 is split: the gap between "check
+      everything with me" and "call me if you are worried" is the whole of a registrar’s third year." Its six rungs,
+      Order, Label, Description:
+      1, "1": "Not entrusted to act. The supervisor performs the activity and thinks aloud; the trainee prepares,
+        observes actively, and may not enact or document decisions."
+      2, "2": "Direct supervision. Supervisor present throughout, sharing the task or watching silently, ready to step
+        in. The plan may be entirely the trainee’s, but nothing is acted on without sign-off."
+      3, "3a": "Indirect supervision, decisions checked. Supervisor on site or immediately available and reviews
+        findings, working diagnosis and plan before they are enacted. Trainee may act alone on routine assessment,
+        investigation and supportive care within protocol."
+      4, "3b": "Indirect supervision, reviewed on the trainee’s initiative. Supervisor available on request; the trainee
+        decides what needs discussion and shows reliable help-seeking. Full management of the activity, supervisor
+        informed rather than consulted."
+      5, "4": "Unsupervised practice. The trainee carries the responsibility for the activity."
+      6, "5": "Supervises others. The trainee carries the responsibility and can supervise juniors in the activity."
+    O-R Scale (scale ‹id›, the Demo College's; in use by the IM Core item, minimum rank 4), "Standard 1-5
+      observation-to-entrustment scale.", 5 levels: 1 Observe only, "Not ready to perform the activity."; 2 Direct
+      supervision, "Performs with the supervisor at the elbow."; 3 Indirect supervision, "Performs with supervision nearby
+      and readily available."; 4 Independent, "Performs independently; supervisor reviews afterwards."; 5 Supervises
+      others, "Performs independently and can supervise junior colleagues.".
+    The items that need rung "5" (rank 6) of the CPSA ladder on 11.1: nine, PAED-001 to PAED-007, PAED-010 and PAED-012
+      (the stage-4 minimum is rung 5 for the same nine). The other six need rung "4". After 6.29 11.2's copies add nine
+      more (eighteen in all).
+    The scale's refusals (built words, label words; S3), each drawn or listed on the Spec:
+      a rung an item needs: Q6's (above); a rung an ended programme's record needs (T312), today "Curriculum item {id} was
+        pinned to this entrustment scale when a programme ended, and that programme's record requires level {n} …",
+        redrawn in label words (NEW): "Not saved. PAED-001 on Paediatric EPA Curriculum (11.1) was on the record of a
+        programme that has ended, which keeps rung 5 of this scale as its minimum. A closed record keeps the targets it
+        ended with, so rung 5 cannot be removed."; a level an entrustment decision uses: "One or more levels are
+        referenced by entrustment decisions and cannot be removed." (built); a taken name, under Name: "An entrustment
+        scale named 'CPSA Paediatric Entrustment Scale v11.1' already exists." (built); duplicate labels, under the
+        second rung's Label: "“Indirect supervision” is already the label of another rung. Give each rung its own
+        label." (round 1's, accepted; replaces "Level labels must be unique within a scale."); a reorder or removal on
+        a scale that came into use since the page was read (Q16's handler, a stale page; NEW): "Not saved. Rungs can be
+        reordered or removed only while nothing uses this scale, and this scale is now in use. The page has been read
+        again." with the rungs read again and the moves gone.
+      Delete's refusals, at the list's top, built: "This entrustment scale is referenced by one or more MSF questions and
+        cannot be deleted."; "This entrustment scale is pinned to one or more curriculum items and cannot be deleted."
+        (the CPSA ladder); "This entrustment scale is pinned to a curriculum item on the record of a programme that has
+        ended, which keeps the targets it ended with, so it cannot be deleted."; "Trainee progress has been scored
+        against this entrustment scale and it cannot be deleted."; the sub-speciality default's (6.8, S1); a published
+        form's: "The form of the activity type ‹name› (‹key›, version ‹n›) uses this entrustment scale, so it cannot be
+        deleted. A published version never changes, and activities stay on the version they were filed on, so no later
+        version can take that back. Leave the scale in place instead."; "Levels of this entrustment scale are referenced
+        by entrustment decisions and cannot be deleted."
+      The rename warning (built, a warning Alert after a save that went through; Illustration with brackets): "The form of
+        the activity type ‹name› (‹key›, version ‹n›) names this scale by its old name, "‹old›", so since it became
+        "‹new›" their scale fields have no ladder: the form offers a field's own options, or asks for a bare number,
+        instead of the ladder's rungs, and credit compares bare numbers. Renaming the scale back restores them. Picking
+        the scale again in the activity-type builder and publishing restores it for new activities only, because
+        activities already filed stay on their version."
+  EPAs (category Core unless said; Active unless said; PAED-012 Inactive from 6.17 to 6.23; ids as replayed: PAED-006
+    is EPA 7, PAED-012 EPA 13, KGK-001 EPA 17, PAED-016 EPA 18, the Demo EPA-001 EPA 1):
+    PAED-001 — Providing paediatric emergency care to children
+    PAED-002 — Managing common paediatric presentations
+    PAED-003 — Providing intensive care to children
+    PAED-004 — Managing common neonatal conditions
+    PAED-005 — Providing neonatal care in intensive and high-care settings
+    PAED-006 — Managing long-term health conditions (LTHCs) (from 6.14: "… (LTHCs) in children")
+    PAED-007 — Maintaining and promoting the health and well-being of children
+    PAED-008 — Evaluating and managing neurodevelopmental and behavioural presentations in children
+    PAED-009 — Providing care for an adolescent patient
+    PAED-010 — Leading and operating within a clinical team
+    PAED-011 — Managing population health challenges
+    PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams
+    PAED-013 — Managing child protection, legal and ethical aspects of children at risk
+    PAED-014 — Providing palliative and end-of-life care
+    PAED-015 — Teaching and applying evidence-based care responsibly and ethically in clinical decision-making and
+      research
+    PAED-016 — Transitioning adolescents with long-term conditions to adult care (6.28; Paediatrics / Paediatrics; Core;
+      description "Plans and leads the handover of an adolescent with a long-term condition to adult services, with the
+      young person and their caregivers."; required knowledge and skills empty)
+    All CPSA, Paediatrics / Paediatrics. Neonatology has no national EPA at any step. The College admin's list never holds
+    KGK-001 or EPA-001. The Administrator's after 6.28: PAED-001 to PAED-016, KGK-001 — Running a paediatric outreach
+    clinic at a district hospital (Kgosi Kgari Teaching Hospital's own, Elective) and EPA-001 — Clerk, assess, and
+    present a general medical admission (Demo College, General Medicine / General Internal Medicine).
+  Curricula (ids as replayed; the College's list in this order):
+    Neonatology EPA Curriculum (1.0), curriculum 3, CPSA, Paediatrics / Neonatology, effective 2026-11-02, no end, 0
+      items, Held back (created at 6.13; its clone section starts "1.0-copy" from 2026-11-03).
+    Paediatric EPA Curriculum (11.2), curriculum 4, CPSA, Paediatrics / Paediatrics, effective 2026-11-02, no end, 15
+      national items at 6.29, 16 after 6.30, Held back from 6.29, Open from 6.31.
+    Paediatric EPA Curriculum (11.1), curriculum 2, CPSA, Paediatrics / Paediatrics, effective 2026-01-01, no end, 15
+      national items, Open (its clone section starts "11.1-copy" from 2026-01-02).
+    IM Core Curriculum (2026.1), curriculum 1, Demo College, General Medicine / General Internal Medicine, effective
+      2026-01-01, 1 item, Open (out of the College admin's scope: Curriculum unavailable).
+    The create form chooses Paediatrics / Neonatology first (6.13 keeps it; 6.28's EPA form does the same, and 6.28
+      changes it to Paediatrics / Paediatrics). Effective from defaults to today.
+  The items of 11.1 (Step 1.18; every row's scale CPSA Paediatric Entrustment Scale v11.1, completion window 12 months,
+    weight "—"; target over decision; minimum; minimum by training year 1 / 2 / 3 / 4; tools):
+    PAED-001 3 per semester, Decided each semester; 5; 3a / 3b / 4 / 5; CBD, CCA, Clinical audit, DOPS, Mini-CEX, MSF,
+      RCA, Reflective exercise
+    PAED-002 3 per semester, Decided each semester; 5; 3a / 3b / 4 / 5; CBD, CCA, Chart-stimulated recall, Clinical
+      audit, Direct observation, DOPS, Mini-CEX, MSF, RCA
+    PAED-003 3 per semester, Decided each academic year; 5; 3a / 3b / 4 / 5; CBD, CCA, Clinical audit, DOPS, Mini-CEX,
+      MSF, RCA, Reflective exercise
+    PAED-004 3 per semester, Decided each semester, by the Neonatal team Clinical Competency Committee; 5; 3a / 3b / 4 /
+      5; CBD, CCA, Direct observation, DOPS, Mini-CEX, MSF
+    PAED-005 3 per semester, Decided each semester, by the Neonatal team Clinical Competency Committee; 5; 3a / 3b / 4 /
+      5; CBD, DOPS, MSF
+    PAED-006 2 per semester, Decided each academic year; 5; 3a / 3b / 4 / 5; CCA, Direct observation, DOPS, Mini-CEX,
+      MSF
+    PAED-007 1 per semester, Decided each academic year; 5; 3a / 3b / 4 / 5; Direct observation, DOPS, Mini-CEX, MSF
+    PAED-008 1 per academic year, Decided each academic year, as opportunity allows; 4; 2 / 3a / 3b / 4; CBD, DOPS,
+      Mini-CEX, MSF, Reflective exercise
+    PAED-009 1 per academic year, Decided each academic year, as opportunity allows; 4; 2 / 3a / 3b / 4; CBD, Direct
+      observation, MSF
+    PAED-010 3 per semester, Decided each semester; 5; 3a / 3b / 4 / 5; Direct observation, MSF
+    PAED-011 1 per academic year, Decided each academic year; 4; 2 / 3a / 3b / 4; CBD, Direct observation, MSF
+    PAED-012 3 per semester, Decided each semester; 5; 3a / 3b / 4 / 5; CBD, Chart-stimulated recall, Mini-CEX, MSF
+    PAED-013 1 per academic year, Decided each academic year, as opportunity allows; 4; 2 / 3a / 3b / 4; CBD, Direct
+      observation, Mini-CEX, MSF
+    PAED-014 1 per academic year, Decided each academic year; 4; 2 / 3a / 3b / 4; CBD, MSF, Reflective exercise
+    PAED-015 1 per semester, Decided each academic year; 4; 2 / 3a / 3b / 4; CBD, Direct observation, Learner feedback,
+      MSF, Portfolio and logbook review
+  The items of 11.2: at 6.29 the same fifteen, cell for cell; at 6.30 PAED-011 "2 per academic year" and PAED-016 added:
+    1 per academic year, Decided each academic year (by the trainee's general panel), not opportunistic, the suggested
+    scale, minimum 4, 2 / 3a / 3b / 4, window 12, weight "—", tools CBD, Mini-CEX, MSF (16 national). Item ids: ‹item id›.
+    The add page offers PAED-016 alone, chosen; Edit PAED-011's EPA select offers PAED-011 alone.
+  The reach (Q2; this flow's steps, by the count rule in § THE REACH):
+    11.1: none at 1.18 ("No institution has adopted it yet."); in Act 6, "Adopted by 1 institution, Kgosi Kgari
+      Teaching Hospital; 3 registrars in training on it." (so at 6.17 and 6.29).
+    11.2 at 6.29, 6.30 and 6.31, and Neonatology EPA Curriculum (1.0) at 6.13: "No institution has adopted it yet."
+      11.2 at A.7.10: "Adopted by 1 institution, Kgosi Kgari Teaching Hospital; 1 registrar in training on it."
+    PAED-012 at 6.17: on 1 curriculum (11.1) adopted by 1 institution, Kgosi Kgari Teaching Hospital; 3 registrars in
+      training. PAED-006 at 6.14: the same. PAED-016 at 6.28 and after 6.30: on no adopted curriculum.
+  CAPTURE-ONLY: none (every value above is from the code, the seed or the runbook).
+  Words that stay (built; flow 15's and the system's): every page's title as its h1 with " · Wombat"; the items page's
+    College notice, verbatim: "A target and its period are read live. Changing one changes what every trainee on this
+    curriculum is measured against, in every institution that has adopted it, including periods that have already
+    closed. A tool list is checked when an activity is filed and submitted, and never takes back credit already earned."
+    (Alert warning, Role=""); the paused EPA's info notice, "PAED-012 is inactive, so its item is not in force: no trainee
+    can choose it for a new activity, its credit is paused, and no running programme's progress page or dashboard shows
+    it (a programme that has ended keeps it on its record). Reactivating an EPA on its own page brings its item back, and
+    credits what was completed against it meanwhile.", and the row's "(inactive: not in force)"; the College's
+    nothing-to-add line, "Every national EPA of Paediatrics is already on this curriculum, as a national item or as an
+    institution's own item, so there is none left to add. To add an item, first add a national EPA of Paediatrics, or
+    remove a national item to free its EPA. An EPA an institution has as its own item is freed only when that
+    institution removes it."; "Add item", "Curriculum item added.", "Curriculum item saved.", "PAED-016 removed from this
+    curriculum."; the Remove dialog's title "Remove PAED-016 from Paediatric EPA Curriculum (11.2)?" and body "Remove
+    PAED-016 — Transitioning adolescents with long-term conditions to adult care from Paediatric EPA Curriculum (11.2)?
+    Its target, minima, decision and tool list are deleted, and so is each trainee's tally toward it. Trainees on this
+    curriculum, in every institution that has adopted it, are no longer measured against this EPA. This cannot be
+    undone.", confirm "Remove item"; the item page's add subtitle "On Paediatric EPA Curriculum (11.2). It applies to
+    every institution that has adopted it.", its labels, options and helps (Target, Per, Decision cadence, Decided by,
+    Opportunistic "Decided as rotation or opportunity allows", Entrustment scale with "Suggested because every item on
+    this curriculum is pinned to it.", Minimum level*, Minimum by training year, Completion window (months), Weight,
+    Tools), "Adding is off until every minimum is a rung on CPSA Paediatric Entrustment Scale v11.1.", "Save item"; the
+    EPA page's labels (Sub-speciality*, Code*, Title*, Description, Required knowledge and skills, Category* Core /
+    Elective, Status with Active), its national Active help ("An inactive EPA cannot be chosen for a new activity and is
+    not a target on any running programme's progress page or dashboard; a programme that has ended keeps it on its
+    record. Evidence already recorded against it is kept, and so is the progress it earned while it was active. An
+    activity completed against it while it is inactive counts towards nothing until the EPA is reactivated, and
+    reactivating it credits those activities."), the pause dialog's title "Deactivate PAED-012?" and body "It can no
+    longer be chosen for a new activity, and it stops being a target on running programmes' progress pages and
+    dashboards, for every institution that has adopted it. A programme that has ended keeps it on its record, marked no
+    longer in use. The progress it has earned is kept. An activity completed against it while it is inactive counts
+    towards nothing until it is reactivated. You can reactivate it on this page.", confirm "Deactivate"; "EPA saved.",
+    "EPA deactivated.", "EPA saved and deactivated.", "EPA reactivated. 1 activity completed against it while it was
+    inactive now counts towards progress." (6.23); "Enter a code.", "Enter a title.", "Choose a sub-speciality."; "An EPA
+    with the same code already exists for this sub-speciality." (a real duplicate only); "The EPA could not be saved.
+    Nothing has changed. Try again, or come back in a few minutes."; "Could not load the EPAs. …", "Could not load this
+    EPA. …", "Could not load the curricula. …", "Could not load this curriculum's items. …", "Could not load this
+    curriculum item. …", "Could not load the entrustment scales. …" (each "… Nothing has changed. Try again, or come back
+    in a few minutes." with Try again); Curricula's College caption "College of Paediatricians of South Africa's
+    curriculum versions", "Open" / "Held back", "Edit Paediatric EPA Curriculum (11.2)", "Items of Paediatric EPA
+    Curriculum (11.2)"; the reader's scales subtitle "The rating ladders that assessment forms and committee reviews use.
+    A Wombat administrator sets them; they are shown here for reference."; Access denied's words (flow 01's); T301's box
+    help, "An institution can adopt this version only while it is open. Closing it does not affect an institution that
+    has already adopted it." (the brief's, decided).
+  Words from round 1's boards, kept (PROPOSED there, accepted by the assessment):
+    Colleges: subtitle "The national Colleges. Each College's admin keeps its specialities, EPAs and curricula; you keep
+      the Colleges themselves."; caption "Every College"; Create college's subtitle "A national College keeps its own
+      specialities, EPAs and curricula. It starts active."; submit "Create college"; the taken code under Short code, "CPSA
+      is already the short code of College of Paediatricians of South Africa. Choose another."; a taken name under Name,
+      "College of Paediatricians of South Africa is already a College's name. Choose another."; "College created.";
+      "College saved."; the Active help "An inactive College cannot be named by a new invitation. Nothing else reads it:
+      its specialities, EPAs and curricula, and every institution that has adopted one of its curricula, carry on as they
+      are."; under an unticked box (B2's short form), "Inactive. A new invitation cannot name this College. Tick Active
+      and save to reactivate it."; the dialog "Deactivate College of Neurologists of South Africa?" / "A new invitation
+      will no longer be able to name it. That is all it changes: its specialities, EPAs and curricula stay as they are,
+      every institution that has adopted one of its curricula carries on, and everyone already invited keeps their
+      invitation." / "You can reactivate it on this page." / Cancel / Deactivate (danger); the result "College of
+      Neurologists of South Africa deactivated. A new invitation can no longer name it."; a reactivation by the box,
+      "College of Neurologists of South Africa reactivated. A new invitation can name it again."
+    The tree: subtitle (S9); an empty tree "No specialities yet" / "Create the first speciality for College of
+      Neurologists of South Africa." with Create speciality; an empty section "No sub-specialities yet. Create the first
+      sub-speciality of Neurology." (N4's verb); "Speciality saved.", "Sub-speciality saved.", "Sub-speciality
+      Neonatology created."; the records' subtitles "Sub-speciality of Paediatrics" (and the speciality's, NEW below).
+    The scales: the Levels help "A rung is read by its label everywhere ("3a", "5"). Its order is its rank, lowest first,
+      and everything that compares levels uses the order: on a ladder with a split rung, the label and the order differ.
+      The order is shown only on this page."; the caption "Levels of CPSA Paediatric Entrustment Scale v11.1, lowest
+      first"; the Create page's subtitle "A ladder of at least two rungs, shared by every College and institution."; the
+      moves and Remove named by label ("Move 3a up", "Move 3a down", "Remove 3a"), each Label input named "Label of the
+      rung in order 3" and each Description "Description of 3a"; "Put rung 5 back" (restores the row in its place and
+      moves the focus to its Label); "Enter this rung's label."; "A scale needs at least two rungs. Add another.";
+      "Entrustment scale saved."; "Entrustment scale deleted."
+    Every page: "Enter a name." and "Enter a short code." (the label's words, once, under the field).
+    The no-College words (Spec § 10): "Your account names no College. Ask the platform administrator to add it."
+  NEW words of this message:
+    The failed save, one sentence for the catalogue (replacing round 1's "Not saved. Something went wrong on our side, and
+      what you typed is still here. Try again.", so part 1 says what part 2 and flow 15 already say): "The College could
+      not be saved. Nothing has changed. Try again, or come back in a few minutes." ("The speciality …", "The
+      sub-speciality …", "The entrustment scale …", "The curriculum …"; a create "… could not be created. …"; the clone
+      "The new version could not be made. …"); a danger Alert in the result region, its first sentence bold, focused,
+      what was typed kept, the cause to the log (T272, T393).
+    The load errors (the system's sentence, the record named): "Could not load the Colleges.", "Could not load this
+      College.", "Could not load the specialities.", "Could not load this speciality.", "Could not load this
+      sub-speciality.", "Could not load this entrustment scale.", "Could not load this curriculum.", each then "Nothing has
+      changed. Try again, or come back in a few minutes." with Try again. Loading lines: "Loading the Colleges.",
+      "Loading this College.", "Loading the specialities.", "Loading this speciality.", "Loading this sub-speciality.",
+      "Loading this entrustment scale.", "Loading this curriculum." A page whose read failed or is running is titled by
+      its kind: "College", "Specialities", "Speciality", "Sub-speciality", "Entrustment scale", "Curriculum" (flow 15's
+      T7).
+    The College's record: subtitle "CPSA · Active" ("CNSA · Inactive"); crumb the College's name.
+    A speciality's record: h1 "Paediatrics", subtitle "Speciality of College of Paediatricians of South Africa"; Create
+      speciality's subtitle "A speciality of College of Neurologists of South Africa."; submit "Create speciality";
+      "Speciality Neurology created.".
+    A sub-speciality's create: h1 "Create sub-speciality", subtitle "A sub-speciality of Paediatrics, in College of
+      Paediatricians of South Africa."; submit "Create sub-speciality"; its Default entrustment scale at create, with the
+      built help.
+    The Status help of a speciality and a sub-speciality (Q15's plain words, within D56): "An inactive sub-speciality
+      cannot be named by a new invitation, and an institution can no longer give anyone a role for it. Nothing else reads
+      it: its EPAs and curricula, and the registrars on them, carry on." ("An inactive speciality …"); under an unticked
+      box, "Inactive. A new invitation cannot name it, and no institution can give anyone a role for it. Tick Active and
+      save to reactivate it."
+    Their dialog: "Deactivate the sub-speciality Neonatology?" ("Deactivate the speciality Paediatrics?") / "A new
+      invitation will no longer be able to name it, and an institution can no longer give anyone a role for it. That is
+      all it changes: its EPAs and curricula, and the registrars already on them, carry on." / "You can reactivate it on
+      this page." / Cancel / Deactivate (danger). Results: "Sub-speciality Neonatology deactivated. A new invitation can no
+      longer name it." / "… reactivated. A new invitation can name it again." (the speciality's the same).
+    The tree's cells: Default scale "No default" where none is set (the select's option keeps "No default — offer every
+      scale"); Status "Active" / "Inactive" in words. A speciality's section line: its description, then "· Active" (or
+      "· Inactive"), p.muted under the h2.
+    The College admin with no College (R2-A21): StatePanel empty, title "No College on your account", body the accepted
+      sentence; no list, no Create; Specialities lit.
+    The scale's page: subtitle "A ladder shared by every College and institution."; Create entrustment scale's submit
+      "Create scale"; after a create "Entrustment scale created." (on the new scale's page, by a one-shot token).
+    The College admin's EPA list (T326): subtitle "College of Paediatricians of South Africa's EPAs. A change to one is
+      read at once wherever it is named, in every institution that has adopted a curriculum that holds it."; caption
+      "College of Paediatricians of South Africa's EPAs" (as Curricula's). The empty state for a College admin with no
+      College: "No College on your account" / the accepted sentence, no Create EPA (the design system's known gap).
+    An EPA's page for the College and the Administrator: a national EPA's subtitle "College of Paediatricians of South
+      Africa · Paediatrics / Paediatrics" (the record's, without "Set by the College, so read only here"); Create EPA's
+      subtitle "A national EPA of College of Paediatricians of South Africa. It reaches a registrar once a curriculum an
+      institution has adopted holds it." (the Administrator's: "A national EPA, of the College whose sub-speciality you
+      choose."); the Sub-speciality help "College of Paediatricians of South Africa's sub-specialities." (the
+      Administrator's: "Every College's sub-specialities."). EV2's line (§ VARIATION EV).
+    The pause dialog's reach (Q2's words, its count from FIXTURES), the body's first paragraph: "PAED-012 is on 1
+      curriculum adopted by 1 institution, Kgosi Kgari Teaching Hospital; 3 registrars in training are measured against
+      it." Then the built body, unchanged.
+    The College admin's Curricula subtitle (T326): "College of Paediatricians of South Africa's curriculum versions. A
+      new version starts held back; an institution can adopt one once you open it."
+    The items page (Q2): the College's standing notice gains the reach as its first sentence, bold: "Adopted by 1
+      institution, Kgosi Kgari Teaching Hospital; 3 registrars in training on it." or "No institution has adopted this
+      version yet.", then the built notice. The item page's subtitle gains it as its second sentence: "On Paediatric EPA
+      Curriculum (11.2). It applies to every institution that has adopted it. No institution has adopted it yet."
+    Q9's header links (PROPOSED (THIS ASK), T4): the items page, for a caller who may edit the curriculum, an outline
+      link "Edit this version" named "Edit Paediatric EPA Curriculum (11.1)"; the curriculum's page an outline link
+      "Items (15)" named "Items of Paediatric EPA Curriculum (11.1)".
+    The curriculum's page (§ THE CURRICULUM'S PAGE): every word there not quoted from Q4, Q5 or T301.
+    The reach's other counts (§ THE REACH).
+  PROPOSED (THIS ASK: choices this message makes, for the review to weigh; list them on the Spec):
+    T1 A scale's page is titled by the scale's name (S11's rule), so 1.4's page reads "CPSA Paediatric Entrustment Scale
+      v11.1", where round 1 kept "Edit entrustment scale" with the name as its subtitle.
+    T2 A curriculum's page is titled by its name and version, "Paediatric EPA Curriculum (11.1)", its crumb the same;
+      today "Edit curriculum" (6.13 and 6.29's Actuals quote it; no Expect does).
+    T3 The College admin's EPA list drops its College column (every row would read College of Paediatricians of South
+      Africa), as the College's Curricula did (flow 15, R3-A12); the caption names the College. 1.16's Expect changes.
+      The Administrator's list keeps its College column.
+    T4 Q9's two header links (above).
+    T5 The tree: a record's Save returns to the tree with its result (one-shot token), while Deactivate…, confirmed,
+      stays on the record (Active unticked, Deactivate… gone, the result focused), as the EPA's page and the College's
+      record do; the tree's row then reads Inactive.
+    T6 The curriculum's Hold back: an outline "Hold back…" in the form's actions, offered only on a version stored open,
+      opening the same dialog as a Save with the box unticked (D56's model); its confirm "Hold back" a filled danger
+      button, as D56's Deactivate. T301's help keeps "Closing it" (the brief's words); the trigger says the lists' word.
+    T7 Opening and holding back say what changed: "Curriculum saved. It is open for adoption: an institution can adopt it
+      now." and "Curriculum saved. It is held back: no institution can adopt it until you open it again." (first
+      sentence bold); a save that leaves the box alone keeps "Curriculum saved." (built).
+    T8 The reach's count rule (§ THE REACH): a version an institution has superseded but still has registrars in training
+      on counts, with those registrars, since their targets read the version's items live.
+    T9 The create page's submit "Create curriculum" (as "Create college", "Create scale"); 6.13's Do unchanged.
+    T10 No link from an item's Minimum level or the scale's name to the scales list for the College admin: the list shows
+      no rungs and a scale's page refuses the College admin, so the link would lead nowhere useful.
+    T11 The curriculum page's Sub-speciality stays a select on an existing version, as built (UpdateCurriculumCommand
+      accepts a move); the Spec lists, as an edge case and not drawn, "fixed once the version has an item or an
+      adoption" as the alternative for the review.
+    T12 A.7.10's Do adds the curriculum's own page at 390 (open Edit on 11.2, read it, leave by Cancel), since the brief's
+      § 5 found it 36–38 px there and no step reaches it.
+
+THE REACH (Q2's words, and this message's for the counts Q2 does not show; NEW where not Q2's):
+  The count: per curriculum version, the institutions with an active adoption of it, by name, and the active trainee
+    profiles on those adoptions; per EPA, the curricula that hold it as a national item and that some institution has
+    adopted, the institutions, and those profiles (DATA: one read per page; T8 adds a superseded adoption with registrars
+    still on it). Never a registrar's name; ended profiles are not counted.
+  A version: "Adopted by 1 institution, Kgosi Kgari Teaching Hospital; 3 registrars in training on it." (Q2); one
+    registrar "… 1 registrar in training on it."; none yet "… no registrar in training on it yet."; three institutions
+    "Adopted by 3 institutions, ‹A›, ‹B› and ‹C›; ‹N› registrars in training on it."; more than three, the first three
+    named "and ‹N› more"; none "No institution has adopted it yet." ("… this version yet." in the items' notice and the
+    curriculum page). A version an institution has superseded with registrars still on it (T8; after 6.36, 11.1 at KGK
+    with 2): "Still used by 1 institution that has superseded it, Kgosi Kgari Teaching Hospital; 2 registrars in
+    training on it." (NEW; added after the adopters' sentence when both hold).
+  An EPA: "PAED-012 is on 1 curriculum adopted by 1 institution, Kgosi Kgari Teaching Hospital; 3 registrars in training
+    are measured against it." (Q2's shape); several "on 2 curricula adopted by …"; none "PAED-016 is on no curriculum an
+    institution has adopted, so no registrar is measured against it yet."
+
+THE CURRICULUM'S PAGE (/admin/curricula/new and /admin/curricula/{Id:int}; Q4, Q5, Q9; flow 12's user page; the one page
+  part 2 designs anew):
+  - Header: h1 and tab "Paediatric EPA Curriculum (11.1)" (T2); crumb the same; trail Home › Curricula › Paediatric EPA
+    Curriculum (11.1); Curricula lit; subtitle "College of Paediatricians of South Africa · Paediatrics / Paediatrics ·
+    effective 2026-01-01" (the items page's head, built words); header action the outline link "Items (15)" (T4). No
+    Back to curricula, no Manage items. Create: h1 "Create curriculum", trail Home › Curricula › Create curriculum,
+    subtitle "A new version starts held back: no institution can adopt it until you open it." (NEW), no header action.
+  - The column: div.user-page with the page class of § CLASSES; the result region (ActionResult) first.
+  - One EditForm (novalidate) holding two section.user-section: "Details" (h2): Sub-speciality * (select, "Paediatrics /
+    Neonatology" and "Paediatrics / Paediatrics" for the CPSA; T11), Name *, Version *, Effective from (ISO), Effective to
+    (ISO, empty for no end); "Open for adoption" (h2; not on the create page): the box "Open for adoption" (a .form-check,
+    its help T301's words, described by aria-describedby), then the reach, p.muted ("Adopted by 1 institution, Kgosi
+    Kgari Teaching Hospital; 3 registrars in training on it." or "No institution has adopted this version yet."). Then
+    FormActions: Cancel (outline, to Curricula), "Hold back…" (outline, aria-haspopup="dialog", only on a version stored
+    open; T6), Save (primary; "Saving…" while it runs, aria-disabled, never natively disabled during its own save). The
+    create page's submit "Create curriculum" (T9).
+  - "A new version" (h2; a section.user-section of its own, its own EditForm; not on the create page): intro p (NEW)
+    "A new version copies this version's 15 national items, with their targets, minimum levels and tools. An
+    institution's own items are never copied. It starts held back." (on 1.0, with none: "This version has no national
+    items yet, so a new version starts with none. It starts held back."); New version * ("11.1-copy"), Effective from
+    (2026-01-02), Effective to (empty); its own FormActions with one outline "Clone" (built word; named "Clone Paediatric
+    EPA Curriculum (11.1) as a new version"; "Cloning…" while it runs).
+  - Opening (box ticked on a held-back version, Save) asks nothing (Q4): T7's result, focused. Holding back (Hold back…,
+    or Save with the box unticked on a version stored open) opens ONE ConfirmDialog (action mode, opening on Cancel):
+    title "Hold back Paediatric EPA Curriculum (11.1)?"; body (NEW) "No institution can adopt it while it is held back."
+    / "Adopted by 1 institution, Kgosi Kgari Teaching Hospital; 3 registrars in training on it. Holding it back changes
+    nothing for them: Kgosi Kgari Teaching Hospital keeps it, and its registrars stay on it." (for none: "No institution
+    has adopted it yet.") / "You can open it again on this page."; Cancel; "Hold back" (danger, T6). Cancel or Escape
+    returns the focus to its trigger; a Save it interrupted leaves the box unticked, unsaved, and Save asks again.
+  - Results (one at a time, in the result region, focused): Q5's create and clone results (arriving by ?created and
+    ?cloned=‹fromId›, then the address replaced, so a reload says nothing); "Curriculum saved."; T7's two.
+  - Refusals under their field (FieldRefusal; never a ValidationSummary, never a property's name, T324): "Choose a
+    sub-speciality.", "Enter a name.", "Enter a version.", "A name is at most 200 characters.", "A version is at most 64
+    characters.", "Effective to must be on or after Effective from." (NEW), the clone's "Enter the new version." (NEW);
+    a duplicate, under Version (or New version), "A curriculum with the same name and version already exists for this
+    sub-speciality." (built, a real unique violation only, T272); each a div.validation-message[role="alert"] first in
+    the control's aria-describedby, the control aria-invalid, the first refused field focused, what was typed kept. Any
+    other failure, the NEW failed-save sentence.
+  - States: loading (h1 "Curriculum", "Loading this curriculum." over a skeleton card, no action offered); the load
+    error (h1 "Curriculum", the NEW sentence with Try again, which focuses the h1 once it reads; no form under it);
+    Curriculum unavailable (Q7, built words).
+
+CLASSES (name each on the Spec's class table; every other class a board uses is app.css's, "reuses .x"):
+  - Lists: .people-page (Colleges, the tree, and flow 15's .people-page.epas-page, .curricula-page,
+    .curriculum-items-page, .scales-page as built); DataTable with StackWide (.clinic-table--stack-wide; the EPA list and
+    the items stack to 1024 px, as built); row actions in div.actions-cell, .btn .btn-sm .btn-outline.
+  - The tree: inside .people-page, one section.user-section per speciality (reuses .user-section's column and 16 px
+    gap); its head a div.form-section-head holding the h2 (the speciality's name) and, on its baseline, Edit and Create
+    sub-speciality (.btn .btn-sm .btn-outline; the section's own actions, so neither is primary); its line p.muted; its
+    table a DataTable StackWide captioned "Sub-specialities of ‹speciality›"; an empty section's line p.muted. No NEW
+    class.
+  - Records and the curriculum's page: .user-page with section.user-section per <h2> (flow 12's; their 44 px and stacked
+    actions come from it: say so), .form-container / .form-grid / .form-actions, a read-out as dl.detail-list.
+  - Unavailable and empty: .detail-card--empty with one primary link; StatePanel with Try again (refresh-cw); the loading
+    line p.loading-line[role="status"] over a skeleton card.
+  - The levels: DataTable .clinic-table--inputs (app.css :395–426), each Description a textarea.form-control in its cell.
+  - The two shipped rules this round may add (NEW, each argued on the Spec; nothing else NEW, no new token, no new
+    badge, no new icon):
+    S1 .catalogue-record, beside .user-page on the College's, a speciality's, a sub-speciality's, a scale's and a
+      curriculum's page: below 641 px its .form-check row (Active; Open for adoption) is a 44 px target with a 20 px box,
+      the same declarations as flow 15's .user-page.epa-page .form-check (app.css :7515–7528; the build may write both
+      selectors in one rule). Today a lone .form-check under .user-page is not 44 px.
+    S2 Only if measured necessary: the levels table at narrow widths, each rung a block (StackWide on the
+      .clinic-table--inputs table first; app.css's container rule leaves a cell's inputs 63 px and 102 px wide at 390,
+      too narrow for a 300-character descriptor), its Label input and Description textarea the block's width, its moves
+      and Remove 44 px. Draw StackWide alone first; if the textarea is narrower than the block, write S2 and say what it
+      measured.
+  - Icons by Lucide name where drawn: plus (Create …, as built), refresh-cw (Try again), arrow-right (Go to …, if
+    drawn), gauge (Entrustment scales in the menu, as built). No icon on a row action.
+
+STATES TO DRAW (each at 1280 and 390, with the role's menu and the shell; 768 where marked; boards R2-… in rows by
+  letter). About 120 states: some 260 boards with their 390 and 768 twins, the Spec and the Steps (round 1 drew 50):
+  PART 1. The College's tree and Home (A2; R2-A):
+    R2-A01 Anton Kruger's Home (1.8, 6.10): one DashboardCard "National catalogue", Q12's sentence, four links
+    (Specialities, EPAs, Curricula, Activity types); the menu with Entrustment scales. R2-A02 the tree at Act 1 (1.12,
+    1.13, 1.14 read at once): h1 "Specialities", S9's subtitle, Create speciality (primary) in the header, the trail Home ›
+    Specialities › College of Paediatricians of South Africa, Specialities lit; one section "Paediatrics" with its line,
+    Edit and Create sub-speciality (named, M8), its table of one row (Paediatrics, its description, CPSA Paediatric
+    Entrustment Scale v11.1, Active, Edit named "Edit the sub-speciality Paediatrics"); no Back to colleges (768 too; swept
+    900–1100). R2-A03 the speciality's record (6.11 before Save): h1 "Paediatrics", its subtitle, Name *, Description
+    (textarea), Status with Active and its help, Cancel, Deactivate…, Save; trail Home › Specialities › College of
+    Paediatricians of South Africa › Paediatrics. R2-A04 6.11 saved: back on the tree, "Speciality saved." focused, the
+    section's line the new description. R2-A05 the sub-speciality's record (1.14): h1 "Paediatrics", "Sub-speciality of
+    Paediatrics", Name, Description, Default entrustment scale (CPSA chosen; the help alone), Status, Cancel, Deactivate…,
+    Save. R2-A06 Create sub-speciality on Paediatrics (6.12), filled: Neonatology, its description, the default CPSA
+    chosen; Cancel, Create sub-speciality. R2-A07 6.12 created: the tree, "Sub-speciality Neonatology created." focused,
+    two rows (Neonatology, Paediatrics), each CPSA, Active (768 too). R2-A08 a create with Name empty: "Enter a name."
+    under Name, focused, the rest kept. R2-A09 a failed save ("Illustration"): the NEW sentence, focused, the form as
+    typed. R2-A10 devadmin, the CNSA's tree before 6.3: the trail Home › Colleges › College of Neurologists of South
+    Africa › Specialities, Colleges lit, the subtitle for the CNSA, the empty state with Create speciality. R2-A11 Create
+    speciality (6.3) filled: Neurology. R2-A12 after 6.3: "Speciality Neurology created." focused, the Neurology section
+    with "No sub-specialities yet. …" and Create sub-speciality. R2-A13 after 6.4: Create sub-speciality on Neurology
+    with "No default — offer every scale" kept (the CNSA scale does not exist yet), then the tree, "Sub-speciality Adult
+    Neurology created." focused, its row "No default" (two boards). R2-A14 6.7: Adult Neurology's record with CNSA
+    Neurology Entrustment Scale chosen; then the tree, "Sub-speciality saved." focused, its row reading the CNSA scale
+    (two boards). R2-A15 Deactivate… on the sub-speciality Neonatology ("Illustration": unplayed): the dialog, opening on
+    Cancel, Q15's words. R2-A16a deactivated: the record, "Sub-speciality Neonatology deactivated. …" focused, Active
+    unticked with the inactive line, Deactivate… gone; R2-A16b the tree, its row "Inactive" (two boards; "Illustration").
+    R2-A17 the speciality's dialog, "Deactivate the speciality Paediatrics?" ("Illustration"). R2-A18a "College
+    unavailable": Anton Kruger typing the Demo College's specialities address (Go to Specialities); R2-A18b "Speciality
+    unavailable" (a speciality record by an unknown id); R2-A18c "Sub-speciality unavailable" (the CNSA's Adult
+    Neurology typed by Anton Kruger). R2-A19 loading (the tree; a record: two boards). R2-A20 the load error (the tree; a
+    record: two boards). R2-A21 a College admin whose account names no College ("Illustration": the NEW empty state).
+    R2-A22 the heavy tree ("Illustration"): a second speciality, one speciality with six sub-specialities (‹names›), one
+    description of 2,000 characters wrapping in its cell, nothing sideways (768 too; swept 900–1100).
+  Colleges and a College (B1; R2-B):
+    R2-B01 1.2: two Colleges (CPSA, Demo College), StackWide, the caption, Created ISO, Edit and Specialities named for
+    the row (768 too). R2-B02 6.1 done: three (CNSA, CPSA, Demo College) (768 too; swept 900–1100). R2-B03 Create college
+    with Name and Short code empty: "Enter a name." and "Enter a short code.", each under its field, Name focused, once
+    each, no summary. R2-B04 6.1's refusal under Short code, focused, everything typed kept. R2-B05 a taken name
+    ("Illustration"). R2-B06 6.1 created: CNSA's record, h1 "College of Neurologists of South Africa", "CNSA · Active",
+    "College created." focused. R2-B07 1.3: CPSA's record, no result, no Back to colleges, trail Home › Colleges › College
+    of Paediatricians of South Africa. R2-B08 6.2 saved: "College saved." focused, the new description. R2-B09
+    Deactivate… on CNSA ("Illustration"): the dialog, opening on Cancel. R2-B10 Save with Active unticked: the same
+    dialog ("Illustration"). R2-B11a deactivated: the result focused, Active unticked with the inactive line, Deactivate…
+    gone, the subtitle "CNSA · Inactive"; R2-B11b the list, CNSA "Inactive" (two boards; "Illustration"). R2-B12 a failed
+    save ("Illustration"). R2-B13 "College unavailable" for the Administrator (an unknown id; Go to Colleges). R2-B14
+    loading (the list; the record). R2-B15 the load error (the list; the record). R2-B16 five Colleges, two with similar
+    names ("Illustration": ‹names›, ‹codes›; 768 too). R2-B17 a description of 2,000 characters in the list and the
+    record's textarea ("Illustration").
+  Scales and a scale (C1; R2-C):
+    R2-C01 1.4: the Administrator's list of two (CPSA 6, O-R 5), S2's words, Edit and Delete… (outline, named for the
+    row) (768 too). R2-C02 1.4: the CPSA ladder (T1's h1; h2 Details: Name, Description; h2 Levels: its help, the caption,
+    six rows Order / Label / Description, each descriptor whole in its textarea): in use, so no Up, Down or Remove, Q16's
+    line above Add level; Cancel, Save (390 stacked: S6). R2-C03 6.5 Create entrustment scale: it starts with two empty
+    rungs (built); then five rungs typed and the fourth labelled "Indirect supervision", refused under the fourth rung's
+    Label, focused, everything kept (two boards). R2-C04 6.5 created: CNSA's page, "Entrustment scale created." focused,
+    five rungs, Up, Down and Remove offered (unused; Up on the first and Down on the last disabled). R2-C05 6.6 saved: six
+    rungs, "Supervises others" at 6, "Entrustment scale saved." focused (390 too, S6). R2-C06 the list of three after 6.6
+    (CNSA 6, CPSA 6, O-R 5) (768 too). R2-C07 6.8 Delete… on CNSA: the dialog (M4), opening on Cancel. R2-C08 6.8 refused:
+    S1's sentence at the list's top, a danger Alert, focused, "Open Adult Neurology"; the scale still 6. R2-C09
+    "Entrustment scale deleted." ("Illustration": ‹a scale nothing uses›), focused, the list read again. R2-C10 the CPSA
+    ladder's Delete refused, "This entrustment scale is pinned to one or more curriculum items and cannot be deleted."
+    ("Illustration"). R2-C11 the rung refusal (M5; "Illustration": a page read before the scale came into use, so Remove
+    was offered): "Not saved." then Q6's three sentences (PAED-001, PAED-002, PAED-003 on Paediatric EPA Curriculum
+    (11.1)) and "and 6 more.", with "Put rung 5 back"; the refusal at the form's top, focused. R2-C12 Q16's stale-page
+    refusal ("Illustration"). R2-C13 an ended record's rung (S3's NEW words; "Illustration"). R2-C14 a taken name under
+    Name. R2-C15 required: the Name empty, a rung's Label empty, one rung left (three boards; "Enter a name.", "Enter this
+    rung's label.", "A scale needs at least two rungs. Add another."). R2-C16 the rename warning ("Illustration", built
+    words with brackets). R2-C17 "Entrustment scale unavailable" (an unknown id; today a silent return to the list).
+    R2-C18 loading (the list; the page). R2-C19 the load error (the list; the page). R2-C20 a ladder of 8 rungs with long
+    descriptors ("Illustration": ‹labels›, ‹descriptors› of about 300 characters; unused, so the moves show; 390 too).
+    R2-C21 Anton Kruger's read-only list (D57; 1.15: two scales; after 6.6: three): the reader's subtitle, the caption, no
+    Create scale, no actions column, no link; Entrustment scales lit (two boards, 768 too).
+  PART 2. The curriculum's page (R2-D):
+    R2-D01 6.13 Create curriculum: Paediatrics / Neonatology chosen, Name "Neonatology EPA Curriculum", Version "1.0",
+    Effective from 2026-11-02, Effective to empty; the NEW subtitle; Cancel, Create curriculum. R2-D02 Name and Version
+    empty: each refused under its field, Name focused, no summary. R2-D03 a duplicate under Version ("Illustration").
+    R2-D04 a failed create ("Illustration"). R2-D05 6.13 created: Neonatology EPA Curriculum (1.0)'s page, Q5's result
+    focused; Details; Open for adoption unticked with its help and "No institution has adopted this version yet."; A new
+    version (the none intro, "1.0-copy", 2026-11-03); the header link "Items (0)". R2-D06 6.29 before the clone: 11.1's
+    page, the box ticked, the reach (KGK, 3), Hold back… offered, A new version "11.1-copy" from 2026-01-02. R2-D07 the
+    clone typed: 11.2, 2026-11-02. R2-D08 6.29 cloned: 11.2's page, Q5's clone result focused, the box unticked, "No
+    institution has adopted this version yet.", "Items (15)". R2-D09 the clone refused: New version empty, then a taken
+    version (two boards, "Illustration"). R2-D10 6.31 before Save: 11.2's box ticked. R2-D11 6.31 saved: T7's opening
+    result focused, the box ticked, Hold back… now offered. R2-D12 Hold back… on 11.1 ("Illustration"): the dialog,
+    opening on Cancel, naming Kgosi Kgari Teaching Hospital and its 3 registrars. R2-D13 held back ("Illustration"):
+    T7's result, the box unticked, Hold back… gone. R2-D14 Save with 11.1's box unticked: the same dialog
+    ("Illustration"). R2-D15 "Curriculum unavailable" (Anton Kruger typing /admin/curricula/1, the Demo IM Core
+    curriculum). R2-D16 loading. R2-D17 the load error. R2-D18 devadmin on 11.2's page ("Illustration": the College named
+    in the subtitle, the same page). R2-D19 Effective to before Effective from, refused under Effective to.
+  The EPA list and an EPA's page in the College's words (R2-E; EV on the boards § VARIATION EV names):
+    R2-E01 1.16: the College's fifteen, the NEW subtitle and caption, no College column (T3), Active, Edit on each row
+    named for it, Create EPA beside the h1 at 1280 (768 too; swept 900–1100). R2-E02 6.17: PAED-012 "Inactive". R2-E03
+    6.28: sixteen, no KGK-001. R2-E04 devadmin's list after 6.28: eighteen rows, the College column, "Kgosi Kgari Teaching
+    Hospital's own EPA" under KGK-001's title, Edit on every row (768 too). R2-E05-EV1 / -EV2 PAED-006's page (6.14)
+    before Save, the title typed: its h1 "PAED-006 — Managing long-term health conditions (LTHCs)", the NEW subtitle,
+    the form, Status Active with its help, Cancel, Deactivate…, Save. R2-E06-EV1 / -EV2 6.14 saved: "EPA saved." focused,
+    the h1 the new title. R2-E07 6.17 the dialog with Q2's reach first, opening on Cancel. R2-E08 6.17 deactivated: "EPA
+    deactivated." focused, Active unticked, Deactivate… gone. R2-E09-EV1 / -EV2 6.23 reactivated: Active ticked and
+    Save, nothing asked, the result focused, Deactivate… back. R2-E10 6.28 Create EPA: the NEW subtitle, Sub-speciality
+    (Paediatrics / Neonatology first, changed to Paediatrics / Paediatrics) with the NEW help, the fields typed. R2-E11-EV1
+    / -EV2 6.28 saved: /admin/epas/18, "PAED-016 — Transitioning adolescents with long-term conditions to adult care",
+    "EPA saved." focused. R2-E12 required empty (Code and Title). R2-E13 a duplicate code (built). R2-E14 a failed save
+    (built words; "Illustration"). R2-E15 "EPA unavailable" (Anton Kruger typing /admin/epas/17, KGK-001). R2-E16 the
+    list loading. R2-E17 the list's load error. R2-E18 the page loading, then its load error (two boards). R2-E19 a College
+    admin with no College on EPAs ("Illustration"). R2-E20 devadmin on PAED-012's page ("Illustration"): the form, the
+    College named in the subtitle.
+  Curricula, the items and an item's page as the College keeps them (R2-F):
+    R2-F01 1.17: the College's Curricula, one row (11.1, Open, 15), the NEW subtitle (768 too). R2-F02 after 6.13:
+    Neonatology 1.0 Held back 0 items, 11.1 Open. R2-F03 after 6.29: 11.2 Held back 15. R2-F04 after 6.31: Neonatology
+    Held back, 11.2 Open 16, 11.1 Open 15 (768 too). R2-F05 1.18: 11.1's items: h1 and trail as built, "Edit this
+    version" (T4) in the header, the notice with "No institution has adopted this version yet." first, "Items (15)", 15
+    rows each with Edit and Remove… named for its EPA, the nothing-to-add line in place of Add item (768 too; swept
+    900–1100). R2-F06 6.13: Neonatology's items, "Items (0)", Q14's line with Go to EPAs, no table, the notice with "No
+    institution …". R2-F07 6.17: 11.1's items with PAED-012 paused (the info notice under the standing one; the row's
+    "(inactive: not in force)"), the reach (KGK, 3). R2-F08 6.29: 11.1's items, "Add item" beside "Items (15)" (PAED-016
+    on no curriculum), the reach (KGK, 3), no KGK-001. R2-F09 6.30 before: 11.2's items, 15 rows, Add item, "No
+    institution …". R2-F10 6.30 the add page: "Add item", the subtitle with the reach, PAED-016 alone and chosen, the
+    values typed (target 1, Academic year, Each academic year, the trainee's general panel, the suggested scale, minimum
+    4, 2 / 3a / 3b / 4, CBD, Mini-CEX, MSF). R2-F11 6.30 added: "Curriculum item added." focused, 16 rows, PAED-016 last,
+    the nothing-to-add line. R2-F12 6.30 Edit PAED-011's page: "Edit PAED-011 — Managing population health challenges",
+    the subtitle with the reach, Target 2. R2-F13 6.30 saved: "Curriculum item saved." focused, PAED-011 "2 per academic
+    year". R2-F14 T242's refusal (Q10; "Illustration": the add page on 11.1, a page read before Kgosi Kgari Teaching
+    Hospital added PAED-016 as its own item): the refusal under EPA, focused, the picker read again. R2-F15 Remove… on
+    11.2's PAED-016 ("Illustration"): the built dialog, opening on Cancel. R2-F16 "Item unavailable" (Anton Kruger
+    typing KGK-001's item on 11.1). R2-F17 "Curriculum unavailable" (/admin/curricula/1/items). R2-F18 devadmin on 11.1's
+    items after 6.26 ("Illustration": KGK-001's row "Kgosi Kgari Teaching Hospital's own item", every row Edit and
+    Remove…, the reach). R2-F19 "Cannot add an item" on Neonatology's add page (/admin/curricula/3/items/new): Q14's words
+    and Go to EPAs. R2-F20 A.7.10 at 390 (390 boards only): EPAs, Curricula, 11.2's items, Edit PAED-001's page, Cancel
+    back with Edit PAED-001 focused, and 11.2's own page (T12): stacked, each control 44 px, nothing sideways; the
+    reach on 11.2's items, its item page and its own page reads 1 registrar (FIXTURES).
+
+ALSO, as flows 12–15's round 2 did:
+  - Every page: one h1 (PageHeader), then h2 per section in order (no <h3> without an <h2>; the scale page's <h3>s become
+    <h2>s); every table captioned (not repeating its heading) with scope on its headers and the row's th scope="row";
+    every row action named for its row, no two alike (M8); loading (the header at once and a skeleton, no action until
+    the read is in); a load error in fixed words with Try again, never an exception's text and no empty state under it
+    (T329, T393); ISO dates; no sideways scroll at 1280, 768 or 390.
+  - Header actions stay beside the title block at 1280 whatever the subtitle's length (states\epas-list--local.png shows
+    Create EPA wrapped under the institution's long subtitle); check the College's and the Administrator's EPA list, the
+    tree and Curricula at 1280 and 1100 and say what each does. At 390 header actions take the row, each 44 px (the
+    system rule).
+  - Focus after every action: each result (created, saved, deactivated, reactivated, deleted, added, cloned, opened, held
+    back) on its ActionResult or Alert; each refusal on its field (Name, Short code, a rung's Label, Version, New version,
+    Code, EPA) or, with no field, on its alert (the rung refusal, a failure, 6.8's); every dialog opening on Cancel, Cancel
+    and Escape returning to its trigger; "Put rung 5 back" to the restored Label; Try again to the reloaded page's h1.
+  - The routes, each with its owner, trail, lit item and tab title: /admin/colleges (Colleges); /admin/colleges/new
+    (Colleges; Home › Colleges › Create college); /admin/colleges/{Id:int} (Colleges; Home › Colleges › ‹name›);
+    /admin/specialities (redirects: the College admin to the College's tree; anyone with no College claim to the NEW
+    words on Specialities, never /admin/colleges); /admin/colleges/{CollegeId:int}/specialities (the tree; the College
+    admin: Specialities lit, Home › Specialities › ‹College›; the Administrator: Colleges lit, Home › Colleges › ‹College›
+    › Specialities); …/specialities/new and …/specialities/{Id:int} (the trail adds "Create speciality" or the name);
+    /admin/specialities/{SpecialityId:int}/sub-specialities (redirects to the tree at that speciality's section,
+    PROPOSED, decided); …/sub-specialities/new and …/{Id:int} (the trail through the tree, then "Create sub-speciality" or
+    the name); /admin/entrustment-scales (lights itself; the College admin admitted, D57); /admin/entrustment-scales/new
+    and /{Id:int} (Entrustment scales; Home › Entrustment scales › ‹name› or Create entrustment scale; the Administrator
+    alone); /admin/epas, /admin/epas/new, /admin/epas/{Id:int} (as flow 15 built them); /admin/curricula; /admin/
+    curricula/new and /{Id:int} (Curricula; Home › Curricula › Create curriculum or ‹name (version)›); /admin/curricula/
+    {Id:int}/items and its item pages (as built); / (the College admin's Home).
+  - Name every design-system component you use (PageHeader with its trail and actions, DashboardCard, StatePanel with
+    Try again, Skeleton, DataTable with StackWide and PagerControls, FormField, FormActions, FieldHelp, FieldRefusal,
+    ActionResult, Alert with Role="" for a standing notice, ConfirmDialog in action mode, the Unavailable state, Icon by
+    its Lucide name), and mark anything else NEW (only § CLASSES' S1, and S2 if measured).
+  - Nothing of flows 01–15 drawn as changed but what this message names: the shell (but for the College admin's menu
+    gaining Entrustment scales); Access denied; the institution's view of every part-2 page, its owner marks and its
+    adoption; My progress, the activity page and the picker (6.18, 6.19, 6.24: no board).
+
+SPEC BOARD, "R2-0-spec" (more boards "R2-0-spec-2", … if it runs long):
+  - FIRST: whether the captures arrived, how, which you opened and which not.
+  - The decisions in one table (Q1–Q17, D56, D57), each with the boards that draw it; then M1–M8, S1–S11, N1–N10, T1–T12
+    and the other points, each with its board; which boards are Illustrations; EV's recommendation and why.
+  - The changes the boards need, written as code changes, each PROPOSED (decided ones say their Q):
+    NavItems: EntrustmentScales joins the CollegeAdmin row after ActivityTypes (D57); DESIGN.md's NavMenu role table
+      with it (NavMenuAuthorizationTests parses it); its owner table: the sub-specialities route redirects to the tree
+      (Specialities / Colleges lit), the scales list lights itself for the College admin.
+    EntrustmentScalesList: its policy admits CollegeAdmin (today AdministratorOrInstitutionalAdmin,
+      EntrustmentScalesList.razor:2); the reader's branch for a College admin; Delete… opens a ConfirmDialog (Q11).
+      EntrustmentScaleEdit stays Administrator; it becomes an EditForm with h2 sections, titled by the scale (T1); an
+      unknown id is Unavailable (today :154–157 return to the list); Remove an outline button; Up, Down and Remove only
+      while nothing uses the scale (Q16), from a "scale in use" read (the delete refusal's uses); its failures fixed words
+      (T393; today :176, :262).
+    UpdateEntrustmentScaleCommand: refuses a reorder or removal on a scale in use (Q16, T395; today the guard runs only
+      on a removal, UpdateEntrustmentScaleCommandHandler.cs:62–84); the rung guard collects every item that needs a
+      removed rung, by EPA code and curriculum name and version, and its count (Q6; today it throws at the first,
+      EntrustmentScaleReferences.cs:213–222, by id and rank); the ended-record refusal in label words (S3).
+    A tree read: every speciality of a College with its sub-specialities and each default scale's name, in one query
+      (today one query per speciality, GetSubSpecialitiesForSpecialityQuery; SubSpecialityDto carries only the scale's
+      id); null for another College or an unknown id, drawn as Unavailable (Q7; today an empty list).
+    CreateSubSpecialityCommand: gains DefaultEntrustmentScaleId (today only the update takes it). The record pages return
+      to the tree with a one-shot token (CatalogueLinks); their Back links go (Q9; CollegeEdit.razor:12,
+      SpecialityEdit.razor:12, SubSpecialityEdit.razor:13, SubSpecialitiesList.razor:10–13); Deactivate… opens a
+      ConfirmDialog, offered only on a record stored active, and Save with Active unticked asks the same (D56; today a
+      btn-danger rendered whenever !IsNew); refusals under their field with the label's words (T324); failures in fixed
+      words (T272; today exception.Message at the lines brief § 5 lists).
+    CreateCollege and UpdateCollege: a check by name and by short code before the save, naming the holder (S10); the
+      database's unique violation only for a race; any other DbUpdateException the failed-save sentence (T272; today
+      every one reads "A college with the same name or short code already exists.", CreateCollege.cs:57–60,
+      UpdateCollege.cs:60–63). "College created." by a one-shot token. Created as the South African day (N2).
+    MySpecialitiesRedirect: a caller with no College reads the NEW words on Specialities (today sent to /admin/colleges,
+      which refuses the College admin; T291 item 2's twin).
+    CollegeAdminDashboard: Q12's sentence and four links; its comment (Q17).
+    The reach (Q2, T8): per curriculum and per EPA, the counts of § THE REACH (DATA); read by the items page, the item
+      page, the EPA page (the dialog; EV2's line), and the curriculum's page.
+    CurriculumEdit: the page of § THE CURRICULUM'S PAGE: titled by the version (T2); no Back links; .user-page and
+      .catalogue-record; the box "Open for adoption" with T301's help (today "Active", CurriculumEdit.razor:72–78), Hold
+      back… and its dialog (Q4, T6); ?created and ?cloned tokens in CatalogueLinks (Q5; today :219–221 and :254–255
+      navigate with no token and :154 clears the status); field refusals with the label's words, no ValidationSummary
+      (T324; today :42, :98); fixed failure words (T393; today :193, :231, :259); Unavailable for null (today /not-found,
+      :176); a loading line (today a bare StatePanel, :36). UpdateCurriculumCommand and CloneCurriculumAsNewVersionCommand:
+      a duplicate only on the unique violation (today every DbUpdateException).
+    CurriculumItemsWords.NothingToAdd: Q14's branch when the discipline has no national EPA (today
+      CurriculumItemsWords.cs:93–97 says every national EPA is already on it); the item page's Cannot add an item the
+      same. CurriculumAdminScope: T242's refusal names the holding institution (Q10; today :286–287 names none).
+    The College's words (T326): EpaWords' College subtitle and caption, the EPA page's College subtitles and help;
+      CurriculaWords.SubtitleCollege; the EPA list's College column off for the College admin (T3); the empty state for a
+      College admin with no College (the design system's known gap: today chosen by MayCreate alone).
+    CurriculumItemsEdit and CurriculumItemPage: the reach in the notice and the subtitle; "Edit this version" (T4).
+  - The class table: every class a board uses, "reuses .x" or NEW and why (S1; S2 only if measured); canvas-only classes
+    (.cv-*, any chip) listed apart and kept off the components.
+  - The 390 scope that gives each page 44 px: .people-page on every list and the tree, StackWide's
+    .clinic-table--stack-wide .btn, .user-page on every record and the curriculum's page, .catalogue-record for their
+    checkbox row, .curriculum-item-page and .epa-page as built, .dialog-card for every dialog; and each table's 768
+    behaviour (StackWide stacks from 900 px down, the EPA list and the items from 1024 px: say so); the 900–1100 sweep's
+    results, table against container.
+  - The DESIGN.md text each changes: § Button system (the deactivation, delete and hold-back questions; Remove on a rung
+    an outline button that asks nothing; no Reactivate button); § Form system (refusals under their field on every part-1
+    form and the curriculum's page, no ValidationSummary; a rung by its label; an item by its EPA and curriculum); §
+    Table system (StackWide on Colleges and the tree; the levels table at 390); § Page-level patterns (a record titled by
+    its name; Unavailable gains College, Speciality, Sub-speciality, Entrustment scale; no Back links; the curriculum's
+    page of sections); § The NavMenu's tables (D57; the redirect); the College admin's Home card.
+  - The tokens: every colour an existing token; contrast checked (text 4.5:1, borders and the focus ring 3:1), the
+    .muted reach line and the inactive line on the surface included.
+  - The DATA reads grouped by query (as above), and every message by kind (result, refusal, hint, notice, empty,
+    failure, question) with its words: built, round 1's, NEW or PROPOSED (THIS ASK), each NEW beside the words it
+    replaces.
+  - Edge cases, one line each with its board: a College with no College admin (CNSA: the Administrator keeps its tree,
+    R2-A10); a College admin whose account names no College (R2-A21, R2-E19); a speciality with no sub-speciality
+    (R2-A12); a sub-speciality whose default ladder another page would delete (refused while it is the default, R2-C08);
+    a ladder whose rung a pinned item needs (R2-C11); a College, speciality or sub-speciality deactivated while an
+    institution has adopted its curriculum (the adoption and its registrars carry on; the dialog says so, no count,
+    R2-A15); two Colleges with similar names (R2-B16); a 2,000-character description (R2-A22, R2-B17); a ladder of 8
+    (R2-C20); a scale used by forty items (the rung refusal's "and 37 more"; words only); the speciality and
+    sub-speciality sharing "Paediatrics" (M8; their tabs both read "Paediatrics · Wombat": the subtitle tells them apart,
+    words only); a version superseded by an institution with registrars still on it (T8; words only); a version held back
+    after an institution adopted it (it keeps it, R2-D12); a curriculum's sub-speciality changed after it has items or an
+    adoption (T11; words only); an adoption made between 00:00 and 02:00 SAST and the Created dates (the South African
+    day; words only); T242's holder (R2-F14).
+
+STEPS BOARD, "R2-0-steps" (more boards "R2-0-steps-2", … if it runs long):
+  - One counting rule, said once at the top and used on every board (N10): a journey counts from Home, presses + fields
+    typed or chosen; a menu link is a press, and at 390 opening the menu is one more; a dialog's confirm is a press; a
+    field that arrives chosen (the preset sub-speciality, the suggested scale, the only EPA) counts as none; a page the
+    app returns to by itself (the tree after Save, the list after Add item) is no press.
+  - The step count: 33 steps, part 1's 18 (1.2–1.4, 1.12–1.15, 6.1–6.8, 6.10–6.12) and part 2's 15 (1.16–1.18, 6.13,
+    6.14, 6.17–6.19, 6.23, 6.24, 6.28–6.31, A.7.10). Round 1's message said "part 1's 19 Expects": it is 18.
+  - Each step, its board, and what its Expect will say once built, quoting today's words and giving the new ones
+    ("unchanged" where so), values person by person and count by count from FIXTURES:
+    1.2 (devadmin, Colleges): two rows, Active, Edit and Specialities named for the row; the header offers Create
+      college. New: the list stacks at 390 (StackWide); Created ISO; the subtitle and caption. The rest unchanged.
+    1.3: Do "Leave by Cancel without saving" (no Back to colleges). Expect: the page is "College of Paediatricians of
+      South Africa", tab "College of Paediatricians of South Africa · Wombat" (S11; today "Edit college", T190), subtitled
+      "CPSA · Active", under Home › Colleges › College of Paediatricians of South Africa; Name, Short code, Description;
+      Active ticked; Deactivate… (outline) and Save offered; leaving saves nothing.
+    1.4: the list's "Edit and Delete on each row" becomes "Edit and Delete… on each row"; the CPSA ladder's page is "CPSA
+      Paediatric Entrustment Scale v11.1" (T1), with Details and Levels as h2 sections, Order beside each label, each
+      descriptor whole; it is in use, so no Up, Down or Remove: "Rungs can be reordered or removed only while nothing uses
+      this scale." above Add level (Q16). Its Note: "a CollegeAdmin is admitted to neither page (Step 1.15)" becomes "a
+      CollegeAdmin reads the list (Step 1.15), and only an Administrator opens a scale's page".
+    1.8 (outside the 33; act-1-setup.md:243–245, :253–254 in the Actual): the card reads Q12's sentence with Specialities,
+      EPAs, Curricula and Activity types; the sidebar reads Home, Specialities, EPAs, Curricula, Activity types,
+      Entrustment scales, then My data rights.
+    1.12: Route unchanged. Expect: the College's tree, subtitled "College of Paediatricians of South Africa (CPSA): its
+      specialities, their sub-specialities and the ladder each uses." (today "College: College of …"); one section,
+      Paediatrics, "Specialist training in Paediatrics." · Active, offering Edit and Create sub-speciality; under it one
+      row, the sub-speciality Paediatrics with its default scale; no Back to colleges; Specialities lit; the trail as
+      today. The header offers Create speciality.
+    1.13: Route /admin/specialities/{SpecialityId:int}/sub-specialities now redirects to the tree at Paediatrics'
+      section (PROPOSED, decided). Do: read the Paediatrics section's table; record {SubSpecialityId} from its Edit link.
+      Expect: one row, Paediatrics, "General paediatric specialist training programme.", CPSA Paediatric Entrustment Scale
+      v11.1, Active, Edit named "Edit the sub-speciality Paediatrics"; no "Speciality: Paediatrics", no Back to
+      specialities. The sub-speciality shares its speciality's name, and there is no "General Paediatrics" (unchanged).
+    1.14: the page is "Paediatrics", subtitled "Sub-speciality of Paediatrics" (today "Edit sub-speciality" / "Speciality:
+      Paediatrics"); Default entrustment scale, its choices and its help unchanged; Active ticked; Deactivate… and Save.
+    1.15 (D57): the step becomes "The College reads the scales". Route /admin/entrustment-scales. Do: open Entrustment
+      scales from the menu. Expect: the reader's subtitle; two scales (CPSA Paediatric Entrustment Scale v11.1, 6; O-R
+      Scale, 5); no Create scale, no actions column, no link; Entrustment scales lit. A scale's own page stays the
+      Administrator's (6.10).
+    1.16: subtitle and caption (NEW); no College column (T3), so "Every row reads College …" goes; Speciality and
+      Sub-speciality as one column, "Paediatrics / Paediatrics" (as built since flow 15: check the Expect's three-column
+      wording against the built list and say so); Active, Edit; Create EPA beside the h1.
+    1.17: the subtitle (NEW); the rest unchanged.
+    1.18: "with no Back links" stays; the header offers "Edit this version" (T4); the warning now begins "No institution
+      has adopted this version yet." (Q2); the rest unchanged.
+    6.1: the first save is refused under Short code, "CPSA is already the short code of College of Paediatricians of South
+      Africa. Choose another." (today "A college with the same name or short code already exists."); a required message
+      names the label, once ("Enter a short code."); the second save opens "College of Neurologists of South Africa",
+      "College created." focused, Active; the list three rows (CNSA, CPSA, Demo College), each Active, Edit and
+      Specialities.
+    6.2: "College saved." focused on the record (the save stays: one press more to read the list); the list shows the
+      new description; "every CPSA page still reads 'College: College of …'" becomes "the tree's subtitle still reads
+      'College of Paediatricians of South Africa (CPSA): …' and the record's 'CPSA · Active'".
+    6.3: Do: "From the new College's row, open its Specialities and create Neurology …" unchanged. Expect: before, "No
+      specialities yet" / "Create the first speciality for College of Neurologists of South Africa."; after, back on the
+      tree with "Speciality Neurology created." focused and one section, Neurology, Active, with "No sub-specialities
+      yet. …" and Create sub-speciality (no "Manage sub-specialities", no "College: …" line on the record).
+    6.4: Do: "On the tree, press Create sub-speciality on Neurology and create Adult Neurology …" Expect: the create page
+      offers Default entrustment scale, "No default — offer every scale" chosen, its choices the two existing scales;
+      Create sub-speciality returns to the tree, "Sub-speciality Adult Neurology created." focused, one row, "No default".
+    6.5: the first save refused under the fourth rung's Label, "“Indirect supervision” is already the label of another
+      rung. Give each rung its own label." (today "Level labels must be unique within a scale."); Do: the form starts with
+      two rungs, so Add level three times (unchanged, built); "Create scale"; the second save opens the scale's page,
+      "Entrustment scale created." focused, five rungs 1 to 5; the list three scales, CNSA at 5.
+    6.6: "Entrustment scale saved." focused (the save stays on the page, built); six rungs, Supervises others at 6, Up,
+      Down and Remove offered (nothing uses it yet); the list reads 6 (a press more).
+    6.7: Route: Colleges › CNSA's Specialities › Edit the sub-speciality Adult Neurology. Expect: Save returns to the tree,
+      "Sub-speciality saved." focused, Adult Neurology's row reading CNSA Neurology Entrustment Scale; reopened, selected;
+      the help unchanged. Still its own step (M7).
+    6.8: "Delete asks first, naming the scale" is now drawn: "Delete CNSA Neurology Entrustment Scale?", opening on
+      Cancel, confirm "Delete scale"; the refusal word for word as today, at the list's top, focused, with "Open Adult
+      Neurology"; the scale stays, 6 levels.
+    6.10: the card reads Q12's sentence with Specialities, EPAs, Curricula and Activity types (today three, and
+      "Institutions adopt an active curriculum"); the menu offers Entrustment scales (the list) but neither page typed;
+      each address Access denied (unchanged).
+    6.11: Route: Specialities › Edit the speciality Paediatrics › the tree. Expect: "Specialities takes Anton Kruger to
+      CPSA's list, which reads 'College: …'" becomes "… to CPSA's tree, subtitled 'College of Paediatricians of South
+      Africa (CPSA): …', with one section"; Save returns to the tree, "Speciality saved." focused, the section's line the
+      new description; no way to the Colleges list (unchanged).
+    6.12: Do: "On the tree, press Create sub-speciality on Paediatrics and create Neonatology, with the description …,
+      choosing the CPSA Paediatric Entrustment Scale v11.1 as its default." (no separate edit). Expect: back on the tree,
+      "Sub-speciality Neonatology created." focused; the section holds Neonatology and Paediatrics, both CPSA, both Active;
+      reopened, Neonatology's default selected; the rest unchanged.
+    6.13: Expect: "The create opens the curriculum's edit page, with Active unticked and a card for cloning it" becomes
+      "Create curriculum opens Neonatology EPA Curriculum (1.0)'s page with 'Neonatology EPA Curriculum (1.0) created. It
+      is held back: no institution can adopt it until you open it.' focused, 'Open for adoption' unticked with T301's
+      help and 'No institution has adopted this version yet.', and A new version below"; the list Held back, 0 items
+      (unchanged); the items page "Items (0)", no rows, "Neonatology has no national EPA yet. Add one under EPAs, then
+      come back to add it here." with Go to EPAs (today "Every national EPA of Neonatology is already on this
+      curriculum", T326).
+    6.14: unchanged but the page's subtitle (NEW), and under EV2 the reach line; "EPA saved."; the h1 the new title.
+    6.17: the question gains Q2's reach as its first paragraph, "PAED-012 is on 1 curriculum adopted by 1 institution,
+      Kgosi Kgari Teaching Hospital; 3 registrars in training are measured against it."; 11.1's items notice begins
+      "Adopted by 1 institution, Kgosi Kgari Teaching Hospital; 3 registrars in training on it."; the rest unchanged.
+    6.18, 6.19, 6.24: unchanged (flows 04, 05 and 03's pages).
+    6.23: unchanged (nothing asks; the result as today); under EV2 the reach line.
+    6.28: the sub-speciality list's help (NEW); the page's subtitle (NEW); under EV2 PAED-016's page reads "PAED-016 is on
+      no curriculum an institution has adopted, so no registrar is measured against it yet."; the rest unchanged.
+    6.29: Route: Curricula › Items (11.1) › Edit this version (T4) › Curricula. Expect: 11.1's items as today, the notice
+      beginning with the reach (KGK, 3); 11.1's page reads its reach under Open for adoption; "The clone form starts with
+      the version '11.1-copy'" stays; "Once cloned, the page is 11.2's, with Active unticked" becomes "… 11.2's, with
+      'Paediatric EPA Curriculum (11.2) cloned from 11.1, with its 15 national items. It is held back.' focused, Open for
+      adoption unticked"; the list 11.2 Held back, 15 items (unchanged).
+    6.30: unchanged but the notice's and the item page's reach ("No institution has adopted …") and the add page's
+      subtitle second sentence.
+    6.31: Do "Open 11.2, tick Open for adoption and save." (today "tick Active"). Expect: nothing asks; "Curriculum saved.
+      It is open for adoption: an institution can adopt it now." focused (T7); Hold back… now offered; the list 11.1 and
+      11.2 Open, 11.2 at 16, Neonatology Held back (unchanged).
+    A.7.10: Do adds 11.2's own page (T12). Expect adds: "11.2's page sets one field a row, each control and the Open for
+      adoption row 44 px, Save on top of Cancel, nothing sideways"; the rest unchanged.
+    Phase 6.B's intro (act-6-catalogue.md:131): "A CollegeAdmin chooses a sub-speciality's default scale from them" gains
+      "and reads their list".
+    6.9, 6.32 to 6.39, A.5.2, A.7.9: unchanged (flow 15's; say so). states.md's rows for the part-1 pages change with
+      the names above (the h1s, Unavailable for the not-found and other-College rows, the dialogs for the deactivated
+      rows): list them.
+  - Search the runbook for the words that change (BRIEF.md § 9 item 7), found by this message; list each hit's step:
+    "Back to colleges" (1.3 Do and Actual, act-1-setup.md:93, :100; 1.12's Actual and Gap, :341–342; 6.11's Actual and
+    Gap, act-6-catalogue.md:243, :249); "Back to specialities" (1.13, act-1-setup.md:350, :354; 6.11's Actual,
+    act-6-catalogue.md:246); "Manage sub-specialities" (6.3's Actual, act-6-catalogue.md:110; 6.11's, :246); "Manage
+    items" and "Clone as new version" (6.13's Actual, act-6-catalogue.md:283); "Edit college" (1.3, act-1-setup.md:95,
+    :98–99; 6.1's Actual, act-6-catalogue.md:73); "Edit speciality" (6.3's Actual, :110); "Edit sub-speciality" (1.14,
+    act-1-setup.md:361, :368); "Edit curriculum" (6.13 and 6.29's Actuals, act-6-catalogue.md:282, :771); "Speciality:
+    Paediatrics" (1.13, 1.14, act-1-setup.md:349, :353, :361, :369; not the panel's Scope in acts 2 and 4, which is
+    another page); "College: College of" (1.12, act-1-setup.md:332, :338; 6.2, act-6-catalogue.md:85; 6.3, :103, :108;
+    6.11, :237); "tick Active" (6.31, act-6-catalogue.md:818; not 6.23's, :582, an EPA's box, unchanged); "Active
+    unticked" (6.13, act-6-catalogue.md:274, :282; 6.29, :764, :772; 6.31's Actual, :822; states.md:803, :805; not
+    6.17's, an EPA's); "Level labels must be unique" (6.5); "National catalogue, with Specialities, EPAs and Curricula"
+    (1.8, act-1-setup.md:243, :253; 6.10, act-6-catalogue.md:219, :225); "a CollegeAdmin is admitted to neither page"
+    (1.4's Note, act-1-setup.md:115); "Every national EPA of Neonatology" (6.13's Actual, act-6-catalogue.md:287).
+  - Each journey's count at 1280 and 390, each press named, today's beside it (round 1's assessment's figures, to check
+    by the rule): reading the tree (1.12–1.14: 1 + 0, 390 2 + 0; today 3 + 0); a sub-speciality with its default (6.12:
+    Specialities, Create sub-speciality, 3 fields, Create sub-speciality; 3 + 3; today 5 + 3); the CNSA's first speciality
+    and sub-speciality (6.3, 6.4: 6 + 4) and its default (6.7: Colleges, Specialities on CNSA, Edit the sub-speciality
+    Adult Neurology, the scale, Save: 4 + 1), 10 + 5 in all; a College created after a refusal (6.1); a description
+    corrected (6.2; today 4 + 1); a ladder created after a refusal (6.5; today 7 + 13) and its sixth rung (6.6); Delete
+    asked and refused (6.8: Entrustment scales, Delete…, Delete scale; 3 + 0; today 2 + 0); a curriculum created (6.13);
+    an EPA corrected (6.14), paused (6.17) and added (6.28); a clone (6.29: Curricula, Edit, 2 fields, Clone); the items
+    edited (6.30); a version opened (6.31: Curricula, Edit, the box, Save; 3 + 1; today 3 + 1).
+
+CHECK BEFORE YOU STOP: one h1 a board; no inline style; no undefined class; no raw colour; no .wf-* and no .rung-edit*;
+  no Back link on any part-1 page or the curriculum's page; Entrustment scales in Anton Kruger's menu on every board;
+  Home's card with four links; every dialog naming its target and opening on Cancel; no count in a deactivation dialog;
+  6.8's sentence word for word; no Up, Down or Remove on a scale in use; no "level 6", "Curriculum item 2" or id on any
+  page; Q7's Unavailable words, never which cause; every 390 control 44 px, the checkbox rows included; nothing scrolls
+  sideways at 1280, 768 or 390, and every new table measured from 900 to 1100 against its container; no gendered pronoun
+  for a person on any board, annotations included (N8); every bracket ‹…› still a bracket, never filled from memory;
+  every board's 390 and 768 twin carries the same words as its 1280 board; f16r2.css saved as a project file; the Spec
+  says first whether the captures arrived.
