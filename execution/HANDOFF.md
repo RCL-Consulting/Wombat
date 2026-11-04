@@ -19,9 +19,9 @@ The operator said "what is next", then "Drop the scratch db's and start the next
 - **Round 2's ask written** (`c969d474`, `design/flows/16-college-catalogue/round-2-ask.txt`; 70 captures staged in
   `design/upload/baseline/`, listed in its "ATTACHED, AGAIN"). T1–T12 provisional, for round 2's review.
 - **Round 2 drawn** (306 boards saved, `19f3eac5`; captures read from the folder this time).
-- **In flight:** three Sonnet reviews (code, cast, design system) each commit `round-2-review-*.md`. Any missing from
-  `git log`: rerun it (flow 15's file of the same name is the template). Then merge into `round-2-review.md`, check
-  every must against the code, and bring the operator the decisions. Not pushed.
+- **Round 2 reviewed** (three Sonnet reviews merged into `round-2-review.md`): M1–M5; Q18–Q21 put to the operator.
+- **Next:** the operator's answers, then round 3's ask (the correction round: M1–M5, the shoulds, the nits as one list).
+  Not pushed.
 
 ## Session 2026-11-02/03 (Opus): T392's replay, re-sync and lessons; T392 done
 

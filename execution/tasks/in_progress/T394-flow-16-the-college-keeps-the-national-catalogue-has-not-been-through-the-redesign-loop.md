@@ -116,3 +116,7 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
 - **2026-11-04, round 2** (306 boards and `f16r2.css` in `round-2/`, `19f3eac5`; the operator sent the ask and said
   "done"; the canvas read all 70 captures from `design/upload/baseline/`, none as attachments). Three Sonnet reviews
   running (code, cast, design system → `round-2-review-{code,cast,ds}.md`); the merge into `round-2-review.md` follows.
+- **2026-11-04, round 2 reviewed** (three Sonnet agents: code `d4f98c5c`, cast `2c9161ef`, ds `7bb27d42`; merged here,
+  `6e7af73a`, `round-2-review.md`): M1–M5 checked against the boards and the code (Q6/Q16 order; the CNSA scale missing
+  from four selects; F18's "Items (15)"; required marks; accessible names); the shoulds and nits carried. Q18–Q21 for the
+  operator (the refusals' order, a curriculum's sub-speciality fixed once used, header actions in app.css, EV2).
