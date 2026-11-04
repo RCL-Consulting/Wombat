@@ -130,3 +130,6 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   the Illustration chip rule; stacking breakpoints (1024; the items 1100) recommended, not decided.
 - **2026-11-04, round 3 drawn** on a second canvas (the operator: "it required a new canvas"): "Wombat 16 · Round 3"
   https://claude.ai/artifact/W1R56z3QGxfK2GPMEcp3c9. Saving to `round-3/` (one Sonnet agent).
+- **2026-11-04, round 3 saved** (230 boards, `f16r3.css`, `ae5e007b`; design system installed on the second canvas,
+  `tokens.css` present, its record's version null). The canvas reports page overflow 0 from 768 to 1280; the check
+  (one Sonnet agent → `round-3-check.md`) judges the tables against their containers.
