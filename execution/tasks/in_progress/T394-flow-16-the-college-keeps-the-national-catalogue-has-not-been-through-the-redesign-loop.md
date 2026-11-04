@@ -128,3 +128,5 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   new (R3-C11/C13 on the CNSA scale as read at 6.6, R3-D20 Q19's refusal, four sweep-edge boards); EV1 dropped. Its own
   calls, for the check: Q19's read-out on every redrawn 11.1/11.2 page; F18's two counts (16 rows, the College's 15);
   the Illustration chip rule; stacking breakpoints (1024; the items 1100) recommended, not decided.
+- **2026-11-04, round 3 drawn** on a second canvas (the operator: "it required a new canvas"): "Wombat 16 · Round 3"
+  https://claude.ai/artifact/W1R56z3QGxfK2GPMEcp3c9. Saving to `round-3/` (one Sonnet agent).
