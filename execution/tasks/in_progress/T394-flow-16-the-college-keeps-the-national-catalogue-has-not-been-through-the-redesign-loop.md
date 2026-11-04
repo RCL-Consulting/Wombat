@@ -138,3 +138,8 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   regression; the check board overclaims M4's hidden "required" on rung labels and counts 40 captures for 39. Widths by
   arithmetic: the four tables fit above 1024 with 50–120 px spare, the items above 1100 with 50–100 px. Decisions 1–5
   put to the operator before step 6.
+- **2026-11-04, round 3's decisions 1–5** taken as recommended ("yes"): (1) a browser sweep of the four tables at
+  900–1100 px against their containers, in the build, before the replay; (2) the items' thin margin above 1100 accepted
+  if (1) confirms it; (3) S15/N1's words and T8's stale references settled in the build plan, no round 4; (4) A22's
+  fixture cut to the 2,000 cap; (5) Q19's refusal names its cause (it has items, or the adopting institution by name).
+  **Next:** step 6.
