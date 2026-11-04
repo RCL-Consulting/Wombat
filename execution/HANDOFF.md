@@ -9,7 +9,7 @@ The operator said "what is next", then "Drop the scratch db's and start the next
   (`wombat_scenario_t290`…`_t392`, `_pdf`, bare `wombat_scenario`): the operator's call whether they go too.
 - **T394 filed and started** (flow 16, the College keeps the national catalogue; `2bbc0768`). Steps 3–4 done: canvas
   "Wombat 16" https://claude.ai/artifact/AqaH447KL91WCTbjQFJnWf, design system v45 installed, `tokens.css` by hand,
-  the mark at `/_blob/ce366cc30297c5a90255d5d0a88fa6b5`. Canvas scratch: `...ƽ60d182d14635f8969ed0-...\scratchpad\c16`.
+  the mark at `/_blob/ce366cc30297c5a90255d5d0a88fa6b5`. Canvas scratch: `...\67560d182d14635f\28969ed0-c979-487c-82e2-606d8331c3a3\scratchpad\c16`.
 - **In flight:** one Opus agent runs steps 1–2 (restate `design/flows/16-college-catalogue.md`, the two check scripts,
   `stage_upload.ps1 -Flow 16`, `round-1-ask.txt` with a `MARK:` placeholder) and commits them itself. If the session
   ended before it reported: check `git log` for "flow 16 brief restated"; if absent, rerun steps 1–2.
