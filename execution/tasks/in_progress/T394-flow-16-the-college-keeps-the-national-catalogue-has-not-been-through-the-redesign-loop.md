@@ -113,3 +113,6 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   line on a national EPA's page); all 70 of § 4's captures to attach, re-staged (`design/upload/baseline/`, 70 found).
   T1–T12 settled provisionally in the ask for round 2's review; T11 (a curriculum's sub-speciality editable after items
   or an adoption) drawn as built. **Next:** the operator sends it and says "done".
+- **2026-11-04, round 2** (306 boards and `f16r2.css` in `round-2/`, `19f3eac5`; the operator sent the ask and said
+  "done"; the canvas read all 70 captures from `design/upload/baseline/`, none as attachments). Three Sonnet reviews
+  running (code, cast, design system → `round-2-review-{code,cast,ds}.md`); the merge into `round-2-review.md` follows.
