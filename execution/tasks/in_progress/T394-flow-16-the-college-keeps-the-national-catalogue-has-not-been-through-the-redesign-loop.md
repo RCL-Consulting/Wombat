@@ -100,3 +100,7 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
 - **2026-11-04, round 1** (50 boards and `f16r1.css` in `round-1/`, `b486bb38`; the operator sent the ask and said
   "done"): A1–A3 the tree as wireframes (the canvas recommends A2, one page per College), B1/B2 Colleges, C1/C2 scales,
   each at 1280 and 390, plus Spec and Steps. Assessment running (one Opus agent → `round-1-assessment.md`).
+- **2026-11-04, round 1 assessed** (one Opus agent, `83a42356`): picks A2 (Q1), B1 (D56), C1 (Q11, 6.8) with C2's
+  textarea; M1–M8 (D57, Q12, Q7, Q11, Q6 contradicted; B2's Reactivate; the Steps board's 6.7/1.15 and missed Expects;
+  two "Edit Paediatrics"); 18 part-1 steps (the ask's 19 a miscount); no capture reached the canvas. Q15–Q17 for the
+  operator. Q16 checked here (`UpdateEntrustmentScaleCommandHandler.cs:61-84` guards removals only): proposed as T395.
