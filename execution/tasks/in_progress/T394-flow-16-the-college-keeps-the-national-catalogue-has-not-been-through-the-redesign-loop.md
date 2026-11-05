@@ -242,3 +242,10 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   :5180, nothing over), published. Unfiled, for review: reactivating a speciality or sub-speciality says only "… saved."
   (the College's record says "reactivated"); a duplicate speciality's refusal names no holder. Scratch DBs `_s10`-`_s12`
   kept for pass 2. States pass 2 running (it re-takes 1.2, 6.1, 6.12 and five states rows on `7d4c4490`).
+- **2026-11-05, states pass 2** (one Opus agent, `1e1ca1fc`): 48 rows, 47 hold, 1 corrected
+  (`entrustment-scales-list--delete-refused`, quoted as built); the Created and Default-scale squeezes gone. It found the
+  room still on one-word columns: Colleges' Short code ("DEMO-" / "C", from `7d4c4490`), the scales' Levels (634px),
+  the EPA lists' Status (the brief's three old-width EPA list states) and the curricula's Effective and count. Fixed
+  here (`f7cb1903`: `.col-fit--wide` from 1025px; text columns widened); swept 390-1440 as devadmin, Dr Kruger and Ms
+  Mbatha, no table or page over; Web 4675 green; published. One Opus agent re-takes those lists' 1280 captures.
+  Scratch DBs `_s10`-`_s12`, `_s20`, `_s21` kept until it reports.
