@@ -208,3 +208,9 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   `replay-brief.md` and the act prompts (scratch `g394`); then one agent per act in order, then two states passes.
 - **2026-11-05, the replay brief** (`48034e43`; g394's generators and prompts: acts 1, 6 and A carry flow 16's changed
   steps, the 900–1100 sweep on 1.2, 1.4, 1.12, 1.16–1.18, 6.1, 6.12; states 103 rows over two passes). **Act 1 runs.**
+- **2026-11-05, act 1 replayed** (`c414a804`; 31 steps, dump `scenario-t394-post-act1`): no flow 16 regression of
+  substance; everything flow 16 changed in the act held, the 900–1100 sweep included; six known-task gaps (T327, T326,
+  T271, T291, T324). Two squeezed columns at 1280 (1.2 Colleges' Name over three lines; 1.12 the tree's Description one
+  word a line) fixed on master `a2878763` and measured on a scratch copy of act 1's state (Name 144→272 px, Description
+  144→389 px, the tree's row 6→4 lines, no overflow 1025–1280); **not published to :5180 until the acts finish**, then
+  1.2 and 1.12's captures re-taken. Act 2 runs.
