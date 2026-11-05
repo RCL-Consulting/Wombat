@@ -203,3 +203,6 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   (143 files; master builds with 0 warnings; `check_baseline_paths.py` on master missing 0). T395 closed (built in lane
   B), T397 done. Worktrees `t394*` removed (branches kept), `wombat_scenario_t394_sweep` dropped. **Next:** step 7, the
   replay, on the operator's word.
+- **2026-11-05, step 7 started** (the operator: "proceed"): fresh `wombat_scenario_t394`, published from master
+  `c2de9b7b` (code as `de4cc718`), the replay app on :5180 (migrated and seeded at start). One Opus agent writes
+  `replay-brief.md` and the act prompts (scratch `g394`); then one agent per act in order, then two states passes.
