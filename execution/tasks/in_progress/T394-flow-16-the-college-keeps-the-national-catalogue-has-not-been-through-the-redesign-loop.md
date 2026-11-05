@@ -191,3 +191,5 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   should, 11 nit, ~38 words on no board; merged `build-review.md` on t394): M1 checked here (A.7.10's "1 registrar"
   on 11.2, but Dr Ndlovu's erasure at A.1.12 ends the only one: the runbook is wrong, the build right). F1 (the fix
   pass's scope; S-1's check-then-save race to its own task) and F2 (the words) put to the operator.
+- **2026-11-05, F1 and F2 taken** ("yes"): the fix pass (one Opus agent on `t394`) takes M1, should-fixes 1–8 and every
+  nit; the words on no board accepted; S-1 proposed as **T396** (the guards' check-then-save race).

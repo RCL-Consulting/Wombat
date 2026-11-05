@@ -29,8 +29,11 @@ The operator said "what is next", then "Drop the scratch db's and start the next
   suites green on the merge (836/4402/1035/52/4670/524, a flaky test fixed `ed7635a4`); the sweep passed after moving
   Curricula to the 1100px stack (`0e6ff53a`, `sweep.md`). Lane W merged (`770c0b27`). **Two Sonnet reviews run**
   (`build-review-code.md`, `build-review-pages.md` on `t394`); if absent, rerun them. Scratch DB `wombat_scenario_t394_sweep` kept (drop at the end).
-- **Next:** merge the reviews into `build-review.md`, the operator's word on the fix pass, one fix pass, squash onto master (DESIGN.md's
-  banner lists flow 16); close T395. Then step 7, the replay. Not pushed.
+- **Reviewed** (`build-review.md` on t394, `c067f8fe`: 1 must, 9 should, 19 nit); F1/F2 taken; S-1 proposed as T396.
+  **The fix pass runs** (one Opus agent on `t394`); if it has no commits past `c067f8fe`, rerun it.
+- **Next:** squash `t394` onto master (DESIGN.md's banner lists flow 16), `check_baseline_paths.py` on master, close
+  T395; then step 7, the replay (flow 15's `replay-brief.md`). Drop `wombat_scenario_t394_sweep` and the lane worktrees
+  after the squash. Not pushed.
 
 ## Session 2026-11-02/03 (Opus): T392's replay, re-sync and lessons; T392 done
 
