@@ -1,11 +1,14 @@
 ---
 id: T395
 title: Reordering the rungs of an entrustment scale in use goes unchecked, so every curriculum item's pinned minimum silently changes meaning
-status: proposed
-priority:
+status: done
+priority: P2
 owner: agent
 depends_on: []
 created: 2026-11-04
+promoted: 2026-11-05
+started: 2026-11-05
+completed: 2026-11-05
 ---
 
 # <id> — <one line that states the defect or the goal, not the solution>
@@ -55,3 +58,11 @@ _Task ids, decisions (`D<n>` for product, `W-<n>` for process), files, commits._
 ## Notes
 
 _Observed facts, inferences, and unknowns. Label them when the difference matters._
+
+## Closed
+
+2026-11-05: built in flow 16 (T394, lane B; squashed onto master as `de4cc718`), as the operator decided (Q16, P2): Up,
+Down and Remove are offered only on a scale nothing uses, and `UpdateEntrustmentScaleCommand` refuses a reorder or a
+removal on one in use (`EntrustmentScaleUses`, the delete's seven uses), after Q6's named refusals (Q18). Proved by
+`EntrustmentScaleReorderGuardTests` (nine tests) and `CatalogueReadsPostgresTests`. Its PostgreSQL half (a reorder on an
+unused scale) was T397.

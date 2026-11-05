@@ -2,38 +2,22 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-11-04 (Opus): scratch DBs dropped; T394, flow 16, started
+## Session 2026-11-04/05 (Opus): T394, flow 16, designed and built (steps 1–6)
 
-The operator said "what is next", then "Drop the scratch db's and start the next flow".
-- Dropped `wombat_scenario_t387_s10`, `_s20`, `_s21`, `_s22`, `_s515`. Kept the replays' end-state DBs
-  (`wombat_scenario_t290`…`_t392`, `_pdf`, bare `wombat_scenario`): the operator's call whether they go too.
-- **T394 filed and started** (flow 16, the College keeps the national catalogue; `2bbc0768`). Steps 3–4 done: canvas
-  "Wombat 16" https://claude.ai/artifact/AqaH447KL91WCTbjQFJnWf, design system v45 installed, `tokens.css` by hand,
-  the mark at `/_blob/ce366cc30297c5a90255d5d0a88fa6b5`. Canvas scratch: `...\67560d182d14635f\28969ed0-c979-487c-82e2-606d8331c3a3\scratchpad\c16`.
-- **Steps 1–2 done** (`999b7fc9`; the mark filled into `round-1-ask.txt` in `472e7a5c`; T394's Notes have what is
-  gone and what remains). The operator took § 6's Q1–Q14 as recommended ("yes"): Q3 is **D56**, Q8 **D57**.
-- **Round 1 drawn** (the operator: "done"): 50 boards saved to `design/flows/16-college-catalogue/round-1/` (`b486bb38`).
-- **Round 1 assessed** (`83a42356`): picks A2, B1, C1; M1–M8; Q15–Q17 put to the operator. T395 proposed (rung reorder
-  on a scale in use is unchecked; the assessment's Q16).
-- The operator took A2, B1, C1 and Q15–Q17 as recommended (`b18559b5`).
-- **Round 2's ask written** (`c969d474`, `design/flows/16-college-catalogue/round-2-ask.txt`; 70 captures staged in
-  `design/upload/baseline/`, listed in its "ATTACHED, AGAIN"). T1–T12 provisional, for round 2's review.
-- **Round 2 drawn** (306 boards saved, `19f3eac5`; captures read from the folder this time).
-- **Round 2 reviewed** (three Sonnet reviews merged into `round-2-review.md`): M1–M5; Q18–Q21 put to the operator.
-- Q18–Q21 taken as recommended (`a73f57d4`).
-- **Round 3's ask written** (`84f211f4`, `round-3-ask.txt`: 51 corrections, 214 screens redrawn, 10 new).
-- **Round 3 drawn and saved** on a second canvas, "Wombat 16 · Round 3"
-  https://claude.ai/artifact/W1R56z3QGxfK2GPMEcp3c9 (the operator: "it required a new canvas"); 230 boards, `ae5e007b`.
-- **Round 3 checked** (`e2977baa`: 55/59 done, 4 partly); the operator took decisions 1–5 (`c9609325`).
-- **Step 6:** plan `b0717eb2`, § 0 `9f25092c`; lanes A–D merged into `t394` (worktree `.claude/worktrees/t394`);
-  suites green on the merge (836/4402/1035/52/4670/524, a flaky test fixed `ed7635a4`); the sweep passed after moving
-  Curricula to the 1100px stack (`0e6ff53a`, `sweep.md`). Lane W merged (`770c0b27`). **Two Sonnet reviews run**
-  (`build-review-code.md`, `build-review-pages.md` on `t394`); if absent, rerun them. Scratch DB `wombat_scenario_t394_sweep` kept (drop at the end).
-- **Reviewed** (`build-review.md` on t394, `c067f8fe`: 1 must, 9 should, 19 nit); F1/F2 taken; S-1 proposed as T396.
-  **The fix pass runs** (one Opus agent on `t394`); if it has no commits past `c067f8fe`, rerun it.
-- **Next:** squash `t394` onto master (DESIGN.md's banner lists flow 16), `check_baseline_paths.py` on master, close
-  T395; then step 7, the replay (flow 15's `replay-brief.md`). Drop `wombat_scenario_t394_sweep` and the lane worktrees
-  after the squash. Not pushed.
+The operator said "Drop the scratch db's and start the next flow", then "yes" at each decision (§ 6 Q1–Q14; round 1's
+picks and Q15–Q17; round 2's Q18–Q21; round 3's decisions 1–5; the build's P1–P3; F1 and F2), "done" after each round
+(round 3 "required a new canvas"), and "Fix T397 now".
+- **Design:** canvases "Wombat 16" https://claude.ai/artifact/AqaH447KL91WCTbjQFJnWf (rounds 1–2) and "Wombat 16 · Round 3"
+  https://claude.ai/artifact/W1R56z3QGxfK2GPMEcp3c9. D56 (deactivation asks first) and D57 (the College reads the scales).
+- **Built and squashed onto master `de4cc718`** (§ 0, lanes A–D, the sweep, lane W, two Sonnet reviews, one fix pass,
+  T397's fix): suites 836/4411/1035/52/4675/530; master builds with 0 warnings; baseline missing 0. T395 and T397 done.
+- **For review:** T396 (proposed: the Q16/Q19 guards' check-then-save race); the lanes' departures from the boards and the
+  ~38 words on no board, accepted (F2); Colleges with five rows (R3-B16) not swept. `scenario-replay.ps1 stop` misses the
+  app it started (twice this session): stop by process id after reading its command line. bUnit's
+  `blazor:elementReference` guids can break a "markup holds no N" assertion.
+- **Next:** step 7, the replay of the whole runbook on a fresh database (flow 15's `replay-brief.md`), on the operator's
+  word; then steps 8 (re-sync the design system) and 9 (lessons). Not pushed: master is ahead of origin.
+- **Environment:** no app running; lane branches `t394*` kept, worktrees removed; scratch DBs of this flow dropped.
 
 ## Session 2026-11-02/03 (Opus): T392's replay, re-sync and lessons; T392 done
 

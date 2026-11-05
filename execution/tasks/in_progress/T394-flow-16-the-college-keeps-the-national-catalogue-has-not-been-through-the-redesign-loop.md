@@ -60,10 +60,10 @@ Run the loop as flow 15 ran it (`design/flows/15-institution-adopts-catalogue/`,
 
 ## Verification
 
-- [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit.
-- [ ] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link.
-- [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/16-college-catalogue/`.
-- [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 16) — the squash commit and counts.
+- [x] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit. (`999b7fc9`)
+- [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link. (https://claude.ai/artifact/AqaH447KL91WCTbjQFJnWf; round 3 on https://claude.ai/artifact/W1R56z3QGxfK2GPMEcp3c9)
+- [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/16-college-catalogue/`. (rounds 1–3, `round-3-check.md`, `e2977baa`)
+- [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 16) — the squash commit and counts. (`de4cc718`; 836/4411/1035/52/4675/530)
 - [ ] The whole runbook replays on a fresh database with no regression from flow 16, the baseline is re-captured, and
   flow 16's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
 - [ ] The design system is re-synced and republished — its version number.
@@ -199,3 +199,7 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   **New defect** found by its PostgreSQL tests: reordering an unused scale's rungs fails (EF circular dependency on the
   unique (scale, order) index), reported as on master too: proposed as **T397**; the operator's call whether it is fixed
   before the squash.
+- **2026-11-05, T397 fixed on t394** (the operator: "Fix T397 now"; `5663b192`) and **squashed onto master `de4cc718`**
+  (143 files; master builds with 0 warnings; `check_baseline_paths.py` on master missing 0). T395 closed (built in lane
+  B), T397 done. Worktrees `t394*` removed (branches kept), `wombat_scenario_t394_sweep` dropped. **Next:** step 7, the
+  replay, on the operator's word.

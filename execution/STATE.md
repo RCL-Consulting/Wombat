@@ -54,6 +54,7 @@ each designed, replayed and in the design system (version 45). Left: flows 16–
 
 ## Recent
 
+- **2026-11-05:** T394, flow 16, built (`de4cc718`; steps 1–6; T395, T397 done; the replay next).
 - **2026-11-03:** T392, flow 15, done (`c931d56f`; replay 332 steps, 303 clean, two layout faults fixed; design system v45).
 - **2026-10-30:** T387, flow 14, done (`e8eea1d2`; replay 332 steps, 295 clean, no regression; design system v41).
 - **10-28 and before:** T312 and T379 (flow 13, design system v37), T376 (flow 12), T373 (flow 11), T369 (flow 10); T290 (D54, D55); T366 (flow 09), T364, T361, T358, T355, T350, T342, T339, T335 (flows 08 to 01); the repo moved to GitHub. Earlier: `git log`.
