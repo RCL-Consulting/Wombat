@@ -204,7 +204,7 @@
               <th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Curriculum</th>
               <th scope="col" role="columnheader" class="col-wrap">College</th>
               <th scope="col" role="columnheader" class="col-wrap">Discipline</th>
-              <th scope="col" role="columnheader">Effective</th>
+              <th scope="col" role="columnheader" class="col-fit--wide">Effective</th>
               <th scope="col" role="columnheader">Items</th>
               <th scope="col" role="columnheader">@(named is null ? CurriculaWords.StateColumn : CurriculaWords.InstitutionStateColumn)</th>
               <th scope="col" role="columnheader" class="col-fit"><span class="visually-hidden">Actions</span></th>
@@ -216,7 +216,7 @@
               <th scope="row" role="rowheader" class="col-wrap">@CurriculaWords.Name(curriculum.Name, curriculum.Version)</th>
               <td role="cell" data-label="College" class="col-wrap">@curriculum.CollegeName</td>
               <td role="cell" data-label="Discipline" class="col-wrap">@CurriculaWords.Discipline(curriculum.SpecialityName, curriculum.SubSpecialityName)</td>
-              <td role="cell" data-label="Effective">@CurriculaWords.Day(curriculum.EffectiveFrom)</td>
+              <td role="cell" data-label="Effective" class="col-fit--wide">@CurriculaWords.Day(curriculum.EffectiveFrom)</td>
               <td role="cell" data-label="Items">@CurriculaWords.Items(state, named is not null)</td>
               <td role="cell" data-label="@(named is null ? CurriculaWords.StateColumn : CurriculaWords.InstitutionStateColumn)">
                 @CurriculaWords.State(state)

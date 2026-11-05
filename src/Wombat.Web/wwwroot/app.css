@@ -7472,8 +7472,8 @@ a.dashboard-metric:hover .dashboard-metric-label {
 
 /* Curricula is a table from 1151px (it stacks to 1150). The College's and the Administrator's lists (.curricula-catalogue)
    give Curriculum 30% and College and Discipline 18% of what Effective, the count and Status ("Held back") give back. An
-   institution's tables keep the shared widths: their Items sentence ("16 national · 1 … own") and adoption line need
-   the room (the re-take after f7cb1903 found Items on four to seven lines in 88px). */
+   institution's tables keep the shared widths, Effective fitted: their Items sentence ("16 national · 1 … own") and
+   adoption line need the room (the re-take after f7cb1903 found Items on four to seven lines in 88px). */
 @media (min-width: 1151px) {
   .curricula-page .clinic-table.curricula-catalogue th.col-wrap--wide {
     width: 30%;
