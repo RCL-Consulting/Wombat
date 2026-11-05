@@ -219,3 +219,6 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   `scenario-t394-post-act2`. Act 3 running.
 - **2026-11-05, act 3 replayed** (one Opus agent, `7d728f5c`): 60 steps, 58 clean; 3.55 and 3.56 keep their known-task
   Gaps (T286 twice, T277); outcome SQL as expected; Q20 holds. Dump `scenario-t394-post-act3`. Act 4 running.
+- **2026-11-05, act 4 replayed** (one Opus agent, `ca410c64`): 50 steps, 44 clean; known Gaps only (4.2 T365, 4.27
+  T320, 4.25/4.29/4.41/4.42 T370's Present order), each as T392's replay; outcome SQL as expected; Q20 holds; 103 of 107
+  captures retaken (4.21-1/-2, 4.38-2/-3 have no state any more). Dump `scenario-t394-post-act4`. Act 5 running.
