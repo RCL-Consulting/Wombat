@@ -249,3 +249,9 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   here (`f7cb1903`: `.col-fit--wide` from 1025px; text columns widened); swept 390-1440 as devadmin, Dr Kruger and Ms
   Mbatha, no table or page over; Web 4675 green; published. One Opus agent re-takes those lists' 1280 captures.
   Scratch DBs `_s10`-`_s12`, `_s20`, `_s21` kept until it reports.
+- **2026-11-05, the lists' re-take** (one Opus agent, `095de27c`): 47 1280 captures on `f7cb1903`; 1.2 and 6.1 now
+  "Gap: none"; missing 0. It found `f7cb1903`'s curricula widths squeezing an institution's Items sentence (4-7 lines
+  in 88px). Fixed (`c6bbb641`: those widths only on the College's and the Administrator's lists, `.curricula-catalogue`,
+  Status fitted there); the institution's table also ran 17px over at 1101px at the appendix's end, so Curricula and
+  the items stack to 1150px (DESIGN.md § Table system amended). Swept 390-1440 as three roles, nothing over; Web 4675.
+  One Opus agent re-takes the curricula captures. Scratch DBs `_s10`-`_s12`, `_s20`-`_s25` kept until it reports.
