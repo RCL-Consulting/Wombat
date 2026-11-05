@@ -182,3 +182,8 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   Curricula 756/717 px at 1025 and 742 at 1050, so `.curricula-page` moved to the 1100px stack; second pass 0 fails;
   decision 2 accepted (spare 0). Not measured: Colleges' heavy five (R3-B16). `scenario-replay.ps1 stop` again missed
   the app (stopped by id after reading its command line). Lane W running (`t394-runbook`, cut at `ed7635a4`).
+- **2026-11-05, lane W merged** (`t394-runbook` `2e29f5df`, merged `770c0b27`; Web 4670): steps 1.2–1.4, 1.8,
+  1.12–1.18, 6.1–6.8, 6.10–6.14, 6.17, 6.23, 6.25–6.26, 6.28–6.31, A.7.10; F-1.12a, F-6.1a, F-6.8a, F-6.11a, F-6.13a
+  closed; Q6's rung refusal listed as unreachable from the UI; verbatim 0 problems, completeness exit 0. Its baseline
+  check's "4 missing" (and 3164 in a worktree) is because the captures are not in a worktree: rerun on master after
+  the squash (master: missing 0). Two Sonnet reviews running (code; pages and runbook).
