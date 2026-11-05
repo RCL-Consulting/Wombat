@@ -96,11 +96,11 @@
                     <th scope="col" role="columnheader" class="col-wrap">@CollegeTreeWords.SubSpecialityColumn</th>
                     @if (described)
                     {
-                      <th scope="col" role="columnheader" class="col-wrap">@CollegeTreeWords.DescriptionColumn</th>
+                      <th scope="col" role="columnheader" class="col-wrap col-wrap--wide">@CollegeTreeWords.DescriptionColumn</th>
                     }
                     <th scope="col" role="columnheader" class="col-wrap">@CollegeTreeWords.DefaultScaleColumn</th>
                     <th scope="col" role="columnheader">@CollegeTreeWords.StatusColumn</th>
-                    <th scope="col" role="columnheader"><span class="visually-hidden">@CollegeTreeWords.ActionsColumn</span></th>
+                    <th scope="col" role="columnheader" class="col-fit"><span class="visually-hidden">@CollegeTreeWords.ActionsColumn</span></th>
                   </tr>
                 </HeaderRow>
                 <Row Context="sub">
@@ -112,7 +112,7 @@
                     }
                     <td role="cell" class="col-wrap" data-label="@CollegeTreeWords.DefaultScaleColumn">@(sub.DefaultEntrustmentScaleName ?? CollegeTreeWords.NoDefault)</td>
                     <td role="cell" data-label="@CollegeTreeWords.StatusColumn">@CollegeTreeWords.Status(sub.IsActive)</td>
-                    <td role="cell">
+                    <td role="cell" class="col-fit">
                       <div class="actions-cell">
                         <a class="btn btn-outline btn-sm" href="@CatalogueLinks.SubSpeciality(speciality.Id, sub.Id)"
                            aria-label="@CollegeTreeWords.EditSubSpecialityName(_rowNames[sub.Id])">@CollegeTreeWords.Edit</a>

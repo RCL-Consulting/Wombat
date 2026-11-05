@@ -7439,6 +7439,21 @@ a.dashboard-metric:hover .dashboard-metric-label {
   }
 }
 
+/* The text columns take the room at 1280px (T394 replay, act 1, 1.2 and 1.12): Colleges' Name at .col-wrap's 14% wrapped
+   "College of Paediatricians of South Africa" over three lines beside 130px the Created and Actions columns did not use,
+   and the tree's sub-speciality Description at 14% ran one word a line beside an auto Actions column 200px wider than its
+   one Edit. Name takes 28%; the tree's Description is .col-wrap--wide at 40% and its Edit column .col-fit. Only where the
+   lists are tables: both stack from 1024px down (flow 16's shared part). */
+@media (min-width: 1025px) {
+  .colleges-page .clinic-table th.col-wrap:not(.col-wrap--wide) {
+    width: 28%;
+  }
+
+  .college-tree-page .clinic-table th.col-wrap--wide {
+    width: 40%;
+  }
+}
+
 /* An empty result region takes no row of the page's column (its 24px gap included), as the people pages' do. */
 .epa-page .action-result:empty {
   display: none;
