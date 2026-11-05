@@ -89,8 +89,8 @@
             <th scope="col" role="columnheader" class="col-wrap">College</th>
           }
           <th scope="col" role="columnheader" class="col-wrap">Sub-speciality</th>
-          <th scope="col" role="columnheader">Status</th>
-          <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
+          <th scope="col" role="columnheader" class="col-fit--wide">Status</th>
+          <th scope="col" role="columnheader" class="col-fit--wide"><span class="visually-hidden">Actions</span></th>
         </tr>
       </HeaderRow>
       <Row Context="epa">
@@ -107,9 +107,9 @@
             <td role="cell" class="col-wrap" data-label="College">@epa.CollegeName</td>
           }
           <td role="cell" class="col-wrap" data-label="Sub-speciality">@epa.DisciplineName</td>
-          <td role="cell" data-label="Status">@EpaWords.Status(epa.IsActive)</td>
+          <td role="cell" data-label="Status" class="col-fit--wide">@EpaWords.Status(epa.IsActive)</td>
           @* Every row says something here: Edit where it may be changed, else why not (M1, T211). *@
-          <td role="cell">
+          <td role="cell" class="col-fit--wide">
             <div class="actions-cell">
               @if (epa.MayChange)
               {

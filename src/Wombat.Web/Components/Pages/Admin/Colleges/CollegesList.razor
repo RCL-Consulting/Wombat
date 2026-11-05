@@ -47,7 +47,7 @@
           <HeaderRow>
             <tr role="row">
               <th scope="col" role="columnheader" class="col-wrap">Name</th>
-              <th scope="col" role="columnheader">Short code</th>
+              <th scope="col" role="columnheader" class="col-fit">Short code</th>
               <th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Description</th>
               <th scope="col" role="columnheader" class="col-fit">Status</th>
               <th scope="col" role="columnheader" class="col-fit">Created</th>
@@ -57,7 +57,7 @@
           <Row Context="college">
             <tr role="row" @key="college.Id">
               <th scope="row" role="rowheader" class="col-wrap">@college.Name</th>
-              <td role="cell" data-label="Short code">@college.ShortCode</td>
+              <td role="cell" data-label="Short code" class="col-fit">@college.ShortCode</td>
               <td role="cell" data-label="Description" class="col-wrap">@college.Description</td>
               <td role="cell" data-label="Status" class="col-fit">@CollegeWords.Status(college.IsActive)</td>
               @* N2: the South African day of its creation, ISO; never the server's local time. *@

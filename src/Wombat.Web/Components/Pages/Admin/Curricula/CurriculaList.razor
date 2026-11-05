@@ -204,7 +204,7 @@
               <th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Curriculum</th>
               <th scope="col" role="columnheader" class="col-wrap">College</th>
               <th scope="col" role="columnheader" class="col-wrap">Discipline</th>
-              <th scope="col" role="columnheader">Effective</th>
+              <th scope="col" role="columnheader" class="col-fit--wide">Effective</th>
               <th scope="col" role="columnheader">Items</th>
               <th scope="col" role="columnheader">@(named is null ? CurriculaWords.StateColumn : CurriculaWords.InstitutionStateColumn)</th>
               <th scope="col" role="columnheader" class="col-fit"><span class="visually-hidden">Actions</span></th>
@@ -216,7 +216,7 @@
               <th scope="row" role="rowheader" class="col-wrap">@CurriculaWords.Name(curriculum.Name, curriculum.Version)</th>
               <td role="cell" data-label="College" class="col-wrap">@curriculum.CollegeName</td>
               <td role="cell" data-label="Discipline" class="col-wrap">@CurriculaWords.Discipline(curriculum.SpecialityName, curriculum.SubSpecialityName)</td>
-              <td role="cell" data-label="Effective">@CurriculaWords.Day(curriculum.EffectiveFrom)</td>
+              <td role="cell" data-label="Effective" class="col-fit--wide">@CurriculaWords.Day(curriculum.EffectiveFrom)</td>
               <td role="cell" data-label="Items">@CurriculaWords.Items(state, named is not null)</td>
               <td role="cell" data-label="@(named is null ? CurriculaWords.StateColumn : CurriculaWords.InstitutionStateColumn)">
                 @CurriculaWords.State(state)
@@ -271,8 +271,8 @@
               <th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Curriculum</th>
               <th scope="col" role="columnheader" class="col-wrap">College</th>
               <th scope="col" role="columnheader" class="col-wrap">Discipline</th>
-              <th scope="col" role="columnheader">Effective</th>
-              <th scope="col" role="columnheader">Items</th>
+              <th scope="col" role="columnheader" class="col-fit--wide">Effective</th>
+              <th scope="col" role="columnheader" class="col-fit--wide">Items</th>
               <th scope="col" role="columnheader" class="col-fit"><span class="visually-hidden">Actions</span></th>
             </tr>
           </HeaderRow>
@@ -284,8 +284,8 @@
               </th>
               <td role="cell" data-label="College" class="col-wrap">@row.CollegeName</td>
               <td role="cell" data-label="Discipline" class="col-wrap">@CurriculaWords.Discipline(row.SpecialityName, row.SubSpecialityName)</td>
-              <td role="cell" data-label="Effective">@CurriculaWords.Day(row.EffectiveFrom)</td>
-              <td role="cell" data-label="Items">@row.NationalItemCount</td>
+              <td role="cell" data-label="Effective" class="col-fit--wide">@CurriculaWords.Day(row.EffectiveFrom)</td>
+              <td role="cell" data-label="Items" class="col-fit--wide">@row.NationalItemCount</td>
               <td role="cell">
                 <div class="actions-cell">
                   @{ var asks = row.Relation != AdoptionRelation.None; }
@@ -369,8 +369,8 @@
             <th scope="col" role="columnheader" class="col-wrap">College</th>
           }
           <th scope="col" role="columnheader" class="col-wrap">Discipline</th>
-          <th scope="col" role="columnheader">Effective</th>
-          <th scope="col" role="columnheader">Items</th>
+          <th scope="col" role="columnheader" class="col-fit--wide">Effective</th>
+          <th scope="col" role="columnheader" class="col-fit--wide">Items</th>
           <th scope="col" role="columnheader">Status</th>
           <th scope="col" role="columnheader" class="col-fit"><span class="visually-hidden">Actions</span></th>
         </tr>
@@ -383,9 +383,9 @@
             <td role="cell" data-label="College" class="col-wrap">@curriculum.CollegeName</td>
           }
           <td role="cell" data-label="Discipline" class="col-wrap">@CurriculaWords.Discipline(curriculum.SpecialityName, curriculum.SubSpecialityName)</td>
-          <td role="cell" data-label="Effective">@CurriculaWords.Day(curriculum.EffectiveFrom)</td>
+          <td role="cell" data-label="Effective" class="col-fit--wide">@CurriculaWords.Day(curriculum.EffectiveFrom)</td>
           @* The items the caller reads: the College's, and for the Administrator every institution's own too (N2). *@
-          <td role="cell" data-label="Items">@curriculum.Items.Count</td>
+          <td role="cell" data-label="Items" class="col-fit--wide">@curriculum.Items.Count</td>
           <td role="cell" data-label="Status">@CurriculaWords.Status(curriculum.IsActive)</td>
           <td role="cell">
             @* T211. Edit changes the curriculum's details and clones it, which only its College can do. *@

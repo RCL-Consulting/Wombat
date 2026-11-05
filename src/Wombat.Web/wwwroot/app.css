@@ -7449,6 +7449,38 @@ a.dashboard-metric:hover .dashboard-metric-label {
    and Created are .col-fit on both, the tree's Default scale takes 24%, and Colleges' Description 27% of what Created
    gave back (at 1280: Name 2 lines, Description 3, Edit and Specialities side by side). */
 @media (min-width: 1025px) {
+  /* States pass 2 (T394): the room went to columns holding one word or digit. A count, a day, a status or a row's one
+     Edit fits its content wherever the list is a table (.col-fit--wide; from 1025px, so a stacked row at 390 keeps
+     wrapping); the scales' Name and Description, and the EPA list's College and Sub-speciality, take what it gives back. */
+  .clinic-table .col-fit--wide {
+    white-space: nowrap;
+    width: 1%;
+  }
+
+  .scales-page .clinic-table th.col-wrap:not(.col-wrap--wide) {
+    width: 28%;
+  }
+
+  .scales-page .clinic-table th.col-wrap--wide {
+    width: 45%;
+  }
+
+  .epas-page .clinic-table th.col-wrap:not(.col-wrap--wide) {
+    width: 22%;
+  }
+}
+
+/* Curricula is a table from 1101px (it stacks to 1100): its Curriculum takes 30% and College and Discipline 18% of what
+   Effective and the national count give back (an institution's Items sentence keeps wrapping). */
+@media (min-width: 1101px) {
+  .curricula-page .clinic-table th.col-wrap--wide {
+    width: 30%;
+  }
+
+  .curricula-page .clinic-table th.col-wrap:not(.col-wrap--wide) {
+    width: 18%;
+  }
+
   .colleges-page .clinic-table th.col-wrap--wide {
     width: 27%;
   }

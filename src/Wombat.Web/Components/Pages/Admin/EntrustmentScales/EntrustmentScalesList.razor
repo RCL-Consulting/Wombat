@@ -89,7 +89,7 @@
             <tr role="row">
               <th scope="col" role="columnheader" class="col-wrap">Name</th>
               <th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Description</th>
-              <th scope="col" role="columnheader">Levels</th>
+              <th scope="col" role="columnheader" class="col-fit--wide">Levels</th>
               @* Only an Administrator changes a scale, so no one else is shown a column of blank cells (T239; DESIGN.md
                  § Table system, "A column of actions that no row offers is not rendered"). *@
               @if (_isAdministrator)
@@ -102,7 +102,7 @@
             <tr role="row" @key="scale.Id">
               <th scope="row" role="rowheader" class="col-wrap">@scale.Name</th>
               <td role="cell" data-label="Description" class="col-wrap">@scale.Description</td>
-              <td role="cell" data-label="Levels">@scale.Levels.Count</td>
+              <td role="cell" data-label="Levels" class="col-fit--wide">@scale.Levels.Count</td>
               @if (_isAdministrator)
               {
                 <td role="cell" class="col-actions">
