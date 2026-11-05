@@ -217,3 +217,5 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
 - **2026-11-05, act 2 replayed** (one Opus agent, `5f03a68f`): 44/44 steps, no Gap; outcome SQL as expected; T392's
   "no longer occurs" notes still hold; Q20 holds at 1280/1024 on Home, Invitations, Decision panels and Users. Dump
   `scenario-t394-post-act2`. Act 3 running.
+- **2026-11-05, act 3 replayed** (one Opus agent, `7d728f5c`): 60 steps, 58 clean; 3.55 and 3.56 keep their known-task
+  Gaps (T286 twice, T277); outcome SQL as expected; Q20 holds. Dump `scenario-t394-post-act3`. Act 4 running.
