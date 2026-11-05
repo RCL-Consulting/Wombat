@@ -163,3 +163,8 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   then Adopted with the adopters named, superseded included); a duplicate only on a real unique violation; the clone's
   refusal key is "Version" (contracts said "NewVersion"); the cloned result read back from the source. Merge risk: its
   tests build lane A's and B's DTOs positionally. Words on no board listed in its report (for the review).
+- **2026-11-05, lane A done** (`t394-tree`: `69f24e97`, `703a1537`; suites 836/4364/1035/52/4590/523): GetCollegeTreeQuery;
+  the default ladder at create; name refusals pre-checked in all four commands (a speciality no longer calls every
+  refused save a duplicate); the old sub-specialities address redirects to the tree's section; Home's four links.
+  Departs from the boards: an Unavailable page's last crumb is its h1; the Status help is `p.page-subtitle`
+  (FieldGroupTests). `PageTitleTests`' exemption note for MySpecialitiesRedirect left stale. For the review.
