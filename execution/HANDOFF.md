@@ -17,7 +17,9 @@ picks and Q15–Q17; round 2's Q18–Q21; round 3's decisions 1–5; the build's
   `blazor:elementReference` guids can break a "markup holds no N" assertion.
 - **Step 7 started** ("proceed"): `wombat_scenario_t394` on :5180 from master `c2de9b7b`; the replay brief and act
   prompts being written (scratch `...\67560d182d14635f\28969ed0-c979-487c-82e2-606d8331c3a3\scratchpad\g394`).
-- **Next:** acts 1–6 and A, one agent each, in order; then the states; then steps 8 and 9. Not pushed.
+- **Next:** acts 1–6 and A, one agent each, in order (act 1 running; an act whose `recovery/scenario-t394-post-actN.dump`
+  is absent did not finish: resume it from its `g394/act-N/out` files, BRIEF § 11 flow 15); then the states; then
+  steps 8 and 9. Not pushed.
 - **Environment:** the replay app runs on :5180; lane branches `t394*` kept, worktrees removed; scratch DBs of this flow dropped.
 
 ## Session 2026-11-02/03 (Opus): T392's replay, re-sync and lessons; T392 done

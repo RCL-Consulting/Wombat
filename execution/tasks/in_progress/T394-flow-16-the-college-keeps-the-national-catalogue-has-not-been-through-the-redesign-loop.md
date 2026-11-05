@@ -206,3 +206,5 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
 - **2026-11-05, step 7 started** (the operator: "proceed"): fresh `wombat_scenario_t394`, published from master
   `c2de9b7b` (code as `de4cc718`), the replay app on :5180 (migrated and seeded at start). One Opus agent writes
   `replay-brief.md` and the act prompts (scratch `g394`); then one agent per act in order, then two states passes.
+- **2026-11-05, the replay brief** (`48034e43`; g394's generators and prompts: acts 1, 6 and A carry flow 16's changed
+  steps, the 900–1100 sweep on 1.2, 1.4, 1.12, 1.16–1.18, 6.1, 6.12; states 103 rows over two passes). **Act 1 runs.**
