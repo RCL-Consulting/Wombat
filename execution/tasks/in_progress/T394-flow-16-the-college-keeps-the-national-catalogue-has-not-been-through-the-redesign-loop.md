@@ -235,3 +235,10 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   script missed it, T391). Dump `scenario-t394-post-actA`. **Acts done: no flow 16 regression left** but the two
   1280px columns, fixed by `a2878763`, now published to :5180 (two app instances were found on :5180's bin after act 6's
   restart; both stopped by id first).
+- **2026-11-05, states pass 1** (one Opus agent, `4b529691`): 59 rows, 58 hold, 1 corrected (`specialities-list--narrow`:
+  at 390 Edit and Create sub-speciality sit beside the h2; check against R3-A02 in step 8); 1.12's squeeze gone. Two
+  faults left by `a2878763`: Colleges' Created broke the date, the tree's Default scale ran three lines beside a 218px
+  Status; fixed here (`7d4c4490`: Status and Created `.col-fit`, Default scale 24%, Description 27%; swept 900-1440 on
+  :5180, nothing over), published. Unfiled, for review: reactivating a speciality or sub-speciality says only "… saved."
+  (the College's record says "reactivated"); a duplicate speciality's refusal names no holder. Scratch DBs `_s10`-`_s12`
+  kept for pass 2. States pass 2 running (it re-takes 1.2, 6.1, 6.12 and five states rows on `7d4c4490`).
