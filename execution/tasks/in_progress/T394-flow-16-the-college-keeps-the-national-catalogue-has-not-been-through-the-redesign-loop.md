@@ -168,3 +168,8 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   refused save a duplicate); the old sub-specialities address redirects to the tree's section; Home's four links.
   Departs from the boards: an Unavailable page's last crumb is its h1; the Status help is `p.page-subtitle`
   (FieldGroupTests). `PageTitleTests`' exemption note for MySpecialitiesRedirect left stale. For the review.
+- **2026-11-05, lane B done** (`t394-admin`: `fc3158d4`, `59c175b4`; suites 836/4364/1035/52/4564/520): College
+  refusals name the holder; the scale save refuses in Q18's order (name, unknown ids, Q6 pinned items by label, ended
+  records, decisions, then Q16 in use), checked by level id; **T395's guard** proved by
+  `EntrustmentScaleReorderGuardTests` (9 tests); the delete refusal names its sub-speciality holders. Mended outside
+  its list: one `EndedCurriculumListTests` assertion.
