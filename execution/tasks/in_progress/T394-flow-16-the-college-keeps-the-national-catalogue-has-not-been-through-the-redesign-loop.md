@@ -187,3 +187,7 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   closed; Q6's rung refusal listed as unreachable from the UI; verbatim 0 problems, completeness exit 0. Its baseline
   check's "4 missing" (and 3164 in a worktree) is because the captures are not in a worktree: rerun on master after
   the squash (master: missing 0). Two Sonnet reviews running (code; pages and runbook).
+- **2026-11-05, the build reviewed** (code `179d8bfc`: 0 must, 4 should, 8 nit; pages and runbook `60b06f21`: 1 must, 5
+  should, 11 nit, ~38 words on no board; merged `build-review.md` on t394): M1 checked here (A.7.10's "1 registrar"
+  on 11.2, but Dr Ndlovu's erasure at A.1.12 ends the only one: the runbook is wrong, the build right). F1 (the fix
+  pass's scope; S-1's check-then-save race to its own task) and F2 (the words) put to the operator.
