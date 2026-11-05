@@ -112,7 +112,7 @@ public sealed class EntrustmentScalesListPageTests : TestContext
         var sender = new Sender { Scales = Scales, DeleteFailure = new TimeoutException("socket closed by 10.0.0.4") };
         var cut = Render(WombatRoles.Administrator, sender);
 
-        cut.FindAll("tbody button").First().Click();
+        Delete(cut);
 
         cut.WaitForAssertion(() => Text(cut.Find(".action-result .alert-danger")).Should().Be(
             "The scale could not be deleted. Nothing has changed. Try again, or come back in a few minutes."));
@@ -125,7 +125,7 @@ public sealed class EntrustmentScalesListPageTests : TestContext
         var sender = new Sender { Scales = Scales, DeleteFailure = new Wombat.Application.Features.Epas.Commands.DeleteEntrustmentScale.EntrustmentScaleDeleteRefusedException("This scale is in use by 2 curriculum items, so it cannot be deleted.") };
         var cut = Render(WombatRoles.Administrator, sender);
 
-        cut.FindAll("tbody button").First().Click();
+        Delete(cut);
 
         cut.WaitForAssertion(() => Text(cut.Find(".action-result .alert-danger")).Should().Be(
             "This scale is in use by 2 curriculum items, so it cannot be deleted."));
@@ -138,11 +138,110 @@ public sealed class EntrustmentScalesListPageTests : TestContext
         var sender = new Sender { Scales = Scales, DeleteFailure = new InvalidOperationException("Sequence contains no elements") };
         var cut = Render(WombatRoles.Administrator, sender);
 
-        cut.FindAll("tbody button").First().Click();
+        Delete(cut);
 
         cut.WaitForAssertion(() => Text(cut.Find(".action-result .alert-danger")).Should().Be(
             "The scale could not be deleted. Nothing has changed. Try again, or come back in a few minutes."));
         cut.Markup.Should().NotContain("Sequence contains");
+    }
+
+    // ---- T394 (flow 16, lane B): the College admin reads the list (D57), Delete… asks first (Q11), the refusal links its
+    // holders (S6), and a deletion reads the list again (R3-C09). ----
+
+    [Fact]
+    public void ACollegeAdmin_ReadsTheListAsTheInstitutionDoes_WithNoActions()
+    {
+        // R2-C21a (D57): the reader's subtitle and caption, no Create scale, no actions column, no link.
+        var cut = Render(WombatRoles.CollegeAdmin, new Sender { Scales = Scales });
+
+        Text(cut.Find(".page-subtitle")).Should().Be(
+            "The rating ladders that assessment forms and committee reviews use. A Wombat administrator sets them; they are shown here for reference.");
+        cut.FindAll(".header-container a, .header-container button").Should().BeEmpty();
+        Text(cut.Find("caption")).Should().Be("Entrustment scales, by name");
+        cut.FindAll("thead th").Select(Text).Should().Equal("Name", "Description", "Levels");
+        cut.FindAll("tbody a, tbody button").Should().BeEmpty();
+        cut.FindAll("dialog").Should().BeEmpty("a reader is offered no delete, so no dialog is drawn");
+    }
+
+    [Fact]
+    public void DeleteIsAnOutlineTrigger_ThatOpensADialogNamedForItsScale_AndSendsNothingUntilConfirmed()
+    {
+        var sender = new Sender { Scales = Scales };
+        var cut = Render(WombatRoles.Administrator, sender);
+        cut.WaitForAssertion(() => cut.FindAll("tbody button").Should().NotBeEmpty());
+
+        var trigger = cut.FindAll("tbody button").First();
+        Text(trigger).Should().Be("Delete…");
+        trigger.GetAttribute("aria-label").Should().Be("Delete CPSA Paediatric Entrustment Scale v11.1");
+        trigger.GetAttribute("aria-haspopup").Should().Be("dialog");
+        trigger.ClassList.Should().Contain("btn-outline").And.NotContain("btn-danger", "N11: a destructive trigger is outline");
+
+        trigger.Click();
+
+        JSInterop.Invocations.Should().Contain(call => call.Identifier == "wombatDialog.showModal");
+        var dialog = cut.Find("dialog");
+        Text(dialog.QuerySelector("h2")!).Should().Be("Delete CPSA Paediatric Entrustment Scale v11.1?");
+        dialog.QuerySelectorAll(".dialog-body p").Select(Text).Should().Equal(
+            "It is removed from every list. This cannot be undone.",
+            "A scale that anything uses is not deleted: you will be told what uses it, and nothing changes.");
+        var buttons = dialog.QuerySelectorAll(".form-actions button").ToList();
+        buttons.Select(Text).Should().Equal("Cancel", "Delete scale");
+        buttons[0].HasAttribute("autofocus").Should().BeTrue("the dialog opens on Cancel");
+        buttons[1].ClassList.Should().Contain("btn-danger");
+        sender.Deleted.Should().BeEmpty("nothing is sent until the dialog's Delete scale");
+    }
+
+    [Fact]
+    public void AConfirmedDelete_SaysSo_AndReadsTheListAgain()
+    {
+        var sender = new Sender { Scales = Scales };
+        var cut = Render(WombatRoles.Administrator, sender);
+        sender.ScalesAfterDelete = [Scales[1]];
+
+        Delete(cut);
+
+        cut.WaitForAssertion(() => Text(cut.Find(".action-result .alert-success")).Should().Be("Entrustment scale deleted."));
+        sender.Deleted.Should().Equal(1);
+        cut.WaitForAssertion(() => cut.FindAll("tbody th[scope='row']").Select(Text).Should().Equal("O-R Scale"));
+    }
+
+    [Fact]
+    public void ADeleteRefusedForASubSpecialitysDefault_LinksEachHolder_ThreeThenTheRestCounted()
+    {
+        // R3-C08, S6: the built sentence word for word, then a link to each holder's record, named for it (M5).
+        const string sentence =
+            "This entrustment scale is the default scale of the sub-specialities \"Adult Neurology\" (Neurology), " +
+            "\"Child Neurology\" (Neurology), \"Neurophysiology\" (Neurology) and \"Stroke\" (Neurology), so it cannot " +
+            "be deleted. Change each one's default entrustment scale to another scale, or to no default, first.";
+        var refusal = new Wombat.Application.Features.Epas.Commands.DeleteEntrustmentScale.EntrustmentScaleDeleteRefusedException(sentence)
+        {
+            Holders =
+            [
+                new(2, 3, "Adult Neurology", "Neurology"),
+                new(2, 4, "Child Neurology", "Neurology"),
+                new(2, 5, "Neurophysiology", "Neurology"),
+                new(2, 6, "Stroke", "Neurology")
+            ]
+        };
+        var cut = Render(WombatRoles.Administrator, new Sender { Scales = Scales, DeleteFailure = refusal });
+
+        Delete(cut);
+
+        cut.WaitForAssertion(() => cut.Find(".action-result .alert-danger"));
+        var alert = cut.Find(".action-result .alert-danger");
+        Text(alert.QuerySelector("p")!).Should().Be(sentence);
+        var links = alert.QuerySelectorAll("a").ToList();
+        links.Select(Text).Should().Equal("Open Adult Neurology", "Open Child Neurology", "Open Neurophysiology");
+        links[0].GetAttribute("aria-label").Should().Be("Open Adult Neurology, the sub-speciality");
+        links[0].GetAttribute("href").Should().Be("/admin/specialities/2/sub-specialities/3");
+        Text(alert.QuerySelector(".scales-refusal-links span")!).Should().Be("and 1 more.");
+    }
+
+    private void Delete(IRenderedComponent<EntrustmentScalesList> cut)
+    {
+        cut.WaitForAssertion(() => cut.FindAll("tbody button").Should().NotBeEmpty());
+        cut.FindAll("tbody button").First().Click();
+        cut.FindAll("dialog .form-actions button").Single(button => Text(button) == "Delete scale").Click();
     }
 
     private IRenderedComponent<EntrustmentScalesList> Render(string role, Sender sender)
@@ -162,6 +261,8 @@ public sealed class EntrustmentScalesListPageTests : TestContext
         public Exception? Failure { get; set; }
         public Exception? DeleteFailure { get; init; }
         public bool Hang { get; init; }
+        public IReadOnlyList<EntrustmentScaleDto>? ScalesAfterDelete { get; set; }
+        public List<int> Deleted { get; } = [];
 
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
         {
@@ -177,8 +278,9 @@ public sealed class EntrustmentScalesListPageTests : TestContext
                     : Task.FromResult((TResponse)(object)Scales);
             }
 
-            if (request is Wombat.Application.Features.Epas.Commands.DeleteEntrustmentScale.DeleteEntrustmentScaleCommand)
+            if (request is Wombat.Application.Features.Epas.Commands.DeleteEntrustmentScale.DeleteEntrustmentScaleCommand typed)
             {
+                Record(typed);
                 return DeleteFailure is not null
                     ? Task.FromException<TResponse>(DeleteFailure)
                     : Task.FromResult(default(TResponse)!);
@@ -188,8 +290,23 @@ public sealed class EntrustmentScalesListPageTests : TestContext
         }
 
         public Task Send(IRequest request, CancellationToken cancellationToken = default)
-            => request is Wombat.Application.Features.Epas.Commands.DeleteEntrustmentScale.DeleteEntrustmentScaleCommand && DeleteFailure is not null
-                ? Task.FromException(DeleteFailure)
-                : Task.CompletedTask;
+        {
+            if (request is not Wombat.Application.Features.Epas.Commands.DeleteEntrustmentScale.DeleteEntrustmentScaleCommand typed)
+            {
+                return Task.CompletedTask;
+            }
+
+            Record(typed);
+            return DeleteFailure is not null ? Task.FromException(DeleteFailure) : Task.CompletedTask;
+        }
+
+        private void Record(Wombat.Application.Features.Epas.Commands.DeleteEntrustmentScale.DeleteEntrustmentScaleCommand command)
+        {
+            Deleted.Add(command.Id);
+            if (DeleteFailure is null && ScalesAfterDelete is { } after)
+            {
+                Scales = after;
+            }
+        }
     }
 }

@@ -585,6 +585,7 @@ public sealed class EntrustmentScaleAdminHandlerTests
         // permanently unmeetable, with nothing anywhere saying so.
         await using var db = CreateDb();
         var seeded = await SeedTwoLevelScaleAsync(db, "Pinned ladder");
+        AddTheItemsEpaAndCurriculum(db);
 
         db.Set<CurriculumItem>().Add(new CurriculumItem
         {
@@ -608,8 +609,10 @@ public sealed class EntrustmentScaleAdminHandlerTests
                 TestPrincipals.Administrator()),
             CancellationToken.None);
 
-        await action.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*requires level 2*");
+        // T394 (Q6): by the EPA, the curriculum (version) and the rung's label, never by the item's id or the rung's rank.
+        (await action.Should().ThrowAsync<EntrustmentScaleUpdateRefusedException>()).Which.Message.Should().Be(
+            "Not saved. PAED-001 on Paediatric EPA Curriculum (11.1) needs the rung “High” of this scale, which the new " +
+            "levels leave out. Change that item's minimum first.");
     }
 
     [Fact]
@@ -631,6 +634,7 @@ public sealed class EntrustmentScaleAdminHandlerTests
                 ],
                 TestPrincipals.Administrator()),
             CancellationToken.None);
+        AddTheItemsEpaAndCurriculum(db);
         db.Set<CurriculumItem>().Add(new CurriculumItem
         {
             Id = 4,
@@ -658,7 +662,7 @@ public sealed class EntrustmentScaleAdminHandlerTests
                 TestPrincipals.Administrator()),
             CancellationToken.None);
 
-        await action.Should().ThrowAsync<InvalidOperationException>().WithMessage("*requires level 3*");
+        await action.Should().ThrowAsync<EntrustmentScaleUpdateRefusedException>().WithMessage("*needs the rung “High”*");
 
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
@@ -759,6 +763,88 @@ public sealed class EntrustmentScaleAdminHandlerTests
             CancellationToken.None);
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    public static TheoryData<string> NonAdministrators => ["CollegeAdmin", "InstitutionalAdmin"];
+
+    private static System.Security.Claims.ClaimsPrincipal NonAdministrator(string role)
+        => role == "CollegeAdmin" ? TestPrincipals.CollegeAdmin(1) : TestPrincipals.InstitutionalAdmin(1);
+
+    /// <summary>
+    /// D57 (T394 fix pass, code S-3): the scales are the Administrator's alone. The College admin, whom D57 brings to the
+    /// list, and the Institutional admin are refused a scale's update, and nothing of it changes.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(NonAdministrators))]
+    public async Task Update_ANonAdministrator_IsRefused_AndNothingChanges(string role)
+    {
+        await using var db = CreateDb();
+        var scale = await SeedTwoLevelScaleAsync(db, "Paed Scale");
+        db.ChangeTracker.Clear();
+
+        var act = () => new UpdateEntrustmentScaleCommandHandler(db).Handle(
+            new UpdateEntrustmentScaleCommand(
+                scale.Id,
+                "Renamed",
+                "Changed.",
+                [
+                    new EntrustmentLevelUpdate(scale.Levels[0].Id, 1, "Low (renamed)", null),
+                    new EntrustmentLevelUpdate(scale.Levels[1].Id, 2, "High", null)
+                ],
+                NonAdministrator(role)),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        db.ChangeTracker.HasChanges().Should().BeFalse("nothing is staged for the audit pipeline to commit (T201)");
+        db.ChangeTracker.Clear();
+        var stored = await db.Set<EntrustmentScale>().Include(stored => stored.Levels).SingleAsync(stored => stored.Id == scale.Id);
+        stored.Name.Should().Be("Paed Scale");
+        stored.Description.Should().BeNull();
+        stored.Levels.OrderBy(level => level.Order).Select(level => level.Label).Should().Equal("Low", "High");
+    }
+
+    /// <summary>D57 (T394 fix pass, code S-3): a non-Administrator's delete of a scale is refused, and the scale stays.</summary>
+    [Theory]
+    [MemberData(nameof(NonAdministrators))]
+    public async Task Delete_ANonAdministrator_IsRefused_AndTheScaleStays(string role)
+    {
+        await using var db = CreateDb();
+        var scale = await SeedTwoLevelScaleAsync(db, "Paed Scale");
+        db.ChangeTracker.Clear();
+
+        var act = () => new DeleteEntrustmentScaleCommandHandler(db).Handle(
+            new DeleteEntrustmentScaleCommand(scale.Id, NonAdministrator(role)), CancellationToken.None);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        db.ChangeTracker.HasChanges().Should().BeFalse("nothing is staged for the audit pipeline to commit (T201)");
+        db.ChangeTracker.Clear();
+        (await db.Set<EntrustmentScale>().CountAsync(stored => stored.Id == scale.Id)).Should().Be(1);
+        (await db.Set<EntrustmentLevel>().CountAsync(level => level.ScaleId == scale.Id)).Should().Be(2);
+    }
+
+    [Fact]
+    public async Task Create_ACollegeAdmin_IsRefused()
+    {
+        await using var db = CreateDb();
+
+        var act = () => new CreateEntrustmentScaleCommandHandler(db).Handle(
+            new CreateEntrustmentScaleCommand("Should fail", null,
+                [new EntrustmentLevelInput(1, "A", null), new EntrustmentLevelInput(2, "B", null)],
+                TestPrincipals.CollegeAdmin(1)),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        (await db.Set<EntrustmentScale>().CountAsync()).Should().Be(0);
+    }
+
+    /// <summary>The EPA and curriculum the tests' pinned items (EPA 5000, curriculum 3000) are named by (T394, Q6).</summary>
+    private static void AddTheItemsEpaAndCurriculum(ApplicationDbContext db)
+    {
+        db.Set<Epa>().Add(new Epa { Id = 5000, SubSpecialityId = 1, Code = "PAED-001", Title = "Emergency care" });
+        db.Set<Curriculum>().Add(new Curriculum
+        {
+            Id = 3000, SubSpecialityId = 1, Name = "Paediatric EPA Curriculum", Version = "11.1", EffectiveFrom = new DateOnly(2026, 1, 1)
+        });
     }
 
     private static ApplicationDbContext CreateDb()

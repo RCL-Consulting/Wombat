@@ -44,6 +44,15 @@ public sealed record EpaDto(
 
     /// <summary>The discipline the EPA belongs to, as the pages write it: "Paediatrics / Paediatrics" (speciality / sub-speciality).</summary>
     public string DisciplineName { get; init; } = string.Empty;
+
+    /// <summary>
+    /// How far a change to this EPA reaches (T394, flow 16, Q2, Q21's EV2, S16): the adopted curricula that hold it, their
+    /// institutions and the registrars in training measured against it (<see cref="Curricula.CatalogueReach.ForEpaAsync" />;
+    /// an institution's own EPA through its owner's own items alone). Filled by <c>GetEpaPageQuery</c> where
+    /// <see cref="MayChange" /> holds, for the page's standing line and its pause dialog; null on the list, on the by-id read,
+    /// and for a caller who may not change the EPA (build-contracts § 0).
+    /// </summary>
+    public Curricula.EpaReachDto? Reach { get; init; }
 }
 
 /// <summary>Whose EPA list a caller reads, which picks the list's words (T392, R2-0-spec-2 § 8).</summary>
@@ -67,7 +76,15 @@ public enum EpaListReader
 /// only while the institution has actively adopted a discipline to add an EPA to.
 /// </param>
 /// <param name="InstitutionName">The InstitutionalAdmin's institution, which the subtitle names; null for the others.</param>
-public sealed record EpaListDto(IReadOnlyList<EpaDto> Epas, EpaListReader Reader, bool MayCreate, string? InstitutionName);
+public sealed record EpaListDto(IReadOnlyList<EpaDto> Epas, EpaListReader Reader, bool MayCreate, string? InstitutionName)
+{
+    /// <summary>
+    /// The CollegeAdmin's College by name, which the College's subtitle and caption name ("College of Paediatricians of
+    /// South Africa's EPAs", T394, flow 16, R3-E01, S15), read once by the query, so an empty list names it too. Null for
+    /// the others, and for a CollegeAdmin whose account names no College, which the page tells her (R2-E19).
+    /// </summary>
+    public string? CollegeName { get; init; }
+}
 
 /// <summary>A discipline an EPA may be created in or moved to: "Paediatrics / Paediatrics".</summary>
 public sealed record EpaDisciplineDto(int SubSpecialityId, string Name);
@@ -90,4 +107,18 @@ public sealed record EpaPageDto(
     IReadOnlyList<EpaDisciplineDto> Disciplines,
     bool CreatesOwn,
     string? InstitutionName,
-    bool MayCreate);
+    bool MayCreate)
+{
+    /// <summary>
+    /// The CollegeAdmin's College by name (T394, flow 16, R3-E10, S15): the create's subtitle ("A national EPA of College of
+    /// Paediatricians of South Africa. …") and the Sub-speciality help ("College of Paediatricians of South Africa's
+    /// sub-specialities."). Null for anyone else, and for a CollegeAdmin whose account names no College.
+    /// </summary>
+    public string? CollegeName { get; init; }
+
+    /// <summary>
+    /// Whether the picker offers every College's sub-specialities, the Administrator's (T394, N16, R3-E20): its help says
+    /// "Every College's sub-specialities.". The query decides, never the page from the caller's roles (S4).
+    /// </summary>
+    public bool ReadsEveryCollege { get; init; }
+}

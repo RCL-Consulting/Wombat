@@ -38,6 +38,9 @@ public sealed class EntrustmentScaleEditRenameTests : TestContext
         auth.SetRoles(WombatRoles.Administrator);
         auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "admin-1"));
         Services.AddSingleton<IScopedSender>(_sender);
+
+        // T394: a refusal under its field moves the focus to it (wombat.focusById).
+        JSInterop.Mode = JSRuntimeMode.Loose;
     }
 
     [Fact]
@@ -85,9 +88,12 @@ public sealed class EntrustmentScaleEditRenameTests : TestContext
         cut.Find("#scale-name").Change("seed:cpsa:scale:v11.1");
         cut.FindAll("button").Single(button => button.TextContent.Trim() == "Save").Click();
 
-        cut.WaitForAssertion(() => cut.Find(".alert-danger").TextContent.Trim()
+        // T394 (flow 16, T324): under Name, the field it is about, not in an alert at the top.
+        cut.WaitForAssertion(() => cut.Find(".validation-message").TextContent.Trim()
             .Should().Be(EntrustmentScaleBindings.ReservedNameRefusal, "not \"Validation failed: -- Name: …\""));
-        cut.FindAll(".alert-success").Should().BeEmpty();
+        cut.Find("#scale-name").GetAttribute("aria-invalid").Should().Be("true");
+        cut.Find("#scale-name").GetAttribute("aria-describedby").Should().Be(cut.Find(".validation-message").Id);
+        cut.FindAll(".alert-success, .alert-danger").Should().BeEmpty();
     }
 
     private IRenderedComponent<EntrustmentScaleEdit> RenderEditor()

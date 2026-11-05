@@ -6,8 +6,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
 using Wombat.Application.Audit;
+using Wombat.Application.Common;
 using Wombat.Application.Features.Institutions;
+using Wombat.Application.Features.Institutions.Commands.CreateSpeciality;
 using Wombat.Application.Features.Institutions.Commands.CreateSubSpeciality;
+using Wombat.Application.Features.Institutions.Commands.UpdateSpeciality;
 using Wombat.Application.Features.Institutions.Commands.UpdateSubSpeciality;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Identity;
@@ -40,6 +43,8 @@ public sealed class SubSpecialitySaveRacePostgresTests : IAsyncLifetime
 {
     private const string DuplicateName = "A sub-speciality with the same name already exists for this speciality.";
 
+    private const string SpecialityTaken = "A speciality with the same name already exists for this college.";
+
     private readonly TestSchemas _schemas = new();
 
     public Task InitializeAsync() => Task.CompletedTask;
@@ -57,7 +62,10 @@ public sealed class SubSpecialitySaveRacePostgresTests : IAsyncLifetime
         /// <summary>Surgery, the speciality the update moves the sub-speciality to, is deleted.</summary>
         TargetSpecialityDeleted,
 
-        /// <summary>The sub-speciality itself is deleted, while a sibling already holds the name it is being given.</summary>
+        /// <summary>
+        /// The sub-speciality itself is deleted. Until T394 it was also given the name a sibling holds, to show the deleted
+        /// row is reported before the name; since T394 (N1) that name is refused before anything is saved, so no race.
+        /// </summary>
         SubSpecialityDeleted
     }
 
@@ -73,12 +81,11 @@ public sealed class SubSpecialitySaveRacePostgresTests : IAsyncLifetime
             var schema = await MigratedSchemaAsync();
             var world = await SeedAsync(schema);
 
-            // Neonatology is renamed and given the ladder as its default; in one case it also moves to Surgery. In the last
-            // case it is given the name Perinatology already holds, which on its own would be a duplicate name.
+            // Neonatology is renamed and given the ladder as its default; in one case it also moves to Surgery.
             var command = new UpdateSubSpecialityCommand(
                 world.NeonatologyId,
                 race == UpdateRace.TargetSpecialityDeleted ? world.SurgeryId : world.PaediatricsId,
-                race == UpdateRace.SubSpecialityDeleted ? "Perinatology" : "Neonatal medicine",
+                "Neonatal medicine",
                 Description: null,
                 IsActive: true,
                 world.LadderId,
@@ -98,6 +105,11 @@ public sealed class SubSpecialitySaveRacePostgresTests : IAsyncLifetime
 
             var thrown = (await update.Should().ThrowAsync<InvalidOperationException>()).Which;
             thrown.Should().BeSameAs(outcome.Thrown);
+            if (race == UpdateRace.NameTaken)
+            {
+                thrown.Should().BeOfType<FieldRefusalException>().Which.Field.Should().Be("Name", "a taken name is the Name field's refusal (T394, N1)");
+            }
+
             thrown.Message.Should().Be(race switch
             {
                 UpdateRace.NameTaken => DuplicateName,
@@ -155,7 +167,7 @@ public sealed class SubSpecialitySaveRacePostgresTests : IAsyncLifetime
             var world = await SeedAsync(schema);
 
             var specialityId = race == CreateRace.NameTaken ? world.PaediatricsId : world.SurgeryId;
-            var command = new CreateSubSpecialityCommand(specialityId, "Neonatal medicine", Description: null, Administrator());
+            var command = new CreateSubSpecialityCommand(specialityId, "Neonatal medicine", Description: null, DefaultEntrustmentScaleId: null, Administrator());
 
             Func<Task> racing = race == CreateRace.NameTaken
                 ? () => InsertSubSpecialityAsync(schema, world.PaediatricsId, "Neonatal medicine")
@@ -168,6 +180,11 @@ public sealed class SubSpecialitySaveRacePostgresTests : IAsyncLifetime
             var thrown = (await create.Should().ThrowAsync<InvalidOperationException>()).Which;
             thrown.Should().BeSameAs(outcome.Thrown);
             thrown.Message.Should().Be(race == CreateRace.NameTaken ? DuplicateName : $"Speciality {world.SurgeryId} was not found.");
+            if (race == CreateRace.NameTaken)
+            {
+                thrown.Should().BeOfType<FieldRefusalException>().Which.Field.Should().Be("Name", "a taken name is the Name field's refusal (T394, N1)");
+            }
+
             thrown.InnerException.Should().BeAssignableTo<DbUpdateException>()
                 .Which.InnerException.Should().BeOfType<PostgresException>()
                 .Which.SqlState.Should().Be(
@@ -189,7 +206,8 @@ public sealed class SubSpecialitySaveRacePostgresTests : IAsyncLifetime
     [InlineData(false)]
     public async Task ANameASiblingAlreadyHolds_IsStillADuplicateName(bool create)
     {
-        // No race: the ordinary duplicate, which neither command checks for before saving, still gets its own words.
+        // No race: the ordinary duplicate gets its own words. Since T394 (flow 16, N1) both commands read the name's holder
+        // before they stage anything, so it is the Name field's refusal with no database refusal under it.
         try
         {
             var schema = await MigratedSchemaAsync();
@@ -199,7 +217,7 @@ public sealed class SubSpecialitySaveRacePostgresTests : IAsyncLifetime
             Func<Task> save = create
                 ? () => SendThroughTheAuditPipelineAsync(
                     schema,
-                    new CreateSubSpecialityCommand(world.PaediatricsId, "Perinatology", null, Administrator()),
+                    new CreateSubSpecialityCommand(world.PaediatricsId, "Perinatology", null, null, Administrator()),
                     db => new CreateSubSpecialityCommandHandler(db),
                     outcome)
                 : () => SendThroughTheAuditPipelineAsync(
@@ -208,9 +226,10 @@ public sealed class SubSpecialitySaveRacePostgresTests : IAsyncLifetime
                     db => new UpdateSubSpecialityCommandHandler(db),
                     outcome);
 
-            var thrown = (await save.Should().ThrowAsync<InvalidOperationException>()).Which;
+            var thrown = (await save.Should().ThrowAsync<FieldRefusalException>()).Which;
             thrown.Message.Should().Be(DuplicateName);
-            thrown.InnerException.Should().BeAssignableTo<DbUpdateException>();
+            thrown.Field.Should().Be("Name");
+            thrown.InnerException.Should().BeNull("the holder was found before anything was saved");
 
             await using var read = NewContext(schema);
             (await read.SubSpecialities.AsNoTracking().CountAsync(entity => entity.Name == "Perinatology")).Should().Be(1);
@@ -286,7 +305,7 @@ public sealed class SubSpecialitySaveRacePostgresTests : IAsyncLifetime
             Func<Task> save = create
                 ? () => SendThroughTheAuditPipelineAsync(
                     schema,
-                    new CreateSubSpecialityCommand(world.PaediatricsId, "Neonatal medicine", null, Administrator()),
+                    new CreateSubSpecialityCommand(world.PaediatricsId, "Neonatal medicine", null, null, Administrator()),
                     db => new CreateSubSpecialityCommandHandler(db),
                     outcome,
                     race,
@@ -319,7 +338,96 @@ public sealed class SubSpecialitySaveRacePostgresTests : IAsyncLifetime
         }
     }
 
-    private sealed record World(int PaediatricsId, int SurgeryId, int NeonatologyId, int LadderId);
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ASpecialityNameTakenInARace_IsTheNameFieldsRefusal_AndSavesNothing(bool create)
+    {
+        // T394 (flow 16, N1): a speciality's create and update read the name's holder before they stage anything; a name
+        // another save takes after that check is refused by the unique index on (CollegeId, Name), and is the same Name
+        // refusal, the database's underneath, so the audit pipeline discards the refused save (T201).
+        try
+        {
+            var schema = await MigratedSchemaAsync();
+            var world = await SeedAsync(schema);
+
+            Func<Task> race = () => InsertSpecialityAsync(schema, world.CollegeId, "Neurology");
+            var outcome = new HandlerOutcome();
+            Func<Task> save = create
+                ? () => SendThroughTheAuditPipelineAsync(
+                    schema,
+                    new CreateSpecialityCommand(world.CollegeId, "Neurology", null, Administrator()),
+                    db => new CreateSpecialityCommandHandler(db),
+                    outcome,
+                    race)
+                : () => SendThroughTheAuditPipelineAsync(
+                    schema,
+                    new UpdateSpecialityCommand(world.SurgeryId, world.CollegeId, "Neurology", null, true, Administrator()),
+                    db => new UpdateSpecialityCommandHandler(db),
+                    outcome,
+                    race);
+
+            var thrown = (await save.Should().ThrowAsync<FieldRefusalException>()).Which;
+            thrown.Should().BeSameAs(outcome.Thrown);
+            thrown.Field.Should().Be("Name");
+            thrown.Message.Should().Be(SpecialityTaken);
+            thrown.InnerException.Should().BeAssignableTo<DbUpdateException>()
+                .Which.InnerException.Should().BeOfType<PostgresException>()
+                .Which.SqlState.Should().Be(PostgresErrorCodes.UniqueViolation);
+
+            await using var read = NewContext(schema);
+            (await read.Specialities.AsNoTracking().CountAsync(entity => entity.Name == "Neurology"))
+                .Should().Be(1, "only the racing save's row was stored");
+            (await read.Specialities.AsNoTracking().SingleAsync(entity => entity.Id == world.SurgeryId)).Name.Should().Be("Surgery");
+            await ShouldHaveOneFailureRowAsync(
+                read, create ? nameof(CreateSpecialityCommand) : nameof(UpdateSpecialityCommand), SpecialityTaken);
+        }
+        finally
+        {
+            await _schemas.DropAllAsync();
+        }
+    }
+
+    [Fact]
+    public async Task ASpecialitySaveRefusedForAnythingButItsName_IsLeftAsTheDatabaseGaveIt_NotCalledADuplicateName()
+    {
+        // Until T394 every refused speciality save was "A speciality with the same name already exists for this college.".
+        // A name longer than the column, sent past the validator, is refused for its length, and rethrown as it came, so
+        // the page shows its fixed failure sentence (T272).
+        try
+        {
+            var schema = await MigratedSchemaAsync();
+            var world = await SeedAsync(schema);
+
+            var outcome = new HandlerOutcome();
+            var update = () => SendThroughTheAuditPipelineAsync(
+                schema,
+                new UpdateSpecialityCommand(world.SurgeryId, world.CollegeId, new string('S', 201), null, true, Administrator()),
+                db => new UpdateSpecialityCommandHandler(db),
+                outcome);
+
+            var thrown = (await update.Should().ThrowAsync<DbUpdateException>()).Which;
+            thrown.Should().BeSameAs(outcome.Thrown);
+            thrown.InnerException.Should().BeOfType<PostgresException>()
+                .Which.SqlState.Should().Be(PostgresErrorCodes.StringDataRightTruncation);
+
+            await using var read = NewContext(schema);
+            (await read.Specialities.AsNoTracking().SingleAsync(entity => entity.Id == world.SurgeryId)).Name.Should().Be("Surgery");
+        }
+        finally
+        {
+            await _schemas.DropAllAsync();
+        }
+    }
+
+    private async Task InsertSpecialityAsync(string schema, int collegeId, string name)
+    {
+        await using var racing = NewContext(schema);
+        racing.Specialities.Add(new Speciality { CollegeId = collegeId, Name = name });
+        await racing.SaveChangesAsync();
+    }
+
+    private sealed record World(int PaediatricsId, int SurgeryId, int NeonatologyId, int LadderId, int CollegeId);
 
     /// <summary>
     /// Paediatrics with Neonatology (no default scale) and Perinatology, an empty Surgery, and a ladder nothing refers to.
@@ -348,7 +456,7 @@ public sealed class SubSpecialitySaveRacePostgresTests : IAsyncLifetime
         db.EntrustmentScales.Add(ladder);
         await db.SaveChangesAsync();
 
-        return new World(paediatrics.Id, surgery.Id, neonatology.Id, ladder.Id);
+        return new World(paediatrics.Id, surgery.Id, neonatology.Id, ladder.Id, college.Id);
     }
 
     private async Task InsertSubSpecialityAsync(string schema, int specialityId, string name)
@@ -374,24 +482,24 @@ public sealed class SubSpecialitySaveRacePostgresTests : IAsyncLifetime
         row.ErrorMessage.Should().Be(message);
     }
 
-    private async Task<SubSpecialityDto> SendThroughTheAuditPipelineAsync<TCommand>(
+    private async Task<TResponse> SendThroughTheAuditPipelineAsync<TCommand, TResponse>(
         string schema,
         TCommand command,
-        Func<ApplicationDbContext, IRequestHandler<TCommand, SubSpecialityDto>> handlerFor,
+        Func<ApplicationDbContext, IRequestHandler<TCommand, TResponse>> handlerFor,
         HandlerOutcome outcome,
         Func<Task>? race = null,
         Func<Task>? readBackFails = null)
-        where TCommand : IRequest<SubSpecialityDto>
+        where TCommand : IRequest<TResponse>
     {
         await using var db = NewContext(schema, race, readBackFails);
         var handler = handlerFor(db);
 
-        return await new AuditPipelineBehavior<TCommand, SubSpecialityDto>(new AuditWriter(db), new FixedAuditContext())
+        return await new AuditPipelineBehavior<TCommand, TResponse>(new AuditWriter(db), new FixedAuditContext())
             .Handle(
                 command,
                 async () =>
                 {
-                    SubSpecialityDto? saved = null;
+                    TResponse? saved = default;
                     await outcome.RecordAsync(async () => saved = await handler.Handle(command, CancellationToken.None));
                     return saved!;
                 },

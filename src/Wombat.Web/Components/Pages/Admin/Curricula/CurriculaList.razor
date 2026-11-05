@@ -1,6 +1,7 @@
 @page "/admin/curricula"
 @attribute [Authorize(Policy = "NationalCatalogueAccess")]
 @using Wombat.Application.Features.Adoptions
+@using Wombat.Application.Features.Colleges
 @using Wombat.Application.Features.Institutions.Queries.GetMyInstitutionName
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -95,6 +96,9 @@
   private bool _loading = true;
   private string? _loadError;
   private string? _institutionName;
+
+  /// <summary>The College admin's College, for the subtitle and caption (T394, F01); null for anyone else.</summary>
+  private string? _collegeName;
   private IReadOnlyList<CurriculumDto> _curricula = [];
   private IReadOnlyList<AdoptableCurriculumDto> _adoptable = [];
   private ActionResult? _result;
@@ -137,7 +141,8 @@
   private string? Subtitle => _view switch
   {
     View.Administrator => CurriculaWords.SubtitleAdministrator,
-    View.College => CurriculaWords.SubtitleCollege,
+    // T394 (F01, T326): the College's words, naming it; none until its name is read (a College admin with no College).
+    View.College => _collegeName is { } college ? CurriculaWords.SubtitleCollege(college) : null,
     _ => _institutionName is { } name ? CurriculaWords.SubtitleInstitution(name) : CurriculaWords.SubtitleInstitutionWithoutName
   };
 
@@ -156,10 +161,10 @@
     {
       <a class="btn btn-outline" href="/admin/curriculum-progress">Curriculum progress</a>
     }
-    @* T211. Offered to those the create page admits. The plus stays, as built (round-3-check decision 4). *@
+    @* T211. Offered to those the create page admits. The plus stays, as built (flow 15's round-3-check decision 4, its build review N13: the boards draw none). *@
     @if (_canCreate)
     {
-      <a class="btn btn-primary" href="/admin/curricula/new">
+      <a class="btn btn-primary" href="@CatalogueLinks.NewCurriculum">
         <Icon Name="plus" />
         Create curriculum
       </a>
@@ -168,7 +173,7 @@
 
   // ---- The Institutional admin's sections, and the Administrator's for the institution chosen ----
 
-  /// <param name="named">The institution's name for the Administrator's section (h3, its words named for it); null for hers.</param>
+  /// <param name="named">The institution's name for the Administrator's section (h3, its words named for it); null for the caller's own.</param>
   private RenderFragment TrainAgainst(IReadOnlyList<CurriculumDto> curricula, string? named, string? ownName) => __builder =>
   {
     var rows = curricula.Where(row => row.Institution is not null).ToList();
@@ -329,7 +334,7 @@
     }
     else
     {
-      @CollegeTable(_curricula, CurriculaWords.CollegeCaption(_curricula[0].CollegeName), withCollege: false)
+      @CollegeTable(_curricula, CurriculaWords.CollegeCaption(_collegeName ?? _curricula[0].CollegeName), withCollege: false)
     }
   };
 
@@ -387,7 +392,7 @@
             <div class="actions-cell">
               @if (curriculum.CanEditCurriculum)
               {
-                <a class="btn btn-outline btn-sm" href="@($"/admin/curricula/{curriculum.Id}")" aria-label="@($"{CurriculaWords.Edit} {names[curriculum.Id]}")">@CurriculaWords.Edit</a>
+                <a class="btn btn-outline btn-sm" href="@CatalogueLinks.Curriculum(curriculum.Id)" aria-label="@($"{CurriculaWords.Edit} {names[curriculum.Id]}")">@CurriculaWords.Edit</a>
               }
               <a class="btn btn-outline btn-sm" href="@CatalogueLinks.Items(curriculum.Id)" aria-label="@CurriculaWords.ItemsName(CurriculaWords.ItemsLink, names[curriculum.Id], null)">@CurriculaWords.ItemsLink</a>
             </div>
@@ -496,6 +501,8 @@
           }
           break;
         default:
+          // T394 (F01): the College admin's College by name, read once, so the subtitle names it even before it has a version.
+          _collegeName = (await Sender.Send(new GetCollegesListQuery(user))).FirstOrDefault()?.Name;
           _curricula = await Sender.Send(new GetCurriculaListQuery(user));
           break;
       }
@@ -564,7 +571,7 @@
 
   private static string TriggerId(int curriculumId) => $"adopt-{curriculumId}";
 
-  /// <summary>The institution the dialog names: the Administrator's chosen one, or hers ("Kgosi Kgari Teaching Hospital").</summary>
+  /// <summary>The institution the dialog names: the Administrator's chosen one, or the caller's own ("Kgosi Kgari Teaching Hospital").</summary>
   private string DialogInstitution => SectionInstitutionNamed ?? _institutionName ?? "your institution";
 
   private async Task AdoptPressedAsync(AdoptableCurriculumDto row)

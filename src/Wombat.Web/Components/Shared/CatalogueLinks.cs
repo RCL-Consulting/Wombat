@@ -18,7 +18,8 @@ namespace Wombat.Web.Components.Shared;
 /// another institution's) writes nothing and focuses nothing.
 /// </para>
 /// <para>
-/// <c>?created</c> has no value; read it with <see cref="HasToken" />. It survives the EPA page's <c>forceLoad</c> after a create
+/// <c>?created</c> has no value on an EPA's, a College's, a scale's or a curriculum's page; read it with
+/// <see cref="HasToken" />. On the College's tree it names the record, as <c>?saved</c> does there (<see cref="TreeRecordOf" />, T394, S13). It survives the EPA page's <c>forceLoad</c> after a create
 /// (<c>EpaEdit.razor</c>), which a scoped flash message would not.
 /// </para>
 /// </remarks>
@@ -45,7 +46,127 @@ public static class CatalogueLinks
     /// <summary>The token after Cancel on an item's page (M6): <c>back</c>.</summary>
     public const string BackToken = "back";
 
-    private static readonly string[] Tokens = [CreatedToken, AddedToken, SavedToken, BackToken];
+    /// <summary>
+    /// The token on a curriculum's page after a clone (T394, flow 16, Q5): <c>cloned=‹the source's id›</c>, so the arriving
+    /// page names what it was cloned from ("… cloned from 11.1, with its 15 national items.").
+    /// </summary>
+    public const string ClonedToken = "cloned";
+
+    private static readonly string[] Tokens = [CreatedToken, AddedToken, SavedToken, BackToken, ClonedToken];
+
+    // Flow 16 (T394, build-contracts § 0): the College's and the Administrator's pages.
+
+    /// <summary>Colleges, the Administrator's: <c>/admin/colleges</c>.</summary>
+    public const string Colleges = "/admin/colleges";
+
+    /// <summary>Create college: <c>/admin/colleges/new</c>.</summary>
+    public const string NewCollege = "/admin/colleges/new";
+
+    /// <summary>
+    /// The College admin's Specialities, the menu item's address: it sends him to his College's tree, or tells him his
+    /// account names no College (S12). Never a link to Colleges (T291 item 2).
+    /// </summary>
+    public const string Specialities = "/admin/specialities";
+
+    /// <summary>Entrustment scales (the Administrator's; read by the College and the institution, D57).</summary>
+    public const string EntrustmentScales = "/admin/entrustment-scales";
+
+    /// <summary>Create scale: <c>/admin/entrustment-scales/new</c>.</summary>
+    public const string NewEntrustmentScale = "/admin/entrustment-scales/new";
+
+    /// <summary>Create curriculum: <c>/admin/curricula/new</c>.</summary>
+    public const string NewCurriculum = "/admin/curricula/new";
+
+    /// <summary>A College's record: <c>/admin/colleges/4</c>.</summary>
+    public static string College(int collegeId) => Invariant($"{Colleges}/{collegeId}");
+
+    /// <summary>A College's record after its create (S13): <c>/admin/colleges/4?created</c>, "College created.".</summary>
+    public static string CollegeCreated(int collegeId) => Invariant($"{College(collegeId)}?{CreatedToken}");
+
+    /// <summary>
+    /// The College's tree: its specialities, their sub-specialities and the ladder each uses (Q1):
+    /// <c>/admin/colleges/2/specialities</c>.
+    /// </summary>
+    public static string CollegeTree(int collegeId) => Invariant($"{Colleges}/{collegeId}/specialities");
+
+    /// <summary>
+    /// The tree at one speciality's section, where the old Sub-specialities list now sends (Q1):
+    /// <c>/admin/colleges/2/specialities#speciality-2</c>. The section's heading carries <see cref="TreeSectionId" />.
+    /// </summary>
+    public static string CollegeTreeAt(int collegeId, int specialityId)
+        => Invariant($"{CollegeTree(collegeId)}#{TreeSectionId(specialityId)}");
+
+    /// <summary>The id of a speciality's section heading on the tree: <c>speciality-2</c>.</summary>
+    public static string TreeSectionId(int specialityId) => Invariant($"speciality-{specialityId}");
+
+    /// <summary>The tree after a create, naming what was made (S13): <c>/admin/colleges/2/specialities?created=sub:4</c>.</summary>
+    public static string TreeCreated(int collegeId, TreeRecord record) => Invariant($"{CollegeTree(collegeId)}?{CreatedToken}={record}");
+
+    /// <summary>The tree after a save (S13): <c>/admin/colleges/2/specialities?saved=speciality:2</c>.</summary>
+    public static string TreeSaved(int collegeId, TreeRecord record) => Invariant($"{CollegeTree(collegeId)}?{SavedToken}={record}");
+
+    /// <summary>Create speciality: <c>/admin/colleges/4/specialities/new</c>.</summary>
+    public static string NewSpeciality(int collegeId) => Invariant($"{CollegeTree(collegeId)}/new");
+
+    /// <summary>A speciality's record: <c>/admin/colleges/2/specialities/2</c>.</summary>
+    public static string Speciality(int collegeId, int specialityId) => Invariant($"{CollegeTree(collegeId)}/{specialityId}");
+
+    /// <summary>
+    /// A speciality's old Sub-specialities list: <c>/admin/specialities/2/sub-specialities</c>. Kept as an address that
+    /// sends to <see cref="CollegeTreeAt" /> (Q1); no page links it.
+    /// </summary>
+    public static string SubSpecialities(int specialityId) => Invariant($"{Specialities}/{specialityId}/sub-specialities");
+
+    /// <summary>Create sub-speciality: <c>/admin/specialities/2/sub-specialities/new</c>.</summary>
+    public static string NewSubSpeciality(int specialityId) => Invariant($"{SubSpecialities(specialityId)}/new");
+
+    /// <summary>A sub-speciality's record: <c>/admin/specialities/2/sub-specialities/4</c>.</summary>
+    public static string SubSpeciality(int specialityId, int subSpecialityId)
+        => Invariant($"{SubSpecialities(specialityId)}/{subSpecialityId}");
+
+    /// <summary>A scale's page: <c>/admin/entrustment-scales/3</c>.</summary>
+    public static string EntrustmentScale(int scaleId) => Invariant($"{EntrustmentScales}/{scaleId}");
+
+    /// <summary>A scale's page after its create (S13): <c>/admin/entrustment-scales/3?created</c>, "Entrustment scale created.".</summary>
+    public static string EntrustmentScaleCreated(int scaleId) => Invariant($"{EntrustmentScale(scaleId)}?{CreatedToken}");
+
+    /// <summary>A curriculum's own page: <c>/admin/curricula/3</c>.</summary>
+    public static string Curriculum(int curriculumId) => Invariant($"{Curricula}/{curriculumId}");
+
+    /// <summary>A curriculum's page after its create (Q5): <c>/admin/curricula/3?created</c>.</summary>
+    public static string CurriculumCreated(int curriculumId) => Invariant($"{Curriculum(curriculumId)}?{CreatedToken}");
+
+    /// <summary>The new version's page after a clone (Q5): <c>/admin/curricula/4?cloned=2</c>, 2 the version cloned.</summary>
+    public static string CurriculumCloned(int curriculumId, int fromCurriculumId)
+        => Invariant($"{Curriculum(curriculumId)}?{ClonedToken}={fromCurriculumId}");
+
+    /// <summary>
+    /// The record a tree token names (<see cref="TreeCreated" />, <see cref="TreeSaved" />): <c>speciality:2</c> or
+    /// <c>sub:4</c>; null when absent or malformed. The tree reads the record again in the caller's scope before it writes
+    /// a result: a stale or foreign id writes nothing and focuses nothing (F1's rule).
+    /// </summary>
+    public static TreeRecord? TreeRecordOf(string uri, string name)
+    {
+        ArgumentNullException.ThrowIfNull(uri);
+        if (!QueryHelpers.ParseQuery(QueryOf(uri)).TryGetValue(name, out var values))
+        {
+            return null;
+        }
+
+        var parts = values.ToString().Split(':');
+        if (parts.Length != 2
+            || !int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out var id))
+        {
+            return null;
+        }
+
+        return parts[0] switch
+        {
+            TreeRecord.SpecialityPrefix => TreeRecord.OfSpeciality(id),
+            TreeRecord.SubSpecialityPrefix => TreeRecord.OfSubSpeciality(id),
+            _ => null
+        };
+    }
 
     /// <summary>An EPA's page: <c>/admin/epas/17</c>.</summary>
     public static string Epa(int epaId) => Invariant($"{Epas}/{epaId}");
@@ -89,7 +210,7 @@ public static class CatalogueLinks
     }
 
     /// <summary>
-    /// <paramref name="uri" /> without the four tokens, keeping its path and any other query part, for the page to replace
+    /// <paramref name="uri" /> without the five tokens, keeping its path and any other query part, for the page to replace
     /// its address with once it has written the result, so a reload says nothing (F1).
     /// </summary>
     public static string WithoutTokens(string uri)
@@ -127,4 +248,34 @@ public static class CatalogueLinks
     }
 
     private static string Invariant(FormattableString value) => value.ToString(CultureInfo.InvariantCulture);
+}
+
+/// <summary>What a tree token names: a speciality or a sub-speciality (T394, flow 16, S13).</summary>
+public enum TreeRecordKind
+{
+    /// <summary>A speciality: <c>speciality:2</c>.</summary>
+    Speciality,
+
+    /// <summary>A sub-speciality: <c>sub:4</c>.</summary>
+    SubSpeciality
+}
+
+/// <summary>A record on the College's tree, as a token carries it: <c>speciality:2</c>, <c>sub:4</c> (T394, S13).</summary>
+public readonly record struct TreeRecord(TreeRecordKind Kind, int Id)
+{
+    /// <summary>A speciality's prefix.</summary>
+    public const string SpecialityPrefix = "speciality";
+
+    /// <summary>A sub-speciality's prefix.</summary>
+    public const string SubSpecialityPrefix = "sub";
+
+    /// <summary>A speciality.</summary>
+    public static TreeRecord OfSpeciality(int id) => new(TreeRecordKind.Speciality, id);
+
+    /// <summary>A sub-speciality.</summary>
+    public static TreeRecord OfSubSpeciality(int id) => new(TreeRecordKind.SubSpeciality, id);
+
+    /// <inheritdoc />
+    public override string ToString()
+        => string.Create(CultureInfo.InvariantCulture, $"{(Kind == TreeRecordKind.Speciality ? SpecialityPrefix : SubSpecialityPrefix)}:{Id}");
 }

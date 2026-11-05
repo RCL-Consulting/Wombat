@@ -53,8 +53,6 @@ public sealed class PageTitleTests
         ["Admin.Adoptions.AdoptionsList"] =
             "it has no heading: Curriculum adoptions' old address sends to Curricula as it opens (T392, flow 15, Q1); " +
             "CurriculaAdoptionPageTests holds the redirect",
-        ["Admin.Institutions.MySpecialitiesRedirect"] =
-            "it has no heading: it redirects as it opens, to the College's specialities or the colleges",
         ["MultiSourceFeedback.MsfRespond"] =
             "each state has its own <h1>; MsfRespondPageHostingTests holds each state's tab to its heading",
     };

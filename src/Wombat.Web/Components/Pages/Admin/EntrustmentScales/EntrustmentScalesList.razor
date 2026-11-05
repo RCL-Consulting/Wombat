@@ -1,5 +1,7 @@
 @page "/admin/entrustment-scales"
-@attribute [Authorize(Policy = "AdministratorOrInstitutionalAdmin")]
+@* T394 (flow 16, D57): the College admin reads the scales too, as the Institutional admin does: the catalogue's three
+   authors (NationalCatalogueAccess). A scale's own page stays the Administrator's. *@
+@attribute [Authorize(Policy = "NationalCatalogueAccess")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JS
@@ -11,18 +13,23 @@
 <PageTitle>Entrustment scales · Wombat</PageTitle>
 
 @*
-  T392 (flow 15, boards R2-E01, E02, E05, R3-E03, E04): a reader (the Institutional admin) is told what the ladders are and
-  who sets them (Q13, T326), with no actions column (T239); the Administrator's page as built, with Create scale, Edit and
-  Delete. Loading says so in words (S19); a load failure is fixed words with Try again (S7, T329), never the exception's.
-  No action is offered until the read is in.
+  T392 (flow 15, boards R2-E01, E02, E05, R3-E03, E04): a reader (the Institutional admin, and since T394 the College
+  admin, D57, R2-C21a/b) is told what the ladders are and who sets them (Q13, T326), with no actions column (T239); the
+  Administrator's page with Create scale, Edit and Delete…. Loading says so in words (S19); a load failure is fixed words
+  with Try again (S7, T329), never the exception's. No action is offered until the read is in.
+
+  T394 (flow 16, lane B; R2-C01, C06, C07, R3-C08–C10): Delete… is an outline trigger (N11) opening one ConfirmDialog named
+  for its scale (Q11), Cancel first and focused, Cancel or Escape back to the row's Delete…. The delete's refusal is the
+  built sentence at the list's top, word for word, with a link to each sub-speciality that holds the scale as its default
+  (S6), three then "and ‹N› more."; a deletion reads the list again and says "Entrustment scale deleted.".
 *@
 <PageHeader Title="Entrustment scales" Subtitle="@(_isAdministrator ? EntrustmentScalesWords.AdministratorSubtitle : EntrustmentScalesWords.ReaderSubtitle)">
   <Actions>
     @if (_isAdministrator && _scales is not null)
     {
-      <a class="btn btn-primary" href="/admin/entrustment-scales/new">
+      <a class="btn btn-primary" href="@CatalogueLinks.NewEntrustmentScale">
         <Icon Name="plus" />
-        Create scale
+        @EntrustmentScalesWords.CreateScale
       </a>
     }
   </Actions>
@@ -37,7 +44,26 @@
     }
     @if (!string.IsNullOrWhiteSpace(_actionError))
     {
-      <Alert Kind="danger">@_actionError</Alert>
+      <Alert Kind="danger">
+        <p>@_actionError</p>
+        @if (_holders.Count > 0)
+        {
+          @* S6 (R3-C08): each holder linked to its record, named by its name (and its speciality where two share one). *@
+          var names = RowNames.Distinct(_holders, holder => holder.SubSpecialityId, holder => holder.SubSpecialityName,
+                                        holder => $" ({holder.SpecialityName})");
+          <p class="scales-refusal-links">
+            @foreach (var holder in _holders.Take(3))
+            {
+              <a class="btn btn-outline btn-sm" href="@CatalogueLinks.SubSpeciality(holder.SpecialityId, holder.SubSpecialityId)"
+                 aria-label="@EntrustmentScalesWords.OpenHolderName(names[holder.SubSpecialityId])">@EntrustmentScalesWords.OpenHolder(names[holder.SubSpecialityId])</a>
+            }
+            @if (_holders.Count > 3)
+            {
+              <span>@EntrustmentScalesWords.MoreHolders(_holders.Count - 3)</span>
+            }
+          </p>
+        }
+      </Alert>
     }
   </ActionResult>
 
@@ -82,8 +108,10 @@
                 <td role="cell" class="col-actions">
                   @* T239: named by the scale, whose name is unique. *@
                   <div class="actions-cell">
-                    <a class="btn btn-outline btn-sm" href="@($"/admin/entrustment-scales/{scale.Id}")" aria-label="@($"Edit {scale.Name}")">Edit</a>
-                    <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Delete {scale.Name}")" @onclick="() => DeleteAsync(scale.Id)">Delete</button>
+                    <a class="btn btn-outline btn-sm" href="@CatalogueLinks.EntrustmentScale(scale.Id)" aria-label="@($"Edit {scale.Name}")">Edit</a>
+                    @* N11, Q11: an outline trigger that asks first; the dialog's confirm is the danger button. *@
+                    <button type="button" id="@DeleteTriggerId(scale.Id)" class="btn btn-outline btn-sm" aria-haspopup="dialog"
+                            aria-label="@($"Delete {scale.Name}")" @onclick="() => AskDeleteAsync(scale)">Delete…</button>
                   </div>
                 </td>
               }
@@ -95,6 +123,21 @@
   </StatePanel>
 </div>
 
+@if (_isAdministrator)
+{
+  <ConfirmDialog @ref="_confirmDelete"
+                 Title="@EntrustmentScalesWords.DeleteTitle(_target?.Name ?? string.Empty)"
+                 ConfirmLabel="@EntrustmentScalesWords.DeleteConfirm"
+                 DangerAction="true"
+                 ReturnFocusId="@(_target is null ? null : DeleteTriggerId(_target.Id))"
+                 OnConfirm="ConfirmDeleteAsync">
+    <BodyContent>
+      <p>@EntrustmentScalesWords.DeleteBody</p>
+      <p>@EntrustmentScalesWords.DeleteInUseLine</p>
+    </BodyContent>
+  </ConfirmDialog>
+}
+
 @code {
   private IReadOnlyList<EntrustmentScaleDto>? _scales;
   private string? _loadError;
@@ -102,6 +145,10 @@
   private string? _statusMessage;
   private bool _isAdministrator;
   private ActionResult? _result;
+  private ConfirmDialog? _confirmDelete;
+  private EntrustmentScaleDto? _target;
+  private bool _deleting;
+  private IReadOnlyList<EntrustmentScaleHolder> _holders = [];
 
   protected override async Task OnInitializedAsync()
   {
@@ -127,28 +174,57 @@
 
   private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
 
-  private async Task DeleteAsync(int scaleId)
+  private static string DeleteTriggerId(int scaleId) => $"scale-delete-{scaleId}";
+
+  private async Task AskDeleteAsync(EntrustmentScaleDto scale)
   {
+    if (_deleting)
+    {
+      return;
+    }
+
+    _target = scale;
+    if (_confirmDelete is not null)
+    {
+      await _confirmDelete.ShowAsync();
+    }
+  }
+
+  private async Task ConfirmDeleteAsync()
+  {
+    if (_target is not { } scale || _deleting)
+    {
+      return;
+    }
+
+    _deleting = true;
     _actionError = null;
     _statusMessage = null;
+    _holders = [];
 
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      await Sender.Send(new DeleteEntrustmentScaleCommand(scaleId, authState.User));
-      _statusMessage = "Entrustment scale deleted.";
+      await Sender.Send(new DeleteEntrustmentScaleCommand(scale.Id, authState.User));
+      _statusMessage = EntrustmentScalesWords.Deleted;
       await LoadAsync();
     }
-    catch (Exception exception) when (exception is EntrustmentScaleDeleteRefusedException or UnauthorizedAccessException)
+    catch (EntrustmentScaleDeleteRefusedException refused)
     {
-      // The handler's typed refusal (a scale in use), written for the person who pressed; nothing else's text (P6).
-      _actionError = RefusalText.Of(exception);
+      // The handler's typed refusal (a scale in use, R3-C08, C10), the built sentence word for word, written for the
+      // person who pressed (P6), with the sub-specialities that hold it as their default (S6).
+      _actionError = refused.Message;
+      _holders = refused.Holders;
     }
     catch (Exception exception) when (exception is not OperationCanceledException)
     {
       // T329: anything else is the page's fixed words, logged; never the exception's text.
-      Logger.LogError(exception, "The entrustment scale {ScaleId} could not be deleted.", scaleId);
+      Logger.LogError(exception, "The entrustment scale {ScaleId} could not be deleted.", scale.Id);
       _actionError = EntrustmentScalesWords.DeleteFailed;
+    }
+    finally
+    {
+      _deleting = false;
     }
 
     _result?.FocusAfterRender();

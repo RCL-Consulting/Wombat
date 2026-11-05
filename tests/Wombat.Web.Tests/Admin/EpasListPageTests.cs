@@ -114,6 +114,51 @@ public sealed class EpasListPageTests : TestContext
             "a page turn moves the focus to the list's heading");
     }
 
+    // ---- T394 (flow 16, lane D): the College admin's list (R3-E01–E03, R2-E19) ----
+
+    [Fact]
+    public void TheCollegesList_NamesItsCollege_HasNoCollegeColumn_AndNamesEachEditByItsFullLabel()
+    {
+        var cut = Render(new EpaListDto(
+            [National(1, "PAED-001", "Providing paediatric emergency care to children", mayChange: true),
+             National(2, "PAED-002", "Managing common paediatric presentations", mayChange: true)],
+            EpaListReader.College, true, null) { CollegeName = "College of Paediatricians of South Africa" });
+
+        Text(cut.Find(".page-subtitle")).Should().Be(
+            "College of Paediatricians of South Africa's EPAs. A change to one is read at once wherever it is named, in every institution that has adopted a curriculum that holds it.");
+        Text(cut.Find("caption")).Should().Be("College of Paediatricians of South Africa's EPAs");
+        cut.FindAll("thead th").Select(Text).Should().Equal("EPA", "Sub-speciality", "Status", "Actions");
+        cut.FindAll("tbody td[data-label=College]").Should().BeEmpty("T3: every row is her College's");
+
+        var first = cut.FindAll("tbody tr").First();
+        first.QuerySelector("td div.actions-cell a")!.GetAttribute("aria-label")
+            .Should().Be("Edit PAED-001 — Providing paediatric emergency care to children", "N3");
+        Text(cut.Find(".header-container a.btn-primary")).Should().Be("Create EPA");
+    }
+
+    [Fact]
+    public void TheCollegesEmptyList_StillNamesItsCollege()
+    {
+        var cut = Render(new EpaListDto([], EpaListReader.College, true, null) { CollegeName = "College of Neurologists of South Africa" });
+
+        Text(cut.Find(".page-subtitle")).Should().StartWith("College of Neurologists of South Africa's EPAs.");
+        Text(cut.Find(".state-panel-title")).Should().Be("No EPAs yet");
+        cut.FindAll(".header-container a.btn-primary").Should().ContainSingle();
+    }
+
+    [Fact]
+    public void ACollegeAdminWhoseAccountNamesNoCollege_IsToldSo_AndOfferedNoCreate()
+    {
+        // R2-E19: until T394 Create EPA was offered by MayCreate alone.
+        var cut = Render(new EpaListDto([], EpaListReader.College, true, null));
+
+        cut.FindAll(".page-subtitle").Should().BeEmpty();
+        Text(cut.Find(".state-panel-title")).Should().Be("No College on your account");
+        Text(cut.Find(".state-panel-copy")).Should().Be("Your account names no College. Ask the platform administrator to add it.");
+        cut.FindAll(".header-container a.btn-primary").Should().BeEmpty();
+        cut.FindAll(".detail-card--empty a").Should().BeEmpty();
+    }
+
     [Fact]
     public void AShortList_ShowsNoPager()
     {

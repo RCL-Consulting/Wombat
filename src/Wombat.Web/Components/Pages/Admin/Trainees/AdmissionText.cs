@@ -133,7 +133,7 @@ public static class AdmissionText
 
     public const string ProgrammeHeading = "Programme";
 
-    public const string RequiredMarkLine = "* marks a field you must fill in.";
+    public const string RequiredMarkLine = RequiredMark.Line;
 
     public const string ChooseCurriculum = "Choose a curriculum";
 

@@ -23,7 +23,13 @@
   - After a create the page arrives by ?created (F1, M5): it writes "EPA saved." itself, focuses it, then replaces its
     address without the token, so a reload says nothing.
   - Deactivate… (S11) and saving with Active unticked both open one dialog, named for the EPA and for whose trainees it
-    stops measuring (Q11). Its results are the built ones, focused (T234).
+    stops measuring (Q11). Its results are the built ones, focused (T234). Save says it will ask (aria-haspopup) while
+    Active is unticked on an EPA stored active (T394, N20).
+  - The College's words (T394, flow 16, R3-E05–E14, E20): a national EPA's form is subtitled by its College and discipline;
+    the College admin's create names their College, and the picker's help says whose sub-specialities it offers (N16).
+  - EV2 (T394, Q21): a national EPA's form, for a caller who may change it, carries one standing line under the result
+    region saying how far a change reaches (EpaDto.Reach), and its pause dialog opens with the reach (Q2, R3-E07). An
+    institution's own EPA carries neither (P3: flow 15's page stays as it is for it).
 *@
 <PageHeader Title="@Heading" Subtitle="@Subtitle" CurrentCrumb="@Crumb" />
 
@@ -66,9 +72,10 @@
 <ConfirmDialog @ref="_confirmDeactivate"
                Title="@EpaWords.DeactivateTitle(_page?.Epa)"
                Body="@EpaWords.DeactivateBody(_page?.Epa)"
+               BodyContent="@DeactivateBodyWithReach"
                ConfirmLabel="@EpaWords.DeactivateConfirm"
                DangerAction="true"
-               ReturnFocusId="@DeactivateTriggerId"
+               ReturnFocusId="@(_saveOnConfirm ? SaveId : DeactivateTriggerId)"
                OnConfirm="ConfirmDeactivationAsync"
                OnCancel="CancelDeactivation" />
 
@@ -84,6 +91,7 @@
   private const string CategoryId = "epa-category";
   private const string ActiveId = "epa-active";
   private const string DeactivateTriggerId = "epa-deactivate";
+  private const string SaveId = "epa-save";
 
   /// <summary>The command's property each control answers for, so a refusal lands under its field.</summary>
   private static readonly IReadOnlyDictionary<string, string> InputOf = new Dictionary<string, string>(StringComparer.Ordinal)
@@ -166,11 +174,40 @@
   private string Crumb => _page?.Epa is { } epa ? epa.Code : Heading;
 
   private string? Subtitle => _page is null || IsUnavailable ? null
-    : IsNew ? (_page.CreatesOwn ? EpaWords.CreateOwnSubtitle(_page.InstitutionName) : EpaWords.FormSubtitle)
+    : IsNew ? (_page.CreatesOwn ? EpaWords.CreateOwnSubtitle(_page.InstitutionName)
+        : _page.CollegeName is { } college ? EpaWords.CreateNationalSubtitle(college)
+        : EpaWords.FormSubtitle)
     : _page.Epa is { MayChange: false } record ? EpaWords.RecordSubtitle(record)
+    : _page.Epa is { OwningInstitutionId: null } national ? EpaWords.NationalFormSubtitle(national)
     : EpaWords.FormSubtitle;
 
-  private string? SubSpecialityHelp => _page is { CreatesOwn: true } ? EpaWords.SubSpecialityHelpOwn : null;
+  /// <summary>Whose sub-specialities the picker offers (R2-C04; T394, R3-E05, E20, N16): the query says, never the roles.</summary>
+  private string? SubSpecialityHelp => _page is { CreatesOwn: true } ? EpaWords.SubSpecialityHelpOwn
+    : _page is { ReadsEveryCollege: true } ? EpaWords.SubSpecialityHelpEveryCollege
+    : _page?.CollegeName is { } college ? EpaWords.SubSpecialityHelpCollege(college)
+    : null;
+
+  /// <summary>
+  /// A national EPA's reach, for a caller who may change it (T394, EV2, Q2): the page's standing line and the pause
+  /// dialog's first paragraph. None for an institution's own EPA (P3), a create, or a reader.
+  /// </summary>
+  private (EpaDto Epa, Wombat.Application.Features.Curricula.EpaReachDto Reach)? NationalReach
+    => _page?.Epa is { OwningInstitutionId: null, MayChange: true, Reach: { } reach } epa ? (epa, reach) : null;
+
+  /// <summary>R3-E07: the reach first, then the built body; null (the built body alone) where no reach is told.</summary>
+  private RenderFragment? DeactivateBodyWithReach => NationalReach is null ? null : DeactivateBodyParagraphs;
+
+  private RenderFragment DeactivateBodyParagraphs => __builder =>
+  {
+    if (NationalReach is { } shown)
+    {
+      <p>@EpaWords.DeactivateReach(shown.Epa, shown.Reach)</p>
+      <p>@EpaWords.DeactivateBody(shown.Epa)</p>
+    }
+  };
+
+  /// <summary>N20: Save will ask first, so it says so, while Active is unticked on an EPA stored active.</summary>
+  private bool SaveAsks => !IsNew && _storedIsActive && !_model.IsActive;
 
   private RenderFragment Record(EpaDto epa) => __builder =>
   {
@@ -219,11 +256,19 @@
       }
     </ActionResult>
 
+    @* EV2 (T394, Q21): a standing notice, not a live region; under the result region (R3-E05, E06). *@
+    @if (NationalReach is { } reach)
+    {
+      <Alert Kind="info" Role="">@EpaWords.ReachLine(reach.Epa, reach.Reach)</Alert>
+    }
+
     <div class="form-container">
       <EditForm EditContext="_editContext" OnSubmit="SaveAsync" FormName="epa-edit" novalidate>
+        @* M4 (DESIGN.md § Form system): the starred fields said once, above the first. *@
+        <p class="field-help">@EpaWords.RequiredMarkLine</p>
         <div class="form-grid form-grid--wide">
           <FormField Label="@EpaWords.SubSpecialityLabel" InputId="@SubSpecialityId" Required="true" HelpText="@SubSpecialityHelp">
-            <InputSelect id="@SubSpecialityId" class="form-select" TValue="int" @bind-Value="_model.SubSpecialityId"
+            <InputSelect id="@SubSpecialityId" class="form-select" TValue="int" @bind-Value="_model.SubSpecialityId" aria-required="true"
                          aria-describedby="@DescribedBy(nameof(UpdateEpaCommand.SubSpecialityId), SubSpecialityHelp)">
               @if (_model.SubSpecialityId == 0)
               {
@@ -238,13 +283,13 @@
           </FormField>
 
           <FormField Label="@EpaWords.CodeLabel" InputId="@CodeId" Required="true">
-            <InputText id="@CodeId" class="form-control" @bind-Value="_model.Code"
+            <InputText id="@CodeId" class="form-control" @bind-Value="_model.Code" aria-required="true"
                        aria-describedby="@DescribedBy(nameof(UpdateEpaCommand.Code), null)" />
             @Refusal(nameof(UpdateEpaCommand.Code))
           </FormField>
 
           <FormField Label="@EpaWords.TitleLabel" InputId="@TitleId" Required="true" FullWidth="true">
-            <InputText id="@TitleId" class="form-control" @bind-Value="_model.Title"
+            <InputText id="@TitleId" class="form-control" @bind-Value="_model.Title" aria-required="true"
                        aria-describedby="@DescribedBy(nameof(UpdateEpaCommand.Title), null)" />
             @Refusal(nameof(UpdateEpaCommand.Title))
           </FormField>
@@ -262,7 +307,7 @@
           </FormField>
 
           <FormField Label="@EpaWords.CategoryLabel" InputId="@CategoryId" Required="true">
-            <InputSelect id="@CategoryId" class="form-select" @bind-Value="_model.Category"
+            <InputSelect id="@CategoryId" class="form-select" @bind-Value="_model.Category" aria-required="true"
                          aria-describedby="@DescribedBy(nameof(UpdateEpaCommand.Category), null)">
               @foreach (var category in EpaWords.Categories)
               {
@@ -274,14 +319,17 @@
 
           @if (!IsNew)
           {
-            @* T158, Q11. The help text is the checkbox's description, not only text beside it (T193: FormField gives it the
-               id); it names whose trainees an own EPA measures. *@
-            <FormField Label="@EpaWords.StatusLabel" InputId="@ActiveId" HelpText="@EpaWords.ActiveHelp(_page!.Epa)">
+            @* T158, Q11. The help text is the checkbox's description, not only text beside it (T193); it names whose
+               trainees an own EPA measures. A legend names the group, so the box's own name is its label, "Active", as on a
+               speciality (T394 fix pass, pages S5). *@
+            <fieldset class="form-group">
+              <legend>@EpaWords.StatusLabel</legend>
               <div class="form-check">
                 <InputCheckbox id="@ActiveId" class="form-check-input" @bind-Value="_model.IsActive" aria-describedby="@FieldHelp.Id(ActiveId)" />
                 <label for="@ActiveId">@EpaWords.ActiveLabel</label>
               </div>
-            </FormField>
+              <p class="page-subtitle" id="@FieldHelp.Id(ActiveId)">@EpaWords.ActiveHelp(_page!.Epa)</p>
+            </fieldset>
           }
         </div>
 
@@ -296,7 +344,8 @@
           }
           @* Not disabled while its own save runs (T234): it has the focus then, and a browser drops the focus of a button
              it disables, to the page. A second press sends nothing (SaveAsync). *@
-          <button type="submit" class="btn btn-primary" disabled="@_deactivating" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? EpaWords.Saving : EpaWords.Save)</button>
+          <button type="submit" id="@SaveId" class="btn btn-primary" disabled="@_deactivating" aria-disabled="@InFlight.AriaDisabled(_saving)"
+                  aria-haspopup="@(SaveAsks ? "dialog" : null)">@(_saving ? EpaWords.Saving : EpaWords.Save)</button>
         </FormActions>
       </EditForm>
     </div>
@@ -426,7 +475,7 @@
     if (!IsNew && _storedIsActive && !_model.IsActive && _confirmDeactivate is not null)
     {
       _saveOnConfirm = true;
-      await _confirmDeactivate.ShowAsync();
+      await _confirmDeactivate.ShowAsync(SaveId);
       return;
     }
 
@@ -491,7 +540,8 @@
       var result = await Sender.Send(new UpdateEpaCommand(Id!.Value, _model.SubSpecialityId, _model.Code, _model.Title, EmptyToNull(_model.Description), EmptyToNull(_model.RequiredKnowledgeSkills), _model.Category, _model.IsActive, authState.User));
       _model.IsActive = result.Epa.IsActive;
       _storedIsActive = result.Epa.IsActive;
-      _page = _page! with { Epa = result.Epa with { MayChange = true } };
+      // The reach is the page's read (EV2): a save of the EPA's own fields does not change which curricula hold it.
+      _page = _page! with { Epa = result.Epa with { MayChange = true, Reach = _page.Epa?.Reach } };
       _statusMessage = (wasActive, result.Epa.IsActive) switch
       {
         (false, true) => EpaWords.Reactivated(result.CompletionsCredited),
@@ -527,7 +577,7 @@
     _saveOnConfirm = false;
     if (_confirmDeactivate is not null)
     {
-      await _confirmDeactivate.ShowAsync();
+      await _confirmDeactivate.ShowAsync(DeactivateTriggerId);
     }
   }
 

@@ -16,14 +16,16 @@
     change says "Set by the College." in its actions cell (M1), and Edit is offered only where its "may change" says so
     (T291 item 1; the query reads UpdateEpa's rule, S4). Each title is a link to its page: the form, or the national EPA's
     record (Q2).
-  - Create EPA, with its plus (round-3-check decision 4), only when it can be completed (Q12, S4); else, with nothing to
+  - Create EPA, with its plus (flow 15's round-3-check decision 4, its build review N13), only when it can be completed (Q12, S4); else, with nothing to
     list, Q12's empty state and Go to Curricula (R2-C01).
   - The Administrator's list pages at 20 (P5), the pager only past one page; a page turn focuses the h1.
+  - The College admin's words (T394, flow 16, R3-E01, R2-E19): the College's name in the subtitle and the caption, no
+    College column (T3), and, for an account that names no College, that said in place of the list, with no Create EPA.
   - Loading and a failed read (S7, S19, T329): fixed words, Try again, the exception logged.
 *@
 <PageHeader Title="EPAs" Subtitle="@(_list is null ? null : EpaWords.ListSubtitle(_list))">
   <Actions>
-    @if (_list is { MayCreate: true })
+    @if (_list is { MayCreate: true } offered && !EpaWords.NamesNoCollege(offered))
     {
       <a class="btn btn-primary" href="@CatalogueLinks.NewEpa">
         <Icon Name="plus" />
@@ -35,9 +37,9 @@
 
 <div class="people-page epas-page" aria-busy="@(_loading ? "true" : null)">
   <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusPageHeadingAsync"
-              IsEmpty="@(_list is { Epas.Count: 0 })" EmptyTitle="@EpaWords.EmptyTitle"
-              EmptyBody="@(_list is { MayCreate: false } ? EpaWords.EmptyBodyNothingAdopted : EpaWords.EmptyBodyMayCreate)"
-              EmptyActions="@(_list is { MayCreate: false } ? GoToCurricula : null)">
+              IsEmpty="@(_list is { Epas.Count: 0 } || NamesNoCollege)" EmptyTitle="@(NamesNoCollege ? EpaWords.NoCollegeTitle : EpaWords.EmptyTitle)"
+              EmptyBody="@(NamesNoCollege ? EpaWords.NoCollegeBody : _list is { MayCreate: false } ? EpaWords.EmptyBodyNothingAdopted : EpaWords.EmptyBodyMayCreate)"
+              EmptyActions="@(!NamesNoCollege && _list is { MayCreate: false } ? GoToCurricula : null)">
     <LoadingContent>
       <p class="loading-line" role="status">@EpaWords.LoadingList</p>
       @for (var card = 0; card < 2; card++)
@@ -60,6 +62,8 @@
 </div>
 
 @code {
+  private bool NamesNoCollege => _list is { } list && EpaWords.NamesNoCollege(list);
+
   private static readonly RenderFragment GoToCurricula =
     @<a class="btn btn-primary" href="@CatalogueLinks.Curricula">@EpaWords.GoToCurricula</a>;
 
@@ -75,11 +79,15 @@
       row => EpaWords.OwnerMark(row) is { } mark ? $" ({mark})" : string.Empty,
       row => $" ({row.DisciplineName})",
       row => $" ({row.CollegeName})");
-    <DataTable TItem="EpaDto" Items="rows" StackWide="true" Caption="@EpaWords.Caption(list.Reader)">
+    var showsCollege = EpaWords.ShowsCollegeColumn(list.Reader);
+    <DataTable TItem="EpaDto" Items="rows" StackWide="true" Caption="@EpaWords.Caption(list)">
       <HeaderRow>
         <tr role="row">
           <th scope="col" role="columnheader" class="col-wrap col-wrap--wide">EPA</th>
-          <th scope="col" role="columnheader" class="col-wrap">College</th>
+          @if (showsCollege)
+          {
+            <th scope="col" role="columnheader" class="col-wrap">College</th>
+          }
           <th scope="col" role="columnheader" class="col-wrap">Sub-speciality</th>
           <th scope="col" role="columnheader">Status</th>
           <th scope="col" role="columnheader"><span class="visually-hidden">Actions</span></th>
@@ -94,7 +102,10 @@
               <div class="muted text-sm">@mark</div>
             }
           </th>
-          <td role="cell" class="col-wrap" data-label="College">@epa.CollegeName</td>
+          @if (showsCollege)
+          {
+            <td role="cell" class="col-wrap" data-label="College">@epa.CollegeName</td>
+          }
           <td role="cell" class="col-wrap" data-label="Sub-speciality">@epa.DisciplineName</td>
           <td role="cell" data-label="Status">@EpaWords.Status(epa.IsActive)</td>
           @* Every row says something here: Edit where it may be changed, else why not (M1, T211). *@

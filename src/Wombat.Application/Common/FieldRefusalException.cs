@@ -34,4 +34,11 @@ public sealed class FieldRefusalException : InvalidOperationException
 
     /// <summary>The refused command's property the refusal is about, by its C# name (<c>"SubSpecialityId"</c>, <c>"Code"</c>).</summary>
     public string Field { get; }
+
+    /// <summary>
+    /// Whether the refusal is about the value chosen itself, which the page keeps chosen with the refusal under it until the
+    /// user changes it, rather than reading the field's options again (T394, Q10, R3-F14): a national item refused because an
+    /// institution holds its EPA as its own item names that institution, so the sentence is about the EPA chosen.
+    /// </summary>
+    public bool KeepsChoice { get; init; }
 }

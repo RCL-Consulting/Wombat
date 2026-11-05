@@ -346,10 +346,14 @@ public sealed class CurriculumItemEpaOwnershipTests
             nationalEdit.Select(option => option.Code).Should().Equal(["PAED-001"], "an edit row keeps its own EPA, and nothing else is free");
 
             var act = () => new AddCurriculumItemCommandHandler(dbContext).Handle(AddCommand(NationalHere, college), CancellationToken.None);
-            var refusal = (await act.Should().ThrowAsync<InvalidOperationException>()).Which;
+            // T394 (flow 16, Q10, T242, R3-F14): the refusal names the institution holding the EPA as its own item, so the
+            // College knows whom to ask; until T394 it named neither.
+            var refusal = (await act.Should().ThrowAsync<FieldRefusalException>()).Which;
+            refusal.Field.Should().Be(nameof(AddCurriculumItemCommand.EpaId));
             refusal.Message.Should().Be(
-                "This curriculum already contains the selected EPA, as an institution's own item. A national item cannot share an EPA with an institution's own item: that institution's trainees would be measured against the EPA twice.");
-            AssertNamesNothingOf(refusal.Message, NationalHere);
+                "Institution A has PAED-009 as its own item on this curriculum, so it cannot be added nationally until that institution removes it.");
+            refusal.Message.Should().NotContain("Institution B");
+            refusal.KeepsChoice.Should().BeTrue("the sentence is about the EPA chosen, so the page keeps it chosen (R3-F14)");
             await AssertNothingForTheAuditSaveToCommitAsync(dbContext);
         }
 

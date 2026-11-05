@@ -1,58 +1,155 @@
 @page "/admin/colleges/{CollegeId:int}/specialities"
 @attribute [Authorize(Policy = "AdministratorOrCollegeAdmin")]
+@using Wombat.Application.Features.Institutions.Queries.GetCollegeTree
 @inject IScopedSender Sender
+@inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject ILogger<SpecialitiesList> Logger
 
-<PageTitle>Specialities · Wombat</PageTitle>
+<PageTitle>@Heading · Wombat</PageTitle>
 
-<PageHeader Title="Specialities" Subtitle="@(_college is null ? "Manage specialities for the selected college." : $"College: {_college.Name} ({_college.ShortCode})")"
-            Trail="CollegeTrail" CurrentCrumb="@CollegeCrumb">
+@*
+  The College's tree (T394, flow 16, lane A, Q1; boards R3-A02, A04, A07, A12, A13b, A14b, A16b, A22 and R2-A10, A18a,
+  A19a, A20a). One read (GetCollegeTreeQuery): each speciality an h2 section, its id the tree's section id
+  (CatalogueLinks.TreeSectionId, where the old Sub-specialities list sends), its sub-specialities its rows with the ladder
+  each uses. No Back to colleges (T291): the trail is the way back.
+
+  - Create speciality in the header once the tree is read; Edit and Create sub-speciality of ‹speciality› per section.
+  - A College the caller cannot open, or that does not exist, is College unavailable (Q7), never an empty list.
+  - A record page returns here with a one-shot token (S13: ?created= or ?saved=, speciality:‹id› or sub:‹id›): the tree,
+    read in the caller's scope, writes the result, focuses it, then drops the token; a record it does not hold writes
+    nothing and focuses nothing.
+*@
+<PageHeader Title="@Heading" Subtitle="@Subtitle" Trail="CollegeTrail" CurrentCrumb="@CollegeCrumb">
   <Actions>
-    <a class="btn btn-outline btn-sm" href="/admin/colleges">Back to colleges</a>
-    <a class="btn btn-primary btn-sm" href="@($"/admin/colleges/{CollegeId}/specialities/new")">
-      <Icon Name="plus" />
-      Create speciality
-    </a>
+    @if (_tree is not null)
+    {
+      <a class="btn btn-primary" href="@CatalogueLinks.NewSpeciality(_tree.Id)">
+        <Icon Name="plus" />
+        @CollegeTreeWords.CreateSpeciality
+      </a>
+    }
   </Actions>
 </PageHeader>
 
-<StatePanel IsLoading="@(_specialities is null && string.IsNullOrWhiteSpace(_errorMessage))" LoadError="@_errorMessage" IsEmpty="@(_specialities?.Count == 0)" EmptyTitle="No specialities yet" EmptyBody="Create the first speciality for this college.">
-  @if (_specialities is not null)
-  {
-    <DataTable TItem="SpecialityDto" Items="_specialities" Caption="Specialities">
-      <HeaderRow>
-        <tr>
-          <th>Name</th>
-          <th>Description</th>
-          <th>Status</th>
-          <th><span class="visually-hidden">Actions</span></th>
-        </tr>
-      </HeaderRow>
-      <Row Context="speciality">
-        <tr>
-          <td>@speciality.Name</td>
-          <td>@speciality.Description</td>
-          <td>@(speciality.IsActive ? "Active" : "Inactive")</td>
-          <td>
-            <div class="actions-cell">
-              @* T239: each named by its speciality, whose name is unique within the College. *@
-              <a class="btn btn-outline btn-sm" href="@($"/admin/colleges/{CollegeId}/specialities/{speciality.Id}")" aria-label="@($"Edit {speciality.Name}")">Edit</a>
-              <a class="btn btn-outline btn-sm" href="@($"/admin/specialities/{speciality.Id}/sub-specialities")" aria-label="@($"Sub-specialities of {speciality.Name}")">Sub-specialities</a>
+<div class="people-page college-tree-page" aria-busy="@(_loading ? "true" : null)">
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="LoadAsync" FocusAfterRetry="FocusPageHeadingAsync"
+              IsEmpty="@(_tree is { Specialities.Count: 0 })"
+              EmptyTitle="@CollegeTreeWords.NoSpecialitiesTitle"
+              EmptyBody="@(_tree is null ? string.Empty : CollegeTreeWords.NoSpecialitiesBody(_tree.Name))">
+    <LoadingContent>
+      <p class="loading-line" role="status">@CollegeTreeWords.LoadingTree</p>
+      <div class="detail-card" aria-hidden="true">
+        <div class="skeleton skel-title"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line skel-short"></div>
+      </div>
+    </LoadingContent>
+    <ChildContent>
+      @if (_unavailable)
+      {
+        <div class="detail-card detail-card--empty">
+          <div class="state-panel-copy">@CollegeTreeWords.CollegeUnavailableBody</div>
+          <div class="form-actions">
+            <a class="btn btn-primary" href="@GoTo.Href">@GoTo.Label</a>
+          </div>
+        </div>
+      }
+      else if (_tree is not null)
+      {
+        @* S3: the page's one result region, a token's sentence in it, focused. *@
+        <ActionResult @ref="_result">
+          @if (_arrived is { } arrived)
+          {
+            <Alert Kind="success"><strong>@arrived.Lead</strong>@(arrived.Rest is null ? null : $" {arrived.Rest}")</Alert>
+          }
+        </ActionResult>
+
+        @foreach (var speciality in _tree.Specialities)
+        {
+          var sectionId = CatalogueLinks.TreeSectionId(speciality.Id);
+          <section class="user-section" aria-labelledby="@sectionId">
+            <div class="form-section-head">
+              <h2 id="@sectionId">@speciality.Name</h2>
+              <div class="actions-cell">
+                <a class="btn btn-outline btn-sm" href="@CatalogueLinks.Speciality(_tree.Id, speciality.Id)"
+                   aria-label="@CollegeTreeWords.EditSpecialityName(speciality.Name)">@CollegeTreeWords.Edit</a>
+                <a class="btn btn-outline btn-sm" href="@CatalogueLinks.NewSubSpeciality(speciality.Id)"
+                   aria-label="@CollegeTreeWords.CreateSubSpecialityName(speciality.Name)">@CollegeTreeWords.CreateSubSpeciality</a>
+              </div>
             </div>
-          </td>
-        </tr>
-      </Row>
-    </DataTable>
-  }
-</StatePanel>
+            <p class="muted">@CollegeTreeWords.SpecialityLine(speciality.Description, speciality.IsActive)</p>
+            @if (speciality.SubSpecialities.Count == 0)
+            {
+              <p class="muted">@CollegeTreeWords.NoSubSpecialities(speciality.Name)</p>
+            }
+            else
+            {
+              @* T239: a column no row fills is not drawn. *@
+              var described = speciality.SubSpecialities.Any(sub => !string.IsNullOrWhiteSpace(sub.Description));
+              <DataTable TItem="CollegeTreeSubSpecialityDto" Items="speciality.SubSpecialities" StackWide="true"
+                         Caption="@CollegeTreeWords.SectionCaption(speciality.Name)">
+                <HeaderRow>
+                  <tr role="row">
+                    <th scope="col" role="columnheader" class="col-wrap">@CollegeTreeWords.SubSpecialityColumn</th>
+                    @if (described)
+                    {
+                      <th scope="col" role="columnheader" class="col-wrap">@CollegeTreeWords.DescriptionColumn</th>
+                    }
+                    <th scope="col" role="columnheader" class="col-wrap">@CollegeTreeWords.DefaultScaleColumn</th>
+                    <th scope="col" role="columnheader">@CollegeTreeWords.StatusColumn</th>
+                    <th scope="col" role="columnheader"><span class="visually-hidden">@CollegeTreeWords.ActionsColumn</span></th>
+                  </tr>
+                </HeaderRow>
+                <Row Context="sub">
+                  <tr role="row">
+                    <th scope="row" role="rowheader" class="col-wrap">@_rowNames[sub.Id]</th>
+                    @if (described)
+                    {
+                      <td role="cell" class="col-wrap" data-label="@CollegeTreeWords.DescriptionColumn">@sub.Description</td>
+                    }
+                    <td role="cell" class="col-wrap" data-label="@CollegeTreeWords.DefaultScaleColumn">@(sub.DefaultEntrustmentScaleName ?? CollegeTreeWords.NoDefault)</td>
+                    <td role="cell" data-label="@CollegeTreeWords.StatusColumn">@CollegeTreeWords.Status(sub.IsActive)</td>
+                    <td role="cell">
+                      <div class="actions-cell">
+                        <a class="btn btn-outline btn-sm" href="@CatalogueLinks.SubSpeciality(speciality.Id, sub.Id)"
+                           aria-label="@CollegeTreeWords.EditSubSpecialityName(_rowNames[sub.Id])">@CollegeTreeWords.Edit</a>
+                      </div>
+                    </td>
+                  </tr>
+                </Row>
+              </DataTable>
+            }
+          </section>
+        }
+      }
+    </ChildContent>
+  </StatePanel>
+</div>
 
 @code {
   [Parameter]
   public int CollegeId { get; set; }
 
-  private CollegeDto? _college;
-  private IReadOnlyList<SpecialityDto>? _specialities;
-  private string? _errorMessage;
+  private CollegeTreeDto? _tree;
+  private bool _unavailable;
+  private bool _loading = true;
+  private string? _loadError;
+  private int? _readId;
+
+  // Each row's name (N4): the sub-speciality's, its speciality's added where two of the College share one.
+  private IReadOnlyDictionary<int, string> _rowNames = new Dictionary<int, string>();
+
+  // The result a record page's token asked for, written once the tree is read in scope (S13).
+  private TreeResult? _arrived;
+  private ActionResult? _result;
+  private bool _focusResult;
+  private bool _stripToken;
+
+  /// <summary>The result region, which an arrival by a token focuses. A test matches a focus call to it.</summary>
+  internal ElementReference ResultRegion => _result?.Element ?? default;
 
   /// <summary>The acting role, as App resolved it and Routes cascades it: which list this page is under.</summary>
   [CascadingParameter] public ActingRole? Acting { get; set; }
@@ -60,28 +157,109 @@
   /// <summary>
   /// The College is on the trail (T335, flow 01; R2-Rules § 3). The Administrator came from Colleges, so it is the crumb
   /// between them and this list (Home › Colleges › the College › Specialities); the College admin's own Specialities
-  /// opens this page, so for him it is the page's own crumb (Home › Specialities › the College).
+  /// opens this page, so for the College admin it is the page's own crumb (Home › Specialities › the College).
   /// </summary>
   private bool UnderColleges => NavOwners.OwnerFor(typeof(SpecialitiesList), Acting?.Role) == NavItems.Colleges;
 
   private IReadOnlyList<Crumb>? CollegeTrail
-    => UnderColleges && _college is not null ? [new Crumb(_college.Name, $"/admin/colleges/{CollegeId}")] : null;
+    => UnderColleges && _tree is not null ? [new Crumb(_tree.Name, CatalogueLinks.College(_tree.Id))] : null;
 
-  private string? CollegeCrumb => UnderColleges ? null : _college?.Name;
+  private string? CollegeCrumb => UnderColleges || _unavailable ? null : _tree?.Name;
 
+  /// <summary>The h1 and the tab: "Specialities", or the Unavailable page's own (Q7).</summary>
+  private string Heading => _unavailable ? CollegeTreeWords.CollegeUnavailableHeading : CollegeTreeWords.TreeHeading;
+
+  private string? Subtitle => _tree is null ? null : CollegeTreeWords.TreeSubtitle(_tree.Name, _tree.ShortCode);
+
+  /// <summary>Unavailable's way out: the College admin's own Specialities, or Colleges for the Administrator (N2).</summary>
+  private (string Label, string Href) GoTo => UnderColleges
+    ? (CollegeTreeWords.GoToColleges, CatalogueLinks.Colleges)
+    : (CollegeTreeWords.GoToSpecialities, CatalogueLinks.Specialities);
+
+  // Read again when the College changes, never when only the query does: the token's own replace must not read again.
   protected override async Task OnParametersSetAsync()
   {
-    _errorMessage = null;
+    if (_readId == CollegeId)
+    {
+      return;
+    }
+
+    _readId = CollegeId;
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
+    _loading = true;
+    _loadError = null;
+    _unavailable = false;
+    _arrived = null;
 
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _college = await Sender.Send(new GetCollegeByIdQuery(CollegeId, authState.User));
-      _specialities = await Sender.Send(new GetSpecialitiesForInstitutionQuery(CollegeId, authState.User));
+      _tree = await Sender.Send(new GetCollegeTreeQuery(CollegeId, authState.User));
+      _unavailable = _tree is null;
+      if (_tree is not null)
+      {
+        var rows = _tree.Specialities.SelectMany(speciality => speciality.SubSpecialities.Select(sub => (Sub: sub, Speciality: speciality.Name))).ToList();
+        _rowNames = RowNames.Distinct(rows, row => row.Sub.Id, row => row.Sub.Name, row => CollegeTreeWords.SharedNameSuffix(row.Speciality));
+        ReadToken(_tree);
+      }
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = exception.Message;
+      // R2-A20a (T329, T393): the read failed, which is not Unavailable. Never the exception's text.
+      Logger.LogError(exception, "The College {CollegeId}'s specialities could not be read.", CollegeId);
+      _tree = null;
+      _loadError = CollegeTreeWords.TreeLoadFailed;
+    }
+    finally
+    {
+      _loading = false;
+    }
+  }
+
+  /// <summary>
+  /// S13: <c>?created=</c> or <c>?saved=</c> names the record a record page made or saved. The tree holds it only if it is
+  /// this College's and the caller's to read, so a stale or foreign id writes nothing and focuses nothing; either way
+  /// the token goes once the tree is drawn.
+  /// </summary>
+  private void ReadToken(CollegeTreeDto tree)
+  {
+    var uri = Navigation.Uri;
+    var created = CatalogueLinks.TreeRecordOf(uri, CatalogueLinks.CreatedToken);
+    var saved = CatalogueLinks.TreeRecordOf(uri, CatalogueLinks.SavedToken);
+    _stripToken = created is not null || saved is not null
+      || CatalogueLinks.HasToken(uri, CatalogueLinks.CreatedToken) || CatalogueLinks.HasToken(uri, CatalogueLinks.SavedToken);
+
+    _arrived = (created ?? saved) is not { } record ? null : record.Kind switch
+    {
+      TreeRecordKind.Speciality when tree.Specialities.FirstOrDefault(speciality => speciality.Id == record.Id) is { } speciality
+        => created is not null ? CollegeTreeWords.SpecialityCreated(speciality.Name) : CollegeTreeWords.SpecialitySaved,
+      TreeRecordKind.SubSpeciality when tree.Specialities.SelectMany(speciality => speciality.SubSpecialities)
+          .FirstOrDefault(sub => sub.Id == record.Id) is { } sub
+        => created is not null ? CollegeTreeWords.SubSpecialityCreated(sub.Name) : CollegeTreeWords.SubSpecialitySaved,
+      _ => null
+    };
+    _focusResult = _arrived is not null;
+  }
+
+  // S7: once a Try again has read, the h1 takes the focus.
+  private ValueTask FocusPageHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusResult && _result is not null)
+    {
+      _focusResult = false;
+      await _result.Element.FocusAsync();
+    }
+
+    if (_stripToken && !_loading)
+    {
+      _stripToken = false;
+      Navigation.NavigateTo(CatalogueLinks.WithoutTokens(Navigation.Uri), replace: true);
     }
   }
 }

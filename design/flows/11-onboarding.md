@@ -735,13 +735,14 @@ Do: In a fresh browser session, open the link from the College admin stub email 
 Expect: The link answers with a redirect to `/account/register`, so the address bar never holds the token (T315; S2).
   The page is "Complete registration" (its tab too), under the Wombat lockup, and reads "This invitation is for
   kruger@cmsa.wombat.local, as College admin at College of Paediatricians of South Africa." Email holds the address,
-  read-only, with "The address this invitation is for. It cannot be changed here."; then First name, Last name,
-  Password with the six rules under it, Confirm password, and Register. Under the form: "Not expecting this
-  invitation? Ignore it: its link works until `D+14`." Register signs Kruger in and lands on Home, with "College admin
-  · Semester N, YYYY" under its heading. The dashboard has one card, National catalogue, with Specialities, EPAs and
-  Curricula. The sidebar reads "Acting as College admin" over Home, Specialities, EPAs, Curricula and Activity types,
-  then My data rights: the College writes its disciplines' activity types in the builder (T300, D52). The top bar
-  names him "Anton Kruger".
+  read-only, with "The address this invitation is for. It cannot be changed here."; then First name, Last name, Password
+  with the six rules under it, Confirm password, and Register. Under the form: "Not expecting this invitation? Ignore
+  it: its link works until `D+14`." Register signs Kruger in and lands on Home, with "College admin · Semester N, YYYY"
+  under its heading. The dashboard has one card, National catalogue: "Your College's specialities, EPAs, curricula and
+  activity types. An institution can adopt a curriculum version once you open it.", with Specialities, EPAs, Curricula
+  and Activity types (T394, Q12, Q17). The sidebar reads "Acting as College admin" over Home, Specialities, EPAs,
+  Curricula, Activity types and Entrustment scales, then My data rights: the College writes its disciplines' activity
+  types in the builder (T300, D52), and reads the scales (D57). The top bar names him "Anton Kruger".
 
 Step 1.9 — A used link is refused
 Role: Anonymous — anyone who holds Kruger's link

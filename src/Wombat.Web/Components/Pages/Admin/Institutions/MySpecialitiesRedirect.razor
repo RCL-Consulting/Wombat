@@ -5,30 +5,47 @@
 @using Wombat.Application.Common.Extensions
 
 @*
-  Specialities are College-owned (T091). This redirect lets the CollegeAdmin "Specialities" nav link work
-  without knowing the user's college id at render time. Administrators are bounced to the colleges list —
-  they pick which college's specialities to manage from there.
+  Specialities are College-owned (T091). This lets the CollegeAdmin "Specialities" nav link work without knowing the
+  user's college id at render time: it sends the user to their College's tree (T394, flow 16, Q1). Administrators are sent to
+  the colleges list, where they pick a College. A College admin whose account names no College is told so here (S12,
+  R2-A21), in place of a send to Colleges, which refuses a College admin (T291 item 2): no list, no Create.
 *@
 
-@* The nav's "Specialities" opens here, so the tab says so for the moment before the redirect lands (T190). *@
+@* The nav's "Specialities" opens here, so the tab says so (T190). *@
 <PageTitle>Specialities · Wombat</PageTitle>
 
-<StatePanel IsLoading="true" IsEmpty="false" EmptyTitle="" EmptyBody="">
-  <p class="muted">Redirecting...</p>
-</StatePanel>
+<PageHeader Title="Specialities" />
+
+<div class="people-page">
+  <StatePanel IsLoading="@(!_noCollege)" IsEmpty="true"
+              EmptyTitle="@CollegeTreeWords.NoCollegeTitle" EmptyBody="@CollegeTreeWords.NoCollegeBody">
+    <LoadingContent>
+      <p class="loading-line" role="status">@CollegeTreeWords.LoadingTree</p>
+    </LoadingContent>
+    <ChildContent></ChildContent>
+  </StatePanel>
+</div>
 
 @code {
+  private bool _noCollege;
+
   protected override async Task OnInitializedAsync()
   {
     var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    var collegeId = authState.User.GetCollegeId();
+    var user = authState.User;
 
-    if (collegeId.HasValue)
+    if (user.IsAdministrator())
     {
-      Navigation.NavigateTo($"/admin/colleges/{collegeId.Value}/specialities", forceLoad: false);
+      Navigation.NavigateTo(CatalogueLinks.Colleges, replace: true);
       return;
     }
 
-    Navigation.NavigateTo("/admin/colleges", forceLoad: false);
+    if (user.GetCollegeId() is { } collegeId)
+    {
+      Navigation.NavigateTo(CatalogueLinks.CollegeTree(collegeId), replace: true);
+      return;
+    }
+
+    _noCollege = true;
   }
 }

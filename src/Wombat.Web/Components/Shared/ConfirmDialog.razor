@@ -164,10 +164,15 @@
   // The first focus waits for the render after ShowAsync, so the field the caller's body draws is there (T366, R5).
   private bool _focusInitial;
 
-  public async ValueTask ShowAsync()
+  /// <param name="returnFocusId">
+  /// The control Cancel and Escape give the focus back to when the script cannot tell who opened the dialog, in place of
+  /// <see cref="ReturnFocusId" />: for a caller that opens it from another control in the same handler that decided so, before
+  /// the render that would pass the new <see cref="ReturnFocusId" /> (T394 fix pass, pages S2: Save's question).
+  /// </param>
+  public async ValueTask ShowAsync(string? returnFocusId = null)
   {
     // The script records who opened the dialog, to give the focus back on Cancel or Escape (T366, D6).
-    await JS.InvokeVoidAsync("wombatDialog.showModal", _dialog, ReturnFocusId);
+    await JS.InvokeVoidAsync("wombatDialog.showModal", _dialog, returnFocusId ?? ReturnFocusId);
     if (!IsFormMode && !string.IsNullOrEmpty(InitialFocusId))
     {
       // After the native dialog has put the focus on its first control, so the field wins (T366, M5); and after the

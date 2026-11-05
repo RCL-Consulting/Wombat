@@ -492,11 +492,12 @@ public sealed class CurriculumAdminScopeTests
     // ---- An EPA already on the curriculum, as an item the caller does not read ----
 
     [Fact]
-    public async Task AddingAnEpaAnInstitutionHasOnTheCurriculumAsItsOwn_SaysSo_WithoutNamingTheInstitution()
+    public async Task AddingAnEpaAnInstitutionHasOnTheCurriculumAsItsOwn_SaysSo_NamingTheInstitution()
     {
         // The College cannot see institution A's item naming PAED-002, so "already contains" alone would point at a list
-        // that does not show it. The refusal says why, and names neither A nor the item. A national item beside A's would
-        // measure A's trainees against PAED-002 twice (T223).
+        // that does not show it. The refusal says why, and since T394 (flow 16, Q10, T242) names A and the EPA, so the
+        // College knows whom to ask; never the item's id. A national item beside A's would measure A's trainees against
+        // PAED-002 twice (T223).
         await using var dbContext = await SeededAsync();
 
         var act = () => new AddCurriculumItemCommandHandler(dbContext).Handle(
@@ -507,8 +508,8 @@ public sealed class CurriculumAdminScopeTests
         var refusal = (await act.Should().ThrowAsync<FieldRefusalException>()).Which;
         refusal.Field.Should().Be(nameof(AddCurriculumItemCommand.EpaId));
         refusal.Message.Should().Be(
-            "This curriculum already contains the selected EPA, as an institution's own item. A national item cannot share an EPA with an institution's own item: that institution's trainees would be measured against the EPA twice.");
-        refusal.Message.Should().NotContain("Institution A").And.NotContain(ANationalEpaItem.ToString(CultureInfo.InvariantCulture));
+            "Institution A has PAED-002 as its own item on this curriculum, so it cannot be added nationally until that institution removes it.");
+        refusal.Message.Should().NotContain(ANationalEpaItem.ToString(CultureInfo.InvariantCulture));
         dbContext.ChangeTracker.Entries<CurriculumItem>().Should().NotContain(entry => entry.State == EntityState.Added);
     }
 
@@ -516,7 +517,7 @@ public sealed class CurriculumAdminScopeTests
     // A's own item holds PAED-002 for A.
     [InlineData(Caller.InstitutionalAdminA, "This curriculum already contains the selected EPA.")]
     // An Administrator adds a national item, which A's own item holds PAED-002 from (T223).
-    [InlineData(Caller.Administrator, "This curriculum already contains the selected EPA, as an institution's own item. A national item cannot share an EPA with an institution's own item: that institution's trainees would be measured against the EPA twice.")]
+    [InlineData(Caller.Administrator, "Institution A has PAED-002 as its own item on this curriculum, so it cannot be added nationally until that institution removes it.")]
     public async Task AddingAnEpaOnAnItemTheCallerReads_IsRefused_SayingWhichKindOfItemHoldsIt(Caller caller, string message)
     {
         await using var dbContext = await SeededAsync();

@@ -5,9 +5,7 @@ using FluentAssertions;
 using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
-using Wombat.Application.Features.Colleges;
-using Wombat.Application.Features.Institutions;
-using Wombat.Application.Features.Institutions.Queries.GetSpecialitiesForInstitution;
+using Wombat.Application.Features.Institutions.Queries.GetCollegeTree;
 using Wombat.Domain.Identity;
 using Wombat.Web.Components.Pages.Admin.Institutions;
 using Wombat.Web.Navigation;
@@ -64,8 +62,7 @@ public sealed class SpecialitiesListTrailTests : TestContext
         public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
             => request switch
             {
-                GetCollegeByIdQuery => Task.FromResult((TResponse)(object)new CollegeDto(CollegeId, College, "CPSA", null, true, DateTime.UnixEpoch)),
-                GetSpecialitiesForInstitutionQuery => Task.FromResult((TResponse)(object)Array.Empty<SpecialityDto>()),
+                GetCollegeTreeQuery => Task.FromResult((TResponse)(object)new CollegeTreeDto(CollegeId, College, "CPSA", [])),
                 _ => throw new NotSupportedException(request.GetType().Name),
             };
 

@@ -85,6 +85,15 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
     /// <summary>What <c>GetCurriculumByIdQuery</c> answers for <see cref="CurriculumDto.Institution" /> (lane A's); none when not set.</summary>
     public CurriculumInstitutionStateDto? Institution { get; init; }
 
+    /// <summary>
+    /// What <c>GetCurriculumByIdQuery</c> answers for <see cref="CurriculumDto.HasNationalEpas" /> (§ 0's, T394 S8); true when
+    /// not set, so a test of the add sees the add, and Q14's words only where it says the discipline has none.
+    /// </summary>
+    public bool HasNationalEpas { get; init; } = true;
+
+    /// <summary>What <c>GetCurriculumByIdQuery</c> answers for <see cref="CurriculumDto.Reach" /> (§ 0's, T394 Q2); none when not set.</summary>
+    public CurriculumReachDto? Reach { get; init; }
+
     /// <summary>Whether the curriculum is out of the caller's scope, so the read answers null (Q19).</summary>
     public bool Unavailable { get; init; }
 
@@ -266,7 +275,13 @@ internal sealed class CurriculumItemsFakeSender : IScopedSender
         }
 
         // The read fills the state for the institution and the may-add flag; a command's curriculum carries neither (§ 0).
-        return Unavailable ? null : Curriculum() with { Institution = Institution, MayAddItem = MayAddItem };
+        return Unavailable ? null : Curriculum() with
+        {
+            Institution = Institution,
+            MayAddItem = MayAddItem,
+            HasNationalEpas = HasNationalEpas,
+            Reach = Reach
+        };
     }
 
     // The handlers' refusals, in their words, where the fake stores what the commands send.

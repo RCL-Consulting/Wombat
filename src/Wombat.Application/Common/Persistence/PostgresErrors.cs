@@ -82,4 +82,26 @@ public static class PostgresErrors
 
         return false;
     }
+
+    /// <summary>
+    /// The name of the constraint or index that refused the write, read from the provider's exception at any depth of
+    /// <paramref name="exception" />'s chain through <see cref="Exception.Data" /> (Npgsql fills <c>ConstraintName</c>
+    /// there), so no provider type is named; null when no exception in the chain carries one.
+    /// </summary>
+    /// <remarks>
+    /// A refusal inside a transaction aborts it, and PostgreSQL then refuses every later command in it (<c>25P02</c>), so
+    /// a handler that saves twice in one transaction cannot read the database to learn which index refused it (T397).
+    /// </remarks>
+    public static string? ConstraintName(Exception? exception)
+    {
+        for (var current = exception; current is not null; current = current.InnerException)
+        {
+            if (current is DbException && current.Data["ConstraintName"] is string name && name.Length > 0)
+            {
+                return name;
+            }
+        }
+
+        return null;
+    }
 }

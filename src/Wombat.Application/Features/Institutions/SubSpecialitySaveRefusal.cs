@@ -1,6 +1,8 @@
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common;
 using Wombat.Application.Common.Interfaces;
+using Wombat.Application.Common.Persistence;
 using Wombat.Domain.Epas;
 using Wombat.Domain.Institutions;
 
@@ -27,8 +29,26 @@ internal static class SubSpecialitySaveRefusal
     /// <summary>The refusal of a name another sub-speciality of the same speciality already holds.</summary>
     internal const string DuplicateName = "A sub-speciality with the same name already exists for this speciality.";
 
-    /// <summary>PostgreSQL's unique_violation.</summary>
-    private const string UniqueViolation = "23505";
+    /// <summary>
+    /// Whether a sub-speciality of <paramref name="specialityId" /> other than <paramref name="subSpecialityId" /> holds
+    /// <paramref name="name" />, compared as the database compares, as the unique index does (T394, flow 16, N1, N7). The
+    /// commands read it before they stage anything; a save the index still refuses is the same refusal, read back.
+    /// </summary>
+    internal static Task<bool> IsTakenAsync(
+        IApplicationDbContext dbContext, int? subSpecialityId, int specialityId, string name, CancellationToken cancellationToken)
+        => dbContext.Set<SubSpeciality>()
+            .AsNoTracking()
+            .AnyAsync(other => other.Id != subSpecialityId && other.SpecialityId == specialityId && other.Name == name, cancellationToken);
+
+    /// <summary>
+    /// The refusal a command throws for the words <see cref="ReadBackAsync" /> found: a taken name is the Name field's
+    /// (T394, flow 16, N1), so the page shows it under Name; anything else is no field's, and the page shows its fixed
+    /// failure sentence (T272). The database's refusal stays underneath, so the audit pipeline discards the save (T201).
+    /// </summary>
+    internal static InvalidOperationException Refused(string refusal, DbUpdateException exception)
+        => refusal == DuplicateName
+            ? new FieldRefusalException("Name", refusal, exception)
+            : new InvalidOperationException(refusal, exception);
 
     /// <summary>
     /// Why the database refused the save, in the command's own words, read now; or null when none of the refusals this
@@ -76,7 +96,7 @@ internal static class SubSpecialitySaveRefusal
     {
         // Only the unique index names a duplicate, and only when another sub-speciality of that speciality holds the
         // name now. The table's only other unique index is on the seed key, which neither command writes.
-        if (exception.InnerException is DbException { SqlState: UniqueViolation }
+        if (PostgresErrors.IsUniqueViolation(exception)
             && await dbContext.Set<SubSpeciality>()
                 .AsNoTracking()
                 .AnyAsync(other => other.Id != subSpecialityId

@@ -869,7 +869,8 @@ Do: Create an EPA:
 Expect:
   - **The form.** "Create EPA", subtitled "An EPA of your institution's own. It applies only to Kgosi Kgari Teaching
     Hospital's trainees." The sub-speciality list offers only Paediatrics / Paediatrics, the discipline KGK has
-    adopted, already chosen, with the help "The disciplines your institution has adopted." (T392, R2-C04).
+    adopted, already chosen, with the help "The disciplines your institution has adopted." (T392, R2-C04). The form
+    opens with "* marks a field you must fill in." (T394, M4).
   - **Once saved.** Save opens the EPA's own page by `?created`: "EPA saved." heads it and takes the focus, and the token
     leaves the address (T392, F1, R3-C08). The page is titled "KGK-001 — Running a paediatric outreach clinic at a
     district hospital", its crumb KGK-001, with no Back to EPAs. It is Active, and its help names Kgosi Kgari Teaching
@@ -895,7 +896,7 @@ Expect:
     Paediatric EPA Curriculum (11.1). It applies only to Kgosi Kgari Teaching Hospital's trainees." Its EPA picker
     offers KGK-001 alone, because the College's items hold all 15 national EPAs (T222). The scale is the CPSA ladder,
     "Suggested because every item on this curriculum is pinned to it." Add item stays off until a minimum rung is
-    chosen. Cancel stands before Add item.
+    chosen. Cancel stands before Add item. The form opens with "* marks a field you must fill in." (T394, M4).
   - **After the add.** Back on the list, "Curriculum item added." heads it and takes the focus, and the token leaves the
     address (F1, R3-B06). "Items (16)", and the add link gives way to the note that every EPA KGK could add is already
     on the curriculum.

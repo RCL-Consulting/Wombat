@@ -308,6 +308,76 @@ public sealed class EpaScopeGuardTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task EpaList_TheCollegeAdmin_ReadsHerCollegesName_EvenWithNoEpa()
+    {
+        // T394 (flow 16, R3-E01, S15): the College's subtitle and caption name it, an empty list's too.
+        _db.Epas.RemoveRange(_db.Epas.Where(epa => epa.SubSpecialityId == _collegeASubSpecialityId));
+        await _db.SaveChangesAsync();
+
+        var result = await new GetEpaListQueryHandler(_db).Handle(new GetEpaListQuery(TestPrincipals.CollegeAdmin(_collegeAId)), CancellationToken.None);
+
+        result.Epas.Should().BeEmpty();
+        result.CollegeName.Should().Be("A");
+    }
+
+    [Fact]
+    public async Task EpaList_ACollegeAdminWhoseAccountNamesNoCollege_ReadsNoCollegeName()
+    {
+        // R2-E19: the page says her account names no College; it names none it cannot read.
+        var principal = Claims([WombatRoles.CollegeAdmin], institutionId: null, collegeId: null);
+
+        var result = await new GetEpaListQueryHandler(_db).Handle(new GetEpaListQuery(principal), CancellationToken.None);
+
+        result.Reader.Should().Be(EpaListReader.College);
+        result.CollegeName.Should().BeNull();
+        result.MayCreate.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task EpaList_TheAdministratorAndAnInstitution_ReadNoCollegeName()
+    {
+        (await new GetEpaListQueryHandler(_db).Handle(new GetEpaListQuery(TestPrincipals.Administrator()), CancellationToken.None))
+            .CollegeName.Should().BeNull();
+        (await new GetEpaListQueryHandler(_db).Handle(new GetEpaListQuery(TestPrincipals.InstitutionalAdmin(_institutionAId)), CancellationToken.None))
+            .CollegeName.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task EpaPage_TheCollegeAdminsCreate_NamesHerCollege_AndSaysItsPickerIsHersAlone()
+    {
+        // T394 (flow 16, R3-E10, E20, N16): the create's subtitle and the picker's help name her College.
+        var result = await new GetEpaPageQueryHandler(_db).Handle(
+            new GetEpaPageQuery(null, TestPrincipals.CollegeAdmin(_collegeAId)), CancellationToken.None);
+
+        result.CollegeName.Should().Be("A");
+        result.ReadsEveryCollege.Should().BeFalse();
+        result.CreatesOwn.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task EpaPage_TheAdministrator_ReadsEveryCollege_AndNoCollegeName()
+    {
+        var result = await new GetEpaPageQueryHandler(_db).Handle(
+            new GetEpaPageQuery(_collegeAEpaId, TestPrincipals.Administrator()), CancellationToken.None);
+
+        result.CollegeName.Should().BeNull();
+        result.ReadsEveryCollege.Should().BeTrue();
+        result.Disciplines.Select(discipline => discipline.Name).Should().Equal("SpecA / SubA", "SpecB / SubB");
+        result.Epa!.Reach.Should().NotBeNull("the Administrator may change a national EPA, so she is told its reach (EV2)");
+    }
+
+    [Fact]
+    public async Task EpaPage_AnInstitution_ReadsNoCollegeName_AndNotEveryCollege()
+    {
+        var result = await new GetEpaPageQueryHandler(_db).Handle(
+            new GetEpaPageQuery(_collegeAEpaId, TestPrincipals.InstitutionalAdmin(_institutionAId)), CancellationToken.None);
+
+        result.CollegeName.Should().BeNull();
+        result.ReadsEveryCollege.Should().BeFalse();
+        result.Epa!.Reach.Should().BeNull("a reader is not told which institutions an EPA reaches");
+    }
+
+    [Fact]
     public async Task EpaPage_OutOfScope_IsUnavailable_AndReadsNothingElse()
     {
         var result = await new GetEpaPageQueryHandler(_db).Handle(

@@ -36,8 +36,9 @@ public sealed class CurriculumItemEpaPerOwnerPostgresTests : IAsyncLifetime
 {
     private const string PaediatricCurriculumName = "Paediatric EPA Curriculum";
 
+    // T394 (flow 16, Q10, T242): a national item refused beside an institution's own names the institution and the EPA.
     private const string NationalBesideLocal =
-        "This curriculum already contains the selected EPA, as an institution's own item. A national item cannot share an EPA with an institution's own item: that institution's trainees would be measured against the EPA twice.";
+        "Institution A Academic has PAED-099 as its own item on this curriculum, so it cannot be added nationally until that institution removes it.";
 
     private const string LocalBesideNational =
         "This curriculum already contains the selected EPA, as a national item. An institution's own item adds an EPA to the national curriculum and cannot repeat one on it.";

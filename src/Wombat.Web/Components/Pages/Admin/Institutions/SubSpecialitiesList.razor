@@ -1,71 +1,87 @@
 @page "/admin/specialities/{SpecialityId:int}/sub-specialities"
 @attribute [Authorize(Policy = "AdministratorOrCollegeAdmin")]
 @inject IScopedSender Sender
+@inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILogger<SubSpecialitiesList> Logger
 
-<PageTitle>Sub-specialities · Wombat</PageTitle>
+<PageTitle>@Heading · Wombat</PageTitle>
 
-<PageHeader Title="Sub-specialities" Subtitle="@(_speciality is null ? "Manage sub-specialities for the selected speciality." : $"Speciality: {_speciality.Name}")">
-  <Actions>
-    @if (_speciality is not null)
-    {
-      <a class="btn btn-outline btn-sm" href="@($"/admin/colleges/{_speciality.CollegeId}/specialities")">Back to specialities</a>
-    }
-    <a class="btn btn-primary btn-sm" href="@($"/admin/specialities/{SpecialityId}/sub-specialities/new")">
-      <Icon Name="plus" />
-      Create sub-speciality
-    </a>
-  </Actions>
-</PageHeader>
+@*
+  A speciality's old Sub-specialities list (T394, flow 16, Q1, T291 item 2): its sub-specialities are rows of its section
+  on the College's tree now, so this address sends there (CatalogueLinks.CollegeTreeAt, replacing itself in the history).
+  A speciality the caller cannot open, or that does not exist, is Speciality unavailable (Q7, N2), never an empty list.
+*@
+<PageHeader Title="@Heading" />
 
-<StatePanel IsLoading="@(_subSpecialities is null && string.IsNullOrWhiteSpace(_errorMessage))" LoadError="@_errorMessage" IsEmpty="@(_subSpecialities?.Count == 0)" EmptyTitle="No sub-specialities yet" EmptyBody="Create the first sub-speciality under this speciality.">
-  @if (_subSpecialities is not null)
-  {
-    <DataTable TItem="SubSpecialityDto" Items="_subSpecialities" Caption="Sub-specialities">
-      <HeaderRow>
-        <tr>
-          <th>Name</th>
-          <th>Description</th>
-          <th>Status</th>
-          <th><span class="visually-hidden">Actions</span></th>
-        </tr>
-      </HeaderRow>
-      <Row Context="subSpeciality">
-        <tr>
-          <td>@subSpeciality.Name</td>
-          <td>@subSpeciality.Description</td>
-          <td>@(subSpeciality.IsActive ? "Active" : "Inactive")</td>
-          <td>
-            @* T239: named by the sub-speciality, whose name is unique within the speciality. *@
-            <a class="btn btn-outline btn-sm" href="@($"/admin/specialities/{SpecialityId}/sub-specialities/{subSpeciality.Id}")" aria-label="@($"Edit {subSpeciality.Name}")">Edit</a>
-          </td>
-        </tr>
-      </Row>
-    </DataTable>
-  }
-</StatePanel>
+<div class="user-page sub-speciality-page" aria-busy="@(_loading ? "true" : null)">
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="LoadAsync">
+    <LoadingContent>
+      <p class="loading-line" role="status">@CollegeTreeWords.LoadingTree</p>
+    </LoadingContent>
+    <ChildContent>
+      @if (_unavailable)
+      {
+        <div class="detail-card detail-card--empty">
+          <div class="state-panel-copy">@CollegeTreeWords.SpecialityUnavailableBody</div>
+          <div class="form-actions">
+            <a class="btn btn-primary" href="@GoTo.Href">@GoTo.Label</a>
+          </div>
+        </div>
+      }
+    </ChildContent>
+  </StatePanel>
+</div>
 
 @code {
   [Parameter]
   public int SpecialityId { get; set; }
 
-  private SpecialityDto? _speciality;
-  private IReadOnlyList<SubSpecialityDto>? _subSpecialities;
-  private string? _errorMessage;
+  private bool _unavailable;
+  private bool _loading = true;
+  private string? _loadError;
 
-  protected override async Task OnParametersSetAsync()
+  /// <summary>The acting role, as App resolved it and Routes cascades it.</summary>
+  [CascadingParameter] public ActingRole? Acting { get; set; }
+
+  private bool UnderColleges => NavOwners.OwnerFor(typeof(SubSpecialitiesList), Acting?.Role) == NavItems.Colleges;
+
+  /// <summary>The h1 and the tab: the tree's while it sends there, or the Unavailable page's own (Q7).</summary>
+  private string Heading => _unavailable ? CollegeTreeWords.SpecialityUnavailableHeading : CollegeTreeWords.TreeHeading;
+
+  private (string Label, string Href) GoTo => UnderColleges
+    ? (CollegeTreeWords.GoToColleges, CatalogueLinks.Colleges)
+    : (CollegeTreeWords.GoToSpecialities, CatalogueLinks.Specialities);
+
+  protected override Task OnParametersSetAsync() => LoadAsync();
+
+  private async Task LoadAsync()
   {
-    _errorMessage = null;
+    _loading = true;
+    _loadError = null;
+    _unavailable = false;
 
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _speciality = await Sender.Send(new GetSpecialityByIdQuery(SpecialityId, authState.User));
-      _subSpecialities = await Sender.Send(new GetSubSpecialitiesForSpecialityQuery(SpecialityId, authState.User));
+      var speciality = await Sender.Send(new GetSpecialityByIdQuery(SpecialityId, authState.User));
+      if (speciality is not null)
+      {
+        Navigation.NavigateTo(CatalogueLinks.CollegeTreeAt(speciality.CollegeId, speciality.Id), replace: true);
+        return;
+      }
+
+      _unavailable = true;
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = exception.Message;
+      // T329, T393: never the exception's text.
+      Logger.LogError(exception, "The speciality {SpecialityId} could not be read.", SpecialityId);
+      _loadError = CollegeTreeWords.TreeLoadFailed;
+    }
+    finally
+    {
+      _loading = false;
     }
   }
 }

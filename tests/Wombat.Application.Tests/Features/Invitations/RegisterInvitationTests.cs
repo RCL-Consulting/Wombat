@@ -37,7 +37,9 @@ public sealed class RegisterInvitationTests
             invitation.SubSpecialityId = 3;
         });
 
-        var preview = await new GetInvitationPreviewQueryHandler(db, _tokenService, new Provisioner(db))
+        // Read on the link's issue day, not the machine's: the link's last day is 2026-11-02, and from 2026-11-03 the system
+        // clock read it as expired (found by T394's § 0 run on 2026-11-04).
+        var preview = await new GetInvitationPreviewQueryHandler(db, _tokenService, new Provisioner(db), new FixedClock(new DateTimeOffset(2026, 10, 20, 8, 0, 0, TimeSpan.Zero)))
             .Handle(new GetInvitationPreviewQuery(token), CancellationToken.None);
 
         preview.Should().Be(new InvitationPreviewDto(
@@ -57,7 +59,9 @@ public sealed class RegisterInvitationTests
             invitation.CollegeId = 4;
         });
 
-        var preview = await new GetInvitationPreviewQueryHandler(db, _tokenService, new Provisioner(db))
+        // Read on the link's issue day, not the machine's: the link's last day is 2026-11-02, and from 2026-11-03 the system
+        // clock read it as expired (found by T394's § 0 run on 2026-11-04).
+        var preview = await new GetInvitationPreviewQueryHandler(db, _tokenService, new Provisioner(db), new FixedClock(new DateTimeOffset(2026, 10, 20, 8, 0, 0, TimeSpan.Zero)))
             .Handle(new GetInvitationPreviewQuery(token), CancellationToken.None);
 
         preview.InstitutionName.Should().BeNull();

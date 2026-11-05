@@ -156,8 +156,9 @@ public static class NavItems
                 new("Access and audit", [SsoMappings, AuditLog]),
             ],
 
-            // T300: the College writes its disciplines' activity types (T091), and the builder admits it.
-            [WombatRoles.CollegeAdmin] = [new(null, [Specialities, Epas, Curricula, ActivityTypes])],
+            // T300: the College writes its disciplines' activity types (T091), and the builder admits it. T394 (flow 16, D57): it
+            // reads the entrustment scales, as an institution's administrator does (the list alone, read-only).
+            [WombatRoles.CollegeAdmin] = [new(null, [Specialities, Epas, Curricula, ActivityTypes, EntrustmentScales])],
 
             // T131 slice 6: Decisions due is for the roles that schedule reviews, so not for a Committee member. T358 (flow 06,
             // Q7, C10): Programme trainees for the four roles that watch the programme; Waiting for assessors for the three

@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Institutions;
@@ -22,10 +23,23 @@ public sealed class CreateSpecialityCommandHandler : IRequestHandler<CreateSpeci
             throw new UnauthorizedAccessException("You do not have permission to create a speciality for this college.");
         }
 
+        // T394 (flow 16, N1): everything that can refuse is read before anything is staged, so a refusal leaves nothing
+        // for the audit pipeline's failure row to send (T201). A taken name is the Name field's refusal.
+        if (!await _dbContext.Set<College>().AnyAsync(college => college.Id == request.CollegeId, cancellationToken))
+        {
+            throw new InvalidOperationException($"College {request.CollegeId} was not found.");
+        }
+
+        var name = request.Name.Trim();
+        if (await SpecialitySaveRefusal.IsTakenAsync(_dbContext, specialityId: null, request.CollegeId, name, cancellationToken))
+        {
+            throw new FieldRefusalException(nameof(CreateSpecialityCommand.Name), SpecialitySaveRefusal.DuplicateName);
+        }
+
         var speciality = new Speciality
         {
             CollegeId = request.CollegeId,
-            Name = request.Name.Trim(),
+            Name = name,
             Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim()
         };
 
@@ -37,7 +51,15 @@ public sealed class CreateSpecialityCommandHandler : IRequestHandler<CreateSpeci
         }
         catch (DbUpdateException exception)
         {
-            throw new InvalidOperationException("A speciality with the same name already exists for this college.", exception);
+            // Another save took the name after the check (T394, N1). Any other refusal is left as the database gave it, so
+            // the page shows its fixed failure sentence (T272) and the audit pipeline discards the refused insert (T201).
+            if (!await SpecialitySaveRefusal.WasTakenAsync(
+                    _dbContext, exception, specialityId: null, speciality.CollegeId, speciality.Name, cancellationToken))
+            {
+                throw;
+            }
+
+            throw new FieldRefusalException(nameof(CreateSpecialityCommand.Name), SpecialitySaveRefusal.DuplicateName, exception);
         }
 
         return new SpecialityDto(speciality.Id, speciality.CollegeId, speciality.Name, speciality.Description, speciality.IsActive);

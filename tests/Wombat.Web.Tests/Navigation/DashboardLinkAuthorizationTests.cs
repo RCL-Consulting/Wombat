@@ -165,7 +165,8 @@ public sealed class DashboardLinkAuthorizationTests
         var home = RenderHomeFor(WombatRoles.CollegeAdmin);
 
         home.Dashboard.Should().Be<CollegeAdminDashboard>();
-        home.Hrefs.Should().Equal("/admin/specialities", "/admin/epas", "/admin/curricula");
+        // T394 (flow 16, Q12, Q17): four links, Activity types the fourth; not Entrustment scales, which she only reads (D57).
+        home.Hrefs.Should().Equal("/admin/specialities", "/admin/epas", "/admin/curricula", "/admin/activity-types");
     }
 
     // A pending trainee is sent to the account page and, since T373 (flow 11, P01's Meanwhile), to My data rights, which

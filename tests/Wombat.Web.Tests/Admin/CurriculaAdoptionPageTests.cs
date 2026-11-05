@@ -317,7 +317,9 @@ public sealed class CurriculaAdoptionPageTests : TestContext
 
         var cut = Render();
 
-        cut.Find(".page-subtitle").TextContent.Should().Be("Manage curriculum versions and the sub-speciality they apply to.");
+        // Changed deliberately by T394 (flow 16, R3-F01, T326): the College's own words, naming it.
+        cut.Find(".page-subtitle").TextContent.Should().Be(
+            "College of Paediatricians of South Africa's curriculum versions. A new version starts held back; an institution can adopt one once you open it.");
         Headings(cut, "h2").Should().BeEmpty();
         cut.Find("caption").TextContent.Should().Be("College of Paediatricians of South Africa's curriculum versions");
         cut.FindAll("thead th").Select(header => header.TextContent.Trim()).Should().Equal(
@@ -643,6 +645,10 @@ public sealed class CurriculaAdoptionPageTests : TestContext
                     break;
                 case GetAdoptableCurriculaQuery:
                     answer = Adoptable;
+                    break;
+                // T394 (flow 16, R3-F01): the College admin's College, for her subtitle and caption.
+                case Wombat.Application.Features.Colleges.GetCollegesListQuery:
+                    answer = new[] { new Wombat.Application.Features.Colleges.CollegeDto(5, "College of Paediatricians of South Africa", "CPSA", null, true, DateTime.UnixEpoch) };
                     break;
                 case AdoptCurriculumCommand adopt:
                     if (Refusal is { } refusal)

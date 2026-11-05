@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Wombat.Application.Common;
 using Wombat.Application.Common.Extensions;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Domain.Epas;
@@ -45,8 +46,16 @@ public sealed class UpdateSubSpecialityCommandHandler : IRequestHandler<UpdateSu
             throw new InvalidOperationException($"Entrustment scale {request.DefaultEntrustmentScaleId.Value} was not found.");
         }
 
+        // T394 (flow 16, N1): the name's holder is read before the sub-speciality is touched, so a refusal stages nothing
+        // for the audit pipeline's failure row to send (T201). A taken name is the Name field's refusal.
+        var name = request.Name.Trim();
+        if (await SubSpecialitySaveRefusal.IsTakenAsync(_dbContext, subSpeciality.Id, request.SpecialityId, name, cancellationToken))
+        {
+            throw new FieldRefusalException(nameof(UpdateSubSpecialityCommand.Name), SubSpecialitySaveRefusal.DuplicateName);
+        }
+
         subSpeciality.SpecialityId = request.SpecialityId;
-        subSpeciality.Name = request.Name.Trim();
+        subSpeciality.Name = name;
         subSpeciality.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
         subSpeciality.IsActive = request.IsActive;
         subSpeciality.DefaultEntrustmentScaleId = request.DefaultEntrustmentScaleId;
@@ -60,7 +69,8 @@ public sealed class UpdateSubSpecialityCommandHandler : IRequestHandler<UpdateSu
             // T254. Before this every refused save was reported as a duplicate name, including a foreign key whose row
             // went away after the checks above: the speciality it moves to, or the default scale an administrator deleted
             // meanwhile. The database's refusal stays underneath, so the audit pipeline discards the refused update
-            // (T201); a refusal none of these explains is left as the database gave it.
+            // (T201); a refusal none of these explains is left as the database gave it. A name taken after the check is
+            // the Name field's refusal (T394, N1).
             var refusal = await SubSpecialitySaveRefusal.ReadBackAsync(
                 _dbContext, exception, subSpeciality.Id, subSpeciality.SpecialityId, subSpeciality.Name,
                 subSpeciality.DefaultEntrustmentScaleId, cancellationToken);
@@ -69,7 +79,7 @@ public sealed class UpdateSubSpecialityCommandHandler : IRequestHandler<UpdateSu
                 throw;
             }
 
-            throw new InvalidOperationException(refusal, exception);
+            throw SubSpecialitySaveRefusal.Refused(refusal, exception);
         }
 
         return new SubSpecialityDto(subSpeciality.Id, subSpeciality.SpecialityId, subSpeciality.Name, subSpeciality.Description, subSpeciality.IsActive, subSpeciality.DefaultEntrustmentScaleId);

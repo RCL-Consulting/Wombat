@@ -60,20 +60,25 @@ College owns: its specialities, sub-specialities, EPAs and curricula.
 ### Step 6.1 — devadmin creates a second national College
 Role: Administrator — devadmin
 Route: /admin/colleges → /admin/colleges/new → /admin/colleges/{Id:int} → /admin/colleges
-Do: Create the College of Neurologists of South Africa, with the description "Constituent College of the CMSA; owns
-  the national Neurology catalogue." Save it first with the short code `CPSA` by mistake, then correct the code to
-  `CNSA` and save again.
-Expect: The first save is refused: "A college with the same name or short code already exists." Nothing is created.
-  The second save opens the new College's edit page, Active. The colleges list reads three rows, each Active and each
-  offering Edit and Specialities: the new College, the College of Paediatricians of South Africa and the Demo College.
+Do: Press Create college, and create the College of Neurologists of South Africa, with the description "Constituent
+  College of the CMSA; owns the national Neurology catalogue." Press Create college first with the short code `CPSA` by
+  mistake, then correct the code to `CNSA` and press Create college again.
+Expect: Create college opens "Create college", subtitled "A national College keeps its own specialities, EPAs and
+  curricula. It starts active.", with "* marks a field you must fill in." over Name, Short code and Description, then
+  Cancel and Create college (T394). The first create is refused under Short code, which takes the focus: "CPSA is
+  already the short code of College of Paediatricians of South Africa. Choose another." (S10). Nothing is created. The
+  second opens the new College's record, "College of Neurologists of South Africa", subtitled "CNSA · Active", with
+  "College created." at its top, focused (S13). The colleges list reads three rows, each Active and each offering Edit
+  and Specialities: the new College, the College of Paediatricians of South Africa and the Demo College.
 Note: Administrator only. The College pages and `CreateCollege` admit no one else.
 Actual (2026-11-02, T392 replay, wombat_scenario_t392): D = 2026-11-02. The list read two rows (CPSA, Demo College).
   An empty save shows "The Name field is required." and "The ShortCode field is required."; with short code CPSA the
   save was refused with "A college with the same name or short code already exists." and stayed on
   /admin/colleges/new. With CNSA it opened /admin/colleges/4, "Edit college", Active. The list reads three rows, all
   Active, each with Edit and Specialities: CNSA, CPSA, Demo College.
-Gap: F-6.1a, T324 (still: the required-field message names the model property, "The ShortCode field is required.", not
-  the label "Short code"; the Expect itself is met). known-task.
+Gap: [F-6.1a, T324] closed by T394 (2026-11-05): a required field's message is in its label's words ("Enter a short
+  code."), once, under its field. The T392 Actual above predates T394 (the refusal naming CPSA's holder, the record
+  titled by the College, and "College created."); the next replay re-reads the step.
 
 ### Step 6.2 — devadmin corrects CPSA's description, and nothing else
 Role: Administrator — devadmin
@@ -81,117 +86,153 @@ Route: /admin/colleges → /admin/colleges/{Id:int} → /admin/colleges
 Do: Open CPSA's record and note its id from the address, for Step 6.10. Change the description to "Constituent
   College of the Colleges of Medicine of South Africa; owns the national Paediatric EPA catalogue and its versions."
   Leave the name, the short code and Active as they are, and save.
-Expect: The save is confirmed, and the list shows the new description, with CPSA still Active. The name and short code
-  are unchanged, so every CPSA page still reads "College: College of Paediatricians of South Africa (CPSA)". A restart
-  neither re-seeds nor restores the record: the seeder finds its College by seed key (T221).
-Note: Administrator only (`UpdateCollege`: a CollegeAdmin keeps the catalogue, not the College's own record). The red
-  Deactivate beside Save does not ask first yet, against DESIGN.md's rule (T264). Do not press it.
+Expect: Save stays on the record, with "College saved." at its top, focused (T394). Colleges (the menu or the trail)
+  shows the new description, with CPSA still Active. The name and short code are unchanged, so the tree's subtitle still
+  reads "College of Paediatricians of South Africa (CPSA): its specialities, …", and the record's "CPSA · Active". A
+  restart neither re-seeds nor restores the record: the seeder finds its College by seed key (T221).
+Note: Administrator only (`UpdateCollege`: a CollegeAdmin keeps the catalogue, not the College's own record).
+  Deactivate… beside Save asks first (D56). Do not press it.
 Actual (2026-11-02, T392 replay, wombat_scenario_t392): CPSA is /admin/colleges/2 (name, short code CPSA, Active as
   seeded). With only the description changed, Save showed "College saved."; the list's CPSA row reads the new
   description, Active, name and short code unchanged. Deactivate was not pressed. After the restart played after Step
   6.14a (the stop script printed "Nothing listens on 5180." while the app answered, T391, so the process was stopped
   by id after checking its command line, then started with the script; the old log kept as
   wombat_scenario_t392-20261102-202932.log, 40 Stub emails) the description stands (SQL).
-Gap: none
+Gap: none. The T392 Actual above predates T394 (the tree's subtitle in place of "College: …", and Deactivate… asking
+  first); the next replay re-reads the step.
 
 ### Step 6.3 — devadmin adds the Neurology speciality
 Role: Administrator — devadmin
-Route: /admin/colleges → /admin/colleges/{CollegeId:int}/specialities → /admin/colleges/{CollegeId:int}/specialities/new → /admin/colleges/{CollegeId:int}/specialities/{Id:int} → /admin/colleges/{CollegeId:int}/specialities
-Do: From the new College's row, open its specialities, and create `Neurology` with the description "Specialist training
+Route: /admin/colleges → /admin/colleges/{CollegeId:int}/specialities → /admin/colleges/{CollegeId:int}/specialities/new → /admin/colleges/{CollegeId:int}/specialities
+Do: From the new College's row, open its Specialities, and create `Neurology` with the description "Specialist training
   in Neurology."
-Expect: Before the create, the list says the College has no specialities yet and invites the first. After it:
-  - the edit page reads "College: College of Neurologists of South Africa (CNSA)", Active, and offers "Manage
-    sub-specialities";
-  - the list has one row, Neurology, Active.
+Expect:
+  - **Before the create.** The tree, "Specialities", subtitled "College of Neurologists of South Africa (CNSA): its
+    specialities, their sub-specialities and the ladder each uses.", under Home › Colleges › College of Neurologists of
+    South Africa › Specialities, says "No specialities yet" and "Create the first speciality for College of Neurologists
+    of South Africa.", with Create speciality in the header (T394, Q1).
+  - **The create.** Create speciality opens "Create speciality", subtitled "A speciality of College of Neurologists of
+    South Africa.", with "* marks a field you must fill in." over Name and Description, then Cancel and Create
+    speciality.
+  - **After it.** The create returns to the tree with "Speciality Neurology created." at its top, focused (S13). The
+    tree has one section, Neurology, "Specialist training in Neurology. · Active", with Edit and Create sub-speciality,
+    and "No sub-specialities yet. Create the first sub-speciality of Neurology." in place of a table. There is no
+    "Manage sub-specialities" and no "College: …" line.
 Note: An Administrator, or the College's own CollegeAdmin. CNSA has none.
 Actual (2026-11-02, T392 replay, wombat_scenario_t392): CNSA's Specialities opened /admin/colleges/4/specialities,
   "College: College of Neurologists of South Africa (CNSA)", "No specialities yet / Create the first speciality for
   this college." Creating Neurology ("Specialist training in Neurology.") opened /admin/colleges/4/specialities/3,
   "Edit speciality", the same College line, with "Manage sub-specialities", Active. The list has one row: Neurology,
   Active.
-Gap: none
+Gap: none. The T392 Actual above predates T394 (the tree, the create's subtitle, and its result on the tree); the next
+  replay re-reads the step.
 
 ### Step 6.4 — devadmin adds the Adult Neurology sub-speciality
 Role: Administrator — devadmin
-Route: /admin/colleges/{CollegeId:int}/specialities/{Id:int} → /admin/specialities/{SpecialityId:int}/sub-specialities → /admin/specialities/{SpecialityId:int}/sub-specialities/new → /admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int} → /admin/specialities/{SpecialityId:int}/sub-specialities
-Do: From Neurology's page, manage its sub-specialities and create `Adult Neurology`, with the description "Adult
-  neurology specialist training programme."
-Expect: The list is empty before the create and has one row after it. The new sub-speciality's edit page offers a
-  default entrustment scale, which reads "No default — offer every scale". Its choices are the two existing scales.
+Route: /admin/colleges/{CollegeId:int}/specialities → /admin/specialities/{SpecialityId:int}/sub-specialities/new → /admin/colleges/{CollegeId:int}/specialities
+Do: On the tree, press Create sub-speciality on Neurology, and create `Adult Neurology`, with the description "Adult
+  neurology specialist training programme." Leave its default scale as it comes.
+Expect:
+  - **The create.** The page is "Create sub-speciality", subtitled "A sub-speciality of Neurology, in College of
+    Neurologists of South Africa.", under "* marks a field you must fill in.". It offers the default entrustment scale
+    at create (T394, Q1), reading "No default — offer every scale"; its other choices are the two existing scales, `CPSA
+    Paediatric Entrustment Scale v11.1` and `O-R Scale`.
+  - **After it.** The create returns to the tree with "Sub-speciality Adult Neurology created." at its top, focused.
+    Neurology's section has one row, Adult Neurology, "Adult neurology specialist training programme.", Default scale
+    "No default", Active, with Edit.
 Note: An Administrator, or the College's own CollegeAdmin. Step 6.7 sets the default.
 Actual (2026-11-02, T392 replay, wombat_scenario_t392): /admin/specialities/3/sub-specialities: "No sub-specialities
   yet / Create the first sub-speciality under this speciality." Creating Adult Neurology opened
   /admin/specialities/3/sub-specialities/3: "Default entrustment scale" reads "No default — offer every scale", its
   other choices the CPSA ladder and the O-R Scale. The list has one row, Adult Neurology, Active.
-Gap: none
+Gap: none. The T392 Actual above predates T394 (the create from the tree, its default chosen there, and its result on
+  the tree); the next replay re-reads the step.
 
 ## Phase 6.B — Entrustment scales
 
 Scales are global: any curriculum item, sub-speciality or form may use any scale. Only an Administrator creates, edits or
-deletes one (T057). An InstitutionalAdmin reads them. A CollegeAdmin chooses a sub-speciality's default scale from them.
+deletes one (T057). An InstitutionalAdmin reads them. A CollegeAdmin reads their list too (D57), and chooses a
+sub-speciality's default scale from them.
 
 ### Step 6.5 — devadmin creates the Neurology ladder
 Role: Administrator — devadmin
 Route: /admin/entrustment-scales → /admin/entrustment-scales/new → /admin/entrustment-scales/{Id:int} → /admin/entrustment-scales
-Do: Create `CNSA Neurology Entrustment Scale`, with the description "Supervision ladder for CNSA EPAs." Give it five
-  levels, in this order, each with a one-line description:
+Do: Press Create scale, and create `CNSA Neurology Entrustment Scale`, with the description "Supervision ladder for CNSA
+  EPAs." Give it five levels, in this order, each with a one-line description (the form starts with two; Add level adds
+  the others):
   1. `Observe only`
   2. `Direct supervision`
   3. `Indirect supervision`
   4. `Distant supervision`
   5. `Unsupervised practice`
-  Save it first with the fourth level also labelled `Indirect supervision`, then correct that label and save again.
-Expect: The first save is refused: "Level labels must be unique within a scale." Nothing is created. The second save
-  opens the new scale's edit page, with the five levels numbered 1 to 5 in the order given. The scales list shows
-  three scales, the new one with 5 levels.
+  Press Create scale first with the fourth level also labelled `Indirect supervision`, then correct that label and press
+  Create scale again.
+Expect: The page is "Create entrustment scale", subtitled "A ladder of at least two rungs, shared by every College and
+  institution." (T394). The first create is refused before anything is sent, under the fourth rung's Label, which takes
+  the focus: "“Indirect supervision” is already the label of another rung. Give each rung its own label." (Q18, T324).
+  Nothing is created. The second opens the new scale's page, "CNSA Neurology Entrustment Scale", with "Entrustment scale
+  created." at its top, focused (S13), and the five levels in Order 1 to 5, in the order given. Nothing uses the scale
+  yet, so each rung offers Up, Down and Remove (T395, Q16). The scales list shows three scales, the new one with 5
+  levels.
 Note: Administrator only. The create and edit pages, and every scale command, admit no one else.
 Actual (2026-11-02, T392 replay, wombat_scenario_t392): With level 4 also "Indirect supervision" the save was refused:
   "Level labels must be unique within a scale." and stayed on /new. Corrected, it opened the new scale's edit page
   (/admin/entrustment-scales/3), levels 1 Observe only to 5 Unsupervised practice in order. The list shows three
   scales: CNSA 5, CPSA ladder 6, O-R Scale 5.
-Gap: none
+Gap: none. The T392 Actual above predates T394 (the refusal under the rung, Create scale, and the created result); the
+  next replay re-reads the step.
 
 ### Step 6.6 — devadmin adds a sixth level
 Role: Administrator — devadmin
 Route: /admin/entrustment-scales → /admin/entrustment-scales/{Id:int} → /admin/entrustment-scales
 Do: Open the CNSA scale, add a sixth level, `Supervises others` ("Supervises juniors performing the activity."), and
   save.
-Expect: The save is confirmed, and the page lists six levels, 1 to 6, with `Supervises others` at 6. The list shows 6
-  levels.
+Expect: The page stays, with "Entrustment scale saved." at its top, focused, and lists six levels, Order 1 to 6, with
+  `Supervises others` at 6. Nothing uses the scale yet, so its rungs still offer Up, Down and Remove (T394, T395). The
+  list shows 6 levels.
 Note: Administrator only.
 Actual (2026-11-02, T392 replay, wombat_scenario_t392): With a sixth level "Supervises others", Save showed
   "Entrustment scale saved." and the page lists 1 to 6, Supervises others at 6. The list reads 6 levels.
-Gap: none
+Gap: none. The T392 Actual above predates T394 (the moves offered on a scale nothing uses); the next replay re-reads the
+  step.
 
 ### Step 6.7 — devadmin makes it Adult Neurology's default
 Role: Administrator — devadmin
-Route: /admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}
-Do: Open Adult Neurology, set its default entrustment scale to the CNSA Neurology Entrustment Scale, and save.
-Expect: The save is confirmed, and reopening the page shows the scale selected. Its help says that committee STARs for
-  this programme's trainees are limited to that scale's levels.
+Route: /admin/colleges → /admin/colleges/{CollegeId:int}/specialities → /admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int} → /admin/colleges/{CollegeId:int}/specialities → /admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}
+Do: From Colleges, open CNSA's Specialities, then Edit on Adult Neurology. Set its default entrustment scale to the CNSA
+  Neurology Entrustment Scale, and save. Then reopen it.
+Expect: The page is "Adult Neurology", subtitled "Sub-speciality of Neurology", under Home › Colleges › College of
+  Neurologists of South Africa › Specialities › Adult Neurology (T394, S11). The default offers "No default — offer
+  every scale" and three scales by name: the CNSA scale, the CPSA ladder and the O-R Scale. Save returns to the tree
+  with "Sub-speciality saved." at its top, focused (S13), and Adult Neurology's row reads `CNSA Neurology Entrustment
+  Scale`. Reopened, the scale is selected, with the help "Committee STARs for this programme's trainees are limited to
+  this scale's levels." From now on the scale is in use, so its rungs can no longer be reordered or removed (T395, Q16).
 Note: An Administrator, or the College's CollegeAdmin.
 Actual (2026-11-02, T392 replay, wombat_scenario_t392): The default offers No default, the CNSA scale, the CPSA ladder
   and the O-R Scale. Choosing the CNSA scale and saving showed "Sub-speciality saved."; reopened, it is selected, with
   "Committee STARs for this programme's trainees are limited to this scale's levels."
-Gap: none
+Gap: none. The T392 Actual above predates T394 (the way in by the tree, the record titled by the sub-speciality, and the
+  result on the tree); the next replay re-reads the step.
 
 ### Step 6.8 — devadmin cannot delete a scale in use
 Role: Administrator — devadmin
 Route: /admin/entrustment-scales
-Do: Delete the CNSA Neurology Entrustment Scale from the list.
-Expect: Delete asks first, naming the scale (DESIGN.md § Button system: a destructive action opens a ConfirmDialog).
-  Once confirmed, it is refused: "This entrustment scale is the default scale of the sub-speciality "Adult Neurology"
-  (Neurology), so it cannot be deleted. Change that sub-speciality's default entrustment scale to another scale, or to
-  no default, first." The scale stays, with 6 levels.
-Note: Administrator only. The refusal names the first reference it finds, in this order: an MSF question, a pinned
-  curriculum item, scored progress, a sub-speciality's default, a published form's binding, an entrustment decision.
-  Until T264 lands, the list's Delete does not ask first.
+Do: Press Delete… on the CNSA Neurology Entrustment Scale's row, read the question, and press Delete scale.
+Expect: Delete… asks first (T394, Q11, T264): the dialog "Delete CNSA Neurology Entrustment Scale?" says "It is removed
+  from every list. This cannot be undone." and "A scale that anything uses is not deleted: you will be told what uses
+  it, and nothing changes.", and opens with the focus on Cancel. Delete scale is refused, at the list's top, focused:
+  "This entrustment scale is the default scale of the sub-speciality "Adult Neurology" (Neurology), so it cannot be
+  deleted. Change that sub-speciality's default entrustment scale to another scale, or to no default, first.", with a
+  link, Open Adult Neurology, to that sub-speciality's page (S6). The scale stays, with 6 levels.
+Note: Administrator only. The refusal names the first use it finds, in this order: an MSF question, a pinned curriculum
+  item, an item pinned on an ended record, scored progress, a sub-speciality's default, a published form's binding, an
+  entrustment decision.
 Actual (2026-11-02, T392 replay, wombat_scenario_t392): The CNSA row's Delete sent the command at once: no dialog
   opened. It was refused: "This entrustment scale is the default scale of the sub-speciality "Adult Neurology"
   (Neurology), so it cannot be deleted. Change that sub-speciality's default entrustment scale to another scale, or to
   no default, first." The scale stays, 6 levels.
-Gap: F-6.8a, T264 (still: Delete does not ask first, against DESIGN.md § Button system; the refusal text matches the
-  Expect). known-task.
+Gap: [F-6.8a, T264] closed by T394 (2026-11-05): Delete… asks first. The T392 Actual above predates T394 (the dialog,
+  and the holder's link under the refusal); the next replay re-reads the step.
 
 ### Step 6.9 — Prof Mbatha reads the scales, and changes none
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -216,17 +257,20 @@ Role: CollegeAdmin — Dr Anton Kruger
 Route: /account/login → /account/login/submit → / → /admin/colleges/{Id:int} → /access-denied → /admin/entrustment-scales/new → /access-denied
 Do: Sign in. From the dashboard, type the address of CPSA's own College record (the id from Step 6.2), then the
   address for creating an entrustment scale.
-Expect: The dashboard has one card, National catalogue, with Specialities, EPAs and Curricula. His menu offers neither
+Expect: The dashboard has one card, National catalogue: "Your College's specialities, EPAs, curricula and activity
+  types. An institution can adopt a curriculum version once you open it.", with Specialities, EPAs, Curricula and
+  Activity types (T394, Q12, Q17). His menu offers Entrustment scales, the list he reads (Step 1.15, D57), but neither
   of the pages he types. Each address lands on "You cannot open this page" ("Your role (College admin) does not open
   this page."), with Go to Home, and nothing changes.
-Note: A CollegeAdmin keeps the College's specialities, EPAs and curricula. The College's own record and the scales
-  belong to an Administrator (`UpdateCollege`, `CreateEntrustmentScale`).
+Note: A CollegeAdmin keeps the College's specialities, EPAs and curricula, and reads the scales. The College's own
+  record and a scale's own pages belong to an Administrator (`UpdateCollege`, `CreateEntrustmentScale`).
 Actual (2026-11-02, T392 replay, wombat_scenario_t392): Signed in, Home ("College admin · Semester 2, 2026") has one
   card, National catalogue, with Specialities, EPAs and Curricula; the menu offers Home, Specialities, EPAs,
   Curricula, Activity types and My data rights. /admin/colleges/2 and /admin/entrustment-scales/new each landed on
   /access-denied?ReturnUrl=…, "You cannot open this page", "Your role (College admin) does not open this page.", Go to
   Home; no menu item lit. Nothing changed.
-Gap: none
+Gap: none. The T392 Actual above predates T394 (Home's sentence and its fourth link, and Entrustment scales in the
+  menu); the next replay re-reads the step.
 
 ### Step 6.11 — Dr Kruger edits the Paediatrics speciality
 Role: CollegeAdmin — Dr Anton Kruger
@@ -234,50 +278,75 @@ Route: /admin/specialities → /admin/colleges/{CollegeId:int}/specialities → 
 Do: From Specialities in his menu, open Paediatrics. Change its description from "Specialist training in Paediatrics."
   to "Specialist training in Paediatrics, and certificate training in its sub-specialities." Save.
 Expect:
-  - Specialities takes him to CPSA's list, which reads "College: College of Paediatricians of South Africa (CPSA)"
-    and has one row.
-  - The save is confirmed, and the list shows the new description.
-  - Neither page offers him a way to the colleges list, which he may not open (T211's rule: a page offers only what
-    its target admits).
+  - Specialities takes him to CPSA's tree, subtitled "College of Paediatricians of South Africa (CPSA): its
+    specialities, their sub-specialities and the ladder each uses.", with one section, Paediatrics (T394, Q1).
+  - The section's Edit opens "Paediatrics", subtitled "Speciality of College of Paediatricians of South Africa", under
+    Home › Specialities › College of Paediatricians of South Africa › Paediatrics. Under "* marks a field you must fill
+    in.", Name and Description, then Status with Active ticked and the help "An inactive speciality cannot be named by a
+    new invitation, and an institution can no longer give anyone a role for it. Nothing else reads it: its EPAs and
+    curricula, and the registrars on them, carry on." (D56); then Cancel, Deactivate… and Save.
+  - Save returns to the tree with "Speciality saved." at its top, focused (S13), and the section's line reads
+    "Specialist training in Paediatrics, and certificate training in its sub-specialities. · Active".
+  - Neither page offers him a way to the colleges list, which he may not open (T211's rule: a page offers only what its
+    target admits; T291 item 2).
 Note: The College's CollegeAdmin, or an Administrator. The seeder finds the speciality by seed key, so a restart keeps
-  the edit (T221). Until T291 item 2 lands, the list still shows him "Back to colleges".
+  the edit (T221).
 Actual (2026-11-02, T392 replay, wombat_scenario_t392): Specialities opened /admin/colleges/2/specialities, "College:
   College of Paediatricians of South Africa (CPSA)", one row, Paediatrics. Edit opened
   /admin/colleges/2/specialities/2 (Back to specialities, Manage sub-specialities, Cancel; no colleges link); the new
   description saved with "Speciality saved." and the list shows it, Active. The list still offers him "Back to
   colleges" (/admin/colleges). After the restart played after Step 6.14a the description stands (SQL).
-Gap: F-6.11a, T291 (still: the specialities list offers a CollegeAdmin "Back to colleges", a page he is refused; the
-  Note anticipates it). known-task.
+Gap: [F-6.11a, T291] closed by T394 (2026-11-05): the tree offers no Back to colleges. The T392 Actual above predates
+  T394 (the tree, the record titled by the speciality, and the result on the tree); the next replay re-reads the step.
 
 ### Step 6.12 — Dr Kruger creates the Neonatology sub-speciality
 Role: CollegeAdmin — Dr Anton Kruger
-Route: /admin/colleges/{CollegeId:int}/specialities/{Id:int} → /admin/specialities/{SpecialityId:int}/sub-specialities → /admin/specialities/{SpecialityId:int}/sub-specialities/new → /admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int} → /admin/specialities/{SpecialityId:int}/sub-specialities
-Do: From Paediatrics, manage its sub-specialities and create `Neonatology`, with the description "Certificate training
-  in Neonatology." On its edit page, set the default entrustment scale to the CPSA Paediatric Entrustment Scale v11.1,
-  and save.
-Expect: The list holds Neonatology and Paediatrics, both Active. The default is saved and stays selected when the page
-  is reopened. The Paediatrics sub-speciality keeps its own default, the CPSA ladder. Nothing about KGK's programme
-  changes.
+Route: /admin/colleges/{CollegeId:int}/specialities → /admin/specialities/{SpecialityId:int}/sub-specialities/new → /admin/colleges/{CollegeId:int}/specialities → /admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}
+Do: On the tree, press Create sub-speciality on Paediatrics, and create `Neonatology`, with the description "Certificate
+  training in Neonatology.", choosing `CPSA Paediatric Entrustment Scale v11.1` as its default. Then reopen it.
+Expect:
+  - **The create.** The page is "Create sub-speciality", subtitled "A sub-speciality of Paediatrics, in College of
+    Paediatricians of South Africa.". Its Default entrustment scale offers "No default — offer every scale" and, after
+    it, three scales by name: the CNSA Neurology Entrustment Scale, the CPSA ladder and the O-R Scale (T394, Q1, T1).
+  - **After it.** The create returns to the tree with "Sub-speciality Neonatology created." at its top, focused.
+    Paediatrics' section holds Neonatology and Paediatrics, both on `CPSA Paediatric Entrustment Scale v11.1` and
+    Active: the Paediatrics sub-speciality keeps its own default.
+  - **Reopened** (Edit the sub-speciality Neonatology), the default stays selected. Nothing about KGK's programme
+    changes.
 Note: The College's CollegeAdmin, or an Administrator.
 Actual (2026-11-02, T392 replay, wombat_scenario_t392): /admin/specialities/2/sub-specialities had one row,
   Paediatrics. Creating Neonatology opened /admin/specialities/2/sub-specialities/4 with "No default — offer every
   scale"; choosing the CPSA ladder and saving showed "Sub-speciality saved.", and it stays selected when reopened. The
   list holds Neonatology and Paediatrics, both Active; Paediatrics keeps the CPSA ladder (outcome SQL).
-Gap: none
+Gap: none. The T392 Actual above predates T394 (the create from the tree, its default chosen there, and its result on
+  the tree); the next replay re-reads the step.
 
 ### Step 6.13 — Dr Kruger starts a Neonatology curriculum, and holds it back
 Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/curricula → /admin/curricula/new → /admin/curricula/{Id:int} → /admin/curricula → /admin/curricula/{Id:int}/items
 Do: Create `Neonatology EPA Curriculum`, version `1.0`, in Paediatrics / Neonatology, effective from `D`, with no end.
-  The form selects Neonatology first. Then open its items.
+  The form selects Neonatology first, and Effective from arrives as `D`. Then open Curricula, and the curriculum's
+  Items.
 Expect:
-  - The create opens the curriculum's edit page, with Active unticked and a card for cloning it: a new version starts
-    held back, so no institution can adopt it yet (T392, F5, T301).
-  - The curricula list shows the curriculum Held back, with 0 items.
-  - Its items page, "Items of Neonatology EPA Curriculum (1.0)", reads "Items (0)" and has no rows. In place of the add
-    link, it says there is nothing to add, and that a national EPA of Neonatology must be added first.
-Note: The College's CollegeAdmin, or an Administrator. Active decides only whether an institution may adopt the
-  curriculum (`GetAdoptableCurricula`).
+  - **The create.** Create curriculum opens "Create curriculum", subtitled "A new version starts held back: no
+    institution can adopt it until you open it.", its Details under "* marks a field you must fill in.", then Cancel and
+    Create curriculum (T394).
+  - **The curriculum's page.** The create opens "Neonatology EPA Curriculum (1.0)", subtitled "College of Paediatricians
+    of South Africa · Paediatrics / Neonatology · effective `D`", with "Neonatology EPA Curriculum (1.0) created. It is
+    held back: no institution can adopt it until you open it." at its top, focused (Q5). Its header's one link is "Items
+    (0)". Its sections are:
+    - Details, its Sub-speciality still a select: the version holds no item and has no adoption (Q19);
+    - Open for adoption, unticked (a new version starts held back, T301), with "An institution can adopt this version
+      only while it is open. Closing it does not affect an institution that has already adopted it." and "No institution
+      has adopted this version yet." (Q2); then Cancel and Save, and no Hold back…;
+    - A new version: "This version has no national items yet, so a new version starts with none. It starts held back."
+  - **Curricula** shows the curriculum Held back, with 0 items.
+  - **Its items page**, "Items of Neonatology EPA Curriculum (1.0)", offers Edit this version in its header, and its
+    warning opens, in bold, "No institution has adopted this version yet." It reads "Items (0)" with no table, and in
+    place of the add: "Neonatology has no national EPA yet. Add one under EPAs, then come back to add it here.", with Go
+    to EPAs (Q14, T326).
+Note: The College's CollegeAdmin, or an Administrator. Open for adoption decides only whether an institution may adopt
+  the curriculum (`GetAdoptableCurricula`).
 Actual (2026-11-02, T392 replay, wombat_scenario_t392): The form selects Paediatrics / Neonatology first. Effective
   from 2026-11-02 (D), no end, the create opened /admin/curricula/3, "Edit curriculum", with Active unticked (SQL:
   IsActive false) and a "Clone as new version" card (version "1.0-copy", from 2026-11-03), Manage items in the header.
@@ -287,16 +356,21 @@ Actual (2026-11-02, T392 replay, wombat_scenario_t392): The form selects Paediat
   and in place of the add link: "Every national EPA of Neonatology is already on this curriculum, as a national item
   or as an institution's own item, so there is none left to add. To add an item, first add a national EPA of
   Neonatology, …". No sideways scroll at 1280. (6.13-2 not retaken: nothing is unticked now.)
-Gap: F-6.13a, T326 (still: the empty state says every national EPA of Neonatology is already on the curriculum, though
-  Neonatology has none; the held-back start and the title are met). known-task.
+Gap: [F-6.13a, T326] closed by T394 (2026-11-05): the empty state says that Neonatology has no national EPA yet, with Go
+  to EPAs. The T392 Actual above predates T394 (the page titled by the version, its created result, Open for adoption,
+  and Q14's words); the next replay re-reads the step.
 
 ### Step 6.14 — Dr Kruger corrects an EPA's wording
 Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/epas → /admin/epas/{Id:int} → /admin/epas
 Do: Open PAED-006. Correct its title from "Managing long-term health conditions (LTHCs)" to "Managing long-term health
   conditions (LTHCs) in children". Change nothing else, and save.
-Expect: The save is confirmed, and the EPA stays Active. The EPA list shows the new title. The title is read live
-  wherever the EPA is named: 11.1's items, the activity pickers and every registrar's progress card (Step 6.15). An
+Expect: PAED-006's page is subtitled "College of Paediatricians of South Africa · Paediatrics / Paediatrics" (T394,
+  S15), and carries one standing line: "PAED-006 is on 1 curriculum adopted by 1 institution, Kgosi Kgari Teaching
+  Hospital; 3 registrars in training are measured against it. Its code, title and description are read at once wherever
+  it is named." (Q21, EV2). Its form opens with "* marks a field you must fill in.". The save is confirmed ("EPA
+  saved."), the h1 reads the new title, and the EPA stays Active. The EPA list shows the new title. The title is read
+  live wherever the EPA is named: 11.1's items, the activity pickers and every registrar's progress card (Step 6.15). An
   EPA's wording has no versions.
 Note: A national EPA's College's CollegeAdmin, or an Administrator (`UpdateEpa`). A restart does not bring back the
   seeded title (T221).
@@ -307,7 +381,7 @@ Actual (2026-11-02, T392 replay, wombat_scenario_t392): The EPA list's PAED-006 
   | College of Paediatricians of South Africa | Paediatrics / Paediatrics | Active", and 11.1's items read the new
   title. After the restart played after Step 6.14a the title stands by SQL (the boot logged "0 republished, 22
   unchanged").
-Gap: none
+Gap: none. The T392 Actual above predates T394 (the subtitle and the reach line); the next replay re-reads the step.
 
 ### Step 6.14a — Dr Kruger drafts a College activity type
 Role: CollegeAdmin — Dr Anton Kruger
@@ -415,16 +489,19 @@ Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/epas → /admin/epas/{Id:int} → /admin/epas → /admin/curricula → /admin/curricula/{Id:int}/items
 Do: Open PAED-012 and press Deactivate…, read the question and confirm. Then open 11.1's items.
 Expect:
-  - **The question.** Deactivate… asks first, "Deactivate PAED-012?" (T392, S11, Q11). The dialog says that the EPA:
+  - **The question.** Deactivate… asks first, "Deactivate PAED-012?" (T392, S11, Q11). The dialog opens with the EPA's
+    reach, "PAED-012 is on 1 curriculum adopted by 1 institution, Kgosi Kgari Teaching Hospital; 3 registrars in
+    training are measured against it." (T394, Q2), then says that the EPA:
     - can no longer be chosen for a new activity;
-    - stops being a target on running programmes' progress pages and dashboards, for every institution that has
-      adopted it, while a programme that has ended keeps it on its record, marked no longer in use (T312);
+    - stops being a target on running programmes' progress pages and dashboards, for every institution that has adopted
+      it, while a programme that has ended keeps it on its record, marked no longer in use (T312);
     - keeps the progress it has earned;
     - credits nothing for an activity completed against it while it is inactive, until it is reactivated.
   - **After confirming.** The page says the EPA is deactivated. Active is unticked, and Deactivate… is gone. The EPA
     list reads PAED-012 Inactive.
-  - **11.1's items.** PAED-012's row is marked "(inactive: not in force)". A notice says its credit is paused and that
-    reactivating it credits what was completed meanwhile.
+  - **11.1's items.** Their warning opens, in bold, "Adopted by 1 institution, Kgosi Kgari Teaching Hospital; 3
+    registrars in training on it." (Q2). PAED-012's row is marked "(inactive: not in force)". A notice says its credit
+    is paused and that reactivating it credits what was completed meanwhile.
 Note: D48, T158, T196. The College's CollegeAdmin or an Administrator deactivates a national EPA; a local EPA is its
   institution's. Unticking Active and saving asks the same question.
 Actual (2026-11-02, T392 replay, wombat_scenario_t392): PAED-012 is /admin/epas/13 (found by its row's "Edit PAED-012
@@ -439,7 +516,8 @@ Actual (2026-11-02, T392 replay, wombat_scenario_t392): PAED-012 is /admin/epas/
   choose it for a new activity, its credit is paused, and no running programme's progress page or dashboard shows it
   (a programme that has ended keeps it on its record). Reactivating an EPA on its own page brings its item back, and
   credits what was completed against it meanwhile."
-Gap: none
+Gap: none. The T392 Actual above predates T394 (the reach first in the question, and in the items' warning); the next
+  replay re-reads the step.
 
 ### Step 6.18 — Dr Patel completes the Mini-CEX during the pause
 Role: Assessor — Dr Mohammed Patel
@@ -581,7 +659,10 @@ Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/epas → /admin/epas/{Id:int} → /admin/epas
 Do: Open PAED-012, tick Active and save.
 Expect: Nothing asks first. The page reads "EPA reactivated. 1 activity completed against it while it was inactive now
-  counts towards progress." Deactivate… is offered again (T392, S11). The EPA list reads PAED-012 Active.
+  counts towards progress." Deactivate… is offered again (T392, S11). The page's standing line reads "PAED-012 is on 1
+  curriculum adopted by 1 institution, Kgosi Kgari Teaching Hospital; 3 registrars in training are measured against it.
+  Its code, title and description are read at once wherever it is named." (T394, EV2). The EPA list reads PAED-012
+  Active.
 Note: D48: reactivating credits the paused completions itself, so no rebuild is needed. The College's CollegeAdmin, or
   an Administrator.
 Actual (2026-11-02, T392 replay, wombat_scenario_t392): PAED-012 (/admin/epas/13) read Active unticked, Save only;
@@ -589,7 +670,7 @@ Actual (2026-11-02, T392 replay, wombat_scenario_t392): PAED-012 (/admin/epas/13
   now counts towards progress." takes the focus; Deactivate… offered again beside Save; the list reads PAED-012
   Active. By SQL Dlamini now has a PAED-012 2026 S2 row (1 counted, ["25:complete"], updated 20:34), and Molefe's row
   (2 counted, ["15:complete", "16:complete"], updated 18:24, before the pause at about 20:31) is untouched.
-Gap: none
+Gap: none. The T392 Actual above predates T394 (the reach line); the next replay re-reads the step.
 
 ### Step 6.24 — Dr Dlamini's credit is counted
 Role: Trainee — Dr Anele Dlamini
@@ -634,7 +715,8 @@ Do: Create an EPA:
 Expect:
   - **The form.** "Create EPA", subtitled "An EPA of your institution's own. It applies only to Kgosi Kgari Teaching
     Hospital's trainees." The sub-speciality list offers only Paediatrics / Paediatrics, the discipline KGK has
-    adopted, already chosen, with the help "The disciplines your institution has adopted." (T392, R2-C04).
+    adopted, already chosen, with the help "The disciplines your institution has adopted." (T392, R2-C04). The form
+    opens with "* marks a field you must fill in." (T394, M4).
   - **Once saved.** Save opens the EPA's own page by `?created`: "EPA saved." heads it and takes the focus, and the token
     leaves the address (T392, F1, R3-C08). The page is titled "KGK-001 — Running a paediatric outreach clinic at a
     district hospital", its crumb KGK-001, with no Back to EPAs. It is Active, and its help names Kgosi Kgari Teaching
@@ -652,7 +734,8 @@ Actual (2026-11-02, T392 replay, wombat_scenario_t392): "Create EPA", subtitled 
   Kgari Teaching Hospital's trainees"; Cancel, Deactivate… and Save. A reload says nothing of the save. The EPA list
   has 16 rows: KGK-001 first with "Your institution's own EPA" under its title and Edit, the only Edit (1); each of
   the 15 national rows reads "Set by the College.".
-Gap: none (T291 no longer occurs: Edit is offered on KGK-001 alone, and the list marks it as KGK's own)
+Gap: none (T291 no longer occurs: Edit is offered on KGK-001 alone, and the list marks it as KGK's own). The T392 Actual
+  above predates T394's required line on the form; the next replay re-reads the step.
 
 ### Step 6.26 — Prof Mbatha adds KGK's own item to 11.1
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -672,7 +755,7 @@ Expect:
     Paediatric EPA Curriculum (11.1). It applies only to Kgosi Kgari Teaching Hospital's trainees." Its EPA picker
     offers KGK-001 alone, because the College's items hold all 15 national EPAs (T222). The scale is the CPSA ladder,
     "Suggested because every item on this curriculum is pinned to it." Add item stays off until a minimum rung is
-    chosen. Cancel stands before Add item.
+    chosen. Cancel stands before Add item. The form opens with "* marks a field you must fill in." (T394, M4).
   - **After the add.** Back on the list, "Curriculum item added." heads it and takes the focus, and the token leaves the
     address (F1, R3-B06). "Items (16)", and the add link gives way to the note that every EPA KGK could add is already
     on the curriculum.
@@ -696,7 +779,7 @@ Actual (2026-11-02, T392 replay, wombat_scenario_t392): Her curricula list shows
   "Remove KGK-001"); the 15 national rows offer View beside "Set by the College.". Remove… (not confirmed) asks
   "Remove KGK-001 from Paediatric EPA Curriculum (11.1)?" with Cancel focused; Escape returned the focus to Remove…. A
   reload says nothing of the add. Curricula again: 11.1's Items "15 national · 1 your own".
-Gap: none
+Gap: none. The T392 Actual above predates T394's required line on the add page; the next replay re-reads the step.
 
 ### Step 6.27 — Dr Dlamini is measured against KGK-001
 Role: Trainee — Dr Anele Dlamini
@@ -724,8 +807,9 @@ Gap: none
 ## Phase 6.F — A new curriculum version
 
 A curriculum's targets are read live, so the College puts a new EPA and a changed target into a new version rather than
-into the one registrars are measured against. There is no draft state. A new or cloned version starts held back (Active
-unticked), so no institution can adopt it until the College ticks Active (T392, F5, T301).
+into the one registrars are measured against. There is no draft state. A new or cloned version starts held back (Open
+for adoption unticked), so no institution can adopt it until the College ticks Open for adoption (T392, F5, T301;
+T394).
 
 ### Step 6.28 — Dr Kruger adds a national EPA
 Role: CollegeAdmin — Dr Anton Kruger
@@ -739,8 +823,13 @@ Do: Create an EPA:
   - category: Core.
   Save.
 Expect:
-  - The sub-speciality list offers CPSA's two, Paediatrics / Neonatology and Paediatrics / Paediatrics.
-  - Once saved, PAED-016 is Active.
+  - **The create.** Create EPA is subtitled "A national EPA of College of Paediatricians of South Africa. It reaches a
+    registrar once a curriculum an institution has adopted holds it." (T394, S15), its form under "* marks a field you
+    must fill in.". The sub-speciality list, with the help "College of Paediatricians of South Africa's
+    sub-specialities.", offers CPSA's two, Paediatrics / Neonatology and Paediatrics / Paediatrics.
+  - **Once saved,** PAED-016's page, subtitled "College of Paediatricians of South Africa · Paediatrics / Paediatrics",
+    reads "EPA saved.", Active, with the standing line "PAED-016 is on no curriculum an institution has adopted, so no
+    registrar is measured against it yet. Its code, title and description are read at once wherever it is named." (EV2).
   - His EPA list holds PAED-001 to PAED-016, and not KGK-001: a College does not see an institution's own EPAs.
   - PAED-016 is on no curriculum yet, so no registrar is offered it or measured against it.
 Note: The College's CollegeAdmin, or an Administrator. 11.1 would accept PAED-016 too, and it would then apply at once
@@ -750,19 +839,29 @@ Actual (2026-11-02, T392 replay, wombat_scenario_t392): Create EPA offers "Paedi
   /admin/epas/18, "PAED-016 — Transitioning adolescents with long-term conditions to adult care", "EPA saved."
   focused, Active, Deactivate… and Save. His EPA list holds 16 rows, PAED-001 to PAED-016, no KGK-001. 11.1's add page
   would offer PAED-016 (Step 6.29: Add item stands on 11.1): it is on no curriculum.
-Gap: none
+Gap: none. The T392 Actual above predates T394 (the create's subtitle and help, and the reach line); the next replay
+  re-reads the step.
 
 ### Step 6.29 — Dr Kruger clones 11.1 as 11.2, and holds it back
 Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/curricula → /admin/curricula/{Id:int}/items → /admin/curricula/{Id:int} → /admin/curricula
-Do: Read 11.1's items. Then, on 11.1's page, clone it: new version `11.2`, effective from `D`, with no end. Then open
-  Curricula.
+Do: Read 11.1's items. Then press Edit this version, and on 11.1's page clone it: new version `11.2`, effective from
+  `D`, with no end. Then open Curricula.
 Expect:
-  - 11.1's items still show him 15 rows: KGK's own item is not shown to the College (T211). "Add item" stands beside
-    "Items (15)", because PAED-016 is on no curriculum.
-  - The clone form starts with the version "11.1-copy".
-  - Once cloned, the page is 11.2's, with Active unticked: a clone starts held back (T392, F5).
-  - The list shows 11.2 Held back, with 15 items.
+  - **11.1's items** still show him 15 rows: KGK's own item is not shown to the College (T211). Their warning opens, in
+    bold, "Adopted by 1 institution, Kgosi Kgari Teaching Hospital; 3 registrars in training on it." (T394, Q2). "Add
+    item" stands beside "Items (15)", because PAED-016 is on no curriculum.
+  - **11.1's page.** Edit this version opens "Paediatric EPA Curriculum (11.1)", whose header link reads "Items (15)".
+    Its Sub-speciality is a read-out, "Paediatrics / Paediatrics", with "Fixed once a version holds an item or has been
+    adopted. To use another sub-speciality, create a curriculum there." (Q19). Open for adoption is ticked, with the
+    same reach under it, and Hold back… is offered. A new version reads "A new version copies this version's 15 national
+    items, with their targets, minimum levels and tools. An institution's own items are never copied. It starts held
+    back.", and its form starts with the version "11.1-copy".
+  - **Once cloned,** the page is 11.2's, "Paediatric EPA Curriculum (11.2)", with "Paediatric EPA Curriculum (11.2)
+    cloned from 11.1, with its 15 national items. It is held back." at its top, focused (Q5). Open for adoption is
+    unticked, with "No institution has adopted this version yet.", and its Sub-speciality reads "Paediatrics /
+    Paediatrics", fixed, since it holds items (T7).
+  - **Curricula** shows 11.2 Held back, with 15 items.
 Note: The College's CollegeAdmin, or an Administrator. A clone copies every cell of the College's items: target,
   period, minima, scale pin, tools and decision. It copies none of an institution's own items
   (`Curriculum.CloneAsNewVersion`).
@@ -772,7 +871,8 @@ Actual (2026-11-02, T392 replay, wombat_scenario_t392): 11.1's items show him 15
   Active unticked (the focus on the h1). The list reads Paediatric EPA Curriculum (11.2), 2026-11-02, 15 items, "Held
   back", beside 11.1 "Open" and Neonatology 1.0 "Held back". While held back, Prof Mbatha's Open for adoption did not
   offer 11.2 (checked after Step 6.30: IM Core only).
-Gap: none (T301 no longer occurs: the clone starts held back)
+Gap: none (T301 no longer occurs: the clone starts held back). The T392 Actual above predates T394 (Edit this version,
+  the page titled by the version, the reach, the clone's result and the read-out); the next replay re-reads the step.
 
 ### Step 6.30 — Dr Kruger edits 11.2's items
 Role: CollegeAdmin — Dr Anton Kruger
@@ -786,9 +886,11 @@ Do: On 11.2's items:
      - tools: Mini-CEX, CBD and MSF.
   2. Edit PAED-011: set its target to 2 per academic year, and change nothing else.
 Expect:
-  - **Before the edits.** The 15 rows match 11.1's, cell for cell, and "Add item" stands beside "Items (15)".
+  - **Before the edits.** The 15 rows match 11.1's, cell for cell, and "Add item" stands beside "Items (15)". The
+    warning opens, in bold, "No institution has adopted this version yet." (T394, Q2).
   - **The add.** "Add item" opens a page of its own (T392, Q14, R3-B22), headed "Add item" and subtitled "On Paediatric
-    EPA Curriculum (11.2). It applies to every institution that has adopted it." Its EPA picker offers PAED-016 alone,
+    EPA Curriculum (11.2). It applies to every institution that has adopted it. No institution has adopted it yet."
+    (T394, Q2). Its form opens with "* marks a field you must fill in." (M4). Its EPA picker offers PAED-016 alone,
     chosen. Add item returns to the list with "Curriculum item added." at its top, focused (F1, R3-B23): 16 rows,
     PAED-016 last, and in place of the add link the note that every national EPA of Paediatrics is already on the
     curriculum.
@@ -810,19 +912,23 @@ Actual (2026-11-02, T392 replay, wombat_scenario_t392): 11.2's items ("College o
   EPA a select offering PAED-011 alone; target 2 and Save item: …/items?saved=28, then …/items, "Curriculum item
   saved." at the top, focused; the row reads "2 per academic year". A reload after each says nothing of the result. No
   sideways scroll at 1280. 11.1's PAED-011 still reads 1 (outcome SQL).
-Gap: none
+Gap: none. The T392 Actual above predates T394 (the reach in the warning and the subtitle, and the required line); the
+  next replay re-reads the step.
 
 ### Step 6.31 — Dr Kruger publishes 11.2
 Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/curricula → /admin/curricula/{Id:int} → /admin/curricula
-Do: Open 11.2, tick Active and save.
-Expect: The save is confirmed, and this is the only opening: a version starts held back (T392, F5). The curricula
-  list shows 11.1 and 11.2 Open, with 11.2 at 16 items, and the Neonatology curriculum still Held back (T9).
+Do: Open 11.2, tick Open for adoption and save.
+Expect: Nothing asks first. The page reads "Curriculum saved. It is open for adoption: an institution can adopt it
+  now.", focused (T394, T7), and offers Hold back… beside Save. Its Sub-speciality stays a read-out (Q19). This is the
+  only opening: a version starts held back (T392, F5). The curricula list shows 11.1 and 11.2 Open, with 11.2 at 16
+  items, and the Neonatology curriculum still Held back (T9).
 Note: The College's CollegeAdmin, or an Administrator.
 Actual (2026-11-02, T392 replay, wombat_scenario_t392): 11.2 (/admin/curricula/4) read Active unticked; ticked and
   Save: "Curriculum saved." (focused), nothing asked. The list reads Neonatology EPA Curriculum (1.0) 0 items "Held
   back", Paediatric EPA Curriculum (11.2) 16 items "Open" (from 2026-11-02) and 11.1 15 items "Open".
-Gap: none
+Gap: none. The T392 Actual above predates T394 (Open for adoption in place of Active, the result's words, and Hold
+  back…); the next replay re-reads the step.
 
 ## Phase 6.G — KGK takes up the new version
 

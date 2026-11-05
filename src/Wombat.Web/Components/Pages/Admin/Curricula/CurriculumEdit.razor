@@ -6,191 +6,414 @@
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject TimeProvider Clock
+@inject ILogger<CurriculumEdit> Logger
 
-<PageTitle>@(IsNew ? "Create curriculum" : "Edit curriculum") · Wombat</PageTitle>
+<PageTitle>@Heading · Wombat</PageTitle>
 
-<PageHeader Title="@(IsNew ? "Create curriculum" : "Edit curriculum")" Subtitle="Set the scope, version window, and lifecycle of the curriculum.">
-  <Actions>
-    <a class="btn btn-outline btn-sm" href="/admin/curricula">Back to curricula</a>
-    @if (!IsNew)
-    {
-      <a class="btn btn-outline btn-sm" href="@($"/admin/curricula/{Id}/items")">Manage items</a>
-    }
-  </Actions>
-</PageHeader>
+@*
+  A curriculum's page (T394, flow 16, lane C; boards R3-D01–D14, D18–D20, R2-D15–D17). One column of h2 sections (Q4):
+  Details, Open for adoption, A new version. One read (GetCurriculumByIdQuery); an id the caller cannot open, or that does
+  not exist, is Curriculum unavailable (Q7).
 
-@* What an action did. It takes the focus once the action is done (T234; DESIGN.md § Button system). A refusal leaves
-   the focus where it was: it is an alert, read at once. *@
-<ActionResult @ref="_result">
-  @if (!string.IsNullOrWhiteSpace(_statusMessage))
-  {
-    <Alert Kind="success">@_statusMessage</Alert>
-  }
+  - Titled by the version, "Paediatric EPA Curriculum (11.1)" (T2), "Create curriculum" new, "Curriculum" while it is read or
+    when its read failed (T7). No Back links (Q9): the trail is the way back; the header's one link is "Items (15)" (T4),
+    counting the College's national items (S9).
+  - The sub-speciality is a read-out once the version holds an item or has been adopted (Q19, SubSpecialityFixed); a save
+    that finds it fixed after the page was read is refused by its cause (decision 5), and the page reads the version again.
+  - "Open for adoption" (T301), its help and the version's reach under it (Q2). Opening asks nothing; holding back asks
+    (Hold back…, and Save with the box unticked on a version stored open, N20), naming who has adopted it (Q4, T6). The
+    save's result says what the box now means (T7).
+  - A create arrives by ?created and a clone by ?cloned=‹from› (Q5): the page writes the result, focuses it and drops the
+    token; a stale or foreign token writes nothing.
+  - Refusals under their fields (T324; no ValidationSummary); any other failure is the fixed sentence, logged (T272, T393),
+    never an exception's text.
+*@
+<PageHeader Title="@Heading" Subtitle="@Subtitle" CurrentCrumb="@Heading" Actions="@(_curriculum is not null ? HeaderActions : null)" />
 
-  @if (!string.IsNullOrWhiteSpace(_errorMessage))
-  {
-    <Alert Kind="danger">@_errorMessage</Alert>
-  }
-</ActionResult>
-
-<StatePanel IsLoading="_loading" IsEmpty="false" EmptyTitle="" EmptyBody="">
-  <div class="details-grid">
-    <section class="detail-card">
-      <h3>Curriculum details</h3>
-      <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="curriculum-edit">
-        <DataAnnotationsValidator />
-        <ValidationSummary class="validation-summary-errors" />
-
-        <div class="form-grid form-grid--wide">
-          <FormField Label="Sub-speciality" InputId="curriculum-sub-speciality" Required="true">
-            <InputSelect id="curriculum-sub-speciality" class="form-select" TValue="int" @bind-Value="_model.SubSpecialityId">
-              @foreach (var option in SubSpecialityOptions)
-              {
-                <option value="@option.Id">@option.Label</option>
-              }
-            </InputSelect>
-          </FormField>
-
-          <FormField Label="Name" InputId="curriculum-name" Required="true">
-            <InputText id="curriculum-name" class="form-control" @bind-Value="_model.Name" />
-            <ValidationMessage For="() => _model.Name" />
-          </FormField>
-
-          <FormField Label="Version" InputId="curriculum-version" Required="true">
-            <InputText id="curriculum-version" class="form-control" @bind-Value="_model.Version" />
-            <ValidationMessage For="() => _model.Version" />
-          </FormField>
-
-          <FormField Label="Effective from" InputId="curriculum-effective-from">
-            <InputDate id="curriculum-effective-from" class="form-control" @bind-Value="_model.EffectiveFrom" />
-          </FormField>
-
-          <FormField Label="Effective to" InputId="curriculum-effective-to">
-            <InputDate id="curriculum-effective-to" class="form-control" TValue="DateOnly?" @bind-Value="_model.EffectiveTo" />
-          </FormField>
-
-          @if (!IsNew)
-          {
-            <FormField Label="Status" InputId="curriculum-active">
-              <div class="form-check">
-                <InputCheckbox id="curriculum-active" class="form-check-input" @bind-Value="_model.IsActive" />
-                <label for="curriculum-active">Active</label>
-              </div>
-            </FormField>
-          }
-        </div>
-
-        <FormActions>
-          <a class="btn btn-outline" href="/admin/curricula">Cancel</a>
-          @* Neither Save nor Clone is disabled while its own action runs (T234): the one pressed has the focus, and a
-             browser drops the focus of a button it disables, to the page. A second press sends nothing. *@
-          <button type="submit" class="btn btn-primary" disabled="@_cloning" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : "Save")</button>
-        </FormActions>
-      </EditForm>
-    </section>
-
-    @if (!IsNew)
-    {
-      <aside class="detail-card">
-        <h3>Clone as new version</h3>
-        <EditForm Model="_cloneModel" OnValidSubmit="CloneAsync" FormName="curriculum-clone">
-          <DataAnnotationsValidator />
-          <ValidationSummary class="validation-summary-errors" />
-
-          <div class="form-grid">
-            <FormField Label="New version" InputId="clone-version" Required="true">
-              <InputText id="clone-version" class="form-control" @bind-Value="_cloneModel.Version" />
-              <ValidationMessage For="() => _cloneModel.Version" />
-            </FormField>
-
-            <FormField Label="Effective from" InputId="clone-effective-from">
-              <InputDate id="clone-effective-from" class="form-control" @bind-Value="_cloneModel.EffectiveFrom" />
-            </FormField>
-
-            <FormField Label="Effective to" InputId="clone-effective-to">
-              <InputDate id="clone-effective-to" class="form-control" TValue="DateOnly?" @bind-Value="_cloneModel.EffectiveTo" />
-            </FormField>
+<div class="user-page curriculum-page" aria-busy="@(_loading ? "true" : null)">
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusPageHeadingAsync">
+    <LoadingContent>
+      <p class="loading-line" role="status">@CurriculumWords.Loading</p>
+      <div class="detail-card" aria-hidden="true">
+        <div class="skeleton skel-title"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line skel-short"></div>
+      </div>
+    </LoadingContent>
+    <ChildContent>
+      @if (_unavailable)
+      {
+        <div class="detail-card detail-card--empty">
+          <div class="state-panel-copy">@CurriculumWords.UnavailableBody</div>
+          <div class="form-actions">
+            <a class="btn btn-primary" href="@CatalogueLinks.Curricula">@CurriculumWords.GoToCurricula</a>
           </div>
+        </div>
+      }
+      else if (_read)
+      {
+        @Content()
+      }
+    </ChildContent>
+  </StatePanel>
+</div>
 
-          <FormActions>
-            <button type="submit" class="btn btn-outline" disabled="@_saving" aria-disabled="@InFlight.AriaDisabled(_cloning)">@(_cloning ? "Cloning..." : "Clone")</button>
-          </FormActions>
-        </EditForm>
-      </aside>
-    }
-  </div>
-</StatePanel>
+@* Q4, T6: holding a version back asks first, naming who has adopted it; Hold back… and a Save with the box unticked on a
+   version stored open (N20) both open it. Cancel keeps the box as it is, unsaved; Save asks again. *@
+@if (!IsNew)
+{
+  <ConfirmDialog @ref="_confirmHoldBack"
+                 Title="@CurriculumWords.HoldBackTitle(_curriculum is null ? string.Empty : CurriculumWords.Heading(_curriculum))"
+                 BodyContent="HoldBackBody"
+                 ConfirmLabel="@CurriculumWords.HoldBackConfirm"
+                 DangerAction="true"
+                 ReturnFocusId="@(_saveOnConfirm ? SaveId : HoldBackTriggerId)"
+                 OnConfirm="ConfirmHoldBackAsync"
+                 OnCancel="CancelHoldBack" />
+}
 
 @code {
   [Parameter]
   public int? Id { get; set; }
 
+  private const string SubSpecialityId = "curriculum-sub-speciality";
+  private const string NameId = "curriculum-name";
+  private const string VersionId = "curriculum-version";
+  private const string EffectiveFromId = "curriculum-effective-from";
+  private const string EffectiveToId = "curriculum-effective-to";
+  private const string OpenId = "curriculum-open";
+  private const string SaveId = "curriculum-save";
+  private const string HoldBackTriggerId = "curriculum-hold-back";
+  private const string CloneVersionId = "clone-version";
+  private const string CloneEffectiveFromId = "clone-effective-from";
+  private const string CloneEffectiveToId = "clone-effective-to";
+
+  /// <summary>The details form's controls by the command's property, in the form's order (the first refused takes the focus).</summary>
+  private static readonly IReadOnlyDictionary<string, string> DetailsInputOf = new Dictionary<string, string>(StringComparer.Ordinal)
+  {
+    [nameof(UpdateCurriculumCommand.SubSpecialityId)] = SubSpecialityId,
+    [nameof(UpdateCurriculumCommand.Name)] = NameId,
+    [nameof(UpdateCurriculumCommand.Version)] = VersionId,
+    [nameof(UpdateCurriculumCommand.EffectiveFrom)] = EffectiveFromId,
+    [nameof(UpdateCurriculumCommand.EffectiveTo)] = EffectiveToId,
+  };
+
+  /// <summary>The clone's controls by its command's property: its Version is New version.</summary>
+  private static readonly IReadOnlyDictionary<string, string> CloneInputOf = new Dictionary<string, string>(StringComparer.Ordinal)
+  {
+    [nameof(CloneCurriculumAsNewVersionCommand.Version)] = CloneVersionId,
+    [nameof(CloneCurriculumAsNewVersionCommand.EffectiveFrom)] = CloneEffectiveFromId,
+    [nameof(CloneCurriculumAsNewVersionCommand.EffectiveTo)] = CloneEffectiveToId,
+  };
+
   private readonly CurriculumFormModel _model = new();
-  private readonly CloneCurriculumModel _cloneModel = new();
-  private IReadOnlyList<InstitutionDto> _institutions = [];
-  private IReadOnlyList<SpecialityDto> _specialities = [];
-  private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
-  private string? _errorMessage;
-  private string? _statusMessage;
-  private bool _loading;
-  private bool _saving;
-  private bool _cloning;
+  private readonly CloneFormModel _cloneModel = new();
+
+  // Each form's own context, whose message store marks a refused control aria-invalid (InputBase sets it itself).
+  private EditContext _editContext = default!;
+  private ValidationMessageStore _messages = default!;
+  private EditContext _cloneContext = default!;
+  private ValidationMessageStore _cloneMessages = default!;
+
+  protected override void OnInitialized()
+  {
+    _editContext = new EditContext(_model);
+    _messages = new ValidationMessageStore(_editContext);
+    _cloneContext = new EditContext(_cloneModel);
+    _cloneMessages = new ValidationMessageStore(_cloneContext);
+  }
+
+  private ConfirmDialog? _confirmHoldBack;
   private ActionResult? _result;
 
-  /// <summary>A save or a clone has been sent and has not answered, so nothing else may be sent. (T234)</summary>
-  private bool Busy => _saving || _cloning;
+  private CurriculumDto? _curriculum;
+  private IReadOnlyList<SpecialityDto> _specialities = [];
+  private IReadOnlyList<SubSpecialityDto> _subSpecialities = [];
+  private bool _loading = true;
+  private string? _loadError;
+  private bool _unavailable;
+  private bool _read;
+  private int? _readId;
+  private bool _readOnce;
+
+  // The page's one result: its words, and whether it is a failure.
+  private string? _statusMessage;
+  private string? _errorMessage;
+
+  // Refusals under their fields, by the control's id.
+  private readonly Dictionary<string, string> _refusals = new(StringComparer.Ordinal);
+
+  private bool _focusResult;
+  private string? _focusField;
+  private bool _stripToken;
+
+  /// <summary>The result region, which a done action focuses. A test matches a focus call to it.</summary>
+  internal ElementReference ResultRegion => _result?.Element ?? default;
+
+  private bool _saving;
+  private bool _holdingBack;
+  private bool _cloning;
+
+  /// <summary>Something has been sent and has not answered, so nothing else may be sent (T234).</summary>
+  private bool Busy => _saving || _holdingBack || _cloning;
+
+  // What the database says, as against the box, which can be unticked without saving.
+  private bool _storedIsOpen;
+
+  // The open question was asked by Save with the box unticked: confirming it saves every edit on the form.
+  private bool _saveOnConfirm;
 
   private bool IsNew => !Id.HasValue;
 
-  private IEnumerable<LookupOption> SubSpecialityOptions =>
+  private bool SubSpecialityFixed => _curriculum is { SubSpecialityFixed: true };
+
+  /// <summary>Save would hold the version back (N20): it asks first, so it says so.</summary>
+  private bool SaveAsks => !IsNew && _storedIsOpen && !_model.IsOpen;
+
+  private string Heading => _unavailable ? CurriculumWords.UnavailableHeading
+    : IsNew ? CurriculumWords.CreateHeading
+    : _curriculum is { } curriculum ? CurriculumWords.Heading(curriculum)
+    : CurriculumWords.HeadingWhileUnread;
+
+  private string? Subtitle => _unavailable || (!IsNew && _curriculum is null) || (IsNew && !_read) ? null
+    : IsNew ? CurriculumWords.CreateSubtitle
+    : CurriculumWords.Subtitle(_curriculum!);
+
+  private IEnumerable<(int Id, string Label)> SubSpecialityOptions =>
     from subSpeciality in _subSpecialities
     join speciality in _specialities on subSpeciality.SpecialityId equals speciality.Id
-    select new LookupOption(subSpeciality.Id, $"{speciality.Name} / {subSpeciality.Name}");
+    select (subSpeciality.Id, CurriculaWords.Discipline(speciality.Name, subSpeciality.Name));
 
+  private RenderFragment HeaderActions => __builder =>
+  {
+    var curriculum = _curriculum!;
+    <a class="btn btn-outline" href="@CatalogueLinks.Items(curriculum.Id)"
+       aria-label="@CurriculumWords.ItemsName(curriculum.NationalItemCount, CurriculumWords.Heading(curriculum))">@CurriculumWords.ItemsLink(curriculum.NationalItemCount)</a>
+  };
+
+  private RenderFragment Content() => __builder =>
+  {
+    @* What an action did, or a failure no field owns (T234, A5). A refusal under a field leaves it empty. *@
+    <ActionResult @ref="_result">
+      @if (!string.IsNullOrWhiteSpace(_statusMessage))
+      {
+        <Alert Kind="success">@_statusMessage</Alert>
+      }
+
+      @if (!string.IsNullOrWhiteSpace(_errorMessage))
+      {
+        <Alert Kind="danger">@_errorMessage</Alert>
+      }
+    </ActionResult>
+
+    <EditForm EditContext="_editContext" OnSubmit="SaveAsync" FormName="curriculum-edit" class="form-container" novalidate>
+      <section class="user-section" aria-labelledby="curriculum-details-h">
+        <h2 id="curriculum-details-h">@CurriculumWords.DetailsHeading</h2>
+        <p class="field-help">@CurriculumWords.RequiredMarkLine</p>
+
+        @if (SubSpecialityFixed)
+        {
+          @* Q19: fixed once the version holds an item or has been adopted, so an adoption's discipline is always its own. *@
+          <dl class="detail-list curriculum-read-out">
+            <dt>@CurriculumWords.SubSpecialityLabel</dt>
+            <dd>@CurriculaWords.Discipline(_curriculum!.SpecialityName, _curriculum.SubSpecialityName)</dd>
+          </dl>
+          <p class="muted">@CurriculumWords.SubSpecialityFixedHelp</p>
+        }
+        else
+        {
+          <FormField Label="@CurriculumWords.SubSpecialityLabel" InputId="@SubSpecialityId" Required="true">
+            <InputSelect id="@SubSpecialityId" class="form-select" TValue="int" @bind-Value="_model.SubSpecialityId" aria-required="true"
+                         aria-describedby="@DescribedBy(SubSpecialityId)">
+              @if (_model.SubSpecialityId == 0)
+              {
+                <option value="0"></option>
+              }
+              @foreach (var option in SubSpecialityOptions)
+              {
+                <option value="@option.Id">@option.Label</option>
+              }
+            </InputSelect>
+            @Refusal(SubSpecialityId)
+          </FormField>
+        }
+
+        <div class="form-grid">
+          <FormField Label="@CurriculumWords.NameLabel" InputId="@NameId" Required="true">
+            <InputText id="@NameId" class="form-control" @bind-Value="_model.Name" aria-required="true" aria-describedby="@DescribedBy(NameId)" />
+            @Refusal(NameId)
+          </FormField>
+
+          <FormField Label="@CurriculumWords.VersionLabel" InputId="@VersionId" Required="true">
+            <InputText id="@VersionId" class="form-control" @bind-Value="_model.Version" aria-required="true" aria-describedby="@DescribedBy(VersionId)" />
+            @Refusal(VersionId)
+          </FormField>
+        </div>
+
+        <div class="form-grid">
+          <FormField Label="@CurriculumWords.EffectiveFromLabel" InputId="@EffectiveFromId">
+            <InputDate id="@EffectiveFromId" class="form-control" @bind-Value="_model.EffectiveFrom" aria-describedby="@DescribedBy(EffectiveFromId)" />
+            @Refusal(EffectiveFromId)
+          </FormField>
+
+          <FormField Label="@CurriculumWords.EffectiveToLabel" InputId="@EffectiveToId">
+            <InputDate id="@EffectiveToId" class="form-control" TValue="DateOnly?" @bind-Value="_model.EffectiveTo" aria-describedby="@DescribedBy(EffectiveToId)" />
+            @Refusal(EffectiveToId)
+          </FormField>
+        </div>
+      </section>
+
+      @if (!IsNew)
+      {
+        @* T301, N14: the h2 names the box; no legend. The reach is a standing line, not a live region (Q2). *@
+        <section class="user-section" aria-labelledby="curriculum-open-h">
+          <h2 id="curriculum-open-h">@CurriculumWords.OpenHeading</h2>
+          <div class="form-check">
+            <InputCheckbox id="@OpenId" class="form-check-input" @bind-Value="_model.IsOpen" aria-describedby="@FieldHelp.Id(OpenId)" />
+            <label for="@OpenId">@CurriculumWords.OpenLabel</label>
+          </div>
+          <p class="field-help" id="@FieldHelp.Id(OpenId)">@CurriculumWords.OpenHelp</p>
+          @if (_curriculum?.Reach is { } reach)
+          {
+            <p class="muted">@CatalogueReachWords.ForCurriculum(reach)</p>
+          }
+        </section>
+      }
+
+      <FormActions>
+        <a class="btn btn-outline" href="@CatalogueLinks.Curricula">@CurriculumWords.Cancel</a>
+        @* T6: offered only on a version stored open; a held-back one is opened by ticking the box and saving. *@
+        @if (!IsNew && _storedIsOpen)
+        {
+          <button type="button" id="@HoldBackTriggerId" class="btn btn-outline" aria-haspopup="dialog"
+                  @onclick="AskHoldBackAsync" disabled="@(_saving || _cloning)"
+                  aria-disabled="@InFlight.AriaDisabled(_holdingBack)">@CurriculumWords.HoldBackTrigger</button>
+        }
+        @* Not disabled while its own save runs (T234): it has the focus then. A second press sends nothing. *@
+        <button type="submit" id="@SaveId" class="btn btn-primary" disabled="@(_cloning || _holdingBack)"
+                aria-haspopup="@(SaveAsks ? "dialog" : null)"
+                aria-disabled="@InFlight.AriaDisabled(_saving)">@SaveWords</button>
+      </FormActions>
+    </EditForm>
+
+    @if (!IsNew)
+    {
+      <section class="user-section" aria-labelledby="curriculum-new-version-h">
+        <h2 id="curriculum-new-version-h">@CurriculumWords.NewVersionHeading</h2>
+        <p class="muted">@CurriculumWords.CloneIntro(_curriculum!.NationalItemCount)</p>
+        <EditForm EditContext="_cloneContext" OnSubmit="CloneAsync" FormName="curriculum-clone" class="form-container" novalidate>
+          <FormField Label="@CurriculumWords.NewVersionLabel" InputId="@CloneVersionId" Required="true">
+            <InputText id="@CloneVersionId" class="form-control" @bind-Value="_cloneModel.Version" aria-required="true" aria-describedby="@DescribedBy(CloneVersionId)" />
+            @Refusal(CloneVersionId)
+          </FormField>
+
+          <div class="form-grid">
+            <FormField Label="@CurriculumWords.EffectiveFromLabel" InputId="@CloneEffectiveFromId">
+              <InputDate id="@CloneEffectiveFromId" class="form-control" @bind-Value="_cloneModel.EffectiveFrom" aria-describedby="@DescribedBy(CloneEffectiveFromId)" />
+              @Refusal(CloneEffectiveFromId)
+            </FormField>
+
+            <FormField Label="@CurriculumWords.EffectiveToLabel" InputId="@CloneEffectiveToId">
+              <InputDate id="@CloneEffectiveToId" class="form-control" TValue="DateOnly?" @bind-Value="_cloneModel.EffectiveTo" aria-describedby="@DescribedBy(CloneEffectiveToId)" />
+              @Refusal(CloneEffectiveToId)
+            </FormField>
+          </div>
+
+          <FormActions>
+            <button type="submit" class="btn btn-outline" disabled="@(_saving || _holdingBack)"
+                    aria-label="@CurriculumWords.CloneName(CurriculumWords.Heading(_curriculum))"
+                    aria-disabled="@InFlight.AriaDisabled(_cloning)">@(_cloning ? CurriculumWords.Cloning : CurriculumWords.Clone)</button>
+          </FormActions>
+        </EditForm>
+      </section>
+    }
+  };
+
+  private string SaveWords => IsNew
+    ? (_saving ? CurriculumWords.Creating : CurriculumWords.Create)
+    : (_saving ? CurriculumWords.Saving : CurriculumWords.Save);
+
+  private RenderFragment HoldBackBody => __builder =>
+  {
+    <p>@CurriculumWords.HoldBackFirst</p>
+    <p>@CurriculumWords.HoldBackReach(_curriculum?.Reach)</p>
+    <p>@CurriculumWords.HoldBackLast</p>
+  };
+
+  /// <summary>A refusal under its field: <c>div.validation-message role="alert"</c>, named first by the control.</summary>
+  private RenderFragment Refusal(string inputId) => __builder =>
+  {
+    if (_refusals.TryGetValue(inputId, out var message))
+    {
+      <div class="validation-message" role="alert" id="@FieldRefusal.Id(inputId)">@message</div>
+    }
+  };
+
+  private string? DescribedBy(string inputId) => FieldRefusal.DescribedBy(inputId, _refusals.ContainsKey(inputId), null);
+
+  // Read again when the id changes (a create or a clone arrives at its version's page), never when only the query does:
+  // the token's own replace must not read the page again.
   protected override async Task OnParametersSetAsync()
   {
+    if (_readOnce && _readId == Id)
+    {
+      return;
+    }
+
+    _readOnce = true;
+    _readId = Id;
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
     _loading = true;
-    _errorMessage = null;
+    _loadError = null;
+    _unavailable = false;
+    _read = false;
     _statusMessage = null;
+    _errorMessage = null;
+    ClearRefusals();
 
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _institutions = await Sender.Send(new GetInstitutionsListQuery(authState.User));
-      _specialities = await Sender.Send(new GetSpecialitiesListQuery(authState.User));
-      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery(authState.User));
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      _specialities = await Sender.Send(new GetSpecialitiesListQuery(user));
+      _subSpecialities = await Sender.Send(new GetSubSpecialitiesListQuery(user));
 
       if (IsNew)
       {
         _model.SubSpecialityId = _subSpecialities.FirstOrDefault()?.Id ?? 0;
-        _model.EffectiveFrom = DateOnly.FromDateTime(DateTime.Today);
-        _model.IsActive = true;
-        _cloneModel.EffectiveFrom = DateOnly.FromDateTime(DateTime.Today);
+        // N6: the South African day, never the server's.
+        _model.EffectiveFrom = CurriculumWords.Today(Clock);
+        _read = true;
         return;
       }
 
-      var curriculum = await Sender.Send(new GetCurriculumByIdQuery(Id!.Value, authState.User));
-
-      if (curriculum is null)
+      var curriculum = await Sender.Send(new GetCurriculumByIdQuery(Id!.Value, user));
+      if (curriculum is not { CanEditCurriculum: true })
       {
-        Navigation.NavigateTo("/not-found");
+        // Q7: out of scope or unknown, one page in the route's own place, no id shown.
+        _curriculum = null;
+        _unavailable = true;
         return;
       }
 
-      _model.SubSpecialityId = curriculum.SubSpecialityId;
-      _model.Name = curriculum.Name;
-      _model.Version = curriculum.Version;
-      _model.EffectiveFrom = curriculum.EffectiveFrom;
-      _model.EffectiveTo = curriculum.EffectiveTo;
-      _model.IsActive = curriculum.IsActive;
-
-      _cloneModel.Version = $"{curriculum.Version}-copy";
-      _cloneModel.EffectiveFrom = curriculum.EffectiveFrom.AddDays(1);
-      _cloneModel.EffectiveTo = curriculum.EffectiveTo;
+      _curriculum = curriculum;
+      Fill(curriculum);
+      FillClone(curriculum);
+      _read = true;
+      await ReadTokenAsync(user, curriculum);
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = exception.Message;
+      // T329, R2-D17: the page's own read failed, which is not Unavailable. Never the exception's text.
+      Logger.LogError(exception, "The curriculum {CurriculumId} could not be read.", Id);
+      _curriculum = null;
+      _loadError = CurriculumWords.LoadFailed;
     }
     finally
     {
@@ -198,6 +421,65 @@
     }
   }
 
+  /// <summary>
+  /// Q5, S13: a create arrives by ?created, a clone by ?cloned=‹the version cloned from›. The sentence is written only for a
+  /// version read in the caller's scope, and a clone's only when its source is one too, of the same curriculum: a stale or
+  /// foreign token writes and focuses nothing. The token goes once the result is drawn.
+  /// </summary>
+  private async Task ReadTokenAsync(System.Security.Claims.ClaimsPrincipal user, CurriculumDto curriculum)
+  {
+    if (CatalogueLinks.HasToken(Navigation.Uri, CatalogueLinks.CreatedToken))
+    {
+      _statusMessage = CurriculumWords.Created(curriculum);
+    }
+    else if (CatalogueLinks.TokenId(Navigation.Uri, CatalogueLinks.ClonedToken) is { } fromId && fromId != curriculum.Id)
+    {
+      var source = await Sender.Send(new GetCurriculumByIdQuery(fromId, user));
+      if (source is { CanEditCurriculum: true }
+          && source.SubSpecialityId == curriculum.SubSpecialityId
+          && string.Equals(source.Name, curriculum.Name, StringComparison.Ordinal))
+      {
+        _statusMessage = CurriculumWords.Cloned(curriculum, source.Version);
+      }
+    }
+
+    if (_statusMessage is not null)
+    {
+      _focusResult = true;
+    }
+
+    _stripToken = CatalogueLinks.HasToken(Navigation.Uri, CatalogueLinks.CreatedToken)
+      || CatalogueLinks.HasToken(Navigation.Uri, CatalogueLinks.ClonedToken);
+  }
+
+  private void Fill(CurriculumDto curriculum)
+  {
+    _model.SubSpecialityId = curriculum.SubSpecialityId;
+    _model.Name = curriculum.Name;
+    _model.Version = curriculum.Version;
+    _model.EffectiveFrom = curriculum.EffectiveFrom;
+    _model.EffectiveTo = curriculum.EffectiveTo;
+    _model.IsOpen = curriculum.IsActive;
+    _storedIsOpen = curriculum.IsActive;
+  }
+
+  // As built: "11.1-copy" from the day after this version's start (R3-D05, D06).
+  private void FillClone(CurriculumDto curriculum)
+  {
+    _cloneModel.Version = $"{curriculum.Version}-copy";
+    _cloneModel.EffectiveFrom = curriculum.EffectiveFrom.AddDays(1);
+    _cloneModel.EffectiveTo = curriculum.EffectiveTo;
+  }
+
+  private Task RetryAsync() => LoadAsync();
+
+  // Once a Try again has read, the h1 takes the focus (R2-D17).
+  private ValueTask FocusPageHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  /// <summary>
+  /// Save, unless it would hold the version back: unticking the box on a version stored open asks Hold back's question
+  /// first (N20), and its confirm saves. Each field is checked here first, each refusal under its field (T324).
+  /// </summary>
   private async Task SaveAsync()
   {
     if (Busy)
@@ -205,30 +487,80 @@
       return;
     }
 
+    ClearRefusals();
+    _statusMessage = null;
+    _errorMessage = null;
+    var name = _model.Name.Trim();
+    var version = _model.Version.Trim();
+    Check(!SubSpecialityFixed && _model.SubSpecialityId <= 0, SubSpecialityId, CurriculumFieldMessages.SubSpecialityRequired);
+    Check(name.Length == 0, NameId, CurriculumFieldMessages.NameRequired);
+    Check(name.Length > CurriculumFieldMessages.NameMaxLength, NameId, CurriculumFieldMessages.NameTooLong);
+    Check(version.Length == 0, VersionId, CurriculumFieldMessages.VersionRequired);
+    Check(version.Length > CurriculumFieldMessages.VersionMaxLength, VersionId, CurriculumFieldMessages.VersionTooLong);
+    Check(_model.EffectiveTo < _model.EffectiveFrom, EffectiveToId, CurriculumFieldMessages.EffectiveToBeforeFrom);
+    if (_refusals.Count > 0)
+    {
+      FocusFirstRefusal(DetailsInputOf.Values);
+      return;
+    }
+
+    if (SaveAsks && _confirmHoldBack is not null)
+    {
+      _saveOnConfirm = true;
+      await _confirmHoldBack.ShowAsync(SaveId);
+      return;
+    }
+
+    await SaveCoreAsync();
+  }
+
+  /// <remarks>
+  /// A create leaves for its version's page by ?created (Q5). A save stays, its result by the box as stored (T7), focused;
+  /// the version is read again so its reach and its read-out are as stored. Q19's refusal is said in the result region and
+  /// the page read again (decision 5); a field's refusal goes under it, focused, what was typed kept; any other failure is
+  /// the fixed sentence, focused, logged.
+  /// </remarks>
+  private async Task SaveCoreAsync()
+  {
     _saving = true;
     _errorMessage = null;
     _statusMessage = null;
+    ClearRefusals();
 
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      CurriculumDto curriculum;
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
 
       if (IsNew)
       {
-        curriculum = await Sender.Send(new CreateCurriculumCommand(_model.SubSpecialityId, _model.Name, _model.Version, _model.EffectiveFrom, _model.EffectiveTo, authState.User));
-        Navigation.NavigateTo($"/admin/curricula/{curriculum.Id}", forceLoad: true);
+        var created = await Sender.Send(new CreateCurriculumCommand(_model.SubSpecialityId, _model.Name, _model.Version, _model.EffectiveFrom, _model.EffectiveTo, user));
+        Navigation.NavigateTo(CatalogueLinks.CurriculumCreated(created.Id), forceLoad: true);
         return;
       }
 
-      curriculum = await Sender.Send(new UpdateCurriculumCommand(Id!.Value, _model.SubSpecialityId, _model.Name, _model.Version, _model.EffectiveFrom, _model.EffectiveTo, _model.IsActive, authState.User));
-      _model.IsActive = curriculum.IsActive;
-      _statusMessage = "Curriculum saved.";
-      _result?.FocusAfterRender();
+      var subSpecialityId = SubSpecialityFixed ? _curriculum!.SubSpecialityId : _model.SubSpecialityId;
+      var saved = await Sender.Send(new UpdateCurriculumCommand(Id!.Value, subSpecialityId, _model.Name, _model.Version, _model.EffectiveFrom, _model.EffectiveTo, _model.IsOpen, user));
+      await ReadAgainAsync(user, saved);
+      Fill(_curriculum!);
+      _statusMessage = CurriculumWords.Saved(saved.IsActive);
+      _focusResult = true;
     }
-    catch (Exception exception)
+    catch (CurriculumSubSpecialityFixedException refusal)
     {
-      _errorMessage = exception.Message;
+      _errorMessage = CurriculumWords.SubSpecialityFixed(refusal);
+      await ReadAgainAfterRefusalAsync();
+      _focusResult = true;
+    }
+    catch (Exception exception) when (FieldRefusal.Of(exception) is { } refusal && DetailsInputOf.ContainsKey(refusal.Field))
+    {
+      Refuse(DetailsInputOf[refusal.Field], refusal.Message);
+      FocusFirstRefusal(DetailsInputOf.Values);
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "The curriculum {CurriculumId} could not be saved.", Id);
+      _errorMessage = IsNew ? CurriculumWords.CreateFailed : CurriculumWords.SaveFailed;
+      _focusResult = true;
     }
     finally
     {
@@ -236,7 +568,119 @@
     }
   }
 
-  /// <remarks>A clone that is done leaves for the new version's page, and the focus with it.</remarks>
+  private async Task AskHoldBackAsync()
+  {
+    if (Busy)
+    {
+      return;
+    }
+
+    _saveOnConfirm = false;
+    if (_confirmHoldBack is not null)
+    {
+      await _confirmHoldBack.ShowAsync(HoldBackTriggerId);
+    }
+  }
+
+  private async Task ConfirmHoldBackAsync()
+  {
+    if (Busy)
+    {
+      return;
+    }
+
+    if (_saveOnConfirm)
+    {
+      _saveOnConfirm = false;
+      await SaveCoreAsync();
+      return;
+    }
+
+    await HoldBackAsync();
+  }
+
+  private void CancelHoldBack() => _saveOnConfirm = false;
+
+  /// <summary>
+  /// Hold back… changes the box alone: it sends the version as stored with the box unticked, so an edit not yet saved on
+  /// the form is neither saved nor lost. Its result is T7's (R3-D13), focused once the dialog has closed.
+  /// </summary>
+  private async Task HoldBackAsync()
+  {
+    _holdingBack = true;
+    _errorMessage = null;
+    _statusMessage = null;
+    ClearRefusals();
+
+    try
+    {
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      var stored = _curriculum!;
+      var saved = await Sender.Send(new UpdateCurriculumCommand(stored.Id, stored.SubSpecialityId, stored.Name, stored.Version, stored.EffectiveFrom, stored.EffectiveTo, false, user));
+      await ReadAgainAsync(user, saved);
+      _model.IsOpen = saved.IsActive;
+      _storedIsOpen = saved.IsActive;
+      _statusMessage = CurriculumWords.Saved(saved.IsActive);
+      _focusResult = true;
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "The curriculum {CurriculumId} could not be held back.", Id);
+      _errorMessage = CurriculumWords.SaveFailed;
+      _focusResult = true;
+    }
+    finally
+    {
+      _holdingBack = false;
+    }
+  }
+
+  /// <summary>
+  /// After a save the version is read again, for its reach, its item count and whether its sub-speciality is now fixed; if
+  /// that read fails or no longer finds it, the save's own curriculum stands, with the facts it was read with.
+  /// </summary>
+  private async Task ReadAgainAsync(System.Security.Claims.ClaimsPrincipal user, CurriculumDto saved)
+  {
+    CurriculumDto? again = null;
+    try
+    {
+      again = await Sender.Send(new GetCurriculumByIdQuery(saved.Id, user));
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogWarning(exception, "The curriculum {CurriculumId} was saved but could not be read again.", saved.Id);
+    }
+
+    var previous = _curriculum!;
+    _curriculum = again is { CanEditCurriculum: true } ? again : saved with
+    {
+      CanEditCurriculum = true,
+      Reach = previous.Reach,
+      NationalItemCount = previous.NationalItemCount,
+      HasNationalEpas = previous.HasNationalEpas,
+      SubSpecialityFixed = previous.SubSpecialityFixed
+    };
+  }
+
+  /// <summary>Decision 5: after Q19's refusal the page is read again, everything as stored, the sub-speciality now its read-out.</summary>
+  private async Task ReadAgainAfterRefusalAsync()
+  {
+    try
+    {
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      if (await Sender.Send(new GetCurriculumByIdQuery(Id!.Value, user)) is { CanEditCurriculum: true } again)
+      {
+        _curriculum = again;
+        Fill(again);
+      }
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogWarning(exception, "The curriculum {CurriculumId} could not be read again after a refusal.", Id);
+    }
+  }
+
+  /// <remarks>A clone that is done leaves for the new version's page by ?cloned (Q5), and the focus with it.</remarks>
   private async Task CloneAsync()
   {
     if (Busy)
@@ -244,19 +688,36 @@
       return;
     }
 
-    _cloning = true;
-    _errorMessage = null;
+    ClearRefusals();
     _statusMessage = null;
+    _errorMessage = null;
+    var version = _cloneModel.Version.Trim();
+    Check(version.Length == 0, CloneVersionId, CurriculumFieldMessages.NewVersionRequired);
+    Check(version.Length > CurriculumFieldMessages.VersionMaxLength, CloneVersionId, CurriculumFieldMessages.VersionTooLong);
+    Check(_cloneModel.EffectiveTo < _cloneModel.EffectiveFrom, CloneEffectiveToId, CurriculumFieldMessages.EffectiveToBeforeFrom);
+    if (_refusals.Count > 0)
+    {
+      FocusFirstRefusal(CloneInputOf.Values);
+      return;
+    }
 
+    _cloning = true;
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var cloned = await Sender.Send(new CloneCurriculumAsNewVersionCommand(Id!.Value, _cloneModel.Version, _cloneModel.EffectiveFrom, _cloneModel.EffectiveTo, authState.User));
-      Navigation.NavigateTo($"/admin/curricula/{cloned.Id}", forceLoad: true);
+      var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      var cloned = await Sender.Send(new CloneCurriculumAsNewVersionCommand(Id!.Value, _cloneModel.Version, _cloneModel.EffectiveFrom, _cloneModel.EffectiveTo, user));
+      Navigation.NavigateTo(CatalogueLinks.CurriculumCloned(cloned.Id, Id!.Value), forceLoad: true);
     }
-    catch (Exception exception)
+    catch (Exception exception) when (FieldRefusal.Of(exception) is { } refusal && CloneInputOf.ContainsKey(refusal.Field))
     {
-      _errorMessage = exception.Message;
+      Refuse(CloneInputOf[refusal.Field], refusal.Message);
+      FocusFirstRefusal(CloneInputOf.Values);
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "The curriculum {CurriculumId} could not be cloned.", Id);
+      _errorMessage = CurriculumWords.CloneFailed;
+      _focusResult = true;
     }
     finally
     {
@@ -264,33 +725,94 @@
     }
   }
 
+  private void Check(bool refused, string inputId, string message)
+  {
+    if (refused && !_refusals.ContainsKey(inputId))
+    {
+      Refuse(inputId, message);
+    }
+  }
+
+  private void Refuse(string inputId, string message)
+  {
+    _refusals[inputId] = message;
+    if (DetailsInputOf.FirstOrDefault(pair => pair.Value == inputId).Key is { } field)
+    {
+      _messages.Add(_editContext.Field(field), message);
+      _editContext.NotifyValidationStateChanged();
+    }
+    else if (CloneInputOf.FirstOrDefault(pair => pair.Value == inputId).Key is { } cloneField)
+    {
+      _cloneMessages.Add(_cloneContext.Field(cloneField), message);
+      _cloneContext.NotifyValidationStateChanged();
+    }
+  }
+
+  private void ClearRefusals()
+  {
+    if (_refusals.Count == 0)
+    {
+      return;
+    }
+
+    _refusals.Clear();
+    _messages.Clear();
+    _cloneMessages.Clear();
+    _editContext.NotifyValidationStateChanged();
+    _cloneContext.NotifyValidationStateChanged();
+  }
+
+  private void FocusFirstRefusal(IEnumerable<string> inputIds)
+    => _focusField = inputIds.FirstOrDefault(_refusals.ContainsKey);
+
+  /// <remarks>
+  /// The focus moves once the browser has acknowledged the render that follows the action; by then a dialog that sent it
+  /// is closed (T206 review). A token's result is focused the same way, and only then is the token taken out of the address.
+  /// </remarks>
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusResult && _result is not null)
+    {
+      _focusResult = false;
+      await _result.Element.FocusAsync();
+    }
+
+    if (_focusField is { } field)
+    {
+      _focusField = null;
+      await PageFocus.FocusByIdAsync(JS, field);
+    }
+
+    if (_stripToken)
+    {
+      _stripToken = false;
+      Navigation.NavigateTo(CatalogueLinks.WithoutTokens(Navigation.Uri), replace: true);
+    }
+  }
+
+  // The form's properties are the update command's names, so a message store entry marks its control aria-invalid.
   private sealed class CurriculumFormModel
   {
-    [Range(1, int.MaxValue)]
     public int SubSpecialityId { get; set; }
 
-    [Required]
-    [StringLength(200)]
     public string Name { get; set; } = string.Empty;
 
-    [Required]
-    [StringLength(64)]
     public string Version { get; set; } = string.Empty;
 
     public DateOnly EffectiveFrom { get; set; }
+
     public DateOnly? EffectiveTo { get; set; }
-    public bool IsActive { get; set; } = true;
+
+    /// <summary>The box, "Open for adoption": the curriculum's IsActive (T301).</summary>
+    public bool IsOpen { get; set; }
   }
 
-  private sealed class CloneCurriculumModel
+  private sealed class CloneFormModel
   {
-    [Required]
-    [StringLength(64)]
     public string Version { get; set; } = string.Empty;
 
     public DateOnly EffectiveFrom { get; set; }
+
     public DateOnly? EffectiveTo { get; set; }
   }
-
-  private sealed record LookupOption(int Id, string Label);
 }

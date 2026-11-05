@@ -11,8 +11,9 @@ namespace Wombat.Web.Components.Pages.Admin.Curricula;
 /// </summary>
 public static class CurriculaWords
 {
-    /// <summary>The College admin's subtitle, as built (R3-A12).</summary>
-    public const string SubtitleCollege = "Manage curriculum versions and the sub-speciality they apply to.";
+    /// <summary>The College admin's subtitle, naming her College (T394, flow 16, R3-F01, T326).</summary>
+    public static string SubtitleCollege(string collegeName)
+        => $"{collegeName}'s curriculum versions. A new version starts held back; an institution can adopt one once you open it.";
 
     /// <summary>The Administrator's subtitle (R2-A09, N7).</summary>
     public const string SubtitleAdministrator = "Every College's curricula; and, for one institution, what it trains against and may adopt.";

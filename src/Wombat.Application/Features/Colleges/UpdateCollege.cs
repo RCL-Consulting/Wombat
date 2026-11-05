@@ -21,9 +21,14 @@ public sealed class UpdateCollegeCommandValidator : AbstractValidator<UpdateColl
     public UpdateCollegeCommandValidator()
     {
         RuleFor(command => command.Id).GreaterThan(0);
-        RuleFor(command => command.Name).NotEmpty().MaximumLength(200);
-        RuleFor(command => command.ShortCode).NotEmpty().MaximumLength(32);
-        RuleFor(command => command.Description).MaximumLength(1000);
+        // T394 (flow 16, T324, N1): each failure in its field's words, never a property's name.
+        RuleFor(command => command.Name)
+            .NotEmpty().WithMessage(CollegeHolders.NameRequired)
+            .MaximumLength(200).WithMessage(CollegeHolders.NameTooLong);
+        RuleFor(command => command.ShortCode)
+            .NotEmpty().WithMessage(CollegeHolders.ShortCodeRequired)
+            .MaximumLength(32).WithMessage(CollegeHolders.ShortCodeTooLong);
+        RuleFor(command => command.Description).MaximumLength(1000).WithMessage(CollegeHolders.DescriptionTooLong);
     }
 }
 
@@ -48,19 +53,21 @@ public sealed class UpdateCollegeCommandHandler : IRequestHandler<UpdateCollegeC
         var college = await _dbContext.Set<College>().SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken)
             ?? throw new InvalidOperationException($"College {request.Id} was not found.");
 
-        college.Name = request.Name.Trim();
-        college.ShortCode = request.ShortCode.Trim();
+        // T394 (S10, T201): checked before anything is assigned, since the audit pipeline commits whatever a refused
+        // handler changed.
+        var name = request.Name.Trim();
+        var shortCode = request.ShortCode.Trim();
+        if (await CollegeHolders.RefusalAsync(_dbContext, college.Id, name, shortCode, null, cancellationToken) is { } taken)
+        {
+            throw taken;
+        }
+
+        college.Name = name;
+        college.ShortCode = shortCode;
         college.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
         college.IsActive = request.IsActive;
 
-        try
-        {
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException exception)
-        {
-            throw new InvalidOperationException("A college with the same name or short code already exists.", exception);
-        }
+        await CollegeHolders.SaveAsync(_dbContext, request.Id, name, shortCode, cancellationToken);
 
         return new CollegeDto(college.Id, college.Name, college.ShortCode, college.Description, college.IsActive, college.CreatedOn);
     }

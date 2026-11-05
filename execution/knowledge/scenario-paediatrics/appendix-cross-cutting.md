@@ -1735,17 +1735,26 @@ Gap: F-A.7.9a, T280 (still: the builder's tabs expose no selected state)
 
 ### Step A.7.10 — Dr Kruger on his phone
 Role: CollegeAdmin — Dr Anton Kruger
-Route: / → /admin/epas → /admin/curricula → /admin/curricula/{Id:int}/items → /admin/curricula/{Id:int}/items/{ItemId:int} → /admin/curricula/{Id:int}/items
-Do: At 390 px, open EPAs, then Curricula and the items of Paediatric EPA Curriculum 11.2. Press Edit PAED-001 and read
-  its page, then leave it by Cancel.
-Expect: Nothing scrolls sideways on any of them (T323; T392, S16).
-  - **EPAs, Curricula and the items** stack, a block per row, each text cell labelled, and each row's actions 44 px
-    tall and named for the row ("Edit PAED-001", "Remove PAED-001"). The items carry no window or weight: those are on
-    an item's own page (T392, decision 1).
-  - **PAED-001's page**, "Edit PAED-001 — Providing paediatric emergency care to children", subtitled "On Paediatric
-    EPA Curriculum (11.2). It applies to every institution that has adopted it.", sets one field a row, each control
-    44 px, with Save item on top of Cancel (T392, Q14, R3-B24 at 390). Cancel returns to the list with PAED-001's Edit
-    focused (R3-B11).
+Route: / → /admin/epas → /admin/curricula → /admin/curricula/{Id:int}/items → /admin/curricula/{Id:int}/items/{ItemId:int} → /admin/curricula/{Id:int}/items → /admin/curricula/{Id:int} → /admin/curricula
+Do: At 390 px, read Home, then open EPAs, then Curricula and the items of Paediatric EPA Curriculum 11.2. Press Edit
+  PAED-001 and read its page, then leave it by Cancel. Then open Edit this version on 11.2's items, read the
+  curriculum's page, and leave it by Cancel.
+Expect: Nothing scrolls sideways on any of them (T323; T392, S16; T394).
+  - **Home's** National catalogue card reads "Your College's specialities, EPAs, curricula and activity types. An
+    institution can adopt a curriculum version once you open it.", with Specialities, EPAs, Curricula and Activity
+    types, each 44 px tall (T394, Q12, Q17).
+  - **EPAs, Curricula and the items** stack, a block per row, each text cell labelled, and each row's actions 44 px tall
+    and named for the row ("Edit PAED-001 — Providing paediatric emergency care to children" on EPAs, "Edit PAED-001"
+    and "Remove PAED-001" on the items). The EPAs carry no College cell (T394, T3). The items carry no window or weight:
+    those are on an item's own page (T392, decision 1).
+  - **PAED-001's page**, "Edit PAED-001 — Providing paediatric emergency care to children", subtitled "On Paediatric EPA
+    Curriculum (11.2). It applies to every institution that has adopted it. Adopted by 1 institution, Kgosi Kgari
+    Teaching Hospital; no registrar in training on it." (T394, Q2), sets one field a row, each control 44 px, with Save
+    item on top of Cancel (T392, Q14, R3-B24 at 390). Cancel returns to the list with PAED-001's Edit focused (R3-B11).
+  - **11.2's page**, "Paediatric EPA Curriculum (11.2)", reached by the items' Edit this version (T394, T4), sets one
+    field a row. Its Sub-speciality is a read-out, "Paediatrics / Paediatrics" (Q19); the Open for adoption row is 44 px
+    tall, with the reach "Adopted by 1 institution, Kgosi Kgari Teaching Hospital; no registrar in training on it." under
+    it; and Save sits on top of Cancel. Cancel returns to Curricula.
 Note: Not this step's to check: Dr Kruger's link reads "Add item". Round 3 measured the Institutional admin's "Add your
   institution's own item" beside "Items (n)" at 36 px at 390; below 641 px the build sets it at 44 px (T392, decision 2).
   No step reaches it on her phone yet; a later replay that does checks it there.
@@ -1771,7 +1780,9 @@ Actual (2026-11-02, T392 replay, wombat_scenario_t392): At 390 px. The bar "Acti
   (717 in 717, Edit 910-955 inside 1001), 972 in 972 at 1280; the 901 capture re-taken.
 Gap: none (found in this replay: from 901 to about 990 px the items table overflowed its container by up to 98 px, its
   Edit and Remove… reached only by scrolling the table; fixed in T392 by stacking the items to 1024 px). T323's
-  item-editor half no longer occurs (the item has its own page, one field a row, nothing scrolls at 390)
+  item-editor half no longer occurs (the item has its own page, one field a row, nothing scrolls at 390). The T392
+  Actual above predates T394 (Home's sentence and fourth link, the EPAs without a College cell, the item page's reach,
+  and 11.2's own page, which the Do now reads); the next replay re-reads the step.
 
 ### Step A.7.11 — devadmin on his phone
 Role: Administrator — devadmin

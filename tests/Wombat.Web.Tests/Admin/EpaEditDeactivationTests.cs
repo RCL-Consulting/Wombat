@@ -51,6 +51,9 @@ public sealed class EpaEditDeactivationTests : TestContext
 
         var describedBy = cut.Find("#epa-active").GetAttribute("aria-describedby");
         describedBy.Should().Be("epa-active-help");
+        // T394 fix pass (pages S5): one label, so the box is named "Active"; the legend names the group.
+        cut.FindAll("label[for=epa-active]").Select(Text).Should().Equal("Active");
+        Text(cut.Find("#epa-active").Closest("fieldset.form-group")!.QuerySelector("legend")!).Should().Be("Status");
 
         var help = Text(cut.Find($"#{describedBy}"));
         help.Should().Contain("cannot be chosen for a new activity and is not a target on any running programme's progress page or dashboard; a programme that has ended keeps it on its record.")

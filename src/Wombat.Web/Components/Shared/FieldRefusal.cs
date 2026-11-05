@@ -21,6 +21,12 @@ namespace Wombat.Web.Components.Shared;
 public sealed record FieldRefusal(string Field, string Message)
 {
     /// <summary>
+    /// Whether the page keeps the value chosen, with the refusal under it, until the user changes it, rather than reading the
+    /// field's options again (<see cref="FieldRefusalException.KeepsChoice" />; T394, Q10, R3-F14).
+    /// </summary>
+    public bool KeepsChoice { get; init; }
+
+    /// <summary>
     /// The field refusal <paramref name="exception" /> carries, or null when it is no field's: a
     /// <see cref="FieldRefusalException" />, or a <see cref="ValidationException" /> whose failures name one property (their
     /// messages joined, once each, in the validator's order).
@@ -31,7 +37,7 @@ public sealed record FieldRefusal(string Field, string Message)
 
         if (exception is FieldRefusalException refused)
         {
-            return new FieldRefusal(refused.Field, refused.Message);
+            return new FieldRefusal(refused.Field, refused.Message) { KeepsChoice = refused.KeepsChoice };
         }
 
         if (exception is ValidationException validation)

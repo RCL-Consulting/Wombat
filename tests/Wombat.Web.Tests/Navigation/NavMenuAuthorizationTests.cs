@@ -291,6 +291,18 @@ public sealed partial class NavMenuAuthorizationTests : TestContext
             .Offers(NavItems.ActivityTypes).Should().BeTrue();
     }
 
+    // T394 (flow 16, D57): the College reads the ladders its sub-specialities default to, so the scales list admits a
+    // CollegeAdmin and the nav offers it; a scale's own page, and so its create, stay the Administrator's.
+    [Fact]
+    public async Task ACollegeAdmin_IsAdmittedToTheScalesList_AndOfferedIt_ButNotToAScalesPage()
+    {
+        (await RefusalOf(PageFor("/admin/entrustment-scales")!, WombatRoles.CollegeAdmin)).Should().BeNull();
+        (await RefusalOf(PageFor("/admin/entrustment-scales/new")!, WombatRoles.CollegeAdmin)).Should().NotBeNull();
+        (await RefusalOf(PageFor("/admin/entrustment-scales/2")!, WombatRoles.CollegeAdmin)).Should().NotBeNull();
+        NavItems.For(ActingAs(WombatRoles.CollegeAdmin, WombatRoles.CollegeAdmin), Holder([WombatRoles.CollegeAdmin]))
+            .Offers(NavItems.EntrustmentScales).Should().BeTrue();
+    }
+
     [Theory]
     [InlineData(WombatRoles.Coordinator)]
     [InlineData(WombatRoles.SpecialityAdmin)]

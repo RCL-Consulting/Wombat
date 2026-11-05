@@ -408,10 +408,85 @@ public sealed class EndedCurriculumListTests
             new UpdateEntrustmentScaleCommand(Cpsa, "CPSA Paediatric Entrustment Scale v11.1", null, withoutTheTopRung,
                 TestPrincipals.Administrator()),
             CancellationToken.None);
-        await update.Should().ThrowAsync<InvalidOperationException>().WithMessage("*when a programme ended*requires level 6*");
+        // T394 (Q18, R3-C13): the ended record's words, by the EPA, the curriculum (version) and the rung's label.
+        await update.Should().ThrowAsync<EntrustmentScaleUpdateRefusedException>()
+            .WithMessage("Not saved. PAED-00? on Paediatric EPA Curriculum (11.1) was on the record of a programme that has ended*");
         db.ChangeTracker.Clear();
         (await db.Set<EntrustmentScale>().AnyAsync(scale => scale.Id == Cpsa)).Should().BeTrue();
         (await db.Set<EntrustmentLevel>().CountAsync(level => level.ScaleId == Cpsa)).Should().Be(6);
+    }
+
+    // ---- Q18's order (T394 fix pass, code S-4): Q6, then the ended record, then the decisions, then Q16 ----
+
+    [Fact]
+    public async Task Q18_ALiveItemNeedingTheRung_IsNamedBeforeTheEndedRecordThatAlsoHoldsIt()
+    {
+        // The live items stay pinned to the CPSA ladder, PAED-001 and PAED-002 at rung 6; the closed record names rung 6 too.
+        await using var db = CreateDb();
+        await SeedAsync(db, withStars: false);
+        await CompleteAsync(db);
+
+        var refusal = (await UpdateWithoutTheTopRung(db).Should().ThrowAsync<EntrustmentScaleUpdateRefusedException>()).Which;
+
+        refusal.Reason.Should().Be(EntrustmentScaleUpdateRefusal.RungNeeded, "Q6's words come first, with the rung to put back");
+        refusal.RungsToPutBack.Should().Equal(4206);
+    }
+
+    [Fact]
+    public async Task Q18_TheEndedRecord_IsNamedBeforeADecisionOnTheRung()
+    {
+        // The graduate's STARs are on rung 6 ("5"), and the record she ended with names it; no live item is pinned.
+        await using var db = CreateDb();
+        await SeedAsync(db);
+        await CompleteAsync(db);
+        await UnpinTheLiveItemsAsync(db);
+        (await db.EntrustmentDecisions.AnyAsync(decision => decision.AuthorisedLevelId == 4206)).Should().BeTrue();
+
+        var refusal = (await UpdateWithoutTheTopRung(db).Should().ThrowAsync<EntrustmentScaleUpdateRefusedException>()).Which;
+
+        refusal.Reason.Should().Be(EntrustmentScaleUpdateRefusal.RungOnAnEndedRecord);
+    }
+
+    [Fact]
+    public async Task Q18_ADecisionOnTheRung_IsNamedBeforeQ16sInUse()
+    {
+        // No live item and no ended record holds rung 6, but the STARs are on it, and the scale is in use (a decision is a
+        // use, and the sub-speciality defaults to it), so Q16 holds as well.
+        await using var db = CreateDb();
+        await SeedAsync(db);
+        await UnpinTheLiveItemsAsync(db);
+        (await db.SubSpecialities.SingleAsync()).DefaultEntrustmentScaleId = Cpsa;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var refusal = (await UpdateWithoutTheTopRung(db).Should().ThrowAsync<EntrustmentScaleUpdateRefusedException>()).Which;
+
+        refusal.Reason.Should().Be(EntrustmentScaleUpdateRefusal.RungDecided);
+        refusal.Message.Should().Be(EntrustmentScaleRefusalWords.RungDecided);
+        db.ChangeTracker.Clear();
+        (await db.Set<EntrustmentLevel>().CountAsync(level => level.ScaleId == Cpsa)).Should().Be(6);
+    }
+
+    private static Func<Task<UpdateEntrustmentScaleResult>> UpdateWithoutTheTopRung(ApplicationDbContext db)
+    {
+        var withoutTheTopRung = CpsaRungs.Take(5)
+            .Select((label, index) => new EntrustmentLevelUpdate(4200 + index + 1, index + 1, label, null))
+            .ToArray();
+        return () => new UpdateEntrustmentScaleCommandHandler(db).Handle(
+            new UpdateEntrustmentScaleCommand(Cpsa, "CPSA Paediatric Entrustment Scale v11.1", null, withoutTheTopRung,
+                TestPrincipals.Administrator()),
+            CancellationToken.None);
+    }
+
+    private static async Task UnpinTheLiveItemsAsync(ApplicationDbContext db)
+    {
+        foreach (var item in db.CurriculumItems)
+        {
+            item.ScaleId = null;
+        }
+
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
     }
 
     private static void AddKgkItem(ApplicationDbContext db)

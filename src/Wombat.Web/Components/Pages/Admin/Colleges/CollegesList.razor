@@ -2,66 +2,103 @@
 @attribute [Authorize(Policy = "Administrator")]
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject ILogger<CollegesList> Logger
+@using System.Globalization
+@using Wombat.Domain.Curricula
 
 <PageTitle>Colleges · Wombat</PageTitle>
 
-<PageHeader Title="Colleges" Subtitle="National governing bodies (CMSA constituent colleges) that own the EPAs and curricula institutions adopt.">
+@*
+  T394 (flow 16, lane B; boards R3-B01, B02, B11b, B16, B17a, R2-B14a, B15a): the Administrator's Colleges. Each College's
+  name is its row's header, its Created the South African day (N2), stacked from 1024px down (the catalogue's shared stack,
+  .colleges-page). Edit and Specialities are named for the row. Create college waits for the read; loading says so in
+  words, and a failed read is fixed words with Try again (T329), never the exception's.
+*@
+<PageHeader Title="Colleges" Subtitle="@CollegeWords.ListSubtitle">
   <Actions>
-    <a class="btn btn-primary" href="/admin/colleges/new">
-      <Icon Name="plus" />
-      Create college
-    </a>
+    @if (_colleges is not null)
+    {
+      <a class="btn btn-primary" href="@CatalogueLinks.NewCollege">
+        <Icon Name="plus" />
+        @CollegeWords.CreateCollege
+      </a>
+    }
   </Actions>
 </PageHeader>
 
-<StatePanel IsLoading="@(_colleges is null && string.IsNullOrWhiteSpace(_errorMessage))" LoadError="@_errorMessage" IsEmpty="@(_colleges?.Count == 0)" EmptyTitle="No colleges yet" EmptyBody="Create the first college to start defining national specialities, EPAs and curricula.">
-  @if (_colleges is not null)
-  {
-    <DataTable TItem="CollegeDto" Items="_colleges" Caption="Colleges">
-      <HeaderRow>
-        <tr>
-          <th>Name</th>
-          <th>Short code</th>
-          <th>Description</th>
-          <th>Status</th>
-          <th>Created</th>
-          <th><span class="visually-hidden">Actions</span></th>
-        </tr>
-      </HeaderRow>
-      <Row Context="college">
-        <tr>
-          <td>@college.Name</td>
-          <td>@college.ShortCode</td>
-          <td>@college.Description</td>
-          <td>@(college.IsActive ? "Active" : "Inactive")</td>
-          <td>@college.CreatedOn.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
-          <td>
-            <div class="actions-cell">
-              @* T239: each named by its college, whose name is unique. *@
-              <a class="btn btn-outline btn-sm" href="@($"/admin/colleges/{college.Id}")" aria-label="@($"Edit {college.Name}")">Edit</a>
-              <a class="btn btn-outline btn-sm" href="@($"/admin/colleges/{college.Id}/specialities")" aria-label="@($"Specialities of {college.Name}")">Specialities</a>
-            </div>
-          </td>
-        </tr>
-      </Row>
-    </DataTable>
-  }
-</StatePanel>
+<div class="people-page colleges-page">
+  <StatePanel IsLoading="@(_colleges is null && string.IsNullOrWhiteSpace(_loadError))" LoadError="@_loadError"
+              OnRetry="LoadAsync" FocusAfterRetry="FocusHeadingAsync"
+              IsEmpty="@(_colleges?.Count == 0)" EmptyTitle="@CollegeWords.EmptyTitle" EmptyBody="@CollegeWords.EmptyBody">
+    <LoadingContent>
+      <p class="loading-line" role="status">@CollegeWords.LoadingColleges</p>
+      <div class="detail-card" aria-hidden="true">
+        <div class="skeleton skel-title"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line skel-short"></div>
+      </div>
+    </LoadingContent>
+    <ChildContent>
+      @if (_colleges is not null)
+      {
+        <DataTable TItem="CollegeDto" Items="_colleges" StackWide="true" Caption="@CollegeWords.Caption">
+          <HeaderRow>
+            <tr role="row">
+              <th scope="col" role="columnheader" class="col-wrap">Name</th>
+              <th scope="col" role="columnheader">Short code</th>
+              <th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Description</th>
+              <th scope="col" role="columnheader">Status</th>
+              <th scope="col" role="columnheader">Created</th>
+              <th scope="col" role="columnheader" class="col-actions"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </HeaderRow>
+          <Row Context="college">
+            <tr role="row" @key="college.Id">
+              <th scope="row" role="rowheader" class="col-wrap">@college.Name</th>
+              <td role="cell" data-label="Short code">@college.ShortCode</td>
+              <td role="cell" data-label="Description" class="col-wrap">@college.Description</td>
+              <td role="cell" data-label="Status">@CollegeWords.Status(college.IsActive)</td>
+              @* N2: the South African day of its creation, ISO; never the server's local time. *@
+              <td role="cell" data-label="Created">@ProgrammeCalendar.DateOf(college.CreatedOn).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)</td>
+              <td role="cell" class="col-actions">
+                @* T239: each named by its College, whose name is unique. *@
+                <div class="actions-cell">
+                  <a class="btn btn-outline btn-sm" href="@CatalogueLinks.College(college.Id)" aria-label="@($"Edit {college.Name}")">Edit</a>
+                  <a class="btn btn-outline btn-sm" href="@CatalogueLinks.CollegeTree(college.Id)" aria-label="@($"Specialities of {college.Name}")">Specialities</a>
+                </div>
+              </td>
+            </tr>
+          </Row>
+        </DataTable>
+      }
+    </ChildContent>
+  </StatePanel>
+</div>
 
 @code {
   private IReadOnlyList<CollegeDto>? _colleges;
-  private string? _errorMessage;
+  private string? _loadError;
 
-  protected override async Task OnInitializedAsync()
+  protected override Task OnInitializedAsync() => LoadAsync();
+
+  private async Task LoadAsync()
   {
+    _loadError = null;
+    _colleges = null;
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       _colleges = await Sender.Send(new GetCollegesListQuery(authState.User));
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = exception.Message;
+      // T329: the failure to the log, fixed words on the page.
+      Logger.LogError(exception, "The Colleges could not be read.");
+      _loadError = CollegeWords.CollegesLoadFailed;
     }
   }
+
+  private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
 }

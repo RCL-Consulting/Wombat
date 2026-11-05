@@ -35,6 +35,28 @@ public static class EntrustmentScaleBindings
         "A scale's name cannot be digits alone or start with \"seed:\", because an activity type's form would read " +
         "that name as a scale's id or seed key.";
 
+    // T394 (flow 16, lane B; R3-C03b, C14, C15a-c, Spec-2 § 9's N1): the scale's form refusals, in the fields' words, for the
+    // two validators and the scale's page, which checks the same before it sends.
+
+    /// <summary>A taken name (R3-C14, built), under Name.</summary>
+    public static string NameTaken(string name) => $"An entrustment scale named '{name}' already exists.";
+
+    public const string NameRequired = "Enter a name.";
+    public const string NameTooLong = "A name is at most 200 characters.";
+    public const string DescriptionTooLong = "A description is at most 2,000 characters.";
+    public const string LabelRequired = "Enter this rung's label.";
+    public const string LabelTooLong = "A label is at most 200 characters.";
+    public const string TooFewRungs = "A scale needs at least two rungs. Add another.";
+
+    /// <summary>R3-C03b: under the later rung's Label (replaces "Level labels must be unique within a scale.").</summary>
+    public static string LabelTaken(string label) => $"“{label}” is already the label of another rung. Give each rung its own label.";
+
+    /// <summary>
+    /// The validator's key for a rung's own field, as FluentValidation writes a collection element's: <c>Levels[3].Label</c>.
+    /// The page maps it to that rung's control.
+    /// </summary>
+    public static string RungField(int index, string property) => $"Levels[{index}].{property}";
+
     /// <summary>
     /// The scale each key binds, by its trimmed key. Blank keys and keys that bind no scale are left out.
     /// </summary>

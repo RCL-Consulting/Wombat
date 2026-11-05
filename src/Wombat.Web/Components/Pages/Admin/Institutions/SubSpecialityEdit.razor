@@ -1,85 +1,135 @@
 @page "/admin/specialities/{SpecialityId:int}/sub-specialities/new"
 @page "/admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}"
 @attribute [Authorize(Policy = "AdministratorOrCollegeAdmin")]
+@using Wombat.Application.Features.Epas
+@using Wombat.Application.Features.Institutions.Queries.GetCollegeTree
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@using Wombat.Application.Features.Epas
+@inject IJSRuntime JS
+@inject ILogger<SubSpecialityEdit> Logger
 
-<PageTitle>@(IsNew ? "Create sub-speciality" : "Edit sub-speciality") · Wombat</PageTitle>
+<PageTitle>@Heading · Wombat</PageTitle>
 
-<PageHeader Title="@(IsNew ? "Create sub-speciality" : "Edit sub-speciality")" Subtitle="@(_speciality is null ? "Scope this sub-speciality under the selected speciality." : $"Speciality: {_speciality.Name}")">
-  <Actions>
-    <a class="btn btn-outline btn-sm" href="@($"/admin/specialities/{SpecialityId}/sub-specialities")">Back to sub-specialities</a>
-  </Actions>
-</PageHeader>
+@*
+  A sub-speciality's record, and Create sub-speciality (T394, flow 16, lane A; boards R3-A05, A06, A08, A13a, A14a, A15,
+  A16a and R2-A18c, A19b, A20b). Its speciality is read in the caller's scope (GetSpecialityByIdQuery), then the College's
+  tree (GetCollegeTreeQuery) for the College, the speciality and the record: a speciality the caller cannot open is
+  Speciality unavailable on the create and Sub-speciality unavailable on a record, as is a sub-speciality the speciality
+  does not hold (Q7, N2): another College's record reads as one that does not exist.
 
-@* What a Save or a Deactivate did. It takes the focus once either is done (T234; DESIGN.md § Button system). A refusal
-   leaves the focus where it was: it is an alert, read at once. *@
-<ActionResult @ref="_result">
-  @if (!string.IsNullOrWhiteSpace(_statusMessage))
-  {
-    <Alert Kind="success">@_statusMessage</Alert>
-  }
+  - Titled by the sub-speciality (S11), "Sub-speciality of ‹speciality›" (M8); its tab reads as the speciality's would
+    when both are "Paediatrics": the subtitle tells them apart. No Back link (Q9).
+  - The default ladder is chosen at create as on the record (Q1), every scale by name after "No default".
+  - Save and a create return to the tree by their token (S13). A deactivation stays here with its result (D56).
+  - Deactivate… and Save with Active unticked open one dialog (D56, Q15); ticking Active and saving reactivates.
+*@
+<PageHeader Title="@Heading" Subtitle="@Subtitle" Trail="RecordTrail" />
 
-  @if (!string.IsNullOrWhiteSpace(_errorMessage))
-  {
-    <Alert Kind="danger">@_errorMessage</Alert>
-  }
-</ActionResult>
+<div class="user-page sub-speciality-page" aria-busy="@(_loading ? "true" : null)">
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="LoadAsync" FocusAfterRetry="FocusPageHeadingAsync">
+    <LoadingContent>
+      <p class="loading-line" role="status">@(IsNew ? CollegeTreeWords.LoadingSpeciality : CollegeTreeWords.LoadingSubSpeciality)</p>
+      <div class="detail-card" aria-hidden="true">
+        <div class="skeleton skel-title"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line skel-short"></div>
+      </div>
+    </LoadingContent>
+    <ChildContent>
+      @if (_unavailable)
+      {
+        <div class="detail-card detail-card--empty">
+          <div class="state-panel-copy">@(IsNew ? CollegeTreeWords.SpecialityUnavailableBody : CollegeTreeWords.SubSpecialityUnavailableBody)</div>
+          <div class="form-actions">
+            <a class="btn btn-primary" href="@GoTo.Href">@GoTo.Label</a>
+          </div>
+        </div>
+      }
+      else if (_tree is not null && _speciality is not null)
+      {
+        @* S3: the page's one result region: a deactivation's result, or a failure that is no field's. *@
+        <ActionResult @ref="_result">
+          @if (_outcome is { } outcome)
+          {
+            <Alert Kind="@(_failed ? "danger" : "success")"><strong>@outcome.Lead</strong>@(outcome.Rest is null ? null : $" {outcome.Rest}")</Alert>
+          }
+        </ActionResult>
 
-<StatePanel IsLoading="_loading" IsEmpty="false" EmptyTitle="" EmptyBody="">
-  <div class="form-container">
-    <EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="sub-speciality-edit">
-      <DataAnnotationsValidator />
-      <ValidationSummary class="validation-summary-errors" />
+        @* novalidate: the browser stays quiet and the page refuses in its own words under each field (T324). *@
+        <EditForm EditContext="_editContext" OnSubmit="SaveAsync" FormName="sub-speciality-edit" class="form-container" novalidate>
+          <p class="field-help">@CollegeTreeWords.RequiredMarkLine</p>
 
-      <div class="form-grid">
-        <FormField Label="Name" InputId="sub-speciality-name" Required="true">
-          <InputText id="sub-speciality-name" class="form-control" @bind-Value="_model.Name" />
-          <ValidationMessage For="() => _model.Name" />
-        </FormField>
+          <FormField Label="@CollegeTreeWords.NameLabel" InputId="@NameId" Required="true">
+            <InputText id="@NameId" class="form-control" aria-required="true" autocomplete="off" @bind-Value="_model.Name"
+                       aria-describedby="@DescribedBy(NameField, null)" />
+            @Refusal(NameField)
+          </FormField>
 
-        <FormField Label="Description" InputId="sub-speciality-description" FullWidth="true">
-          <InputTextArea id="sub-speciality-description" class="form-control" @bind-Value="_model.Description" />
-          <ValidationMessage For="() => _model.Description" />
-        </FormField>
+          <FormField Label="@CollegeTreeWords.DescriptionLabel" InputId="@DescriptionId">
+            <InputTextArea id="@DescriptionId" class="form-control" rows="3" @bind-Value="_model.Description"
+                           aria-describedby="@DescribedBy(DescriptionField, null)" />
+            @Refusal(DescriptionField)
+          </FormField>
 
-        @if (!IsNew)
-        {
-          <FormField Label="Default entrustment scale" InputId="sub-speciality-scale" FullWidth="true"
-                     HelpText="Committee STARs for this programme's trainees are limited to this scale's levels.">
-            <InputSelect id="sub-speciality-scale" class="form-select" aria-describedby="@FieldHelp.Id("sub-speciality-scale")" @bind-Value="_model.DefaultEntrustmentScaleId">
-              <option value="">No default — offer every scale</option>
+          <FormField Label="@CollegeTreeWords.DefaultScaleLabel" InputId="@ScaleId" HelpText="@CollegeTreeWords.DefaultScaleHelp">
+            <InputSelect id="@ScaleId" class="form-select" @bind-Value="_model.DefaultEntrustmentScaleId"
+                         aria-describedby="@DescribedBy(ScaleField, CollegeTreeWords.DefaultScaleHelp)">
+              <option value="">@CollegeTreeWords.NoDefaultOption</option>
               @foreach (var scale in _scales)
               {
                 <option value="@scale.Id">@scale.Name</option>
               }
             </InputSelect>
+            @Refusal(ScaleField)
           </FormField>
 
-          <FormField Label="Status" InputId="sub-speciality-active">
-            <div class="form-check">
-              <InputCheckbox id="sub-speciality-active" class="form-check-input" @bind-Value="_model.IsActive" />
-              <label for="sub-speciality-active">Active</label>
-            </div>
-          </FormField>
-        }
-      </div>
+          @if (!IsNew)
+          {
+            @* D56: the help says what deactivating does, and once it is inactive, how to reactivate it (R3-A16a). *@
+            <fieldset class="form-group">
+              <legend>@CollegeTreeWords.StatusLabel</legend>
+              <div class="form-check">
+                <InputCheckbox id="@ActiveId" class="form-check-input" @bind-Value="_model.IsActive" aria-describedby="@FieldHelp.Id(ActiveId)" />
+                <label for="@ActiveId">@CollegeTreeWords.ActiveLabel</label>
+              </div>
+              <p class="page-subtitle" id="@FieldHelp.Id(ActiveId)">@(_storedIsActive ? CollegeTreeWords.SubSpecialityActiveHelp : CollegeTreeWords.SubSpecialityInactiveLine)</p>
+            </fieldset>
+          }
 
-      <FormActions>
-        <a class="btn btn-outline" href="@($"/admin/specialities/{SpecialityId}/sub-specialities")">Cancel</a>
-        @* Neither is disabled while its own action runs (T234): the one pressed has the focus, and a browser drops the focus
-           of a button it disables, to the page. A second press sends nothing. *@
-        @if (!IsNew)
-        {
-          <button type="button" class="btn btn-danger" @onclick="DeactivateAsync" disabled="@_saving" aria-disabled="@InFlight.AriaDisabled(_deactivating)">Deactivate</button>
-        }
-        <button type="submit" class="btn btn-primary" disabled="@_deactivating" aria-disabled="@InFlight.AriaDisabled(_saving)">@(_saving ? "Saving..." : "Save")</button>
-      </FormActions>
-    </EditForm>
-  </div>
-</StatePanel>
+          <FormActions>
+            <a class="btn btn-outline" href="@CancelHref">@CollegeTreeWords.Cancel</a>
+            @* D56: offered only on a sub-speciality stored active; it opens its dialog, so it says so. *@
+            @if (!IsNew && _storedIsActive)
+            {
+              <button type="button" id="@DeactivateTriggerId" class="btn btn-outline" aria-haspopup="dialog"
+                      @onclick="AskDeactivateAsync" disabled="@_saving">@CollegeTreeWords.DeactivateTrigger</button>
+            }
+            @* Not disabled while its own save runs (T234). N20: while the box is unticked on a sub-speciality stored active,
+               Save asks first, so it says so. *@
+            <button type="submit" id="@SaveId" class="btn btn-primary" disabled="@_deactivating" aria-disabled="@InFlight.AriaDisabled(_saving)"
+                    aria-haspopup="@(SaveAsks ? "dialog" : null)">@(IsNew ? CollegeTreeWords.CreateSubSpeciality : _saving ? CollegeTreeWords.Saving : CollegeTreeWords.Save)</button>
+          </FormActions>
+        </EditForm>
+      }
+    </ChildContent>
+  </StatePanel>
+</div>
+
+@* D56: two actions deactivate, Deactivate… and Save with Active unticked, and both open this dialog. *@
+<ConfirmDialog @ref="_confirmDeactivate"
+               Title="@CollegeTreeWords.DeactivateSubSpecialityTitle(_subSpeciality?.Name)"
+               ConfirmLabel="@CollegeTreeWords.DeactivateConfirm"
+               DangerAction="true"
+               ReturnFocusId="@(_saveOnConfirm ? SaveId : DeactivateTriggerId)"
+               OnConfirm="ConfirmDeactivationAsync"
+               OnCancel="CancelDeactivation">
+  <BodyContent>
+    <p>@CollegeTreeWords.DeactivateSubSpecialityBody</p>
+    <p>@CollegeTreeWords.DeactivateReactivateLine</p>
+  </BodyContent>
+</ConfirmDialog>
 
 @code {
   [Parameter]
@@ -88,67 +138,162 @@
   [Parameter]
   public int? Id { get; set; }
 
-  private SpecialityDto? _speciality;
-  private IReadOnlyList<EntrustmentScaleDto> _scales = Array.Empty<EntrustmentScaleDto>();
-  private SubSpecialityFormModel _model = new();
-  private string? _errorMessage;
-  private string? _statusMessage;
-  private bool _loading;
-  private bool _saving;
-  private bool _deactivating;
+  private const string NameId = "sub-speciality-name";
+  private const string DescriptionId = "sub-speciality-description";
+  private const string ScaleId = "sub-speciality-scale";
+  private const string ActiveId = "sub-speciality-active";
+  private const string DeactivateTriggerId = "sub-speciality-deactivate";
+  private const string SaveId = "sub-speciality-save";
+
+  private const string NameField = nameof(UpdateSubSpecialityCommand.Name);
+  private const string DescriptionField = nameof(UpdateSubSpecialityCommand.Description);
+  private const string ScaleField = nameof(UpdateSubSpecialityCommand.DefaultEntrustmentScaleId);
+
+  /// <summary>The command's property each control answers for, so a refusal lands under its field, in the form's order.</summary>
+  private static readonly IReadOnlyDictionary<string, string> InputOf = new Dictionary<string, string>(StringComparer.Ordinal)
+  {
+    [NameField] = NameId,
+    [DescriptionField] = DescriptionId,
+    [ScaleField] = ScaleId,
+  };
+
+  private readonly SubSpecialityFormModel _model = new();
+
+  // The form's own context, whose message store carries the refusals, so InputBase marks each control aria-invalid.
+  private EditContext _editContext = default!;
+  private ValidationMessageStore _messages = default!;
+
+  protected override void OnInitialized()
+  {
+    _editContext = new EditContext(_model);
+    _messages = new ValidationMessageStore(_editContext);
+  }
+
+  private ConfirmDialog? _confirmDeactivate;
   private ActionResult? _result;
 
-  /// <summary>A save or a deactivation has been sent and has not answered, so nothing else may be sent. (T234)</summary>
+  private CollegeTreeDto? _tree;
+  private CollegeTreeSpecialityDto? _speciality;
+  private CollegeTreeSubSpecialityDto? _subSpeciality;
+  private IReadOnlyList<EntrustmentScaleDto> _scales = [];
+  private bool _unavailable;
+  private bool _loading = true;
+  private string? _loadError;
+  private (int SpecialityId, int? Id)? _readKey;
+
+  private TreeResult? _outcome;
+  private bool _failed;
+
+  private readonly Dictionary<string, string> _refusals = new(StringComparer.Ordinal);
+
+  private bool _focusResult;
+  private string? _focusField;
+
+  private bool _saving;
+  private bool _deactivating;
+
   private bool Busy => _saving || _deactivating;
+
+  private bool _storedIsActive = true;
+
+  private bool _saveOnConfirm;
+
+  /// <summary>The acting role, as App resolved it and Routes cascades it.</summary>
+  [CascadingParameter] public ActingRole? Acting { get; set; }
 
   private bool IsNew => !Id.HasValue;
 
+  private bool UnderColleges => NavOwners.OwnerFor(typeof(SubSpecialityEdit), Acting?.Role) == NavItems.Colleges;
+
+  /// <summary>N20: Save would deactivate, so it asks first.</summary>
+  private bool SaveAsks => !IsNew && _storedIsActive && !_model.IsActive;
+
+  /// <summary>The h1 and the tab: the sub-speciality by its stored name (S11); "Create sub-speciality"; "Sub-speciality" until read.</summary>
+  private string Heading => _unavailable
+      ? (IsNew ? CollegeTreeWords.SpecialityUnavailableHeading : CollegeTreeWords.SubSpecialityUnavailableHeading)
+    : IsNew ? CollegeTreeWords.CreateSubSpeciality
+    : _subSpeciality?.Name ?? CollegeTreeWords.SubSpecialityHeadingWhileUnread;
+
+  private string? Subtitle => _tree is null || _speciality is null || _unavailable ? null
+    : IsNew ? CollegeTreeWords.CreateSubSpecialitySubtitle(_speciality.Name, _tree.Name)
+    : CollegeTreeWords.SubSpecialitySubtitle(_speciality.Name);
+
+  /// <summary>
+  /// The College and its tree between the owner and the record: Home › Specialities › the College › Paediatrics for the
+  /// College admin (R3-A05), Home › Colleges › the College › Specialities › Adult Neurology for the Administrator (R3-A14a).
+  /// </summary>
+  private IReadOnlyList<Crumb>? RecordTrail => _tree is null || _unavailable ? null
+    : UnderColleges
+      ? [new Crumb(_tree.Name, CatalogueLinks.College(_tree.Id)), new Crumb(CollegeTreeWords.TreeHeading, CatalogueLinks.CollegeTreeAt(_tree.Id, SpecialityId))]
+      : [new Crumb(_tree.Name, CatalogueLinks.CollegeTreeAt(_tree.Id, SpecialityId))];
+
+  private string CancelHref => _tree is null ? CatalogueLinks.Specialities : CatalogueLinks.CollegeTreeAt(_tree.Id, SpecialityId);
+
+  private (string Label, string Href) GoTo => UnderColleges
+    ? (CollegeTreeWords.GoToColleges, CatalogueLinks.Colleges)
+    : (CollegeTreeWords.GoToSpecialities, CatalogueLinks.Specialities);
+
+  private RenderFragment Refusal(string field) => __builder =>
+  {
+    if (_refusals.TryGetValue(field, out var message))
+    {
+      <div class="validation-message" role="alert" id="@FieldRefusal.Id(InputOf[field])">@message</div>
+    }
+  };
+
+  private string? DescribedBy(string field, string? helpText)
+    => FieldRefusal.DescribedBy(InputOf[field], _refusals.ContainsKey(field), helpText);
+
   protected override async Task OnParametersSetAsync()
   {
+    if (_readKey == (SpecialityId, Id))
+    {
+      return;
+    }
+
+    _readKey = (SpecialityId, Id);
+    await LoadAsync();
+  }
+
+  private async Task LoadAsync()
+  {
     _loading = true;
-    _errorMessage = null;
-    _statusMessage = null;
+    _loadError = null;
+    _unavailable = false;
+    _outcome = null;
+    ClearRefusals();
 
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      _speciality = await Sender.Send(new GetSpecialityByIdQuery(SpecialityId, authState.User));
-
-      if (_speciality is null)
+      var speciality = await Sender.Send(new GetSpecialityByIdQuery(SpecialityId, authState.User));
+      _tree = speciality is null ? null : await Sender.Send(new GetCollegeTreeQuery(speciality.CollegeId, authState.User));
+      _speciality = _tree?.Specialities.FirstOrDefault(item => item.Id == SpecialityId);
+      _subSpeciality = Id is { } id ? _speciality?.SubSpecialities.FirstOrDefault(item => item.Id == id) : null;
+      _unavailable = _speciality is null || (!IsNew && _subSpeciality is null);
+      if (_unavailable)
       {
-        Navigation.NavigateTo("/not-found");
-        return;
-      }
-
-      if (IsNew)
-      {
-        _model = new SubSpecialityFormModel { IsActive = true };
         return;
       }
 
       _scales = await Sender.Send(new GetEntrustmentScalesListQuery());
-
-      var subSpecialities = await Sender.Send(new GetSubSpecialitiesForSpecialityQuery(SpecialityId, authState.User));
-      var subSpecialityId = Id!.Value;
-      var subSpeciality = subSpecialities.SingleOrDefault(item => item.Id == subSpecialityId);
-
-      if (subSpeciality is null)
+      if (_subSpeciality is { } sub)
       {
-        Navigation.NavigateTo("/not-found");
-        return;
+        _model.Name = sub.Name;
+        _model.Description = sub.Description;
+        _model.IsActive = sub.IsActive;
+        _model.DefaultEntrustmentScaleId = sub.DefaultEntrustmentScaleId;
+        _storedIsActive = sub.IsActive;
       }
-
-      _model = new SubSpecialityFormModel
-      {
-        Name = subSpeciality.Name,
-        Description = subSpeciality.Description,
-        IsActive = subSpeciality.IsActive,
-        DefaultEntrustmentScaleId = subSpeciality.DefaultEntrustmentScaleId
-      };
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = exception.Message;
+      // R2-A20b (T329, T393): the read failed, which is not Unavailable. Never the exception's text.
+      Logger.LogError(exception, "The sub-speciality {SubSpecialityId} of speciality {SpecialityId} could not be read.", Id, SpecialityId);
+      _tree = null;
+      _speciality = null;
+      _subSpeciality = null;
+      _loadError = IsNew ? CollegeTreeWords.SpecialityLoadFailed : CollegeTreeWords.SubSpecialityLoadFailed;
     }
     finally
     {
@@ -156,6 +301,9 @@
     }
   }
 
+  private ValueTask FocusPageHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  /// <summary>Save, unless it would deactivate: then it asks Deactivate…'s question first (D56, N20).</summary>
   private async Task SaveAsync()
   {
     if (Busy)
@@ -163,31 +311,70 @@
       return;
     }
 
+    ClearRefusals();
+    _outcome = null;
+    Check(string.IsNullOrWhiteSpace(_model.Name), NameField, SpecialityFieldMessages.NameRequired);
+    Check(_model.Name.Trim().Length > SpecialityFieldMessages.NameMaxLength, NameField, SpecialityFieldMessages.NameTooLong);
+    Check((_model.Description?.Trim().Length ?? 0) > SpecialityFieldMessages.DescriptionMaxLength, DescriptionField, SpecialityFieldMessages.DescriptionTooLong);
+    if (_refusals.Count > 0)
+    {
+      FocusFirstRefusal();
+      return;
+    }
+
+    if (SaveAsks && _confirmDeactivate is not null)
+    {
+      _saveOnConfirm = true;
+      await _confirmDeactivate.ShowAsync(SaveId);
+      return;
+    }
+
+    await SaveCoreAsync();
+  }
+
+  /// <remarks>
+  /// A create leaves for the tree by <c>?created=sub:‹id›</c> and a plain save by <c>?saved=sub:‹id›</c> (S13). A save that
+  /// deactivates stays here with the deactivation's result (D56). A field's refusal is put under it and focused; any other
+  /// failure is the fixed sentence, focused, and logged (T272).
+  /// </remarks>
+  private async Task SaveCoreAsync()
+  {
     _saving = true;
-    _errorMessage = null;
-    _statusMessage = null;
+    _outcome = null;
+    _failed = false;
+    ClearRefusals();
 
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      SubSpecialityDto subSpeciality;
+      var collegeId = _tree!.Id;
 
       if (IsNew)
       {
-        subSpeciality = await Sender.Send(new CreateSubSpecialityCommand(SpecialityId, _model.Name, EmptyToNull(_model.Description), authState.User));
-        Navigation.NavigateTo($"/admin/specialities/{SpecialityId}/sub-specialities/{subSpeciality.Id}", forceLoad: true);
+        var created = await Sender.Send(new CreateSubSpecialityCommand(SpecialityId, _model.Name, EmptyToNull(_model.Description), _model.DefaultEntrustmentScaleId, authState.User));
+        Navigation.NavigateTo(CatalogueLinks.TreeCreated(collegeId, TreeRecord.OfSubSpeciality(created.Id)));
         return;
       }
 
-      subSpeciality = await Sender.Send(new UpdateSubSpecialityCommand(Id!.Value, SpecialityId, _model.Name, EmptyToNull(_model.Description), _model.IsActive, _model.DefaultEntrustmentScaleId, authState.User));
-      _model.IsActive = subSpeciality.IsActive;
-      _model.DefaultEntrustmentScaleId = subSpeciality.DefaultEntrustmentScaleId;
-      _statusMessage = "Sub-speciality saved.";
-      _result?.FocusAfterRender();
+      var wasActive = _storedIsActive;
+      var saved = await Sender.Send(new UpdateSubSpecialityCommand(Id!.Value, SpecialityId, _model.Name, EmptyToNull(_model.Description), _model.IsActive, _model.DefaultEntrustmentScaleId, authState.User));
+      if (wasActive && !saved.IsActive)
+      {
+        Deactivated(saved.Name);
+        return;
+      }
+
+      Navigation.NavigateTo(CatalogueLinks.TreeSaved(collegeId, TreeRecord.OfSubSpeciality(saved.Id)));
     }
-    catch (Exception exception)
+    catch (Exception exception) when (FieldRefusal.Of(exception) is { } refusal && InputOf.ContainsKey(refusal.Field))
     {
-      _errorMessage = exception.Message;
+      Refuse(refusal.Field, refusal.Message);
+      FocusFirstRefusal();
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      Logger.LogError(exception, "The sub-speciality {SubSpecialityId} of speciality {SpecialityId} could not be saved.", Id, SpecialityId);
+      Fail(IsNew ? CollegeTreeWords.SubSpecialityCreateFailed : CollegeTreeWords.SubSpecialitySaveFailed);
     }
     finally
     {
@@ -195,28 +382,56 @@
     }
   }
 
-  private async Task DeactivateAsync()
+  private async Task AskDeactivateAsync()
   {
     if (Busy)
     {
       return;
     }
 
+    _saveOnConfirm = false;
+    if (_confirmDeactivate is not null)
+    {
+      await _confirmDeactivate.ShowAsync(DeactivateTriggerId);
+    }
+  }
+
+  private async Task ConfirmDeactivationAsync()
+  {
+    if (Busy)
+    {
+      return;
+    }
+
+    if (_saveOnConfirm)
+    {
+      _saveOnConfirm = false;
+      await SaveCoreAsync();
+      return;
+    }
+
+    await DeactivateAsync();
+  }
+
+  private void CancelDeactivation() => _saveOnConfirm = false;
+
+  private async Task DeactivateAsync()
+  {
     _deactivating = true;
-    _errorMessage = null;
-    _statusMessage = null;
+    _outcome = null;
+    _failed = false;
+    ClearRefusals();
 
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       await Sender.Send(new DeactivateSubSpecialityCommand(Id!.Value, authState.User));
-      _model.IsActive = false;
-      _statusMessage = "Sub-speciality deactivated.";
-      _result?.FocusAfterRender();
+      Deactivated(_subSpeciality?.Name ?? _model.Name);
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _errorMessage = exception.Message;
+      Logger.LogError(exception, "The sub-speciality {SubSpecialityId} could not be deactivated.", Id);
+      Fail(CollegeTreeWords.SubSpecialityDeactivateFailed);
     }
     finally
     {
@@ -224,15 +439,74 @@
     }
   }
 
+  /// <summary>D56: the record stays, Active unticked with the inactive line, Deactivate… gone, the result focused.</summary>
+  private void Deactivated(string name)
+  {
+    _model.IsActive = false;
+    _storedIsActive = false;
+    _outcome = CollegeTreeWords.SubSpecialityDeactivated(name);
+    _focusResult = true;
+  }
+
+  private void Fail(TreeResult failure)
+  {
+    _outcome = failure;
+    _failed = true;
+    _focusResult = true;
+  }
+
+  private void Check(bool refused, string field, string message)
+  {
+    if (refused && !_refusals.ContainsKey(field))
+    {
+      Refuse(field, message);
+    }
+  }
+
+  private void Refuse(string field, string message)
+  {
+    _refusals[field] = message;
+    _messages.Add(_editContext.Field(field), message);
+    _editContext.NotifyValidationStateChanged();
+  }
+
+  private void ClearRefusals()
+  {
+    if (_refusals.Count == 0)
+    {
+      return;
+    }
+
+    _refusals.Clear();
+    _messages.Clear();
+    _editContext.NotifyValidationStateChanged();
+  }
+
+  private void FocusFirstRefusal()
+    => _focusField = InputOf.Keys.FirstOrDefault(_refusals.ContainsKey) is { } field ? InputOf[field] : null;
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusResult && _result is not null)
+    {
+      _focusResult = false;
+      await _result.Element.FocusAsync();
+    }
+
+    if (_focusField is { } field)
+    {
+      _focusField = null;
+      await PageFocus.FocusByIdAsync(JS, field);
+    }
+  }
+
   private static string? EmptyToNull(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
+  // The model's properties are the commands' names, so a refusal's key is its field's.
   private sealed class SubSpecialityFormModel
   {
-    [Required]
-    [StringLength(200)]
     public string Name { get; set; } = string.Empty;
 
-    [StringLength(2000)]
     public string? Description { get; set; }
 
     public bool IsActive { get; set; } = true;

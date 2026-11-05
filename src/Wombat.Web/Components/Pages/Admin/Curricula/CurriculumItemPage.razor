@@ -24,6 +24,10 @@
   change, a national item read by an institution, is its record (P2): no form, no Save, its Back carrying ?back=. An item
   the curriculum does not hold for the caller is Item unavailable, a curriculum the caller cannot open Curriculum
   unavailable (Q19).
+
+  The College's half (T394, flow 16, R3-F10, F12, F14, R2-F19): a national item's subtitle carries the reach (Q2); the add
+  on a discipline with no national EPA is "Cannot add an item" with Q14's words and Go to EPAs; Q10's refusal names the
+  institution holding the EPA (the command's words, under EPA). The form opens with the required line (M4).
 *@
 <PageHeader Title="@Heading" Subtitle="@Subtitle" Trail="@Trail" CurrentCrumb="@Crumb" />
 
@@ -46,6 +50,16 @@
             <div class="state-panel-copy">@Words.CurriculumUnavailableBody</div>
             <div class="form-actions">
               <a class="btn btn-primary" href="@CatalogueLinks.Curricula">@Words.GoToCurricula</a>
+            </div>
+          </div>
+          break;
+
+        case PageState.NoNationalEpa:
+          @* Q14 (T394, R2-F19): the College's add on a discipline with no national EPA. *@
+          <div class="detail-card detail-card--empty">
+            <div class="state-panel-copy">@Words.NoNationalEpa(_curriculum!)</div>
+            <div class="form-actions">
+              <a class="btn btn-primary" href="@CatalogueLinks.Epas"><Icon Name="arrow-right" />@Words.GoToEpas</a>
             </div>
           </div>
           break;
@@ -110,7 +124,10 @@
     CurriculumUnavailable,
 
     /// <summary>The add address on a version the caller's institution has superseded (F6; build review P3).</summary>
-    Superseded
+    Superseded,
+
+    /// <summary>The College's add on a discipline with no national EPA (T394, Q14, R2-F19).</summary>
+    NoNationalEpa
   }
 
   private const string EpaInputId = "item-epa";
@@ -166,6 +183,22 @@
   {
     _editContext = new EditContext(_model);
     _messages = new ValidationMessageStore(_editContext);
+    _editContext.OnFieldChanged += (_, changed) => EpaChanged(changed.FieldIdentifier);
+  }
+
+  /// <summary>
+  /// Q10's refusal stays under the EPA it is about, still chosen, until the user chooses another (T394, R3-F14); then it
+  /// goes, since it is no longer about the EPA shown.
+  /// </summary>
+  private void EpaChanged(FieldIdentifier field)
+  {
+    if (field.FieldName == nameof(CurriculumItemFormModel.EpaId)
+        && _refusal is { KeepsChoice: true } refusal
+        && refusal.Is(nameof(AddCurriculumItemCommand.EpaId)))
+    {
+      _refusal = null;
+      MarkRefused(null);
+    }
   }
 
   // The page's one failure (fixed words, T329), at its top, focused once drawn; and a field's refusal (F4), under it.
@@ -189,7 +222,7 @@
   /// </summary>
   private string Heading => _state == PageState.CurriculumUnavailable ? Words.CurriculumUnavailable
     : _state == PageState.ItemUnavailable ? Words.ItemUnavailable
-    : _state == PageState.Superseded ? Words.CannotAddItem
+    : _state is PageState.Superseded or PageState.NoNationalEpa ? Words.CannotAddItem
     : _curriculum is not { } curriculum ? Words.ItemPageName
     : IsAdd ? Words.AddAction(curriculum.CanEditCurriculum)
     : _item is not { } item ? Words.ItemPageName
@@ -201,17 +234,20 @@
     PageState.Form or PageState.NothingToAdd when _curriculum is { } curriculum && IsAdd => Words.AddSubtitle(curriculum),
     PageState.Form when _curriculum is { } curriculum && _item is { } item => Words.EditSubtitle(item, curriculum),
     PageState.Record when _curriculum is { } curriculum => Words.RecordSubtitle(curriculum),
+    PageState.NoNationalEpa when _curriculum is { } curriculum => Words.NoNationalEpaSubtitle(curriculum),
     _ => null
   };
 
   /// <summary>Home › Curricula › Items of … › the page; Unavailable sits straight under Curricula (R2-B15, B16).</summary>
   private IReadOnlyList<Crumb>? Trail
-    => _curriculum is { } curriculum && _state is PageState.Form or PageState.Record or PageState.NothingToAdd or PageState.Superseded
+    => _curriculum is { } curriculum && _state is PageState.Form or PageState.Record or PageState.NothingToAdd or PageState.Superseded or PageState.NoNationalEpa
       ? [new Crumb(Words.ListTitle(curriculum), CatalogueLinks.Items(Id))]
       : null;
 
   /// <summary>An item's crumb is its EPA's code (R2-B09, R3-B24); the add page's its h1.</summary>
-  private string Crumb => _item is { } item && _state is PageState.Form or PageState.Record ? item.EpaCode : Heading;
+  private string Crumb => _item is { } item && _state is PageState.Form or PageState.Record ? item.EpaCode
+    : _state == PageState.NoNationalEpa && _curriculum is { } curriculum ? Words.AddAction(curriculum.CanEditCurriculum)
+    : Heading;
 
   /// <summary>Where Cancel goes: the list with no token from the add (P6), with ?back= from an item (R3-B11).</summary>
   private string CancelHref => ItemId is int itemId ? CatalogueLinks.BackFromItem(Id, itemId) : CatalogueLinks.Items(Id);
@@ -268,6 +304,12 @@
       {
         // F6: no add on a version the institution has superseded (said so, P3), nor for a caller the command would refuse.
         _state = _curriculum.Institution is { IsActiveAdoption: false } ? PageState.Superseded : PageState.ItemUnavailable;
+        return;
+      }
+      else if (Words.HasNoNationalEpa(_curriculum))
+      {
+        // Q14 (T394, S8): nothing the College could add, said in place of the form.
+        _state = PageState.NoNationalEpa;
         return;
       }
 
@@ -404,12 +446,14 @@
       {<Alert Kind="danger" Role="alert">@failure</Alert>}</ActionResult>
 
     <EditForm EditContext="_editContext" OnSubmit="SubmitAsync" FormName="curriculum-item" class="form-container">
+      @* M4 (DESIGN.md § Form system): the starred fields said once, above the first. *@
+      <p class="field-help">@Words.RequiredMarkLine</p>
       <div class="form-grid form-grid--wide">
         @* Full width: v11.1's EPA titles run to over a hundred characters. On an edit it offers the item's own EPA and
            what the item could move to (M6 of round 2). *@
         <FormField Label="EPA" InputId="@EpaInputId" Required="true" FullWidth="true" HelpText="@EpaHelp">
           <ChildContent>
-            <InputSelect id="@EpaInputId" class="form-select" TValue="int" @bind-Value="_model.EpaId"
+            <InputSelect id="@EpaInputId" class="form-select" TValue="int" @bind-Value="_model.EpaId" aria-required="true"
                          aria-describedby="@FieldRefusal.DescribedBy(EpaInputId, epaRefused, EpaHelp, EpaOffered ? null : NotOfferedId)">
               @foreach (var epa in _epas)
               {
@@ -666,7 +710,7 @@
 
   /// <summary>
   /// A refusal under its field (F4), focused, the values kept; the EPA's from a page out of date, so the picker is asked
-  /// again (T222 review). Anything else is fixed words at the top, logged (T329).
+  /// again (T222 review), but for Q10's, which keeps the EPA chosen (T394, R3-F14). Anything else is fixed words at the top, logged (T329).
   /// </summary>
   private async Task RefusedAsync(Exception exception)
   {
@@ -674,7 +718,8 @@
     {
       _refusal = refusal;
       MarkRefused(refusal);
-      if (refusal.Is(nameof(AddCurriculumItemCommand.EpaId)))
+      // Q10's refusal is about the EPA chosen and names who holds it: the choice stays, the picker as read (R3-F14).
+      if (refusal.Is(nameof(AddCurriculumItemCommand.EpaId)) && !refusal.KeepsChoice)
       {
         await RefreshPickerAsync();
       }

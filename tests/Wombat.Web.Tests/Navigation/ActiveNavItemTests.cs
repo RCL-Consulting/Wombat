@@ -186,6 +186,21 @@ public sealed class ActiveNavItemTests : TestContext
     }
 
     [Theory]
+    [InlineData(WombatRoles.CollegeAdmin, typeof(SpecialityEdit), "Specialities")]
+    [InlineData(WombatRoles.CollegeAdmin, typeof(SubSpecialityEdit), "Specialities")]
+    [InlineData(WombatRoles.CollegeAdmin, typeof(SubSpecialitiesList), "Specialities")]
+    [InlineData(WombatRoles.Administrator, typeof(SpecialityEdit), "Colleges")]
+    [InlineData(WombatRoles.Administrator, typeof(SubSpecialityEdit), "Colleges")]
+    [InlineData(WombatRoles.Administrator, typeof(SubSpecialitiesList), "Colleges")]
+    public void TheTreesRecords_AndTheOldSubSpecialitiesAddress_LightWhatTheTreeLights(string role, Type page, string owner)
+    {
+        // T394 (flow 16, Q1): a speciality's and a sub-speciality's record, and the old Sub-specialities address that sends
+        // to the tree, light the tree's owner, one item.
+        var lit = RenderNav(role, page).FindAll("a.active").Should().ContainSingle().Which;
+        lit.TextContent.Trim().Should().Be(owner);
+    }
+
+    [Theory]
     [InlineData(typeof(CampaignReport))]
     [InlineData(typeof(ProgrammeCoverage))]
     [InlineData(typeof(CampaignEdit))]

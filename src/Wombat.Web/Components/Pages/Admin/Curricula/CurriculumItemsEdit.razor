@@ -17,8 +17,19 @@
   the top, focused; ?back focuses the row's Edit (or View); a stale or foreign id writes and focuses nothing; the address is
   then replaced without it. Remove… asks first (T3), its result at the top, focused (T11). No Back links (T5). An id the
   caller cannot open is the page's own Unavailable (Q19).
+
+  The College's half (T394, flow 16, R3-F05–F18): "Edit this version" in the header for a caller who may change the
+  curriculum (T4, named per M5), to its own page; the notice opens with the reach, bold (Q2); a discipline with no
+  national EPA says so in place of the add, with Go to EPAs (Q14, T326), and an empty curriculum draws no table.
 *@
-<PageHeader Title="@Heading" Subtitle="@Subtitle" />
+<PageHeader Title="@Heading" Subtitle="@Subtitle">
+  <Actions>
+    @if (_curriculum is { CanEditCurriculum: true } editable)
+    {
+      <a class="btn btn-outline" href="@CatalogueLinks.Curriculum(Id)" aria-label="@Words.EditThisVersionName(editable)">@Words.EditThisVersion</a>
+    }
+  </Actions>
+</PageHeader>
 
 <div class="people-page curriculum-items-page" aria-busy="@(_loading ? "true" : null)">
   <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusHeadingAsync">
@@ -40,7 +51,15 @@
           {<Alert Kind="@(_refused ? "danger" : "success")" Role="@(_refused ? "alert" : "status")"><strong>@message</strong></Alert>}</ActionResult>
 
         @* Standing notices: page content, no live region (N4). *@
-        <Alert Kind="warning" Role="">@(curriculum.CanEditCurriculum ? Words.CollegeNotice : Words.InstitutionNotice)</Alert>
+        @* Q2 (T394): the College's notice opens with the reach, its one bold sentence (R3-F05). *@
+        @if (Words.NoticeReach(curriculum) is { } reach)
+        {
+          <Alert Kind="warning" Role=""><strong>@reach</strong> @Words.CollegeNotice</Alert>
+        }
+        else
+        {
+          <Alert Kind="warning" Role="">@(curriculum.CanEditCurriculum ? Words.CollegeNotice : Words.InstitutionNotice)</Alert>
+        }
 
         @* T158. The list shows every item as a record, so an item whose EPA is inactive is here, and says it is not in force. *@
         @if (InactiveEpaCodes is { Count: > 0 } inactive)
@@ -50,13 +69,23 @@
 
         <div class="form-section-head">
           <h2 id="curriculum-items-heading">@Words.ItemsHeading(curriculum.Items.Count)</h2>
-          @if (curriculum.MayAddItem && _addEpas.Count > 0)
+          @if (curriculum.MayAddItem && _addEpas.Count > 0 && !Words.HasNoNationalEpa(curriculum))
           {
             <a class="btn btn-primary" href="@CatalogueLinks.NewItem(Id)">@Words.AddAction(curriculum.CanEditCurriculum)</a>
           }
         </div>
 
-        @if (AddLine(curriculum) is { } line)
+        @if (Words.HasNoNationalEpa(curriculum))
+        {
+          @* Q14 (T394, R3-F06): in place of the add, and of the built line, which would say every EPA is on it. *@
+          <div class="detail-card detail-card--empty">
+            <p class="state-panel-copy">@Words.NoNationalEpa(curriculum)</p>
+            <div class="form-actions">
+              <a class="btn btn-primary" href="@CatalogueLinks.Epas"><Icon Name="arrow-right" />@Words.GoToEpas</a>
+            </div>
+          </div>
+        }
+        else if (AddLine(curriculum) is { } line)
         {
           <p class="muted">@line</p>
         }
@@ -66,6 +95,9 @@
           <p class="muted">@elsewhere</p>
         }
 
+        @* "Items (0)" draws no table (R3-F06; flow 15's). *@
+        @if (curriculum.Items.Count > 0)
+        {
         <DataTable TItem="CurriculumItemDto" Items="curriculum.Items" StackWide="true" Class="clinic-table--compact"
                    Caption="@Words.Caption(curriculum)">
           <HeaderRow>
@@ -124,6 +156,7 @@
             </tr>
           </Row>
         </DataTable>
+        }
       }
       else if (_unavailable)
       {

@@ -142,7 +142,13 @@ public sealed class GetEpaListQueryHandler : IRequestHandler<GetEpaListQuery, Ep
             : null;
         var mayCreate = await EpaReads.MayCreateAsync(_dbContext, principal, cancellationToken);
 
-        return new EpaListDto(epas, reader, mayCreate, institutionName);
+        // T394 (flow 16, R3-E01, R2-E19): the College's words name it, an empty list's too; none for a College admin whose
+        // account names no College, which the page says.
+        var collegeName = reader == EpaListReader.College
+            ? await EpaReads.CollegeNameAsync(_dbContext, principal.GetCollegeId(), cancellationToken)
+            : null;
+
+        return new EpaListDto(epas, reader, mayCreate, institutionName) { CollegeName = collegeName };
     }
 }
 
@@ -167,6 +173,15 @@ public sealed class GetEpaPageQueryHandler : IRequestHandler<GetEpaPageQuery, Ep
                 // Unavailable (Q19): nothing else is read for an id the caller cannot open.
                 return new EpaPageDto(null, [], false, null, false);
             }
+
+            // T394 (flow 16, Q2, EV2): the reach, told only to a caller who may change the EPA, since it names institutions.
+            if (epa.MayChange)
+            {
+                epa = epa with
+                {
+                    Reach = await Curricula.CatalogueReach.ForEpaAsync(_dbContext, epa.Id, epa.OwningInstitutionId, cancellationToken)
+                };
+            }
         }
 
         var disciplines = await EpaReads.DisciplinesAsync(_dbContext, principal, epa?.SubSpecialityId, cancellationToken);
@@ -176,7 +191,17 @@ public sealed class GetEpaPageQueryHandler : IRequestHandler<GetEpaPageQuery, Ep
             : null;
         var mayCreate = await EpaReads.MayCreateAsync(_dbContext, principal, cancellationToken);
 
-        return new EpaPageDto(epa, disciplines, createsOwn, institutionName, mayCreate);
+        // T394 (flow 16, R3-E10, R3-E20, N16): the create's subtitle and the picker's help name the College admin's College,
+        // or say the Administrator's picker is every College's.
+        var collegeName = !principal.IsAdministrator() && principal.IsCollegeAdmin()
+            ? await EpaReads.CollegeNameAsync(_dbContext, principal.GetCollegeId(), cancellationToken)
+            : null;
+
+        return new EpaPageDto(epa, disciplines, createsOwn, institutionName, mayCreate)
+        {
+            CollegeName = collegeName,
+            ReadsEveryCollege = principal.IsAdministrator()
+        };
     }
 }
 
@@ -296,6 +321,12 @@ internal static class EpaReads
     public static async Task<string?> InstitutionNameAsync(IApplicationDbContext dbContext, int? institutionId, CancellationToken cancellationToken)
         => institutionId is { } id
             ? await dbContext.Set<Institution>().Where(entity => entity.Id == id).Select(entity => entity.Name).SingleOrDefaultAsync(cancellationToken)
+            : null;
+
+    /// <summary>A College's name by its id, or null for none (T394, flow 16: the College admin's words name her College).</summary>
+    public static async Task<string?> CollegeNameAsync(IApplicationDbContext dbContext, int? collegeId, CancellationToken cancellationToken)
+        => collegeId is { } id
+            ? await dbContext.Set<College>().Where(entity => entity.Id == id).Select(entity => entity.Name).SingleOrDefaultAsync(cancellationToken)
             : null;
 
     /// <summary>"Paediatrics / Paediatrics": a discipline as every catalogue page writes it.</summary>
@@ -440,15 +471,27 @@ public sealed class GetEntrustmentScaleByIdQueryHandler : IRequestHandler<GetEnt
     }
 
     public async Task<EntrustmentScaleDto?> Handle(GetEntrustmentScaleByIdQuery request, CancellationToken cancellationToken)
-        => await _dbContext.Set<EntrustmentScale>()
-            .Where(entity => entity.Id == request.Id)
-            .Select(entity => new EntrustmentScaleDto(
-                entity.Id,
-                entity.Name,
-                entity.Description,
-                entity.Levels
-                    .OrderBy(level => level.Order)
-                    .Select(level => new EntrustmentLevelDto(level.Id, level.Order, level.Label, level.Description))
-                    .ToList()))
-            .SingleOrDefaultAsync(cancellationToken);
+    {
+        var scale = await _dbContext.Set<EntrustmentScale>()
+            .AsNoTracking()
+            .Include(entity => entity.Levels)
+            .SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken);
+        if (scale is null)
+        {
+            return null;
+        }
+
+        // T394 (Q16, T395): the page offers Up, Down and Remove only on a scale nothing uses; the update refuses the same.
+        return new EntrustmentScaleDto(
+            scale.Id,
+            scale.Name,
+            scale.Description,
+            scale.Levels
+                .OrderBy(level => level.Order)
+                .Select(level => new EntrustmentLevelDto(level.Id, level.Order, level.Label, level.Description))
+                .ToList())
+        {
+            InUse = await EntrustmentScaleUses.IsInUseAsync(_dbContext, scale, cancellationToken)
+        };
+    }
 }

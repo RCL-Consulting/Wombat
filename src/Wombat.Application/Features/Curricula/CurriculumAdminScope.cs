@@ -197,36 +197,75 @@ public static class CurriculumAdminScope
 
     /// <summary>
     /// Refuses an EPA the curriculum already holds against an item of this owner (<see cref="HoldsItsEpaAgainst" />).
-    /// Where the item holding it is of another kind, the refusal says which: a national item, or an institution's own,
-    /// naming neither the institution nor the item. The College reads no institution's items, so "already contains" alone
-    /// would point it at a list that does not show the EPA.
+    /// Where the item holding it is of another kind, the refusal says which: a national item, or an institution's own. The
+    /// College reads no institution's items, so "already contains" alone would point it at a list that does not show the
+    /// EPA; and since T394 (Q10, T242, N9) a national item refused beside an institution's own names that institution and
+    /// the EPA: the one place the College is told of an institution's own item, so that it knows whom to ask. An
+    /// institution's own item refused beside a national one names nothing more: the national item is on its own list.
     /// </summary>
+    /// <remarks>Only reads, before anything is staged: the audit pipeline would commit a mutation made before it threw (T201).</remarks>
     /// <param name="exceptItemId">The item being edited, which may keep its own EPA; null for an Add.</param>
     /// <param name="itemOwningInstitutionId">The owner of the item being added or edited; null for a national item.</param>
-    internal static void EnsureEpaNotYetOn(Curriculum curriculum, int epaId, int? exceptItemId, int? itemOwningInstitutionId)
+    internal static async Task EnsureEpaNotYetOnAsync(
+        IApplicationDbContext dbContext,
+        Curriculum curriculum,
+        int epaId,
+        int? exceptItemId,
+        int? itemOwningInstitutionId,
+        CancellationToken cancellationToken)
     {
         var holdsItsEpa = HoldsItsEpaAgainst(exceptItemId, itemOwningInstitutionId).Compile();
-        var holder = curriculum.Items.FirstOrDefault(item => holdsItsEpa(item) && item.EpaId == epaId);
+        // The first by id where several hold it (two institutions' own items, T223): the refusal names one institution.
+        var holder = curriculum.Items.Where(item => holdsItsEpa(item) && item.EpaId == epaId).MinBy(item => item.Id);
         if (holder is null)
         {
             return;
         }
 
         // T392 (flow 15, F4): the EPA field's refusal, shown under EPA on the item's page (R2-B05, B12).
-        throw new FieldRefusalException(nameof(AddCurriculumItemCommand.EpaId), EpaHeldRefusal(itemOwningInstitutionId, holder.OwningInstitutionId));
+        throw new FieldRefusalException(
+            nameof(AddCurriculumItemCommand.EpaId),
+            await EpaHeldWordsAsync(dbContext, epaId, itemOwningInstitutionId, holder.OwningInstitutionId, cancellationToken))
+        {
+            KeepsChoice = NamesAnInstitution(itemOwningInstitutionId, holder.OwningInstitutionId)
+        };
     }
 
     /// <summary>
     /// The refusal of an item whose EPA another item holds, in words of which kind of item holds it (T223): the check above
-    /// and the translation of a racing write's refusal (<see cref="EpaHeldRefusalAsync" />) say the same thing.
+    /// and the translation of a racing write's refusal (<see cref="EpaHeldRefusalAsync" />) say the same thing. A national
+    /// item beside an institution's own names the institution and the EPA (Q10), read here; the kind's words where either
+    /// cannot be read.
     /// </summary>
-    private static string EpaHeldRefusal(int? itemOwningInstitutionId, int? holderOwningInstitutionId)
-        => (itemOwningInstitutionId, holderOwningInstitutionId) switch
+    private static async Task<string> EpaHeldWordsAsync(
+        IApplicationDbContext dbContext,
+        int epaId,
+        int? itemOwningInstitutionId,
+        int? holderOwningInstitutionId,
+        CancellationToken cancellationToken)
+    {
+        switch (itemOwningInstitutionId, holderOwningInstitutionId)
         {
-            (null, not null) => NationalBesideLocal,
-            (not null, null) => LocalBesideNational,
-            _ => AlreadyContains
-        };
+            case (null, int holderInstitutionId):
+                var institutionName = await dbContext.Set<Institution>()
+                    .AsNoTracking()
+                    .Where(institution => institution.Id == holderInstitutionId)
+                    .Select(institution => institution.Name)
+                    .FirstOrDefaultAsync(cancellationToken);
+                var epaCode = await dbContext.Set<Wombat.Domain.Epas.Epa>()
+                    .AsNoTracking()
+                    .Where(epa => epa.Id == epaId)
+                    .Select(epa => epa.Code)
+                    .FirstOrDefaultAsync(cancellationToken);
+                return institutionName is { Length: > 0 } && epaCode is { Length: > 0 }
+                    ? NationalBesideNamedLocal(institutionName, epaCode)
+                    : NationalBesideLocal;
+            case (not null, null):
+                return LocalBesideNational;
+            default:
+                return AlreadyContains;
+        }
+    }
 
     /// <summary>The refusal of an item whose EPA an item of the same kind holds: another national item, or another of the same institution's own.</summary>
     internal const string AlreadyContains = "This curriculum already contains the selected EPA.";
@@ -270,6 +309,7 @@ public static class CurriculumAdminScope
             .AsNoTracking()
             .Where(item => item.CurriculumId == curriculumId && item.EpaId == epaId)
             .Where(HoldsItsEpaAgainst(exceptItemId, itemOwningInstitutionId))
+            .OrderBy(item => item.Id)
             .Select(item => new { item.OwningInstitutionId })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -278,13 +318,37 @@ public static class CurriculumAdminScope
         // T392 (flow 15, F4): the EPA field's refusal, as the check's is, the database's underneath.
         return new FieldRefusalException(
             nameof(AddCurriculumItemCommand.EpaId),
-            holder is null ? AlreadyContains : EpaHeldRefusal(itemOwningInstitutionId, holder.OwningInstitutionId),
-            refused);
+            holder is null
+                ? AlreadyContains
+                : await EpaHeldWordsAsync(dbContext, epaId, itemOwningInstitutionId, holder.OwningInstitutionId, cancellationToken),
+            refused)
+        {
+            KeepsChoice = holder is not null && NamesAnInstitution(itemOwningInstitutionId, holder.OwningInstitutionId)
+        };
     }
 
-    /// <summary>The refusal of a national item on an EPA an institution has as its own item (T223).</summary>
+    /// <summary>
+    /// Whether the refusal is Q10's: a national item beside an institution's own, whose sentence is about the EPA chosen,
+    /// so the page keeps it chosen under the refusal (<see cref="FieldRefusalException.KeepsChoice" />, R3-F14).
+    /// </summary>
+    private static bool NamesAnInstitution(int? itemOwningInstitutionId, int? holderOwningInstitutionId)
+        => itemOwningInstitutionId is null && holderOwningInstitutionId is not null;
+
+    /// <summary>
+    /// The refusal of a national item on an EPA an institution has as its own item (T223), where the holder's name cannot be
+    /// read. The College is told who holds it (T394, Q10, T242): <see cref="NationalBesideNamedLocal" />.
+    /// </summary>
     internal const string NationalBesideLocal =
         "This curriculum already contains the selected EPA, as an institution's own item. A national item cannot share an EPA with an institution's own item: that institution's trainees would be measured against the EPA twice.";
+
+    /// <summary>
+    /// The refusal of a national item on an EPA an institution has as its own item, naming that institution (T394, flow 16,
+    /// Q10, T242, R3-F14): "Kgosi Kgari Teaching Hospital has PAED-016 as its own item on this curriculum, so it cannot be
+    /// added nationally until that institution removes it." Only the College and the Administrator add a national item, and
+    /// the College is told the holder's name by Q10's decision; no registrar is named.
+    /// </summary>
+    internal static string NationalBesideNamedLocal(string institutionName, string epaCode)
+        => $"{institutionName} has {epaCode} as its own item on this curriculum, so it cannot be added nationally until that institution removes it.";
 
     /// <summary>The refusal of an institution's own item on an EPA a national item holds (T223).</summary>
     internal const string LocalBesideNational =

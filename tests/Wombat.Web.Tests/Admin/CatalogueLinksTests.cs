@@ -2,8 +2,11 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using FluentAssertions;
 using Microsoft.AspNetCore.Components;
+using Wombat.Web.Components.Pages.Admin.Colleges;
 using Wombat.Web.Components.Pages.Admin.Curricula;
+using Wombat.Web.Components.Pages.Admin.EntrustmentScales;
 using Wombat.Web.Components.Pages.Admin.Epas;
+using Wombat.Web.Components.Pages.Admin.Institutions;
 using Wombat.Web.Components.Shared;
 using Wombat.Web.Navigation;
 
@@ -31,6 +34,59 @@ public sealed class CatalogueLinksTests
         CatalogueLinks.BackFromItem(4, 31).Should().Be("/admin/curricula/4/items?back=31");
     }
 
+    // T394 (flow 16, build-contracts § 0): the College's and the Administrator's pages, and their results' tokens (Q5, S13).
+    [Fact]
+    public void FlowSixteensAddresses_AreWrittenOnce_Here()
+    {
+        CatalogueLinks.Colleges.Should().Be("/admin/colleges");
+        CatalogueLinks.NewCollege.Should().Be("/admin/colleges/new");
+        CatalogueLinks.College(4).Should().Be("/admin/colleges/4");
+        CatalogueLinks.CollegeCreated(4).Should().Be("/admin/colleges/4?created");
+        CatalogueLinks.Specialities.Should().Be("/admin/specialities");
+        CatalogueLinks.CollegeTree(2).Should().Be("/admin/colleges/2/specialities");
+        CatalogueLinks.CollegeTreeAt(2, 3).Should().Be("/admin/colleges/2/specialities#speciality-3");
+        CatalogueLinks.TreeSectionId(3).Should().Be("speciality-3");
+        CatalogueLinks.TreeCreated(2, TreeRecord.OfSubSpeciality(4)).Should().Be("/admin/colleges/2/specialities?created=sub:4");
+        CatalogueLinks.TreeSaved(2, TreeRecord.OfSpeciality(2)).Should().Be("/admin/colleges/2/specialities?saved=speciality:2");
+        CatalogueLinks.NewSpeciality(4).Should().Be("/admin/colleges/4/specialities/new");
+        CatalogueLinks.Speciality(2, 2).Should().Be("/admin/colleges/2/specialities/2");
+        CatalogueLinks.SubSpecialities(2).Should().Be("/admin/specialities/2/sub-specialities");
+        CatalogueLinks.NewSubSpeciality(2).Should().Be("/admin/specialities/2/sub-specialities/new");
+        CatalogueLinks.SubSpeciality(2, 4).Should().Be("/admin/specialities/2/sub-specialities/4");
+        CatalogueLinks.EntrustmentScales.Should().Be("/admin/entrustment-scales");
+        CatalogueLinks.NewEntrustmentScale.Should().Be("/admin/entrustment-scales/new");
+        CatalogueLinks.EntrustmentScale(3).Should().Be("/admin/entrustment-scales/3");
+        CatalogueLinks.EntrustmentScaleCreated(3).Should().Be("/admin/entrustment-scales/3?created");
+        CatalogueLinks.NewCurriculum.Should().Be("/admin/curricula/new");
+        CatalogueLinks.Curriculum(3).Should().Be("/admin/curricula/3");
+        CatalogueLinks.CurriculumCreated(3).Should().Be("/admin/curricula/3?created");
+        CatalogueLinks.CurriculumCloned(4, 2).Should().Be("/admin/curricula/4?cloned=2");
+    }
+
+    [Theory]
+    [InlineData("/admin/colleges/2/specialities?created=sub:4", "created", TreeRecordKind.SubSpeciality, 4)]
+    [InlineData("http://localhost/admin/colleges/2/specialities?saved=speciality:2#x", "saved", TreeRecordKind.Speciality, 2)]
+    public void A_TreeToken_NamesItsRecord(string uri, string token, TreeRecordKind kind, int id)
+        => CatalogueLinks.TreeRecordOf(uri, token).Should().Be(new TreeRecord(kind, id));
+
+    [Theory]
+    [InlineData("/admin/colleges/2/specialities?created=sub:x")]
+    [InlineData("/admin/colleges/2/specialities?created=4")]
+    [InlineData("/admin/colleges/2/specialities?created=college:4")]
+    [InlineData("/admin/colleges/2/specialities?created=sub:-4")]
+    [InlineData("/admin/colleges/2/specialities?created")]
+    [InlineData("/admin/colleges/2/specialities")]
+    public void A_MalformedTreeToken_NamesNothing(string uri)
+        => CatalogueLinks.TreeRecordOf(uri, CatalogueLinks.CreatedToken).Should().BeNull();
+
+    [Fact]
+    public void WithoutTokens_DropsTheCloneToken_AndTheTreeTokens()
+    {
+        CatalogueLinks.WithoutTokens("/admin/curricula/4?cloned=2").Should().Be("/admin/curricula/4");
+        CatalogueLinks.WithoutTokens("/admin/colleges/2/specialities?saved=sub:3&x=1").Should().Be("/admin/colleges/2/specialities?x=1");
+        CatalogueLinks.TokenId("/admin/curricula/4?cloned=2", CatalogueLinks.ClonedToken).Should().Be(2);
+    }
+
     [Fact]
     public void AnIdIsWrittenInPlainDigits_WhateverTheCulture()
     {
@@ -40,6 +96,7 @@ public sealed class CatalogueLinksTests
             Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("de-DE");
             CatalogueLinks.ItemAdded(12345, 67890).Should().Be("/admin/curricula/12345/items?added=67890");
             CatalogueLinks.EpaCreated(12345).Should().Be("/admin/epas/12345?created");
+            CatalogueLinks.TreeSaved(12345, TreeRecord.OfSubSpeciality(67890)).Should().Be("/admin/colleges/12345/specialities?saved=sub:67890");
         }
         finally
         {
@@ -52,6 +109,9 @@ public sealed class CatalogueLinksTests
     {
         NavItems.Curricula.Href.Should().Be(CatalogueLinks.Curricula);
         NavItems.Epas.Href.Should().Be(CatalogueLinks.Epas);
+        NavItems.Colleges.Href.Should().Be(CatalogueLinks.Colleges);
+        NavItems.Specialities.Href.Should().Be(CatalogueLinks.Specialities);
+        NavItems.EntrustmentScales.Href.Should().Be(CatalogueLinks.EntrustmentScales);
         OnboardingLinks.Curricula.Should().Be(CatalogueLinks.Curricula);
     }
 
@@ -94,13 +154,29 @@ public sealed class CatalogueLinksTests
         // Lane B (T392, Q14): an item's page of its own, the add and the edit.
         { CatalogueLinks.NewItem(4), typeof(CurriculumItemPage) },
         { CatalogueLinks.Item(4, 31), typeof(CurriculumItemPage) },
+        // T394 (flow 16, § 0): the College's and the Administrator's pages, as their files declare them at § 0.
+        { CatalogueLinks.Colleges, typeof(CollegesList) },
+        { CatalogueLinks.NewCollege, typeof(CollegeEdit) },
+        { CatalogueLinks.CollegeCreated(4), typeof(CollegeEdit) },
+        { CatalogueLinks.Specialities, typeof(MySpecialitiesRedirect) },
+        { CatalogueLinks.TreeSaved(2, TreeRecord.OfSpeciality(2)), typeof(SpecialitiesList) },
+        { CatalogueLinks.NewSpeciality(4), typeof(SpecialityEdit) },
+        { CatalogueLinks.Speciality(2, 2), typeof(SpecialityEdit) },
+        { CatalogueLinks.SubSpecialities(2), typeof(SubSpecialitiesList) },
+        { CatalogueLinks.NewSubSpeciality(2), typeof(SubSpecialityEdit) },
+        { CatalogueLinks.SubSpeciality(2, 4), typeof(SubSpecialityEdit) },
+        { CatalogueLinks.EntrustmentScales, typeof(EntrustmentScalesList) },
+        { CatalogueLinks.NewEntrustmentScale, typeof(EntrustmentScaleEdit) },
+        { CatalogueLinks.EntrustmentScaleCreated(3), typeof(EntrustmentScaleEdit) },
+        { CatalogueLinks.NewCurriculum, typeof(CurriculumEdit) },
+        { CatalogueLinks.CurriculumCloned(4, 2), typeof(CurriculumEdit) },
     };
 
     [Theory]
     [MemberData(nameof(EveryLinkToAPageThatExists))]
     public void EachLink_IsARouteItsPageDeclares(string link, Type page)
     {
-        var path = link.Split('?')[0];
+        var path = link.Split('?', '#')[0];
         var templates = page.GetCustomAttributes<RouteAttribute>().Select(route => route.Template).ToList();
 
         templates.Should().Contain(template => Matches(template, path),

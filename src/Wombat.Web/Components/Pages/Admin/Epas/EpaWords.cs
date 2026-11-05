@@ -1,5 +1,6 @@
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Epas;
+using Wombat.Web.Components.Shared;
 
 namespace Wombat.Web.Components.Pages.Admin.Epas;
 
@@ -22,8 +23,12 @@ public static class EpaWords
     /// <summary>R3-C17 (S7, T329): the list's read failed. Never the exception's text.</summary>
     public const string ListLoadFailed = "Could not load the EPAs. Nothing has changed. Try again, or come back in a few minutes.";
 
-    /// <summary>The CollegeAdmin's subtitle: the built words, which speak to an editor, as the College admin is (no board redraws that list).</summary>
-    public const string CollegeSubtitle = "Maintain the entrustable professional activities available to curricula and forms.";
+    /// <summary>
+    /// R3-E01 (T394, flow 16, T326, S15): the CollegeAdmin's subtitle, which tells her how far a change to one reaches.
+    /// Until T394 it was the built "Maintain the entrustable professional activities available to curricula and forms."
+    /// </summary>
+    public static string CollegeSubtitle(string collegeName)
+        => $"{collegeName}'s EPAs. A change to one is read at once wherever it is named, in every institution that has adopted a curriculum that holds it.";
 
     /// <summary>R3-C15: the Administrator's subtitle.</summary>
     public const string AdministratorSubtitle = "Every College's EPAs, and every institution's own.";
@@ -32,20 +37,38 @@ public static class EpaWords
     public static string InstitutionSubtitle(string? institutionName)
         => $"The EPAs of the curricula {institutionName ?? "your institution"} has adopted. The College's are read only; your institution's own are yours to change.";
 
-    public static string ListSubtitle(EpaListDto list) => list.Reader switch
+    /// <summary>The list's subtitle by whose list it is; none for a College admin whose account names no College (R2-E19).</summary>
+    public static string? ListSubtitle(EpaListDto list) => list.Reader switch
     {
         EpaListReader.Administrator => AdministratorSubtitle,
-        EpaListReader.College => CollegeSubtitle,
+        EpaListReader.College => list.CollegeName is { } college ? CollegeSubtitle(college) : null,
         _ => InstitutionSubtitle(list.InstitutionName)
     };
 
-    /// <summary>The table's caption, which does not repeat the heading: R3-C09's, R3-C15's, and the built one for the College.</summary>
-    public static string Caption(EpaListReader reader) => reader switch
+    /// <summary>
+    /// The table's caption, which does not repeat the heading: R3-C09's, R3-E04's, and R3-E01's for the College ("College of
+    /// Paediatricians of South Africa's EPAs", T394; until then "Entrustable professional activities").
+    /// </summary>
+    public static string Caption(EpaListDto list) => list.Reader switch
     {
         EpaListReader.Administrator => "Every EPA",
-        EpaListReader.College => "Entrustable professional activities",
+        EpaListReader.College => list.CollegeName is { } college ? $"{college}'s EPAs" : "Entrustable professional activities",
         _ => "EPAs your institution reads"
     };
+
+    /// <summary>
+    /// T3 (T394, R3-E01): the College column, for a list that spans Colleges. The College admin's are all her College's,
+    /// and the institution's (flow 15's) keep it.
+    /// </summary>
+    public static bool ShowsCollegeColumn(EpaListReader reader) => reader != EpaListReader.College;
+
+    /// <summary>R2-E19 (T394, S12's words): a College admin whose account names no College, in place of the list.</summary>
+    public const string NoCollegeTitle = "No College on your account";
+
+    public const string NoCollegeBody = "Your account names no College. Ask the platform administrator to add it.";
+
+    /// <summary>Whether the list is a College admin's whose account names no College (R2-E19): no list, no Create EPA.</summary>
+    public static bool NamesNoCollege(EpaListDto list) => list is { Reader: EpaListReader.College, CollegeName: null };
 
     public const string EmptyTitle = "No EPAs yet";
 
@@ -90,8 +113,41 @@ public static class EpaWords
 
     public const string CreateHeading = CreateEpa;
 
-    /// <summary>The built subtitle, for the form of an EPA and for the College's and the Administrator's create.</summary>
+    /// <summary>
+    /// The built subtitle: the form of an institution's own EPA (flow 15's), and the Administrator's create, which names no
+    /// College because her picker is every College's.
+    /// </summary>
     public const string FormSubtitle = "Define the EPA code, scope, and descriptive guidance.";
+
+    /// <summary>
+    /// R3-E05, E20 (T394, S15): a national EPA's form names its College and its discipline, "College of Paediatricians of
+    /// South Africa · Paediatrics / Paediatrics", for the College admin and the Administrator alike.
+    /// </summary>
+    public static string NationalFormSubtitle(EpaDto epa) => $"{epa.CollegeName} · {epa.DisciplineName}";
+
+    /// <summary>R3-E10 (T394, S15): the College admin's create.</summary>
+    public static string CreateNationalSubtitle(string collegeName)
+        => $"A national EPA of {collegeName}. It reaches a registrar once a curriculum an institution has adopted holds it.";
+
+    /// <summary>R3-E05, E10 (T394, S15): the College admin's picker help.</summary>
+    public static string SubSpecialityHelpCollege(string collegeName) => $"{collegeName}'s sub-specialities.";
+
+    /// <summary>R3-E20 (T394, N16): the Administrator's picker help.</summary>
+    public const string SubSpecialityHelpEveryCollege = "Every College's sub-specialities.";
+
+    /// <summary>
+    /// R3-E05, E06, E09, E11 (T394, Q21's EV2): the standing reach line on a national EPA's page for a caller who may change
+    /// it, the reach (<see cref="CatalogueReachWords.ForNationalEpa" />) then what a change to it reaches.
+    /// </summary>
+    public static string ReachLine(EpaDto epa, Wombat.Application.Features.Curricula.EpaReachDto reach)
+        => $"{CatalogueReachWords.ForNationalEpa(epa.Code, reach)} Its code, title and description are read at once wherever it is named.";
+
+    /// <summary>R3-E07 (T394, Q2): the pause dialog's first paragraph, the reach alone.</summary>
+    public static string DeactivateReach(EpaDto epa, Wombat.Application.Features.Curricula.EpaReachDto reach)
+        => CatalogueReachWords.ForNationalEpa(epa.Code, reach);
+
+    /// <summary>M4 (DESIGN.md § Form system): the line above a form with a starred field, as flows 11 and 14 write it.</summary>
+    public const string RequiredMarkLine = RequiredMark.Line;
 
     /// <summary>R2-C04: the create of an institution's own EPA.</summary>
     public static string CreateOwnSubtitle(string? institutionName)

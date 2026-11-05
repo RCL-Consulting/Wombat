@@ -2,6 +2,8 @@ using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common.Interfaces;
 using Wombat.Application.Features.Curricula;
+using Wombat.Application.Features.Epas.Commands.DeleteEntrustmentScale;
+using Wombat.Application.Features.Epas.Commands.UpdateEntrustmentScale;
 using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.Curricula;
@@ -189,60 +191,103 @@ internal static class EntrustmentScaleReferences
     private sealed record BoundType(string Name, string Key, IReadOnlyList<int> Versions);
 
     /// <summary>
-    /// Throws when a curriculum item pinned to this scale requires a rung the incoming level set does not have.
+    /// The refusal of a save that removes rungs a curriculum item needs (T394, flow 16, Q6, Q18), or null when none does:
+    /// first every live item pinned to this scale that needs a removed rung, by EPA code, curriculum (version) and rung
+    /// label, three named and the rest counted; else the first item on an ended programme's record that keeps one as its
+    /// minimum (T312). Read with no tracking, before the handler assigns anything.
     /// </summary>
     /// <remarks>
-    /// <c>CurriculumMappings.EnsureScaleCanExpressMinimaAsync</c> establishes the invariant "every ordinal a
-    /// pinned item uses is a real rung on its scale", but it only runs when the ITEM changes. This is the
-    /// other half: the scale can change under a pinned item too, and the validator forces the incoming level
-    /// set to be contiguous from 1, so removing a level always removes the TOP rung. An item requiring that
-    /// rung would become permanently unreachable — its minimum could never again be met by any assessment.
+    /// <para>
+    /// A rung is the stored level, by its id: an item's minimum (and each stage override) is a rank, and the rung it names is
+    /// the stored level at that rank. Until T394 the check compared the item's ranks with the incoming ranks, so removing
+    /// rung 2 of six and saving five passed for an item needing rung 3, whose rank the old rung 4 then took. That save is
+    /// a reorder too, which Q16 now refuses on a scale in use (T395); the removal is named here first, so the words say
+    /// which rung which item needs.
+    /// </para>
+    /// <para>
+    /// <c>CurriculumMappings.EnsureScaleCanExpressMinimaAsync</c> keeps "every rank a pinned item uses is a rung of its
+    /// scale" when the item changes; this is the other half, when the scale changes under it (T109).
+    /// </para>
     /// </remarks>
-    public static async Task ThrowIfPinnedItemNeedsARemovedRungAsync(
+    public static async Task<EntrustmentScaleUpdateRefusedException?> RefusalForRemovedRungsAsync(
         IApplicationDbContext dbContext,
         int scaleId,
-        IReadOnlyCollection<int> incomingOrders,
+        IReadOnlyCollection<EntrustmentLevel> removedLevels,
         CancellationToken cancellationToken)
     {
+        if (removedLevels.Count == 0)
+        {
+            return null;
+        }
+
+        var removedByOrder = removedLevels.ToDictionary(level => level.Order);
+
         var pinnedItems = await dbContext.Set<CurriculumItem>()
             .AsNoTracking()
             .Where(item => item.ScaleId == scaleId)
-            .Select(item => new { item.Id, item.MinimumLevelOrder, item.MinimumLevelByStageJson })
+            .Select(item => new
+            {
+                EpaCode = item.Epa.Code,
+                CurriculumName = item.Curriculum.Name,
+                CurriculumVersion = item.Curriculum.Version,
+                item.MinimumLevelOrder,
+                item.MinimumLevelByStageJson
+            })
             .ToListAsync(cancellationToken);
 
-        foreach (var item in pinnedItems)
+        var needs = pinnedItems
+            .SelectMany(item => Required(item.MinimumLevelOrder, item.MinimumLevelByStageJson)
+                .Where(removedByOrder.ContainsKey)
+                .Select(order => (Order: order, Need: new EntrustmentScaleRungNeed(
+                    item.EpaCode, item.CurriculumName, item.CurriculumVersion, removedByOrder[order].Id, removedByOrder[order].Label))))
+            .OrderBy(entry => entry.Need.EpaCode, StringComparer.Ordinal)
+            .ThenBy(entry => entry.Need.CurriculumName, StringComparer.Ordinal)
+            .ThenBy(entry => entry.Need.CurriculumVersion, StringComparer.Ordinal)
+            .ThenBy(entry => entry.Order)
+            .Select(entry => entry.Need)
+            .ToList();
+
+        if (needs.Count > 0)
         {
-            var unreachable = Unreachable(item.MinimumLevelOrder, item.MinimumLevelByStageJson, incomingOrders);
-            if (unreachable.Count > 0)
-            {
-                throw new InvalidOperationException(
-                    $"Curriculum item {item.Id} is pinned to this entrustment scale and requires level " +
-                    $"{string.Join(", ", unreachable)}, which the new level set does not have. " +
-                    "Change that curriculum item's minimum first.");
-            }
+            var named = needs.Take(3).ToList();
+            var more = needs.Count - named.Count;
+            var putBack = needs.Select(need => need.LevelId).Distinct()
+                .OrderBy(id => removedLevels.Single(level => level.Id == id).Order)
+                .ToList();
+            var message = EntrustmentScaleRefusalWords.NotSaved + " " +
+                          string.Join(" ", EntrustmentScaleRefusalWords.NeedLines(named, more));
+            return new EntrustmentScaleUpdateRefusedException(EntrustmentScaleUpdateRefusal.RungNeeded, named, more, putBack, message);
         }
 
         // T312 (review B2): the list an ended programme ended with keeps each item's minima and pin as they were, and a
         // closed record names its minima as rungs of that ladder. Its minima cannot be changed, so the rung stays.
         var ended = (await ProgrammeItems.AllEndedItemsAsync(dbContext, cancellationToken))
             .Where(item => item.ScaleId == scaleId)
-            .Select(item => (item.CurriculumItemId, Unreachable: Unreachable(item.MinimumLevelOrder, item.MinimumLevelByStageJson, incomingOrders)))
-            .FirstOrDefault(item => item.Unreachable.Count > 0);
-        if (ended.Unreachable is { Count: > 0 } missing)
+            .Select(item => (Item: item, Order: Required(item.MinimumLevelOrder, item.MinimumLevelByStageJson)
+                .Where(removedByOrder.ContainsKey).Order().Cast<int?>().FirstOrDefault()))
+            .FirstOrDefault(entry => entry.Order is not null);
+        if (ended.Order is not { } endedOrder)
         {
-            throw new InvalidOperationException(
-                $"Curriculum item {ended.CurriculumItemId} was pinned to this entrustment scale when a programme ended, and " +
-                $"that programme's record requires level {string.Join(", ", missing)}, which the new level set does not " +
-                "have. A closed record keeps the targets it ended with, so the level cannot be removed.");
+            return null;
         }
+
+        var where = await dbContext.Set<CurriculumItem>()
+            .AsNoTracking()
+            .Where(item => item.Id == ended.Item.CurriculumItemId)
+            .Select(item => new { EpaCode = item.Epa.Code, item.Curriculum.Name, item.Curriculum.Version })
+            .SingleOrDefaultAsync(cancellationToken);
+        var epaCode = where?.EpaCode ?? await dbContext.Set<Epa>().AsNoTracking()
+            .Where(epa => epa.Id == ended.Item.EpaId).Select(epa => epa.Code).SingleOrDefaultAsync(cancellationToken) ?? string.Empty;
+        var endedNeed = new EntrustmentScaleRungNeed(
+            epaCode, where?.Name ?? string.Empty, where?.Version ?? string.Empty,
+            removedByOrder[endedOrder].Id, removedByOrder[endedOrder].Label);
+        return new EntrustmentScaleUpdateRefusedException(
+            EntrustmentScaleUpdateRefusal.RungOnAnEndedRecord, [endedNeed], 0, [],
+            EntrustmentScaleRefusalWords.OnAnEndedRecord(endedNeed));
     }
 
-    private static List<int> Unreachable(int minimumLevelOrder, string? minimumLevelByStageJson, IReadOnlyCollection<int> incomingOrders)
-    {
-        var required = new List<int> { minimumLevelOrder };
-        required.AddRange(CurriculumItem.ParseStageOverrides(minimumLevelByStageJson).Values);
-        return required.Where(order => !incomingOrders.Contains(order)).Distinct().Order().ToList();
-    }
+    private static IEnumerable<int> Required(int minimumLevelOrder, string? minimumLevelByStageJson)
+        => new[] { minimumLevelOrder }.Concat(CurriculumItem.ParseStageOverrides(minimumLevelByStageJson).Values).Distinct();
 
     /// <summary>
     /// Whether a list an ended programme ended with (T312) holds an item pinned to this scale (review B2): the record
@@ -253,6 +298,23 @@ internal static class EntrustmentScaleReferences
         int scaleId,
         CancellationToken cancellationToken)
         => (await ProgrammeItems.AllEndedItemsAsync(dbContext, cancellationToken)).Any(item => item.ScaleId == scaleId);
+
+    /// <summary>
+    /// The sub-specialities whose default this scale is, in the refusal's order (speciality, then name), each with its
+    /// speciality's id for its link (T394, flow 16, S6).
+    /// </summary>
+    public static async Task<IReadOnlyList<EntrustmentScaleHolder>> DefaultHoldersAsync(
+        IApplicationDbContext dbContext,
+        int scaleId,
+        CancellationToken cancellationToken)
+        => await dbContext.Set<SubSpeciality>()
+            .AsNoTracking()
+            .Where(subSpeciality => subSpeciality.DefaultEntrustmentScaleId == scaleId)
+            .OrderBy(subSpeciality => subSpeciality.Speciality.Name)
+            .ThenBy(subSpeciality => subSpeciality.Name)
+            .Select(subSpeciality => new EntrustmentScaleHolder(
+                subSpeciality.SpecialityId, subSpeciality.Id, subSpeciality.Name, subSpeciality.Speciality.Name))
+            .ToListAsync(cancellationToken);
 
     /// <summary>
     /// Why the scale may not be deleted when it is a sub-speciality's default entrustment scale, naming every such

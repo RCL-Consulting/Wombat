@@ -140,6 +140,89 @@ public sealed class CurriculumItemsEditLayoutTests : CurriculumItemsTestBase
         Text(cut.Find("h1")).Should().Be("Items of Paediatrics v11.1 (11.1)");
     }
 
+    // ---- T394 (flow 16, lane D): the items as the College keeps them (R3-F05–F09, F18) ----
+
+    [Fact]
+    public void TheCollegesNotice_OpensWithTheReach_Bold_ThenTheBuiltNotice()
+    {
+        var sender = new FakeSender
+        {
+            Reach = new Wombat.Application.Features.Curricula.CurriculumReachDto(["Kgosi Kgari Teaching Hospital"], 3, [], 0)
+        };
+        var cut = RenderList(sender);
+
+        var notice = cut.Find(".alert-warning");
+        notice.HasAttribute("role").Should().BeFalse("a standing notice is no live region");
+        Text(notice.QuerySelector("strong")!).Should().Be("Adopted by 1 institution, Kgosi Kgari Teaching Hospital; 3 registrars in training on it.");
+        Text(notice).Should().Be(
+            "Adopted by 1 institution, Kgosi Kgari Teaching Hospital; 3 registrars in training on it. A target and its period are read live. Changing one changes what every trainee on this curriculum is measured against, in every institution that has adopted it, including periods that have already closed. A tool list is checked when an activity is filed and submitted, and never takes back credit already earned.");
+        notice.QuerySelectorAll("strong").Should().ContainSingle("only the first sentence is bold");
+    }
+
+    [Fact]
+    public void AVersionNoInstitutionHasAdopted_SaysSo_Bold()
+    {
+        var cut = RenderList(new FakeSender { Reach = Wombat.Application.Features.Curricula.CurriculumReachDto.None });
+
+        Text(cut.Find(".alert-warning strong")).Should().Be("No institution has adopted this version yet.");
+    }
+
+    [Fact]
+    public void TheHeader_OffersEditThisVersion_ToTheCollege_NamedForTheVersion()
+    {
+        var cut = RenderList(new FakeSender());
+
+        var link = cut.Find(".header-container .actions-cell a");
+        Text(link).Should().Be("Edit this version");
+        link.GetAttribute("aria-label").Should().Be("Edit this version of Paediatrics v11.1 (11.1)");
+        link.GetAttribute("href").Should().Be("/admin/curricula/5");
+        link.ClassList.Should().Contain("btn-outline");
+    }
+
+    [Fact]
+    public void AnInstitution_IsOfferedNoEditThisVersion_AndNoReach()
+    {
+        SignIn(Wombat.Domain.Identity.WombatRoles.InstitutionalAdmin);
+        var cut = RenderList(new FakeSender { CanEditCurriculum = false, MayAddItem = false });
+
+        cut.FindAll(".header-container .actions-cell a").Should().BeEmpty();
+        cut.FindAll(".alert-warning strong").Should().BeEmpty("flow 15's notice, unchanged");
+    }
+
+    [Fact]
+    public void ADisciplineWithNoNationalEpa_SaysSo_InPlaceOfTheAdd_WithGoToEpas_AndNoTable()
+    {
+        // Q14 (T326, R3-F06): until T394 the line said every national EPA was already on the curriculum.
+        var cut = RenderList(new FakeSender([]) { HasNationalEpas = false, EpaList = [] });
+
+        Text(cut.Find(".form-section-head h2")).Should().Be("Items (0)");
+        cut.FindAll(".form-section-head a").Should().BeEmpty("nothing to add");
+        Text(cut.Find(".detail-card--empty .state-panel-copy")).Should().Be(
+            "General Paediatrics has no national EPA yet. Add one under EPAs, then come back to add it here.");
+        var go = cut.Find(".detail-card--empty a.btn-primary");
+        Text(go).Should().Be("Go to EPAs");
+        go.GetAttribute("href").Should().Be("/admin/epas");
+        cut.FindAll("table").Should().BeEmpty("Items (0) draws no table");
+        cut.Markup.Should().NotContain("is already on this curriculum");
+    }
+
+    [Fact]
+    public void TheHeading_CountsTheRowsItsReaderReads()
+    {
+        // S9 (R3-F18): the Administrator reads an institution's own item too, so her heading counts it.
+        SignIn(Wombat.Domain.Identity.WombatRoles.Administrator);
+        var sender = new FakeSender(
+        [
+            FakeSender.Item(11, 1, 3, QuotaPeriod.Semester, null),
+            FakeSender.Item(12, 2, 3, QuotaPeriod.AcademicYear, null),
+            FakeSender.Item(20, 4, 1, QuotaPeriod.AcademicYear, null, owningInstitutionId: 3, owningInstitutionName: "Kgosi Kgari Teaching Hospital")
+        ]);
+        var cut = RenderList(sender);
+
+        Text(cut.Find(".form-section-head h2")).Should().Be("Items (3)");
+        cut.FindAll("tbody tr").Should().HaveCount(3);
+    }
+
     private static FakeSender Catalogue()
         => new(
         [

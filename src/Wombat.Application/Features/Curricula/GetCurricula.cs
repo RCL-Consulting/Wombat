@@ -104,7 +104,37 @@ public sealed class GetCurriculumByIdQueryHandler : IRequestHandler<GetCurriculu
         var states = CurriculumInstitutionStates.OwnInstitution(request.Principal) is int institutionId
             ? await CurriculumInstitutionStates.ReadAsync(_dbContext, institutionId, cancellationToken)
             : null;
-        return CurriculumInstitutionStates.Cut(row, request.Principal, states);
+        var cut = CurriculumInstitutionStates.Cut(row, request.Principal, states);
+
+        // T394 (flow 16, build-contracts § 0): the page's facts about the version itself. The counts read every item, whoever
+        // the caller is: the College's count is the national items (S9), and an institution's own item fixes the
+        // sub-speciality as much as a national one (Q19). Read from the items, the adoptions and the EPAs, never the
+        // curricula again: the curriculum and its items stay one statement (CurriculumAdminScopePostgresTests).
+        var nationalItems = await _dbContext.Set<CurriculumItem>()
+            .CountAsync(item => item.CurriculumId == request.Id && item.OwningInstitutionId == null, cancellationToken);
+
+        // Q19's lock is filled, as the reach is, only for a caller who may change the version (T394 fix pass, code N-6):
+        // whether some institution holds an own item on it or has adopted it is a fact about other institutions, and only
+        // the College's page reads it.
+        var subSpecialityFixed = cut.CanEditCurriculum
+            && (nationalItems > 0
+                || await _dbContext.Set<CurriculumItem>().AnyAsync(item => item.CurriculumId == request.Id, cancellationToken)
+                || await _dbContext.Set<InstitutionCurriculumAdoption>()
+                    .AnyAsync(adoption => adoption.CurriculumId == request.Id, cancellationToken));
+        var hasNationalEpas = await _dbContext.Set<Wombat.Domain.Epas.Epa>()
+            .AnyAsync(epa => epa.SubSpecialityId == cut.SubSpecialityId && epa.OwningInstitutionId == null, cancellationToken);
+
+        var reach = cut.CanEditCurriculum
+            ? await CatalogueReach.ForCurriculumAsync(_dbContext, request.Id, cancellationToken)
+            : null;
+
+        return cut with
+        {
+            Reach = reach,
+            NationalItemCount = nationalItems,
+            HasNationalEpas = hasNationalEpas,
+            SubSpecialityFixed = subSpecialityFixed
+        };
     }
 }
 

@@ -8,6 +8,11 @@ using Wombat.Domain.Curricula;
 
 namespace Wombat.Application.Features.Curricula;
 
+/// <remarks>
+/// The new version starts held back (T392, F5) with the version cloned from's national items. The page leaves for the new
+/// version by <c>?cloned=‹CurriculumId›</c> (T394, Q5), and the arriving page reads both versions again to say "… cloned
+/// from 11.1, with its 15 national items. It is held back."
+/// </remarks>
 public sealed record CloneCurriculumAsNewVersionCommand(
     int CurriculumId,
     string Version,
@@ -20,10 +25,15 @@ public sealed class CloneCurriculumAsNewVersionCommandValidator : AbstractValida
     public CloneCurriculumAsNewVersionCommandValidator()
     {
         RuleFor(command => command.CurriculumId).GreaterThan(0);
-        RuleFor(command => command.Version).NotEmpty().MaximumLength(64);
+
+        // T394 (flow 16, R3-D09a, D19): the page's words, under New version and the clone's Effective to.
+        RuleFor(command => command.Version)
+            .NotEmpty().WithMessage(CurriculumFieldMessages.NewVersionRequired)
+            .MaximumLength(CurriculumFieldMessages.VersionMaxLength).WithMessage(CurriculumFieldMessages.VersionTooLong);
         RuleFor(command => command.EffectiveTo)
             .GreaterThanOrEqualTo(command => command.EffectiveFrom)
-            .When(command => command.EffectiveTo.HasValue);
+            .When(command => command.EffectiveTo.HasValue)
+            .WithMessage(CurriculumFieldMessages.EffectiveToBeforeFrom);
     }
 }
 
@@ -53,9 +63,11 @@ public sealed class CloneCurriculumAsNewVersionCommandHandler : IRequestHandler<
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException exception)
+        catch (DbUpdateException exception) when (CurriculumFieldMessages.IsDuplicate(exception))
         {
-            throw new InvalidOperationException("A curriculum with the same name and version already exists for this sub-speciality.", exception);
+            // T394 (T272, R3-D09b): a duplicate only on the unique index's refusal, under New version (the command's Version);
+            // any other refused save reaches the page as "The new version could not be made. …".
+            throw CurriculumFieldMessages.DuplicateUnder(nameof(CloneCurriculumAsNewVersionCommand.Version), exception);
         }
 
         clone = await CurriculumMappings.LoadCurriculumAsync(_dbContext, clone.Id, cancellationToken);

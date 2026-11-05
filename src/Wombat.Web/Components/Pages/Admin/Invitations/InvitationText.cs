@@ -4,6 +4,7 @@ using Wombat.Application.Features.Invitations;
 using Wombat.Domain.Identity;
 using Wombat.Domain.Invitations;
 using Wombat.Web.Components.Shared.Activities;
+using Wombat.Web.Components.Shared;
 
 namespace Wombat.Web.Components.Pages.Admin.Invitations;
 
@@ -213,7 +214,7 @@ public static class InvitationText
     // ─── Invite a person (N01–N26) ───────────────────────────────────────────
 
     public const string InviteSubtitle = "One person, one role. The registration link is shown here once, and emailed to them.";
-    public const string RequiredMarkLine = "* marks a field you must fill in.";
+    public const string RequiredMarkLine = RequiredMark.Line;
     public const string NextPersonHeading = "Invite the next person";
     public const string LoadingForm = "Loading what you can invite.";
 

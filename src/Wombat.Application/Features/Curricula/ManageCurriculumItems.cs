@@ -208,7 +208,7 @@ public sealed class AddCurriculumItemCommandHandler : IRequestHandler<AddCurricu
         // institution's own local EPAs. The Add picker lists exactly these.
         await CurriculumItemEpas.EnsureNameableAsync(_dbContext, curriculum, owningInstitutionId, request.EpaId, cancellationToken);
 
-        CurriculumAdminScope.EnsureEpaNotYetOn(curriculum, request.EpaId, exceptItemId: null, owningInstitutionId);
+        await CurriculumAdminScope.EnsureEpaNotYetOnAsync(_dbContext, curriculum, request.EpaId, exceptItemId: null, owningInstitutionId, cancellationToken);
 
         await CurriculumMappings.EnsureScaleCanExpressMinimaAsync(
             _dbContext, request.ScaleId, request.MinimumLevelOrder, request.MinimumLevelByStageJson, currentScaleId: null, cancellationToken);
@@ -288,7 +288,7 @@ public sealed class UpdateCurriculumItemCommandHandler : IRequestHandler<UpdateC
         // row's picker lists exactly these.
         await CurriculumItemEpas.EnsureNameableAsync(_dbContext, curriculum, item.OwningInstitutionId, request.EpaId, cancellationToken);
 
-        CurriculumAdminScope.EnsureEpaNotYetOn(curriculum, request.EpaId, request.ItemId, item.OwningInstitutionId);
+        await CurriculumAdminScope.EnsureEpaNotYetOnAsync(_dbContext, curriculum, request.EpaId, request.ItemId, item.OwningInstitutionId, cancellationToken);
 
         // Before the first mutation (the audit pipeline commits a half-finished one), and judged on the REQUESTED
         // values: a save that changes the scale, the flat minimum and the stage minima together is re-pinning the

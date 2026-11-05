@@ -207,28 +207,35 @@ public static class ProgrammeItems
 
     /// <summary>
     /// Every item on a list an ended programme ended with (T312), across all curricula: the scale paths ask which ladders
-    /// they pin (review B2).
+    /// they pin (review B2). Each distinct list once, so it is not read and parsed once per graduate.
     /// </summary>
+    /// <remarks>
+    /// The scale page asks this on every load (T394, "in use"), so it reads only the lists, distinct in the database, which
+    /// compares one stored jsonb value with another (never with serializer output): the registrars who ended on one
+    /// version with the same targets share one list (T394 fix pass, code N-5). Its callers ask whether any item pins a
+    /// scale, so a list read once answers as a list read for each programme does.
+    /// </remarks>
     public static async Task<IReadOnlyList<EndedCurriculumItem>> AllEndedItemsAsync(
         IApplicationDbContext dbContext,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(dbContext);
 
-        return (await EndedListsAsync(dbContext, _ => true, cancellationToken)).SelectMany(list => list).ToArray();
+        return (await EndedListsAsync(dbContext, _ => true, cancellationToken, distinct: true)).SelectMany(list => list).ToArray();
     }
 
     private static async Task<IReadOnlyList<IReadOnlyList<EndedCurriculumItem>>> EndedListsAsync(
         IApplicationDbContext dbContext,
         System.Linq.Expressions.Expression<Func<TraineeProfile, bool>> which,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool distinct = false)
     {
-        var stored = await dbContext.Set<TraineeProfile>()
+        var lists = dbContext.Set<TraineeProfile>()
             .AsNoTracking()
             .Where(profile => !profile.IsActive && profile.EndedCurriculumJson != null)
             .Where(which)
-            .Select(profile => profile.EndedCurriculumJson)
-            .ToListAsync(cancellationToken);
+            .Select(profile => profile.EndedCurriculumJson);
+        var stored = await (distinct ? lists.Distinct() : lists).ToListAsync(cancellationToken);
 
         return stored.Select(json => EndedCurriculumItem.Parse(json) ?? []).ToArray();
     }

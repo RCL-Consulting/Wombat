@@ -4,201 +4,467 @@
 @inject IScopedSender Sender
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@using Wombat.Application.Features.Epas
+@inject IJSRuntime JS
+@inject ILogger<EntrustmentScaleEdit> Logger
 @using Wombat.Application.Features.Epas.Commands.CreateEntrustmentScale
 @using Wombat.Application.Features.Epas.Commands.UpdateEntrustmentScale
 
-<PageTitle>@(IsNew ? "Create entrustment scale" : "Edit entrustment scale") · Wombat</PageTitle>
+<PageTitle>@Heading · Wombat</PageTitle>
 
-<PageHeader Title="@(IsNew ? "Create entrustment scale" : "Edit entrustment scale")" Subtitle="Define the ordered ladder of entrustment levels.">
-  <Actions>
-    <a class="btn btn-outline btn-sm" href="/admin/entrustment-scales">Back to scales</a>
-  </Actions>
-</PageHeader>
+@*
+  A scale's page (T394, flow 16, lane B; boards R3-C02–C05, C11–C16, C20, R2-C17–C19b). The Administrator's alone.
 
-@* What a Save did. It takes the focus once the save is done (T234; DESIGN.md § Button system). A refusal leaves the
-   focus on Save: it is an alert, read at once. *@
-<ActionResult @ref="_result">
-  @if (!string.IsNullOrWhiteSpace(_statusMessage))
-  {
-    <Alert Kind="success">@_statusMessage</Alert>
-  }
+  - Titled by the scale's name (T1, S11), "Create entrustment scale" new, "Entrustment scale" while read or failed (T7);
+    no Back to scales (Q9). An unknown id is "Entrustment scale unavailable" in the page's own place (Q7).
+  - One EditForm of two h2 sections, Details and Levels. The levels are a grid of inputs, StackWide (S6): Order is the
+    row's header (S5), each descriptor a textarea (S4), each control named by its rung (the Label by its order, the rest
+    by the rung's label, or its order while the label is empty).
+  - T395, Q16: on a scale anything uses (EntrustmentScaleDto.InUse, the delete's seven uses) there is no Up, Down or
+    Remove, and Q16's line sits above Add level; adding a rung and editing a label stay (P2). On a scale nothing uses, Up,
+    Down and an outline Remove that asks nothing (Q11: nothing is saved until Save); Up on the first rung and Down on the
+    last natively disabled, as drawn (R3-C04).
+  - Refusals under their fields in the label's words, each once, no summary (T324): the page's own checks, then the
+    command's (FieldRefusal.Of: a taken name, a repeated label under the later rung's Label). A save the command refuses
+    for its levels is its typed refusal in the result region (Q18): Q6's needs, each a sentence, with "Put rung … back"
+    for each removed rung an item needs (S14); the ended record's sentence; Q16's, after which the page is read again and
+    nothing is put back. Any other failure is the fixed sentence (T393), logged.
+  - ?created (S13) writes "Entrustment scale created." and is stripped; a save's result, then the rename warning, share the
+    one result region (S3).
+*@
+<PageHeader Title="@Heading" Subtitle="@Subtitle" CurrentCrumb="@Heading" />
 
-  @* A rename that left a published form's fields with no ladder (T253). The save went through, so it is a warning, not a
-     refusal, and it reports what the save just did: a status, the kind's own role. *@
-  @if (!string.IsNullOrWhiteSpace(_renameWarning))
-  {
-    <Alert Kind="warning">@_renameWarning</Alert>
-  }
-
-  @if (!string.IsNullOrWhiteSpace(_errorMessage))
-  {
-    <Alert Kind="danger">@_errorMessage</Alert>
-  }
-</ActionResult>
-
-<StatePanel IsLoading="_loading" LoadError="@_loadError" IsEmpty="false" EmptyTitle="" EmptyBody="">
-  <div class="details-grid">
-    <section class="detail-card">
-      <h3>Scale details</h3>
-      <div class="form-grid form-grid--wide">
-        <FormField Label="Name" InputId="scale-name" Required="true">
-          <input id="scale-name" class="form-control" @bind="_name" />
-        </FormField>
-
-        <FormField Label="Description" InputId="scale-description" FullWidth="true">
-          <textarea id="scale-description" class="form-control" rows="3" @bind="_description"></textarea>
-        </FormField>
+<div class="user-page scale-page" aria-busy="@(_loading ? "true" : null)">
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusHeadingAsync">
+    <LoadingContent>
+      <p class="loading-line" role="status">@EntrustmentScaleWords.LoadingScale</p>
+      <div class="detail-card" aria-hidden="true">
+        <div class="skeleton skel-title"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line skel-short"></div>
       </div>
-    </section>
-
-    <section class="detail-card">
-      <div class="header-container">
-        <h3>Levels</h3>
-        <button type="button" class="btn btn-outline btn-sm" @onclick="AddLevel">
-          <Icon Name="plus" />
-          Add level
-        </button>
-      </div>
-
-      @if (_levels.Count == 0)
+    </LoadingContent>
+    <ChildContent>
+      @if (IsUnavailable)
       {
-        <div class="detail-card detail-card--empty">No levels yet. Add at least two ordered levels before saving.</div>
-      }
-      else
-      {
-        @* A grid of inputs, so each input sits in its cell (DESIGN.md § Table system), and each is named for its column
-           and its level: a column header names no input (T198). Order is as narrow as its content. The buttons ask for
-           room to sit on one line, and wrap where the card is narrow rather than push Remove out of view. The two
-           inputs share the rest. *@
-        <div class="table-container shadow">
-          <table class="clinic-table clinic-table--compact clinic-table--inputs">
-            <thead>
-              <tr>
-                <th class="col-fit">Order</th>
-                <th>Label</th>
-                <th>Description</th>
-                <th class="col-actions"><span class="visually-hidden">Actions</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (var i = 0; i < _levels.Count; i++)
-              {
-                var index = i;
-                var level = _levels[index];
-                <tr>
-                  <td class="col-fit">@level.Order</td>
-                  <td><input class="form-control" aria-label="@($"Label, level {level.Order}")" @bind="level.Label" /></td>
-                  <td><input class="form-control" aria-label="@($"Description, level {level.Order}")" @bind="level.Description" /></td>
-                  <td class="col-actions">
-                    <div class="actions-cell">
-                      <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Move level {level.Order} up")" disabled="@(index == 0)" @onclick="() => MoveLevel(index, -1)">Up</button>
-                      <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Move level {level.Order} down")" disabled="@(index == _levels.Count - 1)" @onclick="() => MoveLevel(index, 1)">Down</button>
-                      <button type="button" class="btn btn-danger btn-sm" aria-label="@($"Remove level {level.Order}")" @onclick="() => RemoveLevel(index)">Remove</button>
-                    </div>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
+        <div class="detail-card detail-card--empty">
+          <div class="state-panel-copy">@EntrustmentScaleWords.UnavailableBody</div>
+          <div class="form-actions">
+            <a class="btn btn-primary" href="@CatalogueLinks.EntrustmentScales">@EntrustmentScaleWords.GoToEntrustmentScales</a>
+          </div>
         </div>
       }
-    </section>
-  </div>
-
-  <FormActions>
-    <a class="btn btn-outline" href="/admin/entrustment-scales">Cancel</a>
-    @* Not disabled while its save runs (T234): it has the focus, and a browser drops the focus of a button it disables, to
-       the page. A second press sends nothing. *@
-    <button type="button" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_saving)" @onclick="SaveAsync">@(_saving ? "Saving..." : "Save")</button>
-  </FormActions>
-</StatePanel>
+      else if (IsNew || _scale is not null)
+      {
+        @Form()
+      }
+    </ChildContent>
+  </StatePanel>
+</div>
 
 @code {
   [Parameter] public int? Id { get; set; }
 
-  private string _name = string.Empty;
-  private string? _description;
-  private readonly List<LevelModel> _levels = new();
-  private bool _loading;
-  private bool _saving;
+  private const string NameId = "scale-name";
+  private const string DescriptionId = "scale-description";
+  private const string LevelsRefusalId = "scale-levels-refusal";
+
+  private const string NameField = nameof(UpdateEntrustmentScaleCommand.Name);
+  private const string DescriptionField = nameof(UpdateEntrustmentScaleCommand.Description);
+  private const string LevelsField = nameof(UpdateEntrustmentScaleCommand.Levels);
+
+  private readonly ScaleFormModel _model = new();
+  private EditContext _editContext = default!;
+  private ValidationMessageStore _messages = default!;
   private ActionResult? _result;
+
+  private EntrustmentScaleDto? _scale;
+  private readonly List<LevelModel> _levels = new();
+
+  // S14: each rung removed since the page was read or last saved, with its stored order, so "Put rung … back" can
+  // re-insert it in its place with its id (not a delete and an add).
+  private readonly List<LevelModel> _removed = new();
+
+  // The removed rungs a Q6 refusal says an item needs, by level id: one "Put rung … back" each.
+  private readonly List<int> _putBack = new();
+  private int _nextKey;
+
+  private bool _loading;
   private string? _loadError;
+  private bool _read;
+  private int? _readId;
+
+  // The result region: a result, the rename warning, a failure, or the update's typed refusal.
   private string? _statusMessage;
   private string? _renameWarning;
   private string? _errorMessage;
+  private EntrustmentScaleUpdateRefusedException? _levelsRefusal;
+
+  // Refusals under their fields, by the command's key ("Name", "Levels", "Levels[3].Label").
+  private readonly Dictionary<string, string> _refusals = new(StringComparer.Ordinal);
+  private bool _focusResult;
+  private string? _focusField;
+  private bool _stripToken;
+  private bool _saving;
 
   private bool IsNew => !Id.HasValue;
 
+  private bool IsUnavailable => !IsNew && !_loading && _loadError is null && _read && _scale is null;
+
+  /// <summary>Whether anything uses the scale, as read (Q16, T395): then no rung moves or goes.</summary>
+  private bool InUse => _scale?.InUse ?? false;
+
+  private string Heading => IsNew ? EntrustmentScaleWords.CreateHeading
+    : IsUnavailable ? EntrustmentScaleWords.UnavailableHeading
+    : _scale is { } scale ? scale.Name
+    : EntrustmentScaleWords.HeadingWhileUnread;
+
+  private string? Subtitle => IsNew ? EntrustmentScaleWords.CreateSubtitle
+    : _scale is not null ? EntrustmentScaleWords.RecordSubtitle
+    : null;
+
+  /// <summary>The result region, which a done save focuses. A test matches a focus call to it.</summary>
+  internal ElementReference ResultRegion => _result?.Element ?? default;
+
+  protected override void OnInitialized()
+  {
+    _loading = !IsNew;
+    _editContext = new EditContext(_model);
+    _messages = new ValidationMessageStore(_editContext);
+  }
+
+  private RenderFragment Form() => __builder =>
+  {
+    <ActionResult @ref="_result">
+      @if (!string.IsNullOrWhiteSpace(_statusMessage))
+      {
+        <Alert Kind="success">@_statusMessage</Alert>
+      }
+      @* A rename that left a published form's fields with no ladder (T253): the save went through, so a warning after
+         its result, in the same region (S3, R3-C16). *@
+      @if (!string.IsNullOrWhiteSpace(_renameWarning))
+      {
+        <Alert Kind="warning">@_renameWarning</Alert>
+      }
+      @if (_levelsRefusal is { } refusal)
+      {
+        <Alert Kind="danger">@LevelsRefusal(refusal)</Alert>
+      }
+      @if (!string.IsNullOrWhiteSpace(_errorMessage))
+      {
+        <Alert Kind="danger">@_errorMessage</Alert>
+      }
+    </ActionResult>
+
+    @* novalidate: the browser stays quiet and the page refuses in its own words under each field (T324). *@
+    <EditForm EditContext="_editContext" OnSubmit="SaveAsync" FormName="scale-edit" novalidate>
+      <section class="user-section" aria-labelledby="scale-details-heading">
+        <h2 id="scale-details-heading">@EntrustmentScaleWords.DetailsHeading</h2>
+        <p class="field-help">@RequiredMark.Line</p>
+        <div class="form-grid">
+          <FormField Label="@EntrustmentScaleWords.NameLabel" InputId="@NameId" Required="true" FullWidth="true">
+            <InputText id="@NameId" class="form-control" @bind-Value="_model.Name" aria-required="true" autocomplete="off"
+                       aria-describedby="@FieldRefusal.DescribedBy(NameId, _refusals.ContainsKey(NameField), null)" />
+            @Refusal(NameField, NameId)
+          </FormField>
+
+          <FormField Label="@EntrustmentScaleWords.DescriptionLabel" InputId="@DescriptionId" FullWidth="true">
+            <InputTextArea id="@DescriptionId" class="form-control" rows="3" @bind-Value="_model.Description"
+                           aria-describedby="@FieldRefusal.DescribedBy(DescriptionId, _refusals.ContainsKey(DescriptionField), null)" />
+            @Refusal(DescriptionField, DescriptionId)
+          </FormField>
+        </div>
+      </section>
+
+      <section class="user-section" aria-labelledby="scale-levels-heading">
+        <h2 id="scale-levels-heading">@EntrustmentScaleWords.LevelsHeading</h2>
+        <p class="field-help">@EntrustmentScaleWords.LevelsIntro</p>
+
+        @* R3-C15c: a refusal no single field holds, above the table; focusable, so the focus can be put on it. *@
+        @if (_refusals.TryGetValue(LevelsField, out var levelsMessage))
+        {
+          <div class="validation-message" role="alert" id="@LevelsRefusalId" tabindex="-1">@levelsMessage</div>
+        }
+
+        <DataTable TItem="LevelModel" Items="_levels" StackWide="true" Class="clinic-table--compact clinic-table--inputs"
+                   Caption="@EntrustmentScaleWords.Caption(IsNew ? null : _scale?.Name)">
+          <HeaderRow>
+            <tr role="row">
+              <th scope="col" role="columnheader" class="col-fit">@EntrustmentScaleWords.OrderHeader</th>
+              <th scope="col" role="columnheader">@EntrustmentScaleWords.LabelHeader<span aria-hidden="true">*</span><span class="visually-hidden"> required</span></th>
+              <th scope="col" role="columnheader">@EntrustmentScaleWords.DescriptionHeader</th>
+              @* T395: a column no row offers an action in is not rendered (T239). *@
+              @if (!InUse)
+              {
+                <th scope="col" role="columnheader" class="col-actions"><span class="visually-hidden">Actions</span></th>
+              }
+            </tr>
+          </HeaderRow>
+          <Row Context="level">
+            @{
+              var index = _levels.IndexOf(level);
+              var labelField = EntrustmentScaleBindings.RungField(index, "Label");
+              var descriptionField = EntrustmentScaleBindings.RungField(index, "Description");
+              var labelId = LabelInputId(level);
+              var descriptionId = DescriptionInputId(level);
+              var labelRefused = _refusals.ContainsKey(labelField);
+              var descriptionRefused = _refusals.ContainsKey(descriptionField);
+            }
+            <tr role="row" @key="level.Key">
+              @* S5: the rung's order is its row's header, shown on this page only. *@
+              <th scope="row" role="rowheader" class="col-fit">@level.Order</th>
+              <td role="cell" data-label="@EntrustmentScaleWords.LabelHeader">
+                <input id="@labelId" class="form-control" aria-label="@EntrustmentScaleWords.LabelName(level.Order)" aria-required="true"
+                       aria-invalid="@(labelRefused ? "true" : null)" aria-describedby="@(labelRefused ? FieldRefusal.Id(labelId) : null)"
+                       autocomplete="off" @bind="level.Label" />
+                @Refusal(labelField, labelId)
+              </td>
+              <td role="cell" data-label="@EntrustmentScaleWords.DescriptionHeader">
+                <textarea id="@descriptionId" class="form-control" rows="3" aria-label="@EntrustmentScaleWords.DescriptionName(level.Order, level.Label)"
+                          aria-invalid="@(descriptionRefused ? "true" : null)" aria-describedby="@(descriptionRefused ? FieldRefusal.Id(descriptionId) : null)"
+                          @bind="level.Description"></textarea>
+                @Refusal(descriptionField, descriptionId)
+              </td>
+              @if (!InUse)
+              {
+                <td role="cell" class="col-actions">
+                  <div class="actions-cell">
+                    <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Move {EntrustmentScaleWords.Rung(level.Order, level.Label)} up")"
+                            disabled="@(index == 0)" @onclick="() => MoveLevel(level, -1)">Up</button>
+                    <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Move {EntrustmentScaleWords.Rung(level.Order, level.Label)} down")"
+                            disabled="@(index == _levels.Count - 1)" @onclick="() => MoveLevel(level, 1)">Down</button>
+                    @* Q11: an outline Remove that asks nothing; nothing is saved until Save, and a refused save offers the
+                       rung back (S14). *@
+                    <button type="button" class="btn btn-outline btn-sm" aria-label="@($"Remove {EntrustmentScaleWords.Rung(level.Order, level.Label)}")"
+                            @onclick="() => RemoveLevel(level)">Remove</button>
+                  </div>
+                </td>
+              }
+            </tr>
+          </Row>
+        </DataTable>
+
+        @if (InUse)
+        {
+          <p class="field-help scale-in-use-line">@EntrustmentScaleWords.InUseLine</p>
+        }
+
+        <div class="scale-levels-actions">
+          <button type="button" class="btn btn-outline" @onclick="AddLevel">
+            <Icon Name="plus" />
+            @EntrustmentScaleWords.AddLevel
+          </button>
+        </div>
+      </section>
+
+      <FormActions>
+        <a class="btn btn-outline" href="@CatalogueLinks.EntrustmentScales">@EntrustmentScaleWords.Cancel</a>
+        @* Not disabled while its save runs (T234): it has the focus, and a browser drops the focus of a button it disables,
+           to the page. A second press sends nothing. *@
+        <button type="submit" class="btn btn-primary" aria-disabled="@InFlight.AriaDisabled(_saving)">@SubmitLabel</button>
+      </FormActions>
+    </EditForm>
+  };
+
+  private string SubmitLabel => IsNew
+    ? (_saving ? EntrustmentScaleWords.Creating : EntrustmentScaleWords.CreateScale)
+    : (_saving ? EntrustmentScaleWords.Saving : EntrustmentScaleWords.Save);
+
+  /// <summary>The update's typed refusal, in its words (Q18, R3-C11–C13).</summary>
+  private RenderFragment LevelsRefusal(EntrustmentScaleUpdateRefusedException refusal) => __builder =>
+  {
+    switch (refusal.Reason)
+    {
+      case EntrustmentScaleUpdateRefusal.RungNeeded:
+        <p>@EntrustmentScaleRefusalWords.NotSaved</p>
+        @if (_putBack.Count > 0)
+        {
+          <div class="scale-put-back">
+            @foreach (var levelId in _putBack)
+            {
+              var rung = _removed.FirstOrDefault(removed => removed.Id == levelId);
+              if (rung is not null)
+              {
+                <button type="button" class="btn btn-outline btn-sm" @onclick="() => PutBack(levelId)">@EntrustmentScaleRefusalWords.PutBack(rung.Label)</button>
+              }
+            }
+          </div>
+        }
+        <ul>
+          @foreach (var line in EntrustmentScaleRefusalWords.NeedLines(refusal.Needs, refusal.MoreCount))
+          {
+            <li>@line</li>
+          }
+        </ul>
+        break;
+      case EntrustmentScaleUpdateRefusal.RungOnAnEndedRecord:
+        @EntrustmentScaleRefusalWords.OnAnEndedRecord(refusal.Needs[0])
+        break;
+      case EntrustmentScaleUpdateRefusal.InUse:
+        @EntrustmentScaleRefusalWords.InUse
+        break;
+      default:
+        @EntrustmentScaleRefusalWords.RungDecided
+        break;
+    }
+  };
+
+  /// <summary>A refusal under its field: <c>div.validation-message role="alert"</c>, named first by the control.</summary>
+  private RenderFragment Refusal(string field, string inputId) => __builder =>
+  {
+    if (_refusals.TryGetValue(field, out var message))
+    {
+      <div class="validation-message" role="alert" id="@FieldRefusal.Id(inputId)">@message</div>
+    }
+  };
+
+  private static string LabelInputId(LevelModel level) => $"scale-rung-{level.Key}-label";
+
+  private static string DescriptionInputId(LevelModel level) => $"scale-rung-{level.Key}-description";
+
+  // Read again when the id changes (a create arrives at its new scale), never when only the query changes.
   protected override async Task OnParametersSetAsync()
   {
-    _errorMessage = null;
+    if (_read && _readId == Id)
+    {
+      return;
+    }
+
+    _readId = Id;
+    if (IsNew)
+    {
+      _read = true;
+      _scale = null;
+      _model.Name = string.Empty;
+      _model.Description = null;
+      _levels.Clear();
+      _removed.Clear();
+      _levels.Add(NewLevel(1));
+      _levels.Add(NewLevel(2));
+      return;
+    }
+
+    await LoadAsync();
+  }
+
+  private async Task RetryAsync()
+  {
     _statusMessage = null;
     _renameWarning = null;
-    _loadError = null;
+    _errorMessage = null;
+    _levelsRefusal = null;
+    await LoadAsync();
+  }
+
+  /// <summary>Reads the scale; the result region is the caller's to keep or clear (Q16's refusal survives a re-read).</summary>
+  private async Task LoadAsync()
+  {
     _loading = true;
+    _loadError = null;
+    ClearRefusals();
 
     try
     {
-      if (IsNew)
+      _scale = await Sender.Send(new GetEntrustmentScaleByIdQuery(Id!.Value));
+      if (_scale is { } scale)
       {
-        _name = string.Empty;
-        _description = null;
-        _levels.Clear();
-        _levels.Add(new LevelModel { Order = 1, Label = string.Empty, Description = null });
-        _levels.Add(new LevelModel { Order = 2, Label = string.Empty, Description = null });
-        return;
-      }
-
-      var scale = await Sender.Send(new GetEntrustmentScaleByIdQuery(Id!.Value));
-      if (scale is null)
-      {
-        Navigation.NavigateTo("/admin/entrustment-scales");
-        return;
-      }
-
-      _name = scale.Name;
-      _description = scale.Description;
-      _levels.Clear();
-      foreach (var level in scale.Levels)
-      {
-        _levels.Add(new LevelModel
+        Fill(scale);
+        if (CatalogueLinks.HasToken(Navigation.Uri, CatalogueLinks.CreatedToken))
         {
-          Id = level.Id,
-          Order = level.Order,
-          Label = level.Label,
-          Description = level.Description
-        });
+          _statusMessage = EntrustmentScaleWords.Created;
+          _focusResult = true;
+          _stripToken = true;
+        }
       }
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _loadError = exception.Message;
+      // T329, R2-C19b: the page's own read failed, which is not Unavailable. Never the exception's text.
+      Logger.LogError(exception, "The entrustment scale {ScaleId} could not be read.", Id);
+      _scale = null;
+      _loadError = EntrustmentScaleWords.ScaleLoadFailed;
     }
     finally
     {
       _loading = false;
+      _read = true;
     }
   }
 
-  private void AddLevel()
+  private void Fill(EntrustmentScaleDto scale)
   {
-    var nextOrder = _levels.Count == 0 ? 1 : _levels.Max(level => level.Order) + 1;
-    _levels.Add(new LevelModel { Order = nextOrder, Label = string.Empty, Description = null });
+    _model.Name = scale.Name;
+    _model.Description = scale.Description;
+    _levels.Clear();
+    _removed.Clear();
+    _putBack.Clear();
+    foreach (var level in scale.Levels.OrderBy(level => level.Order))
+    {
+      _levels.Add(new LevelModel
+      {
+        Key = _nextKey++,
+        Id = level.Id,
+        Order = level.Order,
+        StoredOrder = level.Order,
+        Label = level.Label,
+        Description = level.Description
+      });
+    }
   }
 
-  private void RemoveLevel(int index)
+  private LevelModel NewLevel(int order) => new() { Key = _nextKey++, Order = order };
+
+  private ValueTask FocusHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  private void AddLevel() => _levels.Add(NewLevel(_levels.Count + 1));
+
+  private void RemoveLevel(LevelModel level)
   {
-    _levels.RemoveAt(index);
+    if (InUse)
+    {
+      return;
+    }
+
+    _levels.Remove(level);
+    if (level.Id is not null)
+    {
+      _removed.Add(level);
+    }
+
     Reorder();
   }
 
-  private void MoveLevel(int index, int delta)
+  private void MoveLevel(LevelModel level, int delta)
   {
+    if (InUse)
+    {
+      return;
+    }
+
+    var index = _levels.IndexOf(level);
     var target = index + delta;
-    if (target < 0 || target >= _levels.Count) return;
+    if (index < 0 || target < 0 || target >= _levels.Count)
+    {
+      return;
+    }
+
     (_levels[index], _levels[target]) = (_levels[target], _levels[index]);
     Reorder();
+  }
+
+  /// <summary>S14: the removed rung back in its place, renumbered, its Label focused.</summary>
+  private void PutBack(int levelId)
+  {
+    if (_removed.FirstOrDefault(removed => removed.Id == levelId) is not { } rung)
+    {
+      return;
+    }
+
+    _removed.Remove(rung);
+    _putBack.Remove(levelId);
+    _levels.Insert(Math.Clamp(rung.StoredOrder - 1, 0, _levels.Count), rung);
+    Reorder();
+    _focusField = LabelInputId(rung);
   }
 
   private void Reorder()
@@ -216,50 +482,66 @@
       return;
     }
 
-    _saving = true;
-    _errorMessage = null;
+    ClearRefusals();
     _statusMessage = null;
     _renameWarning = null;
+    _errorMessage = null;
+    _levelsRefusal = null;
+    CheckForm();
+    if (_refusals.Count > 0)
+    {
+      FocusFirstRefusal();
+      return;
+    }
 
+    _saving = true;
     try
     {
       var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
       if (IsNew)
       {
-        var inputs = _levels
-          .OrderBy(level => level.Order)
-          .Select(level => new EntrustmentLevelInput(level.Order, level.Label, level.Description))
-          .ToList();
-        var created = await Sender.Send(new CreateEntrustmentScaleCommand(_name, _description, inputs, authState.User));
-        Navigation.NavigateTo($"/admin/entrustment-scales/{created.Id}", forceLoad: true);
+        var inputs = _levels.Select(level => new EntrustmentLevelInput(level.Order, level.Label, level.Description)).ToList();
+        var created = await Sender.Send(new CreateEntrustmentScaleCommand(_model.Name, _model.Description, inputs, authState.User));
+        Navigation.NavigateTo(CatalogueLinks.EntrustmentScaleCreated(created.Id));
         return;
       }
 
-      var updates = _levels
-        .OrderBy(level => level.Order)
-        .Select(level => new EntrustmentLevelUpdate(level.Id, level.Order, level.Label, level.Description))
-        .ToList();
-      var saved = await Sender.Send(new UpdateEntrustmentScaleCommand(Id!.Value, _name, _description, updates, authState.User));
-      var updated = saved.Scale;
-      _name = updated.Name;
-      _levels.Clear();
-      foreach (var level in updated.Levels)
-      {
-        _levels.Add(new LevelModel
-        {
-          Id = level.Id,
-          Order = level.Order,
-          Label = level.Label,
-          Description = level.Description
-        });
-      }
-      _statusMessage = "Entrustment scale saved.";
+      var updates = _levels.Select(level => new EntrustmentLevelUpdate(level.Id, level.Order, level.Label, level.Description)).ToList();
+      var saved = await Sender.Send(new UpdateEntrustmentScaleCommand(Id!.Value, _model.Name, _model.Description, updates, authState.User));
+      _scale = saved.Scale with { InUse = InUse };
+      Fill(_scale);
+      _statusMessage = EntrustmentScaleWords.Saved;
       _renameWarning = saved.RenameWarning;
-      _result?.FocusAfterRender();
+      _focusResult = true;
     }
-    catch (Exception exception)
+    catch (EntrustmentScaleUpdateRefusedException refusal)
     {
-      _errorMessage = RefusalText.Of(exception);
+      _levelsRefusal = refusal;
+      _focusResult = true;
+      if (refusal.Reason == EntrustmentScaleUpdateRefusal.RungNeeded)
+      {
+        // S14: each removed rung an item needs, offered back; the rest of the page as the user left it.
+        _putBack.Clear();
+        _putBack.AddRange(refusal.RungsToPutBack.Where(id => _removed.Any(removed => removed.Id == id)));
+      }
+      else if (refusal.Reason == EntrustmentScaleUpdateRefusal.InUse)
+      {
+        // Q16 (R3-C12): the scale came into use after this page was read. Read again, so the moves go; nothing is put
+        // back. The refusal stays in the result region.
+        await LoadAsync();
+      }
+    }
+    catch (Exception exception) when (FieldRefusal.Of(exception) is { } refusal && FieldOf(refusal.Field) is not null)
+    {
+      Refuse(refusal.Field, refusal.Message);
+      FocusFirstRefusal();
+    }
+    catch (Exception exception) when (exception is not OperationCanceledException)
+    {
+      // T393: never the exception's text.
+      Logger.LogError(exception, "The entrustment scale {ScaleId} could not be saved.", Id);
+      _errorMessage = IsNew ? EntrustmentScaleWords.CreateFailed : EntrustmentScaleWords.SaveFailed;
+      _focusResult = true;
     }
     finally
     {
@@ -267,11 +549,148 @@
     }
   }
 
+  /// <summary>The page's own checks, the commands' words (T324, N1), before anything is sent.</summary>
+  private void CheckForm()
+  {
+    Check(string.IsNullOrWhiteSpace(_model.Name), NameField, EntrustmentScaleBindings.NameRequired);
+    Check(_model.Name.Trim().Length > 200, NameField, EntrustmentScaleBindings.NameTooLong);
+    Check((_model.Description?.Trim().Length ?? 0) > 2000, DescriptionField, EntrustmentScaleBindings.DescriptionTooLong);
+    Check(_levels.Count < 2, LevelsField, EntrustmentScaleBindings.TooFewRungs);
+
+    var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    for (var index = 0; index < _levels.Count; index++)
+    {
+      var level = _levels[index];
+      var label = level.Label?.Trim() ?? string.Empty;
+      var labelField = EntrustmentScaleBindings.RungField(index, "Label");
+      Check(label.Length == 0, labelField, EntrustmentScaleBindings.LabelRequired);
+      Check(label.Length > 200, labelField, EntrustmentScaleBindings.LabelTooLong);
+      Check(label.Length > 0 && !seen.Add(label), labelField, EntrustmentScaleBindings.LabelTaken(label));
+      Check((level.Description?.Trim().Length ?? 0) > 2000, EntrustmentScaleBindings.RungField(index, "Description"),
+        EntrustmentScaleBindings.DescriptionTooLong);
+    }
+  }
+
+  private void Check(bool refused, string field, string message)
+  {
+    if (refused && !_refusals.ContainsKey(field))
+    {
+      Refuse(field, message);
+    }
+  }
+
+  private void Refuse(string field, string message)
+  {
+    _refusals[field] = message;
+    if (field is NameField or DescriptionField)
+    {
+      // InputBase marks its own control aria-invalid from the form's message store.
+      _messages.Add(_editContext.Field(field), message);
+      _editContext.NotifyValidationStateChanged();
+    }
+  }
+
+  private void ClearRefusals()
+  {
+    if (_refusals.Count == 0)
+    {
+      return;
+    }
+
+    _refusals.Clear();
+    _messages.Clear();
+    _editContext.NotifyValidationStateChanged();
+  }
+
+  /// <summary>The control (or region) a refusal's key belongs to, or null when the page has none for it.</summary>
+  private string? FieldOf(string field)
+  {
+    if (field == NameField)
+    {
+      return NameId;
+    }
+
+    if (field == DescriptionField)
+    {
+      return DescriptionId;
+    }
+
+    if (field == LevelsField)
+    {
+      return LevelsRefusalId;
+    }
+
+    for (var index = 0; index < _levels.Count; index++)
+    {
+      if (field == EntrustmentScaleBindings.RungField(index, "Label"))
+      {
+        return LabelInputId(_levels[index]);
+      }
+
+      if (field == EntrustmentScaleBindings.RungField(index, "Description"))
+      {
+        return DescriptionInputId(_levels[index]);
+      }
+    }
+
+    return null;
+  }
+
+  /// <summary>The first refused control in the form's order: Name, Description, the Levels refusal, then each rung's.</summary>
+  private void FocusFirstRefusal()
+  {
+    var order = new List<string> { NameField, DescriptionField, LevelsField };
+    for (var index = 0; index < _levels.Count; index++)
+    {
+      order.Add(EntrustmentScaleBindings.RungField(index, "Label"));
+      order.Add(EntrustmentScaleBindings.RungField(index, "Description"));
+    }
+
+    _focusField = order.FirstOrDefault(_refusals.ContainsKey) is { } first ? FieldOf(first) : null;
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusResult && _result is not null)
+    {
+      _focusResult = false;
+      await _result.Element.FocusAsync();
+    }
+
+    if (_focusField is { } field)
+    {
+      _focusField = null;
+      await PageFocus.FocusByIdAsync(JS, field);
+    }
+
+    if (_stripToken)
+    {
+      _stripToken = false;
+      Navigation.NavigateTo(CatalogueLinks.WithoutTokens(Navigation.Uri), replace: true);
+    }
+  }
+
+  private sealed class ScaleFormModel
+  {
+    public string Name { get; set; } = string.Empty;
+
+    public string? Description { get; set; }
+  }
+
   private sealed class LevelModel
   {
-    public int? Id { get; set; }
+    /// <summary>The row's own key on this page, stable across moves, for its controls' ids and Blazor's diff.</summary>
+    public int Key { get; init; }
+
+    public int? Id { get; init; }
+
     public int Order { get; set; }
+
+    /// <summary>Its order as read, where "Put rung … back" re-inserts it (S14).</summary>
+    public int StoredOrder { get; init; }
+
     public string Label { get; set; } = string.Empty;
+
     public string? Description { get; set; }
   }
 }

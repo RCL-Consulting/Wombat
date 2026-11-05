@@ -331,7 +331,7 @@ public static class MsfCampaignText
     public const string AddInviteeHeading = "Add an invitee";
 
     /// <summary>Above a form whose required fields carry the mark (M7).</summary>
-    public const string RequiredMarkLine = "* marks a field you must fill in.";
+    public const string RequiredMarkLine = RequiredMark.Line;
 
     public const string LearnerInviteesNote =
         "Every invitee is in one respondent group, Learner. The context is named only on the coordinator's report.";

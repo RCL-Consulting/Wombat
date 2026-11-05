@@ -16,8 +16,9 @@ namespace Wombat.Web.Tests.Admin;
 /// <summary>
 /// T198: every control on the entrustment scale editor has a name. Each level's Label and Description inputs sat bare in
 /// their cells, so a screen reader announced six rows of "edit text" and nothing to tell them apart: a column header
-/// names no input. They are named for their column and their level ("Label, level 3"), and a level's Up, Down and
-/// Remove for the level they act on.
+/// names no input. T394 (flow 16, R3-C02–C04) words them as the boards do: a rung's Label by its order ("Label of the
+/// rung in order 3"), the rest by the rung's label ("Description of 3a", "Move 3a up"), or by its order while the label is
+/// empty ("Move the rung in order 2 up").
 /// </summary>
 public sealed class EntrustmentScaleEditAccessibilityTests : TestContext
 {
@@ -46,11 +47,12 @@ public sealed class EntrustmentScaleEditAccessibilityTests : TestContext
         AccessibleNames.Unnamed(cut).Should().BeEmpty();
         IdReferences.Broken(cut).Should().BeEmpty();
 
+        var labels = new[] { "1", "2", "3a", "3b", "4", "5" };
         LevelControlNames(cut).Should().BeEquivalentTo(
-            Enumerable.Range(1, 6).Select(order => new[]
+            labels.Select((label, index) => new[]
             {
-                $"Label, level {order}", $"Description, level {order}",
-                $"Move level {order} up", $"Move level {order} down", $"Remove level {order}"
+                $"Label of the rung in order {index + 1}", $"Description of {label}",
+                $"Move {label} up", $"Move {label} down", $"Remove {label}"
             }),
             options => options.WithStrictOrdering());
 
@@ -65,8 +67,8 @@ public sealed class EntrustmentScaleEditAccessibilityTests : TestContext
 
         AccessibleNames.Unnamed(cut).Should().BeEmpty();
         LevelControlNames(cut).Select(row => row[0] + " | " + row[1]).Should().Equal(
-            "Label, level 1 | Description, level 1",
-            "Label, level 2 | Description, level 2");
+            "Label of the rung in order 1 | Description of the rung in order 1",
+            "Label of the rung in order 2 | Description of the rung in order 2");
     }
 
     [Fact]
@@ -74,15 +76,16 @@ public sealed class EntrustmentScaleEditAccessibilityTests : TestContext
     {
         var cut = RenderEditor(ScaleId);
 
-        ClickNamed(cut, "Move level 3 up");
+        ClickNamed(cut, "Move 3a up");
 
-        NameOf(cut, InputHolding(cut, "3a")).Should().Be("Label, level 2", "the level the College calls 3a is now second");
-        NameOf(cut, InputHolding(cut, "2")).Should().Be("Label, level 3");
+        NameOf(cut, InputHolding(cut, "3a")).Should().Be("Label of the rung in order 2", "the rung the College calls 3a is now second");
+        NameOf(cut, InputHolding(cut, "2")).Should().Be("Label of the rung in order 3");
 
         ClickNamed(cut, "Add level");
 
         LevelControlNames(cut).Last().Should().Equal(
-            "Label, level 7", "Description, level 7", "Move level 7 up", "Move level 7 down", "Remove level 7");
+            "Label of the rung in order 7", "Description of the rung in order 7", "Move the rung in order 7 up",
+            "Move the rung in order 7 down", "Remove the rung in order 7");
         AccessibleNames.Unnamed(cut).Should().BeEmpty();
         AccessibleNames.Controls(cut).Select(control => control.Name).Should().OnlyHaveUniqueItems();
     }
@@ -103,6 +106,8 @@ public sealed class EntrustmentScaleEditAccessibilityTests : TestContext
 
         var headers = table.QuerySelectorAll("thead th");
         headers.Select(header => string.Join(' ', header.ClassList)).Should().Equal("col-fit", "", "", "col-actions");
+        // T394 (S5, S6): Order is the row's header, and the grid stacks with the catalogue's tables.
+        table.ClassList.Should().Contain("clinic-table--stack-wide");
         headers[0].TextContent.Trim().Should().Be("Order");
         headers[3].QuerySelector(".visually-hidden")!.TextContent.Should().Be("Actions", "a header with no text names nothing");
 
@@ -124,11 +129,12 @@ public sealed class EntrustmentScaleEditAccessibilityTests : TestContext
     /// <summary>Each level's row: the accessible names of its controls, inputs first, in the order they appear.</summary>
     private static IReadOnlyList<string[]> LevelControlNames(IRenderedComponent<EntrustmentScaleEdit> cut)
         => cut.FindAll("tbody tr")
-            .Select(row => row.QuerySelectorAll("input, button").Select(control => NameOf(cut, control)).ToArray())
+            .Select(row => row.QuerySelectorAll("input, textarea, button").Select(control => NameOf(cut, control)).ToArray())
             .ToList();
 
     private static IElement InputHolding(IRenderedComponent<EntrustmentScaleEdit> cut, string value)
         => cut.FindAll("tbody input").Single(input => input.GetAttribute("value") == value);
+
 
     private static void ClickNamed(IRenderedComponent<EntrustmentScaleEdit> cut, string name)
         => cut.FindAll("button").Single(button => NameOf(cut, button) == name).Click();

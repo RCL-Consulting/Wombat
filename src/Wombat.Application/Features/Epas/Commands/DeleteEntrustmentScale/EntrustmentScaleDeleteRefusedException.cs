@@ -7,4 +7,14 @@ namespace Wombat.Application.Features.Epas.Commands.DeleteEntrustmentScale;
 /// a database refusal underneath, so the audit pipeline still discards the refused removal (T201).
 /// </summary>
 public sealed class EntrustmentScaleDeleteRefusedException(string message, Exception? inner = null)
-    : InvalidOperationException(message, inner);
+    : InvalidOperationException(message, inner)
+{
+    /// <summary>
+    /// The sub-specialities whose default the scale is, when that is the refusal (T394, flow 16, S6): each by its
+    /// speciality's and its own id beside its name, so the list links each ("Open Adult Neurology"). Empty otherwise.
+    /// </summary>
+    public IReadOnlyList<EntrustmentScaleHolder> Holders { get; init; } = [];
+}
+
+/// <summary>A sub-speciality that holds a scale as its default (T394, S6), as the delete refusal's link names it.</summary>
+public sealed record EntrustmentScaleHolder(int SpecialityId, int SubSpecialityId, string SubSpecialityName, string SpecialityName);

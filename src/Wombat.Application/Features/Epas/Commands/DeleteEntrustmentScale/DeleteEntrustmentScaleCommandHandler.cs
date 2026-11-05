@@ -30,9 +30,9 @@ public sealed class DeleteEntrustmentScaleCommandHandler : IRequestHandler<Delet
             .SingleOrDefaultAsync(entity => entity.Id == request.Id, cancellationToken)
             ?? throw new EntrustmentScaleDeleteRefusedException(NotFound(request.Id));
 
-        if (await RefusalAsync(scale, cancellationToken) is { } refusal)
+        if (await EntrustmentScaleUses.DeleteRefusalAsync(_dbContext, scale, null, cancellationToken) is { } refusal)
         {
-            throw new EntrustmentScaleDeleteRefusedException(refusal);
+            throw refusal;
         }
 
         foreach (var level in scale.Levels.ToList())
@@ -66,7 +66,28 @@ public sealed class DeleteEntrustmentScaleCommandHandler : IRequestHandler<Delet
                 throw;
             }
 
-            throw new EntrustmentScaleDeleteRefusedException(raced, exception);
+            // S6 (T394): a sub-speciality that took the scale as its default meanwhile is linked, as before the save. Asked
+            // as the read-back is, so a failure of its own leaves the refusal as it is (no links), never another exception.
+            var holders = await HoldersAfterTheRefusalAsync(scale.Id, raced, cancellationToken);
+            throw new EntrustmentScaleDeleteRefusedException(raced, exception) { Holders = holders };
+        }
+    }
+
+    private async Task<IReadOnlyList<EntrustmentScaleHolder>> HoldersAfterTheRefusalAsync(
+        int scaleId, string refusal, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return string.Equals(
+                refusal,
+                await EntrustmentScaleReferences.DescribeDefaultOfASubSpecialityAsync(_dbContext, scaleId, cancellationToken),
+                StringComparison.Ordinal)
+                ? await EntrustmentScaleReferences.DefaultHoldersAsync(_dbContext, scaleId, cancellationToken)
+                : [];
+        }
+        catch (Exception)
+        {
+            return [];
         }
     }
 
@@ -122,74 +143,7 @@ public sealed class DeleteEntrustmentScaleCommandHandler : IRequestHandler<Delet
     private Task<bool> ScaleExistsAsync(int scaleId, CancellationToken cancellationToken)
         => _dbContext.Set<EntrustmentScale>().AsNoTracking().AnyAsync(entity => entity.Id == scaleId, cancellationToken);
 
-    /// <summary>
-    /// Why this scale may not be deleted, read from the database now; or null when nothing refers to it. The first
-    /// reference found is the one named.
-    /// </summary>
-    /// <remarks>
-    /// Asked before the removal and again when the database refuses it (T254), so both give the same words. Every
-    /// question is a query, never the change tracker: after a refused save the scale and its levels are still tracked as
-    /// deleted, and the levels asked about are the ones stored now, not the ones this command loaded, so a level another
-    /// save has added since is asked about too.
-    /// </remarks>
+    /// <summary>Why this scale may not be deleted now (<see cref="EntrustmentScaleUses.FirstUseAsync" />, T394 § 0).</summary>
     private async Task<string?> RefusalAsync(EntrustmentScale scale, CancellationToken cancellationToken)
-    {
-        var scaleId = scale.Id;
-
-        if (await _dbContext.Set<MsfQuestion>().AnyAsync(question => question.ScaleId == scaleId, cancellationToken))
-        {
-            return "This entrustment scale is referenced by one or more MSF questions and cannot be deleted.";
-        }
-
-        // T109 pinned curriculum minima and scored progress rows to scales, both ON DELETE RESTRICT.
-        // Without these two checks the delete reaches the database and comes back as a raw
-        // DbUpdateException, which is a stack trace where an explanation belongs.
-        if (await _dbContext.Set<CurriculumItem>().AnyAsync(item => item.ScaleId == scaleId, cancellationToken))
-        {
-            return "This entrustment scale is pinned to one or more curriculum items and cannot be deleted.";
-        }
-
-        // T312 (review B2): the list an ended programme ended with keeps each item's pin as it was, so the scale an item
-        // was pinned to then is the closed record's, whatever the item is pinned to now. No foreign key knows of it.
-        if (await EntrustmentScaleReferences.IsPinnedOnAnEndedRecordAsync(_dbContext, scaleId, cancellationToken))
-        {
-            return "This entrustment scale is pinned to a curriculum item on the record of a programme that has ended, " +
-                   "which keeps the targets it ended with, so it cannot be deleted.";
-        }
-
-        if (await _dbContext.Set<CurriculumItemProgress>()
-                .AnyAsync(progress => progress.MinimumLevelScaleId == scaleId, cancellationToken))
-        {
-            return "Trainee progress has been scored against this entrustment scale and it cannot be deleted.";
-        }
-
-        // A sub-speciality's default scale is the third ON DELETE RESTRICT reference (T076), and until T232 the one
-        // this handler never asked about: the delete reached the database and came back as that same raw exception.
-        if (await EntrustmentScaleReferences.DescribeDefaultOfASubSpecialityAsync(_dbContext, scaleId, cancellationToken)
-            is { } subSpecialityDefault)
-        {
-            return subSpecialityDefault;
-        }
-
-        // A published schema that binds this scale, by the id the builder writes, the seed key the seeds write or a
-        // name, would lose its ladder for good: the key stops resolving and the cross-scale refusal can never fire for
-        // that type again (T109). Until T253 only a binding by name was asked about.
-        if (await EntrustmentScaleReferences.DescribeBindingByAPublishedSchemaAsync(_dbContext, scale, cancellationToken)
-            is { } binding)
-        {
-            return binding;
-        }
-
-        // Both decision tables hold their level ON DELETE RESTRICT.
-        var pendingRefs = await _dbContext.Set<PendingEntrustmentDecision>()
-            .AnyAsync(decision => decision.AuthorisedLevel.ScaleId == scaleId, cancellationToken);
-        var issuedRefs = await _dbContext.Set<EntrustmentDecision>()
-            .AnyAsync(decision => decision.AuthorisedLevel.ScaleId == scaleId, cancellationToken);
-        if (pendingRefs || issuedRefs)
-        {
-            return "Levels of this entrustment scale are referenced by entrustment decisions and cannot be deleted.";
-        }
-
-        return null;
-    }
+        => (await EntrustmentScaleUses.FirstUseAsync(_dbContext, scale, cancellationToken))?.Sentence;
 }

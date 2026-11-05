@@ -31,9 +31,11 @@ using Wombat.Application.Features.DataRights;
 using Wombat.Application.Features.DataRights.Commands;
 using Wombat.Application.Features.DataRights.Queries;
 using Wombat.Application.Features.Epas;
+using Wombat.Application.Features.Epas.Commands.DeleteEntrustmentScale;
 using Wombat.Application.Features.Epas.Commands.UpdateEntrustmentScale;
 using Wombat.Application.Features.EntrustmentDecisions;
 using Wombat.Application.Features.Institutions;
+using Wombat.Application.Features.Institutions.Queries.GetCollegeTree;
 using Wombat.Application.Features.Institutions.Queries.GetSpecialitiesList;
 using Wombat.Application.Features.Institutions.Queries.GetSubSpecialitiesList;
 using Wombat.Application.Features.Institutions.Commands.DeactivateInstitution;
@@ -476,6 +478,33 @@ public sealed class ActionFocusTests : TestContext
         hold.Count.Should().Be(1);
     }
 
+    /// <summary>
+    /// T394 fix pass (pages S2). Save with the box unticked on a record stored active or open asks Deactivate…'s or Hold
+    /// back…'s question first (D56, N20); Cancel and Escape give the focus back to Save, the control that asked, never to
+    /// the Deactivate… or Hold back… beside it. The dialog's script is told so as it opens, for a browser whose clicked
+    /// button never took the focus (T366, D6).
+    /// </summary>
+    [Theory]
+    [InlineData("CollegeEdit Save", "college-active", "college-save")]
+    [InlineData("SpecialityEdit Save", "speciality-active", "speciality-save")]
+    [InlineData("SubSpecialityEdit Save", "sub-speciality-active", "sub-speciality-save")]
+    [InlineData("EpaEdit Save", "epa-active", "epa-save")]
+    [InlineData("CurriculumEdit Save", "curriculum-open", "curriculum-save")]
+    public void SavesQuestion_ReturnsTheFocusToSave(string name, string boxId, string saveId)
+    {
+        var scenario = Scenarios[name];
+        var hold = new Hold();
+        var cut = scenario.Render(this, hold);
+        scenario.Button(cut).Id.Should().Be(saveId);
+
+        cut.Find($"#{boxId}").Change(false);
+        scenario.Press(cut);
+
+        cut.WaitForAssertion(() => JSInterop.Invocations.Should().ContainSingle(call => call.Identifier == "wombatDialog.showModal")
+            .Which.Arguments[1].Should().Be(saveId, "Cancel returns the focus to the Save that asked"));
+        hold.Count.Should().Be(0, "nothing is sent until the question is answered");
+    }
+
     private static IReadOnlyList<IElement> DownloadButtons(IRenderedFragment cut)
         => cut.FindAll(".detail-card button").ToList();
 
@@ -543,31 +572,37 @@ public sealed class ActionFocusTests : TestContext
                 cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Deactivate").Click();
             }),
 
+        // T394 (flow 16, S13): a speciality's and a sub-speciality's Save returns to the College's tree by its token, which
+        // writes and focuses the result there (CollegeTreePageTests). A refusal is a field's or fixed words (T272):
+        // SpecialityPageTests and SubSpecialityPageTests hold both.
         ["SpecialityEdit Save"] = new(
             (test, hold) => test.Page<SpecialityEdit>(
                 new Sender(hold, request => request is UpdateSpecialityCommand, request => request switch
                 {
-                    GetCollegeByIdQuery => College(),
-                    GetSpecialityByIdQuery => Speciality(),
+                    GetCollegeTreeQuery => CollegeTree(),
                     UpdateSpecialityCommand => Speciality(),
                     _ => null
                 }),
                 parameters => parameters.Add(page => page.CollegeId, 1).Add(page => page.Id, 5)),
             SubmitButton,
-            Submit),
+            Submit,
+            CanBeRefused: false,
+            LeavesFor: "/admin/colleges/1/specialities?saved=speciality:5"),
 
         ["SubSpecialityEdit Save"] = new(
             (test, hold) => test.Page<SubSpecialityEdit>(
                 new Sender(hold, request => request is UpdateSubSpecialityCommand, request => request switch
                 {
                     GetSpecialityByIdQuery => Speciality(),
-                    GetSubSpecialitiesForSpecialityQuery => new[] { SubSpeciality() },
+                    GetCollegeTreeQuery => CollegeTree(),
                     UpdateSubSpecialityCommand => SubSpeciality(),
                     _ => null
                 }),
                 parameters => parameters.Add(page => page.SpecialityId, 5).Add(page => page.Id, 9)),
             SubmitButton,
-            Submit),
+            Submit,
+            CanBeRefused: false,
+            LeavesFor: "/admin/colleges/1/specialities?saved=sub:9"),
 
         ["CollegeEdit Save"] = new(
             (test, hold) => test.Page<CollegeEdit>(
@@ -579,7 +614,10 @@ public sealed class ActionFocusTests : TestContext
                 }),
                 parameters => parameters.Add(page => page.Id, 1)),
             SubmitButton,
-            Submit),
+            Submit,
+            // T394 (flow 16, lane B): a refusal is the command's typed one, under its field and focused, and any other
+            // exception, as this test's is, the fixed sentence (T272): CollegePageTests holds both.
+            CanBeRefused: false),
 
         ["CollegeEdit Deactivate"] = new(
             (test, hold) => test.Page<CollegeEdit>(
@@ -589,11 +627,14 @@ public sealed class ActionFocusTests : TestContext
                     _ => null
                 }),
                 parameters => parameters.Add(page => page.Id, 1)),
-            cut => Named(cut, "Deactivate"),
-            cut => Named(cut, "Deactivate").Click()),
+            // T394 (D56): Deactivate… asks first; its dialog's confirm runs the deactivation.
+            cut => InDialog(cut, "Deactivate"),
+            cut => Confirm(cut, "Deactivate…", "Deactivate"),
+            CanBeRefused: false),
 
+        // T394 (flow 16, lane C): the page reads the South African day for a new version's start (N6), so it is given a clock.
         ["CurriculumEdit Save"] = new(
-            (test, hold) => test.Page<CurriculumEdit>(
+            (test, hold) => test.WithSystemClockForCurriculum().Page<CurriculumEdit>(
                 new Sender(hold, request => request is UpdateCurriculumCommand, request => request switch
                 {
                     GetCurriculumByIdQuery or UpdateCurriculumCommand => Curriculum(),
@@ -601,7 +642,9 @@ public sealed class ActionFocusTests : TestContext
                 }),
                 parameters => parameters.Add(page => page.Id, 2)),
             cut => cut.FindAll("form").First().QuerySelector("button[type=submit]")!,
-            cut => cut.FindAll("form").First().Submit()),
+            cut => cut.FindAll("form").First().Submit(),
+            // T394 (T393): any failure but a field's is the fixed sentence, never the refusal's text: CurriculumPageTests.
+            CanBeRefused: false),
 
         // T392 (flow 15, lane C): an EPA's Save, Deactivate…'s confirm and a reactivating Save. A refusal is a field's,
         // under it and focused, and any other failure the fixed sentence (T329): EpaPageTests and EpaEditDeactivationTests.
@@ -657,8 +700,24 @@ public sealed class ActionFocusTests : TestContext
                     _ => null
                 }),
                 parameters => parameters.Add(page => page.Id, 3)),
-            cut => Named(cut, "Save", "Saving..."),
-            cut => Named(cut, "Save", "Saving...").Click()),
+            SubmitButton,
+            Submit,
+            // T394 (flow 16, lane B): the levels' refusals are the command's typed ones, worded by the page, and a field's
+            // under its field; any other exception is the fixed sentence (T393): EntrustmentScalePageTests holds them.
+            CanBeRefused: false),
+
+        // T394 (Q11): Delete… asks first, and its dialog's Delete scale deletes; the result (or the refusal) takes the
+        // focus once the dialog has closed.
+        ["EntrustmentScalesList Delete… confirm"] = new(
+            (test, hold) => test.Page<EntrustmentScalesList>(
+                new Sender(hold, request => request is DeleteEntrustmentScaleCommand, request => request switch
+                {
+                    GetEntrustmentScalesListQuery => new[] { Scale() },
+                    _ => null
+                })),
+            cut => InDialog(cut, "Delete scale"),
+            cut => Confirm(cut, "Delete…", "Delete scale"),
+            CanBeRefused: false),
 
         // T376 (flow 12, lane T): the old assessor form became a redirect (S10); training is saved in the user page's
         // Assessor training section, opened at ?section=training (T03), whose result takes the focus (T04, T07).
@@ -1021,32 +1080,35 @@ public sealed class ActionFocusTests : TestContext
 
         // ---- T234 review: the actions reported fixed that no scenario held to the rule ----
 
+        // T394 (flow 16, D56): Deactivate… asks first, so the dialog's confirm has the focus while the deactivation runs;
+        // the record stays, its result focused. A refusal is fixed words (T272), so it is not this test's refusal.
         ["SpecialityEdit Deactivate"] = new(
             (test, hold) => test.Page<SpecialityEdit>(
                 new Sender(hold, request => request is DeactivateSpecialityCommand, request => request switch
                 {
-                    GetCollegeByIdQuery => College(),
-                    GetSpecialityByIdQuery => Speciality(),
+                    GetCollegeTreeQuery => CollegeTree(),
                     _ => null
                 }),
                 parameters => parameters.Add(page => page.CollegeId, 1).Add(page => page.Id, 5)),
-            cut => Named(cut, "Deactivate"),
-            cut => Named(cut, "Deactivate").Click()),
+            cut => InDialog(cut, "Deactivate"),
+            cut => Confirm(cut, "Deactivate…", "Deactivate"),
+            CanBeRefused: false),
 
         ["SubSpecialityEdit Deactivate"] = new(
             (test, hold) => test.Page<SubSpecialityEdit>(
                 new Sender(hold, request => request is DeactivateSubSpecialityCommand, request => request switch
                 {
                     GetSpecialityByIdQuery => Speciality(),
-                    GetSubSpecialitiesForSpecialityQuery => new[] { SubSpeciality() },
+                    GetCollegeTreeQuery => CollegeTree(),
                     _ => null
                 }),
                 parameters => parameters.Add(page => page.SpecialityId, 5).Add(page => page.Id, 9)),
-            cut => Named(cut, "Deactivate"),
-            cut => Named(cut, "Deactivate").Click()),
+            cut => InDialog(cut, "Deactivate"),
+            cut => Confirm(cut, "Deactivate…", "Deactivate"),
+            CanBeRefused: false),
 
         ["CurriculumEdit Clone"] = new(
-            (test, hold) => test.Page<CurriculumEdit>(
+            (test, hold) => test.WithSystemClockForCurriculum().Page<CurriculumEdit>(
                 new Sender(hold, request => request is CloneCurriculumAsNewVersionCommand, request => request switch
                 {
                     GetCurriculumByIdQuery => Curriculum(),
@@ -1060,7 +1122,8 @@ public sealed class ActionFocusTests : TestContext
                 cut.Find("#clone-version").Change("v12");
                 cut.Find("#clone-version").Closest("form")!.Submit();
             },
-            LeavesFor: "/admin/curricula/7"),
+            CanBeRefused: false,
+            LeavesFor: "/admin/curricula/7?cloned=2"),
 
         // T392 (flow 15, Q14, F1): an item's page of its own sends its add or save and leaves for the items list, which writes
         // the result from the token and focuses it (CurriculumItemPageTests). A refusal is the field's, under it, or fixed
@@ -1071,7 +1134,8 @@ public sealed class ActionFocusTests : TestContext
                 var cut = test.Page<CurriculumItemPage>(
                     new Sender(hold, request => request is AddCurriculumItemCommand, request => request switch
                     {
-                        GetCurriculumByIdQuery => ItemsCurriculum(),
+                        // T394 (Q14, S8): the read says the discipline has national EPAs, else the add is "Cannot add an item".
+                        GetCurriculumByIdQuery => ItemsCurriculum() with { HasNationalEpas = true },
                         ListCurriculumItemEpaOptionsQuery => new[] { ItemEpa(5, "PAED-005") },
                         AddCurriculumItemCommand => ItemsCurriculum() with { Items = [.. ItemsCurriculum().Items, Item(31, 5, "PAED-005")] },
                         _ => null
@@ -1444,6 +1508,13 @@ public sealed class ActionFocusTests : TestContext
 
     // ---- rendering ----
 
+    /// <summary>T394: a page that reads the day (CurriculumEdit, N6) is given the system clock.</summary>
+    private ActionFocusTests WithSystemClockForCurriculum()
+    {
+        Services.AddSingleton<TimeProvider>(TimeProvider.System);
+        return this;
+    }
+
     private IRenderedFragment Page<TPage>(
         IScopedSender sender,
         Action<ComponentParameterCollectionBuilder<TPage>>? parameters = null,
@@ -1623,6 +1694,10 @@ public sealed class ActionFocusTests : TestContext
     private static SpecialityDto Speciality() => new(5, 1, "Paediatrics", null, true);
 
     private static SubSpecialityDto SubSpeciality() => new(9, 5, "Neonatology", null, true);
+
+    /// <summary>The College's tree (T394, flow 16): Paediatrics (5) holding Neonatology (9).</summary>
+    private static CollegeTreeDto CollegeTree() => new(1, "College of Paediatricians", "CPSA",
+        [new CollegeTreeSpecialityDto(5, "Paediatrics", null, true, [new CollegeTreeSubSpecialityDto(9, 5, "Neonatology", null, true, null, null)])]);
 
     private static CurriculumDto Curriculum() => new(
         2, 5, 9, "Paediatrics", "Neonatology", "CMSA", "Neonatal curriculum", "v11.1", new DateOnly(2026, 1, 1), null,

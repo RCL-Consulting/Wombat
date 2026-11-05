@@ -3,6 +3,7 @@ using Wombat.Application.Features.Curricula;
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Application.Features.Epas;
 using Wombat.Domain.Curricula;
+using Wombat.Web.Components.Shared;
 
 namespace Wombat.Web.Components.Pages.Admin.Curricula;
 
@@ -65,6 +66,39 @@ internal static class CurriculumItemsWords
         1 => "; 1 registrar still on it",
         _ => string.Create(CultureInfo.InvariantCulture, $"; {registrars} registrars still on it")
     };
+
+    /// <summary>
+    /// The reach the College's notice opens with, bold (T394, flow 16, Q2, R3-F05, F07): "Adopted by 1 institution, Kgosi Kgari
+    /// Teaching Hospital; 3 registrars in training on it." or "No institution has adopted this version yet."
+    /// (<see cref="CatalogueReachWords.ForCurriculum" />). Null where the caller is not told it (an institution).
+    /// </summary>
+    public static string? NoticeReach(CurriculumDto curriculum)
+        => curriculum is { CanEditCurriculum: true, Reach: { } reach } ? CatalogueReachWords.ForCurriculum(reach) : null;
+
+    /// <summary>T4 (T394, R3-F05): the header link to the curriculum's own page, for a caller who may change it.</summary>
+    public const string EditThisVersion = "Edit this version";
+
+    /// <summary>M5: its accessible name, "Edit this version of Paediatric EPA Curriculum (11.1)".</summary>
+    public static string EditThisVersionName(CurriculumDto curriculum) => $"{EditThisVersion} of {VersionName(curriculum)}";
+
+    /// <summary>
+    /// Q14 (T394, T326, R3-F06, R2-F19): a discipline with no national EPA, in place of the add, on the items page and the
+    /// add page alike: "Neonatology has no national EPA yet. Add one under EPAs, then come back to add it here."
+    /// </summary>
+    public static string NoNationalEpa(CurriculumDto curriculum)
+        => $"{curriculum.SubSpecialityName} has no national EPA yet. Add one under EPAs, then come back to add it here.";
+
+    /// <summary>Whether Q14's words stand in place of the add: the College's add, on a discipline with no national EPA (S8).</summary>
+    public static bool HasNoNationalEpa(CurriculumDto curriculum)
+        => curriculum is { CanEditCurriculum: true, MayAddItem: true, HasNationalEpas: false };
+
+    public const string GoToEpas = "Go to EPAs";
+
+    /// <summary>R2-F19: the add page's subtitle under Q14, the version alone.</summary>
+    public static string NoNationalEpaSubtitle(CurriculumDto curriculum) => $"On {VersionName(curriculum)}.";
+
+    /// <summary>M4 (DESIGN.md § Form system): the line above a form with a starred field, as flows 11 and 14 write it.</summary>
+    public const string RequiredMarkLine = RequiredMark.Line;
 
     /// <summary>The College's and the Administrator's standing notice (built; R3-B17, B23).</summary>
     public const string CollegeNotice =
@@ -204,9 +238,21 @@ internal static class CurriculumItemsWords
                 ? $"On {VersionName(curriculum)}. It applies only to {institution}'s trainees."
                 : $"On {VersionName(curriculum)}. It applies only to your institution's trainees.";
 
-    /// <summary>A national item's subtitle on its add and edit pages (F3, R3-B22, B24).</summary>
+    /// <summary>
+    /// A national item's subtitle on its add and edit pages (F3, R3-B22, B24), then, for a caller told the reach (T394, Q2,
+    /// R3-F10, F12, F14, F20d), its reach: "Adopted by 1 institution, Kgosi Kgari Teaching Hospital; 3 registrars in training
+    /// on it.", or "No institution has adopted it yet." (the boards' words for this page).
+    /// </summary>
     public static string NationalSubtitle(CurriculumDto curriculum)
-        => $"On {VersionName(curriculum)}. It applies to every institution that has adopted it.";
+    {
+        var head = $"On {VersionName(curriculum)}. It applies to every institution that has adopted it.";
+        return curriculum.Reach switch
+        {
+            null => head,
+            { Reaches: false } => $"{head} No institution has adopted it yet.",
+            { } reach => $"{head} {CatalogueReachWords.ForCurriculum(reach)}"
+        };
+    }
 
     /// <summary>The edit page's h1: "Edit KGK-001 — Running a paediatric outreach clinic at a district hospital" (R2-B09, R3-B24).</summary>
     public static string EditTitle(CurriculumItemDto item) => $"Edit {Label(item)}";

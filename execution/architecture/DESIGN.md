@@ -78,6 +78,13 @@
 >   adoption and the move confirmed; Deactivate… and Remove… open dialogs), § Page-level patterns (an EPA titled by the
 >   EPA, a national EPA and item a record, Unavailable for an EPA, a curriculum and an item, the Administrator's Show,
 >   the EPA pager), the NavMenu table (Curriculum adoptions gone), and § app.css section order (four catalogue sections)).
+>   Flow 16, the College keeps the national catalogue (2026-11-05, T394: § Table system (the catalogue's 1024px stack,
+>   Curricula and the items at 1100px), § Button system (Save's question returns the focus to Save), § Alerts (one
+>   Unavailable markup, its last crumb the h1; the College's tree, a speciality and a sub-speciality), § Page-level
+>   patterns "Detail page" (the College's tree, the College's, a speciality's and a sub-speciality's records with one
+>   Status group, a scale's in-use line, its rung refusal and Put back, the reach lines and EV2's, Q19's read-out), the
+>   NavMenu table (the specialities one tree; the scales list read-only for the College admin), and § app.css section
+>   order (five Flow 16 sections)).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 
@@ -591,7 +598,7 @@ change to this table.
 |---|---|
 | Administrator | Home; Platform: Scheduled jobs, Audit log, SSO mappings, Data rights requests; Organisations: Institutions, Colleges; People: Users, Invitations; Catalogue: EPAs, Curricula, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision panels |
 | InstitutionalAdmin | Home; People: Invitations, Trainees, Assessors, Users; Curriculum: Curricula, EPAs, Activity types, Entrustment scales; Reviews: Decisions due, Committee reviews, Decision panels, Entrustment decisions; Access and audit: SSO mappings, Audit log |
-| CollegeAdmin | Home, Specialities, EPAs, Curricula, Activity types |
+| CollegeAdmin | Home, Specialities, EPAs, Curricula, Activity types, Entrustment scales |
 | SpecialityAdmin | Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels, Entrustment decisions |
 | SubSpecialityAdmin | Home, Programme trainees, Waiting for assessors, Decisions due, Committee reviews, Decision panels, Entrustment decisions |
 | CommitteeMember | Home, Programme trainees, Committee reviews, Decision panels |
@@ -667,14 +674,14 @@ there, and its trail is Home › the page (§ Page-level patterns).
 | A decision panel | Administrator, Institutional admin, Speciality and Sub-speciality admin: Decision panels. Not the Coordinator: the panel's page does not admit him, and an owner is named only for a role the page admits, so he reads the panels on the list, which lights itself (T358, D4) |
 | An MSF campaign, `/msf/reports/{id}`, `/msf/coverage` | Coordinator: MSF campaigns (T331) |
 | A data-rights request | Coordinator, Administrator: Data rights requests. Its crumb is the request's id once loaded (R2-Rules § 3). R2-Rules also names the requester, under My data rights: that row was dropped, since the page admits only Administrator and Coordinator, so the owner table may not name the requester's role (the review of the t335 branch) |
-| A College's specialities and sub-specialities, and their edit pages | College admin: Specialities · Administrator: Colleges (T331) |
+| A College's specialities and sub-specialities, and their edit pages | College admin: Specialities · Administrator: Colleges (T331). Since T394 (flow 16, Q1) the specialities are one tree, a section each, and a speciality's old Sub-specialities address sends to its section; both light the same owner |
 | A College | Administrator: Colleges |
 | An institution, New institution (`/admin/institutions/new`) | Administrator: Institutions. Creating one is the Administrator's alone (`InstitutionCreate`, T376, S12). Her own institution's record has no owner: its trail is Home › ‹name› |
 | An EPA, an activity type, a curriculum's items | Administrator, College admin, Institutional admin: EPAs, Activity types, Curricula |
 | A curriculum | Administrator, College admin: Curricula |
 | `/admin/curriculum-progress` | Administrator: Curricula (a link on Curricula, now that Home's Maintenance card is dropped) |
 | `/admin/adoptions` | Administrator, Institutional admin: Curricula. No menu item since T392 (flow 15, Q1): adoption is on Curricula, and the address sends there |
-| An entrustment scale | Administrator: Entrustment scales |
+| An entrustment scale | Administrator: Entrustment scales. The list admits the College admin and the Institutional admin read-only (T394, flow 16, D57); a scale's own page is the Administrator's |
 | Invite a person (`/admin/invitations/new`) | Administrator, Institutional admin: Invitations; its trail Home › Invitations › Invite a person (T373, flow 11, Q1) |
 | A user | Administrator, Institutional admin: Users. Its Users crumb returns to the filtered Users page it was opened from (`?back=`, read only through `PeopleLinks.SafeUsersReturn`, an allow-listed return: the Users path with Users' own parameters, rebuilt; anything else is `/admin/users`; T376, flow 12, S6; `PageHeader.OwnerHref`) |
 | A trainee's profile | Institutional admin: Trainees |
@@ -809,6 +816,14 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
   close after a confirm leaves the focus to the caller, which puts it on its result. The field's first focus
   (`InitialFocusId`, below) waits for the dialog's render after it opens, so a field the caller has just drawn is there
   (R5).
+- **Save's question gives the focus back to Save** (2026-11-05, T394, flow 16, D56, N20; fix pass S2). On a College, a
+  speciality, a sub-speciality and an EPA stored active, Deactivate… opens the deactivation's dialog, and so does Save with
+  Active unticked; on a curriculum version stored open, Hold back… and Save with Open for adoption unticked open one
+  question naming who has adopted it (Q4, T6). Save then carries `aria-haspopup="dialog"`. Cancel and Escape return the
+  focus to the control that asked: Save after Save, the trigger after the trigger. Each page passes it to
+  `ConfirmDialog.ShowAsync(returnFocusId)` from the handler that opens the dialog, since `ReturnFocusId` is still the last
+  render's at that moment (`ActionFocusTests.SavesQuestion_ReturnsTheFocusToSave`). No count is read in a deactivation's
+  dialog (Q15); no Reactivate button exists (ticking the box and saving reactivates).
 - **A dialog with a field** (2026-10-14, T366, flow 09, M5). In the action mode a dialog may carry a field: the field,
   not the safe button, takes the first focus, and a refusal of the action shows inside the dialog, under the field, with
   what was typed kept; the dialog closes only on Cancel or success (the register's Revoke). `ConfirmDialog` takes
@@ -1010,8 +1025,16 @@ fits" instead) and its evidence snapshot headings (frozen at Start) still print 
 
 A grid whose every row is always a set of inputs, such as a scale's levels on `EntrustmentScaleEdit`, is a different
 pattern and keeps its controls in the cells. Each of them still needs an accessible name; a column header does not
-give one. Name each by its column and its row, in the words the page uses: `aria-label="Label, level 3"`, and a row's
-buttons `aria-label="Move level 3 up"` and `"Remove level 3"` (T198). The table is
+give one. Name each by its column and its row, in the words the page uses (T198; T394, flow 16, R3-C02–C04): a rung's
+Label by its order, `aria-label="Label of the rung in order 3"`, and its Description and buttons by its label,
+`"Description of 3a"`, `"Move 3a up"`, `"Remove 3a"`, or by its order while the label is empty (`"Move the rung in order
+2 up"`). Its order is the row's header (`th scope="row"`, S5), each descriptor a textarea (S4), and it is a `DataTable`
+with `StackWide`, so it stacks from 900px down with the catalogue's other lists (S6). **On a scale anything uses** (T395,
+Q16: the delete's seven uses, `EntrustmentScaleDto.InUse`) no rung moves or goes: the grid has no Up, Down or Remove
+and no actions column, and "Rungs can be reordered or removed only while nothing uses this scale." sits above Add level;
+adding a rung at the top and editing a label stay. A removed rung is kept until a save goes through, so a refusal that
+an item needs it (Q6) offers "Put rung “…” back", which re-inserts it in its place with its id and focuses its Label
+(S14); Q16's refusal reads the page again and offers nothing back. The table is
 `clinic-table clinic-table--compact clinic-table--inputs`: the inputs' own padding spaces the row, and the row's text and
 buttons centre on its inputs. Its rows take no hover tint, for the reason `.is-editing` rows take none. Its ordinal is
 `.col-fit`, as narrow as its content. Its buttons are `.col-actions`, whose header is a `.visually-hidden` "Actions": the
@@ -1107,6 +1130,12 @@ focusable region, the one exception to "nothing scrolls sideways" at 390px (T369
 queue, Your requests and Corrections recorded). The data rights queue stacks from 1100px, not 900px (Q23): beside the
 sidebar its six columns, seven for the Administrator, have no room from 901 to 1100px, so the stack-wide rules are
 repeated for `.data-rights-requests` under a 1100px query, its row buttons 44px.
+**The catalogue's tables stack from 1024px, Curricula and the items from 1100px** (2026-11-05, T394, flow 16, round 3 S1,
+check decisions 1 and 2): the EPA list, Colleges and each section of the College's tree are stack-wide tables stacked by
+one 1024px query in flow 16's shared part, since their columns overflowed between 901 and about 975px. A curriculum's items
+(six compact columns, 691 to 744px wide) and Curricula (756px for the Administrator in a 717px container at 1025px) stack by
+a 1100px query, as the data-rights queue does. A stacked row never scrolls, and its row actions are 44px. The build's
+sweep (900 to 1100px in 25px steps, each table's `scrollWidth` against its container's `clientWidth`) set the edges.
 The three data-rights tables (T387, M5, M6, F10): each a `DataTable` with `StackWide` and the explicit roles, its row
 header a `th scope="row" role="rowheader"` drawn in the cell's weight (`.data-rights-table tbody th[scope="row"]`), with
 no rule under it once stacked (review P7): Your requests' Submitted, the queue's Requester (`.person-cell`: the live name
@@ -1936,6 +1965,22 @@ T019 introduces a small builder-specific extension to the shared system:
   added to it. Its own items stay for the registrars still on it.", with the same Go to Items of …, its trail through the
   items list (build review P3). An add the command refuses because the version was superseded meanwhile says
   `CurriculumVersionSupersededException`'s sentence at the form's top, focused (C2).
+  A College's tree, a speciality and a sub-speciality (2026-11-05, T394, flow 16, Q7, N2; `CollegeTreeWords`): "College
+  unavailable", "This College does not exist, or you cannot open it."; "Speciality unavailable", "This speciality does not
+  exist, or you cannot open it."; "Sub-speciality unavailable", "This sub-speciality does not exist, or you cannot open
+  it."; each with Go to Specialities for the College admin and Go to Colleges for the Administrator. The tree and Create
+  speciality read `GetCollegeTreeQuery`, null for an unknown College and another College's alike; a speciality's record
+  is Speciality unavailable when the tree does not hold it; Create sub-speciality on an unknown or another College's
+  speciality is Speciality unavailable, as is the old Sub-specialities address, which otherwise sends to the tree's
+  section (`CatalogueLinks.CollegeTreeAt`); a sub-speciality its speciality does not hold is Sub-speciality unavailable.
+  Never an empty list offering Create. A read that throws is the load error ("Could not load the specialities. …",
+  "Could not load this speciality. …", titled by the kind's word while read or failed).
+  **Every Unavailable is drawn one way, and its last crumb is its h1** (T394, fix pass S3, S4): a `.detail-card
+  .detail-card--empty` holding `div.state-panel-copy` with the sentence, then `div.form-actions` with the one primary link,
+  no icon (flow 15's markup, now also the tree's, a speciality's, a sub-speciality's and the old sub-specialities
+  address's). The trail ends at the h1 ("Home › Colleges › College unavailable"), not at the parent as the boards (R2-A18a,
+  B13, C17, D15) drew it: `PageHeader`'s current crumb is the h1, as flow 14's "Request unavailable" is, so a screen reader
+  never hears a page named "Colleges" under an h1 "College unavailable".
 - **A data rights request's standing notices and results** (2026-10-30, T387, flow 14, K01, D09, D15, D20): the erased
   requester's "This person's personal data was erased on ‹day›…" line is an `Alert Kind="info" Role=""` at the page's
   top, standing content and no live region; the own-request line ("You cannot decide your own request: …") and the
@@ -3734,6 +3779,64 @@ reminders line always, Q17). On the caller's own account the page offers no role
 own institutional sign-in is flow 02's My account. Not found, the h1 is "User" with "User unavailable" and "Go to Users"
 (the header's "Back to users" is gone). No pronoun is stored, so the page says "they".
 
+**A curriculum's page has no details-grid** (T394, flow 16, Q4; `CurriculumEdit.razor`): one column (`.user-page.curriculum-page`)
+of h2 sections, titled by the version ("Paediatric EPA Curriculum (11.1)"), its subtitle "‹College› · ‹speciality› /
+‹sub-speciality› · effective ‹day›", its header's one link "Items (‹n›)" counting the College's national items, and no Back
+links. One form card holds Details (the required line, the sub-speciality, then Name and Version, then Effective from and to;
+the sub-speciality a `dl.detail-list.curriculum-read-out` with its help once the version holds an item or has been adopted,
+Q19) and Open for adoption (the lone box, its help, then the version's reach as a standing `p.muted`, Q2), then Cancel,
+Hold back… (on a version stored open) and Save. A new version is its own card: its intro by the national items, New
+version, Effective from and to, Clone. Opening asks nothing; Hold back… and a Save with the box unticked on a version
+stored open ask one question naming who has adopted it. A create arrives by `?created`, a clone by `?cloned=‹from›`, each
+writing its result once, focused (Q5); a save's result says what the box now means (T7). Unknown or out of scope:
+"Curriculum unavailable" and "Go to Curricula".
+
+**The College's tree** (2026-11-05, T394, flow 16, Q1; `SpecialitiesList.razor`, `.people-page.college-tree-page`): one page
+for the College's specialities and their sub-specialities, Create speciality its header action (drawn only once the tree
+is read). Each speciality is a `section.user-section`, its h2 the speciality's name with Edit and Create sub-speciality
+beside it in `.form-section-head` (named "Edit the speciality ‹name›", "Create sub-speciality of ‹name›"), its line
+(description, or Inactive with what that means) a `p.muted`, then its sub-specialities as a `StackWide` table captioned
+by the speciality: Sub-speciality (the row header; a name its speciality shares reads "‹name› (‹speciality›)", N4),
+Description only when a row has one, Default scale, Status, and Edit. A speciality with none says so in a `p.muted`. A
+save or create returns here by token, writing its result once in the page's one region, focused (S13). The old
+Sub-specialities address sends to the section (`CatalogueLinks.CollegeTreeAt`).
+
+**A College's, a speciality's and a sub-speciality's record** (T394, flow 16, D56, R3-B07, A09–A16): each is a
+`.user-page` form (`.college-page` one column of full-width fields, 48rem; `.speciality-page`, `.sub-speciality-page`),
+the required line first, no Back link, then Cancel, Deactivate… (on a record stored active) and Save. **Status is one
+pattern everywhere** (fix pass S5): a `fieldset.form-group` whose legend is "Status", the lone box `Active` with its own
+label, and its help a `p.page-subtitle` with the id `FieldHelp.Id` gives, named by the box's `aria-describedby`. The box's
+accessible name is therefore "Active", never "Status Active"; the EPA's page (flow 15) has the same shape since the fix
+pass. The help says what an inactive record stops (a new invitation cannot name it), and on a record stored inactive how
+to reactivate it ("Tick Active and save to reactivate it.").
+
+**A scale's page while the scale is in use** (T394, flow 16, Q16, T395, Q18; `.scale-page`): Up, Down and Remove are not
+offered, and a `p.field-help.scale-in-use-line` under the levels says "Rungs can be reordered or removed only while nothing
+uses this scale." Adding a rung at the top and relabelling one stay allowed. A save refused for a removed rung is one
+alert in the page's result region, in Q18's order: the items that need it (Q6, three named then "and ‹n› more."), then
+an ended programme's record (T312), then a decision on it, then Q16. Q6's alert offers "Put rung “‹label›” back"
+(`.scale-put-back`, S14), which restores the rung where it was; the others offer nothing to put back, and Q16's reads the
+page again. The delete's refusal on the list (`.scales-refusal-links`) links the sub-specialities whose default the scale
+is (S6). The College admin and the Institutional admin read the list only (D57): no Create, no actions column.
+
+**The reach lines** (T394, flow 16, Q2, Q21's EV2, S16, T8; `CatalogueReachWords`): where the caller may change a national
+record, the page says how far a change reaches, by counts and institution names, never a registrar's name, every count
+with its singular and its none. A curriculum version's page carries it as a standing `p.muted` under Open for adoption
+("Adopted by 1 institution, Kgosi Kgari Teaching Hospital; 3 registrars in training on it.", then "Still used by …" for a
+superseder with registrars left, or "No institution has adopted this version yet."); the College's items notice bolds it
+with the Alert's own `<strong>` (R3-F05); a national item's subtitle ends with it. **EV2**: a national EPA's page carries
+its reach as an info `Alert Role=""` under the result region, standing content and no live region ("PAED-012 is on 1
+curriculum adopted by 1 institution, …; 3 registrars in training are measured against it. Its code, title and description
+are read at once wherever it is named."), and the same reach is the first paragraph of its pause dialog (R3-E07). None is
+shown on an institution's own EPA (P3), on a create, or to a reader. Hold back… names the adopters and says that holding a
+version back changes nothing for them.
+
+**Q19's read-out** (T394, flow 16; `.curriculum-read-out`): once a curriculum version holds an item or an institution has
+adopted it, its sub-speciality is a `dl.detail-list` read-out ("Paediatrics / Paediatrics") with its help, not a select.
+A save that races that change is refused in the page's result region by its cause ("Not saved. This version now holds
+items, so its sub-speciality can no longer change. The page has been read again.", or the adopters named), and the
+read-out is drawn again.
+
 **The committee review has no details-grid** (T361, flow 07): one column (`.review-page`, a flex column), the sitting bar
 under the header, then "Before the committee decides" (when it has something to say), the agenda, the decision (above
 the agenda once recorded), "Entrustment against Annexure A", "Multi-source feedback by EPA", the evidence snapshot, the
@@ -4331,6 +4434,10 @@ Dashboards are a composition, not a standalone page pattern.
   - **A header's actions stand on the heading's baseline** (`.header-container`'s `align-items: baseline`, every page):
     at `flex-start` they sat at the header's top, 16px above the heading, which kept the browser's own top margin (the
     heading has none in the header since the review of the t335 branch, § Typography).
+  - **From 1024px a header's actions stay beside the title** (T394, flow 16, Q20): the header does not wrap, the title
+    block takes the free width (`flex: 1 1 20rem; min-width: 0`) and the actions their own (`flex: none`), so a long
+    subtitle wraps under the h1 instead of pushing Create EPA, Create college or Create curriculum under it. Below 1024px
+    the header wraps as before.
   - **No switch.** The "You also act as … Switch view" line is gone: the sidebar's head offers the switch on every page
     (§ Acting role). A switch's one-time result still shows under Home's header (`ActingRoleSwitchAlert`, through
     `PageHeader`).
@@ -5116,7 +5223,7 @@ body, button/input/select/textarea (font: inherit), .auth-page-shell, .auth-page
 h1..h5, .page-subtitle
 
 /* ── Header + search ──────────────────────────────── */
-.header-container (actions on the heading's baseline), .header-container h1 (no margin), .page-title-with-icon, .page-title-icon(--warning|--danger), .search-container, .search-input, .search-grid, .search-field, .search-hint
+.header-container (actions on the heading's baseline; ≥1024px: nowrap, the title block flex 1 1 20rem, the actions flex none, T394 Q20), .header-container h1 (no margin), .page-title-with-icon, .page-title-icon(--warning|--danger), .search-container, .search-input, .search-grid, .search-field, .search-hint
 
 /* ── Tables ────────────────────────────────────────── */
 .table-container, .clinic-table, .clinic-table tr.is-editing, .clinic-table--compact, .col-wrap, .col-fit, .col-actions, .clinic-table--inputs (+ @container inputs-grid), .actions-cell
@@ -5235,9 +5342,14 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
 
 /* ── The catalogue ─────────────────────────────── */
 "Flow 15: curricula (T392)": .curricula-page .curricula-section (+ > *, .action-result .alert, .action-result:empty, > .curricula-section) (the tables StackWide; the phone's 44px controls are .people-page's)
-"Flow 15: a curriculum's items (T392)": .curriculum-items-page (+ .form-section-head, the table's .actions-cell wrapping; ≤1024px: the stack-wide items and the EPA list (.epas-page) stack, row actions 44px, the replay's A.7.10: six columns need 691px in a 593px column at 901px) (+ ≤640px: .form-section-head .btn 44px, decision 2), .curriculum-item-page (+ .detail-list .list-unstyled) (+ ≤640px: .user-page.curriculum-item-page .form-check, its input and label, 44px rows, N9)
-"Flow 15: EPAs (T392)": .epas-page th[scope="row"] (the EPA's label and owner mark wrap inside the cell), .epas-page .clinic-table th.col-wrap--wide (≥1025px: 45%, so a title is not squeezed beside empty auto columns), .epa-page .action-result:empty, .epa-page .epa-text (the record's text keeps its line breaks) (+ ≤640px, inside .user-page.epa-page: Status's Active .form-check row 44px, round-3-check decision 2)
+"Flow 15: a curriculum's items (T392)": .curriculum-items-page (+ .form-section-head, the table's .actions-cell wrapping) (+ ≤640px: .form-section-head .btn 44px, decision 2), .curriculum-item-page (+ .detail-list .list-unstyled) (the stack and the checkbox rows moved to flow 16's shared part, T394)
+"Flow 15: EPAs (T392)": .epas-page th[scope="row"] (the EPA's label and owner mark wrap inside the cell), .epas-page .clinic-table th.col-wrap--wide (≥1025px: 45%, so a title is not squeezed beside empty auto columns), .epa-page .action-result:empty, .epa-page .epa-text (the record's text keeps its line breaks) (the Active row's 44px moved to flow 16's shared part, T394)
 "Flow 15: the move, the rebuild and the scales (T392)": .rebuild-page .action-result:not(:empty) (its step under the bar), .scales-page .clinic-table td[data-label="Levels"] (tabular figures) (the profile's move line is the system's .submit-check inside .user-page; the rebuild is .user-page, the scales .people-page with StackWide, whose phone rules serve them)
+"Flow 16: the catalogue, shared (T394)": (≤1024px: the stack-wide tables of .epas-page, .colleges-page and .college-tree-page stack, row actions 44px; ≤1100px: .curriculum-items-page's and .curricula-page's (the build's sweep), round 3 S1, check decisions 1 and 2) (+ ≤640px: .user-page .form-check outside a .choice-group, its input and label, a 44px row with a 20px box, R1, in place of flow 15's per-page copies)
+"Flow 16: the College's tree and Home (T394)": .college-tree-page .form-section-head (a speciality's h2 and its two actions on one line, wrapping), .college-tree-page .user-section > p (the speciality's line wraps a 2,000-character description) .speciality-page .action-result:empty, .sub-speciality-page .action-result:empty (a record's empty result region takes no row) (the records sit beside .user-page, Home's card in the system's .dashboard-card-footer)
+"Flow 16: Colleges and the scales (T394)": .college-page .form-container (one column, 48rem), .scale-page (the levels grid's textareas; .scale-in-use-line, Q16; .scale-levels-actions; ≤900px: the stacked grid's inputs full width), the refusal's parts in its alert (.scale-page/.scales-page .action-result .alert p and ul; .scale-put-back, S14; .scales-refusal-links, S6, ≤640px 44px)
+"Flow 16: a curriculum's page and Curricula (T394)": .curriculum-page .action-result:empty, .curriculum-page .form-container (its sections a step apart) and its .form-actions, .curriculum-read-out (Q19's read-out) and its dd
+"Flow 16: EPAs, the items and an item's page (T394)": (no rule of its own: the College's items notice bolds its reach with the Alert's own `<strong>`, R3-F05; "Edit this version" is a header action, placed by § 0's Q20 rule; Q14's line and Go to EPAs are a `.detail-card--empty`; EV2's reach line is an info `Alert Role=""` under the result region; the stacks and the checkbox rows are the shared part's)
 ```
 
 The Progress section replaced the Trajectory chart section that held T123's chart (2026-10-04, T355): every flow 05

@@ -18,9 +18,14 @@ public sealed class CreateCollegeCommandValidator : AbstractValidator<CreateColl
 {
     public CreateCollegeCommandValidator()
     {
-        RuleFor(command => command.Name).NotEmpty().MaximumLength(200);
-        RuleFor(command => command.ShortCode).NotEmpty().MaximumLength(32);
-        RuleFor(command => command.Description).MaximumLength(1000);
+        // T394 (flow 16, T324, N1): each failure in its field's words, never a property's name.
+        RuleFor(command => command.Name)
+            .NotEmpty().WithMessage(CollegeHolders.NameRequired)
+            .MaximumLength(200).WithMessage(CollegeHolders.NameTooLong);
+        RuleFor(command => command.ShortCode)
+            .NotEmpty().WithMessage(CollegeHolders.ShortCodeRequired)
+            .MaximumLength(32).WithMessage(CollegeHolders.ShortCodeTooLong);
+        RuleFor(command => command.Description).MaximumLength(1000).WithMessage(CollegeHolders.DescriptionTooLong);
     }
 }
 
@@ -40,24 +45,26 @@ public sealed class CreateCollegeCommandHandler : IRequestHandler<CreateCollegeC
             throw new UnauthorizedAccessException("Only global administrators may create colleges.");
         }
 
+        // T394 (S10, T201): a taken name or short code is refused, naming its holder, before the College is staged, since
+        // the audit pipeline commits whatever a refused handler staged.
+        var name = request.Name.Trim();
+        var shortCode = request.ShortCode.Trim();
+        if (await CollegeHolders.RefusalAsync(_dbContext, null, name, shortCode, null, cancellationToken) is { } taken)
+        {
+            throw taken;
+        }
+
         var college = new College
         {
-            Name = request.Name.Trim(),
-            ShortCode = request.ShortCode.Trim(),
+            Name = name,
+            ShortCode = shortCode,
             Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(),
             CreatedOn = DateTime.UtcNow
         };
 
         _dbContext.Set<College>().Add(college);
 
-        try
-        {
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException exception)
-        {
-            throw new InvalidOperationException("A college with the same name or short code already exists.", exception);
-        }
+        await CollegeHolders.SaveAsync(_dbContext, null, name, shortCode, cancellationToken);
 
         return new CollegeDto(college.Id, college.Name, college.ShortCode, college.Description, college.IsActive, college.CreatedOn);
     }

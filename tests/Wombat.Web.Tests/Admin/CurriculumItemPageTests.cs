@@ -390,6 +390,93 @@ public sealed class CurriculumItemPageTests : CurriculumItemsTestBase
         FocusedIds().Should().BeEmpty();
     }
 
+    // ---- T394 (flow 16, lane D): the College's add and edit (R3-F10, F12, F14, F20d, R2-F19) ----
+
+    [Fact]
+    public void TheCollegesAddPage_SubtitleCarriesTheReach()
+    {
+        // Q2, R3-F14: the reach is the subtitle's last sentence.
+        var cut = RenderItem(new FakeSender
+        {
+            EpaList = FakeSender.MoreEpas,
+            Reach = new CurriculumReachDto(["Kgosi Kgari Teaching Hospital"], 3, [], 0)
+        });
+
+        Text(cut.Find(".page-subtitle")).Should().Be(
+            "On Paediatrics v11.1 (11.1). It applies to every institution that has adopted it. Adopted by 1 institution, Kgosi Kgari Teaching Hospital; 3 registrars in training on it.");
+    }
+
+    [Fact]
+    public void TheCollegesEditPage_OnAVersionNoInstitutionHasAdopted_SaysSo()
+    {
+        // R3-F12.
+        var cut = RenderItem(new FakeSender { Reach = CurriculumReachDto.None }, 11);
+
+        Text(cut.Find(".page-subtitle")).Should().Be(
+            "On Paediatrics v11.1 (11.1). It applies to every institution that has adopted it. No institution has adopted it yet.");
+    }
+
+    [Fact]
+    public void TheForm_OpensWithTheRequiredLine_ItsStarredControlsSaySo()
+    {
+        // M4 (DESIGN.md § Form system).
+        var cut = RenderItem(new FakeSender { EpaList = FakeSender.MoreEpas });
+
+        var line = cut.Find("form > p.field-help");
+        Text(line).Should().Be("* marks a field you must fill in.");
+        cut.Find("#item-epa").GetAttribute("aria-required").Should().Be("true");
+        cut.Find("#item-minimum").GetAttribute("aria-required").Should().Be("true");
+    }
+
+    [Fact]
+    public void TheCollegesAdd_OnADisciplineWithNoNationalEpa_CannotAddAnItem_WithGoToEpas()
+    {
+        // Q14, R2-F19.
+        var sender = new FakeSender([]) { HasNationalEpas = false, EpaList = [] };
+        var cut = RenderItem(sender);
+
+        Text(cut.Find("h1")).Should().Be("Cannot add an item");
+        Text(cut.Find(".page-subtitle")).Should().Be("On Paediatrics v11.1 (11.1).");
+        Crumbs(cut).Should().Equal("Home", "Curricula", "Items of Paediatrics v11.1 (11.1)", "Add item");
+        Text(cut.Find(".state-panel-copy")).Should().Be(
+            "General Paediatrics has no national EPA yet. Add one under EPAs, then come back to add it here.");
+        var go = cut.Find(".detail-card--empty a.btn-primary");
+        Text(go).Should().Be("Go to EPAs");
+        go.GetAttribute("href").Should().Be("/admin/epas");
+        cut.FindAll("form").Should().BeEmpty();
+        sender.EpaOptionQueries.Should().BeEmpty("nothing is offered, so the picker is not asked");
+    }
+
+    [Fact]
+    public void QTensRefusal_NamesTheHoldingInstitution_UnderEpa()
+    {
+        // Q10, R3-F14: the command's words, under EPA, as every EPA refusal.
+        const string Refusal =
+            "Kgosi Kgari Teaching Hospital has PAED-004 as its own item on this curriculum, so it cannot be added nationally until that institution removes it.";
+        var sender = new FakeSender
+        {
+            EpaList = FakeSender.MoreEpas,
+            AddFailure = new FieldRefusalException("EpaId", Refusal) { KeepsChoice = true }
+        };
+        var cut = RenderItem(sender);
+        cut.Find("#item-epa").Change("4");
+        cut.Find("#item-minimum").Change("3");
+
+        cut.Find("form").Submit();
+
+        cut.WaitForAssertion(() => Text(cut.Find("#item-epa-refusal")).Should().Be(Refusal));
+        FocusedIds().Should().Contain("item-epa");
+        // T394 fix pass (pages S1): the refusal is about PAED-004, so PAED-004 stays chosen and the picker is not asked
+        // again, which would have moved the choice off it.
+        cut.Find("#item-epa").GetAttribute("value").Should().Be("4");
+        sender.EpaOptionQueries.Should().ContainSingle("Q10's refusal keeps the picker as read");
+
+        cut.Find("#item-epa").Change("5");
+
+        cut.WaitForAssertion(() => cut.FindAll("#item-epa-refusal").Should().BeEmpty("the refusal goes once another EPA is chosen"));
+        cut.Find("#item-epa").HasAttribute("aria-invalid").Should().BeFalse();
+    }
+
     private static IReadOnlyList<string> Crumbs(IRenderedFragment cut)
         => cut.FindAll("nav[aria-label=Breadcrumb] li").Select(Text).ToList();
 }

@@ -85,6 +85,13 @@ record: F-1.19a (T291: no Create EPA before a discipline is adopted, 1.19), F-1.
 no Edit on a national EPA for an institution), F-6.25b (an institution's own EPA marked), F-1.22a (T326: the scales'
 reader subtitle) and F-A.7.10a (T323: an item edited on its own page, not in the table); and the flow's halves of T272,
 T301 (a held-back version refused, and a new version held back), T323, T325 and T329.
+T394 (flow 16, 2026-11-05) made a College's specialities one page, its tree, so
+`/admin/specialities/{SpecialityId:int}/sub-specialities` is a redirect to its section (1.13 types it), and admitted the
+College admin to the scales list (D57, 1.15): still 332 steps, 80 page files and 90 templates. Its build closes, for its
+replay to confirm, the gaps the steps record: F-1.12a and F-6.11a (T291 item 2: no Back to colleges), F-6.1a (T324: a
+required field in its label's words), F-6.8a (T264: Delete… asks first) and F-6.13a (T326: Q14's words for a
+discipline with no national EPA); T395 (no rung of a scale in use moves or goes); and the flow's halves of T272, T301
+(Open for adoption), T324, T329 and T393.
 
 ## Pages
 
@@ -94,7 +101,7 @@ institution, speciality or the record's own people; where that decides what a pe
 | Templates | Page | Who may open it | Steps |
 |---|---|---|---|
 | `/` | Home.razor | Any signed-in user | 1.1, 1.8, 1.10, 1.11, 1.21, 1.23, 2.1, 2.8, 2.9, 2.10, 2.18, 2.19, 2.23, 2.25, 2.27, 2.28, 2.31, 2.32, 2.33, 2.34, 2.35, 2.36, 2.37, 2.38, 2.39, 2.40, 2.44, 3.1, 3.5, 3.12, 3.13, 3.15, 3.16, 3.17, 3.24, 3.26, 3.28, 3.30, 3.31, 3.33, 3.34, 3.50, 3.51, 3.52, 3.53, 3.54, 3.54a, 3.54c, 4.1, 4.2, 4.3, 4.4, 4.5, 4.35, 4.39, 4.42, 5.7, 5.8, 5.15, 5.21, 5.23, 5.25, 5.28, 6.10, A.1.1, A.2.1, A.4.1, A.4.6, A.4.7, A.5.3, A.5.9, A.5.10, A.5.11, A.5.12, A.5.13, A.5.16, A.6.1, A.6.2, A.6.3, A.6.8, A.7.3, A.7.4, A.7.5, A.7.6, A.7.7, A.7.8, A.7.8a, A.7.9, A.7.10, A.7.11, A.7.14 |
-| `/access-denied` | AccessDenied.razor | Anyone, signed in or not | 1.15, 1.23, 2.19, 2.32, 4.5, 4.41, 5.22, 6.10, A.5.1, A.5.2 |
+| `/access-denied` | AccessDenied.razor | Anyone, signed in or not | 1.23, 2.19, 2.32, 4.5, 4.41, 5.22, 6.10, A.5.1, A.5.2 |
 | `/account/change-password` | Account/ChangePassword.razor | Any signed-in user | A.4.2, A.4.6, A.7.14 |
 | `/account/data-rights` | Profile/DataRights.razor | Any signed-in user | A.1.1, A.1.2, A.1.5, A.1.6, A.1.7, A.1.8a, A.1.9, A.1.11, A.2.3, A.2.5, A.7.3 |
 | `/account/forgot-password` | Account/ForgotPassword.razor | Anyone, signed in or not | A.4.4, A.7.12 |
@@ -114,19 +121,19 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/admin/assessors/edit` | Admin/Assessors/AssessorProfileEdit.razor | Administrator, InstitutionalAdmin; since T376 (S10) a redirect kept for old links: a profile id in the caller's scope opens its person's page at Assessor training, anything else reads "User unavailable" | 2.15 |
 | `/admin/audit` | Admin/Audit/AuditList.razor | Administrator, InstitutionalAdmin | 3.55, 3.56, 3.57, 4.38 |
 | `/admin/audit/{Id:guid}` | Admin/Audit/AuditDetail.razor | Administrator, InstitutionalAdmin | 3.56, 3.57, 4.38 |
-| `/admin/colleges` | Admin/Colleges/CollegesList.razor | Administrator | 1.2, 1.3, 6.1, 6.2, 6.3 |
+| `/admin/colleges` | Admin/Colleges/CollegesList.razor | Administrator | 1.2, 1.3, 6.1, 6.2, 6.3, 6.7 |
 | `/admin/colleges/new`, `/admin/colleges/{Id:int}` | Admin/Colleges/CollegeEdit.razor | Administrator | 1.3, 6.1, 6.2, 6.10 |
-| `/admin/colleges/{CollegeId:int}/specialities` | Admin/Institutions/SpecialitiesList.razor | Administrator, CollegeAdmin | 1.12, 6.3, 6.11 |
-| `/admin/colleges/{CollegeId:int}/specialities/new`, `/admin/colleges/{CollegeId:int}/specialities/{Id:int}` | Admin/Institutions/SpecialityEdit.razor | Administrator, CollegeAdmin | 6.3, 6.4, 6.11, 6.12 |
+| `/admin/colleges/{CollegeId:int}/specialities` | Admin/Institutions/SpecialitiesList.razor (the College's tree: each speciality a section, its sub-specialities its rows, since T394) | Administrator, CollegeAdmin | 1.12, 1.13, 1.14, 6.3, 6.4, 6.7, 6.11, 6.12 |
+| `/admin/colleges/{CollegeId:int}/specialities/new`, `/admin/colleges/{CollegeId:int}/specialities/{Id:int}` | Admin/Institutions/SpecialityEdit.razor | Administrator, CollegeAdmin | 6.3, 6.11 |
 | `/admin/curricula` | Admin/Curricula/CurriculaList.razor | Administrator, CollegeAdmin, InstitutionalAdmin | 1.17, 1.19, 1.20, 1.21, 6.13, 6.17, 6.22, 6.26, 6.29, 6.30, 6.31, 6.32, 6.33, 6.38, A.7.10 |
-| `/admin/curricula/new`, `/admin/curricula/{Id:int}` | Admin/Curricula/CurriculumEdit.razor | Administrator, CollegeAdmin | 6.13, 6.29, 6.31 |
+| `/admin/curricula/new`, `/admin/curricula/{Id:int}` | Admin/Curricula/CurriculumEdit.razor | Administrator, CollegeAdmin | 6.13, 6.29, 6.31, A.7.10 |
 | `/admin/curricula/{Id:int}/items` | Admin/Curricula/CurriculumItemsEdit.razor | Administrator, CollegeAdmin, InstitutionalAdmin | 1.18, 1.21, 6.13, 6.17, 6.22, 6.26, 6.29, 6.30, 6.33, A.7.10 |
 | `/admin/curricula/{Id:int}/items/new`, `/admin/curricula/{Id:int}/items/{ItemId:int}` | Admin/Curricula/CurriculumItemPage.razor | Administrator, CollegeAdmin, InstitutionalAdmin; an item the caller may not change opens as its record (P2) | 1.21, 6.26, 6.30, 6.33, A.7.10 |
 | `/admin/curriculum-progress` | Admin/CurriculumProgress/CurriculumProgressRebuild.razor | Administrator | 6.38 |
 | `/admin/data-rights` | Admin/DataRights/RequestsList.razor | Administrator, Coordinator; a Coordinator sees their own institution's requests | A.1.3, A.1.8, A.1.8a, A.1.12, A.7.5 |
 | `/admin/data-rights/{Id:guid}` | Admin/DataRights/RequestDetail.razor | Administrator, Coordinator; a Coordinator decides their own institution's requests, never their own (T387, F9) | A.1.3, A.1.8, A.1.8a, A.1.12, A.5.7 |
 | `/admin/entrustment-decisions` | Admin/EntrustmentDecisions/Index.razor | Administrator, InstitutionalAdmin, SpecialityAdmin, SubSpecialityAdmin | 4.35, 4.36, 4.37, 5.7, 6.22, A.7.7 |
-| `/admin/entrustment-scales` | Admin/EntrustmentScales/EntrustmentScalesList.razor | Administrator, InstitutionalAdmin | 1.4, 1.15, 1.22, 6.5, 6.6, 6.8, 6.9 |
+| `/admin/entrustment-scales` | Admin/EntrustmentScales/EntrustmentScalesList.razor | Administrator, CollegeAdmin, InstitutionalAdmin; only an Administrator is offered Create scale, Edit and Delete… (D57, T394) | 1.4, 1.15, 1.22, 6.5, 6.6, 6.8, 6.9 |
 | `/admin/entrustment-scales/new`, `/admin/entrustment-scales/{Id:int}` | Admin/EntrustmentScales/EntrustmentScaleEdit.razor | Administrator | 1.4, 6.5, 6.6, 6.10 |
 | `/admin/epas` | Admin/Epas/EpasList.razor | Administrator, CollegeAdmin, InstitutionalAdmin | 1.16, 1.19, 1.21, 6.14, 6.17, 6.22, 6.23, 6.25, 6.28, A.7.10 |
 | `/admin/epas/new`, `/admin/epas/{Id:int}` | Admin/Epas/EpaEdit.razor | Administrator, CollegeAdmin, InstitutionalAdmin | 6.14, 6.17, 6.23, 6.25, 6.28 |
@@ -138,7 +145,7 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/admin/jobs` | Admin/Jobs/ScheduledJobsList.razor | Administrator | 3.32, A.2.1, A.2.2, A.2.4, A.2.6, A.2.8, A.2.9, A.2.10, A.5.1, A.5.2, A.7.11 |
 | `/admin/jobs/runs` | Admin/Jobs/ScheduledJobRunsList.razor | Administrator | A.2.10, A.7.11 |
 | `/admin/specialities` | Admin/Institutions/MySpecialitiesRedirect.razor | Administrator, CollegeAdmin | 1.12, 6.11 |
-| `/admin/specialities/{SpecialityId:int}/sub-specialities` | Admin/Institutions/SubSpecialitiesList.razor | Administrator, CollegeAdmin | 1.13, 6.4, 6.12 |
+| `/admin/specialities/{SpecialityId:int}/sub-specialities` | Admin/Institutions/SubSpecialitiesList.razor (a redirect to the College's tree, at the speciality's section, since T394) | Administrator, CollegeAdmin | 1.13 |
 | `/admin/specialities/{SpecialityId:int}/sub-specialities/new`, `/admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}` | Admin/Institutions/SubSpecialityEdit.razor | Administrator, CollegeAdmin | 1.14, 6.4, 6.7, 6.12 |
 | `/admin/sso/group-mappings` | Admin/Sso/GroupMappings.razor | Administrator, InstitutionalAdmin | A.3.1 |
 | `/admin/trainees` | Admin/Trainees/PendingTraineesList.razor | Administrator, InstitutionalAdmin | 2.28, 2.29, 2.30, 5.10, 5.16, 5.17, 5.27, 6.34, 6.36, A.1.14, A.7.9 |
@@ -206,12 +213,12 @@ state, `states.md` is where it belongs.
 | An invitation's Delivery reading "Sent", or "check the address" after a second failure | The replay logs mail (`Email__SmtpHost` unset), so nothing reports a delivery or a refusal. Rows read "Being sent", then "Not delivered" with its note row. | `states.md`, with an SMTP sink |
 | The Administrator adopting for an institution under Curricula's "An institution's curricula" (Institution and Show, then Adopt… for it; T392, R3-A10, A11) | The story's InstitutionalAdmin adopts for her own institution (1.20, 6.32). | `states.md` |
 | Discard draft in the activity-type builder | The story publishes KGK's draft (1.30) and keeps the College's unpublished (6.14a), discarding neither. | `states.md` |
-| Deactivating a College, speciality or sub-speciality | Nothing in Application or Infrastructure reads their `IsActive`, no decision says what it should stop, and the button does not ask first (T264). | A decision first |
+| Deactivating a College, speciality or sub-speciality | Two things read their Active flag (D56): a new invitation cannot name an inactive one, and an institution can give no one a role for it. Nothing else does: its EPAs, curricula and registrars carry on. No step deactivates one, since each would change who can be invited, and given a role, mid-story; Deactivate… asks first (T394, D56, T264). | `states.md` (scratch, post-appendix) |
 | Removing a curriculum item (its ConfirmDialog, T222) | Every item measures registrars still in training. | `states.md`, on a scratch curriculum |
 | An InstitutionalAdmin deactivating and reactivating a local EPA | The story pauses a national EPA (6.17, 6.23); the local variant was browser-checked in T196. | `states.md` |
 | Rebuilding one trainee's progress | `RebuildCurriculumProgressCommand` takes a trainee, but no page offers it; 6.38 rebuilds everyone. | Not built |
-| Scale edits that refuse or warn: removing a rung a pinned curriculum item needs, and a rename that unbinds a form bound by name (T253) | Only the unused CNSA scale is edited (6.5, 6.6). | `states.md` |
-| The College adding nationally an EPA that an institution already holds as its own item | Undecided (T242, queued). The story avoids it: KGK's item names KGK-001, and PAED-016 goes onto 11.2 only. | T242 |
+| Scale edits that refuse or warn: removing a rung a pinned curriculum item needs (Q6, Q18), moving or removing a rung on a scale in use (Q16, T395), and a rename that unbinds a form bound by name (T253) | Only the CNSA scale is edited, while nothing uses it (6.5, 6.6). On a scale in use the page offers no Up, Down or Remove (1.4), so Q6's and Q16's refusals reach it only from a page read before the scale came into use; a handler test holds each (T394). | `states.md` |
+| The College adding nationally an EPA that an institution already holds as its own item | Decided (T394, Q10, T242): the refusal names the institution that holds it. The story avoids it: KGK's item names KGK-001, and PAED-016 goes onto 11.2 only. | `states.md` (a stale page) |
 | A re-submission after a return, on a type that credits | No seeded type both credits and returns. 3.14–3.17 play the return on a reflective exercise, where lateness is never recorded. | A seed that credits and returns |
 | A seeded procedure-log instrument | The CPSA catalogue has none; the generic `procedure_log` belongs to the Demo speciality. KGK's teaching log stands in (3.18, 3.19). | The College |
 | The Random Case Analysis, Chart-Stimulated Recall and Clinical Audit instruments, filed | Offered to a registrar (2.42) but never filed. | A later replay |
@@ -286,10 +293,10 @@ and Assessor) appears under each role for the jobs done in it.
 | See the platform at a glance: database health, how many users, the maintenance links | 1.1, 1.11, A.6.2 | `/account/login`, `/` |
 | Confirm a College's record | 1.2, 1.3 | `/admin/colleges`, `/admin/colleges/{Id:int}` |
 | Add a second national College, and correct a College's description | 6.1, 6.2 | `/admin/colleges`, `/admin/colleges/new`, `/admin/colleges/{Id:int}` |
-| Give a College with no CollegeAdmin its first speciality and sub-speciality | 6.3, 6.4 | `/admin/colleges/{CollegeId:int}/specialities`, `/admin/colleges/{CollegeId:int}/specialities/new`, `/admin/colleges/{CollegeId:int}/specialities/{Id:int}`, `/admin/specialities/{SpecialityId:int}/sub-specialities`, `/admin/specialities/{SpecialityId:int}/sub-specialities/new`, `/admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}` |
+| Give a College with no CollegeAdmin its first speciality and sub-speciality | 6.3, 6.4 | `/admin/colleges`, `/admin/colleges/{CollegeId:int}/specialities`, `/admin/colleges/{CollegeId:int}/specialities/new`, `/admin/specialities/{SpecialityId:int}/sub-specialities/new` |
 | Read an entrustment ladder's rungs in order | 1.4 | `/admin/entrustment-scales`, `/admin/entrustment-scales/{Id:int}` |
 | Create an entrustment scale, and add a level to it | 6.5, 6.6 | `/admin/entrustment-scales`, `/admin/entrustment-scales/new`, `/admin/entrustment-scales/{Id:int}` |
-| Make a scale a sub-speciality's default | 6.7 | `/admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}` |
+| Make a scale a sub-speciality's default | 6.7 | `/admin/colleges`, `/admin/colleges/{CollegeId:int}/specialities`, `/admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}` |
 | Delete a scale, and be told what still uses it | 6.8 | `/admin/entrustment-scales` |
 | Create an institution | 1.6 | `/admin/institutions`, `/admin/institutions/new`, `/admin/institutions/{Id:int}` |
 | Keep an institution's record up to date | A.6.1 | `/admin/institutions`, `/admin/institutions/{Id:int}` |
@@ -310,12 +317,13 @@ and Assessor) appears under each role for the jobs done in it.
 | Job | Steps | Pages |
 |---|---|---|
 | Accept my invitation to run the College's catalogue | 1.8 | `/account/register/start`, `/account/register`, `/` |
-| Check my College's specialities, sub-specialities and their default ladder | 1.12, 1.13, 1.14 | `/admin/specialities`, `/admin/colleges/{CollegeId:int}/specialities`, `/admin/specialities/{SpecialityId:int}/sub-specialities`, `/admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}` |
+| Check my College's specialities, sub-specialities and their default ladder, on its tree | 1.12, 1.13, 1.14 | `/admin/specialities`, `/admin/colleges/{CollegeId:int}/specialities`, `/admin/specialities/{SpecialityId:int}/sub-specialities` (typed: it lands on the tree), `/admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}` |
 | Check the national EPAs | 1.16 | `/admin/epas` |
 | Check a curriculum version and its items' targets | 1.17, 1.18 | `/admin/curricula`, `/admin/curricula/{Id:int}/items` |
-| Find which pages are the Administrator's: the scales and the College's own record | 1.15, 6.10 | `/admin/entrustment-scales`, `/admin/colleges/{Id:int}`, `/admin/entrustment-scales/new`, `/access-denied` |
+| Read the entrustment ladders | 1.15 | `/admin/entrustment-scales` |
+| Find which pages are the Administrator's: a scale's own page and the College's own record | 6.10 | `/admin/colleges/{Id:int}`, `/admin/entrustment-scales/new`, `/access-denied` |
 | Correct a speciality's description | 6.11 | `/admin/specialities`, `/admin/colleges/{CollegeId:int}/specialities`, `/admin/colleges/{CollegeId:int}/specialities/{Id:int}` |
-| Add a sub-speciality, with its default ladder | 6.12 | `/admin/colleges/{CollegeId:int}/specialities/{Id:int}`, `/admin/specialities/{SpecialityId:int}/sub-specialities`, `/admin/specialities/{SpecialityId:int}/sub-specialities/new`, `/admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}` |
+| Add a sub-speciality, with its default ladder chosen at create | 6.12 | `/admin/colleges/{CollegeId:int}/specialities`, `/admin/specialities/{SpecialityId:int}/sub-specialities/new`, `/admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}` |
 | Start a curriculum for a new sub-speciality and hold it back from adoption | 6.13 | `/admin/curricula`, `/admin/curricula/new`, `/admin/curricula/{Id:int}`, `/admin/curricula/{Id:int}/items` |
 | Correct an EPA's wording | 6.14 | `/admin/epas`, `/admin/epas/{Id:int}` |
 | Draft an activity type for a College discipline, and read the College's instruments as their author | 6.14a | `/admin/activity-types`, `/admin/activity-types/new`, `/admin/activity-types/{ActivityTypeId:int}` |

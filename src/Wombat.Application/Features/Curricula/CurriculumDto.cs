@@ -44,6 +44,37 @@ public sealed record CurriculumDto(
     /// Filled by <c>GetCurriculumByIdQuery</c> (lane A); left at false, a projection that forgot it offers no add.
     /// </summary>
     public bool MayAddItem { get; init; }
+
+    /// <summary>
+    /// How far a change to this version reaches (T394, flow 16, Q2, S16, T8): the institutions training against it and
+    /// their registrars in training (<see cref="CatalogueReach" />). Filled by <c>GetCurriculumByIdQuery</c> for a caller who
+    /// may change the curriculum (<see cref="CanEditCurriculum" />: the College and the Administrator), and null for anyone
+    /// else (it names institutions) and from every command's returned curriculum (build-contracts § 0).
+    /// </summary>
+    public CurriculumReachDto? Reach { get; init; }
+
+    /// <summary>
+    /// The College's items on this version, never an institution's own (T394, S9): the clone intro's "copies this version's
+    /// 15 national items" and the curriculum page's "Items (15)". The items page's heading counts the rows its caller reads
+    /// instead. Filled by <c>GetCurriculumByIdQuery</c>; 0 elsewhere.
+    /// </summary>
+    public int NationalItemCount { get; init; }
+
+    /// <summary>
+    /// Whether the version's sub-speciality has any national EPA, active or not (T394, S8, Q14, T326): false, the items page
+    /// and an item's page say "Neonatology has no national EPA yet. …" in place of the add. Filled by
+    /// <c>GetCurriculumByIdQuery</c>; false elsewhere.
+    /// </summary>
+    public bool HasNationalEpas { get; init; }
+
+    /// <summary>
+    /// Whether the version's sub-speciality can no longer change (T394, Q19): true once it holds any item (national or an
+    /// institution's own) or has any adoption row, active or superseded, so an adoption's <c>SubSpecialityId</c> always
+    /// equals the curriculum's. <c>UpdateCurriculumCommand</c> refuses a changed sub-speciality then; the page shows it as a
+    /// read-out. Filled by <c>GetCurriculumByIdQuery</c> for a caller who may change the version (<c>CanEditCurriculum</c>), as
+    /// <see cref="Reach" /> is; false elsewhere.
+    /// </summary>
+    public bool SubSpecialityFixed { get; init; }
 }
 
 /// <summary>

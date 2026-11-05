@@ -119,6 +119,22 @@ public sealed class CurriculaListScopeTests : TestContext
         cells.Should().ContainInOrder("CMSA", "Paediatrics / General Paediatrics", "2026-01-01");
     }
 
+    // T394 (flow 16, R3-F01, T326): the College admin's Curricula in the College's words, naming it; no section heading and no
+    // College column; Create curriculum beside the title.
+    [Fact]
+    public void TheCollege_ReadsItsVersions_InItsOwnWords()
+    {
+        SignIn(WombatRoles.CollegeAdmin, CreatePagePolicy);
+        var cut = RenderList([Curriculum(5, canEditCurriculum: true)]);
+
+        cut.Find(".header-container .page-subtitle").TextContent.Trim().Should().Be(
+            "College of Paediatricians of South Africa's curriculum versions. A new version starts held back; an institution can adopt one once you open it.");
+        cut.Find("caption").TextContent.Trim().Should().Be("College of Paediatricians of South Africa's curriculum versions");
+        cut.FindAll("main h2, .curricula-page h2").Should().BeEmpty();
+        cut.FindAll("thead th").Select(th => th.TextContent.Trim()).Should().Equal("Curriculum", "Discipline", "Effective", "Items", "Status", "Actions");
+        cut.Find(".header-container .actions-cell a.btn-primary").TextContent.Trim().Should().Be("Create curriculum");
+    }
+
     private void SignIn(string role, params string[] policies)
     {
         var auth = this.AddTestAuthorization();
@@ -162,6 +178,11 @@ public sealed class CurriculaListScopeTests : TestContext
             => request switch
             {
                 GetCurriculaListQuery => Task.FromResult((TResponse)(object)curricula),
+                // T394 (F01): the College admin's College, for her subtitle and caption.
+                Wombat.Application.Features.Colleges.GetCollegesListQuery => Task.FromResult((TResponse)(object)new[]
+                {
+                    new Wombat.Application.Features.Colleges.CollegeDto(3, "College of Paediatricians of South Africa", "CPSA", null, true, DateTime.UnixEpoch)
+                }),
                 Wombat.Application.Features.Institutions.Queries.GetMyInstitutionName.GetMyInstitutionNameQuery
                     => Task.FromResult((TResponse)(object)"Kgosi Kgari Teaching Hospital"),
                 Wombat.Application.Features.Adoptions.GetAdoptableCurriculaQuery
