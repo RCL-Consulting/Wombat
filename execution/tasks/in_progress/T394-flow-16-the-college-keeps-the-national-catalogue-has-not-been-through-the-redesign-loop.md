@@ -229,3 +229,9 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   faults act 1 found (fixed on master `a2878763`, noted in their Gaps); 6.14a T291/T334 still; outcome SQL 14/14; T324,
   T264, T291 item 2, T326 (both halves), T301's clone no longer occur; every one-shot token checked. The app was
   restarted after 6.14a by process id (the stop script missed it again). Dump `scenario-t394-post-act6`. Act A running.
+- **2026-11-05, act A replayed** (one Opus agent, `4a09396f`): 76 steps, 70 clean; known Gaps only (A.2.10 T324/T327,
+  A.4.2 T286, A.6.1 T326, A.6.2 T327, A.7.4 T385, A.7.9 T280); A.7.10, flow 16's step at 390-1280, clean; outcome SQL
+  as expected; 50 stubs over three logs. A.5.15 on scratch `wombat_scenario_t394_s515` (:5181, stopped; the stop
+  script missed it, T391). Dump `scenario-t394-post-actA`. **Acts done: no flow 16 regression left** but the two
+  1280px columns, fixed by `a2878763`, now published to :5180 (two app instances were found on :5180's bin after act 6's
+  restart; both stopped by id first).
