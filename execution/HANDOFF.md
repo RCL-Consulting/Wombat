@@ -6,7 +6,8 @@ Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest
 
 The operator said "Drop the scratch db's and start the next flow", then "yes" at each decision (§ 6 Q1–Q14; round 1's
 picks and Q15–Q17; round 2's Q18–Q21; round 3's decisions 1–5; the build's P1–P3; F1 and F2), "done" after each round
-(round 3 "required a new canvas"), and "Fix T397 now".
+(round 3 "required a new canvas"), "Fix T397 now", "proceed" (step 7), then "close the replay app and finalise
+the session".
 - **Design:** canvases "Wombat 16" https://claude.ai/artifact/AqaH447KL91WCTbjQFJnWf (rounds 1–2) and "Wombat 16 · Round 3"
   https://claude.ai/artifact/W1R56z3QGxfK2GPMEcp3c9. D56 (deactivation asks first) and D57 (the College reads the scales).
 - **Built and squashed onto master `de4cc718`** (§ 0, lanes A–D, the sweep, lane W, two Sonnet reviews, one fix pass,
@@ -22,7 +23,7 @@ picks and Q15–Q17; round 2's Q18–Q21; round 3's decisions 1–5; the build's
   items now stack to 1150px; DESIGN.md amended); captures re-taken, baseline missing 0.
 - **Next:** step 8 (re-sync the design system: read the live files first) and step 9 (lessons, BRIEF § 11); then close
   T394. Not pushed.
-- **Environment:** the replay app runs on :5180 (`wombat_scenario_t394`, the appendix's end, from `2c93b247`); lane branches `t394*` kept; this flow's scratch DBs dropped; dumps `recovery/scenario-t394-post-act{1..6,A}`.
+- **Environment:** the replay app stopped (2026-11-05); `wombat_scenario_t394` kept at the appendix's end; lane branches `t394*` kept; this flow's scratch DBs dropped; dumps `recovery/scenario-t394-post-act{1..6,A}`.
 
 ## Session 2026-11-02/03 (Opus): T392's replay, re-sync and lessons; T392 done
 
