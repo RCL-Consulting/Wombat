@@ -25,10 +25,12 @@ The operator said "what is next", then "Drop the scratch db's and start the next
 - **Round 3 drawn and saved** on a second canvas, "Wombat 16 · Round 3"
   https://claude.ai/artifact/W1R56z3QGxfK2GPMEcp3c9 (the operator: "it required a new canvas"); 230 boards, `ae5e007b`.
 - **Round 3 checked** (`e2977baa`: 55/59 done, 4 partly); the operator took decisions 1–5 (`c9609325`).
-- **Step 6 started:** one Opus planner writes `build-lanes.md` and `build-contracts.md` (master) and builds § 0 on
-  branch `t394` (worktree `.claude/worktrees/t394`). If its commits are absent, rerun it (flow 15's are the template).
-- **Next:** the operator's word on the planner's P1…, then the lanes (each an Opus agent in its own worktree off
-  `t394`), lane W, two Sonnet reviews, one fix pass, squash onto master. T395 to close with the build. Not pushed.
+- **Step 6:** plan `b0717eb2` (master), § 0 `9f25092c` on `t394` (suites 836/4347/1035/52/4533/520); P1–P3 approved
+  (`6ce6b690`). **The wave runs:** lanes A `t394-tree`, B `t394-admin`, C `t394-curriculum`, D `t394-items`, each an
+  Opus agent in `.claude/worktrees/<branch>` from `9f25092c`. A lane whose branch has no commits past `9f25092c` did not
+  finish: rerun it.
+- **Next:** merge the lanes into `t394`, lane W (runbook), the sweep (`sweep.md`), two Sonnet reviews, one fix pass,
+  squash onto master; close T395 with lane B. Not pushed.
 
 ## Session 2026-11-02/03 (Opus): T392's replay, re-sync and lessons; T392 done
 
