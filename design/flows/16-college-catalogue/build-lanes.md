@@ -7,8 +7,8 @@ and the Spec, Spec-2, Steps and three check boards), checked in `round-3-check.m
 round), with the operator's decisions of 2026-11-04 (T394's Notes: round 3's decisions 1–5). The lane plan is at the end
 of this file. The names two or more lanes share are in `build-contracts.md`, beside it; § 0 of it is already on `t394`.
 
-**PROPOSED, for the operator before the lanes run** (each with a recommendation; § "For the operator" at the end). Until
-they are answered, build as recommended.
+**Approved 2026-11-04** (the operator's "yes"): P1–P3 as recommended (§ "For the operator" at the end). Build them as
+decided, no longer PROPOSED.
 
 ## Read first (in your worktree)
 - `design/flows/16-college-catalogue.md`: the brief. The cast, the pages table (each route's file), § 5's known problems

@@ -150,3 +150,6 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   that read the clock (red on master since 2026-11-03) given a fixed clock. Suites 836/4347/1035/52/4533/520 green.
   Lanes A tree, B admin (Colleges, scales, Q18, T395's guard), C curriculum, D EPAs and items, W runbook; the sweep is
   the integrator's (`sweep.md`). P1–P3 put to the operator.
+- **2026-11-05, P1–P3 approved** ("yes"): Q20's ≥1024 half only; "in use" is the delete's seven uses (adding a rung and
+  editing a label stay allowed); no reach line for an institution's own EPA. The wave runs: lanes A–D, each an Opus
+  agent in `.claude/worktrees/t394-<lane>` cut from `t394` at `9f25092c`.
