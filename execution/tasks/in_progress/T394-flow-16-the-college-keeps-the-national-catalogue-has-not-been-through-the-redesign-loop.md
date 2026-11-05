@@ -175,3 +175,10 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   its list: one `EndedCurriculumListTests` assertion.
 - **2026-11-05, the lanes merged into `t394`** (`54c25bc8` A, `d4c75428` B, `1091aa85` C, `bb251ebd` D): only DESIGN.md's
   section-order lane lines conflicted (each lane filled its own; resolved by taking the filled line). Suites running.
+- **2026-11-05, suites on the merge and the sweep.** On `t394`: build 0 errors; 836/4402/1035/52/4670/524 green, after
+  fixing a flaky lane A test (`ed7635a4`: `NotContain("99")` met ConfirmDialog's `confirm-<Guid>` ids, 2 of 3 runs).
+  **The sweep** (`sweep.md`, `0e6ff53a`): `t394` on :5182 against `wombat_scenario_t394_sweep` (restored from
+  `scenario-t392-post-actA`); 8 pages and callers at 900–1100 px (items to 1150); first pass the Administrator's
+  Curricula 756/717 px at 1025 and 742 at 1050, so `.curricula-page` moved to the 1100px stack; second pass 0 fails;
+  decision 2 accepted (spare 0). Not measured: Colleges' heavy five (R3-B16). `scenario-replay.ps1 stop` again missed
+  the app (stopped by id after reading its command line). Lane W running (`t394-runbook`, cut at `ed7635a4`).

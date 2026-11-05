@@ -25,11 +25,12 @@ The operator said "what is next", then "Drop the scratch db's and start the next
 - **Round 3 drawn and saved** on a second canvas, "Wombat 16 · Round 3"
   https://claude.ai/artifact/W1R56z3QGxfK2GPMEcp3c9 (the operator: "it required a new canvas"); 230 boards, `ae5e007b`.
 - **Round 3 checked** (`e2977baa`: 55/59 done, 4 partly); the operator took decisions 1–5 (`c9609325`).
-- **Step 6:** plan `b0717eb2` (master), § 0 `9f25092c`; P1–P3 approved. Lanes A–D all done and **merged into `t394`**
-  (worktree `.claude/worktrees/t394`, head `bb251ebd`); the six suites are running there on the merge.
-- **Next:** suites green, then lane W (runbook Expects; the lanes' reports list each step), the browser sweep
-  (`sweep.md`, the integrator's), two Sonnet reviews, one fix pass, squash onto master; close T395 (lane B's
-  `EntrustmentScaleReorderGuardTests`). Not pushed.
+- **Step 6:** plan `b0717eb2`, § 0 `9f25092c`; lanes A–D merged into `t394` (worktree `.claude/worktrees/t394`);
+  suites green on the merge (836/4402/1035/52/4670/524, a flaky test fixed `ed7635a4`); the sweep passed after moving
+  Curricula to the 1100px stack (`0e6ff53a`, `sweep.md`). **Lane W runs** on `t394-runbook` (cut at `ed7635a4`);
+  if it has no commits, rerun it. Scratch DB `wombat_scenario_t394_sweep` kept (drop at the end).
+- **Next:** merge lane W, two Sonnet reviews (code; pages and runbook), one fix pass, squash onto master (DESIGN.md's
+  banner lists flow 16); close T395. Then step 7, the replay. Not pushed.
 
 ## Session 2026-11-02/03 (Opus): T392's replay, re-sync and lessons; T392 done
 
