@@ -94,14 +94,12 @@ Actual (2026-11-05, T394 replay, wombat_scenario_t394): As expected: Colleges fr
   College of Paediatricians of South Africa" and "Specialities of College of Paediatricians of South Africa" (and Demo
   College's). No College named "College of Paediatricians" alone. Create college beside the h1 at 1024 and 1280 (no
   overlap, no clip). Sweep 900-1100 every 25 px: the table's smallest spare 0 px (never wider than its container), the
-  page never scrolls sideways. In the 1280 capture (re-taken on `7d4c4490`) the Name column (272 px) wraps "College of
-  Paediatricians of South / Africa" over two lines, the Description takes four, Created (106 px) reads each date on one
-  line, and the Short code column (78 px) breaks "DEMO-C" after its hyphen ("DEMO-" / "C") under a two-line header.
-Gap: new (low): at 1280 the Short code column (78 px) breaks "DEMO-C" over two lines ("DEMO-" / "C") and its header
-  over two; it came with `7d4c4490`, which narrowed the column. (The Created-date break is fixed by `7d4c4490`: 106 px,
-  each date on one line. The name squeeze the replay found is fixed by a2878763: the CPSA's name takes two lines in a
-  272 px column; the table's scrollWidth equals its clientWidth at 1280, 1100, 1025 and 1000: 972, 792, 717 and 692
-  px.)
+  page never scrolls sideways. In the 1280 capture (re-taken on `f7cb1903`) the Name column (272 px) wraps "College of
+  Paediatricians of South / Africa" over two lines, the Description takes four in 262 px, and Short code (106 px),
+  Status (75 px) and Created (106 px) each read on one line under a one-line header: "DEMO-C" whole.
+Gap: none. (The 1280 squeezes the replay found are fixed by a2878763, 7d4c4490 and f7cb1903: at 1280 the table's
+  scrollWidth equals its clientWidth, 972 px; the first row reads Name 2 lines, Short code 1, Description 4, Status 1,
+  Created 1; "DEMO-C" and each date on one line.)
 
 ### Step 1.3 — The CPSA's own record
 Role: Administrator — the platform operator

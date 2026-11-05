@@ -82,13 +82,12 @@ Actual (2026-11-05, T394 replay, wombat_scenario_t394): D = 2026-11-05. The list
   created." at its top with the focus; a reload says nothing of it. The list reads three rows, each Active with Edit
   and Specialities: CNSA, CPSA, Demo College. Create college beside the h1 at 1024 and 1280. Sweep 900-1100 (every 25
   px): the table's smallest spare 0 px (never wider than its container), the page 0. In the 1280 capture (re-taken on
-  `7d4c4490`) each College's name takes two lines at most in a 272 px column, each Description three or four lines in
-  262 px, Created (106 px) each date on one line, and the Short code column (78 px) breaks "DEMO-C" after its hyphen.
-Gap: new (low): at 1280 the Short code column (78 px) breaks "DEMO-C" over two lines ("DEMO-" / "C"), as Step 1.2
-  now finds; it came with `7d4c4490`. (The Created-date break is fixed by `7d4c4490`: each date on one line in 106
-  px. The 1280 squeeze of the names the replay found is fixed by a2878763: each name takes two lines at most in a
-  272 px column; the table's scrollWidth equals its clientWidth at 1280, 1100, 1025 and 1000.) (T324 no
-  longer occurs: each required message is in its label's words, "Enter a short code.")
+  `f7cb1903`) each College's name takes two lines at most in a 272 px column, each Description two to four lines in
+  262 px, and Short code (106 px), Status (75 px) and Created (106 px) each read on one line: "DEMO-C" whole.
+Gap: none. (The 1280 squeezes the replay found are fixed by a2878763, 7d4c4490 and f7cb1903: at 1280 the table's
+  scrollWidth equals its clientWidth, 972 px; the first row (CNSA) reads Name 2 lines, Short code 1, Description 3,
+  Status 1, Created 1; "DEMO-C" and each date on one line.) (T324 no longer occurs: each required message is in its
+  label's words, "Enter a short code.")
 
 ### Step 6.2 — devadmin corrects CPSA's description, and nothing else
 Role: Administrator — devadmin
