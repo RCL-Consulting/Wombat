@@ -214,3 +214,6 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   word a line) fixed on master `a2878763` and measured on a scratch copy of act 1's state (Name 144→272 px, Description
   144→389 px, the tree's row 6→4 lines, no overflow 1025–1280); **not published to :5180 until the acts finish**, then
   1.2 and 1.12's captures re-taken. Act 2 runs.
+- **2026-11-05, act 2 replayed** (one Opus agent, `5f03a68f`): 44/44 steps, no Gap; outcome SQL as expected; T392's
+  "no longer occurs" notes still hold; Q20 holds at 1280/1024 on Home, Invitations, Decision panels and Users. Dump
+  `scenario-t394-post-act2`. Act 3 running.
