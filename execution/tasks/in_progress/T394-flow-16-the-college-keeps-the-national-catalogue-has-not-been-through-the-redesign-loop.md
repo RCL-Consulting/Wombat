@@ -255,3 +255,7 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   Status fitted there); the institution's table also ran 17px over at 1101px at the appendix's end, so Curricula and
   the items stack to 1150px (DESIGN.md § Table system amended). Swept 390-1440 as three roles, nothing over; Web 4675.
   One Opus agent re-takes the curricula captures. Scratch DBs `_s10`-`_s12`, `_s20`-`_s25` kept until it reports.
+- **2026-11-05, the curricula re-take** (the same agent, `002ebc4b`): 30 captures on `c6bbb641`, the 1150px edge checked;
+  missing 0. An institution's Effective broke its date (the fit came off with the widths): fixed (`2c93b247`; 1151-1440
+  swept, nothing over), published; the institution captures being re-taken. Left as a nit: "Adopted on 2026-11-05" may
+  break inside the date in For your institution.
