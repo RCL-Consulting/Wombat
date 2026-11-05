@@ -193,3 +193,9 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   pass's scope; S-1's check-then-save race to its own task) and F2 (the words) put to the operator.
 - **2026-11-05, F1 and F2 taken** ("yes"): the fix pass (one Opus agent on `t394`) takes M1, should-fixes 1–8 and every
   nit; the words on no board accepted; S-1 proposed as **T396** (the guards' check-then-save race).
+- **2026-11-05, fix pass done** (one Opus agent; `2c9d70ea`..`624333f4` on t394; suites 836/4411/1035/52/4675/528;
+  verbatim 0 problems, completeness ok): M1, S1–S8 and the nits but N2, N7, N11 (no change asked), N9 (T390's) and
+  N-8's second half (the @using is used). F2: only "..." → "…" and "its registrar stays on it" (one registrar).
+  **New defect** found by its PostgreSQL tests: reordering an unused scale's rungs fails (EF circular dependency on the
+  unique (scale, order) index), reported as on master too: proposed as **T397**; the operator's call whether it is fixed
+  before the squash.
