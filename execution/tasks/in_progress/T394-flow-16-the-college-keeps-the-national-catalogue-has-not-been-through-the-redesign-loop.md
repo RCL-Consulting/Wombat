@@ -153,3 +153,8 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
 - **2026-11-05, P1–P3 approved** ("yes"): Q20's ≥1024 half only; "in use" is the delete's seven uses (adding a rung and
   editing a label stay allowed); no reach line for an institution's own EPA. The wave runs: lanes A–D, each an Opus
   agent in `.claude/worktrees/t394-<lane>` cut from `t394` at `9f25092c`.
+- **2026-11-05, lane D done** (`t394-items`: `a81feb4c`, `c51d296d`; suites 836/4353/1035/52/4559/520): adds three
+  init members to § 0's `EpaDto.cs` (EpaListDto.CollegeName, EpaPageDto.CollegeName, ReadsEveryCollege), to accept at
+  the merge; EV2's line wherever its rule holds (also behind the pause dialog and on the Administrator's page); the
+  required line and aria-required reach flow 15's institution forms too (one component); R3-F14's picker after Q10
+  differs from the board; no College subtitle while loading or after a failed read. For the review.
