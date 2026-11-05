@@ -94,13 +94,14 @@ Actual (2026-11-05, T394 replay, wombat_scenario_t394): As expected: Colleges fr
   College of Paediatricians of South Africa" and "Specialities of College of Paediatricians of South Africa" (and Demo
   College's). No College named "College of Paediatricians" alone. Create college beside the h1 at 1024 and 1280 (no
   overlap, no clip). Sweep 900-1100 every 25 px: the table's smallest spare 0 px (never wider than its container), the
-  page never scrolls sideways. In the 1280 capture (re-taken on `a2878763`) the Name column (272 px) wraps "College of
-  Paediatricians of South / Africa" over two lines, and the Created column (103 px) breaks each date over two lines
-  ("2026-11-" / "05") beside an Actions column about 60 px wider than its two buttons.
-Gap: new (low): at 1280 the Created column breaks each date over two lines ("2026-11-" / "05"), beside spare Actions
-  space; it came with `a2878763`. (The 1280 squeeze of the name the replay found is fixed by a2878763: the CPSA's name
-  takes two lines in a 272 px column; the table's scrollWidth equals its clientWidth at 1280, 1100, 1025 and 1000, 972,
-  792, 717 and 692 px.)
+  page never scrolls sideways. In the 1280 capture (re-taken on `7d4c4490`) the Name column (272 px) wraps "College of
+  Paediatricians of South / Africa" over two lines, the Description takes four, Created (106 px) reads each date on one
+  line, and the Short code column (78 px) breaks "DEMO-C" after its hyphen ("DEMO-" / "C") under a two-line header.
+Gap: new (low): at 1280 the Short code column (78 px) breaks "DEMO-C" over two lines ("DEMO-" / "C") and its header
+  over two; it came with `7d4c4490`, which narrowed the column. (The Created-date break is fixed by `7d4c4490`: 106 px,
+  each date on one line. The name squeeze the replay found is fixed by a2878763: the CPSA's name takes two lines in a
+  272 px column; the table's scrollWidth equals its clientWidth at 1280, 1100, 1025 and 1000: 972, 792, 717 and 692
+  px.)
 
 ### Step 1.3 — The CPSA's own record
 Role: Administrator — the platform operator
@@ -384,12 +385,11 @@ Actual (2026-11-05, T394 replay, wombat_scenario_t394): Specialities in the nav 
   captioned "Sub-specialities of Paediatrics" (Sub-speciality, Description, Default scale, Status, Actions) has one
   row, Paediatrics. No Demo speciality. Create speciality beside the h1 at 1024 and 1280. No Back to colleges and no
   link to /admin/colleges anywhere. Sweep 900-1100: smallest spare 0 px, no sideways scroll. In the 1280 capture
-  (re-taken on `a2878763`) the Description reads on one line in a 389 px column and the Actions column (77 px) fits its
-  Edit; the Default scale wraps "CPSA Paediatric / Entrustment / Scale v11.1" over three lines in 144 px beside a 218 px
-  Status column. {SpecialityId} = 2.
-Gap: none. (The 1280 squeeze the replay found is fixed by a2878763: the Description cell is 389 px wide, on one line,
-  the row 105 px high; the table's scrollWidth equals its clientWidth at 1280, 1100, 1025 and 1000. The Default scale's
-  three-line wrap is Step 6.12's Gap.) (T291 item 2 / F-1.12a and T331 no longer occur: no Back to colleges,
+  (re-taken on `7d4c4490`) the Description reads on one line in a 415 px column, the Default scale on two lines in 249
+  px, Status (76 px) fits "Active" and Actions (78 px) its Edit. {SpecialityId} = 2.
+Gap: none. (The 1280 squeeze the replay found is fixed by a2878763 and 7d4c4490: the Description is one line in 415
+  px and the Default scale two in 249 px, the row 81 px high; the table's scrollWidth equals its clientWidth at 1280,
+  1100, 1025 and 1000.) (T291 item 2 / F-1.12a and T331 no longer occur: no Back to colleges,
   Specialities lit.)
 
 ### Step 1.13 — The Paediatrics sub-speciality

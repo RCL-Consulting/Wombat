@@ -82,12 +82,12 @@ Actual (2026-11-05, T394 replay, wombat_scenario_t394): D = 2026-11-05. The list
   created." at its top with the focus; a reload says nothing of it. The list reads three rows, each Active with Edit
   and Specialities: CNSA, CPSA, Demo College. Create college beside the h1 at 1024 and 1280. Sweep 900-1100 (every 25
   px): the table's smallest spare 0 px (never wider than its container), the page 0. In the 1280 capture (re-taken on
-  `a2878763`) each College's name takes two lines at most in a 272 px column, and the Created column (103 px) breaks
-  each date over two lines ("2026-11-" / "05").
-Gap: new (low): at 1280 the Created column breaks each date over two lines ("2026-11-" / "05") beside spare Actions
-  space, as Step 1.2 now finds; it came with `a2878763`. (The 1280 squeeze of the names the replay found is fixed by
-  a2878763: each name takes two lines at most in a 272 px column; the table's scrollWidth equals its clientWidth at
-  1280, 1100, 1025 and 1000.) (T324 no
+  `7d4c4490`) each College's name takes two lines at most in a 272 px column, each Description three or four lines in
+  262 px, Created (106 px) each date on one line, and the Short code column (78 px) breaks "DEMO-C" after its hyphen.
+Gap: new (low): at 1280 the Short code column (78 px) breaks "DEMO-C" over two lines ("DEMO-" / "C"), as Step 1.2
+  now finds; it came with `7d4c4490`. (The Created-date break is fixed by `7d4c4490`: each date on one line in 106
+  px. The 1280 squeeze of the names the replay found is fixed by a2878763: each name takes two lines at most in a
+  272 px column; the table's scrollWidth equals its clientWidth at 1280, 1100, 1025 and 1000.) (T324 no
   longer occurs: each required message is in its label's words, "Enter a short code.")
 
 ### Step 6.2 — devadmin corrects CPSA's description, and nothing else
@@ -363,12 +363,11 @@ Actual (2026-11-05, T394 replay, wombat_scenario_t394): Create sub-speciality on
   Active; a reload says nothing. Reopened (Edit the sub-speciality Neonatology,
   /admin/specialities/2/sub-specialities/4), the CPSA ladder stays selected. Create speciality beside the h1 at 1024
   and 1280. Sweep 900-1100: the table's smallest spare 0 px, the page 0. In the 1280 capture (re-taken on
-  `a2878763`) each Description reads on one line in a 389 px column and the Actions column (77 px) fits its Edit; the
-  Default scale wraps "CPSA Paediatric / Entrustment / Scale v11.1" over three lines in 144 px beside a 218 px Status
-  column that holds "Active".
-Gap: new (low): at 1280 the Default scale still wraps over three lines in a 144 px column beside a 218 px Status
-  column. (The Description squeeze the replay found is fixed by a2878763: 389 px, one line, each row 105 px high; the
-  table's scrollWidth equals its clientWidth at 1280, 1100, 1025 and 1000.)
+  `7d4c4490`) each Description reads on one line in a 415 px column, the Default scale "CPSA Paediatric Entrustment
+  Scale v11.1" on two lines in 249 px, Status (76 px) fits "Active" and Actions (78 px) its Edit; each row 81 px high.
+Gap: none. (The 1280 squeeze the replay found is fixed by a2878763 and 7d4c4490: at 1280 the Description takes one
+  line in 415 px and the Default scale two in 249 px; the table's scrollWidth equals its clientWidth at 1280, 1100,
+  1025 and 1000: 972, 792, 717 and 692 px.)
 
 ### Step 6.13 — Dr Kruger starts a Neonatology curriculum, and holds it back
 Role: CollegeAdmin — Dr Anton Kruger
