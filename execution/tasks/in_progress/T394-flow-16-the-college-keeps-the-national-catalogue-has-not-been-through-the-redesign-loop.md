@@ -158,3 +158,8 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   the merge; EV2's line wherever its rule holds (also behind the pause dialog and on the Administrator's page); the
   required line and aria-required reach flow 15's institution forms too (one component); R3-F14's picker after Q10
   differs from the board; no College subtitle while loading or after a failed read. For the review.
+- **2026-11-05, lane C done** (`t394-curriculum`: `1d795130`; suites 836/4362/1035/52/4556/521): Q19 refused in
+  `UpdateCurriculumCommand` before any assignment (`CurriculumSubSpecialityFixedException`, causes HoldsItems first,
+  then Adopted with the adopters named, superseded included); a duplicate only on a real unique violation; the clone's
+  refusal key is "Version" (contracts said "NewVersion"); the cloned result read back from the source. Merge risk: its
+  tests build lane A's and B's DTOs positionally. Words on no board listed in its report (for the review).
