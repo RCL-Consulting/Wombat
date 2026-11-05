@@ -81,11 +81,13 @@ Actual (2026-11-05, T394 replay, wombat_scenario_t394): D = 2026-11-05. The list
   (/admin/colleges/3): h1 and tab "College of Neurologists of South Africa", subtitled "CNSA · Active", "College
   created." at its top with the focus; a reload says nothing of it. The list reads three rows, each Active with Edit
   and Specialities: CNSA, CPSA, Demo College. Create college beside the h1 at 1024 and 1280. Sweep 900-1100 (every 25
-  px): the table's smallest spare 0 px (never wider than its container), the page 0. In the 1280 capture each name
-  wraps over three lines while the Actions column leaves about 60 px spare.
-Gap: new (low): at 1280 the Colleges table wraps each College's name over three lines ("College of / Neurologists of /
-  South Africa") beside spare Actions space, as Step 1.2 found (BRIEF § 11 flow 15's squeezed-title check). Fixed on master `a2878763`
-  (published to :5180 after the acts; re-checked in the states pass). (T324 no
+  px): the table's smallest spare 0 px (never wider than its container), the page 0. In the 1280 capture (re-taken on
+  `a2878763`) each College's name takes two lines at most in a 272 px column, and the Created column (103 px) breaks
+  each date over two lines ("2026-11-" / "05").
+Gap: new (low): at 1280 the Created column breaks each date over two lines ("2026-11-" / "05") beside spare Actions
+  space, as Step 1.2 now finds; it came with `a2878763`. (The 1280 squeeze of the names the replay found is fixed by
+  a2878763: each name takes two lines at most in a 272 px column; the table's scrollWidth equals its clientWidth at
+  1280, 1100, 1025 and 1000.) (T324 no
   longer occurs: each required message is in its label's words, "Enter a short code.")
 
 ### Step 6.2 — devadmin corrects CPSA's description, and nothing else
@@ -360,11 +362,13 @@ Actual (2026-11-05, T394 replay, wombat_scenario_t394): Create sub-speciality on
   focused; Paediatrics' section holds Neonatology and Paediatrics, both on CPSA Paediatric Entrustment Scale v11.1,
   Active; a reload says nothing. Reopened (Edit the sub-speciality Neonatology,
   /admin/specialities/2/sub-specialities/4), the CPSA ladder stays selected. Create speciality beside the h1 at 1024
-  and 1280. Sweep 900-1100: the table's smallest spare 0 px, the page 0. In the 1280 capture the Description and
-  Default scale cells wrap two or three words a line while the Actions column leaves about 200 px empty beside Edit.
-Gap: new (low): at 1280 the tree's sub-speciality table squeezes Description and Default scale beside an Actions
-  column about 200 px wider than its Edit, as Step 1.12 found. Fixed on master `a2878763` (published to :5180 after the acts;
-  re-checked in the states pass).
+  and 1280. Sweep 900-1100: the table's smallest spare 0 px, the page 0. In the 1280 capture (re-taken on
+  `a2878763`) each Description reads on one line in a 389 px column and the Actions column (77 px) fits its Edit; the
+  Default scale wraps "CPSA Paediatric / Entrustment / Scale v11.1" over three lines in 144 px beside a 218 px Status
+  column that holds "Active".
+Gap: new (low): at 1280 the Default scale still wraps over three lines in a 144 px column beside a 218 px Status
+  column. (The Description squeeze the replay found is fixed by a2878763: 389 px, one line, each row 105 px high; the
+  table's scrollWidth equals its clientWidth at 1280, 1100, 1025 and 1000.)
 
 ### Step 6.13 — Dr Kruger starts a Neonatology curriculum, and holds it back
 Role: CollegeAdmin — Dr Anton Kruger

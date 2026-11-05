@@ -94,10 +94,13 @@ Actual (2026-11-05, T394 replay, wombat_scenario_t394): As expected: Colleges fr
   College of Paediatricians of South Africa" and "Specialities of College of Paediatricians of South Africa" (and Demo
   College's). No College named "College of Paediatricians" alone. Create college beside the h1 at 1024 and 1280 (no
   overlap, no clip). Sweep 900-1100 every 25 px: the table's smallest spare 0 px (never wider than its container), the
-  page never scrolls sideways. In the 1280 capture the Name column wraps "College of / Paediatricians / of South
-  Africa" over three lines while Created and the Actions column leave about 130 px spare between them.
-Gap: new (low): at 1280 the Colleges table squeezes the CPSA's name to three lines of two words beside spare Created
-  and Actions space (BRIEF § 11 flow 15's squeezed-title check).
+  page never scrolls sideways. In the 1280 capture (re-taken on `a2878763`) the Name column (272 px) wraps "College of
+  Paediatricians of South / Africa" over two lines, and the Created column (103 px) breaks each date over two lines
+  ("2026-11-" / "05") beside an Actions column about 60 px wider than its two buttons.
+Gap: new (low): at 1280 the Created column breaks each date over two lines ("2026-11-" / "05"), beside spare Actions
+  space; it came with `a2878763`. (The 1280 squeeze of the name the replay found is fixed by a2878763: the CPSA's name
+  takes two lines in a 272 px column; the table's scrollWidth equals its clientWidth at 1280, 1100, 1025 and 1000, 972,
+  792, 717 and 692 px.)
 
 ### Step 1.3 — The CPSA's own record
 Role: Administrator — the platform operator
@@ -380,12 +383,14 @@ Actual (2026-11-05, T394 replay, wombat_scenario_t394): Specialities in the nav 
   /admin/colleges/2/specialities/2) and Create sub-speciality ("Create sub-speciality of Paediatrics"); the table
   captioned "Sub-specialities of Paediatrics" (Sub-speciality, Description, Default scale, Status, Actions) has one
   row, Paediatrics. No Demo speciality. Create speciality beside the h1 at 1024 and 1280. No Back to colleges and no
-  link to /admin/colleges anywhere. Sweep 900-1100: smallest spare 0 px, no sideways scroll. In the 1280 capture the
-  Description cell wraps one word a line ("General / paediatric / specialist / training / programme.") while the
-  Actions column leaves about 200 px empty beside the Edit button. {SpecialityId} = 2.
-Gap: new (low): at 1280 the tree's sub-speciality table squeezes the Description to one word a line beside an Actions
-  column about 200 px wider than its Edit button. (T291 item 2 / F-1.12a and T331 no longer occur: no Back to
-  colleges, Specialities lit.)
+  link to /admin/colleges anywhere. Sweep 900-1100: smallest spare 0 px, no sideways scroll. In the 1280 capture
+  (re-taken on `a2878763`) the Description reads on one line in a 389 px column and the Actions column (77 px) fits its
+  Edit; the Default scale wraps "CPSA Paediatric / Entrustment / Scale v11.1" over three lines in 144 px beside a 218 px
+  Status column. {SpecialityId} = 2.
+Gap: none. (The 1280 squeeze the replay found is fixed by a2878763: the Description cell is 389 px wide, on one line,
+  the row 105 px high; the table's scrollWidth equals its clientWidth at 1280, 1100, 1025 and 1000. The Default scale's
+  three-line wrap is Step 6.12's Gap.) (T291 item 2 / F-1.12a and T331 no longer occur: no Back to colleges,
+  Specialities lit.)
 
 ### Step 1.13 — The Paediatrics sub-speciality
 Role: CollegeAdmin — Dr Anton Kruger
