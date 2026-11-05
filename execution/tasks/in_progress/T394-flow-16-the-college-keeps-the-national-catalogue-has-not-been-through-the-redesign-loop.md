@@ -173,3 +173,5 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   records, decisions, then Q16 in use), checked by level id; **T395's guard** proved by
   `EntrustmentScaleReorderGuardTests` (9 tests); the delete refusal names its sub-speciality holders. Mended outside
   its list: one `EndedCurriculumListTests` assertion.
+- **2026-11-05, the lanes merged into `t394`** (`54c25bc8` A, `d4c75428` B, `1091aa85` C, `bb251ebd` D): only DESIGN.md's
+  section-order lane lines conflicted (each lane filled its own; resolved by taking the filled line). Suites running.
