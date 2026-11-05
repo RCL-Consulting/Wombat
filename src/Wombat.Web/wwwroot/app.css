@@ -7443,8 +7443,20 @@ a.dashboard-metric:hover .dashboard-metric-label {
    "College of Paediatricians of South Africa" over three lines beside 130px the Created and Actions columns did not use,
    and the tree's sub-speciality Description at 14% ran one word a line beside an auto Actions column 200px wider than its
    one Edit. Name takes 28%; the tree's Description is .col-wrap--wide at 40% and its Edit column .col-fit. Only where the
-   lists are tables: both stack from 1024px down (flow 16's shared part). */
+   lists are tables: both stack from 1024px down (flow 16's shared part). The states pass after it (1.2, 6.1, 6.12) found
+   the room it left in the wrong place: Colleges' Created broke "2026-11-05" after its hyphen and the tree's Default scale
+   (14%) ran "CPSA Paediatric Entrustment Scale v11.1" over three lines beside a 218px Status holding "Active". Status
+   and Created are .col-fit on both, the tree's Default scale takes 24%, and Colleges' Description 27% of what Created
+   gave back (at 1280: Name 2 lines, Description 3, Edit and Specialities side by side). */
 @media (min-width: 1025px) {
+  .colleges-page .clinic-table th.col-wrap--wide {
+    width: 27%;
+  }
+
+  .college-tree-page .clinic-table th.col-wrap--scale {
+    width: 24%;
+  }
+
   .colleges-page .clinic-table th.col-wrap:not(.col-wrap--wide) {
     width: 28%;
   }
