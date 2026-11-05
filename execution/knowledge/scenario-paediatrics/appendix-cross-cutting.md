@@ -1783,8 +1783,8 @@ Actual (2026-11-05, T394 replay, wombat_scenario_t394): At 390 px. The bar "Acti
   (77 to 341) with its help and the reach "Adopted by 1 institution, Kgosi Kgari Teaching Hospital; no registrar in
   training on it." under it; Save (y1275), Hold back… (y1331) and Cancel (y1387) stacked, 44 px each; the clone
   section under them; 390 in 390. Cancel returned to Curricula. Nothing scrolls sideways at 768, 901, 1024, 1100 or
-  1280 on any of these pages; EPAs stack to 1024 and are a table at 1100, Curricula and the items stack to 1100 and
-  are a table at 1280.
+  1280 on any of these pages; EPAs stack to 1024 and are a table at 1100, Curricula and the items stack to 1150 and
+  are a table from 1151 (re-measured on `c6bbb641`: stacked at 1101, 1125, 1149 and 1150).
 Gap: none (T323's item-editor half and the 901-990 overflow stay fixed; the step's flow 16 parts, Home's sentence and
   four links, the EPAs with no College cell, the item page's reach and 11.2's own page, read as the Expect says)
 

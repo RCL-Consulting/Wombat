@@ -516,7 +516,9 @@ Actual (2026-11-05, T394 replay, wombat_scenario_t394): As expected: subtitled "
   Effective, Items, Status, Actions (no College); one row, Paediatric EPA Curriculum (11.1), Paediatrics /
   Paediatrics, 2026-01-01, 15, Open, Edit ("Edit Paediatric EPA Curriculum (11.1)", /admin/curricula/2) and Items;
   Create curriculum beside the h1 at 1024 and 1280; no IM Core Curriculum. Sweep 900-1100 and 1101, 1125, 1150:
-  smallest spare 0 px, no sideways scroll. {CurriculumId} = 2.
+  smallest spare 0 px, no sideways scroll (re-measured on `c6bbb641`: stacked through 1150, a table from 1151). In
+  the 1280 capture (re-taken on `c6bbb641`) the row is one line but Edit and Items (two), the table's scrollWidth
+  equal to its clientWidth. {CurriculumId} = 2.
 Gap: none
 
 ### Step 1.18 — The 15 items and their targets
@@ -548,7 +550,8 @@ Actual (2026-11-05, T394 replay, wombat_scenario_t394): As expected: /admin/curr
   Target and decision, Minimum level, Minimum by training year, Tools, Actions; 15 rows matching the table cell by
   cell (compared by script, 0 differences), each Edit and Remove… named "Edit PAED-001", "Remove PAED-001". No Add
   item: "Every national EPA of Paediatrics is already on this curriculum, …" with how to free one. Sweep 900-1100 and
-  1101, 1125, 1150: smallest spare 0 px, no sideways scroll.
+  1101, 1125, 1150: smallest spare 0 px, no sideways scroll (re-measured on `c6bbb641`: stacked through 1150, a table
+  from 1151).
 Gap: none
 
 **The 15 curriculum items.** The targets are from Annexure B (T130, D39), the minima and tools from Annexure A (T122),
