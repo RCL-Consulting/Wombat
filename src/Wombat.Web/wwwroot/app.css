@@ -7470,14 +7470,16 @@ a.dashboard-metric:hover .dashboard-metric-label {
   }
 }
 
-/* Curricula is a table from 1101px (it stacks to 1100): its Curriculum takes 30% and College and Discipline 18% of what
-   Effective and the national count give back (an institution's Items sentence keeps wrapping). */
-@media (min-width: 1101px) {
-  .curricula-page .clinic-table th.col-wrap--wide {
+/* Curricula is a table from 1151px (it stacks to 1150). The College's and the Administrator's lists (.curricula-catalogue)
+   give Curriculum 30% and College and Discipline 18% of what Effective, the count and Status ("Held back") give back. An
+   institution's tables keep the shared widths: their Items sentence ("16 national · 1 … own") and adoption line need
+   the room (the re-take after f7cb1903 found Items on four to seven lines in 88px). */
+@media (min-width: 1151px) {
+  .curricula-page .clinic-table.curricula-catalogue th.col-wrap--wide {
     width: 30%;
   }
 
-  .curricula-page .clinic-table th.col-wrap:not(.col-wrap--wide) {
+  .curricula-page .clinic-table.curricula-catalogue th.col-wrap:not(.col-wrap--wide) {
     width: 18%;
   }
 
@@ -7604,7 +7606,9 @@ a.dashboard-metric:hover .dashboard-metric-label {
   }
 }
 
-@media (max-width: 1100px) {
+/* Curricula and the items stack to 1150px (T394 replay, after the states: at the appendix's end an institution's "Curricula
+   you train against", with an adoption and a superseded version, ran 17px past its container at 1101px and 8px at 1110). */
+@media (max-width: 1150px) {
   .curricula-page .clinic-table--stack-wide thead,
   .curriculum-items-page .clinic-table--stack-wide thead {
     border: 0;

@@ -204,7 +204,7 @@
               <th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Curriculum</th>
               <th scope="col" role="columnheader" class="col-wrap">College</th>
               <th scope="col" role="columnheader" class="col-wrap">Discipline</th>
-              <th scope="col" role="columnheader" class="col-fit--wide">Effective</th>
+              <th scope="col" role="columnheader">Effective</th>
               <th scope="col" role="columnheader">Items</th>
               <th scope="col" role="columnheader">@(named is null ? CurriculaWords.StateColumn : CurriculaWords.InstitutionStateColumn)</th>
               <th scope="col" role="columnheader" class="col-fit"><span class="visually-hidden">Actions</span></th>
@@ -216,7 +216,7 @@
               <th scope="row" role="rowheader" class="col-wrap">@CurriculaWords.Name(curriculum.Name, curriculum.Version)</th>
               <td role="cell" data-label="College" class="col-wrap">@curriculum.CollegeName</td>
               <td role="cell" data-label="Discipline" class="col-wrap">@CurriculaWords.Discipline(curriculum.SpecialityName, curriculum.SubSpecialityName)</td>
-              <td role="cell" data-label="Effective" class="col-fit--wide">@CurriculaWords.Day(curriculum.EffectiveFrom)</td>
+              <td role="cell" data-label="Effective">@CurriculaWords.Day(curriculum.EffectiveFrom)</td>
               <td role="cell" data-label="Items">@CurriculaWords.Items(state, named is not null)</td>
               <td role="cell" data-label="@(named is null ? CurriculaWords.StateColumn : CurriculaWords.InstitutionStateColumn)">
                 @CurriculaWords.State(state)
@@ -360,7 +360,7 @@
   {
     @* T239: each row's actions are named by the curriculum, and by its sub-speciality where two hold one name and version. *@
     var names = RowNames.Distinct(curricula, row => row.Id, row => CurriculaWords.Name(row.Name, row.Version), row => $", {row.SubSpecialityName}");
-    <DataTable TItem="CurriculumDto" Items="curricula" StackWide="true" Caption="@caption">
+    <DataTable TItem="CurriculumDto" Items="curricula" StackWide="true" Caption="@caption" Class="curricula-catalogue">
       <HeaderRow>
         <tr role="row">
           <th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Curriculum</th>
@@ -371,7 +371,7 @@
           <th scope="col" role="columnheader" class="col-wrap">Discipline</th>
           <th scope="col" role="columnheader" class="col-fit--wide">Effective</th>
           <th scope="col" role="columnheader" class="col-fit--wide">Items</th>
-          <th scope="col" role="columnheader">Status</th>
+          <th scope="col" role="columnheader" class="col-fit--wide">Status</th>
           <th scope="col" role="columnheader" class="col-fit"><span class="visually-hidden">Actions</span></th>
         </tr>
       </HeaderRow>
@@ -386,7 +386,7 @@
           <td role="cell" data-label="Effective" class="col-fit--wide">@CurriculaWords.Day(curriculum.EffectiveFrom)</td>
           @* The items the caller reads: the College's, and for the Administrator every institution's own too (N2). *@
           <td role="cell" data-label="Items" class="col-fit--wide">@curriculum.Items.Count</td>
-          <td role="cell" data-label="Status">@CurriculaWords.Status(curriculum.IsActive)</td>
+          <td role="cell" data-label="Status" class="col-fit--wide">@CurriculaWords.Status(curriculum.IsActive)</td>
           <td role="cell">
             @* T211. Edit changes the curriculum's details and clones it, which only its College can do. *@
             <div class="actions-cell">

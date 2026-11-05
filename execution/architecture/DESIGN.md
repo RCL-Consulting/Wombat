@@ -79,7 +79,7 @@
 >   EPA, a national EPA and item a record, Unavailable for an EPA, a curriculum and an item, the Administrator's Show,
 >   the EPA pager), the NavMenu table (Curriculum adoptions gone), and § app.css section order (four catalogue sections)).
 >   Flow 16, the College keeps the national catalogue (2026-11-05, T394: § Table system (the catalogue's 1024px stack,
->   Curricula and the items at 1100px), § Button system (Save's question returns the focus to Save), § Alerts (one
+>   Curricula and the items at 1150px; one-word columns `.col-fit--wide`), § Button system (Save's question returns the focus to Save), § Alerts (one
 >   Unavailable markup, its last crumb the h1; the College's tree, a speciality and a sub-speciality), § Page-level
 >   patterns "Detail page" (the College's tree, the College's, a speciality's and a sub-speciality's records with one
 >   Status group, a scale's in-use line, its rung refusal and Put back, the reach lines and EV2's, Q19's read-out), the
@@ -1130,12 +1130,18 @@ focusable region, the one exception to "nothing scrolls sideways" at 390px (T369
 queue, Your requests and Corrections recorded). The data rights queue stacks from 1100px, not 900px (Q23): beside the
 sidebar its six columns, seven for the Administrator, have no room from 901 to 1100px, so the stack-wide rules are
 repeated for `.data-rights-requests` under a 1100px query, its row buttons 44px.
-**The catalogue's tables stack from 1024px, Curricula and the items from 1100px** (2026-11-05, T394, flow 16, round 3 S1,
+**The catalogue's tables stack from 1024px, Curricula and the items from 1150px** (2026-11-05, T394, flow 16, round 3 S1,
 check decisions 1 and 2): the EPA list, Colleges and each section of the College's tree are stack-wide tables stacked by
 one 1024px query in flow 16's shared part, since their columns overflowed between 901 and about 975px. A curriculum's items
 (six compact columns, 691 to 744px wide) and Curricula (756px for the Administrator in a 717px container at 1025px) stack by
-a 1100px query, as the data-rights queue does. A stacked row never scrolls, and its row actions are 44px. The build's
-sweep (900 to 1100px in 25px steps, each table's `scrollWidth` against its container's `clientWidth`) set the edges.
+a 1150px query (1100px until the replay: at the appendix's end an institution's Curricula, with an adoption and a
+superseded version, ran 17px past its container at 1101px). A stacked row never scrolls, and its row actions are 44px.
+The build's sweep (900 to 1100px in 25px steps, each table's `scrollWidth` against its container's `clientWidth`) set
+the edges. Where the tables are tables, a column of one word, a date or a count (Colleges' Short code, Status and
+Created; the scales' Levels; the EPA list's Status and Edit; the College's Curricula's Effective, count and Status) is
+`.col-fit--wide`, which fits its content from 1025px only, so a stacked row at 390px still wraps; the text columns take
+the room (the replay's states passes found names on three lines and dates broken at a hyphen beside 200-600px columns
+holding one word). An institution's Curricula keeps the shared widths: its Items sentence needs the room.
 The three data-rights tables (T387, M5, M6, F10): each a `DataTable` with `StackWide` and the explicit roles, its row
 header a `th scope="row" role="rowheader"` drawn in the cell's weight (`.data-rights-table tbody th[scope="row"]`), with
 no rule under it once stacked (review P7): Your requests' Submitted, the queue's Requester (`.person-cell`: the live name
