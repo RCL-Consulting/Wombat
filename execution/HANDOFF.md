@@ -17,11 +17,12 @@ picks and Q15–Q17; round 2's Q18–Q21; round 3's decisions 1–5; the build's
   `blazor:elementReference` guids can break a "markup holds no N" assertion.
 - **Step 7 started** ("proceed"): `wombat_scenario_t394` on :5180 from master `c2de9b7b`; the replay brief and act
   prompts being written (scratch `...\67560d182d14635f\28969ed0-c979-487c-82e2-606d8331c3a3\scratchpad\g394`).
-- **Next:** acts 1–6 and A done (`c414a804`, `5f03a68f`, `7d728f5c`, `ca410c64`, `a11e1475`, `b4c6b4df`, `4a09396f`: no flow 16 regression; act 1's two 1280px column faults fixed on
-  master `a2878763`, now on :5180); states pass 1 done (`4b529691`), its two column faults fixed (`7d4c4490`); pass 2 done (`1e1ca1fc`), its one-word columns fixed (`f7cb1903`, `c6bbb641`, `2c93b247`, published; Curricula stacks to 1150px); the institution curricula captures being re-taken, one agent each, in order (an act whose
-  post-act dump in recovery is absent did not finish: resume it from its out files in the g394 scratch); then
-  publish `a2878763` to :5180, re-take 1.2 and 1.12, the states; then steps 8 and 9. Not pushed.
-- **Environment:** the replay app runs on :5180; lane branches `t394*` kept, worktrees removed; scratch DBs of this flow dropped.
+- **Step 7 done** (T394's Notes): acts 1-6 and A and both states passes, no flow 16 regression left; the catalogue
+  lists' 1280 column widths fixed in `a2878763`, `7d4c4490`, `f7cb1903`, `c6bbb641`, `2c93b247` (Curricula and the
+  items now stack to 1150px; DESIGN.md amended); captures re-taken, baseline missing 0.
+- **Next:** step 8 (re-sync the design system: read the live files first) and step 9 (lessons, BRIEF § 11); then close
+  T394. Not pushed.
+- **Environment:** the replay app runs on :5180 (`wombat_scenario_t394`, the appendix's end, from `2c93b247`); lane branches `t394*` kept; this flow's scratch DBs dropped; dumps `recovery/scenario-t394-post-act{1..6,A}`.
 
 ## Session 2026-11-02/03 (Opus): T392's replay, re-sync and lessons; T392 done
 

@@ -64,8 +64,10 @@ Run the loop as flow 15 ran it (`design/flows/15-institution-adopts-catalogue/`,
 - [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link. (https://claude.ai/artifact/AqaH447KL91WCTbjQFJnWf; round 3 on https://claude.ai/artifact/W1R56z3QGxfK2GPMEcp3c9)
 - [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/16-college-catalogue/`. (rounds 1–3, `round-3-check.md`, `e2977baa`)
 - [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 16) — the squash commit and counts. (`de4cc718`; 836/4411/1035/52/4675/530)
-- [ ] The whole runbook replays on a fresh database with no regression from flow 16, the baseline is re-captured, and
-  flow 16's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
+- [x] The whole runbook replays on a fresh database with no regression from flow 16, the baseline is re-captured, and
+  flow 16's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines. (acts 1-6 and A,
+  `c414a804`…`4a09396f`; states `4b529691`, `1e1ca1fc`; re-takes `095de27c`, `002ebc4b`; layout fixes `a2878763`,
+  `7d4c4490`, `f7cb1903`, `c6bbb641`, `2c93b247`; missing 0)
 - [ ] The design system is re-synced and republished — its version number.
 
 ## Related
@@ -259,3 +261,9 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   missing 0. An institution's Effective broke its date (the fit came off with the widths): fixed (`2c93b247`; 1151-1440
   swept, nothing over), published; the institution captures being re-taken. Left as a nit: "Adopted on 2026-11-05" may
   break inside the date in For your institution.
+- **2026-11-05, step 7 done.** The institution captures re-taken on `2c93b247` (Effective 1 line, 106px; nothing over;
+  the Administrator's KGK Items cell 4 lines in 162px, accepted); `check_baseline_paths.py` missing 0. Replay totals:
+  acts 44/44, 58/60, 44/50, 28/29, 39/42, 70/76 clean (act 1 as its notes), every other Gap a known task; the flow 16
+  regressions were the catalogue lists' column widths at 1280, fixed in five commits. Scratch DBs
+  `wombat_scenario_t394_s*` dropped; `wombat_scenario_t394` kept on :5180 at the appendix's end, published from
+  `2c93b247`. Next: step 8, step 9.
