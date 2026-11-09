@@ -12,7 +12,7 @@ This is flow 17 of a RESTRUCTURE with UX in scope (design/BRIEF.md § 4). Flows 
   reasoning and its step count. I pick before fidelity.
   The runbook steps follow below in this same message. The brand mark is at the URL on the next line: use it, never a
   drawn disc.
-  ‹MARK_URL›
+  /_blob/a89fec160a8a8c0b20116ccc3634e0bc
   Every person, institution, College, key, name, version, count and id comes from this message and the steps below;
   invent none. Where a value is not given, write a bracket ‹…›.
 
