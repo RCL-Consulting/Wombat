@@ -35,6 +35,5 @@ No new colour token. A stacked cell's label in `muted-text`, 5.09:1 on the surfa
 ## Known gaps
 
 - **Between 1025px and 1150px the text columns lose their widths**: the Name 28% and Description 27% rules sit inside the `@media (min-width: 1151px)` block, which f7cb1903 opened above them for Curricula, while their own comment says "from 1025px" and the list is a table from 1025px; there Name and Description fall back to `.col-wrap`'s 14% and `.col-wrap--wide`'s 20%. Inferred from app.css; no capture measures it (the sweep stops at 1100px and found no overflow, only the squeeze).
-- **DESIGN.md § Table system names Colleges' Short code, Status and Created as `.col-fit--wide`**; the page writes `.col-fit`, which keeps them on one line in the stacked row at 390 too. Harmless for today's codes and dates; a 32-character short code (the cap) would not wrap in a 358px block. The record or DESIGN.md must change to agree.
 - **Colleges with five rows** (R3-B16, the heavy list) were not swept: the build's sweep needed two more Colleges than the scenario holds (`sweep.md`).
 - The column has no `aria-busy` while the first read runs, as the EPA list's and Curricula's have.

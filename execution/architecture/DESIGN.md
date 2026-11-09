@@ -3802,7 +3802,7 @@ writing its result once, focused (Q5); a save's result says what the box now mea
 for the College's specialities and their sub-specialities, Create speciality its header action (drawn only once the tree
 is read). Each speciality is a `section.user-section`, its h2 the speciality's name with Edit and Create sub-speciality
 beside it in `.form-section-head` (named "Edit the speciality ‹name›", "Create sub-speciality of ‹name›"), its line
-(description, or Inactive with what that means) a `p.muted`, then its sub-specialities as a `StackWide` table captioned
+(the description if any, then the status word, `CollegeTreeWords.SpecialityLine`) a `p.muted`, then its sub-specialities as a `StackWide` table captioned
 by the speciality: Sub-speciality (the row header; a name its speciality shares reads "‹name› (‹speciality›)", N4),
 Description only when a row has one, Default scale, Status, and Edit. A speciality with none says so in a `p.muted`. A
 save or create returns here by token, writing its result once in the page's one region, focused (S13). The old

@@ -7359,7 +7359,7 @@ a.dashboard-metric:hover .dashboard-metric-label {
 
 /* Flow 15 (T392): an institution adopts the College's curriculum. Curricula (with adoption, Q1), a curriculum's items and
    an item's page of its own (Q14), EPAs and an EPA's page, and the move, the rebuild and the scales. Nothing is shared
-   between the lanes but the 1024px stack (since T394 in flow 16's shared part, below, with the items at 1100px): each
+   between the lanes but the 1024px stack (since T394 in flow 16's shared part, below, with the items at 1150px): each
    writes its own rules under its own heading below, scoped to its page's own class beside
    .people-page or .user-page (BRIEF § 11, flow 12: every page its own class), phone rules included, and nothing is written
    between the headings but by the lane that owns the heading. Rebuilt from round 3's f15r3.css PART 2 on the spacing
@@ -7802,5 +7802,5 @@ a.dashboard-metric:hover .dashboard-metric-label {
 
 /* Flow 16: EPAs, the items and an item's page (T394). Lane D. Nothing of its own: the College's items notice bolds its
    reach with the Alert's <strong> (R3-F05), "Edit this version" is a header action (the header's Q20 rule above), Q14's
-   line is a .detail-card--empty, EV2's line an info Alert; the 1024 and 1100px stacks and R1 are the shared part's. */
+   line is a .detail-card--empty, EV2's line an info Alert; the 1024 and 1150px stacks and R1 are the shared part's. */
 /* end Flow 16: EPAs, the items and an item's page */
