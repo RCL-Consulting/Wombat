@@ -45,6 +45,7 @@ A message block in one of four kinds (`success`, `info`, `warning`, `danger`): b
 ## Contrast
 
 Words 11.23 to 11.89:1 on every tint. Edges and icons: success 5.23:1, warning 5.43:1, danger 5.56:1, info 4.55:1 on their tints. Until T335 each kind's colour was its words on its own tint (success 2.55, warning 2.42, danger 3.57:1).
+- **A danger Alert may hold block content** (flow 16, T394, Q18, S6, S14): a scale's refused save holds a `p`, a `ul` of what needs the rung and a row of outline small buttons ("Put rung “5” back", `.scale-put-back`), and the scales list's refused delete a `p.scales-refusal-links` of the sub-specialities that use it (app.css "Flow 16: Colleges and the scales", `.alert p`, `.alert ul`). **A standing info Alert** (`Role=""`, no live region) carries a national EPA's reach under its result region (EV2; AdminEpaPage), and the College's items notice bolds its reach with the Alert's own `<strong>` (CurriculumItems).
 
 ## Known gaps
 

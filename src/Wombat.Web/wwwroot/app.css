@@ -7539,9 +7539,10 @@ a.dashboard-metric:hover .dashboard-metric-label {
 /* The catalogue tables stack from 1024px down (T392 replay, A.7.10; T394 round 3 S1, check decisions 1 and 2): the EPA
    list (from flow 15), Colleges (.colleges-page) and the College's tree (.college-tree-page), whose columns overflowed
    their container between 901 and about 975px (round 2's sweep, by arithmetic). The items (.curriculum-items-page) and
-   Curricula (.curricula-page) stack from 1100px down, as the data-rights queue does: the items' six compact columns need
-   691 to 744px, and a 1025px viewport leaves 717; the build's sweep found the Administrator's Curricula 756px wide in a
-   717px container at 1025px and 742px at 1050px, so it moved from the 1024px stack to this one. A stacked row never scrolls; its row actions are 44px. The build's sweep (900 to
+   Curricula (.curricula-page) stack from 1150px down (the next query; 1100px, as the data-rights queue does, until the
+   replay): the items' six compact columns need 691 to 744px, and a 1025px viewport leaves 717; the build's sweep found
+   the Administrator's Curricula 756px wide in a 717px container at 1025px and 742px at 1050px, so it moved from the
+   1024px stack to that one. A stacked row never scrolls; its row actions are 44px. The build's sweep (900 to
    1100px, 25px steps, each table's scrollWidth against its container's clientWidth) confirms the edges. */
 @media (max-width: 1024px) {
   .epas-page .clinic-table--stack-wide thead,

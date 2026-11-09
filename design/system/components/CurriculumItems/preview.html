@@ -1,11 +1,11 @@
-<!-- @dsCard group="Catalogue" height=3900 width=1180 subtitle="A curriculum's items: the list is the page; the standing notice by who may change the national items; Items (n) with its add link or the line saying why there is none; six compact columns, the owner in words; Edit and Remove… or View beside Set by the College.; the Remove dialog; a superseded version; Curriculum unavailable; stacked to 1024px and at 390" -->
+<!-- @dsCard group="Catalogue" height=4500 width=1180 subtitle="A curriculum's items: the list is the page; the standing notice by who may change the national items; Items (n) with its add link or the line saying why there is none; six compact columns, the owner in words; Edit and Remove… or View beside Set by the College.; the Remove dialog; a superseded version; Curriculum unavailable; stacked to 1024px and at 390" -->
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <title>CurriculumItems</title>
 <style>
-  /* The card is 1180px wide so that app.css's 1024px query (the items stack to 1024px, e10a5f22) does not fire on the wide
+  /* The card is 1180px wide so that app.css's 1150px query (the items stack to 1150px, flow 16's shared part) does not fire on the wide
      renditions; each is drawn in a 974px column, the content column beside the sidebar at 1280. */
   body { padding: var(--space-lg); background: var(--background-color); }
   .pv-col { max-width: 974px; }
@@ -14,7 +14,7 @@
   /* The app opens the dialog with showModal(); a static preview cannot, so its stage paints the scrim itself. */
   .pv-stage { position: relative; background: var(--scrim); padding: var(--space-xl) 0; }
   .pv-stage dialog { position: static; margin: 0 auto; }
-  /* The stacked items (1024px and below in the app) and the phone's rules (below 641px), repeated under .pv-narrow (a
+  /* The stacked items (1150px and below in the app) and the phone's rules (below 641px), repeated under .pv-narrow (a
      358px column: 390 less the phone's 16px gutters). */
   .pv-narrow { max-width: 358px; }
   .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
@@ -28,7 +28,7 @@
 </head>
 <body>
 <div class="pv-col">
-<p class="pv-cap">Prof Mbatha after Step 6.26, back by ?added: the result focused; her institution's notice; Items (16) with the line saying nothing is left to add; national rows View beside "Set by the College.", KGK-001 last with its owner in words, Edit and Remove… (three of the 15 national rows drawn)</p>
+<p class="pv-cap">Prof Mbatha after Step 6.26, back by ?added: the result focused; the institution's notice; Items (16) with the line saying nothing is left to add; national rows View beside "Set by the College.", KGK-001 last with its owner in words, Edit and Remove… (three of the 15 national rows drawn)</p>
 <nav aria-label="Breadcrumb"><ol class="breadcrumbs">
   <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
   <li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Curricula</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
@@ -52,10 +52,10 @@
   </table></div>
 </div>
 
-<p class="pv-cap">Dr Kruger on 11.2 before Step 6.30's add: the College's notice; Add item beside Items (15); every row Edit and Remove… (two drawn)</p>
-<div class="header-container"><div><h1>Items of Paediatric EPA Curriculum (11.2)</h1><p class="page-subtitle">College of Paediatricians of South Africa · Paediatrics / Paediatrics · effective 2026-11-02</p></div></div>
+<p class="pv-cap">Dr Kruger on 11.2 before Step 6.30's add: Edit this version in the header (flow 16, T4); the College's notice opening with the version's reach, bold (Q2), no institution having adopted it yet; Add item beside Items (15); every row Edit and Remove… (two drawn)</p>
+<div class="header-container"><div><h1>Items of Paediatric EPA Curriculum (11.2)</h1><p class="page-subtitle">College of Paediatricians of South Africa · Paediatrics / Paediatrics · effective 2026-11-02</p></div><div class="actions-cell"><a class="btn btn-outline" href="#" aria-label="Edit this version of Paediatric EPA Curriculum (11.2)">Edit this version</a></div></div>
 <div class="people-page curriculum-items-page">
-  <div class="alert alert-warning">A target and its period are read live. Changing one changes what every trainee on this curriculum is measured against, in every institution that has adopted it, including periods that have already closed. A tool list is checked when an activity is filed and submitted, and never takes back credit already earned.</div>
+  <div class="alert alert-warning"><strong>No institution has adopted this version yet.</strong> A target and its period are read live. Changing one changes what every trainee on this curriculum is measured against, in every institution that has adopted it, including periods that have already closed. A tool list is checked when an activity is filed and submitted, and never takes back credit already earned.</div>
   <div class="form-section-head"><h2 id="pv2-h">Items (15)</h2><a class="btn btn-primary" href="#">Add item</a></div>
   <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide clinic-table--compact" role="table">
     <caption>Paediatric EPA Curriculum (11.2)'s items, in EPA order</caption>
@@ -65,6 +65,17 @@
       <tr role="row"><th scope="row" role="rowheader" class="col-wrap">PAED-011 — Managing population health challenges</th><td role="cell" data-label="Target and decision" class="col-wrap">1 per academic year<div class="muted text-sm">Decided each academic year</div></td><td role="cell" data-label="Minimum level" class="col-wrap">4<div class="muted text-sm">CPSA Paediatric Entrustment Scale v11.1</div></td><td role="cell" data-label="Minimum by training year">2 / 3a / 3b / 4</td><td role="cell" data-label="Tools" class="col-wrap">CBD, Direct observation, MSF</td><td role="cell"><div class="actions-cell"><a class="btn btn-sm btn-outline" href="#" aria-label="Edit PAED-011">Edit</a><button type="button" class="btn btn-sm btn-outline" aria-haspopup="dialog" aria-label="Remove PAED-011">Remove…</button></div></td></tr>
     </tbody>
   </table></div>
+</div>
+
+<p class="pv-cap">Dr Kruger on Neonatology EPA Curriculum (1.0), a discipline with no national EPA (flow 16, Q14, T326, R3-F06): in place of the add, the card saying why and Go to EPAs; Items (0) draws no table</p>
+<div class="header-container"><div><h1>Items of Neonatology EPA Curriculum (1.0)</h1><p class="page-subtitle">College of Paediatricians of South Africa · Paediatrics / Neonatology · effective 2026-11-02</p></div><div class="actions-cell"><a class="btn btn-outline" href="#" aria-label="Edit this version of Neonatology EPA Curriculum (1.0)">Edit this version</a></div></div>
+<div class="people-page curriculum-items-page">
+  <div class="alert alert-warning"><strong>No institution has adopted this version yet.</strong> A target and its period are read live. Changing one changes what every trainee on this curriculum is measured against, in every institution that has adopted it, including periods that have already closed. A tool list is checked when an activity is filed and submitted, and never takes back credit already earned.</div>
+  <div class="form-section-head"><h2 id="pv-q14-h">Items (0)</h2></div>
+  <div class="detail-card detail-card--empty">
+    <p class="state-panel-copy">Neonatology has no national EPA yet. Add one under EPAs, then come back to add it here.</p>
+    <div class="form-actions"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>Go to EPAs</a></div>
+  </div>
 </div>
 
 <p class="pv-cap">Prof Mbatha after Step 6.33, Remove… on KGK-001: the dialog names the item and whose trainees stop being measured; it opens on Cancel, Remove item the filled danger button</p>
@@ -102,7 +113,7 @@
 </div>
 </div>
 
-<p class="pv-cap">390 (and from 1024px down in the app): each item a block, the EPA first, each cell labelled, Edit and Remove… 44px; the add link 44px beside Items (n)</p>
+<p class="pv-cap">390 (and from 1150px down in the app): each item a block, the EPA first, each cell labelled, Edit and Remove… 44px; the add link 44px beside Items (n)</p>
 <div class="pv-narrow">
   <div class="header-container"><div><h1>Items of Paediatric EPA Curriculum (11.2)</h1><p class="page-subtitle">College of Paediatricians of South Africa · Paediatrics / Paediatrics · effective 2026-11-02 · adopted by your institution on 2026-11-02</p></div></div>
   <div class="people-page curriculum-items-page">

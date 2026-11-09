@@ -1,0 +1,183 @@
+<!-- @dsCard group="Catalogue" height=4700 width=1180 subtitle="A College's record: titled by the College, its name the crumb, CPSA · Active under it; Name, Short code, Description and one Status group whose help says what an inactive College stops; Cancel, Deactivate… and Save; refusals under their field naming the holder; College created. by ?created; the D56 dialog on Cancel; deactivated and its inactive line; the save's failure; Unavailable, loading and load failed; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CollegeRecord</title>
+<style>
+  /* Each wide rendition is drawn in a 974px column, the content column beside the sidebar at 1280; the card is 1180px
+     wide so that no 1024px query fires on them. */
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-col { max-width: 974px; }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The app opens the dialog with showModal(); a static preview cannot, so its stage paints the scrim itself. */
+  .pv-stage { position: relative; background: var(--scrim); padding: var(--space-xl) 0; }
+  .pv-stage dialog { position: static; margin: 0 auto; }
+  /* Below 641px app.css makes every control on .user-page 44px, stacks the form's actions and the dialog's buttons with
+     the action on top, makes the Active row a 44px target with a 20px box (flow 16's shared rule), and folds the trail to
+     its parent; the 390 rendition repeats those rules under .pv-narrow (a 358px column: 390 less the phone's gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .header-container { flex-wrap: wrap; }
+  .pv-narrow .breadcrumbs li.breadcrumb-ancestor, .pv-narrow .breadcrumbs li.breadcrumb-current, .pv-narrow .breadcrumbs .breadcrumb-separator { display: none; }
+  .pv-narrow .breadcrumb-parent a { font-weight: 600; gap: 0.375rem; min-height: 44px; }
+  .pv-narrow .breadcrumb-back { display: block; }
+  .pv-narrow .user-page .btn, .pv-narrow .user-page .form-control { min-height: 2.75rem; }
+  .pv-narrow .user-page .form-actions, .pv-narrow .dialog-card .form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .pv-narrow .user-page .form-actions .btn, .pv-narrow .dialog-card .form-actions .btn { min-height: 2.75rem; width: 100%; }
+  .pv-narrow .user-page .form-check { min-height: 2.75rem; }
+  .pv-narrow .user-page .form-check .form-check-input { height: 1.25rem; width: 1.25rem; }
+  .pv-narrow .user-page .form-check label { align-items: center; display: inline-flex; flex: 1; min-height: 2.75rem; }
+</style>
+</head>
+<body>
+<div class="pv-col">
+<p class="pv-cap">The Administrator (devadmin) at Step 6.1, arrived by ?created: "College created." heads the column with the focus, the token gone from the address; titled by the College, its name the crumb, "CNSA · Active" under it; no Back to colleges</p>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+  <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Colleges</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-current"><span aria-current="page">College of Neurologists of South Africa</span></li>
+</ol></nav>
+<div class="header-container"><div><h1>College of Neurologists of South Africa</h1><p class="page-subtitle">CNSA · Active</p></div></div>
+<div class="user-page college-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status">College created.</div></div>
+  <div class="form-container">
+    <form novalidate>
+      <p class="field-help">* marks a field you must fill in.</p>
+      <div class="form-grid">
+        <div class="form-group full-width"><label for="pv1-name">Name <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv1-name" class="form-control" aria-required="true" autocomplete="off" value="College of Neurologists of South Africa"></div>
+        <div class="form-group full-width"><label for="pv1-code">Short code <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv1-code" class="form-control" aria-required="true" autocomplete="off" value="CNSA"></div>
+        <div class="form-group full-width"><label for="pv1-desc">Description</label><textarea id="pv1-desc" class="form-control" rows="4">Constituent College of the CMSA; owns the national Neurology catalogue.</textarea></div>
+        <fieldset class="form-group full-width"><legend>Status</legend><div class="form-check"><input id="pv1-active" type="checkbox" class="form-check-input" checked aria-describedby="pv1-active-help"><label for="pv1-active">Active</label></div><p class="page-subtitle" id="pv1-active-help">An inactive College cannot be named by a new invitation. Nothing else reads it: its specialities, EPAs and curricula, and every institution that has adopted one of its curricula, carry on as they are.</p></fieldset>
+      </div>
+      <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="button" id="pv1-deactivate" class="btn btn-outline" aria-haspopup="dialog">Deactivate…</button><button type="submit" class="btn btn-primary">Save</button></div>
+    </form>
+  </div>
+</div>
+
+<p class="pv-cap">Create college with CPSA typed by mistake (Step 6.1, S10): the command's refusal under Short code, naming the College that holds it, Short code focused, what was typed kept; no Status on a create</p>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+  <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Colleges</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-current"><span aria-current="page">Create college</span></li>
+</ol></nav>
+<div class="header-container"><div><h1>Create college</h1><p class="page-subtitle">A national College keeps its own specialities, EPAs and curricula. It starts active.</p></div></div>
+<div class="user-page college-page">
+  <div class="action-result" tabindex="-1"></div>
+  <div class="form-container">
+    <form novalidate>
+      <p class="field-help">* marks a field you must fill in.</p>
+      <div class="form-grid">
+        <div class="form-group full-width"><label for="pv2-name">Name <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv2-name" class="form-control" aria-required="true" autocomplete="off" value="College of Neurologists of South Africa"></div>
+        <div class="form-group full-width"><label for="pv2-code">Short code <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv2-code" class="form-control invalid" aria-required="true" aria-invalid="true" autocomplete="off" aria-describedby="pv2-code-refusal" value="CPSA"><div class="validation-message" role="alert" id="pv2-code-refusal">CPSA is already the short code of College of Paediatricians of South Africa. Choose another.</div></div>
+        <div class="form-group full-width"><label for="pv2-desc">Description</label><textarea id="pv2-desc" class="form-control" rows="4">Constituent College of the CMSA; owns the national Neurology catalogue.</textarea></div>
+      </div>
+      <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary">Create college</button></div>
+    </form>
+  </div>
+</div>
+
+<p class="pv-cap">Create college with the form empty (T324): each refusal under its field in the label's words, once, no summary; Name takes the focus; nothing is sent</p>
+<div class="user-page college-page">
+  <div class="form-container">
+    <form novalidate>
+      <p class="field-help">* marks a field you must fill in.</p>
+      <div class="form-grid">
+        <div class="form-group full-width"><label for="pv3-name">Name <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv3-name" class="form-control invalid" aria-required="true" aria-invalid="true" autocomplete="off" aria-describedby="pv3-name-refusal"><div class="validation-message" role="alert" id="pv3-name-refusal">Enter a name.</div></div>
+        <div class="form-group full-width"><label for="pv3-code">Short code <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv3-code" class="form-control invalid" aria-required="true" aria-invalid="true" autocomplete="off" aria-describedby="pv3-code-refusal"><div class="validation-message" role="alert" id="pv3-code-refusal">Enter a short code.</div></div>
+        <div class="form-group full-width"><label for="pv3-desc">Description</label><textarea id="pv3-desc" class="form-control" rows="4"></textarea></div>
+      </div>
+      <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary">Create college</button></div>
+    </form>
+  </div>
+</div>
+
+<p class="pv-cap">Step 6.2: only CPSA's description changed; Save stays on the record with "College saved." focused</p>
+<div class="user-page college-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status">College saved.</div></div>
+</div>
+
+<p class="pv-cap">Deactivate… on CNSA, or Save with Active unticked (D56, N20, Q15: no count): named for the College; Cancel focused; Deactivate the filled danger button. Cancel or Escape gives the focus back to whichever asked</p>
+<div class="pv-stage"><dialog open class="dialog-scrim dialog-card" aria-labelledby="pv4-t" aria-describedby="pv4-b"><div class="form-container"><h2 id="pv4-t">Deactivate College of Neurologists of South Africa?</h2><div id="pv4-b" class="dialog-body"><p>A new invitation will no longer be able to name it. That is all it changes: its specialities, EPAs and curricula stay as they are, every institution that has adopted one of its curricula carries on, and everyone already invited keeps their invitation.</p><p>You can reactivate it on this page.</p></div><div class="form-actions"><button type="button" class="btn btn-outline">Cancel</button><button type="button" class="btn btn-danger">Deactivate</button></div></div></dialog></div>
+
+<p class="pv-cap">Confirmed (R3-B11a): the result focused once the dialog has closed; "CNSA · Inactive"; Active unticked, its help the inactive line; Deactivate… gone. Ticking Active and saving reactivates</p>
+<div class="header-container"><div><h1>College of Neurologists of South Africa</h1><p class="page-subtitle">CNSA · Inactive</p></div></div>
+<div class="user-page college-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status">College of Neurologists of South Africa deactivated. A new invitation can no longer name it.</div></div>
+  <div class="form-container">
+    <form novalidate>
+      <p class="field-help">* marks a field you must fill in.</p>
+      <div class="form-grid">
+        <div class="form-group full-width"><label for="pv5-name">Name <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv5-name" class="form-control" aria-required="true" autocomplete="off" value="College of Neurologists of South Africa"></div>
+        <div class="form-group full-width"><label for="pv5-code">Short code <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv5-code" class="form-control" aria-required="true" autocomplete="off" value="CNSA"></div>
+        <div class="form-group full-width"><label for="pv5-desc">Description</label><textarea id="pv5-desc" class="form-control" rows="4">Constituent College of the CMSA; owns the national Neurology catalogue.</textarea></div>
+        <fieldset class="form-group full-width"><legend>Status</legend><div class="form-check"><input id="pv5-active" type="checkbox" class="form-check-input" aria-describedby="pv5-active-help"><label for="pv5-active">Active</label></div><p class="page-subtitle" id="pv5-active-help">Inactive. A new invitation cannot name this College. Tick Active and save to reactivate it.</p></fieldset>
+      </div>
+      <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary">Save</button></div>
+    </form>
+  </div>
+</div>
+
+<p class="pv-cap">Active ticked and saved: the reactivation's result</p>
+<div class="user-page college-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status">College of Neurologists of South Africa reactivated. A new invitation can name it again.</div></div>
+</div>
+
+<p class="pv-cap">A save that fails for no field's reason (R3-B12, T272): fixed words in the result region, focused; never "already exists", never the exception's text</p>
+<div class="user-page college-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert">The College could not be saved. Nothing has changed. Try again, or come back in a few minutes.</div></div>
+</div>
+
+<p class="pv-cap">Unavailable (Q7, R2-B13): an id the read does not return, in the page's own place; the h1 is the last crumb; no id shown</p>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+  <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Colleges</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-current"><span aria-current="page">College unavailable</span></li>
+</ol></nav>
+<div class="header-container"><div><h1>College unavailable</h1></div></div>
+<div class="user-page college-page">
+  <div class="detail-card detail-card--empty"><div class="state-panel-copy">This College does not exist, or you cannot open it.</div><div class="form-actions"><a class="btn btn-primary" href="#">Go to Colleges</a></div></div>
+</div>
+
+<p class="pv-cap">Loading (R2-B14b, T7): "College" until the record is read, the line over one skeleton card, nothing offered</p>
+<div class="header-container"><div><h1>College</h1></div></div>
+<div class="user-page college-page" aria-busy="true">
+  <p class="loading-line" role="status">Loading this College.</p>
+  <div class="detail-card" aria-hidden="true"><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line skel-short"></div></div>
+</div>
+
+<p class="pv-cap">Load failed (R2-B15b, T329): fixed words and Try again, which focuses the h1 once it has read; not Unavailable</p>
+<div class="header-container"><div><h1>College</h1></div></div>
+<div class="user-page college-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text">Could not load this College. Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5" /></svg>Try again</button></div></div></div>
+</div>
+</div>
+
+<p class="pv-cap">At 390, Step 6.2 before saving: the trail folds to "Colleges"; every control 44px; the Active row a 44px target; Save on top, then Deactivate…, then Cancel, each the form's width (the empty result region still takes its row: a known gap)</p>
+<div class="pv-narrow">
+  <nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+    <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+    <li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Colleges</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+    <li class="breadcrumb-current"><span aria-current="page">College of Paediatricians of South Africa</span></li>
+  </ol></nav>
+  <div class="header-container"><div><h1>College of Paediatricians of South Africa</h1><p class="page-subtitle">CPSA · Active</p></div></div>
+  <div class="user-page college-page">
+    <div class="action-result" tabindex="-1"></div>
+    <div class="form-container">
+      <form novalidate>
+        <p class="field-help">* marks a field you must fill in.</p>
+        <div class="form-grid">
+          <div class="form-group full-width"><label for="pv9-name">Name <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv9-name" class="form-control" aria-required="true" autocomplete="off" value="College of Paediatricians of South Africa"></div>
+          <div class="form-group full-width"><label for="pv9-code">Short code <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv9-code" class="form-control" aria-required="true" autocomplete="off" value="CPSA"></div>
+          <div class="form-group full-width"><label for="pv9-desc">Description</label><textarea id="pv9-desc" class="form-control" rows="4">Constituent College of the Colleges of Medicine of South Africa; owns the national Paediatric EPA catalogue.</textarea></div>
+          <fieldset class="form-group full-width"><legend>Status</legend><div class="form-check"><input id="pv9-active" type="checkbox" class="form-check-input" checked aria-describedby="pv9-active-help"><label for="pv9-active">Active</label></div><p class="page-subtitle" id="pv9-active-help">An inactive College cannot be named by a new invitation. Nothing else reads it: its specialities, EPAs and curricula, and every institution that has adopted one of its curricula, carry on as they are.</p></fieldset>
+        </div>
+        <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="button" class="btn btn-outline" aria-haspopup="dialog">Deactivate…</button><button type="submit" class="btn btn-primary">Save</button></div>
+      </form>
+    </div>
+  </div>
+  <p class="pv-cap">The dialog at 390: Deactivate on top of Cancel, each the row's width</p>
+  <div class="pv-stage"><dialog open class="dialog-scrim dialog-card" aria-labelledby="pv10-t" aria-describedby="pv10-b"><div class="form-container"><h2 id="pv10-t">Deactivate College of Paediatricians of South Africa?</h2><div id="pv10-b" class="dialog-body"><p>A new invitation will no longer be able to name it. That is all it changes: its specialities, EPAs and curricula stay as they are, every institution that has adopted one of its curricula carries on, and everyone already invited keeps their invitation.</p><p>You can reactivate it on this page.</p></div><div class="form-actions"><button type="button" class="btn btn-outline">Cancel</button><button type="button" class="btn btn-danger">Deactivate</button></div></div></dialog></div>
+</div>
+</body>
+</html>

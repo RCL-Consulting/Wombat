@@ -1,4 +1,4 @@
-<!-- @dsCard group="Catalogue" height=4300 width=974 subtitle="An EPA's page in the catalogue: titled by the EPA, its code the crumb; the form where it may be changed (Active's help says whose trainees), Deactivate… and its dialog on Cancel; refusals under their field; the created EPA's result by ?created; a national EPA's record, read only; EPA unavailable; 390" -->
+<!-- @dsCard group="Catalogue" height=5200 width=974 subtitle="An EPA's page in the catalogue: titled by the EPA, its code the crumb; a national EPA's reach for the College (EV2) and in its pause dialog; the required line and the Status legend; the form where it may be changed (Active's help says whose trainees), Deactivate… and its dialog on Cancel; refusals under their field; the created EPA's result by ?created; a national EPA's record, read only; EPA unavailable; 390" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -35,47 +35,65 @@
   <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status">EPA saved.</div></div>
   <div class="form-container">
     <form novalidate>
+      <p class="field-help">* marks a field you must fill in.</p>
       <div class="form-grid form-grid--wide">
-        <div class="form-group"><label for="pv1-sub">Sub-speciality <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><select id="pv1-sub" class="form-select"><option selected>Paediatrics / Paediatrics</option></select></div>
-        <div class="form-group"><label for="pv1-code">Code <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv1-code" class="form-control" value="KGK-001"></div>
-        <div class="form-group full-width"><label for="pv1-title">Title <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv1-title" class="form-control" value="Running a paediatric outreach clinic at a district hospital"></div>
+        <div class="form-group"><label for="pv1-sub">Sub-speciality <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><select id="pv1-sub" aria-required="true" class="form-select"><option selected>Paediatrics / Paediatrics</option></select></div>
+        <div class="form-group"><label for="pv1-code">Code <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv1-code" aria-required="true" class="form-control" value="KGK-001"></div>
+        <div class="form-group full-width"><label for="pv1-title">Title <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv1-title" aria-required="true" class="form-control" value="Running a paediatric outreach clinic at a district hospital"></div>
         <div class="form-group full-width"><label for="pv1-desc">Description</label><textarea id="pv1-desc" class="form-control">Plans and runs a monthly outreach clinic at a North West district hospital, with its referral follow-up.</textarea></div>
         <div class="form-group full-width"><label for="pv1-rks">Required knowledge and skills</label><textarea id="pv1-rks" class="form-control"></textarea></div>
-        <div class="form-group"><label for="pv1-cat">Category <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><select id="pv1-cat" class="form-select"><option>Core</option><option selected>Elective</option></select></div>
-        <div class="form-group"><label for="pv1-active">Status</label><div class="form-check"><input id="pv1-active" type="checkbox" class="form-check-input" checked aria-describedby="pv1-active-help"><label for="pv1-active">Active</label></div><small class="page-subtitle" id="pv1-active-help">An inactive EPA cannot be chosen by Kgosi Kgari Teaching Hospital's trainees for a new activity and is not a target on their running programmes' progress pages or dashboards; a programme that has ended keeps it on its record. Evidence already recorded against it is kept, and so is the progress it earned while it was active. An activity completed against it while it is inactive counts towards nothing until the EPA is reactivated, and reactivating it credits those activities.</small></div>
+        <div class="form-group"><label for="pv1-cat">Category <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><select id="pv1-cat" aria-required="true" class="form-select"><option>Core</option><option selected>Elective</option></select></div>
+        <fieldset class="form-group"><legend>Status</legend><div class="form-check"><input id="pv1-active" type="checkbox" class="form-check-input" checked aria-describedby="pv1-active-help"><label for="pv1-active">Active</label></div><p class="page-subtitle" id="pv1-active-help">An inactive EPA cannot be chosen by Kgosi Kgari Teaching Hospital's trainees for a new activity and is not a target on their running programmes' progress pages or dashboards; a programme that has ended keeps it on its record. Evidence already recorded against it is kept, and so is the progress it earned while it was active. An activity completed against it while it is inactive counts towards nothing until the EPA is reactivated, and reactivating it credits those activities.</p></fieldset>
       </div>
       <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="button" class="btn btn-outline" aria-haspopup="dialog">Deactivate…</button><button type="submit" class="btn btn-primary">Save</button></div>
     </form>
   </div>
 </div>
 
-<p class="pv-cap">Dr Anton Kruger creates an EPA and presses Save with Code and Title empty (Step 6.28): each refusal under its field, named first by it, the field marked; Code takes the focus; nothing at the top</p>
-<div class="header-container"><div><h1>Create EPA</h1><p class="page-subtitle">Define the EPA code, scope, and descriptive guidance.</p></div></div>
+<p class="pv-cap">Dr Anton Kruger creates an EPA and presses Save with Code and Title empty (Step 6.28): the College's create subtitle and picker help (flow 16, R3-E10, N16); the required line; each refusal under its field, named first by it, the field marked; Code takes the focus; nothing at the top</p>
+<div class="header-container"><div><h1>Create EPA</h1><p class="page-subtitle">A national EPA of College of Paediatricians of South Africa. It reaches a registrar once a curriculum an institution has adopted holds it.</p></div></div>
 <div class="user-page epa-page">
   <div class="form-container">
     <form novalidate>
+      <p class="field-help">* marks a field you must fill in.</p>
       <div class="form-grid form-grid--wide">
-        <div class="form-group"><label for="pv2-sub">Sub-speciality <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><select id="pv2-sub" class="form-select"><option selected>Paediatrics / Neonatology</option><option>Paediatrics / Paediatrics</option></select></div>
-        <div class="form-group"><label for="pv2-code">Code <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv2-code" class="form-control input-validation-error" aria-invalid="true" aria-describedby="pv2-code-refusal"><div class="validation-message" role="alert" id="pv2-code-refusal">Enter a code.</div></div>
-        <div class="form-group full-width"><label for="pv2-title">Title <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv2-title" class="form-control input-validation-error" aria-invalid="true" aria-describedby="pv2-title-refusal"><div class="validation-message" role="alert" id="pv2-title-refusal">Enter a title.</div></div>
+        <div class="form-group"><label for="pv2-sub">Sub-speciality <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><select id="pv2-sub" aria-required="true" class="form-select" aria-describedby="pv2-sub-help"><option selected>Paediatrics / Neonatology</option><option>Paediatrics / Paediatrics</option></select><small class="page-subtitle" id="pv2-sub-help">College of Paediatricians of South Africa's sub-specialities.</small></div>
+        <div class="form-group"><label for="pv2-code">Code <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv2-code" aria-required="true" class="form-control input-validation-error" aria-invalid="true" aria-describedby="pv2-code-refusal"><div class="validation-message" role="alert" id="pv2-code-refusal">Enter a code.</div></div>
+        <div class="form-group full-width"><label for="pv2-title">Title <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv2-title" aria-required="true" class="form-control input-validation-error" aria-invalid="true" aria-describedby="pv2-title-refusal"><div class="validation-message" role="alert" id="pv2-title-refusal">Enter a title.</div></div>
         <div class="form-group full-width"><label for="pv2-desc">Description</label><textarea id="pv2-desc" class="form-control"></textarea></div>
         <div class="form-group full-width"><label for="pv2-rks">Required knowledge and skills</label><textarea id="pv2-rks" class="form-control"></textarea></div>
-        <div class="form-group"><label for="pv2-cat">Category <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><select id="pv2-cat" class="form-select"><option selected>Core</option><option>Elective</option></select></div>
+        <div class="form-group"><label for="pv2-cat">Category <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><select id="pv2-cat" aria-required="true" class="form-select"><option selected>Core</option><option>Elective</option></select></div>
       </div>
       <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary">Save</button></div>
     </form>
   </div>
 </div>
 
-<p class="pv-cap">Deactivate… on PAED-012 (Step 6.17, Q11, S11): named for the EPA and for whose trainees it stops measuring; Cancel focused; Deactivate the filled danger button</p>
-<div class="pv-stage"><dialog open class="dialog-scrim dialog-card" aria-labelledby="pv3-t" aria-describedby="pv3-b"><div class="form-container"><h2 id="pv3-t">Deactivate PAED-012?</h2><p id="pv3-b">It can no longer be chosen for a new activity, and it stops being a target on running programmes' progress pages and dashboards, for every institution that has adopted it. A programme that has ended keeps it on its record, marked no longer in use. The progress it has earned is kept. An activity completed against it while it is inactive counts towards nothing until it is reactivated. You can reactivate it on this page.</p><div class="form-actions"><button type="button" class="btn btn-outline">Cancel</button><button type="button" class="btn btn-danger">Deactivate</button></div></div></dialog></div>
+<p class="pv-cap">Dr Anton Kruger on PAED-012 before Step 6.17 (flow 16, EV2, R3-E05): subtitled by its College and discipline; its reach a standing info alert under the result region, no live region; Save asks first while Active is unticked (aria-haspopup)</p>
+<div class="header-container"><div><h1>PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams</h1><p class="page-subtitle">College of Paediatricians of South Africa · Paediatrics / Paediatrics</p></div></div>
+<div class="user-page epa-page">
+  <div class="action-result" tabindex="-1"></div>
+  <div class="alert alert-info">PAED-012 is on 1 curriculum adopted by 1 institution, Kgosi Kgari Teaching Hospital; 3 registrars in training are measured against it. Its code, title and description are read at once wherever it is named.</div>
+  <div class="form-container">
+    <form novalidate>
+      <p class="field-help">* marks a field you must fill in.</p>
+      <div class="form-grid form-grid--wide">
+        <fieldset class="form-group"><legend>Status</legend><div class="form-check"><input id="pv4-active" type="checkbox" class="form-check-input" aria-describedby="pv4-active-help"><label for="pv4-active">Active</label></div><p class="page-subtitle" id="pv4-active-help">An inactive EPA cannot be chosen for a new activity and is not a target on any running programme's progress page or dashboard; a programme that has ended keeps it on its record. Evidence already recorded against it is kept, and so is the progress it earned while it was active. An activity completed against it while it is inactive counts towards nothing until the EPA is reactivated, and reactivating it credits those activities.</p></fieldset>
+      </div>
+      <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="button" class="btn btn-outline" aria-haspopup="dialog">Deactivate…</button><button type="submit" class="btn btn-primary" aria-haspopup="dialog">Save</button></div>
+    </form>
+  </div>
+</div>
+
+<p class="pv-cap">Deactivate… on PAED-012 (Step 6.17, Q11, S11): named for the EPA; its reach first (flow 16, R3-E07), then whose trainees it stops measuring; Cancel focused, and Cancel returns the focus to the control that asked; Deactivate the filled danger button</p>
+<div class="pv-stage"><dialog open class="dialog-scrim dialog-card" aria-labelledby="pv3-t" aria-describedby="pv3-b"><div class="form-container"><h2 id="pv3-t">Deactivate PAED-012?</h2><div id="pv3-b" class="dialog-body"><p>PAED-012 is on 1 curriculum adopted by 1 institution, Kgosi Kgari Teaching Hospital; 3 registrars in training are measured against it.</p><p>It can no longer be chosen for a new activity, and it stops being a target on running programmes' progress pages and dashboards, for every institution that has adopted it. A programme that has ended keeps it on its record, marked no longer in use. The progress it has earned is kept. An activity completed against it while it is inactive counts towards nothing until it is reactivated. You can reactivate it on this page.</p></div><div class="form-actions"><button type="button" class="btn btn-outline">Cancel</button><button type="button" class="btn btn-danger">Deactivate</button></div></div></dialog></div>
 
 <p class="pv-cap">Confirmed: "EPA deactivated." takes the focus once the dialog has closed; Active unticked, Deactivate… gone</p>
 <div class="user-page epa-page">
   <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status">EPA deactivated.</div></div>
 </div>
 
-<p class="pv-cap">Prof Mbatha opens PAED-012 from her EPA list: a national EPA's record (Q2, R2-C10): no form, no Save, no Deactivate…; the College's text keeps its line breaks</p>
+<p class="pv-cap">Prof Mbatha opens PAED-012 from the EPA list: a national EPA's record (Q2, R2-C10): no form, no Save, no Deactivate…; the College's text keeps its line breaks</p>
 <div class="header-container"><div><h1>PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams</h1><p class="page-subtitle">College of Paediatricians of South Africa · Paediatrics / Paediatrics · Set by the College, so read only here</p></div></div>
 <div class="user-page epa-page">
   <section class="user-section" aria-labelledby="pv4-about"><h2 id="pv4-about">About this EPA</h2>

@@ -1,0 +1,91 @@
+<!-- @dsCard group="Catalogue" height=2150 width=1180 subtitle="Colleges: the Administrator's list of national Colleges, each row headed by its name, Created the South African day, Edit and Specialities named for the row; Create college only once the read is in; loading and the fixed-words failure; text columns wide from 1151px, one-word columns fitted; stacked to 1024px; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Colleges</title>
+<style>
+  /* The card is 1180px wide so that app.css's 1024px query (the list stacks to 1024px) does not fire on the wide
+     renditions, and its 1151px query (Name 28%, Description 27%) does, as at 1280; each is drawn in a 974px column, the
+     content column beside the sidebar at 1280. */
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-col { max-width: 974px; }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The stacked list (at 1024px and below in the app), the header's actions and the phone's rules (below 641px),
+     repeated under .pv-narrow (a 358px column: 390 less the phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .header-container { flex-wrap: wrap; }
+  .pv-narrow .header-container .actions-cell { width: 100%; }
+  .pv-narrow .header-container .actions-cell .btn { flex: 1 1 auto; min-height: 2.75rem; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-narrow .clinic-table--stack-wide .btn, .pv-narrow .people-page .btn { min-height: 2.75rem; }
+</style>
+</head>
+<body>
+<div class="pv-col">
+<p class="pv-cap">The Administrator (devadmin) after Step 6.1: three Colleges in name order, each headed by its name; Short code, Status and Created on one line; Edit and Specialities named for the row; Create college beside the h1</p>
+<div class="header-container"><div><h1>Colleges</h1><p class="page-subtitle">The national Colleges. Each College's admin keeps its specialities, EPAs and curricula; you keep the Colleges themselves.</p></div><div class="actions-cell"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Create college</a></div></div>
+<div class="people-page colleges-page">
+  <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+    <caption>Every College</caption>
+    <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap">Name</th><th scope="col" role="columnheader" class="col-fit">Short code</th><th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Description</th><th scope="col" role="columnheader" class="col-fit">Status</th><th scope="col" role="columnheader" class="col-fit">Created</th><th scope="col" role="columnheader" class="col-actions"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody role="rowgroup">
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap">College of Neurologists of South Africa</th><td role="cell" data-label="Short code" class="col-fit">CNSA</td><td role="cell" data-label="Description" class="col-wrap">Constituent College of the CMSA; owns the national Neurology catalogue.</td><td role="cell" data-label="Status" class="col-fit">Active</td><td role="cell" data-label="Created" class="col-fit">2026-11-05</td><td role="cell" class="col-actions"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit College of Neurologists of South Africa">Edit</a><a class="btn btn-outline btn-sm" href="#" aria-label="Specialities of College of Neurologists of South Africa">Specialities</a></div></td></tr>
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap">College of Paediatricians of South Africa</th><td role="cell" data-label="Short code" class="col-fit">CPSA</td><td role="cell" data-label="Description" class="col-wrap">Constituent College of the Colleges of Medicine of South Africa; owns the national Paediatric EPA catalogue.</td><td role="cell" data-label="Status" class="col-fit">Active</td><td role="cell" data-label="Created" class="col-fit">2026-11-05</td><td role="cell" class="col-actions"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit College of Paediatricians of South Africa">Edit</a><a class="btn btn-outline btn-sm" href="#" aria-label="Specialities of College of Paediatricians of South Africa">Specialities</a></div></td></tr>
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Demo College</th><td role="cell" data-label="Short code" class="col-fit">DEMO-C</td><td role="cell" data-label="Description" class="col-wrap">Seeded demo college (national catalogue owner).</td><td role="cell" data-label="Status" class="col-fit">Active</td><td role="cell" data-label="Created" class="col-fit">2026-11-05</td><td role="cell" class="col-actions"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit Demo College">Edit</a><a class="btn btn-outline btn-sm" href="#" aria-label="Specialities of Demo College">Specialities</a></div></td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<p class="pv-cap">An inactive College reads "Inactive" in words; its row keeps Edit and Specialities</p>
+<div class="people-page colleges-page">
+  <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+    <caption>Every College</caption>
+    <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap">Name</th><th scope="col" role="columnheader" class="col-fit">Short code</th><th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Description</th><th scope="col" role="columnheader" class="col-fit">Status</th><th scope="col" role="columnheader" class="col-fit">Created</th><th scope="col" role="columnheader" class="col-actions"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody role="rowgroup">
+      <tr role="row"><th scope="row" role="rowheader" class="col-wrap">College of Neurologists of South Africa</th><td role="cell" data-label="Short code" class="col-fit">CNSA</td><td role="cell" data-label="Description" class="col-wrap">Constituent College of the CMSA; owns the national Neurology catalogue.</td><td role="cell" data-label="Status" class="col-fit">Inactive</td><td role="cell" data-label="Created" class="col-fit">2026-11-05</td><td role="cell" class="col-actions"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit College of Neurologists of South Africa">Edit</a><a class="btn btn-outline btn-sm" href="#" aria-label="Specialities of College of Neurologists of South Africa">Specialities</a></div></td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<p class="pv-cap">Loading (R2-B14a): the line over one skeleton card; no Create college until the read is in</p>
+<div class="header-container"><div><h1>Colleges</h1><p class="page-subtitle">The national Colleges. Each College's admin keeps its specialities, EPAs and curricula; you keep the Colleges themselves.</p></div></div>
+<div class="people-page colleges-page">
+  <p class="loading-line" role="status">Loading the Colleges.</p>
+  <div class="detail-card" aria-hidden="true"><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line skel-short"></div></div>
+</div>
+
+<p class="pv-cap">Load failed (R2-B15a, T329): fixed words and Try again, never the exception's text; no empty state and no Create college</p>
+<div class="header-container"><div><h1>Colleges</h1><p class="page-subtitle">The national Colleges. Each College's admin keeps its specialities, EPAs and curricula; you keep the Colleges themselves.</p></div></div>
+<div class="people-page colleges-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text">Could not load the Colleges. Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5" /></svg>Try again</button></div></div></div>
+</div>
+
+<p class="pv-cap">Empty (as built; the seed makes it unreachable)</p>
+<div class="people-page colleges-page">
+  <div class="detail-card detail-card--empty" tabindex="-1"><div class="state-panel-title">No colleges yet</div> <div class="state-panel-copy">Create the first college to start defining national specialities, EPAs and curricula.</div></div>
+</div>
+</div>
+
+<p class="pv-cap">At 390 (stacked from 1024px), at Step 6.2: Create college takes the row; a block per College, its name first, then Short code, Description, Status, Created, and Edit and Specialities at 44px</p>
+<div class="pv-narrow">
+  <div class="header-container"><div><h1>Colleges</h1><p class="page-subtitle">The national Colleges. Each College's admin keeps its specialities, EPAs and curricula; you keep the Colleges themselves.</p></div><div class="actions-cell"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Create college</a></div></div>
+  <div class="people-page colleges-page">
+    <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+      <caption>Every College</caption>
+      <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap">Name</th><th scope="col" role="columnheader" class="col-fit">Short code</th><th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Description</th><th scope="col" role="columnheader" class="col-fit">Status</th><th scope="col" role="columnheader" class="col-fit">Created</th><th scope="col" role="columnheader" class="col-actions"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody role="rowgroup">
+        <tr role="row"><th scope="row" role="rowheader" class="col-wrap">College of Neurologists of South Africa</th><td role="cell" data-label="Short code" class="col-fit">CNSA</td><td role="cell" data-label="Description" class="col-wrap">Constituent College of the CMSA; owns the national Neurology catalogue.</td><td role="cell" data-label="Status" class="col-fit">Active</td><td role="cell" data-label="Created" class="col-fit">2026-11-05</td><td role="cell" class="col-actions"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit College of Neurologists of South Africa">Edit</a><a class="btn btn-outline btn-sm" href="#" aria-label="Specialities of College of Neurologists of South Africa">Specialities</a></div></td></tr>
+        <tr role="row"><th scope="row" role="rowheader" class="col-wrap">College of Paediatricians of South Africa</th><td role="cell" data-label="Short code" class="col-fit">CPSA</td><td role="cell" data-label="Description" class="col-wrap">Constituent College of the Colleges of Medicine of South Africa; owns the national Paediatric EPA catalogue and its versions.</td><td role="cell" data-label="Status" class="col-fit">Active</td><td role="cell" data-label="Created" class="col-fit">2026-11-05</td><td role="cell" class="col-actions"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit College of Paediatricians of South Africa">Edit</a><a class="btn btn-outline btn-sm" href="#" aria-label="Specialities of College of Paediatricians of South Africa">Specialities</a></div></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</div>
+</body>
+</html>

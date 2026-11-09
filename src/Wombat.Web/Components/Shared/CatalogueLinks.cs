@@ -63,8 +63,8 @@ public static class CatalogueLinks
     public const string NewCollege = "/admin/colleges/new";
 
     /// <summary>
-    /// The College admin's Specialities, the menu item's address: it sends him to his College's tree, or tells him his
-    /// account names no College (S12). Never a link to Colleges (T291 item 2).
+    /// The College admin's Specialities, the menu item's address: it sends them to their College's tree, or tells them
+    /// their account names no College (S12). Never a link to Colleges (T291 item 2).
     /// </summary>
     public const string Specialities = "/admin/specialities";
 

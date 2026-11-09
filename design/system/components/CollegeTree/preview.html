@@ -1,0 +1,163 @@
+<!-- @dsCard group="Catalogue" height=3600 width=1180 subtitle="The College's tree: a section a speciality, its Edit and Create sub-speciality beside the h2, its line, its sub-specialities with their default ladder; a record page's result by token, focused; No sub-specialities yet; the empty College; College unavailable; loading and load failed; No College on your account; stacked at 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CollegeTree</title>
+<style>
+  /* The card is 1180px wide so that app.css's 1024px query (the tree's tables stack to 1024px) does not fire on the wide
+     renditions, and its 1151px query (Description 40%, Default scale 24%) does; each is drawn in a 974px column, the
+     content column beside the sidebar at 1280. */
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-col { max-width: 974px; }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The stacked tables (1024px and below in the app), the header that wraps below 1024px, and the phone's rules (below
+     641px: the trail folded to its parent, every button 44px), repeated under .pv-narrow (a 358px column: 390 less the
+     phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .header-container { flex-wrap: wrap; }
+  .pv-narrow .breadcrumbs li.breadcrumb-ancestor, .pv-narrow .breadcrumbs li.breadcrumb-current, .pv-narrow .breadcrumbs .breadcrumb-separator { display: none; }
+  .pv-narrow .breadcrumb-parent a { font-weight: 600; gap: 0.375rem; min-height: 44px; }
+  .pv-narrow .breadcrumb-back { display: block; }
+  .pv-narrow .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .pv-narrow .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .pv-narrow .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .pv-narrow .clinic-table--stack-wide td, .pv-narrow .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .pv-narrow .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .pv-narrow .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .pv-narrow .people-page .btn { min-height: 2.75rem; }
+</style>
+</head>
+<body>
+<div class="pv-col">
+<p class="pv-cap">Anton Kruger after Step 6.12 (R3-A07): the create returned by ?created=sub:4, its result at the top, focused, the token gone; the trail ends at the College; Paediatrics' line the description saved at Step 6.11; Neonatology and Paediatrics by name, both on the CPSA ladder</p>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+  <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Specialities</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-current"><span aria-current="page">College of Paediatricians of South Africa</span></li>
+</ol></nav>
+<div class="header-container"><div><h1>Specialities</h1><p class="page-subtitle">College of Paediatricians of South Africa (CPSA): its specialities, their sub-specialities and the ladder each uses.</p></div><div class="actions-cell"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Create speciality</a></div></div>
+<div class="people-page college-tree-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status"><strong>Sub-speciality Neonatology created.</strong></div></div>
+  <section class="user-section" aria-labelledby="pv1-speciality-2">
+    <div class="form-section-head">
+      <h2 id="pv1-speciality-2">Paediatrics</h2>
+      <div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit the speciality Paediatrics">Edit</a><a class="btn btn-outline btn-sm" href="#" aria-label="Create sub-speciality of Paediatrics">Create sub-speciality</a></div>
+    </div>
+    <p class="muted">Specialist training in Paediatrics, and certificate training in its sub-specialities. · Active</p>
+    <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+      <caption>Sub-specialities of Paediatrics</caption>
+      <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap">Sub-speciality</th><th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Description</th><th scope="col" role="columnheader" class="col-wrap col-wrap--scale">Default scale</th><th scope="col" role="columnheader" class="col-fit">Status</th><th scope="col" role="columnheader" class="col-fit"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody role="rowgroup">
+        <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Neonatology</th><td role="cell" class="col-wrap" data-label="Description">Certificate training in Neonatology.</td><td role="cell" class="col-wrap" data-label="Default scale">CPSA Paediatric Entrustment Scale v11.1</td><td role="cell" class="col-fit" data-label="Status">Active</td><td role="cell" class="col-fit"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit the sub-speciality Neonatology">Edit</a></div></td></tr>
+        <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Paediatrics</th><td role="cell" class="col-wrap" data-label="Description">General paediatric specialist training programme.</td><td role="cell" class="col-wrap" data-label="Default scale">CPSA Paediatric Entrustment Scale v11.1</td><td role="cell" class="col-fit" data-label="Status">Active</td><td role="cell" class="col-fit"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit the sub-speciality Paediatrics">Edit</a></div></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+</div>
+
+<p class="pv-cap">devadmin at Step 6.3 (R3-A12): Colleges › the College › Specialities; "Speciality Neurology created." focused; Neurology's section with no table yet, "No sub-specialities yet."</p>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+  <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Colleges</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>College of Neurologists of South Africa</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-current"><span aria-current="page">Specialities</span></li>
+</ol></nav>
+<div class="header-container"><div><h1>Specialities</h1><p class="page-subtitle">College of Neurologists of South Africa (CNSA): its specialities, their sub-specialities and the ladder each uses.</p></div><div class="actions-cell"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Create speciality</a></div></div>
+<div class="people-page college-tree-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status"><strong>Speciality Neurology created.</strong></div></div>
+  <section class="user-section" aria-labelledby="pv2-speciality-3">
+    <div class="form-section-head">
+      <h2 id="pv2-speciality-3">Neurology</h2>
+      <div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit the speciality Neurology">Edit</a><a class="btn btn-outline btn-sm" href="#" aria-label="Create sub-speciality of Neurology">Create sub-speciality</a></div>
+    </div>
+    <p class="muted">Specialist training in Neurology. · Active</p>
+    <p class="muted">No sub-specialities yet. Create the first sub-speciality of Neurology.</p>
+  </section>
+</div>
+
+<p class="pv-cap">devadmin after Step 6.4 (R3-A13b): "Sub-speciality Adult Neurology created."; its row "No default" until Step 6.7</p>
+<div class="people-page college-tree-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status"><strong>Sub-speciality Adult Neurology created.</strong></div></div>
+  <section class="user-section" aria-labelledby="pv3-speciality-3">
+    <div class="form-section-head">
+      <h2 id="pv3-speciality-3">Neurology</h2>
+      <div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit the speciality Neurology">Edit</a><a class="btn btn-outline btn-sm" href="#" aria-label="Create sub-speciality of Neurology">Create sub-speciality</a></div>
+    </div>
+    <p class="muted">Specialist training in Neurology. · Active</p>
+    <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+      <caption>Sub-specialities of Neurology</caption>
+      <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap">Sub-speciality</th><th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Description</th><th scope="col" role="columnheader" class="col-wrap col-wrap--scale">Default scale</th><th scope="col" role="columnheader" class="col-fit">Status</th><th scope="col" role="columnheader" class="col-fit"><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody role="rowgroup">
+        <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Adult Neurology</th><td role="cell" class="col-wrap" data-label="Description">Adult neurology specialist training programme.</td><td role="cell" class="col-wrap" data-label="Default scale">No default</td><td role="cell" class="col-fit" data-label="Status">Active</td><td role="cell" class="col-fit"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit the sub-speciality Adult Neurology">Edit</a></div></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+</div>
+
+<p class="pv-cap">devadmin at Step 6.3, before the create (R2-A10): the empty College; Create speciality in the header is the way on</p>
+<div class="header-container"><div><h1>Specialities</h1><p class="page-subtitle">College of Neurologists of South Africa (CNSA): its specialities, their sub-specialities and the ladder each uses.</p></div><div class="actions-cell"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Create speciality</a></div></div>
+<div class="people-page college-tree-page">
+  <div class="detail-card detail-card--empty" tabindex="-1"><div class="state-panel-title">No specialities yet</div> <div class="state-panel-copy">Create the first speciality for College of Neurologists of South Africa.</div></div>
+</div>
+
+<p class="pv-cap">Anton Kruger types the Demo College's id (Q7, R2-A18a): College unavailable, never an empty list offering Create; the trail ends at the h1</p>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+  <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Specialities</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-current"><span aria-current="page">College unavailable</span></li>
+</ol></nav>
+<div class="header-container"><div><h1>College unavailable</h1></div></div>
+<div class="people-page college-tree-page">
+  <div class="detail-card detail-card--empty"><div class="state-panel-copy">This College does not exist, or you cannot open it.</div><div class="form-actions"><a class="btn btn-primary" href="#">Go to Specialities</a></div></div>
+</div>
+
+<p class="pv-cap">Loading (R2-A19a): the line over one skeleton card; no subtitle, no Create speciality</p>
+<div class="header-container"><div><h1>Specialities</h1></div></div>
+<div class="people-page college-tree-page" aria-busy="true">
+  <p class="loading-line" role="status">Loading the specialities.</p>
+  <div class="detail-card" aria-hidden="true"><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line skel-short"></div></div>
+</div>
+
+<p class="pv-cap">Load failed (R2-A20a): fixed words and Try again, never the exception's text; a failed read is not College unavailable</p>
+<div class="header-container"><div><h1>Specialities</h1></div></div>
+<div class="people-page college-tree-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text">Could not load the specialities. Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button></div></div></div>
+</div>
+
+<p class="pv-cap">/admin/specialities for a College admin whose account names no College (S12, R2-A21): no link, since Colleges refuses them</p>
+<div class="header-container"><div><h1>Specialities</h1></div></div>
+<div class="people-page">
+  <div class="detail-card detail-card--empty" tabindex="-1"><div class="state-panel-title">No College on your account</div> <div class="state-panel-copy">Your account names no College. Ask the platform administrator to add it.</div></div>
+</div>
+</div>
+
+<p class="pv-cap">At 390 (stacked from 1024px; Step 6.12): the trail folded to its parent; Edit and Create sub-speciality beside the short h2, 44px; a block per sub-speciality, its name first, then Description, Default scale, Status and Edit</p>
+<div class="pv-narrow">
+  <nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+    <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+    <li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Specialities</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+    <li class="breadcrumb-current"><span aria-current="page">College of Paediatricians of South Africa</span></li>
+  </ol></nav>
+  <div class="header-container"><div><h1>Specialities</h1><p class="page-subtitle">College of Paediatricians of South Africa (CPSA): its specialities, their sub-specialities and the ladder each uses.</p></div><div class="actions-cell"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>Create speciality</a></div></div>
+  <div class="people-page college-tree-page">
+    <section class="user-section" aria-labelledby="pv9-speciality-2">
+      <div class="form-section-head">
+        <h2 id="pv9-speciality-2">Paediatrics</h2>
+        <div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit the speciality Paediatrics">Edit</a><a class="btn btn-outline btn-sm" href="#" aria-label="Create sub-speciality of Paediatrics">Create sub-speciality</a></div>
+      </div>
+      <p class="muted">Specialist training in Paediatrics, and certificate training in its sub-specialities. · Active</p>
+      <div class="table-container shadow"><table class="clinic-table clinic-table--stack clinic-table--stack-wide" role="table">
+        <caption>Sub-specialities of Paediatrics</caption>
+        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader" class="col-wrap">Sub-speciality</th><th scope="col" role="columnheader" class="col-wrap col-wrap--wide">Description</th><th scope="col" role="columnheader" class="col-wrap col-wrap--scale">Default scale</th><th scope="col" role="columnheader" class="col-fit">Status</th><th scope="col" role="columnheader" class="col-fit"><span class="visually-hidden">Actions</span></th></tr></thead>
+        <tbody role="rowgroup">
+          <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Neonatology</th><td role="cell" class="col-wrap" data-label="Description">Certificate training in Neonatology.</td><td role="cell" class="col-wrap" data-label="Default scale">CPSA Paediatric Entrustment Scale v11.1</td><td role="cell" class="col-fit" data-label="Status">Active</td><td role="cell" class="col-fit"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit the sub-speciality Neonatology">Edit</a></div></td></tr>
+          <tr role="row"><th scope="row" role="rowheader" class="col-wrap">Paediatrics</th><td role="cell" class="col-wrap" data-label="Description">General paediatric specialist training programme.</td><td role="cell" class="col-wrap" data-label="Default scale">CPSA Paediatric Entrustment Scale v11.1</td><td role="cell" class="col-fit" data-label="Status">Active</td><td role="cell" class="col-fit"><div class="actions-cell"><a class="btn btn-outline btn-sm" href="#" aria-label="Edit the sub-speciality Paediatrics">Edit</a></div></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+  </div>
+</div>
+</body>
+</html>

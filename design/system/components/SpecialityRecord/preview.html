@@ -1,0 +1,146 @@
+<!-- @dsCard group="Catalogue" height=4200 width=1180 subtitle="A speciality's record: titled by the speciality, the College and its tree on the trail; the required line, Name, Description and one Status group whose help says what inactive stops; Cancel, Deactivate… and Save; refusals under Name; the deactivation dialog on Cancel, from Deactivate… or from Save; the record after it; a failure; Speciality unavailable; loading and load failed; 390" -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SpecialityRecord</title>
+<style>
+  /* Each rendition is drawn in a 974px column, the content column beside the sidebar at 1280; .user-page holds the form to
+     its 60rem measure. */
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-col { max-width: 974px; }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
+  /* The app opens the dialog with showModal(); a static preview cannot, so its stage paints the scrim itself. */
+  .pv-stage { position: relative; background: var(--scrim); padding: var(--space-xl) 0; }
+  .pv-stage dialog { position: static; margin: 0 auto; }
+  /* Below 641px (flow 12's .user-page rules, flow 16's lone checkbox row, the trail's fold, the dialog's stacked buttons)
+     and the header that wraps below 1024px, repeated under .pv-narrow (a 358px column: 390 less the phone's 16px gutters). */
+  .pv-narrow { max-width: 358px; }
+  .pv-narrow .header-container { flex-wrap: wrap; }
+  .pv-narrow .breadcrumbs li.breadcrumb-ancestor, .pv-narrow .breadcrumbs li.breadcrumb-current, .pv-narrow .breadcrumbs .breadcrumb-separator { display: none; }
+  .pv-narrow .breadcrumb-parent a { font-weight: 600; gap: 0.375rem; min-height: 44px; }
+  .pv-narrow .breadcrumb-back { display: block; }
+  .pv-narrow .user-page .btn, .pv-narrow .user-page .form-control { min-height: 2.75rem; }
+  .pv-narrow .user-page .form-actions, .pv-narrow .dialog-card .form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .pv-narrow .user-page .form-actions .btn, .pv-narrow .dialog-card .form-actions .btn { min-height: 2.75rem; width: 100%; }
+  .pv-narrow .user-page .form-check { min-height: 2.75rem; }
+  .pv-narrow .user-page .form-check .form-check-input { height: 1.25rem; width: 1.25rem; }
+  .pv-narrow .user-page .form-check label { align-items: center; display: inline-flex; flex: 1; min-height: 2.75rem; }
+</style>
+</head>
+<body>
+<div class="pv-col">
+<p class="pv-cap">Anton Kruger at Step 6.11, before saving (R3-A03): titled by the speciality, its kind in the subtitle; the College and its tree on the trail, no Back link; Status's help while it is stored active; Cancel, Deactivate… (it asks first) and Save</p>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+  <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Specialities</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>College of Paediatricians of South Africa</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-current"><span aria-current="page">Paediatrics</span></li>
+</ol></nav>
+<div class="header-container"><div><h1>Paediatrics</h1><p class="page-subtitle">Speciality of College of Paediatricians of South Africa</p></div></div>
+<div class="user-page speciality-page">
+  <form class="form-container" novalidate>
+    <p class="field-help">* marks a field you must fill in.</p>
+    <div class="form-group"><label for="pv1-name">Name <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv1-name" class="form-control" aria-required="true" autocomplete="off" value="Paediatrics"></div>
+    <div class="form-group"><label for="pv1-desc">Description</label><textarea id="pv1-desc" class="form-control" rows="3">Specialist training in Paediatrics, and certificate training in its sub-specialities.</textarea></div>
+    <fieldset class="form-group"><legend>Status</legend><div class="form-check"><input type="checkbox" id="pv1-active" class="form-check-input" checked aria-describedby="pv1-active-help"><label for="pv1-active">Active</label></div><p class="page-subtitle" id="pv1-active-help">An inactive speciality cannot be named by a new invitation, and an institution can no longer give anyone a role for it. Nothing else reads it: its EPAs and curricula, and the registrars on them, carry on.</p></fieldset>
+    <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="button" id="pv1-deactivate" class="btn btn-outline" aria-haspopup="dialog">Deactivate…</button><button type="submit" id="pv1-save" class="btn btn-primary">Save</button></div>
+  </form>
+</div>
+
+<p class="pv-cap">devadmin at Step 6.3 presses Create speciality with the form empty (R3-A11, T324): "Enter a name." under Name, which takes the focus; no summary; the trail through Colleges, the College and its tree</p>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+  <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Colleges</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>College of Neurologists of South Africa</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Specialities</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-current"><span aria-current="page">Create speciality</span></li>
+</ol></nav>
+<div class="header-container"><div><h1>Create speciality</h1><p class="page-subtitle">A speciality of College of Neurologists of South Africa.</p></div></div>
+<div class="user-page speciality-page">
+  <form class="form-container" novalidate>
+    <p class="field-help">* marks a field you must fill in.</p>
+    <div class="form-group"><label for="pv2-name">Name <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv2-name" class="form-control invalid" aria-required="true" aria-invalid="true" autocomplete="off" aria-describedby="pv2-name-refusal"><div class="validation-message" role="alert" id="pv2-name-refusal">Enter a name.</div></div>
+    <div class="form-group"><label for="pv2-desc">Description</label><textarea id="pv2-desc" class="form-control" rows="3"></textarea></div>
+    <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary">Create speciality</button></div>
+  </form>
+</div>
+
+<p class="pv-cap">A second Neurology on CNSA (N1): the command's refusal under Name, focused, the typed values kept</p>
+<div class="user-page speciality-page">
+  <form class="form-container" novalidate>
+    <p class="field-help">* marks a field you must fill in.</p>
+    <div class="form-group"><label for="pv3-name">Name <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv3-name" class="form-control invalid" aria-required="true" aria-invalid="true" autocomplete="off" aria-describedby="pv3-name-refusal" value="Neurology"><div class="validation-message" role="alert" id="pv3-name-refusal">A speciality with the same name already exists for this college.</div></div>
+    <div class="form-group"><label for="pv3-desc">Description</label><textarea id="pv3-desc" class="form-control" rows="3">Specialist training in Neurology.</textarea></div>
+    <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary">Create speciality</button></div>
+  </form>
+</div>
+
+<p class="pv-cap">Deactivate… on Neurology (D56, R3-A17): named for the speciality, what it changes and only that, no count (Q15); Cancel focused; Save with Active unticked asks the same, and Cancel then returns to Save</p>
+<div class="pv-stage"><dialog open class="dialog-scrim dialog-card" aria-labelledby="pv4-title" aria-describedby="pv4-body"><div class="form-container"><h2 id="pv4-title">Deactivate the speciality Neurology?</h2><div id="pv4-body" class="dialog-body"><p>A new invitation will no longer be able to name it, and an institution can no longer give anyone a role for it or any of its sub-specialities. That is all it changes: its EPAs and curricula, and the registrars already on them, carry on.</p><p>You can reactivate it on this page.</p></div><div class="form-actions"><button type="button" class="btn btn-outline">Cancel</button><button type="button" class="btn btn-danger">Deactivate</button></div></div></dialog></div>
+
+<p class="pv-cap">Confirmed: the record stays, its result focused once the dialog has closed; Active unticked, the inactive line, no Deactivate…</p>
+<div class="header-container"><div><h1>Neurology</h1><p class="page-subtitle">Speciality of College of Neurologists of South Africa</p></div></div>
+<div class="user-page speciality-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-success" role="status"><strong>Speciality Neurology deactivated.</strong> A new invitation can no longer name it.</div></div>
+  <form class="form-container" novalidate>
+    <p class="field-help">* marks a field you must fill in.</p>
+    <div class="form-group"><label for="pv5-name">Name <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv5-name" class="form-control" aria-required="true" autocomplete="off" value="Neurology"></div>
+    <div class="form-group"><label for="pv5-desc">Description</label><textarea id="pv5-desc" class="form-control" rows="3">Specialist training in Neurology.</textarea></div>
+    <fieldset class="form-group"><legend>Status</legend><div class="form-check"><input type="checkbox" id="pv5-active" class="form-check-input" aria-describedby="pv5-active-help"><label for="pv5-active">Active</label></div><p class="page-subtitle" id="pv5-active-help">Inactive. A new invitation cannot name it, and no institution can give anyone a role for it or any of its sub-specialities. Tick Active and save to reactivate it.</p></fieldset>
+    <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="submit" class="btn btn-primary">Save</button></div>
+  </form>
+</div>
+
+<p class="pv-cap">A save that failed for no field's reason (R3-A09): the fixed sentence at the top, its first sentence bold, focused; the form as typed under it</p>
+<div class="user-page speciality-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><strong>The speciality could not be saved.</strong> Nothing has changed. Try again, or come back in a few minutes.</div></div>
+</div>
+
+<p class="pv-cap">Anton Kruger types their College's id and 999999 (Q7, R2-A18b): Speciality unavailable, Go to Specialities; the trail ends at the h1</p>
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+  <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Specialities</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+  <li class="breadcrumb-current"><span aria-current="page">Speciality unavailable</span></li>
+</ol></nav>
+<div class="header-container"><div><h1>Speciality unavailable</h1></div></div>
+<div class="user-page speciality-page">
+  <div class="detail-card detail-card--empty"><div class="state-panel-copy">This speciality does not exist, or you cannot open it.</div><div class="form-actions"><a class="btn btn-primary" href="#">Go to Specialities</a></div></div>
+</div>
+
+<p class="pv-cap">Loading (R2-A19b): "Speciality" until it is read</p>
+<div class="header-container"><div><h1>Speciality</h1></div></div>
+<div class="user-page speciality-page" aria-busy="true">
+  <p class="loading-line" role="status">Loading this speciality.</p>
+  <div class="detail-card" aria-hidden="true"><div class="skeleton skel-title"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line skel-short"></div></div>
+</div>
+
+<p class="pv-cap">Load failed (R2-A20b): fixed words and Try again, which focuses the h1 once it reads</p>
+<div class="header-container"><div><h1>Speciality</h1></div></div>
+<div class="user-page speciality-page">
+  <div class="action-result" tabindex="-1"><div class="alert alert-danger" role="alert"><div class="alert-row"><span class="alert-row-text">Could not load this speciality. Nothing has changed. Try again, or come back in a few minutes.</span><button type="button" class="btn btn-outline btn-sm"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Try again</button></div></div></div>
+</div>
+</div>
+
+<p class="pv-cap">At 390 (Step 6.11): the trail folded to its parent; every control 44px, Active's row a 44px target; Save on top, then Deactivate…, then Cancel, each the row's width (Cancel stays first in the tab order)</p>
+<div class="pv-narrow">
+  <nav aria-label="Breadcrumb"><ol class="breadcrumbs">
+    <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Home</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+    <li class="breadcrumb-ancestor"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Specialities</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+    <li class="breadcrumb-parent"><a href="#"><svg class="icon breadcrumb-back" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>College of Paediatricians of South Africa</a><svg class="icon breadcrumb-separator" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></li>
+    <li class="breadcrumb-current"><span aria-current="page">Paediatrics</span></li>
+  </ol></nav>
+  <div class="header-container"><div><h1>Paediatrics</h1><p class="page-subtitle">Speciality of College of Paediatricians of South Africa</p></div></div>
+  <div class="user-page speciality-page">
+    <form class="form-container" novalidate>
+      <p class="field-help">* marks a field you must fill in.</p>
+      <div class="form-group"><label for="pv9-name">Name <span aria-hidden="true">*</span> <span class="visually-hidden">required</span></label><input id="pv9-name" class="form-control" aria-required="true" autocomplete="off" value="Paediatrics"></div>
+      <div class="form-group"><label for="pv9-desc">Description</label><textarea id="pv9-desc" class="form-control" rows="3">Specialist training in Paediatrics.</textarea></div>
+      <fieldset class="form-group"><legend>Status</legend><div class="form-check"><input type="checkbox" id="pv9-active" class="form-check-input" checked aria-describedby="pv9-active-help"><label for="pv9-active">Active</label></div><p class="page-subtitle" id="pv9-active-help">An inactive speciality cannot be named by a new invitation, and an institution can no longer give anyone a role for it. Nothing else reads it: its EPAs and curricula, and the registrars on them, carry on.</p></fieldset>
+      <div class="form-actions"><a class="btn btn-outline" href="#">Cancel</a><button type="button" class="btn btn-outline" aria-haspopup="dialog">Deactivate…</button><button type="submit" class="btn btn-primary">Save</button></div>
+    </form>
+  </div>
+</div>
+</body>
+</html>

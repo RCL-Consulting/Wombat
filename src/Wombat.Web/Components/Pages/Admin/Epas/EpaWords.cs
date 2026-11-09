@@ -24,7 +24,7 @@ public static class EpaWords
     public const string ListLoadFailed = "Could not load the EPAs. Nothing has changed. Try again, or come back in a few minutes.";
 
     /// <summary>
-    /// R3-E01 (T394, flow 16, T326, S15): the CollegeAdmin's subtitle, which tells her how far a change to one reaches.
+    /// R3-E01 (T394, flow 16, T326, S15): the CollegeAdmin's subtitle, which tells them how far a change to one reaches.
     /// Until T394 it was the built "Maintain the entrustable professional activities available to curricula and forms."
     /// </summary>
     public static string CollegeSubtitle(string collegeName)
@@ -57,7 +57,7 @@ public static class EpaWords
     };
 
     /// <summary>
-    /// T3 (T394, R3-E01): the College column, for a list that spans Colleges. The College admin's are all her College's,
+    /// T3 (T394, R3-E01): the College column, for a list that spans Colleges. The College admin's are all their College's,
     /// and the institution's (flow 15's) keep it.
     /// </summary>
     public static bool ShowsCollegeColumn(EpaListReader reader) => reader != EpaListReader.College;
@@ -115,7 +115,7 @@ public static class EpaWords
 
     /// <summary>
     /// The built subtitle: the form of an institution's own EPA (flow 15's), and the Administrator's create, which names no
-    /// College because her picker is every College's.
+    /// College because its picker is every College's.
     /// </summary>
     public const string FormSubtitle = "Define the EPA code, scope, and descriptive guidance.";
 

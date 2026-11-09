@@ -1,4 +1,4 @@
-<!-- @dsCard group="Catalogue" height=5200 width=1180 subtitle="A curriculum item's page of its own: the add and the edit (one editor for every caller, its words by whose item it is; the submit aria-disabled with its reason until every minimum is a rung; Cancel first); a refusal under its field, the picker asked again; a national item's record; Item unavailable; 390" -->
+<!-- @dsCard group="Catalogue" height=5500 width=1180 subtitle="A curriculum item's page of its own: the add and the edit (one editor for every caller, its words by whose item it is; the submit aria-disabled with its reason until every minimum is a rung; Cancel first); a refusal under its field, the picker asked again; a national item's record; Item unavailable; 390" -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -34,6 +34,7 @@
 <div class="header-container"><div><h1>Add your institution's own item</h1><p class="page-subtitle">On Paediatric EPA Curriculum (11.1). It applies only to Kgosi Kgari Teaching Hospital's trainees.</p></div></div>
 <div class="user-page curriculum-item-page">
   <form class="form-container">
+    <p class="field-help">* marks a field you must fill in.</p>
     <div class="form-grid form-grid--wide">
       <div class="form-group full-width"><label for="pv1-epa">EPA <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label><select id="pv1-epa" class="form-select" aria-describedby="pv1-epa-help"><option selected>KGK-001 — Running a paediatric outreach clinic at a district hospital</option></select><small class="page-subtitle" id="pv1-epa-help">Lists only the EPAs this item can name that no item on this curriculum already holds for the same trainees: the national EPAs of its sub-speciality and, for an item an institution added, that institution's own local EPAs. A national item holds its EPA for every institution; an institution's own item holds it for that institution alone.</small></div>
       <div class="form-group"><label for="pv1-count">Target</label><input id="pv1-count" class="form-control" type="number" value="1" aria-describedby="pv1-count-help"><small class="page-subtitle" id="pv1-count-help">Credited encounters required in each period below. This is the published frequency, not a total for the whole programme.</small></div>
@@ -68,9 +69,10 @@
 </div>
 
 <p class="pv-cap">Dr Kruger, a stale edit (the states pass): Save item refused under EPA, the select invalid and described by the refusal first, focused; the picker asked again offers PAED-011 alone; the typed target kept (the other fields not drawn)</p>
-<div class="header-container"><div><h1>Edit PAED-011 — Managing population health challenges</h1><p class="page-subtitle">On Paediatric EPA Curriculum (11.2). It applies to every institution that has adopted it.</p></div></div>
+<div class="header-container"><div><h1>Edit PAED-011 — Managing population health challenges</h1><p class="page-subtitle">On Paediatric EPA Curriculum (11.2). It applies to every institution that has adopted it. Adopted by 1 institution, Kgosi Kgari Teaching Hospital; 3 registrars in training on it.</p></div></div>
 <div class="user-page curriculum-item-page">
   <form class="form-container">
+    <p class="field-help">* marks a field you must fill in.</p>
     <div class="form-grid form-grid--wide">
       <div class="form-group full-width"><label for="pv2-epa">EPA <span aria-hidden="true">*</span><span class="visually-hidden">required</span></label><select id="pv2-epa" class="form-select invalid" aria-invalid="true" aria-describedby="pv2-epa-refusal pv2-epa-help"><option selected>PAED-011 — Managing population health challenges</option></select><div id="pv2-epa-refusal" class="validation-message" role="alert">This curriculum already contains the selected EPA.</div><small class="page-subtitle" id="pv2-epa-help">Lists only the EPAs this item can name that no item on this curriculum already holds for the same trainees: the national EPAs of its sub-speciality and, for an item an institution added, that institution's own local EPAs. A national item holds its EPA for every institution; an institution's own item holds it for that institution alone.</small></div>
       <div class="form-group"><label for="pv2-count">Target</label><input id="pv2-count" class="form-control" type="number" value="2" aria-describedby="pv2-count-help"><small class="page-subtitle" id="pv2-count-help">Credited encounters required in each period below. This is the published frequency, not a total for the whole programme.</small></div>
@@ -96,7 +98,7 @@
   <div class="form-actions"><a class="btn btn-outline" href="#">Back to Items of Paediatric EPA Curriculum (11.1)</a></div>
 </div>
 
-<p class="pv-cap">Typed with an id 11.2 does not hold: Item unavailable, in the route's own place, straight under Curricula; and the add on a superseded version: Cannot add an item</p>
+<p class="pv-cap">Typed with an id 11.2 does not hold: Item unavailable, in the route's own place, straight under Curricula; the add on a superseded version: Cannot add an item; and the College's add on a discipline with no national EPA (flow 16, Q14): Cannot add an item with Go to EPAs</p>
 <div class="header-container"><div><h1>Item unavailable</h1></div></div>
 <div class="user-page curriculum-item-page">
   <div class="detail-card detail-card--empty"><div class="state-panel-copy">This curriculum item does not exist, or you cannot change it.</div><div class="form-actions"><a class="btn btn-primary" href="#">Go to Items of Paediatric EPA Curriculum (11.2)</a></div></div>
@@ -104,6 +106,11 @@
 <div class="header-container"><div><h1>Cannot add an item</h1></div></div>
 <div class="user-page curriculum-item-page">
   <div class="detail-card detail-card--empty"><div class="state-panel-copy">Your institution has superseded this version, so no item is added to it. Its own items stay for the registrars still on it.</div><div class="form-actions"><a class="btn btn-primary" href="#">Go to Items of Paediatric EPA Curriculum (11.1)</a></div></div>
+</div>
+
+<div class="header-container"><div><h1>Cannot add an item</h1><p class="page-subtitle">On Neonatology EPA Curriculum (1.0).</p></div></div>
+<div class="user-page curriculum-item-page">
+  <div class="detail-card detail-card--empty"><div class="state-panel-copy">Neonatology has no national EPA yet. Add one under EPAs, then come back to add it here.</div><div class="form-actions"><a class="btn btn-primary" href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>Go to EPAs</a></div></div>
 </div>
 
 <p class="pv-cap">A failed add (fixed words at the form's top, focused); loading</p>
@@ -119,7 +126,7 @@
 
 <p class="pv-cap">390, Step A.7.10's Edit PAED-001 (the decision fields and the tools, shortened): one field a row, every control 44px, the opportunistic box and each tool a 44px row; Save item on top of Cancel, each the row's width</p>
 <div class="pv-narrow">
-  <div class="header-container"><div><h1>Edit PAED-001 — Providing paediatric emergency care to children</h1><p class="page-subtitle">On Paediatric EPA Curriculum (11.2). It applies to every institution that has adopted it.</p></div></div>
+  <div class="header-container"><div><h1>Edit PAED-001 — Providing paediatric emergency care to children</h1><p class="page-subtitle">On Paediatric EPA Curriculum (11.2). It applies to every institution that has adopted it. Adopted by 1 institution, Kgosi Kgari Teaching Hospital; no registrar in training on it.</p></div></div>
   <div class="user-page curriculum-item-page">
     <form class="form-container">
       <div class="form-grid form-grid--wide">

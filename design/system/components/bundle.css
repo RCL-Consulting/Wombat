@@ -1,11 +1,12 @@
 /* Wombat — components/bundle.css
-   Wombat's component CSS as flows 01 to 15 built it (T335, b347e11c; T339, f50dffb2 and 6735fa98; T342, 725237ee,
+   Wombat's component CSS as flows 01 to 16 built it (T335, b347e11c; T339, f50dffb2 and 6735fa98; T342, 725237ee,
    daaf6386, 5fd5abcd and a341b44e; T350, 06aa51d7; T355, b020c942, db4c2d0a, 5f8e6639 and b389f7d2; T358, 85d5a508 and
    94edf2b7; T361, 44de180b, 59bb72fd, 6ad6c57a, 6b149fff and 14378856; T364, 622c5ad1 and
    1ec7a352; T366, 49e7cf5e and 9ba80586; T369, 68327c9d and e4b480e2; T373, 69a17c70 and 27ff8779; T376, e53d4ae7; T379,
    5cc10c66, 920f778c and 73baa556, after T312, c9d6fe13; T387, e8eea1d2, 5b5aab80 and
    1c11d1f6; T392, c931d56f, e10a5f22, 50ca6470 and
-   step 8's comment fix; master after f4b1f390),
+   step 8's comment fix; T394, de4cc718, a2878763, 7d4c4490, f7cb1903, c6bbb641, 2c93b247 and
+   step 8's comment fix; master after 74b01865),
    extracted with every class name and declaration unchanged, so a design maps back to the classes Razor writes.
    - From src/Wombat.Web/wwwroot/app.css: everything after :root. tokens.css, which the page compiles from tokens.json,
      supplies the :root custom properties (colours, --space-*, --radius-*, --shadow-*, --sidebar-width, --motion-fast,
@@ -150,6 +151,25 @@ h5 {
 
 .header-container h1 {
   margin: 0;
+}
+
+/* T394 (flow 16, Q20; f16r3.css R3): from 1024px the title block takes the free width and the actions stay on the h1's
+   row at its right, the subtitle wrapping under the h1 rather than pushing the actions under it. Until then a subtitle
+   longer than the row put Create EPA, Create college and Create curriculum under it at 1280 (T392's replay; R2's header
+   check). Below 1024px the header wraps as before. */
+@media (min-width: 1024px) {
+  .header-container {
+    flex-wrap: nowrap;
+  }
+
+  .header-container > :first-child {
+    flex: 1 1 20rem;
+    min-width: 0;
+  }
+
+  .header-container > .actions-cell {
+    flex: none;
+  }
 }
 
 /* A heading with an icon before it: the system pages (T335, flow 01: "PageHeader with icon", R2-Denied-*, R2-NotFound-*,
@@ -7257,7 +7277,7 @@ a.dashboard-metric:hover .dashboard-metric-label {
 
 /* Flow 15 (T392): an institution adopts the College's curriculum. Curricula (with adoption, Q1), a curriculum's items and
    an item's page of its own (Q14), EPAs and an EPA's page, and the move, the rebuild and the scales. Nothing is shared
-   between the lanes but the 1024px stack, written under a curriculum's items for the EPA list (.epas-page) too: each
+   between the lanes but the 1024px stack (since T394 in flow 16's shared part, below, with the items at 1100px): each
    writes its own rules under its own heading below, scoped to its page's own class beside
    .people-page or .user-page (BRIEF § 11, flow 12: every page its own class), phone rules included, and nothing is written
    between the headings but by the lane that owns the heading. Rebuilt from round 3's f15r3.css PART 2 on the spacing
@@ -7305,92 +7325,15 @@ a.dashboard-metric:hover .dashboard-metric-label {
   flex-wrap: wrap;
 }
 
-/* Narrow desktops (T392 replay, A.7.10): from 901 to about 990px the six columns need 691px in a 593px column, so Edit and
-   Remove… sat past the edge, reached only by scrolling the table. The items stack to 1024px, as the data-rights queue
-   stacks to 1100px, their row actions 44px. The EPA list does too (the states pass): at 901px its five columns left the
-   EPA 144px, a row about 200px tall. */
-@media (max-width: 1024px) {
-  .curriculum-items-page .clinic-table--stack-wide thead,
-  .epas-page .clinic-table--stack-wide thead {
-    border: 0;
-    clip: rect(0, 0, 0, 0);
-    height: 1px;
-    margin: -1px;
-    overflow: hidden;
-    padding: 0;
-    position: absolute;
-    white-space: nowrap;
-    width: 1px;
-  }
-
-  .curriculum-items-page .clinic-table--stack-wide tbody tr,
-  .epas-page .clinic-table--stack-wide tbody tr {
-    border-bottom: 1px solid var(--border-color);
-    display: grid;
-    gap: var(--space-xs);
-    padding: var(--space-sm) var(--space-md);
-  }
-
-  .curriculum-items-page .clinic-table--stack-wide tbody tr:last-child,
-  .epas-page .clinic-table--stack-wide tbody tr:last-child {
-    border-bottom: 0;
-  }
-
-  .curriculum-items-page .clinic-table--stack-wide td,
-  .epas-page .clinic-table--stack-wide td,
-  .curriculum-items-page .clinic-table--stack-wide tbody th,
-  .epas-page .clinic-table--stack-wide tbody th {
-    border: 0;
-    padding: 0;
-    width: auto;
-  }
-
-  .curriculum-items-page .clinic-table--stack-wide th[scope="row"],
-  .epas-page .clinic-table--stack-wide th[scope="row"] {
-    display: block;
-  }
-
-  .curriculum-items-page .clinic-table--stack-wide td[data-label]::before,
-  .epas-page .clinic-table--stack-wide td[data-label]::before {
-    color: var(--muted-text);
-    content: attr(data-label) ": ";
-    content: attr(data-label) ": " / "";
-    font-weight: 600;
-  }
-
-  .curriculum-items-page .clinic-table--stack-wide .btn,
-  .epas-page .clinic-table--stack-wide .btn {
-    min-height: 2.75rem;
-  }
-}
-
 /* The item's page: its form one card, its record's year list unmarked. */
 .curriculum-item-page .detail-list .list-unstyled {
   margin: 0;
 }
 
 /* Below 641px. Decision 2: the add link beside "Items (n)" is a 44px target ("Add your institution's own item", and the
-   College's "Add item"). N9: an item's checkbox rows (Opportunistic and the tools) are 44px rows, the box 20px. */
+   College's "Add item"). N9's checkbox rows are the catalogue's shared rule since T394 (flow 16's shared part). */
 @media (max-width: 640.98px) {
   .curriculum-items-page .form-section-head .btn {
-    min-height: 2.75rem;
-  }
-
-  .user-page.curriculum-item-page .form-check {
-    align-items: center;
-    display: flex;
-    min-height: 2.75rem;
-  }
-
-  .user-page.curriculum-item-page .form-check-input {
-    height: 1.25rem;
-    width: 1.25rem;
-  }
-
-  .user-page.curriculum-item-page .form-check label {
-    align-items: center;
-    display: inline-flex;
-    flex: 1;
     min-height: 2.75rem;
   }
 }
@@ -7407,10 +7350,71 @@ a.dashboard-metric:hover .dashboard-metric-label {
 
 /* The EPA column takes the room (T392 states pass): at .col-wrap--wide's 20% a title wrapped over three to six lines at
    1280px while Status and the actions, both auto, left an empty band before "Set by the College.". Only where the list is
-   a table: it stacks from 1024px down (above). */
+   a table: it stacks from 1024px down (flow 16's shared part). */
 @media (min-width: 1025px) {
   .epas-page .clinic-table th.col-wrap--wide {
     width: 45%;
+  }
+}
+
+/* The text columns take the room at 1280px (T394 replay, act 1, 1.2 and 1.12): Colleges' Name at .col-wrap's 14% wrapped
+   "College of Paediatricians of South Africa" over three lines beside 130px the Created and Actions columns did not use,
+   and the tree's sub-speciality Description at 14% ran one word a line beside an auto Actions column 200px wider than its
+   one Edit. Name takes 28%; the tree's Description is .col-wrap--wide at 40% and its Edit column .col-fit. Only where the
+   lists are tables: both stack from 1024px down (flow 16's shared part). The states pass after it (1.2, 6.1, 6.12) found
+   the room it left in the wrong place: Colleges' Created broke "2026-11-05" after its hyphen and the tree's Default scale
+   (14%) ran "CPSA Paediatric Entrustment Scale v11.1" over three lines beside a 218px Status holding "Active". Status
+   and Created are .col-fit on both, the tree's Default scale takes 24%, and Colleges' Description 27% of what Created
+   gave back (at 1280: Name 2 lines, Description 3, Edit and Specialities side by side). */
+@media (min-width: 1025px) {
+  /* States pass 2 (T394): the room went to columns holding one word or digit. A count, a day, a status or a row's one
+     Edit fits its content wherever the list is a table (.col-fit--wide; from 1025px, so a stacked row at 390 keeps
+     wrapping); the scales' Name and Description, and the EPA list's College and Sub-speciality, take what it gives back. */
+  .clinic-table .col-fit--wide {
+    white-space: nowrap;
+    width: 1%;
+  }
+
+  .scales-page .clinic-table th.col-wrap:not(.col-wrap--wide) {
+    width: 28%;
+  }
+
+  .scales-page .clinic-table th.col-wrap--wide {
+    width: 45%;
+  }
+
+  .epas-page .clinic-table th.col-wrap:not(.col-wrap--wide) {
+    width: 22%;
+  }
+}
+
+/* Curricula is a table from 1151px (it stacks to 1150). The College's and the Administrator's lists (.curricula-catalogue)
+   give Curriculum 30% and College and Discipline 18% of what Effective, the count and Status ("Held back") give back. An
+   institution's tables keep the shared widths, Effective fitted: their Items sentence ("16 national · 1 … own") and
+   adoption line need the room (the re-take after f7cb1903 found Items on four to seven lines in 88px). */
+@media (min-width: 1151px) {
+  .curricula-page .clinic-table.curricula-catalogue th.col-wrap--wide {
+    width: 30%;
+  }
+
+  .curricula-page .clinic-table.curricula-catalogue th.col-wrap:not(.col-wrap--wide) {
+    width: 18%;
+  }
+
+  .colleges-page .clinic-table th.col-wrap--wide {
+    width: 27%;
+  }
+
+  .college-tree-page .clinic-table th.col-wrap--scale {
+    width: 24%;
+  }
+
+  .colleges-page .clinic-table th.col-wrap:not(.col-wrap--wide) {
+    width: 28%;
+  }
+
+  .college-tree-page .clinic-table th.col-wrap--wide {
+    width: 40%;
   }
 }
 
@@ -7426,25 +7430,6 @@ a.dashboard-metric:hover .dashboard-metric-label {
   white-space: pre-line;
 }
 
-/* Below 641px (round-3-check decision 2): Status's Active checkbox row is a 44px target, as the item page's checkbox rows
-   are (.curriculum-item-page, N9): .user-page makes its buttons, inputs and selects 44px, not a lone .form-check. */
-@media (max-width: 640.98px) {
-  .user-page.epa-page .form-check {
-    min-height: 2.75rem;
-  }
-
-  .user-page.epa-page .form-check-input {
-    height: 1.25rem;
-    width: 1.25rem;
-  }
-
-  .user-page.epa-page .form-check label {
-    align-items: center;
-    display: inline-flex;
-    flex: 1;
-    min-height: 2.75rem;
-  }
-}
 /* end Flow 15: EPAs */
 
 /* Flow 15: the move, the rebuild and the scales (T392). Lane D. The profile's move needs nothing beyond .user-page and
@@ -7463,6 +7448,280 @@ a.dashboard-metric:hover .dashboard-metric-label {
   font-variant-numeric: tabular-nums;
 }
 /* end Flow 15: the move, the rebuild and the scales */
+
+/* Flow 16 (T394): the College keeps the national catalogue. Shared by every catalogue page, written by § 0 (build-contracts
+   § 0) and by no lane: the narrow-desktop stack and the one checkbox-row rule. Each lane writes its own rules under its own
+   heading below, scoped to its page's own class, and nothing between the headings. Rebuilt from round 3's f16r3.css
+   PART 2 (R1, R2) on the spacing scale; PART 1 (.cv-*) is the canvas's and never ships. */
+
+/* The catalogue tables stack from 1024px down (T392 replay, A.7.10; T394 round 3 S1, check decisions 1 and 2): the EPA
+   list (from flow 15), Colleges (.colleges-page) and the College's tree (.college-tree-page), whose columns overflowed
+   their container between 901 and about 975px (round 2's sweep, by arithmetic). The items (.curriculum-items-page) and
+   Curricula (.curricula-page) stack from 1150px down (the next query; 1100px, as the data-rights queue does, until the
+   replay): the items' six compact columns need 691 to 744px, and a 1025px viewport leaves 717; the build's sweep found
+   the Administrator's Curricula 756px wide in a 717px container at 1025px and 742px at 1050px, so it moved from the
+   1024px stack to that one. A stacked row never scrolls; its row actions are 44px. The build's sweep (900 to
+   1100px, 25px steps, each table's scrollWidth against its container's clientWidth) confirms the edges. */
+@media (max-width: 1024px) {
+  .epas-page .clinic-table--stack-wide thead,
+  .colleges-page .clinic-table--stack-wide thead,
+  .college-tree-page .clinic-table--stack-wide thead {
+    border: 0;
+    clip: rect(0, 0, 0, 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+
+  .epas-page .clinic-table--stack-wide tbody tr,
+  .colleges-page .clinic-table--stack-wide tbody tr,
+  .college-tree-page .clinic-table--stack-wide tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    display: grid;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .epas-page .clinic-table--stack-wide tbody tr:last-child,
+  .colleges-page .clinic-table--stack-wide tbody tr:last-child,
+  .college-tree-page .clinic-table--stack-wide tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .epas-page .clinic-table--stack-wide td,
+  .epas-page .clinic-table--stack-wide tbody th,
+  .colleges-page .clinic-table--stack-wide td,
+  .colleges-page .clinic-table--stack-wide tbody th,
+  .college-tree-page .clinic-table--stack-wide td,
+  .college-tree-page .clinic-table--stack-wide tbody th {
+    border: 0;
+    padding: 0;
+    width: auto;
+  }
+
+  .epas-page .clinic-table--stack-wide th[scope="row"],
+  .colleges-page .clinic-table--stack-wide th[scope="row"],
+  .college-tree-page .clinic-table--stack-wide th[scope="row"] {
+    display: block;
+  }
+
+  .epas-page .clinic-table--stack-wide td[data-label]::before,
+  .colleges-page .clinic-table--stack-wide td[data-label]::before,
+  .college-tree-page .clinic-table--stack-wide td[data-label]::before {
+    color: var(--muted-text);
+    content: attr(data-label) ": ";
+    content: attr(data-label) ": " / "";
+    font-weight: 600;
+  }
+
+  .epas-page .clinic-table--stack-wide .btn,
+  .colleges-page .clinic-table--stack-wide .btn,
+  .college-tree-page .clinic-table--stack-wide .btn {
+    min-height: 2.75rem;
+  }
+}
+
+/* Curricula and the items stack to 1150px (T394 replay, after the states: at the appendix's end an institution's "Curricula
+   you train against", with an adoption and a superseded version, ran 17px past its container at 1101px and 8px at 1110). */
+@media (max-width: 1150px) {
+  .curricula-page .clinic-table--stack-wide thead,
+  .curriculum-items-page .clinic-table--stack-wide thead {
+    border: 0;
+    clip: rect(0, 0, 0, 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+
+  .curricula-page .clinic-table--stack-wide tbody tr,
+  .curriculum-items-page .clinic-table--stack-wide tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    display: grid;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .curricula-page .clinic-table--stack-wide tbody tr:last-child,
+  .curriculum-items-page .clinic-table--stack-wide tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .curricula-page .clinic-table--stack-wide td,
+  .curriculum-items-page .clinic-table--stack-wide td,
+  .curricula-page .clinic-table--stack-wide tbody th,
+  .curriculum-items-page .clinic-table--stack-wide tbody th {
+    border: 0;
+    padding: 0;
+    width: auto;
+  }
+
+  .curricula-page .clinic-table--stack-wide th[scope="row"],
+  .curriculum-items-page .clinic-table--stack-wide th[scope="row"] {
+    display: block;
+  }
+
+  .curricula-page .clinic-table--stack-wide td[data-label]::before,
+  .curriculum-items-page .clinic-table--stack-wide td[data-label]::before {
+    color: var(--muted-text);
+    content: attr(data-label) ": ";
+    content: attr(data-label) ": " / "";
+    font-weight: 600;
+  }
+
+  .curricula-page .clinic-table--stack-wide .btn,
+  .curriculum-items-page .clinic-table--stack-wide .btn {
+    min-height: 2.75rem;
+  }
+}
+
+/* Below 641px a lone checkbox row on any record page is a 44px target with a 20px box (T394 round 3 S4, R1): Active on a
+   College, a speciality, a sub-speciality and an EPA, Open for adoption on a curriculum, an item's Opportunistic and tools.
+   .user-page makes its buttons, inputs and selects 44px, and a choice-group's radios; until T394 a lone .form-check needed a
+   copy of this rule per page (.user-page.epa-page, .user-page.curriculum-item-page, flow 15). My data rights keeps its own
+   (flow 14's .data-rights-page). */
+@media (max-width: 640.98px) {
+  .user-page .form-check:not(.choice-group .form-check) {
+    min-height: 2.75rem;
+  }
+
+  .user-page .form-check:not(.choice-group .form-check) .form-check-input {
+    height: 1.25rem;
+    width: 1.25rem;
+  }
+
+  .user-page .form-check:not(.choice-group .form-check) label {
+    align-items: center;
+    display: inline-flex;
+    flex: 1;
+    min-height: 2.75rem;
+  }
+}
+
+/* Flow 16: the College's tree and Home (T394). Lane A. The tree (.people-page.college-tree-page: one .user-section a
+   speciality, Q1) and a speciality's and a sub-speciality's record (.user-page.speciality-page, .sub-speciality-page),
+   whose forms and 44px phone rules are the people pages' and the catalogue's shared ones. Home's card writes the
+   system's .dashboard-card-footer, whose phone rule makes its four links 44px and wraps them. Only what those lack. */
+
+/* A speciality's h2 and its Edit and Create sub-speciality on one line, the actions at the end, wrapping under the name
+   when they do not fit (R3-A02, at 390). */
+.college-tree-page .form-section-head {
+  align-items: center;
+}
+
+/* The speciality's line under its h2 ("Specialist training in Paediatrics. · Active"): a 2,000-character description
+   wraps in it rather than widen the page (R3-A22, decision 4). */
+.college-tree-page .user-section > p {
+  overflow-wrap: anywhere;
+}
+
+/* A record's result region takes no row of its column while it holds nothing, as an EPA's page's (flow 15): the form
+   starts under the header, and a deactivation's result or a failure pushes it down when it comes. */
+.speciality-page .action-result:empty,
+.sub-speciality-page .action-result:empty {
+  display: none;
+}
+/* end Flow 16: the College's tree and Home */
+
+/* Flow 16: Colleges and the scales (T394). Lane B. */
+/* A College's record (.college-page) is one column of fields (R3-B07): each FormField is full width, so it needs nothing of
+   its own beyond .user-page's 44px controls and the shared checkbox row. The page class is the record's hook. */
+.college-page .form-container {
+  max-width: 48rem;
+}
+
+/* A scale's page (.scale-page, R3-C02-C05, C11-C16): Details and Levels as .user-section h2s. The levels are a grid of
+   inputs, stacked from 900px down by StackWide (R2's S6), each rung a block whose Label and Description take the width.
+   Q16's line (T395) and Add level follow the table. */
+.scale-page .clinic-table--inputs textarea.form-control {
+  min-height: 4.5rem;
+  resize: vertical;
+}
+
+.scale-page .scale-in-use-line {
+  margin: var(--space-sm) 0 0;
+}
+
+.scale-page .scale-levels-actions {
+  margin-top: var(--space-sm);
+}
+
+/* A refusal's own parts inside its danger alert: Q6's "Not saved.", its Put … back buttons (S14) and its list of needs
+   (R3-C11); the scales list's holder links (S6, R3-C08). */
+.scale-page .action-result .alert p,
+.scales-page .action-result .alert p {
+  margin: 0;
+}
+
+.scale-page .action-result .alert ul {
+  margin: var(--space-xs) 0 0;
+  padding-left: var(--space-lg);
+}
+
+.scale-page .scale-put-back,
+.scales-page .scales-refusal-links {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}
+
+@media (max-width: 900px) {
+  .scale-page .clinic-table--inputs .form-control {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640.98px) {
+  .scales-page .scales-refusal-links .btn {
+    min-height: 2.75rem;
+  }
+}
+/* end Flow 16: Colleges and the scales */
+
+/* Flow 16: a curriculum's page and Curricula (T394). Lane C. A curriculum's page is <div class="user-page curriculum-page">
+   (R3-D01–D20): one column of h2 sections (Q4), Details and Open for adoption in one form card, A new version in its own.
+   .user-page gives its controls 44px and stacks its actions with the primary on top below 641px; Curricula is
+   .people-page.curricula-page, served by flow 15's rules and the shared stack. Only what those lack is here. */
+
+/* An empty result region takes no row of the page's column (its gap included), as the EPA's page's does. */
+.curriculum-page .action-result:empty {
+  display: none;
+}
+
+/* The form card holds two sections and their actions: the sections a step apart, the actions' own rule above them. */
+.curriculum-page .form-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.curriculum-page .form-container > .form-actions {
+  margin-top: 0;
+}
+
+/* Q19's read-out: the sub-speciality as a term and its value, where the select was; a long name breaks in the measure. */
+.curriculum-page .curriculum-read-out {
+  margin: 0;
+}
+
+.curriculum-page .curriculum-read-out dd {
+  overflow-wrap: anywhere;
+}
+/* end Flow 16: a curriculum's page and Curricula */
+
+/* Flow 16: EPAs, the items and an item's page (T394). Lane D. Nothing of its own: the College's items notice bolds its
+   reach with the Alert's <strong> (R3-F05), "Edit this version" is a header action (the header's Q20 rule above), Q14's
+   line is a .detail-card--empty, EV2's line an info Alert; the 1024 and 1100px stacks and R1 are the shared part's. */
+/* end Flow 16: EPAs, the items and an item's page */
 
 /* ══ MainLayout.razor.css ═══════════════════════════════════════════════════════════════════════════════════════════
    Scoped to MainLayout.razor in the app; written unscoped here (see the header). */

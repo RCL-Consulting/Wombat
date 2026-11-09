@@ -105,7 +105,7 @@ public static class CollegeTreeWords
 
     public const string SubSpecialityUnavailableBody = "This sub-speciality does not exist, or you cannot open it.";
 
-    /// <summary>The College admin's way out of an Unavailable page: his own Specialities.</summary>
+    /// <summary>The College admin's way out of an Unavailable page: their own Specialities.</summary>
     public const string GoToSpecialities = "Go to Specialities";
 
     /// <summary>The Administrator's (N2, as R2-B13): Colleges.</summary>
