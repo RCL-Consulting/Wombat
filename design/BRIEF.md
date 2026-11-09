@@ -1327,6 +1327,42 @@ pass, the replay on a fresh database (332 steps, 303 with no gap; two flow 15 la
   it. *Changed:* nothing; the integrator republishes between passes, re-measures, and re-takes the captures the fix
   changes (three earlier-state captures could not be, and are listed).
 
+**Flow 16 (T394, 2026-11-04 to 11-09): what the sixteenth flow added**
+
+Flow 16 ran the loop over three sittings: three rounds (A2, B1, C1 with C2's textarea picked; Q1–Q21, round 3's
+decisions 1–5, P1–P3 and F1–F2 the operator's; D56 and D57 recorded), round 3 on a second canvas, the build
+(`de4cc718`) from a planner and § 0, four lanes (A the tree, B Colleges and scales, C curricula, D EPAs and items) and a
+runbook lane, the integrator's 900–1100px sweep, two Sonnet reviews (one must) and one fix pass, the replay on a fresh
+database (332 steps; the only flow 16 faults were the catalogue lists' column widths at 1280, fixed in five commits),
+the states (107 rows over two passes) and the re-sync (`0c6af0c1`, design system version 49). Its record is
+`design/flows/16-college-catalogue/`. Only what flows 01–15 did not already teach is here.
+
+- **A column-width fix moves the squeeze to the next column.** Observed: widening Colleges' Name and the tree's
+  Description (`a2878763`) broke Colleges' Created date and ran the tree's Default scale over three lines; fitting those
+  (`7d4c4490`) left one-word columns breaking ("DEMO-" / "C"); widening the text columns (`f7cb1903`) squeezed an
+  institution's Items sentence into 88px; scoping that (`c6bbb641`) broke the institution's Effective date
+  (`2c93b247`). Each fix was checked against the column it fixed, and the next states pass found the next one.
+  *Changed:* after a width change, every column of every list the rule reaches is read at 1280 for each role that sees
+  it (the College, the Administrator, an institution), and swept 390–1440, before its captures are re-taken.
+- **A canvas has a ceiling.** Observed: round 2 drew 306 boards; round 3's ask (about 230 boards) "required a new
+  canvas", so it was drawn on "Wombat 16 · Round 3", where the design system had to be installed again (its record's
+  version read null; `tokens.css` was present). *Changed:* nothing; a round's ask over about 200 boards starts its own
+  canvas, set up as the flow's first (tokens.css, the mark).
+- **Captures reach the canvas from the staged folder, not as attachments.** Observed: round 1's canvas saw none of the
+  captures the ask named; round 2's read all 70 from `design/upload/baseline/` once they were staged there, and none as
+  attachments. *Changed:* nothing; the stage step stays the way captures reach a round.
+- **Only PostgreSQL finds an ordered unique index's reorder.** Observed: the fix pass's PostgreSQL tests found that
+  reordering an unused scale's rungs failed (EF's circular dependency on the unique (scale, order) index), on master
+  too (T397); the in-memory suites and three reviews had passed it. *Changed:* nothing new; a command that renumbers an
+  ordered, uniquely indexed set gets a PostgreSQL test.
+- **A "markup holds no N" assertion meets generated ids.** Observed: a lane's bUnit test asserting the markup held no
+  "99" failed in 2 of 3 runs, matching ConfirmDialog's `confirm-<Guid>` ids (`ed7635a4`). *Changed:* nothing; such
+  an assertion reads the element's text, not the markup.
+- **A review checks the runbook's counts against earlier steps, not only the build.** Observed: the pages review's
+  must (M1) said A.7.10 should read "1 registrar" on 11.2; Dr Ndlovu's erasure at A.1.12 had ended the only one, so the
+  runbook was wrong and the build right. *Changed:* nothing; a count in an Expects line is traced to the steps that set
+  it before the build is changed to meet it.
+
 **What the brief keeps as it was**
 - The flows' order (§ 8), the invariants (§ 4.4) and the acceptance check (§ 9) held. The digest (§ 5.1) is restated
   for what flow 01 fixed: the shell, its components and the states it already designed. The brief template (§ 2.4)

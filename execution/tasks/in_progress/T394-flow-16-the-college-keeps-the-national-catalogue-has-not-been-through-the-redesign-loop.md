@@ -68,7 +68,7 @@ Run the loop as flow 15 ran it (`design/flows/15-institution-adopts-catalogue/`,
   flow 16's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines. (acts 1-6 and A,
   `c414a804`…`4a09396f`; states `4b529691`, `1e1ca1fc`; re-takes `095de27c`, `002ebc4b`; layout fixes `a2878763`,
   `7d4c4490`, `f7cb1903`, `c6bbb641`, `2c93b247`; missing 0)
-- [ ] The design system is re-synced and republished — its version number.
+- [x] The design system is re-synced and republished — its version number. (version 49, 1794239792-3119; `0c6af0c1`, `36b3bc04`, `0034f728`, `f98a61f0`)
 
 ## Related
 
@@ -267,3 +267,12 @@ T392 (flow 15), T387 (flow 14); T323, T393, T291, T324, T326, T331; BRIEF § 6, 
   regressions were the catalogue lists' column widths at 1280, fixed in five commits. Scratch DBs
   `wombat_scenario_t394_s*` dropped; `wombat_scenario_t394` kept on :5180 at the appendix's end, published from
   `2c93b247`. Next: step 8, step 9.
+- **2026-11-09, steps 8 and 9** (the operator: "yes" to doing them). Step 8 (one Opus agent, one Sonnet review): the
+  live system (1794237649-6a71, the type's release having moved since 45) matched HEAD in all 241 text files but for
+  CRLF; re-synced (`0c6af0c1`, `36b3bc04`: 8 records added in the Catalogue group, Colleges, CollegeRecord,
+  CollegeTree, SpecialityRecord, SubSpecialityRecord, EntrustmentScale, CurriculumRecord, CollegeAdminHome; 6 catalogue
+  records and 10 shared READMEs revised; the bundle byte for byte; no token or icon added). Review `resync-review.md`:
+  0 must, 3 should, 4 nits, all fixed (`0034f728`, `f98a61f0`). Page faults the re-sync found are in the system
+  README's flow 16 known gaps, not filed (Colleges' and the tree's widths 1025–1150px, inferred; the College record's
+  empty result row; Colleges' missing `aria-busy`; the tree's trail while it reads; and others). Published: files as
+  version 48, the index alone as **version 49** (1794239792-3119). Step 9: BRIEF § 11 "Flow 16". **T394 done.**
