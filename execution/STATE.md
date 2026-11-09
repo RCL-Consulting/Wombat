@@ -6,16 +6,16 @@ This is a reset point, not a diary.
 ## Focus
 
 Wombat is **deployed but not in service**: scenario data only. **The EPA v11.1 stream is built**, the runbook is a
-replayed journey catalogue with a screenshot baseline, and **fifteen redesign flows are done**: 01 the shell (T335),
+replayed journey catalogue with a screenshot baseline, and **sixteen redesign flows are done**: 01 the shell (T335),
 02 sign-in (T339), 03 filing an activity (T342), 04 an assessor's inbox (T350), 05 a registrar's progress (T355), 06
 programme oversight (T358), 07 the review sitting (T361, D53), 08 the committee calendar (T364), 09 outcomes, STARs
-and appeals (T366, with T367), 10 the MSF campaign (T369), 11 onboarding (T373), 12 people admin (T376), 13 graduation and exit (T379), 14 data rights (T387, `e8eea1d2`) and 15 an institution adopts the catalogue (T392, `c931d56f`),
-each designed, replayed and in the design system (version 45). Left: flows 16–20, the deploy, the College's, the P2s, P3 polish. On GitHub (RCL-Consulting/Wombat, public).
+and appeals (T366, with T367), 10 the MSF campaign (T369), 11 onboarding (T373), 12 people admin (T376), 13 graduation and exit (T379), 14 data rights (T387, `e8eea1d2`) and 15 an institution adopts the catalogue (T392, `c931d56f`), 16 the College keeps the national catalogue (T394, `de4cc718`),
+each designed, replayed and in the design system (version 49). Left: flows 17–20, the deploy, the College's, the P2s, P3 polish. On GitHub (RCL-Consulting/Wombat, public).
 
 ## Now
 
-- **The runbook** (`knowledge/scenario-paediatrics/`): replayed whole against flow 15 (T392, `wombat_scenario_t392`, 2026-11-02: no regression left).
-- **Open: 68 queued; none in progress; 1 blocked; 21 proposed (see `tasks/proposed/`).**
+- **The runbook** (`knowledge/scenario-paediatrics/`): replayed whole against flow 16 (T394, `wombat_scenario_t394`, 2026-11-05: no regression left).
+- **Open: 68 queued; none in progress; 1 blocked; 22 proposed (see `tasks/proposed/`).**
   - **P1:** T157, the deploy, which waits for the operator.
   - **P2, before real users:** T315, T320, T329, T334, T341 (T316, T319 closed 2026-11-02: flow 14 did their work).
   - **P3:** the presentation debt the redesign absorbs (BRIEF § 6–7), and polish.
@@ -32,7 +32,7 @@ each designed, replayed and in the design system (version 45). Left: flows 16–
     progress table for the bootstrapper to refill.
   - Check that production sets `Email__SmtpHost` (T157's note).
 - Send the College the § 3F questions, and decide T128.
-- **The redesign:** T394 (flow 16) steps 8 (re-sync the design system) and 9 (BRIEF § 11 lessons), then close it.
+- **The redesign:** flow 17 on the operator's word, or a P2 (T320 the largest). Push master first (ask).
 
 ## Open questions
 
@@ -54,7 +54,7 @@ each designed, replayed and in the design system (version 45). Left: flows 16–
 
 ## Recent
 
-- **2026-11-05:** T394, flow 16, built and replayed (`de4cc718`, `36a6fc25`; steps 1–7; five column-width fixes; steps 8–9 next).
+- **2026-11-09:** T394, flow 16, done (`de4cc718`; replay 332 steps, five column-width fixes; design system v49; BRIEF § 11).
 - **2026-11-03:** T392, flow 15, done (`c931d56f`; replay 332 steps, 303 clean, two layout faults fixed; design system v45).
 - **2026-10-30:** T387, flow 14, done (`e8eea1d2`; replay 332 steps, 295 clean, no regression; design system v41).
 - **10-28 and before:** T312 and T379 (flow 13, design system v37), T376 (flow 12), T373 (flow 11), T369 (flow 10); T290 (D54, D55); T366 (flow 09), T364, T361, T358, T355, T350, T342, T339, T335 (flows 08 to 01); the repo moved to GitHub. Earlier: `git log`.

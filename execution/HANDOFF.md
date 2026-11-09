@@ -2,6 +2,25 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
+## Session 2026-11-09 (Opus): T394 steps 8 and 9; T394 done
+
+The operator asked "what is next??", then "yes" to steps 8 and 9.
+- **Step 8:** one Opus agent re-synced `design/system/` to flow 16 (`0c6af0c1`, `36b3bc04`; the live system matched HEAD
+  but for CRLF). A Sonnet review (`design/flows/16-college-catalogue/resync-review.md`) found 0 must, 3 should and 4
+  nits, all fixed here (`0034f728`, `f98a61f0`). Published: the files as version 48, the index alone as **version 49**
+  (1794239792-3119). Versions 46 and 47 were not ours (presumably the type's releases).
+- **Step 9:** BRIEF § 11 "Flow 16", six lessons (`74989833`). **T394 done.**
+- **For review:**
+  - The page faults the re-sync found are in the system README's flow 16 known gaps, not filed. Among them:
+    - Colleges' and the tree's widths at 1025–1150px (inferred);
+    - the College record's empty result row;
+    - the tree's trail while it reads.
+  - T393 (curriculum and scale pages), T324, T264's scales half, T291 item 2, T326 and T331 no longer occur: close them?
+  - T396 is still proposed.
+  - The runbook's cast cell for Dr Kruger ("CMSA College registrar") reads as a College to a reader.
+- **Not pushed:** master is ahead of origin with all of flow 16. Ask before pushing.
+- **Next:** flow 17 on the operator's word, or a P2 (T320 the largest).
+
 ## Session 2026-11-04/05 (Opus): T394, flow 16, designed and built (steps 1–6)
 
 The operator said "Drop the scratch db's and start the next flow", then "yes" at each decision (§ 6 Q1–Q14; round 1's
@@ -42,24 +61,3 @@ Pushed master to origin.
 - **Environment left:** the replay app stopped (2026-11-03); `wombat_scenario_t392` kept at the appendix's end;
   dumps `recovery/scenario-t392-post-act{1..6,A}`, `-pre-a515-A`; T392's scratch DBs dropped. Old scratch DBs of
   earlier replays (`wombat_scenario_t387_s*` and older) still exist.
-
-## Session 2026-11-02 (Opus): T392, flow 15 (an institution adopts the catalogue), design to build
-
-The operator said "lets do flow 15", then "Done" (round 1), "yes" (picks, Q18–Q21), "done" (round 2), "yes" (F1–F9 as
-recommended). T392's Notes hold every step; not pushed (master ahead of origin since `a87041ac`: ask before pushing).
-- **Design:** canvas "Wombat 15" https://claude.ai/artifact/QvQL26tCCJh6S9zoLBywdZ; brief restated (`1b0676a2`);
-  round 1 (17 boards, `ff17241b`), round 2 (168 boards, `9c37e0ea`; review `2780557d`: 6 must, 25 should, 18 nit).
-- **Round 3's ask** written (`5fe15328`, `round-3-ask.txt`: 93 redrawn, 12 new screens, 11 captures to reopen,
-  the canvas saves its stylesheet as f15r3.css); wording the agent assumed is marked NEW in it.
-- **Round 3** drawn (111 boards, `7ee1206a`) and checked (`round-3-check.md`, `e91f5c7f`: 45/48 done, 2 partly, 1 not).
-- **Step 6, built:** `c931d56f` (lanes A–D, W; two Sonnet reviews, one fix pass, all but P5 left to T390; six suites
-  green). T393 proposed (two edit pages print exception text).
-- **Step 7, replay, done** (T392's Notes have the counts): acts 1-6 and A replayed, no flow 15 regression left; two flow
-  15 layout faults found and fixed (`e10a5f22` the items table, `50ca6470` the EPA list); states 98 rows re-taken
-  (`dff8b957`, `649eb643`); baseline missing 0. The replay app on `:5180` runs the appendix's end state, published
-  from `50ca6470`. Its scratch DBs were dropped 2026-11-03.
-- **Next:** step 8 (re-sync the design system, read the live files first) and step 9 (lessons), on the operator's
-  word; then close T392 (T291 items 1/4, T301, T304, T326's scales half no longer occur: the operator's call to close).
-- **Replay scratch:** `...\ecc5a9d5-...\scratchpad\g392` (prompts, act dirs, `replay-pw.env`: never print it).
-- **Traps:** the harness is at `C:\dev\rcl_execution\bin\harness.py`, not `bin/`. Canvas scratch:
-  `C:\Users\Renier\AppData\Local\Temp\claude\c--dev-Wombat\ecc5a9d5-2a6e-43d8-a55a-e55b7e48f8ab\scratchpad\c15`.

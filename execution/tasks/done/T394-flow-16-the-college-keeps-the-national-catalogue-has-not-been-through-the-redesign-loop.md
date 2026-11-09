@@ -1,12 +1,13 @@
 ---
 id: T394
 title: Flow 16, the College keeps the national catalogue, has not been through the redesign loop
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-11-04
 started: 2026-11-04
+completed: 2026-11-09
 ---
 
 # T394 — Flow 16, the College keeps the national catalogue, has not been through the redesign loop
