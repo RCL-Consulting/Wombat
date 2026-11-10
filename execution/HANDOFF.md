@@ -2,14 +2,14 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-11-09/10 (Opus): T398, flow 17, started (steps 1–5, round 1)
+## Session 2026-11-09/10 (Opus): T398, flow 17, steps 1–5 (rounds 1–3)
 
 The operator said "flow 17", then "Done" (sent the round-1 ask; taken as "yes" to brief § 6 Q1–Q12 as recommended).
 - **T398 in progress.** Canvas "Wombat 17" https://claude.ai/artifact/AQNS1QZDaUNizG7dzKPSGs (design system v49, mark
   `/_blob/a89fec160a8a8c0b20116ccc3634e0bc`). Brief restated and staged (`7d8ce207`); round 1 (17 boards, `f17r1.css`)
   saved in `design/flows/17-activity-type-builder/round-1/` (`465480c7`): A tabs, B one page, C a stepped path.
 - **Round 1 assessed** (`ab13dd3d`): pick A; M1–M7; Q13–Q16 put to the operator. Captures never reached the canvas.
-- **Round 3 ready:** ask `round-3-ask.txt` (89 items, 87 boards) on a new canvas "Wombat 17 · Round 3" https://claude.ai/artifact/Cpyw4vwX7UodgJUdKLF7Zw (set up: design system, mark, refs, round 2 as `.ref.html`). Next: the operator sends it and says "done"; then save, check item by item (one Sonnet, as flow 16's `round-3-check.md`).
+- **Round 3 drawn and saved** (`684119ce`, 87 boards in `round-3/`) on "Wombat 17 · Round 3" https://claude.ai/artifact/Cpyw4vwX7UodgJUdKLF7Zw. Being checked item by item (one Sonnet → `round-3-check.md`); then the operator's decisions, then step 6, the build.
 - **Trap:** the boards keep the workflow JSON "as typed"; jsonb re-renders it, so that is a stored text column (DATA).
 - **Not pushed:** master ahead of origin with flows 16–17. Ask before pushing.
 
