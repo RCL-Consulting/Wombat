@@ -178,3 +178,6 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   key, so no test caught it); 1.27 "1problem" (the inline-flex badge dropped the space). **Not published to :5180 until
   the acts finish**; then 1.25 and 1.27's captures re-taken. List at 1280: Actions 90–93px, every name one line; 1025
   spare 46/60px. Act 2 running.
+- **2026-11-10, act 2 replayed** (one Opus agent, `109bf8e2`; dump `scenario-t398-post-act2`): 44/44 clean; outcome SQL
+  as expected; 2.31 on a fresh session (Claude Code stopped the held tab for low memory); 2.42 offers KGK's type.
+  Baseline missing 0. Act 3 running.
