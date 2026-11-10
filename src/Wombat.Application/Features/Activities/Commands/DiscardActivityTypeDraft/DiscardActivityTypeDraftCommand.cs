@@ -16,10 +16,12 @@ public sealed record DiscardActivityTypeDraftCommand(int ActivityTypeId, ClaimsP
 public sealed class DiscardActivityTypeDraftCommandHandler : IRequestHandler<DiscardActivityTypeDraftCommand, ActivityTypeEditorDto>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public DiscardActivityTypeDraftCommandHandler(IApplicationDbContext dbContext)
+    public DiscardActivityTypeDraftCommandHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     public async Task<ActivityTypeEditorDto> Handle(DiscardActivityTypeDraftCommand request, CancellationToken cancellationToken)
@@ -29,11 +31,13 @@ public sealed class DiscardActivityTypeDraftCommandHandler : IRequestHandler<Dis
             .SingleOrDefaultAsync(entity => entity.Id == request.ActivityTypeId, cancellationToken)
             ?? throw new InvalidOperationException("The activity type could not be found.");
 
-        await ActivityTypeScopeGuard.EnsureCallerCanWriteAsync(_dbContext, request.Principal, activityType.Scope, activityType.ScopeId, cancellationToken);
+        // A system-managed type's draft may be discarded by whoever its scope admits (T398, F1): nothing else of it may.
+        await ActivityTypeScopeGuard.EnsureCallerCanWriteAsync(
+            _dbContext, request.Principal, activityType, activityType.Scope, activityType.ScopeId, cancellationToken, discard: true);
 
         activityType.DiscardDraft();
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return await GetActivityTypeEditorQueryHandler.ForCallerAsync(_dbContext, request.Principal, activityType, cancellationToken);
+        return await GetActivityTypeEditorQueryHandler.ForCallerAsync(_dbContext, _users, request.Principal, activityType, cancellationToken);
     }
 }

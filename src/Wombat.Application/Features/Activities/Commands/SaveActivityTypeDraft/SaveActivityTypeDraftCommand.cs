@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Common;
@@ -11,9 +12,9 @@ using Wombat.Domain.Epas;
 namespace Wombat.Application.Features.Activities.Commands.SaveActivityTypeDraft;
 
 /// <summary>
-/// No validator: the domain-layer parsers (FormSchemaParser, WorkflowParser, CreditRulesParser)
-/// validate the JSON content and throw on malformed input. The Blazor form pre-validates before
-/// dispatch. A separate FluentValidation validator would duplicate those checks without adding value.
+/// Saves an activity type's draft, creating the type on its first save. Details' Key and Name are checked by
+/// <see cref="SaveActivityTypeDraftCommandValidator" /> (T398, S10); the three payloads by the domain parsers, every
+/// problem at once (<see cref="ActivityTypeDraftRefusedException" />, P2).
 /// </summary>
 /// <param name="WbaToolKey">
 /// Which College-named instrument this type is, or null for "Not a WBA instrument" (T122, D21). Positional and
@@ -21,7 +22,6 @@ namespace Wombat.Application.Features.Activities.Commands.SaveActivityTypeDraft;
 /// column on every save, so a caller that forgot a defaulted argument would silently withdraw the type's
 /// instrument, and under D21 that failure is permissive and therefore invisible.
 /// </param>
-[NoValidator]
 public sealed record SaveActivityTypeDraftCommand(
     int? ActivityTypeId,
     string Key,
@@ -38,13 +38,71 @@ public sealed record SaveActivityTypeDraftCommand(
     string ActorUserId,
     ClaimsPrincipal Principal) : IRequest<ActivityTypeEditorDto>;
 
+/// <summary>
+/// The words Details' fields are refused in (T398, flow 17, S10): under Key and Name, as the page shows them. Key's two
+/// are NEW; Name's are the College's (<c>CollegeHolders</c>, N1).
+/// </summary>
+public static class ActivityTypeFieldMessages
+{
+    /// <summary>The key's column (<c>ActivityTypeConfiguration</c>).</summary>
+    public const int KeyMaxLength = 100;
+
+    /// <summary>The name's column.</summary>
+    public const int NameMaxLength = 200;
+
+    public const string KeyRequired = "Enter a key.";
+
+    public const string KeyTooLong = "A key is at most 100 characters.";
+
+    public const string NameRequired = "Enter a name.";
+
+    public const string NameTooLong = "A name is at most 200 characters.";
+
+    /// <summary>The description's column (<c>ActivityTypeConfiguration</c>): the page's counter stops there too.</summary>
+    public const int DescriptionMaxLength = 2000;
+
+    /// <summary>NEW (the fix pass, code review N-1): the class S10 closes for Key and Name, under Description.</summary>
+    public const string DescriptionTooLong = "A description is at most 2,000 characters.";
+
+    /// <summary>The built sentence (R3-C22), now under Key.</summary>
+    public static string KeyTaken(string key) => $"An activity type with key '{key}' already exists.";
+}
+
+/// <summary>
+/// Details' Key and Name (T398, S10): blank or too long, in the words the page shows under each. Lengths are judged as the
+/// handler stores them, trimmed. Until T398 the command had none, so a blank name saved and a long key reached the
+/// database as a failure.
+/// </summary>
+public sealed class SaveActivityTypeDraftCommandValidator : AbstractValidator<SaveActivityTypeDraftCommand>
+{
+    public SaveActivityTypeDraftCommandValidator()
+    {
+        RuleFor(command => command.Key)
+            .Cascade(CascadeMode.Stop)
+            .NotEmpty().WithMessage(ActivityTypeFieldMessages.KeyRequired)
+            .Must(key => key.Trim().Length <= ActivityTypeFieldMessages.KeyMaxLength).WithMessage(ActivityTypeFieldMessages.KeyTooLong);
+
+        RuleFor(command => command.Name)
+            .Cascade(CascadeMode.Stop)
+            .NotEmpty().WithMessage(ActivityTypeFieldMessages.NameRequired)
+            .Must(name => name.Trim().Length <= ActivityTypeFieldMessages.NameMaxLength).WithMessage(ActivityTypeFieldMessages.NameTooLong);
+
+        // T398 fix (N-1): a description past its column was a database failure, not a refusal.
+        RuleFor(command => command.Description)
+            .Must(description => description is null || description.Trim().Length <= ActivityTypeFieldMessages.DescriptionMaxLength)
+            .WithMessage(ActivityTypeFieldMessages.DescriptionTooLong);
+    }
+}
+
 public sealed class SaveActivityTypeDraftCommandHandler : IRequestHandler<SaveActivityTypeDraftCommand, ActivityTypeEditorDto>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserAdministrationService _users;
 
-    public SaveActivityTypeDraftCommandHandler(IApplicationDbContext dbContext)
+    public SaveActivityTypeDraftCommandHandler(IApplicationDbContext dbContext, IUserAdministrationService users)
     {
         _dbContext = dbContext;
+        _users = users;
     }
 
     /// <remarks>
@@ -72,13 +130,13 @@ public sealed class SaveActivityTypeDraftCommandHandler : IRequestHandler<SaveAc
                 .SingleOrDefaultAsync(entity => entity.Id == request.ActivityTypeId.Value, cancellationToken)
                 ?? throw new InvalidOperationException("The activity type could not be found.");
 
-            await ActivityTypeScopeGuard.EnsureCallerCanWriteAsync(_dbContext, request.Principal, existing.Scope, existing.ScopeId, cancellationToken);
+            await ActivityTypeScopeGuard.EnsureCallerCanWriteAsync(_dbContext, request.Principal, existing, existing.Scope, existing.ScopeId, cancellationToken);
         }
 
         // The requested new scope (which may differ from the existing) must also be within the
         // caller's reach — InstitutionalAdmin cannot retarget a type into another institution
         // or up to Global.
-        await ActivityTypeScopeGuard.EnsureCallerCanWriteAsync(_dbContext, request.Principal, request.Scope, request.ScopeId, cancellationToken);
+        await ActivityTypeScopeGuard.EnsureCallerCanWriteAsync(_dbContext, request.Principal, existing, request.Scope, request.ScopeId, cancellationToken);
 
         if (existing is not null)
         {
@@ -89,7 +147,8 @@ public sealed class SaveActivityTypeDraftCommandHandler : IRequestHandler<SaveAc
         }
         else if (await _dbContext.Set<ActivityType>().AnyAsync(entity => entity.Key == normalizedKey, cancellationToken))
         {
-            throw new InvalidOperationException($"An activity type with key '{normalizedKey}' already exists.");
+            // Under Key (T398, S10, R3-C22), still before anything is staged.
+            throw new FieldRefusalException(nameof(SaveActivityTypeDraftCommand.Key), ActivityTypeFieldMessages.KeyTaken(normalizedKey));
         }
 
         var wbaToolKey = await ResolveWbaToolKeyAsync(request.WbaToolKey, cancellationToken);
@@ -124,7 +183,7 @@ public sealed class SaveActivityTypeDraftCommandHandler : IRequestHandler<SaveAc
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
-        return await GetActivityTypeEditorQueryHandler.ForCallerAsync(_dbContext, request.Principal, activityType, cancellationToken);
+        return await GetActivityTypeEditorQueryHandler.ForCallerAsync(_dbContext, _users, request.Principal, activityType, cancellationToken);
     }
 
     /// <summary>

@@ -157,7 +157,7 @@ public sealed class ActivityTypeToolPickerTests : TestContext
         var sender = new FakeSender(storedToolKey: "dops");
         var cut = RenderPage(sender);
 
-        cut.FindAll("#type-wba-tool").Should().BeEmpty("the default tab is Form, not Metadata");
+        cut.FindAll("#type-wba-tool").Should().BeEmpty("the default tab is Form, not Details");
 
         SaveDraft(cut);
 
@@ -196,7 +196,7 @@ public sealed class ActivityTypeToolPickerTests : TestContext
         var cut = RenderPage(sender);
 
         cut.FindAll(".tab-bar-tab")
-            .First(tab => tab.TextContent.Trim() == "Metadata")
+            .First(tab => tab.TextContent.Trim() == "Details")
             .Click();
         cut.WaitForState(() => cut.FindAll("#type-wba-tool").Count == 1);
 

@@ -1,3 +1,4 @@
+using Wombat.Tests.Shared;
 using System.Globalization;
 using System.Security.Claims;
 using FluentAssertions;
@@ -98,7 +99,7 @@ public sealed class ActivityTypeAdminScopePostgresTests : IAsyncLifetime
 
                 foreach (var typeId in ours.Where(id => list.Items.Any(item => item.Id == id)))
                 {
-                    var editor = await new GetActivityTypeEditorQueryHandler(db).Handle(new GetActivityTypeEditorQuery(typeId, principal), CancellationToken.None);
+                    var editor = (await new GetActivityTypeEditorQueryHandler(db, FakeUserDirectory.Empty).Handle(new GetActivityTypeEditorQuery(typeId, principal), CancellationToken.None))!;
                     editor.CanWrite.Should().Be(writes.Contains(typeId), $"the editor tells {who} what the guard admits on type {typeId}");
                 }
 
@@ -112,7 +113,7 @@ public sealed class ActivityTypeAdminScopePostgresTests : IAsyncLifetime
                 var admitted = new List<(ActivityScope, int?)>();
                 foreach (var pair in await EveryPairAsync(db))
                 {
-                    if (await ActivityTypeAdminScope.MayWriteAsync(db, principal, pair.Scope, pair.ScopeId, CancellationToken.None))
+                    if (await ActivityTypeAdminScope.MayWriteAsync(db, principal, pair.Scope, pair.ScopeId, systemManaged: false, CancellationToken.None))
                     {
                         admitted.Add(pair);
                     }
@@ -130,8 +131,8 @@ public sealed class ActivityTypeAdminScopePostgresTests : IAsyncLifetime
                 var institution = await ActivityTypeAdminScope.WritableScopesAsync(db, verdicts["an InstitutionalAdmin of Kalafong"].Principal, CancellationToken.None);
                 institution.Should().ContainSingle().Which.Targets.Select(target => target.Name).Should().Equal("T300 Kalafong");
 
-                var editor = await new GetActivityTypeEditorQueryHandler(db).Handle(
-                    new GetActivityTypeEditorQuery(cpsaSubType, verdicts["an InstitutionalAdmin of Kalafong"].Principal), CancellationToken.None);
+                var editor = (await new GetActivityTypeEditorQueryHandler(db, FakeUserDirectory.Empty).Handle(
+                    new GetActivityTypeEditorQuery(cpsaSubType, verdicts["an InstitutionalAdmin of Kalafong"].Principal), CancellationToken.None))!;
                 editor.ScopeTargetName.Should().Be("T300 Paediatrics / Neonatology");
 
                 // The list names every row's target in one read per kind (T300 review, T291 item 5): the institutions'

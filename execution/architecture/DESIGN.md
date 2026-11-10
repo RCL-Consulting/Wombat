@@ -234,7 +234,7 @@ and a system colour under `@media (forced-colors: active)`. `Design/StylesheetRu
   --radius-md: 6px;     /* controls, buttons, alerts */
   --radius-lg: 8px;     /* cards */
   --radius-xl: 12px;    /* tables, forms, dialogs */
-  --radius-pill: 999px; /* badges, tabs */
+  --radius-pill: 999px; /* badges */
   --motion-fast: 150ms; /* a button's dim, a card's lift, a nav item's hover */
 
   /* Spacing scale: use these, not raw rem values */
@@ -899,6 +899,13 @@ Class order is **`.btn .btn-sm .btn-{variant} [spacing utilities]`**. The sizing
   `DateTime.Today`. It carries no `max`: the field sits inside the page's `EditForm`, and the browser would then refuse
   Save over a field Save does not send. The server's refusal is the rule.
 
+- **The activity type builder** (T398, flow 17; § Builder layout). Discard draft… asks (`ConfirmDialog`, its danger
+  confirm "Discard draft"); Delete on a section or a field asks nothing; Publish saves the edits since the draft was saved
+  first, then asks only when the saved draft has warnings, its dialog's confirm a **primary**, "Publish version 2" (S7),
+  the header's Publish staying `btn-success`. Active newly unticked on a published type: Save draft asks "Deactivate ‹name›?"
+  first, and Publish asks it before anything else (Q17); both carry `aria-haspopup="dialog"` while it holds; ticking Active
+  back asks nothing. Publish off is `aria-disabled` with its reason beside it, and inert (S5).
+
 ## Table system
 
 Two classes, two uses:
@@ -1131,8 +1138,10 @@ queue, Your requests and Corrections recorded). The data rights queue stacks fro
 sidebar its six columns, seven for the Administrator, have no room from 901 to 1100px, so the stack-wide rules are
 repeated for `.data-rights-requests` under a 1100px query, its row buttons 44px.
 **The catalogue's tables stack from 1024px, Curricula and the items from 1150px** (2026-11-05, T394, flow 16, round 3 S1,
-check decisions 1 and 2): the EPA list, Colleges and each section of the College's tree are stack-wide tables stacked by
-one 1024px query in flow 16's shared part, since their columns overflowed between 901 and about 975px. A curriculum's items
+check decisions 1 and 2): the EPA list, Colleges, each section of the College's tree and the activity types list (T398,
+flow 17, round 3 C3) are stack-wide tables stacked by
+one 1024px query in flow 16's shared part, with the builder's "Moves, as saved" (`.workflow-readout`, T398's sweep: Mini-CEX
+(Paediatrics)'s four moves need 578px at their narrowest, which the builder's card gave only from 936px), since their columns overflowed between 901 and about 975px. A curriculum's items
 (six compact columns, 691 to 744px wide) and Curricula (756px for the Administrator in a 717px container at 1025px) stack by
 a 1150px query (1100px until the replay: at the appendix's end an institution's Curricula, with an adoption and a
 superseded version, ran 17px past its container at 1101px). A stacked row never scrolls, and its row actions are 44px.
@@ -1470,6 +1479,15 @@ so a password typed in a circuit does not cross it keystroke by keystroke. It re
   first words and the focus goes to the field: the sentence is shown once. A start more than four years back is a
   `.field-warning` under Programme start, which names it (M07): a warning, never a refusal.
 
+- **The builder's refusals** (T398, flow 17, Q6). A refused save is a `RefusalSummary` at the top of the result region,
+  "Nothing was saved." and "Everything you typed is kept.", one line a place prefixed by the page from the place
+  ("Details:", "Form:", "Form, section ‹title›:", "Workflow, move ‹label›:", "Workflow:", "Credit:"), each a link whose
+  press (`LineAction`) switches the tab, opens the row's editor in place and focuses its key, move's JSON or Details
+  control; the words again at the place (`p.validation-message`, the control `aria-invalid`, the words first in its
+  `aria-describedby`); each tab's count in its name. The builder tells a refusal from a failure itself (P1): anything that
+  is not a refusal is the fixed sentence, logged. The stripes of an open or a refused row keep a 4px edge in a contrast
+  theme (Highlight, CanvasText; S28).
+
 ### The activity form (T342, flow 03)
 
 `ActivityForm` (`Components/Shared/Activities/`) renders an activity type's schema for filing (Log an activity), for the
@@ -1798,42 +1816,104 @@ T011 mandates this grid for every role dashboard — do not hand-roll a differen
 
 ## Builder layout
 
-T019 introduces a small builder-specific extension to the shared system:
+> **Rewritten 2026-11-10, T398, flow 17 (lane C):** the tabs pattern, the version strip, the editor in place, the read
+> in words above the JSON, the Publish tab. Round 3's Spec § 6, with round 2's DESIGN.md text where round 3 points back.
+
+The activity type builder (`ActivityTypeEdit.razor` with `ActivityTypeEdit.razor.cs`; words in `ActivityTypeEditWords`
+and § 0's `ActivityTypeWords`; refusals in `BuilderRefusal`) is a `.user-page.activity-type-page` under `PageHeader`.
 
 ```css
-.tab-bar          /* horizontal tab strip with pill-like tab buttons */
-.tab-bar-tab      /* inactive tab button */
-.tab-bar-tab.is-active
-
-.builder-two-col  /* admin builder split view: editor rail + live preview */
+.tab-bar           /* the tabs pattern: a one-row grid of tabs on the page ground, an underline on the selected */
+.tab-bar-tab       /* a tab: 44px high, equal tracks where the page's column is under 34rem; [aria-selected="true"] is underlined and bold */
+.builder-two-col   /* the Form tab's editor column and live preview, side by side from 1116px */
+.form-outline, .outline-section, .outline-section-head, .field-row, .field-row-label, .field-row-meta,
+.field-editor-inplace, .is-editing, .is-refused   /* the outline (S2) */
+.builder-owner-line, .builder-strip               /* the header's owner line, the version strip */
 ```
 
-- `.tab-bar` sits directly below `PageHeader` inside the surrounding `.form-container`.
-- `.builder-two-col` is `grid-template-columns: minmax(320px, 1fr) minmax(400px, 1.4fr)` with the normal `var(--space-lg)`
-  gap, and collapses to one column by the width of **its card**, not the viewport's (T266). The card, the `.form-container`
-  whose direct child it is, is a size container (`container: builder / inline-size`, selected by
-  `:has(> .builder-two-col)`), and under 46.5rem of it, the two columns' own minimum (320 + 400 + 24px), the columns stack.
-  The sidebar, the gutter and the card's padding take 372px of the viewport, so the viewport's 900px said nothing: until
-  T266 the page scrolled sideways by 158px at 901px, 109px at 950px and 59px at 1000px, and up to 1115px the columns ran
-  into the card's padding. Now they stack up to 1115px and stand side by side from 1116px (a 744px card). Each column's
-  content keeps to its track (`min-width: 0`). `Design/NarrowLayoutTests` pins the rules, and
-  `ActivityTypeBuilderLayoutTests` the columns' place as the card's child.
-- The left column uses stacked `.detail-card` sections and field rows. The right column is always the live preview rendered by the shared `ActivityForm.razor`.
-- New builder affordances still reuse the existing button, card, form, alert, and validation classes. The builder does not get its own parallel design language.
-- **The builder follows the rule its commands refuse by** (T300, § Table system's T211 paragraph). The editor carries
-  `CanWrite` and `WritableScopes` (`ActivityTypeAdminScope`: an Administrator writes every type, a Global type is
-  theirs alone, an Institution type its InstitutionalAdmin's, a Speciality or SubSpeciality type the owning College's
-  CollegeAdmin's). The Scope picker lists exactly `WritableScopes` with no empty target, and a new type starts on the
-  first of them (Institution with her own institution, for an InstitutionalAdmin). Where `CanWrite` is false the page
-  is a reader's: no Save draft, Discard draft or Publish, no Add, Up, Down or Delete; the metadata, the form settings,
-  a section's and a field's settings, the workflow and the credit rules are text (`dl.form-group`, the JSON in a
-  `pre.code-block`); each section and field offers View ("View field Overall level"), so a field can still be read; and a
-  standing `Alert` (`Kind="info"`, `Role=""`, `#activity-type-read-only`) at the top says whose type it is ("Set by the
-  College that owns Paediatrics.") and that the reader can read it but not change it. The header offers nothing to save
-  until the editor has loaded, and nothing after it failed to; its title comes from the address, so a page with an id
-  never reads "New activity type". The list offers Edit where `CanWrite`, View elsewhere, both to the builder, and New
-  activity type only where `ActivityTypeAdminListDto.CanCreate`. `ActivityTypeBuilderAccessTests` and
-  `ActivityTypesListAccessTests` hold both pages to it.
+- **The header.** No Back to list: the trail is the way back. The subtitle "What a registrar fills in, who moves it on,
+  and what it counts towards." and under it the owner line (`.builder-owner-line`): whose type in words, then its scope,
+  "Kgosi Kgari Teaching Hospital · Institution", "CPSA · Speciality · Paediatrics" (the College by its short code), "The
+  platform · Global". A writer's actions: Save draft (`btn-primary`), Publish (`btn-success`) and, with a saved draft,
+  Discard draft… (`btn-outline`, `aria-haspopup="dialog"`). Without a draft Publish is `aria-disabled="true"` with "Save a
+  draft to publish." beside it by `aria-describedby`, and inert (S5). Titles: "New activity type", a writer's "Edit ‹name›",
+  a reader's the name alone, "Activity type" while loading or after a failed read, "Activity type unavailable".
+- **One result region** (`ActionResult`) under the header and above the tabs at every width: a result, a failure, the
+  guard's sentence or the refusal summary. A result stays until the next save, publish or discard; a tab press is none of
+  them (E02b). Then a reader's standing notice (T300's words, or a system-managed type's release notice: no role), the
+  version strip (`dl.detail-list.builder-strip`, no `aria-label`: "Versions" is a heading on the Publish tab and a
+  reader's Details; Published "Version 1, 2026-11-05, Nolwazi Mbatha" or "Not published"; Draft "Saved 2026-11-05 by
+  Nolwazi Mbatha" or "None"), and T18's note on a seed-owned type with a draft. People are named only to a caller the
+  type's scope admits: a reader from outside it reads "Version 1, 2026-11-05" and "Saved 2026-11-05", the seeder still
+  "Wombat's catalogue" (the fix pass, S-2).
+- **The tabs pattern** (Q1, T280). `div.tab-bar[role="tablist"][aria-label="Parts of this activity type"]` stands on the
+  page ground above the card, and the card is the tabpanel (`role="tabpanel"`, `aria-labelledby` its tab, `tabindex="0"`
+  only when it holds no control). Each tab a `button[role="tab"]` with `aria-selected`, a roving `tabindex` (0 on the
+  selected) and `aria-controls` on the selected only. Left, Right, Home and End move the focus (read in C#;
+  `wombat.js` keeps these four alone from scrolling the page, never Tab); Enter or Space selects. A writer has five tabs,
+  Details, Form, Workflow, Credit, Publish; a reader four (no Publish; the versions close a reader's Details). A new type
+  opens on Details, an existing one on Form; a save keeps the tab; Publish lands on the tab it was pressed from (Q20). A
+  tab with refusals carries its count inside its name, `Form <span class="badge badge-declined">1<span> problem</span></span>`
+  ("Form 1 problem"); where the page's column is under 46rem the word is visually hidden and the number shown (R1). The
+  tracks and the word go by the column's width, not the viewport's: `.activity-type-page` is a size container
+  (`builder-page`), the tabs take equal tracks under 34rem, and the bar is one row at every width (T398's sweep: from 641
+  to about 720px the sidebar left five tabs 335px for their 416px, and four counts with their word took the bar to 710px,
+  past the column up to a 1000px viewport). No tab has an `aria-label` or an `aria-describedby`.
+- **Details.** Q14's line "Saved with Save draft, not with Publish: a change here reaches everyone when you save.", then
+  "* marks a field you must fill in." Key (a read-out "Fixed: version 1 is published." once published), Name, Scope (a
+  read-out "The one scope you can write in." where one is offered; else a `fieldset.choice-group[role="radiogroup"]
+  [aria-required="true"]` with the target under it), This tool is, Description with its counter to 2,000 characters,
+  Active with "An inactive type is not offered to anyone filing an activity. Activities already filed are not changed."
+  A reader's is a `dl.detail-list` and the versions.
+- **Form.** The card (`.form-container`, the size container `builder`) holds the Show choice and `.builder-two-col`. The
+  columns collapse by the width of the card, not the viewport's (T266): under 46.5rem of it (up to 1115px) they stack and
+  the CSS-only choice "Edit the form" / "Preview" ("The form" to a reader) hides the unchosen column (C2); from 1116px both
+  stand and the choice is hidden. The left column: `h2` Form settings, by label with the key after ("Date delivered
+  (delivered_on)"; a setting at a deleted field is dropped at save, T133, Q18), then `h2` Sections and fields and the
+  outline. The right column: `h2` Live preview over the shared `ActivityForm` (`SectionHeadingLevel="3"`, the type's own
+  EPAs by `EpaOptions`, S8) and the preview's person line under a User field.
+- **The outline** (S2, S27). A section is a `section.outline-section`: its head on `--header-bg` (the title an `h3`
+  alone, its key a `p.field-row-meta > code`, then Edit, Up, Down, Delete in a `div.actions-cell`), its fields a
+  `ul.list-unstyled` of `li.field-row` (the label, then type, "Names an Assessor", key and Required, then the buttons).
+  Every button is named for its row ("Move field Topic up"). **The editor opens in place**, one at a time, under its row:
+  a field's is an `li.field-editor-inplace` directly after its row, with its `h4` and no `role`; a section's a
+  `div.field-editor-inplace[role="group"]` under its head. Edit becomes Done (`aria-expanded`, `aria-controls` the editor);
+  Edit focuses the editor's first input, Done gives the focus back to Edit. Add field adds the row and opens its editor,
+  Field key focused (S13). Delete is an outline button that asks nothing (Q8); the focus goes to the next row's Edit, else
+  Add field. The open row and its editor share a 4px stripe in the action blue, a refused row a danger stripe with its
+  words under it (a Highlight or CanvasText edge in a contrast theme, S28). A section's words stand in its head
+  (`#sec-N-refusal`), and its editor's Section key, where the summary's line lands, is `aria-invalid` and described by
+  them, as a field's key is by its own. **Up on the first row and Down on the last are natively `disabled`**: a position,
+  not an action withheld for a reason (§ Button system's `aria-disabled` rule), as the boards draw it; the move places the
+  focus on the moved button, or its twin at an end. Above 20 fields in the form each section's head
+  offers "Hide fields" / "Show fields" ("Hide fields of section ‹title›"), `aria-controls` its list, no `aria-expanded`;
+  every section starts open.
+- **Workflow and Credit.** The read in words (lane B's `WorkflowReadout`, `CreditReadout`) above the JSON editor
+  (`textarea.form-control.font-mono`) and its help "After each save this shows the rules as they were saved, laid out by
+  Wombat, one property a line.": what was typed until a save, then the saved text laid out (Q13). A reader's whole view is
+  the read; a reader gets no JSON (Q2).
+- **Publish** (a writer's). What publishing the **saved** draft changes, by label (`GetPublishWarnings`), with the pinned
+  line; "Save draft to see what publishing changes." while edits are unsaved (S6); on a first publish "What you are
+  publishing"; the versions (`VersionsTable`); and its own "Publish version 2" (`btn-success`).
+- **The read in words** (lane B's three read-outs, `HeadingLevel` placing them under their panel's `h2`; Q2, Q3).
+  `WorkflowReadout`: the states as one line ("Draft, where a new one starts · Logged, final") and the moves as a
+  `DataTable StackWide` captioned "Moves, as saved", the row header the move's label, then From ("Draft or Requested"),
+  To, Who moves it (`ActorRuleWords`: "The registrar, or whoever filed it"; a rule it cannot word shown as written in
+  `<code>`), Checks ("The whole form", "The mover's own fields", "Formats only") and Note ("Required" or "No"); it joins
+  the catalogue's 1024px stack (`.workflow-readout`). `CreditReadout`: one sentence a directive, or "Credits nothing."
+  with its line. `VersionsTable`: "Published versions", Version, Published (the South African day), By (left out when no
+  row names anyone), with "Activities filed under a version stay on it."; "Not published yet." for none. The words are
+  computed by the editor query; a `.razor` file never parses a DSL.
+- **The builder follows the rule its commands refuse by** (T300, T334). The editor carries `CanWrite` and
+  `WritableScopes`; a system-managed type is read-only to everyone. Where `CanWrite` is false the page is a reader's: no
+  Save draft, Discard draft… or Publish, no Add, Up, Down or Delete, no dialog; each section and field offers View, its
+  settings opening in place as text. **One exception (the operator's F1, 2026-11-10):** a system-managed type that holds
+  a draft from before T334 offers Discard draft… alone (`CanDiscardDraft`), with its question, to whoever its scope
+  admits; it drops staged work and never changes what is published. Save draft and Publish stay refused. An unknown id, or one the caller may not read, is the page's own Unavailable.
+  `ActivityTypeBuilderAccessTests`, `ActivityTypeTabsTests`, `ActivityTypeOutlineTests` and `ActivityTypeReaderTests` hold
+  the page to it.
+- New builder affordances reuse the shared button, card, form, alert and validation classes; the builder has no design
+  language of its own.
 
 ## Alerts, validation, empty states
 
@@ -3732,6 +3812,30 @@ institution again; the failure takes the focus. An adoption made whose list cann
 superseded, and a stale one is refused in the open section, "Another adoption was made since this page was read, so nothing
 was adopted. The list below has been read again." (C4).
 
+**Activity types** (`/admin/activity-types`, 2026-11-10, T398, flow 17, lane B; Q7, Q11, Q12, T326; the fix pass, S4) in
+`.people-page.activity-types-page`. The subtitle is by role, never by count: "The forms registrars file and assessors
+complete." and then an institution's "You can change the types you set; the College sets its instruments.", a College's
+"You can change the types ‹College› sets; the others you can read." (N12: "‹College› has no speciality yet, so there are
+no types for you to change."), or the Administrator's "You can change every type but the two that Wombat's releases
+write." New activity type is the header action only where the caller may create one.
+- **The search** is a `search-grid` with "Search by name or key" and Show, Clear once a search is applied. It is applied
+  on Show, to name and key, case-insensitive, on the rows already read: no round trip and no live filtering. The count
+  line `p[role="status"][tabindex="-1"]` above the table ("23 activity types.", "12 of 22 activity types match “cpsa”.",
+  each with its singular) takes the focus after Show; Clear and "Clear the search" give it to the search input.
+- **No match is not empty.** No match is the card 'No activity types match "zzz".' / "The search is kept above. Clear it
+  to see all 23." with "Clear the search", the card taking the focus; the empty catalogue is "No activity types" with
+  "Create the first activity type to start the builder." for a creator, "No activity type is open to you yet." otherwise.
+- **The rows**: the caller's own (those they may write) first, then the rest, each part by name (ordinal, ignoring
+  case); the Administrator's by name alone. A `DataTable StackWide` captioned "Activity types you can read or change",
+  the row header the name over its key in `.person-cell` (a system-managed type's release line, "Written by the MSF
+  release.", between them), then Set by (the College by its short code, the institution by name, "The platform", over
+  the scope in words), Published ("Version 1" or "Not published"), Draft ("Saved ‹day›" or "None"), Status, and one
+  action, Edit where the caller may write the type, else View (never Edit on a system-managed one), named for its row, in
+  a `col-actions col-actions--single` column as wide as its one button. No pager; it stacks from 1024px down.
+- **Loading** is the header, "Loading the activity types." and skeletons; a **load error** `StatePanel`'s alert with
+  Try again, "Could not load the activity types. Nothing has changed. Try again, or come back in a few minutes.", never
+  the exception's text.
+
 **The EPA list's pager** (2026-11-02, T392, flow 15, P5): `PagerControls` under the table, named "Pages of EPAs", its size
 select "EPAs per page", drawn while the list runs past the chosen size (`list.Epas.Count > _pageSize`; T390 holds the
 case where a size that holds every row hides the pager). A page turn focuses the h1. The rows are read once and paged on
@@ -5352,11 +5456,13 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
 "Flow 15: a curriculum's items (T392)": .curriculum-items-page (+ .form-section-head, the table's .actions-cell wrapping) (+ ≤640px: .form-section-head .btn 44px, decision 2), .curriculum-item-page (+ .detail-list .list-unstyled) (the stack and the checkbox rows moved to flow 16's shared part, T394)
 "Flow 15: EPAs (T392)": .epas-page th[scope="row"] (the EPA's label and owner mark wrap inside the cell), .epas-page .clinic-table th.col-wrap--wide (≥1025px: 45%, so a title is not squeezed beside empty auto columns), .epa-page .action-result:empty, .epa-page .epa-text (the record's text keeps its line breaks) (the Active row's 44px moved to flow 16's shared part, T394)
 "Flow 15: the move, the rebuild and the scales (T392)": .rebuild-page .action-result:not(:empty) (its step under the bar), .scales-page .clinic-table td[data-label="Levels"] (tabular figures) (the profile's move line is the system's .submit-check inside .user-page; the rebuild is .user-page, the scales .people-page with StackWide, whose phone rules serve them)
-"Flow 16: the catalogue, shared (T394)": (≤1024px: the stack-wide tables of .epas-page, .colleges-page and .college-tree-page stack, row actions 44px; ≤1150px: .curriculum-items-page's and .curricula-page's (the build's sweep, then the replay's 1101px), round 3 S1, check decisions 1 and 2) (+ ≤640px: .user-page .form-check outside a .choice-group, its input and label, a 44px row with a 20px box, R1, in place of flow 15's per-page copies)
+"Flow 16: the catalogue, shared (T394)": (≤1024px: the stack-wide tables of .epas-page, .colleges-page, .college-tree-page and .activity-types-page (T398, round 3 C3, in all seven selector lists), and the builder's .workflow-readout (T398's sweep), stack, row actions 44px; ≤1150px: .curriculum-items-page's and .curricula-page's (the build's sweep, then the replay's 1101px), round 3 S1, check decisions 1 and 2) (+ ≤640px: .user-page .form-check outside a .choice-group, its input and label, a 44px row with a 20px box, R1, in place of flow 15's per-page copies)
 "Flow 16: the College's tree and Home (T394)": .college-tree-page .form-section-head (a speciality's h2 and its two actions on one line, wrapping), .college-tree-page .user-section > p (the speciality's line wraps a 2,000-character description) .speciality-page .action-result:empty, .sub-speciality-page .action-result:empty (a record's empty result region takes no row) (the records sit beside .user-page, Home's card in the system's .dashboard-card-footer)
 "Flow 16: Colleges and the scales (T394)": .college-page .form-container (one column, 48rem), .scale-page (the levels grid's textareas; .scale-in-use-line, Q16; .scale-levels-actions; ≤900px: the stacked grid's inputs full width), the refusal's parts in its alert (.scale-page/.scales-page .action-result .alert p and ul; .scale-put-back, S14; .scales-refusal-links, S6, ≤640px 44px)
 "Flow 16: a curriculum's page and Curricula (T394)": .curriculum-page .action-result:empty, .curriculum-page .form-container (its sections a step apart) and its .form-actions, .curriculum-read-out (Q19's read-out) and its dd
 "Flow 16: EPAs, the items and an item's page (T394)": (no rule of its own: the College's items notice bolds its reach with the Alert's own `<strong>`, R3-F05; "Edit this version" is a header action, placed by § 0's Q20 rule; Q14's line and Go to EPAs are a `.detail-card--empty`; EV2's reach line is an info `Alert Role=""` under the result region; the stacks and the checkbox rows are the shared part's)
+"Flow 17: the list and the read (T398)": (.workflow-readout, .credit-readout and .versions-readout: a flex column 16px apart with no part's own margin, as .user-section spaces its parts, so the read in words sits in a builder panel as R2-B03–B05, R2-D02 and R2-E03 draw it; the list needs nothing of its own: its release line is one more .person-cell span, and its 1024px stack is the shared part's, C3, as is the moves table's, the sweep's)
+"Flow 17: the builder (T398)": the owner line and the strip, R1 (a tab's count), S2 (the outline and its stripes); C1's `.tab-bar` and C2's `.builder-two-col` and Show choice are under Builder, in place
 ```
 
 The Progress section replaced the Trajectory chart section that held T123's chart (2026-10-04, T355): every flow 05

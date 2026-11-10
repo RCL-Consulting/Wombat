@@ -1012,20 +1012,31 @@ public sealed class ActionFocusTests : TestContext
             // ExportPortfolioPageTests holds it.
             CanBeRefused: false),
 
+        // T398 (flow 17, P1): the builder tells a refusal from a failure itself; the test's refusal is neither of its kinds,
+        // so it is the fixed failure, focused: ActivityTypeRefusalTests holds the refusals.
         ["ActivityTypeEdit Save draft"] = new(
             (test, hold) => test.ActivityTypePage(hold, request => request is SaveActivityTypeDraftCommand, hasDraft: false),
             cut => Named(cut, "Save draft"),
-            cut => Named(cut, "Save draft").Click()),
+            cut => Named(cut, "Save draft").Click(),
+            CanBeRefused: false),
 
+        // Q14: Discard draft… asks first; the confirmed action runs with the dialog's confirm pressed.
         ["ActivityTypeEdit Discard draft"] = new(
             (test, hold) => test.ActivityTypePage(hold, request => request is DiscardActivityTypeDraftCommand, hasDraft: true),
-            cut => Named(cut, "Discard draft"),
-            cut => Named(cut, "Discard draft").Click()),
+            cut => cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Discard draft"),
+            cut =>
+            {
+                Named(cut, "Discard draft…").Click();
+                cut.FindAll("dialog button").Single(button => button.TextContent.Trim() == "Discard draft").Click();
+            },
+            CanBeRefused: false),
 
         ["ActivityTypeEdit Publish"] = new(
             (test, hold) => test.ActivityTypePage(hold, request => request is PublishActivityTypeDraftCommand, hasDraft: true),
-            cut => Named(cut, "Publish"),
-            cut => Named(cut, "Publish").Click()),
+            // The header's Publish, by its id: the Publish tab reads "Publish" too.
+            cut => cut.Find("#builder-publish"),
+            cut => cut.Find("#builder-publish").Click(),
+            CanBeRefused: false),
 
         ["CurriculumProgressRebuild Rebuild progress"] = new(
             (test, hold) => test.Page<CurriculumProgressRebuild>(

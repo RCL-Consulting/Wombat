@@ -299,6 +299,14 @@ Suites at master `bce95d7a` (flow 16's squash `de4cc718` plus design commits onl
 Infrastructure 1035, Architecture 52, Web 4675, Integration 530 (from flow 16's handoff; § 0 re-runs them first). § 0
 records the counts on `t398` after its commit here; the integrator fills the squash's.
 
+- **§ 0's re-run at `5451d3b7`** (2026-11-10, each suite with its own build, one at a time, Integration last): Domain 836,
+  Application 4411, Infrastructure 1035, Architecture 52, Web 4675, Integration 530, all green: as flow 16 left them.
+- **On `t398` after § 0** (`dotnet build Wombat.sln -c Release`: 0 warnings, 0 errors): Domain 840 (+4,
+  `RefusalPlaceTests`), Application 4419 (+8: `ActivityTypeScopeGuardTests`' T334/Q19 cases; the inverted
+  `SystemManagedActivityTypeTests` case replaces its old one), Infrastructure 1035, Architecture 52, Web 4703 (+28:
+  `ActivityTypeWordsTests`, `CatalogueLinksTests`' flow 17 addresses and routes, `NarrowLayoutTests`' C3 pin), Integration
+  530. All green.
+
 ## The lane plan
 
 § 0, one wave of three lanes, the merge, the sweep, then the runbook lane, two Sonnet reviews and one fix pass: **eight

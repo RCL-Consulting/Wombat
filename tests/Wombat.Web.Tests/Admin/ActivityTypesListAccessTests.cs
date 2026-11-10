@@ -66,10 +66,11 @@ public sealed class ActivityTypesListAccessTests : TestContext
     }
 
     /// <summary>
-    /// Each row's scope reads the target the query names, as the editor reads a stored one. The page resolves no names of
-    /// its own, so the sender here answers nothing but the list: it did, from the caller's own institutions and
-    /// disciplines, and every other College's row read "Speciality · #1" (T291 item 5), to the CollegeAdmin T300 admits
-    /// as much as to an InstitutionalAdmin.
+    /// Each row's scope reads the target the query names, as the editor reads a stored one, under whose the type is (T398,
+    /// flow 17, Q7: the Set by cell's second line). The page resolves no names of its own, so the sender here answers
+    /// nothing but the list: it did, from the caller's own institutions and disciplines, and every other College's row
+    /// read "Speciality · #1" (T291 item 5). A target that no longer exists is never named by its id (T398: it read
+    /// "Speciality · #99" until flow 17).
     /// </summary>
     [Fact]
     public void EveryRowsScope_ReadsTheTargetTheQueryNames()
@@ -85,9 +86,9 @@ public sealed class ActivityTypesListAccessTests : TestContext
         ScopeCell(cut, 11).Should().Be("Speciality · Paediatrics");
         ScopeCell(cut, 12).Should().Be("Speciality · Internal Medicine", "another College's discipline is named too");
         ScopeCell(cut, 13).Should().Be("Sub-speciality · Paediatrics / Neonatology");
-        ScopeCell(cut, 14).Should().Be("Institution · Kalafong");
+        ScopeCell(cut, 14).Should().Be("Institution", "the institution is the owner, named on the line above");
         ScopeCell(cut, 15).Should().Be("Global");
-        ScopeCell(cut, 16).Should().Be("Speciality · #99", "only a target that no longer exists reads by its id");
+        ScopeCell(cut, 16).Should().Be("Speciality", "a target that no longer exists is never read by its id");
     }
 
     private IRenderedComponent<ActivityTypesList> Render(bool canCreate, params ActivityTypeAdminListItemDto[] rows)
@@ -101,11 +102,11 @@ public sealed class ActivityTypesListAccessTests : TestContext
     private static AngleSharp.Dom.IElement RowAction(IRenderedFragment cut, int id)
         => cut.FindAll("tbody a.btn").Single(link => link.GetAttribute("href") == $"/admin/activity-types/{id}");
 
-    /// <summary>The Scope cell, the third, of the row whose action opens this type.</summary>
+    /// <summary>The scope under the owner in the Set by cell of the row whose action opens this type.</summary>
     private static string ScopeCell(IRenderedFragment cut, int id)
         => cut.FindAll("tbody tr")
             .Single(row => row.QuerySelector($"a[href='/admin/activity-types/{id}']") is not null)
-            .QuerySelectorAll("td")[2].TextContent.Trim();
+            .QuerySelector("td[data-label='Set by'] .person-cell > span")!.TextContent.Trim();
 
     private static ActivityTypeAdminListItemDto Row(
         int id, string key, string name, ActivityScope scope, int? scopeId, bool canWrite, string? scopeTargetName = null)

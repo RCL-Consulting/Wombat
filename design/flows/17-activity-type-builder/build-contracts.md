@@ -208,9 +208,41 @@ queries judge by, the refusal's shape, the read-out components' parameters, the 
 
 ## § 5: words on no board, marked NEW (the fix pass)
 
-| Words | Where | NEW because |
-|---|---|---|
-| "The credit rules are not valid JSON. Check the brackets and commas near line ‹n›." and both JSON sentences ending "commas." with no line | lane C | R3-0-spec-4 § 10 words the workflow's alone |
-| The at-place words for `FieldRuleNamesNoField`, `DuplicateSectionKey`, `UserFieldHasOptions` | lane C | no board draws them |
-| "Version 2 could not be published. Nothing has changed. …", "The draft could not be discarded. Nothing has changed. …", "Draft saved. Nothing was published.", Q17's two results | lane C | words only, no board (N5, Q17) |
-| (filled from the lanes' reports) | | |
+Filled by the fix pass (2026-11-10) from the pages review's 31 groups (`build-review-pages.md` § "Words on no board"),
+checked against the words files at `317778f6`, and the one the fix pass adds (32). Words a board draws, or that were built
+before T398 (T300's "Set by the College." and "Set by its institution.", the key taken's built sentence), are not here.
+
+| # | Words | Where | NEW because |
+|---|---|---|---|
+| 1 | "Counts ‹n› towards curriculum item ‹id›" | lane A, `ActivityTypeReadout` (Credit's read) | R2-D02/D03 word only the curriculum-item-of-the-EPA case |
+| 2 | "…towards the curriculum item in ‹field label›" | lane A, the same | as 1 |
+| 3 | "…towards no curriculum item" | lane A, the same | as 1 |
+| 4 | ", at level ‹fixed›" | lane A, the same | as 1 |
+| 5 | "Use one of: Institutional admin, Coordinator, Committee member, Assessor, Trainee." (the nominee role's refusal by label; the labels are now accepted too, S-1) | lane A, `FormSchemaParser` | N1 named the roles by label; no board words the list |
+| 6 | "a release of Wombat" (in "Written by a release of Wombat.", a system-managed type no release is named for) | § 0 / lane A, the fallback | no board draws an unnamed release |
+| 7 | "1 activity type." | lane B, `ActivityTypesListWords.CountLine` | the singular of R2-A01's count |
+| 8 | "‹n› of 1 activity type matches “‹q›”." | lane B, the same | the singular of R2-A02's |
+| 9 | "The search is kept above. Clear it to see the one activity type." | lane B, `NoMatchBody` | the singular of R2-A04's |
+| 10 | A College admin whose account names no College: the subtitle's lead sentence alone | lane B, the subtitle | no board draws a College admin with no College |
+| 11 | "A, B or C" for three or more From states ("Draft, Requested or Returned") | lane B, `ActivityTypeReadWords` | the boards draw at most two |
+| 12 | "Its College" (a College owner whose target no longer exists) | § 0, `ActivityTypeWords.SetBy` | no board draws a missing target; the builder no longer reaches it for a scope chosen on the page (N2) |
+| 13 | "Its institution" (likewise) | § 0, the same | as 12 |
+| 14 | "Enter a section key." | lane C, the page's own check | no board draws a blank section key |
+| 15 | "Enter a field key." | lane C, the same | no board draws a blank field key |
+| 16 | "The credit rules are not valid JSON. Check the brackets and commas near line ‹n›." | lane C, `ActivityTypeEditWords` | R3-0-spec-4 § 10 words the workflow's alone |
+| 17 | "The workflow is not valid JSON. Check the brackets and commas." (no line known) | lane C, the same | as 16 |
+| 18 | "The credit rules are not valid JSON. Check the brackets and commas." (no line known) | lane C, the same | as 16 |
+| 19 | "Key '‹key›' is also the key of section ‹title›. Give each section its own key." (`DuplicateSectionKey` at its place) | lane C, `BuilderRefusal` | no board draws it at its place |
+| 20 | "A User field names a person, so it offers no options. Clear its options." (`UserFieldHasOptions` at its place) | lane C, the same | as 19 |
+| 21 | "Move ‹move› cannot be read: '‹field›' is not a field of this form, so it names nobody." (`FieldRuleNamesNoField` at its place) | lane C, the same | as 19 |
+| 22 | "Version ‹n› could not be published. Nothing has changed. Try again, or come back in a few minutes." | lane C, the failure | words only, no board (N5) |
+| 23 | "The draft could not be discarded. Nothing has changed. Try again, or come back in a few minutes." | lane C, the failure | as 22 |
+| 24 | "Draft saved. Nothing was published." (Cancel on the warnings' question after a save) | lane C, Publish's results | Q16's outcome, no board |
+| 25 | "Draft saved. ‹name› is inactive: registrars are no longer offered it. Nothing was published." | lane C, Q17's results | Q17, words only |
+| 26 | "Published version ‹n›. ‹name› is inactive: registrars are no longer offered it." | lane C, the same | as 25 |
+| 27 | "From ‹initial› to ‹others›; ‹n› moves" (and "‹initial›; ‹n› moves"; "1 move") | lane C, "What you are publishing" (a first publish, R3-E01) | the board draws it with "→", which never ships |
+| 28 | "‹n› credit rule(s)" ("1 credit rule", "2 credit rules") | lane C, the same | R3-E01 draws only "Credits nothing" |
+| 29 | "Version ‹n›, ‹day›" and "Saved ‹day›" with no publisher or saver named (a type no name is read for; and, since the fix pass, every reader outside the type's scope, S-2) | lane C, the strip | the boards always name the person |
+| 30 | "Close section ‹title›" (a reader's section open in place) | lane C, the outline | R2 draws "Close field ‹label›" only |
+| 31 | "Activities already filed stay on version ‹n›. Only activities filed after the publish use version ‹n+1›." (the pinned line with no field removed) | lane C, `PinnedLine` | the boards draw it with a removed field's clause |
+| 32 | "A description is at most 2,000 characters." (under Description) | the fix pass, `ActivityTypeFieldMessages` (code review N-1) | the page's counter stops at 2,000, so no board draws it; the twin of S10's Key and Name words |

@@ -185,3 +185,16 @@ window.wombat.copyText = async function (text) {
         return false;
     }
 };
+
+// The builder's tab bar (T398, flow 17; the tabs pattern): Left, Right, Home and End move the focus between its tabs, which
+// the page does in the circuit. These four keys alone are kept from scrolling the page; Tab, Shift+Tab, Enter and Space
+// keep their own behaviour, so the keyboard never stays trapped in the bar (build-lanes § "Settled here").
+document.addEventListener("keydown", function (event) {
+    if (!(event.target instanceof Element) || !event.target.closest('.tab-bar[role="tablist"] [role="tab"]')) {
+        return;
+    }
+
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight" || event.key === "Home" || event.key === "End") {
+        event.preventDefault();
+    }
+});

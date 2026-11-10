@@ -130,6 +130,23 @@ public static class CatalogueLinks
     /// <summary>A scale's page after its create (S13): <c>/admin/entrustment-scales/3?created</c>, "Entrustment scale created.".</summary>
     public static string EntrustmentScaleCreated(int scaleId) => Invariant($"{EntrustmentScale(scaleId)}?{CreatedToken}");
 
+    // Flow 17 (T398, build-contracts § 0): the activity types list and the builder.
+
+    /// <summary>Activity types, the list: <c>/admin/activity-types</c>.</summary>
+    public const string ActivityTypes = "/admin/activity-types";
+
+    /// <summary>New activity type, the builder on a type not yet saved: <c>/admin/activity-types/new</c>.</summary>
+    public const string NewActivityType = "/admin/activity-types/new";
+
+    /// <summary>An activity type in the builder: <c>/admin/activity-types/23</c>.</summary>
+    public static string ActivityType(int activityTypeId) => Invariant($"{ActivityTypes}/{activityTypeId}");
+
+    /// <summary>
+    /// An activity type after its first Save draft on <see cref="NewActivityType" /> (T291 item 3):
+    /// <c>/admin/activity-types/23?created</c>, "Draft saved." on the arriving page.
+    /// </summary>
+    public static string ActivityTypeCreated(int activityTypeId) => Invariant($"{ActivityType(activityTypeId)}?{CreatedToken}");
+
     /// <summary>A curriculum's own page: <c>/admin/curricula/3</c>.</summary>
     public static string Curriculum(int curriculumId) => Invariant($"{Curricula}/{curriculumId}");
 

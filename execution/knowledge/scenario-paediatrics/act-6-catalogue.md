@@ -441,33 +441,44 @@ Gap: none
 Role: CollegeAdmin — Dr Anton Kruger
 Route: /admin/activity-types → /admin/activity-types/{ActivityTypeId:int} → /admin/activity-types → /admin/activity-types/new → /admin/activity-types/{ActivityTypeId:int} → /admin/activity-types
 Do: Open Activity types from his menu and read the list. Open `Multi-Source Feedback (Paediatrics)` and change nothing.
-  Back in the list, press New activity type, open the Metadata tab and read what Scope offers, under Sub-speciality
-  too. Then enter:
+  Back in the list by the trail, press New activity type and read what Scope offers, choosing Sub-speciality to read
+  its list too. Then enter:
   - Key `cpsa_case_presentation_log` and Name `CPSA Case Presentation Log`;
   - Scope Speciality, with `Paediatrics`;
   - This tool is `Not a WBA instrument`;
   - Description `A registrar's log of a case they presented at a departmental meeting. Not rated, and credits
     nothing.`;
   - Active on.
-  Press Save draft, publish nothing, and go back to the list.
+  Press Save draft, publish nothing, and go back to the list by the trail.
 Expect:
-  - **The list.** Activity types is in his menu, and lit (T300, D52). The list has 22 rows: the twelve `*_cpsa`
-    instruments and the ten Demo types. The College writes its disciplines' types, so each `*_cpsa` row offers Edit,
-    named for its row ("Edit Mini-CEX (Paediatrics)"). The exceptions are `msf_cpsa` and `learner_feedback_cpsa`: the
-    MSF and learner-feedback releases write their data, so they offer View (T334). The Demo types belong to the Demo
-    College, so they offer View. KGK Teaching Session Log is not listed, because it is an institution's own type. New
-    activity type is offered.
-  - **A system-managed type.** Multi-Source Feedback (Paediatrics) opens read-only, with a notice that the system writes
-    it, and no Save draft, Discard draft, Publish or editor controls (T334).
-  - **The new type.** It opens headed "New activity type", on Form, with the default draft. Scope offers Speciality and
-    Sub-speciality only, never Global or Institution. It starts on Speciality with `Paediatrics`, the College's one
-    speciality; CNSA's Neurology is not offered. Sub-speciality offers `Paediatrics / Neonatology` (Step 6.12) and
-    `Paediatrics / Paediatrics`.
+  - **The list.** Activity types is in his menu, and lit (T300, D52). It is subtitled "The forms registrars file and
+    assessors complete. You can change the types College of Paediatricians of South Africa sets; the others you can
+    read." (T398, Q12). "22 activity types.": the twelve `*_cpsa` instruments and the ten Demo types (Act 1's 22; KGK's
+    own type is not his to read). His own come first, then the rest in one run by name, interleaved, not grouped
+    (Q11): the ten `*_cpsa` rows the College writes, each offering Edit, named for its row ("Edit Mini-CEX
+    (Paediatrics)"); among the rest, `msf_cpsa` and `learner_feedback_cpsa`, which offer View: the MSF and learner-feedback releases write them, and each row says so,
+    "Written by the MSF release." and "Written by the learner-feedback release." (T334, Q9). The Demo types belong to
+    the Demo College, so they offer View, set by "DEMO-C". The College's rows are set by "CPSA" over "Speciality ·
+    Paediatrics". KGK Teaching Session Log is not listed, because it is an institution's own type. New activity type
+    is offered.
+  - **A system-managed type.** Multi-Source Feedback (Paediatrics) opens read-only, headed by its name, under the
+    standing notice "Written by the MSF release. Its form changes only with a release of Wombat. Nobody is offered it
+    when filing an activity." (Q9, T334), with no Save draft, Discard draft… or Publish, and View in place of every
+    editor control. Any save sent would be refused, to everyone: "Nothing was saved. Multi-Source Feedback
+    (Paediatrics) is written by the MSF release, so it cannot be changed here." (N10).
+  - **The new type.** It opens headed "New activity type", on Details, with the default draft on Form. Scope is a
+    required radio group offering Speciality and Sub-speciality only, never Global or Institution (M1). It starts on
+    Speciality, read out as `Paediatrics`, the College's one speciality; CNSA's Neurology is not offered. Sub-speciality
+    offers a required select of `Paediatrics / Neonatology` (Step 6.12) and `Paediatrics / Paediatrics`. The owner line
+    follows the scope chosen: "CPSA · Speciality · Paediatrics".
   - **The save.** Save draft is accepted. The page moves to the type's own address, headed "Edit CPSA Case
-    Presentation Log", and reads "Draft saved." (T291 item 3). In the list the type reads `Speciality · Paediatrics`,
-    with no published version, Draft "Draft saved", Active and Edit.
-  - **Who sees the draft.** It is unpublished, so no registrar is offered it. Prof Mbatha's list leaves it out, and its
-    address reads "could not be found" to her: a type she may neither write nor open is not listed (T300, T211).
+    Presentation Log", still on Details, and "Draft saved." takes the focus (T291 item 3); the strip reads Published
+    "Not published", Draft "Saved `D` by Anton Kruger". In the list, "23 activity types.", the type is among his own
+    rows, set by "CPSA" over "Speciality · Paediatrics", Published "Not published", Draft "Saved `D`", Active and Edit.
+  - **Who sees the draft.** It is unpublished, so no registrar is offered it. Prof Mbatha's list leaves it out, still
+    "23 activity types." (Step 1.31's), and its address reads "Activity type unavailable" (the h1 and the tab) and "This
+    activity type does not exist, or you cannot open it.", with Go to Activity types, Activity types lit in her menu and
+    no id shown: a type she may neither write nor open is not listed (T300, T211, R2-B09).
 Note: A College's CollegeAdmin, or an Administrator (`ActivityTypeScopeGuard`, D52). Save no draft on a seeded `*_cpsa`
   type. A seeded type with an operator's draft stops receiving seed updates until the draft is published or discarded.
   Once anyone but the seeder publishes one, the seed refresher leaves it for good (T103, D52).
@@ -483,9 +494,9 @@ Actual (2026-11-05, T394 replay, wombat_scenario_t394): Activity types in his me
   Paediatrics", v0, "Draft saved", Active, Edit. Prof Mbatha's list has 23 rows without it (KGK Teaching Session Log
   among them), and /admin/activity-types/24 reads "The activity type could not be found." Then the app was restarted
   (see Step 6.2).
-Gap: F-6.14aa, T291 (still: the first Save draft shows no "Draft saved."). F-6.14ab, T334 (still: msf_cpsa and
-  learner_feedback_cpsa offer the College Edit, and msf_cpsa opens with no notice and every editor live; not saved).
-  known-task.
+Gap: F-6.14aa, T291 closed by T398 (2026-11-10): the first Save draft reads "Draft saved.". F-6.14ab, T334 closed by
+  T398: msf_cpsa and learner_feedback_cpsa offer View, under the release's notice. The T394 Actual above predates T398
+  (Details first, Scope's radios, the strip, the list's words, Unavailable); the next replay re-reads the step.
 
 ## Phase 6.D — An EPA paused and restored
 

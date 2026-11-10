@@ -2,105 +2,179 @@
 @* T300: the College writes its disciplines' types (T091), so the list admits a CollegeAdmin beside an Administrator and
    an InstitutionalAdmin. Each row says what the caller may do with it. *@
 @attribute [Authorize(Policy = "NationalCatalogueAccess")]
-@using Wombat.Domain.Activities
+@using System.Security.Claims
+@using Wombat.Application.Common.Extensions
+@using Wombat.Application.Features.Activities.Queries.ListActivityTypesAdmin
 @inject IScopedSender Sender
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject ILogger<ActivityTypesList> Logger
 
 <PageTitle>Activity types · Wombat</PageTitle>
 
-<PageHeader Title="Activity types" Subtitle="Manage draft and published activity-type definitions.">
-  <Actions>
-    @* T300: offered only to a caller with a scope to create a type in (ActivityTypeAdminListDto.CanCreate). *@
-    @if (_canCreate)
-    {
-      <a class="btn btn-primary" href="/admin/activity-types/new">New activity type</a>
-    }
-  </Actions>
-</PageHeader>
+@*
+  The activity types (T398, flow 17, lane B; boards R2-A01–A12, R3-A09-nocreate, R3-A12, R3-A13, R3-C08-list).
 
-<div class="search-container shadow mb-3">
-  <div class="search-grid">
-    <div class="search-field">
-      <label for="activity-type-filter">Search</label>
-      <input id="activity-type-filter" class="search-input" @bind="_search" @bind:event="oninput" />
-    </div>
-  </div>
+  - Whose each type is, in words (Q7): the name over its key, a system-managed type's release line between them (Q9);
+    Set by the owner (the College by its short code, the institution by its name, the platform) over the scope; Published
+    "Version 1" or "Not published"; Draft "Saved 2026-11-05" (the South African day) or "None"; Status; Edit where the
+    caller may write the type, View elsewhere (T300), each named for its row (T239). StackWide, and the 1024px stack
+    through .activity-types-page (§ 0, C3).
+  - The order (Q11, N13): the caller's own types first, then the rest, each by name; the Administrator's by name alone.
+  - The search (Q7, T326): applied with Show to the rows already read, never per keystroke; the count line says what
+    matched and takes the focus; a search matching nothing says so, apart from the empty catalogue, with Clear the
+    search. Clear and Clear the search put the focus back in the search.
+  - The subtitle by role (Q12, T11), N12's for a College with no speciality. No pager (R2-0-spec-2: "At 100 rows").
+  - Loading and a failed read (T329): the loading line, fixed words with Try again, the exception logged.
+*@
+<PageHeader Title="Activity types" Subtitle="@ActivityTypesListWords.Subtitle(_user, _list)" Actions="@HeaderAction" />
+
+<div class="people-page activity-types-page" aria-busy="@(_loading ? "true" : null)">
+  <StatePanel IsLoading="_loading" LoadError="@_loadError" OnRetry="RetryAsync" FocusAfterRetry="FocusPageHeadingAsync"
+              IsEmpty="@(_list is { Items.Count: 0 })" EmptyTitle="@ActivityTypesListWords.EmptyTitle"
+              EmptyBody="@(_list is { CanCreate: true } ? ActivityTypesListWords.EmptyBodyMayCreate : ActivityTypesListWords.EmptyBodyMayNotCreate)"
+              EmptyActions="@(_list is { CanCreate: true } ? NewActivityTypeLink : null)">
+    <LoadingContent>
+      <p class="loading-line" role="status">@ActivityTypesListWords.Loading</p>
+      <div class="detail-card" aria-hidden="true">
+        <div class="skeleton skel-title"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line"></div>
+        <div class="skeleton skel-line skel-short"></div>
+      </div>
+    </LoadingContent>
+    <ChildContent>
+      @if (_list is not null)
+      {
+        @SearchForm()
+        @Types()
+      }
+    </ChildContent>
+  </StatePanel>
 </div>
 
-@{ var rowNames = RowNames.Distinct(FilteredItems, type => type.Id, type => type.Name, type => $" ({type.Key})"); }
-<StatePanel IsLoading="_loading" LoadError="@_error" IsEmpty="@(!_loading && FilteredItems.Count == 0)" EmptyTitle="No activity types" EmptyBody="@(_canCreate ? "Create the first activity type to start the builder." : "No activity type is open to you yet.")">
-  <DataTable Items="FilteredItems" Caption="Configured activity types">
-    <HeaderRow>
-      <tr>
-        <th>Name</th>
-        <th>Key</th>
-        <th>Scope</th>
-        <th>Published</th>
-        <th>Draft</th>
-        <th>Status</th>
-        <th><span class="visually-hidden">Actions</span></th>
-      </tr>
-    </HeaderRow>
-    <Row Context="item">
-      <tr>
-        <td>@item.Name</td>
-        <td><code>@item.Key</code></td>
-        <td>@FormatScope(item)</td>
-        <td>v@(item.PublishedVersion)</td>
-        <td>@(item.HasDraft ? "Draft saved" : "None")</td>
-        <td>@(item.IsActive ? "Active" : "Inactive")</td>
-        <td>
-          @* T239: named by its row, the type's name, and its key where two types share a name. T300: Edit where the caller
-             may write the type (CanWrite, the rule the commands refuse by), View where they may only read it; both open
-             the builder, which is read-only to a reader. *@
-          <div class="actions-cell">
-            @if (item.CanWrite)
-            {
-              <a class="btn btn-outline btn-sm" href="@($"/admin/activity-types/{item.Id}")" aria-label="@($"Edit {rowNames[item.Id]}")">Edit</a>
-            }
-            else
-            {
-              <a class="btn btn-outline btn-sm" href="@($"/admin/activity-types/{item.Id}")" aria-label="@($"View {rowNames[item.Id]}")">View</a>
-            }
-          </div>
-        </td>
-      </tr>
-    </Row>
-    <Empty>
-      <div class="detail-card detail-card--empty">
-        No activity types match the current filter.
-      </div>
-    </Empty>
-  </DataTable>
-</StatePanel>
-
 @code {
-  private readonly List<ActivityTypeAdminListItemDto> _items = [];
-  private bool _loading = true;
-  private bool _canCreate;
-  private string? _error;
-  private string? _search;
+  private const string SearchInputId = "types-q";
+  private const string CountLineId = "types-count";
+  private const string NoMatchId = "types-no-match";
 
-  private IReadOnlyList<ActivityTypeAdminListItemDto> FilteredItems =>
-    _items
-      .Where(item =>
-        string.IsNullOrWhiteSpace(_search) ||
-        item.Name.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
-        item.Key.Contains(_search, StringComparison.OrdinalIgnoreCase))
-      .ToList();
+  private static readonly RenderFragment NewActivityTypeLink =
+    @<a class="btn btn-primary" href="@CatalogueLinks.NewActivityType"><Icon Name="plus" />@ActivityTypesListWords.NewActivityType</a>;
 
-  protected override async Task OnInitializedAsync()
+  /// <summary>New activity type, once the list has read and only where the caller has a scope to create in (T300).</summary>
+  private RenderFragment? HeaderAction => _list is { CanCreate: true } && !_loading && _loadError is null ? NewActivityTypeLink : null;
+
+  private RenderFragment SearchForm() => __builder =>
   {
+    <form class="search-container" role="search" aria-label="@ActivityTypesListWords.SearchName" novalidate @onsubmit="Show">
+      <div class="search-grid">
+        <div class="search-field">
+          <label for="@SearchInputId">@ActivityTypesListWords.SearchLabel</label>
+          <input id="@SearchInputId" class="form-control" type="search" @bind="_query" />
+        </div>
+        <div class="search-field filter-actions">
+          <button type="submit" class="btn btn-primary"><Icon Name="search" />@ActivityTypesListWords.Show</button>
+          @if (_applied is not null)
+          {
+            <button type="button" class="btn btn-outline" @onclick="Clear">@ActivityTypesListWords.Clear</button>
+          }
+        </div>
+      </div>
+    </form>
+  };
+
+  private RenderFragment Types() => __builder =>
+  {
+    var shown = _applied is null ? _ordered : _ordered.Where(item => ActivityTypesListWords.Matches(item, _applied)).ToList();
+    if (shown.Count == 0 && _applied is not null)
+    {
+      @* T326: a search matching nothing is not the empty catalogue; the search stays above and one press clears it. *@
+      <div class="detail-card detail-card--empty" id="@NoMatchId" tabindex="-1">
+        <div class="state-panel-title" role="status">@ActivityTypesListWords.NoMatchTitle(_applied)</div>
+        <div class="state-panel-copy">@ActivityTypesListWords.NoMatchBody(_ordered.Count)</div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" @onclick="Clear">@ActivityTypesListWords.ClearTheSearch</button>
+        </div>
+      </div>
+      return;
+    }
+
+    <p role="status" id="@CountLineId" tabindex="-1">@ActivityTypesListWords.CountLine(_applied, shown.Count, _ordered.Count)</p>
+    <DataTable TItem="ActivityTypeAdminListItemDto" Items="shown" StackWide="true" Caption="@ActivityTypesListWords.Caption(_applied)">
+      <HeaderRow>
+        <tr role="row">
+          <th scope="col" role="columnheader">Name</th>
+          <th scope="col" role="columnheader">Set by</th>
+          <th scope="col" role="columnheader">Published</th>
+          <th scope="col" role="columnheader">Draft</th>
+          <th scope="col" role="columnheader">Status</th>
+          <th scope="col" role="columnheader" class="col-actions col-actions--single"><span class="visually-hidden">Actions</span></th>
+        </tr>
+      </HeaderRow>
+      <Row Context="item">
+        <tr role="row" @key="item.Id">
+          @* The name over its key; a system-managed type's release between them (Q9). *@
+          <th scope="row" role="rowheader"><span class="person-cell">@item.Name@if (item.WrittenBy is { } writtenBy){<span>@ActivityTypeWords.WrittenByLine(writtenBy)</span>}<span><code>@item.Key</code></span></span></th>
+          <td role="cell" data-label="Set by"><span class="person-cell">@ActivityTypeWords.SetBy(ActivityTypesListWords.Owner(item))<span>@ActivityTypeWords.ScopeDetail(item.Scope, item.ScopeTargetName)</span></span></td>
+          <td role="cell" data-label="Published">@ActivityTypeWords.Published(item.PublishedVersion)</td>
+          <td role="cell" data-label="Draft">@ActivityTypesListWords.Draft(item)</td>
+          <td role="cell" data-label="Status">@ActivityTypesListWords.Status(item.IsActive)</td>
+          @* T300: Edit where the caller may write the type (CanWrite, the rule the commands refuse by; never on a
+             system-managed one, T334), View where they may only read it; both open the builder. T239: named by the row. *@
+          <td role="cell" class="col-actions col-actions--single">
+            <div class="actions-cell">
+              @if (item.CanWrite)
+              {
+                <a class="btn btn-outline btn-sm" href="@CatalogueLinks.ActivityType(item.Id)" aria-label="@($"{ActivityTypesListWords.Edit} {_rowNames[item.Id]}")">@ActivityTypesListWords.Edit</a>
+              }
+              else
+              {
+                <a class="btn btn-outline btn-sm" href="@CatalogueLinks.ActivityType(item.Id)" aria-label="@($"{ActivityTypesListWords.View} {_rowNames[item.Id]}")">@ActivityTypesListWords.View</a>
+              }
+            </div>
+          </td>
+        </tr>
+      </Row>
+    </DataTable>
+  };
+
+  private ClaimsPrincipal _user = new();
+  private ActivityTypeAdminListDto? _list;
+  private IReadOnlyList<ActivityTypeAdminListItemDto> _ordered = [];
+  private IReadOnlyDictionary<int, string> _rowNames = new Dictionary<int, string>();
+  private bool _loading = true;
+  private string? _loadError;
+
+  // What is typed, which changes nothing until Show; and the search applied, null for none.
+  private string? _query;
+  private string? _applied;
+
+  // The element that takes the focus once the page has drawn the answer to Show or Clear.
+  private string? _focusId;
+
+  protected override Task OnInitializedAsync() => LoadAsync();
+
+  private async Task LoadAsync()
+  {
+    _loading = true;
+    _loadError = null;
     try
     {
-      var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      var list = await Sender.Send(new Wombat.Application.Features.Activities.Queries.ListActivityTypesAdmin.ListActivityTypesAdminQuery(authState.User));
-      _items.AddRange(list.Items);
-      _canCreate = list.CanCreate;
+      _user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+      var list = await Sender.Send(new ListActivityTypesAdminQuery(_user));
+      _ordered = ActivityTypesListWords.Ordered(list.Items, byNameAlone: _user.IsAdministrator());
+      // T239: each row's action named by the type's name, and its key where two types share a name; over every row, so
+      // a name does not change with the search.
+      _rowNames = RowNames.Distinct(_ordered, type => type.Id, type => type.Name, type => $" ({type.Key})");
+      _list = list;
     }
-    catch (Exception exception)
+    catch (Exception exception) when (exception is not OperationCanceledException)
     {
-      _error = RefusalText.Of(exception);
+      // T329: never the exception's text on the page; the cause goes to the log.
+      Logger.LogError(exception, "The activity types could not be read.");
+      _list = null;
+      _loadError = ActivityTypesListWords.LoadFailed;
     }
     finally
     {
@@ -108,24 +182,33 @@
     }
   }
 
-  /// <summary>
-  /// The scope and its target as the query names it, as the editor reads a stored scope: "Speciality · Paediatrics",
-  /// "Sub-speciality · Paediatrics / Neonatology", "Institution · Kalafong". The page resolves no names of its own: it
-  /// did, from the caller's own institutions and disciplines, so every other College's row read "Speciality · #1" (T291
-  /// item 5). Only a target that no longer exists still reads by its id.
-  /// </summary>
-  private static string FormatScope(ActivityTypeAdminListItemDto item)
-  {
-    var scope = item.Scope switch
-    {
-      ActivityScope.Global => "Global",
-      ActivityScope.Institution => "Institution",
-      ActivityScope.Speciality => "Speciality",
-      ActivityScope.SubSpeciality => "Sub-speciality",
-      _ => item.Scope.ToString()
-    };
+  private Task RetryAsync() => LoadAsync();
 
-    var target = item.ScopeTargetName ?? (item.ScopeId is int id ? $"#{id}" : null);
-    return target is null ? scope : $"{scope} · {target}";
+  // After Try again has read, the h1 takes the focus (T329).
+  private ValueTask FocusPageHeadingAsync() => PageFocus.FocusHeadingAsync(JS);
+
+  /// <summary>Show: the typed search applied to the rows already read; the count line, or the no-match state, takes the focus.</summary>
+  private void Show()
+  {
+    _applied = string.IsNullOrWhiteSpace(_query) ? null : _query.Trim();
+    var anyMatch = _applied is null || _ordered.Any(item => ActivityTypesListWords.Matches(item, _applied));
+    _focusId = anyMatch ? CountLineId : NoMatchId;
+  }
+
+  /// <summary>Clear and Clear the search: every row again, the search emptied and focused.</summary>
+  private void Clear()
+  {
+    _query = null;
+    _applied = null;
+    _focusId = SearchInputId;
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (_focusId is { } id)
+    {
+      _focusId = null;
+      await PageFocus.FocusByIdAsync(JS, id);
+    }
   }
 }

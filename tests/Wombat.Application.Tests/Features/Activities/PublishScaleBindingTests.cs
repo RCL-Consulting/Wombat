@@ -1,3 +1,4 @@
+using Wombat.Tests.Shared;
 using System.Globalization;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -47,7 +48,7 @@ public sealed class PublishScaleBindingTests
             new DeleteEntrustmentScaleCommand(scale.Id, TestPrincipals.Administrator()), CancellationToken.None);
         db.ChangeTracker.Clear();
 
-        var publish = async () => await new PublishActivityTypeDraftCommandHandler(db).Handle(
+        var publish = async () => await new PublishActivityTypeDraftCommandHandler(db, FakeUserDirectory.Empty).Handle(
             new PublishActivityTypeDraftCommand(40, "admin-user", TestPrincipals.Administrator()), CancellationToken.None);
 
         (await publish.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be(
@@ -82,7 +83,7 @@ public sealed class PublishScaleBindingTests
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
 
-        var publish = async () => await new PublishActivityTypeDraftCommandHandler(db).Handle(
+        var publish = async () => await new PublishActivityTypeDraftCommandHandler(db, FakeUserDirectory.Empty).Handle(
             new PublishActivityTypeDraftCommand(41, "admin-user", TestPrincipals.Administrator()), CancellationToken.None);
 
         (await publish.Should().ThrowAsync<InvalidOperationException>()).Which.Message.Should().Be(
@@ -111,7 +112,7 @@ public sealed class PublishScaleBindingTests
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
 
-        var editor = await new PublishActivityTypeDraftCommandHandler(db).Handle(
+        var editor = await new PublishActivityTypeDraftCommandHandler(db, FakeUserDirectory.Empty).Handle(
             new PublishActivityTypeDraftCommand(42, "admin-user", TestPrincipals.Administrator()), CancellationToken.None);
 
         editor.PublishedVersion.Should().Be(1);

@@ -608,6 +608,105 @@ public sealed class ActorFieldRulesTests
         Assert.Empty(roles);
     }
 
+    // ---- EnsurePublishable: each problem at its place (T398, flow 17, Q6, J2) --------------------
+
+    /// <summary>
+    /// A duplicate field key is one place naming every holder's row (R3-C14, C15), so the builder words it under each;
+    /// its sentence is the message's, word for word.
+    /// </summary>
+    [Fact]
+    public void EnsurePublishable_ADuplicateFieldKey_IsOnePlaceAtEveryHolder()
+    {
+        var (schema, workflow) = Build(assessmentExtraField: """{ "key": "title", "type": "text", "label": "Case title" }""");
+
+        var exception = Assert.Throws<SchemaParseException>(() => ActorFieldRules.EnsurePublishable(schema, workflow));
+
+        var place = Assert.Single(exception.Places);
+        Assert.Equal(RefusalTab.Form, place.Tab);
+        Assert.Equal(RefusalKind.DuplicateFieldKey, place.Kind);
+        Assert.Equal("request", place.SectionKey);
+        Assert.Equal(["title", "title"], place.FieldKeys);
+        Assert.Equal(exception.Message, place.Sentence);
+        Assert.Equal(
+            "Field key 'title' is used by 2 fields ('Title' in 'Request', 'Case title' in 'Assessment'); give each field its own key.",
+            place.Sentence);
+    }
+
+    [Fact]
+    public void EnsurePublishable_ADuplicateSectionKey_IsAtTheSection()
+    {
+        var schema = FormSchemaParser.Parse("""
+            {
+              "version": 1,
+              "sections": [
+                { "key": "request", "title": "Request", "fields": [ { "key": "title", "type": "text", "label": "Title" } ] },
+                { "key": "request", "title": "Request, again", "fields": [ { "key": "notes", "type": "text", "label": "Notes" } ] }
+              ]
+            }
+            """);
+
+        var exception = Assert.Throws<SchemaParseException>(
+            () => ActorFieldRules.EnsurePublishable(schema, WorkflowParser.Parse(ActivityTestData.ValidWorkflowJson)));
+
+        var place = Assert.Single(exception.Places);
+        Assert.Equal((RefusalTab.Form, RefusalKind.DuplicateSectionKey, "request"), (place.Tab, place.Kind, place.SectionKey));
+    }
+
+    /// <summary>
+    /// A <c>field:</c> rule's problem is at the move that declares it (Workflow), or at the section or field whose
+    /// <c>editable_by</c> it is (Form), or the Workflow tab alone for a state's; one place each, in the message's order.
+    /// </summary>
+    [Fact]
+    public void EnsurePublishable_EveryFieldRuleProblem_IsOnePlaceWhereItIsDeclared()
+    {
+        var (schema, workflow) = Build(
+            transitionActor: "field:ghost",
+            stateEditableBy: "field:ghost",
+            sectionEditableBy: "field:title",
+            fieldEditableBy: "field:title");
+
+        var exception = Assert.Throws<SchemaParseException>(() => ActorFieldRules.EnsurePublishable(schema, workflow));
+
+        Assert.Equal(4, exception.Places.Count);
+        Assert.Equal(string.Join(" ", exception.Places.Select(place => place.Sentence)), exception.Message);
+
+        var move = exception.Places[0];
+        Assert.Equal((RefusalTab.Workflow, RefusalKind.FieldRuleNamesNoField, "complete", "ghost"), (move.Tab, move.Kind, move.MoveKey, move.NamedField));
+
+        var state = exception.Places[1];
+        Assert.Equal((RefusalTab.Workflow, RefusalKind.FieldRuleNamesNoField), (state.Tab, state.Kind));
+        Assert.Null(state.MoveKey);
+        Assert.Null(state.SectionKey);
+
+        var section = exception.Places[2];
+        Assert.Equal((RefusalTab.Form, RefusalKind.FieldRuleNotUserField, "assessment", "title"), (section.Tab, section.Kind, section.SectionKey, section.NamedField));
+        Assert.Empty(section.FieldKeys);
+
+        var field = exception.Places[3];
+        Assert.Equal((RefusalTab.Form, RefusalKind.FieldRuleNotUserField, "assessment"), (field.Tab, field.Kind, field.SectionKey));
+        Assert.Equal(["overall"], field.FieldKeys);
+    }
+
+    [Fact]
+    public void EnsurePublishable_OptionsOnAUserField_AreAtTheField()
+    {
+        var (schema, workflow) = Build(userFieldExtra: "\"options\": [\"user-1\", \"user-2\"]");
+
+        var exception = Assert.Throws<SchemaParseException>(() => ActorFieldRules.EnsurePublishable(schema, workflow));
+
+        var place = Assert.Single(exception.Places);
+        Assert.Equal((RefusalTab.Form, RefusalKind.UserFieldHasOptions, "request"), (place.Tab, place.Kind, place.SectionKey));
+        Assert.Equal(["assessor_user_id"], place.FieldKeys);
+    }
+
+    [Fact]
+    public void PublishProblems_APublishableType_IsEmpty()
+    {
+        var (schema, workflow) = Build();
+
+        Assert.Empty(ActorFieldRules.PublishProblems(schema, workflow));
+    }
+
     // ---- fixtures -----------------------------------------------------------------------------
 
     /// <summary>

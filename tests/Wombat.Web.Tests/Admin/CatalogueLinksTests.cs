@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using FluentAssertions;
 using Microsoft.AspNetCore.Components;
+using Wombat.Web.Components.Pages.Admin.ActivityTypes;
 using Wombat.Web.Components.Pages.Admin.Colleges;
 using Wombat.Web.Components.Pages.Admin.Curricula;
 using Wombat.Web.Components.Pages.Admin.EntrustmentScales;
@@ -63,6 +64,19 @@ public sealed class CatalogueLinksTests
         CatalogueLinks.CurriculumCloned(4, 2).Should().Be("/admin/curricula/4?cloned=2");
     }
 
+    // T398 (flow 17, build-contracts § 0): the activity types list and the builder; the first save's token is the existing
+    // created token, so no token is added (round 3 check, correction 6).
+    [Fact]
+    public void FlowSeventeensAddresses_AreWrittenOnce_Here()
+    {
+        CatalogueLinks.ActivityTypes.Should().Be("/admin/activity-types");
+        CatalogueLinks.NewActivityType.Should().Be("/admin/activity-types/new");
+        CatalogueLinks.ActivityType(23).Should().Be("/admin/activity-types/23");
+        CatalogueLinks.ActivityTypeCreated(23).Should().Be("/admin/activity-types/23?created");
+        CatalogueLinks.HasToken(CatalogueLinks.ActivityTypeCreated(23), CatalogueLinks.CreatedToken).Should().BeTrue();
+        CatalogueLinks.WithoutTokens(CatalogueLinks.ActivityTypeCreated(23)).Should().Be(CatalogueLinks.ActivityType(23));
+    }
+
     [Theory]
     [InlineData("/admin/colleges/2/specialities?created=sub:4", "created", TreeRecordKind.SubSpeciality, 4)]
     [InlineData("http://localhost/admin/colleges/2/specialities?saved=speciality:2#x", "saved", TreeRecordKind.Speciality, 2)]
@@ -112,6 +126,7 @@ public sealed class CatalogueLinksTests
         NavItems.Colleges.Href.Should().Be(CatalogueLinks.Colleges);
         NavItems.Specialities.Href.Should().Be(CatalogueLinks.Specialities);
         NavItems.EntrustmentScales.Href.Should().Be(CatalogueLinks.EntrustmentScales);
+        NavItems.ActivityTypes.Href.Should().Be(CatalogueLinks.ActivityTypes);
         OnboardingLinks.Curricula.Should().Be(CatalogueLinks.Curricula);
     }
 
@@ -170,6 +185,11 @@ public sealed class CatalogueLinksTests
         { CatalogueLinks.EntrustmentScaleCreated(3), typeof(EntrustmentScaleEdit) },
         { CatalogueLinks.NewCurriculum, typeof(CurriculumEdit) },
         { CatalogueLinks.CurriculumCloned(4, 2), typeof(CurriculumEdit) },
+        // T398 (flow 17, § 0): the list and the builder, both of the builder's routes.
+        { CatalogueLinks.ActivityTypes, typeof(ActivityTypesList) },
+        { CatalogueLinks.NewActivityType, typeof(ActivityTypeEdit) },
+        { CatalogueLinks.ActivityType(23), typeof(ActivityTypeEdit) },
+        { CatalogueLinks.ActivityTypeCreated(23), typeof(ActivityTypeEdit) },
     };
 
     [Theory]

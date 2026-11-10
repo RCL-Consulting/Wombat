@@ -235,6 +235,119 @@ public sealed partial class NarrowLayoutTests
     }
 
     [Fact]
+    public void TheActivityTypesList_StacksFrom1024Px_InEveryOneOfTheCatalogueStacksSevenRules()
+    {
+        // T398 (flow 17, round 3 C3, check decision 2): the list joins all seven selector lists of "The catalogue tables
+        // stack from 1024px down", the EPA list's beside it; the canvas's seven-rule stand-in never ships.
+        var rules = Parse(File.ReadAllText(WebFile("wwwroot", "app.css")));
+        const string stack = "@media (max-width: 1024px)";
+        string[] parts =
+        [
+            "thead",
+            "tbody tr",
+            "tbody tr:last-child",
+            "td",
+            "tbody th",
+            "th[scope=\"row\"]",
+            "td[data-label]::before",
+            ".btn"
+        ];
+
+        var stackRules = rules.Where(rule => rule.AtRule == stack
+            && Selectors(rule).Any(selector => selector.StartsWith(".epas-page .clinic-table--stack-wide", StringComparison.Ordinal)))
+            .ToList();
+        stackRules.Should().HaveCount(7, "guard: the catalogue stack is seven rules");
+
+        foreach (var part in parts)
+        {
+            var epas = $".epas-page .clinic-table--stack-wide {part}";
+            var rule = stackRules.Should().ContainSingle(candidate => Selectors(candidate).Contains(epas), epas).Which;
+            Selectors(rule).Should().Contain($".activity-types-page .clinic-table--stack-wide {part}",
+                $"the activity types list stacks as the EPA list does: {part}");
+        }
+
+        rules.Where(rule => rule.AtRule != stack)
+            .SelectMany(Selectors)
+            .Should().NotContain(selector => selector.StartsWith(".activity-types-page .clinic-table--stack-wide", StringComparison.Ordinal),
+                "the list stacks from 1024px, in the one shared block, and nowhere else");
+    }
+
+    [Fact]
+    public void TheBuildersTabBar_IsOneRow_ByThePagesColumn_NotTheViewport()
+    {
+        // T398 (flow 17, C1, R1; the sweep's two fixes; the fix pass, pages review S3). The page is the size container the
+        // bar asks: from 641px the sidebar takes 306px, so a viewport query left the writer's five tabs 335px for the 416px
+        // their labels need, and the page scrolled sideways by 57px. Under a 34rem column the tabs take equal tracks; under
+        // 46rem a count's word is visually hidden (clipped, never display:none, so "Form 2 problems" stays the tab's
+        // name). A later edit that drops either sends the bar sideways again, silently.
+        var rules = Parse(File.ReadAllText(WebFile("wwwroot", "app.css")));
+
+        Rule(rules, string.Empty, ".activity-type-page").Declarations.Should().Contain("container: builder-page / inline-size");
+        var bar = Rule(rules, string.Empty, ".tab-bar");
+        bar.Declarations.Should().Contain(["display: grid", "grid-auto-flow: column"], "one row at every width");
+        Rule(rules, string.Empty, ".tab-bar-tab").Declarations.Should().Contain(["min-height: 2.75rem", "white-space: nowrap"]);
+
+        var equal = Rule(rules, "@container builder-page (width < 34rem)", ".tab-bar");
+        equal.Declarations.Should().Contain("grid-auto-columns: minmax(0, 1fr)");
+        equal.Index.Should().BeGreaterThan(bar.Index, "the two selectors are equally specific, so the narrow rule comes later");
+
+        var word = Rule(rules, "@container builder-page (width < 46rem)", ".tab-bar-tab .badge > span");
+        word.Declarations.Should().Contain(["clip: rect(0, 0, 0, 0)", "position: absolute"]);
+        word.Declarations.Should().NotContain(declaration => declaration.StartsWith("display", StringComparison.Ordinal),
+            "the count's word stays in the tab's name");
+
+        rules.Where(rule => rule.AtRule.StartsWith("@media", StringComparison.Ordinal)
+                && Selectors(rule).Any(selector => selector.StartsWith(".tab-bar", StringComparison.Ordinal)
+                    && !rule.AtRule.Contains("forced-colors", StringComparison.Ordinal)))
+            .Should().BeEmpty("the viewport does not say how wide the builder's column is");
+    }
+
+    [Fact]
+    public void TheOutline_ResetsItsHeadsAndEditorsMargins_SoTheirGapAloneSpacesThem()
+    {
+        // T398 (flow 17, S2; round 3 check, item 3; the fix pass, pages review S3).
+        var rules = Parse(File.ReadAllText(WebFile("wwwroot", "app.css")));
+
+        Rule(rules, string.Empty, ".outline-section-head > *").Declarations.Should().Contain("margin: 0");
+        Rule(rules, string.Empty, ".field-editor-inplace > *").Declarations.Should().Contain("margin: 0");
+        Rule(rules, string.Empty, ".outline-section-head").Declarations.Should().Contain(["display: flex", "flex-direction: column"]);
+        Rule(rules, string.Empty, ".field-editor-inplace").Declarations.Should().Contain(["display: flex", "flex-direction: column"]);
+        rules.Should().Contain(rule => rule.AtRule.Length == 0 && rule.Selector == ".outline-section > .btn",
+            "Add field's inset ships with S2");
+    }
+
+    [Fact]
+    public void TheMovesAsSaved_StackFrom1024Px_InEveryOneOfTheCatalogueStacksSevenRules()
+    {
+        // T398's sweep (the fix pass, pages review S3): Mini-CEX (Paediatrics)'s four moves need 578px laid out as a table,
+        // and from 901 to 935px a reader's Workflow card gave 543 to 577; the moves table joins the catalogue's 1024px
+        // stack, so it is a table only from 1025px, where it has 667px.
+        var rules = Parse(File.ReadAllText(WebFile("wwwroot", "app.css")));
+        const string stack = "@media (max-width: 1024px)";
+        string[] parts =
+        [
+            "thead",
+            "tbody tr",
+            "tbody tr:last-child",
+            "td",
+            "tbody th",
+            "th[scope=\"row\"]",
+            "td[data-label]::before",
+            ".btn"
+        ];
+
+        var stackRules = rules.Where(rule => rule.AtRule == stack
+            && Selectors(rule).Any(selector => selector.StartsWith(".epas-page .clinic-table--stack-wide", StringComparison.Ordinal)))
+            .ToList();
+        foreach (var part in parts)
+        {
+            var rule = stackRules.Should().ContainSingle(candidate => Selectors(candidate).Contains($".epas-page .clinic-table--stack-wide {part}")).Which;
+            Selectors(rule).Should().Contain($".workflow-readout .clinic-table--stack-wide {part}",
+                $"the moves stack as the catalogue lists do: {part}");
+        }
+    }
+
+    [Fact]
     public void TheMinimaByTrainingYear_GiveTheirPickerWhatTheRowLeaves()
     {
         // T266. With a 10rem floor on the picker's column the rows ran past the Add form's content edge at 641px and

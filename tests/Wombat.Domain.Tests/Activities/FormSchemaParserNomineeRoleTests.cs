@@ -1,3 +1,4 @@
+using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Schema;
 using Wombat.Domain.Identity;
 
@@ -88,6 +89,10 @@ public sealed class FormSchemaParserNomineeRoleTests
     [InlineData("COORDINATOR", WombatRoles.Coordinator)]
     [InlineData("institutionaladmin", WombatRoles.InstitutionalAdmin)]
     [InlineData("trainee", WombatRoles.Trainee)]
+    // The fix pass (S-1): the labels the refusal lists are accepted too, and stored as the key.
+    [InlineData("Committee member", WombatRoles.CommitteeMember)]
+    [InlineData("institutional admin", WombatRoles.InstitutionalAdmin)]
+    [InlineData("  Coordinator  ", WombatRoles.Coordinator)]
     public void Parse_Role_IsNormalisedToTheCanonicalConstant(string written, string canonical)
     {
         var field = SingleUserField(FormSchemaParser.Parse(UserFieldSchema($"\"role\": \"{written}\"")));
@@ -179,7 +184,8 @@ public sealed class FormSchemaParserNomineeRoleTests
 
     /// <summary>
     /// An unknown role, including the actor-rule spelling an author might carry across from the Workflow tab, is
-    /// refused, and the message lists the roles that would be accepted so the author can repair it.
+    /// refused, and the message lists the roles that would be accepted so the author can repair it, by label (T398, N1:
+    /// "Committee member", never "CommitteeMember"), at the field's place.
     /// </summary>
     [Theory]
     [InlineData("Supervisor")]
@@ -191,16 +197,20 @@ public sealed class FormSchemaParserNomineeRoleTests
             () => FormSchemaParser.Parse(UserFieldSchema($"\"role\": \"{role}\"")));
 
         Assert.Contains($"'{role}'", exception.Message, StringComparison.Ordinal);
-        foreach (var nominable in WombatRoles.Nominable)
-        {
-            Assert.Contains(nominable, exception.Message, StringComparison.Ordinal);
-        }
+        Assert.EndsWith(
+            "Use one of: Institutional admin, Coordinator, Committee member, Assessor, Trainee.",
+            exception.Message,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("CommitteeMember", exception.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("InstitutionalAdmin", exception.Message, StringComparison.Ordinal);
 
-        Assert.DoesNotContain(WombatRoles.CollegeAdmin, exception.Message, StringComparison.Ordinal);
-        Assert.DoesNotContain(WombatRoles.PendingTrainee, exception.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain(WombatRoleLabels.For(WombatRoles.CollegeAdmin), exception.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain(WombatRoleLabels.For(WombatRoles.PendingTrainee), exception.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain(WombatRoleLabels.For(WombatRoles.SpecialityAdmin), exception.Message, StringComparison.Ordinal);
 
-        // Ordinal substring: this also rules out SubSpecialityAdmin, which contains it.
-        Assert.DoesNotContain(WombatRoles.SpecialityAdmin, exception.Message, StringComparison.Ordinal);
+        var place = Assert.Single(exception.Places);
+        Assert.Equal(RefusalTab.Form, place.Tab);
+        Assert.Equal(["assessor_user_id"], place.FieldKeys);
     }
 
     [Theory]

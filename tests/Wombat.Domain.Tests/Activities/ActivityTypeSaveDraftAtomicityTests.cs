@@ -87,7 +87,7 @@ public sealed class ActivityTypeSaveDraftAtomicityTests
         var type = TypeWithExistingDraft();
         var before = Snapshot.Of(type);
 
-        Assert.Throws<WorkflowParseException>(() => type.SaveDraft(
+        Assert.Throws<ActivityTypeDraftRefusedException>(() => type.SaveDraft(
             ReplacementSchemaJson,
             malformedWorkflowJson,
             ReplacementCreditRulesJson,
@@ -105,7 +105,7 @@ public sealed class ActivityTypeSaveDraftAtomicityTests
         var type = TypeWithExistingDraft();
         var before = Snapshot.Of(type);
 
-        Assert.Throws<CreditRulesParseException>(() => type.SaveDraft(
+        Assert.Throws<ActivityTypeDraftRefusedException>(() => type.SaveDraft(
             ReplacementSchemaJson,
             ReplacementWorkflowJson,
             "{ \"counts_for\": ",
@@ -143,7 +143,7 @@ public sealed class ActivityTypeSaveDraftAtomicityTests
         var type = TypeWithExistingDraft();
         var before = Snapshot.Of(type);
 
-        Assert.Throws<SchemaParseException>(() => type.SaveDraft(
+        Assert.Throws<ActivityTypeDraftRefusedException>(() => type.SaveDraft(
             "{ \"version\": 1, \"sections\": [] }",
             ReplacementWorkflowJson,
             ReplacementCreditRulesJson,
@@ -162,7 +162,7 @@ public sealed class ActivityTypeSaveDraftAtomicityTests
     {
         var type = PublishedType();
 
-        Assert.Throws<WorkflowParseException>(() => type.SaveDraft(
+        Assert.Throws<ActivityTypeDraftRefusedException>(() => type.SaveDraft(
             ReplacementSchemaJson,
             "{ \"version\": 1, \"initial_state\": ",
             ReplacementCreditRulesJson,
@@ -213,7 +213,7 @@ public sealed class ActivityTypeSaveDraftAtomicityTests
     {
         var type = TypeWithExistingDraft();
 
-        Assert.Throws<WorkflowParseException>(() => type.SaveDraft(
+        Assert.Throws<ActivityTypeDraftRefusedException>(() => type.SaveDraft(
             ReplacementSchemaJson, "not json", ReplacementCreditRulesJson, "[\"setting\"]", "someone-else"));
 
         type.SaveDraft(ReplacementSchemaJson, ReplacementWorkflowJson, ReplacementCreditRulesJson, "[\"setting\"]", "someone-else");
@@ -224,6 +224,138 @@ public sealed class ActivityTypeSaveDraftAtomicityTests
         Assert.Equal("[\"setting\"]", type.StagingDisplayFieldsJson);
         Assert.Equal("someone-else", type.StagingUpdatedByUserId);
     }
+
+    // ---- T398 (flow 17, P2: "every tab at once") -------------------------------------------------
+
+    /// <summary>
+    /// A draft wrong on its Form and its Workflow names both on one save: one refusal, every place, its message their
+    /// sentences joined, and nothing assigned. Before T398 the schema's refusal stopped the save and the workflow's
+    /// appeared on the next.
+    /// </summary>
+    [Fact]
+    public void ADraftWrongOnTwoTabs_IsRefusedOnceNamingBoth_AndAssignsNothing()
+    {
+        var type = TypeWithExistingDraft();
+        var before = Snapshot.Of(type);
+
+        var refused = Assert.Throws<ActivityTypeDraftRefusedException>(() => type.SaveDraft(
+            EmptySectionSchemaJson, BadActorWorkflowJson, ReplacementCreditRulesJson, "[\"setting\"]", "someone-else"));
+
+        Assert.Equal([RefusalTab.Form, RefusalTab.Workflow], refused.Places.Select(place => place.Tab));
+        Assert.Equal((RefusalKind.EmptySection, "more"), (refused.Places[0].Kind, refused.Places[0].SectionKey));
+        Assert.Equal("cancel", refused.Places[1].MoveKey);
+        Assert.Equal(
+            "Section 'more' must contain at least one field. Actor rule grammar supports only 'subject', 'creator', " +
+            "'role:<name>', 'scope:<name>', 'field:<name>', '+' and '|'.",
+            refused.Message);
+        Assert.Equal(before, Snapshot.Of(type));
+    }
+
+    /// <summary>
+    /// Both cross-checks run once their payloads parse, whatever the other found: a <c>field:</c> rule naming a text field
+    /// (Workflow) and credit reading another EPA field (Credit) are two places on one save.
+    /// </summary>
+    [Fact]
+    public void BothCrossChecks_AreReportedTogether()
+    {
+        var type = PublishedType();
+
+        var refused = Assert.Throws<ActivityTypeDraftRefusedException>(() => type.SaveDraft(
+            ActivityTestData.ValidSchemaJson,
+            ActivityTestData.ValidWorkflowJson.Replace("\"role:Assessor\"", "\"field:title\"", StringComparison.Ordinal),
+            ActivityTestData.ValidCreditRulesJson.Replace("\"epa_field\": \"epa_id\"", "\"epa_field\": \"score\"", StringComparison.Ordinal),
+            ValidDisplayFieldsJson,
+            "someone-else"));
+
+        Assert.Equal(
+            [(RefusalTab.Workflow, RefusalKind.FieldRuleNotUserField), (RefusalTab.Credit, RefusalKind.CreditEpaFieldDisagrees)],
+            refused.Places.Select(place => (place.Tab, place.Kind)));
+        Assert.Equal("complete", refused.Places[0].MoveKey);
+        Assert.Equal(1, refused.Places[1].DirectiveNumber);
+        Assert.False(type.HasDraft);
+    }
+
+    /// <summary>
+    /// A cross-check runs only where the payloads it reads parsed: a schema that does not parse is one place, and the
+    /// workflow's <c>field:</c> rule is not judged against a form nobody can read.
+    /// </summary>
+    [Fact]
+    public void ACrossCheck_IsNotRunAgainstAPayloadThatDidNotParse()
+    {
+        var type = PublishedType();
+
+        var refused = Assert.Throws<ActivityTypeDraftRefusedException>(() => type.SaveDraft(
+            "{ \"version\": 1,",
+            ActivityTestData.ValidWorkflowJson.Replace("\"role:Assessor\"", "\"field:ghost\"", StringComparison.Ordinal),
+            ActivityTestData.ValidCreditRulesJson,
+            ValidDisplayFieldsJson,
+            "someone-else"));
+
+        var place = Assert.Single(refused.Places);
+        Assert.Equal((RefusalTab.Form, RefusalKind.MalformedJson, 1L), (place.Tab, place.Kind, place.JsonLine));
+    }
+
+    /// <summary>PublishDraft refuses every problem of a staged draft at once too (P2), changing nothing.</summary>
+    [Fact]
+    public void PublishDraft_ADraftStagedWrongOnTwoTabs_NamesBoth()
+    {
+        var type = PublishedType();
+        type.StagingSchemaJson = EmptySectionSchemaJson;
+        type.StagingWorkflowJson = BadActorWorkflowJson;
+        type.StagingCreditRulesJson = ReplacementCreditRulesJson;
+        type.StagingDisplayFieldsJson = "[]";
+        var before = Snapshot.Of(type);
+
+        var refused = Assert.Throws<ActivityTypeDraftRefusedException>(() => type.PublishDraft(Actor));
+
+        Assert.Equal(2, refused.Places.Count);
+        Assert.Equal(before, Snapshot.Of(type));
+    }
+
+    /// <summary>
+    /// The fix pass (N-3): CheckDraft judges a staged draft as PublishDraft will, every place at once, and assigns nothing;
+    /// a draft that passes gives back its schema for the publish's scale question.
+    /// </summary>
+    [Fact]
+    public void CheckDraft_RefusesAsPublishDraftDoes_AndAssignsNothing()
+    {
+        var type = PublishedType();
+        type.StagingSchemaJson = EmptySectionSchemaJson;
+        type.StagingWorkflowJson = BadActorWorkflowJson;
+        type.StagingCreditRulesJson = ReplacementCreditRulesJson;
+        type.StagingDisplayFieldsJson = "[]";
+        var before = Snapshot.Of(type);
+
+        var refused = Assert.Throws<ActivityTypeDraftRefusedException>(() => type.CheckDraft());
+
+        Assert.Equal(2, refused.Places.Count);
+        Assert.Equal(before, Snapshot.Of(type));
+
+        var good = TypeWithExistingDraft();
+        Assert.NotEmpty(good.CheckDraft().Sections);
+    }
+
+    private const string EmptySectionSchemaJson = """
+        {
+          "version": 1,
+          "sections": [
+            { "key": "encounter", "title": "Encounter", "fields": [ { "key": "title", "type": "text", "label": "Title" } ] },
+            { "key": "more", "title": "More", "fields": [] }
+          ]
+        }
+        """;
+
+    private const string BadActorWorkflowJson = """
+        {
+          "version": 1,
+          "initial_state": "draft",
+          "states": [ { "key": "draft", "label": "Draft" }, { "key": "done", "label": "Done", "terminal": true } ],
+          "transitions": [
+            { "key": "submit", "from": "draft", "to": "done", "actor": "subject" },
+            { "key": "cancel", "from": "draft", "to": "done", "actor": "nobody" }
+          ]
+        }
+        """;
 
     private static ActivityType PublishedType()
     {

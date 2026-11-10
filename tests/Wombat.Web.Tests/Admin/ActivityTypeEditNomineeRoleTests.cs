@@ -34,7 +34,7 @@ namespace Wombat.Web.Tests.Admin;
 /// </remarks>
 public sealed class ActivityTypeEditNomineeRoleTests : TestContext
 {
-    // The first field is selected when the page loads, so the User field's editor is what renders first.
+    // The page opens no editor (T398, Q4); RenderPage opens the User field's, the first, as the tests start from it.
     private const string SchemaJson = """
         {
           "version": 1,
@@ -68,6 +68,9 @@ public sealed class ActivityTypeEditNomineeRoleTests : TestContext
         auth.SetClaims(new Claim(ClaimTypes.NameIdentifier, "admin-1"));
 
         Services.AddSingleton<IActivityReferenceDataService, StubActivityReferenceDataService>();
+
+        // Opening a field's editor moves the focus to its key (T398, Q4), a call into the browser.
+        JSInterop.Mode = JSRuntimeMode.Loose;
     }
 
     [Fact]
@@ -188,10 +191,12 @@ public sealed class ActivityTypeEditNomineeRoleTests : TestContext
         var cut = RenderPage(new FakeSender(SchemaJson));
 
         cut.Find("#field-role").Change(WombatRoles.Trainee);
-        // The warnings are recomputed against the published version after a save (and on structural edits).
+        // The warnings are read from the saved draft against the published version, on the Publish tab (T398, S6).
         SaveDraft(cut);
+        cut.FindAll("[role=tab]").Single(tab => tab.TextContent.Trim() == "Publish").Click();
 
-        cut.Markup.Should().Contain("Publish warnings").And.Contain("will name a Trainee");
+        cut.Find("#panel-publish").TextContent.Should().Contain("What publishing this draft changes")
+            .And.Contain("will name a Trainee instead of a Coordinator", "roles by their labels, with their articles (T398, N1)");
     }
 
     [Fact]
@@ -245,15 +250,16 @@ public sealed class ActivityTypeEditNomineeRoleTests : TestContext
         Services.AddSingleton<IScopedSender>(sender);
 
         var cut = RenderComponent<ActivityTypeEdit>(parameters => parameters.Add(page => page.ActivityTypeId, 4));
-        cut.WaitForState(() => cut.FindAll("#field-key").Count == 1);
+        cut.WaitForState(() => cut.FindAll(".outline-section").Count > 0);
+        EditField(cut, "coordinator_user_id");
 
         return cut;
     }
 
     private static void EditField(IRenderedComponent<ActivityTypeEdit> cut, string fieldKey)
     {
-        // Each field card shows its key in a <code> and has an "Edit" button; pick the card by the key.
-        var card = cut.FindAll(".detail-card--interactive")
+        // Each field row shows its key in a <code> and has an "Edit" button, its editor opening in place (T398, Q4).
+        var card = cut.FindAll("li.field-row")
             .Single(element => element.QuerySelector("code")?.TextContent == fieldKey);
         card.QuerySelectorAll("button").First(button => button.TextContent.Trim() == "Edit")
             .Click();

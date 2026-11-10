@@ -43,7 +43,7 @@ public sealed class ActivityTypeBuilderAccessTests : TestContext
     private const int Paediatrics = 5;
     private const int PaediatricsSub = 9;
 
-    private static readonly string[] EditLabels = ["Save draft", "Discard draft", "Publish", "Add section", "Add field", "Up", "Down", "Delete"];
+    private static readonly string[] EditLabels = ["Save draft", "Discard draft…", "Publish", "Add section", "Add field", "Up", "Down", "Delete"];
 
     private const string SchemaJson = """
         {
@@ -96,6 +96,9 @@ public sealed class ActivityTypeBuilderAccessTests : TestContext
     public ActivityTypeBuilderAccessTests()
     {
         Services.AddSingleton<IActivityReferenceDataService>(new ScaleOptions());
+
+        // Opening an editor in place moves the focus into it (T398, Q4), a call into the browser.
+        JSInterop.Mode = JSRuntimeMode.Loose;
     }
 
     [Fact]
@@ -129,8 +132,9 @@ public sealed class ActivityTypeBuilderAccessTests : TestContext
     }
 
     /// <summary>
-    /// The field editor still opens to a reader, so a field can be read: Step 1.25 reads overall_level's scale there
-    /// (T271 item 2). What it shows is text, not controls (DESIGN.md § Form system, T302).
+    /// The field's settings still open to a reader, under its row, so a field can be read: Step 1.25 reads overall_level's
+    /// scale there (T271 item 2). What it shows is text, not controls (DESIGN.md § Form system, T302); nothing opens with
+    /// the page (T398, Q4).
     /// </summary>
     [Fact]
     public void AReader_StillOpensEachField_AndReadsItsSettingsAsText()
@@ -138,37 +142,44 @@ public sealed class ActivityTypeBuilderAccessTests : TestContext
         SignIn(WombatRoles.InstitutionalAdmin);
         var cut = Render(new FakeSender(CollegeInstrument(canWrite: false)));
 
+        cut.FindAll(".field-editor-inplace").Should().BeEmpty("no editor opens with the page");
+        Named(cut, "View field Overall level").Click();
+
         cut.FindAll("#field-key, #field-label, #field-type, #field-scale, #field-required, #section-key, #section-title")
             .Should().BeEmpty("a reader is given no control");
-        FieldDetail(cut, "Entrustment scale").Should().Be("CPSA v11.1 ladder", "the first field opens with the page");
+        FieldDetail(cut, "Entrustment scale").Should().Be("CPSA v11.1 ladder");
+        Named(cut, "Close field Overall level").GetAttribute("aria-expanded").Should().Be("true");
 
-        cut.FindAll("button").Single(button => button.GetAttribute("aria-label") == "View field Notes").Click();
+        Named(cut, "View field Notes").Click();
 
         FieldDetail(cut, "Label").Should().Be("Notes");
         FieldDetail(cut, "Type").Should().Be("Long text");
+        cut.FindAll(".field-editor-inplace").Should().ContainSingle("one at a time");
         cut.FindAll("button").Where(button => button.TextContent.Trim() == "Edit").Should().BeEmpty(
             "a reader's buttons say View, which is what they do");
     }
 
+    /// <summary>T398 (Q2, T1): a reader's Details is text with the versions, and Workflow and Credit the read in words, no JSON.</summary>
     [Fact]
-    public void AReader_ReadsTheMetadataWorkflowAndCredit_AsText()
+    public void AReader_ReadsTheDetailsWorkflowAndCredit_InWords()
     {
         SignIn(WombatRoles.InstitutionalAdmin);
         var cut = Render(new FakeSender(CollegeInstrument(canWrite: false)));
 
-        Tab(cut, "Metadata");
-        cut.FindAll("input, select, textarea").Should().BeEmpty("the metadata is shown, not offered");
-        Detail(cut, "Scope").Should().Be("Speciality · Paediatrics");
+        Tab(cut, "Details");
+        cut.FindAll("#panel-details input, #panel-details select, #panel-details textarea").Should().BeEmpty("the details are shown, not offered");
+        Detail(cut, "Set by").Should().Be("CPSA · Speciality · Paediatrics");
         Detail(cut, "Name").Should().Be("Mini-CEX (Paediatrics)");
         Detail(cut, "Status").Should().Be("Active");
+        cut.FindAll("#panel-details .versions-readout").Should().ContainSingle("Versions close a reader's Details (T1)");
 
         Tab(cut, "Workflow");
-        cut.FindAll("textarea").Should().BeEmpty();
-        cut.Find("pre.code-block").TextContent.Should().Contain("\"initial_state\": \"draft\"");
+        cut.FindAll("textarea, pre").Should().BeEmpty("a reader gets no JSON (Q2)");
+        cut.FindAll("#panel-workflow .workflow-readout").Should().ContainSingle();
 
         Tab(cut, "Credit");
-        cut.FindAll("textarea").Should().BeEmpty();
-        cut.Find("pre.code-block").TextContent.Should().Contain("counts_for");
+        cut.FindAll("textarea, pre").Should().BeEmpty();
+        cut.FindAll("#panel-credit .credit-readout").Should().ContainSingle();
     }
 
     [Fact]
@@ -178,14 +189,15 @@ public sealed class ActivityTypeBuilderAccessTests : TestContext
         var sender = new FakeSender(NewType(InstitutionalAdminScopes));
         var cut = Render(sender, activityTypeId: null);
 
-        Tab(cut, "Metadata");
-        Options(cut, "#type-scope").Should().Equal(("Institution", "Institution"));
-        Options(cut, "#type-scope-id").Should().Equal((Kalafong.ToString(), "Kalafong"));
-        cut.Find("#type-scope-id").GetAttribute("value").Should().Be(Kalafong.ToString(), "her institution is chosen for her");
+        // R3-C01: a new type opens on Details; one scope at one target is a read-out.
+        TabNamed(cut, "Details").GetAttribute("aria-selected").Should().Be("true");
+        Detail(cut, "Scope").Should().Be("Institution · Kalafong");
+        cut.Find("#panel-details").TextContent.Should().Contain("The one scope you can write in.");
+        cut.FindAll("input[type=radio][name=type-scope], #type-scope-id").Should().BeEmpty();
 
         cut.Find("#type-key").Change("kgk_teaching_log");
         cut.Find("#type-name").Change("KGK Teaching Session Log");
-        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Save draft").Click();
+        Button(cut, "Save draft").Click();
 
         var save = sender.Saves.Should().ContainSingle().Subject;
         save.Scope.Should().Be(ActivityScope.Institution);
@@ -193,20 +205,26 @@ public sealed class ActivityTypeBuilderAccessTests : TestContext
     }
 
     [Fact]
-    public void ANewType_ToACollegeAdmin_OffersHisCollegesSpecialityAndSubSpeciality()
+    public void ANewType_ToACollegeAdmin_OffersHisCollegesSpecialityAndSubSpeciality_AsARequiredRadioGroup()
     {
         SignIn(WombatRoles.CollegeAdmin);
-        var cut = Render(new FakeSender(NewType(CollegeAdminScopes)), activityTypeId: null);
+        var sender = new FakeSender(NewType(CollegeAdminScopes));
+        var cut = Render(sender, activityTypeId: null);
 
-        Tab(cut, "Metadata");
-        Options(cut, "#type-scope").Should().Equal(("Speciality", "Speciality"), ("SubSpeciality", "Sub-speciality"));
-        Options(cut, "#type-scope-id").Should().Equal((Paediatrics.ToString(), "Paediatrics"));
+        // R3-C04, C05, M1: Scope's radios a required radio group, the target under them.
+        var group = cut.Find("fieldset.choice-group[role=radiogroup]");
+        group.GetAttribute("aria-required").Should().Be("true");
+        group.QuerySelectorAll("label").Select(label => label.TextContent.Trim()).Should().Equal("Speciality", "Sub-speciality");
+        Detail(cut, "Speciality").Should().Be("Paediatrics");
 
-        cut.Find("#type-scope").Change("SubSpeciality");
+        cut.Find("#type-scope-subspeciality").Change(true);
 
-        Options(cut, "#type-scope-id").Should().Equal((PaediatricsSub.ToString(), "Paediatrics / Paediatrics"));
-        cut.Find("#type-scope-id").GetAttribute("value").Should().Be(PaediatricsSub.ToString(),
+        Detail(cut, "Sub-speciality").Should().Be("Paediatrics / Paediatrics",
             "a scope's first target is chosen when the scope changes, so no save goes without one");
+        cut.Find("#type-key").Change("cpsa_case_log");
+        cut.Find("#type-name").Change("CPSA Case Log");
+        Button(cut, "Save draft").Click();
+        sender.Saves.Should().ContainSingle().Which.ScopeId.Should().Be(PaediatricsSub);
     }
 
     [Fact]
@@ -215,10 +233,14 @@ public sealed class ActivityTypeBuilderAccessTests : TestContext
         SignIn(WombatRoles.Administrator);
         var cut = Render(new FakeSender(NewType(AdministratorScopes)), activityTypeId: null);
 
-        Tab(cut, "Metadata");
-        Options(cut, "#type-scope").Select(option => option.Label)
+        cut.FindAll("input[type=radio][name=type-scope]").Select(radio => radio.NextElementSibling!.TextContent.Trim())
             .Should().Equal("Global", "Institution", "Speciality", "Sub-speciality");
+        Detail(cut, "Target").Should().Be("None: a Global type belongs to no institution or speciality.");
         cut.FindAll("#type-scope-id").Should().BeEmpty("a Global type has no target");
+
+        cut.Find("#type-scope-institution").Change(true);
+        Options(cut, "#type-scope-id").Should().Equal(("3", "Baragwanath"), (Kalafong.ToString(), "Kalafong"));
+
         cut.Find("h1").TextContent.Should().Be("New activity type");
         TabTitle.Of(this, cut).Should().Be("New activity type · Wombat",
             "the editor has loaded, and the tab still names the page (T190's note: it was empty)");
@@ -251,21 +273,24 @@ public sealed class ActivityTypeBuilderAccessTests : TestContext
         TabTitle.Of(this, cut).Should().Be("Activity type · Wombat");
     }
 
+    /// <summary>T329, R2-B11: a read that fails is its fixed words with Try again, never the exception's text, and offers nothing.</summary>
     [Fact]
-    public void AnUnknownType_IsNotANewType_AndOffersNoSaveDraft()
+    public void AFailedRead_IsNotANewType_SaysSoInFixedWords_AndOffersNoSaveDraft()
     {
         SignIn(WombatRoles.Administrator);
         var cut = Render(new FakeSender(Task.FromException<ActivityTypeEditorDto>(
-            new InvalidOperationException("The activity type could not be found."))));
+            new InvalidOperationException("Npgsql exploded."))));
 
-        cut.WaitForState(() => cut.Markup.Contains("could not be found"));
-        cut.Markup.Should().NotContain("New activity type");
+        cut.WaitForState(() => cut.Markup.Contains("Could not load this activity type."));
+        cut.Markup.Should().NotContain("Npgsql").And.NotContain("New activity type");
+        Button(cut, "Try again").Should().NotBeNull();
         EditButtons(cut).Should().BeEmpty();
+        cut.Find("h1").TextContent.Should().Be("Activity type");
     }
 
     /// <summary>
-    /// A refusal is shown in its own words (DESIGN.md § Alerts, T213): a validation refusal by its failures' messages, not
-    /// the log's "Validation failed: -- Key: …" (the T300 review; the page printed <c>exception.Message</c>).
+    /// A refusal is shown in its own words (DESIGN.md § Alerts, T213), at its place: a validation refusal on Key under Key
+    /// and in the summary after "Details:" (T398, S10), never the log's "Validation failed: -- Key: …".
     /// </summary>
     [Fact]
     public void ARefusedSave_IsShownInTheRefusalsOwnWords()
@@ -276,12 +301,14 @@ public sealed class ActivityTypeBuilderAccessTests : TestContext
             SaveRefusal = new ValidationException([new ValidationFailure("Key", "Give the activity type a key.")])
         };
         var cut = Render(sender, activityTypeId: null);
+        cut.Find("#type-key").Change("kgk_teaching_log");
+        cut.Find("#type-name").Change("KGK Teaching Session Log");
 
-        cut.FindAll("button").Single(button => button.TextContent.Trim() == "Save draft").Click();
+        Button(cut, "Save draft").Click();
 
-        var refusal = cut.Find(".alert-danger");
-        refusal.TextContent.Trim().Should().Be("Give the activity type a key.");
-        refusal.TextContent.Should().NotContain("Validation failed");
+        cut.Find("#refusal-summary li").TextContent.Trim().Should().Be("Details: Give the activity type a key.");
+        cut.Find("#type-key-refusal").TextContent.Trim().Should().Be("Give the activity type a key.");
+        cut.Markup.Should().NotContain("Validation failed");
     }
 
     // ---- helpers ----
@@ -309,25 +336,29 @@ public sealed class ActivityTypeBuilderAccessTests : TestContext
     private static List<IElement> EditButtons(IRenderedFragment cut)
         => cut.FindAll("button").Where(button => EditLabels.Contains(button.TextContent.Trim())).ToList();
 
-    private static void Tab(IRenderedFragment cut, string label)
-        => cut.FindAll(".tab-bar-tab").Single(tab => tab.TextContent.Trim() == label).Click();
+    private static void Tab(IRenderedFragment cut, string label) => TabNamed(cut, label).Click();
+
+    private static IElement TabNamed(IRenderedFragment cut, string label)
+        => cut.FindAll("[role=tab]").Single(tab => tab.TextContent.Trim() == label);
+
+    private static IElement Button(IRenderedFragment cut, string words)
+        => cut.FindAll("button").First(button => button.TextContent.Trim() == words);
+
+    private static IElement Named(IRenderedFragment cut, string label)
+        => cut.FindAll("button").Single(button => button.GetAttribute("aria-label") == label);
 
     private static List<(string Value, string Label)> Options(IRenderedFragment cut, string select)
         => cut.FindAll($"{select} option")
             .Select(option => (option.GetAttribute("value") ?? string.Empty, option.TextContent.Trim()))
             .ToList();
 
-    /// <summary>A metadata field shown as text: the <c>&lt;dd&gt;</c> under its <c>&lt;dt&gt;</c>.</summary>
+    /// <summary>A Details entry shown as text: the first <c>&lt;dd&gt;</c> after its <c>&lt;dt&gt;</c>.</summary>
     private static string Detail(IRenderedFragment cut, string term)
-        => cut.FindAll("dl.form-group")
-            .Single(list => list.QuerySelector("dt")!.TextContent.Trim() == term)
-            .QuerySelector("dd")!.TextContent.Trim();
+        => cut.FindAll("#panel-details dt").Single(dt => dt.TextContent.Trim() == term).NextElementSibling!.TextContent.Trim();
 
-    /// <summary>A field editor setting shown as text.</summary>
+    /// <summary>A field's setting shown as text, in its editor in place.</summary>
     private static string FieldDetail(IRenderedFragment cut, string term)
-        => cut.FindAll("#field-details dl.form-group")
-            .Single(list => list.QuerySelector("dt")!.TextContent.Trim() == term)
-            .QuerySelector("dd")!.TextContent.Trim();
+        => cut.FindAll(".field-editor-inplace dt").Single(dt => dt.TextContent.Trim() == term).NextElementSibling!.TextContent.Trim();
 
     private static ActivityTypeEditorDto CollegeInstrument(bool canWrite) => new(
         11, "mini_cex_cpsa", "Mini-CEX (Paediatrics)", "The College's Mini-CEX.", ActivityScope.Speciality, Paediatrics,
@@ -337,7 +368,12 @@ public sealed class ActivityTypeBuilderAccessTests : TestContext
         "seeder", "seeder", null, [],
         canWrite,
         canWrite ? CollegeAdminScopes : [],
-        "Paediatrics");
+        "Paediatrics")
+    {
+        Owner = new ActivityTypeOwnerDto(ActivityTypeOwnerKind.College, "CPSA"),
+        WorkflowRead = new ActivityTypeWorkflowReadDto([new ActivityTypeStateReadDto("draft", "Draft", true, false)], []),
+        CreditRead = new ActivityTypeCreditReadDto(true, [])
+    };
 
     private static ActivityTypeEditorDto NewType(IReadOnlyList<ActivityTypeScopeChoiceDto> writableScopes)
     {
@@ -355,8 +391,8 @@ public sealed class ActivityTypeBuilderAccessTests : TestContext
 
     private sealed class ScaleOptions : StubActivityReferenceDataService
     {
-        public override Task<IReadOnlyList<ActivityCatalogueOption>> GetEntrustmentScaleOptionsAsync(CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<ActivityCatalogueOption>>([new ActivityCatalogueOption("cpsa-v11-1", "CPSA v11.1 ladder")]);
+        public override Task<IReadOnlyList<EntrustmentScaleOption>> GetEntrustmentScaleOptionsAsync(CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<EntrustmentScaleOption>>([new EntrustmentScaleOption("cpsa-v11-1", null, "CPSA v11.1 ladder")]);
     }
 
     private sealed class FakeSender : IScopedSender

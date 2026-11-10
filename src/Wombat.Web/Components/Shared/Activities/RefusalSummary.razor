@@ -20,7 +20,13 @@
       @foreach (var line in Lines)
       {
         <li>
-          @if (line.FieldKey is { } key)
+          @if (LineAction.HasDelegate && line.TargetId is { } target)
+          {
+            @* T398 (flow 17, S1): the builder's line switches the tab and opens the row's editor before the focus moves,
+               so the page runs its own action in place of the field's focus. *@
+            <a href="@($"#{target}")" @onclick="() => LineAction.InvokeAsync(line)" @onclick:preventDefault>@line.Text</a>
+          }
+          else if (line.FieldKey is { } key)
           {
             <a href="@($"#{ActivityFieldIds.Input(key)}")" @onclick="() => FocusFieldAsync(key)" @onclick:preventDefault>@line.Text</a>
           }
@@ -51,6 +57,13 @@
 
   /// <summary>The refusal, one line a field (<see cref="FieldRefusals.Split" />).</summary>
   [Parameter] public IReadOnlyList<RefusalLine> Lines { get; set; } = [];
+
+  /// <summary>
+  /// What a line's press does, in place of focusing its field's input (T398, flow 17, S1): for a line with a
+  /// <see cref="RefusalLine.TargetId" />, the builder switches the tab, opens the row's editor in place and focuses the
+  /// control. An EventCallback, so the page draws again once it has run. Unset, every line behaves as before (flow 03's pages pass none).
+  /// </summary>
+  [Parameter] public EventCallback<RefusalLine> LineAction { get; set; }
 
   /// <summary>
   /// Takes the focus as the page first draws it (autofocus), for a refusal that arrives with the page: the activity's

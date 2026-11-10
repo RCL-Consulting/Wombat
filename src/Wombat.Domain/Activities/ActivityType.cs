@@ -101,16 +101,9 @@ public sealed class ActivityType
         // Every payload is parsed before any of them is assigned (T122). A save that assigned the schema and then
         // threw on the workflow left a tracked entity half-written, and the audit pipeline's catch saves the
         // request's DbContext, so the half-written draft was COMMITTED under a failed command.
-        var schema = FormSchemaParser.Parse(schemaJson);
-        var workflow = WorkflowParser.Parse(workflowJson);
-
-        var creditRules = CreditRulesParser.Parse(creditRulesJson);
-
-        // T102: the nominee fields must be unambiguous before anything is assigned. See ActorFieldRules.
-        ActorFieldRules.EnsurePublishable(schema, workflow);
-
-        // T137: the EPA an activity stamps and the EPA its credit lands on are one field. See EvidenceEpa.
-        EvidenceEpa.EnsureCreditAgrees(schema, creditRules);
+        // T398 (P2): all three are parsed and both cross-checks run whatever the others say, and every problem is
+        // refused at once, so a draft wrong on two tabs names both on one save.
+        var (schema, workflow, creditRules) = ParseAll(schemaJson, workflowJson, creditRulesJson);
 
         var stagingSchemaJson = FormSchemaParser.Serialize(schema);
         var stagingWorkflowJson = WorkflowParser.Serialize(workflow);
@@ -125,6 +118,22 @@ public sealed class ActivityType
         StagingUpdatedOn = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// The saved draft's schema, after all three payloads are parsed and cross-checked as <see cref="PublishDraft" /> will
+    /// judge them, assigning nothing: every problem at once, as the aggregate (P2). For a publish that asks a question of
+    /// the parsed schema first (a scale it binds), so a draft wrong on a tab is refused in the same words as at
+    /// <see cref="PublishDraft" />, never as a bare parse exception (T398, the fix pass, code review N-3).
+    /// </summary>
+    public FormSchema CheckDraft()
+    {
+        if (!HasDraft)
+        {
+            throw new InvalidOperationException("A saved draft is required before publishing.");
+        }
+
+        return ParseAll(StagingSchemaJson!, StagingWorkflowJson!, StagingCreditRulesJson!).Schema;
+    }
+
     public ActivityTypeVersion PublishDraft(string actorUserId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(actorUserId);
@@ -134,13 +143,9 @@ public sealed class ActivityType
             throw new InvalidOperationException("A saved draft is required before publishing.");
         }
 
-        // T102: also here, because a draft staged before the rule existed never met it, and a publish is the step that
-        // makes it what new activities pin to. Nothing is assigned until it passes.
-        var stagedSchema = FormSchemaParser.Parse(StagingSchemaJson!);
-        ActorFieldRules.EnsurePublishable(stagedSchema, WorkflowParser.Parse(StagingWorkflowJson!));
-
-        // T137, for the same reason: a draft staged before the rule never met it.
-        EvidenceEpa.EnsureCreditAgrees(stagedSchema, CreditRulesParser.Parse(StagingCreditRulesJson!));
+        // T102 and T137: also here, because a draft staged before either rule existed never met it, and a publish is the
+        // step that makes it what new activities pin to. Nothing is assigned until it passes; every problem at once (P2).
+        ParseAll(StagingSchemaJson!, StagingWorkflowJson!, StagingCreditRulesJson!);
 
         SchemaJson = StagingSchemaJson;
         WorkflowJson = StagingWorkflowJson;
@@ -164,6 +169,61 @@ public sealed class ActivityType
         DiscardDraft();
 
         return publishedVersion;
+    }
+
+    /// <summary>
+    /// The three payloads parsed, after the two checks across them (T102's <see cref="ActorFieldRules" />, T137's
+    /// <see cref="EvidenceEpa" />); or every problem any of the five found, at once, as one
+    /// <see cref="ActivityTypeDraftRefusedException" /> (T398, flow 17, P2: "every tab at once", the operator's
+    /// 2026-11-10).
+    /// </summary>
+    /// <remarks>
+    /// A cross-check runs only where the payloads it reads parsed: a schema that does not parse cannot be judged against
+    /// the workflow. Before T398 the first payload to fail stopped the save, so a draft wrong in its form and its
+    /// workflow named only the form, and the workflow's refusal appeared on the next save. The parsers themselves still
+    /// throw their own types; only the draft's refusal is the aggregate, its message their sentences joined.
+    /// </remarks>
+    private static (FormSchema Schema, Workflow.Workflow Workflow, CreditRules CreditRules) ParseAll(
+        string schemaJson,
+        string workflowJson,
+        string creditRulesJson)
+    {
+        var places = new List<RefusalPlace>();
+
+        var schema = Collect(() => FormSchemaParser.Parse(schemaJson), places);
+        var workflow = Collect(() => WorkflowParser.Parse(workflowJson), places);
+        var creditRules = Collect(() => CreditRulesParser.Parse(creditRulesJson), places);
+
+        if (schema is not null && workflow is not null)
+        {
+            places.AddRange(ActorFieldRules.PublishProblems(schema, workflow));
+        }
+
+        if (schema is not null && creditRules is not null)
+        {
+            places.AddRange(EvidenceEpa.CreditProblems(schema, creditRules));
+        }
+
+        if (places.Count > 0)
+        {
+            throw new ActivityTypeDraftRefusedException(places);
+        }
+
+        return (schema!, workflow!, creditRules!);
+    }
+
+    private static T? Collect<T>(Func<T> parse, List<RefusalPlace> places)
+        where T : class
+    {
+        try
+        {
+            return parse();
+        }
+        catch (Exception exception) when (exception is IActivityTypeRefusal refusal)
+        {
+            places.AddRange(refusal.Places);
+            return null;
+        }
     }
 
     public void DiscardDraft()

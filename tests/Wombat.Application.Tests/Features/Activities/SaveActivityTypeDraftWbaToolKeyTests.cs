@@ -1,3 +1,4 @@
+using Wombat.Tests.Shared;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Wombat.Application.Features.Activities.Commands.SaveActivityTypeDraft;
@@ -46,7 +47,7 @@ public sealed class SaveActivityTypeDraftWbaToolKeyTests
         ActivityTypeEditorDto saved;
         await using (var db = fixture.NewContext())
         {
-            saved = await new SaveActivityTypeDraftCommandHandler(db).Handle(
+            saved = await new SaveActivityTypeDraftCommandHandler(db, FakeUserDirectory.Empty).Handle(
                 Command(null, "mini_cex_local", "Local Mini-CEX", ActivityScope.Global, null, " Mini_CEX ", defaults, TestPrincipals.Administrator()),
                 CancellationToken.None);
         }
@@ -68,7 +69,7 @@ public sealed class SaveActivityTypeDraftWbaToolKeyTests
 
         await using (var db = fixture.NewContext())
         {
-            await new SaveActivityTypeDraftCommandHandler(db).Handle(
+            await new SaveActivityTypeDraftCommandHandler(db, FakeUserDirectory.Empty).Handle(
                 Command(fixture.ExistingTypeId, Fixture.ExistingKey, Fixture.ExistingName, ActivityScope.Global, null, "  DOPS", defaults, TestPrincipals.Administrator()),
                 CancellationToken.None);
         }
@@ -91,7 +92,7 @@ public sealed class SaveActivityTypeDraftWbaToolKeyTests
 
         await using (var db = fixture.NewContext())
         {
-            var saved = await new SaveActivityTypeDraftCommandHandler(db).Handle(
+            var saved = await new SaveActivityTypeDraftCommandHandler(db, FakeUserDirectory.Empty).Handle(
                 Command(fixture.ExistingTypeId, Fixture.ExistingKey, Fixture.ExistingName, ActivityScope.Global, null, requestedKey, defaults, TestPrincipals.Administrator()),
                 CancellationToken.None);
 
@@ -113,7 +114,7 @@ public sealed class SaveActivityTypeDraftWbaToolKeyTests
 
         await using (var db = fixture.NewContext())
         {
-            var act = () => new SaveActivityTypeDraftCommandHandler(db).Handle(
+            var act = () => new SaveActivityTypeDraftCommandHandler(db, FakeUserDirectory.Empty).Handle(
                 Command(fixture.ExistingTypeId, Fixture.ExistingKey, "Renamed by a refused save", ActivityScope.Global, null, " OSCE ", defaults, TestPrincipals.Administrator()),
                 CancellationToken.None);
 
@@ -144,7 +145,7 @@ public sealed class SaveActivityTypeDraftWbaToolKeyTests
 
         await using (var db = fixture.NewContext())
         {
-            var act = () => new SaveActivityTypeDraftCommandHandler(db).Handle(
+            var act = () => new SaveActivityTypeDraftCommandHandler(db, FakeUserDirectory.Empty).Handle(
                 Command(null, "viva_local", "Viva", ActivityScope.Global, null, "viva", defaults, TestPrincipals.Administrator()),
                 CancellationToken.None);
 
@@ -170,9 +171,9 @@ public sealed class SaveActivityTypeDraftWbaToolKeyTests
         ActivityTypeEditorDto loaded;
         await using (var db = fixture.NewContext())
         {
-            loaded = await new GetActivityTypeEditorQueryHandler(db).Handle(
+            loaded = (await new GetActivityTypeEditorQueryHandler(db, FakeUserDirectory.Empty).Handle(
                 new GetActivityTypeEditorQuery(fixture.ExistingTypeId, TestPrincipals.Administrator()),
-                CancellationToken.None);
+                CancellationToken.None))!;
         }
 
         loaded.WbaToolKey.Should().Be("cbd", "guard: the editor DTO must carry the key for the round trip to mean anything");
@@ -180,7 +181,7 @@ public sealed class SaveActivityTypeDraftWbaToolKeyTests
 
         await using (var db = fixture.NewContext())
         {
-            await new SaveActivityTypeDraftCommandHandler(db).Handle(
+            await new SaveActivityTypeDraftCommandHandler(db, FakeUserDirectory.Empty).Handle(
                 new SaveActivityTypeDraftCommand(
                     loaded.Id,
                     loaded.Key,
@@ -220,7 +221,7 @@ public sealed class SaveActivityTypeDraftWbaToolKeyTests
 
         await using (var db = fixture.NewContext())
         {
-            var act = () => new SaveActivityTypeDraftCommandHandler(db).Handle(
+            var act = () => new SaveActivityTypeDraftCommandHandler(db, FakeUserDirectory.Empty).Handle(
                 Command(null, "squatter", "Squatter", ActivityScope.Global, null, "mini_cex", defaults, TestPrincipals.InstitutionalAdmin(fixture.InstitutionId)),
                 CancellationToken.None);
 
@@ -247,7 +248,7 @@ public sealed class SaveActivityTypeDraftWbaToolKeyTests
 
         await using (var db = fixture.NewContext())
         {
-            await new SaveActivityTypeDraftCommandHandler(db).Handle(
+            await new SaveActivityTypeDraftCommandHandler(db, FakeUserDirectory.Empty).Handle(
                 Command(null, "local_mini_cex", "Our Mini-CEX", ActivityScope.Institution, fixture.InstitutionId, "Mini_Cex", defaults, TestPrincipals.InstitutionalAdmin(fixture.InstitutionId)),
                 CancellationToken.None);
         }
@@ -268,7 +269,7 @@ public sealed class SaveActivityTypeDraftWbaToolKeyTests
         var defaults = await NewTypeDefaultsAsync(fixture);
 
         await using var db = fixture.NewContext();
-        var act = () => new SaveActivityTypeDraftCommandHandler(db).Handle(
+        var act = () => new SaveActivityTypeDraftCommandHandler(db, FakeUserDirectory.Empty).Handle(
             Command(null, "probe", "Probe", ActivityScope.Global, null, "not_an_instrument", defaults, TestPrincipals.InstitutionalAdmin(fixture.InstitutionId)),
             CancellationToken.None);
 
@@ -286,7 +287,7 @@ public sealed class SaveActivityTypeDraftWbaToolKeyTests
 
         await using (var db = fixture.NewContext())
         {
-            var act = () => new SaveActivityTypeDraftCommandHandler(db).Handle(
+            var act = () => new SaveActivityTypeDraftCommandHandler(db, FakeUserDirectory.Empty).Handle(
                 Command(fixture.ExistingTypeId, Fixture.ExistingKey, "Renamed by an IA", ActivityScope.Global, null, null, defaults, TestPrincipals.InstitutionalAdmin(fixture.InstitutionId)),
                 CancellationToken.None);
 
@@ -312,7 +313,7 @@ public sealed class SaveActivityTypeDraftWbaToolKeyTests
 
         await using (var db = fixture.NewContext())
         {
-            var act = () => new SaveActivityTypeDraftCommandHandler(db).Handle(
+            var act = () => new SaveActivityTypeDraftCommandHandler(db, FakeUserDirectory.Empty).Handle(
                 new SaveActivityTypeDraftCommand(
                     fixture.ExistingTypeId,
                     "renamed_key",
@@ -330,7 +331,7 @@ public sealed class SaveActivityTypeDraftWbaToolKeyTests
                     TestPrincipals.Administrator()),
                 CancellationToken.None);
 
-            await act.Should().ThrowAsync<WorkflowParseException>();
+            await act.Should().ThrowAsync<ActivityTypeDraftRefusedException>("every tab at once (T398, P2)");
 
             db.ChangeTracker.Entries()
                 .Where(entry => entry.State == EntityState.Modified)
@@ -377,7 +378,7 @@ public sealed class SaveActivityTypeDraftWbaToolKeyTests
 
         await using (var db = fixture.NewContext())
         {
-            var act = () => new SaveActivityTypeDraftCommandHandler(db).Handle(
+            var act = () => new SaveActivityTypeDraftCommandHandler(db, FakeUserDirectory.Empty).Handle(
                 new SaveActivityTypeDraftCommand(
                     fixture.ExistingTypeId,
                     Fixture.ExistingKey,
@@ -430,9 +431,9 @@ public sealed class SaveActivityTypeDraftWbaToolKeyTests
     private static async Task<ActivityTypeEditorDto> NewTypeDefaultsAsync(Fixture fixture)
     {
         await using var db = fixture.NewContext();
-        return await new GetActivityTypeEditorQueryHandler(db).Handle(
+        return (await new GetActivityTypeEditorQueryHandler(db, FakeUserDirectory.Empty).Handle(
             new GetActivityTypeEditorQuery(null, TestPrincipals.Administrator()),
-            CancellationToken.None);
+            CancellationToken.None))!;
     }
 
     private static SaveActivityTypeDraftCommand Command(
@@ -508,9 +509,9 @@ public sealed class SaveActivityTypeDraftWbaToolKeyTests
 
             if (publishExistingType || stageExistingDraft)
             {
-                var defaults = await new GetActivityTypeEditorQueryHandler(db).Handle(
+                var defaults = (await new GetActivityTypeEditorQueryHandler(db, FakeUserDirectory.Empty).Handle(
                     new GetActivityTypeEditorQuery(null, TestPrincipals.Administrator()),
-                    CancellationToken.None);
+                    CancellationToken.None))!;
                 existing.SaveDraft(defaults.DraftSchemaJson, defaults.DraftWorkflowJson, defaults.DraftCreditRulesJson, defaults.DraftDisplayFieldsJson, "seed-system");
 
                 if (publishExistingType)

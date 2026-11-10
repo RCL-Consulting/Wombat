@@ -100,9 +100,9 @@ public interface IActivityReferenceDataService
 
     /// <summary>
     /// Entrustment scales available to bind to a Scale field. Used by the activity-type builder's
-    /// Scale picker. Value is the scale id; Label is the scale name.
+    /// Scale picker: each scale's id (the stored <c>scale_key</c>), its seed key, and its name (T398, S12).
     /// </summary>
-    Task<IReadOnlyList<ActivityCatalogueOption>> GetEntrustmentScaleOptionsAsync(
+    Task<IReadOnlyList<EntrustmentScaleOption>> GetEntrustmentScaleOptionsAsync(
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -127,6 +127,17 @@ public interface IActivityReferenceDataService
 public sealed record ActivityCatalogueOption(
     string Value,
     string Label);
+
+/// <summary>
+/// An entrustment scale the builder's Scale picker offers (T398, flow 17, S12, T271 item 2).
+/// </summary>
+/// <param name="Value">The scale's id, as a stored <c>scale_key</c> written by the picker reads it.</param>
+/// <param name="SeedKey">
+/// The scale's seed key ("seed:cpsa:scale:v11.1"), or null for a scale an administrator made: a seeded form binds its
+/// scale by this key, so the builder resolves such a binding to the scale's name rather than print the key.
+/// </param>
+/// <param name="Name">The scale's name, as a person reads it.</param>
+public sealed record EntrustmentScaleOption(string Value, string? SeedKey, string Name);
 
 /// <summary>
 /// What an EPA picker knows about the field it is rendering, so the option list offers what the write path

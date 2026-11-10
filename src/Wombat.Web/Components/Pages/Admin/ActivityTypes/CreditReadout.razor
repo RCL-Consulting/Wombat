@@ -1,0 +1,32 @@
+@*
+  The credit rules in words (T398, flow 17, lane B; Q2; boards R2-B05, R2-D03, R3-D04; build-contracts § 0 and § 2):
+  "Credits nothing." and its line, or one sentence a directive, each the editor query's (ActivityTypeCreditReadDto, lane
+  A). The builder places it under its panel's h2 "Credit"; the boards draw no heading of its own, so HeadingLevel is kept
+  for the contract and draws nothing here.
+*@
+<div class="credit-readout">
+  @if (Read.CreditsNothing || Read.Sentences.Count == 0)
+  {
+    <p>@ActivityTypeReadWords.CreditsNothing</p>
+    <p class="muted">@ActivityTypeReadWords.CreditsNothingLine</p>
+  }
+  else
+  {
+    @foreach (var sentence in Read.Sentences)
+    {
+      <p>@sentence</p>
+    }
+  }
+</div>
+
+@code {
+  [Parameter, EditorRequired]
+  public ActivityTypeCreditReadDto Read { get; set; } = default!;
+
+  /// <summary>
+  /// The level of the component's own headings, so the builder places it under its panel's h2. The boards draw none for
+  /// the credit rules (the panel's h2 "Credit" heads them), so nothing reads it yet.
+  /// </summary>
+  [Parameter]
+  public int HeadingLevel { get; set; } = 3;
+}

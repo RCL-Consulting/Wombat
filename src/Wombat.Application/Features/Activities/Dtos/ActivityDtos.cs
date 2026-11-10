@@ -1,3 +1,4 @@
+using Wombat.Application.Features.Activities.Services;
 using Wombat.Application.Features.Curricula.Quota;
 using Wombat.Application.Features.Programme.Commands.SendActivityReminder;
 using Wombat.Application.Features.Programme.Waiting;
@@ -50,7 +51,44 @@ public enum ActivityTypeShape
 /// </summary>
 public sealed record ActivityTypeAdminListDto(
     IReadOnlyList<ActivityTypeAdminListItemDto> Items,
-    bool CanCreate);
+    bool CanCreate)
+{
+    /// <summary>
+    /// The caller's College by name, for a College admin (T398, flow 17, N12: the subtitle "‹College name› has no
+    /// speciality yet, so there are no types for you to change."); null for everyone else. Filled by lane B.
+    /// </summary>
+    public string? CallerCollegeName { get; init; }
+
+    /// <summary>
+    /// False only for a College admin whose College holds no speciality (T398, N12); true for everyone else. Filled by
+    /// lane B.
+    /// </summary>
+    public bool CallerCollegeHasSpeciality { get; init; } = true;
+}
+
+/// <summary>Who owns an activity type, in kind (T398, flow 17, R2-0-spec-2): the platform, a College or an institution.</summary>
+public enum ActivityTypeOwnerKind
+{
+    /// <summary>A Global type: the platform's, written by an Administrator.</summary>
+    Platform,
+
+    /// <summary>A Speciality or Sub-speciality type: the College's that owns the discipline (T091).</summary>
+    College,
+
+    /// <summary>An Institution type: its institution's.</summary>
+    Institution
+}
+
+/// <summary>
+/// Whose type it is, as the list's Set by cell and the builder's owner line name it (T398, flow 17, R2-A01, R3-C07):
+/// <c>ActivityTypeAdminScope.OwnerOf</c>, so the two name an owner alike.
+/// </summary>
+/// <param name="Kind">Platform for Global, College for Speciality and Sub-speciality, Institution for Institution.</param>
+/// <param name="Name">
+/// The owner by name: the owning College's short code ("CPSA", "DEMO-C"), the institution's name; null for the platform,
+/// and for a target that no longer exists.
+/// </param>
+public sealed record ActivityTypeOwnerDto(ActivityTypeOwnerKind Kind, string? Name);
 
 /// <param name="CanWrite">
 /// Whether the caller may save, discard and publish this type: <c>ActivityTypeAdminScope.MayWrite</c>, the rule the
@@ -74,7 +112,23 @@ public sealed record ActivityTypeAdminListItemDto(
     bool HasDraft,
     DateTime? DraftUpdatedOn,
     bool CanWrite,
-    string? ScopeTargetName);
+    string? ScopeTargetName)
+{
+    /// <summary>Whose type it is (T398, flow 17, Q7, Q12): <c>ActivityTypeAdminScope.OwnerOf</c>. Filled by lane B.</summary>
+    public ActivityTypeOwnerDto? Owner { get; init; }
+
+    /// <summary>
+    /// Whether only a release of Wombat writes the type (T162; T398, Q9, T334): <c>CanWrite</c> is false on it for
+    /// everyone. Filled by lane B.
+    /// </summary>
+    public bool SystemManaged { get; init; }
+
+    /// <summary>
+    /// The release that writes a system-managed type ("the MSF release", <c>SystemManagedReleases.WrittenBy</c>); null for
+    /// any other. Filled by lane B.
+    /// </summary>
+    public string? WrittenBy { get; init; }
+}
 
 /// <summary>
 /// One scope a caller may put an activity type in, with every target they may put it at (T300): none for Global, their
@@ -86,12 +140,26 @@ public sealed record ActivityTypeScopeChoiceDto(
     IReadOnlyList<ActivityTypeScopeTargetDto> Targets);
 
 /// <summary>An institution, a speciality, or a sub-speciality ("Paediatrics / Neonatology") a type may be scoped to.</summary>
-public sealed record ActivityTypeScopeTargetDto(int Id, string Name);
+public sealed record ActivityTypeScopeTargetDto(int Id, string Name)
+{
+    /// <summary>
+    /// The short code of the College that owns a speciality or sub-speciality target ("CPSA"); null for an institution.
+    /// So the builder's owner line names the College of a scope chosen on the page, as it names a stored one (T398, the
+    /// fix pass, pages review N2: an Administrator who chose Speciality on a new type read "Its College").
+    /// </summary>
+    public string? OwningCollegeShortCode { get; init; }
+}
 
 public sealed record ActivityTypeVersionDto(
     int Version,
     DateTime PublishedOn,
-    string PublishedByUserId);
+    string PublishedByUserId)
+{
+    /// <summary>
+    /// The publisher by display name (T398, flow 17, Q3, T16); "Wombat's catalogue" for the seeder. Filled by lane A.
+    /// </summary>
+    public string? PublishedByName { get; init; }
+}
 
 public sealed record ActivityTypeEditorDto(
     int Id,
@@ -126,7 +194,85 @@ public sealed record ActivityTypeEditorDto(
     // CanWrite. A new type starts in the first of them.
     IReadOnlyList<ActivityTypeScopeChoiceDto> WritableScopes,
     // The stored scope's target as a reader sees it ("Kalafong", "Paediatrics / Neonatology"), or null for Global.
-    string? ScopeTargetName);
+    string? ScopeTargetName)
+{
+    // T398 (flow 17, build-contracts § 0): the builder's members, each with a default so no existing constructor call
+    // changes. Filled by lane A on the builder's path only (ForBuilder true); the filing page reads none of them.
+
+    /// <summary>Whose type it is: <c>ActivityTypeAdminScope.OwnerOf</c>, as the list names it (Q12, R3-C07).</summary>
+    public ActivityTypeOwnerDto? Owner { get; init; }
+
+    /// <summary>Whether only a release writes the type (Q9, T334); <c>CanWrite</c> is false on it for everyone.</summary>
+    public bool SystemManaged { get; init; }
+
+    /// <summary>The release that writes a system-managed type ("the MSF release"); null for any other.</summary>
+    public string? WrittenBy { get; init; }
+
+    /// <summary>
+    /// Who saved the draft, by display name (Q3: "Saved 2026-11-05 by Nolwazi Mbatha"); null without a draft, and null to a
+    /// caller the type's scope does not admit (T398 fix, code review S-2).
+    /// </summary>
+    public string? DraftSavedByName { get; init; }
+
+    /// <summary>
+    /// Whether the caller may discard the draft: a writer's draft, or the draft a system-managed type holds from before
+    /// T334, to whoever its scope admits (T398, the operator's F1). False without a draft.
+    /// </summary>
+    public bool CanDiscardDraft { get; init; }
+
+    /// <summary>
+    /// Whether the seed refresher still owns the type (N11, T18): its owner and its newest version's publisher are both
+    /// the seeder, so a save here hands it over.
+    /// </summary>
+    public bool IsSeedOwned { get; init; }
+
+    /// <summary>
+    /// The EPAs the preview's EPA field offers (S8, J11), labelled as the filing page labels them; null when the form
+    /// loads its own.
+    /// </summary>
+    public IReadOnlyList<ActivityCatalogueOption>? PreviewEpaOptions { get; init; }
+
+    /// <summary>The workflow in words (Q2): of the saved draft, or of the published version for a reader.</summary>
+    public ActivityTypeWorkflowReadDto? WorkflowRead { get; init; }
+
+    /// <summary>The credit rules in words (Q2): of the saved draft, or of the published version for a reader.</summary>
+    public ActivityTypeCreditReadDto? CreditRead { get; init; }
+}
+
+/// <summary>
+/// A workflow in words (T398, flow 17, Q2, S9, J12): computed by the editor query, rendered by <c>WorkflowReadout</c>.
+/// A page never parses a DSL.
+/// </summary>
+public sealed record ActivityTypeWorkflowReadDto(
+    IReadOnlyList<ActivityTypeStateReadDto> States,
+    IReadOnlyList<ActivityTypeMoveReadDto> Moves);
+
+/// <summary>One state, by label: whether a new activity starts in it, and whether it is final.</summary>
+public sealed record ActivityTypeStateReadDto(string Key, string Label, bool IsInitial, bool IsTerminal);
+
+/// <summary>
+/// One move in words (Q2): its label, the states it leaves from and goes to by label, who may make it
+/// (<c>ActorRuleWords</c>), what it checks ("The whole form"), and whether it asks for a note.
+/// </summary>
+public sealed record ActivityTypeMoveReadDto(
+    string Key,
+    string Label,
+    IReadOnlyList<string> FromLabels,
+    string ToLabel,
+    string Who,
+    string Checks,
+    bool RequiresNote)
+{
+    /// <summary>
+    /// The actor rule as written, set only when it could not be worded; the page shows it in <c>&lt;code&gt;</c>.
+    /// </summary>
+    public string? WhoAsWritten { get; init; }
+}
+
+/// <summary>
+/// The credit rules in words (Q2): "Credits nothing." when there is no directive, else one sentence a directive.
+/// </summary>
+public sealed record ActivityTypeCreditReadDto(bool CreditsNothing, IReadOnlyList<string> Sentences);
 
 /// <summary>
 /// One recorded workflow move. <paramref name="CreditedItemCount" /> is the T108 signal: <c>null</c>

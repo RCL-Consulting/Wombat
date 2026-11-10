@@ -164,19 +164,45 @@ public static class ActorFieldRules
     ///   <item>inline <c>options</c> or a <c>catalogue</c> on a <c>user</c> field — the people a user field offers
     ///   come from the directory, which is also what the server checks.</item>
     /// </list>
+    /// <para>
+    /// Each problem is one <see cref="RefusalPlace" /> (T398, flow 17, Q6, J2), so the builder words it at its row: a
+    /// duplicate section key at the section; a duplicate field key at every field holding it; a user field's options at
+    /// the field; a <c>field:</c> rule at the move that declares it (the Workflow tab), or, for a section's or a field's
+    /// <c>editable_by</c>, at that section or field (the Form tab), and for a state's at the Workflow tab alone. The
+    /// refusal's message is the problems' sentences joined, word for word as before.
+    /// </para>
     /// </remarks>
     public static void EnsurePublishable(FormSchema schema, Workflow.Workflow workflow)
+    {
+        var places = PublishProblems(schema, workflow);
+        if (places.Count > 0)
+        {
+            throw new SchemaParseException(string.Join(" ", places.Select(place => place.Sentence)), places);
+        }
+    }
+
+    /// <summary>
+    /// Every problem <see cref="EnsurePublishable" /> refuses, each at its place, one place a distinct sentence in the order
+    /// the check finds them; empty when there is none (T398, Q6).
+    /// </summary>
+    public static IReadOnlyList<RefusalPlace> PublishProblems(FormSchema schema, Workflow.Workflow workflow)
     {
         ArgumentNullException.ThrowIfNull(schema);
         ArgumentNullException.ThrowIfNull(workflow);
 
-        var problems = new List<string>();
+        var problems = new List<RefusalPlace>();
 
         foreach (var duplicate in schema.Sections
                      .GroupBy(section => section.Key, StringComparer.Ordinal)
                      .Where(group => group.Count() > 1))
         {
-            problems.Add($"Section key '{duplicate.Key}' is used by {duplicate.Count()} sections; give each section its own key.");
+            problems.Add(new RefusalPlace(
+                RefusalTab.Form,
+                RefusalKind.DuplicateSectionKey,
+                $"Section key '{duplicate.Key}' is used by {duplicate.Count()} sections; give each section its own key.")
+            {
+                SectionKey = duplicate.Key
+            });
         }
 
         var fieldsByKey = schema.Sections
@@ -186,44 +212,82 @@ public static class ActorFieldRules
 
         foreach (var (key, entries) in fieldsByKey.Where(pair => pair.Value.Count > 1))
         {
-            problems.Add(
+            problems.Add(new RefusalPlace(
+                RefusalTab.Form,
+                RefusalKind.DuplicateFieldKey,
                 $"Field key '{key}' is used by {entries.Count} fields ({string.Join(", ", entries.Select(entry => $"'{entry.Field.Label}' in '{entry.Section.Title}'"))}); " +
-                "give each field its own key.");
+                "give each field its own key.")
+            {
+                // Every holder's row is a place (R3-C14, C15): one entry each, the same key; the first's section.
+                SectionKey = entries[0].Section.Key,
+                FieldKeys = entries.Select(entry => entry.Field.Key).ToList()
+            });
         }
 
-        foreach (var (location, fieldName) in FieldRuleLocations(schema, workflow))
+        foreach (var (location, fieldName, at) in FieldRuleLocations(schema, workflow))
         {
             if (!fieldsByKey.TryGetValue(fieldName, out var entries))
             {
-                problems.Add($"{location} names 'field:{fieldName}', but the form has no field '{fieldName}'; add a User field with that key on the Form tab.");
+                problems.Add(at(new RefusalPlace(
+                    RefusalTab.Workflow,
+                    RefusalKind.FieldRuleNamesNoField,
+                    $"{location} names 'field:{fieldName}', but the form has no field '{fieldName}'; add a User field with that key on the Form tab.")
+                {
+                    NamedField = fieldName
+                }));
             }
             else if (entries.Any(entry => entry.Field.Type != FieldType.User))
             {
-                problems.Add($"{location} names 'field:{fieldName}', but '{fieldName}' is not a User field; a field: rule must name a User field.");
+                problems.Add(at(new RefusalPlace(
+                    RefusalTab.Workflow,
+                    RefusalKind.FieldRuleNotUserField,
+                    $"{location} names 'field:{fieldName}', but '{fieldName}' is not a User field; a field: rule must name a User field.")
+                {
+                    NamedField = fieldName
+                }));
             }
         }
 
-        foreach (var field in schema.Sections.SelectMany(section => section.Fields).Where(field => field.Type == FieldType.User))
+        foreach (var section in schema.Sections)
         {
-            if (field.Options.Count > 0 || !string.IsNullOrWhiteSpace(field.CatalogueKey))
+            foreach (var field in section.Fields.Where(field => field.Type == FieldType.User))
             {
-                problems.Add($"User field '{field.Key}' declares its own options; the people it offers come from the directory, so remove them.");
+                if (field.Options.Count > 0 || !string.IsNullOrWhiteSpace(field.CatalogueKey))
+                {
+                    problems.Add(new RefusalPlace(
+                        RefusalTab.Form,
+                        RefusalKind.UserFieldHasOptions,
+                        $"User field '{field.Key}' declares its own options; the people it offers come from the directory, so remove them.")
+                    {
+                        SectionKey = section.Key,
+                        FieldKeys = [field.Key]
+                    });
+                }
             }
         }
 
-        if (problems.Count > 0)
-        {
-            throw new SchemaParseException(string.Join(" ", problems.Distinct(StringComparer.Ordinal)));
-        }
+        // One place a sentence, as the message has always said each problem once (a key declared twice with options
+        // in both reads once).
+        return problems
+            .GroupBy(place => place.Sentence, StringComparer.Ordinal)
+            .Select(group => group.First())
+            .ToList();
     }
 
-    private static IEnumerable<(string Location, string FieldName)> FieldRuleLocations(FormSchema schema, Workflow.Workflow workflow)
+    /// <summary>
+    /// Every <c>field:</c> rule's field, with the words the refusal opens with and where the rule is declared: a move's
+    /// at that move (Workflow), a state's at the Workflow tab, a section's or a field's at that row (Form).
+    /// </summary>
+    private static IEnumerable<(string Location, string FieldName, Func<RefusalPlace, RefusalPlace> At)> FieldRuleLocations(
+        FormSchema schema,
+        Workflow.Workflow workflow)
     {
         foreach (var transition in workflow.Transitions)
         {
             foreach (var name in FieldNamesOf(transition.Actor))
             {
-                yield return ($"Transition '{transition.Key}' actor", name);
+                var moveKey = transition.Key;
+                yield return ($"Transition '{transition.Key}' actor", name, place => place with { MoveKey = moveKey });
             }
         }
 
@@ -231,22 +295,26 @@ public static class ActorFieldRules
         {
             foreach (var name in FieldNamesOf(state.EditableBy))
             {
-                yield return ($"State '{state.Key}' editable_by", name);
+                yield return ($"State '{state.Key}' editable_by", name, place => place);
             }
         }
 
         foreach (var section in schema.Sections)
         {
+            var sectionKey = section.Key;
             foreach (var name in FieldNamesOf(section.EditableBy))
             {
-                yield return ($"Section '{section.Key}' editable_by", name);
+                yield return ($"Section '{section.Key}' editable_by", name,
+                    place => place with { Tab = RefusalTab.Form, SectionKey = sectionKey });
             }
 
             foreach (var field in section.Fields)
             {
+                var fieldKey = field.Key;
                 foreach (var name in FieldNamesOf(field.EditableBy))
                 {
-                    yield return ($"Field '{field.Key}' editable_by", name);
+                    yield return ($"Field '{field.Key}' editable_by", name,
+                        place => place with { Tab = RefusalTab.Form, SectionKey = sectionKey, FieldKeys = [fieldKey] });
                 }
             }
         }

@@ -10,7 +10,15 @@ namespace Wombat.Web.Components.Shared.Activities;
 /// (2026-09-29).". Null when the refusal's words do not name the field (the tool gate's "and 2 more"), so the field is
 /// marked but carries no message of its own.
 /// </param>
-public sealed record RefusalLine(string? FieldKey, string Text, string? FieldMessage);
+public sealed record RefusalLine(string? FieldKey, string Text, string? FieldMessage)
+{
+    /// <summary>
+    /// The id of the control the line is about, for a page that passes <see cref="RefusalSummary.LineAction" /> (T398, flow
+    /// 17, S1): the line links there and its press runs the page's action. Null on flow 03's pages, which link by
+    /// <see cref="FieldKey" />.
+    /// </summary>
+    public string? TargetId { get; init; }
+}
 
 /// <summary>
 /// A refusal of an activity form's data, split into one line per field (T342, C8).

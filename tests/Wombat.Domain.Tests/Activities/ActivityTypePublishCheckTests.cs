@@ -128,7 +128,7 @@ public sealed class ActivityTypePublishCheckTests
         var type = TypeWithExistingDraft();
         var before = Snapshot.Of(type);
 
-        var exception = Assert.Throws<SchemaParseException>(
+        var exception = Assert.Throws<ActivityTypeDraftRefusedException>(
             () => type.SaveDraft(schemaJson, workflowJson, CreditRulesJson, "[\"overall\"]", "someone-else"));
 
         Assert.Contains(expectedMessage, exception.Message, StringComparison.Ordinal);
@@ -149,7 +149,7 @@ public sealed class ActivityTypePublishCheckTests
         var type = PublishedType();
         var before = Snapshot.Of(type);
 
-        var exception = Assert.Throws<SchemaParseException>(
+        var exception = Assert.Throws<ActivityTypeDraftRefusedException>(
             () => type.SaveDraft(schemaJson, workflowJson, CreditRulesJson, DisplayFieldsJson, Actor));
 
         Assert.Contains(expectedMessage, exception.Message, StringComparison.Ordinal);
@@ -181,7 +181,7 @@ public sealed class ActivityTypePublishCheckTests
         StageWithoutTheCheck(type, schemaJson, workflowJson);
         var before = Snapshot.Of(type);
 
-        var exception = Assert.Throws<SchemaParseException>(() => type.PublishDraft("someone-else"));
+        var exception = Assert.Throws<ActivityTypeDraftRefusedException>(() => type.PublishDraft("someone-else"));
 
         Assert.Contains(expectedMessage, exception.Message, StringComparison.Ordinal);
         Assert.Equal(before, Snapshot.Of(type));
@@ -218,7 +218,7 @@ public sealed class ActivityTypePublishCheckTests
         StageWithoutTheCheck(type, TitleOnlySchemaJson, NomineeWorkflowJson);
         var versionBefore = type.Version;
 
-        Assert.Throws<SchemaParseException>(() => type.PublishDraft(Actor));
+        Assert.Throws<ActivityTypeDraftRefusedException>(() => type.PublishDraft(Actor));
 
         type.SaveDraft(NomineeSchemaJson, NomineeWorkflowJson, CreditRulesJson, DisplayFieldsJson, Actor);
         type.PublishDraft(Actor);

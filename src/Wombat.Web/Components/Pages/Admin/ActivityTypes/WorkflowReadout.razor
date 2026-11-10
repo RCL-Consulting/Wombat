@@ -1,0 +1,60 @@
+@*
+  The workflow in words (T398, flow 17, lane B; Q2; boards R2-B04, R2-D02, R3-D01, R3-D05; build-contracts § 0 and § 2):
+  the states on one line, the initial one "where a new one starts" and a terminal one "final", then "Moves, as saved",
+  each move by its label (the row header) with where it leaves from and goes to, who moves it, what it checks and whether
+  it asks for a note. The words are the editor query's (ActivityTypeWorkflowReadDto, lane A); a move whose actor rule
+  could not be worded shows the rule as written, in <code>. The builder places it under its panel's h2 "Workflow"; the
+  boards draw no heading of its own, so HeadingLevel is kept for the contract and draws nothing here.
+*@
+<div class="workflow-readout">
+  @if (Read.States.Count > 0)
+  {
+    <p>@ActivityTypeReadWords.States(Read.States)</p>
+  }
+  @if (Read.Moves.Count > 0)
+  {
+    <DataTable TItem="ActivityTypeMoveReadDto" Items="Read.Moves" StackWide="true" Caption="@ActivityTypeReadWords.MovesCaption">
+      <HeaderRow>
+        <tr role="row">
+          <th scope="col" role="columnheader">@ActivityTypeReadWords.MoveColumn</th>
+          <th scope="col" role="columnheader">@ActivityTypeReadWords.FromColumn</th>
+          <th scope="col" role="columnheader">@ActivityTypeReadWords.ToColumn</th>
+          <th scope="col" role="columnheader">@ActivityTypeReadWords.WhoColumn</th>
+          <th scope="col" role="columnheader">@ActivityTypeReadWords.ChecksColumn</th>
+          <th scope="col" role="columnheader">@ActivityTypeReadWords.NoteColumn</th>
+        </tr>
+      </HeaderRow>
+      <Row Context="move">
+        <tr role="row" @key="move.Key">
+          <th scope="row" role="rowheader">@move.Label</th>
+          <td role="cell" data-label="@ActivityTypeReadWords.FromColumn">@ActivityTypeReadWords.From(move.FromLabels)</td>
+          <td role="cell" data-label="@ActivityTypeReadWords.ToColumn">@move.ToLabel</td>
+          <td role="cell" data-label="@ActivityTypeReadWords.WhoColumn">
+            @if (move.WhoAsWritten is { } asWritten)
+            {
+              <code>@asWritten</code>
+            }
+            else
+            {
+              @move.Who
+            }
+          </td>
+          <td role="cell" data-label="@ActivityTypeReadWords.ChecksColumn">@move.Checks</td>
+          <td role="cell" data-label="@ActivityTypeReadWords.NoteColumn">@ActivityTypeReadWords.Note(move.RequiresNote)</td>
+        </tr>
+      </Row>
+    </DataTable>
+  }
+</div>
+
+@code {
+  [Parameter, EditorRequired]
+  public ActivityTypeWorkflowReadDto Read { get; set; } = default!;
+
+  /// <summary>
+  /// The level of the component's own headings, so the builder places it under its panel's h2. The boards draw none for
+  /// the workflow (the panel's h2 "Workflow" heads it; the table is captioned), so nothing reads it yet.
+  /// </summary>
+  [Parameter]
+  public int HeadingLevel { get; set; } = 3;
+}

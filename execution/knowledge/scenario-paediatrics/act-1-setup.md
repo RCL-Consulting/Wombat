@@ -742,27 +742,33 @@ Gap: none (T291 item 8 / F-1.23c no longer occurs: no Create institution form)
 Each activity type bundles three things: a form schema, a workflow and credit rules (CUSTOMIZATION.md). The College's
 instruments are seeded as the twelve `*_cpsa` types, scoped to the Paediatrics speciality. Prof Mbatha reads them and
 changes none: they open read-only to her, because the College writes them (T300, D52; Dr Kruger does so in Step
-6.14a). KGK's own type is built in the builder, whose tabs are Metadata, Form, Workflow and Credit.
+6.14a). KGK's own type is built in the builder, whose tabs are Details, Form, Workflow, Credit and Publish; a reader's
+are the first four (T398, Q1).
 
 ### Step 1.24 — The twelve CPSA instruments are published
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/activity-types
-Do: Open Activity types, search `cpsa` and read the list. Then clear the search.
-Expect: The search leaves the 12 rows in the table below. Each reads Scope `Speciality · Paediatrics`, Published `v1`,
-  Draft `None` and Active, and each offers View, named for its row ("View Mini-CEX (Paediatrics)"), not Edit: the
-  College's instruments are the College's, and she may not write them (T300, D52; T239 names each row's action). With
-  the search cleared there are 22 rows: these twelve and the ten Demo types, which also offer View and whose Scope
-  names the Demo speciality, `Speciality · General Medicine` (T291 item 5). New activity type is still offered, since
-  she may create a type in her own institution.
+Do: Open Activity types, search `cpsa`, press Show and read the list. Then press Clear.
+Expect: The page is subtitled "The forms registrars file and assessors complete. You can change the types you set; the
+  College sets its instruments." (T398, Q12). The search applies only on Show (Q7): "12 of 22 activity types match
+  “cpsa”." above the table takes the focus, and the table holds the twelve. Each is set by the College, its Set by
+  reading "CPSA" over "Speciality · Paediatrics", Published "Version 1", Draft "None" and Status Active, and each offers
+  View, named for its row ("View Mini-CEX (Paediatrics)"), not Edit: the College's instruments are the College's, and
+  she may not write them (T300, D52; T239 names each row's action). Clear empties the search and puts the focus back in
+  it: "22 activity types." and 22 rows, these twelve and the ten Demo types, by name. The Demo types also offer View,
+  and their Set by reads the Demo College's short code, "DEMO-C", over "Speciality · General Medicine" (T291 item 5).
+  New activity type is still offered, since she may create a type in her own institution.
   Two of the twelve are system-managed (T162, T164): `msf_cpsa` and `learner_feedback_cpsa`. A released MSF or
-  learner-feedback campaign writes them, and nobody is offered them when filing an activity.
+  learner-feedback campaign writes them, and nobody is offered them when filing an activity. Each row says so between
+  its name and its key: "Written by the MSF release." and "Written by the learner-feedback release." (Q9).
 Actual (2026-11-05, T394 replay, wombat_scenario_t394): As expected: `cpsa` leaves the 12 rows of the table, each
   "Speciality · Paediatrics", v1, None, Active and View, named for its row ("View Mini-CEX (Paediatrics)"); cleared,
   22 rows, all View and none Edit, the ten Demo rows "Speciality · General Medicine"; New activity type offered. Ids:
   mini_cex_cpsa 11, dops_cpsa 12, cbd_cpsa 13, direct_observation_cpsa 14, cca_cpsa 15, rca_cpsa 16,
   chart_stimulated_recall_cpsa 17, reflective_exercise_cpsa 18, clinical_audit_cpsa 19, portfolio_review_cpsa 20,
   msf_cpsa 21, learner_feedback_cpsa 22.
-Gap: none
+Gap: none. The T394 Actual above predates T398 (the search by Show and its count line, Set by in words, Version 1, the
+  release lines); the next replay re-reads the step.
 
 The twelve instruments come from `ActivityTypeSeedCatalogue`, which sets each one's key, name and instrument. No two
 seeded types share a name: the ten Demo types are named without "(Paediatrics)".
@@ -786,26 +792,39 @@ seeded types share a name: the ten Demo types are named without "(Paediatrics)".
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/activity-types/{ActivityTypeId:int}
 Do: Open `Mini-CEX (Paediatrics)` from its View and read each tab, opening the `overall_level` field to read its
-  settings. Change nothing, save nothing, and leave by Back to list.
+  settings. Change nothing, save nothing, and leave by the trail's Activity types.
 Expect: The page is headed "Mini-CEX (Paediatrics)", not "Edit …", and the browser tab reads "Mini-CEX (Paediatrics) ·
-  Wombat" (T190). It opens on the Form tab, under a standing information notice that is there on every visit (no alert
-  role): "Set by the College that owns Paediatrics. You can read this activity type here, but not change it." (T300;
-  the wording is a product decision.)
-  - **Form settings** read, as text, Encounter date field `observed_on`, Entrustment rating field `overall_level` and
-    EPA field `epa_id`.
+  Wombat" (T190). Under the subtitle "What a registrar fills in, who moves it on, and what it counts towards." its
+  owner line reads "CPSA · Speciality · Paediatrics" (T398, Q12). It opens on the Form tab, one of four (Details, Form,
+  Workflow, Credit), under a standing information notice that is there on every visit (no alert role): "Set by the
+  College that owns Paediatrics. You can read this activity type here, but not change it." (T300; the wording is a
+  product decision.) The Versions strip reads Published "Version 1, `D`, Wombat's catalogue" and Draft "None" (Q3).
+  - **Form settings** read, as text and by label, Encounter date field "Date observed (observed_on)", Entrustment rating
+    field "Supervision required for this encounter (overall_level)" and EPA field "EPA (epa_id)" (T398, T19).
   - **Sections.** Request holds the EPA, the Assessor (a User field), the date observed, the clinical setting, the
     presenting problem and the case complexity. Entrustment holds the `overall_level` rating. Feedback holds three
-    long-text fields. Each section and field offers View, which shows its settings as text; `overall_level`'s
-    Entrustment scale reads `CPSA Paediatric Entrustment Scale v11.1`, the ladder its seed key binds (T271).
-  - **Metadata**, as text: Key `mini_cex_cpsa`, Name, Scope `Speciality · Paediatrics`, This tool is `Mini-CEX`, the
-    description, and Status Active.
-  - **Workflow**, as a code block. Draft → Requested → Completed, with Declined and Cancelled. The named assessor
-    (`field:assessor_user_id`) completes or declines.
-  - **Credit**, as a code block. One directive: it matches on the EPA field, counts 1, and judges the level reached by
-    what `overall_level` records.
-  She is offered nothing that would change the type: no Save draft, Discard draft or Publish, and no Add, Up, Down or
-  Delete. The College's instruments are the College's (T211's rule; T300, D52). Any save or publish she sent would be
-  refused by `ActivityTypeScopeGuard`: "You do not have permission to modify activity types in that speciality."
+    long-text fields. Each row names its type by label ("EPA", "Long text", "User · Names an Assessor"), never an enum
+    name (T324). Each section and field offers View, named for it, which opens its settings as text under its row;
+    `overall_level`'s Entrustment scale reads `CPSA Paediatric Entrustment Scale v11.1`, the ladder its seed key binds
+    (T271).
+  - **The live preview's** EPA picker offers the fifteen PAED EPAs ("PAED-001 — …"), not the Demo `EPA-001` (S8), and
+    under the Assessor field: "In the preview this offers nobody: it offers an active Assessor at the registrar's
+    institution, never the registrar."
+  - **Details**, as text: Key `mini_cex_cpsa`, Name, Set by "CPSA · Speciality · Paediatrics", This tool is `Mini-CEX`,
+    the description, and Status Active; then Versions, one row: 1, `D`, Wombat's catalogue, and "Activities filed under
+    a version stay on it." (Q3).
+  - **Workflow**, in words, with no JSON (Q2): "Draft, where a new one starts · Requested · Completed, final · Declined ·
+    Cancelled", then the table "Moves, as saved" (Move, From, To, Who moves it, Checks, Note): Submit, Draft to
+    Requested, "The registrar, or whoever filed it", "The mover's own fields", No; Complete, Requested to Completed, "The
+    person Assessor names", "The whole form", No; Decline, Requested to Declined, "The person Assessor names", "Formats
+    only", Required; Cancel, "Draft or Requested" to Cancelled, "The registrar, or whoever filed it", "Formats only",
+    No.
+  - **Credit**, in words, with no JSON: "Counts 1 towards the curriculum item for the EPA in EPA, at the level
+    Supervision required for this encounter records."
+  She is offered nothing that would change the type: no Save draft, Discard draft… or Publish, and no Add, Up, Down,
+  Delete or Edit. The College's instruments are the College's (T211's rule; T300, D52). Any save or publish she sent
+  would be refused by `ActivityTypeScopeGuard`: "You do not have permission to modify activity types in that
+  speciality."
 Note: Do not save a draft on a seeded type, even as an Administrator or the College (D52): a seeded type with an
   operator's draft stops receiving seed updates (T103).
 Actual (2026-11-05, T394 replay, wombat_scenario_t394): View opened /admin/activity-types/11, headed "Mini-CEX
@@ -819,31 +838,40 @@ Actual (2026-11-05, T394 replay, wombat_scenario_t394): View opened /admin/activ
   minimum_level_field overall_level). No Save draft, Discard draft, Publish, Add, Up, Down or Delete anywhere. Nothing
   saved; Back to list. The field list prints "epa_id · Epa" and "strengths · LongText". The live preview's EPA picker
   lists the Demo EPA-001 above the 15 PAED EPAs.
-Gap: [F-1.25b, T271] still: the read-only field view prints the raw seed key "seed:cpsa:scale:v11.1" where the
-  ladder's name belongs. (known-task) [F-1.27a, T291] also seen here: the Mini-CEX preview's EPA picker lists the Demo
-  EPA-001. [F-1.27b, T324] also seen here: the field list prints enum names ("Epa", "LongText"). (known-task)
+Gap: [F-1.25b, T271] closed by T398 (2026-11-10): the field view names the scale by its name. [F-1.27a, T291] closed
+  by T398 here too: the preview offers the College's EPAs alone (S8). [F-1.27b, T324] closed by T398 here too: each row
+  names its type by label. The T394 Actual above predates T398 (the owner line and the strip, the settings by label,
+  Details and Versions, the workflow and credit in words, the trail in place of Back to list); the next replay re-reads
+  the step.
 
 ### Step 1.26 — Start KGK's teaching log
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/activity-types → /admin/activity-types/new → /admin/activity-types/{ActivityTypeId:int}
-Do: Press New activity type, open the Metadata tab and enter:
+Do: Press New activity type and enter, on Details:
   - Key `kgk_teaching_log` and Name `KGK Teaching Session Log`;
-  - Scope Institution, with `Kgosi Kgari Teaching Hospital`, which is how it opens: leave it untouched;
-  - This tool is `Not a WBA instrument`;
+  - Scope: it reads Institution · Kgosi Kgari Teaching Hospital, the one scope she can write in, so there is nothing to
+    choose;
+  - This tool is `Not a WBA instrument`, which is how it opens: leave it untouched;
   - Description `A registrar's log of a teaching session they delivered at KGK. Not rated, and credits nothing.`;
-  - Active on.
+  - Active on, which is how it opens.
   Press Save draft. Record the type's id as `{ActivityTypeId}`.
-Expect: The builder opens on the Form tab, headed "New activity type", with the browser tab reading "New activity type
-  · Wombat" (T300, T190). It starts with a default draft:
-  - one Details section holding a required Title text field;
-  - a workflow from draft to submitted;
-  - the credit rules `{"counts_for": []}`.
-  Scope offers her only what she may save: Institution, with KGK the only institution, and a new type starts there,
-  never Global (T300, D52; DESIGN.md: a picker offers exactly what its command accepts). So the first Save draft is
-  accepted without Scope being touched. This tool is offers `Not a WBA instrument` and the twelve instruments.
-  Save draft moves the page to the type's own address and reads "Draft saved." (T291 item 3). The page is then headed
-  "Edit KGK Teaching Session Log", and the browser tab says the same: "Edit KGK Teaching Session Log · Wombat"
-  (T190).
+Expect: The builder opens on the Details tab (T398, Q1), headed "New activity type", with the browser tab reading "New
+  activity type · Wombat" (T300, T190). Its owner line reads "Kgosi Kgari Teaching Hospital · Institution", and the
+  strip Published "Not published", Draft "None". Details opens with "Saved with Save draft, not with Publish: a change
+  here reaches everyone when you save." and "* marks a field you must fill in." (Q14, M1); Key and Name are starred.
+  The type starts with a default draft:
+  - on Form, one Details section holding a required Title text field;
+  - on Workflow, a workflow from Draft to Submitted, its one move, Submit, made by the registrar;
+  - on Credit, "Credits nothing.", its JSON an empty `counts_for`.
+  Scope is a read-out, "Institution · Kgosi Kgari Teaching Hospital" over "The one scope you can write in.": she may
+  save in KGK alone, and a new type starts there, never Global (T300, D52; DESIGN.md: a picker offers exactly what its
+  command accepts). So the first Save draft is accepted with no scope chosen. This tool is offers `Not a WBA
+  instrument` and the twelve instruments.
+  Save draft moves the page to the type's own address, /admin/activity-types/`{ActivityTypeId}`, still on Details, and
+  "Draft saved." takes the focus above the tabs (T291 item 3); the address carries no token. The page is then headed
+  "Edit KGK Teaching Session Log", and the browser tab says the same: "Edit KGK Teaching Session Log · Wombat" (T190).
+  The strip reads Published "Not published", Draft "Saved `D` by Nolwazi Mbatha", and the header offers Save draft,
+  Publish and Discard draft….
 Note: The key and name cannot collide with a seed, since every seeded key is a bare family or ends `_cpsa`. The type
   has no instrument key, so no tool list restricts which EPA it is filed against (D21, D45).
 Actual (2026-11-05, T394 replay, wombat_scenario_t394): New activity type opened /admin/activity-types/new on Form,
@@ -853,34 +881,50 @@ Actual (2026-11-05, T394 replay, wombat_scenario_t394): New activity type opened
   untouched the first Save draft was accepted: /admin/activity-types/23, headed "Edit KGK Teaching Session Log", tab
   "Edit KGK Teaching Session Log · Wombat", Discard draft and Publish offered; no "Draft saved." at 150 ms, 600 ms,
   1.5 s or 3 s after the press (1.26-2). {ActivityTypeId} = 23.
-Gap: [F-1.26c, T291] still (T291 item 3): the first Save draft shows no "Draft saved.". (known-task)
+Gap: [F-1.26c, T291] closed by T398 (2026-11-10): the first Save draft arrives at the type's address reading "Draft
+  saved.", focused (T291 item 3). The T394 Actual above predates T398 (Details first, Scope a read-out, the strip); the
+  next replay re-reads the step.
 
 ### Step 1.27 — The form, and a duplicate key refused
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/activity-types/{ActivityTypeId:int}
-Do: On the Form tab, edit the Details section: key `session`, title `Teaching session`. Edit its Title field: key
-  `topic`, label `Topic`, type Text, required. Then add five fields to the section:
+Do: On the Form tab, edit the Details section through its Edit: key `session`, title `Teaching session`. Edit its
+  Title field through its Edit: key `topic`, label `Topic`, type Text, required. Then add five fields to the section with
+  its Add field, each opening its own editor:
   - `epa_id`, labelled `EPA`, type EPA, required;
   - `delivered_on`, labelled `Date delivered`, type Date, required;
   - `audience`, labelled `Audience`, type Choice, required, with the options `Interns`, `Medical students`, `Nursing
     staff` and `Registrars`, one per line;
   - `objectives`, labelled `Learning objectives`, type Long text, required;
   - `supervisor_user_id`, labelled `Supervising consultant`, type User, not required, leaving Names a on its default.
-  Give Audience the key `topic` by mistake, and press Save draft. Then correct its key to `audience`. Under Form
-  settings, choose Encounter date field `delivered_on`, Entrustment rating field "None — this form asserts no
-  entrustment level" and EPA field `epa_id`. Press Save draft again.
-Expect: The field types offered are Text, Long text, Number, Date, Choice, Multi-choice, Scale, User, EPA, Likert,
-  Procedure reference, File and Signature.
-  - **The User field** shows Names a in place of Options. It defaults to Assessor, and also offers InstitutionalAdmin,
-    Coordinator, CommitteeMember and Trainee. The people it offers come from the directory (T102).
-  - **The mistaken save** is refused, and the refusal names both fields: "Field key 'topic' is used by 2 fields ('Topic'
-    in 'Teaching session', 'Audience' in 'Teaching session'); give each field its own key."
-  - **The corrected save** reads "Draft saved." The Form settings pickers offer only fields of the matching type.
+  Give Audience the key `topic` by mistake, and press Save draft. Then correct its key to `audience`, reaching it from
+  the refusal's line in the summary. Under Form settings, choose Encounter date field `delivered_on`, Entrustment rating
+  field "None — this form asserts no entrustment level" (how it opens) and EPA field `epa_id`. Press Save draft again.
+Expect: Each Edit opens its editor in place, under its row, its key focused; Add field adds a row "New field" and opens
+  its editor under it, Field key focused, so no Edit is pressed for a new field (T398, Q4, S13). The editors open with
+  "* marks a field you must fill in." (M1). The field types offered are Text, Long text, Number, Date, Choice,
+  Multi-choice, Scale, User, EPA, Likert, Procedure reference, File and Signature, and each row names its type by the
+  same label ("EPA", "Long text"), never an enum name (T324).
+  - **The User field** shows Names a in place of Options. It defaults to "Assessor (default)", and also offers
+    Institutional admin, Coordinator, Committee member and Trainee, by label (T324). Its row reads "User · Names an
+    Assessor". The people it offers come from the directory (T102).
+  - **The mistaken save** is refused, nothing saved and everything typed kept: the summary above the tabs, "Nothing was
+    saved." and "Everything you typed is kept.", takes the focus. Its one line names both fields, after "Form:": "Field
+    key 'topic' is used by 2 fields ('Topic' in 'Teaching session', 'Audience' in 'Teaching session'); give each field
+    its own key." At each field: "Key 'topic' is also the key of Audience. Give each field its own key." at Topic, and
+    "Key 'topic' is also the key of Topic. Give each field its own key." at Audience. The Form tab reads "Form 1
+    problem" (Q6, M2).
+  - **The summary's line** opens Audience's editor, its Field key focused.
+  - **The corrected save** reads "Draft saved.", focused, on the Form tab; the summary and the tab's count are gone. The
+    Form settings pickers offer only fields of the matching type, by label with the key after: Encounter date field
+    "Date delivered (delivered_on)", EPA field "EPA (epa_id)" (T19).
   - **The live preview** shows one section, Teaching session, with six inputs: a text box, an EPA picker, a date
     input, a choice of four, a long-text box and a person picker. The first five are required.
-  - **The EPA picker** offers the 15 PAED EPAs and not the Demo `EPA-001`, following the form's own rule (T291 item 6).
-  - **The person picker** offers nobody in the preview. Whom it offers depends on the registrar filing it: an active
-    Assessor at their institution, never the registrar themselves.
+  - **The EPA picker** offers the 15 PAED EPAs and not the Demo `EPA-001`: an institution's type previews the EPAs of
+    the curricula it adopted (S8; T291 item 6; KGK adopted 11.1 at Step 1.20).
+  - **The person picker** offers nobody in the preview, and says so under it: "In the preview this offers nobody: it
+    offers an active Assessor at the registrar's institution, never the registrar." Whom it offers depends on the
+    registrar filing it.
 Actual (2026-11-05, T394 replay, wombat_scenario_t394): The Type picker offers the thirteen types listed. The User
   field shows "Names a" in place of Options: "Assessor (default)", InstitutionalAdmin, Coordinator, CommitteeMember,
   Trainee. The mistaken save was refused with the quoted text word for word. The corrected save read "Draft saved."
@@ -889,9 +933,10 @@ Actual (2026-11-05, T394 replay, wombat_scenario_t394): The Type picker offers t
   first five starred. Its EPA picker lists the Demo EPA-001 above the 15 PAED EPAs. Supervising consultant offers only
   "Select…". The builder's field list labels types by enum name ("epa_id · Epa", "objectives · LongText"). The
   mistaken save was played once.
-Gap: [F-1.27a, T291] still (T291 item 6): the preview's EPA picker lists the Demo EPA-001 beside the PAED EPAs (so
-  does the Mini-CEX preview in Step 1.25). [F-1.27b, T324] still: the builder's field list prints raw enum names
-  ("Epa", "LongText") where its own Type picker reads "EPA" and "Long text" (low). (known-task)
+Gap: [F-1.27a, T291] closed by T398 (2026-11-10): the preview offers the EPAs of the curricula KGK adopted, not the
+  Demo EPA-001 (T291 item 6, S8). [F-1.27b, T324] closed by T398: rows and roles by label. The T394 Actual above
+  predates T398 (the editors in place, the summary and the words at each field, Form's count, the settings by label);
+  the next replay re-reads the step.
 
 ### Step 1.28 — The workflow, and a `field:` rule refused
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -899,14 +944,24 @@ Route: /admin/activity-types/{ActivityTypeId:int}
 Do: On the Workflow tab, replace the Workflow JSON with the workflow below, but with the cancel transition's actor
   written as `subject|field:topic`. Press Save draft. Then restore the actor to `subject|creator` and press Save draft
   again.
-Expect: The first save is refused: "Transition 'cancel' actor names 'field:topic', but 'topic' is not a User field; a
-  field: rule must name a User field." (T102). The second save reads "Draft saved."
-  In the saved workflow, the registrar, or whoever filed the log for them, either logs the session or cancels the
-  draft. Logging checks the whole form (`validation: all`), and cancelling checks formats only (`draft`, T105).
+Expect: The first save is refused, nothing saved and the JSON kept as typed: the summary, "Nothing was saved." and
+  "Everything you typed is kept.", takes the focus, its one line "Workflow, move Cancel: Transition 'cancel' actor names
+  'field:topic', but 'topic' is not a User field; a field: rule must name a User field." (T102). Under the Workflow
+  JSON, its words at the place: "Move Cancel cannot be read: 'topic' (Topic) is not a User field, so it names
+  nobody.", and the tab reads "Workflow 1 problem" (T398, Q6, M2).
+  The second save reads "Draft saved.", focused, on the Workflow tab. The JSON editor holds the JSON as typed until the
+  save, then as saved, laid out by Wombat one property a line, in the parser's order ("After each save this shows the
+  rules as they were saved, laid out by Wombat, one property a line.", Q13).
+  Above it, the saved workflow in words (Q2): "Draft, where a new one starts · Logged, final · Cancelled", and "Moves,
+  as saved": Log, Draft to Logged, "The registrar, or whoever filed it", "The whole form", Note No; Cancel, Draft to
+  Cancelled, "The registrar, or whoever filed it", "Formats only", No. So the registrar, or whoever filed the log for
+  them, either logs the session or cancels the draft; logging checks the whole form (`validation: all`), and
+  cancelling checks formats only (`draft`, T105).
 Actual (2026-11-05, T394 replay, wombat_scenario_t394): As expected: the first save was refused with the quoted text
   word for word; with the actor restored to `subject|creator` the second read "Draft saved.", and the reloaded
   Workflow JSON holds draft → logged (log, all) and draft → cancelled (cancel, draft), both `subject|creator`.
-Gap: none
+Gap: none. The T394 Actual above predates T398 (the summary's line and the words under the JSON, the tab's count, the
+  workflow in words, the JSON laid out); the next replay re-reads the step.
 
 The workflow for Step 1.28. The DSL, including `editable_by` and the actor grammar (`subject`, `creator`, `role:`,
 `scope:`, `field:`), is described in CUSTOMIZATION.md:
@@ -931,45 +986,64 @@ The workflow for Step 1.28. The DSL, including `editable_by` and the actor gramm
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/activity-types/{ActivityTypeId:int}
 Do: Open the Credit tab. Leave the Credit rules JSON as `{"counts_for": []}`.
-Expect: The type credits nothing. The save accepts an EPA field with no credit directive (T137,
-  `EvidenceEpa.EnsureCreditAgrees`). Each log is stamped with its EPA, which activity lists show.
+Expect: The Credit tab reads "Credits nothing." and "An activity of this type counts towards no curriculum item, and
+  its encounter date may not be after today." above the Credit rules JSON, which is laid out as saved: `{`, then
+  `"counts_for": []`, then `}` (T398, Q2, Q13). The type credits nothing. The save accepts an EPA field with no credit
+  directive (T137, `EvidenceEpa.EnsureCreditAgrees`). Each log is stamped with its EPA, which activity lists show.
   A type that credits nothing is held to one encounter-date rule only: the date may not be after today (T160). It is
   not held to the programme start, and it gets no 14-day late-filing warning (`EncounterDatePolicy.CanCredit`, D15).
 Actual (2026-11-05, T394 replay, wombat_scenario_t394): The Credit tab reads `{"counts_for": []}`, left unchanged. The
   saves of Steps 1.27 and 1.28 were accepted with the EPA field set and no credit directive. The encounter-date
   behaviour is for Act 2 onward to observe.
-Gap: none
+Gap: none. The T394 Actual above predates T398 (the credit rules in words, the JSON laid out); the next replay re-reads
+  the step.
 
 ### Step 1.30 — Publish version 1
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/activity-types/{ActivityTypeId:int}
-Do: Press Publish.
-Expect: The page reads "Published version 1." Discard draft disappears, and Publish is disabled, with the hint "Save a
-  draft to publish." The Key can no longer be changed. There are no publish warnings, since there is no earlier version
-  to compare against.
+Do: Press Publish, from the Credit tab, where Step 1.29 leaves it. Then open Details, and then the Publish tab.
+Expect: "Published version 1." takes the focus above the tabs, and Credit stays selected: a publish keeps the tab it was
+  pressed from (T398, Q20). Discard draft… is gone, and Publish is unavailable (aria-disabled, so it keeps its place in
+  the tab order) with its reason beside it as text: "Save a draft to publish." (S5). The strip reads Published "Version
+  1, `D`, Nolwazi Mbatha" and Draft "None". There are no publish warnings and no question, since there is no earlier
+  version to compare against (Q16).
+  - **Details:** the Key is a read-out, `kgk_teaching_log` over "Fixed: version 1 is published.", and the result still
+    reads in its region: a tab press does not clear it.
+  - **The Publish tab:** "There is no draft to publish: version 1 is what registrars file. Save a draft to publish.";
+    Versions, one row: 1, `D`, Nolwazi Mbatha, and "Activities filed under a version stay on it."; Publish version 2
+    unavailable, with "Save a draft to publish." under it.
 Actual (2026-11-05, T394 replay, wombat_scenario_t394): As expected: "Published version 1."; Discard draft gone;
   Publish disabled, its hint "Save a draft to publish." carried as the button's title (tooltip), not on-page text; Key
   disabled on Metadata; no publish warnings. Save draft stays offered.
-Gap: none
+Gap: none. The T394 Actual above predates T398 (Publish unavailable with its reason as text, the tab kept, Details'
+  read-out, the Publish tab); the next replay re-reads the step.
 
 ### Step 1.31 — KGK's type in the list
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: /admin/activity-types
-Do: Press Back to list and read the list. Then search `KGK`.
-Expect: The list has 23 rows, and no two share a name:
-  - the ten Demo types, whose Scope reads `Speciality · General Medicine` (T291 item 5);
-  - the twelve `*_cpsa` types;
-  - `KGK Teaching Session Log`, whose Scope reads `Institution · Kgosi Kgari Teaching Hospital`, with `v1`, `None` and
-    Active.
-  Her own type's row offers Edit, and every other row View (T300). The search leaves that last row only. Which of these
-  types a KGK registrar is offered is checked in Act 2.
+Do: Press Activity types in the trail and read the list. Then search `KGK` and press Show.
+Expect: "23 activity types." above the table, 23 rows, and no two share a name. Her own type comes first, then the
+  others by name in one run, interleaved, not grouped (T398, Q11: "Mini-CEX" and "Mini-CEX (Paediatrics)" are
+  neighbours); the groups below are for reading, not the page's order:
+  - `KGK Teaching Session Log`, set by "Kgosi Kgari Teaching Hospital" over "Institution", Published "Version 1", Draft
+    "None", Active, and Edit, named for its row ("Edit KGK Teaching Session Log");
+  - the twelve `*_cpsa` types, set by "CPSA" over "Speciality · Paediatrics", the two system-managed ones with their
+    release's line;
+  - the ten Demo types, set by "DEMO-C" over "Speciality · General Medicine" (T291 item 5).
+  Her own type's row offers Edit, and every other row View (T300). The search leaves that first row only, under "1 of
+  23 activity types match “KGK”.", which takes the focus. Which of these types a KGK registrar is offered is checked
+  in Act 2.
+Note: The no-match state is read here too (states.md): searched for `zzz`, the page reads 'No activity types match
+  "zzz".' and "The search is kept above. Clear it to see all 23.", with Clear the search, not the empty catalogue's
+  words (T326).
 Actual (2026-11-05, T394 replay, wombat_scenario_t394): 23 rows, no two names alike: the ten Demo types ("Speciality ·
   General Medicine"), the twelve `*_cpsa`, and KGK Teaching Session Log, "Institution · Kgosi Kgari Teaching
   Hospital", v1, None, Active; it alone offers Edit, the other 22 View. `KGK` leaves that row only. `zzz` still reads
   "No activity types" and "Create the first activity type to start the builder." At 390 px the page is 390 px wide
   with no sideways scroll.
-Gap: [F-1.31b, T326] still: a search that matches nothing shows the empty-catalogue state, "No activity types ...
-  Create the first activity type", though 23 types exist; it should say that nothing matches the search. (known-task)
+Gap: [F-1.31b, T326] closed by T398 (2026-11-10): a search that matches nothing says so, apart from the empty
+  catalogue. The T394 Actual above predates T398 (the trail in place of Back to list, Show and the count line, Set by in
+  words, Version 1, her own row first); the next replay re-reads the step.
 
 ## Act 1 outcome state
 

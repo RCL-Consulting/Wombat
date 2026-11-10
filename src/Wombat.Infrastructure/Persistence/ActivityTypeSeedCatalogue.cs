@@ -89,7 +89,8 @@ public static class ActivityTypeSeedCatalogue
     /// The actor recorded as <c>OwnerUserId</c>, draft author and publisher for everything seeded
     /// here. The refresher's ownership guard keys off this exact value.
     /// </summary>
-    public const string SeedActorUserId = "seed-system";
+    /// <remarks>Domain's <see cref="ActivityTypeSeedOwnership.SeederUserId" />, so the builder reads the same value (T398, N11).</remarks>
+    public const string SeedActorUserId = ActivityTypeSeedOwnership.SeederUserId;
 
     /// <remarks>
     /// The generic Mini-CEX, DOPS and CBD carry their instrument keys although no generic curriculum has a tool list

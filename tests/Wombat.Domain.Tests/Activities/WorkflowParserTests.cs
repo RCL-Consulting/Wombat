@@ -1,3 +1,4 @@
+using Wombat.Domain.Activities;
 using Wombat.Domain.Activities.Workflow;
 
 namespace Wombat.Domain.Tests.Activities;
@@ -86,6 +87,92 @@ public sealed class WorkflowParserTests
         Assert.Equal(
             ActivityTestData.NormalizeJson(ActivityTestData.ValidWorkflowJson),
             ActivityTestData.NormalizeJson(serialized));
+    }
+
+    /// <summary>
+    /// T398 (Q13, S11): laid out for the builder's page, one property a line, two spaces, a line feed, in the compact
+    /// form's key order; it parses to what the compact text parses to, and the one-argument overload stays compact.
+    /// </summary>
+    [Fact]
+    public void Serialize_Indented_IsOnePropertyALine_InTheCompactOrder_AndParsesAlike()
+    {
+        var parsed = WorkflowParser.Parse(ActivityTestData.ValidWorkflowJson);
+        var compact = WorkflowParser.Serialize(parsed);
+        var indented = WorkflowParser.Serialize(parsed, indented: true);
+
+        Assert.DoesNotContain('\n', compact);
+        Assert.DoesNotContain('\r', indented);
+        Assert.StartsWith("{\n  \"version\": 1,\n  \"initial_state\": \"draft\",\n  \"states\": [\n    {\n      \"key\": ", indented);
+        Assert.All(
+            indented.Split('\n').Where(line => line.Contains("\": ", StringComparison.Ordinal)),
+            line => Assert.Equal(2, line.Split("\": ").Length));
+        Assert.Equal(compact, WorkflowParser.Serialize(WorkflowParser.Parse(indented)));
+        Assert.Equal(ActivityTestData.NormalizeJson(compact), ActivityTestData.NormalizeJson(indented));
+    }
+
+    /// <summary>T398 (Q6): a refusal of one move is at that move, its sentence the message.</summary>
+    [Fact]
+    public void Parse_ARefusalOfAMove_IsAtThatMove()
+    {
+        const string json = """
+            {
+              "version": 1,
+              "initial_state": "draft",
+              "states": [ { "key": "draft", "label": "Draft" }, { "key": "done", "label": "Done", "terminal": true } ],
+              "transitions": [
+                { "key": "submit", "from": "draft", "to": "done", "actor": "subject" },
+                { "key": "cancel", "from": "draft", "to": "done", "actor": "nobody" }
+              ]
+            }
+            """;
+
+        var exception = Assert.Throws<WorkflowParseException>(() => WorkflowParser.Parse(json));
+
+        var place = Assert.Single(exception.Places);
+        Assert.Equal((RefusalTab.Workflow, RefusalKind.Other, "cancel"), (place.Tab, place.Kind, place.MoveKey));
+        Assert.Equal(exception.Message, place.Sentence);
+    }
+
+    [Fact]
+    public void Parse_AnUndeclaredState_IsAtTheMoveNamingIt()
+    {
+        const string json = """
+            {
+              "version": 1,
+              "initial_state": "draft",
+              "states": [ { "key": "draft", "label": "Draft" } ],
+              "transitions": [ { "key": "submit", "from": "draft", "to": "nowhere", "actor": "subject" } ]
+            }
+            """;
+
+        var exception = Assert.Throws<WorkflowParseException>(() => WorkflowParser.Parse(json));
+
+        Assert.Equal("submit", Assert.Single(exception.Places).MoveKey);
+    }
+
+    /// <summary>T398 (Q6, S11): a text that is not JSON is at the line the reader stopped on, counted from 1.</summary>
+    [Fact]
+    public void Parse_MalformedJson_IsAtItsLine()
+    {
+        var exception = Assert.Throws<WorkflowParseException>(
+            () => WorkflowParser.Parse("{\n  \"version\": 1,\n  \"states\": [ ,\n}"));
+
+        var place = Assert.Single(exception.Places);
+        Assert.Equal((RefusalTab.Workflow, RefusalKind.MalformedJson, 3L), (place.Tab, place.Kind, place.JsonLine));
+        Assert.StartsWith("Workflow JSON is malformed: ", place.Sentence, StringComparison.Ordinal);
+    }
+
+    /// <summary>A refusal its thrower placed nowhere is the Workflow tab's alone, its sentence the message (T398, Q6).</summary>
+    [Fact]
+    public void Parse_ARefusalWithNoPlace_IsTheTabsAlone()
+    {
+        var exception = Assert.Throws<WorkflowParseException>(() => WorkflowParser.Parse("[]"));
+
+        var place = Assert.Single(exception.Places);
+        Assert.Equal(
+            (RefusalTab.Workflow, RefusalKind.Other, "Workflow root must be an object."),
+            (place.Tab, place.Kind, place.Sentence));
+        Assert.Null(place.MoveKey);
     }
 
     [Fact]

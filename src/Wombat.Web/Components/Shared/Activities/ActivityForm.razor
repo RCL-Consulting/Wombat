@@ -514,6 +514,13 @@ else if (_schema is not null)
   [Parameter] public int SectionHeadingLevel { get; set; } = 2;
 
   /// <summary>
+  /// The EPAs every EPA field offers, in place of the ones this form would read for itself (T398, flow 17, S8, J11): the
+  /// builder's preview has no registrar, so it passes the type's own (<c>ActivityTypeEditorDto.PreviewEpaOptions</c>).
+  /// Null, as the filing page leaves it, reads them as before.
+  /// </summary>
+  [Parameter] public IReadOnlyList<ActivityCatalogueOption>? EpaOptions { get; set; }
+
+  /// <summary>
   /// The reader has a section to fill (T350; round 1, E3; round 2, E2): each filled read-only section is then also drawn
   /// as the phone's fold, shown below 641 px in place of its card. The activity page passes it for such a reader only;
   /// every other reader, Log an activity and the builder's preview keep the sections as they are.
@@ -1215,7 +1222,7 @@ else if (_schema is not null)
     {
       IReadOnlyList<ActivityCatalogueOption>? options = field.Type switch
       {
-        FieldType.Epa => await referenceData.GetEpaOptionsAsync(
+        FieldType.Epa => EpaOptions ?? await referenceData.GetEpaOptionsAsync(
           principal,
           new EpaOptionScope(
             SubjectUserId,

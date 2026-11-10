@@ -135,6 +135,48 @@ public sealed class EvidenceEpaPublishCheckTests
         Assert.Contains("the form's EPA field is 'epa_id'", exception.Message, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// T398 (flow 17, Q6, R3-D04): the disagreement is one place on the Credit tab at its directive, naming the field the
+    /// rule reads and the one it should; its sentence the summary's line after "Credit:", word for word.
+    /// </summary>
+    [Fact]
+    public void EnsureCreditAgrees_CreditReadingAnotherEpaField_IsOnePlaceAtItsDirective()
+    {
+        var exception = Assert.Throws<CreditRulesParseException>(() => EvidenceEpa.EnsureCreditAgrees(
+            FormSchemaParser.Parse(SchemaJson),
+            CreditRulesParser.Parse(CreditsFromAnotherEpaField)));
+
+        var place = Assert.Single(exception.Places);
+        Assert.Equal((RefusalTab.Credit, RefusalKind.CreditEpaFieldDisagrees, 1), (place.Tab, place.Kind, place.DirectiveNumber));
+        Assert.Equal(("second_epa", "epa_id"), (place.NamedField, place.ExpectedField));
+        Assert.Equal(
+            "Credit rule 1 reads its EPA from field 'second_epa', but the form's EPA field is 'epa_id'. The EPA an activity " +
+            "is filed against and the EPA it credits must be the same field.",
+            place.Sentence);
+        Assert.Equal(place.Sentence, exception.Message);
+    }
+
+    /// <summary>One place a problem, each at its own directive; the message their sentences joined (T398, Q6).</summary>
+    [Fact]
+    public void EnsureCreditAgrees_TwoProblems_AreTwoPlaces()
+    {
+        var exception = Assert.Throws<CreditRulesParseException>(() => EvidenceEpa.EnsureCreditAgrees(
+            FormSchemaParser.Parse(SchemaJson),
+            CreditRulesParser.Parse("""
+                {
+                  "counts_for": [
+                    { "curriculum_item_match": { "epa_field": "second_epa" }, "amount": 1 },
+                    { "curriculum_item_match": { "curriculum_item_id": 42 }, "amount": 1 }
+                  ]
+                }
+                """)));
+
+        Assert.Equal([1, 2], exception.Places.Select(place => place.DirectiveNumber!.Value));
+        Assert.Equal(RefusalKind.Other, exception.Places[1].Kind);
+        Assert.All(exception.Places, place => Assert.Equal(RefusalTab.Credit, place.Tab));
+        Assert.Equal(string.Join(" ", exception.Places.Select(place => place.Sentence)), exception.Message);
+    }
+
     [Fact]
     public void EnsureCreditAgrees_OneDisagreeingDirectiveAmongAgreeingOnes_IsRefusedNamingIt()
     {
@@ -257,7 +299,7 @@ public sealed class EvidenceEpaPublishCheckTests
         type.StagingUpdatedOn = new DateTime(2026, 9, 1, 8, 0, 0, DateTimeKind.Utc);
         var before = Snapshot.Of(type);
 
-        Assert.Throws<CreditRulesParseException>(
+        Assert.Throws<ActivityTypeDraftRefusedException>(
             () => type.SaveDraft(schemaJson, ActivityTestData.ValidWorkflowJson, creditRulesJson, DisplayFieldsJson, "someone-else"));
 
         Assert.Equal(before, Snapshot.Of(type));
@@ -282,7 +324,7 @@ public sealed class EvidenceEpaPublishCheckTests
         type.StagingUpdatedOn = new DateTime(2026, 9, 1, 8, 0, 0, DateTimeKind.Utc);
         var before = Snapshot.Of(type);
 
-        Assert.Throws<CreditRulesParseException>(() => type.PublishDraft(Actor));
+        Assert.Throws<ActivityTypeDraftRefusedException>(() => type.PublishDraft(Actor));
 
         Assert.Equal(before, Snapshot.Of(type));
         Assert.True(type.HasDraft);

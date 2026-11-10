@@ -944,7 +944,7 @@ Step A.7.9 — Prof Mbatha on her phone
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
 Route: / → /admin/users → /admin/users/{UserId} → /admin/trainees → /admin/trainees/edit → /admin/activity-types/{ActivityTypeId:int}
 Do: At 390 px, read Home, then open Users and Dr Dlamini's account, Trainees and Dr Dlamini's profile, then the KGK
-  Teaching Session Log in the builder.
+  Teaching Session Log in the builder, from the menu's Activity types and its Edit, and choose Preview on its Form tab.
 Expect: Nothing scrolls sideways on any of them (T323).
   - **Home's** three cards stack; People's counts and each card's footer link are 44 px tall, and a long contact address
     wraps (M7).
@@ -961,8 +961,9 @@ Expect: Nothing scrolls sideways on any of them (T323).
   - **Dr Dlamini's profile**, "Anele Dlamini's programme", has no Back to trainees and offers "Export Anele Dlamini's
     portfolio" in its header (T379). It stacks three fields plus the last day and two triggers: Curriculum, Programme
     start date and Expected completion date, then End this programme's last day with Mark complete… and Deactivate….
-  - **The builder's** editor and live preview stack in one column (DESIGN.md § Builder layout, T266), and its tab bar
-    stays usable.
+  - **The builder's** five tabs sit in one row, the selected one exposed (role "tab", aria-selected; T398, Q1, T280).
+    Its Form tab offers the choice of two under Show, "Edit the form" and "Preview", so the live preview is one press
+    away, at the top of the page, not scrolled to (Q5); every control is 44 px.
 
 Step A.7.14 — Prof Mbatha's pages, checked for contrast
 Role: InstitutionalAdmin — Prof Nolwazi Mbatha
@@ -977,10 +978,11 @@ Do: With a contrast checker (axe, or the browser's accessibility audit), check e
     alert (Change password with a confirmation that differs, which checks no password and changes nothing);
   - a password field's Show toggle, pressed (white on the action blue, 4.86:1);
   - white on the primary, danger (the dialog's Lock out Mohammed Patel: open Lock out… on Dr Patel's page, read it,
-    then Keep access; T376, S22) and success (Publish in the builder, not pressed; with no draft it is disabled, and a
-    disabled control is exempt) buttons;
+    then Keep access; T376, S22) and success (Publish in the builder, not pressed; with no draft it is unavailable,
+    aria-disabled, and exempt, T398, S5) buttons, and Publish's reason beside it, "Save a draft to publish.";
   - the focus ring on white and on the page background;
   - an input's border.
 Expect: Every pair meets WCAG 2.1 AA: text 4.5:1, large text 3:1, and 3:1 for a control's boundary and the focus
-  ring. Muted text passes on the page background since T086.
+  ring. Muted text passes on the page background since T086, and so Publish's reason, muted text, meets 4.5:1; white on
+  Publish is 5.88:1.
 ```

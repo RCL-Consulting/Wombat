@@ -292,7 +292,8 @@ public sealed class ActivityTypeSeedRefresher
 
         // Every guard below runs BEFORE SaveDraft. SaveDraft overwrites all six staging columns
         // unconditionally, so checking afterwards would already have destroyed the operator's draft.
-        if (!string.Equals(activityType.OwnerUserId, ActivityTypeSeedCatalogue.SeedActorUserId, StringComparison.Ordinal))
+        // The two halves of ActivityTypeSeedOwnership.IsSeedOwned, asked apart so each says why it skipped (T398, N11).
+        if (!ActivityTypeSeedOwnership.IsOwnedBySeeder(activityType))
         {
             _logger.LogInformation(
                 "Activity type '{Key}': seed {Changed} differ from published v{Version}, but the type is owned by '{OwnerUserId}'. Skipped — operator-owned types are never reverted.",
@@ -331,7 +332,7 @@ public sealed class ActivityTypeSeedRefresher
         }
 
         var newestVersion = activityType.Versions.OrderByDescending(version => version.Version).First();
-        if (!string.Equals(newestVersion.PublishedByUserId, ActivityTypeSeedCatalogue.SeedActorUserId, StringComparison.Ordinal))
+        if (!ActivityTypeSeedOwnership.NewestPublishedBySeeder(activityType))
         {
             // OwnerUserId alone is not enough: the builder's edit path never reassigns it, so a
             // College or Institutional admin who customises a seeded type still reads as seed-owned.

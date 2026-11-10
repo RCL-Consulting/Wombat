@@ -15,16 +15,24 @@ public static class WorkflowParser
         }
         catch (JsonException exception)
         {
-            throw new WorkflowParseException($"Workflow JSON is malformed: {exception.Message}");
+            // T398 (Q6, S11): at the line the reader stopped on, so the builder can say where.
+            throw WorkflowParseException.At(
+                DslJson.Malformed(RefusalTab.Workflow, $"Workflow JSON is malformed: {exception.Message}", exception));
         }
     }
 
-    public static string Serialize(Workflow workflow)
+    public static string Serialize(Workflow workflow) => Serialize(workflow, indented: false);
+
+    /// <summary>
+    /// The workflow as JSON: compact, as it is stored; or, with <paramref name="indented" />, laid out for the builder's
+    /// page alone (T398, Q13, S11), one property a line in the same key order. Never store the indented text.
+    /// </summary>
+    public static string Serialize(Workflow workflow, bool indented)
     {
         ArgumentNullException.ThrowIfNull(workflow);
 
         using var stream = new MemoryStream();
-        using var writer = new Utf8JsonWriter(stream);
+        using var writer = DslJson.Writer(stream, indented);
         writer.WriteStartObject();
         writer.WriteNumber("version", workflow.Version);
         writer.WriteString("initial_state", workflow.InitialState);
@@ -135,14 +143,16 @@ public static class WorkflowParser
             {
                 if (!stateKeys.Contains(fromState))
                 {
-                    throw new WorkflowParseException(
+                    throw AtMove(
+                        transition.Key,
                         $"Transition '{transition.Key}' references undeclared source state '{fromState}'.");
                 }
             }
 
             if (!stateKeys.Contains(transition.To))
             {
-                throw new WorkflowParseException(
+                throw AtMove(
+                    transition.Key,
                     $"Transition '{transition.Key}' references undeclared target state '{transition.To}'.");
             }
         }
@@ -202,24 +212,41 @@ public static class WorkflowParser
         return ActorRuleParser.Parse(GetRequiredTrimmedStringValue(property, propertyName));
     }
 
+    /// <summary>A refusal of one move, at that move (T398, Q6): the builder words it under the move's row.</summary>
+    private static WorkflowParseException AtMove(string moveKey, string message)
+        => WorkflowParseException.At(new RefusalPlace(RefusalTab.Workflow, RefusalKind.Other, message) { MoveKey = moveKey });
+
+    /// <remarks>
+    /// A refusal of a move whose key has been read is placed at that move (T398, Q6): the helpers below, and the actor
+    /// rule's parser, refuse with their message alone.
+    /// </remarks>
     private static WorkflowTransition ParseTransition(JsonElement element)
     {
-        EnsureObject(element, "Transition must be an object.");
-        EnsureAllowedProperties(
-            element,
-            ["key", "from", "to", "actor", "requires_note", "requires_fields", "validation"],
-            "transition");
+        string? key = null;
+        try
+        {
+            EnsureObject(element, "Transition must be an object.");
+            EnsureAllowedProperties(
+                element,
+                ["key", "from", "to", "actor", "requires_note", "requires_fields", "validation"],
+                "transition");
 
-        var key = GetRequiredString(element, "key");
+            key = GetRequiredString(element, "key");
 
-        return new WorkflowTransition(
-            key,
-            ParseFromStates(GetRequiredProperty(element, "from")),
-            GetRequiredString(element, "to"),
-            ActorRuleParser.Parse(GetRequiredString(element, "actor")),
-            GetBooleanOrDefault(element, "requires_note"),
-            ParseOptionalStringArray(element, "requires_fields"),
-            ParseValidation(element, key));
+            return new WorkflowTransition(
+                key,
+                ParseFromStates(GetRequiredProperty(element, "from")),
+                GetRequiredString(element, "to"),
+                ActorRuleParser.Parse(GetRequiredString(element, "actor")),
+                GetBooleanOrDefault(element, "requires_note"),
+                ParseOptionalStringArray(element, "requires_fields"),
+                ParseValidation(element, key));
+        }
+        catch (WorkflowParseException exception) when (key is not null)
+        {
+            var moveKey = key;
+            throw exception.PlacedAt(place => place with { MoveKey = moveKey });
+        }
     }
 
     /// <summary>
@@ -360,7 +387,7 @@ public static class WorkflowParser
     private static int GetRequiredInt(JsonElement element, string propertyName)
     {
         var property = GetRequiredProperty(element, propertyName);
-        if (!property.TryGetInt32(out var value))
+        if (property.ValueKind != JsonValueKind.Number || !property.TryGetInt32(out var value))
         {
             throw new WorkflowParseException($"Property '{propertyName}' must be an integer.");
         }

@@ -436,13 +436,14 @@ public sealed class ActivityReferenceDataService : IActivityReferenceDataService
             : new ActivityCatalogueOption(user.Id, NomineeDirectory.FormatLabel(user.FirstName, user.LastName, user.Email));
     }
 
-    public async Task<IReadOnlyList<ActivityCatalogueOption>> GetEntrustmentScaleOptionsAsync(
+    public async Task<IReadOnlyList<EntrustmentScaleOption>> GetEntrustmentScaleOptionsAsync(
         CancellationToken cancellationToken = default)
     {
+        // T398 (S12, T271 item 2): the seed key too, so a seeded form's "seed:…" binding resolves to its scale's name.
         return await _dbContext.Set<EntrustmentScale>()
             .AsNoTracking()
             .OrderBy(scale => scale.Name)
-            .Select(scale => new ActivityCatalogueOption(scale.Id.ToString(), scale.Name))
+            .Select(scale => new EntrustmentScaleOption(scale.Id.ToString(), scale.SeedKey, scale.Name))
             .ToListAsync(cancellationToken);
     }
 

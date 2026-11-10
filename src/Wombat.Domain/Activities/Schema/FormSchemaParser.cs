@@ -17,16 +17,24 @@ public static class FormSchemaParser
         }
         catch (JsonException exception)
         {
-            throw new SchemaParseException($"Schema JSON is malformed: {exception.Message}");
+            // T398 (Q6, S11): at the line the reader stopped on, so the builder can say where.
+            throw SchemaParseException.At(
+                DslJson.Malformed(RefusalTab.Form, $"Schema JSON is malformed: {exception.Message}", exception));
         }
     }
 
-    public static string Serialize(FormSchema schema)
+    public static string Serialize(FormSchema schema) => Serialize(schema, indented: false);
+
+    /// <summary>
+    /// The schema as JSON: compact, as it is stored; or, with <paramref name="indented" />, laid out for the builder's page
+    /// alone (T398, Q13, S11), one property a line in the same key order. Never store the indented text.
+    /// </summary>
+    public static string Serialize(FormSchema schema, bool indented)
     {
         ArgumentNullException.ThrowIfNull(schema);
 
         using var stream = new MemoryStream();
-        using var writer = new Utf8JsonWriter(stream);
+        using var writer = DslJson.Writer(stream, indented);
         writer.WriteStartObject();
         writer.WriteNumber("version", schema.Version);
 
@@ -218,13 +226,13 @@ public static class FormSchemaParser
             var target = sections
                 .SelectMany(section => section.Fields)
                 .FirstOrDefault(field => string.Equals(field.Key, observationDateField, StringComparison.Ordinal))
-                ?? throw new SchemaParseException(
-                    $"observation_date_field '{observationDateField}' does not match any field in the schema.");
+                ?? throw PointerRefusal(
+                    $"observation_date_field '{observationDateField}' does not match any field in the schema.", observationDateField, sections);
 
             if (target.Type != FieldType.Date)
             {
-                throw new SchemaParseException(
-                    $"observation_date_field '{observationDateField}' must point at a 'date' field, but it is '{target.Type}'.");
+                throw PointerRefusal(
+                    $"observation_date_field '{observationDateField}' must point at a 'date' field, but it is '{target.Type}'.", observationDateField, sections);
             }
         }
 
@@ -237,13 +245,13 @@ public static class FormSchemaParser
             var target = sections
                 .SelectMany(section => section.Fields)
                 .FirstOrDefault(field => string.Equals(field.Key, ratedLevelField, StringComparison.Ordinal))
-                ?? throw new SchemaParseException(
-                    $"rated_level_field '{ratedLevelField}' does not match any field in the schema.");
+                ?? throw PointerRefusal(
+                    $"rated_level_field '{ratedLevelField}' does not match any field in the schema.", ratedLevelField, sections);
 
             if (target.Type != FieldType.Scale)
             {
-                throw new SchemaParseException(
-                    $"rated_level_field '{ratedLevelField}' must point at a 'scale' field, but it is '{target.Type}'.");
+                throw PointerRefusal(
+                    $"rated_level_field '{ratedLevelField}' must point at a 'scale' field, but it is '{target.Type}'.", ratedLevelField, sections);
             }
         }
 
@@ -255,71 +263,118 @@ public static class FormSchemaParser
             var target = sections
                 .SelectMany(section => section.Fields)
                 .FirstOrDefault(field => string.Equals(field.Key, evidenceEpaField, StringComparison.Ordinal))
-                ?? throw new SchemaParseException(
-                    $"evidence_epa_field '{evidenceEpaField}' does not match any field in the schema.");
+                ?? throw PointerRefusal(
+                    $"evidence_epa_field '{evidenceEpaField}' does not match any field in the schema.", evidenceEpaField, sections);
 
             if (target.Type != FieldType.Epa)
             {
-                throw new SchemaParseException(
-                    $"evidence_epa_field '{evidenceEpaField}' must point at an 'epa' field, but it is '{target.Type}'.");
+                throw PointerRefusal(
+                    $"evidence_epa_field '{evidenceEpaField}' must point at an 'epa' field, but it is '{target.Type}'.", evidenceEpaField, sections);
             }
         }
 
         return new FormSchema(version, sections, observationDateField, ratedLevelField, evidenceEpaField);
     }
 
-    private static FormSection ParseSection(JsonElement element)
+    /// <summary>
+    /// A form setting (the encounter date, rating or EPA field) that names a field it may not (T398, Q6): on the Form tab,
+    /// naming the field as written, and at that field's row where the form has one.
+    /// </summary>
+    private static SchemaParseException PointerRefusal(string message, string pointer, IReadOnlyList<FormSection> sections)
     {
-        EnsureObject(element, "Section must be an object.");
-        EnsureAllowedProperties(element, ["key", "title", "show_if", "editable_by", "fields"], "section");
+        var section = sections.FirstOrDefault(candidate =>
+            candidate.Fields.Any(field => string.Equals(field.Key, pointer, StringComparison.Ordinal)));
 
-        var key = GetRequiredString(element, "key");
-        var title = GetRequiredString(element, "title");
-        var fieldsElement = GetRequiredProperty(element, "fields");
-        EnsureArray(fieldsElement, $"Section '{key}' fields must be an array.");
-
-        var fields = fieldsElement
-            .EnumerateArray()
-            .Select(ParseField)
-            .ToList();
-
-        if (fields.Count == 0)
+        return SchemaParseException.At(new RefusalPlace(RefusalTab.Form, RefusalKind.Other, message)
         {
-            throw new SchemaParseException($"Section '{key}' must contain at least one field.");
-        }
-
-        return new FormSection(
-            key,
-            title,
-            ParseOptionalVisibilityCondition(element, "show_if"),
-            fields,
-            ParseOptionalActorRule(element, "editable_by"));
+            NamedField = pointer,
+            SectionKey = section?.Key,
+            FieldKeys = section is null ? [] : [pointer]
+        });
     }
 
-    private static FormField ParseField(JsonElement element)
+    /// <remarks>
+    /// A refusal inside a section whose key has been read is placed in that section (T398, Q6): the helpers below refuse
+    /// with their message alone, and this is where it is known whose message it is. A field's refusal is placed at its
+    /// field by <see cref="ParseField" /> first.
+    /// </remarks>
+    private static FormSection ParseSection(JsonElement element)
     {
-        EnsureObject(element, "Field must be an object.");
-        EnsureAllowedProperties(
-            element,
-            ["key", "type", "label", "help_text", "required", "options", "catalogue", "scale_key", "role", "validation", "show_if", "editable_by"],
-            "field");
+        string? key = null;
+        try
+        {
+            EnsureObject(element, "Section must be an object.");
+            EnsureAllowedProperties(element, ["key", "title", "show_if", "editable_by", "fields"], "section");
 
-        var key = GetRequiredString(element, "key");
-        var type = ParseFieldType(GetRequiredString(element, "type"));
+            key = GetRequiredString(element, "key");
+            var title = GetRequiredString(element, "title");
+            var fieldsElement = GetRequiredProperty(element, "fields");
+            EnsureArray(fieldsElement, $"Section '{key}' fields must be an array.");
 
-        return new FormField(
-            key,
-            type,
-            GetRequiredString(element, "label"),
-            GetOptionalTrimmedString(element, "help_text"),
-            GetBooleanOrDefault(element, "required"),
-            ParseOptions(element, key),
-            GetOptionalTrimmedString(element, "catalogue"),
-            GetOptionalTrimmedString(element, "scale_key"),
-            ParseOptionalNomineeRole(element, key, type),
-            ParseOptionalValidation(element, "validation"),
-            ParseOptionalVisibilityCondition(element, "show_if"),
-            ParseOptionalActorRule(element, "editable_by"));
+            var sectionKey = key;
+            var fields = fieldsElement
+                .EnumerateArray()
+                .Select(field => ParseField(field, sectionKey))
+                .ToList();
+
+            if (fields.Count == 0)
+            {
+                // T398 (Q6, R3-C20): worded at the section's head.
+                throw SchemaParseException.At(new RefusalPlace(
+                    RefusalTab.Form, RefusalKind.EmptySection, $"Section '{key}' must contain at least one field.")
+                {
+                    SectionKey = key
+                });
+            }
+
+            return new FormSection(
+                key,
+                title,
+                ParseOptionalVisibilityCondition(element, "show_if"),
+                fields,
+                ParseOptionalActorRule(element, "editable_by"));
+        }
+        catch (SchemaParseException exception) when (key is not null)
+        {
+            var sectionKey = key;
+            throw exception.PlacedAt(place => place with { SectionKey = sectionKey });
+        }
+    }
+
+    /// <remarks>A refusal of a field whose key has been read is placed at that field, in its section (T398, Q6).</remarks>
+    private static FormField ParseField(JsonElement element, string sectionKey)
+    {
+        string? key = null;
+        try
+        {
+            EnsureObject(element, "Field must be an object.");
+            EnsureAllowedProperties(
+                element,
+                ["key", "type", "label", "help_text", "required", "options", "catalogue", "scale_key", "role", "validation", "show_if", "editable_by"],
+                "field");
+
+            key = GetRequiredString(element, "key");
+            var type = ParseFieldType(GetRequiredString(element, "type"));
+
+            return new FormField(
+                key,
+                type,
+                GetRequiredString(element, "label"),
+                GetOptionalTrimmedString(element, "help_text"),
+                GetBooleanOrDefault(element, "required"),
+                ParseOptions(element, key),
+                GetOptionalTrimmedString(element, "catalogue"),
+                GetOptionalTrimmedString(element, "scale_key"),
+                ParseOptionalNomineeRole(element, key, type),
+                ParseOptionalValidation(element, "validation"),
+                ParseOptionalVisibilityCondition(element, "show_if"),
+                ParseOptionalActorRule(element, "editable_by"));
+        }
+        catch (SchemaParseException exception) when (key is not null)
+        {
+            var fieldKey = key;
+            throw exception.PlacedAt(place => place with { SectionKey = sectionKey, FieldKeys = [fieldKey] });
+        }
     }
 
     /// <summary>
@@ -345,10 +400,15 @@ public static class FormSchemaParser
                 $"Field '{fieldKey}' declares a role, but only a User field names a person; remove 'role' or make it a User field.");
         }
 
-        return WombatRoles.Nominable.FirstOrDefault(role => string.Equals(role, value, StringComparison.OrdinalIgnoreCase))
+        // The roles by label (T398, N1, T324): "Committee member", never "CommitteeMember". The refusal names them by
+        // label, so a label is accepted as well as the key, and stored as the key (the fix pass, code review S-1): an
+        // author who types what the refusal lists is not refused again.
+        return WombatRoles.Nominable.FirstOrDefault(role =>
+                   string.Equals(role, value, StringComparison.OrdinalIgnoreCase)
+                   || string.Equals(WombatRoleLabels.For(role), value, StringComparison.OrdinalIgnoreCase))
             ?? throw new SchemaParseException(
                 $"Field '{fieldKey}' declares role '{value}', which is not a role a nominee can hold. " +
-                $"Use one of: {string.Join(", ", WombatRoles.Nominable)}.");
+                $"Use one of: {string.Join(", ", WombatRoles.Nominable.Select(WombatRoleLabels.For))}.");
     }
 
     /// <summary>
@@ -666,7 +726,7 @@ public static class FormSchemaParser
     {
         var property = GetRequiredProperty(element, propertyName);
 
-        if (!property.TryGetInt32(out var value))
+        if (property.ValueKind != JsonValueKind.Number || !property.TryGetInt32(out var value))
         {
             throw new SchemaParseException($"Property '{propertyName}' must be an integer.");
         }
@@ -681,7 +741,7 @@ public static class FormSchemaParser
             return null;
         }
 
-        if (!property.TryGetInt32(out var value))
+        if (property.ValueKind != JsonValueKind.Number || !property.TryGetInt32(out var value))
         {
             throw new SchemaParseException($"Property '{propertyName}' must be an integer.");
         }
@@ -696,7 +756,7 @@ public static class FormSchemaParser
             return null;
         }
 
-        if (!property.TryGetDecimal(out var value))
+        if (property.ValueKind != JsonValueKind.Number || !property.TryGetDecimal(out var value))
         {
             throw new SchemaParseException($"Property '{propertyName}' must be numeric.");
         }

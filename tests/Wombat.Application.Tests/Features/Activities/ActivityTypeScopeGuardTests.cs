@@ -1,3 +1,4 @@
+using Wombat.Tests.Shared;
 using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -141,11 +142,11 @@ public sealed class ActivityTypeScopeGuardTests : IAsyncLifetime
         var (scope, scopeId) = Targets[target];
         var typeId = _typeIds[target];
 
-        (await ActivityTypeAdminScope.MayWriteAsync(_db, principal, scope, scopeId, CancellationToken.None))
+        (await ActivityTypeAdminScope.MayWriteAsync(_db, principal, scope, scopeId, systemManaged: false, CancellationToken.None))
             .Should().Be(mayWrite, $"the rule for {caller} on a {target} type");
 
-        var editor = await new GetActivityTypeEditorQueryHandler(_db).Handle(
-            new GetActivityTypeEditorQuery(typeId, principal), CancellationToken.None);
+        var editor = (await new GetActivityTypeEditorQueryHandler(_db, FakeUserDirectory.Empty).Handle(
+            new GetActivityTypeEditorQuery(typeId, principal), CancellationToken.None))!;
         editor.CanWrite.Should().Be(mayWrite, $"the editor tells {caller} what the guard will do on a {target} type");
 
         var list = await new ListActivityTypesAdminQueryHandler(_db).Handle(
@@ -162,7 +163,7 @@ public sealed class ActivityTypeScopeGuardTests : IAsyncLifetime
 
         // The guard itself, through the save that keeps the type where it is: it asks of both the stored scope and the
         // requested one. A refusal is the guard's, and it leaves nothing for the audit pipeline's save to commit.
-        var save = () => new SaveActivityTypeDraftCommandHandler(_db).Handle(
+        var save = () => new SaveActivityTypeDraftCommandHandler(_db, FakeUserDirectory.Empty).Handle(
             SaveInPlace(typeId, KeyOf(target), target, scope, scopeId, principal), CancellationToken.None);
         if (mayWrite)
         {
@@ -198,7 +199,7 @@ public sealed class ActivityTypeScopeGuardTests : IAsyncLifetime
         var admitted = new List<(ActivityScope, int?)>();
         foreach (var pair in EveryPair())
         {
-            if (await ActivityTypeAdminScope.MayWriteAsync(_db, principal, pair.Scope, pair.ScopeId, CancellationToken.None))
+            if (await ActivityTypeAdminScope.MayWriteAsync(_db, principal, pair.Scope, pair.ScopeId, systemManaged: false, CancellationToken.None))
             {
                 admitted.Add(pair);
             }
@@ -236,8 +237,10 @@ public sealed class ActivityTypeScopeGuardTests : IAsyncLifetime
         var offered = await ActivityTypeAdminScope.WritableScopesAsync(_db, TestPrincipals.CollegeAdmin(Cpsa), CancellationToken.None);
 
         offered.Select(choice => choice.Scope).Should().Equal(ActivityScope.Speciality, ActivityScope.SubSpeciality);
-        offered[0].Targets.Should().Equal(new ActivityTypeScopeTargetDto(CpsaSpeciality, "Paediatrics"));
-        offered[1].Targets.Should().Equal(new ActivityTypeScopeTargetDto(CpsaSubSpeciality, "Paediatrics / Neonatology"));
+        // Each with its College's short code, for the owner line of a scope chosen on the page (the fix pass, N2).
+        offered[0].Targets.Should().Equal(new ActivityTypeScopeTargetDto(CpsaSpeciality, "Paediatrics") { OwningCollegeShortCode = "CPSA" });
+        offered[1].Targets.Should().Equal(
+            new ActivityTypeScopeTargetDto(CpsaSubSpeciality, "Paediatrics / Neonatology") { OwningCollegeShortCode = "CPSA" });
     }
 
     /// <summary>
@@ -265,7 +268,7 @@ public sealed class ActivityTypeScopeGuardTests : IAsyncLifetime
         var principal = TestPrincipals.InstitutionalAdmin(InstitutionA);
         var editor = await NewTypeAsync(principal);
 
-        var saved = await new SaveActivityTypeDraftCommandHandler(_db).Handle(
+        var saved = await new SaveActivityTypeDraftCommandHandler(_db, FakeUserDirectory.Empty).Handle(
             new SaveActivityTypeDraftCommand(
                 null,
                 "kgk_teaching_log",
@@ -334,9 +337,9 @@ public sealed class ActivityTypeScopeGuardTests : IAsyncLifetime
         var institutionList = await new ListActivityTypesAdminQueryHandler(_db).Handle(
             new ListActivityTypesAdminQuery(TestPrincipals.InstitutionalAdmin(InstitutionA)), CancellationToken.None);
         institutionList.Items.Should().NotContain(item => item.Id == draftOnly.Id);
-        var openAsInstitution = () => new GetActivityTypeEditorQueryHandler(_db).Handle(
+        var openAsInstitution = () => new GetActivityTypeEditorQueryHandler(_db, FakeUserDirectory.Empty).Handle(
             new GetActivityTypeEditorQuery(draftOnly.Id, TestPrincipals.InstitutionalAdmin(InstitutionA)), CancellationToken.None);
-        await openAsInstitution.Should().ThrowAsync<InvalidOperationException>("guard: the editor does not open it to her");
+        (await openAsInstitution()).Should().BeNull("guard: the editor does not open it to her (T398, N3: null, not a throw)");
 
         var collegeList = await new ListActivityTypesAdminQueryHandler(_db).Handle(
             new ListActivityTypesAdminQuery(TestPrincipals.CollegeAdmin(Cpsa)), CancellationToken.None);
@@ -351,8 +354,8 @@ public sealed class ActivityTypeScopeGuardTests : IAsyncLifetime
     [InlineData(CpsaSubSpecialityType, "Paediatrics / Neonatology")]
     public async Task TheEditor_NamesTheScopesTarget(string target, string? name)
     {
-        var editor = await new GetActivityTypeEditorQueryHandler(_db).Handle(
-            new GetActivityTypeEditorQuery(_typeIds[target], TestPrincipals.InstitutionalAdmin(InstitutionA)), CancellationToken.None);
+        var editor = (await new GetActivityTypeEditorQueryHandler(_db, FakeUserDirectory.Empty).Handle(
+            new GetActivityTypeEditorQuery(_typeIds[target], TestPrincipals.InstitutionalAdmin(InstitutionA)), CancellationToken.None))!;
 
         editor.ScopeTargetName.Should().Be(name);
     }
@@ -394,8 +397,8 @@ public sealed class ActivityTypeScopeGuardTests : IAsyncLifetime
             }
 
             row.ScopeTargetName.Should().Be(name, $"the list names a {target} type's target to {caller}");
-            var editor = await new GetActivityTypeEditorQueryHandler(_db).Handle(
-                new GetActivityTypeEditorQuery(row.Id, principal), CancellationToken.None);
+            var editor = (await new GetActivityTypeEditorQueryHandler(_db, FakeUserDirectory.Empty).Handle(
+                new GetActivityTypeEditorQuery(row.Id, principal), CancellationToken.None))!;
             editor.ScopeTargetName.Should().Be(row.ScopeTargetName, "the list and the editor name a target alike");
         }
     }
@@ -427,10 +430,10 @@ public sealed class ActivityTypeScopeGuardTests : IAsyncLifetime
     [InlineData(-1)]
     public async Task AnIdThatNamesNoType_IsNotFound_NotANewType(int activityTypeId)
     {
-        var open = () => new GetActivityTypeEditorQueryHandler(_db).Handle(
+        var open = () => new GetActivityTypeEditorQueryHandler(_db, FakeUserDirectory.Empty).Handle(
             new GetActivityTypeEditorQuery(activityTypeId, TestPrincipals.Administrator()), CancellationToken.None);
 
-        await open.Should().ThrowAsync<InvalidOperationException>().WithMessage("The activity type could not be found.");
+        (await open()).Should().BeNull("an id names a type or is not found, and not found is null (T398, N3)");
     }
 
     /// <summary>
@@ -441,9 +444,9 @@ public sealed class ActivityTypeScopeGuardTests : IAsyncLifetime
     [Fact]
     public async Task TheFilingPagesRead_JudgesNothingForTheBuilder_ButStillWhoMayOpenTheType()
     {
-        var editor = await new GetActivityTypeEditorQueryHandler(_db).Handle(
+        var editor = (await new GetActivityTypeEditorQueryHandler(_db, FakeUserDirectory.Empty).Handle(
             new GetActivityTypeEditorQuery(_typeIds[CpsaSpecialityType], TestPrincipals.Administrator(), ForBuilder: false),
-            CancellationToken.None);
+            CancellationToken.None))!;
 
         editor.Key.Should().Be(KeyOf(CpsaSpecialityType));
         editor.PublishedSchemaJson.Should().Be(SchemaJson);
@@ -456,10 +459,10 @@ public sealed class ActivityTypeScopeGuardTests : IAsyncLifetime
         _db.ActivityTypes.Add(draftOnly);
         await _db.SaveChangesAsync();
 
-        var openAsInstitution = () => new GetActivityTypeEditorQueryHandler(_db).Handle(
+        var openAsInstitution = () => new GetActivityTypeEditorQueryHandler(_db, FakeUserDirectory.Empty).Handle(
             new GetActivityTypeEditorQuery(draftOnly.Id, TestPrincipals.InstitutionalAdmin(InstitutionA), ForBuilder: false),
             CancellationToken.None);
-        await openAsInstitution.Should().ThrowAsync<InvalidOperationException>("a College's unpublished type is not hers to open");
+        (await openAsInstitution()).Should().BeNull("a College's unpublished type is not hers to open");
     }
 
     [Fact]
@@ -475,25 +478,25 @@ public sealed class ActivityTypeScopeGuardTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task GetActivityTypeEditor_InstitutionalAdmin_OtherInstitutionsUnpublishedType_Throws()
+    public async Task GetActivityTypeEditor_InstitutionalAdmin_OtherInstitutionsUnpublishedType_IsNull()
     {
         var unpublished = PublishedType("type-b-draft", "TypeB draft", ActivityScope.Institution, InstitutionB);
         unpublished.Version = 0;
         _db.ActivityTypes.Add(unpublished);
         await _db.SaveChangesAsync();
 
-        var act = () => new GetActivityTypeEditorQueryHandler(_db).Handle(
+        var act = () => new GetActivityTypeEditorQueryHandler(_db, FakeUserDirectory.Empty).Handle(
             new GetActivityTypeEditorQuery(unpublished.Id, TestPrincipals.InstitutionalAdmin(InstitutionA)),
             CancellationToken.None);
 
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        (await act()).Should().BeNull("out of scope reads as not found (T398, N3)");
     }
 
     [Fact]
     public async Task SaveActivityTypeDraft_InstitutionalAdmin_RejectsMovingHerTypeToAnotherInstitution()
     {
         var principal = TestPrincipals.InstitutionalAdmin(InstitutionA);
-        var act = () => new SaveActivityTypeDraftCommandHandler(_db).Handle(
+        var act = () => new SaveActivityTypeDraftCommandHandler(_db, FakeUserDirectory.Empty).Handle(
             SaveInPlace(_typeIds[InstitutionAType], KeyOf(InstitutionAType), "Moved", ActivityScope.Institution, InstitutionB, principal),
             CancellationToken.None);
 
@@ -504,7 +507,7 @@ public sealed class ActivityTypeScopeGuardTests : IAsyncLifetime
     public async Task SaveActivityTypeDraft_InstitutionalAdmin_RejectsMovingHerTypeUpToGlobal()
     {
         var principal = TestPrincipals.InstitutionalAdmin(InstitutionA);
-        var act = () => new SaveActivityTypeDraftCommandHandler(_db).Handle(
+        var act = () => new SaveActivityTypeDraftCommandHandler(_db, FakeUserDirectory.Empty).Handle(
             SaveInPlace(_typeIds[InstitutionAType], KeyOf(InstitutionAType), "Moved", ActivityScope.Global, null, principal),
             CancellationToken.None);
 
@@ -515,7 +518,7 @@ public sealed class ActivityTypeScopeGuardTests : IAsyncLifetime
     [Fact]
     public async Task DiscardActivityTypeDraft_InstitutionalAdmin_RejectsOtherInstitution()
     {
-        var act = () => new DiscardActivityTypeDraftCommandHandler(_db).Handle(
+        var act = () => new DiscardActivityTypeDraftCommandHandler(_db, FakeUserDirectory.Empty).Handle(
             new DiscardActivityTypeDraftCommand(_typeIds[InstitutionBType], TestPrincipals.InstitutionalAdmin(InstitutionA)),
             CancellationToken.None);
 
@@ -526,12 +529,152 @@ public sealed class ActivityTypeScopeGuardTests : IAsyncLifetime
     [Fact]
     public async Task DiscardActivityTypeDraft_InstitutionalAdmin_RejectsACollegeInstrument_InTheGuardsWords()
     {
-        var act = () => new DiscardActivityTypeDraftCommandHandler(_db).Handle(
+        var act = () => new DiscardActivityTypeDraftCommandHandler(_db, FakeUserDirectory.Empty).Handle(
             new DiscardActivityTypeDraftCommand(_typeIds[CpsaSpecialityType], TestPrincipals.InstitutionalAdmin(InstitutionA)),
             CancellationToken.None);
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>()
             .WithMessage("You do not have permission to modify activity types in that speciality.");
+    }
+
+    /// <summary>
+    /// T398 (flow 17, Q9, T334, N10): a system-managed type is its release's alone. The rule, the editor and the list say
+    /// so to every caller, the Administrator included, and the guard refuses it first, in its own words, before the scope.
+    /// </summary>
+    [Theory]
+    [InlineData(Administrator)]
+    [InlineData(CollegeAdminOfCpsa)]
+    public async Task ASystemManagedType_IsWrittenByNobodyHere_InTheReleasesWords(string caller)
+    {
+        var msf = await AddSystemManagedAsync(isActive: true);
+        var principal = PrincipalOf(caller);
+
+        ActivityTypeAdminScope.MayWrite(principal, ActivityScope.Speciality, CpsaSpeciality, Cpsa, systemManaged: true)
+            .Should().BeFalse("the rule refuses a system-managed type to everyone");
+        ActivityTypeAdminScope.MayWrite(principal, ActivityScope.Speciality, CpsaSpeciality, Cpsa, systemManaged: false)
+            .Should().BeTrue("guard: the scope alone admits the caller");
+        (await ActivityTypeAdminScope.MayWriteAsync(_db, principal, ActivityScope.Speciality, CpsaSpeciality, systemManaged: true, CancellationToken.None))
+            .Should().BeFalse();
+
+        var editor = (await new GetActivityTypeEditorQueryHandler(_db, FakeUserDirectory.Empty).Handle(new GetActivityTypeEditorQuery(msf.Id, principal), CancellationToken.None))!;
+        editor.CanWrite.Should().BeFalse("the builder offers nothing to save");
+        editor.WritableScopes.Should().BeEmpty();
+
+        var list = await new ListActivityTypesAdminQueryHandler(_db).Handle(new ListActivityTypesAdminQuery(principal), CancellationToken.None);
+        list.Items.Should().ContainSingle(item => item.Id == msf.Id).Which.CanWrite.Should().BeFalse("the list offers View, not Edit");
+
+        var save = () => new SaveActivityTypeDraftCommandHandler(_db, FakeUserDirectory.Empty).Handle(
+            SaveInPlace(msf.Id, msf.Key, "Renamed", ActivityScope.Speciality, CpsaSpeciality, principal), CancellationToken.None);
+        await save.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage(
+            "Nothing was saved. Multi-Source Feedback (Paediatrics) is written by the MSF release, so it cannot be changed here.");
+
+        var discard = () => new DiscardActivityTypeDraftCommandHandler(_db, FakeUserDirectory.Empty).Handle(
+            new DiscardActivityTypeDraftCommand(msf.Id, principal), CancellationToken.None);
+        await discard.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage(
+            "Nothing was saved. Multi-Source Feedback (Paediatrics) is written by the MSF release, so it cannot be changed here.");
+
+        _db.ChangeTracker.Entries().Where(entry => entry.State != EntityState.Unchanged).Should().BeEmpty("nothing is staged");
+    }
+
+    /// <summary>
+    /// The guard asks the flag before the scope (N10): an institution's admin, whom the scope refuses too, is told the
+    /// release's words, not the scope's.
+    /// </summary>
+    [Fact]
+    public async Task TheGuard_RefusesASystemManagedType_BeforeTheScope()
+    {
+        var msf = await AddSystemManagedAsync(isActive: true);
+
+        var save = () => new SaveActivityTypeDraftCommandHandler(_db, FakeUserDirectory.Empty).Handle(
+            SaveInPlace(msf.Id, msf.Key, "Renamed", ActivityScope.Speciality, CpsaSpeciality, TestPrincipals.InstitutionalAdmin(InstitutionA)),
+            CancellationToken.None);
+
+        await save.Should().ThrowAsync<UnauthorizedAccessException>()
+            .WithMessage("Nothing was saved. Multi-Source Feedback (Paediatrics) is written by the MSF release, so it cannot be changed here.");
+    }
+
+    /// <summary>
+    /// The fix pass (code review N-2): an outsider who may not even read the type (here an inactive one) is told the
+    /// scope's words, so its name is not learnt from its id.
+    /// </summary>
+    [Fact]
+    public async Task TheGuard_TellsAnOutsiderWhoMayNotReadTheType_TheScopesWords_NotItsName()
+    {
+        var msf = await AddSystemManagedAsync(isActive: false);
+
+        var save = () => new SaveActivityTypeDraftCommandHandler(_db, FakeUserDirectory.Empty).Handle(
+            SaveInPlace(msf.Id, msf.Key, "Renamed", ActivityScope.Speciality, CpsaSpeciality, TestPrincipals.InstitutionalAdmin(InstitutionA)),
+            CancellationToken.None);
+
+        await save.Should().ThrowAsync<UnauthorizedAccessException>()
+            .WithMessage("You do not have permission to modify activity types in that speciality.");
+    }
+
+    [Theory]
+    [InlineData("msf_cpsa", "the MSF release")]
+    [InlineData("learner_feedback_cpsa", "the learner-feedback release")]
+    [InlineData("mini_cex_cpsa", null)]
+    public void EachRelease_IsNamedByItsTypesKey(string key, string? writtenBy)
+        => SystemManagedReleases.WrittenBy(key).Should().Be(writtenBy);
+
+    /// <summary>
+    /// Q19: T334 changes writing only. An inactive system-managed type stays readable, and listed, to the roles that read
+    /// it before (the College that owns its discipline, and an Administrator); an institution's admin, who read it only
+    /// while it was active and published, still reads it then, and still not once it is inactive.
+    /// </summary>
+    [Fact]
+    public async Task AnInactiveSystemManagedType_StaysReadable_ToWhoeverReadItBefore()
+    {
+        var inactive = await AddSystemManagedAsync(isActive: false);
+
+        foreach (var caller in new[] { Administrator, CollegeAdminOfCpsa })
+        {
+            var principal = PrincipalOf(caller);
+            var editor = (await new GetActivityTypeEditorQueryHandler(_db, FakeUserDirectory.Empty).Handle(
+                new GetActivityTypeEditorQuery(inactive.Id, principal), CancellationToken.None))!;
+            editor.Key.Should().Be("msf_cpsa", $"{caller} still reads it");
+            editor.CanWrite.Should().BeFalse();
+
+            var list = await new ListActivityTypesAdminQueryHandler(_db).Handle(new ListActivityTypesAdminQuery(principal), CancellationToken.None);
+            list.Items.Should().ContainSingle(item => item.Id == inactive.Id, $"{caller} still sees it listed")
+                .Which.CanWrite.Should().BeFalse();
+        }
+
+        var institution = TestPrincipals.InstitutionalAdmin(InstitutionA);
+        var institutionList = await new ListActivityTypesAdminQueryHandler(_db).Handle(new ListActivityTypesAdminQuery(institution), CancellationToken.None);
+        institutionList.Items.Should().NotContain(item => item.Id == inactive.Id, "an inactive College type was never hers to read");
+        var openAsInstitution = () => new GetActivityTypeEditorQueryHandler(_db, FakeUserDirectory.Empty).Handle(
+            new GetActivityTypeEditorQuery(inactive.Id, institution), CancellationToken.None);
+        (await openAsInstitution()).Should().BeNull();
+
+        inactive.IsActive = true;
+        await _db.SaveChangesAsync();
+        (await new GetActivityTypeEditorQueryHandler(_db, FakeUserDirectory.Empty).Handle(new GetActivityTypeEditorQuery(inactive.Id, institution), CancellationToken.None))!
+            .Key.Should().Be("msf_cpsa", "an active, published one she reads, as any form template");
+    }
+
+    [Fact]
+    public void MayRead_IsTheScopeRule_AndIgnoresWhetherTheTypeIsSystemManaged()
+    {
+        var college = TestPrincipals.InRoles([WombatRoles.CollegeAdmin], "college-admin-user", InstitutionA).WithCollege(Cpsa);
+        var institution = TestPrincipals.InstitutionalAdmin(InstitutionA);
+
+        ActivityTypeAdminScope.MayRead(college, ActivityScope.Speciality, CpsaSpeciality, Cpsa, isActive: false, publishedVersion: 1).Should().BeTrue();
+        ActivityTypeAdminScope.MayRead(institution, ActivityScope.Speciality, CpsaSpeciality, Cpsa, isActive: false, publishedVersion: 1).Should().BeFalse();
+        ActivityTypeAdminScope.MayRead(institution, ActivityScope.Speciality, CpsaSpeciality, Cpsa, isActive: true, publishedVersion: 1).Should().BeTrue();
+        ActivityTypeAdminScope.MayRead(institution, ActivityScope.Speciality, CpsaSpeciality, Cpsa, isActive: true, publishedVersion: 0).Should().BeFalse();
+        ActivityTypeAdminScope.MayRead(institution, ActivityScope.Global, null, null, isActive: false, publishedVersion: 0).Should().BeTrue();
+        ActivityTypeAdminScope.MayRead(institution, ActivityScope.Institution, InstitutionA, null, isActive: false, publishedVersion: 0).Should().BeTrue();
+    }
+
+    private async Task<ActivityType> AddSystemManagedAsync(bool isActive)
+    {
+        var type = PublishedType("msf_cpsa", "Multi-Source Feedback (Paediatrics)", ActivityScope.Speciality, CpsaSpeciality);
+        type.SystemManaged = true;
+        type.IsActive = isActive;
+        _db.ActivityTypes.Add(type);
+        await _db.SaveChangesAsync();
+        return type;
     }
 
     private static IEnumerable<(ActivityScope Scope, int? ScopeId)> EveryPair()
@@ -557,7 +700,7 @@ public sealed class ActivityTypeScopeGuardTests : IAsyncLifetime
     };
 
     private async Task<ActivityTypeEditorDto> NewTypeAsync(ClaimsPrincipal principal)
-        => await new GetActivityTypeEditorQueryHandler(_db).Handle(new GetActivityTypeEditorQuery(null, principal), CancellationToken.None);
+        => (await new GetActivityTypeEditorQueryHandler(_db, FakeUserDirectory.Empty).Handle(new GetActivityTypeEditorQuery(null, principal), CancellationToken.None))!;
 
     private static SaveActivityTypeDraftCommand SaveInPlace(
         int typeId, string key, string name, ActivityScope scope, int? scopeId, ClaimsPrincipal principal)

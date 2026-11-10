@@ -15,16 +15,24 @@ public static class CreditRulesParser
         }
         catch (JsonException exception)
         {
-            throw new CreditRulesParseException($"Credit rules JSON is malformed: {exception.Message}");
+            // T398 (Q6, S11): at the line the reader stopped on, so the builder can say where.
+            throw CreditRulesParseException.At(
+                DslJson.Malformed(RefusalTab.Credit, $"Credit rules JSON is malformed: {exception.Message}", exception));
         }
     }
 
-    public static string Serialize(CreditRules rules)
+    public static string Serialize(CreditRules rules) => Serialize(rules, indented: false);
+
+    /// <summary>
+    /// The credit rules as JSON: compact, as they are stored; or, with <paramref name="indented" />, laid out for the
+    /// builder's page alone (T398, Q13, S11), one property a line in the same key order. Never store the indented text.
+    /// </summary>
+    public static string Serialize(CreditRules rules, bool indented)
     {
         ArgumentNullException.ThrowIfNull(rules);
 
         using var stream = new MemoryStream();
-        using var writer = new Utf8JsonWriter(stream);
+        using var writer = DslJson.Writer(stream, indented);
         writer.WriteStartObject();
         writer.WritePropertyName("counts_for");
         writer.WriteStartArray();
@@ -79,25 +87,33 @@ public static class CreditRulesParser
 
         var directives = GetRequiredArray(root, "counts_for", "Property 'counts_for' must be an array.")
             .EnumerateArray()
-            .Select(ParseDirective)
+            .Select((element, index) => ParseDirective(element, index + 1))
             .ToList();
 
         return new CreditRules(directives);
     }
 
-    private static CreditDirective ParseDirective(JsonElement element)
+    /// <remarks>Every refusal of a directive is placed at it, counted from 1 (T398, Q6; S4: the summary says "Credit:").</remarks>
+    private static CreditDirective ParseDirective(JsonElement element, int number)
     {
-        EnsureObject(element, "Credit directive must be an object.");
-        EnsureAllowedProperties(
-            element,
-            ["curriculum_item_match", "amount", "minimum_level_field", "minimum_level_fixed"],
-            "credit directive");
+        try
+        {
+            EnsureObject(element, "Credit directive must be an object.");
+            EnsureAllowedProperties(
+                element,
+                ["curriculum_item_match", "amount", "minimum_level_field", "minimum_level_fixed"],
+                "credit directive");
 
-        return new CreditDirective(
-            ParseCurriculumItemMatchRule(GetRequiredProperty(element, "curriculum_item_match")),
-            GetRequiredInt(element, "amount"),
-            GetOptionalTrimmedString(element, "minimum_level_field"),
-            GetOptionalTrimmedString(element, "minimum_level_fixed"));
+            return new CreditDirective(
+                ParseCurriculumItemMatchRule(GetRequiredProperty(element, "curriculum_item_match")),
+                GetRequiredInt(element, "amount"),
+                GetOptionalTrimmedString(element, "minimum_level_field"),
+                GetOptionalTrimmedString(element, "minimum_level_fixed"));
+        }
+        catch (CreditRulesParseException exception)
+        {
+            throw exception.PlacedAt(place => place with { DirectiveNumber = number });
+        }
     }
 
     private static CurriculumItemMatchRule ParseCurriculumItemMatchRule(JsonElement element)
@@ -151,7 +167,7 @@ public static class CreditRulesParser
     private static int GetRequiredInt(JsonElement element, string propertyName)
     {
         var property = GetRequiredProperty(element, propertyName);
-        if (!property.TryGetInt32(out var value))
+        if (property.ValueKind != JsonValueKind.Number || !property.TryGetInt32(out var value))
         {
             throw new CreditRulesParseException($"Property '{propertyName}' must be an integer.");
         }
@@ -166,7 +182,7 @@ public static class CreditRulesParser
             return null;
         }
 
-        if (!property.TryGetInt32(out var value))
+        if (property.ValueKind != JsonValueKind.Number || !property.TryGetInt32(out var value))
         {
             throw new CreditRulesParseException($"Property '{propertyName}' must be an integer.");
         }

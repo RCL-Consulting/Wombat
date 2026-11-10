@@ -305,7 +305,9 @@
       if (match is not null)
       {
         // Only the type's definition: what the builder would let the caller change is not this page's to know (T300 review).
-        _selectedEditor = await Sender.Send(new Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor.GetActivityTypeEditorQuery(match.Id, user, ForBuilder: false));
+        // A type it may not read, or that has gone, is null (T398, N3): this page's own load failure, as the throw was.
+        _selectedEditor = await Sender.Send(new Wombat.Application.Features.Activities.Queries.GetActivityTypeEditor.GetActivityTypeEditorQuery(match.Id, user, ForBuilder: false))
+          ?? throw new InvalidOperationException("The activity type could not be read.");
         _selectedType = match;
         _fileAgain = fileAgain;
         _dataJson = fileAgain?.DataJson ?? "{}";

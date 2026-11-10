@@ -175,6 +175,15 @@ internal sealed class BuilderSchemaModel
         return $"{prefix}_{number}";
     }
 
+    /// <summary>
+    /// What publishing <paramref name="draftSchemaJson" /> over <paramref name="publishedSchemaJson" /> changes for the form,
+    /// in words (T398, flow 17, N1, T324): every field, type, role and setting by its label, never by its key or its enum.
+    /// </summary>
+    /// <remarks>
+    /// A field present in both is named by the draft's label, where the two differ; a field the draft dropped by the
+    /// published one's (R3-0-spec-2's GetPublishWarnings row). A setting is named by the label of the field it points at,
+    /// looked up the same way. A role is a person with its article, "an Assessor" (T24).
+    /// </remarks>
     public static IReadOnlyList<string> GetPublishWarnings(string? publishedSchemaJson, string draftSchemaJson)
     {
         if (string.IsNullOrWhiteSpace(publishedSchemaJson))
@@ -204,14 +213,18 @@ internal sealed class BuilderSchemaModel
                     continue;
                 }
 
+                var label = draftField.Label;
                 if (draftField.Type != publishedField.Type)
                 {
-                    warnings.Add($"Field '{publishedField.Label}' changes type from '{publishedField.Type}' to '{draftField.Type}'.");
+                    // No quotes round a type (N1): "changes type from Long text to Text".
+                    warnings.Add(
+                        $"Field '{label}' changes type from {ActivityTypeEditWords.FieldTypeLabel(publishedField.Type)} " +
+                        $"to {ActivityTypeEditWords.FieldTypeLabel(draftField.Type)}.");
                 }
 
                 if (!publishedField.Required && draftField.Required)
                 {
-                    warnings.Add($"Field '{publishedField.Label}' becomes required.");
+                    warnings.Add($"Field '{label}' becomes required.");
                 }
 
                 // Compared as the requirement each declares: an absent role IS Assessor, so spelling the default out
@@ -224,8 +237,9 @@ internal sealed class BuilderSchemaModel
                         StringComparison.Ordinal))
                 {
                     warnings.Add(
-                        $"Field '{publishedField.Label}' will name a {draftField.NomineeRole ?? "Assessor"} instead of a " +
-                        $"{publishedField.NomineeRole ?? "Assessor"}. Activities already filed keep the person they named.");
+                        $"Field '{label}' will name {ActivityTypeEditWords.RoleWithArticle(draftField.NomineeRole ?? WombatRoles.Assessor)} " +
+                        $"instead of {ActivityTypeEditWords.RoleWithArticle(publishedField.NomineeRole ?? WombatRoles.Assessor)}. " +
+                        "Activities already filed keep the person they named.");
                 }
             }
         }
@@ -234,12 +248,38 @@ internal sealed class BuilderSchemaModel
         // silent by construction -- nothing on the form changes, nothing refuses, and the feature just
         // stops. An operator who deletes a pointed-at field sees the field removal warned above and
         // had no way to know the pointer went with it. (T133)
-        AddPointerWarning(warnings, "encounter date", published.ObservationDateField, draft.ObservationDateField);
-        AddPointerWarning(warnings, "entrustment rating", published.RatedLevelField, draft.RatedLevelField);
-        AddPointerWarning(warnings, "EPA", published.EvidenceEpaField, draft.EvidenceEpaField);
+        string LabelOf(string key) => LabelIn(draft, key) ?? LabelIn(published, key) ?? key;
+        AddPointerWarning(warnings, "encounter date", published.ObservationDateField, draft.ObservationDateField, LabelOf);
+        AddPointerWarning(warnings, "entrustment rating", published.RatedLevelField, draft.RatedLevelField, LabelOf);
+        AddPointerWarning(warnings, "EPA", published.EvidenceEpaField, draft.EvidenceEpaField, LabelOf);
 
         return warnings;
     }
+
+    /// <summary>
+    /// The labels of the published fields the draft removes, in the published order (T398, R3-E04's pinned line: "with
+    /// Audience as they filed it"). A removed section's fields count as removed.
+    /// </summary>
+    public static IReadOnlyList<string> RemovedFieldLabels(string? publishedSchemaJson, string draftSchemaJson)
+    {
+        if (string.IsNullOrWhiteSpace(publishedSchemaJson))
+        {
+            return [];
+        }
+
+        var published = FormSchemaParser.Parse(publishedSchemaJson);
+        var draft = FormSchemaParser.Parse(draftSchemaJson);
+        return published.Sections
+            .SelectMany(section => section.Fields.Select(field => (section.Key, Field: field)))
+            .Where(pair => draft.Sections.SingleOrDefault(section => section.Key == pair.Key)?.Fields
+                .Any(field => field.Key == pair.Field.Key) != true)
+            .Select(pair => pair.Field.Label)
+            .ToList();
+    }
+
+    private static string? LabelIn(FormSchema schema, string key)
+        => schema.Sections.SelectMany(section => section.Fields)
+            .FirstOrDefault(field => string.Equals(field.Key, key, StringComparison.Ordinal))?.Label;
 
     private static VisibilityCondition? BuildVisibility(string? field, string? @operator, string? value)
     {
@@ -347,7 +387,8 @@ internal sealed class BuilderSchemaModel
         return JsonSerializer.Serialize(keys);
     }
 
-    private static void AddPointerWarning(List<string> warnings, string what, string? published, string? draft)
+    private static void AddPointerWarning(
+        List<string> warnings, string what, string? published, string? draft, Func<string, string> labelOf)
     {
         if (string.Equals(published, draft, StringComparison.Ordinal))
         {
@@ -362,11 +403,11 @@ internal sealed class BuilderSchemaModel
 
         if (published is null)
         {
-            warnings.Add($"Field '{draft}' will become the {what} for this form.");
+            warnings.Add($"Field '{labelOf(draft!)}' will become the {what} for this form.");
             return;
         }
 
-        warnings.Add($"The {what} moves from field '{published}' to '{draft}'.");
+        warnings.Add($"The {what} moves from field '{labelOf(published)}' to '{labelOf(draft!)}'.");
     }
 
     private static string NormalizeKey(string? value, string subject)

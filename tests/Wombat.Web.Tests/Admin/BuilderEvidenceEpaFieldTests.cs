@@ -112,7 +112,7 @@ public sealed class BuilderEvidenceEpaFieldTests : TestContext
         var declared = BuilderSchemaModel.Parse(WithoutPointer);
         declared.EvidenceEpaField = "epa_id";
         BuilderSchemaModel.GetPublishWarnings(WithoutPointer, declared.ToJson())
-            .Should().Contain(warning => warning.Contains("'epa_id' will become the EPA for this form"));
+            .Should().Contain(warning => warning == "Field 'EPA' will become the EPA for this form.");
 
         var removed = BuilderSchemaModel.Parse(WithPointer);
         removed.EvidenceEpaField = null;
@@ -122,7 +122,7 @@ public sealed class BuilderEvidenceEpaFieldTests : TestContext
         var moved = BuilderSchemaModel.Parse(WithPointer);
         moved.EvidenceEpaField = "second_epa";
         BuilderSchemaModel.GetPublishWarnings(WithPointer, moved.ToJson())
-            .Should().Contain(warning => warning.Contains("The EPA moves from field 'epa_id' to 'second_epa'"));
+            .Should().Contain(warning => warning == "The EPA moves from field 'EPA' to 'Another EPA'.");
     }
 
     // ---- the page -------------------------------------------------------------------------------------------------

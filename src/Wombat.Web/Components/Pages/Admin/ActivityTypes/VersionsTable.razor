@@ -1,0 +1,59 @@
+@*
+  "Published versions" (T398, flow 17, lane B; Q3, T16; boards R2-B03, R2-E03, R2-E06, R3-E01; build-contracts § 0 and
+  § 2): the heading "Versions" at HeadingLevel (2 on a reader's Details, under the panel's h2; 3 on a writer's Publish
+  tab, under its h2 "Publish"), then each version by its number, the South African day it was published and who
+  published it (the editor query's names, lane A: "Wombat's catalogue" for the seeder), or "Not published yet."; then Q3's
+  line. A publisher the query could not name is left blank, never shown by id; with no publisher named on any row the
+  By column is not drawn (T239).
+*@
+<div class="versions-readout">
+  @Heading
+  @if (Versions.Count == 0)
+  {
+    <p>@ActivityTypeReadWords.NotPublishedYet</p>
+  }
+  else
+  {
+    var namesAny = Versions.Any(version => !string.IsNullOrWhiteSpace(version.PublishedByName));
+    <DataTable TItem="ActivityTypeVersionDto" Items="@Versions.OrderBy(version => version.Version).ToList()" StackWide="true" Caption="@ActivityTypeReadWords.VersionsCaption">
+      <HeaderRow>
+        <tr role="row">
+          <th scope="col" role="columnheader">@ActivityTypeReadWords.VersionColumn</th>
+          <th scope="col" role="columnheader">@ActivityTypeReadWords.PublishedColumn</th>
+          @if (namesAny)
+          {
+            <th scope="col" role="columnheader">@ActivityTypeReadWords.ByColumn</th>
+          }
+        </tr>
+      </HeaderRow>
+      <Row Context="version">
+        <tr role="row" @key="version.Version">
+          <th scope="row" role="rowheader">@ActivityTypeReadWords.Version(version.Version)</th>
+          <td role="cell" data-label="@ActivityTypeReadWords.PublishedColumn">@ActivityTypeReadWords.PublishedOn(version.PublishedOn)</td>
+          @if (namesAny)
+          {
+            <td role="cell" data-label="@ActivityTypeReadWords.ByColumn">@version.PublishedByName</td>
+          }
+        </tr>
+      </Row>
+    </DataTable>
+  }
+  <p class="muted">@ActivityTypeReadWords.VersionsStay</p>
+</div>
+
+@code {
+  [Parameter, EditorRequired]
+  public IReadOnlyList<ActivityTypeVersionDto> Versions { get; set; } = default!;
+
+  /// <summary>The level of the component's own headings, so the builder places it under its panel's h2.</summary>
+  [Parameter]
+  public int HeadingLevel { get; set; } = 3;
+
+  /// <summary>"Versions" at <see cref="HeadingLevel" />, between h2 and h6.</summary>
+  private RenderFragment Heading => __builder =>
+  {
+    __builder.OpenElement(0, $"h{Math.Clamp(HeadingLevel, 2, 6)}");
+    __builder.AddContent(1, ActivityTypeReadWords.VersionsHeading);
+    __builder.CloseElement();
+  };
+}

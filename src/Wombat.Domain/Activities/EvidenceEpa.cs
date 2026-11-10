@@ -56,13 +56,30 @@ public static class EvidenceEpa
     /// <c>evidence_epa_field</c>: through <c>epa_field</c> naming the pointer when there is one, or by targeting an item
     /// or nothing when there is none. See the type's remarks.
     /// </summary>
+    /// <remarks>
+    /// Each problem is one <see cref="RefusalPlace" /> on the Credit tab at its directive's number (T398, flow 17, Q6,
+    /// R3-D04); the message is their sentences joined, word for word as before.
+    /// </remarks>
     public static void EnsureCreditAgrees(FormSchema schema, CreditRules creditRules)
+    {
+        var places = CreditProblems(schema, creditRules);
+        if (places.Count > 0)
+        {
+            throw new CreditRulesParseException(string.Join(" ", places.Select(place => place.Sentence)), places);
+        }
+    }
+
+    /// <summary>
+    /// Every problem <see cref="EnsureCreditAgrees" /> refuses, each at its directive, one place a distinct sentence;
+    /// empty when there is none (T398, Q6).
+    /// </summary>
+    public static IReadOnlyList<RefusalPlace> CreditProblems(FormSchema schema, CreditRules creditRules)
     {
         ArgumentNullException.ThrowIfNull(schema);
         ArgumentNullException.ThrowIfNull(creditRules);
 
         var pointer = schema.EvidenceEpaField;
-        var problems = new List<string>();
+        var problems = new List<RefusalPlace>();
 
         for (var index = 0; index < creditRules.CountsFor.Count; index++)
         {
@@ -73,10 +90,10 @@ public static class EvidenceEpa
 
             if (itemTarget is not null && epaField is not null)
             {
-                problems.Add(
+                problems.Add(At(rule,
                     $"Credit rule {rule} names both {itemTarget} and epa_field '{epaField}'. Credit lands on the item " +
                     "whenever it resolves, so the EPA field would not say what was credited. " +
-                    (pointer is null ? "Name one of them." : $"Credit through epa_field '{pointer}' alone."));
+                    (pointer is null ? "Name one of them." : $"Credit through epa_field '{pointer}' alone.")));
                 continue;
             }
 
@@ -84,11 +101,11 @@ public static class EvidenceEpa
             {
                 if (pointer is not null)
                 {
-                    problems.Add(
+                    problems.Add(At(rule,
                         $"Credit rule {rule} credits {itemTarget}, but the form's activities are filed against the EPA " +
                         $"in '{pointer}'. That item's EPA need not be the one picked, so a row could show one EPA and " +
                         $"credit another. Credit through epa_field '{pointer}' instead, or remove evidence_epa_field " +
-                        "if the form is about no single EPA.");
+                        "if the form is about no single EPA."));
                 }
 
                 continue;
@@ -103,9 +120,16 @@ public static class EvidenceEpa
             {
                 if (!string.Equals(epaField, pointer, StringComparison.Ordinal))
                 {
-                    problems.Add(
+                    // R3-D04: worded at the directive as "Rule 1 reads its EPA from 'epa', but this form's EPA field is
+                    // 'epa_id'. Use 'epa_id'."; this sentence is the summary's line, after "Credit:" (S4).
+                    problems.Add(At(rule,
                         $"Credit rule {rule} reads its EPA from field '{epaField}', but the form's EPA field is " +
-                        $"'{pointer}'. The EPA an activity is filed against and the EPA it credits must be the same field.");
+                        $"'{pointer}'. The EPA an activity is filed against and the EPA it credits must be the same field.",
+                        RefusalKind.CreditEpaFieldDisagrees) with
+                    {
+                        NamedField = epaField,
+                        ExpectedField = pointer
+                    });
                 }
 
                 continue;
@@ -117,30 +141,42 @@ public static class EvidenceEpa
 
             if (field is null)
             {
-                problems.Add(
-                    $"Credit rule {rule} reads its EPA from field '{epaField}', which is not a field of the form.");
+                problems.Add(At(rule,
+                    $"Credit rule {rule} reads its EPA from field '{epaField}', which is not a field of the form.") with
+                {
+                    NamedField = epaField
+                });
             }
             else if (field.Type != FieldType.Epa)
             {
-                problems.Add(
+                problems.Add(At(rule,
                     $"Credit rule {rule} reads its EPA from field '{epaField}', which is a '{field.Type}' field. Credit " +
                     "by EPA must read the form's EPA field, which must be an 'epa' field: change the field's type to " +
-                    "EPA, or credit from an EPA field.");
+                    "EPA, or credit from an EPA field.") with
+                {
+                    NamedField = epaField
+                });
             }
             else
             {
-                problems.Add(
+                problems.Add(At(rule,
                     $"Credit rule {rule} reads its EPA from field '{epaField}', but the form does not say which " +
                     $"field carries the activity's EPA. Set evidence_epa_field to '{epaField}' (in the builder: " +
-                    "Form settings, EPA field).");
+                    "Form settings, EPA field).") with
+                {
+                    NamedField = epaField
+                });
             }
         }
 
-        if (problems.Count > 0)
-        {
-            throw new CreditRulesParseException(string.Join(" ", problems.Distinct(StringComparer.Ordinal)));
-        }
+        return problems
+            .GroupBy(place => place.Sentence, StringComparer.Ordinal)
+            .Select(group => group.First())
+            .ToList();
     }
+
+    private static RefusalPlace At(int directiveNumber, string sentence, RefusalKind kind = RefusalKind.Other)
+        => new(RefusalTab.Credit, kind, sentence) { DirectiveNumber = directiveNumber };
 
     private static string? DescribeItemTarget(CurriculumItemMatchRule match)
     {

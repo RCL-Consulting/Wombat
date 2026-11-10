@@ -92,6 +92,12 @@ replay to confirm, the gaps the steps record: F-1.12a and F-6.11a (T291 item 2: 
 required field in its label's words), F-6.8a (T264: Delete… asks first) and F-6.13a (T326: Q14's words for a
 discipline with no national EPA); T395 (no rung of a scale in use moves or goes); and the flow's halves of T272, T301
 (Open for adoption), T324, T329 and T393.
+T398 (flow 17, 2026-11-10) rebuilt the activity-type list and builder, with no new page or template: still 332 steps, 80
+page files and 90 templates. Its build closes, for its replay to confirm, the gaps the steps record: F-1.25b (T271: the
+scale by its name), F-1.27a (T291 item 6: the preview's EPAs), F-1.27b (T324: types and roles by label), F-1.26c and
+F-6.14aa (T291 item 3: "Draft saved." after the first save), F-1.31b (T326: a search that matches nothing says so),
+F-6.14ab (T334: a system-managed type is written by its release alone) and F-A.7.9a (T280: the builder's tabs are
+tabs); and the flow's halves of T300 and T329.
 
 ## Pages
 
@@ -115,7 +121,7 @@ institution, speciality or the record's own people; where that decides what a pe
 | `/activities/new` | Activities/NewActivity.razor | Any signed-in user | 2.19, 2.42, 2.43, 3.1, 3.8, 3.9, 3.10, 3.12, 3.14, 3.18, 3.19, 3.20, 3.21, 3.22, 3.23, 3.25, 3.27, 3.29, 5.22, 5.24, 6.16, 6.19, 6.20, 6.27, 6.37, A.2.7, A.6.6, A.7.1 |
 | `/activities/{ActivityId:int}` | Activities/ActivityView.razor | Any signed-in user; an activity opens only to its subject, its author, the people it names and their overseers, and reads "Activity unavailable" to anyone else | 3.2, 3.3, 3.4, 3.5, 3.6, 3.10, 3.11, 3.12, 3.13, 3.14, 3.15, 3.16, 3.17, 3.18, 3.19, 3.20, 3.21, 3.22, 3.23, 3.24, 3.25, 3.26, 3.27, 3.28, 3.29, 3.33, 4.17, 5.24, 5.25, 6.16, 6.18, 6.19, 6.24, A.2.7, A.5.6, A.7.1, A.7.2 |
 | `/admin/activity-types` | Admin/ActivityTypes/ActivityTypesList.razor | Administrator, CollegeAdmin, InstitutionalAdmin; each row offers Edit where the caller may write the type and View elsewhere, and New activity type only to a caller with a scope to create in (T300) | 1.24, 1.26, 1.31, 6.14a |
-| `/admin/activity-types/new`, `/admin/activity-types/{ActivityTypeId:int}` | Admin/ActivityTypes/ActivityTypeEdit.razor | Administrator, CollegeAdmin, InstitutionalAdmin; a type the caller may not write opens read-only, and Scope offers only the scopes the caller may write: an InstitutionalAdmin her institution, a CollegeAdmin his College's specialities and sub-specialities (T300, D52) | 1.25, 1.26, 1.27, 1.28, 1.29, 1.30, 6.14a, A.7.9, A.7.14 |
+| `/admin/activity-types/new`, `/admin/activity-types/{ActivityTypeId:int}` | Admin/ActivityTypes/ActivityTypeEdit.razor | Administrator, CollegeAdmin, InstitutionalAdmin; a type the caller may not write opens read-only, as does a system-managed type to everyone (T334, T398), and Scope offers only the scopes the caller may write: an InstitutionalAdmin her institution, a CollegeAdmin his College's specialities and sub-specialities (T300, D52); an id the caller may not open, or that names no type, reads "Activity type unavailable" (T398) | 1.25, 1.26, 1.27, 1.28, 1.29, 1.30, 6.14a, A.7.9, A.7.14 |
 | `/admin/adoptions` | Admin/Adoptions/AdoptionsList.razor (a redirect to Curricula since T392) | Administrator, InstitutionalAdmin | 1.20 |
 | `/admin/assessors` | Admin/Assessors/AssessorsList.razor | Administrator, InstitutionalAdmin | 2.14, 2.15, 2.44 |
 | `/admin/assessors/edit` | Admin/Assessors/AssessorProfileEdit.razor | Administrator, InstitutionalAdmin; since T376 (S10) a redirect kept for old links: a profile id in the caller's scope opens its person's page at Assessor training, anything else reads "User unavailable" | 2.15 |
@@ -212,7 +218,9 @@ state, `states.md` is where it belongs.
 | An assessor's training status (`AssessorProfile.TrainingStatus`) changing an assessment | Nothing on the activity path reads it (2.14 records it). | Undecided |
 | An invitation's Delivery reading "Sent", or "check the address" after a second failure | The replay logs mail (`Email__SmtpHost` unset), so nothing reports a delivery or a refusal. Rows read "Being sent", then "Not delivered" with its note row. | `states.md`, with an SMTP sink |
 | The Administrator adopting for an institution under Curricula's "An institution's curricula" (Institution and Show, then Adopt… for it; T392, R3-A10, A11) | The story's InstitutionalAdmin adopts for her own institution (1.20, 6.32). | `states.md` |
-| Discard draft in the activity-type builder | The story publishes KGK's draft (1.30) and keeps the College's unpublished (6.14a), discarding neither. | `states.md` |
+| Discard draft in the activity-type builder, which asks first in both of its bodies (T398, Q14) | The story publishes KGK's draft (1.30) and keeps the College's unpublished (6.14a), discarding neither. | `states.md` (scratch, post-appendix) |
+| The activity-type builder's other questions and refusals: Publish asking on warnings (Q16), deactivating at Save draft or at Publish (Q15, Q17), a refusal at Details (the key taken, a field left empty) and at a section | The story's one publish is a first version, with nothing to warn of (1.30); no step deactivates a type; its refusals are a field's and a move's (1.27, 1.28). | `states.md` (scratch, post-appendix) |
+| The empty activity-type catalogue, and a College admin whose College has no speciality (the list's subtitle and the builder's no-scope notice) | Every caller in the story can read the seeded types, and Dr Kruger's College holds Paediatrics. | `states.md` (scratch) |
 | Deactivating a College, speciality or sub-speciality | Two things read their Active flag (D56): a new invitation cannot name an inactive one, and an institution can give no one a role for it. Nothing else does: its EPAs, curricula and registrars carry on. No step deactivates one, since each would change who can be invited, and given a role, mid-story; Deactivate… asks first (T394, D56, T264). | `states.md` (scratch, post-appendix) |
 | Removing a curriculum item (its ConfirmDialog, T222) | Every item measures registrars still in training. | `states.md`, on a scratch curriculum |
 | An InstitutionalAdmin deactivating and reactivating a local EPA | The story pauses a national EPA (6.17, 6.23); the local variant was browser-checked in T196. | `states.md` |
@@ -326,7 +334,7 @@ and Assessor) appears under each role for the jobs done in it.
 | Add a sub-speciality, with its default ladder chosen at create | 6.12 | `/admin/colleges/{CollegeId:int}/specialities`, `/admin/specialities/{SpecialityId:int}/sub-specialities/new`, `/admin/specialities/{SpecialityId:int}/sub-specialities/{Id:int}` |
 | Start a curriculum for a new sub-speciality and hold it back from adoption | 6.13 | `/admin/curricula`, `/admin/curricula/new`, `/admin/curricula/{Id:int}`, `/admin/curricula/{Id:int}/items` |
 | Correct an EPA's wording | 6.14 | `/admin/epas`, `/admin/epas/{Id:int}` |
-| Draft an activity type for a College discipline, and read the College's instruments as their author | 6.14a | `/admin/activity-types`, `/admin/activity-types/new`, `/admin/activity-types/{ActivityTypeId:int}` |
+| Draft an activity type for a College discipline, and read the College's instruments as their author, the two its releases write read-only (T334) | 6.14a | `/admin/activity-types`, `/admin/activity-types/new`, `/admin/activity-types/{ActivityTypeId:int}` |
 | Take an EPA out of use while the College revises it, then restore it | 6.17, 6.23 | `/admin/epas`, `/admin/epas/{Id:int}`, `/admin/curricula`, `/admin/curricula/{Id:int}/items` |
 | Add a new national EPA | 6.28 | `/admin/epas`, `/admin/epas/new`, `/admin/epas/{Id:int}` |
 | Publish a new curriculum version: clone the current one, change its items, release it | 6.29, 6.30, 6.31 | `/admin/curricula`, `/admin/curricula/{Id:int}`, `/admin/curricula/{Id:int}/items`, `/admin/curricula/{Id:int}/items/new`, `/admin/curricula/{Id:int}/items/{ItemId:int}` |

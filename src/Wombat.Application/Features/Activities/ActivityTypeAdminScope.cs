@@ -39,15 +39,65 @@ namespace Wombat.Application.Features.Activities;
 /// on a new type's first. The College, which the rule names as the author of its disciplines' types, was not admitted to
 /// the builder at all.
 /// </para>
+/// <para>
+/// <b>A system-managed type is written by its release alone (T398, flow 17, Q9, T334).</b> <see cref="MayWrite" />
+/// refuses one to everyone, the Administrator included: <c>msf_cpsa</c> and <c>learner_feedback_cpsa</c> are written by
+/// the MSF and learner-feedback releases (T162), and a save in the builder handed them over and could change what a
+/// release writes into. Reading is untouched (Q19): <see cref="MayRead" /> judges the scope rule alone, ignoring the
+/// flag, so an inactive system-managed type stays readable to whoever read it before.
+/// </para>
 /// </remarks>
 public static class ActivityTypeAdminScope
 {
     /// <summary>
     /// Whether the caller may write a type at this scope and target, given the College that owns the target when it is a
-    /// speciality or sub-speciality (null otherwise, or when the target does not exist). The rule itself, without a read,
-    /// for a caller that has looked the College up already: a list does it once for all its rows.
+    /// speciality or sub-speciality (null otherwise, or when the target does not exist), and whether the type is
+    /// system-managed (false for a new type, which has no row). The rule itself, without a read, for a caller that has
+    /// looked the College up already: a list does it once for all its rows.
     /// </summary>
-    public static bool MayWrite(ClaimsPrincipal principal, ActivityScope scope, int? scopeId, int? owningCollegeId)
+    public static bool MayWrite(ClaimsPrincipal principal, ActivityScope scope, int? scopeId, int? owningCollegeId, bool systemManaged)
+        => !systemManaged && ScopeAdmits(principal, scope, scopeId, owningCollegeId);
+
+    /// <summary>
+    /// Whether the caller may open the type in the builder or see it listed (T300, T211; T398, Q19): a published, active
+    /// type is a form template any authenticated user must be able to read in order to log an activity against it (a
+    /// trainee on /activities/new); a Global one is read by anyone; anything else, a draft or an inactive type, by whoever
+    /// the scope rule admits to write it. The scope rule alone: whether the type is system-managed is not asked, so the
+    /// write refusal of T334 hides nothing (Q19).
+    /// </summary>
+    public static bool MayRead(
+        ClaimsPrincipal principal,
+        ActivityScope scope,
+        int? scopeId,
+        int? owningCollegeId,
+        bool isActive,
+        int publishedVersion)
+        => (isActive && publishedVersion > 0)
+           || scope == ActivityScope.Global
+           || ScopeAdmits(principal, scope, scopeId, owningCollegeId);
+
+    /// <summary>
+    /// <see cref="MayRead" />, with the College that owns a speciality or sub-speciality read from the store only when the
+    /// answer turns on it.
+    /// </summary>
+    public static async Task<bool> MayReadAsync(
+        IApplicationDbContext dbContext,
+        ClaimsPrincipal principal,
+        ActivityScope scope,
+        int? scopeId,
+        bool isActive,
+        int publishedVersion,
+        CancellationToken cancellationToken)
+        => (isActive && publishedVersion > 0)
+           || scope == ActivityScope.Global
+           || principal.IsAdministrator()
+           || ScopeAdmits(principal, scope, scopeId, await OwningCollegeIdAsync(dbContext, scope, scopeId, cancellationToken));
+
+    /// <summary>
+    /// The scope rule both <see cref="MayWrite" /> and <see cref="MayRead" /> judge by: an Administrator every target, an
+    /// InstitutionalAdmin their own institution's, a CollegeAdmin their College's disciplines'.
+    /// </summary>
+    private static bool ScopeAdmits(ClaimsPrincipal principal, ActivityScope scope, int? scopeId, int? owningCollegeId)
     {
         if (principal.IsAdministrator())
         {
@@ -68,17 +118,32 @@ public static class ActivityTypeAdminScope
 
     /// <summary>
     /// Whether the caller may write a type at this scope and target: <see cref="MayWrite" />, with the College that owns a
-    /// speciality or sub-speciality read from the store. It never throws for a refusal; <see cref="ActivityTypeScopeGuard" />
-    /// does, on false.
+    /// speciality or sub-speciality read from the store. A new type passes <paramref name="systemManaged" /> false. It
+    /// never throws for a refusal; <see cref="ActivityTypeScopeGuard" /> does, on false.
     /// </summary>
     public static async Task<bool> MayWriteAsync(
         IApplicationDbContext dbContext,
         ClaimsPrincipal principal,
         ActivityScope scope,
         int? scopeId,
+        bool systemManaged,
         CancellationToken cancellationToken)
-        => principal.IsAdministrator()
-           || MayWrite(principal, scope, scopeId, await OwningCollegeIdAsync(dbContext, scope, scopeId, cancellationToken));
+        => !systemManaged
+           && (principal.IsAdministrator()
+               || ScopeAdmits(principal, scope, scopeId, await OwningCollegeIdAsync(dbContext, scope, scopeId, cancellationToken)));
+
+    /// <summary>
+    /// Whose type it is, from its scope and its target as <see cref="ScopeTargetsAsync" /> reads it (T398, flow 17, Q7,
+    /// Q12), so the list and the builder name an owner alike: the platform for Global; the College that owns a speciality
+    /// or sub-speciality, by its short code; the institution, by its name. The name is null for a target that no longer
+    /// exists.
+    /// </summary>
+    internal static ActivityTypeOwnerDto OwnerOf(ActivityScope scope, ScopeTarget target) => scope switch
+    {
+        ActivityScope.Speciality or ActivityScope.SubSpeciality => new ActivityTypeOwnerDto(ActivityTypeOwnerKind.College, target.OwningCollegeShortCode),
+        ActivityScope.Institution => new ActivityTypeOwnerDto(ActivityTypeOwnerKind.Institution, target.Name),
+        _ => new ActivityTypeOwnerDto(ActivityTypeOwnerKind.Platform, null)
+    };
 
     /// <summary>
     /// The scopes the caller may put a type in, each with every target the caller may put it at, in the order the Scope
@@ -118,7 +183,7 @@ public static class ActivityTypeAdminScope
                 .AsNoTracking()
                 .Where(entity => isAdministrator || entity.CollegeId == collegeId)
                 .OrderBy(entity => entity.Name)
-                .Select(entity => new ActivityTypeScopeTargetDto(entity.Id, entity.Name))
+                .Select(entity => new ActivityTypeScopeTargetDto(entity.Id, entity.Name) { OwningCollegeShortCode = entity.College.ShortCode })
                 .ToListAsync(cancellationToken));
 
             AddIfAny(choices, ActivityScope.SubSpeciality, await dbContext.Set<SubSpeciality>()
@@ -126,7 +191,10 @@ public static class ActivityTypeAdminScope
                 .Where(entity => isAdministrator || entity.Speciality.CollegeId == collegeId)
                 .OrderBy(entity => entity.Speciality.Name)
                 .ThenBy(entity => entity.Name)
-                .Select(entity => new ActivityTypeScopeTargetDto(entity.Id, entity.Speciality.Name + " / " + entity.Name))
+                .Select(entity => new ActivityTypeScopeTargetDto(entity.Id, entity.Speciality.Name + " / " + entity.Name)
+                {
+                    OwningCollegeShortCode = entity.Speciality.College.ShortCode
+                })
                 .ToListAsync(cancellationToken));
         }
 
@@ -143,9 +211,21 @@ public static class ActivityTypeAdminScope
         ActivityScope scope,
         int? scopeId,
         CancellationToken cancellationToken)
+        => (await ScopeTargetAsync(dbContext, scope, scopeId, cancellationToken)).Name;
+
+    /// <summary>
+    /// One target as <see cref="ScopeTargetsAsync" /> reads it: its name, and the College that owns it with that College's
+    /// short code where it is a speciality or sub-speciality (T398: the editor's owner, <see cref="OwnerOf" />). Every
+    /// member null for Global, or for a target that does not exist.
+    /// </summary>
+    internal static async Task<ScopeTarget> ScopeTargetAsync(
+        IApplicationDbContext dbContext,
+        ActivityScope scope,
+        int? scopeId,
+        CancellationToken cancellationToken)
         => scopeId is null
-            ? null
-            : (await ScopeTargetsAsync(dbContext, [(scope, scopeId)], cancellationToken))(scope, scopeId).Name;
+            ? default
+            : (await ScopeTargetsAsync(dbContext, [(scope, scopeId)], cancellationToken))(scope, scopeId);
 
     /// <summary>The College that owns a speciality or sub-speciality target; null for any other scope, or no such target.</summary>
     private static async Task<int?> OwningCollegeIdAsync(
@@ -194,7 +274,7 @@ public static class ActivityTypeAdminScope
             institutions = await dbContext.Set<Institution>()
                 .Where(entity => institutionIds.Contains(entity.Id))
                 .Select(entity => new { entity.Id, entity.Name })
-                .ToDictionaryAsync(entity => entity.Id, entity => new ScopeTarget(entity.Name, null), cancellationToken);
+                .ToDictionaryAsync(entity => entity.Id, entity => new ScopeTarget(entity.Name, null, null), cancellationToken);
         }
 
         var specialities = new Dictionary<int, ScopeTarget>();
@@ -202,8 +282,8 @@ public static class ActivityTypeAdminScope
         {
             specialities = await dbContext.Set<Speciality>()
                 .Where(entity => specialityIds.Contains(entity.Id))
-                .Select(entity => new { entity.Id, entity.Name, entity.CollegeId })
-                .ToDictionaryAsync(entity => entity.Id, entity => new ScopeTarget(entity.Name, entity.CollegeId), cancellationToken);
+                .Select(entity => new { entity.Id, entity.Name, entity.CollegeId, CollegeShortCode = entity.College.ShortCode })
+                .ToDictionaryAsync(entity => entity.Id, entity => new ScopeTarget(entity.Name, entity.CollegeId, entity.CollegeShortCode), cancellationToken);
         }
 
         var subSpecialities = new Dictionary<int, ScopeTarget>();
@@ -211,8 +291,14 @@ public static class ActivityTypeAdminScope
         {
             subSpecialities = await dbContext.Set<SubSpeciality>()
                 .Where(entity => subSpecialityIds.Contains(entity.Id))
-                .Select(entity => new { entity.Id, Name = entity.Speciality.Name + " / " + entity.Name, entity.Speciality.CollegeId })
-                .ToDictionaryAsync(entity => entity.Id, entity => new ScopeTarget(entity.Name, entity.CollegeId), cancellationToken);
+                .Select(entity => new
+                {
+                    entity.Id,
+                    Name = entity.Speciality.Name + " / " + entity.Name,
+                    entity.Speciality.CollegeId,
+                    CollegeShortCode = entity.Speciality.College.ShortCode
+                })
+                .ToDictionaryAsync(entity => entity.Id, entity => new ScopeTarget(entity.Name, entity.CollegeId, entity.CollegeShortCode), cancellationToken);
         }
 
         return (scope, scopeId) =>
@@ -247,9 +333,10 @@ public static class ActivityTypeAdminScope
 
 /// <summary>
 /// A scope's target as <see cref="ActivityTypeAdminScope.ScopeTargetsAsync" /> reads it: its name as a reader sees it,
-/// and the College that owns it where it is a speciality or sub-speciality. Both null for a target that does not exist.
+/// and the College that owns it, with that College's short code (T398, the owner's words), where it is a speciality or
+/// sub-speciality. All null for a target that does not exist.
 /// </summary>
-internal readonly record struct ScopeTarget(string? Name, int? OwningCollegeId);
+internal readonly record struct ScopeTarget(string? Name, int? OwningCollegeId, string? OwningCollegeShortCode);
 
 /// <summary>
 /// Refuses a save, discard or publish the caller may not make: <see cref="ActivityTypeAdminScope.MayWriteAsync" />, thrown
@@ -258,14 +345,41 @@ internal readonly record struct ScopeTarget(string? Name, int? OwningCollegeId);
 /// </summary>
 internal static class ActivityTypeScopeGuard
 {
+    /// <param name="activityType">
+    /// The stored type the command acts on, or null for a new one. A system-managed type is refused to everyone, in its
+    /// own words (T398, Q9, T334, N10), before the scope is judged; but only to a caller who may read it, so an outsider
+    /// sent the id of an inactive one learns nothing of it, not even its name, and is told the scope's words (T398 fix,
+    /// code review N-2).
+    /// </param>
+    /// <param name="discard">
+    /// Whether the command is Discard draft. A system-managed type that holds a draft may have it discarded by whoever the
+    /// scope admits (T398, the operator's F1, 2026-11-10): such a draft could only come from a builder save before T334,
+    /// the seed refresher skips a type with a draft in flight, and a discard drops staged work without changing what is
+    /// published. Save and Publish stay refused.
+    /// </param>
     public static async Task EnsureCallerCanWriteAsync(
         IApplicationDbContext dbContext,
         ClaimsPrincipal principal,
+        ActivityType? activityType,
         ActivityScope scope,
         int? scopeId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool discard = false)
     {
-        if (await ActivityTypeAdminScope.MayWriteAsync(dbContext, principal, scope, scopeId, cancellationToken))
+        var releaseOnly = activityType is { SystemManaged: true } && !(discard && activityType.HasDraft);
+        if (releaseOnly
+            && await ActivityTypeAdminScope.MayReadAsync(
+                dbContext, principal, activityType!.Scope, activityType.ScopeId, activityType.IsActive, activityType.Version, cancellationToken))
+        {
+            var writtenBy = SystemManagedReleases.WrittenBy(activityType.Key) ?? "a release of Wombat";
+            throw new UnauthorizedAccessException(
+                $"Nothing was saved. {activityType.Name} is written by {writtenBy}, so it cannot be changed here.");
+        }
+
+        // The scope's rule alone (a release-only type that reaches here is one the caller may not read, so the scope
+        // refuses it too: whoever the scope admits may read the type).
+        if (!releaseOnly
+            && await ActivityTypeAdminScope.MayWriteAsync(dbContext, principal, scope, scopeId, systemManaged: false, cancellationToken))
         {
             return;
         }

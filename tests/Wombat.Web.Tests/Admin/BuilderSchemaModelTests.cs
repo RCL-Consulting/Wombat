@@ -124,7 +124,8 @@ public sealed class BuilderSchemaModelTests
 
         var warnings = BuilderSchemaModel.GetPublishWarnings(BothPointers, model.ToJson());
 
-        warnings.Should().Contain(warning => warning.Contains("moves from field 'overall' to 'global_rating'"));
+        warnings.Should().Contain(warning => warning == "The entrustment rating moves from field 'Overall' to 'Global rating'.",
+            "a setting is named by its fields' labels (T398, N1)");
     }
 
     [Fact]
@@ -150,7 +151,8 @@ public sealed class BuilderSchemaModelTests
 
         var warnings = BuilderSchemaModel.GetPublishWarnings(published, model.ToJson());
 
-        warnings.Should().Contain(warning => warning.Contains("'overall' will become the entrustment rating"));
+        warnings.Should().Contain(warning => warning == "Field 'Overall' will become the entrustment rating for this form.",
+            "by the field's label (T398, N1)");
     }
 
     /// <summary>
@@ -182,5 +184,57 @@ public sealed class BuilderSchemaModelTests
 
         fields.Single(field => field.Key == "overall").ScaleKey.Should().Be("O-R Scale");
         fields.Single(field => field.Key == "observed_on").Required.Should().BeTrue();
+    }
+
+    /// <summary>
+    /// T398 (flow 17, N1, T324, T24): every warning names a field, a type and a role by its label: no quotes round a type,
+    /// a role with its article, the draft's label where a field kept its key and changed its label.
+    /// </summary>
+    [Fact]
+    public void Warnings_NameFieldsTypesAndRolesByTheirLabels()
+    {
+        const string published = """
+            {
+              "version": 1,
+              "observation_date_field": "delivered_on",
+              "sections": [
+                {
+                  "key": "session",
+                  "title": "Teaching session",
+                  "fields": [
+                    { "key": "delivered_on", "type": "date", "label": "Date delivered" },
+                    { "key": "objectives", "type": "longtext", "label": "Learning objectives" },
+                    { "key": "topic", "type": "text", "label": "Topic" },
+                    { "key": "audience", "type": "choice", "label": "Audience", "options": ["Interns"] },
+                    { "key": "supervisor_user_id", "type": "user", "label": "Supervising consultant" }
+                  ]
+                },
+                { "key": "request", "title": "Request", "fields": [ { "key": "notes", "type": "text", "label": "Notes" } ] }
+              ]
+            }
+            """;
+
+        var model = BuilderSchemaModel.Parse(published);
+        var session = model.Sections[0];
+        model.Sections.RemoveAt(1);
+        session.Fields.RemoveAll(field => field.Key == "audience");
+        session.Fields.Single(field => field.Key == "objectives").Type = FieldType.Text;
+        session.Fields.Single(field => field.Key == "topic").Required = true;
+        session.Fields.Single(field => field.Key == "supervisor_user_id").NomineeRole = "Coordinator";
+        session.Fields.Single(field => field.Key == "delivered_on").Label = "Date of session";
+
+        BuilderSchemaModel.GetPublishWarnings(published, model.ToJson()).Should().BeEquivalentTo(
+        [
+            "Section 'Request' will be removed.",
+            "Field 'Learning objectives' changes type from Long text to Text.",
+            "Field 'Topic' becomes required.",
+            "Field 'Audience' will be removed.",
+            "Field 'Supervising consultant' will name a Coordinator instead of an Assessor. Activities already filed keep the person they named."
+        ]);
+
+        model.ObservationDateField = null;
+        BuilderSchemaModel.GetPublishWarnings(published, model.ToJson())
+            .Should().Contain("This form will stop recording which field carries the encounter date.");
+        BuilderSchemaModel.RemovedFieldLabels(published, model.ToJson()).Should().Equal("Audience", "Notes");
     }
 }

@@ -68,8 +68,16 @@ public sealed class ActivityTypeBuilderLayoutTests : TestContext
         columns.ParentElement!.ClassList.Should().Contain("form-container",
             "the card is the size container the columns answer to (.form-container:has(> .builder-two-col))");
         columns.Children.Should().HaveCount(2);
-        columns.Children[0].QuerySelector("h3")!.TextContent.Should().Be("Sections");
-        columns.Children[1].QuerySelector("h3")!.TextContent.Should().Be("Live preview");
+        columns.Children[0].QuerySelectorAll("h2").Select(heading => heading.TextContent).Should().Equal("Form settings", "Sections and fields");
+        columns.Children[1].QuerySelector("h2")!.TextContent.Should().Be("Live preview");
+
+        // T398 (flow 17, C2, Q5): the card is the Form tab's panel, and its first child the Show choice, which the stylesheet
+        // shows only where the columns stack.
+        columns.ParentElement.GetAttribute("role").Should().Be("tabpanel");
+        var choice = columns.ParentElement.Children[0];
+        choice.ClassList.Should().Contain("choice-group");
+        choice.QuerySelectorAll("label").Select(label => label.TextContent).Should().Equal("Edit the form", "Preview");
+        choice.QuerySelectorAll("input[type=radio]")[0].HasAttribute("checked").Should().BeTrue();
     }
 
     private sealed class FakeSender : IScopedSender

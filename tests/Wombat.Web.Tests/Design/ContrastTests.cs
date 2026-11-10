@@ -267,13 +267,21 @@ public sealed partial class ContrastTests
             .BeGreaterThanOrEqualTo(Mark, "its edge is the control's boundary on the page");
     }
 
+    /// <summary>
+    /// T398 (flow 17, S23): the builder's tab bar is the tabs pattern, on the page ground. The selected tab is told by its
+    /// underline and its weight, not a fill (the pill's .is-active is gone): its label is text on the page, its underline a
+    /// mark on it.
+    /// </summary>
     [Fact]
-    public void TheActiveTab_TakesOnFill()
+    public void TheSelectedTab_ShowsOnThePageGround()
     {
         var palette = Palette.FromAppCss();
-        var style = Stylesheet.AppCss().Computed(".tab-bar-tab.is-active");
+        var style = Stylesheet.AppCss().Computed(".tab-bar-tab[aria-selected=\"true\"]");
+        var page = palette.Token("--background-color");
 
-        palette.Ratio(palette.Resolve(style["color"]), palette.Resolve(Background(style))).Should().BeGreaterThanOrEqualTo(Text);
+        palette.Ratio(palette.Resolve(style["color"]), page).Should().BeGreaterThanOrEqualTo(Text);
+        palette.Ratio(palette.Resolve(ColourIn(style["border-bottom-color"])), page).Should().BeGreaterThanOrEqualTo(Mark,
+            "the underline is what tells the selected tab");
     }
 
     [Fact]
