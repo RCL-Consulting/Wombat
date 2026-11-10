@@ -172,3 +172,9 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   17's steps (act 1 also sweeps the list and the builder at 900–1150 with real refusals); states 35 rows over two passes.
   The brief's agent printed flow 16's `g394\replay-pw.env` (scenario cast passwords) to its own console by mistake;
   not copied anywhere. Act 1 running.
+- **2026-11-10, act 1 replayed** (one Opus agent, `a641f693`; dump `scenario-t398-post-act1`): 31 steps, 29 clean; 1.1
+  T327, 1.6 T326 known; T291 items 3 and 6, T324, T326's search and T280 no longer occur. Two flow 17 faults, fixed on
+  master `c9742a18` (Web 4811 green): 1.25 the scale read by its stored `seed:` key (the test stub carried the wrong seed
+  key, so no test caught it); 1.27 "1problem" (the inline-flex badge dropped the space). **Not published to :5180 until
+  the acts finish**; then 1.25 and 1.27's captures re-taken. List at 1280: Actions 90–93px, every name one line; 1025
+  spare 46/60px. Act 2 running.
