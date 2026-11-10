@@ -188,3 +188,5 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
 - **2026-11-10, act 4 replayed** (one Opus agent, `729db82b`; dump `scenario-t398-post-act4`): 50 steps, 48 clean;
   known Gaps 4.2 T365, 4.27 T320; 4.25/4.29/4.41/4.42 now clean (the Present order reads as the Expects; T370 says it is
   not stable); outcome SQL 6/6; Q20 holds. Baseline missing 0. Act 5 running.
+- **2026-11-10, act 5 replayed** (one Opus agent, `1473a7a5`; dump `scenario-t398-post-act5`): 29 steps, 28 clean; known
+  Gap 5.28 T382; 5.8's Present order as the Expect (T370). Act 6 running (flow 17's 6.14a).
