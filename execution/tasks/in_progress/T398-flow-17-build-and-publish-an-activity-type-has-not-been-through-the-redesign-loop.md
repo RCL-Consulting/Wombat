@@ -62,8 +62,8 @@ Run the loop as flow 16 ran it (`design/flows/16-college-catalogue/`, BRIEF § 1
 - [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link. (https://claude.ai/artifact/AQNS1QZDaUNizG7dzKPSGs; round 3 on https://claude.ai/artifact/Cpyw4vwX7UodgJUdKLF7Zw)
 - [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/17-activity-type-builder/`. (round 3, `round-3-check.md`; Q1–Q20, P1–P2, F1 in these Notes)
 - [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 17) — the squash commit and counts. (`84bcffeb`; master 899/4466/1035/52/4811/532, 0 warnings)
-- [ ] The whole runbook replays on a fresh database with no regression from flow 17, the baseline is re-captured, and
-  flow 17's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
+- [x] The whole runbook replays on a fresh database with no regression from flow 17, the baseline is re-captured, and
+  flow 17's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines. (`wombat_scenario_t398`, 2026-11-10: acts 1–6, A and both states passes; act 1's two faults fixed `c9742a18`, states pass 1's `277e4a78`; no regression left; `check_baseline_paths.py` missing 0)
 - [ ] The design system is re-synced and republished — its version number.
 
 ## Related
@@ -210,3 +210,10 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   `.col-fit--wide`, and the list moves to the 1150px stack (as a table it needs 779px, 62px over at 1025). Measured on
   :5180 (devadmin, 24 rows): stacked to 1150, a table from 1151 with 64px spare, every one-word cell one line; Web 4811
   green; republished to :5180 (stopped by id, started detached). States pass 2 running.
+- **2026-11-10, states pass 2** (one Opus agent, `ce142c0f`): 19 rows, 18 as built (3 amended in words), every "Not yet
+  captured (T398)" mark gone; the tab count's space holds at 1280 in all five refusals; `--all` re-taken, every one-word
+  cell on one line; F1 played (Kruger discards a staged `msf_cpsa` draft, the published columns unchanged; Mbatha gets no
+  Discard). Scratch `_s20` kept (:5181 stopped by id). **Step 7 done: no flow 17 regression left**; baseline missing 0.
+  Unfiled nits: a section refusal marks only `#section-key` (as the fix pass's S2), not the title; act 1's own 1.27-1
+  capture still shows "1problem" (the states row's was re-taken). The replay app left running on :5180 (master
+  `277e4a78`). Next: steps 8 and 9 on the operator's word.

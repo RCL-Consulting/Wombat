@@ -13,10 +13,13 @@ Q13–Q16; Q17–Q20; round 3's two; the build's P1–P2; F1).
   Learner Feedback read-only; F1: a leftover draft may be discarded).
 - **For review:** T399 proposed (P1: the other pages' `RefusalText.Of`); the lanes' departures and 32 NEW word groups
   (`build-contracts.md` § 5), accepted by the reviews.
-- **Step 7 started** ("push and then proceed"): pushed `399a99be`; `wombat_scenario_t398` on :5180; the replay brief
-  being written (scratch `g398`); then acts 1–6, A and two states passes, one agent each. Then steps 8–9.
-- **Environment:** scratch DB `wombat_scenario_t398_sweep` kept; branches and worktrees `t398*` kept.
-- **Pushed** 2026-11-10 (`399a99be`).
+- **Step 7 done** (2026-11-10): acts 1–6, A and both states passes on `wombat_scenario_t398`; three flow 17 faults found
+  and fixed on master (`c9742a18` the scale's seed key and the count's space; `277e4a78` the list's one-word columns, the
+  list now stacking to 1150px); no regression left; baseline missing 0. Known-task Gaps only otherwise.
+- **Next:** steps 8 (re-sync the design system; read the live files first) and 9 (lessons), on the operator's word.
+- **Environment:** the replay app on :5180 (`wombat_scenario_t398`, master `277e4a78`) left running; scratch DBs
+  `_sweep`, `_s10`, `_s11`, `_s20`, `_s515` kept; dumps `recovery/scenario-t398-post-act{1..6,A}`; worktrees `t398*` kept.
+- **Pushed** 2026-11-10 (`399a99be`); the replay's commits since are not pushed.
 
 ## Session 2026-11-09 (Opus): T394 steps 8 and 9; T394 done
 
