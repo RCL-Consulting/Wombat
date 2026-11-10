@@ -755,7 +755,6 @@ CLASSES (name each on the Spec's class table; every other class a board uses is 
 
 SPEC BOARD, "R2-0-spec" (more boards "R2-0-spec-2", … if it runs long):
   - FIRST: which reference files you opened under project/ref/ (list them), and which you could not read, said plainly.
-    30 capture names is missing, said plainly.
   - The decisions in one table (Q1–Q16), each with the boards that draw it; then M1–M7, S1–S14, N1–N12 and T1–T24, each
     with its board; which boards are Illustrations.
   - The changes the boards need, written as code changes, each PROPOSED (decided ones say their Q):
