@@ -101,3 +101,8 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   panel and C5.1's "What you are publishing"; M1–M7 (Q12 subtitles, Q7/Q11 list, Q9 notice, Discard's untrue body,
   the missing Publish panel, B/C against Q1/Q2/Q8, the Steps board's double count: today 22 + 29); 14 shoulds, 12 nits.
   Q13–Q16 for the operator. No capture or seed reached the canvas: round 2 must upload them into the canvas's files.
+- **2026-11-10, picks.** The operator took A (with B5.1's Publish section and C5.1's first-publish summary) and Q13–Q16
+  as recommended ("yes"): Q13 the JSON not kept as typed, laid out indented in the parser's order; Q14 two Discard
+  bodies, the details stay; Q15 unticking Active on a published type asks first; Q16 Publish saves first. The 29
+  captures and nine seeds published into the canvas as project files under `project/ref/` (version 7). Round 2's ask:
+  one Opus agent → `round-2-ask.txt`.
