@@ -18,8 +18,8 @@
   - Whose each type is, in words (Q7): the name over its key, a system-managed type's release line between them (Q9);
     Set by the owner (the College by its short code, the institution by its name, the platform) over the scope; Published
     "Version 1" or "Not published"; Draft "Saved 2026-11-05" (the South African day) or "None"; Status; Edit where the
-    caller may write the type, View elsewhere (T300), each named for its row (T239). StackWide, and the 1024px stack
-    through .activity-types-page (§ 0, C3).
+    caller may write the type, View elsewhere (T300), each named for its row (T239). StackWide, and the 1150px stack
+    through .activity-types-page (§ 0, C3; the replay moved it from 1024px when Published, Draft and Status took .col-fit--wide).
   - The order (Q11, N13): the caller's own types first, then the rest, each by name; the Administrator's by name alone.
   - The search (Q7, T326): applied with Show to the rows already read, never per keystroke; the count line says what
     matched and takes the focus; a search matching nothing says so, apart from the empty catalogue, with Clear the
@@ -106,9 +106,9 @@
         <tr role="row">
           <th scope="col" role="columnheader">Name</th>
           <th scope="col" role="columnheader">Set by</th>
-          <th scope="col" role="columnheader">Published</th>
-          <th scope="col" role="columnheader">Draft</th>
-          <th scope="col" role="columnheader">Status</th>
+          <th scope="col" role="columnheader" class="col-fit--wide">Published</th>
+          <th scope="col" role="columnheader" class="col-fit--wide">Draft</th>
+          <th scope="col" role="columnheader" class="col-fit--wide">Status</th>
           <th scope="col" role="columnheader" class="col-actions col-actions--single"><span class="visually-hidden">Actions</span></th>
         </tr>
       </HeaderRow>
@@ -117,9 +117,9 @@
           @* The name over its key; a system-managed type's release between them (Q9). *@
           <th scope="row" role="rowheader"><span class="person-cell">@item.Name@if (item.WrittenBy is { } writtenBy){<span>@ActivityTypeWords.WrittenByLine(writtenBy)</span>}<span><code>@item.Key</code></span></span></th>
           <td role="cell" data-label="Set by"><span class="person-cell">@ActivityTypeWords.SetBy(ActivityTypesListWords.Owner(item))<span>@ActivityTypeWords.ScopeDetail(item.Scope, item.ScopeTargetName)</span></span></td>
-          <td role="cell" data-label="Published">@ActivityTypeWords.Published(item.PublishedVersion)</td>
-          <td role="cell" data-label="Draft">@ActivityTypesListWords.Draft(item)</td>
-          <td role="cell" data-label="Status">@ActivityTypesListWords.Status(item.IsActive)</td>
+          <td role="cell" class="col-fit--wide" data-label="Published">@ActivityTypeWords.Published(item.PublishedVersion)</td>
+          <td role="cell" class="col-fit--wide" data-label="Draft">@ActivityTypesListWords.Draft(item)</td>
+          <td role="cell" class="col-fit--wide" data-label="Status">@ActivityTypesListWords.Status(item.IsActive)</td>
           @* T300: Edit where the caller may write the type (CanWrite, the rule the commands refuse by; never on a
              system-managed one, T334), View where they may only read it; both open the builder. T239: named by the row. *@
           <td role="cell" class="col-actions col-actions--single">

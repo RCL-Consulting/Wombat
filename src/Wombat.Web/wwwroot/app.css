@@ -7622,8 +7622,7 @@ a.dashboard-metric:hover .dashboard-metric-label {
 
 /* The catalogue tables stack from 1024px down (T392 replay, A.7.10; T394 round 3 S1, check decisions 1 and 2): the EPA
    list (from flow 15), Colleges (.colleges-page) and the College's tree (.college-tree-page), whose columns overflowed
-   their container between 901 and about 975px (round 2's sweep, by arithmetic), and the activity types list
-   (.activity-types-page, T398 round 3 C3: in all seven selector lists below, so it stacks like the others), and the
+   their container between 901 and about 975px (round 2's sweep, by arithmetic), and the
    builder's "Moves, as saved" (.workflow-readout, T398's sweep: Mini-CEX (Paediatrics)'s four moves need 578px at their
    narrowest, and from 901 to 935px the builder's card gave them 543 to 577). The items (.curriculum-items-page) and
    Curricula (.curricula-page) stack from 1150px down (the next query; 1100px, as the data-rights queue does, until the
@@ -7635,7 +7634,6 @@ a.dashboard-metric:hover .dashboard-metric-label {
   .epas-page .clinic-table--stack-wide thead,
   .colleges-page .clinic-table--stack-wide thead,
   .college-tree-page .clinic-table--stack-wide thead,
-  .activity-types-page .clinic-table--stack-wide thead,
   .workflow-readout .clinic-table--stack-wide thead {
     border: 0;
     clip: rect(0, 0, 0, 0);
@@ -7651,7 +7649,6 @@ a.dashboard-metric:hover .dashboard-metric-label {
   .epas-page .clinic-table--stack-wide tbody tr,
   .colleges-page .clinic-table--stack-wide tbody tr,
   .college-tree-page .clinic-table--stack-wide tbody tr,
-  .activity-types-page .clinic-table--stack-wide tbody tr,
   .workflow-readout .clinic-table--stack-wide tbody tr {
     border-bottom: 1px solid var(--border-color);
     display: grid;
@@ -7662,7 +7659,6 @@ a.dashboard-metric:hover .dashboard-metric-label {
   .epas-page .clinic-table--stack-wide tbody tr:last-child,
   .colleges-page .clinic-table--stack-wide tbody tr:last-child,
   .college-tree-page .clinic-table--stack-wide tbody tr:last-child,
-  .activity-types-page .clinic-table--stack-wide tbody tr:last-child,
   .workflow-readout .clinic-table--stack-wide tbody tr:last-child {
     border-bottom: 0;
   }
@@ -7673,8 +7669,6 @@ a.dashboard-metric:hover .dashboard-metric-label {
   .colleges-page .clinic-table--stack-wide tbody th,
   .college-tree-page .clinic-table--stack-wide td,
   .college-tree-page .clinic-table--stack-wide tbody th,
-  .activity-types-page .clinic-table--stack-wide td,
-  .activity-types-page .clinic-table--stack-wide tbody th,
   .workflow-readout .clinic-table--stack-wide td,
   .workflow-readout .clinic-table--stack-wide tbody th {
     border: 0;
@@ -7685,7 +7679,6 @@ a.dashboard-metric:hover .dashboard-metric-label {
   .epas-page .clinic-table--stack-wide th[scope="row"],
   .colleges-page .clinic-table--stack-wide th[scope="row"],
   .college-tree-page .clinic-table--stack-wide th[scope="row"],
-  .activity-types-page .clinic-table--stack-wide th[scope="row"],
   .workflow-readout .clinic-table--stack-wide th[scope="row"] {
     display: block;
   }
@@ -7693,7 +7686,6 @@ a.dashboard-metric:hover .dashboard-metric-label {
   .epas-page .clinic-table--stack-wide td[data-label]::before,
   .colleges-page .clinic-table--stack-wide td[data-label]::before,
   .college-tree-page .clinic-table--stack-wide td[data-label]::before,
-  .activity-types-page .clinic-table--stack-wide td[data-label]::before,
   .workflow-readout .clinic-table--stack-wide td[data-label]::before {
     color: var(--muted-text);
     content: attr(data-label) ": ";
@@ -7704,16 +7696,18 @@ a.dashboard-metric:hover .dashboard-metric-label {
   .epas-page .clinic-table--stack-wide .btn,
   .colleges-page .clinic-table--stack-wide .btn,
   .college-tree-page .clinic-table--stack-wide .btn,
-  .activity-types-page .clinic-table--stack-wide .btn,
   .workflow-readout .clinic-table--stack-wide .btn {
     min-height: 2.75rem;
   }
 }
 
 /* Curricula and the items stack to 1150px (T394 replay, after the states: at the appendix's end an institution's "Curricula
-   you train against", with an adoption and a superseded version, ran 17px past its container at 1101px and 8px at 1110). */
+   you train against", with an adoption and a superseded version, ran 17px past its container at 1101px and 8px at 1110),
+   and the activity types list (.activity-types-page, T398 replay, states pass 1: its Published, Draft and Status keep their
+   one word, .col-fit--wide, so as a table it needs 779px, 62px past its container at 1025px and 12px at 1075). */
 @media (max-width: 1150px) {
   .curricula-page .clinic-table--stack-wide thead,
+  .activity-types-page .clinic-table--stack-wide thead,
   .curriculum-items-page .clinic-table--stack-wide thead {
     border: 0;
     clip: rect(0, 0, 0, 0);
@@ -7727,6 +7721,7 @@ a.dashboard-metric:hover .dashboard-metric-label {
   }
 
   .curricula-page .clinic-table--stack-wide tbody tr,
+  .activity-types-page .clinic-table--stack-wide tbody tr,
   .curriculum-items-page .clinic-table--stack-wide tbody tr {
     border-bottom: 1px solid var(--border-color);
     display: grid;
@@ -7735,13 +7730,16 @@ a.dashboard-metric:hover .dashboard-metric-label {
   }
 
   .curricula-page .clinic-table--stack-wide tbody tr:last-child,
+  .activity-types-page .clinic-table--stack-wide tbody tr:last-child,
   .curriculum-items-page .clinic-table--stack-wide tbody tr:last-child {
     border-bottom: 0;
   }
 
   .curricula-page .clinic-table--stack-wide td,
+  .activity-types-page .clinic-table--stack-wide td,
   .curriculum-items-page .clinic-table--stack-wide td,
   .curricula-page .clinic-table--stack-wide tbody th,
+  .activity-types-page .clinic-table--stack-wide tbody th,
   .curriculum-items-page .clinic-table--stack-wide tbody th {
     border: 0;
     padding: 0;
@@ -7749,11 +7747,13 @@ a.dashboard-metric:hover .dashboard-metric-label {
   }
 
   .curricula-page .clinic-table--stack-wide th[scope="row"],
+  .activity-types-page .clinic-table--stack-wide th[scope="row"],
   .curriculum-items-page .clinic-table--stack-wide th[scope="row"] {
     display: block;
   }
 
   .curricula-page .clinic-table--stack-wide td[data-label]::before,
+  .activity-types-page .clinic-table--stack-wide td[data-label]::before,
   .curriculum-items-page .clinic-table--stack-wide td[data-label]::before {
     color: var(--muted-text);
     content: attr(data-label) ": ";
@@ -7762,6 +7762,7 @@ a.dashboard-metric:hover .dashboard-metric-label {
   }
 
   .curricula-page .clinic-table--stack-wide .btn,
+  .activity-types-page .clinic-table--stack-wide .btn,
   .curriculum-items-page .clinic-table--stack-wide .btn {
     min-height: 2.75rem;
   }

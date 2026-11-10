@@ -235,12 +235,13 @@ public sealed partial class NarrowLayoutTests
     }
 
     [Fact]
-    public void TheActivityTypesList_StacksFrom1024Px_InEveryOneOfTheCatalogueStacksSevenRules()
+    public void TheActivityTypesList_StacksFrom1150Px_InEveryOneOfCurriculasSevenRules()
     {
-        // T398 (flow 17, round 3 C3, check decision 2): the list joins all seven selector lists of "The catalogue tables
-        // stack from 1024px down", the EPA list's beside it; the canvas's seven-rule stand-in never ships.
+        // T398 (flow 17, round 3 C3; the replay's states pass 1): the list is in all seven selector lists of the 1150px stack,
+        // Curricula's beside it. Its Published, Draft and Status hold one word each (.col-fit--wide, no wrap), so as a table
+        // it needs 779px, 62px past its container at 1025px; it was in the 1024px stack until then.
         var rules = Parse(File.ReadAllText(WebFile("wwwroot", "app.css")));
-        const string stack = "@media (max-width: 1024px)";
+        const string stack = "@media (max-width: 1150px)";
         string[] parts =
         [
             "thead",
@@ -254,22 +255,22 @@ public sealed partial class NarrowLayoutTests
         ];
 
         var stackRules = rules.Where(rule => rule.AtRule == stack
-            && Selectors(rule).Any(selector => selector.StartsWith(".epas-page .clinic-table--stack-wide", StringComparison.Ordinal)))
+            && Selectors(rule).Any(selector => selector.StartsWith(".curricula-page .clinic-table--stack-wide", StringComparison.Ordinal)))
             .ToList();
-        stackRules.Should().HaveCount(7, "guard: the catalogue stack is seven rules");
+        stackRules.Should().HaveCount(7, "guard: the 1150px stack is seven rules");
 
         foreach (var part in parts)
         {
-            var epas = $".epas-page .clinic-table--stack-wide {part}";
-            var rule = stackRules.Should().ContainSingle(candidate => Selectors(candidate).Contains(epas), epas).Which;
+            var curricula = $".curricula-page .clinic-table--stack-wide {part}";
+            var rule = stackRules.Should().ContainSingle(candidate => Selectors(candidate).Contains(curricula), curricula).Which;
             Selectors(rule).Should().Contain($".activity-types-page .clinic-table--stack-wide {part}",
-                $"the activity types list stacks as the EPA list does: {part}");
+                $"the activity types list stacks as Curricula does: {part}");
         }
 
         rules.Where(rule => rule.AtRule != stack)
             .SelectMany(Selectors)
             .Should().NotContain(selector => selector.StartsWith(".activity-types-page .clinic-table--stack-wide", StringComparison.Ordinal),
-                "the list stacks from 1024px, in the one shared block, and nowhere else");
+                "the list stacks from 1150px, in the one shared block, and nowhere else");
     }
 
     [Fact]

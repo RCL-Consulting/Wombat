@@ -85,7 +85,7 @@
 >   Status group, a scale's in-use line, its rung refusal and Put back, the reach lines and EV2's, Q19's read-out), the
 >   NavMenu table (the specialities one tree; the scales list read-only for the College admin), and § app.css section
 >   order (five Flow 16 sections)).
->   Flow 17, build and publish an activity type (2026-11-10, T398: § Table system (the list joins the 1024px stack, with
+>   Flow 17, build and publish an activity type (2026-11-10, T398: § Table system (the list joins the 1150px stack, its one-word columns `.col-fit--wide`; the 1024px stack takes
 >   the builder's "Moves, as saved"; a single action column), § Form system (the builder's refusals at their place,
 >   the section key's), § Button system (Publish saves first and asks first; Discard's two bodies; Up/Down at the ends),
 >   § Page-level patterns "List page" (Activity types: search with Show and Clear, own rows first, Set by, the release
@@ -1144,11 +1144,11 @@ queue, Your requests and Corrections recorded). The data rights queue stacks fro
 sidebar its six columns, seven for the Administrator, have no room from 901 to 1100px, so the stack-wide rules are
 repeated for `.data-rights-requests` under a 1100px query, its row buttons 44px.
 **The catalogue's tables stack from 1024px, Curricula and the items from 1150px** (2026-11-05, T394, flow 16, round 3 S1,
-check decisions 1 and 2): the EPA list, Colleges, each section of the College's tree and the activity types list (T398,
-flow 17, round 3 C3) are stack-wide tables stacked by
+check decisions 1 and 2): the EPA list, Colleges and each section of the College's tree are stack-wide tables stacked by
 one 1024px query in flow 16's shared part, with the builder's "Moves, as saved" (`.workflow-readout`, T398's sweep: Mini-CEX
 (Paediatrics)'s four moves need 578px at their narrowest, which the builder's card gave only from 936px), since their columns overflowed between 901 and about 975px. A curriculum's items
-(six compact columns, 691 to 744px wide) and Curricula (756px for the Administrator in a 717px container at 1025px) stack by
+(six compact columns, 691 to 744px wide), Curricula (756px for the Administrator in a 717px container at 1025px) and the
+activity types list (T398, its Published, Draft and Status one word each, `.col-fit--wide`: 779px, 62px over at 1025px) stack by
 a 1150px query (1100px until the replay: at the appendix's end an institution's Curricula, with an adoption and a
 superseded version, ran 17px past its container at 1101px). A stacked row never scrolls, and its row actions are 44px.
 The build's sweep (900 to 1100px in 25px steps, each table's `scrollWidth` against its container's `clientWidth`) set
@@ -5462,7 +5462,7 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
 "Flow 15: a curriculum's items (T392)": .curriculum-items-page (+ .form-section-head, the table's .actions-cell wrapping) (+ ≤640px: .form-section-head .btn 44px, decision 2), .curriculum-item-page (+ .detail-list .list-unstyled) (the stack and the checkbox rows moved to flow 16's shared part, T394)
 "Flow 15: EPAs (T392)": .epas-page th[scope="row"] (the EPA's label and owner mark wrap inside the cell), .epas-page .clinic-table th.col-wrap--wide (≥1025px: 45%, so a title is not squeezed beside empty auto columns), .epa-page .action-result:empty, .epa-page .epa-text (the record's text keeps its line breaks) (the Active row's 44px moved to flow 16's shared part, T394)
 "Flow 15: the move, the rebuild and the scales (T392)": .rebuild-page .action-result:not(:empty) (its step under the bar), .scales-page .clinic-table td[data-label="Levels"] (tabular figures) (the profile's move line is the system's .submit-check inside .user-page; the rebuild is .user-page, the scales .people-page with StackWide, whose phone rules serve them)
-"Flow 16: the catalogue, shared (T394)": (≤1024px: the stack-wide tables of .epas-page, .colleges-page, .college-tree-page and .activity-types-page (T398, round 3 C3, in all seven selector lists), and the builder's .workflow-readout (T398's sweep), stack, row actions 44px; ≤1150px: .curriculum-items-page's and .curricula-page's (the build's sweep, then the replay's 1101px), round 3 S1, check decisions 1 and 2) (+ ≤640px: .user-page .form-check outside a .choice-group, its input and label, a 44px row with a 20px box, R1, in place of flow 15's per-page copies)
+"Flow 16: the catalogue, shared (T394)": (≤1024px: the stack-wide tables of .epas-page, .colleges-page and .college-tree-page, and the builder's .workflow-readout (T398's sweep), stack, row actions 44px; ≤1150px: .curriculum-items-page's, .curricula-page's and .activity-types-page's (T398's replay: the one-word columns) (the build's sweep, then the replay's 1101px), round 3 S1, check decisions 1 and 2) (+ ≤640px: .user-page .form-check outside a .choice-group, its input and label, a 44px row with a 20px box, R1, in place of flow 15's per-page copies)
 "Flow 16: the College's tree and Home (T394)": .college-tree-page .form-section-head (a speciality's h2 and its two actions on one line, wrapping), .college-tree-page .user-section > p (the speciality's line wraps a 2,000-character description) .speciality-page .action-result:empty, .sub-speciality-page .action-result:empty (a record's empty result region takes no row) (the records sit beside .user-page, Home's card in the system's .dashboard-card-footer)
 "Flow 16: Colleges and the scales (T394)": .college-page .form-container (one column, 48rem), .scale-page (the levels grid's textareas; .scale-in-use-line, Q16; .scale-levels-actions; ≤900px: the stacked grid's inputs full width), the refusal's parts in its alert (.scale-page/.scales-page .action-result .alert p and ul; .scale-put-back, S14; .scales-refusal-links, S6, ≤640px 44px)
 "Flow 16: a curriculum's page and Curricula (T394)": .curriculum-page .action-result:empty, .curriculum-page .form-container (its sections a step apart) and its .form-actions, .curriculum-read-out (Q19's read-out) and its dd

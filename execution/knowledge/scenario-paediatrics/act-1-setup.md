@@ -849,9 +849,9 @@ Actual (2026-11-10, T398 replay, wombat_scenario_t398): View opened /admin/activ
   (900-1150 by 25, 1115, 1116) on all four tabs: the panel, the tab bar and the tables never wider than their box, one
   row of tabs, the page unscrolled, every field row's buttons on one line under a one-line label; the moves table
   stacked to 1024 and its narrowest spare 89 px at 1025, the versions table 284 px at 925 (stacked at 900).
-Gap: [F-1.25b, T271] still, regression-t398: the reader's field view still names overall_level's scale by its stored
-  key, "seed:cpsa:scale:v11.1", not "CPSA Paediatric Entrustment Scale v11.1". ScaleText compares the scale's SeedKey
-  ("cpsa:scale:v11.1") with the stored key, which carries the "seed:" prefix, so it never matches. (F-1.27a, T291 item
+  Re-checked 2026-11-10 after `c9742a18` was published: the scale reads "CPSA Paediatric Entrustment Scale v11.1"
+  (no "seed:" anywhere on the four tabs); captures re-taken.
+Gap: none (T271 no longer occurs). (F-1.27a, T291 item
   6, and F-1.27b, T324, no longer occur here: the preview offers the 15 PAED EPAs alone, and each row names its type
   by label.)
 
