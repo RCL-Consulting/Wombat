@@ -1,0 +1,941 @@
+ROUND 1 PICKED: structure A, "four tabs, repaired" (Details, Form, Workflow and Credit as a real tabs pattern, a new type
+opening on Details; each field's and section's editor under its own row; the workflow and the credit rules read in words
+above the JSON that stays their editor), with a Publish panel of its own: A takes B5.1's Publish section (the versions,
+what publishing changes, what stays pinned, the button named for the version it makes) as that panel, and C5.1's "What
+you are publishing" summary as the panel's first lines on a first publish, where there is nothing to compare. B (one
+page of h2 sections, the contents list, the sticky preview, the dialog editor) and C (the stepped path, the stepper, the
+panel editor, the state diagram, "Edit as JSON", a route per step) are dropped: draw none of them again.
+This round draws A at full fidelity, corrected as below. There is no part 2: the brief's five screens (the list; a
+College instrument read; a new type and its form; the workflow and the credit rules; publishing and after) are all A1 to
+A5's, so this round draws those five screens in every state of the brief's § 3 and of this message's § STATES. Use the
+design system installed on this canvas (Wombat v49, 1794239792-3119, namespace wombat; ds/wombat/tokens.css and
+ds/wombat/components/bundle.css): its tokens and components, real words, no grey bars and no .wf-* wireframe classes
+(round 2 has no wireframe). Every screen and state at 1280 and 390; the list, the builder's Form tab and the moves table
+also at 768 where marked. Draw round 2 on a new page of the canvas, "Round 2", and name every board R2-… (a 390 twin
+R2-…-390, a 768 twin R2-…-768). Round 1's 17 boards are on no page today: put them on a page "Round 1", untouched (move
+none of their content, rename none). The brand mark is at /_blob/a89fec160a8a8c0b20116ccc3634e0bc (this canvas's own
+copy): use it, never a drawn disc. Every person, institution, College, key, name, version, date, id and count comes from
+this message (FIXTURES) and the files under project/ref/; invent none. Where a value is not given, write a bracket ‹…›.
+Label a state the replay never reaches "Illustration", in its title and as a chip on the board's face, and never draw on
+one board two states that cannot hold at once. Words marked NEW below are this message's own (in neither the brief,
+round 1's boards nor the code): draw them as given, and list them on the Spec as NEW so the review can weigh them. Words
+marked PROPOSED (THIS ASK) are a choice this message makes that the operator has not yet seen: draw them, and list them
+on the Spec under that heading.
+
+THE QUESTIONS ARE DECIDED. Round 1's message listed Q1–Q12 as questions, and round 1's Spec answered several of them (Q3,
+  Q7, Q9, Q11, Q12) against what the operator had already decided. They were decided before round 1 was drawn (the
+  operator took every recommendation, 2026-11-10), and Q13–Q16 since, with the pick: every one is a fact below
+  (§ DECISIONS), never a question to reopen. A board that argues against one is a must-fix in the review.
+
+THE STYLESHEET: write the round's shared stylesheet as a PROJECT FILE, project/f17r2.css (write it as a file of the
+  project, NOT as an asset, so the saved round holds it; round 1 did, f17r1.css). Every board's head links
+  ds/wombat/tokens.css, ds/wombat/components/bundle.css, then f17r2.css, in that order, and no /_blob/ stylesheet; a
+  board's <style> holds body{margin:0} at most. f17r2.css holds two kinds of rule and nothing else:
+  - canvas-only rules, named .cv-* (the board's frame, its caption, the Illustration / NEW / PROPOSED / DATA chips, the
+    notes card), listed apart on the Spec as K rows and kept off the components. No .wf-* rule: round 1's W1–W12 were
+    the wireframe sheet and do not come forward. The shell is drawn with the design system's own shell (flow 01's
+    sidebar, top bar and phone bar from bundle.css), never a stand-in.
+  - the shipped rules this round adds or changes, each named under § CLASSES with its Spec row. Nothing else: no new
+    token, no new badge, no new icon.
+
+THE REFERENCE FILES ARE THIS CANVAS'S OWN PROJECT FILES. Round 1's Spec said, first, that nothing arrived (no
+  attachment, no design/upload/ in the canvas's files, the folder request refused); it drew nothing from memory, rightly.
+  The files are now in this canvas's project, read them from there:
+  - The captures, under project/ref/baseline/ (the same names as design/upload/baseline/, copies of design/baseline/):
+    act-1/1.24-1-types-search-cpsa.png, act-1/1.25-1-mini-cex-form.png, act-1/1.25-2-mini-cex-metadata.png,
+    act-1/1.25-3-mini-cex-workflow.png, act-1/1.25-4-mini-cex-credit.png, act-1/1.25-5-overall-level-field-editor.png,
+    act-1/1.26-1-new-type-default.png, act-1/1.26-2-first-save-no-status.png, act-1/1.27-1-duplicate-key-refused.png,
+    act-1/1.27-2-form-saved-preview.png, act-1/1.27-3-user-field-names-a.png, act-1/1.28-1-field-rule-refused.png,
+    act-1/1.28-2-workflow-saved.png, act-1/1.29-1-credit-tab.png, act-1/1.30-1-published-v1.png,
+    act-1/1.30-2-metadata-key-locked.png, act-1/1.31-1-types-all.png, act-1/1.31-3-types-search-nothing.png,
+    act-1/1.31-4-types-390.png, act-6/6.14a-1-kruger-activity-types.png, act-6/6.14a-2-kruger-msf-cpsa-open.png,
+    act-6/6.14a-3-new-type-scope.png, act-6/6.14a-6-list-with-draft.png, act-A/A.7.9-6-builder-390.png,
+    act-A/A.7.14-6-builder-publish.png, states/activity-type-edit--discarded.png, states/activity-type-edit--loading.png,
+    states/activity-type-edit--not-found.png, states/activity-type-edit--publish-warnings.png,
+    states/activity-types-list--loading.png. That is 30 names; 29 were reported uploaded, so one may be missing: name it.
+  - The nine seed files, under project/ref/seeds/: mini_cex_cpsa/, reflective_exercise_cpsa/ and teaching_session/, each
+    schema.json, workflow.json and credit.json. msf_cpsa's and learner_feedback_cpsa's forms are not among them: § FIXTURES
+    pastes them.
+  SAY ON THE SPEC BOARD, FIRST, BEFORE DRAWING, which of these you opened (list them) and which you could not read, and
+  say it plainly if any could not be read; draw nothing from memory in place of one that did not open (flows 06, 12, 13,
+  15, 16 and this flow's round 1). Read them before drawing: the words in the captures are today's pages, defects
+  included, not the target. The states/ captures are from 2026-09-26, on the old frame (a Title Case sidebar with Logout,
+  an email in the top bar), and publish-warnings and discarded were taken before T300 (a writer's page before it): read
+  their bodies only. No capture shows a password or a one-time link; the names, keys and ids in them are the pages' own
+  record. This message pastes every value round 1 bracketed that the code, the seeds or the runbook holds (FIXTURES), so
+  a missing capture leaves no value that only a capture holds.
+
+WHY A: it is Q1 as decided ((a): the tabs kept as a real tabs pattern, Details first for a new type, a Publish panel of
+  its own). It is the only structure that keeps Q2 (no diagram), Q4 (the editor under the row) and Q8 (Publish asks when
+  there are warnings) together, and it adds the fewest NEW parts (the tabs and the editor in place, and § CLASSES asks
+  whether even those can be shipped classes). Mini-CEX's form alone is about 3,800 px today: B's one page would be the
+  longest in the product, with Publish at the foot of a 40-field form.
+BORROW: from B5.1, the Publish section's parts (the versions table, "What publishing this draft changes" with the
+  warnings, the line on what stays pinned, the button named for the version it makes), without its "Activities" count
+  column and without publishing past warnings unasked; from C5.1, "What you are publishing" (Form "1 section, 6 fields
+  (5 required)", Workflow "Draft → Logged or Cancelled; 2 moves", Credit "Credits nothing") and "Nothing to compare: this
+  is the first version." Nothing else from B or C: C1's Set by filter adds radios Q7 did not ask for.
+
+DECISIONS (the operator's: Q1–Q12 on 2026-11-10 as the brief's § 6 recommends; the pick and Q13–Q16 on 2026-11-10, "yes",
+  as round 1's assessment recommends):
+  Q1: the frame is tabs, as the tabs pattern (role="tablist", role="tab" with aria-selected, arrow keys), Details first
+    for a new type, and a Publish panel of its own: a fifth tab, "Publish", holding the versions, the warnings before the
+    press, what stays pinned and the button (the assessment's M5). The header keeps Publish, so 1.30 stays one press.
+  Q2: the JSON stays the editor of the workflow and the credit rules (monospace; T019-d and T019-e are not built), with a
+    read in words above it, drawn from the saved JSON: the states (where a new one starts, which are final), a table of
+    moves (from, to, who in words, how much of the form it checks, a note required), and the credit as sentences
+    ("Credits nothing." / "Counts 1 towards the curriculum item for the EPA in EPA, at the level Supervision required for
+    this encounter records."). The read is the reader's whole view: a reader gets no JSON. No state diagram.
+  Q3: the versions show each version's number, publish date (ISO, the South African day) and publisher, which the editor
+    already reads, with the line "Activities filed under a version stay on it."; the Publish panel shows the warnings,
+    in labels, before the press. No count of activities per version anywhere.
+  Q4: a field's or a section's editor opens in place, under the row pressed, one at a time, its Edit becoming Done; the
+    focus goes to the editor's first input, and back to the row's Edit after; never below the whole list.
+  Q5: at 390, a "Preview" control at the head of the Form tab, rather than the preview below every row; between 641 and
+    1115 px (wherever the two columns stack) the same; the preview stays flow 03's renderer, ActivityForm, placed and
+    never redrawn. Round 1's choice of two, "Edit the form" / "Preview", is the control.
+  Q6: a refusal from Save draft is flow 03's RefusalSummary at the top, each line linking to the field, section, move or
+    directive it names and switching to its tab; the duplicate key shows under both fields' Key; today's sentences are
+    kept word for word. PROPOSED (decided): the commands return which field, section, move or directive each refusal
+    names (DATA).
+  Q7: the list: Name with the key under it in monospace; "Set by" in words ("CPSA", "Kgosi Kgari Teaching Hospital",
+    "Demo College", "the platform"), the scope as a detail under it; Published "Version 1" or "Not published"; Draft
+    "Saved ‹date›" or "None"; Status; Edit or View. StackWide at 390. The search applied with Show (flow 06), and 'No
+    activity types match "zzz".' with Clear.
+  Q8: Delete on a section or a field is an outline button named for its target and asks nothing (nothing is saved until
+    Save draft; flow 16's Q11). Discard draft… is a ConfirmDialog opening on Cancel, "Discard the draft of KGK Teaching
+    Session Log?" (its body is Q14's). Publish asks first only when there are warnings, listing them in labels
+    ("Publish version 2 of KGK Teaching Session Log?"); with none it publishes at once, as today.
+  Q9 (T334): a system-managed type is read-only to everyone, the Administrator included: MayWrite refuses it, the list
+    offers View, and its notice reads "Written by the MSF release. Its form changes only with a release of Wombat." (for
+    learner_feedback_cpsa, "Written by the learner-feedback release. Its form changes only with a release of Wombat.").
+  Q10: the build folds in T334; T324's builder half and its kin (the field list, Names a and its read view, the publish
+    warnings, the form settings, all by label); T271 item 2 (the scale by name, to a reader and in the writer's picker);
+    T291 items 3 and 6; T326's list half; T280's tab item; Delete and Discard (T264's kind); T329's kind on both pages
+    (Try again, fixed words, Unavailable); and the brief's § 5 new faults (the field rows at 1280, the editors' place,
+    refusals at their field, Publish's reason, the headings, "v0", Back to list, the search per keystroke). T271 item 1,
+    T179, T106 item 11, T019-b to -g and T352 item 4 stay their own (§ LATER).
+  Q11: the institution's list keeps the rule (it holds every College's national types and every Global one); each row
+    says whose it is (Q7); the caller's own types come first.
+  Q12: the list's subtitle to an institution "The forms registrars file and assessors complete. You can change the types
+    you set; the College sets its instruments." (the College's and the Administrator's: § PROPOSED, T11); the builder's
+    subtitle "What a registrar fills in, who moves it on, and what it counts towards." for everyone; T300's read-only
+    notice kept word for word ("a product decision").
+  Q13: the JSON is NOT kept as typed. On load and after each save, the saved JSON is laid out indented, in the parser's
+    own key order (WorkflowParser.Serialize, CreditRulesParser.Serialize), with no second stored text. What a writer
+    reads after a save is exactly what was kept, and the read in words agrees with it by construction. Round 1's "Kept
+    as you typed it: a reload or a publish gives this text back" goes.
+  Q14: Discard draft… has two bodies, both saying the details stay. A published type: "Its form, workflow and credit
+    rules go back to version 1, which stays published. Its details (name, description, scope, This tool is, Active) were
+    saved as you changed them, and stay." A type never published: "It has never been published. Its form, workflow and
+    credit rules go back to the starting draft; its details stay." The Details tab says its changes take effect at Save
+    draft: "Saved with Save draft, not with Publish: a change here reaches everyone when you save."
+  Q15: Save draft with Active newly unticked on a published type asks first, as the EPA page does (D56's pattern): the
+    box stays the control, there is no Deactivate… button, and reactivating asks nothing (words: § PROPOSED, T17).
+  Q16: Publish saves the draft first (as it already does for a new type), then works out the warnings from what was
+    saved, asks only if there are any, then publishes. A refused save stops there with its refusal; nothing is
+    published. The dialog lists exactly what is published.
+
+CORRECTIONS (round 1's assessment § 7; round 2's review checks each by number; the boards each fixes):
+  M1 (every list board; every builder board): Q12's subtitles. The list's round-1 subtitle "The forms registrars file and
+    assessors rate. You can change the ones you set; the others you can read." goes. The builder's subtitle is Q12's,
+    and the owner line ("College of Paediatricians of South Africa · Speciality · Paediatrics", "Kgosi Kgari Teaching
+    Hospital · Institution") stands under it as flow 15's owner mark (p.muted.text-sm), not in its place.
+  M2 (R2-A01 to R2-A08): one order at every width: the caller's own types (those they may change, Edit) first, by name,
+    then the rest by name; the Administrator's by name. Key under Name in monospace, not a column. Set by in Q7's words,
+    the scope under it. Draft "Saved 2026-11-05" (the date is read today, DraftUpdatedOn), never "Draft saved ‹date and
+    time›".
+  M3 (R2-B06, R2-B07; the list rows): Q9's notice for both releases, each drawn. Round 1's "Nobody changes it here, the
+    College included, and nobody is offered it when filing an activity." goes; its true half may follow as a second
+    sentence (§ PROPOSED, T22). The row line under the name stays: "Written by the MSF release." / "Written by the
+    learner-feedback release."
+  M4 (R2-E07 to R2-E10): Discard in Q14's two bodies, both drawn. Never round 1's "Its changes since version 1 are lost …"
+    nor the brief's "Your changes since version 1 are removed." (both untrue: Save draft writes the details at once,
+    and Discard reverts only the form, workflow and credit; a never-published type goes back to the starting draft).
+  M5 (R2-E01 to R2-E06; R2-B03): the Publish tab, with Q3's versions moved there from Details (a reader's versions: T1),
+    Q3's line, the warnings before the press, and no "Activities filed on it" column or "‹n› of them" anywhere.
+  M6: moot (B and C dropped).
+  M7 (Steps): one counting rule (§ STEPS), Done optional (S4), so 1.27 is 15 + 24 and 1.26–1.30 22 + 29 at 1280 against
+    today's 22 + 29; every Expect and states.md row that changes is a row (§ STEPS); Publish carries no ellipsis (N9).
+  S1 (every list board): Edit, View and New activity type are links, a.btn, as built (they navigate;
+    Accessibility/RowActionMarkupTests), never <button>.
+  S2 (every builder board; Spec): the tabs pattern whole: each panel role="tabpanel" with aria-labelledby its tab; the
+    selected tab aria-controls its panel (only the selected panel is rendered, so only that tab carries aria-controls:
+    an aria-controls points at an element that exists); a roving tabindex (0 on the selected tab, -1 on the others) with
+    Left, Right, Home and End; a tab is selected by Enter or Space, not by focus alone. The problem count stays visible
+    in the tab but outside its name (T3).
+  S3 (R2-B04, R2-B05, R2-B06, every editor in place): headings. Each panel's first heading is an h2; an outline
+    section's title an h3; the editor in place's heading an h4; nothing straight under the h1 but an h2.
+  S4 (R2-C10 to R2-C13): Done only, no Cancel: an open editor's changes are kept as typed (it binds live, as today);
+    opening another editor, or Save draft, keeps them; the row's Edit becomes Done (aria-expanded="true"), and Done
+    closes the editor and returns the focus to the row's Edit. Round 1's "Cancel puts back what was there" goes.
+  S5 (R2-B04, R2-D02, R2-B06): a final state is a terminal one, and only that: Mini-CEX's Completed alone (Declined and
+    Cancelled are not); KGK's Logged; MSF's Recorded.
+  S6 (R2-B09): Unavailable in the system's words (§ FIXTURES); "The activity type could not be found." appears nowhere.
+  S7 (every result and refusal board): the result region (ActionResult) sits under PageHeader, at every width, never
+    between the trail and the h1.
+  S8: every state round 1 left out is a board (§ STATES): a failed save; 768; the 641–1115 px range with Q5's control;
+    the 900–1100 sweep (Spec); the section editor in place; the writer's Scale field with the scale by name; the
+    Administrator's builder; Learner Feedback's notice; Discard on a type never published; an inactive type; a refusal
+    naming a section and one naming a credit directive; the heavy case under its own h1.
+  S9 (§ FIXTURES): every bracket the code fills is filled: the Demo and CPSA keys, Mini-CEX's description and its ten
+    fields, the MSF and learner-feedback forms, a seeded version's publisher.
+  S10 (Spec, DATA): the DATA table gains SystemManaged (with MayWrite refusing it), the owner's words per row, the null
+    read for Unavailable and the preview's EPA list; the draft's date, "None" and each version's date are read today,
+    not DATA.
+  S11 (R2-C01 to R2-C06, R2-E02, R2-E11): the Details tab says what takes effect at Save draft (Q14's line), and Active
+    carries its help (T17).
+  S12 (R2-C16): the form settings keep today's line, "Which field carries the encounter date, which carries the
+    entrustment rating, and which names the EPA.", and today's EPA field help; round 1's new picker help ("Date fields
+    only. Or: None — …", "Scale fields only. This form has none.") goes.
+  S13 (R2-D01 to R2-D05): "Kept as you typed it …" goes (Q13); the JSON editors' help is T10's.
+  S14 (R2-E03, R2-B03): the versions' date is the South African day alone, ISO (T16).
+  N1: moot. N2 (R2-C19): the heavy case's h1 and crumb name the same type. N3: "Activity type" as the loading and failed
+    h1 is built, not PROPOSED. N4 (R2-C10 to R2-C13, R2-C17): the editors' labels and help as built ("Section key",
+    "Title", "Field key", "Label", "Type", "Help text", "Names a", "Options" with its built help, "Catalogue key",
+    "Entrustment scale", "Required"): keep "a comma is part of the option". N5 (Spec): the parser's role refusal names
+    roles by label (T324's kin). N6: the non-creator's empty state stays as built. N7: no .json-editor; the editors are
+    textarea.form-control.font-mono as built. N8: Publish when off is aria-disabled, not disabled (T14). N9: "Publish",
+    never "Publish…". N10: the Scope read-out is PROPOSED on its own (round 1's), not "flow 16's Q19". N11: moot (Q2: a
+    reader gets no JSON fold). N12: "Could not load the activity types." (§ FIXTURES).
+
+LESSONS FROM FLOWS 12–16 (their reviews' must-fixes and BRIEF § 11; do not repeat them):
+  - Behaviour the boards assume is written on the Spec as the change it needs (a command's parameters, a query's field, a
+    policy, a route), never implied (§ SPEC BOARD's changes).
+  - Steps rows quote values person by person and count by count, each checked against FIXTURES; each of the 11 steps is
+    a row, "unchanged" said where so.
+  - No NEW class that duplicates a shipped one. Before naming a class NEW, search app.css for one that already does the
+    job: .tab-bar and .tab-bar-tab (the builder's own, used nowhere else), .builder-two-col and its container rule,
+    .clinic-table tr.is-editing (T176: a row open for editing, its form in the next row's spanning cell), .clinic-table--
+    inputs, .user-page, .user-section, .people-page, .form-section-head, .detail-list, .detail-card--empty,
+    .state-panel-copy, .loading-line, .refusal-summary-list, .choice-group, .search-container, .filter-actions,
+    .code-block, .font-mono, .list-unstyled, .muted, .text-sm, .badge and its tints. Reuse a shipped class as shipped;
+    never redeclare one.
+  - A table that fits at 1280 can overflow just above its stacking breakpoint (flow 15). Sweep the list, the moves table,
+    the versions table and the builder's two columns from 900 to 1100 px in 50 px steps, measuring each against its
+    CONTAINER, not only the page; say on the Spec what each measured.
+  - A column-width fix moves the squeeze to the next column (flow 16). After the list's widths are set, read every column
+    at 1280 for each role that sees it (Nolwazi Mbatha, Anton Kruger, devadmin), and say that no name wraps past two
+    lines beside an empty band.
+  - A long value wraps in its own cell (overflow-wrap: anywhere; minmax(0, 1fr) in a detail-list): a 2,000-character
+    description, "Portfolio and Logbook Review (Paediatrics)", the label "Supervision the reviewer judged this trainee to
+    need", a field key of 100 characters. A canvas-only chip wraps too. Measure every board at 1280, 1100, 768 and 390.
+  - A read-out is dl.detail-list with dt and dd; .field-label exists nowhere.
+  - ARIA: aria-controls only to an element that exists (S2); a field's help outside its <label>, named by
+    aria-describedby; a refusal first in aria-describedby; a standing notice is an Alert with Role=""; role="status"
+    only for what arrives with a result; a stacked table keeps DataTable's roles.
+  - At 390 the system does the work, never an inline style: .people-page and .user-page make every button, input and
+    select 44 px, and .user-page a lone .form-check's row 44 px (T394); .user-page .form-actions and .dialog-card
+    .form-actions stack (column-reverse: the primary or the confirm on top, the safe button first in the DOM);
+    .clinic-table--stack-wide .btn is 44 px from 900 px down; the search bar's buttons stack full width
+    (.filter-actions). Keep the 1280 DOM order.
+  - A canvas has a ceiling of about 200 boards (flow 16's round 3 needed a new canvas). This round is about 145; if the
+    canvas refuses for size, stop, and say on the Spec which boards were drawn.
+  - The reference files reach the canvas as its own project files (this flow's round 1 saw none from a folder).
+
+THE BUILDER'S PAGE (/admin/activity-types/new and /admin/activity-types/{ActivityTypeId:int}; A at fidelity; the shape
+  every builder board follows):
+  - Header: PageHeader, h1 and tab title from the address, as built (T300, T190): "New activity type" on /new; "Activity
+    type" while loading and after a failed read; "Edit KGK Teaching Session Log" to a writer; "Mini-CEX (Paediatrics)"
+    to a reader (T21). Subtitle Q12's. Under the subtitle, the owner line, p.muted.text-sm (M1). Trail Home › Activity
+    types › ‹the h1›; Activity types lit. No Back to list. Header actions, a writer's only, once the type has loaded:
+    Save draft (btn-primary); Publish (btn-success, never with an ellipsis; aria-disabled when there is no draft, with
+    its reason as text beside it, "Save a draft to publish.", p.muted.text-sm, named by aria-describedby; T14); Discard
+    draft… (btn-outline, aria-haspopup="dialog", only on a saved type with a draft). In that order. At 390 they take the
+    row, each 44 px.
+  - The column: div.user-page (flow 12's column; its 44 px controls, its checkbox rows and its stacked actions at 390
+    come with it: say so on the Spec), in this order: the result region (ActionResult: one success, refusal or failure
+    at a time, focused); a reader's standing notice (Alert info, Role=""); the version strip; the tab list; the
+    selected tab's panel. Add a page class only for a measured need, and name it under § CLASSES.
+  - The version strip: dl.detail-list, two rows. "Published": "Version 1, 2026-11-05, Nolwazi Mbatha" or "Not
+    published". "Draft": "Saved 2026-11-05 by Nolwazi Mbatha" or "None" (the saver's name is DATA). A writer's only
+    note under it, on a seed-owned type with a draft (T18).
+  - The tabs: a writer's five, Details, Form, Workflow, Credit, Publish; a reader's four, Details, Form, Workflow, Credit
+    (T1). One row at every width (at 390 five equal tracks, each 44 px high; measure that "Workflow" and "Publish" fit
+    without wrapping, and say what each measured; if they do not fit, say so and draw the narrowest that does, never two
+    rows). A new type opens on Details; an existing type, for a writer or a reader, opens on Form, as today (T2); after
+    a save the selected tab stays.
+  - Details (writer): h2 "Details"; Q14's line, p.muted; then .form-grid: Key * (help "Fixed once published.", round
+    1's; after a publish a read-out, the key in <code>, with "Fixed: version 1 is published."); Name *; Scope (a read-out
+    where the caller has one scope and one target: "Institution · Kgosi Kgari Teaching Hospital", help "The one scope
+    you can write in."; otherwise Scope * as radios in a .choice-group, then its target as a select, or a read-out where
+    it has one); This tool is (select; its help as built); Description (textarea, with flow 14's counter "94 of 2,000
+    characters"; the column holds 2,000); Active (.form-check, with T17's help). Details (reader): h2 "Details"; dl.detail-
+    list of Key (<code>), Name, Set by (the owner line's words), This tool is, Description, Status; then h2 "Versions",
+    the versions table and Q3's line (T1).
+  - Form: on a narrow card (where .builder-two-col stacks; today up to 1115 px), first a .choice-group of two radios
+    under the legend "Show": "Edit the form" (a reader: "The form") and "Preview", the first chosen, switching with no
+    round trip (T5). Then the two columns (.builder-two-col in its .form-container, as built): the rail holds h2 "Form
+    settings" with today's line (S12) and the three pickers (a reader: a dl.detail-list), then h2 "Sections and fields"
+    with Add section (writer) and each section (its title an h3, its key in <code> beside it, its actions: Edit, Up,
+    Down, Delete, or a reader's View), its fields as rows (the label; then its type by label, its key in <code>,
+    "Required" where it is; then Edit, Up, Down, Delete, or View), Add field under them; the preview column holds h2
+    "Live preview" and ActivityForm with SectionHeadingLevel="3", placed. § CLASSES decides whether the rows are a
+    DataTable per section with tr.is-editing (T4) or round 1's outline.
+  - The editor in place: under the row pressed, one at a time (Q4), its heading an h4 ("Field Audience", "Section
+    Teaching session"; NEW), its inputs in a .form-grid, the row's Edit become Done. A reader's View opens the same place
+    as a dl.detail-list of the settings, its View become Close ("Close field Supervision required for this encounter";
+    round 1's word). Opening one closes any other. Up and Down move the row and keep the focus on the moved row's button;
+    Delete removes the row and moves the focus to the next row's Edit (or Add field when none is left).
+  - Workflow: h2 "Workflow"; the states line, a p ("Draft, where a new one starts · Logged, final · Cancelled"; T8); the
+    moves table (DataTable, captioned "Moves, as saved"; columns Move, From, To, Who moves it, Checks, Note; StackWide);
+    then a writer's JSON editor, "Workflow JSON", textarea.form-control.font-mono (as built), its help T10's, its
+    refusal under it (FieldRefusal) when a save names a move (T9). A reader's panel ends at the table.
+  - Credit: h2 "Credit"; the sentences, one per directive, a p each (Q2), or "Credits nothing." with its line; then a
+    writer's "Credit rules JSON" editor as Workflow's.
+  - Publish (writer only): h2 "Publish". On a type never published: h3 "What you are publishing", a dl.detail-list of
+    Form, Workflow and Credit (C5.1's words, with T15's rule for the workflow's line), then "Nothing to compare: this is
+    the first version." On a published type with a draft: h3 "What publishing this draft changes", the warnings in a ul
+    (by label, T324), or "Nothing on the form changes for activities already filed." where there are none (NEW); then
+    the pinned line, "Activities already filed stay on version 1, with Audience as they filed it. Only activities filed
+    after the publish use version 2." (B5.1's, without its count; PROPOSED there, accepted). Then h3 "Versions", the
+    versions table (DataTable captioned "Published versions": Version, Published, By) and Q3's line. Then the button,
+    "Publish version 2" (btn-success; the same action as the header's Publish, T14), or with no draft its reason (T15).
+  - Results, refusals and failures in the result region, each focused: § FIXTURES "Results" and "Refusals".
+  - Dialogs (ConfirmDialog in action mode, opening on Cancel; Cancel and Escape return the focus to the trigger): Discard
+    draft… (Q14); Publish with warnings (Q8, Q16); Save draft with Active newly unticked on a published type (Q15).
+  - States: loading (h1 "Activity type", "Loading this activity type." p.loading-line[role="status"] over a skeleton
+    card; no tabs, no strip, no header action); the load error (h1 "Activity type", StatePanel's sentence with Try again,
+    which focuses the h1 once it reads; nothing under it); Unavailable (§ FIXTURES); on /new with no scope, the built
+    notice and nothing else.
+
+THE LIST (/admin/activity-types; Q7, Q11, Q12):
+  - Header: h1 "Activity types"; the subtitle by role (Q12; T11); New activity type (a.btn.btn-primary, icon plus) only
+    where the caller may create, and only once the rows have loaded. Trail Home › Activity types. Activity types lit.
+  - The column: div.people-page: the search bar (.search-container: label "Search by name or key" over the input; Show
+    and Clear in .filter-actions, Clear only once a search is set); the count line, p[role="status"], "23 activity
+    types." or "12 of 23 activity types match “cpsa”." (round 1's; PROPOSED there, accepted); then the table or a state.
+  - The table: DataTable StackWide, captioned "Activity types you can read or change" ("Activity types matching “cpsa”"
+    when searched; round 1's, accepted); columns Name (the name as the row's th scope="row", then a system-managed row's
+    line, p.muted.text-sm, then the key in <code>, .text-sm), Set by (the owner in words, then the scope, .muted.text-sm),
+    Published, Draft, Status, and an actions cell (div.actions-cell, one a.btn.btn-sm.btn-outline: Edit or View, named for
+    the row). Six columns. No pager, as built (the replay's lists hold 24 rows at most); say on the Spec, in words only,
+    what the list does at 100 rows.
+  - States: loading ("Loading the activity types." over a skeleton); the load error (StatePanel, Try again); the no-match
+    state ('No activity types match "zzz".' / "The search is kept above. Clear it to see all 23." with a primary "Clear
+    the search"; round 1's, accepted), apart from the empty catalogue (StatePanel empty: "No activity types" / "Create the
+    first activity type to start the builder." with New activity type for a caller who may create, or "No activity type
+    is open to you yet." for one who may not, as built).
+
+FIXTURES (the T394 replay, wombat_scenario_t394; D = 2026-11-05, the day Acts 1 and 6 were played; use these words):
+  People (names as stored, no titles; the product stores no pronoun):
+    Nolwazi Mbatha, Institutional admin, Kgosi Kgari Teaching Hospital (KGK). Top bar "Nolwazi Mbatha"; "Acting as
+      Institutional admin". Menu: Home; People (Invitations, Trainees, Assessors, Users); Curriculum (Curricula, EPAs,
+      Activity types, Entrustment scales); Reviews (Decisions due, Committee reviews, Decision panels, Entrustment
+      decisions); Access and audit (SSO mappings, Audit log); then My data rights under the rule.
+    Anton Kruger, College admin, College of Paediatricians of South Africa (CPSA). Top bar "Anton Kruger"; "Acting as
+      College admin". Menu, flat: Home, Specialities, EPAs, Curricula, Activity types, Entrustment scales; then My data
+      rights (flow 16 built it so).
+    devadmin, display name "Demo Administrator", Administrator; "Acting as Administrator". Menu: Home; Platform
+      (Scheduled jobs, Audit log, SSO mappings, Data rights requests); Organisations (Institutions, Colleges); People
+      (Users, Invitations); Catalogue (EPAs, Curricula, Activity types, Entrustment scales); Reviews (Decisions due,
+      Committee reviews, Decision panels); then My data rights.
+    Seen through the result on flow 03's page, never drawn here: Anele Dlamini (Trainee), offered the KGK log in Act 2.
+    A College admin of a College with no discipline, a second institution's admin, a Global type, a 40-field type: no
+      cast member ("Illustration", ‹name›).
+  The types (id as replayed; key; name; Set by; scope; Published; Draft; Status). Every CPSA instrument is v1, None,
+    Active (observed at 1.24); every Demo type is published and active (a reader lists only those), version 1 on this
+    fresh database (inferred), Draft None:
+    Demo College, "Speciality · General Medicine", View to all but devadmin: ‹id› acat ACAT; ‹id› cbd Case-based
+      Discussion; ‹id› dops DOPS; ‹id› journal_club Journal Club; ‹id› mini_cex Mini-CEX; ‹id› procedure_log Procedure
+      Log; ‹id› qi_project QI Project; ‹id› reflective_note Reflective Note; ‹id› research_output Research Output;
+      ‹id› teaching_session Teaching Session.
+    CPSA, "Speciality · Paediatrics": 11 mini_cex_cpsa Mini-CEX (Paediatrics); 12 dops_cpsa DOPS (Paediatrics); 13
+      cbd_cpsa Case-Based Discussion (Paediatrics); 14 direct_observation_cpsa Direct Observation (Paediatrics); 15
+      cca_cpsa Clinical Case Analysis (Paediatrics); 16 rca_cpsa Random Case Analysis (Paediatrics); 17
+      chart_stimulated_recall_cpsa Chart-Stimulated Recall (Paediatrics); 18 reflective_exercise_cpsa Reflective
+      Exercise (Paediatrics); 19 clinical_audit_cpsa Clinical Audit (Paediatrics); 20 portfolio_review_cpsa Portfolio and
+      Logbook Review (Paediatrics); 21 msf_cpsa Multi-Source Feedback (Paediatrics), system-managed; 22
+      learner_feedback_cpsa Learner Feedback (Paediatrics), system-managed.
+    23 kgk_teaching_log KGK Teaching Session Log, Kgosi Kgari Teaching Hospital, "Institution"; from 1.26 Not published,
+      Draft Saved 2026-11-05 (by Nolwazi Mbatha), Active; from 1.30 Version 1, None, Active. Description "A registrar's
+      log of a teaching session they delivered at KGK. Not rated, and credits nothing." (94 characters). This tool is
+      Not a WBA instrument.
+    24 cpsa_case_presentation_log CPSA Case Presentation Log, CPSA, "Speciality · Paediatrics", from 6.14a Not published,
+      Saved 2026-11-05 (by Anton Kruger), Active. Description "A registrar's log of a case they presented at a
+      departmental meeting. Not rated, and credits nothing." (101 characters). Not a WBA instrument.
+    The rows, in order:
+      Nolwazi Mbatha at 1.31 (23; own first, then by name): KGK Teaching Session Log (Edit); then View on ACAT,
+        Case-based Discussion, Case-Based Discussion (Paediatrics), Chart-Stimulated Recall (Paediatrics), Clinical Audit
+        (Paediatrics), Clinical Case Analysis (Paediatrics), Direct Observation (Paediatrics), DOPS, DOPS (Paediatrics),
+        Journal Club, Learner Feedback (Paediatrics), Mini-CEX, Mini-CEX (Paediatrics), Multi-Source Feedback
+        (Paediatrics), Portfolio and Logbook Review (Paediatrics), Procedure Log, QI Project, Random Case Analysis
+        (Paediatrics), Reflective Exercise (Paediatrics), Reflective Note, Research Output, Teaching Session. At 1.24
+        (before 1.26) the same 22 with no KGK row; `cpsa` leaves the twelve CPSA rows; `KGK` leaves KGK's row alone.
+        Between 1.26 and 1.30 KGK's row reads Not published, Saved 2026-11-05.
+      Anton Kruger at 6.14a (22, then 23; own first): Edit on Case-Based Discussion (Paediatrics), Chart-Stimulated
+        Recall (Paediatrics), Clinical Audit (Paediatrics), Clinical Case Analysis (Paediatrics), [CPSA Case Presentation
+        Log, after the save], Direct Observation (Paediatrics), DOPS (Paediatrics), Mini-CEX (Paediatrics), Portfolio and
+        Logbook Review (Paediatrics), Random Case Analysis (Paediatrics), Reflective Exercise (Paediatrics); then View on
+        ACAT, Case-based Discussion, DOPS, Journal Club, Learner Feedback (Paediatrics), Mini-CEX, Multi-Source Feedback
+        (Paediatrics), Procedure Log, QI Project, Reflective Note, Research Output, Teaching Session. No KGK row.
+      devadmin after 6.14a (24, by name): ACAT, Case-based Discussion, Case-Based Discussion (Paediatrics),
+        Chart-Stimulated Recall (Paediatrics), Clinical Audit (Paediatrics), Clinical Case Analysis (Paediatrics), CPSA
+        Case Presentation Log, Direct Observation (Paediatrics), DOPS, DOPS (Paediatrics), Journal Club, KGK Teaching
+        Session Log, Learner Feedback (Paediatrics), Mini-CEX, Mini-CEX (Paediatrics), Multi-Source Feedback
+        (Paediatrics), Portfolio and Logbook Review (Paediatrics), Procedure Log, QI Project, Random Case Analysis
+        (Paediatrics), Reflective Exercise (Paediatrics), Reflective Note, Research Output, Teaching Session; Edit on all
+        but the two system-managed, which read View.
+      "By name" is drawn case-insensitively, as above; the build keeps the database's order and says if it differs.
+  Mini-CEX (Paediatrics), id 11 (project/ref/seeds/mini_cex_cpsa/): description "Mini clinical evaluation exercise -
+    direct observation of a focused clinical encounter, followed by immediate feedback."; This tool is Mini-CEX;
+    published Version 1, 2026-11-05 (inferred: the day the replay's database was seeded), by Wombat's catalogue (T16).
+    Form settings: Encounter date field Date observed (observed_on); Entrustment rating field Supervision required for
+    this encounter (overall_level); EPA field EPA (epa_id). Sections, all ten fields required:
+      Request (request): EPA (epa_id, EPA); Assessor (assessor_user_id, User, Names a Assessor, the default; help "The
+        supervisor who observed you. They complete this assessment."); Date observed (observed_on, Date; help "When the
+        encounter happened, not when this form is completed."); Clinical setting (setting, Choice: Ward, Outpatient
+        clinic, Emergency unit, Neonatal unit, PICU, Community, stored as ward, outpatient_clinic, emergency_unit,
+        neonatal_unit, picu, community); Presenting problem (presenting_problem, Text); Case complexity (complexity,
+        Choice: Low, Moderate, High).
+      Entrustment (assessment): Supervision required for this encounter (overall_level, Scale, Entrustment scale CPSA
+        Paediatric Entrustment Scale v11.1; help "The supervision this activity actually required on this occasion -
+        not a judgement of the trainee's worth.").
+      Feedback (feedback): What was done well (strengths, Long text); Areas for development (improvements, Long text);
+        Agreed plan (plan, Long text).
+    Workflow: states Draft (where a new one starts), Requested, Completed (final), Declined, Cancelled. Moves: Submit,
+      Draft → Requested, "The registrar, or whoever filed it", "The mover's own fields", Note No; Complete, Requested →
+      Completed, "The person Assessor names", "The whole form", No; Decline, Requested → Declined, "The person Assessor
+      names", "Formats only", Required; Cancel, "Draft or Requested" → Cancelled, "The registrar, or whoever filed it",
+      "Formats only", No.
+    Credit: "Counts 1 towards the curriculum item for the EPA in EPA, at the level Supervision required for this
+      encounter records." (Q2's sentence, the labels whole).
+  Multi-Source Feedback (Paediatrics), id 21 (pasted; not in project/ref/): description "The per-EPA evidence record a
+    released multi-source feedback campaign leaves behind."; This tool is MSF; Version 1, 2026-11-05, Wombat's catalogue.
+    Form settings: Feedback window closed (observed_on); Supervision the reviewer judged this trainee to need
+    (overall_level); EPA (epa_id). Sections: Multi-source feedback (evidence): EPA (epa_id, EPA, required); MSF campaign
+    (campaign_id, Number, required); Feedback window closed (observed_on, Date, required); Questionnaires returned
+    (respondent_count, Number, required). Reviewer's judgement (review): Supervision the reviewer judged this trainee to
+    need (overall_level, Scale, CPSA Paediatric Entrustment Scale v11.1, not required; help "Optional. Stated by the
+    clinician who released the report, informed by the aggregate - never a mean of respondent scores, because a mean is
+    not a rung."); Reviewer's summary (summary, Long text, not required). Workflow: Draft (where a new one starts),
+    Recorded (final); one move, Record, Draft → Recorded, "A Coordinator or an Administrator", "The whole form", No.
+    Credit: Credits nothing.
+  Learner Feedback (Paediatrics), id 22 (pasted): description "The per-EPA evidence record a released learner-feedback
+    campaign leaves behind: feedback on the trainee's teaching from the people they taught."; This tool is Learner
+    feedback; Version 1, 2026-11-05, Wombat's catalogue. Form settings: Feedback window closed (observed_on); none
+    ("None — this form asserts no entrustment level"); EPA (epa_id). Sections: Learner feedback (evidence): EPA, Learner
+    feedback campaign (campaign_id, Number), Feedback window closed, Questionnaires returned, Teaching contexts that
+    responded (teaching_context_count, Number), all required; Reviewer's summary (review): Reviewer's summary (summary,
+    Long text, not required). Workflow and credit as MSF's.
+  KGK Teaching Session Log, id 23, as 1.27 to 1.29 leave it: section Teaching session (session): Topic (topic, Text,
+    required); EPA (epa_id, EPA, required); Date delivered (delivered_on, Date, required); Audience (audience, Choice,
+    required: Interns, Medical students, Nursing staff, Registrars); Learning objectives (objectives, Long text,
+    required); Supervising consultant (supervisor_user_id, User, Names a Assessor, not required). Form settings Date
+    delivered (delivered_on), None — this form asserts no entrustment level, EPA (epa_id). Workflow: Draft (where a new
+    one starts), Logged (final), Cancelled; Log, Draft → Logged, "The registrar, or whoever filed it", "The whole form",
+    No; Cancel, Draft → Cancelled, "The registrar, or whoever filed it", "Formats only", No. Credit: Credits nothing.
+    The workflow as 1.28 pastes it is in the runbook (and the brief's § 8); laid out after a save (Q13) it reads, with a
+    two-space indent and each property on its own line:
+      {
+        "version": 1,
+        "initial_state": "draft",
+        "states": [
+          {
+            "key": "draft",
+            "label": "Draft"
+          },
+          {
+            "key": "logged",
+            "label": "Logged",
+            "terminal": true
+          },
+          {
+            "key": "cancelled",
+            "label": "Cancelled"
+          }
+        ],
+        "transitions": [
+          {
+            "key": "log",
+            "from": "draft",
+            "to": "logged",
+            "actor": "subject|creator",
+            "validation": "all"
+          },
+          {
+            "key": "cancel",
+            "from": "draft",
+            "to": "cancelled",
+            "actor": "subject|creator",
+            "validation": "draft"
+          }
+        ]
+      }
+    and the credit rules, laid out: "{", "  \"counts_for\": []", "}" on three lines.
+  A new type's starting draft (built): one section Details (details) with a required Text field Title (title); the
+    workflow Draft (where a new one starts) → Submitted (final), one move Submit, "The registrar", "The whole form", No;
+    {"counts_for": []}, Credits nothing. Add section adds "Section 2" (section_2) holding "New field" (field_1 or the next
+    free number); Add field adds "New field" (field_‹n›), type Text.
+  The pickers:
+    Field types (as built, by label): Text, Long text, Number, Date, Choice, Multi-choice, Scale, User, EPA, Likert,
+      Procedure reference, File, Signature.
+    Names a: "Assessor (default)", Institutional admin, Coordinator, Committee member, Trainee (role labels, T324; today
+      the keys). Its help, as built: "Who this field may name: someone at the trainee's institution holding this role."
+    This tool is: Not a WBA instrument, then CBD, CCA, Chart-stimulated recall, Clinical audit, Direct observation, DOPS,
+      Learner feedback, Mini-CEX, MSF, Portfolio and logbook review, RCA, Reflective exercise. Its help, as built:
+      "Choosing an instrument lets each curriculum item's tool list decide which EPAs this form can be filed against.
+      'Not a WBA instrument' leaves it unrestricted. Takes effect when you save the draft, not when you publish, and
+      discarding the draft does not undo it. On a seeded type, publish or discard that draft afterwards, or seed updates
+      stop reaching the type."
+    Entrustment scale (a Scale field's editor): the scales by name, CPSA Paediatric Entrustment Scale v11.1 and O-R Scale
+      in Act 1, with CNSA Neurology Entrustment Scale from 6.5; a field bound by the seed key reads CPSA Paediatric
+      Entrustment Scale v11.1 chosen (T271), never "Select…". Its help, as built: "Levels of the chosen scale render as
+      the rating dropdown at runtime."
+    Scope: Nolwazi Mbatha, Institution · Kgosi Kgari Teaching Hospital alone (a read-out); Anton Kruger, Speciality
+      (Paediatrics alone: a read-out) and Sub-speciality (Paediatrics / Neonatology, Paediatrics / Paediatrics), starting
+      on Speciality · Paediatrics, CNSA's Neurology never offered; devadmin, Global (first, no target), Institution
+      (Kgosi Kgari Teaching Hospital, Demo Institution, ‹others›), Speciality (General Medicine, Neurology, Paediatrics),
+      Sub-speciality (‹every College's›).
+    The preview's EPA picker (T291 item 6): the fifteen national EPAs, never EPA-001: PAED-001 — Providing paediatric
+      emergency care to children; PAED-002 — Managing common paediatric presentations; PAED-003 — Providing intensive
+      care to children; PAED-004 — Managing common neonatal conditions; PAED-005 — Providing neonatal care in intensive
+      and high-care settings; PAED-006 — Managing long-term health conditions (LTHCs) (from 6.14: "… (LTHCs) in
+      children"); PAED-007 — Maintaining and promoting the health and well-being of children; PAED-008 — Evaluating and
+      managing neurodevelopmental and behavioural presentations in children; PAED-009 — Providing care for an adolescent
+      patient; PAED-010 — Leading and operating within a clinical team; PAED-011 — Managing population health
+      challenges; PAED-012 — Communicating with and counselling patients, caregivers and healthcare teams; PAED-013 —
+      Managing child protection, legal and ethical aspects of children at risk; PAED-014 — Providing palliative and
+      end-of-life care; PAED-015 — Teaching and applying evidence-based care responsibly and ethically in clinical
+      decision-making and research. Its person picker offers nobody (whom it offers depends on the registrar filing),
+      with round 1's line under it: "In the preview this offers nobody: it offers an active Assessor at the registrar's
+      institution, never the registrar." (PROPOSED there, accepted). The renderer's own line "* marks a field you must
+      fill in." stays as it draws it.
+  Words in the read (T8): an actor: subject "The registrar"; creator "Whoever filed it"; subject|creator "The registrar,
+    or whoever filed it"; field:assessor_user_id "The person Assessor names" (the field's label); role:Coordinator|
+    role:Administrator "A Coordinator or an Administrator" (role labels); "+" "who is also", so role:SpecialityAdmin+
+    scope:speciality "A Speciality admin who is also of the activity's speciality" (the Demo Teaching Session; words only).
+    Checks: all "The whole form"; owned "The mover's own fields"; draft "Formats only". Note: "Required" or "No". A move by
+    its label as the activity page shows it (T352 item 4: derived from its key, "Cancel", "Record discussion").
+  Results (each in the result region, focused; T291 item 3: the first save's result crosses the page change by a
+    one-shot token, CatalogueLinks, as flow 15's ?created): "Draft saved." (built); "Published version 1." (built);
+    "Draft discarded." (built); after Q16's Cancel, "Draft saved. Nothing was published." (T14); after Q15, T17's.
+  Refusals (today's sentences, word for word, after a prefix naming the tab and the place; Q6):
+    the summary: RefusalSummary, title "Nothing was saved." (flow 03's), text "Everything you typed is kept." (T7), each
+      line a link: "Form: Field key 'topic' is used by 2 fields ('Topic' in 'Teaching session', 'Audience' in 'Teaching
+      session'); give each field its own key."; "Workflow, move Cancel: Transition 'cancel' actor names 'field:topic', but
+      'topic' is not a User field; a field: rule must name a User field."; "Form, section Section 2: Section 'section_2'
+      must contain at least one field." (Illustration); "Credit, rule 1: Credit rule 1 reads its EPA from field 'epa',
+      which is not a field of the form." (Illustration).
+    at the place (round 1's per-place words, accepted; straight quotes, as the built sentences): under Topic's row and
+      under Audience's Key, "Key 'topic' is also the key of Audience. Give each field its own key." / "Key 'topic' is also
+      the key of Topic. Give each field its own key."; under the Workflow JSON (T9), "Move Cancel cannot be read: 'topic'
+      (Topic) is not a User field, so it names nobody."; under an empty section's head, "This section has no fields. Add a
+      field, or delete the section." (NEW); under the Credit rules JSON, "Rule 1 reads its EPA from 'epa', which is not a
+      field of this form. Use the form's EPA field, 'epa_id'." (NEW).
+    The tab carries the count, "1 problem" (T3), until the next save.
+    The guard's refusal, never reached from a page that offers nothing: "You do not have permission to modify activity
+      types in that speciality." (built); a system-managed type's (Q9's MayWrite; a stale page only), "Not saved.
+      Multi-Source Feedback (Paediatrics) is written by the MSF release, so it cannot be changed here." (NEW).
+  Failures (NEW, flow 16's sentence, the act named; a danger Alert in the result region, its first sentence bold,
+    focused, what was typed kept, the cause to the log): "The draft could not be saved. Nothing has changed. Try again, or
+    come back in a few minutes."; "Version 2 could not be published. …"; "The draft could not be discarded. …".
+  Loading and load errors (flow 16's words): "Loading the activity types." / "Loading this activity type."; "Could not
+    load the activity types. Nothing has changed. Try again, or come back in a few minutes." / "Could not load this
+    activity type. …" with Try again (refresh-cw).
+  Unavailable (DESIGN.md § Alerts: "Every Unavailable is drawn one way"): h1 and tab "Activity type unavailable"; trail
+    Home › Activity types › Activity type unavailable; a .detail-card--empty holding div.state-panel-copy "This activity
+    type does not exist, or you cannot open it." and a div.form-actions with one primary a.btn "Go to Activity types"; no
+    id shown, no header action, never which cause. For an unknown id and for a type the caller may not read alike (6.14a:
+    /admin/activity-types/24 to Nolwazi Mbatha).
+  The publish warnings, by label (T324; the built sentences with labels for keys, enums and roles): "Section 'Request'
+    will be removed."; "Field 'Audience' will be removed."; "Field 'Learning objectives' changes type from Long text to
+    Text."; "Field 'Topic' becomes required."; "Field 'Supervising consultant' will name a Coordinator instead of an
+    Assessor. Activities already filed keep the person they named." (T24); "This form will stop recording which field
+    carries the encounter date."; "Field 'Date delivered' will become the encounter date for this form."; "The encounter
+    date moves from field 'Date delivered' to 'Date of session'." The one drawn (states.md:916): Audience deleted from
+    KGK's type and the draft saved: "Field 'Audience' will be removed."
+  Words that stay (built): T300's notice, "Set by the College that owns Paediatrics. You can read this activity type here,
+    but not change it." ("Set by Kgosi Kgari Teaching Hospital. …"; "Set by a global administrator. …"); the no-scope
+    notice, "You have no scope to create an activity type in. An institution's administrators create their institution's
+    types, and a College's administrators the types of its specialities and sub-specialities."; the form settings'
+    "None — this form has no single encounter date", "None — this form asserts no entrustment level", "None — this form
+    is about no single EPA"; the EPA field help "The field naming the EPA this activity is evidence for. It is shown on
+    activity lists, and credit rules that match on an EPA field must use this one."; the Options help "One option per
+    line; a comma is part of the option. Write value | Label to show a label: the form shows the label, and the activity
+    stores the value."; the row actions' names, "Edit field Audience", "Move field Audience up", "Move field Audience
+    down", "Delete field Audience", "Edit section Teaching session", "Move section Teaching session up", "Delete section
+    Teaching session", "View field Supervision required for this encounter", "View section Request", "Add field to section
+    Teaching session" (visible "Add field"), "Add section"; the list's "Edit KGK Teaching Session Log", "View Mini-CEX
+    (Paediatrics)".
+  CAPTURE-ONLY: none.
+
+PROPOSED (THIS ASK: choices this message makes, for the review to weigh; list them on the Spec):
+  T1 A reader has four tabs; the Publish tab is a writer's. A reader's Versions (the table and Q3's line) close the Details
+    tab, under the details. (Alternative for the review: a fifth "Versions" tab for a reader.)
+  T2 A new type opens on Details; an existing type opens on Form, whoever opens it (as today; 1.25 expects it); a save
+    keeps the selected tab.
+  T3 The tabs restyle the builder's own shipped .tab-bar and .tab-bar-tab (used nowhere else) as the tabs pattern, keyed
+    on [aria-selected="true"], one row, 44 px: a CHANGED rule, not round 1's NEW .builder-tabs. The problem count is a
+    span inside the tab, .tab-problem (NEW), outside the tab's name: the tab is named "Form", and the count is read by
+    aria-describedby.
+  T4 Each section's fields are a DataTable (no caption repeating the h3: captioned "Fields of Teaching session") with
+    T176's tr.is-editing for the editor in place, before any NEW outline. Measure it in the rail at 1280 (about 380 px)
+    and at 390: if the label, the type line and four buttons cannot read whole, say what it measured and draw round 1's
+    outline (.form-outline, .outline-section, .field-row and its parts) as NEW instead.
+  T5 Q5's control is CSS-only: two radios and the container rule that stacks .builder-two-col hide the unchosen column
+    (:has(:checked)), so switching costs no round trip; above the stacking width the radios are hidden and both columns
+    show. A CHANGED rule on .builder-two-col's container query.
+  T6 Done only, as S4.
+  T7 The refusal summary's text "Everything you typed is kept." (flow 03's "… kept below." without "below": the refused
+    place may be on another tab).
+  T8 The read's words: § FIXTURES "Words in the read"; the states line "Draft, where a new one starts · Logged, final ·
+    Cancelled".
+  T9 The read follows the saved JSON (Q2), so after a refused save it still reads the last saved definition, captioned
+    "Moves, as saved"; a refusal about a move shows under the JSON editor, where the change is, and the summary's line
+    links there. (Alternative for the review: read the typed JSON at each Save attempt.)
+  T10 Under each JSON editor, its help (FieldHelp): "After each save this shows the rules as they were saved, laid out by
+    Wombat, one property a line." (Q13; NEW).
+  T11 The list's subtitles: the College admin's "The forms registrars file and assessors complete. You can change the
+    types College of Paediatricians of South Africa sets; the others you can read."; the Administrator's "The forms
+    registrars file and assessors complete. You can change every type but the two that Wombat's releases write."
+  T12 Set by in a cell starts with a capital: "The platform" (Q7's "the platform").
+  T13 "Own" in Q11's order means the types the caller may change (Edit), so Anton Kruger's two system-managed CPSA types
+    sort with the rest.
+  T14 Publish: the header's "Publish" and the Publish tab's "Publish version 2" are one action. Off (no draft), it is
+    aria-disabled, stays in the tab order, and is described by its reason, "Save a draft to publish.", shown beside it;
+    a press does nothing. If its dialog is cancelled after Q16's save, the result is "Draft saved. Nothing was
+    published." On /new it is off with the same reason.
+  T15 The Publish tab with no draft: "There is no draft to publish: version 1 is what registrars file. Save a draft to
+    publish." (NEW); on /new, "Nothing is published yet. Save a draft to publish." (NEW). The first publish's workflow
+    line reads the initial state, then the final states and the states no move leaves, joined with "or", then the moves'
+    count: "Draft → Logged or Cancelled; 2 moves".
+  T16 A version's date is the South African day alone ("2026-11-05"), never a time; its publisher by name; a version the
+    seeder published reads "Wombat's catalogue" (the assessment's S9(f)).
+  T17 Q15's words: Active's help "An inactive type is not offered to anyone filing an activity, and only those who may
+    change it can find it. Activities already filed are not changed."; the dialog, title "Deactivate KGK Teaching Session
+    Log?", body "Registrars are no longer offered it when filing, and only those who may change it can find it.
+    Activities already filed are not changed." / "You can reactivate it on this page.", Cancel and "Deactivate" (danger);
+    the result "Draft saved. KGK Teaching Session Log is inactive: registrars are no longer offered it."; reactivated,
+    with nothing asked, "Draft saved. KGK Teaching Session Log is active again: registrars are offered it." (all NEW).
+  T18 A seed-owned type with a draft (DATA: seed-owned): under the version strip, "While this draft is saved, updates
+    from Wombat's catalogue stop reaching this type, until you publish or discard it." (the assessment's shortened
+    words); on its Publish tab, "Once you publish it, updates from Wombat's catalogue no longer reach this type." (NEW).
+  T19 A form setting's options by label with the key after it, "Date delivered (delivered_on)"; a setting whose field
+    was deleted stays shown so it can be cleared, "delivered_on (not in the form)", the select invalid.
+  T20 The failure, load and loading words of § FIXTURES (flow 16's sentences, this page's nouns).
+  T21 A writer's h1 stays "Edit KGK Teaching Session Log", as built (T190, 1.26's Expect), though flow 16's S11 titles a
+    record by its name; say so on the Spec as the alternative.
+  T22 The system-managed notice's second sentence: "Nobody is offered it when filing an activity." (true:
+    ListActivityTypesQuery leaves system-managed types out).
+  T23 A section offers Hide fields / Show fields (aria-expanded) only on a form of more than 20 fields; all start open.
+  T24 The role warning's article: "an Assessor" (today "a Assessor").
+
+STATES TO DRAW (each at 1280 and 390, with the role's menu and the shell; 768 where marked; boards R2-… in rows by
+  letter). About 65 states: some 145 boards with their twins, the Spec and the Steps (round 1 drew 17):
+  R2-A. The list:
+    R2-A01 1.31: Nolwazi Mbatha's 23, KGK Teaching Session Log first with Edit, the rest View, the count line "23 activity
+      types.", Q12's subtitle, New activity type (768 too; swept 900–1100; every column read at 1280). R2-A02 1.24:
+      `cpsa` and Show: the twelve, "12 of 23 activity types match “cpsa”." (before 1.26: "12 of 22 …"), Clear offered.
+      R2-A03 1.31: `KGK` and Show: one row. R2-A04 `zzz`: the no-match state, the search kept, "Clear the search".
+      R2-A05 between 1.26 and 1.30 (states.md:903): KGK's row Not published, Saved 2026-11-05. R2-A06 6.14a before the
+      save: Anton Kruger's 22, ten Edit first, the MSF and learner-feedback rows View with their lines, T11's subtitle
+      (768 too; every column read at 1280). R2-A07 6.14a after: 23, CPSA Case Presentation Log among the Edit rows, Not
+      published, Saved 2026-11-05. R2-A08 devadmin's 24, Edit on all but the two (768 too; every column read at 1280).
+      R2-A09 the empty catalogue ("Illustration"): a caller who may create, and one who may not (two boards, and their
+      390 twins). R2-A10 loading. R2-A11 the load error. R2-A12 an inactive type in its writer's list ("Illustration":
+      KGK Teaching Session Log, Inactive, after R2-E12).
+  R2-B. Reading a type:
+    R2-B01 1.25: Mini-CEX (Paediatrics) on Form: the h1, Q12's subtitle, the owner line, T300's notice, the version strip
+      (Version 1, 2026-11-05, Wombat's catalogue; Draft None), four tabs, Form settings as a read-out by label, the three
+      sections with View on each row and section, the live preview with the fifteen PAED EPAs; at 390, "The form" /
+      "Preview" (the 390 twin with "The form" chosen). R2-B02 overall_level's View open under its row: its settings as a
+      dl.detail-list, the Entrustment scale "CPSA Paediatric Entrustment Scale v11.1", Close; at 390 too. R2-B03 Details:
+      the read-out and the Versions (T1). R2-B04 Workflow in words, Completed alone final, no JSON (Q2). R2-B05 Credit in
+      words, no JSON. R2-B06 6.14a: Multi-Source Feedback (Paediatrics) to Anton Kruger: Q9's notice, then T22's sentence,
+      four tabs, Form read, no Save draft, Publish, Discard, Add, Up, Down or Delete. R2-B07 Learner Feedback
+      (Paediatrics) to Anton Kruger ("Illustration": no step opens it): its notice and Form. R2-B08 the Administrator on
+      Multi-Source Feedback (Paediatrics) ("Illustration"): the same read-only page and notice (Q9: the Administrator
+      included). R2-B09 Unavailable: Nolwazi Mbatha typing /admin/activity-types/24 after 6.14a (the same for an unknown
+      id). R2-B10 loading. R2-B11 the load error.
+  R2-C. A new type and its form:
+    R2-C01 1.26 New activity type on Details: the starting draft, Scope a read-out, Publish off with its reason, no
+      Discard; five tabs. R2-C02 1.26 filled (Key, Name, This tool is, Description with "94 of 2,000 characters", Active).
+      R2-C03 1.26 saved: /admin/activity-types/23, "Draft saved." focused, h1 "Edit KGK Teaching Session Log", the strip
+      "Not published" / "Saved 2026-11-05 by Nolwazi Mbatha", Discard draft… and Publish offered, Details still
+      selected. R2-C04 6.14a New as Anton Kruger: Scope radios Speciality (chosen) and Sub-speciality, Speciality a
+      read-out "Paediatrics". R2-C05 6.14a Sub-speciality chosen: its select offering Paediatrics / Neonatology and
+      Paediatrics / Paediatrics. R2-C06 6.14a saved: /24, "Draft saved." focused, "Edit CPSA Case Presentation Log".
+      R2-C07 devadmin's New ("Illustration"): Scope radios Global (chosen), Institution, Speciality, Sub-speciality, no
+      target for Global. R2-C08 a College admin with no scope ("Illustration"): /new with the built notice alone, and the
+      list with no New activity type (two boards). R2-C09 1.27 the Form tab of the starting draft: Details (details) and
+      Title, the preview beside (768 too: the choice of two). R2-C10 the section editor in place: Section key `session`,
+      Title `Teaching session`, the section's Edit become Done. R2-C11 Title's field editor in place: Field key `topic`,
+      Label `Topic`, Type Text, Required ticked. R2-C12 Audience's editor in place, Choice with its four options, its key
+      `topic` by mistake. R2-C13 Supervising consultant's editor: Names a in place of Options and Catalogue key, "Assessor
+      (default)" chosen, the roles by label. R2-C14 1.27 the duplicate key refused, Form selected: the summary focused,
+      "Form 1 problem", both rows marked with their words, Audience's editor open, its Key invalid, everything typed kept.
+      R2-C15 the same refusal while Details is selected ("Illustration" of Q6's tab switch): the summary's line pressed
+      switches to Form, opens Audience's editor and focuses its Key (two boards: before and after the press). R2-C16 1.27
+      saved: "Draft saved." focused; Form settings by label (Date delivered (delivered_on); None — this form asserts no
+      entrustment level; EPA (epa_id)); six rows, Supervising consultant's "User · Names an Assessor"; the preview with
+      six inputs, the fifteen EPAs and nobody in the person picker (768 too). R2-C17 a Scale field's editor with the
+      scale by name (T271; "Illustration": Anton Kruger opens Edit on Mini-CEX (Paediatrics) and Edit on Supervision
+      required for this encounter, saving nothing): CPSA Paediatric Entrustment Scale v11.1 chosen among the three.
+      R2-C18 a form setting whose field was deleted ("Illustration": Date delivered deleted, unsaved): "delivered_on (not
+      in the form)" kept and invalid. R2-C19 the heavy type ("Illustration": h1 and crumb "Edit ‹a type of 6 sections and
+      40 fields›"): six sections, folds (T23), a long label wrapping clear of its buttons, a 12-option choice (768 too;
+      the rail swept 900–1100). R2-C20 a section with no fields refused at save ("Illustration": Section 2 added and its
+      New field deleted): the summary's section line, the section's words under its head. R2-C21 the choice of two at
+      390 with Preview chosen (A.7.9; 390 only), and at 768 with "Edit the form" chosen (768 only): two boards.
+  R2-D. The workflow and the credit rules:
+    R2-D01 1.28 refused: the summary focused ("Workflow, move Cancel: …"), "Workflow 1 problem", the read "Moves, as
+      saved" (the starting draft's Submit), the JSON as typed with the move's words under it (T9). R2-D02 1.28 saved:
+      "Draft saved." focused; the read of Log and Cancel, Logged final; the JSON laid out (Q13) (768 too; the moves table
+      swept 900–1100). R2-D03 1.29 Credit: "Credits nothing." and its line (§ FIXTURES "Credit"), the JSON laid out.
+      R2-D04 a credit rule refused ("Illustration": `"epa_field": "epa"` typed): the summary's line, the words under the
+      Credit rules JSON. R2-D05 the starting draft's Workflow tab on /new (the read of Submit, The registrar).
+  R2-E. Publishing and after:
+    R2-E01 1.30 before: the Publish tab of a first publish (What you are publishing, Nothing to compare, Versions empty:
+      "Not published yet." (NEW), Publish version 1). R2-E02 1.30 published: "Published version 1." focused, Details
+      selected with the key fixed, Discard gone, Publish off with its reason beside it, the strip "Version 1, 2026-11-05,
+      Nolwazi Mbatha" / "None". R2-E03 after: the Publish tab with no draft (T15), the versions table (1, 2026-11-05,
+      Nolwazi Mbatha) and Q3's line. R2-E04 a later draft ("Illustration", states.md:916: Audience deleted, Save draft):
+      the Publish tab with "Field 'Audience' will be removed." and the pinned line, Publish version 2 (768 too). R2-E05
+      Publish pressed: saved first, then the dialog "Publish version 2 of KGK Teaching Session Log?", "Publishing makes
+      this draft version 2. It changes:", the warning, the pinned line, Cancel and "Publish version 2", opening on
+      Cancel. R2-E06 published version 2 ("Illustration"): "Published version 2." focused, two versions. R2-E07 Discard
+      draft… on KGK's draft ("Illustration", after R2-E04): Q14's published body, opening on Cancel. R2-E08 "Draft
+      discarded." (states.md:917): focused, the form back to version 1 (Audience back), Discard gone, Publish off.
+      R2-E09 Discard draft… on CPSA Case Presentation Log ("Illustration": never published): Q14's second body. R2-E10
+      its result: "Draft discarded.", the starting draft's form, the details kept. R2-E11 Active unticked on published
+      KGK, Save draft ("Illustration"): Q15's dialog (T17), opening on Cancel. R2-E12 its result: T17's, Active
+      unticked. R2-E13 a failed save ("Illustration"): the failure sentence, focused, the form as typed. R2-E14 A.7.9: KGK
+      Teaching Session Log at 390 after 1.30 (390 only): the tabs in one row, the strip, Publish off with its reason,
+      the Form tab's choice of two. R2-E15 a seed-owned type with a draft ("Illustration": Mini-CEX (Paediatrics) with a
+      draft saved by Anton Kruger): T18's note under the strip and on the Publish tab.
+
+ALSO, as flows 12–16's round 2 did:
+  - Every page: one h1 (PageHeader), then h2 in order (no h3 without an h2 above it); every table captioned, not
+    repeating its heading, with scope on its headers and the row's th scope="row"; every row action named for its row,
+    no two alike; loading (the header at once and a skeleton, no action until the read is in); a load error in fixed
+    words with Try again, never an exception's text and nothing under it (T329, T393); ISO dates; no sideways scroll at
+    1280, 768 or 390.
+  - Header actions stay beside the title block at 1280 whatever the subtitle's length (the College admin's T11 subtitle
+    is the longest): check the list and the builder at 1280 and 1100 and say what each does. At 390 they take the row,
+    each 44 px.
+  - Focus after every action: each result (saved, published, discarded, deactivated) on the result region; a refusal on
+    its summary, a summary line's press on its place; Edit on the editor's first input, Done on the row's Edit; Delete on
+    the next row's Edit; Show on the count line; Clear on the search input; Clear the search on the search input; every
+    dialog opening on Cancel, Cancel and Escape returning to its trigger; Try again to the reloaded page's h1; a tab's
+    selection on the tab itself.
+  - The routes, each with its owner, trail, lit item and tab title: /admin/activity-types (Activity types; Home ›
+    Activity types); /admin/activity-types/new (Activity types; Home › Activity types › New activity type);
+    /admin/activity-types/{ActivityTypeId:int} (Activity types; Home › Activity types › the h1). No new route.
+  - Name every design-system component you use (PageHeader with its trail and actions, DataTable with StackWide, FormField,
+    FormActions, FieldHelp, FieldRefusal, RefusalSummary, ActionResult, Alert with Role="" for a standing notice,
+    ConfirmDialog in action mode, StatePanel with Try again, Skeleton, the Unavailable state, ActivityForm placed, Icon
+    by its Lucide name: plus, refresh-cw), and mark anything else NEW (only § CLASSES' rows).
+  - Nothing of flows 01–16 drawn as changed but what this message names: the shell, the menus and Access denied; flow 03's
+    renderer in the preview; the College admin's Home card. The filing page that draws the published type (flow 03) has
+    no board.
+
+CLASSES (name each on the Spec's class table; every other class a board uses is app.css's, "reuses .x"):
+  - The list: .people-page; .search-container with .search-field and .filter-actions (flow 06's); DataTable StackWide
+    (.clinic-table--stack-wide), stacking from 900 px down as built, or to 1024 px if the 900–1100 sweep needs it (say
+    which); .actions-cell; .muted, .text-sm for the scope and the system-managed line; <code> for the key.
+  - The builder: .user-page with .user-section per h2 group; .form-container, .form-grid, .form-actions; dl.detail-list
+    for every read-out and the version strip; .choice-group for Scope and for Q5's control; .builder-two-col as built;
+    textarea.form-control.font-mono for the JSON; DataTable for the moves and the versions; .detail-card--empty with
+    .state-panel-copy for Unavailable; p.loading-line over a Skeleton.
+  - Shipped rules this round may add or change (each argued on the Spec, nothing else):
+    C1 (CHANGED, T3) .tab-bar and .tab-bar-tab as the tabs pattern: an underline on the selected tab ([aria-selected=
+      "true"]; .is-active goes), one row, 44 px high, equal tracks below 641 px; DESIGN.md § Builder layout says so.
+    S1 (NEW, T3) .tab-problem, the count's chip inside a tab: text on its tint, measured (4.5:1) on the surface and on
+      the selected tab.
+    C2 (CHANGED, T5) .builder-two-col's container rule: below its stacking width the unchosen column is hidden by the
+      choice's :checked radio, and above it the choice is hidden.
+    S2 (NEW only if T4's DataTable fails its measure) round 1's outline, .form-outline, .outline-section, .outline-
+      section-head, .field-row with -label, -meta and -actions, .is-refused, renamed nothing; the editor in place
+      .field-editor-inplace. Write what the DataTable measured first.
+  - No .json-editor, .version-strip, .publish-panel, .publish-reason, .publish-pinned, .rules-words or .state-line:
+    each is a shipped class's job (N7; the assessment's § DESIGN.md). No .builder-tabs (T3).
+  - Icons by Lucide name: plus (New activity type, Add section, Add field, as built where drawn), refresh-cw (Try
+    again), clipboard-list (Activity types in the menu, as built). No icon on a row action.
+
+SPEC BOARD, "R2-0-spec" (more boards "R2-0-spec-2", … if it runs long):
+  - FIRST: which reference files you opened under project/ref/ (list them), which you could not read, and which of the
+    30 capture names is missing, said plainly.
+  - The decisions in one table (Q1–Q16), each with the boards that draw it; then M1–M7, S1–S14, N1–N12 and T1–T24, each
+    with its board; which boards are Illustrations.
+  - The changes the boards need, written as code changes, each PROPOSED (decided ones say their Q):
+    ActivityTypesList: the search applied with Show and Clear (no @bind:event="oninput"); the count line; the no-match
+      state apart from the empty catalogue (T326); Q7's columns and Q11's order (T13); StackWide; the links kept; the
+      subtitle by role (Q12, T11); the load error in fixed words with Try again and a loading line (T329).
+    ListActivityTypesAdminQuery: each row's owner in words (the owning College's short code, the institution's name, or
+      the platform; DATA: the College's code is not read today, only its id, :81–82) and SystemManaged with its release;
+      CanWrite false on a system-managed type (Q9).
+    ActivityTypeAdminScope.MayWrite and ActivityTypeScopeGuard: refuse a system-managed type to everyone, the
+      Administrator included (Q9, T334; today the scope alone, :50–67), with the NEW refusal of § FIXTURES.
+    GetActivityTypeEditorQuery: null for an unknown id and for one the caller may not read (Unavailable; today both
+      throw "The activity type could not be found.", :83, :87); SystemManaged and its release; the owner's words; the
+      draft saver's and each publisher's name (DATA: ids today, :204, :211), "Wombat's catalogue" for the seeder
+      (seed-system); whether the type is seed-owned (DATA, T18); the preview's EPAs by the type's own rule (DATA, T291
+      item 6); the JSON laid out (Q13).
+    WorkflowParser and CreditRulesParser: an indented Serialize (Q13), used on load and after each save; no store change.
+    SaveActivityTypeDraftCommand (and the parsers): a refusal carries its place: the field key or keys, the section key,
+      the move key or the directive's number (Q6, DATA; today one sentence).
+    ActivityTypeEdit: the tabs pattern on .tab-bar (Q1, S2, T280); Details first on /new (T2); the Publish tab (Q1, M5,
+      T1, T14, T15); no Back to list; Q12's subtitle and the owner line; the version strip; the editor in place, one at a
+      time, Done (Q4, S4; today SelectSection opens the first field too, :1015–1019, and the first section and field
+      open at load, :839–842: both go); Delete outline, asking nothing (Q8; today btn-danger, :284, :310); the form
+      settings, Names a and the type labels by label (T324; today keys and WombatRoles raw, :189–236, :301, :375, :467);
+      the scale picker resolving a seed key (T271 item 2, :487–493); the read in words (Q2) and no JSON to a reader; the
+      first save's result by a one-shot token (T291 item 3; today :900–903 and :802 drop it); Discard draft… and its
+      dialog (Q8, Q14; today :28, :965–992 discard at once); Publish (Q16: save, recompute the warnings from what was
+      saved, ask if any, publish; today it publishes the saved draft against warnings read from the unsaved page,
+      :943–960, :1107–1119); Q15's question on Save draft; RefusalSummary with linked lines (Q6); the failures in fixed
+      words (T393; today RefusalText.Of, :818, :910); Unavailable for null; a loading line; Publish aria-disabled with
+      its reason in text (today a title, :30).
+    BuilderModels.GetPublishWarnings: labels for field types, roles and the form settings' fields (T324; today
+      'LongText', the raw role and keys, :209, :227, :359–369), with "an Assessor" (T24).
+    FormSchemaParser:351: the role refusal names roles by label (N5).
+  - The class table: every class a board uses, "reuses .x", CHANGED or NEW and why (C1, C2, S1; S2 only if measured);
+    canvas-only classes (.cv-*, K rows) listed apart and kept off the components.
+  - The 390 scope that gives each page 44 px: .people-page on the list, .user-page on the builder (its lone .form-check
+    rows: Active, Required), .filter-actions, StackWide's buttons, the tabs (C1), .dialog-card for every dialog; each
+    table's 768 behaviour; the 900–1100 sweep's results, each table and the builder's two columns against their container;
+    where the two columns stand side by side (today from 1116 px) inside .user-page's 60rem.
+  - The DESIGN.md text each changes: § Builder layout rewritten (the tabs pattern and T280's record; Details first; the
+    Publish tab; the version strip; the editor in place; Q5's control; the read in words, a reader's whole view; the JSON
+    laid out; Delete outline); § Button system (Discard draft… asks; Delete asks nothing; Publish asks only with
+    warnings, and saves first; Active unticked on a published type asks; Publish aria-disabled with its reason in text);
+    § Form system (a refusal's summary linking across tabs, its words at the place; the form settings by label); § Table
+    system (the list StackWide; the moves table; the fields' table with tr.is-editing, or the outline); § Page-level
+    patterns (Unavailable gains Activity type; no Back to list; the loading and failure words).
+  - The tokens: every colour an existing token; contrast checked (text 4.5:1, borders and the focus ring 3:1): the
+    selected tab's underline, .tab-problem, the muted reason beside Publish, the muted scope line, white on Publish
+    (5.88:1, A.7.14), the refusal stripe.
+  - The DATA reads grouped by query (as above), and every message by kind (result, refusal, hint, notice, empty, failure,
+    question) with its words: built, round 1's, NEW or PROPOSED (THIS ASK), each NEW beside the words it replaces.
+  - LATER, NOT BUILT (a line each, never drawn as built): T019-b drag-and-drop reorder (Up and Down stay the keyboard
+    path); T019-c nested and repeatable sections; T019-d a visual workflow editor; T019-e a visual credit-rules editor;
+    T019-f visibility on several conditions; T019-g templates and copy from a type; T106 item 11 an input for who may
+    write a field or section (editable_by: Mini-CEX's Entrustment and Feedback carry "field:assessor_user_id", read
+    nowhere on these pages); T179 "This tool is" at publish; T271 item 1 (the race); T352 item 4 (a move's label from
+    its key).
+  - Edge cases, one line each with its board: a type with no sections (the parser refuses it: "Schema must contain at
+    least one section."; words only); a section with no fields (R2-C20); a 40-field form (R2-C19); a field's key changed
+    after publish (a removal and an addition in the warnings; words only); a form setting at a deleted field (R2-C18);
+    a draft saved by someone else (the strip names the saver, "Saved 2026-11-05 by Demo Administrator"; Save draft
+    overwrites it, no lock; words only); a seed-owned type with a draft (R2-E15); a College admin with no scope
+    (R2-C08); an inactive type (R2-A12, R2-E12); an unpublished type opened by one who may not write it (R2-B09); a
+    2,000-character description (the counter at "2,000 of 2,000 characters", the read-out wrapping; words only); the
+    starting draft's section "Details" beside the Details tab (one name for two things until the section is renamed;
+    words only); malformed JSON ("Workflow JSON is malformed: …", the parser's text after the colon an exception's:
+    the build shows "The workflow is not valid JSON. Check the brackets and commas near ‹line›." (NEW) instead; words
+    only).
+
+STEPS BOARD, "R2-0-steps" (more boards "R2-0-steps-2", … if it runs long):
+  - One counting rule, said once at the top and used on every board: a journey counts presses + fields; a press is a
+    click on a button, tab, link or checkbox; a field is a text typed or a choice made in a select or a radio group, and
+    is not also a press; a menu link is a press, and at 390 opening the menu is one more; a dialog's confirm is a press;
+    a field that arrives chosen counts as none; a page the app goes to by itself (the type's own address after the first
+    save) is no press. (Flow 16 counted a box as a field; this flow counts a tick as a press, as the assessment did. Say
+    so.)
+  - The step count: 11 steps, 1.24–1.31 (8), 6.14a, A.7.9 and A.7.14 (their builder parts only).
+  - Each step, its board, and what its Expect will say once built, quoting today's words and giving the new ones
+    ("unchanged" where so), values person by person and count by count from FIXTURES:
+    1.24: "Each reads Scope `Speciality · Paediatrics`, Published `v1`, Draft `None` and Active" becomes "each reads Set
+      by CPSA (Speciality · Paediatrics), Published Version 1, Draft None and Active"; the search is applied with Show,
+      and "12 of 22 activity types match “cpsa”." reads above the table; Clear brings back 22; View named for the row
+      (unchanged); New activity type offered (unchanged). Do: "search `cpsa`, press Show and read the list. Then press
+      Clear."
+    1.25: Do "leave by Back to list" becomes "leave by the trail's Activity types". Expect: the h1, tab and notice
+      unchanged; the subtitle Q12's; "opens on the Form tab" unchanged (T2); Form settings "as text, Encounter date field
+      `observed_on` …" become "Date observed (observed_on), Supervision required for this encounter (overall_level) and
+      EPA (epa_id)"; each field's row reads its type by label ("EPA", "Long text"), not "epa_id · Epa"; View opens under
+      its row, and overall_level's reads CPSA Paediatric Entrustment Scale v11.1 (unchanged words, now true); "Metadata,
+      as text" becomes "Details, as text", with Set by in place of Scope and the Versions (1, 2026-11-05, Wombat's
+      catalogue); "Workflow, as a code block" becomes "Workflow, in words: Draft, where a new one starts; Completed,
+      final; Submit, Complete, Decline and Cancel, the person Assessor names completing or declining"; "Credit, as a code
+      block" becomes "Credit, in words: Counts 1 towards the curriculum item for the EPA in EPA, at the level Supervision
+      required for this encounter records."; no JSON is shown; the preview's EPA picker offers the fifteen PAED EPAs and
+      not EPA-001 (T291 item 6). The rest unchanged.
+    1.26: Do "open the Metadata tab and enter" becomes "enter" (it opens on Details). Expect: "The builder opens on the
+      Form tab" becomes "on the Details tab"; the starting draft is on Form (unchanged words); Scope reads "Institution ·
+      Kgosi Kgari Teaching Hospital", a read-out, "The one scope you can write in."; the first Save draft moves to
+      /admin/activity-types/23 and reads "Draft saved." focused (now true); the strip reads Not published / Saved
+      2026-11-05 by Nolwazi Mbatha; the h1 and tab unchanged.
+    1.27: Do: "edit the Details section" unchanged, through its Edit, its editor opening under its row; "Then correct
+      its key" through the summary's line or Audience's Edit. Expect: the thirteen types unchanged; Names a "defaults
+      to Assessor, and also offers InstitutionalAdmin, Coordinator, CommitteeMember and Trainee" becomes "Institutional
+      admin, Coordinator, Committee member and Trainee"; the mistaken save's refusal word for word in the summary, after
+      "Form:", and at both fields: "Key 'topic' is also the key of Audience. …" / "… of Topic. …"; the Form tab carries
+      "1 problem"; the corrected save reads "Draft saved." (unchanged); the pickers offer fields by label: Date delivered
+      (delivered_on), EPA (epa_id); the preview unchanged but the EPA picker (the fifteen, not EPA-001, now true).
+    1.28: Expect: the refusal word for word in the summary after "Workflow, move Cancel:" and its words under the JSON;
+      the second save "Draft saved." (unchanged); the read in words: Log, Draft → Logged, the registrar or whoever filed
+      it, the whole form; Cancel, Draft → Cancelled, the same, formats only; Logged final; the JSON laid out one
+      property a line, in the parser's order (Q13).
+    1.29: Expect gains "The Credit tab reads 'Credits nothing.' and the date rule in words"; the JSON reads `{` /
+      `"counts_for": []` / `}` laid out. The rest unchanged.
+    1.30: Do unchanged ("Press Publish."). Expect: "Published version 1." focused; Discard draft gone (unchanged);
+      "Publish is disabled, with the hint 'Save a draft to publish.'" becomes "Publish is unavailable (aria-disabled),
+      its reason 'Save a draft to publish.' shown beside it"; the Key a read-out, "Fixed: version 1 is published."; the
+      strip "Version 1, 2026-11-05, Nolwazi Mbatha"; the Publish tab's versions one row; no warnings and no question
+      (unchanged).
+    1.31: Do "Press Back to list" becomes "Press Activity types in the trail"; "Then search `KGK`" adds "and press Show".
+      Expect: 23 rows, KGK Teaching Session Log first, "Set by Kgosi Kgari Teaching Hospital (Institution)", Version 1,
+      None, Active, Edit; the Demo rows Set by Demo College (Speciality · General Medicine); `KGK` leaves one row, "1 of
+      23 activity types match “KGK”."; `zzz` (the Actual's) reads 'No activity types match "zzz".' with Clear the search.
+    6.14a: Do "open the Metadata tab and read what Scope offers" becomes "read what Scope offers" (Details first).
+      Expect: the list's 22 rows, Anton Kruger's ten Edit rows first, then View; msf_cpsa and learner_feedback_cpsa View with their
+      lines (now true, T334); Multi-Source Feedback (Paediatrics) "with a notice that the system writes it" becomes
+      "under 'Written by the MSF release. Its form changes only with a release of Wombat.'"; "It opens headed 'New
+      activity type', on Form" becomes "on Details"; Scope Speciality and Sub-speciality as radios; the save "Draft
+      saved." focused (now true); in the list "with no published version, Draft 'Draft saved'" becomes "Not published,
+      Saved 2026-11-05"; Nolwazi Mbatha's "could not be found" becomes "Activity type unavailable" / "This activity type
+      does not exist, or you cannot open it.".
+    A.7.9 (the builder's part): "editor and live preview stack in one column (DESIGN.md § Builder layout, T266), and its
+      tab bar stays usable" becomes "the five tabs sit in one row, the selected one exposed; the Form tab offers 'Edit
+      the form' and 'Preview', so the preview is one press away; every control 44 px; nothing sideways".
+    A.7.14 (Publish): "with no draft it is disabled, and a disabled control is exempt" becomes "with no draft it is
+      unavailable (aria-disabled), and exempt; its reason beside it meets 4.5:1"; white on Publish 5.88:1 unchanged.
+    states.md: 903 ("Draft reads 'Draft saved'" → "Saved 2026-11-05"); 905 ("the page's empty card" → the no-match
+      state); 907 (narrow: stacked, Edit or View 44 px); 908 (the Form tab, by label); 909 ("New, the default draft" on
+      Details); 910 ("Metadata tab" → "Details tab", "Draft saved." focused); 913 (the refusal at the move and the
+      summary); 914 ("Credit tab": in words); 915 (Publish unavailable with its reason in text); 916 (warnings on the
+      Publish tab, by label); 917 (Discard asks first, Q14's body); 918 ("The activity type could not be found." →
+      Unavailable's words); 919 (the loading line); 920 (narrow: one row of tabs, the choice of two).
+  - Search the runbook for the words that change (BRIEF.md § 9 item 7), found by this message; each hit's step:
+    "Back to list" (1.25 Do and Actual, act-1-setup.md:789, :820; 1.31 Do, :958); "Metadata" (act-1-setup.md:745 the
+    act's prose, :800 1.25 Expect, :816 1.25 Actual, :829 1.26 Do, :952 1.30 Actual; act-6-catalogue.md:444 6.14a Do);
+    "code block" (1.25, act-1-setup.md:802, :804, :817); "on the Form tab" / "on Form" (1.25 :791 and :812, which stay
+    true; 1.26 :836 and :849; 6.14a act-6-catalogue.md:462, :479); "v1" in the list (1.24 :751, 1.31 :962); "v0"
+    (6.14a's Actual, act-6-catalogue.md:483); Draft "Draft saved" (6.14a Expect :468, Actual :482; states.md:903); "could
+    not be found" (6.14a :470, :484; states.md:918); "Save a draft to publish." as a hint (1.30 :947, :951); the builder's
+    "stack in one column" and tab bar (A.7.9, appendix-cross-cutting.md:1708, :1732); "disabled" Publish (A.7.14,
+    appendix-cross-cutting.md:1872); "Configured activity types" (no hit). Act 2's filing of the KGK log is flow 03's page:
+    unchanged.
+  - Each journey's count at 1280 and 390, each press named, today's beside it (from the list where the step starts
+    there):
+    1.24: Activity types, `cpsa`, Show, Clear: 3 + 1 (390: 4 + 1); today 1 + 2 (typing and clearing).
+    1.25: View, View overall_level, Details, Workflow, Credit, the trail: 6 + 0; today 6 + 0 (View, the field's View,
+      Metadata, Workflow, Credit, Back to list).
+    1.26: New activity type, Save draft; Key, Name, Description: 2 + 3; today 3 + 3 (the Metadata tab).
+    1.27: Form, Edit (section), Edit (Title), Add field ×5, Required ×4, Save draft, the summary's line, Save draft: 15 +
+      24 (390: 17 + 24, Preview and back); today 14 + 24 (Edit section opened Title too). With Done required it would be
+      23 + 24 (S4: it is not).
+    1.28: Workflow, Save draft, Save draft; the JSON, the actor: 3 + 2; today 3 + 2.
+    1.29: Credit: 1 + 0; today 1 + 0. 1.30: Publish: 1 + 0; today 1 + 0.
+    1.26–1.30: 22 + 29 at 1280 (24 + 29 at 390); today 22 + 29.
+    1.31: the trail, `KGK`, Show: 2 + 1; today 1 + 1.
+    6.14a: Activity types, View (MSF), the trail, New activity type, Save draft, the trail; Key, Name, Description,
+      Sub-speciality, Speciality: 6 + 5 (390: 7 + 5); today 7 + 5 (the Metadata tab).
+    A.7.9 (the builder): Menu, Activity types, Edit, Preview: the preview at 0 px of scrolling, one press; today about
+      4,390 px down a 5,245 px page.
+
+CHECK BEFORE YOU STOP: one h1 a board; no inline style; no undefined class; no raw colour; no .wf-*, .builder-tabs,
+  .json-editor, .version-strip or .publish-panel; no Back to list on any page; no B or C part (no stepper, no state
+  diagram, no contents list, no dialog or panel editor); five tabs for a writer and four for a reader, one row at every
+  width; a new type on Details; no "Metadata", "v0", "v1", "key · enum", role key, "seed:" key or "Select…" for a bound
+  scale on any page; no JSON for a reader; every refusal word for word after its prefix and at its place; Publish
+  with no ellipsis, aria-disabled with its reason in text when off; Discard asking in Q14's words; no count of
+  activities per version; Q9's notice on both system-managed types and View on them for everyone; Unavailable's words,
+  never which cause; every dialog naming its target and opening on Cancel; every 390 control 44 px, the checkbox rows
+  included; nothing scrolls sideways at 1280, 768 or 390, and every table and the two columns measured from 900 to 1100
+  against their container; every column of the list read at 1280 for each of the three; no gendered pronoun for a
+  person on any board, annotations included; every bracket ‹…› still a bracket, never filled from memory; every board's
+  390 and 768 twin carries the same words as its 1280 board; f17r2.css saved as a project file; round 1's boards on a
+  "Round 1" page, untouched; the Spec says first which reference files opened.
