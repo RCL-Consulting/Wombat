@@ -119,3 +119,7 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   problem tab, C19), M3 the Preview radio counted as a press (390: 22 + 31), M4 E02 on Details not Credit, M5 five
   states.md rows; build should-fixes J1–J15 (RefusalSummary across tabs, refusals as a list of places, refusal vs
   failure, Publish not inert). **Waiting:** the operator's Q17–Q20, then the round-3 correction ask.
+- **2026-11-10, Q17–Q20 taken as recommended ("yes"):** Q17 Publish asks Q15's question first when Active was newly
+  unticked, then saves, then asks on warnings; Q18 keep T133 (a pointer at a deleted field is dropped at save; C18
+  redrawn as "None" with the Publish warning, the NEW refusal dropped); Q19 Q9 changes writing only, an inactive
+  system-managed type stays readable; Q20 Publish lands on the tab it was pressed from. Round 3's ask: one Opus agent.
