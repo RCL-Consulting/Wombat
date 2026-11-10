@@ -168,3 +168,7 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
 - **2026-11-10, step 7 started** (the operator: "push and then proceed"): master pushed (`399a99be`). Fresh
   `wombat_scenario_t398`, published from master `399a99be`, the replay app on :5180 (migrated and seeded at start). One
   Opus agent writes `replay-brief.md` and the act prompts (scratch `g398`); then one agent per act, then two states passes.
+- **2026-11-10, the replay brief** (`c71cd14c`; prompts and generator in scratch `g398`): acts 1, 6 and A carry flow
+  17's steps (act 1 also sweeps the list and the builder at 900–1150 with real refusals); states 35 rows over two passes.
+  The brief's agent printed flow 16's `g394\replay-pw.env` (scenario cast passwords) to its own console by mistake;
+  not copied anywhere. Act 1 running.
