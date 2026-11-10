@@ -85,6 +85,12 @@
 >   Status group, a scale's in-use line, its rung refusal and Put back, the reach lines and EV2's, Q19's read-out), the
 >   NavMenu table (the specialities one tree; the scales list read-only for the College admin), and § app.css section
 >   order (five Flow 16 sections)).
+>   Flow 17, build and publish an activity type (2026-11-10, T398: § Table system (the list joins the 1024px stack, with
+>   the builder's "Moves, as saved"; a single action column), § Form system (the builder's refusals at their place,
+>   the section key's), § Button system (Publish saves first and asks first; Discard's two bodies; Up/Down at the ends),
+>   § Page-level patterns "List page" (Activity types: search with Show and Clear, own rows first, Set by, the release
+>   line) and § Builder layout (a tabs pattern, the field editor in place, the read in words, F1's Discard), and § app.css
+>   section order (two Flow 17 sections)).
 
 This file is the visual contract for the Wombat rewrite. It exists because the first pass at T010 said "copy ClinicAssist" without enumerating what that actually means, and the current `Wombat.Web/wwwroot/app.css` is still the 37-line Blazor default — raw `<h1>` + `<table class="table">` — which is nowhere near the reference.
 

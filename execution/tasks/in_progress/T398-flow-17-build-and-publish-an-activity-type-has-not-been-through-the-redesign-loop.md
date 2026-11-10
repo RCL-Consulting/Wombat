@@ -58,10 +58,10 @@ Run the loop as flow 16 ran it (`design/flows/16-college-catalogue/`, BRIEF § 1
 
 ## Verification
 
-- [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit.
+- [x] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit. (`7d8ce207`; re-run exit 0 at lane W, `60634b21`)
 - [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link. (https://claude.ai/artifact/AQNS1QZDaUNizG7dzKPSGs; round 3 on https://claude.ai/artifact/Cpyw4vwX7UodgJUdKLF7Zw)
-- [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/17-activity-type-builder/`.
-- [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 17) — the squash commit and counts.
+- [x] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/17-activity-type-builder/`. (round 3, `round-3-check.md`; Q1–Q20, P1–P2, F1 in these Notes)
+- [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 17) — the squash commit and counts. (`84bcffeb`; master 899/4466/1035/52/4811/532, 0 warnings)
 - [ ] The whole runbook replays on a fresh database with no regression from flow 17, the baseline is re-captured, and
   flow 17's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines.
 - [ ] The design system is re-synced and republished — its version number.
@@ -159,3 +159,9 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   runbook and counts hold. Waiting: the operator's F1 (Discard on a system-managed type's leftover draft); then one fix pass.
 - **2026-11-10, F1.** The operator said "yes": Discard stays allowed on a system-managed type that holds a draft, for
   the roles that could write it before T334 (Save and Publish stay refused). The fix pass running on `t398-fix`.
+- **2026-11-10, built.** The fix pass (`b1654a9e`, `f5ae65bd`, `4ad623d3`): M1, every should and nit but code N-4
+  (wrong) and N-5 (by design); § 5's 32 NEW word groups. Squashed onto master `84bcffeb` (119 files, no migration); on
+  master: build 0 warnings, suites 899/4466/1035/52/4811/532. DESIGN.md's banner lists flow 17. Branches `t398*` kept.
+  For the replay: the list's 1280 columns and 1025 spare after the single action column (inferred); the two new
+  states rows (an Active-only save; F1 needs a draft on `msf_cpsa` by SQL); Details/Credit at 900–1150, a real refusal,
+  Kruger and devadmin on the builder (never swept). Next: step 7 on the operator's word.

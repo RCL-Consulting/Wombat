@@ -2,18 +2,19 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-11-09/10 (Opus): T398, flow 17, steps 1–5 (rounds 1–3)
+## Session 2026-11-09/10 (Opus): T398, flow 17, designed and built (steps 1–6)
 
-The operator said "flow 17", then "Done" (sent the round-1 ask; taken as "yes" to brief § 6 Q1–Q12 as recommended).
-- **T398 in progress.** Canvas "Wombat 17" https://claude.ai/artifact/AQNS1QZDaUNizG7dzKPSGs (design system v49, mark
-  `/_blob/a89fec160a8a8c0b20116ccc3634e0bc`). Brief restated and staged (`7d8ce207`); round 1 (17 boards, `f17r1.css`)
-  saved in `design/flows/17-activity-type-builder/round-1/` (`465480c7`): A tabs, B one page, C a stepped path.
-- **Round 1 assessed** (`ab13dd3d`): pick A; M1–M7; Q13–Q16 put to the operator. Captures never reached the canvas.
-- **Round 3 drawn and saved** (`684119ce`, 87 boards in `round-3/`) on "Wombat 17 · Round 3" https://claude.ai/artifact/Cpyw4vwX7UodgJUdKLF7Zw. Checked (`round-3-check.md`): 82 of 86 done, 4 partly, one regression (`li role="group"`). Decisions taken (no round 4). Build plan `build-lanes.md`/`build-contracts.md` (`af28d571`): § 0, lanes A/B/C, sweep, W, two reviews, fix pass; no migration. P1–P2 taken (T399 proposed for P1's other pages). § 0 done (`d3c98db5`, notes `08d1bbda` on `t398`). Lanes A, B, C merged on `t398`
-  (suites 895/4459/1035/52/4806/532). Sweep passed (3 fixes), lane W merged (`68e127d8`).
-  Reviewed (`build-review.md`, `ffe7c9f8`): 1 must, 7 should.
-  F1 as recommended. **The fix pass running** (`t398-fix`); then the squash.
-- **Trap:** the boards keep the workflow JSON "as typed"; jsonb re-renders it, so that is a stored text column (DATA).
+The operator said "flow 17", then "Done"/"done" after each round and "yes" at each decision (§ 6 Q1–Q12; the pick and
+Q13–Q16; Q17–Q20; round 3's two; the build's P1–P2; F1).
+- **Design:** canvases "Wombat 17" https://claude.ai/artifact/AQNS1QZDaUNizG7dzKPSGs (rounds 1–2) and "Wombat 17 · Round 3"
+  https://claude.ai/artifact/Cpyw4vwX7UodgJUdKLF7Zw; round 3 checked 82 of 86 done, no round 4.
+- **Built and squashed onto master `84bcffeb`** (§ 0, lanes A–C, the sweep, lane W, two Sonnet reviews, one fix pass):
+  suites 899/4466/1035/52/4811/532, 0 warnings, no migration. DESIGN.md's banner lists flow 17. T334 folded in (MSF and
+  Learner Feedback read-only; F1: a leftover draft may be discarded).
+- **For review:** T399 proposed (P1: the other pages' `RefusalText.Of`); the lanes' departures and 32 NEW word groups
+  (`build-contracts.md` § 5), accepted by the reviews.
+- **Next:** step 7, the replay, on the operator's word (T398's last Note lists what it must check); then steps 8–9.
+- **Environment:** scratch DB `wombat_scenario_t398_sweep` kept; branches and worktrees `t398*` kept.
 - **Not pushed:** master ahead of origin with flows 16–17. Ask before pushing.
 
 ## Session 2026-11-09 (Opus): T394 steps 8 and 9; T394 done
