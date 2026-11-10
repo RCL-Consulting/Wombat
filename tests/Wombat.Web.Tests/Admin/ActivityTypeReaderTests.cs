@@ -126,6 +126,6 @@ public sealed class ActivityTypeReaderTests : TestContext
     {
         public override Task<IReadOnlyList<EntrustmentScaleOption>> GetEntrustmentScaleOptionsAsync(CancellationToken cancellationToken = default)
             => Task.FromResult<IReadOnlyList<EntrustmentScaleOption>>(
-                [new EntrustmentScaleOption("12", "seed:cpsa:scale:v11.1", "CPSA Paediatric Entrustment Scale v11.1"), new EntrustmentScaleOption("3", null, "O-R Scale")]);
+                [new EntrustmentScaleOption("12", "cpsa:scale:v11.1", "CPSA Paediatric Entrustment Scale v11.1"), new EntrustmentScaleOption("3", null, "O-R Scale")]);
     }
 }

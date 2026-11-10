@@ -584,7 +584,7 @@ public partial class ActivityTypeEdit
     private IReadOnlyList<(string Value, string Name)> ScaleChoices(string? current)
     {
         var choices = _entrustmentScales
-            .Select(scale => (Value: !string.IsNullOrEmpty(current) && string.Equals(scale.SeedKey, current, StringComparison.Ordinal) ? current : scale.Value, scale.Name))
+            .Select(scale => (Value: Binds(current, scale) ? current! : scale.Value, scale.Name))
             .ToList();
         if (!string.IsNullOrWhiteSpace(current) && choices.All(choice => !string.Equals(choice.Value, current, StringComparison.Ordinal)))
         {
@@ -596,7 +596,22 @@ public partial class ActivityTypeEdit
 
     private string ScaleText(string? scaleKey) => string.IsNullOrWhiteSpace(scaleKey)
         ? ActivityTypeEditWords.None
-        : _entrustmentScales.FirstOrDefault(scale => scale.Value == scaleKey || scale.SeedKey == scaleKey)?.Name ?? scaleKey;
+        : _entrustmentScales.FirstOrDefault(scale => scale.Value == scaleKey || Binds(scaleKey, scale))?.Name ?? scaleKey;
+
+    /// <summary>
+    /// Whether a stored <c>scale_key</c> binds this scale, read as <see cref="Wombat.Domain.Epas.ScaleBinding" /> reads it:
+    /// by id, by <c>seed:</c> key (the prefix is not the scale's seed key) or by name (T398 replay, 1.25).
+    /// </summary>
+    private static bool Binds(string? scaleKey, EntrustmentScaleOption scale)
+    {
+        var binding = Wombat.Domain.Epas.ScaleBinding.Parse(scaleKey);
+        return binding is not null && binding.Kind switch
+        {
+            Wombat.Domain.Epas.ScaleBindingKind.Id => string.Equals(binding.ScaleId?.ToString(System.Globalization.CultureInfo.InvariantCulture), scale.Value, StringComparison.Ordinal),
+            Wombat.Domain.Epas.ScaleBindingKind.SeedKey => string.Equals(binding.SeedKey, scale.SeedKey, StringComparison.Ordinal),
+            _ => string.Equals(binding.Name, scale.Name, StringComparison.Ordinal)
+        };
+    }
 
     private static IReadOnlyList<string> OptionLines(string? optionsText) => (optionsText ?? string.Empty)
         .Split('\n')

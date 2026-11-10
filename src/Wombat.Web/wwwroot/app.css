@@ -7946,7 +7946,10 @@ a.dashboard-metric:hover .dashboard-metric-label {
    its name ("Form 1 problem"). Where the page's column is under 46rem its word is visually hidden (.visually-hidden's
    declarations), so a 72px track shows the number alone, and the five tabs with four counts keep to one row (T398's
    sweep: four "2 problems" counts took the writer's bar to 710px, past the column up to a 1000px viewport). */
+/* The badge is inline-flex, so the word's leading space is dropped where it shows ("1problem", T398 replay 1.27): the
+   gap stands for it; a clipped word is absolutely placed, so no gap is left beside the number alone. */
 .tab-bar-tab .badge {
+  gap: 0.25em;
   padding-inline: 6px;
 }
 
