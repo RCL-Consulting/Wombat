@@ -135,3 +135,6 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   seven Steps rows "as round 2's"), not done 0. One regression: the in-place editor is `<li role="group">` (19 files).
   Steps arithmetic and the five states.md rows hold. Three stale line citations. Pixel claims not measured. Waiting:
   the operator's decisions (carry the fixes into the build, no round 4; keep the seven PROPOSED settlements).
+- **2026-11-10, round 3 decisions.** The operator said "yes": no round 4 (the check's corrections go into the build:
+  the editor `li` without `role="group"`, seven selector lists, the two margin rules named, the dropped Spec/Steps rows
+  read from round 2, three line citations corrected); the seven PROPOSED settlements kept. Next: step 6, the build.
