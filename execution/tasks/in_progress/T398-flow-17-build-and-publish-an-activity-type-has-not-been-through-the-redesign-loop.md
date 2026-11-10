@@ -114,3 +114,8 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   "done"): every reference file opened (30 captures, 9 seeds, said on R2-0-spec); A at fidelity, families A list, B
   read, C new type and form, D workflow/credit, E publish/discard/deactivate; T4 measured and failed (round 1's outline
   kept, S2); C1 `.tab-bar` restyled, S1 `.tab-problem`, C2/C3 changed. Reviews running (three Sonnet: code, cast, ds).
+- **2026-11-10, round 2 reviewed** (three Sonnet agents: code `4adda465`, cast `5dc373c7`, ds `747fd118`; merged here,
+  `round-2-review.md`): M1 `aria-required` and the star's line (39 boards), M2 names without their visible words (the
+  problem tab, C19), M3 the Preview radio counted as a press (390: 22 + 31), M4 E02 on Details not Credit, M5 five
+  states.md rows; build should-fixes J1–J15 (RefusalSummary across tabs, refusals as a list of places, refusal vs
+  failure, Publish not inert). **Waiting:** the operator's Q17–Q20, then the round-3 correction ask.
