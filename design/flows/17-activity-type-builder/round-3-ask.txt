@@ -1,0 +1,479 @@
+ROUND 3: the one correction round on round 2 as drawn (A the list, B reading a type, C a new type and its form, D the
+workflow and the credit rules, E Publish, Discard and deactivating). THIS ROUND DRAWS 87 BOARDS: 66 redrawn screens (32
+boards at 1280, their 32 twins at 390, and 2 at 768), 14 new screens (7 states at 1280 and 390), and about 7 check, Spec
+and Steps boards. The canvas "Wombat 17" already holds 162 (round 1's 17, round 2's 145); 162 + 87 = 249 is past a
+canvas's ceiling of about 200 (flow 16's round 3 needed a second canvas), so ROUND 3 IS DRAWN ON A NEW CANVAS,
+"Wombat 17 · Round 3", on a page "Round 3", every board named R3-… after its R2 name (R3-C14-390 for R2-C14-390).
+Round 2's boards are NOT on this canvas: draw each R3 board FRESH from its round-2 file, copied into this canvas's
+project as project/r2/R2-….dc.html (R3-C14 from project/r2/R2-C14.dc.html, R3-C14-390 from
+project/r2/R2-C14-390.dc.html), carrying everything no item below changes exactly as that file has it, markup and words.
+Read the R2 files; never link or embed them. A new board starts from the R2 file its item names. Redraw ONLY the boards
+listed under BOARDS ROUND 3 DRAWS, each at every width round 2 drew it; then the new boards listed there; then the
+check, Spec and Steps boards WHOLE. R2 boards not listed stand where they are, on "Wombat 17": the reviews found them
+right, and the Spec says which they are. Change what the items say; draw nothing they do not ask for. The design system
+is Wombat v49 (1794239792-3119, namespace wombat) as installed on this canvas (ds/wombat/tokens.css and
+ds/wombat/components/bundle.css): keep both files in the project so the saved round renders. The brand mark is at
+‹MARK_URL› (this canvas's own copy): use it, never a drawn disc, and never round 2's /_blob/ address. Every person,
+institution, College, key, name, version, date, id, count and order stays as round 2 drew it unless an item below
+changes it: three reviews checked them against the code, the seeds and the T394 replay and found them true. Use FIXTURES
+only and invent nothing; where a value is not given, write a bracket ‹…›, and never as a control's value (N17). Never
+draw on one board two states that cannot hold at once. No gendered pronoun anywhere, the canvas notes included: the
+name, "the", "they" or "their". Words marked NEW are this message's own: draw them as given and list them on the Spec
+beside the words they replace. Choices marked PROPOSED (THIS ASK) are this message's settlement of a review finding that
+the operator has not yet seen: draw them, and list them on the Spec under that heading. The Illustration chip follows
+ONE rule (S15).
+
+THE STYLESHEET. Round 2 saved f17r2.css as a project file, rightly. Round 3 has ONE stylesheet, f17r3.css, a PROJECT
+  FILE at project/f17r3.css (write it as a file of the project, NOT as an asset, so the saved round holds it): f17r2.css
+  copied whole (from project/r2/f17r2.css), its PART 1 (the .cv-* canvas rules, K1–K3) kept as it is, its PART 2 changed
+  only as these items say, and nothing else:
+    C1 (CHANGED, S24) .tab-bar-tab:hover paints var(--header-bg), not var(--hover-bg) (which is the page ground the bar
+       stands on); the rest of C1 as round 2 wrote it.
+    S1 goes (S21): no .tab-problem rule. In its place R1 (NEW, scoped, S21 and S22): ".tab-bar-tab .badge" with
+       padding-inline 6px (the chip is the shipped .badge.badge-declined), and below 641px ".tab-bar-tab .badge > span"
+       visually hidden (the declarations of app.css's .visually-hidden, copied), so a 390 tab shows the number alone.
+    C2 as round 2 wrote it.
+    S2 (CHANGED, S27, S28): .field-row-actions goes (the row's buttons are a div.actions-cell, as shipped); the
+       ".field-row-actions .btn { min-height }" line goes (.user-page already gives every button 44px at 390); below
+       641px only ".field-row .actions-cell .btn { flex: 1 1 auto; }"; ".outline-section-head h3 code" becomes
+       ".outline-section-head .field-row-meta code" (the key leaves the h3, S27); and one forced-colors block gives
+       .field-row.is-editing, .outline-section-head.is-editing and .field-editor-inplace "border-left: 4px solid
+       Highlight; box-shadow: none", and .field-row.is-refused and .outline-section-head.is-refused "border-left: 4px
+       solid CanvasText; box-shadow: none", each with its padding-left less 4px, as app.css does for
+       .choice-group.is-invalid (app.css:4734-4742).
+    C3 (CHANGED, S25): the build writes no declaration for the list; it ADDS ".activity-types-page" to each of the six
+       selector lists of app.css's "The catalogue tables stack from 1024px down" block (app.css:7547-7600, beside
+       .epas-page, .colleges-page and .college-tree-page). The canvas cannot edit bundle.css, so f17r3.css keeps round
+       2's nine .activity-types-page rules as a STAND-IN, under a comment that says so; the Spec quotes the build's
+       change as the six selector lists with the line added, not as nine rules.
+  Every R3 board's head links ds/wombat/tokens.css, ds/wombat/components/bundle.css, then f17r3.css, in that order, and
+  no /_blob/ stylesheet; a board's <style> holds body{margin:0} at most; no inline style=; no other NEW rule. If the
+  canvas has to change a rule to make a board render, change the file, say so on the Spec, and quote the changed rule.
+  The Spec QUOTES every rule of PART 2 in full, each beside its class-table row (flow 16's round 3 pointed to its file
+  instead, and its check marked that partly done).
+
+THE SWEEP, and put every number on R3-0-check (flow 16's check found a sweep that measured a width:100% table's box,
+  which reads its container whatever it holds, so every row said "spare 0": measure the CONTENT, as each line says):
+  THE TABS AT 390 (S22): on R3-C14-390, C20-390, D01-390, D04-390 and C22-390, each of the five tabs' track width and
+    its content's scrollWidth; that "Workflow", "Publish" and "Form" with its badge "1" fit without wrapping; and, on a
+    scratch copy that is no board, that a badge of "12" fits too. The same at 640 and 641px, either side of R1.
+  THE OUTLINE (S27): R3-C11 and R3-C19 at 1280, 1116, 1115, 900, 768 and 390: the rail's (or the stacked column's)
+    width, and whether a field row's four buttons (div.actions-cell, its shipped gap) sit on one line or wrap; that no
+    button is clipped, no label runs under a button, and nothing scrolls sideways.
+  THE LIST (S25): R3-A13 and R3-C08-list at 1000, 1024, 1025, 1050 and 1100: the table's min-content width (its
+    columns' content, not its box) against its .table-container's clientWidth; stacked or not; spare or overflow px.
+  THE HEADER: R3-C03 and R3-E16 at 1280, 1100, 1024, 1023 and 390: where Save draft, Publish with its reason, and
+    Discard draft… sit (beside the h1, or under the subtitle); that no title wraps past two lines beside an empty band.
+  THE 44 PX CHECK: on every R3 board at 390, measure every .btn, .form-control, .form-select, .form-check row, tab,
+    the breadcrumb's parent link and every row action; say how many controls were measured and name each under 44px
+    (or 0).
+  Then say that nothing scrolls sideways on any R3 board at 1280, 768 or 390 (each board's scrollWidth against its
+  width).
+
+THE REFERENCE FILES. This canvas's project holds, copied by the operator: the 30 captures under project/ref/baseline/
+  and the nine seed files under project/ref/seeds/ (the names round 2's ask listed), and round 2's board files under
+  project/r2/ with f17r2.css. SAY ON THE CHECK BOARD, FIRST, which arrived and opened (list them), which you could not
+  read, and draw nothing from memory in place of one that did not open. If project/r2/ or f17r2.css is missing, say so
+  first and stop: every R3 board starts from its R2 file. For the boards this round redraws, open and view these
+  captures (they are today's pages, defects included; read them to check a board against the page it replaces, never
+  to draw from): act-1/1.24-1-types-search-cpsa.png (R3-A13), act-1/1.26-1-new-type-default.png and
+  1.26-2-first-save-no-status.png (R3-C01–C03), act-1/1.27-1-duplicate-key-refused.png (R3-C14, C15, C23),
+  act-1/1.27-3-user-field-names-a.png (R3-C13), act-1/1.28-1-field-rule-refused.png (R3-D01: the JSON as typed),
+  act-1/1.29-1-credit-tab.png and 1.30-1-published-v1.png (R3-E02), act-1/1.30-2-metadata-key-locked.png (R3-E02b),
+  act-6/6.14a-2-kruger-msf-cpsa-open.png (R3-B07's kin), act-6/6.14a-3-new-type-scope.png (R3-C04, C05),
+  states/activity-type-edit--publish-warnings.png (R3-E04, C18b) and states/activity-type-edit--discarded.png (R3-E07).
+  No value rests on a capture alone: CAPTURE-ONLY is still empty.
+
+THE OPERATOR'S DECISIONS. The brief's § 6 Q1–Q16 and round 2's § DECISIONS stand as round 2 drew them, with round 2's
+  T1–T24 as reviewed, but where an item below changes one: T3's "outside its name" is reversed by M2; T17's words change
+  by N2; T19's second half goes by Q18; T23 is drawn as S17 says. Added 2026-11-10, every recommendation of
+  round-2-review.md taken ("yes"): M1–M5 fixed, the shoulds carried, and Q17–Q20 (§ Q17–Q20 below). A board that
+  argues against one is a must-fix in the check.
+
+FIXTURES: round 2's, unchanged (the T394 replay, wombat_scenario_t394; D = 2026-11-05). Restated only where a corrected
+  or new board needs them:
+  Nolwazi Mbatha, Institutional admin, Kgosi Kgari Teaching Hospital (KGK); "Acting as Institutional admin"; the menu as
+    round 2 drew it. Anton Kruger, College admin, CPSA; the flat menu as round 2 drew it.
+  A date the code fills on an Illustration that no step dates (R2-E04 to E07, E12, E15 and the new R3-C18, C18b, E16,
+    E17) stays ‹date›, as round 2 drew it (N7).
+  Nolwazi Mbatha at 1.24 after Clear (R3-A13): the 22 rows of round 2's FIXTURES at 1.31 without KGK's, by name, every
+    one View (no type of KGK's exists before 1.26); the count line "22 activity types."; the search box empty, Clear
+    not offered; New activity type offered; the subtitle Q12's (an institution's).
+  Learner Feedback (Paediatrics)'s help texts (the seed, src/Wombat.Infrastructure/Activities/Seeds/
+    learner_feedback_cpsa/schema.json): EPA "The EPA the campaign was declared as evidence for: one whose College list
+    names learner feedback."; Learner feedback campaign "The campaign this record is one face of. Sibling records share
+    it and differ only by EPA."; Feedback window closed "The date the campaign closed to responses - when the evidence
+    was complete."; Questionnaires returned: none; Teaching contexts that responded "How many distinct teaching contexts
+    the returned questionnaires came from. EPA 15 asks for feedback across at least two; this is reported, not
+    enforced."; Reviewer's summary "The narrative already released to the trainee. No learner is named and no
+    individual comment is reproduced here." MSF's five, on R2-B06, are the seed's (msf_cpsa/schema.json), not only the
+    capture's.
+  The workflow as 1.28 types it (R3-D01, the JSON editor's value): the block at act-1-setup.md:915-927 as it stands, one
+    state and one move a line, with the cancel move's actor written `subject|field:topic`, as 1.28's Do says.
+  The credit refusal R3-D04 draws (its form's EPA field is epa_id, so the code gives EvidenceEpa.cs:107's sentence):
+    "Credit rule 1 reads its EPA from field 'epa', but the form's EPA field is 'epa_id'. The EPA an activity is filed
+    against and the EPA it credits must be the same field."
+  The key taken (R3-C22; SaveActivityTypeDraftCommand.cs:92): "An activity type with key 'kgk_teaching_log' already
+    exists."
+  A new field (R3-C23; ActivityTypeEdit.razor:1021-1031): "New field", key field_1 (the next free number), type Text,
+    Required unticked; Add field opens its editor, as today (:1029).
+  The warnings after Date delivered is deleted from published KGK and the draft saved (R3-C18b; BuilderModels.cs:203
+    then :237, fields first): "Field 'Date delivered' will be removed." and "This form will stop recording which field
+    carries the encounter date."
+  The built order of the editors' selects (N9): Type: Text, Long text, Number, Date, Choice, Multi-choice, Scale, User,
+    EPA, Likert, Procedure reference, File, Signature; Names a: "Assessor (default)", Institutional admin, Coordinator,
+    Committee member, Trainee; Entrustment scale (from 6.5): CNSA Neurology Entrustment Scale, CPSA Paediatric
+    Entrustment Scale v11.1, O-R Scale. The chosen one selected, in its place.
+
+THE CHECKLIST. Each item names its boards (every width the board is drawn at unless it says otherwise) or says "Spec" or
+"Steps"; the check board takes each by its id and says done or not done from the board's text and markup. Each item
+carries the review id it answers (merged M; code J and N; cast C; design-system ds).
+
+MUST FIX:
+  M1. (ds M1) Required fields told to a screen reader. On every board drawn here with a required control (R3-C01–C07,
+      C15-before, E11, E12, E02b, E16, E17, C22: Details; R3-C10–C14, C15-after, C17, C19, C23: the editor in place;
+      and every twin): the line "* marks a field you must fill in." (DESIGN.md:1329, :1510) as a p.muted, once at the
+      head of the Details panel (under Q14's line) and once at the head of the editor in place (under its h4);
+      aria-required="true" on every starred control (Key, Name, Scope's target select; Section key, Title; Field key,
+      Label, Type, a Choice's Options); where Scope is a starred radio group, on its fieldset.choice-group with
+      role="radiogroup"; the .required-mark aria-hidden as now, with FormField's visually hidden "required" in the
+      label (FormField.razor:7). A read-out takes none. The preview keeps the renderer's own line, as placed.
+  M2. (ds M2) Names that hold their visible words (WCAG 2.5.3; DESIGN.md:960-963).
+      (a) A tab with a problem count: no aria-label and no aria-describedby on it; its content is its name, with a
+        space before the badge: "Form <span class="badge badge-declined">1<span> problem</span></span>", named "Form 1
+        problem" (S21, S22). R3-C14, C15-before, C15-after, C20, D01, D04, C22 ("Details 1 problem"). Round 2's T3
+        ("the count outside the tab's name") goes; the Spec says so.
+      (b) R3-C19's folds: each name starts with its visible words, "Hide fields of section ‹title›" / "Show fields of
+        section ‹title›"; the words tell the state, so aria-expanded goes (a name and aria-expanded must not both
+        flip); aria-controls names the section's field list (S27). PROPOSED (THIS ASK: of the two fixes the reviews
+        offer, the one that keeps the drawn words).
+  M3. (cast C1) The Steps board counts the Preview choice, a radio, as a field (its own rule): T1.
+  M4. (cast C2) R2-E02 drew Details, but 1.30 is pressed from Credit and a save keeps the tab: Q20 below (R3-E02 on
+      Credit, R3-E02b, Steps T2).
+  M5. (cast C3) Five changed states.md rows had no Steps row: T3.
+
+SHOULD FIX (a board where it says; a build matter goes on the Spec's code-changes table, not on a board, and says so):
+  S1. (J1) Spec code row, not a board: RefusalSummary (Shared/Activities/RefusalSummary.razor:25, :70) gains a line
+      action (a callback in place of the fixed FocusFieldAsync, and the id to focus), or the builder gets its own
+      summary on the same markup; the line's press switches the tab, opens the row's editor in place and focuses the
+      key, move or JSON editor; the tab prefix ("Form:", "Workflow, move Cancel:") is made by the page from the
+      refusal's place (S2). The boards draw the lines as round 2 did.
+  S2. (J2) Spec code row: a refusal is a list of (place, sentence), not one sentence with one place: a typed refusal in
+      Domain carrying IReadOnlyList<RefusalPlace> (RefusalPlace PROPOSED: tab, kind, section key, field keys, move key,
+      directive number, sentence); ActorFieldRules.EnsurePublishable (:155-217) and EvidenceEpa.EnsureCreditAgrees
+      (:60-143) give one entry per problem instead of one joined string; the parsers' 59 text-only throw sites (33 + 18
+      + 8) each give a place where they have one, else "no place: the summary line only"; the duplicate key's place
+      names every row holding the key; a tab's badge counts its lines.
+  S3. (J3) Spec code row: the refusal rule. S2's typed refusal, FieldRefusalException, the three parse exceptions,
+      UnauthorizedAccessException and ValidationException are refusals, shown in their words; everything else (an
+      InvalidOperationException that is not one of these, a DbUpdateException) is a failure, in the fixed words with a
+      line in the log, and RefusalText.Of no longer prints it. The key taken becomes a FieldRefusalException on Key
+      (S10); "Published activity type keys cannot be changed." and "A saved draft is required before publishing." are
+      guards no page reaches (Key is a read-out once published; S5).
+  S4. (J4) R3-D04 (Illustration as round 2): the summary's line "Credit: " then FIXTURES' sentence (EvidenceEpa.cs:107)
+      word for word (the prefix "Credit:" alone, since the sentence names its rule: NEW, replaces "Credit, rule 1:");
+      under the Credit rules JSON, "Rule 1 reads its EPA from 'epa', but this form's EPA field is 'epa_id'. Use
+      'epa_id'." (NEW, replaces "Rule 1 reads its EPA from 'epa', which is not a field of this form. Use the form's EPA
+      field, 'epa_id'.", which the code could not give on a form with an EPA field).
+  S5. (J6, code N14) Spec code row: PublishAsync returns at once when !CanPublish (today it tests only _inFlight and
+      CanWrite, ActivityTypeEdit.razor:915-941), so aria-disabled is inert, and the reason is wired by
+      aria-describedby; Q16's save-first applies to a type that already has a draft (it saves the edits made since),
+      never to /new, where Publish is off and does nothing; Q16's text loses "(as it already does for a new type)".
+  S6. (J8) Spec code row, no board: the Publish tab reads the SAVED draft (Q16); while the page holds unsaved edits it
+      says so above its list, "Save draft to see what publishing changes." (NEW); the live alert above the tabs
+      (ActivityTypeEdit.razor:50-61, refreshed on every edit by RefreshWarnings, :1107-1119) goes.
+  S7. (J9, ds S8) R3-E05: the dialog's confirm "Publish version 2" is btn-primary, as ConfirmDialog renders a
+      non-danger action (ConfirmDialog.razor:46, :78); no ConfirmDialog change. PROPOSED (THIS ASK: the reviews offered
+      this or a new confirm kind; this needs no component change). The header's Publish stays btn-success.
+  S8. (J11) Spec code row: ActivityForm gains an optional EpaOptions parameter (it loads its own today,
+      ActivityForm.razor:1211-1224, and the builder passes none, ActivityTypeEdit.razor:508); the builder passes the
+      type's own list: a Speciality or Sub-speciality type, that discipline's active national EPAs; an Institution
+      type, the EPAs of the curricula the institution has adopted; a Global type, none, with the preview's line; and
+      SectionHeadingLevel 3, not 4 (:508). Steps 1.25 and 1.27's "(now true)" rest on it.
+  S9. (J12) Spec code row: one helper in Domain beside ActorRule (PROPOSED: ActorRuleWords) and its table, the whole
+      grammar to words: subject "The registrar"; creator "Whoever filed it"; a|b joined with "or" ("The registrar, or
+      whoever filed it"); role:X "A ‹role label›" with its article ("A Coordinator or an Administrator"); field:k "The
+      person ‹the field's label› names"; a+b "who is also"; scope:speciality "of the activity's speciality";
+      scope:subspeciality "of the activity's sub-speciality" (NEW); validation all "The whole form", owned "The mover's
+      own fields", draft "Formats only"; anything it cannot word, the rule as written, in <code>. No board changes.
+  S10. (J13) Details' own refusals. R3-C22 (NEW screen, Illustration, 1280 and 390, from R2-C02): Nolwazi Mbatha on
+      /new after 1.30, Key typed kgk_teaching_log, Name typed KGK Teaching Session Log, the rest the starting draft's,
+      Save draft pressed: in the result region the summary, focused, "Nothing was saved." / "Everything you typed is
+      kept." with the line "Details: An activity type with key 'kgk_teaching_log' already exists." (FIXTURES, built,
+      after the prefix); under Key the same sentence (FieldRefusal), Key aria-invalid with the refusal first in its
+      aria-describedby; the Details tab "Details 1 problem" (M2). Spec, Messages, the three with their fields: blank
+      Key "Enter a key." (NEW), blank Name "Enter a name." (built words, CollegeHolders.cs:31), a Key over 100
+      characters "A key is at most 100 characters." (NEW), a Name over 200 "A name is at most 200 characters." (built
+      words, CollegeHolders.cs:33); and the code row: a validator for blank and too long (the save has [NoValidator]
+      today, SaveActivityTypeDraftCommand.cs:24), FieldRefusalException for the key taken (:92).
+  S11. (J14) Spec code row: an Indented overload of WorkflowParser.Serialize and CreditRulesParser.Serialize (the stored
+      text and every caller unchanged: the seeders, ActivityTypeSeedCatalogue.cs:272-274, and the exact-text tests,
+      ActivityTypePublishCheckTests.cs:117-118), applied in Map for the query and for each command's returned editor;
+      SaveDraftCoreAsync and DiscardDraftAsync reload _workflowJson and _creditRulesJson from it (today only
+      LoadEditorState does, :836-837); the parse exceptions carry JsonException.LineNumber, so "near ‹line›" can be
+      said.
+  S12. (J15) Spec code row: T271 item 2 is a service change: GetEntrustmentScaleOptionsAsync
+      (ActivityReferenceDataService.cs:439-447) returns each scale's id and seed key (or the page calls the T253
+      resolver), and both the picker and the read-out resolve a "seed:" scale_key through it.
+  S13. (cast C5) Add field opens the new row's editor, as today (FIXTURES). R3-C23 (NEW screen, 1280 and 390, from
+      R2-C11; 1.27 reaches it, so no chip): 1.27's first Add field in Teaching session: Topic's row (Topic's editor
+      closed, its Edit back), then the new row "New field" (Text · field_1) with its editor open under it, Field key
+      focused, its Edit become Done (aria-expanded="true", aria-controls the editor), Label "New field", Type Text,
+      Required unticked, as FIXTURES. Spec says it; Steps T5.
+  S14. (cast C6) R3-A12: KGK's Draft cell "Saved ‹date›" (R2-E12's save made a draft), not "None"; the rest as drawn.
+  S15. (cast C7) One Illustration rule: the chip, and "Illustration" in the title, on every state no runbook step and no
+      states.md row reaches, EXCEPT a loading, a load error, an Unavailable page and a required-field state, which carry
+      none (every page has them). So R3-D05 (the starting draft's Workflow tab on /new) and R3-E01 (the Publish tab
+      before 1.30's press) gain it; R3-E04 (states.md:916 reaches it) and R3-E07 (states.md:917's Discard now passes
+      through its dialog) lose it; R2-E08 keeps none; R2-A11 and R2-B11 (load errors) keep none. On this round's new
+      boards: R3-C18, C18b, C22, E16, E17 carry it; R3-A13, C23 and E02b (steps reach them) do not. The Spec's
+      Illustration list is redone by the rule: R3-A09-nocreate, A12, B07, C07, C08-list, C15-before, C15-after, C17,
+      C18, C18b, C19, C20, C22, D04, D05, E01, E05, E11, E12, E16, E17, and the standing R2-A09-create, B08, C08-new,
+      E06, E09, E10, E13, E15: 29.
+  S16. (cast C8) Spec only, Messages: R2-C07's "None: a Global type belongs to no institution or speciality." and
+      R2-C20's "No fields in this section yet." (both NEW in round 2, never listed), each beside what it replaces.
+  S17. (cast C9) R3-C19: its label says the moment, "after Hide fields on sections 2 to 6": T23's sections all start
+      open, and the board draws five folded by the user. PROPOSED (THIS ASK: of the two fixes, the one that keeps the
+      board's height).
+  S18. (cast C10) R3-A13 (NEW screen, 1280 and 390, from R2-A01): 1.24's Clear: FIXTURES' 22 rows and "22 activity
+      types.", the focus on the search input; Steps 1.24 cites it.
+  S19. (cast C11) R3-B07: Learner Feedback's help texts under its preview's fields, from FIXTURES (the seed), as R2-B06
+      draws MSF's; the Spec's FIXTURES line names both seeds as the source.
+  S20. (cast C4) Steps: T4.
+  S21. (ds S1) The tab's count is the shipped .badge.badge-declined (app.css:2039, :2079), with f17r3.css R1's padding;
+      no .tab-problem anywhere. R3-C14, C15-before, C15-after, C20, D01, D04, C22.
+  S22. (ds S2) At 390 the badge shows the number alone, its word visually hidden (R1), so "2 problems" or "12 problems"
+      never spills into the next track; at 641px and up it reads "1 problem". The 390 twins of S21's boards; THE TABS
+      AT 390 measures it. PROPOSED (THIS ASK: the review's second option).
+  S23. (ds S3) Spec and DESIGN.md: the tab bar stands on the page ground above the card, which is the tabpanel
+      (DESIGN.md:1811 says "inside the surrounding .form-container": rewritten, with :237's "badges, tabs" for
+      --radius-pill); the contrast figures restated on --background-color (the underline 4.61:1, the selected label
+      10.42:1, unselected 11.99:1); ContrastTests' TheActiveTab_TakesOnFill reads .tab-bar-tab.is-active and is
+      rewritten to [aria-selected="true"] in the same change. No board changes.
+  S24. (ds S4) The tab's hover on --header-bg (f17r3.css C1); its contrast on the Spec (muted 4.57:1, text 11.36:1).
+  S25. (ds S5) The list's 1024px stack as a selector-list addition (f17r3.css C3); THE LIST sweep; the Spec's class row.
+  S26. (ds S6) Spec only: T4's argument corrected. Four btn-sm are about 220px with their gaps (not 204), and
+      .actions-cell wraps (app.css:461), so the 93px is not what a DataTable would give; the outline stands for two
+      other reasons, both said: a row of Edit, Up, Down and Delete under a label never leaves a readable measure in the
+      363px rail, wrapped or not; and DataTable stacks by a viewport query (app.css:4144, :6278) that does not fire in
+      a rail at 1280. The measure was derived, not rendered: say so. Recorded beside it: a DataTable of Field and Edit
+      alone would fit, but Up and Down are the keyboard's reorder path (T019-b), so they stay on the row.
+  S27. (ds S7) The outline as a list. On every redrawn and new board with it (R3-B07, C10–C14, C15-after, C17, C18,
+      C19, C20, C23, E07): each section's fields a <ul class="list-unstyled"> of <li class="field-row"> (no NEW class;
+      the review's .form-outline-fields is not needed); the row's buttons a div.actions-cell, as shipped; the section's
+      h3 its title alone, its key in a p.field-row-meta <code> under it, so the section is named "Teaching session",
+      not "Teaching session session"; Add section and Add field stand alone, in no actions wrapper. The Spec: the
+      standing boards' div rows are superseded by this markup.
+  S28. (ds S9) The stripes in a contrast theme: f17r3.css S2's forced-colors block; the Spec's class row says so.
+  S29. (ds S10) R3-C19's ids hold no bracket and no space ("sec-section-1", "fe-section-1-field-1"), so every for,
+      aria-labelledby, aria-describedby and aria-controls on it resolves; the brackets stay in the visible words only.
+
+WHILE YOU'RE THERE (nits; on the boards this round draws, or a Spec line; a board that stands is not redrawn for one):
+  N1. (code N1) Spec, GetPublishWarnings' row: the quotes round a type go ("changes type from Long text to Text"); the
+      pointer warnings (AddPointerWarning, BuilderModels.cs:350-370) take keys today, so "Field 'Date delivered' will
+      become the encounter date" needs the label looked up in the draft's schema (the published one's for a field the
+      draft dropped); a published and a draft label can differ: the draft's wins.
+  N2. (code N2) Active's help and Q15's dialog no longer say "only those who may change it can find it" (a Global type
+      is found by anyone, GetActivityTypeEditorQuery.cs:174-176): the help "An inactive type is not offered to anyone
+      filing an activity. Activities already filed are not changed." (NEW); the dialog body "Registrars are no longer
+      offered it when filing. Activities already filed are not changed." / "You can reactivate it on this page." (NEW
+      first line). R3-C01–C07, C15-before, C22, E02b, E11, E12, E16, E17. PROPOSED (THIS ASK: the review's second
+      option, the shorter).
+  N3. (code N3) Spec, GetActivityTypeEditorQuery's row: its null return changes its callers: the filing page
+      (NewActivity.razor:308, ForBuilder false) maps it to its own load state, and two tests that assert the throw
+      (ActivityTypeScopeGuardTests.cs:433, ActivityTypeBuilderAccessTests.cs:259) change.
+  N4. (code N4) Spec: CatalogueLinks gains ActivityTypeCreated(id) in its Tokens list (CatalogueLinks.cs:48) and the
+      builder strips it on arrival (WithoutTokens).
+  N5. (code N5) Spec: "Draft saved. Nothing was published." (Q16's Cancel), "Version 2 could not be published. …" and
+      "The draft could not be discarded. …" are words only, no board; say so in Messages.
+  N6. (code N6, ds N1) No aria-describedby="" on any control of a board this round draws: omit the attribute where
+      there is no help (FieldHelp.DescribedBy returns null).
+  N7. (code N7) Settled against the code review: a date on an Illustration that no step dates stays ‹date› (FIXTURES;
+      the cast review found the brackets right); the Spec says the code fills it with the day of that save, on the
+      South African calendar. PROPOSED (THIS ASK).
+  N8. (code N8) Spec, ActivityTypeEdit's row: the roving tab keys (Left, Right, Home, End) need a handler that stops
+      the page scrolling: @onkeydown:preventDefault on the tablist with the key read in C#, or a small function in
+      wombat.js under the CSP's nonce. Name the one chosen.
+  N9. (code N9) The editors' selects in the built order (FIXTURES), the chosen option selected in its place, never moved
+      first: R3-C11, C12, C13, C17, C23. Spec: round 2's selected-first lists were a canvas device.
+  N10. (code N10) Spec, Messages: the system-managed refusal is a guard (no page offers its control), listed beside
+      "You do not have permission …", and takes the summary's prefix: "Nothing was saved. Multi-Source Feedback
+      (Paediatrics) is written by the MSF release, so it cannot be changed here." (NEW, replaces "Not saved. …").
+  N11. (code N11) Spec, the DATA row: SeedActorUserId ("seed-system") moves from Infrastructure
+      (ActivityTypeSeedCatalogue.cs:92) to Domain, and seed-owned is one named predicate (the type's OwnerUserId and
+      its newest version's publisher both the seeder, as ActivityTypeSeedRefresher.cs:56-80 decides).
+  N12. (code N12) A College admin whose College has no speciality reads its own subtitle: "The forms registrars file
+      and assessors complete. ‹College name› has no speciality yet, so there are no types for you to change." (NEW,
+      replaces T11's for that case; true of a list and of an empty catalogue). R3-C08-list, R3-A09-nocreate. Spec,
+      ListActivityTypesAdminQuery's row: whether the caller's College has a discipline (DATA).
+  N13. (code N13) Spec, ActivityTypesList's row: "by name" is StringComparer.OrdinalIgnoreCase on Name, applied by the
+      page after the query (which orders by the database's collation, ListActivityTypesAdminQuery.cs:49); each date is
+      the South African day of a UTC DateTime through ProgrammeCalendar.DateOf (ProgrammeCalendar.cs:23).
+  N14. (code N14) = S5.
+  N15. (cast C12) R3-D01: the Workflow JSON editor holds the JSON as typed (FIXTURES: the runbook's block,
+      cancel's actor `subject|field:topic`), not laid out: Q13 lays it out only after a save.
+  N16. (cast C13) Spec, FIXTURES: the Demo types' "Version 1" and Mini-CEX's "2026-11-05, Wombat's catalogue" are
+      marked inferred.
+  N17. (cast C14) Spec: Q11's rule stated for a College admin with no scope (the list keeps every College's national
+      and every Global type for a non-Administrator, ListActivityTypesAdminQuery.cs:41-45, so R3-C08-list's 22 rows,
+      CPSA's twelve among them, are true); a subtitle is by role, never by count (R2-A09-create). And no bracket as a
+      control's value on any board this round draws: where FIXTURES give no words, the control is empty and the
+      bracket goes in the label strip.
+  N18. (cast C15) Spec: round 2's M2 row read "key under Name in ;" (an unclosed <code>): "key under Name in monospace".
+  N19. (cast C16) A chip says its state in words: no decision code and no file path on a board's face. R3-E12 ("Q15's
+      result" goes); R3-E04's chip goes (S15). R2-B08's "Q9" stands (not redrawn); the Spec says so.
+  N20. (ds N2) No aria-label on a tab of any board this round draws: the tab's words are its name (M2).
+  N21. (ds N3) A tabpanel holding a focusable control takes no tabindex (every writer's panel; a reader's Form panel,
+      with its View buttons); one holding none keeps tabindex="0". On every board this round draws.
+  N22. (ds N4) An Edit become Done carries aria-controls naming its editor's id (the next sibling's), on every board
+      this round draws with an editor open (R3-C10–C14, C15-after, C17, C23).
+  N23. (ds N5) Spec, C2's comment: the Show choice is CSS state; switching tab and back sets it to "Edit the form"
+      again. Intended.
+  N24. (ds N6) Spec, contrast: --muted-text on --header-bg, 4.57:1 (the section head's key and the row meta), beside
+      the surface's 5.09:1 and the page ground's 4.83:1.
+
+Q17–Q20, AS DECIDED (2026-11-10, "yes"):
+  Q17 (J7). Publish with Active newly unticked on a published type asks Q15's question FIRST, then saves, then asks
+      about warnings if any (Q16), then publishes; Cancel on the first leaves everything unsaved. Spec, the
+      ActivityTypeEdit row: the order. Messages (words only, no board): after Deactivate, a publish with no warnings or
+      one confirmed, "Published version 2. KGK Teaching Session Log is inactive: registrars are no longer offered it."
+      (NEW); after Deactivate and a cancelled warnings dialog, "Draft saved. KGK Teaching Session Log is inactive:
+      registrars are no longer offered it. Nothing was published." (NEW). Both PROPOSED (THIS ASK).
+      R3-E16 (NEW screen, Illustration, 1280 and 390, from R2-E11): KGK Teaching Session Log after R3-E04 (version 1
+        published; a draft with Audience deleted, saved ‹date› by Nolwazi Mbatha), Active unticked on Details, the
+        header's Publish pressed: Q15's dialog, "Deactivate KGK Teaching Session Log?", N2's body, Cancel (autofocus)
+        and "Deactivate" (btn-danger), its trigger and return target the header's Publish. M1 on the Details behind it.
+      R3-E17 (NEW screen, Illustration, 1280 and 390): after Cancel: nothing saved, so no result in the region; Details
+        as left (Active unticked); the strip as before ("Version 1, 2026-11-05, Nolwazi Mbatha" / "Saved ‹date› by
+        Nolwazi Mbatha"); the focus on the header's Publish (its label says so).
+  Q18 (J5). Keep T133: a setting pointing at a deleted field is dropped at save. R2-C18's NEW refusal "Date delivered is
+      no longer in the form. Choose another Date field, or None." is dropped everywhere; T19's second half ("stays shown
+      … the select invalid") goes. Spec, Edge cases: "A setting at a deleted field: dropped at Save draft (T133,
+      BuilderModels.cs:86-124), saved without a word; the Publish tab warns; between the delete and the save the select
+      shows the field's key as today's page does (EligibleFieldKeys keeps it, ActivityTypeEdit.razor:43-66), not marked
+      invalid; no board."
+      R3-C18 (redrawn, Illustration, 1280 and 390, from R2-C18): the same premise (KGK after 1.30, Date delivered
+        deleted) with Save draft pressed: "Draft saved." focused in the result region; the Encounter date field select
+        reading "None — this form has no single encounter date", valid, no refusal under it; Date delivered's row gone;
+        the strip "Draft" "Saved ‹date› by Nolwazi Mbatha"; Discard draft… offered and Publish on.
+      R3-C18b (NEW screen, Illustration, 1280 and 390, from R2-E04): the Publish tab after that save: "What publishing
+        this draft changes" with FIXTURES' two warnings in that order; the pinned line as R2-E04 words it, with Date
+        delivered in Audience's place ("Activities already filed stay on version 1, with Date delivered as they filed
+        it. Only activities filed after the publish use version 2."); the Versions; "Publish version 2".
+  Q19 (J10). Q9 changes writing only: an inactive system-managed type stays readable (View) to the roles that read it
+      today. Spec, the code rows: MayWrite refuses a system-managed type to everyone (the Administrator included), and
+      a separate may-read rule ignores the flag (CanReadAsync, GetActivityTypeEditorQuery.cs:174-176, and the list's own
+      filter, ListActivityTypesAdminQuery.cs:84, read MayWrite today, so refusing in MayWrite alone would hide it);
+      MayWrite and EnsureCallerCanWriteAsync take the type (or its SystemManaged and key) at every caller (the list's
+      per-row MayWrite, ForCallerAsync, the three commands); the release's word from a map of the two keys
+      (msf_cpsa "the MSF release", learner_feedback_cpsa "the learner-feedback release";
+      ActivityTypeSeedCatalogue.cs:173, :180); SystemManagedActivityTypeTests
+      .SavingAndPublishingASystemManagedTypeInTheBuilder_KeepsItSystemManaged (:78-110) inverts with T334. No board.
+  Q20 (cast C2, merged M4). Publish lands on the tab it was pressed from, the result above the tabs.
+      R3-E02 (redrawn, 1280 and 390, from R2-E02 with R2-D03's Credit panel): 1.30 published: "Published version 1."
+        focused in the result region; the Credit tab selected ("Credits nothing." and its line; the Credit rules JSON
+        laid out); Discard draft… gone; Publish aria-disabled with its reason beside it; the strip "Version 1,
+        2026-11-05, Nolwazi Mbatha" / "None".
+      R3-E02b (NEW screen, 1280 and 390, from R2-E02 as round 2 drew it): then Details pressed: the Key a read-out,
+        <code>kgk_teaching_log</code>, "Fixed: version 1 is published."; the result "Published version 1." still in its
+        region (PROPOSED, THIS ASK: a region keeps its last result until the next save, publish or discard; a tab
+        press is none of them); the focus on the Details tab; M1 and N2 as listed.
+      Steps: T2.
+
+STEPS BOARD (R3-0-steps, -steps-2 if long; every row round 2's board carries stays unless an item here changes it;
+values person by person from FIXTURES; round 2's counting rule unchanged, said once at the top; recount each figure
+below and, where a recount differs, write the recount and say why):
+  T1. (cast C1, C5) Radios are fields, by the rule; 1.27's fields are 23, not 24 (section key and title 2, Title's key
+      and label 2, five new fields' keys and labels 10, five type picks 5, Audience's options 1, the key retyped 1, two
+      Form-settings picks 2; the rating's None arrives chosen). So 1.27: 15 + 23 at 1280, 15 + 25 at 390 (Preview and
+      back are fields); A.7.9: 3 + 1 (Menu, Activity types, Edit; Preview a field); 1.26–1.30 (with T2's 1.30): 24 + 28
+      at 1280, 24 + 30 at 390. Today's 1.27 recounted under the same rule from the runbook's Do on today's page (round 2
+      carried "14 + 24"; give the recount), and today's 1.26–1.30 with it. 6.14a holds (its Scope radios were fields).
+  T2. (cast C2, Q20) 1.30: "Publish" pressed from Credit, then Details and the Publish tab for its Expect: 3 + 0 (today
+      1 + 0). Its Expect: "Published version 1." focused above the tabs, Credit selected (R3-E02); Details: the Key
+      a read-out, "Fixed: version 1 is published." (R3-E02b); the Publish tab: the versions one row (R2-E03); the rest
+      as round 2's row. A.7.14 cites R3-E02.
+  T3. (cast C3) A row for each of the five, with the new words: 902 (Searched, 1.24: applied with Show, "12 of 22
+      activity types match “cpsa”." above the table; R2-A02); 904 (All, 1.31: Set by in words, Version 1, "23 activity
+      types."; R2-A01); 906 (the list's Loading: "Loading the activity types." over a skeleton; R2-A10); 911 (the User
+      field editor: in place under its row, Names a by label; R3-C13); 912 (Duplicate key refused: the summary and both
+      fields' words; R3-C14).
+  T4. (cast C4) The runbook hits: 6.14a's "Draft saved" and "v0" are both on act-6-catalogue.md:483 (:482 is the "no
+      'Draft saved.'" clause); add 1.26's Scope (act-1-setup.md:839-841, a read-out now) and 6.14a's Scope
+      (act-6-catalogue.md:459-461, radios and a read-out now).
+  T5. (cast C5) 1.27's Do says Add field opens the new row's editor (R3-C23), so its count holds without an Edit per new
+      field; the row cites R3-C23.
+  T6. (cast C10) 1.24: Clear brings back 22 and "22 activity types." (R3-A13).
+  T7. The states.md rows that cite a redrawn board take its R3 id: 909 R3-C01; 910 R3-C03; 913 R3-D01; 915 R3-E02; 916
+      R3-E04; 917 R3-E07 and R2-E08.
+  T8. Every other changed board in a row's Boards column takes its R3 id (1.26 R3-C01–C03; 1.27 R2-C09, R3-C10–C15,
+      R2-C16, R3-C23; 1.28 R3-D01, R2-D02; 1.30 R3-E02, E02b, R2-E03; 6.14a R3-C04–C06); a board that stands keeps its
+      R2 id. Q17 and Q18 add no step.
+
+BOARDS ROUND 3 DRAWS (each R3 board from the R2 file of the same id in project/r2/; widths as round 2 drew it; every
+board this round draws also takes N6, N17, N20, N21 and, with an editor open, N22):
+  Redrawn, 32 at 1280 with their 32 twins at 390 and 2 at 768 (66 screens):
+    R3-A09-nocreate (N12), A12 (S14, N19);   [2]
+    R3-B07 (S19, S27);   [1]
+    R3-C01, C02, C03, C04, C05, C06 (M1, N2), C07 (M1, N2), C08-list (N12), C10 (M1, S27, N22), C11, C12, C13 (M1, S27,
+      N9, N22), C14 (M1, M2, S21, S22, S27, N22), C15-before (M1, M2, S21, S22, N2), C15-after (M1, M2, S21, S22, S27,
+      N22), C17 (M1, S27, N9, N22), C18 (Q18, S27), C19 (M1, M2, S17, S27, S29; 768), C20 (M2, S21, S22, S27);   [19]
+    R3-D01 (M2, S21, S22, N15), D04 (M2, S4, S21, S22), D05 (S15);   [3]
+    R3-E01 (S15), E02 (Q20), E04 (S15, N19; 768), E05 (S7), E07 (S15, S27), E11 (M1, N2), E12 (M1, N2, N19).   [7]
+  New, 7 at 1280 with their 7 twins at 390 (14 screens):
+    R3-A13 (S18; from R2-A01), C18b (Q18; from R2-E04, Illustration), C22 (S10, M1, M2; from R2-C02, Illustration), C23
+      (S13, M1, S27; from R2-C11), E02b (Q20, M1, N2; from R2-E02), E16 (Q17, M1, N2; from R2-E11, Illustration), E17
+      (Q17, M1, N2; from R2-E11, Illustration).
+  The check (R3-0-check, -check-2 if long), the Spec (R3-0-spec, -spec-2, -spec-3, -spec-4 if long) and the Steps
+    (R3-0-steps, -steps-2 if long), drawn WHOLE: about 7. Total about 87.
+  Stand as drawn, on "Wombat 17" (not redrawn, 35 boards and their twins, 75 screens): R2-A01, A02, A03, A04, A05, A06,
+    A07, A08, A09-create, A10, A11; B01, B02, B03, B04, B05, B06, B08, B09, B10, B11; C08-new, C09, C16, C21 (390 and
+    768); D02, D03; E03, E06, E08, E09, E10, E13, E14 (390), E15.
+
+CHECK BOARD, "R3-0-check", FIRST on the page (more boards "R3-0-check-2", … if long): FIRST, the reference files (which
+  arrived and opened, project/r2/ and f17r2.css included; which captures were viewed; any word a capture shows that a
+  board contradicts). Then, item by item, every id of this message (M1–M5, S1–S29, N1–N24, Q17–Q20, T1–T8): done or not
+  done, the boards it was drawn on (or "Spec" / "Steps"), and for "not done" why. Then THE SWEEP's tables (the tabs,
+  the outline, the list, the header: a row per board and width, each with its own measured numbers), THE 44 PX CHECK's
+  count and names; then the counts of boards redrawn, new and standing against this message's (66 + 14 screens; 35
+  standing). Say what was checked by rendering and what by reading the markup; a number that was not measured says so.
+
+SPEC BOARD, "R3-0-spec" (-spec-2, …): round 2's three Spec boards restated whole (from project/r2/), with these:
+  - § 1 the reference files as the check board says them; that round 3 is on its own canvas, and which R2 boards stand
+    on "Wombat 17" (the list above).
+  - § 2 the decisions Q1–Q20, each with its boards, Q17–Q20 added; round 2's T1–T24 with T3, T17, T19 and T23 as changed
+    here; this round's items M1–M5, S1–S29, N1–N24, each with its boards; the Illustration list by S15 (29); then
+    PROPOSED (THIS ASK), apart: M2(b), S7, S17, S22, N2, N7, N12's words, Q17's two results, E02b's region rule, and
+    every NEW sentence of this message.
+  - § 3 the code changes: round 2's rows, each amended, with: S1, S2, S3, S5, S6, S8, S9 (its table whole), S10's
+    validator and refusal, S11, S12, Q17's order, Q18's edge row, Q19's rows and test, N3, N4, N8, N11, N12's DATA,
+    N13, and the app.css changes (C1's hover, R1, S2 changed, C3 as a selector-list addition) and ContrastTests (S23).
+  - § 4 the class table: every class a board uses, "reuses .x" or CHANGED or NEW: C1, R1 (NEW), C2, S2 (changed), C3;
+    .tab-problem and .field-row-actions gone; .badge, .badge-declined, .list-unstyled and .actions-cell reused; the
+    canvas-only .cv-* rules apart (K1–K3, PART 1). Each shipped rule QUOTED in full beside its row.
+  - § 5 the numbers: THE SWEEP's, THE 44 PX CHECK's (from the check board); the 390 scope; where the two columns stand
+    side by side.
+  - § 6 the DESIGN.md text: round 2's rows, with S23 (the tab bar on the page ground, the card the tabpanel), the badge
+    in a tab (R1, S22), the required-field pattern in the builder (M1), the outline as a list (S27), the stripes'
+    forced-colors fallback (S28), the Publish dialog's confirm a primary (S7), Add field opening its editor (S13).
+  - § 7 the tokens and contrast: round 2's, restated on the page ground (S23), with S24's and N24's figures and
+    .badge-declined's (text-color on danger-bg 11.81:1, its edge 5.56:1).
+  - § 8 DATA by query: round 2's with Q19's may-read rule, N11's predicate, N12's discipline flag, S8's EPA list, S12's
+    seed key.
+  - § 9 every message by kind with its words, built, round 1's, round 2's or NEW, each NEW beside the words it
+    replaces: S4's two, S6's line, S10's four and the key taken, S16's two, N2's two, N10's, N12's subtitle, Q17's two
+    results, M2's fold names and the badge's hidden word, S9's NEW scope words; and Q18's dropped refusal named as gone.
+  - § 10 the edge cases: round 2's, with Q18's (R3-C18, C18b), Q17's sequence (R3-E16, E17), the key taken (R3-C22),
+    a blank or long key or name (words only).
+  - § 11 LATER, NOT BUILT: round 2's list, unchanged.
+
+CHECK BEFORE YOU STOP: the check board first, saying which reference files opened; every board's head linking
+  tokens.css, bundle.css, f17r3.css in that order; one h1 a board; no inline style; no undefined class; no raw colour;
+  no .wf-*, .tab-problem or .field-row-actions; no tab with an aria-label; "* marks a field you must fill in." and
+  aria-required on every form with a required control; every name starting with its visible words; one .action-result
+  per result; no aria-describedby=""; no bracket as a control's value; no id holding a bracket or a space; the outline a
+  list; the Publish dialog's confirm btn-primary; no refusal under a setting whose field was deleted; R3-E02 on Credit;
+  the Illustration chip by S15's one rule, and no decision code or file path on a chip; every 390 control 44px; nothing
+  scrolls sideways at 1280, 768 or 390; no gendered pronoun on any board, annotations included; every bracket ‹…› still
+  a bracket, never filled from memory; every board's 390 and 768 twin carrying the same words as its 1280 board;
+  f17r3.css saved as a project file; the mark from ‹MARK_URL›.
