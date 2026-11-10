@@ -141,3 +141,7 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
 - **2026-11-10, build plan** (one Opus agent, `af28d571`): § 0, lanes A (below Web), B (the list, read-outs), C (the
   builder), the sweep, W, two Sonnet reviews, one fix pass; no migration. The operator said "yes" to P1 (only the two
   pages tell a refusal from a failure; T399 proposed for the rest) and P2 (every tab's problems reported at once).
+- **2026-11-10, § 0** (one Opus agent, `d3c98db5` on `t398`; notes for the lanes `08d1bbda`): shared shapes, T334/Q19
+  rule (one test inverted on purpose), DTO members, refusal shape, scale seed keys, CatalogueLinks, ActivityTypeWords,
+  read-out stubs, C3 in seven lists. Suites 836/4411/1035/52/4675/530 → 840/4419/1035/52/4703/530, 0 warnings, no
+  migration. Lanes A, B, C cut from `08d1bbda` and running.
