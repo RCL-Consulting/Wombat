@@ -157,3 +157,5 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
 - **2026-11-10, build reviewed** (two Sonnet; merged `build-review.md`, `ffe7c9f8` on `t398`): code 1 M (the preview's
   EPAs leak another institution's own EPAs to a reader; checked), 3 S, 5 N; pages 0 M, 4 S, 12 N, 31 NEW word groups;
   runbook and counts hold. Waiting: the operator's F1 (Discard on a system-managed type's leftover draft); then one fix pass.
+- **2026-11-10, F1.** The operator said "yes": Discard stays allowed on a system-managed type that holds a draft, for
+  the roles that could write it before T334 (Save and Publish stay refused). The fix pass running on `t398-fix`.
