@@ -7,7 +7,8 @@ and the Spec 1–4, Steps and two check boards), checked in `round-3-check.md` (
 with the operator's decisions of 2026-11-10 (T398's Notes: "round 3 decisions"). The lane plan is at the end of this
 file. The names two or more lanes share are in `build-contracts.md`, beside it; § 0 of it is already on `t398`.
 
-**Status: PROPOSED.** P1 and P2 (§ "For the operator", at the end) are answered before § 0 runs.
+**Approved 2026-11-10** (the operator's "yes"): P1 and P2 as recommended (§ "For the operator", at the end). Build them as
+decided, no longer PROPOSED.
 
 ## Read first (in your worktree)
 - `design/flows/17-activity-type-builder.md`: the brief. The cast, the pages table (each route's file), § 5's known
@@ -550,7 +551,7 @@ callers; the preview's EPAs by scope; names read once; the list query's owner an
 flow 03's filing page and summary unchanged). Merged into `build-review.md` by the integrator; one fix pass (one Opus
 agent). A third round only if round two finds a new defect of substance.
 
-## For the operator (PROPOSED: answer before § 0 runs)
+## For the operator (answered 2026-11-10: P1 and P2 as recommended)
 
 - **P1. Where the refusal-or-failure rule applies (S3).** R3-0-spec-2's S3 row says `RefusalText.Of` "no longer prints"
   an exception that is not a refusal. `RefusalText.Of` is shared: beside the builder's five, 25 call sites in 17 files

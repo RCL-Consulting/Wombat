@@ -138,3 +138,6 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
 - **2026-11-10, round 3 decisions.** The operator said "yes": no round 4 (the check's corrections go into the build:
   the editor `li` without `role="group"`, seven selector lists, the two margin rules named, the dropped Spec/Steps rows
   read from round 2, three line citations corrected); the seven PROPOSED settlements kept. Next: step 6, the build.
+- **2026-11-10, build plan** (one Opus agent, `af28d571`): § 0, lanes A (below Web), B (the list, read-outs), C (the
+  builder), the sweep, W, two Sonnet reviews, one fix pass; no migration. The operator said "yes" to P1 (only the two
+  pages tell a refusal from a failure; T399 proposed for the rest) and P2 (every tab's problems reported at once).
