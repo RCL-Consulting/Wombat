@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>R3-0-spec-2 · Spec (2 of 4)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="f17r3.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="cv-doc"><h1>Flow 17 · Round 3 · Spec (2 of 4)</h1><div class="table-container"><table class="clinic-table"><caption>§ 3 The code changes (each PROPOSED; a decided one says its Q)</caption><thead><tr><th scope="col">Where</th><th scope="col">Change</th></tr></thead><tbody><tr><th scope="row">ActivityTypesList</th><td>Search applied with Show and Clear (no @bind:event="oninput"); the count line; the no-match state apart from the empty catalogue; Q7's columns; Q11's order: "by name" is StringComparer.OrdinalIgnoreCase on Name, applied by the page after the query, which orders by the database's collation (ListActivityTypesAdminQuery.cs:49) (N13); each date the SA day of a UTC DateTime through ProgrammeCalendar.DateOf (ProgrammeCalendar.cs:23); StackWide and the 1024px stack; links kept; the subtitle by role (N12's for a College with no speciality); the loading line and the load error with Try again.</td></tr><tr><th scope="row">ListActivityTypesAdminQuery</th><td>Each row's owner in words (DATA: the College's code is not read today, :81–82); SystemManaged with its release; CanWrite false when system-managed; whether the caller's College has a discipline (N12, DATA).</td></tr><tr><th scope="row">ActivityTypeAdminScope (Q9, Q19)</th><td>MayWrite refuses a system-managed type to everyone, the Administrator included; a separate may-read rule ignores the flag (CanReadAsync, GetActivityTypeEditorQuery.cs:174-176, and the list's own filter, ListActivityTypesAdminQuery.cs:84, read MayWrite today, so refusing in MayWrite alone would hide it). MayWrite and EnsureCallerCanWriteAsync take the type (or its SystemManaged and key) at every caller: the list's per-row MayWrite, ForCallerAsync, the three commands. The release's word from a map of the two keys (msf_cpsa "the MSF release", learner_feedback_cpsa "the learner-feedback release"; ActivityTypeSeedCatalogue.cs:173, :180). SystemManagedActivityTypeTests.SavingAndPublishingASystemManagedTypeInTheBuilder_KeepsItSystemManaged (:78-110) inverts with T334.</td></tr><tr><th scope="row">GetActivityTypeEditorQuery</th><td>Null for an unknown id and for one the caller may not read (today both throw, :83, :87). N3: the null changes its callers: the filing page (NewActivity.razor:308, ForBuilder false) maps it to its own load state, and ActivityTypeScopeGuardTests.cs:433 and ActivityTypeBuilderAccessTests.cs:259, which assert the throw, change. SystemManaged and release; owner's words; the draft saver's and each publisher's name (DATA), "Wombat's catalogue" for the seeder; seed-owned (N11); the preview's EPAs (S8); the JSON laid out (S11).</td></tr><tr><th scope="row">WorkflowParser, CreditRulesParser (S11)</th><td>An Indented overload of Serialize; the stored text and every caller unchanged (the seeders, ActivityTypeSeedCatalogue.cs:272-274, and the exact-text tests, ActivityTypePublishCheckTests.cs:117-118); applied in Map for the query and for each command's returned editor. SaveDraftCoreAsync and DiscardDraftAsync reload _workflowJson and _creditRulesJson from it (today only LoadEditorState does, :836-837). The parse exceptions carry JsonException.LineNumber, so "near ‹line›" can be said.</td></tr><tr><th scope="row">The refusal (S2)</th><td>A refusal is a list of (place, sentence): a typed refusal in Domain carrying IReadOnlyList<RefusalPlace> (RefusalPlace: tab, kind, section key, field keys, move key, directive number, sentence). ActorFieldRules.EnsurePublishable (:155-217) and EvidenceEpa.EnsureCreditAgrees (:60-143) give one entry per problem, not one joined string; the parsers' 59 text-only throw sites (33 + 18 + 8) each give a place where they have one, else "no place: the summary line only"; the duplicate key's place names every row holding the key; a tab's badge counts its lines.</td></tr><tr><th scope="row">The refusal rule (S3)</th><td>S2's typed refusal, FieldRefusalException, the three parse exceptions, UnauthorizedAccessException and ValidationException are refusals, shown in their words; everything else (an InvalidOperationException that is not one of these, a DbUpdateException) is a failure in the fixed words with a line in the log, and RefusalText.Of no longer prints it. The key taken becomes a FieldRefusalException on Key (S10). "Published activity type keys cannot be changed." and "A saved draft is required before publishing." are guards no page reaches (Key is a read-out once published; S5).</td></tr><tr><th scope="row">RefusalSummary (S1)</th><td>Shared/Activities/RefusalSummary.razor (:25, :70) gains a line action, a callback in place of the fixed FocusFieldAsync and the id to focus (or the builder gets its own summary on the same markup); the line's press switches the tab, opens the row's editor in place and focuses the key, move or JSON editor; the prefix ("Form:", "Workflow, move Cancel:", "Details:") is made by the page from the refusal's place.</td></tr><tr><th scope="row">SaveActivityTypeDraftCommand (S10)</th><td>A validator for blank and too long (the save has [NoValidator] today, :24): blank Key "Enter a key.", blank Name "Enter a name." (CollegeHolders.cs:31's words), Key over 100 "A key is at most 100 characters.", Name over 200 "A name is at most 200 characters." (CollegeHolders.cs:33's words); the key taken (:92) a FieldRefusalException on Key.</td></tr><tr><th scope="row">ActivityForm (S8)</th><td>An optional EpaOptions parameter (it loads its own today, ActivityForm.razor:1211-1224; the builder passes none, ActivityTypeEdit.razor:508): a Speciality or Sub-speciality type, that discipline's active national EPAs; an Institution type, the EPAs of the curricula the institution has adopted; a Global type, none, with the preview's line. SectionHeadingLevel 3, not 4 (:508). Steps 1.25 and 1.27's "(now true)" rest on it.</td></tr><tr><th scope="row">ActorRuleWords (S9)</th><td>One helper in Domain beside ActorRule, the whole grammar to words: subject "The registrar"; creator "Whoever filed it"; a|b joined with "or" ("The registrar, or whoever filed it"); role:X "A ‹role label›" with its article ("A Coordinator or an Administrator"); field:k "The person ‹the field's label› names"; a+b "who is also"; scope:speciality "of the activity's speciality"; scope:subspeciality "of the activity's sub-speciality" (NEW); validation all "The whole form", owned "The mover's own fields", draft "Formats only"; anything it cannot word, the rule as written, in &lt;code&gt;. No board changes.</td></tr><tr><th scope="row">Entrustment scales (S12)</th><td>T271 item 2 is a service change: GetEntrustmentScaleOptionsAsync (ActivityReferenceDataService.cs:439-447) returns each scale's id and seed key (or the page calls the T253 resolver); the picker and the read-out resolve a "seed:" scale_key through it.</td></tr><tr><th scope="row">ActivityTypeEdit</th><td>Round 2's row (the tabs pattern; Details first; the Publish tab; no Back to list; the subtitle and owner line; the version strip; the editor in place, Done; Delete outline; labels; the scale picker; the read in words; the first save's token; Discard draft…; Q16; Q15; RefusalSummary; failures; Unavailable; loading; Publish aria-disabled), and: S5, PublishAsync returns at once when !CanPublish (today it tests only _inFlight and CanWrite, :915-941), so aria-disabled is inert, the reason wired by aria-describedby; Q16's save-first for a type that already has a draft, never on /new. S6, the Publish tab reads the SAVED draft; with unsaved edits it says "Save draft to see what publishing changes." above its list; the live alert above the tabs (:50-61, RefreshWarnings :1107-1119) goes. Q17, the order: Active newly unticked → Q15's question first; then save; then the warnings' question if any; then publish; Cancel on the first leaves everything unsaved. S13, Add field opens the new row's editor (:1021-1031, as today). N8, the roving tab keys: @onkeydown:preventDefault on the tablist, the key read in C# (chosen; no script). The tabs' badge in the tab's name (M2). The required line and aria-required (M1).</td></tr><tr><th scope="row">BuilderModels.GetPublishWarnings (N1)</th><td>Labels for field types, roles and the settings' fields, with "an Assessor" (T24); the quotes round a type go ("changes type from Long text to Text"); the pointer warnings (AddPointerWarning, :350-370) take keys today, so "Field 'Date delivered' will become the encounter date" looks the label up in the draft's schema (the published one's for a field the draft dropped); where the two labels differ the draft's wins. T133 (Q18): a setting at a deleted field is dropped at save (:86-124).</td></tr><tr><th scope="row">CatalogueLinks (N4)</th><td>ActivityTypeCreated(id) joins its Tokens list (CatalogueLinks.cs:48); the builder strips it on arrival (WithoutTokens).</td></tr><tr><th scope="row">Seed ownership (N11)</th><td>SeedActorUserId ("seed-system") moves from Infrastructure (ActivityTypeSeedCatalogue.cs:92) to Domain; seed-owned is one named predicate: the type's OwnerUserId and its newest version's publisher both the seeder (as ActivityTypeSeedRefresher.cs:56-80 decides).</td></tr><tr><th scope="row">Dates on Illustrations (N7)</th><td>Where a board shows ‹date› for a save no step dates, the code fills the South African day of that save.</td></tr><tr><th scope="row">FormSchemaParser:351</th><td>The role refusal names roles by label.</td></tr><tr><th scope="row">app.css</th><td>C1's hover on --header-bg; R1 (NEW); S2 changed (.field-row-actions gone, buttons in .actions-cell, the forced-colors block, Add field's inset); C3 as a selector-list addition: .activity-types-page joins each of the six selector lists of "The catalogue tables stack from 1024px down" (app.css:7547-7600), e.g. ".epas-page .clinic-table--stack-wide thead, .colleges-page .clinic-table--stack-wide thead, .college-tree-page .clinic-table--stack-wide thead, .activity-types-page .clinic-table--stack-wide thead { … }" and likewise for tbody tr, tbody tr:last-child, td and tbody th, th[scope="row"], td[data-label]::before and .btn.</td></tr><tr><th scope="row">ContrastTests (S23)</th><td>TheActiveTab_TakesOnFill reads .tab-bar-tab.is-active; rewritten to [aria-selected="true"] (the underline on the page ground) in the same change.</td></tr></tbody></table></div><div class="table-container"><table class="clinic-table"><caption>§ 4 The class table: every rule of PART 2 quoted in full</caption><thead><tr><th scope="col">Row</th><th scope="col">Classes</th><th scope="col">Kind</th><th scope="col">Why, and the rule</th></tr></thead><tbody><tr><th scope="row">C1</th><td>.tab-bar, .tab-bar-tab</td><td>CHANGED</td><td>The tabs pattern on the builder's own tab bar; the hover on --header-bg (S24).<pre class="code-block">/* C1 (CHANGED; Spec row C1; T3, Q1, S2) — the builder&#x27;s own tab bar as the tabs pattern. It replaces app.css&#x27;s
+   .tab-bar / .tab-bar-tab / .tab-bar-tab.is-active pill rules (used by the builder alone). role=&quot;tablist&quot; on the bar,
+   role=&quot;tab&quot; with aria-selected on each button; the selected tab is told by a 3px underline in the action blue and
+   by weight, not by a fill; one row at every width, each tab 44px high; equal tracks below 641px. */
+.tab-bar {
+  border-bottom: 1px solid var(--input-border);
+  display: grid;
+  gap: var(--space-xs);
+  grid-auto-columns: max-content;
+  grid-auto-flow: column;
+  margin: 0;
+}
+.tab-bar-tab {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  color: var(--text-color);
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 500;
+  gap: var(--space-xs);
+  justify-content: center;
+  margin-bottom: -1px;
+  min-height: 2.75rem;
+  padding: 0 var(--space-md);
+  white-space: nowrap;
+}
+.tab-bar-tab:hover { background: var(--header-bg); } /* C1 CHANGED (S24): the hover on header-bg; hover-bg is the page ground the bar stands on */
+.tab-bar-tab[aria-selected=&quot;true&quot;] { border-bottom-color: var(--secondary-color); color: var(--primary-color); font-weight: 700; }
+@media (max-width: 640.98px) {
+  .tab-bar { gap: 0; grid-auto-columns: minmax(0, 1fr); }
+  .tab-bar-tab { flex-direction: column; font-size: 0.9375rem; gap: 0; line-height: 1.2; padding: 0 2px; }
+}
+@media (forced-colors: active) {
+  .tab-bar-tab[aria-selected=&quot;true&quot;] { border-bottom-color: Highlight; }
+}</pre></td></tr><tr><th scope="row">R1</th><td>.tab-bar-tab .badge, .tab-bar-tab .badge > span</td><td>NEW (scoped)</td><td>The count is the shipped .badge.badge-declined; its word hidden below 641px (S21, S22).<pre class="code-block">/* R1 (NEW, scoped; Spec row R1; S21, S22) — a tab&#x27;s problem count is the shipped .badge.badge-declined, inside the tab and
+   part of its name (&quot;Form 1 problem&quot;). Its padding a little tighter in a tab; below 641px its word is visually hidden
+   (app.css&#x27;s .visually-hidden declarations, copied), so a 72px track shows the number alone. */
+.tab-bar-tab .badge { padding-inline: 6px; }
+@media (max-width: 640.98px) {
+  .tab-bar-tab .badge &gt; span { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+}</pre></td></tr><tr><th scope="row">C2</th><td>.form-container > .choice-group; .builder-two-col's columns</td><td>CHANGED</td><td>The CSS-only Show choice where the columns stack. N23: it is CSS state, so switching tab and back sets it to "Edit the form" again; intended.<pre class="code-block">/* C2 (CHANGED; Spec row C2; Q5, T5) — the builder&#x27;s two columns, and the CSS-only &quot;Show&quot; choice. Above the stacking
+   width (the card 46.5rem and over) the choice is hidden and both columns stand; below it the columns stack, the choice
+   shows, and the unchosen column is hidden by the chosen radio: no round trip. The choice is the form container&#x27;s own
+   .choice-group, so nothing outside the builder is touched. */
+.form-container:has(&gt; .builder-two-col) &gt; .choice-group { display: none; }
+@container builder (width &lt; 46.5rem) {
+  .form-container:has(&gt; .builder-two-col) &gt; .choice-group { display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-lg); margin: 0 0 var(--space-lg); }
+  .form-container:has(&gt; .choice-group .form-check:first-of-type input:checked) &gt; .builder-two-col &gt; :last-child { display: none; }
+  .form-container:has(&gt; .choice-group .form-check:last-of-type input:checked) &gt; .builder-two-col &gt; :first-child { display: none; }
+}
+.form-container:has(&gt; .builder-two-col) &gt; .choice-group legend { font-weight: 600; width: 100%; }
+.builder-two-col h2 { font-size: 1.25rem; margin: 0 0 var(--space-sm); }
+.builder-two-col &gt; * &gt; * + h2 { margin-top: var(--space-xl); }</pre></td></tr><tr><th scope="row">S2</th><td>.form-outline, .outline-section, .outline-section-head, .field-row, .field-row-label, .field-row-meta, .is-editing, .is-refused, .field-editor-inplace</td><td>CHANGED</td><td>The outline as a list (S27); its buttons a shipped .actions-cell; the stripes' forced-colors fallback (S28). Changed to make a board render: ".outline-section > .btn" gives Add field, standing alone at a section's foot, the row's inset.<pre class="code-block">/* S2 (CHANGED in round 3; Spec row S2; T4 argued again by S26; S27, S28). The outline: a section is a bordered block,
+   its head on header-bg (its title an h3 alone, its key in a .field-row-meta &lt;code&gt; under it, then its buttons in a
+   shipped div.actions-cell); its fields a ul.list-unstyled of li.field-row (the label, then type, key and Required, then
+   the buttons in a div.actions-cell); the row open for editing and its editor (an li too) share T176&#x27;s 4px stripe, a
+   refused row a danger stripe (its words under it, so not colour alone). Add section and Add field stand alone. */
+.form-outline { display: flex; flex-direction: column; gap: var(--space-md); }
+.outline-section { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-lg); }
+.outline-section-head { background: var(--header-bg); border-bottom: 1px solid var(--border-color); border-radius: var(--radius-lg) var(--radius-lg) 0 0; display: flex; flex-direction: column; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+.outline-section-head &gt; * { margin: 0; }
+.outline-section-head h3 { font-size: 1.1rem; margin: 0; overflow-wrap: anywhere; }
+.outline-section-head .field-row-meta code, .field-row-meta code { color: var(--muted-text); font-family: var(--font-mono); font-size: 0.875rem; font-weight: 400; overflow-wrap: anywhere; }
+.field-row { border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+.field-row:last-child { border-bottom: 0; }
+.field-row &gt; p { margin: 0; }
+.field-row-label { font-weight: 600; overflow-wrap: anywhere; }
+.field-row-meta { color: var(--muted-text); font-size: 0.875rem; overflow-wrap: anywhere; }
+.field-row.is-editing, .outline-section-head.is-editing { box-shadow: inset 4px 0 0 var(--secondary-color); }
+.field-row.is-refused, .outline-section-head.is-refused { box-shadow: inset 4px 0 0 var(--danger-color); }
+.field-editor-inplace { border-bottom: 1px solid var(--border-color); box-shadow: inset 4px 0 0 var(--secondary-color); display: flex; flex-direction: column; gap: var(--space-md); padding: var(--space-md) var(--space-md) var(--space-md) var(--space-lg); }
+.field-editor-inplace &gt; * { margin: 0; }
+.field-editor-inplace h4 { font-size: 1rem; margin: 0; overflow-wrap: anywhere; }
+.field-editor-inplace .form-grid { gap: var(--space-md); }
+/* Changed to make a board render (round 3, said on the Spec): Add field stands alone at a section&#x27;s foot, so it takes the
+   row&#x27;s own inset rather than sitting on the section&#x27;s border. */
+.outline-section &gt; .btn { margin: var(--space-sm) var(--space-md) var(--space-md); }
+@media (max-width: 640.98px) {
+  .field-row .actions-cell .btn { flex: 1 1 auto; }
+}
+/* S28: the stripes in a contrast theme, as app.css does for .choice-group.is-invalid: a box-shadow is not painted there. */
+@media (forced-colors: active) {
+  .field-row.is-editing, .outline-section-head.is-editing { border-left: 4px solid Highlight; box-shadow: none; padding-left: calc(var(--space-md) - 4px); }
+  .field-editor-inplace { border-left: 4px solid Highlight; box-shadow: none; padding-left: calc(var(--space-lg) - 4px); }
+  .field-row.is-refused, .outline-section-head.is-refused { border-left: 4px solid CanvasText; box-shadow: none; padding-left: calc(var(--space-md) - 4px); }
+}</pre></td></tr><tr><th scope="row">C3</th><td>.activity-types-page (page class)</td><td>CHANGED: a selector-list addition; the nine rules are a canvas stand-in</td><td>The list stacks from 1024px (S25). The build adds the class to six selector lists (§ 3, app.css).<pre class="code-block">/* C3 (CHANGED; Spec row C3; S25). STAND-IN: the build writes no declaration for the list. It ADDS .activity-types-page to
+   each of the six selector lists of app.css&#x27;s &quot;The catalogue tables stack from 1024px down&quot; block (beside .epas-page,
+   .colleges-page and .college-tree-page). The canvas cannot edit bundle.css, so these nine rules stand in for that
+   addition here and nowhere else. Round 2&#x27;s comment follows.
+   C3 (round 2; the 900-1100 sweep) — the list joins flow 16&#x27;s shared narrow-desktop stack: from 1024px down
+   its six columns stack, as the EPA list&#x27;s, Colleges&#x27; and the College&#x27;s tree do. Measured: at 950px the table is 682px in
+   a 642px container (40px over; 45px for the Administrator&#x27;s), at 1000px 692 in 692. Written here as the selector list
+   it adds to (app.css: &quot;The catalogue tables stack from 1024px down&quot;); .activity-types-page is the list&#x27;s page class
+   (NEW, for this measured need alone), on its .people-page column. */
+@media (max-width: 1024px) {
+  .activity-types-page .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .activity-types-page .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .activity-types-page .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .activity-types-page .clinic-table--stack-wide td, .activity-types-page .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .activity-types-page .clinic-table--stack-wide th[scope=&quot;row&quot;] { display: block; }
+  .activity-types-page .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) &quot;: &quot;; content: attr(data-label) &quot;: &quot; / &quot;&quot;; font-weight: 600; }
+  .activity-types-page .clinic-table--stack-wide .btn { min-height: 2.75rem; }
+}</pre></td></tr><tr><th scope="row">gone</th><td>.tab-problem, .field-row-actions</td><td>removed</td><td>The badge is shipped (.badge.badge-declined); the row's buttons a shipped .actions-cell.</td></tr><tr><th scope="row">reuses</th><td>.badge, .badge-declined, .list-unstyled, .actions-cell, and round 2's list (.page, .sidebar, .nav-*, .account-row, .breadcrumbs, .header-container, .page-subtitle, .people-page, .person-cell, .search-container, .search-grid, .search-field, .filter-actions, .table-container, .clinic-table, .clinic-table--stack, .clinic-table--stack-wide, .col-actions, .user-page, .user-section, .detail-card, .detail-card--empty, .state-panel-title, .state-panel-copy, .form-container, .form-grid, .form-group, .full-width, .form-control, .form-select, .form-check, .choice-group, .field-help, .validation-message, .required-mark, .detail-list, .alert, .alert-row, .action-result, .error-summary, .validation-summary-errors, .refusal-summary-list, .loading-line, .skeleton, .skel-*, .activity-form, .form-section, .form-section-head, .dialog-card, .dialog-scrim, .dialog-body, .form-actions, .btn and its kinds, .muted, .text-sm, .font-mono, .visually-hidden)</td><td>reuses</td><td>as shipped, never redeclared</td></tr><tr><th scope="row">K1–K3</th><td>.cv-chip, .cv-modal-stage, .cv-doc, .cv-cols, .cv-first</td><td>canvas-only (PART 1)</td><td>Kept as round 2 wrote them; never shipped.</td></tr></tbody></table></div><ul><li><strong>T4, argued again (S26).</strong> Round 2 said a DataTable per section leaves its label column 93px beside four btn-sm buttons (204px). Corrected: four btn-sm are about 220px with their gaps (measured this round at 223–230px on one line), and .actions-cell wraps (app.css:461), so 93px is not what a DataTable would give. Round 2's figure was derived, not rendered.</li><li>The outline stands for two other reasons: a row of Edit, Up, Down and Delete under a label never leaves a readable measure in the 363px rail, wrapped or not; and DataTable stacks by a viewport query (app.css:4144, :6278) that does not fire in a rail at 1280.</li><li>Recorded: a DataTable of Field and Edit alone would fit, but Up and Down are the keyboard's reorder path (T019-b), so they stay on the row.</li><li>The standing boards' div rows (R2-C09, R2-C16, R2-C21, R2-E08, R2-E13, R2-E14) are superseded by this markup: a ul.list-unstyled of li.field-row.</li></ul></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 1600, "height": 1000}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

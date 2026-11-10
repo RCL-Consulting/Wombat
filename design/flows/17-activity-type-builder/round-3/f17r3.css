@@ -1,0 +1,173 @@
+/* f17r3.css — flow 17, round 3 (the correction round): f17r2.css copied whole, PART 2 changed only as the round's
+   items say (C1 hover, S1 gone for R1, S2 changed, C3 a stand-in for a selector-list addition). From round 2:
+   f17r2.css — flow 17, round 2 (structure A at fidelity). Loaded after ds/wombat/tokens.css and
+   ds/wombat/components/bundle.css. Two kinds of rule and nothing else:
+   1. Canvas-only rules, .cv-* (Spec K rows): the Illustration chip, a dialog's painted backdrop, the two document boards.
+      Never shipped; never on a component.
+   2. The shipped rules this round adds or changes (Spec class table C1, C2, S1, S2), each written as it would go into
+      app.css. No new token, badge or icon. Every colour is a token. */
+
+/* ═══════════════════════ 1. Canvas-only (K rows) ═══════════════════════ */
+
+/* K1 — the Illustration chip on a board's face: over the empty middle of the top bar from 641px, at the foot below. */
+.cv-chip {
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-color);
+  border-radius: var(--radius-pill);
+  color: var(--text-color);
+  font-size: 0.8rem;
+  font-weight: 700;
+  left: calc(var(--sidebar-width) + var(--space-xl));
+  max-width: 28rem;
+  overflow-wrap: anywhere;
+  padding: 2px var(--space-sm);
+  position: fixed;
+  top: 14px;
+  z-index: 30;
+}
+@media (max-width: 640.98px) {
+  .cv-chip { bottom: var(--space-sm); left: var(--space-sm); max-width: calc(100% - 2 * var(--space-sm)); top: auto; }
+}
+
+/* K2 — a ConfirmDialog drawn open on a static board: the scrim showModal() would paint, and the dialog in flow on it. */
+.cv-modal-stage {
+  align-items: flex-start;
+  background: var(--scrim);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 140px var(--space-md) 0;
+  position: fixed;
+  z-index: 40;
+}
+.cv-modal-stage > dialog { margin: 0; position: static; }
+
+/* K3 — the Spec and Steps boards: a document column on the page ground. */
+.cv-doc { background: var(--background-color); box-sizing: border-box; color: var(--text-color); font-family: var(--font-body); line-height: 1.5; padding: var(--space-2xl); }
+.cv-doc > * { max-width: 100%; }
+.cv-doc h1 { font-size: 2rem; margin: 0 0 var(--space-xs); }
+.cv-doc h2 { font-size: 1.4rem; margin: var(--space-2xl) 0 var(--space-sm); }
+.cv-doc h3 { font-size: 1.1rem; margin: var(--space-lg) 0 var(--space-xs); }
+.cv-doc p, .cv-doc li { max-width: 110rem; }
+.cv-doc .table-container { margin: var(--space-sm) 0 var(--space-md); }
+.cv-doc .clinic-table td, .cv-doc .clinic-table th { vertical-align: top; }
+.cv-doc code { font-family: var(--font-mono); font-size: 0.875rem; }
+.cv-cols { display: grid; gap: var(--space-xl); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cv-first { background: var(--warning-bg); border-left: 4px solid var(--warning-color); border-radius: var(--radius-md); padding: var(--space-md) var(--space-lg); }
+
+/* ═══════════════════════ 2. Shipped rules this round adds or changes ═══════════════════════ */
+
+/* C1 (CHANGED; Spec row C1; T3, Q1, S2) — the builder's own tab bar as the tabs pattern. It replaces app.css's
+   .tab-bar / .tab-bar-tab / .tab-bar-tab.is-active pill rules (used by the builder alone). role="tablist" on the bar,
+   role="tab" with aria-selected on each button; the selected tab is told by a 3px underline in the action blue and
+   by weight, not by a fill; one row at every width, each tab 44px high; equal tracks below 641px. */
+.tab-bar {
+  border-bottom: 1px solid var(--input-border);
+  display: grid;
+  gap: var(--space-xs);
+  grid-auto-columns: max-content;
+  grid-auto-flow: column;
+  margin: 0;
+}
+.tab-bar-tab {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  color: var(--text-color);
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 500;
+  gap: var(--space-xs);
+  justify-content: center;
+  margin-bottom: -1px;
+  min-height: 2.75rem;
+  padding: 0 var(--space-md);
+  white-space: nowrap;
+}
+.tab-bar-tab:hover { background: var(--header-bg); } /* C1 CHANGED (S24): the hover on header-bg; hover-bg is the page ground the bar stands on */
+.tab-bar-tab[aria-selected="true"] { border-bottom-color: var(--secondary-color); color: var(--primary-color); font-weight: 700; }
+@media (max-width: 640.98px) {
+  .tab-bar { gap: 0; grid-auto-columns: minmax(0, 1fr); }
+  .tab-bar-tab { flex-direction: column; font-size: 0.9375rem; gap: 0; line-height: 1.2; padding: 0 2px; }
+}
+@media (forced-colors: active) {
+  .tab-bar-tab[aria-selected="true"] { border-bottom-color: Highlight; }
+}
+
+/* R1 (NEW, scoped; Spec row R1; S21, S22) — a tab's problem count is the shipped .badge.badge-declined, inside the tab and
+   part of its name ("Form 1 problem"). Its padding a little tighter in a tab; below 641px its word is visually hidden
+   (app.css's .visually-hidden declarations, copied), so a 72px track shows the number alone. */
+.tab-bar-tab .badge { padding-inline: 6px; }
+@media (max-width: 640.98px) {
+  .tab-bar-tab .badge > span { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+}
+
+/* C2 (CHANGED; Spec row C2; Q5, T5) — the builder's two columns, and the CSS-only "Show" choice. Above the stacking
+   width (the card 46.5rem and over) the choice is hidden and both columns stand; below it the columns stack, the choice
+   shows, and the unchosen column is hidden by the chosen radio: no round trip. The choice is the form container's own
+   .choice-group, so nothing outside the builder is touched. */
+.form-container:has(> .builder-two-col) > .choice-group { display: none; }
+@container builder (width < 46.5rem) {
+  .form-container:has(> .builder-two-col) > .choice-group { display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-lg); margin: 0 0 var(--space-lg); }
+  .form-container:has(> .choice-group .form-check:first-of-type input:checked) > .builder-two-col > :last-child { display: none; }
+  .form-container:has(> .choice-group .form-check:last-of-type input:checked) > .builder-two-col > :first-child { display: none; }
+}
+.form-container:has(> .builder-two-col) > .choice-group legend { font-weight: 600; width: 100%; }
+.builder-two-col h2 { font-size: 1.25rem; margin: 0 0 var(--space-sm); }
+.builder-two-col > * > * + h2 { margin-top: var(--space-xl); }
+
+/* S2 (CHANGED in round 3; Spec row S2; T4 argued again by S26; S27, S28). The outline: a section is a bordered block,
+   its head on header-bg (its title an h3 alone, its key in a .field-row-meta <code> under it, then its buttons in a
+   shipped div.actions-cell); its fields a ul.list-unstyled of li.field-row (the label, then type, key and Required, then
+   the buttons in a div.actions-cell); the row open for editing and its editor (an li too) share T176's 4px stripe, a
+   refused row a danger stripe (its words under it, so not colour alone). Add section and Add field stand alone. */
+.form-outline { display: flex; flex-direction: column; gap: var(--space-md); }
+.outline-section { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-lg); }
+.outline-section-head { background: var(--header-bg); border-bottom: 1px solid var(--border-color); border-radius: var(--radius-lg) var(--radius-lg) 0 0; display: flex; flex-direction: column; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+.outline-section-head > * { margin: 0; }
+.outline-section-head h3 { font-size: 1.1rem; margin: 0; overflow-wrap: anywhere; }
+.outline-section-head .field-row-meta code, .field-row-meta code { color: var(--muted-text); font-family: var(--font-mono); font-size: 0.875rem; font-weight: 400; overflow-wrap: anywhere; }
+.field-row { border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+.field-row:last-child { border-bottom: 0; }
+.field-row > p { margin: 0; }
+.field-row-label { font-weight: 600; overflow-wrap: anywhere; }
+.field-row-meta { color: var(--muted-text); font-size: 0.875rem; overflow-wrap: anywhere; }
+.field-row.is-editing, .outline-section-head.is-editing { box-shadow: inset 4px 0 0 var(--secondary-color); }
+.field-row.is-refused, .outline-section-head.is-refused { box-shadow: inset 4px 0 0 var(--danger-color); }
+.field-editor-inplace { border-bottom: 1px solid var(--border-color); box-shadow: inset 4px 0 0 var(--secondary-color); display: flex; flex-direction: column; gap: var(--space-md); padding: var(--space-md) var(--space-md) var(--space-md) var(--space-lg); }
+.field-editor-inplace > * { margin: 0; }
+.field-editor-inplace h4 { font-size: 1rem; margin: 0; overflow-wrap: anywhere; }
+.field-editor-inplace .form-grid { gap: var(--space-md); }
+/* Changed to make a board render (round 3, said on the Spec): Add field stands alone at a section's foot, so it takes the
+   row's own inset rather than sitting on the section's border. */
+.outline-section > .btn { margin: var(--space-sm) var(--space-md) var(--space-md); }
+@media (max-width: 640.98px) {
+  .field-row .actions-cell .btn { flex: 1 1 auto; }
+}
+/* S28: the stripes in a contrast theme, as app.css does for .choice-group.is-invalid: a box-shadow is not painted there. */
+@media (forced-colors: active) {
+  .field-row.is-editing, .outline-section-head.is-editing { border-left: 4px solid Highlight; box-shadow: none; padding-left: calc(var(--space-md) - 4px); }
+  .field-editor-inplace { border-left: 4px solid Highlight; box-shadow: none; padding-left: calc(var(--space-lg) - 4px); }
+  .field-row.is-refused, .outline-section-head.is-refused { border-left: 4px solid CanvasText; box-shadow: none; padding-left: calc(var(--space-md) - 4px); }
+}
+
+/* C3 (CHANGED; Spec row C3; S25). STAND-IN: the build writes no declaration for the list. It ADDS .activity-types-page to
+   each of the six selector lists of app.css's "The catalogue tables stack from 1024px down" block (beside .epas-page,
+   .colleges-page and .college-tree-page). The canvas cannot edit bundle.css, so these nine rules stand in for that
+   addition here and nowhere else. Round 2's comment follows.
+   C3 (round 2; the 900-1100 sweep) — the list joins flow 16's shared narrow-desktop stack: from 1024px down
+   its six columns stack, as the EPA list's, Colleges' and the College's tree do. Measured: at 950px the table is 682px in
+   a 642px container (40px over; 45px for the Administrator's), at 1000px 692 in 692. Written here as the selector list
+   it adds to (app.css: "The catalogue tables stack from 1024px down"); .activity-types-page is the list's page class
+   (NEW, for this measured need alone), on its .people-page column. */
+@media (max-width: 1024px) {
+  .activity-types-page .clinic-table--stack-wide thead { border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px; }
+  .activity-types-page .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .activity-types-page .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .activity-types-page .clinic-table--stack-wide td, .activity-types-page .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .activity-types-page .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .activity-types-page .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .activity-types-page .clinic-table--stack-wide .btn { min-height: 2.75rem; }
+}
