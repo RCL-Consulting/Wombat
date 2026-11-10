@@ -97,3 +97,7 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   one page of h2 sections, C a stepped path, each as list, read, new form, workflow/credit and publish. Steps board's
   totals 1.26–1.30: today 31 + 29; A 30/32; B 27/29; C 29/31 (1280/390). Assessment: one Opus agent →
   `round-1-assessment.md`.
+- **2026-11-10, round 1 assessed** (one Opus agent, `ab13dd3d`): pick A (Q1), with B5.1's Publish section as A's
+  panel and C5.1's "What you are publishing"; M1–M7 (Q12 subtitles, Q7/Q11 list, Q9 notice, Discard's untrue body,
+  the missing Publish panel, B/C against Q1/Q2/Q8, the Steps board's double count: today 22 + 29); 14 shoulds, 12 nits.
+  Q13–Q16 for the operator. No capture or seed reached the canvas: round 2 must upload them into the canvas's files.
