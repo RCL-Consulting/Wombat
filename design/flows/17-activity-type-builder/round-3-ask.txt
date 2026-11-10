@@ -5,15 +5,15 @@ and Steps boards. The canvas "Wombat 17" already holds 162 (round 1's 17, round 
 canvas's ceiling of about 200 (flow 16's round 3 needed a second canvas), so ROUND 3 IS DRAWN ON A NEW CANVAS,
 "Wombat 17 · Round 3", on a page "Round 3", every board named R3-… after its R2 name (R3-C14-390 for R2-C14-390).
 Round 2's boards are NOT on this canvas: draw each R3 board FRESH from its round-2 file, copied into this canvas's
-project as project/r2/R2-….dc.html (R3-C14 from project/r2/R2-C14.dc.html, R3-C14-390 from
-project/r2/R2-C14-390.dc.html), carrying everything no item below changes exactly as that file has it, markup and words.
+project as project/r2/R2-….ref.html (a .ref.html, so it does not show as a board) (R3-C14 from project/r2/R2-C14.ref.html, R3-C14-390 from
+project/r2/R2-C14-390.ref.html), carrying everything no item below changes exactly as that file has it, markup and words.
 Read the R2 files; never link or embed them. A new board starts from the R2 file its item names. Redraw ONLY the boards
 listed under BOARDS ROUND 3 DRAWS, each at every width round 2 drew it; then the new boards listed there; then the
 check, Spec and Steps boards WHOLE. R2 boards not listed stand where they are, on "Wombat 17": the reviews found them
 right, and the Spec says which they are. Change what the items say; draw nothing they do not ask for. The design system
 is Wombat v49 (1794239792-3119, namespace wombat) as installed on this canvas (ds/wombat/tokens.css and
 ds/wombat/components/bundle.css): keep both files in the project so the saved round renders. The brand mark is at
-‹MARK_URL› (this canvas's own copy): use it, never a drawn disc, and never round 2's /_blob/ address. Every person,
+/_blob/1464be2bd2c027ed86bec42ee064aa32 (this canvas's own copy): use it, never a drawn disc, and never round 2's /_blob/ address. Every person,
 institution, College, key, name, version, date, id, count and order stays as round 2 drew it unless an item below
 changes it: three reviews checked them against the code, the seeds and the T394 replay and found them true. Use FIXTURES
 only and invent nothing; where a value is not given, write a bracket ‹…›, and never as a control's value (N17). Never
@@ -476,4 +476,4 @@ CHECK BEFORE YOU STOP: the check board first, saying which reference files opene
   the Illustration chip by S15's one rule, and no decision code or file path on a chip; every 390 control 44px; nothing
   scrolls sideways at 1280, 768 or 390; no gendered pronoun on any board, annotations included; every bracket ‹…› still
   a bracket, never filled from memory; every board's 390 and 768 twin carrying the same words as its 1280 board;
-  f17r3.css saved as a project file; the mark from ‹MARK_URL›.
+  f17r3.css saved as a project file; the mark from /_blob/1464be2bd2c027ed86bec42ee064aa32.

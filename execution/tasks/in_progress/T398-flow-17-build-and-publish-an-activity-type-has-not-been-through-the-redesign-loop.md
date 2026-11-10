@@ -59,7 +59,7 @@ Run the loop as flow 16 ran it (`design/flows/16-college-catalogue/`, BRIEF § 1
 ## Verification
 
 - [ ] The brief is restated, and `check_flow_completeness.py` exits 0 — its commit.
-- [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link. (https://claude.ai/artifact/AQNS1QZDaUNizG7dzKPSGs)
+- [x] The canvas is created, with `tokens.css` and the mark copied in before round 1 — its link. (https://claude.ai/artifact/AQNS1QZDaUNizG7dzKPSGs; round 3 on https://claude.ai/artifact/Cpyw4vwX7UodgJUdKLF7Zw)
 - [ ] A chosen design with its states, reviewed, and the decisions recorded — `design/flows/17-activity-type-builder/`.
 - [ ] Built, with all six suites green and DESIGN.md amended (its banner lists flow 17) — the squash commit and counts.
 - [ ] The whole runbook replays on a fresh database with no regression from flow 17, the baseline is re-captured, and
@@ -123,3 +123,10 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   unticked, then saves, then asks on warnings; Q18 keep T133 (a pointer at a deleted field is dropped at save; C18
   redrawn as "None" with the Publish warning, the NEW refusal dropped); Q19 Q9 changes writing only, an inactive
   system-managed type stays readable; Q20 Publish lands on the tab it was pressed from. Round 3's ask: one Opus agent.
+- **2026-11-10, round 3's ask** (one Opus agent, `19e5cab2`; `round-3-ask.txt`, 479 lines): 89 items (M1–M5, S1–S29,
+  N1–N24, Q17–Q20, T1–T8); 87 boards, so a new canvas: "Wombat 17 · Round 3" https://claude.ai/artifact/Cpyw4vwX7UodgJUdKLF7Zw,
+  created here with design system v49 (tokens.css by hand, bundle.css and fonts from Wombat 17, tokens.json from the
+  system), the mark `/_blob/1464be2bd2c027ed86bec42ee064aa32`, `project/ref/` and round 2's 145 boards as
+  `project/r2/R2-….ref.html` (not `.dc.html`, which would show as boards) with `f17r2.css`; the ask amended to match.
+  Provisional in the ask (PROPOSED): C19's folds without `aria-expanded`, the tab's count as a number at 390, Publish's
+  dialog `btn-primary`, Active's help shortened, a College with no speciality's subtitle, E02b.
