@@ -130,3 +130,8 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   `project/r2/R2-….ref.html` (not `.dc.html`, which would show as boards) with `f17r2.css`; the ask amended to match.
   Provisional in the ask (PROPOSED): C19's folds without `aria-expanded`, the tab's count as a number at 390, Publish's
   dialog `btn-primary`, Active's help shortened, a College with no speciality's subtitle, E02b.
+- **2026-11-10, round 3** (87 boards, `684119ce`) checked item by item (one Sonnet, `round-3-check.md`): 86 rows, done
+  82, partly 4 (S2's two unnamed margin resets; C3 says six lists/nine rules, app.css has seven; Spec rows not restated;
+  seven Steps rows "as round 2's"), not done 0. One regression: the in-place editor is `<li role="group">` (19 files).
+  Steps arithmetic and the five states.md rows hold. Three stale line citations. Pixel claims not measured. Waiting:
+  the operator's decisions (carry the fixes into the build, no round 4; keep the seven PROPOSED settlements).

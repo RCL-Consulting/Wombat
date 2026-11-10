@@ -9,7 +9,7 @@ The operator said "flow 17", then "Done" (sent the round-1 ask; taken as "yes" t
   `/_blob/a89fec160a8a8c0b20116ccc3634e0bc`). Brief restated and staged (`7d8ce207`); round 1 (17 boards, `f17r1.css`)
   saved in `design/flows/17-activity-type-builder/round-1/` (`465480c7`): A tabs, B one page, C a stepped path.
 - **Round 1 assessed** (`ab13dd3d`): pick A; M1–M7; Q13–Q16 put to the operator. Captures never reached the canvas.
-- **Round 3 drawn and saved** (`684119ce`, 87 boards in `round-3/`) on "Wombat 17 · Round 3" https://claude.ai/artifact/Cpyw4vwX7UodgJUdKLF7Zw. Being checked item by item (one Sonnet → `round-3-check.md`); then the operator's decisions, then step 6, the build.
+- **Round 3 drawn and saved** (`684119ce`, 87 boards in `round-3/`) on "Wombat 17 · Round 3" https://claude.ai/artifact/Cpyw4vwX7UodgJUdKLF7Zw. Checked (`round-3-check.md`): 82 of 86 done, 4 partly, one regression (`li role="group"`). Waiting: the operator's decisions; then step 6, the build.
 - **Trap:** the boards keep the workflow JSON "as typed"; jsonb re-renders it, so that is a stored text column (DATA).
 - **Not pushed:** master ahead of origin with flows 16–17. Ask before pushing.
 
