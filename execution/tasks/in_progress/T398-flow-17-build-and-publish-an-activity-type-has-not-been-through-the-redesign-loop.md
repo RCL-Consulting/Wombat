@@ -149,3 +149,8 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   builder page taken from C, DESIGN.md B's and C's lines; one fix, C's unreachable fallback places). Build 0 warnings;
   suites 895/4459/1035/52/4806/532. The sweep running (one Opus agent, scratch `wombat_scenario_t398_sweep`). Lane
   notes for W and § 5 in the scratchpad `b398/lane-{a,b,c}.md`.
+- **2026-11-10, the sweep** (one Opus agent; `2a4ad364` fix, `44031579` `sweep.md`): 135 measurements pass after three
+  fixes (the writer's tabs at 641–720px, four counts with their word, Mini-CEX's moves at 901–935px). Scratch DB
+  `wombat_scenario_t398_sweep` kept. **Lane W** (`60634b21`, merged `68e127d8`): 1.24–1.31, 6.14a, A.7.9, A.7.14,
+  states.md :902–:920 and 14 new rows; verbatim 425/0, completeness exit 0, ScenarioRunbookTests 49/0. Two Sonnet
+  reviews running (code; pages and runbook).

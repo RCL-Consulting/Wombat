@@ -10,7 +10,8 @@ The operator said "flow 17", then "Done" (sent the round-1 ask; taken as "yes" t
   saved in `design/flows/17-activity-type-builder/round-1/` (`465480c7`): A tabs, B one page, C a stepped path.
 - **Round 1 assessed** (`ab13dd3d`): pick A; M1–M7; Q13–Q16 put to the operator. Captures never reached the canvas.
 - **Round 3 drawn and saved** (`684119ce`, 87 boards in `round-3/`) on "Wombat 17 · Round 3" https://claude.ai/artifact/Cpyw4vwX7UodgJUdKLF7Zw. Checked (`round-3-check.md`): 82 of 86 done, 4 partly, one regression (`li role="group"`). Decisions taken (no round 4). Build plan `build-lanes.md`/`build-contracts.md` (`af28d571`): § 0, lanes A/B/C, sweep, W, two reviews, fix pass; no migration. P1–P2 taken (T399 proposed for P1's other pages). § 0 done (`d3c98db5`, notes `08d1bbda` on `t398`). Lanes A, B, C merged on `t398`
-  (suites 895/4459/1035/52/4806/532). **The sweep running**; then lane W, two reviews, the fix pass, the squash.
+  (suites 895/4459/1035/52/4806/532). Sweep passed (3 fixes), lane W merged (`68e127d8`).
+  **Two Sonnet reviews running**; then merge them into `build-review.md`, one fix pass, the squash.
 - **Trap:** the boards keep the workflow JSON "as typed"; jsonb re-renders it, so that is a stored text column (DATA).
 - **Not pushed:** master ahead of origin with flows 16–17. Ask before pushing.
 
