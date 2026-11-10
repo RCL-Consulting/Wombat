@@ -195,3 +195,11 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   release lines, the MSF type read-only, the new type's Scope radios, "Draft saved." focused at /24, Mbatha
   "Activity type unavailable"; T291 item 3 and T334 no longer occur. Kruger's list at 1280: every name one line; 1025
   spare 55/60px; builder 900–1150 clean. The app restarted once (6.2, by id). Act A running.
+- **2026-11-10, act A replayed** (one Opus agent, `1a18774f`; dump `scenario-t398-post-actA`): 77 steps, 72 clean; known
+  Gaps A.2.10, A.4.2 (T286), A.6.1 (T326), A.6.2 (T327), A.7.4 (T385); **A.7.9 and A.7.14 as built** (T280 no longer
+  occurs: one row of five 72px tabs at 390, manual activation; Publish aria-disabled, its reason 4.83:1); outcome SQL as
+  expected; A.5.15 on `wombat_scenario_t398_s515` (:5181, stopped by id). **Acts done: no flow 17 regression left** but
+  act 1's two, fixed in `c9742a18`. Act 6's restart of :5180 (for 6.2) was tied to its shell and the app went down
+  ~22:06 SAST when it ended (act 6's agent restarted it; act A's outcome SQL still matched); two instances were then on
+  the bin. Both stopped by id; master `1a18774f` published to :5180 and started detached (one instance). States pass 1
+  running (it also re-takes 1.25's captures).
