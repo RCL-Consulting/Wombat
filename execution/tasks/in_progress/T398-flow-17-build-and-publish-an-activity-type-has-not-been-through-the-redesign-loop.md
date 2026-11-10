@@ -110,3 +110,7 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   lines; A at full fidelity, Publish a fifth writer-only tab, ~65 states / ~145 boards (R2-A list 12, R2-B read 11,
   R2-C form 21, R2-D workflow/credit 5, R2-E publish/discard/deactivate 15); T1–T24 settled provisionally for round 2's
   review; readings to confirm: a reader sees no JSON (Q2), the Publish tab as part of the pick (M5).
+- **2026-11-10, round 2** (145 boards, `f17r2.css` and `canvas.json` in `round-2/`; the operator sent the ask and said
+  "done"): every reference file opened (30 captures, 9 seeds, said on R2-0-spec); A at fidelity, families A list, B
+  read, C new type and form, D workflow/credit, E publish/discard/deactivate; T4 measured and failed (round 1's outline
+  kept, S2); C1 `.tab-bar` restyled, S1 `.tab-problem`, C2/C3 changed. Reviews running (three Sonnet: code, cast, ds).
