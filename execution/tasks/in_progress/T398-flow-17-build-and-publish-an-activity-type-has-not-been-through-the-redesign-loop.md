@@ -88,3 +88,12 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   refusals naming no tab, Publish's reason only a tooltip, JSON re-rendered on one line, "v0", no h2, Back to list,
   search per keystroke, no version history, an institution seeing every College's types. **Waiting:** the operator's
   Q1, Q2, Q8 (before round 1), then Q3–Q12 (brief § 6).
+- **2026-11-10, decisions.** The operator took brief § 6's Q1–Q12 as recommended (sent the ask and said "done"): Q1
+  (a) the tabs as a real tabs pattern, Details first; Q2 the JSON stays the editor with a read in words beside it, no
+  diagram; Q8 Delete an outline button that asks nothing, Discard draft… through a ConfirmDialog, Publish asks only on
+  warnings with its reason as text; Q9 T334 folded in; Q10 the fold-in list as written. No new D-row: Q9 is D52's T334
+  note, Q8 follows D56's "asks first" pattern.
+- **2026-11-10, round 1** (17 boards, `f17r1.css` and `canvas.json` in `round-1/`): Spec (Main) and Steps; A tabs, B
+  one page of h2 sections, C a stepped path, each as list, read, new form, workflow/credit and publish. Steps board's
+  totals 1.26–1.30: today 31 + 29; A 30/32; B 27/29; C 29/31 (1280/390). Assessment: one Opus agent →
+  `round-1-assessment.md`.

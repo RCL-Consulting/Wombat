@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Structure B — one page of h2 sections · Screen 4 · the workflow and the credit rules</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="f17r1.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="wf-sheet" style="width: 2400px; min-height: 2700px">
+<p class="wf-sheet-title">Structure B — one page of h2 sections · Screen 4 · the workflow and the credit rules</p>
+<p class="wf-sheet-sub">Words beside the JSON; the field: rule refused.</p>
+<div class="wf-frames">
+<div class="wf-col"><p class="wf-cap"><b>B4.1 · 1280 · 1.28, 1.29</b> — words beside the JSON, refused at its move; Credit under it <span class="wf-pin" aria-hidden="true">1</span><span class="wf-pin" aria-hidden="true">2</span></p>
+<div class="wf-frame wf-frame--1280 "><div class="wf-app">
+<div class="wf-side"><div class="wf-brand"><img src="/_blob/a89fec160a8a8c0b20116ccc3634e0bc" alt=""><span>Wombat</span></div>
+<div class="wf-role"><small>Acting as</small><strong>Institutional admin</strong></div>
+<ul class="wf-nav"><li>Home</li>
+<li class="wf-nav-group">Curriculum</li>
+<li class="wf-lit">Activity types</li>
+<li><span class="wf-bracket">‹the other Curriculum links›</span></li>
+<li class="wf-nav-group"><span class="wf-bracket">‹the other groups›</span></li>
+<li class="wf-nav-group" style="border-top: 1px solid var(--nav-divider); margin-top: 8px">My data rights</li></ul></div>
+<div class="wf-main"><div class="wf-top"><a href="#">Nolwazi Mbatha</a><button type="button" class="btn btn-outline btn-sm">Sign out</button></div>
+<div class="wf-art"><nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li><a href="#">Home</a><span class="breadcrumb-separator" aria-hidden="true">›</span></li><li><a href="#">Activity types</a><span class="breadcrumb-separator" aria-hidden="true">›</span></li><li class="breadcrumb-current"><span aria-current="page">KGK Teaching Session Log</span></li></ol></nav><div class="alert alert-danger" role="alert" tabindex="-1"><b>The draft was not saved. Nothing has changed.</b><ul class="refusal-summary-list"><li><a href="#">Workflow, move Cancel: Transition 'cancel' actor names 'field:topic', but 'topic' is not a User field; a field: rule must name a User field.</a></li></ul></div><div class="header-container"><div><h1>Edit KGK Teaching Session Log</h1><p class="page-subtitle">Kgosi Kgari Teaching Hospital · Institution</p></div><div class="actions-cell"><div style="display:flex; gap:8px"><button type="button" class="btn btn-primary ">Save draft</button><button type="button" class="btn btn-outline ">Discard draft…</button></div></div></div><nav aria-label="On this page"><p class="muted text-sm" style="margin:0 0 4px">On this page</p><ul class="page-contents"><li><a href="#">Details</a></li><li><a href="#">Form</a></li><li><a href="#">Preview</a></li><li><a href="#">Workflow</a></li><li><a href="#">Credit</a></li><li><a href="#">Publish</a></li></ul></nav><h2 style="font-size:1.25rem; margin:32px 0 12px; padding-top:16px; border-top:1px solid var(--border-color)">Workflow</h2><div class="builder-split"><div><h3 style="font-size:1.05rem">In words</h3><ul class="state-line"><li><span class="badge badge-draft">Draft</span> where a new log starts</li><li><span class="badge badge-draft">Logged</span> final</li><li><span class="badge badge-draft">Cancelled</span></li></ul><div class="table-container"><table class="clinic-table rules-words"><caption>Moves, in words</caption>
+<thead><tr><th scope="col">Move</th><th scope="col">From</th><th scope="col">To</th><th scope="col">Who moves it</th><th scope="col">Checks</th><th scope="col">Note</th></tr></thead><tbody><tr><th scope="row">Log</th><td>Draft</td><td>Logged</td><td class="">The registrar, or whoever filed it</td><td>The whole form</td><td>No</td></tr><tr><th scope="row">Cancel</th><td>Draft</td><td>Cancelled</td><td class="is-refused"><span class="validation-message">Cannot be read: ‘topic’ (Topic) is not a User field, so it names nobody.</span></td><td>Formats only</td><td>No</td></tr></tbody></table></div></div><div><div class="form-group"><label>Workflow JSON</label><textarea class="form-control json-editor invalid" rows="18" aria-describedby="wf-err wf-help">{
+  &quot;version&quot;: 1,
+  &quot;initial_state&quot;: &quot;draft&quot;,
+  &quot;states&quot;: [
+    { &quot;key&quot;: &quot;draft&quot;, &quot;label&quot;: &quot;Draft&quot; },
+    { &quot;key&quot;: &quot;logged&quot;, &quot;label&quot;: &quot;Logged&quot;, &quot;terminal&quot;: true },
+    { &quot;key&quot;: &quot;cancelled&quot;, &quot;label&quot;: &quot;Cancelled&quot; }
+  ],
+  &quot;transitions&quot;: [
+    { &quot;key&quot;: &quot;log&quot;, &quot;from&quot;: &quot;draft&quot;, &quot;to&quot;: &quot;logged&quot;, &quot;actor&quot;: &quot;subject|creator&quot;, &quot;validation&quot;: &quot;all&quot; },
+    { &quot;key&quot;: &quot;cancel&quot;, &quot;from&quot;: &quot;draft&quot;, &quot;to&quot;: &quot;cancelled&quot;, &quot;actor&quot;: &quot;subject|field:topic&quot;, &quot;validation&quot;: &quot;draft&quot; }
+  ]
+}</textarea><div class="validation-message" id="wf-err">Transition 'cancel' actor names 'field:topic', but 'topic' is not a User field; a field: rule must name a User field.</div>
+<p class="field-help" id="wf-help">Kept as you typed it: a reload or a publish gives this text back, not a re-rendered line. <span class="wf-tag wf-tag--proposed">PROPOSED</span> <span class="wf-tag wf-tag--data">DATA</span></p></div></div></div><h2 style="font-size:1.25rem; margin:32px 0 12px; padding-top:16px; border-top:1px solid var(--border-color)">Credit</h2><div class="builder-split"><div><h3 style="font-size:1.05rem">In words</h3><p style="margin:0 0 8px"><b>This type credits nothing.</b> A log is stamped with its EPA, which activity lists show, but it counts toward no curriculum item. Its only date rule: the encounter date may not be after today.</p></div><div><div class="form-group"><label>Credit rules JSON</label><textarea class="form-control json-editor" rows="4" aria-describedby="wf-err wf-help">{&quot;counts_for&quot;: []}</textarea>
+<p class="field-help" id="wf-help">Kept as you typed it: a reload or a publish gives this text back, not a re-rendered line. <span class="wf-tag wf-tag--proposed">PROPOSED</span> <span class="wf-tag wf-tag--data">DATA</span></p></div></div></div></div></div></div></div></div>
+<div class="wf-col"><p class="wf-cap"><b>B4.2 · 390</b> — words over JSON; the moves table stacks as in A4.4 <span class="wf-pin" aria-hidden="true">3</span></p>
+<div class="wf-frame wf-frame--390 "><div class="wf-phonebar"><img src="/_blob/a89fec160a8a8c0b20116ccc3634e0bc" alt=""><span>Wombat</span><small>Acting as<br>Institutional admin</small><span class="wf-menu">Menu</span></div>
+<div class="wf-art--phone"><a class="wf-back" href="#">‹ Activity types</a><h1 style="font-size:1.375rem; margin:0 0 12px">Edit KGK Teaching Session Log</h1><h2 style="font-size:1.25rem; margin:32px 0 12px; padding-top:16px; border-top:1px solid var(--border-color)">Workflow</h2><h3 style="font-size:1.05rem">In words</h3><ul class="state-line"><li><span class="badge badge-draft">Draft</span> where a new log starts</li><li><span class="badge badge-draft">Logged</span> final</li><li><span class="badge badge-draft">Cancelled</span></li></ul><div class="table-container" tabindex="0" aria-label="Moves, in words"><table class="clinic-table rules-words"><caption>Moves, in words</caption>
+<thead><tr><th scope="col">Move</th><th scope="col">From</th><th scope="col">To</th><th scope="col">Who moves it</th><th scope="col">Checks</th><th scope="col">Note</th></tr></thead><tbody><tr><th scope="row">Log</th><td>Draft</td><td>Logged</td><td class="">The registrar, or whoever filed it</td><td>The whole form</td><td>No</td></tr><tr><th scope="row">Cancel</th><td>Draft</td><td>Cancelled</td><td class="">The registrar, or whoever filed it</td><td>Formats only</td><td>No</td></tr></tbody></table></div><div class="form-group"><label>Workflow JSON</label><textarea class="form-control json-editor" rows="18" aria-describedby="wf-err wf-help">{
+  &quot;version&quot;: 1,
+  &quot;initial_state&quot;: &quot;draft&quot;,
+  &quot;states&quot;: [
+    { &quot;key&quot;: &quot;draft&quot;, &quot;label&quot;: &quot;Draft&quot; },
+    { &quot;key&quot;: &quot;logged&quot;, &quot;label&quot;: &quot;Logged&quot;, &quot;terminal&quot;: true },
+    { &quot;key&quot;: &quot;cancelled&quot;, &quot;label&quot;: &quot;Cancelled&quot; }
+  ],
+  &quot;transitions&quot;: [
+    { &quot;key&quot;: &quot;log&quot;, &quot;from&quot;: &quot;draft&quot;, &quot;to&quot;: &quot;logged&quot;, &quot;actor&quot;: &quot;subject|creator&quot;, &quot;validation&quot;: &quot;all&quot; },
+    { &quot;key&quot;: &quot;cancel&quot;, &quot;from&quot;: &quot;draft&quot;, &quot;to&quot;: &quot;cancelled&quot;, &quot;actor&quot;: &quot;subject|creator&quot;, &quot;validation&quot;: &quot;draft&quot; }
+  ]
+}</textarea>
+<p class="field-help" id="wf-help">Kept as you typed it: a reload or a publish gives this text back, not a re-rendered line. <span class="wf-tag wf-tag--proposed">PROPOSED</span> <span class="wf-tag wf-tag--data">DATA</span></p></div><h2 style="font-size:1.25rem; margin:32px 0 12px; padding-top:16px; border-top:1px solid var(--border-color)">Credit</h2><p style="margin:0 0 8px"><b>This type credits nothing.</b> A log is stamped with its EPA, which activity lists show, but it counts toward no curriculum item. Its only date rule: the encounter date may not be after today.</p></div></div></div>
+<div class="wf-col"><p class="wf-cap"><b>Notes</b></p><div class="wf-notes"><h2>B4 — workflow and credit</h2><ol><li><span class="wf-pin" aria-hidden="true">1</span> Side by side: as she types the JSON, the words beside it read the <i>saved</i> draft (they refresh on Save draft, never per keystroke).</li><li><span class="wf-pin" aria-hidden="true">2</span> The refusal marks the move’s row and the JSON; the summary’s link moves the focus to the textarea.</li><li><span class="wf-pin" aria-hidden="true">3</span> At 390, words first, then the JSON.</li></ol></div></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 2400, "height": 2700}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

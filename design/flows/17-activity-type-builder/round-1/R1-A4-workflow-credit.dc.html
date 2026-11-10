@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Structure A — four tabs, repaired · Screen 4 · the workflow and the credit rules</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="f17r1.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="wf-sheet" style="width: 3700px; min-height: 4200px">
+<p class="wf-sheet-title">Structure A — four tabs, repaired · Screen 4 · the workflow and the credit rules</p>
+<p class="wf-sheet-sub">1.28 and 1.29: the JSON editor with its read in words; the field: rule refused at its move.</p>
+<div class="wf-frames">
+<div class="wf-col"><p class="wf-cap"><b>A4.1 · 1280 · 1.28</b> — the field: rule refused: summary, the tab’s count, the move’s row in the words table, and the message under the JSON <span class="wf-pin" aria-hidden="true">1</span><span class="wf-pin" aria-hidden="true">2</span></p>
+<div class="wf-frame wf-frame--1280 "><div class="wf-app">
+<div class="wf-side"><div class="wf-brand"><img src="/_blob/a89fec160a8a8c0b20116ccc3634e0bc" alt=""><span>Wombat</span></div>
+<div class="wf-role"><small>Acting as</small><strong>Institutional admin</strong></div>
+<ul class="wf-nav"><li>Home</li>
+<li class="wf-nav-group">Curriculum</li>
+<li class="wf-lit">Activity types</li>
+<li><span class="wf-bracket">‹the other Curriculum links›</span></li>
+<li class="wf-nav-group"><span class="wf-bracket">‹the other groups›</span></li>
+<li class="wf-nav-group" style="border-top: 1px solid var(--nav-divider); margin-top: 8px">My data rights</li></ul></div>
+<div class="wf-main"><div class="wf-top"><a href="#">Nolwazi Mbatha</a><button type="button" class="btn btn-outline btn-sm">Sign out</button></div>
+<div class="wf-art"><nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li><a href="#">Home</a><span class="breadcrumb-separator" aria-hidden="true">›</span></li><li><a href="#">Activity types</a><span class="breadcrumb-separator" aria-hidden="true">›</span></li><li class="breadcrumb-current"><span aria-current="page">KGK Teaching Session Log</span></li></ol></nav><div class="alert alert-danger" role="alert" tabindex="-1"><b>The draft was not saved. Nothing has changed.</b><ul class="refusal-summary-list"><li><a href="#">Workflow, move Cancel: Transition 'cancel' actor names 'field:topic', but 'topic' is not a User field; a field: rule must name a User field.</a></li></ul></div><div class="header-container"><div><h1>Edit KGK Teaching Session Log</h1><p class="page-subtitle">Kgosi Kgari Teaching Hospital · Institution</p></div><div class="actions-cell"><div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end"><button type="button" class="btn btn-primary ">Save draft</button><button type="button" class="btn btn-success ">Publish…</button><button type="button" class="btn btn-outline ">Discard draft…</button></div></div></div><dl class="version-strip"><div><dt>Published</dt><dd>Not published</dd></div><div><dt>Draft</dt><dd>Draft saved <span class="wf-bracket">‹date and time, SAST›</span> by Nolwazi Mbatha <span class="wf-tag wf-tag--data">DATA</span></dd></div></dl><div role="tablist" aria-label="Activity type" class="builder-tabs"><button type="button" role="tab" class="builder-tab" aria-selected="false">Details</button><button type="button" role="tab" class="builder-tab" aria-selected="false">Form</button><button type="button" role="tab" class="builder-tab" aria-selected="true">Workflow<span class="tab-problem">1 problem</span></button><button type="button" role="tab" class="builder-tab" aria-selected="false">Credit</button></div><h2 style="font-size:1.25rem">The workflow, in words</h2><ul class="state-line"><li><span class="badge badge-draft">Draft</span> where a new log starts</li><li><span class="badge badge-draft">Logged</span> final</li><li><span class="badge badge-draft">Cancelled</span></li></ul><div class="table-container"><table class="clinic-table rules-words"><caption>Moves, in words</caption>
+<thead><tr><th scope="col">Move</th><th scope="col">From</th><th scope="col">To</th><th scope="col">Who moves it</th><th scope="col">Checks</th><th scope="col">Note</th></tr></thead><tbody><tr><th scope="row">Log</th><td>Draft</td><td>Logged</td><td class="">The registrar, or whoever filed it</td><td>The whole form</td><td>No</td></tr><tr><th scope="row">Cancel</th><td>Draft</td><td>Cancelled</td><td class="is-refused"><span class="validation-message">Cannot be read: ‘topic’ (Topic) is not a User field, so it names nobody.</span></td><td>Formats only</td><td>No</td></tr></tbody></table></div>
+<h2 style="font-size:1.25rem; margin-top:24px">Workflow JSON</h2><div class="form-group"><label>Workflow JSON</label><textarea class="form-control json-editor invalid" rows="14" aria-describedby="wf-err wf-help">{
+  &quot;version&quot;: 1,
+  &quot;initial_state&quot;: &quot;draft&quot;,
+  &quot;states&quot;: [
+    { &quot;key&quot;: &quot;draft&quot;, &quot;label&quot;: &quot;Draft&quot; },
+    { &quot;key&quot;: &quot;logged&quot;, &quot;label&quot;: &quot;Logged&quot;, &quot;terminal&quot;: true },
+    { &quot;key&quot;: &quot;cancelled&quot;, &quot;label&quot;: &quot;Cancelled&quot; }
+  ],
+  &quot;transitions&quot;: [
+    { &quot;key&quot;: &quot;log&quot;, &quot;from&quot;: &quot;draft&quot;, &quot;to&quot;: &quot;logged&quot;, &quot;actor&quot;: &quot;subject|creator&quot;, &quot;validation&quot;: &quot;all&quot; },
+    { &quot;key&quot;: &quot;cancel&quot;, &quot;from&quot;: &quot;draft&quot;, &quot;to&quot;: &quot;cancelled&quot;, &quot;actor&quot;: &quot;subject|field:topic&quot;, &quot;validation&quot;: &quot;draft&quot; }
+  ]
+}</textarea><div class="validation-message" id="wf-err">Transition 'cancel' actor names 'field:topic', but 'topic' is not a User field; a field: rule must name a User field.</div>
+<p class="field-help" id="wf-help">Kept as you typed it: a reload or a publish gives this text back, not a re-rendered line. <span class="wf-tag wf-tag--proposed">PROPOSED</span> <span class="wf-tag wf-tag--data">DATA</span></p></div></div></div></div></div></div>
+<div class="wf-col"><p class="wf-cap"><b>A4.2 · 1280 · 1.28</b> — corrected and saved; the words read the saved JSON <span class="wf-pin" aria-hidden="true">3</span></p>
+<div class="wf-frame wf-frame--1280 "><div class="wf-app">
+<div class="wf-side"><div class="wf-brand"><img src="/_blob/a89fec160a8a8c0b20116ccc3634e0bc" alt=""><span>Wombat</span></div>
+<div class="wf-role"><small>Acting as</small><strong>Institutional admin</strong></div>
+<ul class="wf-nav"><li>Home</li>
+<li class="wf-nav-group">Curriculum</li>
+<li class="wf-lit">Activity types</li>
+<li><span class="wf-bracket">‹the other Curriculum links›</span></li>
+<li class="wf-nav-group"><span class="wf-bracket">‹the other groups›</span></li>
+<li class="wf-nav-group" style="border-top: 1px solid var(--nav-divider); margin-top: 8px">My data rights</li></ul></div>
+<div class="wf-main"><div class="wf-top"><a href="#">Nolwazi Mbatha</a><button type="button" class="btn btn-outline btn-sm">Sign out</button></div>
+<div class="wf-art"><nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li><a href="#">Home</a><span class="breadcrumb-separator" aria-hidden="true">›</span></li><li><a href="#">Activity types</a><span class="breadcrumb-separator" aria-hidden="true">›</span></li><li class="breadcrumb-current"><span aria-current="page">KGK Teaching Session Log</span></li></ol></nav><div class="action-result"><div class="alert alert-success" role="status" tabindex="-1"><b>Draft saved.</b></div></div><div class="header-container"><div><h1>Edit KGK Teaching Session Log</h1><p class="page-subtitle">Kgosi Kgari Teaching Hospital · Institution</p></div><div class="actions-cell"><div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end"><button type="button" class="btn btn-primary ">Save draft</button><button type="button" class="btn btn-success ">Publish…</button><button type="button" class="btn btn-outline ">Discard draft…</button></div></div></div><div role="tablist" aria-label="Activity type" class="builder-tabs"><button type="button" role="tab" class="builder-tab" aria-selected="false">Details</button><button type="button" role="tab" class="builder-tab" aria-selected="false">Form</button><button type="button" role="tab" class="builder-tab" aria-selected="true">Workflow</button><button type="button" role="tab" class="builder-tab" aria-selected="false">Credit</button></div><h2 style="font-size:1.25rem">The workflow, in words</h2><ul class="state-line"><li><span class="badge badge-draft">Draft</span> where a new log starts</li><li><span class="badge badge-draft">Logged</span> final</li><li><span class="badge badge-draft">Cancelled</span></li></ul><div class="table-container"><table class="clinic-table rules-words"><caption>Moves, in words</caption>
+<thead><tr><th scope="col">Move</th><th scope="col">From</th><th scope="col">To</th><th scope="col">Who moves it</th><th scope="col">Checks</th><th scope="col">Note</th></tr></thead><tbody><tr><th scope="row">Log</th><td>Draft</td><td>Logged</td><td class="">The registrar, or whoever filed it</td><td>The whole form</td><td>No</td></tr><tr><th scope="row">Cancel</th><td>Draft</td><td>Cancelled</td><td class="">The registrar, or whoever filed it</td><td>Formats only</td><td>No</td></tr></tbody></table></div><h2 style="font-size:1.25rem; margin-top:24px">Workflow JSON</h2><div class="form-group"><label>Workflow JSON</label><textarea class="form-control json-editor" rows="14" aria-describedby="wf-err wf-help">{
+  &quot;version&quot;: 1,
+  &quot;initial_state&quot;: &quot;draft&quot;,
+  &quot;states&quot;: [
+    { &quot;key&quot;: &quot;draft&quot;, &quot;label&quot;: &quot;Draft&quot; },
+    { &quot;key&quot;: &quot;logged&quot;, &quot;label&quot;: &quot;Logged&quot;, &quot;terminal&quot;: true },
+    { &quot;key&quot;: &quot;cancelled&quot;, &quot;label&quot;: &quot;Cancelled&quot; }
+  ],
+  &quot;transitions&quot;: [
+    { &quot;key&quot;: &quot;log&quot;, &quot;from&quot;: &quot;draft&quot;, &quot;to&quot;: &quot;logged&quot;, &quot;actor&quot;: &quot;subject|creator&quot;, &quot;validation&quot;: &quot;all&quot; },
+    { &quot;key&quot;: &quot;cancel&quot;, &quot;from&quot;: &quot;draft&quot;, &quot;to&quot;: &quot;cancelled&quot;, &quot;actor&quot;: &quot;subject|creator&quot;, &quot;validation&quot;: &quot;draft&quot; }
+  ]
+}</textarea>
+<p class="field-help" id="wf-help">Kept as you typed it: a reload or a publish gives this text back, not a re-rendered line. <span class="wf-tag wf-tag--proposed">PROPOSED</span> <span class="wf-tag wf-tag--data">DATA</span></p></div></div></div></div></div></div>
+<div class="wf-col"><p class="wf-cap"><b>A4.3 · 1280 · 1.29</b> — a type that credits nothing, said in words with the one date rule it keeps <span class="wf-pin" aria-hidden="true">4</span></p>
+<div class="wf-frame wf-frame--1280 "><div class="wf-app">
+<div class="wf-side"><div class="wf-brand"><img src="/_blob/a89fec160a8a8c0b20116ccc3634e0bc" alt=""><span>Wombat</span></div>
+<div class="wf-role"><small>Acting as</small><strong>Institutional admin</strong></div>
+<ul class="wf-nav"><li>Home</li>
+<li class="wf-nav-group">Curriculum</li>
+<li class="wf-lit">Activity types</li>
+<li><span class="wf-bracket">‹the other Curriculum links›</span></li>
+<li class="wf-nav-group"><span class="wf-bracket">‹the other groups›</span></li>
+<li class="wf-nav-group" style="border-top: 1px solid var(--nav-divider); margin-top: 8px">My data rights</li></ul></div>
+<div class="wf-main"><div class="wf-top"><a href="#">Nolwazi Mbatha</a><button type="button" class="btn btn-outline btn-sm">Sign out</button></div>
+<div class="wf-art"><nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li><a href="#">Home</a><span class="breadcrumb-separator" aria-hidden="true">›</span></li><li><a href="#">Activity types</a><span class="breadcrumb-separator" aria-hidden="true">›</span></li><li class="breadcrumb-current"><span aria-current="page">KGK Teaching Session Log</span></li></ol></nav><div class="header-container"><div><h1>Edit KGK Teaching Session Log</h1><p class="page-subtitle">Kgosi Kgari Teaching Hospital · Institution</p></div><div class="actions-cell"><div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end"><button type="button" class="btn btn-primary ">Save draft</button><button type="button" class="btn btn-success ">Publish…</button><button type="button" class="btn btn-outline ">Discard draft…</button></div></div></div><div role="tablist" aria-label="Activity type" class="builder-tabs"><button type="button" role="tab" class="builder-tab" aria-selected="false">Details</button><button type="button" role="tab" class="builder-tab" aria-selected="false">Form</button><button type="button" role="tab" class="builder-tab" aria-selected="false">Workflow</button><button type="button" role="tab" class="builder-tab" aria-selected="true">Credit</button></div><h2 style="font-size:1.25rem">The credit rules, in words</h2><p style="margin:0 0 8px"><b>This type credits nothing.</b> A log is stamped with its EPA, which activity lists show, but it counts toward no curriculum item. Its only date rule: the encounter date may not be after today.</p><h2 style="font-size:1.25rem; margin-top:24px">Credit rules JSON</h2><div class="form-group"><label>Credit rules JSON</label><textarea class="form-control json-editor" rows="4" aria-describedby="wf-err wf-help">{&quot;counts_for&quot;: []}</textarea>
+<p class="field-help" id="wf-help">Kept as you typed it: a reload or a publish gives this text back, not a re-rendered line. <span class="wf-tag wf-tag--proposed">PROPOSED</span> <span class="wf-tag wf-tag--data">DATA</span></p></div></div></div></div></div></div>
+<div class="wf-col"><p class="wf-cap"><b>A4.4 · 390 · 1.28</b> — moves as blocks; the JSON wraps in its box, nothing sideways <span class="wf-pin" aria-hidden="true">5</span></p>
+<div class="wf-frame wf-frame--390 "><div class="wf-phonebar"><img src="/_blob/a89fec160a8a8c0b20116ccc3634e0bc" alt=""><span>Wombat</span><small>Acting as<br>Institutional admin</small><span class="wf-menu">Menu</span></div>
+<div class="wf-art--phone"><a class="wf-back" href="#">‹ Activity types</a><h1 style="font-size:1.375rem; margin:0 0 12px">Edit KGK Teaching Session Log</h1><div role="tablist" aria-label="Activity type" class="builder-tabs builder-tabs--phone"><button type="button" role="tab" class="builder-tab" aria-selected="false">Details</button><button type="button" role="tab" class="builder-tab" aria-selected="false">Form</button><button type="button" role="tab" class="builder-tab" aria-selected="true">Workflow<span class="tab-problem">1</span></button><button type="button" role="tab" class="builder-tab" aria-selected="false">Credit</button></div><h2 style="font-size:1.25rem">The workflow, in words</h2><ul class="state-line"><li><span class="badge badge-draft">Draft</span></li><li><span class="badge badge-draft">Logged</span> final</li><li><span class="badge badge-draft">Cancelled</span></li></ul>
+<div class="outline-section" style="padding:12px 16px;margin-bottom:8px"><p style="margin:0;font-weight:600">Log: Draft → Logged</p><p class="text-sm" style="margin:0">The registrar, or whoever filed it · checks the whole form · no note</p></div>
+<div class="outline-section" style="padding:12px 16px;margin-bottom:8px;box-shadow: inset 4px 0 0 var(--danger-color)"><p style="margin:0;font-weight:600">Cancel: Draft → Cancelled</p><p class="validation-message">‘topic’ (Topic) is not a User field, so it names nobody.</p></div><h2 style="font-size:1.25rem">Workflow JSON</h2><div class="form-group"><label>Workflow JSON</label><textarea class="form-control json-editor invalid" rows="18" aria-describedby="wf-err wf-help">{
+  &quot;version&quot;: 1,
+  &quot;initial_state&quot;: &quot;draft&quot;,
+  &quot;states&quot;: [
+    { &quot;key&quot;: &quot;draft&quot;, &quot;label&quot;: &quot;Draft&quot; },
+    { &quot;key&quot;: &quot;logged&quot;, &quot;label&quot;: &quot;Logged&quot;, &quot;terminal&quot;: true },
+    { &quot;key&quot;: &quot;cancelled&quot;, &quot;label&quot;: &quot;Cancelled&quot; }
+  ],
+  &quot;transitions&quot;: [
+    { &quot;key&quot;: &quot;log&quot;, &quot;from&quot;: &quot;draft&quot;, &quot;to&quot;: &quot;logged&quot;, &quot;actor&quot;: &quot;subject|creator&quot;, &quot;validation&quot;: &quot;all&quot; },
+    { &quot;key&quot;: &quot;cancel&quot;, &quot;from&quot;: &quot;draft&quot;, &quot;to&quot;: &quot;cancelled&quot;, &quot;actor&quot;: &quot;subject|field:topic&quot;, &quot;validation&quot;: &quot;draft&quot; }
+  ]
+}</textarea><div class="validation-message" id="wf-err">Transition 'cancel' actor names 'field:topic', but 'topic' is not a User field; a field: rule must name a User field.</div>
+<p class="field-help" id="wf-help">Kept as you typed it: a reload or a publish gives this text back, not a re-rendered line. <span class="wf-tag wf-tag--proposed">PROPOSED</span> <span class="wf-tag wf-tag--data">DATA</span></p></div></div></div></div>
+<div class="wf-col"><p class="wf-cap"><b>Notes</b></p><div class="wf-notes"><h2>A4 — workflow and credit</h2><ol><li><span class="wf-pin" aria-hidden="true">1</span> The words sit <b>above</b> the JSON (question 2: a table, not a diagram). The JSON stays the editor until T019-d and T019-e.</li><li><span class="wf-pin" aria-hidden="true">2</span> The refusal names the move in the summary (“Workflow, move Cancel:”) and marks the move’s Who cell; the sentence stays the shipped one. Mapping a refusal to its move is <span class="wf-tag wf-tag--data">DATA</span>.</li><li><span class="wf-pin" aria-hidden="true">3</span> The JSON is given back as typed after a save (today it returns as one line, keys reordered): the store keeps her text <span class="wf-tag wf-tag--proposed">PROPOSED</span> <span class="wf-tag wf-tag--data">DATA</span>.</li><li><span class="wf-pin" aria-hidden="true">4</span> “credits nothing” and its one date rule are said, not left to {"counts_for": []}. Mini-CEX’s directive read is on A2.4.</li><li><span class="wf-pin" aria-hidden="true">5</span> At 390 the moves stack; the textarea wraps (pre-wrap) rather than scroll the page.</li></ol></div></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 3700, "height": 4200}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

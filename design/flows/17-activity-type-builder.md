@@ -595,6 +595,8 @@ neither.
 Each with a recommendation. The canvas answers Q4–Q7 in its structures; Q1–Q3 and Q8–Q12 are the operator's, and **Q1,
 Q2 and Q8 are answered before round 1** (they decide what the structures draw and what the round may show as built).
 
+**Decided 2026-11-10:** the operator took Q1–Q12 as recommended (sent the round-1 ask and said "done").
+
 1. **Q1. (The operator's; the old brief's question 1; must be answered before round 1) The frame.** Today: four tabs
    (Metadata, Form, Workflow, Credit), opening on Form, the preview beside Form only. *Recommendation:* round 1 draws
    three structures with their step counts: (a) the tabs kept, as a real tabs pattern (`role="tablist"`,

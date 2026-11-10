@@ -1,0 +1,153 @@
+/* f17r1.css — flow 17, round 1 (wireframes). Loaded after ds/wombat/tokens.css and ds/wombat/components/bundle.css.
+   Every rule names its row on the Spec board's class table: W* rows are the wireframe sheet only (never shipped);
+   N* rows are NEW components a structure proposes (A, B or C says which). No colour outside the tokens. */
+
+/* W1 — the sheet: a board's ground and type */
+.wf-sheet { background: var(--header-bg); box-sizing: border-box; color: var(--text-color); font-family: var(--font-body); line-height: 1.5; padding: var(--space-2xl); }
+/* W2 — the sheet's own title strip (not a page heading: a <p>, so each frame keeps its one h1) */
+.wf-sheet-title { font-size: 2rem; font-weight: 700; line-height: 1.2; margin: 0; }
+.wf-sheet-sub { color: var(--muted-text); font-size: 1.05rem; margin: var(--space-xs) 0 var(--space-xl); max-width: 90rem; }
+/* W3 — frames in a row, notes beside them */
+.wf-frames { align-items: flex-start; display: flex; flex-wrap: wrap; gap: var(--space-2xl); }
+.wf-col { display: flex; flex-direction: column; gap: var(--space-sm); }
+/* W4 — one frame: a viewport-wide box at 1280 or 390 */
+.wf-frame { background: var(--background-color); border: 1px solid var(--input-border); box-shadow: var(--shadow-raised); overflow: hidden; position: relative; }
+.wf-frame--1280 { width: 1280px; }
+.wf-frame--390 { width: 390px; }
+.wf-frame--dialog { background: var(--scrim); }
+/* W5 — a frame's caption: width, person, step, state */
+.wf-cap { color: var(--text-color); font-size: 0.95rem; margin: 0; max-width: 1280px; }
+.wf-cap b { font-weight: 700; }
+.wf-cap .wf-tag { margin-left: var(--space-xs); }
+/* W6 — the shell, drawn as a stand-in (flow 01 built it; not redrawn here) */
+.wf-app { display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); min-height: 100%; }
+.wf-side { background: linear-gradient(180deg, var(--sidebar-gradient-start), var(--sidebar-gradient-end) 70%); color: var(--nav-text); font-size: 0.9375rem; }
+.wf-brand { align-items: center; background: var(--nav-brand-bg); color: var(--nav-text-strong); display: flex; gap: 10px; height: 56px; padding: 0 var(--space-md); }
+.wf-brand img { height: 32px; width: 32px; }
+.wf-brand span { font-family: var(--font-display); font-size: 1.6rem; font-variation-settings: var(--font-display-settings); font-weight: 500; line-height: 1; }
+.wf-role { border-bottom: 1px solid var(--nav-divider); padding: 10px var(--space-md) 12px; }
+.wf-role small { color: var(--nav-group-label); display: block; font-size: 0.8125rem; font-weight: 600; }
+.wf-role strong { color: var(--nav-text-strong); font-size: 1.0625rem; }
+.wf-nav { list-style: none; margin: 0; padding: var(--space-sm) 0; }
+.wf-nav li { padding: 6px var(--space-md); }
+.wf-nav .wf-nav-group { color: var(--nav-group-label); font-size: 0.8125rem; font-weight: 600; padding-top: var(--space-md); }
+.wf-nav .wf-lit { background: var(--nav-active-bg); border-left: 3px solid var(--nav-text-strong); color: var(--nav-text-strong); font-weight: 600; }
+.wf-main { min-width: 0; }
+.wf-top { align-items: center; background: var(--surface-color); border-bottom: 1px solid var(--border-color); display: flex; gap: var(--space-md); height: 56px; justify-content: flex-end; padding: 0 var(--space-lg); }
+.wf-top a { color: var(--text-color); }
+.wf-art { padding: var(--space-lg) var(--space-lg) var(--space-2xl) var(--space-xl); }
+/* W7 — the phone bar (below 641px) */
+.wf-phonebar { align-items: center; background: var(--sidebar-gradient-start); color: var(--nav-text-strong); display: flex; gap: 10px; height: 56px; padding: 0 var(--space-sm) 0 var(--space-md); }
+.wf-phonebar img { height: 28px; width: 28px; }
+.wf-phonebar span { font-family: var(--font-display); font-size: 1.4rem; font-variation-settings: var(--font-display-settings); font-weight: 500; }
+.wf-phonebar small { color: var(--nav-group-label); flex: 1; font-size: 0.8125rem; font-weight: 600; text-align: right; }
+.wf-phonebar .wf-menu { border: 1px solid var(--nav-group-label); border-radius: var(--radius-md); font-weight: 600; min-height: 44px; padding: 0 12px; display: inline-flex; align-items: center; }
+.wf-art--phone { padding: var(--space-md) var(--space-md) var(--space-2xl); }
+.wf-back { align-items: center; display: inline-flex; font-weight: 600; min-height: 44px; }
+/* W8 — numbered pins and the notes card that explains them */
+.wf-pin { align-items: center; background: var(--primary-color); border-radius: 50%; color: var(--on-fill); display: inline-flex; flex: none; font-size: 0.75rem; font-weight: 700; height: 22px; justify-content: center; margin: 0 var(--space-xs); vertical-align: middle; width: 22px; }
+.wf-notes { background: var(--surface-color); border: 1px solid var(--input-border); border-radius: var(--radius-lg); box-sizing: border-box; font-size: 0.95rem; padding: var(--space-lg); width: 460px; }
+.wf-notes h2 { font-size: 1.25rem; margin: 0 0 var(--space-sm); }
+.wf-notes h3 { font-size: 1.05rem; margin: var(--space-md) 0 var(--space-xs); }
+.wf-notes ol, .wf-notes ul { margin: 0; padding-left: 1.25rem; }
+.wf-notes li { margin-bottom: var(--space-sm); }
+.wf-notes p { margin: 0 0 var(--space-sm); }
+/* W9 — the live preview's stand-in: flow 03's ActivityForm is placed, never redrawn; its fields are sketched inside */
+.wf-renderer { border: 2px dashed var(--input-border); border-radius: var(--radius-lg); padding: var(--space-md); }
+.wf-renderer-label { color: var(--muted-text); font-size: 0.85rem; font-weight: 600; margin: 0 0 var(--space-sm); }
+.wf-sketch-field { margin-bottom: var(--space-md); }
+.wf-sketch-field label { display: block; margin-bottom: var(--space-xs); }
+.wf-sketch-input { background: var(--surface-color); border: 1px solid var(--input-border); border-radius: var(--radius-md); color: var(--muted-text); height: 38px; box-sizing: border-box; padding: 6px 12px; }
+.wf-sketch-input--tall { height: 76px; }
+/* W10 — the 800px fold and a cut in a long page */
+.wf-fold { border-top: 2px dashed var(--warning-color); color: var(--warning-color); font-size: 0.75rem; font-weight: 700; left: 0; padding: 0 var(--space-sm); position: absolute; right: 0; }
+.wf-cut { border-top: 2px dotted var(--input-border); color: var(--muted-text); font-size: 0.85rem; margin: var(--space-lg) 0; padding-top: var(--space-xs); text-align: center; }
+/* W11 — the round's three marks: NEW, PROPOSED, DATA, and a bracketed unknown */
+.wf-tag { border: 1px solid var(--input-border); border-radius: var(--radius-pill); display: inline-block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em; line-height: 1.4; padding: 0 0.5rem; vertical-align: middle; white-space: nowrap; }
+.wf-tag--new { background: var(--info-bg); border-color: var(--secondary-color); }
+.wf-tag--proposed { background: var(--warning-bg); border-color: var(--warning-color); }
+.wf-tag--data { background: var(--success-bg); border-color: var(--success-color); }
+.wf-tag--later { background: var(--header-bg); }
+.wf-bracket { color: var(--muted-text); font-style: italic; }
+/* W12 — a spec or steps board's tables and grids */
+.wf-doc { background: var(--surface-color); border: 1px solid var(--input-border); border-radius: var(--radius-lg); box-sizing: border-box; padding: var(--space-xl); }
+.wf-doc h2 { font-size: 1.25rem; margin: var(--space-xl) 0 var(--space-sm); }
+.wf-doc h2:first-child { margin-top: 0; }
+.wf-doc h3 { font-size: 1.05rem; margin: var(--space-lg) 0 var(--space-xs); }
+.wf-doc p, .wf-doc li { max-width: 80rem; }
+.wf-doc table { border-collapse: collapse; font-size: 0.92rem; width: 100%; }
+.wf-doc th, .wf-doc td { border: 1px solid var(--border-color); padding: 6px 10px; text-align: left; vertical-align: top; }
+.wf-doc thead th { background: var(--header-bg); }
+.wf-doc caption { font-weight: 600; padding: var(--space-xs) 0; text-align: left; }
+.wf-grid2 { display: grid; gap: var(--space-xl); grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.wf-grid3 { display: grid; gap: var(--space-lg); grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.wf-arrived { background: var(--warning-bg); border-left: 4px solid var(--warning-color); border-radius: var(--radius-md); padding: var(--space-md) var(--space-lg); }
+
+/* ───────────── NEW components the structures propose (Spec rows N1–N12) ───────────── */
+
+/* N1 (A) — the builder's tabs as the tabs pattern (role="tablist", aria-selected): an underline, one row at every width */
+.builder-tabs { border-bottom: 1px solid var(--input-border); display: grid; grid-auto-columns: minmax(0, max-content); grid-auto-flow: column; gap: var(--space-xs); margin-bottom: var(--space-lg); }
+.builder-tab { background: none; border: 0; border-bottom: 3px solid transparent; color: var(--text-color); cursor: pointer; font-weight: 600; min-height: 44px; padding: 0 var(--space-md); white-space: nowrap; }
+.builder-tab[aria-selected="true"] { border-bottom-color: var(--secondary-color); color: var(--primary-color); }
+.builder-tab .tab-problem { background: var(--danger-bg); border: 1px solid var(--danger-color); border-radius: var(--radius-pill); font-size: 0.75rem; margin-left: 6px; padding: 0 6px; }
+.builder-tabs--phone { grid-auto-columns: minmax(0, 1fr); }
+.builder-tabs--phone .builder-tab { padding: 0 var(--space-xs); }
+
+/* N2 (A, B, C) — the form's outline: a section head over its field rows; a row is the label, then type and key, then actions */
+.form-outline { display: flex; flex-direction: column; gap: var(--space-md); }
+.outline-section { border: 1px solid var(--border-color); border-radius: var(--radius-lg); background: var(--surface-color); }
+.outline-section-head { align-items: center; background: var(--header-bg); border-bottom: 1px solid var(--border-color); border-radius: var(--radius-lg) var(--radius-lg) 0 0; display: flex; flex-wrap: wrap; gap: var(--space-sm); justify-content: space-between; padding: var(--space-sm) var(--space-md); }
+.outline-section-head h3 { font-size: 1rem; margin: 0; }
+.field-row { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs) var(--space-md); grid-template-columns: minmax(0, 1fr) auto; padding: var(--space-sm) var(--space-md); }
+.field-row:last-child { border-bottom: 0; }
+.field-row-label { font-weight: 600; overflow-wrap: anywhere; }
+.field-row-meta { color: var(--muted-text); font-size: 0.85rem; grid-column: 1; }
+.field-row-actions { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-xs); grid-column: 2; grid-row: 1 / span 2; justify-content: flex-end; }
+.field-row.is-editing { box-shadow: inset 4px 0 0 var(--secondary-color); background: var(--info-bg); }
+.field-row.is-refused { box-shadow: inset 4px 0 0 var(--danger-color); }
+.field-row--narrow { grid-template-columns: minmax(0, 1fr); }
+.field-row--narrow .field-row-actions { grid-column: 1; grid-row: auto; justify-content: flex-start; }
+.field-row--narrow .field-row-actions .btn { min-height: 44px; }
+/* N3 (A) — a field's editor opened under its row: the row's stripe continues down it */
+.field-editor-inplace { border-bottom: 1px solid var(--border-color); box-shadow: inset 4px 0 0 var(--secondary-color); padding: var(--space-md) var(--space-md) var(--space-md) var(--space-lg); }
+/* N4 (B, C) — a field's editor in a panel beside the outline (C) or a dialog (B): the same fields, a heading naming the field */
+.field-editor-panel { background: var(--surface-color); border: 1px solid var(--input-border); border-left: 4px solid var(--secondary-color); border-radius: var(--radius-lg); padding: var(--space-lg); }
+.field-editor-panel h3 { font-size: 1.1rem; margin: 0 0 var(--space-md); }
+/* N5 (A, B, C) — the workflow and credit rules read in words, beside or above the JSON that stays the editor */
+.rules-words caption { caption-side: top; }
+.rules-words td.is-refused { box-shadow: inset 4px 0 0 var(--danger-color); }
+.json-editor { font-family: var(--font-mono); font-size: 0.875rem; min-height: 16rem; white-space: pre; width: 100%; box-sizing: border-box; }
+.state-line { display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-sm); list-style: none; margin: 0 0 var(--space-md); padding: 0; }
+/* N6 (A, B, C) — the version strip: what is published, by whom, what the draft is */
+.version-strip { align-items: baseline; display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-lg); margin: 0 0 var(--space-lg); }
+.version-strip dt { color: var(--muted-text); font-weight: 500; }
+.version-strip div { display: flex; gap: var(--space-sm); }
+.version-strip dd { margin: 0; }
+/* N7 (A, B, C) — Publish's panel: the reason in text when it is off, the warnings and what stays pinned when on */
+.publish-panel { display: flex; flex-direction: column; gap: var(--space-md); }
+.publish-reason { color: var(--text-color); margin: 0; }
+.publish-pinned { background: var(--info-bg); border-left: 4px solid var(--secondary-color); border-radius: var(--radius-md); margin: 0; padding: 12px var(--space-md); }
+/* N8 (B) — the one page's contents: links that move the focus to each h2 (never a bare fragment href) */
+.page-contents { display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-md); list-style: none; margin: 0 0 var(--space-lg); padding: 0; }
+.page-contents a { align-items: center; display: inline-flex; font-weight: 600; min-height: 32px; }
+.page-contents--phone { flex-direction: column; gap: 0; }
+.page-contents--phone a { min-height: 44px; }
+/* N9 (B) — the preview's column beside Form, held in view while the outline scrolls */
+.builder-split { display: grid; gap: var(--space-lg); grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+.builder-split > .builder-preview { position: sticky; top: 72px; }
+/* N10 (C) — the stepped path: five numbered steps, the current one marked (aria-current="step") */
+.stepper { counter-reset: step; display: grid; gap: var(--space-sm); grid-template-columns: repeat(5, minmax(0, 1fr)); list-style: none; margin: 0 0 var(--space-lg); padding: 0; }
+.stepper li { border-top: 4px solid var(--border-color); color: var(--muted-text); font-size: 0.95rem; padding-top: var(--space-xs); }
+.stepper li.is-done { border-top-color: var(--success-color); color: var(--text-color); }
+.stepper li[aria-current="step"] { border-top-color: var(--secondary-color); color: var(--text-color); font-weight: 700; }
+.stepper a { display: inline-flex; min-height: 32px; align-items: center; }
+.stepper-phone { align-items: center; display: flex; justify-content: space-between; margin-bottom: var(--space-md); }
+/* N11 (C) — the outline and the open field's panel side by side */
+.builder-master-detail { display: grid; gap: var(--space-lg); grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: start; }
+/* N12 (C) — the workflow drawn as states and moves (a figure; the table under it is the text of record) */
+.state-diagram { align-items: center; display: flex; flex-wrap: wrap; gap: var(--space-sm); margin: 0 0 var(--space-md); }
+.state-box { background: var(--surface-color); border: 2px solid var(--input-border); border-radius: var(--radius-md); font-weight: 600; padding: 6px 14px; }
+.state-box.is-initial { border-color: var(--secondary-color); }
+.state-box.is-final { border-style: double; border-width: 4px; }
+.state-arrow { color: var(--muted-text); font-size: 0.85rem; text-align: center; }
+.state-arrow::after { content: " →"; }
