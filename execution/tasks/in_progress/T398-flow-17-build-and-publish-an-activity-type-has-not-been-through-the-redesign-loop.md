@@ -154,3 +154,6 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   `wombat_scenario_t398_sweep` kept. **Lane W** (`60634b21`, merged `68e127d8`): 1.24–1.31, 6.14a, A.7.9, A.7.14,
   states.md :902–:920 and 14 new rows; verbatim 425/0, completeness exit 0, ScenarioRunbookTests 49/0. Two Sonnet
   reviews running (code; pages and runbook).
+- **2026-11-10, build reviewed** (two Sonnet; merged `build-review.md`, `ffe7c9f8` on `t398`): code 1 M (the preview's
+  EPAs leak another institution's own EPAs to a reader; checked), 3 S, 5 N; pages 0 M, 4 S, 12 N, 31 NEW word groups;
+  runbook and counts hold. Waiting: the operator's F1 (Discard on a system-managed type's leftover draft); then one fix pass.
