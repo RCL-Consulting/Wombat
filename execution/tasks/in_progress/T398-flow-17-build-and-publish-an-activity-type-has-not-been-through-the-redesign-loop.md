@@ -181,3 +181,7 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
 - **2026-11-10, act 2 replayed** (one Opus agent, `109bf8e2`; dump `scenario-t398-post-act2`): 44/44 clean; outcome SQL
   as expected; 2.31 on a fresh session (Claude Code stopped the held tab for low memory); 2.42 offers KGK's type.
   Baseline missing 0. Act 3 running.
+- **2026-11-10, act 3 replayed** (one Opus agent, `dc1017fb`; dump `scenario-t398-post-act3`): 60 steps, 57 clean;
+  known Gaps 3.55 T286, 3.56 T286 and T277; outcome SQL 5/5; 3.18–3.19 file KGK's type as before. Handed back once
+  during 3.43's MSF hour, resumed at 18:20 UTC. 3.57's audit count (174) is read from 17:00 UTC, missing the act's
+  first two minutes. Act 4 running.
