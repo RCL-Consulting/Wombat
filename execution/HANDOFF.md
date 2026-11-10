@@ -2,6 +2,18 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
+## Session 2026-11-09/10 (Opus): T398, flow 17, started (steps 1–5, round 1)
+
+The operator said "flow 17", then "Done" (sent the round-1 ask; taken as "yes" to brief § 6 Q1–Q12 as recommended).
+- **T398 in progress.** Canvas "Wombat 17" https://claude.ai/artifact/AQNS1QZDaUNizG7dzKPSGs (design system v49, mark
+  `/_blob/a89fec160a8a8c0b20116ccc3634e0bc`). Brief restated and staged (`7d8ce207`); round 1 (17 boards, `f17r1.css`)
+  saved in `design/flows/17-activity-type-builder/round-1/` (`465480c7`): A tabs, B one page, C a stepped path.
+- **Running:** one Opus agent assessing round 1 → `round-1-assessment.md` (it commits). If the session ended before it
+  reported, check `git log` for "flow 17 round 1 assessed"; else re-run it as flow 16's assessment was run.
+- **Next:** bring the operator the assessment's picks, must-fixes and Q13+; then round 2 ask (flow 16's `round-2-ask.txt`).
+- **Trap:** the boards keep the workflow JSON "as typed"; jsonb re-renders it, so that is a stored text column (DATA).
+- **Not pushed:** master ahead of origin with flows 16–17. Ask before pushing.
+
 ## Session 2026-11-09 (Opus): T394 steps 8 and 9; T394 done
 
 The operator asked "what is next??", then "yes" to steps 8 and 9.
