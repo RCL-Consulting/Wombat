@@ -203,3 +203,10 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   ~22:06 SAST when it ended (act 6's agent restarted it; act A's outcome SQL still matched); two instances were then on
   the bin. Both stopped by id; master `1a18774f` published to :5180 and started detached (one instance). States pass 1
   running (it also re-takes 1.25's captures).
+- **2026-11-10, states pass 1** (one Opus agent; rows in `277e4a78`): 16 rows, 13 as written, 3 corrected in words
+  (--no-match: the card takes the focus); 1.25 re-checked after `c9742a18` (the scale by its name; T271 no longer
+  occurs). Scratch `_s10`, `_s11` kept (:5181 stopped by id). **One flow 17 fault, fixed here (`277e4a78`):** at 1280
+  "Not published" and "Saved 2026-11-10" wrapped with room beside them; Published, Draft and Status take
+  `.col-fit--wide`, and the list moves to the 1150px stack (as a table it needs 779px, 62px over at 1025). Measured on
+  :5180 (devadmin, 24 rows): stacked to 1150, a table from 1151 with 64px spare, every one-word cell one line; Web 4811
+  green; republished to :5180 (stopped by id, started detached). States pass 2 running.
