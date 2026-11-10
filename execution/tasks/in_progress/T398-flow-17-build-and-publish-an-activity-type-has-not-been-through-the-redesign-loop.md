@@ -190,3 +190,8 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   not stable); outcome SQL 6/6; Q20 holds. Baseline missing 0. Act 5 running.
 - **2026-11-10, act 5 replayed** (one Opus agent, `1473a7a5`; dump `scenario-t398-post-act5`): 29 steps, 28 clean; known
   Gap 5.28 T382; 5.8's Present order as the Expect (T370). Act 6 running (flow 17's 6.14a).
+- **2026-11-10, act 6 replayed** (one Opus agent, `cbc95748`; dump `scenario-t398-post-act6`): 42/42 clean; outcome SQL
+  14/14; **6.14a as built**: Kruger's 10 CPSA rows first with Edit, msf_cpsa and learner_feedback_cpsa View with their
+  release lines, the MSF type read-only, the new type's Scope radios, "Draft saved." focused at /24, Mbatha
+  "Activity type unavailable"; T291 item 3 and T334 no longer occur. Kruger's list at 1280: every name one line; 1025
+  spare 55/60px; builder 900–1150 clean. The app restarted once (6.2, by id). Act A running.
