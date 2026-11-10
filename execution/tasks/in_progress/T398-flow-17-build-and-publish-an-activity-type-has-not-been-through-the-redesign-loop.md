@@ -185,3 +185,6 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   known Gaps 3.55 T286, 3.56 T286 and T277; outcome SQL 5/5; 3.18–3.19 file KGK's type as before. Handed back once
   during 3.43's MSF hour, resumed at 18:20 UTC. 3.57's audit count (174) is read from 17:00 UTC, missing the act's
   first two minutes. Act 4 running.
+- **2026-11-10, act 4 replayed** (one Opus agent, `729db82b`; dump `scenario-t398-post-act4`): 50 steps, 48 clean;
+  known Gaps 4.2 T365, 4.27 T320; 4.25/4.29/4.41/4.42 now clean (the Present order reads as the Expects; T370 says it is
+  not stable); outcome SQL 6/6; Q20 holds. Baseline missing 0. Act 5 running.
