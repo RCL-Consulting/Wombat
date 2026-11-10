@@ -106,3 +106,7 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   bodies, the details stay; Q15 unticking Active on a published type asks first; Q16 Publish saves first. The 29
   captures and nine seeds published into the canvas as project files under `project/ref/` (version 7). Round 2's ask:
   one Opus agent → `round-2-ask.txt`.
+- **2026-11-10, round 2's ask** (one Opus agent, `c73fbcf4`; capture count corrected here): `round-2-ask.txt`, 941
+  lines; A at full fidelity, Publish a fifth writer-only tab, ~65 states / ~145 boards (R2-A list 12, R2-B read 11,
+  R2-C form 21, R2-D workflow/credit 5, R2-E publish/discard/deactivate 15); T1–T24 settled provisionally for round 2's
+  review; readings to confirm: a reader sees no JSON (Q2), the Publish tab as part of the pick (M5).

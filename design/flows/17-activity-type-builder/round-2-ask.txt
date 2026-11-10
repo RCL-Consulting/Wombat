@@ -52,7 +52,7 @@ THE REFERENCE FILES ARE THIS CANVAS'S OWN PROJECT FILES. Round 1's Spec said, fi
     act-6/6.14a-3-new-type-scope.png, act-6/6.14a-6-list-with-draft.png, act-A/A.7.9-6-builder-390.png,
     act-A/A.7.14-6-builder-publish.png, states/activity-type-edit--discarded.png, states/activity-type-edit--loading.png,
     states/activity-type-edit--not-found.png, states/activity-type-edit--publish-warnings.png,
-    states/activity-types-list--loading.png. That is 30 names; 29 were reported uploaded, so one may be missing: name it.
+    states/activity-types-list--loading.png. That is 30 names, all uploaded: say if any will not open.
   - The nine seed files, under project/ref/seeds/: mini_cex_cpsa/, reflective_exercise_cpsa/ and teaching_session/, each
     schema.json, workflow.json and credit.json. msf_cpsa's and learner_feedback_cpsa's forms are not among them: § FIXTURES
     pastes them.
@@ -754,7 +754,7 @@ CLASSES (name each on the Spec's class table; every other class a board uses is 
     again), clipboard-list (Activity types in the menu, as built). No icon on a row action.
 
 SPEC BOARD, "R2-0-spec" (more boards "R2-0-spec-2", … if it runs long):
-  - FIRST: which reference files you opened under project/ref/ (list them), which you could not read, and which of the
+  - FIRST: which reference files you opened under project/ref/ (list them), and which you could not read, said plainly.
     30 capture names is missing, said plainly.
   - The decisions in one table (Q1–Q16), each with the boards that draw it; then M1–M7, S1–S14, N1–N12 and T1–T24, each
     with its board; which boards are Illustrations.
