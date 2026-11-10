@@ -145,3 +145,7 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   rule (one test inverted on purpose), DTO members, refusal shape, scale seed keys, CatalogueLinks, ActivityTypeWords,
   read-out stubs, C3 in seven lists. Suites 836/4411/1035/52/4675/530 → 840/4419/1035/52/4703/530, 0 warnings, no
   migration. Lanes A, B, C cut from `08d1bbda` and running.
+- **2026-11-10, lanes merged** on `t398` (A `562aae67` `ab9ed40d`; B `69653e7f`; C `1778a84e` `599f3841`; conflicts: the
+  builder page taken from C, DESIGN.md B's and C's lines; one fix, C's unreachable fallback places). Build 0 warnings;
+  suites 895/4459/1035/52/4806/532. The sweep running (one Opus agent, scratch `wombat_scenario_t398_sweep`). Lane
+  notes for W and § 5 in the scratchpad `b398/lane-{a,b,c}.md`.
