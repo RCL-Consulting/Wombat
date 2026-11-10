@@ -13,9 +13,10 @@ Q13–Q16; Q17–Q20; round 3's two; the build's P1–P2; F1).
   Learner Feedback read-only; F1: a leftover draft may be discarded).
 - **For review:** T399 proposed (P1: the other pages' `RefusalText.Of`); the lanes' departures and 32 NEW word groups
   (`build-contracts.md` § 5), accepted by the reviews.
-- **Next:** step 7, the replay, on the operator's word (T398's last Note lists what it must check); then steps 8–9.
+- **Step 7 started** ("push and then proceed"): pushed `399a99be`; `wombat_scenario_t398` on :5180; the replay brief
+  being written (scratch `g398`); then acts 1–6, A and two states passes, one agent each. Then steps 8–9.
 - **Environment:** scratch DB `wombat_scenario_t398_sweep` kept; branches and worktrees `t398*` kept.
-- **Not pushed:** master ahead of origin with flows 16–17. Ask before pushing.
+- **Pushed** 2026-11-10 (`399a99be`).
 
 ## Session 2026-11-09 (Opus): T394 steps 8 and 9; T394 done
 

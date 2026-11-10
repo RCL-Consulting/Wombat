@@ -165,3 +165,6 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   For the replay: the list's 1280 columns and 1025 spare after the single action column (inferred); the two new
   states rows (an Active-only save; F1 needs a draft on `msf_cpsa` by SQL); Details/Credit at 900–1150, a real refusal,
   Kruger and devadmin on the builder (never swept). Next: step 7 on the operator's word.
+- **2026-11-10, step 7 started** (the operator: "push and then proceed"): master pushed (`399a99be`). Fresh
+  `wombat_scenario_t398`, published from master `399a99be`, the replay app on :5180 (migrated and seeded at start). One
+  Opus agent writes `replay-brief.md` and the act prompts (scratch `g398`); then one agent per act, then two states passes.
