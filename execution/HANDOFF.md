@@ -9,7 +9,7 @@ The operator said "flow 17", then "Done" (sent the round-1 ask; taken as "yes" t
   `/_blob/a89fec160a8a8c0b20116ccc3634e0bc`). Brief restated and staged (`7d8ce207`); round 1 (17 boards, `f17r1.css`)
   saved in `design/flows/17-activity-type-builder/round-1/` (`465480c7`): A tabs, B one page, C a stepped path.
 - **Round 1 assessed** (`ab13dd3d`): pick A; M1–M7; Q13–Q16 put to the operator. Captures never reached the canvas.
-- **Picks taken** ("yes": A, Q13–Q16); captures and seeds now in the canvas at `project/ref/`. Round-2 ask being written (one Opus agent, commits `round-2-ask.txt`); then the operator sends it and says "done".
+- **Picks taken** ("yes": A, Q13–Q16); captures and seeds now in the canvas (its ref folder). Round-2 ask being written (one Opus agent, commits `round-2-ask.txt`); then the operator sends it and says "done".
 - **Trap:** the boards keep the workflow JSON "as typed"; jsonb re-renders it, so that is a stored text column (DATA).
 - **Not pushed:** master ahead of origin with flows 16–17. Ask before pushing.
 
