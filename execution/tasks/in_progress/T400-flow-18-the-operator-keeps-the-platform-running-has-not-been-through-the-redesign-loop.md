@@ -130,3 +130,11 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
   refusal's words; no address or body) persisted in a small table pruned by the retention job, the 24 hours read from it,
   "Nothing sent since ‹time›" for the empty state; T1–T24 (Q6–Q12 and words) confirmed as drawn. Round 3's ask: one Opus
   agent.
+- **2026-11-11, round 3's ask** (one Opus agent, `62f0c352`; `round-3-ask.txt`, 509 lines): 57 items (M1–M5, K2–K20,
+  C3–C13, S1–S10, N1–N7, Q18, T1–T24, A1–A3); ~128 boards (120 redrawn, R3-H12 new for Q18's "Nothing sent since", the
+  Spec, Steps and check). Wombat 18 holds 204 boards, so a new canvas: "Wombat 18 · Round 3"
+  https://claude.ai/artifact/CWTWqELyB63LfwvP7cgyJV, created here with design system v52 (tokens.css by hand), the mark
+  `/_blob/c6a099e64c4d721c4870011edee399ca` (filled into the ask), `project/ref/baseline/` and round 2's 171 boards as
+  `project/r2/R2-….ref.html` with `f18r2.css`. Provisional (PROPOSED): Q18's details (an `EmailOutcome` table written by
+  both hosts, 90 days kept by scheduled-job-run-retention, "Not read" for Mail when the database is down), and words and
+  markup for K2–K17, S1, S4. Kabelo Sithole's role checked (README.md:139). Waiting: the operator sends it.

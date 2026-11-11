@@ -13,7 +13,7 @@ there; then the check, Spec and Steps boards WHOLE. R2 boards not listed stand w
 reviews found them right, and the Spec says which they are. Change what the items say; draw nothing they do not ask for.
 The design system is Wombat v52 (1794377277-5687, namespace wombat) as installed on this canvas (ds/wombat/tokens.css and
 ds/wombat/components/bundle.css, with its three fonts): keep these files in the project so the saved round renders. The
-brand mark is at ‹MARK_URL› (this canvas's own copy): use it, never a drawn disc, and never round 2's
+brand mark is at /_blob/c6a099e64c4d721c4870011edee399ca (this canvas's own copy): use it, never a drawn disc, and never round 2's
 /_blob/b3b9ce265597292edc272896bd70a693. Every person, institution, job, key, count, time, id and address stays as round
 2 drew it unless an item below changes it: three reviews checked them against the code, the runbook and the T398 replay
 and found them true. Use FIXTURES only and invent nothing; where a value is not given, write a bracket ‹…›, never as a
@@ -506,4 +506,4 @@ CHECK BEFORE YOU STOP: the check board first, saying which reference files opene
   aria-describedby=""; no bracket as a control's value; no id holding a bracket or a space; every 390 control 44px;
   nothing scrolls sideways at 1280, 768 or 390 but the payload's region; no gendered pronoun on any board, annotations
   included; every bracket ‹…› still a bracket, never filled from memory; every board's 390 and 768 twin carrying the same
-  words as its 1280 board; f18r3.css saved as a project file; the mark from ‹MARK_URL›.
+  words as its 1280 board; f18r3.css saved as a project file; the mark from /_blob/c6a099e64c4d721c4870011edee399ca.
