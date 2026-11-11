@@ -1,0 +1,153 @@
+/* Wombat 18 — f18r2.css, round 2 of flow 18 (structure A at fidelity, and screens 3–5). Linked after
+   ds/wombat/tokens.css and ds/wombat/components/bundle.css. Two kinds of rule and nothing else:
+   PART 1 (.cv-*, rows K1–K6): the canvas's own, never shipped.
+   PART 2 (rows R1, R2, C1): the shipped rules this round adds or changes. Every colour is a token; every length is on
+   the spacing scale or names its reason. No new token, badge tint or icon. */
+
+/* ══ PART 1 — the canvas only (never ships) ═══════════════════════════════════════════════════════════════════════ */
+
+/* K1. The board's chips: its id and state, and the marks Illustration / NEW / PROPOSED / DATA. They wrap. */
+.cv-chips { display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-sm); margin: 0 0 var(--space-md); }
+.cv-chip {
+  background: var(--primary-color);
+  border-radius: var(--radius-sm);
+  color: var(--on-fill);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.4;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  padding: 2px var(--space-sm);
+}
+.cv-chip--illus { background: var(--warning-color); }
+.cv-chip--new { background: var(--secondary-color); }
+.cv-chip--proposed { background: var(--surface-color); border: 1px solid var(--warning-color); color: var(--text-color); }
+.cv-chip--data { background: var(--surface-color); border: 1px solid var(--danger-color); color: var(--text-color); }
+
+/* K2. The notes card at a board's foot: where the focus lands, what the board measures, what it leaves out. */
+.cv-note {
+  background: var(--info-bg);
+  border: 1px dashed var(--secondary-color);
+  border-radius: var(--radius-md);
+  color: var(--text-color);
+  font-size: 0.85rem;
+  margin: var(--space-xl) 0 0;
+  padding: var(--space-sm) var(--space-md);
+}
+.cv-note p { margin: 0 0 var(--space-xs); }
+.cv-note p:last-child { margin: 0; }
+
+/* K3. Where the focus lands: a dashed ring and a "Focus" tag, drawn on the board only. */
+.cv-focus { outline: 2px dashed var(--focus-ring); outline-offset: 3px; position: relative; }
+.cv-focus::after {
+  background: var(--focus-ring);
+  border-radius: var(--radius-sm);
+  color: var(--on-fill);
+  content: "Focus";
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.4;
+  padding: 0 var(--space-xs);
+  position: absolute;
+  right: -3px;
+  top: -1.3rem;
+}
+
+/* K4. A ConfirmDialog drawn open: the backdrop as a layer, the dialog over the page (the board cannot open it modal). */
+.cv-scrim { background: var(--scrim); inset: 0; position: fixed; z-index: 20; }
+.cv-dialog { left: 50%; margin: 0; position: fixed; top: 9rem; transform: translateX(-50%); z-index: 21; }
+
+/* K5. The Spec and Steps boards: a plain column of headings, paragraphs and ruled tables. */
+.cv-sheet { background: var(--background-color); box-sizing: border-box; color: var(--text-color); min-height: 100vh; padding: var(--space-xl); }
+.cv-sheet h1 { font-size: 1.75rem; margin: 0 0 var(--space-sm); }
+.cv-sheet h2 { border-bottom: 2px solid var(--secondary-color); font-size: 1.25rem; margin: var(--space-xl) 0 var(--space-md); padding-bottom: var(--space-xs); }
+.cv-sheet h3 { font-size: 1.05rem; margin: var(--space-lg) 0 var(--space-sm); }
+.cv-sheet p, .cv-sheet li { line-height: 1.5; max-width: 80rem; }
+.cv-sheet table { border-collapse: collapse; font-size: 0.85rem; margin: 0 0 var(--space-md); width: 100%; }
+.cv-sheet th, .cv-sheet td { border: 1px solid var(--border-color); overflow-wrap: anywhere; padding: var(--space-xs) var(--space-sm); text-align: left; vertical-align: top; }
+.cv-sheet th { background: var(--header-bg); }
+.cv-sheet code { font-family: var(--font-mono); font-size: 0.8rem; overflow-wrap: anywhere; }
+.cv-sheet .cv-cols { columns: 2; font-size: 0.85rem; }
+
+/* K6. A board's page label strip on a 390 or 768 twin is the same chip row (K1); nothing else is canvas-only. */
+
+/* ══ PART 2 — shipped (PROPOSED for app.css) ═════════════════════════════════════════════════════════════════════ */
+
+/* R1 (NEW, T8). Home's System health: one line a check — its name and its state as a word on a badge (BadgeFor), beside
+   its sentence and the link to where to act. No dot (§ Status dots retires). The list is its own container: under a
+   30rem card the name and badge sit over the sentence (at 390, and in a narrow column at 768). */
+.health-list {
+  container: health / inline-size;
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.health-line {
+  border-top: 1px solid var(--border-color);
+  display: grid;
+  gap: var(--space-xs) var(--space-md);
+  grid-template-columns: 10rem minmax(0, 1fr);
+  padding: var(--space-md) 0;
+}
+.health-line:first-child { border-top: 0; padding-top: var(--space-xs); }
+.health-line:last-child { padding-bottom: 0; }
+.health-line-name { align-items: flex-start; display: flex; flex-direction: column; font-weight: 600; gap: var(--space-xs); }
+.health-line-text { display: flex; flex-direction: column; gap: var(--space-xs); min-width: 0; overflow-wrap: anywhere; }
+.health-line-text p, .health-line-text ul { margin: 0; }
+.health-line-text ul { padding-left: var(--space-lg); }
+@container health (width < 30rem) {
+  .health-line { grid-template-columns: minmax(0, 1fr); }
+  .health-line-name { align-items: center; flex-direction: row; flex-wrap: wrap; gap: var(--space-sm); }
+}
+
+/* R2 (NEW, Q9). The payload's own region: .code-block (monospace, pre-wrap, wrapping anywhere) with a ceiling, scrolling
+   inside itself; focusable (tabindex 0, role region, named by its h2), so its ring is the page's. */
+.code-block--region { max-height: 28rem; overflow: auto; }
+.code-block--region:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* C1 (CHANGED, T6). The 1150px stack (app.css:7708, DESIGN.md § Table system) gains Institutions, Scheduled jobs and
+   the Audit log; the 1024px stack (app.css:7633) gains Run history. Each is a page scope beside .people-page, with no
+   rule of its own but the stack: in app.css the selectors join the existing blocks; written out here because the
+   canvas cannot edit bundle.css. */
+@media (max-width: 1150px) {
+  .institutions-page .clinic-table--stack-wide thead,
+  .jobs-page .clinic-table--stack-wide thead,
+  .audit-page .clinic-table--stack-wide thead {
+    border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px;
+  }
+  .institutions-page .clinic-table--stack-wide tbody tr,
+  .jobs-page .clinic-table--stack-wide tbody tr,
+  .audit-page .clinic-table--stack-wide tbody tr {
+    border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md);
+  }
+  .institutions-page .clinic-table--stack-wide tbody tr:last-child,
+  .jobs-page .clinic-table--stack-wide tbody tr:last-child,
+  .audit-page .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .institutions-page .clinic-table--stack-wide td, .institutions-page .clinic-table--stack-wide tbody th,
+  .jobs-page .clinic-table--stack-wide td, .jobs-page .clinic-table--stack-wide tbody th,
+  .audit-page .clinic-table--stack-wide td, .audit-page .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .institutions-page .clinic-table--stack-wide th[scope="row"],
+  .jobs-page .clinic-table--stack-wide th[scope="row"],
+  .audit-page .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .institutions-page .clinic-table--stack-wide td[data-label]::before,
+  .jobs-page .clinic-table--stack-wide td[data-label]::before,
+  .audit-page .clinic-table--stack-wide td[data-label]::before {
+    color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600;
+  }
+  .institutions-page .clinic-table--stack-wide .btn,
+  .jobs-page .clinic-table--stack-wide .btn,
+  .audit-page .clinic-table--stack-wide .btn { min-height: 2.75rem; }
+}
+@media (max-width: 1024px) {
+  .job-runs-page .clinic-table--stack-wide thead {
+    border: 0; clip: rect(0, 0, 0, 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; white-space: nowrap; width: 1px;
+  }
+  .job-runs-page .clinic-table--stack-wide tbody tr { border-bottom: 1px solid var(--border-color); display: grid; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); }
+  .job-runs-page .clinic-table--stack-wide tbody tr:last-child { border-bottom: 0; }
+  .job-runs-page .clinic-table--stack-wide td, .job-runs-page .clinic-table--stack-wide tbody th { border: 0; padding: 0; width: auto; }
+  .job-runs-page .clinic-table--stack-wide th[scope="row"] { display: block; }
+  .job-runs-page .clinic-table--stack-wide td[data-label]::before { color: var(--muted-text); content: attr(data-label) ": "; content: attr(data-label) ": " / ""; font-weight: 600; }
+  .job-runs-page .clinic-table--stack-wide .btn { min-height: 2.75rem; }
+}
