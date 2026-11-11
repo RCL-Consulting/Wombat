@@ -7,7 +7,7 @@ The builder's read in words (`Pages/Admin/ActivityTypes/WorkflowReadout.razor`, 
 `div.workflow-readout` (a flex column, 16px apart, no part's own margin; app.css's "Flow 17: the list and the read"):
 
 - **The states on one line**: "Draft, where a new one starts · Requested · Completed, final · Declined · Cancelled" (the initial state "where a new one starts", a terminal one "final"), by label.
-- **"Moves, as saved"**, a `DataTable StackWide` with that caption: the row header the move's label, then **From** ("Draft", or "Draft or Requested"), **To**, **Who moves it** in words ("The registrar, or whoever filed it", "The registrar", "The person Assessor names"; a rule it cannot word shown as written in `<code>`), **Checks** ("The whole form", "The mover's own fields", "Formats only": the move's `validation`, T105), **Note** ("Required" or "No").
+- **"Moves, as saved"**, a `DataTable StackWide` with that caption: **Move**, the row header, the move's label; then **From** ("Draft", or "Draft or Requested"), **To**, **Who moves it** in words ("The registrar, or whoever filed it", "The registrar", "The person Assessor names"; a rule it cannot word shown as written in `<code>`), **Checks** ("The whole form", "The mover's own fields", "Formats only": the move's `validation`, T105), **Note** ("Required" or "No").
 - It joins the catalogue's **1024px stack** (`.workflow-readout .clinic-table--stack-wide`, app.css's "Flow 16: the catalogue, shared"; T398's sweep: Mini-CEX (Paediatrics)'s four moves need 578px at their narrowest, which the builder's card gave only from 936px). Stacked, each move is a block: its label, then "From:", "To:", "Who moves it:", "Checks:", "Note:".
 
 ## CreditReadout

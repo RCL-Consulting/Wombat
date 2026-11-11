@@ -45,8 +45,8 @@ h2 "Publish". With no draft: "There is no draft to publish: version 1 is what re
 
 ## States
 
-- **Loading** (R2-B10): h1 "Activity type", no subtitle or action; "Loading this activity type." over a skeleton card; `aria-busy` on the column.
-- **Load failed** (R2-B11): "Could not load this activity type. Nothing has changed. Try again, or come back in a few minutes." with Try again; no tabs. Try again focuses the h1.
+- **Loading** (R2-B10): h1 "Activity type" over the subtitle "What a registrar fills in, who moves it on, and what it counts towards." (the boards drew none; the page withholds it only when unavailable), no action; "Loading this activity type." over a skeleton card; `aria-busy` on the column.
+- **Load failed** (R2-B11): the same h1 and subtitle; "Could not load this activity type. Nothing has changed. Try again, or come back in a few minutes." with Try again; no tabs. Try again focuses the h1.
 - **Unavailable** (R2-B09, N3): an unknown id, or one the caller may not read: h1 "Activity type unavailable", "This activity type does not exist, or you cannot open it." and **Go to Activity types** (primary) in a `.detail-card--empty`, never Access denied, no id shown; the h1 is the last crumb.
 - **No scope** (R2-C08-new): `/new` for a caller admitted but with no scope to create in (a College with no speciality): "New activity type" over the standing notice "You have no scope to create an activity type in. An institution's administrators create their institution's types, and a College's administrators the types of its specialities and sub-specialities.", no tabs and no Save draft.
 

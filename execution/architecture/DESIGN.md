@@ -85,7 +85,8 @@
 >   Status group, a scale's in-use line, its rung refusal and Put back, the reach lines and EV2's, Q19's read-out), the
 >   NavMenu table (the specialities one tree; the scales list read-only for the College admin), and § app.css section
 >   order (five Flow 16 sections)).
->   Flow 17, build and publish an activity type (2026-11-10, T398: § Table system (the list joins the 1150px stack, its one-word columns `.col-fit--wide`; the 1024px stack takes
+>   Flow 17, build and publish an activity type (2026-11-10, T398: § Table system (the list joins the 1150px stack, its one-word columns
+>   `.col-fit--wide`; the 1024px stack takes
 >   the builder's "Moves, as saved"; a single action column), § Form system (the builder's refusals at their place,
 >   the section key's), § Button system (Publish saves first and asks first; Discard's two bodies; Up/Down at the ends),
 >   § Page-level patterns "List page" (Activity types: search with Show and Clear, own rows first, Set by, the release
@@ -1886,7 +1887,8 @@ and § 0's `ActivityTypeWords`; refusals in `BuilderRefusal`) is a `.user-page.a
   `div.field-editor-inplace[role="group"]` under its head. Edit becomes Done (`aria-expanded`, `aria-controls` the editor);
   Edit focuses the editor's first input, Done gives the focus back to Edit. Add field adds the row and opens its editor,
   Field key focused (S13). Delete is an outline button that asks nothing (Q8); the focus goes to the next row's Edit, else
-  Add field (a section's Delete: the next section's Edit, else Add section). The open row and its editor share a 4px stripe in the action blue, a refused row a danger stripe with its
+  Add field (a section's Delete: the next section's Edit, else Add section). The open row and its editor share a 4px
+  stripe in the action blue, a refused row a danger stripe with its
   words under it (a Highlight or CanvasText edge in a contrast theme, S28). A section's words stand in its head
   (`#sec-N-refusal`), and its editor's Section key, where the summary's line lands, is `aria-invalid` and described by
   them, as a field's key is by its own. **Up on the first row and Down on the last are natively `disabled`**: a position,
