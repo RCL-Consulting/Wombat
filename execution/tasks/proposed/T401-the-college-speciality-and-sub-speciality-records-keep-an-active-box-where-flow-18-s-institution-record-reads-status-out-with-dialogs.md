@@ -8,7 +8,7 @@ depends_on: []
 created: 2026-11-11
 ---
 
-# <id> — <one line that states the defect or the goal, not the solution>
+# T401 — The College, speciality and sub-speciality records keep an Active box where the institution record does not
 
 > **Compatibility is not a constraint** ([W-007]; CLAUDE.md § "Nothing is live"). There are no real users and no real
 > data anywhere: dev and production hold scenario rows only. Do not design around existing rows, stored versions, pinned
