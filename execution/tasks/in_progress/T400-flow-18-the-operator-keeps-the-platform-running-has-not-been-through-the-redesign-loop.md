@@ -149,3 +149,11 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
   four loose citations go into the build); the round-3 PROPOSED settlements kept (Q18's `EmailOutcome` table written by
   both hosts, 90 days, Mail "Not read" with the database down; the code names and words; Home's links in the card footers).
   Next: step 6, the build plan (one Opus agent).
+- **2026-11-11, build plan** (one Opus agent, `a254395d`): § 0 (the boards' words, `EmailOutcome` with migration
+  `T400_EmailOutcomes` and `EmailOutcomePostgresTests`, `IEmailHealth`, `JobSchedule`, `DataRightsPeople.NamesOfAsync`,
+  `SastTime`, `JobLinks`, the stack selector lists), lanes A (Home and institutions; `CountAccountsAsync`; `EmailWorker`
+  records outcomes), B (jobs and run history; Run now returns the run and refuses a disabled job under the dispatcher's
+  lock), C (audit log and entry; names via the shared reader; K10), then the sweep, W, two Sonnet reviews, one fix pass:
+  eight agents. S2, C5 and the four citations settled in the plan. Waiting: the operator's P1 (which exceptions a failed
+  command's audit row words as a refusal; recommended: ValidationException, UnauthorizedAccessException, and an
+  InvalidOperationException thrown from a Wombat assembly; else "The action failed.").
