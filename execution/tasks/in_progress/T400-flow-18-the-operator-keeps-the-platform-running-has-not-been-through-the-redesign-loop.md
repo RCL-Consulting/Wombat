@@ -157,3 +157,7 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
   eight agents. S2, C5 and the four citations settled in the plan. Waiting: the operator's P1 (which exceptions a failed
   command's audit row words as a refusal; recommended: ValidationException, UnauthorizedAccessException, and an
   InvalidOperationException thrown from a Wombat assembly; else "The action failed.").
+- **2026-11-11, P1 taken as recommended ("yes"), the plan approved:** a failed command's audit row keeps a refusal's
+  words only for a ValidationException (its messages), an UnauthorizedAccessException, or an InvalidOperationException
+  thrown from a Wombat assembly; anything else stores "The action failed.", its full text to the application log. The same
+  rule can serve T399. Next: § 0 (one Opus agent on `t400`).
