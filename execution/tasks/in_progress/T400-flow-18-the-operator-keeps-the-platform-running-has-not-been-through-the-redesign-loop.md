@@ -126,3 +126,7 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
   name read (an erased person falls back to the id; `DataRightsPeople.StaffNamesAsync` gives the pseudonym), M4 A.5.5
   also changes (Q17), M5 A.2.10's 390 count; K2–K12, C3–C7, S1–S10, 22 nits. **Waiting:** the operator's Q18 (mail
   health persisted, recommended) and T1–T24, then the round-3 correction ask.
+- **2026-11-11, Q18 and T1–T24 taken as recommended ("yes"):** Q18 each mail's outcome (sent or dropped, its time, the
+  refusal's words; no address or body) persisted in a small table pruned by the retention job, the 24 hours read from it,
+  "Nothing sent since ‹time›" for the empty state; T1–T24 (Q6–Q12 and words) confirmed as drawn. Round 3's ask: one Opus
+  agent.
