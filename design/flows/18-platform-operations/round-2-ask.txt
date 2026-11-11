@@ -1,0 +1,942 @@
+ROUND 1 PICKED: structure A, "Home holds it all": the Administrator's Home keeps flow 01's frame and holds two cards, a
+System health card (span 2) of three lines in words (Database, Mail, Scheduled jobs), each with a badge, one sentence
+and a link where there is somewhere to act, and an Accounts card; no System page, no route, no nav item. Take nothing
+from B (the System page, its nav item, the verdict line, "Your account", the mail figures table) or from C (the "Needs
+you" rows, "Also checked", the one-sentence healthy state): draw neither again. Screens 3–5 (institutions, scheduled
+jobs and run history, the audit log and an entry) were one proposal each at fidelity, and they carry forward, corrected
+as below.
+This round draws A and screens 3–5 at full fidelity, in every state of the brief's § 3 and of this message's § STATES.
+Use the design system installed on this canvas (Wombat v52, 1794377277-5687, namespace wombat; ds/wombat/tokens.css and
+ds/wombat/components/bundle.css): its tokens and components, real words, no grey bars and no .cv-wf or other wireframe
+class (round 2 has no wireframe). Every screen and state at 1280 and 390; the four lists, Home and one entry also at 768
+where marked. Draw round 2 on a new page of the canvas, "Round 2", and name every board R2-… (a 390 twin R2-…-390, a
+768 twin R2-…-768). Round 1's 31 boards (project/*.dc.html: Spec, Steps, h-lines, wf-a, wf-b, wf-c, eight i-*, eight
+j-*, nine a-*) are on no page today: put them on a page "Round 1", untouched (move none of their content, rename none).
+The brand mark is at /_blob/b3b9ce265597292edc272896bd70a693 (this canvas's own copy): use it, never a drawn disc.
+Every person, institution, job, key, count, time, id and address comes from this message (FIXTURES) and the files under
+project/ref/; invent none. Where a value is not given, write a bracket ‹…›. Label a state the replay never reaches
+"Illustration", in its title and as a chip on the board's face, and never draw on one board two states that cannot hold
+at once. Words marked NEW below are this message's own (in neither the brief, round 1's boards nor the code): draw them as
+given, and list them on the Spec as NEW so the review can weigh them. Words and rules marked PROPOSED (THIS ASK) are a
+choice this message makes that the operator has not yet seen: draw them, and list them on the Spec under that heading.
+
+THE QUESTIONS ARE DECIDED, OR SETTLED HERE. Round 1's message listed Q1–Q12 as questions with no answers, though the
+  operator had decided Q1–Q5 before it was sent, and round 1's Spec answered Q4 (the count) and Q5 (Reactivate) against
+  those decisions: its two must-fixes M1 and M2. This message leaves no decided question open:
+  - Q1–Q5 and Q13–Q17 are the operator's (§ DECISIONS): facts, never questions to reopen. A board that argues against
+    one is a must-fix in the review.
+  - Q6–Q12 are still the operator's to answer. This message settles each provisionally with the brief's recommendation
+    (§ DECISIONS, marked PROPOSED (THIS ASK)) and lists each as T1–T7 under § PROPOSED, so the boards draw one answer and
+    the operator rules on it after. Draw them as settled; do not draw alternatives.
+
+THE STYLESHEET: write the round's shared stylesheet as a PROJECT FILE, project/f18r2.css (write it as a file of the
+  project, NOT as an asset, so the saved round holds it; round 1 did, f18r1.css). Every board's head links
+  ds/wombat/tokens.css, ds/wombat/components/bundle.css, then f18r2.css, in that order, and no /_blob/ stylesheet; a
+  board's <style> holds body{margin:0} at most, and no board carries an inline style (round 1's margin and gap
+  scaffolding goes into .cv-* rules). f18r2.css holds two kinds of rule and nothing else:
+  - canvas-only rules, named .cv-* (the board's frame, its caption, the Illustration / NEW / PROPOSED / DATA chips, the
+    focus mark, a dialog drawn open, the notes card), listed apart on the Spec as K rows and kept off the components. No
+    .cv-wf or other wireframe rule: round 1's K6 does not come forward. The shell is drawn with the design system's own
+    shell (flow 01's sidebar, top bar and phone bar from bundle.css), never a stand-in.
+  - the shipped rules this round adds or changes, each named under § CLASSES with its Spec row. Nothing else: no new
+    token, no new badge tint, no new icon.
+
+THE REFERENCE FILES ARE THIS CANVAS'S OWN PROJECT FILES. Round 1's Spec opened all 30; read them again from there:
+  - The captures, under project/ref/baseline/ (the same names as design/upload/baseline/, copies of design/baseline/):
+    act-A/A.6.2-1-system-health.png, act-A/A.7.11-1-home-390.png, act-A/A.2.1-1-scheduled-jobs.png,
+    act-A/A.2.2-1-auto-close-disabled.png, act-A/A.2.10-1-digest-key.png, act-A/A.2.10-2-partial-key-nothing.png,
+    act-A/A.2.10-4-from-today.png, act-A/A.7.11-3-jobs-390.png, act-A/A.7.11-4-runs-390.png,
+    act-1/1.6-1-institutions-one.png, act-1/1.6-4-create-empty-save.png, act-A/A.6.1-2-kgk-saved.png,
+    act-A/A.7.11-5-institutions-390.png, act-3/3.55-2-audit-failures.png, act-3/3.56-1-audit-entry.png,
+    act-3/3.57-3-naidoo-transition-detail.png, act-3/3.57-1-devadmin-audit.png, act-A/A.2.4-1-digest-dispatched.png,
+    act-A/A.2.10-3-failed-none.png, act-1/1.6-2-kgk-created.png, act-3/3.56-2-back-to-log.png,
+    act-3/3.57-2-msf-submission-detail.png, act-6/6.38-2-curriculum-progress-page.png, act-6/6.38-3-rebuild-dialog.png,
+    act-6/6.38-4-rebuilt.png, act-A/A.5.2-1-institutions-access-denied.png, act-A/A.6.9-1-own-account.png,
+    states/institution-edit--deactivated.png, states/scheduled-jobs-list--loading.png,
+    states/audit-detail--not-found.png. That is 30 names.
+  - Round 1's boards, project/*.dc.html, and project/f18r1.css: read them for the words this message keeps; draw none of
+    them again as they stand.
+  SAY ON THE SPEC BOARD, FIRST, BEFORE DRAWING, which of these you opened (list them) and which you could not read, and
+  say it plainly if any could not be read; draw nothing from memory in place of one that did not open (flows 06, 12, 13,
+  16 and 17's lesson). The words in the captures are today's pages, defects included, not the target. The two
+  2026-09-26 states/ captures are on the old frame (a Title Case sidebar, an email in the top bar): read their bodies
+  only. No capture shows a password, a token or a one-time link; the names, addresses, ids and redacted payloads in them
+  are the pages' own record. This message pastes every value round 1 bracketed that the code or the runbook holds
+  (FIXTURES), so a capture that does not open leaves no value only it holds.
+
+WHY A: it is Q1 as decided (Home's card holds everything, no System page, no nav item). It costs nothing in the shell
+  (A.5.13's Expect holds), adds one NEW class family (§ CLASSES R1), and reaches a failed job in 2 presses at both
+  widths. B concedes its own cost ("it repeats Scheduled jobs' rows in a second place", "brings back a nav item flow 01
+  dropped") and needs a route, a nav item, a DESIGN.md nav row and a test change for no new data; C's "Needs you" rows
+  move as their states change, and on dev, where mail is always Not configured, its first row stands for good.
+BORROW: nothing from B or C. A's own "every line failing" already lists each failing job under the one line, which is
+  all C's per-problem rows add; B's mail figures table is the same data as A's configured mail sentence, and Q2 decided
+  the sentence.
+
+DECISIONS (the operator's: Q1–Q5 on 2026-11-11 before round 1; the pick and Q13–Q17 on 2026-11-11 as round 1's
+  assessment recommends; Q6–Q12 settled here, PROPOSED (THIS ASK), with the brief's § 6 recommendation):
+  Q1: Home's System health card holds everything; there is no System page, no route and no nav item. A.5.13's Expect
+    holds. Curriculum progress keeps its way in from Curricula's header (flow 15); the operator's own account is A.6.9's
+    page, reached from Users.
+  Q2: T327's mail half is folded in: an IEmailHealth the mail path writes to (configured or logged; the queue's depth;
+    the last sent; the last dropped and its refusal; the drops in the last 24 hours). With no mail server the line
+    reads "Not configured: mail is written to the log, not sent.", a warning: the badge "Not configured", then the
+    sentence "Mail is written to the log, not sent.". T157's refusal to start in Production stays T157's (the deploy).
+  Q3: the jobs line reads "All 8 jobs last succeeded." or names the jobs that failed, have never run, are disabled or
+    are overdue, each by key, linking to Scheduled jobs. Overdue means the scheduler did not start a job: the host runs
+    every enabled job whose next time has passed on each 30-second tick and catches missed runs up at start
+    (ScheduledJobHost.cs:14, :57–120, :221–273), so a job over an hour past its last scheduled time while Home is read
+    was not started, whatever Wombat's uptime. A Running last run is not a failure.
+  Q4: the account count is every account but an erased one, with locked accounts said apart, read in one query (with a
+    join to the erasure record: an erasure and an administrator's lock write the same lockout, UserDeactivation.cs:3–13).
+    A.6.2: 24 accounts (25 rows less Sipho Ndlovu's erased one), none locked.
+  Q5: the Administrator's institution record is headed by the institution's name (h1 and tab; "Edit institution"
+    goes); Status is read out in a section of its own, with Deactivate… while active and Reactivate… while inactive,
+    each an outline button behind a ConfirmDialog opening on Cancel; there is no Active box and no Back to institutions.
+    The list's subtitle is "The institutions that hold Wombat's people and records.". The create page refuses under its
+    fields, described by them and focused, with "* marks a field you must fill in." (T378).
+  Q6 (PROPOSED (THIS ASK), T1): run history: Job a select of the eight keys, "All jobs" first; Status (All, Running,
+    Succeeded, Failed); From and To as South African days; Show and Clear filters after them (flow 06/17). The person
+    who ran a run by name ("Demo Administrator"), or "Scheduler". PagerControls, "Showing 1–50 of N", 50 a page, the
+    focus on the list's h2 after a turn. A failed run's error whole, wrapped, under its Failed badge, never cut at 80
+    with a tooltip. No Back to jobs. Round 1's renames are kept: "Run history" for "Job run history" (h1, tab, crumb);
+    "Ran by" for "Triggered by"; Finished folded into Started and Duration.
+  Q7 (PROPOSED (THIS ASK), T2): every time a person reads is South African time with the zone, "2026-11-10 21:39 SAST",
+    the jobs', the runs', the institutions' and the audit list's included; a schedule in words in SAST ("Daily at 09:00
+    SAST", "Hourly, on the hour", "Mondays at 10:00 SAST") with the cron as a monospace detail under it ("cron 0 7 * * *,
+    UTC"); the audit filters' From and To in SAST; an entry shows its SAST time and keeps the stored UTC to the
+    millisecond as its record, labelled, under it ("Stored as 2026-11-10 17:01:41.861 UTC").
+  Q8 (PROPOSED (THIS ASK), T3): the audit log: the filters, then Show and Clear filters after them, before the table, in
+    reading and Tab order (T328); Category by label; Action as part of a name; Person's user id and Subject type kept
+    as today's id and type filters (filters by name are DATA, left out: the brief's recommendation; Q15 makes a
+    by-name Person filter possible later); From and To in SAST; Result. The window fixed when the page loads or Show
+    is pressed, and stated; the filters, the resolved window and the page carried in the address, so the trail's Audit
+    log on an entry returns to the same rows (T277). The person by name on every row (Q15). PagerControls, 50 a page,
+    the focus on the list's h2 after a turn (T264).
+  Q9 (PROPOSED (THIS ASK), T4): an entry is one column of h2 sections, as flow 12's user page: What happened, Who, What
+    it was done to, Payload (the brief's names; round 1's Event, Person, Subject are the alternative); the Action and
+    long ids wrap; the payload laid out one property a line, in its own scrolling region with a maximum height,
+    focusable and named by its h2; Unavailable, "Audit entry unavailable", for an unknown id and one outside the
+    caller's scope alike.
+  Q10 (PROPOSED (THIS ASK), T5): a job action's result sits above the list, under PageHeader, focused, in true words
+    (the run has ended when it shows): "Ran weekly-coordinator-digest: Succeeded at 2026-11-10 21:39 SAST." / "Ran
+    ‹key›: Failed at ‹YYYY-MM-DD hh:mm› SAST: ‹the error as stored›."; "Disabled msf-campaign-auto-close. The
+    scheduler will not run it until you enable it."; "Enabled msf-campaign-auto-close. Its next run is 2026-11-10 22:00
+    SAST." Run now on a disabled job is aria-disabled with its reason as text, "Enable it to run it.", and the command
+    refuses it too (PROPOSED rule, § FIXTURES "Refusals").
+  Q11 (PROPOSED (THIS ASK), T6): at 390 the health card comes first; every list stacks (StackWide inside the stack its
+    columns need, § CLASSES); a block per job with its state, next run and both buttons at 44 px; a block per run, per
+    institution and per audit entry; nothing in a scrolling box but the payload's own region. A.7.11's Expect changes.
+  Q12 (PROPOSED (THIS ASK), T7): the build folds in T327 whole (health in words, the mail and jobs state, the count, run
+    history's select and pager); T324's job-runs and audit-category halves; T325's page half for these pages and T384;
+    T326's institutions half; T277's audit half; T286's audit display (small now: Q15 reads names live, no migration);
+    T328's audit half; T264's audit pager; T323 for these pages; T329's kind on the four lists and on the entry; T378;
+    T114 item 1 (the payload's display, not its bound); and the brief's § 5 new faults (the jobs' result below the
+    table, "dispatched.", Run now on a disabled job, the 1280 wraps, the Back links, the entry's headings and
+    Unavailable). Left as their own: T157 (the deploy), T274 (a run's outcome stored), T114 items 2–3, the Api host's
+    /health (to be filed), T401 (the College's records, Q16).
+  Q13: the mail line fails (badge "Failing") when a mail was dropped (given up after its three tries) in the last 24
+    hours. No mail sent is not a state: a quiet weekend is healthy.
+  Q14: the Accounts card has no breakdown: Q4's one figure and the locked line. No "hold a role / hold no role / is
+    erased" lines; Users finds the graduates.
+  Q15: the audit log's names are read live from each row's user id at display (IUserAdministrationService.
+    GetDisplayNamesAsync), never stored in the row, so an erased person reads by the pseudonym the erasure gave them;
+    the stored display is used only where a row has no user id. No migration.
+  Q16: Q5 holds for institutions. The College, speciality and sub-speciality records keep the Active box until T401
+    (proposed) brings them to Q5's pattern; this flow draws none of them.
+  Q17: one Unavailable for an institution, "Institution unavailable", for the Administrator and an institution's own
+    administrator alike: an unknown id and an id outside the caller's scope read the same. Step 1.23's Expect
+    ("The Demo Institution's id sends ‹Prof Mbatha› to Page not found", the
+    runbook's pronoun replaced) and states.md:899 change with it: say so on the Steps
+    board. The page's trail and its one link follow the caller's way in (T10).
+
+CORRECTIONS (round 1's assessment § 7; round 2's review checks each by number; the boards each fixes):
+  M1 (R2-H01 to R2-H10): Q4's count. The Accounts card reads 24 at A.6.2 with "None is locked." under it, never "25
+    accounts in all, whatever they hold"; no "22 hold a role · 2 hold no role · 1 is erased" (Q14). Round 1's R2
+    (.accounts-breakdown) goes.
+  M2 (R2-I01 to R2-I06; R2-I14 to R2-I17): Q5 whole. (a) Reactivate… asks first: the trigger reads "Reactivate…"
+    (outline, aria-haspopup="dialog"), its ConfirmDialog (§ FIXTURES "Dialogs") opens on Cancel, its result is focused;
+    draw the dialog (R2-I16). Round 1's "Reactivate" asking nothing goes. (b) The list's subtitle is Q5's: "The
+    institutions that hold Wombat's people and records." Round 1's "The institutions Wombat serves. Create one, or open
+    one to keep its record, deactivate it or reactivate it." goes.
+  M3 (R2-H01 to R2-H10): Q2's sentence. With no mail server the mail line is the badge "Not configured" and "Mail is
+    written to the log, not sent.", then the PROPOSED (THIS ASK) second line "To send mail, set Email__SmtpHost on the
+    server and restart Wombat." (T13). Round 1's "No mail server is configured (Email__SmtpHost is not set), so every
+    mail is written to the application log and none is sent: invitations, reminders and digests reach no one." goes.
+  M4 (Steps): (a) the operator's own account is A.6.9's page, reached from Users: 3 + 1 at 1280, 4 + 1 at 390; the
+    name in the top bar goes to /account/profile (MainLayout.razor:62), flow 02's page, not A.6.9's. (b) 3.32, A.2.6,
+    A.2.8 and A.2.9 hold (their Expects quote no result words); 14 of the 23 Expects change, plus 1.23's (Q17). (c)
+    A.2.1's "—" (→ "Not run yet"), A.2.10's "finish" (folded), 3.57's "system" on the rows and 4.38's "OK" are rows;
+    so are the states.md rows (§ STEPS).
+  S1: B and C are dropped; none of their parts is drawn (R2 has no B or C board).
+  S2 (Spec): every PROPOSED item is listed (§ PROPOSED): the Accounts card's title; Unavailable for an institution
+    (Q17); the respondent's words and what any other actor-less row reads; the command refusing Run now on a disabled
+    job; Running's tint (kept amber, as built); run history's filters in the address; the audit address carrying the
+    resolved window and the entry's trail carrying it; Home's partial answer when the database is down.
+  S3 (R2-I05, R2-I18, R2-J12, R2-R10, R2-L15, R2-E11): every load error is the house sentence (§ FIXTURES "Loading and
+    load errors"), with Try again (refresh-cw) and nothing under it. Round 1's "The ‹things› could not be read.
+    Nothing was changed. Try again in a moment." goes everywhere.
+  S4 (R2-H08): with the database down, Mail is read as it would be (its state is configuration and the in-process
+    sender, not the database): it reads Not configured on dev. Scheduled jobs and the Accounts card read "Not read: the
+    database did not answer." Round 1's "Mail: Not read" goes.
+  S5 (R2-H07, R2-H09): overdue in Q3's sense: "‹key› has not run since it was due at ‹YYYY-MM-DD hh:mm› SAST: the
+    scheduler did not start it. The application log says why; Run now runs it." Round 1's "Wombat was not running then.
+    It runs again at its next time, or now." goes.
+  S6 (R2-I19, R2-I20): Unavailable covers an unknown id and an out-of-scope one, for both roles (Q17); Prof Mbatha's
+    1.23 is R2-I20.
+  S7 (R2-I19, R2-I20, R2-E08): Unavailable as DESIGN.md § Alerts draws it (DESIGN.md:2073–2078): .detail-card
+    .detail-card--empty holding div.state-panel-copy with the sentence, then div.form-actions with one primary a.btn;
+    no icon; the trail ending at the h1. Not .system-panel; no brackets (§ FIXTURES "Unavailable").
+  S8 (R2-I02, R2-J01, R2-R01, R2-L01, R2-L05; Spec): widths. Each list joins the stack its columns need (§ CLASSES),
+    never the 900 px default alone; the long values break (an audit row's Action, a user id, an address, a key); every
+    list swept 900–1100 px in 50 px steps against its CONTAINER (974 px at 1280, 717 px at 1025, by round 1's
+    arithmetic), and every column read at 1280 for each role that sees it (devadmin; and Prof Mbatha for the audit
+    log). Round 1's R9 (44 px row buttons) goes: .clinic-table--stack-wide .btn is 44 px from 900 px down as shipped.
+  S9 (Spec, DATA): the DATA table gains the costly half (§ SPEC BOARD's changes): the dashboard query's partial answer
+    with the database down; the erasure join for Q4; RunScheduledJobNowCommand returning its run; ScheduledJobDto with
+    the last run's error, finish and runner; run history's total and paging; the institution's name per audit row and
+    on the entry. Two round 1 DATA rows are not DATA: "Ran by" names come from an existing read (GetDisplayNamesAsync),
+    and the jobs' descriptions are code (each job class's Description, rewritten at every start, ScheduledJobHost.cs:
+    166–196).
+  S10 (§ STATES): every state round 1 left out is a board: 768; the 900–1100 sweep (Spec); run history loading; Home with
+    the database down, whole, Accounts included; Reactivate…'s dialog; create's duplicate and malformed refusals; create
+    and Deactivate… at 390; a refused or failed record save; a failed Disable; A.2.1's plain state; the audit log's first
+    arrival on the 24-hour default; the Administrator's Failures only; an entry with a subject; 4.38's decision and
+    revocation entries; Prof Mbatha's entry at 390.
+  S11 (R2-I03): KGK's contact email at A.7.11 is hod.paediatrics@kgk.wombat.local (set at A.6.3,
+    appendix-cross-cutting.md:1260), not paeds-admin@… nor paediatrics@….
+  N1 (every board, annotations included): no gendered pronoun for a person: "they". Round 1's two gendered
+    phrases (the bracket on a-fail, a-states and a-log-390; a-states' edge caption) go.
+  N2 (R2-I11 to R2-I17): the record's subtitle is flow 16's form, "KGK · Active" / "DEMO · Inactive"
+    (CollegeWords.RecordSubtitle); the reactivated result follows flow 16's (§ FIXTURES "Results"; T11).
+  N3 (R2-I07 to R2-I13): the field help "Up to 200 characters.", "Up to 32 characters." and "Optional." is PROPOSED
+    (round 1's; T12), true against the brief's limits.
+  N4 (R2-I11 to R2-I17): one "Status": the h2. No label "Status" under it.
+  N5 (Spec; R2-J05, R2-J08, R2-R07; R2-H07): Running stays amber (badge-accepted, BadgeFor.JobRun, BadgeFor.cs:171);
+    Overdue is .badge-overdue (app.css:2820); the Spec lists the tints it uses by class, not as "five".
+  N6 (R2-J08, R2-L02, R2-E01 to R2-E05): the brackets the code holds are filled (§ FIXTURES): the crash error; "No
+    subject" on Ndlovu's and Naidoo's entries; David Naidoo; the three failed rows' refusals.
+  N7 (R2-J06): Run now refused moves the focus to the result (today it stays on the button, ScheduledJobsList.razor:
+    77–78): right, now that the result sits above the list. Say so on the Spec.
+  N8 (R2-R01, R2-R06, R2-L01, R2-L12): PagerControls with its page-size select ("Per page:", 10, 20, 50, 100) on both
+    lists, set to 50 (T1, T3). The audit log's hand-built pager (AuditList.razor:121–134) goes.
+  N9 (R2-R*): no "Error: None" (an empty cell, or nothing, where a run did not fail); "Running" once a row (the
+    badge; Duration reads "—" while it runs); "No runs match these filters." for "0 runs that failed";
+    the descriptions without "ExpiresOn" or "ScheduledJobRun" (§ FIXTURES "Jobs").
+  N10 (Spec): the audit rows drop the Subject column and the actor's address (today AuditList.razor:73–110); both stay on
+    the entry; Subject type stays a filter.
+  N11 (R2-E03, R2-E06): the payload region is named by aria-labelledby its h2 "Payload", not aria-label. (No <details>
+    on run history any more: T1 shows the error whole.)
+  N12 (R2-L*): Detail's name keeps the date, as today (AuditList.razor:65–70): "Detail: Login at 2026-11-10 20:24:10",
+    now in SAST.
+  N13 (every list board; f18r2.css): DataTable's StackWide writes both classes, clinic-table--stack and
+    clinic-table--stack-wide; the duplicates go (§ CLASSES); every caption is a name ("Institutions", "Scheduled jobs",
+    "Runs", "Actions"), never a count.
+  N14 (Steps, for the runbook lane): states.md:1093 reads "Nine jobs": eight since T379.
+
+CORRECTIONS TO THE BRIEF (the assessment found two values wrong; this message's are the right ones):
+  - A.2.10's 21 runs are 10 by hand (devadmin) and 11 by the scheduler, not 11 and 10 (§ FIXTURES "Run history").
+  - KGK's contact email at A.7.11 is hod.paediatrics@kgk.wombat.local (S11).
+
+LESSONS FROM FLOWS 12–17 (their reviews' must-fixes and BRIEF § 11; do not repeat them):
+  - Behaviour the boards assume is written on the Spec as the change it needs (a command's result, a query's field, a
+    policy, a route), never implied (§ SPEC BOARD's changes).
+  - The ask is regenerated after the decisions, not before (this flow's round 1, flow 17's round 1): nothing decided is
+    drawn as open, and nothing open is drawn as decided without its PROPOSED mark.
+  - Steps rows quote values person by person and count by count, each checked against FIXTURES; each of the 23 steps is
+    a row, "unchanged" said where so; a count in an Expect is traced to the step that set it (flow 16).
+  - No NEW class that duplicates a shipped one. Before naming a class NEW, search app.css for one that does the job:
+    .people-page, .user-page, .user-section, .record-page, .person-cell (a name over a line), .detail-list,
+    .detail-card--empty, .state-panel-copy, .loading-line, .search-container, .search-grid, .search-field,
+    .filter-actions, .code-block (pre-wrap, overflow-wrap: anywhere), .nowrap (app.css:5499), .col-fit--wide,
+    .col-wrap--wide, .actions-cell, .muted, .text-sm, .badge and its tints, .badge-overdue, .dashboard-metric. Reuse a
+    shipped class as shipped; never redeclare one.
+  - A table that fits at 1280 can overflow just above its stacking breakpoint (flow 15), and a nowrap column raises the
+    table's narrowest width (flow 17: the activity types list moved to the 1150 px stack for it). Choose each list's
+    stack from its columns, then sweep it 900–1100 px against its container and say what each measured.
+  - A column-width fix moves the squeeze to the next column (flow 16). After the widths are set, read every column at
+    1280 for each role that sees it, and say that no value wraps past two lines beside an empty band.
+  - A long value wraps in its own cell: a 200-character institution name, a 2,000-character run error, a 36-character
+    user id, "TransitionActivityCommand", "RevokeEntrustmentDecisionCommand", an activity type's save of several KB. A
+    canvas-only chip wraps too. Measure every board at 1280, 1100, 768 and 390.
+  - A read-out is dl.detail-list with dt and dd; .field-label exists nowhere.
+  - ARIA: aria-controls only to an element that exists; a field's help outside its <label>, named by aria-describedby;
+    a refusal first in aria-describedby; a standing notice is an Alert with Role=""; role="status" only for what
+    arrives with a result; a stacked table keeps DataTable's roles; a state is a word, never a colour alone.
+  - At 390 the system does the work, never an inline style: .people-page and .user-page make every button, input and
+    select 44 px; .dialog-card .form-actions stack (column-reverse: the confirm on top, Cancel first in the DOM);
+    .clinic-table--stack-wide .btn is 44 px from 900 px down; the filter bar's buttons stack full width
+    (.filter-actions). Keep the 1280 DOM order.
+  - A figure and its word inside a flex box get their space from gap, not from a space in the markup (flow 17).
+  - A canvas has a ceiling of about 200 boards (flow 16's round 3 needed a new canvas). This round is about 180; if the
+    canvas refuses for size, stop, and say on the Spec which boards were drawn.
+
+HOME (/; the Administrator's; A at fidelity; the shape every Home board follows):
+  - Header: flow 01's, unchanged: h1 "Home", subtitle "Administrator · Semester 2, 2026", no header action. Home lit.
+  - DashboardFrame (loading and its load error as built) holding two DashboardCards in .dashboard-grid: "System
+    health" (icon settings, Span="2") first, then "Accounts" (icon users; PROPOSED (THIS ASK) title, T14, in place of
+    "Users across institutions"). At 390 System health first, one column.
+  - System health: ul.health-list of three li.health-line (§ CLASSES R1), always in this order, Database, Mail,
+    Scheduled jobs. Each line: the name (span.health-line-name), its state as a word on a badge (BadgeFor's tints, §
+    SPEC BOARD "Badges"), the sentence (.health-line-text), and where there is somewhere to act, a link named for its
+    target. No dot (DESIGN.md § Status dots retires with Home's three dots, its only user), no task id. Below a 30rem
+    card (container query) name and badge sit over the sentence. A line's words, § FIXTURES "Health lines".
+  - Accounts: .dashboard-metric (value "24", label "accounts"; T14); under it p.muted.text-sm "Every account Wombat
+    holds but an erased one." (T14), then p "None is locked." or "‹n› are locked and cannot sign in now." (T14), then a
+    link "Users" (/admin/users). No breakdown (Q14).
+  - The database down (Q1's card, S4): the handler returns what it can read (§ SPEC BOARD), so the card draws the
+    Database line Unreachable, Mail as it is, Scheduled jobs Not read, and Accounts "Not read: the database did not
+    answer." DashboardFrame's own load error stays for any other failure, as built.
+
+THE INSTITUTIONS (/admin/institutions, /admin/institutions/new, /admin/institutions/{Id:int}; the Administrator's):
+  - The list: PageHeader h1 "Institutions", subtitle Q5's, header action Create institution (a.btn.btn-primary, icon
+    plus, once the rows have loaded); trail Home › Institutions; Institutions lit. The column: div.people-page.
+    institutions-page. DataTable StackWide in the 1150 px stack (T6, § CLASSES), captioned "Institutions"; columns Name
+    (th scope="row"; wraps), Short code (.col-fit--wide), Contact email (breaks anywhere; "None" where there is none,
+    .muted), Status (a badge: Active, Inactive), Created (the South African day, ISO; .col-fit--wide), and the actions
+    cell, one a.btn.btn-sm.btn-outline "Edit", named "Edit Kgosi Kgari Teaching Hospital" (as built). Order by name. No
+    pager (institutions are few; say on the Spec, in words only, what the list does at 100).
+  - Create: PageHeader h1 "Create institution", subtitle "A new institution is active from the moment it is saved, so
+    its people can be invited." (round 1's; accepted, T12), trail Home › Institutions › Create institution, no Back.
+    The column: div.record-page. The result region (ActionResult) under PageHeader; then p.field-help "* marks a field
+    you must fill in."; .form-grid of Name *, Short code *, Contact email, each refusal under its field (FieldRefusal),
+    the field aria-invalid and described by its refusal first, the first refused field focused (T378); FormActions
+    Cancel (a.btn.btn-outline to the list) and Save (btn-primary). Save lands on the new record with its one-shot result
+    (CatalogueLinks' token, flow 15's ?created; § FIXTURES "Results").
+  - The record (Q5): PageHeader h1 and tab the institution's name ("Institution" while loading and after a failed read,
+    as built for an institution's administrator); subtitle "KGK · Active" (N2); trail Home › Institutions › Kgosi
+    Kgari Teaching Hospital;
+    Institutions lit; no header action. The column: div.record-page (flow 12's): the result region; the form (the mark
+    line, Name *, Short code *, Contact email, each with its help (T12) and its refusal under it; FormActions Cancel and
+    Save); then section.user-section with h2 "Status": p with the badge (Active / Inactive) and its sentence (§ FIXTURES
+    "Status"), then Deactivate… or Reactivate… (btn-outline, aria-haspopup="dialog"). Flow 13's end section, apart
+    from Save. No Active box, no label "Status" under the h2 (N4).
+  - Prof Mbatha's view of their own institution's record (flow 12's) is unchanged and has no board but R2-I20's Unavailable.
+
+THE JOBS (/admin/jobs and /admin/jobs/runs; the Administrator's):
+  - Scheduled jobs: PageHeader h1 "Scheduled jobs", subtitle (NEW, T15) "The eight jobs Wombat runs on a schedule. Run
+    one now, disable or enable one, or read every run in Run history.", header action Run history (a.btn.btn-outline,
+    icon clock, as built); trail Home › Scheduled jobs; lit. The column: div.people-page.jobs-page: the result region
+    (ActionResult, above the list, under PageHeader, at every width); then DataTable StackWide in the 1150 px stack
+    (measured: T6), captioned "Scheduled jobs"; columns Job (td.person-cell: the key in <strong>, the description under
+    it, .muted.text-sm), Schedule (the words, then the cron as <code>, .text-sm, Q7), Last run (the time, .nowrap,
+    then its badge; "Not run yet" where it never ran), Next run (the time, .nowrap; "None while disabled" on a
+    disabled job, round 1's, T16), and the actions cell (div.actions-cell: Run now, then Disable or Enable, each
+    btn-outline btn-sm, named "Run now: ‹key›" and "Disable ‹key›" / "Enable ‹key›" as built (T239)). On a disabled job
+    Run now is aria-disabled, stays in the tab order, is described by its reason p.muted.text-sm "Enable it to run it."
+    beside it, and a press does nothing (flow 17's pattern). The column headed Enabled goes. Order by key, as built.
+  - While Run now waits, that button reads "Running…" (aria-disabled), and the other row actions send nothing (T234 as
+    built); the result replaces it when the run ends (T16).
+  - Run history: PageHeader h1 and tab "Run history" (T1), subtitle (NEW, T15) "Every run of the eight jobs, newest
+    first, kept for 90 days."; trail Home › Scheduled jobs › Run history; Scheduled jobs lit; no Back to jobs. The
+    column: div.people-page.job-runs-page: the filter bar (.search-container, role="search", named "Filter the runs":
+    Job select, Status select, From, To (input type="date", labels "From (a South African day)", "To (a South African
+    day)", round 1's), then .filter-actions with Show (btn-primary) and Clear filters (btn-outline, only once a filter
+    is set)); h2 "Runs"; the count line p[role="status"][tabindex="-1"] ("21 runs.", "2 runs."; T17); DataTable
+    StackWide in the 1024 px stack (measured: T6), captioned "Runs, newest first"; columns Job (the key), Started
+    (time with seconds, SAST, .nowrap), Duration ("68 ms"; "—" while running), Status (the badge, then, on a failed run,
+    the error whole, p.text-sm, wrapping), Ran by ("Demo Administrator" or "Scheduler"); then PagerControls (50, its
+    select; "Showing 1–21 of 21"). The filters, applied with Show, are in the address (?job=…&status=…&from=…&to=…&
+    page=…), so Home's "Its runs" opens a job's failed runs (T18).
+  - Results, refusals and failures in the result region, each focused: § FIXTURES "Results", "Refusals", "Failures".
+
+THE AUDIT LOG AND AN ENTRY (/admin/audit and /admin/audit/{Id:guid}; the Administrator's and an institution's admin's):
+  - The log: PageHeader h1 "Audit log", subtitle by role (NEW, T15): to Prof Mbatha "Every consequential action at Kgosi
+    Kgari Teaching Hospital, newest first."; to devadmin "Every consequential action across the institutions, and those
+    with no institution, newest first." (round 1's, shortened: "Times are South African (SAST)" goes, the zone is on
+    every time); no header action (Apply filters goes, T328); trail Home › Audit log; lit. The column:
+    div.people-page.audit-page: the filter bar (.search-container, role="search", named "Filter the audit log"):
+    Category (All categories, then the nine by label), Action (help "Part of a name: "Msf" finds the MSF commands."),
+    Person's user id, Subject type, From (SAST), To (SAST) (input type="datetime-local"; To's help "Empty: up to when
+    you press Show."), Result (All results, Success only, Failures only), and for devadmin alone Institution (All
+    institutions, No institution, then each by name; T19); then .filter-actions with Show and Clear filters. Then h2
+    "Actions"; the count line, p[role="status"][tabindex="-1"] ("166 actions."); the window, p.muted.text-sm (§
+    FIXTURES "Audit"); DataTable StackWide in the 1150 px stack (measured: T6), captioned "Actions, newest first";
+    columns When (SAST, seconds, .nowrap), Person (td.person-cell: the live name; for devadmin, the institution's name
+    under it, .muted.text-sm, or "No institution"; T19), Category (by label), Action (breaks anywhere), Result (the
+    badge "Success" / "Failed", then on a failed row its refusal, p.text-sm), and Detail (a.btn.btn-sm.btn-outline,
+    named "Detail: ‹action› at ‹YYYY-MM-DD hh:mm:ss›", N12). Six columns for both roles. Then PagerControls (50).
+  - An entry: PageHeader h1 "Audit entry", tab "Audit entry · Wombat", subtitle (NEW, T15) "‹action› by ‹name›,
+    ‹YYYY-MM-DD hh:mm:ss› SAST · ‹Success|Failed›" (round 1's); trail Home › Audit log › Audit entry, the "Audit log"
+    crumb carrying the rows' address (T3); Audit log lit; no Back to log. The column: div.user-page, a section.user-section
+    per h2 (T4): "What happened" (dl.detail-list: When, with "Stored as … UTC" under it, .muted.text-sm; Category; Action
+    in <code>; Institution by name or "No institution"; Result, the badge then the refusal); "Who" (Name, the live name;
+    User id in <code>; Address "::/48" with "Cut to its first 48 bits when stored." under it, round 1's); "What it was
+    done to" (Type and Id, or "No subject", N6); "Payload" (the Administrator's alone: a line "As stored, laid out one
+    property a line: secrets read "[REDACTED]" and the signed-in person "[PRINCIPAL]"." (round 1's), then
+    pre.code-block.code-block--region[tabindex="0"][role="region"][aria-labelledby the h2] (§ CLASSES R2)). Prof Mbatha
+    sees no Payload section, as today.
+  - States: § STATES.
+
+FIXTURES (the T398 replay, wombat_scenario_t398, 2026-11-10 = D; every time SAST = the stored UTC + 2 h; use these
+  words):
+  People (names as stored, no titles; the product stores no pronoun):
+    devadmin, display name "Demo Administrator", Administrator, Global (no institution), one role. Top bar "Demo
+      Administrator"; "Acting as Administrator". Menu: Home; Platform (Scheduled jobs, Audit log, SSO mappings, Data
+      rights requests); Organisations (Institutions, Colleges); People (Users, Invitations); Catalogue (EPAs, Curricula,
+      Activity types, Entrustment scales); Reviews (Decisions due, Committee reviews, Decision panels); then My data
+      rights under the rule.
+    Nolwazi Mbatha, Institutional admin, Kgosi Kgari Teaching Hospital (KGK). Top bar "Nolwazi Mbatha"; "Acting as
+      Institutional admin". Menu: Home; People (Invitations, Trainees, Assessors, Users); Curriculum (Curricula, EPAs,
+      Activity types, Entrustment scales); Reviews (Decisions due, Committee reviews, Decision panels, Entrustment
+      decisions); Access and audit (SSO mappings, Audit log); then My data rights under the rule (round 1's Spec, from
+      3.55-2, 3.56-1, A.5.2-1).
+    Seen in the rows: Pieter Smit (Coordinator, KGK), Sipho Ndlovu (user id c22b8779-798b-4229-a0b8-b73a3d16999c; erased
+      at A.1.12), Anele Dlamini, Fatima Khumalo, David Naidoo (user id 535c41ed-ffb9-449f-bab9-709da9a0ed77), Thandi Zulu,
+      Refilwe Mokoena, Lerato Molefe. devadmin's user id deaa0728-‹…›. An MSF respondent has no account.
+    A second Administrator, an account locked, a mail server, a failed run: no cast member ("Illustration", ‹…›).
+  Accounts: at A.6.2, 24 (25 accounts, Sipho Ndlovu's erased one not counted; Lerato Molefe and Pieter du Plessis hold
+    no role and are counted), none locked. At 1.1, 9 (the brief's § 2: 9 at 1.1, 11 at 1.11; the Expect's "8, or 9
+    where the bootstrap Administrator exists"; draw 9 and say so). At 1.11, 11.
+  Health lines (badge, then the sentence; § SPEC BOARD "Badges"):
+    Database: OK "The database answers." / Unreachable "The database did not answer at ‹hh:mm› SAST, so Wombat can read
+      and save nothing, and /health says Unhealthy." (round 1's, shortened; T13).
+    Mail: Not configured "Mail is written to the log, not sent." then "To send mail, set Email__SmtpHost on the server
+      and restart Wombat." (Q2; the second line T13) / OK "Mail is sent. Last sent ‹YYYY-MM-DD hh:mm› SAST; none
+      waiting; none dropped in the last 24 hours." (T13) / Failing (Q13) "‹n› mails were dropped in the last 24 hours,
+      the last at ‹YYYY-MM-DD hh:mm› SAST: ‹the mail server's refusal›. The application log names each one." (T13).
+    Scheduled jobs (Q3; link "Scheduled jobs" on every state but Not read): OK "All 8 jobs last succeeded." (A.6.2) /
+      OK "7 jobs last succeeded. weekly-coordinator-digest has not run yet: its first run is 2026-11-16 10:00 SAST."
+      (1.1; a job never run is named and is not a problem, T13) / Disabled "msf-campaign-auto-close is disabled, so the
+      scheduler does not run it. The other 7 last succeeded." / Failing "entrustment-decision-expiry failed at
+      ‹YYYY-MM-DD hh:mm› SAST: ‹the first line of its error›." with a second link "Its runs" (run history at
+      ?job=entrustment-decision-expiry&status=Failed, T18) / Overdue (S5's words, .badge-overdue) / Not read "Not read:
+      the database did not answer." Several at once: the worst word on the badge (Failing, then Overdue, then
+      Disabled), then "Three jobs need you:" over a ul of each job's sentence (round 1's).
+  Institutions (id, name, short code, contact email, status, created):
+    1 Demo Institution, DEMO, admin@demo.local, Active, 2026-11-10 (17:00 SAST).
+    2 Kgosi Kgari Teaching Hospital, KGK, created 2026-11-10 (17:17 SAST), Active; contact paeds-admin@kgk.wombat.local
+      at 1.6, paediatrics@kgk.wombat.local from A.6.1, hod.paediatrics@kgk.wombat.local from A.6.3 (so at A.7.11).
+    The list at 1.6 before the create: Demo Institution alone; after it and at A.6.1: both, by name (Demo Institution,
+    Kgosi Kgari Teaching Hospital). R2-I13 to R2-I17 act on the Demo Institution (states.md:898, scratch).
+  Status (Q5): Active "A new invitation can name it." / Inactive "No new invitation can name it. Its people, their
+    records and the invitations already sent are kept." (round 1's, T12).
+  Dialogs (ConfirmDialog in action mode, opening on Cancel; Cancel and Escape return the focus to the trigger):
+    Deactivate (as built, InstitutionEdit.razor:132–138): title "Deactivate Demo Institution?", body "No new invitation
+      can be issued for it until it is reactivated. Its people, their records and the invitations already sent are
+      kept. You can reactivate it on this page.", Cancel and "Deactivate" (danger).
+    Reactivate (M2; NEW, T11): title "Reactivate Demo Institution?", body "A new invitation can name it again. Its
+      people and their records are as they were.", Cancel and "Reactivate" (btn-primary).
+  Jobs (key; description, without "(daily at … UTC)" and with T324's words (N9; NEW, T15); schedule; cron UTC; at A.2.1,
+    last run and its badge; next run):
+    activity-draft-nudge; "Reminds trainees about draft activities older than 14 days."; Daily at 09:00 SAST; 0 7 * * *;
+      2026-11-10 17:00 SAST Succeeded; 2026-11-11 09:00 SAST.
+    assessor-pending-nudge; "Nudges assessors about activities waiting for their assessment for more than 5 days.";
+      Daily at 11:00 SAST; 0 9 * * *; 2026-11-10 19:15 SAST Succeeded; 2026-11-11 11:00 SAST.
+    audit-log-retention; "Archives audit log entries older than 2 years into the archive table."; Daily at 05:00 SAST;
+      0 3 * * *; 2026-11-10 17:00 SAST Succeeded; 2026-11-11 05:00 SAST.
+    entrustment-decision-expiry; "Expires entrustment decisions past their expiry date and sends 30-day expiry
+      reminders."; Daily at 05:30 SAST; 30 3 * * *; 2026-11-10 17:00 SAST Succeeded; 2026-11-11 05:30 SAST.
+    msf-campaign-auto-close; "Closes open MSF campaigns whose window has ended and anonymises their respondents.";
+      Hourly, on the hour; 0 * * * *; 2026-11-10 21:00 SAST Succeeded; 2026-11-10 22:00 SAST.
+    msf-invitation-expiry-reminder; "Reminds MSF respondents who have not responded, once, two days before their last
+      day to respond."; Daily at 10:00 SAST; 0 8 * * *; 2026-11-10 17:00 SAST Succeeded; 2026-11-11 10:00 SAST.
+    scheduled-job-run-retention; "Deletes job run records older than 90 days."; Daily at 06:00 SAST; 0 4 * * *;
+      2026-11-10 17:00 SAST Succeeded; 2026-11-11 06:00 SAST.
+    weekly-coordinator-digest; "Sends weekly digest emails to Coordinators."; Mondays at 10:00 SAST; 0 8 * * 1; Not
+      run yet; 2026-11-16 10:00 SAST (a Monday). From A.2.4: 2026-11-10 21:39 SAST Succeeded.
+    At A.2.2 msf-campaign-auto-close is disabled (Next run "None while disabled"), then enabled (next 2026-11-10 22:00
+    SAST). At A.2.4 the digest runs by hand at 21:39:40 (68 ms), at A.2.6 at 21:39:58 (25 ms). 3.32's run of
+    assessor-pending-nudge is 19:15:54 (12 ms).
+    A run left Running at a crash is failed at the next start with the error "Marked as failed during startup
+    reconciliation — process likely crashed." (ScheduledJobHost.cs:212): draw it as R2-J08's failed last run.
+  Run history at A.2.10 (21 runs, newest first, SAST; from A.2.10-4 as round 1 drew it, which the assessment checked):
+    by hand, Ran by "Demo Administrator" (10): 21:41:44 scheduled-job-run-retention 7 ms; 21:41:39 audit-log-retention
+      20 ms; 21:41:34 msf-invitation-expiry-reminder 20 ms; 21:41:28 msf-campaign-auto-close 14 ms; 21:41:23
+      entrustment-decision-expiry 29 ms; 21:41:07 assessor-pending-nudge 23 ms; 21:41:02 activity-draft-nudge 13 ms;
+      21:39:58 weekly-coordinator-digest 25 ms; 21:39:40 weekly-coordinator-digest 68 ms; 19:15:54
+      assessor-pending-nudge 12 ms.
+    by the scheduler, Ran by "Scheduler" (11): 21:00:03 msf-campaign-auto-close 29 ms; 20:00:02 msf-campaign-auto-close
+      35 ms; 19:00:00 msf-campaign-auto-close 29 ms; 18:00:28 msf-campaign-auto-close 35 ms; and at 17:00:54 (the
+      catch-up) entrustment-decision-expiry 100 ms, scheduled-job-run-retention 24 ms, audit-log-retention 67 ms,
+      msf-invitation-expiry-reminder 89 ms, assessor-pending-nudge 102 ms, msf-campaign-auto-close 70 ms,
+      activity-draft-nudge 80 ms.
+    Every run Succeeded, all on 2026-11-10. The digest's two: 21:39:58 and 21:39:40. Failed: none. At A.7.11 a 22nd,
+    msf-campaign-auto-close at 22:00:13 by the scheduler, 4 ms (A.7.11-4): "22 runs.".
+  Audit (Prof Mbatha at 3.55, From 2026-11-10 18:58 SAST, the sitting's start; 166 KGK rows: 58 Login, 25 Logout, 23
+    CreateActivityCommand, 40 TransitionActivityCommand, 19 MSF, 1 SendActivityReminderCommand; Prof Mbatha's own sign-in the
+    newest):
+    The first rows (round 1's a-log, from the capture; When, Person, Category, Action, Result): 20:24:10 Nolwazi Mbatha
+      Authentication Login Success; 20:22:59 Nolwazi Mbatha Authentication Login; 20:22:29 Pieter Smit Authentication
+      Login; 20:21:44 Pieter Smit Authentication Login; 20:21:43 Lerato Molefe Authentication Logout; 20:21:29 Lerato
+      Molefe Authentication Login; 20:21:20 Lerato Molefe Authentication Login; 20:21:12 Pieter Smit Command
+      ReleaseMsfCampaignCommand; 20:21:05 Pieter Smit Authentication Login; 20:20:55 Pieter Smit Command
+      CloseMsfCampaignCommand; 20:20:48 Pieter Smit Authentication Login; 20:20:19 Pieter Smit Command
+      ResendMsfLinksCommand. The other 38 of page 1 are ‹…›: draw these twelve and say how many are not drawn.
+    Failures only (4, newest first): 19:02:02 Fatima Khumalo Command TransitionActivityCommand Failed "Decline requires
+      a note." (the step's own words, act-3-operations.md:320; inferred to be the stored text); 19:01:45 Sipho Ndlovu
+      Command CreateActivityCommand Failed "Date observed: The date cannot be before your programme started
+      (2026-01-15)." (act-3-operations.md:289; inferred); 19:01:41 Sipho Ndlovu Command CreateActivityCommand Failed
+      "Date observed: The date cannot be after today (2026-11-10)." (observed, 3.56-1); 19:00:06 Anele Dlamini Command
+      TransitionActivityCommand Failed "Presenting problem: A value is required." (act-3-operations.md:135; inferred).
+      The build reads the stored text and says on its record where it differs.
+    "Msf" (19, Pieter Smit, KGK): CreateMsfTemplateCommand 19:17:31; CreateMsfCampaignCommand 19:17:47 and 19:18:40;
+      AddMsfInvitationCommand ×10 (19:18:00 to 19:18:16, round 1's a-admin times); RemoveMsfInvitationCommand 19:18:14;
+      OpenMsfCampaignCommand 19:18:22; WithdrawMsfCampaignCommand 19:18:49; ResendMsfLinksCommand 20:20:19;
+      CloseMsfCampaignCommand 20:20:55; ReleaseMsfCampaignCommand 20:21:12.
+    devadmin at 3.57, From 2026-11-10 19:00 SAST: 174 rows across the institutions and with none, among them eight
+      SubmitMsfResponseCommand rows with no institution and no account (19:19:40, 19:19:44, 19:19:48, 19:20:01,
+      19:20:05, 19:20:09, 19:20:13, 19:20:17), Person "MSF respondent (no account)" (round 1's; T20), and devadmin's
+      own RunScheduledJobNowCommand rows. "Msf" for devadmin: 27 (Mr Smit's 19 with KGK, the 8 submissions with No
+      institution).
+    4.38 (Prof Mbatha): RecordCommitteeDecisionCommand, five Success rows by Thandi Zulu, one per review, at ‹hh:mm:ss›;
+      RevokeEntrustmentDecisionCommand, one Success row by Refilwe Mokoena at ‹hh:mm:ss›.
+    The window line: "Read from 2026-11-10 18:58 SAST to ‹hh:mm› SAST, when you pressed Show. Turning a page keeps
+      this window." (round 1's; T21); on first arrival with no From, "Read from ‹D−1 hh:mm› SAST to ‹hh:mm› SAST: the
+      last 24 hours, when you opened the page. Turning a page keeps this window." (NEW, T21).
+    Categories by label: Command, Authentication, Permission, Committee, MSF, Export, Data rights, Job, Activity type.
+  Entries:
+    Sipho Ndlovu's future-date create (3.56, Prof Mbatha): When 2026-11-10 19:01:41.861 SAST, "Stored as 2026-11-10
+      17:01:41.861 UTC"; Command; CreateActivityCommand; Kgosi Kgari Teaching Hospital; Failed "Date observed: The date
+      cannot be after today (2026-11-10)."; Who: Sipho Ndlovu, c22b8779-798b-4229-a0b8-b73a3d16999c, ::/48; What it was
+      done to: No subject. No Payload.
+    A respondent's submission (3.57, devadmin): 2026-11-10 19:20:17.044 SAST (17:20:17.044 UTC); Command;
+      SubmitMsfResponseCommand; No institution; Success; Who: "No person: an MSF respondent answers by link, with no
+      account." (round 1's; T20), User id "None", Address ::/48; No subject; Payload {"token": "[REDACTED]",
+      "answers": "[REDACTED]"} laid out on four lines.
+    David Naidoo's complete of activity 13 (3.57, devadmin): 2026-11-10 19:10:20.376 SAST (17:10:20.376 UTC); Command;
+      TransitionActivityCommand; Kgosi Kgari Teaching Hospital; Success; David Naidoo, 535c41ed-ffb9-449f-bab9-
+      709da9a0ed77, ::/48; No subject; Payload in jsonb's stored key order, laid out (two-space indent, a property a
+      line): "note": "[REDACTED]", "principal": "[PRINCIPAL]", "activityId": 13, "actorUserId":
+      "535c41ed-ffb9-449f-bab9-709da9a0ed77", "dataPatchJson": "[REDACTED]", "transitionKey": "complete".
+    Thandi Zulu's RecordCommitteeDecisionCommand and Refilwe Mokoena's RevokeEntrustmentDecisionCommand (4.38, Prof
+      Mbatha): What happened, Who and What it was done to only; times, ids and subjects ‹…›.
+    An entry with a subject ("Illustration"): Type ‹…›, Id ‹…›, its institution and speciality by name (DATA).
+    A large payload ("Illustration"): an activity type's save by Demo Administrator, Category Activity type, ‹the
+      command's name›, a payload of several KB (whole schema documents), scrolling in its own region.
+    Sipho Ndlovu's entry after the erasure ("Illustration" of Q15; A.1.12 has erased them): Who reads ‹the pseudonym the
+      erasure gave› with the same user id; nothing else changes.
+  Results (each in the result region, focused):
+    Institutions (T11): "Kgosi Kgari Teaching Hospital created." (on the record after Save, by the one-shot token);
+      "Kgosi Kgari Teaching Hospital saved. Its contact email is now paediatrics@kgk.wombat.local." (A.6.1; flow 12's
+      result for an institution's administrator, InstitutionEdit.razor:33, :366, in place of the Administrator's
+      "Institution saved.");
+      "Demo Institution deactivated. A new invitation can no longer name it."; "Demo Institution reactivated. A new
+      invitation can name it again." (flow 16's, CollegeWords.cs:89, :92).
+    Jobs (Q10, T5): "Disabled msf-campaign-auto-close. The scheduler will not run it until you enable it."; "Enabled
+      msf-campaign-auto-close. Its next run is 2026-11-10 22:00 SAST."; "Ran weekly-coordinator-digest: Succeeded at
+      2026-11-10 21:39 SAST." (A.2.4; 3.32's: "Ran assessor-pending-nudge: Succeeded at 2026-11-10 19:15 SAST."); a
+      failed run, Alert danger, "Ran ‹key›: Failed at ‹YYYY-MM-DD hh:mm› SAST: ‹the error as stored›." with the
+      link "Its runs".
+  Refusals (word for word):
+    Create (as built): "Type the institution's name. The record was not saved." under Name; "Type a short code. The
+      record was not saved." under Short code; "An institution with the same name or short code already exists."
+      under Short code, naming no institution (flow 12's I08); "Enter a valid email address, for example
+      name@example.org." under Contact email (flow 12's I04).
+    Run now while that job runs (as built, ScheduledJobDispatcher.cs:66–68): "Job 'audit-log-retention' is already
+      running, so it was not started again. Wait for that run to finish, then run it again if it is still needed."
+      Alert warning, focused (N7).
+    Run now on a disabled job, from a stale page (PROPOSED rule; NEW, T22): "Job 'msf-campaign-auto-close' is disabled,
+      so it was not run. Enable it, then run it."
+  Failures (flow 16's sentence, the act named; a danger Alert in the result region, its first sentence bold, focused,
+    the cause to the log; NEW, T23): "msf-campaign-auto-close could not be disabled. Nothing has changed. Try again, or
+    come back in a few minutes."; "‹key› could not be started. Nothing has changed. …"; the record's save, as built
+    (InstitutionEdit.razor's SaveFailed): "Could not save the institution. Nothing has changed. Try again, or come back
+    in a few minutes."; "Could not deactivate the institution. …" / "Could not reactivate the institution. …" (NEW).
+  Loading and load errors (the house sentence, S3; with Try again, icon refresh-cw, which focuses the h1 once it reads;
+    nothing under it):
+    "Loading the institutions." / "Could not load the institutions. Nothing has changed. Try again, or come back in a few
+      minutes."; the record, as built: "Loading the institution." / "Could not load the institution. …";
+    "Loading the scheduled jobs." / "Could not load the scheduled jobs. …"; "Loading the run history." / "Could not
+      load the run history. …"; "Loading the audit log." / "Could not load the audit log. …"; "Loading this audit
+      entry." / "Could not load this audit entry. …". The filter bars stay drawn over a list's load error and loading;
+      Show waits for the first read.
+  Empty states (StatePanel empty; NEW unless marked, T17):
+    Run history, a filter matching nothing (A.2.10's Failed): count line "No runs match these filters."; title "No runs
+      match"; body "The filters are kept above. Clear them to see all 21."; a primary "Clear the filters".
+    Run history, no runs at all: "No job has run yet" / "The scheduler runs each job at its time; Scheduled jobs shows
+      when each runs next." (round 1's).
+    The audit log, nothing in the window (states.md:1086, Action NoSuchCommand): count line "No actions match these
+      filters."; title "No actions match"; body "Nothing was recorded between these times. Widen From and To, or
+      clear the filters." (round 1's); a primary "Clear the filters".
+  Unavailable (DESIGN.md § Alerts; S7):
+    Institution (Q17): h1 and tab "Institution unavailable"; .detail-card--empty with div.state-panel-copy "This
+      institution does not exist, or you cannot open it." and div.form-actions with one primary a.btn; no id shown, no
+      header action, never which cause. devadmin: trail Home › Institutions › Institution unavailable, link "Go to
+      Institutions". Prof Mbatha (1.23, the Demo Institution's id): trail Home › Institution unavailable (their record's
+      trail has no Institutions crumb), link "Go to Home" (they cannot open Institutions; T10).
+    Audit entry: h1 and tab "Audit entry unavailable"; "This audit entry does not exist, or you cannot open it."; "Go to
+      Audit log"; trail Home › Audit log › Audit entry unavailable. For an unknown id and for Prof Mbatha typing
+      devadmin's RunScheduledJobNowCommand entry alike (states.md:1091).
+  Access denied (flow 01's, reused, unchanged; A.5.2): Prof Mbatha on /admin/institutions and /admin/jobs: "You cannot
+    open this page", "Your role (Institutional admin) does not open this page.", "If you need it for your work, ask the
+    platform administrator.", Go to Home; nothing lit.
+  Words that stay (built): the Deactivate dialog; the create refusals; the dispatcher's refusal; Run now's and the
+    toggle's names; "Edit ‹name›"; Curriculum progress and the user page whole.
+  CAPTURE-ONLY: none.
+
+PROPOSED (THIS ASK: choices this message makes, for the operator and the review to weigh; list them on the Spec):
+  T1 Q6 (run history) settled as § DECISIONS says: the select, Status, SAST days, Show and Clear filters, the names,
+    PagerControls at 50, the error whole under its badge, no Back; "Run history", "Ran by", Finished folded (round 1's
+    renames). Alternative: the brief's "Job run history" and "Triggered by".
+  T2 Q7 (times) settled as § DECISIONS says: SAST with the zone everywhere a person reads; schedules in words with the
+    cron as a detail; the entry's stored UTC labelled under its SAST time.
+  T3 Q8 (the audit log) settled as § DECISIONS says: the filters then Show, by label, the id and type filters kept, the
+    window fixed and stated, the address carrying it, live names, PagerControls at 50. Alternative: a Person filter by
+    name (now possible, Q15) in place of Person's user id.
+  T4 Q9 (an entry) settled as § DECISIONS says: h2 sections What happened, Who, What it was done to, Payload; the
+    payload's own region; Unavailable. Alternative: round 1's Event, Person, Subject, Payload.
+  T5 Q10 (Run now and Disable) settled as § DECISIONS says, in the brief's words. Alternative: round 1's "‹key› ran and
+    succeeded. It started at ‹time› and took ‹n› ms. What it did is written to the application log."
+  T6 Q11 (the phone) settled as § DECISIONS says. Each list's stack, chosen from its columns at 1280 and to be confirmed
+    by the sweep: Institutions 1150 px (six columns, the address unbreakable but anywhere: about 690–740 px against
+    717 px at 1025); Scheduled jobs 1150 px (five columns, two buttons a row); Run history 1024 px (five columns, about
+    690 px); the audit log 1150 px with Action breaking anywhere (six columns, about 900 px before Action breaks).
+    Never a new 900 px-only stack. Say on the Spec what each measured; if a list still overflows at 1151 px, say so and
+    draw the narrowest columns that do not.
+  T7 Q12 (what the build folds in) settled as § DECISIONS says.
+  T8 Health in words with a badge a line and no dot (T327; round 1's, accepted), with Q2's sentence and S5's overdue
+    words; the line order fixed (Database, Mail, Scheduled jobs).
+  T9 Home's partial answer with the database down (S4): Database Unreachable, Mail as it is, the jobs and Accounts "Not
+    read: the database did not answer."
+  T10 Unavailable's trail and link follow the caller's way in (Q17): the Administrator's "Home › Institutions ›" and "Go
+    to Institutions"; an institution's administrator's "Home ›" and "Go to Home".
+  T11 The institution's results by name, as flow 12's for an institution's administrator and flow 16's for a College
+    (§ FIXTURES "Results"), in
+    place of "Institution saved." / "Institution deactivated." / "Institution saved and reactivated."; a created
+    result on the record; Reactivate's dialog words.
+  T12 The create subtitle (round 1's); the field help "Up to 200 characters.", "Up to 32 characters.", "Optional."
+    (round 1's); the Status sentences (round 1's); the record's subtitle "KGK · Active" (N2).
+  T13 The health lines' words beyond Q2's and Q3's (§ FIXTURES "Health lines"): the database's, the configured and
+    failing mail lines, the never-run line under an OK badge, the mail's second line.
+  T14 The Accounts card: title "Accounts"; "24" / "accounts"; "Every account Wombat holds but an erased one."; "None is
+    locked." / "‹n› are locked and cannot sign in now." (locked: a lockout still running, whether an administrator's
+    lock or a sign-in lockout; an erased account is neither counted nor locked); the link "Users".
+  T15 The new subtitles: Scheduled jobs', Run history's, the audit log's by role, an entry's; the jobs' descriptions
+    without "(daily at … UTC)", "ExpiresOn" or "ScheduledJobRun".
+  T16 A disabled job's Next run "None while disabled"; "Not run yet" for a job never run (A.2.1's "—"); "Running…" on
+    Run now while it waits; Duration "—" while a run runs.
+  T17 The count lines ("21 runs.", "166 actions.") and the empty states' words (§ FIXTURES).
+  T18 Run history's filters in its address, so Home's "Its runs" and the failed result's "Its runs" open one job's
+    failed runs.
+  T19 The Institution filter, the Administrator's alone (All institutions, No institution, each by name), and the
+    institution's name under the person on the Administrator's rows (no Institution column: it would push the table
+    past 974 px at 1280). The query ignores the filter for an institution's administrator, pinned to theirs.
+  T20 An actor-less row: "MSF respondent (no account)" on a submission's row; "No person: an MSF respondent answers by
+    link, with no account." on its entry; any other row with no user id and no stored display reads "No signed-in
+    person" (NEW) on the row and the entry.
+  T21 The window line on Show, and on first arrival (§ FIXTURES "Audit").
+  T22 RunScheduledJobNowCommand refuses a disabled job (the brief's § 5 rule), with the NEW refusal.
+  T23 The failures' words (§ FIXTURES "Failures").
+  T24 The record keeps Created off its page (the list shows it); the list's Created is the South African day alone.
+
+STATES TO DRAW (each at 1280 and 390, with the role's menu and the shell; 768 where marked; boards R2-… in rows by
+  letter). About 85 states: some 175 boards with their twins, the Spec and the Steps (round 1 drew 31):
+  R2-H. Home (devadmin):
+    R2-H01 A.6.2 as replayed: Database OK, Mail Not configured with its two lines, Scheduled jobs OK "All 8 jobs last
+      succeeded." with Scheduled jobs; Accounts 24, "None is locked.", Users (768 too). R2-H02 1.1: the jobs line naming
+      weekly-coordinator-digest not run yet; Accounts 9 (1.11: 11, words only on the Steps). R2-H03 every line healthy,
+      a mail server set ("Illustration"). R2-H04 a mail dropped: Mail Failing (Q13; "Illustration"). R2-H05 a job
+      failed: its first error line, Its runs and Scheduled jobs ("Illustration"). R2-H06 a job disabled (A.2.2's state,
+      Home not opened then: "Illustration"). R2-H07 a job overdue (S5; "Illustration"). R2-H08 the database down: the
+      partial card and Accounts Not read (S4; "Illustration"). R2-H09 every line failing: Database OK, Mail Failing,
+      jobs Failing with "Three jobs need you:" ("Illustration"). R2-H10 three accounts locked ("Illustration"). R2-H11
+      Home loading (DashboardFrame's skeleton, the two cards' shapes).
+  R2-I. Institutions:
+    R2-I01 1.6: one row, Demo Institution, Q5's subtitle, Create institution. R2-I02 A.6.1: two rows (768 too; swept
+      900–1100; every column read at 1280). R2-I03 A.7.11 (390 only): two rows stacked, KGK's
+      hod.paediatrics@kgk.wombat.local, Status, Created and Edit in view. R2-I04 the list loading. R2-I05 its load error.
+      R2-I06 a 200-character name, a row with no contact email and an Inactive row ("Illustration"). R2-I07 create,
+      empty (1.6, before typing). R2-I08 1.6 create saved empty: both refusals under their fields, Name focused. R2-I09
+      the duplicate under Short code ("Illustration"). R2-I10 a malformed address ("Illustration"). R2-I11 1.6 saved:
+      KGK's record, "Kgosi Kgari Teaching Hospital created." focused, h1 and tab Kgosi Kgari Teaching Hospital, "KGK ·
+      Active", Status Active with Deactivate…. R2-I12 A.6.1 saved: the result naming paediatrics@kgk.wombat.local (768
+      too). R2-I13 Deactivate… asked on the Demo Institution (states.md:898), opening on Cancel. R2-I14 deactivated: the
+      result focused, "DEMO · Inactive", Status Inactive with Reactivate…. R2-I15 Reactivate… asked, opening on Cancel.
+      R2-I16 reactivated: the result focused, Status Active with Deactivate… again. R2-I17 the record loading
+      ("Institution", no Save, no Status action). R2-I18 the record's load error. R2-I19 Unavailable: devadmin typing
+      /admin/institutions/99 ("Illustration"). R2-I20 Unavailable: Prof Mbatha at 1.23 typing the Demo Institution's id
+      (Q17; their trail and Go to Home). R2-I21 Access denied: Prof Mbatha typing /admin/institutions (A.5.2; flow 01's,
+      reused; /admin/jobs words only). R2-I22 a record save that failed ("Illustration"). (Create and Deactivate… at
+      390 are R2-I08's and R2-I13's twins: no extra boards.)
+  R2-J. Scheduled jobs:
+    R2-J01 A.2.1: the eight, "Not run yet" on the digest, schedules in words, Run history in the header (768 too; swept;
+      every column read at 1280). R2-J02 A.2.2 disabled: the result above the list, focused; the row reads Enable,
+      "None while disabled", Run now aria-disabled with "Enable it to run it." beside it. R2-J03 A.2.2 enabled: the
+      result with the next run. R2-J04 A.2.4 ran: the result, the digest's row 2026-11-10 21:39 SAST Succeeded. R2-J05 Run now
+      waiting: "Running…" on assessor-pending-nudge ("Illustration": no capture holds it). R2-J06 Run now refused while running ("Illustration"). R2-J07 Run now ended in failure: the
+      danger result with Its runs ("Illustration"). R2-J08 a failed last run in its row: Failed, the crash error under
+      it ("Illustration"). R2-J09 Run now on a disabled job from a stale page, refused (T22; "Illustration"). R2-J10
+      Disable failed ("Illustration"). R2-J11 loading (states/scheduled-jobs-list--loading.png's body). R2-J12 the load
+      error.
+  R2-R. Run history:
+    R2-R01 A.2.10: 21 runs, "21 runs.", Ran by by name, the pager "Showing 1–21 of 21" (768 too; swept; every column
+      read at 1280). R2-R02 Job weekly-coordinator-digest, Show: "2 runs." focused, Clear filters offered. R2-R03 Status
+      Failed, Show: the no-match state. R2-R04 From 2026-11-10, Show: "21 runs.". R2-R05 A.7.11 (390 only): 22 runs
+      stacked, the filters stacked. R2-R06 page 2 of ‹n› past 50: "Showing 51–100 of ‹n›", the focus on h2 "Runs"
+      ("Illustration"). R2-R07 a Running run (Duration "—") and a failed run with a 2,000-character error wrapping under
+      its badge ("Illustration"). R2-R08 no runs at all ("Illustration"). R2-R09 arriving from Home's Its runs:
+      Job and Status set from the address ("Illustration"). R2-R10 loading. R2-R11 the load error (the filters stay).
+  R2-L. The audit log:
+    R2-L01 3.55: Prof Mbatha, From 18:58 SAST, Show: "166 actions." focused, the window line, the first twelve rows
+      (768 too; swept; every column read at 1280). R2-L02 Failures only: four rows, each refusal under its Failed badge.
+      R2-L03 "Msf": 19. R2-L04 Prof Mbatha's first arrival: the last 24 hours, the window line's arrival form.
+      R2-L05 3.57: devadmin,
+      From 19:00 SAST, 174, the Institution filter, each person with the institution under the name, the respondents'
+      rows "MSF respondent (no account)" / "No institution" (768 too; every column read at 1280). R2-L06 devadmin's
+      "Msf": 27. R2-L07 devadmin's Failures only (3.57-0, not attached: the four KGK rows, ‹any others›). R2-L08 the
+      Institution filter on No institution ("Illustration"). R2-L09 4.38: RecordCommitteeDecisionCommand, five rows by
+      Thandi Zulu. R2-L10 4.38: RevokeEntrustmentDecisionCommand, one by Refilwe Mokoena. R2-L11 nothing matches
+      (NoSuchCommand). R2-L12 page 2 of 166: "Showing 51–100 of 166", the window unchanged, the focus on h2 "Actions".
+      R2-L13 back from an entry by the trail: Failures only, page 1, the focus on the Detail left (T277). R2-L14 loading.
+      R2-L15 the load error.
+  R2-E. An entry:
+    R2-E01 3.56: Sipho Ndlovu's future-date create to Prof Mbatha, no Payload. R2-E02 3.57: a respondent's submission
+      to devadmin, its payload. R2-E03 3.57: David Naidoo's complete of activity 13, its payload laid out (768 too).
+      R2-E04 4.38: Thandi Zulu's decision entry to Prof Mbatha. R2-E05 4.38: Refilwe Mokoena's revocation. R2-E06 a
+      large payload scrolling in its region ("Illustration"). R2-E07 an entry with a subject ("Illustration"). R2-E08
+      Unavailable: Prof Mbatha typing devadmin's RunScheduledJobNowCommand entry (states.md:1091). R2-E09 Sipho
+      Ndlovu's entry after the erasure, read by devadmin (Q15; "Illustration"). R2-E10 loading. R2-E11 the load error.
+
+ALSO, as flows 12–17's round 2 did:
+  - Every page: one h1 (PageHeader), then h2 in order; every table captioned with a name (N13), scope on its headers
+    and the row's th scope="row" where a row has a name; every row action named for its row, no two alike; loading
+    (the header at once and a skeleton, no action that needs the data until the read is in); a load error in fixed
+    words with Try again, never an exception's text and nothing under it (T329); ISO dates; no sideways scroll at 1280,
+    768 or 390 but inside the payload's own region.
+  - Header actions stay beside the title block at 1280 and 1100 (Create institution, Run history): say what each does.
+    At 390 they take the row, 44 px.
+  - Focus after every action: each result (created, saved, deactivated, reactivated, disabled, enabled, ran, failed,
+    refused) on the result region; a create refusal on its first refused field; Show on the count line; Clear filters
+    on the first filter; "Clear the filters" in an empty state on the first filter; a page turn on the list's h2; every
+    dialog opening on Cancel, Cancel and Escape returning to its trigger, a confirm to the result; Try again to the
+    reloaded page's h1; the trail's Audit log to the Detail left.
+  - The routes, each with its owner, trail, lit item and tab title: / (Home); /admin/institutions (Institutions; Home ›
+    Institutions); /admin/institutions/new (Institutions; Home › Institutions › Create institution);
+    /admin/institutions/{Id:int} (Institutions; Home › Institutions › the name); /admin/jobs (Scheduled jobs; Home ›
+    Scheduled jobs); /admin/jobs/runs (Scheduled jobs; Home › Scheduled jobs › Run history); /admin/audit (Audit log;
+    Home › Audit log); /admin/audit/{Id:guid} (Audit log; Home › Audit log › Audit entry). No new route.
+  - Name every design-system component you use (PageHeader with its trail and actions, DashboardFrame, DashboardCard,
+    DataTable with StackWide, PagerControls, FormField, FormActions, FieldHelp, FieldRefusal, ActionResult, Alert,
+    ConfirmDialog in action mode, StatePanel with Try again, Skeleton, the Unavailable state, BadgeFor, Icon by its
+    Lucide name: settings, users, plus, clock, refresh-cw), and mark anything else NEW (only § CLASSES' rows).
+  - Nothing of flows 01–17 drawn as changed but what this message names: the shell, the menus and Access denied; Home's
+    frame; an institution's administrator's own record; Curriculum progress; the user page. 6.38 and A.6.9 have no board.
+
+CLASSES (name each on the Spec's class table; every other class a board uses is app.css's, "reuses .x"):
+  - Home: .dashboard-grid, DashboardCard (.detail-card, .dashboard-card-title), .dashboard-metric, .muted, .text-sm,
+    .badge and its tints; R1 for the lines.
+  - The lists: .people-page; .search-container, .search-grid, .search-field, .filter-actions; DataTable StackWide
+    (clinic-table--stack clinic-table--stack-wide); .person-cell for Job and Person; .col-fit--wide for one-word
+    columns; .nowrap for a time; .actions-cell; PagerControls (.pager); p[role="status"] for the count line; .muted
+    .text-sm for the window, a reason, a description.
+  - The record and create: .record-page, .form-container, .form-grid, .form-actions, .field-help, .required-mark,
+    .user-section for Status; an entry: .user-page, .user-section, dl.detail-list, <code>, .code-block.
+  - Shipped rules this round may add or change (each argued on the Spec, nothing else):
+    R1 (NEW, T8) .health-list, .health-line, .health-line-name, .health-line-text: a line's name and badge beside its
+      sentence and link, one column under a 30rem card (container query); round 1's R1, accepted.
+    R2 (NEW, Q9) .code-block--region: a modifier of .code-block (max-height 28rem, overflow: auto, its focus ring), for
+      the payload; round 1's .payload-block becomes this.
+    C1 (CHANGED, T6) the 1150 px query (app.css:7708) gains .institutions-page, .jobs-page and .audit-page; the 1024 px
+      query (app.css:7633) gains .job-runs-page; each a page scope class beside .people-page (NEW as scope only, as
+      .activity-types-page is), with no rule of its own but the stack, unless a measure needs one: name it then.
+  - Gone, each a shipped class's job (the assessment § 6): .accounts-breakdown (Q14); .list-head, .list-count,
+    .list-window (a plain p[role="status"][tabindex="-1"], as ActivityTypesList.razor:103; .muted .text-sm);
+    .action-reason (p.muted.text-sm beside the button, as flow 17's Publish reason; .move-reasons--beside is the
+    activity bar's); .job-desc, .job-key (.person-cell); .run-when and .nw (.nowrap, app.css:5499); .run-error (T1:
+    the error whole under its badge); .payload-block, .payload-note (R2; .muted .text-sm); .audit-entry-page and
+    .stored-utc (.user-page .detail-list dd already wraps, app.css:6630–6633; .muted .text-sm); .institution-status
+    (.user-section); round 1's R9 (shipped, DESIGN.md:1137).
+  - Icons by Lucide name: settings and users (the cards, as built), plus (Create institution), clock (Run history, as
+    built), refresh-cw (Try again). No icon on a row action or a health line.
+
+SPEC BOARD, "R2-0-spec" (more boards "R2-0-spec-2", … if it runs long):
+  - FIRST: which reference files you opened under project/ref/ and of round 1's boards (list them), and which you could
+    not read, said plainly.
+  - The decisions in one table (Q1–Q17), each with the boards that draw it, Q6–Q12 marked PROPOSED (THIS ASK); then
+    M1–M4, S1–S11, N1–N14 and T1–T24, each with its boards; which boards are Illustrations.
+  - The changes the boards need, written as code changes, each PROPOSED (decided ones say their Q):
+    GetAdministratorDashboardSummaryQuery: a partial answer when the database does not answer (today the probe is caught
+      at :31–41 but the ten ListUsersInRoleAsync calls at :44–52 throw, and DashboardFrame replaces both cards, S4, T9);
+      one account count, every account but an erased one (a join to DataRightsErasureRecord), and the locked count (Q4);
+      the mail state from IEmailHealth (Q2); the jobs state, each job's key, enabled, last run's status, time and first
+      error line, and whether it is overdue (computed from its cron, no store) (Q3).
+    IEmailHealth (T327, Q2, Q13): configured or not; the queue's depth; the last sent; the last dropped and its
+      refusal; the drops in the last 24 hours; written by the mail worker and LoggingEmailSender; the Web host's only.
+    AdministratorDashboard: the two cards (§ HOME); the status dots go; DESIGN.md § Status dots retired.
+    ScheduledJobDto and GetScheduledJobStatusQueryHandler: the last run's error, finish and runner (S9); the schedule
+      in words and SAST from the cron (a formatter; T2); each job class's Description without its UTC clause (T15).
+    RunScheduledJobNowCommand: returns the run (status, start, finish, error; today IRequest with no answer, :8, and
+      DispatchNowAsync swallows a failure into the row, ScheduledJobDispatcher.cs:25, :54–60); refuses a disabled job
+      (T22).
+    ScheduledJobsList: the result above the list (today after the table, :79–84), focused; the columns (§ THE JOBS); Run
+      now aria-disabled with its reason (today disabled, :64); Running…; the fixed load error with Try again (today
+      ex.Message, :117) and a loading line; the 1150 px stack.
+    GetScheduledJobRunsQuery: Page and PageSize with a total (today Take(200), :43–45); From and To as South African
+      days (today UTC days, :31–41, :54, :60); the runner's name by GetDisplayNamesAsync.
+    ScheduledJobRunsList: "Run history" (h1, tab, NavOwners' crumb); the select (today a free text per keystroke, :23);
+      Show and Clear filters; the filters in the address (T18); PagerControls; the count line; the empty states; the
+      fixed load error; no Back to jobs (:9–12).
+    InstitutionsList: Q5's subtitle (today :8); the columns; StackWide in the 1150 px stack (today no Stack, :20); the
+      fixed load error with Try again (today exception.Message, :63) and a loading line.
+    InstitutionCreate: T378's refusals (today DataAnnotations ValidationMessages, :30–47); the mark line; the subtitle;
+      no Back (:18); the created result by the one-shot token (today forceLoad, :79).
+    InstitutionEdit (the Administrator's view): h1 and tab the name (today "Edit institution", :212); the subtitle
+      (:214–216); no Back (:187–188); the Status section with Deactivate… and Reactivate… (ReactivateInstitutionCommand
+      exists) behind dialogs; no Active box (:86–97) and no Save-with-unticked dialog (:128–129); the results by name
+      (T11); Unavailable for null, for both roles (today /not-found, :102–105; Q17).
+    ListAuditEntriesQuery: From and To resolved and passed in, never recomputed per request (today UtcNow − 24h, :20–21);
+      the Institution filter for the Administrator (pinned for an institution's administrator, :41); the institution's
+      name per row (today an id, AuditEntryDto.cs:15); the person's live name (Q15).
+    AuditList: the filters' order and labels; Show and Clear filters after them (today Apply filters in the header,
+      :8–15); the address; the window line; PagerControls (today hand-built, :121–134), the focus on the h2 (today
+      lost, :165); the columns (§ THE AUDIT LOG); the 1150 px stack; the fixed load error.
+    AuditDetail: h2 sections (today h3 cards, :26, :43, :54, :74); the names; the institution by name (today raw ids,
+      :60, :64); the payload laid out (an indented serialisation of the stored text, keeping its key order) in its
+      region (today one pre, :71–77); Unavailable for null (today StatePanel's empty card, :20–21); the trail's crumb
+      carrying the list's address (PageHeader's custom Trail, as SpecialityEdit.razor:28); no Back to log (:10).
+  - The class table: every class a board uses, "reuses .x", CHANGED or NEW and why (R1, R2, C1); canvas-only classes
+    (.cv-*, K rows) listed apart.
+  - Badges (BadgeFor's tints, no new one): OK, Success, Succeeded, Active: completed; Failing, Failed, Unreachable:
+    declined; Not configured, Disabled, Running: accepted (Running as built, N5); Overdue: .badge-overdue; Inactive:
+    withdrawn; Not read: draft.
+  - The 390 scope that gives each page 44 px: .people-page on the lists, .record-page and .user-page on the records,
+    .filter-actions, StackWide's buttons, .dialog-card for both dialogs; each list's 768 behaviour; the 900–1100
+    sweep's results, each list against its container; every column of each list at 1280, for devadmin and, on the
+    audit log, Prof Mbatha.
+  - The DESIGN.md text each changes: § Status dots (retired); § Dashboard page (the Administrator's two cards, health in
+    words); § Table system (the four lists' stacks); § Pager (run history and the audit log on PagerControls, 50 a
+    page); § Page-level patterns (the record headed by its name with its Status section; the entry a .user-page of h2
+    sections; Unavailable gains Institution and Audit entry, the trail and link by the caller's way in; no Back links);
+    § Button system (Deactivate… and Reactivate… each asking; Run now aria-disabled with its reason; results above the
+    list); § Form system (the create refusals).
+  - The tokens: every colour an existing token; contrast checked (text 4.5:1, borders and the focus ring 3:1): each
+    badge's word on its tint (T322), .badge-overdue, the muted reason beside Run now, the muted lines on the card at 390,
+    the payload region's focus ring.
+  - The DATA reads grouped by query (as above), and every message by kind (result, refusal, failure, question, notice,
+    empty, health line) with its words: built, round 1's, NEW or PROPOSED (THIS ASK), each NEW beside the words it
+    replaces.
+  - LATER, NOT BUILT (a line each, never drawn as built): T274 (what a run did, stored with it; the Status cell leaves
+    room); T157 (refusing to start in Production with no mail server); T114 items 2–3 (bounding a payload's size); the
+    Api host's /health, which checks nothing (to be filed); T401 (the College's records to Q5's pattern); a by-name
+    Person filter (T3).
+  - Edge cases, one line each with its board: every health line failing (R2-H09); the database down (R2-H08); no runs
+    (R2-R08); thousands of runs, paged (R2-R06; about 2,800 held at once); a run still Running (R2-R07); a
+    2,000-character error (R2-R07); a payload of several KB (R2-E06); an actor-less row (R2-L05, T20); an entry with no
+    subject (R2-E01) and one with (R2-E07); an institution with no contact email and a 200-character name (R2-I06); an
+    institution's administrator whose institution is inactive reading the log (words only: unchanged); an erased
+    person in old rows (R2-E09, Q15); two Administrators running the same job (R2-J06).
+
+STEPS BOARD, "R2-0-steps" (more boards "R2-0-steps-2", … if it runs long):
+  - One counting rule, said once at the top and used on every row (flow 17's): a journey counts presses + fields; a
+    press is a click on a button, link, tab or checkbox; a field is a text typed, a date set or a choice made in a
+    select or a radio group, and is not also a press; a menu link is a press, and at 390 opening the menu is one more;
+    a dialog's confirm is a press; a page the app goes to by itself is no press; reading and scrolling are 0.
+  - The 23 steps, each a row (and 1.23, the 24th, Q17), its board, and what its Expect will say once built, quoting
+    today's words and giving the new ones ("unchanged" where so), values person by person and count by count:
+    1.1: "System health, which shows the database connection as healthy" becomes "System health, which reads Database
+      OK, Mail Not configured ('Mail is written to the log, not sent.') and Scheduled jobs OK, naming
+      weekly-coordinator-digest as not run yet"; "Users across institutions, which counts the seeded accounts (8, or 9
+      where the bootstrap Administrator exists)" becomes "Accounts, which counts every account but an erased one (8, or
+      9 …), with 'None is locked.'"; the menu, Home lit and the top bar unchanged (R2-H02).
+    1.6: Do unchanged (Create institution, the three fields, Save). Expect: the list's row unchanged, "offering Edit
+      only"; the create form unchanged but "* marks a field you must fill in." and each refusal focused and described;
+      "headed 'Edit institution', with the browser tab reading 'Edit institution · Wombat'" becomes "headed 'Kgosi Kgari
+      Teaching Hospital', the tab 'Kgosi Kgari Teaching Hospital · Wombat', the result 'Kgosi Kgari Teaching Hospital
+      created.' focused"; "Active is ticked and Deactivate is offered" becomes "Status reads Active, 'A new invitation
+      can name it.', with Deactivate…"; "created today" reads 2026-11-10 (R2-I01, I07, I08, I11, I02).
+    1.11: "The dashboard's count of registered users is two higher" becomes "Accounts reads two higher (11)" (R2-H02).
+    3.32: unchanged ("The job's last run updates."); the result now reads "Ran assessor-pending-nudge: Succeeded at
+      2026-11-10 19:15 SAST." above the list (words only).
+    3.55: Do "Set From (UTC) to the start of this act's sitting … and apply" becomes "Set From (SAST) to the sitting's
+      start, 18:58, and press Show"; "Filter by Result" and "filter by Action" end "and press Show". Expect: "50 to a
+      page" unchanged; "each with its actor and OK" becomes "each with the person by name and Success"; "each FAILED"
+      becomes "each Failed, its refusal under the badge"; the counts unchanged (166; 4; 19) (R2-L01–L03).
+    3.56: Do unchanged. Expect: "The Event card shows …" becomes "What happened shows the SAST time to the millisecond
+      with the stored UTC under it, Command, CreateActivityCommand, Kgosi Kgari Teaching Hospital, and Failed with 'Date
+      observed: The date cannot be after today (2026-11-10).'"; "The Actor card shows Dr Ndlovu's user id, display name
+      and IP address" becomes "Who shows Sipho Ndlovu by name, the user id and ::/48"; "No Payload card" becomes "no
+      Payload section"; "'Back to log' returns to the list" becomes "the trail's Audit log returns to Failures only, page
+      1, the focus on the Detail left" (R2-E01, R2-L13).
+    3.57: Do "From (UTC)" becomes "From (SAST) 19:00, Show". Expect: "whose actor is 'system'" becomes "whose Person reads
+      'MSF respondent (no account)' and Institution 'No institution'"; "names no user and no display name, only a
+      truncated address" becomes "Who reads 'No person: an MSF respondent answers by link, with no account.', User id
+      None, ::/48"; the payloads unchanged in content, laid out one property a line (R2-L05, E02, E03).
+    4.38: "five OK rows by Dr Zulu" becomes "five Success rows by Thandi Zulu"; "the Event card and the Actor card only"
+      becomes "What happened, Who and What it was done to only, no Payload"; the revocation's actor "Refilwe Mokoena"
+      (R2-L09, L10, E04, E05).
+    6.38: unchanged (flow 15's page; no board).
+    A.2.1: "its cron schedule (UTC), with its last run, that run's status badge and its next run in the server's local
+      time" becomes "its schedule in words in SAST with the cron under it, its last run in SAST with its badge under it,
+      and its next run in SAST"; "Each has Disable and Run now" unchanged (named as built); "reads '—' for its last run
+      and status" becomes "reads 'Not run yet'"; the eight keys unchanged (R2-J01).
+    A.2.2: "Disabling says 'Job 'msf-campaign-auto-close' disabled.'" becomes "'Disabled msf-campaign-auto-close. The
+      scheduler will not run it until you enable it.' above the list, focused"; "'—' for its next run" becomes "'None
+      while disabled'"; "its Run now is unavailable" gains "with 'Enable it to run it.' beside it"; enabled again,
+      "'Enabled msf-campaign-auto-close. Its next run is 2026-11-10 22:00 SAST.'" (R2-J02, J03).
+    A.2.4: "'Job 'weekly-coordinator-digest' dispatched.'" becomes "'Ran weekly-coordinator-digest: Succeeded at
+      2026-11-10 21:39 SAST.'"; the rest unchanged (R2-J04).
+    A.2.6, A.2.8, A.2.9: unchanged (their Expects read the log; A.2.9's "Each run reads Succeeded" holds).
+    A.2.10: Do "Filter it by the key 'weekly-coordinator-digest'; by the key 'digest'; by the status Failed; from today"
+      becomes "Choose weekly-coordinator-digest in Job and press Show; choose All jobs and Failed and press Show; choose
+      All and set From to today and press Show" (the "digest" sub-step goes: a select cannot miss). Expect: "each with
+      its key, start, finish, duration, status badge, who triggered it and any error" becomes "each with its job, its
+      start in SAST, its duration, its status badge (a failed run's error under it) and who ran it"; "one the scheduler
+      ran reads 'scheduler'" becomes "'Scheduler'"; "Filters apply only when Filter is pressed" becomes "… when Show is
+      pressed"; "Failed shows 'No runs found'" becomes "'No runs match these filters.'"; "The date is read as a UTC day"
+      becomes "a South African day"; gains "the pager reads 'Showing 1–21 of 21'; 10 by hand, 11 by the scheduler"
+      (R2-R01–R04).
+    A.5.2: unchanged (flow 01's Access denied; R2-I21).
+    A.5.13: unchanged (no System item: Q1).
+    A.6.1: "creation time" becomes "the day it was created"; "Saving says 'Institution saved.'" becomes "'Kgosi Kgari
+      Teaching Hospital saved. Its contact email is now paediatrics@kgk.wombat.local.'"; "The Administrator is offered
+      the Status box and Deactivate" becomes "Status reads Active, with Deactivate…, in a section of its own; no Active
+      box" (R2-I02, I12).
+    A.6.2: rewritten: "Database reads OK; Mail reads Not configured, 'Mail is written to the log, not sent.'; Scheduled
+      jobs reads OK, 'All 8 jobs last succeeded.'; each a word on a badge, no dot, no task id. Accounts reads 24, every
+      account but an erased one, and 'None is locked.'" (R2-H01).
+    A.6.9: unchanged (flow 12's page; no board).
+    A.6.10: unchanged (/health).
+    A.7.11: "The jobs table scrolls inside its container, with each Run now and toggle reachable" becomes "Each job is a
+      stacked block, its state, next run, Run now and Disable in view, each button 44 px; Run history's runs and
+      Institutions' rows stack likewise (KGK's contact hod.paediatrics@kgk.wombat.local); nothing scrolls sideways";
+      "The run-history filters stack" unchanged (R2-I03, R2-R05, R2-J01-390, R2-H01-390).
+    1.23 (Q17): "The Demo Institution's id sends ‹Prof Mbatha› to Page not found, not 'You cannot open this page'" becomes "… to
+      'Institution unavailable', 'This institution does not exist, or you cannot open it.', with Go to Home; never 'You
+      cannot open this page'"; act-1-setup.md:709, :722 (R2-I20).
+    Changed: 14 of the 23 (1.1, 1.6, 1.11, 3.55, 3.56, 3.57, 4.38, A.2.1, A.2.2, A.2.4, A.2.10, A.6.1, A.6.2, A.7.11),
+    and 1.23. Unchanged: 3.32, 6.38, A.2.6, A.2.8, A.2.9, A.5.2, A.5.13, A.6.9, A.6.10.
+    states.md: 141 ("System health (with the job status), Users across institutions" → the two cards in words); 888 ("An
+    administrator's edit" → the record by its name); 889 ("Institution saved." → T11's); 898 ("Institution
+    deactivated." → T11's); 899 (Page not found → Institution unavailable, Q17); 1086 ("No entries" → "No actions
+    match"); 1091 ("Audit entry not found" → "Audit entry unavailable"); 1095 ("Dispatched" → the ran result); 1099
+    ("the full key" → the Job select); 1100 ("No runs" → "No runs match these filters."); 1093 ("Nine jobs" → eight;
+    stale today, N14).
+  - Search the runbook for the words that change (BRIEF.md § 9 item 7): "Apply filters", "apply" (3.55's Do), "Back to
+    log" (3.56), "Back to jobs", "Edit institution" (1.6), "registered users" (1.11), "dispatched" (A.2.4; states.md:
+    1095), "When (UTC)", "From (UTC)" (3.55, 3.57), "Display name", "Users across institutions" (1.1, A.6.2), "Status
+    box" (A.6.1), "scheduler" lower-case (A.2.10), "No runs found" (A.2.10), "Page not found" (1.23); each hit's step.
+  - Each journey's count at 1280 and 390 (presses + fields), today's beside it:
+    1.1 read Home: 0 + 0 / 0 + 0; today 0 + 0.
+    A.6.2 read health and accounts: 0 + 0 / 0 + 0; today 0 + 0 (nothing true to read).
+    A failing mail line found: 0 + 0 (acting on it is outside Wombat); today never (nothing says it).
+    A failed job found and run again (Illustration): Home's Scheduled jobs, Run now: 2 + 0 / 2 + 0; today 2 + 0 / 3 + 0
+      (the menu), found only by reading a badge.
+    1.6: Institutions, Create institution, Save (empty), Save, the trail: 5 + 3 (390: 6 + 3); today 5 + 3 (Back for the
+      trail).
+    A.6.1: Institutions, Edit, Save; the email: 3 + 1 (390: 4 + 1); today 3 + 1.
+    Deactivate and reactivate (R2-I13–I16): Deactivate…, Deactivate, Reactivate…, Reactivate: 4 + 0; today Deactivate,
+      Deactivate, the box, Save: 4 + 0.
+    A.2.2: Disable, Run now (a press on an aria-disabled button, nothing sent), Enable: 3 + 0; today 2 + 0 (Run now
+      disabled, not pressable).
+    A.2.10: Run history, Show ×3; Job, Job and Status, Status and From: 4 + 5 (390: 5 + 5); today Run history, Filter
+      ×4; the key, the key, the key and Status, Status and From: 5 + 6.
+    3.55: Audit log, Show ×3; From, Result, Result and Action: 4 + 4 (390: 5 + 4); today 4 + 4 (Apply).
+    3.56 and back: Detail, the trail: 2 + 0, and the rows are kept; today 2 + 0, and the filters are lost (3.56-2: 325
+      rows), so finding the row again is 2 + 2 more.
+    Curriculum progress: 2 + 0 / 3 + 0; today the same (flow 15's).
+    Their own account (A.6.9's page): Users, Show, the row; "devadmin": 3 + 1 / 4 + 1; today the same.
+
+CHECK BEFORE YOU STOP: one h1 a board; no inline style; no undefined class; no raw colour; no .cv-wf, .health-dot,
+  .accounts-breakdown, .list-count, .action-reason, .nw, .run-error, .payload-block or .institution-status; no Back link
+  on any page; no B or C part (no System page or item, no verdict line, no "Needs you"); no status dot and no task id on
+  Home; the mail line's Q2 sentence word for word; Accounts 24 at A.6.2 with "None is locked." and no breakdown; Q5's
+  subtitle; Reactivate… asking; "Institution unavailable" for both roles, Prof Mbatha's trail and Go to Home; "Audit entry
+  unavailable"; every load error the house sentence; every time SAST with the zone and every date ISO; no user id on a
+  page but the audit entry's Who and Payload; no "dispatched", "OK"/"FAILED", "system", "Triggered by", "Job run
+  history", "Edit institution" or "When (UTC)" on any page; every result above its list and focused; every dialog naming
+  its target and opening on Cancel; every 390 control 44 px; nothing scrolls sideways at 1280, 768 or 390 but the
+  payload's region; each list swept 900–1100 against its container and every column read at 1280 for each role; no
+  gendered pronoun for a person on any board, annotations included; every bracket ‹…› still a bracket, never filled
+  from memory; every board's 390 and 768 twin carries the same words as its 1280 board; f18r2.css saved as a project
+  file; round 1's boards on a "Round 1" page, untouched; the Spec says first which reference files opened.
