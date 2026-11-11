@@ -2,7 +2,7 @@
 
 Cap: 80 lines. The most recent session only; `harness.py trim` archives the rest into `log/`.
 
-## Session 2026-11-09/10 (Opus): T398, flow 17, designed and built (steps 1–6)
+## Session 2026-11-09 to 11 (Opus): T398, flow 17, designed, built, replayed and synced; T398 done
 
 The operator said "flow 17", then "Done"/"done" after each round and "yes" at each decision (§ 6 Q1–Q12; the pick and
 Q13–Q16; Q17–Q20; round 3's two; the build's P1–P2; F1).
@@ -16,10 +16,16 @@ Q13–Q16; Q17–Q20; round 3's two; the build's P1–P2; F1).
 - **Step 7 done** (2026-11-10): acts 1–6, A and both states passes on `wombat_scenario_t398`; three flow 17 faults found
   and fixed on master (`c9742a18` the scale's seed key and the count's space; `277e4a78` the list's one-word columns, the
   list now stacking to 1150px); no regression left; baseline missing 0. Known-task Gaps only otherwise.
-- **Next:** steps 8 (re-sync the design system; read the live files first) and 9 (lessons), on the operator's word.
+- **Steps 8 and 9 done** (2026-11-11, "proceed"): the live system matched `f98a61f0` but for CRLF; re-synced (`9c12fd44`,
+  `31e8e9c5`: an "Activity types" group of four records, TabBar rewritten); review `design/flows/17-activity-type-builder/
+  resync-review.md` 0 must, 1 should, 4 nits, fixed (`1f708307`, `edb4e5e2`); published as **version 52** (1794377277-5687;
+  50 was the type's). BRIEF § 11 "Flow 17", six lessons (`a78003a2`). **T398 done.**
+- **For review (new):** the two page faults in the system README's flow 17 known gaps, not filed (the pinned line's
+  "as they filed it" with plural fields; the builder's empty result row, inferred).
+- **Next:** flow 18 on the operator's word, or a P2 (T320 the largest).
 - **Environment:** the replay app on :5180 (`wombat_scenario_t398`, master `277e4a78`) left running; scratch DBs
   `_sweep`, `_s10`, `_s11`, `_s20`, `_s515` kept; dumps `recovery/scenario-t398-post-act{1..6,A}`; worktrees `t398*` kept.
-- **Pushed** 2026-11-10 (`399a99be`); the replay's commits since are not pushed.
+- **Pushed** 2026-11-10 (`399a99be`); everything since (the replay, steps 8–9) is not pushed. Ask before pushing.
 
 ## Session 2026-11-09 (Opus): T394 steps 8 and 9; T394 done
 

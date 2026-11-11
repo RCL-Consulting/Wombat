@@ -1,12 +1,13 @@
 ---
 id: T398
 title: Flow 17, build and publish an activity type, has not been through the redesign loop
-status: in_progress
+status: done
 priority: P2
 owner: agent
 depends_on: []
 created: 2026-11-09
 started: 2026-11-09
+completed: 2026-11-11
 ---
 
 # T398 — Flow 17, build and publish an activity type, has not been through the redesign loop
@@ -64,7 +65,7 @@ Run the loop as flow 16 ran it (`design/flows/16-college-catalogue/`, BRIEF § 1
 - [x] Built, with all six suites green and DESIGN.md amended (its banner lists flow 17) — the squash commit and counts. (`84bcffeb`; master 899/4466/1035/52/4811/532, 0 warnings)
 - [x] The whole runbook replays on a fresh database with no regression from flow 17, the baseline is re-captured, and
   flow 17's states are re-taken, with `check_baseline_paths.py` at `missing 0` — the Actual lines. (`wombat_scenario_t398`, 2026-11-10: acts 1–6, A and both states passes; act 1's two faults fixed `c9742a18`, states pass 1's `277e4a78`; no regression left; `check_baseline_paths.py` missing 0)
-- [ ] The design system is re-synced and republished — its version number.
+- [x] The design system is re-synced and republished — its version number. (version 52, 1794377277-5687; `9c12fd44`, `31e8e9c5`, `1f708307`, `edb4e5e2`)
 
 ## Related
 
@@ -217,3 +218,13 @@ T394 (flow 16), T392 (flow 15); T300, D52; T324; BRIEF § 4, § 6–8, § 11; CU
   Unfiled nits: a section refusal marks only `#section-key` (as the fix pass's S2), not the title; act 1's own 1.27-1
   capture still shows "1problem" (the states row's was re-taken). The replay app left running on :5180 (master
   `277e4a78`). Next: steps 8 and 9 on the operator's word.
+- **2026-11-11, steps 8 and 9** (the operator: "proceed"). Step 8 (one Opus agent, one Sonnet review): the live system
+  (1794375539-595a, version 50, the type's release) matched `f98a61f0` in all 257 text files but for CRLF, HEAD being
+  ahead by `84bcffeb`'s one README sentence; re-synced (`9c12fd44`, `31e8e9c5`: a new "Activity types" group of four
+  records, ActivityTypes, ActivityTypeBuilder, ActivityTypeOutline, ActivityTypeReadouts; TabBar rewritten as the tabs
+  pattern; 10 shared READMEs and the Icons README revised; tokens.json's usages for the old pill tabs; the bundle byte
+  for byte; no token or icon added). Review `resync-review.md`: 0 must, 1 should (the loading and failed states keep
+  the subtitle, as built), 4 nits, fixed but the index's group list, which needs none (`1f708307`, `edb4e5e2`). Page
+  faults recorded in the system README's flow 17 known gaps, not filed: the pinned line's "as they filed it" with plural
+  fields; the builder's empty result row (inferred, no `:empty` rule). Published: files as version 51, the index alone
+  as **version 52** (1794377277-5687). Step 9: BRIEF § 11 "Flow 17", six lessons (`a78003a2`). **T398 done.**
