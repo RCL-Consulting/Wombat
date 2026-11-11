@@ -1,12 +1,12 @@
 /* Wombat — components/bundle.css
-   Wombat's component CSS as flows 01 to 16 built it (T335, b347e11c; T339, f50dffb2 and 6735fa98; T342, 725237ee,
+   Wombat's component CSS as flows 01 to 17 built it (T335, b347e11c; T339, f50dffb2 and 6735fa98; T342, 725237ee,
    daaf6386, 5fd5abcd and a341b44e; T350, 06aa51d7; T355, b020c942, db4c2d0a, 5f8e6639 and b389f7d2; T358, 85d5a508 and
    94edf2b7; T361, 44de180b, 59bb72fd, 6ad6c57a, 6b149fff and 14378856; T364, 622c5ad1 and
    1ec7a352; T366, 49e7cf5e and 9ba80586; T369, 68327c9d and e4b480e2; T373, 69a17c70 and 27ff8779; T376, e53d4ae7; T379,
    5cc10c66, 920f778c and 73baa556, after T312, c9d6fe13; T387, e8eea1d2, 5b5aab80 and
    1c11d1f6; T392, c931d56f, e10a5f22, 50ca6470 and
    step 8's comment fix; T394, de4cc718, a2878763, 7d4c4490, f7cb1903, c6bbb641, 2c93b247 and
-   step 8's comment fix; master after 74b01865),
+   step 8's comment fix; T398, 84bcffeb, c9742a18, 277e4a78 and step 8's comment fix; master after 5689ca52),
    extracted with every class name and declaration unchanged, so a design maps back to the classes Razor writes.
    - From src/Wombat.Web/wwwroot/app.css: everything after :root. tokens.css, which the page compiles from tokens.json,
      supplies the :root custom properties (colours, --space-*, --radius-*, --shadow-*, --sidebar-width, --motion-fast,
@@ -2048,27 +2048,73 @@ textarea[aria-invalid="true"] {
 }
 
 /* ── Builder ───────────────────────────────────────── */
+/* C1 (T398, flow 17; Q1, T3, S2, S24): the builder's own tab bar as the tabs pattern. role="tablist" on the bar,
+   role="tab" with aria-selected on each button; the selected tab is told by a 3px underline in the action blue and by
+   weight, not by a fill (the old pill's .is-active, used by the builder alone, is gone). One row at every width, each tab
+   44px high, equal tracks where the page's column is under 34rem. The hover is on --header-bg: --hover-bg is the page
+   ground the bar stands on. The tracks go by the column's width, not the viewport's (T398's sweep): from 641px the
+   sidebar takes 306px, so a 641px viewport left the writer's five tabs 335px for the 416px their labels need, and the
+   page scrolled sideways by 57px up to about 720px; the page is the size container the bar asks. 34rem holds five
+   labels and four tabs' counts as numbers (R1 hides a count's word under 46rem). */
+.activity-type-page {
+  container: builder-page / inline-size;
+}
+
 .tab-bar {
-  border-bottom: 1px solid var(--border-color);
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--input-border);
+  display: grid;
+  gap: var(--space-xs);
+  grid-auto-columns: max-content;
+  grid-auto-flow: column;
+  margin: 0;
 }
 
 .tab-bar-tab {
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-pill);
+  align-items: center;
+  background: none;
+  border: 0;
+  border-bottom: 3px solid transparent;
   color: var(--text-color);
   cursor: pointer;
-  padding: 0.5rem 1rem;
+  display: inline-flex;
+  font-weight: 500;
+  gap: var(--space-xs);
+  justify-content: center;
+  margin-bottom: -1px;
+  min-height: 2.75rem;
+  padding: 0 var(--space-md);
+  white-space: nowrap;
 }
 
-.tab-bar-tab.is-active {
-  background: var(--secondary-color);
-  border-color: var(--secondary-color);
-  color: var(--on-fill);
+.tab-bar-tab:hover {
+  background: var(--header-bg);
+}
+
+.tab-bar-tab[aria-selected="true"] {
+  border-bottom-color: var(--secondary-color);
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+@container builder-page (width < 34rem) {
+  .tab-bar {
+    gap: 0;
+    grid-auto-columns: minmax(0, 1fr);
+  }
+
+  .tab-bar-tab {
+    flex-direction: column;
+    font-size: 0.9375rem;
+    gap: 0;
+    line-height: 1.2;
+    padding: 0 2px;
+  }
+}
+
+@media (forced-colors: active) {
+  .tab-bar-tab[aria-selected="true"] {
+    border-bottom-color: Highlight;
+  }
 }
 
 /* The builder's editor rail and live preview (T019). Two columns need 320px + 400px + the gap, 46.5rem, of the room the
@@ -2097,6 +2143,44 @@ textarea[aria-invalid="true"] {
   .builder-two-col {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* C2 (T398, flow 17; Q5, T5, N23): where the columns stack, the card's own "Show" choice, "Edit the form" or "Preview",
+   hides the unchosen column by the chosen radio: CSS state, no round trip, so switching tab and back sets it to the form
+   again. Above the stacking width the choice is hidden and both columns stand. */
+.form-container:has(> .builder-two-col) > .choice-group {
+  display: none;
+}
+
+@container builder (width < 46.5rem) {
+  .form-container:has(> .builder-two-col) > .choice-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs) var(--space-lg);
+    margin: 0 0 var(--space-lg);
+  }
+
+  .form-container:has(> .choice-group .form-check:first-of-type input:checked) > .builder-two-col > :last-child {
+    display: none;
+  }
+
+  .form-container:has(> .choice-group .form-check:last-of-type input:checked) > .builder-two-col > :first-child {
+    display: none;
+  }
+}
+
+.form-container:has(> .builder-two-col) > .choice-group legend {
+  font-weight: 600;
+  width: 100%;
+}
+
+.builder-two-col h2 {
+  font-size: 1.25rem;
+  margin: 0 0 var(--space-sm);
+}
+
+.builder-two-col > * > * + h2 {
+  margin-top: var(--space-xl);
 }
 
 /* ── Details grid ─────────────────────────────────── */
@@ -7456,7 +7540,9 @@ a.dashboard-metric:hover .dashboard-metric-label {
 
 /* The catalogue tables stack from 1024px down (T392 replay, A.7.10; T394 round 3 S1, check decisions 1 and 2): the EPA
    list (from flow 15), Colleges (.colleges-page) and the College's tree (.college-tree-page), whose columns overflowed
-   their container between 901 and about 975px (round 2's sweep, by arithmetic). The items (.curriculum-items-page) and
+   their container between 901 and about 975px (round 2's sweep, by arithmetic), and the
+   builder's "Moves, as saved" (.workflow-readout, T398's sweep: Mini-CEX (Paediatrics)'s four moves need 578px at their
+   narrowest, and from 901 to 935px the builder's card gave them 543 to 577). The items (.curriculum-items-page) and
    Curricula (.curricula-page) stack from 1150px down (the next query; 1100px, as the data-rights queue does, until the
    replay): the items' six compact columns need 691 to 744px, and a 1025px viewport leaves 717; the build's sweep found
    the Administrator's Curricula 756px wide in a 717px container at 1025px and 742px at 1050px, so it moved from the
@@ -7465,7 +7551,8 @@ a.dashboard-metric:hover .dashboard-metric-label {
 @media (max-width: 1024px) {
   .epas-page .clinic-table--stack-wide thead,
   .colleges-page .clinic-table--stack-wide thead,
-  .college-tree-page .clinic-table--stack-wide thead {
+  .college-tree-page .clinic-table--stack-wide thead,
+  .workflow-readout .clinic-table--stack-wide thead {
     border: 0;
     clip: rect(0, 0, 0, 0);
     height: 1px;
@@ -7479,7 +7566,8 @@ a.dashboard-metric:hover .dashboard-metric-label {
 
   .epas-page .clinic-table--stack-wide tbody tr,
   .colleges-page .clinic-table--stack-wide tbody tr,
-  .college-tree-page .clinic-table--stack-wide tbody tr {
+  .college-tree-page .clinic-table--stack-wide tbody tr,
+  .workflow-readout .clinic-table--stack-wide tbody tr {
     border-bottom: 1px solid var(--border-color);
     display: grid;
     gap: var(--space-xs);
@@ -7488,7 +7576,8 @@ a.dashboard-metric:hover .dashboard-metric-label {
 
   .epas-page .clinic-table--stack-wide tbody tr:last-child,
   .colleges-page .clinic-table--stack-wide tbody tr:last-child,
-  .college-tree-page .clinic-table--stack-wide tbody tr:last-child {
+  .college-tree-page .clinic-table--stack-wide tbody tr:last-child,
+  .workflow-readout .clinic-table--stack-wide tbody tr:last-child {
     border-bottom: 0;
   }
 
@@ -7497,7 +7586,9 @@ a.dashboard-metric:hover .dashboard-metric-label {
   .colleges-page .clinic-table--stack-wide td,
   .colleges-page .clinic-table--stack-wide tbody th,
   .college-tree-page .clinic-table--stack-wide td,
-  .college-tree-page .clinic-table--stack-wide tbody th {
+  .college-tree-page .clinic-table--stack-wide tbody th,
+  .workflow-readout .clinic-table--stack-wide td,
+  .workflow-readout .clinic-table--stack-wide tbody th {
     border: 0;
     padding: 0;
     width: auto;
@@ -7505,13 +7596,15 @@ a.dashboard-metric:hover .dashboard-metric-label {
 
   .epas-page .clinic-table--stack-wide th[scope="row"],
   .colleges-page .clinic-table--stack-wide th[scope="row"],
-  .college-tree-page .clinic-table--stack-wide th[scope="row"] {
+  .college-tree-page .clinic-table--stack-wide th[scope="row"],
+  .workflow-readout .clinic-table--stack-wide th[scope="row"] {
     display: block;
   }
 
   .epas-page .clinic-table--stack-wide td[data-label]::before,
   .colleges-page .clinic-table--stack-wide td[data-label]::before,
-  .college-tree-page .clinic-table--stack-wide td[data-label]::before {
+  .college-tree-page .clinic-table--stack-wide td[data-label]::before,
+  .workflow-readout .clinic-table--stack-wide td[data-label]::before {
     color: var(--muted-text);
     content: attr(data-label) ": ";
     content: attr(data-label) ": " / "";
@@ -7520,15 +7613,19 @@ a.dashboard-metric:hover .dashboard-metric-label {
 
   .epas-page .clinic-table--stack-wide .btn,
   .colleges-page .clinic-table--stack-wide .btn,
-  .college-tree-page .clinic-table--stack-wide .btn {
+  .college-tree-page .clinic-table--stack-wide .btn,
+  .workflow-readout .clinic-table--stack-wide .btn {
     min-height: 2.75rem;
   }
 }
 
 /* Curricula and the items stack to 1150px (T394 replay, after the states: at the appendix's end an institution's "Curricula
-   you train against", with an adoption and a superseded version, ran 17px past its container at 1101px and 8px at 1110). */
+   you train against", with an adoption and a superseded version, ran 17px past its container at 1101px and 8px at 1110),
+   and the activity types list (.activity-types-page, T398 replay, states pass 1: its Published, Draft and Status keep their
+   one word, .col-fit--wide, so as a table it needs 779px, 62px past its container at 1025px and 12px at 1075). */
 @media (max-width: 1150px) {
   .curricula-page .clinic-table--stack-wide thead,
+  .activity-types-page .clinic-table--stack-wide thead,
   .curriculum-items-page .clinic-table--stack-wide thead {
     border: 0;
     clip: rect(0, 0, 0, 0);
@@ -7542,6 +7639,7 @@ a.dashboard-metric:hover .dashboard-metric-label {
   }
 
   .curricula-page .clinic-table--stack-wide tbody tr,
+  .activity-types-page .clinic-table--stack-wide tbody tr,
   .curriculum-items-page .clinic-table--stack-wide tbody tr {
     border-bottom: 1px solid var(--border-color);
     display: grid;
@@ -7550,13 +7648,16 @@ a.dashboard-metric:hover .dashboard-metric-label {
   }
 
   .curricula-page .clinic-table--stack-wide tbody tr:last-child,
+  .activity-types-page .clinic-table--stack-wide tbody tr:last-child,
   .curriculum-items-page .clinic-table--stack-wide tbody tr:last-child {
     border-bottom: 0;
   }
 
   .curricula-page .clinic-table--stack-wide td,
+  .activity-types-page .clinic-table--stack-wide td,
   .curriculum-items-page .clinic-table--stack-wide td,
   .curricula-page .clinic-table--stack-wide tbody th,
+  .activity-types-page .clinic-table--stack-wide tbody th,
   .curriculum-items-page .clinic-table--stack-wide tbody th {
     border: 0;
     padding: 0;
@@ -7564,11 +7665,13 @@ a.dashboard-metric:hover .dashboard-metric-label {
   }
 
   .curricula-page .clinic-table--stack-wide th[scope="row"],
+  .activity-types-page .clinic-table--stack-wide th[scope="row"],
   .curriculum-items-page .clinic-table--stack-wide th[scope="row"] {
     display: block;
   }
 
   .curricula-page .clinic-table--stack-wide td[data-label]::before,
+  .activity-types-page .clinic-table--stack-wide td[data-label]::before,
   .curriculum-items-page .clinic-table--stack-wide td[data-label]::before {
     color: var(--muted-text);
     content: attr(data-label) ": ";
@@ -7577,6 +7680,7 @@ a.dashboard-metric:hover .dashboard-metric-label {
   }
 
   .curricula-page .clinic-table--stack-wide .btn,
+  .activity-types-page .clinic-table--stack-wide .btn,
   .curriculum-items-page .clinic-table--stack-wide .btn {
     min-height: 2.75rem;
   }
@@ -7722,6 +7826,209 @@ a.dashboard-metric:hover .dashboard-metric-label {
    reach with the Alert's <strong> (R3-F05), "Edit this version" is a header action (the header's Q20 rule above), Q14's
    line is a .detail-card--empty, EV2's line an info Alert; the 1024 and 1150px stacks and R1 are the shared part's. */
 /* end Flow 16: EPAs, the items and an item's page */
+
+/* Flow 17: the list and the read (T398). Lane B. */
+/* The read in words (Q2, Q3): WorkflowReadout, CreditReadout and VersionsTable, each placed in a builder panel
+   (.user-section) under its h2, spaced as the panel spaces its own parts: 16px apart, no part's own margin, so the
+   states' line, the moves table, the credit sentences and the versions' heading, table and line sit as R2-B03, B04, B05,
+   R2-D02 and R2-E03 draw them. The list itself needs nothing of its own: the release line under a name is one more
+   .person-cell span, and its 1150px stack is § 0's (C3; 1024px until the replay's 277e4a78). */
+.workflow-readout,
+.credit-readout,
+.versions-readout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-width: 0;
+}
+
+.workflow-readout > *,
+.credit-readout > *,
+.versions-readout > * {
+  margin: 0;
+}
+/* end Flow 17: the list and the read */
+
+/* Flow 17: the builder (T398). Lane C. C1's .tab-bar and C2's .builder-two-col rules are under Builder, in place. */
+/* The header's owner line under the subtitle (Q12, R3-C07): a line of its own inside the subtitle. */
+.builder-owner-line {
+  display: block;
+  font-size: 0.875rem;
+}
+
+/* The version strip above the tabs; the tab bar stands on the page ground above the panel, which is the card. */
+.activity-type-page .builder-strip {
+  margin: 0;
+}
+
+/* R1 (NEW, scoped; S21, S22): a tab's problem count is the shipped .badge.badge-declined, inside the tab and part of
+   its name ("Form 1 problem"). Where the page's column is under 46rem its word is visually hidden (.visually-hidden's
+   declarations), so a 72px track shows the number alone, and the five tabs with four counts keep to one row (T398's
+   sweep: four "2 problems" counts took the writer's bar to 710px, past the column up to a 1000px viewport). */
+/* The badge is inline-flex, so the word's leading space is dropped where it shows ("1problem", T398 replay 1.27): the
+   gap stands for it; a clipped word is absolutely placed, so no gap is left beside the number alone. */
+.tab-bar-tab .badge {
+  gap: 0.25em;
+  padding-inline: 6px;
+}
+
+@container builder-page (width < 46rem) {
+  .tab-bar-tab .badge > span {
+    border: 0;
+    clip: rect(0, 0, 0, 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+}
+
+/* S2 (round 3; T4 argued again by S26; S27, S28): the outline. A section is a bordered block, its head on header-bg (its
+   title an h3 alone, its key in a .field-row-meta <code> under it, then its buttons in a shipped div.actions-cell); its
+   fields a ul.list-unstyled of li.field-row (the label, then type, key and Required, then the buttons); the row open for
+   editing and its editor (an li too) share T176's 4px stripe, a refused row a danger stripe (its words under it, so not
+   colour alone). Add section and Add field stand alone. */
+.form-outline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.outline-section {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+.outline-section-head {
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border-color);
+  border-start-end-radius: var(--radius-lg);
+  border-start-start-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+}
+
+/* The h3's and p's own margins go, so the head's gap alone spaces them (round 3 check, item 3). */
+.outline-section-head > * {
+  margin: 0;
+}
+
+.outline-section-head h3 {
+  font-size: 1.1rem;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.outline-section-head .field-row-meta code,
+.field-row-meta code {
+  color: var(--muted-text);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.field-row {
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+}
+
+.field-row:last-child {
+  border-bottom: 0;
+}
+
+.field-row > p {
+  margin: 0;
+}
+
+.field-row-label {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.field-row-meta {
+  color: var(--muted-text);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.field-row.is-editing,
+.outline-section-head.is-editing {
+  box-shadow: inset 4px 0 0 var(--secondary-color);
+}
+
+.field-row.is-refused,
+.outline-section-head.is-refused {
+  box-shadow: inset 4px 0 0 var(--danger-color);
+}
+
+.field-editor-inplace {
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: inset 4px 0 0 var(--secondary-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-md) var(--space-md) var(--space-lg);
+}
+
+/* The h4's and p's own margins go, so the editor's gap alone spaces them (round 3 check, item 3). */
+.field-editor-inplace > * {
+  margin: 0;
+}
+
+.field-editor-inplace h4 {
+  font-size: 1rem;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.field-editor-inplace .form-grid {
+  gap: var(--space-md);
+}
+
+/* Add field stands alone at a section's foot, so it takes the row's own inset rather than sitting on the border. */
+.outline-section > .btn {
+  margin: var(--space-sm) var(--space-md) var(--space-md);
+}
+
+@media (max-width: 640.98px) {
+  .field-row .actions-cell .btn {
+    flex: 1 1 auto;
+  }
+}
+
+/* S28: the stripes in a contrast theme, as .choice-group.is-invalid does: a box-shadow is not painted there. */
+@media (forced-colors: active) {
+  .field-row.is-editing,
+  .outline-section-head.is-editing {
+    border-left: 4px solid Highlight;
+    box-shadow: none;
+    padding-left: calc(var(--space-md) - 4px);
+  }
+
+  .field-editor-inplace {
+    border-left: 4px solid Highlight;
+    box-shadow: none;
+    padding-left: calc(var(--space-lg) - 4px);
+  }
+
+  .field-row.is-refused,
+  .outline-section-head.is-refused {
+    border-left: 4px solid CanvasText;
+    box-shadow: none;
+    padding-left: calc(var(--space-md) - 4px);
+  }
+}
+/* end Flow 17: the builder */
 
 /* ══ MainLayout.razor.css ═══════════════════════════════════════════════════════════════════════════════════════════
    Scoped to MainLayout.razor in the app; written unscoped here (see the header). */

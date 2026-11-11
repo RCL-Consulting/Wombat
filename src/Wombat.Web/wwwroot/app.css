@@ -7914,7 +7914,7 @@ a.dashboard-metric:hover .dashboard-metric-label {
    (.user-section) under its h2, spaced as the panel spaces its own parts: 16px apart, no part's own margin, so the
    states' line, the moves table, the credit sentences and the versions' heading, table and line sit as R2-B03, B04, B05,
    R2-D02 and R2-E03 draw them. The list itself needs nothing of its own: the release line under a name is one more
-   .person-cell span, and the 1024px stack is § 0's (C3). */
+   .person-cell span, and its 1150px stack is § 0's (C3; 1024px until the replay's 277e4a78). */
 .workflow-readout,
 .credit-readout,
 .versions-readout {

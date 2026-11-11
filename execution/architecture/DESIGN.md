@@ -1886,7 +1886,7 @@ and § 0's `ActivityTypeWords`; refusals in `BuilderRefusal`) is a `.user-page.a
   `div.field-editor-inplace[role="group"]` under its head. Edit becomes Done (`aria-expanded`, `aria-controls` the editor);
   Edit focuses the editor's first input, Done gives the focus back to Edit. Add field adds the row and opens its editor,
   Field key focused (S13). Delete is an outline button that asks nothing (Q8); the focus goes to the next row's Edit, else
-  Add field. The open row and its editor share a 4px stripe in the action blue, a refused row a danger stripe with its
+  Add field (a section's Delete: the next section's Edit, else Add section). The open row and its editor share a 4px stripe in the action blue, a refused row a danger stripe with its
   words under it (a Highlight or CanvasText edge in a contrast theme, S28). A section's words stand in its head
   (`#sec-N-refusal`), and its editor's Section key, where the summary's line lands, is `aria-invalid` and described by
   them, as a field's key is by its own. **Up on the first row and Down on the last are natively `disabled`**: a position,
@@ -3837,7 +3837,7 @@ write." New activity type is the header action only where the caller may create 
   release.", between them), then Set by (the College by its short code, the institution by name, "The platform", over
   the scope in words), Published ("Version 1" or "Not published"), Draft ("Saved ‹day›" or "None"), Status, and one
   action, Edit where the caller may write the type, else View (never Edit on a system-managed one), named for its row, in
-  a `col-actions col-actions--single` column as wide as its one button. No pager; it stacks from 1024px down.
+  a `col-actions col-actions--single` column as wide as its one button. No pager; it stacks from 1150px down (1024px until the replay, `277e4a78`).
 - **Loading** is the header, "Loading the activity types." and skeletons; a **load error** `StatePanel`'s alert with
   Try again, "Could not load the activity types. Nothing has changed. Try again, or come back in a few minutes.", never
   the exception's text.
@@ -5467,7 +5467,7 @@ fieldset, fieldset legend, fieldset.form-group > legend, fieldset.form-group fie
 "Flow 16: Colleges and the scales (T394)": .college-page .form-container (one column, 48rem), .scale-page (the levels grid's textareas; .scale-in-use-line, Q16; .scale-levels-actions; ≤900px: the stacked grid's inputs full width), the refusal's parts in its alert (.scale-page/.scales-page .action-result .alert p and ul; .scale-put-back, S14; .scales-refusal-links, S6, ≤640px 44px)
 "Flow 16: a curriculum's page and Curricula (T394)": .curriculum-page .action-result:empty, .curriculum-page .form-container (its sections a step apart) and its .form-actions, .curriculum-read-out (Q19's read-out) and its dd
 "Flow 16: EPAs, the items and an item's page (T394)": (no rule of its own: the College's items notice bolds its reach with the Alert's own `<strong>`, R3-F05; "Edit this version" is a header action, placed by § 0's Q20 rule; Q14's line and Go to EPAs are a `.detail-card--empty`; EV2's reach line is an info `Alert Role=""` under the result region; the stacks and the checkbox rows are the shared part's)
-"Flow 17: the list and the read (T398)": (.workflow-readout, .credit-readout and .versions-readout: a flex column 16px apart with no part's own margin, as .user-section spaces its parts, so the read in words sits in a builder panel as R2-B03–B05, R2-D02 and R2-E03 draw it; the list needs nothing of its own: its release line is one more .person-cell span, and its 1024px stack is the shared part's, C3, as is the moves table's, the sweep's)
+"Flow 17: the list and the read (T398)": (.workflow-readout, .credit-readout and .versions-readout: a flex column 16px apart with no part's own margin, as .user-section spaces its parts, so the read in words sits in a builder panel as R2-B03–B05, R2-D02 and R2-E03 draw it; the list needs nothing of its own: its release line is one more .person-cell span, and its 1150px stack is the shared part's, C3 (1024px until the replay), as is the moves table's 1024px one, the sweep's)
 "Flow 17: the builder (T398)": the owner line and the strip, R1 (a tab's count), S2 (the outline and its stripes); C1's `.tab-bar` and C2's `.builder-two-col` and Show choice are under Builder, in place
 ```
 

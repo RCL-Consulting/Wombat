@@ -11,6 +11,7 @@ A refusal that names fields, said once at the head of the work (`Components/Shar
 - `Title` (required) and `Text`: the words, from `RefusalWords` on the activity's page and fixed on Log an activity.
 - `Lines`: the refusal cut one field a line (`FieldRefusals.Split`, at each field's label): each `RefusalLine` holds the field's key, the line's words and the field's own part. A line about no field is plain text.
 - `Id`: `refusal-summary` by default (every refused field names it); the note panel's is `note-summary`.
+- `LineAction` (flow 17, T398, S1): what a line's press does, for a line whose `RefusalLine.TargetId` names a control. The builder passes it: the press switches the tab, opens the row's editor in place and focuses the control; the link's `href` is `#‹TargetId›`. Unset (flow 03's pages), every line links by its field key as before.
 - `AutoFocus`: for a refusal that arrives with the page (a submit refused straight after the create, handed over from Log an activity), so it wins over FocusOnNavigate's h1.
 - The page calls `FocusAsync()` once it has drawn the summary.
 
@@ -22,7 +23,11 @@ A refusal that names fields, said once at the head of the work (`Components/Shar
 | The activity page, a refused move | Not submitted. It is still a draft. ("Not returned.", "Not declined.", "Not completed.": a submit and a return have their own words; a move that ends the activity reads as the state it would have ended in; "Verify was not made." for one with no word) | Fix the field below and submit again. / Fix the 2 fields below and submit again. |
 | The activity page, a refused Save draft | Not saved. It is still a draft. | Fix the field below and save again. |
 | The activity page, the submit refused straight after the create | Saved as a draft, but not submitted. | Fix the 6 fields below and submit again. |
+| The activity type builder (flow 17), a refused save or discard | Nothing was saved. | Everything you typed is kept. |
+| The activity type builder, a refused publish | Nothing was published. | Everything you typed is kept. |
 | The note panel | Not declined. It is still Requested. / Not returned. It is still Awaiting discussion. (`RefusalWords.ForNote`, flow 04) | (none) |
+
+The builder's lines are prefixed by their place, not a field's label: "Details: An activity type with key 'mini_cex_cpsa' already exists.", "Form: Field key 'topic' is used by 2 fields ('Topic' in 'Teaching session', 'Audience' in 'Teaching session'); give each field its own key.", "Form, section Section 2: …", "Workflow, move Cancel: Transition 'cancel' actor names 'field:topic', but 'topic' is not a User field; a field: rule must name a User field.", "Credit: …"; one summary holds every tab's (P2), and each tab's count is in its name (TabBar).
 
 Then the lines: "Date observed: The date cannot be after today (2026-09-30).", "Presenting problem: A value is required.", "Note for Sipho Ndlovu: Decline requires a note."
 

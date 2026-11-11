@@ -1,21 +1,55 @@
-<!-- @dsCard group="Navigation" height=170 subtitle="The activity type builder's pill tabs, directly under the page header" -->
+<!-- @dsCard group="Navigation" height=520 width=1180 subtitle="The tabs pattern: tabs on the page ground over their panel, the selected one underlined and bold; a tab's problem count in its name; at 390 five equal tracks, the count as its number" -->
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <title>TabBar</title>
 <style>
-  body { padding: var(--space-lg); }
+  /* Each rendition is drawn in its own .activity-type-page, the size container whose width the bar's tracks and the
+     count's word go by: a 974px column (the content column beside the sidebar at 1280) and a 358px one (390 less the
+     phone's 16px gutters). */
+  body { padding: var(--space-lg); background: var(--background-color); }
+  .pv-col { max-width: 974px; }
+  .pv-narrow { max-width: 358px; }
+  .pv-cap { margin: var(--space-xl) 0 var(--space-sm); color: var(--muted-text); font-size: 0.8rem; }
+  .pv-cap:first-child { margin-top: 0; }
 </style>
 </head>
 <body>
-<div class="form-container">
-  <div class="tab-bar mb-3">
-    <button type="button" class="tab-bar-tab">Metadata</button>
-    <button type="button" class="tab-bar-tab is-active">Form</button>
-    <button type="button" class="tab-bar-tab">Workflow</button>
-    <button type="button" class="tab-bar-tab">Credit</button>
+<p class="pv-cap">A writer's five tabs at 1280, Form selected; the panel under it is the card</p>
+<div class="pv-col"><div class="user-page activity-type-page">
+  <div class="tab-bar" role="tablist" aria-label="Parts of this activity type">
+    <button type="button" role="tab" id="pv1-tab-details" class="tab-bar-tab" aria-selected="false" tabindex="-1">Details</button>
+    <button type="button" role="tab" id="pv1-tab-form" class="tab-bar-tab" aria-selected="true" tabindex="0" aria-controls="pv1-panel-form">Form</button>
+    <button type="button" role="tab" id="pv1-tab-workflow" class="tab-bar-tab" aria-selected="false" tabindex="-1">Workflow</button>
+    <button type="button" role="tab" id="pv1-tab-credit" class="tab-bar-tab" aria-selected="false" tabindex="-1">Credit</button>
+    <button type="button" role="tab" id="pv1-tab-publish" class="tab-bar-tab" aria-selected="false" tabindex="-1">Publish</button>
   </div>
-</div>
+  <div class="form-container" role="tabpanel" id="pv1-panel-form" aria-labelledby="pv1-tab-form"><p class="muted">The Form tab's card.</p></div>
+</div></div>
+
+<p class="pv-cap">With refusals on two tabs (R1): each count in its tab's name, "Form 1 problem", "Workflow 2 problems"</p>
+<div class="pv-col"><div class="user-page activity-type-page">
+  <div class="tab-bar" role="tablist" aria-label="Parts of this activity type">
+    <button type="button" role="tab" id="pv2-tab-details" class="tab-bar-tab" aria-selected="false" tabindex="-1">Details</button>
+    <button type="button" role="tab" id="pv2-tab-form" class="tab-bar-tab" aria-selected="true" tabindex="0" aria-controls="pv2-panel-form">Form <span class="badge badge-declined">1<span> problem</span></span></button>
+    <button type="button" role="tab" id="pv2-tab-workflow" class="tab-bar-tab" aria-selected="false" tabindex="-1">Workflow <span class="badge badge-declined">2<span> problems</span></span></button>
+    <button type="button" role="tab" id="pv2-tab-credit" class="tab-bar-tab" aria-selected="false" tabindex="-1">Credit</button>
+    <button type="button" role="tab" id="pv2-tab-publish" class="tab-bar-tab" aria-selected="false" tabindex="-1">Publish</button>
+  </div>
+  <div class="form-container" role="tabpanel" id="pv2-panel-form" aria-labelledby="pv2-tab-form"><p class="muted">The Form tab's card.</p></div>
+</div></div>
+
+<p class="pv-cap">At 390: five equal tracks, the label over its count, the count's word visually hidden but still in the name</p>
+<div class="pv-narrow"><div class="user-page activity-type-page">
+  <div class="tab-bar" role="tablist" aria-label="Parts of this activity type">
+    <button type="button" role="tab" id="pv3-tab-details" class="tab-bar-tab" aria-selected="false" tabindex="-1">Details</button>
+    <button type="button" role="tab" id="pv3-tab-form" class="tab-bar-tab" aria-selected="true" tabindex="0" aria-controls="pv3-panel-form">Form <span class="badge badge-declined">1<span> problem</span></span></button>
+    <button type="button" role="tab" id="pv3-tab-workflow" class="tab-bar-tab" aria-selected="false" tabindex="-1">Workflow <span class="badge badge-declined">2<span> problems</span></span></button>
+    <button type="button" role="tab" id="pv3-tab-credit" class="tab-bar-tab" aria-selected="false" tabindex="-1">Credit</button>
+    <button type="button" role="tab" id="pv3-tab-publish" class="tab-bar-tab" aria-selected="false" tabindex="-1">Publish</button>
+  </div>
+  <div class="form-container" role="tabpanel" id="pv3-panel-form" aria-labelledby="pv3-tab-form"><p class="muted">The Form tab's card.</p></div>
+</div></div>
 </body>
 </html>

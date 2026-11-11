@@ -49,6 +49,8 @@ A DashboardCard's `Count` shows as a `badge-submitted` after the title ("Needs y
 
 **Work waiting on someone is `badge-submitted`; a count of people is `badge-draft`** (flow 06, T358, D10; DashboardCard's `BadgeTone`): "5 registrars" on the Registrars and Nothing filed in 30 days cards, since people wait on nobody.
 
+**A tab's problem count** (flow 17, T398, R1; TabBar) is a `badge-declined` inside the tab and part of its name: the number, then a `span` " problem" or " problems" ("Form 1 problem"). In a tab the badge has a 0.25em `gap`, which stands for the word's leading space an inline-flex box drops (c9742a18), and `padding-inline: 6px`; where the builder's column is under 46rem the word is visually hidden and the number alone shows.
+
 **"Exempt this period"** (flow 06, review 9) is a `badge-draft`, `BadgeFor.State(Draft)`: a registrar to whom no target applies this period, always beside why, in words ("Starts on 2027-01-01", "Started part-way through the period"), on Programme trainees and Home's Registrars (RegistrarRoster).
 
 ## Look
