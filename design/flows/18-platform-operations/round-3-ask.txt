@@ -1,0 +1,509 @@
+ROUND 3: the one correction round on round 2 as drawn (H Home, I the institutions, J the scheduled jobs, R run history,
+L the audit log, E an audit entry). THIS ROUND DRAWS ABOUT 128 BOARDS: 120 redrawn screens (56 boards at 1280, their 56
+twins at 390, R2-R05's board at 390 alone, and 7 at 768), 2 new screens (R3-H12 at 1280 and 390), and about 6 check,
+Spec and Steps boards. The canvas "Wombat 18" already holds 204 (round 1's 31, round 2's 173), at a canvas's ceiling of
+about 200 (flow 16's round 3 was refused on a canvas past it), so ROUND 3 IS DRAWN ON A NEW CANVAS, "Wombat 18 · Round
+3", on a page "Round 3", every board named R3-… after its R2 name (R3-L05-768 for R2-L05-768). Round 2's boards are NOT
+on this canvas: draw each R3 board FRESH from its round-2 file, copied into this canvas's project as
+project/r2/R2-….ref.html (a .ref.html, so it does not show as a board) (R3-J04 from project/r2/R2-J04.ref.html,
+R3-J04-390 from project/r2/R2-J04-390.ref.html), carrying everything no item below changes exactly as that file has it,
+markup and words. Read the R2 files; never link or embed them. A new board starts from the R2 file its item names.
+Redraw ONLY the boards listed under BOARDS ROUND 3 DRAWS, each at every width round 2 drew it; then the new boards listed
+there; then the check, Spec and Steps boards WHOLE. R2 boards not listed stand where they are, on "Wombat 18": the
+reviews found them right, and the Spec says which they are. Change what the items say; draw nothing they do not ask for.
+The design system is Wombat v52 (1794377277-5687, namespace wombat) as installed on this canvas (ds/wombat/tokens.css and
+ds/wombat/components/bundle.css, with its three fonts): keep these files in the project so the saved round renders. The
+brand mark is at ‹MARK_URL› (this canvas's own copy): use it, never a drawn disc, and never round 2's
+/_blob/b3b9ce265597292edc272896bd70a693. Every person, institution, job, key, count, time, id and address stays as round
+2 drew it unless an item below changes it: three reviews checked them against the code, the runbook and the T398 replay
+and found them true. Use FIXTURES only and invent nothing; where a value is not given, write a bracket ‹…›, never as a
+control's value. Never draw on one board two states that cannot hold at once. No gendered pronoun anywhere, the canvas
+notes included: the name, "the", "they" or "their". Words marked NEW are this message's own: draw them as given and list
+them on the Spec beside the words they replace. Choices marked PROPOSED (THIS ASK) are this message's settlement of a
+review finding that the operator has not yet seen: draw them, and list them on the Spec under that heading. The
+Illustration chip follows ONE rule (C6).
+
+THE ITEM IDS. Each item carries the id its review gave it, so a checker can tie it back: M1–M5 the merged must-fixes
+(round-2-review.md; M1 = ds M1, M2 = ds M2, M3 = code K1, M4 = cast C1, M5 = cast C2); K2–K11 the code review's shoulds
+and K12–K20 its nits (round-2-review-code.md); C3–C7 the cast review's shoulds and C8–C13 its nits
+(round-2-review-cast.md); S1–S10 the design-system review's shoulds and N1–N7 its nits (round-2-review-ds.md); Q18 and
+"T1–T24" the operator's decisions; A1–A3 this message's own housekeeping. Where this message names a stylesheet row it
+writes "f18r3.css R1", "f18r3.css R2", "f18r3.css C1", never a bare R1 or C1 (cast C1 is M4).
+
+THE STYLESHEET. Round 2 saved f18r2.css as a project file, rightly. Round 3 has ONE stylesheet, f18r3.css, a PROJECT
+  FILE at project/f18r3.css (write it as a file of the project, NOT as an asset, so the saved round holds it): f18r2.css
+  copied whole (from project/r2/f18r2.css), its PART 1 (the .cv-* canvas rules, K1–K6) kept as it is, its PART 2
+  changed only as these items say, and nothing else:
+    f18r3.css R1 as round 2 wrote it (.health-list, .health-line, .health-line-name, .health-line-text and the 30rem
+       container query). S1 moves Home's links into the cards' footers, so R1 gains nothing.
+    f18r3.css R2 (CHANGED, S3): ".code-block--region { max-height: 28rem; overflow: auto; }" only; the
+       ".code-block--region:focus-visible" block goes (app.css:512's global :focus-visible already draws that ring, and
+       says why). Its comment says the ring is the page's.
+    f18r3.css C1 as round 2 wrote it, as a STAND-IN (S9): the build writes no declaration for these lists; it ADDS
+       ".institutions-page", ".jobs-page" and ".audit-page" to each selector list of app.css's 1150px stack block and
+       ".job-runs-page" to each selector list of its 1024px block (app.css:7633-7700 and :7708-7790 as the ds review
+       read them). The canvas cannot edit bundle.css, so f18r3.css keeps round 2's written-out rules under a comment that
+       says so. COUNT the selector lists in each block from the file, and say the counts on the Spec; do not take a
+       count from this message (flow 17's check found its ask's "six lists" was seven).
+  Every R3 board's head links ds/wombat/tokens.css, ds/wombat/components/bundle.css, then f18r3.css, in that order, and
+  no /_blob/ stylesheet; a board's <style> holds body{margin:0} at most; no inline style=; no other NEW rule (S7's row
+  headers are painted by app.css's existing ".people-page th[scope="row"] .person-cell" rules, app.css:6799 and :6847,
+  since .jobs-page and .job-runs-page sit on div.people-page: check that on R3-J01 and R3-R01 and say so). If the canvas
+  has to change a rule to make a board render, change the file, say so on the Spec, and quote the changed rule. The Spec
+  QUOTES every rule of PART 2 in full, each beside its class-table row.
+
+THE SWEEP, and put every number on R3-0-check (round 2's sweep printed "stacked 592/592" at every width, which is the
+  table's box against its container: a width:100% box reads its container whatever it holds. Measure the CONTENT, as
+  each line says. Measure on the system's own face, the three fonts under ds/wombat/; say if one did not load):
+  THE HOME CARDS (S1, S2): R3-H01 and R3-H09 at 1280, 1115, 1114, 1100, 1099, 901, 900, 768 and 390: the
+    .dashboard-grid's track count; the health list's inline size against the 30rem container query (wide or narrow
+    lines); each footer's buttons' heights (44px at 390) and that the footer wraps without clipping a button.
+  THE PAGER (M2): R3-R01 and R3-L01 at 1280, 768 and 390: the left and top of .pager-info, .pager-actions and
+    .pager-page-size, in DOM order, and the Tab order through Previous, Next and the page-size select.
+  THE DIALOGS (M1): R3-I13 and R3-I15 at 1280 and 390: the dialog card's width and height (round 2's form-mode markup
+    drew 448 × 270; the ds review measured the component's action-mode markup at 448 × 305); at 390 the action above
+    Cancel, Cancel first in the DOM, each 44px.
+  THE LISTS (S7, S8): Scheduled jobs (R3-J01; R3-J08 with the crash error), Run history (R3-R01; R3-R07 with the
+    2,000-character error) and the audit log (R3-L01 for Nolwazi Mbatha, R3-L05 for devadmin) at 900, 950, 1000, 1024,
+    1025, 1050, 1100, 1150, 1151, 1200 and 1280: stacked or not; the table's min-content width (its columns' content, not
+    its box) against its .table-container's clientWidth; spare or overflow px. Then, on a scratch copy that is no board,
+    with the stack off: the viewport width at which each natural table first overflows its container (the ds review
+    measured about 862–885 for Scheduled jobs, 899–904 for Run history, 967 for devadmin's audit log and 926 for Nolwazi
+    Mbatha's, on a fallback face): S8's sentence quotes these. Then every column at 1280, for devadmin and, on the audit
+    log, for Nolwazi Mbatha: its width and the most lines a value takes, now that Job is a row header (S7); say that no
+    value runs past two lines beside an empty band.
+  THE PAYLOAD (S4): R3-E06 at 1280 and 390: the region's clientHeight and scrollHeight; and on R3-E02, E03, E06, E07 and
+    E09 the named regions a landmark list reads, in order (no name twice).
+  THE 44 PX CHECK: on every R3 board at 390, measure every .btn, .form-control, .form-select, the pager's controls, the
+    breadcrumb's links, every row action and the footers' links; say how many controls were measured and name each
+    under 44px (or 0).
+  Then say that nothing scrolls sideways on any R3 board at 1280, 768 or 390 (each board's scrollWidth against its width),
+  the payload's own region apart.
+
+THE REFERENCE FILES. This canvas's project holds, copied by the operator: the 30 captures under project/ref/baseline/
+  (the names round 2's ask listed), round 2's board files under project/r2/ (170 page boards and R2-0-spec, R2-0-spec-2
+  and R2-0-steps, each as R2-….ref.html) with project/r2/f18r2.css, the design system v52 under ds/wombat/, and the mark.
+  SAY ON THE CHECK BOARD, FIRST, which arrived and opened (list them), which you could not read, and draw nothing from
+  memory in place of one that did not open. If project/r2/ or f18r2.css is missing, say so first and stop: every R3 board
+  starts from its R2 file. For the boards this round redraws, open and view these captures (they are today's pages,
+  defects included; read them to check a board against the page it replaces, never to draw from):
+  act-A/A.6.2-1-system-health.png and act-A/A.7.11-1-home-390.png (R3-H01); act-1/1.6-4-create-empty-save.png (R3-I08),
+  act-1/1.6-2-kgk-created.png (R3-I11), act-A/A.6.1-2-kgk-saved.png (R3-I12), states/institution-edit--deactivated.png
+  (R3-I14; its body only, the old frame); act-A/A.2.1-1-scheduled-jobs.png (R3-J01), act-A/A.2.2-1-auto-close-disabled.png
+  (R3-J02), act-A/A.2.4-1-digest-dispatched.png (R3-J04), act-A/A.7.11-3-jobs-390.png (R3-J01-390);
+  act-A/A.2.10-1-digest-key.png, -3-failed-none.png and -4-from-today.png (R3-R01, R02, R04), act-A/A.7.11-4-runs-390.png
+  (R3-R05-390); act-3/3.55-2-audit-failures.png (R3-L02), act-3/3.57-1-devadmin-audit.png (R3-L05),
+  act-3/3.56-2-back-to-log.png (R3-L13); act-3/3.57-2-msf-submission-detail.png (R3-E02),
+  act-3/3.57-3-naidoo-transition-detail.png (R3-E03). No value rests on a capture alone: CAPTURE-ONLY is still empty.
+
+THE OPERATOR'S DECISIONS. Every one is decided; none is drawn as open. Q1–Q5 (2026-11-11, before round 1); the pick of A
+  and Q13–Q17 (2026-11-11, round 1); and, added 2026-11-11 ("yes"), Q18 (§ Q18 below), T1–T24 confirmed as drawn
+  (round 2's provisional settlements, which carried Q6–Q12 as T1–T7 and the words as T8–T24), and every recommendation of
+  round-2-review.md taken (M1–M5 fixed, the shoulds carried, the nits as one list). So round 2's T1–T24 are DECIDED, no
+  longer PROPOSED: the Spec lists them under the decisions (§ 2), each with its boards, and "PROPOSED (THIS ASK)" now
+  holds only this message's own settlements. They stand as round 2 drew them, but where an item below changes one: T5's
+  enabled result gains K5's form for a job due at once; T13's mail lines gain Q18's empty form and K3's drop with no
+  refusal; T15's description of scheduled-job-run-retention changes by Q18; T20's "No signed-in person" reaches the failed
+  sign-ins (K8); round 2's correction S4 ("Mail as it is" with the database down) is amended by Q18; round 2's N12 (the
+  Detail button's name) gains the zone by C7. A board that argues against a decision is a must-fix in the check.
+
+FIXTURES: round 2's, unchanged (the T398 replay, wombat_scenario_t398; D = 2026-11-10; every time SAST = the stored UTC +
+  2 h). Restated only where a corrected or new board needs them:
+  devadmin, display name "Demo Administrator", Administrator, Global; "Acting as Administrator"; the menu as round 2 drew
+    it. Nolwazi Mbatha, Institutional admin, Kgosi Kgari Teaching Hospital (KGK); "Acting as Institutional admin"; the
+    menu as round 2 drew it. In annotations and canvas titles a person is named as stored, no title: "Nolwazi Mbatha",
+    never "Prof Mbatha" (C12); a quotation of today's runbook keeps its own words.
+  Seen in the rows, added (C13): Kabelo Sithole, Kgosi Kgari Teaching Hospital, a Login at 2026-11-10 19:20:46 SAST on
+    R2-L05 (from 3.57-1; the runbook's Sub-speciality admin).
+  The mail lines (badge, then the sentence; Q18, T13): Not configured "Mail is written to the log, not sent." then "To
+    send mail, set Email__SmtpHost on the server and restart Wombat." (as round 2) / OK "Mail is sent. Last sent
+    ‹YYYY-MM-DD hh:mm› SAST; none waiting; none dropped in the last 24 hours." (as round 2; now read from the table) / OK,
+    nothing sent in what the table holds (R3-H12; Q18's words, the rest T13's): "Nothing sent since ‹YYYY-MM-DD hh:mm›
+    SAST; none waiting; none dropped in the last 24 hours." / Failing "‹n› mails were dropped in the last 24 hours, the
+    last at ‹YYYY-MM-DD hh:mm› SAST: ‹the mail server's refusal›. The application log names each one." (as round 2; the
+    refusal as stored, redacted) / Failing, the last drop with no refusal (words only, K3): "‹n› mails were dropped in
+    the last 24 hours, the last at ‹YYYY-MM-DD hh:mm› SAST. The application log names each one." (NEW) / Not read, a mail
+    server set and the database down (words only, Q18): "Not read: the database did not answer." (S4's words, reused).
+  The description of scheduled-job-run-retention (Q18, PROPOSED (THIS ASK)): "Deletes job run records and mail outcomes
+    older than 90 days." (NEW, replaces "Deletes job run records older than 90 days."). The other seven as round 2.
+  The Detail button's name (C7): "Detail: ‹action› at ‹YYYY-MM-DD hh:mm:ss› SAST", so "Detail: Login at 2026-11-10
+    20:24:10 SAST".
+
+THE CHECKLIST. Each item names its boards (every width the board is drawn at unless it says otherwise) or says "Spec" or
+"Steps"; the check board takes each by its id and says done or not done from the board's text and markup. A build matter
+goes on the Spec's code-changes table (§ 7), not on a board, and the item says so.
+
+MUST FIX:
+  M1. (ds M1) The two dialogs in ConfirmDialog's action mode (ConfirmDialog.razor:52-80), not its form mode (:32-48,
+      which is for a dialog holding a real form that posts; neither posts). R3-I13 and R3-I15: dialog.dialog-scrim
+      .dialog-card (with the canvas's .cv-dialog layer, K4) named by its h2 and described by its p, holding
+      div.form-container > h2, p, div.form-actions > Cancel (button.btn.btn-outline, autofocus) then the action
+      ("Deactivate" btn-danger; "Reactivate" btn-primary). No .dialog-form and no .dialog-actions on any board. The
+      words as round 2. Spec § 12: ".dialog-card .form-actions stacks both dialogs' buttons, the action on top, Cancel
+      first in the DOM (app.css:6375)" in place of round 2's ".dialog-card .dialog-actions …". THE DIALOGS measures it.
+  M2. (ds M2) The pager in PagerControls' order and markup (PagerControls.razor:23-37). On every board this round draws
+      with a pager (R3-R01, R02, R04, R05-390, R06, R07, R09; R3-L01–L10, L12, L13): div.pager holding div.pager-info
+      ("Showing 1–21 of 21"), then div.pager-actions (Previous, Next: button.btn.btn-outline.btn-sm, aria-disabled="true"
+      at an end, never disabled), then div.pager-page-size (label.pager-page-size-label "Per page:" for the select;
+      select.form-select.form-select-sm.pager-page-size-select, 10, 20, 50, 100, 50 selected). No span in the pager.
+      The Spec's § Pager row says the order. THE PAGER measures it.
+  M3. (code K1; decided) Q15 by the right read. Spec § 7 and § DATA: the audit log's names (each row's Person), an
+      entry's Who, and run history's Ran by are read through DataRightsPeople.StaffNamesAsync
+      (src/Wombat.Application/Features/DataRights/Queries/DataRightsPeople.cs:69; internal to Application, so
+      ListAuditEntriesQueryHandler, GetAuditEntryByIdQueryHandler and GetScheduledJobRunsQueryHandler call it, or a
+      shared reader of it moved beside it), with the erasure records of the ids read (DataRightsErasures): an erased
+      person reads as their pseudonym (R3-E09), a living one by the live "First Last", an account with no name by its id.
+      A blank live name never falls back to the row's stored ActorDisplay, which keeps the real name (ErasureExecutor.cs
+      clears the account's names, :440-452, and rewrites no audit row); the stored display is used only where a row has
+      no user id (Q15). Round 2's S9 ("'Ran by' names come from an existing read") goes: it is a DATA row now. R3-E09
+      draws Who as round 2 did, "‹the pseudonym the erasure gave›" (a bracket: no step gives the pseudonym), and its note
+      names the read.
+  M4. (cast C1) Steps: A.5.5 (appendix-cross-cutting.md:998-1011) changes under Q17. Its Expect "The institution shows
+      Page not found, not 'You cannot open this page'" (:1003) becomes "The institution shows 'Institution unavailable',
+      'This institution does not exist, or you cannot open it.', with Go to Home; never 'You cannot open this page'"; its
+      Actual's "as /admin/institutions/999 does" (:1009-1010) holds, the same Unavailable; the user half unchanged;
+      board R2-I20 (standing). The Changed line reads "14 of the 23, and 1.23 and A.5.5"; the search row "Page not
+      found" names 1.23 and A.5.5.
+  M5. (cast C2) Steps: A.2.10 starts on Scheduled jobs (A.2.9's page) and presses Run history, a header action, so its
+      390 count equals its 1280 count: 4 + 5 at both (round 2 wrote "390: 5 + 5").
+
+SHOULD FIX, from the code review (each a build matter on the Spec's § 7 unless it names a board):
+  K2. Spec § 7, § DATA: Q4's count is one new method on IUserAdministrationService (PROPOSED (THIS ASK) name
+      CountAccountsAsync), implemented in Infrastructure, which sees both the Identity users and DataRightsErasureRecord:
+      the accounts that no erasure record names, and the locked among them (a lockout still running). The handler stops
+      looping WombatRoles.All (GetAdministratorDashboardSummaryQuery.cs:44-52), and reads no Identity type
+      (IApplicationDbContext exposes Domain entities only; the architecture tests hold it). An erased account is in
+      neither figure (its LockoutEnd is MaxValue, UserDeactivation.cs:3-13).
+  K3. Q18 (below) settles where mail health is kept. Spec § 7, the rest of K3: (a) the 24 hours and "last sent" read
+      from the table, so a restart no longer resets them; (b) outcomes are written at SendWithRetryAsync's two returns
+      (EmailWorker.cs:150 sent, :160 dropped), for every mail, not through ReportAsync, which returns early for a mail
+      with no DeliveryKey (:195-198); (c) a mail abandoned as the host stops (AbandonAsync, :104) and one whose last try
+      failed in the backoff wait (:179) are recorded dropped with no refusal, PROPOSED (THIS ASK), and the Failing line
+      then has no refusal clause (FIXTURES); a refusal is stored only through EmailLog.Redact (it quotes addresses); (d)
+      the empty state is R3-H12; (e) the queue's depth stays in-process (EmailQueue's Channel), read from the host that
+      draws Home. No board beyond Q18's.
+  K4. Spec § 7, § 16: "Overdue" is the host's own rule, never re-derived from the cron: IsDue (ScheduledJobHost.cs:110-
+      119) is extracted into one shared function the host and the dashboard query both call; a job whose last run is
+      Running is neither failing nor overdue (it holds its lock, :80-85); a stored cron that does not parse reads with
+      its own sentence on the jobs line, PROPOSED (THIS ASK), badge Failing: "‹key›'s schedule cannot be read (cron
+      ‹cron›), so the scheduler does not run it. The application log says why." (NEW, words only). R3-H07's sentence
+      stands (an enabled job whose time has passed and was not started), and its note says Running is not overdue.
+  K5. Spec § 7, § 9: the Next run cell and the enabled result use the host's rule (the next occurrence after the last
+      run's start, :110-119), not the next occurrence after now (GetScheduledJobStatusQueryHandler.cs:38-49). A job that
+      is due as soon as it is enabled reads, PROPOSED (THIS ASK), Next run "At the next check, within 30 seconds" and the
+      result "Enabled ‹key›. It runs at the next check, within 30 seconds." (both NEW, words only). R3-J03 stands true as
+      drawn (msf-campaign-auto-close was disabled for less than an hour), and its note says so.
+  K6. Spec § 7: Run now's result needs the dispatcher's interface changed: IScheduledJobDispatcher.DispatchNowAsync
+      (IScheduledJobDispatcher.cs:5) returns the run (status, start, finish, error), with its implementation and tests;
+      RunScheduledJobNowCommandHandler reads the job's definition and refuses a disabled job under the job's lock, so a
+      Disable between the check and the run is honoured; both refusals (already running, ScheduledJobDispatcher.cs:66-68,
+      and disabled, T22) are one typed refusal (PROPOSED (THIS ASK) name ScheduledJobRefusal, in Application, carrying
+      its sentence), shown as a warning Alert in its words; anything else (a key not in the registry, a database
+      failure) is a failure, in T23's fixed words with the cause to the log, never ex.Message (today
+      ScheduledJobsList.razor:149, :179); the run's TriggeredBy is the caller's id from the command, never the literal
+      "unknown" (:171). R3-J04, J06, J07, J09 and J10 draw these as round 2 did.
+  K7. Spec § 7: one time helper the pages call (PROPOSED (THIS ASK): in Web, beside and replacing the two private
+      fixed-offset copies, ErrorPages.cs:51, :136 and ActivityListWords.cs:13, :94; a .razor file may not name Domain's
+      ProgrammeCalendar): a time with seconds or milliseconds and " SAST", a South African day, a South African day's UTC
+      range [00:00 SAST, the next 00:00 SAST) for run history's From and To (today UTC days,
+      GetScheduledJobRunsQueryHandler.cs:33, :39), and the audit filters' datetime-local read as SAST and converted to UTC
+      (today tagged UTC, AuditList.razor:185-186). The schedule's words cover the three shapes the jobs use; any other
+      cron an administrator stores reads the cron alone, "cron ‹expr›, UTC", with no words line, PROPOSED (THIS ASK).
+  K8. Spec § 7, § DATA: the actor-less rows' rule and where it lives: the audit DTO gains a field computed in the query
+      (PROPOSED (THIS ASK) name ActorKind: Person, MsfRespondent, None) from the row's user id and its Action
+      ("SubmitMsfResponseCommand" with no user id is MsfRespondent; the row carries no flag, IAnonymousAuditedCommand,
+      AuditPipelineBehavior.cs:148-156). "No signed-in person" (T20) reads on every other row with no user id, a failed
+      sign-in included. No board beyond round 2's.
+  K9. Spec § 9 and § 16: the address's sentence is worded from the value: "Cut to its first 48 bits when stored." for a
+      …/48 (round 1's) and "Cut to its first 24 bits when stored." for an IPv4 …/24 (NEW, words only;
+      HttpAuditContextProvider.cs:62-83). The boards keep the 48-bit sentence beside ::/48, which is true.
+  K10. Spec § 7, § 9: a Failed row's text. PROPOSED (THIS ASK): AuditPipelineBehavior (:104) stores a refusal's words
+      (a FieldRefusalException's, a workflow refusal's, a ValidationException's validator messages, reduced as
+      RefusalText.Of reduces them on a page, the typed refusals' sentences) and, for any exception that is no refusal,
+      "The action failed." (NEW), its text to the application log. The four drawn refusals are refusals and read as
+      drawn; the three marked inferred in round 2's FIXTURES stay inferred, and the build says on its record where the
+      stored text differs.
+  K11. Spec § 7, § 16: the database-down answer is a new DTO shape: each part (accounts, jobs, mail's table read) read
+      and caught on its own, with a per-part read or not-read and the moment the database failed (today
+      AdministratorDashboardSummaryDto holds DatabaseHealthy and TotalUserCount only). R3-H08's note adds: reachable only
+      in a circuit that outlives the outage by up to a minute, since the security stamp is revalidated against the
+      database (DependencyInjection.cs:4-6, T279) and a fresh request is refused before Home draws.
+
+SHOULD FIX, from the cast and words review:
+  C3. Steps: the word "dispatched" also stands in 3.32's Actual (act-3-operations.md:840), A.2.4's Actual
+      (appendix-cross-cutting.md:577), A.2.6's (:607), A.2.8's (:649) and A.2.9's (:670), besides A.2.4's Expect (:572) and
+      states.md:1095. Their Expects hold (round 2's M4 b); the search row names every hit so the runbook lane edits the
+      Actuals when it replays. (The review cited :577 as A.2.6's; it is A.2.4's.)
+  C4. Steps: the search rows complete: "When (UTC)" 3.56 (act-3-operations.md:1582); "From (UTC)" 3.55 (:1551, :1562)
+      and 3.57 (:1591); "Display name" 3.56 (:1583) and 3.57 (:1600); "Edit institution" 1.6 (act-1-setup.md:215, :225),
+      A.6.1 (appendix-cross-cutting.md:1235) and 1.23's Note (act-1-setup.md:711); "Users across institutions" 1.1
+      (act-1-setup.md:58), 1.11's Actual (:347) and A.6.2 (appendix-cross-cutting.md:1245); "registered users" 1.11
+      (act-1-setup.md:345) and A.6.2's Actual (appendix-cross-cutting.md:1251); and a new row "Back to institutions",
+      A.6.1 (appendix-cross-cutting.md:1236).
+  C5. Spec § 9 (Messages): every NEW and every decided T word quoted, not pointed to, each with its kind and its status
+      (built, round 1's, round 2's NEW, decided T, this round's NEW or PROPOSED), each NEW beside what it replaces: the
+      subtitles (Scheduled jobs', Run history's, the audit log's for each role, an entry's pattern, the create page's);
+      the eight job descriptions and the schedule words and cron line; the health lines whole (FIXTURES and round 2's),
+      "Not read: the database did not answer." and "Three jobs need you:"; the field helps "Up to 200 characters.", "Up to
+      32 characters.", "Optional."; the two Status sentences; the Accounts card's sentence and locked line; the count
+      lines and their singulars (K19); the empty states and "Clear the filters"; the two window lines; the filter labels
+      and helps ("From (a South African day)", "To (a South African day)", "From (SAST)", "To (SAST)", "Part of a name:
+      "Msf" finds the MSF commands.", "Empty: up to when you press Show."); "Go to Institutions", "Go to Home", "Go to
+      Audit log"; "Stored as ‹…› UTC"; and this round's NEW words (§ PROPOSED). Read the words from the R2 files.
+  C6. One Illustration rule, said once on the Spec (§ 4): the chip, and "Illustration" in the title, on every state no
+      runbook step and no states.md row reaches, EXCEPT a loading state and a load error, which carry none: every page
+      has them, and the replay's states pass reaches them by holding a read or failing one. So the six load errors (R2-I05,
+      I18, J12, R11, L15, E11) and the seven loadings (R2-H11, I04, I17, J11, R10, L14, E10) carry none, as drawn, and the
+      Spec says why. Round 2's 27 Illustrations stand by the rule; this round's R3-H12 adds one: 28. The Spec's list: R3-H03,
+      H04, H05, H06, H07, H08, H09, H10, H12, I09, I10, I22, J05, J06, J07, J08, J09, J10, R06, R07, R09, L08, E06, E07,
+      E09, and the standing R2-I06, I19 and R08.
+  C7. The Detail button's accessible name carries the zone, as every time a person reads does (T2): its visually hidden
+      part ": ‹action› at ‹YYYY-MM-DD hh:mm:ss› SAST" (FIXTURES). Every audit row on R3-L01–L10, L12, L13. The Spec's N12
+      row (round 2's) is restated with the zone.
+
+SHOULD FIX, from the design-system review:
+  S1. Home's links in the cards' footers (PROPOSED (THIS ASK): the review's first option; the other, calling them inline
+      text and exempt, fails WCAG 2.5.8, since a lone link in its own paragraph claims no spacing exception). Each card
+      as DashboardCard renders it (DashboardCard.razor): section.detail-card named by its h2, the h2.dashboard-card-title
+      holding the icon and the title in a <span>, then div.dashboard-card-body holding the content; the links in a
+      div.dashboard-card-footer at the end of the body as a.btn.btn-sm.btn-outline (as AssessorDashboard.razor:39-41),
+      which app.css makes 44px under 641px (app.css:2916) and wraps (:6925). System health's footer: "Its runs" (with its
+      visually hidden ": ‹key›, failed", as round 2 named it) where a job failed, then "Scheduled jobs" on every state
+      but Not read; the jobs line's sentence keeps no link. Accounts' footer: "Users". While loading (R3-H11) each card
+      is its h2 and its body holding div.dashboard-card-skeleton (aria-hidden), no footer. R3-H01–H12.
+  S2. Spec § 12: at 768 Home is ONE column (app.css:2288 sets one track and resets the spans at 900px and below); two
+      tracks from 901 to 1099px, three from 1100. Round 2's "the 2-column grid with System health spanning both" goes;
+      R2-H01-768 drew one column, rightly, and R3-H01-768 keeps it. Also said: from 1100 to 1114px the health list is
+      under 30rem, so its lines take the narrow layout until 1115px (THE HOME CARDS measures it). The DESIGN.md row (§ 13)
+      says the same.
+  S3. f18r3.css R2 without its :focus-visible block (THE STYLESHEET); Spec § 9's R2 row: "its ring is the page's"
+      (app.css:512).
+  S4. The payload's region named once (PROPOSED (THIS ASK): of the review's two fixes, the one that keeps round 2's N11).
+      The Payload section is a plain section.user-section with no aria-labelledby; the pre.code-block.code-block--region
+      [tabindex="0"][role="region"] keeps aria-labelledby its h2 "Payload". The other sections keep the user page's
+      aria-labelledby. R3-E02, E03, E06, E07, E09. THE PAYLOAD reads the landmarks.
+  S5. Spec § 7, § 13, § 14: retiring the status dots lists every place it touches, in one change: app.css's .status-dot
+      and .status-dot.ok/.warn/.err (app.css:2111-2131, used only by AdministratorDashboard.razor:16-22) removed;
+      ContrastTests.cs:319 (tests/Wombat.Web.Tests/Design/), which resolves .status-dot.{state}, deleted or rewritten;
+      DESIGN.md:324's contrast row ("Status dots on surface …") removed; DefinedClassTests checked for the class.
+  S6. aria-required="true" on every starred control, never the native required (DESIGN.md:1345, :1535; the built
+      record writes aria-required, InstitutionEdit.razor:64, :72, in a novalidate form): Name and Short code on R3-I07–
+      I16 and I22; the .required-mark aria-hidden as now, the label carrying the visually hidden "required" as FormField
+      renders it; "* marks a field you must fill in." as drawn. No required="" on any board.
+  S7. Job is the row's header on Scheduled jobs and Run history: th scope="row" in place of the td (the key, and on
+      Scheduled jobs the description under it in .person-cell, as round 2 drew it), painted by .people-page's existing
+      rules (THE STYLESHEET). Every table on R3-J01–J10 and R3-R01, R02, R04, R05-390, R06, R07, R09. The audit rows keep
+      no row header: their Detail name carries the row (round 2's N12, C7). THE LISTS re-reads the columns.
+  S8. (decided) The 1150px stack is kept for Institutions, Scheduled jobs and the audit log, and the 1024px stack for Run
+      history, as a readability choice, not as an overflow fix: Spec § 10 says so in those words, with THE LISTS'
+      natural-overflow widths beside it, and names the cost the stack avoids (the cells' lines at 1151, e.g. Institutions'
+      Contact email over three lines; Scheduled jobs' description over four), as flows 16 and 17 chose it for their lists.
+  S9. Spec § 9: the four page classes join the existing selector lists (f18r3.css C1), acceptable; the alternative
+      (DataTable's Class parameter carrying one table modifier) recorded, not taken. .institutions-page goes on the list
+      only: no record board this round draws carries it (R3-I07–I16, I22: div.record-page alone); the standing R2-I17–
+      I20 keep it, inert, and the Spec says the build puts it on the list alone.
+  S10. Spec § 9, § 13: the build's DataTable draws div.table-container.shadow and, on a stacked table, role="table" /
+      "rowgroup" / "row" / "columnheader" / "cell"; the boards draw neither (flows 16 and 17's convention), so the
+      replay compares a 1px shadow, not a defect. Said once. No board changes.
+
+WHILE YOU'RE THERE (nits; on the boards this round draws, or a Spec or Steps line; a board that stands is not redrawn for
+one, except L11, whose drawn words K16 corrects):
+  K12. Spec § 7, InstitutionEdit's row: the /not-found call is InstitutionEdit.razor:246-250 (not ":102–105", which is
+      the Status read-out for a non-Administrator).
+  K13. Spec § 7: CatalogueLinks gains InstitutionCreated(id) in its Tokens list (CatalogueLinks.cs:38, :83-103 hold
+      CollegeCreated and TreeCreated only), the create page lands on it, and the record reads the token once and strips
+      it (WithoutTokens).
+  K14. No maxlength on Name or Short code (with S6, no required): the built form has neither, and maxlength would make the
+      built refusals "Keep the name to 200 characters. The record was not saved." and "Keep the short code to 32
+      characters. The record was not saved." (UpdateInstitutionCommandValidator.cs) unreachable by typing. R3-I07–I16,
+      I22. Spec § 9 lists both refusals (built; words only, no board).
+  K15. Spec § 7: the audit query's Institution filter has three values (all, none, one id), which an int? cannot say:
+      PROPOSED (THIS ASK) a filter parameter of those three kinds; the institution's name per row is a lookup (DATA);
+      the nine Category labels are a map (Msf → "MSF", DataRights → "Data rights", ActivityType → "Activity type", the
+      other six their names).
+  K16. R3-L11: the empty state's body is true of any filter, PROPOSED (THIS ASK): "Nothing matches these filters between
+      these times. Widen From and To, or clear the filters." (NEW, replaces "Nothing was recorded between these times.
+      Widen From and To, or clear the filters.", which is false when the window holds rows and Action matches none, as
+      on this board). Steps: states.md:1086's row gives the new body.
+  K17. Spec § 16 and Steps: Deactivate… or Reactivate… pressed with unsaved typing in the fields: the typed values stay
+      in the fields, unsaved; only the status changes, PROPOSED (THIS ASK). Words only.
+  K18. Spec § 9: Run history's subtitle "… kept for 90 days." is kept: the retention job keeps that promise, and Home's
+      jobs line says when that job is disabled, overdue or failing. No change.
+  K19. Spec § 9: a count line's singular: "1 run." / "‹n› runs." as "1 action." / "‹n› actions." (R2-L10 drew "1
+      action."). Words only.
+  K20. Settled by Q18: the mail outcomes are written by whichever host sends (both the Web and the Api host start the
+      worker when SmtpHost is set, DependencyInjection.cs:16-25), so Home reads both hosts' mail; round 2's "the Web
+      host's only" goes, PROPOSED (THIS ASK). The Api host's /health stays under LATER.
+  C8. Steps: today's A.2.10 journey listed as its fields are: "the key, the key, the key and Status, Status and From"
+      (round 2 wrote "the key ×3, Status, From"); the count 5 + 6 holds.
+  C9. Spec: round 2's S8 row points to the widths section (§ 10), not the class table.
+  C10. Steps, 1.1's row: 1.1's 9 is drawn on R3-H02; 1.11's 11 is words only.
+  C11. R3-L05's note: "devadmin's own RunScheduledJobNowCommand rows are among the rows not drawn, on this page or a later
+      one" (3.32's run, 19:15:54 SAST, is after From, so it may fall on page 1). R3-L05-768 the same.
+  C12. Names as stored in every annotation and canvas title this round writes: "Nolwazi Mbatha" (R3-L01, L04, and the
+      Spec and Steps boards' own labels). The standing R2-E01, E08, I20 and I21 keep their "Prof Mbatha"; the Spec says
+      so. A quotation of today's runbook keeps "Dr" and "Prof".
+  C13. Spec, FIXTURES: Kabelo Sithole added to "Seen in the rows" (FIXTURES above).
+  N1. (ds N1) The list's focus-target heading is h2.list-section-title tabindex="-1" ("Runs", "Actions"), as built
+      (ActivityInbox.razor:40-50). R3-R01, R02, R04, R05-390, R06, R07, R09; R3-L01–L13. The standing R2-R03, R08, R10,
+      R11, L14 and L15 are superseded: the Spec says so.
+  N2. (ds N2) The count line takes the focus after Show and is not a live region, PROPOSED (THIS ASK: the review's second
+      option; the ActionResult pattern, whose region is not itself live): p[tabindex="-1"] with no role="status". A page
+      turn still focuses the h2 (round 2's). The boards of N1 that draw a count line, and R3-L11. Standing boards
+      superseded, said on the Spec.
+  N3. (ds N3) Spec § 11: Disabled and Not configured stay .badge-accepted (round 2's badges, decided with T8 and T13);
+      the review's preference for .badge-draft is recorded, not taken.
+  N4. (ds N4) Spec § 14: the badge edges stated on their own tints: success 5.23, warning and .badge-overdue 5.43, danger
+      5.56 (beside 5.88, 5.77, 5.95 on white); --input-border on --header-bg 3.42 (3.80 on white).
+  N5. (ds N5) Spec § 7, § 14: ContrastTests pins --muted-text on --success-bg (4.52:1, 0.02 to spare).
+  N6. (ds N6) No change: the brackets sit in no id, for or aria-* value; the check repeats that on every R3 board.
+  N7. (ds N7) No change: the health line's hidden colon ("Database: OK") recorded on the Spec as the one place a hidden
+      colon stands in for a label.
+
+Q18, AS DECIDED (2026-11-11, "yes"): mail health is kept, not counted in-process. Each mail's outcome is persisted in a
+  small table: sent or dropped, its time, the refusal's words; never an address, a subject or a body. The mail line's 24
+  hours and its last sent are read from the table; "Nothing sent since ‹time›" is the empty state; the table is pruned by
+  the existing retention job.
+  This message's settlement of what the decision leaves open, PROPOSED (THIS ASK): the table is a Domain entity
+  (PROPOSED name EmailOutcome: its id, the moment in UTC, Sent or Dropped, the refusal or none, redacted by
+  EmailLog.Redact and bounded at 2,000 characters as a run's error is) with a migration (a hand-written one carries its
+  Designer file, CLAUDE.md); it is written at the points K3 names, by either host (K20); LoggingEmailSender writes none
+  (with no mail server the line is Not configured, read from configuration); scheduled-job-run-retention deletes its rows
+  older than 90 days, the window it already keeps for runs, and its description says so (FIXTURES); "since ‹time›" is the
+  start of that window, now less 90 days, so ‹time› reads 90 days before the moment Home is read; with a mail server set
+  and the database down, the mail line reads Not read, "Not read: the database did not answer." (round 2's S4 amended:
+  Mail reads "as it is" only while it is Not configured, which is configuration).
+  Spec: a DATA row (the table and its reads), a code row (the entity, the migration, the writes, the dashboard query's
+  read, IEmailHealth keeping only "configured" and the queue's depth, the retention job and its Description, and the
+  tests: a sent and a dropped mail recorded, a drop with no refusal, the prune, a restart that keeps the 24 hours), and §
+  16's edge rows.
+  R3-H03 (redrawn, Illustration): as round 2, its note saying the line is read from the table.
+  R3-H04 and R3-H09 (redrawn, Illustration): as round 2, the refusal "as stored, redacted" in the note.
+  R3-H08 (redrawn, Illustration): Mail Not configured, as round 2 (dev has no mail server); its note says the rule above.
+  R3-H12 (NEW screen, Illustration, 1280 and 390, from R2-H03): a mail server set and the table holding nothing sent in
+    its 90 days: Database OK; Mail OK, "Nothing sent since ‹YYYY-MM-DD hh:mm› SAST; none waiting; none dropped in the last
+    24 hours."; Scheduled jobs OK "All 8 jobs last succeeded."; Accounts 24, "None is locked."; the footers (S1). Its note:
+    no mail sent is not a state (Q13), so the badge is OK.
+  Steps: Q18 adds no step (the replay has no mail server).
+
+T1–T24, AS DECIDED (2026-11-11, "yes"): round 2's settlements, confirmed as drawn. The Spec lists T1–T24 among the
+  decisions, each with its boards, with "Decided 2026-11-11" in place of "PROPOSED (THIS ASK)"; round 2's alternatives
+  (the brief's "Job run history" and "Triggered by", a by-name Person filter, round 1's section names and result words)
+  are recorded as not taken. On the boards this round redraws, each PROPOSED chip that marks a T item goes (R3-E02 "the
+  respondent's words (T20)", R3-J09 "the command refuses a disabled job", R3-L08 "the Institution filter (T19)"); NEW
+  chips stay (their words are still this flow's own, listed on the Spec). A board shows a PROPOSED chip only for this
+  round's own settlements, where its words or its visible choice are one (S1's footers on R3-H01–H10, H12; Q18's description on
+  R3-J01–J10; K16's body on R3-L11); a markup-only settlement (S4, N2) carries none, the Spec lists it.
+
+THIS MESSAGE'S OWN ITEMS:
+  A1. Steps: every row that cites a board this round redraws takes its R3 id (1.1 R3-H02; 1.6 R2-I01, R3-I07, I08, I11,
+      R2-I02; 1.11 R3-H02; 3.32 R3-J04; 3.55 R3-L01–L03; 3.56 R2-E01, R3-L13; 3.57 R3-L05, E02, E03; 4.38 R3-L09, L10,
+      R2-E04, E05; A.2.1 R3-J01; A.2.2 R3-J02, J03; A.2.4 R3-J04; A.2.10 R3-R01, R02, R2-R03, R3-R04; A.6.1 R2-I02,
+      R3-I12; A.6.2 R3-H01; A.7.11 R2-I03, R3-R05, J01-390, H01-390); a board that stands keeps its R2 id.
+  A2. Every 390 and 768 twin this round draws carries the same words and markup as its 1280 board (only the title's width
+      suffix differs); R3-R05-390 has no 1280 board, as round 2.
+  A3. Every board this round draws: one h1; no inline style; no undefined class; no raw colour; no id holding a bracket or
+      a space; no aria-describedby=""; every for, aria-labelledby, aria-describedby and aria-controls resolving on its
+      board; every name starting with its visible words.
+
+STEPS BOARD (R3-0-steps, -steps-2 if long): round 2's board restated WHOLE from project/r2/R2-0-steps.ref.html (never "as
+round 2's row": this canvas does not hold round 2; flow 17's check marked that partly done), with M4, M5, C3, C4, C8,
+C10, K16's states.md line, K17's line and A1. Round 2's counting rule unchanged, said once at the top. The 23 steps,
+1.23 and A.5.5 each a row; "unchanged" said where so. Recount each journey under the rule and, where a recount differs
+from round 2's, write the recount and say why (M5 is the one known). The Changed line: "14 of the 23 (…), and 1.23 and
+A.5.5". states.md rows as round 2, with 1086's body (K16). The runbook search table with C3's and C4's rows.
+
+BOARDS ROUND 3 DRAWS (each R3 board from the R2 file of the same id in project/r2/; widths as round 2 drew it; every board
+this round draws also takes A2, A3, N6 and C12 where it has an annotation naming a person):
+  Redrawn, 56 at 1280 with their 56 twins at 390, R2-R05's at 390 alone and 7 at 768 (120 screens):
+    R3-H01 (S1; 768), H02 (S1), H03 (S1, Q18), H04 (S1, Q18), H05 (S1), H06 (S1), H07 (S1, K4's note), H08 (S1, Q18,
+      K11), H09 (S1, Q18), H10 (S1), H11 (S1, the loading card);   [11]
+    R3-I07, I08, I09, I10, I11, I12 (768), I14, I16, I22 (S6, K14, S9), I13, I15 (M1, S6, K14, S9);   [11]
+    R3-J01 (768), J02, J03 (K5's note), J04, J05, J06, J07, J08, J09 (T1–T24's chip), J10 (S7, Q18's description);   [10]
+    R3-R01 (768), R02, R04, R06, R07, R09 (M2, S7, N1, N2), and R3-R05 at 390 alone (the same);   [6 + 1]
+    R3-L01 (768; C12), L02, L03, L04 (C12), L05 (768; C11), L06, L07, L08 (T1–T24's chip), L09, L10, L12, L13 (M2, C7,
+      N1, N2), L11 (K16, N1, N2);   [13]
+    R3-E02 (T1–T24's chip), E03 (768), E06, E07, E09 (M3) (S4).   [5]
+  New, 1 at 1280 with its twin at 390 (2 screens):
+    R3-H12 (Q18, S1; from R2-H03; Illustration).
+  The check (R3-0-check, -check-2 if long), the Spec (R3-0-spec, -spec-2, -spec-3 if long) and the Steps (R3-0-steps,
+    -steps-2 if long), drawn WHOLE: about 6. Total about 128.
+  Stand as drawn, on "Wombat 18" (not redrawn; 24 boards and their twins, 50 screens): R2-I01, I02 (390 and 768), I03
+    (390 alone), I04, I05, I06, I17, I18, I19, I20, I21; J11, J12; R03, R08, R10, R11; L14, L15; E01, E04, E05, E08, E10,
+    E11. Where an item supersedes their markup (S9's class on I17–I20, N1 and N2 on R03, R08, R10, R11, L14, L15, C12's
+    annotations on E01, E08, I20, I21), the Spec says the build follows the item, not the standing board.
+
+CHECK BOARD, "R3-0-check", FIRST on the page (more boards "R3-0-check-2", … if long): FIRST, the reference files (which
+  arrived and opened, project/r2/ and f18r2.css included; which captures were viewed; any word a capture shows that a
+  board contradicts). Then, item by item, every id of this message (M1–M5; K2–K20; C3–C13; S1–S10; N1–N7; Q18; T1–T24;
+  A1–A3): done or not done, the boards it was drawn on (or "Spec" / "Steps"), and for "not done" why. Then the
+  stylesheet's rows (f18r3.css R1, R2, C1) with the selector-list counts; THE SWEEP's tables (the home cards, the pager,
+  the dialogs, the lists, the payload: a row per board and width, each with its own measured numbers); THE 44 PX
+  CHECK's count and names; then the counts of boards redrawn, new and standing against this message's (120 + 2 screens;
+  24 boards and 50 screens standing). Say what was checked by rendering and what by reading the markup; a number that
+  was not measured says so.
+
+SPEC BOARD, "R3-0-spec" (-spec-2, -spec-3): round 2's Spec boards restated WHOLE (from project/r2/R2-0-spec.ref.html and
+  R2-0-spec-2.ref.html; never "as round 2"), with these:
+  - § 1 the reference files as the check board says them; that round 3 is on its own canvas; which R2 boards stand on
+    "Wombat 18" (the list above) and where an item supersedes them.
+  - § 2 the decisions, all decided: Q1–Q18 (Q6–Q12 by T1–T7, Q18 added), each with its boards; T1–T24, "Decided
+    2026-11-11", each with its boards and, where an item here changes one, the change (T5 by K5, T13 by Q18 and K3, T15
+    by Q18, T20 by K8; round 2's S4 by Q18; round 2's N12 by C7; round 2's N11 kept by S4); M3's read and S8's wording as
+    decided.
+  - § 3 this round's items, each with its boards: M1–M5, K2–K20, C3–C13, S1–S10, N1–N7, A1–A3; round 2's corrections
+    (M1–M4, S1–S11, N1–N14) kept as a table, with C9's pointer fixed.
+  - § 4 the Illustration rule (C6) and its list (28), and why loading and load errors carry none.
+  - § 5 the boards: redrawn (120), new (2), standing (50), by id.
+  - § 6 PROPOSED (THIS ASK), apart: K2's method name; K3 (c)'s drops with no refusal; K4's Running rule and the
+    unparsable cron's sentence; K5's two forms; K6's typed refusal; K7's helper and fallback; K8's ActorKind; K10's stored
+    text and "The action failed."; K15's filter parameter; K16's body; K17; K20; S1's footers; S4's naming; N2's count
+    line; Q18's settlement (the entity, its writers, the prune and description, "since ‹time›", Not read with the database
+    down); and every NEW sentence of this message.
+  - § 7 the code changes: round 2's rows, each amended (K12's line, M3's names, S9's "existing read" moved to DATA), with:
+    M3, K2, K3 and Q18 (the entity, migration and Designer, the writes, the read, IEmailHealth, the retention job), K4,
+    K5, K6, K7, K8, K10, K11, K13, K15, S5's four places, S10, N5; and the app.css changes: f18r3.css R1 (NEW), R2 (NEW,
+    without its focus block), C1 (the page classes added to the selector lists, with the counts).
+  - § 8 FIXTURES: round 2's, with C13's name, Q18's mail lines and the retention job's description.
+  - § 9 the class table: every class a board uses, "reuses .x" or CHANGED or NEW: f18r3.css R1 and R2 (NEW, R2 changed
+    by S3), C1 (CHANGED, a selector-list addition); reused and named: .dashboard-card-body, .dashboard-card-footer,
+    .dashboard-card-skeleton, .form-container, .form-actions (the dialogs), .pager-info, .pager-actions, .pager-page-size
+    (-label, -select), .list-section-title; gone from every board this round draws: .dialog-form, .dialog-actions, the
+    institutions-page class on a record, required and maxlength; the canvas-only .cv-* rules apart (K1–K6, PART 1). Each
+    shipped rule QUOTED in full beside its row. Then every message by kind with its words (C5): built, round 1's, round
+    2's (now decided), this round's NEW or PROPOSED, each NEW beside the words it replaces: K3's drop with no refusal,
+    K4's cron sentence, K5's two, K9's 24-bit sentence, K10's "The action failed.", K16's body, K19's singulars, Q18's
+    empty form and the description; and K14's two built refusals.
+  - § 10 the widths: round 2's sweep restated, and this round's (THE LISTS) beside it with the content widths; S8's
+    sentence (a readability choice) with the natural-overflow widths.
+  - § 11 the badges: round 2's table, N3's note.
+  - § 12 44px at 390 and 768: round 2's, with M1's .dialog-card .form-actions, S1's footers (app.css:2916, :6925), S2's
+    one column at 768.
+  - § 13 the DESIGN.md text: round 2's rows, with § Status dots retired and S5's row removed; § Dashboard page (S1's
+    footers, S2's grid); § Pager (M2's order); § Dialogs (M1: a dialog that does not post is action mode); § Table system
+    (S7's row header on the job lists; S8's reason; S10's shadow and roles); § Page-level patterns (S4's payload region
+    named once; N2's count line).
+  - § 14 the tokens and contrast: round 2's, with N4's and N5's figures.
+  - § 15 LATER, NOT BUILT: round 2's list, unchanged but for K20 (the Api host's mail now reads on Home through the
+    table; the Api host's /health stays).
+  - § 16 the edge cases: round 2's, with Q18's (nothing sent, R3-H12; a drop with no refusal; a mail server set and the
+    database down; a restart keeping the 24 hours), K4's (a long Running run; a cron that does not parse), K5's (a job
+    due at once when enabled), K9's (an IPv4 address), K10's (a failure that is no refusal), K11's (how long H08's state
+    can be seen), K17's (status pressed with unsaved typing).
+  - § 17 DATA by query: round 2's, with M3's names, K2's count, Q18's table and reads, K8's ActorKind, K11's per-part
+    state, K15's filter and labels.
+
+CHECK BEFORE YOU STOP: the check board first, saying which reference files opened; every board's head linking
+  tokens.css, bundle.css, f18r3.css in that order; one h1 a board; no inline style; no undefined class; no raw colour; no
+  .dialog-form or .dialog-actions; the dialogs in action mode with Cancel autofocused; every pager info, actions, page
+  size in that order with no span; no required="" and no maxlength on any board; aria-required="true" on every starred
+  control; .institutions-page on no record board this round draws; Job a th scope="row" on every jobs and runs table;
+  h2.list-section-title on every list this round draws; no role="status" on a count line; Home's links in
+  .dashboard-card-footer as outline buttons, and no link in a health line's sentence; every DashboardCard with its
+  .dashboard-card-body and its title in a span; the Payload region named once; every Detail name ending in "SAST";
+  R3-H12 drawn; scheduled-job-run-retention's description Q18's; no PROPOSED chip for a T item; the Illustration chip by
+  C6's one rule; "Nolwazi Mbatha", never "Prof Mbatha", in every annotation and title this round writes; no
+  aria-describedby=""; no bracket as a control's value; no id holding a bracket or a space; every 390 control 44px;
+  nothing scrolls sideways at 1280, 768 or 390 but the payload's region; no gendered pronoun on any board, annotations
+  included; every bracket ‹…› still a bracket, never filled from memory; every board's 390 and 768 twin carrying the same
+  words as its 1280 board; f18r3.css saved as a project file; the mark from ‹MARK_URL›.
