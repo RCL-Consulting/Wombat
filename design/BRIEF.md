@@ -1363,6 +1363,40 @@ the states (107 rows over two passes) and the re-sync (`0c6af0c1`, design system
   runbook was wrong and the build right. *Changed:* nothing; a count in an Expects line is traced to the steps that set
   it before the build is changed to meet it.
 
+**Flow 17 (T398, 2026-11-09 to 11-11): what the seventeenth flow added**
+
+Flow 17 ran the loop over three days: three rounds (A, the tabs, picked with B5.1's Publish section and C5.1's
+summary; Q1–Q20, round 3's two, P1–P2 and F1 the operator's; T334 folded in), round 3 on a second canvas, the build
+(`84bcffeb`) from a planner and § 0, three lanes (A below Web, B the list and read-outs, C the builder) and a runbook
+lane, the integrator's sweep, two Sonnet reviews (one must) and one fix pass, the replay on a fresh database (three flow
+17 faults found and fixed, `c9742a18`, `277e4a78`), the states (35 rows over two passes) and the re-sync. Its record is
+`design/flows/17-activity-type-builder/`. Only what flows 01–16 did not already teach is here.
+
+- **A test stub written by hand can carry a value the code never stores.** Observed: the builder's read-out showed a
+  scale as `seed:cpsa:scale:v11.1`; the reader's tests passed because their stub scale's `SeedKey` had the `seed:`
+  prefix, which only the stored binding carries. Fixing the stub, a whole-suite run then failed a second test whose
+  stub `Value` was a third shape. *Changed:* a stub standing for a stored key copies a real stored value (the seed's,
+  or what `ScaleBinding` parses); after a fix found in the replay, the project's whole suite runs, not the filter.
+- **A space in the markup is not a space on the page.** Observed: the tab's count read "1problem" at 1280; the word's
+  leading space was in the markup and in bUnit's text, and `inline-flex` dropped it. A second space in the markup did
+  nothing; `gap` on `.tab-bar-tab .badge` fixed it. *Changed:* a figure and its word inside a flex box get their space
+  from `gap`; only a capture, not a bUnit test, shows the join.
+- **A nowrap column raises the table's narrowest width.** Observed: giving the list's one-word columns `.col-fit--wide`
+  fixed their wrap at 1280 and overflowed the table by 62px at 1025, so the list moved to the 1150px stack. *Changed:*
+  nothing new; flow 16's rule (read every column after a width change, sweep 390–1440) found it in the same pass.
+- **A replay app started from a background shell dies with that shell.** Observed: act 6's restart of the app ended
+  with its shell; its agent started another, and with two instances holding `.scenario-app\bin` the next publish failed
+  on locked files. *Changed:* the app is started detached (`Start-Process powershell -ArgumentList
+  '-File','tools\scenario-replay.ps1','start',<db>,<port> -WindowStyle Hidden`) and stopped by process id after its
+  command line is read; the act prompts say so.
+- **An act with an hour's wait hands back during it.** Observed: acts 2 and 3 stopped at the invitation's and the MSF's
+  hour (2.26, 3.43) and were resumed by message once it had passed; under low memory Claude Code also stopped an idle
+  background command and a held browser tab (2.31 ran on a fresh session). *Changed:* the later act prompts say not to
+  hand back before the act's dump; the integrator resumes an act that does.
+- **An agent given a flow's scratch can read the last flow's secrets.** Observed: the replay brief's agent printed flow
+  16's `g394\replay-pw.env` (the cast's scenario passwords) to its own console; it was copied nowhere. *Changed:* each
+  act prompt names the earlier flow's file as one never to read or copy, and each replay starts an empty one.
+
 **What the brief keeps as it was**
 - The flows' order (§ 8), the invariants (§ 4.4) and the acceptance check (§ 9) held. The digest (§ 5.1) is restated
   for what flow 01 fixed: the shell, its components and the states it already designed. The brief template (§ 2.4)
