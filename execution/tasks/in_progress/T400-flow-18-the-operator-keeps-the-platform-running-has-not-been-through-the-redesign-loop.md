@@ -175,3 +175,9 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
   measured 1100–1112 narrow, wide from 1113; stacks at 1150 (Institutions 180px spare at 1151, jobs 307, audit 133/144) and
   1024 (run history 144 at 1025); nothing sideways at 390–768, 44px below 641. Four non-width faults for the review
   (scratchpad `b400/sweep-faults.md`). Scratch DB `wombat_scenario_t400_sweep` kept. Next: lane W.
+- **2026-11-11, lane W and the reviews.** Lane W (`88ee3636`, merged `07920cc9`): 16 Expects changed, 9 unchanged, 28
+  "Not yet captured (T400)" rows; verbatim 425/0, completeness exit 0, Scenario tests 49/49. Reviews (two Sonnet; merged
+  `build-review.md` on `t400`): code 0 M, S-1 Home waits out timeouts after a failed probe, S-2 a framework
+  UnauthorizedAccessException's text kept (latent), 8 nits; Integration 541/541, the flaky test passing; pages M1 A.2.9's
+  log line, S1 states.md:145's count, S2 DESIGN.md's jobs pages paragraph, 13 nits, NEW words 26 groups. Waiting: the
+  operator's F1 (S-2), then one fix pass.
