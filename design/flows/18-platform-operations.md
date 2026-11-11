@@ -50,8 +50,8 @@ screenshots are under `design/baseline/` (gitignored). Code is cited at `70657d6
    **v52**, with `tokens.css` written by hand (§ 11, flow 09) and the mark copied in before round 1 (§ 2.3 step 4):
    `/_blob/b3b9ce265597292edc272896bd70a693`, already in `round-1-ask.txt`.
 3. **Captures reach the canvas only as its project files** (§ 11, flows 16 and 17: round 1 of flow 17 saw none of the
-   staged files as attachments): copy the 30 staged captures into the canvas's project under `project/ref/baseline/`,
-   keeping their paths, before the send. The ask tells the canvas to say first, on its Spec board, which it opened.
+   staged files as attachments): the 30 staged captures are the canvas's project files under `project/ref/baseline/`,
+   keeping their paths (published there 2026-11-11, canvas version 4). The ask tells the canvas to say first, on its Spec board, which it opened.
    Then **send § 1 and § 8 as ONE message** (`design/flows/18-platform-operations/round-1-ask.txt`). Read
    `project/canvas.json`'s version before and after: a send can draw nothing. The ask tells the canvas to save its
    stylesheet as a project file (§ 11, flow 14).

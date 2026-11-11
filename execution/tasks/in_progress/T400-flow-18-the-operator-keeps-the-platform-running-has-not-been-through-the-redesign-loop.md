@@ -77,3 +77,21 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
 ## Notes
 
 - **2026-11-11.** Filed and started on the operator's word ("yes, flow 18 next"); master pushed first (`70657d6c`).
+- **2026-11-11, steps 3–4 (ahead of step 1, as T398).** Canvas "Wombat 18": https://claude.ai/artifact/FE7WSRNTmSp88bvS4dZRGV,
+  created from the Design type, empty boards; design system v52 (1794377277-5687) installed: `tokens.json`,
+  `components/bundle.css` and the three fonts copied from the system, `tokens.css` by hand (flow 17's, header updated;
+  its 54 properties match app.css's `:root`, `--shadow-raised` resolved). The mark copied in as
+  `/_blob/b3b9ce265597292edc272896bd70a693`. Canvas scratch:
+  `C:\Users\Renier\AppData\Local\Temp\claude\67560d182d14635f\5ae5486c-8726-4e89-ae35-c60429e28267\scratchpad\c18`.
+- **2026-11-11, steps 1–2** (one Opus agent, `337a6675`): brief restated in flow 17's layout (they/them throughout);
+  `check_flow_completeness.py` exit 0; `check_verbatim_steps.py` 0 problems for flow 18; `check_baseline_paths.py`
+  missing 0; staged 30 captures (all opened: payloads `[REDACTED]`, no link, token or password), published here into the
+  canvas as `project/ref/baseline/…` (version 4); `round-1-ask.txt` (636 lines). Gone: the System stub and its nav item,
+  the Maintenance card, ShortCode's required text, T302's Deactivate, the institution's and Curriculum progress's failure
+  words, nine jobs (eight since T379), 4.38's failed entries. Remain: T327, T157, T324, T325/T384, T326, T286, T277, T328,
+  T264, T323, T329's kind, T378, T114, T274; new: the jobs page's result below the table, "dispatched." for a finished
+  run, Run now not refusing a disabled job, the jobs table wrapping at 1280, Back links beside the trail, the audit
+  entry's h3 with no h2 and its empty state for an unknown id; the Api host's `/health` checks no database (unfiled).
+  BRIEF § 8's row no longer lists `/placeholder/{Feature}`. **Waiting:** the operator's Q1–Q5 (before round 1), then
+  Q6–Q12 (brief § 6). The old frame's `states/` captures are marked "read their bodies only".
+
