@@ -138,3 +138,10 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
   `project/r2/R2-….ref.html` with `f18r2.css`. Provisional (PROPOSED): Q18's details (an `EmailOutcome` table written by
   both hosts, 90 days kept by scheduled-job-run-retention, "Not read" for Mail when the database is down), and words and
   markup for K2–K17, S1, S4. Kabelo Sithole's role checked (README.md:139). Waiting: the operator sends it.
+- **2026-11-11, round 3** (128 boards on "Wombat 18 · Round 3", `69f4f1e3`; the operator sent the ask and said "done")
+  checked item by item (one Sonnet, `95a568be`, `round-3-check.md`): 57 rows, done 55, partly 2 (S2: R3-H01's notes say
+  "narrow until 1115" where the Spec's measured band is 1100–1112, and Spec § 13 omits it; C5: seven new sentences lack a
+  "replaces" cell), not done 0. No regression: the round-2 musts hold, all 128 boards present, 64 twins identical, f18r3.css
+  differs only as the items say, Steps arithmetic right. Four loose citations (`DependencyInjection.cs:4-6`/`:16-25` are 90
+  and 100; `CatalogueLinks.cs:38`; `app.css:6799`/`:6847`). Pixel figures not rendered. Waiting: the operator's decisions
+  (no round 4, the fixes carried into the build; the round-3 PROPOSED settlements kept).
