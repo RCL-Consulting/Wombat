@@ -95,3 +95,10 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
   BRIEF § 8's row no longer lists `/placeholder/{Feature}`. **Waiting:** the operator's Q1–Q5 (before round 1), then
   Q6–Q12 (brief § 6). The old frame's `states/` captures are marked "read their bodies only".
 
+- **2026-11-11, Q1–Q5 taken as recommended ("yes"):** Q1 Home's health card holds everything, no System item (round 1
+  draws both); Q2 T327's mail half folded in ("Not configured: mail is written to the log, not sent." a warning, nothing
+  sent in 24 hours a failure; the Production startup refusal stays with T157); Q3 "All 8 jobs last succeeded." or the
+  jobs named as failed, never run, disabled or overdue (overdue: no run within an hour of its scheduled time), linking to
+  Scheduled jobs; Q4 every account but an erased one, locked said apart, one query; Q5 the institution record headed by
+  its name, Status read out, Deactivate…/Reactivate… behind dialogs in place of the Active box, no Back link, a new list
+  subtitle, T378's field-tied refusals. Next: the operator sends `round-1-ask.txt` and says "done".
