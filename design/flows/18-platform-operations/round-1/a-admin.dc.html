@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Audit log · Wombat</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="f18r1.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="page">
+<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-controls="nav-panel">
+<header class="sidebar">
+<a class="brand" href="#"><img class="brand-mark" src="/_blob/b3b9ce265597292edc272896bd70a693" alt=""><span class="brand-word">Wombat</span></a>
+<p class="phone-role"><span class="phone-role-label">Acting as</span><span>Administrator</span></p>
+<label for="nav-toggle" class="nav-toggle-label"><span class="nav-toggle-closed"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>Menu</span><span class="nav-toggle-open"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>Close</span></label>
+<nav class="nav-panel" id="nav-panel" aria-label="Main">
+<div class="role-head"><p class="role-now"><span class="role-now-label">Acting as</span><span class="role-now-name">Administrator</span></p></div>
+<div class="nav-list"><ul class="nav-items"><li><a class="nav-link" href="#"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="nav-label">Home</span></a></li><li><p class="nav-group-heading">Platform</p><ul class="nav-items"><li><a class="nav-link" href="#"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="nav-label">Scheduled jobs</span></a></li><li><a class="nav-link active" href="#" aria-current="page"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg><span class="nav-label">Audit log</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></svg><span class="nav-label">SSO mappings</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg><span class="nav-label">Data rights requests</span></a></li></ul></li><li><p class="nav-group-heading">Organisations</p><ul class="nav-items"><li><a class="nav-link" href="#"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg><span class="nav-label">Institutions</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg><span class="nav-label">Colleges</span></a></li></ul></li><li><p class="nav-group-heading">People</p><ul class="nav-items"><li><a class="nav-link" href="#"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg><span class="nav-label">Users</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg><span class="nav-label">Invitations</span></a></li></ul></li><li><p class="nav-group-heading">Catalogue</p><ul class="nav-items"><li><a class="nav-link" href="#"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg><span class="nav-label">EPAs</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg><span class="nav-label">Curricula</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg><span class="nav-label">Activity types</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg><span class="nav-label">Entrustment scales</span></a></li></ul></li><li><p class="nav-group-heading">Reviews</p><ul class="nav-items"><li><a class="nav-link" href="#"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg><span class="nav-label">Decisions due</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg><span class="nav-label">Committee reviews</span></a></li><li><a class="nav-link" href="#"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg><span class="nav-label">Decision panels</span></a></li></ul></li></ul><ul class="nav-items nav-personal"><li><a class="nav-link" href="#"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span class="nav-label">My data rights</span></a></li></ul></div>
+</nav>
+<div class="account-row"><a class="account-link" href="#"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="account-name">Demo Administrator</span></a><form class="sign-out"><button type="button" class="btn btn-outline btn-sm sign-out-button"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>Sign out</button></form></div>
+</header>
+<main><article>
+<p class="cv-label">5 · The Administrator, Action "Msf": KGK's rows and the respondents' rows with no institution · 3.57 · 1280</p>
+<div class="people-page audit-page">
+<div class="header-container"><div><h1>Audit log</h1><p class="page-subtitle">Every consequential action across the institutions, and those with no institution, newest first. Times are South African (SAST).</p></div></div>
+<form class="search-container people-filter" role="search" aria-label="Filter the audit log">
+<div class="search-grid">
+<div class="form-group"><label for="a-cat">Category</label><select id="a-cat" class="form-select"><option selected="">All categories</option><option>Command</option><option>Authentication</option><option>Permission</option><option>Committee</option><option>MSF</option><option>Export</option><option>Data rights</option><option>Job</option><option>Activity type</option></select></div>
+<div class="form-group"><label for="a-action">Action</label><input id="a-action" type="text" class="form-control" value="Msf" aria-describedby="a-action-help"><p class="field-help" id="a-action-help" style="margin:0">Part of a name: "Msf" finds the MSF commands.</p></div>
+<div class="form-group"><label for="a-person">Person <span class="cv-mark cv-mark--data">DATA</span></label><input id="a-person" type="text" class="form-control" value="" aria-describedby="a-person-help"><p class="field-help" id="a-person-help" style="margin:0">Part of a name or an email.</p></div>
+<div class="form-group"><label for="a-subject">Subject type</label><input id="a-subject" type="text" class="form-control" value=""></div>
+<div class="form-group"><label for="a-from">From (SAST)</label><input id="a-from" type="datetime-local" class="form-control" value="2026-11-10T19:00"></div>
+<div class="form-group"><label for="a-to">To (SAST)</label><input id="a-to" type="datetime-local" class="form-control" value="" aria-describedby="a-to-help"><p class="field-help" id="a-to-help" style="margin:0">Empty: up to when you press Show.</p></div>
+<div class="form-group"><label for="a-result">Result</label><select id="a-result" class="form-select"><option selected="">All results</option><option>Success only</option><option>Failures only</option></select></div>
+<div class="form-group"><label for="a-inst">Institution <span class="cv-mark cv-mark--proposed">PROPOSED</span></label><select id="a-inst" class="form-select"><option selected="">All institutions</option><option>No institution</option><option>Demo Institution</option><option>Kgosi Kgari Teaching Hospital</option></select></div>
+</div>
+<div class="filter-actions"><button type="submit" class="btn btn-primary">Show</button><button type="button" class="btn btn-outline">Clear filters</button></div>
+</form>
+<div class="list-head"><h2 id="act-h" tabindex="-1">Actions</h2><p class="list-count cv-focus" tabindex="-1" role="status">27 actions</p><p class="list-window">Read from 2026-11-10 19:00 SAST to ‹hh:mm› SAST, when you pressed Show. Turning a page keeps this window.</p></div>
+<div class="table-container"><table class="clinic-table clinic-table--stack-wide">
+<caption>Actions, newest first</caption>
+<thead><tr><th scope="col" class="col-fit--wide">When</th><th scope="col">Person</th><th scope="col">Institution</th><th scope="col">Category</th><th scope="col">Action</th><th scope="col">Result</th><th scope="col" class="col-fit--wide"><span class="visually-hidden">Detail</span></th></tr></thead>
+<tbody><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">20:21:12 SAST</span></td>
+<td data-label="Person">Pieter Smit</td><td data-label="Institution">Kgosi Kgari Teaching Hospital</td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">ReleaseMsfCampaignCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: ReleaseMsfCampaignCommand at 20:21:12</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">20:20:55 SAST</span></td>
+<td data-label="Person">Pieter Smit</td><td data-label="Institution">Kgosi Kgari Teaching Hospital</td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">CloseMsfCampaignCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: CloseMsfCampaignCommand at 20:20:55</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">20:20:19 SAST</span></td>
+<td data-label="Person">Pieter Smit</td><td data-label="Institution">Kgosi Kgari Teaching Hospital</td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">ResendMsfLinksCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: ResendMsfLinksCommand at 20:20:19</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:20:17 SAST</span></td>
+<td data-label="Person"><span class="muted">MSF respondent</span> <span class="text-sm muted">(no account)</span></td><td data-label="Institution"><span class="muted">No institution</span></td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">SubmitMsfResponseCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: SubmitMsfResponseCommand at 19:20:17</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:20:13 SAST</span></td>
+<td data-label="Person"><span class="muted">MSF respondent</span> <span class="text-sm muted">(no account)</span></td><td data-label="Institution"><span class="muted">No institution</span></td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">SubmitMsfResponseCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: SubmitMsfResponseCommand at 19:20:13</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:20:09 SAST</span></td>
+<td data-label="Person"><span class="muted">MSF respondent</span> <span class="text-sm muted">(no account)</span></td><td data-label="Institution"><span class="muted">No institution</span></td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">SubmitMsfResponseCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: SubmitMsfResponseCommand at 19:20:09</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:20:05 SAST</span></td>
+<td data-label="Person"><span class="muted">MSF respondent</span> <span class="text-sm muted">(no account)</span></td><td data-label="Institution"><span class="muted">No institution</span></td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">SubmitMsfResponseCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: SubmitMsfResponseCommand at 19:20:05</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:20:01 SAST</span></td>
+<td data-label="Person"><span class="muted">MSF respondent</span> <span class="text-sm muted">(no account)</span></td><td data-label="Institution"><span class="muted">No institution</span></td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">SubmitMsfResponseCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: SubmitMsfResponseCommand at 19:20:01</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:19:48 SAST</span></td>
+<td data-label="Person"><span class="muted">MSF respondent</span> <span class="text-sm muted">(no account)</span></td><td data-label="Institution"><span class="muted">No institution</span></td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">SubmitMsfResponseCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: SubmitMsfResponseCommand at 19:19:48</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:19:44 SAST</span></td>
+<td data-label="Person"><span class="muted">MSF respondent</span> <span class="text-sm muted">(no account)</span></td><td data-label="Institution"><span class="muted">No institution</span></td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">SubmitMsfResponseCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: SubmitMsfResponseCommand at 19:19:44</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:19:40 SAST</span></td>
+<td data-label="Person"><span class="muted">MSF respondent</span> <span class="text-sm muted">(no account)</span></td><td data-label="Institution"><span class="muted">No institution</span></td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">SubmitMsfResponseCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: SubmitMsfResponseCommand at 19:19:40</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:18:49 SAST</span></td>
+<td data-label="Person">Pieter Smit</td><td data-label="Institution">Kgosi Kgari Teaching Hospital</td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">WithdrawMsfCampaignCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: WithdrawMsfCampaignCommand at 19:18:49</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:18:40 SAST</span></td>
+<td data-label="Person">Pieter Smit</td><td data-label="Institution">Kgosi Kgari Teaching Hospital</td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">CreateMsfCampaignCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: CreateMsfCampaignCommand at 19:18:40</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:18:22 SAST</span></td>
+<td data-label="Person">Pieter Smit</td><td data-label="Institution">Kgosi Kgari Teaching Hospital</td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">OpenMsfCampaignCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: OpenMsfCampaignCommand at 19:18:22</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:18:16 SAST</span></td>
+<td data-label="Person">Pieter Smit</td><td data-label="Institution">Kgosi Kgari Teaching Hospital</td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">AddMsfInvitationCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: AddMsfInvitationCommand at 19:18:16</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:18:14 SAST</span></td>
+<td data-label="Person">Pieter Smit</td><td data-label="Institution">Kgosi Kgari Teaching Hospital</td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">RemoveMsfInvitationCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: RemoveMsfInvitationCommand at 19:18:14</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:18:10 SAST</span></td>
+<td data-label="Person">Pieter Smit</td><td data-label="Institution">Kgosi Kgari Teaching Hospital</td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">AddMsfInvitationCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: AddMsfInvitationCommand at 19:18:10</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:18:09 SAST</span></td>
+<td data-label="Person">Pieter Smit</td><td data-label="Institution">Kgosi Kgari Teaching Hospital</td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">AddMsfInvitationCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: AddMsfInvitationCommand at 19:18:09</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:18:08 SAST</span></td>
+<td data-label="Person">Pieter Smit</td><td data-label="Institution">Kgosi Kgari Teaching Hospital</td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">AddMsfInvitationCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: AddMsfInvitationCommand at 19:18:08</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:18:06 SAST</span></td>
+<td data-label="Person">Pieter Smit</td><td data-label="Institution">Kgosi Kgari Teaching Hospital</td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">AddMsfInvitationCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: AddMsfInvitationCommand at 19:18:06</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:18:05 SAST</span></td>
+<td data-label="Person">Pieter Smit</td><td data-label="Institution">Kgosi Kgari Teaching Hospital</td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">AddMsfInvitationCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: AddMsfInvitationCommand at 19:18:05</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:18:04 SAST</span></td>
+<td data-label="Person">Pieter Smit</td><td data-label="Institution">Kgosi Kgari Teaching Hospital</td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">AddMsfInvitationCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: AddMsfInvitationCommand at 19:18:04</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:18:02 SAST</span></td>
+<td data-label="Person">Pieter Smit</td><td data-label="Institution">Kgosi Kgari Teaching Hospital</td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">AddMsfInvitationCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: AddMsfInvitationCommand at 19:18:02</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:18:01 SAST</span></td>
+<td data-label="Person">Pieter Smit</td><td data-label="Institution">Kgosi Kgari Teaching Hospital</td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">AddMsfInvitationCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: AddMsfInvitationCommand at 19:18:01</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:18:00 SAST</span></td>
+<td data-label="Person">Pieter Smit</td><td data-label="Institution">Kgosi Kgari Teaching Hospital</td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">AddMsfInvitationCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: AddMsfInvitationCommand at 19:18:00</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:17:47 SAST</span></td>
+<td data-label="Person">Pieter Smit</td><td data-label="Institution">Kgosi Kgari Teaching Hospital</td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">CreateMsfCampaignCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: CreateMsfCampaignCommand at 19:17:47</span></a></td></tr><tr><td data-label="When"><span class="nw">2026-11-10</span> <span class="nw">19:17:31 SAST</span></td>
+<td data-label="Person">Pieter Smit</td><td data-label="Institution">Kgosi Kgari Teaching Hospital</td>
+<td data-label="Category">Command</td>
+<td data-label="Action" style="overflow-wrap:anywhere">CreateMsfTemplateCommand</td>
+<td data-label="Result"><span class="badge badge-completed">Success</span></td>
+<td class="col-detail col-fit--wide"><a class="btn btn-outline btn-sm" href="#">Detail<span class="visually-hidden">: CreateMsfTemplateCommand at 19:17:31</span></a></td></tr></tbody></table></div><div class="pager"><span class="pager-info">Showing 1–27 of 27</span><div class="pager-actions"><button type="button" class="btn btn-outline btn-sm" aria-disabled="true">Previous</button><button type="button" class="btn btn-outline btn-sm" aria-disabled="true">Next</button></div></div>
+</div>
+</article></main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2400}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

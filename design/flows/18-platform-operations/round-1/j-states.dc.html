@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Scheduled jobs — states</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wombat/tokens.css">
+<link rel="stylesheet" href="ds/wombat/components/bundle.css">
+<link rel="stylesheet" href="f18r1.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="cv-sheet"><h1>4 · Scheduled jobs and Run history — states</h1><p>Each tile is a page body at the 1280 content width (974 px). The shell is as on 4a–4e. Values not given are bracketed.</p><div class="cv-tiles"><div class="cv-tile" style="width: 974px"><p class="cv-tile-caption">Run history, Status Failed (A.2.10): none — the count line, then the empty state</p><div class="cv-tile-body">
+<div class="people-page jobs-page runs-page">
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#">Home</a></li><li class="breadcrumb-separator" aria-hidden="true"><svg class="icon" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></li><li class="breadcrumb-parent"><a href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Scheduled jobs</a></li><li class="breadcrumb-separator" aria-hidden="true"><svg class="icon" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></li><li class="breadcrumb-current"><span aria-current="page">Run history</span></li></ol></nav>
+<div class="header-container"><div><h1>Run history</h1><p class="page-subtitle">Every run of the eight jobs, newest first, kept for 90 days. Times are South African (SAST).</p></div></div>
+<form class="search-container people-filter" role="search" aria-label="Filter the runs">
+<div class="search-grid">
+<div class="form-group"><label for="f-job">Job</label><select id="f-job" class="form-select"><option selected="">All jobs</option><option>activity-draft-nudge</option><option>assessor-pending-nudge</option><option>audit-log-retention</option><option>entrustment-decision-expiry</option><option>msf-campaign-auto-close</option><option>msf-invitation-expiry-reminder</option><option>scheduled-job-run-retention</option><option>weekly-coordinator-digest</option></select></div>
+<div class="form-group"><label for="f-status">Status</label><select id="f-status" class="form-select"><option>All</option><option>Running</option><option>Succeeded</option><option selected="">Failed</option></select></div>
+<div class="form-group"><label for="f-from">From (a South African day)</label><input id="f-from" type="date" class="form-control" value=""></div>
+<div class="form-group"><label for="f-to">To (a South African day)</label><input id="f-to" type="date" class="form-control" value=""></div>
+</div>
+<div class="filter-actions"><button type="submit" class="btn btn-primary">Show</button><button type="button" class="btn btn-outline">Clear filters</button></div>
+</form>
+<div class="list-head"><h2 id="runs-h" tabindex="-1">Runs</h2><p class="list-count cv-focus" tabindex="-1" role="status">0 runs that failed</p></div>
+<div class="detail-card detail-card--empty"><p class="state-panel-title">No run failed</p><p class="state-panel-copy">No run of any job failed in the 90 days runs are kept. Clear filters to see every run.</p></div>
+</div></div></div><div class="cv-tile" style="width: 974px"><p class="cv-tile-caption">From 2026-11-10 (A.2.10): the day is South African, so a run at 00:30 SAST is that day's</p><div class="cv-tile-body">
+<div class="people-page jobs-page runs-page">
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#">Home</a></li><li class="breadcrumb-separator" aria-hidden="true"><svg class="icon" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></li><li class="breadcrumb-parent"><a href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Scheduled jobs</a></li><li class="breadcrumb-separator" aria-hidden="true"><svg class="icon" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></li><li class="breadcrumb-current"><span aria-current="page">Run history</span></li></ol></nav>
+<div class="header-container"><div><h1>Run history</h1><p class="page-subtitle">Every run of the eight jobs, newest first, kept for 90 days. Times are South African (SAST).</p></div></div>
+<form class="search-container people-filter" role="search" aria-label="Filter the runs">
+<div class="search-grid">
+<div class="form-group"><label for="f-job">Job</label><select id="f-job" class="form-select"><option selected="">All jobs</option><option>activity-draft-nudge</option><option>assessor-pending-nudge</option><option>audit-log-retention</option><option>entrustment-decision-expiry</option><option>msf-campaign-auto-close</option><option>msf-invitation-expiry-reminder</option><option>scheduled-job-run-retention</option><option>weekly-coordinator-digest</option></select></div>
+<div class="form-group"><label for="f-status">Status</label><select id="f-status" class="form-select"><option selected="">All</option><option>Running</option><option>Succeeded</option><option>Failed</option></select></div>
+<div class="form-group"><label for="f-from">From (a South African day)</label><input id="f-from" type="date" class="form-control" value="2026-11-10"></div>
+<div class="form-group"><label for="f-to">To (a South African day)</label><input id="f-to" type="date" class="form-control" value=""></div>
+</div>
+<div class="filter-actions"><button type="submit" class="btn btn-primary">Show</button><button type="button" class="btn btn-outline">Clear filters</button></div>
+</form>
+<div class="list-head"><h2 id="runs-h" tabindex="-1">Runs</h2><p class="list-count cv-focus" tabindex="-1" role="status">21 runs from 2026-11-10</p></div>
+<div class="table-container"><table class="clinic-table clinic-table--stack-wide">
+<caption>Runs, newest first</caption>
+<thead><tr><th scope="col">Job</th><th scope="col">Started</th><th scope="col" class="col-fit--wide">Duration</th><th scope="col" class="col-fit--wide">Status</th><th scope="col">Ran by</th><th scope="col" class="col-wrap--wide">Error</th></tr></thead>
+<tbody><tr><th scope="row" style="font-weight: 400; overflow-wrap: anywhere">scheduled-job-run-retention</th>
+<td data-label="Started"><span class="nw">2026-11-10</span> <span class="nw">21:41:44 SAST</span></td>
+<td data-label="Duration" class="col-fit--wide">7 ms</td>
+<td data-label="Status" class="col-fit--wide"><span class="badge badge-completed">Succeeded</span></td>
+<td data-label="Ran by">Demo Administrator</td>
+<td data-label="Error" class="col-wrap--wide"><span class="visually-hidden">None</span></td></tr><tr><th scope="row" style="font-weight: 400; overflow-wrap: anywhere">audit-log-retention</th>
+<td data-label="Started"><span class="nw">2026-11-10</span> <span class="nw">21:41:39 SAST</span></td>
+<td data-label="Duration" class="col-fit--wide">20 ms</td>
+<td data-label="Status" class="col-fit--wide"><span class="badge badge-completed">Succeeded</span></td>
+<td data-label="Ran by">Demo Administrator</td>
+<td data-label="Error" class="col-wrap--wide"><span class="visually-hidden">None</span></td></tr><tr><th scope="row" style="font-weight: 400; overflow-wrap: anywhere">msf-invitation-expiry-reminder</th>
+<td data-label="Started"><span class="nw">2026-11-10</span> <span class="nw">21:41:34 SAST</span></td>
+<td data-label="Duration" class="col-fit--wide">20 ms</td>
+<td data-label="Status" class="col-fit--wide"><span class="badge badge-completed">Succeeded</span></td>
+<td data-label="Ran by">Demo Administrator</td>
+<td data-label="Error" class="col-wrap--wide"><span class="visually-hidden">None</span></td></tr><tr><th scope="row" style="font-weight: 400; overflow-wrap: anywhere">msf-campaign-auto-close</th>
+<td data-label="Started"><span class="nw">2026-11-10</span> <span class="nw">21:41:28 SAST</span></td>
+<td data-label="Duration" class="col-fit--wide">14 ms</td>
+<td data-label="Status" class="col-fit--wide"><span class="badge badge-completed">Succeeded</span></td>
+<td data-label="Ran by">Demo Administrator</td>
+<td data-label="Error" class="col-wrap--wide"><span class="visually-hidden">None</span></td></tr></tbody></table></div><p class="muted text-sm">… 17 more rows, then Showing 1–21 of 21</p>
+</div></div></div><div class="cv-tile" style="width: 974px"><p class="cv-tile-caption">Illustration · paged past 50; the pager names the total and never stops silently</p><div class="cv-tile-body">
+<div class="people-page jobs-page runs-page">
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#">Home</a></li><li class="breadcrumb-separator" aria-hidden="true"><svg class="icon" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></li><li class="breadcrumb-parent"><a href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Scheduled jobs</a></li><li class="breadcrumb-separator" aria-hidden="true"><svg class="icon" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></li><li class="breadcrumb-current"><span aria-current="page">Run history</span></li></ol></nav>
+<div class="header-container"><div><h1>Run history</h1><p class="page-subtitle">Every run of the eight jobs, newest first, kept for 90 days. Times are South African (SAST).</p></div></div>
+<form class="search-container people-filter" role="search" aria-label="Filter the runs">
+<div class="search-grid">
+<div class="form-group"><label for="f-job">Job</label><select id="f-job" class="form-select"><option selected="">All jobs</option><option>activity-draft-nudge</option><option>assessor-pending-nudge</option><option>audit-log-retention</option><option>entrustment-decision-expiry</option><option>msf-campaign-auto-close</option><option>msf-invitation-expiry-reminder</option><option>scheduled-job-run-retention</option><option>weekly-coordinator-digest</option></select></div>
+<div class="form-group"><label for="f-status">Status</label><select id="f-status" class="form-select"><option selected="">All</option><option>Running</option><option>Succeeded</option><option>Failed</option></select></div>
+<div class="form-group"><label for="f-from">From (a South African day)</label><input id="f-from" type="date" class="form-control" value=""></div>
+<div class="form-group"><label for="f-to">To (a South African day)</label><input id="f-to" type="date" class="form-control" value=""></div>
+</div>
+<div class="filter-actions"><button type="submit" class="btn btn-primary">Show</button></div>
+</form>
+<div class="list-head"><h2 id="runs-h" tabindex="-1" class="cv-focus">Runs</h2><p class="list-count" tabindex="-1" role="status">‹n› runs</p></div>
+<div class="table-container"><table class="clinic-table clinic-table--stack-wide">
+<caption>Runs, newest first</caption>
+<thead><tr><th scope="col">Job</th><th scope="col">Started</th><th scope="col" class="col-fit--wide">Duration</th><th scope="col" class="col-fit--wide">Status</th><th scope="col">Ran by</th><th scope="col" class="col-wrap--wide">Error</th></tr></thead>
+<tbody><tr><th scope="row" style="font-weight: 400; overflow-wrap: anywhere">msf-campaign-auto-close</th>
+<td data-label="Started"><span class="nw">‹YYYY-MM-DD›</span> <span class="nw">‹hh:mm:ss› SAST</span></td>
+<td data-label="Duration" class="col-fit--wide">‹n› ms</td>
+<td data-label="Status" class="col-fit--wide"><span class="badge badge-completed">Succeeded</span></td>
+<td data-label="Ran by"><span class="muted">Scheduler</span></td>
+<td data-label="Error" class="col-wrap--wide"><span class="visually-hidden">None</span></td></tr><tr><th scope="row" style="font-weight: 400; overflow-wrap: anywhere">msf-campaign-auto-close</th>
+<td data-label="Started"><span class="nw">‹YYYY-MM-DD›</span> <span class="nw">‹hh:mm:ss› SAST</span></td>
+<td data-label="Duration" class="col-fit--wide">‹n› ms</td>
+<td data-label="Status" class="col-fit--wide"><span class="badge badge-completed">Succeeded</span></td>
+<td data-label="Ran by"><span class="muted">Scheduler</span></td>
+<td data-label="Error" class="col-wrap--wide"><span class="visually-hidden">None</span></td></tr><tr><th scope="row" style="font-weight: 400; overflow-wrap: anywhere">msf-campaign-auto-close</th>
+<td data-label="Started"><span class="nw">‹YYYY-MM-DD›</span> <span class="nw">‹hh:mm:ss› SAST</span></td>
+<td data-label="Duration" class="col-fit--wide">‹n› ms</td>
+<td data-label="Status" class="col-fit--wide"><span class="badge badge-completed">Succeeded</span></td>
+<td data-label="Ran by"><span class="muted">Scheduler</span></td>
+<td data-label="Error" class="col-wrap--wide"><span class="visually-hidden">None</span></td></tr></tbody></table></div><div class="pager"><span class="pager-info">Showing 51–100 of ‹n›</span><div class="pager-actions"><button type="button" class="btn btn-outline btn-sm">Previous</button><button type="button" class="btn btn-outline btn-sm">Next</button></div></div>
+</div></div></div><div class="cv-tile" style="width: 974px"><p class="cv-tile-caption">Illustration · a run still Running, and a 2,000-character error folded in its cell</p><div class="cv-tile-body">
+<div class="people-page jobs-page runs-page">
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#">Home</a></li><li class="breadcrumb-separator" aria-hidden="true"><svg class="icon" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></li><li class="breadcrumb-parent"><a href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Scheduled jobs</a></li><li class="breadcrumb-separator" aria-hidden="true"><svg class="icon" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></li><li class="breadcrumb-current"><span aria-current="page">Run history</span></li></ol></nav>
+<div class="header-container"><div><h1>Run history</h1><p class="page-subtitle">Every run of the eight jobs, newest first, kept for 90 days. Times are South African (SAST).</p></div></div>
+<form class="search-container people-filter" role="search" aria-label="Filter the runs">
+<div class="search-grid">
+<div class="form-group"><label for="f-job">Job</label><select id="f-job" class="form-select"><option selected="">All jobs</option><option>activity-draft-nudge</option><option>assessor-pending-nudge</option><option>audit-log-retention</option><option>entrustment-decision-expiry</option><option>msf-campaign-auto-close</option><option>msf-invitation-expiry-reminder</option><option>scheduled-job-run-retention</option><option>weekly-coordinator-digest</option></select></div>
+<div class="form-group"><label for="f-status">Status</label><select id="f-status" class="form-select"><option selected="">All</option><option>Running</option><option>Succeeded</option><option>Failed</option></select></div>
+<div class="form-group"><label for="f-from">From (a South African day)</label><input id="f-from" type="date" class="form-control" value=""></div>
+<div class="form-group"><label for="f-to">To (a South African day)</label><input id="f-to" type="date" class="form-control" value=""></div>
+</div>
+<div class="filter-actions"><button type="submit" class="btn btn-primary">Show</button></div>
+</form>
+<div class="list-head"><h2 id="runs-h" tabindex="-1">Runs</h2><p class="list-count" tabindex="-1" role="status">‹n› runs</p></div>
+<div class="table-container"><table class="clinic-table clinic-table--stack-wide">
+<caption>Runs, newest first</caption>
+<thead><tr><th scope="col">Job</th><th scope="col">Started</th><th scope="col" class="col-fit--wide">Duration</th><th scope="col" class="col-fit--wide">Status</th><th scope="col">Ran by</th><th scope="col" class="col-wrap--wide">Error</th></tr></thead>
+<tbody><tr><th scope="row" style="font-weight: 400; overflow-wrap: anywhere">audit-log-retention</th>
+<td data-label="Started"><span class="nw">‹YYYY-MM-DD›</span> <span class="nw">‹hh:mm:ss› SAST</span></td>
+<td data-label="Duration" class="col-fit--wide">Running</td>
+<td data-label="Status" class="col-fit--wide"><span class="badge badge-submitted">Running</span></td>
+<td data-label="Ran by"><span class="muted">Scheduler</span></td>
+<td data-label="Error" class="col-wrap--wide"><span class="visually-hidden">None</span></td></tr><tr><th scope="row" style="font-weight: 400; overflow-wrap: anywhere">entrustment-decision-expiry</th>
+<td data-label="Started"><span class="nw">‹YYYY-MM-DD›</span> <span class="nw">‹hh:mm:ss› SAST</span></td>
+<td data-label="Duration" class="col-fit--wide">‹n› ms</td>
+<td data-label="Status" class="col-fit--wide"><span class="badge badge-declined">Failed</span></td>
+<td data-label="Ran by">Demo Administrator</td>
+<td data-label="Error" class="col-wrap--wide"><details class="run-error"><summary>‹the error's first 160 characters›…</summary><p>‹the whole error, up to 2,000 characters, wrapping inside this cell›</p></details></td></tr></tbody></table></div><div class="pager"><span class="pager-info">Showing 1–50 of ‹n›</span><div class="pager-actions"><button type="button" class="btn btn-outline btn-sm" aria-disabled="true">Previous</button><button type="button" class="btn btn-outline btn-sm">Next</button></div></div>
+</div></div></div><div class="cv-tile" style="width: 974px"><p class="cv-tile-caption">No runs at all</p><div class="cv-tile-body">
+<div class="people-page jobs-page runs-page">
+<nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#">Home</a></li><li class="breadcrumb-separator" aria-hidden="true"><svg class="icon" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></li><li class="breadcrumb-parent"><a href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Scheduled jobs</a></li><li class="breadcrumb-separator" aria-hidden="true"><svg class="icon" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></li><li class="breadcrumb-current"><span aria-current="page">Run history</span></li></ol></nav>
+<div class="header-container"><div><h1>Run history</h1><p class="page-subtitle">Every run of the eight jobs, newest first, kept for 90 days. Times are South African (SAST).</p></div></div>
+<form class="search-container people-filter" role="search" aria-label="Filter the runs">
+<div class="search-grid">
+<div class="form-group"><label for="f-job">Job</label><select id="f-job" class="form-select"><option selected="">All jobs</option><option>activity-draft-nudge</option><option>assessor-pending-nudge</option><option>audit-log-retention</option><option>entrustment-decision-expiry</option><option>msf-campaign-auto-close</option><option>msf-invitation-expiry-reminder</option><option>scheduled-job-run-retention</option><option>weekly-coordinator-digest</option></select></div>
+<div class="form-group"><label for="f-status">Status</label><select id="f-status" class="form-select"><option selected="">All</option><option>Running</option><option>Succeeded</option><option>Failed</option></select></div>
+<div class="form-group"><label for="f-from">From (a South African day)</label><input id="f-from" type="date" class="form-control" value=""></div>
+<div class="form-group"><label for="f-to">To (a South African day)</label><input id="f-to" type="date" class="form-control" value=""></div>
+</div>
+<div class="filter-actions"><button type="submit" class="btn btn-primary">Show</button></div>
+</form>
+<div class="list-head"><h2 id="runs-h" tabindex="-1">Runs</h2><p class="list-count" tabindex="-1" role="status">0 runs</p></div>
+<div class="detail-card detail-card--empty"><p class="state-panel-title">No job has run yet</p><p class="state-panel-copy">The scheduler runs each job at its time; Scheduled jobs shows when each runs next.</p></div>
+</div></div></div><div class="cv-tile" style="width: 974px"><p class="cv-tile-caption">Enable pressed (A.2.2): the result takes the focus and names the next run</p><div class="cv-tile-body"><div class="people-page jobs-page"><div class="action-result" tabindex="-1"><div class="alert alert-success cv-focus" role="status">msf-campaign-auto-close is enabled. Its next run is 2026-11-10 22:00 SAST.</div></div></div></div></div><div class="cv-tile" style="width: 974px"><p class="cv-tile-caption">Illustration · Run now ended in failure: the result says so, in danger, focused</p><div class="cv-tile-body"><div class="people-page jobs-page"><div class="action-result" tabindex="-1"><div class="alert alert-danger cv-focus" role="alert"><strong>‹key› ran and failed.</strong> It started at ‹YYYY-MM-DD hh:mm› SAST. Its error: ‹the error as stored›. Its runs are in <a href="#">Run history</a>.</div></div></div></div></div><div class="cv-tile" style="width: 974px"><p class="cv-tile-caption">While Run now waits: that row's button reads Running… and is unavailable; the result replaces it</p><div class="cv-tile-body"><div class="people-page jobs-page"><div class="table-container"><table class="clinic-table"><caption>While Run now waits (one row shown)</caption><thead><tr><th scope="col">Job</th><th scope="col">Last run</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead><tbody><tr><th scope="row" style="font-weight:400"><span class="job-key">assessor-pending-nudge</span></th><td><span class="nw">2026-11-10</span> <span class="nw">17:00 SAST</span> <span class="badge badge-completed">Succeeded</span></td><td><div class="job-actions"><button type="button" class="btn btn-outline btn-sm" aria-disabled="true" aria-describedby="w1">Running…<span class="visually-hidden">: assessor-pending-nudge</span></button><span class="action-reason" id="w1" role="status">Running now; the page waits for it to end.</span></div></td></tr></tbody></table></div></div></div></div><div class="cv-tile" style="width: 974px"><p class="cv-tile-caption">Scheduled jobs loading: the header and Run history at once, the rows as a skeleton</p><div class="cv-tile-body"><div class="people-page jobs-page"><div class="header-container"><div><h1>Scheduled jobs</h1><p class="page-subtitle">The eight jobs Wombat runs on a schedule. Run one now, disable or enable one, or read every run in Run history. Times are South African (SAST).</p></div><div class="actions-cell"><a class="btn btn-outline" href="#"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>Run history</a></div></div><div class="table-container" style="padding: var(--space-md)" aria-busy="true"><p class="visually-hidden" role="status">Reading the jobs…</p><div class="skeleton" style="height: 2.5rem"></div><div class="skeleton" style="height: 2.5rem"></div><div class="skeleton" style="height: 2.5rem"></div><div class="skeleton" style="height: 2.5rem"></div></div></div></div></div><div class="cv-tile" style="width: 974px"><p class="cv-tile-caption">Scheduled jobs load error</p><div class="cv-tile-body"><div class="people-page jobs-page"><div class="header-container"><div><h1>Scheduled jobs</h1><p class="page-subtitle">The eight jobs Wombat runs on a schedule. Run one now, disable or enable one, or read every run in Run history. Times are South African (SAST).</p></div><div class="actions-cell"><a class="btn btn-outline" href="#"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>Run history</a></div></div><div class="alert alert-danger alert-row" role="alert"><span class="alert-row-text">The jobs could not be read. Nothing was changed. Try again in a moment.</span><button type="button" class="btn btn-outline btn-sm">Try again</button></div></div></div></div><div class="cv-tile" style="width: 974px"><p class="cv-tile-caption">Run history load error: the filters stay, the list does not</p><div class="cv-tile-body"><div class="people-page runs-page"><nav aria-label="Breadcrumb"><ol class="breadcrumbs"><li class="breadcrumb-ancestor"><a href="#">Home</a></li><li class="breadcrumb-separator" aria-hidden="true"><svg class="icon" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></li><li class="breadcrumb-parent"><a href="#"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Scheduled jobs</a></li><li class="breadcrumb-separator" aria-hidden="true"><svg class="icon" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></li><li class="breadcrumb-current"><span aria-current="page">Run history</span></li></ol></nav><div class="header-container"><div><h1>Run history</h1><p class="page-subtitle">Every run of the eight jobs, newest first, kept for 90 days. Times are South African (SAST).</p></div></div><form class="search-container people-filter" role="search" aria-label="Filter the runs">
+<div class="search-grid">
+<div class="form-group"><label for="f-job">Job</label><select id="f-job" class="form-select"><option selected="">All jobs</option><option>activity-draft-nudge</option><option>assessor-pending-nudge</option><option>audit-log-retention</option><option>entrustment-decision-expiry</option><option>msf-campaign-auto-close</option><option>msf-invitation-expiry-reminder</option><option>scheduled-job-run-retention</option><option>weekly-coordinator-digest</option></select></div>
+<div class="form-group"><label for="f-status">Status</label><select id="f-status" class="form-select"><option selected="">All</option><option>Running</option><option>Succeeded</option><option>Failed</option></select></div>
+<div class="form-group"><label for="f-from">From (a South African day)</label><input id="f-from" type="date" class="form-control" value=""></div>
+<div class="form-group"><label for="f-to">To (a South African day)</label><input id="f-to" type="date" class="form-control" value=""></div>
+</div>
+<div class="filter-actions"><button type="submit" class="btn btn-primary">Show</button></div>
+</form><div class="alert alert-danger alert-row" role="alert"><span class="alert-row-text">The runs could not be read. Nothing was changed. Try again in a moment.</span><button type="button" class="btn btn-outline btn-sm">Try again</button></div></div></div></div></div></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2100,"height":3600}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

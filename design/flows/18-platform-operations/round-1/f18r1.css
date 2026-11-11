@@ -1,0 +1,171 @@
+/* Wombat 18 — f18r1.css, round 1 of flow 18 (the operator's pages: Home's health, Institutions, Scheduled jobs and their
+   run history, the Audit log and an entry). Linked after ds/wombat/tokens.css and ds/wombat/components/bundle.css.
+   Every colour is a token from tokens.css; every length is on the spacing scale (xs 4, sm 8, md 16, lg 24, xl 32, 2xl 48)
+   or names its reason. Each rule names its row on the Spec board's class table.
+   PART 1 (.cv-*, rows K1–K8) is the canvas's and never ships.
+   PART 2 (rows R1–R9) is PROPOSED for app.css, each scoped to its page's own class (BRIEF § 11, flow 12). */
+
+/* ══ PART 1 — the canvas only (never ships) ═══════════════════════════════════════════════════════════════════════ */
+
+/* K1. A sheet board (Spec, Steps, wireframe and state sheets): a plain column of text and tiles on the page ground. */
+.cv-sheet {
+  background: var(--background-color);
+  box-sizing: border-box;
+  color: var(--text-color);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  padding: var(--space-xl);
+}
+.cv-sheet h1 { font-size: 1.75rem; margin: 0 0 var(--space-sm); }
+.cv-sheet h2 { border-bottom: 2px solid var(--secondary-color); font-size: 1.25rem; margin: var(--space-xl) 0 var(--space-md); padding-bottom: var(--space-xs); }
+.cv-sheet h3 { font-size: 1.05rem; margin: var(--space-lg) 0 var(--space-sm); }
+.cv-sheet p, .cv-sheet li { line-height: 1.5; max-width: 72rem; }
+.cv-sheet table { border-collapse: collapse; font-size: 0.9rem; margin-bottom: var(--space-md); width: 100%; }
+.cv-sheet th, .cv-sheet td { border: 1px solid var(--border-color); padding: var(--space-xs) var(--space-sm); text-align: left; vertical-align: top; }
+.cv-sheet th { background: var(--header-bg); }
+.cv-sheet code { font-family: var(--font-mono); font-size: 0.85rem; overflow-wrap: anywhere; }
+
+/* K2. A row of tiles on a sheet, and a tile: one page body or one state drawn at its own width, with its caption. */
+.cv-tiles { align-items: flex-start; display: flex; flex-wrap: wrap; gap: var(--space-xl); }
+.cv-tile { display: flex; flex-direction: column; gap: var(--space-sm); }
+.cv-tile-caption { color: var(--muted-text); font-size: 0.85rem; font-weight: 600; margin: 0; max-width: 100%; }
+.cv-tile-body { background: var(--background-color); border: 1px dashed var(--input-border); box-sizing: border-box; padding: var(--space-lg); }
+
+/* K3. The board's own label (state, step, "Illustration"), above a page's header: never part of the page. */
+.cv-label {
+  background: var(--primary-color);
+  border-radius: var(--radius-sm);
+  color: var(--on-fill);
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-sm);
+  padding: 2px var(--space-sm);
+}
+.cv-label--illustration { background: var(--warning-color); }
+
+/* K4. Where the focus lands after an action: a dashed ring and a "Focus" tag, drawn on the board only. */
+.cv-focus { outline: 2px dashed var(--focus-ring); outline-offset: 3px; position: relative; }
+.cv-focus::after {
+  background: var(--focus-ring);
+  border-radius: var(--radius-sm);
+  color: var(--on-fill);
+  content: "Focus";
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0 var(--space-xs);
+  position: absolute;
+  right: -3px;
+  top: -1.4rem;
+}
+
+/* K5. A ConfirmDialog drawn open on a board: the backdrop as a layer, the dialog centred over the page. */
+.cv-scrim { background: var(--scrim); inset: 0; position: fixed; z-index: 20; }
+.cv-dialog { left: 50%; margin: 0; position: fixed; top: 12rem; transform: translateX(-50%); z-index: 21; }
+
+/* K6. Wireframes: grey blocks and real words, no colour but the state words' own. */
+.cv-wf { background: var(--surface-color); border: 2px solid var(--muted-text); box-sizing: border-box; display: flex; font-size: 0.9rem; overflow: hidden; }
+.cv-wf-side { background: var(--header-bg); border-right: 2px solid var(--muted-text); box-sizing: border-box; color: var(--muted-text); flex: none; font-size: 0.8rem; padding: var(--space-sm); width: 250px; }
+.cv-wf-side p { margin: 0 0 2px; }
+.cv-wf-side .cv-wf-on { background: var(--border-color); color: var(--text-color); font-weight: 700; }
+.cv-wf-main { box-sizing: border-box; display: flex; flex: 1; flex-direction: column; gap: var(--space-md); min-width: 0; padding: var(--space-lg); }
+.cv-wf-phonebar { background: var(--header-bg); border-bottom: 2px solid var(--muted-text); color: var(--muted-text); font-size: 0.8rem; padding: var(--space-sm) var(--space-md); }
+.cv-wf-box { border: 1.5px solid var(--muted-text); border-radius: var(--radius-md); box-sizing: border-box; display: flex; flex-direction: column; gap: var(--space-sm); padding: var(--space-md); }
+.cv-wf-box h2, .cv-wf-box h3, .cv-wf-main h1 { margin: 0; }
+.cv-wf-main h1 { font-size: 1.3rem; }
+.cv-wf-box h2 { font-size: 1.05rem; }
+.cv-wf-box h3 { font-size: 0.95rem; }
+.cv-wf-row { align-items: baseline; border-top: 1px solid var(--border-color); display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-sm); padding-top: var(--space-sm); }
+.cv-wf-row:first-of-type { border-top: 0; padding-top: 0; }
+.cv-wf-word { border: 1.5px solid var(--text-color); border-radius: var(--radius-pill); flex: none; font-size: 0.75rem; font-weight: 700; padding: 0 var(--space-sm); }
+.cv-wf-link { color: var(--link-color); text-decoration: underline; }
+.cv-wf-grid { display: grid; gap: var(--space-md); grid-template-columns: 2fr 1fr; }
+.cv-wf-note { background: var(--info-bg); border-left: 4px solid var(--secondary-color); font-size: 0.85rem; padding: var(--space-sm) var(--space-md); }
+.cv-wf-proposed { color: var(--danger-color); font-size: 0.75rem; font-weight: 700; }
+
+/* K7. A board's page drawn without the window's height: the sidebar runs the board's height (the board is the window). */
+.cv-board-note { color: var(--muted-text); font-size: 0.8rem; margin: var(--space-lg) 0 0; }
+
+/* K8. The Spec board's marks: NEW, PROPOSED, DATA. */
+.cv-mark { border-radius: var(--radius-sm); font-size: 0.7rem; font-weight: 700; padding: 0 var(--space-xs); white-space: nowrap; }
+.cv-mark--new { background: var(--info-bg); border: 1px solid var(--secondary-color); }
+.cv-mark--proposed { background: var(--warning-bg); border: 1px solid var(--warning-color); }
+.cv-mark--data { background: var(--danger-bg); border: 1px solid var(--danger-color); }
+
+/* ══ PART 2 — PROPOSED for app.css ═════════════════════════════════════════════════════════════════════════════════ */
+
+/* R1. Home's System health (all three structures): one line per check — its name, its state in words as a badge
+   (BadgeFor: OK success, Not configured / Disabled / Overdue warning, Failing / Unreachable danger, Not run yet neutral),
+   the sentence saying what is wrong, and the link to where to act. No dot: the badge's word is the signal (§ Status dots,
+   WCAG 1.4.1). The lines are a list; each line's parts wrap under each other below 30rem of card. */
+.health-list { display: flex; flex-direction: column; list-style: none; margin: 0; padding: 0; }
+.health-line {
+  border-top: 1px solid var(--border-color);
+  display: grid;
+  gap: var(--space-xs) var(--space-md);
+  grid-template-columns: 9rem minmax(0, 1fr);
+  padding: var(--space-md) 0;
+}
+.health-line:first-child { border-top: 0; padding-top: var(--space-xs); }
+.health-line:last-child { padding-bottom: 0; }
+.health-line-name { align-items: flex-start; display: flex; flex-direction: column; gap: var(--space-xs); font-weight: 600; }
+.health-line-text { display: flex; flex-direction: column; gap: var(--space-xs); min-width: 0; overflow-wrap: anywhere; }
+.health-line-text p, .health-line-text ul { margin: 0; }
+.health-line-text ul { padding-left: var(--space-lg); }
+@container health (width < 30rem) {
+  .health-line { grid-template-columns: minmax(0, 1fr); }
+  .health-line-name { align-items: center; flex-direction: row; flex-wrap: wrap; }
+}
+.home-health { container: health / inline-size; }
+
+/* R2. Home's Accounts card: the count says what it counts, then what the count holds, one line each (Q4). */
+.accounts-breakdown { color: var(--muted-text); list-style: none; margin: var(--space-sm) 0 0; padding: 0; }
+.accounts-breakdown li { padding: 2px 0; }
+
+/* R3. A list's result line and fixed window (Run history, Audit log): the count that takes the focus after Show (flow 17's
+   count line), and the window the rows are read from, fixed when the page loaded or Show was pressed (T277). */
+.list-count { font-weight: 600; margin: 0; }
+.list-window { color: var(--muted-text); font-size: 0.9rem; margin: 0; }
+.list-head { display: flex; flex-direction: column; gap: var(--space-xs); }
+.list-head h2 { font-size: 1.25rem; margin: 0; }
+
+/* R4. Scheduled jobs: the job cell (its key, its state if not plain, its description), a run's time over its badge, and
+   an action unavailable with its reason as text beside it (flow 17's pattern, scoped here). */
+.jobs-page .job-key { font-weight: 600; overflow-wrap: anywhere; }
+.jobs-page .job-desc { color: var(--muted-text); display: block; font-size: 0.9rem; }
+.jobs-page .run-when { display: flex; flex-direction: column; gap: var(--space-xs); align-items: flex-start; }
+.jobs-page .job-actions { align-items: flex-start; display: flex; flex-direction: column; gap: var(--space-xs); }
+.jobs-page .action-reason { color: var(--muted-text); font-size: 0.85rem; max-width: 12rem; }
+.jobs-page .clinic-table th.col-job { width: 38%; }
+/* A time breaks only between its day and its hour ("2026-11-10" over "17:00 SAST"), never inside the date (A.2.1-1). */
+.nw { white-space: nowrap; }
+
+/* R5. A run's error: its first 160 characters, then the whole (up to 2,000) in a native disclosure that wraps in the cell
+   (no script; the error never widens the table, T323). */
+.run-error { font-size: 0.9rem; overflow-wrap: anywhere; }
+.run-error summary { color: var(--link-color); cursor: pointer; min-height: 24px; }
+.run-error p { margin: var(--space-xs) 0 0; }
+
+/* R6. The audit entry's payload (T114): monospace, one property a line as Wombat lays it out, wrapping inside its own
+   region, which scrolls past 28rem and is focusable (tabindex 0, role region, named "Payload") so a keyboard reads it. */
+.payload-block { max-height: 28rem; overflow: auto; }
+.payload-note { color: var(--muted-text); font-size: 0.9rem; margin: 0; }
+
+/* R7. The entry's long values wrap at every width: the action's name, a user id, a refusal (T323). */
+.audit-entry-page .detail-list dd { min-width: 0; overflow-wrap: anywhere; }
+.audit-entry-page .stored-utc { color: var(--muted-text); display: block; font-size: 0.85rem; }
+
+/* R8. The institution's record for the Administrator: Status read out in its own section after the form, with its one
+   action (Deactivate… or Reactivate), apart from Save (flow 13's end section). */
+.institution-status .details-list > div { grid-template-columns: minmax(6rem, max-content) minmax(0, 1fr); }
+
+/* R9. The operator's lists stack from 900px down (StackWide), each row's actions 44px at 390 (the people pages' rule);
+   their filter bar is .people-filter's. A stacked audit row puts its Detail link on a line of its own. */
+@media (max-width: 900px) {
+  .audit-page .clinic-table--stack-wide td.col-detail, .jobs-page .clinic-table--stack-wide td.col-actions { padding-top: var(--space-xs); }
+  .jobs-page .action-reason { max-width: none; }
+}
+@media (max-width: 640.98px) {
+  .jobs-page .job-actions .btn, .audit-page .col-detail .btn { min-height: 2.75rem; width: 100%; }
+  .jobs-page .job-actions { align-items: stretch; }
+}
