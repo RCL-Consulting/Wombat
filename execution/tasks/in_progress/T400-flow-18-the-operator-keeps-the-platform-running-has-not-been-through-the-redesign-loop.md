@@ -120,3 +120,9 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
   brief's two corrections folded in; Steps: 14 of 23 Expects change, plus 1.23 (Q17). Provisional (PROPOSED): T1–T7 Q6–Q12
   at the brief's recommendations (T6: institutions, jobs, audit stack from 1150px, run history from 1024px), T8–T24 words.
   Inferred, not checked: three stored audit refusals, 1.1's account count drawn as 9. Waiting: the operator sends it.
+- **2026-11-11, round 2** (173 boards, `f18r2.css` and `canvas.json` in `round-2/`, `8063c80b`; the operator sent the ask
+  and said "Done"). **Reviewed** (three Sonnet agents: code `844b21e1`, cast `19abf3d7`, ds `ba2f2d3a`; merged here,
+  `round-2-review.md`): M1 the Deactivate/Reactivate dialogs in ConfirmDialog's form mode, M2 the pager's order, M3 Q15's
+  name read (an erased person falls back to the id; `DataRightsPeople.StaffNamesAsync` gives the pseudonym), M4 A.5.5
+  also changes (Q17), M5 A.2.10's 390 count; K2–K12, C3–C7, S1–S10, 22 nits. **Waiting:** the operator's Q18 (mail
+  health persisted, recommended) and T1–T24, then the round-3 correction ask.
