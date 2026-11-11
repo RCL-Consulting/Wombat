@@ -170,3 +170,8 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
 - **2026-11-11, lanes merged** on `t400` (A `e65df391` `7ee09a04`; B `41afb119` `47dbb988`; C `b729a039` `1cba10a1`
   `02c38cfe`; conflicts only DESIGN.md's lane lines, both kept; `e2ad955f`). Build 0 warnings; suites
   907/4553/1039/52/4950/541. Lane notes for W and § 5 in the scratchpad `b400/lane-{a,b,c}.md`. Next: the sweep.
+- **2026-11-11, the sweep** (one Opus agent; `5b9bcf53` fix, `ea1f6f19` `sweep.md`): every page passes for both roles
+  after four column fixes at 1280 (a failed run's error column and the audit's Action/Result ask for shares); the S2 band
+  measured 1100–1112 narrow, wide from 1113; stacks at 1150 (Institutions 180px spare at 1151, jobs 307, audit 133/144) and
+  1024 (run history 144 at 1025); nothing sideways at 390–768, 44px below 641. Four non-width faults for the review
+  (scratchpad `b400/sweep-faults.md`). Scratch DB `wombat_scenario_t400_sweep` kept. Next: lane W.
