@@ -114,3 +114,9 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
   read live from the user id, never stored; Q16 Q5 kept, a task proposed for the College, speciality and sub-speciality
   records to follow it; Q17 one "Institution unavailable" for the Administrator and an institution's own admin (1.23's
   Expect changes). Round 2's ask: one Opus agent, every decision stated as settled.
+- **2026-11-11, round 2's ask** (one Opus agent, `76caf6e6`): `round-2-ask.txt`, 942 lines; A and screens 3–5 at full
+  fidelity, ~85 states / ~175 boards (R2-H Home 11, R2-I institutions 22, R2-J jobs 12, R2-R run history 11, R2-L audit
+  log 15, R2-E entry 11; 390 twins, seven 768 twins); every decision stated as settled; M1–M4, S1–S11, N1–N14 and the
+  brief's two corrections folded in; Steps: 14 of 23 Expects change, plus 1.23 (Q17). Provisional (PROPOSED): T1–T7 Q6–Q12
+  at the brief's recommendations (T6: institutions, jobs, audit stack from 1150px, run history from 1024px), T8–T24 words.
+  Inferred, not checked: three stored audit refusals, 1.1's account count drawn as 9. Waiting: the operator sends it.
