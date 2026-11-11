@@ -109,3 +109,8 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
   M3 Q2's mail sentence, M4 the Steps board (own account is 3 + 1; 14 of 23 Expects change, not 18); 11 shoulds, 14 nits;
   Q13–Q17. Two slips here: the ask went out listing Q1–Q5 as open (written before the decisions; not amended, flow 17's
   lesson again), and Q2 was put to the operator as "nothing sent in 24 hours" where the brief says a drop (Q13).
+- **2026-11-11, Q13–Q17 taken as recommended ("yes"):** pick A, nothing from B or C; Q13 mail fails on a mail dropped in
+  24 hours (the brief's rule; not "nothing sent"); Q14 no breakdown lines, Q4's one figure plus locked; Q15 audit names
+  read live from the user id, never stored; Q16 Q5 kept, a task proposed for the College, speciality and sub-speciality
+  records to follow it; Q17 one "Institution unavailable" for the Administrator and an institution's own admin (1.23's
+  Expect changes). Round 2's ask: one Opus agent, every decision stated as settled.
