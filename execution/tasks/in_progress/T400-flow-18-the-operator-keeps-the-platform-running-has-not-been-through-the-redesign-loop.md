@@ -167,3 +167,6 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
   → 907/4491/1035/52/4833/533, 0 warnings. Departures: `Application/AssemblyInfo.cs` (InternalsVisibleTo the tests), the
   boards' label strip, DESIGN.md placeholders. Notes for the lanes in `build-s0-notes.md`. Lanes A, B, C cut from
   `9f53214e` and running.
+- **2026-11-11, lanes merged** on `t400` (A `e65df391` `7ee09a04`; B `41afb119` `47dbb988`; C `b729a039` `1cba10a1`
+  `02c38cfe`; conflicts only DESIGN.md's lane lines, both kept; `e2ad955f`). Build 0 warnings; suites
+  907/4553/1039/52/4950/541. Lane notes for W and § 5 in the scratchpad `b400/lane-{a,b,c}.md`. Next: the sweep.
