@@ -102,3 +102,10 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
   Scheduled jobs; Q4 every account but an erased one, locked said apart, one query; Q5 the institution record headed by
   its name, Status read out, Deactivate…/Reactivate… behind dialogs in place of the Active box, no Back link, a new list
   subtitle, T378's field-tied refusals. Next: the operator sends `round-1-ask.txt` and says "done".
+- **2026-11-11, round 1** (31 boards, `f18r1.css` and `canvas.json` in `round-1/`, `243ae294`; the operator sent the ask
+  and said "done"): A Home holds it all, B a System page, C needs you first (wireframes); the health lines; institutions,
+  jobs and run history, the audit log and an entry at fidelity. **Assessed** (one Opus agent, `32efa559`): pick A, nothing
+  from B or C; M1 Q4's count (25 counted the erased account), M2 Q5's Reactivate asks nothing and the subtitle's words,
+  M3 Q2's mail sentence, M4 the Steps board (own account is 3 + 1; 14 of 23 Expects change, not 18); 11 shoulds, 14 nits;
+  Q13–Q17. Two slips here: the ask went out listing Q1–Q5 as open (written before the decisions; not amended, flow 17's
+  lesson again), and Q2 was put to the operator as "nothing sent in 24 hours" where the brief says a drop (Q13).
