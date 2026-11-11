@@ -145,3 +145,7 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
   differs only as the items say, Steps arithmetic right. Four loose citations (`DependencyInjection.cs:4-6`/`:16-25` are 90
   and 100; `CatalogueLinks.cs:38`; `app.css:6799`/`:6847`). Pixel figures not rendered. Waiting: the operator's decisions
   (no round 4, the fixes carried into the build; the round-3 PROPOSED settlements kept).
+- **2026-11-11, round 3 decisions.** The operator said "yes to both": no round 4 (S2's band, C5's "replaces" cells and the
+  four loose citations go into the build); the round-3 PROPOSED settlements kept (Q18's `EmailOutcome` table written by
+  both hosts, 90 days, Mail "Not read" with the database down; the code names and words; Home's links in the card footers).
+  Next: step 6, the build plan (one Opus agent).
