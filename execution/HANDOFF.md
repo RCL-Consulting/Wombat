@@ -12,10 +12,11 @@ from T400's notes, which are complete.
 - **Built on branch `t400`** (`f26cd81c`, 16 commits ahead of master, not squashed): § 0 with migration
   `20261111182215_T400_EmailOutcomes`, lanes A–C, the sweep, lane W, two Sonnet reviews (`build-review.md`). Suites
   907/4553/1039/52/4950/541, 0 warnings.
-- **Waiting:** the operator's **F1**: keep an `UnauthorizedAccessException`'s words in a failed audit row only when
-  Wombat's code threw it (recommended), or P1 as written. Then one fix pass (code S-1, S-2; pages M1, S1, S2; the nits;
-  26 NEW word groups into `build-contracts.md` § 5), the squash onto master, and DESIGN.md's banner.
-- **After that:** step 7 the replay, step 8 the design system re-sync, step 9 the lessons.
+- **2026-11-12:** F1 taken as recommended; the fix pass done; **squashed onto master `34b5077e`** (suites
+  907/4560/1039/52/4952/542, 0 warnings; DESIGN.md's banner lists flow 18).
+- **Step 7, the replay, in progress:** brief `b331c64e`; prompts in this session's scratchpad `g400\`; app detached on
+  :5180 against `wombat_scenario_t400`. An interrupted act resumes from its act file's "T400 replay" Actuals (the
+  prompt says how). Then steps 8 and 9.
 - **Environment:** scratch DB `wombat_scenario_t400_sweep` kept; lane and sweep notes in the earlier session's scratchpad
   (`…\5ae5486c-8726-4e89-ae35-c60429e28267\scratchpad\b400`), which survived.
 - **Not pushed:** `337a6675` onward (31 commits on master). Ask before pushing.

@@ -190,3 +190,7 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
   Retention now deletes set-based (two tests moved to `JobRunsPostgresTests`); the Home query and Run now check the
   Administrator. Verbatim 425/0, completeness 332 none unnamed. DESIGN.md's banner lists flow 18 (`b598beaf`
   on `t400`). **Squashed onto master `34b5077e`**: suites 907/4560/1039/52/4952/542, 0 warnings. Next: step 7, the replay.
+- **2026-11-12, step 7 started.** `replay-brief.md` (one Opus agent, `b331c64e`): 17 changed steps (act 1 four, 3 three,
+  4 one, A nine), 67 states rows (pass 1 reads 42, pass 2 staged writes 25 on scratch copies of `post-actA`); prompts in
+  this session's scratchpad `g400\`. Fresh `wombat_scenario_t400`, app published from master and started detached on
+  :5180 (D = 2026-11-12). Acts run one agent each, in order.
