@@ -23,7 +23,7 @@ from T400's notes, which are complete.
 - **Next:** steps 8 (design system re-sync and republish) and 9 (lessons) on the operator's word.
 - **Environment:** the replay app on :5180 (`wombat_scenario_t400`, master `1c06aa31`) left running; scratch DBs
   `wombat_scenario_t400_{sweep,s10,s11,s20,s21,s22,s23,s515}` kept; dumps `recovery/scenario-t400-post-act{1..6,A}`.
-- **Environment:** scratch DB `wombat_scenario_t400_sweep` kept; lane and sweep notes in the earlier session's scratchpad
+- **Lane and sweep notes** in the earlier session's scratchpad
   (`…\5ae5486c-8726-4e89-ae35-c60429e28267\scratchpad\b400`), which survived.
 - **Not pushed:** `337a6675` onward. Ask before pushing.
 
