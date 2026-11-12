@@ -194,3 +194,12 @@ T398 (flow 17), T394 (flow 16); T157, T302, T327; BRIEF § 4, § 6–8, § 11; I
   4 one, A nine), 67 states rows (pass 1 reads 42, pass 2 staged writes 25 on scratch copies of `post-actA`); prompts in
   this session's scratchpad `g400\`. Fresh `wombat_scenario_t400`, app published from master and started detached on
   :5180 (D = 2026-11-12). Acts run one agent each, in order.
+- **2026-11-12, the acts** (seven Opus agents; commits `d5e676ff`, `3d1f559e`, `a91ddda5`, `463085f4`, `983692fa`,
+  `ce502daa`, `3fbdd3b0`; dumps `scenario-t400-post-act{1..6,A}`): act 1 31/31, act 2 44/44, act 3 60/60, act 4 48/50
+  (T365 4.2, T320 4.27), act 5 28/29 (T382 5.28), act 6 42/42, A 72/76 (T286 A.4.2, T385 A.7.4; A.1.11 partly not played,
+  a script fault filed the erasure before review #8; **A.2.1 regression-t400**). Closed as seen: T327, T326's institutions
+  half, T286's audit display half, T277's audit half, T324's job-runs half, T325/T384's page half, T398's "1problem".
+  **A.2.1:** Scheduled jobs at 1280 broke every Last run and Next run over two lines beside a band; fixed on master
+  (`4454e915`: one `.nowrap` per time; DESIGN.md amended; Web 4952/4952), republished, measured by states pass 1.
+  Seen, not a fault: EmailOutcomes 0 rows on a stub-mail host (by design). Proposed T402 (a failed registration's audit
+  row stores Identity's code). Not seen: 1.7's result and Copy link (a script fault; not flow 18's page).
