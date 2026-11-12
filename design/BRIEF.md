@@ -1397,6 +1397,39 @@ lane, the integrator's sweep, two Sonnet reviews (one must) and one fix pass, th
   16's `g394\replay-pw.env` (the cast's scenario passwords) to its own console; it was copied nowhere. *Changed:* each
   act prompt names the earlier flow's file as one never to read or copy, and each replay starts an empty one.
 
+**Flow 18 (T400, 2026-11-11 to 11-12): what the eighteenth flow added**
+
+Flow 18 ran the loop over two days: three rounds (A, Home holds it all, picked; Q1–Q18, T1–T24, P1 and F1 the
+operator's), round 3 on a second canvas, the build (`34b5077e`) from a planner and § 0 (with migration
+`T400_EmailOutcomes`), three lanes (A Home and institutions, B jobs and run history, C the audit log) and a runbook
+lane, the integrator's sweep, two Sonnet reviews (one must) and one fix pass, the replay on a fresh database (four flow
+18 faults found and fixed, `4454e915`, `565b978a`, `a7d14b19`), the states (67 rows over two passes) and the re-sync
+(design system version 55). The machine restarted between the reviews and F1; nothing was lost. Its record is
+`design/flows/18-platform-operations/`. Only what flows 01–17 did not already teach is here.
+
+- **A time is one unit on the page.** Observed: Scheduled jobs drew each Last run and Next run as a day and a clock in
+  two `.nowrap` spans, and at 1280 every one broke between them beside an empty band; Home's health sentences broke a
+  time at its date's hyphens. The sweep passed both, since nothing scrolled; act A's capture and the states pass found
+  them. *Changed:* a date with its clock is one `span.nowrap` in a cell and in running text (DESIGN.md's time-cell rule).
+- **A select whose options arrive after its value shows the first option.** Observed: Run history's Job select, bound
+  to the address's job, showed the first job once the stored keys loaded, because Blazor reused the unkeyed `<option>`
+  elements; bUnit's first render passed it. *Changed:* options that can arrive after the bound value carry `@key`, with
+  a test that renders the select before and after they arrive.
+- **What a failed command stores is read from the database, not the page.** Observed: P1 kept a refusal's words in a
+  failed command's audit row; the replay read the rows by SQL and found Identity's code stored where the page showed
+  the password rule (T402), which no page had shown before the audit log printed it. *Changed:* nothing; a flow that
+  shows stored text reads the rows the runbook writes, by SQL, in the replay.
+- **A states row needs a command that can reach it.** Observed: the audit entry's subject section was designed, built
+  and tested, but no command stores a subject, so states pass 2 could take it only from a hand-staged row. *Changed:*
+  nothing; a round's review traces each state to the step or command that produces it, and one that none does is put
+  to the operator before it is drawn.
+- **A question put to the operator quotes the brief's rule.** Observed: Q2 went out as "nothing sent in 24 hours"
+  where the brief said a dropped mail; the round-1 assessment caught it, and Q13 put it again. *Changed:* nothing; the
+  question's recommendation is copied from the brief, not restated.
+- **The task's notes are what survives a restart.** Observed: the machine restarted while the session waited on F1;
+  master, the worktrees and the notes were intact, and HANDOFF was rewritten from the notes alone. *Changed:* nothing;
+  each decision and each agent's result goes into the task's notes as it lands.
+
 **What the brief keeps as it was**
 - The flows' order (§ 8), the invariants (§ 4.4) and the acceptance check (§ 9) held. The digest (§ 5.1) is restated
   for what flow 01 fixed: the shell, its components and the states it already designed. The brief template (§ 2.4)
